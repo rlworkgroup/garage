@@ -18,6 +18,32 @@ cd "$(dirname "$0")/.."
 
 echo "Creating conda environment..."
 conda env create -f environment.yml
+if [ $? -ne 0 ]; then
+   echo -e "\e[0;31mError: conda environment could not be created\e[0m"
+   exit 1
+fi
+
+env_name="rllab3"
+tf_version="1.8"
+read -r -p "Install tensorflow-gpu instead of regular tensorflow [y/N]: " response
+case "$response" in
+  [yY])
+     source activate $env_name
+     pip install tensorflow-gpu==$tf_version
+     source deactivate
+     ;;
+  *)
+     source activate $env_name
+     pip install tensorflow==$tf_version
+     source deactivate
+     ;;
+esac
+
+echo "Updating conda environment..."
 conda env update
+if [ $? -ne 0 ]; then
+   echo -e "\e[0;31mError: conda environment could not be updated\e[0m"
+   exit 1
+fi
 
 echo "Conda environment created! Make sure to run \`source activate rllab3\` whenever you open a new terminal and want to run programs under rllab."
