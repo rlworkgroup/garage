@@ -15,24 +15,22 @@ import tensorflow as tf
 
 
 class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
-    def __init__(
-            self,
-            name,
-            env_spec,
-            hidden_sizes=(32, 32),
-            learn_std=True,
-            init_std=1.0,
-            adaptive_std=False,
-            std_share_network=False,
-            std_hidden_sizes=(32, 32),
-            min_std=1e-6,
-            std_hidden_nonlinearity=tf.nn.tanh,
-            hidden_nonlinearity=tf.nn.tanh,
-            output_nonlinearity=None,
-            mean_network=None,
-            std_network=None,
-            std_parametrization='exp'
-    ):
+    def __init__(self,
+                 name,
+                 env_spec,
+                 hidden_sizes=(32, 32),
+                 learn_std=True,
+                 init_std=1.0,
+                 adaptive_std=False,
+                 std_share_network=False,
+                 std_hidden_sizes=(32, 32),
+                 min_std=1e-6,
+                 std_hidden_nonlinearity=tf.nn.tanh,
+                 hidden_nonlinearity=tf.nn.tanh,
+                 output_nonlinearity=None,
+                 mean_network=None,
+                 std_network=None,
+                 std_parametrization='exp'):
         """
         :param env_spec:
         :param hidden_sizes: list of sizes for the fully-connected hidden layers
@@ -62,17 +60,40 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
 
             # create network
             if mean_network is None:
-                mean_network = MLP(
-                    name="mean_network",
-                    input_shape=(obs_dim,),
-                    output_dim=action_dim,
-                    hidden_sizes=hidden_sizes,
-                    hidden_nonlinearity=hidden_nonlinearity,
-                    output_nonlinearity=output_nonlinearity,
-                )
+                if std_share_network:
+                    if std_parametrization == "exp":
+                        init_std_param = np.log(init_std)
+                    elif std_parametrization == "softplus":
+                        init_std_param = np.log(np.exp(init_std) - 1)
+                    else:
+                        raise NotImplementedError
+                    init_b = tf.constant_initializer(init_std_param)
+                    mean_network = MLP(
+                        name="mean_network",
+                        input_shape=(obs_dim, ),
+                        output_dim=2 * action_dim,
+                        hidden_sizes=hidden_sizes,
+                        hidden_nonlinearity=hidden_nonlinearity,
+                        output_nonlinearity=output_nonlinearity,
+                        output_b_init=init_b,
+                    )
+                    l_mean = L.SliceLayer(
+                        mean_network.output_layer,
+                        slice(action_dim),
+                        name="mean_slice",
+                    )
+                else:
+                    mean_network = MLP(
+                        name="mean_network",
+                        input_shape=(obs_dim, ),
+                        output_dim=action_dim,
+                        hidden_sizes=hidden_sizes,
+                        hidden_nonlinearity=hidden_nonlinearity,
+                        output_nonlinearity=output_nonlinearity,
+                    )
+                    l_mean = mean_network.output_layer
             self._mean_network = mean_network
 
-            l_mean = mean_network.output_layer
             obs_var = mean_network.input_layer.input_var
 
             if std_network is not None:
@@ -81,7 +102,7 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
                 if adaptive_std:
                     std_network = MLP(
                         name="std_network",
-                        input_shape=(obs_dim,),
+                        input_shape=(obs_dim, ),
                         input_layer=mean_network.input_layer,
                         output_dim=action_dim,
                         hidden_sizes=std_hidden_sizes,
@@ -89,6 +110,12 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
                         output_nonlinearity=None,
                     )
                     l_std_param = std_network.output_layer
+                elif std_share_network:
+                    l_std_param = L.SliceLayer(
+                        mean_network.output_layer,
+                        slice(action_dim, 2 * action_dim),
+                        name="std_slice",
+                    )
                 else:
                     if std_parametrization == 'exp':
                         init_std_param = np.log(init_std)
@@ -130,7 +157,8 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
             LayersPowered.__init__(self, [l_mean, l_std_param])
             super(GaussianMLPPolicy, self).__init__(env_spec)
 
-            dist_info_sym = self.dist_info_sym(mean_network.input_layer.input_var, dict())
+            dist_info_sym = self.dist_info_sym(
+                mean_network.input_layer.input_var, dict())
             mean_var = dist_info_sym["mean"]
             log_std_var = dist_info_sym["log_std"]
 
@@ -144,7 +172,8 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
         return True
 
     def dist_info_sym(self, obs_var, state_info_vars=None):
-        mean_var, std_param_var = L.get_output([self._l_mean, self._l_std_param], obs_var)
+        mean_var, std_param_var = L.get_output(
+            [self._l_mean, self._l_std_param], obs_var)
         if self.min_std_param is not None:
             std_param_var = tf.maximum(std_param_var, self.min_std_param)
         if self.std_parametrization == 'exp':
@@ -180,14 +209,18 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
         :return:
         """
         new_dist_info_vars = self.dist_info_sym(obs_var, action_var)
-        new_mean_var, new_log_std_var = new_dist_info_vars["mean"], new_dist_info_vars["log_std"]
-        old_mean_var, old_log_std_var = old_dist_info_vars["mean"], old_dist_info_vars["log_std"]
-        epsilon_var = (action_var - old_mean_var) / (tf.exp(old_log_std_var) + 1e-8)
+        new_mean_var, new_log_std_var = new_dist_info_vars[
+            "mean"], new_dist_info_vars["log_std"]
+        old_mean_var, old_log_std_var = old_dist_info_vars[
+            "mean"], old_dist_info_vars["log_std"]
+        epsilon_var = (action_var - old_mean_var) / (
+            tf.exp(old_log_std_var) + 1e-8)
         new_action_var = new_mean_var + epsilon_var * tf.exp(new_log_std_var)
         return new_action_var
 
     def log_diagnostics(self, paths):
-        log_stds = np.vstack([path["agent_infos"]["log_std"] for path in paths])
+        log_stds = np.vstack(
+            [path["agent_infos"]["log_std"] for path in paths])
         logger.record_tabular('AveragePolicyStd', np.mean(np.exp(log_stds)))
 
     @property

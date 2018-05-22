@@ -25,6 +25,7 @@ class GaussianLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
             output_nonlinearity=None,
             lstm_layer_cls=L.LSTMLayer,
             use_peepholes=False,
+            std_share_network=False,
     ):
         """
         :param env_spec: A spec for the env.
@@ -44,10 +45,7 @@ class GaussianLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
             else:
                 input_dim = obs_dim
 
-            l_input = L.InputLayer(
-                shape=(None, None, input_dim),
-                name="input"
-            )
+            l_input = L.InputLayer(shape=(None, None, input_dim), name="input")
 
             if feature_network is None:
                 feature_dim = input_dim
@@ -67,44 +65,88 @@ class GaussianLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
                     shape_op=lambda _, input_shape: (input_shape[0], input_shape[1], feature_dim)
                 )
 
-            mean_network = LSTMNetwork(
-                input_shape=(feature_dim,),
-                input_layer=l_feature,
-                output_dim=action_dim,
-                hidden_dim=hidden_dim,
-                hidden_nonlinearity=hidden_nonlinearity,
-                output_nonlinearity=output_nonlinearity,
-                lstm_layer_cls=lstm_layer_cls,
-                name="mean_network",
-                use_peepholes=use_peepholes,
-            )
+            if std_share_network:
+                mean_network = LSTMNetwork(
+                    input_shape=(feature_dim, ),
+                    input_layer=l_feature,
+                    output_dim=2 * action_dim,
+                    hidden_dim=hidden_dim,
+                    hidden_nonlinearity=hidden_nonlinearity,
+                    output_nonlinearity=output_nonlinearity,
+                    lstm_layer_cls=lstm_layer_cls,
+                    name="mean_network",
+                    use_peepholes=use_peepholes,
+                )
 
-            l_log_std = L.ParamLayer(
-                mean_network.input_layer,
-                num_units=action_dim,
-                param=tf.constant_initializer(np.log(init_std)),
-                name="output_log_std",
-                trainable=learn_std,
-            )
+                l_mean = L.SliceLayer(
+                    mean_network.output_layer,
+                    slice(action_dim),
+                    name="mean_slice",
+                )
 
-            l_step_log_std = L.ParamLayer(
-                mean_network.step_input_layer,
-                num_units=action_dim,
-                param=l_log_std.param,
-                name="step_output_log_std",
-                trainable=learn_std,
-            )
+                l_step_mean = L.SliceLayer(
+                    mean_network.step_output_layer,
+                    slice(action_dim),
+                    name="step_mean_slice",
+                )
+
+                l_log_std = L.SliceLayer(
+                    mean_network.output_layer,
+                    slice(action_dim, 2 * action_dim),
+                    name="log_std_slice",
+                )
+
+                l_step_log_std = L.SliceLayer(
+                    mean_network.step_output_layer,
+                    slice(action_dim, 2 * action_dim),
+                    name="step_log_std_slice",
+                )
+            else:
+                mean_network = LSTMNetwork(
+                    input_shape=(feature_dim, ),
+                    input_layer=l_feature,
+                    output_dim=action_dim,
+                    hidden_dim=hidden_dim,
+                    hidden_nonlinearity=hidden_nonlinearity,
+                    output_nonlinearity=output_nonlinearity,
+                    lstm_layer_cls=lstm_layer_cls,
+                    name="mean_network",
+                    use_peepholes=use_peepholes,
+                )
+
+                l_mean = mean_network.output_layer
+
+                l_step_mean = mean_network.step_output_layer
+
+                l_log_std = L.ParamLayer(
+                    mean_network.input_layer,
+                    num_units=action_dim,
+                    param=tf.constant_initializer(np.log(init_std)),
+                    name="output_log_std",
+                    trainable=learn_std,
+                )
+
+                l_step_log_std = L.ParamLayer(
+                    mean_network.step_input_layer,
+                    num_units=action_dim,
+                    param=l_log_std.param,
+                    name="step_output_log_std",
+                    trainable=learn_std,
+                )
 
             self.mean_network = mean_network
             self.feature_network = feature_network
             self.l_input = l_input
             self.state_include_action = state_include_action
 
-            flat_input_var = tf.placeholder(dtype=tf.float32, shape=(None, input_dim), name="flat_input")
+            flat_input_var = tf.placeholder(
+                dtype=tf.float32, shape=(None, input_dim), name="flat_input")
             if feature_network is None:
                 feature_var = flat_input_var
             else:
-                feature_var = L.get_output(l_flat_feature, {feature_network.input_layer: flat_input_var})
+                feature_var = L.get_output(
+                    l_flat_feature,
+                    {feature_network.input_layer: flat_input_var})
 
             self.f_step_mean_std = tensor_utils.compile_function(
                 [
@@ -112,13 +154,12 @@ class GaussianLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
                     mean_network.step_prev_state_layer.input_var,
                 ],
                 L.get_output([
-                    mean_network.step_output_layer,
-                    l_step_log_std,
+                    l_step_mean, l_step_log_std,
                     mean_network.step_hidden_layer,
                     mean_network.step_cell_layer
-                ], {mean_network.step_input_layer: feature_var})
-            )
+                ], {mean_network.step_input_layer: feature_var}))
 
+            self.l_mean = l_mean
             self.l_log_std = l_log_std
 
             self.input_dim = input_dim
@@ -130,7 +171,7 @@ class GaussianLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
             self.prev_cells = None
             self.dist = RecurrentDiagonalGaussian(action_dim)
 
-            out_layers = [mean_network.output_layer, l_log_std]
+            out_layers = [l_mean, l_log_std]
             if feature_network is not None:
                 out_layers.append(feature_network.output_layer)
 
@@ -143,20 +184,20 @@ class GaussianLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
         obs_var = tf.reshape(obs_var, tf.stack([n_batches, n_steps, -1]))
         if self.state_include_action:
             prev_action_var = state_info_vars["prev_action"]
-            all_input_var = tf.concat(axis=2, values=[obs_var, prev_action_var])
+            all_input_var = tf.concat(
+                axis=2, values=[obs_var, prev_action_var])
         else:
             all_input_var = obs_var
         if self.feature_network is None:
-            means, log_stds = L.get_output(
-                [self.mean_network.output_layer, self.l_log_std],
-                {self.l_input: all_input_var}
-            )
+            means, log_stds = L.get_output([self.l_mean, self.l_log_std],
+                                           {self.l_input: all_input_var})
         else:
             flat_input_var = tf.reshape(all_input_var, (-1, self.input_dim))
             means, log_stds = L.get_output(
-                [self.mean_network.output_layer, self.l_log_std],
-                {self.l_input: all_input_var, self.feature_network.input_layer: flat_input_var}
-            )
+                [self.l_mean, self.l_log_std], {
+                    self.l_input: all_input_var,
+                    self.feature_network.input_layer: flat_input_var
+                })
         return dict(mean=means, log_std=log_stds)
 
     @property
@@ -168,7 +209,8 @@ class GaussianLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
             dones = [True]
         dones = np.asarray(dones)
         if self.prev_actions is None or len(dones) != len(self.prev_actions):
-            self.prev_actions = np.zeros((len(dones), self.action_space.flat_dim))
+            self.prev_actions = np.zeros((len(dones),
+                                          self.action_space.flat_dim))
             self.prev_hiddens = np.zeros((len(dones), self.hidden_dim))
             self.prev_cells = np.zeros((len(dones), self.hidden_dim))
 
@@ -190,10 +232,7 @@ class GaussianLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
         flat_obs = self.observation_space.flatten_n(observations)
         if self.state_include_action:
             assert self.prev_actions is not None
-            all_input = np.concatenate([
-                flat_obs,
-                self.prev_actions
-            ], axis=-1)
+            all_input = np.concatenate([flat_obs, self.prev_actions], axis=-1)
         else:
             all_input = flat_obs
         # probs, hidden_vec, cell_vec = self.f_step_prob(all_input, self.prev_hiddens, self.prev_cells)
@@ -223,7 +262,7 @@ class GaussianLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
     def state_info_specs(self):
         if self.state_include_action:
             return [
-                ("prev_action", (self.action_dim,)),
+                ("prev_action", (self.action_dim, )),
             ]
         else:
             return []
