@@ -160,3 +160,28 @@ Additional arguments for `run_experiment_lite` (experimental):
 
 - `exp_name`: If this is set, the experiment data will be stored in the folder `data/local/{exp_name}`. By default, the folder name is set to `experiment_{timestamp}`.
 - `exp_prefix`: If this is set, and if `exp_name` is not specified, the experiment folder name will be set to `{exp_prefix}_{timestamp}`.
+
+Running Experiments with TensorFlow and GPU
+=====================
+
+To run experiments in the TensorFlow tree of rllab with the GPU enabled, set the flags use_tf and use_gpu to True when calling `run_experiment_lite`, as shown in the code below:
+
+.. code-block:: python
+
+    run_experiment_lite(
+        run_task,
+        # Number of parallel workers for sampling
+        n_parallel=1,
+        # Only keep the snapshot parameters for the last iteration
+        snapshot_mode="last",
+        # Specifies the seed for the experiment. If this is not provided, a random seed
+        # will be used
+        seed=1,
+        # Always set to True when using TensorFlow
+        use_tf=True,
+        # Set to True to use GPU with TensorFlow
+        use_gpu=True,
+        # plot=True,
+    )
+
+It's also possible to run TensorFlow with only the CPU by setting use_gpu to False, which is the default behavior when use_tf is enabled.
