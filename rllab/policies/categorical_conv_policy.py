@@ -9,7 +9,7 @@ from rllab.spaces import Discrete
 from rllab.core import Serializable
 from rllab.misc import ext
 from rllab.misc import logger
-from rllab.misc import overrides
+from rllab.misc.overrides import overrides
 import numpy as np
 import lasagne.nonlinearities as NL
 

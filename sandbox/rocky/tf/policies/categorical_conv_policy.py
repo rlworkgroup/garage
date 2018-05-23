@@ -6,7 +6,7 @@ from sandbox.rocky.tf.distributions import Categorical
 from sandbox.rocky.tf.policies import StochasticPolicy
 from rllab.misc import ext
 from sandbox.rocky.tf.misc import tensor_utils
-from rllab.misc import overrides
+from rllab.misc.overrides import overrides
 from sandbox.rocky.tf.spaces import Discrete
 import tensorflow as tf
 

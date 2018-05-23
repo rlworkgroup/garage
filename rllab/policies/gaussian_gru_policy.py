@@ -10,7 +10,7 @@ from rllab.core import GRUNetwork
 from rllab.core import Serializable
 from rllab.distributions import RecurrentDiagonalGaussian
 from rllab.misc import ext
-from rllab.misc import overrides
+from rllab.misc.overrides import overrides
 from rllab.policies import StochasticPolicy
 
 

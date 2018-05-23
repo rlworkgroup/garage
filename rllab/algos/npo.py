@@ -1,5 +1,5 @@
 from rllab.misc import ext
-from rllab.misc import overrides
+from rllab.misc.overrides import overrides
 from rllab.algos import BatchPolopt
 import rllab.misc.logger as logger
 import theano

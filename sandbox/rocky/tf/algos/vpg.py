@@ -2,7 +2,7 @@
 
 from rllab.misc import logger
 from rllab.misc import ext
-from rllab.misc import overrides
+from rllab.misc.overrides import overrides
 from sandbox.rocky.tf.algos import BatchPolopt
 from sandbox.rocky.tf.optimizers import FirstOrderOptimizer
 from sandbox.rocky.tf.misc import tensor_utils

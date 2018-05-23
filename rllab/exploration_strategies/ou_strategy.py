@@ -1,4 +1,4 @@
-from rllab.misc import overrides
+from rllab.misc.overrides import overrides
 from rllab.misc import AttrDict
 from rllab.core import Serializable
 from rllab.spaces import Box

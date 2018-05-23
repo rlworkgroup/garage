@@ -1,7 +1,7 @@
 from rllab.envs.mujoco.mujoco_env import MujocoEnv
 from rllab.core import Serializable
 from rllab.envs import Step
-from rllab.misc import overrides
+from rllab.misc.overrides import overrides
 from rllab.misc import logger
 
 from rllab.envs.mujoco.mujoco_env import q_mult, q_inv

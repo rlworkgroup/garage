@@ -11,7 +11,7 @@ from rllab.envs.box2d.box2d_viewer import Box2DViewer
 from rllab.envs.box2d.parser.xml_box2d import world_from_xml, find_body, \
     find_joint
 from rllab.misc import autoargs
-from rllab.misc import overrides
+from rllab.misc.overrides import overrides
 
 BIG = 1e6
 class Box2DEnv(Env):

@@ -2,18 +2,11 @@ from rllab.misc.console import Message
 from rllab.misc.console import colorize
 from rllab.misc.ext import AttrDict
 from rllab.misc.console import mkdir_p
-from rllab.misc.overrides import overrides
-from rllab.misc.tensor_utils import flatten_tensors
-from rllab.misc.tensor_utils import unflatten_tensors
-from rllab.misc.instrument import StubAttr
-from rllab.misc.instrument import StubObject
 from rllab.misc.autoargs import get_all_parameters
 from rllab.misc.console import query_yes_no
 from rllab.misc.ext import compile_function
 from rllab.misc.ext import lazydict
 from rllab.misc.ext import flatten_tensor_variables
-from rllab.misc.ext import extract
-from rllab.misc.ext import flatten
 from rllab.misc.ext import is_iterable
 from rllab.misc.ext import set_seed
 from rllab.misc.ext import iscanr
@@ -26,5 +19,4 @@ from rllab.misc.instrument import run_experiment_lite
 from rllab.misc.instrument import stub
 from rllab.misc.instrument import to_local_command
 from rllab.misc.resolve import load_class
-from rllab.misc.special import discount_cumsum
 from rllab.misc.tabulate import tabulate

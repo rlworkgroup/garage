@@ -6,7 +6,7 @@ from rllab.envs.box2d.parser import find_body
 from rllab.core import Serializable
 from rllab.envs.box2d.parser.xml_box2d import _get_name
 from rllab.misc import autoargs
-from rllab.misc import overrides
+from rllab.misc.overrides import overrides
 
 
 class CarParkingEnv(Box2DEnv, Serializable):

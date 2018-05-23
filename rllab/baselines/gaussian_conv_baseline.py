@@ -1,7 +1,7 @@
 import numpy as np
 
 from rllab.core import Serializable
-from rllab.misc import overrides
+from rllab.misc.overrides import overrides
 from rllab.core import Parameterized
 from rllab.baselines import Baseline
 from rllab.regressors.gaussian_conv_regressor import GaussianConvRegressor

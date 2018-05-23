@@ -2,7 +2,7 @@ import theano.tensor as TT
 import theano
 import scipy.optimize
 from rllab.misc import logger
-from rllab.misc import overrides
+from rllab.misc.overrides import overrides
 from rllab.misc import ext
 from rllab.algos import BatchPolopt
 from rllab.core import Serializable

@@ -1,5 +1,5 @@
 from rllab.algos import RLAlgorithm
-from rllab.misc import overrides
+from rllab.misc.overrides import overrides
 from rllab.misc import special
 from rllab.misc import ext
 from rllab.sampler import parallel_sampler

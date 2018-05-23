@@ -11,7 +11,7 @@ from rllab.distributions import RecurrentCategorical
 from rllab.misc import ext
 from rllab.spaces import Discrete
 from rllab.misc import special
-from rllab.misc import overrides
+from rllab.misc.overrides import overrides
 from rllab.policies import StochasticPolicy
 
 

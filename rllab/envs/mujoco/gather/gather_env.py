@@ -13,7 +13,7 @@ from rllab.envs import Step
 from rllab.envs.mujoco.gather.embedded_viewer import EmbeddedViewer
 from rllab.envs.mujoco.mujoco_env import MODEL_DIR, BIG
 from rllab.misc import autoargs
-from rllab.misc import overrides
+from rllab.misc.overrides import overrides
 from rllab.mujoco_py import MjViewer, MjModel, mjcore, mjlib, \
     mjextra, glfw
 

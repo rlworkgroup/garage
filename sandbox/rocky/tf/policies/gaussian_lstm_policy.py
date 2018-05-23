@@ -8,7 +8,7 @@ from sandbox.rocky.tf.misc import tensor_utils
 from sandbox.rocky.tf.policies import StochasticPolicy
 
 from rllab.core import Serializable
-from rllab.misc import overrides
+from rllab.misc.overrides import overrides
 
 
 class GaussianLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):

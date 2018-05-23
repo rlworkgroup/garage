@@ -1,7 +1,7 @@
 import theano.tensor as TT
 import theano
 from rllab.misc import logger
-from rllab.misc import overrides
+from rllab.misc.overrides import overrides
 from rllab.misc import ext
 from rllab.algos import BatchPolopt
 from rllab.optimizers import FirstOrderOptimizer

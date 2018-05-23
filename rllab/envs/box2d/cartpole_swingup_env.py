@@ -5,7 +5,7 @@ from rllab.envs.box2d.parser import find_body
 from rllab.core import Serializable
 from rllab.envs.box2d.box2d_env import Box2DEnv
 from rllab.misc import autoargs
-from rllab.misc import overrides
+from rllab.misc.overrides import overrides
 
 
 # Tornio, Matti, and Tapani Raiko. "Variational Bayesian approach for

@@ -6,7 +6,7 @@ from rllab.core import MLP
 from rllab.core import Serializable
 from rllab.distributions import Categorical
 from rllab.misc import ext
-from rllab.misc import overrides
+from rllab.misc.overrides import overrides
 from rllab.policies import StochasticPolicy
 from rllab.spaces import Discrete
 

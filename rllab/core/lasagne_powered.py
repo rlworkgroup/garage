@@ -1,5 +1,5 @@
 from rllab.core import Parameterized
-from rllab.misc import overrides
+from rllab.misc.overrides import overrides
 import lasagne.layers as L
 
 

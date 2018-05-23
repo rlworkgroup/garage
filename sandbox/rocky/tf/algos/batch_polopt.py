@@ -5,7 +5,7 @@ from sandbox.rocky.tf.policies.base import Policy
 import tensorflow as tf
 from sandbox.rocky.tf.samplers import BatchSampler
 from sandbox.rocky.tf.samplers import VectorizedSampler
-from rllab.sampler import rollout
+from rllab.sampler.utils import rollout
 
 
 class BatchPolopt(RLAlgorithm):

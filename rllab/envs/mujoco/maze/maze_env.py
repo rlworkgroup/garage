@@ -11,7 +11,7 @@ from rllab.envs.mujoco.maze.maze_env_utils import construct_maze
 from rllab.envs.mujoco.mujoco_env import MODEL_DIR, BIG
 from rllab.envs.mujoco.maze.maze_env_utils import ray_segment_intersect, point_distance
 from rllab.core import Serializable
-from rllab.misc import overrides
+from rllab.misc.overrides import overrides
 
 from rllab.misc import logger
 

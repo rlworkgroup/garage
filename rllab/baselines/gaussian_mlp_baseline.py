@@ -3,7 +3,7 @@ import numpy as np
 from rllab.core import Serializable
 from rllab.core import Parameterized
 from rllab.baselines import Baseline
-from rllab.misc import overrides
+from rllab.misc.overrides import overrides
 from rllab.regressors.gaussian_mlp_regressor import GaussianMLPRegressor
 
 

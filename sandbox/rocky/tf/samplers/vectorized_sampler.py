@@ -1,7 +1,7 @@
 import pickle
 
 import tensorflow as tf
-from rllab.sampler import BaseSampler
+from rllab.sampler.base import BaseSampler
 from sandbox.rocky.tf.envs import ParallelVecEnvExecutor
 from sandbox.rocky.tf.envs import VecEnvExecutor
 from rllab.misc import tensor_utils

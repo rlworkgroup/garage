@@ -4,7 +4,7 @@ import joblib
 import tensorflow as tf
 
 from rllab.misc import query_yes_no
-from rllab.sampler import rollout
+from rllab.sampler.utils import rollout
 
 if __name__ == "__main__":
 

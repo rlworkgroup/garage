@@ -1,5 +1,5 @@
 from rllab.envs import Step
-from rllab.misc import overrides
+from rllab.misc.overrides import overrides
 from .mujoco_env import MujocoEnv
 import numpy as np
 from rllab.core import Serializable

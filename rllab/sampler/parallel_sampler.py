@@ -1,4 +1,4 @@
-from rllab.sampler import rollout
+from rllab.sampler.utils import rollout
 from rllab.sampler import singleton_pool, SharedGlobal
 from rllab.misc import ext
 from rllab.misc import logger

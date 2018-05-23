@@ -8,7 +8,7 @@ from sandbox.rocky.tf.spaces import Box
 from rllab.core import Serializable
 from sandbox.rocky.tf.policies import StochasticPolicy
 from sandbox.rocky.tf.distributions import DiagonalGaussian
-from rllab.misc import overrides
+from rllab.misc.overrides import overrides
 from rllab.misc import logger
 from sandbox.rocky.tf.misc import tensor_utils
 import tensorflow as tf

@@ -1,7 +1,7 @@
 
 
 
-from rllab.sampler import rollout
+from rllab.sampler.utils import rollout
 from rllab.algos import BatchPolopt
 import argparse
 import joblib

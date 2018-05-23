@@ -5,8 +5,8 @@ import numpy as np
 
 from rllab.misc import ext
 from rllab.sampler import parallel_sampler, stateful_pool
-from rllab.misc import discount_cumsum
-from rllab.sampler import rollout
+from rllab.misc.special import discount_cumsum
+from rllab.sampler.utils import rollout
 from rllab.core import Serializable
 import rllab.misc.logger as logger
 import rllab.plotter as plotter

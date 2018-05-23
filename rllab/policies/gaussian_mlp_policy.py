@@ -10,7 +10,7 @@ from rllab.spaces import Box
 
 from rllab.core import Serializable
 from rllab.policies import StochasticPolicy
-from rllab.misc import overrides
+from rllab.misc.overrides import overrides
 from rllab.misc import logger
 from rllab.misc import ext
 from rllab.distributions import DiagonalGaussian

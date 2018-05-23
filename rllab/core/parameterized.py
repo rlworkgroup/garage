@@ -1,7 +1,7 @@
 from contextlib import contextmanager
 
 from rllab.core import Serializable
-from rllab.misc import flatten_tensors, unflatten_tensors
+from rllab.misc.tensor_utils import flatten_tensors, unflatten_tensors
 
 load_params = True
 

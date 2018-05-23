@@ -1,6 +1,6 @@
 from rllab.core import Serializable
 from rllab.misc import ext
-from rllab.misc import overrides
+from rllab.misc.overrides import overrides
 from sandbox.rocky.tf.core import LayersPowered
 from sandbox.rocky.tf.core import MLP
 from sandbox.rocky.tf.distributions import Categorical

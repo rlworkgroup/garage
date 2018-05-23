@@ -6,7 +6,7 @@ import os
 
 matplotlib.use('Agg')
 import flask  # import Flask, render_template, send_from_directory
-from rllab.misc import flatten
+from rllab.misc.ext import flatten
 from rllab.viskit import core
 from rllab.misc import ext
 import sys
