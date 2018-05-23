@@ -5,11 +5,11 @@ from dm_control import suite
 from dm_control.rl.environment import StepType
 from dm_control.rl.control import flatten_observation
 
-from rllab.envs.base import Env, Step
+from rllab.envs import Env, Step
 from rllab.envs.dm_control_viewer import DmControlViewer
-from rllab.core.serializable import Serializable
-from rllab.spaces.box import Box
-from rllab.spaces.discrete import Discrete
+from rllab.core import Serializable
+from rllab.spaces import Box
+from rllab.spaces import Discrete
 
 
 class DmControlEnv(Env, Serializable):

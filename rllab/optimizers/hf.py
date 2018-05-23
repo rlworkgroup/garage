@@ -7,7 +7,7 @@ import theano
 import theano.tensor as T
 import pickle
 import os
-from rllab.misc.ext import compile_function
+from rllab.misc import compile_function
 import collections
 
 

@@ -1,4 +1,4 @@
-from sandbox.rocky.tf.core.parameterized import Parameterized
+from sandbox.rocky.tf.core import Parameterized
 
 class QFunction(Parameterized):
     pass

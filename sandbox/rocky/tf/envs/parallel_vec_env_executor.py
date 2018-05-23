@@ -5,7 +5,7 @@ import pickle as pickle
 from sandbox.rocky.tf.misc import tensor_utils
 from rllab.misc import logger
 
-from rllab.sampler.stateful_pool import singleton_pool
+from rllab.sampler import singleton_pool
 import uuid
 
 

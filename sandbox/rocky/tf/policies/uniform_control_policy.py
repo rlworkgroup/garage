@@ -1,5 +1,5 @@
-from sandbox.rocky.tf.policies.base import Policy
-from rllab.core.serializable import Serializable
+from sandbox.rocky.tf.policies import Policy
+from rllab.core import Serializable
 
 
 class UniformControlPolicy(Policy, Serializable):

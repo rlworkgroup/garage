@@ -1,8 +1,8 @@
-from rllab.envs.base import Step
-from rllab.misc.overrides import overrides
+from rllab.envs import Step
+from rllab.misc import overrides
 from .mujoco_env import MujocoEnv
 import numpy as np
-from rllab.core.serializable import Serializable
+from rllab.core import Serializable
 from rllab.misc import logger
 from rllab.misc import autoargs
 

@@ -1,4 +1,4 @@
-from rllab.misc.console import colorize
+from rllab.misc import colorize
 import inspect
 
 
@@ -31,9 +31,9 @@ def prefix(prefix_):
 
 def _get_prefix(cls):
     from rllab.mdp.base import MDP
-    from rllab.policies.base import Policy
-    from rllab.baselines.base import Baseline
-    from rllab.algos.base import Algorithm
+    from rllab.policies import Policy
+    from rllab.baselines import Baseline
+    from rllab.algos import Algorithm
 
     if hasattr(cls.__init__, '_autoargs_prefix'):
         return cls.__init__._autoargs_prefix

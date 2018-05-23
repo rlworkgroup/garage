@@ -1,7 +1,7 @@
 import tensorflow as tf
 import numpy as np
-from sandbox.rocky.tf.distributions.categorical import Categorical
-from sandbox.rocky.tf.distributions.base import Distribution
+from sandbox.rocky.tf.distributions import Categorical
+from sandbox.rocky.tf.distributions import Distribution
 
 TINY = 1e-8
 

@@ -1,6 +1,6 @@
 
 
 
-from sandbox.rocky.tf.distributions.diagonal_gaussian import DiagonalGaussian
+from sandbox.rocky.tf.distributions import DiagonalGaussian
 
 RecurrentDiagonalGaussian = DiagonalGaussian

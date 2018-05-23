@@ -1,8 +1,8 @@
 from rllab.misc import ext
 from rllab.misc import logger
-from rllab.core.serializable import Serializable
+from rllab.core import Serializable
 # from rllab.algo.first_order_method import parse_update_method
-from rllab.optimizers.minibatch_dataset import BatchDataset
+from rllab.optimizers import BatchDataset
 from collections import OrderedDict
 import time
 import lasagne.updates

@@ -1,10 +1,10 @@
-from rllab.algos.trpo import TRPO
-from rllab.baselines.linear_feature_baseline import LinearFeatureBaseline
-from rllab.envs.box2d.cartpole_env import CartpoleEnv
-from rllab.envs.normalized_env import normalize
-from rllab.policies.gaussian_gru_policy import GaussianGRUPolicy
-from rllab.optimizers.conjugate_gradient_optimizer import ConjugateGradientOptimizer, FiniteDifferenceHvp
-from rllab.misc.instrument import run_experiment_lite
+from rllab.algos import TRPO
+from rllab.baselines import LinearFeatureBaseline
+from rllab.envs.box2d import CartpoleEnv
+from rllab.envs import normalize
+from rllab.policies import GaussianGRUPolicy
+from rllab.optimizers import ConjugateGradientOptimizer, FiniteDifferenceHvp
+from rllab.misc import run_experiment_lite
 
 
 def run_task(*_):

@@ -1,13 +1,13 @@
-from sandbox.rocky.tf.core.layers_powered import LayersPowered
+from sandbox.rocky.tf.core import LayersPowered
 import sandbox.rocky.tf.core.layers as L
-from sandbox.rocky.tf.core.network import MLP
-from rllab.core.serializable import Serializable
-from sandbox.rocky.tf.distributions.categorical import Categorical
-from sandbox.rocky.tf.policies.base import StochasticPolicy
+from sandbox.rocky.tf.core import MLP
+from rllab.core import Serializable
+from sandbox.rocky.tf.distributions import Categorical
+from sandbox.rocky.tf.policies import StochasticPolicy
 from rllab.misc import ext
 from sandbox.rocky.tf.misc import tensor_utils
-from rllab.misc.overrides import overrides
-from sandbox.rocky.tf.spaces.discrete import Discrete
+from rllab.misc import overrides
+from sandbox.rocky.tf.spaces import Discrete
 import tensorflow as tf
 
 

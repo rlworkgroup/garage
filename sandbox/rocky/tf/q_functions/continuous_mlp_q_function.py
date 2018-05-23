@@ -1,12 +1,12 @@
-from sandbox.rocky.tf.q_functions.base import QFunction
-from rllab.core.serializable import Serializable
+from sandbox.rocky.tf.q_functions import QFunction
+from rllab.core import Serializable
 from rllab.misc import ext
 
-from sandbox.rocky.tf.core.layers_powered import LayersPowered
-from sandbox.rocky.tf.core.network import MLP
+from sandbox.rocky.tf.core import LayersPowered
+from sandbox.rocky.tf.core import MLP
 from sandbox.rocky.tf.core.layers import batch_norm
-from sandbox.rocky.tf.distributions.categorical import Categorical
-from sandbox.rocky.tf.policies.base import StochasticPolicy
+from sandbox.rocky.tf.distributions import Categorical
+from sandbox.rocky.tf.policies import StochasticPolicy
 from sandbox.rocky.tf.misc import tensor_utils
 
 import tensorflow as tf

@@ -1,8 +1,8 @@
-from rllab.misc.overrides import overrides
-from rllab.misc.ext import AttrDict
-from rllab.core.serializable import Serializable
-from rllab.spaces.box import Box
-from rllab.exploration_strategies.base import ExplorationStrategy
+from rllab.misc import overrides
+from rllab.misc import AttrDict
+from rllab.core import Serializable
+from rllab.spaces import Box
+from rllab.exploration_strategies import ExplorationStrategy
 import numpy as np
 import numpy.random as nr
 

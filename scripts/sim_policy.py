@@ -3,8 +3,8 @@ import argparse
 import joblib
 import tensorflow as tf
 
-from rllab.misc.console import query_yes_no
-from rllab.sampler.utils import rollout
+from rllab.misc import query_yes_no
+from rllab.sampler import rollout
 
 if __name__ == "__main__":
 

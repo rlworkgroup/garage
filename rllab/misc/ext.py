@@ -2,7 +2,7 @@ from path import Path
 import sys
 import pickle as pickle
 import random
-from rllab.misc.console import colorize, Message
+from rllab.misc import colorize, Message
 from collections import OrderedDict
 import numpy as np
 import operator

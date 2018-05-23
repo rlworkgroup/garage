@@ -11,9 +11,9 @@ from contextlib import contextmanager
 
 import errno
 
-from rllab.core.serializable import Serializable
+from rllab.core import Serializable
 from rllab import config
-from rllab.misc.console import mkdir_p
+from rllab.misc import mkdir_p
 from rllab.misc import ext
 from io import StringIO
 import datetime
@@ -22,7 +22,7 @@ import json
 import time
 import numpy as np
 
-from rllab.misc.ext import AttrDict
+from rllab.misc import AttrDict
 from rllab.viskit.core import flatten
 import collections
 

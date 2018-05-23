@@ -1,11 +1,11 @@
-from rllab.envs.proxy_env import ProxyEnv
-from rllab.envs.base import EnvSpec
-from rllab.spaces.box import Box as TheanoBox
-from rllab.spaces.discrete import Discrete as TheanoDiscrete
-from rllab.spaces.product import Product as TheanoProduct
-from sandbox.rocky.tf.spaces.discrete import Discrete
-from sandbox.rocky.tf.spaces.box import Box
-from sandbox.rocky.tf.spaces.product import Product
+from rllab.envs import ProxyEnv
+from rllab.envs import EnvSpec
+from rllab.spaces import Box as TheanoBox
+from rllab.spaces import Discrete as TheanoDiscrete
+from rllab.spaces import Product as TheanoProduct
+from sandbox.rocky.tf.spaces import Discrete
+from sandbox.rocky.tf.spaces import Box
+from sandbox.rocky.tf.spaces import Product
 from cached_property import cached_property
 
 

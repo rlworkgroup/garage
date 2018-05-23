@@ -1,4 +1,4 @@
-from rllab.core.serializable import Serializable
+from rllab.core import Serializable
 from .base import Env
 
 

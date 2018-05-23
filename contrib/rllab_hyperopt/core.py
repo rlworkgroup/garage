@@ -8,7 +8,7 @@ import multiprocessing
 import importlib
 
 from rllab import config
-from rllab.misc.instrument import run_experiment_lite
+from rllab.misc import run_experiment_lite
 
 import polling
 from hyperopt import fmin, tpe, STATUS_OK, STATUS_FAIL

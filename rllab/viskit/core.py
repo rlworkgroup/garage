@@ -39,8 +39,8 @@ def load_progress(progress_csv_path):
 
 
 def to_json(stub_object):
-    from rllab.misc.instrument import StubObject
-    from rllab.misc.instrument import StubAttr
+    from rllab.misc import StubObject
+    from rllab.misc import StubAttr
     if isinstance(stub_object, StubObject):
         assert len(stub_object.args) == 0
         data = dict()

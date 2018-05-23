@@ -1,11 +1,11 @@
 # This doesn't work. After 150 iterations still didn't learn anything.
 
-from rllab.algos.trpo import TRPO
-from rllab.baselines.linear_feature_baseline import LinearFeatureBaseline
-from rllab.envs.gym_env import GymEnv
-from rllab.envs.normalized_env import normalize
-from rllab.misc.instrument import run_experiment_lite
-from rllab.policies.categorical_mlp_policy import CategoricalMLPPolicy
+from rllab.algos import TRPO
+from rllab.baselines import LinearFeatureBaseline
+from rllab.envs import GymEnv
+from rllab.envs import normalize
+from rllab.misc import run_experiment_lite
+from rllab.policies import CategoricalMLPPolicy
 
 
 def run_task(*_):

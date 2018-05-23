@@ -1,10 +1,10 @@
 from rllab.misc import ext
-from rllab.misc.overrides import overrides
-from rllab.algos.batch_polopt import BatchPolopt
+from rllab.misc import overrides
+from rllab.algos import BatchPolopt
 import rllab.misc.logger as logger
 import theano
 import theano.tensor as TT
-from rllab.optimizers.penalty_lbfgs_optimizer import PenaltyLbfgsOptimizer
+from rllab.optimizers import PenaltyLbfgsOptimizer
 
 
 class NPO(BatchPolopt):

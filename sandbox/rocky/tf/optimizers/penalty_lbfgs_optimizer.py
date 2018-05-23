@@ -1,7 +1,7 @@
 from sandbox.rocky.tf.misc import tensor_utils
 from rllab.misc import logger
 from rllab.misc import ext
-from rllab.core.serializable import Serializable
+from rllab.core import Serializable
 import tensorflow as tf
 import numpy as np
 import scipy.optimize

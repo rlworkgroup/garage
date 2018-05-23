@@ -7,13 +7,13 @@ import numpy as np
 
 from rllab.misc import logger
 from rllab import spaces
-from rllab.core.serializable import Serializable
+from rllab.core import Serializable
 from rllab.envs.proxy_env import ProxyEnv
-from rllab.envs.base import Step
+from rllab.envs import Step
 from rllab.envs.mujoco.gather.embedded_viewer import EmbeddedViewer
 from rllab.envs.mujoco.mujoco_env import MODEL_DIR, BIG
 from rllab.misc import autoargs
-from rllab.misc.overrides import overrides
+from rllab.misc import overrides
 from rllab.mujoco_py import MjViewer, MjModel, mjcore, mjlib, \
     mjextra, glfw
 

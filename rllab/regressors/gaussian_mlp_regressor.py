@@ -5,16 +5,16 @@ import numpy as np
 import theano
 import theano.tensor as TT
 
-from rllab.core.lasagne_layers import ParamLayer
-from rllab.core.lasagne_powered import LasagnePowered
-from rllab.core.network import MLP
-from rllab.core.serializable import Serializable
+from rllab.core import ParamLayer
+from rllab.core import LasagnePowered
+from rllab.core import MLP
+from rllab.core import Serializable
 from rllab.misc import logger
-from rllab.misc.ext import compile_function
-from rllab.optimizers.lbfgs_optimizer import LbfgsOptimizer
-from rllab.optimizers.penalty_lbfgs_optimizer import PenaltyLbfgsOptimizer
-from rllab.distributions.diagonal_gaussian import DiagonalGaussian
-from rllab.misc.ext import iterate_minibatches_generic
+from rllab.misc import compile_function
+from rllab.optimizers import LbfgsOptimizer
+from rllab.optimizers import PenaltyLbfgsOptimizer
+from rllab.distributions import DiagonalGaussian
+from rllab.misc import iterate_minibatches_generic
 
 
 class GaussianMLPRegressor(LasagnePowered):

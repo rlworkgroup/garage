@@ -2,7 +2,7 @@ import numpy as np
 
 from rllab.envs.mujoco.hill.hill_env import HillEnv
 from rllab.envs.mujoco.half_cheetah_env import HalfCheetahEnv
-from rllab.misc.overrides import overrides
+from rllab.misc import overrides
 import rllab.envs.mujoco.hill.terrain as terrain
 from rllab.spaces import Box
 

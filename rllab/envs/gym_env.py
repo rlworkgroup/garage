@@ -14,11 +14,11 @@ except Exception as e:
 
 import os
 import os.path as osp
-from rllab.envs.base import Env, Step
-from rllab.core.serializable import Serializable
-from rllab.spaces.box import Box
-from rllab.spaces.discrete import Discrete
-from rllab.spaces.product import Product
+from rllab.envs import Env, Step
+from rllab.core import Serializable
+from rllab.spaces import Box
+from rllab.spaces import Discrete
+from rllab.spaces import Product
 from rllab.misc import logger
 
 

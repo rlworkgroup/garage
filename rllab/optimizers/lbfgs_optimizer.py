@@ -1,5 +1,5 @@
-from rllab.misc.ext import compile_function, lazydict, flatten_tensor_variables
-from rllab.core.serializable import Serializable
+from rllab.misc import compile_function, lazydict, flatten_tensor_variables
+from rllab.core import Serializable
 import theano
 import scipy.optimize
 import time

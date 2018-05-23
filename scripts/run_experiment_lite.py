@@ -2,8 +2,8 @@ import sys
 
 sys.path.append(".")
 
-from rllab.misc.ext import is_iterable, set_seed
-from rllab.misc.instrument import concretize
+from rllab.misc import is_iterable, set_seed
+from rllab.misc import concretize
 from rllab import config
 import rllab.misc.logger as logger
 import argparse

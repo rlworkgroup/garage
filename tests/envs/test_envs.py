@@ -1,40 +1,40 @@
 import numpy as np
 from nose2 import tools
 
-from rllab.envs.box2d.car_parking_env import CarParkingEnv
-from rllab.envs.box2d.cartpole_env import CartpoleEnv
-from rllab.envs.box2d.cartpole_swingup_env import CartpoleSwingupEnv
-from rllab.envs.box2d.double_pendulum_env import DoublePendulumEnv
-from rllab.envs.box2d.mountain_car_env import MountainCarEnv
-from rllab.envs.grid_world_env import GridWorldEnv
-from rllab.envs.identification_env import IdentificationEnv
+from rllab.envs.box2d import CarParkingEnv
+from rllab.envs.box2d import CartpoleEnv
+from rllab.envs.box2d import CartpoleSwingupEnv
+from rllab.envs.box2d import DoublePendulumEnv
+from rllab.envs.box2d import MountainCarEnv
+from rllab.envs import GridWorldEnv
+from rllab.envs import IdentificationEnv
 import os
 
 MUJOCO_ENABLED = True
 
 try:
     import rllab.mujoco_py
-    from rllab.envs.mujoco.half_cheetah_env import HalfCheetahEnv
-    from rllab.envs.mujoco.hopper_env import HopperEnv
-    from rllab.envs.mujoco.inverted_double_pendulum_env import InvertedDoublePendulumEnv
-    from rllab.envs.mujoco.point_env import PointEnv
-    from rllab.envs.mujoco.simple_humanoid_env import SimpleHumanoidEnv
-    from rllab.envs.mujoco.swimmer_env import SwimmerEnv
-    from rllab.envs.mujoco.walker2d_env import Walker2DEnv
-    from rllab.envs.mujoco.gather.point_gather_env import PointGatherEnv
-    from rllab.envs.mujoco.gather.swimmer_gather_env import SwimmerGatherEnv
-    from rllab.envs.mujoco.gather.ant_gather_env import AntGatherEnv
-    from rllab.envs.mujoco.maze.point_maze_env import PointMazeEnv
-    from rllab.envs.mujoco.maze.swimmer_maze_env import SwimmerMazeEnv
-    from rllab.envs.mujoco.maze.ant_maze_env import AntMazeEnv
+    from rllab.envs.mujoco import HalfCheetahEnv
+    from rllab.envs.mujoco import HopperEnv
+    from rllab.envs.mujoco import InvertedDoublePendulumEnv
+    from rllab.envs.mujoco import PointEnv
+    from rllab.envs.mujoco import SimpleHumanoidEnv
+    from rllab.envs.mujoco import SwimmerEnv
+    from rllab.envs.mujoco import Walker2DEnv
+    from rllab.envs.mujoco.gather import PointGatherEnv
+    from rllab.envs.mujoco.gather import SwimmerGatherEnv
+    from rllab.envs.mujoco.gather import AntGatherEnv
+    from rllab.envs.mujoco.maze import PointMazeEnv
+    from rllab.envs.mujoco.maze import SwimmerMazeEnv
+    from rllab.envs.mujoco.maze import AntMazeEnv
 except OSError:
     print("Warning: Mujoco not installed. Skipping mujoco-related tests")
     MUJOCO_ENABLED = False
 
-from rllab.envs.noisy_env import NoisyObservationEnv, DelayedActionEnv
-from rllab.envs.normalized_env import NormalizedEnv
-from rllab.envs.proxy_env import ProxyEnv
-from rllab.envs.gym_env import GymEnv
+from rllab.envs import NoisyObservationEnv, DelayedActionEnv
+from rllab.envs import NormalizedEnv
+from rllab.envs import ProxyEnv
+from rllab.envs import GymEnv
 
 simple_env_classes = [
     GridWorldEnv,

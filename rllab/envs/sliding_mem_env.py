@@ -1,10 +1,10 @@
 import numpy as np
 
-from rllab.core.serializable import Serializable
-from rllab.envs.base import Step
+from rllab.core import Serializable
+from rllab.envs import Step
 from rllab.envs.proxy_env import ProxyEnv
 from rllab.misc import autoargs
-from rllab.misc.overrides import overrides
+from rllab.misc import overrides
 from rllab.spaces import Box
 
 

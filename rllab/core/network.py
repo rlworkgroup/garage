@@ -6,9 +6,9 @@ import lasagne.init as LI
 import theano.tensor as TT
 import theano
 from rllab.misc import ext
-from rllab.core.lasagne_layers import OpLayer
-from rllab.core.lasagne_powered import LasagnePowered
-from rllab.core.serializable import Serializable
+from rllab.core import OpLayer
+from rllab.core import LasagnePowered
+from rllab.core import Serializable
 
 import numpy as np
 

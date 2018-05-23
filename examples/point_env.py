@@ -1,6 +1,6 @@
-from rllab.envs.base import Env
+from rllab.envs import Env
 from rllab.spaces import Box
-from rllab.envs.base import Step
+from rllab.envs import Step
 import numpy as np
 
 

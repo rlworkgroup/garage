@@ -1,5 +1,5 @@
 def test_gru_network():
-    from rllab.core.network import GRUNetwork
+    from rllab.core import GRUNetwork
     import lasagne.layers as L
     from rllab.misc import ext
     import numpy as np

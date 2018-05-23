@@ -1,4 +1,4 @@
-from rllab.spaces.base import Space
+from rllab.spaces import Space
 import tensorflow as tf
 import numpy as np
 

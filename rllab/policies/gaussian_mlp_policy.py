@@ -3,17 +3,17 @@ import lasagne.layers as L
 import lasagne.nonlinearities as NL
 import numpy as np
 
-from rllab.core.lasagne_layers import ParamLayer
-from rllab.core.lasagne_powered import LasagnePowered
-from rllab.core.network import MLP
+from rllab.core import ParamLayer
+from rllab.core import LasagnePowered
+from rllab.core import MLP
 from rllab.spaces import Box
 
-from rllab.core.serializable import Serializable
-from rllab.policies.base import StochasticPolicy
-from rllab.misc.overrides import overrides
+from rllab.core import Serializable
+from rllab.policies import StochasticPolicy
+from rllab.misc import overrides
 from rllab.misc import logger
 from rllab.misc import ext
-from rllab.distributions.diagonal_gaussian import DiagonalGaussian
+from rllab.distributions import DiagonalGaussian
 import theano.tensor as TT
 
 

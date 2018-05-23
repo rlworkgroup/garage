@@ -4,7 +4,7 @@ import numpy as np
 
 
 def test_truncate_paths():
-    from rllab.sampler.parallel_sampler import truncate_paths
+    from rllab.sampler import truncate_paths
 
     paths = [
         dict(

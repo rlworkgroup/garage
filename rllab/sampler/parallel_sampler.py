@@ -1,5 +1,5 @@
-from rllab.sampler.utils import rollout
-from rllab.sampler.stateful_pool import singleton_pool, SharedGlobal
+from rllab.sampler import rollout
+from rllab.sampler import singleton_pool, SharedGlobal
 from rllab.misc import ext
 from rllab.misc import logger
 from rllab.misc import tensor_utils

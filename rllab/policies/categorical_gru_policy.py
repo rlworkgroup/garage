@@ -3,16 +3,16 @@ import lasagne.nonlinearities as NL
 import numpy as np
 import theano.tensor as TT
 
-from rllab.core.lasagne_powered import LasagnePowered
-from rllab.core.network import GRUNetwork
-from rllab.core.lasagne_layers import OpLayer
-from rllab.core.serializable import Serializable
-from rllab.distributions.recurrent_categorical import RecurrentCategorical
+from rllab.core import LasagnePowered
+from rllab.core import GRUNetwork
+from rllab.core import OpLayer
+from rllab.core import Serializable
+from rllab.distributions import RecurrentCategorical
 from rllab.misc import ext
 from rllab.spaces import Discrete
 from rllab.misc import special
-from rllab.misc.overrides import overrides
-from rllab.policies.base import StochasticPolicy
+from rllab.misc import overrides
+from rllab.policies import StochasticPolicy
 
 
 class CategoricalGRUPolicy(StochasticPolicy, LasagnePowered):

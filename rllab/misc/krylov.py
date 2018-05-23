@@ -1,5 +1,5 @@
 import numpy as np
-from rllab.misc.ext import sliced_fun
+from rllab.misc import sliced_fun
 
 EPS = np.finfo('float64').tiny
 

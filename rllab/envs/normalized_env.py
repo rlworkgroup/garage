@@ -1,11 +1,11 @@
 import numpy as np
 
 from rllab import spaces
-from rllab.core.serializable import Serializable
+from rllab.core import Serializable
 from rllab.envs.proxy_env import ProxyEnv
-from rllab.spaces.box import Box
-from rllab.misc.overrides import overrides
-from rllab.envs.base import Step
+from rllab.spaces import Box
+from rllab.misc import overrides
+from rllab.envs import Step
 
 
 class NormalizedEnv(ProxyEnv, Serializable):

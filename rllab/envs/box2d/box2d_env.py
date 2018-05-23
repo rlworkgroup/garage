@@ -5,13 +5,13 @@ import mako.template
 import numpy as np
 
 from rllab import spaces
-from rllab.envs.base import Env, Step
+from rllab.envs import Env, Step
 from rllab.envs.box2d.box2d_viewer import Box2DViewer
 
 from rllab.envs.box2d.parser.xml_box2d import world_from_xml, find_body, \
     find_joint
 from rllab.misc import autoargs
-from rllab.misc.overrides import overrides
+from rllab.misc import overrides
 
 BIG = 1e6
 class Box2DEnv(Env):

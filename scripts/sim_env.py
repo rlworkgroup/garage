@@ -5,9 +5,9 @@ import time
 import numpy as np
 import pygame
 
-from rllab.envs.base import Env
+from rllab.envs import Env
 # from rllab.env.base import MDP
-from rllab.misc.resolve import load_class
+from rllab.misc import load_class
 
 
 def sample_action(lb, ub):
@@ -69,8 +69,8 @@ def visualize_env(env, mode, max_steps=sys.maxsize, speedup=1):
                         env.reset()
                 return
 
-            from rllab.envs.mujoco.mujoco_env import MujocoEnv
-            from rllab.envs.mujoco.maze.maze_env import MazeEnv
+            from rllab.envs.mujoco import MujocoEnv
+            from rllab.envs.mujoco import MazeEnv
             if isinstance(env, (MujocoEnv, MazeEnv)):
                 trs = [tr]
                 actions = [np.zeros(2)]

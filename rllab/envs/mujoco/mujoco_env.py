@@ -3,8 +3,8 @@ import os.path as osp
 from cached_property import cached_property
 
 from rllab import spaces
-from rllab.envs.base import Env
-from rllab.misc.overrides import overrides
+from rllab.envs import Env
+from rllab.misc import overrides
 from rllab.mujoco_py import MjModel, MjViewer
 from rllab.misc import autoargs
 from rllab.misc import logger

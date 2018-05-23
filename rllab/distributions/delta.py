@@ -1,4 +1,4 @@
-from rllab.distributions.base import Distribution
+from rllab.distributions import Distribution
 
 class Delta(Distribution):
     @property

@@ -4,15 +4,15 @@ import numpy as np
 import theano
 import theano.tensor as TT
 
-from rllab.core.lasagne_powered import LasagnePowered
-from rllab.core.network import MLP
-from rllab.core.serializable import Serializable
-from rllab.distributions.categorical import Categorical
+from rllab.core import LasagnePowered
+from rllab.core import MLP
+from rllab.core import Serializable
+from rllab.distributions import Categorical
 from rllab.misc import ext
 from rllab.misc import logger
 from rllab.misc import special
-from rllab.optimizers.lbfgs_optimizer import LbfgsOptimizer
-from rllab.optimizers.penalty_lbfgs_optimizer import PenaltyLbfgsOptimizer
+from rllab.optimizers import LbfgsOptimizer
+from rllab.optimizers import PenaltyLbfgsOptimizer
 
 NONE = list()
 

@@ -1,0 +1,4 @@
+from rllab.baselines.base import Baseline
+from rllab.baselines.gaussian_mlp_baseline import GaussianMLPBaseline
+from rllab.baselines.linear_feature_baseline import LinearFeatureBaseline
+from rllab.baselines.zero_baseline import ZeroBaseline

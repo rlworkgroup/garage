@@ -1,5 +1,5 @@
-from rllab.algos.npo import NPO
-from rllab.optimizers.conjugate_gradient_optimizer import ConjugateGradientOptimizer
+from rllab.algos import NPO
+from rllab.optimizers import ConjugateGradientOptimizer
 from rllab.misc import ext
 
 

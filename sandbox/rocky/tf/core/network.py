@@ -1,10 +1,10 @@
-import sandbox.rocky.tf.core.layers as L
+from sandbox.rocky.tf.core import layers as L
 import tensorflow as tf
 import numpy as np
 import itertools
-from rllab.core.serializable import Serializable
-from sandbox.rocky.tf.core.parameterized import Parameterized
-from sandbox.rocky.tf.core.layers_powered import LayersPowered
+from rllab.core import Serializable
+from sandbox.rocky.tf.core import Parameterized
+from sandbox.rocky.tf.core import LayersPowered
 
 
 class MLP(LayersPowered, Serializable):

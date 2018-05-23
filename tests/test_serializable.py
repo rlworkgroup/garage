@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-from rllab.core.serializable import Serializable
+from rllab.core import Serializable
 from sandbox.rocky.tf.core.parameterized import Parameterized, suppress_params_loading
 
 

@@ -7,14 +7,14 @@
 import numpy as np
 
 import tensorflow as tf
-from sandbox.rocky.tf.core.layers_powered import LayersPowered
-from sandbox.rocky.tf.core.network import MLP
+from sandbox.rocky.tf.core import LayersPowered
+from sandbox.rocky.tf.core import MLP
 from sandbox.rocky.tf.misc import tensor_utils
-from sandbox.rocky.tf.distributions.categorical import Categorical
-from sandbox.rocky.tf.optimizers.penalty_lbfgs_optimizer import PenaltyLbfgsOptimizer
-from sandbox.rocky.tf.optimizers.lbfgs_optimizer import LbfgsOptimizer
+from sandbox.rocky.tf.distributions import Categorical
+from sandbox.rocky.tf.optimizers import PenaltyLbfgsOptimizer
+from sandbox.rocky.tf.optimizers import LbfgsOptimizer
 import sandbox.rocky.tf.core.layers as L
-from rllab.core.serializable import Serializable
+from rllab.core import Serializable
 from rllab.misc import ext
 from rllab.misc import logger
 

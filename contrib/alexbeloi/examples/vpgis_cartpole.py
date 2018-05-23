@@ -1,8 +1,8 @@
-from rllab.algos.vpg import VPG
-from rllab.baselines.linear_feature_baseline import LinearFeatureBaseline
-from rllab.envs.box2d.cartpole_env import CartpoleEnv
-from rllab.envs.normalized_env import normalize
-from rllab.policies.gaussian_mlp_policy import GaussianMLPPolicy
+from rllab.algos import VPG
+from rllab.baselines import LinearFeatureBaseline
+from rllab.envs.box2d import CartpoleEnv
+from rllab.envs import normalize
+from rllab.policies import GaussianMLPPolicy
 from contrib.alexbeloi.is_sampler import ISSampler
 
 """

@@ -1,15 +1,15 @@
-from rllab.core.lasagne_powered import LasagnePowered
+from rllab.core import LasagnePowered
 import lasagne.layers as L
-from rllab.core.network import ConvNetwork
-from rllab.distributions.categorical import Categorical
-from rllab.policies.base import StochasticPolicy
+from rllab.core import ConvNetwork
+from rllab.distributions import Categorical
+from rllab.policies import StochasticPolicy
 from rllab.misc import tensor_utils
-from rllab.spaces.discrete import Discrete
+from rllab.spaces import Discrete
 
-from rllab.core.serializable import Serializable
+from rllab.core import Serializable
 from rllab.misc import ext
 from rllab.misc import logger
-from rllab.misc.overrides import overrides
+from rllab.misc import overrides
 import numpy as np
 import lasagne.nonlinearities as NL
 

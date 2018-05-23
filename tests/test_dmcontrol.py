@@ -1,7 +1,7 @@
 import numpy as np
 
-from rllab.envs.dm_control_env import DmControlEnv
-from rllab.envs.normalized_env import normalize
+from rllab.envs import DmControlEnv
+from rllab.envs import normalize
 
 from dm_control import suite
 

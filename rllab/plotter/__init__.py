@@ -1,1 +1,1 @@
-from .plotter import *
+from rllab.plotter import *

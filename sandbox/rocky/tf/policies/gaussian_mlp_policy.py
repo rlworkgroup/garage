@@ -1,14 +1,14 @@
 import numpy as np
 
-from sandbox.rocky.tf.core.layers_powered import LayersPowered
+from sandbox.rocky.tf.core import LayersPowered
 import sandbox.rocky.tf.core.layers as L
-from sandbox.rocky.tf.core.network import MLP
-from sandbox.rocky.tf.spaces.box import Box
+from sandbox.rocky.tf.core import MLP
+from sandbox.rocky.tf.spaces import Box
 
-from rllab.core.serializable import Serializable
-from sandbox.rocky.tf.policies.base import StochasticPolicy
-from sandbox.rocky.tf.distributions.diagonal_gaussian import DiagonalGaussian
-from rllab.misc.overrides import overrides
+from rllab.core import Serializable
+from sandbox.rocky.tf.policies import StochasticPolicy
+from sandbox.rocky.tf.distributions import DiagonalGaussian
+from rllab.misc import overrides
 from rllab.misc import logger
 from sandbox.rocky.tf.misc import tensor_utils
 import tensorflow as tf

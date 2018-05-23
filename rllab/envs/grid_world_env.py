@@ -1,8 +1,8 @@
 import numpy as np
 from .base import Env
 from rllab.spaces import Discrete
-from rllab.envs.base import Step
-from rllab.core.serializable import Serializable
+from rllab.envs import Step
+from rllab.core import Serializable
 
 MAPS = {
     "chain": [

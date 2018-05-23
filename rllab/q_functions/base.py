@@ -1,4 +1,4 @@
-from rllab.core.parameterized import Parameterized
+from rllab.core import Parameterized
 
 
 class QFunction(Parameterized):

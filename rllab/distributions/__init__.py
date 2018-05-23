@@ -1,0 +1,6 @@
+from rllab.distributions.base import Distribution
+from rllab.distributions.categorical import Categorical
+from rllab.distributions.delta import Delta
+from rllab.distributions.diagonal_gaussian import DiagonalGaussian
+from rllab.distributions.recurrent_categorical import RecurrentCategorical
+from rllab.distributions.recurrent_diagonal_gaussian import RecurrentDiagonalGaussian

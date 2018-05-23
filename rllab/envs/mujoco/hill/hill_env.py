@@ -6,7 +6,7 @@ import mako.template
 import mako.lookup
 
 from rllab.envs.proxy_env import ProxyEnv
-from rllab.core.serializable import Serializable
+from rllab.core import Serializable
 import rllab.envs.mujoco.mujoco_env as mujoco_env
 import rllab.envs.mujoco.hill.terrain as terrain
 from rllab.misc import logger

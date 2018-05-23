@@ -2,12 +2,12 @@ import os
 
 os.environ['THEANO_FLAGS'] = 'mode=FAST_COMPILE,optimizer=None'
 
-from rllab.algos.vpg import VPG
-from rllab.envs.box2d.cartpole_env import CartpoleEnv
-from rllab.baselines.zero_baseline import ZeroBaseline
-from rllab.baselines.linear_feature_baseline import LinearFeatureBaseline
-from rllab.baselines.gaussian_mlp_baseline import GaussianMLPBaseline
-from rllab.policies.gaussian_mlp_policy import GaussianMLPPolicy
+from rllab.algos import VPG
+from rllab.envs.box2d import CartpoleEnv
+from rllab.baselines import ZeroBaseline
+from rllab.baselines import LinearFeatureBaseline
+from rllab.baselines import GaussianMLPBaseline
+from rllab.policies import GaussianMLPPolicy
 from nose2 import tools
 
 

@@ -1,9 +1,9 @@
-from rllab.algos.base import RLAlgorithm
+from rllab.algos import RLAlgorithm
 from rllab.sampler import parallel_sampler
-from rllab.sampler.base import BaseSampler
+from rllab.sampler import BaseSampler
 import rllab.misc.logger as logger
-import rllab.plotter as plotter
-from rllab.policies.base import Policy
+from rllab.plotter import plotter
+from rllab.policies import Policy
 
 
 class BatchSampler(BaseSampler):

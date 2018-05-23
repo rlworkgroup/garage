@@ -1,10 +1,10 @@
 import numpy as np
 from rllab.envs.box2d.parser import find_body
 
-from rllab.core.serializable import Serializable
+from rllab.core import Serializable
 from rllab.envs.box2d.box2d_env import Box2DEnv
 from rllab.misc import autoargs
-from rllab.misc.overrides import overrides
+from rllab.misc import overrides
 
 
 # http://mlg.eng.cam.ac.uk/pilco/

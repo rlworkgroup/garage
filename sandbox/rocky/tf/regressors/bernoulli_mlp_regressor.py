@@ -5,14 +5,14 @@ import sandbox.rocky.tf.core.layers as L
 import numpy as np
 import tensorflow as tf
 
-from sandbox.rocky.tf.core.layers_powered import LayersPowered
-from sandbox.rocky.tf.core.network import MLP
-from rllab.core.serializable import Serializable
-from sandbox.rocky.tf.distributions.bernoulli import Bernoulli
+from sandbox.rocky.tf.core import LayersPowered
+from sandbox.rocky.tf.core import MLP
+from rllab.core import Serializable
+from sandbox.rocky.tf.distributions import Bernoulli
 from sandbox.rocky.tf.misc import tensor_utils
 from rllab.misc import logger
-from sandbox.rocky.tf.optimizers.conjugate_gradient_optimizer import ConjugateGradientOptimizer
-from sandbox.rocky.tf.optimizers.lbfgs_optimizer import LbfgsOptimizer
+from sandbox.rocky.tf.optimizers import ConjugateGradientOptimizer
+from sandbox.rocky.tf.optimizers import LbfgsOptimizer
 
 
 class BernoulliMLPRegressor(LayersPowered, Serializable):

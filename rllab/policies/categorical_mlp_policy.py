@@ -1,13 +1,13 @@
 import lasagne.layers as L
 import lasagne.nonlinearities as NL
 
-from rllab.core.lasagne_powered import LasagnePowered
-from rllab.core.network import MLP
-from rllab.core.serializable import Serializable
-from rllab.distributions.categorical import Categorical
+from rllab.core import LasagnePowered
+from rllab.core import MLP
+from rllab.core import Serializable
+from rllab.distributions import Categorical
 from rllab.misc import ext
-from rllab.misc.overrides import overrides
-from rllab.policies.base import StochasticPolicy
+from rllab.misc import overrides
+from rllab.policies import StochasticPolicy
 from rllab.spaces import Discrete
 
 import numpy as np

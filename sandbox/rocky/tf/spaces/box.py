@@ -1,4 +1,4 @@
-from rllab.spaces.box import Box as TheanoBox
+from rllab.spaces import Box as TheanoBox
 import tensorflow as tf
 
 

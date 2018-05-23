@@ -1,8 +1,8 @@
 
-from rllab.envs.box2d.cartpole_env import CartpoleEnv
-from rllab.baselines.linear_feature_baseline import LinearFeatureBaseline
-from rllab.policies.gaussian_mlp_policy import GaussianMLPPolicy
-from rllab.envs.normalized_env import normalize
+from rllab.envs.box2d import CartpoleEnv
+from rllab.baselines import LinearFeatureBaseline
+from rllab.policies import GaussianMLPPolicy
+from rllab.envs import normalize
 import numpy as np
 import theano
 import theano.tensor as TT

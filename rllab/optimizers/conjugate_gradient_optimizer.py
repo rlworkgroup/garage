@@ -1,12 +1,12 @@
 from rllab.misc import ext
 from rllab.misc import krylov
 from rllab.misc import logger
-from rllab.core.serializable import Serializable
+from rllab.core import Serializable
 import theano.tensor as TT
 import theano
 import itertools
 import numpy as np
-from rllab.misc.ext import sliced_fun
+from rllab.misc import sliced_fun
 from _ast import Num
 
 

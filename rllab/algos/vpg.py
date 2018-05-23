@@ -1,11 +1,11 @@
 import theano.tensor as TT
 import theano
 from rllab.misc import logger
-from rllab.misc.overrides import overrides
+from rllab.misc import overrides
 from rllab.misc import ext
-from rllab.algos.batch_polopt import BatchPolopt
-from rllab.optimizers.first_order_optimizer import FirstOrderOptimizer
-from rllab.core.serializable import Serializable
+from rllab.algos import BatchPolopt
+from rllab.optimizers import FirstOrderOptimizer
+from rllab.core import Serializable
 
 
 class VPG(BatchPolopt, Serializable):

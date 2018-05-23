@@ -1,13 +1,13 @@
 import numpy as np
 
 import sandbox.rocky.tf.core.layers as L
-from sandbox.rocky.tf.core.layers_powered import LayersPowered
-from sandbox.rocky.tf.core.network import MLP
+from sandbox.rocky.tf.core import LayersPowered
+from sandbox.rocky.tf.core import MLP
 from sandbox.rocky.tf.misc import tensor_utils
-from sandbox.rocky.tf.optimizers.lbfgs_optimizer import LbfgsOptimizer
-from sandbox.rocky.tf.optimizers.penalty_lbfgs_optimizer import PenaltyLbfgsOptimizer
-from sandbox.rocky.tf.distributions.diagonal_gaussian import DiagonalGaussian
-from rllab.core.serializable import Serializable
+from sandbox.rocky.tf.optimizers import LbfgsOptimizer
+from sandbox.rocky.tf.optimizers import PenaltyLbfgsOptimizer
+from sandbox.rocky.tf.distributions import DiagonalGaussian
+from rllab.core import Serializable
 from rllab.misc import logger
 import tensorflow as tf
 

@@ -1,13 +1,13 @@
-from rllab.baselines.linear_feature_baseline import LinearFeatureBaseline
-from rllab.envs.normalized_env import normalize
-from sandbox.rocky.tf.envs.base import TfEnv
-from sandbox.rocky.tf.policies.gaussian_mlp_policy import GaussianMLPPolicy
-from sandbox.rocky.tf.algos.trpo import TRPO
-from rllab.misc.instrument import run_experiment_lite
-from rllab.envs.gym_env import GymEnv
+from rllab.baselines import LinearFeatureBaseline
+from rllab.envs import normalize
+from sandbox.rocky.tf.envs import TfEnv
+from sandbox.rocky.tf.policies import GaussianMLPPolicy
+from sandbox.rocky.tf.algos import TRPO
+from rllab.misc import run_experiment_lite
+from rllab.envs import GymEnv
 import sys
 
-from rllab.misc.instrument import VariantGenerator, variant
+from rllab.misc import VariantGenerator, variant
 
 
 class VG(VariantGenerator):

@@ -1,16 +1,16 @@
 import numpy as np
 import sandbox.rocky.tf.core.layers as L
 import tensorflow as tf
-from sandbox.rocky.tf.core.layers_powered import LayersPowered
-from sandbox.rocky.tf.core.network import GRUNetwork, MLP
-from sandbox.rocky.tf.distributions.recurrent_categorical import RecurrentCategorical
+from sandbox.rocky.tf.core import LayersPowered
+from sandbox.rocky.tf.core import GRUNetwork, MLP
+from sandbox.rocky.tf.distributions import RecurrentCategorical
 from sandbox.rocky.tf.misc import tensor_utils
-from sandbox.rocky.tf.spaces.discrete import Discrete
-from sandbox.rocky.tf.policies.base import StochasticPolicy
+from sandbox.rocky.tf.spaces import Discrete
+from sandbox.rocky.tf.policies import StochasticPolicy
 
-from rllab.core.serializable import Serializable
+from rllab.core import Serializable
 from rllab.misc import special
-from rllab.misc.overrides import overrides
+from rllab.misc import overrides
 
 
 class CategoricalGRUPolicy(StochasticPolicy, LayersPowered, Serializable):

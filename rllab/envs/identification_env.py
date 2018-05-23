@@ -1,6 +1,6 @@
-from rllab.core.serializable import Serializable
+from rllab.core import Serializable
 from rllab.envs.proxy_env import ProxyEnv
-from rllab.misc.overrides import overrides
+from rllab.misc import overrides
 
 
 class IdentificationEnv(ProxyEnv, Serializable):

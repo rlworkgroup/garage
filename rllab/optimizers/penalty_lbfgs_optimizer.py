@@ -1,6 +1,6 @@
-from rllab.misc.ext import compile_function, lazydict, flatten_tensor_variables
+from rllab.misc import compile_function, lazydict, flatten_tensor_variables
 from rllab.misc import logger
-from rllab.core.serializable import Serializable
+from rllab.core import Serializable
 import theano.tensor as TT
 import theano
 import numpy as np

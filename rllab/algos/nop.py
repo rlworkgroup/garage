@@ -1,5 +1,5 @@
-from rllab.algos.batch_polopt import BatchPolopt
-from rllab.misc.overrides import overrides
+from rllab.algos import BatchPolopt
+from rllab.misc import overrides
 
 
 class NOP(BatchPolopt):
