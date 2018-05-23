@@ -1,0 +1,18 @@
+<?xml version="1.0" ?>
+<sdf version="1.4">
+  <model name="target">
+    <link name="link">
+      <gravity>0</gravity>
+      <visual name="visual">
+        <geometry>
+          <sphere>
+            <radius>0.025</radius>
+          </sphere>
+        </geometry>
+        <material>
+          <name>Gazebo/Yellow</name>
+        </material>
+      </visual>
+    </link>
+  </model>
+</sdf>
