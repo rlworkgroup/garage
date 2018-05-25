@@ -28,9 +28,9 @@ class DeterministicMLPRegressor(LayersPowered, Serializable):
 
     def __init__(
             self,
-            name,
             input_shape,
             output_dim,
+            name="DeterministicMLPRegressor",
             network=None,
             hidden_sizes=(32, 32),
             hidden_nonlinearity=tf.nn.tanh,

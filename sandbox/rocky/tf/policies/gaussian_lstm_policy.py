@@ -6,6 +6,7 @@ from sandbox.rocky.tf.core import LSTMNetwork
 from sandbox.rocky.tf.distributions import RecurrentDiagonalGaussian
 from sandbox.rocky.tf.misc import tensor_utils
 from sandbox.rocky.tf.policies import StochasticPolicy
+from sandbox.rocky.tf.misc.tensor_utils import enclosing_scope
 
 from rllab.core import Serializable
 from rllab.misc.overrides import overrides
@@ -14,8 +15,8 @@ from rllab.misc.overrides import overrides
 class GaussianLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
     def __init__(
             self,
-            name,
             env_spec,
+            name="GaussianLSTMPolicy",
             hidden_dim=32,
             feature_network=None,
             state_include_action=True,
@@ -138,6 +139,7 @@ class GaussianLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
             self.feature_network = feature_network
             self.l_input = l_input
             self.state_include_action = state_include_action
+            self.name = name
 
             flat_input_var = tf.placeholder(
                 dtype=tf.float32, shape=(None, input_dim), name="flat_input")
@@ -178,27 +180,28 @@ class GaussianLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
             LayersPowered.__init__(self, out_layers)
 
     @overrides
-    def dist_info_sym(self, obs_var, state_info_vars):
-        n_batches = tf.shape(obs_var)[0]
-        n_steps = tf.shape(obs_var)[1]
-        obs_var = tf.reshape(obs_var, tf.stack([n_batches, n_steps, -1]))
-        if self.state_include_action:
-            prev_action_var = state_info_vars["prev_action"]
-            all_input_var = tf.concat(
-                axis=2, values=[obs_var, prev_action_var])
-        else:
-            all_input_var = obs_var
-        if self.feature_network is None:
-            means, log_stds = L.get_output([self.l_mean, self.l_log_std],
-                                           {self.l_input: all_input_var})
-        else:
-            flat_input_var = tf.reshape(all_input_var, (-1, self.input_dim))
-            means, log_stds = L.get_output(
-                [self.l_mean, self.l_log_std], {
-                    self.l_input: all_input_var,
-                    self.feature_network.input_layer: flat_input_var
-                })
-        return dict(mean=means, log_std=log_stds)
+    def dist_info_sym(self, obs_var, state_info_vars, name="dist_info_sym"):
+        with enclosing_scope(self.name, name):
+            n_batches = tf.shape(obs_var)[0]
+            n_steps = tf.shape(obs_var)[1]
+            obs_var = tf.reshape(obs_var, tf.stack([n_batches, n_steps, -1]))
+            if self.state_include_action:
+                prev_action_var = state_info_vars["prev_action"]
+                all_input_var = tf.concat(axis=2, values=[obs_var, prev_action_var])
+            else:
+                all_input_var = obs_var
+            if self.feature_network is None:
+                means, log_stds = L.get_output(
+                    [self.mean_network.output_layer, self.l_log_std],
+                    {self.l_input: all_input_var}
+                )
+            else:
+                flat_input_var = tf.reshape(all_input_var, (-1, self.input_dim))
+                means, log_stds = L.get_output(
+                    [self.mean_network.output_layer, self.l_log_std],
+                    {self.l_input: all_input_var, self.feature_network.input_layer: flat_input_var}
+                )
+            return dict(mean=means, log_std=log_stds)
 
     @property
     def vectorized(self):

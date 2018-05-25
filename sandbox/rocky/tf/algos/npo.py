@@ -7,6 +7,7 @@ import rllab.misc.logger as logger
 from sandbox.rocky.tf.optimizers import PenaltyLbfgsOptimizer
 from sandbox.rocky.tf.algos import BatchPolopt
 from sandbox.rocky.tf.misc import tensor_utils
+from sandbox.rocky.tf.misc.tensor_utils import enclosing_scope
 import tensorflow as tf
 
 
@@ -20,6 +21,7 @@ class NPO(BatchPolopt):
             optimizer=None,
             optimizer_args=None,
             step_size=0.01,
+            name="NPO",
             **kwargs):
         if optimizer is None:
             if optimizer_args is None:
@@ -27,69 +29,71 @@ class NPO(BatchPolopt):
             optimizer = PenaltyLbfgsOptimizer(**optimizer_args)
         self.optimizer = optimizer
         self.step_size = step_size
+        self.name = name
         super(NPO, self).__init__(**kwargs)
 
     @overrides
     def init_opt(self):
-        is_recurrent = int(self.policy.recurrent)
-        obs_var = self.env.observation_space.new_tensor_variable(
-            'obs',
-            extra_dims=1 + is_recurrent,
-        )
-        action_var = self.env.action_space.new_tensor_variable(
-            'action',
-            extra_dims=1 + is_recurrent,
-        )
-        advantage_var = tensor_utils.new_tensor(
-            'advantage',
-            ndim=1 + is_recurrent,
-            dtype=tf.float32,
-        )
-        dist = self.policy.distribution
+        with enclosing_scope(self.name, "init_opt"):
+            is_recurrent = int(self.policy.recurrent)
+            obs_var = self.env.observation_space.new_tensor_variable(
+                'obs',
+                extra_dims=1 + is_recurrent,
+            )
+            action_var = self.env.action_space.new_tensor_variable(
+                'action',
+                extra_dims=1 + is_recurrent,
+            )
+            advantage_var = tensor_utils.new_tensor(
+                'advantage',
+                ndim=1 + is_recurrent,
+                dtype=tf.float32,
+            )
+            dist = self.policy.distribution
 
-        old_dist_info_vars = {
-            k: tf.placeholder(tf.float32, shape=[None] * (1 + is_recurrent) + list(shape), name='old_%s' % k)
-            for k, shape in dist.dist_info_specs
-            }
-        old_dist_info_vars_list = [old_dist_info_vars[k] for k in dist.dist_info_keys]
+            old_dist_info_vars = {
+                k: tf.placeholder(tf.float32, shape=[None] * (1 + is_recurrent) + list(shape), name='old_%s' % k)
+                for k, shape in dist.dist_info_specs
+                }
+            old_dist_info_vars_list = [old_dist_info_vars[k] for k in dist.dist_info_keys]
 
-        state_info_vars = {
-            k: tf.placeholder(tf.float32, shape=[None] * (1 + is_recurrent) + list(shape), name=k)
-            for k, shape in self.policy.state_info_specs
-            }
-        state_info_vars_list = [state_info_vars[k] for k in self.policy.state_info_keys]
+            state_info_vars = {
+                k: tf.placeholder(tf.float32, shape=[None] * (1 + is_recurrent) + list(shape), name=k)
+                for k, shape in self.policy.state_info_specs
+                }
+            state_info_vars_list = [state_info_vars[k] for k in self.policy.state_info_keys]
 
-        if is_recurrent:
-            valid_var = tf.placeholder(tf.float32, shape=[None, None], name="valid")
-        else:
-            valid_var = None
+            if is_recurrent:
+                valid_var = tf.placeholder(tf.float32, shape=[None, None], name="valid")
+            else:
+                valid_var = None
 
-        dist_info_vars = self.policy.dist_info_sym(obs_var, state_info_vars)
-        kl = dist.kl_sym(old_dist_info_vars, dist_info_vars)
-        lr = dist.likelihood_ratio_sym(action_var, old_dist_info_vars, dist_info_vars)
-        if is_recurrent:
-            mean_kl = tf.reduce_sum(kl * valid_var) / tf.reduce_sum(valid_var)
-            surr_loss = - tf.reduce_sum(lr * advantage_var * valid_var) / tf.reduce_sum(valid_var)
-        else:
-            mean_kl = tf.reduce_mean(kl)
-            surr_loss = - tf.reduce_mean(lr * advantage_var)
+            dist_info_vars = self.policy.dist_info_sym(obs_var, state_info_vars)
+            kl = dist.kl_sym(old_dist_info_vars, dist_info_vars)
+            lr = dist.likelihood_ratio_sym(action_var, old_dist_info_vars, dist_info_vars)
+            if is_recurrent:
+                mean_kl = tf.reduce_sum(kl * valid_var) / tf.reduce_sum(valid_var)
+                surr_loss = - tf.reduce_sum(lr * advantage_var * valid_var) / tf.reduce_sum(valid_var)
+            else:
+                mean_kl = tf.reduce_mean(kl, name="reduce_mean_er")
+                surr_loss = - tf.reduce_mean(lr * advantage_var)
 
-        input_list = [
-                         obs_var,
-                         action_var,
-                         advantage_var,
-                     ] + state_info_vars_list + old_dist_info_vars_list
-        if is_recurrent:
-            input_list.append(valid_var)
+            input_list = [
+                             obs_var,
+                             action_var,
+                             advantage_var,
+                         ] + state_info_vars_list + old_dist_info_vars_list
+            if is_recurrent:
+                input_list.append(valid_var)
 
-        self.optimizer.update_opt(
-            loss=surr_loss,
-            target=self.policy,
-            leq_constraint=(mean_kl, self.step_size),
-            inputs=input_list,
-            constraint_name="mean_kl"
-        )
-        return dict()
+            self.optimizer.update_opt(
+                loss=surr_loss,
+                target=self.policy,
+                leq_constraint=(mean_kl, self.step_size),
+                inputs=input_list,
+                constraint_name="mean_kl"
+            )
+            return dict()
 
     @overrides
     def optimize_policy(self, itr, samples_data):

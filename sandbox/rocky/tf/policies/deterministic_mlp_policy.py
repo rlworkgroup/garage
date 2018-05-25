@@ -17,8 +17,8 @@ import tensorflow as tf
 class DeterministicMLPPolicy(Policy, LayersPowered, Serializable):
     def __init__(
             self,
-            name,
             env_spec,
+            name="DeterministicMLPPolicy",
             hidden_sizes=(32, 32),
             hidden_nonlinearity=tf.nn.relu,
             output_nonlinearity=tf.nn.tanh,

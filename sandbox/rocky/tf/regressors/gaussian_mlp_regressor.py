@@ -17,25 +17,27 @@ class GaussianMLPRegressor(LayersPowered, Serializable):
     A class for performing regression by fitting a Gaussian distribution to the outputs.
     """
 
-    def __init__(self,
-                 name,
-                 input_shape,
-                 output_dim,
-                 mean_network=None,
-                 hidden_sizes=(32, 32),
-                 hidden_nonlinearity=tf.nn.tanh,
-                 optimizer=None,
-                 use_trust_region=True,
-                 step_size=0.01,
-                 learn_std=True,
-                 init_std=1.0,
-                 adaptive_std=False,
-                 std_share_network=False,
-                 std_hidden_sizes=(32, 32),
-                 std_nonlinearity=None,
-                 normalize_inputs=True,
-                 normalize_outputs=True,
-                 subsample_factor=1.0):
+    def __init__(
+            self,
+            input_shape,
+            output_dim,
+            name="GaussianMLPRegressor",
+            mean_network=None,
+            hidden_sizes=(32, 32),
+            hidden_nonlinearity=tf.nn.tanh,
+            optimizer=None,
+            use_trust_region=True,
+            step_size=0.01,
+            learn_std=True,
+            init_std=1.0,
+            adaptive_std=False,
+            std_share_network=False,
+            std_hidden_sizes=(32, 32),
+            std_nonlinearity=None,
+            normalize_inputs=True,
+            normalize_outputs=True,
+            subsample_factor=1.0
+    ):
         """
         :param input_shape: Shape of the input data.
         :param output_dim: Dimension of output.

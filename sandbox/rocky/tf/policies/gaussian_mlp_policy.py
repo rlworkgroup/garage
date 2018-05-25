@@ -11,26 +11,28 @@ from sandbox.rocky.tf.distributions import DiagonalGaussian
 from rllab.misc.overrides import overrides
 from rllab.misc import logger
 from sandbox.rocky.tf.misc import tensor_utils
+from sandbox.rocky.tf.misc.tensor_utils import enclosing_scope
 import tensorflow as tf
 
-
 class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
-    def __init__(self,
-                 name,
-                 env_spec,
-                 hidden_sizes=(32, 32),
-                 learn_std=True,
-                 init_std=1.0,
-                 adaptive_std=False,
-                 std_share_network=False,
-                 std_hidden_sizes=(32, 32),
-                 min_std=1e-6,
-                 std_hidden_nonlinearity=tf.nn.tanh,
-                 hidden_nonlinearity=tf.nn.tanh,
-                 output_nonlinearity=None,
-                 mean_network=None,
-                 std_network=None,
-                 std_parametrization='exp'):
+    def __init__(
+            self,
+            env_spec,
+            name="GaussianMLPPolicy",
+            hidden_sizes=(32, 32),
+            learn_std=True,
+            init_std=1.0,
+            adaptive_std=False,
+            std_share_network=False,
+            std_hidden_sizes=(32, 32),
+            min_std=1e-6,
+            std_hidden_nonlinearity=tf.nn.tanh,
+            hidden_nonlinearity=tf.nn.tanh,
+            output_nonlinearity=None,
+            mean_network=None,
+            std_network=None,
+            std_parametrization='exp'
+    ):
         """
         :param env_spec:
         :param hidden_sizes: list of sizes for the fully-connected hidden layers
@@ -52,6 +54,7 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
         """
         Serializable.quick_init(self, locals())
         assert isinstance(env_spec.action_space, Box)
+        self.name = name
 
         with tf.variable_scope(name):
 
@@ -171,18 +174,18 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
     def vectorized(self):
         return True
 
-    def dist_info_sym(self, obs_var, state_info_vars=None):
-        mean_var, std_param_var = L.get_output(
-            [self._l_mean, self._l_std_param], obs_var)
-        if self.min_std_param is not None:
-            std_param_var = tf.maximum(std_param_var, self.min_std_param)
-        if self.std_parametrization == 'exp':
-            log_std_var = std_param_var
-        elif self.std_parametrization == 'softplus':
-            log_std_var = tf.log(tf.log(1. + tf.exp(std_param_var)))
-        else:
-            raise NotImplementedError
-        return dict(mean=mean_var, log_std=log_std_var)
+    def dist_info_sym(self, obs_var, state_info_vars=None, name="dist_info_sym"):
+        with enclosing_scope(self.name, name):
+            mean_var, std_param_var = L.get_output([self._l_mean, self._l_std_param], obs_var)
+            if self.min_std_param is not None:
+                std_param_var = tf.maximum(std_param_var, self.min_std_param)
+            if self.std_parametrization == 'exp':
+                log_std_var = std_param_var
+            elif self.std_parametrization == 'softplus':
+                log_std_var = tf.log(tf.log(1. + tf.exp(std_param_var)))
+            else:
+                raise NotImplementedError
+            return dict(mean=mean_var, log_std=log_std_var)
 
     @overrides
     def get_action(self, observation):
@@ -199,7 +202,7 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
         actions = rnd * np.exp(log_stds) + means
         return actions, dict(mean=means, log_std=log_stds)
 
-    def get_reparam_action_sym(self, obs_var, action_var, old_dist_info_vars):
+    def get_reparam_action_sym(self, obs_var, action_var, old_dist_info_vars, name="get_reparam_action_sym"):
         """
         Given observations, old actions, and distribution of old actions, return a symbolically reparameterized
         representation of the actions in terms of the policy parameters
@@ -208,15 +211,13 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
         :param old_dist_info_vars:
         :return:
         """
-        new_dist_info_vars = self.dist_info_sym(obs_var, action_var)
-        new_mean_var, new_log_std_var = new_dist_info_vars[
-            "mean"], new_dist_info_vars["log_std"]
-        old_mean_var, old_log_std_var = old_dist_info_vars[
-            "mean"], old_dist_info_vars["log_std"]
-        epsilon_var = (action_var - old_mean_var) / (
-            tf.exp(old_log_std_var) + 1e-8)
-        new_action_var = new_mean_var + epsilon_var * tf.exp(new_log_std_var)
-        return new_action_var
+        with enclosing_scope(self.name, name):
+            new_dist_info_vars = self.dist_info_sym(obs_var, action_var)
+            new_mean_var, new_log_std_var = new_dist_info_vars["mean"], new_dist_info_vars["log_std"]
+            old_mean_var, old_log_std_var = old_dist_info_vars["mean"], old_dist_info_vars["log_std"]
+            epsilon_var = (action_var - old_mean_var) / (tf.exp(old_log_std_var) + 1e-8)
+            new_action_var = new_mean_var + epsilon_var * tf.exp(new_log_std_var)
+            return new_action_var
 
     def log_diagnostics(self, paths):
         log_stds = np.vstack(

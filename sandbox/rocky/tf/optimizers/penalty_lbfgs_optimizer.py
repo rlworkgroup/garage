@@ -1,4 +1,5 @@
 from sandbox.rocky.tf.misc import tensor_utils
+from sandbox.rocky.tf.misc.tensor_utils import enclosing_scope
 from rllab.misc import logger
 from rllab.misc import ext
 from rllab.core import Serializable
@@ -15,7 +16,6 @@ class PenaltyLbfgsOptimizer(Serializable):
 
     def __init__(
             self,
-            name,
             max_opt_itr=20,
             initial_penalty=1.0,
             min_penalty=1e-2,
@@ -23,7 +23,8 @@ class PenaltyLbfgsOptimizer(Serializable):
             increase_penalty_factor=2,
             decrease_penalty_factor=0.5,
             max_penalty_itr=10,
-            adapt_penalty=True):
+            adapt_penalty=True,
+            name="PenaltyLbfgsOptimizer"):
         Serializable.quick_init(self, locals())
         self._name = name
         self._max_opt_itr = max_opt_itr
@@ -41,7 +42,7 @@ class PenaltyLbfgsOptimizer(Serializable):
         self._max_constraint_val = None
         self._constraint_name = None
 
-    def update_opt(self, loss, target, leq_constraint, inputs, constraint_name="constraint", *args, **kwargs):
+    def update_opt(self, loss, target, leq_constraint, inputs, constraint_name="constraint", name="PenaltyLbfgsOptimizer", *args, **kwargs):
         """
         :param loss: Symbolic expression for the loss function.
         :param target: A parameterized object to optimize over. It should implement methods of the
@@ -50,40 +51,40 @@ class PenaltyLbfgsOptimizer(Serializable):
         :param inputs: A list of symbolic variables as inputs
         :return: No return value.
         """
-        constraint_term, constraint_value = leq_constraint
-        with tf.variable_scope(self._name):
+        with enclosing_scope(self._name, name):
+            constraint_term, constraint_value = leq_constraint
             penalty_var = tf.placeholder(tf.float32, tuple(), name="penalty")
-        penalized_loss = loss + penalty_var * constraint_term
+            penalized_loss = loss + penalty_var * constraint_term
 
-        self._target = target
-        self._max_constraint_val = constraint_value
-        self._constraint_name = constraint_name
+            self._target = target
+            self._max_constraint_val = constraint_value
+            self._constraint_name = constraint_name
 
-        def get_opt_output():
-            params = target.get_params(trainable=True)
-            grads = tf.gradients(penalized_loss, params)
-            for idx, (grad, param) in enumerate(zip(grads, params)):
-                if grad is None:
-                    grads[idx] = tf.zeros_like(param)
-            flat_grad = tensor_utils.flatten_tensor_variables(grads)
-            return [
-                tf.cast(penalized_loss, tf.float64),
-                tf.cast(flat_grad, tf.float64),
-            ]
+            def get_opt_output():
+                params = target.get_params(trainable=True)
+                grads = tf.gradients(penalized_loss, params)
+                for idx, (grad, param) in enumerate(zip(grads, params)):
+                    if grad is None:
+                        grads[idx] = tf.zeros_like(param)
+                flat_grad = tensor_utils.flatten_tensor_variables(grads)
+                return [
+                    tf.cast(penalized_loss, tf.float64),
+                    tf.cast(flat_grad, tf.float64),
+                ]
 
-        self._opt_fun = ext.lazydict(
-            f_loss=lambda: tensor_utils.compile_function(inputs, loss, log_name="f_loss"),
-            f_constraint=lambda: tensor_utils.compile_function(inputs, constraint_term, log_name="f_constraint"),
-            f_penalized_loss=lambda: tensor_utils.compile_function(
-                inputs=inputs + [penalty_var],
-                outputs=[penalized_loss, loss, constraint_term],
-                log_name="f_penalized_loss",
-            ),
-            f_opt=lambda: tensor_utils.compile_function(
-                inputs=inputs + [penalty_var],
-                outputs=get_opt_output(),
+            self._opt_fun = ext.lazydict(
+                f_loss=lambda: tensor_utils.compile_function(inputs, loss, log_name="f_loss"),
+                f_constraint=lambda: tensor_utils.compile_function(inputs, constraint_term, log_name="f_constraint"),
+                f_penalized_loss=lambda: tensor_utils.compile_function(
+                    inputs=inputs + [penalty_var],
+                    outputs=[penalized_loss, loss, constraint_term],
+                    log_name="f_penalized_loss",
+                ),
+                f_opt=lambda: tensor_utils.compile_function(
+                    inputs=inputs + [penalty_var],
+                    outputs=get_opt_output(),
+                )
             )
-        )
 
     def loss(self, inputs):
         return self._opt_fun["f_loss"](*inputs)

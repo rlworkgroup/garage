@@ -14,8 +14,8 @@ import tensorflow as tf
 class CategoricalMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
     def __init__(
             self,
-            name,
             env_spec,
+            name="CategoricalMLPPolicy",
             hidden_sizes=(32, 32),
             hidden_nonlinearity=tf.nn.tanh,
             prob_network=None,

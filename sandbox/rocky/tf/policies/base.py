@@ -85,7 +85,7 @@ class StochasticPolicy(Policy):
         """
         raise NotImplementedError
 
-    def dist_info_sym(self, obs_var, state_info_vars):
+    def dist_info_sym(self, obs_var, state_info_vars, name="dist_info_sym"):
         """
         Return the symbolic distribution information about the actions.
         :param obs_var: symbolic variable for observations

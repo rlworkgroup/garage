@@ -8,8 +8,8 @@ from sandbox.rocky.tf.core import LayersPowered
 
 
 class MLP(LayersPowered, Serializable):
-    def __init__(self, name, output_dim, hidden_sizes, hidden_nonlinearity,
-                 output_nonlinearity, hidden_W_init=L.XavierUniformInitializer(), hidden_b_init=tf.zeros_initializer(),
+    def __init__(self, output_dim, hidden_sizes, hidden_nonlinearity, output_nonlinearity,
+                 name="MLP", hidden_W_init=L.XavierUniformInitializer(), hidden_b_init=tf.zeros_initializer(),
                  output_W_init=L.XavierUniformInitializer(), output_b_init=tf.zeros_initializer(),
                  input_var=None, input_layer=None, input_shape=None, batch_normalization=False, weight_normalization=False,
                  ):
@@ -79,9 +79,9 @@ class MLP(LayersPowered, Serializable):
 
 
 class ConvNetwork(LayersPowered, Serializable):
-    def __init__(self, name, input_shape, output_dim,
+    def __init__(self, input_shape, output_dim,
                  conv_filters, conv_filter_sizes, conv_strides, conv_pads,
-                 hidden_sizes, hidden_nonlinearity, output_nonlinearity,
+                 hidden_sizes, hidden_nonlinearity, output_nonlinearity, name="ConvNetwork",
                  hidden_W_init=L.XavierUniformInitializer(), hidden_b_init=tf.zeros_initializer(),
                  output_W_init=L.XavierUniformInitializer(), output_b_init=tf.zeros_initializer(),
                  input_var=None, input_layer=None, batch_normalization=False, weight_normalization=False):
@@ -184,8 +184,8 @@ class ConvNetwork(LayersPowered, Serializable):
 
 
 class GRUNetwork(object):
-    def __init__(self, name, input_shape, output_dim, hidden_dim, hidden_nonlinearity=tf.nn.relu,
-                 gru_layer_cls=L.GRULayer,
+    def __init__(self, input_shape, output_dim, hidden_dim, name="GRUNetwork",
+                 hidden_nonlinearity=tf.nn.relu, gru_layer_cls=L.GRULayer,
                  output_nonlinearity=None, input_var=None, input_layer=None, layer_args=None):
         with tf.variable_scope(name):
             if input_layer is None:
@@ -293,8 +293,8 @@ class GRUNetwork(object):
 
 
 class LSTMNetwork(object):
-    def __init__(self, name, input_shape, output_dim, hidden_dim, hidden_nonlinearity=tf.nn.relu,
-                 lstm_layer_cls=L.LSTMLayer,
+    def __init__(self, input_shape, output_dim, hidden_dim, name="LSTMNetwork",
+                 hidden_nonlinearity=tf.nn.relu, lstm_layer_cls=L.LSTMLayer,
                  output_nonlinearity=None, input_var=None, input_layer=None, forget_bias=1.0, use_peepholes=False,
                  layer_args=None):
         with tf.variable_scope(name):
@@ -422,8 +422,8 @@ class ConvMergeNetwork(LayersPowered, Serializable):
     components flattened out and then concatenated together
     """
 
-    def __init__(self, name, input_shape, extra_input_shape, output_dim, hidden_sizes,
-                 conv_filters, conv_filter_sizes, conv_strides, conv_pads,
+    def __init__(self, input_shape, extra_input_shape, output_dim, hidden_sizes,
+                 conv_filters, conv_filter_sizes, conv_strides, conv_pads, name="ConvMergeNetwork",
                  extra_hidden_sizes=None,
                  hidden_W_init=L.XavierUniformInitializer(), hidden_b_init=tf.zeros_initializer(),
                  output_W_init=L.XavierUniformInitializer(), output_b_init=tf.zeros_initializer(),

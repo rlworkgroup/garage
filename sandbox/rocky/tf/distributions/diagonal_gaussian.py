@@ -4,11 +4,13 @@
 import tensorflow as tf
 import numpy as np
 from sandbox.rocky.tf.distributions import Distribution
+from sandbox.rocky.tf.misc.tensor_utils import enclosing_scope
 
 
 class DiagonalGaussian(Distribution):
-    def __init__(self, dim):
+    def __init__(self, dim, name="DiagonalGaussian"):
         self._dim = dim
+        self._name = name
 
     @property
     def dim(self):
@@ -39,40 +41,43 @@ class DiagonalGaussian(Distribution):
         # return TT.sum(
         #     numerator / denominator + TT.log(new_std) - TT.log(old_std ), axis=-1)
 
-    def kl_sym(self, old_dist_info_vars, new_dist_info_vars):
-        old_means = old_dist_info_vars["mean"]
-        old_log_stds = old_dist_info_vars["log_std"]
-        new_means = new_dist_info_vars["mean"]
-        new_log_stds = new_dist_info_vars["log_std"]
-        """
-        Compute the KL divergence of two multivariate Gaussian distribution with
-        diagonal covariance matrices
-        """
-        old_std = tf.exp(old_log_stds)
-        new_std = tf.exp(new_log_stds)
-        # means: (N*A)
-        # std: (N*A)
-        # formula:
-        # { (\mu_1 - \mu_2)^2 + \sigma_1^2 - \sigma_2^2 } / (2\sigma_2^2) +
-        # ln(\sigma_2/\sigma_1)
-        numerator = tf.square(old_means - new_means) + \
-                    tf.square(old_std) - tf.square(new_std)
-        denominator = 2 * tf.square(new_std) + 1e-8
-        return tf.reduce_sum(
-            numerator / denominator + new_log_stds - old_log_stds, axis=-1)
+    def kl_sym(self, old_dist_info_vars, new_dist_info_vars, name = "kl_sym"):
+        with enclosing_scope(self._name, name):
+            old_means = old_dist_info_vars["mean"]
+            old_log_stds = old_dist_info_vars["log_std"]
+            new_means = new_dist_info_vars["mean"]
+            new_log_stds = new_dist_info_vars["log_std"]
+            """
+            Compute the KL divergence of two multivariate Gaussian distribution with
+            diagonal covariance matrices
+            """
+            old_std = tf.exp(old_log_stds)
+            new_std = tf.exp(new_log_stds)
+            # means: (N*A)
+            # std: (N*A)
+            # formula:
+            # { (\mu_1 - \mu_2)^2 + \sigma_1^2 - \sigma_2^2 } / (2\sigma_2^2) +
+            # ln(\sigma_2/\sigma_1)
+            numerator = tf.square(old_means - new_means) + \
+                        tf.square(old_std) - tf.square(new_std)
+            denominator = 2 * tf.square(new_std) + 1e-8
+            return tf.reduce_sum(
+                numerator / denominator + new_log_stds - old_log_stds, axis=-1)
 
-    def likelihood_ratio_sym(self, x_var, old_dist_info_vars, new_dist_info_vars):
-        logli_new = self.log_likelihood_sym(x_var, new_dist_info_vars)
-        logli_old = self.log_likelihood_sym(x_var, old_dist_info_vars)
-        return tf.exp(logli_new - logli_old)
+    def likelihood_ratio_sym(self, x_var, old_dist_info_vars, new_dist_info_vars, name = "likelihood_ratio_sym"):
+        with enclosing_scope(self._name, name):
+            logli_new = self.log_likelihood_sym(x_var, new_dist_info_vars)
+            logli_old = self.log_likelihood_sym(x_var, old_dist_info_vars)
+            return tf.exp(logli_new - logli_old)
 
-    def log_likelihood_sym(self, x_var, dist_info_vars):
-        means = dist_info_vars["mean"]
-        log_stds = dist_info_vars["log_std"]
-        zs = (x_var - means) / tf.exp(log_stds)
-        return - tf.reduce_sum(log_stds, axis=-1) - \
-               0.5 * tf.reduce_sum(tf.square(zs), axis=-1) - \
-               0.5 * self.dim * np.log(2 * np.pi)
+    def log_likelihood_sym(self, x_var, dist_info_vars, name = "log_likelihood_sym"):
+        with enclosing_scope(self._name, name):
+            means = dist_info_vars["mean"]
+            log_stds = dist_info_vars["log_std"]
+            zs = (x_var - means) / tf.exp(log_stds)
+            return - tf.reduce_sum(log_stds, axis=-1) - \
+                   0.5 * tf.reduce_sum(tf.square(zs), axis=-1) - \
+                   0.5 * self.dim * np.log(2 * np.pi)
 
     def sample(self, dist_info):
         means = dist_info["mean"]
@@ -92,9 +97,10 @@ class DiagonalGaussian(Distribution):
         log_stds = dist_info["log_std"]
         return np.sum(log_stds + np.log(np.sqrt(2 * np.pi * np.e)), axis=-1)
 
-    def entropy_sym(self, dist_info_var):
-        log_std_var = dist_info_var["log_std"]
-        return tf.reduce_sum(log_std_var + np.log(np.sqrt(2 * np.pi * np.e)), axis=-1)
+    def entropy_sym(self, dist_info_var, name = "entropy_sym"):
+        with enclosing_scope(self._name, name):
+            log_std_var = dist_info_var["log_std"]
+            return tf.reduce_sum(log_std_var + np.log(np.sqrt(2 * np.pi * np.e)), axis=-1)
 
     @property
     def dist_info_specs(self):

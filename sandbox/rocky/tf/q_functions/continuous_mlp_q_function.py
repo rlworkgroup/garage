@@ -8,6 +8,7 @@ from sandbox.rocky.tf.core.layers import batch_norm
 from sandbox.rocky.tf.distributions import Categorical
 from sandbox.rocky.tf.policies import StochasticPolicy
 from sandbox.rocky.tf.misc import tensor_utils
+from sandbox.rocky.tf.misc.tensor_utils import enclosing_scope
 
 import tensorflow as tf
 import sandbox.rocky.tf.core.layers as L
@@ -17,6 +18,7 @@ class ContinuousMLPQFunction(QFunction, LayersPowered, Serializable):
     def __init__(
             self,
             env_spec,
+            name="ContinuousMLPQFunction",
             hidden_sizes=(32, 32),
             hidden_nonlinearity=tf.nn.relu,
             action_merge_layer=-2,
@@ -68,16 +70,18 @@ class ContinuousMLPQFunction(QFunction, LayersPowered, Serializable):
         self._obs_layer = l_obs
         self._action_layer = l_action
         self._output_nonlinearity = output_nonlinearity
+        self._name = name
 
         LayersPowered.__init__(self, [l_output])
 
     def get_qval(self, observations, actions):
         return self._f_qval(observations, actions)
 
-    def get_qval_sym(self, obs_var, action_var, **kwargs):
-        qvals = L.get_output(
-            self._output_layer,
-            {self._obs_layer: obs_var, self._action_layer: action_var},
-            **kwargs
-        )
-        return tf.reshape(qvals, (-1,))
+    def get_qval_sym(self, obs_var, action_var, **kwargs, name="get_qval_sym"):
+        with enclosing_scope(self._name, name):
+            qvals = L.get_output(
+                self._output_layer,
+                {self._obs_layer: obs_var, self._action_layer: action_var},
+                **kwargs
+            )
+            return tf.reshape(qvals, (-1,))

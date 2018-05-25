@@ -2,6 +2,7 @@
 
 from rllab.misc import ext
 from sandbox.rocky.tf.misc import tensor_utils
+from sandbox.rocky.tf.misc.tensor_utils import enclosing_scope
 from rllab.core import Serializable
 import tensorflow as tf
 import scipy.optimize
@@ -13,15 +14,16 @@ class LbfgsOptimizer(Serializable):
     Performs unconstrained optimization via L-BFGS.
     """
 
-    def __init__(self, name, max_opt_itr=20, callback=None):
+    def __init__(self, max_opt_itr=20, callback=None, name="LbfgsOptimizer"):
         Serializable.quick_init(self, locals())
         self._name = name
         self._max_opt_itr = max_opt_itr
         self._opt_fun = None
         self._target = None
         self._callback = callback
+        self._name = name
 
-    def update_opt(self, loss, target, inputs, extra_inputs=None, *args, **kwargs):
+    def update_opt(self, loss, target, inputs, extra_inputs=None, name="update_opt", *args, **kwargs):
         """
         :param loss: Symbolic expression for the loss function.
         :param target: A parameterized object to optimize over. It should implement methods of the
@@ -30,23 +32,23 @@ class LbfgsOptimizer(Serializable):
         :param inputs: A list of symbolic variables as inputs
         :return: No return value.
         """
+        with enclosing_scope(self._name, name):
+            self._target = target
 
-        self._target = target
+            def get_opt_output():
+                flat_grad = tensor_utils.flatten_tensor_variables(tf.gradients(loss, target.get_params(trainable=True)))
+                return [tf.cast(loss, tf.float64), tf.cast(flat_grad, tf.float64)]
 
-        def get_opt_output():
-            flat_grad = tensor_utils.flatten_tensor_variables(tf.gradients(loss, target.get_params(trainable=True)))
-            return [tf.cast(loss, tf.float64), tf.cast(flat_grad, tf.float64)]
+            if extra_inputs is None:
+                extra_inputs = list()
 
-        if extra_inputs is None:
-            extra_inputs = list()
-
-        self._opt_fun = ext.lazydict(
-            f_loss=lambda: tensor_utils.compile_function(inputs + extra_inputs, loss),
-            f_opt=lambda: tensor_utils.compile_function(
-                inputs=inputs + extra_inputs,
-                outputs=get_opt_output(),
+            self._opt_fun = ext.lazydict(
+                f_loss=lambda: tensor_utils.compile_function(inputs + extra_inputs, loss),
+                f_opt=lambda: tensor_utils.compile_function(
+                    inputs=inputs + extra_inputs,
+                    outputs=get_opt_output(),
+                )
             )
-        )
 
     def loss(self, inputs, extra_inputs=None):
         if extra_inputs is None:

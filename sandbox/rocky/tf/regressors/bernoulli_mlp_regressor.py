@@ -25,7 +25,7 @@ class BernoulliMLPRegressor(LayersPowered, Serializable):
             self,
             input_shape,
             output_dim,
-            name,
+            name="BernoulliMLPRegressor",
             hidden_sizes=(32, 32),
             hidden_nonlinearity=tf.nn.relu,
             optimizer=None,

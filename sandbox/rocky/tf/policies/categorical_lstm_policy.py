@@ -5,6 +5,7 @@ from sandbox.rocky.tf.core import LayersPowered
 from sandbox.rocky.tf.core import LSTMNetwork, MLP
 from sandbox.rocky.tf.distributions import RecurrentCategorical
 from sandbox.rocky.tf.misc import tensor_utils
+from sandbox.rocky.tf.misc.tensor_utils import enclosing_scope
 from sandbox.rocky.tf.spaces import Discrete
 from sandbox.rocky.tf.policies import StochasticPolicy
 
@@ -16,8 +17,8 @@ from rllab.misc.overrides import overrides
 class CategoricalLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
     def __init__(
             self,
-            name,
             env_spec,
+            name="CategoricalLSTMPolicy",
             hidden_dim=32,
             feature_network=None,
             prob_network=None,
@@ -110,6 +111,7 @@ class CategoricalLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
             self.input_dim = input_dim
             self.action_dim = action_dim
             self.hidden_dim = hidden_dim
+            self.name = name
 
             self.prev_actions = None
             self.prev_hiddens = None
@@ -123,32 +125,33 @@ class CategoricalLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
             LayersPowered.__init__(self, out_layers)
 
     @overrides
-    def dist_info_sym(self, obs_var, state_info_vars):
-        n_batches = tf.shape(obs_var)[0]
-        n_steps = tf.shape(obs_var)[1]
-        obs_var = tf.reshape(obs_var, tf.stack([n_batches, n_steps, -1]))
-        obs_var = tf.cast(obs_var, tf.float32)
-        if self.state_include_action:
-            prev_action_var = state_info_vars["prev_action"]
-            prev_action_var = tf.cast(prev_action_var, tf.float32)
-            all_input_var = tf.concat(axis=2, values=[obs_var, prev_action_var])
-        else:
-            all_input_var = obs_var
-        if self.feature_network is None:
-            return dict(
-                prob=L.get_output(
-                    self.prob_network.output_layer,
-                    {self.l_input: all_input_var}
+    def dist_info_sym(self, obs_var, state_info_vars, name="dist_info_sym"):
+        with enclosing_scope(self.name, name):
+            n_batches = tf.shape(obs_var)[0]
+            n_steps = tf.shape(obs_var)[1]
+            obs_var = tf.reshape(obs_var, tf.stack([n_batches, n_steps, -1]))
+            obs_var = tf.cast(obs_var, tf.float32)
+            if self.state_include_action:
+                prev_action_var = state_info_vars["prev_action"]
+                prev_action_var = tf.cast(prev_action_var, tf.float32)
+                all_input_var = tf.concat(axis=2, values=[obs_var, prev_action_var])
+            else:
+                all_input_var = obs_var
+            if self.feature_network is None:
+                return dict(
+                    prob=L.get_output(
+                        self.prob_network.output_layer,
+                        {self.l_input: all_input_var}
+                    )
                 )
-            )
-        else:
-            flat_input_var = tf.reshape(all_input_var, (-1, self.input_dim))
-            return dict(
-                prob=L.get_output(
-                    self.prob_network.output_layer,
-                    {self.l_input: all_input_var, self.feature_network.input_layer: flat_input_var}
+            else:
+                flat_input_var = tf.reshape(all_input_var, (-1, self.input_dim))
+                return dict(
+                    prob=L.get_output(
+                        self.prob_network.output_layer,
+                        {self.l_input: all_input_var, self.feature_network.input_layer: flat_input_var}
+                    )
                 )
-            )
 
     @property
     def vectorized(self):

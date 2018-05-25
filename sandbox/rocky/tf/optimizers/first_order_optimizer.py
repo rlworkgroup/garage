@@ -29,6 +29,7 @@ class FirstOrderOptimizer(Serializable):
             batch_size=32,
             callback=None,
             verbose=False,
+            name="FirstOrderOptimizer",
             **kwargs):
         """
 
@@ -55,8 +56,9 @@ class FirstOrderOptimizer(Serializable):
         self._verbose = verbose
         self._input_vars = None
         self._train_op = None
+        self._name = name
 
-    def update_opt(self, loss, target, inputs, extra_inputs=None, **kwargs):
+    def update_opt(self, loss, target, inputs, extra_inputs=None, name="update_opt", **kwargs):
         """
         :param loss: Symbolic expression for the loss function.
         :param target: A parameterized object to optimize over. It should implement methods of the
@@ -65,19 +67,19 @@ class FirstOrderOptimizer(Serializable):
         :param inputs: A list of symbolic variables as inputs
         :return: No return value.
         """
+        with enclosing_scope(self._name, name):
+            self._target = target
 
-        self._target = target
+            self._train_op = self._tf_optimizer.minimize(loss, var_list=target.get_params(trainable=True))
 
-        self._train_op = self._tf_optimizer.minimize(loss, var_list=target.get_params(trainable=True))
+            # updates = OrderedDict([(k, v.astype(k.dtype)) for k, v in updates.iteritems()])
 
-        # updates = OrderedDict([(k, v.astype(k.dtype)) for k, v in updates.iteritems()])
-
-        if extra_inputs is None:
-            extra_inputs = list()
-        self._input_vars = inputs + extra_inputs
-        self._opt_fun = ext.lazydict(
-            f_loss=lambda: tensor_utils.compile_function(inputs + extra_inputs, loss),
-        )
+            if extra_inputs is None:
+                extra_inputs = list()
+            self._input_vars = inputs + extra_inputs
+            self._opt_fun = ext.lazydict(
+                f_loss=lambda: tensor_utils.compile_function(inputs + extra_inputs, loss),
+            )
 
     def loss(self, inputs, extra_inputs=None):
         if extra_inputs is None:

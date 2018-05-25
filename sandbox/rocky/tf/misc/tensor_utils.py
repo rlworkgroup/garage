@@ -30,7 +30,8 @@ def new_tensor(name, ndim, dtype):
 
 
 def new_tensor_like(name, arr_like):
-    return new_tensor(name, arr_like.get_shape().ndims, arr_like.dtype.base_dtype)
+    return new_tensor(name,
+                      arr_like.get_shape().ndims, arr_like.dtype.base_dtype)
 
 
 def concat_tensor_list(tensor_list):
@@ -98,7 +99,8 @@ def to_onehot_sym(inds, dim):
 def pad_tensor(x, max_len):
     return np.concatenate([
         x,
-        np.tile(np.zeros_like(x[0]), (max_len - len(x),) + (1,) * np.ndim(x[0]))
+        np.tile(
+            np.zeros_like(x[0]), (max_len - len(x), ) + (1, ) * np.ndim(x[0]))
     ])
 
 
@@ -118,3 +120,25 @@ def pad_tensor_dict(tensor_dict, max_len):
         else:
             ret[k] = pad_tensor(tensor_dict[k], max_len)
     return ret
+
+
+class enclosing_scope(object):
+    def __init__(self, enclosing_name, name, **kwargs):
+        self.enclosing_scope = None
+        self.scope = None
+        self.enclosing_name = enclosing_name
+        self.name = name
+        self.kwargs = kwargs
+
+    def __enter__(self):
+        if self.enclosing_name not in tf.get_variable_scope().name:
+            self.enclosing_scope = tf.variable_scope(self.enclosing_name,
+                                                     self.kwargs)
+            self.enclosing_scope.__enter__()
+        self.scope = tf.variable_scope(self.name, self.kwargs)
+        self.scope.__enter__()
+
+    def __exit__(self, *args):
+        self.scope.__exit__(*args)
+        if self.enclosing_scope is not None:
+            self.enclosing_scope.__exit__(*args)
