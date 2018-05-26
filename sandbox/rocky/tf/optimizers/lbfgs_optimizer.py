@@ -1,12 +1,12 @@
+import time
 
+import scipy.optimize
+import tensorflow as tf
 
+from rllab.core import Serializable
 from rllab.misc import ext
 from sandbox.rocky.tf.misc import tensor_utils
 from sandbox.rocky.tf.misc.tensor_utils import enclosing_scope
-from rllab.core import Serializable
-import tensorflow as tf
-import scipy.optimize
-import time
 
 
 class LbfgsOptimizer(Serializable):
@@ -21,9 +21,15 @@ class LbfgsOptimizer(Serializable):
         self._opt_fun = None
         self._target = None
         self._callback = callback
-        self._name = name
 
-    def update_opt(self, loss, target, inputs, extra_inputs=None, name="update_opt", *args, **kwargs):
+    def update_opt(self,
+                   loss,
+                   target,
+                   inputs,
+                   extra_inputs=None,
+                   name="update_opt",
+                   *args,
+                   **kwargs):
         """
         :param loss: Symbolic expression for the loss function.
         :param target: A parameterized object to optimize over. It should implement methods of the
@@ -36,8 +42,12 @@ class LbfgsOptimizer(Serializable):
             self._target = target
 
             def get_opt_output():
-                flat_grad = tensor_utils.flatten_tensor_variables(tf.gradients(loss, target.get_params(trainable=True)))
-                return [tf.cast(loss, tf.float64), tf.cast(flat_grad, tf.float64)]
+                flat_grad = tensor_utils.flatten_tensor_variables(
+                    tf.gradients(loss, target.get_params(trainable=True)))
+                return [
+                    tf.cast(loss, tf.float64),
+                    tf.cast(flat_grad, tf.float64)
+                ]
 
             if extra_inputs is None:
                 extra_inputs = list()
@@ -70,20 +80,24 @@ class LbfgsOptimizer(Serializable):
         start_time = time.time()
 
         if self._callback:
+
             def opt_callback(params):
                 loss = self._opt_fun["f_loss"](*(inputs + extra_inputs))
                 elapsed = time.time() - start_time
-                self._callback(dict(
-                    loss=loss,
-                    params=params,
-                    itr=itr[0],
-                    elapsed=elapsed,
-                ))
+                self._callback(
+                    dict(
+                        loss=loss,
+                        params=params,
+                        itr=itr[0],
+                        elapsed=elapsed,
+                    ))
                 itr[0] += 1
         else:
             opt_callback = None
 
         scipy.optimize.fmin_l_bfgs_b(
-            func=f_opt_wrapper, x0=self._target.get_param_values(trainable=True),
-            maxiter=self._max_opt_itr, callback=opt_callback,
+            func=f_opt_wrapper,
+            x0=self._target.get_param_values(trainable=True),
+            maxiter=self._max_opt_itr,
+            callback=opt_callback,
         )

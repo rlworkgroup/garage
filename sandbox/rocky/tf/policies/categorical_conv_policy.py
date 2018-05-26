@@ -1,28 +1,30 @@
-from sandbox.rocky.tf.core import LayersPowered
+import tensorflow as tf
+
 import sandbox.rocky.tf.core.layers as L
-from sandbox.rocky.tf.core import ConvNetwork
 from rllab.core import Serializable
+from rllab.misc.overrides import overrides
+from sandbox.rocky.tf.core import ConvNetwork
+from sandbox.rocky.tf.core import LayersPowered
 from sandbox.rocky.tf.distributions import Categorical
-from sandbox.rocky.tf.policies import StochasticPolicy
-from rllab.misc import ext
 from sandbox.rocky.tf.misc import tensor_utils
 from sandbox.rocky.tf.misc.tensor_utils import enclosing_scope
-from rllab.misc.overrides import overrides
+from sandbox.rocky.tf.policies import StochasticPolicy
 from sandbox.rocky.tf.spaces import Discrete
-import tensorflow as tf
 
 
 class CategoricalConvPolicy(StochasticPolicy, LayersPowered, Serializable):
     def __init__(
             self,
-            name,
             env_spec,
-            conv_filters, conv_filter_sizes, conv_strides, conv_pads,
+            conv_filters,
+            conv_filter_sizes,
+            conv_strides,
+            conv_pads,
             hidden_sizes=[],
             hidden_nonlinearity=tf.nn.relu,
             output_nonlinearity=tf.nn.softmax,
             prob_network=None,
-            name="CategoricalConvPolicy"
+            name="CategoricalConvPolicy",
     ):
         """
         :param env_spec: A spec for the mdp.
@@ -56,8 +58,7 @@ class CategoricalConvPolicy(StochasticPolicy, LayersPowered, Serializable):
         self._l_obs = prob_network.input_layer
         self._f_prob = tensor_utils.compile_function(
             [prob_network.input_layer.input_var],
-            L.get_output(prob_network.output_layer)
-        )
+            L.get_output(prob_network.output_layer))
 
         self._dist = Categorical(env_spec.action_space.n)
 
@@ -69,9 +70,14 @@ class CategoricalConvPolicy(StochasticPolicy, LayersPowered, Serializable):
         return True
 
     @overrides
-    def dist_info_sym(self, obs_var, state_info_vars=None, name="dist_info_sym"):
+    def dist_info_sym(self,
+                      obs_var,
+                      state_info_vars=None,
+                      name="dist_info_sym"):
         with enclosing_scope(self._name, name):
-            return dict(prob=L.get_output(self._l_prob, {self._l_obs: tf.cast(obs_var, tf.float32)}))
+            return dict(
+                prob=L.get_output(self._l_prob,
+                                  {self._l_obs: tf.cast(obs_var, tf.float32)}))
 
     @overrides
     def dist_info(self, obs, state_infos=None):
