@@ -1,22 +1,26 @@
-import base64
-import csv
-import datetime
-import json
 import os
 import os.path as osp
 import pickle
 import sys
-from contextlib import contextmanager
-from enum import Enum
-
+import csv
+import datetime
 import dateutil.tz
 import joblib
-import numpy as np
+import json
+import pickle
+import base64
 
-from rllab.misc.autoargs import get_all_parameters
-from rllab.misc.console import mkdir_p, colorize
+from contextlib import contextmanager
+from enum import Enum
+import numpy as np
+import tensorflow as tf
+
 from rllab.misc.tabulate import tabulate
+from rllab.misc.console import mkdir_p
+from rllab.misc.console import colorize
+from rllab.misc.autoargs import get_all_parameters
 from rllab.misc.tensorboard_output import TensorBoardOutput
+from rllab.misc.tensorboard_summary import Summary
 
 _prefixes = []
 _prefix_str = ''
@@ -40,10 +44,10 @@ _snapshot_gap = 1
 _log_tabular_only = False
 _header_printed = False
 
-_tensorboard_default_step = 0
 _tensorboard_step_key = None
 
 _tensorboard = TensorBoardOutput()
+_tensorboard_summary = Summary()
 
 
 def _add_output(file_name, arr, fds, mode='a'):
@@ -86,6 +90,7 @@ def remove_tabular_output(file_name):
 
 def set_tensorboard_dir(dir_name):
     _tensorboard.set_dir(dir_name)
+    _tensorboard_summary.set_dir(dir_name)
 
 
 def set_snapshot_dir(dir_name):
@@ -158,6 +163,15 @@ def record_tensor(key, val):
     _tensorboard.record_tensor(key, val)
 
 
+def record_histogram(key, val):
+    _tensorboard_summary.record_histogram(str(key), val)
+
+
+def record_histogram_by_type(histogram_type, key=None, shape=[1000], **kwargs):
+    _tensorboard_summary.record_histogram_by_type(histogram_type, key, shape,
+                                                  **kwargs)
+
+
 def push_tabular_prefix(key):
     _tabular_prefixes.append(key)
     global _tabular_prefix_str
@@ -218,6 +232,7 @@ def dump_tensorboard(*args, **kwargs):
     if _tensorboard_step_key and _tensorboard_step_key in tabular_dict:
         step = tabular_dict[_tensorboard_step_key]
     _tensorboard.dump_tensorboard(step)
+    _tensorboard_summary.dump_tensorboard(step)
 
 
 def dump_tabular(*args, **kwargs):
@@ -229,10 +244,6 @@ def dump_tabular(*args, **kwargs):
             for line in tabulate(_tabular).split('\n'):
                 log(line, *args, **kwargs)
         tabular_dict = dict(_tabular)
-
-        # write to the tensorboard folder
-        # This assumes that the keys in each iteration won't change!
-        dump_tensorboard(args, kwargs)
 
         # Also write to the csv files
         # This assumes that the keys in each iteration won't change!
@@ -246,6 +257,10 @@ def dump_tabular(*args, **kwargs):
             writer.writerow(tabular_dict)
             tabular_fd.flush()
         del _tabular[:]
+
+    # write to the tensorboard folder
+    # This assumes that the keys in each iteration won't change!
+    dump_tensorboard(args, kwargs)
 
 
 def pop_prefix():
