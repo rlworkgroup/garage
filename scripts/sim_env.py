@@ -74,7 +74,7 @@ def visualize_env(env, mode, max_steps=sys.maxsize, speedup=1):
             if isinstance(env, (MujocoEnv, MazeEnv)):
                 trs = [tr]
                 actions = [np.zeros(2)]
-                from rllab.mujoco_py import glfw
+                import glfw
 
                 def cb(window, key, scancode, action, mods):
                     actions[0] = env.action_from_key(key)
@@ -97,7 +97,9 @@ def visualize_env(env, mode, max_steps=sys.maxsize, speedup=1):
                         print(e)
                 return
 
-            assert hasattr(env, "start_interactive"), "The environment must implement method start_interactive"
+            assert hasattr(
+                env, "start_interactive"
+            ), "The environment must implement method start_interactive"
 
             env.start_interactive()
         # Assume using matplotlib
@@ -125,15 +127,17 @@ def visualize_env(env, mode, max_steps=sys.maxsize, speedup=1):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('env', type=str,
-                        help='module path to the env class')
-    parser.add_argument('--mode', type=str, default='static',
-                        choices=['noop', 'random', 'static', 'human'],
-                        help='module path to the env class')
+    parser.add_argument('env', type=str, help='module path to the env class')
+    parser.add_argument(
+        '--mode',
+        type=str,
+        default='static',
+        choices=['noop', 'random', 'static', 'human'],
+        help='module path to the env class')
     parser.add_argument('--speedup', type=float, default=1, help='speedup')
-    parser.add_argument('--max_steps', type=int,
-                        default=sys.maxsize, help='max steps')
+    parser.add_argument(
+        '--max_steps', type=int, default=sys.maxsize, help='max steps')
     args = parser.parse_args()
     env = load_class(args.env, Env, ["rllab", "envs"])()
-    visualize_env(env, mode=args.mode, max_steps=args.max_steps,
-                  speedup=args.speedup)
+    visualize_env(
+        env, mode=args.mode, max_steps=args.max_steps, speedup=args.speedup)

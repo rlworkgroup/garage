@@ -1,5 +1,5 @@
-from rllab.envs import Step
-from .mujoco_env import MujocoEnv
+from rllab.envs.base import Step
+from rllab.envs.mujoco.mujoco_env import MujocoEnv
 import numpy as np
 from rllab.core import Serializable
 from rllab.misc.overrides import overrides
@@ -11,21 +11,25 @@ class SimpleHumanoidEnv(MujocoEnv, Serializable):
 
     FILE = 'simple_humanoid.xml'
 
-    @autoargs.arg('vel_deviation_cost_coeff', type=float,
-                  help='cost coefficient for velocity deviation')
-    @autoargs.arg('alive_bonus', type=float,
-                  help='bonus reward for being alive')
-    @autoargs.arg('ctrl_cost_coeff', type=float,
-                  help='cost coefficient for control inputs')
-    @autoargs.arg('impact_cost_coeff', type=float,
-                  help='cost coefficient for impact')
-    def __init__(
-            self,
-            vel_deviation_cost_coeff=1e-2,
-            alive_bonus=0.2,
-            ctrl_cost_coeff=1e-3,
-            impact_cost_coeff=1e-5,
-            *args, **kwargs):
+    @autoargs.arg(
+        'vel_deviation_cost_coeff',
+        type=float,
+        help='cost coefficient for velocity deviation')
+    @autoargs.arg(
+        'alive_bonus', type=float, help='bonus reward for being alive')
+    @autoargs.arg(
+        'ctrl_cost_coeff',
+        type=float,
+        help='cost coefficient for control inputs')
+    @autoargs.arg(
+        'impact_cost_coeff', type=float, help='cost coefficient for impact')
+    def __init__(self,
+                 vel_deviation_cost_coeff=1e-2,
+                 alive_bonus=0.2,
+                 ctrl_cost_coeff=1e-3,
+                 impact_cost_coeff=1e-5,
+                 *args,
+                 **kwargs):
         self.vel_deviation_cost_coeff = vel_deviation_cost_coeff
         self.alive_bonus = alive_bonus
         self.ctrl_cost_coeff = ctrl_cost_coeff
@@ -34,7 +38,7 @@ class SimpleHumanoidEnv(MujocoEnv, Serializable):
         Serializable.quick_init(self, locals())
 
     def get_current_obs(self):
-        data = self.model.data
+        data = self.sim.data
         return np.concatenate([
             data.qpos.flat,
             data.qvel.flat,
@@ -43,8 +47,8 @@ class SimpleHumanoidEnv(MujocoEnv, Serializable):
         ])
 
     def _get_com(self):
-        data = self.model.data
-        mass = self.model.body_mass
+        data = self.sim.data
+        mass = self.sim.body_mass
         xpos = data.xipos
         return (np.sum(mass * xpos, 0) / np.sum(mass))[0]
 
@@ -53,7 +57,7 @@ class SimpleHumanoidEnv(MujocoEnv, Serializable):
         next_obs = self.get_current_obs()
 
         alive_bonus = self.alive_bonus
-        data = self.model.data
+        data = self.sim.data
 
         comvel = self.get_body_comvel("torso")
 

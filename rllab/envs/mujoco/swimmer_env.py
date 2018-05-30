@@ -1,6 +1,6 @@
 from rllab.envs import Step
 from rllab.misc.overrides import overrides
-from .mujoco_env import MujocoEnv
+from rllab.envs.mujoco.mujoco_env import MujocoEnv
 import numpy as np
 from rllab.core import Serializable
 from rllab.misc import logger
@@ -12,25 +12,22 @@ class SwimmerEnv(MujocoEnv, Serializable):
     FILE = 'swimmer.xml'
     ORI_IND = 2
 
-    @autoargs.arg('ctrl_cost_coeff', type=float,
-                  help='cost coefficient for controls')
-    def __init__(
-            self,
-            ctrl_cost_coeff=1e-2,
-            *args, **kwargs):
+    @autoargs.arg(
+        'ctrl_cost_coeff', type=float, help='cost coefficient for controls')
+    def __init__(self, ctrl_cost_coeff=1e-2, *args, **kwargs):
         self.ctrl_cost_coeff = ctrl_cost_coeff
         super(SwimmerEnv, self).__init__(*args, **kwargs)
         Serializable.quick_init(self, locals())
 
     def get_current_obs(self):
         return np.concatenate([
-            self.model.data.qpos.flat,
-            self.model.data.qvel.flat,
+            self.sim.data.qpos.flat,
+            self.sim.data.qvel.flat,
             self.get_body_com("torso").flat,
         ]).reshape(-1)
 
     def get_ori(self):
-        return self.model.data.qpos[self.__class__.ORI_IND]
+        return self.sim.data.qpos[self.__class__.ORI_IND]
 
     def step(self, action):
         self.forward_dynamics(action)

@@ -24,6 +24,7 @@ dependencies:
         - PyOpenGL
         - nose2
         - pyzmq
+        - mujoco-py<1.50.2,>=1.50.1
         - cached_property
         - cloudpickle
         - git+https://github.com/Lasagne/Lasagne.git@7992faa80fa5233a786e2582a605e854cea7d1cf#egg=Lasagne

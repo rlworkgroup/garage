@@ -20,9 +20,9 @@ class AntEnv(MujocoEnv, Serializable):
 
     def get_current_obs(self):
         return np.concatenate([
-            self.model.data.qpos.flat,
-            self.model.data.qvel.flat,
-            np.clip(self.model.data.cfrc_ext, -1, 1).flat,
+            self.sim.data.qpos.flat,
+            self.sim.data.qvel.flat,
+            np.clip(self.sim.data.cfrc_ext, -1, 1).flat,
             self.get_body_xmat("torso").flat,
             self.get_body_com("torso"),
         ]).reshape(-1)
@@ -35,7 +35,7 @@ class AntEnv(MujocoEnv, Serializable):
         scaling = (ub - lb) * 0.5
         ctrl_cost = 0.5 * 1e-2 * np.sum(np.square(action / scaling))
         contact_cost = 0.5 * 1e-3 * np.sum(
-            np.square(np.clip(self.model.data.cfrc_ext, -1, 1))),
+            np.square(np.clip(self.sim.data.cfrc_ext, -1, 1))),
         survive_reward = 0.05
         reward = forward_reward - ctrl_cost - contact_cost + survive_reward
         state = self._state
@@ -48,8 +48,10 @@ class AntEnv(MujocoEnv, Serializable):
     @overrides
     def get_ori(self):
         ori = [0, 1, 0, 0]
-        rot = self.model.data.qpos[self.__class__.ORI_IND:self.__class__.ORI_IND + 4]  # take the quaternion
-        ori = q_mult(q_mult(rot, ori), q_inv(rot))[1:3]  # project onto x-y plane
+        rot = self.sim.data.qpos[self.__class__.ORI_IND:self.__class__.ORI_IND
+                                 + 4]  # take the quaternion
+        ori = q_mult(q_mult(rot, ori),
+                     q_inv(rot))[1:3]  # project onto x-y plane
         ori = math.atan2(ori[1], ori[0])
         return ori
 
@@ -63,4 +65,3 @@ class AntEnv(MujocoEnv, Serializable):
         logger.record_tabular('MaxForwardProgress', np.max(progs))
         logger.record_tabular('MinForwardProgress', np.min(progs))
         logger.record_tabular('StdForwardProgress', np.std(progs))
-

@@ -1,22 +1,26 @@
-from rllab.mujoco_py import glfw, mjcore
-import rllab.mujoco_py.mjconstants as C
-from rllab.mujoco_py.mjlib import mjlib
-from ctypes import byref
 import ctypes
+from ctypes import byref
 from threading import Lock
 
-mjCAT_ALL = 7
+import mujoco_py
+from mujoco_py import const as C
+from mujoco_py import functions
+from mujoco_py import MjRenderContext
+from mujoco_py import MjSim
+from mujoco_py.builder import cymj
+from mujoco_py.generated.const import CAT_ALL
+import glfw
+# https://github.com/openai/mujoco-py/blob/6ac6ac203a875ef35b1505827264cadccbfd9f05/mujoco_py/builder.py#L61
+
+PyMjrRect = cymj.PyMjrRect
+PyMjvCamera = cymj.PyMjvCamera
 
 
 class EmbeddedViewer(object):
-
     def __init__(self):
         self.last_render_time = 0
-        self.objects = mjcore.MJVOBJECTS()
-        self.cam = mjcore.MJVCAMERA()
-        self.vopt = mjcore.MJVOPTION()
-        self.ropt = mjcore.MJROPTION()
-        self.con = mjcore.MJRCONTEXT()
+        self.cam = PyMjvCamera()
+
         self.running = False
         self.speedtype = 1
         self.window = None
@@ -35,52 +39,55 @@ class EmbeddedViewer(object):
     def set_model(self, model):
         self.model = model
         if model:
-            self.data = model.data
+            self.sim = MjSim(self.model)
+            self.data = self.sim.data
+            self.con = MjRenderContext(self.sim)
+            self.scn = self.con.scn
+            self.vopt = self.con.vopt
         else:
             self.data = None
         if self.running:
             if model:
-                mjlib.mjr_makeContext(model.ptr, byref(self.con), 150)
+                functions.mjr_makeContext(self.model, self.con, 150)
             else:
-                mjlib.mjr_makeContext(None, byref(self.con), 150)
+                functions.mjr_makeContext(None, self.con, 150)
             self.render()
         if model:
             self.autoscale()
 
     def autoscale(self):
-        self.cam.lookat[0] = self.model.stat.center[0]
-        self.cam.lookat[1] = self.model.stat.center[1]
-        self.cam.lookat[2] = self.model.stat.center[2]
-        self.cam.distance = 1.0 * self.model.stat.extent
+        self.cam.lookat[0] = self.sim.stat.center[0]
+        self.cam.lookat[1] = self.sim.stat.center[1]
+        self.cam.lookat[2] = self.sim.stat.center[2]
+        self.cam.distance = 1.0 * self.sim.stat.extent
         self.cam.camid = -1
         self.cam.trackbodyid = -1
         if self.window:
             width, height = glfw.get_framebuffer_size(self.window)
-            mjlib.mjv_updateCameraPose(byref(self.cam), width * 1.0 / height)
+            functions.mjv_moveCamera(self.model, None, width, height, self.scn,
+                                     self.cam)
 
     def get_rect(self):
-        rect = mjcore.MJRRECT(0, 0, 0, 0)
+        rect = PyMjrRect()
         rect.width, rect.height = glfw.get_framebuffer_size(self.window)
         return rect
 
     def record_frame(self, **kwargs):
-        self.frames.append({'pos': self.model.data.qpos, 'extra': kwargs})
+        self.frames.append({'pos': self.sim.data.qpos, 'extra': kwargs})
 
     def clear_frames(self):
         self.frames = []
 
     def render(self):
         rect = self.get_rect()
-        arr = (ctypes.c_double * 3)(0, 0, 0)
-        mjlib.mjv_makeGeoms(
-            self.model.ptr, self.data.ptr, byref(self.objects),
-            byref(self.vopt), mjCAT_ALL, 0, None, None,
-            ctypes.cast(arr, ctypes.POINTER(ctypes.c_double)))
-        mjlib.mjv_setCamera(self.model.ptr, self.data.ptr, byref(self.cam))
-        mjlib.mjv_updateCameraPose(
-            byref(self.cam), rect.width * 1.0 / rect.height)
-        mjlib.mjr_render(0, rect, byref(self.objects), byref(
-            self.ropt), byref(self.cam.pose), byref(self.con))
+        width = rect.width, height = rect.height
+
+        functions.mjv_addGeoms(self.model, self.data, self.vopt, None, CAT_ALL,
+                               self.scn)
+        functions.mjv_updateCamera(self.model, self.data, self.scn)
+        functions.mjv_moveCamera(self.model, None, width / height,
+                                 height / height, self.scn, self.cam)
+        functions.mjr_render(rect, self.scn, self.con)
 
     def render_internal(self):
         if not self.data:
@@ -99,19 +106,13 @@ class EmbeddedViewer(object):
 
         self.window = window
 
-        mjlib.mjv_makeObjects(byref(self.objects), 1000)
-
-        mjlib.mjv_defaultCamera(byref(self.cam))
-        mjlib.mjv_defaultOption(byref(self.vopt))
-        mjlib.mjr_defaultOption(byref(self.ropt))
-
-        mjlib.mjr_defaultContext(byref(self.con))
+        functions.mjv_makeScene(self.scn, 1000)
 
         if self.model:
-            mjlib.mjr_makeContext(self.model.ptr, byref(self.con), 150)
+            functions.mjr_makeContext(self.model, self.con, 150)
             self.autoscale()
         else:
-            mjlib.mjr_makeContext(None, byref(self.con), 150)
+            functions.mjr_makeContext(None, self.con, 150)
 
     def handle_mouse_move(self, window, xpos, ypos):
 
@@ -149,7 +150,8 @@ class EmbeddedViewer(object):
 
         self.gui_lock.acquire()
 
-        mjlib.mjv_moveCamera(action, dx, dy, byref(self.cam), width, height)
+        functions.mjv_moveCamera(self.model, action, dx / height, dy / height,
+                                 self.scn, self.cam)
 
         self.gui_lock.release()
 
@@ -191,8 +193,9 @@ class EmbeddedViewer(object):
 
         # scroll
         self.gui_lock.acquire()
-        mjlib.mjv_moveCamera(C.MOUSE_ZOOM, 0, (-20 * y_offset),
-                             byref(self.cam), width, height)
+        functions.mjv_moveCamera(self.model, C.MOUSE_ZOOM, 0,
+                                 (-20 * y_offset) / height, self.scn, self.cam)
+
         self.gui_lock.release()
 
     def should_stop(self):
@@ -207,6 +210,6 @@ class EmbeddedViewer(object):
 
     def finish(self):
         glfw.terminate()
-        mjlib.mjr_freeContext(byref(self.con))
-        mjlib.mjv_freeObjects(byref(self.objects))
+        functions.mjr_freeContext(self.con)
+        functions.mjv_freeScene(self.scn)
         self.running = False

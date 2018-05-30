@@ -13,20 +13,20 @@ import os
 MUJOCO_ENABLED = True
 
 try:
-    import rllab.mujoco_py
-    from rllab.envs.mujoco import HalfCheetahEnv
-    from rllab.envs.mujoco import HopperEnv
-    from rllab.envs.mujoco import InvertedDoublePendulumEnv
-    from rllab.envs.mujoco import PointEnv
-    from rllab.envs.mujoco import SimpleHumanoidEnv
-    from rllab.envs.mujoco import SwimmerEnv
-    from rllab.envs.mujoco import Walker2DEnv
-    from rllab.envs.mujoco.gather import PointGatherEnv
-    from rllab.envs.mujoco.gather import SwimmerGatherEnv
-    from rllab.envs.mujoco.gather import AntGatherEnv
-    from rllab.envs.mujoco.maze import PointMazeEnv
-    from rllab.envs.mujoco.maze import SwimmerMazeEnv
-    from rllab.envs.mujoco.maze import AntMazeEnv
+    import mujoco_py
+    from rllab.envs.mujoco.half_cheetah_env import HalfCheetahEnv
+    from rllab.envs.mujoco.hopper_env import HopperEnv
+    from rllab.envs.mujoco.inverted_double_pendulum_env import InvertedDoublePendulumEnv
+    from rllab.envs.mujoco.point_env import PointEnv
+    from rllab.envs.mujoco.simple_humanoid_env import SimpleHumanoidEnv
+    from rllab.envs.mujoco.swimmer_env import SwimmerEnv
+    from rllab.envs.mujoco.walker2d_env import Walker2DEnv
+    from rllab.envs.mujoco.gather.point_gather_env import PointGatherEnv
+    from rllab.envs.mujoco.gather.swimmer_gather_env import SwimmerGatherEnv
+    from rllab.envs.mujoco.gather.ant_gather_env import AntGatherEnv
+    from rllab.envs.mujoco.maze.point_maze_env import PointMazeEnv
+    from rllab.envs.mujoco.maze.swimmer_maze_env import SwimmerMazeEnv
+    from rllab.envs.mujoco.maze.ant_maze_env import AntMazeEnv
 except OSError:
     print("Warning: Mujoco not installed. Skipping mujoco-related tests")
     MUJOCO_ENABLED = False
@@ -63,24 +63,12 @@ if MUJOCO_ENABLED:
     ])
 
 envs = [cls() for cls in simple_env_classes]
-envs.append(
-    ProxyEnv(envs[0])
-)
-envs.append(
-    IdentificationEnv(CartpoleEnv, {})
-)
-envs.append(
-    NoisyObservationEnv(CartpoleEnv())
-)
-envs.append(
-    DelayedActionEnv(CartpoleEnv())
-)
-envs.append(
-    NormalizedEnv(CartpoleEnv())
-)
-envs.append(
-    GymEnv('CartPole-v0')
-)
+envs.append(ProxyEnv(envs[0]))
+envs.append(IdentificationEnv(CartpoleEnv, {}))
+envs.append(NoisyObservationEnv(CartpoleEnv()))
+envs.append(DelayedActionEnv(CartpoleEnv()))
+envs.append(NormalizedEnv(CartpoleEnv()))
+envs.append(GymEnv('CartPole-v0'))
 
 
 @tools.params(*envs)

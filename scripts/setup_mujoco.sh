@@ -1,14 +1,14 @@
 #!/bin/bash
 
 if [ "$(uname)" == "Darwin" ]; then
-    mujoco_file="libmujoco131.dylib"
+    mujoco_file="libmujoco150.dylib"
     glfw_file="libglfw.3.dylib"
-    zip_file="mjpro131_osx.zip"
+    zip_file="mjpro150_osx.zip"
     mktemp_cmd="mktemp -d /tmp/mujoco"
 elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
-    mujoco_file="libmujoco131.so"
+    mujoco_file="libmujoco150.so"
     glfw_file="libglfw.so.3"
-    zip_file="mjpro131_linux.zip"
+    zip_file="mjpro150_linux.zip"
     mktemp_cmd="mktemp -d"
 fi
 
@@ -23,18 +23,18 @@ if [ ! -f vendor/mujoco/$mujoco_file ]; then
     rm -r /tmp/mujoco
     dir=`$mktemp_cmd`
     unzip $path -d $dir
-    if [ ! -f $dir/mjpro131/bin/$mujoco_file ]; then
+    if [ ! -f $dir/mjpro150/bin/$mujoco_file ]; then
         echo "mjpro/$mujoco_file not found. Make sure you have the correct file (most likely named $zip_file)"
         exit 0
     fi
-    if [ ! -f $dir/mjpro131/bin/$glfw_file ]; then
+    if [ ! -f $dir/mjpro150/bin/$glfw_file ]; then
         echo "mjpro/$glfw_file not found. Make sure you have the correct file (most likely named $zip_file)"
         exit 0
     fi
 
     mkdir -p vendor/mujoco
-    cp $dir/mjpro131/bin/$mujoco_file vendor/mujoco/
-    cp $dir/mjpro131/bin/$glfw_file vendor/mujoco/
+    cp $dir/mjpro150/bin/$mujoco_file vendor/mujoco/
+    cp $dir/mjpro150/bin/$glfw_file vendor/mujoco/
 fi
 
 if [ ! -f vendor/mujoco/mjkey.txt ]; then
@@ -46,6 +46,12 @@ if [ ! -f vendor/mujoco/mjkey.txt ]; then
         exit 0
     fi
     cp $path vendor/mujoco/mjkey.txt
+fi
+
+if [ "$(conda info --envs | grep -c rllab3)" -eq "1" ]; then
+    /bin/bash -c "source activate rllab3; pip3 install -U 'mujoco-py<1.50.2,>=1.50.1'; source deactivate"
+else
+    echo "Installation of mujoco_py skipped, since the conda environment rllab3 was not found."
 fi
 
 echo "Mujoco has been set up!"

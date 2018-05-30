@@ -21,18 +21,16 @@ class HalfCheetahEnv(MujocoEnv, Serializable):
 
     def get_current_obs(self):
         return np.concatenate([
-            self.model.data.qpos.flatten()[1:],
-            self.model.data.qvel.flat,
+            self.sim.data.qpos.flatten()[1:],
+            self.sim.data.qvel.flat,
             self.get_body_com("torso").flat,
         ])
 
     def get_body_xmat(self, body_name):
-        idx = self.model.body_names.index(body_name)
-        return self.model.data.xmat[idx].reshape((3, 3))
+        return self.data.get_body_xmat(body_name).reshape((3, 3))
 
     def get_body_com(self, body_name):
-        idx = self.model.body_names.index(body_name)
-        return self.model.data.com_subtree[idx]
+        return self.data.get_body_xpos(body_name)
 
     def step(self, action):
         self.forward_dynamics(action)

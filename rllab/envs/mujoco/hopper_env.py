@@ -7,7 +7,6 @@ from rllab.misc import autoargs
 from rllab.misc import logger
 from rllab.misc.overrides import overrides
 
-
 # states: [
 # 0: z-coord,
 # 1: x-coord (forward distance),
@@ -20,15 +19,11 @@ class HopperEnv(MujocoEnv, Serializable):
 
     FILE = 'hopper.xml'
 
-    @autoargs.arg('alive_coeff', type=float,
-                  help='reward coefficient for being alive')
-    @autoargs.arg('ctrl_cost_coeff', type=float,
-                  help='cost coefficient for controls')
-    def __init__(
-            self,
-            alive_coeff=1,
-            ctrl_cost_coeff=0.01,
-            *args, **kwargs):
+    @autoargs.arg(
+        'alive_coeff', type=float, help='reward coefficient for being alive')
+    @autoargs.arg(
+        'ctrl_cost_coeff', type=float, help='cost coefficient for controls')
+    def __init__(self, alive_coeff=1, ctrl_cost_coeff=0.01, *args, **kwargs):
         self.alive_coeff = alive_coeff
         self.ctrl_cost_coeff = ctrl_cost_coeff
         super(HopperEnv, self).__init__(*args, **kwargs)
@@ -37,10 +32,10 @@ class HopperEnv(MujocoEnv, Serializable):
     @overrides
     def get_current_obs(self):
         return np.concatenate([
-            self.model.data.qpos[0:1].flat,
-            self.model.data.qpos[2:].flat,
-            np.clip(self.model.data.qvel, -10, 10).flat,
-            np.clip(self.model.data.qfrc_constraint, -10, 10).flat,
+            self.sim.data.qpos[0:1].flat,
+            self.sim.data.qpos[2:].flat,
+            np.clip(self.sim.data.qvel, -10, 10).flat,
+            np.clip(self.sim.data.qfrc_constraint, -10, 10).flat,
             self.get_body_com("torso").flat,
         ])
 

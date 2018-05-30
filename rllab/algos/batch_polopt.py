@@ -14,7 +14,8 @@ class BatchSampler(BaseSampler):
         self.algo = algo
 
     def start_worker(self):
-        parallel_sampler.populate_task(self.algo.env, self.algo.policy, scope=self.algo.scope)
+        parallel_sampler.populate_task(
+            self.algo.env, self.algo.policy, scope=self.algo.scope)
 
     def shutdown_worker(self):
         parallel_sampler.terminate_task(scope=self.algo.scope)
@@ -30,7 +31,8 @@ class BatchSampler(BaseSampler):
         if self.algo.whole_paths:
             return paths
         else:
-            paths_truncated = parallel_sampler.truncate_paths(paths, self.algo.batch_size)
+            paths_truncated = parallel_sampler.truncate_paths(
+                paths, self.algo.batch_size)
             return paths_truncated
 
 
@@ -40,28 +42,26 @@ class BatchPolopt(RLAlgorithm):
     This includes various policy gradient methods like vpg, npg, ppo, trpo, etc.
     """
 
-    def __init__(
-            self,
-            env,
-            policy,
-            baseline,
-            scope=None,
-            n_itr=500,
-            start_itr=0,
-            batch_size=5000,
-            max_path_length=500,
-            discount=0.99,
-            gae_lambda=1,
-            plot=False,
-            pause_for_plot=False,
-            center_adv=True,
-            positive_adv=False,
-            store_paths=False,
-            whole_paths=True,
-            sampler_cls=None,
-            sampler_args=None,
-            **kwargs
-    ):
+    def __init__(self,
+                 env,
+                 policy,
+                 baseline,
+                 scope=None,
+                 n_itr=500,
+                 start_itr=0,
+                 batch_size=5000,
+                 max_path_length=500,
+                 discount=0.99,
+                 gae_lambda=1,
+                 plot=False,
+                 pause_for_plot=False,
+                 center_adv=True,
+                 positive_adv=False,
+                 store_paths=False,
+                 whole_paths=True,
+                 sampler_cls=None,
+                 sampler_args=None,
+                 **kwargs):
         """
         :param env: Environment
         :param policy: Policy
@@ -107,6 +107,7 @@ class BatchPolopt(RLAlgorithm):
     def start_worker(self):
         self.sampler.start_worker()
         if self.plot:
+            plotter.init_worker()
             plotter.init_plot(self.env, self.policy)
 
     def shutdown_worker(self):
@@ -134,7 +135,7 @@ class BatchPolopt(RLAlgorithm):
                     self.update_plot()
                     if self.pause_for_plot:
                         input("Plotting evaluation run: Press Enter to "
-                                  "continue...")
+                              "continue...")
 
         self.shutdown_worker()
 
