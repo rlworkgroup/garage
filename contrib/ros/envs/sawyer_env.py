@@ -161,7 +161,7 @@ class SawyerEnv(RosEnv, Serializable):
         done : a boolean, indicating whether the episode has ended
         info : a dictionary containing other diagnostic information from the previous action
         """
-        self._robot.set_command(action)
+        self._robot.send_command(action)
 
         obs = self._get_obs()
 
@@ -201,7 +201,7 @@ class SawyerEnv(RosEnv, Serializable):
         """
         reset the simulation
         """
-        self._robot.move_to_start_position()
+        self._robot.reset()
 
         # Randomize start position of object
         if self.has_object:
@@ -244,7 +244,7 @@ class SawyerEnv(RosEnv, Serializable):
         if self.has_object:
             self.height_offset = initial_model_pos['object0'][2]
 
-        self._robot.move_to_start_position()
+        self._robot.reset()
 
         if self._simulated:
             # Generate the world
@@ -306,7 +306,7 @@ class SawyerEnv(RosEnv, Serializable):
 
     # -------------------------------------------------------------------------------------------
     def _get_obs(self):
-        robot_obs = self._robot.get_obs()
+        robot_obs = self._robot.get_observation()
 
         # gazebo data message
         if self.has_object:
