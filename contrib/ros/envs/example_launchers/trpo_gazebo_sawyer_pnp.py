@@ -1,3 +1,5 @@
+import rospy
+
 from rllab.baselines.linear_feature_baseline import LinearFeatureBaseline
 from rllab.envs.normalized_env import normalize
 from rllab.misc.instrument import run_experiment_lite
@@ -10,6 +12,8 @@ from contrib.ros.envs.sawyer.pick_and_place_env import PickAndPlaceEnv
 
 
 def run_task(*_):
+    rospy.init_node('trpo_sim_sawyer_pnp_exp', anonymous=True)
+
     env = TfEnv(normalize(PickAndPlaceEnv()))
 
     policy = GaussianMLPPolicy(

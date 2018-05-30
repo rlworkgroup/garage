@@ -79,7 +79,6 @@ class SawyerEnv(RosEnv, Serializable):
         Serializable.quick_init(self, locals())
 
         RosEnv.__init__(self)
-        rospy.init_node('SawyerEnv', anonymous=True)
 
         # Verify robot is enabled
         self._robot = Sawyer(

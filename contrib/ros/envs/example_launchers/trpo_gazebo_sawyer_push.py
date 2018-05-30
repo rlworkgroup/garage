@@ -1,3 +1,5 @@
+import rospy
+
 from rllab.baselines.linear_feature_baseline import LinearFeatureBaseline
 from rllab.envs.normalized_env import normalize
 from rllab.misc.instrument import run_experiment_lite
@@ -10,6 +12,8 @@ from contrib.ros.envs.sawyer.push_env import PushEnv
 
 
 def run_task(*_):
+    rospy.init_node('trpo_sim_sawyer_push_exp', anonymous=True)
+
     env = TfEnv(normalize(PushEnv()))
 
     policy = GaussianMLPPolicy(
