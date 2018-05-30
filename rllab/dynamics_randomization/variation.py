@@ -59,6 +59,7 @@ class Variation:
     def var_range(self):
         return self._var_range
 
+
 class VariationsList:
     def __init__(self):
         self._list = []

@@ -15,7 +15,8 @@ from rllab.dynamics_randomization import VariationsList
 
 #Execute at the root of rllab
 MUJOCO_PY_PATH = os.getcwd()
-TOSSER_XML = osp.join(MUJOCO_PY_PATH, "rllab/dynamics_randomization/tosser.xml")
+TOSSER_XML = osp.join(MUJOCO_PY_PATH,
+                      "rllab/dynamics_randomization/tosser.xml")
 
 # Load original model text into memory
 tosser = ET.parse(TOSSER_XML)
@@ -56,7 +57,6 @@ for _ in range(1000):
     #viewer = MjViewer(sim)
 
     #sim_state = sim.get_state()
-
 
     #sim.set_state(sim_state)
 
