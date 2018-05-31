@@ -38,3 +38,5 @@ dependencies:
         - hyperopt
         - polling
         - tensorboard
+        - jsonmerge
+        - protobuf
