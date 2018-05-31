@@ -1,12 +1,15 @@
 from enum import Enum
 
+
 class VariationMethods(Enum):
     COEFFICIENT = 1
     ABSOLUTE = 2
 
+
 class VariationDistributions(Enum):
     GAUSSIAN = 1
     UNIFORM = 2
+
 
 class Variation:
     def __init__(self):
