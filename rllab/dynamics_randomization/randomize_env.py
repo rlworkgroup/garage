@@ -22,7 +22,7 @@ class RandomizedEnv(Env, Serializable):
 
         for v in variations.get_list():
             e = self._model.find(v.xpath)
-            if not e:
+            if e is None:
                 raise AttributeError("Can't find node in xml")
             v.elem = e
 
@@ -34,10 +34,12 @@ class RandomizedEnv(Env, Serializable):
             else:
                 v.default = np.array(list(map(float, val)))
 
+            if len(v.var_range) != 2 * len(val):
+                raise AttributeError("Range shape != default value shape")
+
     def reset(self):
         for v in self._variations.get_list():
             e = v.elem
-            # todo: handle size
             if v.distribution == VariationDistributions.GAUSSIAN:
                 c = np.random.normal(loc=v.var_range[0], scale=v.var_range[1])
             elif v.distribution == VariationDistributions.UNIFORM:
