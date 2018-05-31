@@ -7,6 +7,7 @@ import numpy as np
 from rllab.core.serializable import Serializable
 
 from contrib.ros.envs import sawyer_env
+from contrib.ros.robots.sawyer import Sawyer
 
 INITIAL_ROBOT_JOINT_POS = {
     'right_j0': -0.041662954890248294,
@@ -24,6 +25,7 @@ class PickAndPlaceEnv(sawyer_env.SawyerEnv, Serializable):
                  initial_goal,
                  task_obj_mgr,
                  sparse_reward=True,
+                 simulated=False,
                  distance_threshold=0.05,
                  target_range=0.15,
                  target_in_the_air=False):
@@ -36,11 +38,12 @@ class PickAndPlaceEnv(sawyer_env.SawyerEnv, Serializable):
         self.initial_goal = initial_goal
         self.goal = self.initial_goal.copy()
 
+        sawyer = Sawyer(simulated=simulated, control_mode='position')
+
         sawyer_env.SawyerEnv.__init__(
             self,
             task_obj_mgr=task_obj_mgr,
-            initial_robot_joint_pos=INITIAL_ROBOT_JOINT_POS,
-            robot_control_mode='position',
+            robot=sawyer,
             has_object=True,
             simulated=True,
             obj_range=0.15)

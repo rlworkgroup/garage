@@ -43,7 +43,7 @@ def run_task(*_):
 
     rospy.init_node('trpo_sim_sawyer_pnp_exp', anonymous=True)
 
-    push_env = PushEnv(initial_goal, task_obj_mgr)
+    push_env = PushEnv(initial_goal, task_obj_mgr, simulated=True)
 
     rospy.on_shutdown(push_env.shutdown)
 

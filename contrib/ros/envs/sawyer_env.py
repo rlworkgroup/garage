@@ -23,22 +23,17 @@ class SawyerEnv(RosEnv, Serializable):
 
     def __init__(self,
                  task_obj_mgr,
-                 initial_robot_joint_pos,
-                 robot_control_mode,
+                 robot,
                  has_object,
                  simulated=False,
                  obj_range=0.15):
         """
         :param task_obj_mgr: object
                 User uses this to manage every other objects used in task except for robots.
-        :param initial_robot_joint_pos: {str: float}
-                {'joint_name': value}
-        :param robot control mode: str
-                'effort'/'position'/'velocity'
+        :param robot: object
+                the robot interface for the environment
         :param has_object: bool
                 if there is object in this experiment
-        :param initial_model_pos: dict
-                joint positions and object positions
         :param simulated: bool
                 if the environment is for real robot or simulation
         :param obj_range: float
@@ -51,8 +46,8 @@ class SawyerEnv(RosEnv, Serializable):
         RosEnv.__init__(self)
 
         # Verify robot is enabled
-        self._robot = Sawyer(
-            initial_robot_joint_pos, control_mode=robot_control_mode)
+        self._robot = robot
+
         if not self._robot.enabled:
             raise RuntimeError('The robot is not enabled!')
             # TODO (gh/74: Add initialize interface for robot)
