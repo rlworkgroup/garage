@@ -80,18 +80,6 @@ class MujocoEnv(Env):
         self.ctrl_dim = self.init_ctrl.size
         self.action_noise = action_noise
         self.frame_skip = 1
-        if "frame_skip" in self.data.numeric_names:
-            frame_skip_id = self.data.numeric_names.index("frame_skip")
-            addr = self.sim.numeric_adr.flat[frame_skip_id]
-            self.frame_skip = int(self.sim.numeric_data.flat[addr])
-        else:
-            self.frame_skip = 1
-        if "init_qpos" in self.data.numeric_names:
-            init_qpos_id = self.data.numeric_names.index("init_qpos")
-            addr = self.sim.numeric_adr.flat[init_qpos_id]
-            size = self.sim.numeric_size.flat[init_qpos_id]
-            init_qpos = self.sim.numeric_data.flat[addr:addr + size]
-            self.init_qpos = init_qpos
         self.dcom = None
         self.current_com = None
         self.reset()

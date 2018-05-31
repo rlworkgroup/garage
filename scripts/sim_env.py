@@ -74,6 +74,7 @@ def visualize_env(env, mode, max_steps=sys.maxsize, speedup=1):
             if isinstance(env, (MujocoEnv, MazeEnv)):
                 trs = [tr]
                 actions = [np.zeros(2)]
+                import mujoco_py
                 import glfw
 
                 def cb(window, key, scancode, action, mods):

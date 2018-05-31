@@ -6,7 +6,7 @@ import traceback
 import logging
 
 try:
-    from gym.wrappers.monitoring import logger as monitor_logger
+    from gym import logger as monitor_logger
 
     monitor_logger.setLevel(logging.WARNING)
 except Exception as e:
@@ -37,7 +37,7 @@ class CappedCubicVideoSchedule(object):
     # Copied from gym, since this method is frequently moved around
     def __call__(self, count):
         if count < 1000:
-            return int(round(count ** (1. / 3))) ** 3 == count
+            return int(round(count**(1. / 3)))**3 == count
         else:
             return count % 1000 == 0
 
@@ -56,11 +56,18 @@ class NoVideoSchedule(object):
 
 
 class GymEnv(Env, Serializable):
-    def __init__(self, env_name, record_video=True, video_schedule=None, log_dir=None, record_log=True,
+    def __init__(self,
+                 env_name,
+                 record_video=True,
+                 video_schedule=None,
+                 log_dir=None,
+                 record_log=True,
                  force_reset=False):
         if log_dir is None:
             if logger.get_snapshot_dir() is None:
-                logger.log("Warning: skipping Gym environment monitoring since snapshot_dir not configured.")
+                logger.log(
+                    "Warning: skipping Gym environment monitoring since snapshot_dir not configured."
+                )
             else:
                 log_dir = os.path.join(logger.get_snapshot_dir(), "gym_log")
         Serializable.quick_init(self, locals())
@@ -79,14 +86,16 @@ class GymEnv(Env, Serializable):
             else:
                 if video_schedule is None:
                     video_schedule = CappedCubicVideoSchedule()
-            self.env = gym.wrappers.Monitor(self.env, log_dir, video_callable=video_schedule, force=True)
+            self.env = gym.wrappers.Monitor(
+                self.env, log_dir, video_callable=video_schedule, force=True)
             self.monitoring = True
 
         self._observation_space = convert_gym_space(env.observation_space)
         logger.log("observation space: {}".format(self._observation_space))
         self._action_space = convert_gym_space(env.action_space)
         logger.log("action space: {}".format(self._action_space))
-        self._horizon = env.spec.tags['wrapper_config.TimeLimit.max_episode_steps']
+        self._horizon = env.spec.tags[
+            'wrapper_config.TimeLimit.max_episode_steps']
         self._log_dir = log_dir
         self._force_reset = force_reset
 

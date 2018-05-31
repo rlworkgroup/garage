@@ -1,5 +1,6 @@
 import math
 
+import mujoco_py
 import glfw
 import numpy as np
 
