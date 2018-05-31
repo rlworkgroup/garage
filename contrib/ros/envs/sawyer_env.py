@@ -22,16 +22,6 @@ from contrib.ros.util.common import rate_limited
 from contrib.ros.util.gazebo import Gazebo
 
 
-def _goal_distance(goal_a, goal_b):
-    """
-    :param goal_a:
-    :param goal_b:
-    :return distance: distance between goal_a and goal_b
-    """
-    assert goal_a.shape == goal_b.shape
-    return np.linalg.norm(goal_a - goal_b, axis=-1)
-
-
 class SawyerEnv(RosEnv, Serializable):
     """
     ROS Sawyer Env
@@ -41,12 +31,8 @@ class SawyerEnv(RosEnv, Serializable):
                  initial_robot_joint_pos,
                  robot_control_mode,
                  has_object,
-                 distance_threshold,
                  initial_model_pos,
-                 sparse_reward,
-                 target_in_the_air,
                  simulated=False,
-                 target_range=0.15,
                  obj_range=0.15):
         """
         :param initial_robot_joint_pos: {str: float}
@@ -55,22 +41,10 @@ class SawyerEnv(RosEnv, Serializable):
                 'effort'/'position'/'velocity'
         :param has_object: bool
                 if there is object in this experiment
-        :param distance_threshold: float
-                When the distance from robot endpoint to the target point is smaller than this threshold
-                the training episode is done.
-                To calculate the sparse reward, if the distance is smaller than this threshold returns -1
-                else returns 0.
         :param initial_model_pos: dict
                 joint positions and object positions
-        :param sparse_reward: bool
-                if reward_type is 'sparse'
-        :param target_in_the_air: bool
-                set to see if the target can be in the air
         :param simulated: bool
                 if the environment is for real robot or simulation
-        :param target_range: float
-                the new target position for the new training episode would be randomly sampled inside
-                [initial_gripper_pos - target_range, initial_gripper_pos + target_range]
         :param obj_range: float
                 the new initial object x,y position for the new training episode would be randomly sampled inside
                 [initial_gripper_pos - obj_range, initial_gripper_pos + obj_range]
@@ -97,10 +71,6 @@ class SawyerEnv(RosEnv, Serializable):
             pass
         self._initial_model_pos = initial_model_pos
         self.has_object = has_object
-        self.distance_threshold = distance_threshold
-        self.sparse_reward = sparse_reward
-        self.target_range = target_range
-        self.target_in_the_air = target_in_the_air
         self.obj_range = obj_range
 
         rospy.on_shutdown(self._shutdown)
@@ -123,25 +93,6 @@ class SawyerEnv(RosEnv, Serializable):
             # TODO(gh/8: Sawyer runtime support)
             pass
 
-    def reward(self, achieved_goal, goal):
-        """
-        Compute the reward for current step.
-        :param achieved_goal: the current gripper's position or object's position in the current training episode.
-        :param goal: the goal of the current training episode, which mostly is the target position of the object or the
-                     position.
-        :return reward: float
-                    if sparse_reward, the reward is -1, else the reward is minus distance from achieved_goal to
-                    our goal. And we have completion bonus for two kinds of types.
-        """
-        d = _goal_distance(achieved_goal, goal)
-        if d < self.distance_threshold:
-            return 88
-        else:
-            if self.sparse_reward:
-                return -1.
-            else:
-                return -d
-
     # Implementation for rllab env functions
     # -----------------------------------
     @rate_limited(100)
@@ -162,11 +113,10 @@ class SawyerEnv(RosEnv, Serializable):
         """
         self._robot.send_command(action)
 
-        obs = self._get_obs()
+        obs = self.get_observation()
 
         reward = self.reward(obs['achieved_goal'], self.goal)
-        done = _goal_distance(obs['achieved_goal'],
-                              self.goal) < self.distance_threshold
+        done = self.done(obs['achieved_goal'], self.goal)
         next_observation = obs['observation']
         return Step(observation=next_observation, reward=reward, done=done)
 
@@ -190,7 +140,7 @@ class SawyerEnv(RosEnv, Serializable):
         else:
             # TODO(gh/8: Sawyer runtime support)
             pass
-        obs = self._get_obs()
+        obs = self.get_observation()
         initial_observation = obs['observation']
 
         return initial_observation
@@ -230,7 +180,8 @@ class SawyerEnv(RosEnv, Serializable):
         """
         Returns a Space object
         """
-        return Box(-np.inf, np.inf, shape=self._get_obs()['observation'].shape)
+        return Box(
+            -np.inf, np.inf, shape=self.get_observation()['observation'].shape)
 
     # ================================================
     # Functions that gazebo env asks to implement
@@ -284,58 +235,26 @@ class SawyerEnv(RosEnv, Serializable):
             # TODO(gh/8: Sawyer runtime support)
             pass
 
+    def done(self, achieved_goal, goal):
+        """
+        :return if done: bool
+        """
+        raise NotImplementedError
+
+    def reward(self, achieved_goal, goal):
+        """
+        Compute the reward for current step.
+        """
+        raise NotImplementedError
+
     def sample_goal(self):
         """
-        Sample goals
-        :return: the new sampled goal
+        Samples a new goal and returns it.
         """
-        if self.has_object:
-            random_goal_delta = np.random.uniform(
-                -self.target_range, self.target_range, size=3)
-            goal = self.initial_gripper_pos[:3] + random_goal_delta
-            goal[2] = self.height_offset
-            # If the target can't set to be in the air like pick and place task
-            # it has 50% probability to be in the air
-            if self.target_in_the_air and np.random.uniform() < 0.5:
-                goal[2] += np.random.uniform(0, 0.45)
-        else:
-            random_goal_delta = np.random.uniform(-0.15, 0.15, size=3)
-            goal = self.initial_gripper_pos[:3] + random_goal_delta
-        return goal
+        raise NotImplementedError
 
-    # -------------------------------------------------------------------------------------------
-    def _get_obs(self):
-        robot_obs = self._robot.get_observation()
-
-        # gazebo data message
-        if self.has_object:
-            object_pos = np.array([])
-            object_ori = np.array([])
-            if self.model_states is not None:
-                model_names = self.model_states.name
-                object_idx = model_names.index('block')
-                object_pose = self.model_states.pose[object_idx]
-                object_pos = np.array([
-                    object_pose.position.x, object_pose.position.y,
-                    object_pose.position.z
-                ])
-                object_ori = np.array([
-                    object_pose.orientation.x, object_pose.orientation.y,
-                    object_pose.orientation.z, object_pose.orientation.w
-                ])
-        else:
-            object_pos = np.array([])
-            object_ori = np.array([])
-
-        if not self.has_object:
-            achieved_goal = self._robot.gripper_pose
-        else:
-            achieved_goal = np.squeeze(object_pos)
-
-        obs = np.concatenate((robot_obs, object_pos, object_ori))
-
-        return {
-            'observation': obs,
-            'achieved_goal': achieved_goal,
-            'desired_goal': self.goal
-        }
+    def get_observation(self):
+        """
+        Get observation
+        """
+        raise NotImplementedError

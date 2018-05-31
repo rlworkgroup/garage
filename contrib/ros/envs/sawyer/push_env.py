@@ -2,7 +2,7 @@
 Push task for the sawyer robot
 """
 
-import rospy
+import numpy as np
 
 from rllab.core.serializable import Serializable
 
@@ -25,18 +25,103 @@ INITIAL_ROBOT_JOINT_POS = {
 
 
 class PushEnv(sawyer_env.SawyerEnv, Serializable):
-    def __init__(self, sparse_reward=False):
+    def __init__(self,
+                 sparse_reward=False,
+                 distance_threshold=0.05,
+                 target_range=0.15,
+                 target_in_the_air=False):
         Serializable.quick_init(self, locals())
+
+        self._distance_threshold = distance_threshold
+        self._target_range = target_range
+        self._sparse_reward = sparse_reward
+        self._target_in_the_air = target_in_the_air
 
         sawyer_env.SawyerEnv.__init__(
             self,
             initial_robot_joint_pos=INITIAL_ROBOT_JOINT_POS,
             robot_control_mode='effort',
             has_object=True,
-            distance_threshold=0.05,
             initial_model_pos=INITIAL_MODEL_POS,
-            sparse_reward=sparse_reward,
-            target_in_the_air=False,
             simulated=True,
-            target_range=0.15,
             obj_range=0.15)
+
+    def sample_goal(self):
+        """
+        Sample goals
+        :return: the new sampled goal
+        """
+        random_goal_delta = np.random.uniform(
+            -self._target_range, self._target_range, size=3)
+        goal = self.initial_gripper_pos[:3] + random_goal_delta
+        goal[2] = self.height_offset
+        # If the target can't set to be in the air like pick and place task
+        # it has 50% probability to be in the air
+        if self._target_in_the_air and np.random.uniform() < 0.5:
+            goal[2] += np.random.uniform(0, 0.45)
+
+        return goal
+
+    def get_observation(self):
+        robot_obs = self._robot.get_observation()
+
+        object_pos = np.array([])
+        object_ori = np.array([])
+        if self.model_states is not None:
+            model_names = self.model_states.name
+            object_idx = model_names.index('block')
+            object_pose = self.model_states.pose[object_idx]
+            object_pos = np.array([
+                object_pose.position.x, object_pose.position.y,
+                object_pose.position.z
+            ])
+            object_ori = np.array([
+                object_pose.orientation.x, object_pose.orientation.y,
+                object_pose.orientation.z, object_pose.orientation.w
+            ])
+
+        achieved_goal = np.squeeze(object_pos)
+
+        obs = np.concatenate((robot_obs, object_pos, object_ori))
+
+        return {
+            'observation': obs,
+            'achieved_goal': achieved_goal,
+            'desired_goal': self.goal
+        }
+
+    def reward(self, achieved_goal, goal):
+        """
+        Compute the reward for current step.
+        :param achieved_goal: the current gripper's position or object's position in the current training episode.
+        :param goal: the goal of the current training episode, which mostly is the target position of the object or the
+                     position.
+        :return reward: float
+                    if sparse_reward, the reward is -1, else the reward is minus distance from achieved_goal to
+                    our goal. And we have completion bonus for two kinds of types.
+        """
+        d = self._goal_distance(achieved_goal, goal)
+        if d < self._distance_threshold:
+            return 100
+        else:
+            if self._sparse_reward:
+                return -1.
+            else:
+                return -d
+
+    def _goal_distance(self, goal_a, goal_b):
+        """
+        :param goal_a:
+        :param goal_b:
+        :return distance: distance between goal_a and goal_b
+        """
+        assert goal_a.shape == goal_b.shape
+        return np.linalg.norm(goal_a - goal_b, axis=-1)
+
+    def done(self, achieved_goal, goal):
+        """
+        :return if_done: bool
+                    if current episode is done:
+        """
+        return self._goal_distance(achieved_goal,
+                                   goal) < self._distance_threshold
