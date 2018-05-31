@@ -3,17 +3,11 @@ ROS environment for the Sawyer robot
 Every specific sawyer task environment should inherit it.
 """
 
-import os.path as osp
-
-from gazebo_msgs.msg import ModelStates
 from geometry_msgs.msg import Pose, Point
 import numpy as np
-import rospkg
-import rospy
 
 from rllab.core.serializable import Serializable
 from rllab.envs.base import Step
-from rllab.misc import logger
 from rllab.spaces import Box
 
 from contrib.ros.envs.ros_env import RosEnv
@@ -28,13 +22,15 @@ class SawyerEnv(RosEnv, Serializable):
     """
 
     def __init__(self,
+                 task_obj_mgr,
                  initial_robot_joint_pos,
                  robot_control_mode,
                  has_object,
-                 initial_model_pos,
                  simulated=False,
                  obj_range=0.15):
         """
+        :param task_obj_mgr: object
+                User uses this to manage every other objects used in task except for robots.
         :param initial_robot_joint_pos: {str: float}
                 {'joint_name': value}
         :param robot control mode: str
@@ -62,33 +58,25 @@ class SawyerEnv(RosEnv, Serializable):
             # TODO (gh/74: Add initialize interface for robot)
 
         self._simulated = simulated
+
+        self.task_obj_mgr = task_obj_mgr
+
         if self._simulated:
-            rospy.Subscriber('/gazebo/model_states', ModelStates,
-                             self.update_model_states)
-            self._gazebosrv = Gazebo()
+            self.gazebo = Gazebo()
+            self.task_obj_mgr.sub_gazebo()
         else:
             # TODO(gh/8: Sawyer runtime support)
             pass
-        self._initial_model_pos = initial_model_pos
         self.has_object = has_object
         self.obj_range = obj_range
 
-        rospy.on_shutdown(self._shutdown)
+        self._initial_setup()
 
-        self.initial_setup(self._initial_model_pos)
-
-    def _shutdown(self):
-        logger.log('Exiting...')
+    def shutdown(self):
         if self._simulated:
             # delete model
-            logger.log('Delete gazebo models...')
-            self._gazebosrv.delete_gazebo_model(model_name='cafe_table')
-            self._gazebosrv.delete_gazebo_model(model_name='block')
-            self._gazebosrv.delete_gazebo_model(model_name='target')
-
-    def update_model_states(self, data):
-        if self._simulated:
-            self.model_states = data
+            for obj in self.task_obj_mgr.objects:
+                self.gazebo.delete_gazebo_model(obj.name)
         else:
             # TODO(gh/8: Sawyer runtime support)
             pass
@@ -127,15 +115,21 @@ class SawyerEnv(RosEnv, Serializable):
         -------
         observation : the initial observation of the space. (Initial reward is assumed to be 0.)
         """
+        self._robot.reset()
+
         self.goal = self.sample_goal()
 
         if self._simulated:
-            self._gazebosrv.set_model_pose(
-                model_name='target',
-                new_pose=Pose(
-                    position=Point(
-                        x=self.goal[0], y=self.goal[1], z=self.goal[2])),
-                reference_frame='world')
+            target_idx = 0
+            for target in self.task_obj_mgr.targets:
+                self.gazebo.set_model_pose(
+                    model_name=target.name,
+                    new_pose=Pose(
+                        position=Point(
+                            x=self.goal[target_idx * 3],
+                            y=self.goal[target_idx * 3 + 1],
+                            z=self.goal[target_idx * 3 + 2])))
+                target_idx += 1
             self._reset_sim()
         else:
             # TODO(gh/8: Sawyer runtime support)
@@ -145,31 +139,27 @@ class SawyerEnv(RosEnv, Serializable):
 
         return initial_observation
 
-    # yapf: disable
     def _reset_sim(self):
         """
         reset the simulation
         """
-        self._robot.reset()
-
         # Randomize start position of object
-        if self.has_object:
-            object_xypos = self.initial_gripper_pos[:2]
-            while np.linalg.norm(object_xypos -
-                                 self.initial_gripper_pos[:2]) < 0.1:
-                object_random_delta = np.random.uniform(-self.obj_range,
-                                                        self.obj_range,
-                                                        size=2)
-                object_xypos = self.initial_gripper_pos[:2] + object_random_delta
-            self._gazebosrv.set_model_pose(
-                model_name='block',
+        for manipulatable in self.task_obj_mgr.manipulatables:
+            manipulatable_random_delta = np.zeros(2)
+            while np.linalg.norm(manipulatable_random_delta) < 0.1:
+                manipulatable_random_delta = np.random.uniform(
+                    -manipulatable.random_delta_range,
+                    manipulatable.random_delta_range,
+                    size=2)
+            self.gazebo.set_model_pose(
+                manipulatable.name,
                 new_pose=Pose(
                     position=Point(
-                        x=object_xypos[0],
-                        y=object_xypos[1],
-                        z=self._initial_model_pos['object0'][2])),
-                reference_frame='world')
-    # yapf: enable
+                        x=manipulatable.initial_pos.x +
+                        manipulatable_random_delta[0],
+                        y=manipulatable.initial_pos.y +
+                        manipulatable_random_delta[1],
+                        z=manipulatable.initial_pos.z)))
 
     @property
     def action_space(self):
@@ -186,51 +176,14 @@ class SawyerEnv(RosEnv, Serializable):
     # ================================================
     # Functions that gazebo env asks to implement
     # ================================================
-    def initial_setup(self, initial_model_pos):
-        # Extract information for sampling goals
-        gripper_pose = self._robot.gripper_pose
-        self.initial_gripper_pos = np.array(gripper_pose['position'])
-        self.initial_gripper_ori = np.array(gripper_pose['orientation'])
-        if self.has_object:
-            self.height_offset = initial_model_pos['object0'][2]
-
+    def _initial_setup(self):
         self._robot.reset()
 
         if self._simulated:
             # Generate the world
             # Load the model
-            table_model_pose = Pose(
-                position=Point(initial_model_pos['table0'][
-                    0], initial_model_pos['table0'][1], initial_model_pos[
-                        'table0'][2]))
-            table_model_path = osp.join(
-                rospkg.RosPack().get_path('sawyer_sim_examples'), 'models',
-                'cafe_table/model.sdf')
-            self._gazebosrv.load_gazebo_sdf_model(
-                model_name='cafe_table',
-                model_pose=table_model_pose,
-                model_path=table_model_path)
-            block_model_pose = Pose(
-                position=Point(initial_model_pos['object0'][
-                    0], initial_model_pos['object0'][1], initial_model_pos[
-                        'object0'][2]))
-            block_model_path = osp.join(
-                rospkg.RosPack().get_path('sawyer_sim_examples'), 'models',
-                'block/model.urdf')
-            self._gazebosrv.load_gazebo_urdf_model(
-                model_name='block',
-                model_pose=block_model_pose,
-                model_path=block_model_path)
-            target_model_pose = Pose(
-                position=Point(gripper_pose['position'][0], gripper_pose[
-                    'position'][1], gripper_pose['position'][2]))
-            target_model_path = osp.join(
-                rospkg.RosPack().get_path('sawyer_sim_examples'), 'models',
-                'target/model.sdf')
-            self._gazebosrv.load_gazebo_sdf_model(
-                model_name='target',
-                model_pose=target_model_pose,
-                model_path=target_model_path)
+            for obj in self.task_obj_mgr.objects:
+                self.gazebo.load_gazebo_model(obj)
         else:
             # TODO(gh/8: Sawyer runtime support)
             pass

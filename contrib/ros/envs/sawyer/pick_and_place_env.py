@@ -8,11 +8,6 @@ from rllab.core.serializable import Serializable
 
 from contrib.ros.envs import sawyer_env
 
-INITIAL_MODEL_POS = {
-    'table0': [0.75, 0.0, 0.0],
-    'object0': [0.5725, 0.1265, 0.80]
-}
-
 INITIAL_ROBOT_JOINT_POS = {
     'right_j0': -0.041662954890248294,
     'right_j1': -1.0258291091425074,
@@ -26,6 +21,8 @@ INITIAL_ROBOT_JOINT_POS = {
 
 class PickAndPlaceEnv(sawyer_env.SawyerEnv, Serializable):
     def __init__(self,
+                 initial_goal,
+                 task_obj_mgr,
                  sparse_reward=True,
                  distance_threshold=0.05,
                  target_range=0.15,
@@ -36,13 +33,15 @@ class PickAndPlaceEnv(sawyer_env.SawyerEnv, Serializable):
         self._target_range = target_range
         self._sparse_reward = sparse_reward
         self._target_in_the_air = target_in_the_air
+        self.initial_goal = initial_goal
+        self.goal = self.initial_goal.copy()
 
         sawyer_env.SawyerEnv.__init__(
             self,
+            task_obj_mgr=task_obj_mgr,
             initial_robot_joint_pos=INITIAL_ROBOT_JOINT_POS,
             robot_control_mode='position',
             has_object=True,
-            initial_model_pos=INITIAL_MODEL_POS,
             simulated=True,
             obj_range=0.15)
 
@@ -51,43 +50,31 @@ class PickAndPlaceEnv(sawyer_env.SawyerEnv, Serializable):
         Sample goals
         :return: the new sampled goal
         """
+        goal = self.initial_goal.copy()
+
         random_goal_delta = np.random.uniform(
-            -self._target_range, self._target_range, size=3)
-        goal = self.initial_gripper_pos[:3] + random_goal_delta
-        goal[2] = self.height_offset
-        # If the target can't set to be in the air like pick and place task
-        # it has 50% probability to be in the air
-        if self._target_in_the_air and np.random.uniform() < 0.5:
-            goal[2] += np.random.uniform(0, 0.45)
+            -self._target_range, self._target_range, size=2)
+        goal[:2] += random_goal_delta
 
         return goal
 
     def get_observation(self):
+        """
+        Get Observation
+        :return observation: dict
+                    {'observation': obs,
+                     'achieved_goal': achieved_goal,
+                     'desired_goal': self.goal}
+        """
         robot_obs = self._robot.get_observation()
 
-        # gazebo data message
-        object_pos = np.array([])
-        object_ori = np.array([])
-        if self.model_states is not None:
-            model_names = self.model_states.name
-            object_idx = model_names.index('block')
-            object_pose = self.model_states.pose[object_idx]
-            object_pos = np.array([
-                object_pose.position.x, object_pose.position.y,
-                object_pose.position.z
-            ])
-            object_ori = np.array([
-                object_pose.orientation.x, object_pose.orientation.y,
-                object_pose.orientation.z, object_pose.orientation.w
-            ])
+        manipulatable_obs = self.task_obj_mgr.get_manipulatables_observation()
 
-        achieved_goal = np.squeeze(object_pos)
-
-        obs = np.concatenate((robot_obs, object_pos, object_ori))
+        obs = np.concatenate((robot_obs, manipulatable_obs['obs']))
 
         return {
             'observation': obs,
-            'achieved_goal': achieved_goal,
+            'achieved_goal': manipulatable_obs['achieved_goal'],
             'desired_goal': self.goal
         }
 
