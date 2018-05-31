@@ -1,3 +1,4 @@
 from rllab.dynamics_randomization.variation import Variations
 from rllab.dynamics_randomization.variation import VariationMethods
 from rllab.dynamics_randomization.variation import VariationDistributions
+from rllab.dynamics_randomization.RandomizeEnv import RandomizedEnv
