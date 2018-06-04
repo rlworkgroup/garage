@@ -1,24 +1,39 @@
-import os.path as osp
-
 from mujoco_py import MjSim
-
 from rllab.core import Serializable
-from rllab.dynamics_randomization.mujoco_model_gen import MujocoModelGenerator
+from rllab.dynamics_randomization import MujocoModelGenerator
 from rllab.envs import Env
 from rllab.envs.mujoco.mujoco_env import MODEL_DIR
 
+import os.path as osp
+
 
 class RandomizedEnv(Env, Serializable):
+    """
+    This class is just a wrapper class for the MujocoEnv to perform
+    the training using Dynamics Randomization.
+    Only code in the methods reset and terminate has been added.
+    """
+
     def __init__(self, mujoco_env, variations):
+        """
+        An instance of the class MujocoModelGenerator is created to
+        generate the Mujoco models with the randomization of the
+        requested dynamic parameters.
+        """
         Serializable.quick_init(self, locals())
         self._wrapped_env = mujoco_env
         self._variations = variations
         self._file_path = osp.join(MODEL_DIR, mujoco_env.FILE)
-
-        self._mujoco_model = MujocoModelGenerator(self._file_path, variations)
+        self._model_generator = MujocoModelGenerator(self._file_path,
+                                                     variations)
 
     def reset(self):
-        self._wrapped_env.model = self._mujoco_model.get_model()
+        """
+        The new model with randomized parameters is requested and the
+        corresponding parameters in the MuJoCo environment class are
+        set.
+        """
+        self._wrapped_env.model = self._model_generator.get_model()
         self._wrapped_env.sim = MjSim(self._wrapped_env.model)
         self._wrapped_env.data = self._wrapped_env.sim.data
         self._wrapped_env.init_qpos = self._wrapped_env.sim.data.qpos
@@ -36,9 +51,6 @@ class RandomizedEnv(Env, Serializable):
     def log_diagnostics(self, paths, *args, **kwargs):
         self._wrapped_env.log_diagnostics(paths, *args, **kwargs)
 
-    def terminate(self):
-        self._wrapped_env.terminate()
-
     def get_param_values(self):
         return self._wrapped_env.get_param_values()
 
@@ -46,7 +58,12 @@ class RandomizedEnv(Env, Serializable):
         self._wrapped_env.set_param_values(params)
 
     def terminate(self):
-        self._mujoco_model.stop()
+        """
+        Besides regular termination, the MuJoCo model generator is
+        stopped.
+        """
+        self._model_generator.stop()
+        self._wrapped_env.terminate()
 
     @property
     def wrapped_env(self):

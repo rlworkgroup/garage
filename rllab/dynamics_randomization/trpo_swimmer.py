@@ -5,15 +5,15 @@ from rllab.envs import normalize
 from rllab.policies import GaussianMLPPolicy
 from rllab.dynamics_randomization import RandomizedEnv
 from rllab.dynamics_randomization import Variations
-from rllab.dynamics_randomization import VariationMethods
-from rllab.dynamics_randomization import VariationDistributions
+from rllab.dynamics_randomization import VariationMethod
+from rllab.dynamics_randomization import VariationDistribution
 
 variations = Variations()
 variations.randomize().\
         at_xpath(".//geom[@name='torso']").\
         attribute("density").\
-        with_method(VariationMethods.COEFFICIENT).\
-        sampled_from(VariationDistributions.UNIFORM).\
+        with_method(VariationMethod.COEFFICIENT).\
+        sampled_from(VariationDistribution.UNIFORM).\
         with_range(0.5, 1.5)
 
 env = normalize(RandomizedEnv(SwimmerEnv(), variations))
