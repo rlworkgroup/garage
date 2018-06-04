@@ -1,7 +1,12 @@
-import threading.Thread
-import threading.RLock
-import threading.Event
-import queue.Queue
+from threading import Event
+from threading import Thread
+
+from lxml import etree
+from mujoco_py import load_model_from_xml
+import numpy as np
+
+from rllab.dynamics_randomization.variation import VariationDistributions
+from rllab.dynamics_randomization.variation import VariationMethods
 
 '''
 A worker thread to produce to MuJoCo models with randomized dynamic
@@ -22,10 +27,10 @@ class MujocoModelGenerator:
     """
     def __init__(self, file_path, variations):
         self._parsed_model = etree.parse(file_path)
-        self._variations = variations 
+        self._variations = variations
 
         for v in variations.get_list():
-            e = self.parsed_model.find(v.xpath)
+            e = self._parsed_model.find(v.xpath)
             if e is None:
                 raise AttributeError("Can't find node in xml")
             v.elem = e
@@ -40,16 +45,17 @@ class MujocoModelGenerator:
 
             if len(v.var_range) != 2 * len(val):
                 raise AttributeError("Range shape != default value shape")
-        # Worker Thread   
+        # Worker Thread
         self._worker_thread = Thread(target=self._generator_routine)
         # Reference to the generated model
         self._mujoco_model = None
-        # Communicates the calling thread with the worker thread by awaking 
+        # Communicates the calling thread with the worker thread by awaking
         # the worker thread so as to generate a new model.
         self._model_requested = Event()
-        # Communicates the worker thread with the calling thread by awaking 
+        # Communicates the worker thread with the calling thread by awaking
         # the calling thread so as to retrieve the generated model.
         self._model_ready = Event()
+        self._stop_event = Event()
         self._worker_thread.start()
 
 
@@ -74,7 +80,9 @@ class MujocoModelGenerator:
         return self._mujoco_model
 
     def _generator_routine(self):
-        while(True):
+        while True:
+            if self._stop_event.is_set():
+                return
             for v in self._variations.get_list():
                 e = v.elem
                 if v.distribution == VariationDistributions.GAUSSIAN:
@@ -98,3 +106,7 @@ class MujocoModelGenerator:
             # Go to idle mode (wait for event)
             self._model_requested.wait()
             self._model_requested.clear()
+
+    def stop(self):
+        self._stop_event.set()
+        self._worker_thread.join(timeout=0.1)
