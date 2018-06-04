@@ -1,10 +1,11 @@
+import os.path as osp
+
 from mujoco_py import MjSim
+
 from rllab.core import Serializable
 from rllab.dynamics_randomization import MujocoModelGenerator
 from rllab.envs import Env
 from rllab.envs.mujoco.mujoco_env import MODEL_DIR
-
-import os.path as osp
 
 
 class RandomizedEnv(Env, Serializable):
@@ -33,7 +34,10 @@ class RandomizedEnv(Env, Serializable):
         corresponding parameters in the MuJoCo environment class are
         set.
         """
-        self._wrapped_env.model = self._model_generator.get_model()
+        try:
+            self._wrapped_env.model = self._model_generator.get_model()
+        except AttributeError as e:
+            raise e
         self._wrapped_env.sim = MjSim(self._wrapped_env.model)
         self._wrapped_env.data = self._wrapped_env.sim.data
         self._wrapped_env.init_qpos = self._wrapped_env.sim.data.qpos

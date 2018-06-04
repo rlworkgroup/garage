@@ -1,13 +1,14 @@
-from lxml import etree
-from mujoco_py import load_model_from_xml
-from rllab.dynamics_randomization import VariationMethod
-from rllab.dynamics_randomization import VariationDistribution
+import atexit
+import sys
 from threading import Event
-from threading import RLock
 from threading import Thread
 
-import atexit
+from lxml import etree
+from mujoco_py import load_model_from_xml
 import numpy as np
+
+from rllab.dynamics_randomization import VariationDistribution
+from rllab.dynamics_randomization import VariationMethod
 
 
 class MujocoModelGenerator:
@@ -33,7 +34,7 @@ class MujocoModelGenerator:
         self._file_path = file_path
         # Worker Thread
         self._worker_thread = Thread(
-            target=self._generator_routine, daemon=True)
+            target=self._generator_routine, daemon=True, name="Worker-Thread")
         # Reference to the generated model
         self._mujoco_model = None
         # Communicates the calling thread with the worker thread by awaking
@@ -58,6 +59,10 @@ class MujocoModelGenerator:
             A MuJoCo model with randomized dynamic parameters specified by the
             user in this class.
         """
+        if not self._worker_thread.is_alive():
+            # If worker thread is dead because of an error, raise an error in main thread
+            raise ChildProcessError("Error raised in Worker-Thread")
+
         if not self._model_ready.is_set():
             # If the model is not ready yet, wait for it to be finished.
             self._model_ready.wait()
@@ -101,7 +106,7 @@ class MujocoModelGenerator:
                 raise AttributeError("Range shape != default value shape")
 
         # Generate model with randomized dynamic parameters
-        while (not self._stop_event.is_set()):
+        while not self._stop_event.is_set():
             for v in self._variations.get_list():
                 e = v.elem
                 if v.distribution == VariationDistribution.GAUSSIAN:
@@ -111,7 +116,7 @@ class MujocoModelGenerator:
                     c = np.random.uniform(
                         low=v.var_range[0], high=v.var_range[1])
                 else:
-                    raise NotImplementedError("Unkown distribution")
+                    raise NotImplementedError("Unknown distribution")
                 if v.method == VariationMethod.COEFFICIENT:
                     e.attrib[v.attrib] = str(c * v.default)
                 elif v.method == VariationMethod.ABSOLUTE:

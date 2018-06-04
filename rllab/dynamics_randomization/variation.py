@@ -5,7 +5,7 @@ class VariationMethod(Enum):
     """
     The random coefficient is applied according to these methods.
     """
-    """ The randomization is the product of the coeffcient and the dynamic parameter """
+    """ The randomization is the product of the coefficient and the dynamic parameter """
     COEFFICIENT = 1
     """ The randomization is equal to the coefficient """
     ABSOLUTE = 2
@@ -13,7 +13,7 @@ class VariationMethod(Enum):
 
 class VariationDistribution(Enum):
     """
-    The different ways to produce the random cofficient.
+    The different ways to produce the random coefficient.
     """
     """ Guassian distribution """
     GAUSSIAN = 1
@@ -151,9 +151,9 @@ class Variations:
         Parameters
         ----------
         method : VariationMethod
-            if equal to "absolute", it sets the dyanmic parameter
+            if equal to "absolute", it sets the dynamic parameter
             equal to the random coefficient obtained from the distribution, or
-            if equal to "coefficient", it multiplies the default value provieded
+            if equal to "coefficient", it multiplies the default value provided
             in the XML file by the random coefficient.
         """
         if self._list:
