@@ -1,15 +1,11 @@
 import os.path as osp
 
-from lxml import etree
-from mujoco_py import load_model_from_xml
 from mujoco_py import MjSim
-import numpy as np
 
+from rllab.core import Serializable
+from rllab.dynamics_randomization.mujoco_model_gen import MujocoModelGenerator
 from rllab.envs import Env
 from rllab.envs.mujoco.mujoco_env import MODEL_DIR
-from rllab.core import Serializable
-from rllab.dynamics_randomization import VariationMethods
-from rllab.dynamics_randomization.variation import VariationDistributions
 
 
 class RandomizedEnv(Env, Serializable):
@@ -18,43 +14,11 @@ class RandomizedEnv(Env, Serializable):
         self._wrapped_env = mujoco_env
         self._variations = variations
         self._file_path = osp.join(MODEL_DIR, mujoco_env.FILE)
-        self._model = etree.parse(self._file_path)
 
-        for v in variations.get_list():
-            e = self._model.find(v.xpath)
-            if e is None:
-                raise AttributeError("Can't find node in xml")
-            v.elem = e
-
-            if v.attrib not in e.attrib:
-                raise KeyError("Attribute doesn't exist")
-            val = e.attrib[v.attrib].split(' ')
-            if len(val) == 1:
-                v.default = float(e.attrib[v.attrib])
-            else:
-                v.default = np.array(list(map(float, val)))
-
-            if len(v.var_range) != 2 * len(val):
-                raise AttributeError("Range shape != default value shape")
+        self._mujoco_model = MujocoModelGenerator(self._file_path, variations)
 
     def reset(self):
-        for v in self._variations.get_list():
-            e = v.elem
-            if v.distribution == VariationDistributions.GAUSSIAN:
-                c = np.random.normal(loc=v.var_range[0], scale=v.var_range[1])
-            elif v.distribution == VariationDistributions.UNIFORM:
-                c = np.random.uniform(low=v.var_range[0], high=v.var_range[1])
-            else:
-                raise NotImplementedError("Unkown distribution")
-            if v.method == VariationMethods.COEFFICIENT:
-                e.attrib[v.attrib] = str(c * v.default)
-            elif v.method == VariationMethods.ABSOLUTE:
-                e.attrib[v.attrib] = str(c)
-            else:
-                raise NotImplementedError("Unknown method")
-
-        model_xml = etree.tostring(self._model.getroot()).decode("ascii")
-        self._wrapped_env.model = load_model_from_xml(model_xml)
+        self._wrapped_env.model = self._mujoco_model.get_model()
         self._wrapped_env.sim = MjSim(self._wrapped_env.model)
         self._wrapped_env.data = self._wrapped_env.sim.data
         self._wrapped_env.init_qpos = self._wrapped_env.sim.data.qpos
@@ -80,6 +44,9 @@ class RandomizedEnv(Env, Serializable):
 
     def set_param_values(self, params):
         self._wrapped_env.set_param_values(params)
+
+    def terminate(self):
+        self._mujoco_model.stop()
 
     @property
     def wrapped_env(self):

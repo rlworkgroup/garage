@@ -1,3 +1,4 @@
+from rllab.dynamics_randomization.mujoco_model_gen import MujocoModelGenerator
 from rllab.dynamics_randomization.variation import Variations
 from rllab.dynamics_randomization.variation import VariationMethods
 from rllab.dynamics_randomization.variation import VariationDistributions
