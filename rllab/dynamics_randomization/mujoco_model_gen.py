@@ -7,8 +7,8 @@ from lxml import etree
 from mujoco_py import load_model_from_xml
 import numpy as np
 
-from rllab.dynamics_randomization import VariationDistribution
-from rllab.dynamics_randomization import VariationMethod
+from rllab.dynamics_randomization import Distribution
+from rllab.dynamics_randomization import Method
 
 
 class MujocoModelGenerator:
@@ -89,11 +89,11 @@ class MujocoModelGenerator:
         for v in self._variations.get_list():
             e = parsed_model.find(v.xpath)
             if e is None:
-                raise AttributeError("Can't find node in xml")
+                raise ValueError("Could not find node in the XML model: %s" % v.xpath)
             v.elem = e
 
             if v.attrib not in e.attrib:
-                raise KeyError("Attribute doesn't exist")
+                raise ValueError("Attribute %s doesn't exist in node %s" % (v.attrib, v.xpath))
             val = e.attrib[v.attrib].split(' ')
             if len(val) == 1:
                 v.default = float(e.attrib[v.attrib])
@@ -107,17 +107,17 @@ class MujocoModelGenerator:
         while not self._stop_event.is_set():
             for v in self._variations.get_list():
                 e = v.elem
-                if v.distribution == VariationDistribution.GAUSSIAN:
+                if v.distribution == Distribution.GAUSSIAN:
                     c = np.random.normal(
                         loc=v.var_range[0], scale=v.var_range[1])
-                elif v.distribution == VariationDistribution.UNIFORM:
+                elif v.distribution == Distribution.UNIFORM:
                     c = np.random.uniform(
                         low=v.var_range[0], high=v.var_range[1])
                 else:
                     raise NotImplementedError("Unknown distribution")
-                if v.method == VariationMethod.COEFFICIENT:
+                if v.method == Method.COEFFICIENT:
                     e.attrib[v.attrib] = str(c * v.default)
-                elif v.method == VariationMethod.ABSOLUTE:
+                elif v.method == Method.ABSOLUTE:
                     e.attrib[v.attrib] = str(c)
                 else:
                     raise NotImplementedError("Unknown method")

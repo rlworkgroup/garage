@@ -1,7 +1,7 @@
 from enum import Enum
 
 
-class VariationMethod(Enum):
+class Method(Enum):
     """
     The random coefficient is applied according to these methods.
     """
@@ -11,7 +11,7 @@ class VariationMethod(Enum):
     ABSOLUTE = 2
 
 
-class VariationDistribution(Enum):
+class Distribution(Enum):
     """
     The different ways to produce the random coefficient.
     """
@@ -36,6 +36,7 @@ class Variation:
         self._var_range = None
         self._elem = None
         self._default = None
+        self._mean_std = None
 
     @property
     def xpath(self):
@@ -93,8 +94,16 @@ class Variation:
     def var_range(self, var_range):
         self._var_range = var_range
 
+    @property
+    def mean_std(self):
+        return self._var_range
 
-class Variations:
+    @mean_std.setter
+    def mean_std(self, var_range):
+        self._mean_std = mean_std
+
+
+class VariationsBase:
     """
     The purpose of this class is to keep a list of all the variations
     that have to be applied to the RandomizedEnv class.
@@ -102,8 +111,8 @@ class Variations:
     to set an attribute will return the instance of this class.
     """
 
-    def __init__(self):
-        self._list = []
+    def __init__(self, variations_list=[]):
+        self._list = variations_list
 
     def randomize(self):
         """
@@ -113,7 +122,7 @@ class Variations:
         """
         variation = Variation()
         self._list.append(variation)
-        return self
+        return Variations(self._list)
 
     def at_xpath(self, xpath):
         """
@@ -150,7 +159,7 @@ class Variations:
 
         Parameters
         ----------
-        method : VariationMethod
+        method : Method
             if equal to "absolute", it sets the dynamic parameter
             equal to the random coefficient obtained from the distribution, or
             if equal to "coefficient", it multiplies the default value provided
@@ -158,37 +167,6 @@ class Variations:
         """
         if self._list:
             self._list[-1].method = method
-        return self
-
-    def sampled_from(self, distribution):
-        """
-        Sets the distribution where the random coefficient is sampled from for
-        the last variation in the list.
-
-        Parameters
-        ----------
-        distribution : VariationDistribution
-            it specifies the probability distribution used to obtain the random
-            coefficient.
-        """
-        if self._list:
-            self._list[-1].distribution = distribution
-        return self
-
-    def with_range(self, low, high):
-        """
-        Sets the range for the random coefficient for the last variation in
-        the list.
-
-        Parameters
-        ----------
-        low : int
-            inclusive low value of the range
-        high : int
-            exclusive high value of the range
-        """
-        if self._list:
-            self._list[-1].var_range = (low, high)
         return self
 
     def get_list(self):
@@ -202,3 +180,73 @@ class Variations:
         and the configuration to randomize each of them
         """
         return self._list
+
+
+class Variations(VariationsBase):
+    """
+    Contains all the methods that have to be called once per variation entry.
+    """
+
+    def sampled_from(self, distribution):
+        """
+        Sets the distribution where the random coefficient is sampled from for
+        the last variation in the list.
+
+        Parameters
+        ----------
+        distribution : Distribution
+            it specifies the probability distribution used to obtain the random
+            coefficient.
+        """
+        if self._list:
+            self._list[-1].distribution = distribution
+
+        if distribution is Distribution.GAUSSIAN:
+            return VariationsGaussian(self._list)
+        elif distribution is Distribution.UNIFORM:
+            return VariationsUniform(self._list)
+        return self
+
+
+class VariationsUniform(VariationsBase):
+    """
+    Contains all the methods for variation entries with uniform distributions
+    """
+
+    def with_range(self, low, high):
+        """
+        Sets the range for the random coefficient for the last variation in
+        the list. Only to be used for Distribution.UNIFORM
+
+        Parameters
+        ----------
+        low : int
+            inclusive low value of the range
+        high : int
+            exclusive high value of the range
+        """
+        if self._list:
+            self._list[-1].var_range = (low, high)
+        return self
+
+
+class VariationsGaussian(Variations):
+    """
+    Contains all the methods for variation entries with Gaussian distributions
+    """
+
+    def with_mean_std(self, mean, std_deviation):
+        """
+        Sets the range for the random coefficient for the last variation in
+        the list. Only to be used for Distribution.GAUSSIAN
+
+        Parameters
+        ----------
+        mean : int
+           mean of the distribution
+        std_deviation : int
+           standard mean of the distribution
+        """
+        if self._list:
+            self._list[-1].mean_std = (mean, std_deviation)
+        return self

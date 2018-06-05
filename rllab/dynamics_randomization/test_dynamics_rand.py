@@ -5,12 +5,12 @@ Benchmark model mutation for dynamics randomization
 from mujoco_py import load_model_from_xml
 from mujoco_py import MjSim
 from mujoco_py import MjViewer
-from rllab.dynamics_randomization import Variations, VariationMethod
-from rllab.dynamics_randomization import VariationDistribution
+from rllab.dynamics_randomization import Variations, Method
+from rllab.dynamics_randomization import Distribution
+from rllab.envs.mujoco import osp
 
 import numpy as np
 import os
-import os.path as osp
 import xml.etree.ElementTree as ET
 
 #Execute at the root of rllab
@@ -25,21 +25,21 @@ variations = Variations()
 variations.randomize().\
         attribute("gear").\
         at_xpath(".//motor[@name='a1']").\
-        with_method(VariationMethod.COEFFICIENT).\
-        sampled_from(VariationDistribution.UNIFORM).\
+        with_method(Method.COEFFICIENT).\
+        sampled_from(Distribution.UNIFORM).\
         with_range(0.5, 1.5).\
         randomize().\
         attribute("gear").\
         at_xpath(".//motor[@name='a2']").\
-        sampled_from(VariationDistribution.UNIFORM).\
-        with_method(VariationMethod.COEFFICIENT).\
+        sampled_from(Distribution.UNIFORM).\
+        with_method(Method.COEFFICIENT).\
         with_range(0.5, 1.5)
 
 variations.randomize().\
         attribute("damping").\
         at_xpath(".//joint[@name='wr_js']").\
-        with_method(VariationMethod.ABSOLUTE).\
-        sampled_from(VariationDistribution.UNIFORM).\
+        with_method(Method.ABSOLUTE).\
+        sampled_from(Distribution.UNIFORM).\
         with_range(5, 15)
 
 # Retrieve defaults and cache etree elems
@@ -52,10 +52,10 @@ for _ in range(1000):
     # Mutate model randomly
     for v in variations.get_list():
         e = v.elem
-        if v.method == VariationMethod.COEFFICIENT:
+        if v.method == Method.COEFFICIENT:
             c = np.random.uniform(low=v.var_range[0], high=v.var_range[1])
             e.attrib[v.attrib] = str(c * v.default)
-        elif v.method == VariationMethod.ABSOLUTE:
+        elif v.method == Method.ABSOLUTE:
             c = np.random.uniform(low=v.var_range[0], high=v.var_range[1])
             e.attrib[v.attrib] = str(c)
         else:
