@@ -89,11 +89,13 @@ class MujocoModelGenerator:
         for v in self._variations.get_list():
             e = parsed_model.find(v.xpath)
             if e is None:
-                raise ValueError("Could not find node in the XML model: %s" % v.xpath)
+                raise ValueError(
+                    "Could not find node in the XML model: %s" % v.xpath)
             v.elem = e
 
             if v.attrib not in e.attrib:
-                raise ValueError("Attribute %s doesn't exist in node %s" % (v.attrib, v.xpath))
+                raise ValueError("Attribute %s doesn't exist in node %s" %
+                                 (v.attrib, v.xpath))
             val = e.attrib[v.attrib].split(' ')
             if len(val) == 1:
                 v.default = float(e.attrib[v.attrib])
