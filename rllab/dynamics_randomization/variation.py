@@ -96,7 +96,7 @@ class Variation:
 
     @property
     def mean_std(self):
-        return self._var_range
+        return self._mean_std
 
     @mean_std.setter
     def mean_std(self, mean_std):

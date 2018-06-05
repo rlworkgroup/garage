@@ -79,39 +79,41 @@ class MujocoModelGenerator:
         """
         # Initialize parsing of the model from XML
         parsed_model = etree.parse(self._file_path)
+        elem_cache = {}
+        default_cache = {}
         for v in self._variations.get_list():
             e = parsed_model.find(v.xpath)
             if e is None:
                 raise ValueError(
                     "Could not find node in the XML model: %s" % v.xpath)
-            v.elem = e
+            elem_cache[v] = e
 
             if v.attrib not in e.attrib:
                 raise ValueError("Attribute %s doesn't exist in node %s" %
                                  (v.attrib, v.xpath))
             val = e.attrib[v.attrib].split(' ')
             if len(val) == 1:
-                v.default = float(e.attrib[v.attrib])
+                default_cache[v] = float(e.attrib[v.attrib])
             else:
-                v.default = np.array(list(map(float, val)))
+                default_cache[v] = np.array(list(map(float, val)))
 
             if len(v.var_range) != 2 * len(val):
-                raise AttributeError("Range shape != default value shape")
+                raise ValueError("Range shape != default value shape")
 
         # Generate model with randomized dynamic parameters
         while not self._stop_event.is_set():
             for v in self._variations.get_list():
-                e = v.elem
+                e = elem_cache[v]
                 if v.distribution == Distribution.GAUSSIAN:
                     c = np.random.normal(
-                        loc=v.var_range[0], scale=v.var_range[1])
+                        loc=v.mean_std[0], scale=v.mean_std[1])
                 elif v.distribution == Distribution.UNIFORM:
                     c = np.random.uniform(
                         low=v.var_range[0], high=v.var_range[1])
                 else:
                     raise ValueError("Unknown distribution")
                 if v.method == Method.COEFFICIENT:
-                    e.attrib[v.attrib] = str(c * v.default)
+                    e.attrib[v.attrib] = str(c * default_cache[v])
                 elif v.method == Method.ABSOLUTE:
                     e.attrib[v.attrib] = str(c)
                 else:
