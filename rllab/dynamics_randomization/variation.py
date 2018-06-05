@@ -99,7 +99,7 @@ class Variation:
         return self._var_range
 
     @mean_std.setter
-    def mean_std(self, var_range):
+    def mean_std(self, mean_std):
         self._mean_std = mean_std
 
 

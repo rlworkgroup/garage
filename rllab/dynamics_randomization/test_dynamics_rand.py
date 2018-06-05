@@ -13,7 +13,7 @@ import numpy as np
 import os
 import xml.etree.ElementTree as ET
 
-#Execute at the root of rllab
+# Execute at the root of rllab
 MUJOCO_PY_PATH = os.getcwd()
 TOSSER_XML = osp.join(MUJOCO_PY_PATH,
                       "rllab/dynamics_randomization/tosser.xml")
@@ -22,25 +22,26 @@ TOSSER_XML = osp.join(MUJOCO_PY_PATH,
 tosser = ET.parse(TOSSER_XML)
 
 variations = Variations()
-variations.randomize().\
-        attribute("gear").\
-        at_xpath(".//motor[@name='a1']").\
-        with_method(Method.COEFFICIENT).\
-        sampled_from(Distribution.UNIFORM).\
-        with_range(0.5, 1.5).\
-        randomize().\
-        attribute("gear").\
-        at_xpath(".//motor[@name='a2']").\
-        sampled_from(Distribution.UNIFORM).\
-        with_method(Method.COEFFICIENT).\
-        with_range(0.5, 1.5)
+variations.randomize() \
+        .attribute("gear") \
+        .at_xpath(".//motor[@name='a1']") \
+        .with_method(Method.COEFFICIENT) \
+        .sampled_from(Distribution.UNIFORM) \
+        .with_range(0.5, 1.5)
 
-variations.randomize().\
-        attribute("damping").\
-        at_xpath(".//joint[@name='wr_js']").\
-        with_method(Method.ABSOLUTE).\
-        sampled_from(Distribution.UNIFORM).\
-        with_range(5, 15)
+variations.randomize() \
+        .attribute("gear") \
+        .at_xpath(".//motor[@name='a2']") \
+        .sampled_from(Distribution.UNIFORM) \
+        .with_method(Method.COEFFICIENT) \
+        .with_range(0.5, 1.5)
+
+variations.randomize()\
+        .attribute("damping") \
+        .at_xpath(".//joint[@name='wr_js']") \
+        .with_method(Method.ABSOLUTE) \
+        .sampled_from(Distribution.UNIFORM) \
+        .with_range(5, 15)
 
 # Retrieve defaults and cache etree elems
 for v in variations.get_list():

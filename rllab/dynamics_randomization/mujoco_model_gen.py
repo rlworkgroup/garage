@@ -39,12 +39,6 @@ class MujocoModelGenerator:
             target=self._generator_routine, daemon=True, name="Worker-Thread")
         # Reference to the generated model
         self._mujoco_model = None
-        # Communicates the calling thread with the worker thread by awaking
-        # the worker thread so as to generate a new model.
-        self._model_requested = Event()
-        # Communicates the worker thread with the calling thread by awaking
-        # the calling thread so as to retrieve the generated model.
-        self._model_ready = Event()
         # Event to stop the worker thread
         self._stop_event = Event()
         atexit.register(self.stop)
@@ -76,7 +70,6 @@ class MujocoModelGenerator:
             while not self._models.empty():
                 self._models.get()
 
-            self._model_requested.set()
             self._stop_event.set()
             self._worker_thread.join()
 
@@ -116,13 +109,13 @@ class MujocoModelGenerator:
                     c = np.random.uniform(
                         low=v.var_range[0], high=v.var_range[1])
                 else:
-                    raise NotImplementedError("Unknown distribution")
+                    raise ValueError("Unknown distribution")
                 if v.method == Method.COEFFICIENT:
                     e.attrib[v.attrib] = str(c * v.default)
                 elif v.method == Method.ABSOLUTE:
                     e.attrib[v.attrib] = str(c)
                 else:
-                    raise NotImplementedError("Unknown method")
+                    raise ValueError("Unknown method")
 
             model_xml = etree.tostring(parsed_model.getroot()).decode("ascii")
             self._mujoco_model = load_model_from_xml(model_xml)
