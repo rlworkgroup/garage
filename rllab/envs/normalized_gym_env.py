@@ -141,4 +141,3 @@ class NormalizedGymEnv(gym.Env, Serializable):
 
 
 normalized_gym = NormalizedGymEnv
-
