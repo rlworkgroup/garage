@@ -1,4 +1,5 @@
 import atexit
+import queue
 from queue import Queue
 from threading import Event
 from threading import Thread
@@ -59,7 +60,11 @@ class MujocoModelGenerator:
             # If worker thread terminates because of an error, terminates main thread
             raise ChildProcessError("Error raised in Worker-Thread")
 
-        return self._models.get()
+        try:
+            return self._models.get(timeout=1)
+        except queue.Empty:
+            # If the queue is empty after 1s, there's something wrong in the worker thread
+            raise ChildProcessError("Error raised in Worker-Thread")
 
     def stop(self):
         """
@@ -110,10 +115,11 @@ class MujocoModelGenerator:
                 else:
                     raise ValueError("Unknown distribution")
 
-                if not isinstance(c, type(default_cache[v])):
+                # Check if the sampled value has the same shape with default value
+                if np.array(c).shape != np.array(default_cache[v]).shape:
                     raise ValueError(
-                        "Sampled value %s don't match with default value %s" %
-                        (c, default_cache[v]))
+                        "Sampled value you input %s don't match with default value %s in the xml node %s"
+                        % (c, default_cache[v], v.xpath))
 
                 if v.method == Method.COEFFICIENT:
                     e.attrib[v.attrib] = str(c * default_cache[v])
