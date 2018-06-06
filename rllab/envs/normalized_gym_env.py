@@ -1,4 +1,4 @@
- import gym
+import gym
 import numpy as np
 
 from rllab.core.serializable import Serializable
