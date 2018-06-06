@@ -19,10 +19,7 @@ def test_env(env):
 
 
 env = NormalizedGymEnv(
-    gym.make('CartPole-v0'),
-    normalize_reward=True,
-    normalize_obs=True
-)
+    gym.make('CartPole-v0'), normalize_reward=True, normalize_obs=True)
 test_env(env)
 
 env = NormalizedGymEnv(
