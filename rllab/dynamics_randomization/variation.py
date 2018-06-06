@@ -15,7 +15,7 @@ class Distribution(Enum):
     """
     The different ways to produce the random coefficient.
     """
-    """ Guassian distribution """
+    """ Gaussian distribution """
     GAUSSIAN = 1
     """ Uniform distribution """
     UNIFORM = 2
@@ -28,101 +28,117 @@ class Variation:
     to find the dynamic parameter and the randomization to apply to it.
     """
 
-    def __init__(self):
-        self._xpath = None
-        self._attrib = None
-        self._method = None
-        self._distribution = None
-        self._var_range = None
-        self._elem = None
-        self._default = None
-        self._mean_std = None
+    def __init__(self,
+                 xpath=None,
+                 attrib=None,
+                 method=None,
+                 distribution=None,
+                 var_range=None,
+                 mean_std=None,
+                 elem=None,
+                 default=None):
+
+        if distribution is Distribution.GAUSSIAN and mean_std is None:
+            raise ValueError("Need to call with_mean_std when sampled from Gaussian")
+
+        if distribution is Distribution.UNIFORM and var_range is None:
+            raise ValueError("Need to call with_range when sampled from Uniform")
+
+        self._xpath = xpath
+        self._attrib = attrib
+        self._method = method
+        self._distribution = distribution
+        self._var_range = var_range
+        self._mean_std = mean_std
+        self._elem = elem
+        self._default = default
 
     @property
     def xpath(self):
         return self._xpath
 
-    @xpath.setter
-    def xpath(self, xpath):
-        self._xpath = xpath
-
     @property
     def elem(self):
         return self._elem
-
-    @elem.setter
-    def elem(self, elem):
-        self._elem = elem
 
     @property
     def attrib(self):
         return self._attrib
 
-    @attrib.setter
-    def attrib(self, attrib):
-        self._attrib = attrib
-
     @property
     def default(self):
         return self._default
-
-    @default.setter
-    def default(self, default):
-        self._default = default
 
     @property
     def method(self):
         return self._method
 
-    @method.setter
-    def method(self, method):
-        self._method = method
-
     @property
     def distribution(self):
         return self._distribution
-
-    @distribution.setter
-    def distribution(self, distribution):
-        self._distribution = distribution
 
     @property
     def var_range(self):
         return self._var_range
 
-    @var_range.setter
-    def var_range(self, var_range):
-        self._var_range = var_range
-
     @property
     def mean_std(self):
         return self._mean_std
 
-    @mean_std.setter
-    def mean_std(self, mean_std):
-        self._mean_std = mean_std
 
-
-class VariationsBase:
+class Variations:
     """
     The purpose of this class is to keep a list of all the variations
     that have to be applied to the RandomizedEnv class.
+    """
+
+    def __init__(self):
+        self._list = []
+
+    def randomize(self):
+        """
+        Creates a VariationSpec instance to store values of dynamic parameters.
+
+        Returns
+        -------
+        VariationSpec
+        """
+        return VariationSpec(self)
+
+    def get_list(self):
+        """
+        Returns a list with all the variations
+
+        Returns
+        -------
+        [Variation]
+        A list of all the dynamic parameters to find in the model XML
+        and the configuration to randomize each of them
+        """
+        return self._list
+
+    def add(self, variation):
+        self._list.append(variation)
+
+
+class VariationSpec:
+    """
+    The purpose of this class is to set the values of each dynamic
+    parameter.
     The class implements the fluent interface pattern, so each call
     to set an attribute will return the instance of this class.
     """
 
-    def __init__(self, variations_list=[]):
-        self._list = variations_list
-
-    def randomize(self):
-        """
-        Creates a new entry in the list of variations. After calling this
-        method, call the setters for each of the attributes to be used with
-        this new entry using the fluent interface pattern.
-        """
-        variation = Variation()
-        self._list.append(variation)
-        return Variations(self._list)
+    def __init__(self, variations):
+        self._variations = variations
+        self._xpath = None
+        self._attrib = None
+        self._method = None
+        self._distribution = None
+        self._mean_std = None
+        self._var_range = None
+        self._elem = None
+        self._default = None
 
     def at_xpath(self, xpath):
         """
@@ -134,8 +150,7 @@ class VariationsBase:
             path expression to identify a node within the XML file
             of the MuJoCo environment.
         """
-        if self._list:
-            self._list[-1].xpath = xpath
+        self._xpath = xpath
         return self
 
     def attribute(self, attrib):
@@ -148,8 +163,7 @@ class VariationsBase:
             name of the dynamic parameter to randomize within the
             node defined in xpath.
         """
-        if self._list:
-            self._list[-1].attrib = attrib
+        self._attrib = attrib
         return self
 
     def with_method(self, method):
@@ -165,27 +179,8 @@ class VariationsBase:
             if equal to "coefficient", it multiplies the default value provided
             in the XML file by the random coefficient.
         """
-        if self._list:
-            self._list[-1].method = method
+        self._method = method
         return self
-
-    def get_list(self):
-        """
-        Returns a list with all the variations
-
-        Returns
-        -------
-        [Variation]
-        A list of all the dynamic parameters to find in the model XML
-        and the configuration to randomize each of them
-        """
-        return self._list
-
-
-class Variations(VariationsBase):
-    """
-    Contains all the methods that have to be called once per variation entry.
-    """
 
     def sampled_from(self, distribution):
         """
@@ -198,42 +193,8 @@ class Variations(VariationsBase):
             it specifies the probability distribution used to obtain the random
             coefficient.
         """
-        if self._list:
-            self._list[-1].distribution = distribution
-
-        if distribution is Distribution.GAUSSIAN:
-            return VariationsGaussian(self._list)
-        elif distribution is Distribution.UNIFORM:
-            return VariationsUniform(self._list)
+        self._distribution = distribution
         return self
-
-
-class VariationsUniform(VariationsBase):
-    """
-    Contains all the methods for variation entries with uniform distributions
-    """
-
-    def with_range(self, low, high):
-        """
-        Sets the range for the random coefficient for the last variation in
-        the list. Only to be used for Distribution.UNIFORM
-
-        Parameters
-        ----------
-        low : int
-            inclusive low value of the range
-        high : int
-            exclusive high value of the range
-        """
-        if self._list:
-            self._list[-1].var_range = (low, high)
-        return self
-
-
-class VariationsGaussian(Variations):
-    """
-    Contains all the methods for variation entries with Gaussian distributions
-    """
 
     def with_mean_std(self, mean, std_deviation):
         """
@@ -247,6 +208,32 @@ class VariationsGaussian(Variations):
         std_deviation : int
            standard mean of the distribution
         """
-        if self._list:
-            self._list[-1].mean_std = (mean, std_deviation)
+        self._mean_std = (mean, std_deviation)
         return self
+
+    def with_range(self, low, high):
+        """
+        Sets the range for the random coefficient for the last variation in
+        the list. Only to be used for Distribution.UNIFORM
+
+        Parameters
+        ----------
+        low : int
+            inclusive low value of the range
+        high : int
+            exclusive high value of the range
+        """
+        self._var_range = (low, high)
+        return self
+
+    def add(self):
+        self._variations.add(
+            Variation(
+                xpath=self._xpath,
+                attrib=self._attrib,
+                method=self._method,
+                distribution=self._distribution,
+                var_range=self._var_range,
+                mean_std=self._mean_std,
+                elem=self._elem,
+                default=self._default))

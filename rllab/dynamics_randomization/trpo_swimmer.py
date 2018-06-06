@@ -13,7 +13,8 @@ variations.randomize() \
         .attribute("density") \
         .with_method(Method.COEFFICIENT) \
         .sampled_from(Distribution.UNIFORM) \
-        .with_range(0.5, 1.5)
+        .with_range(0.5, 1.5) \
+        .add()
 
 env = randomize_dynamics(SwimmerEnv(), variations)
 

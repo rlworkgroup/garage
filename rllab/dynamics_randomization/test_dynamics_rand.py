@@ -27,35 +27,40 @@ variations.randomize() \
         .at_xpath(".//motor[@name='a1']") \
         .with_method(Method.COEFFICIENT) \
         .sampled_from(Distribution.UNIFORM) \
-        .with_range(0.5, 1.5)
+        .with_range(0.5, 1.5) \
+        .add()
 
 variations.randomize() \
         .attribute("gear") \
         .at_xpath(".//motor[@name='a2']") \
         .sampled_from(Distribution.UNIFORM) \
         .with_method(Method.COEFFICIENT) \
-        .with_range(0.5, 1.5)
+        .with_range(0.5, 1.5) \
+        .add()
 
 variations.randomize()\
         .attribute("damping") \
         .at_xpath(".//joint[@name='wr_js']") \
         .with_method(Method.ABSOLUTE) \
         .sampled_from(Distribution.UNIFORM) \
-        .with_range(5, 15)
+        .with_range(5, 15) \
+        .add()
 
+elem_cache = {}
+default_cache = {}
 # Retrieve defaults and cache etree elems
 for v in variations.get_list():
     e = tosser.find(v.xpath)
-    v.elem = e
-    v.default = float(e.attrib[v.attrib])
+    elem_cache[v] = e
+    default_cache[v] = float(e.attrib[v.attrib])
 
 for _ in range(1000):
     # Mutate model randomly
     for v in variations.get_list():
-        e = v.elem
+        e = elem_cache[v]
         if v.method == Method.COEFFICIENT:
             c = np.random.uniform(low=v.var_range[0], high=v.var_range[1])
-            e.attrib[v.attrib] = str(c * v.default)
+            e.attrib[v.attrib] = str(c * default_cache[v])
         elif v.method == Method.ABSOLUTE:
             c = np.random.uniform(low=v.var_range[0], high=v.var_range[1])
             e.attrib[v.attrib] = str(c)
@@ -64,6 +69,7 @@ for _ in range(1000):
 
     # Reify model
     model_xml = ET.tostring(tosser.getroot()).decode("ascii")
+    print(model_xml)
 
     # Run model loop
     model = load_model_from_xml(model_xml)

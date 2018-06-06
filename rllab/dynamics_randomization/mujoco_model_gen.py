@@ -97,9 +97,6 @@ class MujocoModelGenerator:
             else:
                 default_cache[v] = np.array(list(map(float, val)))
 
-            if len(v.var_range) != 2 * len(val):
-                raise ValueError("Range shape != default value shape")
-
         # Generate model with randomized dynamic parameters
         while not self._stop_event.is_set():
             for v in self._variations.get_list():
@@ -112,6 +109,12 @@ class MujocoModelGenerator:
                         low=v.var_range[0], high=v.var_range[1])
                 else:
                     raise ValueError("Unknown distribution")
+
+                if not isinstance(c, type(default_cache[v])):
+                    raise ValueError(
+                        "Sampled value %s don't match with default value %s" %
+                        (c, default_cache[v]))
+
                 if v.method == Method.COEFFICIENT:
                     e.attrib[v.attrib] = str(c * default_cache[v])
                 elif v.method == Method.ABSOLUTE:
