@@ -39,10 +39,12 @@ class Variation:
                  default=None):
 
         if distribution is Distribution.GAUSSIAN and mean_std is None:
-            raise ValueError("Need to call with_mean_std when sampled from Gaussian")
+            raise ValueError(
+                "Need to call with_mean_std when sampled from Gaussian")
 
         if distribution is Distribution.UNIFORM and var_range is None:
-            raise ValueError("Need to call with_range when sampled from Uniform")
+            raise ValueError(
+                "Need to call with_range when sampled from Uniform")
 
         self._xpath = xpath
         self._attrib = attrib
