@@ -1,7 +1,7 @@
 from rllab.algos import TRPO
 from rllab.baselines import LinearFeatureBaseline
 from rllab.envs.mujoco import SwimmerEnv
-from rllab.dynamics_randomization import randomize_dynamics
+from rllab.dynamics_randomization import randomize
 from rllab.dynamics_randomization import Variations
 from rllab.dynamics_randomization import Method
 from rllab.dynamics_randomization import Distribution
@@ -16,7 +16,7 @@ variations.randomize() \
         .with_range(0.5, 1.5) \
         .add()
 
-env = randomize_dynamics(SwimmerEnv(), variations)
+env = randomize(SwimmerEnv(), variations)
 
 policy = GaussianMLPPolicy(
     env_spec=env.spec,

@@ -7,7 +7,7 @@ from rllab.envs.mujoco import osp
 from rllab.envs.mujoco.mujoco_env import MODEL_DIR
 
 
-class RandomizedDynamicsEnv(Env, Serializable):
+class RandomizedEnv(Env, Serializable):
     """
     This class is just a wrapper class for the MujocoEnv to perform
     the training using Dynamics Randomization.
@@ -82,4 +82,4 @@ class RandomizedDynamicsEnv(Env, Serializable):
         return self._wrapped_env.horizon
 
 
-randomize_dynamics = RandomizedDynamicsEnv
+randomize = RandomizedEnv
