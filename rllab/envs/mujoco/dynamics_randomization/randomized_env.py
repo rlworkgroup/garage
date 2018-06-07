@@ -1,9 +1,10 @@
+import os.path as osp
+
 from mujoco_py import MjSim
 
 from rllab.core import Serializable
-from rllab.dynamics_randomization import MujocoModelGenerator
 from rllab.envs import Env
-from rllab.envs.mujoco import osp
+from rllab.envs.mujoco.dynamics_randomization import MujocoModelGenerator
 from rllab.envs.mujoco.mujoco_env import MODEL_DIR
 
 

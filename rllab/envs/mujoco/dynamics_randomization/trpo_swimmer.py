@@ -1,10 +1,10 @@
 from rllab.algos import TRPO
 from rllab.baselines import LinearFeatureBaseline
 from rllab.envs.mujoco import SwimmerEnv
-from rllab.dynamics_randomization import randomize
-from rllab.dynamics_randomization import Variations
-from rllab.dynamics_randomization import Method
-from rllab.dynamics_randomization import Distribution
+from rllab.envs.mujoco.dynamics_randomization import Distribution
+from rllab.envs.mujoco.dynamics_randomization import Method
+from rllab.envs.mujoco.dynamics_randomization import randomize
+from rllab.envs.mujoco.dynamics_randomization import Variations
 from rllab.policies import GaussianMLPPolicy
 
 variations = Variations()

@@ -8,8 +8,8 @@ from lxml import etree
 from mujoco_py import load_model_from_xml
 import numpy as np
 
-from rllab.dynamics_randomization import Distribution
-from rllab.dynamics_randomization import Method
+from rllab.envs.mujoco.dynamics_randomization import Distribution
+from rllab.envs.mujoco.dynamics_randomization import Method
 
 
 class MujocoModelGenerator:
