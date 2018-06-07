@@ -34,6 +34,8 @@ class RandomizedEnv(Env, Serializable):
         set.
         """
         self._wrapped_env.model = self._model_generator.get_model()
+        if hasattr(self._wrapped_env, 'action_space'):
+            del self._wrapped_env.__dict__['action_space']
         self._wrapped_env.sim = MjSim(self._wrapped_env.model)
         self._wrapped_env.data = self._wrapped_env.sim.data
         self._wrapped_env.init_qpos = self._wrapped_env.sim.data.qpos
