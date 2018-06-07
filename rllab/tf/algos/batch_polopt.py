@@ -89,8 +89,10 @@ class BatchPolopt(RLAlgorithm):
         self.sampler = sampler_cls(self, **sampler_args)
         self.init_opt()
 
-    def start_worker(self):
+    def start_worker(self, sess):
         self.sampler.start_worker()
+        if self.plot:
+            plotter.init_plot(self.env, self.policy, sess)
 
     def shutdown_worker(self):
         self.sampler.shutdown_worker()
@@ -108,7 +110,7 @@ class BatchPolopt(RLAlgorithm):
             sess.__enter__()
 
         sess.run(tf.global_variables_initializer())
-        self.start_worker()
+        self.start_worker(sess)
         start_time = time.time()
         for itr in range(self.start_itr, self.n_itr):
             itr_start_time = time.time()
@@ -132,14 +134,11 @@ class BatchPolopt(RLAlgorithm):
                 logger.record_tabular('ItrTime', time.time() - itr_start_time)
                 logger.dump_tabular(with_prefix=False)
                 if self.plot:
-                    rollout(
-                        self.env,
-                        self.policy,
-                        animated=True,
-                        max_path_length=self.max_path_length)
+                    self.update_plot()
                     if self.pause_for_plot:
                         input("Plotting evaluation run: Press Enter to "
                               "continue...")
+
         self.shutdown_worker()
         if created_session:
             sess.close()
