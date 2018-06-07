@@ -1,8 +1,11 @@
 import atexit
-from queue import Empty
 from multiprocessing import Process, Queue
-from rllab.sampler.utils import rollout
 import numpy as np
+import platform
+from threading import Thread
+from queue import Empty
+
+from rllab.sampler.utils import rollout
 
 __all__ = ['init_worker', 'init_plot', 'update_plot']
 
@@ -60,12 +63,22 @@ def _shutdown_worker():
 def init_worker():
     global process, queue
     queue = Queue()
-    process = Process(target=_worker_start)
+    process = Thread(target=_worker_start) if (
+        'Darwin' in platform.platform()) else Process(target=_worker_start)
+    process.daemon = True
     process.start()
     atexit.register(_shutdown_worker)
 
 
 def init_plot(env, policy):
+    global process, queue
+    if not (process and queue):
+        init_worker()
+
+    # Needed in order to draw glfw window on the main thread
+    if ('Darwin' in platform.platform()):
+        rollout(env, policy, max_path_length=np.inf, animated=True, speedup=5)
+
     queue.put(['update', env, policy])
 
 
