@@ -1,4 +1,6 @@
 from enum import Enum
+from lxml import etree
+import numpy as np
 
 
 class Method(Enum):
@@ -23,9 +25,9 @@ class Distribution(Enum):
 
 class Variation:
     """
-    Each dynamic parameter to randomize is represented by a Variation. This
+    Each dynamic parameter to be randomized is represented by a Variation. This
     class works more like a data structure to store the data fields required
-    to find the dynamic parameter and the randomization to apply to it.
+    to find the corresponding dynamic parameter and apply the randomization to it.
     """
 
     def __init__(self,
@@ -91,11 +93,15 @@ class Variation:
 class Variations:
     """
     The purpose of this class is to keep a list of all the variations
-    that have to be applied to the RandomizedEnv class.
+    that have to be applied to the randomized environment, as well as
+    the methods to put the variations in the corresponding XML file.
     """
 
     def __init__(self):
         self._list = []
+        self._elem_cache = {}
+        self._default_cache = {}
+        self._parsed_model = None
 
     def randomize(self):
         """
@@ -107,6 +113,74 @@ class Variations:
         """
         return VariationSpec(self)
 
+    def initialize_variations(self, xml_file_path):
+        """
+        Once all the variations have been added to the list member of this
+        class, this method finds each variation as a node within the model
+        defined in the XML file.
+        For each variation, a reference to the data structure for the model
+        is created, as well as the default values of each parameter found
+        int the model.
+
+        Parameters
+        ----------
+        xml_file_path : string
+            absolute path to the location of the XML file that contains the
+            model
+        """
+        self._parsed_model = etree.parse(xml_file_path)
+        self._elem_cache = {}
+        self._default_cache = {}
+        for v in self._list:
+            e = self._parsed_model.find(v.xpath)
+            if e is None:
+                raise ValueError(
+                    "Could not find node in the XML model: %s" % v.xpath)
+            self._elem_cache[v] = e
+
+            if v.attrib not in e.attrib:
+                raise ValueError("Attribute %s doesn't exist in node %s" %
+                                 (v.attrib, v.xpath))
+            val = e.attrib[v.attrib].split(' ')
+            if len(val) == 1:
+                self._default_cache[v] = float(e.attrib[v.attrib])
+            else:
+                self._default_cache[v] = np.array(list(map(float, val)))
+
+    def get_randomized_xml_model(self):
+        """
+        After all the variations have been initialized, this method will
+        generate a XML string with randomized dynamic parameters.
+
+        Returns
+        ----------
+        string
+            XML string of the model with the randomized dynamic parameters
+        """
+        for v in self._list:
+            e = self._elem_cache[v]
+            if v.distribution == Distribution.GAUSSIAN:
+                c = np.random.normal(loc=v.mean_std[0], scale=v.mean_std[1])
+            elif v.distribution == Distribution.UNIFORM:
+                c = np.random.uniform(low=v.var_range[0], high=v.var_range[1])
+            else:
+                raise ValueError("Unknown distribution")
+
+            # Check if the sampled value has the same shape with default value
+            if np.array(c).shape != np.array(self._default_cache[v]).shape:
+                raise ValueError(
+                    "Sampled value you input %s don't match with default value %s in the xml node %s"
+                    % (c, self._default_cache[v], v.xpath))
+
+            if v.method == Method.COEFFICIENT:
+                e.attrib[v.attrib] = str(c * self._default_cache[v])
+            elif v.method == Method.ABSOLUTE:
+                e.attrib[v.attrib] = str(c)
+            else:
+                raise ValueError("Unknown method")
+
+        return etree.tostring(self._parsed_model.getroot()).decode("ascii")
+
     def get_list(self):
         """
         Returns a list with all the variations
@@ -114,8 +188,8 @@ class Variations:
         Returns
         -------
         [Variation]
-        A list of all the dynamic parameters to find in the model XML
-        and the configuration to randomize each of them
+            A list of all the dynamic parameters to find in the model XML
+            and the configuration to randomize each of them
         """
         return self._list
 
@@ -229,6 +303,10 @@ class VariationSpec:
         return self
 
     def add(self):
+        """
+        Adds the variation defined by the fluent interface up to this call
+        to the list of variations to be randomized.
+        """
         self._variations.add(
             Variation(
                 xpath=self._xpath,

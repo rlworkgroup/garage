@@ -4,12 +4,7 @@ from queue import Queue
 from threading import Event
 from threading import Thread
 
-from lxml import etree
 from mujoco_py import load_model_from_xml
-import numpy as np
-
-from rllab.envs.mujoco.dynamics_randomization import Distribution
-from rllab.envs.mujoco.dynamics_randomization import Method
 
 
 class MujocoModelGenerator:
@@ -83,51 +78,9 @@ class MujocoModelGenerator:
         Routine of the worker thread in this class.
         """
         # Initialize parsing of the model from XML
-        parsed_model = etree.parse(self._file_path)
-        elem_cache = {}
-        default_cache = {}
-        for v in self._variations.get_list():
-            e = parsed_model.find(v.xpath)
-            if e is None:
-                raise ValueError(
-                    "Could not find node in the XML model: %s" % v.xpath)
-            elem_cache[v] = e
-
-            if v.attrib not in e.attrib:
-                raise ValueError("Attribute %s doesn't exist in node %s" %
-                                 (v.attrib, v.xpath))
-            val = e.attrib[v.attrib].split(' ')
-            if len(val) == 1:
-                default_cache[v] = float(e.attrib[v.attrib])
-            else:
-                default_cache[v] = np.array(list(map(float, val)))
-
+        self._variations.initialize_variations(self._file_path)
         # Generate model with randomized dynamic parameters
         while not self._stop_event.is_set():
-            for v in self._variations.get_list():
-                e = elem_cache[v]
-                if v.distribution == Distribution.GAUSSIAN:
-                    c = np.random.normal(
-                        loc=v.mean_std[0], scale=v.mean_std[1])
-                elif v.distribution == Distribution.UNIFORM:
-                    c = np.random.uniform(
-                        low=v.var_range[0], high=v.var_range[1])
-                else:
-                    raise ValueError("Unknown distribution")
-
-                # Check if the sampled value has the same shape with default value
-                if np.array(c).shape != np.array(default_cache[v]).shape:
-                    raise ValueError(
-                        "Sampled value you input %s don't match with default value %s in the xml node %s"
-                        % (c, default_cache[v], v.xpath))
-
-                if v.method == Method.COEFFICIENT:
-                    e.attrib[v.attrib] = str(c * default_cache[v])
-                elif v.method == Method.ABSOLUTE:
-                    e.attrib[v.attrib] = str(c)
-                else:
-                    raise ValueError("Unknown method")
-
-            model_xml = etree.tostring(parsed_model.getroot()).decode("ascii")
-            self._mujoco_model = load_model_from_xml(model_xml)
+            self._mujoco_model = load_model_from_xml(
+                self._variations.get_randomized_xml_model())
             self._models.put(self._mujoco_model)
