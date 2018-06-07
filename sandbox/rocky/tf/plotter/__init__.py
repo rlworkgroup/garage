@@ -1,1 +1,1 @@
-from sandbox.rocky.tf.plotter.plotter import *
+from sandbox.rocky.tf.plotter.plotter import Plotter
