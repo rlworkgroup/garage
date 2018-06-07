@@ -92,10 +92,12 @@ class BatchPolopt(RLAlgorithm):
     def start_worker(self, sess):
         self.sampler.start_worker()
         if self.plot:
-            plotter.init_plot(self.env, self.policy, sess)
+            self.plotter = Plotter(self.env, self.policy)
 
     def shutdown_worker(self):
         self.sampler.shutdown_worker()
+        if self.plot:
+            self.plotter.shutdown()
 
     def obtain_samples(self, itr):
         return self.sampler.obtain_samples(itr)
@@ -164,3 +166,17 @@ class BatchPolopt(RLAlgorithm):
 
     def optimize_policy(self, itr, samples_data):
         raise NotImplementedError
+<<<<<<< HEAD:rllab/tf/algos/batch_polopt.py
+=======
+<<<<<<< HEAD
+=======
+
+    def update_plot(self):
+        if self.plot:
+<<<<<<< HEAD
+            plotter.update_plot(self.policy, self.max_path_length)
+>>>>>>> Added async plotting to TensorFlow
+=======
+            self.plotter.update_plot(self.policy, self.max_path_length)
+>>>>>>> Changed Plotter to be a class
+>>>>>>> Changed Plotter to be a class:sandbox/rocky/tf/algos/batch_polopt.py
