@@ -92,7 +92,7 @@ class BatchPolopt(RLAlgorithm):
     def start_worker(self, sess):
         self.sampler.start_worker()
         if self.plot:
-            self.plotter = Plotter(self.env, self.policy)
+            self.plotter = Plotter(self.env, self.policy, sess)
             self.plotter.start()
 
     def shutdown_worker(self):
