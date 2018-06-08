@@ -52,7 +52,7 @@ class NormalizedGymEnv(gym.Wrapper, Serializable):
             scale_reward=1.,
             normalize_obs=False,
             normalize_reward=False,
-            flatten=True,
+            flatten_obs=True,
             obs_alpha=0.001,
             reward_alpha=0.001,
     ):
@@ -61,7 +61,7 @@ class NormalizedGymEnv(gym.Wrapper, Serializable):
         self._scale_reward = scale_reward
         self._normalize_obs = normalize_obs
         self._normalize_reward = normalize_reward
-        self._flatten = flatten
+        self._flatten_obs = flatten_obs
 
         self._obs_alpha = obs_alpha
         flat_obs_dim = gym_space_flatten_dim(env.observation_space)
@@ -92,7 +92,7 @@ class NormalizedGymEnv(gym.Wrapper, Serializable):
         self._update_obs_estimate(obs)
         normalized_obs = (gym_space_flatten(self.env.observation_space, obs) -
                           self._obs_mean) / (np.sqrt(self._obs_var) + 1e-8)
-        if not self._flatten:
+        if not self._flatten_obs:
             normalized_obs = gym_space_unflatten(self.env.observation_space,
                                                  normalized_obs)
         return normalized_obs

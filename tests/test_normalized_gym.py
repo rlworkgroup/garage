@@ -9,7 +9,7 @@ def test_flatten():
         gym.make('Pendulum-v0'),
         normalize_reward=True,
         normalize_obs=True,
-        flatten=True)
+        flatten_obs=True)
     for i in range(100):
         env.reset()
         for e in range(100):
@@ -28,7 +28,7 @@ def test_unflatten():
         gym.make('Blackjack-v0'),
         normalize_reward=True,
         normalize_obs=True,
-        flatten=False)
+        flatten_obs=False)
     for i in range(100):
         env.reset()
         for e in range(100):
