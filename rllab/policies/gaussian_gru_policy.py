@@ -9,6 +9,7 @@ from rllab.core import LasagnePowered
 from rllab.core import ParamLayer
 from rllab.core import Serializable
 from rllab.distributions import RecurrentDiagonalGaussian
+from rllab.envs.gym_space_util import flat_dim, flatten
 from rllab.misc import ext
 from rllab.misc.overrides import overrides
 from rllab.policies import StochasticPolicy
@@ -37,11 +38,11 @@ class GaussianGRUPolicy(StochasticPolicy, LasagnePowered):
         assert len(hidden_sizes) == 1
 
         if state_include_action:
-            obs_dim = env_spec.observation_space.flat_dim + \
-                      env_spec.action_space.flat_dim
+            obs_dim = flat_dim(env_spec.observation_space) + flat_dim(
+                env_spec.action_space)
         else:
-            obs_dim = env_spec.observation_space.flat_dim
-        action_dim = env_spec.action_space.flat_dim
+            obs_dim = flat_dim(env_spec.observation_space)
+        action_dim = flat_dim(env_spec.action_space)
 
         mean_network = GRUNetwork(
             input_shape=(obs_dim, ),
@@ -118,13 +119,13 @@ class GaussianGRUPolicy(StochasticPolicy, LasagnePowered):
     def get_action(self, observation):
         if self._state_include_action:
             if self._prev_action is None:
-                prev_action = np.zeros((self.action_space.flat_dim, ))
+                prev_action = np.zeros((flat_dim(self.action_space), ))
             else:
-                prev_action = self.action_space.flatten(self._prev_action)
+                prev_action = flatten(self.action_space, self._prev_action)
             all_input = np.concatenate(
-                [self.observation_space.flatten(observation), prev_action])
+                [flatten(self.observation_space, observation), prev_action])
         else:
-            all_input = self.observation_space.flatten(observation)
+            all_input = flatten(self.observation_space, observation)
             # should not be used
             prev_action = np.nan
         mean, log_std, hidden_vec = [

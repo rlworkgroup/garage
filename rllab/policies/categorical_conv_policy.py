@@ -1,11 +1,13 @@
-import lasagne.layers as L
-import lasagne.nonlinearities as NL
+import gym
 import numpy as np
+import lasagne.nonlinearities as NL
 
-from rllab.core import ConvNetwork
 from rllab.core import LasagnePowered
-from rllab.core import Serializable
+import lasagne.layers as L
+from rllab.core import ConvNetwork
 from rllab.distributions import Categorical
+from rllab.core import Serializable
+from rllab.envs.gym_space_util import flatten, flatten_n, weighted_sample
 from rllab.misc import ext
 from rllab.misc import logger
 from rllab.misc import tensor_utils
@@ -38,7 +40,7 @@ class CategoricalConvPolicy(StochasticPolicy, LasagnePowered):
         """
         Serializable.quick_init(self, locals())
 
-        assert isinstance(env_spec.action_space, Discrete)
+        assert isinstance(env_spec.action_space, gym.spaces.Discrete)
 
         self._env_spec = env_spec
 
@@ -85,15 +87,15 @@ class CategoricalConvPolicy(StochasticPolicy, LasagnePowered):
     # the current policy
     @overrides
     def get_action(self, observation):
-        flat_obs = self.observation_space.flatten(observation)
+        flat_obs = flatten(self.observation_space, observation)
         prob = self._f_prob([flat_obs])[0]
-        action = self.action_space.weighted_sample(prob)
+        action = weighted_sample(self.action_space, prob)
         return action, dict(prob=prob)
 
     def get_actions(self, observations):
-        flat_obs = self.observation_space.flatten_n(observations)
+        flat_obs = flatten_n(self.observation_space, observations)
         probs = self._f_prob(flat_obs)
-        actions = list(map(self.action_space.weighted_sample, probs))
+        actions = list(map(weighted_sample(self.action_space), probs))
         return actions, dict(prob=probs)
 
     @property

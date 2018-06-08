@@ -1,16 +1,16 @@
 from functools import partial
-import pickle
-
 import lasagne
 import numpy as np
+import pickle as pickle
 import pyprind
 import theano.tensor as TT
 
 from rllab.algos import RLAlgorithm
+from rllab.envs.gym_space_util import flat_dim, new_tensor_variable
+from rllab.misc.overrides import overrides
 from rllab.misc import ext
 from rllab.misc import special
 import rllab.misc.logger as logger
-from rllab.misc.overrides import overrides
 from rllab.plotter import plotter
 from rllab.sampler import parallel_sampler
 
@@ -56,8 +56,8 @@ class SimpleReplayPool(object):
         while count < batch_size:
             index = np.random.randint(
                 self._bottom, self._bottom + self._size) % self._max_pool_size
-            # make sure that the transition is valid: if we are at the end of
-            # the pool, we need to discard this sample
+            # make sure that the transition is valid: if we are at the end of the pool, we need to discard
+            # this sample
             if index == self._size - 1 and self._size <= self._max_pool_size:
                 continue
             # if self._terminals[index]:
@@ -204,8 +204,8 @@ class DDPG(RLAlgorithm):
         # This seems like a rather sequential method
         pool = SimpleReplayPool(
             max_pool_size=self.replay_pool_size,
-            observation_dim=self.env.observation_space.flat_dim,
-            action_dim=self.env.action_space.flat_dim,
+            observation_dim=flat_dim(self.env.observation_space),
+            action_dim=flat_dim(self.env.action_space),
         )
         self.start_worker()
 
@@ -285,14 +285,16 @@ class DDPG(RLAlgorithm):
         target_qf = pickle.loads(pickle.dumps(self.qf))
 
         # y need to be computed first
-        obs = self.env.observation_space.new_tensor_variable(
+        obs = new_tensor_variable(
+            self.env.observation_space,
             'obs',
             extra_dims=1,
         )
 
         # The yi values are computed separately as above and then passed to
         # the training functions below
-        action = self.env.action_space.new_tensor_variable(
+        action = new_tensor_variable(
+            self.env.action_space,
             'action',
             extra_dims=1,
         )
@@ -359,12 +361,12 @@ class DDPG(RLAlgorithm):
 
         policy_surr = f_train_policy(obs)
 
-        target_policy.set_param_values(
-            target_policy.get_param_values() * (1.0 - self.soft_target_tau) +
-            self.policy.get_param_values() * self.soft_target_tau)
-        target_qf.set_param_values(
-            target_qf.get_param_values() * (1.0 - self.soft_target_tau) +
-            self.qf.get_param_values() * self.soft_target_tau)
+        target_policy.set_param_values(target_policy.get_param_values() * (
+            1.0 - self.soft_target_tau
+        ) + self.policy.get_param_values() * self.soft_target_tau)
+        target_qf.set_param_values(target_qf.get_param_values() * (
+            1.0 - self.soft_target_tau
+        ) + self.qf.get_param_values() * self.soft_target_tau)
 
         self.qf_loss_averages.append(qf_loss)
         self.policy_surr_averages.append(policy_surr)

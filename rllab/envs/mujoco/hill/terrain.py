@@ -1,15 +1,28 @@
+<<<<<<< HEAD
 import os
 
+=======
+import matplotlib.pyplot as plt
+import numpy as np
+import os
+from scipy.stats import multivariate_normal
+from scipy.signal import convolve2d
+>>>>>>> Refactored rllab.Env to gym.Env
 import matplotlib
 try:
     matplotlib.pyplot.figure()
     matplotlib.pyplot.close()
 except Exception:
     matplotlib.use('Agg')
+<<<<<<< HEAD
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.signal import convolve2d
 from scipy.stats import multivariate_normal
+=======
+
+from rllab.envs.gym_space_util import flat_dim
+>>>>>>> Refactored rllab.Env to gym.Env
 
 # the colormap should assign light colors to low values
 TERRAIN_CMAP = 'Greens'
@@ -32,8 +45,13 @@ def generate_hills(width, height, nhills):
     pos[:, :, 1] = y
 
     # generate hilltops
+<<<<<<< HEAD
     xm, ym = np.mgrid[xmin:xmax:width / np.sqrt(nhills), ymin:ymax:height /
                       np.sqrt(nhills)]
+=======
+    xm, ym = np.mgrid[xmin:xmax:width / np.sqrt(nhills), ymin:ymax:
+                      height / np.sqrt(nhills)]
+>>>>>>> Refactored rllab.Env to gym.Env
     mu = np.c_[xm.flat, ym.flat]
     sigma = float(width * height) / (nhills * 8)
     for i in range(mu.shape[0]):
@@ -42,7 +60,12 @@ def generate_hills(width, height, nhills):
     # generate hills
     sigma = sigma + sigma * np.random.rand(mu.shape[0])
     rvs = [
+<<<<<<< HEAD
         multivariate_normal(mu[i, :], cov=sigma[i]) for i in range(mu.shape[0])
+=======
+        multivariate_normal(mu[i, :], cov=sigma[i])
+        for i in range(mu.shape[0])
+>>>>>>> Refactored rllab.Env to gym.Env
     ]
     hfield = np.max([rv.pdf(pos) for rv in rvs], axis=0)
     return x, y, hfield
@@ -52,7 +75,7 @@ def clear_patch(hfield, box):
     ''' Clears a patch shaped like box, assuming robot is placed in center of hfield
     @param box: rllab.spaces.Box-like
     '''
-    if box.flat_dim > 2:
+    if flat_dim(box) > 2:
         raise ValueError("Provide 2dim box")
 
     # clear patch
@@ -109,8 +132,12 @@ def save_texture(x, y, hfield, fname, path=None):
     plt.contourf(x, y, -hfield, 100, cmap=TERRAIN_CMAP)
     xmin, xmax = x.min(), x.max()
     ymin, ymax = y.min(), y.max()
+<<<<<<< HEAD
     # for some reason plt.grid does not work here, so generate gridlines
     # manually
+=======
+    # for some reason plt.grid does not work here, so generate gridlines manually
+>>>>>>> Refactored rllab.Env to gym.Env
     for i in np.arange(xmin, xmax, 0.5):
         plt.plot([i, i], [ymin, ymax], 'k', linewidth=0.1)
     for i in np.arange(ymin, ymax, 0.5):

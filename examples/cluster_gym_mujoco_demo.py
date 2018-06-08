@@ -3,6 +3,7 @@ import sys
 from rllab.baselines import LinearFeatureBaseline
 from rllab.envs import GymEnv
 from rllab.envs import normalize
+from rllab.envs.gym_env_util import spec
 from rllab.misc.instrument import run_experiment_lite
 from rllab.misc.instrument import variant
 from rllab.misc.instrument import VariantGenerator
@@ -28,9 +29,11 @@ def run_task(vv):
             GymEnv('HalfCheetah-v1', record_video=False, record_log=False)))
 
     policy = GaussianMLPPolicy(
-        env_spec=env.spec, hidden_sizes=(32, 32), name="policy")
+        env_spec=spec(env),
+        hidden_sizes=(32, 32),
+        name="policy")
 
-    baseline = LinearFeatureBaseline(env_spec=env.spec)
+    baseline = LinearFeatureBaseline(env_spec=spec(env))
 
     algo = TRPO(
         env=env,

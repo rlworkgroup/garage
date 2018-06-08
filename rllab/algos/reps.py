@@ -1,12 +1,14 @@
 import numpy as np
-import scipy.optimize
-import theano
 import theano.tensor as TT
+import theano
+import scipy.optimize
 
 from rllab.algos import BatchPolopt
 from rllab.core import Serializable
-from rllab.misc import ext
+from rllab.envs.gym_space_util import flat_dim, new_tensor_variable
 from rllab.misc import logger
+from rllab.misc.overrides import overrides
+from rllab.misc import ext
 from rllab.misc import tensor_utils
 from rllab.misc.overrides import overrides
 
@@ -56,15 +58,17 @@ class REPS(BatchPolopt, Serializable):
         # Init dual param values
         self.param_eta = 15.
         # Adjust for linear feature vector.
-        self.param_v = np.random.rand(self.env.observation_space.flat_dim * 2 +
-                                      4)
+        self.param_v = np.random.rand(
+            flat_dim(self.env.observation_space) * 2 + 4)
 
         # Theano vars
-        obs_var = self.env.observation_space.new_tensor_variable(
+        obs_var = new_tensor_variable(
+            self.env.observation_space,
             'obs',
             extra_dims=1 + is_recurrent,
         )
-        action_var = self.env.action_space.new_tensor_variable(
+        action_var = new_tensor_variable(
+            self.env.action_space,
             'action',
             extra_dims=1 + is_recurrent,
         )
@@ -106,8 +110,8 @@ class REPS(BatchPolopt, Serializable):
             loss = -TT.sum(logli * TT.exp(delta_v / param_eta - TT.max(
                 delta_v / param_eta)) * valid_var) / TT.sum(valid_var)
         else:
-            loss = -TT.mean(logli * TT.exp(delta_v / param_eta -
-                                           TT.max(delta_v / param_eta)))
+            loss = -TT.mean(logli * TT.exp(
+                delta_v / param_eta - TT.max(delta_v / param_eta)))
 
         # Add regularization to loss.
         reg_params = self.policy.get_params(regularizable=True)
@@ -151,8 +155,8 @@ class REPS(BatchPolopt, Serializable):
 
         if is_recurrent:
             mean_kl = TT.sum(
-                dist.kl_sym(old_dist_info_vars, dist_info_vars) *
-                valid_var) / TT.sum(valid_var)
+                dist.kl_sym(old_dist_info_vars, dist_info_vars) * valid_var
+            ) / TT.sum(valid_var)
         else:
             mean_kl = TT.mean(dist.kl_sym(old_dist_info_vars, dist_info_vars))
 
@@ -191,12 +195,12 @@ class REPS(BatchPolopt, Serializable):
 
         # Eval functions.
         f_dual = ext.compile_function(
-            inputs=[rewards, feat_diff] + state_info_vars_list + recurrent_vars
-            + [param_eta, param_v],
+            inputs=[rewards, feat_diff] + state_info_vars_list +
+            recurrent_vars + [param_eta, param_v],
             outputs=dual)
         f_dual_grad = ext.compile_function(
-            inputs=[rewards, feat_diff] + state_info_vars_list + recurrent_vars
-            + [param_eta, param_v],
+            inputs=[rewards, feat_diff] + state_info_vars_list +
+            recurrent_vars + [param_eta, param_v],
             outputs=dual_grad)
 
         self.opt_info = dict(

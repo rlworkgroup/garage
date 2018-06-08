@@ -34,9 +34,12 @@ class SlidingMemEnv(ProxyEnv, Serializable):
     @property
     def observation_space(self):
         origin = self._wrapped_env.observation_space
-        return Box(*[
-            np.repeat(b, self.n_steps, axis=self.axis) for b in origin.bounds
-        ])
+        return gym.spaces.Box(
+            *[
+                np.repeat(b, self.n_steps, axis=self.axis)
+                for b in origin.bounds
+            ],
+            dtype=np.float32)
 
     @overrides
     def reset(self):

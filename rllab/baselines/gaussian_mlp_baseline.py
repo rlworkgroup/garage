@@ -1,8 +1,9 @@
 import numpy as np
 
-from rllab.baselines.base import Baseline
+from rllab.baselines import Baseline
 from rllab.core import Parameterized
 from rllab.core import Serializable
+from rllab.envs.gym_space_util import flat_dim
 from rllab.misc.overrides import overrides
 from rllab.regressors import GaussianMLPRegressor
 
@@ -22,7 +23,7 @@ class GaussianMLPBaseline(Baseline, Parameterized):
 
         self._regressor = GaussianMLPRegressor(
             input_shape=(
-                env_spec.observation_space.flat_dim * num_seq_inputs, ),
+                flat_dim(env_spec.observation_space) * num_seq_inputs, ),
             output_dim=1,
             name="vf",
             **regressor_args)

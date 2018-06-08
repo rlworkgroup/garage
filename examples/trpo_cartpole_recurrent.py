@@ -2,6 +2,7 @@ from rllab.algos import TRPO
 from rllab.baselines import LinearFeatureBaseline
 from rllab.envs import normalize
 from rllab.envs.box2d import CartpoleEnv
+from rllab.envs.gym_env_util import spec
 from rllab.misc.instrument import run_experiment_lite
 from rllab.optimizers import ConjugateGradientOptimizer
 from rllab.optimizers import FiniteDifferenceHvp
@@ -11,9 +12,9 @@ from rllab.policies import GaussianGRUPolicy
 def run_task(*_):
     env = normalize(CartpoleEnv())
 
-    policy = GaussianGRUPolicy(env_spec=env.spec, )
+    policy = GaussianGRUPolicy(env_spec=spec(env), )
 
-    baseline = LinearFeatureBaseline(env_spec=env.spec)
+    baseline = LinearFeatureBaseline(env_spec=spec(env))
 
     algo = TRPO(
         env=env,

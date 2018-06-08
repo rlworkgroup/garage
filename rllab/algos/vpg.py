@@ -3,9 +3,10 @@ import theano.tensor as TT
 
 from rllab.algos import BatchPolopt
 from rllab.core import Serializable
-from rllab.misc import ext
+from rllab.envs.gym_space_util import new_tensor_variable
 from rllab.misc import logger
 from rllab.misc.overrides import overrides
+from rllab.misc import ext
 from rllab.optimizers import FirstOrderOptimizer
 
 
@@ -41,11 +42,13 @@ class VPG(BatchPolopt, Serializable):
     def init_opt(self):
         is_recurrent = int(self.policy.recurrent)
 
-        obs_var = self.env.observation_space.new_tensor_variable(
+        obs_var = new_tensor_variable(
+            self.env.observation_space,
             'obs',
             extra_dims=1 + is_recurrent,
         )
-        action_var = self.env.action_space.new_tensor_variable(
+        action_var = new_tensor_variable(
+            self.env.action_space,
             'action',
             extra_dims=1 + is_recurrent,
         )
@@ -84,8 +87,8 @@ class VPG(BatchPolopt, Serializable):
         # formulate as a minimization problem
         # The gradient of the surrogate objective is the policy gradient
         if is_recurrent:
-            surr_obj = -TT.sum(
-                logli * advantage_var * valid_var) / TT.sum(valid_var)
+            surr_obj = -TT.sum(logli * advantage_var * valid_var) / TT.sum(
+                valid_var)
             mean_kl = TT.sum(kl * valid_var) / TT.sum(valid_var)
             max_kl = TT.max(kl * valid_var)
         else:
@@ -126,8 +129,8 @@ class VPG(BatchPolopt, Serializable):
         logger.record_tabular("LossBefore", loss_before)
         logger.record_tabular("LossAfter", loss_after)
 
-        mean_kl, max_kl = self.opt_info['f_kl'](
-            *(list(inputs) + dist_info_list))
+        mean_kl, max_kl = self.opt_info['f_kl'](*(
+            list(inputs) + dist_info_list))
         logger.record_tabular('MeanKL', mean_kl)
         logger.record_tabular('MaxKL', max_kl)
 

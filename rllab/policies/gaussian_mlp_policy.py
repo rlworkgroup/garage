@@ -1,3 +1,4 @@
+import gym
 import lasagne
 import lasagne.layers as L
 import lasagne.nonlinearities as NL
@@ -6,14 +7,13 @@ import theano.tensor as TT
 
 from rllab.core import LasagnePowered
 from rllab.core import MLP
-from rllab.core import ParamLayer
 from rllab.core import Serializable
 from rllab.distributions import DiagonalGaussian
-from rllab.misc import ext
-from rllab.misc import logger
+from rllab.envs.gym_space_util import flat_dim, flatten, flatten_n
 from rllab.misc.overrides import overrides
+from rllab.misc import logger
+from rllab.misc import ext
 from rllab.policies import StochasticPolicy
-from rllab.spaces import Box
 
 
 class GaussianMLPPolicy(StochasticPolicy, LasagnePowered):
@@ -53,10 +53,10 @@ class GaussianMLPPolicy(StochasticPolicy, LasagnePowered):
         :return:
         """
         Serializable.quick_init(self, locals())
-        assert isinstance(env_spec.action_space, Box)
+        assert isinstance(env_spec.action_space, gym.spaces.Box)
 
-        obs_dim = env_spec.observation_space.flat_dim
-        action_dim = env_spec.action_space.flat_dim
+        obs_dim = flat_dim(env_spec.observation_space)
+        action_dim = flat_dim(env_spec.action_space)
 
         # create network
         if mean_network is None:
@@ -125,14 +125,14 @@ class GaussianMLPPolicy(StochasticPolicy, LasagnePowered):
 
     @overrides
     def get_action(self, observation):
-        flat_obs = self.observation_space.flatten(observation)
+        flat_obs = flatten(self.observation_space, observation)
         mean, log_std = [x[0] for x in self._f_dist([flat_obs])]
         rnd = np.random.normal(size=mean.shape)
         action = rnd * np.exp(log_std) + mean
         return action, dict(mean=mean, log_std=log_std)
 
     def get_actions(self, observations):
-        flat_obs = self.observation_space.flatten_n(observations)
+        flat_obs = flatten_n(self.observation_space, observations)
         means, log_stds = self._f_dist(flat_obs)
         rnd = np.random.normal(size=means.shape)
         actions = rnd * np.exp(log_stds) + means

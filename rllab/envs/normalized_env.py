@@ -1,3 +1,4 @@
+import gym
 import numpy as np
 
 from rllab import spaces
@@ -5,7 +6,8 @@ from rllab.core import Serializable
 from rllab.envs import Step
 from rllab.envs.proxy_env import ProxyEnv
 from rllab.misc.overrides import overrides
-from rllab.spaces import Box
+from rllab.envs import Step
+from rllab.envs.gym_space_util import bounds, flat_dim, flatten
 
 
 class NormalizedEnv(ProxyEnv, Serializable):
@@ -24,14 +26,14 @@ class NormalizedEnv(ProxyEnv, Serializable):
         self._normalize_obs = normalize_obs
         self._normalize_reward = normalize_reward
         self._obs_alpha = obs_alpha
-        self._obs_mean = np.zeros(env.observation_space.flat_dim)
-        self._obs_var = np.ones(env.observation_space.flat_dim)
+        self._obs_mean = np.zeros(flat_dim(env.observation_space))
+        self._obs_var = np.ones(flat_dim(env.observation_space))
         self._reward_alpha = reward_alpha
         self._reward_mean = 0.
         self._reward_var = 1.
 
     def _update_obs_estimate(self, obs):
-        flat_obs = self.wrapped_env.observation_space.flatten(obs)
+        flat_obs = flatten(self.wrapped_env.observation_space, obs)
         self._obs_mean = (
             1 - self._obs_alpha) * self._obs_mean + self._obs_alpha * flat_obs
         self._obs_var = (
@@ -39,8 +41,9 @@ class NormalizedEnv(ProxyEnv, Serializable):
                 flat_obs - self._obs_mean)
 
     def _update_reward_estimate(self, reward):
-        self._reward_mean = (1 - self._reward_alpha
-                             ) * self._reward_mean + self._reward_alpha * reward
+        self._reward_mean = (
+            1 - self._reward_alpha
+        ) * self._reward_mean + self._reward_alpha * reward
         self._reward_var = (
             1 - self._reward_alpha
         ) * self._reward_var + self._reward_alpha * np.square(
@@ -75,16 +78,16 @@ class NormalizedEnv(ProxyEnv, Serializable):
     @property
     @overrides
     def action_space(self):
-        if isinstance(self._wrapped_env.action_space, Box):
+        if isinstance(self._wrapped_env.action_space, gym.spaces.Box):
             ub = np.ones(self._wrapped_env.action_space.shape)
-            return spaces.Box(-1 * ub, ub)
+            return gym.spaces.Box(-1 * ub, ub, dtype=np.float32)
         return self._wrapped_env.action_space
 
     @overrides
     def step(self, action):
-        if isinstance(self._wrapped_env.action_space, Box):
+        if isinstance(self._wrapped_env.action_space, gym.spaces.Box):
             # rescale the action
-            lb, ub = self._wrapped_env.action_space.bounds
+            lb, ub = bounds(self._wrapped_env.action_space)
             scaled_action = lb + (action + 1.) * 0.5 * (ub - lb)
             scaled_action = np.clip(scaled_action, lb, ub)
         else:

@@ -2,6 +2,7 @@ import gym
 import numpy as np
 import theano
 
+from rllab.envs.base import EnvSpec
 from rllab.envs.gym_space_util import flat_dim
 from rllab.misc import ext
 from rllab.misc import special
@@ -25,10 +26,6 @@ def horizon(env):
     raise NotImplementedError
 
 
-def log_diagnostics(env, paths):
-    pass
-
-
 def render(env):
     pass
 
@@ -38,8 +35,10 @@ def set_param_values(env, params):
 
 
 def spec(env):
-    # return EnvSpec(env.obs_space, env.act_space)
-    pass
+    return EnvSpec(
+        observation_space=env.observation_space,
+        action_space=env.action_space,
+    )
 
 
 def terminate(env):

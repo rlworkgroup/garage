@@ -2,6 +2,7 @@ from rllab.algos import TRPO
 from rllab.baselines import LinearFeatureBaseline
 from rllab.envs import GymEnv
 from rllab.envs import normalize
+from rllab.envs.gym_env_util import spec
 from rllab.misc.instrument import run_experiment_lite
 from rllab.policies import GaussianMLPPolicy
 
@@ -13,9 +14,12 @@ def run_task(*_):
     # CategoricalMLPPolicy (see the trpo_gym_cartpole.py example)
     env = normalize(GymEnv("Pendulum-v0"))
 
-    policy = GaussianMLPPolicy(env_spec=env.spec, hidden_sizes=(32, 32))
+    policy = GaussianMLPPolicy(
+        env_spec=spec(env),
+        # The neural network policy should have two hidden layers, each with 32 hidden units.
+        hidden_sizes=(32, 32))
 
-    baseline = LinearFeatureBaseline(env_spec=env.spec)
+    baseline = LinearFeatureBaseline(env_spec=spec(env))
 
     algo = TRPO(
         env=env,

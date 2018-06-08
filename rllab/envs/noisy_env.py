@@ -2,6 +2,7 @@ import numpy as np
 
 from rllab.core import Serializable
 from rllab.envs import Step
+from rllab.envs.gym_env_util import action_dim
 from rllab.envs.proxy_env import ProxyEnv
 from rllab.misc import autoargs
 from rllab.misc.overrides import overrides
@@ -21,6 +22,7 @@ class NoisyObservationEnv(ProxyEnv, Serializable):
         super(NoisyObservationEnv, self).__init__(env)
         Serializable.quick_init(self, locals())
         self.obs_noise = obs_noise
+        self._action_dim = action_dim(self)
 
     def get_obs_noise_scale_factor(self, obs):
         # return np.abs(obs)
@@ -66,13 +68,13 @@ class DelayedActionEnv(ProxyEnv, Serializable):
     @overrides
     def reset(self):
         obs = self._wrapped_env.reset()
-        self._queued_actions = np.zeros(self.action_delay * self.action_dim)
+        self._queued_actions = np.zeros(self.action_delay * self._action_dim)
         return obs
 
     @overrides
     def step(self, action):
-        queued_action = self._queued_actions[:self.action_dim]
+        queued_action = self._queued_actions[:self._action_dim]
         next_obs, reward, done, info = self._wrapped_env.step(queued_action)
         self._queued_actions = np.concatenate(
-            [self._queued_actions[self.action_dim:], action])
+            [self._queued_actions[self._action_dim:], action])
         return Step(next_obs, reward, done, **info)
