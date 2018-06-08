@@ -1,10 +1,10 @@
 import os.path as osp
 
 from mujoco_py import MjSim
+from mujoco_py import load_model_from_xml
 
 from rllab.core import Serializable
 from rllab.envs import Env
-from rllab.envs.mujoco.dynamics_randomization import MujocoModelGenerator
 from rllab.envs.mujoco.mujoco_env import MODEL_DIR
 
 
@@ -25,8 +25,7 @@ class RandomizedEnv(Env, Serializable):
         self._wrapped_env = mujoco_env
         self._variations = variations
         self._file_path = osp.join(MODEL_DIR, mujoco_env.FILE)
-        self._model_generator = MujocoModelGenerator(self._file_path,
-                                                     variations)
+        self._variations.initialize_variations(self._file_path)
 
     def reset(self):
         """
@@ -34,7 +33,8 @@ class RandomizedEnv(Env, Serializable):
         corresponding parameters in the MuJoCo environment class are
         set.
         """
-        self._wrapped_env.model = self._model_generator.get_model()
+        self._wrapped_env.model = load_model_from_xml(
+                self._variations.get_randomized_xml_model())
         if hasattr(self._wrapped_env, 'action_space'):
             del self._wrapped_env.__dict__['action_space']
         self._wrapped_env.sim = MjSim(self._wrapped_env.model)
@@ -65,7 +65,6 @@ class RandomizedEnv(Env, Serializable):
         Besides regular termination, the MuJoCo model generator is
         stopped.
         """
-        self._model_generator.stop()
         self._wrapped_env.terminate()
 
     @property
