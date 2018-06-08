@@ -5,7 +5,6 @@ from rllab.core import Serializable
 from rllab.envs.box2d.box2d_env import Box2DEnv
 from rllab.envs.box2d.parser import find_body
 from rllab.envs.box2d.parser.xml_box2d import _get_name
-from rllab.envs.gym_util.env_util import action_flat_dim
 from rllab.misc import autoargs
 from rllab.misc.overrides import overrides
 
