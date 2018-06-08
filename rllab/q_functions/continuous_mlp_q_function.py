@@ -9,7 +9,7 @@ from rllab.core import LasagnePowered
 from rllab.core import batch_norm
 from rllab.core import LasagnePowered
 from rllab.core import Serializable
-from rllab.envs.gym_space_util import flat_dim
+from rllab.envs.gym_util.space_util import flat_dim
 from rllab.misc import ext
 from rllab.q_functions import QFunction
 

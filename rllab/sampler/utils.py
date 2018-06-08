@@ -3,7 +3,7 @@ import time
 import numpy as np
 
 from rllab.core import Serializable
-from rllab.envs.gym_space_util import flatten
+from rllab.envs.gym_util.space_util import flatten
 from rllab.misc import tensor_utils
 from rllab.misc.ext import extract
 
@@ -72,7 +72,7 @@ class ReplayPool(Serializable):
 
     def __init__(self,
                  observation_shape,
-                 action_dim,
+                 action_flat_dim,
                  max_steps,
                  observation_dtype=np.float32,
                  action_dtype=np.float32,
@@ -83,7 +83,7 @@ class ReplayPool(Serializable):
 
         Arguments:
             observation_shape - tuple indicating the shape of the observation
-            action_dim - dimension of the action
+            action_flat_dim - dimension of the action
             size - capacity of the replay pool
             observation_dtype - ...
             action_dtype - ...
@@ -93,11 +93,12 @@ class ReplayPool(Serializable):
         """
 
         self.observation_shape = observation_shape
-        self.action_dim = action_dim
+        self.action_flat_dim = action_flat_dim
         self.max_steps = max_steps
         self.observations = np.zeros(
             (max_steps, ) + observation_shape, dtype=observation_dtype)
-        self.actions = np.zeros((max_steps, action_dim), dtype=action_dtype)
+        self.actions = np.zeros(
+            (max_steps, action_flat_dim), dtype=action_dtype)
         self.rewards = np.zeros((max_steps, ), dtype=np.float32)
         self.terminals = np.zeros((max_steps, ), dtype='bool')
         self.extras = None
@@ -118,9 +119,10 @@ class ReplayPool(Serializable):
         self.bottom = 0
         self.top = 0
         self.size = 0
-        super(ReplayPool, self).__init__(
-            self, observation_shape, action_dim, max_steps, observation_dtype,
-            action_dtype, concat_observations, concat_length, rng)
+        super(ReplayPool,
+              self).__init__(self, observation_shape, action_flat_dim,
+                             max_steps, observation_dtype, action_dtype,
+                             concat_observations, concat_length, rng)
 
     def __getstate__(self):
         d = super(ReplayPool, self).__getstate__()
@@ -218,7 +220,7 @@ class ReplayPool(Serializable):
             (batch_size, self.concat_length) + self.observation_shape,
             dtype=self.observation_dtype)
         actions = np.zeros(
-            (batch_size, self.action_dim), dtype=self.action_dtype)
+            (batch_size, self.action_flat_dim), dtype=self.action_dtype)
         rewards = np.zeros((batch_size, ), dtype=floatX)
         terminals = np.zeros((batch_size, ), dtype='bool')
         if self.extras is not None:
@@ -235,7 +237,7 @@ class ReplayPool(Serializable):
             (batch_size, self.concat_length) + self.observation_shape,
             dtype=self.observation_dtype)
         next_actions = np.zeros(
-            (batch_size, self.action_dim), dtype=self.action_dtype)
+            (batch_size, self.action_flat_dim), dtype=self.action_dtype)
 
         count = 0
         while count < batch_size:
@@ -304,7 +306,7 @@ def simple_tests():
     np.random.seed(222)
     dataset = ReplayPool(
         observation_shape=(3, 2),
-        action_dim=1,
+        action_flat_dim=1,
         max_steps=6,
         concat_observations=True,
         concat_length=4)
@@ -331,7 +333,7 @@ def simple_tests():
 def speed_tests():
     dataset = ReplayPool(
         observation_shape=(80, 80),
-        action_dim=1,
+        action_flat_dim=1,
         max_steps=20000,
         concat_observations=True,
         concat_length=4,
@@ -359,7 +361,7 @@ def speed_tests():
 def trivial_tests():
     dataset = ReplayPool(
         observation_shape=(1, 2),
-        action_dim=1,
+        action_flat_dim=1,
         max_steps=3,
         concat_observations=True,
         concat_length=2)
@@ -378,14 +380,14 @@ def trivial_tests():
 def max_size_tests():
     dataset1 = ReplayPool(
         observation_shape=(4, 3),
-        action_dim=1,
+        action_flat_dim=1,
         max_steps=10,
         concat_observations=True,
         concat_length=4,
         rng=np.random.RandomState(42))
     dataset2 = ReplayPool(
         observation_shape=(4, 3),
-        action_dim=1,
+        action_flat_dim=1,
         max_steps=1000,
         concat_observations=True,
         concat_length=4,
@@ -408,7 +410,7 @@ def test_memory_usage_ok(q):
     import memory_profiler
     dataset = ReplayPool(
         observation_shape=(80, 80),
-        action_dim=1,
+        action_flat_dim=1,
         max_steps=100000,
         concat_observations=True,
         concat_length=4)

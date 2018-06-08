@@ -5,7 +5,7 @@ from rllab.core import Serializable
 from rllab.envs.box2d.box2d_env import Box2DEnv
 from rllab.envs.box2d.parser import find_body
 from rllab.envs.box2d.parser.xml_box2d import _get_name
-from rllab.envs.gym_env_util import action_dim
+from rllab.envs.gym_util.env_util import action_flat_dim
 from rllab.misc import autoargs
 from rllab.misc.overrides import overrides
 
@@ -63,8 +63,8 @@ class CarParkingEnv(Box2DEnv, Serializable):
 
     @property
     @overrides
-    def action_dim(self):
-        return action_dim(super(CarParkingEnv, self)) + 1
+    def action_flat_dim(self):
+        return flat_dim(super(CarParkingEnv, self).action_space) + 1
 
     @property
     @overrides
@@ -107,7 +107,7 @@ class CarParkingEnv(Box2DEnv, Serializable):
 
     @overrides
     def action_from_keys(self, keys):
-        go = np.zeros(self.action_dim)
+        go = np.zeros(self.action_flat_dim)
         if keys[pygame.K_LEFT]:
             go[-1] = self.max_deg
         if keys[pygame.K_RIGHT]:

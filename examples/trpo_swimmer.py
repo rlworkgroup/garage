@@ -1,7 +1,7 @@
 from rllab.algos import TRPO
 from rllab.baselines import LinearFeatureBaseline
 from rllab.envs import normalize
-from rllab.envs.gym_env_util import spec
+from rllab.envs.gym_util.env_util import spec
 from rllab.envs.mujoco import SwimmerEnv
 from rllab.policies import GaussianMLPPolicy
 

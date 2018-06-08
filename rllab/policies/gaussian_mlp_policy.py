@@ -9,7 +9,7 @@ from rllab.core import LasagnePowered
 from rllab.core import MLP
 from rllab.core import Serializable
 from rllab.distributions import DiagonalGaussian
-from rllab.envs.gym_space_util import flat_dim, flatten, flatten_n
+from rllab.envs.gym_util.space_util import flat_dim, flatten, flatten_n
 from rllab.misc.overrides import overrides
 from rllab.misc import logger
 from rllab.misc import ext
@@ -56,13 +56,13 @@ class GaussianMLPPolicy(StochasticPolicy, LasagnePowered):
         assert isinstance(env_spec.action_space, gym.spaces.Box)
 
         obs_dim = flat_dim(env_spec.observation_space)
-        action_dim = flat_dim(env_spec.action_space)
+        action_flat_dim = flat_dim(env_spec.action_space)
 
         # create network
         if mean_network is None:
             mean_network = MLP(
                 input_shape=(obs_dim, ),
-                output_dim=action_dim,
+                output_dim=action_flat_dim,
                 hidden_sizes=hidden_sizes,
                 hidden_nonlinearity=hidden_nonlinearity,
                 output_nonlinearity=output_nonlinearity,
@@ -79,7 +79,7 @@ class GaussianMLPPolicy(StochasticPolicy, LasagnePowered):
                 std_network = MLP(
                     input_shape=(obs_dim, ),
                     input_layer=mean_network.input_layer,
-                    output_dim=action_dim,
+                    output_dim=action_flat_dim,
                     hidden_sizes=std_hidden_sizes,
                     hidden_nonlinearity=std_hidden_nonlinearity,
                     output_nonlinearity=None,
@@ -88,7 +88,7 @@ class GaussianMLPPolicy(StochasticPolicy, LasagnePowered):
             else:
                 l_log_std = ParamLayer(
                     mean_network.input_layer,
-                    num_units=action_dim,
+                    num_units=action_flat_dim,
                     param=lasagne.init.Constant(np.log(init_std)),
                     name="output_log_std",
                     trainable=learn_std,
@@ -106,7 +106,7 @@ class GaussianMLPPolicy(StochasticPolicy, LasagnePowered):
         self._l_mean = l_mean
         self._l_log_std = l_log_std
 
-        self._dist = dist_cls(action_dim)
+        self._dist = dist_cls(action_flat_dim)
 
         LasagnePowered.__init__(self, [l_mean, l_log_std])
         super(GaussianMLPPolicy, self).__init__(env_spec)

@@ -3,7 +3,7 @@ import numpy as np
 import numpy.random as nr
 
 from rllab.core import Serializable
-from rllab.envs.gym_space_util import flat_dim
+from rllab.envs.gym_util.space_util import flat_dim
 from rllab.exploration_strategies import ExplorationStrategy
 from rllab.misc.ext import AttrDict
 from rllab.misc.overrides import overrides

@@ -9,7 +9,7 @@ from rllab.core import LasagnePowered
 from rllab.core import ParamLayer
 from rllab.core import Serializable
 from rllab.distributions import RecurrentDiagonalGaussian
-from rllab.envs.gym_space_util import flat_dim, flatten
+from rllab.envs.gym_util.space_util import flat_dim, flatten
 from rllab.misc import ext
 from rllab.misc.overrides import overrides
 from rllab.policies import StochasticPolicy
@@ -42,11 +42,11 @@ class GaussianGRUPolicy(StochasticPolicy, LasagnePowered):
                 env_spec.action_space)
         else:
             obs_dim = flat_dim(env_spec.observation_space)
-        action_dim = flat_dim(env_spec.action_space)
+        action_flat_dim = flat_dim(env_spec.action_space)
 
         mean_network = GRUNetwork(
             input_shape=(obs_dim, ),
-            output_dim=action_dim,
+            output_dim=action_flat_dim,
             hidden_dim=hidden_sizes[0],
             hidden_nonlinearity=hidden_nonlinearity,
             output_nonlinearity=output_nonlinearity,
@@ -57,7 +57,7 @@ class GaussianGRUPolicy(StochasticPolicy, LasagnePowered):
 
         l_log_std = ParamLayer(
             mean_network.input_layer,
-            num_units=action_dim,
+            num_units=action_flat_dim,
             param=lasagne.init.Constant(np.log(init_std)),
             name="output_log_std",
             trainable=learn_std,
@@ -65,7 +65,7 @@ class GaussianGRUPolicy(StochasticPolicy, LasagnePowered):
 
         l_step_log_std = ParamLayer(
             mean_network.step_input_layer,
-            num_units=action_dim,
+            num_units=action_flat_dim,
             param=l_log_std.param,
             name="step_output_log_std",
             trainable=learn_std,
@@ -88,7 +88,7 @@ class GaussianGRUPolicy(StochasticPolicy, LasagnePowered):
         self._prev_action = None
         self._prev_hidden = None
         self._hidden_sizes = hidden_sizes
-        self._dist = RecurrentDiagonalGaussian(action_dim)
+        self._dist = RecurrentDiagonalGaussian(action_flat_dim)
 
         self.reset()
 

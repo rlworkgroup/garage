@@ -2,7 +2,7 @@ from rllab.algos import TRPO
 from rllab.baselines import LinearFeatureBaseline
 from rllab.envs import GymEnv
 from rllab.envs import normalize
-from rllab.envs.gym_env_util import spec
+from rllab.envs.gym_util.env_util import spec
 from rllab.misc.instrument import run_experiment_lite
 from rllab.policies import GaussianMLPPolicy
 

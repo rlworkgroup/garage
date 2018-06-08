@@ -6,7 +6,7 @@ import pyprind
 import theano.tensor as TT
 
 from rllab.algos import RLAlgorithm
-from rllab.envs.gym_space_util import flat_dim, new_tensor_variable
+from rllab.envs.gym_util.space_util import flat_dim, new_tensor_variable
 from rllab.misc.overrides import overrides
 from rllab.misc import ext
 from rllab.misc import special
@@ -25,12 +25,12 @@ def parse_update_method(update_method, **kwargs):
 
 
 class SimpleReplayPool(object):
-    def __init__(self, max_pool_size, observation_dim, action_dim):
+    def __init__(self, max_pool_size, observation_dim, action_flat_dim):
         self._observation_dim = observation_dim
-        self._action_dim = action_dim
+        self._action_flat_dim = action_flat_dim
         self._max_pool_size = max_pool_size
         self._observations = np.zeros((max_pool_size, observation_dim), )
-        self._actions = np.zeros((max_pool_size, action_dim), )
+        self._actions = np.zeros((max_pool_size, action_flat_dim), )
         self._rewards = np.zeros(max_pool_size)
         self._terminals = np.zeros(max_pool_size, dtype='uint8')
         self._bottom = 0
@@ -205,7 +205,7 @@ class DDPG(RLAlgorithm):
         pool = SimpleReplayPool(
             max_pool_size=self.replay_pool_size,
             observation_dim=flat_dim(self.env.observation_space),
-            action_dim=flat_dim(self.env.action_space),
+            action_flat_dim=flat_dim(self.env.action_space),
         )
         self.start_worker()
 

@@ -9,7 +9,7 @@ from rllab.core import LasagnePowered
 from rllab.core import OpLayer
 from rllab.core import Serializable
 from rllab.distributions import RecurrentCategorical
-from rllab.envs.gym_space_util import flat_dim, flatten
+from rllab.envs.gym_util.space_util import flat_dim, flatten
 from rllab.misc import ext
 from rllab.misc import special
 from rllab.misc.overrides import overrides
@@ -35,10 +35,10 @@ class CategoricalGRUPolicy(StochasticPolicy, LasagnePowered):
         super(CategoricalGRUPolicy, self).__init__(env_spec)
 
         obs_dim = flat_dim(env_spec.observation_space)
-        action_dim = flat_dim(env_spec.action_space)
+        action_flat_dim = flat_dim(env_spec.action_space)
 
         if state_include_action:
-            input_dim = obs_dim + action_dim
+            input_dim = obs_dim + action_flat_dim
         else:
             input_dim = obs_dim
 
@@ -95,7 +95,7 @@ class CategoricalGRUPolicy(StochasticPolicy, LasagnePowered):
             }))
 
         self.input_dim = input_dim
-        self.action_dim = action_dim
+        self.action_flat_dim = action_flat_dim
         self.hidden_dim = hidden_dim
 
         self.prev_action = None

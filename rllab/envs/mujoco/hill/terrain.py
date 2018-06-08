@@ -21,8 +21,12 @@ from scipy.signal import convolve2d
 from scipy.stats import multivariate_normal
 =======
 
+<<<<<<< HEAD
 from rllab.envs.gym_space_util import flat_dim
 >>>>>>> Refactored rllab.Env to gym.Env
+=======
+from rllab.envs.gym_util.space_util import flat_dim
+>>>>>>> Updated Tuple space_utils, created new util directory, renamed all action_dim to action_flat_dim
 
 # the colormap should assign light colors to low values
 TERRAIN_CMAP = 'Greens'

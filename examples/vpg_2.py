@@ -7,9 +7,13 @@ from rllab.baselines import LinearFeatureBaseline
 from rllab.envs import normalize
 from rllab.envs.box2d import CartpoleEnv
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 from rllab.envs.gym_space_util import new_tensor_variable
 >>>>>>> Refactored rllab.Env to gym.Env
+=======
+from rllab.envs.gym_util.space_util import new_tensor_variable
+>>>>>>> Updated Tuple space_utils, created new util directory, renamed all action_dim to action_flat_dim
 from rllab.policies import GaussianMLPPolicy
 
 # normalize() makes sure that the actions for the environment lies

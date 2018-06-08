@@ -53,7 +53,7 @@ class Env(object):
 
     # Helpers that derive from Spaces
     @property
-    def action_dim(self):
+    def action_flat_dim(self):
         return self.action_space.flat_dim
 
     def render(self):

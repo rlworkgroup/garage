@@ -1,23 +1,23 @@
 import gym
 import numpy as np
 
-from rllab.envs.gym_space_util import flatten, flatten_n, unflatten, unflatten_n
-from rllab.spaces import Product, Discrete, Box
+from rllab.envs.gym_util.space_util import flatten, flatten_n, sample, unflatten, unflatten_n
 
 from rllab.spaces import Box
 from rllab.spaces import Discrete
 from rllab.spaces import Product
 
 
-def test_product_space():
-    _ = Product([gym.spaces.Discrete(3), gym.spaces.Discrete(2)])
-    product_space = Product(gym.spaces.Discrete(3), gym.spaces.Discrete(2))
-    sample = product_space.sample()
-    assert product_space.contains(sample)
+def test_tuple_space():
+    _ = gym.spaces.Tuple([gym.spaces.Discrete(3), gym.spaces.Discrete(2)])
+    tuple_space = gym.spaces.Tuple(
+        gym.spaces.Discrete(3), gym.spaces.Discrete(2))
+    sample = sample(tuple_space)
+    assert tuple_space.contains(sample)
 
 
-def test_product_space_unflatten_n():
-    space = Product([gym.spaces.Discrete(3), gym.spaces.Discrete(3)])
+def test_tuple_space_unflatten_n():
+    space = gym.spaces.Tuple([gym.spaces.Discrete(3), gym.spaces.Discrete(3)])
     np.testing.assert_array_equal(
         flatten(space, (2, 2)),
         flatten_n(space, [(2, 2)])[0])

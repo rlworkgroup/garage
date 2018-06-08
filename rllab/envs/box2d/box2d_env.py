@@ -9,8 +9,8 @@ from rllab.envs import Step
 from rllab.envs.box2d.box2d_viewer import Box2DViewer
 from rllab.envs.box2d.parser.xml_box2d import world_from_xml, find_body, \
     find_joint
-from rllab.envs.gym_env_util import action_dim
-from rllab.envs.gym_space_util import bounds
+from rllab.envs.gym_util.env_util import action_flat_dim
+from rllab.envs.gym_util.space_util import bounds
 from rllab.misc import autoargs
 from rllab.misc.overrides import overrides
 
@@ -128,9 +128,9 @@ class Box2DEnv(gym.Env):
         return bounds(self.action_space)
 
     def forward_dynamics(self, action):
-        if len(action) != action_dim(self):
+        if len(action) != flat_dim(self.action_space):
             raise ValueError('incorrect action dimension: expected %d but got '
-                             '%d' % (action_dim(self), len(action)))
+                             '%d' % (flat_dim(self.action_space), len(action)))
         lb, ub = self.action_bounds
         action = np.clip(action, lb, ub)
         for ctrl, act in zip(self.extra_data.controls, action):
