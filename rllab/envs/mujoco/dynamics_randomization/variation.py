@@ -31,12 +31,12 @@ class Variation:
     """
 
     def __init__(self,
-                 xpath=None,
-                 attrib=None,
-                 method=None,
-                 distribution=None,
-                 var_range=None,
-                 mean_std=None,
+                 xpath,
+                 attrib,
+                 method,
+                 distribution,
+                 var_range,
+                 mean_std,
                  elem=None,
                  default=None):
 
@@ -209,10 +209,10 @@ class VariationSpec:
         self._variations = variations
         self._xpath = None
         self._attrib = None
-        self._method = None
-        self._distribution = None
-        self._mean_std = None
-        self._var_range = None
+        self._method = Method.ABSOLUTE
+        self._distribution = Distribution.UNIFORM
+        self._mean_std = (0.0, 1.0)
+        self._var_range = (0.0, 1.0)
         self._elem = None
         self._default = None
 
