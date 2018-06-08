@@ -15,8 +15,6 @@ from mujoco_py import MjViewer
 import numpy as np
 import theano
 
-from rllab import spaces
-from rllab.envs import Env
 from rllab.envs.gym_space_util import bounds
 from rllab.misc.overrides import overrides
 from rllab.misc import autoargs
