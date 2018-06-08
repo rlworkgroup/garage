@@ -34,7 +34,7 @@ class RandomizedEnv(Env, Serializable):
         set.
         """
         self._wrapped_env.model = load_model_from_xml(
-                self._variations.get_randomized_xml_model())
+            self._variations.get_randomized_xml_model())
         if hasattr(self._wrapped_env, 'action_space'):
             del self._wrapped_env.__dict__['action_space']
         self._wrapped_env.sim = MjSim(self._wrapped_env.model)
