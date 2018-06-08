@@ -1,11 +1,11 @@
 from rllab.baselines import LinearFeatureBaseline
 from rllab.envs import GymEnv
 from rllab.envs import normalize
-from rllab.misc.instrument import run_experiment_lite
-from rllab.misc.instrument import stub
-from sandbox.rocky.tf.algos import TRPO
-from sandbox.rocky.tf.envs import TfEnv
-from sandbox.rocky.tf.policies import CategoricalMLPPolicy
+from rllab.misc import stub, run_experiment_lite
+
+from rllab.tf.envs import TfEnv
+from rllab.tf.policies import CategoricalMLPPolicy
+from rllab.tf.algos import TRPO
 
 stub(globals())
 

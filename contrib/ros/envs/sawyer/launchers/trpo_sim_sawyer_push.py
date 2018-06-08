@@ -5,9 +5,10 @@ from contrib.ros.envs.sawyer.push_env import PushEnv
 from rllab.baselines.linear_feature_baseline import LinearFeatureBaseline
 from rllab.envs.normalized_env import normalize
 from rllab.misc.instrument import run_experiment_lite
-from sandbox.rocky.tf.algos.trpo import TRPO
-from sandbox.rocky.tf.envs.base import TfEnv
-from sandbox.rocky.tf.policies.gaussian_mlp_policy import GaussianMLPPolicy
+
+from rllab.tf.algos.trpo import TRPO
+from rllab.tf.policies.gaussian_mlp_policy import GaussianMLPPolicy
+from rllab.tf.envs.base import TfEnv
 
 INITIAL_SIM_ROBOT_JOINT_POS = {
     'right_j0': -0.041662954890248294,
