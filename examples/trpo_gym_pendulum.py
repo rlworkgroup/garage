@@ -30,9 +30,8 @@ def run_task(*_):
         n_itr=50,
         discount=0.99,
         step_size=0.01,
-        # Uncomment both lines (this and the plot parameter below) to enable
-        # plotting
-        plot=True,
+        # Uncomment both lines (this and the plot parameter below) to enable plotting
+        # plot=True,
     )
     algo.train()
 
