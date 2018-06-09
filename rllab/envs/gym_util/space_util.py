@@ -7,22 +7,14 @@ from rllab.misc import special
 from rllab.misc.overrides import overrides
 
 __all__ = [
-    'bounds', 'default_value', 'flatten_dim', 'flatten', 'flatten_n',
-    'log_diagnostics', 'unflatten', 'unflatten_n', 'weighted_sample',
-    'new_tensor_variable'
+    'bounds', 'default_value', 'flat_dim', 'flatten', 'flatten_n', 'sample',
+    'unflatten', 'unflatten_n', 'weighted_sample', 'new_tensor_variable'
 ]
 
 
 def bounds(space):
     if isinstance(space, gym.spaces.Box):
         return space.low, space.high
-    else:
-        raise NotImplementedError
-
-
-def components(space):
-    if isinstance(space, gym.spaces.Tuple):
-        return self.spaces
     else:
         raise NotImplementedError
 
@@ -73,13 +65,9 @@ def flatten_n(space, obs):
         raise NotImplementedError
 
 
-def log_diagnostics(space, paths):
-    pass
-
-
 def sample(space):
     if isinstance(space, gym.spaces.Tuple):
-        return tuple(x.sample() for x in self.spaces)
+        return tuple(x.sample() for x in space.spaces)
     else:
         raise NotImplementedError
 
@@ -91,8 +79,8 @@ def unflatten(space, obs):
         return special.from_onehot(obs)
     elif isinstance(space, gym.spaces.Tuple):
         dims = [flat_dim(c) for c in space.spaces]
-        flat_xs = np.split(x, np.cumsum(dims)[:-1])
-        return tuple(unflatten(c, xi) for c, xi in zip(self.spaces, flat_xs))
+        flat_xs = np.split(obs, np.cumsum(dims)[:-1])
+        return tuple(unflatten(c, xi) for c, xi in zip(space.spaces, flat_xs))
     else:
         raise NotImplementedError
 
@@ -104,16 +92,18 @@ def unflatten_n(space, obs):
     elif isinstance(space, gym.spaces.Discrete):
         return special.from_onehot_n(obs)
     elif isinstance(space, gym.spaces.Tuple):
-        dims = [flat_dim(c) for c in self.spaces]
-        flat_xs = np.split(xs, np.cumsum(dims)[:-1], axis=-1)
-        unflat_xs = [unflatten_n(c, xi) for c, xi in zip(self.spaces, flat_xs)]
+        dims = [flat_dim(c) for c in space.spaces]
+        flat_xs = np.split(obs, np.cumsum(dims)[:-1], axis=-1)
+        unflat_xs = [
+            unflatten_n(c, xi) for c, xi in zip(space.spaces, flat_xs)
+        ]
         unflat_xs_grouped = list(zip(*unflat_xs))
         return unflat_xs_grouped
     else:
         raise NotImplementedError
 
 
-def weighted_sample(space, obs):
+def weighted_sample(space, weights):
     if isinstance(space, gym.spaces.Discrete):
         return special.weighted_sample(weights, range(space.n))
     else:
@@ -125,10 +115,10 @@ def new_tensor_variable(space, name, extra_dims):
         return ext.new_tensor(
             name=name, ndim=extra_dims + 1, dtype=theano.config.floatX)
     elif isinstance(space, gym.spaces.Discrete):
-        if self.n <= 2**8:
+        if space.n <= 2**8:
             return ext.new_tensor(
                 name=name, ndim=extra_dims + 1, dtype='uint8')
-        elif self.n <= 2**16:
+        elif space.n <= 2**16:
             return ext.new_tensor(
                 name=name, ndim=extra_dims + 1, dtype='uint16')
         else:
