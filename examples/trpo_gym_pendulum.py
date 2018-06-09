@@ -2,7 +2,7 @@ from rllab.algos import TRPO
 from rllab.baselines import LinearFeatureBaseline
 from rllab.envs import GymEnv
 from rllab.envs import normalize
-from rllab.envs.gym_util.env_util import spec
+from rllab.envs.gym_env_util import spec
 from rllab.misc.instrument import run_experiment_lite
 from rllab.policies import GaussianMLPPolicy
 
@@ -30,8 +30,14 @@ def run_task(*_):
         n_itr=50,
         discount=0.99,
         step_size=0.01,
+<<<<<<< HEAD
         # Uncomment both lines (this and the plot parameter below) to enable plotting
         # plot=True,
+=======
+        # Uncomment both lines (this and the plot parameter below) to enable
+        # plotting
+        plot=True,
+>>>>>>> Refactored GymEnv to gym.make
     )
     algo.train()
 

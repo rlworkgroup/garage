@@ -89,4 +89,4 @@ def test_env(env):
         print("Skipping rendering test")
     else:
         env.render()
-    env.terminate()
+    env.close()

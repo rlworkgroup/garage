@@ -26,7 +26,7 @@ def run_task(domain_name, task_name):
         if done == True:
             break
 
-    dmcontrol_env.terminate()
+    dmcontrol_env.close()
 
 
 for domain, task in suite.ALL_TASKS:

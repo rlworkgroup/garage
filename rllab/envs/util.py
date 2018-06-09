@@ -67,6 +67,11 @@ def flatten_n(space, obs):
         raise NotImplementedError
 
 
+def horizon(env):
+    return env.spec.tags[
+            'wrapper_config.TimeLimit.max_episode_steps']
+
+
 def new_tensor_variable(space, name, extra_dims):
     if isinstance(space, gym.spaces.Box):
         return ext.new_tensor(

@@ -144,7 +144,6 @@ class BatchPolopt(RLAlgorithm):
         self.shutdown_worker()
 
     def log_diagnostics(self, paths):
-        self.env.log_diagnostics(paths)
         self.policy.log_diagnostics(paths)
         self.baseline.log_diagnostics(paths)
 
