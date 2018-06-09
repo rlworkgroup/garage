@@ -3,7 +3,7 @@ import time
 import numpy as np
 
 from rllab.core import Serializable
-from rllab.envs.gym_util.space_util import flatten
+from rllab.envs.util import flatten
 from rllab.misc import tensor_utils
 from rllab.misc.ext import extract
 

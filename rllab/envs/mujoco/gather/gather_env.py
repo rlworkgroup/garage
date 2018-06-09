@@ -16,7 +16,7 @@ import numpy as np
 
 from rllab.core import Serializable
 from rllab.envs import Step
-from rllab.envs.gym_util.space_util import flat_dim
+from rllab.envs.util import flat_dim
 from rllab.envs.mujoco.gather.embedded_viewer import EmbeddedViewer
 from rllab.envs.mujoco.mujoco_env import BIG
 from rllab.envs.proxy_env import ProxyEnv

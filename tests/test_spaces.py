@@ -1,7 +1,7 @@
 import gym
 import numpy as np
 
-from rllab.envs.gym_util.space_util import flatten, flatten_n, sample, unflatten, unflatten_n
+from rllab.envs.util import flatten, flatten_n, sample, unflatten, unflatten_n
 
 from rllab.spaces import Box
 from rllab.spaces import Discrete

@@ -9,7 +9,7 @@ from rllab.core import LasagnePowered
 from rllab.core import ParamLayer
 from rllab.core import Serializable
 from rllab.distributions import RecurrentDiagonalGaussian
-from rllab.envs.gym_util.space_util import flat_dim, flatten
+from rllab.envs.util import flat_dim, flatten
 from rllab.misc import ext
 from rllab.misc.overrides import overrides
 from rllab.policies import StochasticPolicy

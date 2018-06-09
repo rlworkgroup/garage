@@ -7,7 +7,7 @@ import lasagne.layers as L
 from rllab.core import ConvNetwork
 from rllab.distributions import Categorical
 from rllab.core import Serializable
-from rllab.envs.gym_util.space_util import flatten, flatten_n, weighted_sample
+from rllab.envs.util import flatten, flatten_n, weighted_sample
 from rllab.misc import ext
 from rllab.misc import logger
 from rllab.misc import tensor_utils

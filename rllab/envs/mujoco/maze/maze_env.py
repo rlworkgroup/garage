@@ -7,7 +7,7 @@ import xml.etree.ElementTree as ET
 
 from rllab.core import Serializable
 from rllab.envs import Step
-from rllab.envs.gym_util.space_util import flat_dim
+from rllab.envs.util import flat_dim
 from rllab.envs.proxy_env import ProxyEnv
 from rllab.envs.mujoco.maze.maze_env_utils import construct_maze
 from rllab.envs.mujoco.mujoco_env import MODEL_DIR, BIG

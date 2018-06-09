@@ -5,7 +5,7 @@ import scipy.optimize
 
 from rllab.algos import BatchPolopt
 from rllab.core import Serializable
-from rllab.envs.gym_util.space_util import flat_dim, new_tensor_variable
+from rllab.envs.util import flat_dim, new_tensor_variable
 from rllab.misc import logger
 from rllab.misc.overrides import overrides
 from rllab.misc import ext

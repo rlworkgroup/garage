@@ -6,7 +6,7 @@ import pyprind
 import theano.tensor as TT
 
 from rllab.algos import RLAlgorithm
-from rllab.envs.gym_util.space_util import flat_dim, new_tensor_variable
+from rllab.envs.util import flat_dim, new_tensor_variable
 from rllab.misc.overrides import overrides
 from rllab.misc import ext
 from rllab.misc import special

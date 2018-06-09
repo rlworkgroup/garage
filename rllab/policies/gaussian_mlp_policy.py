@@ -9,7 +9,7 @@ from rllab.core import LasagnePowered
 from rllab.core import MLP
 from rllab.core import Serializable
 from rllab.distributions import DiagonalGaussian
-from rllab.envs.gym_util.space_util import flat_dim, flatten, flatten_n
+from rllab.envs.util import flat_dim, flatten, flatten_n
 from rllab.misc.overrides import overrides
 from rllab.misc import logger
 from rllab.misc import ext

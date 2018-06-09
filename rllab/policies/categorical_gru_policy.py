@@ -9,7 +9,7 @@ from rllab.core import LasagnePowered
 from rllab.core import OpLayer
 from rllab.core import Serializable
 from rllab.distributions import RecurrentCategorical
-from rllab.envs.gym_util.space_util import flat_dim, flatten
+from rllab.envs.util import flat_dim, flatten
 from rllab.misc import ext
 from rllab.misc import special
 from rllab.misc.overrides import overrides

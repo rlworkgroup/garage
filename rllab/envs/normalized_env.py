@@ -7,7 +7,7 @@ from rllab.envs import Step
 from rllab.envs.proxy_env import ProxyEnv
 from rllab.misc.overrides import overrides
 from rllab.envs import Step
-from rllab.envs.gym_util.space_util import bounds, flat_dim, flatten
+from rllab.envs.util import bounds, flat_dim, flatten
 
 
 class NormalizedEnv(ProxyEnv, Serializable):

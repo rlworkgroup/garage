@@ -7,7 +7,7 @@ from rllab.core import LasagnePowered
 from rllab.core import MLP
 from rllab.core import Serializable
 from rllab.distributions import Categorical
-from rllab.envs.gym_util.space_util import flat_dim, flatten, flatten_n, weighted_sample
+from rllab.envs.util import flat_dim, flatten, flatten_n, weighted_sample
 from rllab.misc import ext
 from rllab.misc.overrides import overrides
 from rllab.policies import StochasticPolicy
