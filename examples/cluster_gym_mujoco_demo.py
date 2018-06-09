@@ -1,9 +1,10 @@
 import sys
 
+import gym
+
 from rllab.baselines import LinearFeatureBaseline
-from rllab.envs import GymEnv
 from rllab.envs import normalize
-from rllab.envs.gym_util.env_util import spec
+from rllab.envs.util import spec
 from rllab.misc.instrument import run_experiment_lite
 from rllab.misc.instrument import variant
 from rllab.misc.instrument import VariantGenerator
@@ -13,6 +14,7 @@ from rllab.tf.policies import GaussianMLPPolicy
 
 
 class VG(VariantGenerator):
+
     @variant
     def step_size(self):
         return [0.01, 0.05, 0.1]
@@ -24,14 +26,13 @@ class VG(VariantGenerator):
 
 def run_task(vv):
 
-    env = TfEnv(
-        normalize(
-            GymEnv('HalfCheetah-v1', record_video=False, record_log=False)))
+    env = TfEnv(gym.make('HalfCheetah-v1', record_video=False, record_log=False))
 
     policy = GaussianMLPPolicy(
         env_spec=spec(env),
         hidden_sizes=(32, 32),
-        name="policy")
+        name="policy"
+    )
 
     baseline = LinearFeatureBaseline(env_spec=spec(env))
 
@@ -44,8 +45,8 @@ def run_task(vv):
         n_itr=40,
         discount=0.99,
         step_size=vv["step_size"],
-        # Uncomment both lines (this and the plot parameter below) to enable
-        # plotting plot=True,
+        # Uncomment both lines (this and the plot parameter below) to enable plotting
+        # plot=True,
     )
     algo.train()
 
@@ -61,8 +62,8 @@ for v in variants:
         n_parallel=1,
         # Only keep the snapshot parameters for the last iteration
         snapshot_mode="last",
-        # Specifies the seed for the experiment. If this is not provided, a
-        # random seed will be used
+        # Specifies the seed for the experiment. If this is not provided, a random seed
+        # will be used
         seed=v["seed"],
         # mode="local",
         mode="ec2",
