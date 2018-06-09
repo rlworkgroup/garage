@@ -16,6 +16,7 @@ from rllab.envs import IdentificationEnv
 from rllab.envs import NoisyObservationEnv
 from rllab.envs import NormalizedEnv
 from rllab.envs import ProxyEnv
+<<<<<<< HEAD
 from rllab.envs.box2d import CarParkingEnv
 from rllab.envs.box2d import CartpoleEnv
 from rllab.envs.box2d import CartpoleSwingupEnv
@@ -35,6 +36,8 @@ if MUJOCO_ENABLED:
     from rllab.envs.mujoco.maze import AntMazeEnv
     from rllab.envs.mujoco.maze import PointMazeEnv
     from rllab.envs.mujoco.maze import SwimmerMazeEnv
+=======
+>>>>>>> Removed all references/usage of GymEnv
 
 simple_env_classes = [
     GridWorldEnv,
@@ -68,7 +71,6 @@ envs.append(IdentificationEnv(CartpoleEnv, {}))
 envs.append(NoisyObservationEnv(CartpoleEnv()))
 envs.append(DelayedActionEnv(CartpoleEnv()))
 envs.append(NormalizedEnv(CartpoleEnv()))
-envs.append(GymEnv('CartPole-v0'))
 
 
 @tools.params(*envs)
