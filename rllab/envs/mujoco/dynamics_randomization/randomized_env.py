@@ -17,9 +17,7 @@ class RandomizedEnv(Env, Serializable):
 
     def __init__(self, mujoco_env, variations):
         """
-        An instance of the class MujocoModelGenerator is created to
-        generate the Mujoco models with the randomization of the
-        requested dynamic parameters.
+        Set variations with the node in the XML file at file_path.
         """
         Serializable.quick_init(self, locals())
         self._wrapped_env = mujoco_env
@@ -61,10 +59,6 @@ class RandomizedEnv(Env, Serializable):
         self._wrapped_env.set_param_values(params)
 
     def terminate(self):
-        """
-        Besides regular termination, the MuJoCo model generator is
-        stopped.
-        """
         self._wrapped_env.terminate()
 
     @property

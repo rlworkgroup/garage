@@ -121,7 +121,7 @@ class Variations:
         defined in the XML file.
         For each variation, a reference to the data structure for the model
         is created, as well as the default values of each parameter found
-        int the model.
+        in the model.
 
         Parameters
         ----------
