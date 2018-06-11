@@ -50,11 +50,16 @@ class OUStrategy(ExplorationStrategy, Serializable):
     def get_action(self, t, observation, policy, **kwargs):
         action, _ = policy.get_action(observation)
         ou_state = self.evolve_state()
-        return np.clip(action + ou_state, self.action_space.low, self.action_space.high)
+        return np.clip(action + ou_state, self.action_space.low,
+                       self.action_space.high)
 
 
 if __name__ == "__main__":
-    ou = OUStrategy(env_spec=AttrDict(action_space=Box(low=-1, high=1, shape=(1,))), mu=0, theta=0.15, sigma=0.3)
+    ou = OUStrategy(
+        env_spec=AttrDict(action_space=Box(low=-1, high=1, shape=(1, ))),
+        mu=0,
+        theta=0.15,
+        sigma=0.3)
     states = []
     for i in range(1000):
         states.append(ou.evolve_state()[0])

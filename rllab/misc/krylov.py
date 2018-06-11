@@ -35,11 +35,18 @@ def cg(f_Ax, b, cg_iters=10, callback=None, verbose=False, residual_tol=1e-10):
 
     if callback is not None:
         callback(x)
-    if verbose: print(fmtstr % (i + 1, rdotr, np.linalg.norm(x)))  # pylint: disable=W0631
+    if verbose:
+        print(fmtstr % (i + 1, rdotr, np.linalg.norm(x)))  # pylint: disable=W0631
     return x
 
 
-def preconditioned_cg(f_Ax, f_Minvx, b, cg_iters=10, callback=None, verbose=False, residual_tol=1e-10):
+def preconditioned_cg(f_Ax,
+                      f_Minvx,
+                      b,
+                      cg_iters=10,
+                      callback=None,
+                      verbose=False,
+                      residual_tol=1e-10):
     """
     Demmel p 318
     """
@@ -83,12 +90,20 @@ def test_cg():
     x = cg(lambda x: A.dot(x), b, cg_iters=5, verbose=True)  # pylint: disable=W0108
     assert np.allclose(A.dot(x), b)
 
-    x = preconditioned_cg(lambda x: A.dot(x), lambda x: np.linalg.solve(A, x), b, cg_iters=5,
-                          verbose=True)  # pylint: disable=W0108
+    x = preconditioned_cg(
+        lambda x: A.dot(x),
+        lambda x: np.linalg.solve(A, x),
+        b,
+        cg_iters=5,
+        verbose=True)  # pylint: disable=W0108
     assert np.allclose(A.dot(x), b)
 
-    x = preconditioned_cg(lambda x: A.dot(x), lambda x: x / np.diag(A), b, cg_iters=5,
-                          verbose=True)  # pylint: disable=W0108
+    x = preconditioned_cg(
+        lambda x: A.dot(x),
+        lambda x: x / np.diag(A),
+        b,
+        cg_iters=5,
+        verbose=True)  # pylint: disable=W0108
     assert np.allclose(A.dot(x), b)
 
 
@@ -130,7 +145,8 @@ def lanczos(f_Ax, b, k):
             qm = q
             q = z / beta
 
-    return np.array(qs, 'float64').T, np.array(alphas, 'float64'), np.array(betas[:-1], 'float64')
+    return np.array(qs, 'float64').T, np.array(alphas, 'float64'), np.array(
+        betas[:-1], 'float64')
 
 
 def lanczos2(f_Ax, b, k, residual_thresh=1e-9):
@@ -158,7 +174,9 @@ def lanczos2(f_Ax, b, k, residual_thresh=1e-9):
 
         beta = np.linalg.norm(z)
         if beta < residual_thresh:
-            print("lanczos2: stopping early after %i/%i dimensions residual %f < %f" % (j + 1, k, beta, residual_thresh))
+            print(
+                "lanczos2: stopping early after %i/%i dimensions residual %f < %f"
+                % (j + 1, k, beta, residual_thresh))
             break
         else:
             q = z / beta
@@ -170,9 +188,9 @@ def make_tridiagonal(alphas, betas):
     assert len(alphas) == len(betas) + 1
     N = alphas.size
     out = np.zeros((N, N), 'float64')
-    out.flat[0:N ** 2:N + 1] = alphas
-    out.flat[1:N ** 2 - N:N + 1] = betas
-    out.flat[N:N ** 2 - 1:N + 1] = betas
+    out.flat[0:N**2:N + 1] = alphas
+    out.flat[1:N**2 - N:N + 1] = betas
+    out.flat[N:N**2 - 1:N + 1] = betas
     return out
 
 
@@ -206,7 +224,7 @@ def test_lanczos():
     print(np.linalg.eigvalsh(A)[::-1])
 
     print("lanczos on ill-conditioned problem")
-    A = np.diag(10 ** np.arange(5))
+    A = np.diag(10**np.arange(5))
     Q, H1 = lanczos2(f_Ax, b, 10)
     print(np.linalg.eigvalsh(H1))
 

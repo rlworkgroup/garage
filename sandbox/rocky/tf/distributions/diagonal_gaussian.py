@@ -1,6 +1,3 @@
-
-
-
 import tensorflow as tf
 import numpy as np
 from sandbox.rocky.tf.distributions import Distribution
@@ -39,17 +36,18 @@ class DiagonalGaussian(Distribution):
             numerator / denominator + new_log_stds - old_log_stds, axis=-1)
         # more lossy version
         # return TT.sum(
-        #     numerator / denominator + TT.log(new_std) - TT.log(old_std ), axis=-1)
+        #     numerator / denominator + TT.log(new_std) - TT.log(old_std),
+        #     axis=-1)
 
-    def kl_sym(self, old_dist_info_vars, new_dist_info_vars, name = "kl_sym"):
+    def kl_sym(self, old_dist_info_vars, new_dist_info_vars, name="kl_sym"):
         with enclosing_scope(self._name, name):
             old_means = old_dist_info_vars["mean"]
             old_log_stds = old_dist_info_vars["log_std"]
             new_means = new_dist_info_vars["mean"]
             new_log_stds = new_dist_info_vars["log_std"]
             """
-            Compute the KL divergence of two multivariate Gaussian distribution with
-            diagonal covariance matrices
+            Compute the KL divergence of two multivariate Gaussian distribution
+            with diagonal covariance matrices
             """
             old_std = tf.exp(old_log_stds)
             new_std = tf.exp(new_log_stds)
@@ -64,13 +62,20 @@ class DiagonalGaussian(Distribution):
             return tf.reduce_sum(
                 numerator / denominator + new_log_stds - old_log_stds, axis=-1)
 
-    def likelihood_ratio_sym(self, x_var, old_dist_info_vars, new_dist_info_vars, name = "likelihood_ratio_sym"):
+    def likelihood_ratio_sym(self,
+                             x_var,
+                             old_dist_info_vars,
+                             new_dist_info_vars,
+                             name="likelihood_ratio_sym"):
         with enclosing_scope(self._name, name):
             logli_new = self.log_likelihood_sym(x_var, new_dist_info_vars)
             logli_old = self.log_likelihood_sym(x_var, old_dist_info_vars)
             return tf.exp(logli_new - logli_old)
 
-    def log_likelihood_sym(self, x_var, dist_info_vars, name = "log_likelihood_sym"):
+    def log_likelihood_sym(self,
+                           x_var,
+                           dist_info_vars,
+                           name="log_likelihood_sym"):
         with enclosing_scope(self._name, name):
             means = dist_info_vars["mean"]
             log_stds = dist_info_vars["log_std"]
@@ -97,11 +102,12 @@ class DiagonalGaussian(Distribution):
         log_stds = dist_info["log_std"]
         return np.sum(log_stds + np.log(np.sqrt(2 * np.pi * np.e)), axis=-1)
 
-    def entropy_sym(self, dist_info_var, name = "entropy_sym"):
+    def entropy_sym(self, dist_info_var, name="entropy_sym"):
         with enclosing_scope(self._name, name):
             log_std_var = dist_info_var["log_std"]
-            return tf.reduce_sum(log_std_var + np.log(np.sqrt(2 * np.pi * np.e)), axis=-1)
+            return tf.reduce_sum(
+                log_std_var + np.log(np.sqrt(2 * np.pi * np.e)), axis=-1)
 
     @property
     def dist_info_specs(self):
-        return [("mean", (self.dim,)), ("log_std", (self.dim,))]
+        return [("mean", (self.dim, )), ("log_std", (self.dim, ))]

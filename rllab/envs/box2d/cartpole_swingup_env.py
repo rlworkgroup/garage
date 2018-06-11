@@ -12,13 +12,10 @@ from rllab.misc.overrides import overrides
 # nonlinear identification and control." Proc. of the IFAC Workshop on
 # Nonlinear Model Predictive Control for Fast Systems, NMPC FS06. 2006.
 class CartpoleSwingupEnv(Box2DEnv, Serializable):
-
     @autoargs.inherit(Box2DEnv.__init__)
     def __init__(self, *args, **kwargs):
         super(CartpoleSwingupEnv, self).__init__(
-            self.model_path("cartpole.xml.mako"),
-            *args, **kwargs
-        )
+            self.model_path("cartpole.xml.mako"), *args, **kwargs)
         self.max_cart_pos = 3
         self.max_reward_cart_pos = 3
         self.cart = find_body(self.world, "cart")
@@ -30,8 +27,8 @@ class CartpoleSwingupEnv(Box2DEnv, Serializable):
         self._set_state(self.initial_state)
         self._invalidate_state_caches()
         bounds = np.array([
-            [-1, -2, np.pi-1, -3],
-            [1, 2, np.pi+1, 3],
+            [-1, -2, np.pi - 1, -3],
+            [1, 2, np.pi + 1, 3],
         ])
         low, high = bounds
         xpos, xvel, apos, avel = np.random.uniform(low, high)
@@ -64,4 +61,3 @@ class CartpoleSwingupEnv(Box2DEnv, Serializable):
             return np.asarray([+10])
         else:
             return np.asarray([0])
-

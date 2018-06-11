@@ -8,17 +8,32 @@ from sandbox.rocky.tf.core import LayersPowered
 
 
 class MLP(LayersPowered, Serializable):
-    def __init__(self, output_dim, hidden_sizes, hidden_nonlinearity, output_nonlinearity,
-                 name="MLP", hidden_W_init=L.XavierUniformInitializer(), hidden_b_init=tf.zeros_initializer(),
-                 output_W_init=L.XavierUniformInitializer(), output_b_init=tf.zeros_initializer(),
-                 input_var=None, input_layer=None, input_shape=None, batch_normalization=False, weight_normalization=False,
-                 ):
+    def __init__(
+            self,
+            output_dim,
+            hidden_sizes,
+            hidden_nonlinearity,
+            output_nonlinearity,
+            name="MLP",
+            hidden_W_init=L.XavierUniformInitializer(),
+            hidden_b_init=tf.zeros_initializer(),
+            output_W_init=L.XavierUniformInitializer(),
+            output_b_init=tf.zeros_initializer(),
+            input_var=None,
+            input_layer=None,
+            input_shape=None,
+            batch_normalization=False,
+            weight_normalization=False,
+    ):
 
         Serializable.quick_init(self, locals())
 
         with tf.variable_scope(name):
             if input_layer is None:
-                l_in = L.InputLayer(shape=(None,) + input_shape, input_var=input_var, name="input")
+                l_in = L.InputLayer(
+                    shape=(None, ) + input_shape,
+                    input_var=input_var,
+                    name="input")
             else:
                 l_in = input_layer
             self._layers = [l_in]
@@ -33,8 +48,7 @@ class MLP(LayersPowered, Serializable):
                     name="hidden_%d" % idx,
                     W=hidden_W_init,
                     b=hidden_b_init,
-                    weight_normalization=weight_normalization
-                )
+                    weight_normalization=weight_normalization)
                 if batch_normalization:
                     l_hid = L.batch_norm(l_hid)
                 self._layers.append(l_hid)
@@ -45,8 +59,7 @@ class MLP(LayersPowered, Serializable):
                 name="output",
                 W=output_W_init,
                 b=output_b_init,
-                weight_normalization=weight_normalization
-            )
+                weight_normalization=weight_normalization)
             if batch_normalization:
                 l_out = L.batch_norm(l_out)
             self._layers.append(l_out)
@@ -79,22 +92,39 @@ class MLP(LayersPowered, Serializable):
 
 
 class ConvNetwork(LayersPowered, Serializable):
-    def __init__(self, input_shape, output_dim,
-                 conv_filters, conv_filter_sizes, conv_strides, conv_pads,
-                 hidden_sizes, hidden_nonlinearity, output_nonlinearity, name="ConvNetwork",
-                 hidden_W_init=L.XavierUniformInitializer(), hidden_b_init=tf.zeros_initializer(),
-                 output_W_init=L.XavierUniformInitializer(), output_b_init=tf.zeros_initializer(),
-                 input_var=None, input_layer=None, batch_normalization=False, weight_normalization=False):
+    def __init__(self,
+                 input_shape,
+                 output_dim,
+                 conv_filters,
+                 conv_filter_sizes,
+                 conv_strides,
+                 conv_pads,
+                 hidden_sizes,
+                 hidden_nonlinearity,
+                 output_nonlinearity,
+                 name="ConvNetwork",
+                 hidden_W_init=L.XavierUniformInitializer(),
+                 hidden_b_init=tf.zeros_initializer(),
+                 output_W_init=L.XavierUniformInitializer(),
+                 output_b_init=tf.zeros_initializer(),
+                 input_var=None,
+                 input_layer=None,
+                 batch_normalization=False,
+                 weight_normalization=False):
         Serializable.quick_init(self, locals())
         """
-        A network composed of several convolution layers followed by some fc layers.
+        A network composed of several convolution layers followed by some fc
+        layers.
         input_shape: (width,height,channel)
-            HOWEVER, network inputs are assumed flattened. This network will first unflatten the inputs and then apply the standard convolutions and so on.
+            HOWEVER, network inputs are assumed flattened. This network will
+            first unflatten the inputs and then apply the standard convolutions
+            and so on.
         conv_filters: a list of numbers of convolution kernel
         conv_filter_sizes: a list of sizes (int) of the convolution kernels
         conv_strides: a list of strides (int) of the conv kernels
         conv_pads: a list of pad formats (either 'SAME' or 'VALID')
-        hidden_nonlinearity: a nonlinearity from tf.nn, shared by all conv and fc layers
+        hidden_nonlinearity: a nonlinearity from tf.nn, shared by all conv and
+         fc layers
         hidden_sizes: a list of numbers of hidden units for all fc layers
         """
         with tf.variable_scope(name):
@@ -102,14 +132,25 @@ class ConvNetwork(LayersPowered, Serializable):
                 l_in = input_layer
                 l_hid = l_in
             elif len(input_shape) == 3:
-                l_in = L.InputLayer(shape=(None, np.prod(input_shape)), input_var=input_var, name="input")
-                l_hid = L.reshape(l_in, ([0],) + input_shape, name="reshape_input")
+                l_in = L.InputLayer(
+                    shape=(None, np.prod(input_shape)),
+                    input_var=input_var,
+                    name="input")
+                l_hid = L.reshape(
+                    l_in, ([0], ) + input_shape, name="reshape_input")
             elif len(input_shape) == 2:
-                l_in = L.InputLayer(shape=(None, np.prod(input_shape)), input_var=input_var, name="input")
-                input_shape = (1,) + input_shape
-                l_hid = L.reshape(l_in, ([0],) + input_shape, name="reshape_input")
+                l_in = L.InputLayer(
+                    shape=(None, np.prod(input_shape)),
+                    input_var=input_var,
+                    name="input")
+                input_shape = (1, ) + input_shape
+                l_hid = L.reshape(
+                    l_in, ([0], ) + input_shape, name="reshape_input")
             else:
-                l_in = L.InputLayer(shape=(None,) + input_shape, input_var=input_var, name="input")
+                l_in = L.InputLayer(
+                    shape=(None, ) + input_shape,
+                    input_var=input_var,
+                    name="input")
                 l_hid = l_in
 
             if batch_normalization:
@@ -184,40 +225,57 @@ class ConvNetwork(LayersPowered, Serializable):
 
 
 class GRUNetwork(object):
-    def __init__(self, input_shape, output_dim, hidden_dim, name="GRUNetwork",
-                 hidden_nonlinearity=tf.nn.relu, gru_layer_cls=L.GRULayer,
-                 output_nonlinearity=None, input_var=None, input_layer=None, layer_args=None):
+    def __init__(self,
+                 input_shape,
+                 output_dim,
+                 hidden_dim,
+                 name="GRUNetwork",
+                 hidden_nonlinearity=tf.nn.relu,
+                 gru_layer_cls=L.GRULayer,
+                 output_nonlinearity=None,
+                 input_var=None,
+                 input_layer=None,
+                 layer_args=None):
         with tf.variable_scope(name):
             if input_layer is None:
-                l_in = L.InputLayer(shape=(None, None) + input_shape, input_var=input_var, name="input")
+                l_in = L.InputLayer(
+                    shape=(None, None) + input_shape,
+                    input_var=input_var,
+                    name="input")
             else:
                 l_in = input_layer
-            l_step_input = L.InputLayer(shape=(None,) + input_shape, name="step_input")
-            l_step_prev_state = L.InputLayer(shape=(None, hidden_dim), name="step_prev_state")
+            l_step_input = L.InputLayer(
+                shape=(None, ) + input_shape, name="step_input")
+            l_step_prev_state = L.InputLayer(
+                shape=(None, hidden_dim), name="step_prev_state")
             if layer_args is None:
                 layer_args = dict()
-            l_gru = gru_layer_cls(l_in, num_units=hidden_dim, hidden_nonlinearity=hidden_nonlinearity,
-                                  hidden_init_trainable=False, name="gru", **layer_args)
+            l_gru = gru_layer_cls(
+                l_in,
+                num_units=hidden_dim,
+                hidden_nonlinearity=hidden_nonlinearity,
+                hidden_init_trainable=False,
+                name="gru",
+                **layer_args)
             l_gru_flat = L.ReshapeLayer(
-                l_gru, shape=(-1, hidden_dim),
-                name="gru_flat"
-            )
+                l_gru, shape=(-1, hidden_dim), name="gru_flat")
             l_output_flat = L.DenseLayer(
                 l_gru_flat,
                 num_units=output_dim,
                 nonlinearity=output_nonlinearity,
-                name="output_flat"
-            )
+                name="output_flat")
             l_output = L.OpLayer(
                 l_output_flat,
                 op=lambda flat_output, l_input:
-                tf.reshape(flat_output, tf.stack((tf.shape(l_input)[0], tf.shape(l_input)[1], -1))),
+                tf.reshape(flat_output,
+                    tf.stack((tf.shape(l_input)[0], tf.shape(l_input)[1], -1))),
                 shape_op=lambda flat_output_shape, l_input_shape:
                 (l_input_shape[0], l_input_shape[1], flat_output_shape[-1]),
                 extras=[l_in],
                 name="output"
             )
-            l_step_state = l_gru.get_step_layer(l_step_input, l_step_prev_state, name="step_state")
+            l_step_state = l_gru.get_step_layer(
+                l_step_input, l_step_prev_state, name="step_state")
             l_step_hidden = l_step_state
             l_step_output = L.DenseLayer(
                 l_step_hidden,
@@ -225,8 +283,7 @@ class GRUNetwork(object):
                 nonlinearity=output_nonlinearity,
                 W=l_output_flat.W,
                 b=l_output_flat.b,
-                name="step_output"
-            )
+                name="step_output")
 
             self._l_in = l_in
             self._hid_init_param = l_gru.h0
@@ -293,53 +350,76 @@ class GRUNetwork(object):
 
 
 class LSTMNetwork(object):
-    def __init__(self, input_shape, output_dim, hidden_dim, name="LSTMNetwork",
-                 hidden_nonlinearity=tf.nn.relu, lstm_layer_cls=L.LSTMLayer,
-                 output_nonlinearity=None, input_var=None, input_layer=None, forget_bias=1.0, use_peepholes=False,
+    def __init__(self,
+                 input_shape,
+                 output_dim,
+                 hidden_dim,
+                 name="LSTMNetwork",
+                 hidden_nonlinearity=tf.nn.relu,
+                 lstm_layer_cls=L.LSTMLayer,
+                 output_nonlinearity=None,
+                 input_var=None,
+                 input_layer=None,
+                 forget_bias=1.0,
+                 use_peepholes=False,
                  layer_args=None):
         with tf.variable_scope(name):
             if input_layer is None:
-                l_in = L.InputLayer(shape=(None, None) + input_shape, input_var=input_var, name="input")
+                l_in = L.InputLayer(
+                    shape=(None, None) + input_shape,
+                    input_var=input_var,
+                    name="input")
             else:
                 l_in = input_layer
-            l_step_input = L.InputLayer(shape=(None,) + input_shape, name="step_input")
+            l_step_input = L.InputLayer(
+                shape=(None, ) + input_shape, name="step_input")
             # contains previous hidden and cell state
-            l_step_prev_state = L.InputLayer(shape=(None, hidden_dim * 2), name="step_prev_state")
+            l_step_prev_state = L.InputLayer(
+                shape=(None, hidden_dim * 2), name="step_prev_state")
             if layer_args is None:
                 layer_args = dict()
-            l_lstm = lstm_layer_cls(l_in, num_units=hidden_dim, hidden_nonlinearity=hidden_nonlinearity,
-                                    hidden_init_trainable=False, name="lstm", forget_bias=forget_bias,
-                                    cell_init_trainable=False, use_peepholes=use_peepholes, **layer_args)
+            l_lstm = lstm_layer_cls(
+                l_in,
+                num_units=hidden_dim,
+                hidden_nonlinearity=hidden_nonlinearity,
+                hidden_init_trainable=False,
+                name="lstm",
+                forget_bias=forget_bias,
+                cell_init_trainable=False,
+                use_peepholes=use_peepholes,
+                **layer_args)
             l_lstm_flat = L.ReshapeLayer(
-                l_lstm, shape=(-1, hidden_dim),
-                name="lstm_flat"
-            )
+                l_lstm, shape=(-1, hidden_dim), name="lstm_flat")
             l_output_flat = L.DenseLayer(
                 l_lstm_flat,
                 num_units=output_dim,
                 nonlinearity=output_nonlinearity,
-                name="output_flat"
-            )
+                name="output_flat")
             l_output = L.OpLayer(
                 l_output_flat,
                 op=lambda flat_output, l_input:
-                tf.reshape(flat_output, tf.stack((tf.shape(l_input)[0], tf.shape(l_input)[1], -1))),
+                tf.reshape(flat_output,
+                    tf.stack((tf.shape(l_input)[0], tf.shape(l_input)[1], -1))),
                 shape_op=lambda flat_output_shape, l_input_shape:
                 (l_input_shape[0], l_input_shape[1], flat_output_shape[-1]),
                 extras=[l_in],
                 name="output"
             )
-            l_step_state = l_lstm.get_step_layer(l_step_input, l_step_prev_state, name="step_state")
-            l_step_hidden = L.SliceLayer(l_step_state, indices=slice(hidden_dim), name="step_hidden")
-            l_step_cell = L.SliceLayer(l_step_state, indices=slice(hidden_dim, None), name="step_cell")
+            l_step_state = l_lstm.get_step_layer(
+                l_step_input, l_step_prev_state, name="step_state")
+            l_step_hidden = L.SliceLayer(
+                l_step_state, indices=slice(hidden_dim), name="step_hidden")
+            l_step_cell = L.SliceLayer(
+                l_step_state,
+                indices=slice(hidden_dim, None),
+                name="step_cell")
             l_step_output = L.DenseLayer(
                 l_step_hidden,
                 num_units=output_dim,
                 nonlinearity=output_nonlinearity,
                 W=l_output_flat.W,
                 b=l_output_flat.b,
-                name="step_output"
-            )
+                name="step_output")
 
             self._l_in = l_in
             self._hid_init_param = l_lstm.h0
@@ -408,28 +488,42 @@ class LSTMNetwork(object):
 
     @property
     def state_init_param(self):
-        return tf.concat(axis=0, values=[self._hid_init_param, self._cell_init_param])
+        return tf.concat(
+            axis=0, values=[self._hid_init_param, self._cell_init_param])
 
 
 class ConvMergeNetwork(LayersPowered, Serializable):
     """
-    This network allows the input to consist of a convolution-friendly component, plus a non-convolution-friendly
-    component. These two components will be concatenated in the fully connected layers. There can also be a list of
-    optional layers for the non-convolution-friendly component alone.
+    This network allows the input to consist of a convolution-friendly
+    component, plus a non-convolution-friendly component. These two components
+    will be concatenated in the fully connected layers. There can also be a
+    list of optional layers for the non-convolution-friendly component alone.
 
 
-    The input to the network should be a matrix where each row is a single input entry, with both the aforementioned
-    components flattened out and then concatenated together
+    The input to the network should be a matrix where each row is a single input
+    entry, with both the aforementioned components flattened out and then
+    concatenated together
     """
 
-    def __init__(self, input_shape, extra_input_shape, output_dim, hidden_sizes,
-                 conv_filters, conv_filter_sizes, conv_strides, conv_pads, name="ConvMergeNetwork",
+    def __init__(self,
+                 input_shape,
+                 extra_input_shape,
+                 output_dim,
+                 hidden_sizes,
+                 conv_filters,
+                 conv_filter_sizes,
+                 conv_strides,
+                 conv_pads,
+                 name="ConvMergeNetwork",
                  extra_hidden_sizes=None,
-                 hidden_W_init=L.XavierUniformInitializer(), hidden_b_init=tf.zeros_initializer(),
-                 output_W_init=L.XavierUniformInitializer(), output_b_init=tf.zeros_initializer(),
+                 hidden_W_init=L.XavierUniformInitializer(),
+                 hidden_b_init=tf.zeros_initializer(),
+                 output_W_init=L.XavierUniformInitializer(),
+                 output_b_init=tf.zeros_initializer(),
                  hidden_nonlinearity=tf.nn.relu,
                  output_nonlinearity=None,
-                 input_var=None, input_layer=None):
+                 input_var=None,
+                 input_layer=None):
         Serializable.quick_init(self, locals())
 
         if extra_hidden_sizes is None:
@@ -442,28 +536,24 @@ class ConvMergeNetwork(LayersPowered, Serializable):
             total_input_flat_dim = input_flat_dim + extra_input_flat_dim
 
             if input_layer is None:
-                l_in = L.InputLayer(shape=(None, total_input_flat_dim), input_var=input_var, name="input")
+                l_in = L.InputLayer(
+                    shape=(None, total_input_flat_dim),
+                    input_var=input_var,
+                    name="input")
             else:
                 l_in = input_layer
 
             l_conv_in = L.reshape(
                 L.SliceLayer(
-                    l_in,
-                    indices=slice(input_flat_dim),
-                    name="conv_slice"
-                ),
-                ([0],) + input_shape,
-                name="conv_reshaped"
-            )
+                    l_in, indices=slice(input_flat_dim), name="conv_slice"),
+                ([0], ) + input_shape,
+                name="conv_reshaped")
             l_extra_in = L.reshape(
                 L.SliceLayer(
                     l_in,
                     indices=slice(input_flat_dim, None),
-                    name="extra_slice"
-                ),
-                ([0],) + extra_input_shape,
-                name="extra_reshaped"
-            )
+                    name="extra_slice"), ([0], ) + extra_input_shape,
+                name="extra_reshaped")
 
             l_conv_hid = l_conv_in
             for idx, conv_filter, filter_size, stride, pad in zip(
@@ -496,8 +586,7 @@ class ConvMergeNetwork(LayersPowered, Serializable):
 
             l_joint_hid = L.concat(
                 [L.flatten(l_conv_hid, name="conv_hidden_flat"), l_extra_hid],
-                name="joint_hidden"
-            )
+                name="joint_hidden")
 
             for idx, hidden_size in enumerate(hidden_sizes):
                 l_joint_hid = L.DenseLayer(

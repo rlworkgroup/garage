@@ -12,7 +12,6 @@ import itertools
 
 
 class VectorizedSampler(BaseSampler):
-
     def __init__(self, algo, n_envs=None):
         super(VectorizedSampler, self).__init__(algo)
         self.n_envs = n_envs
@@ -24,13 +23,15 @@ class VectorizedSampler(BaseSampler):
             n_envs = max(1, min(n_envs, 100))
 
         if getattr(self.algo.env, 'vectorized', False):
-            self.vec_env = self.algo.env.vec_env_executor(n_envs=n_envs, max_path_length=self.algo.max_path_length)
+            self.vec_env = self.algo.env.vec_env_executor(
+                n_envs=n_envs, max_path_length=self.algo.max_path_length)
         else:
-            envs = [pickle.loads(pickle.dumps(self.algo.env)) for _ in range(n_envs)]
+            envs = [
+                pickle.loads(pickle.dumps(self.algo.env))
+                for _ in range(n_envs)
+            ]
             self.vec_env = VecEnvExecutor(
-                envs=envs,
-                max_path_length=self.algo.max_path_length
-            )
+                envs=envs, max_path_length=self.algo.max_path_length)
         self.env_spec = self.algo.env.spec
 
     def shutdown_worker(self):
@@ -69,9 +70,9 @@ class VectorizedSampler(BaseSampler):
                 env_infos = [dict() for _ in range(self.vec_env.num_envs)]
             if agent_infos is None:
                 agent_infos = [dict() for _ in range(self.vec_env.num_envs)]
-            for idx, observation, action, reward, env_info, agent_info, done in zip(itertools.count(), obses, actions,
-                                                                                    rewards, env_infos, agent_infos,
-                                                                                    dones):
+            for idx, observation, action, reward, env_info, agent_info, done \
+                in zip(itertools.count(), obses, actions, rewards, env_infos,
+                    agent_infos, dones):
                 if running_paths[idx] is None:
                     running_paths[idx] = dict(
                         observations=[],
@@ -86,13 +87,19 @@ class VectorizedSampler(BaseSampler):
                 running_paths[idx]["env_infos"].append(env_info)
                 running_paths[idx]["agent_infos"].append(agent_info)
                 if done:
-                    paths.append(dict(
-                        observations=self.env_spec.observation_space.flatten_n(running_paths[idx]["observations"]),
-                        actions=self.env_spec.action_space.flatten_n(running_paths[idx]["actions"]),
-                        rewards=tensor_utils.stack_tensor_list(running_paths[idx]["rewards"]),
-                        env_infos=tensor_utils.stack_tensor_dict_list(running_paths[idx]["env_infos"]),
-                        agent_infos=tensor_utils.stack_tensor_dict_list(running_paths[idx]["agent_infos"]),
-                    ))
+                    paths.append(
+                        dict(
+                            observations=self.env_spec.observation_space.
+                            flatten_n(running_paths[idx]["observations"]),
+                            actions=self.env_spec.action_space.flatten_n(
+                                running_paths[idx]["actions"]),
+                            rewards=tensor_utils.stack_tensor_list(
+                                running_paths[idx]["rewards"]),
+                            env_infos=tensor_utils.stack_tensor_dict_list(
+                                running_paths[idx]["env_infos"]),
+                            agent_infos=tensor_utils.stack_tensor_dict_list(
+                                running_paths[idx]["agent_infos"]),
+                        ))
                     n_samples += len(running_paths[idx]["rewards"])
                     running_paths[idx] = None
             process_time += time.time() - t

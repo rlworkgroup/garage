@@ -1,4 +1,4 @@
-name: rllab3
+name: garage
 channels:
     - https://conda.anaconda.org/kne 
     - https://conda.anaconda.org/menpo

@@ -1,5 +1,3 @@
-
-
 from sandbox.rocky.tf.algos import NPO
 from sandbox.rocky.tf.optimizers import ConjugateGradientOptimizer
 
@@ -9,11 +7,7 @@ class TRPO(NPO):
     Trust Region Policy Optimization
     """
 
-    def __init__(
-            self,
-            optimizer=None,
-            optimizer_args=None,
-            **kwargs):
+    def __init__(self, optimizer=None, optimizer_args=None, **kwargs):
         if optimizer is None:
             if optimizer_args is None:
                 optimizer_args = dict()

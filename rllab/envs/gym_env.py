@@ -66,8 +66,8 @@ class GymEnv(Env, Serializable):
         if log_dir is None:
             if logger.get_snapshot_dir() is None:
                 logger.log(
-                    "Warning: skipping Gym environment monitoring since snapshot_dir not configured."
-                )
+                    "Warning: skipping Gym environment monitoring since "
+                    "snapshot_dir not configured.")
             else:
                 log_dir = os.path.join(logger.get_snapshot_dir(), "gym_log")
         Serializable.quick_init(self, locals())
@@ -134,7 +134,8 @@ class GymEnv(Env, Serializable):
                 print("""
     ***************************
 
-    Training finished! You can upload results to OpenAI Gym by running the following command:
+    Training finished! You can upload results to OpenAI Gym by running the
+    following command:
 
     python scripts/submit_gym.py %s
 

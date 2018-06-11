@@ -12,6 +12,7 @@ from rllab.spaces import Discrete
 
 import numpy as np
 
+
 class CategoricalMLPPolicy(StochasticPolicy, LasagnePowered):
     def __init__(
             self,
@@ -25,7 +26,8 @@ class CategoricalMLPPolicy(StochasticPolicy, LasagnePowered):
         :param env_spec: A spec for the mdp.
         :param hidden_sizes: list of sizes for the fully connected hidden layers
         :param hidden_nonlinearity: nonlinearity used for each hidden layer
-        :param prob_network: manually specified network for this policy, other network params
+        :param prob_network: manually specified network for this policy, other
+         network params
         are ignored
         :return:
         """
@@ -35,7 +37,8 @@ class CategoricalMLPPolicy(StochasticPolicy, LasagnePowered):
 
         if prob_network is None:
             prob_network = MLP(
-                input_shape=(env_spec.observation_space.flat_dim * num_seq_inputs,),
+                input_shape=(
+                    env_spec.observation_space.flat_dim * num_seq_inputs, ),
                 output_dim=env_spec.action_space.n,
                 hidden_sizes=hidden_sizes,
                 hidden_nonlinearity=hidden_nonlinearity,
@@ -44,8 +47,9 @@ class CategoricalMLPPolicy(StochasticPolicy, LasagnePowered):
 
         self._l_prob = prob_network.output_layer
         self._l_obs = prob_network.input_layer
-        self._f_prob = ext.compile_function([prob_network.input_layer.input_var], L.get_output(
-            prob_network.output_layer))
+        self._f_prob = ext.compile_function(
+            [prob_network.input_layer.input_var],
+            L.get_output(prob_network.output_layer))
 
         self._dist = Categorical(env_spec.action_space.n)
 

@@ -14,25 +14,24 @@ from sandbox.rocky.tf.misc import tensor_utils
 from sandbox.rocky.tf.misc.tensor_utils import enclosing_scope
 import tensorflow as tf
 
+
 class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
-    def __init__(
-            self,
-            env_spec,
-            name="GaussianMLPPolicy",
-            hidden_sizes=(32, 32),
-            learn_std=True,
-            init_std=1.0,
-            adaptive_std=False,
-            std_share_network=False,
-            std_hidden_sizes=(32, 32),
-            min_std=1e-6,
-            std_hidden_nonlinearity=tf.nn.tanh,
-            hidden_nonlinearity=tf.nn.tanh,
-            output_nonlinearity=None,
-            mean_network=None,
-            std_network=None,
-            std_parametrization='exp'
-    ):
+    def __init__(self,
+                 env_spec,
+                 name="GaussianMLPPolicy",
+                 hidden_sizes=(32, 32),
+                 learn_std=True,
+                 init_std=1.0,
+                 adaptive_std=False,
+                 std_share_network=False,
+                 std_hidden_sizes=(32, 32),
+                 min_std=1e-6,
+                 std_hidden_nonlinearity=tf.nn.tanh,
+                 hidden_nonlinearity=tf.nn.tanh,
+                 output_nonlinearity=None,
+                 mean_network=None,
+                 std_network=None,
+                 std_parametrization='exp'):
         """
         :param env_spec:
         :param hidden_sizes: list of sizes for the fully-connected hidden layers
@@ -40,15 +39,19 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
         :param init_std: Initial std
         :param adaptive_std:
         :param std_share_network:
-        :param std_hidden_sizes: list of sizes for the fully-connected layers for std
-        :param min_std: whether to make sure that the std is at least some threshold value, to avoid numerical issues
+        :param std_hidden_sizes: list of sizes for the fully-connected layers
+         for std
+        :param min_std: whether to make sure that the std is at least some
+         threshold value, to avoid numerical issues
         :param std_hidden_nonlinearity:
         :param hidden_nonlinearity: nonlinearity used for each hidden layer
         :param output_nonlinearity: nonlinearity for the output layer
         :param mean_network: custom network for the output mean
         :param std_network: custom network for the output log std
-        :param std_parametrization: how the std should be parametrized. There are a few options:
-            - exp: the logarithm of the std will be stored, and applied a exponential transformation
+        :param std_parametrization: how the std should be parametrized. There
+         are a few options:
+            - exp: the logarithm of the std will be stored, and applied a
+             exponential transformation
             - softplus: the std will be computed as log(1+exp(x))
         :return:
         """
@@ -174,9 +177,13 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
     def vectorized(self):
         return True
 
-    def dist_info_sym(self, obs_var, state_info_vars=None, name="dist_info_sym"):
+    def dist_info_sym(self,
+                      obs_var,
+                      state_info_vars=None,
+                      name="dist_info_sym"):
         with enclosing_scope(self.name, name):
-            mean_var, std_param_var = L.get_output([self._l_mean, self._l_std_param], obs_var)
+            mean_var, std_param_var = L.get_output(
+                [self._l_mean, self._l_std_param], obs_var)
             if self.min_std_param is not None:
                 std_param_var = tf.maximum(std_param_var, self.min_std_param)
             if self.std_parametrization == 'exp':
@@ -202,10 +209,15 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
         actions = rnd * np.exp(log_stds) + means
         return actions, dict(mean=means, log_std=log_stds)
 
-    def get_reparam_action_sym(self, obs_var, action_var, old_dist_info_vars, name="get_reparam_action_sym"):
+    def get_reparam_action_sym(self,
+                               obs_var,
+                               action_var,
+                               old_dist_info_vars,
+                               name="get_reparam_action_sym"):
         """
-        Given observations, old actions, and distribution of old actions, return a symbolically reparameterized
-        representation of the actions in terms of the policy parameters
+        Given observations, old actions, and distribution of old actions, return
+        a symbolically reparameterized representation of the actions in terms of
+        the policy parameters
         :param obs_var:
         :param action_var:
         :param old_dist_info_vars:
@@ -213,10 +225,14 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
         """
         with enclosing_scope(self.name, name):
             new_dist_info_vars = self.dist_info_sym(obs_var, action_var)
-            new_mean_var, new_log_std_var = new_dist_info_vars["mean"], new_dist_info_vars["log_std"]
-            old_mean_var, old_log_std_var = old_dist_info_vars["mean"], old_dist_info_vars["log_std"]
-            epsilon_var = (action_var - old_mean_var) / (tf.exp(old_log_std_var) + 1e-8)
-            new_action_var = new_mean_var + epsilon_var * tf.exp(new_log_std_var)
+            new_mean_var, new_log_std_var = new_dist_info_vars[
+                "mean"], new_dist_info_vars["log_std"]
+            old_mean_var, old_log_std_var = old_dist_info_vars[
+                "mean"], old_dist_info_vars["log_std"]
+            epsilon_var = (action_var - old_mean_var) / (
+                tf.exp(old_log_std_var) + 1e-8)
+            new_action_var = new_mean_var + epsilon_var * tf.exp(
+                new_log_std_var)
             return new_action_var
 
     def log_diagnostics(self, paths):

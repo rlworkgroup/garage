@@ -58,7 +58,10 @@ class Discrete(Space):
 
     def new_tensor_variable(self, name, extra_dims):
         # needed for safe conversion to float32
-        return tf.placeholder(dtype=tf.uint8, shape=[None] * extra_dims + [self.flat_dim], name=name)
+        return tf.placeholder(
+            dtype=tf.uint8,
+            shape=[None] * extra_dims + [self.flat_dim],
+            name=name)
 
     @property
     def dtype(self):
@@ -71,4 +74,3 @@ class Discrete(Space):
 
     def __hash__(self):
         return hash(self.n)
-

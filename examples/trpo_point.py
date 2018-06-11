@@ -5,9 +5,7 @@ from rllab.envs import normalize
 from rllab.policies import GaussianMLPPolicy
 
 env = normalize(PointEnv())
-policy = GaussianMLPPolicy(
-    env_spec=env.spec,
-)
+policy = GaussianMLPPolicy(env_spec=env.spec, )
 baseline = LinearFeatureBaseline(env_spec=env.spec)
 algo = TRPO(
     env=env,

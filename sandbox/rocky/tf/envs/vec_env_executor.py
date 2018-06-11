@@ -1,5 +1,3 @@
-
-
 import numpy as np
 import pickle as pickle
 from sandbox.rocky.tf.misc import tensor_utils
@@ -15,7 +13,8 @@ class VecEnvExecutor(object):
 
     def step(self, action_n):
         all_results = [env.step(a) for (a, env) in zip(action_n, self.envs)]
-        obs, rewards, dones, env_infos = list(map(list, list(zip(*all_results))))
+        obs, rewards, dones, env_infos = list(
+            map(list, list(zip(*all_results))))
         dones = np.asarray(dones)
         rewards = np.asarray(rewards)
         self.ts += 1
@@ -25,7 +24,8 @@ class VecEnvExecutor(object):
             if done:
                 obs[i] = self.envs[i].reset()
                 self.ts[i] = 0
-        return obs, rewards, dones, tensor_utils.stack_tensor_dict_list(env_infos)
+        return obs, rewards, dones, tensor_utils.stack_tensor_dict_list(
+            env_infos)
 
     def reset(self):
         results = [env.reset() for env in self.envs]

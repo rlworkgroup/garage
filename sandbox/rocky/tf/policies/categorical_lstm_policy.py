@@ -15,19 +15,17 @@ from rllab.misc.overrides import overrides
 
 
 class CategoricalLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
-    def __init__(
-            self,
-            env_spec,
-            name="CategoricalLSTMPolicy",
-            hidden_dim=32,
-            feature_network=None,
-            prob_network=None,
-            state_include_action=True,
-            hidden_nonlinearity=tf.tanh,
-            forget_bias=1.0,
-            use_peepholes=False,
-            lstm_layer_cls=L.LSTMLayer
-    ):
+    def __init__(self,
+                 env_spec,
+                 name="CategoricalLSTMPolicy",
+                 hidden_dim=32,
+                 feature_network=None,
+                 prob_network=None,
+                 state_include_action=True,
+                 hidden_nonlinearity=tf.tanh,
+                 forget_bias=1.0,
+                 use_peepholes=False,
+                 lstm_layer_cls=L.LSTMLayer):
         """
         :param env_spec: A spec for the env.
         :param hidden_dim: dimension of hidden layer
@@ -47,10 +45,7 @@ class CategoricalLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
             else:
                 input_dim = obs_dim
 
-            l_input = L.InputLayer(
-                shape=(None, None, input_dim),
-                name="input"
-            )
+            l_input = L.InputLayer(shape=(None, None, input_dim), name="input")
 
             if feature_network is None:
                 feature_dim = input_dim
@@ -65,14 +60,19 @@ class CategoricalLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
                     name="reshape_feature",
                     op=lambda flat_feature, input: tf.reshape(
                         flat_feature,
-                        tf.stack([tf.shape(input)[0], tf.shape(input)[1], feature_dim])
+                        tf.stack([
+                            tf.shape(input)[0],
+                            tf.shape(input)[1],
+                            feature_dim
+                        ])
                     ),
-                    shape_op=lambda _, input_shape: (input_shape[0], input_shape[1], feature_dim)
+                    shape_op=lambda _, input_shape: (
+                        input_shape[0], input_shape[1], feature_dim)
                 )
 
             if prob_network is None:
                 prob_network = LSTMNetwork(
-                    input_shape=(feature_dim,),
+                    input_shape=(feature_dim, ),
                     input_layer=l_feature,
                     output_dim=env_spec.action_space.n,
                     hidden_dim=hidden_dim,
@@ -81,19 +81,21 @@ class CategoricalLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
                     forget_bias=forget_bias,
                     use_peepholes=use_peepholes,
                     lstm_layer_cls=lstm_layer_cls,
-                    name="prob_network"
-                )
+                    name="prob_network")
 
             self.prob_network = prob_network
             self.feature_network = feature_network
             self.l_input = l_input
             self.state_include_action = state_include_action
 
-            flat_input_var = tf.placeholder(dtype=tf.float32, shape=(None, input_dim), name="flat_input")
+            flat_input_var = tf.placeholder(
+                dtype=tf.float32, shape=(None, input_dim), name="flat_input")
             if feature_network is None:
                 feature_var = flat_input_var
             else:
-                feature_var = L.get_output(l_flat_feature, {feature_network.input_layer: flat_input_var})
+                feature_var = L.get_output(
+                    l_flat_feature,
+                    {feature_network.input_layer: flat_input_var})
 
             self.f_step_prob = tensor_utils.compile_function(
                 [
@@ -105,8 +107,7 @@ class CategoricalLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
                     prob_network.step_output_layer,
                     prob_network.step_hidden_layer,
                     prob_network.step_cell_layer
-                ], {prob_network.step_input_layer: feature_var})
-            )
+                ], {prob_network.step_input_layer: feature_var}))
 
             self.input_dim = input_dim
             self.action_dim = action_dim
@@ -134,24 +135,23 @@ class CategoricalLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
             if self.state_include_action:
                 prev_action_var = state_info_vars["prev_action"]
                 prev_action_var = tf.cast(prev_action_var, tf.float32)
-                all_input_var = tf.concat(axis=2, values=[obs_var, prev_action_var])
+                all_input_var = tf.concat(
+                    axis=2, values=[obs_var, prev_action_var])
             else:
                 all_input_var = obs_var
             if self.feature_network is None:
                 return dict(
-                    prob=L.get_output(
-                        self.prob_network.output_layer,
-                        {self.l_input: all_input_var}
-                    )
-                )
+                    prob=L.get_output(self.prob_network.output_layer,
+                                      {self.l_input: all_input_var}))
             else:
-                flat_input_var = tf.reshape(all_input_var, (-1, self.input_dim))
+                flat_input_var = tf.reshape(all_input_var,
+                                            (-1, self.input_dim))
                 return dict(
                     prob=L.get_output(
-                        self.prob_network.output_layer,
-                        {self.l_input: all_input_var, self.feature_network.input_layer: flat_input_var}
-                    )
-                )
+                        self.prob_network.output_layer, {
+                            self.l_input: all_input_var,
+                            self.feature_network.input_layer: flat_input_var
+                        }))
 
     @property
     def vectorized(self):
@@ -162,7 +162,8 @@ class CategoricalLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
             dones = [True]
         dones = np.asarray(dones)
         if self.prev_actions is None or len(dones) != len(self.prev_actions):
-            self.prev_actions = np.zeros((len(dones), self.action_space.flat_dim))
+            self.prev_actions = np.zeros((len(dones),
+                                          self.action_space.flat_dim))
             self.prev_hiddens = np.zeros((len(dones), self.hidden_dim))
             self.prev_cells = np.zeros((len(dones), self.hidden_dim))
 
@@ -184,14 +185,13 @@ class CategoricalLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
         flat_obs = self.observation_space.flatten_n(observations)
         if self.state_include_action:
             assert self.prev_actions is not None
-            all_input = np.concatenate([
-                flat_obs,
-                self.prev_actions
-            ], axis=-1)
+            all_input = np.concatenate([flat_obs, self.prev_actions], axis=-1)
         else:
             all_input = flat_obs
-        probs, hidden_vec, cell_vec = self.f_step_prob(all_input, self.prev_hiddens, self.prev_cells)
-        actions = special.weighted_sample_n(probs, np.arange(self.action_space.n))
+        probs, hidden_vec, cell_vec = self.f_step_prob(
+            all_input, self.prev_hiddens, self.prev_cells)
+        actions = special.weighted_sample_n(probs,
+                                            np.arange(self.action_space.n))
         prev_actions = self.prev_actions
         self.prev_actions = self.action_space.flatten_n(actions)
         self.prev_hiddens = hidden_vec
@@ -214,7 +214,7 @@ class CategoricalLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
     def state_info_specs(self):
         if self.state_include_action:
             return [
-                ("prev_action", (self.action_dim,)),
+                ("prev_action", (self.action_dim, )),
             ]
         else:
             return []

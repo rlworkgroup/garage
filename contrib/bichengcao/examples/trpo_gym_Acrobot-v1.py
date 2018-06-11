@@ -9,10 +9,7 @@ from rllab.policies import CategoricalMLPPolicy
 def run_task(*_):
     env = normalize(GymEnv("Acrobot-v1"))
 
-    policy = CategoricalMLPPolicy(
-        env_spec=env.spec,
-        hidden_sizes=(32, 32)
-    )
+    policy = CategoricalMLPPolicy(env_spec=env.spec, hidden_sizes=(32, 32))
 
     baseline = LinearFeatureBaseline(env_spec=env.spec)
 

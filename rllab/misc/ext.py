@@ -47,7 +47,7 @@ def cached_function(inputs, outputs):
             hash_content = tuple(map(theano.pp, outputs))
         else:
             hash_content = theano.pp(outputs)
-    cache_key = hex(hash(hash_content) & (2 ** 64 - 1))[:-1]
+    cache_key = hex(hash(hash_content) & (2**64 - 1))[:-1]
     cache_dir = Path('~/.hierctrl_cache')
     cache_dir = cache_dir.expanduser()
     cache_dir.mkdir_p()
@@ -120,7 +120,12 @@ def scanr(f, l, base=None):
     return list(iscanr(f, l, base))
 
 
-def compile_function(inputs=None, outputs=None, updates=None, givens=None, log_name=None, **kwargs):
+def compile_function(inputs=None,
+                     outputs=None,
+                     updates=None,
+                     givens=None,
+                     log_name=None,
+                     **kwargs):
     import theano
     if log_name:
         msg = Message("Compiling function %s" % log_name)
@@ -132,8 +137,7 @@ def compile_function(inputs=None, outputs=None, updates=None, givens=None, log_n
         givens=givens,
         on_unused_input='ignore',
         allow_input_downcast=True,
-        **kwargs
-    )
+        **kwargs)
     if log_name:
         msg.__exit__(None, None, None)
     return ret
@@ -141,7 +145,7 @@ def compile_function(inputs=None, outputs=None, updates=None, givens=None, log_n
 
 def new_tensor(name, ndim, dtype):
     import theano.tensor as TT
-    return TT.TensorType(dtype, (False,) * ndim)(name)
+    return TT.TensorType(dtype, (False, ) * ndim)(name)
 
 
 def new_tensor_like(name, arr_like):
@@ -165,7 +169,8 @@ def truncate_path(p, t):
 
 def concat_paths(p1, p2):
     import numpy as np
-    return dict((k1, np.concatenate([p1[k1], p2[k1]])) for k1 in list(p1.keys()) if k1 in p2)
+    return dict((k1, np.concatenate([p1[k1], p2[k1]]))
+                for k1 in list(p1.keys()) if k1 in p2)
 
 
 def path_len(p):
@@ -198,20 +203,18 @@ def set_seed(seed):
         tf.set_random_seed(seed)
     except Exception as e:
         print(e)
-    print((
-        colorize(
-            'using seed %s' % (str(seed)),
-            'green'
-        )
-    ))
+    print((colorize('using seed %s' % (str(seed)), 'green')))
 
 
 def get_seed():
     return seed_
 
 
-def flatten_hessian(cost, wrt, consider_constant=None,
-                    disconnected_inputs='raise', block_diagonal=True):
+def flatten_hessian(cost,
+                    wrt,
+                    consider_constant=None,
+                    disconnected_inputs='raise',
+                    block_diagonal=True):
     """
     :type cost: Scalar (0-dimensional) Variable.
     :type wrt: Vector (1-dimensional tensor) 'Variable' or list of
@@ -257,10 +260,13 @@ def flatten_hessian(cost, wrt, consider_constant=None,
     hessians = []
     if not block_diagonal:
         expr = TT.concatenate([
-                                  grad(cost, input, consider_constant=consider_constant,
-                                       disconnected_inputs=disconnected_inputs).flatten()
-                                  for input in wrt
-                                  ])
+            grad(
+                cost,
+                input,
+                consider_constant=consider_constant,
+                disconnected_inputs=disconnected_inputs).flatten()
+            for input in wrt
+        ])
 
     for input in wrt:
         assert isinstance(input, Variable), \
@@ -269,8 +275,11 @@ def flatten_hessian(cost, wrt, consider_constant=None,
         #     "tensor.hessian expects a (list of) 1 dimensional variable " \
         #     "as `wrt`"
         if block_diagonal:
-            expr = grad(cost, input, consider_constant=consider_constant,
-                        disconnected_inputs=disconnected_inputs).flatten()
+            expr = grad(
+                cost,
+                input,
+                consider_constant=consider_constant,
+                disconnected_inputs=disconnected_inputs).flatten()
 
         # It is possible that the inputs are disconnected from expr,
         # even if they are connected to cost.
@@ -333,11 +342,15 @@ def unflatten_tensor_variables(flatarr, shapes, symb_arrs):
 
 
 """
-Devide function f's inputs into several slices. Evaluate f on those slices, and then average the result. It is useful when memory is not enough to process all data at once.
+Devide function f's inputs into several slices. Evaluate f on those slices, and
+then average the result. It is useful when memory is not enough to process all
+data at once.
 Assume:
 1. each of f's inputs is iterable and composed of multiple "samples"
 2. outputs can be averaged over "samples"
 """
+
+
 def sliced_fun(f, n_slices):
     def sliced_f(sliced_inputs, non_sliced_inputs=None):
         if non_sliced_inputs is None:
@@ -355,7 +368,9 @@ def sliced_fun(f, n_slices):
             else:
                 slice_ret_vals_as_list = slice_ret_vals
             scaled_ret_vals = [
-                np.asarray(v) * len(inputs_slice[0]) for v in slice_ret_vals_as_list]
+                np.asarray(v) * len(inputs_slice[0])
+                for v in slice_ret_vals_as_list
+            ]
             if ret_vals is None:
                 ret_vals = scaled_ret_vals
             else:

@@ -14,7 +14,8 @@ from sandbox.rocky.tf.misc.tensor_utils import enclosing_scope
 
 class FirstOrderOptimizer(Serializable):
     """
-    Performs (stochastic) gradient descent, possibly using fancier methods like adam etc.
+    Performs (stochastic) gradient descent, possibly using fancier methods like
+    ADAM etc.
     """
 
     def __init__(
@@ -33,7 +34,8 @@ class FirstOrderOptimizer(Serializable):
         :param max_epochs:
         :param tolerance:
         :param update_method:
-        :param batch_size: None or an integer. If None the whole dataset will be used.
+        :param batch_size: None or an integer. If None the whole dataset will be
+         used.
         :param callback:
         :param kwargs:
         :return:
@@ -64,9 +66,11 @@ class FirstOrderOptimizer(Serializable):
                    **kwargs):
         """
         :param loss: Symbolic expression for the loss function.
-        :param target: A parameterized object to optimize over. It should implement methods of the
+        :param target: A parameterized object to optimize over. It should
+         implement methods of the
         :class:`rllab.core.paramerized.Parameterized` class.
-        :param leq_constraint: A constraint provided as a tuple (f, epsilon), of the form f(*inputs) <= epsilon.
+        :param leq_constraint: A constraint provided as a tuple (f, epsilon), of
+         the form f(*inputs) <= epsilon.
         :param inputs: A list of symbolic variables as inputs
         :return: No return value.
         """
@@ -76,7 +80,8 @@ class FirstOrderOptimizer(Serializable):
             self._train_op = self._tf_optimizer.minimize(
                 loss, var_list=target.get_params(trainable=True))
 
-            # updates = OrderedDict([(k, v.astype(k.dtype)) for k, v in updates.iteritems()])
+            # updates = OrderedDict(
+            #     [(k, v.astype(k.dtype)) for k, v in updates.iteritems()])
 
             if extra_inputs is None:
                 extra_inputs = list()

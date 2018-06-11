@@ -6,7 +6,8 @@ robot Interface
 class Robot(object):
     def reset(self):
         """
-        User uses this to reset the robot at the beginning of every training episode.
+        User uses this to reset the robot at the beginning of every training
+        episode.
         """
         raise NotImplementedError
 

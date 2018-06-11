@@ -7,9 +7,7 @@ class NOP(BatchPolopt):
     NOP (no optimization performed) policy search algorithm
     """
 
-    def __init__(
-            self,
-            **kwargs):
+    def __init__(self, **kwargs):
         super(NOP, self).__init__(**kwargs)
 
     @overrides

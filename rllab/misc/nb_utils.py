@@ -8,7 +8,10 @@ from glob import glob
 import os
 
 
-def plot_experiments(name_or_patterns, legend=False, post_processing=None, key='AverageReturn'):
+def plot_experiments(name_or_patterns,
+                     legend=False,
+                     post_processing=None,
+                     key='AverageReturn'):
     if not isinstance(name_or_patterns, (list, tuple)):
         name_or_patterns = [name_or_patterns]
     data_folder = osp.abspath(osp.join(osp.dirname(__file__), '../../data'))
@@ -51,7 +54,8 @@ class Experiment(object):
         flat_params = dict()
         for k, v in params.items():
             if isinstance(v, dict) and depth != 0:
-                for subk, subv in self._flatten_params(v, depth=depth - 1).items():
+                for subk, subv in self._flatten_params(
+                        v, depth=depth - 1).items():
                     if subk == "_name":
                         flat_params[k] = subv
                     else:
@@ -93,8 +97,10 @@ class ExperimentDatabase(object):
         files = []
         for name_or_pattern in name_or_patterns:
             matched_files = glob(
-                osp.join(data_folder, name_or_pattern))  # golb gives a list of all files satisfying pattern
-            files += matched_files  # this will include twice the same file if it satisfies 2 patterns
+                osp.join(data_folder, name_or_pattern)
+            )  # golb gives a list of all files satisfying pattern
+            # this will include twice the same file if it satisfies 2 patterns
+            files += matched_files
         experiments = []
         progress_f = None
         params_f = None
@@ -107,12 +113,15 @@ class ExperimentDatabase(object):
                     params["exp_name"] = osp.basename(f)
                     if os.path.isfile(osp.join(f, "params.pkl")):
                         pkl_data = joblib.load(osp.join(f, "params.pkl"))
-                        experiments.append(Experiment(progress, params, pkl_data))
+                        experiments.append(
+                            Experiment(progress, params, pkl_data))
                     else:
                         experiments.append(Experiment(progress, params))
                 except Exception as e:
                     print(e)
-            elif 'progress.csv' in f:  # in case you're giving as datafolder the dir that contains the files!
+            elif 'progress.csv' in f:
+                # in case you're giving as datafolder the dir that contains
+                # the files!
                 progress_f = self._read_data(f)
             elif 'params.json' in f:
                 params_f = self._read_params(f)
@@ -127,7 +136,12 @@ class ExperimentDatabase(object):
 
         self._experiments = experiments
 
-    def plot_experiments(self, key=None, legend=None, color_key=None, filter_exp=None, **kwargs):
+    def plot_experiments(self,
+                         key=None,
+                         legend=None,
+                         color_key=None,
+                         filter_exp=None,
+                         **kwargs):
         experiments = list(self.filter_experiments(**kwargs))
         if filter_exp:
             experiments = list(filter(filter_exp, experiments))
@@ -136,8 +150,8 @@ class ExperimentDatabase(object):
         color_pool = ['b', 'g', 'r', 'c', 'm', 'y', 'k', 'w']
         color_map = dict()
         if color_key is not None:
-            exp_color_keys = uniq([exp.flat_params.get(
-                color_key, None) for exp in experiments])
+            exp_color_keys = uniq(
+                [exp.flat_params.get(color_key, None) for exp in experiments])
             if len(exp_color_keys) > len(color_pool):
                 raise NotImplementedError
             for exp_color_key, color in zip(exp_color_keys, color_pool):
@@ -153,11 +167,12 @@ class ExperimentDatabase(object):
                 exp_color = color_map.get(exp_color_key, None)
             else:
                 exp_color = None
-            plots.append(plt.plot(exp.progress.get(
-                key, [0]), color=exp_color)[0])
+            plots.append(
+                plt.plot(exp.progress.get(key, [0]), color=exp_color)[0])
             if legend is not None:
                 legends.append(exp.flat_params[legend])
-            elif exp_color_key is not None and exp_color_key not in used_legends:
+            elif exp_color_key is not None and \
+                 exp_color_key not in used_legends:
                 used_legends.append(exp_color_key)
                 legend_list.append(plots[-1])
 
@@ -178,4 +193,7 @@ class ExperimentDatabase(object):
                 yield exp
 
     def unique(self, param_key):
-        return uniq([exp.flat_params[param_key] for exp in self._experiments if param_key in exp.flat_params])
+        return uniq([
+            exp.flat_params[param_key] for exp in self._experiments
+            if param_key in exp.flat_params
+        ])

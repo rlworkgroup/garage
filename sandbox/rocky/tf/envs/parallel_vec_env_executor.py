@@ -1,5 +1,3 @@
-
-
 import numpy as np
 import pickle as pickle
 from sandbox.rocky.tf.misc import tensor_utils
@@ -14,11 +12,14 @@ def worker_init_envs(G, alloc, scope, env):
     if not hasattr(G, 'parallel_vec_envs'):
         G.parallel_vec_envs = dict()
         G.parallel_vec_env_template = dict()
-    G.parallel_vec_envs[scope] = [(idx, pickle.loads(pickle.dumps(env))) for idx in alloc]
+    G.parallel_vec_envs[scope] = [(idx, pickle.loads(pickle.dumps(env)))
+                                  for idx in alloc]
     G.parallel_vec_env_template[scope] = env
 
 
-# For these two methods below, we pack the data into batch numpy arrays whenever possible, to reduce communication cost
+# For these two methods below, we pack the data into batch numpy arrays whenever
+# possible, to reduce communication cost
+
 
 def worker_run_reset(G, flags, scope):
     if not hasattr(G, 'parallel_vec_envs'):
@@ -91,7 +92,8 @@ class ParallelVecEnvExecutor(object):
             start_id += n_allocs
             rest_alloc = max(0, rest_alloc - envs_per_worker)
 
-        singleton_pool.run_each(worker_init_envs, [(alloc, scope, env) for alloc in alloc_env_ids])
+        singleton_pool.run_each(
+            worker_init_envs, [(alloc, scope, env) for alloc in alloc_env_ids])
 
         self._alloc_env_ids = alloc_env_ids
         self._action_space = env.action_space
@@ -112,7 +114,8 @@ class ParallelVecEnvExecutor(object):
         obs = self.observation_space.unflatten_n(np.concatenate(obs))
         rewards = np.concatenate(rewards)
         dones = np.concatenate(dones)
-        env_infos = tensor_utils.split_tensor_dict_list(tensor_utils.concat_tensor_dict_list(env_infos))
+        env_infos = tensor_utils.split_tensor_dict_list(
+            tensor_utils.concat_tensor_dict_list(env_infos))
         if env_infos is None:
             env_infos = [dict() for _ in range(self.num_envs)]
 
@@ -133,7 +136,8 @@ class ParallelVecEnvExecutor(object):
             if done:
                 obs[i] = reset_obs[i]
                 self.ts[i] = 0
-        return obs, rewards, dones, tensor_utils.stack_tensor_dict_list(list(env_infos))
+        return obs, rewards, dones, tensor_utils.stack_tensor_dict_list(
+            list(env_infos))
 
     def _run_reset(self, dones):
         dones = np.asarray(dones)
@@ -143,7 +147,8 @@ class ParallelVecEnvExecutor(object):
         )
         ids, flat_obs = list(map(np.concatenate, list(zip(*results))))
         zipped = list(zip(ids, flat_obs))
-        sorted_obs = np.asarray([x[1] for x in sorted(zipped, key=lambda x: x[0])])
+        sorted_obs = np.asarray(
+            [x[1] for x in sorted(zipped, key=lambda x: x[0])])
 
         done_ids, = np.where(dones)
         done_flat_obs = sorted_obs[done_ids]

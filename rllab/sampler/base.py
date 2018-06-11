@@ -22,7 +22,8 @@ class Sampler(object):
 
     def process_samples(self, itr, paths):
         """
-        Return processed sample data (typically a dictionary of concatenated tensors) based on the collected paths.
+        Return processed sample data (typically a dictionary of concatenated
+        tensors) based on the collected paths.
         :param itr: Iteration number.
         :param paths: A list of collected paths.
         :return: Processed sample data.

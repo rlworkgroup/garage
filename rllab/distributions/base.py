@@ -1,7 +1,7 @@
 import theano.tensor as TT
 
-class Distribution(object):
 
+class Distribution(object):
     @property
     def dim(self):
         raise NotImplementedError
@@ -18,7 +18,8 @@ class Distribution(object):
         """
         raise NotImplementedError
 
-    def likelihood_ratio_sym(self, x_var, old_dist_info_vars, new_dist_info_vars):
+    def likelihood_ratio_sym(self, x_var, old_dist_info_vars,
+                             new_dist_info_vars):
         raise NotImplementedError
 
     def entropy(self, dist_info):

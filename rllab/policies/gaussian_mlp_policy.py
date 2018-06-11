@@ -42,8 +42,10 @@ class GaussianMLPPolicy(StochasticPolicy, LasagnePowered):
         :param init_std: Initial std
         :param adaptive_std:
         :param std_share_network:
-        :param std_hidden_sizes: list of sizes for the fully-connected layers for std
-        :param min_std: whether to make sure that the std is at least some threshold value, to avoid numerical issues
+        :param std_hidden_sizes: list of sizes for the fully-connected layers
+         for std
+        :param min_std: whether to make sure that the std is at least some
+         threshold value, to avoid numerical issues
         :param std_hidden_nonlinearity:
         :param hidden_nonlinearity: nonlinearity used for each hidden layer
         :param output_nonlinearity: nonlinearity for the output layer
@@ -60,7 +62,7 @@ class GaussianMLPPolicy(StochasticPolicy, LasagnePowered):
         # create network
         if mean_network is None:
             mean_network = MLP(
-                input_shape=(obs_dim,),
+                input_shape=(obs_dim, ),
                 output_dim=action_dim,
                 hidden_sizes=hidden_sizes,
                 hidden_nonlinearity=hidden_nonlinearity,
@@ -76,7 +78,7 @@ class GaussianMLPPolicy(StochasticPolicy, LasagnePowered):
         else:
             if adaptive_std:
                 std_network = MLP(
-                    input_shape=(obs_dim,),
+                    input_shape=(obs_dim, ),
                     input_layer=mean_network.input_layer,
                     output_dim=action_dim,
                     hidden_sizes=std_hidden_sizes,
@@ -116,7 +118,8 @@ class GaussianMLPPolicy(StochasticPolicy, LasagnePowered):
         )
 
     def dist_info_sym(self, obs_var, state_info_vars=None):
-        mean_var, log_std_var = L.get_output([self._l_mean, self._l_log_std], obs_var)
+        mean_var, log_std_var = L.get_output([self._l_mean, self._l_log_std],
+                                             obs_var)
         if self.min_std is not None:
             log_std_var = TT.maximum(log_std_var, np.log(self.min_std))
         return dict(mean=mean_var, log_std=log_std_var)
@@ -138,22 +141,27 @@ class GaussianMLPPolicy(StochasticPolicy, LasagnePowered):
 
     def get_reparam_action_sym(self, obs_var, action_var, old_dist_info_vars):
         """
-        Given observations, old actions, and distribution of old actions, return a symbolically reparameterized
-        representation of the actions in terms of the policy parameters
+        Given observations, old actions, and distribution of old actions, return
+        a symbolically reparameterized representation of the actions in terms of
+        the policy parameters
         :param obs_var:
         :param action_var:
         :param old_dist_info_vars:
         :return:
         """
         new_dist_info_vars = self.dist_info_sym(obs_var, action_var)
-        new_mean_var, new_log_std_var = new_dist_info_vars["mean"], new_dist_info_vars["log_std"]
-        old_mean_var, old_log_std_var = old_dist_info_vars["mean"], old_dist_info_vars["log_std"]
-        epsilon_var = (action_var - old_mean_var) / (TT.exp(old_log_std_var) + 1e-8)
+        new_mean_var, new_log_std_var = new_dist_info_vars[
+            "mean"], new_dist_info_vars["log_std"]
+        old_mean_var, old_log_std_var = old_dist_info_vars[
+            "mean"], old_dist_info_vars["log_std"]
+        epsilon_var = (action_var - old_mean_var) / (
+            TT.exp(old_log_std_var) + 1e-8)
         new_action_var = new_mean_var + epsilon_var * TT.exp(new_log_std_var)
         return new_action_var
 
     def log_diagnostics(self, paths):
-        log_stds = np.vstack([path["agent_infos"]["log_std"] for path in paths])
+        log_stds = np.vstack(
+            [path["agent_infos"]["log_std"] for path in paths])
         logger.record_tabular('AveragePolicyStd', np.mean(np.exp(log_stds)))
 
     @property

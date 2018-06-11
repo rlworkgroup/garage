@@ -1,5 +1,6 @@
 from rllab.distributions import Distribution
 
+
 class Delta(Distribution):
     @property
     def dim(self):
@@ -11,7 +12,8 @@ class Delta(Distribution):
     def kl(self, old_dist_info, new_dist_info):
         return None
 
-    def likelihood_ratio_sym(self, x_var, old_dist_info_vars, new_dist_info_vars):
+    def likelihood_ratio_sym(self, x_var, old_dist_info_vars,
+                             new_dist_info_vars):
         raise NotImplementedError
 
     def entropy(self, dist_info):
@@ -30,5 +32,5 @@ class Delta(Distribution):
     def dist_info_keys(self):
         return None
 
-    def entropy(self,dist_info):
+    def entropy(self, dist_info):
         return 0

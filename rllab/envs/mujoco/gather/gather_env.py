@@ -353,7 +353,8 @@ class GatherEnv(ProxyEnv, Serializable):
         ub = BIG * np.ones(shp)
         return spaces.Box(ub * -1, ub)
 
-    # space of only the robot observations (they go first in the get current obs)
+    # space of only the robot observations (they go first in the get current
+    # obs)
     @property
     def robot_observation_space(self):
         shp = self.get_current_robot_obs().shape
@@ -407,8 +408,9 @@ class GatherEnv(ProxyEnv, Serializable):
 
     def get_ori(self):
         """
-        First it tries to use a get_ori from the wrapped env. If not successful, falls
-        back to the default based on the ORI_IND specified in Maze (not accurate for quaternions)
+        First it tries to use a get_ori from the wrapped env. If not successful,
+        falls back to the default based on the ORI_IND specified in Maze (not
+        accurate for quaternions)
         """
         obj = self.wrapped_env
         while not hasattr(obj, 'get_ori') and hasattr(obj, 'wrapped_env'):
@@ -421,8 +423,9 @@ class GatherEnv(ProxyEnv, Serializable):
 
     @overrides
     def log_diagnostics(self, paths, log_prefix='Gather', *args, **kwargs):
-        # we call here any logging related to the gather, strip the maze obs and call log_diag with the stripped paths
-        # we need to log the purely gather reward!!
+        # we call here any logging related to the gather, strip the maze obs and
+        # call log_diag with the stripped paths we need to log the purely gather
+        # reward!!
         with logger.tabular_prefix(log_prefix + '_'):
             gather_undiscounted_returns = [
                 sum(path['env_infos']['outer_rew']) for path in paths
@@ -435,8 +438,10 @@ class GatherEnv(ProxyEnv, Serializable):
             for k, v in path.items():
                 stripped_path[k] = v
             stripped_path['observations'] = \
-                stripped_path['observations'][:, :self.wrapped_env.observation_space.flat_dim]
-            #  this breaks if the obs of the robot are d>1 dimensional (not a vector)
+                stripped_path['observations'][
+                :, :self.wrapped_env.observation_space.flat_dim]
+            # this breaks if the obs of the robot are d>1 dimensional (not a
+            # vector)
             stripped_paths.append(stripped_path)
         with logger.tabular_prefix('wrapped_'):
             if 'env_infos' in paths[0].keys(

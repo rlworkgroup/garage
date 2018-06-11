@@ -112,7 +112,10 @@ def setup_iam():
         aws_access_key_id=ACCESS_KEY,
         aws_secret_access_key=ACCESS_SECRET,
     )
-    iam = boto3.resource('iam', aws_access_key_id=ACCESS_KEY, aws_secret_access_key=ACCESS_SECRET)
+    iam = boto3.resource(
+        'iam',
+        aws_access_key_id=ACCESS_KEY,
+        aws_secret_access_key=ACCESS_SECRET)
 
     # delete existing role if it exists
     try:
@@ -120,14 +123,16 @@ def setup_iam():
         existing_role.load()
         # if role exists, delete and recreate
         if not query_yes_no(
-                "There is an existing role named rllab. Proceed to delete everything rllab-related and recreate?",
+            ("There is an existing role named rllab. "
+             "Proceed to delete everything rllab-related and recreate?"),
                 default="no"):
             sys.exit()
         print("Listing instance profiles...")
         inst_profiles = existing_role.instance_profiles.all()
         for prof in inst_profiles:
             for role in prof.roles:
-                print("Removing role %s from instance profile %s" % (role.name, prof.name))
+                print("Removing role %s from instance profile %s" %
+                      (role.name, prof.name))
                 prof.remove_role(RoleName=role.name)
             print("Deleting instance profile %s" % prof.name)
             prof.delete()
@@ -149,60 +154,57 @@ def setup_iam():
     iam_client.create_role(
         Path='/',
         RoleName='rllab',
-        AssumeRolePolicyDocument=json.dumps({'Version': '2012-10-17', 'Statement': [
-            {'Action': 'sts:AssumeRole', 'Effect': 'Allow', 'Principal': {'Service': 'ec2.amazonaws.com'}}]})
-    )
+        AssumeRolePolicyDocument=json.dumps({
+            'Version':
+            '2012-10-17',
+            'Statement': [{
+                'Action': 'sts:AssumeRole',
+                'Effect': 'Allow',
+                'Principal': {
+                    'Service': 'ec2.amazonaws.com'
+                }
+            }]
+        }))
 
     role = iam.Role('rllab')
     print("Attaching policies")
     role.attach_policy(PolicyArn='arn:aws:iam::aws:policy/AmazonS3FullAccess')
-    role.attach_policy(PolicyArn='arn:aws:iam::aws:policy/ResourceGroupsandTagEditorFullAccess')
+    role.attach_policy(
+        PolicyArn='arn:aws:iam::aws:policy/ResourceGroupsandTagEditorFullAccess'
+    )
 
     print("Creating inline policies")
     iam_client.put_role_policy(
         RoleName=role.name,
         PolicyName='CreateTags',
         PolicyDocument=json.dumps({
-            "Version": "2012-10-17",
-            "Statement": [
-                {
-                    "Effect": "Allow",
-                    "Action": ["ec2:CreateTags"],
-                    "Resource": ["*"]
-                }
-            ]
-        })
-    )
+            "Version":
+            "2012-10-17",
+            "Statement": [{
+                "Effect": "Allow",
+                "Action": ["ec2:CreateTags"],
+                "Resource": ["*"]
+            }]
+        }))
     iam_client.put_role_policy(
         RoleName=role.name,
         PolicyName='TerminateInstances',
         PolicyDocument=json.dumps({
-            "Version": "2012-10-17",
-            "Statement": [
-                {
-                    "Sid": "Stmt1458019101000",
-                    "Effect": "Allow",
-                    "Action": [
-                        "ec2:TerminateInstances"
-                    ],
-                    "Resource": [
-                        "*"
-                    ]
-                }
-            ]
-        })
-    )
+            "Version":
+            "2012-10-17",
+            "Statement": [{
+                "Sid": "Stmt1458019101000",
+                "Effect": "Allow",
+                "Action": ["ec2:TerminateInstances"],
+                "Resource": ["*"]
+            }]
+        }))
 
     print("Creating instance profile rllab")
-    iam_client.create_instance_profile(
-        InstanceProfileName='rllab',
-        Path='/'
-    )
+    iam_client.create_instance_profile(InstanceProfileName='rllab', Path='/')
     print("Adding role rllab to instance profile rllab")
     iam_client.add_role_to_instance_profile(
-        InstanceProfileName='rllab',
-        RoleName='rllab'
-    )
+        InstanceProfileName='rllab', RoleName='rllab')
 
 
 def setup_s3():
@@ -219,7 +221,9 @@ def setup_s3():
         )
     except botocore.exceptions.ClientError as e:
         if e.response['Error']['Code'] == 'BucketAlreadyExists':
-            raise ValueError("Bucket %s already exists. Please reconfigure S3_BUCKET_NAME" % S3_BUCKET_NAME) from e
+            raise ValueError(
+                "Bucket %s already exists. Please reconfigure S3_BUCKET_NAME" %
+                S3_BUCKET_NAME) from e
         elif e.response['Error']['Code'] == 'BucketAlreadyOwnedByYou':
             print("Bucket already created by you")
         else:
@@ -249,8 +253,7 @@ def setup_ec2():
         print("Creating security group in VPC %s" % str(vpc.id))
         try:
             security_group = vpc.create_security_group(
-                GroupName='rllab-sg', Description='Security group for rllab'
-            )
+                GroupName='rllab-sg', Description='Security group for rllab')
         except botocore.exceptions.ClientError as e:
             if e.response['Error']['Code'] == 'InvalidGroup.Duplicate':
                 sgs = list(vpc.security_groups.filter(GroupNames=['rllab-sg']))
@@ -260,9 +263,15 @@ def setup_ec2():
 
         ALL_REGION_AWS_SECURITY_GROUP_IDS[region] = [security_group.id]
 
-        ec2_client.create_tags(Resources=[security_group.id], Tags=[{'Key': 'Name', 'Value': 'rllab-sg'}])
+        ec2_client.create_tags(
+            Resources=[security_group.id],
+            Tags=[{
+                'Key': 'Name',
+                'Value': 'rllab-sg'
+            }])
         try:
-            security_group.authorize_ingress(FromPort=22, ToPort=22, IpProtocol='tcp', CidrIp='0.0.0.0/0')
+            security_group.authorize_ingress(
+                FromPort=22, ToPort=22, IpProtocol='tcp', CidrIp='0.0.0.0/0')
         except botocore.exceptions.ClientError as e:
             if e.response['Error']['Code'] == 'InvalidPermission.Duplicate':
                 pass
@@ -276,7 +285,9 @@ def setup_ec2():
             key_pair = ec2_client.create_key_pair(KeyName=key_name)
         except botocore.exceptions.ClientError as e:
             if e.response['Error']['Code'] == 'InvalidKeyPair.Duplicate':
-                if not query_yes_no("Key pair with name %s exists. Proceed to delete and recreate?" % key_name, "no"):
+                if not query_yes_no(
+                    ("Key pair with name %s exists. "
+                     "Proceed to delete and recreate?") % key_name, "no"):
                     sys.exit()
                 print("Deleting existing key pair with name %s" % key_name)
                 ec2_client.delete_key_pair(KeyName=key_name)
@@ -285,12 +296,15 @@ def setup_ec2():
             else:
                 raise e
 
-        key_pair_folder_path = os.path.join(config.PROJECT_PATH, "private", "key_pairs")
+        key_pair_folder_path = os.path.join(config.PROJECT_PATH, "private",
+                                            "key_pairs")
         file_name = os.path.join(key_pair_folder_path, "%s.pem" % key_name)
 
         print("Saving keypair file")
         console.mkdir_p(key_pair_folder_path)
-        with os.fdopen(os.open(file_name, os.O_WRONLY | os.O_CREAT, 0o600), 'w') as handle:
+        with os.fdopen(
+                os.open(file_name, os.O_WRONLY | os.O_CREAT, 0o600),
+                'w') as handle:
             handle.write(key_pair['KeyMaterial'] + '\n')
 
         # adding pem file to ssh
@@ -302,13 +316,17 @@ def setup_ec2():
 def write_config():
     print("Writing config file...")
     content = CONFIG_TEMPLATE.substitute(
-        all_region_aws_key_names=json.dumps(ALL_REGION_AWS_KEY_NAMES, indent=4),
-        all_region_aws_security_group_ids=json.dumps(ALL_REGION_AWS_SECURITY_GROUP_IDS, indent=4),
+        all_region_aws_key_names=json.dumps(
+            ALL_REGION_AWS_KEY_NAMES, indent=4),
+        all_region_aws_security_group_ids=json.dumps(
+            ALL_REGION_AWS_SECURITY_GROUP_IDS, indent=4),
         s3_bucket_name=S3_BUCKET_NAME,
     )
-    config_personal_file = os.path.join(config.PROJECT_PATH, "rllab/config_personal.py")
+    config_personal_file = os.path.join(config.PROJECT_PATH,
+                                        "rllab/config_personal.py")
     if os.path.exists(config_personal_file):
-        if not query_yes_no("rllab/config_personal.py exists. Override?", "no"):
+        if not query_yes_no("rllab/config_personal.py exists. Override?",
+                            "no"):
             sys.exit()
     with open(config_personal_file, "wb") as f:
         f.write(content.encode("utf-8"))
@@ -331,8 +349,7 @@ def query_yes_no(question, default="yes"):
 
     The "answer" return value is True for "yes" or False for "no".
     """
-    valid = {"yes": True, "y": True, "ye": True,
-             "no": False, "n": False}
+    valid = {"yes": True, "y": True, "ye": True, "no": False, "n": False}
     if default is None:
         prompt = " [y/n] "
     elif default == "yes":

@@ -10,27 +10,31 @@ from rllab.misc.overrides import overrides
 
 
 class CarParkingEnv(Box2DEnv, Serializable):
-
     @autoargs.inherit(Box2DEnv.__init__)
-    @autoargs.arg("random_start", type=bool,
-                  help="Randomized starting position by uniforming sampling starting car angle"
-                       "and position from a circle of radius 5")
-    @autoargs.arg("random_start_range", type=float,
-                  help="Defaulted to 1. which means possible angles are 1. * 2*pi")
+    @autoargs.arg(
+        "random_start",
+        type=bool,
+        help=
+        "Randomized starting position by uniforming sampling starting car angle"
+        "and position from a circle of radius 5")
+    @autoargs.arg(
+        "random_start_range",
+        type=float,
+        help="Defaulted to 1. which means possible angles are 1. * 2*pi")
     def __init__(self, *args, **kwargs):
         Serializable.__init__(self, *args, **kwargs)
         self.random_start = kwargs.pop("random_start", True)
         self.random_start_range = kwargs.pop("random_start_range", 1.)
         super(CarParkingEnv, self).__init__(
-            self.model_path("car_parking.xml"),
-            *args, **kwargs
-        )
+            self.model_path("car_parking.xml"), *args, **kwargs)
         self.goal = find_body(self.world, "goal")
         self.car = find_body(self.world, "car")
         self.wheels = [
-            body for body in self.world.bodies if "wheel" in _get_name(body)]
+            body for body in self.world.bodies if "wheel" in _get_name(body)
+        ]
         self.front_wheels = [
-            body for body in self.wheels if "front" in _get_name(body)]
+            body for body in self.wheels if "front" in _get_name(body)
+        ]
         self.max_deg = 30.
         self.goal_radius = 1.
         self.vel_thres = 1e-1
@@ -53,7 +57,8 @@ class CarParkingEnv(Box2DEnv, Serializable):
             mag = wheel.linearVelocity.dot(wheel.linearVelocity)
             if mag != 0:
                 wheel.ApplyLinearImpulse(
-                    0.1 * wheel.mass * -wheel.linearVelocity / mag**0.5, wheel.worldCenter, True)
+                    0.1 * wheel.mass * -wheel.linearVelocity / mag**0.5,
+                    wheel.worldCenter, True)
 
     @property
     @overrides
@@ -80,11 +85,9 @@ class CarParkingEnv(Box2DEnv, Serializable):
             for wheel in self.wheels:
                 wheel.position = wheel.position - self.car.position + dis
             self.car.position = dis
-            self.world.Step(
-                self.extra_data.timeStep,
-                self.extra_data.velocityIterations,
-                self.extra_data.positionIterations
-            )
+            self.world.Step(self.extra_data.timeStep,
+                            self.extra_data.velocityIterations,
+                            self.extra_data.positionIterations)
         return self.get_current_obs()
 
     @overrides
@@ -92,7 +95,7 @@ class CarParkingEnv(Box2DEnv, Serializable):
         yield
         not_done = not self.is_current_done()
         dist_to_goal = self.get_current_obs()[-3]
-        yield - 1 * not_done - 2 * dist_to_goal
+        yield -1 * not_done - 2 * dist_to_goal
 
     @overrides
     def is_current_done(self):
@@ -113,4 +116,3 @@ class CarParkingEnv(Box2DEnv, Serializable):
         if keys[pygame.K_DOWN]:
             go[0] = -10
         return go
-

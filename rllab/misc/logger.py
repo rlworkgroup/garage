@@ -307,8 +307,8 @@ def stub_to_json(stub_sth):
         data = dict()
         for k, v in stub_sth.kwargs.items():
             data[k] = stub_to_json(v)
-        data[
-            "_name"] = stub_sth.proxy_class.__module__ + "." + stub_sth.proxy_class.__name__
+        data["_name"] = stub_sth.proxy_class.__module__ + \
+                        "." + stub_sth.proxy_class.__name__
         return data
     elif isinstance(stub_sth, instrument.StubAttr):
         return dict(
@@ -324,7 +324,8 @@ def stub_to_json(stub_sth):
     elif isinstance(stub_sth, instrument.BinaryOp):
         return "binary_op"
     elif isinstance(stub_sth, instrument.StubClass):
-        return stub_sth.proxy_class.__module__ + "." + stub_sth.proxy_class.__name__
+        return stub_sth.proxy_class.__module__ + "." + \
+               stub_sth.proxy_class.__name__
     elif isinstance(stub_sth, dict):
         return {stub_to_json(k): stub_to_json(v) for k, v in stub_sth.items()}
     elif isinstance(stub_sth, (list, tuple)):

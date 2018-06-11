@@ -4,7 +4,12 @@ import inspect
 
 # pylint: disable=redefined-builtin
 # pylint: disable=protected-access
-def arg(name, type=None, help=None, nargs=None, mapper=None, choices=None,
+def arg(name,
+        type=None,
+        help=None,
+        nargs=None,
+        mapper=None,
+        choices=None,
         prefix=True):
     def wrap(fn):
         assert fn.__name__ == '__init__'
@@ -18,6 +23,7 @@ def arg(name, type=None, help=None, nargs=None, mapper=None, choices=None,
             mapper=mapper,
         )
         return fn
+
     return wrap
 
 
@@ -26,6 +32,7 @@ def prefix(prefix_):
         assert fn.__name__ == '__init__'
         fn._autoargs_prefix = prefix_
         return fn
+
     return wrap
 
 
@@ -62,9 +69,9 @@ def _get_info(cls_or_fn):
 
 def _t_or_f(s):
     ua = str(s).upper()
-    if ua == 'TRUE'[:len(ua)]:
+    if ua == 'TRUE' [:len(ua)]:
         return True
-    elif ua == 'FALSE'[:len(ua)]:
+    elif ua == 'FALSE' [:len(ua)]:
         return False
     else:
         raise ValueError('Unrecognized boolean value: %s' % s)
@@ -85,6 +92,7 @@ def add_args(_):
                 choices=arg_info['choices'],
                 type=type,
                 nargs=arg_info['nargs'])
+
     return _add_args
 
 
@@ -104,10 +112,12 @@ def new_from_args(_):
                     else:
                         params[arg_name] = val
                     if not silent:
-                        print(colorize(
-                            "using argument %s with value %s" % (arg_name, val),
-                            "yellow"))
+                        print(
+                            colorize(
+                                "using argument %s with value %s" %
+                                (arg_name, val), "yellow"))
         return cls(*args, **params)
+
     return _new_from_args
 
 
@@ -116,11 +126,9 @@ def inherit(base_func):
 
     def wrap(func):
         assert func.__name__ == '__init__'
-        func._autoargs_info = dict(
-            _get_info(base_func),
-            **_get_info(func)
-        )
+        func._autoargs_info = dict(_get_info(base_func), **_get_info(func))
         return func
+
     return wrap
 
 
@@ -134,7 +142,8 @@ def get_all_parameters(cls, parsed_args):
         if spec.defaults is None:
             arg_defaults = {}
         else:
-            arg_defaults = dict(list(zip(spec.args[::-1], spec.defaults[::-1])))
+            arg_defaults = dict(
+                list(zip(spec.args[::-1], spec.defaults[::-1])))
     else:
         arg_defaults = {}
     all_params = {}

@@ -47,10 +47,9 @@ def get_full_output(layer_or_layers, inputs=None, **kwargs):
     treat_as_input = list(inputs.keys()) if isinstance(inputs, dict) else []
     all_layers = get_all_layers(layer_or_layers, treat_as_input)
     # initialize layer-to-expression mapping from all input layers
-    all_outputs = dict((layer, layer.input_var)
-                       for layer in all_layers
-                       if isinstance(layer, InputLayer) and
-                       layer not in treat_as_input)
+    all_outputs = dict(
+        (layer, layer.input_var) for layer in all_layers
+        if isinstance(layer, InputLayer) and layer not in treat_as_input)
     extra_outputs = dict()
     # update layer-to-expression mapping from given input(s), if any
     if isinstance(inputs, dict):
@@ -69,19 +68,22 @@ def get_full_output(layer_or_layers, inputs=None, **kwargs):
         if layer not in all_outputs:
             try:
                 if isinstance(layer, MergeLayer):
-                    layer_inputs = [all_outputs[input_layer]
-                                    for input_layer in layer.input_layers]
+                    layer_inputs = [
+                        all_outputs[input_layer]
+                        for input_layer in layer.input_layers
+                    ]
                 else:
                     layer_inputs = all_outputs[layer.input_layer]
             except KeyError:
                 # one of the input_layer attributes must have been `None`
-                raise ValueError("get_output() was called without giving an "
-                                 "input expression for the free-floating "
-                                 "layer %r. Please call it with a dictionary "
-                                 "mapping this layer to an input expression."
-                                 % layer)
+                raise ValueError(
+                    "get_output() was called without giving an "
+                    "input expression for the free-floating "
+                    "layer %r. Please call it with a dictionary "
+                    "mapping this layer to an input expression." % layer)
             if hasattr(layer, "get_full_output_for"):
-                output, extra = layer.get_full_output_for(layer_inputs, **kwargs)
+                output, extra = layer.get_full_output_for(
+                    layer_inputs, **kwargs)
                 all_outputs[layer] = output
                 extra_outputs[layer] = extra
             else:

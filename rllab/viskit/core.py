@@ -51,9 +51,7 @@ def to_json(stub_object):
         return data
     elif isinstance(stub_object, StubAttr):
         return dict(
-            obj=to_json(stub_object.obj),
-            attr=to_json(stub_object.attr_name)
-        )
+            obj=to_json(stub_object.obj), attr=to_json(stub_object.attr_name))
     return stub_object
 
 
@@ -93,7 +91,7 @@ def lookup(d, keys):
     return d
 
 
-def load_exps_data(exp_folder_paths,disable_variant=False):
+def load_exps_data(exp_folder_paths, disable_variant=False):
     exps = []
     for exp_folder_path in exp_folder_paths:
         exps += [x[0] for x in os.walk(exp_folder_path)]
@@ -112,8 +110,11 @@ def load_exps_data(exp_folder_paths,disable_variant=False):
                     params = load_params(variant_json_path)
                 except IOError:
                     params = load_params(params_json_path)
-            exps_data.append(ext.AttrDict(
-                progress=progress, params=params, flat_params=flatten_dict(params)))
+            exps_data.append(
+                ext.AttrDict(
+                    progress=progress,
+                    params=params,
+                    flat_params=flatten_dict(params)))
         except IOError as e:
             print(e)
     return exps_data
@@ -129,12 +130,15 @@ def smart_repr(x):
             return "(" + ",".join(map(smart_repr, x)) + ")"
     else:
         if hasattr(x, "__call__"):
-            return "__import__('pydoc').locate('%s')" % (x.__module__ + "." + x.__name__)
+            return "__import__('pydoc').locate('%s')" % (
+                x.__module__ + "." + x.__name__)
         else:
             return repr(x)
 
 
-def extract_distinct_params(exps_data, excluded_params=('exp_name', 'seed', 'log_dir'), l=1):
+def extract_distinct_params(exps_data,
+                            excluded_params=('exp_name', 'seed', 'log_dir'),
+                            l=1):
     # all_pairs = unique(flatten([d.flat_params.items() for d in exps_data]))
     # if logger:
     #     logger("(Excluding {excluded})".format(excluded=', '.join(excluded_params)))
@@ -151,28 +155,19 @@ def extract_distinct_params(exps_data, excluded_params=('exp_name', 'seed', 'log
             map(
                 eval,
                 unique(
-                    flatten(
-                        [
-                            list(
-                                map(
-                                    smart_repr,
-                                    list(d.flat_params.items())
-                                )
-                            )
-                            for d in exps_data
-                        ]
-                    )
-                )
-            ),
-            key=lambda x: (
-                tuple(0. if it is None else it for it in x),
-            )
-        )
+                    flatten([
+                        list(map(smart_repr, list(d.flat_params.items())))
+                        for d in exps_data
+                    ]))),
+            key=lambda x: (tuple(0. if it is None else it for it in x), ))
     except Exception as e:
         print(e)
-        import ipdb; ipdb.set_trace()
-    proposals = [(k, [x[1] for x in v])
-                 for k, v in itertools.groupby(stringified_pairs, lambda x: x[0])]
+        import ipdb
+        ipdb.set_trace()
+    proposals = [
+        (k, [x[1] for x in v])
+        for k, v in itertools.groupby(stringified_pairs, lambda x: x[0])
+    ]
     filtered = [(k, v) for (k, v) in proposals if len(v) > l and all(
         [k.find(excluded_param) != 0 for excluded_param in excluded_params])]
     return filtered
@@ -191,16 +186,19 @@ class Selector(object):
             self._custom_filters = custom_filters
 
     def where(self, k, v):
-        return Selector(self._exps_data, self._filters + ((k, v),), self._custom_filters)
+        return Selector(self._exps_data, self._filters + ((k, v), ),
+                        self._custom_filters)
 
     def custom_filter(self, filter):
-        return Selector(self._exps_data, self._filters, self._custom_filters + [filter])
+        return Selector(self._exps_data, self._filters,
+                        self._custom_filters + [filter])
 
     def _check_exp(self, exp):
         # or exp.flat_params.get(k, None) is None
         return all(
-            ((str(exp.flat_params.get(k, None)) == str(v) or (k not in exp.flat_params)) for k, v in self._filters)
-        ) and all(custom_filter(exp) for custom_filter in self._custom_filters)
+            ((str(exp.flat_params.get(k, None)) == str(v) or
+              (k not in exp.flat_params)) for k, v in self._filters)) and all(
+                  custom_filter(exp) for custom_filter in self._custom_filters)
 
     def extract(self):
         return list(filter(self._check_exp, self._exps_data))
@@ -228,7 +226,9 @@ def hex_to_rgb(hex, opacity=1.0):
     if hex[0] == '#':
         hex = hex[1:]
     assert (len(hex) == 6)
-    return "rgba({0},{1},{2},{3})".format(int(hex[:2], 16), int(hex[2:4], 16), int(hex[4:6], 16), opacity)
+    return "rgba({0},{1},{2},{3})".format(
+        int(hex[:2], 16), int(hex[2:4], 16), int(hex[4:6], 16), opacity)
+
 
 # class VisApp(object):
 #

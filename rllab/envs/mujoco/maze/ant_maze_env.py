@@ -9,4 +9,3 @@ class AntMazeEnv(MazeEnv):
 
     MAZE_HEIGHT = 2
     MAZE_SIZE_SCALING = 3.0
-

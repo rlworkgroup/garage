@@ -155,9 +155,9 @@ class StatefulPool(object):
             manager = mp.Manager()
             counter = manager.Value('i', 0)
             lock = manager.RLock()
-            results = self.pool.map_async(
-                _worker_run_collect, [(collect_once, counter, lock, threshold,
-                                       args)] * self.n_parallel)
+            results = self.pool.map_async(_worker_run_collect, [
+                (collect_once, counter, lock, threshold, args)
+            ] * self.n_parallel)
             if show_prog_bar:
                 pbar = ProgBarCounter(threshold)
             last_value = 0

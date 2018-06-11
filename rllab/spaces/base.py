@@ -42,7 +42,8 @@ class Space(object):
 
     def new_tensor_variable(self, name, extra_dims):
         """
-        Create a Theano tensor variable given the name and extra dimensions prepended
+        Create a Theano tensor variable given the name and extra dimensions
+        prepended
         :param name: name of the variable
         :param extra_dims: extra dimensions in the front
         :return: the created tensor variable

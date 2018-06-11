@@ -6,10 +6,7 @@ from rllab.policies import UniformControlPolicy
 
 env = normalize(CartpoleEnv())
 
-policy = UniformControlPolicy(
-    env_spec=env.spec,
-    # The neural network policy should have two hidden layers, each with 32 hidden units.
-)
+policy = UniformControlPolicy(env_spec=env.spec, )
 
 baseline = ZeroBaseline(env_spec=env.spec)
 

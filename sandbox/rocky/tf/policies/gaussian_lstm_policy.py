@@ -61,9 +61,13 @@ class GaussianLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
                     name="reshape_feature",
                     op=lambda flat_feature, input: tf.reshape(
                         flat_feature,
-                        tf.stack([tf.shape(input)[0], tf.shape(input)[1], feature_dim])
+                        tf.stack([
+                            tf.shape(input)[0],
+                            tf.shape(input)[1],
+                            feature_dim])
                     ),
-                    shape_op=lambda _, input_shape: (input_shape[0], input_shape[1], feature_dim)
+                    shape_op=lambda _, input_shape: (
+                        input_shape[0], input_shape[1], feature_dim)
                 )
 
             if std_share_network:
@@ -187,20 +191,22 @@ class GaussianLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
             obs_var = tf.reshape(obs_var, tf.stack([n_batches, n_steps, -1]))
             if self.state_include_action:
                 prev_action_var = state_info_vars["prev_action"]
-                all_input_var = tf.concat(axis=2, values=[obs_var, prev_action_var])
+                all_input_var = tf.concat(
+                    axis=2, values=[obs_var, prev_action_var])
             else:
                 all_input_var = obs_var
             if self.feature_network is None:
                 means, log_stds = L.get_output(
                     [self.mean_network.output_layer, self.l_log_std],
-                    {self.l_input: all_input_var}
-                )
+                    {self.l_input: all_input_var})
             else:
-                flat_input_var = tf.reshape(all_input_var, (-1, self.input_dim))
+                flat_input_var = tf.reshape(all_input_var,
+                                            (-1, self.input_dim))
                 means, log_stds = L.get_output(
-                    [self.mean_network.output_layer, self.l_log_std],
-                    {self.l_input: all_input_var, self.feature_network.input_layer: flat_input_var}
-                )
+                    [self.mean_network.output_layer, self.l_log_std], {
+                        self.l_input: all_input_var,
+                        self.feature_network.input_layer: flat_input_var
+                    })
             return dict(mean=means, log_std=log_stds)
 
     @property
@@ -238,7 +244,8 @@ class GaussianLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
             all_input = np.concatenate([flat_obs, self.prev_actions], axis=-1)
         else:
             all_input = flat_obs
-        # probs, hidden_vec, cell_vec = self.f_step_prob(all_input, self.prev_hiddens, self.prev_cells)
+        # probs, hidden_vec, cell_vec = self.f_step_prob(
+        #     all_input, self.prev_hiddens, self.prev_cells)
         means, log_stds, hidden_vec, cell_vec = self.f_step_mean_std(
             all_input, np.hstack([self.prev_hiddens, self.prev_cells]))
         rnd = np.random.normal(size=means.shape)

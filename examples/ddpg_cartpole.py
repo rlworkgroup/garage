@@ -10,11 +10,7 @@ from rllab.q_functions import ContinuousMLPQFunction
 def run_task(*_):
     env = normalize(CartpoleEnv())
 
-    policy = DeterministicMLPPolicy(
-        env_spec=env.spec,
-        # The neural network policy should have two hidden layers, each with 32 hidden units.
-        hidden_sizes=(32, 32)
-    )
+    policy = DeterministicMLPPolicy(env_spec=env.spec, hidden_sizes=(32, 32))
 
     es = OUStrategy(env_spec=env.spec)
 
@@ -34,10 +30,12 @@ def run_task(*_):
         scale_reward=0.01,
         qf_learning_rate=1e-3,
         policy_learning_rate=1e-4,
-        # Uncomment both lines (this and the plot parameter below) to enable plotting
-        # plot=True,
+        # Uncomment both lines (this and the plot parameter below) to enable
+        # plotting
+        plot=True,
     )
     algo.train()
+
 
 run_experiment_lite(
     run_task,
@@ -45,8 +43,8 @@ run_experiment_lite(
     n_parallel=1,
     # Only keep the snapshot parameters for the last iteration
     snapshot_mode="last",
-    # Specifies the seed for the experiment. If this is not provided, a random seed
-    # will be used
+    # Specifies the seed for the experiment. If this is not provided, a random
+    # seed will be used
     seed=1,
     # plot=True,
 )

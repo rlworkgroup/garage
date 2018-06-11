@@ -2,7 +2,6 @@ from rllab.misc import autoargs
 
 
 class Baseline(object):
-
     def __init__(self, env_spec):
         self._mdp_spec = env_spec
 

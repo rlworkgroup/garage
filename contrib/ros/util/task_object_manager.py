@@ -15,10 +15,11 @@ class TaskObject(object):
                 object's original position
         :param random_delta_range: [float, float, float]
                 positive, the range that would be used in sampling object' new
-                start position for every episode. Set it as 0, if you want to keep the
-                object's initial_pos for every episode.
+                start position for every episode. Set it as 0, if you want to
+                keep the object's initial_pos for every episode.
         :param resource: str
-                the model path(str) for simulation training or ros topic name for real robot training
+                the model path(str) for simulation training or ros topic name
+                for real robot training
         """
         self._name = name
         self._resource = resource

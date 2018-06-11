@@ -4,11 +4,21 @@ import xml.etree.ElementTree as ET
 
 import Box2D
 import numpy as np
-from rllab.envs.box2d.parser.xml_types import XmlElem, XmlChild, XmlAttr, \
-    XmlChildren
-
-from rllab.envs.box2d.parser.xml_attr_types import Tuple, Float, Choice, \
-    String, List, Point2D, Hex, Int, Angle, Bool, Either
+from rllab.envs.box2d.parser.xml_types import XmlElem
+from rllab.envs.box2d.parser.xml_types import XmlChild
+from rllab.envs.box2d.parser.xml_types import XmlAttr
+from rllab.envs.box2d.parser.xml_types import XmlChildren
+from rllab.envs.box2d.parser.xml_attr_types import Tuple
+from rllab.envs.box2d.parser.xml_attr_types import Float
+from rllab.envs.box2d.parser.xml_attr_types import Choice
+from rllab.envs.box2d.parser.xml_attr_types import String
+from rllab.envs.box2d.parser.xml_attr_types import List
+from rllab.envs.box2d.parser.xml_attr_types import Point2D
+from rllab.envs.box2d.parser.xml_attr_types import Hex
+from rllab.envs.box2d.parser.xml_attr_types import Int
+from rllab.envs.box2d.parser.xml_attr_types import Angle
+from rllab.envs.box2d.parser.xml_attr_types import Bool
+from rllab.envs.box2d.parser.xml_attr_types import Either
 
 
 class XmlBox2D(XmlElem):
@@ -86,8 +96,8 @@ class XmlBody(XmlElem):
     class Meta:
         color = XmlAttr("color", List(Float()))
         name = XmlAttr("name", String())
-        typ = XmlAttr("type", Choice("static", "kinematic", "dynamic"),
-                      required=True)
+        typ = XmlAttr(
+            "type", Choice("static", "kinematic", "dynamic"), required=True)
         fixtures = XmlChildren("fixture", lambda: XmlFixture)
         position = XmlAttr("position", Point2D())
 
@@ -116,12 +126,14 @@ class XmlFixture(XmlElem):
     tag = "fixture"
 
     class Meta:
-        shape = XmlAttr("shape",
-                        Choice("polygon", "circle", "edge", "sine_chain"), required=True)
+        shape = XmlAttr(
+            "shape",
+            Choice("polygon", "circle", "edge", "sine_chain"),
+            required=True)
         vertices = XmlAttr("vertices", List(Point2D()))
-        box = XmlAttr("box", Either(
-            Point2D(),
-            Tuple(Float(), Float(), Point2D(), Angle())))
+        box = XmlAttr(
+            "box",
+            Either(Point2D(), Tuple(Float(), Float(), Point2D(), Angle())))
         radius = XmlAttr("radius", Float())
         width = XmlAttr("width", Float())
         height = XmlAttr("height", Float())
@@ -161,8 +173,7 @@ class XmlFixture(XmlElem):
             attrs["radius"] = self.radius
         if self.shape == "polygon":
             if self.box:
-                fixture = body.CreatePolygonFixture(
-                    box=self.box, **attrs)
+                fixture = body.CreatePolygonFixture(box=self.box, **attrs)
             else:
                 fixture = body.CreatePolygonFixture(
                     vertices=self.vertices, **attrs)
@@ -176,10 +187,8 @@ class XmlFixture(XmlElem):
             if self.center:
                 attrs["pos"] = self.center
             m = 100
-            vs = [
-                (0.5/m*i*self.width, self.height*np.sin((1./m*i-0.5)*np.pi))
-                for i in range(-m, m+1)
-            ]
+            vs = [(0.5 / m * i * self.width, self.height * np.sin(
+                (1. / m * i - 0.5) * np.pi)) for i in range(-m, m + 1)]
             attrs["vertices_chain"] = vs
             fixture = body.CreateChainFixture(**attrs)
         else:
@@ -220,7 +229,8 @@ class XmlJoint(XmlElem):
         axis = XmlAttr("axis", Tuple(Float(), Float()))
         limit = XmlAttr("limit", Tuple(Angle(), Angle()))
         ctrllimit = XmlAttr("ctrllimit", Tuple(Angle(), Angle()))
-        typ = XmlAttr("type", Choice("revolute", "friction", "prismatic"), required=True)
+        typ = XmlAttr(
+            "type", Choice("revolute", "friction", "prismatic"), required=True)
         name = XmlAttr("name", String())
         motor = XmlAttr("motor", Bool())
 
@@ -261,14 +271,9 @@ class XmlJoint(XmlElem):
         else:
             raise NotImplementedError
         userData = dict(
-            ctrllimit=self.ctrllimit,
-            motor=self.motor,
-            name=self.name
-        )
-        joint = world.CreateJoint(type=self.JOINT_TYPES[self.typ],
-                                  bodyA=bodyA,
-                                  bodyB=bodyB,
-                                  **args)
+            ctrllimit=self.ctrllimit, motor=self.motor, name=self.name)
+        joint = world.CreateJoint(
+            type=self.JOINT_TYPES[self.typ], bodyA=bodyA, bodyB=bodyB, **args)
         joint.userData = userData
         return joint
 
@@ -279,12 +284,18 @@ class XmlState(XmlElem):
 
     class Meta:
         typ = XmlAttr(
-            "type", Choice(
-                "xpos", "ypos", "xvel", "yvel", "apos", "avel",
-                "dist", "angle",
+            "type",
+            Choice(
+                "xpos",
+                "ypos",
+                "xvel",
+                "yvel",
+                "apos",
+                "avel",
+                "dist",
+                "angle",
             ))
-        transform = XmlAttr(
-            "transform", Choice("id", "sin", "cos"))
+        transform = XmlAttr("transform", Choice("id", "sin", "cos"))
         body = XmlAttr("body", String())
         to = XmlAttr("to", String())
         joint = XmlAttr("joint", String())
@@ -311,22 +322,23 @@ class XmlControl(XmlElem):
     class Meta:
         typ = XmlAttr("type", Choice("force", "torque"), required=True)
         body = XmlAttr(
-            "body", String(),
-            help="name of the body to apply force on")
+            "body", String(), help="name of the body to apply force on")
         bodies = XmlAttr(
-            "bodies", List(String()),
+            "bodies",
+            List(String()),
             help="names of the bodies to apply force on")
-        joint = XmlAttr(
-            "joint", String(),
-            help="name of the joint")
+        joint = XmlAttr("joint", String(), help="name of the joint")
         anchor = XmlAttr(
-            "anchor", Point2D(),
+            "anchor",
+            Point2D(),
             help="location of the force in local coordinate frame")
         direction = XmlAttr(
-            "direction", Point2D(),
+            "direction",
+            Point2D(),
             help="direction of the force in local coordinate frame")
         ctrllimit = XmlAttr(
-            "ctrllimit", Tuple(Float(), Float()),
+            "ctrllimit",
+            Tuple(Float(), Float()),
             help="limit of the control input in Newton")
 
     def __init__(self):
@@ -340,14 +352,14 @@ class XmlControl(XmlElem):
 
     def to_box2d(self, world, xml_world, extra_data):
         if self.body != None:
-            assert self.bodies is None, "Should not set body and bodies at the same time"
+            assert self.bodies is None, ("Should not set body and bodies at "
+                                         "the same time")
             self.bodies = [self.body]
 
         extra_data.controls.append(self)
 
 
 class ExtraData(object):
-
     def __init__(self):
         self.states = []
         self.controls = []

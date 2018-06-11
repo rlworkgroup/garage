@@ -14,46 +14,51 @@ import tensorflow as tf
 
 class GaussianMLPRegressor(LayersPowered, Serializable):
     """
-    A class for performing regression by fitting a Gaussian distribution to the outputs.
+    A class for performing regression by fitting a Gaussian distribution to the
+    outputs.
     """
 
-    def __init__(
-            self,
-            input_shape,
-            output_dim,
-            name="GaussianMLPRegressor",
-            mean_network=None,
-            hidden_sizes=(32, 32),
-            hidden_nonlinearity=tf.nn.tanh,
-            optimizer=None,
-            use_trust_region=True,
-            step_size=0.01,
-            learn_std=True,
-            init_std=1.0,
-            adaptive_std=False,
-            std_share_network=False,
-            std_hidden_sizes=(32, 32),
-            std_nonlinearity=None,
-            normalize_inputs=True,
-            normalize_outputs=True,
-            subsample_factor=1.0
-    ):
+    def __init__(self,
+                 input_shape,
+                 output_dim,
+                 name="GaussianMLPRegressor",
+                 mean_network=None,
+                 hidden_sizes=(32, 32),
+                 hidden_nonlinearity=tf.nn.tanh,
+                 optimizer=None,
+                 use_trust_region=True,
+                 step_size=0.01,
+                 learn_std=True,
+                 init_std=1.0,
+                 adaptive_std=False,
+                 std_share_network=False,
+                 std_hidden_sizes=(32, 32),
+                 std_nonlinearity=None,
+                 normalize_inputs=True,
+                 normalize_outputs=True,
+                 subsample_factor=1.0):
         """
         :param input_shape: Shape of the input data.
         :param output_dim: Dimension of output.
-        :param hidden_sizes: Number of hidden units of each layer of the mean network.
-        :param hidden_nonlinearity: Non-linearity used for each layer of the mean network.
+        :param hidden_sizes: Number of hidden units of each layer of the mean
+         network.
+        :param hidden_nonlinearity: Non-linearity used for each layer of the
+         mean network.
         :param optimizer: Optimizer for minimizing the negative log-likelihood.
         :param use_trust_region: Whether to use trust region constraint.
         :param step_size: KL divergence constraint for each iteration
-        :param learn_std: Whether to learn the standard deviations. Only effective if adaptive_std is False. If
-        adaptive_std is True, this parameter is ignored, and the weights for the std network are always learned.
+        :param learn_std: Whether to learn the standard deviations. Only
+         effective if adaptive_std is False. If adaptive_std is True, this
+         parameter is ignored, and the weights for the std network are always
+         earned.
         :param adaptive_std: Whether to make the std a function of the states.
         :param std_share_network: Whether to use the same network as the mean.
-        :param std_hidden_sizes: Number of hidden units of each layer of the std network. Only used if
-        `std_share_network` is False. It defaults to the same architecture as the mean.
-        :param std_nonlinearity: Non-linearity used for each layer of the std network. Only used if `std_share_network`
-        is False. It defaults to the same non-linearity as the mean.
+        :param std_hidden_sizes: Number of hidden units of each layer of the
+         std network. Only used if `std_share_network` is False. It defaults to
+         the same architecture as the mean.
+        :param std_nonlinearity: Non-linearity used for each layer of the std
+         network. Only used if `std_share_network` is False. It defaults to the
+         same non-linearity as the mean.
         """
         Serializable.quick_init(self, locals())
 
@@ -285,7 +290,8 @@ class GaussianMLPRegressor(LayersPowered, Serializable):
         normalized_xs_var = (x_var - self._x_mean_var) / self._x_std_var
 
         normalized_means_var, normalized_log_stds_var = \
-            L.get_output([self._l_mean, self._l_log_std], {self._mean_network.input_layer: normalized_xs_var})
+            L.get_output([self._l_mean, self._l_log_std],
+                {self._mean_network.input_layer: normalized_xs_var})
 
         means_var = normalized_means_var * self._y_std_var + self._y_mean_var
         log_stds_var = normalized_log_stds_var + TT.log(self._y_std_var)

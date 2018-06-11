@@ -8,7 +8,6 @@ from rllab.regressors.gaussian_conv_regressor import GaussianConvRegressor
 
 
 class GaussianConvBaseline(Baseline, Parameterized):
-
     def __init__(
             self,
             env_spec,
@@ -24,8 +23,7 @@ class GaussianConvBaseline(Baseline, Parameterized):
             input_shape=env_spec.observation_space.shape,
             output_dim=1,
             name="vf",
-            **regressor_args
-        )
+            **regressor_args)
 
     @overrides
     def fit(self, paths):

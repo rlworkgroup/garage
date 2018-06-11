@@ -18,16 +18,19 @@ import sys
 import dis
 __VERSION__ = '0.5'
 
-
 if sys.version > '3':
     long = int
 
-def overrides(method):
-    """Decorator to indicate that the decorated method overrides a method in superclass.
-    The decorator code is executed while loading class. Using this method should have minimal runtime performance
-    implications.
 
-    This is based on my idea about how to do this and fwc:s highly improved algorithm for the implementation
+def overrides(method):
+    """Decorator to indicate that the decorated method overrides a method in
+    superclass.
+
+    The decorator code is executed while loading class. Using this method should
+    have minimal runtime performance implications.
+
+    This is based on my idea about how to do this and fwc:s highly improved
+    algorithm for the implementation
     fwc:s algorithm : http://stackoverflow.com/a/14631397/308189
     my answer : http://stackoverflow.com/a/8313042/308189
 
@@ -46,7 +49,8 @@ def overrides(method):
             return 1
 
     :raises  AssertionError if no match in super classes for the method name
-    :return  method with possibly added (if the method doesn't have one) docstring from super class
+    :return  method with possibly added (if the method doesn't have one)
+     docstring from super class
     """
     # nop for now due to py3 compatibility
     return method
@@ -55,10 +59,16 @@ def overrides(method):
     #         if not method.__doc__:
     #             method.__doc__ = getattr(super_class, method.__name__).__doc__
     #         return method
-    # raise AssertionError('No super class method found for "%s"' % method.__name__)
+    # raise AssertionError(
+    #     'No super class method found for "%s"' % method.__name__)
+
 
 def _get_base_classes(frame, namespace):
-    return [_get_base_class(class_name_components, namespace) for class_name_components in _get_base_class_names(frame)]
+    return [
+        _get_base_class(class_name_components, namespace)
+        for class_name_components in _get_base_class_names(frame)
+    ]
+
 
 def _get_base_class_names(frame):
     """Get baseclass names from the code object"""
@@ -72,11 +82,11 @@ def _get_base_class_names(frame):
         op = ord(c)
         i += 1
         if op >= dis.HAVE_ARGUMENT:
-            oparg = ord(code[i]) + ord(code[i+1])*256 + extended_arg
+            oparg = ord(code[i]) + ord(code[i + 1]) * 256 + extended_arg
             extended_arg = 0
             i += 2
             if op == dis.EXTENDED_ARG:
-                extended_arg = oparg*int(65536)
+                extended_arg = oparg * int(65536)
             if op in dis.hasconst:
                 if type(co.co_consts[oparg]) == str:
                     extends = []
@@ -97,6 +107,7 @@ def _get_base_class_names(frame):
     if previous_item:
         items.append(previous_item)
     return items
+
 
 def _get_base_class(components, namespace):
     obj = namespace[components[0]]

@@ -18,7 +18,7 @@ class GaussianGRUPolicy(StochasticPolicy, LasagnePowered):
     def __init__(
             self,
             env_spec,
-            hidden_sizes=(32,),
+            hidden_sizes=(32, ),
             state_include_action=True,
             hidden_nonlinearity=NL.tanh,
             learn_std=True,
@@ -37,13 +37,14 @@ class GaussianGRUPolicy(StochasticPolicy, LasagnePowered):
         assert len(hidden_sizes) == 1
 
         if state_include_action:
-            obs_dim = env_spec.observation_space.flat_dim + env_spec.action_space.flat_dim
+            obs_dim = env_spec.observation_space.flat_dim + \
+                      env_spec.action_space.flat_dim
         else:
             obs_dim = env_spec.observation_space.flat_dim
         action_dim = env_spec.action_space.flat_dim
 
         mean_network = GRUNetwork(
-            input_shape=(obs_dim,),
+            input_shape=(obs_dim, ),
             output_dim=action_dim,
             hidden_dim=hidden_sizes[0],
             hidden_nonlinearity=hidden_nonlinearity,
@@ -79,11 +80,9 @@ class GaussianGRUPolicy(StochasticPolicy, LasagnePowered):
                 mean_network.step_prev_hidden_layer.input_var
             ],
             L.get_output([
-                mean_network.step_output_layer,
-                l_step_log_std,
+                mean_network.step_output_layer, l_step_log_std,
                 mean_network.step_hidden_layer
-            ])
-        )
+            ]))
 
         self._prev_action = None
         self._prev_hidden = None
@@ -100,13 +99,11 @@ class GaussianGRUPolicy(StochasticPolicy, LasagnePowered):
         obs_var = obs_var.reshape((n_batches, n_steps, -1))
         if self._state_include_action:
             prev_action_var = state_info_vars["prev_action"]
-            all_input_var = TT.concatenate(
-                [obs_var, prev_action_var],
-                axis=2
-            )
+            all_input_var = TT.concatenate([obs_var, prev_action_var], axis=2)
         else:
             all_input_var = obs_var
-        means, log_stds = L.get_output([self._mean_network.output_layer, self._l_log_std], all_input_var)
+        means, log_stds = L.get_output(
+            [self._mean_network.output_layer, self._l_log_std], all_input_var)
         return dict(mean=means, log_std=log_stds)
 
     def reset(self):
@@ -121,18 +118,19 @@ class GaussianGRUPolicy(StochasticPolicy, LasagnePowered):
     def get_action(self, observation):
         if self._state_include_action:
             if self._prev_action is None:
-                prev_action = np.zeros((self.action_space.flat_dim,))
+                prev_action = np.zeros((self.action_space.flat_dim, ))
             else:
                 prev_action = self.action_space.flatten(self._prev_action)
-            all_input = np.concatenate([
-                self.observation_space.flatten(observation),
-                prev_action
-            ])
+            all_input = np.concatenate(
+                [self.observation_space.flatten(observation), prev_action])
         else:
             all_input = self.observation_space.flatten(observation)
             # should not be used
             prev_action = np.nan
-        mean, log_std, hidden_vec = [x[0] for x in self._f_step_mean_std([all_input], [self._prev_hidden])]
+        mean, log_std, hidden_vec = [
+            x[0]
+            for x in self._f_step_mean_std([all_input], [self._prev_hidden])
+        ]
         rnd = np.random.normal(size=mean.shape)
         action = rnd * np.exp(log_std) + mean
         self._prev_action = action

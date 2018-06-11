@@ -14,8 +14,10 @@ class Box(Space):
     def __init__(self, low, high, shape=None):
         """
         Two kinds of valid input:
-            Box(-1.0, 1.0, (3,4)) # low and high are scalars, and shape is provided
-            Box(np.array([-1.0,-2.0]), np.array([2.0,4.0])) # low and high are arrays of the same shape
+            Box(-1.0, 1.0, (3,4)) # low and high are scalars, and shape is
+            provided
+            Box(np.array([-1.0,-2.0]), np.array([2.0,4.0])) # low and high are
+            arrays of the same shape
         """
         if shape is None:
             assert low.shape == high.shape
@@ -27,10 +29,12 @@ class Box(Space):
             self.high = high + np.zeros(shape)
 
     def sample(self):
-        return np.random.uniform(low=self.low, high=self.high, size=self.low.shape)
+        return np.random.uniform(
+            low=self.low, high=self.high, size=self.low.shape)
 
     def contains(self, x):
-        return x.shape == self.shape and (x >= self.low).all() and (x <= self.high).all()
+        return x.shape == self.shape and (x >= self.low).all() and (
+            x <= self.high).all()
 
     @property
     def shape(self):
@@ -56,7 +60,7 @@ class Box(Space):
 
     def unflatten_n(self, xs):
         xs = np.asarray(xs)
-        return xs.reshape((xs.shape[0],) + self.shape)
+        return xs.reshape((xs.shape[0], ) + self.shape)
 
     def __repr__(self):
         return "Box" + str(self.shape)
@@ -70,8 +74,4 @@ class Box(Space):
 
     def new_tensor_variable(self, name, extra_dims):
         return ext.new_tensor(
-            name=name,
-            ndim=extra_dims+1,
-            dtype=theano.config.floatX
-        )
-
+            name=name, ndim=extra_dims + 1, dtype=theano.config.floatX)

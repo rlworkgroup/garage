@@ -22,7 +22,8 @@ class Product(Space):
         return self._components
 
     def contains(self, x):
-        return isinstance(x, tuple) and all(c.contains(xi) for c, xi in zip(self._components, x))
+        return isinstance(x, tuple) and all(
+            c.contains(xi) for c, xi in zip(self._components, x))
 
     def new_tensor_variable(self, name, extra_dims):
         return tf.placeholder(
@@ -40,22 +41,28 @@ class Product(Space):
         return int(np.sum([c.flat_dim for c in self._components]))
 
     def flatten(self, x):
-        return np.concatenate([c.flatten(xi) for c, xi in zip(self._components, x)])
+        return np.concatenate(
+            [c.flatten(xi) for c, xi in zip(self._components, x)])
 
     def flatten_n(self, xs):
         xs_regrouped = [[x[i] for x in xs] for i in range(len(xs[0]))]
-        flat_regrouped = [c.flatten_n(xi) for c, xi in zip(self.components, xs_regrouped)]
+        flat_regrouped = [
+            c.flatten_n(xi) for c, xi in zip(self.components, xs_regrouped)
+        ]
         return np.concatenate(flat_regrouped, axis=-1)
 
     def unflatten(self, x):
         dims = [c.flat_dim for c in self._components]
         flat_xs = np.split(x, np.cumsum(dims)[:-1])
-        return tuple(c.unflatten(xi) for c, xi in zip(self._components, flat_xs))
+        return tuple(
+            c.unflatten(xi) for c, xi in zip(self._components, flat_xs))
 
     def unflatten_n(self, xs):
         dims = [c.flat_dim for c in self._components]
         flat_xs = np.split(xs, np.cumsum(dims)[:-1], axis=-1)
-        unflat_xs = [c.unflatten_n(xi) for c, xi in zip(self.components, flat_xs)]
+        unflat_xs = [
+            c.unflatten_n(xi) for c, xi in zip(self.components, flat_xs)
+        ]
         unflat_xs_grouped = list(zip(*unflat_xs))
         return unflat_xs_grouped
 

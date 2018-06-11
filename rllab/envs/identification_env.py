@@ -4,7 +4,6 @@ from rllab.misc.overrides import overrides
 
 
 class IdentificationEnv(ProxyEnv, Serializable):
-
     def __init__(self, mdp_cls, mdp_args):
         Serializable.quick_init(self, locals())
         self.mdp_cls = mdp_cls
@@ -23,4 +22,3 @@ class IdentificationEnv(ProxyEnv, Serializable):
                 self._wrapped_env.release()
         self._wrapped_env = self.gen_mdp()
         return super(IdentificationEnv, self).reset()
-

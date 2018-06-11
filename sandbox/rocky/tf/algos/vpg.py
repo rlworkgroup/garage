@@ -1,5 +1,3 @@
-
-
 from rllab.misc import logger
 from rllab.misc import ext
 from rllab.misc.overrides import overrides
@@ -16,15 +14,14 @@ class VPG(BatchPolopt, Serializable):
     Vanilla Policy Gradient.
     """
 
-    def __init__(
-            self,
-            env,
-            policy,
-            baseline,
-            optimizer=None,
-            optimizer_args=None,
-            name="VPG",
-            **kwargs):
+    def __init__(self,
+                 env,
+                 policy,
+                 baseline,
+                 optimizer=None,
+                 optimizer_args=None,
+                 name="VPG",
+                 **kwargs):
         Serializable.quick_init(self, locals())
         if optimizer is None:
             default_args = dict(
@@ -39,7 +36,8 @@ class VPG(BatchPolopt, Serializable):
         self.optimizer = optimizer
         self.opt_info = None
         self.name = name
-        super(VPG, self).__init__(env=env, policy=policy, baseline=baseline, **kwargs)
+        super(VPG, self).__init__(
+            env=env, policy=policy, baseline=baseline, **kwargs)
 
     @overrides
     def init_opt(self):
@@ -62,71 +60,86 @@ class VPG(BatchPolopt, Serializable):
             dist = self.policy.distribution
 
             old_dist_info_vars = {
-                k: tf.placeholder(tf.float32, shape=[None] * (1 + is_recurrent) + list(shape), name='old_%s' % k)
+                k: tf.placeholder(
+                    tf.float32,
+                    shape=[None] * (1 + is_recurrent) + list(shape),
+                    name='old_%s' % k)
                 for k, shape in dist.dist_info_specs
-                }
-            old_dist_info_vars_list = [old_dist_info_vars[k] for k in dist.dist_info_keys]
+            }
+            old_dist_info_vars_list = [
+                old_dist_info_vars[k] for k in dist.dist_info_keys
+            ]
 
             state_info_vars = {
-                k: tf.placeholder(tf.float32, shape=[None] * (1 + is_recurrent) + list(shape), name=k)
+                k: tf.placeholder(
+                    tf.float32,
+                    shape=[None] * (1 + is_recurrent) + list(shape),
+                    name=k)
                 for k, shape in self.policy.state_info_specs
-                }
-            state_info_vars_list = [state_info_vars[k] for k in self.policy.state_info_keys]
+            }
+            state_info_vars_list = [
+                state_info_vars[k] for k in self.policy.state_info_keys
+            ]
 
             if is_recurrent:
-                valid_var = tf.placeholder(tf.float32, shape=[None, None], name="valid")
+                valid_var = tf.placeholder(
+                    tf.float32, shape=[None, None], name="valid")
             else:
                 valid_var = None
 
-            dist_info_vars = self.policy.dist_info_sym(obs_var, state_info_vars)
+            dist_info_vars = self.policy.dist_info_sym(obs_var,
+                                                       state_info_vars)
             logli = dist.log_likelihood_sym(action_var, dist_info_vars)
             kl = dist.kl_sym(old_dist_info_vars, dist_info_vars)
 
             # formulate as a minimization problem
             # The gradient of the surrogate objective is the policy gradient
             if is_recurrent:
-                surr_obj = - tf.reduce_sum(logli * advantage_var * valid_var) / tf.reduce_sum(valid_var)
-                mean_kl = tf.reduce_sum(kl * valid_var) / tf.reduce_sum(valid_var)
+                surr_obj = -tf.reduce_sum(logli * advantage_var *
+                                          valid_var) / tf.reduce_sum(valid_var)
+                mean_kl = tf.reduce_sum(
+                    kl * valid_var) / tf.reduce_sum(valid_var)
                 max_kl = tf.reduce_max(kl * valid_var)
             else:
-                surr_obj = - tf.reduce_mean(logli * advantage_var)
+                surr_obj = -tf.reduce_mean(logli * advantage_var)
                 mean_kl = tf.reduce_mean(kl)
                 max_kl = tf.reduce_max(kl)
 
-            input_list = [obs_var, action_var, advantage_var] + state_info_vars_list
+            input_list = [obs_var, action_var, advantage_var
+                          ] + state_info_vars_list
             if is_recurrent:
                 input_list.append(valid_var)
 
-            self.optimizer.update_opt(loss=surr_obj, target=self.policy, inputs=input_list)
+            self.optimizer.update_opt(
+                loss=surr_obj, target=self.policy, inputs=input_list)
 
             f_kl = tensor_utils.compile_function(
                 inputs=input_list + old_dist_info_vars_list,
                 outputs=[mean_kl, max_kl],
             )
-            self.opt_info = dict(
-                f_kl=f_kl,
-            )
+            self.opt_info = dict(f_kl=f_kl, )
 
     @overrides
     def optimize_policy(self, itr, samples_data):
         logger.log("optimizing policy")
-        inputs = ext.extract(
-            samples_data,
-            "observations", "actions", "advantages"
-        )
+        inputs = ext.extract(samples_data, "observations", "actions",
+                             "advantages")
         agent_infos = samples_data["agent_infos"]
         state_info_list = [agent_infos[k] for k in self.policy.state_info_keys]
         inputs += tuple(state_info_list)
         if self.policy.recurrent:
-            inputs += (samples_data["valids"],)
-        dist_info_list = [agent_infos[k] for k in self.policy.distribution.dist_info_keys]
+            inputs += (samples_data["valids"], )
+        dist_info_list = [
+            agent_infos[k] for k in self.policy.distribution.dist_info_keys
+        ]
         loss_before = self.optimizer.loss(inputs)
         self.optimizer.optimize(inputs)
         loss_after = self.optimizer.loss(inputs)
         logger.record_tabular("LossBefore", loss_before)
         logger.record_tabular("LossAfter", loss_after)
 
-        mean_kl, max_kl = self.opt_info['f_kl'](*(list(inputs) + dist_info_list))
+        mean_kl, max_kl = self.opt_info['f_kl'](*(
+            list(inputs) + dist_info_list))
         logger.record_tabular('MeanKL', mean_kl)
         logger.record_tabular('MaxKL', max_kl)
 

@@ -7,32 +7,36 @@ import theano.tensor as TT
 
 
 class ParamLayer(L.Layer):
-
-    def __init__(self, incoming, num_units, param=lasagne.init.Constant(0.),
-                 trainable=True, **kwargs):
+    def __init__(self,
+                 incoming,
+                 num_units,
+                 param=lasagne.init.Constant(0.),
+                 trainable=True,
+                 **kwargs):
         super(ParamLayer, self).__init__(incoming, **kwargs)
         self.num_units = num_units
         self.param = self.add_param(
-            param,
-            (num_units,),
-            name="param",
-            trainable=trainable
-        )
+            param, (num_units, ), name="param", trainable=trainable)
 
     def get_output_shape_for(self, input_shape):
-        return input_shape[:-1] + (self.num_units,)
+        return input_shape[:-1] + (self.num_units, )
 
     def get_output_for(self, input, **kwargs):
         ndim = input.ndim
-        reshaped_param = TT.reshape(self.param, (1,) * (ndim - 1) + (self.num_units,))
+        reshaped_param = TT.reshape(self.param,
+                                    (1, ) * (ndim - 1) + (self.num_units, ))
         tile_arg = TT.concatenate([input.shape[:-1], [1]])
         tiled = TT.tile(reshaped_param, tile_arg, ndim=ndim)
         return tiled
 
 
 class OpLayer(L.MergeLayer):
-    def __init__(self, incoming, op,
-                 shape_op=lambda x: x, extras=None, **kwargs):
+    def __init__(self,
+                 incoming,
+                 op,
+                 shape_op=lambda x: x,
+                 extras=None,
+                 **kwargs):
         if extras is None:
             extras = []
         incomings = [incoming] + extras
@@ -159,16 +163,25 @@ class BatchNormLayer(L.Layer):
            Batch Normalization: Accelerating Deep Network Training by Reducing
            Internal Covariate Shift. http://arxiv.org/abs/1502.03167.
     """
-    def __init__(self, incoming, axes='auto', epsilon=1e-4, alpha=0.1,
-                 mode='low_mem', beta=lasagne.init.Constant(0), gamma=lasagne.init.Constant(1),
-                 mean=lasagne.init.Constant(0), std=lasagne.init.Constant(1), **kwargs):
+
+    def __init__(self,
+                 incoming,
+                 axes='auto',
+                 epsilon=1e-4,
+                 alpha=0.1,
+                 mode='low_mem',
+                 beta=lasagne.init.Constant(0),
+                 gamma=lasagne.init.Constant(1),
+                 mean=lasagne.init.Constant(0),
+                 std=lasagne.init.Constant(1),
+                 **kwargs):
         super(BatchNormLayer, self).__init__(incoming, **kwargs)
 
         if axes == 'auto':
             # default: normalize over all but the second axis
-            axes = (0,) + tuple(range(2, len(self.input_shape)))
+            axes = (0, ) + tuple(range(2, len(self.input_shape)))
         elif isinstance(axes, int):
-            axes = (axes,)
+            axes = (axes, )
         self.axes = axes
 
         self.epsilon = epsilon
@@ -176,33 +189,34 @@ class BatchNormLayer(L.Layer):
         self.mode = mode
 
         # create parameters, ignoring all dimensions in axes
-        shape = [size for axis, size in enumerate(self.input_shape)
-                 if axis not in self.axes]
+        shape = [
+            size for axis, size in enumerate(self.input_shape)
+            if axis not in self.axes
+        ]
         if any(size is None for size in shape):
             raise ValueError("BatchNormLayer needs specified input sizes for "
                              "all axes not normalized over.")
         if beta is None:
             self.beta = None
         else:
-            self.beta = self.add_param(beta, shape, 'beta',
-                                       trainable=True, regularizable=False)
+            self.beta = self.add_param(
+                beta, shape, 'beta', trainable=True, regularizable=False)
         if gamma is None:
             self.gamma = None
         else:
-            self.gamma = self.add_param(gamma, shape, 'gamma',
-                                        trainable=True, regularizable=False)
-        self.mean = self.add_param(mean, shape, 'mean',
-                                   trainable=False, regularizable=False)
-        self.std = self.add_param(std, shape, 'std',
-                                      trainable=False, regularizable=False)
+            self.gamma = self.add_param(
+                gamma, shape, 'gamma', trainable=True, regularizable=False)
+        self.mean = self.add_param(
+            mean, shape, 'mean', trainable=False, regularizable=False)
+        self.std = self.add_param(
+            std, shape, 'std', trainable=False, regularizable=False)
 
     def get_output_for(self, input, deterministic=False, **kwargs):
         input_mean = input.mean(self.axes)
         input_std = TT.sqrt(input.var(self.axes) + self.epsilon)
 
         # Decide whether to use the stored averages or mini-batch statistics
-        use_averages = kwargs.get('batch_norm_use_averages',
-                                  deterministic)
+        use_averages = kwargs.get('batch_norm_use_averages', deterministic)
         if use_averages:
             mean = self.mean
             std = self.std
@@ -219,11 +233,10 @@ class BatchNormLayer(L.Layer):
             running_mean = theano.clone(self.mean, share_inputs=False)
             running_std = theano.clone(self.std, share_inputs=False)
             # set a default update for them:
-            running_mean.default_update = ((1 - self.alpha) * running_mean +
-                                           self.alpha * input_mean)
-            running_std.default_update = ((1 - self.alpha) *
-                                              running_std +
-                                              self.alpha * input_std)
+            running_mean.default_update = (
+                (1 - self.alpha) * running_mean + self.alpha * input_mean)
+            running_std.default_update = (
+                (1 - self.alpha) * running_std + self.alpha * input_std)
             # and make sure they end up in the graph without participating in
             # the computation (this way their default_update will be collected
             # and applied, but the computation will be optimized away):
@@ -232,9 +245,10 @@ class BatchNormLayer(L.Layer):
 
         # prepare dimshuffle pattern inserting broadcastable axes as needed
         param_axes = iter(list(range(input.ndim - len(self.axes))))
-        pattern = ['x' if input_axis in self.axes
-                   else next(param_axes)
-                   for input_axis in range(input.ndim)]
+        pattern = [
+            'x' if input_axis in self.axes else next(param_axes)
+            for input_axis in range(input.ndim)
+        ]
 
         # apply dimshuffle pattern to all parameters
         beta = 0 if self.beta is None else self.beta.dimshuffle(pattern)

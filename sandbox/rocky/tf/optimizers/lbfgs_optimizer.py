@@ -32,9 +32,11 @@ class LbfgsOptimizer(Serializable):
                    **kwargs):
         """
         :param loss: Symbolic expression for the loss function.
-        :param target: A parameterized object to optimize over. It should implement methods of the
+        :param target: A parameterized object to optimize over. It should
+         implement methods of the
         :class:`rllab.core.paramerized.Parameterized` class.
-        :param leq_constraint: A constraint provided as a tuple (f, epsilon), of the form f(*inputs) <= epsilon.
+        :param leq_constraint: A constraint provided as a tuple (f, epsilon), of
+         the form f(*inputs) <= epsilon.
         :param inputs: A list of symbolic variables as inputs
         :return: No return value.
         """
@@ -53,7 +55,8 @@ class LbfgsOptimizer(Serializable):
                 extra_inputs = list()
 
             self._opt_fun = ext.lazydict(
-                f_loss=lambda: tensor_utils.compile_function(inputs + extra_inputs, loss),
+                f_loss=lambda: tensor_utils.compile_function(
+                    inputs + extra_inputs, loss),
                 f_opt=lambda: tensor_utils.compile_function(
                     inputs=inputs + extra_inputs,
                     outputs=get_opt_output(),

@@ -8,11 +8,7 @@ class TNPG(NPO):
     Truncated Natural Policy Gradient.
     """
 
-    def __init__(
-            self,
-            optimizer=None,
-            optimizer_args=None,
-            **kwargs):
+    def __init__(self, optimizer=None, optimizer_args=None, **kwargs):
         if optimizer is None:
             default_args = dict(max_backtracks=1)
             if optimizer_args is None:

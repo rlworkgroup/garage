@@ -19,8 +19,9 @@ NONE = list()
 
 class CategoricalMLPRegressor(LasagnePowered):
     """
-    A class for performing regression (or classification, really) by fitting a categorical distribution to the outputs.
-    Assumes that the outputs will be always a one hot vector.
+    A class for performing regression (or classification, really) by fitting a
+    categorical distribution to the outputs. Assumes that the outputs will be
+    always a one hot vector.
     """
 
     def __init__(
@@ -39,8 +40,10 @@ class CategoricalMLPRegressor(LasagnePowered):
         """
         :param input_shape: Shape of the input data.
         :param output_dim: Dimension of output.
-        :param hidden_sizes: Number of hidden units of each layer of the mean network.
-        :param hidden_nonlinearity: Non-linearity used for each layer of the mean network.
+        :param hidden_sizes: Number of hidden units of each layer of the mean
+         network.
+        :param hidden_nonlinearity: Non-linearity used for each layer of the
+         mean network.
         :param optimizer: Optimizer for minimizing the negative log-likelihood.
         :param use_trust_region: Whether to use trust region constraint.
         :param step_size: KL divergence constraint for each iteration
@@ -74,19 +77,18 @@ class CategoricalMLPRegressor(LasagnePowered):
         old_prob_var = TT.matrix("old_prob")
 
         x_mean_var = theano.shared(
-            np.zeros((1,) + input_shape),
+            np.zeros((1, ) + input_shape),
             name="x_mean",
-            broadcastable=(True,) + (False,) * len(input_shape)
-        )
+            broadcastable=(True, ) + (False, ) * len(input_shape))
         x_std_var = theano.shared(
-            np.ones((1,) + input_shape),
+            np.ones((1, ) + input_shape),
             name="x_std",
-            broadcastable=(True,) + (False,) * len(input_shape)
-        )
+            broadcastable=(True, ) + (False, ) * len(input_shape))
 
         normalized_xs_var = (xs_var - x_mean_var) / x_std_var
 
-        prob_var = L.get_output(l_prob, {prob_network.input_layer: normalized_xs_var})
+        prob_var = L.get_output(l_prob,
+                                {prob_network.input_layer: normalized_xs_var})
 
         old_info_vars = dict(prob=old_prob_var)
         info_vars = dict(prob=prob_var)
@@ -95,9 +97,10 @@ class CategoricalMLPRegressor(LasagnePowered):
 
         mean_kl = TT.mean(dist.kl_sym(old_info_vars, info_vars))
 
-        loss = - TT.mean(dist.log_likelihood_sym(ys_var, info_vars))
+        loss = -TT.mean(dist.log_likelihood_sym(ys_var, info_vars))
 
-        predicted = special.to_onehot_sym(TT.argmax(prob_var, axis=1), output_dim)
+        predicted = special.to_onehot_sym(
+            TT.argmax(prob_var, axis=1), output_dim)
 
         self._f_predict = ext.compile_function([xs_var], predicted)
         self._f_prob = ext.compile_function([xs_var], prob_var)
@@ -155,8 +158,10 @@ class CategoricalMLPRegressor(LasagnePowered):
 
     def log_likelihood_sym(self, x_var, y_var):
         normalized_xs_var = (x_var - self._x_mean_var) / self._x_std_var
-        prob = L.get_output(self._l_prob, {self._prob_network.input_layer: normalized_xs_var})
-        return self._dist.log_likelihood_sym(TT.cast(y_var, 'int32'), dict(prob=prob))
+        prob = L.get_output(
+            self._l_prob, {self._prob_network.input_layer: normalized_xs_var})
+        return self._dist.log_likelihood_sym(
+            TT.cast(y_var, 'int32'), dict(prob=prob))
 
     def get_param_values(self, **tags):
         return LasagnePowered.get_param_values(self, **tags)

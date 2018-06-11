@@ -1,6 +1,3 @@
-
-
-
 import sandbox.rocky.tf.core.layers as L
 import numpy as np
 import tensorflow as tf
@@ -17,8 +14,8 @@ from sandbox.rocky.tf.optimizers import LbfgsOptimizer
 
 class BernoulliMLPRegressor(LayersPowered, Serializable):
     """
-    A class for performing regression (or classification, really) by fitting a bernoulli distribution to each of the
-    output units.
+    A class for performing regression (or classification, really) by fitting a
+    bernoulli distribution to each of the output units.
     """
 
     def __init__(
@@ -38,8 +35,10 @@ class BernoulliMLPRegressor(LayersPowered, Serializable):
         """
         :param input_shape: Shape of the input data.
         :param output_dim: Dimension of output.
-        :param hidden_sizes: Number of hidden units of each layer of the mean network.
-        :param hidden_nonlinearity: Non-linearity used for each layer of the mean network.
+        :param hidden_sizes: Number of hidden units of each layer of the mean
+        network.
+        :param hidden_nonlinearity: Non-linearity used for each layer of the
+        mean network.
         :param optimizer: Optimizer for minimizing the negative log-likelihood.
         :param use_trust_region: Whether to use trust region constraint.
         :param step_size: KL divergence constraint for each iteration
@@ -63,23 +62,31 @@ class BernoulliMLPRegressor(LayersPowered, Serializable):
                 hidden_sizes=hidden_sizes,
                 hidden_nonlinearity=hidden_nonlinearity,
                 output_nonlinearity=tf.nn.sigmoid,
-                name="p_network"
-            )
+                name="p_network")
 
             l_p = p_network.output_layer
 
             LayersPowered.__init__(self, [l_p])
 
             xs_var = p_network.input_layer.input_var
-            ys_var = tf.placeholder(dtype=tf.float32, shape=(None, output_dim), name="ys")
-            old_p_var = tf.placeholder(dtype=tf.float32, shape=(None, output_dim), name="old_p")
+            ys_var = tf.placeholder(
+                dtype=tf.float32, shape=(None, output_dim), name="ys")
+            old_p_var = tf.placeholder(
+                dtype=tf.float32, shape=(None, output_dim), name="old_p")
 
-            x_mean_var = tf.get_variable(name="x_mean", initializer=tf.zeros_initializer(), shape=(1,) + input_shape)
-            x_std_var = tf.get_variable(name="x_std", initializer=tf.ones_initializer(), shape=(1,) + input_shape)
+            x_mean_var = tf.get_variable(
+                name="x_mean",
+                initializer=tf.zeros_initializer(),
+                shape=(1, ) + input_shape)
+            x_std_var = tf.get_variable(
+                name="x_std",
+                initializer=tf.ones_initializer(),
+                shape=(1, ) + input_shape)
 
             normalized_xs_var = (xs_var - x_mean_var) / x_std_var
 
-            p_var = L.get_output(l_p, {p_network.input_layer: normalized_xs_var})
+            p_var = L.get_output(l_p,
+                                 {p_network.input_layer: normalized_xs_var})
 
             old_info_vars = dict(p=old_p_var)
             info_vars = dict(p=p_var)
@@ -88,7 +95,7 @@ class BernoulliMLPRegressor(LayersPowered, Serializable):
 
             mean_kl = tf.reduce_mean(dist.kl_sym(old_info_vars, info_vars))
 
-            loss = - tf.reduce_mean(dist.log_likelihood_sym(ys_var, info_vars))
+            loss = -tf.reduce_mean(dist.log_likelihood_sym(ys_var, info_vars))
 
             predicted = p_var >= 0.5
 
@@ -96,11 +103,17 @@ class BernoulliMLPRegressor(LayersPowered, Serializable):
             self.f_p = tensor_utils.compile_function([xs_var], p_var)
             self.l_p = l_p
 
-            self.optimizer.update_opt(loss=loss, target=self, network_outputs=[p_var], inputs=[xs_var, ys_var])
-            self.tr_optimizer.update_opt(loss=loss, target=self, network_outputs=[p_var],
-                                         inputs=[xs_var, ys_var, old_p_var],
-                                         leq_constraint=(mean_kl, step_size)
-                                         )
+            self.optimizer.update_opt(
+                loss=loss,
+                target=self,
+                network_outputs=[p_var],
+                inputs=[xs_var, ys_var])
+            self.tr_optimizer.update_opt(
+                loss=loss,
+                target=self,
+                network_outputs=[p_var],
+                inputs=[xs_var, ys_var, old_p_var],
+                leq_constraint=(mean_kl, step_size))
 
             self.use_trust_region = use_trust_region
             self.name = name
@@ -115,12 +128,14 @@ class BernoulliMLPRegressor(LayersPowered, Serializable):
             # recompute normalizing constants for inputs
             new_mean = np.mean(xs, axis=0, keepdims=True)
             new_std = np.std(xs, axis=0, keepdims=True) + 1e-8
-            tf.get_default_session().run(tf.group(
-                tf.assign(self.x_mean_var, new_mean),
-                tf.assign(self.x_std_var, new_std),
-            ))
+            tf.get_default_session().run(
+                tf.group(
+                    tf.assign(self.x_mean_var, new_mean),
+                    tf.assign(self.x_std_var, new_std),
+                ))
             # self._x_mean_var.set_value(np.mean(xs, axis=0, keepdims=True))
-            # self._x_std_var.set_value(np.std(xs, axis=0, keepdims=True) + 1e-8)
+            # self._x_std_var.set_value(
+            #     np.std(xs, axis=0, keepdims=True) + 1e-8)
         if self.use_trust_region and self.first_optimized:
             old_p = self.f_p(xs)
             inputs = [xs, ys, old_p]

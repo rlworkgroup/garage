@@ -8,14 +8,16 @@ from rllab.misc.overrides import overrides
 
 
 class NoisyObservationEnv(ProxyEnv, Serializable):
-
-    @autoargs.arg('obs_noise', type=float,
-                  help='Noise added to the observations (note: this makes the '
-                       'problem non-Markovian!)')
-    def __init__(self,
-                 env,
-                 obs_noise=1e-1,
-                 ):
+    @autoargs.arg(
+        'obs_noise',
+        type=float,
+        help='Noise added to the observations (note: this makes the '
+        'problem non-Markovian!)')
+    def __init__(
+            self,
+            env,
+            obs_noise=1e-1,
+    ):
         super(NoisyObservationEnv, self).__init__(env)
         Serializable.quick_init(self, locals())
         self.obs_noise = obs_noise
@@ -48,13 +50,13 @@ class NoisyObservationEnv(ProxyEnv, Serializable):
 
 
 class DelayedActionEnv(ProxyEnv, Serializable):
-
-    @autoargs.arg('action_delay', type=int,
-                  help='Time steps before action is realized')
-    def __init__(self,
-                 env,
-                 action_delay=3,
-                 ):
+    @autoargs.arg(
+        'action_delay', type=int, help='Time steps before action is realized')
+    def __init__(
+            self,
+            env,
+            action_delay=3,
+    ):
         assert action_delay > 0, "Should not use this env transformer"
         super(DelayedActionEnv, self).__init__(env)
         Serializable.quick_init(self, locals())
@@ -71,9 +73,6 @@ class DelayedActionEnv(ProxyEnv, Serializable):
     def step(self, action):
         queued_action = self._queued_actions[:self.action_dim]
         next_obs, reward, done, info = self._wrapped_env.step(queued_action)
-        self._queued_actions = np.concatenate([
-            self._queued_actions[self.action_dim:],
-            action
-        ])
+        self._queued_actions = np.concatenate(
+            [self._queued_actions[self.action_dim:], action])
         return Step(next_obs, reward, done, **info)
-

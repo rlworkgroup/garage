@@ -10,11 +10,7 @@ import sys
 def run_task(v):
     env = normalize(CartpoleEnv())
 
-    policy = GaussianMLPPolicy(
-        env_spec=env.spec,
-        # The neural network policy should have two hidden layers, each with 32 hidden units.
-        hidden_sizes=(32, 32)
-    )
+    policy = GaussianMLPPolicy(env_spec=env.spec, hidden_sizes=(32, 32))
 
     baseline = LinearFeatureBaseline(env_spec=env.spec)
 
@@ -27,8 +23,9 @@ def run_task(v):
         n_itr=40,
         discount=0.99,
         step_size=v["step_size"],
-        # Uncomment both lines (this and the plot parameter below) to enable plotting
-        # plot=True,
+        # Uncomment both lines (this and the plot parameter below) to enable
+        # plotting
+        plot=True,
     )
     algo.train()
 
@@ -42,8 +39,8 @@ for step_size in [0.01, 0.05, 0.1]:
             n_parallel=1,
             # Only keep the snapshot parameters for the last iteration
             snapshot_mode="last",
-            # Specifies the seed for the experiment. If this is not provided, a random seed
-            # will be used
+            # Specifies the seed for the experiment. If this is not provided, a
+            # random seed will be used
             seed=seed,
             # mode="local",
             mode="ec2",

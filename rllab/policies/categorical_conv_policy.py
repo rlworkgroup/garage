@@ -19,7 +19,10 @@ class CategoricalConvPolicy(StochasticPolicy, LasagnePowered):
             self,
             name,
             env_spec,
-            conv_filters, conv_filter_sizes, conv_strides, conv_pads,
+            conv_filters,
+            conv_filter_sizes,
+            conv_strides,
+            conv_pads,
             hidden_sizes=[],
             hidden_nonlinearity=NL.rectify,
             output_nonlinearity=NL.softmax,
@@ -29,8 +32,8 @@ class CategoricalConvPolicy(StochasticPolicy, LasagnePowered):
         :param env_spec: A spec for the mdp.
         :param hidden_sizes: list of sizes for the fully connected hidden layers
         :param hidden_nonlinearity: nonlinearity used for each hidden layer
-        :param prob_network: manually specified network for this policy, other network params
-        are ignored
+        :param prob_network: manually specified network for this policy, other
+         network params are ignored
         :return:
         """
         Serializable.quick_init(self, locals())
@@ -57,8 +60,7 @@ class CategoricalConvPolicy(StochasticPolicy, LasagnePowered):
         self._l_obs = prob_network.input_layer
         self._f_prob = ext.compile_function(
             [prob_network.input_layer.input_var],
-            L.get_output(prob_network.output_layer)
-        )
+            L.get_output(prob_network.output_layer))
 
         self._dist = Categorical(env_spec.action_space.n)
 
@@ -71,12 +73,7 @@ class CategoricalConvPolicy(StochasticPolicy, LasagnePowered):
 
     @overrides
     def dist_info_sym(self, obs_var, state_info_vars=None):
-        return dict(
-            prob=L.get_output(
-                self._l_prob,
-                {self._l_obs: obs_var}
-            )
-        )
+        return dict(prob=L.get_output(self._l_prob, {self._l_obs: obs_var}))
 
     @overrides
     def dist_info(self, obs, state_infos=None):

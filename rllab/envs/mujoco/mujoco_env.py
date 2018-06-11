@@ -107,10 +107,10 @@ class MujocoEnv(Env):
     def reset_mujoco(self, init_state=None):
         self.sim.reset()
         if init_state is None:
-            self.sim.data.qpos[:] = self.init_qpos + \
-                                   np.random.normal(size=self.init_qpos.shape) * 0.01
-            self.sim.data.qvel[:] = self.init_qvel + \
-                                   np.random.normal(size=self.init_qvel.shape) * 0.1
+            self.sim.data.qpos[:] = self.init_qpos + np.random.normal(
+                size=self.init_qpos.shape) * 0.01
+            self.sim.data.qvel[:] = self.init_qvel + np.random.normal(
+                size=self.init_qvel.shape) * 0.1
             self.sim.data.qacc[:] = self.init_qacc
             self.sim.data.ctrl[:] = self.init_ctrl
         else:

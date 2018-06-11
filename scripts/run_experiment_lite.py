@@ -33,9 +33,8 @@ def run_experiment(argv):
         '--n_parallel',
         type=int,
         default=1,
-        help=
-        'Number of parallel workers to perform rollouts. 0 => don\'t start any workers'
-    )
+        help=("Number of parallel workers to perform rollouts. "
+              "0 => don't start any workers"))
     parser.add_argument(
         '--exp_name',
         type=str,
@@ -79,9 +78,7 @@ def run_experiment(argv):
         '--tensorboard_step_key',
         type=str,
         default=None,
-        help=
-        'Name of the step key in log data which shows the step in tensorboard_summary.'
-    )
+        help=("Name of the step key in tensorboard_summary."))
     parser.add_argument(
         '--params_log_file',
         type=str,
@@ -106,9 +103,7 @@ def run_experiment(argv):
         '--log_tabular_only',
         type=ast.literal_eval,
         default=False,
-        help=
-        'Whether to only print the tabular log information (in a horizontal format)'
-    )
+        help='Print only the tabular log information (in a horizontal format)')
     parser.add_argument('--seed', type=int, help='Random seed for numpy')
     parser.add_argument(
         '--args_data', type=str, help='Pickled data for stub objects')

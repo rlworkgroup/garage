@@ -117,7 +117,8 @@ def visualize_env(env, mode, max_steps=sys.maxsize, speedup=1):
         #             return
         #         env.render()
         #
-        # env.matplotlib_figure.canvas.mpl_connect('key_press_event', handle_key_pressed)
+        #env.matplotlib_figure.canvas.mpl_connect('key_press_event',
+        #    handle_key_pressed)
         # plt.ioff()
         # plt.show()
 

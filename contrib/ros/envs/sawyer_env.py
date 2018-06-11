@@ -29,7 +29,8 @@ class SawyerEnv(RosEnv, Serializable):
                  obj_range=0.15):
         """
         :param task_obj_mgr: object
-                User uses this to manage every other objects used in task except for robots.
+                User uses this to manage every other objects used in task except
+                for robots.
         :param robot: object
                 the robot interface for the environment
         :param has_object: bool
@@ -37,8 +38,10 @@ class SawyerEnv(RosEnv, Serializable):
         :param simulated: bool
                 if the environment is for real robot or simulation
         :param obj_range: float
-                the new initial object x,y position for the new training episode would be randomly sampled inside
-                [initial_gripper_pos - obj_range, initial_gripper_pos + obj_range]
+                the new initial object x,y position for the new training episode
+                would be randomly sampled inside
+                [initial_gripper_pos - obj_range,
+                initial_gripper_pos + obj_range]
         """
         # run the superclass initialize function first
         Serializable.quick_init(self, locals())
@@ -82,7 +85,8 @@ class SawyerEnv(RosEnv, Serializable):
     def step(self, action):
         """
         Perform a step in gazebo. When end of episode
-        is reached, reset() should be called to reset the environment's internal state.
+        is reached, reset() should be called to reset the environment's internal
+        state.
         Input
         -----
         action : an action provided by the environment
@@ -92,7 +96,8 @@ class SawyerEnv(RosEnv, Serializable):
         observation : agent's observation of the current environment
         reward [Float] : amount of reward due to the previous action
         done : a boolean, indicating whether the episode has ended
-        info : a dictionary containing other diagnostic information from the previous action
+        info : a dictionary containing other diagnostic information from the
+         previous action
         """
         self._robot.send_command(action)
 
@@ -108,7 +113,8 @@ class SawyerEnv(RosEnv, Serializable):
         Resets the state of the environment, returning an initial observation.
         Outputs
         -------
-        observation : the initial observation of the space. (Initial reward is assumed to be 0.)
+        observation : the initial observation of the space. (Initial reward is
+        assumed to be 0.)
         """
         self._robot.reset()
 

@@ -372,34 +372,47 @@ def run_experiment_lite(stub_method_call=None,
                         added_project_directories=[],
                         **kwargs):
     """
-    Serialize the stubbed method call and run the experiment using the specified mode.
+    Serialize the stubbed method call and run the experiment using the specified
+    mode.
     :param stub_method_call: A stubbed method call.
     :param script: The name of the entrance point python script
-    :param mode: Where & how to run the experiment. Should be one of "local", "local_docker", "ec2",
-    and "lab_kube".
-    :param dry: Whether to do a dry-run, which only prints the commands without executing them.
+    :param mode: Where and how to run the experiment. Should be one of "local",
+     "local_docker", "ec2", or "lab_kube".
+    :param dry: Whether to do a dry-run, which only prints the commands without
+     executing them.
     :param exp_prefix: Name prefix for the experiments
     :param docker_image: name of the docker image. Ignored if using local mode.
     :param aws_config: configuration for AWS. Only used under EC2 mode
     :param env: extra environment variables
-    :param kwargs: All other parameters will be passed directly to the entrance python script.
+    :param kwargs: All other parameters will be passed directly to the entrance
+     python script.
     :param variant: If provided, should be a dictionary of parameters
-    :param use_tf: this flag is used along with the Theano and GPU configuration when using TensorFlow
-    :param use_gpu: Whether the launched task is running on GPU. This triggers a few configuration changes including
+    :param use_tf: this flag is used along with the Theano and GPU configuration
+     when using TensorFlow
+    :param use_gpu: Whether the launched task is running on GPU. This triggers a
+     few configuration changes including
     certain environment flags
-    :param sync_s3_pkl: Whether to sync pkl files during execution of the experiment (they will always be synced at
+    :param sync_s3_pkl: Whether to sync pkl files during execution of the
+     experiment (they will always be synced at
     the end of the experiment)
-    :param sync_s3_png: Whether to sync png files during execution of the experiment (they will always be synced at
+    :param sync_s3_png: Whether to sync png files during execution of the
+     experiment (they will always be synced at
     the end of the experiment)
-    :param sync_s3_log: Whether to sync log files during execution of the experiment (they will always be synced at
+    :param sync_s3_log: Whether to sync log files during execution of the
+     experiment (they will always be synced at
     the end of the experiment)
-    :param confirm_remote: Whether to confirm before launching experiments remotely
-    :param terminate_machine: Whether to terminate machine after experiment finishes. Only used when using
-    mode="ec2". This is useful when one wants to debug after an experiment finishes abnormally.
-    :param periodic_sync: Whether to synchronize certain experiment files periodically during execution.
-    :param periodic_sync_interval: Time interval between each periodic sync, in seconds.
+    :param confirm_remote: Whether to confirm before launching experiments
+     remotely
+    :param terminate_machine: Whether to terminate machine after experiment
+     finishes. Only used when using mode="ec2". This is useful when one wants to
+      debug after an experiment finishes abnormally.
+    :param periodic_sync: Whether to synchronize certain experiment files
+     periodically during execution.
+    :param periodic_sync_interval: Time interval between each periodic sync,
+     in seconds.
     """
-    assert stub_method_call is not None or batch_tasks is not None, "Must provide at least either stub_method_call or batch_tasks"
+    assert stub_method_call is not None or batch_tasks is not None, \
+        "Must provide at least either stub_method_call or batch_tasks"
 
     if use_cloudpickle is None:
         for maybe_stub in (batch_tasks or [stub_method_call]):
@@ -454,7 +467,9 @@ def run_experiment_lite(stub_method_call=None,
                                                exp_count)
         if task.get("log_dir", None) is None:
             task["log_dir"] = config.LOG_DIR + "/local/" + \
-                              exp_prefix.replace("_", "-") + "/" + task["exp_name"]
+                              exp_prefix.replace("_", "-") + \
+                              "/" + \
+                              task["exp_name"]
         if task.get("variant", None) is not None:
             variant = task.pop("variant")
             if "exp_name" not in variant:
@@ -671,7 +686,8 @@ def to_local_command(params,
                      use_gpu=False):
     command = python_command + " " + script
     if use_gpu and not config.USE_TF:
-        command = "THEANO_FLAGS='device=gpu,dnn.enabled=auto,floatX=float32' " + command
+        command = ("THEANO_FLAGS="
+                   "'device=gpu,dnn.enabled=auto,floatX=float32' ") + command
     for k, v in config.ENV.items():
         command = ("%s=%s " % (k, v)) + command
     pre_commands = params.pop("pre_commands", None)
@@ -706,8 +722,9 @@ def to_docker_command(params,
                       env=None,
                       local_code_dir=None):
     """
-    :param params: The parameters for the experiment. If logging directory parameters are provided, we will create
-    docker volume mapping to make sure that the logging files are created at the correct locations
+    :param params: The parameters for the experiment. If logging directory
+     parameters are provided, we will create docker volume mapping to make sure
+     that the logging files are created at the correct locations
     :param docker_image: docker image to run the command on
     :param script: script command for running experiment
     :return:
@@ -740,9 +757,10 @@ def to_docker_command(params,
     if env is not None:
         for k, v in env.items():
             command_prefix += " -e \"{k}={v}\"".format(k=k, v=v)
-    command_prefix += " -v {local_mujoco_key_dir}:{docker_mujoco_key_dir}".format(
-        local_mujoco_key_dir=mujoco_path,
-        docker_mujoco_key_dir='/root/.mujoco')
+    command_prefix += (
+        " -v {local_mujoco_key_dir}:{docker_mujoco_key_dir}").format(
+            local_mujoco_key_dir=mujoco_path,
+            docker_mujoco_key_dir='/root/.mujoco')
     command_prefix += " -v {local_log_dir}:{docker_log_dir}".format(
         local_log_dir=log_dir, docker_log_dir=docker_log_dir)
     command_prefix += docker_args

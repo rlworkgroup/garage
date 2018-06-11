@@ -9,7 +9,8 @@ from rllab.envs import Step
 from rllab.envs.proxy_env import ProxyEnv
 from rllab.envs.mujoco.maze.maze_env_utils import construct_maze
 from rllab.envs.mujoco.mujoco_env import MODEL_DIR, BIG
-from rllab.envs.mujoco.maze.maze_env_utils import ray_segment_intersect, point_distance
+from rllab.envs.mujoco.maze.maze_env_utils import ray_segment_intersect
+from rllab.envs.mujoco.maze.maze_env_utils import point_distance
 from rllab.core import Serializable
 from rllab.misc.overrides import overrides
 
@@ -42,7 +43,8 @@ class MazeEnv(ProxyEnv, Serializable):
             length=1,
             maze_height=0.5,
             maze_size_scaling=2,
-            coef_inner_rew=0.,  # a coef of 0 gives no reward to the maze from the wrapped env.
+            # a coef of 0 gives no reward to the maze from the wrapped env.
+            coef_inner_rew=0.,
             goal_rew=1.,  # reward obtained when reaching the goal
             *args,
             **kwargs):
@@ -115,7 +117,8 @@ class MazeEnv(ProxyEnv, Serializable):
         _, file_path = tempfile.mkstemp(text=True)
         tree.write(
             file_path
-        )  # here we write a temporal file with the robot specifications. Why not the original one??
+        )  # here we write a temporal file with the robot specifications.
+        # Why not the original one??
 
         self._goal_range = self._find_goal_range()
         self._cached_segments = None
@@ -127,8 +130,8 @@ class MazeEnv(ProxyEnv, Serializable):
             self, inner_env)  # here is where the robot env will be initialized
 
     def get_current_maze_obs(self):
-        # The observation would include both information about the robot itself as well as the sensors around its
-        # environment
+        # The observation would include both information about the robot itself
+        # as well as the sensors around its environment
         robot_x, robot_y = self.wrapped_env.get_body_com("torso")[:2]
         ori = self.get_ori()
 
@@ -211,8 +214,9 @@ class MazeEnv(ProxyEnv, Serializable):
 
     def get_ori(self):
         """
-        First it tries to use a get_ori from the wrapped env. If not successfull, falls
-        back to the default based on the ORI_IND specified in Maze (not accurate for quaternions)
+        First it tries to use a get_ori from the wrapped env. If not
+        successfull, falls back to the default based on the ORI_IND specified in
+        Maze (not accurate for quaternions)
         """
         obj = self.wrapped_env
         while not hasattr(obj, 'get_ori') and hasattr(obj, 'wrapped_env'):
@@ -238,7 +242,8 @@ class MazeEnv(ProxyEnv, Serializable):
         ub = BIG * np.ones(shp)
         return spaces.Box(ub * -1, ub)
 
-    # space of only the robot observations (they go first in the get current obs) THIS COULD GO IN PROXYENV
+    # space of only the robot observations (they go first in the get current
+    # obs) THIS COULD GO IN PROXYENV
     @property
     def robot_observation_space(self):
         shp = self.get_current_robot_obs().shape
@@ -266,10 +271,14 @@ class MazeEnv(ProxyEnv, Serializable):
         for i in range(len(structure)):
             for j in range(len(structure[0])):
                 if structure[i][j] == 'g':
-                    minx = j * size_scaling - size_scaling * 0.5 - self._init_torso_x
-                    maxx = j * size_scaling + size_scaling * 0.5 - self._init_torso_x
-                    miny = i * size_scaling - size_scaling * 0.5 - self._init_torso_y
-                    maxy = i * size_scaling + size_scaling * 0.5 - self._init_torso_y
+                    minx = j * size_scaling - size_scaling \
+                           * 0.5 - self._init_torso_x
+                    maxx = j * size_scaling + size_scaling \
+                           * 0.5 - self._init_torso_x
+                    miny = i * size_scaling - size_scaling \
+                           * 0.5 - self._init_torso_y
+                    maxy = i * size_scaling + size_scaling \
+                           * 0.5 - self._init_torso_y
                     return minx, maxx, miny, maxy
 
     def _is_in_collision(self, pos):
@@ -279,10 +288,14 @@ class MazeEnv(ProxyEnv, Serializable):
         for i in range(len(structure)):
             for j in range(len(structure[0])):
                 if structure[i][j] == 1:
-                    minx = j * size_scaling - size_scaling * 0.5 - self._init_torso_x
-                    maxx = j * size_scaling + size_scaling * 0.5 - self._init_torso_x
-                    miny = i * size_scaling - size_scaling * 0.5 - self._init_torso_y
-                    maxy = i * size_scaling + size_scaling * 0.5 - self._init_torso_y
+                    minx = j * size_scaling - size_scaling \
+                           * 0.5 - self._init_torso_x
+                    maxx = j * size_scaling + size_scaling \
+                           * 0.5 - self._init_torso_x
+                    miny = i * size_scaling - size_scaling \
+                           * 0.5 - self._init_torso_y
+                    maxy = i * size_scaling + size_scaling \
+                           * 0.5 - self._init_torso_y
                     if minx <= x <= maxx and miny <= y <= maxy:
                         return True
         return False
@@ -310,8 +323,9 @@ class MazeEnv(ProxyEnv, Serializable):
         if minx <= x <= maxx and miny <= y <= maxy:
             done = True
             reward += self.goal_rew
-            info[
-                'rew_rew'] = 1  # we keep here the original one, so that the AvgReturn is directly the freq of success
+            # we keep here the original one, so that theAvgReturn is directly
+            # the freq of success
+            info['rew_rew'] = 1
         return Step(next_obs, reward, done, **info)
 
     def action_from_key(self, key):
@@ -319,8 +333,9 @@ class MazeEnv(ProxyEnv, Serializable):
 
     @overrides
     def log_diagnostics(self, paths, *args, **kwargs):
-        # we call here any logging related to the maze, strip the maze obs and call log_diag with the stripped paths
-        # we need to log the purely gather reward!!
+        # we call here any logging related to the maze, strip the maze obs and
+        # call log_diag with the stripped paths we need to log the purely gather
+        # reward!!
         with logger.tabular_prefix('Maze_'):
             gather_undiscounted_returns = [
                 sum(path['env_infos']['outer_rew']) for path in paths
@@ -332,9 +347,11 @@ class MazeEnv(ProxyEnv, Serializable):
             stripped_path = {}
             for k, v in path.items():
                 stripped_path[k] = v
-            stripped_path['observations'] = \
-                stripped_path['observations'][:, :self.wrapped_env.observation_space.flat_dim]
-            #  this breaks if the obs of the robot are d>1 dimensional (not a vector)
+            stripped_path['observations'] = stripped_path[
+                'observations'][:, :
+                                self.wrapped_env.observation_space.flat_dim]
+            # this breaks if the obs of the robot are d>1 dimensional (not a
+            # vector)
             stripped_paths.append(stripped_path)
         with logger.tabular_prefix('wrapped_'):
             wrapped_undiscounted_return = np.mean(

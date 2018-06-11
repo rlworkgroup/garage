@@ -53,24 +53,15 @@ class Discrete(Space):
         return 0
 
     def new_tensor_variable(self, name, extra_dims):
-        if self.n <= 2 ** 8:
+        if self.n <= 2**8:
             return ext.new_tensor(
-                name=name,
-                ndim=extra_dims+1,
-                dtype='uint8'
-            )
-        elif self.n <= 2 ** 16:
+                name=name, ndim=extra_dims + 1, dtype='uint8')
+        elif self.n <= 2**16:
             return ext.new_tensor(
-                name=name,
-                ndim=extra_dims+1,
-                dtype='uint16'
-            )
+                name=name, ndim=extra_dims + 1, dtype='uint16')
         else:
             return ext.new_tensor(
-                name=name,
-                ndim=extra_dims+1,
-                dtype='uint32'
-            )
+                name=name, ndim=extra_dims + 1, dtype='uint32')
 
     def __eq__(self, other):
         if not isinstance(other, Discrete):

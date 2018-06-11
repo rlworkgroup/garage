@@ -95,7 +95,8 @@ def normalize_updates(old_mean, old_std, new_mean, new_std, old_W, old_b):
     # (W_old * h + b_old) * std_old + mean_old == \
     #   (W_new * h + b_new) * std_new + mean_new
     new_W = old_W * old_std[0] / (new_std[0] + 1e-6)
-    new_b = (old_b * old_std[0] + old_mean[0] - new_mean[0]) / (new_std[0] + 1e-6)
+    new_b = (old_b * old_std[0] + old_mean[0] - new_mean[0]) / (
+        new_std[0] + 1e-6)
     return OrderedDict([
         (old_W, TT.cast(new_W, old_W.dtype)),
         (old_b, TT.cast(new_b, old_b.dtype)),
@@ -108,11 +109,12 @@ def discount_cumsum(x, discount):
     # See https://docs.scipy.org/doc/scipy/reference/tutorial/signal.html#difference-equation-filtering
     # Here, we have y[t] - discount*y[t+1] = x[t]
     # or rev(y)[t] - discount*rev(y)[t-1] = rev(x)[t]
-    return scipy.signal.lfilter([1], [1, float(-discount)], x[::-1], axis=0)[::-1]
+    return scipy.signal.lfilter(
+        [1], [1, float(-discount)], x[::-1], axis=0)[::-1]
 
 
 def discount_return(x, discount):
-    return np.sum(x * (discount ** np.arange(len(x))))
+    return np.sum(x * (discount**np.arange(len(x))))
 
 
 def rk4(derivs, y0, t, *args, **kwargs):
@@ -169,7 +171,7 @@ def rk4(derivs, y0, t, *args, **kwargs):
     try:
         Ny = len(y0)
     except TypeError:
-        yout = np.zeros((len(t),), np.float_)
+        yout = np.zeros((len(t), ), np.float_)
     else:
         yout = np.zeros((len(t), Ny), np.float_)
 

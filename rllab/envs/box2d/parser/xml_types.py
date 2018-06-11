@@ -15,7 +15,6 @@ class AttrDecl(object):
 
 
 class XmlChildren(AttrDecl):
-
     def __init__(self, tag, typ):
         self._tag = tag
         self._typ = typ
@@ -27,7 +26,6 @@ class XmlChildren(AttrDecl):
 
 
 class XmlChild(AttrDecl):
-
     def __init__(self, tag, typ, required=False):
         self._tag = tag
         self._typ = typ
@@ -47,7 +45,6 @@ class XmlChild(AttrDecl):
 
 
 class XmlAttr(AttrDecl):
-
     def __init__(self, name, typ, required=False, *args, **kwargs):
         self._name = name
         self._typ = typ

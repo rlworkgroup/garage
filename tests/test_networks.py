@@ -10,6 +10,5 @@ def test_gru_network():
     )
     f_output = ext.compile_function(
         inputs=[network.input_layer.input_var],
-        outputs=L.get_output(network.output_layer)
-    )
+        outputs=L.get_output(network.output_layer))
     assert f_output(np.zeros((6, 8, 2, 3))).shape == (6, 8, 5)

@@ -12,7 +12,8 @@ class Gazebo(object):
         Gazebo Service Util
 
         :param task_obj_mgr: object
-                    the object manager interfaces for all objects used in a specific task.
+                    the object manager interfaces for all objects used in a
+                    specific task.
         """
         self._set_model_pose_pub = rospy.Publisher(
             '/gazebo/set_model_state', ModelState, queue_size=20)

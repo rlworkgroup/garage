@@ -62,7 +62,8 @@ def stack_tensor_list(tensor_list):
 def stack_tensor_dict_list(tensor_dict_list):
     """
     Stack a list of dictionaries of {tensors or dictionary of tensors}.
-    :param tensor_dict_list: a list of dictionaries of {tensors or dictionary of tensors}.
+    :param tensor_dict_list: a list of dictionaries of {tensors or dictionary
+     of tensors}.
     :return: a dictionary of {stacked tensors or dictionary of stacked tensors}
     """
     keys = list(tensor_dict_list[0].keys())

@@ -10,4 +10,3 @@ class SwimmerMazeEnv(MazeEnv):
     MAZE_HEIGHT = 0.5
     MAZE_SIZE_SCALING = 4
     MAZE_MAKE_CONTACTS = True
-

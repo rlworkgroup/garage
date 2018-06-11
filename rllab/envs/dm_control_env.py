@@ -13,10 +13,9 @@ from rllab.spaces import Discrete
 
 
 class DmControlEnv(Env, Serializable):
-    '''
-    This environment will use dm_control toolkit(https://arxiv.org/pdf/1801.00690.pdf) 
-    to train and simulate your models.
-    '''
+    """
+    Binding for [dm_control](https://arxiv.org/pdf/1801.00690.pdf)
+    """
 
     def __init__(
             self,

@@ -11,7 +11,6 @@ from rllab.misc import VariantGenerator, variant
 
 
 class VG(VariantGenerator):
-
     @variant
     def step_size(self):
         return [0.01, 0.05, 0.1]
@@ -23,14 +22,12 @@ class VG(VariantGenerator):
 
 def run_task(vv):
 
-    env = TfEnv(normalize(GymEnv('HalfCheetah-v1', record_video=False, record_log=False)))
+    env = TfEnv(
+        normalize(
+            GymEnv('HalfCheetah-v1', record_video=False, record_log=False)))
 
     policy = GaussianMLPPolicy(
-        env_spec=env.spec,
-        # The neural network policy should have two hidden layers, each with 32 hidden units.
-        hidden_sizes=(32, 32),
-        name="policy"
-    )
+        env_spec=env.spec, hidden_sizes=(32, 32), name="policy")
 
     baseline = LinearFeatureBaseline(env_spec=env.spec)
 
@@ -43,8 +40,8 @@ def run_task(vv):
         n_itr=40,
         discount=0.99,
         step_size=vv["step_size"],
-        # Uncomment both lines (this and the plot parameter below) to enable plotting
-        # plot=True,
+        # Uncomment both lines (this and the plot parameter below) to enable
+        # plotting plot=True,
     )
     algo.train()
 
@@ -60,8 +57,8 @@ for v in variants:
         n_parallel=1,
         # Only keep the snapshot parameters for the last iteration
         snapshot_mode="last",
-        # Specifies the seed for the experiment. If this is not provided, a random seed
-        # will be used
+        # Specifies the seed for the experiment. If this is not provided, a
+        # random seed will be used
         seed=v["seed"],
         # mode="local",
         mode="ec2",

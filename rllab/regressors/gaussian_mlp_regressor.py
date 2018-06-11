@@ -19,7 +19,8 @@ from rllab.misc import iterate_minibatches_generic
 
 class GaussianMLPRegressor(LasagnePowered):
     """
-    A class for performing regression by fitting a Gaussian distribution to the outputs.
+    A class for performing regression by fitting a Gaussian distribution to the
+    outputs.
     """
 
     def __init__(
@@ -47,18 +48,24 @@ class GaussianMLPRegressor(LasagnePowered):
         """
         :param input_shape: Shape of the input data.
         :param output_dim: Dimension of output.
-        :param hidden_sizes: Number of hidden units of each layer of the mean network.
-        :param hidden_nonlinearity: Non-linearity used for each layer of the mean network.
+        :param hidden_sizes: Number of hidden units of each layer of the mean
+         network.
+        :param hidden_nonlinearity: Non-linearity used for each layer of the
+         mean network.
         :param optimizer: Optimizer for minimizing the negative log-likelihood.
         :param use_trust_region: Whether to use trust region constraint.
         :param step_size: KL divergence constraint for each iteration
-        :param learn_std: Whether to learn the standard deviations. Only effective if adaptive_std is False. If
-        adaptive_std is True, this parameter is ignored, and the weights for the std network are always learned.
+        :param learn_std: Whether to learn the standard deviations. Only
+         effective if adaptive_std is False. If adaptive_std is True, this
+         parameter is ignored, and the weights for the std network are always
+         learned.
         :param adaptive_std: Whether to make the std a function of the states.
         :param std_share_network: Whether to use the same network as the mean.
-        :param std_hidden_sizes: Number of hidden units of each layer of the std network. Only used if
-        `std_share_network` is False. It defaults to the same architecture as the mean.
-        :param std_nonlinearity: Non-linearity used for each layer of the std network. Only used if `std_share_network`
+        :param std_hidden_sizes: Number of hidden units of each layer of the
+         std network. Only used if `std_share_network` is False. It defaults to
+         the same architecture as the mean.
+        :param std_nonlinearity: Non-linearity used for each layer of the std
+         network. Only used if `std_share_network`
         is False. It defaults to the same non-linearity as the mean.
         """
         Serializable.quick_init(self, locals())
@@ -111,25 +118,21 @@ class GaussianMLPRegressor(LasagnePowered):
         old_log_stds_var = TT.matrix("old_log_stds")
 
         x_mean_var = theano.shared(
-            np.zeros((1,) + input_shape, dtype=theano.config.floatX),
+            np.zeros((1, ) + input_shape, dtype=theano.config.floatX),
             name="x_mean",
-            broadcastable=(True,) + (False,) * len(input_shape)
-        )
+            broadcastable=(True, ) + (False, ) * len(input_shape))
         x_std_var = theano.shared(
-            np.ones((1,) + input_shape, dtype=theano.config.floatX),
+            np.ones((1, ) + input_shape, dtype=theano.config.floatX),
             name="x_std",
-            broadcastable=(True,) + (False,) * len(input_shape)
-        )
+            broadcastable=(True, ) + (False, ) * len(input_shape))
         y_mean_var = theano.shared(
             np.zeros((1, output_dim), dtype=theano.config.floatX),
             name="y_mean",
-            broadcastable=(True, False)
-        )
+            broadcastable=(True, False))
         y_std_var = theano.shared(
             np.ones((1, output_dim), dtype=theano.config.floatX),
             name="y_std",
-            broadcastable=(True, False)
-        )
+            broadcastable=(True, False))
 
         normalized_xs_var = (xs_var - x_mean_var) / x_std_var
         normalized_ys_var = (ys_var - y_mean_var) / y_std_var
@@ -150,11 +153,13 @@ class GaussianMLPRegressor(LasagnePowered):
         normalized_dist_info_vars = dict(
             mean=normalized_means_var, log_std=normalized_log_stds_var)
 
-        mean_kl = TT.mean(dist.kl_sym(
-            dict(mean=normalized_old_means_var,
-                 log_std=normalized_old_log_stds_var),
-            normalized_dist_info_vars,
-        ))
+        mean_kl = TT.mean(
+            dist.kl_sym(
+                dict(
+                    mean=normalized_old_means_var,
+                    log_std=normalized_old_log_stds_var),
+                normalized_dist_info_vars,
+            ))
 
         loss = - \
             TT.mean(dist.log_likelihood_sym(
@@ -174,7 +179,8 @@ class GaussianMLPRegressor(LasagnePowered):
         if use_trust_region:
             optimizer_args["leq_constraint"] = (mean_kl, step_size)
             optimizer_args["inputs"] = [
-                xs_var, ys_var, old_means_var, old_log_stds_var]
+                xs_var, ys_var, old_means_var, old_log_stds_var
+            ]
         else:
             optimizer_args["inputs"] = [xs_var, ys_var]
 
@@ -195,28 +201,35 @@ class GaussianMLPRegressor(LasagnePowered):
 
         if self._subsample_factor < 1:
             num_samples_tot = xs.shape[0]
-            idx = np.random.randint(0, num_samples_tot, int(num_samples_tot * self._subsample_factor))
+            idx = np.random.randint(
+                0, num_samples_tot,
+                int(num_samples_tot * self._subsample_factor))
             xs, ys = xs[idx], ys[idx]
 
         if self._normalize_inputs:
             # recompute normalizing constants for inputs
             self._x_mean_var.set_value(
-                np.mean(xs, axis=0, keepdims=True).astype(theano.config.floatX))
+                np.mean(xs, axis=0,
+                        keepdims=True).astype(theano.config.floatX))
             self._x_std_var.set_value(
-                (np.std(xs, axis=0, keepdims=True) + 1e-8).astype(theano.config.floatX))
+                (np.std(xs, axis=0, keepdims=True) + 1e-8).astype(
+                    theano.config.floatX))
         if self._normalize_outputs:
             # recompute normalizing constants for outputs
             self._y_mean_var.set_value(
-                np.mean(ys, axis=0, keepdims=True).astype(theano.config.floatX))
+                np.mean(ys, axis=0,
+                        keepdims=True).astype(theano.config.floatX))
             self._y_std_var.set_value(
-                (np.std(ys, axis=0, keepdims=True) + 1e-8).astype(theano.config.floatX))
+                (np.std(ys, axis=0, keepdims=True) + 1e-8).astype(
+                    theano.config.floatX))
         if self._name:
             prefix = self._name + "_"
         else:
             prefix = ""
         # FIXME: needs batch computation to avoid OOM.
         loss_before, loss_after, mean_kl, batch_count = 0., 0., 0., 0
-        for batch in iterate_minibatches_generic(input_lst=[xs, ys], batchsize=self._batchsize, shuffle=True):
+        for batch in iterate_minibatches_generic(
+                input_lst=[xs, ys], batchsize=self._batchsize, shuffle=True):
             batch_count += 1
             xs, ys = batch
             if self._use_trust_region:
@@ -233,7 +246,8 @@ class GaussianMLPRegressor(LasagnePowered):
 
         logger.record_tabular(prefix + 'LossBefore', loss_before / batch_count)
         logger.record_tabular(prefix + 'LossAfter', loss_after / batch_count)
-        logger.record_tabular(prefix + 'dLoss', loss_before - loss_after / batch_count)
+        logger.record_tabular(prefix + 'dLoss',
+                              loss_before - loss_after / batch_count)
         if self._use_trust_region:
             logger.record_tabular(prefix + 'MeanKL', mean_kl / batch_count)
 
@@ -256,7 +270,8 @@ class GaussianMLPRegressor(LasagnePowered):
 
     def predict_log_likelihood(self, xs, ys):
         means, log_stds = self._f_pdists(xs)
-        return self._dist.log_likelihood(ys, dict(mean=means, log_std=log_stds))
+        return self._dist.log_likelihood(ys, dict(
+            mean=means, log_std=log_stds))
 
     def log_likelihood_sym(self, x_var, y_var):
         normalized_xs_var = (x_var - self._x_mean_var) / self._x_std_var
@@ -268,7 +283,8 @@ class GaussianMLPRegressor(LasagnePowered):
         means_var = normalized_means_var * self._y_std_var + self._y_mean_var
         log_stds_var = normalized_log_stds_var + TT.log(self._y_std_var)
 
-        return self._dist.log_likelihood_sym(y_var, dict(mean=means_var, log_std=log_stds_var))
+        return self._dist.log_likelihood_sym(
+            y_var, dict(mean=means_var, log_std=log_stds_var))
 
     def get_param_values(self, **tags):
         return LasagnePowered.get_param_values(self, **tags)

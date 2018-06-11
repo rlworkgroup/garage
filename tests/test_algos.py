@@ -32,27 +32,30 @@ common_batch_algo_args = dict(
 )
 
 algo_args = {
-    VPG: common_batch_algo_args,
-    TNPG: dict(common_batch_algo_args,
-        optimizer_args=dict(
-            cg_iters=1,
-        ),
+    VPG:
+    common_batch_algo_args,
+    TNPG:
+    dict(
+        common_batch_algo_args,
+        optimizer_args=dict(cg_iters=1, ),
     ),
-    TRPO: dict(common_batch_algo_args,
-        optimizer_args=dict(
-            cg_iters=1,
-        ),
+    TRPO:
+    dict(
+        common_batch_algo_args,
+        optimizer_args=dict(cg_iters=1, ),
     ),
-    PPO: dict(common_batch_algo_args,
-        optimizer_args=dict(
-            max_penalty_itr=1,
-            max_opt_itr=1
-        ),
+    PPO:
+    dict(
+        common_batch_algo_args,
+        optimizer_args=dict(max_penalty_itr=1, max_opt_itr=1),
     ),
-    REPS: dict(common_batch_algo_args,
+    REPS:
+    dict(
+        common_batch_algo_args,
         max_opt_itr=1,
     ),
-    DDPG: dict(
+    DDPG:
+    dict(
         n_epochs=1,
         epoch_length=100,
         batch_size=32,
@@ -60,17 +63,20 @@ algo_args = {
         replay_pool_size=1000,
         eval_samples=100,
     ),
-    CEM: dict(
+    CEM:
+    dict(
         n_itr=1,
         max_path_length=100,
         n_samples=5,
     ),
-    CMAES: dict(
+    CMAES:
+    dict(
         n_itr=1,
         max_path_length=100,
         batch_size=1000,
     ),
-    ERWR: common_batch_algo_args,
+    ERWR:
+    common_batch_algo_args,
 }
 
 polopt_cases = []
@@ -85,11 +91,16 @@ for algo in [VPG, TNPG, PPO, TRPO, CEM, CMAES, ERWR, REPS]:
 
 @tools.params(*polopt_cases)
 def test_polopt_algo(algo_cls, env_cls, policy_cls):
-    print("Testing %s, %s, %s" % (algo_cls.__name__, env_cls.__name__, policy_cls.__name__))
+    print("Testing %s, %s, %s" % (algo_cls.__name__, env_cls.__name__,
+                                  policy_cls.__name__))
     env = env_cls()
     policy = policy_cls(env_spec=env.spec, )
     baseline = ZeroBaseline(env_spec=env.spec)
-    algo = algo_cls(env=env, policy=policy, baseline=baseline, **(algo_args.get(algo_cls, dict())))
+    algo = algo_cls(
+        env=env,
+        policy=policy,
+        baseline=baseline,
+        **(algo_args.get(algo_cls, dict())))
     algo.train()
     assert not np.any(np.isnan(policy.get_param_values()))
 
@@ -100,7 +111,10 @@ def test_ddpg():
     qf = ContinuousMLPQFunction(env.spec)
     es = OUStrategy(env.spec)
     algo = DDPG(
-        env=env, policy=policy, qf=qf, es=es,
+        env=env,
+        policy=policy,
+        qf=qf,
+        es=es,
         n_epochs=1,
         epoch_length=100,
         batch_size=32,

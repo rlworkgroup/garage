@@ -1,6 +1,3 @@
-
-
-
 from rllab.sampler.utils import rollout
 from rllab.algos import BatchPolopt
 import argparse
@@ -19,10 +16,12 @@ filename = str(uuid.uuid4())
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('file', type=str,
-                        help='path to the snapshot file')
-    parser.add_argument('--log_dir', type=str, default=None,
-                        help='path to the new log directory')
+    parser.add_argument('file', type=str, help='path to the snapshot file')
+    parser.add_argument(
+        '--log_dir',
+        type=str,
+        default=None,
+        help='path to the new log directory')
     # Look for params.json file
     args = parser.parse_args()
     parent_dir = os.path.dirname(os.path.realpath(args.file))
@@ -42,7 +41,8 @@ if __name__ == "__main__":
         if args.log_dir is not None:
             params['log_dir'] = args.log_dir
         params['resume_from'] = args.file
-        command = to_local_command(params, script='scripts/run_experiment_lite.py')
+        command = to_local_command(
+            params, script='scripts/run_experiment_lite.py')
         print(command)
         try:
             subprocess.call(command, shell=True, env=os.environ)

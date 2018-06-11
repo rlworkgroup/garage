@@ -30,7 +30,8 @@ class CategoricalConvPolicy(StochasticPolicy, LayersPowered, Serializable):
         :param env_spec: A spec for the mdp.
         :param hidden_sizes: list of sizes for the fully connected hidden layers
         :param hidden_nonlinearity: nonlinearity used for each hidden layer
-        :param prob_network: manually specified network for this policy, other network params
+        :param prob_network: manually specified network for this policy, other
+         network params
         are ignored
         :return:
         """

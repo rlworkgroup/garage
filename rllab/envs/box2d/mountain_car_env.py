@@ -9,20 +9,15 @@ from rllab.misc.overrides import overrides
 
 
 class MountainCarEnv(Box2DEnv, Serializable):
-
     @autoargs.inherit(Box2DEnv.__init__)
-    @autoargs.arg("height_bonus_coeff", type=float,
-                  help="Height bonus added to each step's reward")
-    @autoargs.arg("goal_cart_pos", type=float,
-                  help="Goal horizontal position")
-    def __init__(self,
-                 height_bonus=1.,
-                 goal_cart_pos=0.6,
-                 *args, **kwargs):
+    @autoargs.arg(
+        "height_bonus_coeff",
+        type=float,
+        help="Height bonus added to each step's reward")
+    @autoargs.arg("goal_cart_pos", type=float, help="Goal horizontal position")
+    def __init__(self, height_bonus=1., goal_cart_pos=0.6, *args, **kwargs):
         super(MountainCarEnv, self).__init__(
-            self.model_path("mountain_car.xml.mako"),
-            *args, **kwargs
-        )
+            self.model_path("mountain_car.xml.mako"), *args, **kwargs)
         self.max_cart_pos = 2
         self.goal_cart_pos = goal_cart_pos
         self.height_bonus = height_bonus
@@ -60,4 +55,3 @@ class MountainCarEnv(Box2DEnv, Serializable):
             return np.asarray([+1])
         else:
             return np.asarray([0])
-

@@ -8,7 +8,6 @@ from rllab.regressors.gaussian_mlp_regressor import GaussianMLPRegressor
 
 
 class GaussianMLPBaseline(Baseline, Parameterized):
-
     def __init__(
             self,
             env_spec,
@@ -22,11 +21,11 @@ class GaussianMLPBaseline(Baseline, Parameterized):
             regressor_args = dict()
 
         self._regressor = GaussianMLPRegressor(
-            input_shape=(env_spec.observation_space.flat_dim * num_seq_inputs,),
+            input_shape=(
+                env_spec.observation_space.flat_dim * num_seq_inputs, ),
             output_dim=1,
             name="vf",
-            **regressor_args
-        )
+            **regressor_args)
 
     @overrides
     def fit(self, paths):

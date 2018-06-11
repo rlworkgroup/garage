@@ -3,11 +3,7 @@ from rllab.spaces import Space
 
 
 class EnvSpec(Serializable):
-
-    def __init__(
-            self,
-            observation_space,
-            action_space):
+    def __init__(self, observation_space, action_space):
         """
         :type observation_space: Space
         :type action_space: Space

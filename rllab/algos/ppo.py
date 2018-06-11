@@ -8,11 +8,7 @@ class PPO(NPO, Serializable):
     Penalized Policy Optimization.
     """
 
-    def __init__(
-            self,
-            optimizer=None,
-            optimizer_args=None,
-            **kwargs):
+    def __init__(self, optimizer=None, optimizer_args=None, **kwargs):
         Serializable.quick_init(self, locals())
         if optimizer is None:
             if optimizer_args is None:
