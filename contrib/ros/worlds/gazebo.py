@@ -1,31 +1,19 @@
 import os.path as osp
 
+from gazebo_msgs.srv import SpawnModel, DeleteModel
 from gazebo_msgs.msg import ModelState
-from gazebo_msgs.srv import DeleteModel
-from gazebo_msgs.srv import SpawnModel
-from geometry_msgs.msg import Pose
 import rospy
 
 
 class Gazebo(object):
-    def __init__(self):
-        """
-        Gazebo Service Util
+    set_model_pose_pub = rospy.Publisher(
+        '/gazebo/set_model_state', ModelState, queue_size=20)
+    spawn_sdf = rospy.ServiceProxy('/gazebo/spawn_sdf_model', SpawnModel)
+    spawn_urdf = rospy.ServiceProxy('/gazebo/spawn_urdf_model', SpawnModel)
+    delete_model = rospy.ServiceProxy('/gazebo/delete_model', DeleteModel)
 
-        :param task_obj_mgr: object
-                    the object manager interfaces for all objects used in a
-                    specific task.
-        """
-        self._set_model_pose_pub = rospy.Publisher(
-            '/gazebo/set_model_state', ModelState, queue_size=20)
-        self._spawn_sdf = rospy.ServiceProxy('/gazebo/spawn_sdf_model',
-                                             SpawnModel)
-        self._spawn_urdf = rospy.ServiceProxy('/gazebo/spawn_urdf_model',
-                                              SpawnModel)
-        self._delete_model = rospy.ServiceProxy('/gazebo/delete_model',
-                                                DeleteModel)
-
-    def set_model_pose(self,
+    @classmethod
+    def set_model_pose(cls,
                        model_name,
                        new_pose,
                        model_reference_frame='world'):
@@ -42,9 +30,10 @@ class Gazebo(object):
         msg.model_name = model_name
         msg.pose = new_pose
         msg.reference_frame = model_reference_frame
-        self._set_model_pose_pub.publish(msg)
+        cls.set_model_pose_pub.publish(msg)
 
-    def _load_gazebo_sdf_model(self,
+    @classmethod
+    def _load_gazebo_sdf_model(cls,
                                model_name,
                                model_pose,
                                model_path,
@@ -54,10 +43,11 @@ class Gazebo(object):
             model_xml = model_file.read()
         # Spawn Target SDF
         rospy.wait_for_service('/gazebo/spawn_sdf_model')
-        self._spawn_sdf(model_name, model_xml, '/', model_pose,
-                        model_reference_frame)
+        cls.spawn_sdf(model_name, model_xml, '/', model_pose,
+                      model_reference_frame)
 
-    def _load_gazebo_urdf_model(self,
+    @classmethod
+    def _load_gazebo_urdf_model(cls,
                                 model_name,
                                 model_pose,
                                 model_path,
@@ -67,22 +57,23 @@ class Gazebo(object):
             model_xml = model_file.read()
         # Spawn Target URDF
         rospy.wait_for_service('/gazebo/spawn_urdf_model')
-        self._spawn_urdf(model_name, model_xml, '/', model_pose,
-                         model_reference_frame)
+        cls.spawn_urdf(model_name, model_xml, '/', model_pose,
+                       model_reference_frame)
 
-    def delete_gazebo_model(self, model_name):
+    @classmethod
+    def delete_gazebo_model(cls, model_name):
         rospy.wait_for_service('/gazebo/delete_model')
-        self._delete_model(model_name)
+        cls.delete_model(model_name)
 
-    def load_gazebo_model(self, obj):
-        if self._is_sdf(obj.resource):
-            self._load_gazebo_sdf_model(
-                obj.name, Pose(position=obj.initial_pos), obj.resource)
+    @classmethod
+    def load_gazebo_model(cls, name, model_pose, model_path):
+        if cls._is_sdf(model_path):
+            cls._load_gazebo_sdf_model(name, model_pose, model_path)
         else:
-            self._load_gazebo_urdf_model(
-                obj.name, Pose(position=obj.initial_pos), obj.resource)
+            cls._load_gazebo_urdf_model(name, model_pose, model_path)
 
-    def _is_sdf(self, file_path):
+    @classmethod
+    def _is_sdf(cls, file_path):
         """
 
         :param file_path: str
