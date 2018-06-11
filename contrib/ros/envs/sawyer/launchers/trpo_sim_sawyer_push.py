@@ -9,7 +9,6 @@ from sandbox.rocky.tf.algos.trpo import TRPO
 from sandbox.rocky.tf.envs.base import TfEnv
 from sandbox.rocky.tf.policies.gaussian_mlp_policy import GaussianMLPPolicy
 
-
 INITIAL_SIM_ROBOT_JOINT_POS = {
     'right_j0': -0.041662954890248294,
     'right_j1': -1.0258291091425074,
