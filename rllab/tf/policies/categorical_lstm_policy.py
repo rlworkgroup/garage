@@ -1,17 +1,17 @@
 import numpy as np
-import rllab.tf.core.layers as L
 import tensorflow as tf
-from rllab.tf.core import LayersPowered
-from rllab.tf.core import LSTMNetwork, MLP
-from rllab.tf.distributions import RecurrentCategorical
-from rllab.tf.misc import tensor_utils
-from rllab.tf.misc.tensor_utils import enclosing_scope
-from rllab.tf.spaces import Discrete
-from rllab.tf.policies import StochasticPolicy
 
 from rllab.core import Serializable
 from rllab.misc import special
 from rllab.misc.overrides import overrides
+from rllab.tf.core import LayersPowered
+from rllab.tf.core import LSTMNetwork, MLP
+import rllab.tf.core.layers as L
+from rllab.tf.distributions import RecurrentCategorical
+from rllab.tf.misc import tensor_utils
+from rllab.tf.misc.tensor_utils import enclosing_scope
+from rllab.tf.policies import StochasticPolicy
+from rllab.tf.spaces import Discrete
 
 
 class CategoricalLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):

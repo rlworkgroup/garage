@@ -1,6 +1,7 @@
+import itertools
+
 from rllab.tf.core import Parameterized
 from rllab.tf.core import layers as L
-import itertools
 
 from sandbox.rocky.tf.core import layers as L
 from sandbox.rocky.tf.core import Parameterized

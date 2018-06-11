@@ -1,12 +1,12 @@
-from rllab.tf.algos import TRPO
 from rllab.baselines import LinearFeatureBaseline
 from rllab.envs.box2d import CartpoleEnv
 from rllab.envs.normalized_env import normalize
+from rllab.misc import stub, run_experiment_lite
+from rllab.tf.algos import TRPO
+from rllab.tf.envs import TfEnv
 from rllab.tf.optimizers import ConjugateGradientOptimizer
 from rllab.tf.optimizers import FiniteDifferenceHvp
 from rllab.tf.policies import GaussianMLPPolicy
-from rllab.tf.envs import TfEnv
-from rllab.misc import stub, run_experiment_lite
 
 env = TfEnv(normalize(CartpoleEnv()))
 

@@ -1,15 +1,15 @@
 import numpy as np
-import rllab.tf.core.layers as L
 import tensorflow as tf
-from rllab.tf.core import LayersPowered
-from rllab.tf.core import LSTMNetwork
-from rllab.tf.distributions import RecurrentDiagonalGaussian
-from rllab.tf.misc import tensor_utils
-from rllab.tf.policies import StochasticPolicy
-from rllab.tf.misc.tensor_utils import enclosing_scope
 
 from rllab.core import Serializable
 from rllab.misc.overrides import overrides
+from rllab.tf.core import LayersPowered
+from rllab.tf.core import LSTMNetwork
+import rllab.tf.core.layers as L
+from rllab.tf.distributions import RecurrentDiagonalGaussian
+from rllab.tf.misc import tensor_utils
+from rllab.tf.misc.tensor_utils import enclosing_scope
+from rllab.tf.policies import StochasticPolicy
 
 
 class GaussianLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):

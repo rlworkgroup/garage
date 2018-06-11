@@ -1,12 +1,10 @@
-from rllab.tf.core import layers as L
-import tensorflow as tf
-import numpy as np
 import itertools
 
 import numpy as np
 import tensorflow as tf
 
 from rllab.core import Serializable
+from rllab.tf.core import layers as L
 from rllab.tf.core import Parameterized
 from rllab.tf.core import LayersPowered
 

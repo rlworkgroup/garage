@@ -2,9 +2,14 @@ import itertools
 
 import numpy as np
 import tensorflow as tf
+
+from rllab.core import Serializable
+from rllab.misc import ext
+from rllab.misc import krylov
+from rllab.misc import logger
+from rllab.misc import sliced_fun
 from rllab.tf.misc import tensor_utils
 from rllab.tf.misc.tensor_utils import enclosing_scope
-from rllab.misc import sliced_fun
 
 
 class PerlmutterHvp(object):

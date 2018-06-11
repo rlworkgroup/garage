@@ -1,16 +1,16 @@
 import numpy as np
 import tensorflow as tf
 
-import rllab.tf.core.layers as L
+from rllab.core import Serializable
+from rllab.misc import logger
 from rllab.tf.core import LayersPowered
 from rllab.tf.core import MLP
+import rllab.tf.core.layers as L
+from rllab.tf.distributions import DiagonalGaussian
 from rllab.tf.misc import tensor_utils
 from rllab.tf.optimizers import LbfgsOptimizer
 from rllab.tf.optimizers import PenaltyLbfgsOptimizer
-from rllab.tf.distributions import DiagonalGaussian
-from rllab.core import Serializable
-from rllab.misc import logger
-import tensorflow as tf
+
 
 
 class GaussianMLPRegressor(LayersPowered, Serializable):

@@ -1,7 +1,9 @@
 import numpy as np
-from rllab.tf.misc.tensor_utils import enclosing_scope
+import tensorflow as tf
+
 from rllab.tf.distributions import Categorical
 from rllab.tf.distributions import Distribution
+from rllab.tf.misc.tensor_utils import enclosing_scope
 
 TINY = 1e-8
 

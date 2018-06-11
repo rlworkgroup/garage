@@ -1,15 +1,16 @@
 import numpy as np
 import tensorflow as tf
-from rllab.tf.core import LayersPowered
-from rllab.tf.core import MLP
-from rllab.tf.misc import tensor_utils
-from rllab.tf.distributions import Categorical
-from rllab.tf.optimizers import PenaltyLbfgsOptimizer
-from rllab.tf.optimizers import LbfgsOptimizer
-import rllab.tf.core.layers as L
+
 from rllab.core import Serializable
 from rllab.misc import ext
 from rllab.misc import logger
+from rllab.tf.core import LayersPowered
+from rllab.tf.core import MLP
+import rllab.tf.core.layers as L
+from rllab.tf.distributions import Categorical
+from rllab.tf.misc import tensor_utils
+from rllab.tf.optimizers import PenaltyLbfgsOptimizer
+from rllab.tf.optimizers import LbfgsOptimizer
 
 NONE = list()
 

@@ -4,11 +4,10 @@ import tensorflow as tf
 
 from rllab.algos import RLAlgorithm
 import rllab.misc.logger as logger
+from rllab.sampler.utils import rollout
 from rllab.tf.policies.base import Policy
-import tensorflow as tf
 from rllab.tf.samplers import BatchSampler
 from rllab.tf.samplers import VectorizedSampler
-from rllab.sampler.utils import rollout
 
 
 class BatchPolopt(RLAlgorithm):

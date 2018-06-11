@@ -1,5 +1,3 @@
-
-
 from rllab.tf.algos import NPO
 from rllab.tf.optimizers import ConjugateGradientOptimizer
 

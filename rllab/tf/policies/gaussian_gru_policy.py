@@ -1,8 +1,12 @@
 import numpy as np
-import rllab.tf.core.layers as L
 import tensorflow as tf
+
+from rllab.core import Serializable
+from rllab.misc.overrides import overrides
+from rllab.misc import logger
 from rllab.tf.core import LayersPowered
 from rllab.tf.core import GRUNetwork
+import rllab.tf.core.layers as L
 from rllab.tf.distributions import RecurrentDiagonalGaussian
 from rllab.tf.misc import tensor_utils
 from rllab.tf.misc.tensor_utils import enclosing_scope

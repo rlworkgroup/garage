@@ -1,6 +1,3 @@
-
-
-
 from rllab.tf.core import Parameterized
 
 

@@ -1,5 +1,7 @@
 import numpy as np
 import tensorflow as tf
+
+from rllab.distributions.base import Distribution
 from rllab.tf.misc.tensor_utils import enclosing_scope
 
 TINY = 1e-8

@@ -5,9 +5,7 @@ from contrib.ros.envs.sawyer.push_env import PushEnv
 from rllab.baselines.linear_feature_baseline import LinearFeatureBaseline
 from rllab.envs.normalized_env import normalize
 from rllab.misc.instrument import run_experiment_lite
-
 from rllab.tf.algos.trpo import TRPO
-from rllab.tf.policies.gaussian_mlp_policy import GaussianMLPPolicy
 from rllab.tf.envs.base import TfEnv
 
 INITIAL_SIM_ROBOT_JOINT_POS = {
