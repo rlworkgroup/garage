@@ -1,4 +1,4 @@
-from rllab.core import Serializable
+from rllab.core.serializable import Serializable
 from rllab.spaces import Space
 
 

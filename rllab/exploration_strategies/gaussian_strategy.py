@@ -1,6 +1,6 @@
 import numpy as np
 
-from rllab.core import Serializable
+from rllab.core.serializable import Serializable
 from rllab.exploration_strategies import ExplorationStrategy
 from rllab.spaces import Box
 

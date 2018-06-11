@@ -1,6 +1,6 @@
 import numpy as np
 
-from rllab.core import Serializable
+from rllab.core.serializable import Serializable
 from rllab.envs import Env
 from rllab.envs import Step
 from rllab.spaces import Discrete

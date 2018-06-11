@@ -1,6 +1,7 @@
 """Pretty-print tabular data."""
 
 from collections import namedtuple
+import functools
 from functools import partial
 from itertools import zip_longest
 from platform import python_version_tuple
@@ -449,7 +450,7 @@ def _column_type(strings, has_invisible=True):
 
     """
     types = [_type(s, has_invisible) for s in strings]
-    return reduce(_more_generic, types, int)
+    return functools.reduce(_more_generic, types, int)
 
 
 def _format(val, valtype, floatfmt, missingval=""):

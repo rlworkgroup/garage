@@ -6,7 +6,7 @@ import xml.etree.ElementTree as ET
 import numpy as np
 
 from rllab import spaces
-from rllab.core import Serializable
+from rllab.core.serializable import Serializable
 from rllab.envs import Step
 from rllab.envs.mujoco.maze.maze_env_utils import construct_maze
 from rllab.envs.mujoco.maze.maze_env_utils import point_distance

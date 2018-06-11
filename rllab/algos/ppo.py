@@ -1,5 +1,5 @@
 from rllab.algos import NPO
-from rllab.core import Serializable
+from rllab.core.serializable import Serializable
 from rllab.optimizers import PenaltyLbfgsOptimizer
 
 

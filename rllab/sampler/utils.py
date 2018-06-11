@@ -2,7 +2,7 @@ import time
 
 import numpy as np
 
-from rllab.core import Serializable
+from rllab.core.serializable import Serializable
 from rllab.misc import tensor_utils
 from rllab.misc.ext import extract
 

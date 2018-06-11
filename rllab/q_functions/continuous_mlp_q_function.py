@@ -6,7 +6,7 @@ import theano.tensor as TT
 
 from rllab.core import batch_norm
 from rllab.core import LasagnePowered
-from rllab.core import Serializable
+from rllab.core.serializable import Serializable
 from rllab.misc import ext
 from rllab.q_functions import QFunction
 

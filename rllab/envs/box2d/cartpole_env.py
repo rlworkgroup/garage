@@ -1,6 +1,6 @@
 import numpy as np
 
-from rllab.core import Serializable
+from rllab.core.serializable import Serializable
 from rllab.envs.box2d.box2d_env import Box2DEnv
 from rllab.envs.box2d.parser import find_body
 from rllab.misc import autoargs

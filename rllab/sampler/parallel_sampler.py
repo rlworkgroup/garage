@@ -5,8 +5,8 @@ import numpy as np
 from rllab.misc import ext
 from rllab.misc import logger
 from rllab.misc import tensor_utils
-from rllab.sampler import SharedGlobal
-from rllab.sampler import singleton_pool
+from rllab.sampler.stateful_pool import SharedGlobal
+from rllab.sampler.stateful_pool import singleton_pool
 from rllab.sampler.utils import rollout
 
 

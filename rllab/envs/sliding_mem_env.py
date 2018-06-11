@@ -1,6 +1,6 @@
 import numpy as np
 
-from rllab.core import Serializable
+from rllab.core.serializable import Serializable
 from rllab.envs import Step
 from rllab.envs.proxy_env import ProxyEnv
 from rllab.misc import autoargs

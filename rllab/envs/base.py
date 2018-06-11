@@ -2,7 +2,7 @@ import collections
 
 from cached_property import cached_property
 
-from rllab.envs import EnvSpec
+from rllab.envs.env_spec import EnvSpec
 
 
 class Env(object):

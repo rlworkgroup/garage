@@ -15,7 +15,7 @@ from rllab.envs import GymEnv
 from rllab.envs import IdentificationEnv
 from rllab.envs import NoisyObservationEnv
 from rllab.envs import NormalizedEnv
-from rllab.envs import ProxyEnv
+from rllab.envs.proxy_env import ProxyEnv
 from rllab.envs.box2d import CarParkingEnv
 from rllab.envs.box2d import CartpoleEnv
 from rllab.envs.box2d import CartpoleSwingupEnv

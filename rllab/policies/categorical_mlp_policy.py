@@ -4,7 +4,7 @@ import numpy as np
 
 from rllab.core import LasagnePowered
 from rllab.core import MLP
-from rllab.core import Serializable
+from rllab.core.serializable import Serializable
 from rllab.distributions import Categorical
 from rllab.misc import ext
 from rllab.misc.overrides import overrides

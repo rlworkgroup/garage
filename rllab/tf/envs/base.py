@@ -1,7 +1,7 @@
 from cached_property import cached_property
 
 from rllab.envs import EnvSpec
-from rllab.envs import ProxyEnv
+from rllab.envs.proxy_env import ProxyEnv
 from rllab.spaces import Box as TheanoBox
 from rllab.spaces import Discrete as TheanoDiscrete
 from rllab.spaces import Product as TheanoProduct

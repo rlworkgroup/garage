@@ -4,7 +4,7 @@ from dm_control.rl.environment import StepType
 import numpy as np
 import pygame
 
-from rllab.core import Serializable
+from rllab.core.serializable import Serializable
 from rllab.envs import Env
 from rllab.envs import Step
 from rllab.envs.dm_control_viewer import DmControlViewer

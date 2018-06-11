@@ -3,7 +3,7 @@ import time
 import scipy.optimize
 import tensorflow as tf
 
-from rllab.core import Serializable
+from rllab.core.serializable import Serializable
 from rllab.misc import ext
 from rllab.tf.misc import tensor_utils
 from rllab.tf.misc.tensor_utils import enclosing_scope

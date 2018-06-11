@@ -1,8 +1,8 @@
 import theano
 import theano.tensor as TT
 
-from rllab.algos import BatchPolopt
-from rllab.core import Serializable
+from rllab.algos.batch_polopt import BatchPolopt
+from rllab.core.serializable import Serializable
 from rllab.misc import ext
 from rllab.misc import logger
 from rllab.misc.overrides import overrides

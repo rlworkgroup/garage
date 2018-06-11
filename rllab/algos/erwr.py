@@ -1,5 +1,5 @@
-from rllab.algos import VPG
-from rllab.core import Serializable
+from rllab.algos.vpg import VPG
+from rllab.core.serializable import Serializable
 from rllab.optimizers import LbfgsOptimizer
 
 

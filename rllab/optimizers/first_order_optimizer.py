@@ -6,10 +6,10 @@ import lasagne.updates
 import pyprind
 import theano
 
-from rllab.core import Serializable
+from rllab.core.serializable import Serializable
 from rllab.misc import ext
 from rllab.misc import logger
-from rllab.optimizers import BatchDataset
+from rllab.optimizers.minibatch_dataset import BatchDataset
 
 
 class FirstOrderOptimizer(Serializable):
