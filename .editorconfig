@@ -1,0 +1,39 @@
+# garage EditorConfig
+
+# top-most EditorConfig file
+root = true
+
+# Unix-style newlines with a newline ending every file
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# Python config
+[*.py]
+indent_style = space
+indent_size = 4
+max_line_length = 80
+
+# HTML, XML, and XML-like formats
+[*.{urdf,html,launch,mako,urdf,world,xml,css}]
+indent_style = space
+indent_size = 2
+
+# JS
+[*.js]
+indent_style = space
+indent_size = 2
+max_line_length = 80
+
+# YAML files
+[*.{yaml, yml}]
+indent_style = space
+indent_size = 2
+
+# shell scripts
+[*.sh]
+indent_style = space
+indent_size = 2
+max_line_length = 80
