@@ -6,10 +6,9 @@ from geometry_msgs.msg import Pose, Point, Quaternion
 import numpy as np
 import rospy
 
-from rllab.spaces import Box
-
 from contrib.ros.worlds.gazebo import Gazebo
 from contrib.ros.worlds.world import World
+from rllab.spaces import Box
 
 
 class Block(object):

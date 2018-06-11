@@ -1,7 +1,6 @@
-from rllab.envs.base import Step
-
 from contrib.ros.envs.ros_env import RosEnv
 from contrib.ros.util.common import rate_limited
+from rllab.envs.base import Step
 
 
 class SawyerEnv(RosEnv):
