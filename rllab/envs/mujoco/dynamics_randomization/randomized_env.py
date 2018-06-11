@@ -1,7 +1,7 @@
 import os.path as osp
 
-from mujoco_py import MjSim
 from mujoco_py import load_model_from_xml
+from mujoco_py import MjSim
 
 from rllab.core import Serializable
 from rllab.envs import Env

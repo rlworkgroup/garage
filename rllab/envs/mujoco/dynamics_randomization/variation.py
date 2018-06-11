@@ -1,4 +1,5 @@
 from enum import Enum
+
 from lxml import etree
 import numpy as np
 
