@@ -22,7 +22,7 @@ The Python code in garage conforms to the [PEP8](https://www.python.org/dev/peps
 ### garage-specific Python style
 These are garage-specific rules which are not part of the aforementioned style guides.
 * Python package imports should be sorted alphabetically within their PEP8 groupings. The sorting is alphabetical from left to right, ignoring case and Python keywords (i.e. `import`, `from`, `as`).
-* We prefer double-quoted strings ("string") over single-quoted strings ('string'), unless there is a compelling escape/formatting reason for using single quotes
+* We prefer double-quoted strings (`"foo"`) over single-quoted strings (`'foo'`), unless there is a compelling escape or formatting reason for using single quotes
 
 ### Other languages
 Non-Python files (including XML, HTML, CSS, JS, and Shell Scripts) should follow the [Google Style Guide](https://github.com/google/styleguide) for that language
@@ -49,7 +49,7 @@ Do's and Don'ts avoiding accidental merge commits and other headaches:
 * *Do* fetch upstream frequently and keep your `master` branch up-to-date with upstream
 * *Do* rebase your feature branch on `master` frequently
 
-Please see [this guide](https://gist.github.com/markreid/12e7c2203916b93d23c27a263f6091a0) for a tutorial on the workflow. Note: unlike the guide, we don't use separate `develop`/master branches, so all PRs should be based on `master` rather than `develop`
+Please see [this guide](https://gist.github.com/markreid/12e7c2203916b93d23c27a263f6091a0) for a tutorial on the workflow. Note: unlike the guide, we don't use separate `develop`/`master` branches, so all PRs should be based on `master` rather than `develop`
 
 ### Commit message format
 garage follows the git commit message guidelines documented [here](https://gist.github.com/robertpainsi/b632364184e70900af4ab688decf6f53) and [here](https://chris.beams.io/posts/git-commit/). 
