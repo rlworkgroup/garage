@@ -5,12 +5,15 @@ python:
 
 install:
   - pip install yapf
+  - pip install flake8
+  - pip install flake8-import-order
 
 git:
   depth: false
 
 script:
   - scripts/travisci/check_yapf.sh
+  - scripts/travisci/check_import_order.sh
 
 notifications:
   email: false
