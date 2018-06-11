@@ -1,4 +1,4 @@
-[![Docs](https://readthedocs.org/projects/garage/badge)](http://garage.readthedocs.org/en/latest/)
+[![Docs](https://readthedocs.org/projects/rlgarage/badge)](http://rlgarage.readthedocs.org/en/latest/)
 [![Build Status](https://travis-ci.com/rlworkgroup/garage.svg?branch=master)](https://travis-ci.com/rlworkgroup/garage)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/rlworkgroup/garage/blob/master/LICENSE)
 
@@ -6,17 +6,17 @@
 
 garage is a framework for developing and evaluating reinforcement learning algorithms. It includes a wide range of continuous control tasks plus implementations of algorithms.
 
-garage is fully compatible with [OpenAI Gym](https://gym.openai.com/). See [here](http://garage.readthedocs.io/en/latest/user/gym_integration.html) for instructions and examples.
+garage is fully compatible with [OpenAI Gym](https://gym.openai.com/). See [here](http://rlgarage.readthedocs.io/en/latest/user/gym_integration.html) for instructions and examples.
 
 garage only officially supports Python 3.5+.
 
-garage comes with support for running reinforcement learning experiments on an EC2 cluster, and tools for visualizing the results. See the [documentation](https://garage.readthedocs.io/en/latest/user/cluster.html) for details.
+garage comes with support for running reinforcement learning experiments on an EC2 cluster, and tools for visualizing the results. See the [documentation](https://rlgarage.readthedocs.io/en/latest/user/cluster.html) for details.
 
 The main modules use [Theano](http://deeplearning.net/software/theano/) as the underlying framework, and we have support for TensorFlow under [sandbox/rocky/tf](https://github.com/rlworkgroup/garage/tree/master/sandbox/rocky/tf).
 
 # Documentation
 
-Documentation is available online: [https://garage.readthedocs.org/en/latest/](https://garage.readthedocs.org/en/latest/).
+Documentation is available online at [https://rlgarage.readthedocs.org/en/latest/](https://rlgarage.readthedocs.org/en/latest/).
 
 # Citing garage
 
