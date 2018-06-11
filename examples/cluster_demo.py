@@ -1,10 +1,12 @@
+import sys
+
 from rllab.algos import TRPO
 from rllab.baselines import LinearFeatureBaseline
-from rllab.envs.box2d import CartpoleEnv
 from rllab.envs import normalize
-from rllab.misc import stub, run_experiment_lite
+from rllab.envs.box2d import CartpoleEnv
+from rllab.misc import run_experiment_lite
+from rllab.misc import stub
 from rllab.policies import GaussianMLPPolicy
-import sys
 
 
 def run_task(v):

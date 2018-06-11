@@ -7,9 +7,8 @@ import intera_interface
 import numpy as np
 import rospy
 
-from rllab.spaces import Box
-
 from contrib.ros.robots.robot import Robot
+from rllab.spaces import Box
 
 INITIAL_SIM_ROBOT_JOINT_POS = {
     'right_j0': -0.041662954890248294,

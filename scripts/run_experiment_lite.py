@@ -1,22 +1,22 @@
-import sys
-
-sys.path.append(".")
-
-from rllab.misc import is_iterable, set_seed
-from rllab.misc import concretize
-from rllab import config
-import rllab.misc.logger as logger
 import argparse
-import os.path as osp
-import datetime
-import dateutil.tz
 import ast
-import uuid
-import pickle as pickle
 import base64
+import datetime
+import logging
+import os.path as osp
+import pickle as pickle
+import sys
+sys.path.append(".")
+import uuid
+
+import dateutil.tz
 import joblib
 
-import logging
+from rllab import config
+from rllab.misc import concretize
+from rllab.misc import is_iterable
+from rllab.misc import set_seed
+import rllab.misc.logger as logger
 
 
 def run_experiment(argv):

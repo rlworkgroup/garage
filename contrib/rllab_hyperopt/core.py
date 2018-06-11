@@ -1,18 +1,21 @@
+import importlib
+import multiprocessing
 import os
 import sys
 sys.path.append('.')
 import threading
 import time
 import warnings
-import multiprocessing
-import importlib
+
+from hyperopt import fmin
+from hyperopt import STATUS_FAIL
+from hyperopt import STATUS_OK
+from hyperopt import tpe
+from hyperopt.mongoexp import MongoTrials
+import polling
 
 from rllab import config
 from rllab.misc import run_experiment_lite
-
-import polling
-from hyperopt import fmin, tpe, STATUS_OK, STATUS_FAIL
-from hyperopt.mongoexp import MongoTrials
 
 
 class S3SyncThread(threading.Thread):

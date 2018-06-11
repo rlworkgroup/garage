@@ -1,24 +1,23 @@
-# pylint: disable=no-init, too-few-public-methods, old-style-class
-
 import xml.etree.ElementTree as ET
 
 import Box2D
 import numpy as np
-from rllab.envs.box2d.parser.xml_types import XmlElem
-from rllab.envs.box2d.parser.xml_types import XmlChild
-from rllab.envs.box2d.parser.xml_types import XmlAttr
-from rllab.envs.box2d.parser.xml_types import XmlChildren
-from rllab.envs.box2d.parser.xml_attr_types import Tuple
-from rllab.envs.box2d.parser.xml_attr_types import Float
-from rllab.envs.box2d.parser.xml_attr_types import Choice
-from rllab.envs.box2d.parser.xml_attr_types import String
-from rllab.envs.box2d.parser.xml_attr_types import List
-from rllab.envs.box2d.parser.xml_attr_types import Point2D
-from rllab.envs.box2d.parser.xml_attr_types import Hex
-from rllab.envs.box2d.parser.xml_attr_types import Int
+
 from rllab.envs.box2d.parser.xml_attr_types import Angle
 from rllab.envs.box2d.parser.xml_attr_types import Bool
+from rllab.envs.box2d.parser.xml_attr_types import Choice
 from rllab.envs.box2d.parser.xml_attr_types import Either
+from rllab.envs.box2d.parser.xml_attr_types import Float
+from rllab.envs.box2d.parser.xml_attr_types import Hex
+from rllab.envs.box2d.parser.xml_attr_types import Int
+from rllab.envs.box2d.parser.xml_attr_types import List
+from rllab.envs.box2d.parser.xml_attr_types import Point2D
+from rllab.envs.box2d.parser.xml_attr_types import String
+from rllab.envs.box2d.parser.xml_attr_types import Tuple
+from rllab.envs.box2d.parser.xml_types import XmlAttr
+from rllab.envs.box2d.parser.xml_types import XmlChild
+from rllab.envs.box2d.parser.xml_types import XmlChildren
+from rllab.envs.box2d.parser.xml_types import XmlElem
 
 
 class XmlBox2D(XmlElem):

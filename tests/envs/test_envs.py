@@ -1,40 +1,40 @@
-import numpy as np
-from nose2 import tools
+import os
 
+from nose2 import tools
+MUJOCO_ENABLED = True
+try:
+    import mujoco_py
+except OSError:
+    print("Warning: Mujoco not installed. Skipping mujoco-related tests")
+    MUJOCO_ENABLED = False
+import numpy as np
+
+from rllab.envs import DelayedActionEnv
+from rllab.envs import GridWorldEnv
+from rllab.envs import GymEnv
+from rllab.envs import IdentificationEnv
+from rllab.envs import NoisyObservationEnv
+from rllab.envs import NormalizedEnv
+from rllab.envs import ProxyEnv
 from rllab.envs.box2d import CarParkingEnv
 from rllab.envs.box2d import CartpoleEnv
 from rllab.envs.box2d import CartpoleSwingupEnv
 from rllab.envs.box2d import DoublePendulumEnv
 from rllab.envs.box2d import MountainCarEnv
-from rllab.envs import GridWorldEnv
-from rllab.envs import IdentificationEnv
-import os
-
-MUJOCO_ENABLED = True
-
-try:
-    import mujoco_py
-    from rllab.envs.mujoco.half_cheetah_env import HalfCheetahEnv
-    from rllab.envs.mujoco.hopper_env import HopperEnv
+if MUJOCO_ENABLED:
+    from rllab.envs.mujoco import HalfCheetahEnv
+    from rllab.envs.mujoco import HopperEnv
     from rllab.envs.mujoco import InvertedDoublePendulumEnv
-    from rllab.envs.mujoco.point_env import PointEnv
-    from rllab.envs.mujoco.simple_humanoid_env import SimpleHumanoidEnv
-    from rllab.envs.mujoco.swimmer_env import SwimmerEnv
-    from rllab.envs.mujoco.walker2d_env import Walker2DEnv
-    from rllab.envs.mujoco.gather.point_gather_env import PointGatherEnv
-    from rllab.envs.mujoco.gather.swimmer_gather_env import SwimmerGatherEnv
-    from rllab.envs.mujoco.gather.ant_gather_env import AntGatherEnv
-    from rllab.envs.mujoco.maze.point_maze_env import PointMazeEnv
-    from rllab.envs.mujoco.maze.swimmer_maze_env import SwimmerMazeEnv
-    from rllab.envs.mujoco.maze.ant_maze_env import AntMazeEnv
-except OSError:
-    print("Warning: Mujoco not installed. Skipping mujoco-related tests")
-    MUJOCO_ENABLED = False
-
-from rllab.envs import NoisyObservationEnv, DelayedActionEnv
-from rllab.envs import NormalizedEnv
-from rllab.envs import ProxyEnv
-from rllab.envs import GymEnv
+    from rllab.envs.mujoco import PointEnv
+    from rllab.envs.mujoco import SimpleHumanoidEnv
+    from rllab.envs.mujoco import SwimmerEnv
+    from rllab.envs.mujoco import Walker2DEnv
+    from rllab.envs.mujoco.gather import AntGatherEnv
+    from rllab.envs.mujoco.gather import PointGatherEnv
+    from rllab.envs.mujoco.gather import SwimmerGatherEnv
+    from rllab.envs.mujoco.maze import AntMazeEnv
+    from rllab.envs.mujoco.maze import PointMazeEnv
+    from rllab.envs.mujoco.maze import SwimmerMazeEnv
 
 simple_env_classes = [
     GridWorldEnv,

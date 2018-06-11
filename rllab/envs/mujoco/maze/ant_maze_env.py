@@ -1,5 +1,5 @@
-from rllab.envs.mujoco.maze.maze_env import MazeEnv
-from rllab.envs.mujoco.ant_env import AntEnv
+from rllab.envs.mujoco import AntEnv
+from rllab.envs.mujoco.maze import MazeEnv
 
 
 class AntMazeEnv(MazeEnv):

@@ -1,27 +1,16 @@
-# -*- coding: utf-8 -*-
-# Taken from John's code
 """Pretty-print tabular data."""
 
 from collections import namedtuple
+from functools import partial
+from itertools import izip_longest
 from platform import python_version_tuple
 import re
 
-if python_version_tuple()[0] < "3":
-    from itertools import izip_longest
-    from functools import partial
-    _none_type = type(None)
-    _int_type = int
-    _float_type = float
-    _text_type = str
-    _binary_type = str
-else:
-    from itertools import zip_longest as izip_longest
-    from functools import reduce, partial
-    _none_type = type(None)
-    _int_type = int
-    _float_type = float
-    _text_type = str
-    _binary_type = bytes
+_none_type = type(None)
+_int_type = int
+_float_type = float
+_text_type = str
+_binary_type = str
 
 __all__ = ["tabulate", "tabulate_formats", "simple_separated_format"]
 __version__ = "0.7.2"

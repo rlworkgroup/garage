@@ -1,5 +1,5 @@
-from rllab.envs.mujoco.maze.maze_env import MazeEnv
-from rllab.envs.mujoco.point_env import PointEnv
+from rllab.envs.mujoco import PointEnv
+from rllab.envs.mujoco.maze import MazeEnv
 
 
 class PointMazeEnv(MazeEnv):

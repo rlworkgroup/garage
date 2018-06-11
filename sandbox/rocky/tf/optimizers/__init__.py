@@ -1,5 +1,5 @@
 from sandbox.rocky.tf.optimizers.conjugate_gradient_optimizer import ConjugateGradientOptimizer
 from sandbox.rocky.tf.optimizers.conjugate_gradient_optimizer import FiniteDifferenceHvp
-from sandbox.rocky.tf.optimizers.lbfgs_optimizer import LbfgsOptimizer
 from sandbox.rocky.tf.optimizers.first_order_optimizer import FirstOrderOptimizer
+from sandbox.rocky.tf.optimizers.lbfgs_optimizer import LbfgsOptimizer
 from sandbox.rocky.tf.optimizers.penalty_lbfgs_optimizer import PenaltyLbfgsOptimizer

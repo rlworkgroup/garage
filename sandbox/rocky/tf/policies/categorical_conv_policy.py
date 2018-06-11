@@ -1,10 +1,10 @@
 import tensorflow as tf
 
-import sandbox.rocky.tf.core.layers as L
 from rllab.core import Serializable
 from rllab.misc.overrides import overrides
 from sandbox.rocky.tf.core import ConvNetwork
 from sandbox.rocky.tf.core import LayersPowered
+import sandbox.rocky.tf.core.layers as L
 from sandbox.rocky.tf.distributions import Categorical
 from sandbox.rocky.tf.misc import tensor_utils
 from sandbox.rocky.tf.misc.tensor_utils import enclosing_scope

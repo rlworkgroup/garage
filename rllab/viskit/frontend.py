@@ -1,20 +1,21 @@
+import argparse
+import itertools
+import json
+import os
 import sys
 sys.path.append('.')
-import matplotlib
-import os
 
-matplotlib.use('Agg')
-import flask  # import Flask, render_template, send_from_directory
+import flask
+import matplotlib
+import numpy as np
+import plotly.graph_objs as go
+import plotly.offline as po
+
+from rllab.misc import ext
 from rllab.misc.ext import flatten
 from rllab.viskit import core
-from rllab.misc import ext
-import sys
-import argparse
-import json
-import numpy as np
-# import threading, webbrowser
-import plotly.offline as po
-import plotly.graph_objs as go
+
+matplotlib.use('Agg')
 
 
 def sliding_mean(data_array, window=5):
@@ -32,8 +33,6 @@ def sliding_mean(data_array, window=5):
 
     return np.array(new_list)
 
-
-import itertools
 
 app = flask.Flask(__name__, static_url_path='/static')
 

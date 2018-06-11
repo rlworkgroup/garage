@@ -1,4 +1,4 @@
-from .swimmer_env import SwimmerEnv
+from rllab.envs.mujoco import SwimmerEnv
 
 
 class Swimmer3DEnv(SwimmerEnv):

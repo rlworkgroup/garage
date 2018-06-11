@@ -1,9 +1,9 @@
 import numpy as np
 
-from rllab.envs.mujoco.hill.hill_env import HillEnv
-from rllab.envs.mujoco.swimmer3d_env import Swimmer3DEnv
-from rllab.misc.overrides import overrides
+from rllab.envs.mujoco import Swimmer3DEnv
+from rllab.envs.mujoco.hill import HillEnv
 import rllab.envs.mujoco.hill.terrain as terrain
+from rllab.misc.overrides import overrides
 from rllab.spaces import Box
 
 

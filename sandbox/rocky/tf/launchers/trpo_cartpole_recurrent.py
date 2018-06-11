@@ -1,14 +1,13 @@
-from sandbox.rocky.tf.algos import TRPO
 from rllab.baselines import LinearFeatureBaseline
-from rllab.envs.box2d import CartpoleEnv
 from rllab.envs import normalize
-from sandbox.rocky.tf.policies import GaussianGRUPolicy
-from sandbox.rocky.tf.policies import GaussianLSTMPolicy
-from sandbox.rocky.tf.envs import TfEnv
+from rllab.envs.box2d import CartpoleEnv
+from rllab.misc import run_experiment_lite
+from sandbox.rocky.tf.algos import TRPO
 import sandbox.rocky.tf.core.layers as L
+from sandbox.rocky.tf.envs import TfEnv
 from sandbox.rocky.tf.optimizers import ConjugateGradientOptimizer
 from sandbox.rocky.tf.optimizers import FiniteDifferenceHvp
-from rllab.misc import stub, run_experiment_lite
+from sandbox.rocky.tf.policies import GaussianLSTMPolicy
 
 env = TfEnv(normalize(CartpoleEnv()))
 

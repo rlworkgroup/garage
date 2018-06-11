@@ -1,16 +1,16 @@
-from rllab.algos import RLAlgorithm
-
-import theano.tensor as TT
 import numpy as np
+import theano.tensor as TT
 
-from rllab.misc import ext
-from rllab.sampler import parallel_sampler, stateful_pool
-from rllab.misc.special import discount_cumsum
-from rllab.sampler.utils import rollout
+from rllab.algos import cma_es_lib
+from rllab.algos import RLAlgorithm
 from rllab.core import Serializable
+from rllab.misc import ext
 import rllab.misc.logger as logger
+from rllab.misc.special import discount_cumsum
 import rllab.plotter as plotter
-from . import cma_es_lib
+from rllab.sampler import parallel_sampler
+from rllab.sampler import stateful_pool
+from rllab.sampler.utils import rollout
 
 
 def sample_return(G, params, max_path_length, discount):

@@ -1,6 +1,7 @@
-from rllab.spaces import Space
-import tensorflow as tf
 import numpy as np
+import tensorflow as tf
+
+from rllab.spaces import Space
 
 
 class Product(Space):

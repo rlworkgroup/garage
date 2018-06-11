@@ -1,6 +1,7 @@
-import theano.tensor as TT
 import numpy as np
-from rllab.distributions import Distribution
+import theano.tensor as TT
+
 from rllab.distributions import DiagonalGaussian
+from rllab.distributions import Distribution
 
 RecurrentDiagonalGaussian = DiagonalGaussian

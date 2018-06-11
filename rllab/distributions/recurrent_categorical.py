@@ -1,6 +1,7 @@
-import theano.tensor as TT
 import numpy as np
 import theano
+import theano.tensor as TT
+
 from rllab.distributions import Categorical
 from rllab.distributions import Distribution
 

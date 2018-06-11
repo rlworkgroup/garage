@@ -1,12 +1,14 @@
-from rllab.envs.mujoco.mujoco_env import MujocoEnv
+import math
+
+import numpy as np
+
 from rllab.core import Serializable
 from rllab.envs import Step
-from rllab.misc.overrides import overrides
+from rllab.envs.mujoco import MujocoEnv
+from rllab.envs.mujoco.mujoco_env import q_inv
+from rllab.envs.mujoco.mujoco_env import q_mult
 from rllab.misc import logger
-
-from rllab.envs.mujoco.mujoco_env import q_mult, q_inv
-import numpy as np
-import math
+from rllab.misc.overrides import overrides
 
 
 class AntEnv(MujocoEnv, Serializable):

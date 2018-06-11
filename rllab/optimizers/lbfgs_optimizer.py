@@ -1,8 +1,12 @@
-from rllab.misc import compile_function, lazydict, flatten_tensor_variables
-from rllab.core import Serializable
-import theano
-import scipy.optimize
 import time
+
+import scipy.optimize
+import theano
+
+from rllab.core import Serializable
+from rllab.misc import compile_function
+from rllab.misc import flatten_tensor_variables
+from rllab.misc import lazydict
 
 
 class LbfgsOptimizer(Serializable):

@@ -1,14 +1,15 @@
+from collections import OrderedDict
+from functools import partial
+import time
+
+import lasagne.updates
+import pyprind
+import theano
+
+from rllab.core import Serializable
 from rllab.misc import ext
 from rllab.misc import logger
-from rllab.core import Serializable
-# from rllab.algo.first_order_method import parse_update_method
 from rllab.optimizers import BatchDataset
-from collections import OrderedDict
-import time
-import lasagne.updates
-import theano
-import pyprind
-from functools import partial
 
 
 class FirstOrderOptimizer(Serializable):

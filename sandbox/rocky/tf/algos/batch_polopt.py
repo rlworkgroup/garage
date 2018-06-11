@@ -1,11 +1,13 @@
 import time
+
+import tensorflow as tf
+
 from rllab.algos import RLAlgorithm
 import rllab.misc.logger as logger
-from sandbox.rocky.tf.policies.base import Policy
-import tensorflow as tf
+from rllab.sampler.utils import rollout
+from sandbox.rocky.tf.policies import Policy
 from sandbox.rocky.tf.samplers import BatchSampler
 from sandbox.rocky.tf.samplers import VectorizedSampler
-from rllab.sampler.utils import rollout
 
 
 class BatchPolopt(RLAlgorithm):

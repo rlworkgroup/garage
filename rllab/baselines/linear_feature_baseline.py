@@ -1,6 +1,7 @@
+import numpy as np
+
 from rllab.baselines import Baseline
 from rllab.misc.overrides import overrides
-import numpy as np
 
 
 class LinearFeatureBaseline(Baseline):

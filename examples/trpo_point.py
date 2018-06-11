@@ -1,6 +1,6 @@
+from examples.point_env import PointEnv
 from rllab.algos import TRPO
 from rllab.baselines import LinearFeatureBaseline
-from examples.point_env import PointEnv
 from rllab.envs import normalize
 from rllab.policies import GaussianMLPPolicy
 

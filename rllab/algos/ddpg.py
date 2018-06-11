@@ -1,16 +1,18 @@
-from rllab.algos import RLAlgorithm
-from rllab.misc.overrides import overrides
-from rllab.misc import special
-from rllab.misc import ext
-from rllab.sampler import parallel_sampler
-from rllab.plotter import plotter
 from functools import partial
-import rllab.misc.logger as logger
-import theano.tensor as TT
-import pickle as pickle
+import pickle
+
+import lasagne
 import numpy as np
 import pyprind
-import lasagne
+import theano.tensor as TT
+
+from rllab.algos import RLAlgorithm
+from rllab.misc import ext
+from rllab.misc import special
+import rllab.misc.logger as logger
+from rllab.misc.overrides import overrides
+from rllab.plotter import plotter
+from rllab.sampler import parallel_sampler
 
 
 def parse_update_method(update_method, **kwargs):

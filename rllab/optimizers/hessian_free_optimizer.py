@@ -1,8 +1,10 @@
-from rllab.misc import compile_function, lazydict
-from rllab.core import Serializable
-from rllab.optimizers import hf_optimizer
 import time
+
+from rllab.core import Serializable
+from rllab.misc import compile_function,
+from rllab.misc import lazydict
 from rllab.optimizers import BatchDataset
+from rllab.optimizers import hf_optimizer
 
 
 class HessianFreeOptimizer(Serializable):

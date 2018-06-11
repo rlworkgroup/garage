@@ -1,5 +1,5 @@
-from rllab.envs.mujoco.maze.maze_env import MazeEnv
-from rllab.envs.mujoco.swimmer_env import SwimmerEnv
+from rllab.envs.mujoco import MazeEnv
+from rllab.envs.mujoco import SwimmerEnv
 
 
 class SwimmerMazeEnv(MazeEnv):

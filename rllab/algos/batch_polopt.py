@@ -1,9 +1,9 @@
 from rllab.algos import RLAlgorithm
-from rllab.sampler import parallel_sampler
-from rllab.sampler.base import BaseSampler
 import rllab.misc.logger as logger
 from rllab.plotter import plotter
 from rllab.policies import Policy
+from rllab.sampler import parallel_sampler
+from rllab.sampler.base import BaseSampler
 from rllab.sampler.utils import rollout
 
 

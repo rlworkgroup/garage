@@ -1,6 +1,6 @@
 from rllab.algos import NPO
-from rllab.optimizers import ConjugateGradientOptimizer
 from rllab.misc import ext
+from rllab.optimizers import ConjugateGradientOptimizer
 
 
 class TNPG(NPO):

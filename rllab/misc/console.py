@@ -1,11 +1,11 @@
+import collections
+import errno
+import inspect
+import os
+import pydoc
+import shlex
 import sys
 import time
-import os
-import errno
-import shlex
-import pydoc
-import inspect
-import collections
 
 color2num = dict(
     gray=30,

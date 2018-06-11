@@ -326,6 +326,7 @@ From a python shell::
 # from __future__ import collections.MutableMapping
 # does not exist in future, otherwise Python 2.5 would work, since 0.91.01
 
+import collections
 import sys
 if not sys.version.startswith('2'):  # in python 3
     xrange = range
@@ -333,15 +334,8 @@ if not sys.version.startswith('2'):  # in python 3
     str = str
 else:
     input = raw_input  # in py2, input(x) == eval(raw_input(x))
-
 import time  # not really essential
-import collections
-import numpy as np
-# arange, cos, size, eye, inf, dot, floor, outer, zeros, linalg.eigh,
-# sort, argsort, random, ones,...
-from numpy import inf, array, dot, exp, log, sqrt, sum, isscalar, isfinite
-# to access the built-in sum fct:  ``__builtins__.sum`` or ``del sum``
-# removes the imported sum and recovers the shadowed build-in
+
 try:
     from matplotlib import pyplot
     savefig = pyplot.savefig  # now we can use cma.savefig() etc
@@ -365,6 +359,20 @@ except:
 
     print('Could not import matplotlib.pyplot, therefore ``cma.plot()``" +'
           ' etc. is not available')
+import numpy as np
+# arange, cos, size, eye, inf, dot, floor, outer, zeros, linalg.eigh,
+# sort, argsort, random, ones,...
+from numpy import array
+from numpy import dot
+from numpy import exp
+from numpy import inf
+from numpy import isfinite
+from numpy import isscalar
+from numpy import log
+from numpy import sqrt
+from numpy import sum
+# to access the built-in sum fct:  ``__builtins__.sum`` or ``del sum``
+# removes the imported sum and recovers the shadowed build-in
 
 __author__ = 'Nikolaus Hansen'
 __version__ = ("1.1.06  $Revision: 4129 $ "

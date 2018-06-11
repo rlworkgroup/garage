@@ -1,8 +1,11 @@
+import lasagne.layers as L
+import numpy as np
+
+from rllab.core import GRUNetwork
+from rllab.misc import ext
+
+
 def test_gru_network():
-    from rllab.core import GRUNetwork
-    import lasagne.layers as L
-    from rllab.misc import ext
-    import numpy as np
     network = GRUNetwork(
         input_shape=(2, 3),
         output_dim=5,

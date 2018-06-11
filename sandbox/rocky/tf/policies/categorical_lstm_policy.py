@@ -1,17 +1,18 @@
 import numpy as np
-import sandbox.rocky.tf.core.layers as L
 import tensorflow as tf
-from sandbox.rocky.tf.core import LayersPowered
-from sandbox.rocky.tf.core import LSTMNetwork, MLP
-from sandbox.rocky.tf.distributions import RecurrentCategorical
-from sandbox.rocky.tf.misc import tensor_utils
-from sandbox.rocky.tf.misc.tensor_utils import enclosing_scope
-from sandbox.rocky.tf.spaces import Discrete
-from sandbox.rocky.tf.policies import StochasticPolicy
 
 from rllab.core import Serializable
 from rllab.misc import special
 from rllab.misc.overrides import overrides
+from sandbox.rocky.tf.core import LayersPowered
+from sandbox.rocky.tf.core import LSTMNetwork
+from sandbox.rocky.tf.core import MLP
+import sandbox.rocky.tf.core.layers as L
+from sandbox.rocky.tf.distributions import RecurrentCategorical
+from sandbox.rocky.tf.misc import tensor_utils
+from sandbox.rocky.tf.misc.tensor_utils import enclosing_scope
+from sandbox.rocky.tf.policies import StochasticPolicy
+from sandbox.rocky.tf.spaces import Discrete
 
 
 class CategoricalLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):

@@ -1,17 +1,17 @@
-from rllab.core import LasagnePowered
 import lasagne.layers as L
-from rllab.core import ConvNetwork
-from rllab.distributions import Categorical
-from rllab.policies import StochasticPolicy
-from rllab.misc import tensor_utils
-from rllab.spaces import Discrete
+import lasagne.nonlinearities as NL
+import numpy as np
 
+from rllab.core import ConvNetwork
+from rllab.core import LasagnePowered
 from rllab.core import Serializable
+from rllab.distributions import Categorical
 from rllab.misc import ext
 from rllab.misc import logger
+from rllab.misc import tensor_utils
 from rllab.misc.overrides import overrides
-import numpy as np
-import lasagne.nonlinearities as NL
+from rllab.policies import StochasticPolicy
+from rllab.spaces import Discrete
 
 
 class CategoricalConvPolicy(StochasticPolicy, LasagnePowered):

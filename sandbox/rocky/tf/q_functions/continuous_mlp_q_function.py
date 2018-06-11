@@ -1,17 +1,16 @@
-from sandbox.rocky.tf.q_functions import QFunction
+import tensorflow as tf
+
 from rllab.core import Serializable
 from rllab.misc import ext
-
 from sandbox.rocky.tf.core import LayersPowered
 from sandbox.rocky.tf.core import MLP
+import sandbox.rocky.tf.core.layers as L
 from sandbox.rocky.tf.core.layers import batch_norm
 from sandbox.rocky.tf.distributions import Categorical
-from sandbox.rocky.tf.policies import StochasticPolicy
 from sandbox.rocky.tf.misc import tensor_utils
 from sandbox.rocky.tf.misc.tensor_utils import enclosing_scope
-
-import tensorflow as tf
-import sandbox.rocky.tf.core.layers as L
+from sandbox.rocky.tf.policies import StochasticPolicy
+from sandbox.rocky.tf.q_functions import QFunction
 
 
 class ContinuousMLPQFunction(QFunction, LayersPowered, Serializable):

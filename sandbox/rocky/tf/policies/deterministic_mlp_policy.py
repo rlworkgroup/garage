@@ -1,17 +1,16 @@
+import tensorflow as tf
+
 from rllab.core import Serializable
 from rllab.misc import ext
 from rllab.misc.overrides import overrides
 from sandbox.rocky.tf.core import LayersPowered
 from sandbox.rocky.tf.core import MLP
-from sandbox.rocky.tf.distributions import Categorical
-from sandbox.rocky.tf.policies import Policy
-from sandbox.rocky.tf.misc import tensor_utils
-
 import sandbox.rocky.tf.core.layers as L
 from sandbox.rocky.tf.core.layers import batch_norm
-
+from sandbox.rocky.tf.distributions import Categorical
+from sandbox.rocky.tf.misc import tensor_utils
+from sandbox.rocky.tf.policies import Policy
 from sandbox.rocky.tf.spaces import Discrete
-import tensorflow as tf
 
 
 class DeterministicMLPPolicy(Policy, LayersPowered, Serializable):

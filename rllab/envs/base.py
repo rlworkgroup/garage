@@ -1,6 +1,8 @@
-from .env_spec import EnvSpec
 import collections
+
 from cached_property import cached_property
+
+from rllab.envs import EnvSpec
 
 
 class Env(object):

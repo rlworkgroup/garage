@@ -1,5 +1,6 @@
-import tensorflow as tf
 import numpy as np
+import tensorflow as tf
+
 from sandbox.rocky.tf.distributions import Distribution
 from sandbox.rocky.tf.misc.tensor_utils import enclosing_scope
 

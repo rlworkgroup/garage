@@ -1,9 +1,11 @@
 import atexit
-from multiprocessing import Process, Queue
-import numpy as np
+from multiprocessing import Process
+from multiprocessing import Queue
 import platform
-from threading import Thread
 from queue import Empty
+from threading import Thread
+
+import numpy as np
 
 from rllab.sampler.utils import rollout
 

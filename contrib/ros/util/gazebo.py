@@ -1,7 +1,8 @@
 import os.path as osp
 
-from gazebo_msgs.srv import SpawnModel, DeleteModel
 from gazebo_msgs.msg import ModelState
+from gazebo_msgs.srv import DeleteModel
+from gazebo_msgs.srv import SpawnModel
 from geometry_msgs.msg import Pose
 import rospy
 

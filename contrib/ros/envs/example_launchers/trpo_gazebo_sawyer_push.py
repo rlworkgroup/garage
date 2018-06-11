@@ -3,17 +3,16 @@ import os.path as osp
 import numpy as np
 import rospy
 
+from contrib.ros.envs.example_launchers import model_dir
+from contrib.ros.envs.sawyer.push_env import PushEnv
+from contrib.ros.util.task_object_manager import TaskObject
+from contrib.ros.util.task_object_manager import TaskObjectManager
 from rllab.baselines.linear_feature_baseline import LinearFeatureBaseline
 from rllab.envs.normalized_env import normalize
 from rllab.misc.instrument import run_experiment_lite
-
 from sandbox.rocky.tf.algos.trpo import TRPO
+from sandbox.rocky.tf.envs import TfEnv
 from sandbox.rocky.tf.policies.gaussian_mlp_policy import GaussianMLPPolicy
-from sandbox.rocky.tf.envs.base import TfEnv
-
-from contrib.ros.envs.example_launchers import model_dir
-from contrib.ros.envs.sawyer.push_env import PushEnv
-from contrib.ros.util.task_object_manager import TaskObject, TaskObjectManager
 
 
 def run_task(*_):

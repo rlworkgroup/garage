@@ -2,18 +2,17 @@
 ROS environment for the Sawyer robot
 Every specific sawyer task environment should inherit it.
 """
-
-from geometry_msgs.msg import Pose, Point
+from geometry_msgs.msg import Point
+from geometry_msgs.msg import Pose
 import numpy as np
-
-from rllab.core.serializable import Serializable
-from rllab.envs.base import Step
-from rllab.spaces import Box
 
 from contrib.ros.envs.ros_env import RosEnv
 from contrib.ros.robots.sawyer import Sawyer
 from contrib.ros.util.common import rate_limited
 from contrib.ros.util.gazebo import Gazebo
+from rllab.core.serializable import Serializable
+from rllab.envs.base import Step
+from rllab.spaces import Box
 
 
 class SawyerEnv(RosEnv, Serializable):

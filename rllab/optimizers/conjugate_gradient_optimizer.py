@@ -1,13 +1,15 @@
+from _ast import Num
+import itertools  # noqa: I100,I201
+
+import numpy as np
+import theano
+import theano.tensor as TT
+
+from rllab.core import Serializable
 from rllab.misc import ext
 from rllab.misc import krylov
 from rllab.misc import logger
-from rllab.core import Serializable
-import theano.tensor as TT
-import theano
-import itertools
-import numpy as np
 from rllab.misc import sliced_fun
-from _ast import Num
 
 
 class PerlmutterHvp(Serializable):

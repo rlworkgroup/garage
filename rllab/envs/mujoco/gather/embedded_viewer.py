@@ -2,15 +2,15 @@ import ctypes
 from ctypes import byref
 from threading import Lock
 
+import mujoco_py
+import glfw  # noqa: I100
+# https://github.com/openai/mujoco-py/blob/6ac6ac203a875ef35b1505827264cadccbfd9f05/mujoco_py/builder.py#L61
 from mujoco_py import const as C
 from mujoco_py import functions
 from mujoco_py import MjRenderContext
 from mujoco_py import MjSim
 from mujoco_py.builder import cymj
 from mujoco_py.generated.const import CAT_ALL
-import mujoco_py
-import glfw
-# https://github.com/openai/mujoco-py/blob/6ac6ac203a875ef35b1505827264cadccbfd9f05/mujoco_py/builder.py#L61
 
 PyMjrRect = cymj.PyMjrRect
 PyMjvCamera = cymj.PyMjvCamera

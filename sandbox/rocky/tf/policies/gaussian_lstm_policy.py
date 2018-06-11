@@ -1,15 +1,15 @@
 import numpy as np
-import sandbox.rocky.tf.core.layers as L
 import tensorflow as tf
-from sandbox.rocky.tf.core import LayersPowered
-from sandbox.rocky.tf.core import LSTMNetwork
-from sandbox.rocky.tf.distributions import RecurrentDiagonalGaussian
-from sandbox.rocky.tf.misc import tensor_utils
-from sandbox.rocky.tf.policies import StochasticPolicy
-from sandbox.rocky.tf.misc.tensor_utils import enclosing_scope
 
 from rllab.core import Serializable
 from rllab.misc.overrides import overrides
+from sandbox.rocky.tf.core import LayersPowered
+from sandbox.rocky.tf.core import LSTMNetwork
+import sandbox.rocky.tf.core.layers as L
+from sandbox.rocky.tf.distributions import RecurrentDiagonalGaussian
+from sandbox.rocky.tf.misc import tensor_utils
+from sandbox.rocky.tf.misc.tensor_utils import enclosing_scope
+from sandbox.rocky.tf.policies import StochasticPolicy
 
 
 class GaussianLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):

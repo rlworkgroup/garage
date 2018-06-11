@@ -1,29 +1,28 @@
 import os
+os.environ['THEANO_FLAGS'] = 'device=cpu,mode=FAST_COMPILE,optimizer=None'
+
+from nose2 import tools
+import numpy as np
 
 from rllab.algos import CEM
 from rllab.algos import CMAES
-from rllab.algos import ERWR
-
-os.environ['THEANO_FLAGS'] = 'device=cpu,mode=FAST_COMPILE,optimizer=None'
-
-from rllab.algos import VPG
-from rllab.algos import TNPG
-from rllab.algos import PPO
-from rllab.algos import TRPO
-from rllab.algos import REPS
 from rllab.algos import DDPG
+from rllab.algos import ERWR
+from rllab.algos import PPO
+from rllab.algos import REPS
+from rllab.algos import TNPG
+from rllab.algos import TRPO
+from rllab.algos import VPG
+from rllab.baselines import ZeroBaseline
 from rllab.envs import GridWorldEnv
 from rllab.envs.box2d import CartpoleEnv
-from rllab.policies import CategoricalMLPPolicy
-from rllab.policies import CategoricalGRUPolicy
-from rllab.policies import GaussianMLPPolicy
-from rllab.policies import GaussianGRUPolicy
-from rllab.policies import DeterministicMLPPolicy
-from rllab.q_functions import ContinuousMLPQFunction
 from rllab.exploration_strategies import OUStrategy
-from rllab.baselines import ZeroBaseline
-from nose2 import tools
-import numpy as np
+from rllab.policies import CategoricalGRUPolicy
+from rllab.policies import CategoricalMLPPolicy
+from rllab.policies import DeterministicMLPPolicy
+from rllab.policies import GaussianGRUPolicy
+from rllab.policies import GaussianMLPPolicy
+from rllab.q_functions import ContinuousMLPQFunction
 
 common_batch_algo_args = dict(
     n_itr=1,

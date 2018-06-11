@@ -1,12 +1,12 @@
 import math
 
-import mujoco_py
 import glfw
+import mujoco_py
 import numpy as np
 
-from rllab.envs.mujoco.mujoco_env import MujocoEnv
-from rllab.envs.base import Step
 from rllab.core.serializable import Serializable
+from rllab.envs import Step
+from rllab.envs.mujoco import MujocoEnv
 from rllab.misc.overrides import overrides
 
 

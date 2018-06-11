@@ -4,10 +4,9 @@ Push task for the sawyer robot
 
 import numpy as np
 
-from rllab.core.serializable import Serializable
-
 from contrib.ros.envs import sawyer_env
 from contrib.ros.robots.sawyer import Sawyer
+from rllab.core.serializable import Serializable
 
 INITIAL_ROBOT_JOINT_POS = {
     'right_j0': -0.041662954890248294,

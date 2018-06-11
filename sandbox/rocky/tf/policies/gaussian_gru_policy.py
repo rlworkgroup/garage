@@ -1,16 +1,16 @@
 import numpy as np
-import sandbox.rocky.tf.core.layers as L
 import tensorflow as tf
-from sandbox.rocky.tf.core import LayersPowered
+
+from rllab.core import Serializable
+from rllab.misc import logger
+from rllab.misc.overrides import overrides
 from sandbox.rocky.tf.core import GRUNetwork
+from sandbox.rocky.tf.core import LayersPowered
+import sandbox.rocky.tf.core.layers as L
 from sandbox.rocky.tf.distributions import RecurrentDiagonalGaussian
 from sandbox.rocky.tf.misc import tensor_utils
 from sandbox.rocky.tf.misc.tensor_utils import enclosing_scope
 from sandbox.rocky.tf.policies import StochasticPolicy
-
-from rllab.core import Serializable
-from rllab.misc.overrides import overrides
-from rllab.misc import logger
 
 
 class GaussianGRUPolicy(StochasticPolicy, LayersPowered, Serializable):

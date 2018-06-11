@@ -1,8 +1,11 @@
-from rllab.algos import BatchSampler
-from math import exp, log
-from numpy import var
-import random
 import copy
+from math import exp
+from math import log
+import random
+
+from numpy import var
+
+from rllab.algos import BatchSampler
 
 
 class ISSampler(BatchSampler):

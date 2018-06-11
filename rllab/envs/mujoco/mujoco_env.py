@@ -1,11 +1,11 @@
-import tempfile
 import os
 import os.path as osp
+import tempfile
 import warnings
 
 from cached_property import cached_property
-import mako.template
 import mako.lookup
+import mako.template
 import mujoco_py
 from mujoco_py import functions
 from mujoco_py import load_model_from_path
@@ -16,9 +16,9 @@ import theano
 
 from rllab import spaces
 from rllab.envs import Env
-from rllab.misc.overrides import overrides
 from rllab.misc import autoargs
 from rllab.misc import logger
+from rllab.misc.overrides import overrides
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
 

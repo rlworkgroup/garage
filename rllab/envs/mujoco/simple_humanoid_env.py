@@ -1,10 +1,11 @@
-from rllab.envs.base import Step
-from rllab.envs.mujoco.mujoco_env import MujocoEnv
 import numpy as np
+
 from rllab.core import Serializable
-from rllab.misc.overrides import overrides
-from rllab.misc import logger
+from rllab.envs import Step
+from rllab.envs.mujoco import MujocoEnv
 from rllab.misc import autoargs
+from rllab.misc import logger
+from rllab.misc.overrides import overrides
 
 
 class SimpleHumanoidEnv(MujocoEnv, Serializable):

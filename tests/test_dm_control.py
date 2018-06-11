@@ -1,9 +1,8 @@
+from dm_control import suite
 import numpy as np
 
 from rllab.envs import DmControlEnv
 from rllab.envs import normalize
-
-from dm_control import suite
 
 
 def run_task(domain_name, task_name):

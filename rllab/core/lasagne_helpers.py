@@ -1,5 +1,5 @@
-from lasagne.layers import get_all_layers
 from lasagne import utils
+from lasagne.layers import get_all_layers
 
 
 def get_full_output(layer_or_layers, inputs=None, **kwargs):

@@ -1,25 +1,25 @@
+import logging
+import os
+import os.path as osp
+import traceback
+
 import gym
-import gym.wrappers
 import gym.envs
 import gym.spaces
-import traceback
-import logging
-
+import gym.wrappers
 try:
     from gym import logger as monitor_logger
-
     monitor_logger.setLevel(logging.WARNING)
 except Exception as e:
     traceback.print_exc()
 
-import os
-import os.path as osp
-from rllab.envs import Env, Step
 from rllab.core import Serializable
+from rllab.envs import Env
+from rllab.envs import Step
+from rllab.misc import logger
 from rllab.spaces import Box
 from rllab.spaces import Discrete
 from rllab.spaces import Product
-from rllab.misc import logger
 
 
 def convert_gym_space(space):

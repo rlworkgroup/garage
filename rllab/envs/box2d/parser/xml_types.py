@@ -1,5 +1,3 @@
-# pylint: disable=no-init, too-few-public-methods, old-style-class
-
 from types import LambdaType
 
 

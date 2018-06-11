@@ -1,5 +1,5 @@
 from rllab.core import Serializable
-from .base import Env
+from rllab.envs import Env
 
 
 class ProxyEnv(Env, Serializable):

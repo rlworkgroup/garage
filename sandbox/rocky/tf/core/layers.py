@@ -1,15 +1,15 @@
-# -*- coding: utf-8 -*-
+from collections import deque
+from collections import OrderedDict
+from difflib import get_close_matches
 import functools
-import numpy as np
+from inspect import getargspec
+from itertools import chain
 import math
+from warnings import warn
+
+import numpy as np
 import tensorflow as tf
 from tensorflow.python.training import moving_averages
-from collections import OrderedDict
-from collections import deque
-from itertools import chain
-from inspect import getargspec
-from difflib import get_close_matches
-from warnings import warn
 
 
 class G(object):

@@ -1,11 +1,12 @@
-import os.path as osp
-import numpy as np
 import csv
-import matplotlib.pyplot as plt
-import json
-import joblib
 from glob import glob
+import json
 import os
+import os.path as osp
+
+import joblib
+import matplotlib.pyplot as plt
+import numpy as np
 
 
 def plot_experiments(name_or_patterns,

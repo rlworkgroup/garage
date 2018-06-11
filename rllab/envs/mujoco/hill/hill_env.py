@@ -1,14 +1,14 @@
-import tempfile
 import os
+import tempfile
 import time
 
-import mako.template
 import mako.lookup
+import mako.template
 
-from rllab.envs.proxy_env import ProxyEnv
 from rllab.core import Serializable
-import rllab.envs.mujoco.mujoco_env as mujoco_env
+import rllab.envs.mujoco as mujoco_env
 import rllab.envs.mujoco.hill.terrain as terrain
+from rllab.envs.proxy_env import ProxyEnv
 from rllab.misc import logger
 
 MODEL_DIR = mujoco_env.MODEL_DIR

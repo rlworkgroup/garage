@@ -1,7 +1,7 @@
 from rllab.algos import TRPO
 from rllab.baselines import LinearFeatureBaseline
-from rllab.envs.box2d import CartpoleEnv
 from rllab.envs import normalize
+from rllab.envs.box2d import CartpoleEnv
 from rllab.policies import GaussianMLPPolicy
 
 env = normalize(CartpoleEnv())

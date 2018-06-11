@@ -1,20 +1,21 @@
-import numpy as np
 import lasagne
 import lasagne.layers as L
 import lasagne.nonlinearities as NL
+import numpy as np
 import theano
 import theano.tensor as TT
-from rllab.misc import compile_function
-from rllab.core import ParamLayer
-from rllab.core import LasagnePowered
+
 from rllab.core import ConvNetwork
+from rllab.core import LasagnePowered
+from rllab.core import ParamLayer
+from rllab.core import Serializable
+from rllab.distributions import DiagonalGaussian
+from rllab.misc import compile_function
+from rllab.misc import iterate_minibatches_generic
+from rllab.misc import logger
 from rllab.misc import tensor_utils
 from rllab.optimizers import LbfgsOptimizer
 from rllab.optimizers import PenaltyLbfgsOptimizer
-from rllab.distributions import DiagonalGaussian
-from rllab.core import Serializable
-from rllab.misc import iterate_minibatches_generic
-from rllab.misc import logger
 
 
 class GaussianConvRegressor(LasagnePowered):

@@ -1,12 +1,14 @@
-import boto3
-import re
-import sys
 import json
-import botocore
 import os
-from rllab.misc import console
-from rllab import config
+import re
 from string import Template
+import sys
+
+import boto3
+import botocore
+
+from rllab import config
+from rllab.misc import console
 
 ACCESS_KEY = os.environ["AWS_ACCESS_KEY"]
 ACCESS_SECRET = os.environ["AWS_ACCESS_SECRET"]

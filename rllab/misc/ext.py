@@ -1,12 +1,14 @@
-from path import Path
-import sys
+from collections import OrderedDict
+from functools import reduce
+import operator
 import pickle as pickle
 import random
-from rllab.misc import colorize, Message
-from collections import OrderedDict
+import sys
+
 import numpy as np
-import operator
-from functools import reduce
+from path import Path
+
+from rllab.misc import colorize, Message
 
 sys.setrecursionlimit(50000)
 

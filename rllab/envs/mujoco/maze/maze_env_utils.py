@@ -1,10 +1,13 @@
-from rllab.misc import logger
-import matplotlib as mpl
-mpl.use('Agg')
-import matplotlib.pyplot as plt
-import os.path as osp
-import numpy as np
 import math
+import os.path as osp
+
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+import numpy as np
+
+from rllab.misc import logger
+
+mpl.use('Agg')
 
 
 def line_intersect(pt1, pt2, ptA, ptB):

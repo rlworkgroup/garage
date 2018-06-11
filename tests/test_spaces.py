@@ -1,5 +1,8 @@
-from rllab.spaces import Product, Discrete, Box
 import numpy as np
+
+from rllab.spaces import Box
+from rllab.spaces import Discrete
+from rllab.spaces import Product
 
 
 def test_product_space():

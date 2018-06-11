@@ -1,13 +1,14 @@
 import lasagne
+import lasagne.init
 import lasagne.layers as L
 import lasagne.nonlinearities as NL
-import lasagne.init
 import theano.tensor as TT
-from rllab.q_functions import QFunction
-from rllab.core import LasagnePowered
+
 from rllab.core import batch_norm
+from rllab.core import LasagnePowered
 from rllab.core import Serializable
 from rllab.misc import ext
+from rllab.q_functions import QFunction
 
 
 class ContinuousMLPQFunction(QFunction, LasagnePowered):

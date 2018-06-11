@@ -1,14 +1,14 @@
-from itertools import chain, zip_longest
-
-from rllab.algos import RLAlgorithm
+from itertools import chain
+from itertools import zip_longest
 
 import numpy as np
 
-from rllab.misc.special import discount_cumsum
-from rllab.sampler.utils import rollout
+from rllab.algos import RLAlgorithm
 from rllab.core import Serializable
 import rllab.misc.logger as logger
+from rllab.misc.special import discount_cumsum
 import rllab.plotter as plotter
+from rllab.sampler.utils import rollout
 
 
 def _get_stderr_lb(x):

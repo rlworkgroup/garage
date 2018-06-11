@@ -1,6 +1,6 @@
-from rllab.optimizers import PenaltyLbfgsOptimizer
 from rllab.algos import NPO
 from rllab.core import Serializable
+from rllab.optimizers import PenaltyLbfgsOptimizer
 
 
 class PPO(NPO, Serializable):

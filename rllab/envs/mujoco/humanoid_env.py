@@ -1,4 +1,4 @@
-from .simple_humanoid_env import SimpleHumanoidEnv
+from rllab.envs.mujoco import SimpleHumanoidEnv
 
 
 # Taken from Wojciech's code

@@ -1,12 +1,12 @@
+import lasagne.init
 import lasagne.layers as L
 import lasagne.nonlinearities as NL
-import lasagne.init
 import numpy as np
 import theano.tensor as TT
 
-from rllab.core import ParamLayer
-from rllab.core import LasagnePowered
 from rllab.core import GRUNetwork
+from rllab.core import LasagnePowered
+from rllab.core import ParamLayer
 from rllab.core import Serializable
 from rllab.distributions import RecurrentDiagonalGaussian
 from rllab.misc import ext

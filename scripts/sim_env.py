@@ -6,7 +6,6 @@ import numpy as np
 import pygame
 
 from rllab.envs import Env
-# from rllab.env.base import MDP
 from rllab.misc import load_class
 
 

@@ -1,13 +1,13 @@
-import sandbox.rocky.tf.core.layers as L
 import numpy as np
 import tensorflow as tf
 
+from rllab.core import Serializable
+from rllab.misc import logger
 from sandbox.rocky.tf.core import LayersPowered
 from sandbox.rocky.tf.core import MLP
-from rllab.core import Serializable
+import sandbox.rocky.tf.core.layers as L
 from sandbox.rocky.tf.distributions import Bernoulli
 from sandbox.rocky.tf.misc import tensor_utils
-from rllab.misc import logger
 from sandbox.rocky.tf.optimizers import ConjugateGradientOptimizer
 from sandbox.rocky.tf.optimizers import LbfgsOptimizer
 

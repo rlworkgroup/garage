@@ -1,16 +1,16 @@
 import numpy as np
-
 import tensorflow as tf
-from sandbox.rocky.tf.core import LayersPowered
-from sandbox.rocky.tf.core import MLP
-from sandbox.rocky.tf.misc import tensor_utils
-from sandbox.rocky.tf.distributions import Categorical
-from sandbox.rocky.tf.optimizers import PenaltyLbfgsOptimizer
-from sandbox.rocky.tf.optimizers import LbfgsOptimizer
-import sandbox.rocky.tf.core.layers as L
+
 from rllab.core import Serializable
 from rllab.misc import ext
 from rllab.misc import logger
+from sandbox.rocky.tf.core import LayersPowered
+from sandbox.rocky.tf.core import MLP
+import sandbox.rocky.tf.core.layers as L
+from sandbox.rocky.tf.distributions import Categorical
+from sandbox.rocky.tf.misc import tensor_utils
+from sandbox.rocky.tf.optimizers import LbfgsOptimizer
+from sandbox.rocky.tf.optimizers import PenaltyLbfgsOptimizer
 
 NONE = list()
 

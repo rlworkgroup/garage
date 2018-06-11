@@ -1,13 +1,13 @@
-import pygame
-import numpy as np
-
 from dm_control import suite
-from dm_control.rl.environment import StepType
 from dm_control.rl.control import flatten_observation
+from dm_control.rl.environment import StepType
+import numpy as np
+import pygame
 
-from rllab.envs import Env, Step
-from rllab.envs.dm_control_viewer import DmControlViewer
 from rllab.core import Serializable
+from rllab.envs import Env
+from rllab.envs import Step
+from rllab.envs.dm_control_viewer import DmControlViewer
 from rllab.spaces import Box
 from rllab.spaces import Discrete
 

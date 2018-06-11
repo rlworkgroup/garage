@@ -1,16 +1,14 @@
-import csv
-from rllab.misc import ext
-import os
-import numpy as np
 import base64
-import pickle
-import json
+import csv
 import itertools
-# import ipywidgets
-# import IPython.display
-# import plotly.offline as po
-# import plotly.graph_objs as go
+import json
+import os
 import pdb
+import pickle
+
+import numpy as np
+
+from rllab.misc import ext
 
 
 def unique(l):

@@ -1,6 +1,6 @@
 from rllab.algos import NPO
-from rllab.optimizers import ConjugateGradientOptimizer
 from rllab.core import Serializable
+from rllab.optimizers import ConjugateGradientOptimizer
 
 
 class TRPO(NPO):

@@ -1,5 +1,5 @@
-from rllab.envs.mujoco.gather.gather_env import GatherEnv
-from rllab.envs.mujoco.swimmer_env import SwimmerEnv
+from rllab.envs.mujoco import SwimmerEnv
+from rllab.envs.mujoco.gather import GatherEnv
 
 
 class SwimmerGatherEnv(GatherEnv):

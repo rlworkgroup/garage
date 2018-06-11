@@ -8,7 +8,6 @@ from rllab.misc import ext
 from rllab.misc import logger
 from rllab.optimizers import BatchDataset
 from sandbox.rocky.tf.misc import tensor_utils
-# from rllab.algo.first_order_method import parse_update_method
 from sandbox.rocky.tf.misc.tensor_utils import enclosing_scope
 
 

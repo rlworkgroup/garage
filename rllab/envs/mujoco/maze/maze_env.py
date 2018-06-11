@@ -1,20 +1,21 @@
+import math
 import os.path as osp
 import tempfile
 import xml.etree.ElementTree as ET
-import math
+
 import numpy as np
 
 from rllab import spaces
-from rllab.envs import Step
-from rllab.envs.proxy_env import ProxyEnv
-from rllab.envs.mujoco.maze.maze_env_utils import construct_maze
-from rllab.envs.mujoco.mujoco_env import MODEL_DIR, BIG
-from rllab.envs.mujoco.maze.maze_env_utils import ray_segment_intersect
-from rllab.envs.mujoco.maze.maze_env_utils import point_distance
 from rllab.core import Serializable
-from rllab.misc.overrides import overrides
-
+from rllab.envs import Step
+from rllab.envs.mujoco.maze.maze_env_utils import construct_maze
+from rllab.envs.mujoco.maze.maze_env_utils import point_distance
+from rllab.envs.mujoco.maze.maze_env_utils import ray_segment_intersect
+from rllab.envs.mujoco.mujoco_env import BIG
+from rllab.envs.mujoco.mujoco_env import MODEL_DIR
+from rllab.envs.proxy_env import ProxyEnv
 from rllab.misc import logger
+from rllab.misc.overrides import overrides
 
 
 class MazeEnv(ProxyEnv, Serializable):

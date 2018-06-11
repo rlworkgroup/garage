@@ -1,10 +1,11 @@
-from rllab.envs.box2d import CartpoleEnv
-from rllab.policies import GaussianMLPPolicy
-from rllab.envs import normalize
+from lasagne.updates import adam
 import numpy as np
 import theano
 import theano.tensor as TT
-from lasagne.updates import adam
+
+from rllab.envs import normalize
+from rllab.envs.box2d import CartpoleEnv
+from rllab.policies import GaussianMLPPolicy
 
 # normalize() makes sure that the actions for the environment lies
 # within the range [-1, 1] (only works for environments with continuous actions)

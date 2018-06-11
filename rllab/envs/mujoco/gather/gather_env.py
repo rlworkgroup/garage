@@ -5,7 +5,7 @@ import tempfile
 import xml.etree.ElementTree as ET
 
 import mujoco_py
-import glfw
+import glfw  # noqa: I100
 # https://github.com/openai/mujoco-py/blob/6ac6ac203a875ef35b1505827264cadccbfd9f05/mujoco_py/builder.py#L61
 from mujoco_py import functions
 from mujoco_py import load_model_from_path
@@ -13,15 +13,15 @@ from mujoco_py import MjRenderContext
 from mujoco_py import MjViewer
 import numpy as np
 
-from rllab.misc import logger
 from rllab import spaces
 from rllab.core import Serializable
-from rllab.envs.proxy_env import ProxyEnv
 from rllab.envs import Step
 from rllab.envs.mujoco.gather.embedded_viewer import EmbeddedViewer
-from rllab.envs.mujoco.mujoco_env import MODEL_DIR
 from rllab.envs.mujoco.mujoco_env import BIG
+from rllab.envs.mujoco.mujoco_env import MODEL_DIR
+from rllab.envs.proxy_env import ProxyEnv
 from rllab.misc import autoargs
+from rllab.misc import logger
 from rllab.misc.overrides import overrides
 
 APPLE = 0

@@ -1,8 +1,9 @@
 import numpy as np
-from .base import Env
-from rllab.spaces import Discrete
-from rllab.envs import Step
+
 from rllab.core import Serializable
+from rllab.envs import Env
+from rllab.envs import Step
+from rllab.spaces import Discrete
 
 MAPS = {
     "chain": ["GFFFFFFFFFFFFFSFFFFFFFFFFFFFG"],

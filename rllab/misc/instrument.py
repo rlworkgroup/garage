@@ -1,30 +1,29 @@
+import base64
+import collections
+from contextlib import contextmanager
+import datetime
+import errno
+import hashlib
+import inspect
+from io import StringIO
+import json
 import os
+import os.path as osp
+import pickle
 import re
 import subprocess
-import base64
-import os.path as osp
-import pickle as pickle
-import inspect
-import hashlib
 import sys
-from contextlib import contextmanager
-
-import errno
-
-from rllab.core import Serializable
-from rllab import config
-from rllab.misc import mkdir_p
-from rllab.misc import ext
-from io import StringIO
-import datetime
-import dateutil.tz
-import json
 import time
+
+import dateutil.tzq
 import numpy as np
 
+from rllab import config
+from rllab.core import Serializable
 from rllab.misc import AttrDict
+from rllab.misc import ext
+from rllab.misc import mkdir_p
 from rllab.viskit.core import flatten
-import collections
 
 
 class StubBase(object):

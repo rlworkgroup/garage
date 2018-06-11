@@ -1,15 +1,17 @@
-from rllab.sampler.utils import rollout
-from rllab.algos import BatchPolopt
 import argparse
-import joblib
-import uuid
+import json
 import os
 import random
-import numpy as np
-import json
 import subprocess
+import uuid
+
+import joblib
+import numpy as np
+
+from rllab.algos import BatchPolopt
 from rllab.misc import logger
 from rllab.misc import to_local_command
+from rllab.sampler.utils import rollout
 
 filename = str(uuid.uuid4())
 

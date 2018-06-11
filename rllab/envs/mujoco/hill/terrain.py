@@ -1,15 +1,15 @@
-from scipy.stats import multivariate_normal
-from scipy.signal import convolve2d
+import os
+
 import matplotlib
 try:
     matplotlib.pyplot.figure()
     matplotlib.pyplot.close()
 except Exception:
     matplotlib.use('Agg')
-
 import matplotlib.pyplot as plt
 import numpy as np
-import os
+from scipy.signal import convolve2d
+from scipy.stats import multivariate_normal
 
 # the colormap should assign light colors to low values
 TERRAIN_CMAP = 'Greens'

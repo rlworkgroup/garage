@@ -1,8 +1,9 @@
 from nose2.tools import such
-from rllab.envs.box2d import CartpoleEnv
-from rllab.policies import GaussianMLPPolicy
+
 from rllab.algos import TRPO
 from rllab.baselines import ZeroBaseline
+from rllab.envs.box2d import CartpoleEnv
+from rllab.policies import GaussianMLPPolicy
 
 with such.A("Issue #3") as it:
 

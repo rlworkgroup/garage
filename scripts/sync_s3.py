@@ -1,9 +1,10 @@
-import sys
-sys.path.append('.')
-from rllab import config
-import os
 import argparse
 import ast
+import os
+import sys
+sys.path.append('.')
+
+from rllab import config
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

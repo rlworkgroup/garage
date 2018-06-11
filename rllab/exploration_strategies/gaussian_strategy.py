@@ -1,7 +1,8 @@
-from rllab.core import Serializable
-from rllab.spaces import Box
-from rllab.exploration_strategies import ExplorationStrategy
 import numpy as np
+
+from rllab.core import Serializable
+from rllab.exploration_strategies import ExplorationStrategy
+from rllab.spaces import Box
 
 
 class GaussianStrategy(ExplorationStrategy, Serializable):

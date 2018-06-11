@@ -1,8 +1,8 @@
 import inspect
 import multiprocessing as mp
+import sys
 import time
 import traceback
-import sys
 
 from joblib.pool import MemmapingPool
 import pyprind
@@ -64,7 +64,7 @@ class StatefulPool(object):
 
     def run_each(self, runner, args_list=None):
         """
-        Run the method on each worker process, and collect the result of 
+        Run the method on each worker process, and collect the result of
         execution.
 
         The runner method will receive 'G' as its first argument, followed by
@@ -136,7 +136,7 @@ class StatefulPool(object):
         def collect_once(G):
             return 'a', 1
 
-        stateful_pool.run_collect(collect_once, threshold=3) 
+        stateful_pool.run_collect(collect_once, threshold=3)
         # should return ['a', 'a', 'a']
 
         :param collector:

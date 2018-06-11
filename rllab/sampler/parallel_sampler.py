@@ -1,10 +1,13 @@
-from rllab.sampler.utils import rollout
-from rllab.sampler import singleton_pool, SharedGlobal
+import pickle
+
+import numpy as np
+
 from rllab.misc import ext
 from rllab.misc import logger
 from rllab.misc import tensor_utils
-import pickle
-import numpy as np
+from rllab.sampler import SharedGlobal
+from rllab.sampler import singleton_pool
+from rllab.sampler.utils import rollout
 
 
 def _worker_init(G, id):

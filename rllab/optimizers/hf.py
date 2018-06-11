@@ -1,13 +1,13 @@
-# Author: Nicolas Boulanger-Lewandowski
-# University of Montreal, 2012-2013
+import collections
+import os
+import pickle
+import sys
 
-import numpy, sys
+import numpy
 import theano
 import theano.tensor as T
-import pickle
-import os
+
 from rllab.misc import compile_function
-import collections
 
 
 def gauss_newton_product(

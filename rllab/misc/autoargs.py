@@ -1,5 +1,6 @@
-from rllab.misc import colorize
 import inspect
+
+from rllab.misc import colorize
 
 
 # pylint: disable=redefined-builtin

@@ -1,9 +1,9 @@
+from contrib.alexbeloi.is_sampler import ISSampler
 from rllab.algos import VPG
 from rllab.baselines import LinearFeatureBaseline
-from rllab.envs.box2d import CartpoleEnv
 from rllab.envs import normalize
+from rllab.envs.box2d import CartpoleEnv
 from rllab.policies import GaussianMLPPolicy
-from contrib.alexbeloi.is_sampler import ISSampler
 """
 Example using VPG with ISSampler, iterations alternate between live and
 importance sampled iterations.
