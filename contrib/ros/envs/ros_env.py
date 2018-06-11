@@ -1,5 +1,4 @@
 import numpy as np
-import rospy
 
 from rllab.core.serializable import Serializable
 from rllab.envs.base import Env
@@ -11,10 +10,16 @@ class RosEnv(Env, Serializable):
     Superclass for all ros environment
     """
 
-    def __init__(self):
+    def __init__(self, simulated=False):
+        """
+        :param simulated: bool
+                if the environment is for real robot or simulation
+        """
         Serializable.quick_init(self, locals())
 
         np.random.RandomState(get_seed())
+
+        self._initial_setup()
 
     def initialize(self):
         # TODO (gh/74: Add initialize interface for robot)
@@ -37,12 +42,33 @@ class RosEnv(Env, Serializable):
     def observation_space(self):
         raise NotImplementedError
 
+    def _initial_setup(self):
+        raise NotImplementedError
+
     # ====================================================
     # Need to be implemented in specific robot env
     # ====================================================
     def sample_goal(self):
         """
         Samples a new goal and returns it.
+        """
+        raise NotImplementedError
+
+    def get_observation(self):
+        """
+        Get observation
+        """
+        raise NotImplementedError
+
+    def done(self, achieved_goal, goal):
+        """
+        :return if done: bool
+        """
+        raise NotImplementedError
+
+    def reward(self, achieved_goal, goal):
+        """
+        Compute the reward for current step.
         """
         raise NotImplementedError
 

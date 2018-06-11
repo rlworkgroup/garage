@@ -10,40 +10,18 @@ import rospy
 from contrib.ros.robots.robot import Robot
 from rllab.spaces import Box
 
-INITIAL_SIM_ROBOT_JOINT_POS = {
-    'right_j0': -0.041662954890248294,
-    'right_j1': -1.0258291091425074,
-    'right_j2': 0.0293680414401436,
-    'right_j3': 2.17518162913313,
-    'right_j4': -0.06703022873354225,
-    'right_j5': 0.3968371433926965,
-    'right_j6': 1.7659649178699421,
-}
-
-INITIAL_REAL_ROBOT_JOINT_POS = {
-    'right_j0': -0.140923828125,
-    'right_j1': -1.2789248046875,
-    'right_j2': -3.043166015625,
-    'right_j3': -2.139623046875,
-    'right_j4': -0.047607421875,
-    'right_j5': -0.7052822265625,
-    'right_j6': -1.4102060546875,
-}
-
 
 class Sawyer(Robot):
-    def __init__(self, simulated=False, control_mode='position'):
+    def __init__(self, initial_joint_pos, control_mode='position'):
         """
         :param initial_joint_pos: {str: float}
-                            {'joint_name': position_value}
+                            {'joint_name': position_value}, and also initial_joint_pos should include all of the
+                            joints that user wants to control and observe.
         """
         Robot.__init__(self)
         self._limb = intera_interface.Limb('right')
         self._gripper = intera_interface.Gripper()
-        if simulated:
-            self._initial_joint_pos = INITIAL_SIM_ROBOT_JOINT_POS
-        else:
-            self._initial_joint_pos = INITIAL_REAL_ROBOT_JOINT_POS
+        self._initial_joint_pos = initial_joint_pos
         self._control_mode = control_mode
         self._joint_limits = rospy.wait_for_message('/robot/joint_limits',
                                                     JointLimits)
