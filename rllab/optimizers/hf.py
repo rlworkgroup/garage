@@ -205,8 +205,8 @@ class hf_optimizer:
         result = lambda_ * vector  # Tikhonov damping
         for inputs in self.cg_dataset.iterate(False):
             result += self.list_to_flat(
-                self.function_Gv(*(inputs + v + [lambda_ * self.mu]))
-            ) / self.cg_dataset.number_batches
+                self.function_Gv(*(inputs + v + [lambda_ * self.mu]
+                                   ))) / self.cg_dataset.number_batches
         return result
 
     def train(self,

@@ -134,8 +134,8 @@ class PenaltyLbfgsOptimizer(Serializable):
                 x0=cur_params,
                 maxiter=self._max_opt_itr)
 
-            _, try_loss, try_constraint_val = f_penalized_loss(*(
-                inputs + (try_penalty, )))
+            _, try_loss, try_constraint_val = f_penalized_loss(
+                *(inputs + (try_penalty, )))
 
             logger.log('penalty %f => loss %f, %s %f' %
                        (try_penalty, try_loss, self._constraint_name,

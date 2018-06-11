@@ -88,8 +88,8 @@ class Parameterized(object):
         tf.get_default_session().run(ops, feed_dict=feed_dict)
 
     def flat_to_params(self, flattened_params, **tags):
-        return unflatten_tensors(flattened_params,
-                                 self.get_param_shapes(**tags))
+        return unflatten_tensors(flattened_params, self.get_param_shapes(
+            **tags))
 
     def __getstate__(self):
         d = Serializable.__getstate__(self)

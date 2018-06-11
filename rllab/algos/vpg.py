@@ -126,8 +126,8 @@ class VPG(BatchPolopt, Serializable):
         logger.record_tabular("LossBefore", loss_before)
         logger.record_tabular("LossAfter", loss_after)
 
-        mean_kl, max_kl = self.opt_info['f_kl'](*(
-            list(inputs) + dist_info_list))
+        mean_kl, max_kl = self.opt_info['f_kl'](
+            *(list(inputs) + dist_info_list))
         logger.record_tabular('MeanKL', mean_kl)
         logger.record_tabular('MaxKL', max_kl)
 
