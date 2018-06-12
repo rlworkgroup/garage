@@ -3,11 +3,9 @@ import scipy.optimize
 import tensorflow as tf
 
 from rllab.core import Serializable
-from rllab.misc import logger
-from rllab.misc import ext
+from rllab.misc import ext, logger
 from rllab.tf.misc import tensor_utils
 from rllab.tf.misc.tensor_utils import enclosing_scope
-
 
 
 class PenaltyLbfgsOptimizer(Serializable):

@@ -2,12 +2,12 @@ import numpy as np
 import tensorflow as tf
 
 from rllab.core import Serializable
+from rllab.misc import logger
 from rllab.tf.core import LayersPowered
 from rllab.tf.core import MLP
 import rllab.tf.core.layers as L
 from rllab.tf.distributions import Bernoulli
 from rllab.tf.misc import tensor_utils
-from rllab.misc import logger
 from rllab.tf.optimizers import ConjugateGradientOptimizer
 from rllab.tf.optimizers import LbfgsOptimizer
 

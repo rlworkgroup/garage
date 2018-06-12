@@ -1,9 +1,7 @@
 import tensorflow as tf
 
 from rllab.core import Serializable
-from rllab.misc import logger
-from rllab.misc import ext
-from rllab.misc import logger
+from rllab.misc import ext, logger
 from rllab.misc.overrides import overrides
 from rllab.tf.algos import BatchPolopt
 from rllab.tf.misc import tensor_utils

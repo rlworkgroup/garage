@@ -12,7 +12,6 @@ from rllab.tf.optimizers import LbfgsOptimizer
 from rllab.tf.optimizers import PenaltyLbfgsOptimizer
 
 
-
 class GaussianMLPRegressor(LayersPowered, Serializable):
     """
     A class for performing regression by fitting a Gaussian distribution to the

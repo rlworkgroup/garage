@@ -1,7 +1,7 @@
 import uuid
+import pickle as pickle
 
 import numpy as np
-import pickle as pickle
 
 from rllab.misc import logger
 from rllab.sampler import singleton_pool

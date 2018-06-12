@@ -5,10 +5,9 @@ from rllab.envs import ProxyEnv
 from rllab.spaces import Box as TheanoBox
 from rllab.spaces import Discrete as TheanoDiscrete
 from rllab.spaces import Product as TheanoProduct
-from rllab.tf.spaces import Discrete
 from rllab.tf.spaces import Box
+from rllab.tf.spaces import Discrete
 from rllab.tf.spaces import Product
-from cached_property import cached_property
 
 
 def to_tf_space(space):

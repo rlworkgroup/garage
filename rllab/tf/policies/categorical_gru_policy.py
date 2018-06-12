@@ -4,8 +4,8 @@ import tensorflow as tf
 from rllab.core import Serializable
 from rllab.misc import special
 from rllab.misc.overrides import overrides
-from rllab.tf.core import LayersPowered
 from rllab.tf.core import GRUNetwork, MLP
+from rllab.tf.core import LayersPowered
 import rllab.tf.core.layers as L
 from rllab.tf.distributions import RecurrentCategorical
 from rllab.tf.misc import tensor_utils

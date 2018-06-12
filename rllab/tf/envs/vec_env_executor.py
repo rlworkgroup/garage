@@ -1,7 +1,7 @@
 import pickle
 
 import numpy as np
-import pickle as pickle
+
 from rllab.tf.misc import tensor_utils
 
 

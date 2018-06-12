@@ -8,10 +8,8 @@ from rllab.tf.core import MLP
 import rllab.tf.core.layers as L
 from rllab.tf.core.layers import batch_norm
 from rllab.tf.distributions import Categorical
-from rllab.tf.policies import Policy
 from rllab.tf.misc import tensor_utils
-
-
+from rllab.tf.policies import Policy
 from rllab.tf.spaces import Discrete
 
 

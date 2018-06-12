@@ -7,11 +7,11 @@ from rllab.misc import logger
 from rllab.tf.core import LayersPowered
 from rllab.tf.core import MLP
 import rllab.tf.core.layers as L
-from rllab.tf.misc import tensor_utils
 from rllab.tf.distributions import Categorical
-from rllab.tf.optimizers import PenaltyLbfgsOptimizer
-from rllab.tf.optimizers import LbfgsOptimizer
+from rllab.tf.misc import tensor_utils
 from rllab.tf.optimizers import ConjugateGradientOptimizer
+from rllab.tf.optimizers import LbfgsOptimizer
+from rllab.tf.optimizers import PenaltyLbfgsOptimizer
 
 NONE = list()
 

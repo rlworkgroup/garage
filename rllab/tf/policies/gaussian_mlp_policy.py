@@ -5,13 +5,14 @@ from rllab.core import Serializable
 from rllab.misc import logger
 from rllab.misc.overrides import overrides
 from rllab.tf.core import LayersPowered
-import rllab.tf.core.layers as L
 from rllab.tf.core import MLP
+import rllab.tf.core.layers as L
 from rllab.tf.distributions import DiagonalGaussian
 from rllab.tf.misc import tensor_utils
 from rllab.tf.misc.tensor_utils import enclosing_scope
 from rllab.tf.policies import StochasticPolicy
 from rllab.tf.spaces import Box
+
 
 class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
     def __init__(self,
