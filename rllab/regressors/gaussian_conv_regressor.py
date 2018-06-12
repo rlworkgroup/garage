@@ -8,7 +8,7 @@ import theano.tensor as TT
 from rllab.core import ConvNetwork
 from rllab.core import LasagnePowered
 from rllab.core import ParamLayer
-from rllab.core.serializable import Serializable
+from rllab.core import Serializable
 from rllab.distributions import DiagonalGaussian
 from rllab.misc import logger
 from rllab.misc import tensor_utils

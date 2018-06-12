@@ -1,7 +1,7 @@
 import numpy as np
 import theano
 
-from rllab.core.serializable import Serializable
+from rllab.core import Serializable
 from rllab.misc import ext
 from rllab.spaces import Space
 

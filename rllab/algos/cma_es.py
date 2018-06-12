@@ -3,7 +3,7 @@ import theano.tensor as TT
 
 from rllab.algos import cma_es_lib
 from rllab.algos import RLAlgorithm
-from rllab.core.serializable import Serializable
+from rllab.core import Serializable
 from rllab.misc import ext
 import rllab.misc.logger as logger
 from rllab.misc.special import discount_cumsum

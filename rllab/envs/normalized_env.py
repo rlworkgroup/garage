@@ -1,7 +1,7 @@
 import numpy as np
 
 from rllab import spaces
-from rllab.core.serializable import Serializable
+from rllab.core import Serializable
 from rllab.envs import Step
 from rllab.envs.proxy_env import ProxyEnv
 from rllab.misc.overrides import overrides

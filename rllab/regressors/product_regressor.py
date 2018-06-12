@@ -1,6 +1,6 @@
 import numpy as np
 
-from rllab.core.serializable import Serializable
+from rllab.core import Serializable
 
 
 class ProductRegressor(Serializable):

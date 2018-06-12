@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-from rllab.core.serializable import Serializable
+from rllab.core import Serializable
 from rllab.misc import ext
 from rllab.misc.overrides import overrides
 from rllab.tf.core import LayersPowered

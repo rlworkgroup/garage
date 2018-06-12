@@ -2,7 +2,7 @@ from cached_property import cached_property
 import numpy as np
 
 from rllab import spaces
-from rllab.core.serializable import Serializable
+from rllab.core import Serializable
 from rllab.envs import Step
 from rllab.envs.mujoco import MujocoEnv
 from rllab.envs.proxy_env import ProxyEnv

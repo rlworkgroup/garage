@@ -13,7 +13,7 @@ try:
 except Exception as e:
     traceback.print_exc()
 
-from rllab.core.serializable import Serializable
+from rllab.core import Serializable
 from rllab.envs import Env
 from rllab.envs import Step
 from rllab.misc import logger

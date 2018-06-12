@@ -7,7 +7,7 @@ import theano.tensor as TT
 
 from rllab.core.lasagne_powered import LasagnePowered
 from rllab.core.lasagne_layers import OpLayer
-from rllab.core.serializable import Serializable
+from rllab.core import Serializable
 from rllab.misc import ext
 
 

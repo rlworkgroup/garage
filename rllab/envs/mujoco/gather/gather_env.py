@@ -14,7 +14,7 @@ from mujoco_py import MjViewer
 import numpy as np
 
 from rllab import spaces
-from rllab.core.serializable import Serializable
+from rllab.core import Serializable
 from rllab.envs import Step
 from rllab.envs.mujoco.gather.embedded_viewer import EmbeddedViewer
 from rllab.envs.mujoco.mujoco_env import BIG

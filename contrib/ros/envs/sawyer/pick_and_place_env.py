@@ -8,7 +8,7 @@ import numpy as np
 from contrib.ros.envs.sawyer.sawyer_env import SawyerEnv
 from contrib.ros.robots.sawyer import Sawyer
 from contrib.ros.worlds.block_world import BlockWorld
-from rllab.core.serializable import Serializable
+from rllab.core import Serializable
 from rllab.spaces import Box
 
 

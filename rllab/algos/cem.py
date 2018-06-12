@@ -4,7 +4,7 @@ from itertools import zip_longest
 import numpy as np
 
 from rllab.algos import RLAlgorithm
-from rllab.core.serializable import Serializable
+from rllab.core import Serializable
 import rllab.misc.logger as logger
 from rllab.misc.special import discount_cumsum
 import rllab.plotter as plotter

@@ -1,7 +1,7 @@
 import numpy as np
 import tensorflow as tf
 
-from rllab.core.serializable import Serializable
+from rllab.core import Serializable
 from rllab.misc import ext
 from rllab.misc import logger
 from rllab.tf.core import LayersPowered

@@ -1,7 +1,7 @@
 import numpy as np
 import numpy.random as nr
 
-from rllab.core.serializable import Serializable
+from rllab.core import Serializable
 from rllab.exploration_strategies import ExplorationStrategy
 from rllab.misc.ext import AttrDict
 from rllab.misc.overrides import overrides
