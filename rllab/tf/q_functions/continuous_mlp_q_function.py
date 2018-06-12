@@ -7,12 +7,11 @@ from rllab.tf.core import MLP
 import rllab.tf.core.layers as L
 from rllab.tf.core.layers import batch_norm
 from rllab.tf.distributions import Categorical
-from rllab.tf.policies import StochasticPolicy
 from rllab.tf.misc import tensor_utils
-from rllab.tf.q_functions import QFunction
 from rllab.tf.misc import tensor_utils
 from rllab.tf.misc.tensor_utils import enclosing_scope
-
+from rllab.tf.policies import StochasticPolicy
+from rllab.tf.q_functions import QFunction
 
 
 class ContinuousMLPQFunction(QFunction, LayersPowered, Serializable):
