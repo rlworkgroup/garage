@@ -1,0 +1,5 @@
+from rllab.tf.optimizers.conjugate_gradient_optimizer import ConjugateGradientOptimizer
+from rllab.tf.optimizers.conjugate_gradient_optimizer import FiniteDifferenceHvp
+from rllab.tf.optimizers.first_order_optimizer import FirstOrderOptimizer
+from rllab.tf.optimizers.lbfgs_optimizer import LbfgsOptimizer
+from rllab.tf.optimizers.penalty_lbfgs_optimizer import PenaltyLbfgsOptimizer
