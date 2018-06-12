@@ -14,7 +14,6 @@ from rllab.policies import StochasticPolicy
 from rllab.spaces import Discrete
 
 
-
 class CategoricalMLPPolicy(StochasticPolicy, LasagnePowered):
     def __init__(
             self,
@@ -49,8 +48,9 @@ class CategoricalMLPPolicy(StochasticPolicy, LasagnePowered):
 
         self._l_prob = prob_network.output_layer
         self._l_obs = prob_network.input_layer
-        self._f_prob = ext.compile_function([prob_network.input_layer.input_var],L.get_output(
-            prob_network.output_layer))
+        self._f_prob = ext.compile_function(
+            [prob_network.input_layer.input_var],
+            L.get_output(prob_network.output_layer))
 
         self._dist = Categorical(env_spec.action_space.n)
 

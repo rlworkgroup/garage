@@ -21,7 +21,10 @@ class CategoricalConvPolicy(StochasticPolicy, LasagnePowered):
             self,
             name,
             env_spec,
-            conv_filters, conv_filter_sizes, conv_strides, conv_pads,
+            conv_filters,
+            conv_filter_sizes,
+            conv_strides,
+            conv_pads,
             hidden_sizes=[],
             hidden_nonlinearity=NL.rectify,
             output_nonlinearity=NL.softmax,
@@ -72,12 +75,7 @@ class CategoricalConvPolicy(StochasticPolicy, LasagnePowered):
 
     @overrides
     def dist_info_sym(self, obs_var, state_info_vars=None):
-        return dict(
-            prob=L.get_output(
-                self._l_prob,
-                {self._l_obs: obs_var}
-            )
-        )
+        return dict(prob=L.get_output(self._l_prob, {self._l_obs: obs_var}))
 
     @overrides
     def dist_info(self, obs, state_infos=None):

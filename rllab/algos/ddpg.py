@@ -29,12 +29,8 @@ class SimpleReplayPool(object):
         self._observation_dim = observation_dim
         self._action_flat_dim = action_flat_dim
         self._max_pool_size = max_pool_size
-        self._observations = np.zeros(
-            (max_pool_size, observation_dim),
-            )
-        self._actions = np.zeros(
-            (max_pool_size, action_flat_dim),
-        )
+        self._observations = np.zeros((max_pool_size, observation_dim), )
+        self._actions = np.zeros((max_pool_size, action_flat_dim), )
         self._rewards = np.zeros(max_pool_size)
         self._terminals = np.zeros(max_pool_size, dtype='uint8')
         self._bottom = 0
@@ -58,7 +54,8 @@ class SimpleReplayPool(object):
         transition_indices = np.zeros(batch_size, dtype='uint64')
         count = 0
         while count < batch_size:
-            index = np.random.randint(self._bottom, self._bottom + self._size) % self._max_pool_size
+            index = np.random.randint(
+                self._bottom, self._bottom + self._size) % self._max_pool_size
             # make sure that the transition is valid: if we are at the end of the pool, we need to discard
             # this sample
             if index == self._size - 1 and self._size <= self._max_pool_size:
@@ -74,8 +71,7 @@ class SimpleReplayPool(object):
             actions=self._actions[indices],
             rewards=self._rewards[indices],
             terminals=self._terminals[indices],
-            next_observations=self._observations[transition_indices]
-        )
+            next_observations=self._observations[transition_indices])
 
     @property
     def size(self):
@@ -87,33 +83,32 @@ class DDPG(RLAlgorithm):
     Deep Deterministic Policy Gradient.
     """
 
-    def __init__(
-            self,
-            env,
-            policy,
-            qf,
-            es,
-            batch_size=32,
-            n_epochs=200,
-            epoch_length=1000,
-            min_pool_size=10000,
-            replay_pool_size=1000000,
-            discount=0.99,
-            max_path_length=250,
-            qf_weight_decay=0.,
-            qf_update_method='adam',
-            qf_learning_rate=1e-3,
-            policy_weight_decay=0,
-            policy_update_method='adam',
-            policy_learning_rate=1e-4,
-            eval_samples=10000,
-            soft_target=True,
-            soft_target_tau=0.001,
-            n_updates_per_sample=1,
-            scale_reward=1.0,
-            include_horizon_terminal_transitions=False,
-            plot=False,
-            pause_for_plot=False):
+    def __init__(self,
+                 env,
+                 policy,
+                 qf,
+                 es,
+                 batch_size=32,
+                 n_epochs=200,
+                 epoch_length=1000,
+                 min_pool_size=10000,
+                 replay_pool_size=1000000,
+                 discount=0.99,
+                 max_path_length=250,
+                 qf_weight_decay=0.,
+                 qf_update_method='adam',
+                 qf_learning_rate=1e-3,
+                 policy_weight_decay=0,
+                 policy_update_method='adam',
+                 policy_learning_rate=1e-4,
+                 eval_samples=10000,
+                 soft_target=True,
+                 soft_target_tau=0.001,
+                 n_updates_per_sample=1,
+                 scale_reward=1.0,
+                 include_horizon_terminal_transitions=False,
+                 plot=False,
+                 pause_for_plot=False):
         """
         :param env: Environment
         :param policy: Policy
@@ -238,7 +233,8 @@ class DDPG(RLAlgorithm):
                     self.es_path_returns.append(path_return)
                     path_length = 0
                     path_return = 0
-                action = self.es.get_action(itr, observation, policy=sample_policy)
+                action = self.es.get_action(
+                    itr, observation, policy=sample_policy)
 
                 next_observation, reward, terminal, _ = self.env.step(action)
                 path_length += 1
@@ -249,7 +245,8 @@ class DDPG(RLAlgorithm):
                     # only include the terminal transition in this case if the
                     # flag was set
                     if self.include_horizon_terminal_transitions:
-                        pool.add_sample(observation, action, reward * self.scale_reward, terminal)
+                        pool.add_sample(observation, action,
+                                        reward * self.scale_reward, terminal)
                 else:
                     pool.add_sample(observation, action,
                                     reward * self.scale_reward, terminal)
@@ -261,7 +258,8 @@ class DDPG(RLAlgorithm):
                         # Train policy
                         batch = pool.random_batch(self.batch_size)
                         self.do_training(itr, batch)
-                    sample_policy.set_param_values(self.policy.get_param_values())
+                    sample_policy.set_param_values(
+                        self.policy.get_param_values())
 
                 itr += 1
 
@@ -316,9 +314,7 @@ class DDPG(RLAlgorithm):
             for param in self.policy.get_params(regularizable=True)
         ])
         policy_qval = self.qf.get_qval_sym(
-            obs, self.policy.get_action_sym(obs),
-            deterministic=True
-        )
+            obs, self.policy.get_action_sym(obs), deterministic=True)
         policy_surr = -TT.mean(policy_qval)
 
         policy_reg_surr = policy_surr + policy_weight_decay_term
@@ -331,14 +327,10 @@ class DDPG(RLAlgorithm):
         f_train_qf = ext.compile_function(
             inputs=[yvar, obs, action],
             outputs=[qf_loss, qval],
-            updates=qf_updates
-        )
+            updates=qf_updates)
 
         f_train_policy = ext.compile_function(
-            inputs=[obs],
-            outputs=policy_surr,
-            updates=policy_updates
-        )
+            inputs=[obs], outputs=policy_surr, updates=policy_updates)
 
         self.opt_info = dict(
             f_train_qf=f_train_qf,
@@ -350,10 +342,8 @@ class DDPG(RLAlgorithm):
     def do_training(self, itr, batch):
 
         obs, actions, rewards, next_obs, terminals = ext.extract(
-            batch,
-            "observations", "actions", "rewards", "next_observations",
-            "terminals"
-        )
+            batch, "observations", "actions", "rewards", "next_observations",
+            "terminals")
 
         # compute the on-policy y values
         target_qf = self.opt_info["target_qf"]
@@ -391,9 +381,10 @@ class DDPG(RLAlgorithm):
             max_path_length=self.max_path_length,
         )
 
-        average_discounted_return = np.mean(
-            [special.discount_return(path["rewards"], self.discount) for path in paths]
-        )
+        average_discounted_return = np.mean([
+            special.discount_return(path["rewards"], self.discount)
+            for path in paths
+        ])
 
         returns = [sum(path["rewards"]) for path in paths]
 
@@ -402,35 +393,25 @@ class DDPG(RLAlgorithm):
 
         average_q_loss = np.mean(self.qf_loss_averages)
         average_policy_surr = np.mean(self.policy_surr_averages)
-        average_action = np.mean(np.square(np.concatenate(
-            [path["actions"] for path in paths]
-        )))
+        average_action = np.mean(
+            np.square(np.concatenate([path["actions"] for path in paths])))
 
         policy_reg_param_norm = np.linalg.norm(
-            self.policy.get_param_values(regularizable=True)
-        )
+            self.policy.get_param_values(regularizable=True))
         qfun_reg_param_norm = np.linalg.norm(
-            self.qf.get_param_values(regularizable=True)
-        )
+            self.qf.get_param_values(regularizable=True))
 
         logger.record_tabular('Epoch', epoch)
-        logger.record_tabular('AverageReturn',
-                              np.mean(returns))
-        logger.record_tabular('StdReturn',
-                              np.std(returns))
-        logger.record_tabular('MaxReturn',
-                              np.max(returns))
-        logger.record_tabular('MinReturn',
-                              np.min(returns))
+        logger.record_tabular('AverageReturn', np.mean(returns))
+        logger.record_tabular('StdReturn', np.std(returns))
+        logger.record_tabular('MaxReturn', np.max(returns))
+        logger.record_tabular('MinReturn', np.min(returns))
         if len(self.es_path_returns) > 0:
             logger.record_tabular('AverageEsReturn',
                                   np.mean(self.es_path_returns))
-            logger.record_tabular('StdEsReturn',
-                                  np.std(self.es_path_returns))
-            logger.record_tabular('MaxEsReturn',
-                                  np.max(self.es_path_returns))
-            logger.record_tabular('MinEsReturn',
-                                  np.min(self.es_path_returns))
+            logger.record_tabular('StdEsReturn', np.std(self.es_path_returns))
+            logger.record_tabular('MaxEsReturn', np.max(self.es_path_returns))
+            logger.record_tabular('MinEsReturn', np.min(self.es_path_returns))
         logger.record_tabular('AverageDiscountedReturn',
                               average_discounted_return)
         logger.record_tabular('AverageQLoss', average_q_loss)
@@ -443,10 +424,8 @@ class DDPG(RLAlgorithm):
                               np.mean(np.abs(all_qs - all_ys)))
         logger.record_tabular('AverageAction', average_action)
 
-        logger.record_tabular('PolicyRegParamNorm',
-                              policy_reg_param_norm)
-        logger.record_tabular('QFunRegParamNorm',
-                              qfun_reg_param_norm)
+        logger.record_tabular('PolicyRegParamNorm', policy_reg_param_norm)
+        logger.record_tabular('QFunRegParamNorm', qfun_reg_param_norm)
 
         self.env.log_diagnostics(paths)
         self.policy.log_diagnostics(paths)

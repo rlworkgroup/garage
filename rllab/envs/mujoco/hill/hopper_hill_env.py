@@ -7,7 +7,6 @@ from rllab.envs.mujoco.hill import terrain
 from rllab.misc.overrides import overrides
 
 
-
 class HopperHillEnv(HillEnv):
 
     MODEL_CLASS = HopperEnv
@@ -15,8 +14,9 @@ class HopperHillEnv(HillEnv):
     @overrides
     def _mod_hfield(self, hfield):
         # clear a flat patch for the robot to start off from
-        return terrain.clear_patch(hfield,
-                                   gym.spaces.Box(
-                                       np.array([-1.0, -1.0]),
-                                       np.array([-0.5, -0.5]),
-                                       dtype=np.float32))
+        return terrain.clear_patch(
+            hfield,
+            gym.spaces.Box(
+                np.array([-1.0, -1.0]),
+                np.array([-0.5, -0.5]),
+                dtype=np.float32))

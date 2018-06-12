@@ -12,10 +12,7 @@ from rllab.policies import CategoricalMLPPolicy
 def run_task(*_):
     env = gym.make("MountainCar-v0")
 
-    policy = CategoricalMLPPolicy(
-        env_spec=spec(env),
-        hidden_sizes=(32, 32)
-    )
+    policy = CategoricalMLPPolicy(env_spec=spec(env), hidden_sizes=(32, 32))
 
     baseline = LinearFeatureBaseline(env_spec=spec(env))
 

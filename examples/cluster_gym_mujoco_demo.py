@@ -14,7 +14,6 @@ from rllab.tf.policies import GaussianMLPPolicy
 
 
 class VG(VariantGenerator):
-
     @variant
     def step_size(self):
         return [0.01, 0.05, 0.1]
@@ -26,13 +25,13 @@ class VG(VariantGenerator):
 
 def run_task(vv):
 
-    env = TfEnv(gym.make('HalfCheetah-v1', record_video=False, record_log=False))
+    env = TfEnv(
+        gym.make('HalfCheetah-v1', record_video=False, record_log=False))
 
     policy = GaussianMLPPolicy(
         env_spec=spec(env),
         hidden_sizes=(32, 32),
-        name="policy"
-    )
+        name="policy")
 
     baseline = LinearFeatureBaseline(env_spec=spec(env))
 

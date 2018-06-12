@@ -68,8 +68,7 @@ def flatten_n(space, obs):
 
 
 def horizon(env):
-    return env.spec.tags[
-            'wrapper_config.TimeLimit.max_episode_steps']
+    return env.spec.tags['wrapper_config.TimeLimit.max_episode_steps']
 
 
 def new_tensor_variable(space, name, extra_dims):

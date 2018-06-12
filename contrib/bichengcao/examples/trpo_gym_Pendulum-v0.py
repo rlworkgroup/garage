@@ -11,10 +11,7 @@ from rllab.policies import GaussianMLPPolicy
 def run_task(*_):
     env = gym.make("Pendulum-v0")
 
-    policy = GaussianMLPPolicy(
-        env_spec=spec(env),
-        hidden_sizes=(32, 32)
-    )
+    policy = GaussianMLPPolicy(env_spec=spec(env), hidden_sizes=(32, 32))
 
     baseline = LinearFeatureBaseline(env_spec=spec(env))
 

@@ -78,8 +78,8 @@ class NPO(BatchPolopt):
             lr = TT.minimum(self.truncate_local_is_ratio, lr)
         if is_recurrent:
             mean_kl = TT.sum(kl * valid_var) / TT.sum(valid_var)
-            surr_loss = -TT.sum(lr * advantage_var * valid_var) / TT.sum(
-                valid_var)
+            surr_loss = -TT.sum(
+                lr * advantage_var * valid_var) / TT.sum(valid_var)
         else:
             mean_kl = TT.mean(kl)
             surr_loss = -TT.mean(lr * advantage_var)

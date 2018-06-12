@@ -97,7 +97,8 @@ class ReplayPool(Serializable):
         self.max_steps = max_steps
         self.observations = np.zeros(
             (max_steps, ) + observation_shape, dtype=observation_dtype)
-        self.actions = np.zeros((max_steps, action_flat_dim), dtype=action_dtype)
+        self.actions = np.zeros(
+            (max_steps, action_flat_dim), dtype=action_dtype)
         self.rewards = np.zeros((max_steps, ), dtype=np.float32)
         self.terminals = np.zeros((max_steps, ), dtype='bool')
         self.extras = None
@@ -118,9 +119,10 @@ class ReplayPool(Serializable):
         self.bottom = 0
         self.top = 0
         self.size = 0
-        super(ReplayPool, self).__init__(
-            self, observation_shape, action_flat_dim, max_steps, observation_dtype,
-            action_dtype, concat_observations, concat_length, rng)
+        super(ReplayPool,
+              self).__init__(self, observation_shape, action_flat_dim,
+                             max_steps, observation_dtype, action_dtype,
+                             concat_observations, concat_length, rng)
 
     def __getstate__(self):
         d = super(ReplayPool, self).__getstate__()
