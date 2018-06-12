@@ -6,6 +6,7 @@ from rllab.algos import RLAlgorithm
 import rllab.misc.logger as logger
 from rllab.sampler.utils import rollout
 from rllab.tf.policies.base import Policy
+from rllab.tf.plotter import Plotter
 from rllab.tf.samplers import BatchSampler
 from rllab.tf.samplers import VectorizedSampler
 

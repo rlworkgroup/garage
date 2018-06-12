@@ -449,7 +449,7 @@ def _column_type(strings, has_invisible=True):
 
     """
     types = [_type(s, has_invisible) for s in strings]
-    return functools.reduce(_more_generic, types, int)
+    return reduce(_more_generic, types, int)
 
 
 def _format(val, valtype, floatfmt, missingval=""):
