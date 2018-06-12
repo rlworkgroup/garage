@@ -21,7 +21,7 @@ class Op(Enum):
     DEMO = 2
 
 
-Message = namedtuple("Message", ["op", "args", "info"])
+Message = namedtuple("Message", ["op", "args", "kwargs"])
 
 
 class Plotter(object):
@@ -84,7 +84,7 @@ class Plotter(object):
 
     def shutdown(self):
         if self.worker_thread.is_alive():
-            self.queue.put(Message(op=Op.STOP, args=None, info=None))
+            self.queue.put(Message(op=Op.STOP, args=None, kwargs=None))
             self.queue.task_done()
             self.queue.join()
             self.worker_thread.join()
@@ -94,7 +94,8 @@ class Plotter(object):
             tf.get_variable_scope().reuse_variables()
             self.worker_thread.start()
             self.queue.put(
-                Message(op=Op.UPDATE, args=(self.env, self.policy), info=None))
+                Message(
+                    op=Op.UPDATE, args=(self.env, self.policy), kwargs=None))
             self.queue.task_done()
             atexit.register(self.shutdown)
 
@@ -104,5 +105,5 @@ class Plotter(object):
                 Message(
                     op=Op.DEMO,
                     args=(policy.get_param_values(), max_length),
-                    info=None))
+                    kwargs=None))
             self.queue.task_done()
