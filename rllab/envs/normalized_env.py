@@ -1,4 +1,3 @@
-import gym
 import numpy as np
 
 from rllab import spaces
@@ -7,7 +6,6 @@ from rllab.envs import Step
 from rllab.envs.proxy_env import ProxyEnv
 from rllab.misc.overrides import overrides
 from rllab.envs import Step
-from rllab.envs.util import bounds, flat_dim, flatten
 
 
 class NormalizedEnv(ProxyEnv, Serializable):
@@ -26,28 +24,21 @@ class NormalizedEnv(ProxyEnv, Serializable):
         self._normalize_obs = normalize_obs
         self._normalize_reward = normalize_reward
         self._obs_alpha = obs_alpha
-        self._obs_mean = np.zeros(flat_dim(env.observation_space))
-        self._obs_var = np.ones(flat_dim(env.observation_space))
+        self._obs_mean = np.zeros(env.observation_space.flat_dim)
+        self._obs_var = np.ones(env.observation_space.flat_dim)
         self._reward_alpha = reward_alpha
         self._reward_mean = 0.
         self._reward_var = 1.
 
     def _update_obs_estimate(self, obs):
-        flat_obs = flatten(self.wrapped_env.observation_space, obs)
-        self._obs_mean = (
-            1 - self._obs_alpha) * self._obs_mean + self._obs_alpha * flat_obs
-        self._obs_var = (
-            1 - self._obs_alpha) * self._obs_var + self._obs_alpha * np.square(
-                flat_obs - self._obs_mean)
+        flat_obs = self.wrapped_env.observation_space.flatten(obs)
+        self._obs_mean = (1 - self._obs_alpha) * self._obs_mean + self._obs_alpha * flat_obs
+        self._obs_var = (1 - self._obs_alpha) * self._obs_var + self._obs_alpha * np.square(flat_obs - self._obs_mean)
 
     def _update_reward_estimate(self, reward):
-        self._reward_mean = (
-            1 - self._reward_alpha
-        ) * self._reward_mean + self._reward_alpha * reward
-        self._reward_var = (
-            1 - self._reward_alpha
-        ) * self._reward_var + self._reward_alpha * np.square(
-            reward - self._reward_mean)
+        self._reward_mean = (1 - self._reward_alpha) * self._reward_mean + self._reward_alpha * reward
+        self._reward_var = (1 - self._reward_alpha) * self._reward_var + self._reward_alpha * np.square(reward -
+                                                                                                        self._reward_mean)
 
     def _apply_normalize_obs(self, obs):
         self._update_obs_estimate(obs)
@@ -78,16 +69,16 @@ class NormalizedEnv(ProxyEnv, Serializable):
     @property
     @overrides
     def action_space(self):
-        if isinstance(self._wrapped_env.action_space, gym.spaces.Box):
+        if isinstance(self._wrapped_env.action_space, Box):
             ub = np.ones(self._wrapped_env.action_space.shape)
-            return gym.spaces.Box(-1 * ub, ub, dtype=np.float32)
+            return spaces.Box(-1 * ub, ub)
         return self._wrapped_env.action_space
 
     @overrides
     def step(self, action):
-        if isinstance(self._wrapped_env.action_space, gym.spaces.Box):
+        if isinstance(self._wrapped_env.action_space, Box):
             # rescale the action
-            lb, ub = bounds(self._wrapped_env.action_space)
+            lb, ub = self._wrapped_env.action_space.bounds
             scaled_action = lb + (action + 1.) * 0.5 * (ub - lb)
             scaled_action = np.clip(scaled_action, lb, ub)
         else:
@@ -108,6 +99,5 @@ class NormalizedEnv(ProxyEnv, Serializable):
     #     print "Obs std:", np.sqrt(self._obs_var)
     #     print "Reward mean:", self._reward_mean
     #     print "Reward std:", np.sqrt(self._reward_var)
-
 
 normalize = NormalizedEnv

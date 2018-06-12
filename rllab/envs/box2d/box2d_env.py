@@ -14,42 +14,33 @@ from rllab.misc import autoargs
 from rllab.misc.overrides import overrides
 
 BIG = 1e6
-
-
 class Box2DEnv(gym.Env):
-    @autoargs.arg("frame_skip", type=int, help="Number of frames to skip")
-    @autoargs.arg(
-        'position_only',
-        type=bool,
-        help='Whether to only provide (generalized) position as the '
-        'observation (i.e. no velocities etc.)')
-    @autoargs.arg(
-        'obs_noise',
-        type=float,
-        help='Noise added to the observations (note: this makes the '
-        'problem non-Markovian!)')
-    @autoargs.arg(
-        'action_noise',
-        type=float,
-        help='Noise added to the controls, which will be '
-        'proportional to the action bounds')
+
+    @autoargs.arg("frame_skip", type=int,
+                  help="Number of frames to skip")
+    @autoargs.arg('position_only', type=bool,
+                  help='Whether to only provide (generalized) position as the '
+                       'observation (i.e. no velocities etc.)')
+    @autoargs.arg('obs_noise', type=float,
+                  help='Noise added to the observations (note: this makes the '
+                       'problem non-Markovian!)')
+    @autoargs.arg('action_noise', type=float,
+                  help='Noise added to the controls, which will be '
+                       'proportional to the action bounds')
     def __init__(
-            self,
-            model_path,
-            frame_skip=1,
-            position_only=False,
-            obs_noise=0.0,
-            action_noise=0.0,
-            template_string=None,
+            self, model_path, frame_skip=1, position_only=False,
+            obs_noise=0.0, action_noise=0.0, template_string=None,
             template_args=None,
     ):
         self.full_model_path = model_path
         if template_string is None:
             if model_path.endswith(".mako"):
                 with open(model_path) as template_file:
-                    template = mako.template.Template(template_file.read())
+                    template = mako.template.Template(
+                        template_file.read())
                 template_string = template.render(
-                    opts=template_args if template_args is not None else {}, )
+                    opts=template_args if template_args is not None else {},
+                )
             else:
                 with open(model_path, "r") as f:
                     template_string = f.read()
@@ -70,8 +61,8 @@ class Box2DEnv(gym.Env):
         self._cached_coms = {}
 
     def model_path(self, file_name):
-        return osp.abspath(
-            osp.join(osp.dirname(__file__), 'models/%s' % file_name))
+        return osp.abspath(osp.join(osp.dirname(__file__),
+                                    'models/%s' % file_name))
 
     def _set_state(self, state):
         splitted = np.array(state).reshape((-1, 6))
@@ -96,20 +87,19 @@ class Box2DEnv(gym.Env):
     def _state(self):
         s = []
         for body in self.world.bodies:
-            s.append(
-                np.concatenate([
-                    list(body.position), [body.angle],
-                    list(body.linearVelocity), [body.angularVelocity]
-                ]))
+            s.append(np.concatenate([
+                list(body.position),
+                [body.angle],
+                list(body.linearVelocity),
+                [body.angularVelocity]
+            ]))
         return np.concatenate(s)
 
     @property
     @overrides
     def action_space(self):
-        lb = np.array(
-            [control.ctrllimit[0] for control in self.extra_data.controls])
-        ub = np.array(
-            [control.ctrllimit[1] for control in self.extra_data.controls])
+        lb = np.array([control.ctrllimit[0] for control in self.extra_data.controls])
+        ub = np.array([control.ctrllimit[1] for control in self.extra_data.controls])
         return gym.spaces.Box(lb, ub, dtype=np.float32)
 
     @property
@@ -129,7 +119,7 @@ class Box2DEnv(gym.Env):
     def forward_dynamics(self, action):
         if len(action) != flat_dim(self.action_space):
             raise ValueError('incorrect action dimension: expected %d but got '
-                             '%d' % (flat_dim(self.action_space), len(action)))
+                             '%d' % (flat_dim(self.action_space)), len(action)))
         lb, ub = self.action_bounds
         action = np.clip(action, lb, ub)
         for ctrl, act in zip(self.extra_data.controls, action):
@@ -154,9 +144,11 @@ class Box2DEnv(gym.Env):
             else:
                 raise NotImplementedError
         self.before_world_step(action)
-        self.world.Step(self.extra_data.timeStep,
-                        self.extra_data.velocityIterations,
-                        self.extra_data.positionIterations)
+        self.world.Step(
+            self.extra_data.timeStep,
+            self.extra_data.velocityIterations,
+            self.extra_data.positionIterations
+        )
 
     def compute_reward(self, action):
         """
@@ -208,8 +200,8 @@ class Box2DEnv(gym.Env):
             np.random.normal(size=obs.shape)
         return obs + noise
 
-    def get_current_reward(self, state, xml_obs, action, next_state,
-                           next_xml_obs):
+    def get_current_reward(
+            self, state, xml_obs, action, next_state, next_xml_obs):
         raise NotImplementedError
 
     def is_current_done(self):

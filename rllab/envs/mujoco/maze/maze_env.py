@@ -189,14 +189,14 @@ class MazeEnv(ProxyEnv, Serializable):
                     # Wall -> add to wall readings
                     if first_seg["distance"] <= self._sensor_range:
                         wall_readings[ray_idx] = (
-                            self._sensor_range - first_seg["distance"]
-                        ) / self._sensor_range
+                            self._sensor_range -
+                            first_seg["distance"]) / self._sensor_range
                 elif first_seg["type"] == 'g':
                     # Goal -> add to goal readings
                     if first_seg["distance"] <= self._sensor_range:
                         goal_readings[ray_idx] = (
-                            self._sensor_range - first_seg["distance"]
-                        ) / self._sensor_range
+                            self._sensor_range -
+                            first_seg["distance"]) / self._sensor_range
                 else:
                     assert False
 

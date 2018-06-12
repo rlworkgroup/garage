@@ -196,30 +196,34 @@ class GatherEnv(ProxyEnv, Serializable):
         attrs = dict(
             type="box", conaffinity="1", rgba="0.8 0.9 0.8 1", condim="3")
         walldist = self.activity_range + 1
-        ET.SubElement(worldbody, "geom",
-                      dict(
-                          attrs,
-                          name="wall1",
-                          pos="0 -%d 0" % walldist,
-                          size="%d.5 0.5 1" % walldist))
-        ET.SubElement(worldbody, "geom",
-                      dict(
-                          attrs,
-                          name="wall2",
-                          pos="0 %d 0" % walldist,
-                          size="%d.5 0.5 1" % walldist))
-        ET.SubElement(worldbody, "geom",
-                      dict(
-                          attrs,
-                          name="wall3",
-                          pos="-%d 0 0" % walldist,
-                          size="0.5 %d.5 1" % walldist))
-        ET.SubElement(worldbody, "geom",
-                      dict(
-                          attrs,
-                          name="wall4",
-                          pos="%d 0 0" % walldist,
-                          size="0.5 %d.5 1" % walldist))
+        ET.SubElement(
+            worldbody, "geom",
+            dict(
+                attrs,
+                name="wall1",
+                pos="0 -%d 0" % walldist,
+                size="%d.5 0.5 1" % walldist))
+        ET.SubElement(
+            worldbody, "geom",
+            dict(
+                attrs,
+                name="wall2",
+                pos="0 %d 0" % walldist,
+                size="%d.5 0.5 1" % walldist))
+        ET.SubElement(
+            worldbody, "geom",
+            dict(
+                attrs,
+                name="wall3",
+                pos="-%d 0 0" % walldist,
+                size="0.5 %d.5 1" % walldist))
+        ET.SubElement(
+            worldbody, "geom",
+            dict(
+                attrs,
+                name="wall4",
+                pos="%d 0 0" % walldist,
+                size="0.5 %d.5 1" % walldist))
         _, file_path = tempfile.mkstemp(text=True)
         tree.write(file_path)
         # pylint: disable=not-callable

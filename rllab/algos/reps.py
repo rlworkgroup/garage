@@ -1,7 +1,7 @@
 import numpy as np
+import scipy.optimize
 import theano.tensor as TT
 import theano
-import scipy.optimize
 
 from rllab.algos import BatchPolopt
 from rllab.core import Serializable
@@ -81,7 +81,10 @@ class REPS(BatchPolopt, Serializable):
         # value of the next observation and the current observation \phi(s') -
         # \phi(s).
         feat_diff = ext.new_tensor(
-            'feat_diff', ndim=2 + is_recurrent, dtype=theano.config.floatX)
+            'feat_diff',
+            ndim=2 + is_recurrent,
+            dtype=theano.config.floatX
+        )
         param_v = TT.vector('param_v')
         param_eta = TT.scalar('eta')
 
@@ -89,12 +92,12 @@ class REPS(BatchPolopt, Serializable):
 
         state_info_vars = {
             k: ext.new_tensor(
-                k, ndim=2 + is_recurrent, dtype=theano.config.floatX)
-            for k in self.policy.state_info_keys
+                k,
+                ndim=2 + is_recurrent,
+                dtype=theano.config.floatX
+            ) for k in self.policy.state_info_keys
         }
-        state_info_vars_list = [
-            state_info_vars[k] for k in self.policy.state_info_keys
-        ]
+        state_info_vars_list = [state_info_vars[k] for k in self.policy.state_info_keys]
 
         # Policy-related symbolics
         dist_info_vars = self.policy.dist_info_sym(obs_var, state_info_vars)
@@ -107,29 +110,31 @@ class REPS(BatchPolopt, Serializable):
 
         # Policy loss (negative because we minimize)
         if is_recurrent:
-            loss = -TT.sum(logli * TT.exp(delta_v / param_eta - TT.max(
-                delta_v / param_eta)) * valid_var) / TT.sum(valid_var)
+            loss = - TT.sum(logli * TT.exp(
+                delta_v / param_eta - TT.max(delta_v / param_eta)
+            ) * valid_var) / TT.sum(valid_var)
         else:
-            loss = -TT.mean(logli * TT.exp(
-                delta_v / param_eta - TT.max(delta_v / param_eta)))
+            loss = - TT.mean(logli * TT.exp(
+                delta_v / param_eta - TT.max(delta_v / param_eta)
+            ))
 
         # Add regularization to loss.
         reg_params = self.policy.get_params(regularizable=True)
         loss += self.L2_reg_loss * TT.sum(
-            [TT.mean(TT.square(param))
-             for param in reg_params]) / len(reg_params)
+            [TT.mean(TT.square(param)) for param in reg_params]
+        ) / len(reg_params)
 
         # Policy loss gradient.
-        loss_grad = TT.grad(loss, self.policy.get_params(trainable=True))
+        loss_grad = TT.grad(
+            loss, self.policy.get_params(trainable=True))
 
         if is_recurrent:
             recurrent_vars = [valid_var]
         else:
             recurrent_vars = []
 
-        input = [
-            rewards, obs_var, feat_diff, action_var
-        ] + state_info_vars_list + recurrent_vars + [param_eta, param_v]
+        input = [rewards, obs_var, feat_diff,
+                 action_var] + state_info_vars_list + recurrent_vars + [param_eta, param_v]
         # if is_recurrent:
         #     input +=
         f_loss = ext.compile_function(
@@ -146,23 +151,18 @@ class REPS(BatchPolopt, Serializable):
             k: ext.new_tensor(
                 'old_%s' % k,
                 ndim=2 + is_recurrent,
-                dtype=theano.config.floatX)
-            for k in dist.dist_info_keys
-        }
-        old_dist_info_vars_list = [
-            old_dist_info_vars[k] for k in dist.dist_info_keys
-        ]
+                dtype=theano.config.floatX
+            ) for k in dist.dist_info_keys
+            }
+        old_dist_info_vars_list = [old_dist_info_vars[k] for k in dist.dist_info_keys]
 
         if is_recurrent:
-            mean_kl = TT.sum(
-                dist.kl_sym(old_dist_info_vars, dist_info_vars) * valid_var
-            ) / TT.sum(valid_var)
+            mean_kl = TT.sum(dist.kl_sym(old_dist_info_vars, dist_info_vars) * valid_var) / TT.sum(valid_var)
         else:
             mean_kl = TT.mean(dist.kl_sym(old_dist_info_vars, dist_info_vars))
 
         f_kl = ext.compile_function(
-            inputs=[obs_var, action_var] + state_info_vars_list +
-            old_dist_info_vars_list + recurrent_vars,
+            inputs=[obs_var, action_var] + state_info_vars_list + old_dist_info_vars_list + recurrent_vars,
             outputs=mean_kl,
         )
 
@@ -195,28 +195,27 @@ class REPS(BatchPolopt, Serializable):
 
         # Eval functions.
         f_dual = ext.compile_function(
-            inputs=[rewards, feat_diff] + state_info_vars_list +
-            recurrent_vars + [param_eta, param_v],
-            outputs=dual)
+            inputs=[rewards, feat_diff] + state_info_vars_list + recurrent_vars + [param_eta, param_v],
+            outputs=dual
+        )
         f_dual_grad = ext.compile_function(
-            inputs=[rewards, feat_diff] + state_info_vars_list +
-            recurrent_vars + [param_eta, param_v],
-            outputs=dual_grad)
+            inputs=[rewards, feat_diff] + state_info_vars_list + recurrent_vars + [param_eta, param_v],
+            outputs=dual_grad
+        )
 
         self.opt_info = dict(
             f_loss_grad=f_loss_grad,
             f_loss=f_loss,
             f_dual=f_dual,
             f_dual_grad=f_dual_grad,
-            f_kl=f_kl)
+            f_kl=f_kl
+        )
 
     def _features(self, path):
         o = np.clip(path["observations"], -10, 10)
         l = len(path["rewards"])
         al = np.arange(l).reshape(-1, 1) / 100.0
-        return np.concatenate(
-            [o, o**2, al, al**2, al**3,
-             np.ones((l, 1))], axis=1)
+        return np.concatenate([o, o ** 2, al, al ** 2, al ** 3, np.ones((l, 1))], axis=1)
 
     @overrides
     def optimize_policy(self, itr, samples_data):
@@ -227,9 +226,7 @@ class REPS(BatchPolopt, Serializable):
 
         agent_infos = samples_data["agent_infos"]
         state_info_list = [agent_infos[k] for k in self.policy.state_info_keys]
-        dist_info_list = [
-            agent_infos[k] for k in self.policy.distribution.dist_info_keys
-        ]
+        dist_info_list = [agent_infos[k] for k in self.policy.distribution.dist_info_keys]
         if self.policy.recurrent:
             recurrent_vals = [samples_data["valids"]]
         else:
@@ -241,13 +238,9 @@ class REPS(BatchPolopt, Serializable):
             feats = np.vstack([feats, np.zeros(feats.shape[1])])
             feat_diff.append(feats[1:] - feats[:-1])
         if self.policy.recurrent:
-            max_path_length = max(
-                [len(path["advantages"]) for path in samples_data["paths"]])
+            max_path_length = max([len(path["advantages"]) for path in samples_data["paths"]])
             # pad feature diffs
-            feat_diff = np.array([
-                tensor_utils.pad_tensor(fd, max_path_length)
-                for fd in feat_diff
-            ])
+            feat_diff = np.array([tensor_utils.pad_tensor(fd, max_path_length) for fd in feat_diff])
         else:
             feat_diff = np.vstack(feat_diff)
 
@@ -265,16 +258,14 @@ class REPS(BatchPolopt, Serializable):
         def eval_dual(input):
             param_eta = input[0]
             param_v = input[1:]
-            val = f_dual(*([rewards, feat_diff] + state_info_list +
-                           recurrent_vals + [param_eta, param_v]))
+            val = f_dual(*([rewards, feat_diff] + state_info_list + recurrent_vals + [param_eta, param_v]))
             return val.astype(np.float64)
 
         # Set BFGS gradient eval function
         def eval_dual_grad(input):
             param_eta = input[0]
             param_v = input[1:]
-            grad = f_dual_grad(*([rewards, feat_diff] + state_info_list +
-                                 recurrent_vals + [param_eta, param_v]))
+            grad = f_dual_grad(*([rewards, feat_diff] + state_info_list + recurrent_vals + [param_eta, param_v]))
             eta_grad = np.float(grad[0])
             v_grad = grad[1]
             return np.hstack([eta_grad, v_grad])
@@ -291,12 +282,12 @@ class REPS(BatchPolopt, Serializable):
         eta_before = x0[0]
         dual_before = eval_dual(x0)
         params_ast, _, _ = self.optimizer(
-            func=eval_dual,
-            x0=x0,
+            func=eval_dual, x0=x0,
             fprime=eval_dual_grad,
             bounds=bounds,
             maxiter=self.max_opt_itr,
-            disp=0)
+            disp=0
+        )
         dual_after = eval_dual(params_ast)
 
         # Optimal values have been obtained
@@ -309,9 +300,8 @@ class REPS(BatchPolopt, Serializable):
         cur_params = self.policy.get_param_values(trainable=True)
         f_loss = self.opt_info["f_loss"]
         f_loss_grad = self.opt_info['f_loss_grad']
-        input = [
-            rewards, observations, feat_diff, actions
-        ] + state_info_list + recurrent_vals + [self.param_eta, self.param_v]
+        input = [rewards, observations, feat_diff,
+                 actions] + state_info_list + recurrent_vals + [self.param_eta, self.param_v]
 
         # Set loss eval function
         def eval_loss(params):
@@ -323,24 +313,23 @@ class REPS(BatchPolopt, Serializable):
         def eval_loss_grad(params):
             self.policy.set_param_values(params, trainable=True)
             grad = f_loss_grad(*input)
-            flattened_grad = tensor_utils.flatten_tensors(
-                list(map(np.asarray, grad)))
+            flattened_grad = tensor_utils.flatten_tensors(list(map(np.asarray, grad)))
             return flattened_grad.astype(np.float64)
 
         loss_before = eval_loss(cur_params)
         logger.log('optimizing policy')
         params_ast, _, _ = self.optimizer(
-            func=eval_loss,
-            x0=cur_params,
+            func=eval_loss, x0=cur_params,
             fprime=eval_loss_grad,
             disp=0,
-            maxiter=self.max_opt_itr)
+            maxiter=self.max_opt_itr
+        )
         loss_after = eval_loss(params_ast)
 
         f_kl = self.opt_info['f_kl']
 
-        mean_kl = f_kl(*([observations, actions] + state_info_list +
-                         dist_info_list + recurrent_vals)).astype(np.float64)
+        mean_kl = f_kl(*([observations, actions] + state_info_list + dist_info_list + recurrent_vals)).astype(
+            np.float64)
 
         logger.log('eta %f -> %f' % (eta_before, self.param_eta))
 

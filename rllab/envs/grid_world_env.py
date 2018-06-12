@@ -7,23 +7,8 @@ from rllab.spaces import Discrete
 
 MAPS = {
     "chain": ["GFFFFFFFFFFFFFSFFFFFFFFFFFFFG"],
-<<<<<<< HEAD
-    "4x4_safe": [
-        "SFFF",
-        "FWFW",
-        "FFFW",
-        "WFFG"
-    ],
-    "4x4": [
-        "SFFF",
-        "FHFH",
-        "FFFH",
-        "HFFG"
-    ],
-=======
     "4x4_safe": ["SFFF", "FWFW", "FFFW", "WFFG"],
     "4x4": ["SFFF", "FHFH", "FFFH", "HFFG"],
->>>>>>> Refactored rllab.Env to gym.Env
     "8x8": [
         "SFFFFFFF", "FFFFFFFF", "FFFHFFFF", "FFFFFHFF", "FFFHFFFF", "FHHFFFHF",
         "FHFFHFHF", "FFFHFFFG"
@@ -138,8 +123,4 @@ class GridWorldEnv(Env, Serializable):
 
     @property
     def observation_space(self):
-<<<<<<< HEAD
-        return Discrete(self.n_row * self.n_col)
-=======
         return gym.spaces.Discrete(self.n_row * self.n_col)
->>>>>>> Refactored rllab.Env to gym.Env

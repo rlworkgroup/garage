@@ -15,23 +15,22 @@ from rllab.q_functions import QFunction
 
 
 class ContinuousMLPQFunction(QFunction, LasagnePowered):
-    def __init__(self,
-                 env_spec,
-                 hidden_sizes=(32, 32),
-                 hidden_nonlinearity=NL.rectify,
-                 hidden_W_init=lasagne.init.HeUniform(),
-                 hidden_b_init=lasagne.init.Constant(0.),
-                 action_merge_layer=-2,
-                 output_nonlinearity=None,
-                 output_W_init=lasagne.init.Uniform(-3e-3, 3e-3),
-                 output_b_init=lasagne.init.Uniform(-3e-3, 3e-3),
-                 bn=False):
+    def __init__(
+            self,
+            env_spec,
+            hidden_sizes=(32, 32),
+            hidden_nonlinearity=NL.rectify,
+            hidden_W_init=lasagne.init.HeUniform(),
+            hidden_b_init=lasagne.init.Constant(0.),
+            action_merge_layer=-2,
+            output_nonlinearity=None,
+            output_W_init=lasagne.init.Uniform(-3e-3, 3e-3),
+            output_b_init=lasagne.init.Uniform(-3e-3, 3e-3),
+            bn=False):
         Serializable.quick_init(self, locals())
 
-        l_obs = L.InputLayer(
-            shape=(None, flat_dim(env_spec.observation_space)), name="obs")
-        l_action = L.InputLayer(
-            shape=(None, flat_dim(env_spec.action_space)), name="actions")
+        l_obs = L.InputLayer(shape=(None, flat_dim(env_spec.observation_space)), name="obs")
+        l_action = L.InputLayer(shape=(None, flat_dim(env_spec.action_space)), name="actions")
 
         n_layers = len(hidden_sizes) + 1
 
@@ -56,7 +55,8 @@ class ContinuousMLPQFunction(QFunction, LasagnePowered):
                 W=hidden_W_init,
                 b=hidden_b_init,
                 nonlinearity=hidden_nonlinearity,
-                name="h%d" % (idx + 1))
+                name="h%d" % (idx + 1)
+            )
 
         if action_merge_layer == n_layers:
             l_hidden = L.ConcatLayer([l_hidden, l_action])
@@ -67,12 +67,12 @@ class ContinuousMLPQFunction(QFunction, LasagnePowered):
             W=output_W_init,
             b=output_b_init,
             nonlinearity=output_nonlinearity,
-            name="output")
+            name="output"
+        )
 
         output_var = L.get_output(l_output, deterministic=True).flatten()
 
-        self._f_qval = ext.compile_function(
-            [l_obs.input_var, l_action.input_var], output_var)
+        self._f_qval = ext.compile_function([l_obs.input_var, l_action.input_var], output_var)
         self._output_layer = l_output
         self._obs_layer = l_obs
         self._action_layer = l_action
@@ -86,6 +86,7 @@ class ContinuousMLPQFunction(QFunction, LasagnePowered):
     def get_qval_sym(self, obs_var, action_var, **kwargs):
         qvals = L.get_output(
             self._output_layer,
-            {self._obs_layer: obs_var,
-             self._action_layer: action_var}, **kwargs)
-        return TT.reshape(qvals, (-1, ))
+            {self._obs_layer: obs_var, self._action_layer: action_var},
+            **kwargs
+        )
+        return TT.reshape(qvals, (-1,))

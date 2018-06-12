@@ -12,16 +12,17 @@ from rllab.policies import Policy
 
 
 class DeterministicMLPPolicy(Policy, LasagnePowered):
-    def __init__(self,
-                 env_spec,
-                 hidden_sizes=(32, 32),
-                 hidden_nonlinearity=NL.rectify,
-                 hidden_W_init=LI.HeUniform(),
-                 hidden_b_init=LI.Constant(0.),
-                 output_nonlinearity=NL.tanh,
-                 output_W_init=LI.Uniform(-3e-3, 3e-3),
-                 output_b_init=LI.Uniform(-3e-3, 3e-3),
-                 bn=False):
+    def __init__(
+            self,
+            env_spec,
+            hidden_sizes=(32, 32),
+            hidden_nonlinearity=NL.rectify,
+            hidden_W_init=LI.HeUniform(),
+            hidden_b_init=LI.Constant(0.),
+            output_nonlinearity=NL.tanh,
+            output_W_init=LI.Uniform(-3e-3, 3e-3),
+            output_b_init=LI.Uniform(-3e-3, 3e-3),
+            bn=False):
         Serializable.quick_init(self, locals())
 
         l_obs = L.InputLayer(
@@ -38,7 +39,8 @@ class DeterministicMLPPolicy(Policy, LasagnePowered):
                 W=hidden_W_init,
                 b=hidden_b_init,
                 nonlinearity=hidden_nonlinearity,
-                name="h%d" % idx)
+                name="h%d" % idx
+            )
             if bn:
                 l_hidden = batch_norm(l_hidden)
 
@@ -48,7 +50,8 @@ class DeterministicMLPPolicy(Policy, LasagnePowered):
             W=output_W_init,
             b=output_b_init,
             nonlinearity=output_nonlinearity,
-            name="output")
+            name="output"
+        )
 
         # Note the deterministic=True argument. It makes sure that when getting
         # actions from single observations, we do not update params in the
