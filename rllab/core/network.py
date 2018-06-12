@@ -5,9 +5,9 @@ import numpy as np
 import theano
 import theano.tensor as TT
 
-from rllab.core.lasagne_powered import LasagnePowered
-from rllab.core.lasagne_layers import OpLayer
 from rllab.core import Serializable
+from rllab.core.lasagne_layers import OpLayer
+from rllab.core.lasagne_powered import LasagnePowered
 from rllab.misc import ext
 
 

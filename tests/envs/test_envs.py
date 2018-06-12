@@ -15,12 +15,12 @@ from rllab.envs import GymEnv
 from rllab.envs import IdentificationEnv
 from rllab.envs import NoisyObservationEnv
 from rllab.envs import NormalizedEnv
-from rllab.envs.proxy_env import ProxyEnv
 from rllab.envs.box2d import CarParkingEnv
 from rllab.envs.box2d import CartpoleEnv
 from rllab.envs.box2d import CartpoleSwingupEnv
 from rllab.envs.box2d import DoublePendulumEnv
 from rllab.envs.box2d import MountainCarEnv
+from rllab.envs.proxy_env import ProxyEnv
 if MUJOCO_ENABLED:
     from rllab.envs.mujoco import HalfCheetahEnv
     from rllab.envs.mujoco import HopperEnv
