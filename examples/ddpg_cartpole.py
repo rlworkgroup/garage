@@ -2,7 +2,7 @@ from rllab.algos import DDPG
 from rllab.envs import normalize
 from rllab.envs.box2d import CartpoleEnv
 from rllab.exploration_strategies import OUStrategy
-from rllab.misc import run_experiment_lite
+from rllab.misc.instrument import run_experiment_lite
 from rllab.policies import DeterministicMLPPolicy
 from rllab.q_functions import ContinuousMLPQFunction
 

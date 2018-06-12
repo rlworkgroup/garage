@@ -10,10 +10,10 @@ from rllab.core import LasagnePowered
 from rllab.core import ParamLayer
 from rllab.core import Serializable
 from rllab.distributions import DiagonalGaussian
-from rllab.misc import compile_function
-from rllab.misc import iterate_minibatches_generic
 from rllab.misc import logger
 from rllab.misc import tensor_utils
+from rllab.misc.ext import compile_function
+from rllab.misc.ext import iterate_minibatches_generic
 from rllab.optimizers import LbfgsOptimizer
 from rllab.optimizers import PenaltyLbfgsOptimizer
 

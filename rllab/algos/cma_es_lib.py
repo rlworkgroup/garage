@@ -6991,8 +6991,7 @@ class CMADataLogger(BaseDataLogger):
         :See: `plot()`
 
         """
-        from matplotlib.pyplot import semilogy, hold, grid, \
-            axis, title, text
+        from matplotlib.pyplot import semilogy, hold, grid, axis, title, text
         fontsize = pyplot.rcParams['font.size']
 
         if not hasattr(self, 'f'):

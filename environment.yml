@@ -1,6 +1,6 @@
 name: garage
 channels:
-    - https://conda.anaconda.org/kne 
+    - https://conda.anaconda.org/kne
     - https://conda.anaconda.org/menpo
 dependencies:
     - python==3.5.2
@@ -30,6 +30,7 @@ dependencies:
         - git+https://github.com/Lasagne/Lasagne.git@7992faa80fa5233a786e2582a605e854cea7d1cf#egg=Lasagne
         - git+https://github.com/Theano/Theano.git@2c19431b165aaf8289d1e6654988c64f4bb234e1#egg=Theano
         - git+https://github.com/plotly/plotly.py.git@2594076e29584ede2d09f2aa40a8a195b3f3fc66#egg=plotly
+        - absl-py==0.1.5 # to fix dm_control install error
         - git+https://github.com/deepmind/dm_control.git#egg=dm_control
         - awscli
         - gym==0.10.5
@@ -40,3 +41,4 @@ dependencies:
         - tensorboard
         - jsonmerge
         - protobuf
+        - memory_profiler

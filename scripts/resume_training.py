@@ -10,7 +10,7 @@ import numpy as np
 
 from rllab.algos import BatchPolopt
 from rllab.misc import logger
-from rllab.misc import to_local_command
+from rllab.misc.instrument import to_local_command
 from rllab.sampler.utils import rollout
 
 filename = str(uuid.uuid4())

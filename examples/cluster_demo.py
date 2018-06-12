@@ -4,8 +4,8 @@ from rllab.algos import TRPO
 from rllab.baselines import LinearFeatureBaseline
 from rllab.envs import normalize
 from rllab.envs.box2d import CartpoleEnv
-from rllab.misc import run_experiment_lite
-from rllab.misc import stub
+from rllab.misc.instrument import run_experiment_lite
+from rllab.misc.instrument import stub
 from rllab.policies import GaussianMLPPolicy
 
 

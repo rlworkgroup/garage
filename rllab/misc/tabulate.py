@@ -2,7 +2,7 @@
 
 from collections import namedtuple
 from functools import partial
-from itertools import izip_longest
+from itertools import zip_longest
 from platform import python_version_tuple
 import re
 

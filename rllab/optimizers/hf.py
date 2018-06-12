@@ -7,7 +7,7 @@ import numpy
 import theano
 import theano.tensor as T
 
-from rllab.misc import compile_function
+from rllab.misc.ext import compile_function
 
 
 def gauss_newton_product(

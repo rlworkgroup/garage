@@ -9,7 +9,7 @@ from rllab.core import Serializable
 from rllab.misc import ext
 from rllab.misc import krylov
 from rllab.misc import logger
-from rllab.misc import sliced_fun
+from rllab.misc.ext import sliced_fun
 
 
 class PerlmutterHvp(Serializable):

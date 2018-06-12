@@ -2,7 +2,7 @@ import numpy as np
 
 from rllab.envs.mujoco import HopperEnv
 from rllab.envs.mujoco.hill import HillEnv
-import rllab.envs.mujoco.hill.terrain as terrain
+from rllab.envs.mujoco.hill import terrain
 from rllab.misc.overrides import overrides
 from rllab.spaces import Box
 

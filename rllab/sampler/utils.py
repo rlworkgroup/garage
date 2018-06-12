@@ -403,7 +403,7 @@ def max_size_tests():
         print("passed")
 
 
-def test_memory_usage_ok():
+def test_memory_usage_ok(q):
     import memory_profiler
     dataset = ReplayPool(
         observation_shape=(80, 80),
