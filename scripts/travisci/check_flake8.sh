@@ -23,7 +23,7 @@ errors+="E221,"
 errors+="W291"
 # E702 multiple statements on one line (semicolon)
 errors+="E702"
-find -iname "*.py" | flake8 --select=$errors
+find -iname "*.py" | flake8 --select=${errors}
 if [[ $? -ne 0 ]]; then
   exit_status=1
 fi
@@ -52,12 +52,6 @@ errors+="W503,"
 # E303 too many blank lines (2)
 errors+="E301,E302,E303,"
 
-# IMPORTS
-# E100 Import statements are in the wrong order
-# E401 multiple imports on one line
-# I201 Missing newline between import groups
-errors+="E100,E401,I201,"
-
 # WHITESPACE IN EXPRESSION AND STATEMENTS
 # E203 whitespace before ':', ';' or ','
 errors+="E203,"
@@ -74,7 +68,7 @@ errors+="E701,"
 # STRING QUOTES
 # Use double quote characters to be consistent with the docstring convention
 # in PEP 257.
-quotes="--docstring-quotes 'double'"
+quotes="--docstring-quote "'double'
 # We prefer double-quoted strings (`"foo"`) over single-quoted strings
 # (`'foo'`), unless there is a compelling escape or formatting reason for using
 # single quotes. Therefore, ignore those rules to avoid conflicts.
@@ -83,14 +77,14 @@ quotes="--docstring-quotes 'double'"
 ignore+="Q000,Q001"
 
 if [[ "${TRAVIS_PULL_REQUEST}" != "false" ]]; then
-  git diff ${TRAVIS_COMMIT_RANGE} | flake8 --diff $quotes --ignore=$ignore --select=$errors
+  git diff ${TRAVIS_COMMIT_RANGE} | flake8 --diff ${quotes} --ignore=${ignore} --select=${errors}
   if [[ $? -ne 0 ]]; then
     exit_status=1
   fi
 else
   git remote set-branches --add origin master
   git fetch
-  git diff origin/master | flake8 --diff $quotes --ignore=$ignore --select=$errors
+  git diff origin/master | flake8 --diff ${quotes} --ignore=${ignore} --select=${errors}
   if [[ $? -ne 0 ]]; then
     exit_status=1
   fi
