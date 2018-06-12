@@ -9,12 +9,15 @@ warnings.simplefilter("ignore", category=RuntimeWarning)
 logging.basicConfig(format='%(levelname)s: %(message)s')
 
 # Add file path prefixes here to ignore them.
-IGNORE = [
+IGNORE_PATHS = [
     "build/",
     "dist/",
     "docs/",
-    "contrib/ros",
     "contrib/",
+]
+
+IGNORE_MODULES = [
+    "__future__",
 ]
 
 # Passing flag
@@ -22,7 +25,7 @@ passed = True
 
 # Get all Python files, except those in ignored prefixes
 filenames = [f for f in glob.iglob("**/*.py", recursive=True)]
-for ignored in IGNORE:
+for ignored in IGNORE_PATHS:
     filenames = [f for f in filenames if not f.startswith(ignored)]
 
 # Get all unique import statements in the repo, and their associated nodes
@@ -72,7 +75,8 @@ for fn in filenames:
                 #     passed = False
 
                 # Send it back to bash, instead of using exec
-                print(line)
+                if not [True for i in IGNORE_MODULES if i in line]:
+                    print(line)
 
 # exit code is non-zero if the script finished without error
 sys.exit(not passed)
