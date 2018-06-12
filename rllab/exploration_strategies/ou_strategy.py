@@ -3,7 +3,7 @@ import numpy.random as nr
 
 from rllab.core import Serializable
 from rllab.exploration_strategies import ExplorationStrategy
-from rllab.misc import AttrDict
+from rllab.misc.ext import AttrDict
 from rllab.misc.overrides import overrides
 from rllab.spaces import Box
 

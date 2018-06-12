@@ -15,14 +15,14 @@ import subprocess
 import sys
 import time
 
-import dateutil.tzq
+import dateutil.tz
 import numpy as np
 
 from rllab import config
 from rllab.core import Serializable
-from rllab.misc import AttrDict
 from rllab.misc import ext
-from rllab.misc import mkdir_p
+from rllab.misc.console import mkdir_p
+from rllab.misc.ext import AttrDict
 from rllab.viskit.core import flatten
 
 

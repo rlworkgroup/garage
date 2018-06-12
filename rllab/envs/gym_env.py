@@ -113,7 +113,7 @@ class GymEnv(Env, Serializable):
 
     def reset(self):
         if self._force_reset and self.monitoring:
-            from gym.wrappers.monitoring import Monitor
+            from gym.wrappers import Monitor
             assert isinstance(self.env, Monitor)
             recorder = self.env.stats_recorder
             if recorder is not None:

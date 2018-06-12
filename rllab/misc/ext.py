@@ -8,7 +8,8 @@ import sys
 import numpy as np
 from path import Path
 
-from rllab.misc import colorize, Message
+from rllab.misc.console import colorize
+from rllab.misc.console import Message
 
 sys.setrecursionlimit(50000)
 

@@ -6,7 +6,7 @@ import numpy as np
 import pygame
 
 from rllab.envs import Env
-from rllab.misc import load_class
+from rllab.misc.resolve import load_class
 
 
 def sample_action(lb, ub):
@@ -53,7 +53,7 @@ def visualize_env(env, mode, max_steps=sys.maxsize, speedup=1):
             env.reset()
             env.render()
             tr = 0.
-            from rllab.envs.box2d.box2d_env import Box2DEnv
+            from rllab.envs.box2d import Box2DEnv
             if isinstance(env, Box2DEnv):
                 for _ in range(max_steps):
                     pygame.event.pump()
@@ -69,7 +69,7 @@ def visualize_env(env, mode, max_steps=sys.maxsize, speedup=1):
                 return
 
             from rllab.envs.mujoco import MujocoEnv
-            from rllab.envs.mujoco import MazeEnv
+            from rllab.envs.mujoco.maze import MazeEnv
             if isinstance(env, (MujocoEnv, MazeEnv)):
                 trs = [tr]
                 actions = [np.zeros(2)]

@@ -1,7 +1,7 @@
 from pydoc import locate
 import types
 
-from rllab.misc import iscanr
+from rllab.misc.ext import iscanr
 
 
 def classesinmodule(module):

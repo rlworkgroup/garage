@@ -13,9 +13,9 @@ import dateutil.tz
 import joblib
 
 from rllab import config
-from rllab.misc import concretize
-from rllab.misc import is_iterable
-from rllab.misc import set_seed
+from rllab.misc.ext import is_iterable
+from rllab.misc.ext import set_seed
+from rllab.misc.instrument import concretize
 import rllab.misc.logger as logger
 
 

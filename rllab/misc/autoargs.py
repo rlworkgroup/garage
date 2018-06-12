@@ -1,6 +1,6 @@
 import inspect
 
-from rllab.misc import colorize
+from rllab.misc.console import colorize
 
 
 # pylint: disable=redefined-builtin
@@ -38,15 +38,12 @@ def prefix(prefix_):
 
 
 def _get_prefix(cls):
-    from rllab.mdp.base import MDP
     from rllab.policies import Policy
     from rllab.baselines import Baseline
     from rllab.algos import Algorithm
 
     if hasattr(cls.__init__, '_autoargs_prefix'):
         return cls.__init__._autoargs_prefix
-    elif issubclass(cls, MDP):
-        return 'mdp_'
     elif issubclass(cls, Algorithm):
         return 'algo_'
     elif issubclass(cls, Baseline):

@@ -15,7 +15,7 @@ from hyperopt.mongoexp import MongoTrials
 import polling
 
 from rllab import config
-from rllab.misc import run_experiment_lite
+from rllab.misc.instrument import run_experiment_lite
 
 
 class S3SyncThread(threading.Thread):

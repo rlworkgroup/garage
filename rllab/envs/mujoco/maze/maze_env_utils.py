@@ -7,8 +7,6 @@ import numpy as np
 
 from rllab.misc import logger
 
-mpl.use('Agg')
-
 
 def line_intersect(pt1, pt2, ptA, ptB):
     """

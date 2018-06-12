@@ -2,7 +2,7 @@ from setuptools import find_packages
 from setuptools import setup
 
 setup(
-    name='rllab',
+    name='rlgarage',
     packages=[
         package for package in find_packages() if package.startswith('rllab')
     ],
