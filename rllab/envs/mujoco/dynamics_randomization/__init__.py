@@ -1,4 +1,0 @@
-from rllab.envs.mujoco.dynamics_randomization.randomized_env import randomize
-from rllab.envs.mujoco.dynamics_randomization.variation import Distribution
-from rllab.envs.mujoco.dynamics_randomization.variation import Method
-from rllab.envs.mujoco.dynamics_randomization.variation import Variations
