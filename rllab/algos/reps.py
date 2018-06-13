@@ -5,6 +5,7 @@ import theano.tensor as TT
 
 from rllab.algos import BatchPolopt
 from rllab.core import Serializable
+from rllab.envs.util import flat_dim, new_tensor_variable
 from rllab.misc import ext
 from rllab.misc import logger
 from rllab.misc import tensor_utils
@@ -56,15 +57,17 @@ class REPS(BatchPolopt, Serializable):
         # Init dual param values
         self.param_eta = 15.
         # Adjust for linear feature vector.
-        self.param_v = np.random.rand(self.env.observation_space.flat_dim * 2 +
-                                      4)
+        self.param_v = np.random.rand(
+            flat_dim(self.env.observation_space) * 2 + 4)
 
         # Theano vars
-        obs_var = self.env.observation_space.new_tensor_variable(
+        obs_var = new_tensor_variable(
+            self.env.observation_space,
             'obs',
             extra_dims=1 + is_recurrent,
         )
-        action_var = self.env.action_space.new_tensor_variable(
+        action_var = new_tensor_variable(
+            self.env.action_space,
             'action',
             extra_dims=1 + is_recurrent,
         )

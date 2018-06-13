@@ -6,6 +6,7 @@ import xml.etree.ElementTree as ET
 
 import mujoco_py
 import glfw  # noqa: I100
+import gym
 # https://github.com/openai/mujoco-py/blob/6ac6ac203a875ef35b1505827264cadccbfd9f05/mujoco_py/builder.py#L61
 from mujoco_py import functions
 from mujoco_py import load_model_from_path
@@ -13,13 +14,13 @@ from mujoco_py import MjRenderContext
 from mujoco_py import MjViewer
 import numpy as np
 
-from rllab import spaces
 from rllab.core import Serializable
 from rllab.envs import Step
 from rllab.envs.mujoco.gather.embedded_viewer import EmbeddedViewer
 from rllab.envs.mujoco.mujoco_env import BIG
 from rllab.envs.mujoco.mujoco_env import MODEL_DIR
 from rllab.envs.proxy_env import ProxyEnv
+from rllab.envs.util import flat_dim
 from rllab.misc import autoargs
 from rllab.misc import logger
 from rllab.misc.overrides import overrides
@@ -224,7 +225,7 @@ class GatherEnv(ProxyEnv, Serializable):
                 name="wall4",
                 pos="%d 0 0" % walldist,
                 size="0.5 %d.5 1" % walldist))
-        _, file_path = tempfile.mkstemp(text=True)
+        _, file_path = tempfile.mkstemp(suffix=".xml", text=True)
         tree.write(file_path)
         # pylint: disable=not-callable
         inner_env = model_cls(*args, file_path=file_path, **kwargs)
@@ -351,7 +352,7 @@ class GatherEnv(ProxyEnv, Serializable):
     def observation_space(self):
         shp = self.get_current_obs().shape
         ub = BIG * np.ones(shp)
-        return spaces.Box(ub * -1, ub)
+        return gym.spaces.Box(ub * -1, ub, dtype=np.float32)
 
     # space of only the robot observations (they go first in the get current
     # obs)
@@ -359,13 +360,13 @@ class GatherEnv(ProxyEnv, Serializable):
     def robot_observation_space(self):
         shp = self.get_current_robot_obs().shape
         ub = BIG * np.ones(shp)
-        return spaces.Box(ub * -1, ub)
+        return gym.spaces.Box(ub * -1, ub, dtype=np.float32)
 
     @property
     def maze_observation_space(self):
         shp = np.concatenate(self.get_readings()).shape
         ub = BIG * np.ones(shp)
-        return spaces.Box(ub * -1, ub)
+        return gym.spaces.Box(ub * -1, ub, dtype=np.float32)
 
     @property
     @overrides
@@ -439,9 +440,9 @@ class GatherEnv(ProxyEnv, Serializable):
                 stripped_path[k] = v
             stripped_path['observations'] = \
                 stripped_path['observations'][
-                :, :self.wrapped_env.observation_space.flat_dim]
-            # this breaks if the obs of the robot are d>1 dimensional (not a
-            # vector)
+                    :, :flat_dim(self.wrapped_env.observation_space)]
+            #  this breaks if the obs of the robot are d>1 dimensional (not a
+            #  vector)
             stripped_paths.append(stripped_path)
         with logger.tabular_prefix('wrapped_'):
             if 'env_infos' in paths[0].keys(

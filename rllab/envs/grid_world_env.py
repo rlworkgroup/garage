@@ -1,7 +1,7 @@
+import gym
 import numpy as np
 
 from rllab.core import Serializable
-from rllab.envs import Env
 from rllab.envs import Step
 from rllab.spaces import Discrete
 
@@ -32,7 +32,7 @@ MAPS = {
 } # yapf: disable
 
 
-class GridWorldEnv(Env, Serializable):
+class GridWorldEnv(gym.Env, Serializable):
     """
     'S' : starting point
     'F' or '.': free space
@@ -135,8 +135,8 @@ class GridWorldEnv(Env, Serializable):
 
     @property
     def action_space(self):
-        return Discrete(4)
+        return gym.spaces.Discrete(4)
 
     @property
     def observation_space(self):
-        return Discrete(self.n_row * self.n_col)
+        return gym.spaces.Discrete(self.n_row * self.n_col)

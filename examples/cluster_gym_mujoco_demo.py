@@ -1,8 +1,10 @@
 import sys
 
+import gym
+
 from rllab.baselines import LinearFeatureBaseline
-from rllab.envs import GymEnv
 from rllab.envs import normalize
+from rllab.envs.util import spec
 from rllab.misc.instrument import run_experiment_lite
 from rllab.misc.instrument import variant
 from rllab.misc.instrument import VariantGenerator
@@ -23,14 +25,12 @@ class VG(VariantGenerator):
 
 def run_task(vv):
 
-    env = TfEnv(
-        normalize(
-            GymEnv('HalfCheetah-v1', record_video=False, record_log=False)))
+    env = TfEnv(normalize(gym.make('HalfCheetah-v1')))
 
     policy = GaussianMLPPolicy(
-        env_spec=env.spec, hidden_sizes=(32, 32), name="policy")
+        env_spec=spec(env), hidden_sizes=(32, 32), name="policy")
 
-    baseline = LinearFeatureBaseline(env_spec=env.spec)
+    baseline = LinearFeatureBaseline(env_spec=spec(env))
 
     algo = TRPO(
         env=env,
@@ -42,7 +42,8 @@ def run_task(vv):
         discount=0.99,
         step_size=vv["step_size"],
         # Uncomment both lines (this and the plot parameter below) to enable
-        # plotting plot=True,
+        # plotting
+        # plot=True,
     )
     algo.train()
 

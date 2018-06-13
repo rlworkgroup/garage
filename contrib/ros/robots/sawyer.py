@@ -2,6 +2,7 @@
 Sawyer Interface
 """
 
+import gym
 from intera_core_msgs.msg import JointLimits
 import intera_interface
 import numpy as np
@@ -78,7 +79,11 @@ class Sawyer(Robot):
 
     @property
     def observation_space(self):
-        return Box(-np.inf, np.inf, shape=self.get_observation().shape)
+        return gym.spaces.Box(
+            -np.inf,
+            np.inf,
+            shape=self.get_observation().shape,
+            dtype=np.float32)
 
     def send_command(self, commands):
         """
@@ -140,6 +145,7 @@ class Sawyer(Robot):
             else:
                 raise ValueError(
                     'Control mode %s is not known!' % self._control_mode)
-        return Box(
+        return gym.spaces.Box(
             np.concatenate((lower_bounds, np.array([0]))),
-            np.concatenate((upper_bounds, np.array([100]))))
+            np.concatenate((upper_bounds, np.array([100]))),
+            dtype=np.float32)

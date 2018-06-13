@@ -5,7 +5,6 @@ import time
 import numpy as np
 import pygame
 
-from rllab.envs import Env
 from rllab.misc.resolve import load_class
 
 

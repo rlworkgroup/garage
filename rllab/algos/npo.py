@@ -2,6 +2,7 @@ import theano
 import theano.tensor as TT
 
 from rllab.algos import BatchPolopt
+from rllab.envs.util import new_tensor_variable
 from rllab.misc import ext
 import rllab.misc.logger as logger
 from rllab.misc.overrides import overrides
@@ -31,11 +32,13 @@ class NPO(BatchPolopt):
     @overrides
     def init_opt(self):
         is_recurrent = int(self.policy.recurrent)
-        obs_var = self.env.observation_space.new_tensor_variable(
+        obs_var = new_tensor_variable(
+            self.env.observation_space,
             'obs',
             extra_dims=1 + is_recurrent,
         )
-        action_var = self.env.action_space.new_tensor_variable(
+        action_var = new_tensor_variable(
+            self.env.action_space,
             'action',
             extra_dims=1 + is_recurrent,
         )

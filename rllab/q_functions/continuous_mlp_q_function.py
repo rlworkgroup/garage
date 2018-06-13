@@ -7,6 +7,7 @@ import theano.tensor as TT
 from rllab.core import batch_norm
 from rllab.core import LasagnePowered
 from rllab.core import Serializable
+from rllab.envs.util import flat_dim
 from rllab.misc import ext
 from rllab.q_functions import QFunction
 
@@ -26,9 +27,9 @@ class ContinuousMLPQFunction(QFunction, LasagnePowered):
         Serializable.quick_init(self, locals())
 
         l_obs = L.InputLayer(
-            shape=(None, env_spec.observation_space.flat_dim), name="obs")
+            shape=(None, flat_dim(env_spec.observation_space)), name="obs")
         l_action = L.InputLayer(
-            shape=(None, env_spec.action_space.flat_dim), name="actions")
+            shape=(None, flat_dim(env_spec.action_space)), name="actions")
 
         n_layers = len(hidden_sizes) + 1
 

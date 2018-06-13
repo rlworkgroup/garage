@@ -50,7 +50,7 @@ class InvertedDoublePendulumEnv(MujocoEnv, Serializable):
         qpos = np.copy(self.init_qpos)
         if self.random_start:
             qpos[1] = (np.random.rand() - 0.5) * 40 / 180. * np.pi
-        self.sim.data.qpos = qpos
-        self.sim.data.qvel = self.init_qvel
-        self.sim.data.qacc = self.init_qacc
-        self.sim.data.ctrl = self.init_ctrl
+        self.sim.data.qpos[:] = qpos
+        self.sim.data.qvel[:] = self.init_qvel
+        self.sim.data.qacc[:] = self.init_qacc
+        self.sim.data.ctrl[:] = self.init_ctrl

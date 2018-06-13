@@ -1,23 +1,22 @@
 import os.path as osp
 
+import gym
 import mako.lookup
 import mako.template
 import numpy as np
 
-from rllab import spaces
-from rllab.envs import Env
 from rllab.envs import Step
 from rllab.envs.box2d.box2d_viewer import Box2DViewer
-from rllab.envs.box2d.parser.xml_box2d import find_body
-from rllab.envs.box2d.parser.xml_box2d import find_joint
+from rllab.envs.box2d.parser.xml_box2d import find_body, find_joint
 from rllab.envs.box2d.parser.xml_box2d import world_from_xml
+from rllab.envs.util import bounds, flat_dim
 from rllab.misc import autoargs
 from rllab.misc.overrides import overrides
 
 BIG = 1e6
 
 
-class Box2DEnv(Env):
+class Box2DEnv(gym.Env):
     @autoargs.arg("frame_skip", type=int, help="Number of frames to skip")
     @autoargs.arg(
         'position_only',
@@ -111,7 +110,7 @@ class Box2DEnv(Env):
             [control.ctrllimit[0] for control in self.extra_data.controls])
         ub = np.array(
             [control.ctrllimit[1] for control in self.extra_data.controls])
-        return spaces.Box(lb, ub)
+        return gym.spaces.Box(lb, ub, dtype=np.float32)
 
     @property
     @overrides
@@ -121,16 +120,17 @@ class Box2DEnv(Env):
         else:
             d = len(self.extra_data.states)
         ub = BIG * np.ones(d)
-        return spaces.Box(ub * -1, ub)
+        return gym.spaces.Box(ub * -1, ub, dtype=np.float32)
 
     @property
     def action_bounds(self):
-        return self.action_space.bounds
+        return bounds(self.action_space)
 
     def forward_dynamics(self, action):
-        if len(action) != self.action_dim:
-            raise ValueError('incorrect action dimension: expected %d but got '
-                             '%d' % (self.action_dim, len(action)))
+        if len(action) != flat_dim(self.action_space):
+            raise ValueError(
+                'incorrect action dimension: expected %d but got '
+                '%d' % (flat_dim(self.action_space)), len(action))
         lb, ub = self.action_bounds
         action = np.clip(action, lb, ub)
         for ctrl, act in zip(self.extra_data.controls, action):
@@ -366,3 +366,6 @@ class Box2DEnv(Env):
 
     def action_from_keys(self, keys):
         raise NotImplementedError
+
+    def log_diagnostics(self, paths):
+        pass

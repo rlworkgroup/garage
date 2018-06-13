@@ -1,8 +1,9 @@
+import gym
+
 from rllab.core import Serializable
-from rllab.envs import Env
 
 
-class ProxyEnv(Env, Serializable):
+class ProxyEnv(gym.Env, Serializable):
     def __init__(self, wrapped_env):
         Serializable.quick_init(self, locals())
         self._wrapped_env = wrapped_env
@@ -35,8 +36,8 @@ class ProxyEnv(Env, Serializable):
     def horizon(self):
         return self._wrapped_env.horizon
 
-    def terminate(self):
-        self._wrapped_env.terminate()
+    def close(self):
+        self._wrapped_env.close()
 
     def get_param_values(self):
         return self._wrapped_env.get_param_values()

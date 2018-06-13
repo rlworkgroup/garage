@@ -1,14 +1,14 @@
 import os.path as osp
 
+import gym
 from mujoco_py import load_model_from_xml
 from mujoco_py import MjSim
 
 from rllab.core import Serializable
-from rllab.envs import Env
 from rllab.envs.mujoco.mujoco_env import MODEL_DIR
 
 
-class RandomizedEnv(Env, Serializable):
+class RandomizedEnv(gym.Env, Serializable):
     """
     This class is just a wrapper class for the MujocoEnv to perform
     the training using Dynamics Randomization.
@@ -58,8 +58,8 @@ class RandomizedEnv(Env, Serializable):
     def set_param_values(self, params):
         self._wrapped_env.set_param_values(params)
 
-    def terminate(self):
-        self._wrapped_env.terminate()
+    def close(self):
+        self._wrapped_env.close()
 
     @property
     def wrapped_env(self):

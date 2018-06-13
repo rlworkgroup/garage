@@ -44,7 +44,7 @@ def _worker_populate_task(G, env, policy, scope=None):
 def _worker_terminate_task(G, scope=None):
     G = _get_scoped_G(G, scope)
     if getattr(G, "env", None):
-        G.env.terminate()
+        G.env.close()
         G.env = None
     if getattr(G, "policy", None):
         G.policy.terminate()

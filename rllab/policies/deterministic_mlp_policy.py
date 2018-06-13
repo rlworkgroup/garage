@@ -6,6 +6,7 @@ import lasagne.nonlinearities as NL
 from rllab.core import batch_norm
 from rllab.core import LasagnePowered
 from rllab.core import Serializable
+from rllab.envs.util import flat_dim
 from rllab.misc import ext
 from rllab.policies import Policy
 
@@ -23,7 +24,8 @@ class DeterministicMLPPolicy(Policy, LasagnePowered):
                  bn=False):
         Serializable.quick_init(self, locals())
 
-        l_obs = L.InputLayer(shape=(None, env_spec.observation_space.flat_dim))
+        l_obs = L.InputLayer(
+            shape=(None, flat_dim(env_spec.observation_space)))
 
         l_hidden = l_obs
         if bn:
@@ -42,7 +44,7 @@ class DeterministicMLPPolicy(Policy, LasagnePowered):
 
         l_output = L.DenseLayer(
             l_hidden,
-            num_units=env_spec.action_space.flat_dim,
+            num_units=flat_dim(env_spec.action_space),
             W=output_W_init,
             b=output_b_init,
             nonlinearity=output_nonlinearity,

@@ -1,5 +1,6 @@
 import os
 
+import gym
 from nose2 import tools
 MUJOCO_ENABLED = True
 try:
@@ -11,7 +12,6 @@ import numpy as np
 
 from rllab.envs import DelayedActionEnv
 from rllab.envs import GridWorldEnv
-from rllab.envs import GymEnv
 from rllab.envs import IdentificationEnv
 from rllab.envs import NoisyObservationEnv
 from rllab.envs import NormalizedEnv
@@ -68,7 +68,7 @@ envs.append(IdentificationEnv(CartpoleEnv, {}))
 envs.append(NoisyObservationEnv(CartpoleEnv()))
 envs.append(DelayedActionEnv(CartpoleEnv()))
 envs.append(NormalizedEnv(CartpoleEnv()))
-envs.append(GymEnv('CartPole-v0'))
+envs.append(gym.make("CartPole-v1"))
 
 
 @tools.params(*envs)
@@ -81,10 +81,10 @@ def test_env(env):
     a = act_space.sample()
     assert act_space.contains(a)
     res = env.step(a)
-    assert ob_space.contains(res.observation)
-    assert np.isscalar(res.reward)
+    assert ob_space.contains(res[0])  # res[0] --> observation
+    assert np.isscalar(res[1])  # res[1] --> reward
     if 'CIRCLECI' in os.environ:
         print("Skipping rendering test")
     else:
         env.render()
-    env.terminate()
+    env.close()

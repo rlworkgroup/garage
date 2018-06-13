@@ -9,6 +9,7 @@ from rllab.core import LasagnePowered
 from rllab.core import ParamLayer
 from rllab.core import Serializable
 from rllab.distributions import RecurrentDiagonalGaussian
+from rllab.envs.util import flat_dim, flatten
 from rllab.misc import ext
 from rllab.misc.overrides import overrides
 from rllab.policies import StochasticPolicy
@@ -37,15 +38,15 @@ class GaussianGRUPolicy(StochasticPolicy, LasagnePowered):
         assert len(hidden_sizes) == 1
 
         if state_include_action:
-            obs_dim = env_spec.observation_space.flat_dim + \
-                      env_spec.action_space.flat_dim
+            obs_dim = flat_dim(env_spec.observation_space) + flat_dim(
+                env_spec.action_space)
         else:
-            obs_dim = env_spec.observation_space.flat_dim
-        action_dim = env_spec.action_space.flat_dim
+            obs_dim = flat_dim(env_spec.observation_space)
+        action_flat_dim = flat_dim(env_spec.action_space)
 
         mean_network = GRUNetwork(
             input_shape=(obs_dim, ),
-            output_dim=action_dim,
+            output_dim=action_flat_dim,
             hidden_dim=hidden_sizes[0],
             hidden_nonlinearity=hidden_nonlinearity,
             output_nonlinearity=output_nonlinearity,
@@ -56,7 +57,7 @@ class GaussianGRUPolicy(StochasticPolicy, LasagnePowered):
 
         l_log_std = ParamLayer(
             mean_network.input_layer,
-            num_units=action_dim,
+            num_units=action_flat_dim,
             param=lasagne.init.Constant(np.log(init_std)),
             name="output_log_std",
             trainable=learn_std,
@@ -64,7 +65,7 @@ class GaussianGRUPolicy(StochasticPolicy, LasagnePowered):
 
         l_step_log_std = ParamLayer(
             mean_network.step_input_layer,
-            num_units=action_dim,
+            num_units=action_flat_dim,
             param=l_log_std.param,
             name="step_output_log_std",
             trainable=learn_std,
@@ -87,7 +88,7 @@ class GaussianGRUPolicy(StochasticPolicy, LasagnePowered):
         self._prev_action = None
         self._prev_hidden = None
         self._hidden_sizes = hidden_sizes
-        self._dist = RecurrentDiagonalGaussian(action_dim)
+        self._dist = RecurrentDiagonalGaussian(action_flat_dim)
 
         self.reset()
 
@@ -118,13 +119,13 @@ class GaussianGRUPolicy(StochasticPolicy, LasagnePowered):
     def get_action(self, observation):
         if self._state_include_action:
             if self._prev_action is None:
-                prev_action = np.zeros((self.action_space.flat_dim, ))
+                prev_action = np.zeros((flat_dim(self.action_space), ))
             else:
-                prev_action = self.action_space.flatten(self._prev_action)
+                prev_action = flatten(self.action_space, self._prev_action)
             all_input = np.concatenate(
-                [self.observation_space.flatten(observation), prev_action])
+                [flatten(self.observation_space, observation), prev_action])
         else:
-            all_input = self.observation_space.flatten(observation)
+            all_input = flatten(self.observation_space, observation)
             # should not be used
             prev_action = np.nan
         mean, log_std, hidden_vec = [

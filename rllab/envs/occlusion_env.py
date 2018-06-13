@@ -1,4 +1,5 @@
 from cached_property import cached_property
+import gym
 import numpy as np
 
 from rllab import spaces
@@ -6,6 +7,7 @@ from rllab.core import Serializable
 from rllab.envs import Step
 from rllab.envs.mujoco import MujocoEnv
 from rllab.envs.proxy_env import ProxyEnv
+from rllab.envs.util import flat_dim
 from rllab.misc.overrides import overrides
 
 BIG = 1e6
@@ -29,7 +31,7 @@ class OcclusionEnv(ProxyEnv, Serializable):
             self._dt = env.sim.opt.timestep * env.frame_skip
 
     def _set_sensor_mask(self, env, sensor_idx):
-        obsdim = env.observation_space.flat_dim
+        obsdim = flat_dim(env.observation_space)
         if len(sensor_idx) > obsdim:
             raise ValueError(("Length of sensor mask ({0}) cannot be greater "
                               "than observation dim ({1})").format(
@@ -56,7 +58,7 @@ class OcclusionEnv(ProxyEnv, Serializable):
     def observation_space(self):
         shp = self.get_current_obs().shape
         ub = BIG * np.ones(shp)
-        return spaces.Box(ub * -1, ub)
+        return gym.spaces.Box(ub * -1, ub, dtype=np.float32)
 
     @overrides
     def reset(self):

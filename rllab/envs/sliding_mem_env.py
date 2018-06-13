@@ -1,3 +1,4 @@
+import gym
 import numpy as np
 
 from rllab.core import Serializable
@@ -5,7 +6,6 @@ from rllab.envs import Step
 from rllab.envs.proxy_env import ProxyEnv
 from rllab.misc import autoargs
 from rllab.misc.overrides import overrides
-from rllab.spaces import Box
 
 
 class SlidingMemEnv(ProxyEnv, Serializable):
@@ -34,9 +34,9 @@ class SlidingMemEnv(ProxyEnv, Serializable):
     @property
     def observation_space(self):
         origin = self._wrapped_env.observation_space
-        return Box(*[
-            np.repeat(b, self.n_steps, axis=self.axis) for b in origin.bounds
-        ])
+        return gym.spaces.Box(*[
+                np.repeat(b, self.n_steps, axis=self.axis) for b in origin.bounds
+            ], dtype=np.float32) # yapf: disable
 
     @overrides
     def reset(self):

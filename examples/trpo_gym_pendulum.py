@@ -1,7 +1,9 @@
+import gym
+
 from rllab.algos import TRPO
 from rllab.baselines import LinearFeatureBaseline
-from rllab.envs import GymEnv
 from rllab.envs import normalize
+from rllab.envs.util import spec
 from rllab.misc.instrument import run_experiment_lite
 from rllab.policies import GaussianMLPPolicy
 
@@ -11,11 +13,11 @@ def run_task(*_):
     # require different policies. For example with a Box action space, a
     # GaussianMLPPolicy works, but for a Discrete action space may need to use a
     # CategoricalMLPPolicy (see the trpo_gym_cartpole.py example)
-    env = normalize(GymEnv("Pendulum-v0"))
+    env = normalize(gym.make("Pendulum-v0"))
 
-    policy = GaussianMLPPolicy(env_spec=env.spec, hidden_sizes=(32, 32))
+    policy = GaussianMLPPolicy(env_spec=spec(env), hidden_sizes=(32, 32))
 
-    baseline = LinearFeatureBaseline(env_spec=env.spec)
+    baseline = LinearFeatureBaseline(env_spec=spec(env))
 
     algo = TRPO(
         env=env,
@@ -28,7 +30,7 @@ def run_task(*_):
         step_size=0.01,
         # Uncomment both lines (this and the plot parameter below) to enable
         # plotting
-        plot=True,
+        # plot=True,
     )
     algo.train()
 

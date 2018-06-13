@@ -5,6 +5,7 @@ from rllab.core import Serializable
 from rllab.envs.box2d.box2d_env import Box2DEnv
 from rllab.envs.box2d.parser import find_body
 from rllab.envs.box2d.parser.xml_box2d import _get_name
+from rllab.envs.util import flat_dim
 from rllab.misc import autoargs
 from rllab.misc.overrides import overrides
 
@@ -106,7 +107,7 @@ class CarParkingEnv(Box2DEnv, Serializable):
 
     @overrides
     def action_from_keys(self, keys):
-        go = np.zeros(self.action_dim)
+        go = np.zeros(self.action_flat_dim)
         if keys[pygame.K_LEFT]:
             go[-1] = self.max_deg
         if keys[pygame.K_RIGHT]:
@@ -116,3 +117,36 @@ class CarParkingEnv(Box2DEnv, Serializable):
         if keys[pygame.K_DOWN]:
             go[0] = -10
         return go
+
+    @overrides
+    def forward_dynamics(self, action):
+        if len(action) != flat_dim(self.action_space) + 1:
+            raise ValueError('incorrect action dimension: expected %d but got '
+                             '%d' % (flat_dim(self.action_space), len(action)))
+        lb, ub = self.action_bounds
+        action = np.clip(action, lb, ub)
+        for ctrl, act in zip(self.extra_data.controls, action):
+            if ctrl.typ == "force":
+                for name in ctrl.bodies:
+                    body = find_body(self.world, name)
+                    direction = np.array(ctrl.direction)
+                    direction = direction / np.linalg.norm(direction)
+                    world_force = body.GetWorldVector(direction * act)
+                    world_point = body.GetWorldPoint(ctrl.anchor)
+                    body.ApplyForce(world_force, world_point, wake=True)
+            elif ctrl.typ == "torque":
+                assert ctrl.joint
+                joint = find_joint(self.world, ctrl.joint)
+                joint.motorEnabled = True
+                # forces the maximum allowed torque to be taken
+                if act > 0:
+                    joint.motorSpeed = 1e5
+                else:
+                    joint.motorSpeed = -1e5
+                joint.maxMotorTorque = abs(act)
+            else:
+                raise NotImplementedError
+        self.before_world_step(action)
+        self.world.Step(self.extra_data.timeStep,
+                        self.extra_data.velocityIterations,
+                        self.extra_data.positionIterations)

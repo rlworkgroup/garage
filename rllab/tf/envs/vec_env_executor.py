@@ -46,5 +46,5 @@ class VecEnvExecutor(object):
     def observation_space(self):
         return self._observation_space
 
-    def terminate(self):
+    def close(self):
         pass

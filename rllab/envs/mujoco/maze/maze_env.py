@@ -3,9 +3,9 @@ import os.path as osp
 import tempfile
 import xml.etree.ElementTree as ET
 
+import gym
 import numpy as np
 
-from rllab import spaces
 from rllab.core import Serializable
 from rllab.envs import Step
 from rllab.envs.mujoco.maze.maze_env_utils import construct_maze
@@ -14,6 +14,7 @@ from rllab.envs.mujoco.maze.maze_env_utils import ray_segment_intersect
 from rllab.envs.mujoco.mujoco_env import BIG
 from rllab.envs.mujoco.mujoco_env import MODEL_DIR
 from rllab.envs.proxy_env import ProxyEnv
+from rllab.envs.util import flat_dim
 from rllab.misc import logger
 from rllab.misc.overrides import overrides
 
@@ -115,7 +116,7 @@ class MazeEnv(ProxyEnv, Serializable):
                                 geom1=geom.attrib["name"],
                                 geom2="block_%d_%d" % (i, j))
 
-        _, file_path = tempfile.mkstemp(text=True)
+        _, file_path = tempfile.mkstemp(suffix=".xml", text=True)
         tree.write(
             file_path
         )  # here we write a temporal file with the robot specifications.
@@ -241,7 +242,7 @@ class MazeEnv(ProxyEnv, Serializable):
     def observation_space(self):
         shp = self.get_current_obs().shape
         ub = BIG * np.ones(shp)
-        return spaces.Box(ub * -1, ub)
+        return gym.spaces.Box(ub * -1, ub, dtype=np.float32)
 
     # space of only the robot observations (they go first in the get current
     # obs) THIS COULD GO IN PROXYENV
@@ -249,13 +250,13 @@ class MazeEnv(ProxyEnv, Serializable):
     def robot_observation_space(self):
         shp = self.get_current_robot_obs().shape
         ub = BIG * np.ones(shp)
-        return spaces.Box(ub * -1, ub)
+        return gym.spaces.Box(ub * -1, ub, dtype=np.float32)
 
     @property
     def maze_observation_space(self):
         shp = self.get_current_maze_obs().shape
         ub = BIG * np.ones(shp)
-        return spaces.Box(ub * -1, ub)
+        return gym.spaces.Box(ub * -1, ub, dtype=np.float32)
 
     def _find_robot(self):
         structure = self.MAZE_STRUCTURE
@@ -348,11 +349,10 @@ class MazeEnv(ProxyEnv, Serializable):
             stripped_path = {}
             for k, v in path.items():
                 stripped_path[k] = v
-            stripped_path['observations'] = stripped_path[
-                'observations'][:, :
-                                self.wrapped_env.observation_space.flat_dim]
-            # this breaks if the obs of the robot are d>1 dimensional (not a
-            # vector)
+            stripped_path['observations'] = stripped_path['observations'][:,
+             :flat_dim(self.wrapped_env.observation_space)] # yapf: disable
+            #  this breaks if the obs of the robot are d>1 dimensional (not a
+            #  vector)
             stripped_paths.append(stripped_path)
         with logger.tabular_prefix('wrapped_'):
             wrapped_undiscounted_return = np.mean(

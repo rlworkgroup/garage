@@ -1,6 +1,7 @@
 from rllab.algos import DDPG
 from rllab.envs import normalize
 from rllab.envs.box2d import CartpoleEnv
+from rllab.envs.util import spec
 from rllab.exploration_strategies import OUStrategy
 from rllab.misc.instrument import run_experiment_lite
 from rllab.policies import DeterministicMLPPolicy
@@ -10,11 +11,14 @@ from rllab.q_functions import ContinuousMLPQFunction
 def run_task(*_):
     env = normalize(CartpoleEnv())
 
-    policy = DeterministicMLPPolicy(env_spec=env.spec, hidden_sizes=(32, 32))
+    policy = DeterministicMLPPolicy(
+        env_spec=spec(env),
+        # The neural network policy should have two hidden layers, each with 32 hidden units.
+        hidden_sizes=(32, 32))
 
-    es = OUStrategy(env_spec=env.spec)
+    es = OUStrategy(env_spec=spec(env))
 
-    qf = ContinuousMLPQFunction(env_spec=env.spec)
+    qf = ContinuousMLPQFunction(env_spec=spec(env))
 
     algo = DDPG(
         env=env,

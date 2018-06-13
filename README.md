@@ -6,7 +6,7 @@
 
 garage is a framework for developing and evaluating reinforcement learning algorithms. It includes a wide range of continuous control tasks plus implementations of algorithms.
 
-garage is fully compatible with [OpenAI Gym](https://gym.openai.com/). See [here](http://rlgarage.readthedocs.io/en/latest/user/gym_integration.html) for instructions and examples.
+garage is fully compatible with [OpenAI Gym](https://gym.openai.com/). All garage environments implement gym.Env, so all garage components can also be used with any environment implementing gym.Env.
 
 garage only officially supports Python 3.5+.
 

@@ -4,6 +4,7 @@ import tempfile
 import warnings
 
 from cached_property import cached_property
+import gym
 import mako.lookup
 import mako.template
 import mujoco_py
@@ -14,8 +15,7 @@ from mujoco_py import MjViewer
 import numpy as np
 import theano
 
-from rllab import spaces
-from rllab.envs import Env
+from rllab.envs.util import bounds
 from rllab.misc import autoargs
 from rllab.misc import logger
 from rllab.misc.overrides import overrides
@@ -40,7 +40,7 @@ def q_mult(a, b):  # multiply two quaternion
     return [w, i, j, k]
 
 
-class MujocoEnv(Env):
+class MujocoEnv(gym.Env):
     FILE = None
 
     @autoargs.arg(
@@ -61,7 +61,7 @@ class MujocoEnv(Env):
                     template_file.read(), lookup=lookup)
             content = template.render(
                 opts=template_args if template_args is not None else {}, )
-            tmp_f, file_path = tempfile.mkstemp(text=True)
+            tmp_f, file_path = tempfile.mkstemp(suffix=".xml", text=True)
             with open(file_path, 'w') as f:
                 f.write(content)
             self.model = load_model_from_path(file_path)
@@ -91,18 +91,18 @@ class MujocoEnv(Env):
         bounds = self.model.actuator_ctrlrange
         lb = bounds[:, 0]
         ub = bounds[:, 1]
-        return spaces.Box(lb, ub)
+        return gym.spaces.Box(lb, ub, dtype=np.float32)
 
     @cached_property
     @overrides
     def observation_space(self):
         shp = self.get_current_obs().shape
         ub = BIG * np.ones(shp)
-        return spaces.Box(ub * -1, ub)
+        return gym.spaces.Box(ub * -1, ub, dtype=np.float32)
 
     @property
     def action_bounds(self):
-        return self.action_space.bounds
+        return bounds(self.action_space)
 
     def reset_mujoco(self, init_state=None):
         self.sim.reset()
@@ -135,7 +135,7 @@ class MujocoEnv(Env):
 
     def _get_full_obs(self):
         data = self.sim.data
-        cdists = np.copy(self.sim.geom_margin).flat
+        cdists = np.copy(self.sim.model.geom_margin).flat
         for c in self.sim.data.contact:
             cdists[c.geom2] = min(cdists[c.geom2], c.dist)
         obs = np.concatenate([
