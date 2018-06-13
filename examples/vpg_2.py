@@ -6,7 +6,7 @@ import theano.tensor as TT
 from rllab.baselines import LinearFeatureBaseline
 from rllab.envs import normalize
 from rllab.envs.box2d import CartpoleEnv
-from rllab.envs.gym_space_util import new_tensor_variable
+from rllab.envs.util import new_tensor_variable
 from rllab.policies import GaussianMLPPolicy
 
 # normalize() makes sure that the actions for the environment lies within the

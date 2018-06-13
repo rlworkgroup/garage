@@ -29,9 +29,7 @@ def run_task(vv):
         gym.make('HalfCheetah-v1', record_video=False, record_log=False))
 
     policy = GaussianMLPPolicy(
-        env_spec=spec(env),
-        hidden_sizes=(32, 32),
-        name="policy")
+        env_spec=spec(env), hidden_sizes=(32, 32), name="policy")
 
     baseline = LinearFeatureBaseline(env_spec=spec(env))
 

@@ -8,8 +8,8 @@ except Exception:
     matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
-from scipy.stats import multivariate_normal
 from scipy.signal import convolve2d
+from scipy.stats import multivariate_normal
 
 from rllab.envs.util import flat_dim
 

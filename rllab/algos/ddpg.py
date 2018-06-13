@@ -10,8 +10,8 @@ from rllab.algos import RLAlgorithm
 from rllab.envs.util import flat_dim, new_tensor_variable
 from rllab.misc import ext
 from rllab.misc import special
-from rllab.misc.overrides import overrides
 import rllab.misc.logger as logger
+from rllab.misc.overrides import overrides
 from rllab.plotter import plotter
 from rllab.sampler import parallel_sampler
 
