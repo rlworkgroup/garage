@@ -1,5 +1,5 @@
 from rllab.core import Serializable
-from rllab.envs.proxy_env import ProxyEnv
+from rllab.envs import ProxyEnv
 from rllab.misc.overrides import overrides
 
 

@@ -28,7 +28,7 @@ class NPO(BatchPolopt):
         self.name = name
         super(NPO, self).__init__(**kwargs)
 
-    # @overrides
+    @overrides
     def init_opt(self):
         with enclosing_scope(self.name, "init_opt"):
             is_recurrent = int(self.policy.recurrent)
@@ -105,7 +105,7 @@ class NPO(BatchPolopt):
                 constraint_name="mean_kl")
             return dict()
 
-    # @overrides
+    @overrides
     def optimize_policy(self, itr, samples_data):
         all_input_values = tuple(
             ext.extract(samples_data, "observations", "actions", "advantages"))
@@ -134,7 +134,7 @@ class NPO(BatchPolopt):
         logger.record_tabular('dLoss', loss_before - loss_after)
         return dict()
 
-    # @overrides
+    @overrides
     def get_itr_snapshot(self, itr, samples_data):
         return dict(
             itr=itr,

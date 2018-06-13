@@ -9,7 +9,7 @@ import theano
 from rllab.core import Serializable
 from rllab.misc import ext
 from rllab.misc import logger
-from rllab.optimizers.minibatch_dataset import BatchDataset
+from rllab.optimizers import BatchDataset
 
 
 class FirstOrderOptimizer(Serializable):

@@ -5,8 +5,8 @@ import tensorflow as tf
 
 from rllab.core import Serializable
 from rllab.tf.core import layers as L
-from rllab.tf.core.layers_powered import LayersPowered
-from rllab.tf.core.parameterized import Parameterized
+from rllab.tf.core import LayersPowered
+from rllab.tf.core import Parameterized
 
 
 class MLP(LayersPowered, Serializable):
