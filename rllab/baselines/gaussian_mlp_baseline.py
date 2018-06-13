@@ -1,8 +1,8 @@
 import numpy as np
 
 from rllab.baselines.base import Baseline
-from rllab.core import Serializable
 from rllab.core import Parameterized
+from rllab.core import Serializable
 from rllab.misc.overrides import overrides
 from rllab.regressors import GaussianMLPRegressor
 

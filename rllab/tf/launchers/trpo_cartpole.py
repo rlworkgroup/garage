@@ -1,6 +1,6 @@
 from rllab.baselines import LinearFeatureBaseline
-from rllab.envs.box2d import CartpoleEnv
 from rllab.envs import normalize
+from rllab.envs.box2d import CartpoleEnv
 from rllab.misc.instrument import run_experiment_lite
 from rllab.tf.algos import TRPO
 from rllab.tf.envs import TfEnv
