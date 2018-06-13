@@ -63,6 +63,7 @@ class DelayedActionEnv(ProxyEnv, Serializable):
         Serializable.quick_init(self, locals())
         super(DelayedActionEnv, self).__init__(env)
         self.action_delay = action_delay
+        self._action_flat_dim = flat_dim(self.action_space)
         self._queued_actions = None
 
     @overrides
@@ -74,7 +75,7 @@ class DelayedActionEnv(ProxyEnv, Serializable):
 
     @overrides
     def step(self, action):
-        queued_action = self._queued_actions[:self.action_dim]
+        queued_action = self._queued_actions[:self._action_flat_dim]
         next_obs, reward, done, info = self._wrapped_env.step(queued_action)
         self._queued_actions = np.concatenate(
             [self._queued_actions[self._action_flat_dim:], action])
