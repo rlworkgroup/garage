@@ -349,9 +349,8 @@ class MazeEnv(ProxyEnv, Serializable):
             stripped_path = {}
             for k, v in path.items():
                 stripped_path[k] = v
-            stripped_path['observations'] = \
-                stripped_path['observations'][
-                    :, :flat_dim(self.wrapped_env.observation_space)]
+            stripped_path['observations'] = stripped_path['observations'][:,
+             :flat_dim(self.wrapped_env.observation_space)] # yapf: disable
             #  this breaks if the obs of the robot are d>1 dimensional (not a
             #  vector)
             stripped_paths.append(stripped_path)

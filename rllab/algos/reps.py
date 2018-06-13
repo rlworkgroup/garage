@@ -10,7 +10,6 @@ from rllab.misc import ext
 from rllab.misc import logger
 from rllab.misc import tensor_utils
 from rllab.misc.overrides import overrides
-from rllab.misc.overrides import overrides
 
 
 class REPS(BatchPolopt, Serializable):

@@ -42,7 +42,8 @@ def run_task(vv):
         n_itr=40,
         discount=0.99,
         step_size=vv["step_size"],
-        # Uncomment both lines (this and the plot parameter below) to enable plotting
+        # Uncomment both lines (this and the plot parameter below) to enable
+        # plotting
         # plot=True,
     )
     algo.train()
@@ -59,8 +60,8 @@ for v in variants:
         n_parallel=1,
         # Only keep the snapshot parameters for the last iteration
         snapshot_mode="last",
-        # Specifies the seed for the experiment. If this is not provided, a random seed
-        # will be used
+        # Specifies the seed for the experiment. If this is not provided, a
+        # random seed will be used
         seed=v["seed"],
         # mode="local",
         mode="ec2",
