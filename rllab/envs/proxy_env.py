@@ -36,8 +36,8 @@ class ProxyEnv(gym.Env, Serializable):
     def horizon(self):
         return self._wrapped_env.horizon
 
-    def terminate(self):
-        self._wrapped_env.terminate()
+    def close(self):
+        self._wrapped_env.close()
 
     def get_param_values(self):
         return self._wrapped_env.get_param_values()

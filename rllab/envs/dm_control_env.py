@@ -54,7 +54,7 @@ class DmControlEnv(gym.Env, Serializable):
             pixels_img = self._env.physics.render(**self._render_kwargs)
             self._viewer.loop_once(pixels_img)
 
-    def terminate(self):
+    def close(self):
         if self._viewer:
             self._viewer.finish()
 

@@ -7,6 +7,7 @@ import theano.tensor as TT
 
 from rllab.core import LasagnePowered
 from rllab.core import MLP
+from rllab.core import ParamLayer
 from rllab.core import Serializable
 from rllab.distributions import DiagonalGaussian
 from rllab.envs.util import flat_dim, flatten, flatten_n
