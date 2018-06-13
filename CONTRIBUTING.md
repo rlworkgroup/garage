@@ -48,6 +48,7 @@ Do's and Don'ts for avoiding accidental merge commits and other headaches:
 * *Don't* make commits in the `master` branch---always use a feature branch
 * *Do* fetch upstream (`rlworkgroup/garage`) frequently and keep your `master` branch up-to-date with upstream
 * *Do* rebase your feature branch on `master` frequently
+* *Do* keep only one or a few commits in your feature branch, and use `git commit --amend` to update your changes. This helps prevent long chains of identical merges during a rebase.
 
 Please see [this guide](https://gist.github.com/markreid/12e7c2203916b93d23c27a263f6091a0) for a tutorial on the workflow. Note: unlike the guide, we don't use separate `develop`/`master` branches, so all PRs should be based on `master` rather than `develop`
 
