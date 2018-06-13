@@ -3,6 +3,7 @@ import os.path as osp
 
 from gazebo_msgs.msg import ModelStates
 from geometry_msgs.msg import Point, Pose, Quaternion, TransformStamped
+from gym.spaces import Box
 import numpy as np
 import rospy
 
