@@ -14,11 +14,11 @@ E221 # multiple spaces before operator
 W291 # trailing whitespace
 E702 # multiple statements on one line (semicolon)
 # PROGRAMMING RECOMMENDATIONS
-E714 # use is not operator rather than not ... is.
+E714 # use is not operator rather than not ... is
 )
 
 errors_absolute="${errors_absolute[@]}"
-flake8 --select="${errors_absolute// /,}"
+flake8 --isolated --select="${errors_absolute// /,}"
 
 
 # INCREMENTAL VERIFICATION:
@@ -37,9 +37,11 @@ E301 # expected 1 blank line, found 0
 E302 # expected 2 blank lines, found 0
 E303 # too many blank lines (2)
 # IMPORTS
-E100 # import statements are in the wrong order
 E401 # multiple imports on one line
+I100 # import statements are in the wrong order
+I101 # the names in from import are in the wrong order
 I201 # missing newline between import groups
+I202 # additional newline in a group of imports
 # WHITESPACE IN EXPRESSION AND STATEMENTS
 E203 # whitespace before ':', ';' or ','
 E225 # missing whitespace around operator
@@ -68,17 +70,19 @@ N
 D
 # PROGRAMMING RECOMMENDATIONS
 E711 # comparisons to None should always be done with is or is not, never the
-     # equality operators.
-E714 # use is not operator rather than not ... is.
-E731 # do not assign a lambda expression, use a def.
-E722 # do not use bare except, specify exception instead.
+     # equality operators
+E731 # do not assign a lambda expression, use a def
+E722 # do not use bare except, specify exception instead
 )
 
 errors_indentation="${errors_absolute[@]}"
 if [[ "${TRAVIS_PULL_REQUEST}" != "false" && "${TRAVIS}" == "true" ]]; then
-  git diff "${TRAVIS_COMMIT_RANGE}" | flake8 --diff --select="${errors_indentation// /,}"
+  git diff "${TRAVIS_COMMIT_RANGE}" | flake8 --diff --isolated \
+	  --import-order-style=google --application-import-names=sandbox,rllab,examples,contrib \
+	  --select="${errors_indentation// /,}"
 else
   git remote set-branches --add origin master
   git fetch
-  git diff origin/master | flake8 --diff --select="${errors_indentation// /,}"
+  git diff origin/master | flake8 --diff --isolated --import-order-style=google \
+	  --application-import-names=sandbox,rllab,examples,contrib --select="${errors_indentation// /,}"
 fi

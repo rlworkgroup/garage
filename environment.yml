@@ -46,4 +46,5 @@ dependencies:
         - flake8-import-order
         - flake8-docstrings==1.3.0
         - pep8-naming==0.7.0
+        - pylint==1.9.2
         - yapf
