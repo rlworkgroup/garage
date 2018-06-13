@@ -7,6 +7,7 @@ from gym.spaces import Box
 import numpy as np
 import rospy
 
+from contrib.ros.worlds.experiment_configuration import VICON_TOPICS
 from contrib.ros.worlds.gazebo import Gazebo
 from contrib.ros.worlds.world import World
 
