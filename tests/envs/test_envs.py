@@ -51,7 +51,7 @@ if MUJOCO_ENABLED:
         Walker2DEnv,
         SwimmerEnv,
         SimpleHumanoidEnv,
-#        InvertedDoublePendulumEnv,
+        InvertedDoublePendulumEnv,
         HopperEnv,
         HalfCheetahEnv,
         PointGatherEnv,

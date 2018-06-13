@@ -4,7 +4,6 @@ from cached_property import cached_property
 
 from rllab.envs import EnvSpec
 
-
 _Step = collections.namedtuple("Step",
                                ["observation", "reward", "done", "info"])
 

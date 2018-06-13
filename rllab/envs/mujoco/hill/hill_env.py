@@ -52,7 +52,7 @@ class HillEnv(ProxyEnv, Serializable):
                 template_file.read(), lookup=lookup)
         content = template.render(opts=template_options)
 
-        tmp_f, file_path = tempfile.mkstemp(text=True)
+        tmp_f, file_path = tempfile.mkstemp(suffix=".xml", text=True)
         with open(file_path, 'w') as f:
             f.write(content)
 
