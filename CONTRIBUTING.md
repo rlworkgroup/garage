@@ -23,6 +23,7 @@ The Python code in garage conforms to the [PEP8](https://www.python.org/dev/peps
 These are garage-specific rules which are not part of the aforementioned style guides.
 * Python package imports should be sorted alphabetically within their PEP8 groupings. The sorting is alphabetical from left to right, ignoring case and Python keywords (i.e. `import`, `from`, `as`). Notable exceptions apply in `__init__.py` files, where sometimes this rule will trigger a circular import.
 * We prefer double-quoted strings (`"foo"`) over single-quoted strings (`'foo'`), unless there is a compelling escape or formatting reason for using single quotes
+* Add convenience imports in `__init__.py` of a package for shallow first-level repetitive imports, but not for subpackages, even if that subpackage is defined in a single `.py` file. For instance, if an import line reads `from garage.foo.bar import Bar` then you should add `from garage.foo.bar import Bar` to `garage/foo/__init__.py` so that users may instead write `from garage.foo import Bar`. However, if an import line reads `from garage.foo.bar.stuff import Baz`, *do not* add `from garage.foo.bar.stuff import Baz` to `garage/foo/__init__.py`, because that obscures the `stuff` subpackage.
 
 ### Other languages
 Non-Python files (including XML, HTML, CSS, JS, and Shell Scripts) should follow the [Google Style Guide](https://github.com/google/styleguide) for that language
