@@ -42,3 +42,6 @@ dependencies:
         - jsonmerge
         - protobuf
         - memory_profiler
+        - flake8
+        - flake8-import-order
+        - yapf
