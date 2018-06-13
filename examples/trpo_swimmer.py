@@ -1,15 +1,13 @@
 from rllab.algos import TRPO
 from rllab.baselines import LinearFeatureBaseline
 from rllab.envs import normalize
-from rllab.envs.util import spec
 from rllab.envs.mujoco import SwimmerEnv
+from rllab.envs.util import spec
 from rllab.policies import GaussianMLPPolicy
 
 env = normalize(SwimmerEnv())
 
-policy = GaussianMLPPolicy(
-    env_spec=spec(env),
-    hidden_sizes=(32, 32))
+policy = GaussianMLPPolicy(env_spec=spec(env), hidden_sizes=(32, 32))
 
 baseline = LinearFeatureBaseline(env_spec=spec(env))
 

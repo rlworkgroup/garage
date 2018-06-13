@@ -5,7 +5,6 @@ from rllab.core import Serializable
 from rllab.envs import Step
 from rllab.envs.proxy_env import ProxyEnv
 from rllab.misc.overrides import overrides
-from rllab.envs import Step
 
 
 class NormalizedEnv(ProxyEnv, Serializable):

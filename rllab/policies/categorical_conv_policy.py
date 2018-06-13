@@ -1,7 +1,7 @@
 import gym
 import lasagne.layers as L
-import numpy as np
 import lasagne.nonlinearities as NL
+import numpy as np
 
 from rllab.core import ConvNetwork
 from rllab.core import LasagnePowered

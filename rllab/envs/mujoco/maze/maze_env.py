@@ -1,19 +1,20 @@
-import gym
 import math
-import numpy as np
 import os.path as osp
 import tempfile
 import xml.etree.ElementTree as ET
 
+import gym
+import numpy as np
+
 from rllab.core import Serializable
 from rllab.envs import Step
-from rllab.envs.util import flat_dim
-from rllab.envs.proxy_env import ProxyEnv
 from rllab.envs.mujoco.maze.maze_env_utils import construct_maze
 from rllab.envs.mujoco.maze.maze_env_utils import point_distance
 from rllab.envs.mujoco.maze.maze_env_utils import ray_segment_intersect
 from rllab.envs.mujoco.mujoco_env import BIG
 from rllab.envs.mujoco.mujoco_env import MODEL_DIR
+from rllab.envs.proxy_env import ProxyEnv
+from rllab.envs.util import flat_dim
 from rllab.misc import logger
 from rllab.misc.overrides import overrides
 

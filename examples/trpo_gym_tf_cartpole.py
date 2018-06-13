@@ -16,9 +16,7 @@ stub(globals())
 env = TfEnv(gym.make("CartPole-v0", force_reset=True))
 
 policy = CategoricalMLPPolicy(
-    name="policy",
-    env_spec=spec(env),
-    hidden_sizes=(32, 32))
+    name="policy", env_spec=spec(env), hidden_sizes=(32, 32))
 
 baseline = LinearFeatureBaseline(env_spec=spec(env))
 

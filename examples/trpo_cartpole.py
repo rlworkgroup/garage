@@ -7,9 +7,7 @@ from rllab.policies import GaussianMLPPolicy
 
 env = normalize(CartpoleEnv())
 
-policy = GaussianMLPPolicy(
-    env_spec=spec(env),
-    hidden_sizes=(32, 32))
+policy = GaussianMLPPolicy(env_spec=spec(env), hidden_sizes=(32, 32))
 
 baseline = LinearFeatureBaseline(env_spec=spec(env))
 

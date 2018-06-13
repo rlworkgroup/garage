@@ -2,8 +2,8 @@ import numpy as np
 
 from rllab.core import Serializable
 from rllab.envs import Step
-from rllab.envs.util import flat_dim
 from rllab.envs.proxy_env import ProxyEnv
+from rllab.envs.util import flat_dim
 from rllab.misc import autoargs
 from rllab.misc.overrides import overrides
 

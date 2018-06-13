@@ -4,9 +4,9 @@ import theano.tensor as TT
 from rllab.algos import BatchPolopt
 from rllab.core import Serializable
 from rllab.envs.util import new_tensor_variable
+from rllab.misc import ext
 from rllab.misc import logger
 from rllab.misc.overrides import overrides
-from rllab.misc import ext
 from rllab.optimizers import FirstOrderOptimizer
 
 

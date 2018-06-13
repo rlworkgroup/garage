@@ -2,9 +2,9 @@
 Sawyer Interface
 """
 
+import gym
 from intera_core_msgs.msg import JointLimits
 import intera_interface
-import gym
 import numpy as np
 import rospy
 

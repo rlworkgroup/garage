@@ -1,16 +1,17 @@
-import matplotlib.pyplot as plt
-import numpy as np
 import os
-from scipy.stats import multivariate_normal
-from scipy.signal import convolve2d
+
 import matplotlib
 try:
     matplotlib.pyplot.figure()
     matplotlib.pyplot.close()
 except Exception:
     matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+import numpy as np
+from scipy.stats import multivariate_normal
+from scipy.signal import convolve2d
 
-from rllab.envs.gym_space_util import flat_dim
+from rllab.envs.util import flat_dim
 
 # the colormap should assign light colors to low values
 TERRAIN_CMAP = 'Greens'

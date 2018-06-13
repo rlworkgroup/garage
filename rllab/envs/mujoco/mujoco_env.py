@@ -1,10 +1,10 @@
-import gym
 import os
 import os.path as osp
 import tempfile
 import warnings
 
 from cached_property import cached_property
+import gym
 import mako.lookup
 import mako.template
 import mujoco_py
@@ -16,7 +16,6 @@ import numpy as np
 import theano
 
 from rllab.envs.util import bounds
-from rllab.misc.overrides import overrides
 from rllab.misc import autoargs
 from rllab.misc import logger
 from rllab.misc.overrides import overrides

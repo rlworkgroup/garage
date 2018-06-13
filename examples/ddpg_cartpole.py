@@ -1,7 +1,6 @@
 from rllab.algos import DDPG
 from rllab.envs import normalize
 from rllab.envs.box2d import CartpoleEnv
-from rllab.misc import run_experiment_lite
 from rllab.envs.util import spec
 from rllab.exploration_strategies import OUStrategy
 from rllab.misc.instrument import run_experiment_lite

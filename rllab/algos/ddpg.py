@@ -1,15 +1,16 @@
 from functools import partial
+import pickle as pickle
+
 import lasagne
 import numpy as np
-import pickle as pickle
 import pyprind
 import theano.tensor as TT
 
 from rllab.algos import RLAlgorithm
 from rllab.envs.util import flat_dim, new_tensor_variable
-from rllab.misc.overrides import overrides
 from rllab.misc import ext
 from rllab.misc import special
+from rllab.misc.overrides import overrides
 import rllab.misc.logger as logger
 from rllab.plotter import plotter
 from rllab.sampler import parallel_sampler

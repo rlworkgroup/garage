@@ -1,15 +1,15 @@
 import numpy as np
 import scipy.optimize
-import theano.tensor as TT
 import theano
+import theano.tensor as TT
 
 from rllab.algos import BatchPolopt
 from rllab.core import Serializable
 from rllab.envs.util import flat_dim, new_tensor_variable
-from rllab.misc import logger
-from rllab.misc.overrides import overrides
 from rllab.misc import ext
+from rllab.misc import logger
 from rllab.misc import tensor_utils
+from rllab.misc.overrides import overrides
 from rllab.misc.overrides import overrides
 
 

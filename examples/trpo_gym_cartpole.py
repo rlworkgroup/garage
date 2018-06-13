@@ -14,9 +14,7 @@ def run_task(*_):
     # a GaussianMLPPolicy (see the trpo_gym_pendulum.py example)
     env = normalize(GymEnv("CartPole-v0"))
 
-    policy = CategoricalMLPPolicy(
-        env_spec=spec(env),
-        hidden_sizes=(32, 32))
+    policy = CategoricalMLPPolicy(env_spec=spec(env), hidden_sizes=(32, 32))
 
     baseline = LinearFeatureBaseline(env_spec=spec(env))
 

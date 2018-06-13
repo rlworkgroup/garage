@@ -4,8 +4,6 @@ import lasagne.layers as L
 import lasagne.nonlinearities as NL
 import theano.tensor as TT
 
-from rllab.q_functions import QFunction
-from rllab.core import LasagnePowered
 from rllab.core import batch_norm
 from rllab.core import LasagnePowered
 from rllab.core import Serializable
