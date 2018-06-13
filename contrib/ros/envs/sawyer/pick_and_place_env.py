@@ -3,6 +3,7 @@ Pick-and-place task for the sawyer robot
 """
 import collections
 
+from gym.spaces import Box
 import numpy as np
 
 from contrib.ros.envs.sawyer.sawyer_env import SawyerEnv
@@ -20,8 +21,7 @@ class PickAndPlaceEnv(SawyerEnv, Serializable):
                  simulated=False,
                  distance_threshold=0.05,
                  target_range=0.15,
-                 robot_control_mode='position',
-                 step_freq=100):
+                 robot_control_mode='position'):
         Serializable.quick_init(self, locals())
 
         self._distance_threshold = distance_threshold
@@ -39,8 +39,7 @@ class PickAndPlaceEnv(SawyerEnv, Serializable):
             self,
             simulated=simulated,
             robot=self._sawyer,
-            world=self._block_world,
-            step_freq=step_freq)
+            world=self._block_world)
 
     @property
     def observation_space(self):
@@ -48,7 +47,10 @@ class PickAndPlaceEnv(SawyerEnv, Serializable):
         Returns a Space object
         """
         return Box(
-            -np.inf, np.inf, shape=self.get_observation().observation.shape)
+            -np.inf,
+            np.inf,
+            shape=self.get_observation().observation.shape,
+            dtype=np.float32)
 
     def sample_goal(self):
         """

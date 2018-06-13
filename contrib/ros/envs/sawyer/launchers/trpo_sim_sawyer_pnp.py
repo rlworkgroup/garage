@@ -33,12 +33,11 @@ def run_task(*_):
 
     pnp_env.initialize()
 
-    env = TfEnv(normalize(pnp_env))
+    env = pnp_env
 
-    policy = GaussianMLPPolicy(
-        name="policy", env_spec=env.spec, hidden_sizes=(32, 32))
+    policy = GaussianMLPPolicy(env_spec=spec(env), hidden_sizes=(32, 32))
 
-    baseline = LinearFeatureBaseline(env_spec=env.spec)
+    baseline = LinearFeatureBaseline(env_spec=spec(env))
 
     algo = TRPO(
         env=env,

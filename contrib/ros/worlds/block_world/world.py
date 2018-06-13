@@ -8,7 +8,6 @@ import rospy
 
 from contrib.ros.worlds.gazebo import Gazebo
 from contrib.ros.worlds.world import World
-from garage.spaces import Box
 
 
 class Block(object):
@@ -93,21 +92,23 @@ class BlockWorld(World):
                 resource=osp.join(World.MODEL_DIR, 'block/model.urdf'))
             # Waiting models to be loaded
             rospy.sleep(1)
+            self._block_states_subs.append(
+                rospy.Subscriber('/gazebo/model_states', ModelStates,
+                                 self._gazebo_update_block_states))
+            rospy.sleep(1)
             self._blocks.append(block)
-            self._block_states_subs.append(rospy.Subscriber(
-                '/gazebo/model_states', ModelStates,
-                self._gazebo_update_block_states))
         else:
-            vicon_topic = input("Please enter your default block's vicon topic")
-            block = Block(
-                name='block',
-                initial_pos=(0.5725, 0.1265, 0.90),
-                random_delta_range=0.15,
-                resource=vicon_topic)
-            self._blocks.append(block)
-            self._block_states_subs.append(rospy.Subscriber(
-                block.resource, TransformStamped,
-                self._vicon_update_block_states))
+            for vicon_topic in VICON_TOPICS:
+                block = Block(
+                    name='block',
+                    initial_pos=(0.5725, 0.1265, 0.90),
+                    random_delta_range=0.15,
+                    resource=vicon_topic)
+                self._block_states_subs.append(
+                    rospy.Subscriber(block.resource, TransformStamped,
+                                     self._vicon_update_block_states))
+                rospy.sleep(1)
+                self._blocks.append(block)
 
     def _gazebo_update_block_states(self, data):
         model_states = data
@@ -230,7 +231,7 @@ class BlockWorld(World):
             # Waiting model to be loaded
             rospy.sleep(1)
         else:
-            self._block_states_subs.append(rospy.Subscriber(
-                block.resource, TransformStamped,
-                self._vicon_update_block_states))
+            self._block_states_subs.append(
+                rospy.Subscriber(block.resource, TransformStamped,
+                                 self._vicon_update_block_states))
         self._blocks.append(block)

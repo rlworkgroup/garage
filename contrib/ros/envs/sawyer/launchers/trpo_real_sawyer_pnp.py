@@ -2,12 +2,11 @@ import numpy as np
 import rospy
 
 from contrib.ros.envs.sawyer.pick_and_place_env import PickAndPlaceEnv
+from rllab.algos.trpo import TRPO
 from rllab.baselines.linear_feature_baseline import LinearFeatureBaseline
-from rllab.envs.normalized_env import normalize
+from rllab.envs.util import spec
 from rllab.misc.instrument import run_experiment_lite
-from sandbox.rocky.tf.algos.trpo import TRPO
-from sandbox.rocky.tf.envs.base import TfEnv
-from sandbox.rocky.tf.policies.gaussian_mlp_policy import GaussianMLPPolicy
+from rllab.policies.gaussian_mlp_policy import GaussianMLPPolicy
 
 INITIAL_REAL_ROBOT_JOINT_POS = {
     'right_j0': -0.140923828125,
@@ -28,19 +27,17 @@ def run_task(*_):
     pnp_env = PickAndPlaceEnv(
         initial_goal,
         initial_joint_pos=INITIAL_REAL_ROBOT_JOINT_POS,
-        simulated=False,
-        step_freq=5)
+        simulated=False)
 
     rospy.on_shutdown(pnp_env.shutdown)
 
     pnp_env.initialize()
 
-    env = TfEnv(normalize(pnp_env))
+    env = pnp_env
 
-    policy = GaussianMLPPolicy(
-        name="policy", env_spec=env.spec, hidden_sizes=(32, 32))
+    policy = GaussianMLPPolicy(env_spec=spec(env), hidden_sizes=(32, 32))
 
-    baseline = LinearFeatureBaseline(env_spec=env.spec)
+    baseline = LinearFeatureBaseline(env_spec=spec(env))
 
     algo = TRPO(
         env=env,
