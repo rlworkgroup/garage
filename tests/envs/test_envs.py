@@ -16,6 +16,25 @@ from rllab.envs import IdentificationEnv
 from rllab.envs import NoisyObservationEnv
 from rllab.envs import NormalizedEnv
 from rllab.envs import ProxyEnv
+from rllab.envs.box2d import CarParkingEnv
+from rllab.envs.box2d import CartpoleEnv
+from rllab.envs.box2d import CartpoleSwingupEnv
+from rllab.envs.box2d import DoublePendulumEnv
+from rllab.envs.box2d import MountainCarEnv
+if MUJOCO_ENABLED:
+    from rllab.envs.mujoco import HalfCheetahEnv
+    from rllab.envs.mujoco import HopperEnv
+    from rllab.envs.mujoco import InvertedDoublePendulumEnv
+    from rllab.envs.mujoco import PointEnv
+    from rllab.envs.mujoco import SimpleHumanoidEnv
+    from rllab.envs.mujoco import SwimmerEnv
+    from rllab.envs.mujoco import Walker2DEnv
+    from rllab.envs.mujoco.gather import AntGatherEnv
+    from rllab.envs.mujoco.gather import PointGatherEnv
+    from rllab.envs.mujoco.gather import SwimmerGatherEnv
+    from rllab.envs.mujoco.maze import AntMazeEnv
+    from rllab.envs.mujoco.maze import PointMazeEnv
+    from rllab.envs.mujoco.maze import SwimmerMazeEnv
 
 simple_env_classes = [
     GridWorldEnv,
@@ -49,6 +68,7 @@ envs.append(IdentificationEnv(CartpoleEnv, {}))
 envs.append(NoisyObservationEnv(CartpoleEnv()))
 envs.append(DelayedActionEnv(CartpoleEnv()))
 envs.append(NormalizedEnv(CartpoleEnv()))
+envs.append(GymEnv('CartPole-v0'))
 
 
 @tools.params(*envs)

@@ -5,7 +5,7 @@ import tempfile
 import xml.etree.ElementTree as ET
 
 import mujoco_py
-import glfw
+import glfw  # noqa: I100
 import gym
 # https://github.com/openai/mujoco-py/blob/6ac6ac203a875ef35b1505827264cadccbfd9f05/mujoco_py/builder.py#L61
 from mujoco_py import functions
@@ -438,8 +438,10 @@ class GatherEnv(ProxyEnv, Serializable):
             for k, v in path.items():
                 stripped_path[k] = v
             stripped_path['observations'] = \
-                stripped_path['observations'][:, :flat_dim(self.wrapped_env.observation_space)]
-            #  this breaks if the obs of the robot are d>1 dimensional (not a vector)
+                stripped_path['observations'][
+                    :, :flat_dim(self.wrapped_env.observation_space)]
+            #  this breaks if the obs of the robot are d>1 dimensional (not a
+            #  vector)
             stripped_paths.append(stripped_path)
         with logger.tabular_prefix('wrapped_'):
             if 'env_infos' in paths[0].keys(

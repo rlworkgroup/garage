@@ -1,12 +1,12 @@
 import gym
+import lasagne.layers as L
 import numpy as np
 import lasagne.nonlinearities as NL
 
-from rllab.core import LasagnePowered
-import lasagne.layers as L
 from rllab.core import ConvNetwork
-from rllab.distributions import Categorical
+from rllab.core import LasagnePowered
 from rllab.core import Serializable
+from rllab.distributions import Categorical
 from rllab.envs.util import flatten, flatten_n, weighted_sample
 from rllab.misc import ext
 from rllab.misc import logger

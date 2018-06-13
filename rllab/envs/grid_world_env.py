@@ -7,11 +7,27 @@ from rllab.spaces import Discrete
 
 MAPS = {
     "chain": ["GFFFFFFFFFFFFFSFFFFFFFFFFFFFG"],
-    "4x4_safe": ["SFFF", "FWFW", "FFFW", "WFFG"],
-    "4x4": ["SFFF", "FHFH", "FFFH", "HFFG"],
+    "4x4_safe": [
+        "SFFF",
+        "FWFW",
+        "FFFW",
+        "WFFG"
+    ],
+    "4x4": [
+        "SFFF",
+        "FHFH",
+        "FFFH",
+        "HFFG"
+    ],
     "8x8": [
-        "SFFFFFFF", "FFFFFFFF", "FFFHFFFF", "FFFFFHFF", "FFFHFFFF", "FHHFFFHF",
-        "FHFFHFHF", "FFFHFFFG"
+        "SFFFFFFF",
+        "FFFFFFFF",
+        "FFFHFFFF",
+        "FFFFFHFF",
+        "FFFHFFFF",
+        "FHHFFFHF",
+        "FHFFHFHF",
+        "FFFHFFFG"
     ],
 } # yapf: disable
 

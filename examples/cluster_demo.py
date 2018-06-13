@@ -5,7 +5,7 @@ from rllab.baselines import LinearFeatureBaseline
 from rllab.envs import normalize
 from rllab.envs.box2d import CartpoleEnv
 from rllab.envs.util import spec
-from rllab.misc.instrument import stub, run_experiment_lite
+from rllab.misc.instrument import run_experiment_lite
 from rllab.policies import GaussianMLPPolicy
 
 

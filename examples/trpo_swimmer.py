@@ -9,7 +9,6 @@ env = normalize(SwimmerEnv())
 
 policy = GaussianMLPPolicy(
     env_spec=spec(env),
-    # The neural network policy should have two hidden layers, each with 32 hidden units.
     hidden_sizes=(32, 32))
 
 baseline = LinearFeatureBaseline(env_spec=spec(env))

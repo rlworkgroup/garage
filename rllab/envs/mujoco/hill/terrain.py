@@ -110,7 +110,8 @@ def save_texture(x, y, hfield, fname, path=None):
     plt.contourf(x, y, -hfield, 100, cmap=TERRAIN_CMAP)
     xmin, xmax = x.min(), x.max()
     ymin, ymax = y.min(), y.max()
-    # for some reason plt.grid does not work here, so generate gridlines manually
+    # for some reason plt.grid does not work here, so generate gridlines
+    # manually
     for i in np.arange(xmin, xmax, 0.5):
         plt.plot([i, i], [ymin, ymax], 'k', linewidth=0.1)
     for i in np.arange(ymin, ymax, 0.5):

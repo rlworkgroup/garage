@@ -56,8 +56,8 @@ class SimpleReplayPool(object):
         while count < batch_size:
             index = np.random.randint(
                 self._bottom, self._bottom + self._size) % self._max_pool_size
-            # make sure that the transition is valid: if we are at the end of the pool, we need to discard
-            # this sample
+            # make sure that the transition is valid: if we are at the end of
+            # the pool, we need to discard this sample
             if index == self._size - 1 and self._size <= self._max_pool_size:
                 continue
             # if self._terminals[index]:

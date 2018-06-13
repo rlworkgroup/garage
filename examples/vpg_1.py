@@ -8,10 +8,11 @@ from rllab.envs.box2d import CartpoleEnv
 from rllab.envs.util import new_tensor_variable
 from rllab.policies import GaussianMLPPolicy
 
-# normalize() makes sure that the actions for the environment lies
-# within the range [-1, 1] (only works for environments with continuous actions)
+# normalize() makes sure that the actions for the environment lies within the
+# range [-1, 1] (only works for environments with continuous actions)
 env = normalize(CartpoleEnv())
-# Initialize a neural network policy with a single hidden layer of 8 hidden units
+# Initialize a neural network policy with a single hidden layer of 8 hidden
+# units
 policy = GaussianMLPPolicy(env.spec, hidden_sizes=(8, ))
 
 # We will collect 100 trajectories per iteration
@@ -27,15 +28,18 @@ learning_rate = 0.01
 
 # Construct the computation graph
 
-# Create a Theano variable for storing the observations
-# We could have simply written `observations_var = TT.matrix('observations')` instead for this example. However,
-# doing it in a slightly more abstract way allows us to delegate to the environment for handling the correct data
-# type for the variable. For instance, for an environment with discrete observations, we might want to use integer
-# types if the observations are represented as one-hot vectors.
+# Create a Theano variable for storing the observations We could have simply
+# written `observations_var = TT.matrix('observations')` instead for this
+# example. However, doing it in a slightly more abstract way allows us to
+# delegate to the environment for handling the correct data type for the
+# variable. For instance, for an environment with discrete observations, we
+# might want to use integer types if the observations are represented as one-hot
+# vectors.
 observations_var = new_tensor_variable(
     env.observation_space,
     'observations',
-    # It should have 1 extra dimension since we want to represent a list of observations
+    # It should have 1 extra dimension since we want to represent a list of
+    # observations
     extra_dims=1)
 actions_var = new_tensor_variable(env.action_space, 'actions', extra_dims=1)
 returns_var = TT.vector('returns')
@@ -53,7 +57,8 @@ dist_info_vars = policy.dist_info_sym(observations_var)
 # distribution is an instance of the class rllab.distributions.DiagonalGaussian
 dist = policy.distribution
 
-# Note that we negate the objective, since most optimizers assume a minimization problem
+# Note that we negate the objective, since most optimizers assume a minimization
+# problem
 surr = -TT.mean(
     dist.log_likelihood_sym(actions_var, dist_info_vars) * returns_var)
 

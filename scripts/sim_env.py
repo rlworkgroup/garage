@@ -5,7 +5,7 @@ import time
 import numpy as np
 import pygame
 
-from rllab.misc import load_class
+from rllab.misc.resolve import load_class
 
 
 def sample_action(lb, ub):

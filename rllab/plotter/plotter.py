@@ -1,9 +1,11 @@
 import atexit
 from multiprocessing import Process
-import numpy as np
+from multiprocessing import Queue
 import platform
+from queue import Empty
 from threading import Thread
-from queue import Empty, Queue
+
+import numpy as np
 
 from rllab.sampler.utils import rollout
 
@@ -56,8 +58,7 @@ def _worker_start():
 def _shutdown_worker():
     if process:
         queue.put(['stop'])
-        # queue.close()
-        queue.join()
+        queue.close()
         process.join()
 
 

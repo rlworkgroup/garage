@@ -10,8 +10,10 @@ from rllab.envs import Step
 from rllab.envs.util import flat_dim
 from rllab.envs.proxy_env import ProxyEnv
 from rllab.envs.mujoco.maze.maze_env_utils import construct_maze
-from rllab.envs.mujoco.mujoco_env import MODEL_DIR, BIG
-from rllab.envs.mujoco.maze.maze_env_utils import ray_segment_intersect, point_distance
+from rllab.envs.mujoco.maze.maze_env_utils import point_distance
+from rllab.envs.mujoco.maze.maze_env_utils import ray_segment_intersect
+from rllab.envs.mujoco.mujoco_env import BIG
+from rllab.envs.mujoco.mujoco_env import MODEL_DIR
 from rllab.misc import logger
 from rllab.misc.overrides import overrides
 
@@ -347,8 +349,10 @@ class MazeEnv(ProxyEnv, Serializable):
             for k, v in path.items():
                 stripped_path[k] = v
             stripped_path['observations'] = \
-                stripped_path['observations'][:, :flat_dim(self.wrapped_env.observation_space)]
-            #  this breaks if the obs of the robot are d>1 dimensional (not a vector)
+                stripped_path['observations'][
+                    :, :flat_dim(self.wrapped_env.observation_space)]
+            #  this breaks if the obs of the robot are d>1 dimensional (not a
+            #  vector)
             stripped_paths.append(stripped_path)
         with logger.tabular_prefix('wrapped_'):
             wrapped_undiscounted_return = np.mean(

@@ -7,7 +7,6 @@ from rllab.envs.util import flat_dim
 from rllab.exploration_strategies import ExplorationStrategy
 from rllab.misc.ext import AttrDict
 from rllab.misc.overrides import overrides
-from rllab.misc import AttrDict
 
 
 class OUStrategy(ExplorationStrategy, Serializable):
