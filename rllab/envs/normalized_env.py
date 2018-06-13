@@ -19,7 +19,7 @@ class NormalizedEnv(ProxyEnv, Serializable):
             reward_alpha=0.001,
     ):
         raise NotImplementedError(
-            "Normalization for gym environments is not yet supported. "
+            "Normalization for gym environments is not yet supported."
             "Please see https://github.com/rlworkgroup/garage/issues/13"
         )
         Serializable.quick_init(self, locals())
