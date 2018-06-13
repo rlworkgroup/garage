@@ -8,7 +8,6 @@ import pygame
 from rllab.core import Serializable
 from rllab.envs import Step
 from rllab.envs.dm_control_viewer import DmControlViewer
-from rllab.spaces import Discrete
 
 
 class DmControlEnv(gym.Env, Serializable):
