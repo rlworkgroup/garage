@@ -1,5 +1,5 @@
 from rllab.envs.env_spec import EnvSpec
-from rllab.envs.base import Step
+from rllab.envs.base import Step  # noqa: I100
 from rllab.envs.dm_control_env import DmControlEnv
 from rllab.envs.dm_control_viewer import DmControlViewer
 from rllab.envs.grid_world_env import GridWorldEnv
