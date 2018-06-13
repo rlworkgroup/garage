@@ -25,7 +25,7 @@ class VG(VariantGenerator):
 
 def run_task(vv):
 
-    env = TfEnv(gym.make('HalfCheetah-v1'))
+    env = TfEnv(normalize(gym.make('HalfCheetah-v1')))
 
     policy = GaussianMLPPolicy(
         env_spec=spec(env), hidden_sizes=(32, 32), name="policy")

@@ -9,7 +9,7 @@ from rllab.policies import GaussianMLPPolicy
 
 
 def run_task(*_):
-    env = gym.make("Pendulum-v0")
+    env = normalize(gym.make("Pendulum-v0"))
 
     policy = GaussianMLPPolicy(env_spec=spec(env), hidden_sizes=(32, 32))
 

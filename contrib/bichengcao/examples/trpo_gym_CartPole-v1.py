@@ -9,7 +9,7 @@ from rllab.policies import CategoricalMLPPolicy
 
 
 def run_task(*_):
-    env = gym.make("CartPole-v1")
+    env = normalize(gym.make("CartPole-v1"))
 
     policy = CategoricalMLPPolicy(env_spec=spec(env), hidden_sizes=(32, 32))
 

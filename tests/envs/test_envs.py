@@ -65,8 +65,8 @@ if MUJOCO_ENABLED:
 envs = [cls() for cls in simple_env_classes]
 envs.append(ProxyEnv(envs[0]))
 envs.append(IdentificationEnv(CartpoleEnv, {}))
-#envs.append(NoisyObservationEnv(CartpoleEnv()))
-#envs.append(DelayedActionEnv(CartpoleEnv()))
+envs.append(NoisyObservationEnv(CartpoleEnv()))
+envs.append(DelayedActionEnv(CartpoleEnv()))
 envs.append(NormalizedEnv(CartpoleEnv()))
 envs.append(gym.make("CartPole-v1"))
 
