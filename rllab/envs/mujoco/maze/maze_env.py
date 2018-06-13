@@ -116,7 +116,7 @@ class MazeEnv(ProxyEnv, Serializable):
                                 geom1=geom.attrib["name"],
                                 geom2="block_%d_%d" % (i, j))
 
-        _, file_path = tempfile.mkstemp(text=True)
+        _, file_path = tempfile.mkstemp(suffix=".xml", text=True)
         tree.write(
             file_path
         )  # here we write a temporal file with the robot specifications.

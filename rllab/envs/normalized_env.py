@@ -2,8 +2,9 @@ import numpy as np
 
 from rllab import spaces
 from rllab.core import Serializable
+from rllab.envs import ProxyEnv
 from rllab.envs import Step
-from rllab.envs.proxy_env import ProxyEnv
+from rllab.envs.util import flat_dim
 from rllab.misc.overrides import overrides
 
 
@@ -23,8 +24,8 @@ class NormalizedEnv(ProxyEnv, Serializable):
         self._normalize_obs = normalize_obs
         self._normalize_reward = normalize_reward
         self._obs_alpha = obs_alpha
-        self._obs_mean = np.zeros(env.observation_space.flat_dim)
-        self._obs_var = np.ones(env.observation_space.flat_dim)
+        self._obs_mean = np.zeros(flat_dim(env.observation_space))
+        self._obs_var = np.ones(flat_dim(env.observation_space))
         self._reward_alpha = reward_alpha
         self._reward_mean = 0.
         self._reward_var = 1.

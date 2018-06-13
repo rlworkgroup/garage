@@ -61,7 +61,7 @@ class MujocoEnv(gym.Env):
                     template_file.read(), lookup=lookup)
             content = template.render(
                 opts=template_args if template_args is not None else {}, )
-            tmp_f, file_path = tempfile.mkstemp(text=True)
+            tmp_f, file_path = tempfile.mkstemp(suffix=".xml", text=True)
             with open(file_path, 'w') as f:
                 f.write(content)
             self.model = load_model_from_path(file_path)
@@ -135,7 +135,7 @@ class MujocoEnv(gym.Env):
 
     def _get_full_obs(self):
         data = self.sim.data
-        cdists = np.copy(self.sim.geom_margin).flat
+        cdists = np.copy(self.sim.model.geom_margin).flat
         for c in self.sim.data.contact:
             cdists[c.geom2] = min(cdists[c.geom2], c.dist)
         obs = np.concatenate([

@@ -225,7 +225,7 @@ class GatherEnv(ProxyEnv, Serializable):
                 name="wall4",
                 pos="%d 0 0" % walldist,
                 size="0.5 %d.5 1" % walldist))
-        _, file_path = tempfile.mkstemp(text=True)
+        _, file_path = tempfile.mkstemp(suffix=".xml", text=True)
         tree.write(file_path)
         # pylint: disable=not-callable
         inner_env = model_cls(*args, file_path=file_path, **kwargs)
