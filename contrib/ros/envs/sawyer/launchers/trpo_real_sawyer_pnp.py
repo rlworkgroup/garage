@@ -1,4 +1,3 @@
-from geometry_msgs.msg import Point
 import numpy as np
 import rospy
 
@@ -29,7 +28,8 @@ def run_task(*_):
     pnp_env = PickAndPlaceEnv(
         initial_goal,
         initial_joint_pos=INITIAL_REAL_ROBOT_JOINT_POS,
-        simulated=False)
+        simulated=False,
+        step_freq=5)
 
     rospy.on_shutdown(pnp_env.shutdown)
 

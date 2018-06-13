@@ -4,10 +4,11 @@ from garage.envs.base import Step
 
 
 class SawyerEnv(RosEnv):
-    def __init__(self, simulated, robot, world):
+    def __init__(self, simulated, robot, world, step_freq):
         self._robot = robot
         self._world = world
         RosEnv.__init__(self, simulated=simulated)
+        self.step_freq = step_freq
 
     def _initial_setup(self):
         self._robot.reset()
@@ -29,7 +30,7 @@ class SawyerEnv(RosEnv):
         initial_observation = self.get_observation().observation
         return initial_observation
 
-    @rate_limited(100)
+    @rate_limited
     def step(self, action):
         """
         Perform a step in gazebo. When end of episode

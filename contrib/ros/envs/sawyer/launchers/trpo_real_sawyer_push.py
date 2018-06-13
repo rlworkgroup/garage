@@ -28,7 +28,8 @@ def run_task(*_):
     push_env = PushEnv(
         initial_goal,
         initial_joint_pos=INITIAL_REAL_ROBOT_JOINT_POS,
-        simulated=False)
+        simulated=False,
+        step_freq=5)
 
     rospy.on_shutdown(push_env.shutdown)
 

@@ -20,7 +20,8 @@ class PickAndPlaceEnv(SawyerEnv, Serializable):
                  simulated=False,
                  distance_threshold=0.05,
                  target_range=0.15,
-                 robot_control_mode='position'):
+                 robot_control_mode='position',
+                 step_freq=100):
         Serializable.quick_init(self, locals())
 
         self._distance_threshold = distance_threshold
@@ -38,7 +39,8 @@ class PickAndPlaceEnv(SawyerEnv, Serializable):
             self,
             simulated=simulated,
             robot=self._sawyer,
-            world=self._block_world)
+            world=self._block_world,
+            step_freq=step_freq)
 
     @property
     def observation_space(self):
