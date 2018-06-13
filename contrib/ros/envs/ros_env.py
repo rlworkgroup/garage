@@ -1,6 +1,6 @@
 import numpy as np
 
-from rllab.core.serializable import Serializable
+from rllab.core import Serializable
 from rllab.envs.base import Env
 from rllab.misc.ext import get_seed
 

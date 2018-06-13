@@ -1,7 +1,7 @@
 """Pretty-print tabular data."""
 
 from collections import namedtuple
-from functools import partial
+from functools import partial, reduce
 from itertools import zip_longest
 from platform import python_version_tuple
 import re

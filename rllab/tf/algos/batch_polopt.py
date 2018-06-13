@@ -5,6 +5,7 @@ import tensorflow as tf
 from rllab.algos import RLAlgorithm
 import rllab.misc.logger as logger
 from rllab.sampler.utils import rollout
+from rllab.tf.plotter import Plotter
 from rllab.tf.policies.base import Policy
 from rllab.tf.samplers import BatchSampler
 from rllab.tf.samplers import VectorizedSampler
@@ -89,11 +90,16 @@ class BatchPolopt(RLAlgorithm):
         self.sampler = sampler_cls(self, **sampler_args)
         self.init_opt()
 
-    def start_worker(self):
+    def start_worker(self, sess):
         self.sampler.start_worker()
+        if self.plot:
+            self.plotter = Plotter(self.env, self.policy, sess)
+            self.plotter.start()
 
     def shutdown_worker(self):
         self.sampler.shutdown_worker()
+        if self.plot:
+            self.plotter.shutdown()
 
     def obtain_samples(self, itr):
         return self.sampler.obtain_samples(itr)
@@ -108,7 +114,7 @@ class BatchPolopt(RLAlgorithm):
             sess.__enter__()
 
         sess.run(tf.global_variables_initializer())
-        self.start_worker()
+        self.start_worker(sess)
         start_time = time.time()
         for itr in range(self.start_itr, self.n_itr):
             itr_start_time = time.time()
@@ -122,8 +128,7 @@ class BatchPolopt(RLAlgorithm):
                 logger.log("Optimizing policy...")
                 self.optimize_policy(itr, samples_data)
                 logger.log("Saving snapshot...")
-                params = self.get_itr_snapshot(itr,
-                                               samples_data)  # , **kwargs)
+                params = self.get_itr_snapshot(itr, samples_data)
                 if self.store_paths:
                     params["paths"] = samples_data["paths"]
                 logger.save_itr_params(itr, params)
@@ -132,14 +137,11 @@ class BatchPolopt(RLAlgorithm):
                 logger.record_tabular('ItrTime', time.time() - itr_start_time)
                 logger.dump_tabular(with_prefix=False)
                 if self.plot:
-                    rollout(
-                        self.env,
-                        self.policy,
-                        animated=True,
-                        max_path_length=self.max_path_length)
+                    self.plotter.update_plot(self.policy, self.max_path_length)
                     if self.pause_for_plot:
                         input("Plotting evaluation run: Press Enter to "
                               "continue...")
+
         self.shutdown_worker()
         if created_session:
             sess.close()

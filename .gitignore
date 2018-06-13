@@ -38,3 +38,4 @@ rllab/config_personal.py
 *.swp
 sandbox/
 .gitmodules
+*.orig
