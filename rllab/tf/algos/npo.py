@@ -2,6 +2,7 @@ import tensorflow as tf
 
 from rllab.misc import ext
 import rllab.misc.logger as logger
+from rllab.misc.overrides import overrides
 from rllab.tf.algos import BatchPolopt
 from rllab.tf.misc import tensor_utils
 from rllab.tf.misc.tensor_utils import enclosing_scope

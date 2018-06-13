@@ -1,7 +1,8 @@
 from rllab.baselines import LinearFeatureBaseline
 from rllab.envs import GymEnv
 from rllab.envs import normalize
-from rllab.misc import run_experiment_lite, stub
+from rllab.misc.instrument import run_experiment_lite
+from rllab.misc.instrument import stub
 from rllab.tf.algos import TRPO
 from rllab.tf.envs import TfEnv
 from rllab.tf.policies import CategoricalMLPPolicy

@@ -7,7 +7,6 @@ before_install:
   # get mujoco key
   - mkdir $HOME/.mujoco
   - echo "$MJKEY" > $HOME/.mujoco/mjkey.txt
-  #- openssl aes-256-cbc -K $encrypted_df93cb1b6551_key -iv $encrypted_df93cb1b6551_iv -in scripts/travisci/mjkey.txt.enc -out $HOME/.mujoco/mjkey.txt -d
 
 install:
   # mujoco deps
@@ -39,17 +38,13 @@ install:
   # it's not included in environment.yml because of CPU vs GPU
   - pip install tensorflow==1.8
 
-  # other stuff
-  - pip install yapf
-  - pip install flake8
-  - pip install flake8-import-order
-
   # prevent rllab from exiting on config
   - cp rllab/config.py rllab/config_personal.py
 
+  # --- uncomment if you add a test which actually uses mujoco_py ---
   # trigger compilation of mujoco_py bindings to catch problems early
-  - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/.mujoco/mjpro150/bin
-  - python -c "import mujoco_py"
+  # - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/.mujoco/mjpro150/bin
+  # - python -c "import mujoco_py"
 
 git:
   depth: false
