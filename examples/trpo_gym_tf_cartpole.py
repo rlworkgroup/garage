@@ -13,7 +13,7 @@ stub(globals())
 
 # Need to wrap in a tf environment and force_reset to true
 # see https://github.com/openai/rllab/issues/87#issuecomment-282519288
-env = TfEnv(gym.make("CartPole-v0", force_reset=True))
+env = TfEnv(gym.make("CartPole-v0"))
 
 policy = CategoricalMLPPolicy(
     name="policy", env_spec=spec(env), hidden_sizes=(32, 32))
