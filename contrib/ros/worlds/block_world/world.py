@@ -223,7 +223,11 @@ class BlockWorld(World):
 
     @property
     def observation_space(self):
-        return Box(-np.inf, np.inf, shape=self.get_observation().obs.shape)
+        return Box(
+            -np.inf,
+            np.inf,
+            shape=self.get_observation().obs.shape,
+            dtype=np.float32)
 
     def add_block(self, block):
         if self._simulated:
