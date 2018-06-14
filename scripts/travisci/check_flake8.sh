@@ -78,8 +78,10 @@ D
 # PROGRAMMING RECOMMENDATIONS
 E711 # comparisons to None should always be done with is or is not, never the
      # equality operators
-E731 # do not assign a lambda expression, use a def
+E712 # comparison to True should be 'if cond is True:' or 'if cond:'
+E721 # do not compare types, use 'isinstance()'
 E722 # do not use bare except, specify exception instead
+E731 # do not assign a lambda expression, use a def
 )
 
 # Add the codes of the errors to be ignored for the absolute verification in
