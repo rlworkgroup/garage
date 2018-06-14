@@ -3,11 +3,11 @@ import os.path as osp
 
 from gazebo_msgs.msg import ModelStates
 from geometry_msgs.msg import Point, Pose, Quaternion, TransformStamped
-from gym.spaces import Box
+import gym
 import numpy as np
 import rospy
 
-from contrib.ros.worlds.experiment_configuration import VICON_TOPICS
+from rllab.config_personal import VICON_TOPICS
 from contrib.ros.worlds.gazebo import Gazebo
 from contrib.ros.worlds.world import World
 
@@ -97,7 +97,6 @@ class BlockWorld(World):
             self._block_states_subs.append(
                 rospy.Subscriber('/gazebo/model_states', ModelStates,
                                  self._gazebo_update_block_states))
-            rospy.sleep(1)
             self._blocks.append(block)
         else:
             for vicon_topic in VICON_TOPICS:
@@ -109,7 +108,6 @@ class BlockWorld(World):
                 self._block_states_subs.append(
                     rospy.Subscriber(block.resource, TransformStamped,
                                      self._vicon_update_block_states))
-                rospy.sleep(1)
                 self._blocks.append(block)
 
     def _gazebo_update_block_states(self, data):
@@ -170,10 +168,10 @@ class BlockWorld(World):
                     -block.random_delta_range,
                     block.random_delta_range,
                     size=2)
-            new_pos[0] += block_random_delta[0]
-            new_pos[1] += block_random_delta[1]
+            new_pos.x += block_random_delta[0]
+            new_pos.y += block_random_delta[1]
             logger.log('new position for {} is x = {}, y = {}, z = {}'.format(
-                block.name, new_pos[0], new_pos[1], new_pos[2]))
+                block.name, new_pos.x, new_pos.y, new_pos.z))
             ready = False
             while not ready:
                 ans = input(
@@ -224,7 +222,7 @@ class BlockWorld(World):
 
     @property
     def observation_space(self):
-        return Box(
+        return gym.spaces.Box(
             -np.inf,
             np.inf,
             shape=self.get_observation().obs.shape,

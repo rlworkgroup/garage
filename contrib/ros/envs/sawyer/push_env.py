@@ -3,7 +3,7 @@ Push task for the sawyer robot
 """
 import collections
 
-from gym.spaces import Box
+import gym
 import numpy as np
 
 from contrib.ros.envs.sawyer.sawyer_env import SawyerEnv
@@ -46,7 +46,7 @@ class PushEnv(SawyerEnv, Serializable):
         """
         Returns a Space object
         """
-        return Box(
+        return gym.spaces.Box(
             -np.inf,
             np.inf,
             shape=self.get_observation().observation.shape,

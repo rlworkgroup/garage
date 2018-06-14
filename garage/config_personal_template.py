@@ -45,3 +45,7 @@ DOCKER_CODE_DIR = "/root/code/garage"
 AWS_ACCESS_KEY = os.environ.get("AWS_ACCESS_KEY", "<insert aws key>")
 
 AWS_ACCESS_SECRET = os.environ.get("AWS_ACCESS_SECRET", "<insert aws secret>")
+
+VICON_TOPICS = ['vicon/vicon_object/iser_cube']
+
+STEP_FREQ = 1

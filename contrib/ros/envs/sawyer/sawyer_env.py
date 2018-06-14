@@ -1,7 +1,7 @@
 from contrib.ros.envs.ros_env import RosEnv
 from contrib.ros.util.common import rate_limited
+from garage.config_personal import STEP_FREQ
 from garage.envs.base import Step
-from contrib.ros.worlds.experiment_configuration import STEP_FREQ
 
 class SawyerEnv(RosEnv):
     def __init__(self, simulated, robot, world):
