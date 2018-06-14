@@ -8,10 +8,10 @@ import uuid
 import joblib
 import numpy as np
 
-from rllab.algos import BatchPolopt
-from rllab.misc import logger
-from rllab.misc.instrument import to_local_command
-from rllab.sampler.utils import rollout
+from garage.algos import BatchPolopt
+from garage.misc import logger
+from garage.misc.instrument import to_local_command
+from garage.sampler.utils import rollout
 
 filename = str(uuid.uuid4())
 

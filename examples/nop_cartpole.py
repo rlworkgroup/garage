@@ -1,9 +1,9 @@
-from rllab.algos import NOP
-from rllab.baselines import ZeroBaseline
-from rllab.envs import normalize
-from rllab.envs.box2d import CartpoleEnv
-from rllab.envs.util import spec
-from rllab.policies import UniformControlPolicy
+from garage.algos import NOP
+from garage.baselines import ZeroBaseline
+from garage.envs import normalize
+from garage.envs.box2d import CartpoleEnv
+from garage.envs.util import spec
+from garage.policies import UniformControlPolicy
 
 env = normalize(CartpoleEnv())
 

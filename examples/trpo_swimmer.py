@@ -1,9 +1,9 @@
-from rllab.algos import TRPO
-from rllab.baselines import LinearFeatureBaseline
-from rllab.envs import normalize
-from rllab.envs.mujoco import SwimmerEnv
-from rllab.envs.util import spec
-from rllab.policies import GaussianMLPPolicy
+from garage.algos import TRPO
+from garage.baselines import LinearFeatureBaseline
+from garage.envs import normalize
+from garage.envs.mujoco import SwimmerEnv
+from garage.envs.util import spec
+from garage.policies import GaussianMLPPolicy
 
 env = normalize(SwimmerEnv())
 

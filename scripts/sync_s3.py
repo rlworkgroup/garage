@@ -4,7 +4,7 @@ import os
 import sys
 sys.path.append('.')
 
-from rllab import config
+from garage import config
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

@@ -5,7 +5,7 @@ import random
 
 from numpy import var
 
-from rllab.algos import BatchSampler
+from garage.algos import BatchSampler
 
 
 class ISSampler(BatchSampler):

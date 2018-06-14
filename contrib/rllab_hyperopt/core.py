@@ -14,8 +14,8 @@ from hyperopt import tpe
 from hyperopt.mongoexp import MongoTrials
 import polling
 
-from rllab import config
-from rllab.misc.instrument import run_experiment_lite
+from garage import config
+from garage.misc.instrument import run_experiment_lite
 
 
 class S3SyncThread(threading.Thread):
@@ -180,7 +180,7 @@ def launch_hyperopt_search(task_method,
                            hyperopt_experiment_key,
                            hyperopt_db_host="localhost",
                            hyperopt_db_port=1234,
-                           hyperopt_db_name="rllab",
+                           hyperopt_db_name="garage",
                            n_hyperopt_workers=1,
                            hyperopt_max_evals=100,
                            result_timeout=1200,
@@ -204,7 +204,7 @@ def launch_hyperopt_search(task_method,
     parallel hyperopt workers to start, an equal number of EC2 instances will be
     started in parallel!
 
-    NOTE2: Rllab currently terminates / starts a new EC2 instance for every
+    NOTE2: garage currently terminates / starts a new EC2 instance for every
     task. This means what you'll pay amounts to hyperopt_max_evals *
     instance_hourly_rate. So you might want to be conservative with
     hyperopt_max_evals.
@@ -225,14 +225,14 @@ def launch_hyperopt_search(task_method,
      mongodb runs
     :param hyperopt_db_port: int, optional (default 1234), the port where
      mongodb is listening for connections
-    :param hyperopt_db_name: str, optional (default "rllab"), the DB name where
+    :param hyperopt_db_name: str, optional (default "garage"), the DB name where
      hyperopt will store results
     :param n_hyperopt_workers: int, optional (default 1). The nr of parallel
      workers to start. NOTE: an equal number of EC2 instances will be started
      in parallel.
     :param hyperopt_max_evals: int, optional (defailt 100). Number of
      parameterset evaluations hyperopt should try.
-     NOTE: Rllab currently terminates / starts a new EC2 instance for every
+     NOTE: garage currently terminates / starts a new EC2 instance for every
      task. This means what you'll pay amounts to
      hyperopt_max_evals * instance_hourly_rate. So you might want to be
      conservative with hyperopt_max_evals.

@@ -1,8 +1,8 @@
 import numpy as np
 
-from rllab.spaces import Box
-from rllab.spaces import Discrete
-from rllab.spaces import Product
+from garage.spaces import Box
+from garage.spaces import Discrete
+from garage.spaces import Product
 
 
 def test_product_space():

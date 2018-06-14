@@ -1,13 +1,13 @@
 import gym
 
-from rllab.baselines import LinearFeatureBaseline
-from rllab.envs import normalize
-from rllab.envs.util import spec
-from rllab.misc.instrument import run_experiment_lite
-from rllab.misc.instrument import stub
-from rllab.tf.algos import TRPO
-from rllab.tf.envs import TfEnv
-from rllab.tf.policies import CategoricalMLPPolicy
+from garage.baselines import LinearFeatureBaseline
+from garage.envs import normalize
+from garage.envs.util import spec
+from garage.misc.instrument import run_experiment_lite
+from garage.misc.instrument import stub
+from garage.tf.algos import TRPO
+from garage.tf.envs import TfEnv
+from garage.tf.policies import CategoricalMLPPolicy
 
 stub(globals())
 

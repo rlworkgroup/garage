@@ -38,8 +38,8 @@ install:
   # it's not included in environment.yml because of CPU vs GPU
   - pip install tensorflow==1.8
 
-  # prevent rllab from exiting on config
-  - cp rllab/config.py rllab/config_personal.py
+  # prevent garage from exiting on config
+  - cp garage/config.py garage/config_personal.py
 
   # --- uncomment if you add a test which actually uses mujoco_py ---
   # trigger compilation of mujoco_py bindings to catch problems early

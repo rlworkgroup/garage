@@ -51,9 +51,9 @@ CMD mkdir /root/code
 ADD environment.yml /root/code/environment.yml
 RUN conda env create -f /root/code/environment.yml
 
-ENV PYTHONPATH /root/code/rllab:$PYTHONPATH
-ENV PATH /opt/conda/envs/rllab3/bin:$PATH
-RUN echo "source activate rllab3" >> /root/.bashrc
+ENV PYTHONPATH /root/code/garage:$PYTHONPATH
+ENV PATH /opt/conda/envs/garage/bin:$PATH
+RUN echo "source activate garage" >> /root/.bashrc
 ENV BASH_ENV /root/.bashrc
 WORKDIR /root/code
 

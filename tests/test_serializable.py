@@ -1,7 +1,7 @@
 import tensorflow as tf
 
-from rllab.core import Serializable
-from rllab.tf.core.parameterized import Parameterized, suppress_params_loading
+from garage.core import Serializable
+from garage.tf.core.parameterized import Parameterized, suppress_params_loading
 
 
 class Simple(Parameterized, Serializable):

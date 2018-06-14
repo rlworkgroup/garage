@@ -14,7 +14,7 @@ fi
 
 if [ ! -f vendor/mujoco/$mujoco_file ]; then
     read -e -p "Please enter the path to the mujoco zip file [$zip_file]:" path
-    path=${path:-$zip_file} 
+    path=${path:-$zip_file}
     eval path=\"$path\"
     if [ ! -f $path ]; then
         echo "No file found at $path"
@@ -48,10 +48,10 @@ if [ ! -f vendor/mujoco/mjkey.txt ]; then
     cp $path vendor/mujoco/mjkey.txt
 fi
 
-if [ "$(conda info --envs | grep -c rllab3)" -eq "1" ]; then
-    /bin/bash -c "source activate rllab3; pip3 install -U 'mujoco-py<1.50.2,>=1.50.1'; source deactivate"
+if [ "$(conda info --envs | grep -c garage)" -eq "1" ]; then
+    /bin/bash -c "source activate garage; pip3 install -U 'mujoco-py<1.50.2,>=1.50.1'; source deactivate"
 else
-    echo "Installation of mujoco_py skipped, since the conda environment rllab3 was not found."
+    echo "Installation of mujoco_py skipped, since the conda environment garage was not found."
 fi
 
 echo "Mujoco has been set up!"

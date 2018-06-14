@@ -1,16 +1,16 @@
 from nose2.tools import such
 
-from rllab.algos import TRPO
-from rllab.baselines import ZeroBaseline
-from rllab.envs.box2d import CartpoleEnv
-from rllab.policies import GaussianMLPPolicy
+from garage.algos import TRPO
+from garage.baselines import ZeroBaseline
+from garage.envs.box2d import CartpoleEnv
+from garage.policies import GaussianMLPPolicy
 
 with such.A("Issue #3") as it:
 
     @it.should("be fixed")
     def test_issue_3():
         """
-        As reported in https://github.com/rllab/rllab/issues/3, the adaptive_std
+        As reported in https://github.com/garage/garage/issues/3, the adaptive_std
         parameter was not functioning properly
         """
         env = CartpoleEnv()

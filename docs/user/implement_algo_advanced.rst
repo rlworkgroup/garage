@@ -5,7 +5,7 @@ Implementing New Algorithms (Advanced)
 ======================================
 
 In this section, we will walk through the implementation of vanilla policy gradient
-algorithm provided in the algorithm, available at :code:`rllab/algos/vpg.py`. It utilizes
+algorithm provided in the algorithm, available at :code:`garage/algos/vpg.py`. It utilizes
 many functionalities provided by the framework, which we describe below.
 
 
@@ -59,23 +59,23 @@ returns a dictionary of objects to be persisted per iteration.
 
 The :code:`BatchPolopt` class powers quite a few algorithms:
 
-- Vanilla Policy Gradient: :code:`rllab/algos/vpg.py`
+- Vanilla Policy Gradient: :code:`garage/algos/vpg.py`
 
-- Natural Policy Gradient: :code:`rllab/algos/npg.py`
+- Natural Policy Gradient: :code:`garage/algos/npg.py`
 
-- Reward-Weighted Regression: :code:`rllab/algos/erwr.py`
+- Reward-Weighted Regression: :code:`garage/algos/erwr.py`
 
-- Trust Region Policy Optimization: :code:`rllab/algos/trpo.py`
+- Trust Region Policy Optimization: :code:`garage/algos/trpo.py`
 
-- Relative Entropy Policy Search: :code:`rllab/algos/reps.py`
+- Relative Entropy Policy Search: :code:`garage/algos/reps.py`
 
 To give an illustration, here's how we might implement :code:`init_opt` for VPG
-(the actual code in :code:`rllab/algos/vpg.py` is longer due to the need to log
+(the actual code in :code:`garage/algos/vpg.py` is longer due to the need to log
 extra diagnostic information as well as supporting recurrent policies):
 
 .. code-block:: python
 
-    from rllab.misc.ext import extract, compile_function, new_tensor
+    from garage.misc.ext import extract, compile_function, new_tensor
 
     # ...
 
@@ -118,7 +118,7 @@ extra diagnostic information as well as supporting recurrent policies):
 
 
 The code is very similar to what we implemented in the basic version. Note that
-we use an optimizer, which in this case would be an instance of :code:`rllab.optimizers.first_order_optimizer.FirstOrderOptimizer`.
+we use an optimizer, which in this case would be an instance of :code:`garage.optimizers.first_order_optimizer.FirstOrderOptimizer`.
 
 Here's how we might implement :code:`optimize_policy`:
 
@@ -138,7 +138,7 @@ Here's how we might implement :code:`optimize_policy`:
 Parallel Sampling
 =================
 
-The :code:`rllab.parallel_sampler` module takes care of parallelizing the
+The :code:`garage.parallel_sampler` module takes care of parallelizing the
 sampling process and aggregating the collected trajectory data. It is used
 by the :code:`BatchPolopt` class like below:
 

@@ -1,6 +1,6 @@
 import numpy as np
 
-from rllab.misc import logger
+from garage.misc import logger
 
 logger.set_tensorboard_dir("./histogram_example")
 N = 400

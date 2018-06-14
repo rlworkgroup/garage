@@ -2,11 +2,11 @@ import numpy as np
 import rospy
 
 from contrib.ros.envs.sawyer.push_env import PushEnv
-from rllab.baselines.linear_feature_baseline import LinearFeatureBaseline
-from rllab.envs.normalized_env import normalize
-from rllab.misc.instrument import run_experiment_lite
-from rllab.tf.algos.trpo import TRPO
-from rllab.tf.envs.base import TfEnv
+from garage.baselines.linear_feature_baseline import LinearFeatureBaseline
+from garage.envs.normalized_env import normalize
+from garage.misc.instrument import run_experiment_lite
+from garage.tf.algos.trpo import TRPO
+from garage.tf.envs.base import TfEnv
 
 INITIAL_SIM_ROBOT_JOINT_POS = {
     'right_j0': -0.041662954890248294,

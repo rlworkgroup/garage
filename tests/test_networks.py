@@ -1,8 +1,8 @@
 import lasagne.layers as L
 import numpy as np
 
-from rllab.core import GRUNetwork
-from rllab.misc import ext
+from garage.core import GRUNetwork
+from garage.misc import ext
 
 
 def test_gru_network():

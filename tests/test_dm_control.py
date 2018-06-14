@@ -1,8 +1,8 @@
 from dm_control import suite
 import numpy as np
 
-from rllab.envs import DmControlEnv
-from rllab.envs import normalize
+from garage.envs import DmControlEnv
+from garage.envs import normalize
 
 
 def run_task(domain_name, task_name):

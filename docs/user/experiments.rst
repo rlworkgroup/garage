@@ -10,11 +10,11 @@ We use object oriented abstractions for different components required for an exp
 
 .. code-block:: python
 
-    from rllab.algos.trpo import TRPO
-    from rllab.baselines.linear_feature_baseline import LinearFeatureBaseline
-    from rllab.envs.box2d.cartpole_env import CartpoleEnv
-    from rllab.envs.normalized_env import normalize
-    from rllab.policies.gaussian_mlp_policy import GaussianMLPPolicy
+    from garage.algos.trpo import TRPO
+    from garage.baselines.linear_feature_baseline import LinearFeatureBaseline
+    from garage.envs.box2d.cartpole_env import CartpoleEnv
+    from garage.envs.normalized_env import normalize
+    from garage.policies.gaussian_mlp_policy import GaussianMLPPolicy
 
     env = normalize(CartpoleEnv())
 
@@ -48,11 +48,11 @@ see some log messages like the following:
 .. code-block:: text
 
     using seed 1
-    instantiating rllab.envs.box2d.cartpole_env.CartpoleEnv
-    instantiating rllab.policy.mean_std_nn_policy.MeanStdNNPolicy
+    instantiating garage.envs.box2d.cartpole_env.CartpoleEnv
+    instantiating garage.policy.mean_std_nn_policy.MeanStdNNPolicy
     using argument hidden_sizes with value [32, 32]
-    instantiating rllab.baseline.linear_feature_baseline.LinearFeatureBaseline
-    instantiating rllab.algo.trpo.TRPO
+    instantiating garage.baseline.linear_feature_baseline.LinearFeatureBaseline
+    instantiating garage.algo.trpo.TRPO
     using argument batch_size with value 4000
     using argument whole_paths with value True
     using argument n_itr with value 40
@@ -99,16 +99,16 @@ see some log messages like the following:
 Pickled Mode Experiments
 =====================
 
-:code:`rllab` also supports a "pickled" mode for running experiments, which supports more configurations like logging and parallelization. A sample script is provided in :code:`examples/trpo_cartpole_pickled.py`. The content is pasted below:
+:code:`garage` also supports a "pickled" mode for running experiments, which supports more configurations like logging and parallelization. A sample script is provided in :code:`examples/trpo_cartpole_pickled.py`. The content is pasted below:
 
 .. code-block:: python
 
-    from rllab.algos.trpo import TRPO
-    from rllab.baselines.linear_feature_baseline import LinearFeatureBaseline
-    from rllab.envs.box2d.cartpole_env import CartpoleEnv
-    from rllab.envs.normalized_env import normalize
-    from rllab.misc.instrument import run_experiment_lite
-    from rllab.policies.gaussian_mlp_policy import GaussianMLPPolicy
+    from garage.algos.trpo import TRPO
+    from garage.baselines.linear_feature_baseline import LinearFeatureBaseline
+    from garage.envs.box2d.cartpole_env import CartpoleEnv
+    from garage.envs.normalized_env import normalize
+    from garage.misc.instrument import run_experiment_lite
+    from garage.policies.gaussian_mlp_policy import GaussianMLPPolicy
 
 
     def run_task(*_):
@@ -164,7 +164,7 @@ Additional arguments for `run_experiment_lite` (experimental):
 Running Experiments with TensorFlow and GPU
 =====================
 
-To run experiments in the TensorFlow tree of rllab with the GPU enabled, set the flags use_tf and use_gpu to True when calling `run_experiment_lite`, as shown in the code below:
+To run experiments in the TensorFlow tree of garage with the GPU enabled, set the flags use_tf and use_gpu to True when calling `run_experiment_lite`, as shown in the code below:
 
 .. code-block:: python
 

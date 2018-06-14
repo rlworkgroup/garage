@@ -8,7 +8,7 @@ In this section, we will walk through an example of implementing a point robot
 environment using our framework.
 
 Each environment should implement at least the following methods / properties defined
-in the file :code:`rllab/envs/base.py`:
+in the file :code:`garage/envs/base.py`:
 
 .. code-block:: python
 
@@ -68,9 +68,9 @@ the base environment and add some imports:
 
 .. code-block:: python
 
-    from rllab.envs.base import Env
-    from rllab.envs.base import Step
-    from rllab.spaces import Box
+    from garage.envs.base import Env
+    from garage.envs.base import Step
+    from garage.spaces import Box
     import numpy as np
 
 
@@ -170,11 +170,11 @@ stub mode):
 
 .. code-block:: python
 
-    from rllab.algos.trpo import TRPO
-    from rllab.baselines.linear_feature_baseline import LinearFeatureBaseline
+    from garage.algos.trpo import TRPO
+    from garage.baselines.linear_feature_baseline import LinearFeatureBaseline
     from examples.point_env import PointEnv
-    from rllab.envs.normalized_env import normalize
-    from rllab.policies.gaussian_mlp_policy import GaussianMLPPolicy
+    from garage.envs.normalized_env import normalize
+    from garage.policies.gaussian_mlp_policy import GaussianMLPPolicy
 
     env = normalize(PointEnv())
     policy = GaussianMLPPolicy(

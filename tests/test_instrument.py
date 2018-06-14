@@ -1,6 +1,6 @@
 from nose2.tools import such
 
-from rllab.misc import instrument
+from garage.misc import instrument
 
 
 class TestClass(object):

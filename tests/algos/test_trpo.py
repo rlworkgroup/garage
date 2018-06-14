@@ -3,11 +3,11 @@ import lasagne.nonlinearities
 import numpy as np
 import theano.tensor as TT
 
-from rllab.algos import TRPO
-from rllab.baselines import ZeroBaseline
-from rllab.envs import Step
-from rllab.policies import GaussianMLPPolicy
-from rllab.spaces import Box
+from garage.algos import TRPO
+from garage.baselines import ZeroBaseline
+from garage.envs import Step
+from garage.policies import GaussianMLPPolicy
+from garage.spaces import Box
 
 
 class DummyEnv(gym.Env):
