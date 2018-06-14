@@ -10,7 +10,6 @@ from contrib.ros.envs.sawyer.sawyer_env import SawyerEnv
 from contrib.ros.robots.sawyer import Sawyer
 from contrib.ros.worlds.block_world.world import BlockWorld
 from garage.core import Serializable
-from garage.spaces import Box
 
 
 class PushEnv(SawyerEnv, Serializable):

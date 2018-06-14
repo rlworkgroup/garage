@@ -10,6 +10,7 @@ import rospy
 from contrib.ros.worlds.gazebo import Gazebo
 from contrib.ros.worlds.world import World
 from garage.config_personal import VICON_TOPICS
+import garage.misc.logger as logger
 
 
 class Block(object):

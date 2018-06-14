@@ -2,11 +2,11 @@ import numpy as np
 import rospy
 
 from contrib.ros.envs.sawyer.push_env import PushEnv
-from rllab.algos.trpo import TRPO
-from rllab.baselines.linear_feature_baseline import LinearFeatureBaseline
-from rllab.envs.util import spec
-from rllab.misc.instrument import run_experiment_lite
-from rllab.policies.gaussian_mlp_policy import GaussianMLPPolicy
+from garage.algos.trpo import TRPO
+from garage.baselines.linear_feature_baseline import LinearFeatureBaseline
+from garage.envs.util import spec
+from garage.misc.instrument import run_experiment_lite
+from garage.policies.gaussian_mlp_policy import GaussianMLPPolicy
 
 INITIAL_REAL_ROBOT_JOINT_POS = {
     'right_j0': -0.140923828125,

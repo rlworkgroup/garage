@@ -2,7 +2,6 @@ import gym
 import numpy as np
 
 from garage.core import Serializable
-from garage.envs.base import Env
 from garage.misc.ext import get_seed
 
 

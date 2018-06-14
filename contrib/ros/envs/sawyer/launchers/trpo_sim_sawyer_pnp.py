@@ -2,11 +2,11 @@ import numpy as np
 import rospy
 
 from contrib.ros.envs.sawyer.pick_and_place_env import PickAndPlaceEnv
+from garage.algos.trpo import TRPO
 from garage.baselines.linear_feature_baseline import LinearFeatureBaseline
-from garage.envs.normalized_env import normalize
+from garage.envs.util import spec
 from garage.misc.instrument import run_experiment_lite
-from garage.tf.algos.trpo import TRPO
-from garage.tf.envs.base import TfEnv
+from garage.policies.gaussian_mlp_policy import GaussianMLPPolicy
 
 INITIAL_SIM_ROBOT_JOINT_POS = {
     'right_j0': -0.041662954890248294,
