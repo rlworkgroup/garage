@@ -1,9 +1,9 @@
 import numpy as np
 
-from rllab.core.serializable import Serializable
-from rllab.envs.base import Step
-from rllab.envs.mujoco.mujoco_env import MujocoEnv
-from rllab.misc.overrides import overrides
+from garage.core.serializable import Serializable
+from garage.envs.base import Step
+from garage.envs.mujoco.mujoco_env import MujocoEnv
+from garage.misc.overrides import overrides
 
 
 class BinSortingEnv(MujocoEnv, Serializable):
