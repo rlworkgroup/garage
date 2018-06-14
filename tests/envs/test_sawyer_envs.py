@@ -1,11 +1,11 @@
 import numpy as np
 
-from rllab.algos.trpo import TRPO
-from rllab.baselines import LinearFeatureBaseline
+from garage.algos.trpo import TRPO
+from garage.baselines import LinearFeatureBaseline
 from garage.envs.mujoco.sawyer import BinSortingEnv, BlockStackingEnv, PickAndPlaceEnv
-from rllab.envs.util import spec
-from rllab.misc.instrument import run_experiment_lite
-from rllab.policies.gaussian_mlp_policy import GaussianMLPPolicy
+from garage.envs.util import spec
+from garage.misc.instrument import run_experiment_lite
+from garage.policies.gaussian_mlp_policy import GaussianMLPPolicy
 
 
 def run_bin_sorting(*_):
