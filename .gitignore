@@ -34,7 +34,7 @@ src/
 docs/_build
 blackbox.zip
 blackbox
-rllab/config_personal.py
+garage/config_personal.py
 *.swp
 sandbox/
 .gitmodules

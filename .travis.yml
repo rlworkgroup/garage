@@ -50,8 +50,9 @@ git:
   depth: false
 
 script:
+  - scripts/travisci/check_flake8.sh
   - scripts/travisci/check_yapf.sh
-  - scripts/travisci/check_import_order.sh
+  - scripts/travisci/check_pylint.sh
   - scripts/travisci/check_imports.sh
 
 notifications:
