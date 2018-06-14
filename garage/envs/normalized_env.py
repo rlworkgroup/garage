@@ -1,6 +1,6 @@
+import gym
 import numpy as np
 
-from garage import spaces
 from garage.core import Serializable
 from garage.envs import ProxyEnv
 from garage.envs import Step
@@ -78,14 +78,14 @@ class NormalizedEnv(ProxyEnv, Serializable):
     @property
     @overrides
     def action_space(self):
-        if isinstance(self._wrapped_env.action_space, Box):
+        if isinstance(self._wrapped_env.action_space, gym.spaces.Box):
             ub = np.ones(self._wrapped_env.action_space.shape)
-            return spaces.Box(-1 * ub, ub)
+            return gym.spaces.Box(-1 * ub, ub, dtype=np.float32)
         return self._wrapped_env.action_space
 
     @overrides
     def step(self, action):
-        if isinstance(self._wrapped_env.action_space, Box):
+        if isinstance(self._wrapped_env.action_space, gym.spaces.Box):
             # rescale the action
             lb, ub = self._wrapped_env.action_space.bounds
             scaled_action = lb + (action + 1.) * 0.5 * (ub - lb)

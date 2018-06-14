@@ -3,7 +3,6 @@ import numpy as np
 
 from garage.core import Serializable
 from garage.envs import Step
-from garage.spaces import Discrete
 
 MAPS = {
     "chain": ["GFFFFFFFFFFFFFSFFFFFFFFFFFFFG"],

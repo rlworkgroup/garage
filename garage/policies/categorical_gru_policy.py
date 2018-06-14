@@ -14,7 +14,6 @@ from garage.misc import ext
 from garage.misc import special
 from garage.misc.overrides import overrides
 from garage.policies import StochasticPolicy
-from garage.spaces import Discrete
 
 
 class CategoricalGRUPolicy(StochasticPolicy, LasagnePowered):

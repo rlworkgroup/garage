@@ -13,7 +13,6 @@ from garage.misc import logger
 from garage.misc import tensor_utils
 from garage.misc.overrides import overrides
 from garage.policies import StochasticPolicy
-from garage.spaces import Discrete
 
 
 class CategoricalConvPolicy(StochasticPolicy, LasagnePowered):

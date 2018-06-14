@@ -2,7 +2,6 @@ from cached_property import cached_property
 import gym
 import numpy as np
 
-from garage import spaces
 from garage.core import Serializable
 from garage.envs import Step
 from garage.envs.mujoco import MujocoEnv
