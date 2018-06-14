@@ -14,7 +14,7 @@ trim_trailing_whitespace = true
 [*.py]
 indent_style = space
 indent_size = 4
-max_line_length = 80
+max_line_length = 79
 
 # HTML, XML, and XML-like formats
 [*.{urdf,html,launch,mako,urdf,world,xml,css}]
