@@ -2,9 +2,9 @@ from gym.envs.robotics import rotations
 from gym.spaces import Box
 import numpy as np
 
+from rllab.core.serializable import Serializable
 from rllab.envs.base import Step
 from rllab.envs.mujoco.mujoco_env import MujocoEnv
-from rllab.core.serializable import Serializable
 from rllab.misc.overrides import overrides
 
 
