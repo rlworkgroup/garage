@@ -17,14 +17,21 @@ E702 # multiple statements on one line (semicolon)
 E714 # use is not operator rather than not ... is
 )
 
+# Add the codes of the errors to be ignored for the absolute verification in
+# this array.
+ignored_errors_absolute=(
+)
+
 errors_absolute="${errors_absolute[@]}"
-flake8 --isolated --select="${errors_absolute// /,}"
+ignored_errors_absolute="${ignored_errors_absolute[@]}"
+flake8 --isolated --select="${errors_absolute// /,}" \
+  --ignore="${ignored_errors_absolute// /,}"
 
 
 # INCREMENTAL VERIFICATION:
 # The following errors are analyzed only in the modified code in the pull
 # request branch.
-errors_indentation=(
+errors_incremental=(
 # INDENTATION
 E125 # continuation line with same indent as next logical line
 E128 # continuation line under-indented for visual indent
@@ -75,14 +82,26 @@ E731 # do not assign a lambda expression, use a def
 E722 # do not use bare except, specify exception instead
 )
 
-errors_indentation="${errors_absolute[@]}"
+# Add the codes of the errors to be ignored for the absolute verification in
+# this array.
+ignored_errors_incremental=(
+)
+
+errors_incremental="${errors_incremental[@]}"
+ignored_errors_incremental="${ignored_errors_incremental[@]}"
 if [[ "${TRAVIS_PULL_REQUEST}" != "false" && "${TRAVIS}" == "true" ]]; then
-  git diff "${TRAVIS_COMMIT_RANGE}" | flake8 --diff --isolated \
-	  --import-order-style=google --application-import-names=sandbox,rllab,examples,contrib \
-	  --select="${errors_indentation// /,}"
+  git diff "${TRAVIS_COMMIT_RANGE}" \
+    | flake8 --diff --isolated \
+        --import-order-style=google \
+        --application-import-names=sandbox,rllab,examples,contrib \
+        --select="${errors_incremental// /,}" \
+        --ignore="${ignored_errors_incremental// /,}"
 else
   git remote set-branches --add origin master
   git fetch
-  git diff origin/master | flake8 --diff --isolated --import-order-style=google \
-	  --application-import-names=sandbox,rllab,examples,contrib --select="${errors_indentation// /,}"
+  git diff origin/master \
+    | flake8 --diff --isolated --import-order-style=google \
+        --application-import-names=sandbox,rllab,examples,contrib \
+        --select="${errors_incremental// /,}" \
+        --ignore="${ignored_errors_incremental// /,}"
 fi
