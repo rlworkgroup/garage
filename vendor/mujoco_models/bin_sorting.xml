@@ -1,0 +1,61 @@
+<mujoco>
+  <compiler angle="radian" meshdir="meshes/" />
+  <asset>
+    <include file="shared_assets.xml"></include>
+  </asset>
+  <default>
+    <include file="shared.xml"></include>
+  </default>
+
+  <worldbody>
+    <light directional="true" ambient="0.2 0.2 0.2" diffuse="0.8 0.8 0.8" specular="0.3 0.3 0.3" castshadow="false" pos="0 0 4" dir="0 0 -1" name="light0"></light>
+    <geom name="floor0" pos="0.4 0 -0.92" size="1.2 0.7 1" type="plane" condim="3" material="floor_mat"></geom>
+	  <geom size="0.45 0.55 0.05" pos="0.85 0.25 -0.4" type="box" name="table0" mass="2000" material="table_mat"></geom>
+
+    <body name="green_bin" pos="0.85 0.25 -0.35">
+      <include file="green_bin.xml"></include>
+    </body>
+    <body name="red_bin" pos="0.85 0.55 -0.35">
+      <include file="red_bin.xml"></include>
+    </body>
+    <body name="blue_bin" pos="0.85 -0.05 -0.35">
+      <include file="blue_bin.xml"></include>
+    </body>
+
+    <body name="object0" pos="0.55 0.25 0.0">
+      <joint name="object0:joint" type="free" damping="0.01"></joint>
+      <geom size="0.025 0.025 0.025" type="box" condim="3" name="object0" rgba="0 1 0 1" mass="2"></geom>
+      <site name="object0" pos="0 0 0" size="0.02 0.02 0.02" rgba="1 0 0 1" type="sphere"></site>
+    </body>
+
+    <body name="object1" pos="0.55 0.35 0.0">
+      <joint name="object1:joint" type="free" damping="0.01"></joint>
+      <geom size="0.025 0.025 0.025" type="box" condim="3" name="object1" rgba="1 0 0 1" mass="2"></geom>
+      <site name="object1" pos="0 0 0" size="0.02 0.02 0.02" rgba="1 0 0 1" type="sphere"></site>
+    </body>
+
+    <body name="object2" pos="0.55 0.15 0.0">
+      <joint name="object2:joint" type="free" damping="0.01"></joint>
+      <geom size="0.025 0.025 0.025" type="box" condim="3" name="object2" rgba="0 0 1 1" mass="2"></geom>
+      <site name="object2" pos="0 0 0" size="0.02 0.02 0.02" rgba="1 0 0 1" type="sphere"></site>
+    </body>
+
+    <include file="sawyer_robot.xml"></include>
+    <body mocap="true" name="mocap" pos="0.2369680365278436 0.7377722688452103 0.30233579064225752">
+      <geom conaffinity="0" contype="0" pos="0 0 0" rgba="1.0 1.0 1.0 0.0" size="0.02 0.02 0.02" type="box"></geom>
+    </body>
+  </worldbody>
+
+  <actuator>
+    <motor joint="right_j0" ctrlrange="-100.0 100.0" ctrllimited="false"/>
+    <motor joint="right_j1" ctrlrange="-100.0 100.0" ctrllimited="false"/>
+    <motor joint="right_j2" ctrlrange="-100.0 100.0" ctrllimited="false"/>
+    <motor joint="right_j3" ctrlrange="-100.0 100.0" ctrllimited="false"/>
+    <motor joint="right_j4" ctrlrange="-100.0 100.0" ctrllimited="false"/>
+    <motor joint="right_j5" ctrlrange="-100.0 100.0" ctrllimited="false"/>
+    <motor joint="right_j6" ctrlrange="-100.0 100.0" ctrllimited="false"/>
+    <motor gear="1" joint="r_gripper_l_finger_joint" name="slide_l_claw"/>
+    <motor gear="1" joint="r_gripper_r_finger_joint" name="slide_r_claw"/>
+  </actuator>
+
+</mujoco>
