@@ -2,15 +2,15 @@ import sys
 
 import gym
 
-from rllab.baselines import LinearFeatureBaseline
-from rllab.envs import normalize
-from rllab.envs.util import spec
-from rllab.misc.instrument import run_experiment_lite
-from rllab.misc.instrument import variant
-from rllab.misc.instrument import VariantGenerator
-from rllab.tf.algos import TRPO
-from rllab.tf.envs import TfEnv
-from rllab.tf.policies import GaussianMLPPolicy
+from garage.baselines import LinearFeatureBaseline
+from garage.envs import normalize
+from garage.envs.util import spec
+from garage.misc.instrument import run_experiment_lite
+from garage.misc.instrument import variant
+from garage.misc.instrument import VariantGenerator
+from garage.tf.algos import TRPO
+from garage.tf.envs import TfEnv
+from garage.tf.policies import GaussianMLPPolicy
 
 
 class VG(VariantGenerator):

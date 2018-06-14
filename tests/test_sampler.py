@@ -2,7 +2,7 @@ import numpy as np
 
 
 def test_truncate_paths():
-    from rllab.sampler import truncate_paths
+    from garage.sampler import truncate_paths
 
     paths = [
         dict(

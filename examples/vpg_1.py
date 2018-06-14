@@ -3,10 +3,10 @@ import numpy as np
 import theano
 import theano.tensor as TT
 
-from rllab.envs import normalize
-from rllab.envs.box2d import CartpoleEnv
-from rllab.envs.util import new_tensor_variable
-from rllab.policies import GaussianMLPPolicy
+from garage.envs import normalize
+from garage.envs.box2d import CartpoleEnv
+from garage.envs.util import new_tensor_variable
+from garage.policies import GaussianMLPPolicy
 
 # normalize() makes sure that the actions for the environment lies within the
 # range [-1, 1] (only works for environments with continuous actions)
@@ -50,11 +50,11 @@ returns_var = TT.vector('returns')
 # deviation.
 dist_info_vars = policy.dist_info_sym(observations_var)
 
-# policy.distribution returns a distribution object under rllab.distributions.
+# policy.distribution returns a distribution object under garage.distributions.
 # It contains many utilities for computing distribution-related quantities,
 # given the computed dist_info_vars. Below we use dist.log_likelihood_sym to
 # compute the symbolic log-likelihood. For this example, the corresponding
-# distribution is an instance of the class rllab.distributions.DiagonalGaussian
+# distribution is an instance of the class garage.distributions.DiagonalGaussian
 dist = policy.distribution
 
 # Note that we negate the objective, since most optimizers assume a minimization

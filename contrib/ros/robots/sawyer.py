@@ -9,7 +9,7 @@ import numpy as np
 import rospy
 
 from contrib.ros.robots.robot import Robot
-from rllab.spaces import Box
+from garage.spaces import Box
 
 
 class Sawyer(Robot):

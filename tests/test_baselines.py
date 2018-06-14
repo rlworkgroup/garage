@@ -3,12 +3,12 @@ os.environ['THEANO_FLAGS'] = 'mode=FAST_COMPILE,optimizer=None'
 
 from nose2 import tools
 
-from rllab.algos import VPG
-from rllab.baselines import GaussianMLPBaseline
-from rllab.baselines import LinearFeatureBaseline
-from rllab.baselines import ZeroBaseline
-from rllab.envs.box2d import CartpoleEnv
-from rllab.policies import GaussianMLPPolicy
+from garage.algos import VPG
+from garage.baselines import GaussianMLPBaseline
+from garage.baselines import LinearFeatureBaseline
+from garage.baselines import ZeroBaseline
+from garage.envs.box2d import CartpoleEnv
+from garage.policies import GaussianMLPPolicy
 
 baselines = [ZeroBaseline, LinearFeatureBaseline, GaussianMLPBaseline]
 

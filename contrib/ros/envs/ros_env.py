@@ -1,9 +1,9 @@
 import gym
 import numpy as np
 
-from rllab.core import Serializable
-from rllab.envs.base import Env
-from rllab.misc.ext import get_seed
+from garage.core import Serializable
+from garage.envs.base import Env
+from garage.misc.ext import get_seed
 
 
 class RosEnv(gym.Env, Serializable):
@@ -27,7 +27,7 @@ class RosEnv(gym.Env, Serializable):
         pass
 
     # =======================================================
-    # The functions that base rllab Env asks to implement
+    # The functions that base garage Env asks to implement
     # =======================================================
     def step(self, action):
         raise NotImplementedError

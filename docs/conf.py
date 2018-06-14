@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# rllab documentation build configuration file, created by
+# garage documentation build configuration file, created by
 # sphinx-quickstart on Mon Feb 15 20:07:12 2016.
 #
 # This file is execfile()d with the current directory set to its
@@ -52,9 +52,9 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = 'rllab'
-copyright = '2016, rllab contributors'
-author = 'rllab contributors'
+project = 'garage'
+copyright = '2018, garage contributors'
+author = 'garage contributors'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -212,7 +212,7 @@ html_static_path = ['_static']
 #html_search_scorer = 'scorer.js'
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'rllabdoc'
+htmlhelp_basename = 'garagedoc'
 
 # -- Options for LaTeX output ---------------------------------------------
 
@@ -234,7 +234,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'rllab.tex', 'rllab Documentation', 'rllab contributors',
+    (master_doc, 'garage.tex', 'garage Documentation', 'garage contributors',
      'manual'),
 ]
 
@@ -262,7 +262,7 @@ latex_documents = [
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [(master_doc, 'rllab', 'rllab Documentation', [author], 1)]
+man_pages = [(master_doc, 'garage', 'garage Documentation', [author], 1)]
 
 # If true, show URL addresses after external links.
 #man_show_urls = False
@@ -273,7 +273,7 @@ man_pages = [(master_doc, 'rllab', 'rllab Documentation', [author], 1)]
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'rllab', 'rllab Documentation', author, 'rllab',
+    (master_doc, 'garage', 'garage Documentation', author, 'garage',
      'One line description of project.', 'Miscellaneous'),
 ]
 

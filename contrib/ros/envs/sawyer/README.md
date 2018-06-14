@@ -8,18 +8,18 @@
 - defusedxml
 - opencv-python
 ## Define bash variables which will be used throughout the tutorial
-### Define rllab conda env python interpreter, rllab path, your favorite workspace name as bash variable
+### Define garage conda env python interpreter, garage path, your favorite workspace name as bash variable
 ```bash
-$ source activate rllab3
-$ export RLLAB_PYTHON=`which python`
+$ source activate garage
+$ export GARAGE_PYTHON=`which python`
 $ source deactivate
 $ export ROS_WS=/path/to/your/ros/workspace/
-$ export RLLAB=/path/to/your/rllab/  
+$ export GARAGE=/path/to/your/garage/  
 ```
 ## Installation
-- Assuming we got a clean system which only has rllab running.
-- Check if our robots and workstations are supported by rllab.contrib.ros    
-- Following is how we setup the rllab.contrib.ros's environment for sawyer robot
+- Assuming we got a clean system which only has garage running.
+- Check if our robots and workstations are supported by garage.contrib.ros    
+- Following is how we setup the garage.contrib.ros's environment for sawyer robot
 ### Setup Workstation
 #### INSTALL ROS
 ##### Configure Ubuntu repositories
@@ -43,7 +43,7 @@ $ rosdep update
 #### CREATE DEVELOPMENT WORKSPACE
 ##### Install Python Dependecies
 ```bash
-$ source activate rllab3
+$ source activate garage
 $ pip install catkin_pkg
 $ pip install rospkg
 $ pip install defusedxml
@@ -59,7 +59,7 @@ You can also add this to your .bashrc by using
 ##### Build
 ```bash
 $ cd $ROS_WS
-$ catkin_make -DPYTHON_EXECUTABLE:FILEPATH=$RLLAB_PYTHON
+$ catkin_make -DPYTHON_EXECUTABLE:FILEPATH=$GARAGE_PYTHON
 ```
 #### INSTALL INTERA SDK DEPENDENCIES
 ##### Install SDK Dependencies
@@ -68,9 +68,9 @@ $ sudo apt-get update
 $ sudo apt-get install git-core python-argparse python-wstool python-vcstools python-rosdep ros-kinetic-control-msgs ros-kinetic-joystick-drivers ros-kinetic-xacro ros-kinetic-tf2-ros ros-kinetic-rviz ros-kinetic-cv-bridge ros-kinetic-actionlib ros-kinetic-actionlib-msgs ros-kinetic-dynamic-reconfigure ros-kinetic-trajectory-msgs ros-kinetic-rospy-message-converter
 ```
 #### INSTALL INTERA ROBOT SDK
-##### Activate the conda environment for rllab
-    $ source activate rllab3
-**rllab3 is your rllab conda environment's name** 
+##### Activate the conda environment for garage
+    $ source activate garage
+**garage is your garage conda environment's name** 
 ##### Download the SDK on your Workstation
 ```bash
 $ cd $ROS_WS/src
@@ -95,7 +95,7 @@ $ git checkout indigo-devel
 ##### Build
 ```bash
 $ cd $ROS_WS
-$ catkin_make -DPYTHON_EXECUTABLE:FILEPATH=$RLLAB_PYTHON
+$ catkin_make -DPYTHON_EXECUTABLE:FILEPATH=$GARAGE_PYTHON
 ```
 #### GONFIGURE ROBOT COMMUNICATION/ROS WORKSPACE
 ##### intera.sh ROS Environment Setup
@@ -133,11 +133,11 @@ $ wstool update
 ```bash
 $ source /opt/ros/kinetic/setup.bash
 $ cd $ROS_WS
-$ catkin_make -DPYTHON_EXECUTABLE:FILEPATH=$RLLAB_PYTHON
+$ catkin_make -DPYTHON_EXECUTABLE:FILEPATH=$GARAGE_PYTHON
 ```
 ### Convert Python2 code in intera packages to Python3
 - As our environments only support Python3, we need to convert Python2 code in intera packages.
-- These can be done using rllab.contrib.ros.scripts.sawyer_2to3.sh
+- These can be done using garage.contrib.ros.scripts.sawyer_2to3.sh
 ##### Customize sawyer_2to3.sh
 Upgrade path:
     
@@ -147,23 +147,23 @@ Remove sawyer_simulator, if you don't need it:
     packages=(intera_sdk)
 ##### Execute script
 ```bash
-$ ./$RLLAB/contrib/ros/scripts/sawyer_2to3.sh
+$ ./$GARAGE/contrib/ros/scripts/sawyer_2to3.sh
 ```
 ## Usage
 ### Start the gazebo simulation
 - This section is only for simulation user
 #### Copy the sawyer simulation launch file and simulation world file
 ```bash
-$ cp $RLLAB/contrib/ros/envs/sawyer/sawyer_learning.launch $ROS_WS/src/sawyer_simulator/sawyer_gazebo/launch
-$ cp $RLLAB/contrib/ros/envs/sawyer/sawyer_world_learning.launch $ROS_WS/src/sawyer_simulator/sawyer_gazebo/launch
-$ cp $RLLAB/contrib/ros/envs/sawyer/sawyer_learning.world $ROS_WS/src/sawyer_simulator/sawyer_gazebo/worlds/
+$ cp $GARAGE/contrib/ros/envs/sawyer/sawyer_learning.launch $ROS_WS/src/sawyer_simulator/sawyer_gazebo/launch
+$ cp $GARAGE/contrib/ros/envs/sawyer/sawyer_world_learning.launch $ROS_WS/src/sawyer_simulator/sawyer_gazebo/launch
+$ cp $GARAGE/contrib/ros/envs/sawyer/sawyer_learning.world $ROS_WS/src/sawyer_simulator/sawyer_gazebo/worlds/
 ```
 #### Copy the model file 
 ```bash
-$ cp $RLLAB/contrib/ros/envs/sawyer/models/target $ROS_WS/src/sawyer_simulator/sawyer_sim_examples/models
+$ cp $GARAGE/contrib/ros/envs/sawyer/models/target $ROS_WS/src/sawyer_simulator/sawyer_sim_examples/models
 ```
 #### Set the environment variables
-**Make sure the rllab conda env is not activated now!**
+**Make sure the garage conda env is not activated now!**
 ```bash
 $ cd $ROS_WS
 $ SHELL=/bin/bash ./intera.sh sim
@@ -177,16 +177,15 @@ $ export PYTHONPATH=/opt/ros/kinetic/lib/python2.7/dist-packages:$ROS_WS/devel/l
 ```bash
 $ cd $ROS_WS
 $ SHELL=/bin/bash ./intera.sh sim
-$ source activate rllab3
+$ source activate garage
 ```
 #### Run the training script
-**Make sure that $RLLAB is in your $PYTHONPATH** \
+**Make sure that $GARAGE is in your $PYTHONPATH** \
 Ex.
 
-    $ python $RLLAB/contrib/ros/envs/example_launchers/trpo_gazebo_sawyer_pnp.py
+    $ python $GARAGE/contrib/ros/envs/example_launchers/trpo_gazebo_sawyer_pnp.py
 ## Troubleshooting
 ### ImportError: import cv2 when running training script
-Make sure your are using opencv-python installed in rllab conda env. 
+Make sure your are using opencv-python installed in garage conda env. 
 
 
-    

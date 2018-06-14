@@ -8,7 +8,7 @@ import rospy
 
 from contrib.ros.worlds.gazebo import Gazebo
 from contrib.ros.worlds.world import World
-from rllab.spaces import Box
+from garage.spaces import Box
 
 
 class Block(object):

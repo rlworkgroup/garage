@@ -27,7 +27,7 @@ optimizes a parameterized stochastic policy
 gradient ascent on the expected return objective:
 
 .. math::
-    
+
     \eta(\theta) = \mathbb{E}\left[\sum_{t=0}^T \gamma^t r(s_t, a_t)\right]
 
 where the expectation is implicitly taken over all possible trajectories,
@@ -37,7 +37,7 @@ following the sampling procedure :math:`s_0 \sim \mu_0`,
 the gradient of the objective with respect to :math:`\theta` is given by
 
 .. math::
-    
+
     \nabla_\theta \eta(\theta) = \mathbb{E}\left[\left(\sum_{t=0}^T \gamma^t r(s_t, a_t)\right) \left(\sum_{t=0}^T \nabla_\theta \log \pi_\theta(a_t | s_t) \right)\right]
 
 We can reduce the variance of this estimator by noting that for :math:`t' < t`,
@@ -49,13 +49,13 @@ We can reduce the variance of this estimator by noting that for :math:`t' < t`,
 Hence,
 
 .. math::
-    
+
     \nabla_\theta \eta(\theta) = \mathbb{E}\left[ \sum_{t=0}^T \nabla_\theta \log \pi_\theta(a_t | s_t) \sum_{t'=t}^T \gamma^{t'} r(s_{t'}, a_{t'}) \right]
 
 Often, we use the following estimator instead:
 
 .. math::
-    
+
     \nabla_\theta \eta(\theta) = \mathbb{E}\left[ \sum_{t=0}^T \nabla_\theta \log \pi_\theta(a_t | s_t) \sum_{t'=t}^T \gamma^{t'-t} r(s_{t'}, a_{t'}) \right]
 
 where :math:`\gamma^{t'}` is replaced by :math:`\gamma^{t'-t}`. When viewing the discount factor as a variance reduction factor for the undiscounted objective, this alternative gradient estimator has less bias, at the expense of having a larger variance. We define :math:`R_t := \sum_{t'=t}^T \gamma^{t'-t} r(s_{t'}, a_{t'})` as the empirical discounted return.
@@ -63,7 +63,7 @@ where :math:`\gamma^{t'}` is replaced by :math:`\gamma^{t'-t}`. When viewing the
 .. We can further reduce the variance by subtracting a baseline :math:`b(s_t)` from the empirical return :math:`\sum_{t'=t}^T \gamma^{t'-t} r(s_{t'}, a_{t'})`:
 
 .. .. math::
-    
+
     \nabla_\theta \eta(\theta) = \mathbb{E}\left[ \sum_{t=0}^T \nabla_\theta \log \pi_\theta(a_t | s_t) \left(\sum_{t'=t}^T \gamma^{t'-t} r(s_{t'}, a_{t'}) - b(s_{t}) \right) \right]
 
 .. The baseline :math:`b(s_t)` is typically implemented as an estimator of :math:`V^\pi(s_t)`.
@@ -84,7 +84,7 @@ The above formula will be the central object of our implementation. The pseudoco
     - Compute the empirical policy gradient:
 
     .. math::
-        \widehat{\nabla_\theta \eta(\theta)} = \frac{1}{NT} \sum_{i=1}^N \sum_{t=0}^{T-1} \nabla_\theta \log \pi_\theta(a_t^i | s_t^i) R_t^i 
+        \widehat{\nabla_\theta \eta(\theta)} = \frac{1}{NT} \sum_{i=1}^N \sum_{t=0}^{T-1} \nabla_\theta \log \pi_\theta(a_t^i | s_t^i) R_t^i
 
     - Take a gradient step: :math:`\theta_{k+1} = \theta_k + \alpha \widehat{\nabla_\theta \eta(\theta)}`.
 
@@ -98,9 +98,9 @@ parameters. But let's keep things simple for now.
 .. code-block:: python
 
     from __future__ import print_function
-    from rllab.envs.box2d.cartpole_env import CartpoleEnv
-    from rllab.policies.gaussian_mlp_policy import GaussianMLPPolicy
-    from rllab.envs.normalized_env import normalize
+    from garage.envs.box2d.cartpole_env import CartpoleEnv
+    from garage.policies.gaussian_mlp_policy import GaussianMLPPolicy
+    from garage.envs.normalized_env import normalize
     import numpy as np
     import theano
     import theano.tensor as TT
@@ -228,10 +228,10 @@ where :math:`L(\theta) = \frac{1}{NT} \sum_{i=1}^N \sum_{t=0}^{T-1} \log \pi_\th
     # distribution of the actions. For a Gaussian policy, it contains the mean and (log) standard deviation.
     dist_info_vars = policy.dist_info_sym(observations_var, actions_var)
 
-    # policy.distribution returns a distribution object under rllab.distributions. It contains many utilities for computing
+    # policy.distribution returns a distribution object under garage.distributions. It contains many utilities for computing
     # distribution-related quantities, given the computed dist_info_vars. Below we use dist.log_likelihood_sym to compute
     # the symbolic log-likelihood. For this example, the corresponding distribution is an instance of the class
-    # rllab.distributions.DiagonalGaussian
+    # garage.distributions.DiagonalGaussian
     dist = policy.distribution
 
     # Note that we negate the objective, since most optimizers assume a
@@ -283,14 +283,14 @@ this case, :math:`R_t^i - b(s_t^i)` is an estimator of
 :math:`A^\pi(s_t^i, a_t^i)`. The framework implements a few options for the
 baseline. A good balance of computational efficiency and accuracy is achieved
 by a linear baseline using state features, available
-at :code:`rllab/baselines/linear_feature_baseline.py`. To use it in our implementation,
+at :code:`garage/baselines/linear_feature_baseline.py`. To use it in our implementation,
 the relevant code looks like the following:
 
 .. code-block:: python
 
     # ... initialization code ...
 
-    from rllab.baselines.linear_feature_baseline import LinearFeatureBaseline
+    from garage.baselines.linear_feature_baseline import LinearFeatureBaseline
     baseline = LinearFeatureBaseline(env.spec)
 
     # ... inside the loop for each episode, after the samples are collected

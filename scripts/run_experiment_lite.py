@@ -12,11 +12,11 @@ import uuid
 import dateutil.tz
 import joblib
 
-from rllab import config
-from rllab.misc.ext import is_iterable
-from rllab.misc.ext import set_seed
-from rllab.misc.instrument import concretize
-import rllab.misc.logger as logger
+from garage import config
+from garage.misc.ext import is_iterable
+from garage.misc.ext import set_seed
+from garage.misc.instrument import concretize
+import garage.misc.logger as logger
 
 
 def run_experiment(argv):
@@ -120,13 +120,13 @@ def run_experiment(argv):
         set_seed(args.seed)
 
     if args.n_parallel > 0:
-        from rllab.sampler import parallel_sampler
+        from garage.sampler import parallel_sampler
         parallel_sampler.initialize(n_parallel=args.n_parallel)
         if args.seed is not None:
             parallel_sampler.set_seed(args.seed)
 
     if args.plot:
-        from rllab.plotter import plotter
+        from garage.plotter import plotter
         plotter.init_worker()
 
     if args.log_dir is None:

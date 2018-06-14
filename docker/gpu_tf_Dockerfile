@@ -54,12 +54,12 @@ CMD mkdir /root/code
 ADD environment.yml /root/code/environment.yml
 RUN conda env create -f /root/code/environment.yml
 
-ENV PYTHONPATH /root/code/rllab:$PYTHONPATH
-ENV PATH /opt/conda/envs/rllab3/bin:$PATH
-RUN echo "source activate rllab3" >> /root/.bashrc
+ENV PYTHONPATH /root/code/garage:$PYTHONPATH
+ENV PATH /opt/conda/envs/garage/bin:$PATH
+RUN echo "source activate garage" >> /root/.bashrc
 ENV BASH_ENV /root/.bashrc
 WORKDIR /root/code
 
 # cpu theano so it wont fight with tf
 ENV THEANO_FLAGS mode=FAST_RUN,device=cpu,floatX=float32
-RUN /opt/conda/envs/rllab3/bin/pip install --ignore-installed --upgrade https://storage.googleapis.com/tensorflow/linux/gpu/tensorflow-0.10.0rc0-cp35-cp35m-linux_x86_64.whl
+RUN /opt/conda/envs/garage/bin/pip install --ignore-installed --upgrade https://storage.googleapis.com/tensorflow/linux/gpu/tensorflow-0.10.0rc0-cp35-cp35m-linux_x86_64.whl

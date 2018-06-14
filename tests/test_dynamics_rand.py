@@ -1,8 +1,8 @@
-from rllab.envs.mujoco import SwimmerEnv
-from rllab.envs.mujoco.randomization import Distribution
-from rllab.envs.mujoco.randomization import Method
-from rllab.envs.mujoco.randomization import randomize
-from rllab.envs.mujoco.randomization import Variations
+from garage.envs.mujoco import SwimmerEnv
+from garage.envs.mujoco.randomization import Distribution
+from garage.envs.mujoco.randomization import Method
+from garage.envs.mujoco.randomization import randomize
+from garage.envs.mujoco.randomization import Variations
 
 variations = Variations()
 variations.randomize() \

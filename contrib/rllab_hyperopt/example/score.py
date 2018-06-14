@@ -2,11 +2,11 @@ import os
 
 import pandas as pd
 
-from rllab import config
+from garage import config
 
 
 def process_result(exp_prefix, exp_name):
-    # Open the default rllab path for storing results
+    # Open the default garage path for storing results
     result_path = os.path.join(config.LOG_DIR, "s3", exp_prefix, exp_name,
                                'progress.csv')
     print("Processing result from", result_path)

@@ -10,31 +10,31 @@ except OSError:
     MUJOCO_ENABLED = False
 import numpy as np
 
-from rllab.envs import DelayedActionEnv
-from rllab.envs import GridWorldEnv
-from rllab.envs import IdentificationEnv
-from rllab.envs import NoisyObservationEnv
-from rllab.envs import NormalizedEnv
-from rllab.envs import ProxyEnv
-from rllab.envs.box2d import CarParkingEnv
-from rllab.envs.box2d import CartpoleEnv
-from rllab.envs.box2d import CartpoleSwingupEnv
-from rllab.envs.box2d import DoublePendulumEnv
-from rllab.envs.box2d import MountainCarEnv
+from garage.envs import DelayedActionEnv
+from garage.envs import GridWorldEnv
+from garage.envs import IdentificationEnv
+from garage.envs import NoisyObservationEnv
+from garage.envs import NormalizedEnv
+from garage.envs import ProxyEnv
+from garage.envs.box2d import CarParkingEnv
+from garage.envs.box2d import CartpoleEnv
+from garage.envs.box2d import CartpoleSwingupEnv
+from garage.envs.box2d import DoublePendulumEnv
+from garage.envs.box2d import MountainCarEnv
 if MUJOCO_ENABLED:
-    from rllab.envs.mujoco import HalfCheetahEnv
-    from rllab.envs.mujoco import HopperEnv
-    from rllab.envs.mujoco import InvertedDoublePendulumEnv
-    from rllab.envs.mujoco import PointEnv
-    from rllab.envs.mujoco import SimpleHumanoidEnv
-    from rllab.envs.mujoco import SwimmerEnv
-    from rllab.envs.mujoco import Walker2DEnv
-    from rllab.envs.mujoco.gather import AntGatherEnv
-    from rllab.envs.mujoco.gather import PointGatherEnv
-    from rllab.envs.mujoco.gather import SwimmerGatherEnv
-    from rllab.envs.mujoco.maze import AntMazeEnv
-    from rllab.envs.mujoco.maze import PointMazeEnv
-    from rllab.envs.mujoco.maze import SwimmerMazeEnv
+    from garage.envs.mujoco import HalfCheetahEnv
+    from garage.envs.mujoco import HopperEnv
+    from garage.envs.mujoco import InvertedDoublePendulumEnv
+    from garage.envs.mujoco import PointEnv
+    from garage.envs.mujoco import SimpleHumanoidEnv
+    from garage.envs.mujoco import SwimmerEnv
+    from garage.envs.mujoco import Walker2DEnv
+    from garage.envs.mujoco.gather import AntGatherEnv
+    from garage.envs.mujoco.gather import PointGatherEnv
+    from garage.envs.mujoco.gather import SwimmerGatherEnv
+    from garage.envs.mujoco.maze import AntMazeEnv
+    from garage.envs.mujoco.maze import PointMazeEnv
+    from garage.envs.mujoco.maze import SwimmerMazeEnv
 
 simple_env_classes = [
     GridWorldEnv,

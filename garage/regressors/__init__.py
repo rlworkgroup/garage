@@ -1,0 +1,4 @@
+from garage.regressors.categorical_mlp_regressor import CategoricalMLPRegressor
+from garage.regressors.gaussian_conv_regressor import GaussianConvRegressor
+from garage.regressors.gaussian_mlp_regressor import GaussianMLPRegressor
+from garage.regressors.product_regressor import ProductRegressor

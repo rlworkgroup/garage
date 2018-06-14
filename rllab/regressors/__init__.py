@@ -1,4 +1,0 @@
-from rllab.regressors.categorical_mlp_regressor import CategoricalMLPRegressor
-from rllab.regressors.gaussian_conv_regressor import GaussianConvRegressor
-from rllab.regressors.gaussian_mlp_regressor import GaussianMLPRegressor
-from rllab.regressors.product_regressor import ProductRegressor

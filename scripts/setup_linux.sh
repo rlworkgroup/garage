@@ -23,7 +23,7 @@ if [ $? -ne 0 ]; then
    exit 1
 fi
 
-env_name="rllab3"
+env_name="garage"
 tf_version="1.8"
 read -r -p "Install tensorflow-gpu instead of regular tensorflow [y/N]: " response
 case "$response" in
@@ -46,4 +46,4 @@ if [ $? -ne 0 ]; then
    exit 1
 fi
 
-echo "Conda environment created! Make sure to run \`source activate rllab3\` whenever you open a new terminal and want to run programs under rllab."
+echo "Conda environment created! Make sure to run \`source activate garage\` whenever you open a new terminal and want to run programs under garage."

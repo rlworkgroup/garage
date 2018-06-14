@@ -4,25 +4,25 @@ os.environ['THEANO_FLAGS'] = 'device=cpu,mode=FAST_COMPILE,optimizer=None'
 from nose2 import tools
 import numpy as np
 
-from rllab.algos import CEM
-from rllab.algos import CMAES
-from rllab.algos import DDPG
-from rllab.algos import ERWR
-from rllab.algos import PPO
-from rllab.algos import REPS
-from rllab.algos import TNPG
-from rllab.algos import TRPO
-from rllab.algos import VPG
-from rllab.baselines import ZeroBaseline
-from rllab.envs import GridWorldEnv
-from rllab.envs.box2d import CartpoleEnv
-from rllab.exploration_strategies import OUStrategy
-from rllab.policies import CategoricalGRUPolicy
-from rllab.policies import CategoricalMLPPolicy
-from rllab.policies import DeterministicMLPPolicy
-from rllab.policies import GaussianGRUPolicy
-from rllab.policies import GaussianMLPPolicy
-from rllab.q_functions import ContinuousMLPQFunction
+from garage.algos import CEM
+from garage.algos import CMAES
+from garage.algos import DDPG
+from garage.algos import ERWR
+from garage.algos import PPO
+from garage.algos import REPS
+from garage.algos import TNPG
+from garage.algos import TRPO
+from garage.algos import VPG
+from garage.baselines import ZeroBaseline
+from garage.envs import GridWorldEnv
+from garage.envs.box2d import CartpoleEnv
+from garage.exploration_strategies import OUStrategy
+from garage.policies import CategoricalGRUPolicy
+from garage.policies import CategoricalMLPPolicy
+from garage.policies import DeterministicMLPPolicy
+from garage.policies import GaussianGRUPolicy
+from garage.policies import GaussianMLPPolicy
+from garage.q_functions import ContinuousMLPQFunction
 
 common_batch_algo_args = dict(
     n_itr=1,

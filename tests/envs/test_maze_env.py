@@ -1,7 +1,7 @@
 import math
 
-from rllab.envs.mujoco.maze.maze_env_utils import line_intersect
-from rllab.envs.mujoco.maze.maze_env_utils import ray_segment_intersect
+from garage.envs.mujoco.maze.maze_env_utils import line_intersect
+from garage.envs.mujoco.maze.maze_env_utils import ray_segment_intersect
 
 
 def test_line_intersect():
