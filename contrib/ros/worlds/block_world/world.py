@@ -7,9 +7,9 @@ import gym
 import numpy as np
 import rospy
 
-from rllab.config_personal import VICON_TOPICS
 from contrib.ros.worlds.gazebo import Gazebo
 from contrib.ros.worlds.world import World
+from garage.config_personal import VICON_TOPICS
 
 
 class Block(object):
