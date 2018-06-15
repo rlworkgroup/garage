@@ -13,7 +13,6 @@ from tensorboard.plugins.custom_scalar import metadata
 import tensorflow as tf
 
 from garage.misc.console import mkdir_p
-import garage.misc.logger
 
 
 class TensorBoardOutput:
@@ -25,7 +24,6 @@ class TensorBoardOutput:
 
         self._histogram_ds = {}
         self._histogram_summary_op = []
-        self._session = tf.Session()
         self._histogram_distribute_list = [
             'normal', 'gamma', 'poisson', 'uniform'
         ]
@@ -53,8 +51,6 @@ class TensorBoardOutput:
 
             self._default_step = 0
             assert self._writer is not None
-            garage.misc.logger.log("tensorboard data will be logged into:" +
-                                   dir_name)
 
     def dump_tensorboard(self, step=None):
         if not self._writer:
@@ -181,8 +177,9 @@ class TensorBoardOutput:
         del self._scalars.value[:]
 
     def _dump_histogram(self, step):
+        self.session = tf.get_default_session()
         if len(self._histogram_summary_op):
-            summary_str = self._session.run(
+            summary_str = self.session.run(
                 self._histogram_summary_op_merge, feed_dict=self._feed)
             self._writer.add_summary(summary_str, global_step=step)
             self._writer.flush()
