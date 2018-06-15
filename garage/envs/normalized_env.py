@@ -55,7 +55,7 @@ class NormalizedEnv(gym.Wrapper, Serializable):
                           self._obs_mean) / (np.sqrt(self._obs_var) + 1e-8)
         if not self._flatten_obs:
             normalized_obs = unflatten(self.env.observation_space,
-                                                 normalized_obs)
+                                       normalized_obs)
         return normalized_obs
 
     def _apply_normalize_reward(self, reward):

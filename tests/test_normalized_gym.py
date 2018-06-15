@@ -4,7 +4,6 @@ from garage.envs import normalize
 from garage.envs.util import flat_dim, flatten
 
 
-
 def test_flatten():
     env = normalize(
         gym.make('Pendulum-v0'),
@@ -17,8 +16,7 @@ def test_flatten():
             env.render()
             action = env.action_space.sample()
             next_obs, reward, done, info = env.step(action)
-            assert next_obs.shape == flat_dim(
-                env.observation_space)
+            assert next_obs.shape == flat_dim(env.observation_space)
             if done:
                 break
     env.close()
@@ -36,8 +34,7 @@ def test_unflatten():
             action = env.action_space.sample()
             next_obs, reward, done, info = env.step(action)
             assert flatten(env.observation_space,
-                                     next_obs).shape == flat_dim(
-                                         env.observation_space)
+                           next_obs).shape == flat_dim(env.observation_space)
             if done:
                 break
     env.close()
