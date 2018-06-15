@@ -1,6 +1,6 @@
 import gym
 
-from rllab.envs.normalized_gym_env import NormalizedGymEnv, \
+from garage.envs.normalized_gym_env import NormalizedGymEnv, \
     gym_space_flatten_dim, gym_space_flatten
 
 

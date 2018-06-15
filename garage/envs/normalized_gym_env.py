@@ -1,9 +1,9 @@
 import gym
 import numpy as np
 
-from rllab.core.serializable import Serializable
-from rllab.misc import special
-from rllab.misc.overrides import overrides
+from garage.core import Serializable
+from garage.misc import special
+from garage.misc.overrides import overrides
 
 
 def gym_space_flatten_dim(space):
