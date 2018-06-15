@@ -43,10 +43,12 @@ def flatten(space, obs):
     if isinstance(space, gym.spaces.Box):
         return np.asarray(obs).flatten()
     elif isinstance(space, gym.spaces.Discrete):
+        if space.n == 2:
+            obs = int(obs)
         return special.to_onehot(obs, space.n)
     elif isinstance(space, gym.spaces.Tuple):
         return np.concatenate(
-            [flatten(xi, c) for c, xi in zip(space.spaces, obs)])
+            [flatten(c, xi) for c, xi in zip(space.spaces, obs)])
     else:
         raise NotImplementedError
 

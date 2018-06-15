@@ -2,50 +2,11 @@ import gym
 import numpy as np
 
 from garage.core import Serializable
-from garage.misc import special
 from garage.misc.overrides import overrides
+from garage.envs.util import flat_dim, flatten, unflatten
 
 
-def gym_space_flatten_dim(space):
-    if isinstance(space, gym.spaces.Box):
-        return np.prod(space.low.shape)
-    elif isinstance(space, gym.spaces.Discrete):
-        return space.n
-    elif isinstance(space, gym.spaces.Tuple):
-        return np.sum([gym_space_flatten_dim(x) for x in space.spaces])
-    else:
-        raise NotImplementedError
-
-
-def gym_space_flatten(space, obs):
-    if isinstance(space, gym.spaces.Box):
-        return np.asarray(obs).flatten()
-    elif isinstance(space, gym.spaces.Discrete):
-        if space.n == 2:
-            obs = int(obs)
-        return special.to_onehot(obs, space.n)
-    elif isinstance(space, gym.spaces.Tuple):
-        return np.concatenate(
-            [gym_space_flatten(c, xi) for c, xi in zip(space.spaces, obs)])
-    else:
-        raise NotImplementedError
-
-
-def gym_space_unflatten(space, obs):
-    if isinstance(space, gym.spaces.Box):
-        return np.asarray(obs).reshape(space.shape)
-    elif isinstance(space, gym.spaces.Discrete):
-        return special.from_onehot(obs)
-    elif isinstance(space, gym.spaces.Tuple):
-        dims = [gym_space_flatten_dim(c) for c in space.spaces]
-        flat_xs = np.split(obs, np.cumsum(dims)[:-1])
-        return tuple(
-            gym_space_unflatten(c, xi) for c, xi in zip(space.spaces, flat_xs))
-    else:
-        raise NotImplementedError
-
-
-class NormalizedGymEnv(gym.Wrapper, Serializable):
+class NormalizedEnv(gym.Wrapper, Serializable):
     def __init__(
             self,
             env,
@@ -57,14 +18,14 @@ class NormalizedGymEnv(gym.Wrapper, Serializable):
             reward_alpha=0.001,
     ):
         Serializable.quick_init(self, locals())
-        super(NormalizedGymEnv, self).__init__(env)
+        super(NormalizedEnv, self).__init__(env)
         self._scale_reward = scale_reward
         self._normalize_obs = normalize_obs
         self._normalize_reward = normalize_reward
         self._flatten_obs = flatten_obs
 
         self._obs_alpha = obs_alpha
-        flat_obs_dim = gym_space_flatten_dim(env.observation_space)
+        flat_obs_dim = flat_dim(env.observation_space)
         self._obs_mean = np.zeros(flat_obs_dim)
         self._obs_var = np.ones(flat_obs_dim)
 
@@ -73,7 +34,7 @@ class NormalizedGymEnv(gym.Wrapper, Serializable):
         self._reward_var = 1.
 
     def _update_obs_estimate(self, obs):
-        flat_obs = gym_space_flatten(self.env.observation_space, obs)
+        flat_obs = flatten(self.env.observation_space, obs)
         self._obs_mean = (
             1 - self._obs_alpha) * self._obs_mean + self._obs_alpha * flat_obs
         self._obs_var = (
@@ -90,10 +51,10 @@ class NormalizedGymEnv(gym.Wrapper, Serializable):
 
     def _apply_normalize_obs(self, obs):
         self._update_obs_estimate(obs)
-        normalized_obs = (gym_space_flatten(self.env.observation_space, obs) -
+        normalized_obs = (flatten(self.env.observation_space, obs) -
                           self._obs_mean) / (np.sqrt(self._obs_var) + 1e-8)
         if not self._flatten_obs:
-            normalized_obs = gym_space_unflatten(self.env.observation_space,
+            normalized_obs = unflatten(self.env.observation_space,
                                                  normalized_obs)
         return normalized_obs
 
@@ -146,4 +107,4 @@ class NormalizedGymEnv(gym.Wrapper, Serializable):
         return "Normalized: %s" % self.env
 
 
-normalize = NormalizedGymEnv
+normalize = NormalizedEnv

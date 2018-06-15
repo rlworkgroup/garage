@@ -14,7 +14,7 @@ from garage.envs import DelayedActionEnv
 from garage.envs import GridWorldEnv
 from garage.envs import IdentificationEnv
 from garage.envs import NoisyObservationEnv
-from garage.envs import NormalizedGymEnv
+from garage.envs import NormalizedEnv
 from garage.envs import ProxyEnv
 from garage.envs.box2d import CarParkingEnv
 from garage.envs.box2d import CartpoleEnv
@@ -67,7 +67,7 @@ envs.append(ProxyEnv(envs[0]))
 envs.append(IdentificationEnv(CartpoleEnv, {}))
 envs.append(NoisyObservationEnv(CartpoleEnv()))
 envs.append(DelayedActionEnv(CartpoleEnv()))
-envs.append(NormalizedGymEnv(CartpoleEnv()))
+envs.append(NormalizedEnv(CartpoleEnv()))
 envs.append(gym.make("CartPole-v1"))
 
 
