@@ -31,7 +31,7 @@ flake8 --isolated --select="${errors_absolute// /,}" \
 # INCREMENTAL VERIFICATION:
 # The following errors are analyzed only in the modified code in the pull
 # request branch.
-errors_incremental=(
+errors_change=(
 # INDENTATION
 E125 # continuation line with same indent as next logical line
 E128 # continuation line under-indented for visual indent
@@ -80,7 +80,7 @@ E731 # do not assign a lambda expression, use a def
 
 # Add the codes of the errors to be ignored for the absolute verification in
 # this array.
-ignored_errors_incremental=(
+ignored_errors_change=(
 )
 
 # DOCSTRING
@@ -88,32 +88,34 @@ ignored_errors_incremental=(
 # here:
 # http://pep257.readthedocs.io/en/latest/error_codes.html
 # If one of the errors needs to be ignored, just add it to the ignore array.
-errors_incremental_doc="${errors_incremental[@]} D"
+erros_add="${errors_change[@]} D"
 
-errors_incremental="${errors_incremental[@]}"
-ignored_errors_incremental="${ignored_errors_incremental[@]}"
+errors_change="${errors_change[@]}"
+ignored_errors_change="${ignored_errors_change[@]}"
 if [[ "${TRAVIS_PULL_REQUEST}" != "false" && "${TRAVIS}" == "true" ]]; then
-  git diff "${TRAVIS_COMMIT_RANGE}" --diff-filter=M \
-    | flake8 --diff --isolated \
-        --import-order-style=google \
-        --application-import-names=sandbox,garage,examples,contrib \
-        --select="${errors_incremental// /,}" \
-        --ignore="${ignored_errors_incremental// /,}"
-  git diff "${TRAVIS_COMMIT_RANGE}" --diff-filter=A \
-    | flake8 --diff --isolated \
-        --select="${errors_incremental_doc// /,}" \
-        --ignore="${ignored_errors_incremental// /,}"
+  files_changed="$(git diff "${TRAVIS_COMMIT_RANGE}" --diff-filter=M \
+    --name-only)"
+  files_added="$(git diff "${TRAVIS_COMMIT_RANGE}" --diff-filter=A \
+    --name-only)"
+  flake8 --isolated --import-order-style=google \
+    --application-import-names=sandbox,garage,examples,contrib \
+    --select="${errors_change// /,}" \
+    --ignore="${ignored_errors_change// /,}" "${files_changed}"
+  flake8 --isolated --import-order-style=google \
+    --application-import-names=sandbox,garage,examples,contrib \
+    --select="${erros_add// /,}" \
+    --ignore="${ignored_errors_change// /,}" "${files_added}"
 else
   git remote set-branches --add origin master
   git fetch
-  git diff origin/master  --diff-filter=M \
-    | flake8 --diff --isolated --import-order-style=google \
-        --application-import-names=sandbox,garage,examples,contrib \
-        --select="${errors_incremental// /,}" \
-        --ignore="${ignored_errors_incremental// /,}"
-  git diff origin/master  --diff-filter=A \
-    | flake8 --diff --isolated --import-order-style=google \
-        --application-import-names=sandbox,garage,examples,contrib \
-        --select="${errors_incremental_doc// /,}" \
-        --ignore="${ignored_errors_incremental// /,}"
+  files_changed="$(git diff origin/master --diff-filter=M --name-only)"
+  files_added="$(git diff origin/master --diff-filter=A --name-only)"
+  flake8 --isolated --import-order-style=google \
+    --application-import-names=sandbox,garage,examples,contrib \
+    --select="${errors_change// /,}" \
+    --ignore="${ignored_errors_change// /,}" "${files_changed}"
+  flake8 --isolated --import-order-style=google \
+    --application-import-names=sandbox,garage,examples,contrib \
+    --select="${erros_add// /,}" \
+    --ignore="${ignored_errors_change// /,}" "${files_added}"
 fi
