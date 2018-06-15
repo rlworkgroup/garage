@@ -29,6 +29,7 @@ ignored_errors_all=(
 
 # Files or directories to exclude from checks applied to all files.
 exclude_all=(
+./tests/'*'
 )
 
 
@@ -88,6 +89,7 @@ ignored_errors_changed=(
 
 # Files or directories to exclude from checks applied to changed files.
 exclude_changed=(
+./tests/'*'
 )
 
 ### ADDED FILES ###
@@ -112,6 +114,52 @@ exclude_added=(
 ./tests/'*'
 )
 
+### ALL TEST FILES ###
+
+# Error codes applied to all test files
+test_errors_all=(
+${errors_all[@]}
+)
+
+# Error codes ignored for all test files
+test_ignored_errors_all=(
+)
+
+# Files or directories to exclude from checks applied to all files.
+test_exclude_all=(
+)
+
+### CHANGED TEST FILES ###
+
+# Error codes applied to changed test files
+test_errors_changed=(
+${errors_changed[@]}
+)
+
+# Error codes ignored to changed test files
+test_ignored_errors_changed=(
+)
+
+# Files or directories to exclude from checks applied to changed test files.
+test_exclude_changed=(
+)
+
+### ADDED TEST FILES ###
+
+# Error codes applied to added test files
+test_errors_added=(
+${errors_changed[@]}
+)
+
+# Error codes ignored to added test files
+test_ignored_errors_added=(
+)
+
+# Files or directories to exclude from checks applied to added test files.
+test_exclude_added=(
+)
+
+
 ################################################################################
 
 # DOCSTRING
@@ -134,6 +182,9 @@ else
   files_added="$(git diff origin/master --diff-filter=A --name-only \
                    | grep ".*\.py")"
 fi
+
+test_files_changed="$(echo "${files_changed}" |  grep "tests/*")"
+test_files_added="$(echo "${files_added}" |  grep "tests/*")"
 
 # Check rules with flake8
 check_flake8() {
@@ -171,4 +222,35 @@ if [[ ! -z "${files_added}" ]]; then
                --ignore="${ignored_errors_added// /,}" \
                --exclude="${exclude_added// /,}" \
                ${files_added}
+fi
+
+# All test files
+test_errors_all="${test_errors_all[@]}"
+test_ignored_errors_all="${test_ignored_errors_all[@]}"
+test_exclude_all="${test_exclude_all[@]}"
+check_flake8 --select="${test_errors_all// /,}" \
+             --ignore="${test_ignored_errors_all// /,}" \
+             --exclude="${test_exclude_all// /,}" \
+             --filename="./tests/*"
+
+# Changed test files
+test_errors_changed="${test_errors_changed[@]}"
+test_ignored_errors_changed="${test_ignored_errors_changed[@]}"
+test_exclude_changed="${test_exclude_changed[@]}"
+if [[ ! -z "${test_files_changed}" ]]; then
+  check_flake8 --select="${test_errors_changed// /,}" \
+               --ignore="${test_ignored_errors_changed// /,}" \
+               --exclude="${test_exclude_changed// /,}" \
+               ${test_files_changed}
+fi
+
+# Added test files
+test_errors_added="${test_errors_added[@]}"
+test_ignored_errors_added="${test_ignored_errors_added[@]}"
+test_exclude_added="${test_exclude_added[@]}"
+if [[ ! -z "${test_files_added}" ]]; then
+  check_flake8 --select="${test_errors_added// /,}" \
+               --ignore="${test_ignored_errors_added// /,}" \
+               --exclude="${test_exclude_added// /,}" \
+               ${test_files_added}
 fi
