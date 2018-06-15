@@ -85,6 +85,7 @@ def remove_tabular_output(file_name):
 
 def set_tensorboard_dir(dir_name):
     _tensorboard.set_dir(dir_name)
+    log("tensorboard data will be logged into:" + dir_name)
 
 
 def set_snapshot_dir(dir_name):
