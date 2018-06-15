@@ -33,7 +33,7 @@ exclude_all=(
 )
 
 
-### CHANGED_FILES ###
+### CHANGED FILES ###
 
 # Error codes applied to changed files
 errors_changed=(
@@ -161,15 +161,12 @@ test_exclude_added=(
 
 
 ################################################################################
-
-# DOCSTRING
-# The following error code enables all the error codes for docstring defined
-# here:
-# http://pep257.readthedocs.io/en/latest/error_codes.html
-# If one of the errors needs to be ignored, just add it to the ignore array.
-#erros_add="${errors_changed[@]} D"
-
-if [[ "${TRAVIS_PULL_REQUEST}" != "false" && "${TRAVIS}" == "true" ]]; then
+# If Travis CI is running this script and there's a valid pull request,
+# use the commits defined by TRAVIS_COMMIT_RANGE to get a list of changed
+# and added files introduced in the feature branch,
+# Otherwise, obtain the lists by comparing against the master branch in the
+# repository.
+if [[ "${TRAVIS}" == "true" && "${TRAVIS_PULL_REQUEST}" != "false" ]]; then
   files_changed="$(git diff "${TRAVIS_COMMIT_RANGE}" --diff-filter=M \
                      --name-only | grep ".*\.py")"
   files_added="$(git diff "${TRAVIS_COMMIT_RANGE}" --diff-filter=A \
@@ -183,6 +180,8 @@ else
                    | grep ".*\.py")"
 fi
 
+# Obtain the files that have been added or modified in the repository that
+# exist inside the tests folder.
 test_files_changed="$(echo "${files_changed}" |  grep "tests/*")"
 test_files_added="$(echo "${files_added}" |  grep "tests/*")"
 
