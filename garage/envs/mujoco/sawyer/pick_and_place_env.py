@@ -8,11 +8,6 @@ from garage.envs.mujoco import MujocoEnv
 from garage.misc import overrides
 
 
-def goal_distance(goal_a, goal_b):
-    assert goal_a.shape == goal_b.shape
-    return np.linalg.norm(goal_a - goal_b, axis=-1)
-
-
 class PickAndPlaceEnv(MujocoEnv, Serializable):
 
     FILE = 'pick_and_place.xml'
@@ -42,13 +37,13 @@ class PickAndPlaceEnv(MujocoEnv, Serializable):
         achieved_goal = obs['achieved_goal']
         goal = obs['desired_goal']
         reward = self._compute_reward(achieved_goal, goal)
-        done = (goal_distance(achieved_goal, goal) < self._distance_threshold)
+        done = (self._goal_distance(achieved_goal, goal) < self._distance_threshold)
 
         return Step(next_obs, reward, done)
 
     def _compute_reward(self, achieved_goal, goal):
         # Compute distance between goal and the achieved goal.
-        d = goal_distance(achieved_goal, goal)
+        d = self._goal_distance(achieved_goal, goal)
         if self._sparse_reward:
             return -(d > self._distance_threshold).astype(np.float32)
         else:
@@ -112,3 +107,8 @@ class PickAndPlaceEnv(MujocoEnv, Serializable):
             'achieved_goal': achieved_goal.copy(),
             'desired_goal': self._goal
         }
+
+    @staticmethod
+    def _goal_distance(goal_a, goal_b):
+        assert goal_a.shape == goal_b.shape
+        return np.linalg.norm(goal_a - goal_b, axis=-1)
