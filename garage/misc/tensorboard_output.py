@@ -14,6 +14,7 @@ import tensorflow as tf
 
 from garage.misc.console import mkdir_p
 
+
 class TensorBoardOutput:
     def __init__(self):
         self._scalars = tf.Summary()
