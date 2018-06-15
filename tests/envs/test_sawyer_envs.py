@@ -4,7 +4,7 @@ from garage.algos import TRPO
 from garage.baselines import LinearFeatureBaseline
 from garage.envs.mujoco.sawyer import BinSortingEnv, BlockStackingEnv, PickAndPlaceEnv
 from garage.envs.util import spec
-from garage.misc.instrument import run_experiment_lite
+from garage.misc.instrument import run_experiment
 from garage.policies import GaussianMLPPolicy
 
 

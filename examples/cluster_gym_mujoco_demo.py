@@ -5,7 +5,7 @@ import gym
 from garage.baselines import LinearFeatureBaseline
 from garage.envs import normalize
 from garage.envs.util import spec
-from garage.misc.instrument import run_experiment_lite
+from garage.misc.instrument import run_experiment
 from garage.misc.instrument import variant
 from garage.misc.instrument import VariantGenerator
 from garage.tf.algos import TRPO
@@ -52,7 +52,7 @@ variants = VG().variants()
 
 for v in variants:
 
-    run_experiment_lite(
+    run_experiment(
         run_task,
         exp_prefix="first_exp",
         # Number of parallel workers for sampling

@@ -5,7 +5,7 @@ from contrib.ros.envs.sawyer.push_env import PushEnv
 from garage.algos.trpo import TRPO
 from garage.baselines.linear_feature_baseline import LinearFeatureBaseline
 from garage.envs.util import spec
-from garage.misc.instrument import run_experiment_lite
+from garage.misc.instrument import run_experiment
 from garage.policies.gaussian_mlp_policy import GaussianMLPPolicy
 
 INITIAL_SIM_ROBOT_JOINT_POS = {
@@ -54,7 +54,7 @@ def run_task(*_):
     algo.train()
 
 
-run_experiment_lite(
+run_experiment(
     run_task,
     n_parallel=1,
     plot=False,
