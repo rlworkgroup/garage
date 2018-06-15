@@ -1,11 +1,12 @@
 import gym
 
-from garage.envs.normalized_gym_env import NormalizedGymEnv, \
-    gym_space_flatten_dim, gym_space_flatten
+from garage.envs import normalize
+from garage.envs.normalized_gym_env import gym_space_flatten
+from garage.envs.normalized_gym_env import gym_space_flatten_dim
 
 
 def test_flatten():
-    env = NormalizedGymEnv(
+    env = normalize(
         gym.make('Pendulum-v0'),
         normalize_reward=True,
         normalize_obs=True,
@@ -24,7 +25,7 @@ def test_flatten():
 
 
 def test_unflatten():
-    env = NormalizedGymEnv(
+    env = normalize(
         gym.make('Blackjack-v0'),
         normalize_reward=True,
         normalize_obs=True,

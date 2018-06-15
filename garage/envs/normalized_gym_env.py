@@ -146,4 +146,4 @@ class NormalizedGymEnv(gym.Wrapper, Serializable):
         return "Normalized: %s" % self.env
 
 
-normalized_gym = NormalizedGymEnv
+normalize = NormalizedGymEnv
