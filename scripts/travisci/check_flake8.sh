@@ -67,14 +67,8 @@ E743 # do not define functions named ‘l’, ‘O’, or ‘I’
 # The following error code enables all the error codes for naming conventions
 # defined here:
 # https://github.com/PyCQA/pep8-naming
-# If one of the errors needs to be ignored, just add it to the ignore variable.
+# If one of the errors needs to be ignored, just add it to the ignore array.
 N
-# DOCSTRING
-# The following error code enables all the error codes for docstring defined
-# here:
-# http://pep257.readthedocs.io/en/latest/error_codes.html
-# If one of the errors needs to be ignored, just add it to the ignore variable.
-D
 # PROGRAMMING RECOMMENDATIONS
 E711 # comparisons to None should always be done with is or is not, never the
      # equality operators
@@ -89,21 +83,37 @@ E731 # do not assign a lambda expression, use a def
 ignored_errors_incremental=(
 )
 
+# DOCSTRING
+# The following error code enables all the error codes for docstring defined
+# here:
+# http://pep257.readthedocs.io/en/latest/error_codes.html
+# If one of the errors needs to be ignored, just add it to the ignore array.
+errors_incremental_doc="${errors_incremental[@]} D"
+
 errors_incremental="${errors_incremental[@]}"
 ignored_errors_incremental="${ignored_errors_incremental[@]}"
 if [[ "${TRAVIS_PULL_REQUEST}" != "false" && "${TRAVIS}" == "true" ]]; then
-  git diff "${TRAVIS_COMMIT_RANGE}" \
+  git diff "${TRAVIS_COMMIT_RANGE}" --diff-filter=M \
     | flake8 --diff --isolated \
         --import-order-style=google \
-        --application-import-names=sandbox,rllab,examples,contrib \
+        --application-import-names=sandbox,garage,examples,contrib \
         --select="${errors_incremental// /,}" \
+        --ignore="${ignored_errors_incremental// /,}"
+  git diff "${TRAVIS_COMMIT_RANGE}" --diff-filter=A \
+    | flake8 --diff --isolated \
+        --select="${errors_incremental_doc// /,}" \
         --ignore="${ignored_errors_incremental// /,}"
 else
   git remote set-branches --add origin master
   git fetch
-  git diff origin/master \
+  git diff origin/master  --diff-filter=M \
     | flake8 --diff --isolated --import-order-style=google \
-        --application-import-names=sandbox,rllab,examples,contrib \
+        --application-import-names=sandbox,garage,examples,contrib \
         --select="${errors_incremental// /,}" \
+        --ignore="${ignored_errors_incremental// /,}"
+  git diff origin/master  --diff-filter=A \
+    | flake8 --diff --isolated --import-order-style=google \
+        --application-import-names=sandbox,garage,examples,contrib \
+        --select="${errors_incremental_doc// /,}" \
         --ignore="${ignored_errors_incremental// /,}"
 fi
