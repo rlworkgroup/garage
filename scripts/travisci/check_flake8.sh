@@ -27,10 +27,9 @@ E714 # use is not operator rather than not ... is
 ignored_errors_all=(
 )
 
-#errors_all="${errors_all[@]}"
-#ignored_errors_all="${ignored_errors_all[@]}"
-#flake8 --isolated --select="${errors_all// /,}" \
-#  --ignore="${ignored_errors_all// /,}"
+# Files or directories to exclude from checks applied to all files.
+exclude_all=(
+)
 
 
 ### CHANGED_FILES ###
@@ -83,11 +82,13 @@ E722 # do not use bare except, specify exception instead
 E731 # do not assign a lambda expression, use a def
 )
 
-# Add the codes of the errors to be ignored for the absolute verification in
-# this array.
+# Error codes ignored for changed files
 ignored_errors_changed=(
 )
 
+# Files or directories to exclude from checks applied to changed files.
+exclude_changed=(
+)
 
 ### ADDED FILES ###
 
@@ -104,6 +105,11 @@ D
 
 # Error codes applied to added files
 ignored_errors_added=(
+)
+
+# Files or directories to exclude from checks applied to added files.
+exclude_added=(
+./tests/'*'
 )
 
 ################################################################################
@@ -140,21 +146,29 @@ check_flake8() {
 # All files
 errors_all="${errors_all[@]}"
 ignored_errors_all="${ignored_errors_all[@]}"
+exclude_all="${exclude_all[@]}"
 check_flake8 --select="${errors_all// /,}" \
-             --ignore="${ignored_errors_all// /,}"
+             --ignore="${ignored_errors_all// /,}" \
+             --exclude="${exclude_all// /,}"
 
 # Changed files
 errors_changed="${errors_changed[@]}"
 ignored_errors_changed="${ignored_errors_changed[@]}"
+exclude_changed="${exclude_changed[@]}"
 if [[ ! -z "${files_changed}" ]]; then
   check_flake8 --select="${errors_changed// /,}" \
-               --ignore="${ignored_errors_changed// /,}" ${files_changed}
+               --ignore="${ignored_errors_changed// /,}" \
+               --exclude="${exclude_changed// /,}" \
+               ${files_changed}
 fi
 
 # Added files
 errors_added="${errors_added[@]}"
 ignored_errors_added="${ignored_errors_added[@]}"
+exclude_added="${exclude_added[@]}"
 if [[ ! -z "${files_added}" ]]; then
   check_flake8 --select="${errors_added// /,}" \
-               --ignore="${ignored_errors_added// /,}" ${files_added}
+               --ignore="${ignored_errors_added// /,}" \
+               --exclude="${exclude_added// /,}" \
+               ${files_added}
 fi
