@@ -150,7 +150,7 @@ Remove sawyer_simulator, if you don't need it:
 $ ./$GARAGE/contrib/ros/scripts/sawyer_2to3.sh
 ```
 ## Usage
-### Start the gazebo simulation
+### Use Gazebo simulation
 - This section is only for simulation user
 #### Copy the sawyer simulation launch file and simulation world file
 ```bash
@@ -171,6 +171,13 @@ $ export PYTHONPATH=/opt/ros/kinetic/lib/python2.7/dist-packages:$ROS_WS/devel/l
 ```
 #### Launch the gazebo sawyer
     $ roslaunch sawyer_gazebo sawyer_learning.launch
+### Use real Sawyer
+#### If you are using vicon system
+Please append your vicon ros topics in your config_personal file:
+    ```
+    # e.g.
+    VICON_TOPICS = ['vicon/vicon_object/cube']
+    ```
 ### Run the training script
 #### Open a new terminator
 #### Set the environment variables
@@ -179,6 +186,12 @@ $ cd $ROS_WS
 $ SHELL=/bin/bash ./intera.sh sim
 $ source activate garage
 ```
+#### Configure experiment
+**Remember to add STEP_FREQ in your personal config_personal file!**
+    ```
+    # e.g.
+    STEP_FREQ = 20
+    ```
 #### Run the training script
 **Make sure that $GARAGE is in your $PYTHONPATH** \
 Ex.

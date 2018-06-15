@@ -2,11 +2,11 @@ import numpy as np
 import rospy
 
 from contrib.ros.envs.sawyer.push_env import PushEnv
+from garage.algos.trpo import TRPO
 from garage.baselines.linear_feature_baseline import LinearFeatureBaseline
-from garage.envs.normalized_env import normalize
+from garage.envs.util import spec
 from garage.misc.instrument import run_experiment_lite
-from garage.tf.algos.trpo import TRPO
-from garage.tf.envs.base import TfEnv
+from garage.policies.gaussian_mlp_policy import GaussianMLPPolicy
 
 INITIAL_SIM_ROBOT_JOINT_POS = {
     'right_j0': -0.041662954890248294,
@@ -33,12 +33,11 @@ def run_task(*_):
 
     push_env.initialize()
 
-    env = TfEnv(normalize(push_env))
+    env = push_env
 
-    policy = GaussianMLPPolicy(
-        name="policy", env_spec=env.spec, hidden_sizes=(32, 32))
+    policy = GaussianMLPPolicy(env_spec=spec(env), hidden_sizes=(32, 32))
 
-    baseline = LinearFeatureBaseline(env_spec=env.spec)
+    baseline = LinearFeatureBaseline(env_spec=spec(env))
 
     algo = TRPO(
         env=env,

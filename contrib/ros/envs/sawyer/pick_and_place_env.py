@@ -3,13 +3,13 @@ Pick-and-place task for the sawyer robot
 """
 import collections
 
+import gym
 import numpy as np
 
 from contrib.ros.envs.sawyer.sawyer_env import SawyerEnv
 from contrib.ros.robots.sawyer import Sawyer
-from contrib.ros.worlds.block_world import BlockWorld
+from contrib.ros.worlds.block_world.world import BlockWorld
 from garage.core import Serializable
-from garage.spaces import Box
 
 
 class PickAndPlaceEnv(SawyerEnv, Serializable):
@@ -45,8 +45,11 @@ class PickAndPlaceEnv(SawyerEnv, Serializable):
         """
         Returns a Space object
         """
-        return Box(
-            -np.inf, np.inf, shape=self.get_observation().observation.shape)
+        return gym.spaces.Box(
+            -np.inf,
+            np.inf,
+            shape=self.get_observation().observation.shape,
+            dtype=np.float32)
 
     def sample_goal(self):
         """

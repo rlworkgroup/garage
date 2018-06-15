@@ -1,5 +1,6 @@
 from contrib.ros.envs.ros_env import RosEnv
 from contrib.ros.util.common import rate_limited
+from garage.config_personal import STEP_FREQ
 from garage.envs.base import Step
 
 
@@ -29,7 +30,7 @@ class SawyerEnv(RosEnv):
         initial_observation = self.get_observation().observation
         return initial_observation
 
-    @rate_limited(100)
+    @rate_limited(STEP_FREQ)
     def step(self, action):
         """
         Perform a step in gazebo. When end of episode

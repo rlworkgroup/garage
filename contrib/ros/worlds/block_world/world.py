@@ -2,13 +2,15 @@ import collections
 import os.path as osp
 
 from gazebo_msgs.msg import ModelStates
-from geometry_msgs.msg import Point, Pose, Quaternion
+from geometry_msgs.msg import Point, Pose, Quaternion, TransformStamped
+import gym
 import numpy as np
 import rospy
 
 from contrib.ros.worlds.gazebo import Gazebo
 from contrib.ros.worlds.world import World
-from garage.spaces import Box
+from garage.config_personal import VICON_TOPICS
+import garage.misc.logger as logger
 
 
 class Block(object):
@@ -74,8 +76,7 @@ class BlockWorld(World):
         """
         self._blocks = []
         self._simulated = simulated
-        if simulated:
-            self._model_states_sub = None
+        self._block_states_subs = []
 
     def initialize(self):
         if self._simulated:
@@ -94,13 +95,21 @@ class BlockWorld(World):
                 resource=osp.join(World.MODEL_DIR, 'block/model.urdf'))
             # Waiting models to be loaded
             rospy.sleep(1)
+            self._block_states_subs.append(
+                rospy.Subscriber('/gazebo/model_states', ModelStates,
+                                 self._gazebo_update_block_states))
             self._blocks.append(block)
-            self._model_states_sub = rospy.Subscriber(
-                '/gazebo/model_states', ModelStates,
-                self._gazebo_update_block_states)
         else:
-            # TODO(gh/8: Sawyer runtime support)
-            pass
+            for vicon_topic in VICON_TOPICS:
+                block = Block(
+                    name='block',
+                    initial_pos=(0.5725, 0.1265, 0.90),
+                    random_delta_range=0.15,
+                    resource=vicon_topic)
+                self._block_states_subs.append(
+                    rospy.Subscriber(block.resource, TransformStamped,
+                                     self._vicon_update_block_states))
+                self._blocks.append(block)
 
     def _gazebo_update_block_states(self, data):
         model_states = data
@@ -111,18 +120,27 @@ class BlockWorld(World):
             block.position = block_pose.position
             block.orientation = block_pose.orientation
 
+    def _vicon_update_block_states(self, data):
+        translation = data.transform.translation
+        rotation = data.transform.rotation
+        child_frame_id = data.child_frame_id
+
+        for block in self._blocks:
+            if block.resource == child_frame_id:
+                block.position = translation
+                block.orientation = rotation
+
     def reset(self):
         if self._simulated:
             self._reset_sim()
         else:
-            # TODO(gh/8: Sawyer runtime support)
-            pass
+            self._reset_real()
 
     def _reset_sim(self):
         """
         reset the simulation
         """
-        # Randomize start position of object
+        # Randomize start position of blocks
         for block in self._blocks:
             block_random_delta = np.zeros(2)
             while np.linalg.norm(block_random_delta) < 0.1:
@@ -139,18 +157,44 @@ class BlockWorld(World):
                         z=block.initial_pos.z)))
 
     def _reset_real(self):
-        # TODO(gh/8: Sawyer runtime support)
-        pass
+        """
+        reset the real
+        """
+        # randomize start position of blocks
+        for block in self._blocks:
+            block_random_delta = np.zeros(2)
+            new_pos = block.initial_pos
+            while np.linalg.norm(block_random_delta) < 0.1:
+                block_random_delta = np.random.uniform(
+                    -block.random_delta_range,
+                    block.random_delta_range,
+                    size=2)
+            new_pos.x += block_random_delta[0]
+            new_pos.y += block_random_delta[1]
+            logger.log('new position for {} is x = {}, y = {}, z = {}'.format(
+                block.name, new_pos.x, new_pos.y, new_pos.z))
+            ready = False
+            while not ready:
+                ans = input(
+                    'Have you finished setting up {}?[Yes/No]\n'.format(
+                        block.name))
+                if ans.lower() == 'yes' or ans.lower() == 'y':
+                    ready = True
 
     def terminate(self):
+        for sub in self._block_states_subs:
+            sub.unregister()
+
         if self._simulated:
-            self._model_states_sub.unregister()
             for block in self._blocks:
                 Gazebo.delete_gazebo_model(block.name)
             Gazebo.delete_gazebo_model('table')
         else:
-            # TODO(gh/8: Sawyer runtime support)
-            pass
+            ready = False
+            while not ready:
+                ans = input('Are you ready to exit?[Yes/No]\n')
+                if ans.lower() == 'yes' or ans.lower() == 'y':
+                    ready = True
 
     def get_observation(self):
         blocks_pos = np.array([])
@@ -179,7 +223,11 @@ class BlockWorld(World):
 
     @property
     def observation_space(self):
-        return Box(-np.inf, np.inf, shape=self.get_observation().obs.shape)
+        return gym.spaces.Box(
+            -np.inf,
+            np.inf,
+            shape=self.get_observation().obs.shape,
+            dtype=np.float32)
 
     def add_block(self, block):
         if self._simulated:
@@ -188,6 +236,7 @@ class BlockWorld(World):
             # Waiting model to be loaded
             rospy.sleep(1)
         else:
-            # TODO(gh/8: Sawyer runtime support)
-            pass
+            self._block_states_subs.append(
+                rospy.Subscriber(block.resource, TransformStamped,
+                                 self._vicon_update_block_states))
         self._blocks.append(block)
