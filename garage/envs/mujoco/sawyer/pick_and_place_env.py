@@ -37,7 +37,8 @@ class PickAndPlaceEnv(MujocoEnv, Serializable):
         achieved_goal = obs['achieved_goal']
         goal = obs['desired_goal']
         reward = self._compute_reward(achieved_goal, goal)
-        done = (self._goal_distance(achieved_goal, goal) < self._distance_threshold)
+        done = (self._goal_distance(achieved_goal, goal) <
+                self._distance_threshold)
 
         return Step(next_obs, reward, done)
 
