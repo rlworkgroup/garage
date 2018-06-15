@@ -43,8 +43,7 @@ if __name__ == "__main__":
         if args.log_dir is not None:
             params['log_dir'] = args.log_dir
         params['resume_from'] = args.file
-        command = to_local_command(
-            params, script='scripts/run_experiment_lite.py')
+        command = to_local_command(params, script='scripts/run_experiment.py')
         print(command)
         try:
             subprocess.call(command, shell=True, env=os.environ)

@@ -15,7 +15,7 @@ from hyperopt.mongoexp import MongoTrials
 import polling
 
 from garage import config
-from garage.misc.instrument import run_experiment_lite
+from garage.misc.instrument import run_experiment
 
 
 class S3SyncThread(threading.Thread):
@@ -121,7 +121,7 @@ def _launch_ec2(func, exp_prefix, exp_name, params, run_experiment_kwargs):
             variant=params,
             confirm_remote=False))
 
-    run_experiment_lite(func, **kwargs)
+    run_experiment(func, **kwargs)
 
 
 def _get_stubs(params):
@@ -243,7 +243,7 @@ def launch_hyperopt_search(task_method,
     :param max_retries: int, optional (default 0). Number of times to retry
      launching a task when results don't come in from S3
     :param run_experiment_kwargs: dict, optional (default None). Further kwargs
-     to pass to run_experiment_lite. Note that specified values for exp_prefix,
+     to pass to run_experiment. Note that specified values for exp_prefix,
      exp_name, variant, and confirm_remote will be ignored.
     :return the best result as found by hyperopt.fmin
     """

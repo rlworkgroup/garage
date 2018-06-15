@@ -5,7 +5,7 @@ from garage.baselines import LinearFeatureBaseline
 from garage.envs import normalize
 from garage.envs.box2d import CartpoleEnv
 from garage.envs.util import spec
-from garage.misc.instrument import run_experiment_lite
+from garage.misc.instrument import run_experiment
 from garage.policies import GaussianMLPPolicy
 
 
@@ -37,7 +37,7 @@ def run_task(v):
 
 for step_size in [0.01, 0.05, 0.1]:
     for seed in [1, 11, 21, 31, 41]:
-        run_experiment_lite(
+        run_experiment(
             run_task,
             exp_prefix="first_exp",
             # Number of parallel workers for sampling

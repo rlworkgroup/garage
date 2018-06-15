@@ -3,7 +3,7 @@ from garage.baselines import LinearFeatureBaseline
 from garage.envs import normalize
 from garage.envs.box2d import CartpoleEnv
 from garage.envs.util import spec
-from garage.misc.instrument import run_experiment_lite
+from garage.misc.instrument import run_experiment
 from garage.optimizers import ConjugateGradientOptimizer
 from garage.optimizers import FiniteDifferenceHvp
 from garage.policies import GaussianGRUPolicy
@@ -30,7 +30,7 @@ def run_task(*_):
     algo.train()
 
 
-run_experiment_lite(
+run_experiment(
     run_task,
     n_parallel=1,
     seed=1,

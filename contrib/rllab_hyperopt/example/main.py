@@ -27,7 +27,7 @@ param_space = {
     'seed': hp.choice('seed', [0, 1, 2])
 }
 
-# just by way of example, pass a different config to run_experiment_lite
+# just by way of example, pass a different config to run_experiment
 run_experiment_kwargs = dict(
     n_parallel=16,
     aws_config=dict(instance_type="c4.4xlarge", spot_price='0.7'))
@@ -36,7 +36,7 @@ launch_hyperopt_search(
     run_task,  # the task to run
     process_result,  # the function that will process results and return a score
     param_space,  # param search space
-    # key for hyperopt DB, and also exp_prefix for run_experiment_lite
+    # key for hyperopt DB, and also exp_prefix for run_experiment
     hyperopt_experiment_key='test12',
     # # of local workers AND # of EC2 instances that will be started in parallel
     n_hyperopt_workers=3,
@@ -44,4 +44,4 @@ launch_hyperopt_search(
     hyperopt_max_evals=5,
     result_timeout=600,  # wait this long for results from S3 before timing out
     run_experiment_kwargs=run_experiment_kwargs
-)  # additional kwargs to pass to run_experiment_lite
+)  # additional kwargs to pass to run_experiment
