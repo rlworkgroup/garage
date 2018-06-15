@@ -94,28 +94,30 @@ errors_change="${errors_change[@]}"
 ignored_errors_change="${ignored_errors_change[@]}"
 if [[ "${TRAVIS_PULL_REQUEST}" != "false" && "${TRAVIS}" == "true" ]]; then
   files_changed="$(git diff "${TRAVIS_COMMIT_RANGE}" --diff-filter=M \
-    --name-only)"
+                     --name-only | grep ".*.py")"
   files_added="$(git diff "${TRAVIS_COMMIT_RANGE}" --diff-filter=A \
-    --name-only)"
+                   --name-only | grep ".*.py")"
   flake8 --isolated --import-order-style=google \
     --application-import-names=sandbox,garage,examples,contrib \
     --select="${errors_change// /,}" \
-    --ignore="${ignored_errors_change// /,}" "${files_changed}"
+    --ignore="${ignored_errors_change// /,}" ${files_changed}
   flake8 --isolated --import-order-style=google \
     --application-import-names=sandbox,garage,examples,contrib \
     --select="${erros_add// /,}" \
-    --ignore="${ignored_errors_change// /,}" "${files_added}"
+    --ignore="${ignored_errors_change// /,}" ${files_added}
 else
   git remote set-branches --add origin master
   git fetch
-  files_changed="$(git diff origin/master --diff-filter=M --name-only)"
-  files_added="$(git diff origin/master --diff-filter=A --name-only)"
+  files_changed="$(git diff origin/master --diff-filter=M --name-only \
+                     | grep ".*.py")"
+  files_added="$(git diff origin/master --diff-filter=A --name-only \
+                   | grep ".*.py")"
   flake8 --isolated --import-order-style=google \
     --application-import-names=sandbox,garage,examples,contrib \
     --select="${errors_change// /,}" \
-    --ignore="${ignored_errors_change// /,}" "${files_changed}"
+    --ignore="${ignored_errors_change// /,}" ${files_changed}
   flake8 --isolated --import-order-style=google \
     --application-import-names=sandbox,garage,examples,contrib \
     --select="${erros_add// /,}" \
-    --ignore="${ignored_errors_change// /,}" "${files_added}"
+    --ignore="${ignored_errors_change// /,}" ${files_added}
 fi
