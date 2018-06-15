@@ -7,7 +7,7 @@ from garage.envs.proxy_env import ProxyEnv
 from garage.envs.identification_env import IdentificationEnv  # noqa: I100
 from garage.envs.noisy_env import DelayedActionEnv
 from garage.envs.noisy_env import NoisyObservationEnv
-from garage.envs.normalized_gym_env import normalize
-from garage.envs.normalized_gym_env import NormalizedEnv
+from garage.envs.normalized_env import normalize
+from garage.envs.normalized_env import NormalizedEnv
 from garage.envs.occlusion_env import OcclusionEnv
 from garage.envs.sliding_mem_env import SlidingMemEnv
