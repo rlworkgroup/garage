@@ -1,22 +1,23 @@
 from cached_property import cached_property
 
+from gym.spaces import Box as GymBox
+from gym.spaces import Discrete as GymDiscrete
+from gym.spaces import Tuple as GymTuple
+
 from garage.envs import EnvSpec
 from garage.envs import ProxyEnv
-from garage.spaces import Box as TheanoBox
-from garage.spaces import Discrete as TheanoDiscrete
-from garage.spaces import Product as TheanoProduct
 from garage.tf.spaces import Box
 from garage.tf.spaces import Discrete
 from garage.tf.spaces import Product
 
 
 def to_tf_space(space):
-    if isinstance(space, TheanoBox):
+    if isinstance(space, GymBox):
         return Box(low=space.low, high=space.high)
-    elif isinstance(space, TheanoDiscrete):
+    elif isinstance(space, GymDiscrete):
         return Discrete(space.n)
-    elif isinstance(space, TheanoProduct):
-        return Product(list(map(to_tf_space, space.components)))
+    elif isinstance(space, GymTuple):
+        return Product(list(map(to_tf_space, space.spaces)))
     else:
         raise NotImplementedError
 

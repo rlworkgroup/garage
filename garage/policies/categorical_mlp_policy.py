@@ -11,7 +11,6 @@ from garage.envs.util import flat_dim, flatten, flatten_n, weighted_sample
 from garage.misc import ext
 from garage.misc.overrides import overrides
 from garage.policies import StochasticPolicy
-from garage.spaces import Discrete
 
 
 class CategoricalMLPPolicy(StochasticPolicy, LasagnePowered):

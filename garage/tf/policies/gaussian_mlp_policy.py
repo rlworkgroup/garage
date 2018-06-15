@@ -1,3 +1,4 @@
+import gym
 import numpy as np
 import tensorflow as tf
 
@@ -11,7 +12,6 @@ from garage.tf.distributions import DiagonalGaussian
 from garage.tf.misc import tensor_utils
 from garage.tf.misc.tensor_utils import enclosing_scope
 from garage.tf.policies import StochasticPolicy
-from garage.tf.spaces import Box
 
 
 class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
@@ -55,7 +55,7 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
         :return:
         """
         Serializable.quick_init(self, locals())
-        assert isinstance(env_spec.action_space, Box)
+        assert isinstance(env_spec.action_space, gym.spaces.Box)
         self.name = name
 
         with tf.variable_scope(name):

@@ -7,7 +7,6 @@ from garage.algos import TRPO
 from garage.baselines import ZeroBaseline
 from garage.envs import Step
 from garage.policies import GaussianMLPPolicy
-from garage.spaces import Box
 
 
 class DummyEnv(gym.Env):
