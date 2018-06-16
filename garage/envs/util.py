@@ -5,7 +5,6 @@ import theano
 from garage.envs.base import EnvSpec
 from garage.misc import ext
 from garage.misc import special
-from garage.misc.overrides import overrides
 
 __all__ = [
     'bounds', 'default_value', 'flat_dim', 'flatten', 'flatten_n', 'sample',
@@ -92,7 +91,7 @@ def new_tensor_variable(space, name, extra_dims):
             new_tensor_variable(c, "tmp", extra_dims=0).dtype
             for c in space.spaces
         ]
-        if len(dtypes) > 0 and hasattr(dtypes[0], "as_numpy_dtype"):
+        if dtypes and hasattr(dtypes[0], "as_numpy_dtype"):
             dtypes = [d.as_numpy_dtype for d in dtypes]
         common_dtype = np.core.numerictypes.find_common_type([], dtypes)
         return ext.new_tensor(

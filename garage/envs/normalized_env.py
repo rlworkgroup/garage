@@ -103,8 +103,5 @@ class NormalizedEnv(gym.Wrapper, Serializable):
 
         return next_obs, reward * self._scale_reward, done, info
 
-    def __str__(self):
-        return "Normalized: %s" % self.env
-
 
 normalize = NormalizedEnv
