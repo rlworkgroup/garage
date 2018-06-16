@@ -1,7 +1,13 @@
 #!/usr/bin/env bash
-# ABSOLUTE VERIFICATION:
-# The following errors are analyzed in all python files across the repository.
-errors_absolute=(
+
+# Python packages considered local to the project, for the purposes of import
+# order checking. Comma-delimited.
+garage_packages="garage,sandbox,examples,contrib"
+
+### ALL FILES ###
+
+# Error codes applied to all files
+errors_all=(
 # TABS
 E101 # indentation contains mixed spaces and tabs
 W191 # indentation contains tabs
@@ -17,21 +23,20 @@ E702 # multiple statements on one line (semicolon)
 E714 # use is not operator rather than not ... is
 )
 
-# Add the codes of the errors to be ignored for the absolute verification in
-# this array.
-ignored_errors_absolute=(
+# Error codes ignored for all files
+ignored_errors_all=(
 )
 
-errors_absolute="${errors_absolute[@]}"
-ignored_errors_absolute="${ignored_errors_absolute[@]}"
-flake8 --isolated --select="${errors_absolute// /,}" \
-  --ignore="${ignored_errors_absolute// /,}"
+# Files or directories to exclude from checks applied to all files.
+exclude_all=(
+./tests/'*'
+)
 
 
-# INCREMENTAL VERIFICATION:
-# The following errors are analyzed only in the modified code in the pull
-# request branch.
-errors_change=(
+### CHANGED FILES ###
+
+# Error codes applied to changed files
+errors_changed=(
 # INDENTATION
 E125 # continuation line with same indent as next logical line
 E128 # continuation line under-indented for visual indent
@@ -78,44 +83,173 @@ E722 # do not use bare except, specify exception instead
 E731 # do not assign a lambda expression, use a def
 )
 
-# Add the codes of the errors to be ignored for the absolute verification in
-# this array.
-ignored_errors_change=(
+# Error codes ignored for changed files
+ignored_errors_changed=(
 )
 
+# Files or directories to exclude from checks applied to changed files.
+exclude_changed=(
+./tests/'*'
+)
+
+### ADDED FILES ###
+
+# Error codes for added files
+errors_added=(
+${errors_changed[@]}
 # DOCSTRING
 # The following error code enables all the error codes for docstring defined
 # here:
 # http://pep257.readthedocs.io/en/latest/error_codes.html
 # If one of the errors needs to be ignored, just add it to the ignore array.
-erros_add="${errors_change[@]} D"
+D
+)
 
-errors_change="${errors_change[@]}"
-ignored_errors_change="${ignored_errors_change[@]}"
-if [[ "${TRAVIS_PULL_REQUEST}" != "false" && "${TRAVIS}" == "true" ]]; then
+# Error codes applied to added files
+ignored_errors_added=(
+)
+
+# Files or directories to exclude from checks applied to added files.
+exclude_added=(
+./tests/'*'
+)
+
+### ALL TEST FILES ###
+
+# Error codes applied to all test files
+test_errors_all=(
+${errors_all[@]}
+)
+
+# Error codes ignored for all test files
+test_ignored_errors_all=(
+)
+
+# Files or directories to exclude from checks applied to all files.
+test_exclude_all=(
+)
+
+### CHANGED TEST FILES ###
+
+# Error codes applied to changed test files
+test_errors_changed=(
+${errors_changed[@]}
+)
+
+# Error codes ignored to changed test files
+test_ignored_errors_changed=(
+)
+
+# Files or directories to exclude from checks applied to changed test files.
+test_exclude_changed=(
+)
+
+### ADDED TEST FILES ###
+
+# Error codes applied to added test files
+test_errors_added=(
+${errors_changed[@]}
+)
+
+# Error codes ignored to added test files
+test_ignored_errors_added=(
+)
+
+# Files or directories to exclude from checks applied to added test files.
+test_exclude_added=(
+)
+
+
+################################################################################
+# If Travis CI is running this script and there's a valid pull request,
+# use the commits defined by TRAVIS_COMMIT_RANGE to get a list of changed
+# and added files introduced in the feature branch,
+# Otherwise, obtain the lists by comparing against the master branch in the
+# repository.
+if [[ "${TRAVIS}" == "true" && "${TRAVIS_PULL_REQUEST}" != "false" ]]; then
   files_changed="$(git diff "${TRAVIS_COMMIT_RANGE}" --diff-filter=M \
-    --name-only)"
+                     --name-only | grep ".*\.py")"
   files_added="$(git diff "${TRAVIS_COMMIT_RANGE}" --diff-filter=A \
-    --name-only)"
-  flake8 --isolated --import-order-style=google \
-    --application-import-names=sandbox,garage,examples,contrib \
-    --select="${errors_change// /,}" \
-    --ignore="${ignored_errors_change// /,}" "${files_changed}"
-  flake8 --isolated --import-order-style=google \
-    --application-import-names=sandbox,garage,examples,contrib \
-    --select="${erros_add// /,}" \
-    --ignore="${ignored_errors_change// /,}" "${files_added}"
+                   --name-only | grep ".*\.py")"
 else
   git remote set-branches --add origin master
   git fetch
-  files_changed="$(git diff origin/master --diff-filter=M --name-only)"
-  files_added="$(git diff origin/master --diff-filter=A --name-only)"
-  flake8 --isolated --import-order-style=google \
-    --application-import-names=sandbox,garage,examples,contrib \
-    --select="${errors_change// /,}" \
-    --ignore="${ignored_errors_change// /,}" "${files_changed}"
-  flake8 --isolated --import-order-style=google \
-    --application-import-names=sandbox,garage,examples,contrib \
-    --select="${erros_add// /,}" \
-    --ignore="${ignored_errors_change// /,}" "${files_added}"
+  files_changed="$(git diff origin/master --diff-filter=M --name-only \
+                     | grep ".*\.py")"
+  files_added="$(git diff origin/master --diff-filter=A --name-only \
+                   | grep ".*\.py")"
+fi
+
+# Obtain the files that have been added or modified in the repository that
+# exist inside the tests folder.
+test_files_changed="$(echo "${files_changed}" |  grep "tests/*")"
+test_files_added="$(echo "${files_added}" |  grep "tests/*")"
+
+# Check rules with flake8
+check_flake8() {
+  flake8 --isolated \
+         --import-order-style=google \
+         --application-import-names="${garage_packages}" \
+         "$@"
+}
+
+# All files
+errors_all="${errors_all[@]}"
+ignored_errors_all="${ignored_errors_all[@]}"
+exclude_all="${exclude_all[@]}"
+check_flake8 --select="${errors_all// /,}" \
+             --ignore="${ignored_errors_all// /,}" \
+             --exclude="${exclude_all// /,}"
+
+# Changed files
+errors_changed="${errors_changed[@]}"
+ignored_errors_changed="${ignored_errors_changed[@]}"
+exclude_changed="${exclude_changed[@]}"
+if [[ ! -z "${files_changed}" ]]; then
+  check_flake8 --select="${errors_changed// /,}" \
+               --ignore="${ignored_errors_changed// /,}" \
+               --exclude="${exclude_changed// /,}" \
+               ${files_changed}
+fi
+
+# Added files
+errors_added="${errors_added[@]}"
+ignored_errors_added="${ignored_errors_added[@]}"
+exclude_added="${exclude_added[@]}"
+if [[ ! -z "${files_added}" ]]; then
+  check_flake8 --select="${errors_added// /,}" \
+               --ignore="${ignored_errors_added// /,}" \
+               --exclude="${exclude_added// /,}" \
+               ${files_added}
+fi
+
+# All test files
+test_errors_all="${test_errors_all[@]}"
+test_ignored_errors_all="${test_ignored_errors_all[@]}"
+test_exclude_all="${test_exclude_all[@]}"
+check_flake8 --select="${test_errors_all// /,}" \
+             --ignore="${test_ignored_errors_all// /,}" \
+             --exclude="${test_exclude_all// /,}" \
+             --filename="./tests/*"
+
+# Changed test files
+test_errors_changed="${test_errors_changed[@]}"
+test_ignored_errors_changed="${test_ignored_errors_changed[@]}"
+test_exclude_changed="${test_exclude_changed[@]}"
+if [[ ! -z "${test_files_changed}" ]]; then
+  check_flake8 --select="${test_errors_changed// /,}" \
+               --ignore="${test_ignored_errors_changed// /,}" \
+               --exclude="${test_exclude_changed// /,}" \
+               ${test_files_changed}
+fi
+
+# Added test files
+test_errors_added="${test_errors_added[@]}"
+test_ignored_errors_added="${test_ignored_errors_added[@]}"
+test_exclude_added="${test_exclude_added[@]}"
+if [[ ! -z "${test_files_added}" ]]; then
+  check_flake8 --select="${test_errors_added// /,}" \
+               --ignore="${test_ignored_errors_added// /,}" \
+               --exclude="${test_exclude_added// /,}" \
+               ${test_files_added}
 fi
