@@ -9,8 +9,12 @@ import rospy
 
 from contrib.ros.worlds.gazebo import Gazebo
 from contrib.ros.worlds.world import World
-from garage.config_personal import VICON_TOPICS
 import garage.misc.logger as logger
+try:
+    from garage.config import VICON_TOPICS
+except ImportError:
+    logger.log("If you want to use real robot please set "
+               "VICON_TOPICS in garage.config.py, otherwise skip this")
 
 
 class Block(object):
