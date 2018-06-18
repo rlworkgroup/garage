@@ -36,7 +36,7 @@ class DDPG(RLAlgorithm):
                  actor_lr=1e-4,
                  critic_lr=1e-3,
                  actor_weight_decay=0.,
-                 critic_weight_decay=0.,
+                 critic_weight_decay=1e-2,
                  replay_buffer_size=int(1e6),
                  min_buffer_size=10000,
                  exploration_strategy=None,
@@ -124,26 +124,13 @@ class DDPG(RLAlgorithm):
         episode_critic_losses = []
         epoch_ys = []
         epoch_qs = []
+        terminal = False
 
         for epoch in range(self.n_epochs):
             logger.push_prefix('epoch #%d | ' % epoch)
             logger.log("Training started")
             for epoch_cycle in pyprind.prog_bar(range(self.n_epoch_cycles)):
                 for rollout in range(self.n_rollout_steps):
-                    action = self.es.get_action(rollout, observation,
-                                                self.actor)
-                    assert action.shape == self.env.action_space.shape
-
-                    next_observation, reward, terminal, info = self.env.step(
-                        action)
-                    episode_reward += reward
-                    episode_step += 1
-
-                    replay_buffer.add_transition(observation, action,
-                                                 reward * self.reward_scale,
-                                                 terminal, next_observation)
-                    observation = next_observation
-
                     if terminal:
                         episode_rewards.append(episode_reward)
                         episode_steps.append(episode_step)
@@ -154,10 +141,25 @@ class DDPG(RLAlgorithm):
                         if self.es:
                             self.es.reset()
 
+                    action = self.es.get_action(rollout, observation,
+                                                self.actor)
+                    assert action.shape == self.env.action_space.shape
+
+                    next_observation, reward, terminal, info = self.env.step(
+                        action * self.action_bound)
+                    episode_reward += reward
+                    episode_step += 1
+
+                    if not terminal:
+                        replay_buffer.add_transition(observation, action,
+                                                     reward * self.reward_scale,
+                                                     terminal, next_observation)
+
+                    observation = next_observation
+
                 for train_itr in range(self.n_train_steps):
                     if replay_buffer.size >= self.min_buffer_size:
                         action_loss, critic_loss, y, q = self._learn()
-                        print(action_loss)
                         episode_actor_losses.append(action_loss)
                         episode_critic_losses.append(critic_loss)
                         epoch_ys.append(y)
@@ -233,7 +235,7 @@ class DDPG(RLAlgorithm):
         f_update_target = tensor_utils.compile_function(
             inputs=[], outputs=target_update_op)
 
-        y = tf.placeholder(tf.float32, name="input_y")
+        y = tf.placeholder(tf.float32, shape=(None, ), name="input_y")
         obs = tf.placeholder(
             tf.float32,
             shape=(None, self.observation_dim),
@@ -242,7 +244,7 @@ class DDPG(RLAlgorithm):
             tf.float32, shape=(None, self.action_dim), name="input_action")
 
         with tf.variable_scope("CriticTrain"):
-            qval = self.critic.get_qval_sym(obs, actions, name="q_value")
+            qval = self.critic.get_qval_sym(obs, actions, name="q_value", deterministic=True)
             qval_loss = tf.reduce_mean(tf.squared_difference(y, qval))
             if self.critic_weight_decay > 0.:
                 critic_reg = tc.layers.apply_regularization(
@@ -250,9 +252,9 @@ class DDPG(RLAlgorithm):
                     weights_list=self.critic.regularizable_vars)
                 qval_loss += critic_reg
 
-            next_action = self.actor.get_action_sym(obs, name="actor_action")
+            next_action = self.actor.get_action_sym(obs, name="actor_action", deterministic=True)
             next_qval = self.critic.get_qval_sym(
-                obs, next_action, name="actor_qval")
+                obs, next_action, name="actor_qval", deterministic=True)
             action_loss = -tf.reduce_mean(next_qval)
             if self.actor_weight_decay > 0.:
                 actor_reg = tc.layers.apply_regularization(
@@ -260,10 +262,14 @@ class DDPG(RLAlgorithm):
                     weights_list=self.actor.regularizable_vars)
                 action_loss += actor_reg
 
+            policy_grads = tf.gradients(qval_loss, self.critic.trainable_vars)
             # Set up critic training function
             critic_train_op = self.optimizer(
                 self.critic_lr, name="CriticOptimizer").minimize(
                     qval_loss, var_list=self.critic.trainable_vars)
+            # critic_train_op = self.optimizer(
+            #     self.critic_lr, name="CriticOptimizer").apply_gradients(
+            #         list(zip(policy_grads, self.critic.trainable_vars)))
 
             f_train_critic = tensor_utils.compile_function(
                 inputs=[y, obs, actions],
@@ -279,12 +285,12 @@ class DDPG(RLAlgorithm):
                 name="policy_grads")
 
             # Set up actor training function
-            actor_train_op = self.optimizer(
-                self.actor_lr, name="ActorOptimizer").apply_gradients(
-                    list(zip(policy_grads, self.actor.trainable_vars)))
             # actor_train_op = self.optimizer(
-            #     self.actor_lr, name="ActorOptimizer").minimize(
-            #         action_loss, var_list=self.actor.trainable_vars)
+            #     self.actor_lr, name="ActorOptimizer").apply_gradients(
+            #         list(zip(policy_grads, self.actor.trainable_vars)))
+            actor_train_op = self.optimizer(
+                self.actor_lr, name="ActorOptimizer").minimize(
+                    action_loss, var_list=self.actor.trainable_vars)
 
             f_train_actor = tensor_utils.compile_function(
                 inputs=[obs], outputs=[actor_train_op])
@@ -322,18 +328,21 @@ class DDPG(RLAlgorithm):
         terminals = transitions["terminals"]
         next_observations = transitions["next_observations"]
         rewards = rewards.reshape(-1, 1)
+        terminals = terminals.reshape(-1, 1)
 
         target_actions = target_actor.get_actions(next_observations)
         target_qvals = target_critic.get_qval(next_observations,
                                               target_actions)
 
-        ys = rewards + (1. - terminals) * self.discount * target_qvals
+        ys = rewards + (1.0 - terminals) * self.discount * target_qvals
 
         _, qval_loss, qval, action_loss = f_train_critic(
-            ys, observations, actions)
+            ys.reshape(-1, ), observations, actions)
         _ = f_train_actor(observations)
         f_update_target()
 
+        import pdb
+        pdb.set_trace()
         return action_loss, qval_loss, ys, qval
 
     def _get_target_ops(self, vars, target_vars, tau, name):
@@ -344,6 +353,7 @@ class DDPG(RLAlgorithm):
             init_ops.append(tf.assign(target_var, var, name=name + "Input"))
             soft_ops.append(
                 tf.assign(
-                    target_var, (1.0 - tau) * target_var + tau * var,
+                    target_var,
+                    tau * var + (1.0 - tau) * target_var,
                     name=name + "Update"))
         return tf.group(*init_ops), tf.group(*soft_ops)

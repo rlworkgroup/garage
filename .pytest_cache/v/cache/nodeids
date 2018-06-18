@@ -1,0 +1,3 @@
+[
+  "tests/test_sampler.py::test_truncate_paths"
+]

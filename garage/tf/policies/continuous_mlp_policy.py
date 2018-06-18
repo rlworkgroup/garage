@@ -85,7 +85,7 @@ class ContinuousMLPPolicy(Policy, Serializable, LayersPowered):
                 trainable=trainable,
                 name="output")
 
-            action = L.get_output(l_output, deterministic=True)
+            action = L.get_output(l_output)
             scaled_action = tf.multiply(
                 action, self._action_bound, name="scaled_action")
 

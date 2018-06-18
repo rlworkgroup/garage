@@ -101,11 +101,9 @@ class ContinuousMLPQFunction(QFunction, Serializable, LayersPowered):
                 num_units=1,
                 nonlinearity=self._output_nonlinearity,
                 trainable=trainable,
-                name="output",
-                W=tf.random_uniform_initializer(minval=-3e-3, maxval=3e-3),
-                b=tf.random_uniform_initializer(minval=-3e-3, maxval=3e-3))
+                name="output")
 
-            output_var = L.get_output(l_output, deterministic=True)
+            output_var = L.get_output(l_output)
 
         self._f_qval = tensor_utils.compile_function(
             [l_obs.input_var, l_action.input_var], output_var)
