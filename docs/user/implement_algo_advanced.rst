@@ -75,16 +75,19 @@ extra diagnostic information as well as supporting recurrent policies):
 
 .. code-block:: python
 
+    from garage.envs.util import new_tensor_variable
     from garage.misc.ext import extract, compile_function, new_tensor
 
     # ...
 
     def init_opt(self):
-        obs_var = self.env.observation_space.new_tensor_variable(
+        obs_var = new_tensor_variable(
+            self.env.observation_space,
             'obs',
             extra_dims=1,
         )
-        action_var = self.env.action_space.new_tensor_variable(
+        action_var = new_tensor_variable(
+            self.env.action_space,
             'action',
             extra_dims=1,
         )

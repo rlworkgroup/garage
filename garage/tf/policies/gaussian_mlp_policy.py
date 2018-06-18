@@ -3,6 +3,7 @@ import numpy as np
 import tensorflow as tf
 
 from garage.core import Serializable
+from garage.envs.util import flat_dim, flatten, flatten_n
 from garage.misc import logger
 from garage.misc.overrides import overrides
 from garage.tf.core import LayersPowered
@@ -33,7 +34,7 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
                  std_parametrization='exp'):
         """
         :param env_spec:
-        :param hidden_sizes: list of sizes for the fully-connected hidden layers
+        :param hidden_sizes: list of sizes for fully-connected hidden layers
         :param learn_std: Is std trainable
         :param init_std: Initial std
         :param adaptive_std:
@@ -60,8 +61,8 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
 
         with tf.variable_scope(name):
 
-            obs_dim = env_spec.observation_space.flat_dim
-            action_dim = env_spec.action_space.flat_dim
+            obs_dim = flat_dim(env_spec.observation_space)
+            action_dim = flat_dim(env_spec.action_space)
 
             # create network
             if mean_network is None:
@@ -195,14 +196,14 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
 
     @overrides
     def get_action(self, observation):
-        flat_obs = self.observation_space.flatten(observation)
+        flat_obs = flatten(self.observation_space, observation)
         mean, log_std = [x[0] for x in self._f_dist([flat_obs])]
         rnd = np.random.normal(size=mean.shape)
         action = rnd * np.exp(log_std) + mean
         return action, dict(mean=mean, log_std=log_std)
 
     def get_actions(self, observations):
-        flat_obs = self.observation_space.flatten_n(observations)
+        flat_obs = flatten_n(self.observation_space, observations)
         means, log_stds = self._f_dist(flat_obs)
         rnd = np.random.normal(size=means.shape)
         actions = rnd * np.exp(log_stds) + means
@@ -214,9 +215,9 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
                                old_dist_info_vars,
                                name="get_reparam_action_sym"):
         """
-        Given observations, old actions, and distribution of old actions, return
-        a symbolically reparameterized representation of the actions in terms of
-        the policy parameters
+        Given observations, old actions, and distribution of old actions,
+        return a symbolically reparameterized representation of the actions
+        in terms of the policy parameters
         :param obs_var:
         :param action_var:
         :param old_dist_info_vars:

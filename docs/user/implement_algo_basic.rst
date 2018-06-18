@@ -203,12 +203,14 @@ First, we construct symbolic variables for the input data:
     # doing it in a slightly more abstract way allows us to delegate to the environment for handling the correct data
     # type for the variable. For instance, for an environment with discrete observations, we might want to use integer
     # types if the observations are represented as one-hot vectors.
-    observations_var = env.observation_space.new_tensor_variable(
+    observations_var = new_tensor_variable(
+        env.observation_space,
         'observations',
         # It should have 1 extra dimension since we want to represent a list of observations
         extra_dims=1
     )
-    actions_var = env.action_space.new_tensor_variable(
+    actions_var = new_tensor_variable(
+        env.action_space,
         'actions',
         extra_dims=1
     )

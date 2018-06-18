@@ -1,16 +1,13 @@
 import tensorflow as tf
 
 from garage.core import Serializable
-from garage.misc import ext
+from garage.envs.util import flat_dim, flatten, flatten_n
 from garage.misc.overrides import overrides
 from garage.tf.core import LayersPowered
 from garage.tf.core import MLP
 import garage.tf.core.layers as L
-from garage.tf.core.layers import batch_norm
-from garage.tf.distributions import Categorical
 from garage.tf.misc import tensor_utils
 from garage.tf.policies import Policy
-from garage.tf.spaces import Discrete
 
 
 class DeterministicMLPPolicy(Policy, LayersPowered, Serializable):
@@ -27,8 +24,8 @@ class DeterministicMLPPolicy(Policy, LayersPowered, Serializable):
         with tf.variable_scope(name):
             if prob_network is None:
                 prob_network = MLP(
-                    input_shape=(env_spec.observation_space.flat_dim, ),
-                    output_dim=env_spec.action_space.flat_dim,
+                    input_shape=(flat_dim(env_spec.observation_space), ),
+                    output_dim=flat_dim(env_spec.action_space),
                     hidden_sizes=hidden_sizes,
                     hidden_nonlinearity=hidden_nonlinearity,
                     output_nonlinearity=output_nonlinearity,
@@ -58,13 +55,13 @@ class DeterministicMLPPolicy(Policy, LayersPowered, Serializable):
 
     @overrides
     def get_action(self, observation):
-        flat_obs = self.observation_space.flatten(observation)
+        flat_obs = flatten(self.observation_space, observation)
         action = self._f_prob([flat_obs])[0]
         return action, dict()
 
     @overrides
     def get_actions(self, observations):
-        flat_obs = self.observation_space.flatten_n(observations)
+        flat_obs = flatten_n(self.observation_space, observations)
         actions = self._f_prob(flat_obs)
         return actions, dict()
 

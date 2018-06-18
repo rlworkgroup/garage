@@ -1,6 +1,7 @@
 import tensorflow as tf
 
 from garage.core import Serializable
+from garage.envs.util import new_tensor_variable
 from garage.misc import ext, logger
 from garage.misc.overrides import overrides
 from garage.tf.algos import BatchPolopt
@@ -44,11 +45,13 @@ class VPG(BatchPolopt, Serializable):
         with enclosing_scope(self.name, "init_opt"):
             is_recurrent = int(self.policy.recurrent)
 
-            obs_var = self.env.observation_space.new_tensor_variable(
+            obs_var = new_tensor_variable(
+                self.env.observation_space,
                 'obs',
                 extra_dims=1 + is_recurrent,
             )
-            action_var = self.env.action_space.new_tensor_variable(
+            action_var = new_tensor_variable(
+                self.env.action_space,
                 'action',
                 extra_dims=1 + is_recurrent,
             )

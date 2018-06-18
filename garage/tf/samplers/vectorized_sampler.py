@@ -2,13 +2,12 @@ import itertools
 import pickle
 
 import numpy as np
-import tensorflow as tf
 
+from garage.envs.util import flatten_n
 from garage.misc import tensor_utils
 import garage.misc.logger as logger
 from garage.sampler import ProgBarCounter
 from garage.sampler.base import BaseSampler
-from garage.tf.envs import ParallelVecEnvExecutor
 from garage.tf.envs import VecEnvExecutor
 
 
@@ -73,7 +72,7 @@ class VectorizedSampler(BaseSampler):
                 agent_infos = [dict() for _ in range(self.vec_env.num_envs)]
             for idx, observation, action, reward, env_info, agent_info, done \
                 in zip(itertools.count(), obses, actions, rewards, env_infos,
-                    agent_infos, dones):
+                        agent_infos, dones):
                 if running_paths[idx] is None:
                     running_paths[idx] = dict(
                         observations=[],
@@ -90,10 +89,11 @@ class VectorizedSampler(BaseSampler):
                 if done:
                     paths.append(
                         dict(
-                            observations=self.env_spec.observation_space.
-                            flatten_n(running_paths[idx]["observations"]),
-                            actions=self.env_spec.action_space.flatten_n(
-                                running_paths[idx]["actions"]),
+                            observations=flatten_n(
+                                self.env_spec.observation_space,
+                                running_paths[idx]["observations"]),
+                            actions=flatten_n(self.env_spec.action_space,
+                                              running_paths[idx]["actions"]),
                             rewards=tensor_utils.stack_tensor_list(
                                 running_paths[idx]["rewards"]),
                             env_infos=tensor_utils.stack_tensor_dict_list(
