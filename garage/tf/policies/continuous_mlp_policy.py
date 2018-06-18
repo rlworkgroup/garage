@@ -1,52 +1,54 @@
 import tensorflow as tf
 
 from garage.core import Serializable
+from garage.misc.overrides import overrides
+from garage.tf.core import layers as L
 from garage.tf.core import LayersPowered
-import garage.tf.core.layers as L
 from garage.tf.core.layers import batch_norm
 from garage.tf.misc import tensor_utils
 from garage.tf.misc.tensor_utils import enclosing_scope
-from garage.tf.q_functions import QFunction
+from garage.tf.policies import Policy
 
 
-class ContinuousMLPQFunction(QFunction, Serializable, LayersPowered):
+class ContinuousMLPPolicy(Policy, Serializable, LayersPowered):
     """
-    This class implements a q value network to predict q based on the input
-    state and action. It uses an MLP to fit the function of Q(s, a).
+    This class implements a policy network to select action based on the state
+    of the environment. It uses neural nets to fit the function of pi(s).
     """
 
     def __init__(self,
                  env_spec,
-                 name="ContinuousMLPQFunction",
-                 hidden_sizes=(32, 32),
+                 hidden_sizes=(64, 64),
+                 name="StochasticMLPPolicy",
                  hidden_nonlinearity=tf.nn.relu,
-                 action_merge_layer=-2,
-                 output_nonlinearity=None,
+                 output_nonlinearity=tf.nn.tanh,
                  bn=False):
         """
         Initialize class with multiple attributes.
 
         Args:
             env_spec():
-            name(str, optional): A str contains the name of the policy.
             hidden_sizes(list or tuple, optional):
                 A list of numbers of hidden units for all hidden layers.
+            name(str, optional):
+                A str contains the name of the policy.
             hidden_nonlinearity(optional):
                 An activation shared by all fc layers.
-            action_merge_layer(int, optional):
-                An index to indicate when to merge action layer.
             output_nonlinearity(optional):
                 An activation used by the output layer.
             bn(bool, optional):
                 A bool to indicate whether normalize the layer or not.
         """
         Serializable.quick_init(self, locals())
+        super(ContinuousMLPPolicy, self).__init__(env_spec)
 
         self.name = name
         self._env_spec = env_spec
+        self._obs_dim = env_spec.observation_space.shape[-1]
+        self._action_dim = env_spec.action_space.shape[-1]
+        self._action_bound = env_spec.action_space.high
         self._hidden_sizes = hidden_sizes
         self._hidden_nonlinearity = hidden_nonlinearity
-        self._action_merge_layer = action_merge_layer
         self._output_nonlinearity = output_nonlinearity
         self._batch_norm = bn
 
@@ -62,69 +64,51 @@ class ContinuousMLPQFunction(QFunction, Serializable, LayersPowered):
         trainable = True if reuse is None else False
         with tf.variable_scope(
                 self.name, reuse=reuse, custom_getter=custom_getter):
-            l_obs = L.InputLayer(
-                shape=(None, self._env_spec.observation_space.shape[-1]),
-                name="obs")
-            l_action = L.InputLayer(
-                shape=(None, self._env_spec.action_space.shape[-1]),
-                name="actions")
+            l_in = L.InputLayer(shape=(None, self._obs_dim), name="obs")
 
-            n_layers = len(self._hidden_sizes) + 1
-
-            if n_layers > 1:
-                action_merge_layer = \
-                    (self._action_merge_layer % n_layers + n_layers) % n_layers
-            else:
-                action_merge_layer = 1
-
-            l_hidden = l_obs
-
-            for idx, size in enumerate(self._hidden_sizes):
+            l_hidden = l_in
+            for idx, hidden_size in enumerate(self._hidden_sizes):
                 if self._batch_norm:
                     l_hidden = batch_norm(l_hidden)
 
-                if idx == action_merge_layer:
-                    l_hidden = L.ConcatLayer([l_hidden, l_action])
-
                 l_hidden = L.DenseLayer(
                     l_hidden,
-                    num_units=size,
+                    hidden_size,
                     nonlinearity=self._hidden_nonlinearity,
                     trainable=trainable,
-                    name="hidden_%d" % (idx + 1))
-
-            if action_merge_layer == n_layers:
-                l_hidden = L.ConcatLayer([l_hidden, l_action])
+                    name="hidden_%d" % idx)
 
             l_output = L.DenseLayer(
                 l_hidden,
-                num_units=1,
+                self._action_dim,
                 nonlinearity=self._output_nonlinearity,
                 trainable=trainable,
-                name="output",
-                W=tf.random_uniform_initializer(minval=-3e-3, maxval=3e-3),
-                b=tf.random_uniform_initializer(minval=-3e-3, maxval=3e-3))
+                name="output")
 
-            output_var = L.get_output(l_output, deterministic=True)
+            action = L.get_output(l_output, deterministic=True)
+            scaled_action = tf.multiply(
+                action, self._action_bound, name="scaled_action")
 
-        self._f_qval = tensor_utils.compile_function(
-            [l_obs.input_var, l_action.input_var], output_var)
+        self._f_prob_online = tensor_utils.compile_function(
+            inputs=[l_in.input_var], outputs=scaled_action)
         self._output_layer = l_output
-        self._obs_layer = l_obs
-        self._action_layer = l_action
+        self._obs_layer = l_in
 
         LayersPowered.__init__(self, [l_output])
 
-    def get_qval(self, observations, actions):
-        return self._f_qval(observations, actions)
-
-    def get_qval_sym(self, obs_var, action_var, name="get_qval_sym", **kwargs):
+    def get_action_sym(self, obs_var, name="get_action_sym", **kwargs):
         with enclosing_scope(self.name, name):
-            qvals = L.get_output(self._output_layer, {
-                self._obs_layer: obs_var,
-                self._action_layer: action_var
-            }, **kwargs)
-            return tf.reshape(qvals, (-1, ))
+            actions = L.get_output(self._output_layer,
+                                   {self._obs_layer: obs_var}, **kwargs)
+        return tf.multiply(actions, self._action_bound)
+
+    @overrides
+    def get_action(self, observation):
+        return self._f_prob_online([observation])[0]
+
+    @overrides
+    def get_actions(self, observations):
+        return self._f_prob_online(observations)
 
     @property
     def trainable_vars(self):
