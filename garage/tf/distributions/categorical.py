@@ -1,8 +1,8 @@
 import numpy as np
 import tensorflow as tf
 
-from garage.distributions.base import Distribution
-from garage.tf.misc.tensor_utils import enclosing_scope
+from garage.tf.distributions import Distribution
+from garage.tf.misc.tensor_utils import enclosing_scope, compile_function
 
 TINY = 1e-8
 
@@ -20,7 +20,7 @@ class Categorical(Distribution):
         self._name = name
         weights_var = tf.placeholder(
             dtype=tf.float32, shape=(None, dim), name="weights")
-        self._f_sample = tensor_utils.compile_function(
+        self._f_sample = compile_function(
             inputs=[weights_var],
             outputs=tf.multinomial(tf.log(weights_var + 1e-8),
                                    num_samples=1)[:, 0],
