@@ -13,8 +13,9 @@ import garage.misc.logger as logger
 try:
     from garage.config import VICON_TOPICS
 except ImportError:
-    logger.log("If you want to use real robot please set "
-               "VICON_TOPICS in garage.config_personal.py, otherwise skip this")
+    logger.log(
+        "If you want to use real robot please set "
+        "VICON_TOPICS in garage.config_personal.py, otherwise skip this")
 
 
 class Block(object):
