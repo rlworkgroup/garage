@@ -5,7 +5,8 @@ from garage.misc.overrides import overrides
 
 
 class OUStrategy(ExplorationStrategy):
-    def __init__(self, env_spec, mu=0, sigma=0.3, theta=0.15, dt=1, x0=None):
+    def __init__(self, env_spec, mu=0, sigma=0.3, theta=0.15, dt=1e-2,
+                 x0=None):
         self.env_spec = env_spec
         self.action_space = env_spec.action_space
         self.mu = mu

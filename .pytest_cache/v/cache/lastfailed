@@ -1,4 +1,0 @@
-{
-  "tests/test_baselines.py::test_baseline": true,
-  "tests/test_networks.py::test_gru_network": true
-}

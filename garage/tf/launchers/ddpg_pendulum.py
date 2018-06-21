@@ -19,6 +19,7 @@ def run_task(*_):
         name="Actor",
         hidden_sizes=[64, 64],
         hidden_nonlinearity=tf.nn.relu,
+        output_nonlinearity=tf.nn.tanh
     )
 
     critic_net = ContinuousMLPQFunction(
@@ -38,7 +39,8 @@ def run_task(*_):
         n_rollout_steps=100,
         n_train_steps=50,
         exploration_strategy=action_noise,
-        optimizer=tf.train.AdamOptimizer)
+        actor_optimizer=tf.train.AdamOptimizer,
+        critic_optimizer=tf.train.AdamOptimizer)
 
     ddpg.train()
 

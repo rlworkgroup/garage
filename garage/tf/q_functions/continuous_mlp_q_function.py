@@ -50,7 +50,7 @@ class ContinuousMLPQFunction(QFunction, Serializable, LayersPowered):
         self._output_nonlinearity = output_nonlinearity
         self._batch_norm = bn
 
-    def build_net(self, reuse=None, custom_getter=None):
+    def build_net(self, reuse=None, custom_getter=None, trainable=None):
         """
         Set up q network based on class attributes. This function uses layers
         defined in rllab.tf.
@@ -59,7 +59,7 @@ class ContinuousMLPQFunction(QFunction, Serializable, LayersPowered):
             reuse: A bool indicates whether reuse variables in the same scope.
             custom_getter: A customized getter object used to get variables.
         """
-        trainable = True if reuse is None else False
+        trainable = True if trainable is None else trainable
         with tf.variable_scope(
                 self.name, reuse=reuse, custom_getter=custom_getter):
             l_obs = L.InputLayer(
@@ -122,7 +122,7 @@ class ContinuousMLPQFunction(QFunction, Serializable, LayersPowered):
                 self._obs_layer: obs_var,
                 self._action_layer: action_var
             }, **kwargs)
-            return tf.reshape(qvals, (-1, ))
+            return qvals
 
     @property
     def trainable_vars(self):
