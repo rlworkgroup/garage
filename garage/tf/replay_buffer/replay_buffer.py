@@ -2,15 +2,16 @@ import numpy as np
 
 
 class ReplayBuffer(object):
+
     """
     This class caches transitions in the training of RL algorithms.
     It uses random batch sample to minimize correlations between samples.
     """
 
     def __init__(self, max_buffer_size, observation_dim, action_dim):
+
         """
-        The init method initializes the data in a transition, which includes
-        observation, action, reward, terminal and next_observation.
+        Initializes the data in a transition.
 
         Args:
             max_buffer_size(int): Max size of the buffer cache.

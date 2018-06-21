@@ -19,15 +19,13 @@ def run_task(*_):
         name="Actor",
         hidden_sizes=[64, 64],
         hidden_nonlinearity=tf.nn.relu,
-        output_nonlinearity=tf.nn.tanh
-    )
+        output_nonlinearity=tf.nn.tanh)
 
     critic_net = ContinuousMLPQFunction(
         env_spec=env,
         name="Critic",
         hidden_sizes=[64, 64],
-        hidden_nonlinearity=tf.nn.relu,
-    )
+        hidden_nonlinearity=tf.nn.relu)
 
     ddpg = DDPG(
         env,

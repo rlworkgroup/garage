@@ -103,7 +103,7 @@ def test_ddpg():
         dict_args = vars(args)
         del dict_args['num_timesteps']
         return dict_args
-    
+
     args = parse_args()
     if MPI.COMM_WORLD.Get_rank() == 0:
         logger.configure()

@@ -9,6 +9,7 @@ from garage.algos.base import RLAlgorithm
 from garage.misc import logger
 from garage.misc.overrides import overrides
 from garage.tf.misc import tensor_utils
+from garage.tf.plotter import Plotter
 from garage.tf.replay_buffer import ReplayBuffer
 
 
@@ -28,7 +29,6 @@ class DDPG(RLAlgorithm):
                  n_epoch_cycles=20,
                  n_rollout_steps=100,
                  n_train_steps=50,
-                 action_range=(-1, 1),
                  reward_scale=1,
                  batch_size=64,
                  soft_update_tau=0.01,
@@ -41,6 +41,7 @@ class DDPG(RLAlgorithm):
                  min_buffer_size=10000,
                  exploration_strategy=None,
                  plot=False,
+                 pause_for_plot=False,
                  actor_optimizer=None,
                  critic_optimizer=None):
         """
@@ -52,7 +53,6 @@ class DDPG(RLAlgorithm):
             n_epoch_cycles(int, optional): Number of epoch cycles.
             n_rollout_steps(int, optional): Number of rollout steps.
             n_train_steps(int, optional): Number of train steps.
-            action_range(tuple): Range of env.action_space.
             reward_scale(float): The scaling factor applied to the rewards when
          training.
             batch_size(int): Number of samples for each minibatch.
@@ -70,6 +70,7 @@ class DDPG(RLAlgorithm):
             exploration_strategy(): Exploration strategy.
             plot(bool): Whether to visualize the policy performance after each
          eval_interval.
+            pause_for_plot(bool): Whether to pause before continuing when plotting.
             actor_optimizer(): Optimizer for training policy network.
             critic_optimizer(): Optimizer for training q function network.
         """
@@ -85,7 +86,6 @@ class DDPG(RLAlgorithm):
         self.n_epoch_cycles = n_epoch_cycles
         self.n_rollout_steps = n_rollout_steps
         self.n_train_steps = n_train_steps
-        self.action_range = action_range
         self.reward_scale = reward_scale
         self.batch_size = batch_size
         self.tau = soft_update_tau
@@ -98,6 +98,7 @@ class DDPG(RLAlgorithm):
         self.min_buffer_size = min_buffer_size
         self.es = exploration_strategy
         self.plot = plot
+        self.pause_for_plot = pause_for_plot
         self.actor_optimizer = actor_optimizer
         self.critic_optimzier = critic_optimizer
 
@@ -111,6 +112,11 @@ class DDPG(RLAlgorithm):
         if sess is None:
             sess = tf.Session()
             sess.__enter__()
+
+        # Start plotter
+        if self.plot:
+            self.plotter = Plotter(self.env, self.actor, sess)
+            self.plotter.start()
 
         sess.run(tf.global_variables_initializer())
         f_init_target()
@@ -195,7 +201,14 @@ class DDPG(RLAlgorithm):
 
             logger.dump_tabular(with_prefix=False)
             logger.pop_prefix()
+            if self.plot:
+                self.plotter.update_plot(self.actor, self.n_rollout_steps)
+                if self.pause_for_plot:
+                    input("Plotting evaluation run: Press Enter to "
+                          "continue...")
 
+        if self.plot:
+            self.plotter.shutdown()
         if created_session:
             sess.close()
 
