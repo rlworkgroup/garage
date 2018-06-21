@@ -60,6 +60,7 @@ class ContinuousMLPPolicy(Policy, Serializable, LayersPowered):
         Args:
             reuse: A bool indicates whether reuse variables in the same scope.
             custom_getter: A customized getter object used to get variables.
+            trainable: A bool indicates whether variables are trainable.
         """
         trainable = True if trainable is None else trainable
         with tf.variable_scope(

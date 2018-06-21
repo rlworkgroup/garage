@@ -70,7 +70,8 @@ class DDPG(RLAlgorithm):
             exploration_strategy(): Exploration strategy.
             plot(bool): Whether to visualize the policy performance after each
          eval_interval.
-            optimizer(): Optimizer for training networks.
+            actor_optimizer(): Optimizer for training policy network.
+            critic_optimizer(): Optimizer for training q function network.
         """
         self.env = env
 

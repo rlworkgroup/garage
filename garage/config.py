@@ -17,7 +17,7 @@ DOCKER_LOG_DIR = "/tmp/expt"
 
 POD_DIR = PROJECT_PATH + "/.pods"
 
-AWS_S3_PATH = ''
+AWS_S3_PATH = None
 
 AWS_IMAGE_ID = None
 

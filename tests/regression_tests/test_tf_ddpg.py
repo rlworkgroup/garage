@@ -4,8 +4,8 @@ from baselines import logger
 from baselines.common.misc_util import boolean_flag
 from baselines.ddpg.main import run
 import gym
-import tensorflow as tf
 from mpi4py import MPI
+import tensorflow as tf
 
 from garage.misc.instrument import run_experiment
 from garage.tf.algos import DDPG
@@ -51,12 +51,8 @@ def test_ddpg():
 
     run_experiment(
         run_task,
-        # Number of parallel workers for sampling
         n_parallel=1,
-        # Only keep the snapshot parameters for the last iteration
         snapshot_mode="last",
-        # Specifies the seed for the experiment. If this is not provided, a random seed
-        # will be used
         seed=1,
         plot=False,
     )
@@ -107,7 +103,7 @@ def test_ddpg():
         dict_args = vars(args)
         del dict_args['num_timesteps']
         return dict_args
-
+    
     args = parse_args()
     if MPI.COMM_WORLD.Get_rank() == 0:
         logger.configure()
