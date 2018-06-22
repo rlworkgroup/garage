@@ -1,7 +1,13 @@
 from contrib.ros.envs.ros_env import RosEnv
 from contrib.ros.util.common import rate_limited
-from garage.config_personal import STEP_FREQ
 from garage.envs.base import Step
+try:
+    from garage.config import STEP_FREQ
+except ImportError:
+    raise NotImplementedError(
+        "Please set STEP_FREQ in garage/config_personal.py!"
+        "example 1: "
+        "   STEP_FREQ = 5")
 
 
 class SawyerEnv(RosEnv):
