@@ -30,10 +30,6 @@ install:
   - conda env create -f environment.yml
   - source activate garage
 
-  # once more, with feeling (fixes dm_control install error)
-  - pip install absl-py==0.1.5
-  - pip install --ignore-installed git+https://github.com/deepmind/dm_control.git#egg=dm_control
-
   # install tensorflow
   # it's not included in environment.yml because of CPU vs GPU
   - pip install tensorflow==1.8
