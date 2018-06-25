@@ -1,3 +1,13 @@
+"""
+This module implements a DDPG model.
+
+DDPG, also known as Deep Deterministic Policy Gradient, uses actor-critic
+method to optimize the policy and reward prediction. It uses a supervised
+method to update the critic network and policy gradient to update the actor
+network. And there are exploration strategy, replay buffer and target networks
+involved to stabilize the training process.
+"""
+
 import pickle
 
 import numpy as np
@@ -47,8 +57,9 @@ class DDPG(RLAlgorithm):
         """
         Args:
             env(): Environment.
-            actor(rllab.tf.policies.ContinuousMLPPolicy): Policy network.
-            critic(rllab.tf.q_functions.ContinuousMLPQFunction): Q Value network.
+            actor(garage.tf.policies.ContinuousMLPPolicy): Policy network.
+            critic(garage.tf.q_functions.ContinuousMLPQFunction):
+         Q Value network.
             n_epochs(int, optional): Number of epochs.
             n_epoch_cycles(int, optional): Number of epoch cycles.
             n_rollout_steps(int, optional): Number of rollout steps.
@@ -56,21 +67,23 @@ class DDPG(RLAlgorithm):
             reward_scale(float): The scaling factor applied to the rewards when
          training.
             batch_size(int): Number of samples for each minibatch.
-            target_update_tau(float): Interpolation parameter for doing the soft
-         target update.
+            target_update_tau(float): Interpolation parameter for doing the
+         soft target update.
             discount(float): Discount factor for the cumulative return.
             actor_lr(float): Learning rate for training policy network.
             critic_lr(float): Learning rate for training q value network.
             actor_weight_decay(float): L2 weight decay factor for parameters of
          the policy network.
-            critic_weight_decay(float): L2 weight decay factor for parameters of
-         the q value network.
+            critic_weight_decay(float): L2 weight decay factor for parameters
+         of the q value network.
             replay_buffer_size(int): Size of the replay buffer.
-            min_buffer_size(int): Minimum size of the replay buffer to start training.
+            min_buffer_size(int): Minimum size of the replay buffer to start
+         training.
             exploration_strategy(): Exploration strategy.
             plot(bool): Whether to visualize the policy performance after each
          eval_interval.
-            pause_for_plot(bool): Whether to pause before continuing when plotting.
+            pause_for_plot(bool): Whether to pause before continuing when
+         plotting.
             actor_optimizer(): Optimizer for training policy network.
             critic_optimizer(): Optimizer for training q function network.
         """
@@ -106,6 +119,12 @@ class DDPG(RLAlgorithm):
 
     @overrides
     def train(self, sess=None):
+        """
+        Training process of DDPG algorithm.
+
+        Args:
+            sess: A TensorFlow session for executing ops.
+        """
         replay_buffer = self.opt_info["replay_buffer"]
         f_init_target = self.opt_info["f_init_target"]
         created_session = True if (sess is None) else False
@@ -214,9 +233,7 @@ class DDPG(RLAlgorithm):
             sess.close()
 
     def _initialize(self):
-        """
-        Set up the actor, critic and target network.
-        """
+        """Set up the actor, critic and target network."""
         # Set up the actor and critic network
         self.actor.build_net()
         self.critic.build_net()
@@ -236,9 +253,9 @@ class DDPG(RLAlgorithm):
                                      self.observation_dim, self.action_dim)
 
         # Set up target init and update function
-        actor_init_ops, actor_update_ops = self._get_target_ops(
+        actor_init_ops, actor_update_ops = get_target_ops(
             self.actor.global_vars, target_actor.global_vars, self.tau)
-        critic_init_ops, critic_update_ops = self._get_target_ops(
+        critic_init_ops, critic_update_ops = get_target_ops(
             self.critic.global_vars, target_critic.global_vars, self.tau)
         target_init_op = actor_init_ops + critic_init_ops
         target_update_op = actor_update_ops + critic_update_ops
@@ -282,6 +299,7 @@ class DDPG(RLAlgorithm):
                 tc.layers.l2_regularizer(self.critic_weight_decay),
                 weights_list=self.critic.regularizable_vars)
             qval_loss += critic_reg
+
         critic_train_op = self.critic_optimzier(
             self.critic_lr, name="CriticOptimizer").minimize(
                 qval_loss, var_list=self.critic.trainable_vars)
@@ -338,12 +356,13 @@ class DDPG(RLAlgorithm):
 
         return qval_loss, ys, qval, action_loss
 
-    def _get_target_ops(self, vars, target_vars, tau):
-        update_ops = []
-        init_ops = []
-        assert len(vars) == len(target_vars)
-        for var, target_var in zip(vars, target_vars):
-            init_ops.append(tf.assign(target_var, var))
-            update_ops.append(
-                tf.assign(target_var, tau * var + (1.0 - tau) * target_var))
-        return init_ops, update_ops
+
+def get_target_ops(vars, target_vars, tau):
+    update_ops = []
+    init_ops = []
+    assert len(vars) == len(target_vars)
+    for var, target_var in zip(vars, target_vars):
+        init_ops.append(tf.assign(target_var, var))
+        update_ops.append(
+            tf.assign(target_var, tau * var + (1.0 - tau) * target_var))
+    return init_ops, update_ops
