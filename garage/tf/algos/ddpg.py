@@ -29,14 +29,14 @@ class DDPG(RLAlgorithm):
                  n_epoch_cycles=20,
                  n_rollout_steps=100,
                  n_train_steps=50,
-                 reward_scale=1,
+                 reward_scale=1.,
                  batch_size=64,
-                 soft_update_tau=0.01,
+                 target_update_tau=0.01,
                  discount=0.99,
                  actor_lr=1e-4,
                  critic_lr=1e-3,
-                 actor_weight_decay=0.,
-                 critic_weight_decay=1e-2,
+                 actor_weight_decay=0,
+                 critic_weight_decay=0,
                  replay_buffer_size=int(1e6),
                  min_buffer_size=10000,
                  exploration_strategy=None,
@@ -56,7 +56,7 @@ class DDPG(RLAlgorithm):
             reward_scale(float): The scaling factor applied to the rewards when
          training.
             batch_size(int): Number of samples for each minibatch.
-            soft_update_tau(float): Interpolation parameter for doing the soft
+            target_update_tau(float): Interpolation parameter for doing the soft
          target update.
             discount(float): Discount factor for the cumulative return.
             actor_lr(float): Learning rate for training policy network.
@@ -88,7 +88,7 @@ class DDPG(RLAlgorithm):
         self.n_train_steps = n_train_steps
         self.reward_scale = reward_scale
         self.batch_size = batch_size
-        self.tau = soft_update_tau
+        self.tau = target_update_tau
         self.discount = discount
         self.actor_lr = actor_lr
         self.critic_lr = critic_lr
@@ -131,6 +131,7 @@ class DDPG(RLAlgorithm):
         episode_steps = []
         episode_actor_losses = []
         episode_critic_losses = []
+        episodes = 0
         epoch_ys = []
         epoch_qs = []
         terminal = False
@@ -140,35 +141,34 @@ class DDPG(RLAlgorithm):
             logger.log("Training started")
             for epoch_cycle in pyprind.prog_bar(range(self.n_epoch_cycles)):
                 for rollout in range(self.n_rollout_steps):
-                    if terminal:
-                        episode_rewards.append(episode_reward)
-                        episode_steps.append(episode_step)
-                        episode_reward = 0.
-                        episode_step = 0
-
-                        observation = self.env.reset()
-                        if self.es:
-                            self.es.reset()
-
                     action = self.es.get_action(rollout, observation,
                                                 self.actor)
                     assert action.shape == self.env.action_space.shape
 
                     next_observation, reward, terminal, info = self.env.step(
-                        action * self.action_bound)
+                        action)
                     episode_reward += reward
                     episode_step += 1
 
-                    if not terminal:
-                        replay_buffer.add_transition(
-                            observation, action, reward * self.reward_scale,
-                            terminal, next_observation)
+                    replay_buffer.add_transition(observation, action,
+                                                 reward * self.reward_scale,
+                                                 terminal, next_observation)
 
                     observation = next_observation
 
+                    if terminal:
+                        episode_rewards.append(episode_reward)
+                        episode_steps.append(episode_step)
+                        episode_reward = 0.
+                        episode_step = 0
+                        episodes += 1
+
+                        observation = self.env.reset()
+                        if self.es:
+                            self.es.reset()
+
                 for train_itr in range(self.n_train_steps):
                     if replay_buffer.size >= self.min_buffer_size:
-
                         critic_loss, y, q, action_loss = self._learn()
 
                         episode_actor_losses.append(action_loss)
@@ -179,6 +179,7 @@ class DDPG(RLAlgorithm):
             logger.log("Training finished")
             if replay_buffer.size >= self.min_buffer_size:
                 logger.record_tabular('Epoch', epoch)
+                logger.record_tabular('Episodes', episodes)
                 logger.record_tabular('AverageReturn',
                                       np.mean(episode_rewards))
                 logger.record_tabular('StdReturn', np.std(episode_rewards))
@@ -235,12 +236,12 @@ class DDPG(RLAlgorithm):
                                      self.observation_dim, self.action_dim)
 
         # Set up target init and update function
-        actor_init_updates, actor_soft_updates = self._get_target_ops(
+        actor_init_ops, actor_update_ops = self._get_target_ops(
             self.actor.global_vars, target_actor.global_vars, self.tau)
-        critic_init_updates, critic_soft_updates = self._get_target_ops(
+        critic_init_ops, critic_update_ops = self._get_target_ops(
             self.critic.global_vars, target_critic.global_vars, self.tau)
-        target_init_op = actor_init_updates + critic_init_updates
-        target_update_op = actor_soft_updates + critic_soft_updates
+        target_init_op = actor_init_ops + critic_init_ops
+        target_update_op = actor_update_ops + critic_update_ops
 
         f_init_target = tensor_utils.compile_function(
             inputs=[], outputs=target_init_op)
@@ -338,11 +339,11 @@ class DDPG(RLAlgorithm):
         return qval_loss, ys, qval, action_loss
 
     def _get_target_ops(self, vars, target_vars, tau):
-        soft_ops = []
+        update_ops = []
         init_ops = []
         assert len(vars) == len(target_vars)
         for var, target_var in zip(vars, target_vars):
             init_ops.append(tf.assign(target_var, var))
-            soft_ops.append(
+            update_ops.append(
                 tf.assign(target_var, tau * var + (1.0 - tau) * target_var))
-        return init_ops, soft_ops
+        return init_ops, update_ops
