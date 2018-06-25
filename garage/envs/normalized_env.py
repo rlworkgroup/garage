@@ -2,8 +2,8 @@ import gym
 import numpy as np
 
 from garage.core import Serializable
-from garage.misc.overrides import overrides
 from garage.envs.util import flat_dim, flatten, unflatten
+from garage.misc.overrides import overrides
 
 
 class NormalizedEnv(gym.Wrapper, Serializable):
@@ -84,9 +84,9 @@ class NormalizedEnv(gym.Wrapper, Serializable):
     @overrides
     def step(self, action):
         if isinstance(self.action_space, gym.spaces.Box):
-            # rescale the action
+            # rescale the action when the bounds are not inf
             lb, ub = self.action_space.low, self.action_space.high
-            if lb != -np.inf or ub != -np.inf:
+            if np.all(lb != -np.inf) and np.all(ub != -np.inf):
                 scaled_action = lb + (action + 1.) * 0.5 * (ub - lb)
                 scaled_action = np.clip(scaled_action, lb, ub)
             else:
