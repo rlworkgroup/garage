@@ -1,15 +1,23 @@
+"""
+This module implements a replay buffer memory.
+
+Replay buffer is an important technique in reinforcement learning. It
+stores transitions in a memory buffer of fixed size. When the buffer is
+full, oldest memory will be discarded. At each step, a batch of memories
+will be sampled from the buffer to update the agent's parameters. In a
+word, replay buffer breaks temporal correlations and thus benefits RL
+algorithms.
+"""
 import numpy as np
 
 
 class ReplayBuffer(object):
-
     """
     This class caches transitions in the training of RL algorithms.
     It uses random batch sample to minimize correlations between samples.
     """
 
     def __init__(self, max_buffer_size, observation_dim, action_dim):
-
         """
         Initializes the data in a transition.
 
@@ -76,4 +84,10 @@ class ReplayBuffer(object):
 
     @property
     def size(self):
+        """
+        Return the size of the replay buffer.
+
+        Returns:
+            self._size: Size of the current replay buffer.
+        """
         return self._size

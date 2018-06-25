@@ -1,3 +1,11 @@
+"""
+This module creates an OU exploration strategy.
+
+Ornstein Uhlenbeck exploration strategy comes from the Ornstein-Uhlenbeck
+process. It is often used in DDPG algorithm because in continuous control task
+it is better to have temporally correlated exploration to get smoother
+transitions. And OU process is relatively smooth in time.
+"""
 import numpy as np
 
 from garage.exploration_strategies import ExplorationStrategy
@@ -5,8 +13,24 @@ from garage.misc.overrides import overrides
 
 
 class OUStrategy(ExplorationStrategy):
+    """
+    An OU exploration strategy to add noise to environment actions.
+
+    Example:
+        $ python garage/tf/exploration_strategies/ou_strategy.py
+    """
+
     def __init__(self, env_spec, mu=0, sigma=0.3, theta=0.15, dt=1e-2,
                  x0=None):
+        """
+        Args:
+            env_spec: Environment for OUStrategy to explore.
+            mu: A parameter to simulate the process.
+            sigma: A parameter to simulate the process.
+            theta: A parameter to simulate the process.
+            dt: A parameter to simulate the process.
+            x0: Initial state.
+        """
         self.env_spec = env_spec
         self.action_space = env_spec.action_space
         self.mu = mu
@@ -17,19 +41,36 @@ class OUStrategy(ExplorationStrategy):
         self.reset()
 
     def simulate(self):
+        """
+        Compute the next state of the exploration.
+
+        Returns:
+            self.state: Next state of the exploration.
+        """
         x = self.state
         dx = self.theta * (self.mu - x) * self.dt + self.sigma * np.sqrt(
             self.dt) * np.random.normal(size=len(x))
         self.state = x + dx
-        return x
+        return self.state
 
     @overrides
     def reset(self):
+        """Reset the state of the exploration."""
         self.state = self.x0 if self.x0 is not None else self.mu * np.ones(
             self.action_space.shape[-1])
 
     @overrides
     def get_action(self, t, observation, policy, **kwargs):
+        """Return an action with noise.
+
+        Args:
+            t: Iteration.
+            observation: Observation from the environment.
+            policy: Policy network to predict action based on the observation.
+
+        Returns:
+            An action with noise explored by OUStrategy.
+        """
         action = policy.get_action(observation)
         ou_state = self.simulate()
         return np.clip(action + ou_state, self.action_space.low,

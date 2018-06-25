@@ -1,3 +1,9 @@
+"""
+This is an example to train a task with DDPG algorithm.
+
+Here it creates a gym environment InvertedPendulum. And uses a DDPG with 1M
+steps.
+"""
 import gym
 import tensorflow as tf
 
@@ -9,10 +15,15 @@ from garage.tf.q_functions import ContinuousMLPQFunction
 
 
 def run_task(*_):
+    """
+    Wrapper function to create a DDPG training task.
+    :param _:
+    :return:
+    """
 
-    env = gym.make('Pendulum-v0')
+    env = gym.make('InvertedPendulum-v2')
 
-    action_noise = OUStrategy(env)
+    action_noise = OUStrategy(env, sigma=0.2)
 
     actor_net = ContinuousMLPPolicy(
         env_spec=env,
@@ -30,12 +41,18 @@ def run_task(*_):
     ddpg = DDPG(
         env,
         actor=actor_net,
+        actor_lr=1e-4,
+        critic_lr=1e-3,
         critic=critic_net,
         plot=False,
+        target_update_tau=1e-3,
         n_epochs=500,
         n_epoch_cycles=20,
         n_rollout_steps=100,
         n_train_steps=50,
+        discount=0.9,
+        replay_buffer_size=int(1e4),
+        min_buffer_size=int(1e3),
         exploration_strategy=action_noise,
         actor_optimizer=tf.train.AdamOptimizer,
         critic_optimizer=tf.train.AdamOptimizer)

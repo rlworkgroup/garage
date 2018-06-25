@@ -1,3 +1,10 @@
+"""
+This modules creates a continuous MLP policy network.
+
+A continuous MLP network can be used as policy method in different RL
+algorithms. It accepts an observation of the environment and predicts an
+action.
+"""
 import tensorflow as tf
 
 from garage.core import Serializable
@@ -98,6 +105,7 @@ class ContinuousMLPPolicy(Policy, Serializable, LayersPowered):
         LayersPowered.__init__(self, [l_output])
 
     def get_action_sym(self, obs_var, name="get_action_sym", **kwargs):
+        """Return action sym according to obs_var."""
         with enclosing_scope(self.name, name):
             actions = L.get_output(self._output_layer,
                                    {self._obs_layer: obs_var}, **kwargs)
@@ -105,24 +113,29 @@ class ContinuousMLPPolicy(Policy, Serializable, LayersPowered):
 
     @overrides
     def get_action(self, observation):
+        """Return a single action."""
         return self._f_prob_online([observation])[0]
 
     @overrides
     def get_actions(self, observations):
+        """Return multiple actions."""
         return self._f_prob_online(observations)
 
     @property
     def trainable_vars(self):
+        """Return trainable vars in the network."""
         return tf.get_collection(
             tf.GraphKeys.TRAINABLE_VARIABLES, scope=self.name)
 
     @property
     def global_vars(self):
+        """Return the global vars in the network."""
         return tf.get_collection(
             tf.GraphKeys.GLOBAL_VARIABLES, scope=self.name)
 
     @property
     def regularizable_vars(self):
+        """Return regularizable vars in the network."""
         reg_vars = [
             var for var in self.trainable_vars
             if 'W' in var.name and 'output' not in var.name
