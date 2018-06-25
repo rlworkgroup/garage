@@ -64,30 +64,39 @@ def test_benchmark():
         env_id = task["env_id"]
         env = gym.make(env_id)
         seeds = random.sample(range(100), task["trials"])
-        for i in range(task["trials"]):
-            env.reset()
-            seed = seeds[i]
 
-            log_dir = "./benchmark/%s/" % timestamp
-            trail_dir = log_dir + "%s_trail_%d_seed_%d" % (env_id, i + 1, seed)
+        task_dir = "./benchmark/%s/%s/" % (timestamp, env_id)
+        plt_file = task_dir + "/benchmark.png"
+        baselines_csvs = []
+        garage_csvs = []
+
+        for trail in range(task["trials"]):
+            env.reset()
+            seed = seeds[trail]
+
+            trail_dir = task_dir + "trail_%d_seed_%d" % (trail + 1, seed)
             garage_dir = trail_dir + "/garage"
             baselines_dir = trail_dir + "/baselines"
-            plt_file = trail_dir + "/benchmark.png"
 
             # Run garage algorithms
-            csv_g = run_garage(env, seed, garage_dir)
+            garage_csv = run_garage(env, seed, garage_dir)
 
             # Run baselines algorithms
-            csv_b = run_baselines(env, seed, baselines_dir)
+            baselines_csv = run_baselines(env, seed, baselines_dir)
 
-            plot(
-                csv_g=csv_g,
-                csv_b=csv_b,
-                x_g="Epoch",
-                y_g="AverageReturn",
-                x_b="total/epochs",
-                y_b="rollout/return",
-                plt_file=plt_file)
+            garage_csvs.append(garage_csv)
+            baselines_csvs.append(baselines_csv)
+
+        plot(
+            b_csvs=baselines_csvs,
+            g_csvs=garage_csvs,
+            g_x="Epoch",
+            g_y="AverageReturn",
+            b_x="total/epochs",
+            b_y="rollout/return",
+            trails=task["trials"],
+            seeds=seeds,
+            plt_file=plt_file)
 
 
 def run_garage(env, seed, log_dir):
@@ -104,12 +113,6 @@ def run_garage(env, seed, log_dir):
     env.seed(seed)
 
     with tf.Graph().as_default():
-        # Set up logger since we are not using run_experiment
-        tabular_log_file = osp.join(log_dir, "progress.csv")
-        tensorboard_log_dir = osp.join(log_dir, "progress")
-        garage_logger.add_tabular_output(tabular_log_file)
-        garage_logger.set_tensorboard_dir(tensorboard_log_dir)
-
         # Set up params for ddpg
         action_noise = OUStrategy(env, sigma=params["sigma"])
 
@@ -145,7 +148,15 @@ def run_garage(env, seed, log_dir):
             actor_optimizer=tf.train.AdamOptimizer,
             critic_optimizer=tf.train.AdamOptimizer)
 
+        # Set up logger since we are not using run_experiment
+        tabular_log_file = osp.join(log_dir, "progress.csv")
+        tensorboard_log_dir = osp.join(log_dir, "progress")
+        garage_logger.add_tabular_output(tabular_log_file)
+        garage_logger.set_tensorboard_dir(tensorboard_log_dir)
+
         ddpg.train()
+
+        garage_logger.remove_tabular_output(tabular_log_file)
 
         return tabular_log_file
 
@@ -212,24 +223,36 @@ def run_baselines(env, seed, log_dir):
     return osp.join(log_dir, "progress.csv")
 
 
-def plot(csv_g, csv_b, x_g, y_g, x_b, y_b, plt_file):
+def plot(b_csvs, g_csvs, g_x, g_y, b_x, b_y, trails, seeds, plt_file):
     """
     Plot benchmark from csv files of garage and baselines.
 
-    :param csv_g: Csv filename of garage.
-    :param csv_b: Csv filename of baselines.
-    :param x_g: X column names of garage csv.
-    :param y_g: Y column names of garage csv.
-    :param x_b: X column names of baselines csv.
-    :param y_b: Y column names of baselines csv.
+    :param b_csvs: A list contains all csv files in the task.
+    :param g_csvs: A list contains all csv files in the task.
+    :param g_x: X column names of garage csv.
+    :param g_y: Y column names of garage csv.
+    :param b_x: X column names of baselines csv.
+    :param b_y: Y column names of baselines csv.
+    :param trails: Number of trails in the task.
+    :param seeds: A list contains all the seeds in the task.
     :param plt_file: Path of the plot png file.
     :return:
     """
-    df_g = pd.read_csv(csv_g)
-    df_b = pd.read_csv(csv_b)
+    assert len(b_csvs) == len(g_csvs)
+    for trail in range(trails):
+        seed = seeds[trail]
 
-    plt.plot(df_g[x_g], df_g[y_g], label="garage")
-    plt.plot(df_b[x_b], df_b[y_b], label="baselines")
+        df_g = pd.read_csv(g_csvs[trail])
+        df_b = pd.read_csv(b_csvs[trail])
+
+        plt.plot(
+            df_g[g_x],
+            df_g[g_y],
+            label="garage_trail%d_seed%d" % (trail + 1, seed))
+        plt.plot(
+            df_b[b_x],
+            df_b[b_y],
+            label="baselines_trail%d_seed%d" % (trail + 1, seed))
 
     plt.legend()
     plt.xlabel("Epoch")
