@@ -53,3 +53,4 @@ dependencies:
         - pep8-naming==0.7.0
         - pylint==1.9.2
         - yapf
+        - baselines

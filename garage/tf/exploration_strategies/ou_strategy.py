@@ -13,6 +13,7 @@ from garage.misc.overrides import overrides
 
 
 class OUStrategy(ExplorationStrategy):
+
     """
     An OU exploration strategy to add noise to environment actions.
 
@@ -23,6 +24,8 @@ class OUStrategy(ExplorationStrategy):
     def __init__(self, env_spec, mu=0, sigma=0.3, theta=0.15, dt=1e-2,
                  x0=None):
         """
+        Construct class.
+
         Args:
             env_spec: Environment for OUStrategy to explore.
             mu: A parameter to simulate the process.

@@ -12,8 +12,10 @@ import numpy as np
 
 
 class ReplayBuffer(object):
+
     """
     This class caches transitions in the training of RL algorithms.
+
     It uses random batch sample to minimize correlations between samples.
     """
 

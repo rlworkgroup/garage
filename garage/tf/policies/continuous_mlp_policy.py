@@ -9,7 +9,7 @@ import tensorflow as tf
 
 from garage.core import Serializable
 from garage.misc.overrides import overrides
-from garage.tf.core import layers as L
+from garage.tf.core import layers as layers
 from garage.tf.core import LayersPowered
 from garage.tf.core.layers import batch_norm
 from garage.tf.misc import tensor_utils
@@ -18,9 +18,12 @@ from garage.tf.policies import Policy
 
 
 class ContinuousMLPPolicy(Policy, Serializable, LayersPowered):
+
     """
-    This class implements a policy network to select action based on the state
-    of the environment. It uses neural nets to fit the function of pi(s).
+    This class implements a policy network.
+
+    The policy network selects action based on the state of the environment.
+    It uses neural nets to fit the function of pi(s).
     """
 
     def __init__(self,
@@ -61,8 +64,9 @@ class ContinuousMLPPolicy(Policy, Serializable, LayersPowered):
 
     def build_net(self, reuse=None, custom_getter=None, trainable=None):
         """
-        Set up q network based on class attributes. This function uses layers
-        defined in rllab.tf.
+        Set up q network based on class attributes.
+
+        This function uses layers defined in rllab.tf.
 
         Args:
             reuse: A bool indicates whether reuse variables in the same scope.
@@ -72,28 +76,28 @@ class ContinuousMLPPolicy(Policy, Serializable, LayersPowered):
         trainable = True if trainable is None else trainable
         with tf.variable_scope(
                 self.name, reuse=reuse, custom_getter=custom_getter):
-            l_in = L.InputLayer(shape=(None, self._obs_dim), name="obs")
+            l_in = layers.InputLayer(shape=(None, self._obs_dim), name="obs")
 
             l_hidden = l_in
             for idx, hidden_size in enumerate(self._hidden_sizes):
                 if self._batch_norm:
                     l_hidden = batch_norm(l_hidden)
 
-                l_hidden = L.DenseLayer(
+                l_hidden = layers.DenseLayer(
                     l_hidden,
                     hidden_size,
                     nonlinearity=self._hidden_nonlinearity,
                     trainable=trainable,
                     name="hidden_%d" % idx)
 
-            l_output = L.DenseLayer(
+            l_output = layers.DenseLayer(
                 l_hidden,
                 self._action_dim,
                 nonlinearity=self._output_nonlinearity,
                 trainable=trainable,
                 name="output")
 
-            action = L.get_output(l_output)
+            action = layers.get_output(l_output)
             scaled_action = tf.multiply(
                 action, self._action_bound, name="scaled_action")
 
@@ -107,8 +111,8 @@ class ContinuousMLPPolicy(Policy, Serializable, LayersPowered):
     def get_action_sym(self, obs_var, name="get_action_sym", **kwargs):
         """Return action sym according to obs_var."""
         with enclosing_scope(self.name, name):
-            actions = L.get_output(self._output_layer,
-                                   {self._obs_layer: obs_var}, **kwargs)
+            actions = layers.get_output(self._output_layer,
+                                        {self._obs_layer: obs_var}, **kwargs)
         return tf.multiply(actions, self._action_bound)
 
     @overrides

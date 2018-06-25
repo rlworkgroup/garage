@@ -9,9 +9,9 @@ import os.path as osp
 
 from baselines import logger
 from baselines.bench import benchmarks
-from baselines.ddpg.models import Actor, Critic
 from baselines.ddpg.memory import Memory
-from baselines.ddpg.noise import *
+from baselines.ddpg.models import Actor, Critic
+from baselines.ddpg.noise import OrnsteinUhlenbeckActionNoise
 import baselines.ddpg.training as training
 from baselines.logger import configure
 import gym
@@ -102,6 +102,8 @@ def test_ddpg():
         },
     }
 
+    rand_dir = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S-%f")
+
     for task in mujoco1m["tasks"]:
         env_id = task["env_id"]
         env = gym.make(env_id)
@@ -120,6 +122,9 @@ def test_ddpg():
             replay_buffer_size = garage_ddpg_params["replay_buffer_size"]
             min_buffer_size = garage_ddpg_params["min_buffer_size"]
             target_update_tau = garage_ddpg_params["target_update_tau"]
+
+            tf.reset_default_graph()
+            tf.Graph().as_default()
 
             action_noise = OUStrategy(env, sigma=0.2)
 
@@ -155,10 +160,9 @@ def test_ddpg():
                 actor_optimizer=tf.train.AdamOptimizer,
                 critic_optimizer=tf.train.AdamOptimizer)
 
-            rand_dir = datetime.datetime.now().strftime(
-                "garage-%Y-%m-%d-%H-%M-%S-%f")
-            log_dir = "./ddpg_benchmark/" + rand_dir + "/" + task["env_id"] \
-                      + "/trail_" + str(i) + "_seed_" + str(seed) + "/"
+            log_dir = "./ddpg_benchmark/garage-" + rand_dir + "/" + \
+                      task["env_id"] + "/trail_" + str(i) + "_seed_" + \
+                      str(seed) + "/"
             tabular_log_file = osp.join(log_dir, "progress.csv")
             tensorboard_log_dir = osp.join(log_dir, "progress")
             garage_logger.add_tabular_output(tabular_log_file)
@@ -181,10 +185,9 @@ def test_ddpg():
             critic = Critic(layer_norm=layer_norm)
             actor = Actor(nb_actions, layer_norm=layer_norm)
 
-            rand_dir = datetime.datetime.now().strftime(
-                "baselines-%Y-%m-%d-%H-%M-%S-%f")
-            log_dir = "./ddpg_benchmark/" + rand_dir + "/" + task["env_id"] \
-                      + "/trail_" + str(i) + "_seed_" + str(seed) + "/"
+            log_dir = "./ddpg_benchmark/baselines-" + rand_dir + "/" + \
+                      task["env_id"] + "/trail_" + str(i) + "_seed_" + \
+                      str(seed) + "/"
             configure(dir=log_dir)
             logger.info('rank {}: seed={}, logdir={}'.format(
                 rank, seed, logger.get_dir()))

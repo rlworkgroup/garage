@@ -24,6 +24,7 @@ from garage.tf.replay_buffer import ReplayBuffer
 
 
 class DDPG(RLAlgorithm):
+
     """
     A DDPG model based on https://arxiv.org/pdf/1509.02971.pdf.
 
@@ -55,6 +56,8 @@ class DDPG(RLAlgorithm):
                  actor_optimizer=None,
                  critic_optimizer=None):
         """
+        Construct class.
+
         Args:
             env(): Environment.
             actor(garage.tf.policies.ContinuousMLPPolicy): Policy network.
@@ -358,6 +361,7 @@ class DDPG(RLAlgorithm):
 
 
 def get_target_ops(vars, target_vars, tau):
+    """Get target network update operations."""
     update_ops = []
     init_ops = []
     assert len(vars) == len(target_vars)

@@ -16,11 +16,11 @@ from garage.tf.q_functions import ContinuousMLPQFunction
 
 def run_task(*_):
     """
-    Wrapper function to create a DDPG training task.
+    Wraps DDPG training task in the run_task function.
+
     :param _:
     :return:
     """
-
     env = gym.make('InvertedPendulum-v2')
 
     action_noise = OUStrategy(env, sigma=0.2)
