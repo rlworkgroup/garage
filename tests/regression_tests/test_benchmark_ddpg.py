@@ -96,7 +96,8 @@ def test_benchmark():
             b_y="rollout/return",
             trails=task["trials"],
             seeds=seeds,
-            plt_file=plt_file)
+            plt_file=plt_file,
+            env_id=env_id)
 
 
 def run_garage(env, seed, log_dir):
@@ -223,7 +224,7 @@ def run_baselines(env, seed, log_dir):
     return osp.join(log_dir, "progress.csv")
 
 
-def plot(b_csvs, g_csvs, g_x, g_y, b_x, b_y, trails, seeds, plt_file):
+def plot(b_csvs, g_csvs, g_x, g_y, b_x, b_y, trails, seeds, plt_file, env_id):
     """
     Plot benchmark from csv files of garage and baselines.
 
@@ -236,6 +237,7 @@ def plot(b_csvs, g_csvs, g_x, g_y, b_x, b_y, trails, seeds, plt_file):
     :param trails: Number of trails in the task.
     :param seeds: A list contains all the seeds in the task.
     :param plt_file: Path of the plot png file.
+    :param env_id: String contains the id of the environment.
     :return:
     """
     assert len(b_csvs) == len(g_csvs)
@@ -257,6 +259,7 @@ def plot(b_csvs, g_csvs, g_x, g_y, b_x, b_y, trails, seeds, plt_file):
     plt.legend()
     plt.xlabel("Epoch")
     plt.ylabel("AverageReturn")
+    plt.title(env_id)
 
     plt.savefig(plt_file)
     plt.close()
