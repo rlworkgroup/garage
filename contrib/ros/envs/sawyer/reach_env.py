@@ -8,7 +8,7 @@ import numpy as np
 
 from contrib.ros.envs.sawyer.sawyer_env import SawyerEnv
 from contrib.ros.robots.sawyer import Sawyer
-from contrib.ros.worlds.empty_world.world import EmptyWorld
+from contrib.ros.worlds.empty_world import EmptyWorld
 from garage.core import Serializable
 
 
