@@ -185,12 +185,16 @@ fi
 test_files_changed="$(echo "${files_changed}" |  grep "tests/*")"
 test_files_added="$(echo "${files_added}" |  grep "tests/*")"
 
+# Exit status of this script
+status=0
+
 # Check rules with flake8
 check_flake8() {
   flake8 --isolated \
          --import-order-style=google \
          --application-import-names="${garage_packages}" \
          "$@"
+  status="$((${status} | ${?}))"
 }
 
 # All files
@@ -253,3 +257,5 @@ if [[ ! -z "${test_files_added}" ]]; then
                --exclude="${test_exclude_added// /,}" \
                ${test_files_added}
 fi
+
+exit "${status}"
