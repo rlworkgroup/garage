@@ -12,7 +12,6 @@ import numpy as np
 
 
 class ReplayBuffer(object):
-
     """
     This class caches transitions in the training of RL algorithms.
 

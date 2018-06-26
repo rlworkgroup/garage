@@ -18,7 +18,6 @@ from garage.tf.policies import Policy
 
 
 class ContinuousMLPPolicy(Policy, Serializable, LayersPowered):
-
     """
     This class implements a policy network.
 

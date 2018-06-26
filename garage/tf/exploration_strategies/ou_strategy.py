@@ -13,7 +13,6 @@ from garage.misc.overrides import overrides
 
 
 class OUStrategy(ExplorationStrategy):
-
     """
     An OU exploration strategy to add noise to environment actions.
 

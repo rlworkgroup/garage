@@ -24,7 +24,6 @@ from garage.tf.replay_buffer import ReplayBuffer
 
 
 class DDPG(RLAlgorithm):
-
     """
     A DDPG model based on https://arxiv.org/pdf/1509.02971.pdf.
 
