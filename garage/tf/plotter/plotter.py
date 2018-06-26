@@ -1,16 +1,13 @@
 import atexit
 from collections import namedtuple
-import enum
 from enum import Enum
-from multiprocessing import Process
-import platform
-from queue import Empty, Queue
+from queue import Queue
 from threading import Thread
 
 import numpy as np
 import tensorflow as tf
 
-from garage.sampler.utils import rollout
+from garage.sampler.utils import rollout as default_rollout
 
 __all__ = ["Plotter"]
 
@@ -25,11 +22,17 @@ Message = namedtuple("Message", ["op", "args", "kwargs"])
 
 
 class Plotter(object):
-    def __init__(self, env, policy, sess=None, graph=None):
+    def __init__(self,
+                 env,
+                 policy,
+                 sess=None,
+                 graph=None,
+                 rollout=default_rollout):
         self.env = env
         self.policy = policy
         self.sess = tf.get_default_session() if sess is None else sess
         self.graph = tf.get_default_graph() if graph is None else graph
+        self.rollout = rollout
         self.worker_thread = Thread(target=self._start_worker, daemon=True)
         self.queue = Queue()
 
@@ -40,7 +43,8 @@ class Plotter(object):
         initial_rollout = True
         try:
             with self.sess.as_default(), self.sess.graph.as_default():
-                # Each iteration will process ALL messages currently in the queue
+                # Each iteration will process ALL messages currently in the
+                # queue
                 while True:
                     msgs = {}
                     # If true, block and yield processor
@@ -65,7 +69,7 @@ class Plotter(object):
                         param_values, max_length = msgs[Op.DEMO].args
                         policy.set_param_values(param_values)
                         initial_rollout = False
-                        rollout(
+                        self.rollout(
                             env,
                             policy,
                             max_path_length=max_length,
@@ -73,7 +77,7 @@ class Plotter(object):
                             speedup=5)
                     else:
                         if max_length:
-                            rollout(
+                            self.rollout(
                                 env,
                                 policy,
                                 max_path_length=max_length,
