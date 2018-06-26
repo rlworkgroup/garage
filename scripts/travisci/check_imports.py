@@ -9,6 +9,24 @@ import warnings
 warnings.simplefilter("ignore", category=RuntimeWarning)
 logging.basicConfig(format='%(levelname)s: %(message)s')
 
+
+def get_import_statement(node, lines):
+    """
+    Gets the text of the full import statement associated with a node, which
+    might be split across multiple lines.
+    """
+    offset = -1
+    stmt = lines[node.lineno + offset].strip()
+
+    # Join lines split by \
+    while stmt.endswith("\\"):
+        offset += 1
+        stmt = stmt[:-1]
+        stmt += lines[node.lineno + offset].strip()
+
+    return stmt
+
+
 # Add file path prefixes here to ignore them.
 IGNORE_PATHS = [
     "build/",
@@ -64,7 +82,7 @@ for ignored in IGNORE_PATHS:
 for fn in filenames:
     with open(fn) as f:
         syntax = f.read()
-        lines = syntax.split("\n")
+        lines = syntax.splitlines()
 
         try:
             module = ast.parse(syntax)
@@ -78,32 +96,33 @@ for fn in filenames:
 
         for node in ast.walk(module):
             if isinstance(node, (ast.Import, ast.ImportFrom)):
-                line = lines[node.lineno - 1].strip()
+                # line = lines[node.lineno - 1].strip()
+                stmt = get_import_statement(node, lines)
 
                 try:
-                    if not [True for i in IGNORE_MODULES if i in line]:
-                        exec(line, {})
+                    if not [True for i in IGNORE_MODULES if i in stmt]:
+                        exec(stmt, {})
                 except TypeError:
                     pass
                 except AttributeError:
-                    logging.error(("{filename}:{line_num} - \"{line}\" "
+                    logging.error(("{filename}:{line_num} - \"{stmt}\" "
                                    "failed with an AttributeError.").format(
                                        filename=fn,
                                        line_num=node.lineno,
-                                       line=line))
+                                       stmt=stmt))
                     passed = False
                 except SyntaxError:
-                    logging.error(("{filename}:{line_num} - \"{line}\" "
+                    logging.error(("{filename}:{line_num} - \"{stmt}\" "
                                    "failed with a SyntaxError.").format(
                                        filename=fn,
                                        line_num=node.lineno,
-                                       line=line))
+                                       stmt=stmt))
                     passed = False
 
                 except ImportError:
                     logging.error(
-                        "{filename}:{line_num} - \"{line}\" failed.".format(
-                            filename=fn, line_num=node.lineno, line=line))
+                        "{filename}:{line_num} - \"{stmt}\" failed.".format(
+                            filename=fn, line_num=node.lineno, stmt=stmt))
                     passed = False
 
 # exit code is non-zero if the script finished without error
