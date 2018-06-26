@@ -8,6 +8,7 @@ action.
 import tensorflow as tf
 
 from garage.core import Serializable
+from garage.envs.util import flat_dim
 from garage.misc.overrides import overrides
 from garage.tf.core import layers as layers
 from garage.tf.core import LayersPowered
@@ -53,8 +54,8 @@ class ContinuousMLPPolicy(Policy, Serializable, LayersPowered):
 
         self.name = name
         self._env_spec = env_spec
-        self._obs_dim = env_spec.observation_space.shape[-1]
-        self._action_dim = env_spec.action_space.shape[-1]
+        self._obs_dim = flat_dim(env_spec.observation_space)
+        self._action_dim = flat_dim(env_spec.action_space)
         self._action_bound = env_spec.action_space.high
         self._hidden_sizes = hidden_sizes
         self._hidden_nonlinearity = hidden_nonlinearity
@@ -72,7 +73,6 @@ class ContinuousMLPPolicy(Policy, Serializable, LayersPowered):
             custom_getter: A customized getter object used to get variables.
             trainable: A bool indicates whether variables are trainable.
         """
-        trainable = True if trainable is None else trainable
         with tf.variable_scope(
                 self.name, reuse=reuse, custom_getter=custom_getter):
             l_in = layers.InputLayer(shape=(None, self._obs_dim), name="obs")

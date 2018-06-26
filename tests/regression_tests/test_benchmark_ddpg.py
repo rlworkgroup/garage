@@ -18,6 +18,7 @@ from baselines.ddpg.models import Actor, Critic
 from baselines.ddpg.noise import OrnsteinUhlenbeckActionNoise
 import baselines.ddpg.training as training
 from baselines.logger import configure
+from baselines.common.misc_util import set_global_seeds
 import gym
 import matplotlib.pyplot as plt
 from mpi4py import MPI
@@ -25,6 +26,7 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 
+from garage.misc import ext
 from garage.misc import logger as garage_logger
 from garage.tf.algos import DDPG
 from garage.tf.exploration_strategies import OUStrategy
@@ -111,7 +113,7 @@ def run_garage(env, seed, log_dir):
     :param log_dir: Log dir path.
     :return:
     """
-    env.seed(seed)
+    ext.set_seed(seed)
 
     with tf.Graph().as_default():
         # Set up params for ddpg
@@ -174,6 +176,9 @@ def run_baselines(env, seed, log_dir):
     :return
     """
     rank = MPI.COMM_WORLD.Get_rank()
+    seed = seed + 1000000 * rank
+    tf.reset_default_graph()
+    set_global_seeds(seed)
     env.seed(seed)
 
     # Set up logger for baselines

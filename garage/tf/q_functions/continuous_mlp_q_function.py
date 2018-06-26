@@ -1,6 +1,7 @@
 import tensorflow as tf
 
 from garage.core import Serializable
+from garage.envs.util import flat_dim
 from garage.tf.core import LayersPowered
 import garage.tf.core.layers as L
 from garage.tf.core.layers import batch_norm
@@ -60,14 +61,13 @@ class ContinuousMLPQFunction(QFunction, Serializable, LayersPowered):
             custom_getter: A customized getter object used to get variables.
             trainable: A bool indicates whether variables are trainable.
         """
-        trainable = True if trainable is None else trainable
         with tf.variable_scope(
                 self.name, reuse=reuse, custom_getter=custom_getter):
             l_obs = L.InputLayer(
-                shape=(None, self._env_spec.observation_space.shape[-1]),
+                shape=(None, flat_dim(self._env_spec.observation_space)),
                 name="obs")
             l_action = L.InputLayer(
-                shape=(None, self._env_spec.action_space.shape[-1]),
+                shape=(None, flat_dim(self._env_spec.action_space)),
                 name="actions")
 
             n_layers = len(self._hidden_sizes) + 1

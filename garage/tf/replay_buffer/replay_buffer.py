@@ -51,6 +51,7 @@ class ReplayBuffer(object):
         """
         assert self._size > sample_size
         indices = np.random.choice(self._size, size=sample_size)
+
         return {
             "observations": self._observations[indices],
             "actions": self._actions[indices],

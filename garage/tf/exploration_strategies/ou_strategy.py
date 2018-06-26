@@ -8,6 +8,7 @@ transitions. And OU process is relatively smooth in time.
 """
 import numpy as np
 
+from garage.envs.util import flat_dim
 from garage.exploration_strategies import ExplorationStrategy
 from garage.misc.overrides import overrides
 
@@ -35,6 +36,7 @@ class OUStrategy(ExplorationStrategy):
         """
         self.env_spec = env_spec
         self.action_space = env_spec.action_space
+        self.action_dim = flat_dim(self.action_space)
         self.mu = mu
         self.sigma = sigma
         self.theta = theta
@@ -58,8 +60,8 @@ class OUStrategy(ExplorationStrategy):
     @overrides
     def reset(self):
         """Reset the state of the exploration."""
-        self.state = self.x0 if self.x0 is not None else self.mu * np.ones(
-            self.action_space.shape[-1])
+        self.state = self.x0 if self.x0 is not None else self.mu * np.zeros(
+            self.action_dim)
 
     @overrides
     def get_action(self, t, observation, policy, **kwargs):
@@ -85,6 +87,7 @@ if __name__ == "__main__":
 
     ou = OUStrategy(
         env_spec=gym.make("Pendulum-v0"), mu=0, theta=0.15, sigma=0.3)
+
     states = []
     for i in range(1000):
         states.append(ou.simulate()[0])

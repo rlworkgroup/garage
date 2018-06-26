@@ -8,7 +8,7 @@ network. And there are exploration strategy, replay buffer and target networks
 involved to stabilize the training process.
 """
 
-import pickle
+from copy import copy
 
 import numpy as np
 import pyprind
@@ -16,6 +16,7 @@ import tensorflow as tf
 import tensorflow.contrib as tc
 
 from garage.algos.base import RLAlgorithm
+from garage.envs.util import flat_dim
 from garage.misc import logger
 from garage.misc.overrides import overrides
 from garage.tf.misc import tensor_utils
@@ -28,7 +29,7 @@ class DDPG(RLAlgorithm):
     A DDPG model based on https://arxiv.org/pdf/1509.02971.pdf.
 
     Example:
-        $ python rllab/tf/launchers/ddpg_pendulum.py
+        $ python garage/tf/launchers/ddpg_pendulum.py
     """
 
     def __init__(self,
@@ -91,8 +92,8 @@ class DDPG(RLAlgorithm):
         """
         self.env = env
 
-        self.observation_dim = env.observation_space.shape[-1]
-        self.action_dim = env.action_space.shape[-1]
+        self.observation_dim = flat_dim(env.observation_space)
+        self.action_dim = flat_dim(env.action_space)
         self.action_bound = env.action_space.high
 
         self.actor = actor
@@ -155,7 +156,6 @@ class DDPG(RLAlgorithm):
         episodes = 0
         epoch_ys = []
         epoch_qs = []
-        terminal = False
 
         for epoch in range(self.n_epochs):
             logger.push_prefix('epoch #%d | ' % epoch)
@@ -237,12 +237,12 @@ class DDPG(RLAlgorithm):
     def _initialize(self):
         """Set up the actor, critic and target network."""
         # Set up the actor and critic network
-        self.actor.build_net()
-        self.critic.build_net()
+        self.actor.build_net(trainable=True)
+        self.critic.build_net(trainable=True)
 
         # Create target actor and critic network
-        target_actor = pickle.loads(pickle.dumps(self.actor))
-        target_critic = pickle.loads(pickle.dumps(self.critic))
+        target_actor = copy(self.actor)
+        target_critic = copy(self.critic)
 
         # Set up the target network
         target_actor.name = "TargetActor"
