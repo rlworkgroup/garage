@@ -194,7 +194,7 @@ check_flake8() {
          --import-order-style=google \
          --application-import-names="${garage_packages}" \
          "$@"
-  status="$(( $status | $? ))"
+  status="$((${status} | ${?}))"
 }
 
 # All files
@@ -258,4 +258,4 @@ if [[ ! -z "${test_files_added}" ]]; then
                ${test_files_added}
 fi
 
-exit "$status"
+exit "${status}"
