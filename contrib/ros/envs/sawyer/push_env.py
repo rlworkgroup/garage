@@ -6,9 +6,9 @@ import collections
 import gym
 import numpy as np
 
-from contrib.ros.envs.sawyer.sawyer_env import SawyerEnv
-from contrib.ros.robots.sawyer import Sawyer
-from contrib.ros.worlds.block_world import BlockWorld
+from contrib.ros.envs.sawyer import SawyerEnv
+from contrib.ros.robots import Sawyer
+from contrib.ros.worlds import BlockWorld
 from garage.core import Serializable
 
 

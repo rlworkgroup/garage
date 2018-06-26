@@ -1,12 +1,12 @@
 import numpy as np
 import rospy
 
-from contrib.ros.envs.sawyer.reach_env import ReachEnv
-from garage.algos.trpo import TRPO
-from garage.baselines.linear_feature_baseline import LinearFeatureBaseline
+from contrib.ros.envs.sawyer import ReacherEnv
+from garage.algos import TRPO
+from garage.baselines import LinearFeatureBaseline
 from garage.envs.util import spec
 from garage.misc.instrument import run_experiment
-from garage.policies.gaussian_mlp_policy import GaussianMLPPolicy
+from garage.policies import GaussianMLPPolicy
 
 INITIAL_SIM_ROBOT_JOINT_POS = {
     'right_j0': -0.041662954890248294,
@@ -22,18 +22,16 @@ INITIAL_SIM_ROBOT_JOINT_POS = {
 def run_task(*_):
     initial_goal = np.array([0.6, -0.1, 0.80])
 
-    rospy.init_node('trpo_sim_sawyer_reach_exp', anonymous=True)
+    rospy.init_node('trpo_sim_sawyer_reacher_exp', anonymous=True)
 
-    reach_env = ReachEnv(
+    env = ReacherEnv(
         initial_goal,
         initial_joint_pos=INITIAL_SIM_ROBOT_JOINT_POS,
         simulated=True)
 
-    rospy.on_shutdown(reach_env.shutdown)
+    rospy.on_shutdown(env.shutdown)
 
-    reach_env.initialize()
-
-    env = reach_env
+    env.initialize()
 
     policy = GaussianMLPPolicy(env_spec=spec(env), hidden_sizes=(32, 32))
 
