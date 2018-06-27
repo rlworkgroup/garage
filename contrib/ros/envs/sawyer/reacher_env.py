@@ -6,7 +6,7 @@ import collections
 import gym
 import numpy as np
 
-from contrib.ros.envs.sawyer import SawyerEnv
+from contrib.ros.envs.sawyer.sawyer_env import SawyerEnv
 from contrib.ros.robots import Sawyer
 from contrib.ros.worlds import EmptyWorld
 from garage.core import Serializable
@@ -29,7 +29,7 @@ class ReacherEnv(SawyerEnv, Serializable):
         self.initial_goal = initial_goal
         self.goal = self.initial_goal.copy()
 
-        self._sawyer = Sawyer(
+        self._robot = Sawyer(
             initial_joint_pos=initial_joint_pos,
             control_mode=robot_control_mode)
         self._world = EmptyWorld(simulated)
@@ -68,9 +68,9 @@ class ReacherEnv(SawyerEnv, Serializable):
                      'achieved_goal': achieved_goal,
                      'desired_goal': self.goal}
         """
-        obs = self._sawyer.get_observation()
+        obs = self._robot.get_observation()
 
-        robot_gripper_pos = self._sawyer.gripper_pose['position']
+        robot_gripper_pos = self._robot.gripper_pose['position']
 
         achieved_goal = np.array(
             [robot_gripper_pos.x, robot_gripper_pos.y, robot_gripper_pos.z])

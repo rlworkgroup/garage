@@ -3,7 +3,7 @@ import collections
 import gym
 import numpy as np
 
-from contrib.ros.worlds import World
+from contrib.ros.worlds.world import World
 
 
 class EmptyWorld(World):

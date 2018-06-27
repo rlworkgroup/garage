@@ -6,7 +6,7 @@ import collections
 import gym
 import numpy as np
 
-from contrib.ros.envs.sawyer import SawyerEnv
+from contrib.ros.envs.sawyer.sawyer_env import SawyerEnv
 from contrib.ros.robots import Sawyer
 from contrib.ros.worlds import BlockWorld
 from garage.core import Serializable
@@ -29,10 +29,10 @@ class PushEnv(SawyerEnv, Serializable):
         self.initial_goal = initial_goal
         self.goal = self.initial_goal.copy()
 
-        self._sawyer = Sawyer(
+        self._robot = Sawyer(
             initial_joint_pos=initial_joint_pos,
             control_mode=robot_control_mode)
-        self._block_world = BlockWorld(simulated)
+        self._world = BlockWorld(simulated)
 
         SawyerEnv.__init__(self, simulated=simulated)
 
@@ -68,9 +68,9 @@ class PushEnv(SawyerEnv, Serializable):
                      'achieved_goal': achieved_goal,
                      'desired_goal': self.goal}
         """
-        robot_obs = self._sawyer.get_observation()
+        robot_obs = self._robot.get_observation()
 
-        world_obs = self._block_world.get_observation()
+        world_obs = self._world.get_observation()
 
         obs = np.concatenate((robot_obs, world_obs.obs))
 
