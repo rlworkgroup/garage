@@ -13,6 +13,7 @@ from garage.core import Serializable
 
 class ReacherEnv(SawyerEnv, Serializable):
     """Reacher Environment."""
+
     def __init__(self,
                  initial_goal,
                  initial_joint_pos,
@@ -37,7 +38,8 @@ class ReacherEnv(SawyerEnv, Serializable):
         :param target_range: float
                         delta range the goal is randomized
         :param robot_control_mode: string
-                        robot control mode: 'position' or 'velocity' or 'effort'
+                        robot control mode: 'position' or 'velocity'
+                        or 'effort'
         """
         Serializable.quick_init(self, locals())
 
@@ -56,7 +58,11 @@ class ReacherEnv(SawyerEnv, Serializable):
 
     @property
     def observation_space(self):
-        """Returns a Space object."""
+        """
+        Returns a Space object.
+
+        :return: the observation space
+        """
         return gym.spaces.Box(
             -np.inf,
             np.inf,
