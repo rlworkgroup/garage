@@ -328,6 +328,7 @@ class DDPG(RLAlgorithm):
             qval_loss: Loss of q value predicted by the q network.
             ys: y_s.
             qval: Q value predicted by the q network.
+
         """
         replay_buffer = self.opt_info["replay_buffer"]
         target_actor = self.opt_info["target_actor"]

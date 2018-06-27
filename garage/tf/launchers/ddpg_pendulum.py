@@ -16,7 +16,7 @@ from garage.tf.q_functions import ContinuousMLPQFunction
 
 def run_task(*_):
     """
-    Wraps DDPG training task in the run_task function.
+    Wrap DDPG training task in the run_task function.
 
     :param _:
     :return:

@@ -50,6 +50,7 @@ class OUStrategy(ExplorationStrategy):
 
         Returns:
             self.state: Next state of the exploration.
+
         """
         x = self.state
         dx = self.theta * (self.mu - x) * self.dt + self.sigma * np.sqrt(
@@ -74,6 +75,7 @@ class OUStrategy(ExplorationStrategy):
 
         Returns:
             An action with noise explored by OUStrategy.
+
         """
         action = policy.get_action(observation)
         ou_state = self.simulate()

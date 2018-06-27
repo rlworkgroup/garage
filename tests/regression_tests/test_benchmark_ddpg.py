@@ -13,12 +13,12 @@ import random
 
 from baselines import logger as baselines_logger
 from baselines.bench import benchmarks
+from baselines.common.misc_util import set_global_seeds
 from baselines.ddpg.memory import Memory
 from baselines.ddpg.models import Actor, Critic
 from baselines.ddpg.noise import OrnsteinUhlenbeckActionNoise
 import baselines.ddpg.training as training
 from baselines.logger import configure
-from baselines.common.misc_util import set_global_seeds
 import gym
 import matplotlib.pyplot as plt
 from mpi4py import MPI

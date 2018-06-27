@@ -20,7 +20,7 @@ class ReplayBuffer(object):
 
     def __init__(self, max_buffer_size, observation_dim, action_dim):
         """
-        Initializes the data in a transition.
+        Initialize the data in a transition.
 
         Args:
             max_buffer_size(int): Max size of the buffer cache.
@@ -41,13 +41,14 @@ class ReplayBuffer(object):
 
     def random_sample(self, sample_size):
         """
-        Randomly samples a batch of transitions.
+        Randomly sample a batch of transitions.
 
         Args:
             sample_size(int): Size of the sampled batch.
 
         Returns:
             A dictionary contains fields and values in the sampled transitions.
+
         """
         assert self._size > sample_size
         indices = np.random.choice(self._size, size=sample_size)
@@ -73,6 +74,7 @@ class ReplayBuffer(object):
             next_observation:
 
         Returns:
+
         """
         self._observations[self._top] = observation
         self._actions[self._top] = action
@@ -91,5 +93,6 @@ class ReplayBuffer(object):
 
         Returns:
             self._size: Size of the current replay buffer.
+            
         """
         return self._size
