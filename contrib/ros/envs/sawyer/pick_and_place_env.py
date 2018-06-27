@@ -87,12 +87,17 @@ class PickAndPlaceEnv(SawyerEnv, Serializable):
     def reward(self, achieved_goal, goal):
         """
         Compute the reward for current step.
-        :param achieved_goal: the current gripper's position or object's position in the current training episode.
-        :param goal: the goal of the current training episode, which mostly is the target position of the object or the
-                     position.
+        :param achieved_goal: np.array
+                    the current gripper's position or object's
+                    position in the current training episode.
+        :param goal: np.array
+                    the goal of the current training episode, which mostly
+                    is the target position of the object or the position.
         :return reward: float
-                    if sparse_reward, the reward is -1, else the reward is minus distance from achieved_goal to
-                    our goal. And we have completion bonus for two kinds of types.
+                    if sparse_reward, the reward is -1, else the
+                    reward is minus distance from achieved_goal to
+                    our goal. And we have completion bonus for two
+                    kinds of types.
         """
         d = self._goal_distance(achieved_goal, goal)
         if d < self._distance_threshold:

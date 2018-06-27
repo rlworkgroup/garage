@@ -1,3 +1,5 @@
+"""example launcer file for experiment on real sawyer with trpo"""
+
 import numpy as np
 import rospy
 
