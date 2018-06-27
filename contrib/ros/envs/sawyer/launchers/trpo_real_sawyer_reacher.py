@@ -1,4 +1,4 @@
-"""example launcer file for experiment on real sawyer with trpo"""
+"""example launcer file for experiment on real sawyer with trpo."""
 
 import numpy as np
 import rospy
@@ -22,6 +22,7 @@ INITIAL_REAL_ROBOT_JOINT_POS = {
 
 
 def run_task(*_):
+    """run task"""
     initial_goal = np.array([0.6, -0.1, 0.80])
 
     rospy.init_node('trpo_real_sawyer_reacher_exp', anonymous=True)

@@ -1,6 +1,5 @@
-"""
-Reach task for the sawyer robot
-"""
+"""Reacher task for the sawyer robot."""
+
 import collections
 
 import gym
@@ -13,6 +12,7 @@ from garage.core import Serializable
 
 
 class ReacherEnv(SawyerEnv, Serializable):
+    """Reacher Environment."""
     def __init__(self,
                  initial_goal,
                  initial_joint_pos,
@@ -21,6 +21,24 @@ class ReacherEnv(SawyerEnv, Serializable):
                  distance_threshold=0.05,
                  target_range=0.15,
                  robot_control_mode='position'):
+        """
+        Reacher Environment.
+
+        :param initial_goal: np.array
+                        the initial goal for the task
+        :param initial_joint_pos: dict
+                        the initial joint angles for the sawyer
+        :param sparse_reward: Bool
+                        if use sparse reward
+        :param simulated: Bool
+                        if run simulated experiment
+        :param distance_threshold: float
+                        threshold for whether experiment is done
+        :param target_range: float
+                        delta range the goal is randomized
+        :param robot_control_mode: string
+                        robot control mode: 'position' or 'velocity' or 'effort'
+        """
         Serializable.quick_init(self, locals())
 
         self._distance_threshold = distance_threshold
@@ -38,9 +56,7 @@ class ReacherEnv(SawyerEnv, Serializable):
 
     @property
     def observation_space(self):
-        """
-        Returns a Space object
-        """
+        """Returns a Space object."""
         return gym.spaces.Box(
             -np.inf,
             np.inf,
@@ -49,7 +65,8 @@ class ReacherEnv(SawyerEnv, Serializable):
 
     def sample_goal(self):
         """
-        Sample goals
+        Sample goals.
+
         :return: the new sampled goal
         """
         goal = self.initial_goal.copy()
@@ -62,7 +79,8 @@ class ReacherEnv(SawyerEnv, Serializable):
 
     def get_observation(self):
         """
-        Get Observation
+        Get Observation.
+
         :return observation: dict
                     {'observation': obs,
                      'achieved_goal': achieved_goal,
@@ -88,6 +106,7 @@ class ReacherEnv(SawyerEnv, Serializable):
     def reward(self, achieved_goal, goal):
         """
         Compute the reward for current step.
+
         :param achieved_goal: np.array
                     the current gripper's position or object's
                     position in the current training episode.
@@ -111,6 +130,8 @@ class ReacherEnv(SawyerEnv, Serializable):
 
     def _goal_distance(self, goal_a, goal_b):
         """
+        Compute distance between achieved goal and goal.
+
         :param goal_a:
         :param goal_b:
         :return distance: distance between goal_a and goal_b
@@ -120,6 +141,8 @@ class ReacherEnv(SawyerEnv, Serializable):
 
     def done(self, achieved_goal, goal):
         """
+        If done.
+
         :return if_done: bool
                     if current episode is done:
         """

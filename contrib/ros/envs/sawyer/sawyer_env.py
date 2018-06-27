@@ -26,7 +26,9 @@ class SawyerEnv(RosEnv):
         Resets the state of the environment, returning an initial observation.
         Outputs
         -------
-        observation : the initial observation of the space. (Initial reward is assumed to be 0.)
+        observation :
+            the initial observation of the space.
+            (Initial reward is assumed to be 0.)
         """
         self._robot.reset()
         self._world.reset()
@@ -38,17 +40,23 @@ class SawyerEnv(RosEnv):
     def step(self, action):
         """
         Perform a step in gazebo. When end of episode
-        is reached, reset() should be called to reset the environment's internal state.
+        is reached, reset() should be called to reset
+        the environment's internal state.
         Input
         -----
         action : an action provided by the environment
         Outputs
         -------
         (observation, reward, done, info)
-        observation : agent's observation of the current environment
-        reward [Float] : amount of reward due to the previous action
-        done : a boolean, indicating whether the episode has ended
-        info : a dictionary containing other diagnostic information from the previous action
+        observation :
+            agent's observation of the current environment
+        reward: float
+            amount of reward due to the previous action
+        done :
+            a boolean, indicating whether the episode has ended
+        info :
+            a dictionary containing other diagnostic information
+            from the previous action
         """
         self._robot.send_command(action)
 
