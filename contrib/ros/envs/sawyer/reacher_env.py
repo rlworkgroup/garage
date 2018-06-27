@@ -1,6 +1,5 @@
-"""
-Push task for the sawyer robot
-"""
+"""Reacher task for the sawyer robot."""
+
 import collections
 
 import gym
@@ -8,11 +7,13 @@ import numpy as np
 
 from contrib.ros.envs.sawyer.sawyer_env import SawyerEnv
 from contrib.ros.robots import Sawyer
-from contrib.ros.worlds import BlockWorld
+from contrib.ros.worlds import EmptyWorld
 from garage.core import Serializable
 
 
-class PushEnv(SawyerEnv, Serializable):
+class ReacherEnv(SawyerEnv, Serializable):
+    """Reacher Environment."""
+
     def __init__(self,
                  initial_goal,
                  initial_joint_pos,
@@ -21,6 +22,25 @@ class PushEnv(SawyerEnv, Serializable):
                  distance_threshold=0.05,
                  target_range=0.15,
                  robot_control_mode='position'):
+        """
+        Reacher Environment.
+
+        :param initial_goal: np.array
+                        the initial goal for the task
+        :param initial_joint_pos: dict
+                        the initial joint angles for the sawyer
+        :param sparse_reward: Bool
+                        if use sparse reward
+        :param simulated: Bool
+                        if run simulated experiment
+        :param distance_threshold: float
+                        threshold for whether experiment is done
+        :param target_range: float
+                        delta range the goal is randomized
+        :param robot_control_mode: string
+                        robot control mode: 'position' or 'velocity'
+                        or 'effort'
+        """
         Serializable.quick_init(self, locals())
 
         self._distance_threshold = distance_threshold
@@ -32,14 +52,16 @@ class PushEnv(SawyerEnv, Serializable):
         self._robot = Sawyer(
             initial_joint_pos=initial_joint_pos,
             control_mode=robot_control_mode)
-        self._world = BlockWorld(simulated)
+        self._world = EmptyWorld(simulated)
 
         SawyerEnv.__init__(self, simulated=simulated)
 
     @property
     def observation_space(self):
         """
-        Returns a Space object
+        Return a Space object.
+
+        :return: the observation space
         """
         return gym.spaces.Box(
             -np.inf,
@@ -49,7 +71,8 @@ class PushEnv(SawyerEnv, Serializable):
 
     def sample_goal(self):
         """
-        Sample goals
+        Sample goals.
+
         :return: the new sampled goal
         """
         goal = self.initial_goal.copy()
@@ -62,24 +85,26 @@ class PushEnv(SawyerEnv, Serializable):
 
     def get_observation(self):
         """
-        Get Observation
+        Get Observation.
+
         :return observation: dict
                     {'observation': obs,
                      'achieved_goal': achieved_goal,
                      'desired_goal': self.goal}
         """
-        robot_obs = self._robot.get_observation()
+        obs = self._robot.get_observation()
 
-        world_obs = self._world.get_observation()
+        robot_gripper_pos = self._robot.gripper_pose['position']
 
-        obs = np.concatenate((robot_obs, world_obs.obs))
+        achieved_goal = np.array(
+            [robot_gripper_pos.x, robot_gripper_pos.y, robot_gripper_pos.z])
 
         Observation = collections.namedtuple(
             'Observation', 'observation achieved_goal desired_goal')
 
         observation = Observation(
             observation=obs,
-            achieved_goal=world_obs.achieved_goal,
+            achieved_goal=achieved_goal,
             desired_goal=self.goal)
 
         return observation
@@ -87,6 +112,7 @@ class PushEnv(SawyerEnv, Serializable):
     def reward(self, achieved_goal, goal):
         """
         Compute the reward for current step.
+
         :param achieved_goal: np.array
                     the current gripper's position or object's
                     position in the current training episode.
@@ -110,6 +136,8 @@ class PushEnv(SawyerEnv, Serializable):
 
     def _goal_distance(self, goal_a, goal_b):
         """
+        Compute distance between achieved goal and goal.
+
         :param goal_a:
         :param goal_b:
         :return distance: distance between goal_a and goal_b
@@ -119,6 +147,8 @@ class PushEnv(SawyerEnv, Serializable):
 
     def done(self, achieved_goal, goal):
         """
+        If done.
+
         :return if_done: bool
                     if current episode is done:
         """

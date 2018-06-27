@@ -8,7 +8,7 @@ import numpy as np
 
 from contrib.ros.envs.sawyer.sawyer_env import SawyerEnv
 from contrib.ros.robots.sawyer import Sawyer
-from contrib.ros.worlds.block_world.world import BlockWorld
+from contrib.ros.worlds.block_world import BlockWorld
 from garage.core import Serializable
 
 
@@ -29,16 +29,12 @@ class PickAndPlaceEnv(SawyerEnv, Serializable):
         self.initial_goal = initial_goal
         self.goal = self.initial_goal.copy()
 
-        self._sawyer = Sawyer(
+        self._robot = Sawyer(
             initial_joint_pos=initial_joint_pos,
             control_mode=robot_control_mode)
-        self._block_world = BlockWorld(simulated)
+        self._world = BlockWorld(simulated)
 
-        SawyerEnv.__init__(
-            self,
-            simulated=simulated,
-            robot=self._sawyer,
-            world=self._block_world)
+        SawyerEnv.__init__(self, simulated=simulated)
 
     @property
     def observation_space(self):
@@ -72,9 +68,9 @@ class PickAndPlaceEnv(SawyerEnv, Serializable):
                      'achieved_goal': achieved_goal,
                      'desired_goal': self.goal}
         """
-        robot_obs = self._sawyer.get_observation()
+        robot_obs = self._robot.get_observation()
 
-        world_obs = self._block_world.get_observation()
+        world_obs = self._world.get_observation()
 
         obs = np.concatenate((robot_obs, world_obs.obs))
 
@@ -91,12 +87,17 @@ class PickAndPlaceEnv(SawyerEnv, Serializable):
     def reward(self, achieved_goal, goal):
         """
         Compute the reward for current step.
-        :param achieved_goal: the current gripper's position or object's position in the current training episode.
-        :param goal: the goal of the current training episode, which mostly is the target position of the object or the
-                     position.
+        :param achieved_goal: np.array
+                    the current gripper's position or object's
+                    position in the current training episode.
+        :param goal: np.array
+                    the goal of the current training episode, which mostly
+                    is the target position of the object or the position.
         :return reward: float
-                    if sparse_reward, the reward is -1, else the reward is minus distance from achieved_goal to
-                    our goal. And we have completion bonus for two kinds of types.
+                    if sparse_reward, the reward is -1, else the
+                    reward is minus distance from achieved_goal to
+                    our goal. And we have completion bonus for two
+                    kinds of types.
         """
         d = self._goal_distance(achieved_goal, goal)
         if d < self._distance_threshold:
