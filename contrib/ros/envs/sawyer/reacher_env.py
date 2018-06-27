@@ -59,7 +59,7 @@ class ReacherEnv(SawyerEnv, Serializable):
     @property
     def observation_space(self):
         """
-        Returns a Space object.
+        Return a Space object.
 
         :return: the observation space
         """

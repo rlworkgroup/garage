@@ -1,6 +1,4 @@
-"""
-Sawyer Interface
-"""
+"""Sawyer Interface."""
 
 import gym
 from intera_core_msgs.msg import JointLimits
@@ -12,11 +10,19 @@ from contrib.ros.robots.robot import Robot
 
 
 class Sawyer(Robot):
+    """Sawyer class."""
+
     def __init__(self, initial_joint_pos, control_mode='position'):
         """
+        Sawyer class.
+
         :param initial_joint_pos: {str: float}
-                            {'joint_name': position_value}, and also initial_joint_pos should include all of the
-                            joints that user wants to control and observe.
+                        {'joint_name': position_value}, and also
+                        initial_joint_pos should include all of the
+                        joints that user wants to control and observe.
+        :param control_mode: string
+                        robot control mode: 'position' or velocity
+                        or effort
         """
         Robot.__init__(self)
         self._limb = intera_interface.Limb('right')
@@ -28,6 +34,11 @@ class Sawyer(Robot):
 
     @property
     def enabled(self):
+        """
+        If robot is enabled.
+
+        :return: if robot is enabled.
+        """
         return intera_interface.RobotEnable(
             intera_interface.CHECK_VERSION).state().enabled
 
@@ -52,9 +63,15 @@ class Sawyer(Robot):
         rospy.sleep(1.0)
 
     def reset(self):
+        """Reset sawyer."""
         self._move_to_start_position()
 
     def get_observation(self):
+        """
+        Get robot observation.
+
+        :return: robot observation
+        """
         # cartesian space
         gripper_pos = np.array(self._limb.endpoint_pose()['position'])
         gripper_ori = np.array(self._limb.endpoint_pose()['orientation'])
@@ -78,6 +95,12 @@ class Sawyer(Robot):
 
     @property
     def observation_space(self):
+        """
+        Observation space.
+
+        :return: gym.spaces
+                    observation space
+        """
         return gym.spaces.Box(
             -np.inf,
             np.inf,
@@ -86,6 +109,8 @@ class Sawyer(Robot):
 
     def send_command(self, commands):
         """
+        Send command to sawyer.
+
         :param commands: [float]
                     list of command for different joints and gripper
         """
@@ -109,12 +134,19 @@ class Sawyer(Robot):
 
     @property
     def gripper_pose(self):
+        """
+        Get the gripper pose.
+
+        :return: gripper pose
+        """
         return self._limb.endpoint_pose()
 
     @property
     def action_space(self):
         """
-        Returns a Space object
+        Return a Space object.
+
+        :return: action space
         """
         lower_bounds = np.array([])
         upper_bounds = np.array([])
@@ -130,17 +162,15 @@ class Sawyer(Robot):
                      np.array(self._joint_limits.position_upper[
                          joint_idx:joint_idx + 1])))
             elif self._control_mode == 'velocity':
-                lower_bounds = np.concatenate((lower_bounds, np.zeros(1)))
-                upper_bounds = np.concatenate((
-                    upper_bounds,
-                    np.array(
-                        self._joint_limits.velocity[joint_idx:joint_idx + 1])))
+                velocity_limit = np.array(
+                    self._joint_limits.velocity[joint_idx:joint_idx + 1])
+                lower_bounds = np.concatenate((lower_bounds, -velocity_limit))
+                upper_bounds = np.concatenate((upper_bounds, velocity_limit))
             elif self._control_mode == 'effort':
-                lower_bounds = np.concatenate((lower_bounds, np.zeros(1)))
-                upper_bounds = np.concatenate(
-                    (upper_bounds,
-                     np.array(
-                         self._joint_limits.effort[joint_idx:joint_idx + 1])))
+                effort_limit = np.array(
+                    self._joint_limits.effort[joint_idx:joint_idx + 1])
+                lower_bounds = np.concatenate((lower_bounds, -effort_limit))
+                upper_bounds = np.concatenate((upper_bounds, effort_limit))
             else:
                 raise ValueError(
                     'Control mode %s is not known!' % self._control_mode)
