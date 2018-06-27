@@ -34,11 +34,7 @@ class PickAndPlaceEnv(SawyerEnv, Serializable):
             control_mode=robot_control_mode)
         self._block_world = BlockWorld(simulated)
 
-        SawyerEnv.__init__(
-            self,
-            simulated=simulated,
-            robot=self._sawyer,
-            world=self._block_world)
+        SawyerEnv.__init__(self, simulated=simulated)
 
     @property
     def observation_space(self):

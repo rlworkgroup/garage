@@ -11,9 +11,7 @@ except ImportError:
 
 
 class SawyerEnv(RosEnv):
-    def __init__(self, simulated, robot, world):
-        self._robot = robot
-        self._world = world
+    def __init__(self, simulated):
         RosEnv.__init__(self, simulated=simulated)
 
     def _initial_setup(self):

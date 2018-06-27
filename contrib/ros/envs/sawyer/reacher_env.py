@@ -34,8 +34,7 @@ class ReacherEnv(SawyerEnv, Serializable):
             control_mode=robot_control_mode)
         self._world = EmptyWorld(simulated)
 
-        SawyerEnv.__init__(
-            self, simulated=simulated, robot=self._sawyer, world=self._world)
+        SawyerEnv.__init__(self, simulated=simulated)
 
     @property
     def observation_space(self):
