@@ -145,7 +145,7 @@ class DDPG(RLAlgorithm):
 
     def start_worker(self):
         parallel_sampler.populate_task(self.env, self.policy)
-        if plotter.status(self.plot):
+        if self.plotter.status(self.plot):
             plotter.init_plot(self.env, self.policy)
 
     @overrides
