@@ -93,21 +93,53 @@ class Plotter(object):
             self.queue.join()
             self.worker_thread.join()
 
+    @staticmethod
+    def set_enable(enable):
+        """Set the plot enabling according to the run_experiment function.
+        """
+        Plotter.enable = enable
+
+    @staticmethod
+    def status(plot_algo_status):
+        """Use this method as a guard for plot enabling.
+
+        This guard method considers the plot enabling defined in the
+        function run_experiment.
+
+        Parameters
+        ----------
+        plot_algo_status : boolean
+            The plot enabling defined in the algorithm class.
+
+        Returns
+        -------
+            The plot enabling of the algorithm if the run_experiment was not
+            called, and the plot enabling of the run_experiment otherwise.
+
+        """
+        if Plotter.enable is None:
+            return plot_algo_status
+        else:
+            return Plotter.enable
+
     def start(self):
-        if not self.worker_thread.is_alive():
-            tf.get_variable_scope().reuse_variables()
-            self.worker_thread.start()
-            self.queue.put(
-                Message(
-                    op=Op.UPDATE, args=(self.env, self.policy), kwargs=None))
-            self.queue.task_done()
-            atexit.register(self.shutdown)
+        if Plotter.enable is None or Plotter.enable:
+            if not self.worker_thread.is_alive():
+                tf.get_variable_scope().reuse_variables()
+                self.worker_thread.start()
+                self.queue.put(
+                    Message(
+                        op=Op.UPDATE, args=(self.env, self.policy),
+                        kwargs=None))
+                self.queue.task_done()
+                atexit.register(self.shutdown)
 
     def update_plot(self, policy, max_length=np.inf):
-        if self.worker_thread.is_alive():
-            self.queue.put(
-                Message(
-                    op=Op.DEMO,
-                    args=(policy.get_param_values(), max_length),
-                    kwargs=None))
-            self.queue.task_done()
+        if Plotter.enable is None or Plotter.enable:
+            if self.worker_thread.is_alive():
+                self.queue.put(
+                    Message(
+                        op=Op.DEMO,
+                        args=(policy.get_param_values(), max_length),
+                        kwargs=None))
+                self.queue.task_done()

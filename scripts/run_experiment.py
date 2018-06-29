@@ -17,6 +17,7 @@ from garage.misc.ext import is_iterable
 from garage.misc.ext import set_seed
 from garage.misc.instrument import concretize
 import garage.misc.logger as logger
+from garage.plotter import Plotter
 
 
 def run_experiment(argv):
@@ -126,9 +127,7 @@ def run_experiment(argv):
         if args.seed is not None:
             parallel_sampler.set_seed(args.seed)
 
-    if args.plot:
-        from garage.plotter import plotter
-        plotter.init_worker()
+    Plotter.set_enable(args.plot)
 
     if args.log_dir is None:
         log_dir = osp.join(default_log_dir, args.exp_name)

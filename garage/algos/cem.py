@@ -7,7 +7,7 @@ from garage.algos import RLAlgorithm
 from garage.core import Serializable
 import garage.misc.logger as logger
 from garage.misc.special import discount_cumsum
-import garage.plotter as plotter
+from garage.plotter import Plotter
 from garage.sampler.utils import rollout
 
 
@@ -105,11 +105,12 @@ class CEM(RLAlgorithm, Serializable):
         self.max_path_length = max_path_length
         self.n_itr = n_itr
         self.n_evals = n_evals
+        self.plotter = Plotter()
 
     def train(self):
         parallel_sampler.populate_task(self.env, self.policy)
-        if self.plot:
-            plotter.init_plot(self.env, self.policy)
+        if self.plotter.status(self.plot):
+            self.plotter.init_plot(self.env, self.policy)
 
         cur_std = self.init_std
         cur_mean = self.policy.get_param_values()
@@ -181,6 +182,7 @@ class CEM(RLAlgorithm, Serializable):
                 ))
             logger.dump_tabular(with_prefix=False)
             logger.pop_prefix()
-            if self.plot:
-                plotter.update_plot(self.policy, self.max_path_length)
+            if self.plotter.status(self.plot):
+                self.plotter.update_plot(self.policy, self.max_path_length)
         parallel_sampler.terminate_task()
+        self.plotter.shutdown()
