@@ -22,6 +22,11 @@ Message = namedtuple("Message", ["op", "args", "kwargs"])
 
 
 class Plotter(object):
+
+    # Static variable used along with function run_experiment to enable or
+    # disable the plotter
+    enable = None
+
     def __init__(self,
                  env,
                  policy,
