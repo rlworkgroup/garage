@@ -1,5 +1,6 @@
 name: garage
 channels:
+    - https://conda.anaconda.org/conda-forge
     - https://conda.anaconda.org/kne
     - https://conda.anaconda.org/menpo
 dependencies:
@@ -18,6 +19,7 @@ dependencies:
     - pandas
     - mkl-service=1.1.2
     - absl-py==0.2.2
+    - pre_commit
     - pip:
         - pyprind
         - ipdb

@@ -50,6 +50,7 @@ script:
   - scripts/travisci/check_yapf.sh
   - scripts/travisci/check_pylint.sh
   - scripts/travisci/check_imports.sh
+  - scripts/travisci/check_precommit.sh
 
 notifications:
   email: false

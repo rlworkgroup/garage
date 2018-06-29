@@ -1,0 +1,61 @@
+#!/usr/bin/env python
+import sys
+
+# Get the commit message location
+commit_msg_filepath = sys.argv[1]
+
+# Extract the message lines into a list
+lines = list((line.rstrip() for line in open(commit_msg_filepath, 'r')))
+
+# Remove all commented lines
+lines = [line for line in lines if len(line) == 0 or line[0] != '#']
+
+exit_code = 0
+
+# Error: no commit message
+if len(lines) == 0 or len(lines[0]) == 0:
+    print('Error: commit message cannot be blank.')
+    sys.exit(1)
+
+# Error: invalid subject line length
+if len(lines[0]) > 50:
+    print('Error: your subject line must be within 50 characters.')
+    exit_code = 1
+
+# Error: subject line not capitalized
+if lines[0][0].isalpha() and not lines[0][0].isupper():
+    print('Error: your subject line must be capitalized.')
+    exit_code = 1
+
+# Error: subject line ends with period
+if lines[0].endswith('.'):
+    print('Error: your subject line cannot end with a period.')
+    exit_code = 1
+
+# No body paragraph
+if len(lines) == 1:
+    sys.exit(exit_code)
+
+# Error: subject and body not separated by newline
+if len(lines[1]) != 0:
+    print('Error: you must separate your subject '
+          'and body paragraph with a newline.')
+    exit_code = 1
+
+lines = lines[2:]
+
+count = 0
+for line in lines:
+    count += 1
+    # Ignore newline
+    if len(line) == 0:
+        continue
+
+    # Error: invalid body paragraph length
+    if len(line) > 72:
+        print('Error: line {} of your body paragraph '
+              'must be wrapped to 72 characters:'.format(count))
+        print('>> ' + line)
+        exit_code = 1
+
+sys.exit(exit_code)
