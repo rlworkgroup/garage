@@ -178,5 +178,3 @@ class Sawyer(Robot):
             np.concatenate((lower_bounds, np.array([0]))),
             np.concatenate((upper_bounds, np.array([100]))),
             dtype=np.float32)
-
-
