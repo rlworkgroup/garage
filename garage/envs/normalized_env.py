@@ -103,5 +103,8 @@ class NormalizedEnv(gym.Wrapper, Serializable):
 
         return next_obs, reward * self._scale_reward, done, info
 
+    def log_diagnostics(self, paths):
+        pass
+
 
 normalize = NormalizedEnv
