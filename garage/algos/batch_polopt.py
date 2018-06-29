@@ -1,10 +1,8 @@
 from garage.algos import RLAlgorithm
 import garage.misc.logger as logger
-from garage.plotter import plotter
-from garage.policies import Policy
+from garage.plotter import Plotter
 from garage.sampler import parallel_sampler
 from garage.sampler.base import BaseSampler
-from garage.sampler.utils import rollout
 
 
 class BatchSampler(BaseSampler):
@@ -40,7 +38,8 @@ class BatchSampler(BaseSampler):
 class BatchPolopt(RLAlgorithm):
     """
     Base class for batch sampling-based policy optimization methods.
-    This includes various policy gradient methods like vpg, npg, ppo, trpo, etc.
+    This includes various policy gradient methods like vpg, npg, ppo, trpo,
+    etc.
     """
 
     def __init__(self,
@@ -111,13 +110,14 @@ class BatchPolopt(RLAlgorithm):
 
     def start_worker(self):
         self.sampler.start_worker()
-        if self.plot:
-            plotter.init_plot(self.env, self.policy)
 
     def shutdown_worker(self):
         self.sampler.shutdown_worker()
 
     def train(self):
+        plotter = Plotter()
+        if plotter.status(self.plot):
+            plotter.init_plot(self.env, self.policy)
         self.start_worker()
         self.init_opt()
         for itr in range(self.current_itr, self.n_itr):
@@ -135,12 +135,13 @@ class BatchPolopt(RLAlgorithm):
                 logger.save_itr_params(itr, params)
                 logger.log("saved")
                 logger.dump_tabular(with_prefix=False)
-                if self.plot:
-                    self.update_plot()
+                if plotter.status(self.plot):
+                    plotter.update_plot(self.policy, self.max_path_length)
                     if self.pause_for_plot:
                         input("Plotting evaluation run: Press Enter to "
                               "continue...")
 
+        plotter.shutdown()
         self.shutdown_worker()
 
     def log_diagnostics(self, paths):
@@ -163,7 +164,3 @@ class BatchPolopt(RLAlgorithm):
 
     def optimize_policy(self, itr, samples_data):
         raise NotImplementedError
-
-    def update_plot(self):
-        if self.plot:
-            plotter.update_plot(self.policy, self.max_path_length)

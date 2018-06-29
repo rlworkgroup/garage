@@ -12,7 +12,7 @@ from garage.misc import ext
 from garage.misc import special
 import garage.misc.logger as logger
 from garage.misc.overrides import overrides
-from garage.plotter import plotter
+from garage.plotter import Plotter
 from garage.sampler import parallel_sampler
 
 
@@ -194,10 +194,11 @@ class DDPG(RLAlgorithm):
         self.scale_reward = scale_reward
 
         self.opt_info = None
+        self.plotter = Plotter()
 
     def start_worker(self):
         parallel_sampler.populate_task(self.env, self.policy)
-        if self.plot:
+        if plotter.status(self.plot):
             plotter.init_plot(self.env, self.policy)
 
     @overrides
@@ -278,6 +279,7 @@ class DDPG(RLAlgorithm):
                           "continue...")
         self.env.close()
         self.policy.terminate()
+        self.plotter.shutdown()
 
     def init_opt(self):
 
@@ -439,8 +441,8 @@ class DDPG(RLAlgorithm):
         self.es_path_returns = []
 
     def update_plot(self):
-        if self.plot:
-            plotter.update_plot(self.policy, self.max_path_length)
+        if self.plotter.status(self.plot):
+            self.plotter.update_plot(self.policy, self.max_path_length)
 
     def get_epoch_snapshot(self, epoch):
         return dict(

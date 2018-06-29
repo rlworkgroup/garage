@@ -7,7 +7,7 @@ from garage.core import Serializable
 from garage.misc import ext
 import garage.misc.logger as logger
 from garage.misc.special import discount_cumsum
-import garage.plotter as plotter
+from garage.plotter import Plotter
 from garage.sampler import parallel_sampler
 from garage.sampler import stateful_pool
 from garage.sampler.utils import rollout
@@ -57,6 +57,7 @@ class CMAES(RLAlgorithm, Serializable):
         self.max_path_length = max_path_length
         self.n_itr = n_itr
         self.batch_size = batch_size
+        self.plotter = Plotter()
 
     def train(self):
 
@@ -65,8 +66,8 @@ class CMAES(RLAlgorithm, Serializable):
         es = cma_es_lib.CMAEvolutionStrategy(cur_mean, cur_std)
 
         parallel_sampler.populate_task(self.env, self.policy)
-        if self.plot:
-            plotter.init_plot(self.env, self.policy)
+        if self.plotter.status(self.plot):
+            self.plotter.init_plot(self.env, self.policy)
 
         cur_std = self.sigma0
         cur_mean = self.policy.get_param_values()
@@ -139,8 +140,8 @@ class CMAES(RLAlgorithm, Serializable):
                     env=self.env,
                 ))
             logger.dump_tabular(with_prefix=False)
-            if self.plot:
-                plotter.update_plot(self.policy, self.max_path_length)
+            if self.plotter.status(self.plot):
+                self.plotter.update_plot(self.policy, self.max_path_length)
             logger.pop_prefix()
             # Update iteration.
             itr += 1
@@ -148,3 +149,4 @@ class CMAES(RLAlgorithm, Serializable):
         # Set final params.
         self.policy.set_param_values(es.result()[0])
         parallel_sampler.terminate_task()
+        self.plotter.shutdown()

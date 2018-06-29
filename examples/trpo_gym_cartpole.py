@@ -1,3 +1,5 @@
+import gym
+
 from garage.algos import TRPO
 from garage.baselines import LinearFeatureBaseline
 from garage.envs import normalize
@@ -22,7 +24,6 @@ def run_task(*_):
         policy=policy,
         baseline=baseline,
         batch_size=4000,
-        max_path_length=env.horizon,
         n_itr=50,
         discount=0.99,
         step_size=0.01,
