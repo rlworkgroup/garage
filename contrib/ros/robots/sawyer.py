@@ -163,7 +163,7 @@ class Sawyer(Robot):
                          joint_idx:joint_idx + 1])))
             elif self._control_mode == 'velocity':
                 velocity_limit = np.array(
-                    self._joint_limits.velocity[joint_idx:joint_idx + 1])
+                    self._joint_limits.velocity[joint_idx:joint_idx + 1]/10)
                 lower_bounds = np.concatenate((lower_bounds, -velocity_limit))
                 upper_bounds = np.concatenate((upper_bounds, velocity_limit))
             elif self._control_mode == 'effort':
