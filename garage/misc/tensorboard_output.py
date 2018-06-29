@@ -28,6 +28,8 @@ class TensorBoardOutput:
             'normal', 'gamma', 'poisson', 'uniform'
         ]
         self._feed = {}
+        self._name_scope = tf.name_scope("TensorBoardOutput")
+        self._name_scope.__enter__()
 
         self._default_step = 0
         self._writer = None
@@ -87,6 +89,9 @@ class TensorBoardOutput:
             gamma: alpha
             poisson: lam
             uniform: maxval
+
+        example:
+            $ python examples/example_tensorboard_logger.py
         '''
         if histogram_type not in self._histogram_distribute_list:
             raise Exception('histogram type error %s' % histogram_type,
@@ -178,7 +183,7 @@ class TensorBoardOutput:
 
     def _dump_histogram(self, step):
         self.session = tf.get_default_session()
-        if len(self._histogram_summary_op):
+        if self._histogram_summary_op:
             summary_str = self.session.run(
                 self._histogram_summary_op_merge, feed_dict=self._feed)
             self._writer.add_summary(summary_str, global_step=step)
@@ -236,7 +241,8 @@ class TensorBoardOutput:
                 self._layout_writer.add_summary(layout_summary)
                 self._layout_writer.close()
             except KeyError:
-                # Write the current layout proto when there is no layout in the disk.
+                # Write the current layout proto into disk
+                # when there is no layout.
                 self._layout_writer = tf.summary.FileWriter(
                     self._layout_writer_dir)
                 layout_summary = summary_lib.custom_scalar_pb(

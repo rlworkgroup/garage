@@ -1,10 +1,12 @@
-import numpy as np
+import tensorflow as tf
 
 from garage.misc import logger
 
 logger.set_tensorboard_dir("./histogram_example")
 N = 400
 for i in range(N):
+    sess = tf.Session()
+    sess.__enter__()
     k_val = i / float(N)
     logger.record_histogram_by_type('gamma', key='gamma', alpha=k_val)
     logger.record_histogram_by_type(
