@@ -3,9 +3,9 @@ import gym
 from garage.algos import TRPO
 from garage.baselines import LinearFeatureBaseline
 from garage.envs import normalize
+from garage.envs.util import horizon
 from garage.envs.util import spec
 from garage.misc.instrument import run_experiment
-from garage.envs.util import horizon
 from garage.policies import CategoricalMLPPolicy
 
 
