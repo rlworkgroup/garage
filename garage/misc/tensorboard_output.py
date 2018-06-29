@@ -13,6 +13,7 @@ from tensorboard.plugins.custom_scalar import metadata
 import tensorflow as tf
 
 from garage.misc.console import mkdir_p
+from garage.tf.misc.tensor_utils import enclosing_scope
 
 
 class TensorBoardOutput:
@@ -28,8 +29,7 @@ class TensorBoardOutput:
             'normal', 'gamma', 'poisson', 'uniform'
         ]
         self._feed = {}
-        self._name_scope = tf.name_scope("TensorBoardOutput")
-        self._name_scope.__enter__()
+        self._name = "TensorBoardOutput/"
 
         self._default_step = 0
         self._writer = None
@@ -69,14 +69,16 @@ class TensorBoardOutput:
         self._dump_tensors()
 
     def record_histogram(self, key, val):
-        if str(key) not in self._histogram_ds:
-            self._histogram_ds[str(key)] = tf.Variable(val)
-            self._histogram_summary_op.append(
-                tf.summary.histogram(str(key), self._histogram_ds[str(key)]))
-            self._histogram_summary_op_merge = tf.summary.merge(
-                self._histogram_summary_op)
+        with enclosing_scope(self._name, "record_hist"):
+            if str(key) not in self._histogram_ds:
+                self._histogram_ds[str(key)] = tf.Variable(val)
+                self._histogram_summary_op.append(
+                    tf.summary.histogram(
+                        str(key), self._histogram_ds[str(key)]))
+                self._histogram_summary_op_merge = tf.summary.merge(
+                    self._histogram_summary_op)
 
-        self._feed[self._histogram_ds[str(key)]] = val
+            self._feed[self._histogram_ds[str(key)]] = val
 
     def record_histogram_by_type(self,
                                  histogram_type,
@@ -129,26 +131,27 @@ class TensorBoardOutput:
                 tag=key + '/' + str(idx).strip('()'), simple_value=float(v))
 
     def _get_histogram_var_by_type(self, histogram_type, shape, **kwargs):
-        if histogram_type == "normal":
-            # Make a normal distribution, with a shifting mean
-            mean = tf.Variable(kwargs['mean'])
-            stddev = tf.Variable(kwargs['stddev'])
-            return tf.random_normal(
-                shape=shape, mean=mean, stddev=stddev), [mean, stddev]
-        elif histogram_type == "gamma":
-            # Add a gamma distribution
-            alpha = tf.Variable(kwargs['alpha'])
-            return tf.random_gamma(shape=shape, alpha=alpha), [alpha]
-        elif histogram_type == "poisson":
-            lam = tf.Variable(kwargs['lam'])
-            return tf.random_poisson(shape=shape, lam=lam), [lam]
-        elif histogram_type == "uniform":
-            # Add a uniform distribution
-            maxval = tf.Variable(kwargs['maxval'])
-            return tf.random_uniform(shape=shape, maxval=maxval), [maxval]
+        with enclosing_scope(self._name, "get_hist_{}".format(histogram_type)):
+            if histogram_type == "normal":
+                # Make a normal distribution, with a shifting mean
+                mean = tf.Variable(kwargs['mean'])
+                stddev = tf.Variable(kwargs['stddev'])
+                return tf.random_normal(
+                    shape=shape, mean=mean, stddev=stddev), [mean, stddev]
+            elif histogram_type == "gamma":
+                # Add a gamma distribution
+                alpha = tf.Variable(kwargs['alpha'])
+                return tf.random_gamma(shape=shape, alpha=alpha), [alpha]
+            elif histogram_type == "poisson":
+                lam = tf.Variable(kwargs['lam'])
+                return tf.random_poisson(shape=shape, lam=lam), [lam]
+            elif histogram_type == "uniform":
+                # Add a uniform distribution
+                maxval = tf.Variable(kwargs['maxval'])
+                return tf.random_uniform(shape=shape, maxval=maxval), [maxval]
 
-        raise Exception('histogram type error %s' % histogram_type,
-                        'builtin type', self._histogram_distribute_list)
+            raise Exception('histogram type error %s' % histogram_type,
+                            'builtin type', self._histogram_distribute_list)
 
     def _get_histogram_val_by_type(self, histogram_type, **kwargs):
         if histogram_type == "normal":
