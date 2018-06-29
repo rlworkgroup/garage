@@ -1,6 +1,7 @@
 import math
 
-import glfw
+import mujoco_py  # pylint: disable=unused-import
+import glfw  # noqa: I100
 import numpy as np
 
 from garage.core import Serializable
