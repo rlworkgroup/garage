@@ -61,6 +61,15 @@ In short:
 * A newline between the subject and the body
 * If relevant, an informative body which is wrapped to 72 characters
 
+garage currently uses [pre-commit](https://pre-commit.com/#usage), a multi-language package manager for pre-commit hooks, and its out-of-the-box [hooks](https://github.com/pre-commit/pre-commit-hooks).
+To setup pre-commit on your local machine:
+* `pre-commit install` to install pre-commit into your .git/hooks/ directory
+* `pre-commit autoupdate` to update the hooks to the latest version
+
+To run pre-commit:
+* `pre-commit run --files *file_name*` to run pre-commit on the specified file.
+* `pre-commit run --files *file_name1* *file_name2*` to run on multiple files.
+
 ### Git recipes
 
 These recipes assume you are working out of a private GitHub fork.
