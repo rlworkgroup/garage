@@ -25,7 +25,7 @@ class Plotter(object):
 
     # Static variable used along with function run_experiment to enable or
     # disable the plotter
-    enable = None
+    enable = True
 
     def __init__(self,
                  env,
@@ -99,36 +99,13 @@ class Plotter(object):
             self.worker_thread.join()
 
     @staticmethod
-    def set_enable(enable):
+    def disable():
         """Set the plot enabling according to the run_experiment function.
         """
-        Plotter.enable = enable
-
-    @staticmethod
-    def status(plot_algo_status):
-        """Use this method as a guard for plot enabling.
-
-        This guard method considers the plot enabling defined in the
-        function run_experiment.
-
-        Parameters
-        ----------
-        plot_algo_status : boolean
-            The plot enabling defined in the algorithm class.
-
-        Returns
-        -------
-            The plot enabling of the algorithm if the run_experiment was not
-            called, and the plot enabling of the run_experiment otherwise.
-
-        """
-        if Plotter.enable is None:
-            return plot_algo_status
-        else:
-            return Plotter.enable
+        Plotter.enable = False
 
     def start(self):
-        if Plotter.enable is None or Plotter.enable:
+        if Plotter.enable:
             if not self.worker_thread.is_alive():
                 tf.get_variable_scope().reuse_variables()
                 self.worker_thread.start()
@@ -141,7 +118,7 @@ class Plotter(object):
                 atexit.register(self.shutdown)
 
     def update_plot(self, policy, max_length=np.inf):
-        if Plotter.enable is None or Plotter.enable:
+        if Plotter.enable:
             if self.worker_thread.is_alive():
                 self.queue.put(
                     Message(

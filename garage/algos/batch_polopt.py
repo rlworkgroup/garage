@@ -96,7 +96,7 @@ class BatchPolopt(RLAlgorithm):
         self.max_path_length = max_path_length
         self.discount = discount
         self.gae_lambda = gae_lambda
-        self.plot = plot
+        self.plot = plot or Plotter.enable
         self.pause_for_plot = pause_for_plot
         self.center_adv = center_adv
         self.positive_adv = positive_adv
@@ -116,7 +116,7 @@ class BatchPolopt(RLAlgorithm):
 
     def train(self):
         plotter = Plotter()
-        if plotter.status(self.plot):
+        if self.plot:
             plotter.init_plot(self.env, self.policy)
         self.start_worker()
         self.init_opt()
@@ -135,7 +135,7 @@ class BatchPolopt(RLAlgorithm):
                 logger.save_itr_params(itr, params)
                 logger.log("saved")
                 logger.dump_tabular(with_prefix=False)
-                if plotter.status(self.plot):
+                if self.plot:
                     plotter.update_plot(self.policy, self.max_path_length)
                     if self.pause_for_plot:
                         input("Plotting evaluation run: Press Enter to "

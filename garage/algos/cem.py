@@ -97,7 +97,7 @@ class CEM(RLAlgorithm, Serializable):
         self.env = env
         self.policy = policy
         self.batch_size = batch_size
-        self.plot = plot
+        self.plot = plot or Plotter.enable
         self.extra_decay_time = extra_decay_time
         self.extra_std = extra_std
         self.best_frac = best_frac
@@ -111,7 +111,7 @@ class CEM(RLAlgorithm, Serializable):
 
     def train(self):
         parallel_sampler.populate_task(self.env, self.policy)
-        if self.plotter.status(self.plot):
+        if self.plot:
             self.plotter.init_plot(self.env, self.policy)
 
         cur_std = self.init_std
@@ -184,7 +184,7 @@ class CEM(RLAlgorithm, Serializable):
                 ))
             logger.dump_tabular(with_prefix=False)
             logger.pop_prefix()
-            if self.plotter.status(self.plot):
+            if self.plot:
                 self.plotter.update_plot(self.policy, self.max_path_length)
         parallel_sampler.terminate_task()
         self.plotter.shutdown()

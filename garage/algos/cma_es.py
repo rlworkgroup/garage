@@ -49,7 +49,7 @@ class CMAES(RLAlgorithm, Serializable):
         Serializable.quick_init(self, locals())
         self.env = env
         self.policy = policy
-        self.plot = plot
+        self.plot = plot or Plotter.enable
         self.sigma0 = sigma0
         self.discount = discount
         self.max_path_length = max_path_length
@@ -64,7 +64,7 @@ class CMAES(RLAlgorithm, Serializable):
         es = cma_es_lib.CMAEvolutionStrategy(cur_mean, cur_std)
 
         parallel_sampler.populate_task(self.env, self.policy)
-        if self.plotter.status(self.plot):
+        if self.plot:
             self.plotter.init_plot(self.env, self.policy)
 
         cur_std = self.sigma0
@@ -138,7 +138,7 @@ class CMAES(RLAlgorithm, Serializable):
                     env=self.env,
                 ))
             logger.dump_tabular(with_prefix=False)
-            if self.plotter.status(self.plot):
+            if self.plot:
                 self.plotter.update_plot(self.policy, self.max_path_length)
             logger.pop_prefix()
             # Update iteration.

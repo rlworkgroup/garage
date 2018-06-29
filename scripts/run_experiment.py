@@ -128,8 +128,9 @@ def run_experiment(argv):
         if args.seed is not None:
             parallel_sampler.set_seed(args.seed)
 
-    garage.plotter.Plotter.set_enable(args.plot)
-    garage.tf.plotter.Plotter.set_enable(args.plot)
+    if not args.plot:
+        garage.plotter.Plotter.disable()
+        garage.tf.plotter.Plotter.disable()
 
     if args.log_dir is None:
         log_dir = osp.join(default_log_dir, args.exp_name)

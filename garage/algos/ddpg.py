@@ -126,7 +126,7 @@ class DDPG(RLAlgorithm):
         self.n_updates_per_sample = n_updates_per_sample
         self.include_horizon_terminal_transitions = \
             include_horizon_terminal_transitions
-        self.plot = plot
+        self.plot = plot or Plotter.enable
         self.pause_for_plot = pause_for_plot
 
         self.qf_loss_averages = []
@@ -144,7 +144,7 @@ class DDPG(RLAlgorithm):
 
     def start_worker(self):
         parallel_sampler.populate_task(self.env, self.policy)
-        if self.plotter.status(self.plot):
+        if self.plot:
             self.plotter.init_plot(self.env, self.policy)
 
     @overrides
@@ -389,7 +389,7 @@ class DDPG(RLAlgorithm):
         self.es_path_returns = []
 
     def update_plot(self):
-        if self.plotter.status(self.plot):
+        if self.plot:
             self.plotter.update_plot(self.policy, self.max_path_length)
 
     def get_epoch_snapshot(self, epoch):

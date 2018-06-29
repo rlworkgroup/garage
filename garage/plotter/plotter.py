@@ -26,7 +26,7 @@ class Plotter():
 
     # Static variable used along with function run_experiment to enable or
     # disable the plotter
-    enable = None
+    enable = True
 
     def __init__(self):
         self._process = None
@@ -82,42 +82,19 @@ class Plotter():
             pass
 
     def shutdown(self):
-        if self._process.is_alive():
+        if Plotter.enable and self._process.is_alive():
             self._queue.put(Message(op=Op.STOP, args=None, kwargs=None))
             self._queue.close()
             self._process.join()
 
     @staticmethod
-    def set_enable(enable):
+    def disable():
         """Set the plot enabling according to the run_experiment function.
         """
-        Plotter.enable = enable
-
-    @staticmethod
-    def status(plot_algo_status):
-        """Use this method as a guard for plot enabling.
-
-        This guard method considers the plot enabling defined in the
-        function run_experiment.
-
-        Parameters
-        ----------
-        plot_algo_status : boolean
-            The plot enabling defined in the algorithm class.
-
-        Returns
-        -------
-            The plot enabling of the algorithm if the run_experiment was not
-            called, and the plot enabling of the run_experiment otherwise.
-
-        """
-        if Plotter.enable is None:
-            return plot_algo_status
-        else:
-            return Plotter.enable
+        Plotter.enable = False
 
     def init_worker(self):
-        if Plotter.enable is None or Plotter.enable:
+        if Plotter.enable:
             self._queue = Queue()
             if ('Darwin' in platform.platform()):
                 self._process = Thread(target=self._worker_start)
@@ -128,7 +105,7 @@ class Plotter():
             atexit.register(self.shutdown)
 
     def init_plot(self, env, policy):
-        if Plotter.enable is None or Plotter.enable:
+        if Plotter.enable:
             if not (self._process and self._queue):
                 self.init_worker()
 
@@ -145,7 +122,7 @@ class Plotter():
                 Message(op=Op.UPDATE, args=(env, policy), kwargs=None))
 
     def update_plot(self, policy, max_length=np.inf):
-        if Plotter.enable is None or Plotter.enable:
+        if Plotter.enable:
             self._queue.put(
                 Message(
                     op=Op.DEMO,
