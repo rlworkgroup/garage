@@ -3,6 +3,10 @@ This is an example to train a task with DDPG algorithm.
 
 Here it creates a gym environment InvertedPendulum. And uses a DDPG with 1M
 steps.
+
+Results:
+    AverageReturn: 250
+    RiseTime: epoch 300
 """
 import gym
 import tensorflow as tf
@@ -21,7 +25,7 @@ def run_task(*_):
     :param _:
     :return:
     """
-    env = gym.make('InvertedPendulum-v2')
+    env = gym.make('InvertedDoublePendulum-v2')
 
     action_noise = OUStrategy(env, sigma=0.2)
 
@@ -50,7 +54,7 @@ def run_task(*_):
         n_epoch_cycles=20,
         n_rollout_steps=100,
         n_train_steps=50,
-        discount=0.99,
+        discount=0.9,
         replay_buffer_size=int(1e6),
         min_buffer_size=int(1e4),
         exploration_strategy=action_noise,

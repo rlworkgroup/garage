@@ -93,6 +93,6 @@ class ReplayBuffer(object):
 
         Returns:
             self._size: Size of the current replay buffer.
-            
+
         """
         return self._size

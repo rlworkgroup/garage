@@ -16,6 +16,7 @@ import tensorflow as tf
 import tensorflow.contrib as tc
 
 from garage.algos.base import RLAlgorithm
+from garage.envs.util import bounds
 from garage.envs.util import flat_dim
 from garage.misc import logger
 from garage.misc.overrides import overrides
@@ -94,7 +95,7 @@ class DDPG(RLAlgorithm):
 
         self.observation_dim = flat_dim(env.observation_space)
         self.action_dim = flat_dim(env.action_space)
-        self.action_bound = env.action_space.high
+        _, self.action_bound = bounds(env.action_space)
 
         self.actor = actor
         self.critic = critic
@@ -116,7 +117,7 @@ class DDPG(RLAlgorithm):
         self.plot = plot
         self.pause_for_plot = pause_for_plot
         self.actor_optimizer = actor_optimizer
-        self.critic_optimzier = critic_optimizer
+        self.critic_optimizer = critic_optimizer
 
         self._initialize()
 
@@ -204,22 +205,26 @@ class DDPG(RLAlgorithm):
                 logger.record_tabular('AverageReturn',
                                       np.mean(episode_rewards))
                 logger.record_tabular('StdReturn', np.std(episode_rewards))
-                logger.record_tabular('AveragePolicyLoss',
+                logger.record_tabular('Policy/AveragePolicyLoss',
                                       np.mean(episode_actor_losses))
-                logger.record_tabular('AverageQFunctionLoss',
+                logger.record_tabular('QFunction/AverageQFunctionLoss',
                                       np.mean(episode_critic_losses))
-                logger.record_tabular('AverageQ', np.mean(epoch_qs))
-                logger.record_tabular('MaxQ', np.max(epoch_qs))
-                logger.record_tabular('AverageAbsQ', np.mean(np.abs(epoch_qs)))
-                logger.record_tabular('AverageY', np.mean(epoch_ys))
-                logger.record_tabular('MaxY', np.max(epoch_ys))
-                logger.record_tabular('AverageAbsY', np.mean(np.abs(epoch_ys)))
+                logger.record_tabular('QFunction/AverageQ', np.mean(epoch_qs))
+                logger.record_tabular('QFunction/MaxQ', np.max(epoch_qs))
+                logger.record_tabular('QFunction/AverageAbsQ',
+                                      np.mean(np.abs(epoch_qs)))
+                logger.record_tabular('QFunction/AverageY', np.mean(epoch_ys))
+                logger.record_tabular('QFunction/MaxY', np.max(epoch_ys))
+                logger.record_tabular('QFunction/AverageAbsY',
+                                      np.mean(np.abs(epoch_ys)))
 
-                episode_rewards = []
-                episode_actor_losses = []
-                episode_critic_losses = []
-                epoch_ys = []
-                epoch_qs = []
+                # Uncomment the following if you want to calculate the average
+                # in each epoch
+                # episode_rewards = []
+                # episode_actor_losses = []
+                # episode_critic_losses = []
+                # epoch_ys = []
+                # epoch_qs = []
 
             logger.dump_tabular(with_prefix=False)
             logger.pop_prefix()
@@ -237,8 +242,8 @@ class DDPG(RLAlgorithm):
     def _initialize(self):
         """Set up the actor, critic and target network."""
         # Set up the actor and critic network
-        self.actor.build_net(trainable=True)
-        self.critic.build_net(trainable=True)
+        self.actor._build_net(trainable=True)
+        self.critic._build_net(trainable=True)
 
         # Create target actor and critic network
         target_actor = copy(self.actor)
@@ -246,9 +251,9 @@ class DDPG(RLAlgorithm):
 
         # Set up the target network
         target_actor.name = "TargetActor"
-        target_actor.build_net(trainable=False)
+        target_actor._build_net(trainable=False)
         target_critic.name = "TargetCritic"
-        target_critic.build_net(trainable=False)
+        target_critic._build_net(trainable=False)
 
         # Initialize replay buffer
         replay_buffer = ReplayBuffer(self.replay_buffer_size,
@@ -302,7 +307,7 @@ class DDPG(RLAlgorithm):
                 weights_list=self.critic.regularizable_vars)
             qval_loss += critic_reg
 
-        critic_train_op = self.critic_optimzier(
+        critic_train_op = self.critic_optimizer(
             self.critic_lr, name="CriticOptimizer").minimize(
                 qval_loss, var_list=self.critic.trainable_vars)
 

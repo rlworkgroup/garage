@@ -29,7 +29,7 @@ class ContinuousMLPPolicy(Policy, Serializable, LayersPowered):
     def __init__(self,
                  env_spec,
                  hidden_sizes=(64, 64),
-                 name="StochasticMLPPolicy",
+                 name="ContinuousMLPPolicy",
                  hidden_nonlinearity=tf.nn.relu,
                  output_nonlinearity=tf.nn.tanh,
                  bn=False):
@@ -62,7 +62,7 @@ class ContinuousMLPPolicy(Policy, Serializable, LayersPowered):
         self._output_nonlinearity = output_nonlinearity
         self._batch_norm = bn
 
-    def build_net(self, reuse=None, custom_getter=None, trainable=None):
+    def _build_net(self, reuse=None, custom_getter=None, trainable=None):
         """
         Set up q network based on class attributes.
 

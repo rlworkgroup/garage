@@ -43,7 +43,7 @@ params = {
     "n_epoch_cycles": 20,
     "n_rollout_steps": 100,
     "n_train_steps": 50,
-    "discount": 0.99,
+    "discount": 0.9,
     "tau": 1e-2,
     "replay_buffer_size": int(1e6),
     "sigma": 0.2,
@@ -61,14 +61,15 @@ def test_benchmark():
     mujoco1m = benchmarks.get_benchmark("Mujoco1M")
 
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S-%f")
+    benchmark_dir = "./benchmark/%s/" % timestamp
 
     for task in mujoco1m["tasks"]:
         env_id = task["env_id"]
         env = gym.make(env_id)
         seeds = random.sample(range(100), task["trials"])
 
-        task_dir = "./benchmark/%s/%s/" % (timestamp, env_id)
-        plt_file = task_dir + "/benchmark.png"
+        task_dir = osp.join(benchmark_dir, env_id)
+        plt_file = osp.join(benchmark_dir, "{}_benchmark.png".format(env_id))
         baselines_csvs = []
         garage_csvs = []
 
@@ -177,7 +178,6 @@ def run_baselines(env, seed, log_dir):
     """
     rank = MPI.COMM_WORLD.Get_rank()
     seed = seed + 1000000 * rank
-    tf.reset_default_graph()
     set_global_seeds(seed)
     env.seed(seed)
 

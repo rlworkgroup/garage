@@ -51,7 +51,7 @@ class ContinuousMLPQFunction(QFunction, Serializable, LayersPowered):
         self._output_nonlinearity = output_nonlinearity
         self._batch_norm = bn
 
-    def build_net(self, reuse=None, custom_getter=None, trainable=None):
+    def _build_net(self, reuse=None, custom_getter=None, trainable=None):
         """
         Set up q network based on class attributes. This function uses layers
         defined in rllab.tf.
