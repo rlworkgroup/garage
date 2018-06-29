@@ -8,6 +8,8 @@ from garage.core import Serializable
 import garage.misc.logger as logger
 from garage.misc.special import discount_cumsum
 from garage.plotter import Plotter
+from garage.sampler import parallel_sampler
+from garage.sampler import stateful_pool
 from garage.sampler.utils import rollout
 
 
@@ -27,16 +29,16 @@ def _get_stderr_lb_varyinglens(x):
     return np.array(mus) - np.array(stds) / np.sqrt(ns)
 
 
-def _worker_rollout_policy(G, args):
+def _worker_rollout_policy(g, args):
     sample_std = args["sample_std"].flatten()
     cur_mean = args["cur_mean"].flatten()
     n_evals = args["n_evals"]
-    K = len(cur_mean)
-    params = np.random.standard_normal(K) * sample_std + cur_mean
-    G.policy.set_param_values(params)
+    k = len(cur_mean)
+    params = np.random.standard_normal(k) * sample_std + cur_mean
+    g.policy.set_param_values(params)
     paths, returns, undiscounted_returns = [], [], []
     for _ in range(n_evals):
-        path = rollout(G.env, G.policy, args["max_path_length"])
+        path = rollout(g.env, g.policy, args["max_path_length"])
         path["returns"] = discount_cumsum(path["rewards"], args["discount"])
         path["undiscounted_return"] = sum(path["rewards"])
         paths.append(path)
@@ -77,8 +79,8 @@ class CEM(RLAlgorithm, Serializable):
         """
         :param n_itr: Number of iterations.
         :param max_path_length: Maximum length of a single rollout.
-        :param batch_size: # of samples from trajs from param distribution, when
-         this is set, n_samples is ignored
+        :param batch_size: # of samples from trajs from param distribution,
+         when this is set, n_samples is ignored
         :param discount: Discount.
         :param plot: Plot evaluation run after each iteration.
         :param init_std: Initial std for param distribution
@@ -163,7 +165,7 @@ class CEM(RLAlgorithm, Serializable):
             logger.record_tabular('NumTrajs', len(paths))
             paths = list(chain(
                 *[d['full_paths']
-                  for d in paths]))  #flatten paths for the case n_evals > 1
+                  for d in paths]))  # flatten paths for the case n_evals > 1
             logger.record_tabular(
                 'AvgTrajLen',
                 np.mean([len(path['returns']) for path in paths]))

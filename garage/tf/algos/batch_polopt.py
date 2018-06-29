@@ -4,9 +4,7 @@ import tensorflow as tf
 
 from garage.algos import RLAlgorithm
 import garage.misc.logger as logger
-from garage.sampler.utils import rollout
 from garage.tf.plotter import Plotter
-from garage.tf.policies.base import Policy
 from garage.tf.samplers import BatchSampler
 from garage.tf.samplers import VectorizedSampler
 
@@ -14,7 +12,8 @@ from garage.tf.samplers import VectorizedSampler
 class BatchPolopt(RLAlgorithm):
     """
     Base class for batch sampling-based policy optimization methods.
-    This includes various policy gradient methods like vpg, npg, ppo, trpo, etc.
+    This includes various policy gradient methods like vpg, npg, ppo, trpo,
+    etc.
     """
 
     def __init__(self,

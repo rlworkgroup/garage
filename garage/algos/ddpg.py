@@ -89,12 +89,11 @@ class DDPG(RLAlgorithm):
         :param scale_reward: The scaling factor applied to the rewards when
          training
         :param include_horizon_terminal_transitions: whether to include
-         transitions with terminal=True because the horizon was reached.
-         This might make the Q value back up less stable for certain tasks.
+         transitions with terminal=True because the horizon was reached. This
+         might make the Q value back up less stable for certain tasks.
         :param plot: Whether to visualize the policy performance after each
          eval_interval.
-        :param pause_for_plot: Whether to pause before continuing when
-         plotting.
+        :param pause_for_plot: Whether to pause before continuing when plotting
         :return:
         """
         self.env = env
@@ -146,7 +145,7 @@ class DDPG(RLAlgorithm):
     def start_worker(self):
         parallel_sampler.populate_task(self.env, self.policy)
         if self.plotter.status(self.plot):
-            plotter.init_plot(self.env, self.policy)
+            self.plotter.init_plot(self.env, self.policy)
 
     @overrides
     def train(self):

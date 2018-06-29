@@ -1,10 +1,8 @@
 import numpy as np
-import theano.tensor as TT
 
 from garage.algos import cma_es_lib
 from garage.algos import RLAlgorithm
 from garage.core import Serializable
-from garage.misc import ext
 import garage.misc.logger as logger
 from garage.misc.special import discount_cumsum
 from garage.plotter import Plotter
@@ -13,13 +11,13 @@ from garage.sampler import stateful_pool
 from garage.sampler.utils import rollout
 
 
-def sample_return(G, params, max_path_length, discount):
+def sample_return(g, params, max_path_length, discount):
     # env, policy, params, max_path_length, discount = args
     # of course we make the strong assumption that there is no race condition
-    G.policy.set_param_values(params)
+    g.policy.set_param_values(params)
     path = rollout(
-        G.env,
-        G.policy,
+        g.env,
+        g.policy,
         max_path_length,
     )
     path["returns"] = discount_cumsum(path["rewards"], discount)
@@ -41,8 +39,8 @@ class CMAES(RLAlgorithm, Serializable):
         """
         :param n_itr: Number of iterations.
         :param max_path_length: Maximum length of a single rollout.
-        :param batch_size: # of samples from trajs from param distribution, when
-         this is set, n_samples is ignored
+        :param batch_size: # of samples from trajs from param distribution,
+         when this is set, n_samples is ignored
         :param discount: Discount.
         :param plot: Plot evaluation run after each iteration.
         :param sigma0: Initial std for param dist
