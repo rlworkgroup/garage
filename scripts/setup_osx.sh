@@ -26,7 +26,7 @@ cd "$(dirname "$0")/.."
 echo "Setting up MuJoCo..."
 /bin/bash ./scripts/setup_mujoco.sh
 if [[ "${?}" -ne 0 ]]; then
-  echo -e "\e[0;31mError: mujoco couldn't be set up\e[0m"
+  echo -e "\e[0;31mError: MuJoCo couldn't be set up\e[0m"
   exit 1
 fi
 
