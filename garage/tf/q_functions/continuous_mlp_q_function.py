@@ -1,16 +1,13 @@
 import tensorflow as tf
 
 from garage.core import Serializable
-from garage.misc import ext
+from garage.envs.util import flat_dim
 from garage.tf.core import LayersPowered
-from garage.tf.core import MLP
 import garage.tf.core.layers as L
 from garage.tf.core.layers import batch_norm
-from garage.tf.distributions import Categorical
 from garage.tf.misc import tensor_utils
 from garage.tf.misc import tensor_utils
 from garage.tf.misc.tensor_utils import enclosing_scope
-from garage.tf.policies import StochasticPolicy
 from garage.tf.q_functions import QFunction
 
 
@@ -26,9 +23,9 @@ class ContinuousMLPQFunction(QFunction, LayersPowered, Serializable):
         Serializable.quick_init(self, locals())
 
         l_obs = L.InputLayer(
-            shape=(None, env_spec.observation_space.flat_dim), name="obs")
+            shape=(None, flat_dim(env_spec.observation_space)), name="obs")
         l_action = L.InputLayer(
-            shape=(None, env_spec.action_space.flat_dim), name="actions")
+            shape=(None, flat_dim(env_spec.action_space)), name="actions")
 
         n_layers = len(hidden_sizes) + 1
 

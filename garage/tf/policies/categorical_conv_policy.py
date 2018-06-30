@@ -1,6 +1,7 @@
 import tensorflow as tf
 
 from garage.core import Serializable
+from garage.envs.util import flatten, flatten_n, weighted_sample
 from garage.misc.overrides import overrides
 from garage.tf.core import ConvNetwork
 from garage.tf.core import LayersPowered
@@ -28,7 +29,7 @@ class CategoricalConvPolicy(StochasticPolicy, LayersPowered, Serializable):
     ):
         """
         :param env_spec: A spec for the mdp.
-        :param hidden_sizes: list of sizes for the fully connected hidden layers
+        :param hidden_sizes: list of sizes for fully connected hidden layers
         :param hidden_nonlinearity: nonlinearity used for each hidden layer
         :param prob_network: manually specified network for this policy, other
          network params
@@ -90,15 +91,15 @@ class CategoricalConvPolicy(StochasticPolicy, LayersPowered, Serializable):
     # the current policy
     @overrides
     def get_action(self, observation):
-        flat_obs = self.observation_space.flatten(observation)
+        flat_obs = flatten(self.observation_space, observation)
         prob = self._f_prob([flat_obs])[0]
-        action = self.action_space.weighted_sample(prob)
+        action = weighted_sample(self.action_space, prob)
         return action, dict(prob=prob)
 
     def get_actions(self, observations):
-        flat_obs = self.observation_space.flatten_n(observations)
+        flat_obs = flatten_n(self.observation_space, observations)
         probs = self._f_prob(flat_obs)
-        actions = list(map(self.action_space.weighted_sample, probs))
+        actions = list(map(weighted_sample(self.action_space, probs), probs))
         return actions, dict(prob=probs)
 
     @property

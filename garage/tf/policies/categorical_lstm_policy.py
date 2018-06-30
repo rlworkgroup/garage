@@ -2,10 +2,11 @@ import numpy as np
 import tensorflow as tf
 
 from garage.core import Serializable
+from garage.envs.util import flat_dim, flatten_n
 from garage.misc import special
 from garage.misc.overrides import overrides
 from garage.tf.core import LayersPowered
-from garage.tf.core import LSTMNetwork, MLP
+from garage.tf.core import LSTMNetwork
 import garage.tf.core.layers as L
 from garage.tf.distributions import RecurrentCategorical
 from garage.tf.misc import tensor_utils
@@ -37,8 +38,8 @@ class CategoricalLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
             Serializable.quick_init(self, locals())
             super(CategoricalLSTMPolicy, self).__init__(env_spec)
 
-            obs_dim = env_spec.observation_space.flat_dim
-            action_dim = env_spec.action_space.flat_dim
+            obs_dim = flat_dim(env_spec.observation_space)
+            action_dim = flat_dim(env_spec.action_space)
 
             if state_include_action:
                 input_dim = obs_dim + action_dim
@@ -163,7 +164,7 @@ class CategoricalLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
         dones = np.asarray(dones)
         if self.prev_actions is None or len(dones) != len(self.prev_actions):
             self.prev_actions = np.zeros((len(dones),
-                                          self.action_space.flat_dim))
+                                          flat_dim(self.action_space)))
             self.prev_hiddens = np.zeros((len(dones), self.hidden_dim))
             self.prev_cells = np.zeros((len(dones), self.hidden_dim))
 
@@ -182,7 +183,7 @@ class CategoricalLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
 
     @overrides
     def get_actions(self, observations):
-        flat_obs = self.observation_space.flatten_n(observations)
+        flat_obs = flatten_n(self.observation_space, observations)
         if self.state_include_action:
             assert self.prev_actions is not None
             all_input = np.concatenate([flat_obs, self.prev_actions], axis=-1)
@@ -193,7 +194,7 @@ class CategoricalLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
         actions = special.weighted_sample_n(probs,
                                             np.arange(self.action_space.n))
         prev_actions = self.prev_actions
-        self.prev_actions = self.action_space.flatten_n(actions)
+        self.prev_actions = flatten_n(self.action_space, actions)
         self.prev_hiddens = hidden_vec
         self.prev_cells = cell_vec
         agent_info = dict(prob=probs)

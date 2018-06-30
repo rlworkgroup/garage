@@ -3,12 +3,13 @@ import uuid
 
 import numpy as np
 
+from garage.envs.util import flat_dim, flatten_n, unflatten_n
 from garage.misc import logger
 from garage.sampler import singleton_pool
 from garage.tf.misc import tensor_utils
 
 
-def worker_init_envs(G, alloc, scope, env):
+def worker_init_envs(G, alloc, scope, env):  # noqa
     logger.log("initializing environment on worker %d" % G.worker_id)
     if not hasattr(G, 'parallel_vec_envs'):
         G.parallel_vec_envs = dict()
@@ -18,11 +19,11 @@ def worker_init_envs(G, alloc, scope, env):
     G.parallel_vec_env_template[scope] = env
 
 
-# For these two methods below, we pack the data into batch numpy arrays whenever
-# possible, to reduce communication cost
+# For these two methods below, we pack the data into batch numpy arrays
+# whenever possible, to reduce communication cost
 
 
-def worker_run_reset(G, flags, scope):
+def worker_run_reset(G, flags, scope):  # noqa
     if not hasattr(G, 'parallel_vec_envs'):
         logger.log("on worker %d" % G.worker_id)
         import traceback
@@ -35,10 +36,10 @@ def worker_run_reset(G, flags, scope):
         assert hasattr(G, 'parallel_vec_envs')
 
     assert scope in G.parallel_vec_envs
-    N = len(G.parallel_vec_envs[scope])
+    n = len(G.parallel_vec_envs[scope])
     env_template = G.parallel_vec_env_template[scope]
-    obs_dim = env_template.observation_space.flat_dim
-    ret_arr = np.zeros((N, obs_dim))
+    obs_dim = flat_dim(env_template.observation_space)
+    ret_arr = np.zeros((n, obs_dim))
     ids = []
     flat_obs = []
     reset_ids = []
@@ -48,12 +49,13 @@ def worker_run_reset(G, flags, scope):
             flat_obs.append(env.reset())
             reset_ids.append(itr_idx)
         ids.append(idx)
-    if len(reset_ids) > 0:
-        ret_arr[reset_ids] = env_template.observation_space.flatten_n(flat_obs)
+    if reset_ids:
+        ret_arr[reset_ids] = flatten_n(env_template.observation_space,
+                                       flat_obs)
     return ids, ret_arr
 
 
-def worker_run_step(G, action_n, scope):
+def worker_run_step(G, action_n, scope):  # noqa
     assert hasattr(G, 'parallel_vec_envs')
     assert scope in G.parallel_vec_envs
     env_template = G.parallel_vec_env_template[scope]
@@ -63,17 +65,17 @@ def worker_run_step(G, action_n, scope):
         action = action_n[idx]
         ids.append(idx)
         step_results.append(tuple(env.step(action)))
-    if len(step_results) == 0:
+    if not step_results:
         return None
     obs, rewards, dones, env_infos = list(map(list, list(zip(*step_results))))
-    obs = env_template.observation_space.flatten_n(obs)
+    obs = flatten_n(env_template.observation_space, obs)
     rewards = np.asarray(rewards)
     dones = np.asarray(dones)
     env_infos = tensor_utils.stack_tensor_dict_list(env_infos)
     return ids, obs, rewards, dones, env_infos
 
 
-def worker_collect_env_time(G):
+def worker_collect_env_time(G):  # noqa
     return G.env_time
 
 
@@ -112,7 +114,7 @@ class ParallelVecEnvExecutor(object):
         results = [x for x in results if x is not None]
         ids, obs, rewards, dones, env_infos = list(zip(*results))
         ids = np.concatenate(ids)
-        obs = self.observation_space.unflatten_n(np.concatenate(obs))
+        obs = unflatten_n(self.observation_space, np.concatenate(obs))
         rewards = np.concatenate(rewards)
         dones = np.concatenate(dones)
         env_infos = tensor_utils.split_tensor_dict_list(
@@ -153,7 +155,7 @@ class ParallelVecEnvExecutor(object):
 
         done_ids, = np.where(dones)
         done_flat_obs = sorted_obs[done_ids]
-        done_unflat_obs = self.observation_space.unflatten_n(done_flat_obs)
+        done_unflat_obs = unflatten_n(self.observation_space, done_flat_obs)
         all_obs = [None] * self.num_envs
         done_cursor = 0
         for idx, done in enumerate(dones):

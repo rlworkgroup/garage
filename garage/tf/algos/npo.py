@@ -1,5 +1,6 @@
 import tensorflow as tf
 
+from garage.envs.util import new_tensor_variable
 from garage.misc import ext
 import garage.misc.logger as logger
 from garage.misc.overrides import overrides
@@ -33,11 +34,13 @@ class NPO(BatchPolopt):
     def init_opt(self):
         with enclosing_scope(self.name, "init_opt"):
             is_recurrent = int(self.policy.recurrent)
-            obs_var = self.env.observation_space.new_tensor_variable(
+            obs_var = new_tensor_variable(
+                self.env.observation_space,
                 'obs',
                 extra_dims=1 + is_recurrent,
             )
-            action_var = self.env.action_space.new_tensor_variable(
+            action_var = new_tensor_variable(
+                self.env.action_space,
                 'action',
                 extra_dims=1 + is_recurrent,
             )
