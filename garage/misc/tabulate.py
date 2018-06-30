@@ -48,7 +48,7 @@ DataRow = namedtuple("DataRow", ["begin", "sep", "end"])
 #
 #   - either None, to display all table elements unconditionally,
 #   - or a list of elements not to be displayed if the table has column
-#   - headers.
+#   headers.
 #
 TableFormat = namedtuple("TableFormat", [
     "lineabove", "linebelowheader", "linebetweenrows", "linebelow",
@@ -206,7 +206,8 @@ def simple_separated_format(separator):
     """Construct a simple TableFormat with columns separated by a separator.
 
     >>> tsv = simple_separated_format("\\t") ; \
-        tabulate([["foo", 1], ["spam", 23]], tablefmt=tsv) == 'foo \\t 1\\nspam\\t23'
+        tabulate([["foo", 1], ["spam", 23]], tablefmt=tsv) \
+        == 'foo \\t 1\\nspam\\t23'
     True
 
     """
@@ -248,10 +249,9 @@ def _isint(string):
     >>> _isint("123.45")
     False
     """
-    return type(string) is int or \
-           (isinstance(string, _binary_type) or \
-            isinstance(string, _text_type)) and \
-           _isconvertible(int, string)
+    return type(string) is int or (isinstance(
+        string, _binary_type) or isinstance(
+            string, _text_type)) and _isconvertible(int, string)  # noqa: W503
 
 
 def _type(string, has_invisible=True):
@@ -331,7 +331,7 @@ def _padleft(width, s, has_invisible=True):
 def _padright(width, s, has_invisible=True):
     """Flush left.
 
-    >>> _padright(6, '\u044f\u0439\u0446\u0430') == '\u044f\u0439\u0446\u0430  '
+    >>> _padright(6, '\u044f\u0439\u0446\u0430') == '\u044f\u0439\u0446\u0430 '
     True
 
     """
@@ -378,8 +378,10 @@ def _visible_width(s):
 def _align_column(strings, alignment, minwidth=0, has_invisible=True):
     """[string] -> [padded_string]
 
-    >>> list(map(str,_align_column(["12.345", "-1234.5", "1.23", "1234.5", "1e+234", "1.0e234"], "decimal")))
-    ['   12.345  ', '-1234.5    ', '    1.23   ', ' 1234.5    ', '    1e+234 ', '    1.0e234']
+    >>> list(map(str,_align_column(\
+    ... ["12.345", "-1234.5", "1.23", "1234.5", "1e+234", "1.0e234"], \
+    ... "decimal")))
+    ['   12.345  ', '-1234.5    ', '    1.23   ', ' 1234.5    ', '    1e+234 ', '    1.0e234'] # noqa: E501
 
     >>> list(map(str,_align_column(['123.4', '56.7890'], None)))
     ['123.4', '56.7890']
@@ -457,9 +459,13 @@ def _format(val, valtype, floatfmt, missingval=""):
 
     Unicode is supported:
 
-    >>> hrow = ['\u0431\u0443\u043a\u0432\u0430', '\u0446\u0438\u0444\u0440\u0430'] ; \
+    >>> hrow = ['\u0431\u0443\u043a\u0432\u0430', \
+        '\u0446\u0438\u0444\u0440\u0430'] ; \
         tbl = [['\u0430\u0437', 2], ['\u0431\u0443\u043a\u0438', 4]] ; \
-        good_result = '\\u0431\\u0443\\u043a\\u0432\\u0430      \\u0446\\u0438\\u0444\\u0440\\u0430\\n-------  -------\\n\\u0430\\u0437             2\\n\\u0431\\u0443\\u043a\\u0438           4' ; \
+        good_result = '\\u0431\\u0443\\u043a\\u0432\\u0430      \
+        \\u0446\\u0438\\u0444\\u0440\\u0430\\n-------  \
+        -------\\n\\u0430\\u0437             \
+        2\\n\\u0431\\u0443\\u043a\\u0438           4' ; \
         tabulate(tbl, headers=hrow) == good_result
     True
 
@@ -520,7 +526,8 @@ def _normalize_tabular_data(tabular_data, headers):
             rows = list(zip_longest(*list(
                 tabular_data.values())))  # columns have to be transposed
         elif hasattr(tabular_data, "index"):
-            # values is a property, has .index => it's likely a pandas.DataFrame
+            # values is a property, has .index
+            # => it's likely a pandas.DataFrame
             # (pandas 0.11.0)
             tabular_data.reindex(sorted(tabular_data.keys()), axis=1)
             keys = list(tabular_data.keys())
@@ -536,15 +543,19 @@ def _normalize_tabular_data(tabular_data, headers):
             headers = list(map(_text_type, keys))  # headers should be strings
 
     else:  # it's a usual an iterable of iterables, or a NumPy array
-        tabular_data = sorted(tabular_data, key=lambda data: data[0])
+        if headers == "firstrow" and tabular_data:
+            tabular_data = [tabular_data[0]] + sorted(
+                tabular_data[1:], key=lambda data: str(data[0]))
+        else:
+            tabular_data = sorted(tabular_data, key=lambda data: str(data[0]))
         rows = list(tabular_data)
 
-        if (headers == "keys" and hasattr(tabular_data, "dtype") and
-                getattr(tabular_data.dtype, "names")):
+        if (headers == "keys" and hasattr(tabular_data, "dtype")
+                and getattr(tabular_data.dtype, "names")):  # noqa: W503
             # numpy record array
             headers = tabular_data.dtype.names
-        elif (headers == "keys" and rows and isinstance(rows[0], tuple) and
-              hasattr(rows[0], "_fields")):  # namedtuple
+        elif (headers == "keys" and rows and isinstance(rows[0], tuple)
+              and hasattr(rows[0], "_fields")):  # namedtuple   # noqa: W503
             headers = list(map(_text_type, rows[0]._fields))
         elif headers == "keys" and rows:  # keys are column indices
             headers = list(map(_text_type, list(range(len(rows[0])))))
@@ -578,8 +589,8 @@ def tabulate(tabular_data,
 
     >>> print(tabulate([[1, 2.34], [-56, "8.999"], ["2", "10001"]]))
     ---  ---------
-      1      2.34
     -56      8.999
+      1      2.34
       2  10001
     ---  ---------
 
@@ -635,9 +646,9 @@ def tabulate(tabular_data,
     ...                 ["eggs", 42, 3.14],
     ...                 ["other", None, 2.7]], missingval="?"))
     -----  --  ----
-    spam    1  ?
     eggs   42  3.14
     other   ?  2.7
+    spam    1  ?
     -----  --  ----
 
     Various plain-text table formats (`tablefmt`) are supported:
@@ -651,12 +662,13 @@ def tabulate(tabular_data,
     >>> print(tabulate([["spam", 41.9999], ["eggs", "451.0"]],
     ...                 ["strings", "numbers"], "plain"))
     strings      numbers
-    spam         41.9999
     eggs        451
+    spam         41.9999
 
-    >>> print(tabulate([["spam", 41.9999], ["eggs", "451.0"]], tablefmt="plain"))
-    spam   41.9999
+    >>> print(tabulate([["spam", 41.9999], ["eggs", "451.0"]],
+    ... tablefmt="plain"))
     eggs  451
+    spam   41.9999
 
     "simple" format is like Pandoc simple_tables:
 
@@ -664,13 +676,14 @@ def tabulate(tabular_data,
     ...                 ["strings", "numbers"], "simple"))
     strings      numbers
     ---------  ---------
-    spam         41.9999
     eggs        451
+    spam         41.9999
 
-    >>> print(tabulate([["spam", 41.9999], ["eggs", "451.0"]], tablefmt="simple"))
+    >>> print(tabulate([["spam", 41.9999], ["eggs", "451.0"]],
+    ... tablefmt="simple"))
     ----  --------
-    spam   41.9999
     eggs  451
+    spam   41.9999
     ----  --------
 
     "grid" is similar to tables produced by Emacs table.el package or
@@ -681,16 +694,17 @@ def tabulate(tabular_data,
     +-----------+-----------+
     | strings   |   numbers |
     +===========+===========+
-    | spam      |   41.9999 |
-    +-----------+-----------+
     | eggs      |  451      |
     +-----------+-----------+
+    | spam      |   41.9999 |
+    +-----------+-----------+
 
-    >>> print(tabulate([["spam", 41.9999], ["eggs", "451.0"]], tablefmt="grid"))
-    +------+----------+
-    | spam |  41.9999 |
+    >>> print(tabulate([["spam", 41.9999], ["eggs", "451.0"]],
+    ... tablefmt="grid"))
     +------+----------+
     | eggs | 451      |
+    +------+----------+
+    | spam |  41.9999 |
     +------+----------+
 
     "pipe" is like tables in PHP Markdown Extra extension or Pandoc
@@ -700,13 +714,14 @@ def tabulate(tabular_data,
     ...                ["strings", "numbers"], "pipe"))
     | strings   |   numbers |
     |:----------|----------:|
-    | spam      |   41.9999 |
     | eggs      |  451      |
+    | spam      |   41.9999 |
 
-    >>> print(tabulate([["spam", 41.9999], ["eggs", "451.0"]], tablefmt="pipe"))
+    >>> print(tabulate([["spam", 41.9999], ["eggs", "451.0"]],
+    ... tablefmt="pipe"))
     |:-----|---------:|
-    | spam |  41.9999 |
     | eggs | 451      |
+    | spam |  41.9999 |
 
     "orgtbl" is like tables in Emacs org-mode and orgtbl-mode. They
     are slightly different from "pipe" format by not using colons to
@@ -717,13 +732,14 @@ def tabulate(tabular_data,
     ...                ["strings", "numbers"], "orgtbl"))
     | strings   |   numbers |
     |-----------+-----------|
-    | spam      |   41.9999 |
     | eggs      |  451      |
+    | spam      |   41.9999 |
 
 
-    >>> print(tabulate([["spam", 41.9999], ["eggs", "451.0"]], tablefmt="orgtbl"))
-    | spam |  41.9999 |
+    >>> print(tabulate([["spam", 41.9999], ["eggs", "451.0"]],
+    ... tablefmt="orgtbl"))
     | eggs | 451      |
+    | spam |  41.9999 |
 
     "rst" is like a simple table format from reStructuredText; please
     note that reStructuredText accepts also "grid" tables:
@@ -733,40 +749,41 @@ def tabulate(tabular_data,
     =========  =========
     strings      numbers
     =========  =========
-    spam         41.9999
     eggs        451
+    spam         41.9999
     =========  =========
 
     >>> print(tabulate([["spam", 41.9999], ["eggs", "451.0"]], tablefmt="rst"))
     ====  ========
-    spam   41.9999
     eggs  451
+    spam   41.9999
     ====  ========
 
     "mediawiki" produces a table markup used in Wikipedia and on other
     MediaWiki-based sites:
 
-    >>> print(tabulate([["strings", "numbers"], ["spam", 41.9999], ["eggs", "451.0"]],
-    ...                headers="firstrow", tablefmt="mediawiki"))
+    >>> print(tabulate([["strings", "numbers"], ["spam", 41.9999],
+    ... ["eggs", "451.0"]], headers="firstrow", tablefmt="mediawiki"))
     {| class="wikitable" style="text-align: left;"
     |+ <!-- caption -->
     |-
     ! strings   !! align="right"|   numbers
     |-
-    | spam      || align="right"|   41.9999
-    |-
     | eggs      || align="right"|  451
+    |-
+    | spam      || align="right"|   41.9999
     |}
 
     "latex" produces a tabular environment of LaTeX document markup:
 
-    >>> print(tabulate([["spam", 41.9999], ["eggs", "451.0"]], tablefmt="latex"))
-    \\begin{tabular}{lr}
-    \\hline
-     spam &  41.9999 \\\\
-     eggs & 451      \\\\
-    \\hline
-    \\end{tabular}
+    >>> print(tabulate([["spam", 41.9999], ["eggs", "451.0"]],
+    ... tablefmt="latex"))
+    \begin{tabular}{lr}
+    \hline
+     eggs & 451      \\
+     spam &  41.9999 \\
+    \hline
+    \end{tabular}
 
     """
 
