@@ -3,7 +3,6 @@
 from collections import namedtuple
 from functools import partial, reduce
 from itertools import zip_longest
-from platform import python_version_tuple
 import re
 
 _none_type = type(None)
@@ -48,7 +47,8 @@ DataRow = namedtuple("DataRow", ["begin", "sep", "end"])
 # with_header_hide:
 #
 #   - either None, to display all table elements unconditionally,
-#   - or a list of elements not to be displayed if the table has column headers.
+#   - or a list of elements not to be displayed if the table has column
+#   - headers.
 #
 TableFormat = namedtuple("TableFormat", [
     "lineabove", "linebelowheader", "linebetweenrows", "linebelow",
@@ -514,12 +514,15 @@ def _normalize_tabular_data(tabular_data, headers):
         # dict-like and pandas.DataFrame?
         if hasattr(tabular_data.values, "__call__"):
             # likely a conventional dict
+            tabular_data = dict(
+                sorted(tabular_data.items(), key=lambda kv: kv[0]))
             keys = list(tabular_data.keys())
             rows = list(zip_longest(*list(
                 tabular_data.values())))  # columns have to be transposed
         elif hasattr(tabular_data, "index"):
             # values is a property, has .index => it's likely a pandas.DataFrame
             # (pandas 0.11.0)
+            tabular_data.reindex(sorted(tabular_data.keys()), axis=1)
             keys = list(tabular_data.keys())
             # values matrix doesn't need to be transposed
             vals = tabular_data.values
@@ -533,21 +536,21 @@ def _normalize_tabular_data(tabular_data, headers):
             headers = list(map(_text_type, keys))  # headers should be strings
 
     else:  # it's a usual an iterable of iterables, or a NumPy array
+        tabular_data = sorted(tabular_data, key=lambda data: data[0])
         rows = list(tabular_data)
 
-        if (headers == "keys" and hasattr(tabular_data, "dtype")
-                and getattr(tabular_data.dtype, "names")):
+        if (headers == "keys" and hasattr(tabular_data, "dtype") and
+                getattr(tabular_data.dtype, "names")):
             # numpy record array
             headers = tabular_data.dtype.names
-        elif (headers == "keys" and len(rows) > 0
-              and isinstance(rows[0], tuple)
-              and hasattr(rows[0], "_fields")):  # namedtuple
+        elif (headers == "keys" and rows and isinstance(rows[0], tuple) and
+              hasattr(rows[0], "_fields")):  # namedtuple
             headers = list(map(_text_type, rows[0]._fields))
-        elif headers == "keys" and len(rows) > 0:  # keys are column indices
+        elif headers == "keys" and rows:  # keys are column indices
             headers = list(map(_text_type, list(range(len(rows[0])))))
 
     # take headers from the first row if necessary
-    if headers == "firstrow" and len(rows) > 0:
+    if headers == "firstrow" and rows:
         headers = list(map(_text_type, rows[0]))  # headers should be strings
         rows = rows[1:]
 
@@ -555,7 +558,7 @@ def _normalize_tabular_data(tabular_data, headers):
     rows = list(map(list, rows))
 
     # pad with empty headers for initial columns if necessary
-    if headers and len(rows) > 0:
+    if headers and rows:
         nhs = len(headers)
         ncols = len(rows[0])
         if nhs < ncols:
@@ -771,7 +774,8 @@ def tabulate(tabular_data,
 
     # optimization: look for ANSI control codes once,
     # enable smart width functions only if a control code is found
-    plain_text = '\n'.join(['\t'.join(map(_text_type, headers))] + \
+    plain_text = '\n'.join(
+        ['\t'.join(map(_text_type, headers))] +
         ['\t'.join(map(_text_type, row)) for row in list_of_lists])
     has_invisible = re.search(_invisible_codes, plain_text)
     if has_invisible:
