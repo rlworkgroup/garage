@@ -234,5 +234,3 @@ class MujocoEnv(gym.Env):
             self.sim.data.set_joint_qpos(name, value)
         utils.reset_mocap_welds(self.sim)
         self.sim.forward()
-
-

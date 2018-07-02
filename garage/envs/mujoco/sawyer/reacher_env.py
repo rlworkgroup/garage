@@ -114,7 +114,7 @@ class ReachEnv(MujocoEnv, Serializable):
 
     def sample_goal(self):
         """
-        Sample goals
+        Sample goals.
 
         :return: the new sampled goal.
         """
@@ -130,7 +130,7 @@ class ReachEnv(MujocoEnv, Serializable):
     @property
     def observation_space(self):
         """
-        Returns a Space object.
+        Return a Space object.
 
         :return: observation space
         """
@@ -139,9 +139,6 @@ class ReachEnv(MujocoEnv, Serializable):
 
     @overrides
     def close(self):
-        """
-        Close the viewer.
-
-        """
+        """Close the viewer."""
         if self.viewer is not None:
             self.viewer = None
