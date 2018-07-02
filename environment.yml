@@ -1,12 +1,13 @@
 name: garage
 channels:
-    - https://conda.anaconda.org/conda-forge
     - https://conda.anaconda.org/kne
     - https://conda.anaconda.org/menpo
+    - https://conda.anaconda.org/conda-forge
 dependencies:
     - python==3.5.2
-    - numpy==1.12.0
+    - numpy==1.14.5
     - scipy
+    - mkl==2017.0.4
     - path.py
     - python-dateutil
     - joblib==0.10.3
@@ -18,14 +19,14 @@ dependencies:
     - matplotlib
     - pandas
     - mkl-service=1.1.2
-    - absl-py==0.2.2
+    # dev dependencies below this line
     - pre_commit
     - pip:
+        - absl-py==0.2.2
         - pyprind
         - ipdb
         - boto3
         - PyOpenGL
-        - nose2
         - pyzmq
         - mujoco-py<1.50.2,>=1.50.1
         - cached_property
@@ -44,6 +45,8 @@ dependencies:
         - jsonmerge
         - protobuf
         - memory_profiler
+        # dev dependencies below this line
+        - nose2
         - flake8
         - flake8-import-order
         - flake8-docstrings==1.3.0
