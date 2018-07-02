@@ -6,10 +6,10 @@ import numpy as np
 from garage.core import Serializable
 from garage.envs import Step
 from garage.envs.mujoco import MujocoEnv
-from garage.misc import overrides
+from garage.misc.overrides import overrides
 
 
-class ReachEnv(MujocoEnv, Serializable):
+class ReacherEnv(MujocoEnv, Serializable):
     """Reacher Environment."""
 
     FILE = "reach.xml"
@@ -35,13 +35,15 @@ class ReachEnv(MujocoEnv, Serializable):
         """
         Serializable.quick_init(self, locals())
         self._initial_goal = initial_goal
+        self._initial_qpos = initial_qpos
         self._distance_threshold = distance_threshold
         self._target_range = target_range
         self._sparse_reward = sparse_reward
 
         self._goal = self._initial_goal
-        super(ReachEnv, self).__init__(*args, **kwargs)
-        self._env_setup(initial_qpos)
+        self._accumulated_reward = 0
+        super(ReacherEnv, self).__init__(*args, **kwargs)
+        self.env_setup(initial_qpos)
 
     @overrides
     def step(self, action):
@@ -63,13 +65,25 @@ class ReachEnv(MujocoEnv, Serializable):
 
         return Step(next_obs, reward, done)
 
+    @overrides
+    def reset(self, init_state=None):
+        super(ReacherEnv, self).reset(init_state)
+        self._accumulated_reward = 0
+
     def _compute_reward(self, achieved_goal, goal):
         # Compute distance between goal and the achieved goal.
         d = self._goal_distance(achieved_goal, goal)
         if self._sparse_reward:
-            return -(d > self._distance_threshold).astype(np.float32)
+            reward = -(d > self._distance_threshold).astype(np.float32)
         else:
-            return -d
+            reward = -d
+
+        if d < self._distance_threshold:
+            reward += (-self._accumulated_reward)  # Zero the reward
+            reward += (self._distance_threshold*100)  # Completion
+
+        self._accumulated_reward += reward
+        return reward
 
     @overrides
     def get_current_obs(self):
@@ -139,6 +153,6 @@ class ReachEnv(MujocoEnv, Serializable):
 
     @overrides
     def close(self):
-        """Close the viewer."""
+        """Make sure the environment start another viewer next time."""
         if self.viewer is not None:
             self.viewer = None
