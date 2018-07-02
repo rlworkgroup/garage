@@ -1,4 +1,3 @@
-import gym
 import numpy as np
 import tensorflow as tf
 
@@ -12,6 +11,7 @@ from garage.tf.distributions import DiagonalGaussian
 from garage.tf.misc import tensor_utils
 from garage.tf.misc.tensor_utils import enclosing_scope
 from garage.tf.policies import StochasticPolicy
+from garage.tf.spaces import Box as TfBox
 
 
 class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
@@ -33,7 +33,8 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
                  std_parametrization='exp'):
         """
         :param env_spec:
-        :param hidden_sizes: list of sizes for the fully-connected hidden layers
+        :param hidden_sizes: list of sizes for the fully-connected hidden
+        layers
         :param learn_std: Is std trainable
         :param init_std: Initial std
         :param adaptive_std:
@@ -55,7 +56,7 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
         :return:
         """
         Serializable.quick_init(self, locals())
-        assert isinstance(env_spec.action_space, gym.spaces.Box)
+        assert isinstance(env_spec.action_space, TfBox)
         self.name = name
 
         with tf.variable_scope(name):
@@ -214,9 +215,9 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
                                old_dist_info_vars,
                                name="get_reparam_action_sym"):
         """
-        Given observations, old actions, and distribution of old actions, return
-        a symbolically reparameterized representation of the actions in terms of
-        the policy parameters
+        Given observations, old actions, and distribution of old actions,
+        return a symbolically reparameterized representation of the actions in
+        terms of the policy parameters
         :param obs_var:
         :param action_var:
         :param old_dist_info_vars:

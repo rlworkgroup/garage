@@ -5,6 +5,9 @@ import theano
 from garage.envs.base import EnvSpec
 from garage.misc import ext
 from garage.misc import special
+from garage.spaces import Box as GarageBox
+from garage.spaces import Discrete as GarageDiscrete
+from garage.spaces import Product as GarageProduct
 
 __all__ = [
     'bounds', 'default_value', 'flat_dim', 'flatten', 'flatten_n', 'sample',
@@ -115,6 +118,17 @@ def spec(env):
         observation_space=env.observation_space,
         action_space=env.action_space,
     )
+
+
+def _to_garage_space(space):
+    if isinstance(space, gym.spaces.Box):
+        return GarageBox(low=space.low, high=space.high)
+    elif isinstance(space, gym.spaces.Discrete):
+        return GarageDiscrete(n=space.n)
+    elif isinstance(space, gym.spaces.Tuple):
+        return GarageProduct([_to_garage_space(s) for s in space.spaces])
+    else:
+        raise NotImplementedError
 
 
 def unflatten(space, obs):
