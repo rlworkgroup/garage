@@ -5,7 +5,7 @@ import numpy as np
 from garage.core import Serializable
 from garage.envs import Step
 from garage.envs.mujoco import MujocoEnv
-from garage.misc.overrides import overrides
+from garage.misc import overrides
 
 
 class PickAndPlaceEnv(MujocoEnv, Serializable):
