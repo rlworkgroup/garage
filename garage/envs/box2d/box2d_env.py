@@ -351,7 +351,7 @@ class Box2DEnv(gym.Env):
         return self._compute_com_pos_vel(*com)[2:]
 
     @overrides
-    def render(self, mode='human', states=None, actions=None, pause=False):
+    def render(self, mode, states=None, actions=None, pause=False):
         if not self.viewer:
             self.viewer = Box2DViewer(self.world)
         if states or actions or pause:
