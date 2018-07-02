@@ -190,6 +190,7 @@ class MujocoEnv(gym.Env):
         if mode == 'human':
             viewer = self.get_viewer()
             viewer.render()
+            return None
         elif mode == 'rgb_array':
             viewer = self.get_viewer()
             viewer.render()
@@ -198,6 +199,7 @@ class MujocoEnv(gym.Env):
                 data, dtype='uint8').reshape(height, width, 3)[::-1, :, :]
         if close:
             self.stop_viewer()
+        return None
 
     def start_viewer(self):
         viewer = self.get_viewer()
