@@ -256,9 +256,9 @@ class Box2DEnv(gym.Env):
             if state.body:
                 body = find_body(self.world, state.body)
                 if state.local is not None:
-                    l = state.local
-                    position = body.GetWorldPoint(l)
-                    linearVel = body.GetLinearVelocityFromLocalPoint(l)
+                    loc = state.local
+                    position = body.GetWorldPoint(loc)
+                    linearVel = body.GetLinearVelocityFromLocalPoint(loc)
                     # now I wish I could write angle = error "not supported"
                 else:
                     position = body.position
@@ -351,7 +351,7 @@ class Box2DEnv(gym.Env):
         return self._compute_com_pos_vel(*com)[2:]
 
     @overrides
-    def render(self, states=None, actions=None, pause=False):
+    def render(self, mode='human', states=None, actions=None, pause=False):
         if not self.viewer:
             self.viewer = Box2DViewer(self.world)
         if states or actions or pause:
