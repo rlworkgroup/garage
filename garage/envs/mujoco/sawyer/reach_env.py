@@ -13,6 +13,7 @@ class ReachEnv(MujocoEnv, Serializable):
 
     def __init__(self,
                  initial_goal,
+                 initial_qpos,
                  distance_threshold=0.05,
                  target_range=0.15,
                  sparse_reward=True,
@@ -26,6 +27,7 @@ class ReachEnv(MujocoEnv, Serializable):
 
         self._goal = self._initial_goal
         super(ReachEnv, self).__init__(*args, **kwargs)
+        self._env_setup(initial_qpos)
 
     @overrides
     def step(self, action):

@@ -76,8 +76,17 @@ def run_pick_and_place(*_):
 
 def test_env():
     initial_goal = np.array([0.6, -0.1, 0.80])
-    env = ReachEnv(initial_goal)
-    for i in range(10):
+    initial_qpos = {
+        'right_j0': -0.140923828125,
+        'right_j1': -1.2789248046875,
+        'right_j2': -3.043166015625,
+        'right_j3': -2.139623046875,
+        'right_j4': -0.047607421875,
+        'right_j5': -0.7052822265625,
+        'right_j6': -1.4102060546875,
+    }
+    env = ReachEnv(initial_goal, initial_qpos)
+    for i in range(9999):
         env.render()
         action = env.action_space.sample()
         env.step(action)
@@ -86,8 +95,8 @@ def test_env():
 
 
 test_env()
-run_experiment(
-    run_bin_sorting,
-    n_parallel=2,
-    plot=True,
-)
+# run_experiment(
+#     run_bin_sorting,
+#     n_parallel=2,
+#     plot=True,
+# )

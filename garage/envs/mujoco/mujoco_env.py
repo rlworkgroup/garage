@@ -16,6 +16,7 @@ import numpy as np
 import theano
 
 from garage.envs.util import bounds
+from garage.envs.mujoco import utils
 from garage.misc import autoargs
 from garage.misc import logger
 from garage.misc.overrides import overrides
@@ -230,3 +231,11 @@ class MujocoEnv(gym.Env):
 
     def action_from_key(self, key):
         raise NotImplementedError
+
+    def _env_setup(self, initial_qpos):
+        for name, value in initial_qpos.items():
+            self.sim.data.set_joint_qpos(name, value)
+        utils.reset_mocap_welds(self.sim)
+        self.sim.forward()
+
+
