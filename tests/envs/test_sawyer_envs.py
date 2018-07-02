@@ -95,8 +95,8 @@ def test_env():
 
 
 test_env()
-# run_experiment(
-#     run_bin_sorting,
-#     n_parallel=2,
-#     plot=True,
-# )
+run_experiment(
+    run_bin_sorting,
+    n_parallel=2,
+    plot=True,
+)
