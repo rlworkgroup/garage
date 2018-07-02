@@ -1,4 +1,5 @@
 import mujoco_py
+import numpy as np
 
 
 def reset_mocap_welds(sim):

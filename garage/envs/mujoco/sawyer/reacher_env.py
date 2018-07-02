@@ -23,6 +23,8 @@ class ReachEnv(MujocoEnv, Serializable):
                  *args,
                  **kwargs):
         """
+        Reacher Environment.
+
         :param initial_goal: initial position to reach.
         :param initial_qpos: initial qpos for each joint.
         :param distance_threshold: distance threhold to define reached.
@@ -45,6 +47,7 @@ class ReachEnv(MujocoEnv, Serializable):
     def step(self, action):
         """
         Perform one step with action.
+
         :param action: the action to be performed
         :return: next_obs, reward, done, info
         """
@@ -71,6 +74,8 @@ class ReachEnv(MujocoEnv, Serializable):
     @overrides
     def get_current_obs(self):
         """
+        Get the current observation.
+
         :return: current observation.
         """
         grip_pos = self.sim.data.get_site_xpos('grip')
@@ -99,9 +104,10 @@ class ReachEnv(MujocoEnv, Serializable):
     def _goal_distance(goal_a, goal_b):
         """
         Calculate the distance between two goals.
+
         :param goal_a: first goal.
         :param goal_b: second goal.
-        :return:
+        :return: distance between goal a and b.
         """
         assert goal_a.shape == goal_b.shape
         return np.linalg.norm(goal_a - goal_b, axis=-1)
@@ -109,6 +115,7 @@ class ReachEnv(MujocoEnv, Serializable):
     def sample_goal(self):
         """
         Sample goals
+
         :return: the new sampled goal.
         """
         goal = self._initial_goal.copy()
@@ -124,6 +131,8 @@ class ReachEnv(MujocoEnv, Serializable):
     def observation_space(self):
         """
         Returns a Space object.
+
+        :return: observation space
         """
         return Box(
             -np.inf, np.inf, shape=self.get_current_obs()['observation'].shape)
@@ -132,6 +141,7 @@ class ReachEnv(MujocoEnv, Serializable):
     def close(self):
         """
         Close the viewer.
+
         """
         if self.viewer is not None:
             self.viewer = None

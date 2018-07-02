@@ -7,18 +7,15 @@ from cached_property import cached_property
 import gym
 import mako.lookup
 import mako.template
-import mujoco_py
 from mujoco_py import functions
 from mujoco_py import load_model_from_path
 from mujoco_py import MjSim
 from mujoco_py import MjViewer
 import numpy as np
-import theano
 
-from garage.envs.util import bounds
 from garage.envs.mujoco import utils
+from garage.envs.util import bounds
 from garage.misc import autoargs
-from garage.misc import logger
 from garage.misc.overrides import overrides
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
