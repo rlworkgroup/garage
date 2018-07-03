@@ -5,7 +5,6 @@ import tensorflow as tf
 from garage.core import Serializable
 from garage.misc import ext, logger
 from garage.tf.misc import tensor_utils
-from garage.tf.misc.tensor_utils import enclosing_scope
 
 
 class PenaltyLbfgsOptimizer(Serializable):
@@ -47,7 +46,7 @@ class PenaltyLbfgsOptimizer(Serializable):
                    leq_constraint,
                    inputs,
                    constraint_name="constraint",
-                   name="PenaltyLbfgsOptimizer",
+                   name=None,
                    *args,
                    **kwargs):
         """
@@ -60,7 +59,10 @@ class PenaltyLbfgsOptimizer(Serializable):
         :param inputs: A list of symbolic variables as inputs
         :return: No return value.
         """
-        with enclosing_scope(self._name, name):
+        with tf.name_scope(
+                name,
+                "PenaltyLbfgsOptimizer",
+                [loss, target.get_params(trainable=True), leq_constraint]):
             constraint_term, constraint_value = leq_constraint
             penalty_var = tf.placeholder(tf.float32, tuple(), name="penalty")
             penalized_loss = loss + penalty_var * constraint_term
@@ -143,7 +145,7 @@ class PenaltyLbfgsOptimizer(Serializable):
             # already and no alternative parameter satisfies the constraint
             if try_constraint_val < self._max_constraint_val or \
                     (penalty_itr == self._max_penalty_itr - 1 and \
-                    opt_params is None):
+                     opt_params is None):
                 opt_params = itr_opt_params
 
             if not self._adapt_penalty:

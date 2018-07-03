@@ -6,7 +6,6 @@ import tensorflow as tf
 from garage.core import Serializable
 from garage.misc import ext
 from garage.tf.misc import tensor_utils
-from garage.tf.misc.tensor_utils import enclosing_scope
 
 
 class LbfgsOptimizer(Serializable):
@@ -27,7 +26,7 @@ class LbfgsOptimizer(Serializable):
                    target,
                    inputs,
                    extra_inputs=None,
-                   name="update_opt",
+                   name=None,
                    *args,
                    **kwargs):
         """
@@ -40,7 +39,11 @@ class LbfgsOptimizer(Serializable):
         :param inputs: A list of symbolic variables as inputs
         :return: No return value.
         """
-        with enclosing_scope(self._name, name):
+        with tf.name_scope(
+                name,
+                "LbfgsOptimizer",
+            [loss,
+             target.get_params(trainable=True), inputs, extra_inputs]):
             self._target = target
 
             def get_opt_output():

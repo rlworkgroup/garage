@@ -9,7 +9,6 @@ from garage.misc import krylov
 from garage.misc import logger
 from garage.misc.ext import sliced_fun
 from garage.tf.misc import tensor_utils
-from garage.tf.misc.tensor_utils import enclosing_scope
 
 
 class PerlmutterHvp(object):
@@ -20,8 +19,8 @@ class PerlmutterHvp(object):
         self._num_slices = num_slices
         self._name = name
 
-    def update_opt(self, f, target, inputs, reg_coeff, name="update_opt"):
-        with enclosing_scope(self._name, name):
+    def update_opt(self, f, target, inputs, reg_coeff, name=None):
+        with tf.name_scope(name, "PerlmutterHvp", [f, target, inputs]):
             self.target = target
             self.reg_coeff = reg_coeff
             params = target.get_params(trainable=True)
@@ -37,23 +36,23 @@ class PerlmutterHvp(object):
                 for p in params
             ])
 
-            def Hx_plain(original_scope_name=tf.get_variable_scope().name):
-                with tf.variable_scope(original_scope_name):
-                    with enclosing_scope(name, "Hx_plain"):
-                        Hx_plain_splits = tf.gradients(
-                            tf.reduce_sum(
-                                tf.stack([
-                                    tf.reduce_sum(g * x)
-                                    for g, x in zip(constraint_grads, xs)
-                                ])),
-                            params,
-                            name="Hx_plain_gradients")
-                        for idx, (Hx, param) in enumerate(
-                                zip(Hx_plain_splits, params)):
-                            if Hx is None:
-                                Hx_plain_splits[idx] = tf.zeros_like(param)
-                        return tensor_utils.flatten_tensor_variables(
-                            Hx_plain_splits)
+            def Hx_plain():
+                with tf.name_scope(
+                        "Hx_plain", values=[params, constraint_grads, xs]):
+                    Hx_plain_splits = tf.gradients(
+                        tf.reduce_sum(
+                            tf.stack([
+                                tf.reduce_sum(g * x)
+                                for g, x in zip(constraint_grads, xs)
+                            ])),
+                        params,
+                        name="Hx_plain_gradients")
+                    for idx, (Hx, param) in enumerate(
+                            zip(Hx_plain_splits, params)):
+                        if Hx is None:
+                            Hx_plain_splits[idx] = tf.zeros_like(param)
+                    return tensor_utils.flatten_tensor_variables(
+                        Hx_plain_splits)
 
             self.opt_fun = ext.lazydict(
                 f_Hx_plain=lambda: tensor_utils.compile_function(
@@ -85,8 +84,11 @@ class FiniteDifferenceHvp(object):
         self._num_slices = num_slices
         self._name = name
 
-    def update_opt(self, f, target, inputs, reg_coeff, name="update_opt"):
-        with enclosing_scope(self._name, name):
+    def update_opt(self, f, target, inputs, reg_coeff, name=None):
+        with tf.name_scope(
+                    name,
+                    "FiniteDifferenceHvp",
+                [f, target.get_params(trainable=True), inputs]):
             self.target = target
             self.reg_coeff = reg_coeff
 
@@ -200,7 +202,7 @@ class ConjugateGradientOptimizer(Serializable):
                    leq_constraint,
                    inputs,
                    extra_inputs=None,
-                   name="update_opt",
+                   name=None,
                    constraint_name="constraint",
                    *args,
                    **kwargs):
@@ -218,7 +220,12 @@ class ConjugateGradientOptimizer(Serializable):
          should not be subsampled
         :return: No return value.
         """
-        with enclosing_scope(self._name, name):
+        with tf.name_scope(
+                name,
+                "ConjugateGradientOptimizer", [
+                    loss, inputs, extra_inputs, leq_constraint,
+                    target.get_params(trainable=True)
+                ]):
             inputs = tuple(inputs)
             if extra_inputs is None:
                 extra_inputs = tuple()
@@ -334,7 +341,7 @@ class ConjugateGradientOptimizer(Serializable):
 
         n_iter = 0
         for n_iter, ratio in enumerate(self._backtrack_ratio
-                                       **np.arange(self._max_backtracks)):
+                                       ** np.arange(self._max_backtracks)):
             cur_step = ratio * flat_descent_step
             cur_param = prev_param - cur_step
             self._target.set_param_values(cur_param, trainable=True)
@@ -348,8 +355,8 @@ class ConjugateGradientOptimizer(Serializable):
                constraint_val <= self._max_constraint_val:
                 break
         if (np.isnan(loss) or np.isnan(constraint_val) or loss >= loss_before
-                or constraint_val >= self._max_constraint_val
-            ) and not self._accept_violation:
+                    or constraint_val >= self._max_constraint_val
+                ) and not self._accept_violation:
             logger.log("Line search condition violated. Rejecting the step!")
             if np.isnan(loss):
                 logger.log("Violated because loss is NaN")
