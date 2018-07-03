@@ -15,11 +15,12 @@ class ReacherEnv(MujocoEnv, Serializable):
     FILE = "reach.xml"
 
     def __init__(self,
-                 initial_goal,
-                 initial_qpos,
-                 distance_threshold=0.05,
+                 initial_goal=None,
+                 initial_qpos=None,
+                 distance_threshold=0.08,
                  target_range=0.15,
-                 sparse_reward=True,
+                 sparse_reward=False,
+                 control_method='position_control',
                  *args,
                  **kwargs):
         """
@@ -34,16 +35,28 @@ class ReacherEnv(MujocoEnv, Serializable):
         :param kwargs
         """
         Serializable.quick_init(self, locals())
-        self._initial_goal = initial_goal
-        self._initial_qpos = initial_qpos
+        self._initial_goal = np.array([0.6, -0.1, 0.80])
+        if initial_qpos is not None:
+            self._initial_qpos = initial_qpos
+        else:
+            self._initial_qpos = {
+                'right_j0': -0.140923828125,
+                'right_j1': -1.2789248046875,
+                'right_j2': -3.043166015625,
+                'right_j3': -2.139623046875,
+                'right_j4': -0.047607421875,
+                'right_j5': -0.7052822265625,
+                'right_j6': -1.4102060546875,
+            }
         self._distance_threshold = distance_threshold
         self._target_range = target_range
         self._sparse_reward = sparse_reward
+        self._control_method = control_method
 
         self._goal = self._initial_goal
         self._accumulated_reward = 0
         super(ReacherEnv, self).__init__(*args, **kwargs)
-        self.env_setup(initial_qpos)
+        self.env_setup(self._initial_qpos)
 
     @overrides
     def step(self, action):
@@ -53,7 +66,15 @@ class ReacherEnv(MujocoEnv, Serializable):
         :param action: the action to be performed
         :return: next_obs, reward, done, info
         """
-        self.forward_dynamics(action)
+        if self._control_method == 'torque_control':
+            self.forward_dynamics(action)
+        elif self._control_method == 'position_control':
+            action = np.clip(action, -1, 1)
+            self.sim.data.set_mocap_pos('mocap', action)
+            for _ in range(10):
+                self.sim.step()
+        else:
+            raise NotImplementedError
 
         obs = self.get_current_obs()
         next_obs = obs['observation']
@@ -62,13 +83,12 @@ class ReacherEnv(MujocoEnv, Serializable):
         reward = self._compute_reward(achieved_goal, goal)
         done = (self._goal_distance(achieved_goal, goal) <
                 self._distance_threshold)
-
         return Step(next_obs, reward, done)
 
     @overrides
     def reset(self, init_state=None):
-        super(ReacherEnv, self).reset(init_state)
         self._accumulated_reward = 0
+        return super(ReacherEnv, self).reset(init_state)['observation']
 
     def _compute_reward(self, achieved_goal, goal):
         # Compute distance between goal and the achieved goal.
@@ -79,10 +99,9 @@ class ReacherEnv(MujocoEnv, Serializable):
             reward = -d
 
         if d < self._distance_threshold:
-            reward += (-self._accumulated_reward)  # Zero the reward
-            reward += (self._distance_threshold*100)  # Completion
-
-        self._accumulated_reward += reward
+            # reward += (-self._accumulated_reward)  # Zero the reward
+            reward += 500  # Completion
+        # self._accumulated_reward += reward
         return reward
 
     @overrides
@@ -149,7 +168,15 @@ class ReacherEnv(MujocoEnv, Serializable):
         :return: observation space
         """
         return Box(
-            -np.inf, np.inf, shape=self.get_current_obs()['observation'].shape)
+            -np.inf, np.inf, shape=self.get_current_obs()['observation'].shape, dtype=np.float32)
+
+    @overrides
+    @property
+    def action_space(self):
+        if self._control_method == 'torque_control':
+            return super(ReacherEnv, self).action_space()
+        elif self._control_method == 'position_control':
+            return Box(-1., 1., shape=(3,), dtype=np.float32)  # Temp action space
 
     @overrides
     def close(self):
