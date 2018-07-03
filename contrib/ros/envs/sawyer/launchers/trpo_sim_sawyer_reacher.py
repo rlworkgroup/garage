@@ -23,7 +23,7 @@ INITIAL_SIM_ROBOT_JOINT_POS = {
 
 def run_task(*_):
     """Run task function."""
-    initial_goal = np.array([0.6, -0.1, 0.80])
+    initial_goal = np.array([0.6, -0.1, 0.40])
 
     rospy.init_node('trpo_sim_sawyer_reacher_exp', anonymous=True)
 

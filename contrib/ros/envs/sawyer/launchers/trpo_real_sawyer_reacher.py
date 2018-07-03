@@ -23,14 +23,15 @@ INITIAL_REAL_ROBOT_JOINT_POS = {
 
 def run_task(*_):
     """Run task function."""
-    initial_goal = np.array([0.6, -0.1, 0.80])
+    initial_goal = np.array([0.6, -0.1, 0.30])
 
     rospy.init_node('trpo_real_sawyer_reacher_exp', anonymous=True)
 
     env = ReacherEnv(
         initial_goal,
         initial_joint_pos=INITIAL_REAL_ROBOT_JOINT_POS,
-        simulated=False)
+        simulated=False,
+        robot_control_mode='position')
 
     rospy.on_shutdown(env.shutdown)
 

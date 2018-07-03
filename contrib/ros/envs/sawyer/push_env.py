@@ -28,6 +28,7 @@ class PushEnv(SawyerEnv, Serializable):
         self._sparse_reward = sparse_reward
         self.initial_goal = initial_goal
         self.goal = self.initial_goal.copy()
+        self.simulated = simulated
 
         self._robot = Sawyer(
             initial_joint_pos=initial_joint_pos,
@@ -119,8 +120,22 @@ class PushEnv(SawyerEnv, Serializable):
 
     def done(self, achieved_goal, goal):
         """
+        If done.
+
         :return if_done: bool
                     if current episode is done:
         """
-        return self._goal_distance(achieved_goal,
-                                   goal) < self._distance_threshold
+        if not self.simulated:
+            # For safety, we need to stop earlier when
+            # robot gripper goes into dangerous region.
+            collision = rospy.wait_for_message('/sawyer_collision_avoidance/collision_state', Bool, timeout=1)
+            if collision.data:
+                done = True
+            else:
+                done = self._goal_distance(achieved_goal,
+                                           goal) < self._distance_threshold
+        else:
+            done = self._goal_distance(achieved_goal,
+                                       goal) < self._distance_threshold
+
+        return done
