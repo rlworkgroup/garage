@@ -1,14 +1,13 @@
 from cached_property import cached_property
-
 from gym.spaces import Box as GymBox
 from gym.spaces import Discrete as GymDiscrete
 from gym.spaces import Tuple as GymTuple
 
 from garage.envs import EnvSpec
 from garage.envs import ProxyEnv
-from garage.tf.spaces import Box
-from garage.tf.spaces import Discrete
-from garage.tf.spaces import Product
+from garage.spaces.tf import Box
+from garage.spaces.tf import Discrete
+from garage.spaces.tf import Product
 
 
 def to_tf_space(space):

@@ -1,6 +1,5 @@
 import numpy as np
 
-from garage.misc import ext
 from garage.misc import special
 from garage.spaces import Space
 
@@ -53,17 +52,6 @@ class Discrete(Space):
     def default_value(self):
         return 0
 
-    def new_tensor_variable(self, name, extra_dims):
-        if self.n <= 2**8:
-            return ext.new_tensor(
-                name=name, ndim=extra_dims + 1, dtype='uint8')
-        elif self.n <= 2**16:
-            return ext.new_tensor(
-                name=name, ndim=extra_dims + 1, dtype='uint16')
-        else:
-            return ext.new_tensor(
-                name=name, ndim=extra_dims + 1, dtype='uint32')
-
     def __eq__(self, other):
         if not isinstance(other, Discrete):
             return False
@@ -71,3 +59,6 @@ class Discrete(Space):
 
     def __hash__(self):
         return hash(self.n)
+
+    def new_tensor_variable(self, name, extra_dims):
+        raise NotImplementedError
