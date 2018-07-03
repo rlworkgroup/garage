@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<package>
+    <name>sawyer_collision_avoidance</name>
+    <version>0.0.1</version>
+    <description>sawyer collision avoidance package</description>
+    <maintainer email="hjzh578@gmail.com">Hejia Zhang</maintainer>
+    <license>MIT</license>
+
+    <buildtool_depend>catkin</buildtool_depend>
+    <build_depend>roscpp</build_depend>
+    <build_depend>rospy</build_depend>
+    <build_depend>intera_core_msgs</build_depend>
+    <run_depend>roscpp</run_depend>
+    <run_depend>rospy</run_depend>
+    <run_depend>intera_core_msgs</run_depend>
+</package>
