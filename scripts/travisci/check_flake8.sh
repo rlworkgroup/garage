@@ -42,8 +42,6 @@ E125 # continuation line with same indent as next logical line
 E128 # continuation line under-indented for visual indent
 # MAXIMUM LINE LENGTH
 E501 # line too long
-# BREAK BEFORE BINARY OPERATOR
-W503 # line break before binary operator
 # BLANK LINE
 E301 # expected 1 blank line, found 0
 E302 # expected 2 blank lines, found 0
@@ -85,6 +83,11 @@ E731 # do not assign a lambda expression, use a def
 
 # Error codes ignored for changed files
 ignored_errors_changed=(
+# BREAK BEFORE BINARY OPERATOR
+# It enforces the break after the operator, which is acceptable, but it's
+# preferred to do it before the operator. Since YAPF enforces the preferred
+# style, this rule is ignored.
+W503 # line break before binary operator
 )
 
 # Files or directories to exclude from checks applied to changed files.
