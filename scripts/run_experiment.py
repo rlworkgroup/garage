@@ -2,7 +2,6 @@ import argparse
 import ast
 import base64
 import datetime
-import logging
 import os.path as osp
 import pickle as pickle
 import signal

@@ -10,12 +10,12 @@ from garage.sampler import singleton_pool
 from garage.sampler.utils import rollout
 
 
-def _worker_init(G, id):
+def _worker_init(g, id):
     if singleton_pool.n_parallel > 1:
         import os
         os.environ['THEANO_FLAGS'] = 'device=cpu'
         os.environ['CUDA_VISIBLE_DEVICES'] = ""
-    G.worker_id = id
+    g.worker_id = id
 
 
 def initialize(n_parallel):
@@ -24,31 +24,31 @@ def initialize(n_parallel):
         _worker_init, [(id, ) for id in range(singleton_pool.n_parallel)])
 
 
-def _get_scoped_G(G, scope):
+def _get_scoped_g(g, scope):
     if scope is None:
-        return G
-    if not hasattr(G, "scopes"):
-        G.scopes = dict()
-    if scope not in G.scopes:
-        G.scopes[scope] = SharedGlobal()
-        G.scopes[scope].worker_id = G.worker_id
-    return G.scopes[scope]
+        return g
+    if not hasattr(g, "scopes"):
+        g.scopes = dict()
+    if scope not in g.scopes:
+        g.scopes[scope] = SharedGlobal()
+        g.scopes[scope].worker_id = g.worker_id
+    return g.scopes[scope]
 
 
-def _worker_populate_task(G, env, policy, scope=None):
-    G = _get_scoped_G(G, scope)
-    G.env = pickle.loads(env)
-    G.policy = pickle.loads(policy)
+def _worker_populate_task(g, env, policy, scope=None):
+    g = _get_scoped_g(g, scope)
+    g.env = pickle.loads(env)
+    g.policy = pickle.loads(policy)
 
 
-def _worker_terminate_task(G, scope=None):
-    G = _get_scoped_G(G, scope)
-    if getattr(G, "env", None):
-        G.env.close()
-        G.env = None
-    if getattr(G, "policy", None):
-        G.policy.terminate()
-        G.policy = None
+def _worker_terminate_task(g, scope=None):
+    g = _get_scoped_g(g, scope)
+    if getattr(g, "env", None):
+        g.env.close()
+        g.env = None
+    if getattr(g, "policy", None):
+        g.policy.terminate()
+        g.policy = None
 
 
 def populate_task(env, policy, scope=None):
@@ -59,9 +59,9 @@ def populate_task(env, policy, scope=None):
         ] * singleton_pool.n_parallel)
     else:
         # avoid unnecessary copying
-        G = _get_scoped_G(singleton_pool.G, scope)
-        G.env = env
-        G.policy = policy
+        g = _get_scoped_g(singleton_pool.g, scope)
+        g.env = env
+        g.policy = policy
     logger.log("Populated")
 
 
@@ -69,8 +69,10 @@ def terminate_task(scope=None):
     singleton_pool.run_each(_worker_terminate_task,
                             [(scope, )] * singleton_pool.n_parallel)
 
+
 def terminate():
     singleton_pool.terminate()
+
 
 def _worker_set_seed(_, seed):
     logger.log("Setting seed to %d" % seed)
@@ -83,19 +85,19 @@ def set_seed(seed):
                              for i in range(singleton_pool.n_parallel)])
 
 
-def _worker_set_policy_params(G, params, scope=None):
-    G = _get_scoped_G(G, scope)
-    G.policy.set_param_values(params)
+def _worker_set_policy_params(g, params, scope=None):
+    g = _get_scoped_g(g, scope)
+    g.policy.set_param_values(params)
 
 
-def _worker_set_env_params(G, params, scope=None):
-    G = _get_scoped_G(G, scope)
-    G.env.set_param_values(params)
+def _worker_set_env_params(g, params, scope=None):
+    g = _get_scoped_g(g, scope)
+    g.env.set_param_values(params)
 
 
-def _worker_collect_one_path(G, max_path_length, scope=None):
-    G = _get_scoped_G(G, scope)
-    path = rollout(G.env, G.policy, max_path_length)
+def _worker_collect_one_path(g, max_path_length, scope=None):
+    g = _get_scoped_g(g, scope)
+    path = rollout(g.env, g.policy, max_path_length)
     return path, len(path["rewards"])
 
 
@@ -131,21 +133,20 @@ def sample_paths(policy_params,
 def truncate_paths(paths, max_samples):
     """
     Truncate the list of paths so that the total number of samples is exactly
-    equal to max_samples. This is done by removing extra paths at the end of the
-    list, and make the last path shorter if necessary
+    equal to max_samples. This is done by removing extra paths at the end of
+    the list, and make the last path shorter if necessary
     :param paths: a list of paths
     :param max_samples: the absolute maximum number of samples
-    :return: a list of paths, truncated so that the number of samples adds up to
-     max-samples
+    :return: a list of paths, truncated so that the number of samples adds up
+    to max-samples
     """
     # chop samples collected by extra paths
     # make a copy
     paths = list(paths)
     total_n_samples = sum(len(path["rewards"]) for path in paths)
-    while len(paths) > 0 and total_n_samples - len(
-            paths[-1]["rewards"]) >= max_samples:
+    while paths and total_n_samples - len(paths[-1]["rewards"]) >= max_samples:
         total_n_samples -= len(paths.pop(-1)["rewards"])
-    if len(paths) > 0:
+    if paths > 0:
         last_path = paths.pop(-1)
         truncated_last_path = dict()
         truncated_len = len(
