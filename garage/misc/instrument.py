@@ -846,12 +846,14 @@ def launch_ec2(params_list,
     if config.LABEL:
         sio.write("""
             aws ec2 create-tags --resources $EC2_INSTANCE_ID --tags Key=owner,Value={label} --region {aws_region}
-        """.format(label=config.LABEL,  # noqa: E501
-                   aws_region=config.AWS_REGION_NAME))
+        """.format(  # noqa: E501
+            label=config.LABEL,
+            aws_region=config.AWS_REGION_NAME))
     sio.write("""
         aws ec2 create-tags --resources $EC2_INSTANCE_ID --tags Key=exp_prefix,Value={exp_prefix} --region {aws_region}
-    """.format(exp_prefix=exp_prefix,  # noqa: E501
-               aws_region=config.AWS_REGION_NAME))
+    """.format(  # noqa: E501
+        exp_prefix=exp_prefix,
+        aws_region=config.AWS_REGION_NAME))
     sio.write("""
         service docker start
     """)
@@ -969,8 +971,9 @@ def launch_ec2(params_list,
                             sleep 5
                         fi
                     done & echo log sync initiated
-                """.format(log_dir=log_dir,  # noqa: E501
-                           remote_log_dir=remote_log_dir))
+                """.format(  # noqa: E501
+                    log_dir=log_dir,
+                    remote_log_dir=remote_log_dir))
         if use_gpu:
             sio.write("""
                 for i in {1..800}; do su -c "nvidia-modprobe -u -c=0" ubuntu && break || sleep 3; done
@@ -1037,8 +1040,8 @@ def launch_ec2(params_list,
         aws s3 cp {s3_path} /home/ubuntu/remote_script.sh --region {aws_region} && \\
         chmod +x /home/ubuntu/remote_script.sh && \\
         bash /home/ubuntu/remote_script.sh
-        """.format(s3_path=s3_path,  # noqa: E501
-                   aws_region=config.AWS_REGION_NAME))
+        """.format(  # noqa: E501
+            s3_path=s3_path, aws_region=config.AWS_REGION_NAME))
         user_data = dedent(sio.getvalue())
     else:
         user_data = full_script
