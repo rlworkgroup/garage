@@ -1,17 +1,18 @@
-from ctypes import byref
 import math
 import os.path as osp
 import tempfile
 import xml.etree.ElementTree as ET
 
-import mujoco_py
 import glfw  # noqa: I100
 import gym
-# https://github.com/openai/mujoco-py/blob/6ac6ac203a875ef35b1505827264cadccbfd9f05/mujoco_py/builder.py#L61
 from mujoco_py import functions
 from mujoco_py import load_model_from_path
 from mujoco_py import MjRenderContext
+from mujoco_py import MjSim
 from mujoco_py import MjViewer
+# https://github.com/openai/mujoco-py/blob/6ac6ac203a875ef35b1505827264cadccbfd9f05/mujoco_py/builder.py#L61
+from mujoco_py.builder import cymj
+from mujoco_py.generated.const import CAT_ALL
 import numpy as np
 
 from garage.core import Serializable
@@ -27,66 +28,84 @@ from garage.misc.overrides import overrides
 
 APPLE = 0
 BOMB = 1
+PyMjrRect = cymj.PyMjrRect
 
 
 class GatherViewer(MjViewer):
     def __init__(self, env):
         self.env = env
-        super(GatherViewer, self).__init__()
+        super(GatherViewer, self).__init__(self.env.wrapped_env.sim)
         green_ball_model = load_model_from_path(
             osp.abspath(osp.join(MODEL_DIR, 'green_ball.xml')))
         self.green_ball_renderer = EmbeddedViewer()
         self.green_ball_model = green_ball_model
+        self.green_ball_sim = MjSim(self.green_ball_model)
         self.green_ball_renderer.set_model(green_ball_model)
         red_ball_model = load_model_from_path(
             osp.abspath(osp.join(MODEL_DIR, 'red_ball.xml')))
         self.red_ball_renderer = EmbeddedViewer()
         self.red_ball_model = red_ball_model
+        self.red_ball_sim = MjSim(self.red_ball_model)
         self.red_ball_renderer.set_model(red_ball_model)
 
     def start(self):
-        super(GatherViewer, self).start()
         self.green_ball_renderer.start(self.window)
         self.red_ball_renderer.start(self.window)
 
     def handle_mouse_move(self, window, xpos, ypos):
-        super(GatherViewer, self).handle_mouse_move(window, xpos, ypos)
         self.green_ball_renderer.handle_mouse_move(window, xpos, ypos)
         self.red_ball_renderer.handle_mouse_move(window, xpos, ypos)
 
     def handle_scroll(self, window, x_offset, y_offset):
-        super(GatherViewer, self).handle_scroll(window, x_offset, y_offset)
         self.green_ball_renderer.handle_scroll(window, x_offset, y_offset)
         self.red_ball_renderer.handle_scroll(window, x_offset, y_offset)
 
+    def get_rect(self):
+        rect = PyMjrRect()
+        rect.width, rect.height = glfw.get_framebuffer_size(self.window)
+        return rect
+
     def render(self):
         super(GatherViewer, self).render()
-        self.con = MjRenderContext(self.sim)
-        functions.mjv_makeScene(self.scn, 1000)
-        self.con.scn = self.scn
+        ctx = MjRenderContext(self.env.wrapped_env.sim)
+        scn = ctx.scn
+        con = ctx.con
+        functions.mjv_makeScene(scn, 1000)
+        scn.camera[0].frustum_near = 0.05
+        scn.camera[1].frustum_near = 0.05
 
         for obj in self.env.objects:
             x, y, typ = obj
-            # print x, y
-            qpos = np.zeros_like(self.green_ball_model.data.qpos)
-            qpos[0, 0] = x
-            qpos[1, 0] = y
+            qpos = np.zeros_like(self.green_ball_sim.data.qpos)
+            qpos[0] = x
+            qpos[1] = y
             if typ == APPLE:
-                self.green_ball_model.data.qpos = qpos
-                self.green_ball_model.forward()
+                self.green_ball_sim.data.qpos[:] = qpos
+                self.green_ball_sim.forward()
                 self.green_ball_renderer.render()
+                self.green_ball_ctx = MjRenderContext(self.green_ball_sim)
+                functions.mjv_addGeoms(self.green_ball_sim.model,
+                                       self.green_ball_sim.data,
+                                       self.green_ball_ctx.vopt,
+                                       self.green_ball_ctx.pert, CAT_ALL, scn)
             else:
-                self.red_ball_model.data.qpos = qpos
-                self.red_ball_model.forward()
+                self.red_ball_sim.data.qpos[:] = qpos
+                self.red_ball_sim.forward()
                 self.red_ball_renderer.render()
+                self.red_ball_ctx = MjRenderContext(self.red_ball_sim)
+                functions.mjv_addGeoms(self.red_ball_sim.model,
+                                       self.red_ball_sim.data,
+                                       self.red_ball_ctx.vopt,
+                                       self.red_ball_ctx.pert, CAT_ALL, scn)
 
-        self.green_ball_renderer.render()
-        self.red_ball_renderer.render()
-        functions.mjr_render(self.get_rect(), self.scn, self.con)
+        functions.mjv_addGeoms(self.env.wrapped_env.sim.model,
+                               self.env.wrapped_env.sim.data, ctx.vopt,
+                               ctx.pert, CAT_ALL, scn)
+        functions.mjr_render(self.green_ball_renderer.get_rect(), scn, con)
 
         try:
             import OpenGL.GL as GL
-        except:
+        except ImportError:
             return
 
         def draw_rect(x, y, width, height):
@@ -100,7 +119,6 @@ class GatherViewer(MjViewer):
             GL.glVertex2f(x + width, y + height)
             # top left point
             GL.glVertex2f(x, y + height)
-            GL.glEnd()
 
         def refresh2d(width, height):
             GL.glViewport(0, 0, width, height)
@@ -110,6 +128,7 @@ class GatherViewer(MjViewer):
             GL.glMatrixMode(GL.GL_MODELVIEW)
             GL.glLoadIdentity()
 
+        GL.glBegin(GL.GL_QUADS)
         GL.glLoadIdentity()
         width, height = glfw.get_framebuffer_size(self.window)
         refresh2d(width, height)
@@ -319,8 +338,7 @@ class GatherEnv(ProxyEnv, Serializable):
                 continue
             angle = math.atan2(oy - robot_y, ox - robot_x) - ori
             if math.isnan(angle):
-                import ipdb
-                ipdb.set_trace()
+                raise ValueError("Variable angle is not a valid number")
             angle = angle % (2 * math.pi)
             if angle > math.pi:
                 angle = angle - 2 * math.pi
@@ -388,14 +406,13 @@ class GatherEnv(ProxyEnv, Serializable):
         if self.wrapped_env.viewer is None:
             self.wrapped_env.viewer = GatherViewer(self)
             self.wrapped_env.viewer.start()
-            self.wrapped_env.viewer.set_model(self.wrapped_env.model)
         return self.wrapped_env.viewer
 
     def stop_viewer(self):
         if self.wrapped_env.viewer:
             self.wrapped_env.viewer.finish()
 
-    def render(self, mode='human', close=False):
+    def render(self, mode='human', close=False):  # pylint: disable=R1710
         if mode == 'rgb_array':
             self.get_viewer().render()
             data, width, height = self.get_viewer().get_image()
@@ -409,9 +426,9 @@ class GatherEnv(ProxyEnv, Serializable):
 
     def get_ori(self):
         """
-        First it tries to use a get_ori from the wrapped env. If not successful,
-        falls back to the default based on the ORI_IND specified in Maze (not
-        accurate for quaternions)
+        First it tries to use a get_ori from the wrapped env. If not
+        successful, falls back to the default based on the ORI_IND specified in
+        Maze (not accurate for quaternions)
         """
         obj = self.wrapped_env
         while not hasattr(obj, 'get_ori') and hasattr(obj, 'wrapped_env'):
@@ -424,9 +441,9 @@ class GatherEnv(ProxyEnv, Serializable):
 
     @overrides
     def log_diagnostics(self, paths, log_prefix='Gather', *args, **kwargs):
-        # we call here any logging related to the gather, strip the maze obs and
-        # call log_diag with the stripped paths we need to log the purely gather
-        # reward!!
+        # we call here any logging related to the gather, strip the maze obs
+        # and call log_diag with the stripped paths we need to log the purely
+        # gather reward!!
         with logger.tabular_prefix(log_prefix + '_'):
             gather_undiscounted_returns = [
                 sum(path['env_infos']['outer_rew']) for path in paths

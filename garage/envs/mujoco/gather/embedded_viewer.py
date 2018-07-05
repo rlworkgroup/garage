@@ -1,11 +1,8 @@
-import ctypes
-from ctypes import byref
 from threading import Lock
 
-import mujoco_py
 import glfw  # noqa: I100
 # https://github.com/openai/mujoco-py/blob/6ac6ac203a875ef35b1505827264cadccbfd9f05/mujoco_py/builder.py#L61
-from mujoco_py import const as C
+from mujoco_py import const as c
 from mujoco_py import functions
 from mujoco_py import MjRenderContext
 from mujoco_py import MjSim
@@ -14,12 +11,12 @@ from mujoco_py.generated.const import CAT_ALL
 
 PyMjrRect = cymj.PyMjrRect
 PyMjvCamera = cymj.PyMjvCamera
+MjMOUSE_ZOOM = 5
 
 
 class EmbeddedViewer(object):
     def __init__(self):
         self.last_render_time = 0
-        self.cam = PyMjvCamera()
 
         self.running = False
         self.speedtype = 1
@@ -41,9 +38,11 @@ class EmbeddedViewer(object):
         if model:
             self.sim = MjSim(self.model)
             self.data = self.sim.data
-            self.con = MjRenderContext(self.sim)
-            self.scn = self.con.scn
-            self.vopt = self.con.vopt
+            self.ctx = MjRenderContext(self.sim)
+            self.con = self.ctx.con
+            self.cam = self.ctx.cam
+            self.scn = self.ctx.scn
+            self.vopt = self.ctx.vopt
         else:
             self.data = None
         if self.running:
@@ -56,16 +55,16 @@ class EmbeddedViewer(object):
             self.autoscale()
 
     def autoscale(self):
-        self.cam.lookat[0] = self.sim.stat.center[0]
-        self.cam.lookat[1] = self.sim.stat.center[1]
-        self.cam.lookat[2] = self.sim.stat.center[2]
-        self.cam.distance = 1.0 * self.sim.stat.extent
-        self.cam.camid = -1
+        self.cam.lookat[0] = self.model.stat.center[0]
+        self.cam.lookat[1] = self.model.stat.center[1]
+        self.cam.lookat[2] = self.model.stat.center[2]
+        self.cam.distance = 1.0 * self.model.stat.extent
+        self.cam.fixedcamid = -1
         self.cam.trackbodyid = -1
         if self.window:
             width, height = glfw.get_framebuffer_size(self.window)
-            functions.mjv_moveCamera(self.model, None, width, height, self.scn,
-                                     self.cam)
+            functions.mjv_moveCamera(self.model, MjMOUSE_ZOOM, width, height,
+                                     self.scn, self.cam)
 
     def get_rect(self):
         rect = PyMjrRect()
@@ -80,12 +79,13 @@ class EmbeddedViewer(object):
 
     def render(self):
         rect = self.get_rect()
-        width = rect.width, height = rect.height
+        width = rect.width
+        height = rect.height
 
         functions.mjv_addGeoms(self.model, self.data, self.vopt, None, CAT_ALL,
                                self.scn)
-        functions.mjv_updateCamera(self.model, self.data, self.scn)
-        functions.mjv_moveCamera(self.model, None, width / height,
+        functions.mjv_updateCamera(self.model, self.data, self.cam, self.scn)
+        functions.mjv_moveCamera(self.model, 5, width / height,
                                  height / height, self.scn, self.cam)
         functions.mjr_render(rect, self.scn, self.con)
 
@@ -106,6 +106,9 @@ class EmbeddedViewer(object):
 
         self.window = window
 
+        functions.mjv_defaultCamera(self.cam)
+        functions.mjv_defaultOption(self.vopt)
+        functions.mjr_defaultContext(self.con)
         functions.mjv_makeScene(self.scn, 1000)
 
         if self.model:
@@ -142,11 +145,11 @@ class EmbeddedViewer(object):
         # determine action based on mouse button
         action = None
         if self.button_right_pressed:
-            action = C.MOUSE_MOVE_H if mod_shift else C.MOUSE_MOVE_V
+            action = c.MOUSE_MOVE_H if mod_shift else c.MOUSE_MOVE_V
         elif self.button_left_pressed:
-            action = C.MOUSE_ROTATE_H if mod_shift else C.MOUSE_ROTATE_V
+            action = c.MOUSE_ROTATE_H if mod_shift else c.MOUSE_ROTATE_V
         else:
-            action = C.MOUSE_ZOOM
+            action = c.MOUSE_ZOOM
 
         self.gui_lock.acquire()
 
@@ -193,7 +196,7 @@ class EmbeddedViewer(object):
 
         # scroll
         self.gui_lock.acquire()
-        functions.mjv_moveCamera(self.model, C.MOUSE_ZOOM, 0,
+        functions.mjv_moveCamera(self.model, c.MOUSE_ZOOM, 0,
                                  (-20 * y_offset) / height, self.scn, self.cam)
 
         self.gui_lock.release()

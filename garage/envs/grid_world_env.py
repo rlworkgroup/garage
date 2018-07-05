@@ -3,6 +3,7 @@ import numpy as np
 
 from garage.core import Serializable
 from garage.envs import Step
+from garage.misc.overrides import overrides
 
 MAPS = {
     "chain": ["GFFFFFFFFFFFFFSFFFFFFFFFFFFFG"],
@@ -28,7 +29,7 @@ MAPS = {
         "FHFFHFHF",
         "FFFHFFFG"
     ],
-} # yapf: disable
+}   # yapf: disable
 
 
 class GridWorldEnv(gym.Env, Serializable):
@@ -64,8 +65,8 @@ class GridWorldEnv(gym.Env, Serializable):
     @staticmethod
     def action_from_direction(d):
         """
-        Return the action corresponding to the given direction. This is a helper
-        method for debugging and testing purposes.
+        Return the action corresponding to the given direction. This is a
+        helper method for debugging and testing purposes.
         :return: the action index corresponding to the given direction
         """
         return dict(left=0, down=1, right=2, up=3)[d]
@@ -108,8 +109,8 @@ class GridWorldEnv(gym.Env, Serializable):
     def get_possible_next_states(self, state, action):
         """
         Given the state and action, return a list of possible next states and
-        their probabilities. Only next states with nonzero probabilities will be
-        returned
+        their probabilities. Only next states with nonzero probabilities will
+        be returned
         :param state: start state
         :param action: action
         :return: a list of pairs (s', p(s'|s,a))
@@ -139,3 +140,7 @@ class GridWorldEnv(gym.Env, Serializable):
     @property
     def observation_space(self):
         return gym.spaces.Discrete(self.n_row * self.n_col)
+
+    @overrides
+    def render(self, mode='human'):
+        pass

@@ -106,5 +106,8 @@ class NormalizedEnv(gym.Wrapper, Serializable):
     def log_diagnostics(self, paths):
         pass
 
+    def render(self, *args, **kwargs):
+        return self.env.render(*args, **kwargs)
+
 
 normalize = NormalizedEnv
