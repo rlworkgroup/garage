@@ -69,16 +69,15 @@ class TensorBoardOutput:
         self._dump_tensors()
 
     def record_histogram(self, key, val):
-        with enclosing_scope(self._name, "record_hist"):
-            if str(key) not in self._histogram_ds:
+        if str(key) not in self._histogram_ds:
+            with enclosing_scope(self._name, "record_hist"):
                 self._histogram_ds[str(key)] = tf.Variable(val)
-                self._histogram_summary_op.append(
-                    tf.summary.histogram(
-                        str(key), self._histogram_ds[str(key)]))
-                self._histogram_summary_op_merge = tf.summary.merge(
-                    self._histogram_summary_op)
+            self._histogram_summary_op.append(
+                tf.summary.histogram(str(key), self._histogram_ds[str(key)]))
+            self._histogram_summary_op_merge = tf.summary.merge(
+                self._histogram_summary_op)
 
-            self._feed[self._histogram_ds[str(key)]] = val
+        self._feed[self._histogram_ds[str(key)]] = val
 
     def record_histogram_by_type(self,
                                  histogram_type,
