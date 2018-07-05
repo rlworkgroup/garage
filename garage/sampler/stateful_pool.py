@@ -62,6 +62,9 @@ class StatefulPool(object):
                 temp_folder="/tmp",
             )
 
+    def terminate(self):
+        self.pool.terminate()
+
     def run_each(self, runner, args_list=None):
         """
         Run the method on each worker process, and collect the result of

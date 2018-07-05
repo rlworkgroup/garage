@@ -69,6 +69,8 @@ def terminate_task(scope=None):
     singleton_pool.run_each(_worker_terminate_task,
                             [(scope, )] * singleton_pool.n_parallel)
 
+def terminate():
+    singleton_pool.terminate()
 
 def _worker_set_seed(_, seed):
     logger.log("Setting seed to %d" % seed)

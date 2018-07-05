@@ -5,6 +5,7 @@ import datetime
 import logging
 import os.path as osp
 import pickle as pickle
+import signal
 import sys
 sys.path.append(".")
 import uuid
@@ -119,11 +120,15 @@ def run_experiment(argv):
     if args.seed is not None:
         set_seed(args.seed)
 
+    # Fork the work processes with SIGINT blocked so they don't get
+    # finished when they own locks
+    signal.pthread_sigmask(signal.SIG_BLOCK, [signal.SIGINT])
     if args.n_parallel > 0:
         from garage.sampler import parallel_sampler
         parallel_sampler.initialize(n_parallel=args.n_parallel)
         if args.seed is not None:
             parallel_sampler.set_seed(args.seed)
+    signal.pthread_sigmask(signal.SIG_UNBLOCK, [signal.SIGINT])
 
     if args.plot:
         from garage.plotter import plotter
@@ -170,7 +175,11 @@ def run_experiment(argv):
         if args.use_cloudpickle:
             import cloudpickle
             method_call = cloudpickle.loads(base64.b64decode(args.args_data))
-            method_call(variant_data)
+            try:
+                method_call(variant_data)
+            except KeyboardInterrupt:
+                if args.n_parallel > 0:
+                    parallel_sampler.terminate()
         else:
             data = pickle.loads(base64.b64decode(args.args_data))
             maybe_iter = concretize(data)
