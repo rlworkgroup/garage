@@ -2,6 +2,7 @@ import argparse
 import ast
 import base64
 import datetime
+import os
 import os.path as osp
 import pickle as pickle
 import signal
@@ -116,6 +117,7 @@ def run_experiment(argv):
 
     args = parser.parse_args(argv[1:])
 
+    assert(os.environ.get("JOBLIB_START_METHOD", None) == "forkserver")
     if args.seed is not None:
         set_seed(args.seed)
 

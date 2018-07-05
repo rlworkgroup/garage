@@ -443,6 +443,8 @@ def run_experiment(stub_method_call=None,
     config.USE_GPU = use_gpu
     config.USE_TF = use_tf
 
+    os.environ["JOBLIB_START_METHOD"] = "forkserver"
+
     if use_tf:
         if not use_gpu:
             os.environ['CUDA_VISIBLE_DEVICES'] = ""
