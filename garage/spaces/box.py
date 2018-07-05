@@ -1,8 +1,5 @@
 import numpy as np
-import theano
 
-from garage.core import Serializable
-from garage.misc import ext
 from garage.spaces import Space
 
 
@@ -67,12 +64,12 @@ class Box(Space):
         return "Box" + str(self.shape)
 
     def __eq__(self, other):
-        return isinstance(other, Box) and np.allclose(self.low, other.low) and \
-               np.allclose(self.high, other.high)
+        return isinstance(other, Box) \
+            and np.allclose(self.low, other.low) \
+            and np.allclose(self.high, other.high)
 
     def __hash__(self):
         return hash((self.low, self.high))
 
     def new_tensor_variable(self, name, extra_dims):
-        return ext.new_tensor(
-            name=name, ndim=extra_dims + 1, dtype=theano.config.floatX)
+        raise NotImplementedError

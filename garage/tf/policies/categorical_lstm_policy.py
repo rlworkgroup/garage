@@ -4,14 +4,14 @@ import tensorflow as tf
 from garage.core import Serializable
 from garage.misc import special
 from garage.misc.overrides import overrides
+from garage.spaces.tf import Discrete
 from garage.tf.core import LayersPowered
-from garage.tf.core import LSTMNetwork, MLP
+from garage.tf.core import LSTMNetwork
 import garage.tf.core.layers as L
 from garage.tf.distributions import RecurrentCategorical
 from garage.tf.misc import tensor_utils
 from garage.tf.misc.tensor_utils import enclosing_scope
 from garage.tf.policies import StochasticPolicy
-from garage.tf.spaces import Discrete
 
 
 class CategoricalLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
