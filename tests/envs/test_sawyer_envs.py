@@ -2,7 +2,9 @@ import numpy as np
 
 from garage.algos import TRPO
 from garage.baselines import LinearFeatureBaseline
-from garage.envs.mujoco.sawyer import BinSortingEnv, BlockStackingEnv, PickAndPlaceEnv
+from garage.envs.mujoco.sawyer import BinSortingEnv
+from garage.envs.mujoco.sawyer import BlockStackingEnv
+from garage.envs.mujoco.sawyer import PickAndPlaceEnv
 from garage.envs.util import spec
 from garage.misc.instrument import run_experiment
 from garage.policies import GaussianMLPPolicy
@@ -78,7 +80,7 @@ def test_env():
 
 
 test_env()
-run_experiment_lite(
+run_experiment(
     run_bin_sorting,
     n_parallel=2,
     plot=True,
