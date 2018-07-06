@@ -9,6 +9,7 @@ from garage.misc import logger
 from garage.optimizers import BatchDataset
 from garage.tf.misc import tensor_utils
 from garage.tf.misc.tensor_utils import enclosing_scope
+from garage.tf.misc.tensor_utils import convert_inputs
 
 
 class FirstOrderOptimizer(Serializable):
@@ -33,8 +34,8 @@ class FirstOrderOptimizer(Serializable):
         :param max_epochs:
         :param tolerance:
         :param update_method:
-        :param batch_size: None or an integer. If None the whole dataset will be
-         used.
+        :param batch_size: None or an integer. If None the whole dataset will
+         be used.
         :param callback:
         :param kwargs:
         :return:
@@ -68,8 +69,8 @@ class FirstOrderOptimizer(Serializable):
         :param target: A parameterized object to optimize over. It should
          implement methods of the
         :class:`garage.core.paramerized.Parameterized` class.
-        :param leq_constraint: A constraint provided as a tuple (f, epsilon), of
-         the form f(*inputs) <= epsilon.
+        :param leq_constraint: A constraint provided as a tuple (f, epsilon),
+         of the form f(*inputs) <= epsilon.
         :param inputs: A list of symbolic variables as inputs
         :return: No return value.
         """
@@ -84,27 +85,31 @@ class FirstOrderOptimizer(Serializable):
 
             if extra_inputs is None:
                 extra_inputs = list()
+            inputs = convert_inputs(inputs, instance=extra_inputs)
             self._input_vars = inputs + extra_inputs
             self._opt_fun = ext.lazydict(
-                f_loss=
-                lambda: tensor_utils.compile_function(inputs + extra_inputs, loss),
-            )
+                f_loss=lambda: tensor_utils.compile_function(
+                    inputs + extra_inputs, loss),
+            )   # yapf: disable
 
     def loss(self, inputs, extra_inputs=None):
         if extra_inputs is None:
             extra_inputs = tuple()
-        return self._opt_fun["f_loss"](*(tuple(inputs) + extra_inputs))
+        inputs = convert_inputs(inputs, instance=extra_inputs)
+        return self._opt_fun["f_loss"](*(inputs + extra_inputs))
 
     def optimize(self, inputs, extra_inputs=None, callback=None):
 
-        if len(inputs) == 0:
+        if not inputs:
             # Assumes that we should always sample mini-batches
             raise NotImplementedError
 
+        inputs = convert_inputs(inputs)
         f_loss = self._opt_fun["f_loss"]
 
         if extra_inputs is None:
             extra_inputs = tuple()
+        inputs = convert_inputs(inputs, instance=extra_inputs)
 
         last_loss = f_loss(*(tuple(inputs) + extra_inputs))
 

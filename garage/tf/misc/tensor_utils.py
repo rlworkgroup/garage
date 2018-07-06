@@ -123,7 +123,15 @@ def pad_tensor_dict(tensor_dict, max_len):
     return ret
 
 
-class enclosing_scope(object):
+def convert_inputs(inputs, instance=()):
+    """Convert inputs to a sequence has the same type as instance."""
+    if isinstance(inputs, dict):
+        return type(instance)(inputs[k] for k in sorted(inputs.keys()))
+    else:
+        return type(instance)(inputs)
+
+
+class enclosing_scope(object):  # noqa: disable=N801
     def __init__(self, enclosing_name, name, **kwargs):
         self.enclosing_scope = None
         self.scope = None

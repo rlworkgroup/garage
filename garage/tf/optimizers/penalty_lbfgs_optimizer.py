@@ -6,6 +6,7 @@ from garage.core import Serializable
 from garage.misc import ext, logger
 from garage.tf.misc import tensor_utils
 from garage.tf.misc.tensor_utils import enclosing_scope
+from garage.tf.misc.tensor_utils import convert_inputs
 
 
 class PenaltyLbfgsOptimizer(Serializable):
@@ -53,8 +54,8 @@ class PenaltyLbfgsOptimizer(Serializable):
         """
         :param loss: Symbolic expression for the loss function.
         :param target: A parameterized object to optimize over. It should
-         implement methods of the :class:`garage.core.paramerized.Parameterized`
-         class.
+         implement methods of the :class:`garage.core.paramerized.
+         Parameterized` class.
         :param leq_constraint: A constraint provided as a tuple (f, epsilon),
          of the form f(*inputs) <= epsilon.
         :param inputs: A list of symbolic variables as inputs
@@ -81,6 +82,8 @@ class PenaltyLbfgsOptimizer(Serializable):
                     tf.cast(flat_grad, tf.float64),
                 ]
 
+            inputs = convert_inputs(inputs, [])
+
             self._opt_fun = ext.lazydict(
                 f_loss=lambda: tensor_utils.compile_function(
                     inputs, loss, log_name="f_loss"),
@@ -98,15 +101,16 @@ class PenaltyLbfgsOptimizer(Serializable):
             )
 
     def loss(self, inputs):
+        inputs = convert_inputs(inputs)
         return self._opt_fun["f_loss"](*inputs)
 
     def constraint_val(self, inputs):
+        inputs = convert_inputs(inputs)
         return self._opt_fun["f_constraint"](*inputs)
 
     def optimize(self, inputs):
 
-        inputs = tuple(inputs)
-
+        inputs = convert_inputs(inputs)
         try_penalty = np.clip(self._penalty, self._min_penalty,
                               self._max_penalty)
 
@@ -143,8 +147,8 @@ class PenaltyLbfgsOptimizer(Serializable):
             # Either constraint satisfied, or we are at the last iteration
             # already and no alternative parameter satisfies the constraint
             if try_constraint_val < self._max_constraint_val or \
-                    (penalty_itr == self._max_penalty_itr - 1 and \
-                    opt_params is None):
+                    (penalty_itr == self._max_penalty_itr - 1 and
+                     opt_params is None):
                 opt_params = itr_opt_params
 
             if not self._adapt_penalty:
@@ -153,8 +157,8 @@ class PenaltyLbfgsOptimizer(Serializable):
             # Decide scale factor on the first iteration, or if constraint
             # violation yields numerical error
             if penalty_scale_factor is None or np.isnan(try_constraint_val):
-                # Increase penalty if constraint violated, or if constraint term
-                # is NAN
+                # Increase penalty if constraint violated, or if constraint
+                # term is NAN
                 if try_constraint_val > self._max_constraint_val or np.isnan(
                         try_constraint_val):
                     penalty_scale_factor = self._increase_penalty_factor

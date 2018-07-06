@@ -7,6 +7,7 @@ from garage.core import Serializable
 from garage.misc import ext
 from garage.tf.misc import tensor_utils
 from garage.tf.misc.tensor_utils import enclosing_scope
+from garage.tf.misc.tensor_utils import convert_inputs
 
 
 class LbfgsOptimizer(Serializable):
@@ -35,8 +36,8 @@ class LbfgsOptimizer(Serializable):
         :param target: A parameterized object to optimize over. It should
          implement methods of the
         :class:`garage.core.paramerized.Parameterized` class.
-        :param leq_constraint: A constraint provided as a tuple (f, epsilon), of
-         the form f(*inputs) <= epsilon.
+        :param leq_constraint: A constraint provided as a tuple (f, epsilon),
+         of the form f(*inputs) <= epsilon.
         :param inputs: A list of symbolic variables as inputs
         :return: No return value.
         """
@@ -53,6 +54,7 @@ class LbfgsOptimizer(Serializable):
 
             if extra_inputs is None:
                 extra_inputs = list()
+            inputs = convert_inputs(inputs, extra_inputs)
 
             self._opt_fun = ext.lazydict(
                 f_loss=lambda: tensor_utils.compile_function(
@@ -66,6 +68,7 @@ class LbfgsOptimizer(Serializable):
     def loss(self, inputs, extra_inputs=None):
         if extra_inputs is None:
             extra_inputs = list()
+        inputs = convert_inputs(inputs, extra_inputs)
         return self._opt_fun["f_loss"](*(list(inputs) + list(extra_inputs)))
 
     def optimize(self, inputs, extra_inputs=None):
@@ -73,6 +76,7 @@ class LbfgsOptimizer(Serializable):
 
         if extra_inputs is None:
             extra_inputs = list()
+        inputs = convert_inputs(inputs, extra_inputs)
 
         def f_opt_wrapper(flat_params):
             self._target.set_param_values(flat_params, trainable=True)
