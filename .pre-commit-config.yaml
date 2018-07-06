@@ -46,7 +46,9 @@ repos:
     rev: v0.22.0
     hooks:
     -   id: yapf
+        args: ['-dpr']
 -   repo: https://github.com/pre-commit/mirrors-pylint
     rev: v1.9.1
     hooks:
     -   id: pylint
+        args: ['--rcfile=setup.cfg']
