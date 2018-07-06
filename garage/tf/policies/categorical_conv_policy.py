@@ -1,30 +1,27 @@
 import tensorflow as tf
 
+from garage.tf.misc import tensor_utils
+from garage.tf.misc.tensor_utils import enclosing_scope
+from garage.tf.policies import StochasticPolicy
+from garage.tf.spaces import Discrete
 from garage.core import Serializable
 from garage.misc.overrides import overrides
 from garage.tf.core import ConvNetwork
 from garage.tf.core import LayersPowered
 import garage.tf.core.layers as L
 from garage.tf.distributions import Categorical
-from garage.tf.misc import tensor_utils
-from garage.tf.misc.tensor_utils import enclosing_scope
-from garage.tf.policies import StochasticPolicy
-from garage.tf.spaces import Discrete
 
 
 class CategoricalConvPolicy(StochasticPolicy, LayersPowered, Serializable):
-    def __init__(
-            self,
-            env_spec,
-            conv_filters,
-            conv_filter_sizes,
-            conv_strides,
-            conv_pads,
-            hidden_sizes=[],
-            hidden_nonlinearity=tf.nn.relu,
-            output_nonlinearity=tf.nn.softmax,
-            prob_network=None,
-            name="CategoricalConvPolicy",
+    def __init__( self, env_spec, conv_filters,
+        conv_filter_sizes,
+        conv_strides,
+        conv_pads,
+        hidden_sizes=[],
+        hidden_nonlinearity=tf.nn.relu,
+        output_nonlinearity=tf.nn.softmax,
+        prob_network=None,
+        name="CategoricalConvPolicy",
     ):
         """
         :param env_spec: A spec for the mdp.
