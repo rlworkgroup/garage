@@ -64,7 +64,8 @@ class StatefulPool(object):
             )
 
     def terminate(self):
-        self.pool.terminate()
+        if self.pool:
+            self.pool.terminate()
 
     def run_each(self, runner, args_list=None):
         """
