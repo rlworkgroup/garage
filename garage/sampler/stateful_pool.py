@@ -24,7 +24,8 @@ class ProgBarCounter(object):
     def inc(self, increment):
         if not logger.get_log_tabular_only():
             self.cur_count += increment
-            new_progress = self.cur_count * self.max_progress / self.total_count
+            new_progress = (
+                self.cur_count * self.max_progress / self.total_count)
             if new_progress < self.max_progress:
                 self.pbar.update(new_progress - self.cur_progress)
             self.cur_progress = new_progress
@@ -62,6 +63,9 @@ class StatefulPool(object):
                 temp_folder="/tmp",
             )
 
+    def terminate(self):
+        self.pool.terminate()
+
     def run_each(self, runner, args_list=None):
         """
         Run the method on each worker process, and collect the result of
@@ -72,8 +76,8 @@ class StatefulPool(object):
         :return:
         """
         assert not inspect.ismethod(runner), (
-            "run_each() cannot run a class method. Please ensure that runner is"
-            " a function with the prototype def foo(G, ...), where G is an "
+            "run_each() cannot run a class method. Please ensure that runner "
+            "is a function with the prototype def foo(G, ...), where G is an "
             "object of type garage.sampler.stateful_pool.SharedGlobal")
 
         if args_list is None:
@@ -91,9 +95,9 @@ class StatefulPool(object):
 
     def run_map(self, runner, args_list):
         assert not inspect.ismethod(runner), (
-            "run_map() cannot run a class method. Please ensure that runner is "
-            "a function with the prototype 'def foo(G, ...)', where G is an "
-            "object of type garage.sampler.stateful_pool.SharedGlobal")
+            "run_map() cannot run a class method. Please ensure that runner "
+            "is a function with the prototype 'def foo(G, ...)', where G is "
+            "an object of type garage.sampler.stateful_pool.SharedGlobal")
 
         if self.n_parallel > 1:
             return self.pool.map(_worker_run_map,
@@ -106,9 +110,10 @@ class StatefulPool(object):
 
     def run_imap_unordered(self, runner, args_list):
         assert not inspect.ismethod(runner), (
-            "run_imap_unordered() cannot run a class method. Please ensure that"
-            "runner is a function with the prototype 'def foo(G, ...)', where "
-            "G is an object of type garage.sampler.stateful_pool.SharedGlobal")
+            "run_imap_unordered() cannot run a class method. Please ensure "
+            "that runner is a function with the prototype 'def foo(G, ...)', "
+            "where G is an object of type "
+            "garage.sampler.stateful_pool.SharedGlobal")
 
         if self.n_parallel > 1:
             for x in self.pool.imap_unordered(
@@ -127,7 +132,8 @@ class StatefulPool(object):
         Run the collector method using the worker pool. The collect_once method
         will receive 'G' as its first argument, followed by the provided args,
         if any. The method should return a pair of values. The first should be
-        the object to be collected, and the second is the increment to be added.
+        the object to be collected, and the second is the increment to be
+        added.
         This will continue until the total increment reaches or exceeds the
         given threshold.
 
@@ -186,6 +192,7 @@ class StatefulPool(object):
             if show_prog_bar:
                 pbar.stop()
             return results
+        return []
 
 
 singleton_pool = StatefulPool()

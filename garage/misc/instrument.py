@@ -1,6 +1,5 @@
 import base64
 import collections
-from contextlib import contextmanager
 import datetime
 import errno
 import hashlib
@@ -20,7 +19,6 @@ import numpy as np
 
 from garage import config
 from garage.core import Serializable
-from garage.misc import ext
 from garage.misc.console import mkdir_p
 from garage.misc.ext import AttrDict
 from garage.viskit.core import flatten
@@ -109,7 +107,7 @@ class StubClass(StubBase):
         self.proxy_class = proxy_class
 
     def __call__(self, *args, **kwargs):
-        if len(args) > 0:
+        if args:
             # Convert the positional arguments to keyword arguments
             spec = inspect.getargspec(self.proxy_class.__init__)
             kwargs = dict(list(zip(spec.args[1:], args)), **kwargs)
@@ -133,7 +131,7 @@ class StubClass(StubBase):
 
 class StubObject(StubBase):
     def __init__(self, __proxy_class, *args, **kwargs):
-        if len(args) > 0:
+        if args:
             spec = inspect.getargspec(__proxy_class.__init__)
             kwargs = dict(list(zip(spec.args[1:], args)), **kwargs)
             args = tuple()
@@ -242,11 +240,11 @@ class VariantGenerator(object):
         # topo sort all nodes
         while len(sorted_keys) < len(self._variants):
             # get all nodes with zero in-degree
-            free_nodes = [k for k, v in dependencies if len(v) == 0]
-            if len(free_nodes) == 0:
+            free_nodes = [k for k, v in dependencies if not v]
+            if not free_nodes:
                 error_msg = "Invalid parameter dependency: \n"
                 for k, v in dependencies:
-                    if len(v) > 0:
+                    if v:
                         error_msg += k + " depends on " + " & ".join(v) + "\n"
                 raise ValueError(error_msg)
             dependencies = [(k, v) for k, v in dependencies
@@ -258,7 +256,7 @@ class VariantGenerator(object):
         return self._ivariants_sorted(sorted_keys)
 
     def _ivariants_sorted(self, sorted_keys):
-        if len(sorted_keys) == 0:
+        if not sorted_keys:
             yield dict()
         else:
             first_keys = sorted_keys[:-1]
@@ -371,8 +369,8 @@ def run_experiment(stub_method_call=None,
                    added_project_directories=[],
                    **kwargs):
     """
-    Serialize the stubbed method call and run the experiment using the specified
-    mode.
+    Serialize the stubbed method call and run the experiment using the
+    specified mode.
     :param stub_method_call: A stubbed method call.
     :param script: The name of the entrance point python script
     :param mode: Where and how to run the experiment. Should be one of "local",
@@ -386,10 +384,10 @@ def run_experiment(stub_method_call=None,
     :param kwargs: All other parameters will be passed directly to the entrance
      python script.
     :param variant: If provided, should be a dictionary of parameters
-    :param use_tf: this flag is used along with the Theano and GPU configuration
-     when using TensorFlow
-    :param use_gpu: Whether the launched task is running on GPU. This triggers a
-     few configuration changes including
+    :param use_tf: this flag is used along with the Theano and GPU
+     configuration when using TensorFlow
+    :param use_gpu: Whether the launched task is running on GPU. This triggers
+     a few configuration changes including
     certain environment flags
     :param sync_s3_pkl: Whether to sync pkl files during execution of the
      experiment (they will always be synced at
@@ -403,8 +401,8 @@ def run_experiment(stub_method_call=None,
     :param confirm_remote: Whether to confirm before launching experiments
      remotely
     :param terminate_machine: Whether to terminate machine after experiment
-     finishes. Only used when using mode="ec2". This is useful when one wants to
-      debug after an experiment finishes abnormally.
+     finishes. Only used when using mode="ec2". This is useful when one wants
+     to debug after an experiment finishes abnormally.
     :param periodic_sync: Whether to synchronize certain experiment files
      periodically during execution.
     :param periodic_sync_interval: Time interval between each periodic sync,
@@ -442,6 +440,8 @@ def run_experiment(stub_method_call=None,
     global remote_confirmed
     config.USE_GPU = use_gpu
     config.USE_TF = use_tf
+
+    os.environ["JOBLIB_START_METHOD"] = "forkserver"
 
     if use_tf:
         if not use_gpu:
@@ -810,7 +810,7 @@ def launch_ec2(params_list,
                sync_log_on_termination=True,
                periodic_sync=True,
                periodic_sync_interval=15):
-    if len(params_list) == 0:
+    if not params_list:
         return
 
     default_config = dict(
@@ -837,19 +837,23 @@ def launch_ec2(params_list,
     """)
     sio.write("""
         EC2_INSTANCE_ID="`wget -q -O - http://169.254.169.254/latest/meta-data/instance-id`"
-    """)
+    """)  # noqa: E501
     sio.write("""
         aws ec2 create-tags --resources $EC2_INSTANCE_ID --tags Key=Name,Value={exp_name} --region {aws_region}
-    """.format(
+    """.format(  # noqa: E501
         exp_name=params_list[0].get("exp_name"),
         aws_region=config.AWS_REGION_NAME))
     if config.LABEL:
         sio.write("""
             aws ec2 create-tags --resources $EC2_INSTANCE_ID --tags Key=owner,Value={label} --region {aws_region}
-        """.format(label=config.LABEL, aws_region=config.AWS_REGION_NAME))
+        """.format(  # noqa: E501
+            label=config.LABEL,
+            aws_region=config.AWS_REGION_NAME))
     sio.write("""
         aws ec2 create-tags --resources $EC2_INSTANCE_ID --tags Key=exp_prefix,Value={exp_prefix} --region {aws_region}
-    """.format(exp_prefix=exp_prefix, aws_region=config.AWS_REGION_NAME))
+    """.format(  # noqa: E501
+        exp_prefix=exp_prefix,
+        aws_region=config.AWS_REGION_NAME))
     sio.write("""
         service docker start
     """)
@@ -861,8 +865,8 @@ def launch_ec2(params_list,
     """.format(aws_region=config.AWS_REGION_NAME))
     if config.FAST_CODE_SYNC:
         # sio.write("""
-        #     aws s3 cp {code_full_path} /tmp/garage_code.tar.gz --region {aws_region}
-        # """.format(code_full_path=code_full_path, local_code_path=config.DOCKER_CODE_DIR,
+        #     aws s3 cp {code_full_path} /tmp/garage_code.tar.gz --region {aws_region}  # noqa: E501
+        # """.format(code_full_path=code_full_path, local_code_path=config.DOCKER_CODE_DIR,  # noqa: E501
         #            aws_region=config.AWS_REGION_NAME))
         sio.write("""
             aws s3 cp {code_full_path} /tmp/garage_code.tar.gz
@@ -883,8 +887,8 @@ def launch_ec2(params_list,
             aws_region=config.AWS_REGION_NAME))
     else:
         # sio.write("""
-        #     aws s3 cp --recursive {code_full_path} {local_code_path} --region {aws_region}
-        # """.format(code_full_path=code_full_path, local_code_path=config.DOCKER_CODE_DIR,
+        #     aws s3 cp --recursive {code_full_path} {local_code_path} --region {aws_region}  # noqa: E501
+        # """.format(code_full_path=code_full_path, local_code_path=config.DOCKER_CODE_DIR,  # noqa: E501
         #            aws_region=config.AWS_REGION_NAME))
         sio.write("""
             aws s3 cp --recursive {code_full_path} {local_code_path}
@@ -895,7 +899,7 @@ def launch_ec2(params_list,
     s3_mujoco_key_path = config.AWS_CODE_SYNC_S3_PATH + '/.mujoco/'
     # sio.write("""
     #     aws s3 cp --recursive {} {} --region {}
-    # """.format(s3_mujoco_key_path, config.MUJOCO_KEY_PATH, config.AWS_REGION_NAME))
+    # """.format(s3_mujoco_key_path, config.MUJOCO_KEY_PATH, config.AWS_REGION_NAME))  # noqa: E501
     sio.write("""
         aws s3 cp --recursive {} {}
     """.format(s3_mujoco_key_path, config.MUJOCO_KEY_PATH))
@@ -910,7 +914,7 @@ def launch_ec2(params_list,
 
         sio.write("""
             aws ec2 create-tags --resources $EC2_INSTANCE_ID --tags Key=Name,Value={exp_name} --region {aws_region}
-        """.format(
+        """.format(  # noqa: E501
             exp_name=params.get("exp_name"),
             aws_region=config.AWS_REGION_NAME))
         sio.write("""
@@ -922,17 +926,17 @@ def launch_ec2(params_list,
             include_log = " --include '*.log' " if sync_s3_log else " "
             # sio.write("""
             #     while /bin/true; do
-            #         aws s3 sync --exclude '*' {include_png} {include_pkl} {include_log}--include '*.csv' --include '*.json' {log_dir} {remote_log_dir} --region {aws_region}
+            #         aws s3 sync --exclude '*' {include_png} {include_pkl} {include_log}--include '*.csv' --include '*.json' {log_dir} {remote_log_dir} --region {aws_region}  # noqa: E501
             #         sleep {periodic_sync_interval}
-            #     done & echo sync initiated""".format(include_png=include_png, include_pkl=include_pkl, include_log=include_log,
-            #                                          log_dir=log_dir, remote_log_dir=remote_log_dir,
+            #     done & echo sync initiated""".format(include_png=include_png, include_pkl=include_pkl, include_log=include_log,  # noqa: E501
+            #                                          log_dir=log_dir, remote_log_dir=remote_log_dir,  # noqa: E501
             #                                          aws_region=config.AWS_REGION_NAME,
             #                                          periodic_sync_interval=periodic_sync_interval))
             sio.write("""
                 while /bin/true; do
                     aws s3 sync --exclude '*' {include_png} {include_pkl} {include_log}--include '*.csv' --include '*.json' {log_dir} {remote_log_dir}
                     sleep {periodic_sync_interval}
-                done & echo sync initiated""".format(
+                done & echo sync initiated""".format(  # noqa: E501
                 include_png=include_png,
                 include_pkl=include_pkl,
                 include_log=include_log,
@@ -942,18 +946,18 @@ def launch_ec2(params_list,
             if sync_log_on_termination:
                 # sio.write("""
                 #     while /bin/true; do
-                #         if [ -z $(curl -Is http://169.254.169.254/latest/meta-data/spot/termination-time | head -1 | grep 404 | cut -d \  -f 2) ]
+                #         if [ -z $(curl -Is http://169.254.169.254/latest/meta-data/spot/termination-time | head -1 | grep 404 | cut -d \  -f 2) ]  # noqa: E501
                 #           then
                 #             logger "Running shutdown hook."
-                #             aws s3 cp /home/ubuntu/user_data.log {remote_log_dir}/stdout.log --region {aws_region}
-                #             aws s3 cp --recursive {log_dir} {remote_log_dir} --region {aws_region}
+                #             aws s3 cp /home/ubuntu/user_data.log {remote_log_dir}/stdout.log --region {aws_region}  # noqa: E501
+                #             aws s3 cp --recursive {log_dir} {remote_log_dir} --region {aws_region}  # noqa: E501
                 #             break
                 #           else
                 #             # Spot instance not yet marked for termination.
                 #             sleep 5
                 #         fi
                 #     done & echo log sync initiated
-                # """.format(log_dir=log_dir, remote_log_dir=remote_log_dir, aws_region=config.AWS_REGION_NAME))
+                # """.format(log_dir=log_dir, remote_log_dir=remote_log_dir, aws_region=config.AWS_REGION_NAME))  # noqa: E501
                 sio.write("""
                     while /bin/true; do
                         if [ -z $(curl -Is http://169.254.169.254/latest/meta-data/spot/termination-time | head -1 | grep 404 | cut -d \  -f 2) ]
@@ -967,12 +971,14 @@ def launch_ec2(params_list,
                             sleep 5
                         fi
                     done & echo log sync initiated
-                """.format(log_dir=log_dir, remote_log_dir=remote_log_dir))
+                """.format(  # noqa: E501
+                    log_dir=log_dir,
+                    remote_log_dir=remote_log_dir))
         if use_gpu:
             sio.write("""
                 for i in {1..800}; do su -c "nvidia-modprobe -u -c=0" ubuntu && break || sleep 3; done
                 systemctl start nvidia-docker
-            """)
+            """)  # noqa: E501
         sio.write("""
             {command}
         """.format(
@@ -985,14 +991,14 @@ def launch_ec2(params_list,
                 env=env,
                 local_code_dir=config.DOCKER_CODE_DIR)))
         # sio.write("""
-        #     aws s3 cp --recursive {log_dir} {remote_log_dir} --region {aws_region}
-        # """.format(log_dir=log_dir, remote_log_dir=remote_log_dir, aws_region=config.AWS_REGION_NAME))
+        #     aws s3 cp --recursive {log_dir} {remote_log_dir} --region {aws_region}  # noqa: E501
+        # """.format(log_dir=log_dir, remote_log_dir=remote_log_dir, aws_region=config.AWS_REGION_NAME))  # noqa: E501
         sio.write("""
             aws s3 cp --recursive {log_dir} {remote_log_dir}
         """.format(log_dir=log_dir, remote_log_dir=remote_log_dir))
         # sio.write("""
-        #     aws s3 cp /home/ubuntu/user_data.log {remote_log_dir}/stdout.log --region {aws_region}
-        # """.format(remote_log_dir=remote_log_dir, aws_region=config.AWS_REGION_NAME))
+        #     aws s3 cp /home/ubuntu/user_data.log {remote_log_dir}/stdout.log --region {aws_region}  # noqa: E501
+        # """.format(remote_log_dir=remote_log_dir, aws_region=config.AWS_REGION_NAME))  # noqa: E501
         sio.write("""
             aws s3 cp /home/ubuntu/user_data.log {remote_log_dir}/stdout.log
         """.format(remote_log_dir=remote_log_dir))
@@ -1001,7 +1007,7 @@ def launch_ec2(params_list,
         sio.write("""
             EC2_INSTANCE_ID="`wget -q -O - http://169.254.169.254/latest/meta-data/instance-id || die \"wget instance-id has failed: $?\"`"
             aws ec2 terminate-instances --instance-ids $EC2_INSTANCE_ID --region {aws_region}
-        """.format(aws_region=config.AWS_REGION_NAME))
+        """.format(aws_region=config.AWS_REGION_NAME))  # noqa: E501
     sio.write("} >> /home/ubuntu/user_data.log 2>&1\n")
 
     full_script = dedent(sio.getvalue())
@@ -1034,7 +1040,8 @@ def launch_ec2(params_list,
         aws s3 cp {s3_path} /home/ubuntu/remote_script.sh --region {aws_region} && \\
         chmod +x /home/ubuntu/remote_script.sh && \\
         bash /home/ubuntu/remote_script.sh
-        """.format(s3_path=s3_path, aws_region=config.AWS_REGION_NAME))
+        """.format(  # noqa: E501
+            s3_path=s3_path, aws_region=config.AWS_REGION_NAME))
         user_data = dedent(sio.getvalue())
     else:
         user_data = full_script
@@ -1055,9 +1062,9 @@ def launch_ec2(params_list,
             Name=aws_config["iam_instance_profile_name"], ),
         **config.AWS_EXTRA_CONFIGS)
 
-    if len(instance_args["NetworkInterfaces"]) > 0:
+    if instance_args["NetworkInterfaces"]:
         # disable_security_group = query_yes_no(
-        #     "Cannot provide both network interfaces and security groups info. Do you want to disable security group settings?",
+        #     "Cannot provide both network interfaces and security groups info. Do you want to disable security group settings?",  # noqa: E501
         #     default="yes",
         # )
         disable_security_group = True
@@ -1170,8 +1177,8 @@ def s3_sync_code(config, dry=False, added_project_directories=[]):
         try:
             current_commit = subprocess.check_output(
                 ["git", "rev-parse", "HEAD"]).strip().decode("utf-8")
-            clean_state = len(
-                subprocess.check_output(["git", "status", "--porcelain"])) == 0
+            clean_state = not subprocess.check_output(
+                ["git", "status", "--porcelain"])
         except subprocess.CalledProcessError as _:
             print("Warning: failed to execute git commands")
             has_git = False
@@ -1184,13 +1191,16 @@ def s3_sync_code(config, dry=False, added_project_directories=[]):
         full_path = "%s/%s" % (base, code_path)
         cache_path = "%s/%s" % (base, dir_hash)
         cache_cmds = ["aws", "s3", "cp", "--recursive"] + \
-                     flatten(["--exclude", "%s" % pattern] for pattern in config.CODE_SYNC_IGNORES) + \
+                     flatten(["--exclude", "%s" % pattern]
+                             for pattern in config.CODE_SYNC_IGNORES) + \
                      [cache_path, full_path]
         cmds = ["aws", "s3", "cp", "--recursive"] + \
-               flatten(["--exclude", "%s" % pattern] for pattern in config.CODE_SYNC_IGNORES) + \
+               flatten(["--exclude", "%s" % pattern]
+                       for pattern in config.CODE_SYNC_IGNORES) + \
                [".", full_path]
         caching_cmds = ["aws", "s3", "cp", "--recursive"] + \
-                       flatten(["--exclude", "%s" % pattern] for pattern in config.CODE_SYNC_IGNORES) + \
+                       flatten(["--exclude", "%s" % pattern]
+                               for pattern in config.CODE_SYNC_IGNORES) + \
                        [full_path, cache_path]
         mujoco_key_cmd = [
             "aws", "s3", "sync", config.MUJOCO_KEY_PATH,
@@ -1234,8 +1244,9 @@ def to_lab_kube_pod(params,
                     sync_all_data_node_to_s3=False,
                     terminate_machine=True):
     """
-    :param params: The parameters for the experiment. If logging directory parameters are provided, we will create
-    docker volume mapping to make sure that the logging files are created at the correct locations
+    :param params: The parameters for the experiment. If logging directory
+    parameters are provided, we will create docker volume mapping to make sure
+    that the logging files are created at the correct locations
     :param docker_image: docker image to run the command on
     :param script: script command for running experiment
     :return:
@@ -1285,7 +1296,7 @@ def to_lab_kube_pod(params,
                             while /bin/true; do
                                 aws s3 sync {log_dir} {remote_log_dir} --region {aws_region} --quiet
                                 sleep {periodic_sync_interval}
-                            done & echo sync initiated""".format(
+                            done & echo sync initiated""".format(  # noqa: E501
                     log_dir=log_dir,
                     remote_log_dir=remote_log_dir,
                     aws_region=config.AWS_REGION_NAME,
@@ -1295,7 +1306,7 @@ def to_lab_kube_pod(params,
                             while /bin/true; do
                                 aws s3 sync {log_dir} {remote_log_dir} --region {aws_region} --quiet
                                 sleep {periodic_sync_interval}
-                            done & echo sync initiated""".format(
+                            done & echo sync initiated""".format(  # noqa: E501
                     log_dir=log_dir,
                     remote_log_dir=remote_log_dir,
                     aws_region=config.AWS_REGION_NAME,
@@ -1307,7 +1318,7 @@ def to_lab_kube_pod(params,
                     while /bin/true; do
                         aws s3 sync --exclude '*' --include '*.csv' --include '*.json' --include '*.pkl' {log_dir} {remote_log_dir} --region {aws_region} --quiet
                         sleep {periodic_sync_interval}
-                    done & echo sync initiated""".format(
+                    done & echo sync initiated""".format(  # noqa: E501
                     log_dir=log_dir,
                     remote_log_dir=remote_log_dir,
                     aws_region=config.AWS_REGION_NAME,
@@ -1317,7 +1328,7 @@ def to_lab_kube_pod(params,
                     while /bin/true; do
                         aws s3 sync --exclude '*' --include '*.csv' --include '*.json' {log_dir} {remote_log_dir} --region {aws_region} --quiet
                         sleep {periodic_sync_interval}
-                    done & echo sync initiated""".format(
+                    done & echo sync initiated""".format(  # noqa: E501
                     log_dir=log_dir,
                     remote_log_dir=remote_log_dir,
                     aws_region=config.AWS_REGION_NAME,

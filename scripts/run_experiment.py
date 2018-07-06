@@ -2,7 +2,7 @@ import argparse
 import ast
 import base64
 import datetime
-import logging
+import os
 import os.path as osp
 import pickle as pickle
 import sys
@@ -116,6 +116,7 @@ def run_experiment(argv):
 
     args = parser.parse_args(argv[1:])
 
+    assert (os.environ.get("JOBLIB_START_METHOD", None) == "forkserver")
     if args.seed is not None:
         set_seed(args.seed)
 
@@ -170,7 +171,11 @@ def run_experiment(argv):
         if args.use_cloudpickle:
             import cloudpickle
             method_call = cloudpickle.loads(base64.b64decode(args.args_data))
-            method_call(variant_data)
+            try:
+                method_call(variant_data)
+            except BaseException:
+                if args.n_parallel > 0:
+                    parallel_sampler.terminate()
         else:
             data = pickle.loads(base64.b64decode(args.args_data))
             maybe_iter = concretize(data)
