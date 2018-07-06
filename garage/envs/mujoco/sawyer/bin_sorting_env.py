@@ -45,9 +45,9 @@ class BinSortingEnv(MujocoEnv, Serializable):
         qpos = self.sim.data.qpos
         qvel = self.sim.data.qvel
 
-        green_object_pos = self.sim.data.get_site_xpos('object0')
-        red_object_pos = self.sim.data.get_site_xpos('object1')
-        blue_object_pos = self.sim.data.get_site_xpos('object2')
+        green_object_pos = self.sim.data.get_geom_xpos('object0')
+        red_object_pos = self.sim.data.get_geom_xpos('object1')
+        blue_object_pos = self.sim.data.get_geom_xpos('object2')
 
         obs = np.concatenate([
             grip_pos,
@@ -62,9 +62,9 @@ class BinSortingEnv(MujocoEnv, Serializable):
         return obs
 
     def compute_reward(self):
-        green_object_pos = self.sim.data.get_site_xpos('object0')
-        red_object_pos = self.sim.data.get_site_xpos('object1')
-        blue_object_pos = self.sim.data.get_site_xpos('object2')
+        green_object_pos = self.sim.data.get_geom_xpos('object0')
+        red_object_pos = self.sim.data.get_geom_xpos('object1')
+        blue_object_pos = self.sim.data.get_geom_xpos('object2')
 
         if self.in_circle(self._green_bin_center, green_object_pos):
             self._green_done = True

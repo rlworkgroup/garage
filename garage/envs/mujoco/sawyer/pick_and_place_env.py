@@ -81,11 +81,11 @@ class PickAndPlaceEnv(MujocoEnv, Serializable):
         qpos = self.sim.data.qpos
         qvel = self.sim.data.qvel
 
-        object_pos = self.sim.data.get_site_xpos('object0')
+        object_pos = self.sim.data.get_geom_xpos('object0')
         object_rot = rotations.mat2euler(
-            self.sim.data.get_site_xmat('object0'))
-        object_velp = self.sim.data.get_site_xvelp('object0') * dt
-        object_velr = self.sim.data.get_site_xvelr('object0') * dt
+            self.sim.data.get_geom_xmat('object0'))
+        object_velp = self.sim.data.get_geom_xvelp('object0') * dt
+        object_velr = self.sim.data.get_geom_xvelr('object0') * dt
         object_rel_pos = object_pos - grip_pos
         object_velp -= grip_velp
 
