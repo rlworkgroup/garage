@@ -1,5 +1,5 @@
 <mujoco>
-    <body name="pedestal_table" pos="0 0 0">
+    <body name="pedestal_table" pos="0.482 0 -0.05">
       <inertial pos="0 0 0" quat="0.659267 -0.259505 -0.260945 0.655692" mass="60.864" diaginertia="6.0869 5.81635 4.20915" />
       <geom pos="0 0 0" quat="0.707 0 0 0.707" type="mesh" contype="0" conaffinity="0" group="1" rgba="0.2 0.2 0.2 1" mesh="pedestal_table" />
       <geom size="0.6 0.45 0.05" pos="0 0 0" type="box" rgba="0.2 0.2 0.2 0" />
