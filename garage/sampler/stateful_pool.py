@@ -64,20 +64,21 @@ class StatefulPool(object):
             )
 
     def terminate(self):
-        self.pool.terminate()
+        if self.pool:
+            self.pool.terminate()
 
     def run_each(self, runner, args_list=None):
         """
         Run the method on each worker process, and collect the result of
         execution.
 
-        The runner method will receive 'G' as its first argument, followed by
-        the arguments in the args_list, if any
+        The runner method will receive 'g' as its first argument, followed
+        by the arguments in the args_list, if any
         :return:
         """
         assert not inspect.ismethod(runner), (
             "run_each() cannot run a class method. Please ensure that runner "
-            "is a function with the prototype def foo(G, ...), where G is an "
+            "is a function with the prototype def foo(g, ...), where g is an "
             "object of type garage.sampler.stateful_pool.SharedGlobal")
 
         if args_list is None:
@@ -96,7 +97,7 @@ class StatefulPool(object):
     def run_map(self, runner, args_list):
         assert not inspect.ismethod(runner), (
             "run_map() cannot run a class method. Please ensure that runner "
-            "is a function with the prototype 'def foo(G, ...)', where G is "
+            "is a function with the prototype 'def foo(g, ...)', where g is "
             "an object of type garage.sampler.stateful_pool.SharedGlobal")
 
         if self.n_parallel > 1:
@@ -111,8 +112,8 @@ class StatefulPool(object):
     def run_imap_unordered(self, runner, args_list):
         assert not inspect.ismethod(runner), (
             "run_imap_unordered() cannot run a class method. Please ensure "
-            "that runner is a function with the prototype 'def foo(G, ...)', "
-            "where G is an object of type "
+            "that runner is a function with the prototype 'def foo(g, ...)', "
+            "where g is an object of type "
             "garage.sampler.stateful_pool.SharedGlobal")
 
         if self.n_parallel > 1:
@@ -130,7 +131,7 @@ class StatefulPool(object):
                     show_prog_bar=True):
         """
         Run the collector method using the worker pool. The collect_once method
-        will receive 'G' as its first argument, followed by the provided args,
+        will receive 'g' as its first argument, followed by the provided args,
         if any. The method should return a pair of values. The first should be
         the object to be collected, and the second is the increment to be
         added.
@@ -139,7 +140,7 @@ class StatefulPool(object):
 
         Sample script:
 
-        def collect_once(G):
+        def collect_once(g):
             return 'a', 1
 
         stateful_pool.run_collect(collect_once, threshold=3)
@@ -151,8 +152,8 @@ class StatefulPool(object):
         """
         assert not inspect.ismethod(collect_once), (
             "run_collect() cannot run a class method. Please ensure that "
-            "collect_once is a function with the prototype 'def foo(G, ...)', "
-            "where G is an object of type "
+            "collect_once is a function with the prototype 'def foo(g, ...)', "
+            "where g is an object of type "
             "garage.sampler.stateful_pool.SharedGlobal")
 
         if args is None:

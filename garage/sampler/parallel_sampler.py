@@ -59,7 +59,7 @@ def populate_task(env, policy, scope=None):
         ] * singleton_pool.n_parallel)
     else:
         # avoid unnecessary copying
-        g = _get_scoped_g(singleton_pool.g, scope)
+        g = _get_scoped_g(singleton_pool.G, scope)
         g.env = env
         g.policy = policy
     logger.log("Populated")
