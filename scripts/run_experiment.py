@@ -178,6 +178,7 @@ def run_experiment(argv):
             except BaseException:
                 if args.n_parallel > 0:
                     parallel_sampler.terminate()
+                raise
         else:
             data = pickle.loads(base64.b64decode(args.args_data))
             maybe_iter = concretize(data)
