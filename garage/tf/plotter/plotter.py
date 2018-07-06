@@ -21,7 +21,11 @@ class Op(Enum):
 Message = namedtuple("Message", ["op", "args", "kwargs"])
 
 
-class Plotter(object):
+class Plotter:
+
+    # Static variable used to disable the plotter
+    enable = True
+
     def __init__(self,
                  env,
                  policy,
@@ -93,7 +97,14 @@ class Plotter(object):
             self.queue.join()
             self.worker_thread.join()
 
+    @staticmethod
+    def disable():
+        """Disable all instances of the Plotter class."""
+        Plotter.enable = False
+
     def start(self):
+        if not Plotter.enable:
+            return
         if not self.worker_thread.is_alive():
             tf.get_variable_scope().reuse_variables()
             self.worker_thread.start()
@@ -104,6 +115,8 @@ class Plotter(object):
             atexit.register(self.shutdown)
 
     def update_plot(self, policy, max_length=np.inf):
+        if not Plotter.enable:
+            return
         if self.worker_thread.is_alive():
             self.queue.put(
                 Message(

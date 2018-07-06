@@ -12,7 +12,7 @@ from garage.misc import ext
 from garage.misc import special
 import garage.misc.logger as logger
 from garage.misc.overrides import overrides
-from garage.plotter import plotter
+from garage.plotter import Plotter
 from garage.replay_buffer import ReplayBuffer
 from garage.sampler import parallel_sampler
 
@@ -89,12 +89,11 @@ class DDPG(RLAlgorithm):
         :param scale_reward: The scaling factor applied to the rewards when
          training
         :param include_horizon_terminal_transitions: whether to include
-         transitions with terminal=True because the horizon was reached.
-         This might make the Q value back up less stable for certain tasks.
+         transitions with terminal=True because the horizon was reached. This
+         might make the Q value back up less stable for certain tasks.
         :param plot: Whether to visualize the policy performance after each
          eval_interval.
-        :param pause_for_plot: Whether to pause before continuing when
-         plotting.
+        :param pause_for_plot: Whether to pause before continuing when plotting
         :return:
         """
         self.env = env
@@ -141,11 +140,12 @@ class DDPG(RLAlgorithm):
         self.scale_reward = scale_reward
 
         self.opt_info = None
+        self.plotter = Plotter()
 
     def start_worker(self):
         parallel_sampler.populate_task(self.env, self.policy)
         if self.plot:
-            plotter.init_plot(self.env, self.policy)
+            self.plotter.init_plot(self.env, self.policy)
 
     @overrides
     def train(self):
@@ -227,6 +227,7 @@ class DDPG(RLAlgorithm):
                           "continue...")
         self.env.close()
         self.policy.terminate()
+        self.plotter.shutdown()
 
     def init_opt(self):
 
@@ -389,7 +390,7 @@ class DDPG(RLAlgorithm):
 
     def update_plot(self):
         if self.plot:
-            plotter.update_plot(self.policy, self.max_path_length)
+            self.plotter.update_plot(self.policy, self.max_path_length)
 
     def get_epoch_snapshot(self, epoch):
         return dict(

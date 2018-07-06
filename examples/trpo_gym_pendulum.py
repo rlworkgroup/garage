@@ -3,6 +3,7 @@ import gym
 from garage.algos import TRPO
 from garage.baselines import LinearFeatureBaseline
 from garage.envs import normalize
+from garage.envs.util import horizon
 from garage.envs.util import spec
 from garage.misc.instrument import run_experiment
 from garage.policies import GaussianMLPPolicy
@@ -11,8 +12,8 @@ from garage.policies import GaussianMLPPolicy
 def run_task(*_):
     # Please note that different environments with different action spaces may
     # require different policies. For example with a Box action space, a
-    # GaussianMLPPolicy works, but for a Discrete action space may need to use a
-    # CategoricalMLPPolicy (see the trpo_gym_cartpole.py example)
+    # GaussianMLPPolicy works, but for a Discrete action space may need to use
+    # a CategoricalMLPPolicy (see the trpo_gym_cartpole.py example)
     env = normalize(gym.make("Pendulum-v0"))
 
     policy = GaussianMLPPolicy(env_spec=spec(env), hidden_sizes=(32, 32))
@@ -24,7 +25,7 @@ def run_task(*_):
         policy=policy,
         baseline=baseline,
         batch_size=4000,
-        max_path_length=env.horizon,
+        max_path_length=horizon(env),
         n_itr=50,
         discount=0.99,
         step_size=0.01,
