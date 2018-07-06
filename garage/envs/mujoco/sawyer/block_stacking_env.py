@@ -26,9 +26,9 @@ class BlockStackingEnv(MujocoEnv, Serializable):
         return Step(obs, reward, done)
 
     def compute_reward(self):
-        green_pos = self.sim.data.get_site_xpos('object0')
-        red_pos = self.sim.data.get_site_xpos('object1')
-        blue_pos = self.sim.data.get_site_xpos('object2')
+        green_pos = self.sim.data.get_geom_xpos('object0')
+        red_pos = self.sim.data.get_geom_xpos('object1')
+        blue_pos = self.sim.data.get_geom_xpos('object2')
 
         if self._is_stacked(green_pos, red_pos) and self._is_stacked(
                 green_pos, blue_pos) and self._is_stacked(red_pos, blue_pos):
@@ -46,9 +46,9 @@ class BlockStackingEnv(MujocoEnv, Serializable):
         qpos = self.sim.data.qpos
         qvel = self.sim.data.qvel
 
-        green_object_pos = self.sim.data.get_site_xpos('object0')
-        red_object_pos = self.sim.data.get_site_xpos('object1')
-        blue_object_pos = self.sim.data.get_site_xpos('object2')
+        green_object_pos = self.sim.data.get_geom_xpos('object0')
+        red_object_pos = self.sim.data.get_geom_xpos('object1')
+        blue_object_pos = self.sim.data.get_geom_xpos('object2')
 
         obs = np.concatenate([
             grip_pos,
