@@ -107,8 +107,8 @@
                           <geom size="0.005 0.025 0.0085" contype="0" pos="-0.005 -0.003 0.0083" quat="0 0 0 -1" type="box" rgba="0.1 0.1 0.1 1"/>
                           <body name="r_gripper_l_finger_tip" pos="0 0.01725 0.1127">
                             <inertial pos="0 0 0" quat="0 0 0 1" mass="0.01" diaginertia="0.01 0.01 0.01" />
-                            <geom pos="-.007 -.01 0.003" class="viz" mesh="half_round_tip" euler="-1.57 0 0"/>
-                            <geom size="0.008 0.0185" pos="0 -0.0045 -0.015" quat="0 0 0 1" type="cylinder" />
+                            <geom pos="-.007 -.01 0.003" class="viz" mesh="half_round_tip" euler="-1.57 0 0" friction="1 0.05 0.01"/>
+                            <geom size="0.008 0.0185" pos="0 -0.0045 -0.015" quat="0 0 0 1" type="cylinder" friction="1 0.05 0.01"/>
                           </body>
                         </body>
                         <body name="r_gripper_r_finger" pos="0 0.0015 0.02">
@@ -119,8 +119,8 @@
                           <geom size="0.005 0.025 0.0085" contype="0" pos="0.005 0.003 0.0083" type="box" rgba="0.1 0.1 0.1 1"/>
                           <body name="r_gripper_r_finger_tip" pos="0 -0.01725 0.1127">
                             <inertial pos="0 0 0" mass="0.01" diaginertia="0.01 0.01 0.01" />
-                            <geom pos=".007 .01 0.003" class="viz" mesh="half_round_tip" euler="-1.57 3.14 0"/>
-                            <geom size="0.008 0.0185" pos="0 0.0045 -0.015" type="cylinder" />
+                            <geom pos=".007 .01 0.003" class="viz" mesh="half_round_tip" euler="-1.57 3.14 0" friction="1 0.05 0.01"/>
+                            <geom size="0.008 0.0185" pos="0 0.0045 -0.015" type="cylinder" friction="1 0.05 0.01"/>
                           </body>
                         </body>
                         <site name="grip" pos="0 0 0" rgba="0 0 0 0" size="0.02 0.02 0.02"></site>

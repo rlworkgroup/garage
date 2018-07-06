@@ -15,7 +15,7 @@
 
     <body name="object0" pos="0.632 0.30 0.1">
       <joint name="object0:joint" type="free" damping="0.01"></joint>
-      <geom size="0.025 0.025 0.025" type="box" condim="3" name="object0" material="block_mat" mass="2" rgba="1 0 0 1"></geom>
+      <geom size="0.025 0.025 0.025" type="box" condim="3" name="object0" material="block_mat" mass="0.1" rgba="1 0 0 1"></geom>
     </body>
 
     <body mocap="true" name="mocap" pos="0.2369680365278436 0.7377722688452103 0.30233579064225752">

@@ -15,17 +15,17 @@
 
     <body name="object0" pos="0.332 -0.15 0.025">
       <joint name="object0:joint" type="free" damping="0.01"></joint>
-      <geom size="0.025 0.025 0.025" type="box" condim="3" name="object0" rgba="0 1 0 1" mass="2"></geom>
+      <geom size="0.025 0.025 0.025" type="box" condim="3" name="object0" rgba="0 1 0 1" mass="0.1"></geom>
     </body>
 
     <body name="object1" pos="0.232 -0.25 0.025">
       <joint name="object1:joint" type="free" damping="0.01"></joint>
-      <geom size="0.025 0.025 0.025" type="box" condim="3" name="object1" rgba="1 0 0 1" mass="2"></geom>
+      <geom size="0.025 0.025 0.025" type="box" condim="3" name="object1" rgba="1 0 0 1" mass="0.1"></geom>
     </body>
 
     <body name="object2" pos="0.132 -0.35 0.025">
       <joint name="object2:joint" type="free" damping="0.01"></joint>
-      <geom size="0.025 0.025 0.025" type="box" condim="3" name="object2" rgba="0 0 1 1" mass="2"></geom>
+      <geom size="0.025 0.025 0.025" type="box" condim="3" name="object2" rgba="0 0 1 1" mass="0.1"></geom>
     </body>
 
     <body mocap="true" name="mocap" pos="0.2369680365278436 0.7377722688452103 0.30233579064225752">
