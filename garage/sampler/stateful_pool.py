@@ -72,8 +72,8 @@ class StatefulPool(object):
         Run the method on each worker process, and collect the result of
         execution.
 
-        The runner method will receive 'G' as its first argument, followed by
-        the arguments in the args_list, if any
+        The runner method will receive 'G' as its first argument, followed
+        by the arguments in the args_list, if any
         :return:
         """
         assert not inspect.ismethod(runner), (
