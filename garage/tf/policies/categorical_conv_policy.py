@@ -13,7 +13,9 @@ from garage.tf.spaces import Discrete
 
 
 class CategoricalConvPolicy(StochasticPolicy, LayersPowered, Serializable):
-    def __init__( self, env_spec,
+    def __init__(
+            self,
+            env_spec,
             conv_filters,
             conv_filter_sizes,
             conv_strides,
