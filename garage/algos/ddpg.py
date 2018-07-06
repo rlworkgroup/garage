@@ -126,7 +126,7 @@ class DDPG(RLAlgorithm):
         self.n_updates_per_sample = n_updates_per_sample
         self.include_horizon_terminal_transitions = \
             include_horizon_terminal_transitions
-        self.plot = plot or Plotter.enable
+        self.plot = plot
         self.pause_for_plot = pause_for_plot
 
         self.qf_loss_averages = []

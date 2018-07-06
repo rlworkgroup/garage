@@ -97,7 +97,7 @@ class CEM(RLAlgorithm, Serializable):
         self.env = env
         self.policy = policy
         self.batch_size = batch_size
-        self.plot = plot or Plotter.enable
+        self.plot = plot
         self.extra_decay_time = extra_decay_time
         self.extra_std = extra_std
         self.best_frac = best_frac

@@ -49,7 +49,7 @@ class CMAES(RLAlgorithm, Serializable):
         Serializable.quick_init(self, locals())
         self.env = env
         self.policy = policy
-        self.plot = plot or Plotter.enable
+        self.plot = plot
         self.sigma0 = sigma0
         self.discount = discount
         self.max_path_length = max_path_length

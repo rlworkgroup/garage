@@ -21,10 +21,9 @@ class Op(Enum):
 Message = namedtuple("Message", ["op", "args", "kwargs"])
 
 
-class Plotter(object):
+class Plotter:
 
-    # Static variable used along with function run_experiment to enable or
-    # disable the plotter
+    # Static variable used to disable the plotter
     enable = True
 
     def __init__(self,
@@ -100,29 +99,30 @@ class Plotter(object):
 
     @staticmethod
     def disable():
-        """Set the plot enabling according to the run_experiment function.
-        """
+        """Disable all instances of the Plotter class."""
         Plotter.enable = False
 
     def start(self):
-        if Plotter.enable:
-            if not self.worker_thread.is_alive():
-                tf.get_variable_scope().reuse_variables()
-                self.worker_thread.start()
-                self.queue.put(
-                    Message(
-                        op=Op.UPDATE,
-                        args=(self.env, self.policy),
-                        kwargs=None))
-                self.queue.task_done()
-                atexit.register(self.shutdown)
+        if not Plotter.enable:
+            return
+        if not self.worker_thread.is_alive():
+            tf.get_variable_scope().reuse_variables()
+            self.worker_thread.start()
+            self.queue.put(
+                Message(
+                    op=Op.UPDATE,
+                    args=(self.env, self.policy),
+                    kwargs=None))
+            self.queue.task_done()
+            atexit.register(self.shutdown)
 
     def update_plot(self, policy, max_length=np.inf):
-        if Plotter.enable:
-            if self.worker_thread.is_alive():
-                self.queue.put(
-                    Message(
-                        op=Op.DEMO,
-                        args=(policy.get_param_values(), max_length),
-                        kwargs=None))
-                self.queue.task_done()
+        if not Plotter.enable:
+            return
+        if self.worker_thread.is_alive():
+            self.queue.put(
+                Message(
+                    op=Op.DEMO,
+                    args=(policy.get_param_values(), max_length),
+                    kwargs=None))
+            self.queue.task_done()

@@ -22,10 +22,9 @@ class Op(Enum):
 Message = namedtuple("Message", ["op", "args", "kwargs"])
 
 
-class Plotter():
+class Plotter:
 
-    # Static variable used along with function run_experiment to enable or
-    # disable the plotter
+    # Static variable used to disable the plotter
     enable = True
 
     def __init__(self):
@@ -82,49 +81,53 @@ class Plotter():
             pass
 
     def shutdown(self):
-        if Plotter.enable and self._process.is_alive():
+        if not Plotter.enable:
+            return
+        if self._process.is_alive():
             self._queue.put(Message(op=Op.STOP, args=None, kwargs=None))
             self._queue.close()
             self._process.join()
 
     @staticmethod
     def disable():
-        """Set the plot enabling according to the run_experiment function.
-        """
+        """Disable all instances of the Plotter class."""
         Plotter.enable = False
 
     def init_worker(self):
-        if Plotter.enable:
-            self._queue = Queue()
-            if ('Darwin' in platform.platform()):
-                self._process = Thread(target=self._worker_start)
-            else:
-                self._process = Process(target=self._worker_start)
-            self._process.daemon = True
-            self._process.start()
-            atexit.register(self.shutdown)
+        if not Plotter.enable:
+            return
+        self._queue = Queue()
+        if ('Darwin' in platform.platform()):
+            self._process = Thread(target=self._worker_start)
+        else:
+            self._process = Process(target=self._worker_start)
+        self._process.daemon = True
+        self._process.start()
+        atexit.register(self.shutdown)
 
     def init_plot(self, env, policy):
-        if Plotter.enable:
-            if not (self._process and self._queue):
-                self.init_worker()
+        if not Plotter.enable:
+            return
+        if not (self._process and self._queue):
+            self.init_worker()
 
-            # Needed in order to draw glfw window on the main thread
-            if ('Darwin' in platform.platform()):
-                rollout(
-                    env,
-                    policy,
-                    max_path_length=np.inf,
-                    animated=True,
-                    speedup=5)
+        # Needed in order to draw glfw window on the main thread
+        if ('Darwin' in platform.platform()):
+            rollout(
+                env,
+                policy,
+                max_path_length=np.inf,
+                animated=True,
+                speedup=5)
 
-            self._queue.put(
-                Message(op=Op.UPDATE, args=(env, policy), kwargs=None))
+        self._queue.put(
+            Message(op=Op.UPDATE, args=(env, policy), kwargs=None))
 
     def update_plot(self, policy, max_length=np.inf):
-        if Plotter.enable:
-            self._queue.put(
-                Message(
-                    op=Op.DEMO,
-                    args=(policy.get_param_values(), max_length),
-                    kwargs=None))
+        if not Plotter.enable:
+            return
+        self._queue.put(
+            Message(
+                op=Op.DEMO,
+                args=(policy.get_param_values(), max_length),
+                kwargs=None))

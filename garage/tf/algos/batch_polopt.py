@@ -72,7 +72,7 @@ class BatchPolopt(RLAlgorithm):
         self.max_path_length = max_path_length
         self.discount = discount
         self.gae_lambda = gae_lambda
-        self.plot = plot or Plotter.enable
+        self.plot = plot
         self.pause_for_plot = pause_for_plot
         self.center_adv = center_adv
         self.positive_adv = positive_adv
