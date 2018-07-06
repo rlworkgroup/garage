@@ -5,9 +5,9 @@ from gym.spaces import Tuple as GymTuple
 
 from garage.envs import EnvSpec
 from garage.envs import ProxyEnv
-from garage.spaces.tf import Box
-from garage.spaces.tf import Discrete
-from garage.spaces.tf import Product
+from garage.tf.spaces import Box
+from garage.tf.spaces import Discrete
+from garage.tf.spaces import Product
 
 
 def to_tf_space(space):
