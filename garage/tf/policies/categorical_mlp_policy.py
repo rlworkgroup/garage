@@ -2,13 +2,13 @@ import tensorflow as tf
 
 from garage.core import Serializable
 from garage.misc.overrides import overrides
-from garage.spaces.tf import Discrete
 from garage.tf.core import LayersPowered
 from garage.tf.core import MLP
 import garage.tf.core.layers as L
 from garage.tf.distributions import Categorical
 from garage.tf.misc import tensor_utils
 from garage.tf.policies import StochasticPolicy
+from garage.tf.spaces import Discrete
 
 
 class CategoricalMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
