@@ -120,8 +120,6 @@ def run_experiment(argv):
     if args.seed is not None:
         set_seed(args.seed)
 
-    # Fork the work processes with SIGINT blocked so they don't get
-    # finished when they own locks
     if args.n_parallel > 0:
         from garage.sampler import parallel_sampler
         parallel_sampler.initialize(n_parallel=args.n_parallel)
