@@ -20,9 +20,9 @@ from garage.envs.util import bounds
 from garage.envs.util import flat_dim
 from garage.misc import logger
 from garage.misc.overrides import overrides
+from garage.replay_buffer import ReplayBuffer
 from garage.tf.misc import tensor_utils
 from garage.tf.plotter import Plotter
-from garage.tf.replay_buffer import ReplayBuffer
 
 
 class DDPG(RLAlgorithm):

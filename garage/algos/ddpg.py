@@ -13,6 +13,7 @@ from garage.misc import special
 import garage.misc.logger as logger
 from garage.misc.overrides import overrides
 from garage.plotter import plotter
+from garage.replay_buffer import ReplayBuffer
 from garage.sampler import parallel_sampler
 
 
@@ -23,60 +24,6 @@ def parse_update_method(update_method, **kwargs):
         return partial(lasagne.updates.sgd, **ext.compact(kwargs))
     else:
         raise NotImplementedError
-
-
-class SimpleReplayPool(object):
-    def __init__(self, max_pool_size, observation_dim, action_flat_dim):
-        self._observation_dim = observation_dim
-        self._action_flat_dim = action_flat_dim
-        self._max_pool_size = max_pool_size
-        self._observations = np.zeros((max_pool_size, observation_dim), )
-        self._actions = np.zeros((max_pool_size, action_flat_dim), )
-        self._rewards = np.zeros(max_pool_size)
-        self._terminals = np.zeros(max_pool_size, dtype='uint8')
-        self._bottom = 0
-        self._top = 0
-        self._size = 0
-
-    def add_sample(self, observation, action, reward, terminal):
-        self._observations[self._top] = observation
-        self._actions[self._top] = action
-        self._rewards[self._top] = reward
-        self._terminals[self._top] = terminal
-        self._top = (self._top + 1) % self._max_pool_size
-        if self._size >= self._max_pool_size:
-            self._bottom = (self._bottom + 1) % self._max_pool_size
-        else:
-            self._size += 1
-
-    def random_batch(self, batch_size):
-        assert self._size > batch_size
-        indices = np.zeros(batch_size, dtype='uint64')
-        transition_indices = np.zeros(batch_size, dtype='uint64')
-        count = 0
-        while count < batch_size:
-            index = np.random.randint(
-                self._bottom, self._bottom + self._size) % self._max_pool_size
-            # make sure that the transition is valid: if we are at the end of
-            # the pool, we need to discard this sample
-            if index == self._size - 1 and self._size <= self._max_pool_size:
-                continue
-            # if self._terminals[index]:
-            #     continue
-            transition_index = (index + 1) % self._max_pool_size
-            indices[count] = index
-            transition_indices[count] = transition_index
-            count += 1
-        return dict(
-            observations=self._observations[indices],
-            actions=self._actions[indices],
-            rewards=self._rewards[indices],
-            terminals=self._terminals[indices],
-            next_observations=self._observations[transition_indices])
-
-    @property
-    def size(self):
-        return self._size
 
 
 class DDPG(RLAlgorithm):
@@ -130,24 +77,24 @@ class DDPG(RLAlgorithm):
         :param qf_learning_rate: Learning rate for training Q function.
         :param policy_weight_decay: Weight decay factor for parameters of the
          policy.
-        :param policy_update_method: Online optimization method for training the
-         policy.
+        :param policy_update_method: Online optimization method for training
+         the policy.
         :param policy_learning_rate: Learning rate for training the policy.
         :param eval_samples: Number of samples (timesteps) for evaluating the
          policy.
         :param soft_target_tau: Interpolation parameter for doing the soft
          target update.
-        :param n_updates_per_sample: Number of Q function and policy updates per
-         new sample obtained
+        :param n_updates_per_sample: Number of Q function and policy updates
+         per new sample obtained
         :param scale_reward: The scaling factor applied to the rewards when
          training
         :param include_horizon_terminal_transitions: whether to include
-         transitions with terminal=True because the
-        horizon was reached. This might make the Q value back up less stable for
-         certain tasks.
+         transitions with terminal=True because the horizon was reached.
+         This might make the Q value back up less stable for certain tasks.
         :param plot: Whether to visualize the policy performance after each
          eval_interval.
-        :param pause_for_plot: Whether to pause before continuing when plotting.
+        :param pause_for_plot: Whether to pause before continuing when
+         plotting.
         :return:
         """
         self.env = env
@@ -203,10 +150,10 @@ class DDPG(RLAlgorithm):
     @overrides
     def train(self):
         # This seems like a rather sequential method
-        pool = SimpleReplayPool(
-            max_pool_size=self.replay_pool_size,
+        pool = ReplayBuffer(
+            max_buffer_size=self.replay_pool_size,
             observation_dim=flat_dim(self.env.observation_space),
-            action_flat_dim=flat_dim(self.env.action_space),
+            action_dim=flat_dim(self.env.action_space),
         )
         self.start_worker()
 
@@ -246,18 +193,20 @@ class DDPG(RLAlgorithm):
                     # only include the terminal transition in this case if the
                     # flag was set
                     if self.include_horizon_terminal_transitions:
-                        pool.add_sample(observation, action,
-                                        reward * self.scale_reward, terminal)
+                        pool.add_transition(observation, action,
+                                            reward * self.scale_reward,
+                                            terminal, next_observation)
                 else:
-                    pool.add_sample(observation, action,
-                                    reward * self.scale_reward, terminal)
+                    pool.add_transition(observation, action,
+                                        reward * self.scale_reward, terminal,
+                                        next_observation)
 
                 observation = next_observation
 
                 if pool.size >= self.min_pool_size:
                     for update_itr in range(self.n_updates_per_sample):
                         # Train policy
-                        batch = pool.random_batch(self.batch_size)
+                        batch = pool.random_sample(self.batch_size)
                         self.do_training(itr, batch)
                     sample_policy.set_param_values(
                         self.policy.get_param_values())
@@ -407,7 +356,7 @@ class DDPG(RLAlgorithm):
         logger.record_tabular('StdReturn', np.std(returns))
         logger.record_tabular('MaxReturn', np.max(returns))
         logger.record_tabular('MinReturn', np.min(returns))
-        if len(self.es_path_returns) > 0:
+        if self.es_path_returns:
             logger.record_tabular('AverageEsReturn',
                                   np.mean(self.es_path_returns))
             logger.record_tabular('StdEsReturn', np.std(self.es_path_returns))
