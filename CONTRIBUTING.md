@@ -3,6 +3,10 @@ We welcome all contributions to garage.
 
 Use this guide to prepare your contribution.
 
+# Post-setup instructions
+After activating your conda environment (e.g. `conda activate garage`), make sure you run `pre-commit install` to install the pre-commit package on your machine.
+This will streamline your git process and reduce potential CI errors.
+
 ## Pull requests
 All contributions to the garage codebase are submitted via a GitHub pull request.
 
