@@ -110,9 +110,7 @@ class Plotter:
             self.worker_thread.start()
             self.queue.put(
                 Message(
-                    op=Op.UPDATE,
-                    args=(self.env, self.policy),
-                    kwargs=None))
+                    op=Op.UPDATE, args=(self.env, self.policy), kwargs=None))
             self.queue.task_done()
             atexit.register(self.shutdown)
 

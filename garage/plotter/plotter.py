@@ -114,14 +114,9 @@ class Plotter:
         # Needed in order to draw glfw window on the main thread
         if ('Darwin' in platform.platform()):
             rollout(
-                env,
-                policy,
-                max_path_length=np.inf,
-                animated=True,
-                speedup=5)
+                env, policy, max_path_length=np.inf, animated=True, speedup=5)
 
-        self._queue.put(
-            Message(op=Op.UPDATE, args=(env, policy), kwargs=None))
+        self._queue.put(Message(op=Op.UPDATE, args=(env, policy), kwargs=None))
 
     def update_plot(self, policy, max_length=np.inf):
         if not Plotter.enable:
