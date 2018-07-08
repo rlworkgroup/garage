@@ -11,7 +11,8 @@ secrets.py
 build
 build_linux
 .idea
-.sublime-project
+*.sublime-project
+*.sublime-workspace
 run_experiment.sh
 scratch-notebooks
 launch_scripts
