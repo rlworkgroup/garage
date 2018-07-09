@@ -13,7 +13,7 @@ from garage.misc.overrides import overrides
 class ReacherEnv(MujocoEnv, Serializable):
     """Reacher Environment."""
 
-    FILE = "reach.xml"
+    FILE = "reacher.xml"
 
     def __init__(self,
                  initial_goal=None,
@@ -36,8 +36,8 @@ class ReacherEnv(MujocoEnv, Serializable):
         :param kwargs
         """
         Serializable.quick_init(self, locals())
-        if self._initial_goal is None:
-            self._initial_goal = np.array([0.6, -0.1, 0.80])
+        if initial_goal is None:
+            self._initial_goal = np.array([0.0, 0.0, 0.0])
         else:
             self._initial_goal = initial_goal
         if initial_qpos is not None:
@@ -62,6 +62,10 @@ class ReacherEnv(MujocoEnv, Serializable):
         super(ReacherEnv, self).__init__(*args, **kwargs)
         self.env_setup(self._initial_qpos)
 
+        site_id = self.sim.model.site_name2id('target_pos')
+        self.sim.model.site_pos[site_id] = self._initial_goal
+        self.sim.forward()
+
     @overrides
     def step(self, action):
         """
@@ -74,12 +78,13 @@ class ReacherEnv(MujocoEnv, Serializable):
         if self._control_method == 'torque_control':
             self.forward_dynamics(action)
         elif self._control_method == 'position_control':
-            assert action.shape == (3,)
+            assert action.shape == (3, )
             action = action.copy()
             action *= 0.1  # limit the action
             rot_ctrl = np.array([1., 0., 1., 0.])
             action = np.concatenate([action, rot_ctrl])
-            mocap_set_action(self.sim, action)  # For pos control of the end effector
+            mocap_set_action(self.sim,
+                             action)  # For pos control of the end effector
             self.sim.step()
         else:
             raise NotImplementedError
@@ -135,6 +140,19 @@ class ReacherEnv(MujocoEnv, Serializable):
             qvel,
         ])
 
+        if self._control_method == 'position_control':
+            obs = np.concatenate([
+                grip_pos,
+                grip_velp,
+            ])
+        elif self._control_method == 'torque_control':
+            obs = np.concatenate([
+                qpos,
+                qvel,
+            ])
+        else:
+            raise NotImplementedError
+
         return {
             'observation': obs.copy(),
             'achieved_goal': achieved_goal.copy(),
@@ -176,7 +194,10 @@ class ReacherEnv(MujocoEnv, Serializable):
         :return: observation space
         """
         return Box(
-            -np.inf, np.inf, shape=self.get_current_obs()['observation'].shape, dtype=np.float32)
+            -np.inf,
+            np.inf,
+            shape=self.get_current_obs()['observation'].shape,
+            dtype=np.float32)
 
     @overrides
     @property
@@ -184,7 +205,8 @@ class ReacherEnv(MujocoEnv, Serializable):
         if self._control_method == 'torque_control':
             return super(ReacherEnv, self).action_space()
         elif self._control_method == 'position_control':
-            return Box(-1., 1., shape=(3,), dtype=np.float32)  # Temp action space
+            return Box(
+                -1., 1., shape=(3, ), dtype=np.float32)  # Temp action space
 
     @overrides
     def close(self):
