@@ -12,7 +12,7 @@ install:
   # mujoco deps
   - sudo add-apt-repository --yes ppa:flixr/backports # for patchelf
   - sudo apt-get update
-  - sudo apt-get install libglfw2 libglew-dev libosmesa6-dev patchelf libopenmpi-dev openmpi-bin
+  - sudo apt-get install -y libglfw2 libglew-dev libosmesa6-dev patchelf libopenmpi-dev openmpi-bin
 
   # mujoco installation
   - wget https://www.roboti.us/download/mjpro150_linux.zip
