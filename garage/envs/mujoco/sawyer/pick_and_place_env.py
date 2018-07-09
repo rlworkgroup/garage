@@ -89,7 +89,7 @@ class PickAndPlaceEnv(MujocoEnv, Serializable):
             d = self._goal_distance(achieved_goal, goal)
             if not self._grasped:
                 reward += 400
-                self._grasped = not self._grasped
+            self._grasped = True
 
         if self._sparse_reward:
             reward += -(d > self._distance_threshold).astype(np.float32)
