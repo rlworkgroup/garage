@@ -423,7 +423,9 @@ class GatherEnv(ProxyEnv, Serializable):
             img = viewer.read_pixels(width=self.render_width,
                                      height=self.render_height,
                                      depth=False)
+            # image is upside-down
             img = img[::-1, :, :]
+            # transpose image s.t. img.shape[0] = width, img.shape[1] = height
             img = np.swapaxes(img, 0, 1)
             return img
         elif mode == 'human':
