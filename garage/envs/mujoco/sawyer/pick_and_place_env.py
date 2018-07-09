@@ -96,7 +96,7 @@ class PickAndPlaceEnv(MujocoEnv, Serializable):
         else:
             reward += -d
 
-        if d < self._distance_threshold:
+        if d < self._distance_threshold and grasped:
             reward += 4200
         return reward
 

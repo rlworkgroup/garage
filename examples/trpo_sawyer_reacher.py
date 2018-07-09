@@ -9,7 +9,7 @@ from garage.policies import GaussianMLPPolicy
 
 
 def run(*_):
-    """A Method for TRPO with reacher environment."""
+    """Stub method for running trpo."""
     env = ReacherEnv(control_method='position_control', sparse_reward=False)
     policy = GaussianMLPPolicy(env_spec=spec(env), hidden_sizes=(32, 32))
     baseline = LinearFeatureBaseline(env_spec=spec(env))
