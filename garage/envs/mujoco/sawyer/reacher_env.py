@@ -37,7 +37,7 @@ class ReacherEnv(MujocoEnv, Serializable):
         """
         Serializable.quick_init(self, locals())
         if initial_goal is None:
-            self._initial_goal = np.array([0.0, 0.0, 0.0])
+            self._initial_goal = np.array([0.8, 0.0, 0.15])
         else:
             self._initial_goal = initial_goal
         if initial_qpos is not None:
@@ -61,10 +61,6 @@ class ReacherEnv(MujocoEnv, Serializable):
         self._accumulated_reward = 0
         super(ReacherEnv, self).__init__(*args, **kwargs)
         self.env_setup(self._initial_qpos)
-
-        site_id = self.sim.model.site_name2id('target_pos')
-        self.sim.model.site_pos[site_id] = self._initial_goal
-        self.sim.forward()
 
     @overrides
     def step(self, action):
@@ -98,9 +94,15 @@ class ReacherEnv(MujocoEnv, Serializable):
                 self._distance_threshold)
         return Step(next_obs, reward, done)
 
+    def _reset_target_visualization(self):
+        site_id = self.sim.model.site_name2id('target_pos')
+        self.sim.model.site_pos[site_id] = self._initial_goal
+        self.sim.forward()
+
     @overrides
     def reset(self, init_state=None):
         self._accumulated_reward = 0
+        self._reset_target_visualization()
         return super(ReacherEnv, self).reset(init_state)['observation']
 
     def _compute_reward(self, achieved_goal, goal):
@@ -112,9 +114,7 @@ class ReacherEnv(MujocoEnv, Serializable):
             reward = -d
 
         if d < self._distance_threshold:
-            # reward += (-self._accumulated_reward)  # Zero the reward
             reward += 500  # Completion
-        # self._accumulated_reward += reward
         return reward
 
     @overrides
@@ -132,13 +132,6 @@ class ReacherEnv(MujocoEnv, Serializable):
         qvel = self.sim.data.qvel
 
         achieved_goal = np.squeeze(grip_pos.copy())
-
-        obs = np.concatenate([
-            grip_pos,
-            grip_velp,
-            qpos,
-            qvel,
-        ])
 
         if self._control_method == 'position_control':
             obs = np.concatenate([
@@ -215,4 +208,5 @@ class ReacherEnv(MujocoEnv, Serializable):
             self.viewer = None
 
     def log_diagnostics(self, paths):
+        """TODO: Logging. """
         pass

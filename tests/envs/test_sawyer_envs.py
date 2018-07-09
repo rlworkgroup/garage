@@ -1,3 +1,5 @@
+"""Testing for sawyer envrionments. """
+
 import numpy as np
 
 from garage.algos import TRPO
@@ -11,6 +13,8 @@ from garage.policies import GaussianMLPPolicy
 
 
 def run_bin_sorting(*_):
+    """Run TRPO for bin sorting env. """
+
     env = BinSortingEnv()
 
     policy = GaussianMLPPolicy(env_spec=spec(env), hidden_sizes=(32, 32))
@@ -31,6 +35,7 @@ def run_bin_sorting(*_):
 
 
 def run_block_stacking(*_):
+    """Run TRPO with block stacking. """
     env = BlockStackingEnv()
 
     policy = GaussianMLPPolicy(env_spec=spec(env), hidden_sizes=(32, 32))
@@ -71,6 +76,8 @@ def run_pick_and_place(*_):
 
 
 def test_reacher():
+    """Testing for reacher."""
+
     env = ReacherEnv()
     for i in range(9999):
         env.render()
@@ -81,9 +88,9 @@ def test_reacher():
 
 
 def test_pnp():
+    """Testing for pick and place."""
 
     env = PickAndPlaceEnv()
-
     for i in range(9999):
         env.render()
         action = env.action_space.sample()

@@ -24,8 +24,8 @@
       <geom size="0.01 0.01 0.01" type="sphere" condim="3" name="object0" material="block_mat" mass="0.1" rgba="1 0 1 1"></geom>
     </body>
 
-    <body name="target_pos" pos="0.64 0.35 0.1">
-      <site name="target_pos" pos="0 0 0.5" size="0.02 0.02 0.02" rgba="1 0 0 1" type="sphere"></site>
+    <body name="target_pos" pos="0 0 0">
+      <site name="target_pos" pos="0 0 0" size="0.02 0.02 0.02" rgba="1 0 0 1" type="sphere"></site>
     </body>
 
 

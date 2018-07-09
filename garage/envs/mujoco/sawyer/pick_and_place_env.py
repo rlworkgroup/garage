@@ -48,10 +48,6 @@ class PickAndPlaceEnv(MujocoEnv, Serializable):
         super(PickAndPlaceEnv, self).__init__(*args, **kwargs)
         self.env_setup(self._initial_qpos)
 
-        site_id = self.sim.model.site_name2id('target_pos')
-        self.sim.model.site_pos[site_id] = self._initial_goal
-        self.sim.forward()
-
     @overrides
     def step(self, action: np.ndarray):
         action = np.clip(action, self.action_space.low, self.action_space.high)
@@ -204,10 +200,17 @@ class PickAndPlaceEnv(MujocoEnv, Serializable):
                 np.array([0.1, 0.1, 0.1, 100]),
                 dtype=np.float32)
 
+    def _reset_target_visualization(self):
+        site_id = self.sim.model.site_name2id('target_pos')
+        self.sim.model.site_pos[site_id] = self._initial_goal
+        self.sim.forward()
+
     @overrides
     def reset(self, init_state=None):
         self._grasped = False
+        self._reset_target_visualization()
         return super(PickAndPlaceEnv, self).reset(init_state)['observation']
 
     def log_diagnostics(self, paths):
+        """TODO: Logging."""
         pass
