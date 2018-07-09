@@ -33,4 +33,3 @@ run_experiment(
     n_parallel=2,
     plot=True,
 )
-
