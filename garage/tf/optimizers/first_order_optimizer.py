@@ -8,7 +8,6 @@ from garage.misc import ext
 from garage.misc import logger
 from garage.optimizers import BatchDataset
 from garage.tf.misc import tensor_utils
-from garage.tf.misc.tensor_utils import enclosing_scope
 
 
 class FirstOrderOptimizer(Serializable):
@@ -33,8 +32,8 @@ class FirstOrderOptimizer(Serializable):
         :param max_epochs:
         :param tolerance:
         :param update_method:
-        :param batch_size: None or an integer. If None the whole dataset will be
-         used.
+        :param batch_size: None or an integer. If None the whole dataset will
+         be used.
         :param callback:
         :param kwargs:
         :return:
@@ -56,24 +55,24 @@ class FirstOrderOptimizer(Serializable):
         self._train_op = None
         self._name = name
 
-    def update_opt(self,
-                   loss,
-                   target,
-                   inputs,
-                   extra_inputs=None,
-                   name="update_opt",
-                   **kwargs):
+    def update_opt(self, loss, target, inputs, extra_inputs=None, **kwargs):
         """
         :param loss: Symbolic expression for the loss function.
         :param target: A parameterized object to optimize over. It should
          implement methods of the
         :class:`garage.core.paramerized.Parameterized` class.
-        :param leq_constraint: A constraint provided as a tuple (f, epsilon), of
-         the form f(*inputs) <= epsilon.
+        :param leq_constraint: A constraint provided as a tuple (f, epsilon),
+         of the form f(*inputs) <= epsilon.
         :param inputs: A list of symbolic variables as inputs
         :return: No return value.
         """
-        with enclosing_scope(self._name, name):
+        with tf.variable_scope(
+                self._name,
+                values=[
+                    loss,
+                    target.get_params(trainable=True), inputs, extra_inputs
+                ]):
+
             self._target = target
 
             self._train_op = self._tf_optimizer.minimize(
@@ -96,7 +95,7 @@ class FirstOrderOptimizer(Serializable):
 
     def optimize(self, inputs, extra_inputs=None, callback=None):
 
-        if len(inputs) == 0:
+        if not inputs:
             # Assumes that we should always sample mini-batches
             raise NotImplementedError
 
