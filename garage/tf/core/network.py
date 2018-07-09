@@ -268,14 +268,14 @@ class GRUNetwork(object):
                 name="output_flat")
             l_output = L.OpLayer(
                 l_output_flat,
-                op=lambda flat_output, l_input:
-                tf.reshape(flat_output,
-                    tf.stack((tf.shape(l_input)[0], tf.shape(l_input)[1], -1))),
-                shape_op=lambda flat_output_shape, l_input_shape:
-                (l_input_shape[0], l_input_shape[1], flat_output_shape[-1]),
+                op=lambda flat_output, l_input: tf.reshape(
+                    flat_output,
+                    tf.stack((tf.shape(l_input)[0], tf.shape(l_input)[1], -1))
+                ),
+                shape_op=lambda flat_output_shape, l_input_shape: (
+                    l_input_shape[0], l_input_shape[1], flat_output_shape[-1]),
                 extras=[l_in],
-                name="output"
-            )
+                name="output")
             l_step_state = l_gru.get_step_layer(
                 l_step_input, l_step_prev_state, name="step_state")
             l_step_hidden = l_step_state
@@ -399,14 +399,14 @@ class LSTMNetwork(object):
                 name="output_flat")
             l_output = L.OpLayer(
                 l_output_flat,
-                op=lambda flat_output, l_input:
-                tf.reshape(flat_output,
-                    tf.stack((tf.shape(l_input)[0], tf.shape(l_input)[1], -1))),
-                shape_op=lambda flat_output_shape, l_input_shape:
-                (l_input_shape[0], l_input_shape[1], flat_output_shape[-1]),
+                op=lambda flat_output, l_input: tf.reshape(
+                    flat_output,
+                    tf.stack((tf.shape(l_input)[0], tf.shape(l_input)[1], -1))
+                ),
+                shape_op=lambda flat_output_shape, l_input_shape: (
+                    l_input_shape[0], l_input_shape[1], flat_output_shape[-1]),
                 extras=[l_in],
-                name="output"
-            )
+                name="output")
             l_step_state = l_lstm.get_step_layer(
                 l_step_input, l_step_prev_state, name="step_state")
             l_step_hidden = L.SliceLayer(

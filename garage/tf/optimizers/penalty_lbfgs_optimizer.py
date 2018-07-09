@@ -94,8 +94,7 @@ class PenaltyLbfgsOptimizer(Serializable):
                 f_opt=lambda: tensor_utils.compile_function(
                     inputs=inputs + [penalty_var],
                     outputs=get_opt_output(),
-                )
-            )
+                ))
 
     def loss(self, inputs):
         return self._opt_fun["f_loss"](*inputs)

@@ -56,11 +56,9 @@ class CategoricalGRUPolicy(StochasticPolicy, LasagnePowered):
                 name="reshape_feature",
                 op=lambda flat_feature, input: TT.reshape(
                     flat_feature,
-                    [input.shape[0], input.shape[1], feature_dim]
-                ),
-                shape_op=lambda _, input_shape: (
-                    input_shape[0], input_shape[1], feature_dim)
-            )
+                    [input.shape[0], input.shape[1], feature_dim]),
+                shape_op=lambda _, input_shape: (input_shape[0],
+                                                 input_shape[1], feature_dim))
 
         prob_network = GRUNetwork(
             input_shape=(feature_dim, ),

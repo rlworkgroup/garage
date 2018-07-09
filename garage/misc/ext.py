@@ -287,13 +287,14 @@ def flatten_hessian(cost,
         # It is possible that the inputs are disconnected from expr,
         # even if they are connected to cost.
         # This should not be an error.
-        hess, updates = theano.scan(lambda i, y, x: grad(
-            y[i],
-            x,
-            consider_constant=consider_constant,
-            disconnected_inputs='ignore').flatten(),
-                                    sequences=arange(expr.shape[0]),
-                                    non_sequences=[expr, input])
+        hess, updates = theano.scan(
+            lambda i, y, x: grad(
+                y[i],
+                x,
+                consider_constant=consider_constant,
+                disconnected_inputs='ignore').flatten(),
+            sequences=arange(expr.shape[0]),
+            non_sequences=[expr, input])
         assert not updates, \
             ("Scan has returned a list of updates. This should not "
              "happen! Report this to theano-users (also include the "

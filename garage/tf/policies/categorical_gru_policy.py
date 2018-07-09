@@ -61,16 +61,10 @@ class CategoricalGRUPolicy(StochasticPolicy, LayersPowered, Serializable):
                         flat_feature,
                         tf.stack([
                             tf.shape(input)[0],
-                            tf.shape(input)[1],
-                            feature_dim
-                        ])
-                    ),
+                            tf.shape(input)[1], feature_dim
+                        ])),
                     shape_op=lambda _, input_shape: (
-                        input_shape[0],
-                        input_shape[1],
-                        feature_dim
-                    )
-                )
+                        input_shape[0], input_shape[1], feature_dim))
 
             prob_network = GRUNetwork(
                 input_shape=(feature_dim, ),

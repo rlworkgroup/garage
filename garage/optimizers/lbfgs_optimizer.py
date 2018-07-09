@@ -60,8 +60,7 @@ class LbfgsOptimizer(Serializable):
             f_opt=lambda: compile_function(
                 inputs=inputs + extra_inputs,
                 outputs=get_opt_output(gradients),
-            )
-        )
+            ))
 
     def loss(self, inputs, extra_inputs=None):
         if extra_inputs is None:
