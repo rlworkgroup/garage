@@ -3352,7 +3352,11 @@ class CMAEvolutionStrategy(OOOptimizer):
                     boundary_repair = self.boundary_handler.repair
                 elif isinstance(self.boundary_handler, BoundPenalty):
                     fpenalty = lambda x: self.boundary_handler.__call__(
-                        x, SolutionDict({tuple(x): {'geno': x}}), self.gp)
+                        x, SolutionDict({
+                            tuple(x): {
+                                'geno': x
+                            }
+                        }), self.gp)
                     gradpen = grad_numerical_sym(xmean, fpenalty)
                 elif self.boundary_handler is None or \
                         isinstance(self.boundary_handler, BoundNone):
@@ -3362,9 +3366,8 @@ class CMAEvolutionStrategy(OOOptimizer):
                         "unknown boundary handling method" +
                         str(self.boundary_handler) + " when using gradf")
                 gradgp = grad_numerical_of_coordinate_map(
-                    xmean,
-                    lambda x: self.gp.pheno(x, copy=True,
-                            into_bounds=boundary_repair))
+                    xmean, lambda x: self.gp.pheno(
+                        x, copy=True, into_bounds=boundary_repair))
                 grad_at_mean = grad_at_mean * gradgp + gradpen
 
             # TODO: frozen variables brake the code (e.g. at grad of map)
@@ -4503,7 +4506,8 @@ class CMAEvolutionStrategy(OOOptimizer):
             self.gp._tf_matrix_inv = (
                 dot(self.B / self.D, self.B.T).T / self.sigma_vec).T
             self.gp.tf_pheno = lambda x: dot(self.gp._tf_matrix, x)
-            self.gp.tf_geno = lambda x: dot(self.gp._tf_matrix_inv, x)  # not really necessary
+            self.gp.tf_geno = lambda x: dot(self.gp._tf_matrix_inv, x
+                                            )  # not really necessary
             self.gp.isidentity = False
             assert self.mean is not self.mean_old
             self.mean = self.gp.geno(self.mean)  # same as tf_geno

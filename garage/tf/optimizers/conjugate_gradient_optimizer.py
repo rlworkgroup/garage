@@ -60,8 +60,7 @@ class PerlmutterHvp(object):
                     inputs=inputs + xs,
                     outputs=Hx_plain(),
                     log_name="f_Hx_plain",
-                ),
-            )
+                ), )
 
     def build_eval(self, inputs):
         def eval(x):

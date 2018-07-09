@@ -90,9 +90,7 @@ class PenaltyLbfgsOptimizer(Serializable):
             f_opt=lambda: compile_function(
                 inputs=inputs + [penalty_var],
                 outputs=get_opt_output(),
-                log_name="f_opt"
-            )
-        )
+                log_name="f_opt"))
 
     def loss(self, inputs):
         return self._opt_fun["f_loss"](*inputs)

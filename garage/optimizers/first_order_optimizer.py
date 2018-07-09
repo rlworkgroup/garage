@@ -88,8 +88,7 @@ class FirstOrderOptimizer(Serializable):
                 inputs=inputs + extra_inputs,
                 outputs=loss,
                 updates=updates,
-            )
-        )
+            ))
 
     def loss(self, inputs, extra_inputs=None):
         if extra_inputs is None:
