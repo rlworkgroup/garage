@@ -1,4 +1,4 @@
-import numpy as np
+"""Launcher file for trpo sawyer reacher training. """
 
 from garage.algos import TRPO
 from garage.baselines import LinearFeatureBaseline
@@ -9,6 +9,7 @@ from garage.policies import GaussianMLPPolicy
 
 
 def run(*_):
+    """Method for TRPO with reacher environment."""
 
     env = ReacherEnv(control_method='position_control', sparse_reward=False)
     policy = GaussianMLPPolicy(env_spec=spec(env), hidden_sizes=(32, 32))

@@ -95,12 +95,16 @@ class ReacherEnv(MujocoEnv, Serializable):
         return Step(next_obs, reward, done)
 
     def _reset_target_visualization(self):
+        """Reset the target position visualization."""
+
         site_id = self.sim.model.site_name2id('target_pos')
         self.sim.model.site_pos[site_id] = self._initial_goal
         self.sim.forward()
 
     @overrides
     def reset(self, init_state=None):
+        """Reset the environmet."""
+
         self._accumulated_reward = 0
         self._reset_target_visualization()
         return super(ReacherEnv, self).reset(init_state)['observation']
@@ -208,5 +212,5 @@ class ReacherEnv(MujocoEnv, Serializable):
             self.viewer = None
 
     def log_diagnostics(self, paths):
-        """TODO: Logging. """
+        """TODO: Logging."""
         pass

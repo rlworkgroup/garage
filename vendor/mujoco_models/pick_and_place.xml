@@ -19,9 +19,9 @@
       <geom conaffinity="0" contype="0" pos="0 0 0" rgba="1.0 1.0 1.0 0.0" size="0.02 0.02 0.02" type="box"></geom>
     </body>
 
-    <body name="object0" pos="0.632 0.30 0.1">
+    <body name="object0" pos="0.7 0.2 0.1">
       <joint name="object0:joint" type="free" damping="0.01"></joint>
-      <geom size="0.01 0.01 0.01" type="sphere" condim="3" name="object0" material="block_mat" mass="0.1" rgba="1 0 1 1"></geom>
+      <geom size="0.01 0.01 0.01" type="box" condim="3" name="object0" material="block_mat" mass="0.1" rgba="1 0 1 1"></geom>
     </body>
 
     <body name="target_pos" pos="0 0 0">

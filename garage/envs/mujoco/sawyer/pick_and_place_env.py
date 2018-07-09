@@ -24,7 +24,7 @@ class PickAndPlaceEnv(MujocoEnv, Serializable):
                  **kwargs):
         Serializable.__init__(self, *args, **kwargs)
         if initial_goal is None:
-            self._initial_goal = np.array([0.0, 0.05, -0.1])
+            self._initial_goal = np.array([0.8, 0, 0])
         else:
             self._initial_goal = initial_goal
         if initial_qpos is not None:
