@@ -198,6 +198,7 @@ class MujocoEnv(gym.Env):
         elif mode == 'rgb_array':
             img = self.sim.render(self.render_width, self.render_height,
                                   camera_name=self.render_camera)
+            # image is upside-down
             img = img[::-1, :, :]
             return img
         if close:
