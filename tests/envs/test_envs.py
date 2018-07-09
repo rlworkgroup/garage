@@ -16,7 +16,7 @@ from garage.envs import IdentificationEnv
 from garage.envs import NoisyObservationEnv
 from garage.envs import NormalizedEnv
 from garage.envs import ProxyEnv
-from garage.envs.box2d import CarParkingEnv
+from garage.envs.box2d import CarParkingEnv, Box2DEnv
 from garage.envs.box2d import CartpoleEnv
 from garage.envs.box2d import CartpoleSwingupEnv
 from garage.envs.box2d import DoublePendulumEnv
@@ -87,4 +87,12 @@ def test_env(env):
         print("Skipping rendering test")
     else:
         env.render()
+        if all(not isinstance(env, T) for T in [GridWorldEnv, Box2DEnv]):
+            img = env.render(mode="rgb_array")
+            assert img is not None
+            assert img.shape[0] == env.render_width
+            assert img.shape[1] == env.render_height
     env.close()
+
+for env in envs:
+    test_env(env)
