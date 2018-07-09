@@ -96,7 +96,6 @@ class ReacherEnv(MujocoEnv, Serializable):
 
     def _reset_target_visualization(self):
         """Reset the target position visualization."""
-
         site_id = self.sim.model.site_name2id('target_pos')
         self.sim.model.site_pos[site_id] = self._initial_goal
         self.sim.forward()
@@ -104,7 +103,6 @@ class ReacherEnv(MujocoEnv, Serializable):
     @overrides
     def reset(self, init_state=None):
         """Reset the environmet."""
-
         self._accumulated_reward = 0
         self._reset_target_visualization()
         return super(ReacherEnv, self).reset(init_state)['observation']
@@ -199,11 +197,14 @@ class ReacherEnv(MujocoEnv, Serializable):
     @overrides
     @property
     def action_space(self):
+        """Return an action space."""
         if self._control_method == 'torque_control':
             return super(ReacherEnv, self).action_space()
         elif self._control_method == 'position_control':
             return Box(
-                -1., 1., shape=(3, ), dtype=np.float32)  # Temp action space
+                -1., 1., shape=(3, ), dtype=np.float32)
+        else:
+            raise NotImplementedError
 
     @overrides
     def close(self):
