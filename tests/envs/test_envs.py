@@ -93,6 +93,3 @@ def test_env(env):
             assert img.shape[0] == env.render_width
             assert img.shape[1] == env.render_height
     env.close()
-
-for env in envs:
-    test_env(env)
