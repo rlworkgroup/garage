@@ -24,7 +24,7 @@ class PickAndPlaceEnv(MujocoEnv, Serializable):
                  **kwargs):
         Serializable.__init__(self, *args, **kwargs)
         if initial_goal is None:
-            self._initial_goal = np.array([0.8, 0, 0])
+            self._initial_goal = np.array([0.8, 0.0, 0.])
         else:
             self._initial_goal = initial_goal
         if initial_qpos is not None:
@@ -57,9 +57,9 @@ class PickAndPlaceEnv(MujocoEnv, Serializable):
             assert action.shape == (4, )
             action = action.copy()
             pos_ctrl, gripper_ctrl = action[:3], action[3]
-            pos_ctrl *= 0.5  # limit the action
+            pos_ctrl *= 0.1  # limit the action
             rot_ctrl = np.array([0., 1., 1., 0.])
-            gripper_ctrl = -50 if gripper_ctrl < 0 else 10
+            gripper_ctrl = -50 if gripper_ctrl < 0 else 50
             gripper_ctrl = np.array([gripper_ctrl, -gripper_ctrl])
             action = np.concatenate([pos_ctrl, rot_ctrl, gripper_ctrl])
             ctrl_set_action(self.sim, action)  # For gripper
@@ -73,8 +73,11 @@ class PickAndPlaceEnv(MujocoEnv, Serializable):
         goal = obs['desired_goal']
         gripper_pos = obs['gripper_pos']
         reward = self._compute_reward(achieved_goal, goal, gripper_pos)
+        collided = self._is_collided()
+        if collided:
+            reward -= 200
         done = (self._goal_distance(achieved_goal, goal) <
-                self._distance_threshold)
+                self._distance_threshold) or collided
 
         return Step(next_obs, reward, done)
 
@@ -95,8 +98,7 @@ class PickAndPlaceEnv(MujocoEnv, Serializable):
             reward += -(d > self._distance_threshold).astype(np.float32)
         else:
             reward += -d
-
-        if d < self._distance_threshold and grasped:
+        if grasped and d < self._distance_threshold:
             reward += 4200
         return reward
 
@@ -105,9 +107,14 @@ class PickAndPlaceEnv(MujocoEnv, Serializable):
         for coni in range(self.sim.data.ncon):
             con = self.sim.data.contact[coni]
             contacts += ((con.geom1, con.geom2), )
-        if ((38, 2) in contacts or
-            (2, 38) in contacts) and ((33, 2) in contacts or
-                                      (38, 2) in contacts):
+
+        finger_id_1 = self.sim.model.geom_name2id('finger_tip_1')
+        finger_id_2 = self.sim.model.geom_name2id('finger_tip_2')
+        object_id = self.sim.model.geom_name2id('object0')
+        if ((finger_id_1, object_id) in contacts or
+            (object_id, finger_id_1) in contacts) and (
+                (finger_id_2, object_id) in contacts or
+                (finger_id_2, object_id) in contacts):
             return True
         else:
             return False
@@ -199,8 +206,6 @@ class PickAndPlaceEnv(MujocoEnv, Serializable):
                 np.array([-0.1, -0.1, -0.1, -100]),
                 np.array([0.1, 0.1, 0.1, 100]),
                 dtype=np.float32)
-        else:
-            raise NotImplementedError
 
     def _reset_target_visualization(self):
         site_id = self.sim.model.site_name2id('target_pos')
@@ -216,3 +221,16 @@ class PickAndPlaceEnv(MujocoEnv, Serializable):
     def log_diagnostics(self, paths):
         """TODO: Logging."""
         pass
+
+    def _is_collided(self):
+        """Detect collision"""
+        d = self.sim.data
+        table_id = self.sim.model.geom_name2id('table')
+
+        for i in range(d.ncon):
+            con = d.contact[i]
+            if table_id == con.geom1 and con.geom2 != 40:
+                return True
+            if table_id == con.geom2 and con.geom1 != 40:
+                return True
+        return False
