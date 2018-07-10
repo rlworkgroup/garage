@@ -1,9 +1,9 @@
 import time
 
 import numpy as np
+import theano
 
 from garage.core import Serializable
-from garage.envs.util import flatten
 from garage.misc import tensor_utils
 from garage.misc.ext import extract
 
@@ -27,9 +27,9 @@ def rollout(env,
     while path_length < max_path_length:
         a, agent_info = agent.get_action(o)
         next_o, r, d, env_info = env.step(a)
-        observations.append(flatten(env.observation_space, o))
+        observations.append(env.observation_space.flatten(o))
         rewards.append(r)
-        actions.append(flatten(env.action_space, a))
+        actions.append(env.action_space.flatten(a))
         agent_infos.append(agent_info)
         env_infos.append(env_info)
         path_length += 1
@@ -41,7 +41,7 @@ def rollout(env,
             timestep = 0.05
             time.sleep(timestep / speedup)
     if animated and not always_return_paths:
-        return
+        return None
 
     return dict(
         observations=tensor_utils.stack_tensor_list(observations),
@@ -201,7 +201,8 @@ class ReplayPool(Serializable):
             indexes = np.arange(self.top - self.concat_length + 1, self.top)
 
             concat_state = np.empty(
-                (self.concat_length, ) + self.observation_shape, dtype=floatX)
+                (self.concat_length, ) + self.observation_shape,
+                dtype=theano.config.floatX)
             concat_state[0:self.concat_length - 1] = \
                 self.observations.take(indexes, axis=0, mode='wrap')
             concat_state[-1] = state
@@ -221,7 +222,7 @@ class ReplayPool(Serializable):
             dtype=self.observation_dtype)
         actions = np.zeros(
             (batch_size, self.action_flat_dim), dtype=self.action_dtype)
-        rewards = np.zeros((batch_size, ), dtype=floatX)
+        rewards = np.zeros((batch_size, ), dtype=theano.config.floatX)
         terminals = np.zeros((batch_size, ), dtype='bool')
         if self.extras is not None:
             extras = np.zeros(

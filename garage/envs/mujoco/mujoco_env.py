@@ -7,17 +7,15 @@ from cached_property import cached_property
 import gym
 import mako.lookup
 import mako.template
-import mujoco_py
 from mujoco_py import functions
 from mujoco_py import load_model_from_path
 from mujoco_py import MjSim
 from mujoco_py import MjViewer
 import numpy as np
-import theano
 
+from garage.envs.mujoco import utils
 from garage.envs.util import bounds
 from garage.misc import autoargs
-from garage.misc import logger
 from garage.misc.overrides import overrides
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
@@ -195,6 +193,7 @@ class MujocoEnv(gym.Env):
         if mode == 'human':
             viewer = self.get_viewer()
             viewer.render()
+            return None
         elif mode == 'rgb_array':
             img = self.sim.render(self.render_width, self.render_height,
                                   camera_name=self.render_camera)
@@ -203,6 +202,7 @@ class MujocoEnv(gym.Env):
             return img
         if close:
             self.stop_viewer()
+        return None
 
     def start_viewer(self):
         viewer = self.get_viewer()
@@ -233,3 +233,9 @@ class MujocoEnv(gym.Env):
 
     def action_from_key(self, key):
         raise NotImplementedError
+
+    def env_setup(self, initial_qpos):
+        for name, value in initial_qpos.items():
+            self.sim.data.set_joint_qpos(name, value)
+        utils.reset_mocap_welds(self.sim)
+        self.sim.forward()

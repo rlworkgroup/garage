@@ -1,4 +1,3 @@
-import lasagne
 import lasagne.init as LI
 import lasagne.layers as L
 import lasagne.nonlinearities as NL
@@ -6,7 +5,6 @@ import lasagne.nonlinearities as NL
 from garage.core import batch_norm
 from garage.core import LasagnePowered
 from garage.core import Serializable
-from garage.envs.util import flat_dim
 from garage.misc import ext
 from garage.policies import Policy
 
@@ -16,16 +14,15 @@ class DeterministicMLPPolicy(Policy, LasagnePowered):
                  env_spec,
                  hidden_sizes=(32, 32),
                  hidden_nonlinearity=NL.rectify,
-                 hidden_W_init=LI.HeUniform(),
+                 hidden_w_init=LI.HeUniform(),
                  hidden_b_init=LI.Constant(0.),
                  output_nonlinearity=NL.tanh,
-                 output_W_init=LI.Uniform(-3e-3, 3e-3),
+                 output_w_init=LI.Uniform(-3e-3, 3e-3),
                  output_b_init=LI.Uniform(-3e-3, 3e-3),
                  bn=False):
         Serializable.quick_init(self, locals())
 
-        l_obs = L.InputLayer(
-            shape=(None, flat_dim(env_spec.observation_space)))
+        l_obs = L.InputLayer(shape=(None, env_spec.observation_space.flat_dim))
 
         l_hidden = l_obs
         if bn:
@@ -35,7 +32,7 @@ class DeterministicMLPPolicy(Policy, LasagnePowered):
             l_hidden = L.DenseLayer(
                 l_hidden,
                 num_units=size,
-                W=hidden_W_init,
+                W=hidden_w_init,
                 b=hidden_b_init,
                 nonlinearity=hidden_nonlinearity,
                 name="h%d" % idx)
@@ -44,8 +41,8 @@ class DeterministicMLPPolicy(Policy, LasagnePowered):
 
         l_output = L.DenseLayer(
             l_hidden,
-            num_units=flat_dim(env_spec.action_space),
-            W=output_W_init,
+            num_units=env_spec.action_space.flat_dim,
+            W=output_w_init,
             b=output_b_init,
             nonlinearity=output_nonlinearity,
             name="output")
