@@ -196,8 +196,10 @@ class MujocoEnv(gym.Env):
             viewer = self.get_viewer()
             viewer.render()
         elif mode == 'rgb_array':
-            img = self.sim.render(self.render_width, self.render_height,
-                                  camera_name=self.render_camera)
+            img = self.sim.render(
+                self.render_width,
+                self.render_height,
+                camera_name=self.render_camera)
             img = img[::-1, :, :]
             return img
         if close:

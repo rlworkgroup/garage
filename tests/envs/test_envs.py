@@ -16,7 +16,8 @@ from garage.envs import IdentificationEnv
 from garage.envs import NoisyObservationEnv
 from garage.envs import NormalizedEnv
 from garage.envs import ProxyEnv
-from garage.envs.box2d import CarParkingEnv, Box2DEnv
+from garage.envs.box2d import Box2DEnv
+from garage.envs.box2d import CarParkingEnv
 from garage.envs.box2d import CartpoleEnv
 from garage.envs.box2d import CartpoleSwingupEnv
 from garage.envs.box2d import DoublePendulumEnv

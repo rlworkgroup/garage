@@ -420,9 +420,10 @@ class GatherEnv(ProxyEnv, Serializable):
         if mode == 'rgb_array':
             viewer = self.get_viewer()
             self.wrapped_env.render()
-            img = viewer.read_pixels(width=self.render_width,
-                                     height=self.render_height,
-                                     depth=False)
+            img = viewer.read_pixels(
+                width=self.render_width,
+                height=self.render_height,
+                depth=False)
             img = img[::-1, :, :]
             img = np.swapaxes(img, 0, 1)
             return img
