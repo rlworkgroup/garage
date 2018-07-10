@@ -1,7 +1,7 @@
 ## Support Platform
 | Robot        | Workstation OS | ROS    | Python | Simulation Platform | 
 |:------------:|:--------------:| :-----:|:------:|:-------------------:|
-| Sawyer       | Ubuntu16.04    | Kinetic| 3      |Gazebo 7.0           |
+| Sawyer       | Ubuntu16.04    | Kinetic|   3    |Gazebo 7.0           |
 ### Major python packages dependencies
 - catkin_pkg
 - rospkg
@@ -135,6 +135,15 @@ $ source /opt/ros/kinetic/setup.bash
 $ cd $ROS_WS
 $ catkin_make -DPYTHON_EXECUTABLE:FILEPATH=$GARAGE_PYTHON
 ```
+### Setup MoveIt! for safety check
+#### Install MoveIt!
+```bash
+$ cd $ROS_WS
+$ wstool merge -t src https://raw.githubusercontent.com/ros-planning/moveit/kinetic-devel/moveit.rosinstall
+$ wstool update -t src
+$ rosdep install -y --from-paths src --ignore-src --rosdistro kinetic
+$ catkin_make
+```
 ### Convert Python2 code in intera packages to Python3
 - As our environments only support Python3, we need to convert Python2 code in intera packages.
 - These can be done using garage.contrib.ros.scripts.sawyer_2to3.sh
@@ -143,8 +152,6 @@ Upgrade path:
     
     ros_ws=$ROS_WS/src/
 Remove sawyer_simulator, if you don't need it:
-
-    packages=(intera_sdk)
 ##### Execute script
 ```bash
 $ ./$GARAGE/contrib/ros/scripts/sawyer_2to3.sh
@@ -178,6 +185,8 @@ Please append your vicon ros topics in your config_personal file:
     # e.g.
     VICON_TOPICS = ['vicon/vicon_object/cube']
     ```
+### Launch MoveIt! sawyer for safety check
+Follow this [intera official tutorial](http://sdk.rethinkrobotics.com/intera/MoveIt_Tutorial)
 ### Run the training script
 #### Open a new terminator
 #### Set the environment variables
