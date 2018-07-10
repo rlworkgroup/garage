@@ -75,7 +75,6 @@ class Sawyer(Robot):
         result = self._sv.get_state_validity(rs, self._moveit_group)
         return result.valid
 
-
     @property
     def enabled(self):
         """
@@ -91,7 +90,8 @@ class Sawyer(Robot):
         current_joint_angles = self._limb.joint_angles()
         for joint in joint_angle_cmds:
             joint_cmd_delta = joint_angle_cmds[joint] - current_joint_angles[joint]
-            joint_angle_cmds[joint] = current_joint_angles[joint] + joint_cmd_delta * 0.1
+            joint_angle_cmds[
+                joint] = current_joint_angles[joint] + joint_cmd_delta * 0.1
 
         if self.safety_predict(joint_angle_cmds):
             self._limb.set_joint_positions(joint_angle_cmds)

@@ -19,7 +19,11 @@ class ForwardKinematics(object):
         """Terminate the service proxy."""
         self._srv.close()
 
-    def get_fk(self, fk_link_names, joint_names, positions, frame_id='base_link'):
+    def get_fk(self,
+               fk_link_names,
+               joint_names,
+               positions,
+               frame_id='base_link'):
         """
         Get the forward kinematics of a joint configuration.
 
@@ -68,7 +72,8 @@ class InverseKinematics(object):
 
     def __init__(self):
         """Interface to MoveIt! inverse kinematics service."""
-        self._srv = rospy.ServiceProxy('/compute_ik', moveit_msgs.srv.GetPositionIK)
+        self._srv = rospy.ServiceProxy('/compute_ik',
+                                       moveit_msgs.srv.GetPositionIK)
         self._srv.wait_for_service()
 
     def terminate(self):
@@ -159,9 +164,3 @@ class StateValidity(object):
             sv_request.constraints = constraints
         result = self._srv.call(sv_request)
         return result
-
-
-
-
-
-

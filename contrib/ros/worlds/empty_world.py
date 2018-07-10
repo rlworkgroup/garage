@@ -12,10 +12,7 @@ from contrib.ros.worlds.world import World
 class EmptyWorld(World):
     """Empty world class."""
 
-    def __init__(self,
-                 moveit_scene,
-                 frame_id,
-                 simulated=False):
+    def __init__(self, moveit_scene, frame_id, simulated=False):
         """
         Users use this to manage world and get world state.
 

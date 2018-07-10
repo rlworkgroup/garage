@@ -55,7 +55,8 @@ class ReacherEnv(SawyerEnv, Serializable):
         self._moveit_robot = moveit_commander.RobotCommander()
         self._moveit_scene = moveit_commander.PlanningSceneInterface()
         self._moveit_group_name = 'right_arm'
-        self._moveit_group = moveit_commander.MoveGroupCommander(self._moveit_group_name)
+        self._moveit_group = moveit_commander.MoveGroupCommander(
+            self._moveit_group_name)
 
         self._robot = Sawyer(
             initial_joint_pos=initial_joint_pos,
@@ -169,5 +170,3 @@ class ReacherEnv(SawyerEnv, Serializable):
             done = self._goal_distance(achieved_goal,
                                        goal) < self._distance_threshold
         return done
-
-

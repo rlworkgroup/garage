@@ -80,10 +80,7 @@ class Block(object):
 
 
 class BlockWorld(World):
-    def __init__(self,
-                 moveit_scene,
-                 frame_id,
-                 simulated=False):
+    def __init__(self, moveit_scene, frame_id, simulated=False):
         """
         Users use this to manage world and get world state.
         """
