@@ -197,11 +197,11 @@ class ReacherEnv(MujocoEnv, Serializable):
     @overrides
     @property
     def action_space(self):
+        """Return an Action space."""
         if self._control_method == 'torque_control':
             return super(ReacherEnv, self).action_space()
         elif self._control_method == 'position_control':
-            return Box(
-                -1., 1., shape=(3, ), dtype=np.float32)
+            return Box(-1., 1., shape=(3, ), dtype=np.float32)
         else:
             raise NotImplementedError
 
