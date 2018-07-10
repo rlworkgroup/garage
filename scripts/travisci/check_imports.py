@@ -42,10 +42,10 @@ IGNORE_MODULES = [
 
 # Mock out some modules because they are slow or error-prone
 MOCK_MODULES = [
-    # "dm_control",
-    # "dm_control.rl",
-    # "dm_control.rl.control",
-    # "dm_control.rl.environment",
+    "dm_control",
+    "dm_control.rl",
+    "dm_control.rl.control",
+    "dm_control.rl.environment",
     "ipdb",
     "matplotlib",
     "matplotlib.pyplot",
@@ -54,6 +54,8 @@ MOCK_MODULES = [
     "mujoco_py.builder",
     "mujoco_py.generated",
     "mujoco_py.generated.const",
+    "OpenGL",
+    "OpenGL.GL",
     # "tensorflow",
     # "tensorflow.python",
     # "tensorflow.python.training",

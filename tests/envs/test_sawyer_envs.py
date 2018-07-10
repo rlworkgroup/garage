@@ -1,3 +1,5 @@
+"""Testing for sawyer envrionments. """
+
 import numpy as np
 
 from garage.algos import TRPO
@@ -5,12 +7,14 @@ from garage.baselines import LinearFeatureBaseline
 from garage.envs.mujoco.sawyer import BinSortingEnv
 from garage.envs.mujoco.sawyer import BlockStackingEnv
 from garage.envs.mujoco.sawyer import PickAndPlaceEnv
+from garage.envs.mujoco.sawyer import ReacherEnv
 from garage.envs.util import spec
-from garage.misc.instrument import run_experiment
 from garage.policies import GaussianMLPPolicy
 
 
 def run_bin_sorting(*_):
+    """Run TRPO for bin sorting env. """
+
     env = BinSortingEnv()
 
     policy = GaussianMLPPolicy(env_spec=spec(env), hidden_sizes=(32, 32))
@@ -31,6 +35,7 @@ def run_bin_sorting(*_):
 
 
 def run_block_stacking(*_):
+    """Run TRPO with block stacking. """
     env = BlockStackingEnv()
 
     policy = GaussianMLPPolicy(env_spec=spec(env), hidden_sizes=(32, 32))
@@ -70,18 +75,29 @@ def run_pick_and_place(*_):
     algo.train()
 
 
-def test_env():
-    env = BlockStackingEnv()
-    for i in range(5000):
+def test_reacher():
+    """Testing for reacher."""
+
+    env = ReacherEnv()
+    for i in range(9999):
+        env.render()
+        action = env.action_space.sample()
+        next_obs, reward, done, _ = env.step(action)
+    env.reset()
+    env.close()
+
+
+def test_pnp():
+    """Testing for pick and place."""
+
+    env = PickAndPlaceEnv()
+    for i in range(9999):
         env.render()
         action = env.action_space.sample()
         env.step(action)
     env.reset()
+    env.close()
 
 
-test_env()
-run_experiment(
-    run_bin_sorting,
-    n_parallel=2,
-    plot=True,
-)
+test_reacher()
+test_pnp()

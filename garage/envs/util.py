@@ -10,8 +10,8 @@ from garage.spaces import Discrete as GarageDiscrete
 from garage.spaces import Product as GarageProduct
 
 __all__ = [
-    'bounds', 'default_value', 'flat_dim', 'flatten', 'flatten_n', 'sample',
-    'spec', 'unflatten', 'unflatten_n', 'weighted_sample',
+    'bounds', 'default_value', 'flat_dim', 'flatten', 'flatten_n', 'horizon',
+    'sample', 'spec', 'unflatten', 'unflatten_n', 'weighted_sample',
     'new_tensor_variable'
 ]
 
@@ -115,8 +115,8 @@ def sample(space):
 
 def spec(env):
     return EnvSpec(
-        observation_space=env.observation_space,
-        action_space=env.action_space,
+        observation_space=_to_garage_space(env.observation_space),
+        action_space=_to_garage_space(env.action_space),
     )
 
 
