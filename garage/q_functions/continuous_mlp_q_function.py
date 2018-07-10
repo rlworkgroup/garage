@@ -7,7 +7,6 @@ import theano.tensor as TT
 from garage.core import batch_norm
 from garage.core import LasagnePowered
 from garage.core import Serializable
-from garage.envs.util import flat_dim
 from garage.misc import ext
 from garage.q_functions import QFunction
 
@@ -17,19 +16,19 @@ class ContinuousMLPQFunction(QFunction, LasagnePowered):
                  env_spec,
                  hidden_sizes=(32, 32),
                  hidden_nonlinearity=NL.rectify,
-                 hidden_W_init=lasagne.init.HeUniform(),
+                 hidden_w_init=lasagne.init.HeUniform(),
                  hidden_b_init=lasagne.init.Constant(0.),
                  action_merge_layer=-2,
                  output_nonlinearity=None,
-                 output_W_init=lasagne.init.Uniform(-3e-3, 3e-3),
+                 output_w_init=lasagne.init.Uniform(-3e-3, 3e-3),
                  output_b_init=lasagne.init.Uniform(-3e-3, 3e-3),
                  bn=False):
         Serializable.quick_init(self, locals())
 
         l_obs = L.InputLayer(
-            shape=(None, flat_dim(env_spec.observation_space)), name="obs")
+            shape=(None, env_spec.observation_space.flat_dim), name="obs")
         l_action = L.InputLayer(
-            shape=(None, flat_dim(env_spec.action_space)), name="actions")
+            shape=(None, env_spec.action_space.flat_dim), name="actions")
 
         n_layers = len(hidden_sizes) + 1
 
@@ -51,7 +50,7 @@ class ContinuousMLPQFunction(QFunction, LasagnePowered):
             l_hidden = L.DenseLayer(
                 l_hidden,
                 num_units=size,
-                W=hidden_W_init,
+                W=hidden_w_init,
                 b=hidden_b_init,
                 nonlinearity=hidden_nonlinearity,
                 name="h%d" % (idx + 1))
@@ -62,7 +61,7 @@ class ContinuousMLPQFunction(QFunction, LasagnePowered):
         l_output = L.DenseLayer(
             l_hidden,
             num_units=1,
-            W=output_W_init,
+            W=output_w_init,
             b=output_b_init,
             nonlinearity=output_nonlinearity,
             name="output")
