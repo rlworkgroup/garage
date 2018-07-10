@@ -2,7 +2,8 @@ import collections
 import os.path as osp
 
 from gazebo_msgs.msg import ModelStates
-from geometry_msgs.msg import Point, Pose, Quaternion, TransformStamped
+from geometry_msgs.msg import Point, Pose, Quaternion, TransformStamped, \
+                              PoseStamped
 import gym
 import numpy as np
 import rospy
@@ -79,13 +80,18 @@ class Block(object):
 
 
 class BlockWorld(World):
-    def __init__(self, simulated=False):
+    def __init__(self,
+                 moveit_scene,
+                 frame_id,
+                 simulated=False):
         """
         Users use this to manage world and get world state.
         """
         self._blocks = []
         self._simulated = simulated
         self._block_states_subs = []
+        self._moveit_scene = moveit_scene
+        self._frame_id = frame_id
 
     def initialize(self):
         if self._simulated:
@@ -119,6 +125,19 @@ class BlockWorld(World):
                     rospy.Subscriber(block.resource, TransformStamped,
                                      self._vicon_update_block_states))
                 self._blocks.append(block)
+
+        # Add table to moveit
+        pose_stamped = PoseStamped()
+        pose_stamped.header.frame_id = self._frame_id
+        pose_stamped.pose.position.x = 0.655
+        pose_stamped.pose.position.y = 0
+        # Leave redundant space
+        pose_stamped.pose.position.z = -0.02
+        pose_stamped.pose.orientation.x = 0
+        pose_stamped.pose.orientation.y = 0
+        pose_stamped.pose.orientation.z = 0
+        pose_stamped.pose.orientation.w = 1.0
+        self._moveit_scene.add_box('table', pose_stamped, (1.0, 0.9, 0.1))
 
     def _gazebo_update_block_states(self, data):
         model_states = data
@@ -204,6 +223,8 @@ class BlockWorld(World):
                 ans = input('Are you ready to exit?[Yes/No]\n')
                 if ans.lower() == 'yes' or ans.lower() == 'y':
                     ready = True
+
+        self._moveit_scene.remove_world_object('table')
 
     def get_observation(self):
         blocks_pos = np.array([])

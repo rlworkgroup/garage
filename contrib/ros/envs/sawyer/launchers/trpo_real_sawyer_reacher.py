@@ -10,7 +10,7 @@ from garage.envs.util import spec
 from garage.misc.instrument import run_experiment
 from garage.policies import GaussianMLPPolicy
 
-INITIAL_REAL_ROBOT_JOINT_POS = {
+INITIAL_ROBOT_JOINT_POS = {
     'right_j0': -0.140923828125,
     'right_j1': -1.2789248046875,
     'right_j2': -3.043166015625,
@@ -29,7 +29,7 @@ def run_task(*_):
 
     env = ReacherEnv(
         initial_goal,
-        initial_joint_pos=INITIAL_REAL_ROBOT_JOINT_POS,
+        initial_joint_pos=INITIAL_ROBOT_JOINT_POS,
         simulated=False,
         robot_control_mode='position')
 
