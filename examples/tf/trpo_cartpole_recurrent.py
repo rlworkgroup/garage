@@ -1,12 +1,10 @@
 from garage.baselines import LinearFeatureBaseline
 from garage.envs import normalize
 from garage.envs.box2d import CartpoleEnv
-from garage.misc.instrument import run_experiment
 from garage.tf.algos import TRPO
 import garage.tf.core.layers as L
 from garage.tf.envs import TfEnv
 from garage.tf.optimizers import ConjugateGradientOptimizer, FiniteDifferenceHvp
-from garage.tf.policies import GaussianGRUPolicy
 from garage.tf.policies import GaussianLSTMPolicy
 
 env = TfEnv(normalize(CartpoleEnv()))

@@ -1,8 +1,7 @@
 from garage.baselines import LinearFeatureBaseline
 from garage.envs import normalize
 from garage.envs.box2d import CartpoleEnv
-from garage.misc.instrument import run_experiment
-from garage.tf.algos import VPG
+from garage.tf.algos import TRPO
 from garage.tf.envs import TfEnv
 from garage.tf.policies import GaussianMLPPolicy
 
@@ -13,13 +12,14 @@ policy = GaussianMLPPolicy(
 
 baseline = LinearFeatureBaseline(env_spec=env.spec)
 
-algo = VPG(
+algo = TRPO(
     env=env,
     policy=policy,
     baseline=baseline,
-    batch_size=10000,
+    batch_size=4000,
     max_path_length=100,
     n_itr=40,
     discount=0.99,
-    optimizer_args=dict(tf_optimizer_args=dict(learning_rate=0.01, )))
+    step_size=0.01,
+    plot=True)
 algo.train()

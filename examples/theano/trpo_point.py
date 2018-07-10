@@ -1,4 +1,4 @@
-from examples.point_env import PointEnv
+from examples.theano.point_env import PointEnv
 from garage.algos import TRPO
 from garage.baselines import LinearFeatureBaseline
 from garage.envs import normalize
