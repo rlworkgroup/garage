@@ -206,6 +206,8 @@ class PickAndPlaceEnv(MujocoEnv, Serializable):
                 np.array([-0.1, -0.1, -0.1, -100]),
                 np.array([0.1, 0.1, 0.1, 100]),
                 dtype=np.float32)
+        else:
+            raise NotImplementedError
 
     def _reset_target_visualization(self):
         site_id = self.sim.model.site_name2id('target_pos')
