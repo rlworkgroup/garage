@@ -30,7 +30,7 @@ class DDPG(RLAlgorithm):
     A DDPG model based on https://arxiv.org/pdf/1509.02971.pdf.
 
     Example:
-        $ python garage/tf/launchers/ddpg_pendulum.py
+        $ python garage/examples/tf/ddpg_pendulum.py
     """
 
     def __init__(self,
