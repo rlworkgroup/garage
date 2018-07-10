@@ -1,6 +1,6 @@
 <mujoco>
   <joint damping="0.2" stiffness="0" armature=".01" user="0"/>
-  <geom solref="0.008 1" solimp="0.95 0.95 0.01" margin="0.001" user="0"/>
+  <geom solref="0.008 1" solimp="0.99 0.99 0." margin="0.001" user="0"/>
   <default class="viz">
     <geom contype="0" conaffinity="0" group="1" type="mesh"/>
   </default>
