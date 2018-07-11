@@ -49,7 +49,6 @@ class TensorBoardOutput:
 
             self._layout_writer_dir = dirname(dirname(
                 abspath(dir_name))) + '/custom_scalar_config'
-            mkdir_p(self._layout_writer_dir)
 
             self._default_step = 0
             assert self._writer is not None
