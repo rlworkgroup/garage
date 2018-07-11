@@ -18,7 +18,7 @@ hash conda 2>/dev/null || {
 echo "Installing system dependencies"
 echo "You will probably be asked for your sudo password."
 
-brew install swig sdl sdl_image sdl_mixer sdl_ttf portmidi
+brew install swig sdl sdl_image sdl_mixer sdl_ttf portmidi openmpi
 
 # Make sure that we're under the directory of the project
 cd "$(dirname "$0")/.."

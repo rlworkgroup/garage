@@ -12,7 +12,7 @@ echo "Installing system dependencies"
 echo "You will probably be asked for your sudo password."
 sudo apt-get update
 sudo apt-get install -y python-pip python-dev swig cmake build-essential \
-  zlib1g-dev
+  zlib1g-dev libopenmpi-dev
 sudo apt-get build-dep -y python-pygame
 sudo apt-get build-dep -y python-scipy
 
