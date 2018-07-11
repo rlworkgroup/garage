@@ -11,7 +11,6 @@ from contrib.ros.robots.kinematics_interfaces import StateValidity
 from contrib.ros.robots.robot import Robot
 
 
-
 class Sawyer(Robot):
     """Sawyer class."""
 
