@@ -1,6 +1,6 @@
 """Reacher environment for the sawyer robot."""
 
-from gym.envs.robotics.utils import mocap_set_action
+from gym.envs.robotics.utils import reset_mocap2body_xpos
 from gym.spaces import Box
 import numpy as np
 
@@ -77,10 +77,8 @@ class ReacherEnv(MujocoEnv, Serializable):
             assert action.shape == (3, )
             action = action.copy()
             action *= 0.1  # limit the action
-            rot_ctrl = np.array([0., 1., 1., 0.])
-            action = np.concatenate([action, rot_ctrl])
-            mocap_set_action(self.sim,
-                             action)  # For pos control of the end effector
+            reset_mocap2body_xpos(self.sim)
+            self.sim.data.mocap_pos[:] = self.sim.data.mocap_pos + action
             self.sim.step()
         else:
             raise NotImplementedError
