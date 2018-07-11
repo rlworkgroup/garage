@@ -1,4 +1,4 @@
-"""Interfaces to MoveIt! kinematics services. """
+"""Interfaces to MoveIt! kinematics services."""
 
 from geometry_msgs.msg import PoseStamped
 import moveit_msgs.srv
@@ -50,8 +50,7 @@ class ForwardKinematics(object):
 
     def get_current_fk(self, fk_link_names, frame_id='base_link'):
         """
-        Get the forward kinematics of a set of links
-        in the current configuration.
+        Get the current forward kinematics of a set of links.
 
         :param fk_link_names: [string]
                         list of links that we want to
@@ -63,7 +62,7 @@ class ForwardKinematics(object):
         # Subscribe to a joint_states
         js = rospy.wait_for_message('/robot/joint_states', JointState)
         # Call FK service
-        fk_result = self.getFK(fk_link_names, js.name, js.position, frame_id)
+        fk_result = self.get_fk(fk_link_names, js.name, js.position, frame_id)
         return fk_result
 
 
@@ -89,8 +88,7 @@ class InverseKinematics(object):
                robot_state=None,
                constraints=None):
         """
-        Get the inverse kinematics for a group
-        with a link in a pose in 3d world
+        Get the inverse kinematics with a link in a pose in 3d world.
 
         :param group_name: string
                     group name, i.e. 'right_arm'
@@ -133,14 +131,12 @@ class StateValidity(object):
 
     def __init__(self):
         """Interface to MoveIt! StateValidity service."""
-
         self._srv = rospy.ServiceProxy('/check_state_validity',
                                        moveit_msgs.srv.GetStateValidity)
         self._srv.wait_for_service()
 
     def terminate(self):
         """Terminate."""
-
         self._srv.close()
 
     def get_state_validity(self,

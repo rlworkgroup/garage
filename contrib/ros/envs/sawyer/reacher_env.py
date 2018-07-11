@@ -3,8 +3,8 @@
 import collections
 
 import gym
-import numpy as np
 import moveit_commander
+import numpy as np
 
 from contrib.ros.envs.sawyer.sawyer_env import SawyerEnv
 from contrib.ros.robots import Sawyer

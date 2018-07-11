@@ -2,8 +2,9 @@ import collections
 import os.path as osp
 
 from gazebo_msgs.msg import ModelStates
-from geometry_msgs.msg import Point, Pose, Quaternion, TransformStamped, \
-                              PoseStamped
+from geometry_msgs.msg import Point, Pose, PoseStamped, Quaternion, \
+                              TransformStamped
+
 import gym
 import numpy as np
 import rospy
@@ -31,11 +32,13 @@ class Block(object):
         :param initial_pos: geometry_msgs.msg.Point
                 object's original position
         :param random_delta_range: [float, float, float]
-                positive, the range that would be used in sampling object' new
-                start position for every episode. Set it as 0, if you want to keep the
+                positive, the range that would be used in
+                sampling object' new start position for every episode.
+                Set it as 0, if you want to keep the
                 object's initial_pos for every episode.
         :param resource: str
-                the model path(str) for simulation training or ros topic name for real robot training
+                the model path(str) for simulation training or ros
+                topic name for real robot training
         """
         self._name = name
         self._resource = resource

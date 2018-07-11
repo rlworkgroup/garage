@@ -7,8 +7,9 @@ import moveit_msgs.msg
 import numpy as np
 import rospy
 
-from contrib.ros.robots.robot import Robot
 from contrib.ros.robots.kinematics_interfaces import StateValidity
+from contrib.ros.robots.robot import Robot
+
 
 
 class Sawyer(Robot):
@@ -89,7 +90,8 @@ class Sawyer(Robot):
         # limit joint angles cmd
         current_joint_angles = self._limb.joint_angles()
         for joint in joint_angle_cmds:
-            joint_cmd_delta = joint_angle_cmds[joint] - current_joint_angles[joint]
+            joint_cmd_delta = joint_angle_cmds[joint] - \
+                              current_joint_angles[joint]
             joint_angle_cmds[
                 joint] = current_joint_angles[joint] + joint_cmd_delta * 0.1
 
