@@ -209,5 +209,3 @@ Ex.
 ## Troubleshooting
 ### ImportError: import cv2 when running training script
 Make sure your are using opencv-python installed in garage conda env.
-
-
