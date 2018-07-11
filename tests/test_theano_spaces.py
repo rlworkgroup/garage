@@ -1,8 +1,8 @@
 import numpy as np
 
-from garage.spaces import Box
-from garage.spaces import Discrete
-from garage.spaces import Product
+from garage.theano.spaces import Box
+from garage.theano.spaces import Discrete
+from garage.theano.spaces import Product
 
 
 def test_product_space():

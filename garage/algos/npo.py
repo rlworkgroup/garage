@@ -2,7 +2,6 @@ import theano
 import theano.tensor as TT
 
 from garage.algos import BatchPolopt
-from garage.envs.util import new_tensor_variable
 from garage.misc import ext
 import garage.misc.logger as logger
 from garage.misc.overrides import overrides
@@ -32,13 +31,11 @@ class NPO(BatchPolopt):
     @overrides
     def init_opt(self):
         is_recurrent = int(self.policy.recurrent)
-        obs_var = new_tensor_variable(
-            self.env.observation_space,
+        obs_var = self.env.observation_space.new_tensor_variable(
             'obs',
             extra_dims=1 + is_recurrent,
         )
-        action_var = new_tensor_variable(
-            self.env.action_space,
+        action_var = self.env.action_space.new_tensor_variable(
             'action',
             extra_dims=1 + is_recurrent,
         )

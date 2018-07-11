@@ -5,15 +5,15 @@ import theano.tensor as TT
 
 from garage.envs import normalize
 from garage.envs.box2d import CartpoleEnv
-from garage.envs.util import new_tensor_variable, spec
 from garage.policies import GaussianMLPPolicy
+from garage.theano.envs import TheanoEnv
 
 # normalize() makes sure that the actions for the environment lies within the
 # range [-1, 1] (only works for environments with continuous actions)
-env = normalize(CartpoleEnv())
+env = TheanoEnv(normalize(CartpoleEnv()))
 # Initialize a neural network policy with a single hidden layer of 8 hidden
 # units
-policy = GaussianMLPPolicy(spec(env), hidden_sizes=(8, ))
+policy = GaussianMLPPolicy(env.spec, hidden_sizes=(8, ))
 
 # We will collect 100 trajectories per iteration
 N = 100
@@ -35,13 +35,12 @@ learning_rate = 0.01
 # variable. For instance, for an environment with discrete observations, we
 # might want to use integer types if the observations are represented
 # as one-hot vectors.
-observations_var = new_tensor_variable(
-    env.observation_space,
+observations_var = env.observation_space.new_tensor_variable(
     'observations',
     # It should have 1 extra dimension since we want to represent a list of
     # observations
     extra_dims=1)
-actions_var = new_tensor_variable(env.action_space, 'actions', extra_dims=1)
+actions_var = env.action_space.new_tensor_variable('actions', extra_dims=1)
 returns_var = TT.vector('returns')
 
 # policy.dist_info_sym returns a dictionary, whose values are symbolic

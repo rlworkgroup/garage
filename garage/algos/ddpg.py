@@ -7,7 +7,6 @@ import pyprind
 import theano.tensor as TT
 
 from garage.algos import RLAlgorithm
-from garage.envs.util import flat_dim, new_tensor_variable
 from garage.misc import ext
 from garage.misc import special
 import garage.misc.logger as logger
@@ -152,8 +151,8 @@ class DDPG(RLAlgorithm):
         # This seems like a rather sequential method
         pool = ReplayBuffer(
             max_buffer_size=self.replay_pool_size,
-            observation_dim=flat_dim(self.env.observation_space),
-            action_dim=flat_dim(self.env.action_space),
+            observation_dim=self.env.observation_space.flat_dim,
+            action_dim=self.env.action_space.flat_dim,
         )
         self.start_worker()
 
@@ -236,16 +235,14 @@ class DDPG(RLAlgorithm):
         target_qf = pickle.loads(pickle.dumps(self.qf))
 
         # y need to be computed first
-        obs = new_tensor_variable(
-            self.env.observation_space,
+        obs = self.env.observation_space.new_tensor_variable(
             'obs',
             extra_dims=1,
         )
 
         # The yi values are computed separately as above and then passed to
         # the training functions below
-        action = new_tensor_variable(
-            self.env.action_space,
+        action = self.env.action_space.new_tensor_variable(
             'action',
             extra_dims=1,
         )

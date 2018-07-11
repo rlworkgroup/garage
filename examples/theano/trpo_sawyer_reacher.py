@@ -3,16 +3,17 @@
 from garage.algos import TRPO
 from garage.baselines import LinearFeatureBaseline
 from garage.envs.mujoco.sawyer import ReacherEnv
-from garage.envs.util import spec
 from garage.misc.instrument import run_experiment
 from garage.policies import GaussianMLPPolicy
+from garage.theano.envs import TheanoEnv
 
 
 def run(*_):
     """Stub method for running trpo."""
-    env = ReacherEnv(control_method='position_control', sparse_reward=False)
-    policy = GaussianMLPPolicy(env_spec=spec(env), hidden_sizes=(32, 32))
-    baseline = LinearFeatureBaseline(env_spec=spec(env))
+    env = TheanoEnv(
+        ReacherEnv(control_method='position_control', sparse_reward=False))
+    policy = GaussianMLPPolicy(env_spec=env.spec, hidden_sizes=(32, 32))
+    baseline = LinearFeatureBaseline(env_spec=env.spec)
     algo = TRPO(
         env=env,
         policy=policy,
