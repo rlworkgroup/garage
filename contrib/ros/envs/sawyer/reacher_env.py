@@ -3,6 +3,7 @@
 import collections
 
 import gym
+import moveit_commander
 import numpy as np
 
 from contrib.ros.envs.sawyer.sawyer_env import SawyerEnv
@@ -48,11 +49,22 @@ class ReacherEnv(SawyerEnv, Serializable):
         self._sparse_reward = sparse_reward
         self.initial_goal = initial_goal
         self.goal = self.initial_goal.copy()
+        self.simulated = simulated
+
+        # Initialize moveit to get safety check
+        self._moveit_robot = moveit_commander.RobotCommander()
+        self._moveit_scene = moveit_commander.PlanningSceneInterface()
+        self._moveit_group_name = 'right_arm'
+        self._moveit_group = moveit_commander.MoveGroupCommander(
+            self._moveit_group_name)
 
         self._robot = Sawyer(
             initial_joint_pos=initial_joint_pos,
-            control_mode=robot_control_mode)
-        self._world = EmptyWorld(simulated)
+            control_mode=robot_control_mode,
+            moveit_group=self._moveit_group_name)
+        self._world = EmptyWorld(self._moveit_scene,
+                                 self._moveit_robot.get_planning_frame(),
+                                 simulated)
 
         SawyerEnv.__init__(self, simulated=simulated)
 
@@ -152,5 +164,9 @@ class ReacherEnv(SawyerEnv, Serializable):
         :return if_done: bool
                     if current episode is done:
         """
-        return self._goal_distance(achieved_goal,
-                                   goal) < self._distance_threshold
+        if not self._robot.safety_check():
+            done = True
+        else:
+            done = self._goal_distance(achieved_goal,
+                                       goal) < self._distance_threshold
+        return done

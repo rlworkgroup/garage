@@ -3,16 +3,21 @@
 import gym
 from intera_core_msgs.msg import JointLimits
 import intera_interface
+import moveit_msgs.msg
 import numpy as np
 import rospy
 
+from contrib.ros.robots.kinematics_interfaces import StateValidity
 from contrib.ros.robots.robot import Robot
 
 
 class Sawyer(Robot):
     """Sawyer class."""
 
-    def __init__(self, initial_joint_pos, control_mode='position'):
+    def __init__(self,
+                 initial_joint_pos,
+                 moveit_group,
+                 control_mode='position'):
         """
         Sawyer class.
 
@@ -20,6 +25,8 @@ class Sawyer(Robot):
                         {'joint_name': position_value}, and also
                         initial_joint_pos should include all of the
                         joints that user wants to control and observe.
+        :param moveit_group: str
+                        Use this to check safety
         :param control_mode: string
                         robot control mode: 'position' or velocity
                         or effort
@@ -29,8 +36,44 @@ class Sawyer(Robot):
         self._gripper = intera_interface.Gripper()
         self._initial_joint_pos = initial_joint_pos
         self._control_mode = control_mode
+        self._used_joints = []
+        for joint in initial_joint_pos:
+            self._used_joints.append(joint)
         self._joint_limits = rospy.wait_for_message('/robot/joint_limits',
                                                     JointLimits)
+        self._moveit_group = moveit_group
+
+        self._sv = StateValidity()
+
+    def safety_check(self):
+        """
+        If robot is in safe state.
+
+        :return safe: Bool
+                if robot is safe.
+        """
+        rs = moveit_msgs.msg.RobotState()
+        current_joint_angles = self._limb.joint_angles()
+        for joint in current_joint_angles:
+            rs.joint_state.name.append(joint)
+            rs.joint_state.position.append(current_joint_angles[joint])
+        result = self._sv.get_state_validity(rs, self._moveit_group)
+        return result.valid
+
+    def safety_predict(self, joint_angles):
+        """
+        Will robot be in safe state.
+
+        :param joint_angles: {'': float}
+        :return safe: Bool
+                    if robot is safe.
+        """
+        rs = moveit_msgs.msg.RobotState()
+        for joint in joint_angles:
+            rs.joint_state.name.append(joint)
+            rs.joint_state.position.append(joint_angles[joint])
+        result = self._sv.get_state_validity(rs, self._moveit_group)
+        return result.valid
 
     @property
     def enabled(self):
@@ -43,7 +86,16 @@ class Sawyer(Robot):
             intera_interface.CHECK_VERSION).state().enabled
 
     def _set_limb_joint_positions(self, joint_angle_cmds):
-        self._limb.set_joint_positions(joint_angle_cmds)
+        # limit joint angles cmd
+        current_joint_angles = self._limb.joint_angles()
+        for joint in joint_angle_cmds:
+            joint_cmd_delta = joint_angle_cmds[joint] - \
+                              current_joint_angles[joint]
+            joint_angle_cmds[
+                joint] = current_joint_angles[joint] + joint_cmd_delta * 0.1
+
+        if self.safety_predict(joint_angle_cmds):
+            self._limb.set_joint_positions(joint_angle_cmds)
 
     def _set_limb_joint_velocities(self, joint_angle_cmds):
         self._limb.set_joint_velocities(joint_angle_cmds)
@@ -114,15 +166,14 @@ class Sawyer(Robot):
         :param commands: [float]
                     list of command for different joints and gripper
         """
-        joint_commands = {
-            'right_j0': commands[0],
-            'right_j1': commands[1],
-            'right_j2': commands[2],
-            'right_j3': commands[3],
-            'right_j4': commands[4],
-            'right_j5': commands[5],
-            'right_j6': commands[6]
-        }
+        action_space = self.action_space
+        commands = np.clip(commands, action_space.low, action_space.high)
+        i = 0
+        joint_commands = {}
+        for joint in self._used_joints:
+            joint_commands[joint] = commands[i]
+            i += 1
+
         if self._control_mode == 'position':
             self._set_limb_joint_positions(joint_commands)
         elif self._control_mode == 'velocity':
@@ -150,7 +201,7 @@ class Sawyer(Robot):
         """
         lower_bounds = np.array([])
         upper_bounds = np.array([])
-        for joint in self._initial_joint_pos:
+        for joint in self._used_joints:
             joint_idx = self._joint_limits.joint_names.index(joint)
             if self._control_mode == 'position':
                 lower_bounds = np.concatenate(
@@ -163,7 +214,7 @@ class Sawyer(Robot):
                          joint_idx:joint_idx + 1])))
             elif self._control_mode == 'velocity':
                 velocity_limit = np.array(
-                    self._joint_limits.velocity[joint_idx:joint_idx + 1])
+                    self._joint_limits.velocity[joint_idx:joint_idx + 1]) * 0.1
                 lower_bounds = np.concatenate((lower_bounds, -velocity_limit))
                 upper_bounds = np.concatenate((upper_bounds, velocity_limit))
             elif self._control_mode == 'effort':
