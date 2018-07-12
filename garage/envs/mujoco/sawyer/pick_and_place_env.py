@@ -1,10 +1,10 @@
 from gym.envs.robotics import rotations
 from gym.envs.robotics.utils import ctrl_set_action, mocap_set_action
 from gym.spaces import Box
+import mujoco_py
 import numpy as np
 
 from garage.core import Serializable
-from garage.envs import Step
 from garage.envs.mujoco import MujocoEnv
 from garage.misc.overrides import overrides
 
@@ -47,6 +47,9 @@ class PickAndPlaceEnv(MujocoEnv, Serializable):
         self._grasped = False
         super(PickAndPlaceEnv, self).__init__(*args, **kwargs)
         self.env_setup(self._initial_qpos)
+        self._mj_viewer = mujoco_py.MjViewer(self.sim)
+        self.len = 0
+        self.rew = 0
 
     @overrides
     def step(self, action: np.ndarray):
@@ -74,12 +77,19 @@ class PickAndPlaceEnv(MujocoEnv, Serializable):
         gripper_pos = obs['gripper_pos']
         reward = self._compute_reward(achieved_goal, goal, gripper_pos)
         collided = self._is_collided()
-        if collided:
-            reward -= 200
+        # if collided:
+        #     reward -= 200
         done = (self._goal_distance(achieved_goal, goal) <
                 self._distance_threshold) or collided
 
-        return Step(next_obs, reward, done)
+        self.rew += reward
+        self.len += 1
+        info = dict()
+        if done or self.len >= 400:
+            info = dict(episode=dict(r=self.rew, l=self.len))
+            next_obs = self.reset()
+
+        return next_obs, reward, False, info
 
     def _compute_reward(self, achieved_goal, goal, gripper_pos):
         # Compute distance between goal and the achieved goal.
@@ -98,7 +108,7 @@ class PickAndPlaceEnv(MujocoEnv, Serializable):
             reward += -(d > self._distance_threshold).astype(np.float32)
         else:
             reward += -d
-        if grasped and d < self._distance_threshold:
+        if self._grasped and d < self._distance_threshold:
             reward += 4200
         return reward
 
@@ -200,14 +210,13 @@ class PickAndPlaceEnv(MujocoEnv, Serializable):
     @property
     def action_space(self):
         if self._control_method == 'torque_control':
-            return super(PickAndPlaceEnv, self).action_space()
+            action_space = super(PickAndPlaceEnv, self).action_space()
         elif self._control_method == 'position_control':
-            return Box(
+            action_space = Box(
                 np.array([-0.1, -0.1, -0.1, -100]),
                 np.array([0.1, 0.1, 0.1, 100]),
                 dtype=np.float32)
-        else:
-            raise NotImplementedError
+        return action_space
 
     def _reset_target_visualization(self):
         site_id = self.sim.model.site_name2id('target_pos')
@@ -217,6 +226,8 @@ class PickAndPlaceEnv(MujocoEnv, Serializable):
     @overrides
     def reset(self, init_state=None):
         self._grasped = False
+        self.len = 0
+        self.rew = 0
         self._reset_target_visualization()
         return super(PickAndPlaceEnv, self).reset(init_state)['observation']
 
