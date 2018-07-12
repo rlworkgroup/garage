@@ -2,14 +2,14 @@ from garage.algos import NOP
 from garage.baselines import ZeroBaseline
 from garage.envs import normalize
 from garage.envs.box2d import CartpoleEnv
-from garage.envs.util import spec
 from garage.policies import UniformControlPolicy
+from garage.theano.envs import TheanoEnv
 
-env = normalize(CartpoleEnv())
+env = TheanoEnv(normalize(CartpoleEnv()))
 
-policy = UniformControlPolicy(env_spec=spec(env), )
+policy = UniformControlPolicy(env_spec=env.spec, )
 
-baseline = ZeroBaseline(env_spec=spec(env))
+baseline = ZeroBaseline(env_spec=env.spec)
 
 algo = NOP(
     env=env,

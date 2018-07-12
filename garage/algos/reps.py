@@ -5,7 +5,6 @@ import theano.tensor as TT
 
 from garage.algos import BatchPolopt
 from garage.core import Serializable
-from garage.envs.util import flat_dim, new_tensor_variable
 from garage.misc import ext
 from garage.misc import logger
 from garage.misc import tensor_utils
@@ -26,8 +25,8 @@ class REPS(BatchPolopt, Serializable):
     def __init__(
             self,
             epsilon=0.5,
-            L2_reg_dual=0.,  # 1e-5,
-            L2_reg_loss=0.,
+            l2_reg_dual=0.,  # 1e-5,
+            l2_reg_loss=0.,
             max_opt_itr=50,
             optimizer=scipy.optimize.fmin_l_bfgs_b,
             **kwargs):
@@ -37,15 +36,15 @@ class REPS(BatchPolopt, Serializable):
         :param L2_reg_dual: Dual regularization
         :param L2_reg_loss: Loss regularization
         :param max_opt_itr: Maximum number of batch optimization iterations.
-        :param optimizer: Module path to the optimizer. It must support the same
-         interface as scipy.optimize.fmin_l_bfgs_b.
+        :param optimizer: Module path to the optimizer. It must support the
+         same interface as scipy.optimize.fmin_l_bfgs_b.
         :return:
         """
         Serializable.quick_init(self, locals())
         super(REPS, self).__init__(**kwargs)
         self.epsilon = epsilon
-        self.L2_reg_dual = L2_reg_dual
-        self.L2_reg_loss = L2_reg_loss
+        self.L2_reg_dual = l2_reg_dual
+        self.L2_reg_loss = l2_reg_loss
         self.max_opt_itr = max_opt_itr
         self.optimizer = optimizer
         self.opt_info = None
@@ -57,17 +56,15 @@ class REPS(BatchPolopt, Serializable):
         # Init dual param values
         self.param_eta = 15.
         # Adjust for linear feature vector.
-        self.param_v = np.random.rand(
-            flat_dim(self.env.observation_space) * 2 + 4)
+        self.param_v = np.random.rand(self.env.observation_space.flat_dim * 2 +
+                                      4)
 
         # Theano vars
-        obs_var = new_tensor_variable(
-            self.env.observation_space,
+        obs_var = self.env.observation_space.new_tensor_variable(
             'obs',
             extra_dims=1 + is_recurrent,
         )
-        action_var = new_tensor_variable(
-            self.env.action_space,
+        action_var = self.env.action_space.new_tensor_variable(
             'action',
             extra_dims=1 + is_recurrent,
         )
@@ -172,7 +169,7 @@ class REPS(BatchPolopt, Serializable):
                    param_eta * TT.log(
                        TT.sum(
                            TT.exp(
-                               delta_v / param_eta - TT.max(delta_v / param_eta)
+                            delta_v / param_eta - TT.max(delta_v / param_eta)
                            ) * valid_var
                        ) / TT.sum(valid_var)
                    ) + param_eta * TT.max(delta_v / param_eta)
@@ -181,7 +178,7 @@ class REPS(BatchPolopt, Serializable):
                    param_eta * TT.log(
                        TT.mean(
                            TT.exp(
-                               delta_v / param_eta - TT.max(delta_v / param_eta)
+                            delta_v / param_eta - TT.max(delta_v / param_eta)
                            )
                        )
                    ) + param_eta * TT.max(delta_v / param_eta)
@@ -211,11 +208,11 @@ class REPS(BatchPolopt, Serializable):
 
     def _features(self, path):
         o = np.clip(path["observations"], -10, 10)
-        l = len(path["rewards"])
-        al = np.arange(l).reshape(-1, 1) / 100.0
+        lr = len(path["rewards"])
+        al = np.arange(lr).reshape(-1, 1) / 100.0
         return np.concatenate(
             [o, o**2, al, al**2, al**3,
-             np.ones((l, 1))], axis=1)
+             np.ones((lr, 1))], axis=1)
 
     @overrides
     def optimize_policy(self, itr, samples_data):

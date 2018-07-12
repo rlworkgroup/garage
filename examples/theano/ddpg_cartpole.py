@@ -1,24 +1,25 @@
 from garage.algos import DDPG
 from garage.envs import normalize
 from garage.envs.box2d import CartpoleEnv
-from garage.envs.util import spec
 from garage.exploration_strategies import OUStrategy
 from garage.misc.instrument import run_experiment
 from garage.policies import DeterministicMLPPolicy
 from garage.q_functions import ContinuousMLPQFunction
+from garage.theano.envs import TheanoEnv
 
 
 def run_task(*_):
-    env = normalize(CartpoleEnv())
+    env = TheanoEnv(normalize(CartpoleEnv()))
 
     policy = DeterministicMLPPolicy(
-        env_spec=spec(env),
-        # The neural network policy should have two hidden layers, each with 32 hidden units.
+        env_spec=env.spec,
+        # The neural network policy should have two hidden layers,
+        # each with 32 hidden units.
         hidden_sizes=(32, 32))
 
-    es = OUStrategy(env_spec=spec(env))
+    es = OUStrategy(env_spec=env.spec)
 
-    qf = ContinuousMLPQFunction(env_spec=spec(env))
+    qf = ContinuousMLPQFunction(env_spec=env.spec)
 
     algo = DDPG(
         env=env,

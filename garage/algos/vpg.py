@@ -3,7 +3,6 @@ import theano.tensor as TT
 
 from garage.algos import BatchPolopt
 from garage.core import Serializable
-from garage.envs.util import new_tensor_variable
 from garage.misc import ext
 from garage.misc import logger
 from garage.misc.overrides import overrides
@@ -42,13 +41,11 @@ class VPG(BatchPolopt, Serializable):
     def init_opt(self):
         is_recurrent = int(self.policy.recurrent)
 
-        obs_var = new_tensor_variable(
-            self.env.observation_space,
+        obs_var = self.env.observation_space.new_tensor_variable(
             'obs',
             extra_dims=1 + is_recurrent,
         )
-        action_var = new_tensor_variable(
-            self.env.action_space,
+        action_var = self.env.action_space.new_tensor_variable(
             'action',
             extra_dims=1 + is_recurrent,
         )

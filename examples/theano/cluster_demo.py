@@ -4,20 +4,21 @@ from garage.algos import TRPO
 from garage.baselines import LinearFeatureBaseline
 from garage.envs import normalize
 from garage.envs.box2d import CartpoleEnv
-from garage.envs.util import spec
 from garage.misc.instrument import run_experiment
 from garage.policies import GaussianMLPPolicy
+from garage.theano.envs import TheanoEnv
 
 
 def run_task(v):
-    env = normalize(CartpoleEnv())
+    env = TheanoEnv(normalize(CartpoleEnv()))
 
     policy = GaussianMLPPolicy(
-        env_spec=spec(env),
-        # The neural network policy should have two hidden layers, each with 32 hidden units.
+        env_spec=env.spec,
+        # The neural network policy should have two hidden layers,
+        # each with 32 hidden units.
         hidden_sizes=(32, 32))
 
-    baseline = LinearFeatureBaseline(env_spec=spec(env))
+    baseline = LinearFeatureBaseline(env_spec=env.spec)
 
     algo = TRPO(
         env=env,

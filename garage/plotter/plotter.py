@@ -83,7 +83,7 @@ class Plotter:
     def shutdown(self):
         if not Plotter.enable:
             return
-        if self._process.is_alive():
+        if self._process and self._process.is_alive():
             self._queue.put(Message(op=Op.STOP, args=None, kwargs=None))
             self._queue.close()
             self._process.join()

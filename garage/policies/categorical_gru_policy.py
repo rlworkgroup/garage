@@ -1,4 +1,3 @@
-import gym
 import lasagne.layers as L
 import lasagne.nonlinearities as NL
 import numpy as np
@@ -9,11 +8,11 @@ from garage.core import LasagnePowered
 from garage.core import OpLayer
 from garage.core import Serializable
 from garage.distributions import RecurrentCategorical
-from garage.envs.util import flat_dim, flatten
 from garage.misc import ext
 from garage.misc import special
 from garage.misc.overrides import overrides
 from garage.policies import StochasticPolicy
+from garage.spaces import Discrete
 
 
 class CategoricalGRUPolicy(StochasticPolicy, LasagnePowered):
@@ -29,12 +28,12 @@ class CategoricalGRUPolicy(StochasticPolicy, LasagnePowered):
         :param hidden_nonlinearity: nonlinearity used for each hidden layer
         :return:
         """
-        assert isinstance(env_spec.action_space, gym.spaces.Discrete)
+        assert isinstance(env_spec.action_space, Discrete)
         Serializable.quick_init(self, locals())
         super(CategoricalGRUPolicy, self).__init__(env_spec)
 
-        obs_dim = flat_dim(env_spec.observation_space)
-        action_flat_dim = flat_dim(env_spec.action_space)
+        obs_dim = env_spec.observation_space.flat_dim
+        action_flat_dim = env_spec.action_space.flat_dim
 
         if state_include_action:
             input_dim = obs_dim + action_flat_dim
@@ -136,13 +135,13 @@ class CategoricalGRUPolicy(StochasticPolicy, LasagnePowered):
     def get_action(self, observation):
         if self.state_include_action:
             if self.prev_action is None:
-                prev_action = np.zeros((flat_dim(self.action_space), ))
+                prev_action = np.zeros((self.action_space.flat_dim, ))
             else:
-                prev_action = flatten(self.action_space, self.prev_action)
+                prev_action = self.action_space.flatten(self.prev_action)
             all_input = np.concatenate(
-                [flatten(self.observation_space, observation), prev_action])
+                [self.observation_space.flatten(observation), prev_action])
         else:
-            all_input = flatten(self.observation_space, observation)
+            all_input = self.observation_space.flatten(observation)
             # should not be used
             prev_action = np.nan
         probs, hidden_vec = [

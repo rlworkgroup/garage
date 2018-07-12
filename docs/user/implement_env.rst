@@ -158,7 +158,7 @@ script:
 
 .. code-block:: bash
 
-    python scripts/sim_env.py examples.point_env --mode random
+    python scripts/sim_env.py garage.envs.point_env --mode random
 
 It simulates an episode of the environment with random actions, sampled from a
 uniform distribution within the defined action bounds.
@@ -172,7 +172,7 @@ stub mode):
 
     from garage.algos.trpo import TRPO
     from garage.baselines.linear_feature_baseline import LinearFeatureBaseline
-    from examples.point_env import PointEnv
+    from garage.envs.point_env import PointEnv
     from garage.envs.normalized_env import normalize
     from garage.policies.gaussian_mlp_policy import GaussianMLPPolicy
 
