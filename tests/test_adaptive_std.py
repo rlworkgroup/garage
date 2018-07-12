@@ -4,16 +4,16 @@ from garage.algos import TRPO
 from garage.baselines import ZeroBaseline
 from garage.envs.box2d import CartpoleEnv
 from garage.policies import GaussianMLPPolicy
+from garage.theano.envs import TheanoEnv
 
-with such.A("Issue #3") as it:
+with such.A("adaptive_std") as it:
 
-    @it.should("be fixed")
-    def test_issue_3():
+    @it.should
+    def test_adaptive_std():
         """
-        As reported in https://github.com/garage/garage/issues/3, the adaptive_std
-        parameter was not functioning properly
+        Checks if the adaptive_std parameter works.
         """
-        env = CartpoleEnv()
+        env = TheanoEnv(CartpoleEnv())
         policy = GaussianMLPPolicy(env_spec=env, adaptive_std=True)
         baseline = ZeroBaseline(env_spec=env.spec)
         algo = TRPO(
@@ -21,4 +21,5 @@ with such.A("Issue #3") as it:
         algo.train()
 
 
+# This call generates the unittest.TestCase instances for all of the tests
 it.createTests(globals())

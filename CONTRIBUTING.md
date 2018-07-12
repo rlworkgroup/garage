@@ -117,3 +117,9 @@ git rebase master
 # you may need to manually reconcile merge conflicts here. Follow git's instructions.
 git push -f origin myfeaturebranch # -f is frequently necessary because rebases rewrite history
 ```
+
+## Testing
+We want to maintain testable code to ensure that future changes do not break existing functionality.
+
+### Creating Tests
+Add a test for your functionality under the `garage/tests/` directory. Make sure your test filename is prepended with test(i.e. `test_<filename>.py`) to ensure the test will be run in the CI.
