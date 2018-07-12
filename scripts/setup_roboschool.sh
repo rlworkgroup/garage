@@ -1,14 +1,22 @@
 echo "Make sure this script is running under garage conda environment"
-# install dependency
-sudo apt-get install -y ffmpeg pkg-config qtbase5-dev libqt5opengl5-dev libpython3.5-dev\
-  libassimp-dev libboost-python-dev libtinyxml-dev
 
-# clone roboschool
-mktemp_cmd="mktemp -d"
-PARENT_DIR=`$mktemp_cmd`
+# install dependency
+if [[ "$(uname)" == "Darwin" ]]; then
+	brew install cmake tinyxml assimp ffmpeg
+	brew reinstall boost-python3 --without-python --with-python3 --build-from-source
+	conda install qt
+	export PKG_CONFIG_PATH=$(dirname $(dirname $(which python)))/lib/pkgconfig
+elif [[ "$(expr substr $(uname -s) 1 5)" == "Linux" ]]; then
+	sudo apt-get install -y ffmpeg pkg-config qtbase5-dev libqt5opengl5-dev libpython3.5-dev \
+	  libassimp-dev libboost-python-dev libtinyxml-dev
+fi
+
+# clone roboschool and bullet
+read -e -p "Please enter a path to clone roboschool and bullet3 repo [eg: /home/name/code]: " PARENT_DIR
+eval PARENT_DIR=${PARENT_DIR}
+
 ROBOSCHOOL_PATH=${PARENT_DIR}/roboschool
 git clone https://github.com/openai/roboschool.git ${ROBOSCHOOL_PATH}
-
 
 # build bullet for roboschool
 BULLET_PATH=${PARENT_DIR}/bullet3
@@ -23,5 +31,7 @@ make -j4
 make install
 
 cd ${ROBOSCHOOL_PATH}
-pip install -e ${ROBOSCHOOL_PATH}
+pip install ${ROBOSCHOOL_PATH}
 
+echo "setup done. try command below to test roboschool:"
+echo "python ${ROBOSCHOOL_PATH}/agent_zoo/demo_race2.py"

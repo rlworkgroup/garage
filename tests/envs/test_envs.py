@@ -9,6 +9,12 @@ try:
 except OSError:
     print("Warning: Mujoco not installed. Skipping mujoco-related tests")
     MUJOCO_ENABLED = False
+
+try:
+    import roboschool
+except OSError:
+    print("Warning: Roboschool not installed. Skipping roboschool-related tests")
+    ROBOSCHOOL_ENABLED = False
 import numpy as np
 
 from garage.envs import DelayedActionEnv
@@ -62,6 +68,9 @@ if MUJOCO_ENABLED:
         SwimmerMazeEnv,
         AntMazeEnv,
     ])
+
+if ROBOSCHOOL_ENABLED:
+    envs.append(gym.make("RoboschoolAnt-v1"))
 
 envs = [cls() for cls in simple_env_classes]
 envs.append(ProxyEnv(envs[0]))

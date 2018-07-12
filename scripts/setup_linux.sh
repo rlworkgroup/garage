@@ -33,6 +33,14 @@ if [[ "${?}" -ne 0 ]]; then
   exit 1
 fi
 
+echo "Setting up Roboschool..."
+/bin/bash ./scripts/setup_roboschool.sh
+if [[ "${?}" -ne 0 ]]; then
+  echo -e "\e[0;31mError: Roboschool couldn't be set up\e[0m"
+  exit 1
+fi
+
+
 env_name="garage"
 tf_version="1.8"
 read -r -p "Install tensorflow-gpu instead of regular tensorflow [y/N]: " \
