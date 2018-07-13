@@ -68,7 +68,11 @@ In short:
 
 garage currently uses [pre-commit](https://pre-commit.com/#usage), a multi-language package manager for pre-commit hooks, and its out-of-the-box [hooks](https://github.com/pre-commit/pre-commit-hooks).
 To setup pre-commit on your local machine:
-* `pre-commit install` to install pre-commit into your .git/hooks/ directory
+```sh
+pre-commit install -t pre-commit
+pre-commit install -t pre-push
+pre-commit install -t commit-msg
+```
 
 Once you've installed pre-commit, it will automatically run every time you type `git commit`.
 
