@@ -1,6 +1,7 @@
 import atexit
 from collections import namedtuple
 from enum import Enum
+import platform
 from queue import Queue
 from threading import Thread
 
@@ -39,6 +40,11 @@ class Plotter:
         self.rollout = rollout
         self.worker_thread = Thread(target=self._start_worker, daemon=True)
         self.queue = Queue()
+
+        # Needed in order to draw glfw window on the main thread
+        if ('Darwin' in platform.platform()):
+            self.rollout(
+                env, policy, max_path_length=np.inf, animated=True, speedup=5)
 
     def _start_worker(self):
         env = None
