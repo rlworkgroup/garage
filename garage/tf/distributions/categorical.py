@@ -2,7 +2,7 @@ import numpy as np
 import tensorflow as tf
 
 from garage.tf.distributions import Distribution
-from garage.tf.misc.tensor_utils import enclosing_scope, compile_function
+from garage.tf.misc.tensor_utils import compile_function
 
 TINY = 1e-8
 
@@ -15,26 +15,28 @@ def from_onehot(x_var):
 
 
 class Categorical(Distribution):
-    def __init__(self, dim, name="Categorical"):
-        self._dim = dim
-        self._name = name
-        weights_var = tf.placeholder(
-            dtype=tf.float32, shape=(None, dim), name="weights")
-        self._f_sample = compile_function(
-            inputs=[weights_var],
-            outputs=tf.multinomial(tf.log(weights_var + 1e-8),
-                                   num_samples=1)[:, 0],
-        )
+    def __init__(self, dim, name=None):
+        with tf.variable_scope(name, "Categorical"):
+            self._dim = dim
+            self._name = name
+            weights_var = tf.placeholder(
+                dtype=tf.float32, shape=(None, dim), name="weights")
+            self._f_sample = compile_function(
+                inputs=[weights_var],
+                outputs=tf.multinomial(
+                    tf.log(weights_var + 1e-8), num_samples=1)[:, 0],
+            )
 
     @property
     def dim(self):
         return self._dim
 
-    def kl_sym(self, old_dist_info_vars, new_dist_info_vars, name="kl_sym"):
+    def kl_sym(self, old_dist_info_vars, new_dist_info_vars, name=None):
         """
         Compute the symbolic KL divergence of two categorical distributions
         """
-        with enclosing_scope(self._name, name):
+        with tf.name_scope(name, "kl",
+                           [old_dist_info_vars, new_dist_info_vars]):
             old_prob_var = old_dist_info_vars["prob"]
             new_prob_var = new_dist_info_vars["prob"]
             ndims = old_prob_var.get_shape().ndims
@@ -58,8 +60,9 @@ class Categorical(Distribution):
                              x_var,
                              old_dist_info_vars,
                              new_dist_info_vars,
-                             name="likelihood_ratio_sym"):
-        with enclosing_scope(self._name, name):
+                             name=None):
+        with tf.name_scope(name, "likelihood_ratio",
+                           [x_var, old_dist_info_vars, new_dist_info_vars]):
             old_prob_var = old_dist_info_vars["prob"]
             new_prob_var = new_dist_info_vars["prob"]
             ndims = old_prob_var.get_shape().ndims
@@ -68,16 +71,17 @@ class Categorical(Distribution):
             return (tf.reduce_sum(new_prob_var * x_var, ndims - 1) + TINY) / \
                    (tf.reduce_sum(old_prob_var * x_var, ndims - 1) + TINY)
 
-    def entropy_sym(self, dist_info_vars, name="entropy_sym"):
-        with enclosing_scope(self._name, name):
+    def entropy_sym(self, dist_info_vars, name=None):
+        with tf.name_scope(name, "entropy", [dist_info_vars]):
             probs = dist_info_vars["prob"]
             return -tf.reduce_sum(probs * tf.log(probs + TINY), axis=1)
 
     def cross_entropy_sym(self,
                           old_dist_info_vars,
                           new_dist_info_vars,
-                          name="cross_entropy_sym"):
-        with enclosing_scope(self._name, name):
+                          name=None):
+        with tf.name_scope(name, "cross_entropy",
+                           [old_dist_info_vars, new_dist_info_vars]):
             old_prob_var = old_dist_info_vars["prob"]
             new_prob_var = new_dist_info_vars["prob"]
             ndims = old_prob_var.get_shape().ndims
@@ -89,11 +93,8 @@ class Categorical(Distribution):
         probs = info["prob"]
         return -np.sum(probs * np.log(probs + TINY), axis=1)
 
-    def log_likelihood_sym(self,
-                           x_var,
-                           dist_info_vars,
-                           name="log_likelihood_sym"):
-        with enclosing_scope(self._name, name):
+    def log_likelihood_sym(self, x_var, dist_info_vars, name=None):
+        with tf.name_scope(name, "log_likelihood", [x_var, dist_info_vars]):
             probs = dist_info_vars["prob"]
             ndims = probs.get_shape().ndims
             return tf.log(
@@ -112,8 +113,8 @@ class Categorical(Distribution):
     def sample(self, dist_info):
         return self._f_sample(dist_info["prob"])
 
-    def sample_sym(self, dist_info, name="sample_sym"):
-        with enclosing_scope(self._name, name):
+    def sample_sym(self, dist_info, name=None):
+        with tf.name_scope(name, "sample", [dist_info]):
             probs = dist_info["prob"]
             samples = tf.multinomial(tf.log(probs + 1e-8), num_samples=1)[:, 0]
             return tf.nn.embedding_lookup(

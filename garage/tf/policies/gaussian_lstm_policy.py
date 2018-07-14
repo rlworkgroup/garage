@@ -8,7 +8,6 @@ from garage.tf.core import LSTMNetwork
 import garage.tf.core.layers as L
 from garage.tf.distributions import RecurrentDiagonalGaussian
 from garage.tf.misc import tensor_utils
-from garage.tf.misc.tensor_utils import enclosing_scope
 from garage.tf.policies import StochasticPolicy
 
 
@@ -34,6 +33,8 @@ class GaussianLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
         :param hidden_nonlinearity: nonlinearity used for each hidden layer
         :return:
         """
+        self._mean_network_name = "mean_network"
+        self._std_network_name = "std_network"
         with tf.variable_scope(name):
             Serializable.quick_init(self, locals())
             super(GaussianLSTMPolicy, self).__init__(env_spec)
@@ -77,7 +78,7 @@ class GaussianLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
                     hidden_nonlinearity=hidden_nonlinearity,
                     output_nonlinearity=output_nonlinearity,
                     lstm_layer_cls=lstm_layer_cls,
-                    name="mean_network",
+                    name="lstm_mean_network",
                     use_peepholes=use_peepholes,
                 )
 
@@ -113,7 +114,7 @@ class GaussianLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
                     hidden_nonlinearity=hidden_nonlinearity,
                     output_nonlinearity=output_nonlinearity,
                     lstm_layer_cls=lstm_layer_cls,
-                    name="mean_network",
+                    name="lstm_mean_network",
                     use_peepholes=use_peepholes,
                 )
 
@@ -152,16 +153,29 @@ class GaussianLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
                     l_flat_feature,
                     {feature_network.input_layer: flat_input_var})
 
-            self.f_step_mean_std = tensor_utils.compile_function(
-                [
-                    flat_input_var,
-                    mean_network.step_prev_state_layer.input_var,
-                ],
-                L.get_output([
-                    l_step_mean, l_step_log_std,
-                    mean_network.step_hidden_layer,
-                    mean_network.step_cell_layer
-                ], {mean_network.step_input_layer: feature_var}))
+            with tf.name_scope(self._mean_network_name, values=[feature_var]):
+                (out_step_mean, out_step_hidden, out_mean_cell) = L.get_output(
+                    [
+                        l_step_mean, mean_network.step_hidden_layer,
+                        mean_network.step_cell_layer
+                    ], {mean_network.step_input_layer: feature_var})
+                out_step_mean = tf.identity(out_step_mean, "step_mean")
+                out_step_hidden = tf.identity(out_step_hidden, "step_hidden")
+                out_mean_cell = tf.identity(out_mean_cell, "mean_cell")
+
+            with tf.name_scope(self._std_network_name, values=[feature_var]):
+                out_step_log_std = L.get_output(
+                    l_step_log_std,
+                    {mean_network.step_input_layer: feature_var})
+                out_step_log_std = tf.identity(out_step_log_std,
+                                               "step_log_std")
+
+            self.f_step_mean_std = tensor_utils.compile_function([
+                flat_input_var,
+                mean_network.step_prev_state_layer.input_var,
+            ], [
+                out_step_mean, out_step_log_std, out_step_hidden, out_mean_cell
+            ])
 
             self.l_mean = l_mean
             self.l_log_std = l_log_std
@@ -182,8 +196,8 @@ class GaussianLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
             LayersPowered.__init__(self, out_layers)
 
     @overrides
-    def dist_info_sym(self, obs_var, state_info_vars, name="dist_info_sym"):
-        with enclosing_scope(self.name, name):
+    def dist_info_sym(self, obs_var, state_info_vars, name=None):
+        with tf.name_scope(name, "dist_info_sym", [obs_var, state_info_vars]):
             n_batches = tf.shape(obs_var)[0]
             n_steps = tf.shape(obs_var)[1]
             obs_var = tf.reshape(obs_var, tf.stack([n_batches, n_steps, -1]))
@@ -194,17 +208,33 @@ class GaussianLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
             else:
                 all_input_var = obs_var
             if self.feature_network is None:
-                means, log_stds = L.get_output(
-                    [self.mean_network.output_layer, self.l_log_std],
-                    {self.l_input: all_input_var})
+                with tf.name_scope(
+                        self._mean_network_name, values=[all_input_var]):
+                    means = L.get_output(self.mean_network.output_layer,
+                                         {self.l_input: all_input_var})
+                with tf.name_scope(
+                        self._std_network_name, values=[all_input_var]):
+                    log_stds = L.get_output(self.l_log_std,
+                                            {self.l_input: all_input_var})
             else:
                 flat_input_var = tf.reshape(all_input_var,
                                             (-1, self.input_dim))
-                means, log_stds = L.get_output(
-                    [self.mean_network.output_layer, self.l_log_std], {
-                        self.l_input: all_input_var,
-                        self.feature_network.input_layer: flat_input_var
-                    })
+                with tf.name_scope(
+                        self._mean_network_name,
+                        values=[all_input_var, flat_input_var]):
+                    means = L.get_output(
+                        self.mean_network.output_layer, {
+                            self.l_input: all_input_var,
+                            self.feature_network.input_layer: flat_input_var
+                        })
+                with tf.name_scope(
+                        self._std_network_name,
+                        values=[all_input_var, flat_input_var]):
+                    log_stds = L.get_output(
+                        self.l_log_std, {
+                            self.l_input: all_input_var,
+                            self.feature_network.input_layer: flat_input_var
+                        })
             return dict(mean=means, log_std=log_stds)
 
     @property

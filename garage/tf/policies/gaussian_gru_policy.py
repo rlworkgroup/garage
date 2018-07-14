@@ -9,7 +9,6 @@ from garage.tf.core import LayersPowered
 import garage.tf.core.layers as L
 from garage.tf.distributions import RecurrentDiagonalGaussian
 from garage.tf.misc import tensor_utils
-from garage.tf.misc.tensor_utils import enclosing_scope
 from garage.tf.policies import StochasticPolicy
 
 
@@ -17,7 +16,7 @@ class GaussianGRUPolicy(StochasticPolicy, LayersPowered, Serializable):
     def __init__(
             self,
             env_spec,
-            name="GaussianGRUPolicy",
+            name=None,
             hidden_dim=32,
             feature_network=None,
             state_include_action=True,
@@ -34,7 +33,10 @@ class GaussianGRUPolicy(StochasticPolicy, LayersPowered, Serializable):
         :param hidden_nonlinearity: nonlinearity used for each hidden layer
         :return:
         """
-        with tf.variable_scope(name):
+        self._mean_network_name = "mean_network"
+        self._std_network_name = "std_network"
+
+        with tf.variable_scope(name, "GaussianGRUPolicy"):
             Serializable.quick_init(self, locals())
             super(GaussianGRUPolicy, self).__init__(env_spec)
 
@@ -77,7 +79,7 @@ class GaussianGRUPolicy(StochasticPolicy, LayersPowered, Serializable):
                     hidden_nonlinearity=hidden_nonlinearity,
                     output_nonlinearity=output_nonlinearity,
                     gru_layer_cls=gru_layer_cls,
-                    name="mean_network")
+                    name="gru_mean_network")
 
                 l_mean = L.SliceLayer(
                     mean_network.output_layer,
@@ -107,7 +109,7 @@ class GaussianGRUPolicy(StochasticPolicy, LayersPowered, Serializable):
                     hidden_nonlinearity=hidden_nonlinearity,
                     output_nonlinearity=output_nonlinearity,
                     gru_layer_cls=gru_layer_cls,
-                    name="mean_network")
+                    name="gru_mean_network")
 
                 l_mean = mean_network.output_layer
 
@@ -143,16 +145,25 @@ class GaussianGRUPolicy(StochasticPolicy, LayersPowered, Serializable):
                     l_flat_feature,
                     {feature_network.input_layer: flat_input_var})
 
-            self.f_step_mean_std = tensor_utils.compile_function(
-                [
-                    flat_input_var,
-                    mean_network.step_prev_state_layer.input_var,
-                ],
-                L.get_output([
-                    l_step_mean,
+            with tf.name_scope(self._mean_network_name):
+                out_step_mean, out_step_hidden_mean = L.get_output(
+                    [l_step_mean, mean_network.step_hidden_layer],
+                    {mean_network.step_input_layer: feature_var})
+                out_step_mean = tf.identity(out_step_mean, "step_mean")
+                out_step_hidden_mean = tf.identity(out_step_hidden_mean,
+                                                   "step_hidden_mean")
+
+            with tf.name_scope(self._std_network_name):
+                out_step_log_std = L.get_output(
                     l_step_log_std,
-                    mean_network.step_hidden_layer,
-                ], {mean_network.step_input_layer: feature_var}))
+                    {mean_network.step_input_layer: feature_var})
+                out_step_log_std = tf.identity(out_step_log_std,
+                                               "step_log_std")
+
+            self.f_step_mean_std = tensor_utils.compile_function([
+                flat_input_var,
+                mean_network.step_prev_state_layer.input_var,
+            ], [out_step_mean, out_step_log_std, out_step_hidden_mean])
 
             self.l_mean = l_mean
             self.l_log_std = l_log_std
@@ -173,8 +184,8 @@ class GaussianGRUPolicy(StochasticPolicy, LayersPowered, Serializable):
             LayersPowered.__init__(self, out_layers)
 
     @overrides
-    def dist_info_sym(self, obs_var, state_info_vars, name="dist_info_sym"):
-        with enclosing_scope(self.name, name):
+    def dist_info_sym(self, obs_var, state_info_vars, name=None):
+        with tf.name_scope(name, "dist_info", [obs_var, state_info_vars]):
             n_batches = tf.shape(obs_var)[0]
             n_steps = tf.shape(obs_var)[1]
             obs_var = tf.reshape(obs_var, tf.stack([n_batches, n_steps, -1]))
@@ -185,17 +196,33 @@ class GaussianGRUPolicy(StochasticPolicy, LayersPowered, Serializable):
             else:
                 all_input_var = obs_var
             if self.feature_network is None:
-                means, log_stds = L.get_output(
-                    [self.mean_network.output_layer, self.l_log_std],
-                    {self.l_input: all_input_var})
+                with tf.name_scope(
+                        self._mean_network_name, values=[all_input_var]):
+                    means = L.get_output(self.mean_network.output_layer,
+                                         {self.l_input: all_input_var})
+                with tf.name_scope(
+                        self._std_network_name, values=[all_input_var]):
+                    log_stds = L.get_output(self.l_log_std,
+                                            {self.l_input: all_input_var})
             else:
                 flat_input_var = tf.reshape(all_input_var,
                                             (-1, self.input_dim))
-                means, log_stds = L.get_output(
-                    [self.mean_network.output_layer, self.l_log_std], {
-                        self.l_input: all_input_var,
-                        self.feature_network.input_layer: flat_input_var
-                    })
+                with tf.name_scope(
+                        self._mean_network_name,
+                        values=[all_input_var, flat_input_var]):
+                    means = L.get_output(
+                        self.mean_network.output_layer, {
+                            self.l_input: all_input_var,
+                            self.feature_network.input_layer: flat_input_var
+                        })
+                with tf.name_scope(
+                        self._mean_network_name,
+                        values=[all_input_var, flat_input_var]):
+                    log_stds = L.get_output(
+                        self.l_log_std, {
+                            self.l_input: all_input_var,
+                            self.feature_network.input_layer: flat_input_var
+                        })
             return dict(mean=means, log_std=log_stds)
 
     @property

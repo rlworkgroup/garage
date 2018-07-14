@@ -5,7 +5,6 @@ from garage.misc import ext, logger
 from garage.misc.overrides import overrides
 from garage.tf.algos import BatchPolopt
 from garage.tf.misc import tensor_utils
-from garage.tf.misc.tensor_utils import enclosing_scope
 from garage.tf.optimizers import FirstOrderOptimizer
 
 
@@ -23,27 +22,27 @@ class VPG(BatchPolopt, Serializable):
                  name="VPG",
                  **kwargs):
         Serializable.quick_init(self, locals())
-        if optimizer is None:
-            default_args = dict(
-                batch_size=None,
-                max_epochs=1,
-            )
-            if optimizer_args is None:
-                optimizer_args = default_args
-            else:
-                optimizer_args = dict(default_args, **optimizer_args)
-            optimizer = FirstOrderOptimizer(**optimizer_args)
-        self.optimizer = optimizer
-        self.opt_info = None
-        self.name = name
-        super(VPG, self).__init__(
-            env=env, policy=policy, baseline=baseline, **kwargs)
+        with tf.name_scope(name):
+            if optimizer is None:
+                default_args = dict(
+                    batch_size=None,
+                    max_epochs=1,
+                )
+                if optimizer_args is None:
+                    optimizer_args = default_args
+                else:
+                    optimizer_args = dict(default_args, **optimizer_args)
+                optimizer = FirstOrderOptimizer(**optimizer_args)
+            self.optimizer = optimizer
+            self.opt_info = None
+            self.name = name
+            super(VPG, self).__init__(
+                env=env, policy=policy, baseline=baseline, **kwargs)
 
     @overrides
     def init_opt(self):
-        with enclosing_scope(self.name, "init_opt"):
-            is_recurrent = int(self.policy.recurrent)
-
+        is_recurrent = int(self.policy.recurrent)
+        with tf.name_scope("inputs"):
             obs_var = self.env.observation_space.new_tensor_variable(
                 'obs',
                 extra_dims=1 + is_recurrent,
@@ -87,37 +86,52 @@ class VPG(BatchPolopt, Serializable):
             else:
                 valid_var = None
 
-            dist_info_vars = self.policy.dist_info_sym(obs_var,
-                                                       state_info_vars)
-            logli = dist.log_likelihood_sym(action_var, dist_info_vars)
-            kl = dist.kl_sym(old_dist_info_vars, dist_info_vars)
+        dist_info_vars = self.policy.dist_info_sym(obs_var, state_info_vars)
+        logli = dist.log_likelihood_sym(action_var, dist_info_vars)
+        kl = dist.kl_sym(old_dist_info_vars, dist_info_vars)
+        surr_obj_scope = tf.name_scope(
+            "surr_obj", values=[logli, advantage_var, valid_var])
+        mean_kl_scope = tf.name_scope("mean_kl", values=[kl, valid_var])
+        max_kl_scope = tf.name_scope("max_kl", values=[kl, valid_var])
 
-            # formulate as a minimization problem
-            # The gradient of the surrogate objective is the policy gradient
-            if is_recurrent:
+        # formulate as a minimization problem
+        # The gradient of the surrogate objective is the policy gradient
+        if is_recurrent:
+            with surr_obj_scope:
                 surr_obj = -tf.reduce_sum(logli * advantage_var *
                                           valid_var) / tf.reduce_sum(valid_var)
+                tf.identity(surr_obj, name="surr_obj")
+            with mean_kl_scope:
                 mean_kl = tf.reduce_sum(
                     kl * valid_var) / tf.reduce_sum(valid_var)
+                tf.identity(mean_kl, name="mean_kl")
+            with max_kl_scope:
                 max_kl = tf.reduce_max(kl * valid_var)
-            else:
+                tf.identity(max_kl, name="max_kl")
+        else:
+            with surr_obj_scope:
                 surr_obj = -tf.reduce_mean(logli * advantage_var)
+                tf.identity(surr_obj, name="surr_obj")
+            with mean_kl_scope:
                 mean_kl = tf.reduce_mean(kl)
+                tf.identity(mean_kl, name="mean_kl")
+            with max_kl_scope:
                 max_kl = tf.reduce_max(kl)
+                tf.identity(max_kl, name="max_kl")
 
-            input_list = [obs_var, action_var, advantage_var
-                          ] + state_info_vars_list
-            if is_recurrent:
-                input_list.append(valid_var)
+        input_list = [obs_var, action_var, advantage_var
+                      ] + state_info_vars_list
+        if is_recurrent:
+            input_list.append(valid_var)
 
-            self.optimizer.update_opt(
-                loss=surr_obj, target=self.policy, inputs=input_list)
+        self.optimizer.update_opt(
+            loss=surr_obj, target=self.policy, inputs=input_list)
 
-            f_kl = tensor_utils.compile_function(
-                inputs=input_list + old_dist_info_vars_list,
-                outputs=[mean_kl, max_kl],
-            )
-            self.opt_info = dict(f_kl=f_kl, )
+        f_kl = tensor_utils.compile_function(
+            inputs=input_list + old_dist_info_vars_list,
+            outputs=[mean_kl, max_kl],
+        )
+        self.opt_info = dict(f_kl=f_kl, )
 
     @overrides
     def optimize_policy(self, itr, samples_data):

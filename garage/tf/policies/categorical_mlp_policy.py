@@ -15,7 +15,7 @@ class CategoricalMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
     def __init__(
             self,
             env_spec,
-            name="CategoricalMLPPolicy",
+            name=None,
             hidden_sizes=(32, 32),
             hidden_nonlinearity=tf.nn.tanh,
             prob_network=None,
@@ -34,7 +34,8 @@ class CategoricalMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
 
         assert isinstance(env_spec.action_space, Discrete)
 
-        with tf.variable_scope(name):
+        self._prob_network_name = "prob_network"
+        with tf.variable_scope(name, "CategoricalMLPPolicy"):
             if prob_network is None:
                 prob_network = MLP(
                     input_shape=(env_spec.observation_space.flat_dim, ),
@@ -42,14 +43,15 @@ class CategoricalMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
                     hidden_sizes=hidden_sizes,
                     hidden_nonlinearity=hidden_nonlinearity,
                     output_nonlinearity=tf.nn.softmax,
-                    name="prob_network",
+                    name=self._prob_network_name,
                 )
 
             self._l_prob = prob_network.output_layer
             self._l_obs = prob_network.input_layer
+            with tf.name_scope(self._prob_network_name):
+                prob_network_outputs = L.get_output(prob_network.output_layer)
             self._f_prob = tensor_utils.compile_function(
-                [prob_network.input_layer.input_var],
-                L.get_output(prob_network.output_layer))
+                [prob_network.input_layer.input_var], [prob_network_outputs])
 
             self._dist = Categorical(env_spec.action_space.n)
 
@@ -61,10 +63,12 @@ class CategoricalMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
         return True
 
     @overrides
-    def dist_info_sym(self, obs_var, state_info_vars=None):
-        return dict(
-            prob=L.get_output(self._l_prob,
-                              {self._l_obs: tf.cast(obs_var, tf.float32)}))
+    def dist_info_sym(self, obs_var, state_info_vars=None, name=None):
+        with tf.name_scope(name, "dist_info", [obs_var, state_info_vars]):
+            with tf.name_scope(self._prob_network_name, values=[obs_var]):
+                prob = L.get_output(
+                    self._l_prob, {self._l_obs: tf.cast(obs_var, tf.float32)})
+            return dict(prob)
 
     @overrides
     def dist_info(self, obs, state_infos=None):

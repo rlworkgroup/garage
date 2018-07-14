@@ -5,7 +5,6 @@ import garage.misc.logger as logger
 from garage.misc.overrides import overrides
 from garage.tf.algos import BatchPolopt
 from garage.tf.misc import tensor_utils
-from garage.tf.misc.tensor_utils import enclosing_scope
 from garage.tf.optimizers import PenaltyLbfgsOptimizer
 
 
@@ -27,12 +26,13 @@ class NPO(BatchPolopt):
         self.optimizer = optimizer
         self.step_size = step_size
         self.name = name
-        super(NPO, self).__init__(**kwargs)
+        with tf.name_scope(name):
+            super(NPO, self).__init__(**kwargs)
 
     @overrides
     def init_opt(self):
-        with enclosing_scope(self.name, "init_opt"):
-            is_recurrent = int(self.policy.recurrent)
+        is_recurrent = int(self.policy.recurrent)
+        with tf.name_scope("inputs"):
             obs_var = self.env.observation_space.new_tensor_variable(
                 'obs',
                 extra_dims=1 + is_recurrent,
@@ -76,35 +76,46 @@ class NPO(BatchPolopt):
             else:
                 valid_var = None
 
-            dist_info_vars = self.policy.dist_info_sym(obs_var,
-                                                       state_info_vars)
-            kl = dist.kl_sym(old_dist_info_vars, dist_info_vars)
-            lr = dist.likelihood_ratio_sym(action_var, old_dist_info_vars,
-                                           dist_info_vars)
-            if is_recurrent:
+        dist_info_vars = self.policy.dist_info_sym(obs_var, state_info_vars)
+        kl = dist.kl_sym(old_dist_info_vars, dist_info_vars)
+        lr = dist.likelihood_ratio_sym(action_var, old_dist_info_vars,
+                                       dist_info_vars)
+        mean_kl_scope = tf.name_scope("mean_kl", values=[kl, valid_var])
+        surr_loss_scope = tf.name_scope(
+            "surr_loss", values=[lr, advantage_var, valid_var])
+        if is_recurrent:
+            with mean_kl_scope:
                 mean_kl = tf.reduce_sum(
                     kl * valid_var) / tf.reduce_sum(valid_var)
+                tf.identity(mean_kl, name="mean_kl")
+            with surr_loss_scope:
                 surr_loss = -tf.reduce_sum(
                     lr * advantage_var * valid_var) / tf.reduce_sum(valid_var)
-            else:
+                tf.identity(surr_loss, name="surr_loss")
+        else:
+            with mean_kl_scope:
                 mean_kl = tf.reduce_mean(kl, name="reduce_mean_er")
+                tf.identity(mean_kl, name="mean_kl")
+            with surr_loss_scope:
                 surr_loss = -tf.reduce_mean(lr * advantage_var)
+                tf.identity(surr_loss, name="surr_loss")
 
-            input_list = [
-                obs_var,
-                action_var,
-                advantage_var,
-            ] + state_info_vars_list + old_dist_info_vars_list
-            if is_recurrent:
-                input_list.append(valid_var)
+        input_list = [
+            obs_var,
+            action_var,
+            advantage_var,
+        ] + state_info_vars_list + old_dist_info_vars_list
+        if is_recurrent:
+            input_list.append(valid_var)
 
-            self.optimizer.update_opt(
-                loss=surr_loss,
-                target=self.policy,
-                leq_constraint=(mean_kl, self.step_size),
-                inputs=input_list,
-                constraint_name="mean_kl")
-            return dict()
+        self.optimizer.update_opt(
+            loss=surr_loss,
+            target=self.policy,
+            leq_constraint=(mean_kl, self.step_size),
+            inputs=input_list,
+            constraint_name="mean_kl",
+            name="update_opt_surr_loss")
+        return dict()
 
     @overrides
     def optimize_policy(self, itr, samples_data):

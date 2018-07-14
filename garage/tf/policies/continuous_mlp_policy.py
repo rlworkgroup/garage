@@ -14,7 +14,6 @@ from garage.tf.core import layers as layers
 from garage.tf.core import LayersPowered
 from garage.tf.core.layers import batch_norm
 from garage.tf.misc import tensor_utils
-from garage.tf.misc.tensor_utils import enclosing_scope
 from garage.tf.policies import Policy
 
 
@@ -61,6 +60,7 @@ class ContinuousMLPPolicy(Policy, Serializable, LayersPowered):
         self._hidden_nonlinearity = hidden_nonlinearity
         self._output_nonlinearity = output_nonlinearity
         self._batch_norm = bn
+        self._q_network_name = "q_network"
 
     def _build_net(self, reuse=None, custom_getter=None, trainable=None):
         """
@@ -96,9 +96,10 @@ class ContinuousMLPPolicy(Policy, Serializable, LayersPowered):
                 trainable=trainable,
                 name="output")
 
-            action = layers.get_output(l_output)
-            scaled_action = tf.multiply(
-                action, self._action_bound, name="scaled_action")
+            with tf.name_scope(self._q_network_name):
+                action = layers.get_output(l_output)
+                scaled_action = tf.multiply(
+                    action, self._action_bound, name="scaled_action")
 
         self._f_prob_online = tensor_utils.compile_function(
             inputs=[l_in.input_var], outputs=scaled_action)
@@ -107,12 +108,13 @@ class ContinuousMLPPolicy(Policy, Serializable, LayersPowered):
 
         LayersPowered.__init__(self, [l_output])
 
-    def get_action_sym(self, obs_var, name="get_action_sym", **kwargs):
+    def get_action_sym(self, obs_var, name=None, **kwargs):
         """Return action sym according to obs_var."""
-        with enclosing_scope(self.name, name):
-            actions = layers.get_output(self._output_layer,
-                                        {self._obs_layer: obs_var}, **kwargs)
-        return tf.multiply(actions, self._action_bound)
+        with tf.name_scope(name, "get_action_sym", [obs_var]):
+            with tf.name_scope(self._q_network_name):
+                actions = layers.get_output(
+                    self._output_layer, {self._obs_layer: obs_var}, **kwargs)
+            return tf.multiply(actions, self._action_bound)
 
     @overrides
     def get_action(self, observation):
