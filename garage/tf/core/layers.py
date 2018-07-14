@@ -524,8 +524,6 @@ class BaseConvLayer(Layer):
         elif self.pad == 'VALID':
             pad = (0, ) * self.n
         else:
-            import ipdb
-            ipdb.set_trace()
             raise NotImplementedError
 
         # if isinstance(self.pad, tuple):

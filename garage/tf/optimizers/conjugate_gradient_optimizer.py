@@ -216,7 +216,8 @@ class ConjugateGradientOptimizer(Serializable):
         params = target.get_params(trainable=True)
         with tf.name_scope(
                 name, "ConjugateGradientOptimizer",
-            [loss, target, leq_constraint, inputs, extra_inputs, params]):
+                [loss, target, leq_constraint, inputs, extra_inputs,
+                 params]):  # yapf: disable
             inputs = tuple(inputs)
             if extra_inputs is None:
                 extra_inputs = tuple()
@@ -348,8 +349,7 @@ class ConjugateGradientOptimizer(Serializable):
                     self._opt_fun["f_loss_constraint"],
                     self._num_slices)(inputs, extra_inputs)
                 if self._debug_nan and np.isnan(constraint_val):
-                    import ipdb
-                    ipdb.set_trace()
+                    break
                 if loss < loss_before and \
                    constraint_val <= self._max_constraint_val:
                     break
