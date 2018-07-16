@@ -283,10 +283,8 @@ class DDPG(RLAlgorithm):
             actions = tf.placeholder(
                 tf.float32, shape=(None, self.action_dim), name="input_action")
 
-        #obs = tf.identity(obs, "obs")
         # Set up actor training function
         next_action = self.actor.get_action_sym(obs, name="actor_action")
-        #next_action = tf.identity(next_action, "next_action")
         next_qval = self.critic.get_qval_sym(
             obs, next_action, name="actor_qval")
         with tf.name_scope("action_loss"):

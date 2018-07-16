@@ -848,10 +848,6 @@ class ReshapeLayer(Layer):
                                      "single-element lists of int >= 0")
             elif isinstance(s, (tf.Tensor, tf.Variable)):  # T.TensorVariable):
                 raise NotImplementedError
-                # if s.ndim != 0:
-                #     raise ValueError(
-                #         "A symbolic variable in a shape specification must "
-                #         "be a scalar, but had %i dimensions" % s.ndim)
             else:
                 raise ValueError("`shape` must be a tuple of int and/or [int]")
         if sum(s == -1 for s in shape) > 1:

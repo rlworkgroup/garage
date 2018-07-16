@@ -60,7 +60,7 @@ class ContinuousMLPPolicy(Policy, Serializable, LayersPowered):
         self._hidden_nonlinearity = hidden_nonlinearity
         self._output_nonlinearity = output_nonlinearity
         self._batch_norm = bn
-        self._q_network_name = "q_network"
+        self._policy_network_name = "policy_network"
 
     def _build_net(self, reuse=None, custom_getter=None, trainable=None):
         """
@@ -96,7 +96,7 @@ class ContinuousMLPPolicy(Policy, Serializable, LayersPowered):
                 trainable=trainable,
                 name="output")
 
-            with tf.name_scope(self._q_network_name):
+            with tf.name_scope(self._policy_network_name):
                 action = layers.get_output(l_output)
                 scaled_action = tf.multiply(
                     action, self._action_bound, name="scaled_action")
@@ -111,7 +111,7 @@ class ContinuousMLPPolicy(Policy, Serializable, LayersPowered):
     def get_action_sym(self, obs_var, name=None, **kwargs):
         """Return action sym according to obs_var."""
         with tf.name_scope(name, "get_action_sym", [obs_var]):
-            with tf.name_scope(self._q_network_name):
+            with tf.name_scope(self._policy_network_name):
                 actions = layers.get_output(
                     self._output_layer, {self._obs_layer: obs_var}, **kwargs)
             return tf.multiply(actions, self._action_bound)
