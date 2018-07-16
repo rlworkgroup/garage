@@ -2,15 +2,11 @@ import numpy as np
 import tensorflow as tf
 
 from garage.core import Serializable
-from garage.misc import ext
-from garage.misc import logger
 from garage.tf.core import LayersPowered
 from garage.tf.core import MLP
 import garage.tf.core.layers as L
-from garage.tf.distributions import Categorical
 from garage.tf.misc import tensor_utils
 from garage.tf.optimizers import LbfgsOptimizer
-from garage.tf.optimizers import PenaltyLbfgsOptimizer
 
 NONE = list()
 
@@ -24,7 +20,7 @@ class DeterministicMLPRegressor(LayersPowered, Serializable):
             self,
             input_shape,
             output_dim,
-            name="DeterministicMLPRegressor",
+            name=None,
             network=None,
             hidden_sizes=(32, 32),
             hidden_nonlinearity=tf.nn.tanh,
@@ -43,7 +39,7 @@ class DeterministicMLPRegressor(LayersPowered, Serializable):
         """
         Serializable.quick_init(self, locals())
 
-        with tf.variable_scope(name):
+        with tf.variable_scope(name, "DeterministicMLPRegressor"):
 
             if optimizer is None:
                 optimizer = LbfgsOptimizer(name="optimizer")
@@ -51,6 +47,7 @@ class DeterministicMLPRegressor(LayersPowered, Serializable):
             self.output_dim = output_dim
             self.optimizer = optimizer
 
+            self._network_name = "network"
             if network is None:
                 network = MLP(
                     input_shape=input_shape,
@@ -58,7 +55,7 @@ class DeterministicMLPRegressor(LayersPowered, Serializable):
                     hidden_sizes=hidden_sizes,
                     hidden_nonlinearity=hidden_nonlinearity,
                     output_nonlinearity=output_nonlinearity,
-                    name="network")
+                    name=self._network_name)
 
             l_out = network.output_layer
 
@@ -79,8 +76,9 @@ class DeterministicMLPRegressor(LayersPowered, Serializable):
 
             normalized_xs_var = (xs_var - x_mean_var) / x_std_var
 
-            fit_ys_var = L.get_output(l_out,
-                                      {network.input_layer: normalized_xs_var})
+            with tf.name_scope(self._network_name, values=[normalized_xs_var]):
+                fit_ys_var = L.get_output(
+                    l_out, {network.input_layer: normalized_xs_var})
 
             loss = -tf.reduce_mean(tf.square(fit_ys_var - ys_var))
 
@@ -104,8 +102,9 @@ class DeterministicMLPRegressor(LayersPowered, Serializable):
             self.x_mean_var = x_mean_var
             self.x_std_var = x_std_var
 
-    def predict_sym(self, xs):
-        return L.get_output(self.l_out, xs)
+    def predict_sym(self, xs, name=None):
+        with tf.name_scope(name, "predict_sym", values=[xs]):
+            return L.get_output(self.l_out, xs)
 
     # def fit(self, xs, ys):
     #     if self._normalize_inputs:

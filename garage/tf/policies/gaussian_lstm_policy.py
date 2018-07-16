@@ -15,7 +15,7 @@ class GaussianLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
     def __init__(
             self,
             env_spec,
-            name="GaussianLSTMPolicy",
+            name=None,
             hidden_dim=32,
             feature_network=None,
             state_include_action=True,
@@ -35,7 +35,7 @@ class GaussianLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
         """
         self._mean_network_name = "mean_network"
         self._std_network_name = "std_network"
-        with tf.variable_scope(name):
+        with tf.variable_scope(name, "GaussianLSTMPolicy"):
             Serializable.quick_init(self, locals())
             super(GaussianLSTMPolicy, self).__init__(env_spec)
 

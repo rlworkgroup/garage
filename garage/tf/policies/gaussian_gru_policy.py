@@ -185,7 +185,7 @@ class GaussianGRUPolicy(StochasticPolicy, LayersPowered, Serializable):
 
     @overrides
     def dist_info_sym(self, obs_var, state_info_vars, name=None):
-        with tf.name_scope(name, "dist_info", [obs_var, state_info_vars]):
+        with tf.name_scope(name, "dist_info_sym", [obs_var, state_info_vars]):
             n_batches = tf.shape(obs_var)[0]
             n_steps = tf.shape(obs_var)[1]
             obs_var = tf.reshape(obs_var, tf.stack([n_batches, n_steps, -1]))

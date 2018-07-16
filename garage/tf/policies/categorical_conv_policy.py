@@ -77,7 +77,7 @@ class CategoricalConvPolicy(StochasticPolicy, LayersPowered, Serializable):
 
     @overrides
     def dist_info_sym(self, obs_var, state_info_vars=None, name=None):
-        with tf.name_scope(name, "dist_info", [obs_var]):
+        with tf.name_scope(name, "dist_info_sym", [obs_var]):
             with tf.name_scope(self._prob_network_name, [obs_var]):
                 prob = L.get_output(
                     self._l_prob, {self._l_obs: tf.cast(obs_var, tf.float32)})

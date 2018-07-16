@@ -40,7 +40,7 @@ class DiagonalGaussian(Distribution):
         #     axis=-1)
 
     def kl_sym(self, old_dist_info_vars, new_dist_info_vars, name=None):
-        with tf.name_scope(name, "kl",
+        with tf.name_scope(name, "kl_sym",
                            [old_dist_info_vars, new_dist_info_vars]):
             old_means = old_dist_info_vars["mean"]
             old_log_stds = old_dist_info_vars["log_std"]
@@ -68,14 +68,15 @@ class DiagonalGaussian(Distribution):
                              old_dist_info_vars,
                              new_dist_info_vars,
                              name=None):
-        with tf.name_scope(name, "likelihood_ratio",
+        with tf.name_scope(name, "likelihood_ratio_sym",
                            [x_var, old_dist_info_vars, new_dist_info_vars]):
             logli_new = self.log_likelihood_sym(x_var, new_dist_info_vars)
             logli_old = self.log_likelihood_sym(x_var, old_dist_info_vars)
             return tf.exp(logli_new - logli_old)
 
     def log_likelihood_sym(self, x_var, dist_info_vars, name=None):
-        with tf.name_scope(name, "log_likelihood", [x_var, dist_info_vars]):
+        with tf.name_scope(name, "log_likelihood_sym",
+                           [x_var, dist_info_vars]):
             means = dist_info_vars["mean"]
             log_stds = dist_info_vars["log_std"]
             zs = (x_var - means) / tf.exp(log_stds)
@@ -102,7 +103,7 @@ class DiagonalGaussian(Distribution):
         return np.sum(log_stds + np.log(np.sqrt(2 * np.pi * np.e)), axis=-1)
 
     def entropy_sym(self, dist_info_var, name=None):
-        with tf.name_scope(name, "entropy", [dist_info_var]):
+        with tf.name_scope(name, "entropy_sym", [dist_info_var]):
             log_std_var = dist_info_var["log_std"]
             return tf.reduce_sum(
                 log_std_var + np.log(np.sqrt(2 * np.pi * np.e)), axis=-1)

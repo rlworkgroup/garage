@@ -183,7 +183,7 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
         return True
 
     def dist_info_sym(self, obs_var, state_info_vars=None, name=None):
-        with tf.name_scope(name, "dist_info", [obs_var]):
+        with tf.name_scope(name, "dist_info_sym", [obs_var]):
             with tf.name_scope(self._mean_network_name, values=[obs_var]):
                 mean_var = L.get_output(self._l_mean, obs_var)
             with tf.name_scope(self._std_network_name, values=[obs_var]):
@@ -227,7 +227,7 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
         :param old_dist_info_vars:
         :return:
         """
-        with tf.name_scope(name, "get_reparam_action",
+        with tf.name_scope(name, "get_reparam_action_sym",
                            [obs_var, action_var, old_dist_info_vars]):
             new_dist_info_vars = self.dist_info_sym(obs_var, action_var)
             new_mean_var, new_log_std_var = new_dist_info_vars[

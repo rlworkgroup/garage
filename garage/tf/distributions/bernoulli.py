@@ -16,7 +16,7 @@ class Bernoulli(Distribution):
         return self._dim
 
     def kl_sym(self, old_dist_info_vars, new_dist_info_vars, name=None):
-        with tf.name_scope(name, "kl",
+        with tf.name_scope(name, "kl_sym",
                            [old_dist_info_vars, new_dist_info_vars]):
             old_p = old_dist_info_vars["p"]
             new_p = new_dist_info_vars["p"]
@@ -44,7 +44,7 @@ class Bernoulli(Distribution):
                              old_dist_info_vars,
                              new_dist_info_vars,
                              name=None):
-        with tf.name_scope(name, "likelihood_ratio",
+        with tf.name_scope(name, "likelihood_ratio_sym",
                            [x_var, old_dist_info_vars, new_dist_info_vars]):
             old_p = old_dist_info_vars["p"]
             new_p = new_dist_info_vars["p"]
@@ -55,7 +55,8 @@ class Bernoulli(Distribution):
                 axis=ndims - 1)
 
     def log_likelihood_sym(self, x_var, dist_info_vars, name=None):
-        with tf.name_scope(name, "log_likelihood", [x_var, dist_info_vars]):
+        with tf.name_scope(name, "log_likelihood_sym",
+                           [x_var, dist_info_vars]):
             p = dist_info_vars["p"]
             ndims = p.get_shape().ndims
             return tf.reduce_sum(

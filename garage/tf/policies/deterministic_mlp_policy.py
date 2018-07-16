@@ -68,6 +68,6 @@ class DeterministicMLPPolicy(Policy, LayersPowered, Serializable):
         return actions, dict()
 
     def get_action_sym(self, obs_var, name=None):
-        with tf.name_scope(name, "get_action", values=[obs_var]):
+        with tf.name_scope(name, "get_action_sym", values=[obs_var]):
             with tf.name_scope(self._prob_network_name, values=[obs_var]):
                 return L.get_output(self.prob_network.output_layer, obs_var)
