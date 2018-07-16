@@ -13,7 +13,6 @@ from mujoco_py import MjSim
 from mujoco_py import MjViewer
 import numpy as np
 
-from garage.envs.mujoco import utils
 from garage.envs.util import bounds
 from garage.misc import autoargs
 from garage.misc.overrides import overrides
@@ -230,9 +229,3 @@ class MujocoEnv(gym.Env):
 
     def action_from_key(self, key):
         raise NotImplementedError
-
-    def env_setup(self, initial_qpos):
-        for name, value in initial_qpos.items():
-            self.sim.data.set_joint_qpos(name, value)
-        utils.reset_mocap_welds(self.sim)
-        self.sim.forward()
