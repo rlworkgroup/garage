@@ -2,6 +2,10 @@ language: python
 
 python:
   - "3.5.2"
+  
+cache:
+  directories:
+    - $HOME/miniconda
 
 before_install:
   # get mujoco key
