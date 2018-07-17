@@ -46,7 +46,7 @@ before_install:
       fi;
       wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O "${HOME}/downloads/miniconda.sh";
       bash "${HOME}/downloads/miniconda.sh" -b -p "${HOME}/miniconda";
-      conda update -q conda;
+      conda update -q -y conda;
     fi;
   - conda config --set always_yes yes --set changeps1 no
   - conda info -a
