@@ -1,21 +1,24 @@
-import os
-import os.path as osp
-import tempfile
-import warnings
-
-import gym
-import mako.lookup
-import mako.template
-import numpy as np
 from cached_property import cached_property
+
+from garage.envs.util import bounds
+from garage.misc import autoargs
+from garage.misc.overrides import overrides
+
 from mujoco_py import MjSim
 from mujoco_py import MjViewer
 from mujoco_py import functions
 from mujoco_py import load_model_from_path
 
-from garage.envs.util import bounds
-from garage.misc import autoargs
-from garage.misc.overrides import overrides
+import gym
+import mako.lookup
+import mako.template
+import numpy as np
+
+import os
+import os.path as osp
+import tempfile
+import warnings
+
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
