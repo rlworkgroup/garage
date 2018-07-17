@@ -9,13 +9,14 @@ from garage.baselines import LinearFeatureBaseline
 from garage.baselines import ZeroBaseline
 from garage.envs.box2d import CartpoleEnv
 from garage.policies import GaussianMLPPolicy
+from garage.theano.envs import TheanoEnv
 
 baselines = [ZeroBaseline, LinearFeatureBaseline, GaussianMLPBaseline]
 
 
 @tools.params(*baselines)
 def test_baseline(baseline_cls):
-    env = CartpoleEnv()
+    env = TheanoEnv(CartpoleEnv())
     policy = GaussianMLPPolicy(env_spec=env.spec, hidden_sizes=(6, ))
     baseline = baseline_cls(env_spec=env.spec)
     algo = VPG(

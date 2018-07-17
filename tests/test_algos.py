@@ -23,6 +23,7 @@ from garage.policies import DeterministicMLPPolicy
 from garage.policies import GaussianGRUPolicy
 from garage.policies import GaussianMLPPolicy
 from garage.q_functions import ContinuousMLPQFunction
+from garage.theano.envs import TheanoEnv
 
 common_batch_algo_args = dict(
     n_itr=1,
@@ -92,7 +93,7 @@ for algo in [VPG, TNPG, PPO, TRPO, CEM, CMAES, ERWR, REPS]:
 def test_polopt_algo(algo_cls, env_cls, policy_cls):
     print("Testing %s, %s, %s" % (algo_cls.__name__, env_cls.__name__,
                                   policy_cls.__name__))
-    env = env_cls()
+    env = TheanoEnv(env_cls())
     policy = policy_cls(env_spec=env.spec, )
     baseline = ZeroBaseline(env_spec=env.spec)
     algo = algo_cls(
@@ -105,7 +106,7 @@ def test_polopt_algo(algo_cls, env_cls, policy_cls):
 
 
 def test_ddpg():
-    env = CartpoleEnv()
+    env = TheanoEnv(CartpoleEnv())
     policy = DeterministicMLPPolicy(env.spec)
     qf = ContinuousMLPQFunction(env.spec)
     es = OUStrategy(env.spec)

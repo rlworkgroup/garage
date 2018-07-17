@@ -3,7 +3,6 @@ import numpy as np
 from garage.baselines import Baseline
 from garage.core import Parameterized
 from garage.core import Serializable
-from garage.envs.util import flat_dim
 from garage.misc.overrides import overrides
 from garage.regressors import GaussianMLPRegressor
 
@@ -23,7 +22,7 @@ class GaussianMLPBaseline(Baseline, Parameterized):
 
         self._regressor = GaussianMLPRegressor(
             input_shape=(
-                flat_dim(env_spec.observation_space) * num_seq_inputs, ),
+                env_spec.observation_space.flat_dim * num_seq_inputs, ),
             output_dim=1,
             name="vf",
             **regressor_args)

@@ -1,7 +1,7 @@
 ## Support Platform
-| Robot        | Workstation OS | ROS    | Python | Simulation Platform | 
+| Robot        | Workstation OS | ROS    | Python | Simulation Platform |
 |:------------:|:--------------:| :-----:|:------:|:-------------------:|
-| Sawyer       | Ubuntu16.04    | Kinetic| 3      |Gazebo 7.0           |
+| Sawyer       | Ubuntu16.04    | Kinetic|   3    |Gazebo 7.0           |
 ### Major python packages dependencies
 - catkin_pkg
 - rospkg
@@ -14,11 +14,11 @@ $ source activate garage
 $ export GARAGE_PYTHON=`which python`
 $ source deactivate
 $ export ROS_WS=/path/to/your/ros/workspace/
-$ export GARAGE=/path/to/your/garage/  
+$ export GARAGE=/path/to/your/garage/
 ```
 ## Installation
 - Assuming we got a clean system which only has garage running.
-- Check if our robots and workstations are supported by garage.contrib.ros    
+- Check if our robots and workstations are supported by garage.contrib.ros
 - Following is how we setup the garage.contrib.ros's environment for sawyer robot
 ### Setup Workstation
 #### INSTALL ROS
@@ -70,7 +70,7 @@ $ sudo apt-get install git-core python-argparse python-wstool python-vcstools py
 #### INSTALL INTERA ROBOT SDK
 ##### Activate the conda environment for garage
     $ source activate garage
-**garage is your garage conda environment's name** 
+**garage is your garage conda environment's name**
 ##### Download the SDK on your Workstation
 ```bash
 $ cd $ROS_WS/src
@@ -89,7 +89,7 @@ $ cd ..
 $ git clone https://github.com/ros/geometry2.git
 $ cd geometry2
 $ git checkout indigo-devel
-``` 
+```
 ##### Source ROS Setup
     $ source /opt/ros/kinetic/setup.bash
 ##### Build
@@ -101,7 +101,7 @@ $ catkin_make -DPYTHON_EXECUTABLE:FILEPATH=$GARAGE_PYTHON
 ##### intera.sh ROS Environment Setup
 ##### Copy the intera.sh script
 The intera.sh file already exists in intera_sdk repo, copy the file into your ros workspace.
-    
+
     $ cp $ROS_WS/src/intera_sdk/intera.sh ~/$ROS_WS
 ##### Customize the intera.sh script
 ```bash
@@ -135,16 +135,23 @@ $ source /opt/ros/kinetic/setup.bash
 $ cd $ROS_WS
 $ catkin_make -DPYTHON_EXECUTABLE:FILEPATH=$GARAGE_PYTHON
 ```
+### Setup MoveIt! for safety check
+#### Install MoveIt!
+```bash
+$ cd $ROS_WS
+$ wstool merge -t src https://raw.githubusercontent.com/ros-planning/moveit/kinetic-devel/moveit.rosinstall
+$ wstool update -t src
+$ rosdep install -y --from-paths src --ignore-src --rosdistro kinetic
+$ catkin_make -DPYTHON_EXECUTABLE:FILEPATH=$GARAGE_PYTHON
+```
 ### Convert Python2 code in intera packages to Python3
 - As our environments only support Python3, we need to convert Python2 code in intera packages.
 - These can be done using garage.contrib.ros.scripts.sawyer_2to3.sh
 ##### Customize sawyer_2to3.sh
 Upgrade path:
-    
+
     ros_ws=$ROS_WS/src/
 Remove sawyer_simulator, if you don't need it:
-
-    packages=(intera_sdk)
 ##### Execute script
 ```bash
 $ ./$GARAGE/contrib/ros/scripts/sawyer_2to3.sh
@@ -158,7 +165,7 @@ $ cp $GARAGE/contrib/ros/envs/sawyer/sawyer_learning.launch $ROS_WS/src/sawyer_s
 $ cp $GARAGE/contrib/ros/envs/sawyer/sawyer_world_learning.launch $ROS_WS/src/sawyer_simulator/sawyer_gazebo/launch
 $ cp $GARAGE/contrib/ros/envs/sawyer/sawyer_learning.world $ROS_WS/src/sawyer_simulator/sawyer_gazebo/worlds/
 ```
-#### Copy the model file 
+#### Copy the model file
 ```bash
 $ cp $GARAGE/contrib/ros/envs/sawyer/models/target $ROS_WS/src/sawyer_simulator/sawyer_sim_examples/models
 ```
@@ -178,6 +185,8 @@ Please append your vicon ros topics in your config_personal file:
     # e.g.
     VICON_TOPICS = ['vicon/vicon_object/cube']
     ```
+### Launch MoveIt! sawyer for safety check
+Follow this [intera official tutorial](http://sdk.rethinkrobotics.com/intera/MoveIt_Tutorial)
 ### Run the training script
 #### Open a new terminator
 #### Set the environment variables
@@ -199,6 +208,4 @@ Ex.
     $ python $GARAGE/contrib/ros/envs/example_launchers/trpo_gazebo_sawyer_pnp.py
 ## Troubleshooting
 ### ImportError: import cv2 when running training script
-Make sure your are using opencv-python installed in garage conda env. 
-
-
+Make sure your are using opencv-python installed in garage conda env.

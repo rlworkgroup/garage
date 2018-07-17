@@ -2,14 +2,14 @@ from garage.algos import TRPO
 from garage.baselines import LinearFeatureBaseline
 from garage.envs import normalize
 from garage.envs.mujoco import SwimmerEnv
-from garage.envs.util import spec
 from garage.policies import GaussianMLPPolicy
+from garage.theano.envs import TheanoEnv
 
-env = normalize(SwimmerEnv())
+env = TheanoEnv(normalize(SwimmerEnv()))
 
-policy = GaussianMLPPolicy(env_spec=spec(env), hidden_sizes=(32, 32))
+policy = GaussianMLPPolicy(env_spec=env.spec, hidden_sizes=(32, 32))
 
-baseline = LinearFeatureBaseline(env_spec=spec(env))
+baseline = LinearFeatureBaseline(env_spec=env.spec)
 
 algo = TRPO(
     env=env,

@@ -10,7 +10,7 @@ from garage.envs.util import spec
 from garage.misc.instrument import run_experiment
 from garage.policies import GaussianMLPPolicy
 
-INITIAL_REAL_ROBOT_JOINT_POS = {
+INITIAL_ROBOT_JOINT_POS = {
     'right_j0': -0.140923828125,
     'right_j1': -1.2789248046875,
     'right_j2': -3.043166015625,
@@ -23,14 +23,15 @@ INITIAL_REAL_ROBOT_JOINT_POS = {
 
 def run_task(*_):
     """Run task function."""
-    initial_goal = np.array([0.6, -0.1, 0.80])
+    initial_goal = np.array([0.6, -0.1, 0.30])
 
     rospy.init_node('trpo_real_sawyer_reacher_exp', anonymous=True)
 
     env = ReacherEnv(
         initial_goal,
-        initial_joint_pos=INITIAL_REAL_ROBOT_JOINT_POS,
-        simulated=False)
+        initial_joint_pos=INITIAL_ROBOT_JOINT_POS,
+        simulated=False,
+        robot_control_mode='position')
 
     rospy.on_shutdown(env.shutdown)
 

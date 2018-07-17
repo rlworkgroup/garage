@@ -1,5 +1,4 @@
 import gym
-import lasagne.nonlinearities
 import numpy as np
 import theano.tensor as TT
 
@@ -7,6 +6,7 @@ from garage.algos import TRPO
 from garage.baselines import ZeroBaseline
 from garage.envs import Step
 from garage.policies import GaussianMLPPolicy
+from garage.theano.envs import TheanoEnv
 
 
 class DummyEnv(gym.Env):
@@ -33,7 +33,7 @@ def naive_relu(x):
 
 
 def test_trpo_relu_nan():
-    env = DummyEnv()
+    env = TheanoEnv(DummyEnv())
     policy = GaussianMLPPolicy(
         env_spec=env.spec, hidden_nonlinearity=naive_relu, hidden_sizes=(1, ))
     baseline = ZeroBaseline(env_spec=env.spec)
@@ -50,7 +50,7 @@ def test_trpo_relu_nan():
 
 
 def test_trpo_deterministic_nan():
-    env = DummyEnv()
+    env = TheanoEnv(DummyEnv())
     policy = GaussianMLPPolicy(env_spec=env.spec, hidden_sizes=(1, ))
     policy._l_log_std.param.set_value([np.float32(np.log(1e-8))])
     baseline = ZeroBaseline(env_spec=env.spec)

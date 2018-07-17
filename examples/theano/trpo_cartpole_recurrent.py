@@ -2,19 +2,19 @@ from garage.algos import TRPO
 from garage.baselines import LinearFeatureBaseline
 from garage.envs import normalize
 from garage.envs.box2d import CartpoleEnv
-from garage.envs.util import spec
 from garage.misc.instrument import run_experiment
 from garage.optimizers import ConjugateGradientOptimizer
 from garage.optimizers import FiniteDifferenceHvp
 from garage.policies import GaussianGRUPolicy
+from garage.theano.envs import TheanoEnv
 
 
 def run_task(*_):
-    env = normalize(CartpoleEnv())
+    env = TheanoEnv(normalize(CartpoleEnv()))
 
-    policy = GaussianGRUPolicy(env_spec=spec(env), )
+    policy = GaussianGRUPolicy(env_spec=env.spec, )
 
-    baseline = LinearFeatureBaseline(env_spec=spec(env))
+    baseline = LinearFeatureBaseline(env_spec=env.spec)
 
     algo = TRPO(
         env=env,

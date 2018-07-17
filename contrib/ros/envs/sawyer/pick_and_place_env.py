@@ -1,9 +1,9 @@
-"""
-Pick-and-place task for the sawyer robot
-"""
+"""Pick-and-place task for the sawyer robot."""
+
 import collections
 
 import gym
+import moveit_commander
 import numpy as np
 
 from contrib.ros.envs.sawyer.sawyer_env import SawyerEnv
@@ -21,6 +21,25 @@ class PickAndPlaceEnv(SawyerEnv, Serializable):
                  distance_threshold=0.05,
                  target_range=0.15,
                  robot_control_mode='position'):
+        """
+        Pick-and-place task for the sawyer robot.
+
+        :param initial_goal: np.array()
+                    the initial goal of pnp task,
+                    which is object's target position
+        :param initial_joint_pos: dict{string: float}
+                    initial joint position
+        :param sparse_reward: Bool
+                    if use sparse reward
+        :param simulated: Bool
+                    if use simulator
+        :param distance_threshold: float
+                    threshold for judging if the episode is done
+        :param target_range: float
+                    the range within which the new target is randomized
+        :param robot_control_mode: string
+                    control mode 'position'/'velocity'/'effort'
+        """
         Serializable.quick_init(self, locals())
 
         self._distance_threshold = distance_threshold
@@ -28,18 +47,31 @@ class PickAndPlaceEnv(SawyerEnv, Serializable):
         self._sparse_reward = sparse_reward
         self.initial_goal = initial_goal
         self.goal = self.initial_goal.copy()
+        self.simulated = simulated
+
+        # Initialize moveit to get safety check
+        self._moveit_robot = moveit_commander.RobotCommander()
+        self._moveit_scene = moveit_commander.PlanningSceneInterface()
+        self._moveit_group_name = 'right_arm'
+        self._moveit_group = moveit_commander.MoveGroupCommander(
+            self._moveit_group_name)
 
         self._robot = Sawyer(
             initial_joint_pos=initial_joint_pos,
-            control_mode=robot_control_mode)
-        self._world = BlockWorld(simulated)
+            control_mode=robot_control_mode,
+            moveit_group=self._moveit_group_name)
+        self._world = BlockWorld(self._moveit_scene,
+                                 self._moveit_robot.get_planning_frame(),
+                                 simulated)
 
         SawyerEnv.__init__(self, simulated=simulated)
 
     @property
     def observation_space(self):
         """
-        Returns a Space object
+        Returns a Space object.
+
+        :return: observation_space
         """
         return gym.spaces.Box(
             -np.inf,
@@ -49,7 +81,8 @@ class PickAndPlaceEnv(SawyerEnv, Serializable):
 
     def sample_goal(self):
         """
-        Sample goals
+        Sample goals.
+
         :return: the new sampled goal
         """
         goal = self.initial_goal.copy()
@@ -62,7 +95,8 @@ class PickAndPlaceEnv(SawyerEnv, Serializable):
 
     def get_observation(self):
         """
-        Get Observation
+        Get Observation.
+
         :return observation: dict
                     {'observation': obs,
                      'achieved_goal': achieved_goal,
@@ -87,6 +121,7 @@ class PickAndPlaceEnv(SawyerEnv, Serializable):
     def reward(self, achieved_goal, goal):
         """
         Compute the reward for current step.
+
         :param achieved_goal: np.array
                     the current gripper's position or object's
                     position in the current training episode.
@@ -119,8 +154,14 @@ class PickAndPlaceEnv(SawyerEnv, Serializable):
 
     def done(self, achieved_goal, goal):
         """
+        If done.
+
         :return if_done: bool
                     if current episode is done:
         """
-        return self._goal_distance(achieved_goal,
-                                   goal) < self._distance_threshold
+        if not self._robot.safety_check():
+            done = True
+        else:
+            done = self._goal_distance(achieved_goal,
+                                       goal) < self._distance_threshold
+        return done

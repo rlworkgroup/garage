@@ -144,3 +144,7 @@ class GridWorldEnv(gym.Env, Serializable):
     @overrides
     def render(self, mode='human'):
         pass
+
+    @overrides
+    def log_diagnostics(self, paths):
+        pass
