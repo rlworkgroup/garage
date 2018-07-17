@@ -2,12 +2,6 @@ import os
 
 import gym
 from nose2 import tools
-MUJOCO_ENABLED = True
-try:
-    import mujoco_py
-except OSError:
-    print("Warning: Mujoco not installed. Skipping mujoco-related tests")
-    MUJOCO_ENABLED = False
 import numpy as np
 
 from garage.envs import DelayedActionEnv
@@ -22,7 +16,9 @@ from garage.envs.box2d import CartpoleEnv
 from garage.envs.box2d import CartpoleSwingupEnv
 from garage.envs.box2d import DoublePendulumEnv
 from garage.envs.box2d import MountainCarEnv
-if MUJOCO_ENABLED:
+
+MUJOCO_ENABLED = True
+try:
     from garage.envs.mujoco import HalfCheetahEnv
     from garage.envs.mujoco import HopperEnv
     from garage.envs.mujoco import InvertedDoublePendulumEnv
@@ -36,6 +32,9 @@ if MUJOCO_ENABLED:
     from garage.envs.mujoco.maze import AntMazeEnv
     from garage.envs.mujoco.maze import PointMazeEnv
     from garage.envs.mujoco.maze import SwimmerMazeEnv
+except OSError:
+    print("Warning: Mujoco not installed. Skipping mujoco-related tests")
+    MUJOCO_ENABLED = False
 
 simple_env_classes = [
     GridWorldEnv,
@@ -82,6 +81,7 @@ def test_env(env):
     a = act_space.sample()
     assert act_space.contains(a)
     res = env.step(a)
+    obs, reward, done, info = env.step(a)
     assert ob_space.contains(res[0])  # res[0] --> observation
     assert np.isscalar(res[1])  # res[1] --> reward
     if 'CIRCLECI' in os.environ:

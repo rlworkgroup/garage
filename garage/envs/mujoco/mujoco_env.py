@@ -3,21 +3,18 @@ import os.path as osp
 import tempfile
 import warnings
 
-from cached_property import cached_property
 import gym
 import mako.lookup
 import mako.template
-import mujoco_py
-from mujoco_py import functions
-from mujoco_py import load_model_from_path
+import numpy as np
+from cached_property import cached_property
 from mujoco_py import MjSim
 from mujoco_py import MjViewer
-import numpy as np
-import theano
+from mujoco_py import functions
+from mujoco_py import load_model_from_path
 
 from garage.envs.util import bounds
 from garage.misc import autoargs
-from garage.misc import logger
 from garage.misc.overrides import overrides
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
@@ -204,6 +201,7 @@ class MujocoEnv(gym.Env):
             return img
         if close:
             self.stop_viewer()
+        return None
 
     def start_viewer(self):
         viewer = self.get_viewer()
