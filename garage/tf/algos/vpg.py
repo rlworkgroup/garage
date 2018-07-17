@@ -90,10 +90,6 @@ class VPG(BatchPolopt, Serializable):
                                                        state_info_vars)
             logli = dist.log_likelihood_sym(action_var, dist_info_vars)
             kl = dist.kl_sym(old_dist_info_vars, dist_info_vars)
-            surr_obj_scope = tf.name_scope(
-                "surr_obj", values=[logli, advantage_var, valid_var])
-            mean_kl_scope = tf.name_scope("mean_kl", values=[kl, valid_var])
-            max_kl_scope = tf.name_scope("max_kl", values=[kl, valid_var])
 
             # formulate as a minimization problem
             # The gradient of the surrogate objective is the policy gradient
@@ -115,7 +111,7 @@ class VPG(BatchPolopt, Serializable):
                     mean_kl = tf.reduce_mean(kl)
                 tf.identity(mean_kl, name="mean_kl")
 
-            with tf.name_scope("mean_kl", values=[kl, valid_var]):
+            with tf.name_scope("max_kl", values=[kl, valid_var]):
                 if is_recurrent:
                     max_kl = tf.reduce_max(kl * valid_var)
                 else:
