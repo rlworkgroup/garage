@@ -119,8 +119,8 @@ class DDPG(RLAlgorithm):
         self.pause_for_plot = pause_for_plot
         self.actor_optimizer = actor_optimizer
         self.critic_optimizer = critic_optimizer
-        with tf.name_scope(name, "DDPG"):
-            self._initialize()
+        self.name = name
+        self._initialize()
 
     @overrides
     def train(self, sess=None):
@@ -241,95 +241,99 @@ class DDPG(RLAlgorithm):
             sess.close()
 
     def _initialize(self):
-        """Set up the actor, critic and target network."""
-        # Set up the actor and critic network
-        self.actor._build_net(trainable=True)
-        self.critic._build_net(trainable=True)
+        with tf.name_scope(self.name, "DDPG"):
+            """Set up the actor, critic and target network."""
+            # Set up the actor and critic network
+            self.actor._build_net(trainable=True)
+            self.critic._build_net(trainable=True)
 
-        # Create target actor and critic network
-        target_actor = copy(self.actor)
-        target_critic = copy(self.critic)
+            # Create target actor and critic network
+            target_actor = copy(self.actor)
+            target_critic = copy(self.critic)
 
-        # Set up the target network
-        target_actor.name = "TargetActor"
-        target_actor._build_net(trainable=False)
-        target_critic.name = "TargetCritic"
-        target_critic._build_net(trainable=False)
+            # Set up the target network
+            target_actor.name = "TargetActor"
+            target_actor._build_net(trainable=False)
+            target_critic.name = "TargetCritic"
+            target_critic._build_net(trainable=False)
 
-        # Initialize replay buffer
-        replay_buffer = ReplayBuffer(self.replay_buffer_size,
-                                     self.observation_dim, self.action_dim)
+            # Initialize replay buffer
+            replay_buffer = ReplayBuffer(self.replay_buffer_size,
+                                         self.observation_dim, self.action_dim)
 
-        # Set up target init and update function
-        with tf.name_scope("setup_target"):
-            actor_init_ops, actor_update_ops = get_target_ops(
-                self.actor.global_vars, target_actor.global_vars, self.tau)
-            critic_init_ops, critic_update_ops = get_target_ops(
-                self.critic.global_vars, target_critic.global_vars, self.tau)
-            target_init_op = actor_init_ops + critic_init_ops
-            target_update_op = actor_update_ops + critic_update_ops
+            # Set up target init and update function
+            with tf.name_scope("setup_target"):
+                actor_init_ops, actor_update_ops = get_target_ops(
+                    self.actor.global_vars, target_actor.global_vars, self.tau)
+                critic_init_ops, critic_update_ops = get_target_ops(
+                    self.critic.global_vars, target_critic.global_vars,
+                    self.tau)
+                target_init_op = actor_init_ops + critic_init_ops
+                target_update_op = actor_update_ops + critic_update_ops
 
-        f_init_target = tensor_utils.compile_function(
-            inputs=[], outputs=target_init_op)
-        f_update_target = tensor_utils.compile_function(
-            inputs=[], outputs=target_update_op)
+            f_init_target = tensor_utils.compile_function(
+                inputs=[], outputs=target_init_op)
+            f_update_target = tensor_utils.compile_function(
+                inputs=[], outputs=target_update_op)
 
-        with tf.name_scope("inputs"):
-            y = tf.placeholder(tf.float32, shape=(None, 1), name="input_y")
-            obs = tf.placeholder(
-                tf.float32,
-                shape=(None, self.observation_dim),
-                name="input_observation")
-            actions = tf.placeholder(
-                tf.float32, shape=(None, self.action_dim), name="input_action")
+            with tf.name_scope("inputs"):
+                y = tf.placeholder(tf.float32, shape=(None, 1), name="input_y")
+                obs = tf.placeholder(
+                    tf.float32,
+                    shape=(None, self.observation_dim),
+                    name="input_observation")
+                actions = tf.placeholder(
+                    tf.float32,
+                    shape=(None, self.action_dim),
+                    name="input_action")
 
-        # Set up actor training function
-        next_action = self.actor.get_action_sym(obs, name="actor_action")
-        next_qval = self.critic.get_qval_sym(
-            obs, next_action, name="actor_qval")
-        with tf.name_scope("action_loss"):
-            action_loss = -tf.reduce_mean(next_qval)
-            if self.actor_weight_decay > 0.:
-                actor_reg = tc.layers.apply_regularization(
-                    tc.layers.l2_regularizer(self.actor_weight_decay),
-                    weights_list=self.actor.regularizable_vars)
-                action_loss += actor_reg
+            # Set up actor training function
+            next_action = self.actor.get_action_sym(obs, name="actor_action")
+            next_qval = self.critic.get_qval_sym(
+                obs, next_action, name="actor_qval")
+            with tf.name_scope("action_loss"):
+                action_loss = -tf.reduce_mean(next_qval)
+                if self.actor_weight_decay > 0.:
+                    actor_reg = tc.layers.apply_regularization(
+                        tc.layers.l2_regularizer(self.actor_weight_decay),
+                        weights_list=self.actor.regularizable_vars)
+                    action_loss += actor_reg
 
-        with tf.name_scope("minimize_action_loss"):
-            actor_train_op = self.actor_optimizer(
-                self.actor_lr, name="ActorOptimizer").minimize(
-                    action_loss, var_list=self.actor.trainable_vars)
+            with tf.name_scope("minimize_action_loss"):
+                actor_train_op = self.actor_optimizer(
+                    self.actor_lr, name="ActorOptimizer").minimize(
+                        action_loss, var_list=self.actor.trainable_vars)
 
-        f_train_actor = tensor_utils.compile_function(
-            inputs=[obs], outputs=[actor_train_op, action_loss])
+            f_train_actor = tensor_utils.compile_function(
+                inputs=[obs], outputs=[actor_train_op, action_loss])
 
-        # Set up critic training function
-        qval = self.critic.get_qval_sym(obs, actions, name="q_value")
-        with tf.name_scope("qval_loss"):
-            qval_loss = tf.reduce_mean(tf.squared_difference(y, qval))
-            if self.critic_weight_decay > 0.:
-                critic_reg = tc.layers.apply_regularization(
-                    tc.layers.l2_regularizer(self.critic_weight_decay),
-                    weights_list=self.critic.regularizable_vars)
-                qval_loss += critic_reg
+            # Set up critic training function
+            qval = self.critic.get_qval_sym(obs, actions, name="q_value")
+            with tf.name_scope("qval_loss"):
+                qval_loss = tf.reduce_mean(tf.squared_difference(y, qval))
+                if self.critic_weight_decay > 0.:
+                    critic_reg = tc.layers.apply_regularization(
+                        tc.layers.l2_regularizer(self.critic_weight_decay),
+                        weights_list=self.critic.regularizable_vars)
+                    qval_loss += critic_reg
 
-        with tf.name_scope("minimize_critic_loss"):
-            critic_train_op = self.critic_optimizer(
-                self.critic_lr, name="CriticOptimizer").minimize(
-                    qval_loss, var_list=self.critic.trainable_vars)
+            with tf.name_scope("minimize_critic_loss"):
+                critic_train_op = self.critic_optimizer(
+                    self.critic_lr, name="CriticOptimizer").minimize(
+                        qval_loss, var_list=self.critic.trainable_vars)
 
-        f_train_critic = tensor_utils.compile_function(
-            inputs=[y, obs, actions],
-            outputs=[critic_train_op, qval_loss, qval])
+            f_train_critic = tensor_utils.compile_function(
+                inputs=[y, obs, actions],
+                outputs=[critic_train_op, qval_loss, qval])
 
-        self.opt_info = dict(
-            f_train_actor=f_train_actor,
-            f_train_critic=f_train_critic,
-            f_init_target=f_init_target,
-            f_update_target=f_update_target,
-            replay_buffer=replay_buffer,
-            target_critic=target_critic,
-            target_actor=target_actor)
+            self.opt_info = dict(
+                f_train_actor=f_train_actor,
+                f_train_critic=f_train_critic,
+                f_init_target=f_init_target,
+                f_update_target=f_update_target,
+                replay_buffer=replay_buffer,
+                target_critic=target_critic,
+                target_actor=target_actor)
 
     def _learn(self):
         """

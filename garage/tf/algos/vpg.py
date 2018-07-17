@@ -19,119 +19,122 @@ class VPG(BatchPolopt, Serializable):
                  baseline,
                  optimizer=None,
                  optimizer_args=None,
-                 name="VPG",
+                 name=None,
                  **kwargs):
         Serializable.quick_init(self, locals())
-        with tf.name_scope(name):
-            if optimizer is None:
-                default_args = dict(
-                    batch_size=None,
-                    max_epochs=1,
-                )
-                if optimizer_args is None:
-                    optimizer_args = default_args
-                else:
-                    optimizer_args = dict(default_args, **optimizer_args)
-                optimizer = FirstOrderOptimizer(**optimizer_args)
-            self.optimizer = optimizer
-            self.opt_info = None
-            self.name = name
-            super(VPG, self).__init__(
-                env=env, policy=policy, baseline=baseline, **kwargs)
+        if optimizer is None:
+            default_args = dict(
+                batch_size=None,
+                max_epochs=1,
+            )
+            if optimizer_args is None:
+                optimizer_args = default_args
+            else:
+                optimizer_args = dict(default_args, **optimizer_args)
+            optimizer = FirstOrderOptimizer(**optimizer_args)
+        self.optimizer = optimizer
+        self.opt_info = None
+        self.name = name
+        super(VPG, self).__init__(
+            env=env, policy=policy, baseline=baseline, **kwargs)
 
     @overrides
     def init_opt(self):
-        is_recurrent = int(self.policy.recurrent)
-        with tf.name_scope("inputs"):
-            obs_var = self.env.observation_space.new_tensor_variable(
-                'obs',
-                extra_dims=1 + is_recurrent,
-            )
-            action_var = self.env.action_space.new_tensor_variable(
-                'action',
-                extra_dims=1 + is_recurrent,
-            )
-            advantage_var = tensor_utils.new_tensor(
-                name='advantage',
-                ndim=1 + is_recurrent,
-                dtype=tf.float32,
-            )
-            dist = self.policy.distribution
+        with tf.name_scope(self.name, "VPG"):
+            is_recurrent = int(self.policy.recurrent)
+            with tf.name_scope("inputs"):
+                obs_var = self.env.observation_space.new_tensor_variable(
+                    'obs',
+                    extra_dims=1 + is_recurrent,
+                )
+                action_var = self.env.action_space.new_tensor_variable(
+                    'action',
+                    extra_dims=1 + is_recurrent,
+                )
+                advantage_var = tensor_utils.new_tensor(
+                    name='advantage',
+                    ndim=1 + is_recurrent,
+                    dtype=tf.float32,
+                )
+                dist = self.policy.distribution
 
-            old_dist_info_vars = {
-                k: tf.placeholder(
-                    tf.float32,
-                    shape=[None] * (1 + is_recurrent) + list(shape),
-                    name='old_%s' % k)
-                for k, shape in dist.dist_info_specs
-            }
-            old_dist_info_vars_list = [
-                old_dist_info_vars[k] for k in dist.dist_info_keys
-            ]
+                old_dist_info_vars = {
+                    k: tf.placeholder(
+                        tf.float32,
+                        shape=[None] * (1 + is_recurrent) + list(shape),
+                        name='old_%s' % k)
+                    for k, shape in dist.dist_info_specs
+                }
+                old_dist_info_vars_list = [
+                    old_dist_info_vars[k] for k in dist.dist_info_keys
+                ]
 
-            state_info_vars = {
-                k: tf.placeholder(
-                    tf.float32,
-                    shape=[None] * (1 + is_recurrent) + list(shape),
-                    name=k)
-                for k, shape in self.policy.state_info_specs
-            }
-            state_info_vars_list = [
-                state_info_vars[k] for k in self.policy.state_info_keys
-            ]
+                state_info_vars = {
+                    k: tf.placeholder(
+                        tf.float32,
+                        shape=[None] * (1 + is_recurrent) + list(shape),
+                        name=k)
+                    for k, shape in self.policy.state_info_specs
+                }
+                state_info_vars_list = [
+                    state_info_vars[k] for k in self.policy.state_info_keys
+                ]
 
+                if is_recurrent:
+                    valid_var = tf.placeholder(
+                        tf.float32, shape=[None, None], name="valid")
+                else:
+                    valid_var = None
+
+            dist_info_vars = self.policy.dist_info_sym(obs_var,
+                                                       state_info_vars)
+            logli = dist.log_likelihood_sym(action_var, dist_info_vars)
+            kl = dist.kl_sym(old_dist_info_vars, dist_info_vars)
+            surr_obj_scope = tf.name_scope(
+                "surr_obj", values=[logli, advantage_var, valid_var])
+            mean_kl_scope = tf.name_scope("mean_kl", values=[kl, valid_var])
+            max_kl_scope = tf.name_scope("max_kl", values=[kl, valid_var])
+
+            # formulate as a minimization problem
+            # The gradient of the surrogate objective is the policy gradient
+            with tf.name_scope(
+                    "surr_obj", values=[logli, advantage_var, valid_var]):
+                if is_recurrent:
+                    surr_obj = (
+                        -tf.reduce_sum(logli * advantage_var * valid_var) /
+                        tf.reduce_sum(valid_var))
+                else:
+                    surr_obj = -tf.reduce_mean(logli * advantage_var)
+                tf.identity(surr_obj, name="surr_obj")
+
+            with tf.name_scope("mean_kl", values=[kl, valid_var]):
+                if is_recurrent:
+                    mean_kl = tf.reduce_sum(
+                        kl * valid_var) / tf.reduce_sum(valid_var)
+                else:
+                    mean_kl = tf.reduce_mean(kl)
+                tf.identity(mean_kl, name="mean_kl")
+
+            with tf.name_scope("mean_kl", values=[kl, valid_var]):
+                if is_recurrent:
+                    max_kl = tf.reduce_max(kl * valid_var)
+                else:
+                    max_kl = tf.reduce_max(kl)
+                tf.identity(max_kl, name="max_kl")
+
+            input_list = [obs_var, action_var, advantage_var
+                          ] + state_info_vars_list
             if is_recurrent:
-                valid_var = tf.placeholder(
-                    tf.float32, shape=[None, None], name="valid")
-            else:
-                valid_var = None
+                input_list.append(valid_var)
 
-        dist_info_vars = self.policy.dist_info_sym(obs_var, state_info_vars)
-        logli = dist.log_likelihood_sym(action_var, dist_info_vars)
-        kl = dist.kl_sym(old_dist_info_vars, dist_info_vars)
-        surr_obj_scope = tf.name_scope(
-            "surr_obj", values=[logli, advantage_var, valid_var])
-        mean_kl_scope = tf.name_scope("mean_kl", values=[kl, valid_var])
-        max_kl_scope = tf.name_scope("max_kl", values=[kl, valid_var])
+            self.optimizer.update_opt(
+                loss=surr_obj, target=self.policy, inputs=input_list)
 
-        # formulate as a minimization problem
-        # The gradient of the surrogate objective is the policy gradient
-        if is_recurrent:
-            with surr_obj_scope:
-                surr_obj = -tf.reduce_sum(logli * advantage_var *
-                                          valid_var) / tf.reduce_sum(valid_var)
-                tf.identity(surr_obj, name="surr_obj")
-            with mean_kl_scope:
-                mean_kl = tf.reduce_sum(
-                    kl * valid_var) / tf.reduce_sum(valid_var)
-                tf.identity(mean_kl, name="mean_kl")
-            with max_kl_scope:
-                max_kl = tf.reduce_max(kl * valid_var)
-                tf.identity(max_kl, name="max_kl")
-        else:
-            with surr_obj_scope:
-                surr_obj = -tf.reduce_mean(logli * advantage_var)
-                tf.identity(surr_obj, name="surr_obj")
-            with mean_kl_scope:
-                mean_kl = tf.reduce_mean(kl)
-                tf.identity(mean_kl, name="mean_kl")
-            with max_kl_scope:
-                max_kl = tf.reduce_max(kl)
-                tf.identity(max_kl, name="max_kl")
-
-        input_list = [obs_var, action_var, advantage_var
-                      ] + state_info_vars_list
-        if is_recurrent:
-            input_list.append(valid_var)
-
-        self.optimizer.update_opt(
-            loss=surr_obj, target=self.policy, inputs=input_list)
-
-        f_kl = tensor_utils.compile_function(
-            inputs=input_list + old_dist_info_vars_list,
-            outputs=[mean_kl, max_kl],
-        )
-        self.opt_info = dict(f_kl=f_kl, )
+            f_kl = tensor_utils.compile_function(
+                inputs=input_list + old_dist_info_vars_list,
+                outputs=[mean_kl, max_kl],
+            )
+            self.opt_info = dict(f_kl=f_kl, )
 
     @overrides
     def optimize_policy(self, itr, samples_data):
