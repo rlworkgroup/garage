@@ -1,0 +1,126 @@
+FROM ubuntu:16.04
+# FROM krellin/ubuntu-tini:16.04
+
+# apt dependencies
+RUN \
+  apt-get -y -q update && \
+  # Prevents debconf from prompting for user input
+  # See https://github.com/phusion/baseimage-docker/issues/58
+  DEBIAN_FRONTEND=noninteractive apt-get install -y \
+    # Dockerfile deps
+    wget \
+    bzip2 \
+    unzip \
+    git \
+    # For building glfw
+    cmake \
+    xorg-dev \
+    # Dummy X server
+    xpra \
+    xserver-xorg-video-dummy \
+    xserver-xorg-input-void \
+    libgl1-mesa-dev \
+    libgl1-mesa-glx \
+    # not sure these two are needed (or the diff b/t this and gl1)
+    libglu1-mesa \
+    libglu1-mesa-dev \
+    # not sure this is needed
+    libgles2-mesa-dev \
+    # no sure freeglut3 is nedded. freeglut3-dev probably needed.
+    freeglut3 \
+    freeglut3-dev \
+    libosmesa6-dev \
+    mesa-utils \
+    # MuJoCo/mujoco_py
+    # libglfw3 \ # 16.04 repo is too old, install from source instead
+    libglew-dev \
+    patchelf \
+    # OpenAI gym
+    # https://github.com/openai/gym/blob/master/Dockerfile
+    # not sure this is needed
+    libav-tools \
+    # not sure this is needed
+    libpq-dev \
+    # not sure this is needed
+    libjpeg-dev \
+    swig \
+    # not sure this is needed
+    libsdl2-2.0-0\
+    # not sure this is needed
+    libsdl2-dev \
+    # not sure this is needed
+    libboost-all-dev \
+    # OpenAI baselines
+    libopenmpi-dev \
+    openmpi-bin && \
+  apt-get clean && \
+  rm -rf /var/lib/apt/lists/*
+
+# Build GLFW
+RUN git clone https://github.com/glfw/glfw.git && \
+  cd glfw && \
+  git checkout 0be4f3f75aebd9d24583ee86590a38e741db0904 && \
+  mkdir glfw-build && \
+  cd glfw-build && \
+  cmake -DBUILD_SHARED_LIBS=ON -DGLFW_BUILD_EXAMPLES=OFF -DGLFW_BUILD_TESTS=OFF -DGLFW_BUILD_DOCS=OFF .. && \
+  make -j"$(nproc)" && \
+  make install && \
+  cd ../../ && \
+  rm -rf glfw
+
+# MuJoCo
+RUN mkdir /root/.mujoco && \
+  wget https://www.roboti.us/download/mjpro150_linux.zip -O mujoco.zip && \
+  unzip mujoco.zip -d $HOME/.mujoco && \
+  rm mujoco.zip
+ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mjpro150/bin
+
+# conda
+RUN wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh && \
+  bash miniconda.sh -b -p /opt/conda && \
+  rm miniconda.sh && \
+  ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh
+ENV PATH=$PATH:/opt/conda/bin
+RUN conda update -q -y conda
+
+# conda environment
+# Copy over just environment.yml first, so the Docker cache doesn't expire
+# until it changes
+COPY environment.yml .
+RUN conda env create -f environment.yml
+
+# Extras
+# prevent pip from complaining about available upgrades
+RUN ["/bin/bash", "-c", "source activate garage && pip install --upgrade pip"]
+
+# TensorFlow is not in environment.yml because of CPU vs GPU
+RUN ["/bin/bash", "-c", "source activate garage && pip install tensorflow==1.8.0"]
+
+# Trigger Cython build of mujoco_py bindings
+# We need a MuJoCo key to import mujoco_py, but MAKE SURE TO DELETE IT AFTER SO
+# THAT WE DON'T PUBLISH THE KEY
+ARG MJKEY
+RUN echo "${MJKEY}" > /root/.mujoco/mjkey.txt
+RUN ["/bin/bash", "-c", "source activate garage && python -c 'import mujoco_py'"]
+RUN rm /root/.mujoco/mjkey.txt
+
+# Add code stub
+COPY . /root/code/garage
+ENV PYTHONPATH=$PYTHONPATH:/root/code/garage
+
+# Ready, set, go.
+WORKDIR /root/code
+
+# All of these only for testing -- so I can run the test suites easily
+RUN git clone https://github.com/openai/mujoco-py.git
+RUN ["/bin/bash", "-c", "source activate garage && pip install -r mujoco-py/requirements.txt && pip install -r mujoco-py/requirements.dev.txt"]
+
+RUN git clone https://github.com/openai/gym.git
+RUN ["/bin/bash", "-c", "source activate garage && pip install -r gym/requirements.txt"]
+
+RUN git clone https://github.com/deepmind/dm_control.git
+RUN ["/bin/bash", "-c", "source activate garage && pip install -r dm_control/requirements.txt"]
+
+
+
+ENTRYPOINT ["garage/docker/docker-entrypoint.sh"]
