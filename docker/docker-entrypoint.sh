@@ -6,10 +6,9 @@ set -e
 echo "${MJKEY}" > /root/.mujoco/mjkey.txt
 
 # Setup dummy X server display
-display_num=99
+display_num=0
 export DISPLAY=:"${display_num}"
-# xpra --xvfb="Xorg +extension GLX -config /root/code/garage/docker/dummy.xorg.conf -logfile /root/xorg.log" start "${DISPLAY}"
-Xvfb -screen "${display_num}" 1024x768x24 &
+Xvfb "${DISPLAY}" -screen 0 1024x768x24 &
 
 # Wait for the file to come up
 file="/tmp/.X11-unix/X${display_num}"

@@ -1,5 +1,4 @@
 FROM ubuntu:16.04
-# FROM krellin/ubuntu-tini:16.04
 
 # apt dependencies
 RUN \
@@ -16,40 +15,42 @@ RUN \
     cmake \
     xorg-dev \
     # Dummy X server
-    xpra \
-    xserver-xorg-video-dummy \
-    xserver-xorg-input-void \
-    libgl1-mesa-dev \
-    libgl1-mesa-glx \
+    # xpra \
+    xvfb \
+    # xserver-xorg-video-dummy \
+    # xserver-xorg-input-void \
+    # libgl1-mesa-dev \
+    # libgl1-mesa-glx \
     # not sure these two are needed (or the diff b/t this and gl1)
-    libglu1-mesa \
-    libglu1-mesa-dev \
+    # libglu1-mesa \
+    # libglu1-mesa-dev \
     # not sure this is needed
-    libgles2-mesa-dev \
+    # libgles2-mesa-dev \
     # no sure freeglut3 is nedded. freeglut3-dev probably needed.
-    freeglut3 \
-    freeglut3-dev \
+    # freeglut3 \
+    # freeglut3-dev \
     libosmesa6-dev \
-    mesa-utils \
+    # mesa-utils \
     # MuJoCo/mujoco_py
-    # libglfw3 \ # 16.04 repo is too old, install from source instead
+    # 16.04 repo is too old, install glfw from source instead
+    # libglfw3 \
     libglew-dev \
     patchelf \
     # OpenAI gym
     # https://github.com/openai/gym/blob/master/Dockerfile
     # not sure this is needed
-    libav-tools \
+    # libav-tools \
     # not sure this is needed
     libpq-dev \
     # not sure this is needed
     libjpeg-dev \
     swig \
     # not sure this is needed
-    libsdl2-2.0-0\
+    # libsdl2-2.0-0\
     # not sure this is needed
     libsdl2-dev \
     # not sure this is needed
-    libboost-all-dev \
+    # libboost-all-dev \
     # OpenAI baselines
     libopenmpi-dev \
     openmpi-bin && \
@@ -92,9 +93,10 @@ RUN conda env create -f environment.yml
 # Extras
 # prevent pip from complaining about available upgrades
 RUN ["/bin/bash", "-c", "source activate garage && pip install --upgrade pip"]
-
 # TensorFlow is not in environment.yml because of CPU vs GPU
 RUN ["/bin/bash", "-c", "source activate garage && pip install tensorflow==1.8.0"]
+# Fix Box2D (TODO: fix environment.yml to actually use the pip version)
+RUN ["/bin/bash", "-c", "source activate garatge && pip uninstall -y Box2D && pip install Box2D"]
 
 # Trigger Cython build of mujoco_py bindings
 # We need a MuJoCo key to import mujoco_py, but MAKE SURE TO DELETE IT AFTER SO
