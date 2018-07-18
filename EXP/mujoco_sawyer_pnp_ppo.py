@@ -55,7 +55,7 @@ def main():
         obs[:] = env.reset()
         while True:
             actions = model.step(obs)[0]
-            obs[:] = env.step(actions)[0]
+            obs[:] = env.step(actions, -0.5)[0]
             env.render()
 
 

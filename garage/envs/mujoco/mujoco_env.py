@@ -5,6 +5,7 @@ import warnings
 
 from cached_property import cached_property
 import gym
+from gym.envs.robotics.utils import mocap_set_action
 import mako.lookup
 import mako.template
 from mujoco_py import functions
@@ -105,10 +106,8 @@ class MujocoEnv(gym.Env):
     def reset_mujoco(self, init_state=None):
         self.sim.reset()
         if init_state is None:
-            self.sim.data.qpos[:] = self.init_qpos + np.random.normal(
-                size=self.init_qpos.shape) * 0.01
-            self.sim.data.qvel[:] = self.init_qvel + np.random.normal(
-                size=self.init_qvel.shape) * 0.1
+            self.sim.data.qpos[:] = self.init_qpos
+            self.sim.data.qvel[:] = self.init_qvel
             self.sim.data.qacc[:] = self.init_qacc
             self.sim.data.ctrl[:] = self.init_ctrl
         else:
@@ -235,4 +234,6 @@ class MujocoEnv(gym.Env):
         for name, value in initial_qpos.items():
             self.sim.data.set_joint_qpos(name, value)
         utils.reset_mocap_welds(self.sim)
+        action = np.array([0.4, 0.2, 0.5, 0, 1, 0, 1])
+        mocap_set_action(self.sim, action)
         self.sim.forward()

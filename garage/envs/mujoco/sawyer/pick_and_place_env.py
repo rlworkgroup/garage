@@ -50,9 +50,10 @@ class PickAndPlaceEnv(MujocoEnv, Serializable):
         self._mj_viewer = mujoco_py.MjViewer(self.sim)
         self.len = 0
         self.rew = 0
+        self._grasped_time = 0
 
     @overrides
-    def step(self, action: np.ndarray):
+    def step(self, action: np.ndarray, collision_penalty=0):
         action = np.clip(action, self.action_space.low, self.action_space.high)
         if self._control_method == 'torque_control':
             self.forward_dynamics(action)
@@ -62,26 +63,34 @@ class PickAndPlaceEnv(MujocoEnv, Serializable):
             pos_ctrl, gripper_ctrl = action[:3], action[3]
             pos_ctrl *= 0.1  # limit the action
             rot_ctrl = np.array([0., 1., 1., 0.])
-            gripper_ctrl = -50 if gripper_ctrl < 0 else 50
-            gripper_ctrl = np.array([gripper_ctrl, -gripper_ctrl])
+            gripper_ctrl = -0.05 if gripper_ctrl <= 0 else 0.05
+            gripper_ctrl = np.array([gripper_ctrl, gripper_ctrl])
             action = np.concatenate([pos_ctrl, rot_ctrl, gripper_ctrl])
             ctrl_set_action(self.sim, action)  # For gripper
             mocap_set_action(self.sim,
                              action)  # For pos control of the end effector
             self.sim.step()
 
+        grasped = self._grasp()
+        if grasped:
+            self._grasped_time += 1
+        self._grasped = grasped
+
         obs = self.get_current_obs()
         next_obs = obs['observation']
         achieved_goal = obs['achieved_goal']
         goal = obs['desired_goal']
         gripper_pos = obs['gripper_pos']
-        reward = self._compute_reward(achieved_goal, goal, gripper_pos)
+        reward = self._compute_reward(self._grasped, self._grasped_time,
+                                      achieved_goal, goal, gripper_pos)
         collided = self._is_collided()
-        # if collided:
-        #     reward -= 200
-        done = (self._goal_distance(achieved_goal, goal) <
-                self._distance_threshold) or collided
+        if collided:
+            reward += collision_penalty
 
+        # done = (self._goal_distance(achieved_goal, goal) <
+        #         self._distance_threshold) or (collided and collision_penalty < 0)
+        done = (self._goal_distance(achieved_goal, goal) <
+                self._distance_threshold)
         self.rew += reward
         self.len += 1
         info = dict()
@@ -91,25 +100,30 @@ class PickAndPlaceEnv(MujocoEnv, Serializable):
 
         return next_obs, reward, False, info
 
-    def _compute_reward(self, achieved_goal, goal, gripper_pos):
+    def _compute_reward(self, grasped, grasp_time, achieved_goal, goal,
+                        gripper_pos):
         # Compute distance between goal and the achieved goal.
-        grasped = self._grasp()
         reward = 0
         if not grasped:
             # first phase: move towards the object
-            d = self._goal_distance(gripper_pos, achieved_goal)
+            d = self._goal_distance(gripper_pos,
+                                    achieved_goal) + self._goal_distance(
+                                        gripper_pos[:2], achieved_goal[:2])
+            # if not self._grasped and d < 0.12 and d > 0.10:
+            #         reward += 0.5
         else:
             d = self._goal_distance(achieved_goal, goal)
-            if not self._grasped:
-                reward += 400
-            self._grasped = True
+            reward += 10
+            if grasp_time == 1:
+                reward += 600
+                print('Already grasped!')
 
         if self._sparse_reward:
             reward += -(d > self._distance_threshold).astype(np.float32)
         else:
             reward += -d
-        if self._grasped and d < self._distance_threshold:
-            reward += 4200
+        if grasped and d < self._distance_threshold:
+            reward += 3000
         return reward
 
     def _grasp(self):
@@ -172,6 +186,8 @@ class PickAndPlaceEnv(MujocoEnv, Serializable):
         object_velp -= grip_velp
 
         achieved_goal = np.squeeze(object_pos.copy())
+
+        grasp = np.array([int(self._grasped)])
         if self._control_method == 'position_control':
             obs = np.concatenate([
                 grip_pos,
@@ -179,8 +195,7 @@ class PickAndPlaceEnv(MujocoEnv, Serializable):
                 object_rel_pos.ravel(),
                 object_rot.ravel(),
                 object_velp.ravel(),
-                object_velr.ravel(),
-                grip_velp,
+                object_velr.ravel(), grip_velp, grasp
             ])
         elif self._control_method == 'torque_control':
             obs = np.concatenate([
@@ -188,9 +203,7 @@ class PickAndPlaceEnv(MujocoEnv, Serializable):
                 object_rel_pos.ravel(),
                 object_rot.ravel(),
                 object_velp.ravel(),
-                object_velr.ravel(),
-                qpos,
-                qvel,
+                object_velr.ravel(), qpos, qvel, grasp
             ])
         else:
             raise NotImplementedError
@@ -213,14 +226,14 @@ class PickAndPlaceEnv(MujocoEnv, Serializable):
             action_space = super(PickAndPlaceEnv, self).action_space()
         elif self._control_method == 'position_control':
             action_space = Box(
-                np.array([-0.1, -0.1, -0.1, -100]),
-                np.array([0.1, 0.1, 0.1, 100]),
+                np.array([-1, -1, -1, -100]),
+                np.array([1, 1, 1, 100]),
                 dtype=np.float32)
         return action_space
 
     def _reset_target_visualization(self):
         site_id = self.sim.model.site_name2id('target_pos')
-        self.sim.model.site_pos[site_id] = self._initial_goal
+        self.sim.model.site_pos[site_id] = self._goal
         self.sim.forward()
 
     @overrides
@@ -229,6 +242,7 @@ class PickAndPlaceEnv(MujocoEnv, Serializable):
         self.len = 0
         self.rew = 0
         self._reset_target_visualization()
+        self._grasped_time = 0
         return super(PickAndPlaceEnv, self).reset(init_state)['observation']
 
     def log_diagnostics(self, paths):
@@ -239,11 +253,12 @@ class PickAndPlaceEnv(MujocoEnv, Serializable):
         """Detect collision"""
         d = self.sim.data
         table_id = self.sim.model.geom_name2id('table')
+        object_id = self.sim.model.geom_name2id('object0')
 
         for i in range(d.ncon):
             con = d.contact[i]
-            if table_id == con.geom1 and con.geom2 != 40:
+            if table_id == con.geom1 and con.geom2 != object_id:
                 return True
-            if table_id == con.geom2 and con.geom1 != 40:
+            if table_id == con.geom2 and con.geom1 != object_id:
                 return True
         return False
