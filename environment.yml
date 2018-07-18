@@ -1,6 +1,5 @@
 name: garage
 channels:
-    - https://conda.anaconda.org/kne
     - https://conda.anaconda.org/menpo
     - https://conda.anaconda.org/conda-forge
 dependencies:
@@ -14,21 +13,24 @@ dependencies:
     - mako
     - ipywidgets
     - flask
-    - pybox2d
-    - pygame
     - matplotlib
     - pandas
     - mkl-service=1.1.2
+    # absl-py must be installed via conda rather than pip, because for some
+    # reason depedencies from the pip stanza are not available during the build
+    # phase of other packages in the pip stanza
+    - absl-py
     # dev dependencies below this line
     - pre_commit
     - pip:
-        - absl-py==0.2.2
         - pyprind
         - ipdb
         - boto3
         - PyOpenGL
         - pyzmq
         - mujoco-py<1.50.2,>=1.50.1
+        - pygame
+        - Box2D>=2.3.2
         - cached_property
         - cloudpickle
         - git+https://github.com/Lasagne/Lasagne.git@7992faa80fa5233a786e2582a605e854cea7d1cf#egg=Lasagne
@@ -36,7 +38,7 @@ dependencies:
         - git+https://github.com/plotly/plotly.py.git@2594076e29584ede2d09f2aa40a8a195b3f3fc66#egg=plotly
         - git+https://github.com/deepmind/dm_control.git#egg=dm_control
         - awscli
-        - gym==0.10.5
+        - gym[all]==0.10.5
         - pyglet
         - jupyter
         - hyperopt
