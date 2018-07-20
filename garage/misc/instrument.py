@@ -19,9 +19,9 @@ import numpy as np
 
 from garage import config
 from garage.core import Serializable
-from garage.misc.git_handler import GitHandler
 from garage.misc.console import mkdir_p
 from garage.misc.ext import AttrDict
+from garage.misc.git_handler import GitHandler
 from garage.viskit.core import flatten
 
 
