@@ -2,7 +2,6 @@ import numpy as np
 import tensorflow as tf
 
 from garage.core import Serializable
-from garage.misc import ext
 from garage.misc import logger
 from garage.tf.core import LayersPowered
 from garage.tf.core import MLP
@@ -11,7 +10,6 @@ from garage.tf.distributions import Categorical
 from garage.tf.misc import tensor_utils
 from garage.tf.optimizers import ConjugateGradientOptimizer
 from garage.tf.optimizers import LbfgsOptimizer
-from garage.tf.optimizers import PenaltyLbfgsOptimizer
 
 NONE = list()
 
@@ -27,7 +25,7 @@ class CategoricalMLPRegressor(LayersPowered, Serializable):
             self,
             input_shape,
             output_dim,
-            name="CategoricalMLPRegressor",
+            name=None,
             prob_network=None,
             hidden_sizes=(32, 32),
             hidden_nonlinearity=tf.nn.tanh,
@@ -51,7 +49,7 @@ class CategoricalMLPRegressor(LayersPowered, Serializable):
         """
         Serializable.quick_init(self, locals())
 
-        with tf.variable_scope(name):
+        with tf.variable_scope(name, "CategoricalMLPRegressor"):
             if optimizer is None:
                 optimizer = LbfgsOptimizer(name="optimizer")
             if tr_optimizer is None:
@@ -61,6 +59,7 @@ class CategoricalMLPRegressor(LayersPowered, Serializable):
             self.optimizer = optimizer
             self.tr_optimizer = tr_optimizer
 
+            self._prob_network_name = "prob_network"
             if prob_network is None:
                 prob_network = MLP(
                     input_shape=input_shape,
@@ -68,7 +67,7 @@ class CategoricalMLPRegressor(LayersPowered, Serializable):
                     hidden_sizes=hidden_sizes,
                     hidden_nonlinearity=hidden_nonlinearity,
                     output_nonlinearity=tf.nn.softmax,
-                    name="prob_network")
+                    name=self._prob_network_name)
 
             l_prob = prob_network.output_layer
 
@@ -91,8 +90,10 @@ class CategoricalMLPRegressor(LayersPowered, Serializable):
 
             normalized_xs_var = (xs_var - x_mean_var) / x_std_var
 
-            prob_var = L.get_output(
-                l_prob, {prob_network.input_layer: normalized_xs_var})
+            with tf.name_scope(
+                    self._prob_network_name, values=[normalized_xs_var]):
+                prob_var = L.get_output(
+                    l_prob, {prob_network.input_layer: normalized_xs_var})
 
             old_info_vars = dict(prob=old_prob_var)
             info_vars = dict(prob=prob_var)
@@ -167,16 +168,24 @@ class CategoricalMLPRegressor(LayersPowered, Serializable):
         prob = self.f_prob(np.asarray(xs))
         return self._dist.log_likelihood(np.asarray(ys), dict(prob=prob))
 
-    def dist_info_sym(self, x_var):
-        normalized_xs_var = (x_var - self.x_mean_var) / self.x_std_var
-        prob = L.get_output(self.l_prob,
-                            {self.prob_network.input_layer: normalized_xs_var})
+    def dist_info_sym(self, x_var, name=None):
+        with tf.name_scope(name, "dist_info_sym", [x_var]):
+            normalized_xs_var = (x_var - self.x_mean_var) / self.x_std_var
+            with tf.name_scope(
+                    self._prob_network_name, values=[normalized_xs_var]):
+                prob = L.get_output(
+                    self.l_prob,
+                    {self.prob_network.input_layer: normalized_xs_var})
         return dict(prob=prob)
 
-    def log_likelihood_sym(self, x_var, y_var):
-        normalized_xs_var = (x_var - self.x_mean_var) / self.x_std_var
-        prob = L.get_output(self.l_prob,
-                            {self.prob_network.input_layer: normalized_xs_var})
+    def log_likelihood_sym(self, x_var, y_var, name=None):
+        with tf.name_scope(name, "log_likelihood_sym", [x_var, y_var]):
+            normalized_xs_var = (x_var - self.x_mean_var) / self.x_std_var
+            with tf.name_scope(
+                    self._prob_network_name, values=[normalized_xs_var]):
+                prob = L.get_output(
+                    self.l_prob,
+                    {self.prob_network.input_layer: normalized_xs_var})
         return self._dist.log_likelihood_sym(y_var, dict(prob=prob))
 
     def get_param_values(self, **tags):

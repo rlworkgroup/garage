@@ -5,7 +5,6 @@ from garage.misc import ext, logger
 from garage.misc.overrides import overrides
 from garage.tf.algos import BatchPolopt
 from garage.tf.misc import tensor_utils
-from garage.tf.misc.tensor_utils import enclosing_scope
 from garage.tf.optimizers import FirstOrderOptimizer
 
 
@@ -20,7 +19,7 @@ class VPG(BatchPolopt, Serializable):
                  baseline,
                  optimizer=None,
                  optimizer_args=None,
-                 name="VPG",
+                 name=None,
                  **kwargs):
         Serializable.quick_init(self, locals())
         if optimizer is None:
@@ -41,51 +40,51 @@ class VPG(BatchPolopt, Serializable):
 
     @overrides
     def init_opt(self):
-        with enclosing_scope(self.name, "init_opt"):
+        with tf.name_scope(self.name, "VPG"):
             is_recurrent = int(self.policy.recurrent)
+            with tf.name_scope("inputs"):
+                obs_var = self.env.observation_space.new_tensor_variable(
+                    'obs',
+                    extra_dims=1 + is_recurrent,
+                )
+                action_var = self.env.action_space.new_tensor_variable(
+                    'action',
+                    extra_dims=1 + is_recurrent,
+                )
+                advantage_var = tensor_utils.new_tensor(
+                    name='advantage',
+                    ndim=1 + is_recurrent,
+                    dtype=tf.float32,
+                )
+                dist = self.policy.distribution
 
-            obs_var = self.env.observation_space.new_tensor_variable(
-                'obs',
-                extra_dims=1 + is_recurrent,
-            )
-            action_var = self.env.action_space.new_tensor_variable(
-                'action',
-                extra_dims=1 + is_recurrent,
-            )
-            advantage_var = tensor_utils.new_tensor(
-                name='advantage',
-                ndim=1 + is_recurrent,
-                dtype=tf.float32,
-            )
-            dist = self.policy.distribution
+                old_dist_info_vars = {
+                    k: tf.placeholder(
+                        tf.float32,
+                        shape=[None] * (1 + is_recurrent) + list(shape),
+                        name='old_%s' % k)
+                    for k, shape in dist.dist_info_specs
+                }
+                old_dist_info_vars_list = [
+                    old_dist_info_vars[k] for k in dist.dist_info_keys
+                ]
 
-            old_dist_info_vars = {
-                k: tf.placeholder(
-                    tf.float32,
-                    shape=[None] * (1 + is_recurrent) + list(shape),
-                    name='old_%s' % k)
-                for k, shape in dist.dist_info_specs
-            }
-            old_dist_info_vars_list = [
-                old_dist_info_vars[k] for k in dist.dist_info_keys
-            ]
+                state_info_vars = {
+                    k: tf.placeholder(
+                        tf.float32,
+                        shape=[None] * (1 + is_recurrent) + list(shape),
+                        name=k)
+                    for k, shape in self.policy.state_info_specs
+                }
+                state_info_vars_list = [
+                    state_info_vars[k] for k in self.policy.state_info_keys
+                ]
 
-            state_info_vars = {
-                k: tf.placeholder(
-                    tf.float32,
-                    shape=[None] * (1 + is_recurrent) + list(shape),
-                    name=k)
-                for k, shape in self.policy.state_info_specs
-            }
-            state_info_vars_list = [
-                state_info_vars[k] for k in self.policy.state_info_keys
-            ]
-
-            if is_recurrent:
-                valid_var = tf.placeholder(
-                    tf.float32, shape=[None, None], name="valid")
-            else:
-                valid_var = None
+                if is_recurrent:
+                    valid_var = tf.placeholder(
+                        tf.float32, shape=[None, None], name="valid")
+                else:
+                    valid_var = None
 
             dist_info_vars = self.policy.dist_info_sym(obs_var,
                                                        state_info_vars)
@@ -94,16 +93,30 @@ class VPG(BatchPolopt, Serializable):
 
             # formulate as a minimization problem
             # The gradient of the surrogate objective is the policy gradient
-            if is_recurrent:
-                surr_obj = -tf.reduce_sum(logli * advantage_var *
-                                          valid_var) / tf.reduce_sum(valid_var)
-                mean_kl = tf.reduce_sum(
-                    kl * valid_var) / tf.reduce_sum(valid_var)
-                max_kl = tf.reduce_max(kl * valid_var)
-            else:
-                surr_obj = -tf.reduce_mean(logli * advantage_var)
-                mean_kl = tf.reduce_mean(kl)
-                max_kl = tf.reduce_max(kl)
+            with tf.name_scope(
+                    "surr_obj", values=[logli, advantage_var, valid_var]):
+                if is_recurrent:
+                    surr_obj = (
+                        -tf.reduce_sum(logli * advantage_var * valid_var) /
+                        tf.reduce_sum(valid_var))
+                else:
+                    surr_obj = -tf.reduce_mean(logli * advantage_var)
+                tf.identity(surr_obj, name="surr_obj")
+
+            with tf.name_scope("mean_kl", values=[kl, valid_var]):
+                if is_recurrent:
+                    mean_kl = tf.reduce_sum(
+                        kl * valid_var) / tf.reduce_sum(valid_var)
+                else:
+                    mean_kl = tf.reduce_mean(kl)
+                tf.identity(mean_kl, name="mean_kl")
+
+            with tf.name_scope("max_kl", values=[kl, valid_var]):
+                if is_recurrent:
+                    max_kl = tf.reduce_max(kl * valid_var)
+                else:
+                    max_kl = tf.reduce_max(kl)
+                tf.identity(max_kl, name="max_kl")
 
             input_list = [obs_var, action_var, advantage_var
                           ] + state_info_vars_list

@@ -6,7 +6,6 @@ from garage.tf.core import LayersPowered
 import garage.tf.core.layers as L
 from garage.tf.core.layers import batch_norm
 from garage.tf.misc import tensor_utils
-from garage.tf.misc.tensor_utils import enclosing_scope
 from garage.tf.q_functions import QFunction
 
 
@@ -117,8 +116,8 @@ class ContinuousMLPQFunction(QFunction, Serializable, LayersPowered):
     def get_qval(self, observations, actions):
         return self._f_qval(observations, actions)
 
-    def get_qval_sym(self, obs_var, action_var, name="get_qval_sym", **kwargs):
-        with enclosing_scope(self.name, name):
+    def get_qval_sym(self, obs_var, action_var, name=None, **kwargs):
+        with tf.name_scope(name, "get_qval_sym", values=[obs_var, action_var]):
             qvals = L.get_output(self._output_layer, {
                 self._obs_layer: obs_var,
                 self._action_layer: action_var

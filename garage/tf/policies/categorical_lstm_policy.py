@@ -9,7 +9,6 @@ from garage.tf.core import LSTMNetwork
 import garage.tf.core.layers as L
 from garage.tf.distributions import RecurrentCategorical
 from garage.tf.misc import tensor_utils
-from garage.tf.misc.tensor_utils import enclosing_scope
 from garage.tf.policies import StochasticPolicy
 from garage.tf.spaces import Discrete
 
@@ -17,7 +16,7 @@ from garage.tf.spaces import Discrete
 class CategoricalLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
     def __init__(self,
                  env_spec,
-                 name="CategoricalLSTMPolicy",
+                 name=None,
                  hidden_dim=32,
                  feature_network=None,
                  prob_network=None,
@@ -32,7 +31,8 @@ class CategoricalLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
         :param hidden_nonlinearity: nonlinearity used for each hidden layer
         :return:
         """
-        with tf.variable_scope(name):
+        self._prob_network_name = "prob_network"
+        with tf.variable_scope(name, "CategoricalLSTMPolicy"):
             assert isinstance(env_spec.action_space, Discrete)
             Serializable.quick_init(self, locals())
             super(CategoricalLSTMPolicy, self).__init__(env_spec)
@@ -78,7 +78,7 @@ class CategoricalLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
                     forget_bias=forget_bias,
                     use_peepholes=use_peepholes,
                     lstm_layer_cls=lstm_layer_cls,
-                    name="prob_network")
+                    name=self._prob_network_name)
 
             self.prob_network = prob_network
             self.feature_network = feature_network
@@ -90,21 +90,23 @@ class CategoricalLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
             if feature_network is None:
                 feature_var = flat_input_var
             else:
-                feature_var = L.get_output(
-                    l_flat_feature,
-                    {feature_network.input_layer: flat_input_var})
+                with tf.name_scope("feature_network", values=[flat_input_var]):
+                    feature_var = L.get_output(
+                        l_flat_feature,
+                        {feature_network.input_layer: flat_input_var})
 
-            self.f_step_prob = tensor_utils.compile_function(
-                [
-                    flat_input_var,
-                    prob_network.step_prev_hidden_layer.input_var,
-                    prob_network.step_prev_cell_layer.input_var
-                ],
-                L.get_output([
-                    prob_network.step_output_layer,
-                    prob_network.step_hidden_layer,
-                    prob_network.step_cell_layer
-                ], {prob_network.step_input_layer: feature_var}))
+            with tf.name_scope(self._prob_network_name, values=[feature_var]):
+                out_prob_step, out_prob_hidden, out_step_cell = L.get_output(
+                    [
+                        prob_network.step_output_layer,
+                        prob_network.step_hidden_layer,
+                        prob_network.step_cell_layer
+                    ], {prob_network.step_input_layer: feature_var})
+
+            self.f_step_prob = tensor_utils.compile_function([
+                flat_input_var, prob_network.step_prev_hidden_layer.input_var,
+                prob_network.step_prev_cell_layer.input_var
+            ], [out_prob_step, out_prob_hidden, out_step_cell])
 
             self.input_dim = input_dim
             self.action_dim = action_dim
@@ -123,8 +125,8 @@ class CategoricalLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
             LayersPowered.__init__(self, out_layers)
 
     @overrides
-    def dist_info_sym(self, obs_var, state_info_vars, name="dist_info_sym"):
-        with enclosing_scope(self.name, name):
+    def dist_info_sym(self, obs_var, state_info_vars, name=None):
+        with tf.name_scope(name, "dist_info_sym", [obs_var, state_info_vars]):
             n_batches = tf.shape(obs_var)[0]
             n_steps = tf.shape(obs_var)[1]
             obs_var = tf.reshape(obs_var, tf.stack([n_batches, n_steps, -1]))
@@ -137,18 +139,23 @@ class CategoricalLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
             else:
                 all_input_var = obs_var
             if self.feature_network is None:
-                return dict(
-                    prob=L.get_output(self.prob_network.output_layer,
-                                      {self.l_input: all_input_var}))
+                with tf.name_scope(
+                        self._prob_network_name, values=[all_input_var]):
+                    prob = L.get_output(self.prob_network.output_layer,
+                                        {self.l_input: all_input_var})
+                return dict(prob)
             else:
                 flat_input_var = tf.reshape(all_input_var,
                                             (-1, self.input_dim))
-                return dict(
-                    prob=L.get_output(
+                with tf.name_scope(
+                        self._prob_network_name,
+                        values=[all_input_var, flat_input_var]):
+                    prob = L.get_output(
                         self.prob_network.output_layer, {
                             self.l_input: all_input_var,
                             self.feature_network.input_layer: flat_input_var
-                        }))
+                        })
+                return dict(prob)
 
     @property
     def vectorized(self):

@@ -13,7 +13,6 @@ from tensorboard.plugins.custom_scalar import metadata
 import tensorflow as tf
 
 from garage.misc.console import mkdir_p
-from garage.tf.misc.tensor_utils import enclosing_scope
 
 
 class TensorBoardOutput:
@@ -29,7 +28,6 @@ class TensorBoardOutput:
             'normal', 'gamma', 'poisson', 'uniform'
         ]
         self._feed = {}
-        self._name = "TensorBoardOutput/"
 
         self._default_step = 0
         self._writer = None
@@ -67,21 +65,23 @@ class TensorBoardOutput:
         self._dump_histogram(run_step)
         self._dump_tensors()
 
-    def record_histogram(self, key, val):
-        if str(key) not in self._histogram_ds:
-            with enclosing_scope(self._name, "record_hist"):
+    def record_histogram(self, key, val, name=None):
+        with tf.name_scope(name, "record_histogram"):
+            if str(key) not in self._histogram_ds:
                 self._histogram_ds[str(key)] = tf.Variable(val)
-            self._histogram_summary_op.append(
-                tf.summary.histogram(str(key), self._histogram_ds[str(key)]))
-            self._histogram_summary_op_merge = tf.summary.merge(
-                self._histogram_summary_op)
+                self._histogram_summary_op.append(
+                    tf.summary.histogram(
+                        str(key), self._histogram_ds[str(key)]))
+                self._histogram_summary_op_merge = tf.summary.merge(
+                    self._histogram_summary_op)
 
-        self._feed[self._histogram_ds[str(key)]] = val
+            self._feed[self._histogram_ds[str(key)]] = val
 
     def record_histogram_by_type(self,
                                  histogram_type,
                                  key=None,
                                  shape=[1000],
+                                 name=None,
                                  **kwargs):
         '''
         distribution type and args:
@@ -99,7 +99,7 @@ class TensorBoardOutput:
 
         if str(key) not in self._histogram_ds:
             self._histogram_ds[str(key)] = self._get_histogram_var_by_type(
-                histogram_type, shape, **kwargs)
+                histogram_type, shape, name, **kwargs)
             self._histogram_summary_op.append(
                 tf.summary.histogram(
                     str(key), self._histogram_ds[str(key)][0]))
@@ -128,8 +128,12 @@ class TensorBoardOutput:
             self._scalars.value.add(
                 tag=key + '/' + str(idx).strip('()'), simple_value=float(v))
 
-    def _get_histogram_var_by_type(self, histogram_type, shape, **kwargs):
-        with enclosing_scope(self._name, "get_hist_{}".format(histogram_type)):
+    def _get_histogram_var_by_type(self,
+                                   histogram_type,
+                                   shape,
+                                   name=None,
+                                   **kwargs):
+        with tf.name_scope(name, "get_hist_{}".format(histogram_type)):
             if histogram_type == "normal":
                 # Make a normal distribution, with a shifting mean
                 mean = tf.Variable(kwargs['mean'])

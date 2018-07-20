@@ -11,7 +11,10 @@ def compile_function(inputs, outputs, log_name=None):
 
 
 def flatten_tensor_variables(ts):
-    return tf.concat(axis=0, values=[tf.reshape(x, [-1]) for x in ts])
+    return tf.concat(
+        axis=0,
+        values=[tf.reshape(x, [-1]) for x in ts],
+        name="flatten_tensor_variables")
 
 
 def unflatten_tensor_variables(flatarr, shapes, symb_arrs):
@@ -121,25 +124,3 @@ def pad_tensor_dict(tensor_dict, max_len):
         else:
             ret[k] = pad_tensor(tensor_dict[k], max_len)
     return ret
-
-
-class enclosing_scope(object):
-    def __init__(self, enclosing_name, name, **kwargs):
-        self.enclosing_scope = None
-        self.scope = None
-        self.enclosing_name = enclosing_name
-        self.name = name
-        self.kwargs = kwargs
-
-    def __enter__(self):
-        if self.enclosing_name not in tf.get_variable_scope().name:
-            self.enclosing_scope = tf.variable_scope(self.enclosing_name,
-                                                     self.kwargs)
-            self.enclosing_scope.__enter__()
-        self.scope = tf.variable_scope(self.name, self.kwargs)
-        self.scope.__enter__()
-
-    def __exit__(self, *args):
-        self.scope.__exit__(*args)
-        if self.enclosing_scope is not None:
-            self.enclosing_scope.__exit__(*args)

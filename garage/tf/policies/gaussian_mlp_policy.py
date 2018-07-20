@@ -9,7 +9,6 @@ from garage.tf.core import MLP
 import garage.tf.core.layers as L
 from garage.tf.distributions import DiagonalGaussian
 from garage.tf.misc import tensor_utils
-from garage.tf.misc.tensor_utils import enclosing_scope
 from garage.tf.policies import StochasticPolicy
 from garage.tf.spaces import Box
 
@@ -17,7 +16,7 @@ from garage.tf.spaces import Box
 class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
     def __init__(self,
                  env_spec,
-                 name="GaussianMLPPolicy",
+                 name=None,
                  hidden_sizes=(32, 32),
                  learn_std=True,
                  init_std=1.0,
@@ -58,8 +57,10 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
         Serializable.quick_init(self, locals())
         assert isinstance(env_spec.action_space, Box)
         self.name = name
+        self._mean_network_name = "mean_network"
+        self._std_network_name = "std_network"
 
-        with tf.variable_scope(name):
+        with tf.variable_scope(name, "GaussianMLPPolicy"):
 
             obs_dim = env_spec.observation_space.flat_dim
             action_dim = env_spec.action_space.flat_dim
@@ -74,23 +75,24 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
                     else:
                         raise NotImplementedError
                     init_b = tf.constant_initializer(init_std_param)
-                    mean_network = MLP(
-                        name="mean_network",
-                        input_shape=(obs_dim, ),
-                        output_dim=2 * action_dim,
-                        hidden_sizes=hidden_sizes,
-                        hidden_nonlinearity=hidden_nonlinearity,
-                        output_nonlinearity=output_nonlinearity,
-                        output_b_init=init_b,
-                    )
-                    l_mean = L.SliceLayer(
-                        mean_network.output_layer,
-                        slice(action_dim),
-                        name="mean_slice",
-                    )
+                    with tf.variable_scope(self._mean_network_name):
+                        mean_network = MLP(
+                            name="mlp",
+                            input_shape=(obs_dim, ),
+                            output_dim=2 * action_dim,
+                            hidden_sizes=hidden_sizes,
+                            hidden_nonlinearity=hidden_nonlinearity,
+                            output_nonlinearity=output_nonlinearity,
+                            output_b_init=init_b,
+                        )
+                        l_mean = L.SliceLayer(
+                            mean_network.output_layer,
+                            slice(action_dim),
+                            name="mean_slice",
+                        )
                 else:
                     mean_network = MLP(
-                        name="mean_network",
+                        name=self._mean_network_name,
                         input_shape=(obs_dim, ),
                         output_dim=action_dim,
                         hidden_sizes=hidden_sizes,
@@ -107,7 +109,7 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
             else:
                 if adaptive_std:
                     std_network = MLP(
-                        name="std_network",
+                        name=self._std_network_name,
                         input_shape=(obs_dim, ),
                         input_layer=mean_network.input_layer,
                         output_dim=action_dim,
@@ -117,11 +119,12 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
                     )
                     l_std_param = std_network.output_layer
                 elif std_share_network:
-                    l_std_param = L.SliceLayer(
-                        mean_network.output_layer,
-                        slice(action_dim, 2 * action_dim),
-                        name="std_slice",
-                    )
+                    with tf.variable_scope(self._std_network_name):
+                        l_std_param = L.SliceLayer(
+                            mean_network.output_layer,
+                            slice(action_dim, 2 * action_dim),
+                            name="std_slice",
+                        )
                 else:
                     if std_parametrization == 'exp':
                         init_std_param = np.log(init_std)
@@ -129,13 +132,14 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
                         init_std_param = np.log(np.exp(init_std) - 1)
                     else:
                         raise NotImplementedError
-                    l_std_param = L.ParamLayer(
-                        mean_network.input_layer,
-                        num_units=action_dim,
-                        param=tf.constant_initializer(init_std_param),
-                        name="output_std_param",
-                        trainable=learn_std,
-                    )
+                    with tf.variable_scope(self._std_network_name):
+                        l_std_param = L.ParamLayer(
+                            mean_network.input_layer,
+                            num_units=action_dim,
+                            param=tf.constant_initializer(init_std_param),
+                            name="output_std_param",
+                            trainable=learn_std,
+                        )
 
             self.std_parametrization = std_parametrization
 
@@ -165,8 +169,9 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
 
             dist_info_sym = self.dist_info_sym(
                 mean_network.input_layer.input_var, dict())
-            mean_var = dist_info_sym["mean"]
-            log_std_var = dist_info_sym["log_std"]
+            mean_var = tf.identity(dist_info_sym["mean"], name="mean")
+            log_std_var = tf.identity(
+                dist_info_sym["log_std"], name="standard_dev")
 
             self._f_dist = tensor_utils.compile_function(
                 inputs=[obs_var],
@@ -177,13 +182,12 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
     def vectorized(self):
         return True
 
-    def dist_info_sym(self,
-                      obs_var,
-                      state_info_vars=None,
-                      name="dist_info_sym"):
-        with enclosing_scope(self.name, name):
-            mean_var, std_param_var = L.get_output(
-                [self._l_mean, self._l_std_param], obs_var)
+    def dist_info_sym(self, obs_var, state_info_vars=None, name=None):
+        with tf.name_scope(name, "dist_info_sym", [obs_var]):
+            with tf.name_scope(self._mean_network_name, values=[obs_var]):
+                mean_var = L.get_output(self._l_mean, obs_var)
+            with tf.name_scope(self._std_network_name, values=[obs_var]):
+                std_param_var = L.get_output(self._l_std_param, obs_var)
             if self.min_std_param is not None:
                 std_param_var = tf.maximum(std_param_var, self.min_std_param)
             if self.std_parametrization == 'exp':
@@ -213,7 +217,7 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
                                obs_var,
                                action_var,
                                old_dist_info_vars,
-                               name="get_reparam_action_sym"):
+                               name=None):
         """
         Given observations, old actions, and distribution of old actions,
         return a symbolically reparameterized representation of the actions in
@@ -223,7 +227,8 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
         :param old_dist_info_vars:
         :return:
         """
-        with enclosing_scope(self.name, name):
+        with tf.name_scope(name, "get_reparam_action_sym",
+                           [obs_var, action_var, old_dist_info_vars]):
             new_dist_info_vars = self.dist_info_sym(obs_var, action_var)
             new_mean_var, new_log_std_var = new_dist_info_vars[
                 "mean"], new_dist_info_vars["log_std"]

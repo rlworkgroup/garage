@@ -1,5 +1,6 @@
 import numpy as np
 import tensorflow as tf
+import theano.tensor as TT
 
 from garage.core import Serializable
 from garage.misc import logger
@@ -61,6 +62,8 @@ class GaussianMLPRegressor(LayersPowered, Serializable):
          same non-linearity as the mean.
         """
         Serializable.quick_init(self, locals())
+        self._mean_network_name = "mean_network"
+        self._std_network_name = "std_network"
 
         with tf.variable_scope(name):
 
@@ -156,10 +159,14 @@ class GaussianMLPRegressor(LayersPowered, Serializable):
             normalized_xs_var = (xs_var - x_mean_var) / x_std_var
             normalized_ys_var = (ys_var - y_mean_var) / y_std_var
 
-            normalized_means_var = L.get_output(
-                l_mean, {mean_network.input_layer: normalized_xs_var})
-            normalized_log_stds_var = L.get_output(
-                l_log_std, {mean_network.input_layer: normalized_xs_var})
+            with tf.name_scope(
+                    self._mean_network_name, values=[normalized_xs_var]):
+                normalized_means_var = L.get_output(
+                    l_mean, {mean_network.input_layer: normalized_xs_var})
+            with tf.name_scope(
+                    self._std_network_name, values=[normalized_xs_var]):
+                normalized_log_stds_var = L.get_output(
+                    l_log_std, {mean_network.input_layer: normalized_xs_var})
 
             means_var = normalized_means_var * y_std_var + y_mean_var
             log_stds_var = normalized_log_stds_var + tf.log(y_std_var)
@@ -286,18 +293,27 @@ class GaussianMLPRegressor(LayersPowered, Serializable):
         return self._dist.log_likelihood(ys, dict(
             mean=means, log_std=log_stds))
 
-    def log_likelihood_sym(self, x_var, y_var):
-        normalized_xs_var = (x_var - self._x_mean_var) / self._x_std_var
+    def log_likelihood_sym(self, x_var, y_var, name=None):
+        with tf.name_scope(name, "log_likelihood_sym", [x_var, y_var]):
+            normalized_xs_var = (x_var - self._x_mean_var) / self._x_std_var
 
-        normalized_means_var, normalized_log_stds_var = \
-            L.get_output([self._l_mean, self._l_log_std],
-                {self._mean_network.input_layer: normalized_xs_var})
+            with tf.name_scope(
+                    self._mean_network_name, values=[normalized_xs_var]):
+                normalized_means_var = L.get_output(
+                    self._l_mean,
+                    {self._mean_network.input_layer: normalized_xs_var})
+            with tf.name_scope(
+                    self._std_network_name, values=[normalized_xs_var]):
+                normalized_log_stds_var = L.get_output(
+                    self._l_log_std,
+                    {self._mean_network.input_layer: normalized_xs_var})
 
-        means_var = normalized_means_var * self._y_std_var + self._y_mean_var
-        log_stds_var = normalized_log_stds_var + TT.log(self._y_std_var)
+            means_var = (
+                normalized_means_var * self._y_std_var + self._y_mean_var)
+            log_stds_var = normalized_log_stds_var + TT.log(self._y_std_var)
 
-        return self._dist.log_likelihood_sym(
-            y_var, dict(mean=means_var, log_std=log_stds_var))
+            return self._dist.log_likelihood_sym(
+                y_var, dict(mean=means_var, log_std=log_stds_var))
 
     def get_param_values(self, **tags):
         return LayersPowered.get_param_values(self, **tags)
