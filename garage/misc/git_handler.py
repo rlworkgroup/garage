@@ -35,10 +35,9 @@ def cmd_to_string_array(command):
 
     """
     cmd_str = "%s" % command
-    srt_arr = cmd_str.split("\n")
+    str_arr = cmd_str.split("\n")
     # Remove next line character
-    srt_arr = srt_arr[:-1]
-    return srt_arr
+    return str_arr[:-1]
 
 
 class GitHandler:
