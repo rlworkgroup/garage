@@ -242,20 +242,21 @@ class DDPG(RLAlgorithm):
 
     def _initialize(self):
         with tf.name_scope(self.name, "DDPG"):
-            """Set up the actor, critic and target network."""
-            # Set up the actor and critic network
-            self.actor._build_net(trainable=True)
-            self.critic._build_net(trainable=True)
+            with tf.name_scope("setup_networks"):
+                """Set up the actor, critic and target network."""
+                # Set up the actor and critic network
+                self.actor._build_net(trainable=True)
+                self.critic._build_net(trainable=True)
 
-            # Create target actor and critic network
-            target_actor = copy(self.actor)
-            target_critic = copy(self.critic)
+                # Create target actor and critic network
+                target_actor = copy(self.actor)
+                target_critic = copy(self.critic)
 
-            # Set up the target network
-            target_actor.name = "TargetActor"
-            target_actor._build_net(trainable=False)
-            target_critic.name = "TargetCritic"
-            target_critic._build_net(trainable=False)
+                # Set up the target network
+                target_actor.name = "TargetActor"
+                target_actor._build_net(trainable=False)
+                target_critic.name = "TargetCritic"
+                target_critic._build_net(trainable=False)
 
             # Initialize replay buffer
             replay_buffer = ReplayBuffer(self.replay_buffer_size,
