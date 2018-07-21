@@ -3,41 +3,12 @@ import importlib
 import signal
 import time
 
-import sh
+from git.exc import BadName, GitCommandError
 from termcolor import colored
 
 from garage.config import GIT_REPO_URL
 from garage.config import PROJECT_PATH
-
-
-def cmd_to_string(command):
-    """Return the output of the executed command as a string.
-
-    Parameter
-    ---------
-    - command: it's an executed command from the sh package.
-
-    """
-    str_cmd = "%s" % command
-    # Remove next line character
-    return str_cmd[:-1]
-
-
-def cmd_to_string_array(command):
-    """Return the output of the executed command as a string array.
-
-    The output is split by the new line character and each element is added to
-    the array.
-
-    Parameter
-    ---------
-    - command: it's an executed command from the sh package.
-
-    """
-    cmd_str = "%s" % command
-    str_arr = cmd_str.split("\n")
-    # Remove next line character
-    return str_arr[:-1]
+from git import Repo
 
 
 class GitHandler:
@@ -73,57 +44,37 @@ class GitHandler:
             "sha": self.get_sha,
             "tag": self.get_tag_sha
         }
-        self.git = sh.git.bake(_cwd=self.work_dir)
-        self.remotes = self.get_remotes()
-        assert self.remotes, colored(
-            "There are no remotes in the git "
-            "working directory %s" % self.work_dir, "red")
+        self.repo = Repo(work_directory)
         remote_found = self._check_url(repo_url)
         assert remote_found, colored("The garage remote couldn't be found " \
                                      "in the git working directory %s" %
                                      self.work_dir, "red")
 
-    def get_remotes(self):
-        """Return a list with the names of the remotes in the repository."""
-        repos = []
-        try:
-            remote_cmd = self.git.remote()
-            remotes = cmd_to_string_array(remote_cmd)
-        except sh.ErrorReturnCode_128:
-            print(
-                colored(
-                    "There's no git working directory at %s" % (self.work_dir),
-                    "red"))
-            raise
-        return remotes
-
     def _check_url(self, repo_url):
         """Return true if one of the remotes points to the repository URL."""
         valid_url = False
-        remote_keys = ["remote.%s.url" % rem_name for rem_name in self.remotes]
-        for rem_key in remote_keys:
-            config_cmd = self.git.config("--get", rem_key)
-            remote_url = cmd_to_string(config_cmd)
-            if remote_url == repo_url:
-                valid_url = True
-                break
+        for remote in self.repo.remotes:
+            for remote_url in remote.urls:
+                if remote_url == repo_url:
+                    valid_url = True
+                    break
         return valid_url
 
     def create_branch(self, branch_name, target_ref="HEAD"):
         """Create a branch on the targer reference."""
-        self.git.branch(branch_name, target_ref)
+        self.repo.git.branch(branch_name, target_ref)
 
     def checkout_new_branch(self, branch_name, target_ref="HEAD"):
         """Create a branch on the targer reference."""
-        self.git.checkout("-b", branch_name, target_ref)
+        self.repo.git.checkout(branch_name, target_ref, b=True)
 
     def checkout(self, branch_name):
         """Checkout a branch."""
-        self.git.checkout(branch_name)
+        self.repo.git.checkout(branch_name)
 
     def delete_branch(self, branch_name):
         """Create a branch on the targer reference."""
-        self.git.branch("-D", branch_name)
+        self.repo.git.branch(branch_name, D=True)
 
     def get_branch_sha(self, branch_name):
         """Return the 40 character SHA of the branch name.
@@ -133,9 +84,9 @@ class GitHandler:
         # Local branches may contain slashes just like remote branches
         remote_branch = False
         sha = ""
-        for remote in self.remotes:
-            remote = remote + "/"
-            if branch_name.startswith(remote):
+        for remote in self.repo.remotes:
+            remote_name = remote.name + "/"
+            if branch_name.startswith(remote_name):
                 remote_branch = True
                 break
 
@@ -148,11 +99,11 @@ class GitHandler:
 
     def create_tag(self, tag_name, target_ref="HEAD"):
         """Create a tag on the targer reference."""
-        self.git.tag(tag_name, target_ref)
+        self.repo.git.tag(tag_name, target_ref)
 
     def delete_tag(self, tag_name):
         """Create a tag on the targer reference."""
-        self.git.tag("-d", tag_name)
+        self.repo.git.tag(tag_name, d=True)
 
     def get_tag_sha(self, tag_name):
         """Return the 40 character SHA of the tag name."""
@@ -161,7 +112,7 @@ class GitHandler:
 
     def reset(self, reference="HEAD"):
         """Reset the working directory to the indicated reference."""
-        self.git.reset("--hard", reference)
+        self.repo.git.reset("--hard", reference)
 
     def get_sha(self, reference="HEAD"):
         """Return the 40 character SHA of the reference.
@@ -176,15 +127,13 @@ class GitHandler:
         If the reference is not valid, the exception sh.ErrorReturnCode_128 is
         thrown.
         """
-        reference = reference + "^{object}"
         try:
-            rev_cmd = self.git("rev-parse", reference)
-            sha = cmd_to_string(rev_cmd)
-        except sh.ErrorReturnCode_128:
+            commit = self.repo.rev_parse(reference)
+        except (BadName, ValueError):
             print(
                 colored("The reference %s does not exist", "red") % reference)
             raise
-        return sha
+        return str(commit)
 
     def create_stash(self):
         """Stashes the local changes that have not been staged.
@@ -200,11 +149,10 @@ class GitHandler:
         """
         stash_sha = ""
         try:
-            diff_cmd = self.git.diff("--exit-code")
-        except sh.ErrorReturnCode_1:
+            self.repo.git.diff(exit_code=True)
+        except GitCommandError:
             # Exit code 1 means there are differences
-            create_stash_cmd = self.git.stash.create()
-            stash_sha = cmd_to_string(create_stash_cmd)
+            stash_sha = self.repo.git.stash("create")
             pass
         return stash_sha
 
@@ -218,8 +166,8 @@ class GitHandler:
         - No branch (local or remote) in the repository is named "HEAD".
 
         """
-        rev_cmd = self.git("rev-parse", "--abbrev-ref", "HEAD")
-        curr_branch_name = cmd_to_string(rev_cmd)
+        curr_branch_name = self.repo.git.rev_parse(
+            self.repo.head, abbrev_ref=True)
         if curr_branch_name == "HEAD":
             curr_branch_name = ""
         return curr_branch_name
@@ -377,6 +325,6 @@ class GitHandler:
         else:
             self.reset(restore_sha)
         if stash_sha:
-            self.git.stash.apply(stash_sha)
+            self.repo.git.stash("apply", stash_sha)
         self.delete_branch(target_branch_name)
         signal.pthread_sigmask(signal.SIG_UNBLOCK, {signal.SIGINT})

@@ -49,6 +49,7 @@ dependencies:
         - scipy
         - tensorboard
         - Theano==1.0.2
+        - GitPython
         # dev dependencies below this line
         - git+https://github.com/openai/baselines.git@f2729693253c0ef4d4086231d36e0a4307ec1cb3#egg=baselines
         - flake8

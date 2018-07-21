@@ -1,6 +1,6 @@
 import time
 
-import sh
+from git.exc import BadName, InvalidGitRepositoryError, NoSuchPathError
 from termcolor import colored
 
 from garage.misc.git_handler import GitHandler
@@ -28,13 +28,13 @@ def test_init_git_handler():
     not_git_dir = "../"
 
     invalid_dir_arg = {"work_directory": "/invalid/dir"}
-    error_init_git_handler(FileNotFoundError, invalid_dir_arg)
+    error_init_git_handler(NoSuchPathError, invalid_dir_arg)
+
+    not_git_dir_arg = {"work_directory": "../"}
+    error_init_git_handler(InvalidGitRepositoryError, not_git_dir_arg)
 
     invalid_url_arg = {"repo_url": "https://github.com/invalid/repo.git"}
     error_init_git_handler(AssertionError, invalid_url_arg)
-
-    not_git_dir_arg = {"work_directory": "../"}
-    error_init_git_handler(sh.ErrorReturnCode_128, not_git_dir_arg)
 
 
 def verify_branch(branch_name, branch_exists, git_handler, sha_to_verify=""):
@@ -47,7 +47,7 @@ def verify_branch(branch_name, branch_exists, git_handler, sha_to_verify=""):
 
     try:
         branch_sha = git_handler.get_branch_sha(branch_name)
-    except sh.ErrorReturnCode_128:
+    except BadName:
         confirm_branch = not confirm_branch
 
     if branch_exists:
@@ -80,7 +80,7 @@ def test_branch_sha():
 
     # Create a local branch in a specific target and verify its SHA
     sha_on_master = "5c5f63674fe6a39125f0bca1e35a01e2a53f6637"
-    local_branch = "branch_" + sha_on_master[:8] + "_" + time_str()
+    local_branch = "branch_" + time_str()
     git_handler.create_branch(local_branch, sha_on_master)
     verify_branch(local_branch, True, git_handler, sha_on_master)
     git_handler.delete_branch(local_branch)
@@ -113,7 +113,7 @@ def verify_tag(tag_name, tag_exists, git_handler, sha_to_verify=""):
 
     try:
         tag_sha = git_handler.get_tag_sha(tag_name)
-    except sh.ErrorReturnCode_128:
+    except BadName:
         confirm_tag = not confirm_tag
 
     if tag_exists:
@@ -165,7 +165,7 @@ def test_sha():
     try:
         returned_sha = git_handler.get_sha(sha_to_verify)
         print(returned_sha)
-    except sh.ErrorReturnCode_128:
+    except ValueError:
         fake_sha = True
     assert fake_sha, ("The SHA returned by get_sha() is unexpected")
 
@@ -173,12 +173,21 @@ def test_sha():
 def test_verify_target():
     git_handler = GitHandler()
 
+    # Verify that an invalid key in the passed target is invalid
+    key_value = "invalid_key: invalid_value"
+    invalid_key = False
+    try:
+        git_handler._verify_target(key_value)
+    except KeyError:
+        invalid_key = True
+    assert invalid_key, "The key-value %s must be invalid" % key_value
+
     # Verify that a tag, branch and sha do not exist using a key-value as input
     tag_name = "tag_" + time_str()
     invalid_target = False
     try:
         git_handler._verify_target("tag: " + tag_name)
-    except sh.ErrorReturnCode_128:
+    except BadName:
         invalid_target = True
     assert invalid_target, "The tag %s must be invalid" % tag_name
 
@@ -186,7 +195,7 @@ def test_verify_target():
     invalid_target = False
     try:
         git_handler._verify_target("branch: " + branch_name)
-    except sh.ErrorReturnCode_128:
+    except BadName:
         invalid_target = True
     assert invalid_target, "The branch %s must be invalid" % branch_name
 
@@ -194,7 +203,7 @@ def test_verify_target():
     invalid_target = False
     try:
         git_handler._verify_target("sha: " + invalid_sha)
-    except sh.ErrorReturnCode_128:
+    except BadName:
         invalid_target = True
     assert invalid_target, "The sha %s must be invalid" % invalid_sha
 
