@@ -2,7 +2,7 @@ import tensorflow as tf
 
 from garage.misc import logger
 
-logger.set_tensorboard_dir("./histogram_example")
+logger.set_tensorboard_dir("data/local/histogram_example")
 N = 400
 for i in range(N):
     sess = tf.Session()
