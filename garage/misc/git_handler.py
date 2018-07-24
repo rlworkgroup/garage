@@ -61,11 +61,11 @@ class GitHandler:
         return valid_url
 
     def create_branch(self, branch_name, target_ref="HEAD"):
-        """Create a branch on the targer reference."""
+        """Create a branch on the target reference."""
         self.repo.git.branch(branch_name, target_ref)
 
     def checkout_new_branch(self, branch_name, target_ref="HEAD"):
-        """Create a branch on the targer reference."""
+        """Create a branch on the target reference."""
         self.repo.git.checkout(branch_name, target_ref, b=True)
 
     def checkout(self, branch_name):
@@ -73,7 +73,7 @@ class GitHandler:
         self.repo.git.checkout(branch_name)
 
     def delete_branch(self, branch_name):
-        """Create a branch on the targer reference."""
+        """Create a branch on the target reference."""
         self.repo.git.branch(branch_name, D=True)
 
     def get_branch_sha(self, branch_name):
@@ -98,11 +98,11 @@ class GitHandler:
         return self.get_sha(full_branch_name)
 
     def create_tag(self, tag_name, target_ref="HEAD"):
-        """Create a tag on the targer reference."""
+        """Create a tag on the target reference."""
         self.repo.git.tag(tag_name, target_ref)
 
     def delete_tag(self, tag_name):
-        """Create a tag on the targer reference."""
+        """Create a tag on the target reference."""
         self.repo.git.tag(tag_name, d=True)
 
     def get_tag_sha(self, tag_name):
@@ -238,7 +238,13 @@ class GitHandler:
 
         Parameters
         ----------
-        - target: same description as in method run_experiment_on_target.
+        - target: a key-value string, where the key indicates the type of
+            target (tag, branch, sha), and the value the reference for the
+            corresponding type. For example:
+                sha: 8d54s23a
+                branch: my_branch
+                branch: remote/master
+                tag: my_tag
 
         Returns
         -------
