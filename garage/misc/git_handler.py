@@ -3,12 +3,12 @@ import importlib
 import signal
 import time
 
+from git import Repo
 from git.exc import BadName, GitCommandError
 from termcolor import colored
 
 from garage.config import GIT_REPO_URL
 from garage.config import PROJECT_PATH
-from git import Repo
 
 
 class GitHandler:
