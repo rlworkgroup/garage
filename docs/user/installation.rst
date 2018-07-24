@@ -38,13 +38,13 @@ The script sets up a conda environment, which is similar to :code:`virtualenv`. 
     source activate garage
 
 
-Optionally, if you would like to run experiments that depends on the Mujoco environment, you can set it up by running the following command:
+Optionally, if you would like to run experiments that depends on the MuJoCo environment, you can set it up by running the following command:
 
 .. code-block:: bash
 
     ./scripts/setup_mujoco.sh
 
-and follow the instructions. You need to have the zip file for Mujoco v1.31 and the license file ready.
+and follow the instructions. You need to have the zip file for Mujoco v1.50 and the license file ready.
 
 
 
@@ -54,7 +54,7 @@ Manual Install
 Anaconda
 ------------
 
-:code:`garage` assumes that you are using Anaconda Python distribution. You can download it from `https://www.continuum.io/downloads<https://www.continuum.io/downloads>`.  Make sure to download the installer for Python 2.7.
+:code:`garage` assumes that you are using Anaconda Python distribution. You can download it from `https://www.continuum.io/downloads<https://www.continuum.io/downloads`.  Make sure to download the installer for Python 2.7.
 
 
 System dependencies for pygame
