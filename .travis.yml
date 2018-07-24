@@ -64,6 +64,14 @@ script:
       -e TRAVIS \
       -e MJKEY \
       "${tag}" scripts/travisci/check_precommit.sh
+  - |
+    docker run \
+      -e TRAVIS_BRANCH \
+      -e TRAVIS_PULL_REQUEST \
+      -e TRAVIS_COMMIT_RANGE \
+      -e TRAVIS \
+      -e MJKEY \
+      "${tag}" nose2 -c setup.cfg -E 'not huge'
 
 after_success:
   - |

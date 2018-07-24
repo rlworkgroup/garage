@@ -1,5 +1,7 @@
+import os
+import unittest
+
 from dm_control import suite
-import numpy as np
 
 from garage.envs import DmControlEnv
 from garage.envs import normalize
@@ -19,17 +21,22 @@ def run_task(domain_name, task_name):
 
     time_step = dm_control_env.reset()
     action_spec = dm_control_env.action_space
-    for _ in range(200):
-        dm_control_env.render()
+    for _ in range(5):
+        if 'CI' in os.environ:
+            print("Skipping rendering test")
+        else:
+            dm_control_env.render()
         action = action_spec.sample()
         next_obs, reward, done, info = dm_control_env.step(action)
-        if done == True:
+        if done:
             break
 
     dm_control_env.close()
 
 
-for domain, task in suite.ALL_TASKS:
-    run_task(domain, task)
+class TestDmControl(unittest.TestCase):
+    def test_dm_control(self):
+        for domain, task in suite.ALL_TASKS:
+            run_task(domain, task)
 
-print("Congratulation! All tasks are done!")
+        print("Congratulation! All tasks are done!")

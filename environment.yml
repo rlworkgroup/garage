@@ -33,8 +33,8 @@ dependencies:
         - Box2D>=2.3.2
         - cached_property
         - cloudpickle
-        - git+https://github.com/Lasagne/Lasagne.git@7992faa80fa5233a786e2582a605e854cea7d1cf#egg=Lasagne
-        - git+https://github.com/Theano/Theano.git@2c19431b165aaf8289d1e6654988c64f4bb234e1#egg=Theano
+        - git+https://github.com/Theano/Theano.git@3b51141a46affe9505f0e3f283020820b2c0251e#egg=theano
+        - git+https://github.com/jonashen/Lasagne.git@83065b9e1ff1758eaee9ce5bc494ceb5c804fdfd#egg=lasagne
         - git+https://github.com/plotly/plotly.py.git@2594076e29584ede2d09f2aa40a8a195b3f3fc66#egg=plotly
         - git+https://github.com/deepmind/dm_control.git#egg=dm_control
         - awscli

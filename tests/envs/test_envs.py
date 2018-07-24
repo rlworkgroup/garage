@@ -1,10 +1,11 @@
 import os
+import unittest
 
 import gym
 from nose2 import tools
 MUJOCO_ENABLED = True
 try:
-    import mujoco_py
+    import mujoco_py  # pylint: disable=W0611
 except OSError:
     print("Warning: Mujoco not installed. Skipping mujoco-related tests")
     MUJOCO_ENABLED = False
@@ -71,20 +72,21 @@ envs.append(NormalizedEnv(CartpoleEnv()))
 envs.append(gym.make("CartPole-v1"))
 
 
-@tools.params(*envs)
-def test_env(env):
-    print("Testing", env.__class__)
-    ob_space = env.observation_space
-    act_space = env.action_space
-    ob = env.reset()
-    assert ob_space.contains(ob)
-    a = act_space.sample()
-    assert act_space.contains(a)
-    res = env.step(a)
-    assert ob_space.contains(res[0])  # res[0] --> observation
-    assert np.isscalar(res[1])  # res[1] --> reward
-    if 'CIRCLECI' in os.environ:
-        print("Skipping rendering test")
-    else:
-        env.render()
-    env.close()
+class TestEnvs(unittest.TestCase):
+    @tools.params(*envs)
+    def test_env(self, env):
+        print("Testing", env.__class__)
+        ob_space = env.observation_space
+        act_space = env.action_space
+        ob = env.reset()
+        assert ob_space.contains(ob)
+        a = act_space.sample()
+        assert act_space.contains(a)
+        res = env.step(a)
+        assert ob_space.contains(res[0])  # res[0] --> observation
+        assert np.isscalar(res[1])  # res[1] --> reward
+        if 'CI' in os.environ:
+            print("Skipping rendering test")
+        else:
+            env.render()
+        env.close()

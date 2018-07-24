@@ -10,6 +10,7 @@ plotting the average return curve from baselines and garage.
 import datetime
 import os.path as osp
 import random
+import unittest
 
 from baselines import logger as baselines_logger
 from baselines.bench import benchmarks
@@ -50,57 +51,61 @@ params = {
 }
 
 
-def test_benchmark():
-    """
-    Compare benchmarks between garage and baselines.
+class TestBenchmarkDDPG(unittest.TestCase):
+    def test_benchmark_ddpg(self):
+        """
+        Compare benchmarks between garage and baselines.
 
-    :return:
-    """
-    # Load Mujoco1M tasks, you can check other benchmarks here
-    # https://github.com/openai/baselines/blob/master/baselines/bench/benchmarks.py
-    mujoco1m = benchmarks.get_benchmark("Mujoco1M")
+        :return:
+        """
+        # Load Mujoco1M tasks, you can check other benchmarks here
+        # https://github.com/openai/baselines/blob/master/baselines/bench/benchmarks.py
+        mujoco1m = benchmarks.get_benchmark("Mujoco1M")
 
-    timestamp = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S-%f")
-    benchmark_dir = "./benchmark/%s/" % timestamp
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S-%f")
+        benchmark_dir = "./benchmark/%s/" % timestamp
 
-    for task in mujoco1m["tasks"]:
-        env_id = task["env_id"]
-        env = gym.make(env_id)
-        seeds = random.sample(range(100), task["trials"])
+        for task in mujoco1m["tasks"]:
+            env_id = task["env_id"]
+            env = gym.make(env_id)
+            seeds = random.sample(range(100), task["trials"])
 
-        task_dir = osp.join(benchmark_dir, env_id)
-        plt_file = osp.join(benchmark_dir, "{}_benchmark.png".format(env_id))
-        baselines_csvs = []
-        garage_csvs = []
+            task_dir = osp.join(benchmark_dir, env_id)
+            plt_file = osp.join(benchmark_dir,
+                                "{}_benchmark.png".format(env_id))
+            baselines_csvs = []
+            garage_csvs = []
 
-        for trail in range(task["trials"]):
-            env.reset()
-            seed = seeds[trail]
+            for trail in range(task["trials"]):
+                env.reset()
+                seed = seeds[trail]
 
-            trail_dir = task_dir + "trail_%d_seed_%d" % (trail + 1, seed)
-            garage_dir = trail_dir + "/garage"
-            baselines_dir = trail_dir + "/baselines"
+                trail_dir = task_dir + "trail_%d_seed_%d" % (trail + 1, seed)
+                garage_dir = trail_dir + "/garage"
+                baselines_dir = trail_dir + "/baselines"
 
-            # Run garage algorithms
-            garage_csv = run_garage(env, seed, garage_dir)
+                # Run garage algorithms
+                garage_csv = run_garage(env, seed, garage_dir)
 
-            # Run baselines algorithms
-            baselines_csv = run_baselines(env, seed, baselines_dir)
+                # Run baselines algorithms
+                baselines_csv = run_baselines(env, seed, baselines_dir)
 
-            garage_csvs.append(garage_csv)
-            baselines_csvs.append(baselines_csv)
+                garage_csvs.append(garage_csv)
+                baselines_csvs.append(baselines_csv)
 
-        plot(
-            b_csvs=baselines_csvs,
-            g_csvs=garage_csvs,
-            g_x="Epoch",
-            g_y="AverageReturn",
-            b_x="total/epochs",
-            b_y="rollout/return",
-            trails=task["trials"],
-            seeds=seeds,
-            plt_file=plt_file,
-            env_id=env_id)
+            plot(
+                b_csvs=baselines_csvs,
+                g_csvs=garage_csvs,
+                g_x="Epoch",
+                g_y="AverageReturn",
+                b_x="total/epochs",
+                b_y="rollout/return",
+                trails=task["trials"],
+                seeds=seeds,
+                plt_file=plt_file,
+                env_id=env_id)
+
+    test_benchmark_ddpg.huge = True
 
 
 def run_garage(env, seed, log_dir):
@@ -268,6 +273,3 @@ def plot(b_csvs, g_csvs, g_x, g_y, b_x, b_y, trails, seeds, plt_file, env_id):
 
     plt.savefig(plt_file)
     plt.close()
-
-
-test_benchmark()

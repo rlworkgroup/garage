@@ -1,5 +1,6 @@
 import os
 os.environ['THEANO_FLAGS'] = 'device=cpu,mode=FAST_COMPILE,optimizer=None'
+import unittest
 
 from nose2 import tools
 import numpy as np
@@ -16,13 +17,10 @@ from garage.algos import VPG
 from garage.baselines import ZeroBaseline
 from garage.envs import GridWorldEnv
 from garage.envs.box2d import CartpoleEnv
-from garage.exploration_strategies import OUStrategy
 from garage.policies import CategoricalGRUPolicy
 from garage.policies import CategoricalMLPPolicy
-from garage.policies import DeterministicMLPPolicy
 from garage.policies import GaussianGRUPolicy
 from garage.policies import GaussianMLPPolicy
-from garage.q_functions import ContinuousMLPQFunction
 from garage.theano.envs import TheanoEnv
 
 common_batch_algo_args = dict(
@@ -89,37 +87,18 @@ for algo in [VPG, TNPG, PPO, TRPO, CEM, CMAES, ERWR, REPS]:
     ])
 
 
-@tools.params(*polopt_cases)
-def test_polopt_algo(algo_cls, env_cls, policy_cls):
-    print("Testing %s, %s, %s" % (algo_cls.__name__, env_cls.__name__,
-                                  policy_cls.__name__))
-    env = TheanoEnv(env_cls())
-    policy = policy_cls(env_spec=env.spec, )
-    baseline = ZeroBaseline(env_spec=env.spec)
-    algo = algo_cls(
-        env=env,
-        policy=policy,
-        baseline=baseline,
-        **(algo_args.get(algo_cls, dict())))
-    algo.train()
-    assert not np.any(np.isnan(policy.get_param_values()))
-
-
-def test_ddpg():
-    env = TheanoEnv(CartpoleEnv())
-    policy = DeterministicMLPPolicy(env.spec)
-    qf = ContinuousMLPQFunction(env.spec)
-    es = OUStrategy(env.spec)
-    algo = DDPG(
-        env=env,
-        policy=policy,
-        qf=qf,
-        es=es,
-        n_epochs=1,
-        epoch_length=100,
-        batch_size=32,
-        min_pool_size=50,
-        replay_pool_size=1000,
-        eval_samples=100,
-    )
-    algo.train()
+class TestAlgos(unittest.TestCase):
+    @tools.params(*polopt_cases)
+    def test_polopt_algo(self, algo_cls, env_cls, policy_cls):
+        print("Testing %s, %s, %s" % (algo_cls.__name__, env_cls.__name__,
+                                      policy_cls.__name__))
+        env = TheanoEnv(env_cls())
+        policy = policy_cls(env_spec=env.spec, )
+        baseline = ZeroBaseline(env_spec=env.spec)
+        algo = algo_cls(
+            env=env,
+            policy=policy,
+            baseline=baseline,
+            **(algo_args.get(algo_cls, dict())))
+        algo.train()
+        assert not np.any(np.isnan(policy.get_param_values()))

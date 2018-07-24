@@ -1,4 +1,6 @@
 """Testing for sawyer envrionments. """
+import os
+import unittest
 
 import numpy as np
 
@@ -75,29 +77,31 @@ def run_pick_and_place(*_):
     algo.train()
 
 
-def test_reacher():
-    """Testing for reacher."""
+class TestSawyerEnvs(unittest.TestCase):
+    def test_reacher(self):
+        """Testing for reacher."""
 
-    env = ReacherEnv()
-    for i in range(9999):
-        env.render()
-        action = env.action_space.sample()
-        next_obs, reward, done, _ = env.step(action)
-    env.reset()
-    env.close()
+        env = ReacherEnv()
+        for i in range(5):
+            if 'CI' in os.environ:
+                print("Skipping rendering test")
+            else:
+                env.render()
+            action = env.action_space.sample()
+            next_obs, reward, done, _ = env.step(action)
+        env.reset()
+        env.close()
 
+    def test_pnp(self):
+        """Testing for pick and place."""
 
-def test_pnp():
-    """Testing for pick and place."""
-
-    env = PickAndPlaceEnv()
-    for i in range(9999):
-        env.render()
-        action = env.action_space.sample()
-        env.step(action)
-    env.reset()
-    env.close()
-
-
-test_reacher()
-test_pnp()
+        env = PickAndPlaceEnv()
+        for i in range(5):
+            if 'CI' in os.environ:
+                print("Skipping rendering test")
+            else:
+                env.render()
+            action = env.action_space.sample()
+            env.step(action)
+        env.reset()
+        env.close()
