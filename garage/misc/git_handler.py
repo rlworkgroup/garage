@@ -4,7 +4,7 @@ import signal
 import time
 
 from git import Repo
-from git.exc import BadName, GitCommandError
+from git.exc import BadName
 from termcolor import colored
 
 from garage.config import PROJECT_PATH
@@ -18,8 +18,6 @@ class GitHandler:
     the convenience of grouping commands to perform more complex tasks.
 
     Preconditions of this class:
-        - The working directory is not in the middle of a conflict
-        resolution.
         - No branch is named HEAD.
     """
 
@@ -48,6 +46,11 @@ class GitHandler:
         assert remote_found, colored("The garage remote couldn't be found " \
                                      "in the git working directory %s" %
                                      self.work_dir, "red")
+        assert not self.repo.git.diff(diff_filter="U"), \
+                colored("Unmerged paths were found, so the working " \
+                        "directory could be in the middle of a merge " \
+                        "conflict. Fix the conflicts first before running " \
+                        "the experiment.", "red")
 
     def _check_url(self, repo_url):
         """Return true if one of the remotes points to the repository URL."""
@@ -147,12 +150,8 @@ class GitHandler:
 
         """
         stash_sha = ""
-        try:
-            self.repo.git.diff(exit_code=True)
-        except GitCommandError:
-            # Exit code 1 means there are differences
+        if self.repo.is_dirty():
             stash_sha = self.repo.git.stash("create")
-            pass
         return stash_sha
 
     def get_current_branch_name(self):
