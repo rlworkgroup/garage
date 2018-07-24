@@ -1,96 +1,77 @@
 language: python
 
+services:
+  - docker
+
+addons:
+  apt:
+    packages:
+      - docker-ce
+
 python:
   - "3.5.2"
-
-cache:
-  timeout: 1000
-  directories:
-    - $HOME/miniconda
-    - $HOME/downloads
-    - $HOME/.mujoco
-    - "$HOME/.cache/pre-commit"
-
-before_cache:
- - rm -rf "${HOME}/miniconda/locks"
- - rm -rf "${HOME}/miniconda/pkgs"
- - rm -rf "${HOME}/miniconda/var"
- - rm -rf "${HOME}/miniconda/conda-meta/history"
- - rm -rf "${HOME}/.mujoco/mjkey.txt"
-
-before_install:
-  # paths
-  - export LD_LIBRARY_PATH="${HOME}/.mujoco/mjpro150/bin:${LD_LIBRARY_PATH}"
-  - export PATH="${HOME}/miniconda/bin:${PATH}"
-
-  # get mujoco key
-  - echo "${MJKEY}" > "${HOME}/.mujoco/mjkey.txt"
-
-  # install MuJoCo if necessary
-  - if [[ ! -d "${HOME}/.mujoco/mjpro150" ]]; then
-      echo "Installing MuJoCo...";
-      wget https://www.roboti.us/download/mjpro150_linux.zip -O "${HOME}/downloads/mjpro150_linux.zip";
-      unzip "${HOME}/downloads/mjpro150_linux.zip" -d "${HOME}/.mujoco";
-    else
-      echo "MuJoCo already installed.";
-    fi;
-
-  # Install miniconda if necessary
-  - if [[ -d "${HOME}/miniconda/bin" ]]; then
-      echo "miniconda already installed.";
-    else
-      echo "Installing miniconda...";
-      rm -rf "${HOME}/miniconda";
-      if [[ -f "${HOME}/downloads/miniconda.sh" ]]; then
-        rm -rf "${HOME}/downloads/miniconda.sh";
-      fi;
-      wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O "${HOME}/downloads/miniconda.sh";
-      bash "${HOME}/downloads/miniconda.sh" -b -p "${HOME}/miniconda";
-      conda update -q -y conda;
-    fi;
-  - conda config --set always_yes yes --set changeps1 no
-  - conda info -a
-
-install:
-  # mujoco deps
-  - sudo add-apt-repository --yes ppa:flixr/backports # for patchelf
-  - sudo apt-get update
-  - sudo apt-get install -y libglfw2 libglew-dev libosmesa6-dev patchelf libopenmpi-dev openmpi-bin
-
-  # Create conda env if it does not exist; update it if environment.yml was touched
-  - if [[ "${TRAVIS_PULL_REQUEST}" != "false" ]]; then
-        env_changed="$(git diff "${TRAVIS_COMMIT_RANGE}" --stat environment.yml)";
-    else
-        env_changed="$(git diff origin/master --stat environment.yml)";
-    fi;
-  - if [[ ! -d "${HOME}/miniconda/envs/garage" ]]; then
-      echo "Create conda environment...";
-      conda env create -f environment.yml;
-    else
-      if [[ ! -z "${env_changed}" ]]; then
-        echo "Updating conda environment...";
-        conda env update;
-      fi;
-    fi;
-  - source activate garage
-
-  # install tensorflow
-  # it's not included in environment.yml because of CPU vs GPU
-  - pip install tensorflow==1.8
-
-  # prevent garage from exiting on config
-  - cp garage/config.py garage/config_personal.py
-
-  # trigger compilation of mujoco_py bindings
-  - python -c "import mujoco_py"
 
 git:
   depth: false
 
+before_install:
+  # Reconfigure docker to be more efficient
+  - |
+    echo '{
+      "experimental": true,
+      "storage-driver": "overlay2",
+      "max-concurrent-downloads": 50,
+      "max-concurrent-uploads": 50
+    }' | sudo tee /etc/docker/daemon.json
+  - sudo service docker restart
+  # prevent garage from exiting on config
+  - cp garage/config.py garage/config_personal.py
+  # Pull cached docker image
+  - docker pull rlworkgroup/garage-ci:latest
+
+install:
+  - tag="rlworkgroup/garage-ci:${TRAVIS_BUILD_NUMBER}"
+  - |
+    docker build \
+      -f docker/Dockerfile.ci \
+      --cache-from rlworkgroup/garage-ci:latest \
+      --build-arg MJKEY="${MJKEY}" \
+      -t "${tag}" \
+      .
+
 script:
-  - scripts/travisci/check_flake8.sh
-  - scripts/travisci/check_imports.sh
-  - scripts/travisci/check_precommit.sh
+  - |
+    docker run \
+      -e TRAVIS_BRANCH \
+      -e TRAVIS_PULL_REQUEST \
+      -e TRAVIS_COMMIT_RANGE \
+      -e TRAVIS \
+      -e MJKEY \
+      "${tag}" scripts/travisci/check_flake8.sh
+  - |
+    docker run \
+      -e TRAVIS_BRANCH \
+      -e TRAVIS_PULL_REQUEST \
+      -e TRAVIS_COMMIT_RANGE \
+      -e TRAVIS \
+      -e MJKEY \
+      "${tag}" scripts/travisci/check_imports.sh
+  - |
+    docker run \
+      -e TRAVIS_BRANCH \
+      -e TRAVIS_PULL_REQUEST \
+      -e TRAVIS_COMMIT_RANGE \
+      -e TRAVIS \
+      -e MJKEY \
+      "${tag}" scripts/travisci/check_precommit.sh
+
+after_success:
+  - |
+    if [[ "${TRAVIS_BRANCH}" == "master" ]] && [[ "${TRAVIS_PULL_REQUEST}" == "false" ]]; then
+      echo "${DOCKER_API_KEY}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
+      docker tag "${tag}" rlworkgroup/garage-ci:latest
+      docker push rlworkgroup/garage-ci
+    fi
 
 notifications:
   email: false
