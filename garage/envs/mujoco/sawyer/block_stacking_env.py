@@ -2,17 +2,18 @@ import numpy as np
 
 from garage.core import Serializable
 from garage.envs import Step
-from garage.envs.mujoco import MujocoEnv
+from garage.envs.mujoco.sawyer.sawyer_env import SawyerEnv
 from garage.misc.overrides import overrides
 
 
-class BlockStackingEnv(MujocoEnv, Serializable):
+class BlockStackingEnv(SawyerEnv, Serializable):
 
     FILE = 'block_stacking.xml'
 
     def __init__(self, block_size=0.025, *args, **kwargs):
         Serializable.__init__(self, *args, **kwargs)
-        super(BlockStackingEnv, self).__init__(*args, **kwargs)
+        super(BlockStackingEnv, self).__init__(
+            initial_goal=None, initial_qpos=None, *args, **kwargs)
         self._distance_threshold = block_size / 2.
         self._done = False
 
@@ -25,7 +26,8 @@ class BlockStackingEnv(MujocoEnv, Serializable):
 
         return Step(obs, reward, done)
 
-    def compute_reward(self):
+    @overrides
+    def compute_reward(self, achieved_goal, desired_goal, info):
         green_pos = self.sim.data.get_geom_xpos('object0')
         red_pos = self.sim.data.get_geom_xpos('object1')
         blue_pos = self.sim.data.get_geom_xpos('object2')

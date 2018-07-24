@@ -5,11 +5,11 @@ import numpy as np
 
 from garage.core import Serializable
 from garage.envs import Step
-from garage.envs.mujoco import MujocoEnv
+from garage.envs.mujoco.sawyer.sawyer_env import SawyerEnv
 from garage.misc.overrides import overrides
 
 
-class PickAndPlaceEnv(MujocoEnv, Serializable):
+class PickAndPlaceEnv(SawyerEnv, Serializable):
 
     FILE = 'pick_and_place.xml'
 
@@ -24,13 +24,9 @@ class PickAndPlaceEnv(MujocoEnv, Serializable):
                  **kwargs):
         Serializable.__init__(self, *args, **kwargs)
         if initial_goal is None:
-            self._initial_goal = np.array([0.8, 0.0, 0.])
-        else:
-            self._initial_goal = initial_goal
-        if initial_qpos is not None:
-            self._initial_qpos = initial_qpos
-        else:
-            self._initial_qpos = {
+            initial_goal = np.array([0.8, 0.0, 0.])
+        if initial_qpos is None:
+            initial_qpos = {
                 'right_j0': -0.140923828125,
                 'right_j1': -1.2789248046875,
                 'right_j2': -3.043166015625,
@@ -43,10 +39,14 @@ class PickAndPlaceEnv(MujocoEnv, Serializable):
         self._target_range = target_range
         self._sparse_reward = sparse_reward
         self._control_method = control_method
-        self._goal = self._initial_goal
         self._grasped = False
-        super(PickAndPlaceEnv, self).__init__(*args, **kwargs)
-        self.env_setup(self._initial_qpos)
+        SawyerEnv.__init__(
+            self,
+            initial_goal=initial_goal,
+            initial_qpos=initial_qpos,
+            target_range=target_range,
+            *args,
+            **kwargs)
 
     @overrides
     def step(self, action: np.ndarray):
@@ -72,26 +72,27 @@ class PickAndPlaceEnv(MujocoEnv, Serializable):
         achieved_goal = obs['achieved_goal']
         goal = obs['desired_goal']
         gripper_pos = obs['gripper_pos']
-        reward = self._compute_reward(achieved_goal, goal, gripper_pos)
+        reward = self.compute_reward(
+            achieved_goal, goal, dict(gripper_pos=gripper_pos))
         collided = self._is_collided()
         if collided:
-            reward -= 200
+            reward -= 5
         done = (self._goal_distance(achieved_goal, goal) <
-                self._distance_threshold) or collided
+                self._distance_threshold)
 
         return Step(next_obs, reward, done)
 
-    def _compute_reward(self, achieved_goal, goal, gripper_pos):
+    def compute_reward(self, achieved_goal, goal, info):
         # Compute distance between goal and the achieved goal.
         grasped = self._grasp()
         reward = 0
+        gripper_pos = info['gripper_pos']
         if not grasped:
             # first phase: move towards the object
             d = self._goal_distance(gripper_pos, achieved_goal)
         else:
             d = self._goal_distance(achieved_goal, goal)
-            if not self._grasped:
-                reward += 400
+            reward += 30
             self._grasped = True
 
         if self._sparse_reward:
@@ -211,7 +212,7 @@ class PickAndPlaceEnv(MujocoEnv, Serializable):
 
     def _reset_target_visualization(self):
         site_id = self.sim.model.site_name2id('target_pos')
-        self.sim.model.site_pos[site_id] = self._initial_goal
+        self.sim.model.site_pos[site_id] = self._goal
         self.sim.forward()
 
     @overrides
@@ -219,10 +220,6 @@ class PickAndPlaceEnv(MujocoEnv, Serializable):
         self._grasped = False
         self._reset_target_visualization()
         return super(PickAndPlaceEnv, self).reset(init_state)['observation']
-
-    def log_diagnostics(self, paths):
-        """TODO: Logging."""
-        pass
 
     def _is_collided(self):
         """Detect collision"""

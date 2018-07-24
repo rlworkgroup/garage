@@ -6,11 +6,11 @@ import numpy as np
 
 from garage.core import Serializable
 from garage.envs import Step
-from garage.envs.mujoco import MujocoEnv
+from garage.envs.mujoco.sawyer.sawyer_env import SawyerEnv
 from garage.misc.overrides import overrides
 
 
-class ReacherEnv(MujocoEnv, Serializable):
+class ReacherEnv(SawyerEnv, Serializable):
     """Reacher Environment."""
 
     FILE = "reacher.xml"
@@ -37,13 +37,9 @@ class ReacherEnv(MujocoEnv, Serializable):
         """
         Serializable.quick_init(self, locals())
         if initial_goal is None:
-            self._initial_goal = np.array([0.8, 0.0, 0.15])
-        else:
-            self._initial_goal = initial_goal
-        if initial_qpos is not None:
-            self._initial_qpos = initial_qpos
-        else:
-            self._initial_qpos = {
+            initial_goal = np.array([0.8, 0.0, 0.15])
+        if initial_qpos is None:
+            initial_qpos = {
                 'right_j0': -0.140923828125,
                 'right_j1': -1.2789248046875,
                 'right_j2': -3.043166015625,
@@ -57,10 +53,14 @@ class ReacherEnv(MujocoEnv, Serializable):
         self._sparse_reward = sparse_reward
         self._control_method = control_method
 
-        self._goal = self._initial_goal
         self._accumulated_reward = 0
-        super(ReacherEnv, self).__init__(*args, **kwargs)
-        self.env_setup(self._initial_qpos)
+        SawyerEnv.__init__(
+            self,
+            initial_goal=initial_goal,
+            initial_qpos=initial_qpos,
+            target_range=target_range,
+            *args,
+            **kwargs)
 
     @overrides
     def step(self, action):
@@ -87,7 +87,7 @@ class ReacherEnv(MujocoEnv, Serializable):
         next_obs = obs['observation']
         achieved_goal = obs['achieved_goal']
         goal = obs['desired_goal']
-        reward = self._compute_reward(achieved_goal, goal)
+        reward = self.compute_reward(achieved_goal, goal, dict())
         done = (self._goal_distance(achieved_goal, goal) <
                 self._distance_threshold)
         return Step(next_obs, reward, done)
@@ -95,7 +95,7 @@ class ReacherEnv(MujocoEnv, Serializable):
     def _reset_target_visualization(self):
         """Reset the target visualization."""
         site_id = self.sim.model.site_name2id('target_pos')
-        self.sim.model.site_pos[site_id] = self._initial_goal
+        self.sim.model.site_pos[site_id] = self._goal
         self.sim.forward()
 
     @overrides
@@ -105,7 +105,8 @@ class ReacherEnv(MujocoEnv, Serializable):
         self._reset_target_visualization()
         return super(ReacherEnv, self).reset(init_state)['observation']
 
-    def _compute_reward(self, achieved_goal, goal):
+    @overrides
+    def compute_reward(self, achieved_goal, goal, info):
         # Compute distance between goal and the achieved goal.
         d = self._goal_distance(achieved_goal, goal)
         if self._sparse_reward:
@@ -202,13 +203,3 @@ class ReacherEnv(MujocoEnv, Serializable):
             return Box(-1., 1., shape=(3, ), dtype=np.float32)
         else:
             raise NotImplementedError
-
-    @overrides
-    def close(self):
-        """Make sure the environment start another viewer next time."""
-        if self.viewer is not None:
-            self.viewer = None
-
-    def log_diagnostics(self, paths):
-        """TODO: Logging."""
-        pass

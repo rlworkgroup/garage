@@ -2,11 +2,11 @@ import numpy as np
 
 from garage.core import Serializable
 from garage.envs import Step
-from garage.envs.mujoco import MujocoEnv
+from garage.envs.mujoco.sawyer.sawyer_env import SawyerEnv
 from garage.misc.overrides import overrides
 
 
-class BinSortingEnv(MujocoEnv, Serializable):
+class BinSortingEnv(SawyerEnv, Serializable):
 
     FILE = 'bin_sorting.xml'
 
@@ -26,7 +26,8 @@ class BinSortingEnv(MujocoEnv, Serializable):
         self._red_done = False
         self._blue_done = False
 
-        super(BinSortingEnv, self).__init__(*args, **kwargs)
+        super(BinSortingEnv, self).__init__(
+            initial_goal=None, initial_qpos=None, *args, **kwargs)
 
     @overrides
     def step(self, action):
@@ -61,7 +62,8 @@ class BinSortingEnv(MujocoEnv, Serializable):
 
         return obs
 
-    def compute_reward(self):
+    @overrides
+    def compute_reward(self, achieved_goal, desired_goal, info):
         green_object_pos = self.sim.data.get_geom_xpos('object0')
         red_object_pos = self.sim.data.get_geom_xpos('object1')
         blue_object_pos = self.sim.data.get_geom_xpos('object2')
