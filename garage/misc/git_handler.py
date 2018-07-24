@@ -7,16 +7,15 @@ from git import Repo
 from git.exc import BadName, GitCommandError
 from termcolor import colored
 
-from garage.config import GIT_REPO_URL
 from garage.config import PROJECT_PATH
+from garage.config_personal import GIT_REPO_URL
 
 
 class GitHandler:
     """Execute diverse git commands.
 
-    This class makes use of the sh package to execute git commands just like
-    in the terminal shell, with the convenience of grouping commands to perform
-    more complex tasks.
+    This class makes use of the GitPython library to execute git commands with
+    the convenience of grouping commands to perform more complex tasks.
 
     Preconditions of this class:
         - The working directory is not in the middle of a conflict
@@ -39,7 +38,7 @@ class GitHandler:
 
         """
         self.work_dir = work_directory
-        self.valid_targets = {
+        self.valid_references = {
             "branch": self.get_branch_sha,
             "sha": self.get_sha,
             "tag": self.get_tag_sha
@@ -60,20 +59,20 @@ class GitHandler:
                     break
         return valid_url
 
-    def create_branch(self, branch_name, target_ref="HEAD"):
-        """Create a branch on the target reference."""
-        self.repo.git.branch(branch_name, target_ref)
+    def create_branch(self, branch_name, ref="HEAD"):
+        """Create a branch on the reference."""
+        self.repo.git.branch(branch_name, ref)
 
-    def checkout_new_branch(self, branch_name, target_ref="HEAD"):
-        """Create a branch on the target reference."""
-        self.repo.git.checkout(branch_name, target_ref, b=True)
+    def checkout_new_branch(self, branch_name, ref="HEAD"):
+        """Create a branch on the reference."""
+        self.repo.git.checkout(branch_name, ref, b=True)
 
     def checkout(self, branch_name):
         """Checkout a branch."""
         self.repo.git.checkout(branch_name)
 
     def delete_branch(self, branch_name):
-        """Create a branch on the target reference."""
+        """Delete branch."""
         self.repo.git.branch(branch_name, D=True)
 
     def get_branch_sha(self, branch_name):
@@ -97,12 +96,12 @@ class GitHandler:
 
         return self.get_sha(full_branch_name)
 
-    def create_tag(self, tag_name, target_ref="HEAD"):
-        """Create a tag on the target reference."""
-        self.repo.git.tag(tag_name, target_ref)
+    def create_tag(self, tag_name, ref="HEAD"):
+        """Create a tag on the reference."""
+        self.repo.git.tag(tag_name, ref)
 
     def delete_tag(self, tag_name):
-        """Create a tag on the target reference."""
+        """Delete tag."""
         self.repo.git.tag(tag_name, d=True)
 
     def get_tag_sha(self, tag_name):
@@ -124,7 +123,7 @@ class GitHandler:
         HEAD is just a reference to the commit where the working directory is
         currently checked out.
 
-        If the reference is not valid, the exception sh.ErrorReturnCode_128 is
+        If the reference is not valid, the exception BadName or ValueError is
         thrown.
         """
         try:
@@ -172,18 +171,18 @@ class GitHandler:
             curr_branch_name = ""
         return curr_branch_name
 
-    def run_experiment_on_target(self, target, exp_args):
-        """Run a experiment on the indicated commit defined by target.
+    def run_experiment_on_ref(self, reference, exp_args):
+        """Run a experiment on the indicated commit defined by the reference.
 
-        After the target is verified, if there are any non-staged changes in
-        the working directory, they're stashed, the target commit is checked
+        After the reference is verified, if there are any non-staged changes in
+        the working directory, they're stashed, the reference commit is checked
         out, the experiment is executed and the working directory is restored
         at the end, including the stashed changes.
 
         Parameters
         ----------
-        - target: a key-value string, where the key indicates the type of
-            target (tag, branch, sha), and the value the reference for the
+        - reference: a key-value string, where the key indicates the type of
+            reference (tag, branch, sha), and the value the reference for the
             corresponding type. For example:
                 sha: 8d54s23a
                 branch: my_branch
@@ -191,30 +190,29 @@ class GitHandler:
                 tag: my_tag
         - exp_args: it's a dictionary of arguments obtained from the function
             run_experiment at garage.misc.instrument, that will be passed to
-            the experiment once the target is checked out.
+            the experiment once the reference is checked out.
 
         Precondition
         ------------
         - The working directory is not in the middle of a conflict resolution.
 
         """
-        assert isinstance(target, str), ("The git target has to be a string")
-        self.target = target
-        self.target_sha = self._verify_target(self.target)
+        assert isinstance(reference, str), ("The git reference has to be a" \
+                                            " string")
+        self.ref_sha = self._verify_reference(reference)
         self.restore_sha = self.get_sha()
         self.stash_sha = self.create_stash()
         self.branch_name = self.get_current_branch_name()
-        self.target_branch_name = ("run_exp_on_" + str(int(time.time())))
+        self.ref_branch_name = ("run_exp_on_" + str(int(time.time())))
         try:
-            self._switch_to_target(self.target_branch_name, self.target_sha)
+            self._switch_to_ref(self.ref_branch_name, self.ref_sha)
             current_sha = self.get_sha()
             self._run_experiment(exp_args)
         except BaseException:
             print(colored(
-                "If the working area is damaged after " \
-                "an unexpected error while trying to\nswitch to the " \
-                "target in the repository, run the following command(s) " \
-                "to\nrestore it:", "yellow"))
+                "If the working area is not correctly restored after an " \
+                "unexpected error, run\nthe following command(s) to restore " \
+                "it:", "yellow"))
             if self.branch_name:
                 print(
                     colored("$ git checkout %s" % (self.branch_name),
@@ -230,16 +228,16 @@ class GitHandler:
                             "yellow"))
             raise
         finally:
-            self._restore_working_dir(self.target_branch_name, self.stash_sha,
+            self._restore_working_dir(self.ref_branch_name, self.stash_sha,
                                       self.branch_name, self.restore_sha)
 
-    def _verify_target(self, target):
-        """Verify the key-value target is valid.
+    def _verify_reference(self, reference):
+        """Verify the key-value reference is valid.
 
         Parameters
         ----------
-        - target: a key-value string, where the key indicates the type of
-            target (tag, branch, sha), and the value the reference for the
+        - reference: a key-value string, where the key indicates the type of
+            reference (tag, branch, sha), and the value the reference for the
             corresponding type. For example:
                 sha: 8d54s23a
                 branch: my_branch
@@ -248,34 +246,34 @@ class GitHandler:
 
         Returns
         -------
-        If the target is valid, the corresponding SHA.
+        If the reference is valid, the corresponding SHA.
 
         """
-        target = [target.strip() for target in target.split(":")]
+        reference = [reference.strip() for reference in reference.split(":")]
         sha = ""
-        assert (len(target) == 2 and target[0]
-                and target[1]), self._get_target_use_message()
+        assert (len(reference) == 2 and reference[0]
+                and reference[1]), self._get_reference_use_message()
         try:
-            verify = self.valid_targets[target[0]]
-            sha = verify(target[1])
+            verify = self.valid_references[reference[0]]
+            sha = verify(reference[1])
         except KeyError:
-            print(self._get_target_use_message())
+            print(self._get_reference_use_message())
             raise
         return sha
 
-    def _get_target_use_message(self):
-        """Print a use message if the user passed an invalid target."""
+    def _get_reference_use_message(self):
+        """Print a use message if the user passed an invalid reference."""
         return colored(
-            "\nInvalid target: targets can be defined with a SHA, branch " \
+            "\nInvalid reference: refs can be defined with a SHA, branch " \
             "name (local or remote) or tag\nas shown " \
             "in the following examples:\nsha: 8d54s23a" \
             "\nbranch: my_branch\nbranch: remote/master\ntag: my_tag\n",
             "yellow")
 
-    def _switch_to_target(self, target_branch_name, target_sha):
-        """Clean working directory and check out the target branch.
+    def _switch_to_ref(self, ref_branch_name, ref_sha):
+        """Clean working directory and check out the reference branch.
 
-        The target branch is created during the checkout operation.
+        The reference branch is created during the checkout operation.
         SIGINT is temporarily blocked while performing the git operations to
         avoid corrupting the working directory.
         """
@@ -283,14 +281,14 @@ class GitHandler:
         signal.pthread_sigmask(signal.SIG_BLOCK, {signal.SIGINT})
         # Clean working directory
         self.reset()
-        # Change to target directory using a new branch
-        self.checkout_new_branch(target_branch_name, target_sha)
+        # Change to the reference directory using a new branch
+        self.checkout_new_branch(ref_branch_name, ref_sha)
         signal.pthread_sigmask(signal.SIG_UNBLOCK, {signal.SIGINT})
 
     def _run_experiment(self, exp_args):
         """Call method run_experiment at garage.misc.instrument.
 
-        The git target is removed from the dictionary of arguments passed to
+        The git reference is removed from the dictionary of arguments passed to
         run_experiment, and the key arguments are updated directly into the
         run_experiment arguments.
 
@@ -298,14 +296,14 @@ class GitHandler:
         ----------
         - exp_args: it's a dictionary of arguments obtained from the function
             run_experiment at garage.misc.instrument, that will be passed to
-            the experiment once the target is checked out.
+            the experiment once the reference is checked out.
 
         """
         # Imports are here to avoid circular dependencies within garage.misc
         import garage.misc.instrument
         from garage.misc import instrument
-        if "git_target" in exp_args:
-            exp_args.pop("git_target")
+        if "git_ref" in exp_args:
+            exp_args.pop("git_ref")
         if "kwargs" in exp_args:
             kwargs = exp_args["kwargs"]
             exp_args.pop("kwargs")
@@ -314,7 +312,7 @@ class GitHandler:
         instrument.run_experiment(**exp_args)
 
     def _restore_working_dir(self,
-                             target_branch_name,
+                             ref_branch_name,
                              stash_sha="",
                              branch_name="",
                              restore_sha=""):
@@ -332,5 +330,5 @@ class GitHandler:
             self.reset(restore_sha)
         if stash_sha:
             self.repo.git.stash("apply", stash_sha)
-        self.delete_branch(target_branch_name)
+        self.delete_branch(ref_branch_name)
         signal.pthread_sigmask(signal.SIG_UNBLOCK, {signal.SIGINT})

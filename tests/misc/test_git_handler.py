@@ -78,7 +78,7 @@ def test_branch_sha():
     verify_branch(local_branch, True, git_handler)
     git_handler.delete_branch(local_branch)
 
-    # Create a local branch in a specific target and verify its SHA
+    # Create a local branch in a specific reference and verify its SHA
     sha_on_master = "5c5f63674fe6a39125f0bca1e35a01e2a53f6637"
     local_branch = "branch_" + time_str()
     git_handler.create_branch(local_branch, sha_on_master)
@@ -133,7 +133,7 @@ def test_tag_sha():
     invalid_tag = "tag_" + time_str()
     verify_tag(invalid_tag, False, git_handler)
 
-    # Create a tag in a specific target and verify its SHA
+    # Create a tag in a specific reference and verify its SHA
     tag_name = "tag_" + time_str()
     sha_on_master = "5378034533a47dad101c6f60e628a64442b439ed"
     git_handler.create_tag(tag_name, sha_on_master)
@@ -170,49 +170,49 @@ def test_sha():
     assert fake_sha, ("The SHA returned by get_sha() is unexpected")
 
 
-def test_verify_target():
+def test_verify_reference():
     git_handler = GitHandler()
 
-    # Verify that an invalid key in the passed target is invalid
+    # Verify that an invalid key in the passed reference is invalid
     key_value = "invalid_key: invalid_value"
     invalid_key = False
     try:
-        git_handler._verify_target(key_value)
+        git_handler._verify_reference(key_value)
     except KeyError:
         invalid_key = True
     assert invalid_key, "The key-value %s must be invalid" % key_value
 
     # Verify that a tag, branch and sha do not exist using a key-value as input
     tag_name = "tag_" + time_str()
-    invalid_target = False
+    invalid_reference = False
     try:
-        git_handler._verify_target("tag: " + tag_name)
+        git_handler._verify_reference("tag: " + tag_name)
     except BadName:
-        invalid_target = True
-    assert invalid_target, "The tag %s must be invalid" % tag_name
+        invalid_reference = True
+    assert invalid_reference, "The tag %s must be invalid" % tag_name
 
     branch_name = "branch_" + time_str()
-    invalid_target = False
+    invalid_reference = False
     try:
-        git_handler._verify_target("branch: " + branch_name)
+        git_handler._verify_reference("branch: " + branch_name)
     except BadName:
-        invalid_target = True
-    assert invalid_target, "The branch %s must be invalid" % branch_name
+        invalid_reference = True
+    assert invalid_reference, "The branch %s must be invalid" % branch_name
 
     invalid_sha = "5730843353" + time_str()
-    invalid_target = False
+    invalid_reference = False
     try:
-        git_handler._verify_target("sha: " + invalid_sha)
+        git_handler._verify_reference("sha: " + invalid_sha)
     except BadName:
-        invalid_target = True
-    assert invalid_target, "The sha %s must be invalid" % invalid_sha
+        invalid_reference = True
+    assert invalid_reference, "The sha %s must be invalid" % invalid_sha
 
     # Create tag and branch on a specific SHA in repository, and then verify
     # the key-value for the tag, branch and sha
     tag_name = "tag_" + time_str()
     sha_on_master = "5378034533a47dad101c6f60e628a64442b439ed"
     git_handler.create_tag(tag_name, sha_on_master)
-    sha_retrieved = git_handler._verify_target("tag: " + tag_name)
+    sha_retrieved = git_handler._verify_reference("tag: " + tag_name)
     assert sha_on_master == sha_retrieved, \
             "The tag %s must be valid" % tag_name
     git_handler.delete_tag(tag_name)
@@ -220,40 +220,39 @@ def test_verify_target():
     branch_name = "branch_" + time_str()
     sha_on_master = "5378034533a47dad101c6f60e628a64442b439ed"
     git_handler.create_branch(branch_name, sha_on_master)
-    sha_retrieved = git_handler._verify_target("branch: " + branch_name)
+    sha_retrieved = git_handler._verify_reference("branch: " + branch_name)
     assert sha_on_master == sha_retrieved, \
             "The branch %s must be invalid" % branch_name
     git_handler.delete_branch(branch_name)
 
     sha_on_master = "5378034533a47dad101c6f60e628a64442b439ed"
-    sha_retrieved = git_handler._verify_target("sha: " + sha_on_master)
+    sha_retrieved = git_handler._verify_reference("sha: " + sha_on_master)
     assert sha_on_master == sha_retrieved, \
             "The SHA %s must be invalid" % sha_on_master
 
 
 def test_switch_and_restore():
-    # This test is basically the same as the method run_experiment_on_target
+    # This test is basically the same as the method run_experiment_on_ref
     # except for calling run_experiment to avoid running any training.
     git_handler = GitHandler()
     sha_on_master = "5378034533a47dad101c6f60e628a64442b439ed"
-    target_sha = git_handler._verify_target("sha: " + sha_on_master)
+    ref_sha = git_handler._verify_reference("sha: " + sha_on_master)
     restore_sha = git_handler.get_sha()
     stash_sha = git_handler.create_stash()
     branch_name = git_handler.get_current_branch_name()
-    target_branch_name = "run_exp_on_" + time_str()
+    ref_branch_name = "run_exp_on_" + time_str()
     try:
-        git_handler._switch_to_target(target_branch_name, target_sha)
+        git_handler._switch_to_ref(ref_branch_name, ref_sha)
         current_sha = git_handler.get_sha()
         # Once the working directory is switched, it's asserted that the HEAD
-        # is at the target based on the SHA
-        assert current_sha == target_sha, \
-                "The working area must be at SHA %s" % target_sha
+        # is at the reference based on the SHA
+        assert current_sha == ref_sha, \
+                "The working area must be at SHA %s" % ref_sha
     except BaseException:
         print(colored(
-            "If the working area is damaged after " \
-            "an unexpected error while trying to\nswitch to the " \
-            "target in the repository, run the following command(s) " \
-            "to\nrestore it:", "yellow"))
+            "If the working area is not correctly restored after an " \
+            "unexpected error, run\nthe following command(s) to restore " \
+            "it:", "yellow"))
         if branch_name:
             print(colored("$ git checkout %s" % (branch_name), "yellow"))
         else:
@@ -263,7 +262,7 @@ def test_switch_and_restore():
             print(colored("$ git stash apply %s" % (stash_sha), "yellow"))
         raise
     finally:
-        git_handler._restore_working_dir(target_branch_name, stash_sha,
+        git_handler._restore_working_dir(ref_branch_name, stash_sha,
                                          branch_name, restore_sha)
         current_sha = git_handler.get_sha()
         # Once the working directory is restored, it's asserted that the HEAD

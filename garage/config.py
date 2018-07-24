@@ -56,8 +56,6 @@ FAST_CODE_SYNC = True
 
 FAST_CODE_SYNC_IGNORES = [".git", "data", ".pods"]
 
-GIT_REPO_URL = "https://github.com/rlworkgroup/garage.git"
-
 KUBE_DEFAULT_RESOURCES = {
     "requests": {
         "cpu": 0.8,
