@@ -8,7 +8,6 @@ dependencies:
     - mkl-service=1.1.2
     - mkl==2017.0.4
     - numpy==1.14.5
-    - scipy
     # dev dependencies below this line
     - pre_commit
     - pip:
@@ -18,6 +17,10 @@ dependencies:
         - Box2D>=2.3.2
         - cached_property
         - cloudpickle
+        # dm_control throws an error during install about not being able to
+        # find a build dependency (absl-py). Later pip executes the `install`
+        # command again and the install succeeds because absl-py has been
+        # installed. This is stupid, but harmless.
         - git+https://github.com/deepmind/dm_control.git#egg=dm_control
         - flask
         - gym[all]==0.10.5
@@ -43,6 +46,7 @@ dependencies:
         - pyprind
         - python-dateutil
         - pyzmq
+        - scipy
         - tensorboard
         - git+https://github.com/Theano/Theano.git@3b51141a46affe9505f0e3f283020820b2c0251e#egg=theano
         # dev dependencies below this line
