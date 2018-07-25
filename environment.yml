@@ -48,7 +48,7 @@ dependencies:
         - pyzmq
         - scipy
         - tensorboard
-        - git+https://github.com/Theano/Theano.git@3b51141a46affe9505f0e3f283020820b2c0251e#egg=theano
+        - Theano==1.0.2
         # dev dependencies below this line
         - git+https://github.com/openai/baselines.git@f2729693253c0ef4d4086231d36e0a4307ec1cb3#egg=baselines
         - flake8
