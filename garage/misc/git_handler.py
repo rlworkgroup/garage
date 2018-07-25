@@ -46,11 +46,6 @@ class GitHandler:
         assert remote_found, colored("The garage remote couldn't be found " \
                                      "in the git working directory %s" %
                                      self.work_dir, "red")
-        assert not self.repo.git.diff(diff_filter="U"), \
-                colored("Unmerged paths were found, so the working " \
-                        "directory could be in the middle of a merge " \
-                        "conflict. Fix the conflicts first before running " \
-                        "the experiment.", "red")
 
     def _check_url(self, repo_url):
         """Return true if one of the remotes points to the repository URL."""
@@ -61,6 +56,13 @@ class GitHandler:
                     valid_url = True
                     break
         return valid_url
+
+    def _check_unmerged_paths(self):
+        assert not self.repo.git.diff(diff_filter="U"), \
+                colored("Unmerged paths were found, so the working " \
+                        "directory could be in the middle of a merge " \
+                        "conflict. Fix the conflicts first before running " \
+                        "the experiment.", "red")
 
     def create_branch(self, branch_name, ref="HEAD"):
         """Create a branch on the reference."""
@@ -298,6 +300,7 @@ class GitHandler:
             the experiment once the reference is checked out.
 
         """
+        self._check_unmerged_paths()
         # Imports are here to avoid circular dependencies within garage.misc
         import garage.misc.instrument
         from garage.misc import instrument
