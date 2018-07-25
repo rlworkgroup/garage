@@ -13,6 +13,7 @@ import dateutil.tz
 import joblib
 
 from garage import config
+from garage.misc import gcs_utils
 from garage.misc.ext import is_iterable
 from garage.misc.ext import set_seed
 from garage.misc.instrument import concretize
@@ -110,10 +111,24 @@ def run_experiment(argv):
         help='Pickled data for variant configuration')
     parser.add_argument(
         '--use_cloudpickle', type=ast.literal_eval, default=False)
+    parser.add_argument(
+        '--gcs_bucket',
+        type=str,
+        default=None,
+        help='Bucket name in Google Cloud Storage to save the result files')
+    parser.add_argument(
+        '--gcs_path_in_bucket',
+        type=str,
+        default="",
+        help='Path to save the files in the Google Cloud Storage bucket')
 
     args = parser.parse_args(argv[1:])
 
     assert (os.environ.get("JOBLIB_START_METHOD", None) == "forkserver")
+
+    if args.gcs_bucket:
+        gcs_utils.check_gcs_config(args.gcs_bucket)
+
     if args.seed is not None:
         set_seed(args.seed)
 
@@ -185,6 +200,10 @@ def run_experiment(argv):
     logger.remove_tabular_output(tabular_log_file)
     logger.remove_text_output(text_log_file)
     logger.pop_prefix()
+
+    if args.gcs_bucket:
+        gcs_utils.upload_to_gcs(log_dir, args.gcs_bucket,
+                                args.gcs_path_in_bucket)
 
 
 if __name__ == "__main__":
