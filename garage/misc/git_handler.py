@@ -7,8 +7,8 @@ from git import Repo
 from git.exc import BadName
 from termcolor import colored
 
+from garage.config import GIT_REPO_URL
 from garage.config import PROJECT_PATH
-from garage.config_personal import GIT_REPO_URL
 
 
 class GitHandler:
