@@ -3,10 +3,6 @@ We welcome all contributions to garage.
 
 Use this guide to prepare your contribution.
 
-# Post-setup instructions
-After activating your conda environment (e.g. `conda activate garage`), make sure you run `pre-commit install` to install the pre-commit hooks to your repository.
-This will help streamline the pull request process by catching basic problems locally before they are checked by the CI.
-
 ## Pull requests
 All contributions to the garage codebase are submitted via a GitHub pull request.
 
@@ -19,6 +15,19 @@ To be submitted, a pull request must satisfy the following criteria:
 1. Receives approval from a maintainer (distinct from the contributor review)
 
 These criteria may be satisfied in any order, but in practice your PR is unlikely to get attention from contributors until 1-3 are satisfied. Maintainer attention is a scarce resource, so generally maintainers wait for a review from a non-maintainer contributor before reviewing your PR.
+
+## Preparing your repo to make contributions
+After following the standard garage setup steps, make sure to run to install the pre-commit hooks into your repository. pre-commit helps streamline the pull request process by catching basic problems locally before they are checked by the CI.
+
+To setup pre-commit in your repo:
+```sh
+conda activate garage
+pre-commit install -t pre-commit
+pre-commit install -t pre-push
+pre-commit install -t commit-msg
+```
+
+Once you've installed pre-commit, it will automatically run every time you type `git commit`.
 
 ## Code style
 The Python code in garage conforms to the [PEP8](https://www.python.org/dev/peps/pep-0008/) standard. Please read and understand it in detail.
@@ -39,6 +48,15 @@ YAML files should use 2 spaces for indentation.
 * Use Unix-style line endings
 * Trim trailing whitespace from all lines
 * All files should end in a single newline
+
+## Testing
+garage maintains a test suite to ensure that future changes do not break existing functionality. We use TravisCI to run a unit test suite on every pull request before merging.
+
+* New functionality should always include unit tests and, where appropriate, integration tests.
+* PRs fixing bugs which were not caught by an existing test should always include a test replicating the bug
+
+### Creating Tests
+Add a test for your functionality under the `garage/tests/` directory. Make sure your test filename is prepended with test(i.e. `test_<filename>.py`) to ensure the test will be run in the CI.
 
 ## Git
 
@@ -65,16 +83,6 @@ In short:
 * All commit messages have an informative subject line of 50 characters
 * A newline between the subject and the body
 * If relevant, an informative body which is wrapped to 72 characters
-
-garage currently uses [pre-commit](https://pre-commit.com/#usage), a multi-language package manager for pre-commit hooks, and its out-of-the-box [hooks](https://github.com/pre-commit/pre-commit-hooks).
-To setup pre-commit on your local machine:
-```sh
-pre-commit install -t pre-commit
-pre-commit install -t pre-push
-pre-commit install -t commit-msg
-```
-
-Once you've installed pre-commit, it will automatically run every time you type `git commit`.
 
 ### Git recipes
 
@@ -117,9 +125,3 @@ git rebase master
 # you may need to manually reconcile merge conflicts here. Follow git's instructions.
 git push -f origin myfeaturebranch # -f is frequently necessary because rebases rewrite history
 ```
-
-## Testing
-We want to maintain testable code to ensure that future changes do not break existing functionality.
-
-### Creating Tests
-Add a test for your functionality under the `garage/tests/` directory. Make sure your test filename is prepended with test(i.e. `test_<filename>.py`) to ensure the test will be run in the CI.
