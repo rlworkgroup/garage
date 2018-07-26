@@ -31,6 +31,7 @@ class ContinuousMLPPolicy(Policy, Serializable, LayersPowered):
                  name="ContinuousMLPPolicy",
                  hidden_nonlinearity=tf.nn.relu,
                  output_nonlinearity=tf.nn.tanh,
+                 input_include_goal=False,
                  bn=False):
         """
         Initialize class with multiple attributes.
@@ -53,7 +54,14 @@ class ContinuousMLPPolicy(Policy, Serializable, LayersPowered):
 
         self.name = name
         self._env_spec = env_spec
-        self._obs_dim = flat_dim(env_spec.observation_space)
+        if input_include_goal:
+            obs_dim = flat_dim(
+                env_spec.observation_space.spaces["observation"])
+            goal_dim = flat_dim(
+                env_spec.observation_space.spaces["desired_goal"])
+            self._obs_dim = obs_dim + goal_dim
+        else:
+            self._obs_dim = flat_dim(env_spec.observation_space)
         self._action_dim = flat_dim(env_spec.action_space)
         self._action_bound = env_spec.action_space.high
         self._hidden_sizes = hidden_sizes

@@ -7,6 +7,7 @@ import pyprind
 import theano.tensor as TT
 
 from garage.algos import RLAlgorithm
+from garage.envs.util import configure_dims, dims_to_shapes
 from garage.misc import ext
 from garage.misc import special
 import garage.misc.logger as logger
@@ -97,6 +98,7 @@ class DDPG(RLAlgorithm):
         :return:
         """
         self.env = env
+        self.input_dims = configure_dims(env)
         self.policy = policy
         self.qf = qf
         self.es = es
@@ -150,10 +152,10 @@ class DDPG(RLAlgorithm):
     @overrides
     def train(self):
         # This seems like a rather sequential method
+        input_shapes = dims_to_shapes(self.input_dims)
         pool = ReplayBuffer(
+            buffer_shapes=input_shapes,
             max_buffer_size=self.replay_pool_size,
-            observation_dim=self.env.observation_space.flat_dim,
-            action_dim=self.env.action_space.flat_dim,
         )
         self.start_worker()
 
@@ -193,20 +195,26 @@ class DDPG(RLAlgorithm):
                     # only include the terminal transition in this case if the
                     # flag was set
                     if self.include_horizon_terminal_transitions:
-                        pool.add_transition(observation, action,
-                                            reward * self.scale_reward,
-                                            terminal, next_observation)
+                        pool.add_transition(
+                            observation=observation,
+                            action=action,
+                            reward=reward * self.scale_reward,
+                            terminal=terminal,
+                            next_observation=next_observation)
                 else:
-                    pool.add_transition(observation, action,
-                                        reward * self.scale_reward, terminal,
-                                        next_observation)
+                    pool.add_transition(
+                        observation=observation,
+                        action=action,
+                        reward=reward * self.scale_reward,
+                        terminal=terminal,
+                        next_observation=next_observation)
 
                 observation = next_observation
 
                 if pool.size >= self.min_pool_size:
                     for update_itr in range(self.n_updates_per_sample):
                         # Train policy
-                        batch = pool.random_sample(self.batch_size)
+                        batch = pool.sample(self.batch_size)
                         self.do_training(itr, batch)
                     sample_policy.set_param_values(
                         self.policy.get_param_values())
@@ -291,8 +299,11 @@ class DDPG(RLAlgorithm):
     def do_training(self, itr, batch):
 
         obs, actions, rewards, next_obs, terminals = ext.extract(
-            batch, "observations", "actions", "rewards", "next_observations",
-            "terminals")
+            batch, "observation", "action", "reward", "next_observation",
+            "terminal")
+
+        rewards = rewards.reshape(-1, )
+        terminals = terminals.reshape(-1, )
 
         # compute the on-policy y values
         target_qf = self.opt_info["target_qf"]

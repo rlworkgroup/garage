@@ -22,6 +22,7 @@ class ContinuousMLPQFunction(QFunction, Serializable, LayersPowered):
                  hidden_nonlinearity=tf.nn.relu,
                  action_merge_layer=-2,
                  output_nonlinearity=None,
+                 input_include_goal=False,
                  bn=False):
         """
         Initialize class with multiple attributes.
@@ -44,6 +45,15 @@ class ContinuousMLPQFunction(QFunction, Serializable, LayersPowered):
 
         self.name = name
         self._env_spec = env_spec
+        if input_include_goal:
+            obs_dim = flat_dim(
+                env_spec.observation_space.spaces["observation"])
+            goal_dim = flat_dim(
+                env_spec.observation_space.spaces["desired_goal"])
+            self._obs_dim = obs_dim + goal_dim
+        else:
+            self._obs_dim = flat_dim(env_spec.observation_space)
+        self._action_dim = flat_dim(env_spec.action_space)
         self._hidden_sizes = hidden_sizes
         self._hidden_nonlinearity = hidden_nonlinearity
         self._action_merge_layer = action_merge_layer
@@ -62,12 +72,9 @@ class ContinuousMLPQFunction(QFunction, Serializable, LayersPowered):
         """
         with tf.variable_scope(
                 self.name, reuse=reuse, custom_getter=custom_getter):
-            l_obs = L.InputLayer(
-                shape=(None, flat_dim(self._env_spec.observation_space)),
-                name="obs")
+            l_obs = L.InputLayer(shape=(None, self._obs_dim), name="obs")
             l_action = L.InputLayer(
-                shape=(None, flat_dim(self._env_spec.action_space)),
-                name="actions")
+                shape=(None, self._action_dim), name="actions")
 
             n_layers = len(self._hidden_sizes) + 1
 
