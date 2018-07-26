@@ -47,3 +47,7 @@ AWS_ACCESS_KEY = os.environ.get("AWS_ACCESS_KEY", "<insert aws key>")
 AWS_ACCESS_SECRET = os.environ.get("AWS_ACCESS_SECRET", "<insert aws secret>")
 
 GCS_CREDENTIAL_PATH = "<insert file path to key>"
+
+GCS_BUCKET = "<insert bucket to drop experiment logs and checkpoints>"
+
+GCS_PATH_IN_BUCKET = ""

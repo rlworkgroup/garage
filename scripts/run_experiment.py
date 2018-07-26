@@ -112,22 +112,18 @@ def run_experiment(argv):
     parser.add_argument(
         '--use_cloudpickle', type=ast.literal_eval, default=False)
     parser.add_argument(
-        '--gcs_bucket',
-        type=str,
-        default=None,
-        help='Bucket name in Google Cloud Storage to save the result files')
-    parser.add_argument(
-        '--gcs_path_in_bucket',
-        type=str,
-        default="",
-        help='Path to save the files in the Google Cloud Storage bucket')
+        '--save_in_gcs_bucket',
+        type=bool,
+        default=False,
+        help='If True, the logs and checkpoints of the experiment are saved ' \
+        'in the bucket set in config_personal.py')
 
     args = parser.parse_args(argv[1:])
 
     assert (os.environ.get("JOBLIB_START_METHOD", None) == "forkserver")
 
-    if args.gcs_bucket:
-        gcs_utils.check_gcs_config(args.gcs_bucket)
+    if args.save_in_gcs_bucket:
+        gcs_utils.check_gcs_config()
 
     if args.seed is not None:
         set_seed(args.seed)
@@ -201,9 +197,9 @@ def run_experiment(argv):
     logger.remove_text_output(text_log_file)
     logger.pop_prefix()
 
-    if args.gcs_bucket:
-        gcs_utils.upload_to_gcs(log_dir, args.gcs_bucket,
-                                args.gcs_path_in_bucket)
+    if args.save_in_gcs_bucket:
+        gcs_utils.upload_to_gcs(
+            log_dir, path_in_bucket=config.GCS_PATH_IN_BUCKET + args.exp_name)
 
 
 if __name__ == "__main__":
