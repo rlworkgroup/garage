@@ -25,7 +25,7 @@ before_install:
     }' | sudo tee /etc/docker/daemon.json
   - sudo service docker restart
   # prevent garage from exiting on config
-  - cp garage/config.py garage/config_personal.py
+  - cp garage/config_personal_template.py garage/config_personal.py
   # Pull cached docker image
   - docker pull rlworkgroup/garage-ci:latest
 
