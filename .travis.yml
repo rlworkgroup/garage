@@ -9,7 +9,7 @@ addons:
       - docker-ce
 
 python:
-  - "3.5.2"
+  - "3.6.6"
 
 git:
   depth: false
