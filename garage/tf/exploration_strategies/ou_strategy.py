@@ -77,7 +77,7 @@ class OUStrategy(ExplorationStrategy):
             An action with noise explored by OUStrategy.
 
         """
-        action = policy.get_action(observation)
+        action, _ = policy.get_action(observation)
         ou_state = self.simulate()
         return np.clip(action + ou_state, self.action_space.low,
                        self.action_space.high)
