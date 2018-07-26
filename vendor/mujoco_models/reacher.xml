@@ -1,5 +1,8 @@
 <mujoco>
   <compiler angle="radian" meshdir="meshes/" />
+  <option timestep="0.002">
+  	<flag warmstart="enable"></flag>
+  </option>
   <asset>
     <include file="shared_assets.xml"></include>
   </asset>

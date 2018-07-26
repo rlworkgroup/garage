@@ -9,9 +9,9 @@ from garage.envs.mujoco import MujocoEnv
 from garage.misc.overrides import overrides
 
 
-class PickAndPlaceEnv(MujocoEnv, Serializable):
+class PnpHerEnv(MujocoEnv, Serializable):
 
-    FILE = 'pick_and_place.xml'
+    FILE = 'pick_and_place_eric.xml'
 
     def __init__(self,
                  initial_goal=None,
@@ -45,7 +45,7 @@ class PickAndPlaceEnv(MujocoEnv, Serializable):
         self._control_method = control_method
         self._goal = self._initial_goal
         self._grasped = False
-        super(PickAndPlaceEnv, self).__init__(*args, **kwargs)
+        super(PnpHerEnv, self).__init__(*args, **kwargs)
         self.env_setup(self._initial_qpos)
         self._mj_viewer = mujoco_py.MjViewer(self.sim)
         self.len = 0
@@ -252,7 +252,7 @@ class PickAndPlaceEnv(MujocoEnv, Serializable):
     @property
     def action_space(self):
         if self._control_method == 'torque_control':
-            action_space = super(PickAndPlaceEnv, self).action_space()
+            action_space = super(PnpHerEnv, self).action_space()
         elif self._control_method == 'position_control':
             action_space = Box(
                 np.array([-1, -1, -1, -100]),
@@ -272,7 +272,7 @@ class PickAndPlaceEnv(MujocoEnv, Serializable):
         self.rew = 0
         self._reset_target_visualization()
         self._grasped_time = 0
-        return super(PickAndPlaceEnv, self).reset(init_state)
+        return super(PnpHerEnv, self).reset(init_state)
 
     def log_diagnostics(self, paths):
         """TODO: Logging."""
