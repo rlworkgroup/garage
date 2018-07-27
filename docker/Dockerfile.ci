@@ -101,7 +101,9 @@ RUN /bin/bash -c "source activate garage" && \
   make -j"$(nproc)" && \
   make install && \ 
   pip install /root/roboschool && \
-  rm -rf /root/roboschool /root/bullet3
+  rm -rf /root/roboschool /root/bullet3 && \
+  ls /opt/conda/envs/garage/lib/python3.6/site-packages/roboschool/ && \
+  ls /opt/conda/envs/garage/lib/python3.6/site-packages/
 ENV LD_LIBRARY_PATH=/opt/conda/envs/garage/lib/python3.6/site-packages/roboschool/:$LD_LIBRARY_PATH 
 
 # Extras
