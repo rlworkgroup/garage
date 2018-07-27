@@ -57,15 +57,16 @@ class PenaltyLbfgsOptimizer(Serializable):
         :param inputs: A list of symbolic variables as inputs
         :return: No return value.
         """
-        self._target = target
-        self._max_constraint_val = constraint_value
-        self._constraint_name = constraint_name
         params = target.get_params(trainable=True)
         with tf.name_scope(name, "PenaltyLbfgsOptimizer",
                            [leq_constraint, loss, params]):
             constraint_term, constraint_value = leq_constraint
             penalty_var = tf.placeholder(tf.float32, tuple(), name="penalty")
             penalized_loss = loss + penalty_var * constraint_term
+
+            self._target = target
+            self._max_constraint_val = constraint_value
+            self._constraint_name = constraint_name
 
             def get_opt_output():
                 with tf.name_scope(
@@ -132,8 +133,8 @@ class PenaltyLbfgsOptimizer(Serializable):
                     x0=cur_params,
                     maxiter=self._max_opt_itr)
 
-                _, try_loss, try_constraint_val = f_penalized_loss(
-                    *(inputs + (try_penalty, )))
+                _, try_loss, try_constraint_val = f_penalized_loss(*(
+                    inputs + (try_penalty, )))
 
                 logger.log('penalty %f => loss %f, %s %f' %
                            (try_penalty, try_loss, self._constraint_name,

@@ -48,7 +48,7 @@ class BernoulliMLPRegressor(LayersPowered, Serializable):
         with tf.variable_scope(name):
 
             if optimizer is None:
-                optimizer = LbfgsOptimizer(name="optimizer")
+                optimizer = LbfgsOptimizer()
             if tr_optimizer is None:
                 tr_optimizer = ConjugateGradientOptimizer()
 
@@ -145,7 +145,7 @@ class BernoulliMLPRegressor(LayersPowered, Serializable):
             optimizer = self.optimizer
         loss_before = optimizer.loss(inputs)
         if self.name:
-            prefix = self.name + "_"
+            prefix = self.name + "/"
         else:
             prefix = ""
         logger.record_tabular(prefix + 'LossBefore', loss_before)
