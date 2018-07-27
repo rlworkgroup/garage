@@ -35,6 +35,14 @@ RUN \
     libjpeg-dev \
     swig \
     libsdl2-dev \
+    # OpenAI Roboschool
+    pkg-config \
+    qtbase5-dev \
+    libqt5opengl5-dev \
+    libpython3.5-dev \
+    libassimp-dev \
+    libboost-python-dev \
+    libtinyxml-dev \
     # OpenAI baselines
     libopenmpi-dev \
     openmpi-bin && \
@@ -76,6 +84,26 @@ RUN conda update -q -y conda
 COPY environment.yml /root/code/garage/environment.yml
 RUN conda env create -f /root/code/garage/environment.yml && \
   rm -rf /opt/conda/pkgs/*
+
+# Roboschool in conda
+RUN /bin/bash -c '\
+  source activate garage && \
+  export PKG_CONFIG_PATH=${CONDA_PREFIX}/lib/pkgconfig:${PKG_CONFIG_PATH} && \
+  export LD_LIBRARY_PATH=${CONDA_PREFIX}/lib/python3.6/site-packages/roboschool/:$LD_LIBRARY_PATH && \
+  git clone --depth 1 https://github.com/openai/roboschool.git /root/roboschool && \
+  git clone --depth 1 https://github.com/olegklimov/bullet3 -b roboschool_self_collision /root/bullet3 && \
+  mkdir /root/bullet3/build && \
+  cd /root/bullet3/build && \
+  cmake -DBUILD_SHARED_LIBS=ON -DUSE_DOUBLE_PRECISION=1 \
+      -DCMAKE_INSTALL_PREFIX:PATH="/root/roboschool/roboschool/cpp-household/bullet_local_install" \
+      -DBUILD_CPU_DEMOS=OFF -DBUILD_BULLET2_DEMOS=OFF -DBUILD_EXTRAS=OFF\
+      -DBUILD_UNIT_TESTS=OFF -DBUILD_CLSOCKET=OFF -DBUILD_ENET=OFF \
+      -DBUILD_OPENGL3_DEMOS=OFF .. && \
+  make -j"$(nproc)" && \
+  make install && \ 
+  pip install /root/roboschool && \
+  rm -rf /root/roboschool /root/bullet3
+ENV LD_LIBRARY_PATH=/opt/conda/envs/garage/lib/python3.6/site-packages/roboschool/:$LD_LIBRARY_PATH 
 
 # Extras
 # prevent pip from complaining about available upgrades
