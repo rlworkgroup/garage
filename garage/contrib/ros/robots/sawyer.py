@@ -1,5 +1,6 @@
 """Sawyer Interface."""
 
+from geometry_msgs.msg import Pose
 import gym
 from intera_core_msgs.msg import JointLimits
 import intera_interface
@@ -17,7 +18,9 @@ class Sawyer(Robot):
     def __init__(self,
                  initial_joint_pos,
                  moveit_group,
-                 control_mode='position'):
+                 without_gripper=False,
+                 control_mode='position',
+                 tip_name='right_hand'):
         """
         Sawyer class.
 
@@ -27,16 +30,22 @@ class Sawyer(Robot):
                         joints that user wants to control and observe.
         :param moveit_group: str
                         Use this to check safety
+        :param without_gripper: Bool
+                        If use gripper
         :param control_mode: string
                         robot control mode: 'position' or velocity
                         or effort
+        :param tip_name: string
+                        tip name
         """
         Robot.__init__(self)
         self._limb = intera_interface.Limb('right')
         self._gripper = intera_interface.Gripper()
         self._initial_joint_pos = initial_joint_pos
-        self._control_mode = control_mode
+        self.control_mode = control_mode
+        self._without_gripper = without_gripper
         self._used_joints = []
+        self._tip_name = tip_name
         for joint in initial_joint_pos:
             self._used_joints.append(joint)
         self._joint_limits = rospy.wait_for_message('/robot/joint_limits',
@@ -131,6 +140,7 @@ class Sawyer(Robot):
         gripper_avel = np.array(self._limb.endpoint_velocity()['angular'])
         gripper_force = np.array(self._limb.endpoint_effort()['force'])
         gripper_torque = np.array(self._limb.endpoint_effort()['torque'])
+        is_gripping = np.array([float(self._gripper.is_gripping())])
 
         # joint space
         robot_joint_angles = np.array(list(self._limb.joint_angles().values()))
@@ -142,7 +152,7 @@ class Sawyer(Robot):
         obs = np.concatenate(
             (gripper_pos, gripper_ori, gripper_lvel, gripper_avel,
              gripper_force, gripper_torque, robot_joint_angles,
-             robot_joint_velocities, robot_joint_efforts))
+             robot_joint_velocities, robot_joint_efforts, is_gripping))
         return obs
 
     @property
@@ -159,6 +169,21 @@ class Sawyer(Robot):
             shape=self.get_observation().shape,
             dtype=np.float32)
 
+    def ik_move(self, desired_pose):
+        """
+        Use it in task space control.
+
+        :param desired_pose: Pose
+                desired gripper pose
+        """
+        joint_angles = self._limb.ik_request(desired_pose, self._tip_name)
+        if joint_angles and self.safety_predict(joint_angles):
+            self._limb.set_joint_positions(joint_angles)
+        else:
+            rospy.logerr(
+                "No Joint Angles provided for move_to_joint_positions. Staying put."
+            )
+
     def send_command(self, commands):
         """
         Send command to sawyer.
@@ -168,20 +193,43 @@ class Sawyer(Robot):
         """
         action_space = self.action_space
         commands = np.clip(commands, action_space.low, action_space.high)
-        i = 0
-        joint_commands = {}
-        for joint in self._used_joints:
-            joint_commands[joint] = commands[i]
-            i += 1
 
-        if self._control_mode == 'position':
-            self._set_limb_joint_positions(joint_commands)
-        elif self._control_mode == 'velocity':
-            self._set_limb_joint_velocities(joint_commands)
-        elif self._control_mode == 'effort':
-            self._set_limb_joint_torques(joint_commands)
+        if self.control_mode == 'gripper_position':
+            desired_pose = Pose()
+            current_pose = self.gripper_pose
+            desired_pose.orientation.w = current_pose['orientation'].w
+            desired_pose.orientation.x = current_pose['orientation'].x
+            desired_pose.orientation.y = current_pose['orientation'].y
+            desired_pose.orientation.z = current_pose['orientation'].z
+            desired_pose.position.x = current_pose['position'].x + commands[0]
+            desired_pose.position.y = current_pose['position'].y + commands[1]
+            desired_pose.position.z = current_pose['position'].z + commands[2]
+            self.ik_move(desired_pose)
+        else:
+            i = 0
+            joint_commands = {}
+            for joint in self._used_joints:
+                joint_commands[joint] = commands[i]
+                i += 1
 
-        self._set_gripper_position(commands[7])
+            if self.control_mode == 'position':
+                self._set_limb_joint_positions(joint_commands)
+            elif self.control_mode == 'velocity':
+                self._set_limb_joint_velocities(joint_commands)
+            elif self.control_mode == 'effort':
+                self._set_limb_joint_torques(joint_commands)
+
+        if not self._without_gripper:
+            if self.control_mode == 'gripper_position':
+                idx = 4
+            else:
+                idx = 7
+            if commands[idx] > 50:
+                self._gripper.open()
+                rospy.sleep(0.5)
+            else:
+                self._gripper.close()
+                rospy.sleep(0.5)
 
     @property
     def gripper_pose(self):
@@ -201,31 +249,44 @@ class Sawyer(Robot):
         """
         lower_bounds = np.array([])
         upper_bounds = np.array([])
-        for joint in self._used_joints:
-            joint_idx = self._joint_limits.joint_names.index(joint)
-            if self._control_mode == 'position':
-                lower_bounds = np.concatenate(
-                    (lower_bounds,
-                     np.array(self._joint_limits.position_lower[
-                         joint_idx:joint_idx + 1])))
-                upper_bounds = np.concatenate(
-                    (upper_bounds,
-                     np.array(self._joint_limits.position_upper[
-                         joint_idx:joint_idx + 1])))
-            elif self._control_mode == 'velocity':
-                velocity_limit = np.array(
-                    self._joint_limits.velocity[joint_idx:joint_idx + 1]) * 0.1
-                lower_bounds = np.concatenate((lower_bounds, -velocity_limit))
-                upper_bounds = np.concatenate((upper_bounds, velocity_limit))
-            elif self._control_mode == 'effort':
-                effort_limit = np.array(
-                    self._joint_limits.effort[joint_idx:joint_idx + 1])
-                lower_bounds = np.concatenate((lower_bounds, -effort_limit))
-                upper_bounds = np.concatenate((upper_bounds, effort_limit))
-            else:
-                raise ValueError(
-                    'Control mode %s is not known!' % self._control_mode)
-        return gym.spaces.Box(
-            np.concatenate((lower_bounds, np.array([0]))),
-            np.concatenate((upper_bounds, np.array([100]))),
-            dtype=np.float32)
+
+        if self.control_mode == 'gripper_position':
+            lower_bounds = np.repeat(-0.03, 3)
+            upper_bounds = np.repeat(0.03, 3)
+        else:
+            for joint in self._used_joints:
+                joint_idx = self._joint_limits.joint_names.index(joint)
+                if self.control_mode == 'position':
+                    lower_bounds = np.concatenate(
+                        (lower_bounds,
+                         np.array(self._joint_limits.position_lower[
+                             joint_idx:joint_idx + 1])))
+                    upper_bounds = np.concatenate(
+                        (upper_bounds,
+                         np.array(self._joint_limits.position_upper[
+                             joint_idx:joint_idx + 1])))
+                elif self.control_mode == 'velocity':
+                    velocity_limit = np.array(
+                        self._joint_limits.velocity[joint_idx:joint_idx +
+                                                    1]) * 0.1
+                    lower_bounds = np.concatenate((lower_bounds,
+                                                   -velocity_limit))
+                    upper_bounds = np.concatenate((upper_bounds,
+                                                   velocity_limit))
+                elif self.control_mode == 'effort':
+                    effort_limit = np.array(
+                        self._joint_limits.effort[joint_idx:joint_idx + 1])
+                    lower_bounds = np.concatenate((lower_bounds,
+                                                   -effort_limit))
+                    upper_bounds = np.concatenate((upper_bounds, effort_limit))
+                else:
+                    raise ValueError(
+                        'Control mode %s is not known!' % self.control_mode)
+
+        if self._without_gripper:
+            return gym.spaces.Box(lower_bounds, upper_bounds, dtype=np.float32)
+        else:
+            return gym.spaces.Box(
+                np.concatenate((lower_bounds, np.array([0]))),
+                np.concatenate((upper_bounds, np.array([100]))),
+                dtype=np.float32)

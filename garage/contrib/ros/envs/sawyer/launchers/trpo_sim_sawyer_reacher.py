@@ -8,10 +8,11 @@ import rospy
 
 from garage.baselines import LinearFeatureBaseline
 from garage.contrib.ros.envs.sawyer import ReacherEnv
+from garage.envs import normalize
 from garage.misc.instrument import run_experiment
-from garage.theano.algos import TRPO
-from garage.theano.envs import TheanoEnv
-from garage.theano.policies import GaussianMLPPolicy
+from garage.tf.algos import TRPO
+from garage.tf.envs import TfEnv
+from garage.tf.policies import GaussianMLPPolicy
 
 INITIAL_ROBOT_JOINT_POS = {
     'right_j0': -0.140923828125,
@@ -33,17 +34,20 @@ def run_task(*_):
 
     rospy.init_node('trpo_sim_sawyer_reacher_exp', anonymous=True)
 
-    env = TheanoEnv(
-        ReacherEnv(
-            initial_goal,
-            initial_joint_pos=INITIAL_ROBOT_JOINT_POS,
-            simulated=True))
+    env = ReacherEnv(
+        initial_goal,
+        initial_joint_pos=INITIAL_ROBOT_JOINT_POS,
+        simulated=True,
+        robot_control_mode='gripper_position')
 
     rospy.on_shutdown(env.shutdown)
 
     env.initialize()
 
-    policy = GaussianMLPPolicy(env_spec=env.spec, hidden_sizes=(32, 32))
+    env = TfEnv(normalize(env))
+
+    policy = GaussianMLPPolicy(
+        name='policy', env_spec=env.spec, hidden_sizes=(32, 32))
 
     baseline = LinearFeatureBaseline(env_spec=env.spec)
 
@@ -56,9 +60,7 @@ def run_task(*_):
         n_itr=100,
         discount=0.99,
         step_size=0.01,
-        plot=False,
-        force_batch_sampler=True,
-    )
+        plot=True)
     algo.train()
 
 
