@@ -18,6 +18,15 @@ def get_import_statement(node, lines):
     offset = -1
     stmt = lines[node.lineno + offset].strip()
 
+    # Join lines split by (
+    while stmt.endswith("("):
+        offset += 1
+        stmt = stmt[:-1]
+        stmt += lines[node.lineno + offset].strip()
+
+    while stmt.endswith(")"):
+        stmt = stmt[:-1]
+
     # Join lines split by \
     while stmt.endswith("\\"):
         offset += 1
