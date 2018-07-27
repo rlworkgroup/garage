@@ -105,7 +105,7 @@ class ReacherEnv(SawyerEnv, Serializable):
                      'achieved_goal': achieved_goal,
                      'desired_goal': self.goal}
         """
-        robot_gripper_pos = self._robot.gripper_pose['position']
+        robot_gripper_pos = self._robot.endpoint_pose['position']
 
         achieved_goal = np.array(
             [robot_gripper_pos.x, robot_gripper_pos.y, robot_gripper_pos.z])

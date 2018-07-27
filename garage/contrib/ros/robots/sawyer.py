@@ -40,7 +40,8 @@ class Sawyer(Robot):
         """
         Robot.__init__(self)
         self._limb = intera_interface.Limb('right')
-        self._gripper = intera_interface.Gripper()
+        if not without_gripper:
+            self._gripper = intera_interface.Gripper()
         self._initial_joint_pos = initial_joint_pos
         self.control_mode = control_mode
         self._without_gripper = without_gripper
@@ -120,7 +121,8 @@ class Sawyer(Robot):
             return
         self._limb.move_to_joint_positions(
             self._initial_joint_pos, timeout=5.0)
-        self._gripper.open()
+        if not self._without_gripper:
+            self._gripper.open()
         rospy.sleep(1.0)
 
     def reset(self):
@@ -134,13 +136,12 @@ class Sawyer(Robot):
         :return: robot observation
         """
         # cartesian space
-        gripper_pos = np.array(self._limb.endpoint_pose()['position'])
-        gripper_ori = np.array(self._limb.endpoint_pose()['orientation'])
-        gripper_lvel = np.array(self._limb.endpoint_velocity()['linear'])
-        gripper_avel = np.array(self._limb.endpoint_velocity()['angular'])
-        gripper_force = np.array(self._limb.endpoint_effort()['force'])
-        gripper_torque = np.array(self._limb.endpoint_effort()['torque'])
-        is_gripping = np.array([float(self._gripper.is_gripping())])
+        endpoint_pos = np.array(self._limb.endpoint_pose()['position'])
+        endpoint_ori = np.array(self._limb.endpoint_pose()['orientation'])
+        endpoint_lvel = np.array(self._limb.endpoint_velocity()['linear'])
+        endpoint_avel = np.array(self._limb.endpoint_velocity()['angular'])
+        endpoint_force = np.array(self._limb.endpoint_effort()['force'])
+        endpoint_torque = np.array(self._limb.endpoint_effort()['torque'])
 
         # joint space
         robot_joint_angles = np.array(list(self._limb.joint_angles().values()))
@@ -150,9 +151,12 @@ class Sawyer(Robot):
             list(self._limb.joint_efforts().values()))
 
         obs = np.concatenate(
-            (gripper_pos, gripper_ori, gripper_lvel, gripper_avel,
-             gripper_force, gripper_torque, robot_joint_angles,
-             robot_joint_velocities, robot_joint_efforts, is_gripping))
+            (endpoint_pos, endpoint_ori, endpoint_lvel, endpoint_avel,
+             endpoint_force, endpoint_torque, robot_joint_angles,
+             robot_joint_velocities, robot_joint_efforts))
+        if not self._without_gripper:
+            obs = np.concatenate(
+                (obs, np.array([float(self._gripper.is_gripping())])))
         return obs
 
     @property
@@ -196,7 +200,7 @@ class Sawyer(Robot):
 
         if self.control_mode == 'gripper_position':
             desired_pose = Pose()
-            current_pose = self.gripper_pose
+            current_pose = self.endpoint_pose
             desired_pose.orientation.w = current_pose['orientation'].w
             desired_pose.orientation.x = current_pose['orientation'].x
             desired_pose.orientation.y = current_pose['orientation'].y
@@ -232,11 +236,11 @@ class Sawyer(Robot):
                 rospy.sleep(0.5)
 
     @property
-    def gripper_pose(self):
+    def endpoint_pose(self):
         """
-        Get the gripper pose.
+        Get the endpoint pose.
 
-        :return: gripper pose
+        :return: endpoint pose
         """
         return self._limb.endpoint_pose()
 
