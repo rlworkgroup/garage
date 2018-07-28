@@ -25,7 +25,7 @@ class CategoricalMLPRegressor(LayersPowered, Serializable):
             self,
             input_shape,
             output_dim,
-            name=None,
+            name="CategoricalMLPRegressor",
             prob_network=None,
             hidden_sizes=(32, 32),
             hidden_nonlinearity=tf.nn.tanh,
@@ -51,7 +51,7 @@ class CategoricalMLPRegressor(LayersPowered, Serializable):
 
         with tf.variable_scope(name, "CategoricalMLPRegressor"):
             if optimizer is None:
-                optimizer = LbfgsOptimizer(name="optimizer")
+                optimizer = LbfgsOptimizer()
             if tr_optimizer is None:
                 tr_optimizer = ConjugateGradientOptimizer()
 
@@ -151,7 +151,7 @@ class CategoricalMLPRegressor(LayersPowered, Serializable):
             optimizer = self.optimizer
         loss_before = optimizer.loss(inputs)
         if self.name:
-            prefix = self.name + "_"
+            prefix = self.name + "/"
         else:
             prefix = ""
         logger.record_tabular(prefix + 'LossBefore', loss_before)

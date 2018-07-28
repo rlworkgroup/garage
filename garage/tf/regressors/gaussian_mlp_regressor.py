@@ -27,6 +27,7 @@ class GaussianMLPRegressor(LayersPowered, Serializable):
                  hidden_sizes=(32, 32),
                  hidden_nonlinearity=tf.nn.tanh,
                  optimizer=None,
+                 optimizer_args=None,
                  use_trust_region=True,
                  step_size=0.01,
                  learn_std=True,
@@ -66,12 +67,16 @@ class GaussianMLPRegressor(LayersPowered, Serializable):
         self._std_network_name = "std_network"
 
         with tf.variable_scope(name):
+            if optimizer_args is None:
+                optimizer_args = dict()
 
             if optimizer is None:
                 if use_trust_region:
-                    optimizer = PenaltyLbfgsOptimizer("optimizer")
+                    optimizer = PenaltyLbfgsOptimizer(**optimizer_args)
                 else:
-                    optimizer = LbfgsOptimizer("optimizer")
+                    optimizer = LbfgsOptimizer(**optimizer_args)
+            else:
+                optimizer = optimizer(**optimizer_args)
 
             self._optimizer = optimizer
             self._subsample_factor = subsample_factor
@@ -259,7 +264,7 @@ class GaussianMLPRegressor(LayersPowered, Serializable):
             inputs = [xs, ys]
         loss_before = self._optimizer.loss(inputs)
         if self._name:
-            prefix = self._name + "_"
+            prefix = self._name + "/"
         else:
             prefix = ""
         logger.record_tabular(prefix + 'LossBefore', loss_before)
