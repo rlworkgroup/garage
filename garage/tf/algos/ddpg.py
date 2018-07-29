@@ -364,7 +364,7 @@ class DDPG(RLAlgorithm):
         rewards = rewards.reshape(-1, 1)
         terminals = terminals.reshape(-1, 1)
 
-        target_actions = target_actor.get_actions(next_observations)
+        target_actions, _ = target_actor.get_actions(next_observations)
         target_qvals = target_critic.get_qval(next_observations,
                                               target_actions)
 

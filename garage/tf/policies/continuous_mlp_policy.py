@@ -119,12 +119,12 @@ class ContinuousMLPPolicy(Policy, Serializable, LayersPowered):
     @overrides
     def get_action(self, observation):
         """Return a single action."""
-        return self._f_prob_online([observation])[0]
+        return self._f_prob_online([observation])[0], dict()
 
     @overrides
     def get_actions(self, observations):
         """Return multiple actions."""
-        return self._f_prob_online(observations)
+        return self._f_prob_online(observations), dict()
 
     @property
     def trainable_vars(self):

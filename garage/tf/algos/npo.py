@@ -150,6 +150,6 @@ class NPO(BatchPolopt):
         return dict(
             itr=itr,
             policy=self.policy,
-            baseline=self.baseline,
+            # baseline=self.baseline,
             env=self.env,
         )

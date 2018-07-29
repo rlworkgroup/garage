@@ -13,7 +13,7 @@ from garage.tf.optimizers import LbfgsOptimizer
 from garage.tf.optimizers import PenaltyLbfgsOptimizer
 
 
-class GaussianMLPRegressor(LayersPowered, Serializable):
+class GaussianMLPRegressor(LayersPowered, Parameterized, Serializable):
     """
     A class for performing regression by fitting a Gaussian distribution to the
     outputs.
@@ -63,6 +63,7 @@ class GaussianMLPRegressor(LayersPowered, Serializable):
          same non-linearity as the mean.
         """
         Serializable.quick_init(self, locals())
+        Parameterized.__init__(self)
         self._mean_network_name = "mean_network"
         self._std_network_name = "std_network"
 
@@ -131,8 +132,6 @@ class GaussianMLPRegressor(LayersPowered, Serializable):
                     name="output_log_std",
                     trainable=learn_std,
                 )
-
-            LayersPowered.__init__(self, [l_mean, l_log_std])
 
             xs_var = mean_network.input_layer.input_var
             ys_var = tf.placeholder(
@@ -232,6 +231,8 @@ class GaussianMLPRegressor(LayersPowered, Serializable):
             self._y_mean_var = y_mean_var
             self._y_std_var = y_std_var
 
+            LayersPowered.__init__(self, [l_mean, l_log_std])
+
     def fit(self, xs, ys):
         if self._subsample_factor < 1:
             num_samples_tot = xs.shape[0]
@@ -320,8 +321,8 @@ class GaussianMLPRegressor(LayersPowered, Serializable):
             return self._dist.log_likelihood_sym(
                 y_var, dict(mean=means_var, log_std=log_stds_var))
 
-    def get_param_values(self, **tags):
-        return LayersPowered.get_param_values(self, **tags)
+    # def get_param_values(self, **tags):
+    #     return LayersPowered.get_param_values(self, **tags)
 
-    def set_param_values(self, flattened_params, **tags):
-        LayersPowered.set_param_values(self, flattened_params, **tags)
+    # def set_param_values(self, flattened_params, **tags):
+    #     LayersPowered.set_param_values(self, flattened_params, **tags)

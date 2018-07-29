@@ -1,7 +1,7 @@
 <mujoco>
     <body name="pedestal_table" pos="0.482 0 -0.05">
       <inertial pos="0 0 0" quat="0.659267 -0.259505 -0.260945 0.655692" mass="60.864" diaginertia="6.0869 5.81635 4.20915" />
-      <geom pos="0 0 0" quat="0.707 0 0 0.707" type="mesh" contype="0" conaffinity="0" group="1" rgba="0.2 0.2 0.2 1" mesh="pedestal_table" />
+      <geom pos="0 0 0" quat="0.707 0 0 0.707" type="mesh" contype="0" conaffinity="0" group="1" rgba="0.6 0.6 0.6 1" mesh="pedestal_table" />
       <geom name="table" size="0.6 0.45 0.05" pos="0 0 0" type="box" rgba="0.2 0.2 0.2 0" />
     <body name="right_arm_base_link" pos="-0.482 0 0.05">
       <inertial pos="-0.0006241 -2.8025e-05 0.065404" quat="-0.209285 0.674441 0.227335 0.670558" mass="2.0687" diaginertia="0.00740351 0.00681776 0.00672942" />
@@ -52,7 +52,7 @@
                 <geom type="mesh" contype="0" conaffinity="0" group="1" rgba="0.5 0.1 0.1 1" mesh="l4" />
                 <geom size="0.045 0.15" pos="0 0 0.11" type="cylinder" rgba="0.5 0.1 0.1 0" />
                 <body name="right_arm_itb" pos="-0.055 0 0.075" quat="0.707107 0 -0.707107 0">
-                  <inertial pos="0 0 0" mass="0.0001" diaginertia="1e-08 1e-08 1e-08" />
+                  <!--<inertial pos="0 0 0" mass="0.0001" diaginertia="1e-08 1e-08 1e-08" />-->
                 </body>
                 <body name="right_l5" pos="0 0.031 0.275" quat="0.707107 -0.707107 0 0">
                   <inertial pos="0.0061133 -0.023697 0.076416" quat="0.404076 0.9135 0.0473125 0.00158335" mass="1.5625" diaginertia="0.00474131 0.00422857 0.00190672" />
@@ -99,30 +99,57 @@
                         <geom size="0.029 0.05" quat="0 0 0.707107 0.707107" type="cylinder" />
                         <body name="r_gripper_l_finger" pos="0 -0.0015 0.02">
                           <inertial pos="0 0 0" quat="0 0 0 -1" mass="0.02" diaginertia="0.01 0.01 0.01" />
-                          <joint name="r_gripper_l_finger_joint" pos="0 0 0" axis="0 1 0" type="slide" range="0 0.020833" limited="true"/>
+                          <joint name="r_gripper_l_finger_joint" pos="0 0 0" axis="0 1 0" type="slide" range="0 0.020833" armature="100" damping="1000" limited="true" solimplimit="0.99 0.999 0.01" solreflimit="0.01 1"/>
                           <geom class="viz" mesh="extended_narrow" euler="1.57 1.57 0" rgba="0.1 0.1 0.1 1"/>
                           <geom size="0.005 0.00675 0.05635" contype="0" pos="0 0.01725 0.0615" quat="0 0 0 -1" type="box" rgba="0.1 0.1 0.1 1"/>
                           <geom size="0.005 0.025 0.0085" contype="0" pos="-0.005 -0.003 0.0083" quat="0 0 0 -1" type="box" rgba="0.1 0.1 0.1 1"/>
                           <body name="r_gripper_l_finger_tip" pos="0 0.01725 0.1127">
                             <inertial pos="0 0 0" quat="0 0 0 1" mass="0.01" diaginertia="0.01 0.01 0.01" />
-                            <geom pos="-.007 -.01 0.003" class="viz" mesh="half_round_tip" euler="-1.57 0 0" friction="1 0.05 0.01"/>
-                            <geom name="finger_tip_1" size="0.008 0.0185" pos="0 -0.0045 -0.015" quat="0 0 0 1" type="cylinder" friction="1 0.05 0.01"/>
+                            <geom pos="-.007 -.01 0.003" class="viz" mesh="half_round_tip" euler="-1.57 0 0" friction="1 1.05 0.01"/>
+                            <geom name="finger_tip_1" size="0.008 0.0185" pos="0 -0.0045 -0.015" quat="0 0 0 1" type="cylinder" friction="1 1.05 0.01"/>
                           </body>
                         </body>
                         <body name="r_gripper_r_finger" pos="0 0.0015 0.02">
                           <inertial pos="0 0 0" mass="0.02" diaginertia="0.01 0.01 0.01" />
-                          <joint name="r_gripper_r_finger_joint" pos="0 0 0" axis="0 1 0" type="slide" range="-0.020833 0" limited="true"/>
+                          <joint name="r_gripper_r_finger_joint" pos="0 0 0" axis="0 1 0" type="slide" range="-0.020833 0" armature="100" damping="1000" limited="true" solimplimit="0.99 0.999 0.01" solreflimit="0.01 1"/>
                           <geom class="viz" mesh="extended_narrow" euler="1.57 -1.57 0" rgba="0.1 0.1 0.1 1"/>
                           <geom size="0.005 0.00675 0.05635" contype="0" pos="0 -0.01725 0.0615" type="box" rgba="0.1 0.1 0.1 1"/>
                           <geom size="0.005 0.025 0.0085" contype="0" pos="0.005 0.003 0.0083" type="box" rgba="0.1 0.1 0.1 1"/>
                           <body name="r_gripper_r_finger_tip" pos="0 -0.01725 0.1127">
                             <inertial pos="0 0 0" mass="0.01" diaginertia="0.01 0.01 0.01" />
-                            <geom pos=".007 .01 0.003" class="viz" mesh="half_round_tip" euler="-1.57 3.14 0" friction="1 0.05 0.01"/>
-                            <geom name="finger_tip_2" size="0.008 0.0185" pos="0 0.0045 -0.015" type="cylinder" friction="1 0.05 0.01"/>
+                            <geom pos=".007 .01 0.003" class="viz" mesh="half_round_tip" euler="-1.57 3.14 0" friction="1 1.05 0.01"/>
+                            <geom name="finger_tip_2" size="0.008 0.0185" pos="0 0.0045 -0.015" type="cylinder" friction="1 1.05 0.01"/>
                           </body>
                         </body>
                         <site name="grip" pos="0 0 0" rgba="0 0 0 0" size="0.02 0.02 0.02"></site>
                       </body>
+
+                      <!--<body euler="0 0 0" name="gripper_link" pos="0.1664 0 0">-->
+                        <!--<inertial diaginertia="0.0024 0.0019 0.0013" mass="1.5175" pos="-0.09 -0.0001 -0.0017" quat="0 0.7071 0 0.7071"></inertial>-->
+                        <!--&lt;!&ndash;<geom mesh="gripper_link" name="gripper_link" material="gripper_mat"></geom>&ndash;&gt;-->
+                        <!--<body name="gipper_camera_link" pos="0.055 0 0.0225">-->
+                          <!--<body name="gripper_camera_rgb_frame" pos="0 0.02 0">-->
+                            <!--<body name="gripper_camera_rgb_optical_frame" pos="0 0 0" quat="0.5 -0.5 0.5 -0.5">-->
+                              <!--<camera euler="3.1415 0 0" fovy="50" name="gripper_camera_rgb" pos="0 0 0"></camera>-->
+                            <!--</body>-->
+                          <!--</body>-->
+                          <!--<body name="gripper_camera_depth_frame" pos="0 0.045 0">-->
+                            <!--<body name="gripper_camera_depth_optical_frame" pos="0 0 0" quat="0.5 -0.5 0.5 -0.5"></body>-->
+                          <!--</body>-->
+                        <!--</body>-->
+
+                        <!--<body name="r_gripper_r_finger_tip" pos="0 0.0159 0">-->
+                          <!--<inertial diaginertia="0.1 0.1 0.1" mass="4" pos="-0.01 0 0"></inertial>-->
+                          <!--<joint axis="0 1 0" name="r_gripper_r_finger_joint" range="0 0.05"></joint>-->
+                          <!--<geom pos="0 -0.008 0" size="0.0385 0.007 0.0135" type="box" name="r_gripper_finger_link" material="gripper_finger_mat" condim="4" friction="1 0.05 0.01"></geom>-->
+                        <!--</body>-->
+                        <!--<body name="r_gripper_l_finger_tip" pos="0 -0.0159 0">-->
+                          <!--<inertial diaginertia="0.1 0.1 0.1" mass="4" pos="-0.01 0 0"></inertial>-->
+                          <!--<joint axis="0 -1 0" name="r_gripper_l_finger_joint" range="0 0.05"></joint>-->
+                          <!--<geom pos="0 0.008 0" size="0.0385 0.007 0.0135" type="box" name="l_gripper_finger_link" material="gripper_finger_mat" condim="4" friction="1 0.05 0.01"></geom>-->
+                        <!--</body>-->
+                        <!--<site name="grip" pos="0.02 0 0" rgba="0 0 0 0" size="0.02 0.02 0.02"></site>-->
+                      <!--</body>-->
 <!--  ================= END GRIPPER ================= /-->
 
                     </body>

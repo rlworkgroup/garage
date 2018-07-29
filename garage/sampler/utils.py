@@ -4,6 +4,7 @@ import numpy as np
 import theano
 
 from garage.core import Serializable
+from garage.envs.util import flatten
 from garage.misc import tensor_utils
 from garage.misc.ext import extract
 
