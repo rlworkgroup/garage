@@ -1,12 +1,16 @@
-from gym.spaces import Box
 import numpy as np
 
-from garage.envs.mujoco.sawyer.sawyer_env import Configuration, SawyerEnv
 from garage.misc.overrides import overrides
+from gym.spaces import Box
+from garage.core.serializable import Serializable
+from garage.envs.mujoco.sawyer.sawyer_env import SawyerEnv, Configuration
+from garage.envs.mujoco.sawyer.sawyer_env import Configuration
+from garage.envs.mujoco.sawyer.sawyer_env import SawyerEnvWrapper
 
 
 class ReacherEnv(SawyerEnv):
     def __init__(self, goal_position, start_position=None, **kwargs):
+
         def generate_start_goal():
             nonlocal start_position
             if start_position is None:
@@ -26,8 +30,17 @@ class ReacherEnv(SawyerEnv):
 
             return start, goal
 
+        def reward_fn(env: SawyerEnv, achieved_goal, desired_goal, info: dict):
+            d = np.linalg.norm(achieved_goal - desired_goal, axis=-1)
+            if env._reward_type == 'sparse':
+                return (d < env._distance_threshold).astype(np.float32)
+
+            return 1 - np.exp(d)
+
         super(ReacherEnv, self).__init__(
-            start_goal_config=generate_start_goal, **kwargs)
+            start_goal_config=generate_start_goal,
+            reward_fn=reward_fn,
+            **kwargs)
 
     def get_obs(self):
         gripper_pos = self.gripper_position
@@ -38,7 +51,17 @@ class ReacherEnv(SawyerEnv):
         object_velp = self.sim.data.get_site_xvelp('object0') * dt
         object_velp -= grip_velp
         grasped = self.has_object
-        obs = np.concatenate([gripper_pos])
+        if self._control_method == 'task_space_control':
+            obs = np.concatenate([gripper_pos])
+        elif self._control_method == 'position_control':
+            arm_qpos = list()
+            arm_qvel = list()
+            for i in range(7):
+                arm_qpos.append(self.sim.data.get_joint_qpos('right_j{}'.format(i)))
+                # Excluding the joint velocities since mujoco has different dynamics from the real robot.
+                # arm_qvel.append(self.sim.data.get_joint_qvel('right_j{}'.format(i)))
+
+            obs = np.concatenate([arm_qpos, gripper_pos])
 
         achieved_goal = self._achieved_goal_fn(self)
         desired_goal = self._desired_goal_fn(self)
@@ -58,17 +81,11 @@ class ReacherEnv(SawyerEnv):
             'object_pos': object_pos.copy()
         }
 
-    @overrides
-    @property
-    def action_space(self):
-        return Box(
-            np.array([-0.5, -0.5, -0.5, -1.]),
-            np.array([0.5, 0.5, 0.5, 1.]),
-            dtype=np.float32)
 
-    def compute_reward(self, achieved_goal, desired_goal, info: dict):
-        d = np.linalg.norm(achieved_goal - desired_goal, axis=-1)
-        if self._reward_type == 'sparse':
-            return (d < self._distance_threshold).astype(np.float32)
+class SimpleReacherEnv(SawyerEnvWrapper, Serializable):
 
-        return .01 - d
+    def __init__(self, *args, **kwargs):
+        Serializable.quick_init(self, locals())
+        self.reward_range = None
+        self.metadata = None
+        super().__init__(ReacherEnv(*args, **kwargs))

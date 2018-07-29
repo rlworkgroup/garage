@@ -1,19 +1,28 @@
-from collections import namedtuple
-import os.path as osp
-
 import gym
 from gym.envs.robotics import rotations
-from gym.envs.robotics.utils import reset_mocap2body_xpos, reset_mocap_welds
+from gym.envs.robotics.utils import reset_mocap_welds, reset_mocap2body_xpos
 from gym.spaces import Box
+import os.path as osp
+
 import numpy as np
 
 from garage.envs.mujoco import MujocoEnv
 from garage.envs.mujoco.mujoco_env import MODEL_DIR
 from garage.misc.overrides import overrides
 
+from collections import namedtuple
+from typing import Callable, Union, Tuple
+
 Configuration = namedtuple(
     "Configuration",
     ["gripper_pos", "gripper_state", "object_grasped", "object_pos"])
+
+
+def default_reward_fn(env, achieved_goal, desired_goal, _info: dict):
+    d = np.linalg.norm(achieved_goal - desired_goal, axis=-1)
+    if env._reward_type == 'sparse':
+        return (d < env._distance_threshold).astype(np.float32)
+    return -d
 
 
 def default_success_fn(env, achieved_goal, desired_goal, _info: dict):
@@ -34,27 +43,33 @@ def default_desired_goal_fn(env):
 class SawyerEnv(MujocoEnv, gym.GoalEnv):
     """Sawyer Robot Environments."""
 
-    def __init__(self,
-                 start_goal_config,
-                 success_fn=default_success_fn,
-                 achieved_goal_fn=default_achieved_goal_fn,
-                 desired_goal_fn=default_desired_goal_fn,
-                 max_episode_steps=50,
-                 completion_bonus=10,
-                 distance_threshold=0.05,
-                 for_her=False,
-                 reward_type='dense',
-                 control_method='task_space_control',
-                 file_path='pick_and_place.xml',
-                 *args,
-                 **kwargs):
+    def __init__(
+            self,
+            start_goal_config: Union[Tuple[Configuration, Configuration],
+                                     Callable[[], Tuple[Configuration,
+                                                        Configuration]]],
+            reward_fn: Callable[..., float] = default_reward_fn,
+            success_fn: Callable[..., bool] = default_success_fn,
+            achieved_goal_fn: Callable[...,
+                                       np.array] = default_achieved_goal_fn,
+            desired_goal_fn: Callable[..., np.array] = default_desired_goal_fn,
+            max_episode_steps: int = 50,
+            completion_bonus: float = 10,
+            distance_threshold: float = 0.05,
+            for_her: bool = False,
+            reward_type: str = 'dense',
+            control_method: str = 'task_space_control',
+            file_path: str = 'pick_and_place.xml',
+            *args,
+            **kwargs):
         """
-        Sawyer Environment.  #noqa: E501
+        Sawyer Environment.
         :param args:
         :param kwargs:
         """
 
         self._start_goal_config = start_goal_config
+        self._reward_fn = reward_fn
         self._success_fn = success_fn
         self._achieved_goal_fn = achieved_goal_fn
         self._desired_goal_fn = desired_goal_fn
@@ -74,15 +89,17 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
         self._step = 0
         self._for_her = for_her
         file_path = osp.join(MODEL_DIR, file_path)
-
         MujocoEnv.__init__(self, file_path=file_path, *args, **kwargs)
-        self._env_setup()
+        self.env_setup()
 
     def _sample_start_goal(self):
-        self._start_configuration, self._goal_configuration = self._start_goal_config(  # noqa: E501
-        )
+        if isinstance(self._start_goal_config, tuple):
+            self._start_configuration, self._goal_configuration = self._start_goal_config
+        else:
+            self._start_configuration, self._goal_configuration = self._start_goal_config(
+            )
 
-    def _env_setup(self):
+    def env_setup(self):
         reset_mocap_welds(self.sim)
         self.sim.forward()
 
@@ -133,11 +150,15 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
     def action_space(self):
         if self._control_method == 'torque_control':
             return super(SawyerEnv, self).action_space
-        else:
+        elif self._control_method == 'task_space_control':
             return Box(
                 np.array([-0.15, -0.15, -0.15, -1.]),
                 np.array([0.15, 0.15, 0.15, 1.]),
                 dtype=np.float32)
+        elif self._control_method == 'position_control':
+            return Box(low=np.full(7, -0.05), high=np.full(7, 0.05), dtype=np.float32)
+        else:
+            raise NotImplementedError
 
     @overrides
     @property
@@ -149,19 +170,42 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
             dtype=np.float32)
 
     def step(self, action):
+        # Clip to action space
+        assert action.shape == self.action_space.shape
+        action = np.clip(action, self.action_space.low, self.action_space.high)
         if self._control_method == "torque_control":
             self.forward_dynamics(action)
             self.sim.forward()
-        else:
+        elif self._control_method == "task_space_control":
             reset_mocap2body_xpos(self.sim)
             self.sim.data.mocap_pos[
                 0, :3] = self.sim.data.mocap_pos[0, :3] + action[:3]
             self.sim.data.mocap_quat[:] = np.array([0, 1, 0, 0])
             self.set_gripper_state(action[3])
-            for _ in range(1):
+            for _ in range(5):
                 self.sim.step()
             self.sim.forward()
+        elif self._control_method == "position_control":
+            low = np.array([-3.0503, -3.8095, -3.0426, -3.0439, -2.9761, -2.9761, -4.7124])
+            high = np.array([3.0503, 2.2736, 3.0426, 3.0439, 2.9761, 2.9761, 4.7124])
+            curr_pos = []
+            for i in range(7):
+                curr_pos.append(self.sim.data.get_joint_qpos('right_j{}'.format(i)))
+            curr_pos = np.array(curr_pos)
+            action = np.clip(action + curr_pos, low, high)
+            for i in range(7):
+                self.sim.data.set_joint_qpos("right_j{}".format(i), action[i])
+            self.sim.forward()
 
+            # Verify the execution of the action.
+            for i in range(7):
+                curr_pos = self.sim.data.get_joint_qpos('right_j{}'.format(i))
+                d = np.absolute(curr_pos - action[i])
+                assert d < 1e-5, \
+                "Joint right_j{} failed to reached the desired qpos.\nError: {}\t Desired: {}\t Current: {}"\
+                .format(i, d, action[i], curr_pos)
+        else:
+            raise NotImplementedError
         self._step += 1
 
         obs = self.get_obs()
@@ -187,7 +231,7 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
         done = False
         if self._is_success:
             r = self._completion_bonus
-            done = True
+            # done = True
 
         info["r"] = r
         info["d"] = done
@@ -253,6 +297,9 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
     def is_success(self):
         return self._is_success
 
+    def compute_reward(self, achieved_goal, desired_goal, info):
+        return self._reward_fn(self, achieved_goal, desired_goal, info)
+
     @overrides
     def reset(self):
         self._step = 0
@@ -275,12 +322,6 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
 
         return self.get_obs()
 
-    def compute_reward(self, achieved_goal, desired_goal, info):
-        d = np.linalg.norm(achieved_goal - desired_goal, axis=-1)
-        if self._reward_type == 'sparse':
-            return (d < self._distance_threshold).astype(np.float32)
-        return -d
-
 
 def ppo_info(info):
     info["task"] = [1]
@@ -288,7 +329,7 @@ def ppo_info(info):
     return ppo_infos
 
 
-class SawyerEnvWrapper():
+class SawyerEnvWrapper:
     def __init__(self,
                  env: SawyerEnv,
                  info_callback=ppo_info,
