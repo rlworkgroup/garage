@@ -10,10 +10,16 @@ class PickAndPlaceEnv(SawyerEnv):
     def __init__(self, **kwargs):
         def start_goal_config():
             center = self.sim.data.get_geom_xpos('target2')
-            start = Configuration(gripper_pos=np.concatenate([center[:2], [0.35]]), gripper_state=1,
-                                  object_grasped=False, object_pos=np.concatenate([center[:2], [0.03]]))
-            goal = Configuration(gripper_pos=np.concatenate([center[:2], [0.105]]), gripper_state=0,
-                                 object_grasped=True, object_pos=np.concatenate([center[:2], [0.1]]))
+            start = Configuration(
+                gripper_pos=np.concatenate([center[:2], [0.35]]),
+                gripper_state=1,
+                object_grasped=False,
+                object_pos=np.concatenate([center[:2], [0.03]]))
+            goal = Configuration(
+                gripper_pos=np.concatenate([center[:2], [0.105]]),
+                gripper_state=0,
+                object_grasped=True,
+                object_pos=np.concatenate([center[:2], [0.1]]))
             return start, goal
 
         def reward_fn(env: SawyerEnv, achieved_goal, desired_goal, info: dict):
@@ -21,13 +27,17 @@ class PickAndPlaceEnv(SawyerEnv):
             if env._reward_type == 'sparse':
                 return (d < env._distance_threshold).astype(np.float32)
 
-            return - d
+            return -d
 
-        def success_fn(env: SawyerEnv, _achieved_goal, _desired_goal, _info: dict):
+        def success_fn(env: SawyerEnv, _achieved_goal, _desired_goal,
+                       _info: dict):
             return env.has_object and env.object_position[2] >= self._goal_configuration.object_pos[2]
 
-        super(PickAndPlaceEnv, self).__init__(start_goal_config=start_goal_config,
-                                       reward_fn=reward_fn, success_fn=success_fn, **kwargs)
+        super(PickAndPlaceEnv, self).__init__(
+            start_goal_config=start_goal_config,
+            reward_fn=reward_fn,
+            success_fn=success_fn,
+            **kwargs)
 
     def get_obs(self):
         gripper_pos = self.gripper_position
@@ -38,10 +48,7 @@ class PickAndPlaceEnv(SawyerEnv):
         object_velp = self.sim.data.get_site_xvelp('object0') * dt
         object_velp -= grip_velp
         grasped = self.has_object
-        obs = np.concatenate([
-            gripper_pos,
-            object_pos
-        ])
+        obs = np.concatenate([gripper_pos, object_pos])
 
         achieved_goal = self._achieved_goal_fn(self)
         desired_goal = self._desired_goal_fn(self)
@@ -64,4 +71,7 @@ class PickAndPlaceEnv(SawyerEnv):
     @overrides
     @property
     def action_space(self):
-        return Box(np.array([-0.1, -0.1, -0.1, -1.]), np.array([0.1, 0.1, 0.1, 1.]), dtype=np.float32)
+        return Box(
+            np.array([-0.1, -0.1, -0.1, -1.]),
+            np.array([0.1, 0.1, 0.1, 1.]),
+            dtype=np.float32)

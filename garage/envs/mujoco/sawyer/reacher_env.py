@@ -14,10 +14,16 @@ class ReacherEnv(SawyerEnv):
                 center = self.sim.data.get_geom_xpos('target2')
                 start_position = np.concatenate([center[:2], [0.15]])
 
-            start = Configuration(gripper_pos=start_position, gripper_state=1,
-                                  object_grasped=False, object_pos=[0, 0, -1])
-            goal = Configuration(gripper_pos=goal_position, gripper_state=1,
-                                 object_grasped=False, object_pos=[0, 0, -1])
+            start = Configuration(
+                gripper_pos=start_position,
+                gripper_state=1,
+                object_grasped=False,
+                object_pos=[0, 0, -1])
+            goal = Configuration(
+                gripper_pos=goal_position,
+                gripper_state=1,
+                object_grasped=False,
+                object_pos=[0, 0, -1])
 
             return start, goal
 
@@ -28,7 +34,10 @@ class ReacherEnv(SawyerEnv):
 
             return .01 - d
 
-        super(ReacherEnv, self).__init__(start_goal_config=generate_start_goal, reward_fn=reward_fn, **kwargs)
+        super(ReacherEnv, self).__init__(
+            start_goal_config=generate_start_goal,
+            reward_fn=reward_fn,
+            **kwargs)
 
     def get_obs(self):
         gripper_pos = self.gripper_position
@@ -39,9 +48,7 @@ class ReacherEnv(SawyerEnv):
         object_velp = self.sim.data.get_site_xvelp('object0') * dt
         object_velp -= grip_velp
         grasped = self.has_object
-        obs = np.concatenate([
-            gripper_pos
-        ])
+        obs = np.concatenate([gripper_pos])
 
         achieved_goal = self._achieved_goal_fn(self)
         desired_goal = self._desired_goal_fn(self)
@@ -64,4 +71,7 @@ class ReacherEnv(SawyerEnv):
     @overrides
     @property
     def action_space(self):
-        return Box(np.array([-0.5, -0.5, -0.5, -1.]), np.array([0.5, 0.5, 0.5, 1.]), dtype=np.float32)
+        return Box(
+            np.array([-0.5, -0.5, -0.5, -1.]),
+            np.array([0.5, 0.5, 0.5, 1.]),
+            dtype=np.float32)
