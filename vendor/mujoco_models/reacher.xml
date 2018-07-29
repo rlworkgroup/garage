@@ -12,7 +12,12 @@
 
   <worldbody>
     <light directional="true" ambient="0.2 0.2 0.2" diffuse="0.8 0.8 0.8" specular="0.3 0.3 0.3" castshadow="false" pos="0 0 4" dir="0 0 -1" name="light0"></light>
-    <geom name="floor0" pos="0.4 0 -0.92" size="1.2 0.7 1" type="plane" condim="3" material="floor_mat"></geom>
+    <geom name="floor0" pos="0.4 0 -0.92" size="2.2 2.7 1" type="plane" condim="3" material="floor_mat"></geom>
+
+    <camera name="camera_topdown" mode="fixed" zaxis="0 0 1" pos="0 0 3" />
+    <camera name="camera_side" mode="fixed" zaxis="0 -1 0" pos="0.4 -2 0.5" />
+    <camera name="camera_front" mode="fixed" xyaxes="0 1 0 0 0 1" pos="2.4 0 0.5" />
+
     <include file="sawyer_robot.xml"></include>
 
     <body mocap="true" name="mocap" pos="0.2369680365278436 0.7377722688452103 0.30233579064225752">
@@ -27,15 +32,13 @@
   </worldbody>
 
   <actuator>
-    <motor joint="right_j0" ctrlrange="-100.0 100.0" ctrllimited="false"/>
-    <motor joint="right_j1" ctrlrange="-100.0 100.0" ctrllimited="false"/>
-    <motor joint="right_j2" ctrlrange="-100.0 100.0" ctrllimited="false"/>
-    <motor joint="right_j3" ctrlrange="-100.0 100.0" ctrllimited="false"/>
-    <motor joint="right_j4" ctrlrange="-100.0 100.0" ctrllimited="false"/>
-    <motor joint="right_j5" ctrlrange="-100.0 100.0" ctrllimited="false"/>
-    <motor joint="right_j6" ctrlrange="-100.0 100.0" ctrllimited="false"/>
-    <motor gear="1" joint="r_gripper_l_finger_joint" name="slide_l_claw"/>
-    <motor gear="1" joint="r_gripper_r_finger_joint" name="slide_r_claw"/>
+    <motor joint="right_j0" ctrlrange="-100.0 100.0" ctrllimited="false" gear="150"/>
+    <motor joint="right_j1" ctrlrange="-100.0 100.0" ctrllimited="false" gear="100"/>
+    <motor joint="right_j2" ctrlrange="-100.0 100.0" ctrllimited="false" gear="120"/>
+    <motor joint="right_j3" ctrlrange="-100.0 100.0" ctrllimited="false" gear="150"/>
+    <motor joint="right_j4" ctrlrange="-100.0 100.0" ctrllimited="false" gear="150"/>
+    <motor joint="right_j5" ctrlrange="-100.0 100.0" ctrllimited="false" gear="150"/>
+    <motor joint="right_j6" ctrlrange="-100.0 100.0" ctrllimited="false" gear="150"/>
   </actuator>
 
 </mujoco>
