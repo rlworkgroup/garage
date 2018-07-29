@@ -187,6 +187,10 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
                  **kwargs):
         """
         Sawyer Environment.
+
+        :param initial_goal: The initial goal for the goal environment.
+        :param initial_qpos: The initial position for each joint.
+        :param target_range: delta range the goal is randomized.
         :param args:
         :param kwargs:
         """
