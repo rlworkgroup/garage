@@ -29,7 +29,7 @@ dependencies:
         - jsonmerge
         - joblib==0.10.3
         - jupyter
-        - git+https://github.com/jonashen/Lasagne.git@b4fd25809c446f8c7b1c0d80283eb25c66e06960#egg=lasagne
+        - git+https://github.com/Lasagne/Lasagne.git@a61b76fd991f84c50acdb7bea02118899b5fefe1#egg=lasagne
         - mako
         - matplotlib
         - memory_profiler
