@@ -770,9 +770,6 @@ class DropoutLayer(Layer):
             if deterministic or self.p == 0:
                 return input
             else:
-                # Using theano constant to prevent upcasting
-                # one = T.constant(1)
-
                 retain_prob = 1. - self.p
                 if self.rescale:
                     input /= retain_prob
@@ -846,7 +843,7 @@ class ReshapeLayer(Layer):
                 if len(s) != 1 or not isinstance(s[0], int) or s[0] < 0:
                     raise ValueError("`shape` input references must be "
                                      "single-element lists of int >= 0")
-            elif isinstance(s, (tf.Tensor, tf.Variable)):  # T.TensorVariable):
+            elif isinstance(s, (tf.Tensor, tf.Variable)):
                 raise NotImplementedError
             else:
                 raise ValueError("`shape` must be a tuple of int and/or [int]")
@@ -882,7 +879,7 @@ class ReshapeLayer(Layer):
         # Secondly, replace all symbolic shapes with `None`, as we cannot
         # infer their size here.
         for dim, o in enumerate(output_shape):
-            if isinstance(o, (tf.Tensor, tf.Variable)):  # T.TensorVariable):
+            if isinstance(o, (tf.Tensor, tf.Variable)):
                 raise NotImplementedError
                 # output_shape[dim] = None
                 # masked_output_shape[dim] = None
