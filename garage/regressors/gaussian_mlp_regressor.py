@@ -5,9 +5,6 @@ import numpy as np
 import theano
 import theano.tensor as TT
 
-from garage.core import LasagnePowered
-from garage.core import MLP
-from garage.core import ParamLayer
 from garage.core import Serializable
 from garage.distributions import DiagonalGaussian
 from garage.misc import logger
@@ -15,6 +12,9 @@ from garage.misc.ext import compile_function
 from garage.misc.ext import iterate_minibatches_generic
 from garage.optimizers import LbfgsOptimizer
 from garage.optimizers import PenaltyLbfgsOptimizer
+from garage.theano.core import LasagnePowered
+from garage.theano.core import MLP
+from garage.theano.core import ParamLayer
 
 
 class GaussianMLPRegressor(LasagnePowered):

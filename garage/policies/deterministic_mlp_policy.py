@@ -2,11 +2,11 @@ import lasagne.init as LI
 import lasagne.layers as L
 import lasagne.nonlinearities as NL
 
-from garage.core import batch_norm
-from garage.core import LasagnePowered
 from garage.core import Serializable
 from garage.misc import ext
 from garage.policies import Policy
+from garage.theano.core import batch_norm
+from garage.theano.core import LasagnePowered
 
 
 class DeterministicMLPPolicy(Policy, LasagnePowered):

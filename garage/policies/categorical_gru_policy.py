@@ -3,9 +3,6 @@ import lasagne.nonlinearities as NL
 import numpy as np
 import theano.tensor as TT
 
-from garage.core import GRUNetwork
-from garage.core import LasagnePowered
-from garage.core import OpLayer
 from garage.core import Serializable
 from garage.distributions import RecurrentCategorical
 from garage.misc import ext
@@ -13,6 +10,9 @@ from garage.misc import special
 from garage.misc.overrides import overrides
 from garage.policies import StochasticPolicy
 from garage.spaces import Discrete
+from garage.theano.core import GRUNetwork
+from garage.theano.core import LasagnePowered
+from garage.theano.core import OpLayer
 
 
 class CategoricalGRUPolicy(StochasticPolicy, LasagnePowered):

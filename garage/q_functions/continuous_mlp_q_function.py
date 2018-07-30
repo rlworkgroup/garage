@@ -4,11 +4,11 @@ import lasagne.layers as L
 import lasagne.nonlinearities as NL
 import theano.tensor as TT
 
-from garage.core import batch_norm
-from garage.core import LasagnePowered
 from garage.core import Serializable
 from garage.misc import ext
 from garage.q_functions import QFunction
+from garage.theano.core import batch_norm
+from garage.theano.core import LasagnePowered
 
 
 class ContinuousMLPQFunction(QFunction, LasagnePowered):

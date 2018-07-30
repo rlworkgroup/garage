@@ -4,8 +4,6 @@ import numpy as np
 import theano
 import theano.tensor as TT
 
-from garage.core import LasagnePowered
-from garage.core import MLP
 from garage.core import Serializable
 from garage.distributions import Categorical
 from garage.misc import ext
@@ -13,6 +11,8 @@ from garage.misc import logger
 from garage.misc import special
 from garage.optimizers import LbfgsOptimizer
 from garage.optimizers import PenaltyLbfgsOptimizer
+from garage.theano.core import LasagnePowered
+from garage.theano.core import MLP
 
 NONE = list()
 

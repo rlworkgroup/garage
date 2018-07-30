@@ -3,8 +3,8 @@ import unittest
 import lasagne.layers as L
 import numpy as np
 
-from garage.core import GRUNetwork
 from garage.misc import ext
+from garage.theano.core import GRUNetwork
 
 
 class TestNetworks(unittest.TestCase):

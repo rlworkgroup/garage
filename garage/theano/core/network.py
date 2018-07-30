@@ -5,10 +5,10 @@ import numpy as np
 import theano
 import theano.tensor as TT
 
-from garage.core import LasagnePowered
-from garage.core import OpLayer
 from garage.core import Serializable
 from garage.misc import ext
+from garage.theano.core import LasagnePowered
+from garage.theano.core import OpLayer
 
 
 def wrapped_conv(*args, **kwargs):

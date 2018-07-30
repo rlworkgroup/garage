@@ -2,14 +2,14 @@ import lasagne.layers as L
 import lasagne.nonlinearities as NL
 import numpy as np
 
-from garage.core import LasagnePowered
-from garage.core import MLP
 from garage.core import Serializable
 from garage.distributions import Categorical
 from garage.misc import ext
 from garage.misc.overrides import overrides
 from garage.policies import StochasticPolicy
 from garage.spaces import Discrete
+from garage.theano.core import MLP
+from garage.theano.core import LasagnePowered
 
 
 class CategoricalMLPPolicy(StochasticPolicy, LasagnePowered):
