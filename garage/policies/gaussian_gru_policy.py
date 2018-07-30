@@ -10,8 +10,8 @@ from garage.misc import ext
 from garage.misc.overrides import overrides
 from garage.policies import StochasticPolicy
 from garage.theano.core import GRUNetwork
-from garage.theano.core import ParamLayer
 from garage.theano.core import LasagnePowered
+from garage.theano.core import ParamLayer
 
 
 class GaussianGRUPolicy(StochasticPolicy, LasagnePowered):

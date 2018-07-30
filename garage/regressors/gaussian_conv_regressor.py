@@ -8,7 +8,6 @@ import theano.tensor as TT
 from garage.core import Serializable
 from garage.distributions import DiagonalGaussian
 from garage.misc import logger
-from garage.misc import tensor_utils
 from garage.misc.ext import compile_function
 from garage.misc.ext import iterate_minibatches_generic
 from garage.optimizers import LbfgsOptimizer
@@ -71,9 +70,9 @@ class GaussianConvRegressor(LasagnePowered):
          learned.
         :param adaptive_std: Whether to make the std a function of the states.
         :param std_share_network: Whether to use the same network as the mean.
-        :param std_hidden_sizes: Number of hidden units of each layer of the std
-         network. Only used if `std_share_network` is False. It defaults to the
-         same architecture as the mean.
+        :param std_hidden_sizes: Number of hidden units of each layer of the
+         std network. Only used if `std_share_network` is False. It defaults to
+         the same architecture as the mean.
         :param std_nonlinearity: Non-linearity used for each layer of the std
          network. Only used if `std_share_network` is False. It defaults to the
          same non-linearity as the mean.
@@ -112,7 +111,7 @@ class GaussianConvRegressor(LasagnePowered):
                 input_var=mean_network.input_layer.input_var,
                 output_dim=output_dim,
                 conv_filters=std_conv_filters,
-                conv_filter_sizes=std_conv_filter_sizes,
+                conv_filter_sizes=conv_filter_sizes,
                 conv_strides=std_conv_strides,
                 conv_pads=std_conv_pads,
                 hidden_sizes=std_hidden_sizes,

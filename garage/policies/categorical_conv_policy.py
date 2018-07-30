@@ -1,14 +1,11 @@
 import gym
 import lasagne.layers as L
 import lasagne.nonlinearities as NL
-import numpy as np
 
 from garage.core import Serializable
 from garage.distributions import Categorical
 from garage.envs.util import flatten, flatten_n, weighted_sample
 from garage.misc import ext
-from garage.misc import logger
-from garage.misc import tensor_utils
 from garage.misc.overrides import overrides
 from garage.policies import StochasticPolicy
 from garage.theano.core import ConvNetwork
@@ -31,7 +28,8 @@ class CategoricalConvPolicy(StochasticPolicy, LasagnePowered):
     ):
         """
         :param env_spec: A spec for the mdp.
-        :param hidden_sizes: list of sizes for the fully connected hidden layers
+        :param hidden_sizes: list of sizes for the fully connected hidden
+         layers
         :param hidden_nonlinearity: nonlinearity used for each hidden layer
         :param prob_network: manually specified network for this policy, other
          network params are ignored

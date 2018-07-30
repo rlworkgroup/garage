@@ -11,8 +11,8 @@ from garage.misc import logger
 from garage.misc.overrides import overrides
 from garage.policies import StochasticPolicy
 from garage.spaces import Box
-from garage.theano.core import MLP
 from garage.theano.core import LasagnePowered
+from garage.theano.core import MLP
 from garage.theano.core import ParamLayer
 
 
