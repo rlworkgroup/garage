@@ -8,7 +8,6 @@ action.
 import tensorflow as tf
 
 from garage.core import Serializable
-from garage.envs.util import flat_dim
 from garage.misc.overrides import overrides
 from garage.tf.core import layers as layers
 from garage.tf.core import LayersPowered

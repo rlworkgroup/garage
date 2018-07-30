@@ -1,4 +1,5 @@
 from cached_property import cached_property
+
 from gym.spaces import Box as GymBox
 from gym.spaces import Discrete as GymDiscrete
 from gym.spaces import Tuple as GymTuple
@@ -9,6 +10,7 @@ from garage.misc.overrides import overrides
 from garage.tf.spaces import Box
 from garage.tf.spaces import Discrete
 from garage.tf.spaces import Product
+from garage.misc.overrides import overrides
 
 
 class TfEnv(GarageEnv):
@@ -23,7 +25,6 @@ class TfEnv(GarageEnv):
         super().__init__(env)
         self.action_space = self._to_garage_space(self.env.action_space)
         self.observation_space = self._to_garage_space(
-            self.env.observation_space)
 
     @classmethod
     def wrap(cls, env_cls, **extra_kwargs):
@@ -61,8 +62,7 @@ class TfEnv(GarageEnv):
             observation_space=self.observation_space,
             action_space=self.action_space)
 
-
-class VecTfEnv:
+    @classmethod
     def __init__(self, vec_env):
         self.vec_env = vec_env
 
