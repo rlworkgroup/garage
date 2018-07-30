@@ -21,7 +21,6 @@ from garage.envs.mujoco.gather.embedded_viewer import EmbeddedViewer
 from garage.envs.mujoco.mujoco_env import BIG
 from garage.envs.mujoco.mujoco_env import MODEL_DIR
 from garage.envs.proxy_env import ProxyEnv
-from garage.envs.util import flat_dim
 from garage.misc import autoargs
 from garage.misc import logger
 from garage.misc.overrides import overrides
@@ -467,7 +466,7 @@ class GatherEnv(ProxyEnv, Serializable):
                 stripped_path[k] = v
             stripped_path['observations'] = \
                 stripped_path['observations'][
-                    :, :flat_dim(self.wrapped_env.observation_space)]
+                    :, :np.prod(self.wrapped_env.observation_space.low.shape)]
             #  this breaks if the obs of the robot are d>1 dimensional (not a
             #  vector)
             stripped_paths.append(stripped_path)

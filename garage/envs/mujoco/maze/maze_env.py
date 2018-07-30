@@ -15,7 +15,6 @@ from garage.envs.mujoco.maze.maze_env_utils import ray_segment_intersect
 from garage.envs.mujoco.mujoco_env import BIG
 from garage.envs.mujoco.mujoco_env import MODEL_DIR
 from garage.envs.proxy_env import ProxyEnv
-from garage.envs.util import flat_dim
 from garage.misc import logger
 from garage.misc.overrides import overrides
 

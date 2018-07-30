@@ -11,8 +11,6 @@ import numpy as np
 from scipy.signal import convolve2d
 from scipy.stats import multivariate_normal
 
-from garage.envs.util import flat_dim
-
 # the colormap should assign light colors to low values
 TERRAIN_CMAP = 'Greens'
 DEFAULT_PATH = '/tmp/mujoco_terrains'
@@ -55,7 +53,7 @@ def clear_patch(hfield, box):
     '''Clears a patch shaped like box, assuming robot is placed in center of hfield
     @param box: garage.spaces.Box-like
     '''
-    if flat_dim(box) > 2:
+    if np.prod(box.low.shape) > 2:
         raise ValueError("Provide 2dim box")
 
     # clear patch
