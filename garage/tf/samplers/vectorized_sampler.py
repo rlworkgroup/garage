@@ -2,21 +2,21 @@ import itertools
 import pickle
 
 import numpy as np
-import tensorflow as tf
 
 from garage.misc import tensor_utils
 import garage.misc.logger as logger
+from garage.misc.overrides import overrides
 from garage.sampler import ProgBarCounter
-from garage.sampler.base import BaseSampler
-from garage.tf.envs import ParallelVecEnvExecutor
 from garage.tf.envs import VecEnvExecutor
+from garage.tf.samplers import BatchSampler
 
 
-class VectorizedSampler(BaseSampler):
+class VectorizedSampler(BatchSampler):
     def __init__(self, algo, n_envs=None):
         super(VectorizedSampler, self).__init__(algo)
         self.n_envs = n_envs
 
+    @overrides
     def start_worker(self):
         n_envs = self.n_envs
         if n_envs is None:
@@ -35,9 +35,11 @@ class VectorizedSampler(BaseSampler):
                 envs=envs, max_path_length=self.algo.max_path_length)
         self.env_spec = self.algo.env.spec
 
+    @overrides
     def shutdown_worker(self):
         self.vec_env.close()
 
+    @overrides
     def obtain_samples(self, itr):
         logger.log("Obtaining samples for iteration %d..." % itr)
         paths = []
@@ -73,7 +75,7 @@ class VectorizedSampler(BaseSampler):
                 agent_infos = [dict() for _ in range(self.vec_env.num_envs)]
             for idx, observation, action, reward, env_info, agent_info, done \
                 in zip(itertools.count(), obses, actions, rewards, env_infos,
-                    agent_infos, dones):
+                       agent_infos, dones):
                 if running_paths[idx] is None:
                     running_paths[idx] = dict(
                         observations=[],

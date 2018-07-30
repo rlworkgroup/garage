@@ -1,149 +1,101 @@
+from enum import Enum
+from enum import unique
+
+import numpy as np
 import tensorflow as tf
 
-from garage.misc import ext
-import garage.misc.logger as logger
+from garage.misc import logger
+from garage.misc import special
 from garage.misc.overrides import overrides
 from garage.tf.algos import BatchPolopt
 from garage.tf.misc import tensor_utils
-from garage.tf.optimizers import PenaltyLbfgsOptimizer
+from garage.tf.misc.tensor_utils import compute_adv, compute_ret
+from garage.tf.misc.tensor_utils import filter_valids
+from garage.tf.misc.tensor_utils import filter_valids_dict
+from garage.tf.misc.tensor_utils import flatten_batch
+from garage.tf.misc.tensor_utils import flatten_batch_dict
+from garage.tf.misc.tensor_utils import flatten_inputs
+from garage.tf.misc.tensor_utils import graph_inputs
+from garage.tf.optimizers import LbfgsOptimizer
+
+
+@unique
+class PGLoss(Enum):
+    VANILLA = "vanilla"
+    CLIP = "clip"
 
 
 class NPO(BatchPolopt):
-    """
-    Natural Policy Optimization.
-    """
-
     def __init__(self,
+                 pg_loss=PGLoss.VANILLA,
+                 clip_range=0.01,
                  optimizer=None,
                  optimizer_args=None,
-                 step_size=0.01,
                  name=None,
+                 policy=None,
+                 policy_ent_coeff=1e-2,
                  **kwargs):
+        self.name = name
+        self._name_scope = tf.name_scope(self.name)
+
+        self._pg_loss = pg_loss
         if optimizer is None:
             if optimizer_args is None:
                 optimizer_args = dict()
-            optimizer = PenaltyLbfgsOptimizer(**optimizer_args)
-        self.optimizer = optimizer
-        self.step_size = step_size
-        self.name = name
-        super(NPO, self).__init__(**kwargs)
+            optimizer = LbfgsOptimizer
+
+        with self._name_scope:
+            self.optimizer = optimizer(**optimizer_args)
+            self.clip_range = float(clip_range)
+            self.policy_ent_coeff = float(policy_ent_coeff)
+
+        super(NPO, self).__init__(policy=policy, **kwargs)
 
     @overrides
     def init_opt(self):
-        with tf.name_scope(self.name, "NPO"):
-            is_recurrent = int(self.policy.recurrent)
-            with tf.name_scope("inputs"):
-                obs_var = self.env.observation_space.new_tensor_variable(
-                    'obs',
-                    extra_dims=1 + is_recurrent,
-                )
-                action_var = self.env.action_space.new_tensor_variable(
-                    'action',
-                    extra_dims=1 + is_recurrent,
-                )
-                advantage_var = tensor_utils.new_tensor(
-                    'advantage',
-                    ndim=1 + is_recurrent,
-                    dtype=tf.float32,
-                )
-                dist = self.policy.distribution
+        if self.policy.recurrent:
+            raise NotImplementedError
 
-                old_dist_info_vars = {
-                    k: tf.placeholder(
-                        tf.float32,
-                        shape=[None] * (1 + is_recurrent) + list(shape),
-                        name='old_%s' % k)
-                    for k, shape in dist.dist_info_specs
-                }
-                old_dist_info_vars_list = [
-                    old_dist_info_vars[k] for k in dist.dist_info_keys
-                ]
+        pol_loss_inputs, pol_opt_inputs = self._build_inputs()
+        self._policy_opt_inputs = pol_opt_inputs
 
-                state_info_vars = {
-                    k: tf.placeholder(
-                        tf.float32,
-                        shape=[None] * (1 + is_recurrent) + list(shape),
-                        name=k)
-                    for k, shape in self.policy.state_info_specs
-                }
-                state_info_vars_list = [
-                    state_info_vars[k] for k in self.policy.state_info_keys
-                ]
+        pol_loss, pol_kl = self._build_policy_loss(pol_loss_inputs)
+        self.optimizer.update_opt(
+            loss=pol_loss,
+            target=self.policy,
+            leq_constraint=(pol_kl, self.clip_range),
+            inputs=flatten_inputs(self._policy_opt_inputs),
+            constraint_name="mean_kl")
 
-                if is_recurrent:
-                    valid_var = tf.placeholder(
-                        tf.float32, shape=[None, None], name="valid")
-                else:
-                    valid_var = None
-
-            dist_info_vars = self.policy.dist_info_sym(obs_var,
-                                                       state_info_vars)
-            kl = dist.kl_sym(old_dist_info_vars, dist_info_vars)
-            lr = dist.likelihood_ratio_sym(action_var, old_dist_info_vars,
-                                           dist_info_vars)
-
-            with tf.name_scope("mean_kl", values=[kl, valid_var]):
-                if is_recurrent:
-                    mean_kl = tf.reduce_sum(
-                        kl * valid_var) / tf.reduce_sum(valid_var)
-                else:
-                    mean_kl = tf.reduce_mean(kl, name="reduce_mean_er")
-                tf.identity(mean_kl, name="mean_kl")
-
-            with tf.name_scope(
-                    "surr_loss", values=[lr, advantage_var, valid_var]):
-                if is_recurrent:
-                    surr_loss = (-tf.reduce_sum(lr * advantage_var * valid_var)
-                                 / tf.reduce_sum(valid_var))
-                else:
-                    surr_loss = -tf.reduce_mean(lr * advantage_var)
-                tf.identity(surr_loss, name="surr_loss")
-
-            input_list = [
-                obs_var,
-                action_var,
-                advantage_var,
-            ] + state_info_vars_list + old_dist_info_vars_list
-            if is_recurrent:
-                input_list.append(valid_var)
-
-            self.optimizer.update_opt(
-                loss=surr_loss,
-                target=self.policy,
-                leq_constraint=(mean_kl, self.step_size),
-                inputs=input_list,
-                constraint_name="mean_kl",
-                name="update_opt_surr_loss")
-            return dict()
+        return dict()
 
     @overrides
     def optimize_policy(self, itr, samples_data):
-        all_input_values = tuple(
-            ext.extract(samples_data, "observations", "actions", "advantages"))
-        agent_infos = samples_data["agent_infos"]
-        state_info_list = [agent_infos[k] for k in self.policy.state_info_keys]
-        dist_info_list = [
-            agent_infos[k] for k in self.policy.distribution.dist_info_keys
-        ]
-        all_input_values += tuple(state_info_list) + tuple(dist_info_list)
-        if self.policy.recurrent:
-            all_input_values += (samples_data["valids"], )
+        policy_opt_input_values = self._policy_opt_input_values(samples_data)
+
+        # Train policy network
         logger.log("Computing loss before")
-        loss_before = self.optimizer.loss(all_input_values)
+        loss_before = self.optimizer.loss(policy_opt_input_values)
         logger.log("Computing KL before")
-        mean_kl_before = self.optimizer.constraint_val(all_input_values)
+        policy_kl_before = self.f_policy_kl(*policy_opt_input_values)
         logger.log("Optimizing")
-        self.optimizer.optimize(all_input_values)
+        self.optimizer.optimize(policy_opt_input_values)
         logger.log("Computing KL after")
-        mean_kl = self.optimizer.constraint_val(all_input_values)
+        policy_kl = self.f_policy_kl(*policy_opt_input_values)
         logger.log("Computing loss after")
-        loss_after = self.optimizer.loss(all_input_values)
-        logger.record_tabular('LossBefore', loss_before)
-        logger.record_tabular('LossAfter', loss_after)
-        logger.record_tabular('MeanKLBefore', mean_kl_before)
-        logger.record_tabular('MeanKL', mean_kl)
-        logger.record_tabular('dLoss', loss_before - loss_after)
-        return dict()
+        loss_after = self.optimizer.loss(policy_opt_input_values)
+        logger.record_tabular('Policy/LossBefore', loss_before)
+        logger.record_tabular('Policy/LossAfter', loss_after)
+        logger.record_tabular('Policy/KLBefore', policy_kl_before)
+        logger.record_tabular('Policy/KL', policy_kl)
+        logger.record_tabular('Policy/dLoss', loss_before - loss_after)
+
+        pol_ent = self.f_policy_entropy(*policy_opt_input_values)
+        logger.record_tabular('Policy/Entropy', pol_ent)
+
+        self._fit_baseline(samples_data)
+
+        return self.get_itr_snapshot(itr, samples_data)
 
     @overrides
     def get_itr_snapshot(self, itr, samples_data):
@@ -153,3 +105,286 @@ class NPO(BatchPolopt):
             baseline=self.baseline,
             env=self.env,
         )
+
+    def _build_inputs(self):
+        observation_space = self.policy.observation_space
+        action_space = self.policy.action_space
+
+        policy_dist = self.policy._dist
+
+        with tf.name_scope("inputs"):
+            obs_var = observation_space.new_tensor_variable(
+                name="obs", extra_dims=2)
+            action_var = action_space.new_tensor_variable(
+                name="action", extra_dims=2)
+            reward_var = tensor_utils.new_tensor(
+                name="reward", ndim=2, dtype=tf.float32)
+            valid_var = tf.placeholder(
+                tf.float32, shape=[None, None], name="valid")
+            baseline_var = tensor_utils.new_tensor(
+                name="baseline", ndim=2, dtype=tf.float32)
+
+            policy_state_info_vars = {
+                k: tf.placeholder(
+                    tf.float32, shape=[None] * 2 + list(shape), name=k)
+                for k, shape in self.policy.state_info_specs
+            }
+            policy_state_info_vars_list = [
+                policy_state_info_vars[k] for k in self.policy.state_info_keys
+            ]
+
+            # old policy distribution
+            policy_old_dist_info_vars = {
+                k: tf.placeholder(
+                    tf.float32,
+                    shape=[None] * 2 + list(shape),
+                    name="policy_old_%s" % k)
+                for k, shape in policy_dist.dist_info_specs
+            }
+            policy_old_dist_info_vars_list = [
+                policy_old_dist_info_vars[k]
+                for k in policy_dist.dist_info_keys
+            ]
+
+            # flattened view
+            with tf.name_scope("flat"):
+                obs_flat = flatten_batch(obs_var, name="obs_flat")
+                action_flat = flatten_batch(action_var, name="action_flat")
+                reward_flat = flatten_batch(reward_var, name="reward_flat")
+                valid_flat = flatten_batch(valid_var, name="valid_flat")
+                policy_state_info_vars_flat = flatten_batch_dict(
+                    policy_state_info_vars, name="policy_state_info_vars_flat")
+                policy_old_dist_info_vars_flat = flatten_batch_dict(
+                    policy_old_dist_info_vars,
+                    name="policy_old_dist_info_vars_flat")
+
+            # valid view
+            with tf.name_scope("valid"):
+                action_valid = filter_valids(
+                    action_flat, valid_flat, name="action_valid")
+                policy_state_info_vars_valid = filter_valids_dict(
+                    policy_state_info_vars_flat,
+                    valid_flat,
+                    name="policy_state_info_vars_valid")
+                policy_old_dist_info_vars_valid = filter_valids_dict(
+                    policy_old_dist_info_vars_flat,
+                    valid_flat,
+                    name="policy_old_dist_info_vars_valid")
+
+        # policy loss and optimizer inputs
+        pol_flat = graph_inputs(
+            "PolicyLossInputsFlat",
+            obs_var=obs_flat,
+            action_var=action_flat,
+            reward_var=reward_flat,
+            valid_var=valid_flat,
+            policy_state_info_vars=policy_state_info_vars_flat,
+            policy_old_dist_info_vars=policy_old_dist_info_vars_flat,
+        )
+        pol_valid = graph_inputs(
+            "PolicyLossInputsValid",
+            action_var=action_valid,
+            policy_state_info_vars=policy_state_info_vars_valid,
+            policy_old_dist_info_vars=policy_old_dist_info_vars_valid,
+        )
+        policy_loss_inputs = graph_inputs(
+            "PolicyLossInputs",
+            obs_var=obs_var,
+            action_var=action_var,
+            reward_var=reward_var,
+            baseline_var=baseline_var,
+            valid_var=valid_var,
+            policy_state_info_vars=policy_state_info_vars,
+            policy_old_dist_info_vars=policy_old_dist_info_vars,
+            flat=pol_flat,
+            valid=pol_valid,
+        )
+        policy_opt_inputs = graph_inputs(
+            "PolicyOptInputs",
+            obs_var=obs_var,
+            action_var=action_var,
+            reward_var=reward_var,
+            baseline_var=baseline_var,
+            valid_var=valid_var,
+            policy_state_info_vars_list=policy_state_info_vars_list,
+            policy_old_dist_info_vars_list=policy_old_dist_info_vars_list,
+        )
+
+        return policy_loss_inputs, policy_opt_inputs
+
+    def _build_policy_loss(self, i):
+        pol_dist = self.policy._dist
+
+        policy_entropy = self._build_entropy_term(i)
+
+        with tf.name_scope("augmented_rewards"):
+            rewards = i.reward_var \
+                      + self.policy_ent_coeff * policy_entropy
+
+        with tf.name_scope("policy_loss"):
+            advantages = compute_adv(self.discount, self.gae_lambda,
+                                     self.max_path_length, i.baseline_var,
+                                     rewards)
+
+            adv_flat = flatten_batch(advantages, name="adv_flat")
+            adv_valid = filter_valids(
+                adv_flat, i.flat.valid_var, name="adv_valid")
+
+            # Optionally normalize advantages
+            eps = tf.constant(1e-8, dtype=tf.float32)
+            if self.center_adv:
+                with tf.name_scope("center_adv"):
+                    mean, var = tf.nn.moments(adv_valid, axes=[0])
+                    adv_valid = tf.nn.batch_normalization(
+                        adv_valid, mean, var, 0, 1, eps)
+            if self.positive_adv:
+                with tf.name_scope("positive_adv"):
+                    m = tf.reduce_min(adv_valid)
+                    adv_valid = (adv_valid - m) + eps
+
+            policy_dist_info_flat = self.policy.dist_info_sym(
+                i.flat.obs_var,
+                i.flat.policy_state_info_vars,
+                name="policy_dist_info_flat")
+            policy_dist_info_valid = filter_valids_dict(
+                policy_dist_info_flat,
+                i.flat.valid_var,
+                name="policy_dist_info_valid")
+
+            # Calculate loss function and KL divergence
+            with tf.name_scope("kl"):
+                kl = pol_dist.kl_sym(
+                    i.valid.policy_old_dist_info_vars,
+                    policy_dist_info_valid,
+                )
+                pol_mean_kl = tf.reduce_mean(kl)
+
+            # Calculate surrogate loss
+            with tf.name_scope("surr_loss"):
+                lr = pol_dist.likelihood_ratio_sym(
+                    i.valid.action_var,
+                    i.valid.policy_old_dist_info_vars,
+                    policy_dist_info_valid,
+                    name="lr")
+
+                surr_vanilla = lr * adv_valid
+
+                if self._pg_loss == PGLoss.VANILLA:
+                    # VPG, TRPO use the standard surrogate objective
+                    surr_obj = tf.identity(surr_vanilla, name="surr_obj")
+                elif self._pg_loss == PGLoss.CLIP:
+                    lr_clip = tf.clip_by_value(
+                        lr,
+                        1 - self.clip_range,
+                        1 + self.clip_range,
+                        name="lr_clip")
+                    surr_clip = lr_clip * adv_valid
+                    surr_obj = tf.minimum(
+                        surr_vanilla, surr_clip, name="surr_obj")
+                else:
+                    raise NotImplementedError("Unknown PGLoss")
+
+                # Maximize E[surrogate objective] by minimizing
+                # -E_t[surrogate objective]
+                surr_loss = -tf.reduce_mean(surr_obj)
+
+            # Diagnostic functions
+            self.f_policy_kl = tensor_utils.compile_function(
+                flatten_inputs(self._policy_opt_inputs),
+                pol_mean_kl,
+                log_name="f_policy_kl")
+
+            self.f_rewards = tensor_utils.compile_function(
+                flatten_inputs(self._policy_opt_inputs),
+                rewards,
+                log_name="f_rewards")
+
+            returns = compute_ret(self.discount, self.max_path_length, rewards)
+            self.f_returns = tensor_utils.compile_function(
+                flatten_inputs(self._policy_opt_inputs),
+                returns,
+                log_name="f_returns")
+
+            return surr_loss, pol_mean_kl
+
+    def _build_entropy_term(self, i):
+        with tf.name_scope("policy_entropy"):
+            policy_dist_info_flat = self.policy.dist_info_sym(
+                i.flat.obs_var,
+                i.flat.policy_state_info_vars,
+                name="policy_dist_info_flat")
+
+            policy_entropy_flat = self.policy._dist.entropy_sym(
+                policy_dist_info_flat)
+            policy_entropy = tf.reshape(policy_entropy_flat,
+                                        [-1, self.max_path_length])
+            policy_entropy = tf.reduce_mean(policy_entropy * i.valid_var)
+
+        self.f_policy_entropy = tensor_utils.compile_function(
+            flatten_inputs(self._policy_opt_inputs),
+            tf.reduce_mean(policy_entropy * i.valid_var),
+            log_name="f_policy_entropy")
+
+        return policy_entropy
+
+    def _fit_baseline(self, samples_data):
+        """ Update baselines from samples. """
+
+        policy_opt_input_values = self._policy_opt_input_values(samples_data)
+
+        # Augment reward from baselines
+        rewards_tensor = self.f_rewards(*policy_opt_input_values)
+        returns_tensor = self.f_returns(*policy_opt_input_values)
+        returns_tensor = np.squeeze(returns_tensor)
+
+        paths = samples_data['paths']
+        valids = samples_data['valids']
+        baselines = [path['baselines'] for path in paths]
+
+        # Recompute parts of samples_data
+        aug_rewards = []
+        aug_returns = []
+        for rew, ret, val, path in zip(rewards_tensor, returns_tensor, valids,
+                                       paths):
+            path['rewards'] = rew[val.astype(np.bool)]
+            path['returns'] = ret[val.astype(np.bool)]
+            aug_rewards.append(path['rewards'])
+            aug_returns.append(path['returns'])
+        aug_rewards = tensor_utils.concat_tensor_list(aug_rewards)
+        aug_returns = tensor_utils.concat_tensor_list(aug_returns)
+        samples_data['rewards'] = aug_rewards
+        samples_data['returns'] = aug_returns
+
+        # Calculate explained variance
+        ev = special.explained_variance_1d(
+            np.concatenate(baselines), aug_returns)
+        logger.record_tabular('Baseline/ExplainedVariance', ev)
+
+        # Fit baseline
+        logger.log("Fitting baseline...")
+        if hasattr(self.baseline, 'fit_with_samples'):
+            self.baseline.fit_with_samples(paths, samples_data)
+        else:
+            self.baseline.fit(paths)
+
+    def _policy_opt_input_values(self, samples_data):
+        """ Map rollout samples to the policy optimizer inputs """
+
+        policy_state_info_list = [
+            samples_data["agent_infos"][k] for k in self.policy.state_info_keys
+        ]
+        policy_old_dist_info_list = [
+            samples_data["agent_infos"][k]
+            for k in self.policy._dist.dist_info_keys
+        ]
+
+        policy_opt_input_values = self._policy_opt_inputs._replace(
+            obs_var=samples_data["observations"],
+            action_var=samples_data["actions"],
+            reward_var=samples_data["rewards"],
+            baseline_var=samples_data["baselines"],
+            valid_var=samples_data["valids"],
+            policy_state_info_vars_list=policy_state_info_list,
+            policy_old_dist_info_vars_list=policy_old_dist_info_list,
+        )
+        return flatten_inputs(policy_opt_input_values)
