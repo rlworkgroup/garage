@@ -1,10 +1,8 @@
-import os
 import unittest
 
 import gym
 
 from garage.envs import normalize
-from garage.envs.util import flat_dim, flatten
 
 
 class TestNormalizedGym(unittest.TestCase):
@@ -17,13 +15,10 @@ class TestNormalizedGym(unittest.TestCase):
         for i in range(10):
             env.reset()
             for e in range(5):
-                if 'CI' in os.environ:
-                    print("Skipping rendering test")
-                else:
-                    env.render()
+                env.render()
                 action = env.action_space.sample()
                 next_obs, reward, done, info = env.step(action)
-                assert next_obs.shape == flat_dim(env.observation_space)
+                assert next_obs.shape == env.observation_space.low.shape
                 if done:
                     break
         env.close()
@@ -39,9 +34,8 @@ class TestNormalizedGym(unittest.TestCase):
             for e in range(5):
                 action = env.action_space.sample()
                 next_obs, reward, done, info = env.step(action)
-                assert flatten(env.observation_space,
-                               next_obs).shape == flat_dim(
-                                   env.observation_space)
+                assert (env.observation_space.flatten(next_obs).shape[0] ==
+                        env.observation_space.flat_dim)  # yapf: disable
                 if done:
                     break
         env.close()

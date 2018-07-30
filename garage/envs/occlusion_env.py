@@ -6,7 +6,6 @@ from garage.core import Serializable
 from garage.envs import Step
 from garage.envs.mujoco import MujocoEnv
 from garage.envs.proxy_env import ProxyEnv
-from garage.envs.util import flat_dim
 from garage.misc.overrides import overrides
 
 BIG = 1e6
@@ -17,9 +16,9 @@ class OcclusionEnv(ProxyEnv, Serializable):
 
     def __init__(self, env, sensor_idx):
         """
-        :param sensor_idx: list or ndarray of indices to be shown. Other indices
-         will be occluded. Can be either list of integer indices or boolean
-         mask.
+        :param sensor_idx: list or ndarray of indices to be shown.
+         Other indices will be occluded. Can be either list of integer
+         indices or boolean mask.
         """
         Serializable.quick_init(self, locals())
 
@@ -30,7 +29,7 @@ class OcclusionEnv(ProxyEnv, Serializable):
             self._dt = env.sim.opt.timestep * env.frame_skip
 
     def _set_sensor_mask(self, env, sensor_idx):
-        obsdim = flat_dim(env.observation_space)
+        obsdim = np.prod(env.observation_space.low.shape)
         if len(sensor_idx) > obsdim:
             raise ValueError(("Length of sensor mask ({0}) cannot be greater "
                               "than observation dim ({1})").format(
@@ -72,8 +71,3 @@ class OcclusionEnv(ProxyEnv, Serializable):
     @property
     def dt(self):
         return self._dt
-
-    @overrides
-    def log_diagnostics(self, paths):
-        pass  # the wrapped env will be expecting its own observations in paths,
-        # but they're not

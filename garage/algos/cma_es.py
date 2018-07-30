@@ -128,9 +128,7 @@ class CMAES(RLAlgorithm, Serializable):
             logger.record_tabular(
                 'AvgTrajLen',
                 np.mean([len(info['returns']) for info in infos]))
-            self.env.log_diagnostics(infos)
             self.policy.log_diagnostics(infos)
-
             logger.save_itr_params(
                 itr, dict(
                     itr=itr,

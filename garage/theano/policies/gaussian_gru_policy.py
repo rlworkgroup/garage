@@ -12,6 +12,7 @@ from garage.theano.core import LasagnePowered
 from garage.theano.core import ParamLayer
 from garage.theano.distributions import RecurrentDiagonalGaussian
 from garage.theano.misc import tensor_utils
+from garage.theano.spaces import Box
 
 
 class GaussianGRUPolicy(StochasticPolicy, LasagnePowered):
@@ -31,6 +32,8 @@ class GaussianGRUPolicy(StochasticPolicy, LasagnePowered):
         :param hidden_nonlinearity: nonlinearity used for each hidden layer
         :return:
         """
+        assert isinstance(env_spec.action_space, Box)
+
         Serializable.quick_init(self, locals())
         super(GaussianGRUPolicy, self).__init__(env_spec)
 

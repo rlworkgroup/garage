@@ -11,8 +11,6 @@ import numpy as np
 from scipy.signal import convolve2d
 from scipy.stats import multivariate_normal
 
-from garage.envs.util import flat_dim
-
 # the colormap should assign light colors to low values
 TERRAIN_CMAP = 'Greens'
 DEFAULT_PATH = '/tmp/mujoco_terrains'
@@ -23,7 +21,8 @@ def generate_hills(width, height, nhills):
     '''
     @param width float, terrain width
     @param height float, terrain height
-    @param nhills int, #hills to gen. #hills actually generted is sqrt(nhills)^2
+    @param nhills int, #hills to gen. #hills actually generated
+           is sqrt(nhills)^2
     '''
     # setup coordinate grid
     xmin, xmax = -width / 2.0, width / 2.0
@@ -51,10 +50,10 @@ def generate_hills(width, height, nhills):
 
 
 def clear_patch(hfield, box):
-    ''' Clears a patch shaped like box, assuming robot is placed in center of hfield
+    '''Clears a patch shaped like box, assuming robot is placed in center of hfield
     @param box: garage.spaces.Box-like
     '''
-    if flat_dim(box) > 2:
+    if np.prod(box.low.shape) > 2:
         raise ValueError("Provide 2dim box")
 
     # clear patch
@@ -67,10 +66,10 @@ def clear_patch(hfield, box):
     hfield[fromrow:torow, fromcol:tocol] = 0.0
 
     # convolve to smoothen edges somewhat, in case hills were cut off
-    K = np.ones((10, 10)) / 100.0
+    k = np.ones((10, 10)) / 100.0
     s = convolve2d(
         hfield[fromrow - 9:torow + 9, fromcol - 9:tocol + 9],
-        K,
+        k,
         mode='same',
         boundary='symm')
     hfield[fromrow - 9:torow + 9, fromcol - 9:tocol + 9] = s

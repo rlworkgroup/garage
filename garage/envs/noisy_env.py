@@ -3,7 +3,6 @@ import numpy as np
 from garage.core import Serializable
 from garage.envs import Step
 from garage.envs.proxy_env import ProxyEnv
-from garage.envs.util import flat_dim
 from garage.misc import autoargs
 from garage.misc.overrides import overrides
 
@@ -22,7 +21,7 @@ class NoisyObservationEnv(ProxyEnv, Serializable):
         Serializable.quick_init(self, locals())
         super(NoisyObservationEnv, self).__init__(env)
         self.obs_noise = obs_noise
-        self._action_flat_dim = flat_dim(self.action_space)
+        self._action_flat_dim = np.prod(self.action_space.low.shape)
 
     def get_obs_noise_scale_factor(self, obs):
         # return np.abs(obs)
@@ -63,7 +62,7 @@ class DelayedActionEnv(ProxyEnv, Serializable):
         Serializable.quick_init(self, locals())
         super(DelayedActionEnv, self).__init__(env)
         self.action_delay = action_delay
-        self._action_flat_dim = flat_dim(self.action_space)
+        self._action_flat_dim = np.prod(self.action_space.low.shape)
         self._queued_actions = None
 
     @overrides

@@ -387,7 +387,6 @@ class DDPG(RLAlgorithm):
         logger.record_tabular('PolicyRegParamNorm', policy_reg_param_norm)
         logger.record_tabular('QFunRegParamNorm', qfun_reg_param_norm)
 
-        self.env.log_diagnostics(paths)
         self.policy.log_diagnostics(paths)
 
         self.qf_loss_averages = []

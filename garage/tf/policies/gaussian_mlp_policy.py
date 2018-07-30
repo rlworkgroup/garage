@@ -54,8 +54,9 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
             - softplus: the std will be computed as log(1+exp(x))
         :return:
         """
-        Serializable.quick_init(self, locals())
         assert isinstance(env_spec.action_space, Box)
+
+        Serializable.quick_init(self, locals())
         self.name = name
         self._mean_network_name = "mean_network"
         self._std_network_name = "std_network"

@@ -14,6 +14,7 @@ from garage.theano.core import MLP
 from garage.theano.core import ParamLayer
 from garage.theano.distributions import DiagonalGaussian
 from garage.theano.misc import tensor_utils
+from garage.theano.spaces import Box
 
 
 class GaussianMLPPolicy(StochasticPolicy, LasagnePowered):
@@ -52,8 +53,9 @@ class GaussianMLPPolicy(StochasticPolicy, LasagnePowered):
         :param std_network: custom network for the output log std
         :return:
         """
-        Serializable.quick_init(self, locals())
         assert isinstance(env_spec.action_space, Box)
+
+        Serializable.quick_init(self, locals())
 
         obs_dim = env_spec.observation_space.flat_dim
         action_flat_dim = env_spec.action_space.flat_dim

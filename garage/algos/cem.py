@@ -171,7 +171,6 @@ class CEM(RLAlgorithm, Serializable):
                 np.mean([len(path['returns']) for path in paths]))
 
             self.policy.set_param_values(best_x)
-            self.env.log_diagnostics(paths)
             self.policy.log_diagnostics(paths)
             logger.save_itr_params(
                 itr,

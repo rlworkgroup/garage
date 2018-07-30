@@ -4,8 +4,8 @@ import pygame
 from garage.core import Serializable
 from garage.envs.box2d.box2d_env import Box2DEnv
 from garage.envs.box2d.parser import find_body
+from garage.envs.box2d.parser import find_joint
 from garage.envs.box2d.parser.xml_box2d import _get_name
-from garage.envs.util import flat_dim
 from garage.misc import autoargs
 from garage.misc.overrides import overrides
 
@@ -15,9 +15,8 @@ class CarParkingEnv(Box2DEnv, Serializable):
     @autoargs.arg(
         "random_start",
         type=bool,
-        help=
-        "Randomized starting position by uniforming sampling starting car angle"
-        "and position from a circle of radius 5")
+        help="Randomized starting position by uniforming sampling starting"
+        " car angle and position from a circle of radius 5")
     @autoargs.arg(
         "random_start_range",
         type=float,
@@ -120,9 +119,10 @@ class CarParkingEnv(Box2DEnv, Serializable):
 
     @overrides
     def forward_dynamics(self, action):
-        if len(action) != flat_dim(self.action_space) + 1:
-            raise ValueError('incorrect action dimension: expected %d but got '
-                             '%d' % (flat_dim(self.action_space), len(action)))
+        if len(action) != np.prod(self.action_space.low.shape) + 1:
+            raise ValueError(
+                'incorrect action dimension: expected %d but got '
+                '%d' % (np.prod(self.action_space.low.shape), len(action)))
         lb, ub = self.action_bounds
         action = np.clip(action, lb, ub)
         for ctrl, act in zip(self.extra_data.controls, action):

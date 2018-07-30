@@ -1,5 +1,4 @@
 """Testing for sawyer envrionments. """
-import os
 import unittest
 
 import numpy as np
@@ -9,18 +8,18 @@ from garage.envs.mujoco.sawyer import BinSortingEnv
 from garage.envs.mujoco.sawyer import BlockStackingEnv
 from garage.envs.mujoco.sawyer import PickAndPlaceEnv
 from garage.envs.mujoco.sawyer import ReacherEnv
-from garage.envs.util import spec
 from garage.theano.algos import TRPO
+from garage.theano.envs import TheanoEnv
 from garage.theano.policies import GaussianMLPPolicy
 
 
 def run_bin_sorting(*_):
     """Run TRPO for bin sorting env. """
 
-    env = BinSortingEnv()
+    env = TheanoEnv(BinSortingEnv())
 
-    policy = GaussianMLPPolicy(env_spec=spec(env), hidden_sizes=(32, 32))
-    baseline = LinearFeatureBaseline(env_spec=spec(env))
+    policy = GaussianMLPPolicy(env_spec=env.spec, hidden_sizes=(32, 32))
+    baseline = LinearFeatureBaseline(env_spec=env.spec)
     algo = TRPO(
         env=env,
         policy=policy,
@@ -38,10 +37,10 @@ def run_bin_sorting(*_):
 
 def run_block_stacking(*_):
     """Run TRPO with block stacking. """
-    env = BlockStackingEnv()
+    env = TheanoEnv(BlockStackingEnv())
 
-    policy = GaussianMLPPolicy(env_spec=spec(env), hidden_sizes=(32, 32))
-    baseline = LinearFeatureBaseline(env_spec=spec(env))
+    policy = GaussianMLPPolicy(env_spec=env.spec, hidden_sizes=(32, 32))
+    baseline = LinearFeatureBaseline(env_spec=env.spec)
     algo = TRPO(
         env=env,
         policy=policy,
@@ -59,9 +58,9 @@ def run_block_stacking(*_):
 
 def run_pick_and_place(*_):
     initial_goal = np.array([0.6, -0.1, 0.80])
-    env = PickAndPlaceEnv(initial_goal)
-    policy = GaussianMLPPolicy(env_spec=spec(env), hidden_sizes=(32, 32))
-    baseline = LinearFeatureBaseline(env_spec=spec(env))
+    env = TheanoEnv(PickAndPlaceEnv(initial_goal))
+    policy = GaussianMLPPolicy(env_spec=env.spec, hidden_sizes=(32, 32))
+    baseline = LinearFeatureBaseline(env_spec=env.spec)
     algo = TRPO(
         env=env,
         policy=policy,
@@ -84,10 +83,7 @@ class TestSawyerEnvs(unittest.TestCase):
 
         env = ReacherEnv(goal_position=tasks[0])
         for i in range(5):
-            if 'CI' in os.environ:
-                print("Skipping rendering test")
-            else:
-                env.render()
+            env.render()
             action = env.action_space.sample()
             next_obs, reward, done, _ = env.step(action)
         env.reset()
@@ -98,10 +94,7 @@ class TestSawyerEnvs(unittest.TestCase):
 
         env = PickAndPlaceEnv()
         for i in range(5):
-            if 'CI' in os.environ:
-                print("Skipping rendering test")
-            else:
-                env.render()
+            env.render()
             action = env.action_space.sample()
             env.step(action)
         env.reset()

@@ -5,11 +5,11 @@ import numpy as np
 from garage.core import Serializable
 from garage.misc.overrides import overrides
 from garage.policies import StochasticPolicy
-from garage.spaces import Discrete
 from garage.theano.core import LasagnePowered
 from garage.theano.core import MLP
 from garage.theano.distributions import Categorical
 from garage.theano.misc import tensor_utils
+from garage.theano.spaces import Discrete
 
 
 class CategoricalMLPPolicy(StochasticPolicy, LasagnePowered):
@@ -30,9 +30,9 @@ class CategoricalMLPPolicy(StochasticPolicy, LasagnePowered):
         are ignored
         :return:
         """
-        Serializable.quick_init(self, locals())
-
         assert isinstance(env_spec.action_space, Discrete)
+
+        Serializable.quick_init(self, locals())
 
         if prob_network is None:
             prob_network = MLP(

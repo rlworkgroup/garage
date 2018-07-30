@@ -7,12 +7,12 @@ from garage.core import Serializable
 from garage.misc import special
 from garage.misc.overrides import overrides
 from garage.policies import StochasticPolicy
-from garage.spaces import Discrete
 from garage.theano.core import GRUNetwork
 from garage.theano.core import LasagnePowered
 from garage.theano.core import OpLayer
 from garage.theano.distributions import RecurrentCategorical
 from garage.theano.misc import tensor_utils
+from garage.theano.spaces import Discrete
 
 
 class CategoricalGRUPolicy(StochasticPolicy, LasagnePowered):
@@ -29,6 +29,7 @@ class CategoricalGRUPolicy(StochasticPolicy, LasagnePowered):
         :return:
         """
         assert isinstance(env_spec.action_space, Discrete)
+
         Serializable.quick_init(self, locals())
         super(CategoricalGRUPolicy, self).__init__(env_spec)
 
