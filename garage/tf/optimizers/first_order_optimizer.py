@@ -84,7 +84,7 @@ class FirstOrderOptimizer(Serializable):
             if extra_inputs is None:
                 extra_inputs = list()
             self._input_vars = inputs + extra_inputs
-            self._opt_fun = ext.lazydict(
+            self._opt_fun = ext.LazyDict(
                 f_loss=lambda: tensor_utils.compile_function(
                     inputs + extra_inputs, loss), )
 

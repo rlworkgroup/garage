@@ -7,7 +7,6 @@ import theano.tensor as TT
 
 from garage.core import Serializable
 from garage.misc import logger
-from garage.misc import tensor_utils
 from garage.misc.ext import iterate_minibatches_generic
 from garage.optimizers import LbfgsOptimizer
 from garage.optimizers import PenaltyLbfgsOptimizer

@@ -51,7 +51,7 @@ class PerlmutterHvp(object):
                     return tensor_utils.flatten_tensor_variables(
                         hx_plain_splits)
 
-            self.opt_fun = ext.lazydict(
+            self.opt_fun = ext.LazyDict(
                 f_hx_plain=lambda: tensor_utils.compile_function(
                     inputs=inputs + xs,
                     outputs=hx_plain(),
@@ -118,7 +118,7 @@ class FiniteDifferenceHvp(object):
                         hx = (flat_grad_dvplus - flat_grad) / eps
                     return hx
 
-            self.opt_fun = ext.lazydict(
+            self.opt_fun = ext.LazyDict(
                 f_grad=lambda: tensor_utils.compile_function(
                     inputs=inputs,
                     outputs=flat_grad,
@@ -244,7 +244,7 @@ class ConjugateGradientOptimizer(Serializable):
             self._max_constraint_val = constraint_value
             self._constraint_name = constraint_name
 
-            self._opt_fun = ext.lazydict(
+            self._opt_fun = ext.LazyDict(
                 f_loss=lambda: tensor_utils.compile_function(
                     inputs=inputs + extra_inputs,
                     outputs=loss,

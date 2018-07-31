@@ -1,13 +1,19 @@
 """Utilities for Theano tensors."""
+from collections import OrderedDict
+import os.path as osp
+import pickle
+
 import numpy as np
 import theano
-from theano import Variable
 from theano import grad
+from theano import Variable
 from theano.gradient import format_as
 import theano.tensor as TT
 from theano.tensor import arange
 import theano.tensor.extra_ops
 import theano.tensor.nnet
+
+from garage.misc.console import Message
 
 
 def softmax_sym(x):
@@ -15,16 +21,16 @@ def softmax_sym(x):
     return theano.tensor.nnet.softmax(x)
 
 
-def normalize_updates(old_mean, old_std, new_mean, new_std, old_W, old_b):
+def normalize_updates(old_mean, old_std, new_mean, new_std, old_w, old_b):
     """Compute the updates to normalize the last layer of a neural network."""
     # Make necessary transformation so that
     # (W_old * h + b_old) * std_old + mean_old == \
     #   (W_new * h + b_new) * std_new + mean_new
-    new_W = old_W * old_std[0] / (new_std[0] + 1e-6)
+    new_w = old_w * old_std[0] / (new_std[0] + 1e-6)
     new_b = (old_b * old_std[0] + old_mean[0] - new_mean[0]) / (
         new_std[0] + 1e-6)
     return OrderedDict([
-        (old_W, TT.cast(new_W, old_W.dtype)),
+        (old_w, TT.cast(new_w, old_w.dtype)),
         (old_b, TT.cast(new_b, old_b.dtype)),
         (old_mean, new_mean),
         (old_std, new_std),
@@ -50,11 +56,9 @@ def cached_function(inputs, outputs):
         else:
             hash_content = theano.pp(outputs)
     cache_key = hex(hash(hash_content) & (2**64 - 1))[:-1]
-    cache_dir = Path('~/.hierctrl_cache')
-    cache_dir = cache_dir.expanduser()
-    cache_dir.mkdir_p()
-    cache_file = cache_dir / ('%s.pkl' % cache_key)
-    if cache_file.exists():
+    cache_dir = osp.expanduser('~/.hierctrl_cache')
+    cache_file = cache_dir + ("/%s.pkl" % cache_key)
+    if osp.isfile(cache_file):
         with Message("unpickling"):
             with open(cache_file, "rb") as f:
                 try:

@@ -15,28 +15,28 @@ def gauss_newton_product(
 ):  # this computes the product Gv = J'HJv (G is the Gauss-Newton matrix)
     if not isinstance(s, (list, tuple)):
         s = [s]
-    sum_Gv = None
+    sum_gv = None
     for si in s:
-        Jv = T.Rop(si, p, v)
-        HJv = T.grad(
-            T.sum(T.grad(cost, si, disconnected_inputs='ignore') * Jv),
+        jv = T.Rop(si, p, v)
+        hjv = T.grad(
+            T.sum(T.grad(cost, si, disconnected_inputs='ignore') * jv),
             si,
-            consider_constant=[Jv],
+            consider_constant=[jv],
             disconnected_inputs='ignore')
-        Gv = T.grad(
-            T.sum(HJv * si),
+        gv = T.grad(
+            T.sum(hjv * si),
             p,
-            consider_constant=[HJv, Jv],
+            consider_constant=[hjv, jv],
             disconnected_inputs='ignore')
-        Gv = list(map(T.as_tensor_variable, Gv))  # for CudaNdarray
-        if sum_Gv is None:
-            sum_Gv = Gv
+        gv = list(map(T.as_tensor_variable, gv))  # for CudaNdarray
+        if sum_gv is None:
+            sum_gv = gv
         else:
-            sum_Gv = [a + b for a, b in zip(Gv, sum_Gv)]
-    return sum_Gv
+            sum_gv = [a + b for a, b in zip(gv, sum_gv)]
+    return sum_gv
 
 
-class hf_optimizer:
+class HfOptimizer:
     '''Black-box Theano-based Hessian-free optimizer.
     See (Martens, ICML 2010) and (Martens & Sutskever, ICML 2011) for details.
 
@@ -53,17 +53,19 @@ class hf_optimizer:
             Parameters of the model to be optimized.
         inputs : list of Theano variables
             Symbolic variables that are inputs to your graph (they should also
-            include your model 'output'). Your training examples must fit these.
+            include your model 'output'). Your training examples must fit
+            these.
         s : Theano variable
-            Symbolic variable with respect to which the Hessian of the objective
-            is positive-definite, implicitly defining the Gauss-Newton matrix.
+            Symbolic variable with respect to which the Hessian of the
+            objective is positive-definite, implicitly defining the
+            Gauss-Newton matrix.
             Typically, it is the activation of the output layer.
         costs : list of Theano variables
             Monitoring costs, the first of which will be the optimized
             objective.
         h: Theano variable or None
-            Structural damping is applied to this variable (typically the hidden
-            units of an RNN).
+            Structural damping is applied to this variable (typically the
+            hidden units of an RNN).
         ha: Theano variable or None
             Symbolic variable that implicitly defines the Gauss-Newton matrix
             for the structural damping term (typically the activation of the
@@ -84,24 +86,25 @@ class hf_optimizer:
         symbolic_types = T.scalar, T.vector, T.matrix, T.tensor3, T.tensor4
 
         v = [symbolic_types[len(i)]() for i in self.shapes]
-        Gv = gauss_newton_product(costs[0], _p, v, s)
+        gv = gauss_newton_product(costs[0], _p, v, s)
 
         coefficient = T.scalar()  # this is lambda*mu
         if h is not None:  # structural damping with cross-entropy
             h_constant = symbolic_types[h.ndim](
-            )  # T.Rop does not support `consider_constant` yet, so use `givens`
+            )  # T.Rop doesn't support `consider_constant` yet, so use `givens`
             structural_damping = coefficient * (
                 -h_constant * T.log(h + 1e-10) -
                 (1 - h_constant) * T.log((1 - h) + 1e-10)).sum() / h.shape[0]
-            if ha is None: ha = h
-            Gv_damping = gauss_newton_product(structural_damping, _p, v, ha)
-            Gv = [a + b for a, b in zip(Gv, Gv_damping)]
+            if ha is None:
+                ha = h
+            gv_damping = gauss_newton_product(structural_damping, _p, v, ha)
+            gv = [a + b for a, b in zip(gv, gv_damping)]
             givens = {h_constant: h}
         else:
             givens = {}
 
         self.function_Gv = compile_function(
-            inputs + v + [coefficient], Gv, givens=givens)
+            inputs + v + [coefficient], gv, givens=givens)
 
     def quick_cost(self, delta=0):
         # quickly evaluate objective (costs[0]) over the CG batch
@@ -126,34 +129,34 @@ class hf_optimizer:
 
     def cg(self, b, verbose=False):
         if self.preconditioner:
-            M = self.lambda_ * numpy.ones_like(b)
+            m = self.lambda_ * numpy.ones_like(b)
             for inputs in self.cg_dataset.iterate(update=False):
-                M += self.list_to_flat(self.f_gc(*inputs)[:len(
+                m += self.list_to_flat(self.f_gc(*inputs)[:len(
                     self.p)])**2  # / self.cg_dataset.number_batches**2
-            # print 'precond~%.3f,' % (M - self.lambda_).mean(),
-            M **= -0.75  # actually 1/M
+            # print 'precond~%.3f,' % (m - self.lambda_).mean(),
+            m **= -0.75  # actually 1/m
             sys.stdout.flush()
         else:
-            M = 1.0
+            m = 1.0
 
         x = self.cg_last_x if hasattr(self, 'cg_last_x') else numpy.zeros_like(
             b)  # sharing information between CG runs
-        r = b - self.batch_Gv(x)
-        d = M * r
+        r = b - self.batch_gv(x)
+        d = m * r
         delta_new = numpy.dot(r, d)
         phi = []
         backtracking = []
         backspaces = 0
 
         for i in range(1, 1 + self.max_cg_iterations):
-            # adapted from http://www.cs.cmu.edu/~quake-papers/painless-conjugate-gradient.pdf (p.51)
-            q = self.batch_Gv(d)
+            # adapted from http://www.cs.cmu.edu/~quake-papers/painless-conjugate-gradient.pdf (p.51)  # noqa: E501
+            q = self.batch_gv(d)
             dq = numpy.dot(d, q)
             # assert dq > 0, 'negative curvature'
             alpha = delta_new / dq
             x = x + alpha * d
             r = r - alpha * q
-            s = M * r
+            s = m * r
             delta_old = delta_new
             delta_new = numpy.dot(r, s)
             d = s + (delta_new / delta_old) * d
@@ -199,14 +202,15 @@ class hf_optimizer:
     def list_to_flat(self, l):
         return numpy.concatenate([i.flatten() for i in l])
 
-    def batch_Gv(self, vector, lambda_=None):
+    def batch_gv(self, vector, lambda_=None):
         v = self.flat_to_list(vector)
-        if lambda_ is None: lambda_ = self.lambda_
+        if lambda_ is None:
+            lambda_ = self.lambda_
         result = lambda_ * vector  # Tikhonov damping
         for inputs in self.cg_dataset.iterate(False):
             result += self.list_to_flat(
-                self.function_Gv(*(inputs + v + [lambda_ * self.mu]
-                                   ))) / self.cg_dataset.number_batches
+                self.function_Gv(*(inputs + v + [lambda_ * self.mu]))
+            ) / self.cg_dataset.number_batches
         return result
 
     def train(self,
@@ -279,15 +283,18 @@ class hf_optimizer:
         first_iteration = 1
 
         if isinstance(save_progress, str) and os.path.isfile(save_progress):
-            save = pickle.load(file(save_progress))
+            with open(save_progress, "rb") as f:
+                save = pickle.load(f)
             self.cg_last_x, best, self.lambda_, first_iteration, init_p = save
             first_iteration += 1
 
-            if verbose: print('* recovered saved model')
+            if verbose:
+                print('* recovered saved model')
 
         try:
             for u in range(first_iteration, 1 + num_updates):
-                if verbose: print('update %i/%i,' % (u, num_updates), end=' ')
+                if verbose:
+                    print('update %i/%i,' % (u, num_updates), end=' ')
                 sys.stdout.flush()
                 #                 import ipdb; ipdb.set_trace()
                 gradient = numpy.zeros(
@@ -300,15 +307,17 @@ class hf_optimizer:
                         result[:len(self.p)]) / gradient_dataset.number_batches
                     costs.append(result[len(self.p):])
 
-                if verbose: print('cost=', numpy.mean(costs, axis=0), end=' ')
-                if verbose: print('lambda=%.5f,' % self.lambda_, end=' ')
+                if verbose:
+                    print('cost=', numpy.mean(costs, axis=0), end=' ')
+                if verbose:
+                    print('lambda=%.5f,' % self.lambda_, end=' ')
                 sys.stdout.flush()
 
                 after_cost, flat_delta, backtracking, num_cg_iterations = \
                     self.cg(-gradient)
                 delta_cost = numpy.dot(
                     flat_delta,
-                    gradient + 0.5 * self.batch_Gv(flat_delta, lambda_=0)
+                    gradient + 0.5 * self.batch_gv(flat_delta, lambda_=0)
                 )  # disable damping
                 before_cost = self.quick_cost()
                 for i, delta in zip(self.p, self.flat_to_list(flat_delta)):
@@ -333,30 +342,34 @@ class hf_optimizer:
                             axis=0)
                     elif isinstance(validation, collections.Callable):
                         costs = validation()
-                    if verbose: print('validation=', costs, end=' ')
+                    if verbose:
+                        print('validation=', costs, end=' ')
                     if costs[0] < best[1]:
                         best = u, costs[0], [
                             i.get_value().copy() for i in self.p
                         ]
-                        if verbose: print('*NEW BEST', end=' ')
+                        if verbose:
+                            print('*NEW BEST', end=' ')
 
                 if isinstance(save_progress, str):
                     # do not save dataset states
                     save = self.cg_last_x, best, self.lambda_, u, [
                         i.get_value().copy() for i in self.p
                     ]
-                    pickle.dump(save, file(save_progress, 'wb'),
-                                pickle.HIGHEST_PROTOCOL)
+                    with open(save_progress, "wb") as f:
+                        pickle.dump(save, f, pickle.HIGHEST_PROTOCOL)
 
                 if u - best[0] > patience:
-                    if verbose: print('PATIENCE ELAPSED, BAILING OUT')
+                    if verbose:
+                        print('PATIENCE ELAPSED, BAILING OUT')
                     break
 
                 if verbose:
                     print()
                     sys.stdout.flush()
         except KeyboardInterrupt:
-            if verbose: print('Interrupted by user.')
+            if verbose:
+                print('Interrupted by user.')
 
         if best[2] is None:
             best[2] = [i.get_value().copy() for i in self.p]
@@ -372,7 +385,8 @@ class SequenceDataset:
 
         data : list of lists of numpy arrays
             Your dataset will be provided as a list (one list for each graph
-            input) of variable-length tensors that will be used as mini-batches.
+            input) of variable-length tensors that will be used as
+            mini-batches.
             Typically, each tensor is a sequence or a set of examples.
         batch_size : int or None
             If an int, the mini-batches will be further split in chunks of
@@ -411,7 +425,8 @@ class SequenceDataset:
     def iterate(self, update=True):
         for b in range(self.number_batches):
             yield self.items[(self.current_batch + b) % len(self.items)]
-        if update: self.update()
+        if update:
+            self.update()
 
     def update(self):
         if self.current_batch + self.number_batches >= len(self.items):

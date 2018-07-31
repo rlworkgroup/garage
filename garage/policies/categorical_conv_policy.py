@@ -4,7 +4,6 @@ import lasagne.nonlinearities as NL
 
 from garage.core import Serializable
 from garage.envs.util import flatten, flatten_n, weighted_sample
-from garage.misc import logger
 from garage.misc.overrides import overrides
 from garage.policies import StochasticPolicy
 from garage.theano.core import ConvNetwork

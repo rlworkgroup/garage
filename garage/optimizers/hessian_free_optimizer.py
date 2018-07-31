@@ -1,9 +1,9 @@
 import time
 
 from garage.core import Serializable
-from garage.misc.ext import lazydict
+from garage.misc.ext import LazyDict
 from garage.optimizers import BatchDataset
-from garage.optimizers import hf_optimizer
+from garage.optimizers import HfOptimizer
 from garage.theano.misc.tensor_utils import compile_function
 
 
@@ -46,14 +46,14 @@ class HessianFreeOptimizer(Serializable):
         if extra_inputs is None:
             extra_inputs = list()
 
-        self._hf_optimizer = hf_optimizer(
+        self._hf_optimizer = HfOptimizer(
             _p=target.get_params(trainable=True),
             inputs=(inputs + extra_inputs),
             s=network_outputs,
             costs=[loss],
         )
 
-        self._opt_fun = lazydict(
+        self._opt_fun = LazyDict(
             f_loss=lambda: compile_function(inputs + extra_inputs, loss), )
 
     def loss(self, inputs, extra_inputs=None):

@@ -33,8 +33,8 @@ class FirstOrderOptimizer(Serializable):
         :param max_epochs:
         :param tolerance:
         :param update_method:
-        :param batch_size: None or an integer. If None the whole dataset will be
-         used.
+        :param batch_size: None or an integer. If None the whole dataset will
+         be used.
         :param callback:
         :param kwargs:
         :return:
@@ -60,8 +60,8 @@ class FirstOrderOptimizer(Serializable):
         """
         :param loss: Symbolic expression for the loss function.
         :param target: A parameterized object to optimize over. It should
-         implement methods of the :class:`garage.core.paramerized.Parameterized`
-         class.
+         implement methods of the
+         :class:`garage.core.paramerized.Parameterized` class.
         :param leq_constraint: A constraint provided as a tuple (f, epsilon),
          of the form f(*inputs) <= epsilon.
         :param inputs: A list of symbolic variables as inputs
@@ -83,9 +83,9 @@ class FirstOrderOptimizer(Serializable):
         if extra_inputs is None:
             extra_inputs = list()
 
-        self._opt_fun = ext.lazydict(
-            f_loss=lambda: tensor_utils.compile_function(inputs + extra_inputs,
-                                                         loss),
+        self._opt_fun = ext.LazyDict(
+            f_loss=lambda: tensor_utils.compile_function(
+                inputs + extra_inputs, loss),
             f_opt=lambda: tensor_utils.compile_function(
                 inputs=inputs + extra_inputs,
                 outputs=loss,
@@ -103,7 +103,7 @@ class FirstOrderOptimizer(Serializable):
                      callback=None,
                      yield_itr=None):
 
-        if len(inputs) == 0:
+        if not inputs:
             # Assumes that we should always sample mini-batches
             raise NotImplementedError
 

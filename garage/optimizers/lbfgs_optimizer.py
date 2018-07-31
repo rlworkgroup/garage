@@ -4,9 +4,10 @@ import scipy.optimize
 import theano
 
 from garage.core import Serializable
-from garage.misc.ext import lazydict
+from garage.misc.ext import LazyDict
 from garage.theano.misc.tensor_utils import compile_function
 from garage.theano.misc.tensor_utils import flatten_tensor_variables
+
 
 class LbfgsOptimizer(Serializable):
     """
@@ -31,10 +32,10 @@ class LbfgsOptimizer(Serializable):
         """
         :param loss: Symbolic expression for the loss function.
         :param target: A parameterized object to optimize over. It should
-         implement methods of the :class:`garage.core.paramerized.Parameterized`
-         class.
-        :param leq_constraint: A constraint provided as a tuple (f, epsilon), of
-         the form f(*inputs) <= epsilon.
+         implement methods of the
+         :class:`garage.core.paramerized.Parameterized` class.
+        :param leq_constraint: A constraint provided as a tuple (f, epsilon),
+         of the form f(*inputs) <= epsilon.
         :param inputs: A list of symbolic variables as inputs
         :param gradients: symbolic expressions for the gradients of trainable
          parameters of the target. By default this will be computed by calling
@@ -54,7 +55,7 @@ class LbfgsOptimizer(Serializable):
         if extra_inputs is None:
             extra_inputs = list()
 
-        self._opt_fun = lazydict(
+        self._opt_fun = LazyDict(
             f_loss=lambda: compile_function(inputs + extra_inputs, loss),
             f_opt=lambda: compile_function(
                 inputs=inputs + extra_inputs,

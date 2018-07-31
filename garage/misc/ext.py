@@ -1,21 +1,17 @@
-from collections import OrderedDict
 from functools import reduce
 import operator
-import pickle as pickle
 import random
 import sys
 
 import numpy as np
-from path import Path
 
 from garage.misc.console import colorize
-from garage.misc.console import Message
 
 sys.setrecursionlimit(50000)
 
 
 def extract(x, *keys):
-    if isinstance(x, (dict, lazydict)):
+    if isinstance(x, (dict, LazyDict)):
         return tuple(x[k] for k in keys)
     elif isinstance(x, list):
         return tuple([xi[k] for xi in x] for k in keys)
@@ -44,7 +40,7 @@ def compact(x):
 
 
 # Immutable, lazily evaluated dict
-class lazydict(object):
+class LazyDict(object):
     def __init__(self, **kwargs):
         self._lazy_dict = kwargs
         self._dict = {}
@@ -123,7 +119,7 @@ def path_len(p):
 
 def shuffled(sequence):
     deck = list(sequence)
-    while len(deck):
+    while deck:
         i = random.randint(0, len(deck) - 1)  # choose random card
         card = deck[i]  # take the card
         deck[i] = deck[-1]  # put top card in its place
@@ -172,17 +168,16 @@ def print_lasagne_layer(layer, prefix=""):
         print_lasagne_layer(layer.input_layer, prefix + "  ")
 
 
-"""
-Devide function f's inputs into several slices. Evaluate f on those slices, and
-then average the result. It is useful when memory is not enough to process all
-data at once.
-Assume:
-1. each of f's inputs is iterable and composed of multiple "samples"
-2. outputs can be averaged over "samples"
-"""
-
-
 def sliced_fun(f, n_slices):
+    """Devide function f's inputs into several slices.
+
+    Evaluate f on those slices, and then average the result. It is useful when
+    memory is not enough to process all data at once.
+    Assume:
+    1. each of f's inputs is iterable and composed of multiple "samples"
+    2. outputs can be averaged over "samples"
+    """
+
     def sliced_f(sliced_inputs, non_sliced_inputs=None):
         if non_sliced_inputs is None:
             non_sliced_inputs = []

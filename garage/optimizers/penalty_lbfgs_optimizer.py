@@ -5,7 +5,7 @@ import theano.tensor as TT
 
 from garage.core import Serializable
 from garage.misc import logger
-from garage.misc.ext import lazydict
+from garage.misc.ext import LazyDict
 from garage.theano.misc.tensor_utils import compile_function
 from garage.theano.misc.tensor_utils import flatten_tensor_variables
 
@@ -52,8 +52,8 @@ class PenaltyLbfgsOptimizer(Serializable):
         """
         :param loss: Symbolic expression for the loss function.
         :param target: A parameterized object to optimize over. It should
-         implement methods of the :class:`garage.core.paramerized.Parameterized`
-         class.
+         implement methods of the
+         :class:`garage.core.paramerized.Parameterized` class.
         :param leq_constraint: A constraint provided as a tuple (f, epsilon),
          of the form f(*inputs) <= epsilon.
         :param inputs: A list of symbolic variables as inputs
@@ -78,7 +78,7 @@ class PenaltyLbfgsOptimizer(Serializable):
                 flat_grad.astype('float64')
             ]
 
-        self._opt_fun = lazydict(
+        self._opt_fun = LazyDict(
             f_loss=lambda: compile_function(inputs, loss, log_name="f_loss"),
             f_constraint=lambda: compile_function(
                 inputs, constraint_term, log_name="f_constraint"),
@@ -128,8 +128,8 @@ class PenaltyLbfgsOptimizer(Serializable):
                 x0=cur_params,
                 maxiter=self._max_opt_itr)
 
-            _, try_loss, try_constraint_val = f_penalized_loss(
-                *(inputs + (try_penalty, )))
+            _, try_loss, try_constraint_val = f_penalized_loss(*(
+                inputs + (try_penalty, )))
 
             logger.log('penalty %f => loss %f, %s %f' %
                        (try_penalty, try_loss, self._constraint_name,
@@ -148,8 +148,8 @@ class PenaltyLbfgsOptimizer(Serializable):
             # Decide scale factor on the first iteration, or if constraint
             # violation yields numerical error
             if penalty_scale_factor is None or np.isnan(try_constraint_val):
-                # Increase penalty if constraint violated, or if constraint term
-                # is NAN
+                # Increase penalty if constraint violated, or if constraint
+                # term is NAN
                 if try_constraint_val > self._max_constraint_val or np.isnan(
                         try_constraint_val):
                     penalty_scale_factor = self._increase_penalty_factor

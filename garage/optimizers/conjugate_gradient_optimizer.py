@@ -1,6 +1,3 @@
-from _ast import Num
-import itertools  # noqa: I100,I201
-
 import numpy as np
 import theano
 import theano.tensor as TT
@@ -31,24 +28,24 @@ class PerlmutterHvp(Serializable):
         xs = tuple([tensor_utils.new_tensor_like("%s x" % p.name, p) \
                     for p in params])
 
-        def Hx_plain():
-            Hx_plain_splits = TT.grad(
+        def hx_plain():
+            hx_plain_splits = TT.grad(
                 TT.sum([TT.sum(g * x) for g, x in zip(constraint_grads, xs)]),
                 wrt=params,
                 disconnected_inputs='warn')
-            return TT.concatenate([TT.flatten(s) for s in Hx_plain_splits])
+            return TT.concatenate([TT.flatten(s) for s in hx_plain_splits])
 
-        self.opt_fun = ext.lazydict(
-            f_Hx_plain=lambda: tensor_utils.compile_function(
+        self.opt_fun = ext.LazyDict(
+            f_hx_plain=lambda: tensor_utils.compile_function(
                 inputs=inputs + xs,
-                outputs=Hx_plain(),
-                log_name="f_Hx_plain",
+                outputs=hx_plain(),
+                log_name="f_hx_plain",
             ), )
 
     def build_eval(self, inputs):
         def eval(x):
             xs = tuple(self.target.flat_to_params(x, trainable=True))
-            ret = sliced_fun(self.opt_fun["f_Hx_plain"], self._num_slices)(
+            ret = sliced_fun(self.opt_fun["f_hx_plain"], self._num_slices)(
                 inputs, xs) + self.reg_coeff * x
             return ret
 
@@ -77,7 +74,7 @@ class FiniteDifferenceHvp(Serializable):
             f, wrt=params, disconnected_inputs='warn')
         flat_grad = tensor_utils.flatten_tensor_variables(constraint_grads)
 
-        def f_Hx_plain(*args):
+        def f_hx_plain(*args):
             inputs_ = args[:len(inputs)]
             xs = args[len(inputs):]
             flat_xs = np.concatenate([np.reshape(x, (-1, )) for x in xs])
@@ -99,19 +96,19 @@ class FiniteDifferenceHvp(Serializable):
                 hx = (flat_grad_dvplus - flat_grad) / eps
             return hx
 
-        self.opt_fun = ext.lazydict(
+        self.opt_fun = ext.LazyDict(
             f_grad=lambda: tensor_utils.compile_function(
                 inputs=inputs,
                 outputs=flat_grad,
                 log_name="f_grad",
             ),
-            f_Hx_plain=lambda: f_Hx_plain,
+            f_hx_plain=lambda: f_hx_plain,
         )
 
     def build_eval(self, inputs):
         def eval(x):
             xs = tuple(self.target.flat_to_params(x, trainable=True))
-            ret = sliced_fun(self.opt_fun["f_Hx_plain"], self._num_slices)(
+            ret = sliced_fun(self.opt_fun["f_hx_plain"], self._num_slices)(
                 inputs, xs) + self.reg_coeff * x
             return ret
 
@@ -139,8 +136,8 @@ class ConjugateGradientOptimizer(Serializable):
 
         :param cg_iters: The number of CG iterations used to calculate A^-1 g
         :param reg_coeff: A small value so that A -> A + reg*I
-        :param subsample_factor: Subsampling factor to reduce samples when using
-         "conjugate gradient. Since the computation time for the descent
+        :param subsample_factor: Subsampling factor to reduce samples when
+         using "conjugate gradient. Since the computation time for the descent
          direction dominates, this can greatly reduce the overall computation
          time.
         :param accept_violation: whether to accept the descent step if it
@@ -177,10 +174,10 @@ class ConjugateGradientOptimizer(Serializable):
         """
         :param loss: Symbolic expression for the loss function.
         :param target: A parameterized object to optimize over. It should
-         implement methods of the :class:`garage.core.paramerized.Parameterized`
-         class.
-        :param leq_constraint: A constraint provided as a tuple (f, epsilon), of
-         the form f(*inputs) <= epsilon.
+         implement methods of the
+         :class:`garage.core.paramerized.Parameterized` class.
+        :param leq_constraint: A constraint provided as a tuple (f, epsilon),
+         of the form f(*inputs) <= epsilon.
         :param inputs: A list of symbolic variables as inputs, which could be
          subsampled if needed. It is assumed that the first dimension of these
          inputs should correspond to the number of data points
@@ -211,7 +208,7 @@ class ConjugateGradientOptimizer(Serializable):
         self._max_constraint_val = constraint_value
         self._constraint_name = constraint_name
 
-        self._opt_fun = ext.lazydict(
+        self._opt_fun = ext.LazyDict(
             f_loss=lambda: tensor_utils.compile_function(
                 inputs=inputs + extra_inputs,
                 outputs=loss,
@@ -280,13 +277,13 @@ class ConjugateGradientOptimizer(Serializable):
         flat_g = sliced_fun(self._opt_fun["f_grad"],
                             self._num_slices)(inputs, extra_inputs)
 
-        Hx = self._hvp_approach.build_eval(subsample_inputs + extra_inputs)
+        hx = self._hvp_approach.build_eval(subsample_inputs + extra_inputs)
 
-        descent_direction = krylov.cg(Hx, flat_g, cg_iters=self._cg_iters)
+        descent_direction = krylov.cg(hx, flat_g, cg_iters=self._cg_iters)
 
         initial_step_size = np.sqrt(
             2.0 * self._max_constraint_val *
-            (1. / (descent_direction.dot(Hx(descent_direction)) + 1e-8)))
+            (1. / (descent_direction.dot(hx(descent_direction)) + 1e-8)))
         if np.isnan(initial_step_size):
             initial_step_size = 1.
         flat_descent_step = initial_step_size * descent_direction
@@ -295,8 +292,8 @@ class ConjugateGradientOptimizer(Serializable):
 
         prev_param = np.copy(self._target.get_param_values(trainable=True))
         n_iter = 0
-        for n_iter, ratio in enumerate(self._backtrack_ratio
-                                       **np.arange(self._max_backtracks)):
+        for n_iter, ratio in enumerate(self._backtrack_ratio**np.arange(
+                self._max_backtracks)):  # yapf: disable
             cur_step = ratio * flat_descent_step
             cur_param = prev_param - cur_step
             self._target.set_param_values(cur_param, trainable=True)
@@ -307,8 +304,8 @@ class ConjugateGradientOptimizer(Serializable):
                and constraint_val <= self._max_constraint_val:
                 break
         if (np.isnan(loss) or np.isnan(constraint_val) or loss >= loss_before
-                or constraint_val >= self._max_constraint_val
-            ) and not self._accept_violation:
+                or constraint_val >= self._max_constraint_val) \
+           and not self._accept_violation:
             logger.log("Line search condition violated. Rejecting the step!")
             if np.isnan(loss):
                 logger.log("Violated because loss is NaN")

@@ -1,5 +1,3 @@
-from collections import OrderedDict
-
 import numpy as np
 import scipy
 import scipy.signal
@@ -70,13 +68,13 @@ def from_onehot(v):
 
 
 def from_onehot_n(v):
-    if len(v) == 0:
+    if not v:
         return []
     return np.nonzero(v)[1]
 
 
 def discount_cumsum(x, discount):
-    # See https://docs.scipy.org/doc/scipy/reference/tutorial/signal.html#difference-equation-filtering
+    # See https://docs.scipy.org/doc/scipy/reference/tutorial/signal.html#difference-equation-filtering  # noqa: E501
     # Here, we have y[t] - discount*y[t+1] = x[t]
     # or rev(y)[t] - discount*rev(y)[t-1] = rev(x)[t]
     return scipy.signal.lfilter(
@@ -139,11 +137,11 @@ def rk4(derivs, y0, t, *args, **kwargs):
     """
 
     try:
-        Ny = len(y0)
+        ny = len(y0)
     except TypeError:
         yout = np.zeros((len(t), ), np.float_)
     else:
-        yout = np.zeros((len(t), Ny), np.float_)
+        yout = np.zeros((len(t), ny), np.float_)
 
     yout[0] = y0
     i = 0

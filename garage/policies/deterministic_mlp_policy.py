@@ -54,7 +54,8 @@ class DeterministicMLPPolicy(Policy, LasagnePowered):
         action_var = L.get_output(l_output, deterministic=True)
         self._output_layer = l_output
 
-        self._f_actions = tensor_utils.compile_function([l_obs.input_var], action_var)
+        self._f_actions = tensor_utils.compile_function([l_obs.input_var],
+                                                        action_var)
 
         super(DeterministicMLPPolicy, self).__init__(env_spec)
         LasagnePowered.__init__(self, [l_output])

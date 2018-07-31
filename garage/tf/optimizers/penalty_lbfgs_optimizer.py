@@ -81,7 +81,7 @@ class PenaltyLbfgsOptimizer(Serializable):
                         tf.cast(flat_grad, tf.float64),
                     ]
 
-            self._opt_fun = ext.lazydict(
+            self._opt_fun = ext.LazyDict(
                 f_loss=lambda: tensor_utils.compile_function(
                     inputs, loss, log_name="f_loss"),
                 f_constraint=lambda: tensor_utils.compile_function(
