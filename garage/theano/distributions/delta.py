@@ -1,3 +1,5 @@
+import theano.tensor as TT
+
 from garage.theano.distributions import Distribution
 
 

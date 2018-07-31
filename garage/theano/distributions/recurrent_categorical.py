@@ -1,5 +1,4 @@
 import numpy as np
-import theano
 import theano.tensor as TT
 
 from garage.theano.distributions import Categorical

@@ -77,8 +77,8 @@ class Categorical(Distribution):
     def log_likelihood(self, xs, dist_info):
         probs = dist_info["prob"]
         # Assume layout is N * A
-        N = probs.shape[0]
-        return np.log(probs[np.arange(N), from_onehot(np.asarray(xs))] + TINY)
+        n = probs.shape[0]
+        return np.log(probs[np.arange(n), from_onehot(np.asarray(xs))] + TINY)
 
     def sample_sym(self, dist_info):
         probs = dist_info["prob"]

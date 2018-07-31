@@ -1,4 +1,3 @@
-from garage.core import Parameterized
 from garage.core import Serializable
 from garage.misc.overrides import overrides
 from garage.policies import Policy

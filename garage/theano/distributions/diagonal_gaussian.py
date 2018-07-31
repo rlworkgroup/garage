@@ -18,8 +18,8 @@ class DiagonalGaussian(Distribution):
         new_means = new_dist_info_vars["mean"]
         new_log_stds = new_dist_info_vars["log_std"]
         """
-        Compute the KL divergence of two multivariate Gaussian distribution with
-        diagonal covariance matrices
+        Compute the KL divergence of two multivariate Gaussian distribution
+        with diagonal covariance matrices
         """
         old_std = TT.exp(old_log_stds)
         new_std = TT.exp(new_log_stds)
@@ -40,8 +40,8 @@ class DiagonalGaussian(Distribution):
         new_means = new_dist_info["mean"]
         new_log_stds = new_dist_info["log_std"]
         """
-        Compute the KL divergence of two multivariate Gaussian distribution with
-        diagonal covariance matrices
+        Compute the KL divergence of two multivariate Gaussian distribution
+        with diagonal covariance matrices
         """
         old_std = np.exp(old_log_stds)
         new_std = np.exp(new_log_stds)
