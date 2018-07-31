@@ -4,8 +4,8 @@ from garage.baselines import LinearFeatureBaseline
 from garage.envs import normalize
 from garage.envs.util import horizon, spec
 from garage.misc.instrument import run_experiment
-from garage.policies import CategoricalMLPPolicy
 from garage.theano.algos import TRPO
+from garage.theano.policies import CategoricalMLPPolicy
 
 
 def run_task(*_):

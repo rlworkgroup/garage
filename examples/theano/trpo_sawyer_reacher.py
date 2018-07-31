@@ -3,9 +3,9 @@
 from garage.baselines import LinearFeatureBaseline
 from garage.envs.mujoco.sawyer import ReacherEnv
 from garage.misc.instrument import run_experiment
-from garage.policies import GaussianMLPPolicy
 from garage.theano.algos import TRPO
 from garage.theano.envs import TheanoEnv
+from garage.theano.policies import GaussianMLPPolicy
 
 
 def run(*_):

@@ -8,9 +8,9 @@ from garage.baselines import GaussianMLPBaseline
 from garage.baselines import LinearFeatureBaseline
 from garage.baselines import ZeroBaseline
 from garage.envs.box2d import CartpoleEnv
-from garage.policies import GaussianMLPPolicy
 from garage.theano.algos import VPG
 from garage.theano.envs import TheanoEnv
+from garage.theano.policies import GaussianMLPPolicy
 
 baselines = [ZeroBaseline, LinearFeatureBaseline, GaussianMLPBaseline]
 

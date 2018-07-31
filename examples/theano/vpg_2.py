@@ -6,8 +6,8 @@ import theano.tensor as TT
 from garage.baselines import LinearFeatureBaseline
 from garage.envs import normalize
 from garage.envs.box2d import CartpoleEnv
-from garage.policies import GaussianMLPPolicy
 from garage.theano.envs import TheanoEnv
+from garage.theano.policies import GaussianMLPPolicy
 
 # normalize() makes sure that the actions for the environment lies within the
 # range [-1, 1] (only works for environments with continuous actions)

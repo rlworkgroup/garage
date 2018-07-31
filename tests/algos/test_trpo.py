@@ -5,9 +5,9 @@ import numpy as np
 
 from garage.baselines import ZeroBaseline
 from garage.envs import Step
-from garage.policies import GaussianMLPPolicy
 from garage.theano.algos import TRPO
 from garage.theano.envs import TheanoEnv
+from garage.theano.policies import GaussianMLPPolicy
 
 
 class DummyEnv(gym.Env):

@@ -10,10 +10,6 @@ from garage.algos import CMAES
 from garage.baselines import ZeroBaseline
 from garage.envs import GridWorldEnv
 from garage.envs.box2d import CartpoleEnv
-from garage.policies import CategoricalGRUPolicy
-from garage.policies import CategoricalMLPPolicy
-from garage.policies import GaussianGRUPolicy
-from garage.policies import GaussianMLPPolicy
 from garage.theano.algos import DDPG
 from garage.theano.algos import ERWR
 from garage.theano.algos import PPO
@@ -22,6 +18,10 @@ from garage.theano.algos import TNPG
 from garage.theano.algos import TRPO
 from garage.theano.algos import VPG
 from garage.theano.envs import TheanoEnv
+from garage.theano.policies import CategoricalGRUPolicy
+from garage.theano.policies import CategoricalMLPPolicy
+from garage.theano.policies import GaussianGRUPolicy
+from garage.theano.policies import GaussianMLPPolicy
 
 common_batch_algo_args = dict(
     n_itr=1,
