@@ -4,10 +4,10 @@ import unittest
 
 from garage.envs.box2d import CartpoleEnv
 from garage.exploration_strategies import OUStrategy
-from garage.q_functions import ContinuousMLPQFunction
 from garage.theano.algos import DDPG
 from garage.theano.envs import TheanoEnv
 from garage.theano.policies import DeterministicMLPPolicy
+from garage.theano.q_functions import ContinuousMLPQFunction
 
 
 class TestDDPG(unittest.TestCase):
