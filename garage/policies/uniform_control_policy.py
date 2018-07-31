@@ -1,8 +1,8 @@
 from garage.core import Parameterized
 from garage.core import Serializable
-from garage.distributions import Delta
 from garage.misc.overrides import overrides
 from garage.policies import Policy
+from garage.theano.distributions import Delta
 
 
 class UniformControlPolicy(Policy):

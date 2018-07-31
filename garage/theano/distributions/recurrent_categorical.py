@@ -2,8 +2,8 @@ import numpy as np
 import theano
 import theano.tensor as TT
 
-from garage.distributions import Categorical
-from garage.distributions import Distribution
+from garage.theano.distributions import Categorical
+from garage.theano.distributions import Distribution
 
 TINY = 1e-8
 

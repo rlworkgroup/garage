@@ -5,7 +5,6 @@ import numpy as np
 import theano.tensor as TT
 
 from garage.core import Serializable
-from garage.distributions import DiagonalGaussian
 from garage.misc import ext
 from garage.misc import logger
 from garage.misc.overrides import overrides
@@ -14,6 +13,7 @@ from garage.spaces import Box
 from garage.theano.core import LasagnePowered
 from garage.theano.core import MLP
 from garage.theano.core import ParamLayer
+from garage.theano.distributions import DiagonalGaussian
 
 
 class GaussianMLPPolicy(StochasticPolicy, LasagnePowered):

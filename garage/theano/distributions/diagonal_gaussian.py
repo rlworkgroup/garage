@@ -1,7 +1,7 @@
 import numpy as np
 import theano.tensor as TT
 
-from garage.distributions import Distribution
+from garage.theano.distributions import Distribution
 
 
 class DiagonalGaussian(Distribution):

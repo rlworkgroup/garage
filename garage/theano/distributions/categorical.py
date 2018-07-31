@@ -2,7 +2,7 @@ import numpy as np
 from theano.sandbox.rng_mrg import MRG_RandomStreams as RandomStreams
 import theano.tensor as TT
 
-from garage.distributions import Distribution
+from garage.theano.distributions import Distribution
 
 TINY = 1e-8
 

@@ -3,13 +3,13 @@ import lasagne.layers as L
 import lasagne.nonlinearities as NL
 
 from garage.core import Serializable
-from garage.distributions import Categorical
 from garage.envs.util import flatten, flatten_n, weighted_sample
 from garage.misc import ext
 from garage.misc.overrides import overrides
 from garage.policies import StochasticPolicy
 from garage.theano.core import ConvNetwork
 from garage.theano.core import LasagnePowered
+from garage.theano.distributions import Categorical
 
 
 class CategoricalConvPolicy(StochasticPolicy, LasagnePowered):

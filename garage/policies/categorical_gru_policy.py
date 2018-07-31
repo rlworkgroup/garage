@@ -4,7 +4,6 @@ import numpy as np
 import theano.tensor as TT
 
 from garage.core import Serializable
-from garage.distributions import RecurrentCategorical
 from garage.misc import ext
 from garage.misc import special
 from garage.misc.overrides import overrides
@@ -13,6 +12,7 @@ from garage.spaces import Discrete
 from garage.theano.core import GRUNetwork
 from garage.theano.core import LasagnePowered
 from garage.theano.core import OpLayer
+from garage.theano.distributions import RecurrentCategorical
 
 
 class CategoricalGRUPolicy(StochasticPolicy, LasagnePowered):

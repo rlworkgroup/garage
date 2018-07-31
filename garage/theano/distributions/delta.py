@@ -1,4 +1,4 @@
-from garage.distributions import Distribution
+from garage.theano.distributions import Distribution
 
 
 class Delta(Distribution):
