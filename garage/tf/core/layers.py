@@ -558,13 +558,13 @@ class BaseConvLayer(Layer):
         shape ``self.output_shape``. To be implemented by subclasses.
         Parameters
         ----------
-        input : Theano tensor
+        input : TensorFlow tensor
             The input minibatch to convolve
         **kwargs
             Any additional keyword arguments from :meth:`get_output_for`
         Returns
         -------
-        Theano tensor
+        TensorFlow tensor
             `input` convolved according to the configuration of this layer,
             without any bias or nonlinearity applied.
         """
@@ -914,7 +914,7 @@ class ReshapeLayer(Layer):
             for dim, o in enumerate(output_shape):
                 if isinstance(o, list):
                     output_shape[dim] = tf.shape(input)[o[0]]
-            # Everything else is handled by Theano
+            # Everything else is handled by TensorFlow
             return tf.reshape(input, tf.stack(output_shape))
 
 

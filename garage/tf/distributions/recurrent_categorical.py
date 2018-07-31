@@ -72,7 +72,6 @@ class RecurrentCategorical(Distribution):
             probs = dist_info_vars["prob"]
             # Assume layout is N * T * A
             a_dim = tf.shape(probs)[2]
-            # a_dim = TT.printing.Print("lala")(a_dim)
             flat_logli = self._cat.log_likelihood_sym(
                 tf.reshape(xs, tf.stack([-1, a_dim])),
                 dict(prob=tf.reshape(probs, tf.stack((-1, a_dim)))))
