@@ -4,7 +4,7 @@ from garage.baselines import Baseline
 from garage.core import Parameterized
 from garage.core import Serializable
 from garage.misc.overrides import overrides
-from garage.regressors import GaussianMLPRegressor
+from garage.theano.regressors import GaussianMLPRegressor
 
 
 class GaussianMLPBaseline(Baseline, Parameterized):
