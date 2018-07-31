@@ -6,12 +6,12 @@ import theano.tensor as TT
 
 from garage.core import Serializable
 from garage.misc import logger
-from garage.optimizers import LbfgsOptimizer
-from garage.optimizers import PenaltyLbfgsOptimizer
 from garage.theano.core import LasagnePowered
 from garage.theano.core import MLP
 from garage.theano.distributions import Categorical
 from garage.theano.misc import tensor_utils
+from garage.theano.optimizers import LbfgsOptimizer
+from garage.theano.optimizers import PenaltyLbfgsOptimizer
 
 NONE = list()
 

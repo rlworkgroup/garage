@@ -3,8 +3,8 @@ import time
 from garage.core import Serializable
 from garage.misc.ext import LazyDict
 from garage.optimizers import BatchDataset
-from garage.optimizers import HfOptimizer
 from garage.theano.misc.tensor_utils import compile_function
+from garage.theano.optimizers import HfOptimizer
 
 
 class HessianFreeOptimizer(Serializable):

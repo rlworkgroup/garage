@@ -2,11 +2,11 @@ from garage.baselines import LinearFeatureBaseline
 from garage.envs import normalize
 from garage.envs.box2d import CartpoleEnv
 from garage.misc.instrument import run_experiment
-from garage.optimizers import ConjugateGradientOptimizer
-from garage.optimizers import FiniteDifferenceHvp
 from garage.policies import GaussianGRUPolicy
 from garage.theano.algos import TRPO
 from garage.theano.envs import TheanoEnv
+from garage.theano.optimizers import ConjugateGradientOptimizer
+from garage.theano.optimizers import FiniteDifferenceHvp
 
 
 def run_task(*_):

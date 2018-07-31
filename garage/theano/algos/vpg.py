@@ -6,8 +6,8 @@ from garage.core import Serializable
 from garage.misc import ext
 from garage.misc import logger
 from garage.misc.overrides import overrides
-from garage.optimizers import FirstOrderOptimizer
 from garage.theano.misc import tensor_utils
+from garage.theano.optimizers import FirstOrderOptimizer
 
 
 class VPG(BatchPolopt, Serializable):

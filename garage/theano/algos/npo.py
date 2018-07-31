@@ -5,8 +5,8 @@ from garage.algos import BatchPolopt
 from garage.misc import ext
 import garage.misc.logger as logger
 from garage.misc.overrides import overrides
-from garage.optimizers import PenaltyLbfgsOptimizer
 from garage.theano.misc import tensor_utils
+from garage.theano.optimizers import PenaltyLbfgsOptimizer
 
 
 class NPO(BatchPolopt):
