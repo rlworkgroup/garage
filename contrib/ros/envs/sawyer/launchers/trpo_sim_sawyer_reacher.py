@@ -7,11 +7,11 @@ import numpy as np
 import rospy
 
 from contrib.ros.envs.sawyer import ReacherEnv
-from garage.algos import TRPO
 from garage.baselines import LinearFeatureBaseline
 from garage.envs.util import spec
 from garage.misc.instrument import run_experiment
 from garage.policies import GaussianMLPPolicy
+from garage.theano.algos import TRPO
 
 INITIAL_ROBOT_JOINT_POS = {
     'right_j0': -0.140923828125,

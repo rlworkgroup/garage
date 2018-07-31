@@ -3,10 +3,10 @@ import unittest
 import gym
 import numpy as np
 
-from garage.algos import TRPO
 from garage.baselines import ZeroBaseline
 from garage.envs import Step
 from garage.policies import GaussianMLPPolicy
+from garage.theano.algos import TRPO
 from garage.theano.envs import TheanoEnv
 
 

@@ -4,12 +4,12 @@ import unittest
 
 from nose2 import tools
 
-from garage.algos import VPG
 from garage.baselines import GaussianMLPBaseline
 from garage.baselines import LinearFeatureBaseline
 from garage.baselines import ZeroBaseline
 from garage.envs.box2d import CartpoleEnv
 from garage.policies import GaussianMLPPolicy
+from garage.theano.algos import VPG
 from garage.theano.envs import TheanoEnv
 
 baselines = [ZeroBaseline, LinearFeatureBaseline, GaussianMLPBaseline]

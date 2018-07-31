@@ -2,11 +2,11 @@ import os
 os.environ['THEANO_FLAGS'] = 'device=cpu,mode=FAST_COMPILE,optimizer=None'
 import unittest
 
-from garage.algos import DDPG
 from garage.envs.box2d import CartpoleEnv
 from garage.exploration_strategies import OUStrategy
 from garage.policies import DeterministicMLPPolicy
 from garage.q_functions import ContinuousMLPQFunction
+from garage.theano.algos import DDPG
 from garage.theano.envs import TheanoEnv
 
 

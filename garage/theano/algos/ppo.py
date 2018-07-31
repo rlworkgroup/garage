@@ -1,6 +1,6 @@
-from garage.algos import NPO
 from garage.core import Serializable
 from garage.optimizers import PenaltyLbfgsOptimizer
+from garage.theano.algos import NPO
 
 
 class PPO(NPO, Serializable):

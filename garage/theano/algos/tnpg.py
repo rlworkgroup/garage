@@ -1,6 +1,6 @@
-from garage.algos import NPO
 from garage.misc import ext
 from garage.optimizers import ConjugateGradientOptimizer
+from garage.theano.algos import NPO
 
 
 class TNPG(NPO):

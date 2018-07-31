@@ -1,6 +1,6 @@
-from garage.algos import VPG
 from garage.core import Serializable
 from garage.optimizers import LbfgsOptimizer
+from garage.theano.algos import VPG
 
 
 class ERWR(VPG, Serializable):

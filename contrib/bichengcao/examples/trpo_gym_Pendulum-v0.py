@@ -1,11 +1,11 @@
 import gym
 
-from garage.algos import TRPO
 from garage.baselines import LinearFeatureBaseline
 from garage.envs import normalize
 from garage.envs.util import horizon, spec
 from garage.misc.instrument import run_experiment
 from garage.policies import GaussianMLPPolicy
+from garage.theano.algos import TRPO
 
 
 def run_task(*_):
