@@ -5,14 +5,13 @@ import theano
 import theano.tensor as TT
 
 from garage.core import Serializable
-from garage.misc import ext
 from garage.misc import logger
-from garage.misc import special
 from garage.optimizers import LbfgsOptimizer
 from garage.optimizers import PenaltyLbfgsOptimizer
 from garage.theano.core import LasagnePowered
 from garage.theano.core import MLP
 from garage.theano.distributions import Categorical
+from garage.theano.misc import tensor_utils
 
 NONE = list()
 
@@ -99,11 +98,11 @@ class CategoricalMLPRegressor(LasagnePowered):
 
         loss = -TT.mean(dist.log_likelihood_sym(ys_var, info_vars))
 
-        predicted = special.to_onehot_sym(
+        predicted = tensor_utils.to_onehot_sym(
             TT.argmax(prob_var, axis=1), output_dim)
 
-        self._f_predict = ext.compile_function([xs_var], predicted)
-        self._f_prob = ext.compile_function([xs_var], prob_var)
+        self._f_predict = tensor_utils.compile_function([xs_var], predicted)
+        self._f_prob = tensor_utils.compile_function([xs_var], prob_var)
         self._prob_network = prob_network
         self._l_prob = l_prob
 

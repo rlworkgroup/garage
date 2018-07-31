@@ -3,8 +3,8 @@ import unittest
 import lasagne.layers as L
 import numpy as np
 
-from garage.misc import ext
 from garage.theano.core import GRUNetwork
+from garage.theano.misc import tensor_utils
 
 
 class TestNetworks(unittest.TestCase):
@@ -14,7 +14,7 @@ class TestNetworks(unittest.TestCase):
             output_dim=5,
             hidden_dim=4,
         )
-        f_output = ext.compile_function(
+        f_output = tensor_utils.compile_function(
             inputs=[network.input_layer.input_var],
             outputs=L.get_output(network.output_layer))
         assert f_output(np.zeros((6, 8, 2, 3))).shape == (6, 8, 5)

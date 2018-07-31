@@ -5,10 +5,10 @@ import lasagne.nonlinearities as NL
 import theano.tensor as TT
 
 from garage.core import Serializable
-from garage.misc import ext
 from garage.q_functions import QFunction
 from garage.theano.core import batch_norm
 from garage.theano.core import LasagnePowered
+from garage.theano.misc import tensor_utils
 
 
 class ContinuousMLPQFunction(QFunction, LasagnePowered):
@@ -68,7 +68,7 @@ class ContinuousMLPQFunction(QFunction, LasagnePowered):
 
         output_var = L.get_output(l_output, deterministic=True).flatten()
 
-        self._f_qval = ext.compile_function(
+        self._f_qval = tensor_utils.compile_function(
             [l_obs.input_var, l_action.input_var], output_var)
         self._output_layer = l_output
         self._obs_layer = l_obs

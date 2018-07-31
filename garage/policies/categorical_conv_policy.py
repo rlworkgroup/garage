@@ -4,12 +4,13 @@ import lasagne.nonlinearities as NL
 
 from garage.core import Serializable
 from garage.envs.util import flatten, flatten_n, weighted_sample
-from garage.misc import ext
+from garage.misc import logger
 from garage.misc.overrides import overrides
 from garage.policies import StochasticPolicy
 from garage.theano.core import ConvNetwork
 from garage.theano.core import LasagnePowered
 from garage.theano.distributions import Categorical
+from garage.theano.misc import tensor_utils
 
 
 class CategoricalConvPolicy(StochasticPolicy, LasagnePowered):
@@ -57,7 +58,7 @@ class CategoricalConvPolicy(StochasticPolicy, LasagnePowered):
 
         self._l_prob = prob_network.output_layer
         self._l_obs = prob_network.input_layer
-        self._f_prob = ext.compile_function(
+        self._f_prob = tensor_utils.compile_function(
             [prob_network.input_layer.input_var],
             L.get_output(prob_network.output_layer))
 

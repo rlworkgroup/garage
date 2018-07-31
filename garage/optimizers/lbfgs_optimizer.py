@@ -4,10 +4,9 @@ import scipy.optimize
 import theano
 
 from garage.core import Serializable
-from garage.misc.ext import compile_function
-from garage.misc.ext import flatten_tensor_variables
 from garage.misc.ext import lazydict
-
+from garage.theano.misc.tensor_utils import compile_function
+from garage.theano.misc.tensor_utils import flatten_tensor_variables
 
 class LbfgsOptimizer(Serializable):
     """

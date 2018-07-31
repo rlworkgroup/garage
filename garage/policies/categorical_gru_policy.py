@@ -4,7 +4,6 @@ import numpy as np
 import theano.tensor as TT
 
 from garage.core import Serializable
-from garage.misc import ext
 from garage.misc import special
 from garage.misc.overrides import overrides
 from garage.policies import StochasticPolicy
@@ -13,6 +12,7 @@ from garage.theano.core import GRUNetwork
 from garage.theano.core import LasagnePowered
 from garage.theano.core import OpLayer
 from garage.theano.distributions import RecurrentCategorical
+from garage.theano.misc import tensor_utils
 
 
 class CategoricalGRUPolicy(StochasticPolicy, LasagnePowered):
@@ -80,7 +80,7 @@ class CategoricalGRUPolicy(StochasticPolicy, LasagnePowered):
             feature_var = L.get_output(
                 l_flat_feature, {feature_network.input_layer: flat_input_var})
 
-        self.f_step_prob = ext.compile_function(
+        self.f_step_prob = tensor_utils.compile_function(
             [flat_input_var, prob_network.step_prev_hidden_layer.input_var],
             L.get_output([
                 prob_network.step_output_layer, prob_network.step_hidden_layer

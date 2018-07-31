@@ -10,6 +10,7 @@ from garage.misc import ext
 from garage.misc import krylov
 from garage.misc import logger
 from garage.misc.ext import sliced_fun
+from garage.theano.misc import tensor_utils
 
 
 class PerlmutterHvp(Serializable):
@@ -27,7 +28,8 @@ class PerlmutterHvp(Serializable):
 
         constraint_grads = theano.grad(
             f, wrt=params, disconnected_inputs='warn')
-        xs = tuple([ext.new_tensor_like("%s x" % p.name, p) for p in params])
+        xs = tuple([tensor_utils.new_tensor_like("%s x" % p.name, p) \
+                    for p in params])
 
         def Hx_plain():
             Hx_plain_splits = TT.grad(
@@ -37,7 +39,7 @@ class PerlmutterHvp(Serializable):
             return TT.concatenate([TT.flatten(s) for s in Hx_plain_splits])
 
         self.opt_fun = ext.lazydict(
-            f_Hx_plain=lambda: ext.compile_function(
+            f_Hx_plain=lambda: tensor_utils.compile_function(
                 inputs=inputs + xs,
                 outputs=Hx_plain(),
                 log_name="f_Hx_plain",
@@ -73,7 +75,7 @@ class FiniteDifferenceHvp(Serializable):
 
         constraint_grads = theano.grad(
             f, wrt=params, disconnected_inputs='warn')
-        flat_grad = ext.flatten_tensor_variables(constraint_grads)
+        flat_grad = tensor_utils.flatten_tensor_variables(constraint_grads)
 
         def f_Hx_plain(*args):
             inputs_ = args[:len(inputs)]
@@ -98,7 +100,7 @@ class FiniteDifferenceHvp(Serializable):
             return hx
 
         self.opt_fun = ext.lazydict(
-            f_grad=lambda: ext.compile_function(
+            f_grad=lambda: tensor_utils.compile_function(
                 inputs=inputs,
                 outputs=flat_grad,
                 log_name="f_grad",
@@ -197,7 +199,7 @@ class ConjugateGradientOptimizer(Serializable):
 
         params = target.get_params(trainable=True)
         grads = theano.grad(loss, wrt=params, disconnected_inputs='warn')
-        flat_grad = ext.flatten_tensor_variables(grads)
+        flat_grad = tensor_utils.flatten_tensor_variables(grads)
 
         self._hvp_approach.update_opt(
             f=constraint_term,
@@ -210,22 +212,22 @@ class ConjugateGradientOptimizer(Serializable):
         self._constraint_name = constraint_name
 
         self._opt_fun = ext.lazydict(
-            f_loss=lambda: ext.compile_function(
+            f_loss=lambda: tensor_utils.compile_function(
                 inputs=inputs + extra_inputs,
                 outputs=loss,
                 log_name="f_loss",
             ),
-            f_grad=lambda: ext.compile_function(
+            f_grad=lambda: tensor_utils.compile_function(
                 inputs=inputs + extra_inputs,
                 outputs=flat_grad,
                 log_name="f_grad",
             ),
-            f_constraint=lambda: ext.compile_function(
+            f_constraint=lambda: tensor_utils.compile_function(
                 inputs=inputs + extra_inputs,
                 outputs=constraint_term,
                 log_name="constraint",
             ),
-            f_loss_constraint=lambda: ext.compile_function(
+            f_loss_constraint=lambda: tensor_utils.compile_function(
                 inputs=inputs + extra_inputs,
                 outputs=[loss, constraint_term],
                 log_name="f_loss_constraint",

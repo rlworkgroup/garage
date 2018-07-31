@@ -6,6 +6,7 @@ from garage.misc import ext
 import garage.misc.logger as logger
 from garage.misc.overrides import overrides
 from garage.optimizers import PenaltyLbfgsOptimizer
+from garage.theano.misc import tensor_utils
 
 
 class NPO(BatchPolopt):
@@ -39,11 +40,11 @@ class NPO(BatchPolopt):
             'action',
             extra_dims=1 + is_recurrent,
         )
-        advantage_var = ext.new_tensor(
+        advantage_var = tensor_utils.new_tensor(
             'advantage', ndim=1 + is_recurrent, dtype=theano.config.floatX)
         dist = self.policy.distribution
         old_dist_info_vars = {
-            k: ext.new_tensor(
+            k: tensor_utils.new_tensor(
                 'old_%s' % k,
                 ndim=2 + is_recurrent,
                 dtype=theano.config.floatX)
@@ -54,7 +55,7 @@ class NPO(BatchPolopt):
         ]
 
         state_info_vars = {
-            k: ext.new_tensor(
+            k: tensor_utils.new_tensor(
                 k, ndim=2 + is_recurrent, dtype=theano.config.floatX)
             for k in self.policy.state_info_keys
         }

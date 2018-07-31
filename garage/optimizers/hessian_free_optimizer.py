@@ -1,10 +1,10 @@
 import time
 
 from garage.core import Serializable
-from garage.misc.ext import compile_function
 from garage.misc.ext import lazydict
 from garage.optimizers import BatchDataset
 from garage.optimizers import hf_optimizer
+from garage.theano.misc.tensor_utils import compile_function
 
 
 class HessianFreeOptimizer(Serializable):

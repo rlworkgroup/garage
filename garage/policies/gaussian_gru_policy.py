@@ -5,13 +5,13 @@ import numpy as np
 import theano.tensor as TT
 
 from garage.core import Serializable
-from garage.misc import ext
 from garage.misc.overrides import overrides
 from garage.policies import StochasticPolicy
 from garage.theano.core import GRUNetwork
 from garage.theano.core import LasagnePowered
 from garage.theano.core import ParamLayer
 from garage.theano.distributions import RecurrentDiagonalGaussian
+from garage.theano.misc import tensor_utils
 
 
 class GaussianGRUPolicy(StochasticPolicy, LasagnePowered):
@@ -74,7 +74,7 @@ class GaussianGRUPolicy(StochasticPolicy, LasagnePowered):
         self._l_log_std = l_log_std
         self._state_include_action = state_include_action
 
-        self._f_step_mean_std = ext.compile_function(
+        self._f_step_mean_std = tensor_utils.compile_function(
             [
                 mean_network.step_input_layer.input_var,
                 mean_network.step_prev_hidden_layer.input_var

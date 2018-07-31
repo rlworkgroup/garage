@@ -7,7 +7,7 @@ import numpy
 import theano
 import theano.tensor as T
 
-from garage.misc.ext import compile_function
+from garage.theano.misc.tensor_utils import compile_function
 
 
 def gauss_newton_product(

@@ -3,13 +3,13 @@ import lasagne.nonlinearities as NL
 import numpy as np
 
 from garage.core import Serializable
-from garage.misc import ext
 from garage.misc.overrides import overrides
 from garage.policies import StochasticPolicy
 from garage.spaces import Discrete
 from garage.theano.core import LasagnePowered
 from garage.theano.core import MLP
 from garage.theano.distributions import Categorical
+from garage.theano.misc import tensor_utils
 
 
 class CategoricalMLPPolicy(StochasticPolicy, LasagnePowered):
@@ -46,7 +46,7 @@ class CategoricalMLPPolicy(StochasticPolicy, LasagnePowered):
 
         self._l_prob = prob_network.output_layer
         self._l_obs = prob_network.input_layer
-        self._f_prob = ext.compile_function(
+        self._f_prob = tensor_utils.compile_function(
             [prob_network.input_layer.input_var],
             L.get_output(prob_network.output_layer))
 

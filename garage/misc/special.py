@@ -3,9 +3,6 @@ from collections import OrderedDict
 import numpy as np
 import scipy
 import scipy.signal
-import theano.tensor as TT
-import theano.tensor.extra_ops
-import theano.tensor.nnet
 
 
 def weighted_sample(weights, objects):
@@ -33,10 +30,6 @@ def softmax(x):
     shifted = x - np.max(x, axis=-1, keepdims=True)
     expx = np.exp(shifted)
     return expx / np.sum(expx, axis=-1, keepdims=True)
-
-
-def softmax_sym(x):
-    return theano.tensor.nnet.softmax(x)
 
 
 # compute entropy for each row
@@ -72,11 +65,6 @@ def to_onehot_n(inds, dim):
     return ret
 
 
-def to_onehot_sym(ind, dim):
-    assert ind.ndim == 1
-    return theano.tensor.extra_ops.to_one_hot(ind, dim)
-
-
 def from_onehot(v):
     return np.nonzero(v)[0][0]
 
@@ -85,25 +73,6 @@ def from_onehot_n(v):
     if len(v) == 0:
         return []
     return np.nonzero(v)[1]
-
-
-def normalize_updates(old_mean, old_std, new_mean, new_std, old_W, old_b):
-    """
-    Compute the updates for normalizing the last (linear) layer of a neural
-    network
-    """
-    # Make necessary transformation so that
-    # (W_old * h + b_old) * std_old + mean_old == \
-    #   (W_new * h + b_new) * std_new + mean_new
-    new_W = old_W * old_std[0] / (new_std[0] + 1e-6)
-    new_b = (old_b * old_std[0] + old_mean[0] - new_mean[0]) / (
-        new_std[0] + 1e-6)
-    return OrderedDict([
-        (old_W, TT.cast(new_W, old_W.dtype)),
-        (old_b, TT.cast(new_b, old_b.dtype)),
-        (old_mean, new_mean),
-        (old_std, new_std),
-    ])
 
 
 def discount_cumsum(x, discount):

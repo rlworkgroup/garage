@@ -3,10 +3,10 @@ import lasagne.layers as L
 import lasagne.nonlinearities as NL
 
 from garage.core import Serializable
-from garage.misc import ext
 from garage.policies import Policy
 from garage.theano.core import batch_norm
 from garage.theano.core import LasagnePowered
+from garage.theano.misc import tensor_utils
 
 
 class DeterministicMLPPolicy(Policy, LasagnePowered):
@@ -54,7 +54,7 @@ class DeterministicMLPPolicy(Policy, LasagnePowered):
         action_var = L.get_output(l_output, deterministic=True)
         self._output_layer = l_output
 
-        self._f_actions = ext.compile_function([l_obs.input_var], action_var)
+        self._f_actions = tensor_utils.compile_function([l_obs.input_var], action_var)
 
         super(DeterministicMLPPolicy, self).__init__(env_spec)
         LasagnePowered.__init__(self, [l_output])

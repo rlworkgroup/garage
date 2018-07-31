@@ -5,9 +5,9 @@ import theano.tensor as TT
 
 from garage.core import Serializable
 from garage.misc import logger
-from garage.misc.ext import compile_function
-from garage.misc.ext import flatten_tensor_variables
 from garage.misc.ext import lazydict
+from garage.theano.misc.tensor_utils import compile_function
+from garage.theano.misc.tensor_utils import flatten_tensor_variables
 
 
 class PenaltyLbfgsOptimizer(Serializable):

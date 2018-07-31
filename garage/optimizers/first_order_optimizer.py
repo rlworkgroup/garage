@@ -10,6 +10,7 @@ from garage.core import Serializable
 from garage.misc import ext
 from garage.misc import logger
 from garage.optimizers import BatchDataset
+from garage.theano.misc import tensor_utils
 
 
 class FirstOrderOptimizer(Serializable):
@@ -83,8 +84,9 @@ class FirstOrderOptimizer(Serializable):
             extra_inputs = list()
 
         self._opt_fun = ext.lazydict(
-            f_loss=lambda: ext.compile_function(inputs + extra_inputs, loss),
-            f_opt=lambda: ext.compile_function(
+            f_loss=lambda: tensor_utils.compile_function(inputs + extra_inputs,
+                                                         loss),
+            f_opt=lambda: tensor_utils.compile_function(
                 inputs=inputs + extra_inputs,
                 outputs=loss,
                 updates=updates,

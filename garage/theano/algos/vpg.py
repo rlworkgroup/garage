@@ -7,6 +7,7 @@ from garage.misc import ext
 from garage.misc import logger
 from garage.misc.overrides import overrides
 from garage.optimizers import FirstOrderOptimizer
+from garage.theano.misc import tensor_utils
 
 
 class VPG(BatchPolopt, Serializable):
@@ -49,11 +50,11 @@ class VPG(BatchPolopt, Serializable):
             'action',
             extra_dims=1 + is_recurrent,
         )
-        advantage_var = ext.new_tensor(
+        advantage_var = tensor_utils.new_tensor(
             'advantage', ndim=1 + is_recurrent, dtype=theano.config.floatX)
         dist = self.policy.distribution
         old_dist_info_vars = {
-            k: ext.new_tensor(
+            k: tensor_utils.new_tensor(
                 'old_%s' % k,
                 ndim=2 + is_recurrent,
                 dtype=theano.config.floatX)
@@ -69,7 +70,7 @@ class VPG(BatchPolopt, Serializable):
             valid_var = None
 
         state_info_vars = {
-            k: ext.new_tensor(
+            k: tensor_utils.new_tensor(
                 k, ndim=2 + is_recurrent, dtype=theano.config.floatX)
             for k in self.policy.state_info_keys
         }
@@ -101,7 +102,7 @@ class VPG(BatchPolopt, Serializable):
         self.optimizer.update_opt(
             surr_obj, target=self.policy, inputs=input_list)
 
-        f_kl = ext.compile_function(
+        f_kl = tensor_utils.compile_function(
             inputs=input_list + old_dist_info_vars_list,
             outputs=[mean_kl, max_kl],
         )

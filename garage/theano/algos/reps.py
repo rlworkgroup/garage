@@ -5,10 +5,10 @@ import theano.tensor as TT
 
 from garage.algos import BatchPolopt
 from garage.core import Serializable
-from garage.misc import ext
 from garage.misc import logger
 from garage.misc import tensor_utils
 from garage.misc.overrides import overrides
+from garage.theano.misc import tensor_utils as theano_tensor_utils
 
 
 class REPS(BatchPolopt, Serializable):
@@ -68,7 +68,7 @@ class REPS(BatchPolopt, Serializable):
             'action',
             extra_dims=1 + is_recurrent,
         )
-        rewards = ext.new_tensor(
+        rewards = theano_tensor_utils.new_tensor(
             'rewards',
             ndim=1 + is_recurrent,
             dtype=theano.config.floatX,
@@ -76,7 +76,7 @@ class REPS(BatchPolopt, Serializable):
         # Feature difference variable representing the difference in feature
         # value of the next observation and the current observation \phi(s') -
         # \phi(s).
-        feat_diff = ext.new_tensor(
+        feat_diff = theano_tensor_utils.new_tensor(
             'feat_diff', ndim=2 + is_recurrent, dtype=theano.config.floatX)
         param_v = TT.vector('param_v')
         param_eta = TT.scalar('eta')
@@ -84,7 +84,7 @@ class REPS(BatchPolopt, Serializable):
         valid_var = TT.matrix('valid')
 
         state_info_vars = {
-            k: ext.new_tensor(
+            k: theano_tensor_utils.new_tensor(
                 k, ndim=2 + is_recurrent, dtype=theano.config.floatX)
             for k in self.policy.state_info_keys
         }
@@ -128,18 +128,18 @@ class REPS(BatchPolopt, Serializable):
         ] + state_info_vars_list + recurrent_vars + [param_eta, param_v]
         # if is_recurrent:
         #     input +=
-        f_loss = ext.compile_function(
+        f_loss = theano_tensor_utils.compile_function(
             inputs=input,
             outputs=loss,
         )
-        f_loss_grad = ext.compile_function(
+        f_loss_grad = theano_tensor_utils.compile_function(
             inputs=input,
             outputs=loss_grad,
         )
 
         # Debug prints
         old_dist_info_vars = {
-            k: ext.new_tensor(
+            k: theano_tensor_utils.new_tensor(
                 'old_%s' % k,
                 ndim=2 + is_recurrent,
                 dtype=theano.config.floatX)
@@ -156,7 +156,7 @@ class REPS(BatchPolopt, Serializable):
         else:
             mean_kl = TT.mean(dist.kl_sym(old_dist_info_vars, dist_info_vars))
 
-        f_kl = ext.compile_function(
+        f_kl = theano_tensor_utils.compile_function(
             inputs=[obs_var, action_var] + state_info_vars_list +
             old_dist_info_vars_list + recurrent_vars,
             outputs=mean_kl,
@@ -190,11 +190,11 @@ class REPS(BatchPolopt, Serializable):
         dual_grad = TT.grad(cost=dual, wrt=[param_eta, param_v])
 
         # Eval functions.
-        f_dual = ext.compile_function(
+        f_dual = theano_tensor_utils.compile_function(
             inputs=[rewards, feat_diff] + state_info_vars_list + recurrent_vars
             + [param_eta, param_v],
             outputs=dual)
-        f_dual_grad = ext.compile_function(
+        f_dual_grad = theano_tensor_utils.compile_function(
             inputs=[rewards, feat_diff] + state_info_vars_list + recurrent_vars
             + [param_eta, param_v],
             outputs=dual_grad)
@@ -319,7 +319,7 @@ class REPS(BatchPolopt, Serializable):
         def eval_loss_grad(params):
             self.policy.set_param_values(params, trainable=True)
             grad = f_loss_grad(*input)
-            flattened_grad = tensor_utils.flatten_tensors(
+            flattened_grad = theano_tensor_utils.flatten_tensors(
                 list(map(np.asarray, grad)))
             return flattened_grad.astype(np.float64)
 

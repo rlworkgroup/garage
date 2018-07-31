@@ -14,6 +14,7 @@ from garage.misc.overrides import overrides
 from garage.plotter import Plotter
 from garage.replay_buffer import ReplayBuffer
 from garage.sampler import parallel_sampler
+from garage.theano.misc import tensor_utils
 
 
 def parse_update_method(update_method, **kwargs):
@@ -272,12 +273,12 @@ class DDPG(RLAlgorithm):
         policy_updates = self.policy_update_method(
             policy_reg_surr, self.policy.get_params(trainable=True))
 
-        f_train_qf = ext.compile_function(
+        f_train_qf = tensor_utils.compile_function(
             inputs=[yvar, obs, action],
             outputs=[qf_loss, qval],
             updates=qf_updates)
 
-        f_train_policy = ext.compile_function(
+        f_train_policy = tensor_utils.compile_function(
             inputs=[obs], outputs=policy_surr, updates=policy_updates)
 
         self.opt_info = dict(
