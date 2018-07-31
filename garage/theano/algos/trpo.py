@@ -1,4 +1,3 @@
-from garage.core import Serializable
 from garage.optimizers import ConjugateGradientOptimizer
 from garage.theano.algos import NPO
 

@@ -16,10 +16,10 @@ class ERWR(VPG, Serializable):
     .. [1] Kober, Jens, and Jan R. Peters. "Policy search for motor primitives
            in robotics." Advances in neural information processing systems.
            2009.
-    .. [2] Peters, Jan, and Stefan Schaal. "Using reward-weighted regression for
-           reinforcement learning of task space control." Approximate Dynamic
-           Programming and Reinforcement Learning, 2007. ADPRL 2007. IEEE
-           International Symposium on. IEEE, 2007.
+    .. [2] Peters, Jan, and Stefan Schaal. "Using reward-weighted regression
+           for reinforcement learning of task space control." Approximate
+           Dynamic Programming and Reinforcement Learning, 2007. ADPRL 2007.
+           IEEE International Symposium on. IEEE, 2007.
     """
 
     def __init__(self,
