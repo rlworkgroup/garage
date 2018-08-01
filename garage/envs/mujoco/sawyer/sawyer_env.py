@@ -1,28 +1,19 @@
-import gym
-from gym.envs.robotics import rotations
-from gym.envs.robotics.utils import reset_mocap_welds, reset_mocap2body_xpos
-from gym.spaces import Box
+from collections import namedtuple
 import os.path as osp
 
+import gym
+from gym.envs.robotics import rotations
+from gym.envs.robotics.utils import reset_mocap2body_xpos, reset_mocap_welds
+from gym.spaces import Box
 import numpy as np
 
 from garage.envs.mujoco import MujocoEnv
 from garage.envs.mujoco.mujoco_env import MODEL_DIR
 from garage.misc.overrides import overrides
 
-from collections import namedtuple
-from typing import Callable, Union, Tuple
-
 Configuration = namedtuple(
     "Configuration",
     ["gripper_pos", "gripper_state", "object_grasped", "object_pos"])
-
-
-def default_reward_fn(env, achieved_goal, desired_goal, _info: dict):
-    d = np.linalg.norm(achieved_goal - desired_goal, axis=-1)
-    if env._reward_type == 'sparse':
-        return (d < env._distance_threshold).astype(np.float32)
-    return -d
 
 
 def default_success_fn(env, achieved_goal, desired_goal, _info: dict):
@@ -43,33 +34,27 @@ def default_desired_goal_fn(env):
 class SawyerEnv(MujocoEnv, gym.GoalEnv):
     """Sawyer Robot Environments."""
 
-    def __init__(
-            self,
-            start_goal_config: Union[Tuple[Configuration, Configuration],
-                                     Callable[[], Tuple[Configuration,
-                                                        Configuration]]],
-            reward_fn: Callable[..., float] = default_reward_fn,
-            success_fn: Callable[..., bool] = default_success_fn,
-            achieved_goal_fn: Callable[...,
-                                       np.array] = default_achieved_goal_fn,
-            desired_goal_fn: Callable[..., np.array] = default_desired_goal_fn,
-            max_episode_steps: int = 50,
-            completion_bonus: float = 10,
-            distance_threshold: float = 0.05,
-            for_her: bool = False,
-            reward_type: str = 'dense',
-            control_method: str = 'task_space_control',
-            file_path: str = 'pick_and_place.xml',
-            *args,
-            **kwargs):
+    def __init__(self,
+                 start_goal_config,
+                 success_fn=default_success_fn,
+                 achieved_goal_fn=default_achieved_goal_fn,
+                 desired_goal_fn=default_desired_goal_fn,
+                 max_episode_steps=50,
+                 completion_bonus=10,
+                 distance_threshold=0.05,
+                 for_her=False,
+                 reward_type='dense',
+                 control_method='task_space_control',
+                 file_path='pick_and_place.xml',
+                 *args,
+                 **kwargs):
         """
-        Sawyer Environment.
+        Sawyer Environment.  #noqa: E501
         :param args:
         :param kwargs:
         """
 
         self._start_goal_config = start_goal_config
-        self._reward_fn = reward_fn
         self._success_fn = success_fn
         self._achieved_goal_fn = achieved_goal_fn
         self._desired_goal_fn = desired_goal_fn
@@ -89,18 +74,15 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
         self._step = 0
         self._for_her = for_her
         file_path = osp.join(MODEL_DIR, file_path)
-        print(file_path)
+
         MujocoEnv.__init__(self, file_path=file_path, *args, **kwargs)
-        self.env_setup()
+        self._env_setup()
 
     def _sample_start_goal(self):
-        if isinstance(self._start_goal_config, tuple):
-            self._start_configuration, self._goal_configuration = self._start_goal_config
-        else:
-            self._start_configuration, self._goal_configuration = self._start_goal_config(
-            )
+        self._start_configuration, self._goal_configuration = self._start_goal_config(  # noqa: E501
+        )
 
-    def env_setup(self):
+    def _env_setup(self):
         reset_mocap_welds(self.sim)
         self.sim.forward()
 
@@ -271,9 +253,6 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
     def is_success(self):
         return self._is_success
 
-    def compute_reward(self, achieved_goal, desired_goal, info):
-        return self._reward_fn(self, achieved_goal, desired_goal, info)
-
     @overrides
     def reset(self):
         self._step = 0
@@ -295,6 +274,12 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
             self.sim.step()
 
         return self.get_obs()
+
+    def compute_reward(self, achieved_goal, desired_goal, info):
+        d = np.linalg.norm(achieved_goal - desired_goal, axis=-1)
+        if self._reward_type == 'sparse':
+            return (d < self._distance_threshold).astype(np.float32)
+        return -d
 
 
 def ppo_info(info):

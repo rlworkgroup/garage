@@ -1,9 +1,8 @@
+from gym.spaces import Box
 import numpy as np
 
+from garage.envs.mujoco.sawyer.sawyer_env import Configuration, SawyerEnv
 from garage.misc.overrides import overrides
-from gym.spaces import Box
-
-from garage.envs.mujoco.sawyer.sawyer_env import SawyerEnv, Configuration
 
 
 class PickAndPlaceEnv(SawyerEnv):
@@ -22,20 +21,12 @@ class PickAndPlaceEnv(SawyerEnv):
                 object_pos=np.concatenate([center[:2], [0.1]]))
             return start, goal
 
-        def reward_fn(env: SawyerEnv, achieved_goal, desired_goal, info: dict):
-            d = np.linalg.norm(achieved_goal - desired_goal, axis=-1)
-            if env._reward_type == 'sparse':
-                return (d < env._distance_threshold).astype(np.float32)
-
-            return -d
-
         def success_fn(env: SawyerEnv, _achieved_goal, _desired_goal,
                        _info: dict):
-            return env.has_object and env.object_position[2] >= self._goal_configuration.object_pos[2]
+            return env.has_object and env.object_position[2] >= self._goal_configuration.object_pos[2]  # noqa: E501
 
         super(PickAndPlaceEnv, self).__init__(
             start_goal_config=start_goal_config,
-            reward_fn=reward_fn,
             success_fn=success_fn,
             **kwargs)
 
@@ -75,3 +66,10 @@ class PickAndPlaceEnv(SawyerEnv):
             np.array([-0.1, -0.1, -0.1, -1.]),
             np.array([0.1, 0.1, 0.1, 1.]),
             dtype=np.float32)
+
+    def compute_reward(self, achieved_goal, desired_goal, info: dict):
+        d = np.linalg.norm(achieved_goal - desired_goal, axis=-1)
+        if self._reward_type == 'sparse':
+            return (d < self._distance_threshold).astype(np.float32)
+
+        return -d
