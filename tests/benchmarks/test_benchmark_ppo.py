@@ -86,6 +86,8 @@ class TestBenchmarkPPO(unittest.TestCase):
                 plt_file=plt_file,
                 env_id=env_id)
 
+    test_benchmark_ppo.huge = True
+
 
 def run_garage(env, seed, log_dir):
     """
