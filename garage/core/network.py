@@ -17,12 +17,12 @@ def wrapped_conv(*args, **kwargs):
     copy.pop("filter_shape", None)
     assert copy.pop("filter_flip", False)
 
-    input, W, input_shape, get_W_shape = args
+    input, w, input_shape, get_w_shape = args
     if theano.config.device == 'cpu':
         return theano.tensor.nnet.conv2d(*args, **kwargs)
     try:
         return theano.sandbox.cuda.dnn.dnn_conv(
-            input.astype('float32'), W.astype('float32'), **copy)
+            input.astype('float32'), w.astype('float32'), **copy)
     except Exception as e:
         print("falling back to default conv2d")
         return theano.tensor.nnet.conv2d(*args, **kwargs)
@@ -34,9 +34,9 @@ class MLP(LasagnePowered, Serializable):
                  hidden_sizes,
                  hidden_nonlinearity,
                  output_nonlinearity,
-                 hidden_W_init=LI.GlorotUniform(),
+                 hidden_w_init=LI.GlorotUniform(),
                  hidden_b_init=LI.Constant(0.),
-                 output_W_init=LI.GlorotUniform(),
+                 output_w_init=LI.GlorotUniform(),
                  output_b_init=LI.Constant(0.),
                  name=None,
                  input_var=None,
@@ -64,7 +64,7 @@ class MLP(LasagnePowered, Serializable):
                 num_units=hidden_size,
                 nonlinearity=hidden_nonlinearity,
                 name="%shidden_%d" % (prefix, idx),
-                W=hidden_W_init,
+                W=hidden_w_init,
                 b=hidden_b_init,
             )
             if batch_norm:
@@ -76,7 +76,7 @@ class MLP(LasagnePowered, Serializable):
             num_units=output_dim,
             nonlinearity=output_nonlinearity,
             name="%soutput" % (prefix, ),
-            W=output_W_init,
+            W=output_w_init,
             b=output_b_init,
         )
         self._layers.append(l_out)
@@ -124,7 +124,7 @@ class GRULayer(L.Layer):
                  hidden_nonlinearity,
                  gate_nonlinearity=LN.sigmoid,
                  name=None,
-                 W_init=LI.GlorotUniform(),
+                 w_init=LI.GlorotUniform(),
                  b_init=LI.Constant(0.),
                  hidden_init=LI.Constant(0.),
                  hidden_init_trainable=True):
@@ -148,18 +148,18 @@ class GRULayer(L.Layer):
             trainable=hidden_init_trainable,
             regularizable=False)
         # Weights for the reset gate
-        self.W_xr = self.add_param(W_init, (input_dim, num_units), name="W_xr")
-        self.W_hr = self.add_param(W_init, (num_units, num_units), name="W_hr")
+        self.W_xr = self.add_param(w_init, (input_dim, num_units), name="W_xr")
+        self.W_hr = self.add_param(w_init, (num_units, num_units), name="W_hr")
         self.b_r = self.add_param(
             b_init, (num_units, ), name="b_r", regularizable=False)
         # Weights for the update gate
-        self.W_xu = self.add_param(W_init, (input_dim, num_units), name="W_xu")
-        self.W_hu = self.add_param(W_init, (num_units, num_units), name="W_hu")
+        self.W_xu = self.add_param(w_init, (input_dim, num_units), name="W_xu")
+        self.W_hu = self.add_param(w_init, (num_units, num_units), name="W_hu")
         self.b_u = self.add_param(
             b_init, (num_units, ), name="b_u", regularizable=False)
         # Weights for the cell gate
-        self.W_xc = self.add_param(W_init, (input_dim, num_units), name="W_xc")
-        self.W_hc = self.add_param(W_init, (num_units, num_units), name="W_hc")
+        self.W_xc = self.add_param(w_init, (input_dim, num_units), name="W_xc")
+        self.W_hc = self.add_param(w_init, (num_units, num_units), name="W_hc")
         self.b_c = self.add_param(
             b_init, (num_units, ), name="b_c", regularizable=False)
         self.gate_nonlinearity = gate_nonlinearity
@@ -205,7 +205,8 @@ class GRUStepLayer(L.MergeLayer):
         return self._gru_layer.get_params(**tags)
 
     def get_output_shape_for(self, input_shapes):
-        n_batch = input_shapes[0]
+        # Get the dimension inside the tuple input_shapes[0]
+        n_batch = input_shapes[0][0]
         return n_batch, self._gru_layer.num_units
 
     def get_output_for(self, inputs, **kwargs):
@@ -253,7 +254,7 @@ class GRUNetwork(object):
             shape_op=lambda flat_output_shape, l_input_shape: (
                 l_input_shape[0], l_input_shape[1], flat_output_shape[-1]
             ),
-            extras=[l_in]) # yapf: disable
+            extras=[l_in])  # yapf: disable
         l_step_hidden = l_gru.get_step_layer(l_step_input, l_step_prev_hidden)
         l_step_output = L.DenseLayer(
             l_step_hidden,
@@ -315,9 +316,9 @@ class ConvNetwork(object):
             conv_filter_sizes,
             conv_strides,
             conv_pads,
-            hidden_W_init=LI.GlorotUniform(),
+            hidden_w_init=LI.GlorotUniform(),
             hidden_b_init=LI.Constant(0.),
-            output_W_init=LI.GlorotUniform(),
+            output_w_init=LI.GlorotUniform(),
             output_b_init=LI.Constant(0.),
             # conv_W_init=LI.GlorotUniform(), conv_b_init=LI.Constant(0.),
             hidden_nonlinearity=LN.rectify,
@@ -366,7 +367,7 @@ class ConvNetwork(object):
                 num_units=hidden_size,
                 nonlinearity=hidden_nonlinearity,
                 name="%shidden_%d" % (prefix, idx),
-                W=hidden_W_init,
+                W=hidden_w_init,
                 b=hidden_b_init,
             )
         l_out = L.DenseLayer(
@@ -374,7 +375,7 @@ class ConvNetwork(object):
             num_units=output_dim,
             nonlinearity=output_nonlinearity,
             name="%soutput" % (prefix, ),
-            W=output_W_init,
+            W=output_w_init,
             b=output_b_init,
         )
         self._l_in = l_in
