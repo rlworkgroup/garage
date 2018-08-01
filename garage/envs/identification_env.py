@@ -1,9 +1,10 @@
+import gym
+
 from garage.core import Serializable
-from garage.envs import ProxyEnv
 from garage.misc.overrides import overrides
 
 
-class IdentificationEnv(ProxyEnv, Serializable):
+class IdentificationEnv(gym.Wrapper, Serializable):
     def __init__(self, mdp_cls, mdp_args):
         Serializable.quick_init(self, locals())
         self.mdp_cls = mdp_cls
@@ -18,7 +19,7 @@ class IdentificationEnv(ProxyEnv, Serializable):
     @overrides
     def reset(self):
         if getattr(self, "_mdp", None):
-            if hasattr(self._wrapped_env, "release"):
-                self._wrapped_env.release()
-        self._wrapped_env = self.gen_mdp()
+            if hasattr(self.env, "release"):
+                self.env.release()
+        self.env = self.gen_mdp()
         return super(IdentificationEnv, self).reset()

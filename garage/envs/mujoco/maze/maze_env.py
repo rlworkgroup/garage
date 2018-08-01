@@ -14,13 +14,12 @@ from garage.envs.mujoco.maze.maze_env_utils import point_distance
 from garage.envs.mujoco.maze.maze_env_utils import ray_segment_intersect
 from garage.envs.mujoco.mujoco_env import BIG
 from garage.envs.mujoco.mujoco_env import MODEL_DIR
-from garage.envs.proxy_env import ProxyEnv
 from garage.envs.util import flat_dim
 from garage.misc import logger
 from garage.misc.overrides import overrides
 
 
-class MazeEnv(ProxyEnv, Serializable):
+class MazeEnv(gym.Wrapper, Serializable):
     MODEL_CLASS = None
     ORI_IND = None
 
@@ -53,7 +52,6 @@ class MazeEnv(ProxyEnv, Serializable):
             **kwargs):
         Serializable.quick_init(self, locals())
 
-        Serializable.quick_init(self, locals())
         self._n_bins = n_bins
         self._sensor_range = sensor_range
         self._sensor_span = sensor_span
@@ -129,8 +127,7 @@ class MazeEnv(ProxyEnv, Serializable):
         inner_env = model_cls(
             *args, file_path=file_path,
             **kwargs)  # file to the robot specifications
-        ProxyEnv.__init__(
-            self, inner_env)  # here is where the robot env will be initialized
+        super().__init__(inner_env)
 
     def get_current_maze_obs(self):
         # The observation would include both information about the robot itself
@@ -246,7 +243,7 @@ class MazeEnv(ProxyEnv, Serializable):
         return gym.spaces.Box(ub * -1, ub, dtype=np.float32)
 
     # space of only the robot observations (they go first in the get current
-    # obs) THIS COULD GO IN PROXYENV
+    # obs)
     @property
     def robot_observation_space(self):
         shp = self.get_current_robot_obs().shape

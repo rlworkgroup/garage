@@ -22,7 +22,8 @@ class TfEnv(GarageEnv):
     def __init__(self, env):
         super().__init__(env)
         self.action_space = self._to_garage_space(self.env.action_space)
-        self.observation_space = self._to_garage_space(self.env.observation_space)
+        self.observation_space = self._to_garage_space(
+            self.env.observation_space)
 
     @classmethod
     def wrap(cls, env_cls, **extra_kwargs):
@@ -60,7 +61,8 @@ class TfEnv(GarageEnv):
             observation_space=self.observation_space,
             action_space=self.action_space)
 
-    @classmethod
+
+class VecTfEnv:
     def __init__(self, vec_env):
         self.vec_env = vec_env
 

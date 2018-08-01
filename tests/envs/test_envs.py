@@ -9,7 +9,6 @@ from garage.envs import GridWorldEnv
 from garage.envs import IdentificationEnv
 from garage.envs import NoisyObservationEnv
 from garage.envs import NormalizedEnv
-from garage.envs import ProxyEnv
 from garage.envs.box2d import Box2DEnv
 from garage.envs.box2d import CarParkingEnv
 from garage.envs.box2d import CartpoleEnv
@@ -63,7 +62,6 @@ if MUJOCO_ENABLED:
     ])
 
 envs = [cls() for cls in simple_env_classes]
-envs.append(ProxyEnv(envs[0]))
 envs.append(IdentificationEnv(CartpoleEnv, {}))
 envs.append(NoisyObservationEnv(CartpoleEnv()))
 envs.append(DelayedActionEnv(CartpoleEnv()))

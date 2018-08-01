@@ -2,19 +2,19 @@ import os
 import tempfile
 import time
 
+import gym
 import mako.lookup
 import mako.template
 
 from garage.core import Serializable
 from garage.envs.mujoco import mujoco_env
 from garage.envs.mujoco.hill import terrain
-from garage.envs.proxy_env import ProxyEnv
 from garage.misc import logger
 
 MODEL_DIR = mujoco_env.MODEL_DIR
 
 
-class HillEnv(ProxyEnv, Serializable):
+class HillEnv(gym.Wrapper, Serializable):
 
     HFIELD_FNAME = 'hills.png'
     TEXTURE_FNAME = 'hills_texture.png'
@@ -63,8 +63,7 @@ class HillEnv(ProxyEnv, Serializable):
         inner_env = model_cls(
             *args, file_path=file_path,
             **kwargs)  # file to the robot specifications
-        ProxyEnv.__init__(
-            self, inner_env)  # here is where the robot env will be initialized
+        super().__init__(inner_env)
 
         os.close(tmp_f)
 
@@ -100,11 +99,12 @@ class HillEnv(ProxyEnv, Serializable):
                     time.sleep(5)
                     total += 5
                 if os.path.exists(lock_path):
-                    raise (
-                        "Process {0} timed out waiting for terrain generation, "
-                        "or stale lock file").format(os.getpid())
+                    raise ("Process {0} timed out waiting for terrain "
+                           "generation, or stale lock file").format(
+                               os.getpid())
                 logger.log("Done.")
                 return False
+        return False
 
     def _gen_terrain(self, regen=True):
         logger.log("Process {0} generating terrain...".format(os.getpid()))
@@ -121,4 +121,4 @@ class HillEnv(ProxyEnv, Serializable):
         return hfield
 
     def get_current_obs(self):
-        return self._wrapped_env.get_current_obs()
+        return self.env.get_current_obs()
