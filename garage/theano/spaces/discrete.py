@@ -1,6 +1,6 @@
 """Spaces.Discrete for Theano."""
-from garage.misc import ext
 from garage.spaces import Discrete as GarageDiscrete
+from garage.theano.misc import tensor_utils
 
 
 class Discrete(GarageDiscrete):
@@ -15,11 +15,11 @@ class Discrete(GarageDiscrete):
         :return: the created tensor variable
         """
         if self.n <= 2**8:
-            return ext.new_tensor(
+            return tensor_utils.new_tensor(
                 name=name, ndim=extra_dims + 1, dtype='uint8')
         elif self.n <= 2**16:
-            return ext.new_tensor(
+            return tensor_utils.new_tensor(
                 name=name, ndim=extra_dims + 1, dtype='uint16')
         else:
-            return ext.new_tensor(
+            return tensor_utils.new_tensor(
                 name=name, ndim=extra_dims + 1, dtype='uint32')

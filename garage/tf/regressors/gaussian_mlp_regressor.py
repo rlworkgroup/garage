@@ -1,6 +1,5 @@
 import numpy as np
 import tensorflow as tf
-import theano.tensor as TT
 
 from garage.core import Serializable
 from garage.misc import logger
@@ -315,7 +314,7 @@ class GaussianMLPRegressor(LayersPowered, Serializable):
 
             means_var = (
                 normalized_means_var * self._y_std_var + self._y_mean_var)
-            log_stds_var = normalized_log_stds_var + TT.log(self._y_std_var)
+            log_stds_var = normalized_log_stds_var + tf.log(self._y_std_var)
 
             return self._dist.log_likelihood_sym(
                 y_var, dict(mean=means_var, log_std=log_stds_var))

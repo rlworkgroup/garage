@@ -1,8 +1,8 @@
 """Spaces.Box for Theano."""
 import theano
 
-from garage.misc import ext
 from garage.spaces import Box as GarageBox
+from garage.theano.misc import tensor_utils
 
 
 class Box(GarageBox):
@@ -16,5 +16,5 @@ class Box(GarageBox):
         :param extra_dims: extra dimensions to be prepended
         :return: the created tensor variable
         """
-        return ext.new_tensor(
+        return tensor_utils.new_tensor(
             name=name, ndim=extra_dims + 1, dtype=theano.config.floatX)

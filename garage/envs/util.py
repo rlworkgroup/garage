@@ -1,9 +1,7 @@
 import gym
 import numpy as np
-import theano
 
 from garage.envs.base import EnvSpec
-from garage.misc import ext
 from garage.misc import special
 from garage.spaces import Box as GarageBox
 from garage.spaces import Discrete as GarageDiscrete
@@ -11,8 +9,7 @@ from garage.spaces import Product as GarageProduct
 
 __all__ = [
     'bounds', 'default_value', 'flat_dim', 'flatten', 'flatten_n', 'horizon',
-    'sample', 'spec', 'unflatten', 'unflatten_n', 'weighted_sample',
-    'new_tensor_variable'
+    'sample', 'spec', 'unflatten', 'unflatten_n', 'weighted_sample'
 ]
 
 
@@ -73,37 +70,6 @@ def flatten_n(space, obs):
 
 def horizon(env):
     return env.spec.tags['wrapper_config.TimeLimit.max_episode_steps']
-
-
-def new_tensor_variable(space, name, extra_dims):
-    if isinstance(space, gym.spaces.Box):
-        return ext.new_tensor(
-            name=name, ndim=extra_dims + 1, dtype=theano.config.floatX)
-    elif isinstance(space, gym.spaces.Discrete):
-        if space.n <= 2**8:
-            return ext.new_tensor(
-                name=name, ndim=extra_dims + 1, dtype='uint8')
-        elif space.n <= 2**16:
-            return ext.new_tensor(
-                name=name, ndim=extra_dims + 1, dtype='uint16')
-        else:
-            return ext.new_tensor(
-                name=name, ndim=extra_dims + 1, dtype='uint32')
-    elif isinstance(space, gym.spaces.Tuple):
-        dtypes = [
-            new_tensor_variable(c, "tmp", extra_dims=0).dtype
-            for c in space.spaces
-        ]
-        if dtypes and hasattr(dtypes[0], "as_numpy_dtype"):
-            dtypes = [d.as_numpy_dtype for d in dtypes]
-        common_dtype = np.core.numerictypes.find_common_type([], dtypes)
-        return ext.new_tensor(
-            name=name,
-            ndim=extra_dims + 1,
-            dtype=common_dtype,
-        )
-    else:
-        raise NotImplementedError
 
 
 def sample(space):

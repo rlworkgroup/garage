@@ -1,13 +1,13 @@
-from contrib.alexbeloi.is_sampler import ISSampler
-from garage.algos import VPG
-from garage.baselines import LinearFeatureBaseline
-from garage.envs import normalize
-from garage.envs.box2d import CartpoleEnv
-from garage.policies import GaussianMLPPolicy
 """
 Example using VPG with ISSampler, iterations alternate between live and
 importance sampled iterations.
 """
+from contrib.alexbeloi.is_sampler import ISSampler
+from garage.baselines import LinearFeatureBaseline
+from garage.envs import normalize
+from garage.envs.box2d import CartpoleEnv
+from garage.theano.algos import VPG
+from garage.theano.policies import GaussianMLPPolicy
 
 env = normalize(CartpoleEnv())
 

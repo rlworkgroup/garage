@@ -4,14 +4,14 @@ import unittest
 
 import numpy as np
 
-from garage.algos import TRPO
 from garage.baselines import LinearFeatureBaseline
 from garage.envs.mujoco.sawyer import BinSortingEnv
 from garage.envs.mujoco.sawyer import BlockStackingEnv
 from garage.envs.mujoco.sawyer import PickAndPlaceEnv
 from garage.envs.mujoco.sawyer import ReacherEnv
 from garage.envs.util import spec
-from garage.policies import GaussianMLPPolicy
+from garage.theano.algos import TRPO
+from garage.theano.policies import GaussianMLPPolicy
 
 
 def run_bin_sorting(*_):

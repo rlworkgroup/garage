@@ -1,11 +1,11 @@
 import gym
 
-from garage.algos import TRPO
 from garage.baselines import LinearFeatureBaseline
 from garage.envs import normalize
 from garage.misc.instrument import run_experiment
-from garage.policies import CategoricalMLPPolicy
+from garage.theano.algos import TRPO
 from garage.theano.envs import TheanoEnv
+from garage.theano.policies import CategoricalMLPPolicy
 
 
 def run_task(*_):

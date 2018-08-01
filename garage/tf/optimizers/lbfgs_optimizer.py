@@ -55,7 +55,7 @@ class LbfgsOptimizer(Serializable):
             if extra_inputs is None:
                 extra_inputs = list()
 
-            self._opt_fun = ext.lazydict(
+            self._opt_fun = ext.LazyDict(
                 f_loss=lambda: tensor_utils.compile_function(
                     inputs + extra_inputs, loss),
                 f_opt=lambda: tensor_utils.compile_function(

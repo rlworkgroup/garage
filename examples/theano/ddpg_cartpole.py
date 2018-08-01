@@ -1,11 +1,11 @@
-from garage.algos import DDPG
 from garage.envs import normalize
 from garage.envs.box2d import CartpoleEnv
 from garage.exploration_strategies import OUStrategy
 from garage.misc.instrument import run_experiment
-from garage.policies import DeterministicMLPPolicy
-from garage.q_functions import ContinuousMLPQFunction
+from garage.theano.algos import DDPG
 from garage.theano.envs import TheanoEnv
+from garage.theano.policies import DeterministicMLPPolicy
+from garage.theano.q_functions import ContinuousMLPQFunction
 
 
 def run_task(*_):
