@@ -80,8 +80,9 @@ def run_pick_and_place(*_):
 class TestSawyerEnvs(unittest.TestCase):
     def test_reacher(self):
         """Testing for reacher."""
+        tasks = [(0.3, -0.3, 0.30), (0.3, 0.3, 0.30)]
 
-        env = ReacherEnv()
+        env = ReacherEnv(goal_position=tasks[0])
         for i in range(5):
             if 'CI' in os.environ:
                 print("Skipping rendering test")

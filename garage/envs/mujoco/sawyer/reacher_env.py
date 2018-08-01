@@ -1,205 +1,74 @@
-"""Reacher environment for the sawyer robot."""
-
-from gym.envs.robotics.utils import reset_mocap2body_xpos
 from gym.spaces import Box
 import numpy as np
 
-from garage.core import Serializable
-from garage.envs import Step
-from garage.envs.mujoco.sawyer.sawyer_env import SawyerEnv
+from garage.envs.mujoco.sawyer.sawyer_env import Configuration, SawyerEnv
 from garage.misc.overrides import overrides
 
 
-class ReacherEnv(SawyerEnv, Serializable):
-    """Reacher Environment."""
+class ReacherEnv(SawyerEnv):
+    def __init__(self, goal_position, start_position=None, **kwargs):
+        def generate_start_goal():
+            nonlocal start_position
+            if start_position is None:
+                center = self.sim.data.get_geom_xpos('target2')
+                start_position = np.concatenate([center[:2], [0.15]])
 
-    FILE = "reacher.xml"
+            start = Configuration(
+                gripper_pos=start_position,
+                gripper_state=1,
+                object_grasped=False,
+                object_pos=[0, 0, -1])
+            goal = Configuration(
+                gripper_pos=goal_position,
+                gripper_state=1,
+                object_grasped=False,
+                object_pos=[0, 0, -1])
 
-    def __init__(self,
-                 initial_goal=None,
-                 initial_qpos=None,
-                 distance_threshold=0.08,
-                 target_range=0.15,
-                 sparse_reward=False,
-                 control_method='position_control',
-                 *args,
-                 **kwargs):
-        """
-        Reacher Environment.
+            return start, goal
 
-        :param initial_goal: initial position to reach.
-        :param initial_qpos: initial qpos for each joint.
-        :param distance_threshold: distance threhold to define reached.
-        :param target_range: delta range the goal is randomized
-        :param sparse_reward: whether using sparse reward
-        :param args
-        :param kwargs
-        """
-        Serializable.quick_init(self, locals())
-        if initial_goal is None:
-            initial_goal = np.array([0.8, 0.0, 0.15])
-        if initial_qpos is None:
-            initial_qpos = {
-                'right_j0': -0.140923828125,
-                'right_j1': -1.2789248046875,
-                'right_j2': -3.043166015625,
-                'right_j3': -2.139623046875,
-                'right_j4': -0.047607421875,
-                'right_j5': -0.7052822265625,
-                'right_j6': -1.4102060546875,
-            }
-        self._distance_threshold = distance_threshold
-        self._target_range = target_range
-        self._sparse_reward = sparse_reward
-        self._control_method = control_method
+        super(ReacherEnv, self).__init__(
+            start_goal_config=generate_start_goal, **kwargs)
 
-        self._accumulated_reward = 0
-        SawyerEnv.__init__(
-            self,
-            initial_goal=initial_goal,
-            initial_qpos=initial_qpos,
-            target_range=target_range,
-            *args,
-            **kwargs)
-
-    @overrides
-    def step(self, action):
-        """
-        Perform one step with action.
-
-        :param action: the action to be performed, (x, y, z) only for pos_ctrl
-        :return: next_obs, reward, done, info
-        """
-        action = np.clip(action, self.action_space.low, self.action_space.high)
-        if self._control_method == 'torque_control':
-            self.forward_dynamics(action)
-        elif self._control_method == 'position_control':
-            assert action.shape == (3, )
-            action = action.copy()
-            action *= 0.1  # limit the action
-            reset_mocap2body_xpos(self.sim)
-            self.sim.data.mocap_pos[:] = self.sim.data.mocap_pos + action
-            self.sim.step()
-        else:
-            raise NotImplementedError
-
-        obs = self.get_current_obs()
-        next_obs = obs['observation']
-        achieved_goal = obs['achieved_goal']
-        goal = obs['desired_goal']
-        reward = self.compute_reward(achieved_goal, goal, dict())
-        done = (self._goal_distance(achieved_goal, goal) <
-                self._distance_threshold)
-        return Step(next_obs, reward, done)
-
-    def _reset_target_visualization(self):
-        """Reset the target visualization."""
-        site_id = self.sim.model.site_name2id('target_pos')
-        self.sim.model.site_pos[site_id] = self._goal
-        self.sim.forward()
-
-    @overrides
-    def reset(self, init_state=None):
-        """Reset the environment."""
-        self._accumulated_reward = 0
-        self._reset_target_visualization()
-        return super(ReacherEnv, self).reset(init_state)['observation']
-
-    @overrides
-    def compute_reward(self, achieved_goal, goal, info):
-        # Compute distance between goal and the achieved goal.
-        d = self._goal_distance(achieved_goal, goal)
-        if self._sparse_reward:
-            reward = -(d > self._distance_threshold).astype(np.float32)
-        else:
-            reward = -d
-
-        if d < self._distance_threshold:
-            reward += 500  # Completion
-        return reward
-
-    @overrides
-    def get_current_obs(self):
-        """
-        Get the current observation.
-
-        :return: current observation.
-        """
-        grip_pos = self.sim.data.get_site_xpos('grip')
+    def get_obs(self):
+        gripper_pos = self.gripper_position
         dt = self.sim.nsubsteps * self.sim.model.opt.timestep
         grip_velp = self.sim.data.get_site_xvelp('grip') * dt
 
-        qpos = self.sim.data.qpos
-        qvel = self.sim.data.qvel
+        object_pos = self.object_position
+        object_velp = self.sim.data.get_site_xvelp('object0') * dt
+        object_velp -= grip_velp
+        grasped = self.has_object
+        obs = np.concatenate([gripper_pos])
 
-        achieved_goal = np.squeeze(grip_pos.copy())
+        achieved_goal = self._achieved_goal_fn(self)
+        desired_goal = self._desired_goal_fn(self)
 
-        if self._control_method == 'position_control':
-            obs = np.concatenate([
-                grip_pos,
-                grip_velp,
-            ])
-        elif self._control_method == 'torque_control':
-            obs = np.concatenate([
-                qpos,
-                qvel,
-            ])
-        else:
-            raise NotImplementedError
+        achieved_goal_qpos = np.concatenate((achieved_goal, [1, 0, 0, 0]))
+        self.sim.data.set_joint_qpos('achieved_goal:joint', achieved_goal_qpos)
+        desired_goal_qpos = np.concatenate((desired_goal, [1, 0, 0, 0]))
+        self.sim.data.set_joint_qpos('desired_goal:joint', desired_goal_qpos)
 
         return {
             'observation': obs.copy(),
-            'achieved_goal': achieved_goal.copy(),
-            'desired_goal': self._goal
+            'achieved_goal': achieved_goal,
+            'desired_goal': desired_goal,
+            'gripper_state': self.gripper_state,
+            'gripper_pos': gripper_pos.copy(),
+            'has_object': grasped,
+            'object_pos': object_pos.copy()
         }
-
-    @staticmethod
-    def _goal_distance(goal_a, goal_b):
-        """
-        Calculate the distance between two goals.
-
-        :param goal_a: first goal.
-        :param goal_b: second goal.
-        :return: distance between goal a and b.
-        """
-        assert goal_a.shape == goal_b.shape
-        return np.linalg.norm(goal_a - goal_b, axis=-1)
-
-    def sample_goal(self):
-        """
-        Sample goals.
-
-        :return: the new sampled goal.
-        """
-        goal = self._initial_goal.copy()
-
-        random_goal_delta = np.random.uniform(
-            -self._target_range, self._target_range, size=2)
-        goal[:2] += random_goal_delta
-        self._goal = goal
-        return goal
-
-    @overrides
-    @property
-    def observation_space(self):
-        """
-        Return a Space object.
-
-        :return: observation space
-        """
-        return Box(
-            -np.inf,
-            np.inf,
-            shape=self.get_current_obs()['observation'].shape,
-            dtype=np.float32)
 
     @overrides
     @property
     def action_space(self):
-        """Return an Action space."""
-        if self._control_method == 'torque_control':
-            return super(ReacherEnv, self).action_space()
-        elif self._control_method == 'position_control':
-            return Box(-1., 1., shape=(3, ), dtype=np.float32)
-        else:
-            raise NotImplementedError
+        return Box(
+            np.array([-0.5, -0.5, -0.5, -1.]),
+            np.array([0.5, 0.5, 0.5, 1.]),
+            dtype=np.float32)
+
+    def compute_reward(self, achieved_goal, desired_goal, info: dict):
+        d = np.linalg.norm(achieved_goal - desired_goal, axis=-1)
+        if self._reward_type == 'sparse':
+            return (d < self._distance_threshold).astype(np.float32)
+
+        return .01 - d
