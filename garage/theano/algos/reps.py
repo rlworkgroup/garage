@@ -319,7 +319,7 @@ class REPS(BatchPolopt, Serializable):
         def eval_loss_grad(params):
             self.policy.set_param_values(params, trainable=True)
             grad = f_loss_grad(*input)
-            flattened_grad = theano_tensor_utils.flatten_tensors(
+            flattened_grad = tensor_utils.flatten_tensors(
                 list(map(np.asarray, grad)))
             return flattened_grad.astype(np.float64)
 

@@ -68,7 +68,8 @@ def from_onehot(v):
 
 
 def from_onehot_n(v):
-    if not v:
+    if ((isinstance(v, np.ndarray) and not v.size)
+            or (isinstance(v, list) and not v)):
         return []
     return np.nonzero(v)[1]
 
