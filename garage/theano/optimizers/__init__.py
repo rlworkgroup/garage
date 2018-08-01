@@ -1,3 +1,4 @@
+# noqa: D104
 from garage.theano.optimizers.conjugate_gradient_optimizer import \
         ConjugateGradientOptimizer
 from garage.theano.optimizers.conjugate_gradient_optimizer import \

@@ -17,7 +17,7 @@ from garage.misc.console import Message
 
 
 def softmax_sym(x):
-    """Returns the softmax function of x."""
+    """Return the softmax function of x."""
     return theano.tensor.nnet.softmax(x)
 
 
@@ -38,17 +38,18 @@ def normalize_updates(old_mean, old_std, new_mean, new_std, old_w, old_b):
 
 
 def to_onehot_sym(ind, dim):
-    """Returns a matrix with one hot encoding of each element in ind."""
+    """Return a matrix with one hot encoding of each element in ind."""
     assert ind.ndim == 1
     return theano.tensor.extra_ops.to_one_hot(ind, dim)
 
 
 def cached_function(inputs, outputs):
-    """Finds and loads a file with a cached tensor function.
+    """Find and load a file with a cached tensor function.
 
     Returns
     -------
     A callable object that will calculate outputs from inputs.
+
     """
     with Message("Hashing theano fn"):
         if hasattr(outputs, '__len__'):
@@ -79,7 +80,7 @@ def compile_function(inputs=None,
                      givens=None,
                      log_name=None,
                      **kwargs):
-    """Returns a callable object that will calculate outputs from inputs."""
+    """Return a callable object that will calculate outputs from inputs."""
     if log_name:
         msg = Message("Compiling function %s" % log_name)
         msg.__enter__()
@@ -97,12 +98,12 @@ def compile_function(inputs=None,
 
 
 def new_tensor(name, ndim, dtype):
-    """Returns a new tensor based on the data type and name provided."""
+    """Return a new tensor based on the data type and name provided."""
     return TT.TensorType(dtype, (False, ) * ndim)(name)
 
 
 def new_tensor_like(name, arr_like):
-    """Returns a new tensor based on arr_like."""
+    """Return a new tensor based on arr_like."""
     return new_tensor(name, arr_like.ndim, arr_like.dtype)
 
 
@@ -111,7 +112,8 @@ def flatten_hessian(cost,
                     consider_constant=None,
                     disconnected_inputs='raise',
                     block_diagonal=True):
-    """
+    """Flatten hessian.
+
     :type cost: Scalar (0-dimensional) Variable.
     :type wrt: Vector (1-dimensional tensor) 'Variable' or list of
                vectors (1-dimensional tensors) Variables

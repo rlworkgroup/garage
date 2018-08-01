@@ -1,3 +1,4 @@
+# noqa: D104
 from garage.theano.algos.ddpg import DDPG
 from garage.theano.algos.vpg import VPG
 from garage.theano.algos.erwr import ERWR  # noqa: I100

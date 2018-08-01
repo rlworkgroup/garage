@@ -1,3 +1,4 @@
+"""Module for experience replay."""
 import time
 
 import numpy as np
@@ -8,8 +9,8 @@ from garage.misc.ext import extract
 
 
 class ReplayPool(Serializable):
-    """
-    A utility class for experience replay.
+    """A utility class for experience replay.
+
     The code is adapted from https://github.com/spragunr/deep_q_rl
     """
 
@@ -34,7 +35,6 @@ class ReplayPool(Serializable):
             as a single one, so as to ensure the Markov property
             concat_length - length of the concatenation
         """
-
         self.observation_shape = observation_shape
         self.action_flat_dim = action_flat_dim
         self.max_steps = max_steps
@@ -68,6 +68,7 @@ class ReplayPool(Serializable):
                              concat_observations, concat_length, rng)
 
     def __getstate__(self):
+        """Get the experiment state."""
         d = super(ReplayPool, self).__getstate__()
         d["bottom"] = self.bottom
         d["top"] = self.top
@@ -81,6 +82,7 @@ class ReplayPool(Serializable):
         return d
 
     def __setstate__(self, d):
+        """Set the experiment state."""
         super(ReplayPool, self).__setstate__(d)
         self.bottom, self.top, self.size, self.observations, self.actions, \
         self.rewards, self.terminals, self.extras, self.rng = extract(
@@ -126,8 +128,9 @@ class ReplayPool(Serializable):
         return max(0, self.size - self.concat_length)
 
     def last_concat_state(self):
-        """
-        Return the most recent sample (concatenated observations if needed).
+        """Return the most recent sample.
+
+        Observations are concatenated if needed.
         """
         if self.concat_observations:
             indexes = np.arange(self.top - self.concat_length, self.top)
@@ -136,9 +139,9 @@ class ReplayPool(Serializable):
             return self.observations[self.top - 1]
 
     def concat_state(self, state):
-        """Return a concatenated state, using the last concat_length -
-        1, plus state.
+        """Return a concatenated state.
 
+        The last concat_length - 1, plus state is used.
         """
         if self.concat_observations:
             indexes = np.arange(self.top - self.concat_length + 1, self.top)
@@ -154,9 +157,11 @@ class ReplayPool(Serializable):
             return state
 
     def random_batch(self, batch_size):
-        """
-        Return corresponding observations, actions, rewards, terminal status,
-        and next_observations for batch_size randomly chosen state transitions.
+        """Return random batch.
+
+        The batch contains the corresponding observations, actions, rewards,
+        terminal status and next_observations for batch_size randomly chosen
+        state transitions.
         """
         # Allocate the response.
 
@@ -247,6 +252,7 @@ class ReplayPool(Serializable):
 
 
 def simple_tests():
+    """Test simple operations of ReplayPool."""
     np.random.seed(222)
     dataset = ReplayPool(
         observation_shape=(3, 2),
@@ -275,6 +281,7 @@ def simple_tests():
 
 
 def speed_tests():
+    """Test samples per second."""
     dataset = ReplayPool(
         observation_shape=(80, 80),
         action_flat_dim=1,
@@ -303,6 +310,7 @@ def speed_tests():
 
 
 def trivial_tests():
+    """Trivial tests."""
     dataset = ReplayPool(
         observation_shape=(1, 2),
         action_flat_dim=1,
@@ -322,6 +330,7 @@ def trivial_tests():
 
 
 def max_size_tests():
+    """Max size tests."""
     dataset1 = ReplayPool(
         observation_shape=(4, 3),
         action_flat_dim=1,
@@ -351,6 +360,7 @@ def max_size_tests():
 
 
 def test_memory_usage_ok(q):
+    """Test memory usage."""
     import memory_profiler
     dataset = ReplayPool(
         observation_shape=(80, 80),
@@ -374,6 +384,7 @@ def test_memory_usage_ok(q):
 
 
 def main():
+    """Run all tests for Replay Pool."""
     speed_tests()
     # test_memory_usage_ok()
     max_size_tests()

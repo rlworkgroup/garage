@@ -1,3 +1,4 @@
+# noqa: D104
 from garage.theano.core.lasagne_layers import batch_norm  # noqa: I100
 from garage.theano.core.lasagne_layers import OpLayer
 from garage.theano.core.lasagne_layers import ParamLayer

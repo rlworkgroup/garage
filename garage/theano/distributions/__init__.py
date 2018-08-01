@@ -1,3 +1,4 @@
+# noqa: D104
 from garage.theano.distributions.base import Distribution
 from garage.theano.distributions.categorical import Categorical
 from garage.theano.distributions.delta import Delta

@@ -1,3 +1,4 @@
+# noqa: D104
 from garage.theano.policies.categorical_gru_policy import CategoricalGRUPolicy
 from garage.theano.policies.categorical_mlp_policy import CategoricalMLPPolicy
 from garage.theano.policies.deterministic_mlp_policy import \
