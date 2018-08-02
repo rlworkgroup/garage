@@ -6,12 +6,13 @@ import random
 from numpy import var
 
 from garage.algos import BatchSampler
+from garage.sampler import parallel_sampler
 
 
 class ISSampler(BatchSampler):
     """
-    Sampler which alternates between live sampling iterations using BatchSampler
-    and importance sampling iterations.
+    Sampler which alternates between live sampling iterations using
+    BatchSampler and importance sampling iterations.
     """
 
     def __init__(

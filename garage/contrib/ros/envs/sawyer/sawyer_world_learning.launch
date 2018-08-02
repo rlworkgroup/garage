@@ -32,7 +32,7 @@
   <param unless="$(arg electric_gripper)" name="robot/limb/right/tip_name"
          value="right_hand" />
 
-  <param name="robot/limb/right/camera_name" value="right_hand_camera" /> 
+  <param name="robot/limb/right/camera_name" value="right_hand_camera" />
   <param if="$(arg electric_gripper)"     name="robot/limb/right/gravity_tip_name"
          value="right_gripper_tip" />
   <param unless="$(arg electric_gripper)" name="robot/limb/right/gravity_tip_name"

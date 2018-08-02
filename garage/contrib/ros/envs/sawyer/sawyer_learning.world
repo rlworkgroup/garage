@@ -12,7 +12,7 @@
     <physics type="ode">
       <real_time_update_rate>0</real_time_update_rate>
     </physics>
-    
+
     <gravity>
       0.0 0.0 -9.81
     </gravity>

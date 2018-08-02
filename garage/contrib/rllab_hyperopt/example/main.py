@@ -1,9 +1,9 @@
 '''
 Main module to launch an example hyperopt search on EC2.
 
-Launch this from outside the garage main dir. Otherwise, garage will try to ship
-the logfiles being written by this process, which will fail because tar doesn't
-want to tar files that are being written to. Alternatively, disable the
+Launch this from outside the garage main dir. Otherwise, garage will try to
+ship the logfiles being written by this process, which will fail because tar
+doesn't want to tar files that are being written to. Alternatively, disable the
 packaging of log files by garage, but I couldn't quickly find how to do this.
 
 You can use Jupyter notebook visualize_hyperopt_results.ipynb to inspect
@@ -12,11 +12,11 @@ results.
 from hyperopt import hp
 
 from garage.contrib.rllab_hyperopt.core import launch_hyperopt_search
-# the functions to run the task and process result do not need to be in separate
-# files. They do need to be separate from the main file though. Also, anything
-# you import in the module that contains run_task needs to be on the garage AMI.
-# Therefore, since I use pandas to process results, I have put them in separate
-# files here.
+# the functions to run the task and process result do not need to be in
+# separate files. They do need to be separate from the main file though. Also,
+# anything you import in the module that contains run_task needs to be on the
+# garage AMI. Therefore, since I use pandas to process results, I have put them
+# in separate files here.
 from garage.contrib.rllab_hyperopt.example.score import process_result
 from garage.contrib.rllab_hyperopt.example.task import run_task
 
@@ -34,11 +34,11 @@ run_experiment_kwargs = dict(
 
 launch_hyperopt_search(
     run_task,  # the task to run
-    process_result,  # the function that will process results and return a score
+    process_result,  # the function that processes results and returns a score
     param_space,  # param search space
     # key for hyperopt DB, and also exp_prefix for run_experiment
     hyperopt_experiment_key='test12',
-    # # of local workers AND # of EC2 instances that will be started in parallel
+    # number of local workers AND EC2 instances that are started in parallel
     n_hyperopt_workers=3,
     # nr of parameter values to eval
     hyperopt_max_evals=5,

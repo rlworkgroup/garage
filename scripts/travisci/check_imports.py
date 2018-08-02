@@ -41,7 +41,7 @@ IGNORE_PATHS = [
     "build/",
     "dist/",
     "docs/",
-    "contrib/",
+    "garage/contrib/",
     "sandbox/",
 ]
 

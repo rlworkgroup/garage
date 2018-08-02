@@ -201,8 +201,8 @@ def launch_hyperopt_search(task_method,
     contrib.rllab_hyperopt.example.main.py.
 
     NOTE: While the argument n_hyperopt_workers specifies the number of (local)
-    parallel hyperopt workers to start, an equal number of EC2 instances will be
-    started in parallel!
+    parallel hyperopt workers to start, an equal number of EC2 instances will
+    be started in parallel!
 
     NOTE2: garage currently terminates / starts a new EC2 instance for every
     task. This means what you'll pay amounts to hyperopt_max_evals *
@@ -221,12 +221,12 @@ def launch_hyperopt_search(task_method,
      "Defining a search space" for further info
     :param hyperopt_experiment_key: str, the key hyperopt will use to store
      results in the DB
-    :param hyperopt_db_host: str, optional (default "localhost"). The host where
-     mongodb runs
+    :param hyperopt_db_host: str, optional (default "localhost"). The host
+     where mongodb runs
     :param hyperopt_db_port: int, optional (default 1234), the port where
      mongodb is listening for connections
-    :param hyperopt_db_name: str, optional (default "garage"), the DB name where
-     hyperopt will store results
+    :param hyperopt_db_name: str, optional (default "garage"), the DB name
+     where hyperopt will store results
     :param n_hyperopt_workers: int, optional (default 1). The nr of parallel
      workers to start. NOTE: an equal number of EC2 instances will be started
      in parallel.
