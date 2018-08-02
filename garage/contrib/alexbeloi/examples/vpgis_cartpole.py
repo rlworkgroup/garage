@@ -2,8 +2,8 @@
 Example using VPG with ISSampler, iterations alternate between live and
 importance sampled iterations.
 """
-from contrib.alexbeloi.is_sampler import ISSampler
 from garage.baselines import LinearFeatureBaseline
+from garage.contrib.alexbeloi.is_sampler import ISSampler
 from garage.envs import normalize
 from garage.envs.box2d import CartpoleEnv
 from garage.theano.algos import VPG

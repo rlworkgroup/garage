@@ -1,8 +1,8 @@
 import numpy as np
 import rospy
 
-from contrib.ros.envs.sawyer.pick_and_place_env import PickAndPlaceEnv
 from garage.baselines.linear_feature_baseline import LinearFeatureBaseline
+from garage.contrib.ros.envs.sawyer.pick_and_place_env import PickAndPlaceEnv
 from garage.envs.util import spec
 from garage.misc.instrument import run_experiment
 from garage.theano.algos import TRPO
@@ -22,12 +22,12 @@ INITIAL_ROBOT_JOINT_POS = {
 def run_task(*_):
     initial_goal = np.array([0.6, -0.1, 0.80])
 
-    rospy.init_node('trpo_real_sawyer_pnp_exp', anonymous=True)
+    rospy.init_node('trpo_sim_sawyer_pnp_exp', anonymous=True)
 
     pnp_env = PickAndPlaceEnv(
         initial_goal,
         initial_joint_pos=INITIAL_ROBOT_JOINT_POS,
-        simulated=False)
+        simulated=True)
 
     rospy.on_shutdown(pnp_env.shutdown)
 

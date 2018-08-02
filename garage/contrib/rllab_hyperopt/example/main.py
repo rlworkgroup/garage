@@ -11,14 +11,14 @@ results.
 '''
 from hyperopt import hp
 
-from contrib.rllab_hyperopt.core import launch_hyperopt_search
+from garage.contrib.rllab_hyperopt.core import launch_hyperopt_search
 # the functions to run the task and process result do not need to be in separate
 # files. They do need to be separate from the main file though. Also, anything
 # you import in the module that contains run_task needs to be on the garage AMI.
 # Therefore, since I use pandas to process results, I have put them in separate
 # files here.
-from contrib.rllab_hyperopt.example.score import process_result
-from contrib.rllab_hyperopt.example.task import run_task
+from garage.contrib.rllab_hyperopt.example.score import process_result
+from garage.contrib.rllab_hyperopt.example.task import run_task
 
 # define a search space.
 # See https://github.com/hyperopt/hyperopt/wiki/FMin, sect 2 for more detail

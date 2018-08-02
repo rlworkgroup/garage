@@ -8,8 +8,8 @@ import gym
 import numpy as np
 import rospy
 
-from contrib.ros.worlds.gazebo import Gazebo
-from contrib.ros.worlds.world import World
+from garage.contrib.ros.worlds.gazebo import Gazebo
+from garage.contrib.ros.worlds.world import World
 import garage.misc.logger as logger
 try:
     from garage.config import VICON_TOPICS

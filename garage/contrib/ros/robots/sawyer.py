@@ -7,8 +7,8 @@ import moveit_msgs.msg
 import numpy as np
 import rospy
 
-from contrib.ros.robots.kinematics_interfaces import StateValidity
-from contrib.ros.robots.robot import Robot
+from garage.contrib.ros.robots.kinematics_interfaces import StateValidity
+from garage.contrib.ros.robots.robot import Robot
 
 
 class Sawyer(Robot):

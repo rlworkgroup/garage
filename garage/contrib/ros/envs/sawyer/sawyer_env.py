@@ -1,5 +1,5 @@
-from contrib.ros.envs.ros_env import RosEnv
-from contrib.ros.util.common import rate_limited
+from garage.contrib.ros.envs.ros_env import RosEnv
+from garage.contrib.ros.util.common import rate_limited
 from garage.envs.base import Step
 try:
     from garage.config import STEP_FREQ

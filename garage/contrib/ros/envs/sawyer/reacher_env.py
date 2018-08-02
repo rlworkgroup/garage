@@ -1,4 +1,4 @@
-"""Push task for the sawyer robot."""
+"""Reacher task for the sawyer robot."""
 
 import collections
 
@@ -6,13 +6,15 @@ import gym
 import moveit_commander
 import numpy as np
 
-from contrib.ros.envs.sawyer.sawyer_env import SawyerEnv
-from contrib.ros.robots import Sawyer
-from contrib.ros.worlds import BlockWorld
+from garage.contrib.ros.envs.sawyer.sawyer_env import SawyerEnv
+from garage.contrib.ros.robots import Sawyer
+from garage.contrib.ros.worlds import EmptyWorld
 from garage.core import Serializable
 
 
-class PushEnv(SawyerEnv, Serializable):
+class ReacherEnv(SawyerEnv, Serializable):
+    """Reacher Environment."""
+
     def __init__(self,
                  initial_goal,
                  initial_joint_pos,
@@ -22,23 +24,23 @@ class PushEnv(SawyerEnv, Serializable):
                  target_range=0.15,
                  robot_control_mode='position'):
         """
-        Push task for the sawyer robot.
+        Reacher Environment.
 
-        :param initial_goal: np.array()
-                    the initial goal of pnp task,
-                    which is object's target position
-        :param initial_joint_pos: dict{string: float}
-                    initial joint position
+        :param initial_goal: np.array
+                        the initial goal for the task
+        :param initial_joint_pos: dict
+                        the initial joint angles for the sawyer
         :param sparse_reward: Bool
-                    if use sparse reward
+                        if use sparse reward
         :param simulated: Bool
-                    if use simulator
+                        if run simulated experiment
         :param distance_threshold: float
-                    threshold for judging if the episode is done
+                        threshold for whether experiment is done
         :param target_range: float
-                    the range within which the new target is randomized
+                        delta range the goal is randomized
         :param robot_control_mode: string
-                    control mode 'position'/'velocity'/'effort'
+                        robot control mode: 'position' or 'velocity'
+                        or 'effort'
         """
         Serializable.quick_init(self, locals())
 
@@ -60,7 +62,7 @@ class PushEnv(SawyerEnv, Serializable):
             initial_joint_pos=initial_joint_pos,
             control_mode=robot_control_mode,
             moveit_group=self._moveit_group_name)
-        self._world = BlockWorld(self._moveit_scene,
+        self._world = EmptyWorld(self._moveit_scene,
                                  self._moveit_robot.get_planning_frame(),
                                  simulated)
 
@@ -69,9 +71,9 @@ class PushEnv(SawyerEnv, Serializable):
     @property
     def observation_space(self):
         """
-        Returns a Space object.
+        Return a Space object.
 
-        :return: observation_space
+        :return: the observation space
         """
         return gym.spaces.Box(
             -np.inf,
@@ -102,18 +104,19 @@ class PushEnv(SawyerEnv, Serializable):
                      'achieved_goal': achieved_goal,
                      'desired_goal': self.goal}
         """
-        robot_obs = self._robot.get_observation()
+        obs = self._robot.get_observation()
 
-        world_obs = self._world.get_observation()
+        robot_gripper_pos = self._robot.gripper_pose['position']
 
-        obs = np.concatenate((robot_obs, world_obs.obs))
+        achieved_goal = np.array(
+            [robot_gripper_pos.x, robot_gripper_pos.y, robot_gripper_pos.z])
 
         Observation = collections.namedtuple(
             'Observation', 'observation achieved_goal desired_goal')
 
         observation = Observation(
             observation=obs,
-            achieved_goal=world_obs.achieved_goal,
+            achieved_goal=achieved_goal,
             desired_goal=self.goal)
 
         return observation
@@ -145,6 +148,8 @@ class PushEnv(SawyerEnv, Serializable):
 
     def _goal_distance(self, goal_a, goal_b):
         """
+        Compute distance between achieved goal and goal.
+
         :param goal_a:
         :param goal_b:
         :return distance: distance between goal_a and goal_b
