@@ -2,6 +2,7 @@ import os
 import unittest
 
 import gym
+import roboschool
 from nose2 import tools
 MUJOCO_ENABLED = True
 try:
@@ -9,6 +10,7 @@ try:
 except OSError:
     print("Warning: Mujoco not installed. Skipping mujoco-related tests")
     MUJOCO_ENABLED = False
+
 import numpy as np
 
 from garage.envs import DelayedActionEnv
@@ -70,6 +72,7 @@ envs.append(NoisyObservationEnv(CartpoleEnv()))
 envs.append(DelayedActionEnv(CartpoleEnv()))
 envs.append(NormalizedEnv(CartpoleEnv()))
 envs.append(gym.make("CartPole-v1"))
+envs.append(gym.make("RoboschoolAnt-v1"))
 
 
 class TestEnvs(unittest.TestCase):
