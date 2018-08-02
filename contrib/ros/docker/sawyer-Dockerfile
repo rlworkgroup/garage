@@ -1,0 +1,13 @@
+FROM tensorflow/tensorflow:1.8.0-py3
+MAINTAINER Hejia Zhang <hjzh578@gmail.com>
+
+ARG USER
+ARG HOME
+
+ENV LANG=C.UTF-8 LC_ALL=C.UTF-8 USER=$USER HOME=$HOME
+
+RUN echo "The working directory is: $HOME"
+RUN echo "The user is: $USER"
+
+RUN mkdir -p $HOME
+WORKDIR $HOME
