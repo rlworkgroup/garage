@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<launch>
+
+  <!-- We resume the logic in empty_world.launch, changing the name of the world to be launched -->
+  <include file="$(find sawyer_gazebo)/launch/sawyer_world_learning.launch">
+    <arg name="electric_gripper" value="true"/>
+  </include>
+
+</launch>

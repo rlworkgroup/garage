@@ -1,0 +1,29 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <world name="default">
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+
+    <include>
+      <uri>model://sun</uri>
+    </include>
+
+    <physics type="ode">
+      <real_time_update_rate>0</real_time_update_rate>
+    </physics>
+
+    <gravity>
+      0.0 0.0 -9.81
+    </gravity>
+
+    <gui fullscreen='0'>
+      <camera name='user_camera'>
+        <pose frame=''>2.69836 -0.874828 2.04939 0 0.399643 2.75619</pose>
+        <view_controller>orbit</view_controller>
+        <projection_type>perspective</projection_type>
+      </camera>
+    </gui>
+
+  </world>
+</sdf>

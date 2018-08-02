@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<launch>
+
+  <!-- these are the arguments you can pass this launch file, for example paused:=true -->
+  <arg name="paused" default="false"/>
+  <arg name="use_sim_time" default="true"/>
+  <arg name="gui" default="true"/>
+  <arg name="headless" default="false"/>
+  <arg name="debug" default="false"/>
+  <arg name="head_display_img" default="$(find sawyer_gazebo)/share/images/sawyer_sdk_research.png"/>
+
+  <!-- These arguments load the electric grippers, for example electric_gripper:=true -->
+  <arg name="electric_gripper" default="false"/>
+
+  <param name="img_path_head_display" value="$(arg head_display_img)"/>
+
+  <!-- Load the URDF into the ROS Parameter Server -->
+  <!-- This xacro will pull in sawyer.urdf.xacro, and right_end_effector.urdf.xacro
+       Note: if you set this to false, you MUST have set the robot_description prior
+             to launching sawyer_world -->
+  <arg name="load_robot_description" default="true"/>
+  <param if="$(arg load_robot_description)" name="robot_description"
+      command="$(find xacro)/xacro --inorder $(find sawyer_description)/urdf/sawyer.urdf.xacro
+      gazebo:=true electric_gripper:=$(arg electric_gripper)"/>
+  <!-- Load Parameters to the ROS Parameter Server -->
+  <rosparam command="load" file="$(find sawyer_gazebo)/config/config.yaml" />
+  <rosparam command="load" file="$(find sawyer_description)/params/named_poses.yaml" />
+  <rosparam command="load" file="$(find sawyer_gazebo)/config/acceleration_limits.yaml" />
+  <param name="robot/limb/right/root_name" value="base" />
+  <param if="$(arg electric_gripper)" name="robot/limb/right/tip_name"
+         value="right_gripper_tip" />
+  <param unless="$(arg electric_gripper)" name="robot/limb/right/tip_name"
+         value="right_hand" />
+
+  <param name="robot/limb/right/camera_name" value="right_hand_camera" />
+  <param if="$(arg electric_gripper)"     name="robot/limb/right/gravity_tip_name"
+         value="right_gripper_tip" />
+  <param unless="$(arg electric_gripper)" name="robot/limb/right/gravity_tip_name"
+         value="right_hand" />
+
+
+  <!-- We resume the logic in empty_world.launch, changing the name of the world to be launched -->
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" value="$(find sawyer_gazebo)/worlds/sawyer_learning.world"/>
+    <arg name="debug" value="$(arg debug)" />
+    <arg name="gui" value="$(arg gui)" />
+    <arg name="paused" value="$(arg paused)"/>
+    <arg name="use_sim_time" value="$(arg use_sim_time)"/>
+    <arg name="headless" value="$(arg headless)"/>
+  </include>
+
+  <!-- Publish a static transform between the world and the base of the robot -->
+  <node pkg="tf2_ros" type="static_transform_publisher" name="base_to_world" args="0 0 0 0 0 0 1 world base" />
+
+  <!-- Run a python script to the send a service call to gazebo_ros to spawn a URDF robot -->
+   <node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model" respawn="false" output="screen"
+	args="-param robot_description -urdf -z 0.93 -model sawyer
+              -J sawyer::right_j0 -0.272659
+              -J sawyer::right_j1 1.04701
+              -J sawyer::right_j2 -0.00123203
+              -J sawyer::right_j3 0.49262
+              -J sawyer::right_j4 -0.0806423
+              -J sawyer::right_j5 -0.0620532
+              -J sawyer::right_j6 0.0265941" />
+
+  <!-- ros_control sawyer launch file -->
+  <include file="$(find sawyer_sim_controllers)/launch/sawyer_sim_controllers.launch">
+      <arg name="electric_gripper" value="$(arg electric_gripper)"/>
+      <arg name="gui" value="$(arg gui)" />
+  </include>
+
+
+  <!-- sawyer cameras launch file -->
+  <arg name="wrist_camera" default="right_hand_camera" />
+  <arg name="head_camera"  default="head_camera" />
+  <include file="$(find sawyer_gazebo)/launch/sawyer_sim_cameras.launch">
+      <arg name="wrist_camera" value="$(arg wrist_camera)" />
+      <arg name="head_camera" value="$(arg head_camera)" />
+  </include>
+
+  <!-- Publish a static transform between the world and the base of the robot -->
+  <node pkg="rosbag" type="play" name="io_robot" args="-l $(find sawyer_gazebo)/share/bags/robot_io.bag" />
+
+</launch>
