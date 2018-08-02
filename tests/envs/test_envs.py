@@ -1,14 +1,7 @@
-import os
 import unittest
 
 import gym
 from nose2 import tools
-MUJOCO_ENABLED = True
-try:
-    import mujoco_py  # pylint: disable=W0611
-except OSError:
-    print("Warning: Mujoco not installed. Skipping mujoco-related tests")
-    MUJOCO_ENABLED = False
 import numpy as np
 
 from garage.envs import DelayedActionEnv
@@ -17,12 +10,15 @@ from garage.envs import IdentificationEnv
 from garage.envs import NoisyObservationEnv
 from garage.envs import NormalizedEnv
 from garage.envs import ProxyEnv
+from garage.envs.box2d import Box2DEnv
 from garage.envs.box2d import CarParkingEnv
 from garage.envs.box2d import CartpoleEnv
 from garage.envs.box2d import CartpoleSwingupEnv
 from garage.envs.box2d import DoublePendulumEnv
 from garage.envs.box2d import MountainCarEnv
-if MUJOCO_ENABLED:
+
+MUJOCO_ENABLED = True
+try:
     from garage.envs.mujoco import HalfCheetahEnv
     from garage.envs.mujoco import HopperEnv
     from garage.envs.mujoco import InvertedDoublePendulumEnv
@@ -36,6 +32,9 @@ if MUJOCO_ENABLED:
     from garage.envs.mujoco.maze import AntMazeEnv
     from garage.envs.mujoco.maze import PointMazeEnv
     from garage.envs.mujoco.maze import SwimmerMazeEnv
+except OSError:
+    print("Warning: MuJoCo not installed. Skipping MuJoCo-related tests")
+    MUJOCO_ENABLED = False
 
 simple_env_classes = [
     GridWorldEnv,
@@ -83,10 +82,13 @@ class TestEnvs(unittest.TestCase):
         a = act_space.sample()
         assert act_space.contains(a)
         res = env.step(a)
+        _, _, _, _ = env.step(a)
         assert ob_space.contains(res[0])  # res[0] --> observation
         assert np.isscalar(res[1])  # res[1] --> reward
-        if 'CI' in os.environ:
-            print("Skipping rendering test")
-        else:
-            env.render()
+        env.render()
+        if all(not isinstance(env, T) for T in [GridWorldEnv, Box2DEnv]):
+            img = env.render(mode="rgb_array")
+            assert img is not None
+            assert img.shape[0] == env.render_width
+            assert img.shape[1] == env.render_height
         env.close()
