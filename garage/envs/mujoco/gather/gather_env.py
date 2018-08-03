@@ -206,6 +206,8 @@ class GatherEnv(ProxyEnv, Serializable):
         self.dying_cost = dying_cost
         self.objects = []
         self.viewer = None
+        self.render_width = 512
+        self.render_height = 512
         # super(GatherEnv, self).__init__(*args, **kwargs)
         model_cls = self.__class__.MODEL_CLASS
         if model_cls is None:
@@ -406,6 +408,8 @@ class GatherEnv(ProxyEnv, Serializable):
         if self.wrapped_env.viewer is None:
             self.wrapped_env.viewer = GatherViewer(self)
             self.wrapped_env.viewer.start()
+            r = self.wrapped_env.viewer.get_rect()
+            self.render_width, self.render_height = r.width, r.height
         return self.wrapped_env.viewer
 
     def stop_viewer(self):
@@ -414,10 +418,16 @@ class GatherEnv(ProxyEnv, Serializable):
 
     def render(self, mode='human', close=False):  # pylint: disable=R1710
         if mode == 'rgb_array':
-            self.get_viewer().render()
-            data, width, height = self.get_viewer().get_image()
-            return np.fromstring(
-                data, dtype='uint8').reshape(height, width, 3)[::-1, :, :]
+            viewer = self.get_viewer()
+            self.wrapped_env.render()
+            img = viewer.read_pixels(
+                width=self.render_width,
+                height=self.render_height,
+                depth=False)
+            img = img[::-1, :, :]
+            # transpose image s.t. img.shape[0] = width, img.shape[1] = height
+            img = np.swapaxes(img, 0, 1)
+            return img
         elif mode == 'human':
             self.get_viewer()
             self.wrapped_env.render()
