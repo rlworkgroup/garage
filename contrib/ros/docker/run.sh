@@ -1,5 +1,7 @@
 #!/bin/sh
 
+ROBOT=${1:-"sawyer"}
+
 USER_UID=$(id -u)
 USER_GID=$(id -g)
 XSOCK=/tmp/.X11-unix
@@ -7,7 +9,8 @@ XAUTH=/tmp/.docker.xauth
 touch $XAUTH
 xauth -b nlist $DISPLAY | sed -e 's/^..../ffff/' | xauth -b -f $XAUTH nmerge -
 
-docker run \
+if [ "$ROBOT" = "sawyer" ] ; then
+  docker run \
 	-it \
 	--init \
 	--volume=/home/:/home/:rw \
@@ -24,5 +27,9 @@ docker run \
 	--cap-add MKNOD \
 	--device /dev/fuse \
 	--security-opt apparmor:unconfined \
-	--name "sawyer-deeprl-docker" \
-  sawyer-deeprl-docker
+	--name "sawyer-ros-docker" \
+  sawyer-ros-docker:anaconda;
+else
+  echo "The robot "$ROBOT" is not supported by us!";
+fi
+

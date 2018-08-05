@@ -1,13 +1,201 @@
-FROM tensorflow/tensorflow:1.8.0-py3
+FROM ubuntu:16.04
 MAINTAINER Hejia Zhang <hjzh578@gmail.com>
 
 ARG USER
 ARG HOME
 
-ENV LANG=C.UTF-8 LC_ALL=C.UTF-8 USER=$USER HOME=$HOME
+ENV LANG C.UTF-8
+ENV LC_ALL C.UTF-8
+ENV USER=$USER HOME=$HOME
+ENV GARAGE_CODE_ROOT=../../..
+ENV ROS_WS=$HOME/ros_ws
 
 RUN echo "The working directory is: $HOME"
 RUN echo "The user is: $USER"
 
 RUN mkdir -p $HOME
 WORKDIR $HOME
+
+# apt dependencies
+RUN \
+  apt-get -y -q update && \
+  # Prevents debconf from prompting for user input
+  # See https://github.com/phusion/baseimage-docker/issues/58
+  DEBIAN_FRONTEND=noninteractive apt-get install -y \
+    # Dockerfile deps
+    wget \
+    bzip2 \
+    unzip \
+    git \
+    # For building glfw
+    cmake \
+    xorg-dev \
+    # Dummy X server
+    xvfb \
+    libosmesa6-dev \
+    pulseaudio \
+    # mujoco_py
+    # See https://github.com/openai/mujoco-py/blob/master/Dockerfile
+    # 16.04 repo is too old, install glfw from source instead
+    # libglfw3 \
+    libglew-dev \
+    patchelf \
+    # OpenAI gym
+    # See https://github.com/openai/gym/blob/master/Dockerfile
+    libpq-dev \
+    ffmpeg \
+    libjpeg-dev \
+    swig \
+    libsdl2-dev \
+    # OpenAI baselines
+    libopenmpi-dev \
+    openmpi-bin && \
+  apt-get clean && \
+  rm -rf /var/lib/apt/lists/*
+
+# Build GLFW because the Ubuntu 16.04 version is too old
+# See https://github.com/glfw/glfw/issues/1004
+RUN apt-get purge -y -v libglfw*
+RUN git clone https://github.com/glfw/glfw.git && \
+  cd glfw && \
+  git checkout 0be4f3f75aebd9d24583ee86590a38e741db0904 && \
+  mkdir glfw-build && \
+  cd glfw-build && \
+  cmake -DBUILD_SHARED_LIBS=ON -DGLFW_BUILD_EXAMPLES=OFF -DGLFW_BUILD_TESTS=OFF -DGLFW_BUILD_DOCS=OFF .. && \
+  make -j"$(nproc)" && \
+  make install && \
+  cd ../../ && \
+  rm -rf glfw
+
+# conda
+RUN wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh && \
+  bash miniconda.sh -b -p /opt/conda && \
+  rm miniconda.sh && \
+  ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh
+ENV PATH=$PATH:/opt/conda/bin
+RUN conda update -q -y conda
+
+# conda environment
+RUN conda env create -f $GARAGE_CODE_ROOT/environment.yml && \
+    rm -rf /opt/conda/pkgs/*
+
+# Extras
+# prevent pip from complaining about available upgrades
+RUN ["/bin/bash", "-c", "source activate garage && pip install --upgrade pip"]
+# TensorFlow is not in environment.yml because of CPU vs GPU
+RUN ["/bin/bash", "-c", "source activate garage && pip install tensorflow==1.8.0"]
+# Fix Box2D install
+# See https://github.com/openai/gym/issues/100
+# See https://github.com/pybox2d/pybox2d/issues/82
+RUN ["/bin/bash", "-c", "source activate garage && pip uninstall -y Box2D Box2D-kengz box2d-py && pip install Box2D"]
+
+# ROS
+# setup sources.list
+RUN echo "deb http://packages.ros.org/ros/ubuntu xenial main" > /etc/apt/sources.list.d/ros-latest.list
+# setup keys
+RUN apt-key adv --keyserver hkp://ha.pool.sks-keyservers.net:80 --recv-key 421C365BD9FF1F717815A3895523BAEEB01FA116
+# install ros packages
+RUN apt update && DEBIAN_FRONTEND=noninteractive apt install -y \
+  ros-kinetic-desktop-full
+RUN rosdep init && rosdep update
+ENV PATH=/opt/ros/kinetic/bin:$PATH
+
+ENV PYTHONPATH=/opt/ros/kinetic/lib/python2.7/dist-packages:/opt/conda/lib/python2.7/site-packages:/opt/conda/envs/garage/lib/python3.6/site-packages
+# install bootstrap tools
+RUN apt update && DEBIAN_FRONTEND=noninteractive apt install -y \
+  python-rosinstall \
+  python-wstool \
+  python-yaml
+ENV GARAGE_PYTHON=/opt/conda/envs/garage/bin/python
+ENV GARAGE_PIP=$HOME/anaconda2/envs/garage/bin/pip
+ENV PYTHONPATH=/opt/ros/kinetic/lib/python2.7/dist-packages:$HOME/anaconda2/envs/garage/lib/python3.6/site-packages
+RUN ["/bin/bash", "-c", "source activate garage && pip install catkin_pkg rospkg defusedxml opencv-python empy"]
+
+# Create ROS Workspace
+RUN mkdir -p $ROS_WS/src
+RUN ["/bin/bash", "-c", "cd $ROS_WS && source /opt/ros/kinetic/setup.bash && catkin_make -DPYTHON_EXECUTABLE:FILEPATH=$GARAGE_PYTHON"]
+
+# Install Intera SDK dependencies
+RUN apt update && DEBIAN_FRONTEND=noninteractive apt install -y \
+  git-core \
+  python-argparse \
+  python-wstool \
+  python-vcstools \
+  python-rosdep \
+  ros-kinetic-control-msgs \
+  ros-kinetic-joystick-drivers \
+  ros-kinetic-xacro \
+  ros-kinetic-tf2-ros \
+  ros-kinetic-rviz \
+  ros-kinetic-cv-bridge \
+  ros-kinetic-actionlib \
+  ros-kinetic-actionlib-msgs \
+  ros-kinetic-dynamic-reconfigure \
+  ros-kinetic-trajectory-msgs \
+  ros-kinetic-rospy-message-converter
+
+# Install Intera SDK
+# activate the conda environment for garage3
+# RUN source activate garage
+# download sdk source
+ENV PYTHONPATH=/opt/ros/kinetic/lib/python2.7/dist-packages:$HOME/anaconda2/lib/python2.7/site-packages:$HOME/anaconda2/envs/garage3/lib/python3.6/site-packages
+RUN cd $ROS_WS/src && \
+    wstool init . && \
+    git clone https://github.com/RethinkRobotics/sawyer_robot.git && \
+    wstool merge sawyer_robot/sawyer_robot.rosinstall && \
+    wstool update
+# download the dependencies
+RUN cd $ROS_WS/src && \
+    git clone https://github.com/ros/geometry.git && \
+    cd geometry && \
+    git checkout indigo-devel && \
+    cd $ROS_WS/src && \
+    git clone https://github.com/ros/geometry2.git && \
+    cd geometry2 && \
+    git checkout indigo-devel
+# Source ROS Setup
+# RUN source /opt/ros/kinetic/setup.bash
+# Build
+# RUN cd $ROS_WS
+# RUN catkin_make -DPYTHON_EXECUTABLE:FILEPATH=$GARAGE_PYTHON
+
+# Configure robot communication/ros workspace
+# copy the intera.sh script
+RUN cp $ROS_WS/src/intera_sdk/intera.sh $ROS_WS
+# customize the intera.sh script
+
+# Setup Gazebo Simulation for Sawyer
+RUN apt update && DEBIAN_FRONTEND=noninteractive apt install -y \
+  gazebo7 \
+  ros-kinetic-qt-build \
+  ros-kinetic-gazebo-ros-control \
+  ros-kinetic-gazebo-ros-pkgs \
+  ros-kinetic-ros-control \
+  ros-kinetic-control-toolbox \
+  ros-kinetic-realtime-tools \
+  ros-kinetic-ros-controllers \
+  ros-kinetic-xacro \
+  python-wstool \
+  ros-kinetic-tf-conversions \
+  ros-kinetic-kdl-parser \
+  ros-kinetic-sns-ik-lib
+
+# install sawyer_simulator
+RUN cd $ROS_WS/src && git clone https://github.com/RethinkRobotics/sawyer_simulator.git && wstool merge sawyer_simulator/sawyer_simulator.rosinstall && wstool update
+# build source
+# RUN source /opt/ros/kinetic/setup.bash
+# convert python2 code to python3
+COPY $GARAGE_CODE_ROOT/contrib/ros/scripts/sawyer_2to3.sh $HOME
+RUN chmod +x $HOME/sawyer_2to3.sh
+RUN $HOME/sawyer_2to3.sh $ROS_WS/src/
+RUN apt update && DEBIAN_FRONTEND=noninteractive apt install -y \
+  libbullet-dev \
+  python-empy
+ENV PYTHONPATH=/opt/ros/kinetic/lib/python2.7/dist-packages:$HOME/anaconda2/envs/garage3/lib/python3.6/site-packages
+RUN /bin/bash -c "cd $ROS_WS && source /opt/ros/kinetic/setup.bash && catkin_make -DPYTHON_EXECUTABLE:FILEPATH=$GARAGE_PYTHON"
+
+# copy the sawyer simulation launch file and world file
+COPY $GARAGE_CODE_ROOT/contrib/ros/envs/sawyer_learning.launch $ROS_WS/src/sawyer_simulator/sawyer_gazebo/launch
+COPY $GARAGE_CODE_ROOT/contrib/ros/envs/sawyer_world_learning.launch $ROS_WS/src/sawyer_simulator/sawyer_gazebo/launch
+COPY $GARAGE_CODE_ROOT/contrib/ros/envs/sawyer_learning.world $ROS_WS/src/sawyer_simulator/sawyer_gazebo/worlds/
+

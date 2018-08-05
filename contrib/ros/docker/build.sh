@@ -2,18 +2,16 @@
 
 ROBOT=${1:-"sawyer"}
 
-ROBOT_HOME="$HOME"/."$ROBOT"-deeprl-docker
+ROBOT_HOME="$HOME"/."$ROBOT"-ros-docker
 
 mkdir -p $ROBOT_HOME
 
-echo "Building"$ROBOT"-ros-docker"
 if [ "$ROBOT" = "sawyer" ] ; then
-  echo "Building sawyer-deeprl-docker..." ;
+  echo "Building sawyer-ros-docker..." ;
   docker build -f sawyer-Dockerfile \
-    -t sawyer-deeprl-docker \
+    -t sawyer-ros-docker:anaconda \
     --build-arg USER=$USER \
-    --build-arg HOME=$HOME/.sawyer-deeprl-docker .;
-    echo "GPU version of sawyer-deeprl-docker is not ready..." ;
+    --build-arg HOME=$HOME/.sawyer-ros-docker . ;
 else
-
+  echo "The robot "$ROBOT" is not supported by us!" ;
 fi
