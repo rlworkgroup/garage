@@ -32,4 +32,3 @@ if [ "$ROBOT" = "sawyer" ] ; then
 else
   echo "The robot "$ROBOT" is not supported by us!";
 fi
-

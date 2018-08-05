@@ -7,7 +7,7 @@ ARG HOME
 ENV LANG C.UTF-8
 ENV LC_ALL C.UTF-8
 ENV USER=$USER HOME=$HOME
-ENV GARAGE_CODE_ROOT=../../..
+ENV GARAGE_CODE_ROOT=../../../..
 ENV ROS_WS=$HOME/ros_ws
 
 RUN echo "The working directory is: $HOME"
@@ -185,7 +185,7 @@ RUN cd $ROS_WS/src && git clone https://github.com/RethinkRobotics/sawyer_simula
 # build source
 # RUN source /opt/ros/kinetic/setup.bash
 # convert python2 code to python3
-COPY $GARAGE_CODE_ROOT/contrib/ros/scripts/sawyer_2to3.sh $HOME
+COPY $GARAGE_CODE_ROOT/garage/contrib/ros/scripts/sawyer_2to3.sh $HOME
 RUN chmod +x $HOME/sawyer_2to3.sh
 RUN $HOME/sawyer_2to3.sh $ROS_WS/src/
 RUN apt update && DEBIAN_FRONTEND=noninteractive apt install -y \
@@ -195,7 +195,6 @@ ENV PYTHONPATH=/opt/ros/kinetic/lib/python2.7/dist-packages:$HOME/anaconda2/envs
 RUN /bin/bash -c "cd $ROS_WS && source /opt/ros/kinetic/setup.bash && catkin_make -DPYTHON_EXECUTABLE:FILEPATH=$GARAGE_PYTHON"
 
 # copy the sawyer simulation launch file and world file
-COPY $GARAGE_CODE_ROOT/contrib/ros/envs/sawyer_learning.launch $ROS_WS/src/sawyer_simulator/sawyer_gazebo/launch
-COPY $GARAGE_CODE_ROOT/contrib/ros/envs/sawyer_world_learning.launch $ROS_WS/src/sawyer_simulator/sawyer_gazebo/launch
-COPY $GARAGE_CODE_ROOT/contrib/ros/envs/sawyer_learning.world $ROS_WS/src/sawyer_simulator/sawyer_gazebo/worlds/
-
+COPY $GARAGE_CODE_ROOT/garage/contrib/ros/envs/sawyer_learning.launch $ROS_WS/src/sawyer_simulator/sawyer_gazebo/launch
+COPY $GARAGE_CODE_ROOT/garage/contrib/ros/envs/sawyer_world_learning.launch $ROS_WS/src/sawyer_simulator/sawyer_gazebo/launch
+COPY $GARAGE_CODE_ROOT/garage/contrib/ros/envs/sawyer_learning.world $ROS_WS/src/sawyer_simulator/sawyer_gazebo/worlds/
