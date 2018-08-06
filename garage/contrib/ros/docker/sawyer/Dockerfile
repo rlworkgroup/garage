@@ -63,11 +63,11 @@ RUN git clone https://github.com/glfw/glfw.git && \
   rm -rf glfw
 
 # MuJoCo
-RUN mkdir $HOME/.mujoco && \
+RUN mkdir /root/.mujoco && \
   wget https://www.roboti.us/download/mjpro150_linux.zip -O mujoco.zip && \
-  unzip mujoco.zip -d $HOME/.mujoco && \
+  unzip mujoco.zip -d /root/.mujoco && \
   rm mujoco.zip
-ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/.mujoco/mjpro150/bin
+ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mjpro150/bin
 
 # conda
 RUN wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh && \
@@ -78,8 +78,8 @@ ENV PATH=$PATH:/opt/conda/bin
 RUN conda update -q -y conda
 
 # conda environment
-COPY environment.yml $HOME/code/garage/environment.yml
-RUN conda env create -f $HOME/code/garage/environment.yml && \
+COPY environment.yml /root/code/garage/environment.yml
+RUN conda env create -f /root/code/garage/environment.yml && \
     rm -rf /opt/conda/pkgs/*
 
 # Extras
@@ -93,13 +93,13 @@ RUN ["/bin/bash", "-c", "source activate garage && pip install tensorflow==1.8.0
 RUN ["/bin/bash", "-c", "source activate garage && pip uninstall -y Box2D Box2D-kengz box2d-py && pip install Box2D"]
 
 # Setup repo
-WORKDIR $HOME/code/garage
+WORKDIR /root/code/garage
 # Pre-build pre-commit env
-COPY .pre-commit-config.yaml $HOME/code/garage
+COPY .pre-commit-config.yaml /root/code/garage
 RUN ["/bin/bash", "-c", "source activate garage && git init && pre-commit"]
 # Add code stub last
-COPY . $HOME/code/garage
-ENV PYTHONPATH=$PYTHONPATH:$HOME/code/garage
+COPY . /root/code/garage
+ENV PYTHONPATH=$PYTHONPATH:/root/code/garage
 
 # ROS
 # setup sources.list
@@ -116,12 +116,7 @@ RUN apt update && DEBIAN_FRONTEND=noninteractive apt install -y \
   python-wstool \
   python-yaml
 
-ENV GARAGE_PYTHON=/opt/conda/envs/garage/bin/python
 RUN ["/bin/bash", "-c", "source activate garage && pip install catkin_pkg rospkg defusedxml opencv-python empy"]
-
-# Create ROS Workspace
-RUN mkdir -p $ROS_WS/src
-RUN ["/bin/bash", "-c", "cd $ROS_WS && source /opt/ros/kinetic/setup.bash && catkin_make -DPYTHON_EXECUTABLE:FILEPATH=$GARAGE_PYTHON"]
 
 # Prepare Intera SDK installation
 # Install dependencies
@@ -142,20 +137,6 @@ RUN apt update && DEBIAN_FRONTEND=noninteractive apt install -y \
   ros-kinetic-dynamic-reconfigure \
   ros-kinetic-trajectory-msgs \
   ros-kinetic-rospy-message-converter
-# Get source
-RUN cd $ROS_WS/src && \
-    wstool init . && \
-    git clone https://github.com/RethinkRobotics/sawyer_robot.git && \
-    wstool merge sawyer_robot/sawyer_robot.rosinstall && \
-    wstool update
-RUN cd $ROS_WS/src && \
-    git clone https://github.com/ros/geometry.git && \
-    cd geometry && \
-    git checkout indigo-devel && \
-    cd $ROS_WS/src && \
-    git clone https://github.com/ros/geometry2.git && \
-    cd geometry2 && \
-    git checkout indigo-devel
 
 # Prepare sawyer gazebo simulator installation
 # Install dependencies
@@ -173,32 +154,10 @@ RUN apt update && DEBIAN_FRONTEND=noninteractive apt install -y \
   ros-kinetic-tf-conversions \
   ros-kinetic-kdl-parser \
   ros-kinetic-sns-ik-lib
-# Get source
-RUN cd $ROS_WS/src && \
-    git clone https://github.com/RethinkRobotics/sawyer_simulator.git && \
-    wstool merge sawyer_simulator/sawyer_simulator.rosinstall && \
-    wstool update
 
-# Prepare Moveit! installation
-# Get source
-RUN cd $ROS_WS && \
-    wstool merge -t src https://raw.githubusercontent.com/ros-planning/moveit/kinetic-devel/moveit.rosinstall && \
-    wstool update -t src && \
-    rosdep install -y --from-paths src --ignore-src --rosdistro kinetic
-# Have to exclude some targets
-# See https://github.com/ros-planning/moveit/issues/697
-RUN sed -i '/demo/s/^/# /g' $ROS_WS/src/moveit/moveit_ros/planning_interface/move_group_interface/CMakeLists.txt
-
-# Build ROS_WS
-# convert python2 code to python3
-COPY ./garage/contrib/ros/scripts/sawyer_2to3.sh $HOME
-RUN chmod +x $HOME/sawyer_2to3.sh
-RUN $HOME/sawyer_2to3.sh $ROS_WS/src/
 RUN apt update && DEBIAN_FRONTEND=noninteractive apt install -y \
   libbullet-dev \
   python-empy
-RUN ["/bin/bash", "-c", "source /opt/ros/kinetic/setup.bash && source activate garage && cd $ROS_WS && catkin_make -DPYTHON_EXECUTABLE:FILEPATH=$GARAGE_PYTHON -DCATKIN_BLACKLIST_PACKAGES='moveit_setup_assistant'"]
-RUN cp $ROS_WS/src/intera_sdk/intera.sh $ROS_WS
 
 COPY garage/contrib/ros/docker/sawyer/docker-entrypoint.sh /docker-entrypoint.sh
 ENTRYPOINT ["/docker-entrypoint.sh"]
