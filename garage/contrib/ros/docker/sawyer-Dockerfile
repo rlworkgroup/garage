@@ -202,8 +202,3 @@ RUN apt update && DEBIAN_FRONTEND=noninteractive apt install -y \
   python-empy
 RUN ["/bin/bash", "-c", "source /opt/ros/kinetic/setup.bash && source activate garage && cd $ROS_WS && catkin_make -DPYTHON_EXECUTABLE:FILEPATH=$GARAGE_PYTHON -DCATKIN_BLACKLIST_PACKAGES='moveit_setup_assistant'"]
 RUN cp $ROS_WS/src/intera_sdk/intera.sh $ROS_WS
-
-# copy the sawyer simulation launch file and world file
-COPY $HOME/code/garage/garage/contrib/ros/envs/sawyer_learning.launch $ROS_WS/src/sawyer_simulator/sawyer_gazebo/launch
-COPY $HOME/code/garage/garage/contrib/ros/envs/sawyer_world_learning.launch $ROS_WS/src/sawyer_simulator/sawyer_gazebo/launch
-COPY $HOME/code/garage/garage/contrib/ros/envs/sawyer_learning.world $ROS_WS/src/sawyer_simulator/sawyer_gazebo/worlds/
