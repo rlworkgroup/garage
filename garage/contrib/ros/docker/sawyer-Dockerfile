@@ -7,14 +7,12 @@ ARG HOME
 ENV LANG C.UTF-8
 ENV LC_ALL C.UTF-8
 ENV USER=$USER HOME=$HOME
-ENV GARAGE_CODE_ROOT=../../../..
 ENV ROS_WS=$HOME/ros_ws
 
 RUN echo "The working directory is: $HOME"
 RUN echo "The user is: $USER"
 
 RUN mkdir -p $HOME
-WORKDIR $HOME
 
 # apt dependencies
 RUN \
@@ -67,6 +65,13 @@ RUN git clone https://github.com/glfw/glfw.git && \
   cd ../../ && \
   rm -rf glfw
 
+# MuJoCo
+RUN mkdir $HOME/.mujoco && \
+  wget https://www.roboti.us/download/mjpro150_linux.zip -O mujoco.zip && \
+  unzip mujoco.zip -d $HOME/.mujoco && \
+  rm mujoco.zip
+ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/.mujoco/mjpro150/bin
+
 # conda
 RUN wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh && \
   bash miniconda.sh -b -p /opt/conda && \
@@ -76,9 +81,8 @@ ENV PATH=$PATH:/opt/conda/bin
 RUN conda update -q -y conda
 
 # conda environment
-RUN pwd
-RUN ls $GARAGE_CODE_ROOT
-RUN conda env create -f $GARAGE_CODE_ROOT/environment.yml && \
+COPY environment.yml $HOME/code/garage/environment.yml
+RUN conda env create -f $HOME/code/garage/environment.yml && \
     rm -rf /opt/conda/pkgs/*
 
 # Extras
@@ -90,6 +94,15 @@ RUN ["/bin/bash", "-c", "source activate garage && pip install tensorflow==1.8.0
 # See https://github.com/openai/gym/issues/100
 # See https://github.com/pybox2d/pybox2d/issues/82
 RUN ["/bin/bash", "-c", "source activate garage && pip uninstall -y Box2D Box2D-kengz box2d-py && pip install Box2D"]
+
+# Setup repo
+WORKDIR $HOME/code/garage
+# Pre-build pre-commit env
+COPY .pre-commit-config.yaml $HOME/code/garage
+RUN ["/bin/bash", "-c", "source activate garage && git init && pre-commit"]
+# Add code stub last
+COPY . $HOME/code/garage
+ENV PYTHONPATH=$PYTHONPATH:$HOME/code/garage
 
 # ROS
 # setup sources.list
@@ -174,23 +187,23 @@ RUN cd $ROS_WS/src && \
 RUN cd $ROS_WS && \
     wstool merge -t src https://raw.githubusercontent.com/ros-planning/moveit/kinetic-devel/moveit.rosinstall && \
     wstool update -t src && \
-    rosdep install -y --from-paths src --ignore-src --rosdistro kinetic && \
+    rosdep install -y --from-paths src --ignore-src --rosdistro kinetic
 # Have to exclude some targets
 # See https://github.com/ros-planning/moveit/issues/697
 RUN sed -i '/demo/s/^/# /g' $ROS_WS/src/moveit/moveit_ros/planning_interface/move_group_interface/CMakeLists.txt
 
 # Build ROS_WS
 # convert python2 code to python3
-COPY $GARAGE_CODE_ROOT/garage/contrib/ros/scripts/sawyer_2to3.sh $HOME
+COPY ./garage/contrib/ros/scripts/sawyer_2to3.sh $HOME
 RUN chmod +x $HOME/sawyer_2to3.sh
 RUN $HOME/sawyer_2to3.sh $ROS_WS/src/
 RUN apt update && DEBIAN_FRONTEND=noninteractive apt install -y \
   libbullet-dev \
   python-empy
-RUN ["/bin/bash", "-c", "source /opt/ros/kinetic/setup.bash && source activate garage && cd $ROS_WS && catkin_make -DPYTHON_EXECUTABLE:FILEPATH=$GARAGE_PYTHON -DCATKIN_BLACKLIST_PACKAGES="moveit_setup_assistant"]
+RUN ["/bin/bash", "-c", "source /opt/ros/kinetic/setup.bash && source activate garage && cd $ROS_WS && catkin_make -DPYTHON_EXECUTABLE:FILEPATH=$GARAGE_PYTHON -DCATKIN_BLACKLIST_PACKAGES='moveit_setup_assistant'"]
 RUN cp $ROS_WS/src/intera_sdk/intera.sh $ROS_WS
 
 # copy the sawyer simulation launch file and world file
-COPY $GARAGE_CODE_ROOT/garage/contrib/ros/envs/sawyer_learning.launch $ROS_WS/src/sawyer_simulator/sawyer_gazebo/launch
-COPY $GARAGE_CODE_ROOT/garage/contrib/ros/envs/sawyer_world_learning.launch $ROS_WS/src/sawyer_simulator/sawyer_gazebo/launch
-COPY $GARAGE_CODE_ROOT/garage/contrib/ros/envs/sawyer_learning.world $ROS_WS/src/sawyer_simulator/sawyer_gazebo/worlds/
+COPY $HOME/code/garage/garage/contrib/ros/envs/sawyer_learning.launch $ROS_WS/src/sawyer_simulator/sawyer_gazebo/launch
+COPY $HOME/code/garage/garage/contrib/ros/envs/sawyer_world_learning.launch $ROS_WS/src/sawyer_simulator/sawyer_gazebo/launch
+COPY $HOME/code/garage/garage/contrib/ros/envs/sawyer_learning.world $ROS_WS/src/sawyer_simulator/sawyer_gazebo/worlds/
