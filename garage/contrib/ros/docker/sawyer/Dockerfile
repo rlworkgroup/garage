@@ -1,12 +1,9 @@
 FROM ubuntu:16.04
 MAINTAINER Hejia Zhang <hjzh578@gmail.com>
 
-ARG USER
-ARG HOME
-
 ENV LANG C.UTF-8
 ENV LC_ALL C.UTF-8
-ENV USER=$USER HOME=$HOME
+ENV USER=sawyer_docker HOME=/home/sawyer_docker
 ENV ROS_WS=$HOME/ros_ws
 
 RUN echo "The working directory is: $HOME"
@@ -202,3 +199,6 @@ RUN apt update && DEBIAN_FRONTEND=noninteractive apt install -y \
   python-empy
 RUN ["/bin/bash", "-c", "source /opt/ros/kinetic/setup.bash && source activate garage && cd $ROS_WS && catkin_make -DPYTHON_EXECUTABLE:FILEPATH=$GARAGE_PYTHON -DCATKIN_BLACKLIST_PACKAGES='moveit_setup_assistant'"]
 RUN cp $ROS_WS/src/intera_sdk/intera.sh $ROS_WS
+
+COPY garage/contrib/ros/docker/sawyer/docker-entrypoint.sh /docker-entrypoint.sh
+ENTRYPOINT ["/docker-entrypoint.sh"]
