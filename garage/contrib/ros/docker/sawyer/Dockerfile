@@ -65,7 +65,7 @@ RUN git clone https://github.com/glfw/glfw.git && \
 # MuJoCo
 RUN mkdir /root/.mujoco && \
   wget https://www.roboti.us/download/mjpro150_linux.zip -O mujoco.zip && \
-  unzip mujoco.zip -d /root/.mujoco && \
+  unzip mujoco.zip -d $HOME/.mujoco && \
   rm mujoco.zip
 ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mjpro150/bin
 
@@ -97,9 +97,6 @@ WORKDIR /root/code/garage
 # Pre-build pre-commit env
 COPY .pre-commit-config.yaml /root/code/garage
 RUN ["/bin/bash", "-c", "source activate garage && git init && pre-commit"]
-# Add code stub last
-COPY . /root/code/garage
-ENV PYTHONPATH=$PYTHONPATH:/root/code/garage
 
 # ROS
 # setup sources.list
@@ -159,5 +156,8 @@ RUN apt update && DEBIAN_FRONTEND=noninteractive apt install -y \
   libbullet-dev \
   python-empy
 
-COPY garage/contrib/ros/docker/sawyer/docker-entrypoint.sh /docker-entrypoint.sh
-ENTRYPOINT ["/docker-entrypoint.sh"]
+ENTRYPOINT ["garage/contrib/ros/docker/sawyer/docker-entrypoint.sh"]
+
+# Add code stub last
+COPY . /root/code/garage
+ENV PYTHONPATH=$PYTHONPATH:/root/code/garage

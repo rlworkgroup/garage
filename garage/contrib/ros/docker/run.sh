@@ -14,21 +14,17 @@ if [ "$ROBOT" = "sawyer" ] ; then
 	-it \
 	--init \
 	--volume=/home/:/home/:rw \
-	--volume=/media/:/media/:rw \
 	--volume=$XSOCK:$XSOCK:rw \
 	--volume=$XAUTH:$XAUTH:rw \
+	--volume=/dev/bus/usb:/dev/bus/usb \
+	--volume=/media:/media:rw \
 	--env="XAUTHORITY=${XAUTH}" \
 	--env="USER_UID=${USER_UID}" \
 	--env="USER_GID=${USER_GID}" \
 	--env="DISPLAY=${DISPLAY}" \
-	-p 6006:6006 \
-	-p 8888:8888 \
-	--cap-add SYS_ADMIN \
-	--cap-add MKNOD \
-	--device /dev/fuse \
-	--security-opt apparmor:unconfined \
 	--name "sawyer-ros-docker" \
-  sawyer-ros-docker:anaconda;
+	--privileged=true \
+  sawyer-ros-docker:anaconda bash;
 else
   echo "The robot "$ROBOT" is not supported by us!";
 fi
