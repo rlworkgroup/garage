@@ -7,14 +7,25 @@ USER_GID=$(id -g)
 
 xhost +local:root
 
-DOCKER_VISUAL="-v /tmp/.X11-unix:/tmp/.X11-unix"
+if [ -z ${NVIDIA_DRIVER+x} ]; then
+	NVIDIA_DRIVER=$(nvidia-settings -q NvidiaDriverVersion | head -2 | tail -1 | sed 's/.*\([0-9][0-9][0-9]\)\..*/\1/') ;
+fi
+if [ -z ${NVIDIA_DRIVER+x} ]; then
+	echo "Error: Could not determine NVIDIA driver version number. Please specify your driver version number manually in $0." 1>&2 ;
+	exit ;
+else
+	echo "Linking to NVIDIA driver version $NVIDIA_DRIVER..." ;
+fi
+
+DOCKER_VISUAL_NVIDIA="-v /tmp/.X11-unix:/tmp/.X11-unix --device /dev/nvidia0 --device /dev/nvidiactl"
 
 
 if [ "$ROBOT" = "sawyer" ] ; then
-  docker run \
+  nvidia-docker run \
 	-it \
+	--rm \
 	--init \
-	$DOCKER_VISUAL \
+	$DOCKER_VISUAL_NVIDIA \
 	--env="USER_UID=${USER_UID}" \
 	--env="USER_GID=${USER_GID}" \
 	--env="USER=${USER}" \

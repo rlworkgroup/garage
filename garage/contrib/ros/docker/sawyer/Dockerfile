@@ -158,46 +158,6 @@ RUN apt update && DEBIAN_FRONTEND=noninteractive apt install -y \
 
 RUN apt update && DEBIAN_FRONTEND=noninteractive apt install -y terminator
 
-# Set up libglvnd for OpenGL GUI support
-RUN apt-get update && apt-get install -y --no-install-recommends \
-        git \
-        ca-certificates \
-        make \
-        automake \
-        autoconf \
-        libtool \
-        pkg-config \
-        python \
-        libxext-dev \
-        libx11-dev \
-        x11proto-gl-dev && \
-    rm -rf /var/lib/apt/lists/*
-
-WORKDIR /opt/libglvnd
-RUN git clone --branch=v1.0.0 https://github.com/NVIDIA/libglvnd.git . && \
-    ./autogen.sh && \
-    ./configure --prefix=/usr/local --libdir=/usr/local/lib/x86_64-linux-gnu && \
-    make -j"$(nproc)" install-strip && \
-    find /usr/local/lib/x86_64-linux-gnu -type f -name 'lib*.la' -delete
-
-RUN dpkg --add-architecture i386 && \
-    apt-get update && apt-get install -y --no-install-recommends \
-        gcc-multilib \
-        libxext-dev:i386 \
-        libx11-dev:i386 && \
-    rm -rf /var/lib/apt/lists/*
-
-# 32-bit libraries
-RUN make distclean && \
-    ./autogen.sh && \
-    ./configure --prefix=/usr/local --libdir=/usr/local/lib/i386-linux-gnu --host=i386-linux-gnu "CFLAGS=-m32" "CXXFLAGS=-m32" "LDFLAGS=-m32" && \
-    make -j"$(nproc)" install-strip && \
-    find /usr/local/lib/i386-linux-gnu -type f -name 'lib*.la' -delete
-
-LABEL com.nvidia.volumes.needed="nvidia_driver"
-ENV PATH /usr/local/nvidia/bin:${PATH}
-ENV LD_LIBRARY_PATH /usr/local/nvidia/lib:/usr/local/nvidia/lib64:${LD_LIBRARY_PATH}
-
 WORKDIR /root/code/garage
 
 ENTRYPOINT ["garage/contrib/ros/docker/sawyer/docker-entrypoint.sh"]
