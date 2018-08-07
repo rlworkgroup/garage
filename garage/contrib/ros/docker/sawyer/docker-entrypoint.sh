@@ -190,12 +190,9 @@ function run_gazebo() {
 
 source "/home/$USER/.bashrc"
 
-eval $(dbus-launch --sh-syntax)
 export DBUS_SESSION_BUS_ADDRESS
 export DBUS_SESSION_BUS_PID
 
 cd "/home/$USER"
-
-terminator &
 
 bash

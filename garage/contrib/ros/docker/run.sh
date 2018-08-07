@@ -23,6 +23,7 @@ DOCKER_VISUAL_NVIDIA="-v /tmp/.X11-unix:/tmp/.X11-unix --device /dev/nvidia0 --d
 if [ "$ROBOT" = "sawyer" ] ; then
   nvidia-docker run \
 	-it \
+	--rm \
 	--init \
 	$DOCKER_VISUAL_NVIDIA \
 	--env="USER_UID=${USER_UID}" \
