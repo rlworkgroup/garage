@@ -181,3 +181,21 @@ cd "/home/$USER/ros_ws"
 export CMAKE_PREFIX_PATH=/usr/local:$CMAKE_PREFIX_PATH
 
 catkin_make -DPYTHON_EXECUTABLE:FILEPATH=$GARAGE_PYTHON -DCATKIN_BLACKLIST_PACKAGES='moveit_setup_assistant'
+
+echo "
+function run_gazebo() {
+	QT_X11_NO_MITSHM=1 gazebo
+}
+" >> "/home/$USER/.bashrc"
+
+source "/home/$USER/.bashrc"
+
+eval $(dbus-launch --sh-syntax)
+export DBUS_SESSION_BUS_ADDRESS
+export DBUS_SESSION_BUS_PID
+
+cd "/home/$USER"
+
+terminator &
+
+bash
