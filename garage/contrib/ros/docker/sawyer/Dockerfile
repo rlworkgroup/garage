@@ -197,6 +197,10 @@ RUN apt update && DEBIAN_FRONTEND=noninteractive apt install -y \
   apt-get clean && \
   rm -rf /var/lib/apt/lists/*
 
+RUN apt update && DEBIAN_FRONTEND=noninteractive apt install -y terminator vim && \
+  apt-get clean && \
+  rm -rf /var/lib/apt/lists/*
+
 # Prepare sawyer gazebo simulator installation
 # Install dependencies
 RUN apt update && DEBIAN_FRONTEND=noninteractive apt install -y \
@@ -219,10 +223,6 @@ RUN apt update && DEBIAN_FRONTEND=noninteractive apt install -y \
 RUN apt update && DEBIAN_FRONTEND=noninteractive apt install -y \
   libbullet-dev \
   python-empy && \
-  apt-get clean && \
-  rm -rf /var/lib/apt/lists/*
-
-RUN apt update && DEBIAN_FRONTEND=noninteractive apt install -y terminator && \
   apt-get clean && \
   rm -rf /var/lib/apt/lists/*
 
