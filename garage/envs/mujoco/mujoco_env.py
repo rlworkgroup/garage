@@ -101,7 +101,7 @@ class MujocoEnv(gym.Env):
 
     @property
     def action_bounds(self):
-        assert isinstance(gym.spaces.Box, self.action_space)
+        assert isinstance(self.action_space, gym.spaces.Box)
         return self.action_space.low, self.action_space.high
 
     def reset_mujoco(self, init_state=None):

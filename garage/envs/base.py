@@ -1,66 +1,34 @@
 """Wrapper class that converts gym.Env into GarageEnv."""
-from cached_property import cached_property
+from abc import ABCMeta, abstractmethod
 import collections
 import warnings
 
 import gym
-from gym.spaces import Box as GymBox
-from gym.spaces import Discrete as GymDiscrete
-from gym.spaces import Tuple as GymTuple
 
 from garage.core import Parameterized
 from garage.core import Serializable
-from garage.envs.env_spec import EnvSpec
-from garage.misc.overrides import overrides
-from garage.spaces import Box
-from garage.spaces import Discrete
-from garage.spaces import Product
 
 
-class GarageEnv(gym.Wrapper, Parameterized, Serializable):
+class GarageEnv(gym.Wrapper, Parameterized, Serializable, metaclass=ABCMeta):
     """
-    Returns a Garage wrapper class for gym.Env.
+    Returns an abstract Garage wrapper class for gym.Env.
 
     In order to provide pickling (serialization) and parameterization
-    for gym.Envs, they must be wrapped with GarageEnv. This ensures
+    for gym.Envs, they must be wrapped with a GarageEnv. This ensures
     compatibility with existing samplers and checkpointing when the
     envs are passed internally around garage.
 
-    Furthermore, GarageEnv silently converts action_space and
-    observation_space from gym.Spaces to garage.spaces.
+    Furthermore, classes inheriting from GarageEnv should silently
+    convert action_space and observation_space from gym.Spaces to
+    garage.spaces.
 
-    Args:
-        env (gym.Env): the env that will be wrapped
+    Args: env (gym.Env): the env that will be wrapped
     """
 
     def __init__(self, env):
         Serializable.quick_init(self, locals())
         Parameterized.__init__(self)
         super().__init__(env)
-
-    @cached_property
-    @overrides
-    def action_space(self):
-        """
-        Classes inheriting from GarageEnv need to convert
-        action_space from gym.space to garage.space.
-
-        Returns:
-            NotImplementedError
-        """
-        return self._to_garage_space(self.env.action_space)
-
-    @cached_property
-    @overrides
-    def observation_space(self):
-        """
-        Classes inheriting from GarageEnv need to convert
-        observation_space from gym.space to garage.space.
-
-        Returns:
-            NotImplementedError
-        """
-        return self._to_garage_space(self.env.observation_space)
 
     def close(self):
         """
@@ -99,22 +67,20 @@ class GarageEnv(gym.Wrapper, Parameterized, Serializable):
         warnings.warn("log_diagnostics is deprecated", DeprecationWarning)
         pass
 
-    @property
+    @abstractmethod
     def spec(self):
         """
-        Returns an EnvSpec.
+        Returns an EnvSpec with garage.spaces.
 
         Returns:
             spec (garage.envs.EnvSpec)
         """
-        return EnvSpec(
-            observation_space=self.observation_space,
-            action_space=self.action_space,
-        )
+        raise NotImplementedError
 
     def reset(self, **kwargs):
         """
-        Inheriting gym.Wrapper requires implementing this method.
+        This method is necessary to suppress a deprecated warning
+        thrown by gym.Wrapper.
 
         Calls reset on wrapped env.
         """
@@ -122,15 +88,17 @@ class GarageEnv(gym.Wrapper, Parameterized, Serializable):
 
     def step(self, action):
         """
-        Inheriting gym.Wrapper requires implementing this method.
+        This method is necessary to suppress a deprecated warning
+        thrown by gym.Wrapper.
 
         Calls step on wrapped env.
         """
         return self.env.step(action)
 
+    @abstractmethod
     def _to_garage_space(self, space):
         """
-        Converts a gym space into a garage space.
+        Converts a gym.space into a garage.space.
 
         Args:
             space (gym.spaces)
@@ -138,14 +106,7 @@ class GarageEnv(gym.Wrapper, Parameterized, Serializable):
         Returns:
             space (garage.spaces)
         """
-        if isinstance(space, GymBox):
-            return Box(low=space.low, high=space.high)
-        elif isinstance(space, GymDiscrete):
-            return Discrete(space.n)
-        elif isinstance(space, GymTuple):
-            return Product(list(map(self._to_tf_space, space.spaces)))
-        else:
-            raise NotImplementedError
+        raise NotImplementedError
 
 
 def Step(observation, reward, done, **kwargs):  # noqa: N802

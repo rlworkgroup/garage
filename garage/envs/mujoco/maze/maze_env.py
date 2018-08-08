@@ -1,6 +1,7 @@
 import math
 import os.path as osp
 import tempfile
+import warnings
 import xml.etree.ElementTree as ET
 
 import gym
@@ -14,6 +15,7 @@ from garage.envs.mujoco.maze.maze_env_utils import ray_segment_intersect
 from garage.envs.mujoco.mujoco_env import BIG
 from garage.envs.mujoco.mujoco_env import MODEL_DIR
 from garage.envs.proxy_env import ProxyEnv
+from garage.envs.util import flat_dim
 from garage.misc import logger
 from garage.misc.overrides import overrides
 
@@ -200,7 +202,7 @@ class MazeEnv(ProxyEnv, Serializable):
                             self._sensor_range -
                             first_seg["distance"]) / self._sensor_range
                 else:
-                    assert False
+                    assert KeyError
 
         obs = np.concatenate([wall_readings, goal_readings])
         return obs
@@ -264,7 +266,7 @@ class MazeEnv(ProxyEnv, Serializable):
             for j in range(len(structure[0])):
                 if structure[i][j] == 'r':
                     return j * size_scaling, i * size_scaling
-        assert False
+        assert KeyError
         return None
 
     def _find_goal_range(self):  # this only finds one goal!
@@ -282,6 +284,7 @@ class MazeEnv(ProxyEnv, Serializable):
                     maxy = i * size_scaling + size_scaling \
                            * 0.5 - self._init_torso_y
                     return minx, maxx, miny, maxy
+        warnings.warn("Goal not found", Warning)
         return None
 
     def _is_in_collision(self, pos):
@@ -351,8 +354,8 @@ class MazeEnv(ProxyEnv, Serializable):
             for k, v in path.items():
                 stripped_path[k] = v
             stripped_path['observations'] = stripped_path[
-                'observations'][:, :np.prod(
-                    self.wrapped_env.observation_space.low.shape)]
+                'observations'][:, :flat_dim(
+                    self.wrapped_env.observation_space)]
             #  this breaks if the obs of the robot are d>1 dimensional (not a
             #  vector)
             stripped_paths.append(stripped_path)

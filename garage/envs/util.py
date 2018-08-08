@@ -2,11 +2,12 @@ import gym
 import numpy as np
 
 from garage.misc import special
-from garage.spaces import Box as GarageBox, Space
-from garage.spaces import Discrete as GarageDiscrete
-from garage.spaces import Product as GarageProduct
+from garage.spaces import Space
 
-__all__ = ['flat_dim', 'flatten', 'flatten_n', 'unflatten', 'unflatten_n']
+__all__ = [
+    'configure_dims', 'dims_to_shapes', 'flat_dim', 'flatten', 'flatten_n',
+    'unflatten', 'unflatten_n', 'weighted_sample'
+]
 
 
 def flat_dim(space):

@@ -1,14 +1,14 @@
 from cached_property import cached_property
-
 from gym.spaces import Box as GymBox
 from gym.spaces import Discrete as GymDiscrete
 from gym.spaces import Tuple as GymTuple
 
 from garage.envs import GarageEnv
+from garage.envs.env_spec import EnvSpec
+from garage.misc.overrides import overrides
 from garage.tf.spaces import Box
 from garage.tf.spaces import Discrete
 from garage.tf.spaces import Product
-from garage.misc.overrides import overrides
 
 
 class TfEnv(GarageEnv):
@@ -21,6 +21,9 @@ class TfEnv(GarageEnv):
 
     def __init__(self, env):
         super().__init__(env)
+        self.action_space = self._to_garage_space(self.env.action_space)
+        self.observation_space = self._to_garage_space(
+            self.env.observation_space)
 
     @classmethod
     def wrap(cls, env_cls, **extra_kwargs):
@@ -31,7 +34,7 @@ class TfEnv(GarageEnv):
     @overrides
     def _to_garage_space(self, space):
         """
-        Converts gym.space to a TensorFlow space.
+        Converts a gym.space to a garage.tf.space.
 
         Returns:
             space (garage.tf.spaces)
@@ -41,21 +44,22 @@ class TfEnv(GarageEnv):
         elif isinstance(space, GymDiscrete):
             return Discrete(space.n)
         elif isinstance(space, GymTuple):
-            return Product(list(map(self._to_tf_space, space.spaces)))
+            return Product(list(map(self._to_garage_space, space.spaces)))
         else:
             raise NotImplementedError
 
     @cached_property
     @overrides
-    def action_space(self):
-        """Returns a converted action_space."""
-        return self._to_garage_space(self.action_space)
+    def spec(self):
+        """
+        Returns an EnvSpec.
 
-    @cached_property
-    @overrides
-    def observation_space(self):
-        """Returns a converted observation_space."""
-        return self._to_garage_space(self.observation_space)
+        Returns:
+            spec (garage.envs.EnvSpec)
+        """
+        return EnvSpec(
+            observation_space=self.observation_space,
+            action_space=self.action_space)
 
 
 class VecTfEnv:

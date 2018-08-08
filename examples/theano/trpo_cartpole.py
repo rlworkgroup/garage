@@ -10,7 +10,6 @@ env = TheanoEnv(normalize(CartpoleEnv()))
 policy = GaussianMLPPolicy(env_spec=env.spec, hidden_sizes=(32, 32))
 
 baseline = LinearFeatureBaseline(env_spec=env.spec)
-
 algo = TRPO(
     env=env,
     policy=policy,
