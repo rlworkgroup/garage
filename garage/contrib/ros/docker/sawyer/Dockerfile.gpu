@@ -39,7 +39,7 @@ RUN make distclean && \
     make -j"$(nproc)" install-strip && \
     find /usr/local/lib/i386-linux-gnu -type f -name 'lib*.la' -delete
 
-FROM $DOCKER_FROM
+FROM tensorflow/tensorflow:1.8.0-gpu-py3
 MAINTAINER Hejia Zhang <hjzh578@gmail.com>
 
 RUN ls .
