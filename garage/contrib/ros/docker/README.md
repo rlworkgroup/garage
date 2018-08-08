@@ -50,7 +50,7 @@
     $ rosrun intera_interface enable_robot.py -e
     $ rosrun intera_interface joint_trajectory_action_server.py
     ```
-- start sawyer moveit 
+- start sawyer moveit
     ```bash
     $ cd $ROS_WS
     $ ./intera.sh sim
@@ -59,6 +59,35 @@
     $ roslaunch sawyer_moveit_config sawyer_moveit.launch electric_gripper:=true
     # without gripper
     $ roslaunch sawyer_moveit_config sawyer_moveit.launch
-    ```    
+    ```
+- run launcher file
+    ```bash
+    $ ./intera.sh sim
+    $ source activate garage
+    $ python launcher_file
+    ```
+
 ## Trouble Shooting
 - Notice moveit sawyer collision definition.
+    ```xml
+    <!-- remove controller_box in sawyer_moveit/sawyer_moveit_config/srdf/sawyer.srdf.xacro -->
+    <xacro:sawyer_base tip_name="$(arg tip_name)"/>
+    <!--Controller Box Collisions-->
+-  <xacro:if value="$(arg controller_box)">
++  <!--xacro:if value="$(arg controller_box)">
+     <xacro:include filename="$(find sawyer_moveit_config)/srdf/controller_box.srdf.xacro" />
+     <xacro:controller_box/>
+-  </xacro:if>
++  </xacro:if-->
+   <!--Right End Effector Collisions-->
+   <xacro:if value="$(arg electric_gripper)">
+    ```
+    ```xml
+    <disable_collisions link1="head" link2="right_arm_base_link" reason="Never" />
+    <disable_collisions link1="head" link2="right_l0" reason="Adjacent" />
+    <disable_collisions link1="head" link2="right_l1" reason="Default" />
++   <disable_collisions link1="head" link2="right_l2" reason="Default" />
+    <disable_collisions link1="head" link2="screen" reason="Adjacent" />
+    <disable_collisions link1="head" link2="torso" reason="Never" />
+    <disable_collisions link1="pedestal" link2="right_arm_base_link" reason="Adjacent" />
+    ```
