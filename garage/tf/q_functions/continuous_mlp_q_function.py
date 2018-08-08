@@ -1,6 +1,7 @@
 import tensorflow as tf
 
 from garage.core import Serializable
+from garage.envs.util import flat_dim
 from garage.tf.core import LayersPowered
 import garage.tf.core.layers as L
 from garage.tf.core.layers import batch_norm
