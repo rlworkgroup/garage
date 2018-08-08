@@ -29,10 +29,9 @@ if [ "$ROBOT" = "sawyer" ] ; then
 	--device /dev/fuse \
 	--name "sawyer-ros-docker" \
 	--security-opt apparmor:unconfined \
-  sawyer-ros-docker:anaconda bash;
+  sawyer-ros-docker:cpu bash;
 else
   echo "The robot "$ROBOT" is not supported by us!";
 fi
 
 xhost -local:root
-
