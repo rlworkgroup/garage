@@ -91,7 +91,7 @@ class Categorical(Distribution):
 
     def entropy(self, info):
         probs = info["prob"]
-        return -np.sum(probs * np.log(probs + TINY), axis=1)
+        return -np.sum(probs * np.log(probs + TINY), axis=-1)
 
     def log_likelihood_sym(self, x_var, dist_info_vars, name=None):
         with tf.name_scope(name, "log_likelihood_sym",
