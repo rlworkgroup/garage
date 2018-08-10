@@ -2,13 +2,13 @@
 import numpy as np
 
 from garage.baselines import Baseline
-from garage.core import Parameterized
 from garage.core import Serializable
 from garage.misc.overrides import overrides
+from garage.tf.core import Parameterized
 from garage.tf.regressors import GaussianMLPRegressor
 
 
-class GaussianMLPBaseline(Baseline, Parameterized):
+class GaussianMLPBaseline(Baseline, Parameterized, Serializable):
     """A value function using gaussian mlp network."""
 
     def __init__(
@@ -26,6 +26,7 @@ class GaussianMLPBaseline(Baseline, Parameterized):
         :param num_seq_inputs:
         :param regressor_args:
         """
+        Parameterized.__init__(self)
         Serializable.quick_init(self, locals())
         super(GaussianMLPBaseline, self).__init__(env_spec)
         if regressor_args is None:
@@ -59,3 +60,7 @@ class GaussianMLPBaseline(Baseline, Parameterized):
     def set_param_values(self, flattened_params, **tags):
         """Set parameter values to val."""
         self._regressor.set_param_values(flattened_params, **tags)
+
+    @overrides
+    def get_params_internal(self, **tags):
+        return self._regressor.get_params_internal(**tags)

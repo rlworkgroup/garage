@@ -5,6 +5,7 @@ from garage.core import Serializable
 from garage.misc import logger
 from garage.tf.core import LayersPowered
 from garage.tf.core import MLP
+from garage.tf.core import Parameterized
 import garage.tf.core.layers as L
 from garage.tf.misc import tensor_utils
 from garage.tf.optimizers import LbfgsOptimizer
@@ -12,7 +13,7 @@ from garage.tf.optimizers import LbfgsOptimizer
 NONE = list()
 
 
-class DeterministicMLPRegressor(LayersPowered, Serializable):
+class DeterministicMLPRegressor(LayersPowered, Serializable, Parameterized):
     """
     A class for performing nonlinear regression.
     """
@@ -39,6 +40,7 @@ class DeterministicMLPRegressor(LayersPowered, Serializable):
         mean network.
         :param optimizer: Optimizer for minimizing the negative log-likelihood.
         """
+        Parameterized.__init__(self)
         Serializable.quick_init(self, locals())
 
         with tf.variable_scope(name, "DeterministicMLPRegressor"):
@@ -136,9 +138,3 @@ class DeterministicMLPRegressor(LayersPowered, Serializable):
 
     def predict(self, xs):
         return self.f_predict(np.asarray(xs))
-
-    def get_param_values(self, **tags):
-        return LayersPowered.get_param_values(self, **tags)
-
-    def set_param_values(self, flattened_params, **tags):
-        return LayersPowered.set_param_values(self, flattened_params, **tags)
