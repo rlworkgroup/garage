@@ -5,14 +5,13 @@ import numpy as np
 from garage.core import Serializable
 from garage.envs import Step
 from garage.envs.mujoco import MujocoEnv
-from garage.envs.proxy_env import ProxyEnv
 from garage.envs.util import flat_dim
 from garage.misc.overrides import overrides
 
 BIG = 1e6
 
 
-class OcclusionEnv(ProxyEnv, Serializable):
+class OcclusionEnv(gym.Wrapper, Serializable):
     """ Occludes part of the observation."""
 
     def __init__(self, env, sensor_idx):
@@ -50,7 +49,7 @@ class OcclusionEnv(ProxyEnv, Serializable):
         return obs[self._sensor_mask]
 
     def get_current_obs(self):
-        return self.occlude(self._wrapped_env.get_current_obs())
+        return self.occlude(self.env.get_current_obs())
 
     @cached_property
     @overrides
@@ -61,12 +60,12 @@ class OcclusionEnv(ProxyEnv, Serializable):
 
     @overrides
     def reset(self):
-        obs = self._wrapped_env.reset()
+        obs = self.env.reset()
         return self.occlude(obs)
 
     @overrides
     def step(self, action):
-        next_obs, reward, done, info = self._wrapped_env.step(action)
+        next_obs, reward, done, info = self.env.step(action)
         return Step(self.occlude(next_obs), reward, done, **info)
 
     @property

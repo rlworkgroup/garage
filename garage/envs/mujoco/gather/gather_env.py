@@ -20,7 +20,6 @@ from garage.envs import Step
 from garage.envs.mujoco.gather.embedded_viewer import EmbeddedViewer
 from garage.envs.mujoco.mujoco_env import BIG
 from garage.envs.mujoco.mujoco_env import MODEL_DIR
-from garage.envs.proxy_env import ProxyEnv
 from garage.envs.util import flat_dim
 from garage.misc import autoargs
 from garage.misc import logger
@@ -149,7 +148,7 @@ class GatherViewer(MjViewer):
                 draw_rect(20 * (idx + 1), 60, 5, 50)
 
 
-class GatherEnv(ProxyEnv, Serializable):
+class GatherEnv(gym.Wrapper, Serializable):
     MODEL_CLASS = None
     ORI_IND = None
 
@@ -251,8 +250,7 @@ class GatherEnv(ProxyEnv, Serializable):
         # pylint: disable=not-callable
         inner_env = model_cls(*args, file_path=file_path, **kwargs)
         # pylint: enable=not-callable
-        ProxyEnv.__init__(
-            self, inner_env)  # to access the inner env, do self.wrapped_env
+        super().__init__(inner_env)
 
     def reset(self, also_wrapped=True):
         self.objects = []
