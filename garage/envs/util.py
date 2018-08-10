@@ -1,30 +1,13 @@
 import gym
 import numpy as np
 
-from garage.envs.base import EnvSpec
 from garage.misc import special
-from garage.spaces import Box as GarageBox, Space
-from garage.spaces import Discrete as GarageDiscrete
-from garage.spaces import Product as GarageProduct
+from garage.spaces import Space
 
 __all__ = [
-    'bounds', 'default_value', 'flat_dim', 'flatten', 'flatten_n', 'horizon',
-    'sample', 'spec', 'unflatten', 'unflatten_n', 'weighted_sample'
+    'configure_dims', 'dims_to_shapes', 'flat_dim', 'flatten', 'flatten_n',
+    'unflatten', 'unflatten_n', 'weighted_sample'
 ]
-
-
-def bounds(space):
-    if isinstance(space, gym.spaces.Box):
-        return space.low, space.high
-    else:
-        raise NotImplementedError
-
-
-def default_value(space):
-    if isinstance(space, gym.spaces.Discrete):
-        return 0
-    else:
-        return NotImplementedError
 
 
 def flat_dim(space):
@@ -64,35 +47,6 @@ def flatten_n(space, obs):
             flatten_n(c, oi) for c, oi in zip(space.spaces, obs_regrouped)
         ]
         return np.concatenate(flat_regrouped, axis=-1)
-    else:
-        raise NotImplementedError
-
-
-def horizon(env):
-    return env.spec.tags['wrapper_config.TimeLimit.max_episode_steps']
-
-
-def sample(space):
-    if isinstance(space, gym.spaces.Tuple):
-        return tuple(x.sample() for x in space.spaces)
-    else:
-        raise NotImplementedError
-
-
-def spec(env):
-    return EnvSpec(
-        observation_space=_to_garage_space(env.observation_space),
-        action_space=_to_garage_space(env.action_space),
-    )
-
-
-def _to_garage_space(space):
-    if isinstance(space, gym.spaces.Box):
-        return GarageBox(low=space.low, high=space.high)
-    elif isinstance(space, gym.spaces.Discrete):
-        return GarageDiscrete(n=space.n)
-    elif isinstance(space, gym.spaces.Tuple):
-        return GarageProduct([_to_garage_space(s) for s in space.spaces])
     else:
         raise NotImplementedError
 

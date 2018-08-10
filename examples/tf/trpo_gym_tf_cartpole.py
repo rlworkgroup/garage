@@ -1,7 +1,6 @@
 import gym
 
 from garage.baselines import LinearFeatureBaseline
-from garage.envs.util import spec
 from garage.misc.instrument import run_experiment
 from garage.misc.instrument import stub
 from garage.tf.algos import TRPO
@@ -15,9 +14,9 @@ stub(globals())
 env = TfEnv(gym.make("CartPole-v0"))
 
 policy = CategoricalMLPPolicy(
-    name="policy", env_spec=spec(env), hidden_sizes=(32, 32))
+    name="policy", env_spec=env.spec, hidden_sizes=(32, 32))
 
-baseline = LinearFeatureBaseline(env_spec=spec(env))
+baseline = LinearFeatureBaseline(env_spec=env.spec)
 
 algo = TRPO(
     env=env,

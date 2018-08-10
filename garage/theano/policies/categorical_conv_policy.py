@@ -1,15 +1,14 @@
-import gym
 import lasagne.layers as L
 import lasagne.nonlinearities as NL
 
 from garage.core import Serializable
-from garage.envs.util import flatten, flatten_n, weighted_sample
 from garage.misc.overrides import overrides
 from garage.policies import StochasticPolicy
 from garage.theano.core import ConvNetwork
 from garage.theano.core import LasagnePowered
 from garage.theano.distributions import Categorical
 from garage.theano.misc import tensor_utils
+from garage.theano.spaces import Discrete
 
 
 class CategoricalConvPolicy(StochasticPolicy, LasagnePowered):
@@ -28,16 +27,17 @@ class CategoricalConvPolicy(StochasticPolicy, LasagnePowered):
     ):
         """
         :param env_spec: A spec for the mdp.
-        :param hidden_sizes: list of sizes for the fully connected hidden
-         layers
-        :param hidden_nonlinearity: nonlinearity used for each hidden layer
-        :param prob_network: manually specified network for this policy, other
-         network params are ignored
+        :param hidden_sizes: list of sizes for the fully connected
+        hidden layers
+        :param hidden_nonlinearity: nonlinearity used for each hidden
+        layer
+        :param prob_network: manually specified network for this
+        policy, other network params are ignored
         :return:
         """
-        Serializable.quick_init(self, locals())
+        assert isinstance(env_spec.action_space, Discrete)
 
-        assert isinstance(env_spec.action_space, gym.spaces.Discrete)
+        Serializable.quick_init(self, locals())
 
         self._env_spec = env_spec
 
@@ -84,15 +84,15 @@ class CategoricalConvPolicy(StochasticPolicy, LasagnePowered):
     # the current policy
     @overrides
     def get_action(self, observation):
-        flat_obs = flatten(self.observation_space, observation)
+        flat_obs = self.observation_space.flatten(observation)
         prob = self._f_prob([flat_obs])[0]
-        action = weighted_sample(self.action_space, prob)
+        action = self.action_space.weighted_sample(prob)
         return action, dict(prob=prob)
 
     def get_actions(self, observations):
-        flat_obs = flatten_n(self.observation_space, observations)
+        flat_obs = self.observation_space.flatten_n(observations)
         probs = self._f_prob(flat_obs)
-        actions = list(map(weighted_sample(self.action_space), probs))
+        actions = list(map(self.action_space.weighted_sample, probs))
         return actions, dict(prob=probs)
 
     @property

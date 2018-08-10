@@ -16,7 +16,7 @@ import tensorflow as tf
 import tensorflow.contrib as tc
 
 from garage.algos.base import RLAlgorithm
-from garage.envs.util import bounds, configure_dims, dims_to_shapes
+from garage.envs.util import configure_dims, dims_to_shapes
 from garage.misc import logger
 from garage.misc.overrides import overrides
 from garage.replay_buffer import HerReplayBuffer
@@ -113,7 +113,7 @@ class DDPG(RLAlgorithm):
         self.env = env
 
         self.input_dims = configure_dims(env)
-        _, action_bound = bounds(env.action_space)
+        action_bound = env.action_space.high
         self.max_action = action_bound if max_action is None else max_action
 
         self.actor = actor

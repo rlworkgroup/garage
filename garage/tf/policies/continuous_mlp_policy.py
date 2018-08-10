@@ -15,6 +15,7 @@ from garage.tf.core import LayersPowered
 from garage.tf.core.layers import batch_norm
 from garage.tf.misc import tensor_utils
 from garage.tf.policies import Policy
+from garage.tf.spaces import Box
 
 
 class ContinuousMLPPolicy(Policy, Serializable, LayersPowered):
@@ -49,6 +50,8 @@ class ContinuousMLPPolicy(Policy, Serializable, LayersPowered):
             bn(bool, optional):
                 A bool to indicate whether normalize the layer or not.
         """
+        assert isinstance(env_spec.action_space, Box)
+
         Serializable.quick_init(self, locals())
         super(ContinuousMLPPolicy, self).__init__(env_spec)
 
@@ -74,7 +77,7 @@ class ContinuousMLPPolicy(Policy, Serializable, LayersPowered):
         """
         Set up q network based on class attributes.
 
-        This function uses layers defined in rllab.tf.
+        This function uses layers defined in garage.tf.
 
         Args:
             reuse: A bool indicates whether reuse variables in the same scope.

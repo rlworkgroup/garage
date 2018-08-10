@@ -1,4 +1,3 @@
-import os
 import unittest
 
 from dm_control import suite
@@ -22,10 +21,7 @@ def run_task(domain_name, task_name):
     time_step = dm_control_env.reset()
     action_spec = dm_control_env.action_space
     for _ in range(5):
-        if 'CI' in os.environ:
-            print("Skipping rendering test")
-        else:
-            dm_control_env.render()
+        dm_control_env.render()
         action = action_spec.sample()
         next_obs, reward, done, info = dm_control_env.step(action)
         if done:

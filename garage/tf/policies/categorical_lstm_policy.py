@@ -31,9 +31,10 @@ class CategoricalLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
         :param hidden_nonlinearity: nonlinearity used for each hidden layer
         :return:
         """
+        assert isinstance(env_spec.action_space, Discrete)
+
         self._prob_network_name = "prob_network"
         with tf.variable_scope(name, "CategoricalLSTMPolicy"):
-            assert isinstance(env_spec.action_space, Discrete)
             Serializable.quick_init(self, locals())
             super(CategoricalLSTMPolicy, self).__init__(env_spec)
 

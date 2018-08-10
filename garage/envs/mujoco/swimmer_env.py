@@ -44,7 +44,7 @@ class SwimmerEnv(MujocoEnv, Serializable):
 
     @overrides
     def log_diagnostics(self, paths):
-        if len(paths) > 0:
+        if paths:
             progs = [
                 path["observations"][-1][-3] - path["observations"][0][-3]
                 for path in paths

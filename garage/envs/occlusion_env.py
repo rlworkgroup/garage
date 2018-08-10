@@ -17,9 +17,9 @@ class OcclusionEnv(ProxyEnv, Serializable):
 
     def __init__(self, env, sensor_idx):
         """
-        :param sensor_idx: list or ndarray of indices to be shown. Other indices
-         will be occluded. Can be either list of integer indices or boolean
-         mask.
+        :param sensor_idx: list or ndarray of indices to be shown.
+         Other indices will be occluded. Can be either list of integer
+         indices or boolean mask.
         """
         Serializable.quick_init(self, locals())
 
@@ -72,8 +72,3 @@ class OcclusionEnv(ProxyEnv, Serializable):
     @property
     def dt(self):
         return self._dt
-
-    @overrides
-    def log_diagnostics(self, paths):
-        pass  # the wrapped env will be expecting its own observations in paths,
-        # but they're not

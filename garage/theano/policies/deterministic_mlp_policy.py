@@ -7,6 +7,7 @@ from garage.policies import Policy
 from garage.theano.core import batch_norm
 from garage.theano.core import LasagnePowered
 from garage.theano.misc import tensor_utils
+from garage.theano.spaces import Box
 
 
 class DeterministicMLPPolicy(Policy, LasagnePowered):
@@ -20,6 +21,9 @@ class DeterministicMLPPolicy(Policy, LasagnePowered):
                  output_w_init=LI.Uniform(-3e-3, 3e-3),
                  output_b_init=LI.Uniform(-3e-3, 3e-3),
                  bn=False):
+
+        assert isinstance(env_spec.action_space, Box)
+
         Serializable.quick_init(self, locals())
 
         l_obs = L.InputLayer(shape=(None, env_spec.observation_space.flat_dim))

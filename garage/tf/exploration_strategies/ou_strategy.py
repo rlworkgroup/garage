@@ -8,7 +8,6 @@ transitions. And OU process is relatively smooth in time.
 """
 import numpy as np
 
-from garage.envs.util import flat_dim
 from garage.exploration_strategies import ExplorationStrategy
 from garage.misc.overrides import overrides
 
@@ -36,7 +35,7 @@ class OUStrategy(ExplorationStrategy):
         """
         self.env_spec = env_spec
         self.action_space = env_spec.action_space
-        self.action_dim = flat_dim(self.action_space)
+        self.action_dim = self.action_space.flat_dim
         self.mu = mu
         self.sigma = sigma
         self.theta = theta

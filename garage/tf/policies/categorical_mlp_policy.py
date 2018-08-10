@@ -30,9 +30,9 @@ class CategoricalMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
         are ignored
         :return:
         """
-        Serializable.quick_init(self, locals())
-
         assert isinstance(env_spec.action_space, Discrete)
+
+        Serializable.quick_init(self, locals())
 
         self._prob_network_name = "prob_network"
         with tf.variable_scope(name, "CategoricalMLPPolicy"):

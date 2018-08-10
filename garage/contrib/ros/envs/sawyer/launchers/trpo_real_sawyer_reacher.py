@@ -5,9 +5,9 @@ import rospy
 
 from garage.baselines import LinearFeatureBaseline
 from garage.contrib.ros.envs.sawyer import ReacherEnv
-from garage.envs.util import spec
 from garage.misc.instrument import run_experiment
 from garage.theano.algos import TRPO
+from garage.theano.envs import TheanoEnv
 from garage.theano.policies import GaussianMLPPolicy
 
 INITIAL_ROBOT_JOINT_POS = {
@@ -27,19 +27,20 @@ def run_task(*_):
 
     rospy.init_node('trpo_real_sawyer_reacher_exp', anonymous=True)
 
-    env = ReacherEnv(
-        initial_goal,
-        initial_joint_pos=INITIAL_ROBOT_JOINT_POS,
-        simulated=False,
-        robot_control_mode='position')
+    env = TheanoEnv(
+        ReacherEnv(
+            initial_goal,
+            initial_joint_pos=INITIAL_ROBOT_JOINT_POS,
+            simulated=False,
+            robot_control_mode='position'))
 
     rospy.on_shutdown(env.shutdown)
 
     env.initialize()
 
-    policy = GaussianMLPPolicy(env_spec=spec(env), hidden_sizes=(32, 32))
+    policy = GaussianMLPPolicy(env_spec=env.spec, hidden_sizes=(32, 32))
 
-    baseline = LinearFeatureBaseline(env_spec=spec(env))
+    baseline = LinearFeatureBaseline(env_spec=env.spec)
 
     algo = TRPO(
         env=env,

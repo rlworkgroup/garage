@@ -35,9 +35,9 @@ class CategoricalConvPolicy(StochasticPolicy, LayersPowered, Serializable):
         are ignored
         :return:
         """
-        Serializable.quick_init(self, locals())
-
         assert isinstance(env_spec.action_space, Discrete)
+
+        Serializable.quick_init(self, locals())
 
         self._name = name
         self._env_spec = env_spec

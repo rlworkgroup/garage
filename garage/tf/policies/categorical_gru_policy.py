@@ -30,9 +30,10 @@ class CategoricalGRUPolicy(StochasticPolicy, LayersPowered, Serializable):
         :param hidden_nonlinearity: nonlinearity used for each hidden layer
         :return:
         """
+        assert isinstance(env_spec.action_space, Discrete)
+
         self._prob_network_name = "prob_network"
         with tf.variable_scope(name, "CategoricalGRUPolicy"):
-            assert isinstance(env_spec.action_space, Discrete)
             Serializable.quick_init(self, locals())
             super(CategoricalGRUPolicy, self).__init__(env_spec)
 
