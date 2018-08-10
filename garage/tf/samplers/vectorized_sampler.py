@@ -57,7 +57,7 @@ class VectorizedSampler(BatchSampler):
         import time
         while n_samples < self.algo.batch_size:
             t = time.time()
-            policy.reset(dones)
+            policy.reset()
             actions, agent_infos = policy.get_actions(obses)
 
             policy_time += time.time() - t

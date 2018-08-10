@@ -187,6 +187,10 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
                  **kwargs):
         """
         Sawyer Environment.
+
+        :param initial_goal: The initial goal for the goal environment.
+        :param initial_qpos: The initial position for each joint.
+        :param target_range: delta range the goal is randomized.
         :param args:
         :param kwargs:
         """
@@ -297,14 +301,14 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
         contacts = tuple()
         for coni in range(self.sim.data.ncon):
             con = self.sim.data.contact[coni]
-            contacts += ((con.geom1, con.geom2), )
+            contacts += ((con.geom1, con.geom2),)
         finger_id_1 = self.sim.model.geom_name2id('finger_tip_1')
         finger_id_2 = self.sim.model.geom_name2id('finger_tip_2')
         object_id = self.sim.model.geom_name2id('object0')
         if ((finger_id_1, object_id) in contacts or
             (object_id, finger_id_1) in contacts) and (
-                (finger_id_2, object_id) in contacts or
-                (object_id, finger_id_2) in contacts):
+            (finger_id_2, object_id) in contacts or
+            (object_id, finger_id_2) in contacts):
             return True
         else:
             return False
@@ -349,8 +353,7 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
             self.sim.forward()
         elif self._control_method == "task_space_control":
             reset_mocap2body_xpos(self.sim)
-            self.sim.data.mocap_pos[0, :
-                                    3] = self.sim.data.mocap_pos[0, :3] + a[:3]
+            self.sim.data.mocap_pos[0, :3] = self.sim.data.mocap_pos[0, :3] + a[:3]
             self.sim.data.mocap_quat[:] = np.array([0, 1, 0, 0])
             self.set_gripper_state(a[3])
             for _ in range(5):
@@ -420,7 +423,30 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
         info["r"] = r
         info["d"] = done
 
+        # control cost
+        r -= self._control_cost_coeff * np.linalg.norm(a)
+
         return obs, r, done, info
+
+    @property
+    def joint_position_limits(self):
+        low = np.array(
+            [-3.0503, -3.8095, -3.0426, -3.0439, -2.9761, -2.9761, -4.7124])
+        high = np.array(
+            [3.0503, 2.2736, 3.0426, 3.0439, 2.9761, 2.9761, 4.7124])
+        return low, high
+
+    @property
+    def joint_positions(self):
+        curr_pos = []
+        for i in range(7):
+            curr_pos.append(
+                self.sim.data.get_joint_qpos('right_j{}'.format(i)))
+        return np.array(curr_pos)
+
+    @joint_positions.setter
+    def joint_positions(self, jpos):
+        assert jpos.size == 7
 
     def set_gripper_state(self, state):
         # 1 = open, -1 = closed
@@ -449,15 +475,15 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
         grasped = self.has_object
         obs = np.concatenate([
             gripper_pos,
-            object_pos.ravel(),  # TODO remove object_pos (reveals task id)
-            object_rel_pos.ravel(),
-            object_rot.ravel(),
-            object_velp.ravel(),
-            object_velr.ravel(),
-            grip_velp,
+            object_pos.ravel(),
+            # object_rel_pos.ravel(),
+            # object_rot.ravel(),
+            # object_velp.ravel(),
+            # object_velr.ravel(),
+            # grip_velp,
             qpos,
-            qvel,
-            [float(grasped), self.gripper_state],
+            # qvel,
+            # [float(grasped), self.gripper_state],
         ])
 
         achieved_goal = self._achieved_goal_fn(self)
@@ -511,7 +537,7 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
                 )
 
     @overrides
-    def reset(self):
+    def reset(self, **kwargs):
         self._step = 0
         super(SawyerEnv, self).reset()
 
@@ -527,6 +553,10 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
         #     self.set_gripper_state(self._start_configuration.gripper_state)
         #     self.set_gripper_position(self._start_configuration.gripper_pos)
         #     self.set_object_position(self._start_configuration.object_pos)
+
+        if self._start_configuration.joint_pos is not None:
+            self.joint_positions = self._start_configuration.joint_pos
+            self.sim.step()
 
         attempts = 1
         if self._randomize_start_jpos:
