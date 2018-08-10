@@ -1,42 +1,43 @@
 import numpy as np
 
-from garage.misc.overrides import overrides
-from gym.spaces import Box
-
 from garage.envs.mujoco.sawyer.sawyer_env import SawyerEnv, Configuration
 
 
 class PushEnv(SawyerEnv):
-    def __init__(self, **kwargs):
+    def __init__(self, direction="up", **kwargs):
         def start_goal_config():
-            center = self.sim.data.get_geom_xpos('target2')
+            # center = self.sim.data.get_geom_xpos('target2')
+            xy = np.random.uniform([-0.2, 0.2], [0.3, 0.6], 2)
             start = Configuration(
-                gripper_pos=np.concatenate([center[:2], [0.35]]),
-                gripper_state=1,
-                object_grasped=False,
-                object_pos=np.concatenate([center[:2], [0.03]]))
-            goal = Configuration(
-                gripper_pos=np.concatenate([center[:2], [0.105]]),
+                gripper_pos=np.concatenate([xy, [0.35]]),
                 gripper_state=0,
-                object_grasped=True,
-                object_pos=np.concatenate([center[:2], [0.1]]))
+                object_grasped=False,
+                object_pos=np.concatenate([xy, [0.03]]))
+            d = 0.2
+            delta = np.array({
+                "up":    ( 0,  d),
+                "down":  ( 0, -d),
+                "left":  (-d,  0),
+                "right": ( d,  0)
+            }[direction])
+            goal = Configuration(
+                gripper_pos=np.concatenate([xy + delta, [0.35]]),
+                gripper_state=0,
+                object_grasped=False,
+                object_pos=np.concatenate([xy + delta, [0.03]]))
             return start, goal
 
-        def reward_fn(env: SawyerEnv, achieved_goal, desired_goal, info: dict):
-            d = np.linalg.norm(achieved_goal - desired_goal, axis=-1)
-            if env._reward_type == 'sparse':
-                return (d < env._distance_threshold).astype(np.float32)
+        def achieved_goal_fn(env: SawyerEnv):
+            return env.object_position
 
-            return -d
-
-        def success_fn(env: SawyerEnv, _achieved_goal, _desired_goal,
-                       _info: dict):
-            return env.has_object and env.object_position[2] >= self._goal_configuration.object_pos[2]
+        def desired_goal_fn(env: SawyerEnv):
+            return env._goal_configuration.object_pos
 
         super(PushEnv, self).__init__(
             start_goal_config=start_goal_config,
-            reward_fn=reward_fn,
-            success_fn=success_fn,
+            achieved_goal_fn=achieved_goal_fn,
+            desired_goal_fn=desired_goal_fn,
+            file_path="push.xml",
             **kwargs)
 
     def get_obs(self):
@@ -67,11 +68,3 @@ class PushEnv(SawyerEnv):
             'has_object': grasped,
             'object_pos': object_pos.copy()
         }
-
-    @overrides
-    @property
-    def action_space(self):
-        return Box(
-            np.array([-0.1, -0.1, -0.1, -1.]),
-            np.array([0.1, 0.1, 0.1, 1.]),
-            dtype=np.float32)
