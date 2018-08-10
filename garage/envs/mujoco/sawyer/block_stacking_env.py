@@ -69,6 +69,6 @@ class BlockStackingEnv(SawyerEnv, Serializable):
         return distance < self._distance_threshold
 
     @overrides
-    def reset(self, init_state=None):
+    def reset(self, **kwargs):
         self._done = False
-        return super(BlockStackingEnv, self).reset(init_state)
+        return super(BlockStackingEnv, self).reset()

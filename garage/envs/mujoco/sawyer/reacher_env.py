@@ -17,6 +17,11 @@ class ReacherEnv(SawyerEnv):
             if start_position is None or randomize_start_position:
                 center = self.sim.data.get_geom_xpos('target2')
                 start_position = np.concatenate([center[:2], [0.15]])
+            
+            if randomize_start_position:
+                offset_x = np.random.uniform(low=-0.3, high=0.3)
+                offset_y = np.random.uniform(low=-0.2, high=0.2)
+                offset_z = np.random.uniform(low=0, high=0.3)
 
             # if randomize_start_position:
             #     offset_x = np.random.uniform(low=-0.3, high=0.3)
