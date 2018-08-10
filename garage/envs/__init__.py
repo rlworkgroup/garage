@@ -1,7 +1,5 @@
 from garage.envs.base import GarageEnv
 from garage.envs.base import Step
-from garage.envs.dm_control_env import DmControlEnv
-from garage.envs.dm_control_viewer import DmControlViewer
 from garage.envs.env_spec import EnvSpec
 from garage.envs.grid_world_env import GridWorldEnv
 from garage.envs.identification_env import IdentificationEnv  # noqa: I100

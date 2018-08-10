@@ -2,8 +2,8 @@ import unittest
 
 from dm_control import suite
 
-from garage.envs import DmControlEnv
 from garage.envs import normalize
+from garage.envs.dm_control import DmControlEnv
 
 
 def run_task(domain_name, task_name):
