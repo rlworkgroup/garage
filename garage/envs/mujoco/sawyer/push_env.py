@@ -7,7 +7,7 @@ class PushEnv(SawyerEnv):
     def __init__(self, direction="up", **kwargs):
         def start_goal_config():
             # center = self.sim.data.get_geom_xpos('target2')
-            xy = np.random.uniform([-0.2, 0.2], [0.3, 0.6], 2)
+            xy = np.random.uniform([0.3, 0.6], [-0.2, 0.2], 2)
             start = Configuration(
                 gripper_pos=np.concatenate([xy, [0.35]]),
                 gripper_state=0,
@@ -15,10 +15,10 @@ class PushEnv(SawyerEnv):
                 object_pos=np.concatenate([xy, [0.03]]))
             d = 0.2
             delta = np.array({
-                "up":    ( 0,  d),
-                "down":  ( 0, -d),
-                "left":  (-d,  0),
-                "right": ( d,  0)
+                "up":    ( d,  0),
+                "down":  (-d,  0),
+                "left":  ( 0, -d),
+                "right": ( 0,  d)
             }[direction])
             goal = Configuration(
                 gripper_pos=np.concatenate([xy + delta, [0.35]]),
