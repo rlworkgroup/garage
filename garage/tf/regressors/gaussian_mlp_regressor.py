@@ -5,6 +5,7 @@ from garage.core import Serializable
 from garage.misc import logger
 from garage.tf.core import LayersPowered
 from garage.tf.core import MLP
+from garage.tf.core import Parameterized
 import garage.tf.core.layers as L
 from garage.tf.distributions import DiagonalGaussian
 from garage.tf.misc import tensor_utils
@@ -12,7 +13,7 @@ from garage.tf.optimizers import LbfgsOptimizer
 from garage.tf.optimizers import PenaltyLbfgsOptimizer
 
 
-class GaussianMLPRegressor(LayersPowered, Serializable):
+class GaussianMLPRegressor(LayersPowered, Serializable, Parameterized):
     """
     A class for performing regression by fitting a Gaussian distribution to the
     outputs.
@@ -61,6 +62,7 @@ class GaussianMLPRegressor(LayersPowered, Serializable):
          network. Only used if `std_share_network` is False. It defaults to the
          same non-linearity as the mean.
         """
+        Parameterized.__init__(self)
         Serializable.quick_init(self, locals())
         self._mean_network_name = "mean_network"
         self._std_network_name = "std_network"
@@ -318,9 +320,3 @@ class GaussianMLPRegressor(LayersPowered, Serializable):
 
             return self._dist.log_likelihood_sym(
                 y_var, dict(mean=means_var, log_std=log_stds_var))
-
-    def get_param_values(self, **tags):
-        return LayersPowered.get_param_values(self, **tags)
-
-    def set_param_values(self, flattened_params, **tags):
-        LayersPowered.set_param_values(self, flattened_params, **tags)

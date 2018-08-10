@@ -26,6 +26,7 @@ class DeterministicMLPBaseline(Baseline, Parameterized, Serializable):
         :param num_seq_inputs: number of sequence inputs.
         :param regressor_args: regressor arguments.
         """
+        Parameterized.__init__(self)
         Serializable.quick_init(self, locals())
         super(DeterministicMLPBaseline, self).__init__(env_spec)
         if regressor_args is None:
@@ -59,3 +60,7 @@ class DeterministicMLPBaseline(Baseline, Parameterized, Serializable):
     def predict(self, path):
         """Predict value based on paths."""
         return self._regressor.predict(path["observations"]).flatten()
+
+    @overrides
+    def get_params_internal(self, **tags):
+        return self._regressor.get_params_internal(**tags)
