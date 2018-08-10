@@ -27,6 +27,8 @@ class Discrete(Space):
         return "Discrete(%d)" % self.n
 
     def __eq__(self, other):
+        if not isinstance(other, Discrete):
+            return False
         return self.n == other.n
 
     def flatten(self, x):
@@ -51,11 +53,6 @@ class Discrete(Space):
     @property
     def default_value(self):
         return 0
-
-    def __eq__(self, other):
-        if not isinstance(other, Discrete):
-            return False
-        return self.n == other.n
 
     def __hash__(self):
         return hash(self.n)
