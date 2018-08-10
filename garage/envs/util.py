@@ -3,7 +3,7 @@ import numpy as np
 
 from garage.envs.base import EnvSpec
 from garage.misc import special
-from garage.spaces import Box as GarageBox
+from garage.spaces import Box as GarageBox, Space
 from garage.spaces import Discrete as GarageDiscrete
 from garage.spaces import Product as GarageProduct
 
@@ -133,3 +133,50 @@ def weighted_sample(space, weights):
         return special.weighted_sample(weights, range(space.n))
     else:
         raise NotImplementedError
+
+
+def dims_to_shapes(input_dims):
+    return {
+        key: tuple([val]) if val > 0 else tuple()
+        for key, val in input_dims.items()
+    }
+
+
+def configure_dims(env):
+    env.reset()
+    _, _, _, info = env.step(env.action_space.sample())
+    obs = env.observation_space
+    action = env.action_space
+
+    if isinstance(obs, gym.spaces.Dict):
+        dims = {
+            "observation": flat_dim(obs.spaces["observation"]),
+            "action": flat_dim(action),
+            "goal": flat_dim(obs.spaces["desired_goal"]),
+            "achieved_goal": flat_dim(obs.spaces["achieved_goal"]),
+        }
+
+        for key, value in info.items():
+            value = np.array(value)
+            if value.ndim == 0:
+                value = value.reshape(1)
+            dims['info_{}'.format(key)] = value.shape[0]
+    else:
+        if isinstance(obs, Space):
+            dims = {
+                "observation": obs.flat_dim,
+                "action": action.flat_dim,
+                "terminal": 1,
+                "reward": 1,
+                "next_observation": obs.flat_dim,
+            }
+        else:
+            dims = {
+                "observation": flat_dim(obs),
+                "action": flat_dim(action),
+                "terminal": 1,
+                "reward": 1,
+                "next_observation": flat_dim(obs),
+            }
+
+    return dims
