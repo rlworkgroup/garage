@@ -52,6 +52,11 @@ S
     <!--<motor gear="100" joint="r_gripper_l_finger_joint" name="slide_l_claw"/>-->
     <!--<motor gear="100" joint="r_gripper_r_finger_joint" name="slide_r_claw"/>-->
 
+    <position ctrllimited="true" ctrlrange="0 0.020833" joint="r_gripper_l_finger_joint" kp="30000" name="slide_l_claw"
+              user="1"/>
+    <position ctrllimited="true" ctrlrange="-0.020833 0" joint="r_gripper_r_finger_joint" kp="30000" name="slide_r_claw"
+              user="1"/>
+
     <!--<motor joint="right_j0" ctrlrange="-100.0 100.0" ctrllimited="false" gear="150"/>-->
     <!--<motor joint="right_j1" ctrlrange="-100.0 100.0" ctrllimited="false" gear="100"/>-->
     <!--<motor joint="right_j2" ctrlrange="-100.0 100.0" ctrllimited="false" gear="120"/>-->
