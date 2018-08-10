@@ -257,15 +257,15 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
         grasped = self.has_object
         obs = np.concatenate([
             gripper_pos,
-            object_pos.ravel(),  # TODO remove object_pos (reveals task id)
-            object_rel_pos.ravel(),
-            object_rot.ravel(),
-            object_velp.ravel(),
-            object_velr.ravel(),
-            grip_velp,
+            object_pos.ravel(),
+            # object_rel_pos.ravel(),
+            # object_rot.ravel(),
+            # object_velp.ravel(),
+            # object_velr.ravel(),
+            # grip_velp,
             qpos,
-            qvel,
-            [float(grasped), self.gripper_state],
+            # qvel,
+            # [float(grasped), self.gripper_state],
         ])
 
         achieved_goal = self._achieved_goal_fn(self)
