@@ -31,12 +31,14 @@ class NPO(BatchPolopt):
                  clip_range=0.01,
                  optimizer=None,
                  optimizer_args=None,
-                 name=None,
+                 name="NPO",
                  policy=None,
                  policy_ent_coeff=1e-2,
+                 use_softplus_entropy=True,
                  **kwargs):
         self.name = name
         self._name_scope = tf.name_scope(self.name)
+        self._use_softplus_entropy = use_softplus_entropy
 
         self._pg_loss = pg_loss
         if optimizer is None:
@@ -84,14 +86,18 @@ class NPO(BatchPolopt):
         policy_kl = self.f_policy_kl(*policy_opt_input_values)
         logger.log("Computing loss after")
         loss_after = self.optimizer.loss(policy_opt_input_values)
-        logger.record_tabular('Policy/LossBefore', loss_before)
-        logger.record_tabular('Policy/LossAfter', loss_after)
-        logger.record_tabular('Policy/KLBefore', policy_kl_before)
-        logger.record_tabular('Policy/KL', policy_kl)
-        logger.record_tabular('Policy/dLoss', loss_before - loss_after)
+        logger.record_tabular("{}/LossBefore".format(self.policy.name),
+                              loss_before)
+        logger.record_tabular("{}/LossAfter".format(self.policy.name),
+                              loss_after)
+        logger.record_tabular("{}/dLoss".format(self.policy.name),
+                              loss_before - loss_after)
+        logger.record_tabular("{}/KLBefore".format(self.policy.name),
+                              policy_kl_before)
+        logger.record_tabular("{}/KL".format(self.policy.name), policy_kl)
 
         pol_ent = self.f_policy_entropy(*policy_opt_input_values)
-        logger.record_tabular('Policy/Entropy', pol_ent)
+        logger.record_tabular("{}/Entropy".format(self.policy.name), pol_ent)
 
         self._fit_baseline(samples_data)
 
@@ -218,8 +224,7 @@ class NPO(BatchPolopt):
         policy_entropy = self._build_entropy_term(i)
 
         with tf.name_scope("augmented_rewards"):
-            rewards = i.reward_var \
-                      + self.policy_ent_coeff * policy_entropy
+            rewards = i.reward_var + (self.policy_ent_coeff * policy_entropy)
 
         with tf.name_scope("policy_loss"):
             advantages = compute_adv(self.discount, self.gae_lambda,
@@ -318,11 +323,16 @@ class NPO(BatchPolopt):
                 policy_dist_info_flat)
             policy_entropy = tf.reshape(policy_entropy_flat,
                                         [-1, self.max_path_length])
+
+            # This prevents entropy from becoming negative for small policy std
+            if self._use_softplus_entropy:
+                policy_entropy = tf.nn.softplus(policy_entropy)
+
             policy_entropy = tf.reduce_mean(policy_entropy * i.valid_var)
 
         self.f_policy_entropy = tensor_utils.compile_function(
             flatten_inputs(self._policy_opt_inputs),
-            tf.reduce_mean(policy_entropy * i.valid_var),
+            policy_entropy,
             log_name="f_policy_entropy")
 
         return policy_entropy
@@ -358,7 +368,7 @@ class NPO(BatchPolopt):
         # Calculate explained variance
         ev = special.explained_variance_1d(
             np.concatenate(baselines), aug_returns)
-        logger.record_tabular('Baseline/ExplainedVariance', ev)
+        logger.record_tabular("Baseline/ExplainedVariance", ev)
 
         # Fit baseline
         logger.log("Fitting baseline...")
