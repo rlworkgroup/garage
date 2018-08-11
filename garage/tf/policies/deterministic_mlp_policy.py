@@ -42,7 +42,7 @@ class DeterministicMLPPolicy(Policy, LayersPowered, Serializable):
             self._l_prob = prob_network.output_layer
             self._l_obs = prob_network.input_layer
             self._f_prob = tensor_utils.compile_function(
-                [prob_network.input_layer.input_var], [prob_network_output])
+                [prob_network.input_layer.input_var], prob_network_output)
 
         self.prob_network = prob_network
 

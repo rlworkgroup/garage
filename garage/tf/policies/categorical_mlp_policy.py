@@ -51,7 +51,7 @@ class CategoricalMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
             with tf.name_scope(self._prob_network_name):
                 prob_network_outputs = L.get_output(prob_network.output_layer)
             self._f_prob = tensor_utils.compile_function(
-                [prob_network.input_layer.input_var], [prob_network_outputs])
+                [prob_network.input_layer.input_var], prob_network_outputs)
 
             self._dist = Categorical(env_spec.action_space.n)
 
@@ -68,7 +68,7 @@ class CategoricalMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
             with tf.name_scope(self._prob_network_name, values=[obs_var]):
                 prob = L.get_output(
                     self._l_prob, {self._l_obs: tf.cast(obs_var, tf.float32)})
-            return dict(prob)
+            return dict(prob=prob)
 
     @overrides
     def dist_info(self, obs, state_infos=None):
