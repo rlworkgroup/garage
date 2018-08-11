@@ -17,7 +17,7 @@ class CategoricalGRUPolicy(StochasticPolicy, LayersPowered, Serializable):
     def __init__(
             self,
             env_spec,
-            name=None,
+            name="CategoricalGRUPolicy",
             hidden_dim=32,
             feature_network=None,
             state_include_action=True,
@@ -102,9 +102,9 @@ class CategoricalGRUPolicy(StochasticPolicy, LayersPowered, Serializable):
                 out_prob_hidden = tf.identity(out_prob_hidden,
                                               "prob_step_hidden")
 
-            self.f_step_prob = tensor_utils.compile_function([
-                flat_input_var, prob_network.step_prev_hidden_layer.input_var
-            ], [out_prob_step, out_prob_hidden])
+            self.f_step_prob = tensor_utils.compile_function(
+                [flat_input_var, prob_network.step_prev_state_layer.input_var],
+                [out_prob_step, out_prob_hidden])
 
             self.input_dim = input_dim
             self.action_dim = action_dim
@@ -140,7 +140,7 @@ class CategoricalGRUPolicy(StochasticPolicy, LayersPowered, Serializable):
                         self._prob_network_name, values=[all_input_var]):
                     prob = L.get_output(self.prob_network.output_layer,
                                         {self.l_input: all_input_var})
-                return dict(prob)
+                return dict(prob=prob)
             else:
                 flat_input_var = tf.reshape(all_input_var,
                                             (-1, self.input_dim))
@@ -152,7 +152,7 @@ class CategoricalGRUPolicy(StochasticPolicy, LayersPowered, Serializable):
                             self.l_input: all_input_var,
                             self.feature_network.input_layer: flat_input_var
                         })
-                return dict(prob)
+                return dict(prob=prob)
 
     @property
     def vectorized(self):
