@@ -178,17 +178,29 @@ class BlockWorld(World):
                 SAWYER_CALI_VICON_TOPIC, TransformStamped, vicon_update_cali)
 
         # Add table to moveit
-        pose_stamped = PoseStamped()
-        pose_stamped.header.frame_id = self._frame_id
-        pose_stamped.pose.position.x = 0.655
-        pose_stamped.pose.position.y = 0
+        pose_stamped_table = PoseStamped()
+        pose_stamped_table.header.frame_id = self._frame_id
+        pose_stamped_table.pose.position.x = 0.655
+        pose_stamped_table.pose.position.y = 0
         # Leave redundant space
-        pose_stamped.pose.position.z = -0.02
-        pose_stamped.pose.orientation.x = 0
-        pose_stamped.pose.orientation.y = 0
-        pose_stamped.pose.orientation.z = 0
-        pose_stamped.pose.orientation.w = 1.0
-        self._moveit_scene.add_box('table', pose_stamped, (1.0, 0.9, 0.1))
+        pose_stamped_table.pose.position.z = -0.02
+        pose_stamped_table.pose.orientation.x = 0
+        pose_stamped_table.pose.orientation.y = 0
+        pose_stamped_table.pose.orientation.z = 0
+        pose_stamped_table.pose.orientation.w = 1.0
+        self._moveit_scene.add_box('table', pose_stamped_table, (1.0, 0.9, 0.1))
+        # Add calibration marker to moveit
+        pose_stamped_marker = PoseStamped()
+        pose_stamped_marker.header.frame_id = self._frame_id
+        pose_stamped_marker.pose.position.x = 1.055
+        pose_stamped_marker.pose.position.y = -0.404
+        # Leave redundant space
+        pose_stamped_marker.pose.position.z = 0.03
+        pose_stamped_marker.pose.orientation.x = 0
+        pose_stamped_marker.pose.orientation.y = 0
+        pose_stamped_marker.pose.orientation.z = 0
+        pose_stamped_marker.pose.orientation.w = 1.0
+        self._moveit_scene.add_box('marker', pose_stamped_marker, (0.09, 0.08, 0.06))
 
     def _gazebo_update_block_states(self, data):
         model_states = data
@@ -278,6 +290,7 @@ class BlockWorld(World):
                     ready = True
 
         self._moveit_scene.remove_world_object('table')
+        self._moveit_scene.remove_world_object('marker')
 
     def get_observation(self):
         blocks_pos = np.array([])
