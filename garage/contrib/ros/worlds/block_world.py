@@ -22,6 +22,40 @@ except ImportError:
         "   # if you are not using real robot and vicon system"
         "   VICON_TOPICS = []")
 
+SAWYER_CALI_VICON_TOPIC = 'vicon/sawyer_marker/sawyer_marker'
+
+TRANS_MATRIX_C2R = np.matrix([[1, 0, 0, 1.055], [0, 1, 0, -0.404],
+                              [0, 0, 1, 0.03], [0, 0, 0, 1]])
+
+TRANS_MATRIX_C2V = np.matrix([[0, 1, 0, 0], [-1, 0, 0, 0], [0, 0, 1, 0],
+                              [0, 0, 0, 1]])
+
+
+def vicon2robot(vicon_pos):
+    v = np.array(vicon_pos)
+    v = v.reshape([3, 1])
+    v = np.concatenate((v, [[1]]))
+    v = np.matrix(v)
+
+    r = TRANS_MATRIX_C2R * TRANS_MATRIX_C2V.I * v
+
+    return [r[0, 0], r[1, 0], r[2, 0]]
+
+
+def vicon_update_cali(data):
+    translation = data.transform.translation
+
+    global TRANS_MATRIX_C2V
+
+    if TRANS_MATRIX_C2V is None:
+        TRANS_MATRIX_C2V = np.matrix([[0, 1, 0, translation.x],
+                                      [-1, 0, 0, translation.y],
+                                      [0, 0, 1, translation.z], [0, 0, 0, 1]])
+    else:
+        TRANS_MATRIX_C2V[0, 3] = translation.x
+        TRANS_MATRIX_C2V[1, 3] = translation.y
+        TRANS_MATRIX_C2V[2, 3] = translation.z
+
 
 class Block(object):
     def __init__(self, name, initial_pos, random_delta_range, resource=None):
@@ -124,6 +158,9 @@ class BlockWorld(World):
                     rospy.Subscriber(block.resource, TransformStamped,
                                      self._vicon_update_block_states))
                 self._blocks.append(block)
+
+            sawyer_cali_marker_sub = rospy.Subscriber(
+                SAWYER_CALI_VICON_TOPIC, TransformStamped, vicon_update_cali)
 
         # Add table to moveit
         pose_stamped = PoseStamped()
@@ -249,6 +286,16 @@ class BlockWorld(World):
         observation = Observation(obs=obs, achieved_goal=achieved_goal)
 
         return observation
+
+    def get_blocks_position(self):
+        poses = []
+
+        for block in self._blocks:
+            vicon_pos = [block.position.x, block.position.y, block.position.z]
+            robot_pos = vicon2robot(vicon_pos)
+            poses.append(robot_pos)
+
+        return poses
 
     @property
     def observation_space(self):
