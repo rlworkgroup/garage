@@ -159,7 +159,7 @@ class BlockWorld(World):
                                      self._vicon_update_block_states))
                 self._blocks.append(block)
 
-            sawyer_cali_marker_sub = rospy.Subscriber(
+            self._sawyer_cali_marker_sub = rospy.Subscriber(
                 SAWYER_CALI_VICON_TOPIC, TransformStamped, vicon_update_cali)
 
         # Add table to moveit
@@ -248,6 +248,8 @@ class BlockWorld(World):
     def terminate(self):
         for sub in self._block_states_subs:
             sub.unregister()
+
+        self._sawyer_cali_marker_sub.unregister()
 
         if self._simulated:
             for block in self._blocks:
