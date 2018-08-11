@@ -320,10 +320,15 @@ class BlockWorld(World):
     def get_blocks_position(self):
         poses = []
 
-        for block in self._blocks:
-            vicon_pos = [block.position.x, block.position.y, block.position.z]
-            robot_pos = vicon2robot(vicon_pos)
-            poses.append(robot_pos)
+        if self._simulated:
+            for block in self._blocks:
+                pos = [block.position.x, block.position.y, block.position.z]
+                poses.append(pos)
+        else:
+            for block in self._blocks:
+                vicon_pos = [block.position.x, block.position.y, block.position.z]
+                robot_pos = vicon2robot(vicon_pos)
+                poses.append(robot_pos)
 
         return poses
 
