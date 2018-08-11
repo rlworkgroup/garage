@@ -3,11 +3,10 @@ from dm_control.rl.control import flatten_observation
 from dm_control.rl.environment import StepType
 import gym
 import numpy as np
-import pygame
 
 from garage.core import Serializable
 from garage.envs import Step
-from garage.envs.dm_control_viewer import DmControlViewer
+from garage.envs.dm_control import DmControlViewer
 
 
 class DmControlEnv(gym.Env, Serializable):
@@ -39,10 +38,9 @@ class DmControlEnv(gym.Env, Serializable):
         time_step = self._env.step(action)
         if time_step.reward:
             self._total_reward += time_step.reward
-        return Step(flatten_observation(time_step.observation), \
-                time_step.reward, \
-                time_step.step_type == StepType.LAST, \
-                **time_step.observation)
+        return Step(
+            flatten_observation(time_step.observation), time_step.reward,
+            time_step.step_type == StepType.LAST, **time_step.observation)
 
     def reset(self):
         self._total_reward = 0

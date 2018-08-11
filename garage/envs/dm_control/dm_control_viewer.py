@@ -4,7 +4,7 @@ import pygame
 CAPTION = "dm_control viewer"
 
 
-class DmControlViewer():
+class DmControlViewer:
     def __init__(self):
         pygame.init()
         pygame.display.set_caption(CAPTION)
