@@ -156,7 +156,7 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
                 np.array([0.15, 0.15, 0.15, 1.]),
                 dtype=np.float32)
         elif self._control_method == 'position_control':
-            return Box(low=np.full(7, -0.05), high=np.full(7, 0.05), dtype=np.float32)
+            return Box(low=np.full(7, -0.04), high=np.full(7, 0.04), dtype=np.float32)
         else:
             raise NotImplementedError
 
