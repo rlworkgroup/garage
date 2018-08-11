@@ -16,7 +16,7 @@ from garage.tf.spaces import Box
 class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
     def __init__(self,
                  env_spec,
-                 name=None,
+                 name="GaussianMLPPolicy",
                  hidden_sizes=(32, 32),
                  learn_std=True,
                  init_std=1.0,
@@ -75,7 +75,13 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
                         init_std_param = np.log(np.exp(init_std) - 1)
                     else:
                         raise NotImplementedError
-                    init_b = tf.constant_initializer(init_std_param)
+                    b = np.concatenate(
+                        [
+                            np.zeros(action_dim),
+                            np.full(action_dim, init_std_param)
+                        ],
+                        axis=0)
+                    b = tf.constant_initializer(b)
                     with tf.variable_scope(self._mean_network_name):
                         mean_network = MLP(
                             name="mlp",
@@ -84,7 +90,7 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
                             hidden_sizes=hidden_sizes,
                             hidden_nonlinearity=hidden_nonlinearity,
                             output_nonlinearity=output_nonlinearity,
-                            output_b_init=init_b,
+                            output_b_init=b,
                         )
                         l_mean = L.SliceLayer(
                             mean_network.output_layer,
@@ -244,7 +250,10 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
     def log_diagnostics(self, paths):
         log_stds = np.vstack(
             [path["agent_infos"]["log_std"] for path in paths])
-        logger.record_tabular('AveragePolicyStd', np.mean(np.exp(log_stds)))
+        logger.record_tabular("{}/AverageStd".format(self.name),
+                              np.mean(np.exp(log_stds)))
+        actions = np.vstack([path["actions"] for path in paths])
+        logger.record_histogram("{}/Actions".format(self.name), actions)
 
     @property
     def distribution(self):
