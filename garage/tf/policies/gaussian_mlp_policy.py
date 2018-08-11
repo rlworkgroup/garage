@@ -252,8 +252,6 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
             [path["agent_infos"]["log_std"] for path in paths])
         logger.record_tabular("{}/AverageStd".format(self.name),
                               np.mean(np.exp(log_stds)))
-        actions = np.vstack([path["actions"] for path in paths])
-        logger.record_histogram("{}/Actions".format(self.name), actions)
 
     @property
     def distribution(self):
