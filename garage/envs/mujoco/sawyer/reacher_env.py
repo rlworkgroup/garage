@@ -9,13 +9,22 @@ from garage.envs.mujoco.sawyer.sawyer_env import SawyerEnvWrapper
 
 
 class ReacherEnv(SawyerEnv):
-    def __init__(self, goal_position, start_position=None, **kwargs):
+    def __init__(self, goal_position, start_position=None, randomize_start_position=False, **kwargs):
 
         def generate_start_goal():
             nonlocal start_position
-            if start_position is None:
+            if start_position is None or randomize_start_position:
                 center = self.sim.data.get_geom_xpos('target2')
                 start_position = np.concatenate([center[:2], [0.15]])
+            
+            if randomize_start_position:
+                offset_x = np.random.uniform(low=-0.3, high=0.3)
+                offset_y = np.random.uniform(low=-0.2, high=0.2)
+                offset_z = np.random.uniform(low=0, high=0.3)
+
+                start_position[0] += offset_x
+                start_position[1] += offset_y
+                start_position[2] += offset_z
 
             start = Configuration(
                 gripper_pos=start_position,
