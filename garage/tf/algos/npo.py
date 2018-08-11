@@ -9,7 +9,8 @@ from garage.misc import special
 from garage.misc.overrides import overrides
 from garage.tf.algos import BatchPolopt
 from garage.tf.misc import tensor_utils
-from garage.tf.misc.tensor_utils import compute_adv, compute_ret
+from garage.tf.misc.tensor_utils import calculate_advantages
+from garage.tf.misc.tensor_utils import discounted_returns
 from garage.tf.misc.tensor_utils import filter_valids
 from garage.tf.misc.tensor_utils import filter_valids_dict
 from garage.tf.misc.tensor_utils import flatten_batch
@@ -98,6 +99,10 @@ class NPO(BatchPolopt):
 
         pol_ent = self.f_policy_entropy(*policy_opt_input_values)
         logger.record_tabular("{}/Entropy".format(self.policy.name), pol_ent)
+
+        num_traj = self.batch_size // self.max_path_length
+        actions = samples_data["actions"][:num_traj, ...]
+        logger.record_histogram("{}/Actions".format(self.policy.name), actions)
 
         self._fit_baseline(samples_data)
 
@@ -227,9 +232,13 @@ class NPO(BatchPolopt):
             rewards = i.reward_var + (self.policy_ent_coeff * policy_entropy)
 
         with tf.name_scope("policy_loss"):
-            advantages = compute_adv(self.discount, self.gae_lambda,
-                                     self.max_path_length, i.baseline_var,
-                                     rewards)
+            advantages = calculate_advantages(
+                self.discount,
+                self.gae_lambda,
+                self.max_path_length,
+                i.baseline_var,
+                rewards,
+                name="advantages")
 
             adv_flat = flatten_batch(advantages, name="adv_flat")
             adv_valid = filter_valids(
@@ -304,7 +313,8 @@ class NPO(BatchPolopt):
                 rewards,
                 log_name="f_rewards")
 
-            returns = compute_ret(self.discount, self.max_path_length, rewards)
+            returns = discounted_returns(self.discount, self.max_path_length,
+                                         rewards)
             self.f_returns = tensor_utils.compile_function(
                 flatten_inputs(self._policy_opt_inputs),
                 returns,

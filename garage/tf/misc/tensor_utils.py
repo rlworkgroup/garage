@@ -164,8 +164,14 @@ def pad_tensor_dict(tensor_dict, max_len):
     return ret
 
 
-def compute_adv(discount, gae_lambda, max_len, baselines, rewards):
-    with tf.name_scope("advantage"):
+def calculate_advantages(discount,
+                         gae_lambda,
+                         max_len,
+                         baselines,
+                         rewards,
+                         name=None):
+    with tf.name_scope(name, "calculate_advantages",
+                       [discount, gae_lambda, max_len, baselines, rewards]):
         # Calculate advantages
         #
         # Advantages are a discounted cumulative sum.
@@ -213,8 +219,9 @@ def compute_adv(discount, gae_lambda, max_len, baselines, rewards):
     return advantages
 
 
-def compute_ret(discount, max_len, rewards):
-    with tf.name_scope("returns"):
+def discounted_returns(discount, max_len, rewards, name=None):
+    with tf.name_scope(name, "discounted_returns",
+                       [discount, max_len, rewards]):
         gamma = tf.constant(
             float(discount), dtype=tf.float32, shape=[max_len, 1, 1])
         return_filter = tf.cumprod(gamma, exclusive=True)
