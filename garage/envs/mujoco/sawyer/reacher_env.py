@@ -1,7 +1,5 @@
 import numpy as np
 
-from garage.misc.overrides import overrides
-from gym.spaces import Box
 from garage.core.serializable import Serializable
 from garage.envs.mujoco.sawyer.sawyer_env import SawyerEnv, Configuration
 from garage.envs.mujoco.sawyer.sawyer_env import Configuration
@@ -9,14 +7,17 @@ from garage.envs.mujoco.sawyer.sawyer_env import SawyerEnvWrapper
 
 
 class ReacherEnv(SawyerEnv):
-    def __init__(self, goal_position, start_position=None, randomize_start_position=False, **kwargs):
-
+    def __init__(self,
+                 goal_position,
+                 start_position=None,
+                 randomize_start_position=False,
+                 **kwargs):
         def generate_start_goal():
             nonlocal start_position
             if start_position is None or randomize_start_position:
                 center = self.sim.data.get_geom_xpos('target2')
                 start_position = np.concatenate([center[:2], [0.15]])
-            
+
             if randomize_start_position:
                 offset_x = np.random.uniform(low=-0.3, high=0.3)
                 offset_y = np.random.uniform(low=-0.2, high=0.2)
@@ -39,7 +40,7 @@ class ReacherEnv(SawyerEnv):
 
             return start, goal
 
-        def reward_fn(env: SawyerEnv, achieved_goal, desired_goal, info: dict):
+        def reward_fn(env, achieved_goal, desired_goal, info):
             d = np.linalg.norm(achieved_goal - desired_goal, axis=-1)
             if env._reward_type == 'sparse':
                 return (d < env._distance_threshold).astype(np.float32)
@@ -66,11 +67,14 @@ class ReacherEnv(SawyerEnv):
             arm_qpos = list()
             arm_qvel = list()
             for i in range(7):
-                arm_qpos.append(self.sim.data.get_joint_qpos('right_j{}'.format(i)))
+                arm_qpos.append(
+                    self.sim.data.get_joint_qpos('right_j{}'.format(i)))
                 # Excluding the joint velocities since mujoco has different dynamics from the real robot.
                 # arm_qvel.append(self.sim.data.get_joint_qvel('right_j{}'.format(i)))
 
             obs = np.concatenate([arm_qpos, gripper_pos])
+        else:
+            raise NotImplementedError
 
         achieved_goal = self._achieved_goal_fn(self)
         desired_goal = self._desired_goal_fn(self)
@@ -92,7 +96,6 @@ class ReacherEnv(SawyerEnv):
 
 
 class SimpleReacherEnv(SawyerEnvWrapper, Serializable):
-
     def __init__(self, *args, **kwargs):
         Serializable.quick_init(self, locals())
         self.reward_range = None

@@ -1,17 +1,15 @@
+from collections import namedtuple
+import os.path as osp
+
 import gym
 from gym.envs.robotics import rotations
 from gym.envs.robotics.utils import reset_mocap_welds, reset_mocap2body_xpos
 from gym.spaces import Box
-import os.path as osp
-
 import numpy as np
 
 from garage.envs.mujoco import MujocoEnv
 from garage.envs.mujoco.mujoco_env import MODEL_DIR
 from garage.misc.overrides import overrides
-
-from collections import namedtuple
-from typing import Callable, Union, Tuple
 
 Configuration = namedtuple(
     "Configuration",
@@ -43,25 +41,23 @@ def default_desired_goal_fn(env):
 class SawyerEnv(MujocoEnv, gym.GoalEnv):
     """Sawyer Robot Environments."""
 
-    def __init__(
-            self,
-            start_goal_config: Union[Tuple[Configuration, Configuration],
-                                     Callable[[], Tuple[Configuration,
-                                                        Configuration]]],
-            reward_fn: Callable[..., float] = default_reward_fn,
-            success_fn: Callable[..., bool] = default_success_fn,
-            achieved_goal_fn: Callable[...,
-                                       np.array] = default_achieved_goal_fn,
-            desired_goal_fn: Callable[..., np.array] = default_desired_goal_fn,
-            max_episode_steps: int = 50,
-            completion_bonus: float = 10,
-            distance_threshold: float = 0.05,
-            for_her: bool = False,
-            reward_type: str = 'dense',
-            control_method: str = 'task_space_control',
-            file_path: str = 'pick_and_place.xml',
-            *args,
-            **kwargs):
+    def __init__(self,
+                 start_goal_config,
+                 reward_fn=default_reward_fn,
+                 success_fn=default_success_fn,
+                 achieved_goal_fn=default_achieved_goal_fn,
+                 desired_goal_fn=default_desired_goal_fn,
+                 max_episode_steps=50,
+                 completion_bonus=10,
+                 distance_threshold=0.05,
+                 for_her=False,
+                 control_cost_coeff=0.,
+                 action_scale=1.0,
+                 reward_type='dense',
+                 control_method='task_space_control',
+                 file_path='pick_and_place.xml',
+                 *args,
+                 **kwargs):
         """
         Sawyer Environment.
         :param args:
@@ -88,6 +84,8 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
         self._distance_threshold = distance_threshold
         self._step = 0
         self._for_her = for_her
+        self._control_cost_coeff = control_cost_coeff
+        self._action_scale = action_scale
         file_path = osp.join(MODEL_DIR, file_path)
         MujocoEnv.__init__(self, file_path=file_path, *args, **kwargs)
         self.env_setup()
@@ -156,7 +154,8 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
                 np.array([0.15, 0.15, 0.15, 1.]),
                 dtype=np.float32)
         elif self._control_method == 'position_control':
-            return Box(low=np.full(7, -0.04), high=np.full(7, 0.04), dtype=np.float32)
+            return Box(
+                low=np.full(7, -0.04), high=np.full(7, 0.04), dtype=np.float32)
         else:
             raise NotImplementedError
 
@@ -172,38 +171,38 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
     def step(self, action):
         # Clip to action space
         assert action.shape == self.action_space.shape
-        action = np.clip(action, self.action_space.low, self.action_space.high)
+        a = action.copy()  # Note: you MUST copy the action if you modify it
+        a *= self._action_scale
+        a = np.clip(a, self.action_space.low, self.action_space.high)
+
         if self._control_method == "torque_control":
-            self.forward_dynamics(action)
+            self.forward_dynamics(a)
             self.sim.forward()
         elif self._control_method == "task_space_control":
             reset_mocap2body_xpos(self.sim)
-            self.sim.data.mocap_pos[
-                0, :3] = self.sim.data.mocap_pos[0, :3] + action[:3]
+            self.sim.data.mocap_pos[0, :
+                                    3] = self.sim.data.mocap_pos[0, :3] + a[:3]
             self.sim.data.mocap_quat[:] = np.array([0, 1, 0, 0])
-            self.set_gripper_state(action[3])
+            self.set_gripper_state(a[3])
             for _ in range(5):
                 self.sim.step()
             self.sim.forward()
         elif self._control_method == "position_control":
-            low = np.array([-3.0503, -3.8095, -3.0426, -3.0439, -2.9761, -2.9761, -4.7124])
-            high = np.array([3.0503, 2.2736, 3.0426, 3.0439, 2.9761, 2.9761, 4.7124])
-            curr_pos = []
+            low, high = self.joint_position_limits
+            curr_pos = self.joint_positions
+            next_pos = np.clip(a + curr_pos, low, high)
             for i in range(7):
-                curr_pos.append(self.sim.data.get_joint_qpos('right_j{}'.format(i)))
-            curr_pos = np.array(curr_pos)
-            action = np.clip(action + curr_pos, low, high)
-            for i in range(7):
-                self.sim.data.set_joint_qpos("right_j{}".format(i), action[i])
+                self.sim.data.set_joint_qpos("right_j{}".format(i),
+                                             next_pos[i])
             self.sim.forward()
 
             # Verify the execution of the action.
             for i in range(7):
                 curr_pos = self.sim.data.get_joint_qpos('right_j{}'.format(i))
-                d = np.absolute(curr_pos - action[i])
+                d = np.absolute(curr_pos - next_pos[i])
                 assert d < 1e-5, \
                 "Joint right_j{} failed to reached the desired qpos.\nError: {}\t Desired: {}\t Current: {}"\
-                .format(i, d, action[i], curr_pos)
+                .format(i, d, next_pos[i], curr_pos)
         else:
             raise NotImplementedError
         self._step += 1
@@ -236,7 +235,30 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
         info["r"] = r
         info["d"] = done
 
+        # control cost
+        r -= self._control_cost_coeff * np.linalg.norm(a)
+
         return obs, r, done, info
+
+    @property
+    def joint_position_limits(self):
+        low = np.array(
+            [-3.0503, -3.8095, -3.0426, -3.0439, -2.9761, -2.9761, -4.7124])
+        high = np.array(
+            [3.0503, 2.2736, 3.0426, 3.0439, 2.9761, 2.9761, 4.7124])
+        return low, high
+
+    @property
+    def joint_positions(self):
+        curr_pos = []
+        for i in range(7):
+            curr_pos.append(
+                self.sim.data.get_joint_qpos('right_j{}'.format(i)))
+        return np.array(curr_pos)
+
+    @joint_positions.setter
+    def joint_positions(self, jpos):
+        assert jpos.size == 7
 
     def set_gripper_state(self, state):
         # 1 = open, -1 = closed
