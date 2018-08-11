@@ -7,6 +7,7 @@ from geometry_msgs.msg import Point, Pose, PoseStamped, Quaternion, \
 import gym
 import numpy as np
 import rospy
+import tf
 
 from garage.contrib.ros.worlds.gazebo import Gazebo
 from garage.contrib.ros.worlds.world import World
@@ -27,34 +28,48 @@ SAWYER_CALI_VICON_TOPIC = 'vicon/sawyer_marker/sawyer_marker'
 TRANS_MATRIX_C2R = np.matrix([[1, 0, 0, 1.055], [0, 1, 0, -0.404],
                               [0, 0, 1, 0.03], [0, 0, 0, 1]])
 
-TRANS_MATRIX_C2V = np.matrix([[0, 1, 0, 0], [-1, 0, 0, 0], [0, 0, 1, 0],
-                              [0, 0, 0, 1]])
+# Depends on how you set volume origin during calibration.
+ORIGIN_ROTATION_MATRIX_C2V = np.matrix([[0, 1, 0, 0], [-1, 0, 0, 0], [0, 0, 1, 0],
+                                        [0, 0, 0, 1]])
+
+ROTATION_MATRIX_C2V = None
+
+
+TRANSLATION_MATRIX_C2V = None
 
 
 def vicon2robot(vicon_pos):
-    v = np.array(vicon_pos)
-    v = v.reshape([3, 1])
-    v = np.concatenate((v, [[1]]))
-    v = np.matrix(v)
+    if ROTATION_MATRIX_C2V is None or TRANSLATION_MATRIX_C2V is None:
+        print('Not ready...')
+        return [0, 0, 0]
+    else:
+        v = np.array(vicon_pos)
+        v = v.reshape([3, 1])
+        v = np.concatenate((v, [[1]]))
+        v = np.matrix(v)
 
-    r = TRANS_MATRIX_C2R * TRANS_MATRIX_C2V.I * v
+        trans_matrix_c2v = ROTATION_MATRIX_C2V
+        for i in range(3):
+            trans_matrix_c2v[i, 3] = TRANSLATION_MATRIX_C2V[i, 0]
 
-    return [r[0, 0], r[1, 0], r[2, 0]]
+        r = TRANS_MATRIX_C2R * trans_matrix_c2v.I * v
+
+        return [r[0, 0], r[1, 0], r[2, 0]]
 
 
 def vicon_update_cali(data):
     translation = data.transform.translation
+    rotation = data.transform.rotation
 
-    global TRANS_MATRIX_C2V
+    global TRANSLATION_MATRIX_C2V
 
-    if TRANS_MATRIX_C2V is None:
-        TRANS_MATRIX_C2V = np.matrix([[0, 1, 0, translation.x],
-                                      [-1, 0, 0, translation.y],
-                                      [0, 0, 1, translation.z], [0, 0, 0, 1]])
-    else:
-        TRANS_MATRIX_C2V[0, 3] = translation.x
-        TRANS_MATRIX_C2V[1, 3] = translation.y
-        TRANS_MATRIX_C2V[2, 3] = translation.z
+    global ROTATION_MATRIX_C2V
+
+    TRANSLATION_MATRIX_C2V = np.matrix([[translation.x], [translation.y],
+                                        [translation.z], [1]])
+    quaternion = np.array([rotation.x, rotation.y, rotation.z, rotation.w])
+    ROTATION_MATRIX_C2V = np.matrix(tf.transformations.quaternion_matrix(quaternion)) * \
+                          ORIGIN_ROTATION_MATRIX_C2V
 
 
 class Block(object):
