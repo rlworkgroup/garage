@@ -30,13 +30,12 @@ TRANS_MATRIX_C2R = np.matrix([[1, 0, 0, 1.055], [0, 1, 0, -0.404],
                               [0, 0, 1, 0.03], [0, 0, 0, 1]])
 
 # Depends on how you set volume origin during calibration.
-ORIGIN_ROTATION_MATRIX_C2V = np.matrix([[0, 1, 0, 0], [-1, 0, 0, 0], [0, 0, 1, 0],
-                                        [0, 0, 0, 1]])
+ORIGIN_ROTATION_MATRIX_C2V = np.matrix([[0, 1, 0, 0], [-1, 0, 0, 0],
+                                        [0, 0, 1, 0], [0, 0, 0, 1]])
 
 CALI_ORIENTATION = Quaternion()
 
 ROTATION_MATRIX_C2V = None
-
 
 TRANSLATION_MATRIX_C2V = None
 
@@ -44,7 +43,8 @@ TRANSLATION_MATRIX_C2V = None
 def get_transformation_matrix_v2r():
     if ROTATION_MATRIX_C2V is None or TRANSLATION_MATRIX_C2V is None:
         print('Not ready...')
-        return np.matrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])
+        return np.matrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0],
+                          [0, 0, 0, 1]])
     else:
         trans_matrix_c2v = ROTATION_MATRIX_C2V
         for i in range(3):
@@ -66,9 +66,13 @@ def position_vicon2robot(vicon_pos):
 
 
 def rotation_vicon2robot(vicon_orientation):
-    cali_orientation = [CALI_ORIENTATION.x, CALI_ORIENTATION.y, CALI_ORIENTATION.z, CALI_ORIENTATION.w]
-    return tf.transformations.quaternion_multiply(vicon_orientation,
-                                                  tf.transformations.quaternion_inverse(cali_orientation)).tolist()
+    cali_orientation = [
+        CALI_ORIENTATION.x, CALI_ORIENTATION.y, CALI_ORIENTATION.z,
+        CALI_ORIENTATION.w
+    ]
+    return tf.transformations.quaternion_multiply(
+        vicon_orientation,
+        tf.transformations.quaternion_inverse(cali_orientation)).tolist()
 
 
 def vicon_update_cali(data):
@@ -91,19 +95,26 @@ def vicon_update_cali(data):
 
 
 class Block(object):
-    def __init__(self, name, size, initial_pos, random_delta_range, resource=None):
+    def __init__(self,
+                 name,
+                 size,
+                 initial_pos,
+                 random_delta_range,
+                 resource=None):
         """
         Task Object interface
         :param name: str
         :param size: [float]
                 [x, y, z]
         :param initial_pos: geometry_msgs.msg.Point
-                object's original position
+                object's original position. Use this for
+                training from scratch on ros/gazebo.
         :param random_delta_range: [float, float, float]
                 positive, the range that would be used in
                 sampling object' new start position for every episode.
                 Set it as 0, if you want to keep the
                 object's initial_pos for every episode.
+                Use this for training from scratch on ros/gazebo
         :param resource: str
                 the model path(str) for simulation training or ros
                 topic name for real robot training
@@ -117,6 +128,8 @@ class Block(object):
         self._position = Point(
             x=initial_pos[0], y=initial_pos[1], z=initial_pos[2])
         self._orientation = Quaternion(x=0., y=0., z=0., w=1.)
+        # If it's first smoothed, set data directly.
+        self.first_smoothed = True
 
     @property
     def size(self):
@@ -140,36 +153,40 @@ class Block(object):
 
     @property
     def position(self):
+        """Position with reference to robot frame."""
         return self._position
 
     @position.setter
     def position(self, value):
+        """Position with reference to robot frame."""
         self._position = value
 
     @property
     def orientation(self):
+        """Orientation with reference to robot frame."""
         return self._orientation
 
     @orientation.setter
     def orientation(self, value):
+        """Orientation with reference to robot frame."""
         self._orientation = value
 
 
 class BlockWorld(World):
     def __init__(self, moveit_scene, frame_id, simulated=False):
-        """
-        Users use this to manage world and get world state.
-        """
+        """Users use this to manage world and get world state."""
         self._blocks = []
         self._simulated = simulated
         self._block_states_subs = []
         self._moveit_scene = moveit_scene
         self._frame_id = frame_id
-        self._moveit_pub = rospy.Publisher('collision_object',
-                                           CollisionObject,
-                                           queue_size=10)
+        # Use this to move collision object in moveit.
+        self._moveit_col_obj_pub = rospy.Publisher(
+            'collision_object', CollisionObject, queue_size=10)
+        self._lowpass_alpha = 0.1
 
     def initialize(self):
+        """Initialize the block world."""
         if self._simulated:
             Gazebo.load_gazebo_model(
                 'table',
@@ -177,30 +194,38 @@ class BlockWorld(World):
                 osp.join(World.MODEL_DIR, 'cafe_table/model.sdf'))
             Gazebo.load_gazebo_model(
                 'block',
-                Pose(position=Point(x=0.5725, y=0.1265, z=0.90)),
+                Pose(position=Point(x=0.5725, y=0.1265, z=0.05)),
                 osp.join(World.MODEL_DIR, 'block/model.urdf'))
             block = Block(
                 name='block',
-                initial_pos=(0.5725, 0.1265, 0.90),
+                initial_pos=(0.5725, 0.1265, 0.05),
                 random_delta_range=0.15,
                 resource=osp.join(World.MODEL_DIR, 'block/model.urdf'))
             try:
-                block_states_sub = rospy.Subscriber('/gazebo/model_states', ModelStates,
-                                                    self._gazebo_update_block_states)
+                block_states_sub = rospy.Subscriber(
+                    '/gazebo/model_states', ModelStates,
+                    self._gazebo_update_block_states)
                 self._block_states_subs.append(block_states_sub)
-                rospy.wait_for_message('/gazebo/model_states', ModelStates, timeout=2)
+                # Must get the first msg from gazebo.
+                rospy.wait_for_message(
+                    '/gazebo/model_states', ModelStates, timeout=2)
             except rospy.ROSException as e:
-                print("Topic /gazebo/model_states is not available, aborting...")
+                print(
+                    "Topic /gazebo/model_states is not available, aborting...")
                 print("Error message: ", e)
                 exit()
             self._blocks.append(block)
         else:
             try:
                 self._sawyer_cali_marker_sub = rospy.Subscriber(
-                    SAWYER_CALI_VICON_TOPIC, TransformStamped, vicon_update_cali)
-                rospy.wait_for_message(SAWYER_CALI_VICON_TOPIC, TransformStamped, timeout=2)
+                    SAWYER_CALI_VICON_TOPIC, TransformStamped,
+                    vicon_update_cali)
+                # Must get the first msg for calibration object from vicon.
+                rospy.wait_for_message(
+                    SAWYER_CALI_VICON_TOPIC, TransformStamped, timeout=2)
             except rospy.ROSException as e:
-                print("Topic {} is not available, aborting...".format(SAWYER_CALI_VICON_TOPIC))
+                print("Topic {} is not available, aborting...".format(
+                    SAWYER_CALI_VICON_TOPIC))
                 print("Error message: ", e)
                 exit()
             for vicon_topic in VICON_TOPICS:
@@ -211,12 +236,16 @@ class BlockWorld(World):
                     random_delta_range=0.15,
                     resource=vicon_topic)
                 try:
-                    block_state_sub = rospy.Subscriber(block.resource, TransformStamped,
-                                                       self._vicon_update_block_state)
+                    block_state_sub = rospy.Subscriber(
+                        block.resource, TransformStamped,
+                        self._vicon_update_block_state)
                     self._block_states_subs.append(block_state_sub)
-                    rospy.wait_for_message(block.resource, TransformStamped, timeout=2)
+                    # Must get the first msg for block from vicon.
+                    rospy.wait_for_message(
+                        block.resource, TransformStamped, timeout=2)
                 except rospy.ROSException as e:
-                    print("Topic {} is not available, aborting...".format(block.resource))
+                    print("Topic {} is not available, aborting...".format(
+                        block.resource))
                     print("Error message: ", e)
                     exit()
                 self._blocks.append(block)
@@ -234,7 +263,8 @@ class BlockWorld(World):
         pose_stamped_table.pose.orientation.y = 0
         pose_stamped_table.pose.orientation.z = 0
         pose_stamped_table.pose.orientation.w = 1.0
-        self._moveit_scene.add_box('table', pose_stamped_table, (1.0, 0.9, 0.1))
+        self._moveit_scene.add_box('table', pose_stamped_table,
+                                   (1.0, 0.9, 0.1))
         # Add calibration marker to moveit
         rospy.sleep(1)
         pose_stamped_marker = PoseStamped()
@@ -247,18 +277,21 @@ class BlockWorld(World):
         pose_stamped_marker.pose.orientation.y = 0
         pose_stamped_marker.pose.orientation.z = 0
         pose_stamped_marker.pose.orientation.w = 1.0
-        self._moveit_scene.add_box('marker', pose_stamped_marker, (0.09, 0.08, 0.06))
+        self._moveit_scene.add_box('marker', pose_stamped_marker,
+                                   (0.09, 0.08, 0.06))
         # Add blocks to moveit
         for block in self._blocks:
             rospy.sleep(1)
             pose_stamped_block = PoseStamped()
             pose_stamped_block.header.frame_id = self._frame_id
-            pos = self._get_block_position(block)
+            pos = block.position
             pos.z += 0.03
             pose_stamped_block.pose.position = pos
-            orientation = self._get_block_orientation(block)
+            orientation = block.orientation
             pose_stamped_block.pose.orientation = orientation
-            self._moveit_scene.add_box(block.name, pose_stamped_block, (block.size[0], block.size[1], block.size[2]))
+            self._moveit_scene.add_box(
+                block.name, pose_stamped_block,
+                (block.size[0], block.size[1], block.size[2]))
 
     def _gazebo_update_block_states(self, data):
         model_states = data
@@ -272,28 +305,67 @@ class BlockWorld(World):
             self._moveit_update_block(block)
 
     def _vicon_update_block_state(self, data):
+        # Data with reference to vicon frame.
         translation = data.transform.translation
         rotation = data.transform.rotation
         child_frame_id = data.child_frame_id
 
+        # Transform data from vicon frame to robot frame.
+        orientation_wrt_vicon = [
+            rotation.x, rotation.y, rotation.z, rotation.w
+        ]
+        orientation_wrt_robot = rotation_vicon2robot(orientation_wrt_vicon)
+        orientation_wrt_robot = Quaternion(
+            x=orientation_wrt_robot[0],
+            y=orientation_wrt_robot[1],
+            z=orientation_wrt_robot[2],
+            w=orientation_wrt_robot[3])
+        translation_wrt_vicon = [translation.x, translation.y, translation.z]
+        translation_wrt_robot = position_vicon2robot(translation_wrt_vicon)
+        translation_wrt_robot = Point(
+            x=translation_wrt_robot[0],
+            y=translation_wrt_robot[1],
+            z=translation_wrt_robot[2])
+
         for block in self._blocks:
             if block.resource == child_frame_id:
-                block.position = translation
-                block.orientation = rotation
-
+                # Use low pass filter to smooth data.
+                if block.first_smoothed:
+                    block.position = translation_wrt_robot
+                    block.orientation = orientation_wrt_robot
+                else:
+                    block.position.x = self._lowpass_filter(
+                        translation_wrt_robot.x, block.position.x)
+                    block.position.y = self._lowpass_filter(
+                        translation_wrt_robot.y, block.position.y)
+                    block.position.x = self._lowpass_filter(
+                        translation_wrt_robot.z, block.position.z)
+                    block.orientation.x = self._lowpass_filter(
+                        orientation_wrt_robot.x, block.orientation.x)
+                    block.orientation.y = self._lowpass_filter(
+                        orientation_wrt_robot.y, block.orientation.y)
+                    block.orientation.z = self._lowpass_filter(
+                        orientation_wrt_robot.z, block.orientation.z)
+                    block.orientation.w = self._lowpass_filter(
+                        orientation_wrt_robot.w, block.orientation.w)
                 self._moveit_update_block(block)
+
+    def _lowpass_filter(self, observed_value_p1, estimated_value):
+        estimated_value_p1 = estimated_value + self._lowpass_alpha * (
+            observed_value_p1 - estimated_value)
+        return estimated_value_p1
 
     def _moveit_update_block(self, block):
         move_object = CollisionObject()
-        move_object.id = block.name;
+        move_object.id = block.name
         move_object.header.frame_id = self._frame_id
         pose = Pose()
-        pose.position = self._get_block_position(block)
-        pose.orientation = self._get_block_orientation(block)
+        pose.position = block.position
+        pose.orientation = block.orientation
         move_object.primitive_poses.append(pose)
         move_object.operation = move_object.MOVE
 
-        self._moveit_pub.publish(move_object)
+        self._moveit_col_obj_pub.publish(move_object)
 
     def reset(self):
         if self._simulated:
@@ -350,7 +422,8 @@ class BlockWorld(World):
         for sub in self._block_states_subs:
             sub.unregister()
 
-        self._sawyer_cali_marker_sub.unregister()
+        if not self._simulated:
+            self._sawyer_cali_marker_sub.unregister()
 
         if self._simulated:
             for block in self._blocks:
@@ -391,39 +464,19 @@ class BlockWorld(World):
 
         return observation
 
-    def _get_block_orientation(self, block):
-        if self._simulated:
-            orientation = block.orientation
-        else:
-            vicon_orientation = [block.orientation.x, block.orientation.y, block.orientation.z, block.orientation.w]
-            orientation = rotation_vicon2robot(vicon_orientation)
-            orientation = Quaternion(x=orientation[0], y=orientation[1],
-                                     z=orientation[2], w=orientation[3])
-
-        return orientation
-
     def get_blocks_orientation(self):
         orientations = []
 
         for block in self._blocks:
-            orientations.append(self._get_block_orientation(block))
+            orientations.append(block.orientation)
 
         return orientations
-
-    def _get_block_position(self, block):
-        if self._simulated:
-            pos = block.position
-        else:
-            vicon_pos = [block.position.x, block.position.y, block.position.z]
-            pos = position_vicon2robot(vicon_pos)
-            pos = Point(x=pos[0], y=pos[1], z=pos[2])
-        return pos
 
     def get_blocks_position(self):
         poses = []
 
         for block in self._blocks:
-            poses.append(self._get_block_position(block))
+            poses.append(block.position)
 
         return poses
 

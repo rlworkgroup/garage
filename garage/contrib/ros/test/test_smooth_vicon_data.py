@@ -1,13 +1,11 @@
 import copy
 
-from geometry_msgs.msg import Point, Pose, PoseStamped, Quaternion, \
-                              TransformStamped
+from geometry_msgs.msg import Point, Quaternion, TransformStamped
 import matplotlib
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 import numpy as np
 import rospy
-
 
 TEST_VICON_TOPIC = 'vicon/sawyer_block/sawyer_block'
 
@@ -45,15 +43,19 @@ def vicon_update(data):
         INITIALIZED = True
     else:
         SMOOTHED_TRANSLATION.x = SMOOTHED_TRANSLATION.x + LOW_PASS_ALPHA * (
-                observed_translation.x - SMOOTHED_TRANSLATION.x)
+            observed_translation.x - SMOOTHED_TRANSLATION.x)
         SMOOTHED_TRANSLATION.y = SMOOTHED_TRANSLATION.y + LOW_PASS_ALPHA * (
-                observed_translation.y - SMOOTHED_TRANSLATION.y)
+            observed_translation.y - SMOOTHED_TRANSLATION.y)
         SMOOTHED_TRANSLATION.z = SMOOTHED_TRANSLATION.z + LOW_PASS_ALPHA * (
-                observed_translation.z - SMOOTHED_TRANSLATION.z)
-        SMOOTHED_ROTATION.x = SMOOTHED_ROTATION.x + LOW_PASS_ALPHA * (observed_rotation.x - SMOOTHED_ROTATION.x)
-        SMOOTHED_ROTATION.y = SMOOTHED_ROTATION.y + LOW_PASS_ALPHA * (observed_rotation.y - SMOOTHED_ROTATION.y)
-        SMOOTHED_ROTATION.z = SMOOTHED_ROTATION.z + LOW_PASS_ALPHA * (observed_rotation.z - SMOOTHED_ROTATION.z)
-        SMOOTHED_ROTATION.w = SMOOTHED_ROTATION.w + LOW_PASS_ALPHA * (observed_rotation.w - SMOOTHED_ROTATION.w)
+            observed_translation.z - SMOOTHED_TRANSLATION.z)
+        SMOOTHED_ROTATION.x = SMOOTHED_ROTATION.x + LOW_PASS_ALPHA * (
+            observed_rotation.x - SMOOTHED_ROTATION.x)
+        SMOOTHED_ROTATION.y = SMOOTHED_ROTATION.y + LOW_PASS_ALPHA * (
+            observed_rotation.y - SMOOTHED_ROTATION.y)
+        SMOOTHED_ROTATION.z = SMOOTHED_ROTATION.z + LOW_PASS_ALPHA * (
+            observed_rotation.z - SMOOTHED_ROTATION.z)
+        SMOOTHED_ROTATION.w = SMOOTHED_ROTATION.w + LOW_PASS_ALPHA * (
+            observed_rotation.w - SMOOTHED_ROTATION.w)
 
     SMOOTHED_TRANSLATIONS.append(copy.deepcopy(SMOOTHED_TRANSLATION))
     SMOOTHED_ROTATIONS.append(copy.deepcopy(SMOOTHED_ROTATION))
@@ -70,8 +72,7 @@ def vicon_update(data):
 def run():
     rospy.init_node('test_smooth_vicon_data', anonymous=True)
 
-    rospy.Subscriber(TEST_VICON_TOPIC, TransformStamped,
-                     vicon_update)
+    rospy.Subscriber(TEST_VICON_TOPIC, TransformStamped, vicon_update)
 
     r = rospy.Rate(10)
 

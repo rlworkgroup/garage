@@ -18,9 +18,7 @@ def run():
     moveit_scene = moveit_commander.PlanningSceneInterface()
     moveit_frame = moveit_robot.get_planning_frame()
 
-    blockworld = BlockWorld(moveit_scene,
-                            moveit_frame,
-                            False)
+    blockworld = BlockWorld(moveit_scene, moveit_frame, False)
 
     blockworld.initialize()
 
