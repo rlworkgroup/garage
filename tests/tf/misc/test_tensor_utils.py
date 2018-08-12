@@ -6,12 +6,12 @@ import unittest
 import numpy as np
 import tensorflow as tf
 
-from garage.tf.misc.tensor_utils import compute_adv
+from garage.tf.misc.tensor_utils import compute_advantages
 
 
 class TestTensorUtil(unittest.TestCase):
-    def test_compute_adv(self):
-        """Tests compute_adv function in utils."""
+    def test_compute_advantages(self):
+        """Tests compute_advantages function in utils."""
         discount = 1
         gae_lambda = 1
         max_len = 1
@@ -19,7 +19,8 @@ class TestTensorUtil(unittest.TestCase):
             dtype=tf.float32, name="reward", shape=[None, None])
         baselines = tf.placeholder(
             dtype=tf.float32, name="baseline", shape=[None, None])
-        adv = compute_adv(discount, gae_lambda, max_len, baselines, rewards)
+        adv = compute_advantages(discount, gae_lambda, max_len, baselines,
+                                 rewards)
 
         # Set up inputs and outputs
         rewards_val = np.ones(shape=[2, 1])
