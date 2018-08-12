@@ -1,5 +1,5 @@
 """
-This script creates a test that fails when 
+This script creates a test that fails when
 garage.tf.baselines failed to initialize.
 """
 import unittest
