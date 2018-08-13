@@ -512,21 +512,23 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
         super(SawyerEnv, self).reset()
 
         self._sample_start_goal()
-        self.set_object_position(self._start_configuration.object_pos)
+        if self._start_configuration.object_pos is not None:
+            self.set_object_position(self._start_configuration.object_pos)
 
-        # if self._start_configuration.object_grasped:
-        #     self.set_gripper_state(1)  # open
-        #     self.set_gripper_position(self._start_configuration.gripper_pos)
-        #     self.set_object_position(self._start_configuration.gripper_pos)
-        #     self.set_gripper_state(-1)  # close
-        # else:
-        #     self.set_gripper_state(self._start_configuration.gripper_state)
-        #     self.set_gripper_position(self._start_configuration.gripper_pos)
-        #     self.set_object_position(self._start_configuration.object_pos)
+        if self._start_configuration.gripper_pos is not None:
+            if self._start_configuration.object_grasped:
+                self.set_gripper_state(1)  # open
+                self.set_gripper_position(self._start_configuration.gripper_pos)
+                self.set_object_position(self._start_configuration.gripper_pos)
+                self.set_gripper_state(-1)  # close
+            else:
+                self.set_gripper_state(self._start_configuration.gripper_state)
+                self.set_gripper_position(self._start_configuration.gripper_pos)
+                self.set_object_position(self._start_configuration.object_pos)
 
-        # for _ in range(20):
-        #     self.sim.step()
-        # self.sim.forward()
+            for _ in range(20):
+                self.sim.step()
+            self.sim.forward()
 
         attempts = 1
         if self._randomize_start_jpos:
