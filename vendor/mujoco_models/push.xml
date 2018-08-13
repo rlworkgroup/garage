@@ -23,7 +23,7 @@
 
     <body name="object0" pos="0 0 0">
       <joint name="object0:joint" type="free" damping="0.01"/>
-      <geom size="0.02 0.02 0.02" type="box" condim="3" name="object0" contype="1" conaffinity="1"
+      <geom size="0.05 0.05 0.05" type="box" condim="3" name="object0" contype="1" conaffinity="1"
             material="block_mat" mass="2"/>
       <site name="object0" pos="0 0 0" size="0.01 0.01 0.01" rgba="1 0 0 1" type="sphere"/>
     </body>

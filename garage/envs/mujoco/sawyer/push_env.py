@@ -1,18 +1,23 @@
 import numpy as np
 
+from gym.spaces import Box
+from gym.envs.robotics import rotations
+from gym.envs.robotics.utils import reset_mocap_welds, reset_mocap2body_xpos
+
 from garage.envs.mujoco.sawyer.sawyer_env import SawyerEnv, Configuration
+from garage.misc.overrides import overrides
 
 
 class PushEnv(SawyerEnv):
     def __init__(self, direction="up", **kwargs):
         def start_goal_config():
             # center = self.sim.data.get_geom_xpos('target2')
-            xy = np.random.uniform([0.3, 0.6], [-0.2, 0.2], 2)
+            xy = [np.random.uniform(0.6, 0.8), np.random.uniform(-0.35, 0.35)]
             start = Configuration(
-                gripper_pos=np.concatenate([xy, [0.35]]),
+                gripper_pos=np.concatenate([xy, [0.2]]),
                 gripper_state=0,
                 object_grasped=False,
-                object_pos=np.zeros(3))  # np.concatenate([xy, [0.03]]))
+                object_pos=np.concatenate([xy, [0.03]]))
             d = 0.2
             delta = np.array({
                 "up":    ( d,  0),
@@ -68,3 +73,93 @@ class PushEnv(SawyerEnv):
             'has_object': grasped,
             'object_pos': object_pos.copy()
         }
+
+    @overrides
+    @property
+    def action_space(self):
+        if self._control_method == 'torque_control':
+            return super(SawyerEnv, self).action_space
+        elif self._control_method == 'task_space_control':
+            return Box(
+                np.array([-0.05, -0.05, -0.05]),
+                np.array([0.05, 0.05, 0.05]),
+                dtype=np.float32)
+        elif self._control_method == 'position_control':
+            return Box(
+                low=np.full(7, -0.04), high=np.full(7, 0.04), dtype=np.float32)
+        else:
+            raise NotImplementedError
+
+    @overrides
+    def step(self, action):
+        # Clip to action space
+        assert action.shape == self.action_space.shape
+        a = action.copy()  # Note: you MUST copy the action if you modify it
+        a *= self._action_scale
+        a = np.clip(a, self.action_space.low, self.action_space.high)
+
+        if self._control_method == "torque_control":
+            self.forward_dynamics(a)
+            self.sim.forward()
+        elif self._control_method == "task_space_control":
+            reset_mocap2body_xpos(self.sim)
+            self.sim.data.mocap_pos[0, :3] = self.sim.data.mocap_pos[0, :3] + a[:3]
+            self.sim.data.mocap_quat[:] = np.array([0, 1, 0, 0])
+            # self.set_gripper_state(a[3])
+            for _ in range(1):
+                self.sim.step()
+            self.sim.forward()
+        elif self._control_method == "position_control":
+            low, high = self.joint_position_limits
+            curr_pos = self.joint_positions
+            next_pos = np.clip(a + curr_pos, low, high)
+            for i in range(7):
+                self.sim.data.set_joint_qpos("right_j{}".format(i),
+                                             next_pos[i])
+            for _ in range(3):
+                self.sim.forward()
+            self.sim.step()
+
+            # Verify the execution of the action.
+            # for i in range(7):
+            #     curr_pos = self.sim.data.get_joint_qpos('right_j{}'.format(i))
+            #     d = np.absolute(curr_pos - next_pos[i])
+            #     assert d < 1e-2, \
+            #         "Joint right_j{} failed to reach the desired qpos.\nError: {}\t Desired: {}\t Current: {}" \
+            #         .format(i, d, next_pos[i], curr_pos)
+        else:
+            raise NotImplementedError
+        self._step += 1
+
+        obs = self.get_obs()
+        self._achieved_goal = obs.get('achieved_goal')
+        self._desired_goal = obs.get('desired_goal')
+
+        info = {
+            "l": self._step,
+            "grasped": obs["has_object"],
+            "gripper_state": obs["gripper_state"],
+            "gripper_position": obs["gripper_pos"],
+            "object_position": obs["object_pos"],
+            "is_success": self._is_success
+        }
+
+        r = self.compute_reward(
+            achieved_goal=obs.get('achieved_goal'),
+            desired_goal=obs.get('desired_goal'),
+            info=info)
+
+        self._is_success = self._success_fn(self, self._achieved_goal,
+                                            self._desired_goal, info)
+        done = False
+        if self._is_success:
+            r = self._completion_bonus
+            # done = True
+
+        info["r"] = r
+        info["d"] = done
+
+        # control cost
+        r -= self._control_cost_coeff * np.linalg.norm(a)
+
+        return obs, r, done, info
