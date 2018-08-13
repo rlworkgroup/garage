@@ -1,4 +1,4 @@
-"""Push task for the sawyer robot."""
+"""Pusher task for the sawyer robot."""
 
 import collections
 
@@ -12,7 +12,7 @@ from garage.contrib.ros.worlds import BlockWorld
 from garage.core import Serializable
 
 
-class PushEnv(SawyerEnv, Serializable):
+class PusherEnv(SawyerEnv, Serializable):
     def __init__(self,
                  initial_goal,
                  initial_joint_pos,
@@ -22,7 +22,7 @@ class PushEnv(SawyerEnv, Serializable):
                  target_range=0.15,
                  robot_control_mode='position'):
         """
-        Push task for the sawyer robot.
+        Pusher task for the sawyer robot.
 
         :param initial_goal: np.array()
                     the initial goal of pnp task,
@@ -102,18 +102,33 @@ class PushEnv(SawyerEnv, Serializable):
                      'achieved_goal': achieved_goal,
                      'desired_goal': self.goal}
         """
-        robot_obs = self._robot.get_observation()
+        robot_joint_angles = self._robot.limb_joint_angles()
 
-        world_obs = self._world.get_observation()
+        robot_obs = np.array(
+            [robot_joint_angles['right_j{}'.format(i)] for i in range(7)])
 
-        obs = np.concatenate((robot_obs, world_obs.obs))
+        blocks_position = self._world.get_blocks_position()
+        blocks_orientation = self._world.get_blocks_orientation()
+
+        block_pos_obs = np.array([])
+        for position in blocks_position:
+            block_pos_obs = np.concatenate(
+                (block_pos_obs, np.array([position.x, position.y,
+                                          position.z])))
+
+        for orientation in blocks_orientation:
+            block_ori_obs = np.concatenate(
+                (block_ori_obs,
+                 np.array([orientation.x, orientation.y, orientation.z])))
+
+        obs = np.concatenate((robot_obs, block_pos_obs, block_ori_obs))
 
         Observation = collections.namedtuple(
             'Observation', 'observation achieved_goal desired_goal')
 
         observation = Observation(
             observation=obs,
-            achieved_goal=world_obs.achieved_goal,
+            achieved_goal=block_pos_obs,
             desired_goal=self.goal)
 
         return observation

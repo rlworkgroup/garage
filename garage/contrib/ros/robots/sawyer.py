@@ -145,6 +145,9 @@ class Sawyer(Robot):
              robot_joint_velocities, robot_joint_efforts))
         return obs
 
+    def limb_joint_angles(self):
+        return self._limb.joint_angles()
+
     @property
     def observation_space(self):
         """
