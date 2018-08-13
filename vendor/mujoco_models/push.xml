@@ -21,7 +21,7 @@
     <camera name="camera_side" mode="fixed" zaxis="0 -1 0" pos="0.4 -2 0.5" />
     <camera name="camera_front" mode="fixed" xyaxes="0 1 0 0 0 1" pos="2.4 0 0.5" />
 
-    <body name="object0" pos="0.75 0.25 -0.14">
+    <body name="object0" pos="0 0 0">
       <joint name="object0:joint" type="free" damping="0.01"/>
       <geom size="0.02 0.02 0.02" type="box" condim="3" name="object0" contype="1" conaffinity="1"
             material="block_mat" mass="2"/>

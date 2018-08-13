@@ -84,7 +84,7 @@ class GarageEnv(gym.Wrapper, Parameterized, Serializable, metaclass=ABCMeta):
 
         Calls reset on wrapped env.
         """
-        return self.env.reset(**kwargs)
+        return self.env.reset()
 
     def step(self, action):
         """

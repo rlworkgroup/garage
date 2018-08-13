@@ -64,7 +64,7 @@ class NormalizedEnv(gym.Wrapper, Serializable):
 
     @overrides
     def reset(self, **kwargs):
-        ret = self.env.reset(**kwargs)
+        ret = self.env.reset()
         if self._normalize_obs:
             return self._apply_normalize_obs(ret)
         else:

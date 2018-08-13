@@ -12,7 +12,7 @@ class PushEnv(SawyerEnv):
                 gripper_pos=np.concatenate([xy, [0.35]]),
                 gripper_state=0,
                 object_grasped=False,
-                object_pos=np.concatenate([xy, [0.03]]))
+                object_pos=np.zeros(3))  # np.concatenate([xy, [0.03]]))
             d = 0.2
             delta = np.array({
                 "up":    ( d,  0),

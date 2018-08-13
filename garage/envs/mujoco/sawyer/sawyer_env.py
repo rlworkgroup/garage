@@ -131,14 +131,14 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
         contacts = tuple()
         for coni in range(self.sim.data.ncon):
             con = self.sim.data.contact[coni]
-            contacts += ((con.geom1, con.geom2), )
+            contacts += ((con.geom1, con.geom2),)
         finger_id_1 = self.sim.model.geom_name2id('finger_tip_1')
         finger_id_2 = self.sim.model.geom_name2id('finger_tip_2')
         object_id = self.sim.model.geom_name2id('object0')
         if ((finger_id_1, object_id) in contacts or
             (object_id, finger_id_1) in contacts) and (
-                (finger_id_2, object_id) in contacts or
-                (object_id, finger_id_2) in contacts):
+            (finger_id_2, object_id) in contacts or
+            (object_id, finger_id_2) in contacts):
             return True
         else:
             return False
@@ -180,8 +180,7 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
             self.sim.forward()
         elif self._control_method == "task_space_control":
             reset_mocap2body_xpos(self.sim)
-            self.sim.data.mocap_pos[0, :
-                                    3] = self.sim.data.mocap_pos[0, :3] + a[:3]
+            self.sim.data.mocap_pos[0, :3] = self.sim.data.mocap_pos[0, :3] + a[:3]
             self.sim.data.mocap_quat[:] = np.array([0, 1, 0, 0])
             self.set_gripper_state(a[3])
             for _ in range(5):
@@ -201,8 +200,8 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
                 curr_pos = self.sim.data.get_joint_qpos('right_j{}'.format(i))
                 d = np.absolute(curr_pos - next_pos[i])
                 assert d < 1e-5, \
-                "Joint right_j{} failed to reached the desired qpos.\nError: {}\t Desired: {}\t Current: {}"\
-                .format(i, d, next_pos[i], curr_pos)
+                    "Joint right_j{} failed to reach the desired qpos.\nError: {}\t Desired: {}\t Current: {}" \
+                    .format(i, d, next_pos[i], curr_pos)
         else:
             raise NotImplementedError
         self._step += 1
@@ -323,7 +322,7 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
         return self._reward_fn(self, achieved_goal, desired_goal, info)
 
     @overrides
-    def reset(self):
+    def reset(self, **kwargs):
         self._step = 0
         super(SawyerEnv, self).reset()
 

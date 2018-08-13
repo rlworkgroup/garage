@@ -86,8 +86,8 @@ class BinSortingEnv(SawyerEnv, Serializable):
         return distance < self._bin_radius
 
     @overrides
-    def reset(self, init_state=None):
+    def reset(self, **kwargs):
         self._green_done = False
         self._blue_done = False
         self._red_done = False
-        return super(BinSortingEnv, self).reset(init_state)
+        return super(BinSortingEnv, self).reset()
