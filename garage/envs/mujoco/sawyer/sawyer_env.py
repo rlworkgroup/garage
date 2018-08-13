@@ -136,7 +136,8 @@ COLLISION_WHITELIST = [
 
 Configuration = namedtuple(
     "Configuration",
-    ["gripper_pos", "gripper_state", "object_grasped", "object_pos"])
+    ["gripper_pos", "gripper_state", "object_grasped", "object_pos",
+     "joint_pos"])
 
 
 def default_reward_fn(env, achieved_goal, desired_goal, _info: dict):
@@ -530,6 +531,10 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
                 self.sim.step()
             self.sim.forward()
 
+        if self._start_configuration.joint_pos is not None:
+            self.joint_positions = self._start_configuration.joint_pos
+            self.sim.step()
+
         attempts = 1
         if self._randomize_start_jpos:
             self.joint_positions = self.joint_position_space.sample()
@@ -543,8 +548,6 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
                 self.joint_positions = self.joint_position_space.sample()
                 self.sim.step()
                 attempts += 1
-
-
 
         return self.get_obs()
 
