@@ -9,7 +9,7 @@ from garage.misc import special
 from garage.misc.overrides import overrides
 from garage.tf.algos import BatchPolopt
 from garage.tf.misc import tensor_utils
-from garage.tf.misc.tensor_utils import calculate_advantages
+from garage.tf.misc.tensor_utils import compute_advantages
 from garage.tf.misc.tensor_utils import discounted_returns
 from garage.tf.misc.tensor_utils import filter_valids
 from garage.tf.misc.tensor_utils import filter_valids_dict
@@ -232,7 +232,7 @@ class NPO(BatchPolopt):
             rewards = i.reward_var + (self.policy_ent_coeff * policy_entropy)
 
         with tf.name_scope("policy_loss"):
-            advantages = calculate_advantages(
+            advantages = compute_advantages(
                 self.discount,
                 self.gae_lambda,
                 self.max_path_length,

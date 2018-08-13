@@ -164,13 +164,13 @@ def pad_tensor_dict(tensor_dict, max_len):
     return ret
 
 
-def calculate_advantages(discount,
-                         gae_lambda,
-                         max_len,
-                         baselines,
-                         rewards,
-                         name=None):
-    with tf.name_scope(name, "calculate_advantages",
+def compute_advantages(discount,
+                       gae_lambda,
+                       max_len,
+                       baselines,
+                       rewards,
+                       name=None):
+    with tf.name_scope(name, "compute_advantages",
                        [discount, gae_lambda, max_len, baselines, rewards]):
         # Calculate advantages
         #
