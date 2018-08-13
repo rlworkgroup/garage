@@ -98,7 +98,7 @@ class PushEnv(SawyerEnv):
         grasped = self.has_object
         obs = np.concatenate([gripper_pos, object_pos])
         if self._control_method == "position_control":
-            obs = np.concatenate((obs, [self.joint_positions]))
+            obs = np.concatenate((obs, self.joint_positions))
 
         achieved_goal = self._achieved_goal_fn(self)
         desired_goal = self._desired_goal_fn(self)
