@@ -31,6 +31,7 @@ begins_with_short_option()
 _positionals=()
 # THE DEFAULTS INITIALIZATION - OPTIONALS
 _arg_tf_gpu="off"
+_arg_set_envvar="off"
 
 print_help ()
 {
@@ -109,11 +110,11 @@ assign_positional_args
 
 # Utility functions
 print_error() {
-  echo -e "\e[0;31m$1\e[0m"
+  printf "\e[0;31m%s\e[0m" "${1}"
 }
 
 print_warning() {
-  echo -e "\e[0;33m$1\e[0m"
+  printf "\e[0;33m%s\e[0m" "${1}"
 }
 
 # Verify there's a file in the mjkey path
