@@ -159,7 +159,7 @@ class PushEnv(SawyerEnv):
                                             self._desired_goal, info)
         done = False
         if self._is_success:
-            # r = self._completion_bonus
+            r = self._completion_bonus
             done = True
 
         info["r"] = r
