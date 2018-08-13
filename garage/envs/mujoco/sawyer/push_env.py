@@ -153,7 +153,7 @@ class PushEnv(SawyerEnv):
         r = self.compute_reward(
             achieved_goal=obs.get('achieved_goal'),
             desired_goal=obs.get('desired_goal'),
-            info=info) + np.linalg.norm(self.gripper_position - self.object_position)
+            info=info) + 0.02 - np.linalg.norm(self.gripper_position - self.object_position)
 
         self._is_success = self._success_fn(self, self._achieved_goal,
                                             self._desired_goal, info)
