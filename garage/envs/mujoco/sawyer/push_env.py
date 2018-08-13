@@ -8,13 +8,13 @@ from garage.misc.overrides import overrides
 
 
 class PushEnv(SawyerEnv):
-    def __init__(self, direction="up", easy_gripper_init=True, deterministic_start=True, **kwargs):
+    def __init__(self, direction="up", easy_gripper_init=True, randomize_start_pos=False, **kwargs):
         def start_goal_config():
             # center = self.sim.data.get_geom_xpos('target2')
-            if deterministic_start:
-                xy = [0.7, 0.]
-            else:
+            if randomize_start_pos:
                 xy = [np.random.uniform(0.6, 0.8), np.random.uniform(-0.35, 0.35)]
+            else:
+                xy = [0.7, 0.]
             d = 0.15
             delta = np.array({
                 "up":    ( d,  0),
@@ -51,6 +51,7 @@ class PushEnv(SawyerEnv):
             achieved_goal_fn=achieved_goal_fn,
             desired_goal_fn=desired_goal_fn,
             file_path="push.xml",
+            collision_whitelist=[],
             **kwargs)
         self._easy_gripper_init = easy_gripper_init
 
