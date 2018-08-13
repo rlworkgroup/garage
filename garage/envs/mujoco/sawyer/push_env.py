@@ -1,18 +1,20 @@
 import numpy as np
 
 from gym.spaces import Box
-from gym.envs.robotics import rotations
-from gym.envs.robotics.utils import reset_mocap_welds, reset_mocap2body_xpos
+from gym.envs.robotics.utils import reset_mocap2body_xpos
 
 from garage.envs.mujoco.sawyer.sawyer_env import SawyerEnv, Configuration
 from garage.misc.overrides import overrides
 
 
 class PushEnv(SawyerEnv):
-    def __init__(self, direction="up", easy_gripper_init=True, **kwargs):
+    def __init__(self, direction="up", easy_gripper_init=True, deterministic_start=True, **kwargs):
         def start_goal_config():
             # center = self.sim.data.get_geom_xpos('target2')
-            xy = [np.random.uniform(0.6, 0.8), np.random.uniform(-0.35, 0.35)]
+            if deterministic_start:
+                xy = [0.7, 0.]
+            else:
+                xy = [np.random.uniform(0.6, 0.8), np.random.uniform(-0.35, 0.35)]
             d = 0.15
             delta = np.array({
                 "up":    ( d,  0),
@@ -50,6 +52,7 @@ class PushEnv(SawyerEnv):
             desired_goal_fn=desired_goal_fn,
             file_path="push.xml",
             **kwargs)
+        self._easy_gripper_init = easy_gripper_init
 
     def get_obs(self):
         gripper_pos = self.gripper_position
@@ -116,14 +119,13 @@ class PushEnv(SawyerEnv):
             for _ in range(1):
                 self.sim.step()
         elif self._control_method == "position_control":
-            low, high = self.joint_position_limits
             curr_pos = self.joint_positions
-            next_pos = np.clip(a + curr_pos, low, high)
-            for i in range(7):
-                self.sim.data.set_joint_qpos("right_j{}".format(i),
-                                             next_pos[i])
-            for _ in range(3):
-                self.sim.forward()
+            next_pos = np.clip(
+                a + curr_pos,
+                self.joint_position_space.low,
+                self.joint_position_space.high
+            )
+            self.joint_positions = next_pos
             self.sim.step()
 
             # Verify the execution of the action.
@@ -153,7 +155,10 @@ class PushEnv(SawyerEnv):
         r = self.compute_reward(
             achieved_goal=obs.get('achieved_goal'),
             desired_goal=obs.get('desired_goal'),
-            info=info) + 0.02 - np.linalg.norm(self.gripper_position - self.object_position)
+            info=info)
+        if self._easy_gripper_init:
+            # encourage gripper to move close to block
+            r += 0.02 - np.linalg.norm(self.gripper_position - self.object_position)
 
         self._is_success = self._success_fn(self, self._achieved_goal,
                                             self._desired_goal, info)
