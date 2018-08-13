@@ -4,6 +4,7 @@ import pygame
 from garage.core import Serializable
 from garage.envs.box2d.box2d_env import Box2DEnv
 from garage.envs.box2d.parser import find_body
+from garage.envs.box2d.parser import find_joint
 from garage.envs.box2d.parser.xml_box2d import _get_name
 from garage.envs.util import flat_dim
 from garage.misc import autoargs
@@ -15,9 +16,8 @@ class CarParkingEnv(Box2DEnv, Serializable):
     @autoargs.arg(
         "random_start",
         type=bool,
-        help=
-        "Randomized starting position by uniforming sampling starting car angle"
-        "and position from a circle of radius 5")
+        help="Randomized starting position by uniforming sampling starting"
+        " car angle and position from a circle of radius 5")
     @autoargs.arg(
         "random_start_range",
         type=float,

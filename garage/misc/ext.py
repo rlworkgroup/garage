@@ -1,21 +1,17 @@
-from collections import OrderedDict
 from functools import reduce
 import operator
-import pickle as pickle
 import random
 import sys
 
 import numpy as np
-from path import Path
 
 from garage.misc.console import colorize
-from garage.misc.console import Message
 
 sys.setrecursionlimit(50000)
 
 
 def extract(x, *keys):
-    if isinstance(x, (dict, lazydict)):
+    if isinstance(x, (dict, LazyDict)):
         return tuple(x[k] for k in keys)
     elif isinstance(x, list):
         return tuple([xi[k] for xi in x] for k in keys)
@@ -43,35 +39,8 @@ def compact(x):
     return x
 
 
-def cached_function(inputs, outputs):
-    import theano
-    with Message("Hashing theano fn"):
-        if hasattr(outputs, '__len__'):
-            hash_content = tuple(map(theano.pp, outputs))
-        else:
-            hash_content = theano.pp(outputs)
-    cache_key = hex(hash(hash_content) & (2**64 - 1))[:-1]
-    cache_dir = Path('~/.hierctrl_cache')
-    cache_dir = cache_dir.expanduser()
-    cache_dir.mkdir_p()
-    cache_file = cache_dir / ('%s.pkl' % cache_key)
-    if cache_file.exists():
-        with Message("unpickling"):
-            with open(cache_file, "rb") as f:
-                try:
-                    return pickle.load(f)
-                except Exception:
-                    pass
-    with Message("compiling"):
-        fun = compile_function(inputs, outputs)
-    with Message("picking"):
-        with open(cache_file, "wb") as f:
-            pickle.dump(fun, f, protocol=pickle.HIGHEST_PROTOCOL)
-    return fun
-
-
 # Immutable, lazily evaluated dict
-class lazydict(object):
+class LazyDict(object):
     def __init__(self, **kwargs):
         self._lazy_dict = kwargs
         self._dict = {}
@@ -123,38 +92,6 @@ def scanr(f, l, base=None):
     return list(iscanr(f, l, base))
 
 
-def compile_function(inputs=None,
-                     outputs=None,
-                     updates=None,
-                     givens=None,
-                     log_name=None,
-                     **kwargs):
-    import theano
-    if log_name:
-        msg = Message("Compiling function %s" % log_name)
-        msg.__enter__()
-    ret = theano.function(
-        inputs=inputs,
-        outputs=outputs,
-        updates=updates,
-        givens=givens,
-        on_unused_input='ignore',
-        allow_input_downcast=True,
-        **kwargs)
-    if log_name:
-        msg.__exit__(None, None, None)
-    return ret
-
-
-def new_tensor(name, ndim, dtype):
-    import theano.tensor as TT
-    return TT.TensorType(dtype, (False, ) * ndim)(name)
-
-
-def new_tensor_like(name, arr_like):
-    return new_tensor(name, arr_like.ndim, arr_like.dtype)
-
-
 class AttrDict(dict):
     def __init__(self, *args, **kwargs):
         super(AttrDict, self).__init__(*args, **kwargs)
@@ -182,7 +119,7 @@ def path_len(p):
 
 def shuffled(sequence):
     deck = list(sequence)
-    while len(deck):
+    while deck:
         i = random.randint(0, len(deck) - 1)  # choose random card
         card = deck[i]  # take the card
         deck[i] = deck[-1]  # put top card in its place
@@ -213,105 +150,6 @@ def get_seed():
     return seed_
 
 
-def flatten_hessian(cost,
-                    wrt,
-                    consider_constant=None,
-                    disconnected_inputs='raise',
-                    block_diagonal=True):
-    """
-    :type cost: Scalar (0-dimensional) Variable.
-    :type wrt: Vector (1-dimensional tensor) 'Variable' or list of
-               vectors (1-dimensional tensors) Variables
-
-    :param consider_constant: a list of expressions not to backpropagate
-        through
-
-    :type disconnected_inputs: string
-    :param disconnected_inputs: Defines the behaviour if some of the variables
-        in ``wrt`` are not part of the computational graph computing ``cost``
-        (or if all links are non-differentiable). The possible values are:
-        - 'ignore': considers that the gradient on these parameters is zero.
-        - 'warn': consider the gradient zero, and print a warning.
-        - 'raise': raise an exception.
-
-    :return: either a instance of Variable or list/tuple of Variables
-            (depending upon `wrt`) repressenting the Hessian of the `cost`
-            with respect to (elements of) `wrt`. If an element of `wrt` is not
-            differentiable with respect to the output, then a zero
-            variable is returned. The return value is of same type
-            as `wrt`: a list/tuple or TensorVariable in all cases.
-    """
-    import theano
-    from theano.tensor import arange
-    # Check inputs have the right format
-    import theano.tensor as TT
-    from theano import Variable
-    from theano import grad
-    assert isinstance(cost, Variable), \
-        "tensor.hessian expects a Variable as `cost`"
-    assert cost.ndim == 0, \
-        "tensor.hessian expects a 0 dimensional variable as `cost`"
-
-    using_list = isinstance(wrt, list)
-    using_tuple = isinstance(wrt, tuple)
-
-    if isinstance(wrt, (list, tuple)):
-        wrt = list(wrt)
-    else:
-        wrt = [wrt]
-
-    hessians = []
-    if not block_diagonal:
-        expr = TT.concatenate([
-            grad(
-                cost,
-                input,
-                consider_constant=consider_constant,
-                disconnected_inputs=disconnected_inputs).flatten()
-            for input in wrt
-        ])
-
-    for input in wrt:
-        assert isinstance(input, Variable), \
-            "tensor.hessian expects a (list of) Variable as `wrt`"
-        # assert input.ndim == 1, \
-        #     "tensor.hessian expects a (list of) 1 dimensional variable " \
-        #     "as `wrt`"
-        if block_diagonal:
-            expr = grad(
-                cost,
-                input,
-                consider_constant=consider_constant,
-                disconnected_inputs=disconnected_inputs).flatten()
-
-        # It is possible that the inputs are disconnected from expr,
-        # even if they are connected to cost.
-        # This should not be an error.
-        hess, updates = theano.scan(
-            lambda i, y, x: grad(
-                y[i],
-                x,
-                consider_constant=consider_constant,
-                disconnected_inputs='ignore').flatten(),
-            sequences=arange(expr.shape[0]),
-            non_sequences=[expr, input])
-        assert not updates, \
-            ("Scan has returned a list of updates. This should not "
-             "happen! Report this to theano-users (also include the "
-             "script that generated the error)")
-        hessians.append(hess)
-    if block_diagonal:
-        from theano.gradient import format_as
-        return format_as(using_list, using_tuple, hessians)
-    else:
-        return TT.concatenate(hessians, axis=1)
-
-
-def flatten_tensor_variables(ts):
-    import theano.tensor as TT
-    return TT.concatenate(list(map(TT.flatten, ts)))
-
-
 def flatten_shape_dim(shape):
     return reduce(operator.mul, shape, 1)
 
@@ -330,32 +168,16 @@ def print_lasagne_layer(layer, prefix=""):
         print_lasagne_layer(layer.input_layer, prefix + "  ")
 
 
-def unflatten_tensor_variables(flatarr, shapes, symb_arrs):
-    import theano.tensor as TT
-    import numpy as np
-    arrs = []
-    n = 0
-    for (shape, symb_arr) in zip(shapes, symb_arrs):
-        size = np.prod(list(shape))
-        arr = flatarr[n:n + size].reshape(shape)
-        if arr.type.broadcastable != symb_arr.type.broadcastable:
-            arr = TT.patternbroadcast(arr, symb_arr.type.broadcastable)
-        arrs.append(arr)
-        n += size
-    return arrs
-
-
-"""
-Devide function f's inputs into several slices. Evaluate f on those slices, and
-then average the result. It is useful when memory is not enough to process all
-data at once.
-Assume:
-1. each of f's inputs is iterable and composed of multiple "samples"
-2. outputs can be averaged over "samples"
-"""
-
-
 def sliced_fun(f, n_slices):
+    """Devide function f's inputs into several slices.
+
+    Evaluate f on those slices, and then average the result. It is useful when
+    memory is not enough to process all data at once.
+    Assume:
+    1. each of f's inputs is iterable and composed of multiple "samples"
+    2. outputs can be averaged over "samples"
+    """
+
     def sliced_f(sliced_inputs, non_sliced_inputs=None):
         if non_sliced_inputs is None:
             non_sliced_inputs = []

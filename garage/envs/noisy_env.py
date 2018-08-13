@@ -1,14 +1,14 @@
+import gym
 import numpy as np
 
 from garage.core import Serializable
 from garage.envs import Step
-from garage.envs.proxy_env import ProxyEnv
 from garage.envs.util import flat_dim
 from garage.misc import autoargs
 from garage.misc.overrides import overrides
 
 
-class NoisyObservationEnv(ProxyEnv, Serializable):
+class NoisyObservationEnv(gym.Wrapper, Serializable):
     @autoargs.arg(
         'obs_noise',
         type=float,
@@ -38,20 +38,20 @@ class NoisyObservationEnv(ProxyEnv, Serializable):
         return obs + noise
 
     def get_current_obs(self):
-        return self.inject_obs_noise(self._wrapped_env.get_current_obs())
+        return self.inject_obs_noise(self.env.get_current_obs())
 
     @overrides
     def reset(self):
-        obs = self._wrapped_env.reset()
+        obs = self.env.reset()
         return self.inject_obs_noise(obs)
 
     @overrides
     def step(self, action):
-        next_obs, reward, done, info = self._wrapped_env.step(action)
+        next_obs, reward, done, info = self.env.step(action)
         return Step(self.inject_obs_noise(next_obs), reward, done, **info)
 
 
-class DelayedActionEnv(ProxyEnv, Serializable):
+class DelayedActionEnv(gym.Wrapper, Serializable):
     @autoargs.arg(
         'action_delay', type=int, help='Time steps before action is realized')
     def __init__(
@@ -68,7 +68,7 @@ class DelayedActionEnv(ProxyEnv, Serializable):
 
     @overrides
     def reset(self):
-        obs = self._wrapped_env.reset()
+        obs = self.env.reset()
         self._queued_actions = np.zeros(
             self.action_delay * self._action_flat_dim)
         return obs
@@ -76,7 +76,7 @@ class DelayedActionEnv(ProxyEnv, Serializable):
     @overrides
     def step(self, action):
         queued_action = self._queued_actions[:self._action_flat_dim]
-        next_obs, reward, done, info = self._wrapped_env.step(queued_action)
+        next_obs, reward, done, info = self.env.step(queued_action)
         self._queued_actions = np.concatenate(
             [self._queued_actions[self._action_flat_dim:], action])
         return Step(next_obs, reward, done, **info)

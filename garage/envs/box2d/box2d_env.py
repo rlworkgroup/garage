@@ -9,7 +9,6 @@ from garage.envs import Step
 from garage.envs.box2d.box2d_viewer import Box2DViewer
 from garage.envs.box2d.parser.xml_box2d import find_body, find_joint
 from garage.envs.box2d.parser.xml_box2d import world_from_xml
-from garage.envs.util import bounds, flat_dim
 from garage.misc import autoargs
 from garage.misc.overrides import overrides
 
@@ -124,13 +123,13 @@ class Box2DEnv(gym.Env):
 
     @property
     def action_bounds(self):
-        return bounds(self.action_space)
+        return self.action_space.low, self.action_space.high
 
     def forward_dynamics(self, action):
-        if len(action) != flat_dim(self.action_space):
+        if action.shape != self.action_space.low.shape:
             raise ValueError(
                 'incorrect action dimension: expected %d but got '
-                '%d' % (flat_dim(self.action_space)), len(action))
+                '%d' % (len(action.shape), len(self.action_space.low.shape)))
         lb, ub = self.action_bounds
         action = np.clip(action, lb, ub)
         for ctrl, act in zip(self.extra_data.controls, action):

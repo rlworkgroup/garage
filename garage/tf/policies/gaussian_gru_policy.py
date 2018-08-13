@@ -10,6 +10,7 @@ import garage.tf.core.layers as L
 from garage.tf.distributions import RecurrentDiagonalGaussian
 from garage.tf.misc import tensor_utils
 from garage.tf.policies import StochasticPolicy
+from garage.tf.spaces import Box
 
 
 class GaussianGRUPolicy(StochasticPolicy, LayersPowered, Serializable):
@@ -33,6 +34,8 @@ class GaussianGRUPolicy(StochasticPolicy, LayersPowered, Serializable):
         :param hidden_nonlinearity: nonlinearity used for each hidden layer
         :return:
         """
+        assert isinstance(env_spec.action_space, Box)
+
         self._mean_network_name = "mean_network"
         self._std_network_name = "std_network"
 

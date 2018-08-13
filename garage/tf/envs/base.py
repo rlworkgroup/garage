@@ -3,59 +3,27 @@ from gym.spaces import Box as GymBox
 from gym.spaces import Discrete as GymDiscrete
 from gym.spaces import Tuple as GymTuple
 
-from garage.envs import EnvSpec
-from garage.envs import ProxyEnv
+from garage.envs import GarageEnv
+from garage.envs.env_spec import EnvSpec
+from garage.misc.overrides import overrides
 from garage.tf.spaces import Box
 from garage.tf.spaces import Discrete
 from garage.tf.spaces import Product
 
 
-def to_tf_space(space):
-    if isinstance(space, GymBox):
-        return Box(low=space.low, high=space.high)
-    elif isinstance(space, GymDiscrete):
-        return Discrete(space.n)
-    elif isinstance(space, GymTuple):
-        return Product(list(map(to_tf_space, space.spaces)))
-    else:
-        raise NotImplementedError
+class TfEnv(GarageEnv):
+    """
+    Returns a TensorFlow wrapper class for gym.Env.
 
+    Args:
+        env (gym.Env): the env that will be wrapped
+    """
 
-class WrappedCls(object):
-    def __init__(self, cls, env_cls, extra_kwargs):
-        self.cls = cls
-        self.env_cls = env_cls
-        self.extra_kwargs = extra_kwargs
-
-    def __call__(self, *args, **kwargs):
-        return self.cls(
-            self.env_cls(*args, **dict(self.extra_kwargs, **kwargs)))
-
-
-class TfEnv(ProxyEnv):
-    @cached_property
-    def observation_space(self):
-        return to_tf_space(self.wrapped_env.observation_space)
-
-    @cached_property
-    def action_space(self):
-        return to_tf_space(self.wrapped_env.action_space)
-
-    @cached_property
-    def spec(self):
-        return EnvSpec(
-            observation_space=self.observation_space,
-            action_space=self.action_space,
-        )
-
-    @property
-    def vectorized(self):
-        return getattr(self.wrapped_env, "vectorized", False)
-
-    def vec_env_executor(self, n_envs, max_path_length):
-        return VecTfEnv(
-            self.wrapped_env.vec_env_executor(
-                n_envs=n_envs, max_path_length=max_path_length))
+    def __init__(self, env):
+        super().__init__(env)
+        self.action_space = self._to_garage_space(self.env.action_space)
+        self.observation_space = self._to_garage_space(
+            self.env.observation_space)
 
     @classmethod
     def wrap(cls, env_cls, **extra_kwargs):
@@ -63,8 +31,38 @@ class TfEnv(ProxyEnv):
         # serialization
         return WrappedCls(cls, env_cls, extra_kwargs)
 
+    @overrides
+    def _to_garage_space(self, space):
+        """
+        Converts a gym.space to a garage.tf.space.
 
-class VecTfEnv(object):
+        Returns:
+            space (garage.tf.spaces)
+        """
+        if isinstance(space, GymBox):
+            return Box(low=space.low, high=space.high)
+        elif isinstance(space, GymDiscrete):
+            return Discrete(space.n)
+        elif isinstance(space, GymTuple):
+            return Product(list(map(self._to_garage_space, space.spaces)))
+        else:
+            raise NotImplementedError
+
+    @cached_property
+    @overrides
+    def spec(self):
+        """
+        Returns an EnvSpec.
+
+        Returns:
+            spec (garage.envs.EnvSpec)
+        """
+        return EnvSpec(
+            observation_space=self.observation_space,
+            action_space=self.action_space)
+
+
+class VecTfEnv:
     def __init__(self, vec_env):
         self.vec_env = vec_env
 
@@ -80,3 +78,14 @@ class VecTfEnv(object):
 
     def close(self):
         self.vec_env.close()
+
+
+class WrappedCls:
+    def __init__(self, cls, env_cls, extra_kwargs):
+        self.cls = cls
+        self.env_cls = env_cls
+        self.extra_kwargs = extra_kwargs
+
+    def __call__(self, *args, **kwargs):
+        return self.cls(
+            self.env_cls(*args, **dict(self.extra_kwargs, **kwargs)))

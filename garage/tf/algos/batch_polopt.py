@@ -115,6 +115,7 @@ class BatchPolopt(RLAlgorithm):
         sess.run(tf.global_variables_initializer())
         self.start_worker(sess)
         start_time = time.time()
+        last_average_return = None
         for itr in range(self.start_itr, self.n_itr):
             itr_start_time = time.time()
             with logger.prefix('itr #%d | ' % itr):
@@ -122,6 +123,7 @@ class BatchPolopt(RLAlgorithm):
                 paths = self.obtain_samples(itr)
                 logger.log("Processing samples...")
                 samples_data = self.process_samples(itr, paths)
+                last_average_return = samples_data["average_return"]
                 logger.log("Logging diagnostics...")
                 self.log_diagnostics(paths)
                 logger.log("Optimizing policy...")
@@ -144,9 +146,9 @@ class BatchPolopt(RLAlgorithm):
         self.shutdown_worker()
         if created_session:
             sess.close()
+        return last_average_return
 
     def log_diagnostics(self, paths):
-        self.env.log_diagnostics(paths)
         self.policy.log_diagnostics(paths)
         self.baseline.log_diagnostics(paths)
 

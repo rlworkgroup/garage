@@ -170,16 +170,16 @@ test_exclude_added=(
 # Otherwise, obtain the lists by comparing against the master branch in the
 # repository.
 if [[ "${TRAVIS}" == "true" && "${TRAVIS_PULL_REQUEST}" != "false" ]]; then
-  files_changed="$(git diff "${TRAVIS_COMMIT_RANGE}" --diff-filter=M \
+  files_changed="$(git diff "${TRAVIS_COMMIT_RANGE}" -M --diff-filter={M,R} \
                      --name-only | grep ".*\.py")"
-  files_added="$(git diff "${TRAVIS_COMMIT_RANGE}" --diff-filter=A \
+  files_added="$(git diff "${TRAVIS_COMMIT_RANGE}" -M --diff-filter=A \
                    --name-only | grep ".*\.py")"
 else
   git remote set-branches --add origin master
   git fetch
-  files_changed="$(git diff origin/master --diff-filter=M --name-only \
+  files_changed="$(git diff origin/master -M --diff-filter={M,R} --name-only \
                      | grep ".*\.py")"
-  files_added="$(git diff origin/master --diff-filter=A --name-only \
+  files_added="$(git diff origin/master -M --diff-filter=A --name-only \
                    | grep ".*\.py")"
 fi
 

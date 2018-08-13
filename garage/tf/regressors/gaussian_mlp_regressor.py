@@ -1,11 +1,11 @@
 import numpy as np
 import tensorflow as tf
-import theano.tensor as TT
 
 from garage.core import Serializable
 from garage.misc import logger
 from garage.tf.core import LayersPowered
 from garage.tf.core import MLP
+from garage.tf.core import Parameterized
 import garage.tf.core.layers as L
 from garage.tf.distributions import DiagonalGaussian
 from garage.tf.misc import tensor_utils
@@ -13,7 +13,7 @@ from garage.tf.optimizers import LbfgsOptimizer
 from garage.tf.optimizers import PenaltyLbfgsOptimizer
 
 
-class GaussianMLPRegressor(LayersPowered, Parameterized, Serializable):
+class GaussianMLPRegressor(LayersPowered, Serializable, Parameterized):
     """
     A class for performing regression by fitting a Gaussian distribution to the
     outputs.
@@ -62,8 +62,8 @@ class GaussianMLPRegressor(LayersPowered, Parameterized, Serializable):
          network. Only used if `std_share_network` is False. It defaults to the
          same non-linearity as the mean.
         """
-        Serializable.quick_init(self, locals())
         Parameterized.__init__(self)
+        Serializable.quick_init(self, locals())
         self._mean_network_name = "mean_network"
         self._std_network_name = "std_network"
 
@@ -132,6 +132,8 @@ class GaussianMLPRegressor(LayersPowered, Parameterized, Serializable):
                     name="output_log_std",
                     trainable=learn_std,
                 )
+
+            LayersPowered.__init__(self, [l_mean, l_log_std])
 
             xs_var = mean_network.input_layer.input_var
             ys_var = tf.placeholder(
@@ -231,8 +233,6 @@ class GaussianMLPRegressor(LayersPowered, Parameterized, Serializable):
             self._y_mean_var = y_mean_var
             self._y_std_var = y_std_var
 
-            LayersPowered.__init__(self, [l_mean, l_log_std])
-
     def fit(self, xs, ys):
         if self._subsample_factor < 1:
             num_samples_tot = xs.shape[0]
@@ -316,13 +316,7 @@ class GaussianMLPRegressor(LayersPowered, Parameterized, Serializable):
 
             means_var = (
                 normalized_means_var * self._y_std_var + self._y_mean_var)
-            log_stds_var = normalized_log_stds_var + TT.log(self._y_std_var)
+            log_stds_var = normalized_log_stds_var + tf.log(self._y_std_var)
 
             return self._dist.log_likelihood_sym(
                 y_var, dict(mean=means_var, log_std=log_stds_var))
-
-    # def get_param_values(self, **tags):
-    #     return LayersPowered.get_param_values(self, **tags)
-
-    # def set_param_values(self, flattened_params, **tags):
-    #     LayersPowered.set_param_values(self, flattened_params, **tags)

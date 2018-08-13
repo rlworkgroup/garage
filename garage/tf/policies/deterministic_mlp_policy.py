@@ -7,6 +7,7 @@ from garage.tf.core import MLP
 import garage.tf.core.layers as L
 from garage.tf.misc import tensor_utils
 from garage.tf.policies import Policy
+from garage.tf.spaces import Box
 
 
 class DeterministicMLPPolicy(Policy, LayersPowered, Serializable):
@@ -18,6 +19,8 @@ class DeterministicMLPPolicy(Policy, LayersPowered, Serializable):
                  output_nonlinearity=tf.nn.tanh,
                  prob_network=None,
                  bn=False):
+        assert isinstance(env_spec.action_space, Box)
+
         Serializable.quick_init(self, locals())
 
         self._prob_network_name = "prob_network"
@@ -39,7 +42,7 @@ class DeterministicMLPPolicy(Policy, LayersPowered, Serializable):
             self._l_prob = prob_network.output_layer
             self._l_obs = prob_network.input_layer
             self._f_prob = tensor_utils.compile_function(
-                [prob_network.input_layer.input_var], [prob_network_output])
+                [prob_network.input_layer.input_var], prob_network_output)
 
         self.prob_network = prob_network
 

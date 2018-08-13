@@ -1,12 +1,12 @@
 import sys
 
-from garage.algos import TRPO
 from garage.baselines import LinearFeatureBaseline
 from garage.envs import normalize
 from garage.envs.box2d import CartpoleEnv
 from garage.misc.instrument import run_experiment
-from garage.policies import GaussianMLPPolicy
+from garage.theano.algos import TRPO
 from garage.theano.envs import TheanoEnv
+from garage.theano.policies import GaussianMLPPolicy
 
 
 def run_task(v):

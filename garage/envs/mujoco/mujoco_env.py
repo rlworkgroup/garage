@@ -13,7 +13,6 @@ from mujoco_py import MjSim
 from mujoco_py import MjViewer
 import numpy as np
 
-from garage.envs.util import bounds
 from garage.misc import autoargs
 from garage.misc.overrides import overrides
 
@@ -68,6 +67,9 @@ class MujocoEnv(gym.Env):
         self.sim = MjSim(self.model)
         self.data = self.sim.data
         self.viewer = None
+        self.render_width = 512
+        self.render_height = 512
+        self.render_camera = None
         self.init_qpos = self.sim.data.qpos
         self.init_qvel = self.sim.data.qvel
         self.init_qacc = self.sim.data.qacc
@@ -99,7 +101,8 @@ class MujocoEnv(gym.Env):
 
     @property
     def action_bounds(self):
-        return bounds(self.action_space)
+        assert isinstance(self.action_space, gym.spaces.Box)
+        return self.action_space.low, self.action_space.high
 
     def reset_mujoco(self, init_state=None):
         self.sim.reset()
@@ -191,11 +194,12 @@ class MujocoEnv(gym.Env):
             viewer.render()
             return None
         elif mode == 'rgb_array':
-            viewer = self.get_viewer()
-            viewer.render()
-            data, width, height = viewer.get_image()
-            return np.fromstring(
-                data, dtype='uint8').reshape(height, width, 3)[::-1, :, :]
+            img = self.sim.render(
+                self.render_width,
+                self.render_height,
+                camera_name=self.render_camera)
+            img = img[::-1, :, :]
+            return img
         if close:
             self.stop_viewer()
         return None

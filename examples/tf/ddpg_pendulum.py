@@ -13,6 +13,7 @@ import tensorflow as tf
 
 from garage.misc.instrument import run_experiment
 from garage.tf.algos import DDPG
+from garage.tf.envs import TfEnv
 from garage.tf.exploration_strategies import OUStrategy
 from garage.tf.policies import ContinuousMLPPolicy
 from garage.tf.q_functions import ContinuousMLPQFunction
@@ -25,19 +26,19 @@ def run_task(*_):
     :param _:
     :return:
     """
-    env = gym.make('InvertedDoublePendulum-v2')
+    env = TfEnv(gym.make('InvertedDoublePendulum-v2'))
 
     action_noise = OUStrategy(env, sigma=0.2)
 
     actor_net = ContinuousMLPPolicy(
-        env_spec=env,
+        env_spec=env.spec,
         name="Actor",
         hidden_sizes=[64, 64],
         hidden_nonlinearity=tf.nn.relu,
         output_nonlinearity=tf.nn.tanh)
 
     critic_net = ContinuousMLPQFunction(
-        env_spec=env,
+        env_spec=env.spec,
         name="Critic",
         hidden_sizes=[64, 64],
         hidden_nonlinearity=tf.nn.relu)

@@ -1,6 +1,0 @@
-from garage.distributions.base import Distribution
-from garage.distributions.categorical import Categorical
-from garage.distributions.delta import Delta
-from garage.distributions.diagonal_gaussian import DiagonalGaussian
-from garage.distributions.recurrent_categorical import RecurrentCategorical
-from garage.distributions.recurrent_diagonal_gaussian import RecurrentDiagonalGaussian

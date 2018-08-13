@@ -5,6 +5,7 @@ from garage.core import Serializable
 from garage.misc import logger
 from garage.tf.core import LayersPowered
 from garage.tf.core import MLP
+from garage.tf.core import Parameterized
 import garage.tf.core.layers as L
 from garage.tf.distributions import Bernoulli
 from garage.tf.misc import tensor_utils
@@ -12,7 +13,7 @@ from garage.tf.optimizers import ConjugateGradientOptimizer
 from garage.tf.optimizers import LbfgsOptimizer
 
 
-class BernoulliMLPRegressor(LayersPowered, Serializable):
+class BernoulliMLPRegressor(LayersPowered, Serializable, Parameterized):
     """
     A class for performing regression (or classification, really) by fitting a
     bernoulli distribution to each of the output units.
@@ -43,6 +44,7 @@ class BernoulliMLPRegressor(LayersPowered, Serializable):
         :param use_trust_region: Whether to use trust region constraint.
         :param step_size: KL divergence constraint for each iteration
         """
+        Parameterized.__init__(self)
         Serializable.quick_init(self, locals())
 
         with tf.variable_scope(name):
@@ -165,9 +167,3 @@ class BernoulliMLPRegressor(LayersPowered, Serializable):
     def predict_log_likelihood(self, xs, ys):
         p = self.f_p(np.asarray(xs))
         return self._dist.log_likelihood(np.asarray(ys), dict(p=p))
-
-    def get_param_values(self, **tags):
-        return LayersPowered.get_param_values(self, **tags)
-
-    def set_param_values(self, flattened_params, **tags):
-        return LayersPowered.set_param_values(self, flattened_params, **tags)
