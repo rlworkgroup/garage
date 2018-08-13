@@ -112,9 +112,9 @@ class PushEnv(SawyerEnv):
             self.sim.data.mocap_pos[0, :3] = self.sim.data.mocap_pos[0, :3] + a[:3]
             self.sim.data.mocap_quat[:] = np.array([0, 1, 0, 0])
             # self.set_gripper_state(a[3])
+            self.sim.forward()
             for _ in range(1):
                 self.sim.step()
-            self.sim.forward()
         elif self._control_method == "position_control":
             low, high = self.joint_position_limits
             curr_pos = self.joint_positions
@@ -159,7 +159,7 @@ class PushEnv(SawyerEnv):
                                             self._desired_goal, info)
         done = False
         if self._is_success:
-            r = self._completion_bonus
+            # r = self._completion_bonus
             done = True
 
         info["r"] = r
