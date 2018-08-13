@@ -40,7 +40,7 @@ class ReacherEnv(SawyerEnv, Serializable):
                         delta range the goal is randomized
         :param robot_control_mode: string
                         robot control mode: 'position' or 'velocity'
-                        or 'effort' or 'gripper_position'
+                        or 'effort' or 'task_space'
         """
         Serializable.quick_init(self, locals())
 
@@ -61,7 +61,7 @@ class ReacherEnv(SawyerEnv, Serializable):
         self._robot = Sawyer(
             initial_joint_pos=initial_joint_pos,
             control_mode=robot_control_mode,
-            without_gripper=True,
+            has_gripper=True,
             moveit_group=self._moveit_group_name)
         self._world = EmptyWorld(self._moveit_scene,
                                  self._moveit_robot.get_planning_frame(),
@@ -110,7 +110,7 @@ class ReacherEnv(SawyerEnv, Serializable):
         achieved_goal = np.array(
             [robot_gripper_pos.x, robot_gripper_pos.y, robot_gripper_pos.z])
 
-        if self._robot.control_mode == 'gripper_position':
+        if self._robot.control_mode == 'task_space':
             obs = achieved_goal
         else:
             obs = self._robot.get_observation()

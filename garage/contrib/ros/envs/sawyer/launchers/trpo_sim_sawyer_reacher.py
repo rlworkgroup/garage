@@ -38,7 +38,7 @@ def run_task(*_):
         initial_goal,
         initial_joint_pos=INITIAL_ROBOT_JOINT_POS,
         simulated=True,
-        robot_control_mode='gripper_position')
+        robot_control_mode='task_space')
 
     rospy.on_shutdown(env.shutdown)
 

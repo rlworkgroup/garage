@@ -18,7 +18,7 @@ class Sawyer(Robot):
     def __init__(self,
                  initial_joint_pos,
                  moveit_group,
-                 without_gripper=False,
+                 has_gripper=True,
                  control_mode='position',
                  tip_name='right_hand'):
         """
@@ -30,7 +30,7 @@ class Sawyer(Robot):
                         joints that user wants to control and observe.
         :param moveit_group: str
                         Use this to check safety
-        :param without_gripper: Bool
+        :param has_gripper: Bool
                         If use gripper
         :param control_mode: string
                         robot control mode: 'position' or velocity
@@ -40,11 +40,11 @@ class Sawyer(Robot):
         """
         Robot.__init__(self)
         self._limb = intera_interface.Limb('right')
-        if not without_gripper:
+        if not has_gripper:
             self._gripper = intera_interface.Gripper()
         self._initial_joint_pos = initial_joint_pos
         self.control_mode = control_mode
-        self._without_gripper = without_gripper
+        self._has_gripper = has_gripper
         self._used_joints = []
         self._tip_name = tip_name
         for joint in initial_joint_pos:
@@ -121,7 +121,7 @@ class Sawyer(Robot):
             return
         self._limb.move_to_joint_positions(
             self._initial_joint_pos, timeout=5.0)
-        if not self._without_gripper:
+        if self._has_gripper:
             self._gripper.open()
         rospy.sleep(1.0)
 
@@ -154,7 +154,7 @@ class Sawyer(Robot):
             (endpoint_pos, endpoint_ori, endpoint_lvel, endpoint_avel,
              endpoint_force, endpoint_torque, robot_joint_angles,
              robot_joint_velocities, robot_joint_efforts))
-        if not self._without_gripper:
+        if self._has_gripper:
             obs = np.concatenate(
                 (obs, np.array([float(self._gripper.is_gripping())])))
         return obs
@@ -198,7 +198,7 @@ class Sawyer(Robot):
         action_space = self.action_space
         commands = np.clip(commands, action_space.low, action_space.high)
 
-        if self.control_mode == 'gripper_position':
+        if self.control_mode == 'task_space':
             desired_pose = Pose()
             current_pose = self.endpoint_pose
             desired_pose.orientation.w = current_pose['orientation'].w
@@ -223,8 +223,8 @@ class Sawyer(Robot):
             elif self.control_mode == 'effort':
                 self._set_limb_joint_torques(joint_commands)
 
-        if not self._without_gripper:
-            if self.control_mode == 'gripper_position':
+        if self._has_gripper:
+            if self.control_mode == 'task_space':
                 idx = 4
             else:
                 idx = 7
@@ -254,7 +254,7 @@ class Sawyer(Robot):
         lower_bounds = np.array([])
         upper_bounds = np.array([])
 
-        if self.control_mode == 'gripper_position':
+        if self.control_mode == 'task_space':
             lower_bounds = np.repeat(-0.03, 3)
             upper_bounds = np.repeat(0.03, 3)
         else:
@@ -287,7 +287,7 @@ class Sawyer(Robot):
                     raise ValueError(
                         'Control mode %s is not known!' % self.control_mode)
 
-        if self._without_gripper:
+        if not self._has_gripper:
             return gym.spaces.Box(lower_bounds, upper_bounds, dtype=np.float32)
         else:
             return gym.spaces.Box(
