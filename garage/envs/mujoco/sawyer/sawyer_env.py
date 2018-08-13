@@ -540,7 +540,6 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
 
                 self.joint_positions = self.joint_position_space.sample()
                 self.sim.step()
-                for _ in range(100): self.get_viewer().render()
                 attempts += 1
 
 
