@@ -81,8 +81,8 @@ class PushEnv(SawyerEnv):
             return super(SawyerEnv, self).action_space
         elif self._control_method == 'task_space_control':
             return Box(
-                np.array([-0.05, -0.05, -0.05]),
-                np.array([0.05, 0.05, 0.05]),
+                np.array([-0.15, -0.15, -0.15]),
+                np.array([0.15, 0.15, 0.15]),
                 dtype=np.float32)
         elif self._control_method == 'position_control':
             return Box(
