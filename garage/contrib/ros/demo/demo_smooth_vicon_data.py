@@ -70,7 +70,7 @@ def vicon_update(data):
 
 
 def run():
-    rospy.init_node('test_smooth_vicon_data', anonymous=True)
+    rospy.init_node('demo_smooth_vicon_data', anonymous=True)
 
     rospy.Subscriber(TEST_VICON_TOPIC, TransformStamped, vicon_update)
 

@@ -9,7 +9,7 @@ from garage.contrib.ros.worlds import BlockWorld
 def run():
     moveit_commander.roscpp_initialize(sys.argv)
 
-    rospy.init_node('test_vicon2robot', anonymous=True)
+    rospy.init_node('demo_vicon2robot', anonymous=True)
 
     moveit_robot = moveit_commander.RobotCommander()
     moveit_scene = moveit_commander.PlanningSceneInterface()

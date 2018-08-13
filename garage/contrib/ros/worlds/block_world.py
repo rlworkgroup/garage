@@ -183,7 +183,7 @@ class BlockWorld(World):
         # Use this to move collision object in moveit.
         self._moveit_col_obj_pub = rospy.Publisher(
             'collision_object', CollisionObject, queue_size=10)
-        self._lowpass_alpha = 0.1
+        self._lowpass_alpha = 1
 
     def initialize(self):
         """Initialize the block world."""
@@ -197,7 +197,7 @@ class BlockWorld(World):
                 Pose(position=Point(x=0.5725, y=0.1265, z=0.05)),
                 osp.join(World.MODEL_DIR, 'block/model.urdf'))
             block = Block(
-                name='block',
+                name='block_{}'.format(len(self._blocks)),
                 initial_pos=(0.5725, 0.1265, 0.05),
                 random_delta_range=0.15,
                 resource=osp.join(World.MODEL_DIR, 'block/model.urdf'))
@@ -230,8 +230,8 @@ class BlockWorld(World):
                 exit()
             for vicon_topic in VICON_TOPICS:
                 block = Block(
-                    name='block',
-                    size=[0.075, 0.1, 0.08],
+                    name='block_{}'.format(len(self._blocks)),
+                    size=[0.1, 0.15, 0.065],
                     initial_pos=(0.5725, 0.1265, 0.90),
                     random_delta_range=0.15,
                     resource=vicon_topic)
@@ -333,12 +333,13 @@ class BlockWorld(World):
                 if block.first_smoothed:
                     block.position = translation_wrt_robot
                     block.orientation = orientation_wrt_robot
+                    block.first_smoothed = False
                 else:
                     block.position.x = self._lowpass_filter(
                         translation_wrt_robot.x, block.position.x)
                     block.position.y = self._lowpass_filter(
                         translation_wrt_robot.y, block.position.y)
-                    block.position.x = self._lowpass_filter(
+                    block.position.z = self._lowpass_filter(
                         translation_wrt_robot.z, block.position.z)
                     block.orientation.x = self._lowpass_filter(
                         orientation_wrt_robot.x, block.orientation.x)
@@ -361,6 +362,7 @@ class BlockWorld(World):
         move_object.header.frame_id = self._frame_id
         pose = Pose()
         pose.position = block.position
+        pose.position.z += 0.03
         pose.orientation = block.orientation
         move_object.primitive_poses.append(pose)
         move_object.operation = move_object.MOVE
@@ -425,6 +427,8 @@ class BlockWorld(World):
         if not self._simulated:
             self._sawyer_cali_marker_sub.unregister()
 
+        self._moveit_col_obj_pub.unregister()
+
         if self._simulated:
             for block in self._blocks:
                 Gazebo.delete_gazebo_model(block.name)
@@ -463,6 +467,18 @@ class BlockWorld(World):
         observation = Observation(obs=obs, achieved_goal=achieved_goal)
 
         return observation
+
+    def get_block_orientation(self, name):
+        for block in self._blocks:
+            if block.name == name:
+                return block.orientation
+        raise NameError('No block named {}'.format(name))
+
+    def get_block_position(self, name):
+        for block in self._blocks:
+            if block.name == name:
+                return block.position
+        raise NameError('No block named {}'.format(name))
 
     def get_blocks_orientation(self):
         orientations = []
