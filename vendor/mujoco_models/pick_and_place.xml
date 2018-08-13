@@ -52,7 +52,7 @@
       <geom conaffinity="0" contype="0" pos="0 0 0" rgba="0 1 0 1" size="0.01" type="sphere" name="desired_goal"/>
     </body>
   </worldbody>
-S
+
   <actuator>
     <!-- Finger joints are position-controlled -->
     <!--<motor gear="100" joint="r_gripper_l_finger_joint" name="slide_l_claw"/>-->
@@ -70,6 +70,15 @@ S
     <!--<motor joint="right_j4" ctrlrange="-100.0 100.0" ctrllimited="false" gear="150"/>-->
     <!--<motor joint="right_j5" ctrlrange="-100.0 100.0" ctrllimited="false" gear="150"/>-->
     <!--<motor joint="right_j6" ctrlrange="-100.0 100.0" ctrllimited="false" gear="150"/>-->
+
+<!--     <position joint="right_j0" ctrlrange="-3.0503 3.0503" ctrllimited="true" kp="30000" name="pos_right_j0"/>
+    <position joint="right_j1" ctrlrange="-3.8095 2.2736" ctrllimited="true" kp="30000" name="pos_right_j1"/>
+    <position joint="right_j2" ctrlrange="-3.0426 3.0426" ctrllimited="true" kp="30000" name="pos_right_j2"/>
+    <position joint="right_j3" ctrlrange="-3.0439 3.0439" ctrllimited="true" kp="30000" name="pos_right_j3"/>
+    <position joint="right_j4" ctrlrange="-2.9761 2.9761" ctrllimited="true" kp="30000" name="pos_right_j4"/>
+    <position joint="right_j5" ctrlrange="-2.9761 2.9761" ctrllimited="true" kp="30000" name="pos_right_j5"/>
+    <position joint="right_j6" ctrlrange="-4.7124 4.7124" ctrllimited="true" kp="30000" name="pos_right_j6"/> -->
+
   </actuator>
 
 </mujoco>

@@ -1,7 +1,7 @@
 import numpy as np
 
 from garage.core.serializable import Serializable
-from garage.envs.mujoco.sawyer.sawyer_env import SawyerEnv, Configuration
+from garage.envs.mujoco.sawyer.sawyer_env import SawyerEnv
 from garage.envs.mujoco.sawyer.sawyer_env import Configuration
 from garage.envs.mujoco.sawyer.sawyer_env import SawyerEnvWrapper
 
@@ -18,14 +18,15 @@ class ReacherEnv(SawyerEnv):
                 center = self.sim.data.get_geom_xpos('target2')
                 start_position = np.concatenate([center[:2], [0.15]])
 
-            if randomize_start_position:
-                offset_x = np.random.uniform(low=-0.3, high=0.3)
-                offset_y = np.random.uniform(low=-0.2, high=0.2)
-                offset_z = np.random.uniform(low=0, high=0.3)
+            # if randomize_start_position:
+            #     offset_x = np.random.uniform(low=-0.3, high=0.3)
+            #     offset_y = np.random.uniform(low=-0.2, high=0.2)
+            #     offset_z = np.random.uniform(low=0, high=0.3)
 
-                start_position[0] += offset_x
-                start_position[1] += offset_y
-                start_position[2] += offset_z
+            #     start_position[0] += offset_x
+            #     start_position[1] += offset_y
+            #     start_position[2] += offset_z
+
 
             start = Configuration(
                 gripper_pos=start_position,
@@ -47,10 +48,10 @@ class ReacherEnv(SawyerEnv):
 
             return 1 - np.exp(d)
 
-        super(ReacherEnv, self).__init__(
-            start_goal_config=generate_start_goal,
-            reward_fn=reward_fn,
-            **kwargs)
+        SawyerEnv.__init__(self,
+                           start_goal_config=generate_start_goal,
+                           reward_fn=reward_fn,
+                           **kwargs)
 
     def get_obs(self):
         gripper_pos = self.gripper_position
