@@ -23,13 +23,13 @@ class PushEnv(SawyerEnv):
                 "left":  ( 0,  d),
                 "right": ( 0, -d)
             }[direction])
+            if easy_gripper_init:
+                # position gripper besides the block
+                gripper_pos = np.concatenate([xy - delta, [0.07]])
+            else:
+                # position gripper above the block
+                gripper_pos = np.concatenate([xy, [0.2]])
             if control_method == 'task_space_control':
-                if easy_gripper_init:
-                    # position gripper besides the block
-                    gripper_pos = np.concatenate([xy - delta, [0.07]])
-                else:
-                    # position gripper above the block
-                    gripper_pos = np.concatenate([xy, [0.2]])
                 start = Configuration(
                     gripper_pos=gripper_pos,
                     gripper_state=0,
@@ -58,7 +58,7 @@ class PushEnv(SawyerEnv):
                     jpos = np.array([-0.35807692,  0.6890401,  -0.21887338, -1.4569705,   0.22947722,  2.31383609,
  -1.4571502 ])
                 start = Configuration(
-                    gripper_pos=None,
+                    gripper_pos=gripper_pos,
                     gripper_state=0,
                     object_grasped=False,
                     object_pos=np.concatenate([xy, [0.03]]),
