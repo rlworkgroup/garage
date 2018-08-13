@@ -9,24 +9,30 @@ from garage.misc.overrides import overrides
 
 
 class PushEnv(SawyerEnv):
-    def __init__(self, direction="up", **kwargs):
+    def __init__(self, direction="up", easy_gripper_init=True, **kwargs):
         def start_goal_config():
             # center = self.sim.data.get_geom_xpos('target2')
             xy = [np.random.uniform(0.6, 0.8), np.random.uniform(-0.35, 0.35)]
-            start = Configuration(
-                gripper_pos=np.concatenate([xy, [0.2]]),
-                gripper_state=0,
-                object_grasped=False,
-                object_pos=np.concatenate([xy, [0.03]]))
-            d = 0.2
+            d = 0.15
             delta = np.array({
                 "up":    ( d,  0),
                 "down":  (-d,  0),
-                "left":  ( 0, -d),
-                "right": ( 0,  d)
+                "left":  ( 0,  d),
+                "right": ( 0, -d)
             }[direction])
+            if easy_gripper_init:
+                # position gripper besides the block
+                gripper_pos = np.concatenate([xy - delta, [0.07]])
+            else:
+                # position gripper above the block
+                gripper_pos = np.concatenate([xy, [0.2]])
+            start = Configuration(
+                gripper_pos=gripper_pos,
+                gripper_state=0,
+                object_grasped=False,
+                object_pos=np.concatenate([xy, [0.03]]))
             goal = Configuration(
-                gripper_pos=np.concatenate([xy + delta, [0.35]]),
+                gripper_pos=None,
                 gripper_state=0,
                 object_grasped=False,
                 object_pos=np.concatenate([xy + delta, [0.03]]))
