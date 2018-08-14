@@ -108,12 +108,14 @@ script_dir_path() {
     echo "${PWD}/${SCRIPT_DIR#./}"
 }
 
+# red text
 print_error() {
-  echo -e "\e[0;31m${@}\e[0m"
+  echo -e "\033[0;31m${@}\033[0m"
 }
 
+# yellow text
 print_warning() {
-  echo -e "\e[0;33m${@}\e[0m"
+  echo -e "\033[0;33m${@}\033[0m"
 }
 
 # List of verified versions of OS X where garage has been installed
@@ -121,10 +123,12 @@ VALID_VER=()
 VER="$(sw_vers -productVersion)"
 
 if [[ ! " ${VALID_VER[@]} " =~ " ${VER} " ]]; then
-  print_warning "It has not been verified that garage works under"\
-    "OS X version ${VER}. If the installation is successful, please update" \
-    "the list of valid versions in this script, otherwise, if you are able" \
-    "to fix the compatibility issue, please submit a Pull Request to garage." |
+  print_warning "It has not been verified whether garage will install" \
+    "correctly under your current OS X version (${VER}). If the installation" \
+    "is successful, please update the list of valid versions in this script." \
+    "Otherwise, if you are able to fix your compatibility issue, please file" \
+    "an issue to (https://github.com/rlworkgroup/garage/issues) and include a"\
+    "link to your Pull Request.\n" |
   fold -s
   while [[ "${continue_var}" != "y" ]]; do
     read -p "Continue? (y/n): " continue_var
