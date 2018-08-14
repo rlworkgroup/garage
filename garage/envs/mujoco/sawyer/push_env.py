@@ -15,6 +15,7 @@ class PushEnv(SawyerEnv):
                  direction="up",
                  easy_gripper_init=True,
                  randomize_start_pos=False,
+                 control_method='task_space_control',
                  **kwargs):
         def start_goal_config():
             # center = self.sim.data.get_geom_xpos('target2')
@@ -38,16 +39,57 @@ class PushEnv(SawyerEnv):
             else:
                 # position gripper above the block
                 gripper_pos = np.concatenate([xy, [0.2]])
-            start = Configuration(
-                gripper_pos=gripper_pos,
-                gripper_state=0,
-                object_grasped=False,
-                object_pos=np.concatenate([xy, [0.03]]))
-            goal = Configuration(
-                gripper_pos=None,
-                gripper_state=0,
-                object_grasped=False,
-                object_pos=np.concatenate([xy + delta, [0.03]]))
+            if control_method == 'task_space_control':
+                start = Configuration(
+                    gripper_pos=gripper_pos,
+                    gripper_state=0,
+                    object_grasped=False,
+                    object_pos=np.concatenate([xy, [0.03]]),
+                    joint_pos=None)
+                goal = Configuration(
+                    gripper_pos=None,
+                    gripper_state=0,
+                    object_grasped=False,
+                    object_pos=np.concatenate([xy + delta, [0.03]]),
+                    joint_pos=None)
+            else:
+                if easy_gripper_init:
+                    jpos = np.array({
+                        "up": [
+                            -0.68198394, -0.96920825, 0.76964638, 2.00488611,
+                            -0.56956307, 0.76115281, -0.97169329
+                        ],
+                        "down": [
+                            -0.12526904, 0.29675812, 0.06034621, -0.55948609,
+                            -0.03694355, 1.8277617, -1.54921871
+                        ],
+                        "left": [
+                            -0.36766702, 0.62033507, 0.00376033, -1.33212273,
+                            0.06092402, 2.29230268, -1.7248123
+                        ],
+                        "right": [
+                            5.97299145e-03, 6.46604393e-01, 1.40055632e-03,
+                            -1.22810430e+00, 9.04236294e-03, 2.13193649e+00,
+                            -1.38572576e+00
+                        ]
+                    }[direction])
+                else:
+                    jpos = np.array([
+                        -0.35807692, 0.6890401, -0.21887338, -1.4569705,
+                        0.22947722, 2.31383609, -1.4571502
+                    ])
+                start = Configuration(
+                    gripper_pos=gripper_pos,
+                    gripper_state=0,
+                    object_grasped=False,
+                    object_pos=np.concatenate([xy, [0.03]]),
+                    joint_pos=jpos)
+                goal = Configuration(
+                    gripper_pos=None,
+                    gripper_state=0,
+                    object_grasped=False,
+                    object_pos=np.concatenate([xy + delta, [0.03]]),
+                    joint_pos=None)
             return start, goal
 
         def achieved_goal_fn(env: SawyerEnv):
@@ -62,6 +104,7 @@ class PushEnv(SawyerEnv):
             desired_goal_fn=desired_goal_fn,
             file_path="push.xml",
             collision_whitelist=[],
+            control_method=control_method,
             **kwargs)
         self._easy_gripper_init = easy_gripper_init
 
@@ -75,6 +118,8 @@ class PushEnv(SawyerEnv):
         object_velp -= grip_velp
         grasped = self.has_object
         obs = np.concatenate([gripper_pos, object_pos])
+        if self._control_method == "position_control":
+            obs = np.concatenate((obs, self.joint_positions))
 
         achieved_goal = self._achieved_goal_fn(self)
         desired_goal = self._desired_goal_fn(self)
