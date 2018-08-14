@@ -3,24 +3,34 @@ import numpy as np
 from gym.spaces import Box
 from gym.envs.robotics.utils import reset_mocap2body_xpos
 
-from garage.envs.mujoco.sawyer.sawyer_env import SawyerEnv, Configuration
+from garage.core.serializable import Serializable
+from garage.envs.mujoco.sawyer.sawyer_env import Configuration
+from garage.envs.mujoco.sawyer.sawyer_env import SawyerEnv
+from garage.envs.mujoco.sawyer.sawyer_env import SawyerEnvWrapper
 from garage.misc.overrides import overrides
 
 
 class PushEnv(SawyerEnv):
-    def __init__(self, direction="up", easy_gripper_init=True, randomize_start_pos=False, **kwargs):
+    def __init__(self,
+                 direction="up",
+                 easy_gripper_init=True,
+                 randomize_start_pos=False,
+                 **kwargs):
         def start_goal_config():
             # center = self.sim.data.get_geom_xpos('target2')
             if randomize_start_pos:
-                xy = [np.random.uniform(0.6, 0.8), np.random.uniform(-0.35, 0.35)]
+                xy = [
+                    np.random.uniform(0.6, 0.8),
+                    np.random.uniform(-0.35, 0.35)
+                ]
             else:
                 xy = [0.7, 0.]
             d = 0.15
             delta = np.array({
-                "up":    ( d,  0),
-                "down":  (-d,  0),
-                "left":  ( 0,  d),
-                "right": ( 0, -d)
+                "up": (d, 0),
+                "down": (-d, 0),
+                "left": (0, d),
+                "right": (0, -d)
             }[direction])
             if easy_gripper_init:
                 # position gripper besides the block
@@ -113,7 +123,8 @@ class PushEnv(SawyerEnv):
             self.sim.forward()
         elif self._control_method == "task_space_control":
             reset_mocap2body_xpos(self.sim)
-            self.sim.data.mocap_pos[0, :3] = self.sim.data.mocap_pos[0, :3] + a[:3]
+            self.sim.data.mocap_pos[0, :
+                                    3] = self.sim.data.mocap_pos[0, :3] + a[:3]
             self.sim.data.mocap_quat[:] = np.array([0, 1, 0, 0])
             # self.set_gripper_state(a[3])
             self.sim.forward()
@@ -121,11 +132,8 @@ class PushEnv(SawyerEnv):
                 self.sim.step()
         elif self._control_method == "position_control":
             curr_pos = self.joint_positions
-            next_pos = np.clip(
-                a + curr_pos,
-                self.joint_position_space.low,
-                self.joint_position_space.high
-            )
+            next_pos = np.clip(a + curr_pos, self.joint_position_space.low,
+                               self.joint_position_space.high)
             self.joint_positions = next_pos
             self.sim.step()
 
@@ -159,7 +167,8 @@ class PushEnv(SawyerEnv):
             info=info)
         if self._easy_gripper_init:
             # encourage gripper to move close to block
-            r += 0.02 - np.linalg.norm(self.gripper_position - self.object_position)
+            r += 0.02 - np.linalg.norm(self.gripper_position -
+                                       self.object_position)
 
         self._is_success = self._success_fn(self, self._achieved_goal,
                                             self._desired_goal, info)
@@ -175,3 +184,11 @@ class PushEnv(SawyerEnv):
         r -= self._control_cost_coeff * np.linalg.norm(a)
 
         return obs, r, done, info
+
+
+class SimplePushEnv(SawyerEnvWrapper, Serializable):
+    def __init__(self, *args, **kwargs):
+        Serializable.quick_init(self, locals())
+        self.reward_range = None
+        self.metadata = None
+        super().__init__(PushEnv(*args, **kwargs))
