@@ -320,3 +320,9 @@ class GaussianMLPRegressor(LayersPowered, Serializable, Parameterized):
 
             return self._dist.log_likelihood_sym(
                 y_var, dict(mean=means_var, log_std=log_stds_var))
+
+    def get_param_values(self, **tags):
+        return LayersPowered.get_param_values(self, **tags)
+
+    def set_param_values(self, flattened_params, **tags):
+        LayersPowered.set_param_values(self, flattened_params, **tags)

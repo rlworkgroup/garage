@@ -101,8 +101,15 @@ class NPO(BatchPolopt):
         logger.record_tabular("{}/Entropy".format(self.policy.name), pol_ent)
 
         num_traj = self.batch_size // self.max_path_length
-        actions = samples_data["actions"][:num_traj, ...]
-        logger.record_histogram("{}/Actions".format(self.policy.name), actions)
+        logger.record_histogram(
+            "{}/Actions".format(self.policy.name),
+            samples_data["actions"][:num_traj, ...]
+        )
+        for i in range(self.policy.action_space.flat_dim):
+            logger.record_histogram(
+                "{}/Actions/i={}".format(self.policy.name, i),
+                samples_data["actions"][:num_traj, :, i]
+            )
 
         self._fit_baseline(samples_data)
 
@@ -324,13 +331,8 @@ class NPO(BatchPolopt):
 
     def _build_entropy_term(self, i):
         with tf.name_scope("policy_entropy"):
-            policy_dist_info_flat = self.policy.dist_info_sym(
-                i.flat.obs_var,
-                i.flat.policy_state_info_vars,
-                name="policy_dist_info_flat")
-
-            policy_entropy_flat = self.policy._dist.entropy_sym(
-                policy_dist_info_flat)
+            policy_entropy_flat = self.policy.entropy_sym(
+                i.obs_var, name="policy_entropy_flat")
             policy_entropy = tf.reshape(policy_entropy_flat,
                                         [-1, self.max_path_length])
 
@@ -338,11 +340,11 @@ class NPO(BatchPolopt):
             if self._use_softplus_entropy:
                 policy_entropy = tf.nn.softplus(policy_entropy)
 
-            policy_entropy = tf.reduce_mean(policy_entropy * i.valid_var)
+            # policy_entropy = tf.reduce_mean(policy_entropy * i.valid_var)
 
         self.f_policy_entropy = tensor_utils.compile_function(
             flatten_inputs(self._policy_opt_inputs),
-            policy_entropy,
+            tf.reduce_mean(policy_entropy * i.valid_var),
             log_name="f_policy_entropy")
 
         return policy_entropy
