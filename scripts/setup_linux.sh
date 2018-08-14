@@ -178,7 +178,7 @@ fi
 # Set up MuJoCo
 if [[ ! -d "${HOME}"/.mujoco/mjpro150 ]]; then
   mkdir "${HOME}"/.mujoco
-  MUJOCO_ZIP="$(mktemp --suffix=_mujoco.zip)"
+  MUJOCO_ZIP="$(mktemp -d)/mujoco.zip"
   wget https://www.roboti.us/download/mjpro150_linux.zip -O "${MUJOCO_ZIP}"
   unzip -u "${MUJOCO_ZIP}" -d "${HOME}"/.mujoco
 else
@@ -194,7 +194,7 @@ fi
 
 # Set up conda
 hash conda 2>/dev/null || {
-  CONDA_INSTALLER="$(mktemp --suffix=_miniconda.sh)"
+  CONDA_INSTALLER="$(mktemp -d)/miniconda.sh"
   sudo chmod u+x "${CONDA_INSTALLER}"
   wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh \
     -O "${CONDA_INSTALLER}"
@@ -247,15 +247,16 @@ PYTHON_ENV_VAR="PYTHONPATH=\"\$PYTHONPATH:${GARAGE_DIR}\""
 if [[ "${_arg_set_envvar}" = on ]]; then
   echo "export ${PYTHON_ENV_VAR}" >> "${BASH_RC}"
 else
-  echo "Remember to export the following environment variables before" \
+  echo -e "\nRemember to export the following environment variables before" \
     "running garage:"
   echo "${LD_LIB_ENV_VAR}"
   echo "${PATH_ENV_VAR}"
   echo "${PYTHON_ENV_VAR}"
-  echo "You may wish to edit your .bashrc to prepend the exports of these"
+  echo "You may wish to edit your .bashrc to prepend the exports of these" \
     "environment variables."
 fi
 
 echo -e "\nGarage is installed! To make the changes take effect, work under" \
   "a new terminal. Also, make sure to run \`source activate garage\`" \
-  "whenever you open a new terminal and want to run programs under garage."
+  "whenever you open a new terminal and want to run programs under garage." \
+  | fold -s
