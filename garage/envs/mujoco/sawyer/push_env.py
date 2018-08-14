@@ -3,7 +3,10 @@ import numpy as np
 from gym.spaces import Box
 from gym.envs.robotics.utils import reset_mocap2body_xpos
 
-from garage.envs.mujoco.sawyer.sawyer_env import SawyerEnv, Configuration
+from garage.core.serializable import Serializable
+from garage.envs.mujoco.sawyer.sawyer_env import Configuration
+from garage.envs.mujoco.sawyer.sawyer_env import SawyerEnv
+from garage.envs.mujoco.sawyer.sawyer_env import SawyerEnvWrapper
 from garage.misc.overrides import overrides
 
 
@@ -226,3 +229,11 @@ class PushEnv(SawyerEnv):
         r -= self._control_cost_coeff * np.linalg.norm(a)
 
         return obs, r, done, info
+
+
+class SimplePushEnv(SawyerEnvWrapper, Serializable):
+    def __init__(self, *args, **kwargs):
+        Serializable.quick_init(self, locals())
+        self.reward_range = None
+        self.metadata = None
+        super().__init__(PushEnv(*args, **kwargs))
