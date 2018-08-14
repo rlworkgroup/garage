@@ -114,7 +114,14 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
             if std_network is not None:
                 l_std_param = std_network.output_layer
             else:
+                if std_parametrization == 'exp':
+                    init_std_param = np.log(init_std)
+                elif std_parametrization == 'softplus':
+                    init_std_param = np.log(np.exp(init_std) - 1)
+                else:
+                    raise NotImplementedError
                 if adaptive_std:
+                    b = tf.constant_initializer(init_std_param)
                     std_network = MLP(
                         name=self._std_network_name,
                         input_shape=(obs_dim, ),
@@ -123,6 +130,7 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
                         hidden_sizes=std_hidden_sizes,
                         hidden_nonlinearity=std_hidden_nonlinearity,
                         output_nonlinearity=None,
+                        output_b_init=b,
                     )
                     l_std_param = std_network.output_layer
                 elif std_share_network:
@@ -133,12 +141,6 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
                             name="std_slice",
                         )
                 else:
-                    if std_parametrization == 'exp':
-                        init_std_param = np.log(init_std)
-                    elif std_parametrization == 'softplus':
-                        init_std_param = np.log(np.exp(init_std) - 1)
-                    else:
-                        raise NotImplementedError
                     with tf.variable_scope(self._std_network_name):
                         l_std_param = L.ParamLayer(
                             mean_network.input_layer,
