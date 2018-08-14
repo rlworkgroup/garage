@@ -121,7 +121,7 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
                 else:
                     raise NotImplementedError
                 if adaptive_std:
-                    b= tf.constant_initializer(init_std_param)
+                    b = tf.constant_initializer(init_std_param)
                     std_network = MLP(
                         name=self._std_network_name,
                         input_shape=(obs_dim, ),

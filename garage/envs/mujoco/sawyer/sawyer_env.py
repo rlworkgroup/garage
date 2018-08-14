@@ -363,7 +363,7 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
                 self.joint_position_space.high
             )
             self.joint_positions = next_pos
-            self.sim.step()
+            self.sim.forward()
 
             # Verify the execution of the action.
             # for i in range(7):
@@ -514,15 +514,15 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
         self._sample_start_goal()
         self.set_object_position(self._start_configuration.object_pos)
 
-        # if self._start_configuration.object_grasped:
-        #     self.set_gripper_state(1)  # open
-        #     self.set_gripper_position(self._start_configuration.gripper_pos)
-        #     self.set_object_position(self._start_configuration.gripper_pos)
-        #     self.set_gripper_state(-1)  # close
-        # else:
-        #     self.set_gripper_state(self._start_configuration.gripper_state)
-        #     self.set_gripper_position(self._start_configuration.gripper_pos)
-        #     self.set_object_position(self._start_configuration.object_pos)
+        if self._start_configuration.object_grasped:
+            self.set_gripper_state(1)  # open
+            self.set_gripper_position(self._start_configuration.gripper_pos)
+            self.set_object_position(self._start_configuration.gripper_pos)
+            self.set_gripper_state(-1)  # close
+        else:
+            self.set_gripper_state(self._start_configuration.gripper_state)
+            self.set_gripper_position(self._start_configuration.gripper_pos)
+            self.set_object_position(self._start_configuration.object_pos)
 
         # for _ in range(20):
         #     self.sim.step()
@@ -531,7 +531,7 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
         attempts = 1
         if self._randomize_start_jpos:
             self.joint_positions = self.joint_position_space.sample()
-            self.sim.step()
+            self.sim.forward()
             while hasattr(self, "_collision_whitelist") and self.in_collision:
                 if attempts > 1000:
                     print("Gave up after 1000 attempts")
@@ -539,10 +539,8 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
                     ipdb.set_trace()
 
                 self.joint_positions = self.joint_position_space.sample()
-                self.sim.step()
+                self.sim.forward()
                 attempts += 1
-
-
 
         return self.get_obs()
 
