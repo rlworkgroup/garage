@@ -365,7 +365,7 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
             self.joint_positions = next_pos
             self.sim.forward()
 
-            # Verify the execution of the action.
+            # # Verify the execution of the action.
             # for i in range(7):
             #     curr_pos = self.joint_positions
             #     d = np.absolute(curr_pos[i] - next_pos[i])
@@ -387,7 +387,8 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
             "gripper_state": obs["gripper_state"],
             "gripper_position": obs["gripper_pos"],
             "object_position": obs["object_pos"],
-            "is_success": self._is_success
+            "is_success": self._is_success,
+            "in_collision": self.in_collision,
         }
 
         r = self.compute_reward(
@@ -524,10 +525,6 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
             self.set_gripper_position(self._start_configuration.gripper_pos)
             self.set_object_position(self._start_configuration.object_pos)
 
-        # for _ in range(20):
-        #     self.sim.step()
-        # self.sim.forward()
-
         attempts = 1
         if self._randomize_start_jpos:
             self.joint_positions = self.joint_position_space.sample()
@@ -541,6 +538,14 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
                 self.joint_positions = self.joint_position_space.sample()
                 self.sim.forward()
                 attempts += 1
+
+                # # Verify the execution of the action.
+                # for i in range(7):
+                #     curr_pos = self.joint_positions
+                #     d = np.absolute(curr_pos[i] - next_pos[i])
+                #     assert d < 1e-5, \
+                #     "Joint right_j{} failed to reached the desired qpos.\nError: {}\t Desired: {}\t Current: {}"\
+                #     .format(i, d, next_pos[i], curr_pos)
 
         return self.get_obs()
 
@@ -562,8 +567,7 @@ class SawyerEnvWrapper:
 
     def step(self, action):
         goal_env_obs, r, done, info = self.env.step(action=action)
-        return goal_env_obs.get('observation'), r, done, self._info_callback(
-            info)
+        return goal_env_obs.get('observation'), r, done, info
 
     def reset(self):
         goal_env_obs = self.env.reset()
