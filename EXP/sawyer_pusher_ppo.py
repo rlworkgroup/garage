@@ -2,29 +2,36 @@
 
 from types import SimpleNamespace
 
-from garage.envs import normalize
 from garage.envs.mujoco.sawyer.push_env import SimplePushEnv
 from garage.misc.instrument import run_experiment
 from garage.tf.algos import PPO
 from garage.tf.baselines import GaussianMLPBaseline
 from garage.tf.envs import TfEnv
-# from garage.tf.policies import GaussianMLPPolicy
 from sandbox.embed2learn.policies import GaussianMLPPolicy
 
 
 def run_task(v):
     v = SimpleNamespace(**v)
 
-    env = TfEnv(normalize(SimplePushEnv(control_method='position_control')))
+    env = TfEnv(
+        SimplePushEnv(
+            control_method='position_control',
+            action_scale=0.04,
+            completion_bonus=0.0,
+            collision_penalty=0.))
 
     policy = GaussianMLPPolicy(
         name="policy",
         env_spec=env.spec,
         hidden_sizes=(256, 128),
         std_share_network=True,
-        init_std=v.policy_init_std,)
+        init_std=v.policy_init_std,
+    )
 
-    baseline = GaussianMLPBaseline(env_spec=env.spec)
+    baseline = GaussianMLPBaseline(
+        env_spec=env.spec,
+        regressor_args=dict(hidden_sizes=(256, 128)),
+    )
 
     algo = PPO(
         env=env,
@@ -41,18 +48,16 @@ def run_task(v):
 
 
 config = dict(
-    batch_size=16384,
+    batch_size=4096,
     max_path_length=500,
-    policy_init_std=1.0
+    policy_init_std=0.5,
 )
-
 
 run_experiment(
     run_task,
     exp_prefix='sawyer_push_ppo_position',
-    n_parallel=12,
-    snapshot_mode="last",
+    n_parallel=8,
     variant=config,
     seed=1,
-    plot=True,
+    plot=False,
 )
