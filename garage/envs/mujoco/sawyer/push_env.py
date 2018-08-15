@@ -301,10 +301,6 @@ class PushEnv(SawyerEnv):
             self.joint_positions = next_pos
             self.sim.forward()
 
-            # Check collision between block and gripper
-            if self.in_collision:
-                print("In collision!")
-
             # Move the block
             # Verify if gripper is in collision with block
             in_collision = False
