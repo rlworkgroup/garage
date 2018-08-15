@@ -37,13 +37,7 @@ def get_import_statement(node, lines):
 
 
 # Add file path prefixes here to ignore them.
-IGNORE_PATHS = [
-    "build/",
-    "dist/",
-    "docs/",
-    "garage/contrib/",
-    "sandbox/",
-]
+IGNORE_PATHS = ["build/", "dist/", "docs/", "garage/contrib/", "tests/"]
 
 IGNORE_MODULES = [
     "__future__",

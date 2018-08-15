@@ -1,6 +1,7 @@
 """Wrapper class that converts gym.Env into TheanoEnv."""
 from cached_property import cached_property
 from gym.spaces import Box as GymBox
+from gym.spaces import Dict as GymDict
 from gym.spaces import Discrete as GymDiscrete
 from gym.spaces import Tuple as GymTuple
 
@@ -8,6 +9,7 @@ from garage.envs import GarageEnv
 from garage.envs.env_spec import EnvSpec
 from garage.misc.overrides import overrides
 from garage.theano.spaces import Box
+from garage.theano.spaces import Dict
 from garage.theano.spaces import Discrete
 from garage.theano.spaces import Product
 
@@ -35,6 +37,8 @@ class TheanoEnv(GarageEnv):
         """
         if isinstance(space, GymBox):
             return Box(low=space.low, high=space.high)
+        elif isinstance(space, GymDict):
+            return Dict(space.spaces)
         elif isinstance(space, GymDiscrete):
             return Discrete(space.n)
         elif isinstance(space, GymTuple):
