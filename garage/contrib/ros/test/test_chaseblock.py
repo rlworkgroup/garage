@@ -63,7 +63,6 @@ def run():
     moveit_scene = moveit_commander.PlanningSceneInterface()
     moveit_group_name = 'right_arm'
     moveit_group = moveit_commander.MoveGroupCommander(moveit_group_name)
-    moveit_scene = moveit_commander.PlanningSceneInterface()
     moveit_frame = moveit_robot.get_planning_frame()
 
     blockworld = BlockWorld(moveit_scene, moveit_frame, False)

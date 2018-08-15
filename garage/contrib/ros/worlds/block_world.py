@@ -12,6 +12,7 @@ import tf
 
 from garage.contrib.ros.worlds.gazebo import Gazebo
 from garage.contrib.ros.worlds.world import World
+from garage.contrib.ros.worlds.moveit_planningscene_controller import MoveitPlanningSceneController
 import garage.misc.logger as logger
 try:
     from garage.config import VICON_TOPICS
@@ -184,6 +185,7 @@ class BlockWorld(World):
         self._moveit_col_obj_pub = rospy.Publisher(
             'collision_object', CollisionObject, queue_size=10)
         self._lowpass_alpha = 1
+        self._moveit_scene_controller = MoveitPlanningSceneController(frame_id)
 
     def initialize(self):
         """Initialize the block world."""
@@ -196,8 +198,9 @@ class BlockWorld(World):
                 'block',
                 Pose(position=Point(x=0.5725, y=0.1265, z=0.05)),
                 osp.join(World.MODEL_DIR, 'block/model.urdf'))
+            block_name = 'block_{}'.format(len(self._blocks))
             block = Block(
-                name='block_{}'.format(len(self._blocks)),
+                name=block_name,
                 initial_pos=(0.5725, 0.1265, 0.05),
                 random_delta_range=0.15,
                 resource=osp.join(World.MODEL_DIR, 'block/model.urdf'))
@@ -229,8 +232,9 @@ class BlockWorld(World):
                 print("Error message: ", e)
                 exit()
             for vicon_topic in VICON_TOPICS:
+                block_name = 'block_{}'.format(len(self._blocks))
                 block = Block(
-                    name='block_{}'.format(len(self._blocks)),
+                    name=block_name,
                     size=[0.1, 0.15, 0.065],
                     initial_pos=(0.5725, 0.1265, 0.90),
                     random_delta_range=0.15,
@@ -249,6 +253,7 @@ class BlockWorld(World):
                     print("Error message: ", e)
                     exit()
                 self._blocks.append(block)
+
 
         # Add table to moveit
         # moveit needs a sleep before adding object
@@ -292,6 +297,9 @@ class BlockWorld(World):
             self._moveit_scene.add_box(
                 block.name, pose_stamped_block,
                 (block.size[0], block.size[1], block.size[2]))
+            # add the block to the allowed collision matrix
+            rospy.sleep(1)
+            self._moveit_scene_controller.add_object_to_acm(block.name)
 
     def _gazebo_update_block_states(self, data):
         model_states = data
