@@ -116,12 +116,16 @@ class PusherEnv(SawyerEnv, Serializable):
                 (block_pos_obs, np.array([position.x, position.y,
                                           position.z])))
 
+        block_ori_obs = np.array([])
         for orientation in blocks_orientation:
             block_ori_obs = np.concatenate(
                 (block_ori_obs,
-                 np.array([orientation.x, orientation.y, orientation.z])))
+                 np.array([orientation.w, orientation.x, orientation.y, orientation.z])))
 
-        obs = np.concatenate((robot_obs, block_pos_obs, block_ori_obs))
+        gripper_pos = self._robot.gripper_pose.position
+        gripper_pos = np.array([gripper_pos.x, gripper_pos.y, gripper_pos.z])
+
+        obs = np.concatenate((robot_obs, block_pos_obs, block_ori_obs, gripper_pos))
 
         Observation = collections.namedtuple(
             'Observation', 'observation achieved_goal desired_goal')
