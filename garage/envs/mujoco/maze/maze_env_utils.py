@@ -289,7 +289,7 @@ def plot_ray(self, reading, ray_idx, color='r'):
 
 def plot_state(self, name='sensors', state=None):
     if state:
-        self.wrapped_env.reset(state)
+        self.wrapped_env.reset()
 
     structure = self.__class__.MAZE_STRUCTURE
     size_scaling = self.__class__.MAZE_SIZE_SCALING
