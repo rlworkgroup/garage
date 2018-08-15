@@ -33,6 +33,9 @@ class Dict(GarageDict):
         for key, space in self.spaces.items():
             self.spaces[key] = self._to_garage_space(space)
 
+        # Retrieve dimension length for un/flatten_n
+        self._dims = [space.flat_dim for space in self.spaces.values()]
+
     @property
     def dtype(self):
         """
@@ -100,45 +103,29 @@ class Dict(GarageDict):
             OrderedDict
 
         """
-        return OrderedDict(
-            [(key, space.unflatten(x)) for key, space in self.spaces.items()])
+        flat_x = np.split(x, np.cumsum(self._dims)[:-1])
+        return OrderedDict([(key, self.spaces[key].unflatten(xi))
+                            for key, xi in zip(self.spaces.keys(), flat_x)])
 
     def flatten_n(self, xs):
         """
         Return flattened obs of all spaces using values in x for x in xs.
 
         Returns:
-            list
+            list.shape = n x np.sum(self._dims)
 
         """
-        ret = []
-        for x in xs:
-            ret.append(
-                np.concatenate(
-                    [
-                        space.flatten(xi)
-                        for space, xi in zip(self.spaces.values(), x.values())
-                    ],
-                    axis=-1))
-        return ret
+        return [self.flatten(x) for x in xs]
 
     def unflatten_n(self, xs):
         """
         Return unflattened obs of all spaces using values in x for x in xs.
 
         Returns:
-            OrderedDict
+            A list of OrderedDict.
 
         """
-        ret = []
-        for x in xs:
-            ret.append(
-                [
-                    space.unflatten(xi)
-                    for space, xi in zip(self.spaces.values(), x.values())
-                ],
-                axis=-1)
-        return OrderedDict(ret)
+        return [self.unflatten(x) for x in xs]
 
     def flatten_with_keys(self, x, keys: Iterable):
         """
@@ -148,7 +135,13 @@ class Dict(GarageDict):
             list
 
         """
-        return np.concatenate([self.spaces[key].flatten(x) for key in keys])
+        return np.concatenate(
+            [
+                self.spaces[key].flatten(xi)
+                for key, xi in zip(self.spaces.keys(), x.values())
+                if key in keys
+            ],
+            axis=-1)
 
     def unflatten_with_keys(self, x, keys: Iterable):
         """
@@ -158,7 +151,8 @@ class Dict(GarageDict):
             OrderedDict
 
         """
-        return OrderedDict([self.spaces[key].unflatten(x) for key in keys])
+        unflat_x = self.unflatten(x)
+        return OrderedDict({key: unflat_x[key] for key in sorted(keys)})
 
     def _to_garage_space(self, space):
         """

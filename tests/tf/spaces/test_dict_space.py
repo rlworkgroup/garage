@@ -35,6 +35,11 @@ class TestDictSpace(unittest.TestCase):
         assert tf_act.unflatten(
             tf_act.flatten(dummy_act_sample)) == dummy_act_sample
 
-        # TODO: un/flatten_n
+        # un/flatten_n
+        samples = [dummy_act.sample() for _ in range(10)]
+        assert tf_act.unflatten_n(tf_act.flatten_n(samples)) == samples
 
-        # TODO: un/flatten_with_keys
+        # un/flatten_with_keys
+        assert tf_act.unflatten_with_keys(
+            tf_act.flatten_with_keys(dummy_act_sample, iter(["action"])),
+            iter(["action"]))

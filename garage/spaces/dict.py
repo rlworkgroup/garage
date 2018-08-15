@@ -1,4 +1,4 @@
-"""This is a garage.Dict space."""
+"""This is a garage-compatible wrapper for Dict spaces."""
 from collections import OrderedDict
 
 from garage.spaces import Space

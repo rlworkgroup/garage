@@ -136,12 +136,11 @@ class Dict(GarageDict):
         Return unflattened obs of all spaces using values in x for x in xs.
 
         Returns:
-            a list of OrderedDict.
+            A list of OrderedDict.
 
         """
         return [self.unflatten(x) for x in xs]
 
-    # WIP
     def flatten_with_keys(self, x, keys: Iterable):
         """
         Return flattened obs of spaces specified by the keys using x.
@@ -158,7 +157,6 @@ class Dict(GarageDict):
             ],
             axis=-1)
 
-    # WIP
     def unflatten_with_keys(self, x, keys: Iterable):
         """
         Return unflattened obs of spaces specified by the keys using x.
