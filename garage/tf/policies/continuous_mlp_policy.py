@@ -64,8 +64,8 @@ class ContinuousMLPPolicy(Policy, Serializable, LayersPowered):
                 env_spec.observation_space.spaces["desired_goal"])
             self._obs_dim = obs_dim + goal_dim
         else:
-            self._obs_dim = flat_dim(env_spec.observation_space)
-        self._action_dim = flat_dim(env_spec.action_space)
+            self._obs_dim = env_spec.observation_space.flat_dim
+        self._action_dim = env_spec.action_space.flat_dim
         self._action_bound = env_spec.action_space.high
         self._hidden_sizes = hidden_sizes
         self._hidden_nonlinearity = hidden_nonlinearity
