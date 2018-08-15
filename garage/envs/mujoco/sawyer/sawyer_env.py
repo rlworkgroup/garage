@@ -279,8 +279,9 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
 
     @property
     def gripper_position(self):
-        return self.sim.data.get_site_xpos('grip') - np.array(
-            [0., 0., .1])  # 0.1 offset for the finger
+        # return self.sim.data.get_site_xpos('grip') - np.array(
+        #     [0., 0., .1])  # 0.1 offset for the finger
+        return self.sim.data.get_body_xpos("r_gripper_r_finger_tip")
 
     def set_object_position(self, position):
         object_qpos = np.concatenate((position, [1, 0, 0, 0]))
@@ -288,7 +289,7 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
 
     @property
     def object_position(self):
-        return self.sim.data.get_site_xpos('object0').copy()
+        return self.sim.data.get_site_xpos('object0')
 
     @property
     def has_object(self):
@@ -381,6 +382,9 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
         self._achieved_goal = obs.get('achieved_goal')
         self._desired_goal = obs.get('desired_goal')
 
+        # collision checking is expensive so cache the value
+        in_collision = self.in_collision
+
         info = {
             "l": self._step,
             "grasped": obs["has_object"],
@@ -388,7 +392,7 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
             "gripper_position": obs["gripper_pos"],
             "object_position": obs["object_pos"],
             "is_success": self._is_success,
-            "in_collision": self.in_collision,
+            "in_collision": in_collision,
         }
 
         r = self.compute_reward(
@@ -404,7 +408,7 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
         r -= self._control_cost_coeff * np.linalg.norm(a)
 
         # collision detection
-        if self.in_collision:
+        if in_collision:
             r -= self._collision_penalty
             if self._terminate_on_collision:
                 done = True
@@ -465,13 +469,13 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
         self.sim.data.set_joint_qpos('desired_goal:joint', desired_goal_qpos)
 
         return {
-            'observation': obs.copy(),
+            'observation': obs,
             'achieved_goal': achieved_goal,
             'desired_goal': desired_goal,
             'gripper_state': self.gripper_state,
-            'gripper_pos': gripper_pos.copy(),
+            'gripper_pos': gripper_pos,
             'has_object': grasped,
-            'object_pos': object_pos.copy()
+            'object_pos': object_pos,
         }
 
     def is_success(self):
@@ -487,7 +491,6 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
                 return True
 
         return False
-
 
     def _get_collision_names(self, whitelist=True):
         contacts = []
@@ -515,15 +518,15 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
         self._sample_start_goal()
         self.set_object_position(self._start_configuration.object_pos)
 
-        if self._start_configuration.object_grasped:
-            self.set_gripper_state(1)  # open
-            self.set_gripper_position(self._start_configuration.gripper_pos)
-            self.set_object_position(self._start_configuration.gripper_pos)
-            self.set_gripper_state(-1)  # close
-        else:
-            self.set_gripper_state(self._start_configuration.gripper_state)
-            self.set_gripper_position(self._start_configuration.gripper_pos)
-            self.set_object_position(self._start_configuration.object_pos)
+        # if self._start_configuration.object_grasped:
+        #     self.set_gripper_state(1)  # open
+        #     self.set_gripper_position(self._start_configuration.gripper_pos)
+        #     self.set_object_position(self._start_configuration.gripper_pos)
+        #     self.set_gripper_state(-1)  # close
+        # else:
+        #     self.set_gripper_state(self._start_configuration.gripper_state)
+        #     self.set_gripper_position(self._start_configuration.gripper_pos)
+        #     self.set_object_position(self._start_configuration.object_pos)
 
         attempts = 1
         if self._randomize_start_jpos:
