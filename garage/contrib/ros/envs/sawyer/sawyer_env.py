@@ -1,3 +1,5 @@
+import numpy as np
+
 from garage.contrib.ros.envs.ros_env import RosEnv
 from garage.contrib.ros.util.common import rate_limited
 from garage.envs.base import Step
@@ -11,8 +13,13 @@ except ImportError:
 
 
 class SawyerEnv(RosEnv):
-    def __init__(self, simulated):
+    def __init__(self,
+                 simulated,
+                 control_cost_coeff=0.,
+                 action_scale=1.):
         RosEnv.__init__(self, simulated=simulated)
+        self._control_cost_coeff = control_cost_coeff
+        self._action_scale = action_scale
 
     def _initial_setup(self):
         self._robot.reset()
@@ -58,11 +65,16 @@ class SawyerEnv(RosEnv):
             a dictionary containing other diagnostic information
             from the previous action
         """
-        self._robot.send_command(action)
+        assert action.shape == self.action_space.shape
+        a = action.copy()  # Note: you MUST copy the action if you modify it
+        a *= self._action_scale
+        a = np.clip(a, self.action_space.low, self.action_space.high)
+        self._robot.send_command(a)
 
         obs = self.get_observation()
 
         reward = self.reward(obs.achieved_goal, self.goal)
+        reward -= self._control_cost_coeff * np.linalg.norm(a)
         done = self.done(obs.achieved_goal, self.goal)
         next_observation = obs.observation
         return Step(observation=next_observation, reward=reward, done=done)

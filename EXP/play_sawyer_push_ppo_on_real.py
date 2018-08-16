@@ -1,20 +1,32 @@
 import argparse
 import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
-import time
+import sys
 
 import joblib
+import moveit_commander
 import numpy as np
+import rospy
 import tensorflow as tf
 
+from garage.contrib.ros.envs.sawyer import PusherEnv
 from garage.misc import tensor_utils
+from garage.tf.envs import TfEnv
+
+INITIAL_ROBOT_JOINT_POS = {
+    'right_j0': -0.140923828125,
+    'right_j1': -1.2789248046875,
+    'right_j2': -3.043166015625,
+    'right_j3': -2.139623046875,
+    'right_j4': -0.047607421875,
+    'right_j5': -0.7052822265625,
+    'right_j6': -1.4102060546875,
+}
 
 
 def rollout(env,
             agent,
             max_path_length=np.inf,
-            animated=False,
-            speedup=1,
             always_return_paths=False):
     observations = []
     actions = []
@@ -24,11 +36,11 @@ def rollout(env,
     o = env.reset()
     agent.reset()
     path_length = 0
-    if animated:
-        env.render()
+
     while path_length < max_path_length:
         a, agent_info = agent.get_action(o)
         # a = agent_info["mean"]
+        a = np.concatenate((a, np.array([0.])))
         next_o, r, d, env_info = env.step(a)
         observations.append(env.observation_space.flatten(o))
         rewards.append(r)
@@ -39,11 +51,8 @@ def rollout(env,
         # if d:
         #     break
         o = next_o
-        if animated:
-            env.render()
-            timestep = 0.05
-            time.sleep(timestep / speedup)
-    if animated and not always_return_paths:
+
+    if not always_return_paths:
         return None
 
     return dict(
@@ -56,12 +65,33 @@ def rollout(env,
 
 
 def play(pkl_file):
+    # config = tf.ConfigProto(
+    #     device_count={'GPU': 0}
+    # )
+    moveit_commander.roscpp_initialize(sys.argv)
+
+    rospy.init_node('rollingout_policy_push', anonymous=True)
+
+    initial_goal = np.array([0.70, 0., 0.03])
+    push_env = PusherEnv(
+        initial_goal=initial_goal,
+        initial_joint_pos=INITIAL_ROBOT_JOINT_POS,
+        simulated=False,
+        robot_control_mode='position',
+        action_scale=0.04
+    )
+    push_env._robot.set_joint_position_speed(0.05)
+    rospy.on_shutdown(push_env.shutdown)
+    push_env.initialize()
+
+    env = TfEnv(push_env)
+
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
 
         # Unpack the snapshot
         snapshot = joblib.load(pkl_file)
-        env = snapshot["env"]
+
         policy = snapshot["policy"]
 
         while True:
@@ -69,7 +99,6 @@ def play(pkl_file):
                 env,
                 policy,
                 max_path_length=500,
-                animated=True,
             )
 
 

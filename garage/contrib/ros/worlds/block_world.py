@@ -236,7 +236,7 @@ class BlockWorld(World):
                 block = Block(
                     name=block_name,
                     size=[0.1, 0.15, 0.065],
-                    initial_pos=(0.5725, 0.1265, 0.90),
+                    initial_pos=(0.55, 0., 0.06),
                     random_delta_range=0.15,
                     resource=vicon_topic)
                 try:
