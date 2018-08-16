@@ -119,7 +119,7 @@ print_warning() {
 }
 
 # List of verified versions of OS X where garage has been installed
-VALID_VER=()
+VALID_VER=("10.12")
 VER="$(sw_vers -productVersion)"
 
 if [[ ! " ${VALID_VER[@]} " =~ " ${VER} " ]]; then
@@ -206,10 +206,10 @@ fi
 # Set up conda
 hash conda 2>/dev/null || {
   CONDA_INSTALLER="$(mktemp -d)/miniconda.sh"
-  sudo chmod u+x "${CONDA_INSTALLER}"
+  chmod u+x "${CONDA_INSTALLER}"
   wget https://repo.continuum.io/miniconda/Miniconda2-latest-MacOSX-x86_64.sh \
     -O "${CONDA_INSTALLER}"
-  sudo bash "${CONDA_INSTALLER}" -b
+  bash "${CONDA_INSTALLER}" -b
   # Add conda to executable programs
   CONDA_PATH="${HOME}/miniconda2/bin/"
   export PATH="$PATH:${CONDA_PATH}"
@@ -234,9 +234,16 @@ pip install --upgrade pip
 # See https://github.com/openai/gym/issues/100
 # See https://github.com/pybox2d/pybox2d/issues/82
 pip uninstall -y Box2D Box2D-kengz box2d-py
-pip install Box2D
+PYBOX2D_DIR="$(mktemp -d)/pybox2d"
+git clone https://github.com/pybox2d/pybox2d "${PYBOX2D_DIR}"
+cd "${PYBOX2D_DIR}"
+python setup.py build
+python setup.py install
+python setup.py develop
+cd "${GARAGE_DIR}"
 # We need a MuJoCo key to import mujoco_py
 cp ${_arg_mjkey_path} "${HOME}"/.mujoco/mjkey.txt
+brew reinstall gcc@7 --without-multilib
 python -c 'import mujoco_py'
 # Set up pre-commit in local repo
 pre-commit install -t pre-commit
@@ -255,8 +262,8 @@ else
   echo "${LD_LIB_ENV_VAR}"
   echo "${PATH_ENV_VAR}"
   echo "${PYTHON_ENV_VAR}"
-  echo "You may wish to edit your .bashrc to prepend the exports of these" \
-    "environment variables."
+  echo "You may wish to edit your .bash_profile to prepend the exports of" \
+    "these environment variables."
 fi
 
 echo -e "\nGarage is installed! To make the changes take effect, work under" \
