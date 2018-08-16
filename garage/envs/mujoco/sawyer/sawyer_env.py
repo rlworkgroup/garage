@@ -52,22 +52,22 @@ COLLISION_WHITELIST = [
     ("r_gripper_l_finger_tip", "r_gripper_r_finger"),
     ("r_gripper_r_finger_tip", "r_gripper_l_finger"),
 
-    ("task_marker", "right_l0"),
-    ("task_marker", "right_l1"),
-    ("task_marker", "right_l1_2"),
-    ("task_marker", "right_l2"),
-    ("task_marker", "right_l2_2"),
-    ("task_marker", "right_l3"),
-    ("task_marker", "right_l4"),
-    ('task_marker', 'right_l4_2'),
-    ("task_marker", "right_l5"),
-    ("task_marker", "right_l6"),
-    ("task_marker", "right_gripper_base"),
-    ("task_marker", "right_hand"),
-    ("task_marker", "r_gripper_r_finger"),
-    ("task_marker", "r_gripper_r_finger_tip"),
-    ("task_marker", "r_gripper_l_finger"),
-    ("task_marker", "r_gripper_l_finger_tip"),
+    # ("task_marker", "right_l0"),
+    # ("task_marker", "right_l1"),
+    # ("task_marker", "right_l1_2"),
+    # ("task_marker", "right_l2"),
+    # ("task_marker", "right_l2_2"),
+    # ("task_marker", "right_l3"),
+    # ("task_marker", "right_l4"),
+    # ('task_marker', 'right_l4_2'),
+    # ("task_marker", "right_l5"),
+    # ("task_marker", "right_l6"),
+    # ("task_marker", "right_gripper_base"),
+    # ("task_marker", "right_hand"),
+    # ("task_marker", "r_gripper_r_finger"),
+    # ("task_marker", "r_gripper_r_finger_tip"),
+    # ("task_marker", "r_gripper_l_finger"),
+    # ("task_marker", "r_gripper_l_finger_tip"),
     ("object0", "right_l0"),
     ("object0", "right_l1"),
     ("object0", "right_l1_2"),
@@ -84,22 +84,22 @@ COLLISION_WHITELIST = [
     ("object0", "r_gripper_r_finger_tip"),
     ("object0", "r_gripper_l_finger"),
     ("object0", "r_gripper_l_finger_tip"),
-    ("mocap", "right_l0"),
-    ("mocap", "right_l1"),
-    ("mocap", "right_l1_2"),
-    ("mocap", "right_l2"),
-    ("mocap", "right_l2_2"),
-    ("mocap", "right_l3"),
-    ("mocap", "right_l4"),
-    ('mocap', 'right_l4_2'),
-    ("mocap", "right_l5"),
-    ("mocap", "right_l6"),
-    ("mocap", "right_gripper_base"),
-    ("mocap", "right_hand"),
-    ("mocap", "r_gripper_r_finger"),
-    ("mocap", "r_gripper_r_finger_tip"),
-    ("mocap", "r_gripper_l_finger"),
-    ("mocap", "r_gripper_l_finger_tip"),
+    # ("mocap", "right_l0"),
+    # ("mocap", "right_l1"),
+    # ("mocap", "right_l1_2"),
+    # ("mocap", "right_l2"),
+    # ("mocap", "right_l2_2"),
+    # ("mocap", "right_l3"),
+    # ("mocap", "right_l4"),
+    # ('mocap', 'right_l4_2'),
+    # ("mocap", "right_l5"),
+    # ("mocap", "right_l6"),
+    # ("mocap", "right_gripper_base"),
+    # ("mocap", "right_hand"),
+    # ("mocap", "r_gripper_r_finger"),
+    # ("mocap", "r_gripper_r_finger_tip"),
+    # ("mocap", "r_gripper_l_finger"),
+    # ("mocap", "r_gripper_l_finger_tip"),
     ("achieved_goal", "right_l0"),
     ("achieved_goal", "right_l1"),
     ("achieved_goal", "right_l1_2"),
@@ -231,8 +231,10 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
                 self.sim.model.body_name2id(c[1]),
                 self.sim.model.body_name2id(c[0])
             ))
-
-        self.env_setup()
+        # Only use the mocap when using task space control,
+        # otherwise it will mess up the position control
+        if self._control_method == "task_space_control":
+            self.env_setup()
 
     def _sample_start_goal(self):
         if isinstance(self._start_goal_config, tuple):
@@ -248,14 +250,16 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
     @property
     def joint_position_space(self):
         low = np.array(
-            [-3.0503, -3.8095, -3.0426, -3.0439, -2.9761, -2.9761, -4.7124])
+            [-0.020833, -0.020833, -3.0503, -3.8095, -3.0426, -3.0439, -2.9761, -2.9761, -4.7124])
         high = np.array(
-            [3.0503, 2.2736, 3.0426, 3.0439, 2.9761, 2.9761, 4.7124])
+            [0.020833, 0.020833, 3.0503, 2.2736, 3.0426, 3.0439, 2.9761, 2.9761, 4.7124])
         return Box(low, high, dtype=np.float32)
 
     @property
     def joint_positions(self):
         curr_pos = []
+        curr_pos.append(self.sim.data.get_joint_qpos("r_gripper_l_finger_joint"))
+        curr_pos.append(self.sim.data.get_joint_qpos("r_gripper_r_finger_joint"))
         for i in range(7):
             curr_pos.append(
                 self.sim.data.get_joint_qpos('right_j{}'.format(i)))
@@ -263,7 +267,9 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
 
     @joint_positions.setter
     def joint_positions(self, jpos):
-        for i, p in enumerate(jpos):
+        self.sim.data.set_joint_qpos("r_gripper_l_finger_joint", jpos[0])
+        self.sim.data.set_joint_qpos("r_gripper_r_finger_joint", jpos[1])
+        for i, p in enumerate(jpos[2:]):
             self.sim.data.set_joint_qpos('right_j{}'.format(i), p)
 
     def set_gripper_position(self, position):
@@ -321,7 +327,7 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
                 dtype=np.float32)
         elif self._control_method == 'position_control':
             return Box(
-                low=np.full(7, -0.04), high=np.full(7, 0.04), dtype=np.float32)
+                low=np.full(9, -0.04), high=np.full(9, 0.04), dtype=np.float32)
         else:
             raise NotImplementedError
 
@@ -358,29 +364,24 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
             self.sim.forward()
         elif self._control_method == "position_control":
             curr_pos = self.joint_positions
+
             next_pos = np.clip(
                 a + curr_pos,
                 self.joint_position_space.low,
                 self.joint_position_space.high
             )
-            self.joint_positions = next_pos
-            self.sim.forward()
-
-            # # Verify the execution of the action.
-            # for i in range(7):
-            #     curr_pos = self.joint_positions
-            #     d = np.absolute(curr_pos[i] - next_pos[i])
-            #     assert d < 1e-5, \
-            #     "Joint right_j{} failed to reached the desired qpos.\nError: {}\t Desired: {}\t Current: {}"\
-            #     .format(i, d, next_pos[i], curr_pos)
-
+            self.sim.data.ctrl[:] = next_pos
+            for _ in range(20):
+                self.sim.data.ctrl[:] = next_pos
+                self.sim.step()
+                self.sim.forward()            
         else:
             raise NotImplementedError
         self._step += 1
 
         obs = self.get_obs()
         self._achieved_goal = obs.get('achieved_goal')
-        self._desired_goal = obs.get('desired_goal')
+        self._desired_goal = self._goal_configuration.gripper_pos
 
         # collision checking is expensive so cache the value
         in_collision = self.in_collision
@@ -397,7 +398,7 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
 
         r = self.compute_reward(
             achieved_goal=obs.get('achieved_goal'),
-            desired_goal=obs.get('desired_goal'),
+            desired_goal=self._desired_goal,
             info=info)
 
         self._is_success = self._success_fn(self, self._achieved_goal,
@@ -489,7 +490,6 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
         for c in self._get_collisions():
             if c not in self._collision_whitelist:
                 return True
-
         return False
 
     def _get_collision_names(self, whitelist=True):
@@ -518,16 +518,6 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
         self._sample_start_goal()
         self.set_object_position(self._start_configuration.object_pos)
 
-        # if self._start_configuration.object_grasped:
-        #     self.set_gripper_state(1)  # open
-        #     self.set_gripper_position(self._start_configuration.gripper_pos)
-        #     self.set_object_position(self._start_configuration.gripper_pos)
-        #     self.set_gripper_state(-1)  # close
-        # else:
-        #     self.set_gripper_state(self._start_configuration.gripper_state)
-        #     self.set_gripper_position(self._start_configuration.gripper_pos)
-        #     self.set_object_position(self._start_configuration.object_pos)
-
         attempts = 1
         if self._randomize_start_jpos:
             self.joint_positions = self.joint_position_space.sample()
@@ -541,14 +531,6 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
                 self.joint_positions = self.joint_position_space.sample()
                 self.sim.forward()
                 attempts += 1
-
-                # # Verify the execution of the action.
-                # for i in range(7):
-                #     curr_pos = self.joint_positions
-                #     d = np.absolute(curr_pos[i] - next_pos[i])
-                #     assert d < 1e-5, \
-                #     "Joint right_j{} failed to reached the desired qpos.\nError: {}\t Desired: {}\t Current: {}"\
-                #     .format(i, d, next_pos[i], curr_pos)
 
         return self.get_obs()
 
