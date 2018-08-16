@@ -117,7 +117,9 @@ class PushEnv(SawyerEnv):
         object_velp = self.sim.data.get_site_xvelp('object0') * dt
         object_velp -= grip_velp
         grasped = self.has_object
-        obs = np.concatenate([gripper_pos, object_pos])
+        # obs = np.concatenate([gripper_pos, object_pos])
+        # obs = np.concatenate([gripper_pos])
+        obs = np.array([0.])
         if self._control_method == "position_control":
             obs = np.concatenate((obs, self.joint_positions))
 
@@ -145,9 +147,10 @@ class PushEnv(SawyerEnv):
         if self._control_method == 'torque_control':
             return super(SawyerEnv, self).action_space
         elif self._control_method == 'task_space_control':
+            # TODO revert to xyz actions
             return Box(
-                np.array([-0.15, -0.15, -0.15]),
-                np.array([0.15, 0.15, 0.15]),
+                np.array([-0.15, -0.15]),
+                np.array([0.15, 0.15]),
                 dtype=np.float32)
         elif self._control_method == 'position_control':
             return Box(
@@ -168,16 +171,17 @@ class PushEnv(SawyerEnv):
             self.sim.forward()
         elif self._control_method == "task_space_control":
             reset_mocap2body_xpos(self.sim)
-            self.sim.data.mocap_pos[0, :
-                                    3] = self.sim.data.mocap_pos[0, :3] + a[:3]
+            # TODO revert to xyz actions
+            self.sim.data.mocap_pos[0, :2] = self.sim.data.mocap_pos[0, :2] + a[:2]
             self.sim.data.mocap_quat[:] = np.array([0, 1, 0, 0])
             # self.set_gripper_state(a[3])
             self.sim.forward()
-            for _ in range(1):
+            for _ in range(5):
                 self.sim.step()
         elif self._control_method == "position_control":
             curr_pos = self.joint_positions
-            next_pos = np.clip(a + curr_pos, self.joint_position_space.low,
+            next_pos = np.clip(a + curr_pos,
+                               self.joint_position_space.low,
                                self.joint_position_space.high)
             self.joint_positions = next_pos
             self.sim.step()
@@ -220,10 +224,13 @@ class PushEnv(SawyerEnv):
         done = False
         if self._is_success:
             r = self._completion_bonus
-            done = True
+            # done = True
+            info["d"] = True
+        else:
+            info["d"] = False
 
         info["r"] = r
-        info["d"] = done
+        # info["d"] = done
 
         # control cost
         r -= self._control_cost_coeff * np.linalg.norm(a)
