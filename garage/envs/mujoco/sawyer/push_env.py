@@ -42,15 +42,15 @@ class PushEnv(SawyerEnv):
             if control_method == 'task_space_control':
                 start = Configuration(
                     gripper_pos=gripper_pos,
-                    gripper_state=0,
+                    gripper_state=1,
                     object_grasped=False,
-                    object_pos=np.concatenate([xy, [0.03]]),
+                    object_pos=(0.8, 0, 0),
                     joint_pos=None)
                 goal = Configuration(
-                    gripper_pos=None,
-                    gripper_state=0,
+                    gripper_pos=(0.5, 0, 0),
+                    gripper_state=1,
                     object_grasped=False,
-                    object_pos=np.concatenate([xy + delta, [0.03]]),
+                    object_pos=(0.5, 0, 0),
                     joint_pos=None)
             else:
                 if easy_gripper_init:
@@ -102,7 +102,7 @@ class PushEnv(SawyerEnv):
             start_goal_config=start_goal_config,
             achieved_goal_fn=achieved_goal_fn,
             desired_goal_fn=desired_goal_fn,
-            file_path="push.xml",
+            file_path="push.xml" if control_method == "task_space_control" else "push_poscontrol.xml",
             collision_whitelist=[],
             control_method=control_method,
             **kwargs)
@@ -117,11 +117,12 @@ class PushEnv(SawyerEnv):
         object_velp = self.sim.data.get_site_xvelp('object0') * dt
         object_velp -= grip_velp
         grasped = self.has_object
-        # obs = np.concatenate([gripper_pos, object_pos])
-        # obs = np.concatenate([gripper_pos])
-        obs = np.array([0.])
         if self._control_method == "position_control":
-            obs = np.concatenate((obs, self.joint_positions))
+            obs = np.concatenate([self.joint_positions, self.object_position])
+        else:
+            # obs = np.concatenate([gripper_pos, object_pos])
+            # obs = np.concatenate([gripper_pos])
+            obs = np.array([0.])
 
         achieved_goal = self._achieved_goal_fn(self)
         desired_goal = self._desired_goal_fn(self)
@@ -141,101 +142,108 @@ class PushEnv(SawyerEnv):
             'object_pos': object_pos.copy()
         }
 
-    @overrides
-    @property
-    def action_space(self):
-        if self._control_method == 'torque_control':
-            return super(SawyerEnv, self).action_space
-        elif self._control_method == 'task_space_control':
-            # TODO revert to xyz actions
-            return Box(
-                np.array([-0.15, -0.15]),
-                np.array([0.15, 0.15]),
-                dtype=np.float32)
-        elif self._control_method == 'position_control':
-            return Box(
-                low=np.full(7, -0.04), high=np.full(7, 0.04), dtype=np.float32)
-        else:
-            raise NotImplementedError
+    # @overrides
+    # @property
+    # def action_space(self):
+    #     if self._control_method == 'torque_control':
+    #         return super(SawyerEnv, self).action_space
+    #     elif self._control_method == 'task_space_control':
+    #         # TODO revert to xyz actions
+    #         return Box(
+    #             np.array([-0.15, -0.15]),
+    #             np.array([0.15, 0.15]),
+    #             dtype=np.float32)
+    #     elif self._control_method == 'position_control':
+    #         return Box(
+    #             low=np.full(9, -0.04), high=np.full(9, 0.04), dtype=np.float32)
+    #     else:
+    #         raise NotImplementedError
 
-    @overrides
-    def step(self, action):
-        # Clip to action space
-        assert action.shape == self.action_space.shape
-        a = action.copy()  # Note: you MUST copy the action if you modify it
-        a *= self._action_scale
-        a = np.clip(a, self.action_space.low, self.action_space.high)
-
-        if self._control_method == "torque_control":
-            self.forward_dynamics(a)
-            self.sim.forward()
-        elif self._control_method == "task_space_control":
-            reset_mocap2body_xpos(self.sim)
-            # TODO revert to xyz actions
-            self.sim.data.mocap_pos[0, :2] = self.sim.data.mocap_pos[0, :2] + a[:2]
-            self.sim.data.mocap_quat[:] = np.array([0, 1, 0, 0])
-            # self.set_gripper_state(a[3])
-            self.sim.forward()
-            for _ in range(5):
-                self.sim.step()
-        elif self._control_method == "position_control":
-            curr_pos = self.joint_positions
-            next_pos = np.clip(a + curr_pos,
-                               self.joint_position_space.low,
-                               self.joint_position_space.high)
-            self.joint_positions = next_pos
-            self.sim.step()
-
-            # Verify the execution of the action.
-            # for i in range(7):
-            #     curr_pos = self.sim.data.get_joint_qpos('right_j{}'.format(i))
-            #     d = np.absolute(curr_pos - next_pos[i])
-            #     assert d < 1e-2, \
-            #         "Joint right_j{} failed to reach the desired qpos.\nError: {}\t Desired: {}\t Current: {}" \
-            #         .format(i, d, next_pos[i], curr_pos)
-        else:
-            raise NotImplementedError
-        self._step += 1
-
-        obs = self.get_obs()
-        self._achieved_goal = obs.get('achieved_goal')
-        self._desired_goal = obs.get('desired_goal')
-
-        info = {
-            "l": self._step,
-            "grasped": obs["has_object"],
-            "gripper_state": obs["gripper_state"],
-            "gripper_position": obs["gripper_pos"],
-            "object_position": obs["object_pos"],
-            "is_success": self._is_success
-        }
-
-        r = self.compute_reward(
-            achieved_goal=obs.get('achieved_goal'),
-            desired_goal=obs.get('desired_goal'),
-            info=info)
-        if self._easy_gripper_init:
-            # encourage gripper to move close to block
-            r += 0.02 - np.linalg.norm(self.gripper_position -
-                                       self.object_position)
-
-        self._is_success = self._success_fn(self, self._achieved_goal,
-                                            self._desired_goal, info)
-        done = False
-        if self._is_success:
-            r = self._completion_bonus
-            # done = True
-            info["d"] = True
-        else:
-            info["d"] = False
-
-        info["r"] = r
-        # info["d"] = done
-
-        # control cost
-        r -= self._control_cost_coeff * np.linalg.norm(a)
-
-        return obs, r, done, info
+    # @overrides
+    # def step(self, action):
+    #     assert action.shape == self.action_space.shape
+    #
+    #     # Note: you MUST copy the action if you modify it
+    #     a = action.copy()
+    #
+    #     # Clip to action space
+    #     a *= self._action_scale
+    #     a = np.clip(a, self.action_space.low, self.action_space.high)
+    #
+    #     if self._control_method == "torque_control":
+    #         self.forward_dynamics(a)
+    #         self.sim.forward()
+    #     elif self._control_method == "task_space_control":
+    #         reset_mocap2body_xpos(self.sim)
+    #         self.sim.data.mocap_pos[0, :2] = self.sim.data.mocap_pos[0, :2] + a[:2]
+    #         self.sim.data.mocap_quat[:] = np.array([0, 1, 0, 0])
+    #         # self.set_gripper_state(a[3])
+    #         for _ in range(5):
+    #             self.sim.step()
+    #         self.sim.forward()
+    #     elif self._control_method == "position_control":
+    #         curr_pos = self.joint_positions
+    #
+    #         next_pos = np.clip(
+    #             a + curr_pos,
+    #             self.joint_position_space.low,
+    #             self.joint_position_space.high
+    #         )
+    #         # self.sim.data.ctrl[:] = next_pos
+    #         for _ in range(1):
+    #             self.sim.data.ctrl[:] = next_pos
+    #             self.sim.step()
+    #             self.sim.forward()
+    #     else:
+    #         raise NotImplementedError
+    #     self._step += 1
+    #
+    #     obs = self.get_obs()
+    #     self._achieved_goal = obs.get('achieved_goal')
+    #     self._desired_goal = self._goal_configuration.gripper_pos
+    #
+    #     # collision checking is expensive so cache the value
+    #     in_collision = self.in_collision
+    #
+    #     info = {
+    #         "l": self._step,
+    #         "grasped": obs["has_object"],
+    #         "gripper_state": obs["gripper_state"],
+    #         "gripper_position": obs["gripper_pos"],
+    #         "object_position": obs["object_pos"],
+    #         "is_success": self._is_success,
+    #         "in_collision": in_collision,
+    #     }
+    #
+    #     self._achieved_goal = self.object_position
+    #     self._desired_goal = self._goal_configuration.object_pos
+    #
+    #     r = self.compute_reward(
+    #         achieved_goal=self._achieved_goal,
+    #         desired_goal=self._desired_goal,
+    #         info=info)
+    #
+    #     self._is_success = self._success_fn(self, self._achieved_goal,
+    #                                         self._desired_goal, info)
+    #     done = False
+    #
+    #     # control cost
+    #     r -= self._control_cost_coeff * np.linalg.norm(a)
+    #
+    #     # collision detection
+    #     if in_collision:
+    #         r -= self._collision_penalty
+    #         if self._terminate_on_collision:
+    #             done = True
+    #
+    #     if self._is_success:
+    #         r = self._completion_bonus
+    #         # done = True
+    #
+    #     info["r"] = r
+    #     info["d"] = done
+    #
+    #     return obs, r, done, info
 
 
 class SimplePushEnv(SawyerEnvWrapper, Serializable):

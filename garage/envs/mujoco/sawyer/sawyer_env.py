@@ -233,7 +233,10 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
                 (self.sim.model.body_name2id(c[1]),
                  self.sim.model.body_name2id(c[0])))
 
-        self.env_setup()
+        # Only use the mocap when using task space control,
+        # otherwise it will mess up the position control
+        if self._control_method == "task_space_control":
+            self.env_setup()
 
     def _sample_start_goal(self):
         if isinstance(self._start_goal_config, tuple):
@@ -249,14 +252,16 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
     @property
     def joint_position_space(self):
         low = np.array(
-            [-3.0503, -3.8095, -3.0426, -3.0439, -2.9761, -2.9761, -4.7124])
+            [-0.020833, -0.020833, -3.0503, -3.8095, -3.0426, -3.0439, -2.9761, -2.9761, -4.7124])
         high = np.array(
-            [3.0503, 2.2736, 3.0426, 3.0439, 2.9761, 2.9761, 4.7124])
+            [0.020833, 0.020833, 3.0503, 2.2736, 3.0426, 3.0439, 2.9761, 2.9761, 4.7124])
         return Box(low, high, dtype=np.float32)
 
     @property
     def joint_positions(self):
         curr_pos = []
+        curr_pos.append(self.sim.data.get_joint_qpos("r_gripper_l_finger_joint"))
+        curr_pos.append(self.sim.data.get_joint_qpos("r_gripper_r_finger_joint"))
         for i in range(7):
             curr_pos.append(
                 self.sim.data.get_joint_qpos('right_j{}'.format(i)))
@@ -264,19 +269,10 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
 
     @joint_positions.setter
     def joint_positions(self, jpos):
-        for i, p in enumerate(jpos):
+        self.sim.data.set_joint_qpos("r_gripper_l_finger_joint", jpos[0])
+        self.sim.data.set_joint_qpos("r_gripper_r_finger_joint", jpos[1])
+        for i, p in enumerate(jpos[2:]):
             self.sim.data.set_joint_qpos('right_j{}'.format(i), p)
-
-    def set_gripper_position(self, position):
-        reset_mocap2body_xpos(self.sim)
-        self.sim.data.mocap_quat[:] = np.array([0, 1, 0, 0])
-        self.sim.data.set_mocap_pos('mocap', position)
-        for _ in range(100):
-            self.sim.step()
-            reset_mocap2body_xpos(self.sim)
-            self.sim.data.mocap_quat[:] = np.array([0, 1, 0, 0])
-            self.sim.data.set_mocap_pos('mocap', position)
-        # self.sim.forward()
 
     @property
     def gripper_position(self):
@@ -321,7 +317,7 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
                 dtype=np.float32)
         elif self._control_method == 'position_control':
             return Box(
-                low=np.full(7, -0.04), high=np.full(7, 0.04), dtype=np.float32)
+                low=np.full(9, -0.04), high=np.full(9, 0.04), dtype=np.float32)
         else:
             raise NotImplementedError
 
@@ -419,7 +415,7 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
         # 1 = open, -1 = closed
         self.gripper_state = state
         state = (state + 1.) / 2.
-        self.sim.data.ctrl[:] = np.array([state * 0.020833, -state * 0.020833])
+        self.sim.data.ctrl[-2:] = np.array([state * 0.020833, -state * 0.020833])
         # for _ in range(3):
         #     self.sim.step()
         # self.sim.forward()
@@ -507,35 +503,26 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
         self._sample_start_goal()
         self.set_object_position(self._start_configuration.object_pos)
 
-        if self._start_configuration.object_grasped:
-            self.set_gripper_state(1)  # open
-            self.set_gripper_position(self._start_configuration.gripper_pos)
-            self.set_object_position(self._start_configuration.gripper_pos)
-            self.set_gripper_state(-1)  # close
-        else:
-            self.set_gripper_state(self._start_configuration.gripper_state)
-            self.set_gripper_position(self._start_configuration.gripper_pos)
-            self.set_object_position(self._start_configuration.object_pos)
-
-        # for _ in range(20):
-        #     self.sim.step()
-        # self.sim.forward()
-
         if self._start_configuration.joint_pos is not None:
-            self.joint_positions = self._start_configuration.joint_pos
-            self.sim.step()
-
-        attempts = 1
-        if self._randomize_start_jpos:
-            self.joint_positions = self.joint_position_space.sample()
+            if len(self._start_configuration.joint_pos) == 7:
+                self.joint_positions = np.concatenate((np.zeros(2), self._start_configuration.joint_pos))
+            else:
+                self.joint_positions = self._start_configuration.joint_pos
             self.sim.forward()
-            while hasattr(self, "_collision_whitelist") and self.in_collision:
-                if attempts > 1000:
-                    print("Gave up after 1000 attempts")
 
-                self.joint_positions = self.joint_position_space.sample()
-                self.sim.forward()
-                attempts += 1
+        # attempts = 1
+        # if self._randomize_start_jpos:
+        #     self.joint_positions = self.joint_position_space.sample()
+        #     self.sim.forward()
+        #     while hasattr(self, "_collision_whitelist") and self.in_collision:
+        #         if attempts > 1000:
+        #             print("Gave up after 1000 attempts")
+        #             import ipdb
+        #             ipdb.set_trace()
+        #
+        #         self.joint_positions = self.joint_position_space.sample()
+        #         self.sim.forward()
+        #         attempts += 1
 
         return self.get_obs()
 
