@@ -18,7 +18,7 @@ def run_task(v):
             control_method='position_control',
             action_scale=0.04,
             completion_bonus=0.0,
-            collision_penalty=0.))
+            collision_penalty=1.))
 
     policy = GaussianMLPPolicy(
         name="policy",
@@ -50,7 +50,7 @@ def run_task(v):
 config = dict(
     batch_size=4096,
     max_path_length=500,
-    policy_init_std=0.5,
+    policy_init_std=1,
 )
 
 run_experiment(

@@ -138,7 +138,7 @@ class PushEnv(SawyerEnv):
                     np.random.uniform(-0.35, 0.35)
                 ]
             else:
-                xy = [0.7, 0.]
+                xy = [0.55, 0.]
             d = 0.15
             delta = np.array({
                 "up": (d, 0),
@@ -168,12 +168,17 @@ class PushEnv(SawyerEnv):
             else:
                 if easy_gripper_init:
                     jpos = np.array({
-                        "up": [
-                            -0.68198394, -0.96920825, 0.76964638, 2.00488611,
-                            -0.56956307, 0.76115281, -0.97169329
-                        ],
-                        #                        "up": [-0.64455559, -1.0961024,   0.91690344,  2.31425867, -0.57141069,  0.62862147,
+                        # "up": [
+                        #     -0.68198394, -0.96920825, 0.76964638, 2.00488611,
+                        #     -0.56956307, 0.76115281, -0.97169329
+                        # ],
+                        #  "up": [-0.64455559, -3.0961024,   0.91690344,  4.31425867, -0.57141069,  0.62862147,
                         # -0.69098976],
+                        "up": [
+                            -0.140923828125, -1.2789248046875, -3.043166015625,
+                            -2.139623046875, -0.047607421875, -0.7052822265625,
+                            -1.4102060546875
+                        ],
                         "down": [
                             -0.12526904, 0.29675812, 0.06034621, -0.55948609,
                             -0.03694355, 1.8277617, -1.54921871
@@ -213,7 +218,7 @@ class PushEnv(SawyerEnv):
         def desired_goal_fn(env: SawyerEnv):
             return env._goal_configuration.object_pos
 
-        self._touched = False
+        self._test_ration = 0
 
         super(PushEnv, self).__init__(
             start_goal_config=start_goal_config,
@@ -315,7 +320,6 @@ class PushEnv(SawyerEnv):
                         in_collision = True
                         break
             if in_collision:
-                self._touched = True
                 new_gripper_pos = self.gripper_position
 
                 xy_delta = new_gripper_pos[:2] - old_gripper_pos[:2]
@@ -360,19 +364,23 @@ class PushEnv(SawyerEnv):
             "is_success": self._is_success
         }
 
-        r = self.compute_reward(
+        r1 = self.compute_reward(
             achieved_goal=obs.get('achieved_goal'),
             desired_goal=obs.get('desired_goal'),
             info=info)
 
-        if not self._touched:
-            r += self.compute_reward(
-                self.gripper_position, self.object_position, info=info)
+        r2 = -np.linalg.norm(self.gripper_position - self.object_position) / 5
 
-        if self._easy_gripper_init:
-            # encourage gripper to move close to block
-            r += 0.02 - np.linalg.norm(self.gripper_position -
-                                       self.object_position)
+        # if r2 / r1 > self._test_ration:
+        #     self._test_ration = r2 / r1
+        #     print(self._test_ration)
+
+        r = r1 + r2
+
+        # if self._easy_gripper_init:
+        #     # encourage gripper to move close to block
+        #     r += 0.02 - np.linalg.norm(self.gripper_position -
+        #                                self.object_position)
 
         self._is_success = self._success_fn(self, self._achieved_goal,
                                             self._desired_goal, info)
@@ -391,7 +399,6 @@ class PushEnv(SawyerEnv):
 
     @overrides
     def reset(self):
-        self._touched = False
         return super(PushEnv, self).reset()
 
 
