@@ -125,7 +125,7 @@ COLLISION_WHITELIST = [
 
 class PushEnv(SawyerEnv):
     def __init__(self,
-                 direction="up",
+                 delta=np.array([0.15, 0, 0]),
                  easy_gripper_init=True,
                  randomize_start_pos=False,
                  control_method='task_space_control',
@@ -133,82 +133,92 @@ class PushEnv(SawyerEnv):
         def start_goal_config():
             # center = self.sim.data.get_geom_xpos('target2')
             if randomize_start_pos:
-                xy = [
+                initial_block_pos = np.array([
                     np.random.uniform(0.6, 0.8),
-                    np.random.uniform(-0.35, 0.35)
-                ]
+                    np.random.uniform(-0.35, 0.35),
+                    0.03
+                ])
             else:
-                xy = [0.55, 0.]
-            d = 0.15
-            delta = np.array({
-                "up": (d, 0),
-                "down": (-d, 0),
-                "left": (0, d),
-                "right": (0, -d)
-            }[direction])
-            if easy_gripper_init:
-                # position gripper besides the block
-                gripper_pos = np.concatenate([xy - delta, [0.07]])
-            else:
-                # position gripper above the block
-                gripper_pos = np.concatenate([xy, [0.2]])
+                initial_block_pos = np.array([0.55, 0., 0.03])
+            # d = 0.15
+            # delta = np.array({
+            #     "up": (d, 0),
+            #     "down": (-d, 0),
+            #     "left": (0, d),
+            #     "right": (0, -d)
+            # }[direction])
+            # if easy_gripper_init:
+            #     # position gripper besides the block
+            #     gripper_pos = np.concatenate([initial_block_pos - delta, [0.07]])
+            # else:
+            #     # position gripper above the block
+            #     gripper_pos = np.concatenate([initial_block_pos, [0.2]])
             if control_method == 'task_space_control':
                 start = Configuration(
-                    gripper_pos=gripper_pos,
+                    gripper_pos=initial_block_pos + np.array([0, 0, 0.3]),
                     gripper_state=0,
                     object_grasped=False,
-                    object_pos=np.concatenate([xy, [0.03]]),
+                    object_pos=initial_block_pos,
                     joint_pos=None)
                 goal = Configuration(
                     gripper_pos=None,
                     gripper_state=0,
                     object_grasped=False,
-                    object_pos=np.concatenate([xy + delta, [0.03]]),
+                    object_pos=initial_block_pos + delta,
                     joint_pos=None)
             else:
                 if easy_gripper_init:
-                    jpos = np.array({
-                        # "up": [
-                        #     -0.68198394, -0.96920825, 0.76964638, 2.00488611,
-                        #     -0.56956307, 0.76115281, -0.97169329
-                        # ],
-                        #  "up": [-0.64455559, -3.0961024,   0.91690344,  4.31425867, -0.57141069,  0.62862147,
-                        # -0.69098976],
-                        "up": [
-                            -0.140923828125, -1.2789248046875, -3.043166015625,
-                            -2.139623046875, -0.047607421875, -0.7052822265625,
-                            -1.4102060546875
-                        ],
-                        "down": [
-                            -0.12526904, 0.29675812, 0.06034621, -0.55948609,
-                            -0.03694355, 1.8277617, -1.54921871
-                        ],
-                        "left": [
-                            -0.36766702, 0.62033507, 0.00376033, -1.33212273,
-                            0.06092402, 2.29230268, -1.7248123
-                        ],
-                        "right": [
-                            5.97299145e-03, 6.46604393e-01, 1.40055632e-03,
-                            -1.22810430e+00, 9.04236294e-03, 2.13193649e+00,
-                            -1.38572576e+00
-                        ]
-                    }[direction])
+                    jpos = np.array([
+                        0.02631256,  0.57778916,  0.1339495, -2.16678053,
+                        -1.77062755, 3.03287272, -3.22155594
+                    ])
+                    # jpos = np.array({
+                    #     "up": [
+                    #         -0.68198394, -0.96920825, 0.76964638, 2.00488611,
+                    #         -0.56956307, 0.76115281, -0.97169329
+                    #     ],
+                    #      "up": [-0.64455559, -3.0961024,   0.91690344,  4.31425867, -0.57141069,  0.62862147,
+                    #     -0.69098976],
+                    #     "up": [
+                    #         -0.140923828125, -1.2789248046875, -3.043166015625,
+                    #         -2.139623046875, -0.047607421875, -0.7052822265625,
+                    #         -1.4102060546875
+                    #     ],
+                    #     "down": [
+                    #         -0.12526904, 0.29675812, 0.06034621, -0.55948609,
+                    #         -0.03694355, 1.8277617, -1.54921871
+                    #     ],
+                    #     "down": [
+                    #         -0.140923828125, -1.2789248046875, -3.043166015625,
+                    #         -2.139623046875, -0.047607421875, -0.7052822265625,
+                    #         -1.4102060546875
+                    #     ],
+                    #     "left": [
+                    #         -0.36766702, 0.62033507, 0.00376033, -1.33212273,
+                    #         0.06092402, 2.29230268, -1.7248123
+                    #     ],
+                    #     "right": [
+                    #         5.97299145e-03, 6.46604393e-01, 1.40055632e-03,
+                    #         -1.22810430e+00, 9.04236294e-03, 2.13193649e+00,
+                    #         -1.38572576e+00
+                    #     ]
+                    # }[direction])
                 else:
                     jpos = np.array([
                         -0.35807692, 0.6890401, -0.21887338, -1.4569705,
                         0.22947722, 2.31383609, -1.4571502
                     ])
                 start = Configuration(
-                    gripper_pos=gripper_pos,
+                    gripper_pos=initial_block_pos + np.array([0, 0, 0.3]),
                     gripper_state=0,
                     object_grasped=False,
-                    object_pos=np.concatenate([xy, [0.03]]),
+                    object_pos=initial_block_pos,
                     joint_pos=jpos)
                 goal = Configuration(
                     gripper_pos=None,
                     gripper_state=0,
                     object_grasped=False,
-                    object_pos=np.concatenate([xy + delta, [0.03]]),
+                    object_pos=initial_block_pos + delta,
                     joint_pos=None)
             return start, goal
 
