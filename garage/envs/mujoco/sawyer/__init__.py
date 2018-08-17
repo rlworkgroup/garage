@@ -4,4 +4,4 @@ from garage.envs.mujoco.sawyer.pick_and_place_env import PickAndPlaceEnv
 from garage.envs.mujoco.sawyer.push_env import PushEnv
 from garage.envs.mujoco.sawyer.reacher_env import ReacherEnv
 from garage.envs.mujoco.sawyer.reacher_env import SimpleReacherEnv
-from garage.envs.mujoco.sawyer.sawyer_env import SawyerEnv
+from garage.envs.mujoco.sawyer.sawyer_env import SawyerEnv, Configuration

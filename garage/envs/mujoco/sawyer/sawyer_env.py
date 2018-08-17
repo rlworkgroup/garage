@@ -182,6 +182,7 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
                  reward_type='dense',
                  control_method='task_space_control',
                  file_path='pick_and_place.xml',
+                 send_done_signal=False,
                  *args,
                  **kwargs):
         """
@@ -206,6 +207,8 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
         self.gripper_state = 0.
         self._is_success = False
 
+        self._send_done_signal = send_done_signal
+
         self._reward_type = reward_type
         self._control_method = control_method
         self._max_episode_steps = max_episode_steps
@@ -218,6 +221,8 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
         self._randomize_start_jpos = randomize_start_jpos
         self._terminate_on_collision = terminate_on_collision
         self._collision_penalty = collision_penalty
+
+        self._episode_data = {}
 
         file_path = osp.join(MODEL_DIR, file_path)
         MujocoEnv.__init__(self, file_path=file_path)
@@ -285,7 +290,7 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
 
     @property
     def object_position(self):
-        return self.sim.data.get_site_xpos('object0').copy()
+        return self.sim.data.get_geom_xpos('object0').copy()
 
     @property
     def has_object(self):
@@ -356,8 +361,10 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
             curr_pos = self.joint_positions
             next_pos = np.clip(a + curr_pos, self.joint_position_space.low,
                                self.joint_position_space.high)
-            self.joint_positions = next_pos
+            # self.joint_positions = next_pos
+            self.sim.data.ctrl[:] = next_pos
             self.sim.forward()
+            self.sim.step()
 
             # Verify the execution of the action.
             # for i in range(7):
@@ -404,12 +411,14 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
 
         if self._is_success:
             r = self._completion_bonus
-            # done = True
+            info["d"] = True
+            done = True
+        else:
+            info["d"] = False
 
         info["r"] = r
-        info["d"] = done
 
-        return obs, r, done, info
+        return obs, r, done and self._send_done_signal, info
 
     def set_gripper_state(self, state):
         # 1 = open, -1 = closed
@@ -498,6 +507,7 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
     @overrides
     def reset(self):
         self._step = 0
+        self._episode_data = {}
         super(SawyerEnv, self).reset()
 
         self._sample_start_goal()

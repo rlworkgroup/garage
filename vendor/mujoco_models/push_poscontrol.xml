@@ -20,20 +20,9 @@
 
     <body name="object0" pos="0 0 0">
       <joint name="object0:joint" type="free" damping="0.01"/>
-      <geom size="0.05 0.075 0.0325" type="box" condim="3" name="object0" contype="1" conaffinity="1" material="block_mat" mass="1000"/>
-      <site name="object0" pos="0 0 0" size="0.01 0.01 0.01" rgba="1 0 0 1" type="sphere"/>
+      <geom size="0.05 0.075 0.04" type="box" condim="3" name="object0" contype="1" conaffinity="1" material="block_mat" mass="100"/>
     </body>
     <include file="sawyer_robot.xml"/>
-
-    <body name="achieved_goal">
-      <joint name="achieved_goal:joint" type="free" damping="0.01"/>
-      <geom conaffinity="0" contype="0" pos="0 0 0" rgba="1 0 0 1" size="0.01" type="sphere" name="achieved_goal"/>
-    </body>
-
-    <body name="desired_goal">
-      <joint name="desired_goal:joint" type="free" damping="0.01"/>
-      <geom conaffinity="0" contype="0" pos="0 0 0" rgba="0 1 0 1" size="0.01" type="sphere" name="desired_goal"/>
-    </body>
   </worldbody>
 
   <actuator>

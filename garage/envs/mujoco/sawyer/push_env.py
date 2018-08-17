@@ -1,8 +1,5 @@
 import numpy as np
 
-from gym.spaces import Box
-from gym.envs.robotics.utils import reset_mocap2body_xpos
-
 from garage.core.serializable import Serializable
 from garage.envs.mujoco.sawyer.sawyer_env import Configuration
 from garage.envs.mujoco.sawyer.sawyer_env import SawyerEnv
@@ -25,7 +22,7 @@ class PushEnv(SawyerEnv):
                     np.random.uniform(-0.35, 0.35)
                 ]
             else:
-                xy = [0.7, 0.]
+                xy = [0.75, 0.17]
             d = 0.15
             delta = np.array({
                 "up": (d, 0),
@@ -54,10 +51,11 @@ class PushEnv(SawyerEnv):
                     joint_pos=None)
             else:
                 if easy_gripper_init:
+                    if direction != "up":
+                        raise Warning("Easy gripper init has only been implemented for the up direction so far.")
                     jpos = np.array({
                         "up": [
-                            -0.68198394, -0.96920825, 0.76964638, 2.00488611,
-                            -0.56956307, 0.76115281, -0.97169329
+                            0, -0.97, 0, 2., 0, 0.5, 1.65
                         ],
                         "down": [
                             -0.12526904, 0.29675812, 0.06034621, -0.55948609,
@@ -75,8 +73,7 @@ class PushEnv(SawyerEnv):
                     }[direction])
                 else:
                     jpos = np.array([
-                        -0.35807692, 0.6890401, -0.21887338, -1.4569705,
-                        0.22947722, 2.31383609, -1.4571502
+                        0, -1.1, 0, 1.3, 0, 1.4, 1.65
                     ])
                 start = Configuration(
                     gripper_pos=gripper_pos,
@@ -98,6 +95,28 @@ class PushEnv(SawyerEnv):
         def desired_goal_fn(env: SawyerEnv):
             return env._goal_configuration.object_pos
 
+        def reward_fn(env: SawyerEnv, achieved_goal, desired_goal, info: dict):
+            gripper_pos = info["gripper_position"]
+            object_pos = info["object_position"]
+
+            if direction == "up":
+                if "_traj_phase" not in env._episode_data or env._episode_data["_traj_phase"] == 0:
+                    env._episode_data["_traj_phase"] = 0
+                    # Gripper start on top of block -> has to move in front of it
+                    if gripper_pos[2] < 0.05 and np.linalg.norm(gripper_pos - object_pos + np.array([0.1, 0, 0])) < 0.2:
+                        env._episode_data["_traj_phase"] += 1
+                        print("Reached phase", env._episode_data["_traj_phase"])
+                    return -gripper_pos[2] - 10. * np.linalg.norm(gripper_pos - object_pos + np.array([0.1, 0, 0])) + gripper_pos[1] - 10. * np.linalg.norm(gripper_pos[1] - object_pos[1])
+
+            reach_block = -np.linalg.norm(gripper_pos - object_pos)
+            block_goal = -np.linalg.norm(achieved_goal - desired_goal)
+            block_down = -object_pos[2]
+
+            dt = env.sim.nsubsteps * env.sim.model.opt.timestep
+            block_norot = -np.linalg.norm(env.sim.data.get_geom_xvelr('object0') * dt)
+
+            return .1 * reach_block + block_goal + block_down + block_norot
+
         super(PushEnv, self).__init__(
             start_goal_config=start_goal_config,
             achieved_goal_fn=achieved_goal_fn,
@@ -105,6 +124,8 @@ class PushEnv(SawyerEnv):
             file_path="push.xml" if control_method == "task_space_control" else "push_poscontrol.xml",
             collision_whitelist=[],
             control_method=control_method,
+            reward_fn=reward_fn,
+            send_done_signal=False,
             **kwargs)
         self._easy_gripper_init = easy_gripper_init
 
@@ -114,11 +135,11 @@ class PushEnv(SawyerEnv):
         grip_velp = self.sim.data.get_site_xvelp('grip') * dt
 
         object_pos = self.object_position
-        object_velp = self.sim.data.get_site_xvelp('object0') * dt
+        object_velp = self.sim.data.get_geom_xvelp('object0') * dt
         object_velp -= grip_velp
         grasped = self.has_object
         if self._control_method == "position_control":
-            obs = np.concatenate([self.joint_positions, self.object_position])
+            obs = np.concatenate([self.joint_positions, self.object_position, self.gripper_position])
         else:
             # obs = np.concatenate([gripper_pos, object_pos])
             # obs = np.concatenate([gripper_pos])
@@ -127,10 +148,10 @@ class PushEnv(SawyerEnv):
         achieved_goal = self._achieved_goal_fn(self)
         desired_goal = self._desired_goal_fn(self)
 
-        achieved_goal_qpos = np.concatenate((achieved_goal, [1, 0, 0, 0]))
-        self.sim.data.set_joint_qpos('achieved_goal:joint', achieved_goal_qpos)
-        desired_goal_qpos = np.concatenate((desired_goal, [1, 0, 0, 0]))
-        self.sim.data.set_joint_qpos('desired_goal:joint', desired_goal_qpos)
+        # achieved_goal_qpos = np.concatenate((achieved_goal, [1, 0, 0, 0]))
+        # self.sim.data.set_joint_qpos('achieved_goal:joint', achieved_goal_qpos)
+        # desired_goal_qpos = np.concatenate((desired_goal, [1, 0, 0, 0]))
+        # self.sim.data.set_joint_qpos('desired_goal:joint', desired_goal_qpos)
 
         return {
             'observation': obs.copy(),

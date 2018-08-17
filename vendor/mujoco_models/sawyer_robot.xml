@@ -1,8 +1,8 @@
 <mujoco>
     <body name="pedestal_table" pos="0.482 0 -0.05">
       <inertial pos="0 0 0" quat="0.659267 -0.259505 -0.260945 0.655692" mass="60.864" diaginertia="6.0869 5.81635 4.20915" />
-      <geom pos="0 0 0" quat="0.707 0 0 0.707" type="mesh" contype="0" conaffinity="0" group="1" rgba="0.6 0.6 0.6 1" mesh="pedestal_table" />
-      <geom name="table" size="0.6 0.45 0.05" pos="0 0 0" type="box" rgba="0.2 0.2 0.2 0" />
+      <!-- <geom pos="0 0 0" quat="0.707 0 0 0.707" type="mesh" contype="0" conaffinity="0" group="1" rgba="0.6 0.6 0.6 1" mesh="pedestal_table" /> -->
+      <geom name="table" size="0.6 0.45 0.05" pos="0 0 0" type="box" rgba="0.4 0.4 0.4 1" />
     <body name="right_arm_base_link" pos="-0.482 0 0.05">
       <inertial pos="-0.0006241 -2.8025e-05 0.065404" quat="-0.209285 0.674441 0.227335 0.670558" mass="2.0687" diaginertia="0.00740351 0.00681776 0.00672942" />
       <geom type="mesh" contype="0" conaffinity="0" group="1" rgba="0.5 0.1 0.1 1" mesh="base" />
