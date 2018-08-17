@@ -5,6 +5,7 @@ from garage.envs.mujoco.sawyer.sawyer_env import Configuration
 from garage.envs.mujoco.sawyer.sawyer_env import SawyerEnv
 from garage.envs.mujoco.sawyer.sawyer_env import SawyerEnvWrapper
 from garage.misc.overrides import overrides
+from gym.envs.robotics import rotations
 
 
 class PushEnv(SawyerEnv):
@@ -99,14 +100,18 @@ class PushEnv(SawyerEnv):
             gripper_pos = info["gripper_position"]
             object_pos = info["object_position"]
 
+            upright_gripper = np.array([np.pi, 0, np.pi])
+            gripper_rot = rotations.mat2euler(env.sim.data.get_site_xmat('grip'))
+            gripper_norot = -np.linalg.norm(upright_gripper - gripper_rot)
+
             if direction == "up":
                 if "_traj_phase" not in env._episode_data or env._episode_data["_traj_phase"] == 0:
                     env._episode_data["_traj_phase"] = 0
                     # Gripper start on top of block -> has to move in front of it
-                    if gripper_pos[2] < 0.05 and np.linalg.norm(gripper_pos - object_pos + np.array([0.1, 0, 0])) < 0.2:
+                    if gripper_pos[2] < 0.05 and np.linalg.norm(gripper_pos - object_pos + np.array([0.1, 0, -0.05])) < 0.2 and abs(gripper_norot) < 0.5:
                         env._episode_data["_traj_phase"] += 1
                         print("Reached phase", env._episode_data["_traj_phase"])
-                    return -gripper_pos[2] - 10. * np.linalg.norm(gripper_pos - object_pos + np.array([0.1, 0, 0])) + gripper_pos[1] - 10. * np.linalg.norm(gripper_pos[1] - object_pos[1])
+                    return -gripper_pos[2] - 10. * np.linalg.norm(gripper_pos - object_pos + np.array([0.1, 0, -0.05])) + gripper_pos[1] - 10. * np.linalg.norm(gripper_pos[1] - object_pos[1]) + 10. * gripper_norot
 
             reach_block = -np.linalg.norm(gripper_pos - object_pos)
             block_goal = -np.linalg.norm(achieved_goal - desired_goal)
