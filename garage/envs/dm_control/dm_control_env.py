@@ -40,13 +40,14 @@ class DmControlEnv(gym.Env, Serializable):
         if time_step.reward:
             self._total_reward += time_step.reward
         return Step(
-            flatten_observation(time_step.observation), time_step.reward,
-            time_step.step_type == StepType.LAST, **time_step.observation)
+            flatten_observation(time_step.observation)["observations"],
+            time_step.reward, time_step.step_type == StepType.LAST,
+            **time_step.observation)
 
     def reset(self):
         self._total_reward = 0
         time_step = self._env.reset()
-        return flatten_observation(time_step.observation)
+        return flatten_observation(time_step.observation)["observations"]
 
     def render(self):
         if self._viewer:
