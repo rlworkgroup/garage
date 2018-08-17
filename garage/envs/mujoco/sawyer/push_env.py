@@ -102,16 +102,16 @@ class PushEnv(SawyerEnv):
 
             upright_gripper = np.array([np.pi, 0, np.pi])
             gripper_rot = rotations.mat2euler(env.sim.data.get_site_xmat('grip'))
-            gripper_norot = -np.linalg.norm(upright_gripper - gripper_rot)
+            gripper_norot = -np.linalg.norm(np.sin(upright_gripper) - np.sin(gripper_rot))
 
-            if direction == "up":
+            if not easy_gripper_init and direction == "up":
                 if "_traj_phase" not in env._episode_data or env._episode_data["_traj_phase"] == 0:
                     env._episode_data["_traj_phase"] = 0
                     # Gripper start on top of block -> has to move in front of it
                     if gripper_pos[2] < 0.05 and np.linalg.norm(gripper_pos - object_pos + np.array([0.1, 0, -0.05])) < 0.2 and abs(gripper_norot) < 0.5:
                         env._episode_data["_traj_phase"] += 1
                         print("Reached phase", env._episode_data["_traj_phase"])
-                    return -gripper_pos[2] - 10. * np.linalg.norm(gripper_pos - object_pos + np.array([0.1, 0, -0.05])) + gripper_pos[1] - 10. * np.linalg.norm(gripper_pos[1] - object_pos[1]) + 10. * gripper_norot
+                    return -gripper_pos[2] - 3. * np.linalg.norm(gripper_pos - object_pos + np.array([0.1, 0, -0.05])) + gripper_pos[1] - 2. * np.linalg.norm(gripper_pos[1] - object_pos[1]) + 2. * gripper_norot
 
             reach_block = -np.linalg.norm(gripper_pos - object_pos)
             block_goal = -np.linalg.norm(achieved_goal - desired_goal)
@@ -120,7 +120,7 @@ class PushEnv(SawyerEnv):
             dt = env.sim.nsubsteps * env.sim.model.opt.timestep
             block_norot = -np.linalg.norm(env.sim.data.get_geom_xvelr('object0') * dt)
 
-            return .1 * reach_block + block_goal + block_down + block_norot
+            return reach_block + 3. * block_goal + .4 * block_down + 0.3 * block_norot + .1 * gripper_norot
 
         super(PushEnv, self).__init__(
             start_goal_config=start_goal_config,
@@ -128,6 +128,7 @@ class PushEnv(SawyerEnv):
             desired_goal_fn=desired_goal_fn,
             file_path="push.xml" if control_method == "task_space_control" else "push_poscontrol.xml",
             collision_whitelist=[],
+            collision_penalty=0.,
             control_method=control_method,
             reward_fn=reward_fn,
             send_done_signal=False,
