@@ -2,12 +2,15 @@ import argparse
 import ast
 import base64
 import datetime
+import glob
 import os
 import os.path as osp
 import pickle as pickle
+import subprocess
 import sys
 sys.path.append(".")
 import uuid
+from zipfile import ZipFile
 
 import dateutil.tz
 import joblib
@@ -19,6 +22,10 @@ from garage.misc.instrument import concretize
 import garage.misc.logger as logger
 import garage.plotter
 import garage.tf.plotter
+
+ZIP_IGNORE = [
+    "data",
+]
 
 
 def run_experiment(argv):
@@ -156,6 +163,33 @@ def run_experiment(argv):
     logger.set_log_tabular_only(args.log_tabular_only)
     logger.set_tensorboard_step_key(args.tensorboard_step_key)
     logger.push_prefix("[%s] " % args.exp_name)
+
+    # Save a ZIP file of the code
+    zip_path = osp.join(log_dir, "garage.zip")
+    with ZipFile(zip_path, mode="x") as zipfile:
+        # Git info
+        git_info = subprocess.run(
+            ['git', 'log', '-n 1'],
+            stdout=subprocess.PIPE).stdout.decode('utf-8')
+        git_info += subprocess.run(
+            ['git', 'status'], stdout=subprocess.PIPE).stdout.decode('utf-8')
+        zipfile.writestr("git_info.txt", git_info)
+
+        # Files
+        for f in glob.iglob(
+                osp.join(config.PROJECT_PATH, "**"), recursive=True):
+            # exclude some files
+            keep = True
+            keep = keep and osp.isfile(f)
+            keep = keep and not "__pycache__" in f
+            for i in ZIP_IGNORE:
+                if f.startswith(osp.join(config.PROJECT_PATH, i)):
+                    keep = False
+                    break
+
+            if keep:
+                print("Zipping {}...".format(f))
+                zipfile.write(f, arcname=osp.relpath(f, config.PROJECT_PATH))
 
     if args.resume_from is not None:
         data = joblib.load(args.resume_from)

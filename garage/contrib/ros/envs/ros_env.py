@@ -66,7 +66,7 @@ class RosEnv(gym.Env, Serializable):
         """
         raise NotImplementedError
 
-    def reward(self, achieved_goal, goal):
+    def reward(self, achieved_goal, goal, *args, **kwargs):
         """
         Compute the reward for current step.
         """

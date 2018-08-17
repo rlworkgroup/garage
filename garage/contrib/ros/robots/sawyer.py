@@ -1,4 +1,5 @@
 """Sawyer Interface."""
+from collections import namedtuple
 
 import gym
 from intera_core_msgs.msg import JointLimits
@@ -45,6 +46,31 @@ class Sawyer(Robot):
 
         self._sv = StateValidity()
 
+    def set_joint_position_speed(self, speed):
+        self._limb.set_joint_position_speed(speed)
+
+    @property
+    def joint_position_limits(self):
+        """
+        Return a joint position limits on sawyer's arm.
+
+        :return: JointLimits
+            JointLimits.lower -> np.array['right_j0' -> 'right_j6']
+            JointLimits.upper -> np.array['right_j0' -> 'right_j6']
+        """
+        JointLimits = namedtuple('JointLimits', ['low', 'high'])
+
+        joint_limits_lower = np.array([])
+        joint_limits_upper = np.array([])
+        for i in range(7):
+            index = self._joint_limits.joint_names.index('right_j{}'.format(i))
+            joint_limits_lower = np.concatenate(
+                (joint_limits_lower,  np.array([self._joint_limits.position_lower[index]])))
+            joint_limits_upper = np.concatenate(
+                (joint_limits_upper, np.array([self._joint_limits.position_upper[index]])))
+
+        return JointLimits(joint_limits_lower, joint_limits_upper)
+
     def safety_check(self):
         """
         If robot is in safe state.
@@ -85,22 +111,43 @@ class Sawyer(Robot):
         return intera_interface.RobotEnable(
             intera_interface.CHECK_VERSION).state().enabled
 
-    def _set_limb_joint_positions(self, joint_angle_cmds):
-        # limit joint angles cmd
-        current_joint_angles = self._limb.joint_angles()
-        for joint in joint_angle_cmds:
-            joint_cmd_delta = joint_angle_cmds[joint] - \
-                              current_joint_angles[joint]
-            joint_angle_cmds[
-                joint] = current_joint_angles[joint] + joint_cmd_delta * 0.1
+    def _set_limb_joint_positions(self, commands):
+        """
+        Set limb joint positions.
+
+        :param commands: np.array[float]
+                'right_j0 -> right_j7'
+        """
+        current_joint_positions = self.limb_joint_positions
+
+        next_joint_positions = current_joint_positions + commands
+
+        next_joint_positions = np.clip(next_joint_positions,
+                                       self.joint_position_limits.low,
+                                       self.joint_position_limits.high)
+
+        joint_angle_cmds = {}
+
+        for i in range(7):
+            joint_angle_cmds['right_j{}'.format(i)] = next_joint_positions[i]
 
         if self.safety_predict(joint_angle_cmds):
             self._limb.set_joint_positions(joint_angle_cmds)
 
-    def _set_limb_joint_velocities(self, joint_angle_cmds):
+    def _set_limb_joint_velocities(self, commands):
+        joint_angle_cmds = {}
+
+        for i in range(7):
+            joint_angle_cmds['right_j{}'.format(i)] = commands[i]
+
         self._limb.set_joint_velocities(joint_angle_cmds)
 
-    def _set_limb_joint_torques(self, joint_angle_cmds):
+    def _set_limb_joint_torques(self, commands):
+        joint_angle_cmds = {}
+
+        for i in range(7):
+            joint_angle_cmds['right_j{}'.format(i)] = commands[i]
+
         self._limb.set_joint_torques(joint_angle_cmds)
 
     def _set_gripper_position(self, position):
@@ -110,7 +157,7 @@ class Sawyer(Robot):
         if rospy.is_shutdown():
             return
         self._limb.move_to_joint_positions(
-            self._initial_joint_pos, timeout=5.0)
+            self._initial_joint_pos, timeout=60.0)
         self._gripper.open()
         rospy.sleep(1.0)
 
@@ -145,8 +192,18 @@ class Sawyer(Robot):
              robot_joint_velocities, robot_joint_efforts))
         return obs
 
-    def limb_joint_angles(self):
-        return self._limb.joint_angles()
+    @property
+    def limb_joint_positions(self):
+        """
+        Return a list of sawyer's limb joint angles from j0 to j7.
+
+        :return: np.array[float]
+        """
+        limb_joint_angles = self._limb.joint_angles()
+
+        limb_joint_angles = np.array(
+            [limb_joint_angles['right_j{}'.format(i)] for i in range(7)])
+        return limb_joint_angles
 
     @property
     def observation_space(self):
@@ -167,22 +224,18 @@ class Sawyer(Robot):
         Send command to sawyer.
 
         :param commands: [float]
+                    'right_j0' -> 'right_j6' -> 'gripper'
                     list of command for different joints and gripper
         """
         action_space = self.action_space
         commands = np.clip(commands, action_space.low, action_space.high)
-        i = 0
-        joint_commands = {}
-        for joint in self._used_joints:
-            joint_commands[joint] = commands[i]
-            i += 1
 
         if self._control_mode == 'position':
-            self._set_limb_joint_positions(joint_commands)
+            self._set_limb_joint_positions(commands[:7])
         elif self._control_mode == 'velocity':
-            self._set_limb_joint_velocities(joint_commands)
+            self._set_limb_joint_velocities(commands[:7])
         elif self._control_mode == 'effort':
-            self._set_limb_joint_torques(joint_commands)
+            self._set_limb_joint_torques(commands[:7])
 
         self._set_gripper_position(commands[7])
 
@@ -204,17 +257,14 @@ class Sawyer(Robot):
         """
         lower_bounds = np.array([])
         upper_bounds = np.array([])
-        for joint in self._used_joints:
+        for i in range(7):
+            joint = 'right_j{}'.format(i)
             joint_idx = self._joint_limits.joint_names.index(joint)
             if self._control_mode == 'position':
                 lower_bounds = np.concatenate(
-                    (lower_bounds,
-                     np.array(self._joint_limits.position_lower[
-                         joint_idx:joint_idx + 1])))
+                    (lower_bounds, np.array([-0.04])))
                 upper_bounds = np.concatenate(
-                    (upper_bounds,
-                     np.array(self._joint_limits.position_upper[
-                         joint_idx:joint_idx + 1])))
+                    (upper_bounds, np.array([0.04])))
             elif self._control_mode == 'velocity':
                 velocity_limit = np.array(
                     self._joint_limits.velocity[joint_idx:joint_idx + 1]) * 0.1
