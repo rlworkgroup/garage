@@ -143,7 +143,6 @@ def set_seed(seed):
         tf.set_random_seed(seed)
     except Exception as e:
         print(e)
-    print((colorize('using seed %s' % (str(seed)), 'green')))
 
 
 def get_seed():
