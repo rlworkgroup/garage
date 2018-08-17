@@ -23,7 +23,7 @@ class PushEnv(SawyerEnv):
                     np.random.uniform(-0.35, 0.35)
                 ]
             else:
-                xy = [0.75, 0.17]
+                xy = [0.62, 0.17]
             d = 0.15
             delta = np.array({
                 "up": (d, 0),
@@ -80,13 +80,13 @@ class PushEnv(SawyerEnv):
                     gripper_pos=gripper_pos,
                     gripper_state=0,
                     object_grasped=False,
-                    object_pos=np.concatenate([xy, [0.03]]),
+                    object_pos=np.concatenate([xy, [0.04]]),
                     joint_pos=jpos)
                 goal = Configuration(
                     gripper_pos=None,
                     gripper_state=0,
                     object_grasped=False,
-                    object_pos=np.concatenate([xy + delta, [0.03]]),
+                    object_pos=np.concatenate([xy + delta, [0.04]]),
                     joint_pos=None)
             return start, goal
 

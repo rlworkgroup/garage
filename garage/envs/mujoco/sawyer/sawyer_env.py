@@ -401,7 +401,7 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
         done = False
 
         # control cost
-        r -= self._control_cost_coeff * np.linalg.norm(a)
+        # r -= self._control_cost_coeff * np.linalg.norm(a)
 
         # collision detection
         if self.in_collision:
