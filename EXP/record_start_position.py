@@ -16,8 +16,8 @@ traj = None
 start_obs = env.reset()
 next_step = start_obs[:3]
 
-for _ in range(20):
-    next_step = np.array([0.30, 0, 0.2])
+for _ in range(50):
+    next_step = np.array([0.55, 0, 0.35])
     # next_pos = pos + env.action_space.sample()
     # next_pos_clip = np.clip(next_pos, low, high)
     new_joints = np.array([

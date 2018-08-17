@@ -2,6 +2,8 @@
 
 from types import SimpleNamespace
 
+import numpy as np
+
 from garage.envs.mujoco.sawyer.push_env import SimplePushEnv
 from garage.misc.instrument import run_experiment
 from garage.tf.algos import PPO
@@ -15,10 +17,11 @@ def run_task(v):
 
     env = TfEnv(
         SimplePushEnv(
+            delta=np.array([0.15, 0, 0]),
             control_method='position_control',
             action_scale=0.04,
             completion_bonus=0.0,
-            collision_penalty=1.))
+            collision_penalty=2.))
 
     policy = GaussianMLPPolicy(
         name="policy",
