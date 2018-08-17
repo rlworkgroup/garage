@@ -1,5 +1,6 @@
 """EXP to train a sawyer pusher with PPO algorithm."""
-
+import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 from types import SimpleNamespace
 
 import numpy as np
@@ -17,7 +18,7 @@ def run_task(v):
 
     env = TfEnv(
         SimplePushEnv(
-            delta=np.array([0.15, 0, 0]),
+            delta=np.array([-0.10, 0, 0]),
             control_method='position_control',
             action_scale=0.04,
             completion_bonus=0.0,
@@ -58,8 +59,8 @@ config = dict(
 
 run_experiment(
     run_task,
-    exp_prefix='sawyer_push_ppo_position',
-    n_parallel=8,
+    exp_prefix='sawyer_push_ppo_down_position',
+    n_parallel=2,
     variant=config,
     seed=1,
     plot=False,

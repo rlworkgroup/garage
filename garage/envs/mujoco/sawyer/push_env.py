@@ -141,7 +141,7 @@ class PushEnv(SawyerEnv):
                     0.03
                 ])
             else:
-                initial_block_pos = np.array([0.55, 0., 0.03])
+                initial_block_pos = np.array([0.65, 0., 0.03])
             # d = 0.15
             # delta = np.array({
             #     "up": (d, 0),
@@ -170,10 +170,14 @@ class PushEnv(SawyerEnv):
                     joint_pos=None)
             else:
                 if easy_gripper_init:
-                    jpos = np.array([
-                        0.02631256,  0.57778916,  0.1339495, -2.16678053,
-                        -1.77062755, 3.03287272, -3.22155594
-                    ])
+                    # jpos = np.array([
+                    #     0.02631256,  0.57778916,  0.1339495, -2.16678053,
+                    #     -1.77062755, 3.03287272, -3.22155594
+                    # ])
+                    # jpos = np.array([-0.7318902, -1.06648196, 0.92428461, 1.78847105, -0.43512962, 1.08968813,
+                    #         -1.05157125])
+                    jpos = np.array([-0.83591221, -1.05890433, 0.91351439, 1.75259073, -0.43152266, 1.11151082,
+ -1.1771668])
                     # jpos = np.array({
                     #     "up": [
                     #         -0.68198394, -0.96920825, 0.76964638, 2.00488611,
@@ -265,6 +269,8 @@ class PushEnv(SawyerEnv):
         if self._control_method == 'position_control':
             obs = np.concatenate((self.joint_positions, object_pos, object_ori,
                                   gripper_pos))
+            # relative difference
+            # obs = np.concatenate((self.joint_positions, gripper_pos - object_pos))
         else:
             obs = np.concatenate([gripper_pos, object_pos, object_ori])
 
@@ -400,11 +406,11 @@ class PushEnv(SawyerEnv):
             desired_goal=obs.get('desired_goal'),
             info=info)
 
-        r2 = -np.linalg.norm(self.gripper_position - self.object_position) / 5
+        r2 = -np.linalg.norm(self.gripper_position - self.object_position) / 5 *2/3
 
         upright_gripper = np.array([np.pi, 0, np.pi])
         gripper_rot = rotations.mat2euler(self.sim.data.get_site_xmat('grip'))
-        r3 = -np.linalg.norm(np.sin(upright_gripper) - np.sin(gripper_rot)) / 10
+        r3 = -np.linalg.norm(np.sin(upright_gripper) - np.sin(gripper_rot)) / 10 *2/3
 
         # if r2 / r1 > self._test_ration:
         #     self._test_ration = r2 / r1
@@ -412,7 +418,7 @@ class PushEnv(SawyerEnv):
 
         end_position = self.object_position + np.array([0, 0, 0.3])
         if self._already_successful:
-            r2 = -np.linalg.norm(self.gripper_position - end_position) / 5
+            r2 = -np.linalg.norm(self.gripper_position - end_position) / 5 * 2/3
         r = r1 + r2 + r3
 
         # if self._easy_gripper_init:

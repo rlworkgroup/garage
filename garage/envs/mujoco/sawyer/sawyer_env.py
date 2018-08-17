@@ -171,7 +171,7 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
                  desired_goal_fn=default_desired_goal_fn,
                  max_episode_steps=50,
                  completion_bonus=10,
-                 distance_threshold=0.05,
+                 distance_threshold=0.01,
                  for_her=False,
                  control_cost_coeff=0.,
                  action_scale=1.0,

@@ -16,8 +16,20 @@ traj = None
 start_obs = env.reset()
 next_step = start_obs[:3]
 
+
 for _ in range(50):
-    next_step = np.array([0.55, 0, 0.35])
+    initial_joints = np.array([
+        -0.80198394, -0.96920825, 0.76964638, 2.00488611,
+        -0.56956307, 0.76115281, -0.97169329
+    ])
+
+    for i in range(7):
+        env.env.sim.data.set_joint_qpos('right_j{}'.format(i), initial_joints[i])
+    env.env.sim.forward()
+    env.render()
+
+for _ in range(50):
+    next_step = np.array([0.55, 0, 2])
     # next_pos = pos + env.action_space.sample()
     # next_pos_clip = np.clip(next_pos, low, high)
     new_joints = np.array([
