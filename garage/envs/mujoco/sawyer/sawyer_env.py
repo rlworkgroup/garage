@@ -179,6 +179,7 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
                  collision_whitelist=COLLISION_WHITELIST,
                  terminate_on_collision=False,
                  collision_penalty=0.,
+                 skip_steps=1,
                  reward_type='dense',
                  control_method='task_space_control',
                  file_path='pick_and_place.xml',
@@ -214,6 +215,7 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
         self._max_episode_steps = max_episode_steps
         self._completion_bonus = completion_bonus
         self._distance_threshold = distance_threshold
+        self._skip_steps = max(1, skip_steps)
         self._step = 0
         self._for_her = for_her
         self._control_cost_coeff = control_cost_coeff
@@ -354,7 +356,7 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
                                     3] = self.sim.data.mocap_pos[0, :3] + a[:3]
             self.sim.data.mocap_quat[:] = np.array([0, 1, 0, 0])
             self.set_gripper_state(a[3])
-            for _ in range(5):
+            for _ in range(self._skip_steps):
                 self.sim.step()
             self.sim.forward()
         elif self._control_method == "position_control":
@@ -362,9 +364,10 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
             next_pos = np.clip(a + curr_pos, self.joint_position_space.low,
                                self.joint_position_space.high)
             # self.joint_positions = next_pos
-            self.sim.data.ctrl[:] = next_pos
-            self.sim.forward()
-            self.sim.step()
+            for _ in range(self._skip_steps):
+                self.sim.data.ctrl[:] = next_pos
+                self.sim.forward()
+                self.sim.step()
 
             # Verify the execution of the action.
             # for i in range(7):
