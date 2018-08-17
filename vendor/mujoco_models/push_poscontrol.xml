@@ -19,7 +19,11 @@
     <camera name="camera_front" mode="fixed" xyaxes="0 1 0 0 0 1" pos="2.4 0 0.5" />
 
     <body name="object0" pos="0 0 0">
-      <joint name="object0:joint" type="free" damping="50"/>
+      <!--<joint name="object0:joint" type="free" damping="50"/>-->
+      <joint name="object0:joint1" type="slide" damping="50" axis="1 0 0" range="-100 100"/>
+      <joint name="object0:joint2" type="slide" damping="50" axis="0 1 0" range="-100 100"/>
+      <joint name="object0:joint3" type="slide" damping="50" axis="0 0 1" range="0 0.04"/>
+      <joint name="object0:rot" type="ball" damping="0.1" range="0 6.28319"/>
       <geom size="0.05 0.075 0.04" type="box" condim="3" name="object0" contype="1" conaffinity="1" material="block_mat" mass="100"/>
     </body>
     <include file="sawyer_robot.xml"/>

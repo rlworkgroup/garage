@@ -288,7 +288,11 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
 
     def set_object_position(self, position):
         object_qpos = np.concatenate((position, [1, 0, 0, 0]))
-        self.sim.data.set_joint_qpos('object0:joint', object_qpos)
+        # self.sim.data.set_joint_qpos('object0:joint', object_qpos)
+        self.sim.data.set_joint_qpos('object0:joint1', position[0])
+        self.sim.data.set_joint_qpos('object0:joint2', position[1])
+        self.sim.data.set_joint_qpos('object0:joint3', position[2])
+        self.sim.data.set_joint_qpos('object0:rot', [1, 0, 0, 0])
 
     @property
     def object_position(self):
