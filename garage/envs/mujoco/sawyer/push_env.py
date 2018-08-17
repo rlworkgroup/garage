@@ -8,6 +8,7 @@ from garage.envs.mujoco.sawyer.sawyer_env import Configuration
 from garage.envs.mujoco.sawyer.sawyer_env import SawyerEnv
 from garage.envs.mujoco.sawyer.sawyer_env import SawyerEnvWrapper
 from garage.misc.overrides import overrides
+from gym.envs.robotics import rotations
 
 COLLISION_WHITELIST = [
     # Liberal whitelist here
@@ -396,11 +397,15 @@ class PushEnv(SawyerEnv):
 
         r2 = -np.linalg.norm(self.gripper_position - self.object_position) / 5
 
+        upright_gripper = np.array([np.pi, 0, np.pi])
+        gripper_rot = rotations.mat2euler(self.sim.data.get_site_xmat('grip'))
+        r3 = -np.linalg.norm(np.sin(upright_gripper) - np.sin(gripper_rot)) / 1
+
         # if r2 / r1 > self._test_ration:
         #     self._test_ration = r2 / r1
         #     print(self._test_ration)
 
-        r = r1 + r2
+        r = r1 + r2 + r3
 
         # if self._easy_gripper_init:
         #     # encourage gripper to move close to block
