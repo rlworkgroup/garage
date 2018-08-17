@@ -230,6 +230,18 @@ class PushEnv(SawyerEnv):
 
         self._test_ration = 0
 
+        # depends on block's size
+        # 1----------2
+        # |          |
+        # |          |
+        # 4----------3
+        length = 0.15
+        width = 0.1
+        self.cp1 = np.array([- width / 2, - length / 2, 0])
+        self.cp2 = np.array([- width / 2, length / 2, 0])
+        self.cp3 = np.array([width / 2, length / 2, 0])
+        self.cp4 = np.array([width / 2, - length / 2, 0])
+
         super(PushEnv, self).__init__(
             start_goal_config=start_goal_config,
             achieved_goal_fn=achieved_goal_fn,
@@ -313,6 +325,8 @@ class PushEnv(SawyerEnv):
             next_pos = np.clip(a + curr_pos, self.joint_position_space.low,
                                self.joint_position_space.high)
             old_gripper_pos = self.gripper_position
+            old_block_pos = self.object_position
+            old_block_ori = self.object_orientation
             self.joint_positions = next_pos
             self.sim.forward()
 
@@ -332,14 +346,15 @@ class PushEnv(SawyerEnv):
             if in_collision:
                 new_gripper_pos = self.gripper_position
 
-                xy_delta = new_gripper_pos[:2] - old_gripper_pos[:2]
+                if not self.in_xyregion(old_gripper_pos, old_block_pos, old_block_ori):
+                    xy_delta = new_gripper_pos[:2] - old_gripper_pos[:2]
 
-                qpos = self.sim.data.get_joint_qpos('object0:joint')
-                qpos[0] += xy_delta[0]
-                qpos[1] += xy_delta[1]
-                self.sim.data.set_joint_qpos('object0:joint', qpos)
+                    qpos = self.sim.data.get_joint_qpos('object0:joint')
+                    qpos[0] += xy_delta[0]
+                    qpos[1] += xy_delta[1]
+                    self.sim.data.set_joint_qpos('object0:joint', qpos)
 
-                self.sim.forward()
+                    self.sim.forward()
 
             # self.sim.step()
             # for _ in range(2):
@@ -410,6 +425,48 @@ class PushEnv(SawyerEnv):
     @overrides
     def reset(self):
         return super(PushEnv, self).reset()
+
+    def in_xyregion(self, gripper_pos, block_pos, block_ori):
+        p = np.array([gripper_pos[0], gripper_pos[1], 0])
+        newcp1 = rotate(block_ori, self.cp1)
+        newcp2 = rotate(block_ori, self.cp2)
+        newcp3 = rotate(block_ori, self.cp3)
+        newcp4 = rotate(block_ori, self.cp4)
+
+        newc = np.array([block_pos[0], block_pos[1], 0])
+        newp1 = newcp1 + newc
+        newp2 = newcp2 + newc
+        newp3 = newcp3 + newc
+        newp4 = newcp4 + newc
+
+        p1p2 = newp2 - newp1
+        p1p = p - newp1
+
+        p3p4 = newp4 - newp3
+        p3p = p - newp3
+
+        p2p3 = newp3 - newp2
+        p2p = p - newp2
+
+        p4p1 = newp1 - newp4
+        p4p = p - newp4
+
+        return np.dot(np.cross(p1p2, p1p), np.cross(p3p4, p3p)) >= 0 and np.dot(np.cross(p2p3, p2p), np.cross(p4p1, p4p)) >= 0
+
+
+def rotate(ori, vec):
+    w = ori[0]
+    x = ori[1]
+    y = ori[2]
+    z = ori[3]
+
+    rotation_matrix = np.matrix([[1-2*y*y-2*z*z, 2*x*y - 2*z*w, 2*x*z + 2*y*w],
+                                 [2*x*y + 2*z*w, 1-2*x*x-2*z*z, 2*y*z-2*x*w],
+                                 [2*x*z-2*y*w, 2*y*z+2*x*w, 1-2*x*x-2*y*y]])
+
+    new_vec = rotation_matrix * np.matrix([[vec[0]], [vec[1]], [vec[2]]])
+
+    return np.array([new_vec[0, 0], new_vec[1, 0], new_vec[2, 0]])
 
 
 class SimplePushEnv(SawyerEnvWrapper, Serializable):
