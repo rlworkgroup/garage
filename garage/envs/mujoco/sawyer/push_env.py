@@ -399,7 +399,7 @@ class PushEnv(SawyerEnv):
 
         upright_gripper = np.array([np.pi, 0, np.pi])
         gripper_rot = rotations.mat2euler(self.sim.data.get_site_xmat('grip'))
-        r3 = -np.linalg.norm(np.sin(upright_gripper) - np.sin(gripper_rot)) / 1
+        r3 = -np.linalg.norm(np.sin(upright_gripper) - np.sin(gripper_rot)) / 10
 
         # if r2 / r1 > self._test_ration:
         #     self._test_ration = r2 / r1
