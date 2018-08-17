@@ -5,8 +5,6 @@ import sys
 
 import numpy as np
 
-from garage.misc.console import colorize
-
 sys.setrecursionlimit(50000)
 
 
