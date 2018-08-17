@@ -72,9 +72,11 @@ class Plotter:
                             msgs[msg.op] = msg
 
                     if Op.STOP in msgs:
+                        self.queue.task_done()
                         break
                     if Op.UPDATE in msgs:
                         env, policy = msgs[Op.UPDATE].args
+                        self.queue.task_done()
                     if Op.DEMO in msgs:
                         param_values, max_length = msgs[Op.DEMO].args
                         policy.set_param_values(param_values)
@@ -85,6 +87,7 @@ class Plotter:
                             max_path_length=max_length,
                             animated=True,
                             speedup=5)
+                        self.queue.task_done()
                     else:
                         if max_length:
                             self.rollout(
@@ -98,8 +101,10 @@ class Plotter:
 
     def shutdown(self):
         if self.worker_thread.is_alive():
+            while not self.queue.empty():
+                self.queue.get()
+                self.queue.task_done()
             self.queue.put(Message(op=Op.STOP, args=None, kwargs=None))
-            self.queue.task_done()
             self.queue.join()
             self.worker_thread.join()
 
@@ -117,7 +122,6 @@ class Plotter:
             self.queue.put(
                 Message(
                     op=Op.UPDATE, args=(self.env, self.policy), kwargs=None))
-            self.queue.task_done()
             atexit.register(self.shutdown)
 
     def update_plot(self, policy, max_length=np.inf):
@@ -129,4 +133,3 @@ class Plotter:
                     op=Op.DEMO,
                     args=(policy.get_param_values(), max_length),
                     kwargs=None))
-            self.queue.task_done()

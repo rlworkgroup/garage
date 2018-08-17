@@ -74,6 +74,10 @@ def terminate():
     singleton_pool.terminate()
 
 
+def join():
+    singleton_pool.join()
+
+
 def _worker_set_seed(_, seed):
     logger.log("Setting seed to %d" % seed)
     ext.set_seed(seed)

@@ -2,7 +2,7 @@ import atexit
 from collections import namedtuple
 from enum import Enum
 from multiprocessing import Process
-from multiprocessing import Queue
+from multiprocessing import JoinableQueue
 import platform
 from threading import Thread
 
@@ -84,6 +84,9 @@ class Plotter:
         if not Plotter.enable:
             return
         if self._process and self._process.is_alive():
+            while not self._queue.empty():
+                self._queue.get()
+                self._queue.task_done()
             self._queue.put(Message(op=Op.STOP, args=None, kwargs=None))
             self._queue.close()
             self._process.join()
@@ -96,7 +99,7 @@ class Plotter:
     def init_worker(self):
         if not Plotter.enable:
             return
-        self._queue = Queue()
+        self._queue = JoinableQueue()
         if ('Darwin' in platform.platform()):
             self._process = Thread(target=self._worker_start)
         else:

@@ -4,7 +4,7 @@ import sys
 import time
 import traceback
 
-from joblib.pool import MemmapingPool
+from joblib.pool import MemmappingPool
 import pyprind
 
 from garage.misc import logger
@@ -58,7 +58,7 @@ class StatefulPool:
         if n_parallel > 1:
             self.queue = mp.Queue()
             self.worker_queue = mp.Queue()
-            self.pool = MemmapingPool(
+            self.pool = MemmappingPool(
                 self.n_parallel,
                 temp_folder="/tmp",
             )
@@ -66,6 +66,10 @@ class StatefulPool:
     def terminate(self):
         if self.pool:
             self.pool.terminate()
+
+    def join(self):
+        if self.pool:
+            self.pool.join()
 
     def run_each(self, runner, args_list=None):
         """

@@ -2,9 +2,9 @@ import argparse
 import ast
 import base64
 import datetime
-import os
 import os.path as osp
 import pickle as pickle
+import signal
 import sys
 import uuid
 
@@ -112,15 +112,25 @@ def run_experiment(argv):
 
     args = parser.parse_args(argv[1:])
 
-    assert (os.environ.get("JOBLIB_START_METHOD", None) == "forkserver")
     if args.seed is not None:
         set_seed(args.seed)
 
+    sigint_hdlr = signal.getsignal(signal.SIGINT)
+
+    def terminte_sampler(signum, frame):
+        parallel_sampler.terminate()
+        parallel_sampler.join()
+        sigint_hdlr(signum, frame)
+
+    signal.signal(signal.SIGINT, terminte_sampler)
+
+    signal.pthread_sigmask(signal.SIG_BLOCK, [signal.SIGINT])
     if args.n_parallel > 0:
         from garage.sampler import parallel_sampler
         parallel_sampler.initialize(n_parallel=args.n_parallel)
         if args.seed is not None:
             parallel_sampler.set_seed(args.seed)
+    signal.pthread_sigmask(signal.SIG_UNBLOCK, [signal.SIGINT])
 
     if not args.plot:
         garage.plotter.Plotter.disable()

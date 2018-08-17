@@ -30,7 +30,7 @@ dependencies:
         - ipdb
         - ipywidgets
         - jsonmerge
-        - joblib==0.10.3
+        - joblib<0.13,>=0.12
         - jupyter
         - git+https://github.com/Lasagne/Lasagne.git@a61b76fd991f84c50acdb7bea02118899b5fefe1#egg=lasagne
         - mako
