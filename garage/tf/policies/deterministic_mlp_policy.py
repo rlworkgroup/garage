@@ -13,7 +13,7 @@ from garage.tf.spaces import Box
 class DeterministicMLPPolicy(Policy, LayersPowered, Serializable):
     def __init__(self,
                  env_spec,
-                 name=None,
+                 name="DeterministicMLPPolicy",
                  hidden_sizes=(32, 32),
                  hidden_nonlinearity=tf.nn.relu,
                  output_nonlinearity=tf.nn.tanh,
@@ -45,6 +45,7 @@ class DeterministicMLPPolicy(Policy, LayersPowered, Serializable):
                 [prob_network.input_layer.input_var], prob_network_output)
 
         self.prob_network = prob_network
+        self.name = name
 
         # Note the deterministic=True argument. It makes sure that when getting
         # actions from single observations, we do not update params in the

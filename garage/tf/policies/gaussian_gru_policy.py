@@ -17,7 +17,7 @@ class GaussianGRUPolicy(StochasticPolicy, LayersPowered, Serializable):
     def __init__(
             self,
             env_spec,
-            name=None,
+            name="GaussianGRUPolicy",
             hidden_dim=32,
             feature_network=None,
             state_include_action=True,

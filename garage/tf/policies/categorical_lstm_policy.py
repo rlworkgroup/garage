@@ -16,7 +16,7 @@ from garage.tf.spaces import Discrete
 class CategoricalLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
     def __init__(self,
                  env_spec,
-                 name=None,
+                 name="CategoricalLSTMPolicy",
                  hidden_dim=32,
                  feature_network=None,
                  prob_network=None,
@@ -105,8 +105,8 @@ class CategoricalLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
                     ], {prob_network.step_input_layer: feature_var})
 
             self.f_step_prob = tensor_utils.compile_function([
-                flat_input_var, prob_network.step_prev_hidden_layer.input_var,
-                prob_network.step_prev_cell_layer.input_var
+                flat_input_var,
+                prob_network.step_prev_state_layer.input_var,
             ], [out_prob_step, out_prob_hidden, out_step_cell])
 
             self.input_dim = input_dim
@@ -144,7 +144,7 @@ class CategoricalLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
                         self._prob_network_name, values=[all_input_var]):
                     prob = L.get_output(self.prob_network.output_layer,
                                         {self.l_input: all_input_var})
-                return dict(prob)
+                return dict(prob=prob)
             else:
                 flat_input_var = tf.reshape(all_input_var,
                                             (-1, self.input_dim))
@@ -156,7 +156,7 @@ class CategoricalLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
                             self.l_input: all_input_var,
                             self.feature_network.input_layer: flat_input_var
                         })
-                return dict(prob)
+                return dict(prob=prob)
 
     @property
     def vectorized(self):
@@ -194,7 +194,8 @@ class CategoricalLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
         else:
             all_input = flat_obs
         probs, hidden_vec, cell_vec = self.f_step_prob(
-            all_input, self.prev_hiddens, self.prev_cells)
+            all_input,
+            np.concatenate([self.prev_hiddens, self.prev_cells], axis=-1))
         actions = special.weighted_sample_n(probs,
                                             np.arange(self.action_space.n))
         prev_actions = self.prev_actions

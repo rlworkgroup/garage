@@ -15,7 +15,7 @@ class CategoricalMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
     def __init__(
             self,
             env_spec,
-            name=None,
+            name="CategoricalMLPPolicy",
             hidden_sizes=(32, 32),
             hidden_nonlinearity=tf.nn.tanh,
             prob_network=None,
@@ -34,6 +34,7 @@ class CategoricalMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
 
         Serializable.quick_init(self, locals())
 
+        self.name = name
         self._prob_network_name = "prob_network"
         with tf.variable_scope(name, "CategoricalMLPPolicy"):
             if prob_network is None:

@@ -8,6 +8,8 @@ import unittest
 from tests.envs.dummy import DummyBoxEnv, DummyDiscreteEnv
 
 from garage.tf.envs import TfEnv
+from garage.tf.policies import CategoricalGRUPolicy
+from garage.tf.policies import CategoricalLSTMPolicy
 from garage.tf.policies import CategoricalMLPPolicy
 from garage.tf.policies import ContinuousMLPPolicy
 from garage.tf.policies import DeterministicMLPPolicy
@@ -21,6 +23,10 @@ class TestTfPolicies(unittest.TestCase):
         """Test the policies initialization."""
         box_env = TfEnv(DummyBoxEnv())
         discrete_env = TfEnv(DummyDiscreteEnv())
+        categorical_gru_policy = CategoricalGRUPolicy(
+            env_spec=discrete_env, hidden_dim=1)
+        categorical_lstm_policy = CategoricalLSTMPolicy(
+            env_spec=discrete_env, hidden_dim=1)
         categorical_mlp_policy = CategoricalMLPPolicy(
             env_spec=discrete_env, hidden_sizes=(1, ))
         continuous_mlp_policy = ContinuousMLPPolicy(

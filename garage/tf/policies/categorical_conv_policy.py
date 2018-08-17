@@ -23,7 +23,7 @@ class CategoricalConvPolicy(StochasticPolicy, LayersPowered, Serializable):
             hidden_nonlinearity=tf.nn.relu,
             output_nonlinearity=tf.nn.softmax,
             prob_network=None,
-            name=None,
+            name="CategoricalConvPolicy",
     ):
         """
         :param env_spec: A spec for the mdp.

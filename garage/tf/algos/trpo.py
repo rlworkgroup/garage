@@ -23,12 +23,13 @@ class TRPO(NPO):
                  optimizer=None,
                  optimizer_args=None,
                  **kwargs):
-        if kl_constraint == KLConstraint.HARD:
-            optimizer = ConjugateGradientOptimizer
-        elif kl_constraint == KLConstraint.SOFT:
-            optimizer = PenaltyLbfgsOptimizer
-        else:
-            raise NotImplementedError("Unknown KLConstraint")
+        if not optimizer:
+            if kl_constraint == KLConstraint.HARD:
+                optimizer = ConjugateGradientOptimizer
+            elif kl_constraint == KLConstraint.SOFT:
+                optimizer = PenaltyLbfgsOptimizer
+            else:
+                raise NotImplementedError("Unknown KLConstraint")
 
         if optimizer_args is None:
             optimizer_args = dict()

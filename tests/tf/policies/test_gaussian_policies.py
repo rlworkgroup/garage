@@ -1,23 +1,29 @@
 """
-This script creates a unittest that tests CategoricalMLPPolicy in
+This script creates a unittest that tests Gaussian policies in
 garage.tf.policies.
 """
 import unittest
 
-import gym
+from nose2 import tools
 
 from garage.baselines import LinearFeatureBaseline
 from garage.envs import normalize
+from garage.envs.box2d import CartpoleEnv
 from garage.tf.algos import TRPO
 from garage.tf.envs import TfEnv
-from garage.tf.policies import CategoricalMLPPolicy
+from garage.tf.policies import GaussianGRUPolicy
+from garage.tf.policies import GaussianLSTMPolicy
+from garage.tf.policies import GaussianMLPPolicy
+
+policies = [GaussianGRUPolicy, GaussianLSTMPolicy, GaussianMLPPolicy]
 
 
-class TestCategoricalMLPPolicy(unittest.TestCase):
-    def test_categorical_mlp_policy(self):
-        env = TfEnv(normalize(gym.make("CartPole-v0")))
+class TestGaussianPolicies(unittest.TestCase):
+    @tools.params(*policies)
+    def test_gaussian_policies(self, policy_cls):
+        env = TfEnv(normalize(CartpoleEnv()))
 
-        policy = CategoricalMLPPolicy(
+        policy = policy_cls(
             name="policy", env_spec=env.spec, hidden_sizes=(32, 32))
 
         baseline = LinearFeatureBaseline(env_spec=env.spec)
