@@ -131,6 +131,7 @@ class PushEnv(SawyerEnv):
                  randomize_start_pos=False,
                  control_method='task_space_control',
                  **kwargs):
+        self._already_successful = False
         def start_goal_config():
             # center = self.sim.data.get_geom_xpos('target2')
             if randomize_start_pos:
@@ -348,14 +349,18 @@ class PushEnv(SawyerEnv):
                 new_gripper_pos = self.gripper_position
 
                 if not self.in_xyregion(old_gripper_pos, old_block_pos, old_block_ori):
-                    xy_delta = new_gripper_pos[:2] - old_gripper_pos[:2]
+                    # Make sure the gripper is not pulling the block
+                    delta_gripper_block = old_block_pos - old_gripper_pos
+                    delta_gripper = new_gripper_pos - old_gripper_pos
+                    if np.dot(delta_gripper_block, delta_gripper) > 0:
+                        xy_delta = new_gripper_pos[:2] - old_gripper_pos[:2]
 
-                    qpos = self.sim.data.get_joint_qpos('object0:joint')
-                    qpos[0] += xy_delta[0]
-                    qpos[1] += xy_delta[1]
-                    self.sim.data.set_joint_qpos('object0:joint', qpos)
+                        qpos = self.sim.data.get_joint_qpos('object0:joint')
+                        qpos[0] += xy_delta[0]
+                        qpos[1] += xy_delta[1]
+                        self.sim.data.set_joint_qpos('object0:joint', qpos)
 
-                    self.sim.forward()
+                        self.sim.forward()
 
             # self.sim.step()
             # for _ in range(2):
@@ -405,6 +410,9 @@ class PushEnv(SawyerEnv):
         #     self._test_ration = r2 / r1
         #     print(self._test_ration)
 
+        end_position = self.object_position + np.array([0, 0, 0.3])
+        if self._already_successful:
+            r2 = -np.linalg.norm(self.gripper_position - end_position) / 5
         r = r1 + r2 + r3
 
         # if self._easy_gripper_init:
@@ -415,9 +423,10 @@ class PushEnv(SawyerEnv):
         self._is_success = self._success_fn(self, self._achieved_goal,
                                             self._desired_goal, info)
         done = False
-        if self._is_success:
+        if self._is_success and not self._already_successful:
+            self._already_successful = True
             r = self._completion_bonus
-            done = True
+            done = False
 
         info["r"] = r
         info["d"] = done
@@ -429,6 +438,7 @@ class PushEnv(SawyerEnv):
 
     @overrides
     def reset(self):
+        self._already_successful = False
         return super(PushEnv, self).reset()
 
     def in_xyregion(self, gripper_pos, block_pos, block_ori):
