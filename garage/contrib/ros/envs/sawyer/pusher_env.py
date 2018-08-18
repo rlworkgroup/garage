@@ -126,7 +126,7 @@ class PusherEnv(SawyerEnv, Serializable):
                      'achieved_goal': achieved_goal,
                      'desired_goal': self.goal}
         """
-        limb_joint_positions = self._robot.limb_joint_positions
+        limb_joint_positions = np.concatenate(((0.01, -0.01), self._robot.limb_joint_positions))
 
         blocks_position = self._world.get_blocks_position()
         blocks_orientation = self._world.get_blocks_orientation()
@@ -146,7 +146,7 @@ class PusherEnv(SawyerEnv, Serializable):
         gripper_pos = self._robot.gripper_pose['position']
         gripper_pos = np.array([gripper_pos.x, gripper_pos.y, gripper_pos.z])
 
-        obs = np.concatenate((limb_joint_positions, block_pos_obs, block_ori_obs, gripper_pos))
+        obs = np.concatenate((limb_joint_positions, block_pos_obs, gripper_pos))
 
         Observation = collections.namedtuple(
             'Observation', 'observation achieved_goal desired_goal')
