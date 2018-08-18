@@ -237,7 +237,7 @@ class Sawyer(Robot):
         elif self._control_mode == 'effort':
             self._set_limb_joint_torques(commands[:7])
 
-        self._set_gripper_position(commands[7])
+        self._set_gripper_position(float(commands[7]))
 
     @property
     def gripper_pose(self):
