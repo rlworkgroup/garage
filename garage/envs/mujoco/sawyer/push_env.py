@@ -120,7 +120,7 @@ class PushEnv(SawyerEnv):
             dt = env.sim.nsubsteps * env.sim.model.opt.timestep
             block_norot = -np.linalg.norm(env.sim.data.get_geom_xvelr('object0') * dt)
 
-            return reach_block + 3. * block_goal + .4 * block_down + 0.3 * block_norot + .3 * gripper_norot + 0.6
+            return reach_block + 3. * block_goal + .4 * block_down + 0.3 * block_norot + .3 * gripper_norot + 0.73
 
         super(PushEnv, self).__init__(
             start_goal_config=start_goal_config,
@@ -146,7 +146,10 @@ class PushEnv(SawyerEnv):
         object_velp -= grip_velp
         grasped = self.has_object
         if self._control_method == "position_control":
-            obs = np.concatenate([self.joint_positions, self.object_position, self.gripper_position])
+            obs = np.concatenate([self.joint_positions,  # - self._start_configuration.joint_pos,
+                                  self.object_position,  # - self._start_configuration.object_pos,
+                                  self.gripper_position  # - self._start_configuration.gripper_pos])
+            ])
         else:
             # obs = np.concatenate([gripper_pos, object_pos])
             # obs = np.concatenate([gripper_pos])
