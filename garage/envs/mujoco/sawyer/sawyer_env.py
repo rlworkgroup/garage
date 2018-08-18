@@ -417,7 +417,7 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
                 done = True
 
         if self._is_success:
-            r = self._completion_bonus
+            r += self._completion_bonus
             info["d"] = True
             done = True
         else:

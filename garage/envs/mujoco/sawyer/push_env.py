@@ -20,7 +20,7 @@ class PushEnv(SawyerEnv):
             if randomize_start_pos:
                 xy = [
                     np.random.uniform(0.6, 0.8),
-                    np.random.uniform(-0.35, 0.35)
+                    np.random.uniform(0.12, 0.22)
                 ]
             else:
                 xy = [0.62, 0.17]
@@ -120,12 +120,13 @@ class PushEnv(SawyerEnv):
             dt = env.sim.nsubsteps * env.sim.model.opt.timestep
             block_norot = -np.linalg.norm(env.sim.data.get_geom_xvelr('object0') * dt)
 
-            return reach_block + 3. * block_goal + .4 * block_down + 0.3 * block_norot + .1 * gripper_norot + 0.6
+            return reach_block + 3. * block_goal + .4 * block_down + 0.3 * block_norot + .3 * gripper_norot + 0.6
 
         super(PushEnv, self).__init__(
             start_goal_config=start_goal_config,
             achieved_goal_fn=achieved_goal_fn,
             desired_goal_fn=desired_goal_fn,
+            completion_bonus=0.5,
             file_path="push.xml" if control_method == "task_space_control" else "push_poscontrol.xml",
             collision_whitelist=[],
             collision_penalty=0.,
