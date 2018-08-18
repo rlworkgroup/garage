@@ -67,7 +67,7 @@ class SawyerEnv(RosEnv):
         """
         # assert action.shape == self.action_space.shape
         a = action.copy()  # Note: you MUST copy the action if you modify it
-        a = a[2:]
+        a = a[1:]
         a *= self._action_scale
         a = np.clip(a, self.action_space.low, self.action_space.high)
         self._robot.send_command(a)
