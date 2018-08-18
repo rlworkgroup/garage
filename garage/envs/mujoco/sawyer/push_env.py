@@ -56,7 +56,7 @@ class PushEnv(SawyerEnv):
                         raise Warning("Easy gripper init has only been implemented for the up direction so far.")
                     jpos = np.array({
                         "up": [
-                            0, -1.1, 0, 2., 0, 0.5, 1.65
+                            0, -0.97, 0, 2., 0, 0.5, 1.65
                         ],
                         "down": [
                             -0.12526904, 0.29675812, 0.06034621, -0.55948609,
