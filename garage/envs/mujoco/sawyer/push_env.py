@@ -414,7 +414,7 @@ class PushEnv(SawyerEnv):
         r1 = self.compute_reward(
             achieved_goal=obs.get('achieved_goal'),
             desired_goal=obs.get('desired_goal'),
-            info=info)
+            info=info) * 3/2
 
         r2 = -np.linalg.norm(self.gripper_position - block_desired_gripper) / 5 *2/3
 
