@@ -270,13 +270,13 @@ class PushEnv(SawyerEnv):
         object_ori = self.object_orientation
         grasped = self.has_object
         if self._control_method == 'position_control':
-            # obs = np.concatenate((self.joint_positions, object_pos, object_ori,
-            #                       gripper_pos))
+            obs = np.concatenate((self.joint_positions, object_pos, object_ori,
+                                  gripper_pos))
             # relative difference
-            initial_jpos = np.array(
-                [-0.4839443359375, -0.991173828125, -2.3821015625, -1.9510517578125, -0.5477119140625, -0.816458984375,
-                 -0.816326171875])
-            obs = np.concatenate((self.joint_positions - initial_jpos, gripper_pos - object_pos, object_ori-np.array([1., 0., 0., 0.])))
+            # initial_jpos = np.array(
+            #     [-0.4839443359375, -0.991173828125, -2.3821015625, -1.9510517578125, -0.5477119140625, -0.816458984375,
+            #      -0.816326171875])
+            # obs = np.concatenate((self.joint_positions - initial_jpos, gripper_pos - object_pos, object_ori-np.array([1., 0., 0., 0.])))
         else:
             obs = np.concatenate([gripper_pos, object_pos, object_ori])
 
