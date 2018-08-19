@@ -403,12 +403,17 @@ class PushEnv(SawyerEnv):
             "is_success": self._is_success
         }
 
+        desired_goal = obs.get('desired_goal')
+        achieved_goal = obs.get('achieved_goal')
+        revert_unit_vec = - (desired_goal - achieved_goal) / np.linalg.norm(desired_goal - achieved_goal)
+        block_desired_gripper = revert_unit_vec * 0.09 + achieved_goal
+
         r1 = self.compute_reward(
             achieved_goal=obs.get('achieved_goal'),
             desired_goal=obs.get('desired_goal'),
             info=info)
 
-        r2 = -np.linalg.norm(self.gripper_position - self.object_position) / 5 *2/3
+        r2 = -np.linalg.norm(self.gripper_position - block_desired_gripper) / 5 *2/3
 
         # w, x, y, z quat
         upright_gripper = np.array([0, 0, 1, 0])
