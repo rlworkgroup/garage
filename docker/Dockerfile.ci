@@ -96,7 +96,7 @@ RUN ["/bin/bash", "-c", "source activate garage && pip uninstall -y Box2D Box2D-
 # THAT WE DON'T PUBLISH THE KEY
 ARG MJKEY
 RUN echo "${MJKEY}" > /root/.mujoco/mjkey.txt
-RUN ["/bin/bash", "-c", "source activate garage && python -c 'import mujoco_py'"]
+RUN ["/bin/bash", "-c", "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mjpro150/bin && source activate garage && python -c 'import mujoco_py'"]
 RUN rm /root/.mujoco/mjkey.txt
 
 # Setup repo
