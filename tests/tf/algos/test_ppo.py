@@ -8,18 +8,25 @@ import gym
 import tensorflow as tf
 
 from garage.envs import normalize
+import garage.misc.logger as logger
+from garage.misc.tensorboard_output import TensorBoardOutput
 from garage.tf.algos import PPO
 from garage.tf.baselines import GaussianMLPBaseline
 from garage.tf.envs import TfEnv
 from garage.tf.policies import GaussianMLPPolicy
 
 
-class TestTRPO(unittest.TestCase):
-    def test_trpo_pendulum(self):
+class TestPPO(unittest.TestCase):
+    def setUp(self):
+        self.sess = tf.Session(graph=tf.Graph())
+        self.sess.__enter__()
+        logger._tensorboard = TensorBoardOutput()
+
+    def test_ppo_pendulum(self):
         """Test PPO with Pendulum environment."""
+        logger._tensorboard = TensorBoardOutput()
         env = TfEnv(normalize(gym.make("Pendulum-v0")))
         policy = GaussianMLPPolicy(
-            name="policy",
             env_spec=env.spec,
             hidden_sizes=(32, 32),
             hidden_nonlinearity=tf.nn.tanh,
@@ -41,5 +48,5 @@ class TestTRPO(unittest.TestCase):
             policy_ent_coeff=0.0,
             plot=False,
         )
-        last_avg_ret = algo.train()
-        assert last_avg_ret > -400
+        last_avg_ret = algo.train(sess=self.sess)
+        assert last_avg_ret > -1000
