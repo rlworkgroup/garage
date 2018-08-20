@@ -29,6 +29,9 @@ class TestGaussianPolicies(unittest.TestCase):
         self.sess.__enter__()
         logger._tensorboard = TensorBoardOutput()
 
+    def tearDown(self):
+        self.sess.close()
+
     @tools.params(*policies)
     def test_gaussian_policies(self, policy_cls):
         logger._tensorboard = TensorBoardOutput()

@@ -129,10 +129,15 @@ class MazeEnv(gym.Wrapper, Serializable):
             **kwargs)  # file to the robot specifications
         super().__init__(inner_env)
 
+        # Redefine observation space
+        shp = self.get_current_obs().shape
+        ub = BIG * np.ones(shp)
+        self.observation_space = gym.spaces.Box(ub * -1, ub, dtype=np.float32)
+
     def get_current_maze_obs(self):
         # The observation would include both information about the robot itself
         # as well as the sensors around its environment
-        robot_x, robot_y = self.wrapped_env.get_body_com("torso")[:2]
+        robot_x, robot_y = self.env.get_body_com("torso")[:2]
         ori = self.get_ori()
 
         structure = self.MAZE_STRUCTURE
@@ -205,11 +210,11 @@ class MazeEnv(gym.Wrapper, Serializable):
         return obs
 
     def get_current_robot_obs(self):
-        return self.wrapped_env.get_current_obs()
+        return self.env.get_current_obs()
 
     def get_current_obs(self):
         return np.concatenate(
-            [self.wrapped_env.get_current_obs(),
+            [self.env.get_current_obs(),
              self.get_current_maze_obs()])
 
     def get_ori(self):
@@ -218,29 +223,22 @@ class MazeEnv(gym.Wrapper, Serializable):
         successfull, falls back to the default based on the ORI_IND
         specified in Maze (not accurate for quaternions)
         """
-        obj = self.wrapped_env
-        while not hasattr(obj, 'get_ori') and hasattr(obj, 'wrapped_env'):
-            obj = obj.wrapped_env
+        obj = self.env
+        while not hasattr(obj, 'get_ori') and hasattr(obj, 'env'):
+            obj = obj.env
         try:
             return obj.get_ori()
         except (NotImplementedError, AttributeError) as e:
             pass
-        return self.wrapped_env.sim.data.qpos[self.__class__.ORI_IND]
+        return self.env.sim.data.qpos[self.__class__.ORI_IND]
 
     def reset(self):
-        self.wrapped_env.reset()
+        self.env.reset()
         return self.get_current_obs()
 
     @property
     def viewer(self):
-        return self.wrapped_env.viewer
-
-    @property
-    @overrides
-    def observation_space(self):
-        shp = self.get_current_obs().shape
-        ub = BIG * np.ones(shp)
-        return gym.spaces.Box(ub * -1, ub, dtype=np.float32)
+        return self.env.viewer
 
     # space of only the robot observations (they go first in the get current
     # obs)
@@ -305,18 +303,16 @@ class MazeEnv(gym.Wrapper, Serializable):
 
     def step(self, action):
         if self.MANUAL_COLLISION:
-            old_pos = self.wrapped_env.get_xy()
-            inner_next_obs, inner_rew, done, info = self.wrapped_env.step(
-                action)
-            new_pos = self.wrapped_env.get_xy()
+            old_pos = self.env.get_xy()
+            inner_next_obs, inner_rew, done, info = self.env.step(action)
+            new_pos = self.env.get_xy()
             if self._is_in_collision(new_pos):
-                self.wrapped_env.set_xy(old_pos)
+                self.env.set_xy(old_pos)
                 done = False
         else:
-            inner_next_obs, inner_rew, done, info = self.wrapped_env.step(
-                action)
+            inner_next_obs, inner_rew, done, info = self.env.step(action)
         next_obs = self.get_current_obs()
-        x, y = self.wrapped_env.get_body_com("torso")[:2]
+        x, y = self.env.get_body_com("torso")[:2]
         # ref_x = x + self._init_torso_x
         # ref_y = y + self._init_torso_y
         info['outer_rew'] = 0
@@ -332,7 +328,7 @@ class MazeEnv(gym.Wrapper, Serializable):
         return Step(next_obs, reward, done, **info)
 
     def action_from_key(self, key):
-        return self.wrapped_env.action_from_key(key)
+        return self.env.action_from_key(key)
 
     @overrides
     def log_diagnostics(self, paths, *args, **kwargs):
@@ -351,8 +347,7 @@ class MazeEnv(gym.Wrapper, Serializable):
             for k, v in path.items():
                 stripped_path[k] = v
             stripped_path['observations'] = stripped_path[
-                'observations'][:, :flat_dim(
-                    self.wrapped_env.observation_space)]
+                'observations'][:, :flat_dim(self.env.observation_space)]
             #  this breaks if the obs of the robot are d>1 dimensional (not a
             #  vector)
             stripped_paths.append(stripped_path)
@@ -360,4 +355,4 @@ class MazeEnv(gym.Wrapper, Serializable):
             wrapped_undiscounted_return = np.mean(
                 [np.sum(path['env_infos']['inner_rew']) for path in paths])
             logger.record_tabular('AverageReturn', wrapped_undiscounted_return)
-            self.wrapped_env.log_diagnostics(stripped_paths, *args, **kwargs)
+            self.env.log_diagnostics(stripped_paths, *args, **kwargs)

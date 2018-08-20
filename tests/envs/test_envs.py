@@ -9,7 +9,6 @@ from garage.envs import GridWorldEnv
 from garage.envs import IdentificationEnv
 from garage.envs import NoisyObservationEnv
 from garage.envs import NormalizedEnv
-from garage.envs.box2d import Box2DEnv
 from garage.envs.box2d import CarParkingEnv
 from garage.envs.box2d import CartpoleEnv
 from garage.envs.box2d import CartpoleSwingupEnv
@@ -60,7 +59,6 @@ if MUJOCO_ENABLED:
         SwimmerMazeEnv,
         AntMazeEnv,
     ])
-
 envs = [cls() for cls in simple_env_classes]
 envs.append(IdentificationEnv(CartpoleEnv, {}))
 envs.append(NoisyObservationEnv(CartpoleEnv()))
@@ -80,13 +78,7 @@ class TestEnvs(unittest.TestCase):
         a = act_space.sample()
         assert act_space.contains(a)
         res = env.step(a)
-        _, _, _, _ = env.step(a)
         assert ob_space.contains(res[0])  # res[0] --> observation
         assert np.isscalar(res[1])  # res[1] --> reward
         env.render()
-        if all(not isinstance(env, T) for T in [GridWorldEnv, Box2DEnv]):
-            img = env.render(mode="rgb_array")
-            assert img is not None
-            assert img.shape[0] == env.render_width
-            assert img.shape[1] == env.render_height
         env.close()

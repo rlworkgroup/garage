@@ -5,8 +5,11 @@ garage.tf.policies failed to initialize.
 
 import unittest
 
+import tensorflow as tf
 from tests.envs.dummy import DummyBoxEnv, DummyDiscreteEnv
 
+import garage.misc.logger as logger
+from garage.misc.tensorboard_output import TensorBoardOutput
 from garage.tf.envs import TfEnv
 from garage.tf.policies import CategoricalGRUPolicy
 from garage.tf.policies import CategoricalLSTMPolicy
@@ -19,6 +22,14 @@ from garage.tf.policies import GaussianMLPPolicy
 
 
 class TestTfPolicies(unittest.TestCase):
+    def setUp(self):
+        self.sess = tf.Session(graph=tf.Graph())
+        self.sess.__enter__()
+        logger._tensorboard = TensorBoardOutput()
+
+    def tearDown(self):
+        self.sess.close()
+
     def test_policies(self):
         """Test the policies initialization."""
         box_env = TfEnv(DummyBoxEnv())
