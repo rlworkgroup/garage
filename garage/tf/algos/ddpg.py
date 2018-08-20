@@ -292,6 +292,11 @@ class DDPG(RLAlgorithm):
                             epoch_qs.append(q)
 
             logger.log("Training finished")
+            logger.log("Saving snapshot")
+            itr = epoch * self.n_epoch_cycles + epoch_cycle
+            params = self.get_itr_snapshot(itr)
+            logger.save_itr_params(itr, params)
+            logger.log("Saved")
             if self.evaluate:
                 logger.record_tabular('Epoch', epoch)
                 logger.record_tabular('Episodes', episodes)
@@ -509,6 +514,9 @@ class DDPG(RLAlgorithm):
             self.f_update_target()
 
         return qval_loss, ys, qval, action_loss
+
+    def get_itr_snapshot(self, itr):
+        return dict(itr=itr, policy=self.actor, env=self.env)
 
 
 def get_target_ops(vars, target_vars, tau):
