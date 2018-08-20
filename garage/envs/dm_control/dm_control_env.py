@@ -22,8 +22,6 @@ class DmControlEnv(gym.Env, Serializable):
             width=320,
             height=240,
     ):
-        Serializable.quick_init(self, locals())
-
         self._env = suite.load(domain_name=domain_name, task_name=task_name)
 
         self._total_reward = 0
@@ -33,6 +31,9 @@ class DmControlEnv(gym.Env, Serializable):
             self._viewer = DmControlViewer()
         else:
             self._viewer = None
+
+        # Always call Serializable constructor last
+        Serializable.quick_init(self, locals())
 
     def step(self, action):
         time_step = self._env.step(action)

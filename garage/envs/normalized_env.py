@@ -17,8 +17,8 @@ class NormalizedEnv(gym.Wrapper, Serializable):
             obs_alpha=0.001,
             reward_alpha=0.001,
     ):
-        Serializable.quick_init(self, locals())
-        super(NormalizedEnv, self).__init__(env)
+        super().__init__(env)
+
         self._scale_reward = scale_reward
         self._normalize_obs = normalize_obs
         self._normalize_reward = normalize_reward
@@ -32,6 +32,9 @@ class NormalizedEnv(gym.Wrapper, Serializable):
         self._reward_alpha = reward_alpha
         self._reward_mean = 0.
         self._reward_var = 1.
+
+        # Always call Serializable constructor last
+        Serializable.quick_init(self, locals())
 
     def _update_obs_estimate(self, obs):
         flat_obs = flatten(self.env.observation_space, obs)

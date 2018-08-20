@@ -13,11 +13,14 @@ class SlidingMemEnv(gym.Wrapper, Serializable):
             n_steps=4,
             axis=0,
     ):
-        Serializable.quick_init(self, locals())
         super().__init__(env)
+
         self.n_steps = n_steps
         self.axis = axis
         self.buffer = None
+
+        # Always call Serializable constructor last
+        Serializable.quick_init(self, locals())
 
     def reset_buffer(self, new_):
         assert self.axis == 0
@@ -32,9 +35,18 @@ class SlidingMemEnv(gym.Wrapper, Serializable):
     @property
     def observation_space(self):
         origin = self.env.observation_space
-        return gym.spaces.Box(*[
-            np.repeat(b, self.n_steps, axis=self.axis) for b in origin.bounds
-            ], dtype=np.float32)  # yapf: disable
+        low = origin.low[np.newaxis, ...]
+        high = origin.high[np.newaxis, ...]
+        return gym.spaces.Box(
+            np.repeat(low, self.n_steps, axis=self.axis),
+            np.repeat(high, self.n_steps, axis=self.axis),
+            dtype=np.float32)
+
+    @observation_space.setter
+    def observation_space(self, obs_space):
+        # Since gym.Wrapper sets this property in SlidingMemEnv.__init__(),
+        # this void setter is required to avoid an AttributeError.
+        return
 
     @overrides
     def reset(self):

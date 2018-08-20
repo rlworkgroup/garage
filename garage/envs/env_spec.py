@@ -7,9 +7,11 @@ class EnvSpec(Serializable):
         :type observation_space: Space
         :type action_space: Space
         """
-        Serializable.quick_init(self, locals())
         self._observation_space = observation_space
         self._action_space = action_space
+
+        # Always call Serializable constructor last
+        Serializable.quick_init(self, locals())
 
     @property
     def observation_space(self):

@@ -20,13 +20,14 @@ class OcclusionEnv(gym.Wrapper, Serializable):
          Other indices will be occluded. Can be either list of integer
          indices or boolean mask.
         """
-        Serializable.quick_init(self, locals())
-
         self._set_sensor_mask(env, sensor_idx)
-        super(OcclusionEnv, self).__init__(env)
+        super().__init__(env)
         self._dt = 1
         if isinstance(env, MujocoEnv):
             self._dt = env.sim.opt.timestep * env.frame_skip
+
+        # Always call Serializable constructor last
+        Serializable.quick_init(self, locals())
 
     def _set_sensor_mask(self, env, sensor_idx):
         obsdim = flat_dim(env.observation_space)

@@ -191,7 +191,6 @@ class GatherEnv(gym.Wrapper, Serializable):
                  dying_cost=-10,
                  *args,
                  **kwargs):
-        Serializable.quick_init(self, locals())
         self.n_apples = n_apples
         self.n_bombs = n_bombs
         self.activity_range = activity_range
@@ -205,10 +204,9 @@ class GatherEnv(gym.Wrapper, Serializable):
         self.objects = []
         self.render_width = 512
         self.render_height = 512
-        # super(GatherEnv, self).__init__(*args, **kwargs)
         model_cls = self.__class__.MODEL_CLASS
-        if model_cls is None:
-            raise "MODEL_CLASS unspecified!"
+        if not model_cls:
+            raise NotImplementedError("MODEL_CLASS unspecified!")
         xml_path = osp.join(MODEL_DIR, model_cls.FILE)
         tree = ET.parse(xml_path)
         worldbody = tree.find(".//worldbody")
@@ -254,6 +252,9 @@ class GatherEnv(gym.Wrapper, Serializable):
         shp = self.get_current_obs().shape
         ub = BIG * np.ones(shp)
         self.observation_space = gym.spaces.Box(ub * -1, ub, dtype=np.float32)
+
+        # Always call Serializable constructor last
+        Serializable.quick_init(self, locals())
 
     def reset(self, also_wrapped=True):
         self.objects = []
@@ -406,6 +407,10 @@ class GatherEnv(gym.Wrapper, Serializable):
             self.env.viewer.finish()
 
     def render(self, mode='human', close=False):  # pylint: disable=R1710
+        # The render function returns immediately since it's not working
+        # properly. This has to be addressed for
+        # https://github.com/rlworkgroup/garage/issues/323.
+        return
         if mode == 'rgb_array':
             viewer = self.get_viewer()
             self.env.render()
@@ -432,7 +437,6 @@ class GatherEnv(gym.Wrapper, Serializable):
         obj = self.env
         while not hasattr(obj, 'get_ori') and hasattr(obj, 'env'):
             obj = obj.env
-        obj = self.env
         try:
             return obj.get_ori()
         except (NotImplementedError, AttributeError):

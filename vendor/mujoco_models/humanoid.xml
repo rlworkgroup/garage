@@ -9,7 +9,7 @@
     <motor ctrlrange='-.4 .4' ctrllimited='true' />
   </default>
   <option timestep='0.002' integrator="RK4" iterations="50" solver="PGS">
-    <flag solverstat="enable" energy="enable" />
+    <flag fwdinv="enable" energy="enable" />
   </option>
   <size nuser_geom='1' nkey='5' />
   <visual>

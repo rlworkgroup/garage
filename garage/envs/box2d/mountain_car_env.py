@@ -16,12 +16,15 @@ class MountainCarEnv(Box2DEnv, Serializable):
         help="Height bonus added to each step's reward")
     @autoargs.arg("goal_cart_pos", type=float, help="Goal horizontal position")
     def __init__(self, height_bonus=1., goal_cart_pos=0.6, *args, **kwargs):
-        super(MountainCarEnv, self).__init__(
+        super().__init__(
             self.model_path("mountain_car.xml.mako"), *args, **kwargs)
+
         self.max_cart_pos = 2
         self.goal_cart_pos = goal_cart_pos
         self.height_bonus = height_bonus
         self.cart = find_body(self.world, "cart")
+
+        # Always call Serializable constructor last
         Serializable.quick_init(self, locals())
 
     @overrides
