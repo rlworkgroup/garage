@@ -84,8 +84,6 @@ RUN conda env create -f /root/code/garage/environment.yml && \
 # Extras
 # prevent pip from complaining about available upgrades
 RUN ["/bin/bash", "-c", "source activate garage && pip install --upgrade pip"]
-# TensorFlow is not in environment.yml because of CPU vs GPU
-RUN ["/bin/bash", "-c", "source activate garage && pip install tensorflow==1.8.0"]
 # Fix Box2D install
 # See https://github.com/openai/gym/issues/100
 # See https://github.com/pybox2d/pybox2d/issues/82
