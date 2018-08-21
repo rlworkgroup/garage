@@ -114,6 +114,7 @@ def run_task(v):
         hidden_sizes=(256, 128),
         std_share_network=True,
         init_std=v.policy_init_std,
+        max_std=v.policy_max_std,
     )
 
     extra = v.latent_length + len(v.tasks)
@@ -149,7 +150,8 @@ config = dict(
     max_path_length=500,
     embedding_init_std=1.0,
     embedding_max_std=2.0,
-    policy_init_std=1.0,
+    policy_init_std=0.5,
+    policy_max_std=2.0,
 )
 
 run_experiment(
