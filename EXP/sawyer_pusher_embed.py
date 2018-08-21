@@ -140,6 +140,7 @@ def run_task(v):
     )
     algo.train()
 
+
 config = dict(
     latent_length=3,
     inference_window=6,
