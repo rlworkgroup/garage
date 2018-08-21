@@ -146,9 +146,9 @@ config = dict(
     inference_window=6,
     batch_size=4096 * len(TASKS),
     policy_ent_coeff=5e-3,  # 1e-2
-    embedding_ent_coeff=0.003,  # 1e-3
+    embedding_ent_coeff=1e-5,  # 1e-3
     inference_ce_coeff=14e-3,  # 1e-4
-    max_path_length=500,
+    max_path_length=200,
     embedding_init_std=1.0,
     embedding_max_std=2.0,
     policy_init_std=0.5,
@@ -158,7 +158,7 @@ config = dict(
 run_experiment(
     run_task,
     exp_prefix='sawyer_pusher_rel_obs_embed_udlr',
-    n_parallel=12,
+    n_parallel=6,
     seed=1,
     variant=config,
     plot=False,
