@@ -146,13 +146,13 @@ config = dict(
     inference_window=6,
     batch_size=4096 * len(TASKS),
     policy_ent_coeff=5e-3,  # 1e-2
-    embedding_ent_coeff=2e-3,  # 1e-3
-    inference_ce_coeff=14e-3,  # 1e-4
+    embedding_ent_coeff=5e-3,  # 1e-3
+    inference_ce_coeff=14e-4,  # 1e-4
     max_path_length=200,
     embedding_init_std=1.0,
     embedding_max_std=2.0,
     policy_init_std=0.5,
-    policy_max_std=2.0,
+    policy_max_std=None,
 )
 
 run_experiment(
