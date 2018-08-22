@@ -33,7 +33,7 @@ PyMjrRect = cymj.PyMjrRect
 class GatherViewer(MjViewer):
     def __init__(self, env):
         self.env = env
-        super(GatherViewer, self).__init__(self.env.wrapped_env.sim)
+        super(GatherViewer, self).__init__(self.env.env.sim)
         green_ball_model = load_model_from_path(
             osp.abspath(osp.join(MODEL_DIR, 'green_ball.xml')))
         self.green_ball_renderer = EmbeddedViewer()
@@ -66,7 +66,7 @@ class GatherViewer(MjViewer):
 
     def render(self):
         super(GatherViewer, self).render()
-        ctx = MjRenderContext(self.env.wrapped_env.sim)
+        ctx = MjRenderContext(self.env.env.sim)
         scn = ctx.scn
         con = ctx.con
         functions.mjv_makeScene(scn, 1000)
@@ -97,9 +97,8 @@ class GatherViewer(MjViewer):
                                        self.red_ball_ctx.vopt,
                                        self.red_ball_ctx.pert, CAT_ALL, scn)
 
-        functions.mjv_addGeoms(self.env.wrapped_env.sim.model,
-                               self.env.wrapped_env.sim.data, ctx.vopt,
-                               ctx.pert, CAT_ALL, scn)
+        functions.mjv_addGeoms(self.env.env.sim.model, self.env.env.sim.data,
+                               ctx.vopt, ctx.pert, CAT_ALL, scn)
         functions.mjr_render(self.green_ball_renderer.get_rect(), scn, con)
 
         try:
@@ -252,6 +251,11 @@ class GatherEnv(gym.Wrapper, Serializable):
         # pylint: enable=not-callable
         super().__init__(inner_env)
 
+        # Redefine observation space
+        shp = self.get_current_obs().shape
+        ub = BIG * np.ones(shp)
+        self.observation_space = gym.spaces.Box(ub * -1, ub, dtype=np.float32)
+
     def reset(self, also_wrapped=True):
         self.objects = []
         existing = set()
@@ -283,17 +287,17 @@ class GatherEnv(gym.Wrapper, Serializable):
             existing.add((x, y))
 
         if also_wrapped:
-            self.wrapped_env.reset()
+            self.env.reset()
         return self.get_current_obs()
 
     def step(self, action):
-        _, inner_rew, done, info = self.wrapped_env.step(action)
+        _, inner_rew, done, info = self.env.step(action)
         info['inner_rew'] = inner_rew
         info['outer_rew'] = 0
         if done:
             return Step(self.get_current_obs(), self.dying_cost, done,
                         **info)  # give a -10 rew if the robot dies
-        com = self.wrapped_env.get_body_com("torso")
+        com = self.env.get_body_com("torso")
         x, y = com[:2]
         reward = self.coef_inner_rew * inner_rew
         new_objs = []
@@ -319,7 +323,7 @@ class GatherEnv(gym.Wrapper, Serializable):
         # first, obtain current orientation
         apple_readings = np.zeros(self.n_bins)
         bomb_readings = np.zeros(self.n_bins)
-        robot_x, robot_y = self.wrapped_env.get_body_com("torso")[:2]
+        robot_x, robot_y = self.env.get_body_com("torso")[:2]
         # sort objects by distance to the robot, so that farther objects'
         # signals will be occluded by the closer ones'
         sorted_objects = sorted(
@@ -357,20 +361,13 @@ class GatherEnv(gym.Wrapper, Serializable):
         return apple_readings, bomb_readings
 
     def get_current_robot_obs(self):
-        return self.wrapped_env.get_current_obs()
+        return self.env.get_current_obs()
 
     def get_current_obs(self):
         # return sensor data along with data about itself
-        self_obs = self.wrapped_env.get_current_obs()
+        self_obs = self.env.get_current_obs()
         apple_readings, bomb_readings = self.get_readings()
         return np.concatenate([self_obs, apple_readings, bomb_readings])
-
-    @property
-    @overrides
-    def observation_space(self):
-        shp = self.get_current_obs().shape
-        ub = BIG * np.ones(shp)
-        return gym.spaces.Box(ub * -1, ub, dtype=np.float32)
 
     # space of only the robot observations (they go first in the get current
     # obs)
@@ -387,37 +384,32 @@ class GatherEnv(gym.Wrapper, Serializable):
         return gym.spaces.Box(ub * -1, ub, dtype=np.float32)
 
     @property
-    @overrides
-    def action_space(self):
-        return self.wrapped_env.action_space
-
-    @property
     def action_bounds(self):
-        return self.wrapped_env.action_bounds
+        return self.env.action_bounds
 
     # @property
     # def viewer(self):
-    #     return self.wrapped_env.viewer
+    #     return self.env.viewer
 
     def action_from_key(self, key):
-        return self.wrapped_env.action_from_key(key)
+        return self.env.action_from_key(key)
 
     def get_viewer(self):
-        if self.wrapped_env.viewer is None:
-            self.wrapped_env.viewer = GatherViewer(self)
-            self.wrapped_env.viewer.start()
-            r = self.wrapped_env.viewer.get_rect()
+        if self.env.viewer is None:
+            self.env.viewer = GatherViewer(self)
+            self.env.viewer.start()
+            r = self.env.viewer.get_rect()
             self.render_width, self.render_height = r.width, r.height
-        return self.wrapped_env.viewer
+        return self.env.viewer
 
     def stop_viewer(self):
-        if self.wrapped_env.viewer:
-            self.wrapped_env.viewer.finish()
+        if self.env.viewer:
+            self.env.viewer.finish()
 
     def render(self, mode='human', close=False):  # pylint: disable=R1710
         if mode == 'rgb_array':
             viewer = self.get_viewer()
-            self.wrapped_env.render()
+            self.env.render()
             img = viewer.read_pixels(
                 width=self.render_width,
                 height=self.render_height,
@@ -428,7 +420,7 @@ class GatherEnv(gym.Wrapper, Serializable):
             return img
         elif mode == 'human':
             self.get_viewer()
-            self.wrapped_env.render()
+            self.env.render()
         if close:
             self.stop_viewer()
 
@@ -438,14 +430,12 @@ class GatherEnv(gym.Wrapper, Serializable):
         successful, falls back to the default based on the ORI_IND specified in
         Maze (not accurate for quaternions)
         """
-        obj = self.wrapped_env
-        while not hasattr(obj, 'get_ori') and hasattr(obj, 'wrapped_env'):
-            obj = obj.wrapped_env
+        obj = self.env
         try:
             return obj.get_ori()
         except (NotImplementedError, AttributeError):
             pass
-        return self.wrapped_env.sim.data.qpos[self.__class__.ORI_IND]
+        return self.env.sim.data.qpos[self.__class__.ORI_IND]
 
     @overrides
     def log_diagnostics(self, paths, log_prefix='Gather', *args, **kwargs):
@@ -465,7 +455,7 @@ class GatherEnv(gym.Wrapper, Serializable):
                 stripped_path[k] = v
             stripped_path['observations'] = \
                 stripped_path['observations'][
-                    :, :flat_dim(self.wrapped_env.observation_space)]
+                    :, :flat_dim(self.env.observation_space)]
             #  this breaks if the obs of the robot are d>1 dimensional (not a
             #  vector)
             stripped_paths.append(stripped_path)
@@ -476,6 +466,6 @@ class GatherEnv(gym.Wrapper, Serializable):
                     [np.sum(path['env_infos']['inner_rew']) for path in paths])
                 logger.record_tabular('AverageReturn',
                                       wrapped_undiscounted_return)
-            self.wrapped_env.log_diagnostics(
+            self.env.log_diagnostics(
                 stripped_paths
             )  # see swimmer_env.py for a scketch of the maze plotting!

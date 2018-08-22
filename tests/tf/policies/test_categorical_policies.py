@@ -29,6 +29,9 @@ class TestCategoricalPolicies(unittest.TestCase):
         self.sess.__enter__()
         logger._tensorboard = TensorBoardOutput()
 
+    def tearDown(self):
+        self.sess.close()
+
     @tools.params(*policies)
     def test_categorical_policies(self, policy_cls):
         env = TfEnv(normalize(gym.make("CartPole-v0")))

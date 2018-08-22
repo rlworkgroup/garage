@@ -22,6 +22,9 @@ class TestPPO(unittest.TestCase):
         self.sess.__enter__()
         logger._tensorboard = TensorBoardOutput()
 
+    def tearDown(self):
+        self.sess.close()
+
     def test_ppo_pendulum(self):
         """Test PPO with Pendulum environment."""
         logger._tensorboard = TensorBoardOutput()
