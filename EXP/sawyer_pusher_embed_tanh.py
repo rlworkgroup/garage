@@ -147,14 +147,14 @@ def run_task(v):
 
 config = dict(
     latent_length=3,
-    inference_window=6,
+    inference_window=12,
     batch_size=4096 * len(TASKS),
     policy_ent_coeff=5e-3,  # 1e-2
-    embedding_ent_coeff=2.9e-3,  # 1e-3
+    embedding_ent_coeff=2.7e-3,  # 1e-3
     inference_ce_coeff=1.25e-4,  # 1e-4
     max_path_length=200,
-    embedding_init_std=0.5,
-    embedding_max_std=1,
+    embedding_init_std=0.4,
+    embedding_max_std=0.4,
     policy_init_std=1,
     policy_max_std=None,
 )
