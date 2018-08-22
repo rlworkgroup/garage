@@ -2,8 +2,6 @@
 This script creates a test that fails when garage.tf.algos.PPO performance is
 too low.
 """
-import unittest
-
 import gym
 import tensorflow as tf
 
@@ -14,17 +12,10 @@ from garage.tf.algos import PPO
 from garage.tf.baselines import GaussianMLPBaseline
 from garage.tf.envs import TfEnv
 from garage.tf.policies import GaussianMLPPolicy
+from tests.fixtures import GarageTestCase
 
 
-class TestPPO(unittest.TestCase):
-    def setUp(self):
-        self.sess = tf.Session(graph=tf.Graph())
-        self.sess.__enter__()
-        logger._tensorboard = TensorBoardOutput()
-
-    def tearDown(self):
-        self.sess.close()
-
+class TestPPO(GarageTestCase):
     def test_ppo_pendulum(self):
         """Test PPO with Pendulum environment."""
         logger._tensorboard = TensorBoardOutput()

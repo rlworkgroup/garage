@@ -43,28 +43,43 @@ simple_env_classes = [
     MountainCarEnv,
 ]
 
+mujoco_classes = [
+    SwimmerMazeEnv,
+    PointMazeEnv,
+    AntMazeEnv,
+]
+
+mujoco_rgb_classes = [
+    PointEnv,
+    Walker2DEnv,
+    SwimmerEnv,
+    SimpleHumanoidEnv,
+    InvertedDoublePendulumEnv,
+    HopperEnv,
+    HalfCheetahEnv,
+    PointGatherEnv,
+    SwimmerGatherEnv,
+    AntGatherEnv,
+]
+
+classes = []
+classes.extend(simple_env_classes)
+
 if MUJOCO_ENABLED:
-    simple_env_classes.extend([
-        PointEnv,
-        Walker2DEnv,
-        SwimmerEnv,
-        SimpleHumanoidEnv,
-        InvertedDoublePendulumEnv,
-        HopperEnv,
-        HalfCheetahEnv,
-        PointGatherEnv,
-        SwimmerGatherEnv,
-        AntGatherEnv,
-        PointMazeEnv,
-        SwimmerMazeEnv,
-        AntMazeEnv,
-    ])
-envs = [cls() for cls in simple_env_classes]
-envs.append(IdentificationEnv(CartpoleEnv, {}))
-envs.append(NoisyObservationEnv(CartpoleEnv()))
-envs.append(DelayedActionEnv(CartpoleEnv()))
-envs.append(NormalizedEnv(CartpoleEnv()))
-envs.append(gym.make("CartPole-v1"))
+    classes.extend(mujoco_classes)
+    classes.extend(mujoco_rgb_classes)
+
+# Call constructor for each class
+envs = [cls() for cls in classes]
+
+cartpole_envs = [
+    IdentificationEnv(CartpoleEnv, {}),
+    NoisyObservationEnv(CartpoleEnv()),
+    DelayedActionEnv(CartpoleEnv()),
+    NormalizedEnv(CartpoleEnv()),
+    gym.make("CartPole-v1"),
+]
+envs.extend(cartpole_envs)
 
 
 class TestEnvs(unittest.TestCase):
@@ -80,5 +95,13 @@ class TestEnvs(unittest.TestCase):
         res = env.step(a)
         assert ob_space.contains(res[0])  # res[0] --> observation
         assert np.isscalar(res[1])  # res[1] --> reward
-        env.render()
+        if any(isinstance(env, T) for T in mujoco_rgb_classes):
+            img = env.render(mode="rgb_array")
+            if img is None:
+                img = env.render(mode="human")
+            assert img is not None
+            assert img.shape[0] == env.render_width
+            assert img.shape[1] == env.render_height
+        else:
+            env.render()
         env.close()

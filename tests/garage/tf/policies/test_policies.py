@@ -2,13 +2,6 @@
 This script creates a test that fails when
 garage.tf.policies failed to initialize.
 """
-
-import unittest
-
-import tensorflow as tf
-
-import garage.misc.logger as logger
-from garage.misc.tensorboard_output import TensorBoardOutput
 from garage.tf.envs import TfEnv
 from garage.tf.policies import CategoricalGRUPolicy
 from garage.tf.policies import CategoricalLSTMPolicy
@@ -18,18 +11,11 @@ from garage.tf.policies import DeterministicMLPPolicy
 from garage.tf.policies import GaussianGRUPolicy
 from garage.tf.policies import GaussianLSTMPolicy
 from garage.tf.policies import GaussianMLPPolicy
+from tests.fixtures import GarageTestCase
 from tests.fixtures.envs.dummy import DummyBoxEnv, DummyDiscreteEnv
 
 
-class TestTfPolicies(unittest.TestCase):
-    def setUp(self):
-        self.sess = tf.Session(graph=tf.Graph())
-        self.sess.__enter__()
-        logger._tensorboard = TensorBoardOutput()
-
-    def tearDown(self):
-        self.sess.close()
-
+class TestTfPolicies(GarageTestCase):
     def test_policies(self):
         """Test the policies initialization."""
         box_env = TfEnv(DummyBoxEnv())

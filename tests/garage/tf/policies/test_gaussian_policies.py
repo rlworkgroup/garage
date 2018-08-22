@@ -2,10 +2,7 @@
 This script creates a unittest that tests Gaussian policies in
 garage.tf.policies.
 """
-import unittest
-
 from nose2 import tools
-import tensorflow as tf
 
 from garage.baselines import LinearFeatureBaseline
 from garage.envs import normalize
@@ -19,19 +16,12 @@ from garage.tf.optimizers import FiniteDifferenceHvp
 from garage.tf.policies import GaussianGRUPolicy
 from garage.tf.policies import GaussianLSTMPolicy
 from garage.tf.policies import GaussianMLPPolicy
+from tests.fixtures import GarageTestCase
 
 policies = [GaussianGRUPolicy, GaussianLSTMPolicy, GaussianMLPPolicy]
 
 
-class TestGaussianPolicies(unittest.TestCase):
-    def setUp(self):
-        self.sess = tf.Session(graph=tf.Graph())
-        self.sess.__enter__()
-        logger._tensorboard = TensorBoardOutput()
-
-    def tearDown(self):
-        self.sess.close()
-
+class TestGaussianPolicies(GarageTestCase):
     @tools.params(*policies)
     def test_gaussian_policies(self, policy_cls):
         logger._tensorboard = TensorBoardOutput()
