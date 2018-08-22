@@ -419,7 +419,7 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
         if self._is_success:
             r += self._completion_bonus
             info["d"] = True
-            done = True
+            # done = True
         else:
             info["d"] = False
 
@@ -526,6 +526,9 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
             else:
                 self.joint_positions = self._start_configuration.joint_pos
             self.sim.forward()
+
+        desired_goal_qpos = np.concatenate((self._goal_configuration.object_pos, [1, 0, 0, 0]))
+        self.sim.data.set_joint_qpos('desired_goal:joint', desired_goal_qpos)
 
         # attempts = 1
         # if self._randomize_start_jpos:

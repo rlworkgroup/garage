@@ -74,7 +74,9 @@ class PushEnv(SawyerEnv):
                     }[direction])
                 else:
                     jpos = np.array([
-                        0, -1.1, 0, 1.3, 0, 1.4, 1.65
+                        # 0, -1.1, 0, 1.3, 0, 1.4, 1.65
+                        -0.4839443359375, -0.991173828125, -2.3821015625, -1.9510517578125, -0.5477119140625,
+                        -0.816458984375, -0.816326171875
                     ])
                 start = Configuration(
                     gripper_pos=gripper_pos,
@@ -104,14 +106,14 @@ class PushEnv(SawyerEnv):
             gripper_rot = rotations.mat2euler(env.sim.data.get_site_xmat('grip'))
             gripper_norot = -np.linalg.norm(np.sin(upright_gripper) - np.sin(gripper_rot))
 
-            if not easy_gripper_init and direction == "up":
-                if "_traj_phase" not in env._episode_data or env._episode_data["_traj_phase"] == 0:
-                    env._episode_data["_traj_phase"] = 0
-                    # Gripper start on top of block -> has to move in front of it
-                    if gripper_pos[2] < 0.05 and np.linalg.norm(gripper_pos - object_pos + np.array([0.1, 0, -0.05])) < 0.2 and abs(gripper_norot) < 0.5:
-                        env._episode_data["_traj_phase"] += 1
-                        print("Reached phase", env._episode_data["_traj_phase"])
-                    return -gripper_pos[2] - 3. * np.linalg.norm(gripper_pos - object_pos + np.array([0.1, 0, -0.05])) + gripper_pos[1] - 2. * np.linalg.norm(gripper_pos[1] - object_pos[1]) + 2. * gripper_norot
+            # if not easy_gripper_init and direction == "up":
+            #     if "_traj_phase" not in env._episode_data or env._episode_data["_traj_phase"] == 0:
+            #         env._episode_data["_traj_phase"] = 0
+            #         # Gripper start on top of block -> has to move in front of it
+            #         if gripper_pos[2] < 0.05 and np.linalg.norm(gripper_pos - object_pos + np.array([0.1, 0, -0.05])) < 0.2 and abs(gripper_norot) < 0.5:
+            #             env._episode_data["_traj_phase"] += 1
+            #             print("Reached phase", env._episode_data["_traj_phase"])
+            #         return -gripper_pos[2] - 3. * np.linalg.norm(gripper_pos - object_pos + np.array([0.1, 0, -0.05])) + gripper_pos[1] - 2. * np.linalg.norm(gripper_pos[1] - object_pos[1]) + 2. * gripper_norot + 1.
 
             reach_block = -np.linalg.norm(gripper_pos - object_pos)
             block_goal = -np.linalg.norm(achieved_goal - desired_goal)
@@ -120,7 +122,7 @@ class PushEnv(SawyerEnv):
             dt = env.sim.nsubsteps * env.sim.model.opt.timestep
             block_norot = -np.linalg.norm(env.sim.data.get_geom_xvelr('object0') * dt)
 
-            return reach_block + 3. * block_goal + .4 * block_down + 0.3 * block_norot + .3 * gripper_norot + 0.73
+            return reach_block + 3. * block_goal + 0.65  # .1 * gripper_norot + 0.73
 
         super(PushEnv, self).__init__(
             start_goal_config=start_goal_config,
@@ -146,9 +148,9 @@ class PushEnv(SawyerEnv):
         object_velp -= grip_velp
         grasped = self.has_object
         if self._control_method == "position_control":
-            obs = np.concatenate([self.joint_positions,  # - self._start_configuration.joint_pos,
-                                  self.object_position,  # - self._start_configuration.object_pos,
-                                  self.gripper_position  # - self._start_configuration.gripper_pos])
+            obs = np.concatenate([self.joint_positions[2:] - self._start_configuration.joint_pos,
+                                  self.object_position - self.gripper_position,
+                                  # self.gripper_position  # - self._start_configuration.gripper_pos])
             ])
         else:
             # obs = np.concatenate([gripper_pos, object_pos])

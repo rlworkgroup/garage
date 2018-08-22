@@ -1,7 +1,7 @@
 <mujoco>
   <!--<joint damping="0.2" stiffness="0" armature=".01" user="0"/>-->
   <!--<geom solref="0.02 1" solimp="0.98 0.95 0." />-->
-  <geom solref="0.008 1" solimp="0.8 0.9 0." friction=".1 0.005 0.001" />
+  <geom solref="0.008 1" solimp="0.8 0.9 0." friction="0.2 0.005 0.001" />
   <default class="viz">
     <geom contype="0" conaffinity="0" group="1" type="mesh"/>
   </default>
