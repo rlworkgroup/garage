@@ -22,6 +22,7 @@ dependencies:
         # installed. This is stupid, but harmless.
         - git+https://github.com/deepmind/dm_control.git#egg=dm_control
         - flask
+        - google-cloud-storage
         - gym[all]==0.10.5
         - hyperopt
         - ipdb

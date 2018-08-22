@@ -13,6 +13,7 @@ import dateutil.tz
 import joblib
 
 from garage import config
+from garage.misc import gcs_utils
 from garage.misc.ext import is_iterable
 from garage.misc.ext import set_seed
 from garage.misc.instrument import concretize
@@ -110,10 +111,20 @@ def run_experiment(argv):
         help='Pickled data for variant configuration')
     parser.add_argument(
         '--use_cloudpickle', type=ast.literal_eval, default=False)
+    parser.add_argument(
+        '--save_in_gcs_bucket',
+        type=bool,
+        default=False,
+        help='If True, the logs and checkpoints of the experiment are saved ' \
+        'in the bucket set in config_personal.py')
 
     args = parser.parse_args(argv[1:])
 
     assert (os.environ.get("JOBLIB_START_METHOD", None) == "forkserver")
+
+    if args.save_in_gcs_bucket:
+        gcs_utils.check_gcs_config()
+
     if args.seed is not None:
         set_seed(args.seed)
 
@@ -185,6 +196,10 @@ def run_experiment(argv):
     logger.remove_tabular_output(tabular_log_file)
     logger.remove_text_output(text_log_file)
     logger.pop_prefix()
+
+    if args.save_in_gcs_bucket:
+        gcs_utils.upload_to_gcs(
+            log_dir, path_in_bucket=config.GCS_PATH_IN_BUCKET + args.exp_name)
 
 
 if __name__ == "__main__":
