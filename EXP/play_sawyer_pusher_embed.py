@@ -187,7 +187,7 @@ def play(pkl_file):
                 task_envs[0],
                 policy,
                 z,
-                max_path_length=500,
+                max_path_length=120,
                 animated=True,
                 goal_markers=goals,
             )
@@ -200,7 +200,7 @@ def play(pkl_file):
                     task_envs[0],
                     policy,
                     z,
-                    max_path_length=500,
+                    max_path_length=120,
                     animated=True,
                     goal_markers=goals,
                 )

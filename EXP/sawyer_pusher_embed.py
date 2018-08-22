@@ -154,8 +154,8 @@ config = dict(
     inference_ce_coeff=1.25e-4,  # 1e-4
     max_path_length=200,
     embedding_init_std=0.5,
-    embedding_max_std=0.5,
-    policy_init_std=0.5,
+    embedding_max_std=1,
+    policy_init_std=1,
     policy_max_std=None,
 )
 
