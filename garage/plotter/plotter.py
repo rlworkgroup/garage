@@ -1,8 +1,8 @@
 import atexit
 from collections import namedtuple
 from enum import Enum
-from multiprocessing import Process
 from multiprocessing import JoinableQueue
+from multiprocessing import Process
 import platform
 from threading import Thread
 

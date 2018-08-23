@@ -2,7 +2,7 @@
 
 # Python packages considered local to the project, for the purposes of import
 # order checking. Comma-delimited.
-garage_packages="garage,sandbox,examples,tests"
+garage_packages="tests,garage,sandbox,examples,contrib"
 
 ### ALL FILES ###
 

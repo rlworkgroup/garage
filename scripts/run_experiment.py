@@ -17,6 +17,8 @@ from garage.misc.ext import set_seed
 from garage.misc.instrument import concretize
 import garage.misc.logger as logger
 import garage.plotter
+from garage.sampler import parallel_sampler
+from garage.sampler.utils import mask_signals
 import garage.tf.plotter
 
 
@@ -115,22 +117,23 @@ def run_experiment(argv):
     if args.seed is not None:
         set_seed(args.seed)
 
-    sigint_hdlr = signal.getsignal(signal.SIGINT)
-
-    def terminte_sampler(signum, frame):
-        parallel_sampler.terminate()
-        parallel_sampler.join()
-        sigint_hdlr(signum, frame)
-
-    signal.signal(signal.SIGINT, terminte_sampler)
-
-    signal.pthread_sigmask(signal.SIG_BLOCK, [signal.SIGINT])
-    if args.n_parallel > 0:
-        from garage.sampler import parallel_sampler
-        parallel_sampler.initialize(n_parallel=args.n_parallel)
-        if args.seed is not None:
-            parallel_sampler.set_seed(args.seed)
-    signal.pthread_sigmask(signal.SIG_UNBLOCK, [signal.SIGINT])
+    # SIGINT is blocked for all processes created in parallel_sampler to avoid
+    # the creation of sleeping and zombie processes.
+    #
+    # If the user interrupts run_experiment, there's a chance some processes
+    # won't die due to a dead lock condition where one of the children in the
+    # parallel sampler exits without releasing a lock once after it catches
+    # SIGINT.
+    #
+    # Later the parent tries to acquire the same lock to proceed with his
+    # cleanup, but it remains sleeping waiting for the lock to be released.
+    # In the meantime, all the process in parallel sampler remain in the zombie
+    # state since the parent cannot proceed with their clean up.
+    with mask_signals([signal.SIGINT]):
+        if args.n_parallel > 0:
+            parallel_sampler.initialize(n_parallel=args.n_parallel)
+            if args.seed is not None:
+                parallel_sampler.set_seed(args.seed)
 
     if not args.plot:
         garage.plotter.Plotter.disable()
@@ -181,6 +184,7 @@ def run_experiment(argv):
             except BaseException:
                 if args.n_parallel > 0:
                     parallel_sampler.terminate()
+                    parallel_sampler.join()
                 raise
         else:
             data = pickle.loads(base64.b64decode(args.args_data))
