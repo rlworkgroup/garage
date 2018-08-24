@@ -236,7 +236,7 @@ class BlockWorld(World):
                 block = Block(
                     name=block_name,
                     size=[0.1, 0.15, 0.065],
-                    initial_pos=(0.55, 0., 0.06),
+                    initial_pos=(0.55, 0., 0.03),
                     random_delta_range=0.15,
                     resource=vicon_topic)
                 try:
@@ -263,7 +263,7 @@ class BlockWorld(World):
         pose_stamped_table.pose.position.x = 0.655
         pose_stamped_table.pose.position.y = 0
         # Leave redundant space
-        pose_stamped_table.pose.position.z = -0.02
+        pose_stamped_table.pose.position.z = -0.05
         pose_stamped_table.pose.orientation.x = 0
         pose_stamped_table.pose.orientation.y = 0
         pose_stamped_table.pose.orientation.z = 0
@@ -277,20 +277,20 @@ class BlockWorld(World):
         pose_stamped_marker.pose.position.x = 1.055
         pose_stamped_marker.pose.position.y = -0.404
         # Leave redundant space
-        pose_stamped_marker.pose.position.z = 0.06
+        pose_stamped_marker.pose.position.z = 0.02
         pose_stamped_marker.pose.orientation.x = 0
         pose_stamped_marker.pose.orientation.y = 0
         pose_stamped_marker.pose.orientation.z = 0
         pose_stamped_marker.pose.orientation.w = 1.0
         self._moveit_scene.add_box('marker', pose_stamped_marker,
-                                   (0.09, 0.08, 0.06))
+                                   (0.09, 0.08, 0.04))
         # Add blocks to moveit
         for block in self._blocks:
             rospy.sleep(1)
             pose_stamped_block = PoseStamped()
             pose_stamped_block.header.frame_id = self._frame_id
             pos = block.position
-            pos.z += 0.03
+            pos.z += 0.0
             pose_stamped_block.pose.position = pos
             orientation = block.orientation
             pose_stamped_block.pose.orientation = orientation
@@ -370,7 +370,7 @@ class BlockWorld(World):
         move_object.header.frame_id = self._frame_id
         pose = Pose()
         pose.position = block.position
-        pose.position.z += 0.03
+        pose.position.z += 0.0
         pose.orientation = block.orientation
         move_object.primitive_poses.append(pose)
         move_object.operation = move_object.MOVE
