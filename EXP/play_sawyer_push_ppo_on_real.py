@@ -14,13 +14,13 @@ from garage.misc import tensor_utils
 from garage.tf.envs import TfEnv
 
 INITIAL_ROBOT_JOINT_POS = {
-    'right_j0': -0.140923828125,
-    'right_j1': -1.2789248046875,
-    'right_j2': -3.043166015625,
-    'right_j3': -2.139623046875,
-    'right_j4': -0.047607421875,
-    'right_j5': -0.7052822265625,
-    'right_j6': -1.4102060546875,
+    'right_j0': -0.4839443359375,
+    'right_j1': -0.991173828125,
+    'right_j2': -2.3821015625,
+    'right_j3': -1.9510517578125,
+    'right_j4': -0.5477119140625,
+    'right_j5': -0.816458984375,
+    'right_j6': -0.816326171875,
 }
 
 
