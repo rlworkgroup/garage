@@ -6,7 +6,6 @@ garage.tf.policies failed to initialize.
 import unittest
 
 import tensorflow as tf
-from tests.envs.dummy import DummyBoxEnv, DummyDiscreteEnv
 
 import garage.misc.logger as logger
 from garage.misc.tensorboard_output import TensorBoardOutput
@@ -19,6 +18,7 @@ from garage.tf.policies import DeterministicMLPPolicy
 from garage.tf.policies import GaussianGRUPolicy
 from garage.tf.policies import GaussianLSTMPolicy
 from garage.tf.policies import GaussianMLPPolicy
+from tests.fixtures.envs.dummy import DummyBoxEnv, DummyDiscreteEnv
 
 
 class TestTfPolicies(unittest.TestCase):

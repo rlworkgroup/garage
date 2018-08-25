@@ -5,13 +5,13 @@ garage.tf.baselines failed to initialize.
 import unittest
 
 import tensorflow as tf
-from tests.envs.dummy import DummyBoxEnv
 
 import garage.misc.logger as logger
 from garage.misc.tensorboard_output import TensorBoardOutput
 from garage.tf.baselines import DeterministicMLPBaseline
 from garage.tf.baselines import GaussianMLPBaseline
 from garage.tf.envs import TfEnv
+from tests.fixtures.envs.dummy import DummyBoxEnv
 
 
 class TestTfBaselines(unittest.TestCase):
