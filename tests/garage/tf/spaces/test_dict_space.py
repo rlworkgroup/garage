@@ -1,10 +1,9 @@
 """This script tests garage.tf.spaces.dict functionality."""
 import unittest
 
-from tests.envs.dummy import DummyDictEnv
-
 from garage.misc import ext
 from garage.tf.envs import TfEnv
+from tests.fixtures.envs.dummy import DummyDictEnv
 
 
 class TestDictSpace(unittest.TestCase):
