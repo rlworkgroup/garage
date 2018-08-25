@@ -138,10 +138,10 @@ class PushEnv(SawyerEnv):
                 initial_block_pos = np.array([
                     np.random.uniform(0.6, 0.8),
                     np.random.uniform(-0.35, 0.35),
-                    0.03
+                    0.065
                 ])
             else:
-                initial_block_pos = np.array([0.64, 0.22, 0.03])
+                initial_block_pos = np.array([0.64, 0.22, 0.065])
             # d = 0.15
             # delta = np.array({
             #     "up": (d, 0),
@@ -243,8 +243,8 @@ class PushEnv(SawyerEnv):
         # |          |
         # |          |
         # 4----------3
-        length = 0.15
-        width = 0.1
+        length = 0.11
+        width = 0.11
         self.cp1 = np.array([- width / 2, - length / 2, 0])
         self.cp2 = np.array([- width / 2, length / 2, 0])
         self.cp3 = np.array([width / 2, length / 2, 0])
@@ -358,20 +358,20 @@ class PushEnv(SawyerEnv):
                         break
             if in_collision:
                 new_gripper_pos = self.gripper_position
+                if self.gripper_position[2] >= self.object_position[2]:
+                    if not self.in_xyregion(old_gripper_pos, old_block_pos, old_block_ori):
+                        # Make sure the gripper is not pulling the block
+                        delta_gripper_block = old_block_pos - old_gripper_pos
+                        delta_gripper = new_gripper_pos - old_gripper_pos
+                        if np.dot(delta_gripper_block, delta_gripper) > 0:
+                            xy_delta = new_gripper_pos[:2] - old_gripper_pos[:2]
 
-                if not self.in_xyregion(old_gripper_pos, old_block_pos, old_block_ori):
-                    # Make sure the gripper is not pulling the block
-                    delta_gripper_block = old_block_pos - old_gripper_pos
-                    delta_gripper = new_gripper_pos - old_gripper_pos
-                    if np.dot(delta_gripper_block, delta_gripper) > 0:
-                        xy_delta = new_gripper_pos[:2] - old_gripper_pos[:2]
+                            qpos = self.sim.data.get_joint_qpos('object0:joint')
+                            qpos[0] += xy_delta[0]
+                            qpos[1] += xy_delta[1]
+                            self.sim.data.set_joint_qpos('object0:joint', qpos)
 
-                        qpos = self.sim.data.get_joint_qpos('object0:joint')
-                        qpos[0] += xy_delta[0]
-                        qpos[1] += xy_delta[1]
-                        self.sim.data.set_joint_qpos('object0:joint', qpos)
-
-                        self.sim.forward()
+                            self.sim.forward()
 
             # self.sim.step()
             # for _ in range(2):
@@ -411,6 +411,7 @@ class PushEnv(SawyerEnv):
         revert_unit_vec = - (desired_goal - achieved_goal) / np.linalg.norm(desired_goal - achieved_goal)
         block_desired_gripper = revert_unit_vec * 0.09 + achieved_goal
 
+        r4 = 0
         r1 = self.compute_reward(
             achieved_goal=obs.get('achieved_goal'),
             desired_goal=obs.get('desired_goal'),
@@ -430,7 +431,7 @@ class PushEnv(SawyerEnv):
         end_position = self.object_position + np.array([0, 0, 0.3])
         if self._already_successful:
             r2 = -np.linalg.norm(self.gripper_position - end_position) / 5 * 2/3
-        r = r1 + r2 + r3
+        r = r1 + r2 + r3 + r4
 
         # if self._easy_gripper_init:
         #     # encourage gripper to move close to block
