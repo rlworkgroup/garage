@@ -217,7 +217,7 @@ class ConvNetwork(LayersPowered, Serializable):
         return self._l_in.input_var
 
 
-class GRUNetwork(object):
+class GRUNetwork:
     def __init__(self,
                  input_shape,
                  output_dim,
@@ -342,7 +342,7 @@ class GRUNetwork(object):
         return self._hid_init_param
 
 
-class LSTMNetwork(object):
+class LSTMNetwork:
     def __init__(self,
                  input_shape,
                  output_dim,

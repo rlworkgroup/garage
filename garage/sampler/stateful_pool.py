@@ -10,7 +10,7 @@ import pyprind
 from garage.misc import logger
 
 
-class ProgBarCounter(object):
+class ProgBarCounter:
     def __init__(self, total_count):
         self.total_count = total_count
         self.max_progress = 1000000
@@ -35,11 +35,11 @@ class ProgBarCounter(object):
             self.pbar.stop()
 
 
-class SharedGlobal(object):
+class SharedGlobal:
     pass
 
 
-class StatefulPool(object):
+class StatefulPool:
     def __init__(self):
         self.n_parallel = 1
         self.pool = None

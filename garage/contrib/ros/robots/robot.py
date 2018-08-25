@@ -3,7 +3,7 @@ robot Interface
 """
 
 
-class Robot(object):
+class Robot:
     def reset(self):
         """
         User uses this to reset the robot at the beginning of every training

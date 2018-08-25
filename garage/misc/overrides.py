@@ -37,7 +37,7 @@ def overrides(method):
     How to use:
     from overrides import overrides
 
-    class SuperClass(object):
+    class SuperClass:
 
         def method(self):
             return 2

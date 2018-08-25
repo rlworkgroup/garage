@@ -216,7 +216,7 @@ class GRUStepLayer(L.MergeLayer):
         return self._gru_layer.step(x, hprev)
 
 
-class GRUNetwork(object):
+class GRUNetwork:
     def __init__(self,
                  input_shape,
                  output_dim,
@@ -306,7 +306,7 @@ class GRUNetwork(object):
         return self._hid_init_param
 
 
-class ConvNetwork(object):
+class ConvNetwork:
     def __init__(
             self,
             input_shape,

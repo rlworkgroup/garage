@@ -194,7 +194,7 @@ def tabular_prefix(key):
     pop_tabular_prefix()
 
 
-class TerminalTablePrinter(object):
+class TerminalTablePrinter:
     def __init__(self):
         self.headers = None
         self.tabulars = []

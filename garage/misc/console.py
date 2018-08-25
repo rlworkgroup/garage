@@ -45,7 +45,7 @@ def log(s):  # , send_telegram=False):
     sys.stdout.flush()
 
 
-class SimpleMessage(object):
+class SimpleMessage:
     def __init__(self, msg, logger=log):
         self.msg = msg
         self.logger = logger
@@ -63,7 +63,7 @@ class SimpleMessage(object):
 MESSAGE_DEPTH = 0
 
 
-class Message(object):
+class Message:
     def __init__(self, msg):
         self.msg = msg
 

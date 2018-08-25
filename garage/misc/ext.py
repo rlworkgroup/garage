@@ -38,7 +38,7 @@ def compact(x):
 
 
 # Immutable, lazily evaluated dict
-class LazyDict(object):
+class LazyDict:
     def __init__(self, **kwargs):
         self._lazy_dict = kwargs
         self._dict = {}

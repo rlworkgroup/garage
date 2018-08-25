@@ -1,4 +1,4 @@
-class ExplorationStrategy(object):
+class ExplorationStrategy:
     def get_action(self, t, observation, policy, **kwargs):
         raise NotImplementedError
 

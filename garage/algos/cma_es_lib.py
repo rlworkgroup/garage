@@ -436,7 +436,7 @@ need for an inverse gp-transformation, relies on collections module,
 not sure what happens if set to ``False``. """
 
 
-class MetaParameters(object):
+class MetaParameters:
     """meta parameters are either "modifiable constants" or refer to
     options from ``CMAOptions`` or are arguments to ``fmin`` or to the
     ``NoiseHandler`` class constructor.
@@ -684,7 +684,7 @@ def unitdoctest():
     pass
 
 
-class _BlancClass(object):
+class _BlancClass:
     """blanc container class for having a collection of attributes,
     that might/should at some point become a more tailored class"""
 
@@ -865,7 +865,7 @@ if not use_archives:
             pass
 
 
-class BestSolution(object):
+class BestSolution:
     """container to keep track of the best solution seen"""
 
     def __init__(self, x=None, f=np.inf, evals=None):
@@ -930,7 +930,7 @@ class BestSolution(object):
 # ____________________________________________________________
 # ____________________________________________________________
 #
-class BoundaryHandlerBase(object):
+class BoundaryHandlerBase:
     """hacked base class """
 
     def __init__(self, bounds):
@@ -1398,7 +1398,7 @@ class BoundPenalty(BoundaryHandlerBase):
 # ____________________________________________________________
 # ____________________________________________________________
 #
-class BoxConstraintsTransformationBase(object):
+class BoxConstraintsTransformationBase:
     """Implements a transformation into boundaries and is used for
     boundary handling::
 
@@ -1783,7 +1783,7 @@ class BoxConstraintsLinQuadTransformation(BoxConstraintsTransformationBase):
             return (ub + au) - 2 * (au * (ub - y))**0.5
 
 
-class GenoPheno(object):
+class GenoPheno:
     """Genotype-phenotype transformation.
 
     Method `pheno` provides the transformation from geno- to phenotype,
@@ -2086,7 +2086,7 @@ class GenoPheno(object):
 # check out built-in package abc: class ABCMeta, abstractmethod, abstractproperty...
 # see http://docs.python.org/whatsnew/2.6.html PEP 3119 abstract base classes
 #
-class OOOptimizer(object):
+class OOOptimizer:
     """"abstract" base class for an Object Oriented Optimizer interface.
 
      Relevant methods are `__init__`, `ask`, `tell`, `stop`, `result`,
@@ -2318,7 +2318,7 @@ class OOOptimizer(object):
 _experimental = False
 
 
-class CMAAdaptSigmaBase(object):
+class CMAAdaptSigmaBase:
     """step-size adaptation base class, implementing hsig functionality
     via an isotropic evolution path.
 
@@ -5452,7 +5452,7 @@ class _CMAStopDict(dict):
 
 # ____________________________________________________________
 # ____________________________________________________________
-class _CMAParameters(object):
+class _CMAParameters:
     """strategy parameters like population size and learning rates.
 
     Note:
@@ -6174,7 +6174,7 @@ def fmin(
 # _____________________________________________________________________
 # _____________________________________________________________________
 #
-class BaseDataLogger(object):
+class BaseDataLogger:
     """"abstract" base class for a data logger that can be used with an `OOOptimizer`
 
     Details: attribute `modulo` is used in ``OOOptimizer.optimize``
@@ -7504,7 +7504,7 @@ def _fileToMatrix(file_name):
 
 # ____________________________________________________________
 # ____________________________________________________________
-class NoiseHandler(object):
+class NoiseHandler:
     """Noise handling according to [Hansen et al 2009, A Method for
     Handling Uncertainty in Evolutionary Optimization...]
 
@@ -7808,7 +7808,7 @@ class NoiseHandler(object):
 
 # ____________________________________________________________
 # ____________________________________________________________
-class Sections(object):
+class Sections:
     """plot sections through an objective function.
 
     A first rational thing to do, when facing an (expensive)
@@ -8016,7 +8016,7 @@ class _Error(Exception):
 # ____________________________________________________________
 # ____________________________________________________________
 #
-class ElapsedTime(object):
+class ElapsedTime:
     """using ``time.clock`` with overflow handling to measure CPU time.
 
     Example:
@@ -8058,11 +8058,11 @@ class ElapsedTime(object):
         return self.elapsedtime
 
 
-class Misc(object):
+class Misc:
     # ____________________________________________________________
     # ____________________________________________________________
     #
-    class MathHelperFunctions(object):
+    class MathHelperFunctions:
         """static convenience math helper functions, if the function name
         is preceded with an "a", a numpy array is returned
 
@@ -8287,7 +8287,7 @@ class Misc(object):
 
         """
 
-        # class eig(object):
+        # class eig:
         #     def __call__(self, C):
 
         # Householder transformation of a symmetric matrix V into tridiagonal form.
@@ -8613,7 +8613,7 @@ def pprint(to_be_printed):
 pp = pprint
 
 
-class ConstRandnShift(object):
+class ConstRandnShift:
     """``ConstRandnShift()(x)`` adds a fixed realization of
     ``stddev * randn(len(x))`` to the vector x.
 
@@ -8660,7 +8660,7 @@ class ConstRandnShift(object):
         return self.__call__(np.zeros(dimension))
 
 
-class Rotation(object):
+class Rotation:
     """Rotation class that implements an orthogonal linear transformation,
     one for each dimension.
 
@@ -8721,14 +8721,14 @@ rotate = Rotation()
 #
 
 
-class FFWrapper(object):
+class FFWrapper:
     """
     A collection of (yet experimental) classes to implement fitness
     transformations and wrappers. Aliased to `FF2` below.
 
     """
 
-    class FitnessTransformation(object):
+    class FitnessTransformation:
         """This class does nothing but serve as an interface template.
         Typical use-case::
 
@@ -8948,7 +8948,7 @@ class FFWrapper(object):
             return self.inner_fitness(
                 array(x, copy=False), *(args + self.args), **self.kwargs)
 
-    class UnknownFF(object):
+    class UnknownFF:
         """search in [-10, 10] for the unknown (optimum)"""
 
         def __init__(self, seed=2):
@@ -8989,7 +8989,7 @@ class FFWrapper(object):
 FF2 = FFWrapper
 
 
-class FitnessFunctions(object):
+class FitnessFunctions:
     """ versatile container for test objective functions """
 
     def __init__(self):

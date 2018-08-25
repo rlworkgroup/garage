@@ -171,7 +171,7 @@ def extract_distinct_params(exps_data,
     return filtered
 
 
-class Selector(object):
+class Selector:
     def __init__(self, exps_data, filters=None, custom_filters=None):
         self._exps_data = exps_data
         if filters is None:
@@ -228,7 +228,7 @@ def hex_to_rgb(hex, opacity=1.0):
         int(hex[:2], 16), int(hex[2:4], 16), int(hex[4:6], 16), opacity)
 
 
-# class VisApp(object):
+# class VisApp:
 #
 #
 #     def __init__(self, exp_folder_path):

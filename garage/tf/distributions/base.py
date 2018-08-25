@@ -1,4 +1,4 @@
-class Distribution(object):
+class Distribution:
     @property
     def dim(self):
         raise NotImplementedError

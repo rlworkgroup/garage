@@ -5,7 +5,7 @@ import numpy as np
 from garage.tf.misc import tensor_utils
 
 
-class VecEnvExecutor(object):
+class VecEnvExecutor:
     def __init__(self, envs, max_path_length):
         self.envs = envs
         self._action_space = envs[0].action_space

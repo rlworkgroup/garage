@@ -24,7 +24,7 @@ from garage.misc.ext import AttrDict
 from garage.viskit.core import flatten
 
 
-class StubBase(object):
+class StubBase:
     def __getitem__(self, item):
         return StubMethodCall(self, "__getitem__", args=[item], kwargs=dict())
 
@@ -171,7 +171,7 @@ class VariantDict(AttrDict):
         return {k: v for k, v in self.items() if k not in self._hidden_keys}
 
 
-class VariantGenerator(object):
+class VariantGenerator:
     """
     Usage:
 

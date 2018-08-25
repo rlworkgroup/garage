@@ -358,7 +358,7 @@ class XmlControl(XmlElem):
         extra_data.controls.append(self)
 
 
-class ExtraData(object):
+class ExtraData:
     def __init__(self):
         self.states = []
         self.controls = []

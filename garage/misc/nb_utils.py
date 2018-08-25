@@ -43,7 +43,7 @@ def plot_experiments(name_or_patterns,
         plt.legend(plots, legends)
 
 
-class Experiment(object):
+class Experiment:
     def __init__(self, progress, params, pkl_data=None):
         self.progress = progress
         self.params = params
@@ -72,7 +72,7 @@ def uniq(seq):
     return [x for x in seq if not (x in seen or seen_add(x))]
 
 
-class ExperimentDatabase(object):
+class ExperimentDatabase:
     def __init__(self, data_folder, names_or_patterns='*'):
         self._load_experiments(data_folder, names_or_patterns)
 
