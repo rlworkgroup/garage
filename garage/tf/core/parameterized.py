@@ -16,7 +16,7 @@ def suppress_params_loading():
     load_params = True
 
 
-class Parameterized(object):
+class Parameterized:
     def __init__(self):
         self._cached_params = {}
         self._cached_param_dtypes = {}

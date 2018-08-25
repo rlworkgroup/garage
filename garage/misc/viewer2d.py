@@ -3,7 +3,7 @@ import pygame
 import pygame.gfxdraw
 
 
-class Colors(object):
+class Colors:
     black = (0, 0, 0)
     white = (255, 255, 255)
     blue = (0, 0, 255)
@@ -11,7 +11,7 @@ class Colors(object):
     green = (0, 255, 0)
 
 
-class Viewer2D(object):
+class Viewer2D:
     def __init__(self, size=(640, 480), xlim=None, ylim=None):
         pygame.init()
         screen = pygame.display.set_mode(size)

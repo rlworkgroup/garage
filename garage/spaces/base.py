@@ -1,4 +1,4 @@
-class Space(object):
+class Space:
     """
     Provides a classification state spaces and action spaces,
     so you can write generic code that applies to any Environment.

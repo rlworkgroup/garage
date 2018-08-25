@@ -8,7 +8,7 @@ def _extract_type(typ):
         return typ
 
 
-class AttrDecl(object):
+class AttrDecl:
     pass
 
 
@@ -61,7 +61,7 @@ class XmlAttr(AttrDecl):
             return None
 
 
-class XmlElem(object):
+class XmlElem:
 
     tag = None
     Meta = None

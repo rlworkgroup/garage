@@ -6,7 +6,7 @@ import garage.misc.logger as logger
 from garage.sampler import utils
 
 
-class Sampler(object):
+class Sampler:
     def start_worker(self):
         """
         Initialize the sampler, e.g. launching parallel workers if necessary.

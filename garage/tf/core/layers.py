@@ -12,7 +12,7 @@ import tensorflow as tf
 from tensorflow.python.training import moving_averages
 
 
-class G(object):
+class G:
     pass
 
 
@@ -116,7 +116,7 @@ def conv_output_length(input_length, filter_size, stride, pad=0):
     return output_length
 
 
-class Layer(object):
+class Layer:
     def __init__(self,
                  incoming,
                  name=None,
@@ -320,7 +320,7 @@ class ConcatLayer(MergeLayer):
 concat = ConcatLayer  # shortcut
 
 
-class XavierUniformInitializer(object):
+class XavierUniformInitializer:
     def __call__(self, shape, dtype=tf.float32, name=None, *args, **kwargs):
         if len(shape) == 2:
             n_inputs, n_outputs = shape
@@ -334,7 +334,7 @@ class XavierUniformInitializer(object):
                 -init_range, init_range, dtype=dtype)(shape)
 
 
-class HeUniformInitializer(object):
+class HeUniformInitializer:
     def __call__(self, shape, dtype=tf.float32, name=None, *args, **kwargs):
         if len(shape) == 2:
             n_inputs, _ = shape
@@ -355,7 +355,7 @@ def py_ortho_init(scale):
     return _init
 
 
-class OrthogonalInitializer(object):
+class OrthogonalInitializer:
     def __init__(self, scale=1.1):
         self.scale = scale
 

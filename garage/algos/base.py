@@ -1,4 +1,4 @@
-class Algorithm(object):
+class Algorithm:
     pass
 
 

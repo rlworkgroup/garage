@@ -2,7 +2,7 @@ import inspect
 import sys
 
 
-class Serializable(object):
+class Serializable:
     def __init__(self, *args, **kwargs):
         self.__args = args
         self.__kwargs = kwargs

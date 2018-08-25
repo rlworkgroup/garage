@@ -5,7 +5,7 @@ from garage.misc import instrument
 # https://gist.github.com/jrast/109f70f9b4c52bab4252
 
 
-class TestClass(object):
+class TestClass:
     @property
     def arr(self):
         return [1, 2, 3]

@@ -14,7 +14,7 @@ PyMjvCamera = cymj.PyMjvCamera
 MjMOUSE_ZOOM = 5
 
 
-class EmbeddedViewer(object):
+class EmbeddedViewer:
     def __init__(self):
         self.last_render_time = 0
 

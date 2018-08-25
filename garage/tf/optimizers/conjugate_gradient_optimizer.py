@@ -9,7 +9,7 @@ from garage.misc.ext import sliced_fun
 from garage.tf.misc import tensor_utils
 
 
-class PerlmutterHvp(object):
+class PerlmutterHvp:
     def __init__(self, num_slices=1):
         self.target = None
         self.reg_coeff = None
@@ -68,7 +68,7 @@ class PerlmutterHvp(object):
         return eval
 
 
-class FiniteDifferenceHvp(object):
+class FiniteDifferenceHvp:
     def __init__(self,
                  base_eps=1e-8,
                  symmetric=True,
