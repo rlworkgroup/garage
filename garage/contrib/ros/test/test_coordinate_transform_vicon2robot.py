@@ -24,11 +24,15 @@ def run():
 
     r = rospy.Rate(10)
 
+    i = 0
     while not rospy.is_shutdown():
-        print('block_positions: ', blockworld.get_blocks_position())
-        print('block orientations: ', blockworld.get_blocks_orientation())
+        if i % 20 == 0:
+            print('block_positions: ', blockworld.get_blocks_position())
+            print('block orientations: ', blockworld.get_blocks_orientation())
 
         r.sleep()
+
+        i += 1
 
     blockworld.terminate()
 

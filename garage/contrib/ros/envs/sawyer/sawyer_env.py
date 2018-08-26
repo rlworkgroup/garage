@@ -65,6 +65,7 @@ class SawyerEnv(RosEnv):
             a dictionary containing other diagnostic information
             from the previous action
         """
+        action = np.concatenate((action, np.zeros(1)))
         assert action.shape == self.action_space.shape
         a = action.copy()  # Note: you MUST copy the action if you modify it
         a *= self._action_scale
