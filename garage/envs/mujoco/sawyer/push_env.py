@@ -26,9 +26,9 @@ COLLISION_WHITELIST = [
     ("head", "right_l5"),
     ("head", "right_l6"),
     ("head", "right_gripper_base"),
-    ("head", "r_gripper_l_finger_tip"),
+    # ("head", "r_gripper_l_finger_tip"),
     ("head", "r_gripper_r_finger"),
-    ("head", "r_gripper_r_finger_tip"),
+    # ("head", "r_gripper_r_finger_tip"),
     ("head", "r_gripper_l_finger"),
 
     # Close but fine
@@ -37,9 +37,9 @@ COLLISION_WHITELIST = [
     ("right_l2_2", "pedestal_table"),
 
     # Trivially okay below this line
-    ("r_gripper_l_finger_tip", "r_gripper_r_finger_tip"),
-    ("r_gripper_l_finger_tip", "r_gripper_r_finger"),
-    ("r_gripper_r_finger_tip", "r_gripper_l_finger"),
+    # ("r_gripper_l_finger_tip", "r_gripper_r_finger_tip"),
+    # ("r_gripper_l_finger_tip", "r_gripper_r_finger"),
+    # ("r_gripper_r_finger_tip", "r_gripper_l_finger"),
     # ("task_marker", "right_l0"),
     # ("task_marker", "right_l1"),
     # ("task_marker", "right_l1_2"),
@@ -69,26 +69,26 @@ COLLISION_WHITELIST = [
     ("object0", "right_gripper_base"),
     ("object0", "right_hand"),
     ("object0", "r_gripper_r_finger"),
-    ("object0", "r_gripper_r_finger_tip"),
+    # ("object0", "r_gripper_r_finger_tip"),
     ("object0", "r_gripper_l_finger"),
-    ("object0", "r_gripper_l_finger_tip"),
+    # ("object0", "r_gripper_l_finger_tip"),
     ("object0", "pedestal_table"),
-    ("mocap", "right_l0"),
-    ("mocap", "right_l1"),
-    ("mocap", "right_l1_2"),
-    ("mocap", "right_l2"),
-    ("mocap", "right_l2_2"),
-    ("mocap", "right_l3"),
-    ("mocap", "right_l4"),
-    ('mocap', 'right_l4_2'),
-    ("mocap", "right_l5"),
-    ("mocap", "right_l6"),
-    ("mocap", "right_gripper_base"),
-    ("mocap", "right_hand"),
-    ("mocap", "r_gripper_r_finger"),
-    ("mocap", "r_gripper_r_finger_tip"),
-    ("mocap", "r_gripper_l_finger"),
-    ("mocap", "r_gripper_l_finger_tip"),
+    # ("mocap", "right_l0"),
+    # ("mocap", "right_l1"),
+    # ("mocap", "right_l1_2"),
+    # ("mocap", "right_l2"),
+    # ("mocap", "right_l2_2"),
+    # ("mocap", "right_l3"),
+    # ("mocap", "right_l4"),
+    # ('mocap', 'right_l4_2'),
+    # ("mocap", "right_l5"),
+    # ("mocap", "right_l6"),
+    # ("mocap", "right_gripper_base"),
+    # ("mocap", "right_hand"),
+    # ("mocap", "r_gripper_r_finger"),
+    # ("mocap", "r_gripper_r_finger_tip"),
+    # ("mocap", "r_gripper_l_finger"),
+    # ("mocap", "r_gripper_l_finger_tip"),
     ("achieved_goal", "right_l0"),
     ("achieved_goal", "right_l1"),
     ("achieved_goal", "right_l1_2"),
@@ -102,9 +102,9 @@ COLLISION_WHITELIST = [
     ("achieved_goal", "right_gripper_base"),
     ("achieved_goal", "right_hand"),
     ("achieved_goal", "r_gripper_r_finger"),
-    ("achieved_goal", "r_gripper_r_finger_tip"),
+    # ("achieved_goal", "r_gripper_r_finger_tip"),
     ("achieved_goal", "r_gripper_l_finger"),
-    ("achieved_goal", "r_gripper_l_finger_tip"),
+    # ("achieved_goal", "r_gripper_l_finger_tip"),
     ("desired_goal", "right_l0"),
     ("desired_goal", "right_l1"),
     ("desired_goal", "right_l1_2"),
@@ -118,9 +118,9 @@ COLLISION_WHITELIST = [
     ("desired_goal", "right_gripper_base"),
     ("desired_goal", "right_hand"),
     ("desired_goal", "r_gripper_r_finger"),
-    ("desired_goal", "r_gripper_r_finger_tip"),
+    # ("desired_goal", "r_gripper_r_finger_tip"),
     ("desired_goal", "r_gripper_l_finger"),
-    ("desired_goal", "r_gripper_l_finger_tip"),
+    # ("desired_goal", "r_gripper_l_finger_tip"),
 ]
 
 
@@ -349,8 +349,8 @@ class PushEnv(SawyerEnv):
             # Verify if gripper is in collision with block
             in_collision = False
             finger_collision_bodies = [
-                'r_gripper_r_finger', 'r_gripper_r_finger_tip',
-                'r_gripper_l_finger', 'r_gripper_l_finger_tip'
+                'r_gripper_r_finger', # 'r_gripper_r_finger_tip',
+                'r_gripper_l_finger', # 'r_gripper_l_finger_tip'
             ]
             collision_names = self._get_collision_names(whitelist=False)
             for collision_pair in collision_names:
@@ -360,7 +360,7 @@ class PushEnv(SawyerEnv):
                         break
             if in_collision:
                 new_gripper_pos = self.gripper_position
-                if self.gripper_position[2] >= self.object_position[2] * 2 / 3:
+                if self.gripper_position[2] >= self.object_position[2] * 5 / 4:
                     if not self.in_xyregion(old_gripper_pos, old_block_pos, old_block_ori):
                         # Make sure the gripper is not pulling the block
                         delta_gripper_block = old_block_pos - old_gripper_pos

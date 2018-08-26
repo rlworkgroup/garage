@@ -243,7 +243,7 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
             )
 
     def env_setup(self):
-        reset_mocap_welds(self.sim)
+        # reset_mocap_welds(self.sim)
         self.sim.forward()
 
     @property
@@ -268,20 +268,20 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
             self.sim.data.set_joint_qpos('right_j{}'.format(i), p)
 
     def set_gripper_position(self, position):
-        reset_mocap2body_xpos(self.sim)
-        self.sim.data.mocap_quat[:] = np.array([0, 1, 0, 0])
-        self.sim.data.set_mocap_pos('mocap', position)
-        for _ in range(100):
-            self.sim.step()
-            reset_mocap2body_xpos(self.sim)
-            self.sim.data.mocap_quat[:] = np.array([0, 1, 0, 0])
-            self.sim.data.set_mocap_pos('mocap', position)
+        # reset_mocap2body_xpos(self.sim)
+        # self.sim.data.mocap_quat[:] = np.array([0, 1, 0, 0])
+        # self.sim.data.set_mocap_pos('mocap', position)
+        # for _ in range(100):
+        #     self.sim.step()
+        #     reset_mocap2body_xpos(self.sim)
+        #     self.sim.data.mocap_quat[:] = np.array([0, 1, 0, 0])
+        #     self.sim.data.set_mocap_pos('mocap', position)
+        pass
         # self.sim.forward()
 
     @property
     def gripper_position(self):
-        return self.sim.data.get_site_xpos('grip') - np.array(
-            [0., 0., .1])  # 0.1 offset for the finger
+        return self.sim.data.get_site_xpos('grip') # - np.array([0., 0., .1])  # 0.1 offset for the finger
 
     def set_object_position(self, position):
         object_qpos = np.concatenate((position, [1, 0, 0, 0]))
@@ -302,8 +302,8 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
         for coni in range(self.sim.data.ncon):
             con = self.sim.data.contact[coni]
             contacts += ((con.geom1, con.geom2), )
-        finger_id_1 = self.sim.model.geom_name2id('finger_tip_1')
-        finger_id_2 = self.sim.model.geom_name2id('finger_tip_2')
+        finger_id_1 = self.sim.model.geom_name2id('finger_1')
+        finger_id_2 = self.sim.model.geom_name2id('finger_2')
         object_id = self.sim.model.geom_name2id('object0')
         if ((finger_id_1, object_id) in contacts or
             (object_id, finger_id_1) in contacts) and (
