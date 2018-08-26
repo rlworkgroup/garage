@@ -7,6 +7,8 @@ dependencies:
     # Please keep alphabetized
     - mkl-service=1.1.2
     - mkl==2017.0.4
+    # cma requires numpy to install
+    - numpy==1.14.5
     # dev dependencies below this line
     - pre_commit
     - pip:
@@ -16,6 +18,7 @@ dependencies:
         - Box2D>=2.3.2
         - cached_property
         - cloudpickle
+        - cma==1.1.06
         # dm_control throws an error during install about not being able to
         # find a build dependency (absl-py). Later pip executes the `install`
         # command again and the install succeeds because absl-py has been
@@ -34,7 +37,6 @@ dependencies:
         - matplotlib
         - memory_profiler
         - mujoco-py<1.50.2,>=1.50.1
-        - numpy==1.14.5
         - pandas
         - path.py
         - git+https://github.com/plotly/plotly.py.git@2594076e29584ede2d09f2aa40a8a195b3f3fc66#egg=plotly
