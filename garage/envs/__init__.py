@@ -9,3 +9,17 @@ from garage.envs.normalized_env import normalize
 from garage.envs.normalized_env import NormalizedEnv
 from garage.envs.occlusion_env import OcclusionEnv
 from garage.envs.sliding_mem_env import SlidingMemEnv
+
+__all__ = [
+    "GarageEnv",
+    "Step",
+    "EnvSpec",
+    "GridWorldEnv",
+    "IdentificationEnv",
+    "DelayedActionEnv",
+    "NoisyObservationEnv",
+    "normalize",
+    "NormalizedEnv",
+    "OcclusionEnv",
+    "SlidingMemEnv",
+]

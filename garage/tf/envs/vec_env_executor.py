@@ -1,5 +1,3 @@
-import pickle
-
 import numpy as np
 
 from garage.tf.misc import tensor_utils

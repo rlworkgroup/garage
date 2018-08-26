@@ -523,8 +523,8 @@ def _normalize_tabular_data(tabular_data, headers):
             tabular_data = dict(
                 sorted(tabular_data.items(), key=lambda kv: kv[0]))
             keys = list(tabular_data.keys())
-            rows = list(zip_longest(*list(
-                tabular_data.values())))  # columns have to be transposed
+            rows = list(zip_longest(
+                *list(tabular_data.values())))  # columns have to be transposed
         elif hasattr(tabular_data, "index"):
             # values is a property, has .index
             # => it's likely a pandas.DataFrame

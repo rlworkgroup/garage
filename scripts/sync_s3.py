@@ -1,8 +1,5 @@
 import argparse
-import ast
 import os
-import sys
-sys.path.append('.')
 
 from garage import config
 

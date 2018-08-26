@@ -4,3 +4,8 @@ from garage.envs.box2d.cartpole_env import CartpoleEnv
 from garage.envs.box2d.cartpole_swingup_env import CartpoleSwingupEnv
 from garage.envs.box2d.double_pendulum_env import DoublePendulumEnv
 from garage.envs.box2d.mountain_car_env import MountainCarEnv
+
+__all__ = [
+    "Box2DEnv", "CarParkingEnv", "CartpoleEnv", "CartpoleSwingupEnv",
+    "DoublePendulumEnv", "MountainCarEnv"
+]

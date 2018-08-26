@@ -1,10 +1,8 @@
-import operator
-
 import numpy as np
 
 
 def flatten_tensors(tensors):
-    if len(tensors) > 0:
+    if tensors:
         return np.concatenate([np.reshape(x, [-1]) for x in tensors])
     else:
         return np.asarray([])

@@ -4,8 +4,6 @@ import os.path as osp
 
 import gym
 
-from garage.viskit.core import load_params
-
 if __name__ == "__main__":
     # rl_gym.api_key = 'g8JOpnNVmcjMShBiFtyji2VWX3P2uCzc'
     if 'OPENAI_GYM_API_KEY' not in os.environ:

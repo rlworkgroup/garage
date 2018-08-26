@@ -3,7 +3,6 @@ import itertools
 import json
 import os
 import sys
-sys.path.append('.')
 
 import flask
 import matplotlib
@@ -212,8 +211,6 @@ def make_plot_eps(plot_list, use_median=False, counter=0):
         def y_fmt(x, y):
             return str(int(np.round(x / 1000.0))) + 'K'
 
-        import matplotlib.ticker as tick
-        #         ax.xaxis.set_major_formatter(tick.FuncFormatter(y_fmt))
         _plt.savefig('tmp' + str(counter) + '.pdf', bbox_inches='tight')
 
 
@@ -317,7 +314,7 @@ def get_plot_instruction(plot_key,
         for group_selector, group_legend in zip(group_selectors,
                                                 group_legends):
             filtered_data = group_selector.extract()
-            if len(filtered_data) > 0:
+            if filtered_data:
 
                 if only_show_best or only_show_best_final or only_show_best_sofar:
                     # Group by seed and sort.
@@ -335,7 +332,7 @@ def get_plot_instruction(plot_key,
                         for k, v in zip(filtered_params_k, params):
                             selector = selector.where(k, str(v))
                         data = selector.extract()
-                        if len(data) > 0:
+                        if data:
                             progresses = [
                                 exp.progress.get(plot_key, np.array([np.nan]))
                                 for exp in data
@@ -452,7 +449,7 @@ def get_plot_instruction(plot_key,
                                     means=means,
                                     stds=stds,
                                     legend=legend_post_processor(legend)))
-                        if len(to_plot) > 0 and len(data) > 0:
+                        if to_plot and data:
                             to_plot[-1]["footnote"] = "%s; e.g. %s" % (
                                 kv_string_best_regret, data[0].params.get(
                                     "exp_name", "NA"))
@@ -521,7 +518,7 @@ def get_plot_instruction(plot_key,
                                 stds=stds,
                                 legend=legend_post_processor(group_legend)))
 
-        if len(to_plot) > 0 and not gen_eps:
+        if to_plot and not gen_eps:
             fig_title = "%s: %s" % (split_key, split_legend)
             # plots.append("<h3>%s</h3>" % fig_title)
             plots.append(
@@ -555,9 +552,9 @@ def plot_div():
     group_key = args.get("group_key", "")
     filters_json = args.get("filters", "{}")
     filters = json.loads(filters_json)
-    if len(split_key) == 0:
+    if split_key:
         split_key = None
-    if len(group_key) == 0:
+    if group_key:
         group_key = None
     # group_key = distinct_params[0][0]
     # print split_key
@@ -575,19 +572,17 @@ def plot_div():
     plot_height = parse_float_arg(args, "plot_height")
     custom_filter = args.get("custom_filter", None)
     custom_series_splitter = args.get("custom_series_splitter", None)
-    if custom_filter is not None and len(custom_filter.strip()) > 0:
+    if custom_filter is not None and custom_filter.strip():
         custom_filter = safer_eval(custom_filter)
 
     else:
         custom_filter = None
     legend_post_processor = args.get("legend_post_processor", None)
-    if legend_post_processor is not None and len(
-            legend_post_processor.strip()) > 0:
+    if legend_post_processor and legend_post_processor.strip():
         legend_post_processor = safer_eval(legend_post_processor)
     else:
         legend_post_processor = None
-    if custom_series_splitter is not None and len(
-            custom_series_splitter.strip()) > 0:
+    if custom_series_splitter and custom_series_splitter.strip():
         custom_series_splitter = safer_eval(custom_series_splitter)
     else:
         custom_series_splitter = None
@@ -632,11 +627,11 @@ def index():
     # exp_json = json.dumps(exp_data)
     if "AverageReturn" in plottable_keys:
         plot_key = "AverageReturn"
-    elif len(plottable_keys) > 0:
+    elif plottable_keys:
         plot_key = plottable_keys[0]
     else:
         plot_key = None
-    if len(distinct_params) > 0:
+    if distinct_params:
         group_key = distinct_params[0][0]
     else:
         group_key = None

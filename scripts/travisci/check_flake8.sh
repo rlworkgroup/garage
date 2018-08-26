@@ -2,7 +2,7 @@
 
 # Python packages considered local to the project, for the purposes of import
 # order checking. Comma-delimited.
-garage_packages="garage,sandbox,examples,contrib,tests"
+garage_packages="garage,sandbox,examples,tests"
 
 ### ALL FILES ###
 
@@ -21,6 +21,8 @@ W291 # trailing whitespace
 E702 # multiple statements on one line (semicolon)
 # PROGRAMMING RECOMMENDATIONS
 E714 # use is not operator rather than not ... is
+# Unused imports
+F401
 )
 
 # Error codes ignored for all files

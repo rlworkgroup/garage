@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# flake8: noqa
+# pylint: skip-file
 #
 # garage documentation build configuration file, created by
 # sphinx-quickstart on Mon Feb 15 20:07:12 2016.

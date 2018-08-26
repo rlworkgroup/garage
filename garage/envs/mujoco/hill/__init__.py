@@ -4,3 +4,8 @@ from garage.envs.mujoco.hill.half_cheetah_hill_env import HalfCheetahHillEnv  # 
 from garage.envs.mujoco.hill.swimmer3d_hill_env import Swimmer3DHillEnv
 from garage.envs.mujoco.hill.walker2d_hill_env import Walker2DHillEnv
 from garage.envs.mujoco.hill.ant_hill_env import AntHillEnv  # noqa: I100
+
+__all__ = [
+    "HillEnv", "HopperHillEnv", "HalfCheetahHillEnv", "Swimmer3DHillEnv",
+    "Walker2DHillEnv", "AntHillEnv"
+]
