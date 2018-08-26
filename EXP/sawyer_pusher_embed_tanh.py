@@ -163,8 +163,8 @@ config = dict(
 run_experiment(
     run_task,
     exp_prefix='sawyer_pusher_rel_obs_embed_udlr',
-    n_parallel=12,
+    n_parallel=1,
     seed=1,
     variant=config,
-    plot=False,
+    plot=True,
 )

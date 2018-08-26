@@ -132,6 +132,7 @@ class PushEnv(SawyerEnv):
                  control_method='task_space_control',
                  **kwargs):
         self._already_successful = False
+
         def start_goal_config():
             # center = self.sim.data.get_geom_xpos('target2')
             if randomize_start_pos:
@@ -342,6 +343,7 @@ class PushEnv(SawyerEnv):
             old_block_ori = self.object_orientation
             self.joint_positions = next_pos
             self.sim.forward()
+            self.previous_joint_positions = self.joint_positions
 
             # Move the block
             # Verify if gripper is in collision with block
@@ -358,7 +360,7 @@ class PushEnv(SawyerEnv):
                         break
             if in_collision:
                 new_gripper_pos = self.gripper_position
-                if self.gripper_position[2] >= self.object_position[2]:
+                if self.gripper_position[2] >= self.object_position[2] * 2 / 3:
                     if not self.in_xyregion(old_gripper_pos, old_block_pos, old_block_ori):
                         # Make sure the gripper is not pulling the block
                         delta_gripper_block = old_block_pos - old_gripper_pos
@@ -372,18 +374,12 @@ class PushEnv(SawyerEnv):
                             self.sim.data.set_joint_qpos('object0:joint', qpos)
 
                             self.sim.forward()
-
-            # self.sim.step()
-            # for _ in range(2):
-            #     self.sim.step()
-
-            # Verify the execution of the action.
-            # for i in range(7):
-            #     curr_pos = self.sim.data.get_joint_qpos('right_j{}'.format(i))
-            #     d = np.absolute(curr_pos - next_pos[i])
-            #     assert d < 1e-2, \
-            #         "Joint right_j{} failed to reach the desired qpos.\nError: {}\t Desired: {}\t Current: {}" \
-            #         .format(i, d, next_pos[i], curr_pos)
+                        else:
+                            self.go_back()
+                    else:
+                        self.go_back()
+                else:
+                    self.go_back()
         else:
             raise NotImplementedError
 
@@ -417,12 +413,12 @@ class PushEnv(SawyerEnv):
             desired_goal=obs.get('desired_goal'),
             info=info) * 2
 
-        r2 = -np.linalg.norm(self.gripper_position - block_desired_gripper) / 5 *2/3
+        r2 = -np.linalg.norm(self.gripper_position - block_desired_gripper) / 5 * 2 / 3
 
         # w, x, y, z quat
         upright_gripper = np.array([0, 0, 1, 0])
         gripper_rot = rotations.mat2quat(self.sim.data.get_site_xmat('grip'))
-        r3 = -np.linalg.norm(upright_gripper - gripper_rot) / 10 *2/3
+        r3 = -np.linalg.norm(upright_gripper - gripper_rot) / 10 * 2/3
 
         # if r2 / r1 > self._test_ration:
         #     self._test_ration = r2 / r1
@@ -454,10 +450,17 @@ class PushEnv(SawyerEnv):
 
         return obs, r, done, info
 
+    def go_back(self):
+        self.joint_positions = self.previous_joint_positions
+        self.sim.forward()
+
     @overrides
     def reset(self):
         self._already_successful = False
+
         return super(PushEnv, self).reset()
+
+        self.previous_joint_positions = self.joint_positions
 
     def in_xyregion(self, gripper_pos, block_pos, block_ori):
         p = np.array([gripper_pos[0], gripper_pos[1], 0])
