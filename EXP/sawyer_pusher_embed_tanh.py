@@ -21,10 +21,10 @@ from sandbox.embed2learn.policies import GaussianMLPMultitaskPolicy
 
 
 DELTAS = [
-    np.array([ 0.10,    0., 0.]),
-    np.array([-0.10,    0., 0.]),
-    np.array([   0.,  0.10, 0.]),
-    np.array([   0., -0.10, 0.]),
+    np.array([ 0.15,    0., 0.]),
+    np.array([-0.15,    0., 0.]),
+    np.array([   0.,  0.15, 0.]),
+    np.array([   0., -0.15, 0.]),
 ]
 
 TASKS = {
@@ -141,7 +141,7 @@ def run_task(v):
         embedding_ent_coeff=v.embedding_ent_coeff,
         inference_ce_coeff=v.inference_ce_coeff,
         use_softplus_entropy=True,
-	save_sample_frequency=5
+	save_sample_frequency=50
     )
     algo.train()
 
@@ -151,7 +151,7 @@ config = dict(
     inference_window=15,
     batch_size=4096 * len(TASKS),
     policy_ent_coeff=5e-3,  # 1e-2
-    embedding_ent_coeff=1.8e-3,  # 1e-3
+    embedding_ent_coeff=2e-3,  # 1e-3
     inference_ce_coeff=1.25e-4,  # 1e-4
     max_path_length=400,
     embedding_init_std=0.4,
