@@ -1,5 +1,4 @@
 from garage.core import Serializable
-from garage.spaces import Space
 
 
 class EnvSpec(Serializable):

@@ -6,3 +6,14 @@ from garage.tf.core.network import GRUNetwork
 from garage.tf.core.network import LSTMNetwork
 from garage.tf.core.network import MLP
 from garage.tf.core.parameterized import JointParameterized
+
+__all__ = [
+    "layers",
+    "Parameterized",
+    "LayersPowered",
+    "ConvNetwork",
+    "GRUNetwork",
+    "LSTMNetwork",
+    "MLP",
+    "JointParameterized",
+]

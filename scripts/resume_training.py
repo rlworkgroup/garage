@@ -1,17 +1,14 @@
 import argparse
 import json
 import os
-import random
 import subprocess
 import uuid
 
 import joblib
-import numpy as np
 
 from garage.algos import BatchPolopt
 from garage.misc import logger
 from garage.misc.instrument import to_local_command
-from garage.sampler.utils import rollout
 
 filename = str(uuid.uuid4())
 

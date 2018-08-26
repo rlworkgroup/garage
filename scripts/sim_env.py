@@ -2,6 +2,7 @@ import argparse
 import sys
 import time
 
+import gym
 import numpy as np
 import pygame
 
@@ -72,7 +73,7 @@ def visualize_env(env, mode, max_steps=sys.maxsize, speedup=1):
             if isinstance(env, (MujocoEnv, MazeEnv)):
                 trs = [tr]
                 actions = [np.zeros(2)]
-                import mujoco_py
+                import mujoco_py  # noqa: F401
                 import glfw
 
                 def cb(window, key, scancode, action, mods):
@@ -115,7 +116,7 @@ def visualize_env(env, mode, max_steps=sys.maxsize, speedup=1):
         #             return
         #         env.render()
         #
-        #env.matplotlib_figure.canvas.mpl_connect('key_press_event',
+        # env.matplotlib_figure.canvas.mpl_connect('key_press_event',
         #    handle_key_pressed)
         # plt.ioff()
         # plt.show()
@@ -138,6 +139,6 @@ if __name__ == "__main__":
     parser.add_argument(
         '--max_steps', type=int, default=sys.maxsize, help='max steps')
     args = parser.parse_args()
-    env = load_class(args.env, Env, ["garage", "envs"])()
+    env = load_class(args.env, gym.Env, ["garage", "envs"])()
     visualize_env(
         env, mode=args.mode, max_steps=args.max_steps, speedup=args.speedup)

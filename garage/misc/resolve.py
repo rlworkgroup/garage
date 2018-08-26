@@ -1,8 +1,6 @@
 from pydoc import locate
 import types
 
-from garage.misc.ext import iscanr
-
 
 def classesinmodule(module):
     md = module.__dict__
@@ -35,7 +33,7 @@ def load_class(class_path, superclass=None, prefix_hints=[]):
                 x for x in classesinmodule(module_or_class)
                 if issubclass(x, superclass)
             ]
-        if len(classes) == 0:
+        if not classes:
             if superclass:
                 raise ValueError(
                     'Could not find any subclasses of %s defined in module %s'

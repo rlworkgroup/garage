@@ -1,10 +1,7 @@
-import base64
 import csv
 import itertools
 import json
 import os
-import pdb
-import pickle
 
 import numpy as np
 
@@ -40,7 +37,7 @@ def to_json(stub_object):
     from garage.misc.instrument import StubObject
     from garage.misc.instrument import StubAttr
     if isinstance(stub_object, StubObject):
-        assert len(stub_object.args) == 0
+        assert stub_object.args
         data = dict()
         for k, v in stub_object.kwargs.items():
             data[k] = to_json(v)
@@ -120,7 +117,7 @@ def load_exps_data(exp_folder_paths, disable_variant=False):
 
 def smart_repr(x):
     if isinstance(x, tuple):
-        if len(x) == 0:
+        if x:
             return "tuple()"
         elif len(x) == 1:
             return "(%s,)" % smart_repr(x[0])
@@ -160,8 +157,6 @@ def extract_distinct_params(exps_data,
             key=lambda x: (tuple(0. if it is None else it for it in x), ))
     except Exception as e:
         print(e)
-        import ipdb
-        ipdb.set_trace()
     proposals = [
         (k, [x[1] for x in v])
         for k, v in itertools.groupby(stringified_pairs, lambda x: x[0])

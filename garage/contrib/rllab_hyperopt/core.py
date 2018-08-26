@@ -1,8 +1,6 @@
 import importlib
 import multiprocessing
 import os
-import sys
-sys.path.append('.')
 import threading
 import time
 import warnings

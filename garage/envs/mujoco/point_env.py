@@ -1,6 +1,6 @@
 import math
 
-import mujoco_py  # pylint: disable=unused-import
+import mujoco_py  # noqa: F401, pylint: disable=unused-import
 import glfw  # noqa: I100
 import numpy as np
 

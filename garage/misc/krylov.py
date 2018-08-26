@@ -1,7 +1,5 @@
 import numpy as np
 
-from garage.misc.ext import sliced_fun
-
 EPS = np.finfo('float64').tiny
 
 

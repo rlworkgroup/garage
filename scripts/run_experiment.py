@@ -6,7 +6,6 @@ import os
 import os.path as osp
 import pickle as pickle
 import sys
-sys.path.append(".")
 import uuid
 
 import dateutil.tz

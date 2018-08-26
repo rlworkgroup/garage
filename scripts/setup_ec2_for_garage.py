@@ -1,6 +1,5 @@
 import json
 import os
-import re
 from string import Template
 import sys
 
