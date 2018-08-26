@@ -1,6 +1,6 @@
+import cma
 import numpy as np
 
-from garage.algos import cma_es_lib
 from garage.algos import RLAlgorithm
 from garage.core import Serializable
 import garage.misc.logger as logger
@@ -61,7 +61,7 @@ class CMAES(RLAlgorithm, Serializable):
 
         cur_std = self.sigma0
         cur_mean = self.policy.get_param_values()
-        es = cma_es_lib.CMAEvolutionStrategy(cur_mean, cur_std)
+        es = cma.CMAEvolutionStrategy(cur_mean, cur_std)
 
         parallel_sampler.populate_task(self.env, self.policy)
         if self.plot:
