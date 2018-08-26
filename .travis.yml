@@ -39,39 +39,32 @@ install:
       -t "${tag}" \
       .
 
+before_script:
+  # Codecov utility to capture environment variables it needs
+  # This should be passed as an environment variable after `docker run`.
+  # e.g. `docker run ${ci_env} ...`
+  - ci_env="$(bash <(curl -s https://codecov.io/env))"
+  - |
+    docker-run() {
+      docker run \
+      ${ci_env} \
+      -e COVERALLS_REPO_TOKEN \
+      -e COVERALLS_SERVICE_NAME \
+      -e CODACY_PROJECT_TOKEN \
+      -e CC_TEST_REPORTER_ID \
+      -e TRAVIS_BRANCH \
+      -e TRAVIS_PULL_REQUEST \
+      -e TRAVIS_COMMIT_RANGE \
+      -e TRAVIS \
+      -e MJKEY \
+      "${tag}" "$@"
+    }
+
 script:
-  - |
-    docker run \
-      -e TRAVIS_BRANCH \
-      -e TRAVIS_PULL_REQUEST \
-      -e TRAVIS_COMMIT_RANGE \
-      -e TRAVIS \
-      -e MJKEY \
-      "${tag}" scripts/travisci/check_flake8.sh
-  - |
-    docker run \
-      -e TRAVIS_BRANCH \
-      -e TRAVIS_PULL_REQUEST \
-      -e TRAVIS_COMMIT_RANGE \
-      -e TRAVIS \
-      -e MJKEY \
-      "${tag}" scripts/travisci/check_imports.sh
-  - |
-    docker run \
-      -e TRAVIS_BRANCH \
-      -e TRAVIS_PULL_REQUEST \
-      -e TRAVIS_COMMIT_RANGE \
-      -e TRAVIS \
-      -e MJKEY \
-      "${tag}" scripts/travisci/check_precommit.sh
-  - |
-    docker run \
-      -e TRAVIS_BRANCH \
-      -e TRAVIS_PULL_REQUEST \
-      -e TRAVIS_COMMIT_RANGE \
-      -e TRAVIS \
-      -e MJKEY \
-      "${tag}" nose2 -c setup.cfg -E 'not huge'
+  - docker-run scripts/travisci/check_flake8.sh
+  - docker-run scripts/travisci/check_imports.sh
+  - docker-run scripts/travisci/check_precommit.sh
+  - docker-run scripts/travisci/check_tests.sh
 
 after_success:
   - |

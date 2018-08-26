@@ -54,6 +54,9 @@ dependencies:
         - Theano==1.0.2
         # dev dependencies below this line
         - git+https://github.com/openai/baselines.git@f2729693253c0ef4d4086231d36e0a4307ec1cb3#egg=baselines
+        - codacy-coverage
+        - coverage
+        - coveralls
         - flake8
         - flake8-docstrings==1.3.0
         - flake8-import-order
