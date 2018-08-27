@@ -344,8 +344,6 @@ class PushEnv(SawyerEnv):
             self.joint_positions = next_pos
             self.sim.forward()
 
-            self.previous_joint_positions = self.joint_positions
-
             # Move the block
             # Verify if gripper is in collision with block
             in_collision = False
@@ -382,6 +380,8 @@ class PushEnv(SawyerEnv):
                         self.go_back()
                 else:
                     self.go_back()
+                    
+            self.previous_joint_positions = self.joint_positions
         else:
             raise NotImplementedError
 
