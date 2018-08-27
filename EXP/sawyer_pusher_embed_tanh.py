@@ -155,7 +155,7 @@ config = dict(
     inference_ce_coeff=1.25e-4,  # 1e-4
     max_path_length=400,
     embedding_init_std=0.4,
-    embedding_max_std=0.5,
+    embedding_max_std=1,
     policy_init_std=1,
     policy_max_std=None,
 )
@@ -163,8 +163,8 @@ config = dict(
 run_experiment(
     run_task,
     exp_prefix='sawyer_pusher_rel_obs_embed_udlr',
-    n_parallel=1,
+    n_parallel=8,
     seed=1,
     variant=config,
-    plot=True,
+    plot=False,
 )

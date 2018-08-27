@@ -68,7 +68,7 @@ def play(pkl_file):
             rollout(
                 env,
                 policy,
-                max_path_length=500,
+                max_path_length=400,
                 animated=True,
             )
 

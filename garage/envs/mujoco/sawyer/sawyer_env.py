@@ -281,7 +281,11 @@ class SawyerEnv(MujocoEnv, gym.GoalEnv):
 
     @property
     def gripper_position(self):
-        return self.sim.data.get_site_xpos('grip') # - np.array([0., 0., .1])  # 0.1 offset for the finger
+        return np.copy(self.sim.data.get_site_xpos('grip')) # - np.array([0., 0., .1])  # 0.1 offset for the finger
+
+    @property
+    def finger_position(self):
+        return np.copy(self.sim.data.get_site_xpos('finger'))
 
     def set_object_position(self, position):
         object_qpos = np.concatenate((position, [1, 0, 0, 0]))

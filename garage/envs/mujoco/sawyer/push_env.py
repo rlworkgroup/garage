@@ -338,11 +338,12 @@ class PushEnv(SawyerEnv):
             curr_pos = self.joint_positions
             next_pos = np.clip(a + curr_pos, self.joint_position_space.low,
                                self.joint_position_space.high)
-            old_gripper_pos = self.gripper_position
             old_block_pos = self.object_position
             old_block_ori = self.object_orientation
+            old_finger_pos = self.finger_position
             self.joint_positions = next_pos
             self.sim.forward()
+
             self.previous_joint_positions = self.joint_positions
 
             # Move the block
@@ -359,14 +360,15 @@ class PushEnv(SawyerEnv):
                         in_collision = True
                         break
             if in_collision:
-                new_gripper_pos = self.gripper_position
-                if self.gripper_position[2] >= self.object_position[2] * 5 / 4:
-                    if not self.in_xyregion(old_gripper_pos, old_block_pos, old_block_ori):
+                new_finger_pos = self.finger_position
+                if self.finger_position[2] >= self.object_position[2]:
+                    if not self.in_xyregion(old_finger_pos, old_block_pos, old_block_ori):
                         # Make sure the gripper is not pulling the block
-                        delta_gripper_block = old_block_pos - old_gripper_pos
-                        delta_gripper = new_gripper_pos - old_gripper_pos
-                        if np.dot(delta_gripper_block, delta_gripper) > 0:
-                            xy_delta = new_gripper_pos[:2] - old_gripper_pos[:2]
+                        delta_finger_block = old_block_pos - old_finger_pos
+                        delta_finger = new_finger_pos - old_finger_pos
+                        if np.dot(delta_finger_block, delta_finger) > 0:
+
+                            xy_delta = new_finger_pos[:2] - old_finger_pos[:2]
 
                             qpos = self.sim.data.get_joint_qpos('object0:joint')
                             qpos[0] += xy_delta[0]
@@ -413,7 +415,7 @@ class PushEnv(SawyerEnv):
             desired_goal=obs.get('desired_goal'),
             info=info) * 2
 
-        r2 = -np.linalg.norm(self.gripper_position - block_desired_gripper) / 5 * 2 / 3
+        r2 = -np.linalg.norm(self.finger_position - block_desired_gripper) / 5 * 2 / 3
 
         # w, x, y, z quat
         upright_gripper = np.array([0, 0, 1, 0])
@@ -424,9 +426,9 @@ class PushEnv(SawyerEnv):
         #     self._test_ration = r2 / r1
         #     print(self._test_ration)
 
-        end_position = self.object_position + np.array([0, 0, 0.3])
+        end_position = self.object_position + np.array([0, 0, 0.15])
         if self._already_successful:
-            r2 = -np.linalg.norm(self.gripper_position - end_position) / 5 * 2/3
+            r2 = -np.linalg.norm(self.finger_position - end_position) / 5 * 2/3
         r = r1 + r2 + r3 + r4
 
         # if self._easy_gripper_init:

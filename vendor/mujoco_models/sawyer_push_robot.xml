@@ -93,12 +93,12 @@
                                                         <!-- </body>-->
                                                     <!--/body-->
                                                 <!--/body-->
-                      <site name="grip" pos="0 0 0.0245" rgba="0 0 0 0" size="0.02 0.02 0.02"></site>
                       <body name="right_gripper_base" pos="0 0 0.025">
                         <inertial pos="0 0 0" quat="-0.5 0.5 0.5 0.5" mass="0.3" diaginertia="3e-08 2e-08 2e-08" />
                         <geom quat="0 0 0.707107 0.707107" class="viz" mesh="electric_gripper_base" />
                         <geom size="0.029 0.05" quat="0 0 0.707107 0.707107" type="cylinder" />
                         <body name="r_gripper_l_finger" pos="0 -0.0015 0.02">
+                          <site name="finger" pos="0 0.0015 0.04" rgba="0 0 0 0" size="0.02 0.02 0.02"></site>
                           <inertial pos="0 0 0" quat="0 0 0 -1" mass="0.02" diaginertia="0.01 0.01 0.01" />
                           <joint name="r_gripper_l_finger_joint" pos="0 0 0" axis="0 1 0" type="slide" range="0 0.020833" armature="100" damping="1000" limited="true" solimplimit="0.99 0.999 0.01" solreflimit="0.01 1"/>
                           <!-- geom class="viz" mesh="extended_narrow" euler="1.57 1.57 0" rgba="0.1 0.1 0.1 1"/-->
@@ -152,6 +152,7 @@
                         <!--<site name="grip" pos="0.02 0 0" rgba="0 0 0 0" size="0.02 0.02 0.02"></site>-->
                       <!--</body>-->
 <!--  ================= END GRIPPER ================= /-->
+                      <site name="grip" pos="0 0 0.0245" rgba="0 0 0 0" size="0.02 0.02 0.02"></site>
 
                     </body>
                   </body>
