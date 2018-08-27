@@ -19,6 +19,7 @@ RUN \
     bzip2 \
     unzip \
     git \
+    curl \
     # For building glfw
     cmake \
     xorg-dev \
@@ -102,6 +103,11 @@ WORKDIR /root/code/garage
 # Pre-build pre-commit env
 COPY .pre-commit-config.yaml /root/code/garage
 RUN ["/bin/bash", "-c", "source activate garage && git init && pre-commit"]
+
+# Pull CodeClimate reporter
+RUN curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > /root/code/garage/cc-test-reporter && \
+  chmod +x /root/code/garage/cc-test-reporter
+
 # Add code stub last
 COPY . /root/code/garage
 ENV PYTHONPATH=$PYTHONPATH:/root/code/garage

@@ -40,3 +40,4 @@ garage/config_personal.py
 sandbox/
 .gitmodules
 *.orig
+.coverage
