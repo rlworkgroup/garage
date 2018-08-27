@@ -1,6 +1,6 @@
 """This file is a copy of garage/theano/algos/npo.py
 
-The only difference is the use of BatchPoloptCallback to notify the test of
+The only difference is the use of InstrumentedBatchPolopt to notify the test of
 the different stages in the experiment lifecycle.
 """
 import theano
@@ -11,10 +11,10 @@ import garage.misc.logger as logger
 from garage.misc.overrides import overrides
 from garage.theano.misc import tensor_utils
 from garage.theano.optimizers import PenaltyLbfgsOptimizer
-from tests.theano.test_exp_interrupt import BatchPoloptCallback
+from tests.fixtures.theano import InstrumentedBatchPolopt
 
 
-class NPO(BatchPoloptCallback):
+class InstrumentedNPO(InstrumentedBatchPolopt):
     """
     Natural Policy Optimization.
     """
@@ -32,7 +32,7 @@ class NPO(BatchPoloptCallback):
         self.optimizer = optimizer
         self.step_size = step_size
         self.truncate_local_is_ratio = truncate_local_is_ratio
-        super(NPO, self).__init__(**kwargs)
+        super(InstrumentedNPO, self).__init__(**kwargs)
 
     @overrides
     def init_opt(self):

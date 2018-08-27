@@ -177,9 +177,9 @@ class ExperimentDatabase:
                 used_legends.append(exp_color_key)
                 legend_list.append(plots[-1])
 
-        if len(legends) > 0:
+        if legends:
             plt.legend(plots, legends)
-        elif len(legend_list) > 0:
+        elif legend_list:
             plt.legend(legend_list, used_legends)
 
     def filter_experiments(self, **kwargs):

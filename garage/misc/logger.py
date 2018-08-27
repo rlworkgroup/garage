@@ -8,6 +8,7 @@ import os
 import os.path as osp
 import pickle
 import sys
+import types
 
 import dateutil.tz
 import joblib
@@ -220,7 +221,7 @@ table_printer = TerminalTablePrinter()
 
 
 def dump_tensorboard(*args, **kwargs):
-    if len(_tabular) > 0:
+    if _tabular:
         tabular_dict = dict(_tabular)
     step = None
     if _tensorboard_step_key and _tensorboard_step_key in tabular_dict:
@@ -230,7 +231,7 @@ def dump_tensorboard(*args, **kwargs):
 
 def dump_tabular(*args, **kwargs):
     wh = kwargs.pop("write_header", None)
-    if len(_tabular) > 0:
+    if _tabular:
         if _log_tabular_only:
             table_printer.print_tabular(_tabular)
         else:
@@ -304,7 +305,7 @@ def log_parameters(log_file, args, classes):
 def stub_to_json(stub_sth):
     from garage.misc import instrument
     if isinstance(stub_sth, instrument.StubObject):
-        assert len(stub_sth.args) == 0
+        assert not stub_sth.args
         data = dict()
         for k, v in stub_sth.kwargs.items():
             data[k] = stub_to_json(v)
@@ -331,7 +332,7 @@ def stub_to_json(stub_sth):
         return {stub_to_json(k): stub_to_json(v) for k, v in stub_sth.items()}
     elif isinstance(stub_sth, (list, tuple)):
         return list(map(stub_to_json, stub_sth))
-    elif type(stub_sth) == type(lambda: None):
+    elif isinstance(stub_sth, types.LambdaType):
         if stub_sth.__module__ is not None:
             return stub_sth.__module__ + "." + stub_sth.__name__
         return stub_sth.__name__
@@ -388,7 +389,7 @@ def record_tabular_misc_stat(key, values, placement='back'):
     else:
         prefix = key
         suffix = ""
-    if len(values) > 0:
+    if values:
         record_tabular(prefix + "Average" + suffix, np.average(values))
         record_tabular(prefix + "Std" + suffix, np.std(values))
         record_tabular(prefix + "Median" + suffix, np.median(values))

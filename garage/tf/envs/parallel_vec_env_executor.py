@@ -8,62 +8,62 @@ from garage.sampler import singleton_pool
 from garage.tf.misc import tensor_utils
 
 
-def worker_init_envs(G, alloc, scope, env):
-    logger.log("initializing environment on worker %d" % G.worker_id)
-    if not hasattr(G, 'parallel_vec_envs'):
-        G.parallel_vec_envs = dict()
-        G.parallel_vec_env_template = dict()
-    G.parallel_vec_envs[scope] = [(idx, pickle.loads(pickle.dumps(env)))
+def worker_init_envs(g, alloc, scope, env):
+    logger.log("initializing environment on worker %d" % g.worker_id)
+    if not hasattr(g, 'parallel_vec_envs'):
+        g.parallel_vec_envs = dict()
+        g.parallel_vec_env_template = dict()
+    g.parallel_vec_envs[scope] = [(idx, pickle.loads(pickle.dumps(env)))
                                   for idx in alloc]
-    G.parallel_vec_env_template[scope] = env
+    g.parallel_vec_env_template[scope] = env
 
 
-# For these two methods below, we pack the data into batch numpy arrays whenever
-# possible, to reduce communication cost
+# For these two methods below, we pack the data into batch numpy arrays
+# whenever possible, to reduce communication cost
 
 
-def worker_run_reset(G, flags, scope):
-    if not hasattr(G, 'parallel_vec_envs'):
-        logger.log("on worker %d" % G.worker_id)
+def worker_run_reset(g, flags, scope):
+    if not hasattr(g, 'parallel_vec_envs'):
+        logger.log("on worker %d" % g.worker_id)
         import traceback
         for line in traceback.format_stack():
             logger.log(line)
         # log the stacktrace at least
         logger.log("oops")
-        for k, v in G.__dict__.items():
+        for k, v in g.__dict__.items():
             logger.log(str(k) + " : " + str(v))
-        assert hasattr(G, 'parallel_vec_envs')
+        assert hasattr(g, 'parallel_vec_envs')
 
-    assert scope in G.parallel_vec_envs
-    N = len(G.parallel_vec_envs[scope])
-    env_template = G.parallel_vec_env_template[scope]
+    assert scope in g.parallel_vec_envs
+    n = len(g.parallel_vec_envs[scope])
+    env_template = g.parallel_vec_env_template[scope]
     obs_dim = env_template.observation_space.flat_dim
-    ret_arr = np.zeros((N, obs_dim))
+    ret_arr = np.zeros((n, obs_dim))
     ids = []
     flat_obs = []
     reset_ids = []
-    for itr_idx, (idx, env) in enumerate(G.parallel_vec_envs[scope]):
+    for itr_idx, (idx, env) in enumerate(g.parallel_vec_envs[scope]):
         flag = flags[idx]
         if flag:
             flat_obs.append(env.reset())
             reset_ids.append(itr_idx)
         ids.append(idx)
-    if len(reset_ids) > 0:
+    if reset_ids:
         ret_arr[reset_ids] = env_template.observation_space.flatten_n(flat_obs)
     return ids, ret_arr
 
 
-def worker_run_step(G, action_n, scope):
-    assert hasattr(G, 'parallel_vec_envs')
-    assert scope in G.parallel_vec_envs
-    env_template = G.parallel_vec_env_template[scope]
+def worker_run_step(g, action_n, scope):
+    assert hasattr(g, 'parallel_vec_envs')
+    assert scope in g.parallel_vec_envs
+    env_template = g.parallel_vec_env_template[scope]
     ids = []
     step_results = []
-    for (idx, env) in G.parallel_vec_envs[scope]:
+    for (idx, env) in g.parallel_vec_envs[scope]:
         action = action_n[idx]
         ids.append(idx)
         step_results.append(tuple(env.step(action)))
-    if len(step_results) == 0:
+    if not step_results:
         return None
     obs, rewards, dones, env_infos = list(map(list, list(zip(*step_results))))
     obs = env_template.observation_space.flatten_n(obs)
@@ -73,8 +73,8 @@ def worker_run_step(G, action_n, scope):
     return ids, obs, rewards, dones, env_infos
 
 
-def worker_collect_env_time(G):
-    return G.env_time
+def worker_collect_env_time(g):
+    return g.env_time
 
 
 class ParallelVecEnvExecutor:

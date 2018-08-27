@@ -9,10 +9,10 @@ from multiprocessing.connection import Client
 from garage.algos import BatchPolopt
 import garage.misc.logger as logger
 from garage.plotter import Plotter
-from tests.theano.test_exp_interrupt.test_exp_interruption import ExpLifecycle
+from tests.sampler.test_sigint_theano import ExpLifecycle
 
 
-class BatchPoloptCallback(BatchPolopt):
+class InstrumentedBatchPolopt(BatchPolopt):
     """
     Base class for batch sampling-based policy optimization methods.
     This includes various policy gradient methods like vpg, npg, ppo, trpo,
