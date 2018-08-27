@@ -415,7 +415,7 @@ class PushEnv(SawyerEnv):
             desired_goal=obs.get('desired_goal'),
             info=info) * 2
 
-        r2 = -np.linalg.norm(self.finger_position - block_desired_gripper) / 5 * 2 / 3
+        r2 = -np.linalg.norm(self.finger_position - block_desired_gripper) / 3
 
         # w, x, y, z quat
         upright_gripper = np.array([0, 0, 1, 0])
