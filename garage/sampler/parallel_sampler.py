@@ -70,12 +70,8 @@ def terminate_task(scope=None):
                             [(scope, )] * singleton_pool.n_parallel)
 
 
-def terminate():
-    singleton_pool.terminate()
-
-
-def join():
-    singleton_pool.join()
+def close():
+    singleton_pool.close()
 
 
 def _worker_set_seed(_, seed):

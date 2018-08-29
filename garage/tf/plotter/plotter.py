@@ -21,6 +21,8 @@ class Op(Enum):
 
 Message = namedtuple("Message", ["op", "args", "kwargs"])
 
+__plotters__ = []
+
 
 class Plotter:
 
@@ -33,6 +35,7 @@ class Plotter:
                  sess=None,
                  graph=None,
                  rollout=default_rollout):
+        __plotters__.append(self)
         self.env = env
         self.policy = policy
         self.sess = tf.get_default_session() if sess is None else sess

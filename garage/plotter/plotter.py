@@ -21,13 +21,16 @@ class Op(Enum):
 
 Message = namedtuple("Message", ["op", "args", "kwargs"])
 
+__plotters__ = []
+
 
 class Plotter:
 
     # Static variable used to disable the plotter
     enable = True
 
-    def __init__(self):
+    def __init__(self, standalone=False):
+        __plotters__.append(self)
         self._process = None
         self._queue = None
 

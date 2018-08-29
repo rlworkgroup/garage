@@ -10,8 +10,10 @@ import uuid
 
 import dateutil.tz
 import joblib
+import psutil
 
 from garage import config
+from garage.misc.console import colorize
 from garage.misc.ext import is_iterable
 from garage.misc.ext import set_seed
 from garage.misc.instrument import concretize
@@ -183,8 +185,8 @@ def run_experiment(argv):
                 method_call(variant_data)
             except BaseException:
                 if args.n_parallel > 0:
-                    parallel_sampler.terminate()
-                    parallel_sampler.join()
+                    shutdown_sampler = True
+                child_proc_shutdown(shutdown_sampler)
                 raise
         else:
             data = pickle.loads(base64.b64decode(args.args_data))
@@ -198,6 +200,35 @@ def run_experiment(argv):
     logger.remove_tabular_output(tabular_log_file)
     logger.remove_text_output(text_log_file)
     logger.pop_prefix()
+
+
+def child_proc_shutdown(shutdown_sampler=False):
+    run_exp_proc = psutil.Process()
+    alive = run_exp_proc.children(recursive=True)
+    for plotter in garage.plotter.plotter.__plotters__:
+        plotter.shutdown()
+    for tf_plotter in garage.tf.plotter.plotter.__plotters__:
+        tf_plotter.shutdown()
+    if shutdown_sampler:
+        parallel_sampler.close()
+    max_retries = 5
+    for _ in range(max_retries):
+        _, alive = psutil.wait_procs(alive, 1.0)
+        if not alive:
+            break
+    if alive:
+        error_msg = ""
+        for child in alive:
+            error_msg += (
+                str(child.as_dict(attrs=["pid", "name", "status"])) + "\n")
+
+        error_msg = ("The following processes didn't die after the shutdown " +
+                     "of run_experiment:\n" + error_msg)
+        error_msg += ("This is a sign of an unclean shutdown. Please reopen " +
+                      "the following issue\nwith a detailed description " +
+                      "of how the error was produced:\n")
+        error_msg += ("https://github.com/rlworkgroup/garage/issues/120")
+        print(colorize(error_msg, "yellow"))
 
 
 if __name__ == "__main__":

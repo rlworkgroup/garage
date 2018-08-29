@@ -3,6 +3,7 @@ from multiprocessing.connection import Listener
 import os
 import signal
 import subprocess
+import unittest
 
 import psutil
 
@@ -53,7 +54,7 @@ def interrupt_experiment(lifecycle_stage):
     listener.close()
 
     # Once the signal has been sent, all children should die
-    _, alive = psutil.wait_procs(children, timeout=3)
+    _, alive = psutil.wait_procs(children, timeout=6)
 
     # If any, notify the zombie and sleeping processes and fail the test
     clean_exit = True
@@ -73,7 +74,8 @@ def interrupt_experiment(lifecycle_stage):
         raise AssertionError(colorize(error_msg, "red"))
 
 
-def test_sigint():
-    """Interrupt the experiment in different stages of its lifecyle."""
-    for stage in list(ExpLifecycle):
-        interrupt_experiment(stage)
+class TestSigInt(unittest.TestCase):
+    def test_sigint(self):
+        """Interrupt the experiment in different stages of its lifecyle."""
+        for stage in list(ExpLifecycle):
+            interrupt_experiment(stage)

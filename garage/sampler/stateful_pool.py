@@ -63,13 +63,9 @@ class StatefulPool:
                 temp_folder="/tmp",
             )
 
-    def terminate(self):
+    def close(self):
         if self.pool:
-            self.pool.terminate()
-
-    def join(self):
-        if self.pool:
-            self.pool.join()
+            self.pool.close()
 
     def run_each(self, runner, args_list=None):
         """
