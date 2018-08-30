@@ -285,7 +285,7 @@ class PushEnv(SawyerEnv):
 
         achieved_goal_qpos = np.concatenate((achieved_goal, [1, 0, 0, 0]))
         self.sim.data.set_joint_qpos('achieved_goal:joint', achieved_goal_qpos)
-        desired_goal_qpos = np.concatenate((desired_goal, [1, 0, 0, 0]))
+        desired_goal_qpos = np.concatenate((np.array(desired_goal).reshape(-1), [1, 0, 0, 0]))
         self.sim.data.set_joint_qpos('desired_goal:joint', desired_goal_qpos)
 
         return {
@@ -380,7 +380,7 @@ class PushEnv(SawyerEnv):
                         self.go_back()
                 else:
                     self.go_back()
-                    
+
             self.previous_joint_positions = self.joint_positions
         else:
             raise NotImplementedError
