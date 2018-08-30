@@ -184,9 +184,11 @@ def run_experiment(argv):
             try:
                 method_call(variant_data)
             except BaseException:
+                children = garage.plotter.Plotter.get_plotters()
+                children += garage.tf.plotter.Plotter.get_plotters()
                 if args.n_parallel > 0:
-                    shutdown_sampler = True
-                child_proc_shutdown(shutdown_sampler)
+                    children += [parallel_sampler]
+                child_proc_shutdown(children)
                 raise
         else:
             data = pickle.loads(base64.b64decode(args.args_data))
@@ -202,15 +204,11 @@ def run_experiment(argv):
     logger.pop_prefix()
 
 
-def child_proc_shutdown(shutdown_sampler=False):
+def child_proc_shutdown(children):
     run_exp_proc = psutil.Process()
     alive = run_exp_proc.children(recursive=True)
-    for plotter in garage.plotter.plotter.__plotters__:
-        plotter.shutdown()
-    for tf_plotter in garage.tf.plotter.plotter.__plotters__:
-        tf_plotter.shutdown()
-    if shutdown_sampler:
-        parallel_sampler.close()
+    for c in children:
+        c.close()
     max_retries = 5
     for _ in range(max_retries):
         _, alive = psutil.wait_procs(alive, 1.0)

@@ -145,4 +145,4 @@ class CMAES(RLAlgorithm, Serializable):
         # Set final params.
         self.policy.set_param_values(es.result()[0])
         parallel_sampler.terminate_task()
-        self.plotter.shutdown()
+        self.plotter.close()

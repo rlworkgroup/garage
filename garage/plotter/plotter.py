@@ -21,16 +21,16 @@ class Op(Enum):
 
 Message = namedtuple("Message", ["op", "args", "kwargs"])
 
-__plotters__ = []
-
 
 class Plotter:
 
     # Static variable used to disable the plotter
     enable = True
+    # List containing all plotters instantiated in the process
+    __plotters = []
 
     def __init__(self, standalone=False):
-        __plotters__.append(self)
+        Plotter.__plotters.append(self)
         self._process = None
         self._queue = None
 
@@ -83,7 +83,7 @@ class Plotter:
         except KeyboardInterrupt:
             pass
 
-    def shutdown(self):
+    def close(self):
         if not Plotter.enable:
             return
         if self._process and self._process.is_alive():
@@ -99,6 +99,10 @@ class Plotter:
         """Disable all instances of the Plotter class."""
         Plotter.enable = False
 
+    @staticmethod
+    def get_plotters():
+        return Plotter.__plotters
+
     def init_worker(self):
         if not Plotter.enable:
             return
@@ -109,7 +113,7 @@ class Plotter:
             self._process = Process(target=self._worker_start)
         self._process.daemon = True
         self._process.start()
-        atexit.register(self.shutdown)
+        atexit.register(self.close)
 
     def init_plot(self, env, policy):
         if not Plotter.enable:

@@ -1,13 +1,20 @@
 from enum import Enum
 from multiprocessing.connection import Listener
+import itertools
 import os
 import signal
 import subprocess
 import unittest
 
+from nose2.tools import params
 import psutil
 
 from garage.misc.console import colorize
+
+scripts = [
+    "tests/fixtures/theano/trpo_cartpole_instrumented.py",
+    "tests/fixtures/tf/trpo_cartpole_instrumented.py"
+]
 
 
 class ExpLifecycle(Enum):
@@ -20,10 +27,10 @@ class ExpLifecycle(Enum):
     SHUTDOWN = 6
 
 
-def interrupt_experiment(lifecycle_stage):
+def interrupt_experiment(experiment_script, lifecycle_stage):
     """Interrupt the experiment and verify no children processes remain."""
 
-    args = ["python", "tests/fixtures/theano/trpo_cartpole_instrumented.py"]
+    args = ["python", experiment_script]
     # The pre-executed function setpgrp allows to create a process group
     # so signals are propagated to all the process in the group.
     proc = subprocess.Popen(args, preexec_fn=os.setpgrp)
@@ -70,12 +77,17 @@ def interrupt_experiment(lifecycle_stage):
     for child in alive:
         os.kill(child.pid, signal.SIGINT)
 
-    if not clean_exit:
-        raise AssertionError(colorize(error_msg, "red"))
+    assert clean_exit, colorize(error_msg, "red")
 
 
 class TestSigInt(unittest.TestCase):
-    def test_sigint(self):
+
+    test_sigint_params = list(itertools.product(scripts, ExpLifecycle))
+    #test_sigint_params = list(itertools.product(scripts, [ExpLifecycle.SHUTDOWN]))
+
+    @params(*test_sigint_params)
+    def test_sigint(self, experiment_script, exp_stage):
         """Interrupt the experiment in different stages of its lifecyle."""
-        for stage in list(ExpLifecycle):
-            interrupt_experiment(stage)
+        print(colorize(experiment_script, "blue"))
+        print(colorize(exp_stage, "blue"))
+        interrupt_experiment(experiment_script, exp_stage)

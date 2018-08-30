@@ -336,7 +336,7 @@ class DDPG(RLAlgorithm):
                           "continue...")
 
         if self.plot:
-            self.plotter.shutdown()
+            self.plotter.close()
         if created_session:
             sess.close()
 

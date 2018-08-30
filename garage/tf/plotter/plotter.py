@@ -21,13 +21,13 @@ class Op(Enum):
 
 Message = namedtuple("Message", ["op", "args", "kwargs"])
 
-__plotters__ = []
-
 
 class Plotter:
 
     # Static variable used to disable the plotter
     enable = True
+    # List containing all plotters instantiated in the process
+    __plotters = []
 
     def __init__(self,
                  env,
@@ -35,7 +35,7 @@ class Plotter:
                  sess=None,
                  graph=None,
                  rollout=default_rollout):
-        __plotters__.append(self)
+        Plotter.__plotters.append(self)
         self.env = env
         self.policy = policy
         self.sess = tf.get_default_session() if sess is None else sess
@@ -102,7 +102,7 @@ class Plotter:
         except KeyboardInterrupt:
             pass
 
-    def shutdown(self):
+    def close(self):
         if self.worker_thread.is_alive():
             while not self.queue.empty():
                 self.queue.get()
@@ -116,6 +116,10 @@ class Plotter:
         """Disable all instances of the Plotter class."""
         Plotter.enable = False
 
+    @staticmethod
+    def get_plotters():
+        return Plotter.__plotters
+
     def start(self):
         if not Plotter.enable:
             return
@@ -125,7 +129,7 @@ class Plotter:
             self.queue.put(
                 Message(
                     op=Op.UPDATE, args=(self.env, self.policy), kwargs=None))
-            atexit.register(self.shutdown)
+            atexit.register(self.close)
 
     def update_plot(self, policy, max_length=np.inf):
         if not Plotter.enable:

@@ -9,7 +9,7 @@ from multiprocessing.connection import Client
 from garage.algos import BatchPolopt
 import garage.misc.logger as logger
 from garage.plotter import Plotter
-from tests.sampler.test_sigint_theano import ExpLifecycle
+from tests.integration_tests.test_sigint import ExpLifecycle
 
 
 class InstrumentedBatchPolopt(BatchPolopt):
@@ -55,7 +55,7 @@ class InstrumentedBatchPolopt(BatchPolopt):
                                   "continue...")
 
             conn.send(ExpLifecycle.SHUTDOWN)
-            plotter.shutdown()
+            plotter.close()
             self.shutdown_worker()
         finally:
             conn.close()
