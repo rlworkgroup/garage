@@ -1,5 +1,4 @@
 import argparse
-import copy
 import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 import sys
@@ -8,7 +7,6 @@ import time
 import joblib
 import moveit_commander
 import numpy as np
-import pickle
 import rospy
 import tensorflow as tf
 
@@ -26,9 +24,19 @@ INITIAL_ROBOT_JOINT_POS = {
     'right_j6': -0.816326171875,
 }
 
-playback_obs = []
-playback_actions = []
-playback_tasks = []
+
+def playback(env,
+             agent,
+             z,
+             obs_traj,
+             ):
+    observations = []
+
+    for obs in obs_traj:
+        a, agent_info = agent.get_action_from_latent(z, obs)
+        env.step(a)
+
+
 
 def rollout(env,
             sim_env,
@@ -38,8 +46,7 @@ def rollout(env,
             animated=False,
             speedup=1,
             always_return_paths=False,
-            goal_markers=None,
-            task=""):
+            goal_markers=None):
 
     observations = []
     tasks = []
@@ -67,15 +74,9 @@ def rollout(env,
     path_length = 0
     while path_length < max_path_length:
         a, agent_info = agent.get_action_from_latent(z, o)
-        playback_actions.append(a.copy())
-        agent_infos.append(copy.deepcopy(agent_info))
-        actions.append(copy.deepcopy(a))
         next_o, r, d, env_info = env.step(a)
-        env_infos.append(copy.deepcopy(env_info))
         # sim_env.step(a)
-        observations.append(copy.deepcopy(agent.observation_space.flatten(o)))
-        playback_obs.append(o)
-        playback_tasks.append(task)
+        observations.append(agent.observation_space.flatten(o))
         path_length += 1
         if d:
             break
@@ -93,13 +94,7 @@ def rollout(env,
     if animated and not always_return_paths:
         return
 
-    return {
-        'observations': np.array(observations),
-        'latent:': z,
-        'actions': actions,
-        'agent_infos': agent_infos,
-        'env_infos': env_infos
-    }
+    return np.array(observations)
 
 
 def play(pkl_file):
@@ -124,7 +119,7 @@ def play(pkl_file):
 
     env = TfEnv(push_env)
 
-    env.env._robot.set_joint_position_speed(0.1)
+    env.env._robot.set_joint_position_speed(0.3)
 
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
@@ -147,32 +142,29 @@ def play(pkl_file):
         z_means = np.array([d[0] for d in z_dists])
         z_stds = np.array([d[1] for d in z_dists])
 
-        task_dict = {0: 'up', 1: 'down', 2: 'left', 3: 'right', 4: 'up_left', 5: 'down_left', 6: 'down_right', 7: 'up_right'}
-
         # Render individual task policies
-        # for t in range(num_tasks):
-        #     z = z_means[(t + 3) % 4]
-        #
-        #     # Run rollout
-        #     print("Animating task {}".format(t + 1))
-        #     info = rollout(
-        #         env,
-        #         task_envs[0],
-        #         policy,
-        #         z,
-        #         max_path_length=200,
-        #         animated=False,
-        #         goal_markers=goals,
-        #         task=task_dict[t]
-        #     )
-        #
-        #     pickle.dump(info, open('task%i_infos.pkl' % t, "wb"))
-        #     print('Rollout data is saved!')
-        #     playback_data = np.array(dict(actions=np.array(playback_actions),
-        #                                   tasks=np.array(playback_tasks),
-        #                                   obs=np.array(playback_obs)))
-        #     np.save("playback_pusher.npy", playback_data)
-        #
+        for t in range(num_tasks):
+            z = z_means[t]
+
+            # Run rollout
+            print("Animating task {}".format(t + 1))
+            # rollout(
+            #     env,
+            #     task_envs[0],
+            #     policy,
+            #     z,
+            #     max_path_length=400,
+            #     animated=False,
+            #     goal_markers=goals
+            # )
+            obs_traj = np.load('/home/sawyer/Downloads/task_{}.npy'.format(t))
+            playback(
+                env,
+                policy,
+                z,
+                obs_traj
+            )
+
         # while True:
         #     for t in range(num_tasks - 1):
         #         print("Rollout policy given mean embedding of tasks {} and {}".format(t+1, t+2))
@@ -184,48 +176,36 @@ def play(pkl_file):
         #             max_path_length=400,
         #             animated=False,
         #         )
-
-        print("Rollout policy given mean embedding of tasks {} and {}".format(1, 4))
-        z = (z_means[0] + z_means[3]) / 2
-        info = rollout(
-            env,
-            task_envs[0],
-            policy,
-            z,
-            max_path_length=200,
-            animated=False,
-            goal_markers=goals,
-            task=task_dict[7]
-        )
-
-        # pickle.dump(info, open('task%i_infos.pkl' % t, "wb"))
-        print('Rollout data is saved!')
-        playback_data = np.array(dict(actions=np.array(playback_actions),
-                                      tasks=np.array(playback_tasks),
-                                      obs=np.array(playback_obs)))
-        np.save("playback_pusher.npy", playback_data)
-
-        env.reset()
-
-            # print("Rollout policy given mean embedding of tasks {} and {}".format(2, 4))
-            # z = (z_means[1] + z_means[3]) / 2
-            # rollout(
-            #     env,
-            #     policy,
-            #     z,
-            #     max_path_length=400,
-            #     animated=False,
-            # )
-            #
-            # print("Rollout policy given mean embedding of tasks {} and {}".format(1, 4))
-            # z = (z_means[0] + z_means[3]) / 2
-            # rollout(
-            #     env,
-            #     policy,
-            #     z,
-            #     max_path_length=400,
-            #     animated=False,
-            # )
+        #
+        #     print("Rollout policy given mean embedding of tasks {} and {}".format(1, 3))
+        #     z = (z_means[0] + z_means[2]) / 2
+        #     rollout(
+        #         env,
+        #         policy,
+        #         z,
+        #         max_path_length=400,
+        #         animated=False,
+        #     )
+        #
+        #     print("Rollout policy given mean embedding of tasks {} and {}".format(2, 4))
+        #     z = (z_means[1] + z_means[3]) / 2
+        #     rollout(
+        #         env,
+        #         policy,
+        #         z,
+        #         max_path_length=400,
+        #         animated=False,
+        #     )
+        #
+        #     print("Rollout policy given mean embedding of tasks {} and {}".format(1, 4))
+        #     z = (z_means[0] + z_means[3]) / 2
+        #     rollout(
+        #         env,
+        #         policy,
+        #         z,
+        #         max_path_length=400,
+        #         animated=False,
+        #     )
 
 
 def get_z_dist(t, policy):

@@ -132,7 +132,10 @@ class Sawyer(Robot):
             joint_angle_cmds['right_j{}'.format(i)] = next_joint_positions[i]
 
         if self.safety_predict(joint_angle_cmds):
-            self._limb.set_joint_positions(joint_angle_cmds)
+            # print(joint_angle_cmds)
+            self._limb.move_to_joint_positions(joint_angle_cmds, timeout=1)
+        else:
+            print('Not safe!')
 
     def _set_limb_joint_velocities(self, commands):
         joint_angle_cmds = {}
@@ -158,7 +161,7 @@ class Sawyer(Robot):
             return
         self._limb.move_to_joint_positions(
             self._initial_joint_pos, timeout=60.0)
-        self._gripper.open()
+        self._gripper.close()
         rospy.sleep(1.0)
 
     def reset(self):

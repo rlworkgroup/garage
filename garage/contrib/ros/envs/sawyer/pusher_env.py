@@ -144,7 +144,8 @@ class PusherEnv(SawyerEnv, Serializable):
                  np.array([orientation.w, orientation.x, orientation.y, orientation.z])))
 
         gripper_pos = self._robot.gripper_pose['position']
-        gripper_pos = np.array([gripper_pos.x, gripper_pos.y, gripper_pos.z])
+        print(gripper_pos)
+        gripper_pos = np.array([gripper_pos.x, gripper_pos.y, gripper_pos.z - 0.03])
 
         initial_jpos = np.array(
             [-0.4839443359375, -0.991173828125, -2.3821015625, -1.9510517578125, -0.5477119140625, -0.816458984375,
@@ -153,6 +154,7 @@ class PusherEnv(SawyerEnv, Serializable):
         delta_limb_joint_positions = limb_joint_positions - initial_jpos
 
         obs = np.concatenate((delta_limb_joint_positions, gripper_pos - block_pos_obs, np.array([0., 0., 0., 0.])))
+        # print(obs)
 
         Observation = collections.namedtuple(
             'Observation', 'observation achieved_goal desired_goal')
@@ -208,7 +210,8 @@ class PusherEnv(SawyerEnv, Serializable):
                     if current episode is done:
         """
         if not self._robot.safety_check():
-            done = True
+            done = False
+            print('Done')
         else:
             done = compute_distance(achieved_goal, goal) < self._distance_threshold
         return done

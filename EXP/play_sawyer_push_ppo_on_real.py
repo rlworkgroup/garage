@@ -40,7 +40,7 @@ def rollout(env,
     while path_length < max_path_length:
         a, agent_info = agent.get_action(o)
         # a = agent_info["mean"]
-        a = np.concatenate((a, np.array([0.])))
+        # a = np.concatenate((a, np.array([0.])))
         next_o, r, d, env_info = env.step(a)
         observations.append(env.observation_space.flatten(o))
         rewards.append(r)
@@ -98,7 +98,7 @@ def play(pkl_file):
             rollout(
                 env,
                 policy,
-                max_path_length=500,
+                max_path_length=200,
             )
 
 

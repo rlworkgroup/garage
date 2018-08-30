@@ -1,4 +1,5 @@
 import collections
+import copy
 import os.path as osp
 
 from gazebo_msgs.msg import ModelStates
@@ -235,7 +236,7 @@ class BlockWorld(World):
                 block_name = 'block_{}'.format(len(self._blocks))
                 block = Block(
                     name=block_name,
-                    size=[0.1, 0.15, 0.065],
+                    size=[0.11, 0.11, 0.13],
                     initial_pos=(0.55, 0., 0.03),
                     random_delta_range=0.15,
                     resource=vicon_topic)
@@ -297,6 +298,12 @@ class BlockWorld(World):
             self._moveit_scene.add_box(
                 block.name, pose_stamped_block,
                 (block.size[0], block.size[1], block.size[2]))
+            # add a top block to protect block
+            # protect_block = copy.deepcopy(pose_stamped_block)
+            # protect_block.pose.position.z += block.size[2] / 2 + 0.005 / 2
+            # self._moveit_scene.add_box(
+            #     block.name + '_protect', protect_block,
+            #     (block.size[0] * 0.9, block.size[1] * 0.9, 0.005))
             # add the block to the allowed collision matrix
             rospy.sleep(1)
             self._moveit_scene_controller.add_object_to_acm(block.name)
@@ -316,6 +323,10 @@ class BlockWorld(World):
         # Data with reference to vicon frame.
         translation = data.transform.translation
         rotation = data.transform.rotation
+        if translation.z > 0.13:
+            # filp it back
+            translation.z -= (0.1839 - 0.89)
+
         child_frame_id = data.child_frame_id
 
         # Transform data from vicon frame to robot frame.
@@ -340,15 +351,19 @@ class BlockWorld(World):
                 # Use low pass filter to smooth data.
                 if block.first_smoothed:
                     block.position = translation_wrt_robot
+                    block.position.x -= 0.035
+                    block.position.y += 0.035
+                    block.position.z = 0.065
                     block.orientation = orientation_wrt_robot
                     block.first_smoothed = False
                 else:
                     block.position.x = self._lowpass_filter(
-                        translation_wrt_robot.x, block.position.x)
+                        translation_wrt_robot.x, block.position.x) - 0.035
                     block.position.y = self._lowpass_filter(
-                        translation_wrt_robot.y, block.position.y)
-                    block.position.z = self._lowpass_filter(
-                        translation_wrt_robot.z, block.position.z)
+                        translation_wrt_robot.y, block.position.y) + 0.035
+                    # block.position.z = self._lowpass_filter(
+                    #     translation_wrt_robot.z, block.position.z)
+                    block.position.z = 0.065
                     block.orientation.x = self._lowpass_filter(
                         orientation_wrt_robot.x, block.orientation.x)
                     block.orientation.y = self._lowpass_filter(
@@ -376,6 +391,18 @@ class BlockWorld(World):
         move_object.operation = move_object.MOVE
 
         self._moveit_col_obj_pub.publish(move_object)
+        #
+        # move_object = CollisionObject()
+        # move_object.id = block.name + '_protect'
+        # move_object.header.frame_id = self._frame_id
+        # pose = Pose()
+        # pose.position = block.position
+        # pose.position.z += block.size[2] / 2 + 0.005 / 2
+        # pose.orientation = block.orientation
+        # move_object.primitive_poses.append(pose)
+        # move_object.operation = move_object.MOVE
+        #
+        # self._moveit_col_obj_pub.publish(move_object)
 
     def reset(self):
         if self._simulated:

@@ -1,4 +1,5 @@
 import argparse
+import copy
 import json
 import os.path as osp
 import sys
@@ -10,6 +11,7 @@ from matplotlib import cm
 import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse
 import numpy as np
+import pickle
 from scipy.spatial import ConvexHull
 import tensorflow as tf
 
@@ -50,8 +52,11 @@ def rollout(env,
     path_length = 0
     while path_length < max_path_length:
         a, agent_info = agent.get_action_from_latent(z, o)
+        agent_infos.append(copy.deepcopy(agent_info))
+        actions.append(copy.deepcopy(a))
         next_o, r, d, env_info = env.step(a)
-        observations.append(agent.observation_space.flatten(o))
+        env_infos.append(copy.deepcopy(env_info))
+        observations.append(copy.deepcopy(agent.observation_space.flatten(o)))
         path_length += 1
         if d:
             break
@@ -69,7 +74,14 @@ def rollout(env,
     if animated and not always_return_paths:
         return
 
-    return np.array(observations)
+    return {
+        'observations': np.array(observations),
+        'latent:': z,
+        'actions': actions,
+        'agent_infos': agent_infos,
+        'env_infos': env_infos
+    }
+
 
 
 def rollout_interpolate(env,
@@ -183,7 +195,7 @@ def play(pkl_file):
 
             # Run rollout
             print("Animating task {}".format(t + 1))
-            rollout(
+            infos = rollout(
                 task_envs[0],
                 policy,
                 z,
@@ -192,18 +204,20 @@ def play(pkl_file):
                 goal_markers=goals,
             )
 
-        while True:
-            for t in range(num_tasks - 1):
-                print("Rollout policy given mean embedding of tasks {} and {}".format(t+1, t+2))
-                z = get_mean_embedding2(z_means[t], z_means[t+1], .5)
-                rollout(
-                    task_envs[0],
-                    policy,
-                    z,
-                    max_path_length=400,
-                    animated=True,
-                    goal_markers=goals,
-                )
+            pickle.dump(infos, open('simulated_task%i_infos.pkl' % t, "wb"))
+            print('Rollout data is saved!')
+        # while True:
+        #     for t in range(num_tasks - 1):
+        #         print("Rollout policy given mean embedding of tasks {} and {}".format(t+1, t+2))
+        #         z = get_mean_embedding2(z_means[t], z_means[t+1], .5)
+        #         rollout(
+        #             task_envs[0],
+        #             policy,
+        #             z,
+        #             max_path_length=400,
+        #             animated=True,
+        #             goal_markers=goals,
+        #         )
 
             # print("Rollout policy given mean embedding of tasks {} and {}".format(1, 3))
             # z = (z_means[0] + z_means[2]) / 2
