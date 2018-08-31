@@ -9,7 +9,7 @@ from enum import unique
 
 from garage.tf.optimizers import ConjugateGradientOptimizer
 from garage.tf.optimizers import PenaltyLbfgsOptimizer
-from tests.fixtures.tf import InstrumentedNPO
+from tests.fixtures.tf.instrumented_npo import InstrumentedNPO
 from tests.fixtures.tf.instrumented_npo import PGLoss
 
 

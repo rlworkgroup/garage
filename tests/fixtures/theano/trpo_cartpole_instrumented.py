@@ -4,7 +4,7 @@ from garage.envs.box2d import CartpoleEnv
 from garage.misc.instrument import run_experiment
 from garage.theano.envs import TheanoEnv
 from garage.theano.policies import GaussianMLPPolicy
-from tests.fixtures.theano import InstrumentedTRPO
+from tests.fixtures.theano.instrumented_trpo import InstrumentedTRPO
 
 
 def run_task(*_):

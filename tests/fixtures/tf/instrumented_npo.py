@@ -22,7 +22,7 @@ from garage.tf.misc.tensor_utils import flatten_batch_dict
 from garage.tf.misc.tensor_utils import flatten_inputs
 from garage.tf.misc.tensor_utils import graph_inputs
 from garage.tf.optimizers import LbfgsOptimizer
-from tests.fixtures.tf import InstrumentedBatchPolopt
+from tests.fixtures.tf.instrumented_batch_polopt import InstrumentedBatchPolopt
 
 
 @unique

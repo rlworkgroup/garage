@@ -6,7 +6,7 @@ from garage.misc.instrument import run_experiment
 from garage.tf.baselines import GaussianMLPBaseline
 from garage.tf.envs import TfEnv
 from garage.tf.policies import GaussianMLPPolicy
-from tests.fixtures.tf import InstrumentedTRPO
+from tests.fixtures.tf.instrumented_trpo import InstrumentedTRPO
 
 
 def run_task(*_):

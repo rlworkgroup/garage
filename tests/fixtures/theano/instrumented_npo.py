@@ -11,7 +11,8 @@ import garage.misc.logger as logger
 from garage.misc.overrides import overrides
 from garage.theano.misc import tensor_utils
 from garage.theano.optimizers import PenaltyLbfgsOptimizer
-from tests.fixtures.theano import InstrumentedBatchPolopt
+from tests.fixtures.theano.instrumented_batch_polopt import (
+    InstrumentedBatchPolopt)
 
 
 class InstrumentedNPO(InstrumentedBatchPolopt):

@@ -5,7 +5,7 @@ different stages in the experiment lifecycle.
 """
 
 from garage.theano.optimizers import ConjugateGradientOptimizer
-from tests.fixtures.theano import InstrumentedNPO
+from tests.fixtures.theano.instrumented_npo import InstrumentedNPO
 
 
 class InstrumentedTRPO(InstrumentedNPO):

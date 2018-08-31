@@ -1,6 +1,6 @@
 from enum import Enum
-from multiprocessing.connection import Listener
 import itertools
+from multiprocessing.connection import Listener
 import os
 import signal
 import subprocess
@@ -83,7 +83,6 @@ def interrupt_experiment(experiment_script, lifecycle_stage):
 class TestSigInt(unittest.TestCase):
 
     test_sigint_params = list(itertools.product(scripts, ExpLifecycle))
-    #test_sigint_params = list(itertools.product(scripts, [ExpLifecycle.SHUTDOWN]))
 
     @params(*test_sigint_params)
     def test_sigint(self, experiment_script, exp_stage):
