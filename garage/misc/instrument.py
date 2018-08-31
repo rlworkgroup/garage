@@ -21,6 +21,7 @@ from garage import config
 from garage.core import Serializable
 from garage.misc.console import mkdir_p
 from garage.misc.ext import AttrDict
+from garage.misc.git_handler import GitHandler
 from garage.viskit.core import flatten
 
 
@@ -348,6 +349,7 @@ def run_experiment(stub_method_call=None,
                    script="scripts/run_experiment.py",
                    python_command="python",
                    mode="local",
+                   git_ref=None,
                    dry=False,
                    docker_image=None,
                    aws_config=None,
@@ -407,9 +409,19 @@ def run_experiment(stub_method_call=None,
      periodically during execution.
     :param periodic_sync_interval: Time interval between each periodic sync,
      in seconds.
+    :param git_ref: if set, the git reference it points to is checked out
+     before running the experiment. This parameter is defined as a key value
+     that works for branches, tags or SHAs, for example: "branch: master",
+     "branch: origin/master", "tag: my_tag" or "sha: 4d93a274bcd2de0a".
     """
     assert stub_method_call is not None or batch_tasks is not None, \
         "Must provide at least either stub_method_call or batch_tasks"
+    saved_args = locals()
+
+    if git_ref:
+        git_handler = GitHandler()
+        git_handler.run_experiment_on_ref(git_ref, saved_args)
+        return
 
     if use_cloudpickle is None:
         for maybe_stub in (batch_tasks or [stub_method_call]):

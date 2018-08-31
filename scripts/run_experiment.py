@@ -147,6 +147,7 @@ def run_experiment(argv):
     logger.add_text_output(text_log_file)
     logger.add_tabular_output(tabular_log_file)
     logger.set_tensorboard_dir(log_dir)
+    logger.log_repo_sha()
     prev_snapshot_dir = logger.get_snapshot_dir()
     prev_mode = logger.get_snapshot_mode()
     logger.set_snapshot_dir(log_dir)
