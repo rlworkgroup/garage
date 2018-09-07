@@ -5,15 +5,6 @@
 Installation
 ============
 
-Preparation
-===========
-
-You need to edit your :code:`PYTHONPATH` to include the garage directory:
-
-.. code-block:: bash
-
-    export PYTHONPATH=path_to_garage:$PYTHONPATH
-
 Express Install
 ===============
 

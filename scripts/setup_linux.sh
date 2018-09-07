@@ -178,14 +178,13 @@ if [[ "${_arg_modify_bashrc}" = on ]]; then
 fi
 
 # Set up conda
+CONDA_SH="${HOME}/miniconda2/etc/profile.d/conda.sh"
 if [[ ! -d "${HOME}/miniconda2" ]]; then
   CONDA_INSTALLER="$(mktemp -d)/miniconda.sh"
   wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh \
     -O "${CONDA_INSTALLER}"
   chmod u+x "${CONDA_INSTALLER}"
   bash "${CONDA_INSTALLER}" -b -u
-  # Add conda to executable programs
-  CONDA_SH="${HOME}/miniconda2/etc/profile.d/conda.sh"
   . "${CONDA_SH}"
   if [[ "${_arg_modify_bashrc}" = on ]]; then
     echo ". ${CONDA_SH}" >> "${BASH_RC}"
@@ -207,9 +206,12 @@ conda activate garage
   # Prevent pip from complaining about available upgrades
   pip install --upgrade pip
 
+  # 'Install' garage as an editable package
+  pip install -e .
+
   # Remove any TensorFlow installations before installing the GPU flavor
-  pip uninstall -y tensorflow
   if [[ "${_arg_tf_gpu}" = on ]]; then
+    pip uninstall -y tensorflow
     pip install "tensorflow-gpu<1.10,>=1.9.0"
   fi
 
@@ -239,15 +241,11 @@ conda deactivate
 cp garage/config_personal_template.py garage/config_personal.py
 
 # Add garage to python modules
-export PYTHONPATH="$PYTHONPATH:${GARAGE_DIR}"
-PYTHON_ENV_VAR="PYTHONPATH=\"\$PYTHONPATH:${GARAGE_DIR}\""
-if [[ "${_arg_modify_bashrc}" = on ]]; then
-  echo "export ${PYTHON_ENV_VAR}" >> "${BASH_RC}"
-else
+
+if [[ "${_arg_modify_bashrc}" != on ]]; then
   echo -e "\nRemember to execute the following commands before running garage:"
   echo "export ${LD_LIB_ENV_VAR}"
   echo ". ${CONDA_SH}"
-  echo "export ${PYTHON_ENV_VAR}"
   echo "You may wish to edit your .bashrc to prepend these commands."
 fi
 
