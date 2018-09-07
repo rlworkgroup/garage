@@ -7,6 +7,9 @@ import inspect
 
 import numpy as np
 
+from garage.misc.overrides import overrides
+from garage.replay_buffer.base import ReplayBuffer
+
 
 def make_her_sample(replay_k, reward_fun):
     """
@@ -30,8 +33,8 @@ def make_her_sample(replay_k, reward_fun):
         # Select which episodes to use
         time_horizon = episode_batch["action"].shape[1]
         rollout_batch_size = episode_batch["action"].shape[0]
-        episode_idxs = np.random.randint(0, rollout_batch_size,
-                                         sample_batch_size)
+        episode_idxs = np.random.randint(
+            rollout_batch_size, size=sample_batch_size)
         # Select time steps to use
         t_samples = np.random.randint(time_horizon, size=sample_batch_size)
         transitions = {
@@ -77,32 +80,14 @@ def make_her_sample(replay_k, reward_fun):
     return _her_sample_transitions
 
 
-class HerReplayBuffer:
+class HerReplayBuffer(ReplayBuffer):
     """This class implements HerReplayBuffer."""
 
-    def __init__(self, buffer_shapes, size_in_transitions, time_horizon,
-                 sample_transitions):
-        """
-        Initialize the data used in HER.
-
-        :param buffer_shapes: shape of values for each key in the buffer
-        :param size_in_transitions: total size of transitions in the buffer
-        :param time_horizon: time horizon of rollout
-        :param sample_transitions: function to sample transitions
-        """
-        self._current_size = 0
-        self._n_transitions_stored = 0
-        self._time_horizon = time_horizon
+    def __init__(self, sample_transitions, **kwargs):
         self._sample_transitions = sample_transitions
-        self._episode_buffer = {}
-        self._size = size_in_transitions // time_horizon
-        for key in buffer_shapes.keys():
-            self._episode_buffer[key] = list()
-        self._buffer = {
-            key: np.empty([self._size, *shape])
-            for key, shape in buffer_shapes.items()
-        }
+        super(HerReplayBuffer, self).__init__(**kwargs)
 
+    @overrides
     def sample(self, batch_size):
         """Sample a transition of batch_size."""
         buffer = {}
@@ -119,13 +104,7 @@ class HerReplayBuffer:
 
         return transitions
 
-    def store_episode(self):
-        """Add an episode to the buffer."""
-        idx = self._get_storage_idx()
-        for key in self._buffer.keys():
-            self._buffer[key][idx] = np.array(self._episode_buffer[key])
-        self._n_transitions_stored += self._time_horizon
-
+    @overrides
     def add_transition(self, **kwargs):
         """Add one transition into the replay buffer."""
         for key, value in kwargs.items():
@@ -135,30 +114,3 @@ class HerReplayBuffer:
             self.store_episode()
             for key in self._episode_buffer.keys():
                 self._episode_buffer[key].clear()
-
-    @property
-    def full(self):
-        """Whether the buffer is full."""
-        return self._current_size == self._size
-
-    def _get_storage_idx(self):
-        """Get the storage index for the episode to add into the buffer."""
-        size_increment = 1
-        if self._current_size + size_increment <= self._size:
-            idx = np.arange(self._current_size,
-                            self._current_size + size_increment)
-        elif self._current_size < self._size:
-            overflow = size_increment - (self._size - self._current_size)
-            idx_a = np.arange(self._current_size, self._size)
-            idx_b = np.random.randint(0, self._current_size, overflow)
-            idx = np.concatenate([idx_a, idx_b])
-        else:
-            idx = np.random.randint(0, self._size, size_increment)
-
-        # Update replay size
-        self._current_size = min(self._size,
-                                 self._current_size + size_increment)
-
-        if size_increment == 1:
-            idx = idx[0]
-        return idx

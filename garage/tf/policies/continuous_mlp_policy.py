@@ -8,7 +8,6 @@ action.
 import tensorflow as tf
 
 from garage.core import Serializable
-from garage.envs.util import flat_dim
 from garage.misc.overrides import overrides
 from garage.tf.core import layers as layers
 from garage.tf.core import LayersPowered
@@ -18,7 +17,7 @@ from garage.tf.policies import Policy
 from garage.tf.spaces import Box
 
 
-class ContinuousMLPPolicy(Policy, Serializable, LayersPowered):
+class ContinuousMLPPolicy(Policy, LayersPowered, Serializable):
     """
     This class implements a policy network.
 
@@ -33,7 +32,9 @@ class ContinuousMLPPolicy(Policy, Serializable, LayersPowered):
                  hidden_nonlinearity=tf.nn.relu,
                  output_nonlinearity=tf.nn.tanh,
                  input_include_goal=False,
-                 bn=False):
+                 bn=False,
+                 reuse=False,
+                 trainable=True):
         """
         Initialize class with multiple attributes.
 
@@ -58,11 +59,8 @@ class ContinuousMLPPolicy(Policy, Serializable, LayersPowered):
         self.name = name
         self._env_spec = env_spec
         if input_include_goal:
-            obs_dim = flat_dim(
-                env_spec.observation_space.spaces["observation"])
-            goal_dim = flat_dim(
-                env_spec.observation_space.spaces["desired_goal"])
-            self._obs_dim = obs_dim + goal_dim
+            self._obs_dim = env_spec.observation_space.flat_dim_with_keys(
+                ["observation", "desired_goal"])
         else:
             self._obs_dim = env_spec.observation_space.flat_dim
         self._action_dim = env_spec.action_space.flat_dim
@@ -72,8 +70,14 @@ class ContinuousMLPPolicy(Policy, Serializable, LayersPowered):
         self._output_nonlinearity = output_nonlinearity
         self._batch_norm = bn
         self._policy_network_name = "policy_network"
+        self._trainable = trainable
+        self._reuse = reuse
+        # Build the network and initialized as Parameterized
+        self._f_prob_online, self._output_layer, self._obs_layer = self._build_net(
+            reuse=self._reuse, trainable=self._trainable, name=self.name)
+        LayersPowered.__init__(self, [self._output_layer])
 
-    def _build_net(self, reuse=None, custom_getter=None, trainable=None):
+    def _build_net(self, reuse=None, trainable=None, name=None):
         """
         Set up q network based on class attributes.
 
@@ -81,11 +85,9 @@ class ContinuousMLPPolicy(Policy, Serializable, LayersPowered):
 
         Args:
             reuse: A bool indicates whether reuse variables in the same scope.
-            custom_getter: A customized getter object used to get variables.
             trainable: A bool indicates whether variables are trainable.
         """
-        with tf.variable_scope(
-                self.name, reuse=reuse, custom_getter=custom_getter):
+        with tf.variable_scope(name, reuse=reuse):
             l_in = layers.InputLayer(shape=(None, self._obs_dim), name="obs")
 
             l_hidden = l_in
@@ -112,12 +114,12 @@ class ContinuousMLPPolicy(Policy, Serializable, LayersPowered):
                 scaled_action = tf.multiply(
                     action, self._action_bound, name="scaled_action")
 
-        self._f_prob_online = tensor_utils.compile_function(
+        f_prob_online = tensor_utils.compile_function(
             inputs=[l_in.input_var], outputs=scaled_action)
-        self._output_layer = l_output
-        self._obs_layer = l_in
+        output_layer = l_output
+        obs_layer = l_in
 
-        LayersPowered.__init__(self, [l_output])
+        return f_prob_online, output_layer, obs_layer
 
     def get_action_sym(self, obs_var, name=None, **kwargs):
         """Return action sym according to obs_var."""
@@ -137,23 +139,29 @@ class ContinuousMLPPolicy(Policy, Serializable, LayersPowered):
         """Return multiple actions."""
         return self._f_prob_online(observations), dict()
 
-    @property
-    def trainable_vars(self):
-        """Return trainable vars in the network."""
-        return tf.get_collection(
-            tf.GraphKeys.TRAINABLE_VARIABLES, scope=self.name)
+    def get_trainable_vars(self, scope=None):
+        scope = scope if scope else self.name
+        return tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=scope)
 
-    @property
-    def global_vars(self):
-        """Return the global vars in the network."""
-        return tf.get_collection(
-            tf.GraphKeys.GLOBAL_VARIABLES, scope=self.name)
+    def get_global_vars(self, scope=None):
+        scope = scope if scope else self.name
+        return tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=scope)
 
-    @property
-    def regularizable_vars(self):
-        """Return regularizable vars in the network."""
+    def get_regularizable_vars(self, scope=None):
+        scope = scope if scope else self.name
         reg_vars = [
-            var for var in self.trainable_vars
+            var for var in self.get_trainable_vars(scope=scope)
             if 'W' in var.name and 'output' not in var.name
         ]
         return reg_vars
+
+    @property
+    def vectorized(self):
+        return True
+
+    @property
+    def stochastic(self):
+        return False
+
+    def log_diagnostics(self, paths):
+        pass

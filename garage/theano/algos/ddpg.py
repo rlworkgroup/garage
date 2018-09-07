@@ -13,7 +13,7 @@ from garage.misc import special
 import garage.misc.logger as logger
 from garage.misc.overrides import overrides
 from garage.plotter import Plotter
-from garage.replay_buffer import ReplayBuffer
+from garage.replay_buffer import RegularReplayBuffer
 from garage.sampler import parallel_sampler
 from garage.theano.misc import tensor_utils
 
@@ -153,10 +153,15 @@ class DDPG(RLAlgorithm):
     def train(self):
         # This seems like a rather sequential method
         input_shapes = dims_to_shapes(self.input_dims)
-        pool = ReplayBuffer(
-            buffer_shapes=input_shapes,
-            max_buffer_size=self.replay_pool_size,
-        )
+        buffer_shapes = {
+            key: (self.max_path_length, *input_shapes[key])
+            for key, val in input_shapes.items()
+        }
+        pool = RegularReplayBuffer(
+            buffer_shapes=buffer_shapes,
+            size_in_transitions=self.replay_pool_size,
+            time_horizon=self.max_path_length)
+
         self.start_worker()
 
         self.init_opt()
@@ -211,7 +216,7 @@ class DDPG(RLAlgorithm):
 
                 observation = next_observation
 
-                if pool.size >= self.min_pool_size:
+                if pool.n_transitions_stored >= self.min_pool_size:
                     for update_itr in range(self.n_updates_per_sample):
                         # Train policy
                         batch = pool.sample(self.batch_size)
@@ -222,7 +227,7 @@ class DDPG(RLAlgorithm):
                 itr += 1
 
             logger.log("Training finished")
-            if pool.size >= self.min_pool_size:
+            if pool.n_transitions_stored >= self.min_pool_size:
                 self.evaluate(epoch, pool)
                 params = self.get_epoch_snapshot(epoch)
                 logger.save_itr_params(epoch, params)

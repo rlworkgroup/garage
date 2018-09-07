@@ -11,7 +11,9 @@ import gym
 import tensorflow as tf
 
 from garage.misc.instrument import run_experiment
+from garage.replay_buffer.base import Buffer
 from garage.tf.algos import DDPG
+from garage.tf.envs import TfEnv
 from garage.tf.exploration_strategies import OUStrategy
 from garage.tf.policies import ContinuousMLPPolicy
 from garage.tf.q_functions import ContinuousMLPQFunction
@@ -24,22 +26,22 @@ def run_task(*_):
     :param _:
     :return:
     """
-    env = gym.make('FetchReach-v1')
+    env = TfEnv(gym.make('FetchReach-v1'))
 
-    action_noise = OUStrategy(env, sigma=0.2)
+    action_noise = OUStrategy(env.spec, sigma=0.2)
 
-    actor_net = ContinuousMLPPolicy(
-        env_spec=env,
-        name="Actor",
+    policy = ContinuousMLPPolicy(
+        env_spec=env.spec,
+        name="Policy",
         hidden_sizes=[256, 256, 256],
         hidden_nonlinearity=tf.nn.relu,
         output_nonlinearity=tf.nn.tanh,
         input_include_goal=True,
     )
 
-    critic_net = ContinuousMLPQFunction(
-        env_spec=env,
-        name="Critic",
+    qf = ContinuousMLPQFunction(
+        env_spec=env.spec,
+        name="QFunction",
         hidden_sizes=[256, 256, 256],
         hidden_nonlinearity=tf.nn.relu,
         input_include_goal=True,
@@ -47,25 +49,23 @@ def run_task(*_):
 
     ddpg = DDPG(
         env,
-        actor=actor_net,
-        actor_lr=1e-3,
-        critic_lr=1e-3,
-        critic=critic_net,
+        policy=policy,
+        policy_lr=1e-3,
+        qf_lr=1e-3,
+        qf=qf,
         plot=False,
         target_update_tau=0.05,
         n_epochs=50,
         n_epoch_cycles=20,
-        n_rollout_steps=100,
+        max_path_length=100,
         n_train_steps=40,
         discount=0.9,
         replay_buffer_size=int(1e6),
-        min_buffer_size=int(1e4),
         exploration_strategy=action_noise,
-        actor_optimizer=tf.train.AdamOptimizer,
-        critic_optimizer=tf.train.AdamOptimizer,
-        use_her=True,
-        batch_size=256,
-        clip_obs=200.,
+        policy_optimizer=tf.train.AdamOptimizer,
+        qf_optimizer=tf.train.AdamOptimizer,
+        buffer_batch_size=256,
+        replay_buffer_type=Buffer.HER,
     )
 
     ddpg.train()

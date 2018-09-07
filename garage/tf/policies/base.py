@@ -106,3 +106,7 @@ class StochasticPolicy(Policy):
         :return:
         """
         raise NotImplementedError
+
+    @property
+    def stochastic(self):
+        return False

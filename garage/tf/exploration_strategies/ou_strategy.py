@@ -76,10 +76,16 @@ class OUStrategy(ExplorationStrategy):
             An action with noise explored by OUStrategy.
 
         """
-        action, _ = policy.get_action(observation)
+        action, agent_infos = policy.get_action(observation)
         ou_state = self.simulate()
         return np.clip(action + ou_state, self.action_space.low,
-                       self.action_space.high)
+                       self.action_space.high), agent_infos
+
+    def get_actions(self, observations, policy):
+        actions, agent_infos = policy.get_actions(observations)
+        ou_state = self.simulate()
+        return np.clip(actions + ou_state, self.action_space.low,
+                       self.action_space.high), agent_infos
 
 
 if __name__ == "__main__":

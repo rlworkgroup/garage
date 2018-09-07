@@ -15,17 +15,19 @@ import tensorflow as tf
 
 from garage.misc import ext
 from garage.misc import logger as garage_logger
+from garage.replay_buffer.base import Buffer
 from garage.tf.algos import DDPG
+from garage.tf.envs import TfEnv
 from garage.tf.exploration_strategies import OUStrategy
 from garage.tf.policies import ContinuousMLPPolicy
 from garage.tf.q_functions import ContinuousMLPQFunction
 
 # Hyperparams for baselines and garage
 params = {
-    "actor_lr": 1e-3,
-    "critic_lr": 1e-3,
-    "actor_hidden_sizes": [256, 256, 256],
-    "critic_hidden_sizes": [256, 256, 256],
+    "policy_lr": 1e-3,
+    "qf_lr": 1e-3,
+    "policy_hidden_sizes": [256, 256, 256],
+    "qf_hidden_sizes": [256, 256, 256],
     "n_epochs": 50,
     "n_epoch_cycles": 20,
     "n_rollout_steps": 100,
@@ -107,48 +109,46 @@ def run_garage(env, seed, log_dir):
     ext.set_seed(seed)
 
     with tf.Graph().as_default():
-        # env = TfEnv(normalize(env))
+        env = TfEnv(env)
 
-        action_noise = OUStrategy(env, sigma=params["sigma"])
+        action_noise = OUStrategy(env.spec, sigma=params["sigma"])
 
-        actor_net = ContinuousMLPPolicy(
-            env_spec=env,
-            name="Actor",
-            hidden_sizes=params["actor_hidden_sizes"],
+        policy = ContinuousMLPPolicy(
+            env_spec=env.spec,
+            name="Policy",
+            hidden_sizes=params["policy_hidden_sizes"],
             hidden_nonlinearity=tf.nn.relu,
             output_nonlinearity=tf.nn.tanh,
             input_include_goal=True,
         )
 
-        critic_net = ContinuousMLPQFunction(
-            env_spec=env,
-            name="Critic",
-            hidden_sizes=params["critic_hidden_sizes"],
+        qf = ContinuousMLPQFunction(
+            env_spec=env.spec,
+            name="QFunction",
+            hidden_sizes=params["qf_hidden_sizes"],
             hidden_nonlinearity=tf.nn.relu,
             input_include_goal=True,
         )
 
         algo = DDPG(
             env,
-            actor=actor_net,
-            critic=critic_net,
-            actor_lr=params["actor_lr"],
-            critic_lr=params["critic_lr"],
+            policy=policy,
+            qf=qf,
+            policy_lr=params["policy_lr"],
+            qf_lr=params["qf_lr"],
             plot=False,
             target_update_tau=params["tau"],
             n_epochs=params["n_epochs"],
             n_epoch_cycles=params["n_epoch_cycles"],
-            n_rollout_steps=params["n_rollout_steps"],
+            max_path_length=params["n_rollout_steps"],
             n_train_steps=params["n_train_steps"],
             discount=params["discount"],
             replay_buffer_size=params["replay_buffer_size"],
-            min_buffer_size=int(1e4),
             exploration_strategy=action_noise,
-            actor_optimizer=tf.train.AdamOptimizer,
-            critic_optimizer=tf.train.AdamOptimizer,
-            use_her=True,
-            batch_size=256,
-            clip_obs=200.,
+            policy_optimizer=tf.train.AdamOptimizer,
+            qf_optimizer=tf.train.AdamOptimizer,
+            buffer_batch_size=256,
+            replay_buffer_type=Buffer.HER,
         )
 
         # Set up logger since we are not using run_experiment

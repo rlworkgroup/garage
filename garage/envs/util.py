@@ -2,7 +2,7 @@ import gym
 import numpy as np
 
 from garage.misc import special
-from garage.spaces import Space
+from garage.tf.spaces import Dict
 
 __all__ = [
     'configure_dims', 'dims_to_shapes', 'flat_dim', 'flatten', 'flatten_n',
@@ -102,12 +102,13 @@ def configure_dims(env):
     obs = env.observation_space
     action = env.action_space
 
-    if isinstance(obs, gym.spaces.Dict):
+    if isinstance(obs, Dict):
         dims = {
-            "observation": flat_dim(obs.spaces["observation"]),
-            "action": flat_dim(action),
-            "goal": flat_dim(obs.spaces["desired_goal"]),
-            "achieved_goal": flat_dim(obs.spaces["achieved_goal"]),
+            "observation": obs.flat_dim_with_keys(["observation"]),
+            "action": action.flat_dim,
+            "goal": obs.flat_dim_with_keys(["desired_goal"]),
+            "achieved_goal": obs.flat_dim_with_keys(["achieved_goal"]),
+            "terminal": 0,
         }
 
         for key, value in info.items():
@@ -116,21 +117,12 @@ def configure_dims(env):
                 value = value.reshape(1)
             dims['info_{}'.format(key)] = value.shape[0]
     else:
-        if isinstance(obs, Space):
-            dims = {
-                "observation": obs.flat_dim,
-                "action": action.flat_dim,
-                "terminal": 1,
-                "reward": 1,
-                "next_observation": obs.flat_dim,
-            }
-        else:
-            dims = {
-                "observation": flat_dim(obs),
-                "action": flat_dim(action),
-                "terminal": 1,
-                "reward": 1,
-                "next_observation": flat_dim(obs),
-            }
+        dims = {
+            "observation": obs.flat_dim,
+            "action": action.flat_dim,
+            "terminal": 0,
+            "reward": 0,
+            "next_observation": obs.flat_dim,
+        }
 
     return dims
