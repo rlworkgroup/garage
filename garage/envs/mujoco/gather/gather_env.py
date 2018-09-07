@@ -203,7 +203,6 @@ class GatherEnv(gym.Wrapper, Serializable):
         self.coef_inner_rew = coef_inner_rew
         self.dying_cost = dying_cost
         self.objects = []
-        self.viewer = None
         self.render_width = 512
         self.render_height = 512
         # super(GatherEnv, self).__init__(*args, **kwargs)
@@ -387,9 +386,9 @@ class GatherEnv(gym.Wrapper, Serializable):
     def action_bounds(self):
         return self.env.action_bounds
 
-    # @property
-    # def viewer(self):
-    #     return self.env.viewer
+    @property
+    def viewer(self):
+        return self.get_viewer()
 
     def action_from_key(self, key):
         return self.env.action_from_key(key)
@@ -430,6 +429,9 @@ class GatherEnv(gym.Wrapper, Serializable):
         successful, falls back to the default based on the ORI_IND specified in
         Maze (not accurate for quaternions)
         """
+        obj = self.env
+        while not hasattr(obj, 'get_ori') and hasattr(obj, 'env'):
+            obj = obj.env
         obj = self.env
         try:
             return obj.get_ori()

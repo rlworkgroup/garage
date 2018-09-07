@@ -2,16 +2,11 @@
 This script creates a unittest that tests Categorical policies in
 garage.tf.policies.
 """
-import unittest
-
 import gym
 from nose2 import tools
-import tensorflow as tf
 
 from garage.baselines import LinearFeatureBaseline
 from garage.envs import normalize
-import garage.misc.logger as logger
-from garage.misc.tensorboard_output import TensorBoardOutput
 from garage.tf.algos import TRPO
 from garage.tf.envs import TfEnv
 from garage.tf.optimizers import ConjugateGradientOptimizer
@@ -19,19 +14,12 @@ from garage.tf.optimizers import FiniteDifferenceHvp
 from garage.tf.policies import CategoricalGRUPolicy
 from garage.tf.policies import CategoricalLSTMPolicy
 from garage.tf.policies import CategoricalMLPPolicy
+from tests.fixtures import GarageTestCase
 
 policies = [CategoricalGRUPolicy, CategoricalLSTMPolicy, CategoricalMLPPolicy]
 
 
-class TestCategoricalPolicies(unittest.TestCase):
-    def setUp(self):
-        self.sess = tf.Session(graph=tf.Graph())
-        self.sess.__enter__()
-        logger._tensorboard = TensorBoardOutput()
-
-    def tearDown(self):
-        self.sess.close()
-
+class TestCategoricalPolicies(GarageTestCase):
     @tools.params(*policies)
     def test_categorical_policies(self, policy_cls):
         env = TfEnv(normalize(gym.make("CartPole-v0")))
