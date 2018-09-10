@@ -110,7 +110,7 @@ RUN curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest
 
 # Add code stub last
 COPY . /root/code/garage
-ENV PYTHONPATH=$PYTHONPATH:/root/code/garage
+RUN ["/bin/bash", "-c", "source activate garage && pip install -e /root/code/garage && source deactivate garage"]
 
 # Ready, set, go.
 ENTRYPOINT ["docker/docker-entrypoint.sh"]
