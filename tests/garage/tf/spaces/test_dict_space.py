@@ -16,12 +16,9 @@ class TestDictSpace(unittest.TestCase):
         dummy_act_sample = dummy_act.sample()
 
         # A dummy dict env wrapped by garage.tf
-        tf_env = TfEnv(DummyDictEnv())
+        tf_env = TfEnv(dummy_env)
         tf_act = tf_env.action_space
         tf_obs = tf_env.observation_space
-
-        # sample
-        assert tf_act.sample() == dummy_act_sample
 
         # flat_dim
         assert tf_act.flat_dim == tf_act.flatten(dummy_act_sample).shape[-1]
