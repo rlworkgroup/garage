@@ -84,3 +84,9 @@ KNOWN_GYM_CLOSE_BROKEN = [
     "Thrower-v2",
     "Walker2d-v2",
 ]
+
+KNOWN_GYM_NOT_CLOSE_VIEWER = [
+    # Please keep alphabetized
+    "gym.envs.mujoco",
+    "gym.envs.robotics"
+]

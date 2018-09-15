@@ -25,8 +25,11 @@ class GarageEnv(gym.Wrapper, Parameterized, Serializable, metaclass=ABCMeta):
     Args: env (gym.Env): the env that will be wrapped
     """
 
-    def __init__(self, env):
-        super().__init__(env)
+    def __init__(self, env=None, env_name=""):
+        if env_name:
+            super().__init__(gym.make(env_name))
+        else:
+            super().__init__(env)
         Parameterized.__init__(self)
         Serializable.quick_init(self, locals())
 

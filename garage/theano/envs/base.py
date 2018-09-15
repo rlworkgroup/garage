@@ -22,8 +22,8 @@ class TheanoEnv(GarageEnv):
         env (gym.Env): the env that will be wrapped
     """
 
-    def __init__(self, env):
-        super(TheanoEnv, self).__init__(env)
+    def __init__(self, env=None, env_name=""):
+        super(TheanoEnv, self).__init__(env, env_name)
         self.action_space = self._to_garage_space(self.env.action_space)
         self.observation_space = self._to_garage_space(
             self.env.observation_space)
