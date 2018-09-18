@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import IntEnum
 import itertools
 from multiprocessing.connection import Listener
 import os
@@ -17,7 +17,7 @@ scripts = [
 ]
 
 
-class ExpLifecycle(Enum):
+class ExpLifecycle(IntEnum):
     """Messages sent from InstrumentedBatchPolopt to this test."""
     START = 1
     OBTAIN_SAMPLES = 2
