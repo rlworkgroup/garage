@@ -51,6 +51,14 @@ def interrupt_experiment(experiment_script, lifecycle_stage):
             # children processes attached to the process running this test
             # that are not part of the launcher.
             children = launcher_proc.children(recursive=True)
+            # Remove the semaphore tracker from the list of children, since
+            # we cannot stop its execution.
+            for child in children:
+                if any([
+                        "multiprocessing.semaphore_tracker" in cmd
+                        for cmd in child.cmdline()
+                ]):
+                    children.remove(child)
             # We append the launcher to the list of children so later we can
             # check it has died.
             children.append(launcher_proc)
@@ -67,8 +75,8 @@ def interrupt_experiment(experiment_script, lifecycle_stage):
     clean_exit = True
     error_msg = ""
     for child in alive:
-        error_msg += (
-            str(child.as_dict(attrs=["pid", "name", "status"])) + "\n")
+        error_msg += (str(
+            child.as_dict(attrs=["pid", "name", "status", "cmdline"])) + "\n")
         clean_exit = False
 
     error_msg = ("These processes didn't die during %s:\n" % (lifecycle_stage)
@@ -87,6 +95,4 @@ class TestSigInt(unittest.TestCase):
     @params(*test_sigint_params)
     def test_sigint(self, experiment_script, exp_stage):
         """Interrupt the experiment in different stages of its lifecyle."""
-        print(colorize(experiment_script, "blue"))
-        print(colorize(exp_stage, "blue"))
         interrupt_experiment(experiment_script, exp_stage)

@@ -46,6 +46,7 @@ class StatefulPool:
         self.queue = None
         self.worker_queue = None
         self.G = SharedGlobal()
+        self.manager = None
 
     def initialize(self, n_parallel):
         self.n_parallel = n_parallel
@@ -56,6 +57,7 @@ class StatefulPool:
             self.worker_queue.close()
             self.G = SharedGlobal()
         if n_parallel > 1:
+            self.manager = mp.Manager()
             self.queue = mp.Queue()
             self.worker_queue = mp.Queue()
             self.pool = MemmappingPool(
@@ -64,8 +66,10 @@ class StatefulPool:
             )
 
     def close(self):
+        if self.manager:
+            self.manager.shutdown()
         if self.pool:
-            self.pool.close()
+            self.pool.terminate()
 
     def run_each(self, runner, args_list=None):
         """
@@ -159,9 +163,8 @@ class StatefulPool:
         if args is None:
             args = tuple()
         if self.pool:
-            manager = mp.Manager()
-            counter = manager.Value('i', 0)
-            lock = manager.RLock()
+            counter = self.manager.Value('i', 0)
+            lock = self.manager.RLock()
             results = self.pool.map_async(_worker_run_collect, [
                 (collect_once, counter, lock, threshold, args)
             ] * self.n_parallel)

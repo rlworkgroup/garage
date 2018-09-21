@@ -207,6 +207,13 @@ def run_experiment(argv):
 def child_proc_shutdown(children):
     run_exp_proc = psutil.Process()
     alive = run_exp_proc.children(recursive=True)
+    for proc in alive:
+        if any([
+                "multiprocessing.semaphore_tracker" in cmd
+                for cmd in proc.cmdline()
+        ]):
+            alive.remove(proc)
+
     for c in children:
         c.close()
     max_retries = 5
@@ -217,8 +224,10 @@ def child_proc_shutdown(children):
     if alive:
         error_msg = ""
         for child in alive:
-            error_msg += (
-                str(child.as_dict(attrs=["pid", "name", "status"])) + "\n")
+            error_msg += (str(
+                child.as_dict(
+                    attrs=["ppid", "pid", "name", "status", "cmdline"])) +
+                          "\n")
 
         error_msg = ("The following processes didn't die after the shutdown " +
                      "of run_experiment:\n" + error_msg)
