@@ -186,4 +186,4 @@ class CEM(RLAlgorithm, Serializable):
             if self.plot:
                 self.plotter.update_plot(self.policy, self.max_path_length)
         parallel_sampler.terminate_task()
-        self.plotter.shutdown()
+        self.plotter.close()

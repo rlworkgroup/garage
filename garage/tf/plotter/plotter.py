@@ -26,6 +26,8 @@ class Plotter:
 
     # Static variable used to disable the plotter
     enable = True
+    # List containing all plotters instantiated in the process
+    __plotters = []
 
     def __init__(self,
                  env,
@@ -33,6 +35,7 @@ class Plotter:
                  sess=None,
                  graph=None,
                  rollout=default_rollout):
+        Plotter.__plotters.append(self)
         self.env = env
         self.policy = policy
         self.sess = tf.get_default_session() if sess is None else sess
@@ -72,9 +75,11 @@ class Plotter:
                             msgs[msg.op] = msg
 
                     if Op.STOP in msgs:
+                        self.queue.task_done()
                         break
                     if Op.UPDATE in msgs:
                         env, policy = msgs[Op.UPDATE].args
+                        self.queue.task_done()
                     if Op.DEMO in msgs:
                         param_values, max_length = msgs[Op.DEMO].args
                         policy.set_param_values(param_values)
@@ -85,6 +90,7 @@ class Plotter:
                             max_path_length=max_length,
                             animated=True,
                             speedup=5)
+                        self.queue.task_done()
                     else:
                         if max_length:
                             self.rollout(
@@ -96,10 +102,12 @@ class Plotter:
         except KeyboardInterrupt:
             pass
 
-    def shutdown(self):
+    def close(self):
         if self.worker_thread.is_alive():
+            while not self.queue.empty():
+                self.queue.get()
+                self.queue.task_done()
             self.queue.put(Message(op=Op.STOP, args=None, kwargs=None))
-            self.queue.task_done()
             self.queue.join()
             self.worker_thread.join()
 
@@ -107,6 +115,10 @@ class Plotter:
     def disable():
         """Disable all instances of the Plotter class."""
         Plotter.enable = False
+
+    @staticmethod
+    def get_plotters():
+        return Plotter.__plotters
 
     def start(self):
         if not Plotter.enable:
@@ -117,8 +129,7 @@ class Plotter:
             self.queue.put(
                 Message(
                     op=Op.UPDATE, args=(self.env, self.policy), kwargs=None))
-            self.queue.task_done()
-            atexit.register(self.shutdown)
+            atexit.register(self.close)
 
     def update_plot(self, policy, max_length=np.inf):
         if not Plotter.enable:
@@ -129,4 +140,3 @@ class Plotter:
                     op=Op.DEMO,
                     args=(policy.get_param_values(), max_length),
                     kwargs=None))
-            self.queue.task_done()

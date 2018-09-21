@@ -33,7 +33,7 @@ class XmlChild(AttrDecl):
         xml_elems = [child for child in xml if child.tag == self._tag]
         if len(xml_elems) > 1:
             raise ValueError('Multiple candidate found for tag %s' % self._tag)
-        if len(xml_elems) == 0:
+        if not xml_elems:
             if self._required:
                 raise ValueError('Missing xml element with tag %s' % self._tag)
             else:

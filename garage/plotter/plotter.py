@@ -1,8 +1,8 @@
 import atexit
 from collections import namedtuple
 from enum import Enum
+from multiprocessing import JoinableQueue
 from multiprocessing import Process
-from multiprocessing import Queue
 import platform
 from threading import Thread
 
@@ -26,8 +26,11 @@ class Plotter:
 
     # Static variable used to disable the plotter
     enable = True
+    # List containing all plotters instantiated in the process
+    __plotters = []
 
-    def __init__(self):
+    def __init__(self, standalone=False):
+        Plotter.__plotters.append(self)
         self._process = None
         self._queue = None
 
@@ -80,10 +83,13 @@ class Plotter:
         except KeyboardInterrupt:
             pass
 
-    def shutdown(self):
+    def close(self):
         if not Plotter.enable:
             return
         if self._process and self._process.is_alive():
+            while not self._queue.empty():
+                self._queue.get()
+                self._queue.task_done()
             self._queue.put(Message(op=Op.STOP, args=None, kwargs=None))
             self._queue.close()
             self._process.join()
@@ -93,17 +99,21 @@ class Plotter:
         """Disable all instances of the Plotter class."""
         Plotter.enable = False
 
+    @staticmethod
+    def get_plotters():
+        return Plotter.__plotters
+
     def init_worker(self):
         if not Plotter.enable:
             return
-        self._queue = Queue()
+        self._queue = JoinableQueue()
         if ('Darwin' in platform.platform()):
             self._process = Thread(target=self._worker_start)
         else:
             self._process = Process(target=self._worker_start)
         self._process.daemon = True
         self._process.start()
-        atexit.register(self.shutdown)
+        atexit.register(self.close)
 
     def init_plot(self, env, policy):
         if not Plotter.enable:

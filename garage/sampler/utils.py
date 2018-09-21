@@ -1,3 +1,4 @@
+import signal
 import time
 
 import numpy as np
@@ -59,3 +60,19 @@ def shift_advantages_to_positive(advantages):
 
 def sign(x):
     return 1. * (x >= 0) - 1. * (x < 0)
+
+
+class MaskSignals():
+    """Context Manager to mask a list of signals."""
+
+    def __init__(self, signals):
+        self.signals = signals
+
+    def __enter__(self):
+        signal.pthread_sigmask(signal.SIG_BLOCK, self.signals)
+
+    def __exit__(self, *args):
+        signal.pthread_sigmask(signal.SIG_UNBLOCK, self.signals)
+
+
+mask_signals = MaskSignals

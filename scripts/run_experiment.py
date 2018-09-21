@@ -2,21 +2,25 @@ import argparse
 import ast
 import base64
 import datetime
-import os
 import os.path as osp
 import pickle as pickle
+import signal
 import sys
 import uuid
 
 import dateutil.tz
 import joblib
+import psutil
 
 from garage import config
+from garage.misc.console import colorize
 from garage.misc.ext import is_iterable
 from garage.misc.ext import set_seed
 from garage.misc.instrument import concretize
 import garage.misc.logger as logger
 import garage.plotter
+from garage.sampler import parallel_sampler
+from garage.sampler.utils import mask_signals
 import garage.tf.plotter
 
 
@@ -112,15 +116,26 @@ def run_experiment(argv):
 
     args = parser.parse_args(argv[1:])
 
-    assert (os.environ.get("JOBLIB_START_METHOD", None) == "forkserver")
     if args.seed is not None:
         set_seed(args.seed)
 
-    if args.n_parallel > 0:
-        from garage.sampler import parallel_sampler
-        parallel_sampler.initialize(n_parallel=args.n_parallel)
-        if args.seed is not None:
-            parallel_sampler.set_seed(args.seed)
+    # SIGINT is blocked for all processes created in parallel_sampler to avoid
+    # the creation of sleeping and zombie processes.
+    #
+    # If the user interrupts run_experiment, there's a chance some processes
+    # won't die due to a dead lock condition where one of the children in the
+    # parallel sampler exits without releasing a lock once after it catches
+    # SIGINT.
+    #
+    # Later the parent tries to acquire the same lock to proceed with his
+    # cleanup, but it remains sleeping waiting for the lock to be released.
+    # In the meantime, all the process in parallel sampler remain in the zombie
+    # state since the parent cannot proceed with their clean up.
+    with mask_signals([signal.SIGINT]):
+        if args.n_parallel > 0:
+            parallel_sampler.initialize(n_parallel=args.n_parallel)
+            if args.seed is not None:
+                parallel_sampler.set_seed(args.seed)
 
     if not args.plot:
         garage.plotter.Plotter.disable()
@@ -169,8 +184,11 @@ def run_experiment(argv):
             try:
                 method_call(variant_data)
             except BaseException:
+                children = garage.plotter.Plotter.get_plotters()
+                children += garage.tf.plotter.Plotter.get_plotters()
                 if args.n_parallel > 0:
-                    parallel_sampler.terminate()
+                    children += [parallel_sampler]
+                child_proc_shutdown(children)
                 raise
         else:
             data = pickle.loads(base64.b64decode(args.args_data))
@@ -184,6 +202,40 @@ def run_experiment(argv):
     logger.remove_tabular_output(tabular_log_file)
     logger.remove_text_output(text_log_file)
     logger.pop_prefix()
+
+
+def child_proc_shutdown(children):
+    run_exp_proc = psutil.Process()
+    alive = run_exp_proc.children(recursive=True)
+    for proc in alive:
+        if any([
+                "multiprocessing.semaphore_tracker" in cmd
+                for cmd in proc.cmdline()
+        ]):
+            alive.remove(proc)
+
+    for c in children:
+        c.close()
+    max_retries = 5
+    for _ in range(max_retries):
+        _, alive = psutil.wait_procs(alive, 1.0)
+        if not alive:
+            break
+    if alive:
+        error_msg = ""
+        for child in alive:
+            error_msg += (str(
+                child.as_dict(
+                    attrs=["ppid", "pid", "name", "status", "cmdline"])) +
+                          "\n")
+
+        error_msg = ("The following processes didn't die after the shutdown " +
+                     "of run_experiment:\n" + error_msg)
+        error_msg += ("This is a sign of an unclean shutdown. Please reopen " +
+                      "the following issue\nwith a detailed description " +
+                      "of how the error was produced:\n")
+        error_msg += ("https://github.com/rlworkgroup/garage/issues/120")
+        print(colorize(error_msg, "yellow"))
 
 
 if __name__ == "__main__":

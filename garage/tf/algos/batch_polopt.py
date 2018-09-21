@@ -98,7 +98,7 @@ class BatchPolopt(RLAlgorithm):
     def shutdown_worker(self):
         self.sampler.shutdown_worker()
         if self.plot:
-            self.plotter.shutdown()
+            self.plotter.close()
 
     def obtain_samples(self, itr):
         return self.sampler.obtain_samples(itr)

@@ -235,7 +235,7 @@ class DDPG(RLAlgorithm):
                           "continue...")
         self.env.close()
         self.policy.terminate()
-        self.plotter.shutdown()
+        self.plotter.close()
 
     def init_opt(self):
 
