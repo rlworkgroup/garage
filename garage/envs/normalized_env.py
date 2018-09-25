@@ -109,5 +109,9 @@ class NormalizedEnv(gym.Wrapper, Serializable):
     def render(self, *args, **kwargs):
         return self.env.render(*args, **kwargs)
 
+    @overrides
+    def max_episode_steps(self):
+        return self.env.spec.max_episode_steps
+
 
 normalize = NormalizedEnv
