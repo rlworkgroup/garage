@@ -1,11 +1,13 @@
 import os.path as osp
 
+from cached_property import cached_property
 import gym
 from mujoco_py import load_model_from_xml
 from mujoco_py import MjSim
 
 from garage.core import Serializable
 from garage.envs.mujoco.mujoco_env import MODEL_DIR
+from garage.misc.overrides import overrides
 
 
 class RandomizedEnv(gym.Env, Serializable):
@@ -73,9 +75,10 @@ class RandomizedEnv(gym.Env, Serializable):
     def observation_space(self):
         return self._wrapped_env.observation_space
 
-    @property
-    def horizon(self):
-        return self._wrapped_env.horizon
+    @cached_property
+    @overrides
+    def max_episode_steps(self):
+        return self._wrapped_env.spec.max_episode_steps
 
 
 randomize = RandomizedEnv

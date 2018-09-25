@@ -58,3 +58,14 @@ class TheanoEnv(GarageEnv):
         return EnvSpec(
             observation_space=self.observation_space,
             action_space=self.action_space)
+
+    @cached_property
+    @overrides
+    def max_episode_steps(self):
+        """
+        Returns gym.Env's max episode steps.
+
+        Returns:
+            max_episode_steps (int)
+        """
+        return self.env.spec.max_episode_steps
