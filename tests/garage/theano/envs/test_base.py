@@ -14,7 +14,11 @@ class TestTheanoEnv(unittest.TestCase):
         env = TheanoEnv(spec.make())
         step_env_with_gym_quirks(self, env, spec, render=True)
 
+    test_all_gym_envs.cron_job = True
+
     @params(*list(gym.envs.registry.all()))
     def test_all_gym_envs_pickleable(self, spec):
         env = TheanoEnv(env_name=spec.id)
         pickle_env_with_gym_quirks(self, env, spec, render=True)
+
+    test_all_gym_envs_pickleable.cron_job = True
