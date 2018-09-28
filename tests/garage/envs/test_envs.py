@@ -47,6 +47,12 @@ mujoco_classes = [
     SwimmerMazeEnv,
     PointMazeEnv,
     AntMazeEnv,
+    # Once the rendering for MuJoCo Gather Env has been fixed, move
+    # PointGatherEnv, SwimmerGatherEnv and AntGatherEnv to mujoco_rgb_classes
+    # See: https://github.com/rlworkgroup/garage/issues/323
+    PointGatherEnv,
+    SwimmerGatherEnv,
+    AntGatherEnv,
 ]
 
 mujoco_rgb_classes = [
@@ -57,9 +63,6 @@ mujoco_rgb_classes = [
     InvertedDoublePendulumEnv,
     HopperEnv,
     HalfCheetahEnv,
-    PointGatherEnv,
-    SwimmerGatherEnv,
-    AntGatherEnv,
 ]
 
 classes = []
