@@ -69,7 +69,7 @@ class StatefulPool:
         if self.manager:
             self.manager.shutdown()
         if self.pool:
-            self.pool.terminate()
+            self.pool.close()
 
     def run_each(self, runner, args_list=None):
         """
