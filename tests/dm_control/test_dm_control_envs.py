@@ -1,13 +1,13 @@
 import pickle
+import unittest
 
 from dm_control.suite import ALL_TASKS
 import numpy as np
 
 from garage.envs.dm_control import DmControlEnv
-from tests.fixtures import GarageTestCase
 
 
-class TestDmControlEnvs(GarageTestCase):
+class TestDmControlEnvs(unittest.TestCase):
     def test_dm_control_envs(self):
         for task in ALL_TASKS:
             env = DmControlEnv(domain_name=task[0], task_name=task[1])

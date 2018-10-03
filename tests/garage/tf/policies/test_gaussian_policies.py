@@ -16,12 +16,12 @@ from garage.tf.optimizers import FiniteDifferenceHvp
 from garage.tf.policies import GaussianGRUPolicy
 from garage.tf.policies import GaussianLSTMPolicy
 from garage.tf.policies import GaussianMLPPolicy
-from tests.fixtures import GarageTestCase
+from tests.fixtures import TfTestCase
 
 policies = [GaussianGRUPolicy, GaussianLSTMPolicy, GaussianMLPPolicy]
 
 
-class TestGaussianPolicies(GarageTestCase):
+class TestGaussianPolicies(TfTestCase):
     @tools.params(*policies)
     def test_gaussian_policies(self, policy_cls):
         logger._tensorboard = TensorBoardOutput()

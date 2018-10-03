@@ -1,1 +1,1 @@
-from tests.fixtures.fixtures import GarageTestCase  # noqa: F401
+from tests.fixtures.fixtures import TfTestCase  # noqa: F401
