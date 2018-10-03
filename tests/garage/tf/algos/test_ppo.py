@@ -12,10 +12,10 @@ from garage.tf.algos import PPO
 from garage.tf.baselines import GaussianMLPBaseline
 from garage.tf.envs import TfEnv
 from garage.tf.policies import GaussianMLPPolicy
-from tests.fixtures import TfTestCase
+from tests.fixtures import TfGraphTestCase
 
 
-class TestPPO(TfTestCase):
+class TestPPO(TfGraphTestCase):
     def test_ppo_pendulum(self):
         """Test PPO with Pendulum environment."""
         logger._tensorboard = TensorBoardOutput()

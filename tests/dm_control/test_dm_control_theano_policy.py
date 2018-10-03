@@ -32,5 +32,4 @@ class TestDmControlTheanoPolicy(unittest.TestCase):
             discount=0.99,
             step_size=0.01,
         )
-        print("Testing", env.__class__)
         algo.train()

@@ -12,10 +12,10 @@ from garage.tf.algos import TRPO
 from garage.tf.baselines import GaussianMLPBaseline
 from garage.tf.envs import TfEnv
 from garage.tf.policies import GaussianMLPPolicy
-from tests.fixtures import TfTestCase
+from tests.fixtures import TfGraphTestCase
 
 
-class TestTRPO(TfTestCase):
+class TestTRPO(TfGraphTestCase):
     def test_trpo_pendulum(self):
         """Test TRPO with Pendulum environment."""
         logger._tensorboard = TensorBoardOutput()

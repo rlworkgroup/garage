@@ -5,10 +5,10 @@ from garage.envs.dm_control import DmControlEnv
 from garage.tf.algos import TRPO
 from garage.tf.envs import TfEnv
 from garage.tf.policies import GaussianMLPPolicy
-from tests.fixtures import TfTestCase
+from tests.fixtures import TfGraphTestCase
 
 
-class TestDmControlTfPolicy(TfTestCase):
+class TestDmControlTfPolicy(TfGraphTestCase):
     def test_dm_control_tf_policy(self):
         task = ALL_TASKS[0]
 
@@ -32,5 +32,4 @@ class TestDmControlTfPolicy(TfTestCase):
                 discount=0.99,
                 step_size=0.01,
             )
-            print("Testing", env.__class__)
             algo.train()
