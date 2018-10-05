@@ -12,5 +12,3 @@ class TestSwimmerGatherEnv(unittest.TestCase):
         assert round_trip
         assert round_trip.n_apples == env.n_apples
         step_env(round_trip)
-
-    test_pickleable.broken = True

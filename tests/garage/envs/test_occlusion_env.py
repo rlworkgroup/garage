@@ -16,5 +16,3 @@ class TestOcclusionEnv(unittest.TestCase):
         assert round_trip.occlude(obs) == env.occlude(obs)
         assert round_trip.env.obs_noise == env.env.obs_noise
         step_env(round_trip)
-
-    test_pickleable.broken = True

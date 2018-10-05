@@ -12,5 +12,3 @@ class TestPointMazeEnv(unittest.TestCase):
         assert round_trip
         assert round_trip._n_bins == env._n_bins
         step_env(round_trip)
-
-    test_pickleable.broken = True

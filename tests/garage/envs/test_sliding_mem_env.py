@@ -15,5 +15,3 @@ class TestSlidingMemEnv(unittest.TestCase):
         assert round_trip.n_steps == env.n_steps
         assert round_trip.env.obs_noise == env.env.obs_noise
         step_env(round_trip)
-
-    test_pickleable.broken = True

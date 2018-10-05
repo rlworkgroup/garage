@@ -23,3 +23,4 @@ class TestDict(unittest.TestCase):
         obj = Dict(spaces)
         round_trip = pickle.loads(pickle.dumps(obj))
         assert round_trip
+        assert round_trip.contains(spaces)

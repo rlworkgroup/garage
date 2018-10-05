@@ -34,14 +34,10 @@ class Dict(Space):
             Boolean
 
         """
-        if not isinstance(x, dict) or len(x) != len(self.spaces):
+        if isinstance(x, dict):
+            return all(item in self.spaces.items() for item in x.items())
+        else:
             return False
-        for k, space in self.spaces.items():
-            if k not in x:
-                return False
-            if not space.contains(x[k]):
-                return False
-        return True
 
     def to_jsonable(self, sample_n):
         """

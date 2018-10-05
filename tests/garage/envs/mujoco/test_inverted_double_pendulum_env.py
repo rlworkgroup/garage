@@ -1,8 +1,8 @@
 import pickle
 import unittest
 
-from garage.envs.mujoco.inverted_double_pendulum_env import \
-    InvertedDoublePendulumEnv
+from garage.envs.mujoco.inverted_double_pendulum_env import (
+    InvertedDoublePendulumEnv)
 from tests.helpers import step_env
 
 

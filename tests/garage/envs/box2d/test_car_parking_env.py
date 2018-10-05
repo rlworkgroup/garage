@@ -12,5 +12,3 @@ class TestCarParkingEnv(unittest.TestCase):
         assert round_trip
         assert round_trip.random_start_range == env.random_start_range
         step_env(round_trip)
-
-    test_pickleable.broken = True
