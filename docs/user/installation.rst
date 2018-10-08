@@ -31,7 +31,7 @@ The script sets up a conda environment, which is similar to :code:`virtualenv`. 
 
 .. code-block:: bash
 
-    source activate garage
+    conda activate garage
 
 
 Optionally, if you would like to run experiments that depends on the MuJoCo environment, you can set it up by running the following command:
