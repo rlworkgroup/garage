@@ -219,10 +219,15 @@ conda activate garage
   fi
 
   # Fix Box2D install
+  # box2d-py 2.3.4 works on both Linux & OSX and is
+  # actively mantained by OpenAI.
+  # Before that, box2d-py works only on Linux,
+  # and Box2D-kengz works only on OSX.
   # See https://github.com/openai/gym/issues/100
   # See https://github.com/pybox2d/pybox2d/issues/82
+  # See https://github.com/openai/gym/pull/1120 (fixed)
   pip uninstall -y Box2D Box2D-kengz box2d-py
-  pip install Box2D
+  pip install box2d-py
 
   # We need a MuJoCo key to import mujoco_py
   cp ${_arg_mjkey} "${HOME}"/.mujoco/mjkey.txt
