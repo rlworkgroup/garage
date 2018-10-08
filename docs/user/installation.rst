@@ -24,11 +24,11 @@ Clone this repo and navigate to its directory.
 
     ./scripts/setup_osx.sh --mjkey path-to-your-mjkey.txt
     
-You need a MuJoCo key to install, but this can be avoided by running
+You need a MuJoCo key to install, but this can be avoided with the argument
 
 .. code-block:: bash
 
-    ./scripts/setup_osx.sh --no-install-mujoco
+    --no-install-mujoco
 
 
 The script sets up a conda environment, which is similar to :code:`virtualenv`. To start using it, run the following:
