@@ -12,7 +12,7 @@ The fastest way to set up dependencies for garage is via running the setup scrip
 
 Clone this repo and navigate to its directory.
 
-MuJoCo is required for the install.
+MuJoCo is required for installation.
 
 - On Linux, run the following:
 
