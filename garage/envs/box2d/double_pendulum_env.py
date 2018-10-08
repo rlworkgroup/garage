@@ -19,11 +19,13 @@ class DoublePendulumEnv(Box2DEnv, Serializable):
             self.link_len = 1
         kwargs["template_args"] = kwargs.get("template_args", {})
         kwargs["template_args"]["link_len"] = self.link_len
-        super(DoublePendulumEnv, self).__init__(
+        super().__init__(
             self.model_path("double_pendulum.xml.mako"), *args, **kwargs)
         self.link1 = find_body(self.world, "link1")
         self.link2 = find_body(self.world, "link2")
-        Serializable.__init__(self, *args, **kwargs)
+
+        # Always call Serializable constructor last
+        Serializable.quick_init(self, locals())
 
     @overrides
     def reset(self):

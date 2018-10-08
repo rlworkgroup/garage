@@ -26,7 +26,10 @@ class HopperEnv(MujocoEnv, Serializable):
     def __init__(self, alive_coeff=1, ctrl_cost_coeff=0.01, *args, **kwargs):
         self.alive_coeff = alive_coeff
         self.ctrl_cost_coeff = ctrl_cost_coeff
-        super(HopperEnv, self).__init__(*args, **kwargs)
+
+        super().__init__(*args, **kwargs)
+
+        # Always call Serializable constructor last
         Serializable.quick_init(self, locals())
 
     @overrides

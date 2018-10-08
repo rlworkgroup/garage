@@ -16,9 +16,11 @@ class InvertedDoublePendulumEnv(MujocoEnv, Serializable):
         help="Randomized starting position by adjusting the angles"
         "When this is false, the double pendulum started out"
         "in balanced position")
-    def __init__(self, *args, **kwargs):
-        self.random_start = kwargs.get("random_start", True)
-        super(InvertedDoublePendulumEnv, self).__init__(*args, **kwargs)
+    def __init__(self, random_start=True, *args, **kwargs):
+        self.random_start = random_start
+        super().__init__(*args, **kwargs)
+
+        # Always call Serializable constructor last
         Serializable.quick_init(self, locals())
 
     @overrides

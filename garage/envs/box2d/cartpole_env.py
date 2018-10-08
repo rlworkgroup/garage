@@ -15,11 +15,12 @@ class CartpoleEnv(Box2DEnv, Serializable):
         self.max_cart_speed = 4.
         self.max_pole_speed = 4.
         self.reset_range = 0.05
-        super(CartpoleEnv, self).__init__(
-            self.model_path("cartpole.xml.mako"), *args, **kwargs)
+        super().__init__(self.model_path("cartpole.xml.mako"), *args, **kwargs)
         self.cart = find_body(self.world, "cart")
         self.pole = find_body(self.world, "pole")
-        Serializable.__init__(self, *args, **kwargs)
+
+        # Always call Serializable constructor last
+        Serializable.quick_init(self, locals())
 
     @overrides
     def reset(self):

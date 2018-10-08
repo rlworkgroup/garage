@@ -19,10 +19,13 @@ class NoisyObservationEnv(gym.Wrapper, Serializable):
             env,
             obs_noise=1e-1,
     ):
-        Serializable.quick_init(self, locals())
-        super(NoisyObservationEnv, self).__init__(env)
+        super().__init__(env)
+
         self.obs_noise = obs_noise
         self._action_flat_dim = flat_dim(self.action_space)
+
+        # Always call Serializable constructor last
+        Serializable.quick_init(self, locals())
 
     def get_obs_noise_scale_factor(self, obs):
         # return np.abs(obs)

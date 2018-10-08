@@ -1,10 +1,15 @@
 import gym
 import numpy as np
 
+from garage.core import Serializable
 from garage.envs import Step
 
 
-class PointEnv(gym.Env):
+class PointEnv(gym.Env, Serializable):
+    def __init__(self):
+        # Always call Serializable constructor last
+        Serializable.quick_init(self, locals())
+
     @property
     def observation_space(self):
         return gym.spaces.Box(

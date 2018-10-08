@@ -44,7 +44,6 @@ class GridWorldEnv(gym.Env, Serializable):
     """
 
     def __init__(self, desc='4x4'):
-        Serializable.quick_init(self, locals())
         if isinstance(desc, str):
             desc = MAPS[desc]
         desc = np.array(list(map(list, desc)))
@@ -57,6 +56,9 @@ class GridWorldEnv(gym.Env, Serializable):
         self.start_state = start_x * self.n_col + start_y
         self.state = None
         self.domain_fig = None
+
+        # Always call Serializable constructor last
+        Serializable.quick_init(self, locals())
 
     def reset(self):
         self.state = self.start_state

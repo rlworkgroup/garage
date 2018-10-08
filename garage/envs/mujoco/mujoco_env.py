@@ -48,7 +48,7 @@ class MujocoEnv(gym.Env):
         # compile template
         if file_path is None:
             if self.__class__.FILE is None:
-                raise "Mujoco file not specified"
+                raise NotImplementedError("Mujoco file not specified")
             file_path = osp.join(MODEL_DIR, self.__class__.FILE)
         if file_path.endswith(".mako"):
             lookup = mako.lookup.TemplateLookup(directories=[MODEL_DIR])
@@ -82,7 +82,7 @@ class MujocoEnv(gym.Env):
         self.dcom = None
         self.current_com = None
         self.reset()
-        super(MujocoEnv, self).__init__()
+        super().__init__()
 
     @cached_property
     @overrides

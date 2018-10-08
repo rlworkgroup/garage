@@ -50,8 +50,6 @@ class MazeEnv(gym.Wrapper, Serializable):
             goal_rew=1.,  # reward obtained when reaching the goal
             *args,
             **kwargs):
-        Serializable.quick_init(self, locals())
-
         self._n_bins = n_bins
         self._sensor_range = sensor_range
         self._sensor_span = sensor_span
@@ -61,8 +59,8 @@ class MazeEnv(gym.Wrapper, Serializable):
         self.goal_rew = goal_rew
 
         model_cls = self.__class__.MODEL_CLASS
-        if model_cls is None:
-            raise "MODEL_CLASS unspecified!"
+        if not model_cls:
+            raise NotImplementedError("MODEL_CLASS unspecified!")
         xml_path = osp.join(MODEL_DIR, model_cls.FILE)
         tree = ET.parse(xml_path)
         worldbody = tree.find(".//worldbody")
@@ -133,6 +131,9 @@ class MazeEnv(gym.Wrapper, Serializable):
         shp = self.get_current_obs().shape
         ub = BIG * np.ones(shp)
         self.observation_space = gym.spaces.Box(ub * -1, ub, dtype=np.float32)
+
+        # Always call Serializable constructor last
+        Serializable.quick_init(self, locals())
 
     def get_current_maze_obs(self):
         # The observation would include both information about the robot itself

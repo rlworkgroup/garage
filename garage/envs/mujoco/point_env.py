@@ -18,7 +18,9 @@ class PointEnv(MujocoEnv, Serializable):
     FILE = 'point.xml'
 
     def __init__(self, *args, **kwargs):
-        super(PointEnv, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
+
+        # Always call Serializable constructor last
         Serializable.quick_init(self, locals())
 
     def step(self, action):

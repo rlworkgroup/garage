@@ -3,7 +3,9 @@ from abc import ABCMeta, abstractmethod
 import collections
 import warnings
 
+import glfw
 import gym
+from mujoco_py.mjviewer import MjViewer
 
 from garage.core import Parameterized
 from garage.core import Serializable
@@ -25,10 +27,13 @@ class GarageEnv(gym.Wrapper, Parameterized, Serializable, metaclass=ABCMeta):
     Args: env (gym.Env): the env that will be wrapped
     """
 
-    def __init__(self, env):
-        Serializable.quick_init(self, locals())
+    def __init__(self, env=None, env_name=""):
+        if env_name:
+            super().__init__(gym.make(env_name))
+        else:
+            super().__init__(env)
         Parameterized.__init__(self)
-        super().__init__(env)
+        Serializable.quick_init(self, locals())
 
     def close(self):
         """
@@ -37,7 +42,36 @@ class GarageEnv(gym.Wrapper, Parameterized, Serializable, metaclass=ABCMeta):
         Returns:
             None
         """
-        self.env.close()
+        try:
+            self.env.close()
+        except AttributeError as e:
+            if str(e) == "'MjViewer' object has no attribute 'finish'":
+                self._close_viewer_window()
+            raise
+
+    def _close_viewer_window(self):
+        """
+        Close the MjViewer window.
+
+        Unfortunately, the gym environments using MuJoCo don't close the viewer
+        windows properly, which leads to "out of memory" issues when several
+        of these environments are tested one after the other.
+        This method searches for the viewer object of type MjViewer, and if the
+        environment is wrapped in other environment classes, it performs depth
+        search in those as well.
+        This method can be removed once OpenAI solves the issue.
+        """
+        if (hasattr(self.env, "viewer")
+                and isinstance(self.env.viewer, MjViewer)):
+            glfw.destroy_window(self.env.viewer.window)
+        else:
+            env_itr = self.env
+            while hasattr(env_itr, "env"):
+                env_itr = env_itr.env
+                if (hasattr(env_itr, "viewer")
+                        and isinstance(env_itr.viewer, MjViewer)):
+                    glfw.destroy_window(env_itr.viewer.window)
+                    break
 
     def get_params_internal(self, **tags):
         """

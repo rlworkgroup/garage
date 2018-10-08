@@ -20,7 +20,9 @@ class Walker2DEnv(MujocoEnv, Serializable):
         'ctrl_cost_coeff', type=float, help='cost coefficient for controls')
     def __init__(self, ctrl_cost_coeff=1e-2, *args, **kwargs):
         self.ctrl_cost_coeff = ctrl_cost_coeff
-        super(Walker2DEnv, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
+
+        # Always call Serializable constructor last
         Serializable.quick_init(self, locals())
 
     def get_current_obs(self):

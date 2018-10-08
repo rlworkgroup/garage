@@ -35,7 +35,10 @@ class SimpleHumanoidEnv(MujocoEnv, Serializable):
         self.alive_bonus = alive_bonus
         self.ctrl_cost_coeff = ctrl_cost_coeff
         self.impact_cost_coeff = impact_cost_coeff
-        super(SimpleHumanoidEnv, self).__init__(*args, **kwargs)
+
+        super().__init__(*args, **kwargs)
+
+        # Always call Serializable constructor last
         Serializable.quick_init(self, locals())
 
     def get_current_obs(self):
