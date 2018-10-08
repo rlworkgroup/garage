@@ -134,15 +134,20 @@ def log(s, with_prefix=True, with_timestamp=True, color=None):
     out = s
     if with_prefix:
         out = _prefix_str + out
+    # out_basic holds output with a simpler timestamp for stdout
+    out_basic = out
     if with_timestamp:
         now = datetime.datetime.now(dateutil.tz.tzlocal())
+        timestamp_basic = now.strftime('%Y-%m-%d %H:%M:%S')
         timestamp = now.strftime('%Y-%m-%d %H:%M:%S.%f %Z')
+        out_basic = "%s | %s" % (timestamp_basic, out_basic)
         out = "%s | %s" % (timestamp, out)
     if color is not None:
         out = colorize(out, color)
+        out_basic = colorize(out_basic, color)
     if not _log_tabular_only:
         # Also log to stdout
-        print(out)
+        print(out_basic)
         for fd in list(_text_fds.values()):
             fd.write(out + '\n')
             fd.flush()
