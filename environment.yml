@@ -15,7 +15,6 @@ dependencies:
         # Please keep alphabetized
         - awscli
         - boto3
-        # box2d-py>=2.3.4 works both on Linux and OSX.
         - box2d-py>=2.3.4
         - cached_property
         - cloudpickle
