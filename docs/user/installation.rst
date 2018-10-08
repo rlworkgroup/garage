@@ -12,6 +12,8 @@ The fastest way to set up dependencies for garage is via running the setup scrip
 
 Clone this repo and navigate to its directory.
 
+MuJoCo is required for the install.
+
 - On Linux, run the following:
 
 .. code-block:: bash
@@ -23,12 +25,6 @@ Clone this repo and navigate to its directory.
 .. code-block:: bash
 
     ./scripts/setup_osx.sh --mjkey path-to-your-mjkey.txt
-    
-You need a MuJoCo key to install, but this can be avoided with the argument
-
-.. code-block:: bash
-
-    --no-install-mujoco
 
 
 The script sets up a conda environment, which is similar to :code:`virtualenv`. To start using it, run the following:
