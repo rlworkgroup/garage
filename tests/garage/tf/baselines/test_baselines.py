@@ -5,11 +5,11 @@ garage.tf.baselines failed to initialize.
 from garage.tf.baselines import DeterministicMLPBaseline
 from garage.tf.baselines import GaussianMLPBaseline
 from garage.tf.envs import TfEnv
-from tests.fixtures import GarageTestCase
+from tests.fixtures import TfGraphTestCase
 from tests.fixtures.envs.dummy import DummyBoxEnv
 
 
-class TestTfBaselines(GarageTestCase):
+class TestTfBaselines(TfGraphTestCase):
     def test_baseline(self):
         """Test the baseline initialization."""
         box_env = TfEnv(DummyBoxEnv())
