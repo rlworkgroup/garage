@@ -14,7 +14,7 @@ from garage.misc.overrides import overrides
 from garage.spaces.dict import Dict as GarageDict
 from garage.tf.spaces.box import Box
 from garage.tf.spaces.discrete import Discrete
-from garage.tf.spaces.product import Product
+from garage.tf.spaces.tuple import Tuple
 
 
 class Dict(GarageDict):
@@ -183,6 +183,6 @@ class Dict(GarageDict):
         elif isinstance(space, GymDiscrete):
             return Discrete(space.n)
         elif isinstance(space, GymTuple):
-            return Product(list(map(self._to_garage_space, space.spaces)))
+            return Tuple(list(map(self._to_garage_space, space.spaces)))
         else:
             raise NotImplementedError

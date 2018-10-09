@@ -11,7 +11,7 @@ from garage.misc.overrides import overrides
 from garage.theano.spaces import Box
 from garage.theano.spaces import Dict
 from garage.theano.spaces import Discrete
-from garage.theano.spaces import Product
+from garage.theano.spaces import Tuple
 
 
 class TheanoEnv(GarageEnv):
@@ -42,7 +42,7 @@ class TheanoEnv(GarageEnv):
         elif isinstance(space, GymDiscrete):
             return Discrete(space.n)
         elif isinstance(space, GymTuple):
-            return Product(list(map(self._to_garage_space, space.spaces)))
+            return Tuple(list(map(self._to_garage_space, space.spaces)))
         else:
             raise NotImplementedError
 

@@ -1,11 +1,11 @@
-"""Spaces.Product for TensorFlow."""
+"""Spaces.Tuple for TensorFlow."""
 import tensorflow as tf
 
-from garage.spaces import Product as GarageProduct
+from garage.spaces import Tuple as GarageTuple
 
 
-class Product(GarageProduct):
-    """TensorFlow extension of garage.Product."""
+class Tuple(GarageTuple):
+    """TensorFlow extension of garage.Tuple."""
 
     def new_tensor_variable(self, name, extra_dims):
         """
