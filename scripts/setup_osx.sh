@@ -227,9 +227,6 @@ conda activate garage
   # 'Install' garage as an editable package
   pip install -e .
 
- # box2d-py>=2.3.4 works on both Linux & OSX.
-  pip install box2d-py
-
   # We need a MuJoCo key to import mujoco_py
   cp ${_arg_mjkey} "${HOME}"/.mujoco/mjkey.txt
 

@@ -92,10 +92,6 @@ RUN echo "${MJKEY}" > /root/.mujoco/mjkey.txt && \
 # Extras
 # prevent pip from complaining about available upgrades
 RUN ["/bin/bash", "-c", "source activate garage && pip install --upgrade pip"]
-# Fix Box2D install
-# See https://github.com/openai/gym/issues/100
-# See https://github.com/pybox2d/pybox2d/issues/82
-RUN ["/bin/bash", "-c", "source activate garage && pip uninstall -y Box2D Box2D-kengz box2d-py && pip install Box2D"]
 
 # Setup repo
 WORKDIR /root/code/garage
