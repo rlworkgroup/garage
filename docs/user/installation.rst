@@ -10,21 +10,23 @@ Express Install
 
 The fastest way to set up dependencies for garage is via running the setup script.
 
-Clone this repo and navigate to its directory.
+Clone our repo (https://github.com/rlworkgroup/garage) and navigate to its directory.
 
-A MuJoCo key is required for installation.
+A MuJoCo key is required for installation. You can get one here: https://www.roboti.us/license.html
+
+Make sure you run these scripts from the root directory of the repo, not from the scripts directory.
 
 - On Linux, run the following:
 
 .. code-block:: bash
 
-    ./scripts/setup_linux.sh --mjkey path-to-your-mjkey.txt
+    ./scripts/setup_linux.sh --mjkey path-to-your-mjkey.txt --modify-bashrc
 
 - On Mac OS X, run the following:
 
 .. code-block:: bash
 
-    ./scripts/setup_osx.sh --mjkey path-to-your-mjkey.txt
+    ./scripts/setup_osx.sh --mjkey path-to-your-mjkey.txt --modify-bashrc
 
 
 The script sets up a conda environment, which is similar to :code:`virtualenv`. To start using it, run the following:
