@@ -1,10 +1,10 @@
-"""Spaces.Product for Theano."""
-from garage.spaces import Product as GarageProduct
+"""Spaces.Tuple for Theano."""
+from garage.spaces import Tuple as GarageTuple
 from garage.theano.misc import tensor_utils
 
 
-class Product(GarageProduct):
-    """Theano extension of garage.Product."""
+class Tuple(GarageTuple):
+    """Theano extension of garage.Tuple."""
 
     def new_tensor_variable(self, name, extra_dims):
         """

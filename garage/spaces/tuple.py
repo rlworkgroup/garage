@@ -3,7 +3,7 @@ import numpy as np
 from garage.spaces import Space
 
 
-class Product(Space):
+class Tuple(Space):
     def __init__(self, *components):
         if isinstance(components[0], (list, tuple)):
             assert len(components) == 1
@@ -59,7 +59,7 @@ class Product(Space):
         return unflat_xs_grouped
 
     def __eq__(self, other):
-        if not isinstance(other, Product):
+        if not isinstance(other, Tuple):
             return False
         return tuple(self.components) == tuple(other.components)
 

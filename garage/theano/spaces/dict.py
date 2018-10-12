@@ -13,7 +13,7 @@ from garage.misc.overrides import overrides
 from garage.spaces.dict import Dict as GarageDict
 from garage.theano.spaces.box import Box
 from garage.theano.spaces.discrete import Discrete
-from garage.theano.spaces.product import Product
+from garage.theano.spaces.tuple import Tuple
 
 
 class Dict(GarageDict):
@@ -169,6 +169,6 @@ class Dict(GarageDict):
         elif isinstance(space, GymDiscrete):
             return Discrete(space.n)
         elif isinstance(space, GymTuple):
-            return Product(list(map(self._to_garage_space, space.spaces)))
+            return Tuple(list(map(self._to_garage_space, space.spaces)))
         else:
             raise NotImplementedError

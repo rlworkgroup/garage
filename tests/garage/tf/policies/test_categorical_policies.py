@@ -14,12 +14,12 @@ from garage.tf.optimizers import FiniteDifferenceHvp
 from garage.tf.policies import CategoricalGRUPolicy
 from garage.tf.policies import CategoricalLSTMPolicy
 from garage.tf.policies import CategoricalMLPPolicy
-from tests.fixtures import GarageTestCase
+from tests.fixtures import TfGraphTestCase
 
 policies = [CategoricalGRUPolicy, CategoricalLSTMPolicy, CategoricalMLPPolicy]
 
 
-class TestCategoricalPolicies(GarageTestCase):
+class TestCategoricalPolicies(TfGraphTestCase):
     @tools.params(*policies)
     def test_categorical_policies(self, policy_cls):
         env = TfEnv(normalize(gym.make("CartPole-v0")))

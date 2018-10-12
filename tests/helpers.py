@@ -1,20 +1,7 @@
 import pickle
-import unittest
-
-import tensorflow as tf
 
 from tests.quirks import KNOWN_GYM_CLOSE_BROKEN
 from tests.quirks import KNOWN_GYM_RENDER_NOT_IMPLEMENTED
-
-
-class TfTest(unittest.TestCase):
-    def setUp(self):
-        self.sess = tf.Session()
-        self.sess.__enter__()
-
-    def tearDown(self):
-        self.sess.__exit__(None, None, None)
-        self.sess.close()
 
 
 def step_env(env, n=10, render=True):

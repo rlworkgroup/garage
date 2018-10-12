@@ -10,7 +10,7 @@ from garage.misc.overrides import overrides
 from garage.tf.spaces import Box
 from garage.tf.spaces import Dict
 from garage.tf.spaces import Discrete
-from garage.tf.spaces import Product
+from garage.tf.spaces import Tuple
 
 
 class TfEnv(GarageEnv):
@@ -48,7 +48,7 @@ class TfEnv(GarageEnv):
         elif isinstance(space, GymDiscrete):
             return Discrete(space.n)
         elif isinstance(space, GymTuple):
-            return Product(list(map(self._to_garage_space, space.spaces)))
+            return Tuple(list(map(self._to_garage_space, space.spaces)))
         else:
             raise NotImplementedError
 

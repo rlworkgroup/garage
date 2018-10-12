@@ -11,11 +11,11 @@ from garage.tf.policies import DeterministicMLPPolicy
 from garage.tf.policies import GaussianGRUPolicy
 from garage.tf.policies import GaussianLSTMPolicy
 from garage.tf.policies import GaussianMLPPolicy
-from tests.fixtures import GarageTestCase
+from tests.fixtures import TfGraphTestCase
 from tests.fixtures.envs.dummy import DummyBoxEnv, DummyDiscreteEnv
 
 
-class TestTfPolicies(GarageTestCase):
+class TestTfPolicies(TfGraphTestCase):
     def test_policies(self):
         """Test the policies initialization."""
         box_env = TfEnv(DummyBoxEnv())
