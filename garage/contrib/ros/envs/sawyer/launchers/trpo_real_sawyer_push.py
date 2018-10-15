@@ -1,12 +1,18 @@
+"""Example launcher file for experiment on simulation sawyer with trpo."""
+
+import sys
+
+import moveit_commander
 import numpy as np
 import rospy
 
-from garage.baselines.linear_feature_baseline import LinearFeatureBaseline
+from garage.baselines import LinearFeatureBaseline
 from garage.contrib.ros.envs.sawyer.push_env import PushEnv
+from garage.envs import normalize
 from garage.misc.instrument import run_experiment
-from garage.theano.algos import TRPO
-from garage.theano.envs import TheanoEnv
-from garage.theano.policies import GaussianMLPPolicy
+from garage.tf.algos import TRPO
+from garage.tf.envs import TfEnv
+from garage.tf.policies import GaussianMLPPolicy
 
 INITIAL_ROBOT_JOINT_POS = {
     'right_j0': -0.140923828125,
@@ -22,21 +28,24 @@ INITIAL_ROBOT_JOINT_POS = {
 def run_task(*_):
     initial_goal = np.array([0.6, -0.1, 0.80])
 
+    # Initialize moveit_commander
+    moveit_commander.roscpp_initialize(sys.argv)
+
     rospy.init_node('trpo_real_sawyer_push_exp', anonymous=True)
 
-    push_env = TheanoEnv(
-        PushEnv(
-            initial_goal,
-            initial_joint_pos=INITIAL_ROBOT_JOINT_POS,
-            simulated=False))
+    env = PushEnv(
+        initial_goal,
+        initial_joint_pos=INITIAL_ROBOT_JOINT_POS,
+        simulated=False)
 
-    rospy.on_shutdown(push_env.shutdown)
+    rospy.on_shutdown(env.shutdown)
 
-    push_env.initialize()
+    env.initialize()
 
-    env = push_env
+    env = TfEnv(normalize(env))
 
-    policy = GaussianMLPPolicy(env_spec=env.spec, hidden_sizes=(32, 32))
+    policy = GaussianMLPPolicy(
+        name='policy', env_spec=env.spec, hidden_sizes=(32, 32))
 
     baseline = LinearFeatureBaseline(env_spec=env.spec)
 
@@ -49,9 +58,7 @@ def run_task(*_):
         n_itr=100,
         discount=0.99,
         step_size=0.01,
-        plot=False,
-        force_batch_sampler=True,
-    )
+        plot=True)
     algo.train()
 
 
