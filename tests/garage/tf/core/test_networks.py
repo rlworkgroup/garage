@@ -9,6 +9,7 @@ class TestNetworks(TfGraphTestCase):
         super(TestNetworks, self).setUp()
         self.obs_input = np.array([[1, 2, 3, 4]])
         input_shape = self.obs_input.shape[1]  # 4
+        self.hidden_nonlinearity = tf.nn.relu
 
         self._input = tf.placeholder(
             tf.float32, shape=(None, input_shape), name="input")
@@ -19,6 +20,7 @@ class TestNetworks(TfGraphTestCase):
             input_var=self._input,
             output_dim=self._output_shape,
             hidden_sizes=(32, 32),
+            hidden_nonlinearity=self.hidden_nonlinearity,
             hidden_b_init=tf.constant_initializer(value=np.random.rand(1)),
             name="mlp")
 
@@ -27,7 +29,7 @@ class TestNetworks(TfGraphTestCase):
     def test_output_shape(self):
         mlp_output = self.sess.run(
             self.mlp_f, feed_dict={self._input: self.obs_input})
-        # first sample
+
         assert mlp_output.shape[1] == self._output_shape
 
     def test_output_value(self):
@@ -50,10 +52,10 @@ class TestNetworks(TfGraphTestCase):
 
         # check first layer
         h2_in = np.dot(self.obs_input, h1_w) + h1_b
-        h2_in = self.sess.run(tf.nn.relu(h2_in))
+        h2_in = self.sess.run(self.hidden_nonlinearity(h2_in))
         # second layer
         h3_in = np.dot(h2_in, h2_w) + h2_b
-        h3_in = self.sess.run(tf.nn.relu(h3_in))
+        h3_in = self.sess.run(self.hidden_nonlinearity(h3_in))
         # output layer
         h3_out = np.dot(h3_in, out_w) + out_b
         np.testing.assert_array_almost_equal(h3_out, mlp_output)

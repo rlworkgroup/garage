@@ -28,6 +28,11 @@ def mlp(input_var,
                 bias_initializer=hidden_b_init,
                 name="hidden_%d" % idx,
             )
+            if batch_normalization:
+                l_hid = tf.layers.batch_normalization(
+                    l_hid, training=is_training)
+            if weight_normalization:
+                l_hid = tf.contrib.layers.layer_norm(l_hid)
         l_out = tf.layers.dense(
             inputs=l_hid,
             units=output_dim,
@@ -37,5 +42,7 @@ def mlp(input_var,
             name="output")
         if batch_normalization:
             l_out = tf.layers.batch_normalization(l_out, training=is_training)
+        if weight_normalization:
+            l_out = tf.contrib.layers.layer_norm(l_out)
 
     return l_out
