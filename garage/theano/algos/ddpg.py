@@ -7,13 +7,11 @@ import pyprind
 import theano.tensor as TT
 
 from garage.algos import RLAlgorithm
-from garage.envs.util import configure_dims, dims_to_shapes
 from garage.misc import ext
 from garage.misc import special
 import garage.misc.logger as logger
 from garage.misc.overrides import overrides
 from garage.plotter import Plotter
-from garage.replay_buffer import RegularReplayBuffer
 from garage.sampler import parallel_sampler
 from garage.theano.misc import tensor_utils
 
@@ -37,11 +35,11 @@ class DDPG(RLAlgorithm):
                  policy,
                  qf,
                  es,
+                 pool,
                  batch_size=32,
                  n_epochs=200,
                  epoch_length=1000,
                  min_pool_size=10000,
-                 replay_pool_size=1000000,
                  discount=0.99,
                  max_path_length=250,
                  qf_weight_decay=0.,
@@ -68,7 +66,6 @@ class DDPG(RLAlgorithm):
          epoch.
         :param epoch_length: How many timesteps for each epoch.
         :param min_pool_size: Minimum size of the pool to start training.
-        :param replay_pool_size: Size of the experience replay pool.
         :param discount: Discount factor for the cumulative return.
         :param max_path_length: Discount factor for the cumulative return.
         :param qf_weight_decay: Weight decay factor for parameters of the Q
@@ -98,7 +95,6 @@ class DDPG(RLAlgorithm):
         :return:
         """
         self.env = env
-        self.input_dims = configure_dims(env)
         self.policy = policy
         self.qf = qf
         self.es = es
@@ -106,7 +102,7 @@ class DDPG(RLAlgorithm):
         self.n_epochs = n_epochs
         self.epoch_length = epoch_length
         self.min_pool_size = min_pool_size
-        self.replay_pool_size = replay_pool_size
+        self.pool = pool
         self.discount = discount
         self.max_path_length = max_path_length
         self.qf_weight_decay = qf_weight_decay
@@ -152,15 +148,6 @@ class DDPG(RLAlgorithm):
     @overrides
     def train(self):
         # This seems like a rather sequential method
-        input_shapes = dims_to_shapes(self.input_dims)
-        buffer_shapes = {
-            key: (self.max_path_length, *input_shapes[key])
-            for key, val in input_shapes.items()
-        }
-        pool = RegularReplayBuffer(
-            buffer_shapes=buffer_shapes,
-            size_in_transitions=self.replay_pool_size,
-            time_horizon=self.max_path_length)
 
         self.start_worker()
 
@@ -200,26 +187,26 @@ class DDPG(RLAlgorithm):
                     # only include the terminal transition in this case if the
                     # flag was set
                     if self.include_horizon_terminal_transitions:
-                        pool.add_transition(
-                            observation=observation,
-                            action=action,
-                            reward=reward * self.scale_reward,
-                            terminal=terminal,
-                            next_observation=next_observation)
+                        self.pool.add_transition(
+                            observation=[observation],
+                            action=[action],
+                            reward=[reward * self.scale_reward],
+                            terminal=[terminal],
+                            next_observation=[next_observation])
                 else:
-                    pool.add_transition(
-                        observation=observation,
-                        action=action,
-                        reward=reward * self.scale_reward,
-                        terminal=terminal,
-                        next_observation=next_observation)
+                    self.pool.add_transition(
+                        observation=[observation],
+                        action=[action],
+                        reward=[reward * self.scale_reward],
+                        terminal=[terminal],
+                        next_observation=[next_observation])
 
                 observation = next_observation
 
-                if pool.n_transitions_stored >= self.min_pool_size:
+                if self.pool.n_transitions_stored >= self.min_pool_size:
                     for update_itr in range(self.n_updates_per_sample):
                         # Train policy
-                        batch = pool.sample(self.batch_size)
+                        batch = self.pool.sample(self.batch_size)
                         self.do_training(itr, batch)
                     sample_policy.set_param_values(
                         self.policy.get_param_values())
@@ -227,8 +214,8 @@ class DDPG(RLAlgorithm):
                 itr += 1
 
             logger.log("Training finished")
-            if pool.n_transitions_stored >= self.min_pool_size:
-                self.evaluate(epoch, pool)
+            if self.pool.n_transitions_stored >= self.min_pool_size:
+                self.evaluate(epoch, self.pool)
                 params = self.get_epoch_snapshot(epoch)
                 logger.save_itr_params(epoch, params)
             logger.dump_tabular(with_prefix=False)

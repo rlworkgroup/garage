@@ -29,6 +29,7 @@ import tensorflow as tf
 
 from garage.misc import ext
 from garage.misc import logger as garage_logger
+from garage.replay_buffer import SimpleReplayBuffer
 from garage.tf.algos import DDPG
 from garage.tf.envs import TfEnv
 from garage.tf.exploration_strategies import OUStrategy
@@ -140,10 +141,16 @@ def run_garage(env, seed, log_dir):
             hidden_sizes=params["qf_hidden_sizes"],
             hidden_nonlinearity=tf.nn.relu)
 
+        replay_buffer = SimpleReplayBuffer(
+            env_spec=env.spec,
+            size_in_transitions=params["replay_buffer_size"],
+            time_horizon=params["n_rollout_steps"])
+
         ddpg = DDPG(
             env,
             policy=policy,
             qf=qf,
+            replay_buffer=replay_buffer,
             policy_lr=params["policy_lr"],
             qf_lr=params["qf_lr"],
             plot=False,
@@ -153,7 +160,6 @@ def run_garage(env, seed, log_dir):
             max_path_length=params["n_rollout_steps"],
             n_train_steps=params["n_train_steps"],
             discount=params["discount"],
-            replay_buffer_size=params["replay_buffer_size"],
             min_buffer_size=int(1e4),
             exploration_strategy=action_noise,
             policy_optimizer=tf.train.AdamOptimizer,

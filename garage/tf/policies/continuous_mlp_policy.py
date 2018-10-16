@@ -32,9 +32,7 @@ class ContinuousMLPPolicy(Policy, LayersPowered, Serializable):
                  hidden_nonlinearity=tf.nn.relu,
                  output_nonlinearity=tf.nn.tanh,
                  input_include_goal=False,
-                 bn=False,
-                 reuse=False,
-                 trainable=True):
+                 bn=False):
         """
         Initialize class with multiple attributes.
 
@@ -70,14 +68,12 @@ class ContinuousMLPPolicy(Policy, LayersPowered, Serializable):
         self._output_nonlinearity = output_nonlinearity
         self._batch_norm = bn
         self._policy_network_name = "policy_network"
-        self._trainable = trainable
-        self._reuse = reuse
         # Build the network and initialized as Parameterized
-        self._f_prob_online, self._output_layer, self._obs_layer = self._build_net(
-            reuse=self._reuse, trainable=self._trainable, name=self.name)
+        self._f_prob_online, self._output_layer, self._obs_layer = self._build_net(  # noqa: E501
+            name=self.name)
         LayersPowered.__init__(self, [self._output_layer])
 
-    def _build_net(self, reuse=None, trainable=None, name=None):
+    def _build_net(self, trainable=True, name=None):
         """
         Set up q network based on class attributes.
 
@@ -87,7 +83,7 @@ class ContinuousMLPPolicy(Policy, LayersPowered, Serializable):
             reuse: A bool indicates whether reuse variables in the same scope.
             trainable: A bool indicates whether variables are trainable.
         """
-        with tf.variable_scope(name, reuse=reuse):
+        with tf.variable_scope(name):
             l_in = layers.InputLayer(shape=(None, self._obs_dim), name="obs")
 
             l_hidden = l_in
@@ -139,6 +135,13 @@ class ContinuousMLPPolicy(Policy, LayersPowered, Serializable):
         """Return multiple actions."""
         return self._f_prob_online(observations), dict()
 
+    @property
+    def vectorized(self):
+        return True
+
+    def log_diagnostics(self, paths):
+        pass
+
     def get_trainable_vars(self, scope=None):
         scope = scope if scope else self.name
         return tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=scope)
@@ -154,14 +157,3 @@ class ContinuousMLPPolicy(Policy, LayersPowered, Serializable):
             if 'W' in var.name and 'output' not in var.name
         ]
         return reg_vars
-
-    @property
-    def vectorized(self):
-        return True
-
-    @property
-    def stochastic(self):
-        return False
-
-    def log_diagnostics(self, paths):
-        pass

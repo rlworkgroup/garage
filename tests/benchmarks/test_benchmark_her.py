@@ -15,7 +15,7 @@ import tensorflow as tf
 
 from garage.misc import ext
 from garage.misc import logger as garage_logger
-from garage.replay_buffer.base import Buffer
+from garage.replay_buffer import HerReplayBuffer
 from garage.tf.algos import DDPG
 from garage.tf.envs import TfEnv
 from garage.tf.exploration_strategies import OUStrategy
@@ -130,6 +130,14 @@ def run_garage(env, seed, log_dir):
             input_include_goal=True,
         )
 
+        replay_buffer = HerReplayBuffer(
+            env_spec=env.spec,
+            size_in_transitions=params["replay_buffer_size"],
+            time_horizon=params["n_rollout_steps"],
+            replay_k=0.4,
+            reward_fun=env.compute_reward,
+        )
+
         algo = DDPG(
             env,
             policy=policy,
@@ -143,12 +151,11 @@ def run_garage(env, seed, log_dir):
             max_path_length=params["n_rollout_steps"],
             n_train_steps=params["n_train_steps"],
             discount=params["discount"],
-            replay_buffer_size=params["replay_buffer_size"],
             exploration_strategy=action_noise,
             policy_optimizer=tf.train.AdamOptimizer,
             qf_optimizer=tf.train.AdamOptimizer,
             buffer_batch_size=256,
-            replay_buffer_type=Buffer.HER,
+            input_include_goal=True,
         )
 
         # Set up logger since we are not using run_experiment

@@ -7,7 +7,7 @@ import tensorflow as tf
 from garage.misc import logger
 from garage.misc import special
 from garage.misc.overrides import overrides
-from garage.tf.algos.on_policy_batch_polopt import OnPolicyBatchPolopt
+from garage.tf.algos import BatchPolopt
 from garage.tf.misc import tensor_utils
 from garage.tf.misc.tensor_utils import compute_advantages
 from garage.tf.misc.tensor_utils import discounted_returns
@@ -26,7 +26,7 @@ class PGLoss(Enum):
     CLIP = "clip"
 
 
-class NPO(OnPolicyBatchPolopt):
+class NPO(BatchPolopt):
     def __init__(self,
                  pg_loss=PGLoss.VANILLA,
                  clip_range=0.01,

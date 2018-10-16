@@ -11,7 +11,7 @@ import gym
 import tensorflow as tf
 
 from garage.misc.instrument import run_experiment
-from garage.replay_buffer.base import Buffer
+from garage.replay_buffer import HerReplayBuffer
 from garage.tf.algos import DDPG
 from garage.tf.envs import TfEnv
 from garage.tf.exploration_strategies import OUStrategy
@@ -47,12 +47,20 @@ def run_task(*_):
         input_include_goal=True,
     )
 
+    replay_buffer = HerReplayBuffer(
+        env_spec=env.spec,
+        size_in_transitions=int(1e6),
+        time_horizon=100,
+        replay_k=0.4,
+        reward_fun=env.compute_reward)
+
     ddpg = DDPG(
         env,
         policy=policy,
         policy_lr=1e-3,
         qf_lr=1e-3,
         qf=qf,
+        replay_buffer=replay_buffer,
         plot=False,
         target_update_tau=0.05,
         n_epochs=50,
@@ -60,12 +68,11 @@ def run_task(*_):
         max_path_length=100,
         n_train_steps=40,
         discount=0.9,
-        replay_buffer_size=int(1e6),
         exploration_strategy=action_noise,
         policy_optimizer=tf.train.AdamOptimizer,
         qf_optimizer=tf.train.AdamOptimizer,
         buffer_batch_size=256,
-        replay_buffer_type=Buffer.HER,
+        input_include_goal=True,
     )
 
     ddpg.train()

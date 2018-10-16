@@ -38,26 +38,20 @@ def make_her_sample(replay_k, reward_fun):
         # Select time steps to use
         t_samples = np.random.randint(time_horizon, size=sample_batch_size)
         transitions = {
-            key: episode_batch[key][episode_idxs, t_samples].copy()
+            key: episode_batch[key][episode_idxs, t_samples]
             for key in episode_batch.keys()
         }
 
-        her_indexes = np.where(
+        her_idxs = np.where(
             np.random.uniform(size=sample_batch_size) < future_p)
         future_offset = np.random.uniform(size=sample_batch_size) * (
             time_horizon - t_samples)
         future_offset = future_offset.astype(int)
-        future_t = (t_samples + 1 + future_offset)[her_indexes]
+        future_t = (t_samples + future_offset)[her_idxs]
 
-        future_ag = episode_batch["achieved_goal"][episode_idxs[her_indexes],
+        future_ag = episode_batch["achieved_goal"][episode_idxs[her_idxs],
                                                    future_t]
-        transitions["goal"][her_indexes] = future_ag
-
-        # Reconstruct info dictionary for reward computation.
-        info = {}
-        for key, value in transitions.items():
-            if key.startswith("info_"):
-                info[key.replace("info_", "")] = value
+        transitions["goal"][her_idxs] = future_ag
 
         # Re-compute reward since we may have substituted the goal.
         reward_params_keys = inspect.signature(reward_fun).parameters.keys()
@@ -66,7 +60,7 @@ def make_her_sample(replay_k, reward_fun):
             for k, rk in zip(["next_achieved_goal", "goal"],
                              list(reward_params_keys)[:-1])
         }
-        reward_params["info"] = info
+        reward_params["info"] = {}
         transitions["reward"] = reward_fun(**reward_params)
 
         transitions = {
@@ -81,10 +75,14 @@ def make_her_sample(replay_k, reward_fun):
 
 
 class HerReplayBuffer(ReplayBuffer):
-    """This class implements HerReplayBuffer."""
+    """
+    This class implements HerReplayBuffer.
 
-    def __init__(self, sample_transitions, **kwargs):
-        self._sample_transitions = sample_transitions
+    It constructs hindsight examples using future strategy.
+    """
+
+    def __init__(self, replay_k, reward_fun, **kwargs):
+        self._sample_transitions = make_her_sample(replay_k, reward_fun)
         super(HerReplayBuffer, self).__init__(**kwargs)
 
     @overrides
@@ -93,8 +91,6 @@ class HerReplayBuffer(ReplayBuffer):
         buffer = {}
         for key in self._buffer.keys():
             buffer[key] = self._buffer[key][:self._current_size]
-        buffer["next_observation"] = buffer["observation"][:, 1:, :]
-        buffer["next_achieved_goal"] = buffer["achieved_goal"][:, 1:, :]
 
         transitions = self._sample_transitions(buffer, batch_size)
 
@@ -103,14 +99,3 @@ class HerReplayBuffer(ReplayBuffer):
             assert key in transitions, "key %s missing from transitions" % key
 
         return transitions
-
-    @overrides
-    def add_transition(self, **kwargs):
-        """Add one transition into the replay buffer."""
-        for key, value in kwargs.items():
-            self._episode_buffer[key].append(kwargs[key])
-
-        if len(self._episode_buffer["observation"]) == self._time_horizon + 1:
-            self.store_episode()
-            for key in self._episode_buffer.keys():
-                self._episode_buffer[key].clear()

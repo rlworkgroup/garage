@@ -54,21 +54,13 @@ class OnPolicyVectorizedSampler(BatchSampler):
         process_time = 0
 
         policy = self.algo.policy
-        if self.algo.es:
-            self.algo.es.reset()
 
         import time
         while n_samples < self.algo.batch_size:
             t = time.time()
             policy.reset(dones)
-            input_obses = np.concatenate(
-                (obses["observation"], obses["desired_goal"]),
-                axis=-1) if self.algo.input_include_goal else obses
-            if self.algo.es:
-                actions, agent_infos = self.algo.es.get_actions(
-                    input_obses, self.algo.policy)
-            else:
-                actions, agent_infos = policy.get_actions(input_obses)
+
+            actions, agent_infos = policy.get_actions(obses)
 
             policy_time += time.time() - t
             t = time.time()
@@ -82,7 +74,7 @@ class OnPolicyVectorizedSampler(BatchSampler):
                 env_infos = [dict() for _ in range(self.vec_env.num_envs)]
             if agent_infos is None:
                 agent_infos = [dict() for _ in range(self.vec_env.num_envs)]
-            for idx, observation, action, reward, env_info, agent_info, done in zip(
+            for idx, observation, action, reward, env_info, agent_info, done in zip(  # noqa: E501
                     itertools.count(), obses, actions, rewards, env_infos,
                     agent_infos, dones):
                 if running_paths[idx] is None:
@@ -114,8 +106,6 @@ class OnPolicyVectorizedSampler(BatchSampler):
                     n_samples += len(running_paths[idx]["rewards"])
                     running_paths[idx] = None
 
-                    if self.algo.es:
-                        self.algo.es.reset()
             process_time += time.time() - t
             pbar.inc(len(obses))
             obses = next_obses

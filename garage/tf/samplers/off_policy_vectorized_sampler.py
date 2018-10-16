@@ -1,3 +1,14 @@
+"""
+This module implements a Vectorized Sampler used for OffPolicy Algorithms.
+
+It diffs from OnPolicyVectorizedSampler in two parts:
+ - The num of envs is defined by rollout_batch_size. In
+ OnPolicyVectorizedSampler, the number of envs can be decided by batch_size
+ and max_path_length. But OffPolicy algorithms usually samples transitions
+ from replay buffer, which only has buffer_batch_size.
+ - It needs to add transitions to replay buffer throughout the rollout.
+"""
+
 import itertools
 import pickle
 
@@ -5,18 +16,26 @@ import numpy as np
 
 from garage.misc import tensor_utils
 from garage.misc.overrides import overrides
-from garage.replay_buffer.base import Buffer
 from garage.tf.envs import VecEnvExecutor
 from garage.tf.samplers import BatchSampler
 
 
 class OffPolicyVectorizedSampler(BatchSampler):
+    """This class implements OffPolicyVectorizedSampler."""
+
     def __init__(self, algo, n_envs=None):
+        """
+        Construct an OffPolicyVectorizedSampler.
+
+        :param algo: Algorithms.
+        :param n_envs: Number of parallelized sampling envs.
+        """
         super(OffPolicyVectorizedSampler, self).__init__(algo)
         self.n_envs = n_envs
 
     @overrides
     def start_worker(self):
+        """Initialize the sampler."""
         n_envs = self.n_envs
         if n_envs is None:
             n_envs = int(self.algo.rollout_batch_size)
@@ -36,10 +55,17 @@ class OffPolicyVectorizedSampler(BatchSampler):
 
     @overrides
     def shutdown_worker(self):
+        """Terminate workers if necessary."""
         self.vec_env.close()
 
     @overrides
     def obtain_samples(self, itr):
+        """
+        Collect samples for the given iteration number.
+
+        :param itr: Iteration number.
+        :return: A list of paths.
+        """
         paths = []
         obses = self.vec_env.reset()
         dones = np.asarray([True] * self.vec_env.num_envs)
@@ -51,7 +77,7 @@ class OffPolicyVectorizedSampler(BatchSampler):
 
         for rollout in range(self.algo.max_path_length):
             policy.reset(dones)
-            if self.algo.replay_buffer_type == Buffer.HER:
+            if self.algo.input_include_goal:
                 obs = [obs["observation"] for obs in obses]
                 d_g = [obs["desired_goal"] for obs in obses]
                 a_g = [obs["achieved_goal"] for obs in obses]
@@ -73,7 +99,21 @@ class OffPolicyVectorizedSampler(BatchSampler):
             if env_infos is None:
                 env_infos = [dict() for _ in range(self.vec_env.num_envs)]
 
-            if self.algo.replay_buffer_type == Buffer.REGULAR:
+            if self.algo.input_include_goal:
+                self.algo.replay_buffer.add_transition(
+                    observation=obs,
+                    action=actions,
+                    goal=d_g,
+                    achieved_goal=a_g,
+                    terminal=dones,
+                    next_observation=[
+                        next_obs["observation"] for next_obs in next_obses
+                    ],
+                    next_achieved_goal=[
+                        next_obs["achieved_goal"] for next_obs in next_obses
+                    ],
+                )
+            else:
                 self.algo.replay_buffer.add_transition(
                     observation=obses,
                     action=actions,
@@ -81,33 +121,6 @@ class OffPolicyVectorizedSampler(BatchSampler):
                     terminal=dones,
                     next_observation=next_obses,
                 )
-            elif self.algo.replay_buffer_type == Buffer.HER:
-                info_dict = {
-                    "info_{}".format(key): []
-                    for key in env_infos[0].keys()
-                }
-                for env_info in env_infos:
-                    for key in env_info.keys():
-                        info_dict["info_{}".format(key)].append(
-                            env_info[key].reshape(1))
-                self.algo.replay_buffer.add_transition(
-                    observation=obs,
-                    action=actions,
-                    goal=d_g,
-                    achieved_goal=a_g,
-                    terminal=dones,
-                    **info_dict,
-                )
-
-            if self.algo.replay_buffer_type == Buffer.HER and (
-                    rollout == self.algo.max_path_length - 1):
-                self.algo.replay_buffer.add_transition(
-                    observation=[
-                        next_obs['observation'] for next_obs in next_obses
-                    ],
-                    achieved_goal=[
-                        next_obs['achieved_goal'] for next_obs in next_obses
-                    ])
 
             for idx, reward, env_info, done in zip(itertools.count(), rewards,
                                                    env_infos, dones):
@@ -119,12 +132,7 @@ class OffPolicyVectorizedSampler(BatchSampler):
                 running_paths[idx]["rewards"].append(reward)
                 running_paths[idx]["env_infos"].append(env_info)
 
-                if self.algo.replay_buffer_type == Buffer.REGULAR:
-                    add_to_paths = done or (
-                        rollout == self.algo.max_path_length - 1)
-                else:
-                    add_to_paths = rollout == self.algo.max_path_length - 1
-                if add_to_paths:
+                if done or (rollout == self.algo.max_path_length - 1):
                     paths.append(
                         dict(
                             rewards=tensor_utils.stack_tensor_list(
@@ -141,6 +149,13 @@ class OffPolicyVectorizedSampler(BatchSampler):
 
     @overrides
     def process_samples(self, itr, paths):
+        """
+        Return processed sample data based on the collected paths.
+
+        :param itr: Iteration number.
+        :param paths: A list of collected paths.
+        :return: Processed sample data.
+        """
         success_history = []
         for path in paths:
             if "is_success" in path["env_infos"]:

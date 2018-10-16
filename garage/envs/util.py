@@ -2,11 +2,10 @@ import gym
 import numpy as np
 
 from garage.misc import special
-from garage.tf.spaces import Dict
 
 __all__ = [
-    'configure_dims', 'dims_to_shapes', 'flat_dim', 'flatten', 'flatten_n',
-    'unflatten', 'unflatten_n', 'weighted_sample'
+    'flat_dim', 'flatten', 'flatten_n', 'unflatten', 'unflatten_n',
+    'weighted_sample'
 ]
 
 
@@ -87,42 +86,3 @@ def weighted_sample(space, weights):
         return special.weighted_sample(weights, range(space.n))
     else:
         raise NotImplementedError
-
-
-def dims_to_shapes(input_dims):
-    return {
-        key: tuple([val]) if val > 0 else tuple()
-        for key, val in input_dims.items()
-    }
-
-
-def configure_dims(env):
-    env.reset()
-    _, _, _, info = env.step(env.action_space.sample())
-    obs = env.observation_space
-    action = env.action_space
-
-    if isinstance(obs, Dict):
-        dims = {
-            "observation": obs.flat_dim_with_keys(["observation"]),
-            "action": action.flat_dim,
-            "goal": obs.flat_dim_with_keys(["desired_goal"]),
-            "achieved_goal": obs.flat_dim_with_keys(["achieved_goal"]),
-            "terminal": 0,
-        }
-
-        for key, value in info.items():
-            value = np.array(value)
-            if value.ndim == 0:
-                value = value.reshape(1)
-            dims['info_{}'.format(key)] = value.shape[0]
-    else:
-        dims = {
-            "observation": obs.flat_dim,
-            "action": action.flat_dim,
-            "terminal": 0,
-            "reward": 0,
-            "next_observation": obs.flat_dim,
-        }
-
-    return dims

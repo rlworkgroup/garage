@@ -2,6 +2,7 @@ from garage.envs import normalize
 from garage.envs.box2d import CartpoleEnv
 from garage.exploration_strategies import OUStrategy
 from garage.misc.instrument import run_experiment
+from garage.replay_buffer import SimpleReplayBuffer
 from garage.theano.algos import DDPG
 from garage.theano.envs import TheanoEnv
 from garage.theano.policies import DeterministicMLPPolicy
@@ -21,11 +22,15 @@ def run_task(*_):
 
     qf = ContinuousMLPQFunction(env_spec=env.spec)
 
+    replay_buffer = SimpleReplayBuffer(
+        env_spec=env.spec, size_in_transitions=int(1e6), time_horizon=100)
+
     algo = DDPG(
         env=env,
         policy=policy,
         es=es,
         qf=qf,
+        pool=replay_buffer,
         batch_size=32,
         max_path_length=100,
         epoch_length=1000,

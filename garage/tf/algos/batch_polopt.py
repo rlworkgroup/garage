@@ -1,7 +1,11 @@
+import time
+
+import tensorflow as tf
+
 from garage.algos import RLAlgorithm
+import garage.misc.logger as logger
 from garage.tf.plotter import Plotter
 from garage.tf.samplers import BatchSampler
-from garage.tf.samplers import OffPolicyVectorizedSampler
 from garage.tf.samplers import OnPolicyVectorizedSampler
 
 
@@ -17,16 +21,22 @@ class BatchPolopt(RLAlgorithm):
                  policy,
                  baseline,
                  scope=None,
+                 n_itr=500,
+                 start_itr=0,
+                 batch_size=5000,
                  max_path_length=500,
                  discount=0.99,
+                 gae_lambda=1,
                  plot=False,
                  pause_for_plot=False,
+                 center_adv=True,
+                 positive_adv=False,
                  store_paths=False,
+                 whole_paths=True,
+                 fixed_horizon=False,
                  sampler_cls=None,
                  sampler_args=None,
                  force_batch_sampler=False,
-                 exploration_strategy=None,
-                 input_include_goal=False,
                  **kwargs):
         """
         :param env: Environment
@@ -38,6 +48,7 @@ class BatchPolopt(RLAlgorithm):
         simultaneously, each using different environments and policies
         :param n_itr: Number of iterations.
         :param start_itr: Starting iteration.
+        :param batch_size: Number of samples per iteration.
         :param max_path_length: Maximum length of a single rollout.
         :param discount: Discount.
         :param gae_lambda: Lambda used for generalized advantage estimation.
@@ -55,16 +66,22 @@ class BatchPolopt(RLAlgorithm):
         self.policy = policy
         self.baseline = baseline
         self.scope = scope
+        self.n_itr = n_itr
+        self.start_itr = start_itr
+        self.batch_size = batch_size
         self.max_path_length = max_path_length
         self.discount = discount
+        self.gae_lambda = gae_lambda
         self.plot = plot
         self.pause_for_plot = pause_for_plot
+        self.center_adv = center_adv
+        self.positive_adv = positive_adv
         self.store_paths = store_paths
-        self.es = exploration_strategy
-        self.input_include_goal = input_include_goal
+        self.whole_paths = whole_paths
+        self.fixed_horizon = fixed_horizon
         if sampler_cls is None:
             if self.policy.vectorized and not force_batch_sampler:
-                sampler_cls = OffPolicyVectorizedSampler if self.off_policy else OnPolicyVectorizedSampler
+                sampler_cls = OnPolicyVectorizedSampler
             else:
                 sampler_cls = BatchSampler
         if sampler_args is None:
@@ -90,7 +107,46 @@ class BatchPolopt(RLAlgorithm):
         return self.sampler.process_samples(itr, paths)
 
     def train(self, sess=None):
-        raise NotImplementedError
+        created_session = True if (sess is None) else False
+        if sess is None:
+            sess = tf.Session()
+            sess.__enter__()
+
+        sess.run(tf.global_variables_initializer())
+        self.start_worker(sess)
+        start_time = time.time()
+        last_average_return = None
+        for itr in range(self.start_itr, self.n_itr):
+            itr_start_time = time.time()
+            with logger.prefix('itr #%d | ' % itr):
+                logger.log("Obtaining samples...")
+                paths = self.obtain_samples(itr)
+                logger.log("Processing samples...")
+                samples_data = self.process_samples(itr, paths)
+                last_average_return = samples_data["average_return"]
+                logger.log("Logging diagnostics...")
+                self.log_diagnostics(paths)
+                logger.log("Optimizing policy...")
+                self.optimize_policy(itr, samples_data)
+                logger.log("Saving snapshot...")
+                params = self.get_itr_snapshot(itr, samples_data)
+                if self.store_paths:
+                    params["paths"] = samples_data["paths"]
+                logger.save_itr_params(itr, params)
+                logger.log("Saved")
+                logger.record_tabular('Time', time.time() - start_time)
+                logger.record_tabular('ItrTime', time.time() - itr_start_time)
+                logger.dump_tabular(with_prefix=False)
+                if self.plot:
+                    self.plotter.update_plot(self.policy, self.max_path_length)
+                    if self.pause_for_plot:
+                        input("Plotting evaluation run: Press Enter to "
+                              "continue...")
+
+        self.shutdown_worker()
+        if created_session:
+            sess.close()
+        return last_average_return
 
     def log_diagnostics(self, paths):
         self.policy.log_diagnostics(paths)
@@ -112,7 +168,3 @@ class BatchPolopt(RLAlgorithm):
 
     def optimize_policy(self, itr, samples_data):
         raise NotImplementedError
-
-    @property
-    def off_policy(self):
-        return False

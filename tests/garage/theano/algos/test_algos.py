@@ -10,7 +10,6 @@ from garage.algos import CMAES
 from garage.baselines import ZeroBaseline
 from garage.envs import GridWorldEnv
 from garage.envs.box2d import CartpoleEnv
-from garage.theano.algos import DDPG
 from garage.theano.algos import ERWR
 from garage.theano.algos import PPO
 from garage.theano.algos import REPS
@@ -52,15 +51,6 @@ algo_args = {
         common_batch_algo_args,
         max_opt_itr=1,
     ),
-    DDPG:
-    dict(
-        n_epochs=1,
-        epoch_length=100,
-        batch_size=32,
-        min_pool_size=50,
-        replay_pool_size=1000,
-        eval_samples=100,
-    ),
     CEM:
     dict(
         n_itr=1,
@@ -93,7 +83,7 @@ class TestAlgos(unittest.TestCase):
         print("Testing %s, %s, %s" % (algo_cls.__name__, env_cls.__name__,
                                       policy_cls.__name__))
         env = TheanoEnv(env_cls())
-        policy = policy_cls(env_spec=env.spec, )
+        policy = policy_cls(env_spec=env.spec)
         baseline = ZeroBaseline(env_spec=env.spec)
         algo = algo_cls(
             env=env,

@@ -22,9 +22,7 @@ class ContinuousMLPQFunction(QFunction, LayersPowered, Serializable):
                  action_merge_layer=-2,
                  output_nonlinearity=None,
                  input_include_goal=False,
-                 bn=False,
-                 reuse=False,
-                 trainable=True):
+                 bn=False):
         """
         Initialize class with multiple attributes.
 
@@ -57,13 +55,11 @@ class ContinuousMLPQFunction(QFunction, LayersPowered, Serializable):
         self._action_merge_layer = action_merge_layer
         self._output_nonlinearity = output_nonlinearity
         self._batch_norm = bn
-        self._reuse = reuse
-        self._trainable = trainable
-        self._f_qval, self._output_layer, self._obs_layer, self._action_layer = self._build_net(
-            reuse=self._reuse, trainable=self._trainable, name=self.name)
+        self._f_qval, self._output_layer, self._obs_layer, self._action_layer = self._build_net(  # noqa: E501
+            name=self.name)
         LayersPowered.__init__(self, [self._output_layer])
 
-    def _build_net(self, reuse=None, trainable=None, name=None):
+    def _build_net(self, trainable=True, name=None):
         """
         Set up q network based on class attributes. This function uses layers
         defined in garage.tf.
@@ -72,7 +68,7 @@ class ContinuousMLPQFunction(QFunction, LayersPowered, Serializable):
             reuse: A bool indicates whether reuse variables in the same scope.
             trainable: A bool indicates whether variables are trainable.
         """
-        with tf.variable_scope(name, reuse=reuse):
+        with tf.variable_scope(name):
             l_obs = L.InputLayer(shape=(None, self._obs_dim), name="obs")
             l_action = L.InputLayer(
                 shape=(None, self._action_dim), name="actions")
@@ -132,6 +128,9 @@ class ContinuousMLPQFunction(QFunction, LayersPowered, Serializable):
             }, **kwargs)
             return qvals
 
+    def log_diagnostics(self, paths):
+        pass
+
     def get_trainable_vars(self, scope=None):
         scope = scope if scope else self.name
         return tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=scope)
@@ -147,6 +146,3 @@ class ContinuousMLPQFunction(QFunction, LayersPowered, Serializable):
             if 'W' in var.name and 'output' not in var.name
         ]
         return reg_vars
-
-    def log_diagnostics(self, paths):
-        pass

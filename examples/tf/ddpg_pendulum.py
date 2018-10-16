@@ -6,13 +6,13 @@ Here it creates a gym environment InvertedDoublePendulum. And uses a DDPG with
 
 Results:
     AverageReturn: 250
-    RiseTime: epoch 300
+    RiseTime: epoch 499
 """
 import gym
 import tensorflow as tf
 
 from garage.misc.instrument import run_experiment
-
+from garage.replay_buffer import SimpleReplayBuffer
 from garage.tf.algos import DDPG
 from garage.tf.envs import TfEnv
 from garage.tf.exploration_strategies import OUStrategy
@@ -42,12 +42,16 @@ def run_task(*_):
         hidden_sizes=[64, 64],
         hidden_nonlinearity=tf.nn.relu)
 
+    replay_buffer = SimpleReplayBuffer(
+        env_spec=env.spec, size_in_transitions=int(1e6), time_horizon=100)
+
     ddpg = DDPG(
         env,
         policy=policy,
         policy_lr=1e-4,
         qf_lr=1e-3,
         qf=qf,
+        replay_buffer=replay_buffer,
         plot=False,
         target_update_tau=1e-2,
         n_epochs=500,
@@ -55,7 +59,6 @@ def run_task(*_):
         max_path_length=100,
         n_train_steps=50,
         discount=0.9,
-        replay_buffer_size=int(1e6),
         min_buffer_size=int(1e4),
         exploration_strategy=action_noise,
         policy_optimizer=tf.train.AdamOptimizer,
