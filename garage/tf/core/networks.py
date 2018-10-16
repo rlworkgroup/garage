@@ -13,14 +13,10 @@ def mlp(input_var,
         output_b_init=tf.zeros_initializer(),
         batch_normalization=False,
         weight_normalization=False,
-        is_training=True,
-        debug=False):
-
-    _layers = []
+        is_training=True):
 
     with tf.variable_scope(name):
         l_hid = input_var
-        _layers = [l_hid]
         if batch_normalization:
             l_hid = tf.layers.batch_normalization(l_hid, training=is_training)
         for idx, hidden_size in enumerate(hidden_sizes):
@@ -32,8 +28,6 @@ def mlp(input_var,
                 bias_initializer=hidden_b_init,
                 name="hidden_%d" % idx,
             )
-
-            _layers.append(l_hid)
         l_out = tf.layers.dense(
             inputs=l_hid,
             units=output_dim,
@@ -43,10 +37,5 @@ def mlp(input_var,
             name="output")
         if batch_normalization:
             l_out = tf.layers.batch_normalization(l_out, training=is_training)
-        _layers.append(l_out)
-        _l_out = l_out
 
-    if debug:
-        return _l_out, _layers
-    else:
-        return _l_out
+    return l_out
