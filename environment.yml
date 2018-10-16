@@ -23,7 +23,7 @@ dependencies:
         # find a build dependency (absl-py). Later pip executes the `install`
         # command again and the install succeeds because absl-py has been
         # installed. This is stupid, but harmless.
-        - git+https://github.com/deepmind/dm_control.git#egg=dm_control
+        - git+https://github.com/deepmind/dm_control.git@c24ec9f5f3cb3c25c6571c89c9f60bf3350f5711#egg=dm_control
         - flask
         - gym[all]==0.10.5
         - hyperopt
