@@ -46,7 +46,3 @@ def step_env_with_gym_quirks(test_case,
 
     if not spec.id in KNOWN_GYM_CLOSE_BROKEN:
         env.close()
-    else:
-        with test_case.assertRaisesRegex(
-                AttributeError, "'MjViewer' object has no attribute 'finish'"):
-            env.close()
