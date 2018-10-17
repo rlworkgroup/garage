@@ -103,7 +103,8 @@ print_warning() {
 }
 
 # Verify this script is running from the correct folder (root directory)
-(more setup.py | grep -q "name='rlgarage'") || _PRINT_HELP=yes die \
+([ -e setup.py ] && (more setup.py | grep -q "name='rlgarage'")) \
+  || _PRINT_HELP=yes die \
   "This setup script must be run from the root garage directory." 1
 
 # Verify there's a file in the mjkey path
