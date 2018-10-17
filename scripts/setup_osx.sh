@@ -132,6 +132,10 @@ if [[ ! " ${VERIFIED_OSX_VERSIONS[@]} " =~ " ${VER} " ]]; then
   done
 fi
 
+# Verify this script is running from the correct folder (root directory)
+(more setup.py | grep -q "name='rlgarage'") || _PRINT_HELP=yes die \
+  "This setup script must be run from the root garage directory." 1
+
 # Verify there's a file in the mjkey path
 test "$(file -b --mime-type ${_arg_mjkey})" == "text/plain" \
   || _PRINT_HELP=yes die \

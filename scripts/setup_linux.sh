@@ -102,6 +102,10 @@ print_warning() {
   printf "\e[0;33m%s\e[0m" "${1}"
 }
 
+# Verify this script is running from the correct folder (root directory)
+(more setup.py | grep -q "name='rlgarage'") || _PRINT_HELP=yes die \
+  "This setup script must be run from the root garage directory." 1
+
 # Verify there's a file in the mjkey path
 test "$(file -b --mime-type ${_arg_mjkey})" == "text/plain" \
   || _PRINT_HELP=yes die \
