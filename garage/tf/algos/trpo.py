@@ -38,4 +38,5 @@ class TRPO(NPO):
             pg_loss=PGLoss.VANILLA,
             optimizer=optimizer,
             optimizer_args=optimizer_args,
+            name="TRPO",
             **kwargs)

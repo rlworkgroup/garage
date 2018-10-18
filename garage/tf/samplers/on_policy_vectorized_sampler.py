@@ -11,9 +11,9 @@ from garage.tf.envs import VecEnvExecutor
 from garage.tf.samplers import BatchSampler
 
 
-class VectorizedSampler(BatchSampler):
+class OnPolicyVectorizedSampler(BatchSampler):
     def __init__(self, algo, n_envs=None):
-        super(VectorizedSampler, self).__init__(algo)
+        super(OnPolicyVectorizedSampler, self).__init__(algo)
         self.n_envs = n_envs
 
     @overrides
@@ -54,17 +54,18 @@ class VectorizedSampler(BatchSampler):
         process_time = 0
 
         policy = self.algo.policy
+
         import time
         while n_samples < self.algo.batch_size:
             t = time.time()
             policy.reset(dones)
+
             actions, agent_infos = policy.get_actions(obses)
 
             policy_time += time.time() - t
             t = time.time()
             next_obses, rewards, dones, env_infos = self.vec_env.step(actions)
             env_time += time.time() - t
-
             t = time.time()
 
             agent_infos = tensor_utils.split_tensor_dict_list(agent_infos)
@@ -73,9 +74,9 @@ class VectorizedSampler(BatchSampler):
                 env_infos = [dict() for _ in range(self.vec_env.num_envs)]
             if agent_infos is None:
                 agent_infos = [dict() for _ in range(self.vec_env.num_envs)]
-            for idx, observation, action, reward, env_info, agent_info, done \
-                in zip(itertools.count(), obses, actions, rewards, env_infos,
-                       agent_infos, dones):
+            for idx, observation, action, reward, env_info, agent_info, done in zip(  # noqa: E501
+                    itertools.count(), obses, actions, rewards, env_infos,
+                    agent_infos, dones):
                 if running_paths[idx] is None:
                     running_paths[idx] = dict(
                         observations=[],
@@ -101,10 +102,10 @@ class VectorizedSampler(BatchSampler):
                             env_infos=tensor_utils.stack_tensor_dict_list(
                                 running_paths[idx]["env_infos"]),
                             agent_infos=tensor_utils.stack_tensor_dict_list(
-                                running_paths[idx]["agent_infos"]),
-                        ))
+                                running_paths[idx]["agent_infos"])))
                     n_samples += len(running_paths[idx]["rewards"])
                     running_paths[idx] = None
+
             process_time += time.time() - t
             pbar.inc(len(obses))
             obses = next_obses

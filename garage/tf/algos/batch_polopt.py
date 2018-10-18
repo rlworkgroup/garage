@@ -6,7 +6,7 @@ from garage.algos import RLAlgorithm
 import garage.misc.logger as logger
 from garage.tf.plotter import Plotter
 from garage.tf.samplers import BatchSampler
-from garage.tf.samplers import VectorizedSampler
+from garage.tf.samplers import OnPolicyVectorizedSampler
 
 
 class BatchPolopt(RLAlgorithm):
@@ -81,7 +81,7 @@ class BatchPolopt(RLAlgorithm):
         self.fixed_horizon = fixed_horizon
         if sampler_cls is None:
             if self.policy.vectorized and not force_batch_sampler:
-                sampler_cls = VectorizedSampler
+                sampler_cls = OnPolicyVectorizedSampler
             else:
                 sampler_cls = BatchSampler
         if sampler_args is None:

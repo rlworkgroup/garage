@@ -5,7 +5,7 @@ Here it creates InvertedDoublePendulum using gym. And uses a PPO with 1M
 steps.
 
 Results:
-    AverageReturn: 526.092
+    AverageDiscountedReturn: 526.092
     RiseTime: itr 488
 """
 import gym

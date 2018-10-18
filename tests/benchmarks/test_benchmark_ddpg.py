@@ -29,17 +29,19 @@ import tensorflow as tf
 
 from garage.misc import ext
 from garage.misc import logger as garage_logger
+from garage.replay_buffer import SimpleReplayBuffer
 from garage.tf.algos import DDPG
+from garage.tf.envs import TfEnv
 from garage.tf.exploration_strategies import OUStrategy
 from garage.tf.policies import ContinuousMLPPolicy
 from garage.tf.q_functions import ContinuousMLPQFunction
 
 # Hyperparams for baselines and garage
 params = {
-    "actor_lr": 1e-4,
-    "critic_lr": 1e-3,
-    "actor_hidden_sizes": [64, 64],
-    "critic_hidden_sizes": [64, 64],
+    "policy_lr": 1e-4,
+    "qf_lr": 1e-3,
+    "policy_hidden_sizes": [64, 64],
+    "qf_hidden_sizes": [64, 64],
     "n_epochs": 500,
     "n_epoch_cycles": 20,
     "n_rollout_steps": 100,
@@ -63,7 +65,7 @@ class TestBenchmarkDDPG(unittest.TestCase):
         mujoco1m = benchmarks.get_benchmark("Mujoco1M")
 
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S-%f")
-        benchmark_dir = "./benchmark/%s/" % timestamp
+        benchmark_dir = "./benchmark_ddpg/%s/" % timestamp
 
         for task in mujoco1m["tasks"]:
             env_id = task["env_id"]
@@ -80,7 +82,7 @@ class TestBenchmarkDDPG(unittest.TestCase):
                 env.reset()
                 seed = seeds[trail]
 
-                trail_dir = task_dir + "trail_%d_seed_%d" % (trail + 1, seed)
+                trail_dir = task_dir + "/trail_%d_seed_%d" % (trail + 1, seed)
                 garage_dir = trail_dir + "/garage"
                 baselines_dir = trail_dir + "/baselines"
 
@@ -122,40 +124,46 @@ def run_garage(env, seed, log_dir):
     ext.set_seed(seed)
 
     with tf.Graph().as_default():
+        env = TfEnv(env)
         # Set up params for ddpg
-        action_noise = OUStrategy(env, sigma=params["sigma"])
+        action_noise = OUStrategy(env.spec, sigma=params["sigma"])
 
-        actor_net = ContinuousMLPPolicy(
-            env_spec=env,
-            name="Actor",
-            hidden_sizes=params["actor_hidden_sizes"],
+        policy = ContinuousMLPPolicy(
+            env_spec=env.spec,
+            name="Policy",
+            hidden_sizes=params["policy_hidden_sizes"],
             hidden_nonlinearity=tf.nn.relu,
             output_nonlinearity=tf.nn.tanh)
 
-        critic_net = ContinuousMLPQFunction(
-            env_spec=env,
-            name="Critic",
-            hidden_sizes=params["critic_hidden_sizes"],
+        qf = ContinuousMLPQFunction(
+            env_spec=env.spec,
+            name="QFunction",
+            hidden_sizes=params["qf_hidden_sizes"],
             hidden_nonlinearity=tf.nn.relu)
+
+        replay_buffer = SimpleReplayBuffer(
+            env_spec=env.spec,
+            size_in_transitions=params["replay_buffer_size"],
+            time_horizon=params["n_rollout_steps"])
 
         ddpg = DDPG(
             env,
-            actor=actor_net,
-            critic=critic_net,
-            actor_lr=params["actor_lr"],
-            critic_lr=params["critic_lr"],
+            policy=policy,
+            qf=qf,
+            replay_buffer=replay_buffer,
+            policy_lr=params["policy_lr"],
+            qf_lr=params["qf_lr"],
             plot=False,
             target_update_tau=params["tau"],
             n_epochs=params["n_epochs"],
             n_epoch_cycles=params["n_epoch_cycles"],
-            n_rollout_steps=params["n_rollout_steps"],
+            max_path_length=params["n_rollout_steps"],
             n_train_steps=params["n_train_steps"],
             discount=params["discount"],
-            replay_buffer_size=params["replay_buffer_size"],
             min_buffer_size=int(1e4),
             exploration_strategy=action_noise,
-            actor_optimizer=tf.train.AdamOptimizer,
-            critic_optimizer=tf.train.AdamOptimizer)
+            policy_optimizer=tf.train.AdamOptimizer,
+            qf_optimizer=tf.train.AdamOptimizer)
 
         # Set up logger since we are not using run_experiment
         tabular_log_file = osp.join(log_dir, "progress.csv")
@@ -221,8 +229,8 @@ def run_baselines(env, seed, log_dir):
         normalize_returns=False,
         normalize_observations=False,
         critic_l2_reg=0,
-        actor_lr=params["actor_lr"],
-        critic_lr=params["critic_lr"],
+        actor_lr=params["policy_lr"],
+        critic_lr=params["qf_lr"],
         popart=False,
         gamma=params["discount"],
         clip_norm=None,

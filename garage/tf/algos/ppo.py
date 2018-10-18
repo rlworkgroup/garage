@@ -27,4 +27,5 @@ class PPO(NPO):
             pg_loss=PGLoss.CLIP,
             optimizer=optimizer,
             optimizer_args=optimizer_args,
+            name="PPO",
             **kwargs)

@@ -20,8 +20,8 @@ class Policy(Parameterized):
     @property
     def vectorized(self):
         """
-        Indicates whether the policy is vectorized. If True, it should implement
-        get_actions(), and support resetting
+        Indicates whether the policy is vectorized. If True, it should
+        implement get_actions(), and support resetting
         with multiple simultaneous states.
         """
         return False

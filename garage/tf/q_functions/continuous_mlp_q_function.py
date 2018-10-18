@@ -1,7 +1,6 @@
 import tensorflow as tf
 
 from garage.core import Serializable
-from garage.envs.util import flat_dim
 from garage.tf.core import LayersPowered
 import garage.tf.core.layers as L
 from garage.tf.core.layers import batch_norm
@@ -9,7 +8,7 @@ from garage.tf.misc import tensor_utils
 from garage.tf.q_functions import QFunction
 
 
-class ContinuousMLPQFunction(QFunction, Serializable, LayersPowered):
+class ContinuousMLPQFunction(QFunction, LayersPowered, Serializable):
     """
     This class implements a q value network to predict q based on the input
     state and action. It uses an MLP to fit the function of Q(s, a).
@@ -46,11 +45,8 @@ class ContinuousMLPQFunction(QFunction, Serializable, LayersPowered):
         self.name = name
         self._env_spec = env_spec
         if input_include_goal:
-            obs_dim = flat_dim(
-                env_spec.observation_space.spaces["observation"])
-            goal_dim = flat_dim(
-                env_spec.observation_space.spaces["desired_goal"])
-            self._obs_dim = obs_dim + goal_dim
+            self._obs_dim = env_spec.observation_space.flat_dim_with_keys(
+                ["observation", "desired_goal"])
         else:
             self._obs_dim = env_spec.observation_space.flat_dim
         self._action_dim = env_spec.action_space.flat_dim
@@ -59,19 +55,20 @@ class ContinuousMLPQFunction(QFunction, Serializable, LayersPowered):
         self._action_merge_layer = action_merge_layer
         self._output_nonlinearity = output_nonlinearity
         self._batch_norm = bn
+        self._f_qval, self._output_layer, self._obs_layer, self._action_layer = self._build_net(  # noqa: E501
+            name=self.name)
+        LayersPowered.__init__(self, [self._output_layer])
 
-    def _build_net(self, reuse=None, custom_getter=None, trainable=None):
+    def _build_net(self, trainable=True, name=None):
         """
         Set up q network based on class attributes. This function uses layers
-        defined in rllab.tf.
+        defined in garage.tf.
 
         Args:
             reuse: A bool indicates whether reuse variables in the same scope.
-            custom_getter: A customized getter object used to get variables.
             trainable: A bool indicates whether variables are trainable.
         """
-        with tf.variable_scope(
-                self.name, reuse=reuse, custom_getter=custom_getter):
+        with tf.variable_scope(name):
             l_obs = L.InputLayer(shape=(None, self._obs_dim), name="obs")
             l_action = L.InputLayer(
                 shape=(None, self._action_dim), name="actions")
@@ -112,13 +109,13 @@ class ContinuousMLPQFunction(QFunction, Serializable, LayersPowered):
 
             output_var = L.get_output(l_output)
 
-        self._f_qval = tensor_utils.compile_function(
+        f_qval = tensor_utils.compile_function(
             [l_obs.input_var, l_action.input_var], output_var)
-        self._output_layer = l_output
-        self._obs_layer = l_obs
-        self._action_layer = l_action
+        output_layer = l_output
+        obs_layer = l_obs
+        action_layer = l_action
 
-        LayersPowered.__init__(self, [l_output])
+        return f_qval, output_layer, obs_layer, action_layer
 
     def get_qval(self, observations, actions):
         return self._f_qval(observations, actions)
@@ -131,20 +128,21 @@ class ContinuousMLPQFunction(QFunction, Serializable, LayersPowered):
             }, **kwargs)
             return qvals
 
-    @property
-    def trainable_vars(self):
-        return tf.get_collection(
-            tf.GraphKeys.TRAINABLE_VARIABLES, scope=self.name)
+    def log_diagnostics(self, paths):
+        pass
 
-    @property
-    def global_vars(self):
-        return tf.get_collection(
-            tf.GraphKeys.GLOBAL_VARIABLES, scope=self.name)
+    def get_trainable_vars(self, scope=None):
+        scope = scope if scope else self.name
+        return tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=scope)
 
-    @property
-    def regularizable_vars(self):
+    def get_global_vars(self, scope=None):
+        scope = scope if scope else self.name
+        return tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=scope)
+
+    def get_regularizable_vars(self, scope=None):
+        scope = scope if scope else self.name
         reg_vars = [
-            var for var in self.trainable_vars
+            var for var in self.get_trainable_vars(scope=scope)
             if 'W' in var.name and 'output' not in var.name
         ]
         return reg_vars

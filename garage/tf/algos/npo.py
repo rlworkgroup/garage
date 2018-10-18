@@ -103,8 +103,6 @@ class NPO(BatchPolopt):
 
         self._fit_baseline(samples_data)
 
-        return self.get_itr_snapshot(itr, samples_data)
-
     @overrides
     def get_itr_snapshot(self, itr, samples_data):
         return dict(
@@ -394,23 +392,23 @@ class NPO(BatchPolopt):
         returns_tensor = self.f_returns(*policy_opt_input_values)
         returns_tensor = np.squeeze(returns_tensor)
 
-        paths = samples_data['paths']
-        valids = samples_data['valids']
-        baselines = [path['baselines'] for path in paths]
+        paths = samples_data["paths"]
+        valids = samples_data["valids"]
+        baselines = [path["baselines"] for path in paths]
 
         # Recompute parts of samples_data
         aug_rewards = []
         aug_returns = []
         for rew, ret, val, path in zip(rewards_tensor, returns_tensor, valids,
                                        paths):
-            path['rewards'] = rew[val.astype(np.bool)]
-            path['returns'] = ret[val.astype(np.bool)]
-            aug_rewards.append(path['rewards'])
-            aug_returns.append(path['returns'])
+            path["rewards"] = rew[val.astype(np.bool)]
+            path["returns"] = ret[val.astype(np.bool)]
+            aug_rewards.append(path["rewards"])
+            aug_returns.append(path["returns"])
         aug_rewards = tensor_utils.concat_tensor_list(aug_rewards)
         aug_returns = tensor_utils.concat_tensor_list(aug_returns)
-        samples_data['rewards'] = aug_rewards
-        samples_data['returns'] = aug_returns
+        samples_data["rewards"] = aug_rewards
+        samples_data["returns"] = aug_returns
 
         # Calculate explained variance
         ev = special.explained_variance_1d(
@@ -419,7 +417,7 @@ class NPO(BatchPolopt):
 
         # Fit baseline
         logger.log("Fitting baseline...")
-        if hasattr(self.baseline, 'fit_with_samples'):
+        if hasattr(self.baseline, "fit_with_samples"):
             self.baseline.fit_with_samples(paths, samples_data)
         else:
             self.baseline.fit(paths)
