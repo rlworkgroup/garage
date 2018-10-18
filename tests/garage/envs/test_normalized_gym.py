@@ -18,8 +18,18 @@ class TestNormalizedGym(unittest.TestCase):
             env.reset()
             for e in range(5):
                 env.render()
-                action = env.action_space.sample()
-                next_obs, reward, done, info = env.step(action)
+                a = env.action_space.sample()
+                a_copy = a if isinstance(a, (int, float)) else a.copy()
+                next_obs, _, done, _ = env.step(a)
+
+                # Check for side effects
+                if isinstance(a, (int, float)):
+                    assert a == a_copy,\
+                    "Action was modified by environment!"
+                else:
+                    assert a.all() == a_copy.all(),\
+                    "Action was modified by environment!"
+
                 assert next_obs.shape == env.observation_space.low.shape
                 if done:
                     break
@@ -35,8 +45,18 @@ class TestNormalizedGym(unittest.TestCase):
         for i in range(10):
             env.reset()
             for e in range(5):
-                action = env.action_space.sample()
-                next_obs, reward, done, info = env.step(action)
+                a = env.action_space.sample()
+                a_copy = a if isinstance(a, (int, float)) else a.copy()
+                next_obs, reward, done, info = env.step(a)
+
+                # Check for side effects
+                if isinstance(a, (int, float)):
+                    assert a == a_copy,\
+                    "Action was modified by environment!"
+                else:
+                    assert a.all() == a_copy.all(),\
+                    "Action was modified by environment!"
+
                 assert (env.observation_space.flatten(next_obs).shape ==
                         env.observation_space.flat_dim)  # yapf: disable
                 if done:

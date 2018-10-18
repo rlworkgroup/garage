@@ -11,6 +11,7 @@ from garage.envs.mujoco.sawyer import ReacherEnv
 from garage.theano.algos import TRPO
 from garage.theano.envs import TheanoEnv
 from garage.theano.policies import GaussianMLPPolicy
+from tests.helpers import step_env
 
 
 def run_bin_sorting(*_):
@@ -82,20 +83,10 @@ class TestSawyerEnvs(unittest.TestCase):
         tasks = [(0.3, -0.3, 0.30), (0.3, 0.3, 0.30)]
 
         env = ReacherEnv(goal_position=tasks[0])
-        for i in range(5):
-            env.render()
-            action = env.action_space.sample()
-            next_obs, reward, done, _ = env.step(action)
-        env.reset()
-        env.close()
+        step_env(env, n=5, render=True)
 
     def test_pnp(self):
         """Testing for pick and place."""
 
         env = PickAndPlaceEnv()
-        for i in range(5):
-            env.render()
-            action = env.action_space.sample()
-            env.step(action)
-        env.reset()
-        env.close()
+        step_env(env, n=5, render=True)
