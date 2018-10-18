@@ -103,8 +103,9 @@ print_warning() {
 }
 
 # Verify this script is running from the correct folder (root directory)
-dir_err_txt="This script must be run from the root garage git directory. Use:
-./scripts/setup_linux.sh"
+dir_err_txt="Please run this script only from the root of the garage \
+repository, i.e. you should run it using the command \
+\"bash scripts/setup_linux.sh\""
 ([ -e setup.py ] && (grep -Fq "name='rlgarage'," setup.py)) \
   || _PRINT_HELP=yes die \
   "${dir_err_txt}" 1
