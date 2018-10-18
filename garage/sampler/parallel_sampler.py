@@ -5,8 +5,8 @@ import numpy as np
 from garage.misc import ext
 from garage.misc import logger
 from garage.misc import tensor_utils
-from garage.sampler.stateful_pool import SharedGlobal
 from garage.sampler import singleton_pool
+from garage.sampler.stateful_pool import SharedGlobal
 from garage.sampler.utils import rollout
 
 
