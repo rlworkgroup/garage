@@ -5,7 +5,7 @@ import numpy as np
 
 class TestSampler(unittest.TestCase):
     def test_truncate_paths(self):
-        from garage.sampler import truncate_paths
+        from garage.sampler.parallel_sampler import truncate_paths
 
         paths = [
             dict(

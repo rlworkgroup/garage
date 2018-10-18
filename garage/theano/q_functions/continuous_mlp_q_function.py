@@ -6,8 +6,8 @@ import theano.tensor as TT
 
 from garage.core import Serializable
 from garage.q_functions import QFunction
-from garage.theano.core import batch_norm
 from garage.theano.core import LasagnePowered
+from garage.theano.core.lasagne_layers import batch_norm
 from garage.theano.misc import tensor_utils
 
 

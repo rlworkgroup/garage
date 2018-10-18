@@ -1,10 +1,10 @@
 import unittest
 
 from garage.envs.mujoco import SwimmerEnv
-from garage.envs.mujoco.randomization import Distribution
-from garage.envs.mujoco.randomization import Method
 from garage.envs.mujoco.randomization import randomize
 from garage.envs.mujoco.randomization import Variations
+from garage.envs.mujoco.randomization.variation import Distribution
+from garage.envs.mujoco.randomization.variation import Method
 
 
 class TestDynamicsRand(unittest.TestCase):

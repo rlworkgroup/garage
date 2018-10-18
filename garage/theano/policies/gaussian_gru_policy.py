@@ -7,9 +7,9 @@ import theano.tensor as TT
 from garage.core import Serializable
 from garage.misc.overrides import overrides
 from garage.policies import StochasticPolicy
-from garage.theano.core import GRUNetwork
 from garage.theano.core import LasagnePowered
-from garage.theano.core import ParamLayer
+from garage.theano.core.lasagne_layers import ParamLayer
+from garage.theano.core.network import GRUNetwork
 from garage.theano.distributions import RecurrentDiagonalGaussian
 from garage.theano.misc import tensor_utils
 from garage.theano.spaces import Box

@@ -6,7 +6,7 @@ import numpy as np
 from garage.misc import tensor_utils
 import garage.misc.logger as logger
 from garage.misc.overrides import overrides
-from garage.sampler import ProgBarCounter
+from garage.sampler.stateful_pool import ProgBarCounter
 from garage.tf.envs import VecEnvExecutor
 from garage.tf.samplers import BatchSampler
 

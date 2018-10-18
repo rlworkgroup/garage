@@ -5,7 +5,7 @@ import random
 
 from numpy import var
 
-from garage.algos import BatchSampler
+from garage.algos.batch_polopt import BatchSampler
 from garage.sampler import parallel_sampler
 
 

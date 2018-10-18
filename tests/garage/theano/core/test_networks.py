@@ -3,7 +3,7 @@ import unittest
 import lasagne.layers as L
 import numpy as np
 
-from garage.theano.core import GRUNetwork
+from garage.theano.core.network import GRUNetwork
 from garage.theano.misc import tensor_utils
 
 
