@@ -103,9 +103,11 @@ print_warning() {
 }
 
 # Verify this script is running from the correct folder (root directory)
-([ -e setup.py ] && (more setup.py | grep -q "name='rlgarage'")) \
+dir_err_txt="This script must be run from the root garage git directory. Use:
+./scripts/setup_linux.sh"
+([ -e setup.py ] && (grep -Fq "name='rlgarage'," setup.py)) \
   || _PRINT_HELP=yes die \
-  "This setup script must be run from the root garage directory." 1
+  "${dir_err_txt}" 1
 
 # Verify there's a file in the mjkey path
 test "$(file -b --mime-type ${_arg_mjkey})" == "text/plain" \

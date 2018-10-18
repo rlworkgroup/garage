@@ -45,7 +45,7 @@ _arg_modify_bashrc="off"
 print_help ()
 {
   printf '%s\n' "Installer of garage for OS X."
-  printf 'Usage: %s [--mjkey <arg>] [--(no-)modify-bashrc] ' "$0"
+  printf 'Usage: ./scripts/setup_osx.sh [--mjkey <arg>] [--(no-)modify-bashrc] '
   printf '[-h|--help]\n'
   printf '\t%s\n' "--mjkey: Path of the MuJoCo key (no default)"
   printf '\t%s' "--modify-bashrc,--no-modify-bashrc: Set environment "
@@ -133,9 +133,11 @@ if [[ ! " ${VERIFIED_OSX_VERSIONS[@]} " =~ " ${VER} " ]]; then
 fi
 
 # Verify this script is running from the correct folder (root directory)
-([ -e setup.py ] && (more setup.py | grep -q "name='rlgarage'")) \
+dir_err_txt="This script must be run from the root garage git directory. Use:
+./scripts/setup_osx.sh"
+([ -e setup.py ] && (grep -Fq "name='rlgarage'," setup.py)) \
   || _PRINT_HELP=yes die \
-  "This setup script must be run from the root garage directory." 1
+  "${dir_err_txt}" 1
 
 # Verify there's a file in the mjkey path
 test "$(file -b --mime-type ${_arg_mjkey})" == "text/plain" \
