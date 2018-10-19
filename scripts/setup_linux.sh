@@ -35,16 +35,16 @@ _positionals=()
 # THE DEFAULTS INITIALIZATION - OPTIONALS
 _arg_mjkey=
 _arg_modify_bashrc="off"
-_arg_tf_gpu="off"
+_arg_gpu="off"
 
 print_help ()
 {
   printf '%s\n' "Installer of garage for Linux."
   printf 'Usage: %s [--mjkey <arg>] [--(no-)modify-bashrc] ' "$0"
-  printf '[--(no-)tf-gpu] [-h|--help]\n'
+  printf '[--(no-)gpu] [-h|--help]\n'
   printf '\t%s\n' "--mjkey: Path of the MuJoCo key (no default)"
-  printf '\t%s' "--tf-gpu,--no-tf-gpu: Install TensorFlow GPU instead of the "
-  printf '%s\n' "regular version (off by default)"
+  printf '\t%s' "--gpu,--no-gpu: Install GPU support of Tensorflow and Theano "
+  printf '%s\n' "(off by default)"
   printf '\t%s' "--modify-bashrc,--no-modify-bashrc: Set environment variables "
   printf '%s\n' "required by garage in .bashrc (off by default)"
   printf '\t%s\n' "-h,--help: Prints help"
@@ -70,8 +70,8 @@ parse_commandline ()
         test "${1:0:5}" = "--no-" && _arg_modify_bashrc="off"
         ;;
       --no-tf-gpu|--tf-gpu)
-        _arg_tf_gpu="on"
-        test "${1:0:5}" = "--no-" && _arg_tf_gpu="off"
+        _arg_gpu="on"
+        test "${1:0:5}" = "--no-" && _arg_gpu="off"
         ;;
       -h|--help)
         print_help
@@ -209,8 +209,8 @@ conda activate garage
   # 'Install' garage as an editable package
   pip install -e .
 
-  if [[ "${_arg_tf_gpu}" = on ]]; then
-    # Remove any TensorFlow installations before installing the GPU flavor
+  if [[ "${_arg_gpu}" = on ]]; then
+    # Remove any TensorFlow installations before installing the GPU flavor 
     pip uninstall -y tensorflow
     pip install "tensorflow-gpu<1.10,>=1.9.0"
 
