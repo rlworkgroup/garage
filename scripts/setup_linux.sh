@@ -209,10 +209,13 @@ conda activate garage
   # 'Install' garage as an editable package
   pip install -e .
 
-  # Remove any TensorFlow installations before installing the GPU flavor
   if [[ "${_arg_tf_gpu}" = on ]]; then
+    # Remove any TensorFlow installations before installing the GPU flavor
     pip uninstall -y tensorflow
     pip install "tensorflow-gpu<1.10,>=1.9.0"
+
+    # pygpu is required by Theano to run on GPU
+    conda install pygpu
   fi
 
   # Fix Box2D install
