@@ -1,6 +1,5 @@
 import pickle
 
-from tests.quirks import KNOWN_GYM_CLOSE_BROKEN
 from tests.quirks import KNOWN_GYM_RENDER_NOT_IMPLEMENTED
 
 
@@ -44,5 +43,4 @@ def step_env_with_gym_quirks(test_case,
         round_trip = pickle.loads(pickle.dumps(env))
         assert round_trip.env.spec == env.env.spec
 
-    if not spec.id in KNOWN_GYM_CLOSE_BROKEN:
-        env.close()
+    env.close()
