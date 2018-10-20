@@ -69,7 +69,7 @@ parse_commandline ()
         _arg_modify_bashrc="on"
         test "${1:0:5}" = "--no-" && _arg_modify_bashrc="off"
         ;;
-      --no-tf-gpu|--tf-gpu)
+      --no-gpu|--gpu)
         _arg_gpu="on"
         test "${1:0:5}" = "--no-" && _arg_gpu="off"
         ;;
@@ -210,7 +210,7 @@ conda activate garage
   pip install -e .
 
   if [[ "${_arg_gpu}" = on ]]; then
-    # Remove any TensorFlow installations before installing the GPU flavor 
+    # Remove any TensorFlow installations before installing the GPU flavor
     pip uninstall -y tensorflow
     pip install "tensorflow-gpu<1.10,>=1.9.0"
 
