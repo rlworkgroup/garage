@@ -95,7 +95,7 @@ GPU Support
 
 To enable GPU support, you need to run the express installation script with the argument :code:`--gpu`. This options installs GPU-supported Tensorflow and modules needed by Theano.
 
-Before you run garage, you need to specify the directory for the CUDA library in environment varible :code:`LD_LIBRARY_PATH`. You may need to replace the directory conforming to your CUDA version accordingly.
+Before you run garage, you need to specify the directory for the CUDA library in environment variable :code:`LD_LIBRARY_PATH`. You may need to replace the directory conforming to your CUDA version accordingly.
 
 .. code-block:: bash
 
