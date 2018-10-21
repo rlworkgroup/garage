@@ -79,8 +79,15 @@ RUN conda update -q -y conda
 # Copy over just environment.yml first, so the Docker cache doesn't expire
 # until it changes
 COPY environment.yml /root/code/garage/environment.yml
-RUN conda env create -f /root/code/garage/environment.yml && \
-  rm -rf /opt/conda/pkgs/*
+
+# We need a MuJoCo key to install mujoco_py
+# MAKE SURE TO DELETE MJKEY.TXT SO THAT WE DON'T PUBLISH THE KEY
+# NOTE: You MUST create and delete the mjkey.txt within the same RUN command
+ARG MJKEY
+RUN echo "${MJKEY}" > /root/.mujoco/mjkey.txt && \
+  conda env create -f /root/code/garage/environment.yml && \
+  rm -rf /opt/conda/pkgs/* && \
+  rm /root/.mujoco/mjkey.txt
 
 # Extras
 # prevent pip from complaining about available upgrades
@@ -89,14 +96,6 @@ RUN ["/bin/bash", "-c", "source activate garage && pip install --upgrade pip"]
 # See https://github.com/openai/gym/issues/100
 # See https://github.com/pybox2d/pybox2d/issues/82
 RUN ["/bin/bash", "-c", "source activate garage && pip uninstall -y Box2D Box2D-kengz box2d-py && pip install Box2D"]
-
-# Trigger Cython build of mujoco_py bindings
-# We need a MuJoCo key to import mujoco_py, but MAKE SURE TO DELETE IT AFTER SO
-# THAT WE DON'T PUBLISH THE KEY
-ARG MJKEY
-RUN echo "${MJKEY}" > /root/.mujoco/mjkey.txt
-RUN ["/bin/bash", "-c", "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mjpro150/bin && source activate garage && python -c 'import mujoco_py'"]
-RUN rm /root/.mujoco/mjkey.txt
 
 # Setup repo
 WORKDIR /root/code/garage
