@@ -106,9 +106,10 @@ print_warning() {
 dir_err_txt="Please run this script only from the root of the garage \
 repository, i.e. you should run it using the command \
 \"bash scripts/setup_linux.sh\""
-([ -e setup.py ] && (grep -Fq "name='rlgarage'," setup.py)) \
-  || _PRINT_HELP=yes die \
+if ! test -f setup.py && ! grep -Fq "name='rlgarage'," setup.py; then
+  _PRINT_HELP=yes die \
   "${dir_err_txt}" 1
+fi
 
 # Verify there's a file in the mjkey path
 test "$(file -b --mime-type ${_arg_mjkey})" == "text/plain" \
