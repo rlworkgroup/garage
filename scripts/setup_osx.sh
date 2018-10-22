@@ -136,7 +136,7 @@ fi
 dir_err_txt="Please run this script only from the root of the garage \
 repository, i.e. you should run it using the command \
 \"bash scripts/setup_osx.sh\""
-if ! test -f setup.py && ! grep -Fq "name='rlgarage'," setup.py; then
+if [[ ! -f setup.py ]] && ! grep -Fq "name='rlgarage'," setup.py; then
   _PRINT_HELP=yes die \
   "${dir_err_txt}" 1
 fi
