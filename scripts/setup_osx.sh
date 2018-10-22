@@ -45,7 +45,7 @@ _arg_modify_bashrc="off"
 print_help ()
 {
   printf '%s\n' "Installer of garage for OS X."
-  printf 'Usage: ./scripts/setup_osx.sh [--mjkey <arg>] [--(no-)modify-bashrc] '
+  printf 'Usage: %s [--mjkey <arg>] [--(no-)modify-bashrc] ' "$0"
   printf '[-h|--help]\n'
   printf '\t%s\n' "--mjkey: Path of the MuJoCo key (no default)"
   printf '\t%s' "--modify-bashrc,--no-modify-bashrc: Set environment "
