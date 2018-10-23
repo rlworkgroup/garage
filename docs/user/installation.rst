@@ -89,3 +89,30 @@ Install Python modules
 .. code-block:: bash
 
   conda env create -f environment.yml
+
+GPU Support
+===========
+
+To enable GPU support, you need to run the express installation script with the argument :code:`--gpu`. This options installs GPU-supported Tensorflow and modules needed by Theano.
+
+Before you run garage, you need to specify the directory for the CUDA library in environment variable :code:`LD_LIBRARY_PATH`. You may need to replace the directory conforming to your CUDA version accordingly.
+
+.. code-block:: bash
+
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda-9.0/lib64
+
+
+You should now be able to use GPU in Tensorflow. For Theano, two additional steps are needed.
+
+* Specify CUDA root in :code:`~/.theanorc` (Create the file if it doesn't exist)
+
+.. code-block:: ini
+
+    [cuda]
+    root = /usr/local/cuda-9.0
+
+* | `Enable GPU for theano <http://deeplearning.net/software/theano/tutorial/using_gpu.html>`_ by
+
+.. code-block:: bash
+
+    export THEANO_FLAGS=device=cuda,floatX=float32,force_device=True
