@@ -2,10 +2,11 @@ import unittest
 
 import numpy as np
 
+from garage.sampler.utils import truncate_paths
+
 
 class TestSampler(unittest.TestCase):
     def test_truncate_paths(self):
-        from garage.sampler.parallel_sampler import truncate_paths
 
         paths = [
             dict(

@@ -4,9 +4,9 @@ import tensorflow as tf
 from garage.core import Serializable
 from garage.misc import logger
 from garage.tf.core import LayersPowered
-from garage.tf.core import MLP
 from garage.tf.core import Parameterized
 import garage.tf.core.layers as L
+from garage.tf.core.network import MLP
 from garage.tf.misc import tensor_utils
 from garage.tf.optimizers import LbfgsOptimizer
 

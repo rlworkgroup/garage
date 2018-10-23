@@ -5,8 +5,8 @@ import random
 
 from numpy import var
 
-from garage.algos.batch_polopt import BatchSampler
-from garage.sampler import parallel_sampler
+from garage.sampler import BatchSampler
+from garage.sampler.utils import truncate_paths
 
 
 class ISSampler(BatchSampler):
@@ -111,8 +111,7 @@ class ISSampler(BatchSampler):
         if self.algo.whole_paths:
             return paths
         else:
-            paths_truncated = parallel_sampler.truncate_paths(
-                paths, self.algo.batch_size)
+            paths_truncated = truncate_paths(paths, self.algo.batch_size)
             return paths_truncated
 
     def sample_isweighted_paths(

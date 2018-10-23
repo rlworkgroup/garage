@@ -6,7 +6,7 @@ from garage.core import Serializable
 from garage.misc.overrides import overrides
 from garage.policies import StochasticPolicy
 from garage.theano.core import LasagnePowered
-from garage.theano.core import MLP
+from garage.theano.core.network import MLP
 from garage.theano.distributions import Categorical
 from garage.theano.misc import tensor_utils
 from garage.theano.spaces import Discrete
