@@ -1,3 +1,5 @@
+from copy import copy
+
 import numpy as np
 
 from garage.core import Serializable
@@ -36,8 +38,7 @@ class HalfCheetahEnv(MujocoEnv, Serializable):
 
     def step(self, action):
         # Copy action first to remove side effects
-        action_copy = action if isinstance(action,
-                                           (int, float)) else action.copy()
+        action_copy = copy(action)
 
         self.forward_dynamics(action_copy)
         next_obs = self.get_current_obs()

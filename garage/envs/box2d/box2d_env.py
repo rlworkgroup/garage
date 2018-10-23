@@ -1,3 +1,4 @@
+from copy import copy
 import os.path as osp
 
 import gym
@@ -177,8 +178,7 @@ class Box2DEnv(gym.Env):
         observations, etc.
         """
         # Copy action first to remove side effects
-        action_copy = action if isinstance(action,
-                                           (int, float)) else action.copy()
+        action_copy = copy(action)
 
         reward_computer = self.compute_reward(action_copy)
         # forward the state

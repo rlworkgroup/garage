@@ -12,3 +12,11 @@ class TestGridWorldEnv(unittest.TestCase):
         assert round_trip
         assert round_trip.start_state == env.start_state
         step_env(round_trip)
+
+    def test_does_not_modify_action(self):
+        env = GridWorldEnv(desc="8x8")
+        a = env.action_space.sample()
+        a_copy = a
+        env.reset()
+        env.step(a)
+        self.assertEquals(a, a_copy)

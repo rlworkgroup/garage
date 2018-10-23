@@ -12,3 +12,11 @@ class TestSwimmer3DEnv(unittest.TestCase):
         assert round_trip
         assert round_trip.ctrl_cost_coeff == env.ctrl_cost_coeff
         step_env(round_trip)
+
+    def test_does_not_modify_action(self):
+        env = Swimmer3DEnv(ctrl_cost_coeff=1.0)
+        a = env.action_space.sample()
+        a_copy = a.copy()
+        env.reset()
+        env.step(a)
+        self.assertEquals(a.all(), a_copy.all())

@@ -1,4 +1,6 @@
 """Testing for sawyer envrionments. """
+import collections
+from copy import copy
 import unittest
 
 import numpy as np
@@ -90,3 +92,17 @@ class TestSawyerEnvs(unittest.TestCase):
 
         env = PickAndPlaceEnv()
         step_env(env, n=5, render=True)
+
+    def test_does_not_modify_action(self):
+        tasks = [(0.3, -0.3, 0.30), (0.3, 0.3, 0.30)]
+        envs = [ReacherEnv(goal_position=tasks[0]), PickAndPlaceEnv()]
+        for env in envs:
+            env.reset()
+            a = env.action_space.sample()
+            a_copy = copy(a)
+            env.step(a)
+            if isinstance(a, collections.Iterable):
+                self.assertEquals(a.all(), a_copy.all())
+            else:
+                self.assertEquals(a, a_copy)
+        env.close()

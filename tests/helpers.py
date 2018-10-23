@@ -7,18 +7,7 @@ from tests.quirks import KNOWN_GYM_RENDER_NOT_IMPLEMENTED
 def step_env(env, n=10, render=True):
     env.reset()
     for _ in range(n):
-        a = env.action_space.sample()
-        a_copy = a if isinstance(a, int) else a.copy()
-        _, _, done, _ = env.step(a)
-
-        # Check for side effects
-        if isinstance(a, (int, float)):
-            assert a == a_copy,\
-            "Action was modified by environment!"
-        else:
-            assert a.all() == a_copy.all(),\
-             "Action was modified by environment!"
-
+        _, _, done, _ = env.step(env.action_space.sample())
         if render:
             env.render()
         if done:
@@ -40,18 +29,7 @@ def step_env_with_gym_quirks(test_case,
 
     env.reset()
     for _ in range(n):
-        a = env.action_space.sample()
-        a_copy = a if isinstance(a, int) else a.copy()
-        _, _, done, _ = env.step(a)
-
-        # Check for side effects
-        if isinstance(a, (int, float)):
-            assert a == a_copy,\
-            "Action was modified by environment!"
-        else:
-            assert a.all() == a_copy.all(),\
-            "Action was modified by environment!"
-
+        _, _, done, _ = env.step(env.action_space.sample())
         if render:
             if not spec.id in KNOWN_GYM_RENDER_NOT_IMPLEMENTED:
                 env.render()
