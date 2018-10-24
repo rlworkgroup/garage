@@ -4,8 +4,8 @@ import tensorflow as tf
 from garage.core import Serializable
 from garage.misc.overrides import overrides
 from garage.tf.core import LayersPowered
-from garage.tf.core import LSTMNetwork
 import garage.tf.core.layers as L
+from garage.tf.core.network import LSTMNetwork
 from garage.tf.distributions import RecurrentDiagonalGaussian
 from garage.tf.misc import tensor_utils
 from garage.tf.policies import StochasticPolicy

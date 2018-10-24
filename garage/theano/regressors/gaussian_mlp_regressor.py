@@ -9,8 +9,8 @@ from garage.core import Serializable
 from garage.misc import logger
 from garage.misc.ext import iterate_minibatches_generic
 from garage.theano.core import LasagnePowered
-from garage.theano.core import MLP
-from garage.theano.core import ParamLayer
+from garage.theano.core.lasagne_layers import ParamLayer
+from garage.theano.core.network import MLP
 from garage.theano.distributions import DiagonalGaussian
 from garage.theano.misc.tensor_utils import compile_function
 from garage.theano.optimizers import LbfgsOptimizer

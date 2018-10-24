@@ -4,9 +4,9 @@ import tensorflow as tf
 from garage.core import Serializable
 from garage.misc import special
 from garage.misc.overrides import overrides
-from garage.tf.core import GRUNetwork
 from garage.tf.core import LayersPowered
 import garage.tf.core.layers as L
+from garage.tf.core.network import GRUNetwork
 from garage.tf.distributions import RecurrentCategorical
 from garage.tf.misc import tensor_utils
 from garage.tf.policies import StochasticPolicy

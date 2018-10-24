@@ -4,8 +4,8 @@ import lasagne.nonlinearities as NL
 
 from garage.core import Serializable
 from garage.policies import Policy
-from garage.theano.core import batch_norm
 from garage.theano.core import LasagnePowered
+from garage.theano.core.lasagne_layers import batch_norm
 from garage.theano.misc import tensor_utils
 from garage.theano.spaces import Box
 
