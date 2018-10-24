@@ -8,7 +8,7 @@ import theano.tensor as TT
 from garage.core import Serializable
 from garage.misc import ext
 from garage.theano.core import LasagnePowered
-from garage.theano.core import OpLayer
+from garage.theano.core.lasagne_layers import OpLayer
 
 
 def wrapped_conv(*args, **kwargs):

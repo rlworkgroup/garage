@@ -1,9 +1,9 @@
 import pickle
 import unittest
 
+from garage.envs import DelayedActionEnv
+from garage.envs import NoisyObservationEnv
 from garage.envs.box2d import CartpoleEnv
-from garage.envs.noisy_env import DelayedActionEnv
-from garage.envs.noisy_env import NoisyObservationEnv
 from tests.helpers import step_env
 
 

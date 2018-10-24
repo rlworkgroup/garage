@@ -5,6 +5,7 @@ from garage.misc import logger, special
 from garage.sampler import parallel_sampler
 from garage.sampler import singleton_pool
 from garage.sampler.base import BaseSampler
+from garage.sampler.utils import truncate_paths
 from garage.tf.misc import tensor_utils
 
 
@@ -41,8 +42,7 @@ class BatchSampler(BaseSampler):
         if self.algo.whole_paths:
             return paths
         else:
-            paths_truncated = parallel_sampler.truncate_paths(
-                paths, self.algo.batch_size)
+            paths_truncated = truncate_paths(paths, self.algo.batch_size)
             return paths_truncated
 
     def process_samples(self, itr, paths):

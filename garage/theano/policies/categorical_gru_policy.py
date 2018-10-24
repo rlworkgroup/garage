@@ -7,9 +7,9 @@ from garage.core import Serializable
 from garage.misc import special
 from garage.misc.overrides import overrides
 from garage.policies import StochasticPolicy
-from garage.theano.core import GRUNetwork
 from garage.theano.core import LasagnePowered
-from garage.theano.core import OpLayer
+from garage.theano.core.lasagne_layers import OpLayer
+from garage.theano.core.network import GRUNetwork
 from garage.theano.distributions import RecurrentCategorical
 from garage.theano.misc import tensor_utils
 from garage.theano.spaces import Discrete

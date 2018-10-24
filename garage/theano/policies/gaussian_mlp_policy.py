@@ -10,8 +10,8 @@ from garage.misc.overrides import overrides
 from garage.policies import StochasticPolicy
 from garage.spaces import Box
 from garage.theano.core import LasagnePowered
-from garage.theano.core import MLP
-from garage.theano.core import ParamLayer
+from garage.theano.core.lasagne_layers import ParamLayer
+from garage.theano.core.network import MLP
 from garage.theano.distributions import DiagonalGaussian
 from garage.theano.misc import tensor_utils
 from garage.theano.spaces import Box

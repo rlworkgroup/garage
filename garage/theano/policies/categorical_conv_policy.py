@@ -4,8 +4,8 @@ import lasagne.nonlinearities as NL
 from garage.core import Serializable
 from garage.misc.overrides import overrides
 from garage.policies import StochasticPolicy
-from garage.theano.core import ConvNetwork
 from garage.theano.core import LasagnePowered
+from garage.theano.core.network import ConvNetwork
 from garage.theano.distributions import Categorical
 from garage.theano.misc import tensor_utils
 from garage.theano.spaces import Discrete

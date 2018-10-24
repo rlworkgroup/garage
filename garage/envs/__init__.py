@@ -6,7 +6,6 @@ from garage.envs.identification_env import IdentificationEnv  # noqa: I100
 from garage.envs.noisy_env import DelayedActionEnv
 from garage.envs.noisy_env import NoisyObservationEnv
 from garage.envs.normalized_env import normalize
-from garage.envs.normalized_env import NormalizedEnv
 from garage.envs.sliding_mem_env import SlidingMemEnv
 
 __all__ = [
@@ -18,6 +17,5 @@ __all__ = [
     "DelayedActionEnv",
     "NoisyObservationEnv",
     "normalize",
-    "NormalizedEnv",
     "SlidingMemEnv",
 ]
