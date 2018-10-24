@@ -16,3 +16,12 @@ class TestOcclusionEnv(unittest.TestCase):
         assert round_trip.occlude(obs) == env.occlude(obs)
         assert round_trip.env.obs_noise == env.env.obs_noise
         step_env(round_trip)
+
+    def test_does_not_modify_action(self):
+        inner_env = CartpoleEnv(obs_noise=5.)
+        env = OcclusionEnv(inner_env, [1])
+        a = env.action_space.sample()
+        a_copy = a
+        env.reset()
+        env.step(a)
+        self.assertEquals(a, a_copy)

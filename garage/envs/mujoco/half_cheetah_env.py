@@ -1,3 +1,5 @@
+from copy import copy
+
 import numpy as np
 
 from garage.core import Serializable
@@ -35,10 +37,14 @@ class HalfCheetahEnv(MujocoEnv, Serializable):
         return self.data.get_body_xpos(body_name)
 
     def step(self, action):
-        self.forward_dynamics(action)
+        # Copy action first to remove side effects
+        action_copy = copy(action)
+
+        self.forward_dynamics(action_copy)
         next_obs = self.get_current_obs()
-        action = np.clip(action, *self.action_bounds)
-        ctrl_cost = 1e-1 * 0.5 * np.sum(np.square(action))
+        action_copy = np.clip(action_copy, *self.action_bounds)
+        ctrl_cost = 1e-1 * 0.5 * np.sum(np.square(action_copy))
+        assert action.all() == action_copy.all()
         run_cost = -1 * self.get_body_comvel("torso")[0]
         cost = ctrl_cost + run_cost
         reward = -cost

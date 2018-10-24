@@ -1,5 +1,4 @@
 import gc
-import pickle
 import unittest
 
 from dm_control.suite import ALL_TASKS
@@ -8,7 +7,6 @@ import tensorflow as tf
 from garage.envs.dm_control import DmControlEnv
 import garage.misc.logger as logger
 from garage.misc.tensorboard_output import TensorBoardOutput
-from tests.helpers import step_env
 
 
 class TfTestCase(unittest.TestCase):
@@ -51,17 +49,3 @@ class DmParameterizedTestCase(unittest.TestCase):
         for name in testnames:
             suite.addTest(child_class(name, param=param))
         return suite
-
-
-class DmTestCase(DmParameterizedTestCase):
-    def test_can_step_and_render(self):
-        ob_space = self.env.observation_space
-        act_space = self.env.action_space
-        ob = self.env.reset()
-        assert ob_space.contains(ob)
-        a = act_space.sample()
-        assert act_space.contains(a)
-        step_env(self.env, n=10, render=True)
-
-    def test_pickling(self):
-        pickle.loads(pickle.dumps(self.env))

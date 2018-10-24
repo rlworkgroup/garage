@@ -14,3 +14,11 @@ class TestIdentificationEnv(unittest.TestCase):
         assert env.mdp_args == round_trip.mdp_args
         assert round_trip.env.obs_noise == env.env.obs_noise
         step_env(round_trip)
+
+    def test_does_not_modify_action(self):
+        env = IdentificationEnv(CartpoleEnv, dict(obs_noise=5.))
+        a = env.action_space.sample()
+        a_copy = a.copy()
+        env.reset()
+        env.step(a)
+        self.assertEquals(a.all(), a_copy.all())

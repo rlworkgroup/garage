@@ -12,3 +12,11 @@ class TestHopperEnv(unittest.TestCase):
         assert round_trip
         assert round_trip.alive_coeff == env.alive_coeff
         step_env(round_trip)
+
+    def test_does_not_modify_action(self):
+        env = HopperEnv(alive_coeff=2.0)
+        a = env.action_space.sample()
+        a_copy = a.copy()
+        env.reset()
+        env.step(a)
+        self.assertEquals(a.all(), a_copy.all())
