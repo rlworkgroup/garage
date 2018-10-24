@@ -14,8 +14,6 @@ from abc import abstractmethod
 
 import numpy as np
 
-from garage.spaces import Dict
-
 
 class ReplayBuffer(metaclass=abc.ABCMeta):
     """Abstract class for Replay Buffer."""
@@ -31,21 +29,17 @@ class ReplayBuffer(metaclass=abc.ABCMeta):
         self._current_size = 0
         self._n_transitions_stored = 0
         self._time_horizon = time_horizon
-        self._episode_buffer = {}
         self._size = size_in_transitions // time_horizon
-        self._buffer_shapes = self._get_buffer_shapes(env_spec)
-        for key in self._buffer_shapes.keys():
-            self._episode_buffer[key] = list()
-        self._buffer = {
-            key: np.zeros([self._size, *shape])
-            for key, shape in self._buffer_shapes.items()
-        }
+        self._initialized_buffer = False
+        self._buffer = {}
+        self._episode_buffer = {}
 
     def store_episode(self):
         """Add an episode to the buffer."""
         episode_buffer = self._convert_episode_to_batch_major()
         rollout_batch_size = len(episode_buffer["observation"])
         idx = self._get_storage_idx(rollout_batch_size)
+
         for key in self._buffer.keys():
             self._buffer[key][idx] = episode_buffer[key]
         self._n_transitions_stored += self._time_horizon * rollout_batch_size
@@ -57,6 +51,9 @@ class ReplayBuffer(metaclass=abc.ABCMeta):
 
     def add_transition(self, **kwargs):
         """Add one transition into the replay buffer."""
+        if not self._initialized_buffer:
+            self._initialize_buffer(**kwargs)
+
         for key, value in kwargs.items():
             self._episode_buffer[key].append(value)
 
@@ -64,6 +61,13 @@ class ReplayBuffer(metaclass=abc.ABCMeta):
             self.store_episode()
             for key in self._episode_buffer.keys():
                 self._episode_buffer[key].clear()
+
+    def _initialize_buffer(self, **kwargs):
+        for key, value in kwargs.items():
+            self._episode_buffer[key] = list()
+            self._buffer[key] = np.zeros(
+                [self._size, self._time_horizon, *np.array(value).shape[1:]])
+        self._initialized_buffer = True
 
     def _get_storage_idx(self, size_increment=1):
         """Get the storage index for the episode to add into the buffer."""
@@ -87,42 +91,17 @@ class ReplayBuffer(metaclass=abc.ABCMeta):
         return idx
 
     def _convert_episode_to_batch_major(self):
+        """
+        Convert the shape of episode_buffer.
+
+        episode_buffer: {time_horizon, algo.rollout_batch_size, falt_dim}.
+        buffer: {size, time_horizon, flat_dim}.
+        """
         transitions = {}
         for key in self._episode_buffer.keys():
             val = np.array(self._episode_buffer[key])
             transitions[key] = val.swapaxes(0, 1)
         return transitions
-
-    def _get_buffer_shapes(self, env_spec):
-        obs = env_spec.observation_space
-        action = env_spec.action_space
-
-        if isinstance(obs, Dict):
-            dims = {
-                "observation": obs.flat_dim_with_keys(["observation"]),
-                "action": action.flat_dim,
-                "goal": obs.flat_dim_with_keys(["desired_goal"]),
-                "achieved_goal": obs.flat_dim_with_keys(["achieved_goal"]),
-                "terminal": 0,
-                "next_observation": obs.flat_dim_with_keys(["observation"]),
-                "next_achieved_goal":
-                obs.flat_dim_with_keys(["achieved_goal"]),
-            }
-
-        else:
-            dims = {
-                "observation": obs.flat_dim,
-                "action": action.flat_dim,
-                "terminal": 0,
-                "reward": 0,
-                "next_observation": obs.flat_dim,
-            }
-
-        return {
-            key: (self._time_horizon, *tuple([val]))
-            if val > 0 else (self._time_horizon, *tuple())
-            for key, val in dims.items()
-        }
 
     @property
     def full(self):

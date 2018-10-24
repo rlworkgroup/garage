@@ -212,13 +212,6 @@ class DDPG(OffPolicyRLAlgorithm):
                             epoch_ys.append(y)
                             epoch_qs.append(q)
 
-                    if self.plot:
-                        self.plotter.update_plot(self.policy,
-                                                 self.max_path_length)
-                        if self.pause_for_plot:
-                            input("Plotting evaluation run: Press Enter to "
-                                  "continue...")
-
                 logger.log("Training finished")
                 logger.log("Saving snapshot #{}".format(epoch))
                 params = self.get_itr_snapshot(epoch, samples_data)
@@ -256,6 +249,11 @@ class DDPG(OffPolicyRLAlgorithm):
                     epoch_qs = []
 
                 logger.dump_tabular(with_prefix=False)
+                if self.plot:
+                    self.plotter.update_plot(self.policy, self.max_path_length)
+                    if self.pause_for_plot:
+                        input("Plotting evaluation run: Press Enter to "
+                              "continue...")
 
         self.shutdown_worker()
         if created_session:
