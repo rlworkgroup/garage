@@ -12,3 +12,11 @@ class TestSwimmerGatherEnv(unittest.TestCase):
         assert round_trip
         assert round_trip.n_apples == env.n_apples
         step_env(round_trip)
+
+    def test_does_not_modify_action(self):
+        env = SwimmerGatherEnv(n_apples=1)
+        a = env.action_space.sample()
+        a_copy = a.copy()
+        env.reset()
+        env.step(a)
+        self.assertEquals(a.all(), a_copy.all())

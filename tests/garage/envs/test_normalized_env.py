@@ -15,3 +15,12 @@ class TestNormalizedEnv(unittest.TestCase):
         assert round_trip._scale_reward == env._scale_reward
         assert round_trip.env.obs_noise == env.env.obs_noise
         step_env(round_trip)
+
+    def test_does_not_modify_action(self):
+        inner_env = CartpoleEnv(obs_noise=5.)
+        env = NormalizedEnv(inner_env, scale_reward=10.)
+        a = env.action_space.sample()
+        a_copy = a
+        env.reset()
+        env.step(a)
+        self.assertEquals(a, a_copy)

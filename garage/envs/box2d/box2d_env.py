@@ -1,3 +1,4 @@
+from copy import copy
 import os.path as osp
 
 import gym
@@ -176,11 +177,14 @@ class Box2DEnv(gym.Env):
         Note: override this method with great care, as it post-processes the
         observations, etc.
         """
-        reward_computer = self.compute_reward(action)
+        # Copy action first to remove side effects
+        action_copy = copy(action)
+
+        reward_computer = self.compute_reward(action_copy)
         # forward the state
-        action = self._inject_action_noise(action)
+        action_copy = self._inject_action_noise(action_copy)
         for _ in range(self.frame_skip):
-            self.forward_dynamics(action)
+            self.forward_dynamics(action_copy)
         # notifies that we have stepped the world
         next(reward_computer)
         # actually get the reward
