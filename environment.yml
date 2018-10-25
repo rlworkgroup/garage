@@ -15,7 +15,6 @@ dependencies:
         # Please keep alphabetized
         - awscli
         - boto3
-        - Box2D>=2.3.2
         - cached_property
         - cloudpickle
         - cma==1.1.06
@@ -25,7 +24,8 @@ dependencies:
         # installed. This is stupid, but harmless.
         - git+https://github.com/deepmind/dm_control.git@c24ec9f5f3cb3c25c6571c89c9f60bf3350f5711#egg=dm_control
         - flask
-        - gym[all]==0.10.5
+        - gym[all]==0.10.8
+        - box2d-py>=2.3.4
         - hyperopt
         - ipdb
         - ipywidgets

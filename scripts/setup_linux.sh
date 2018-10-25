@@ -218,12 +218,6 @@ conda activate garage
     conda install pygpu
   fi
 
-  # Fix Box2D install
-  # See https://github.com/openai/gym/issues/100
-  # See https://github.com/pybox2d/pybox2d/issues/82
-  pip uninstall -y Box2D Box2D-kengz box2d-py
-  pip install Box2D
-
   # We need a MuJoCo key to import mujoco_py
   cp ${_arg_mjkey} "${HOME}"/.mujoco/mjkey.txt
 
