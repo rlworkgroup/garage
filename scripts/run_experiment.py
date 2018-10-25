@@ -106,7 +106,7 @@ def run_experiment(argv):
         help='Print only the tabular log information (in a horizontal format)')
     parser.add_argument('--seed', type=int, help='Random seed for numpy')
     parser.add_argument(
-        '--args_data', type=str, help='Pickled data for stub objects')
+        '--args_data', type=str, help='Pickled data for objects')
     parser.add_argument(
         '--variant_data',
         type=str,

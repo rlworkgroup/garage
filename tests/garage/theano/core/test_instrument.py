@@ -22,21 +22,14 @@ with such.A("instrument") as it:
         it.assertEqual(instrument.concretize([5]), [5])
         it.assertEqual(instrument.concretize((5, )), (5, ))
         fake_globals = dict(TestClass=TestClass)
-        instrument.stub(fake_globals)
         modified = fake_globals["TestClass"]
-        it.assertIsInstance(modified, instrument.StubClass)
-        it.assertIsInstance(modified(), instrument.StubObject)
         it.assertEqual(instrument.concretize((5, )), (5, ))
         it.assertIsInstance(instrument.concretize(modified()), TestClass)
 
     @it.should
     def test_chained_call():
         fake_globals = dict(TestClass=TestClass)
-        instrument.stub(fake_globals)
         modified = fake_globals["TestClass"]
-        it.assertIsInstance(modified().arr[0], instrument.StubMethodCall)
-        it.assertIsInstance(modified().compound_arr[0]["a"],
-                            instrument.StubMethodCall)
         it.assertEqual(instrument.concretize(modified().arr[0]), 1)
 
     @it.should

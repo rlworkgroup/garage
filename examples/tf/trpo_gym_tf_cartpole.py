@@ -2,12 +2,9 @@ import gym
 
 from garage.baselines import LinearFeatureBaseline
 from garage.misc.instrument import run_experiment
-from garage.misc.instrument import stub
 from garage.tf.algos import TRPO
 from garage.tf.envs import TfEnv
 from garage.tf.policies import CategoricalMLPPolicy
-
-stub(globals())
 
 # Need to wrap in a tf environment and force_reset to true
 # see https://github.com/openai/rllab/issues/87#issuecomment-282519288
