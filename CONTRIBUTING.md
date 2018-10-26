@@ -125,3 +125,8 @@ git rebase master
 # you may need to manually reconcile merge conflicts here. Follow git's instructions.
 git push -f origin myfeaturebranch # -f is frequently necessary because rebases rewrite history
 ```
+
+## Release
+
+### Modify CHANGELOG.md
+For each release in garage, modify [CHANGELOG.md](https://github.com/rlworkgroup/garage/blob/master/CHANGELOG.md) with the most relevant changes from the latest release. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), which adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
