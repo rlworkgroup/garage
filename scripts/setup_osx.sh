@@ -133,7 +133,8 @@ if [[ ! " ${VERIFIED_OSX_VERSIONS[@]} " =~ " ${VER} " ]]; then
 fi
 
 # Verify there's a file in the mjkey path
-test -f "${_arg_mjkey}" || _PRINT_HELP=yes die \
+test "$(file -b --mime-type ${_arg_mjkey})" == "text/plain" \
+  || _PRINT_HELP=yes die \
   "The path ${_arg_mjkey} of the MuJoCo key is not valid." 1
 
 # Make sure that we're under the garage directory
@@ -215,6 +216,9 @@ fi
 . "${CONDA_SH}"
 conda update -q -y conda
 
+# We need a MuJoCo key to import mujoco_py
+cp "${_arg_mjkey}" "${HOME}/.mujoco/mjkey.txt"
+
 # Create conda environment
 conda env create -f environment.yml
 if [[ "${?}" -ne 0 ]]; then
@@ -229,12 +233,6 @@ conda activate garage
 
   # 'Install' garage as an editable package
   pip install -e .
-
-  # We need a MuJoCo key to import mujoco_py
-  cp ${_arg_mjkey} "${HOME}"/.mujoco/mjkey.txt
-
-  # Build mujoco-py and check it's correctly installed
-  python -c 'import mujoco_py'
 
   # Install git hooks
   pre-commit install -t pre-commit
