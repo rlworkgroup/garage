@@ -5,8 +5,8 @@ Here it creates InvertedDoublePendulum using gym. And uses a PPO with 1M
 steps.
 
 Results:
-    AverageDiscountedReturn: 526.092
-    RiseTime: itr 488
+    AverageDiscountedReturn: 528.3
+    RiseTime: itr 250
 """
 import gym
 
@@ -27,8 +27,7 @@ def run_task(*_):
     """
     env = TfEnv(normalize(gym.make("InvertedDoublePendulum-v2")))
 
-    policy = GaussianMLPPolicy(
-        name="policy", env_spec=env.spec, hidden_sizes=(64, 64))
+    policy = GaussianMLPPolicy(env_spec=env.spec, hidden_sizes=(64, 64))
 
     baseline = GaussianMLPBaseline(env_spec=env.spec)
 
