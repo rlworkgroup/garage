@@ -96,3 +96,5 @@ class TestSigInt(unittest.TestCase):
     def test_sigint(self, experiment_script, exp_stage):
         """Interrupt the experiment in different stages of its lifecyle."""
         interrupt_experiment(experiment_script, exp_stage)
+
+    test_sigint.flaky = True
