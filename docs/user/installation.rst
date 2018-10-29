@@ -22,11 +22,11 @@ Make sure you run these scripts from the root directory of the repo, not from th
 
     ./scripts/setup_linux.sh --mjkey path-to-your-mjkey.txt --modify-bashrc
 
-- On Mac OS X, run the following:
+- On macOS, run the following:
 
 .. code-block:: bash
 
-    ./scripts/setup_osx.sh --mjkey path-to-your-mjkey.txt --modify-bashrc
+    ./scripts/setup_macos.sh --mjkey path-to-your-mjkey.txt --modify-bashrc
 
 
 The script sets up a conda environment, which is similar to :code:`virtualenv`. To start using it, run the following:
@@ -68,7 +68,7 @@ On Linux, run the following:
   sudo apt-get install swig
   sudo apt-get build-dep python-pygame
 
-On Mac OS X, run the following:
+On macOS, run the following:
 
 .. code-block:: bash
 
