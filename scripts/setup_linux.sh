@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # This script installs garage on Linux distributions.
 #
-# NOTICE: To keep consistency across this script, scripts/setup_osx.sh and
+# NOTICE: To keep consistency across this script, scripts/setup_macos.sh and
 # docker/Dockerfile.ci, if there's any changes applied to this file, specially
 # regarding the installation of dependencies, apply those same changes to the
 # mentioned files.

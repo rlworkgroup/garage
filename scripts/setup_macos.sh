@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# This script installs garage on OS X distributions.
+# This script installs garage on macOS distributions.
 #
 # NOTICE: To keep consistency across this script, scripts/setup_linux.sh and
 # docker/Dockerfile.ci, if there's any changes applied to this file, specially
@@ -9,8 +9,8 @@
 # Exit if any error occurs
 set -e
 
-# Add OS X versions where garage is successfully installed in this list
-VERIFIED_OSX_VERSIONS=(
+# Add macOS versions where garage is successfully installed in this list
+VERIFIED_MACOS_VERSIONS=(
   "10.12",
   "10.13.6",
 )
@@ -44,7 +44,7 @@ _arg_modify_bashrc="off"
 
 print_help ()
 {
-  printf '%s\n' "Installer of garage for OS X."
+  printf '%s\n' "Installer of garage for macOS."
   printf 'Usage: %s [--mjkey <arg>] [--(no-)modify-bashrc] ' "$0"
   printf '[-h|--help]\n'
   printf '\t%s\n' "--mjkey: Path of the MuJoCo key (no default)"
@@ -109,16 +109,16 @@ print_warning() {
   echo -e "\033[0;33m${@}\033[0m"
 }
 
-# Obtain the OS X version
+# Obtain the macOS version
 VER="$(sw_vers -productVersion)"
 
-if [[ ! " ${VERIFIED_OSX_VERSIONS[@]} " =~ " ${VER} " ]]; then
-  print_warning "You are attempting to install garage on a version of OS X" \
+if [[ ! " ${VERIFIED_MACOS_VERSIONS[@]} " =~ " ${VER} " ]]; then
+  print_warning "You are attempting to install garage on a version of macOS" \
     "which we have not verified is working." | fold -s
-  print_warning "\ngarage relies on community contributions to support OS X\n"
-  print_warning "If this installation is successful, please add your OS X" \
-    "version to VERIFIED_OSX_VERSIONS to" \
-    "https://github.com/rlworkgroup/garage/blob/master/scripts/setup_osx.sh" \
+  print_warning "\ngarage relies on community contributions to support macOS\n"
+  print_warning "If this installation is successful, please add your macOS" \
+    "version to VERIFIED_MACOS_VERSIONS to" \
+    "https://github.com/rlworkgroup/garage/blob/master/scripts/setup_macos.sh" \
     "on GitHub and submit a pull request to rlworkgroup/garage to help out" \
     "future users. If the installation is not initially successful, but you" \
     "find changes which fix it, please help us out by submitting a PR with" \
@@ -135,7 +135,7 @@ fi
 # Verify this script is running from the correct folder (root directory)
 dir_err_txt="Please run this script only from the root of the garage \
 repository, i.e. you should run it using the command \
-\"bash scripts/setup_osx.sh\""
+\"bash scripts/setup_macos.sh\""
 if [[ ! -f setup.py ]] && [[ ! $(grep -Fq "name='rlgarage'," setup.py) ]]; then
   _PRINT_HELP=yes die "${dir_err_txt}" 1
 fi

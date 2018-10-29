@@ -26,7 +26,7 @@ garage comes with support for running jobs on EC2 cluster. Here are the steps to
 
     Click "Create New Access Key". Then download the key file.
 
-3. Set up environment variables. On Linux / Mac OS X, edit your :code:`~/.bash_profile` and add the following environment variables:
+3. Set up environment variables. On Linux / macOS, edit your :code:`~/.bash_profile` and add the following environment variables:
 
 .. code-block:: bash
 

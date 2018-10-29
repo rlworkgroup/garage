@@ -1,5 +1,5 @@
 # NOTICE: To keep consistency across this docker file, scripts/setup_linux.sh
-# and scripts/setup_osx.sh, if there's any changes applied to this file,
+# and scripts/setup_macos.sh, if there's any changes applied to this file,
 # specially regarding the installation of dependencies, apply those same
 # changes to the mentioned files.
 FROM ubuntu:16.04
