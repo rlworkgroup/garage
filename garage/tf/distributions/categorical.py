@@ -118,5 +118,6 @@ class Categorical(Distribution):
         with tf.name_scope(name, "sample_sym", [dist_info]):
             probs = dist_info["prob"]
             samples = tf.multinomial(tf.log(probs + 1e-8), num_samples=1)[:, 0]
+
             return tf.nn.embedding_lookup(
                 np.eye(self.dim, dtype=np.float32), samples)
