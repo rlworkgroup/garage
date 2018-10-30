@@ -23,7 +23,10 @@ def flatten_batch_dict(d, name=None):
 
 
 def filter_valids(t, valid, name="filter_valids"):
-    return tf.dynamic_partition(t, tf.to_int32(valid), 2, name=name)[1]
+    # 'valid' is either 0 or 1 with dtype of tf.float32
+    # Must round before cast to prevent floating-error
+    return tf.dynamic_partition(
+        t, tf.to_int32(tf.round(valid)), 2, name=name)[1]
 
 
 def filter_valids_dict(d, valid, name=None):

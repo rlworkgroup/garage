@@ -126,7 +126,7 @@ class NPO(BatchPolopt):
             reward_var = tensor_utils.new_tensor(
                 name="reward", ndim=2, dtype=tf.float32)
             valid_var = tf.placeholder(
-                tf.bool, shape=[None, None], name="valid")
+                tf.float32, shape=[None, None], name="valid")
             baseline_var = tensor_utils.new_tensor(
                 name="baseline", ndim=2, dtype=tf.float32)
 
@@ -373,8 +373,7 @@ class NPO(BatchPolopt):
             if self._use_softplus_entropy:
                 policy_entropy = tf.nn.softplus(policy_entropy)
 
-            policy_entropy = tf.reduce_mean(
-                policy_entropy * tf.to_float(i.valid_var))
+            policy_entropy = tf.reduce_mean(policy_entropy * i.valid_var)
 
         self.f_policy_entropy = tensor_utils.compile_function(
             flatten_inputs(self._policy_opt_inputs),
