@@ -34,12 +34,16 @@ class NPO(BatchPolopt):
                  optimizer_args=None,
                  name="NPO",
                  policy=None,
-                 policy_ent_coeff=1e-2,
+                 policy_ent_coeff=0.0,
                  use_softplus_entropy=True,
+                 use_neg_logli_entropy=True,
+                 stop_entropy_gradient=True,
                  **kwargs):
         self.name = name
         self._name_scope = tf.name_scope(self.name)
         self._use_softplus_entropy = use_softplus_entropy
+        self._use_neg_logli_entropy = use_neg_logli_entropy
+        self._stop_entropy_gradient = stop_entropy_gradient
 
         self._pg_loss = pg_loss
         if optimizer is None:
@@ -95,7 +99,8 @@ class NPO(BatchPolopt):
         logger.record_tabular("{}/KL".format(self.policy.name), policy_kl)
 
         pol_ent = self.f_policy_entropy(*policy_opt_input_values)
-        logger.record_tabular("{}/Entropy".format(self.policy.name), pol_ent)
+        logger.record_tabular("{}/Entropy".format(self.policy.name),
+                              np.mean(pol_ent))
 
         num_traj = self.batch_size // self.max_path_length
         actions = samples_data["actions"][:num_traj, ...]
@@ -326,7 +331,7 @@ class NPO(BatchPolopt):
                 # Maximize E[surrogate objective] by minimizing
                 # -E_t[surrogate objective]
                 if self.policy.recurrent:
-                    surr_loss = (-tf.reduce_sum(surr_vanilla)) / tf.reduce_sum(
+                    surr_loss = (-tf.reduce_sum(surr_obj)) / tf.reduce_sum(
                         i.valid_var)
                 else:
                     surr_loss = -tf.reduce_mean(surr_obj)
@@ -358,14 +363,26 @@ class NPO(BatchPolopt):
                     i.obs_var,
                     i.policy_state_info_vars,
                     name="policy_dist_info")
+                policy_neg_log_likeli_flat = self.policy.distribution.log_likelihood_sym(  # noqa: E501
+                    i.action_var,
+                    policy_dist_info_flat,
+                    name="policy_log_likeli")
             else:
                 policy_dist_info_flat = self.policy.dist_info_sym(
                     i.flat.obs_var,
                     i.flat.policy_state_info_vars,
                     name="policy_dist_info_flat")
+                policy_neg_log_likeli_flat = self.policy.distribution.log_likelihood_sym(  # noqa: E501
+                    i.flat.action_var,
+                    policy_dist_info_flat,
+                    name="policy_log_likeli")
 
-            policy_entropy_flat = self.policy.distribution.entropy_sym(
-                policy_dist_info_flat)
+            if self._use_neg_logli_entropy:
+                policy_entropy_flat = policy_neg_log_likeli_flat
+            else:
+                policy_entropy_flat = self.policy.distribution.entropy_sym(
+                    policy_dist_info_flat)
+
             policy_entropy = tf.reshape(policy_entropy_flat,
                                         [-1, self.max_path_length])
 
@@ -373,7 +390,10 @@ class NPO(BatchPolopt):
             if self._use_softplus_entropy:
                 policy_entropy = tf.nn.softplus(policy_entropy)
 
-            policy_entropy = tf.reduce_mean(policy_entropy * i.valid_var)
+            policy_entropy = policy_entropy * i.valid_var
+
+            if self._stop_entropy_gradient:
+                policy_entropy = tf.stop_gradient(policy_entropy)
 
         self.f_policy_entropy = tensor_utils.compile_function(
             flatten_inputs(self._policy_opt_inputs),
