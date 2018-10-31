@@ -24,41 +24,6 @@ from garage.misc.ext import AttrDict
 from garage.viskit.core import flatten
 
 
-class StubBase:
-    def __getitem__(self, item):
-        return StubMethodCall(self, "__getitem__", args=[item], kwargs=dict())
-
-    def __getattr__(self, item):
-        try:
-            return super(self.__class__, self).__getattribute__(item)
-        except AttributeError:
-            if item.startswith("__") and item.endswith("__"):
-                raise
-            return StubAttr(self, item)
-
-    def __pow__(self, power, modulo=None):
-        return StubMethodCall(self, "__pow__", [power, modulo], dict())
-
-    def __call__(self, *args, **kwargs):
-        return StubMethodCall(self.obj, self.attr_name, args, kwargs)
-
-    def __add__(self, other):
-        return StubMethodCall(self, "__add__", [other], dict())
-
-    def __rmul__(self, other):
-        return StubMethodCall(self, "__rmul__", [other], dict())
-
-    def __div__(self, other):
-        return StubMethodCall(self, "__div__", [other], dict())
-
-    def __rdiv__(self, other):
-        return StubMethodCall(BinaryOp(), "rdiv", [self, other],
-                              dict())  # self, "__rdiv__", [other], dict())
-
-    def __rpow__(self, power, modulo=None):
-        return StubMethodCall(self, "__rpow__", [power, modulo], dict())
-
-
 class BinaryOp(Serializable):
     def __init__(self):
         Serializable.quick_init(self, locals())
@@ -69,97 +34,6 @@ class BinaryOp(Serializable):
         #     self.opname = opname
         #     self.a = a
         #     self.b = b
-
-
-class StubAttr(StubBase):
-    def __init__(self, obj, attr_name):
-        self.__dict__["_obj"] = obj
-        self.__dict__["_attr_name"] = attr_name
-
-    @property
-    def obj(self):
-        return self.__dict__["_obj"]
-
-    @property
-    def attr_name(self):
-        return self.__dict__["_attr_name"]
-
-    def __str__(self):
-        return "StubAttr(%s, %s)" % (str(self.obj), str(self.attr_name))
-
-
-class StubMethodCall(StubBase, Serializable):
-    def __init__(self, obj, method_name, args, kwargs):
-        self._serializable_initialized = False
-        Serializable.quick_init(self, locals())
-        self.obj = obj
-        self.method_name = method_name
-        self.args = args
-        self.kwargs = kwargs
-
-    def __str__(self):
-        return "StubMethodCall(%s, %s, %s, %s)" % (str(
-            self.obj), str(self.method_name), str(self.args), str(self.kwargs))
-
-
-class StubClass(StubBase):
-    def __init__(self, proxy_class):
-        self.proxy_class = proxy_class
-
-    def __call__(self, *args, **kwargs):
-        if args:
-            # Convert the positional arguments to keyword arguments
-            spec = inspect.getargspec(self.proxy_class.__init__)
-            kwargs = dict(list(zip(spec.args[1:], args)), **kwargs)
-            args = tuple()
-        return StubObject(self.proxy_class, *args, **kwargs)
-
-    def __getstate__(self):
-        return dict(proxy_class=self.proxy_class)
-
-    def __setstate__(self, dict):
-        self.proxy_class = dict["proxy_class"]
-
-    def __getattr__(self, item):
-        if hasattr(self.proxy_class, item):
-            return StubAttr(self, item)
-        raise AttributeError
-
-    def __str__(self):
-        return "StubClass(%s)" % self.proxy_class
-
-
-class StubObject(StubBase):
-    def __init__(self, __proxy_class, *args, **kwargs):
-        if args:
-            spec = inspect.getargspec(__proxy_class.__init__)
-            kwargs = dict(list(zip(spec.args[1:], args)), **kwargs)
-            args = tuple()
-        self.proxy_class = __proxy_class
-        self.args = args
-        self.kwargs = kwargs
-
-    def __getstate__(self):
-        return dict(
-            args=self.args, kwargs=self.kwargs, proxy_class=self.proxy_class)
-
-    def __setstate__(self, dict):
-        self.args = dict["args"]
-        self.kwargs = dict["kwargs"]
-        self.proxy_class = dict["proxy_class"]
-
-    def __getattr__(self, item):
-        # why doesnt the commented code work?
-        # return StubAttr(self, item)
-        # checks bypassed to allow for accesing instance fileds
-        if hasattr(self.proxy_class, item):
-            return StubAttr(self, item)
-        raise AttributeError(
-            'Cannot get attribute %s from %s' % (item, self.proxy_class))
-
-    def __str__(self):
-        return "StubObject(%s, *%s, **%s)" % (str(self.proxy_class),
-                                              str(self.args), str(self.kwargs))
 
 
 class VariantDict(AttrDict):
@@ -293,15 +167,6 @@ def variant(*args, **kwargs):
     return _variant
 
 
-def stub(glbs):
-    # replace the __init__ method in all classes
-    # hacky!!!
-    for k, v in list(glbs.items()):
-        # look at all variables that are instances of a class (not yet Stub)
-        if isinstance(v, type) and v != StubClass:
-            glbs[k] = StubClass(v)  # and replaces them by a the same but Stub
-
-
 def query_yes_no(question, default="yes"):
     """Ask a yes/no question via raw_input() and return their answer.
 
@@ -340,7 +205,7 @@ timestamp = now.strftime('%Y_%m_%d_%H_%M_%S')
 remote_confirmed = False
 
 
-def run_experiment(stub_method_call=None,
+def run_experiment(method_call=None,
                    batch_tasks=None,
                    exp_prefix="experiment",
                    exp_name=None,
@@ -369,9 +234,9 @@ def run_experiment(stub_method_call=None,
                    added_project_directories=[],
                    **kwargs):
     """
-    Serialize the stubbed method call and run the experiment using the
+    Serialize the method call and run the experiment using the
     specified mode.
-    :param stub_method_call: A stubbed method call.
+    :param method_call: A method call.
     :param script: The name of the entrance point python script
     :param mode: Where and how to run the experiment. Should be one of "local",
      "local_docker", "ec2", or "lab_kube".
@@ -408,27 +273,23 @@ def run_experiment(stub_method_call=None,
     :param periodic_sync_interval: Time interval between each periodic sync,
      in seconds.
     """
-    assert stub_method_call is not None or batch_tasks is not None, \
-        "Must provide at least either stub_method_call or batch_tasks"
+    assert method_call is not None or batch_tasks is not None, \
+        "Must provide at least either method_call or batch_tasks"
 
     if use_cloudpickle is None:
-        for maybe_stub in (batch_tasks or [stub_method_call]):
-            # decide mode
-            if isinstance(maybe_stub, StubBase):
-                use_cloudpickle = False
-            else:
-                assert hasattr(maybe_stub, '__call__')
-                use_cloudpickle = True
-                # ensure variant exists
-                if variant is None:
-                    variant = dict()
+        for task in (batch_tasks or [method_call]):
+            assert hasattr(task, '__call__')
+            use_cloudpickle = True
+            # ensure variant exists
+            if variant is None:
+                variant = dict()
 
     if batch_tasks is None:
         batch_tasks = [
             dict(
                 kwargs,
                 pre_commands=pre_commands,
-                stub_method_call=stub_method_call,
+                method_call=method_call,
                 exp_name=exp_name,
                 log_dir=log_dir,
                 env=env,
@@ -450,7 +311,7 @@ def run_experiment(stub_method_call=None,
     # params_list = []
 
     for task in batch_tasks:
-        call = task.pop("stub_method_call")
+        call = task.pop("method_call")
         if use_cloudpickle:
             import cloudpickle
             data = base64.b64encode(cloudpickle.dumps(call)).decode("utf-8")
@@ -1446,41 +1307,14 @@ def to_lab_kube_pod(params,
     }
 
 
-def concretize(maybe_stub):
-    if isinstance(maybe_stub, StubMethodCall):
-        obj = concretize(maybe_stub.obj)
-        method = getattr(obj, maybe_stub.method_name)
-        args = concretize(maybe_stub.args)
-        kwargs = concretize(maybe_stub.kwargs)
-        return method(*args, **kwargs)
-    elif isinstance(maybe_stub, StubClass):
-        return maybe_stub.proxy_class
-    elif isinstance(maybe_stub, StubAttr):
-        obj = concretize(maybe_stub.obj)
-        attr_name = maybe_stub.attr_name
-        attr_val = getattr(obj, attr_name)
-        return concretize(attr_val)
-    elif isinstance(maybe_stub, StubObject):
-        if not hasattr(maybe_stub, "__stub_cache"):
-            args = concretize(maybe_stub.args)
-            kwargs = concretize(maybe_stub.kwargs)
-            try:
-                maybe_stub.__stub_cache = maybe_stub.proxy_class(
-                    *args, **kwargs)
-            except Exception as e:
-                print(
-                    ("Error while instantiating %s" % maybe_stub.proxy_class))
-                import traceback
-                traceback.print_exc()
-        ret = maybe_stub.__stub_cache
-        return ret
-    elif isinstance(maybe_stub, dict):
+def concretize(obj):
+    if isinstance(obj, dict):
         # make sure that there's no hidden caveat
         ret = dict()
-        for k, v in maybe_stub.items():
+        for k, v in obj.items():
             ret[concretize(k)] = concretize(v)
         return ret
-    elif isinstance(maybe_stub, (list, tuple)):
-        return maybe_stub.__class__(list(map(concretize, maybe_stub)))
+    elif isinstance(obj, (list, tuple)):
+        return obj.__class__(list(map(concretize, obj)))
     else:
-        return maybe_stub
+        return obj

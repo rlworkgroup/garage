@@ -27,27 +27,10 @@ def load_progress(progress_csv_path):
                     entries[k] = []
                 try:
                     entries[k].append(float(v))
-                except:
+                except:  # noqa
                     entries[k].append(0.)
     entries = dict([(k, np.array(v)) for k, v in entries.items()])
     return entries
-
-
-def to_json(stub_object):
-    from garage.misc.instrument import StubObject
-    from garage.misc.instrument import StubAttr
-    if isinstance(stub_object, StubObject):
-        assert stub_object.args
-        data = dict()
-        for k, v in stub_object.kwargs.items():
-            data[k] = to_json(v)
-        data["_name"] = stub_object.proxy_class.__module__ + \
-                        "." + stub_object.proxy_class.__name__
-        return data
-    elif isinstance(stub_object, StubAttr):
-        return dict(
-            obj=to_json(stub_object.obj), attr=to_json(stub_object.attr_name))
-    return stub_object
 
 
 def flatten_dict(d):
@@ -133,10 +116,11 @@ def smart_repr(x):
 
 def extract_distinct_params(exps_data,
                             excluded_params=('exp_name', 'seed', 'log_dir'),
-                            l=1):
+                            length=1):
     # all_pairs = unique(flatten([d.flat_params.items() for d in exps_data]))
     # if logger:
-    #     logger("(Excluding {excluded})".format(excluded=', '.join(excluded_params)))
+    #     logger("(Excluding {excluded})".format(
+    #       excluded=', '.join(excluded_params)))
     # def cmp(x,y):
     #     if x < y:
     #         return -1
@@ -161,7 +145,7 @@ def extract_distinct_params(exps_data,
         (k, [x[1] for x in v])
         for k, v in itertools.groupby(stringified_pairs, lambda x: x[0])
     ]
-    filtered = [(k, v) for (k, v) in proposals if len(v) > l and all(
+    filtered = [(k, v) for (k, v) in proposals if len(v) > length and all(
         [k.find(excluded_param) != 0 for excluded_param in excluded_params])]
     return filtered
 
@@ -240,12 +224,15 @@ def hex_to_rgb(hex, opacity=1.0):
 #     def _init_data(self, exp_folder_path):
 #         self.log("Loading data...")
 #         self._exps_data = load_exps_data(exp_folder_path)
-#         self.log("Loaded {nexp} experiments".format(nexp=len(self._exps_data)))
-#         self._distinct_params = extract_distinct_params(self._exps_data, logger=self.log)
+#         self.log("Loaded {nexp} experiments".format(
+#           nexp=len(self._exps_data)))
+#         self._distinct_params = extract_distinct_params(
+#           self._exps_data, logger=self.log)
 #         assert len(self._distinct_params) == 1
 #         self._exp_filter = self._distinct_params[0]
 #         self.log("******************************************")
-#         self.log("Found {nvary} varying parameter{plural}".format(nvary=len(self._distinct_params), plural="" if len(
+#         self.log("Found {nvary} varying parameter{plural}".format(
+#           nvary=len(self._distinct_params), plural="" if len(
 #             self._distinct_params) == 1 else "s"))
 #         for k, v in self._distinct_params:
 #             self.log(k, ':', ", ".join(map(str, v)))
@@ -263,7 +250,8 @@ def hex_to_rgb(hex, opacity=1.0):
 #     def _display_dropdown(self, attr_name, options):
 #         def f(**kwargs):
 #             self.__dict__[attr_name] = kwargs[attr_name]
-#         IPython.display.display(ipywidgets.interactive(f, **{attr_name: options}))
+#         IPython.display.display(ipywidgets.interactive(
+#           f, **{attr_name: options}))
 #
 #     def redraw(self):
 #         # print out all the logs
@@ -282,11 +270,14 @@ def hex_to_rgb(hex, opacity=1.0):
 #             max_size = max(sizes)
 #             for exp, retlen in zip(filtered_data, sizes):
 #                 if retlen < max_size:
-#                     self.log("Excluding {exp_name} since the trajectory is shorter: {thislen} vs. {maxlen}".format(
-#                         exp_name=exp.params["exp_name"], thislen=retlen, maxlen=max_size))
+#                     self.log("Excluding {exp_name} since the
+#                       trajectory is shorter: {thislen} vs. {maxlen}".format(
+#                         exp_name=exp.params["exp_name"],
+#                           thislen=retlen, maxlen=max_size))
 #             returns = [ret for ret in returns if len(ret) == max_size]
 #             mean_returns = np.mean(returns, axis=0)
 #             std_returns = np.std(returns, axis=0)
 #             self._plot_sequence.append((''))
-#             to_plot.append(ext.AttrDict(means=mean_returns, stds=std_returns, legend=str(v)))
+#             to_plot.append(ext.AttrDict(
+#               means=mean_returns, stds=std_returns, legend=str(v)))
 #         make_plot(to_plot)

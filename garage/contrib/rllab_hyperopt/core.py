@@ -122,7 +122,7 @@ def _launch_ec2(func, exp_prefix, exp_name, params, run_experiment_kwargs):
     run_experiment(func, **kwargs)
 
 
-def _get_stubs(params):
+def _extract_params(params):
     module_str = params.pop('task_module')
     func_str = params.pop('task_function')
     eval_module_str = params.pop('eval_module')
@@ -148,7 +148,7 @@ def objective_fun(params):
     result_timeout = params.pop('result_timeout')
     run_experiment_kwargs = params.pop('run_experiment_kwargs', {})
 
-    func, eval_func = _get_stubs(params)
+    func, eval_func = _extract_params(params)
 
     result_success = False
     while max_retries > 0:
@@ -207,10 +207,10 @@ def launch_hyperopt_search(task_method,
     instance_hourly_rate. So you might want to be conservative with
     hyperopt_max_evals.
 
-    :param task_method: the stubbed method call that runs the actual task.
+    :param task_method: the method call that runs the actual task.
      Should take a single dict as argument, with the params to evaluate.
      See e.g. contrib.rllab_hyperopt.example.task.py
-    :param eval_method: the stubbed method call that reads in results returned
+    :param eval_method: the method call that reads in results returned
      from S3 and produces a score. Should take the exp_prefix and exp_name as
      arguments (this is where S3 results will be synced to).
      See e.g. contrib.rllab_hyperopt.example.score.py
