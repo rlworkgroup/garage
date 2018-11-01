@@ -74,11 +74,12 @@ def parameter(input_var,
               trainable=True,
               name="parameter"):
     """
-    Paramter function that creates  variables that could be broadcast to a certain shape to match with input var.
-        
+    Paramter function that creates  variables that could be
+    broadcast to a certain shape to match with input var.
+
     Args:
         input_var: Input tf.Tensor.
-        lenth: Integer dimension of the variables.
+        lenth: Integer length of the variables.
         initializer: Initializer of the variables.
         dtype: Data type of the variables.
         trainable: Whether these variables are trainable.
