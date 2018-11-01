@@ -157,7 +157,7 @@ class TestNetworks(TfGraphTestCase):
 
         np.testing.assert_array_almost_equal(out, mlp_output)
 
-    def test_param():
+    def test_param(self):
         input_vars = tf.placeholder(shape=[None, 2, 3, 4], dtype=tf.float32)
         initial_params = np.array([48, 21, 33])
 
@@ -169,7 +169,7 @@ class TestNetworks(TfGraphTestCase):
             initializer=init,
         )
 
-        data = np.random.uniform(size=[5, 2, 3, 4])
+        data = np.zeros(shape=[5, 2, 3, 4])
         feed_dict = {
             input_vars: data,
         }
