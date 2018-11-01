@@ -79,7 +79,7 @@ def parameter(input_var,
 
     Args:
         input_var: Input tf.Tensor.
-        lenth: Integer length of the variables.
+        length: Integer dimension of the variables.
         initializer: Initializer of the variables.
         dtype: Data type of the variables.
         trainable: Whether these variables are trainable.
