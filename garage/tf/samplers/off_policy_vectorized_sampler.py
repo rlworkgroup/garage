@@ -8,7 +8,6 @@ It diffs from OnPolicyVectorizedSampler in two parts:
  from replay buffer, which only has buffer_batch_size.
  - It needs to add transitions to replay buffer throughout the rollout.
 """
-
 import itertools
 import pickle
 

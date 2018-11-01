@@ -1,19 +1,19 @@
 import numpy as np
 import tensorflow as tf
 
-from garage.tf.core.networks import mlp, parameter
+from garage.tf.core.mlp import mlp
 from tests.fixtures import TfGraphTestCase
 
 
-class TestNetworks(TfGraphTestCase):
+class TestMLP(TfGraphTestCase):
     def setUp(self):
-        super(TestNetworks, self).setUp()
+        super(TestMLP, self).setUp()
         self.obs_input = np.array([[1, 2, 3, 4]])
-        input_shape = self.obs_input.shape[1]  # 4
+        input_shape = self.obs_input.shape[1:]  # 4
         self.hidden_nonlinearity = tf.nn.relu
 
         self._input = tf.placeholder(
-            tf.float32, shape=(None, input_shape), name="input")
+            tf.float32, shape=(None, ) + input_shape, name="input")
 
         self._output_shape = 2
 
@@ -106,7 +106,7 @@ class TestNetworks(TfGraphTestCase):
         h3_out = tf.matmul(h3_in, out_w) + out_b
         out = self.sess.run(h3_out, feed_dict={self._input: self.obs_input})
 
-        np.testing.assert_array_almost_equal(out, mlp_output)
+        np.testing.assert_array_equal(out, mlp_output)
 
     def test_layer_normalization(self):
         # Create a mlp with layer normalization
@@ -156,26 +156,3 @@ class TestNetworks(TfGraphTestCase):
             self.mlp_f_w_n, feed_dict={self._input: self.obs_input})
 
         np.testing.assert_array_almost_equal(out, mlp_output)
-
-    def test_param(self):
-        input_vars = tf.placeholder(shape=[None, 2, 3, 4], dtype=tf.float32)
-        initial_params = np.array([48, 21, 33])
-
-        init = tf.constant_initializer(initial_params)
-
-        params = parameter(
-            input_var=input_vars,
-            length=3,
-            initializer=init,
-        )
-
-        data = np.zeros(shape=[5, 2, 3, 4])
-        feed_dict = {
-            input_vars: data,
-        }
-
-        self.sess.run(tf.global_variables_initializer())
-        p = self.sess.run(params, feed_dict=feed_dict)
-
-        assert p.shape[:-1] == data.shape[:-1]
-        assert np.all(p[0, 0, 0, :] == initial_params)
