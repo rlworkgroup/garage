@@ -1,2 +1,5 @@
 # garage Maintainers at root
 * @rlworkgroup/maintainers
+
+# TensorFlow tree
+/garage/tf/* @CatherineSue
