@@ -1,32 +1,38 @@
+"""Gaussian MLP Model."""
 import numpy as np
 import tensorflow as tf
 
 from garage.core import Serializable
 from garage.misc import ext
+from garage.misc.overrides import overrides
 from garage.tf.core.networks import mlp, parameter
 from garage.tf.models import Model
 
 
 class GaussianMLPModel(Model, Serializable):
-    """Gaussian MLP Model"""
-    def __init__(self,
-                 input_dim,
-                 output_dim,
-                 name="GaussianMLPModel",
-                 hidden_sizes=(32, 32),
-                 learn_std=True,
-                 init_std=1.0,
-                 adaptive_std=False,
-                 std_share_network=False,
-                 std_hidden_sizes=(32, 32),
-                 min_std=1e-6,
-                 max_std=None,
-                 std_hidden_nonlinearity=tf.nn.tanh,
-                 hidden_nonlinearity=tf.nn.tanh,
-                 output_nonlinearity=None,
-                 std_parameterization='exp',
-                ):
+    """Gaussian MLP Model."""
+
+    def __init__(
+            self,
+            input_dim,
+            output_dim,
+            name="GaussianMLPModel",
+            hidden_sizes=(32, 32),
+            learn_std=True,
+            init_std=1.0,
+            adaptive_std=False,
+            std_share_network=False,
+            std_hidden_sizes=(32, 32),
+            min_std=1e-6,
+            max_std=None,
+            std_hidden_nonlinearity=tf.nn.tanh,
+            hidden_nonlinearity=tf.nn.tanh,
+            output_nonlinearity=None,
+            std_parameterization='exp',
+    ):
         """
+        Initialize a gaussian mlp model and build the graph.
+
         :param input_dim: input dimension
         :param output_dim: output dimension
         :param name: name of the model
@@ -52,7 +58,6 @@ class GaussianMLPModel(Model, Serializable):
             - softplus: the std will be computed as log(1+exp(x))
         :return:
         """
-
         Serializable.quick_init(self, locals())
         super(GaussianMLPModel, self).__init__()
 
@@ -98,7 +103,7 @@ class GaussianMLPModel(Model, Serializable):
 
         inputs, outputs, model_info = self.build_model()
         self._inputs = inputs["input_var"]
-        
+
         self._mean = outputs["mean"]
         self._std = outputs["std"]
         self._std_param = outputs["std_param"]
@@ -107,16 +112,17 @@ class GaussianMLPModel(Model, Serializable):
 
         self._outputs = outputs
 
+    @overrides
     def build_model(self):
         """
-        Build the graph
+        Build the graph.
+
         return:
             inputs: a dict that contains input tensor
-            outputs: a dict that contains mean, 
+            outputs: a dict that contains mean,
                 std, parameterized std and sample tensors
             model_info: a dict that contains the distribution tensor
         """
-
         input_var = tf.placeholder(
             shape=[None, self._input_dim],
             dtype=tf.float32,
@@ -124,7 +130,7 @@ class GaussianMLPModel(Model, Serializable):
 
         with self._variable_scope:
             if self._std_share_network:
-                 # mean and std networks share an MLP
+                # mean and std networks share an MLP
                 b = np.concatenate(
                     [
                         np.zeros(self._output_dim),
@@ -147,12 +153,12 @@ class GaussianMLPModel(Model, Serializable):
                     std_network = mean_std_network[..., self._output_dim:]
             else:
                 mean_network = mlp(
-                        input_var=input_var,
-                        output_dim=self._output_dim,
-                        hidden_sizes=self._hidden_sizes,
-                        hidden_nonlinearity=self._hidden_nonlinearity,
-                        output_nonlinearity=self._output_nonlinearity,
-                        name="mean_network")
+                    input_var=input_var,
+                    output_dim=self._output_dim,
+                    hidden_sizes=self._hidden_sizes,
+                    hidden_nonlinearity=self._hidden_nonlinearity,
+                    output_nonlinearity=self._output_nonlinearity,
+                    name="mean_network")
 
                 if self._adaptive_std:
                     b = tf.constant_initializer(self._init_std_param)
@@ -179,9 +185,11 @@ class GaussianMLPModel(Model, Serializable):
 
             with tf.variable_scope("std_limits"):
                 if self._min_std_param:
-                    std_param_var = tf.maximum(std_param_var, self._min_std_param)
+                    std_param_var = tf.maximum(std_param_var,
+                                               self._min_std_param)
                 if self._max_std_param:
-                    std_param_var = tf.minimum(std_param_var, self._max_std_param)
+                    std_param_var = tf.minimum(std_param_var,
+                                               self._max_std_param)
 
         with tf.variable_scope("std_parameterization"):
             # build std_var with std parameterization
@@ -192,7 +200,8 @@ class GaussianMLPModel(Model, Serializable):
             else:
                 raise NotImplementedError
 
-        dist = tf.contrib.distributions.MultivariateNormalDiag(mean_var, std_var)
+        dist = tf.contrib.distributions.MultivariateNormalDiag(
+            mean_var, std_var)
         sample_var = dist.sample(seed=ext.get_seed())
 
         inputs = {
