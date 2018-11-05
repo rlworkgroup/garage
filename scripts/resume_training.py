@@ -7,8 +7,8 @@ import uuid
 import joblib
 
 from garage.algos import BatchPolopt
+from garage.experiment import to_local_command
 from garage.misc import logger
-from garage.misc.instrument import to_local_command
 
 filename = str(uuid.uuid4())
 
@@ -48,7 +48,7 @@ if __name__ == "__main__":
             print(e)
             if isinstance(e, KeyboardInterrupt):
                 raise
-    except IOError as e:
+    except IOError:
         logger.log("Failed to find json file. Continuing in non-stub mode...")
         data = joblib.load(args.file)
         assert 'algo' in data

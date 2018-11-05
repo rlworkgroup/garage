@@ -13,10 +13,10 @@ import joblib
 import psutil
 
 from garage import config
+from garage.experiment.experiment import concretize
 from garage.misc.console import colorize
 from garage.misc.ext import is_iterable
 from garage.misc.ext import set_seed
-from garage.misc.instrument import concretize
 import garage.misc.logger as logger
 import garage.plotter
 from garage.sampler import parallel_sampler
@@ -224,15 +224,15 @@ def child_proc_shutdown(children):
     if alive:
         error_msg = ""
         for child in alive:
-            error_msg += (str(
-                child.as_dict(
-                    attrs=["ppid", "pid", "name", "status", "cmdline"])) +
-                          "\n")
+            error_msg += "{}\n".format(
+                str(
+                    child.as_dict(
+                        attrs=["ppid", "pid", "name", "status", "cmdline"])))
 
-        error_msg = ("The following processes didn't die after the shutdown " +
-                     "of run_experiment:\n" + error_msg)
-        error_msg += ("This is a sign of an unclean shutdown. Please reopen " +
-                      "the following issue\nwith a detailed description " +
+        error_msg = ("The following processes didn't die after the shutdown "
+                     "of run_experiment:\n") + error_msg
+        error_msg += ("This is a sign of an unclean shutdown. Please reopen "
+                      "the following issue\nwith a detailed description "
                       "of how the error was produced:\n")
         error_msg += ("https://github.com/rlworkgroup/garage/issues/120")
         print(colorize(error_msg, "yellow"))

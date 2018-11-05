@@ -2,7 +2,7 @@ import tensorflow as tf
 
 from garage.envs import normalize
 from garage.envs.box2d import CartpoleEnv
-from garage.misc.instrument import run_experiment
+from garage.experiment import run_experiment
 from garage.tf.baselines import GaussianMLPBaseline
 from garage.tf.envs import TfEnv
 from garage.tf.policies import GaussianMLPPolicy
