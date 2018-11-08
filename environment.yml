@@ -2,6 +2,7 @@ name: garage
 channels:
     - https://conda.anaconda.org/menpo
     - https://conda.anaconda.org/conda-forge
+    - pytorch
 dependencies:
     - python==3.6.6
     # Please keep alphabetized
@@ -11,6 +12,7 @@ dependencies:
     - numpy==1.14.5
     # dev dependencies below this line
     - pre_commit
+    - pytorch-cpu=0.4.1
     - pip:
         # Please keep alphabetized
         - awscli
@@ -25,6 +27,7 @@ dependencies:
         - git+https://github.com/deepmind/dm_control.git@c24ec9f5f3cb3c25c6571c89c9f60bf3350f5711#egg=dm_control
         - flask
         - gym[all]==0.10.8
+        - gtimer
         - box2d-py>=2.3.4
         - hyperopt
         - ipdb

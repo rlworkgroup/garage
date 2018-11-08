@@ -228,6 +228,12 @@ conda activate garage
 
     # pygpu is required by Theano to run on GPU
     conda install pygpu
+
+    # Remove pytorch-cpu before installing the GPU flavor
+    # TODO: Better avoid unnecessary installation beforehand
+    # by using environment-gpu.yml. See how rlkit handles this.
+    conda uninstall -y pytorch-cpu
+    conda install "pytorch==0.4.1"
   fi
 
   # Install git hooks
