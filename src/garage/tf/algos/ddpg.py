@@ -1,3 +1,5 @@
+"""This module implements a DDPG model."""
+
 from collections import deque
 
 from dowel import logger, tabular
@@ -106,26 +108,26 @@ class DDPG(OffPolicyRLAlgorithm):
 
         self.target_policy = policy.clone('target_policy')
 
-        super(DDPG, self).__init__(
-            env_spec=env_spec,
-            policy=policy,
-            qf=qf,
-            n_train_steps=n_train_steps,
-            n_epoch_cycles=n_epoch_cycles,
-            max_path_length=max_path_length,
-            buffer_batch_size=buffer_batch_size,
-            min_buffer_size=min_buffer_size,
-            rollout_batch_size=rollout_batch_size,
-            exploration_strategy=exploration_strategy,
-            replay_buffer=replay_buffer,
-            use_target=True,
-            discount=discount,
-            reward_scale=reward_scale,
-            input_include_goal=input_include_goal,
-            smooth_return=smooth_return)
+        super(DDPG, self).__init__(env_spec=env_spec,
+                                   policy=policy,
+                                   qf=qf,
+                                   n_train_steps=n_train_steps,
+                                   n_epoch_cycles=n_epoch_cycles,
+                                   max_path_length=max_path_length,
+                                   buffer_batch_size=buffer_batch_size,
+                                   min_buffer_size=min_buffer_size,
+                                   rollout_batch_size=rollout_batch_size,
+                                   exploration_strategy=exploration_strategy,
+                                   replay_buffer=replay_buffer,
+                                   use_target=True,
+                                   discount=discount,
+                                   reward_scale=reward_scale,
+                                   input_include_goal=input_include_goal,
+                                   smooth_return=smooth_return)
 
     @overrides
     def init_opt(self):
+        """Build the loss function and init the optimizer."""
         with tf.name_scope(self.name, 'DDPG'):
             # Create target policy and qf network
             self.target_policy_f_prob_online = tensor_utils.compile_function(
@@ -157,20 +159,21 @@ class DDPG(OffPolicyRLAlgorithm):
                         flat_dim_with_keys(['observation', 'desired_goal'])
                 else:
                     obs_dim = self.env_spec.observation_space.flat_dim
-                y = tf.compat.v1.placeholder(
-                    tf.float32, shape=(None, 1), name='input_y')
-                obs = tf.compat.v1.placeholder(
-                    tf.float32,
-                    shape=(None, obs_dim),
-                    name='input_observation')
+                y = tf.compat.v1.placeholder(tf.float32,
+                                             shape=(None, 1),
+                                             name='input_y')
+                obs = tf.compat.v1.placeholder(tf.float32,
+                                               shape=(None, obs_dim),
+                                               name='input_observation')
                 actions = tf.compat.v1.placeholder(
                     tf.float32,
                     shape=(None, self.env_spec.action_space.flat_dim),
                     name='input_action')
             # Set up policy training function
             next_action = self.policy.get_action_sym(obs, name='policy_action')
-            next_qval = self.qf.get_qval_sym(
-                obs, next_action, name='policy_action_qval')
+            next_qval = self.qf.get_qval_sym(obs,
+                                             next_action,
+                                             name='policy_action_qval')
             with tf.name_scope('action_loss'):
                 action_loss = -tf.reduce_mean(next_qval)
                 if self.policy_weight_decay > 0.:
@@ -213,6 +216,7 @@ class DDPG(OffPolicyRLAlgorithm):
             self.f_update_target = f_update_target
 
     def __getstate__(self):
+        """Object.__getstate__."""
         data = self.__dict__.copy()
         del data['target_policy_f_prob_online']
         del data['target_qf_f_prob_online']
@@ -223,10 +227,18 @@ class DDPG(OffPolicyRLAlgorithm):
         return data
 
     def __setstate__(self, state):
+        """Object.__setstate__."""
         self.__dict__ = state
         self.init_opt()
 
     def train_once(self, itr, paths):
+        """Perform one step of policy optimization given one batch of samples.
+
+        Args:
+            itr (int): Iteration number.
+            paths (list[dict]): A list of collected paths.
+
+        """
         paths = self.process_samples(itr, paths)
 
         epoch = itr / self.n_epoch_cycles
@@ -288,14 +300,17 @@ class DDPG(OffPolicyRLAlgorithm):
 
     @overrides
     def optimize_policy(self, itr, samples_data):
-        """
-        Perform algorithm optimizing.
+        """Perform algorithm optimizing.
+
+        Args:
+            itr (int): Iterations.
+            samples_data (list): Processed batch data.
 
         Returns:
-            action_loss: Loss of action predicted by the policy network.
-            qval_loss: Loss of q value predicted by the q network.
-            ys: y_s.
-            qval: Q value predicted by the q network.
+            action_loss (float): Loss of action predicted by the policy network
+            qval_loss (float): Loss of q value predicted by the q network.
+            ys (float): y_s.
+            qval (float): Q value predicted by the q network.
 
         """
         transitions = self.replay_buffer.sample(self.buffer_batch_size)
@@ -335,4 +350,5 @@ class DDPG(OffPolicyRLAlgorithm):
 
     @overrides
     def get_itr_snapshot(self, itr):
+        """Return data saved in the snapshot for this iteration."""
         return dict(itr=itr, policy=self.policy)

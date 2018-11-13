@@ -62,6 +62,7 @@ extras['dev'] = [
     'flake8',
     'flake8-docstrings==1.3.0',
     'flake8-import-order',
+    'gtimer',
     'pandas',
     'pep8-naming==0.7.0',
     'pre-commit',
@@ -73,6 +74,7 @@ extras['dev'] = [
     'pytest-cov',
     'pytest-xdist',
     'recommonmark',
+    'rlkit @ git+https://github.com/vitchyr/rlkit/@1d469a509b797ca04a39b8734c1816ca7d108fc8',  # noqa: E501
     'sphinx',
     'sphinx_rtd_theme',
     'yapf==0.28.0',

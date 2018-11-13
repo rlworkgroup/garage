@@ -68,8 +68,8 @@ def convolve(_input, filter_weights, filter_bias, strides, filter_sizes,
         out_height = int((in_height - filter_size) / stride) + 1
         flatten_filter_size = filter_size * filter_size * in_shape
         reshape_filter = filter_weight.reshape(flatten_filter_size, -1)
-        image_vector = np.empty((batch_size, out_width, out_height,
-                                 flatten_filter_size))
+        image_vector = np.empty(
+            (batch_size, out_width, out_height, flatten_filter_size))
         for batch in range(batch_size):
             for w in range(out_width):
                 for h in range(out_height):
@@ -296,8 +296,19 @@ def create_json(b_csvs, g_csvs, trails, seeds, b_x, b_y, g_x, g_y, factor_g,
     return task_result
 
 
-def plot(b_csvs, g_csvs, g_x, g_y, b_x, b_y, trials, seeds, plt_file, env_id,
-         x_label, y_label):
+def plot(b_csvs,
+         g_csvs,
+         g_x,
+         g_y,
+         b_x,
+         b_y,
+         trials,
+         seeds,
+         plt_file,
+         env_id,
+         x_label,
+         y_label,
+         baseline_label='baselines'):
     """
     Plot benchmark from csv files of garage and baselines.
 
@@ -320,14 +331,12 @@ def plot(b_csvs, g_csvs, g_x, g_y, b_x, b_y, trials, seeds, plt_file, env_id,
         df_g = pd.read_csv(g_csvs[trial])
         df_b = pd.read_csv(b_csvs[trial])
 
-        plt.plot(
-            df_g[g_x],
-            df_g[g_y],
-            label='garage_trial%d_seed%d' % (trial + 1, seed))
-        plt.plot(
-            df_b[b_x],
-            df_b[b_y],
-            label='baselines_trial%d_seed%d' % (trial + 1, seed))
+        plt.plot(df_g[g_x],
+                 df_g[g_y],
+                 label='garage_trial%d_seed%d' % (trial + 1, seed))
+        plt.plot(df_b[b_x],
+                 df_b[b_y],
+                 label='%s_trial%d_seed%d' % (baseline_label, trial + 1, seed))
 
     plt.legend()
     plt.xlabel(x_label)
