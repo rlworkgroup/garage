@@ -2,7 +2,6 @@ name: garage
 channels:
     - https://conda.anaconda.org/menpo
     - https://conda.anaconda.org/conda-forge
-    - pytorch
 dependencies:
     - python==3.6.6
     # Please keep alphabetized
@@ -12,7 +11,6 @@ dependencies:
     - numpy==1.14.5
     # dev dependencies below this line
     - pre_commit
-    - pytorch-cpu=0.4.1
     - pip:
         # Please keep alphabetized
         - awscli
@@ -56,6 +54,8 @@ dependencies:
         - tensorboard
         - tensorflow<1.10,>=1.9.0
         - Theano==1.0.2
+        - torch
+        - torchvision
         # dev dependencies below this line
         - git+https://github.com/openai/baselines.git@f2729693253c0ef4d4086231d36e0a4307ec1cb3#egg=baselines
         - codacy-coverage
