@@ -9,7 +9,7 @@ from gym.envs.mujoco import HalfCheetahEnv
 import garage.torch.algos.pytorch_util as ptu
 from garage.torch.envs.wrappers import NormalizedBoxEnv
 from garage.torch.launchers.launcher_util import setup_logger
-from garage.torch.algos.sac.policies import TanhGaussianPolicy
+from garage.torch.policies import TanhGaussianPolicy
 from garage.torch.algos.sac.sac import SoftActorCritic
 from garage.torch.algos.networks import FlattenMlp
 

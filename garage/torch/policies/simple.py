@@ -3,7 +3,7 @@ from garage.torch.policies.base import SerializablePolicy
 
 class RandomPolicy(SerializablePolicy):
     """
-    Policy that always outputs zero.
+    Policy that always outputs a random action.
     """
 
     def __init__(self, action_space):

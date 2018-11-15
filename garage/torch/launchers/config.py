@@ -1,10 +1,9 @@
-import os
-import garage.torch
+from garage import config
 
 # Change this as desired
 LOCAL_LOG_DIR = 'output'
 
 CODE_DIRS_TO_MOUNT = [
-    os.path.dirname(os.path.dirname(garage.torch.__file__))
+    config.PROJECT_PATH
     # '/path/to/other/git/repos/',
 ]
