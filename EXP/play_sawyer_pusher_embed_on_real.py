@@ -29,6 +29,8 @@ INITIAL_ROBOT_JOINT_POS = {
 playback_obs = []
 playback_actions = []
 playback_tasks = []
+playback_env_infos = []
+playback_latents = []
 
 def rollout(env,
             sim_env,
@@ -71,11 +73,12 @@ def rollout(env,
         agent_infos.append(copy.deepcopy(agent_info))
         actions.append(copy.deepcopy(a))
         next_o, r, d, env_info = env.step(a)
-        env_infos.append(copy.deepcopy(env_info))
+        playback_env_infos.append(copy.deepcopy(env_info))
         # sim_env.step(a)
         observations.append(copy.deepcopy(agent.observation_space.flatten(o)))
-        playback_obs.append(o)
+        playback_obs.append(copy.deepcopy(o))
         playback_tasks.append(task)
+        playback_latents.append(z)
         path_length += 1
         if d:
             break
@@ -170,9 +173,11 @@ def play(pkl_file):
         #     print('Rollout data is saved!')
         #     playback_data = np.array(dict(actions=np.array(playback_actions),
         #                                   tasks=np.array(playback_tasks),
-        #                                   obs=np.array(playback_obs)))
+        #                                   obs=np.array(playback_obs),
+        #                                   env_infos=np.array(playback_env_infos),
+        #                                   latents=playback_latents))
         #     np.save("playback_pusher.npy", playback_data)
-        #
+
         # while True:
         #     for t in range(num_tasks - 1):
         #         print("Rollout policy given mean embedding of tasks {} and {}".format(t+1, t+2))
@@ -202,7 +207,10 @@ def play(pkl_file):
         print('Rollout data is saved!')
         playback_data = np.array(dict(actions=np.array(playback_actions),
                                       tasks=np.array(playback_tasks),
-                                      obs=np.array(playback_obs)))
+                                      obs=np.array(playback_obs),
+                                      env_infos = np.array(playback_env_infos),
+                                      latents=playback_latents)
+        )
         np.save("playback_pusher.npy", playback_data)
 
         env.reset()

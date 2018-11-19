@@ -277,7 +277,6 @@ class PushEnv(SawyerEnv):
                 [-0.4839443359375, -0.991173828125, -2.3821015625, -1.9510517578125, -0.5477119140625, -0.816458984375,
                  -0.816326171875])
             obs = np.concatenate((self.joint_positions - initial_jpos, gripper_pos - object_pos, object_ori-np.array([1., 0., 0., 0.])))
-            print(obs)
         else:
             obs = np.concatenate([gripper_pos, object_pos, object_ori])
 
