@@ -71,10 +71,11 @@ class TestBenchmarkHER(unittest.TestCase):
                 garage_dir = trail_dir + "/garage"
                 baselines_dir = trail_dir + "/baselines"
 
+                garage_csv = run_garage(env, seed, garage_dir)
+
                 CACHED_ENVS.clear()
                 baselines_csv = run_baselines(env_id, seed, baselines_dir)
 
-                garage_csv = run_garage(env, seed, garage_dir)
                 env.close()
 
                 garage_csvs.append(garage_csv)
@@ -142,6 +143,7 @@ def run_garage(env, seed, log_dir):
             env,
             policy=policy,
             qf=qf,
+            replay_buffer=replay_buffer,
             policy_lr=params["policy_lr"],
             qf_lr=params["qf_lr"],
             plot=False,
