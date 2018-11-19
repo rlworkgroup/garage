@@ -167,7 +167,7 @@ def run_garage(env, seed, log_dir):
 
         # Set up logger since we are not using run_experiment
         tabular_log_file = osp.join(log_dir, "progress.csv")
-        tensorboard_log_dir = osp.join(log_dir, "progress")
+        tensorboard_log_dir = osp.join(log_dir)
         garage_logger.add_tabular_output(tabular_log_file)
         garage_logger.set_tensorboard_dir(tensorboard_log_dir)
 
