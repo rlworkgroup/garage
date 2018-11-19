@@ -1,7 +1,7 @@
 import os.path as osp
 
 
-class World(object):
+class World:
     MODEL_DIR = osp.join(osp.dirname(__file__), 'models')
 
     def initialize(self):

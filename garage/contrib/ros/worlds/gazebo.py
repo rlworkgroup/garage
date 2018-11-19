@@ -5,7 +5,7 @@ from gazebo_msgs.srv import DeleteModel, SpawnModel
 import rospy
 
 
-class Gazebo(object):
+class Gazebo:
     set_model_pose_pub = rospy.Publisher(
         '/gazebo/set_model_state', ModelState, queue_size=20)
     spawn_sdf = rospy.ServiceProxy('/gazebo/spawn_sdf_model', SpawnModel)

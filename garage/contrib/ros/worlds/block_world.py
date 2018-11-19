@@ -11,15 +11,15 @@ import numpy as np
 import rospy
 import tf
 
-from garage.contrib.ros.worlds.gazebo import Gazebo
-from garage.contrib.ros.worlds.world import World
-from garage.contrib.ros.worlds.moveit_planningscene_controller import MoveitPlanningSceneController
-import garage.misc.logger as logger
+from sawyer.ros.worlds.gazebo import Gazebo
+from sawyer.ros.worlds.world import World
+from sawyer.ros.worlds.moveit_planningscene_controller import MoveitPlanningSceneController
+import sawyer.garage.misc.logger as logger
 try:
-    from garage.config import VICON_TOPICS
+    from sawyer.garage.config import VICON_TOPICS
 except ImportError:
     raise NotImplementedError(
-        "Please set VICON_TOPICS in garage/config_personal.py! "
+        "Please set VICON_TOPICS in sawyer.garage.config_personal.py! "
         "example 1:"
         "   VICON_TOPICS = ['<vicon_topic_name>']"
         "example 2:"
@@ -96,7 +96,7 @@ def vicon_update_cali(data):
                           ORIGIN_ROTATION_MATRIX_C2V
 
 
-class Block(object):
+class Block:
     def __init__(self,
                  name,
                  size,
@@ -254,7 +254,6 @@ class BlockWorld(World):
                     print("Error message: ", e)
                     exit()
                 self._blocks.append(block)
-
 
         # Add table to moveit
         # moveit needs a sleep before adding object

@@ -6,10 +6,10 @@ import gym
 import moveit_commander
 import numpy as np
 
-from garage.contrib.ros.envs.sawyer.sawyer_env import SawyerEnv
-from garage.contrib.ros.robots import Sawyer
-from garage.contrib.ros.worlds import BlockWorld
-from garage.core import Serializable
+from sawyer.ros.envs.sawyer.sawyer_env import SawyerEnv
+from sawyer.ros.robots import Sawyer
+from sawyer.ros.worlds import BlockWorld
+from sawyer.garage.core import Serializable
 from garage.misc.overrides import overrides
 
 

@@ -6,7 +6,7 @@ from geometry_msgs.msg import PoseStamped
 import gym
 import numpy as np
 
-from garage.contrib.ros.worlds.world import World
+from sawyer.ros.worlds.world import World
 
 
 class EmptyWorld(World):

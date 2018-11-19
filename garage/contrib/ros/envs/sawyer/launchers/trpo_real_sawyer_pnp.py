@@ -1,12 +1,12 @@
 import numpy as np
 import rospy
 
-from garage.baselines.linear_feature_baseline import LinearFeatureBaseline
-from garage.contrib.ros.envs.sawyer.pick_and_place_env import PickAndPlaceEnv
-from garage.misc.instrument import run_experiment
-from garage.theano.algos import TRPO
-from garage.theano.envs import TheanoEnv
-from garage.theano.policies import GaussianMLPPolicy
+from sawyer.garage.baselines.linear_feature_baseline import LinearFeatureBaseline
+from sawyer.ros.envs.sawyer import PickAndPlaceEnv
+from sawyer.garage.misc.instrument import run_experiment
+from sawyer.garage.theano.algos import TRPO
+from sawyer.garage.theano.envs import TheanoEnv
+from sawyer.garage.theano.policies import GaussianMLPPolicy
 
 INITIAL_ROBOT_JOINT_POS = {
     'right_j0': -0.140923828125,

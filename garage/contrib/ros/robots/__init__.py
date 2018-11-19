@@ -1,2 +1,3 @@
-# noqa: D104
-from garage.contrib.ros.robots.sawyer import Sawyer
+from sawyer.ros.robots.sawyer import Sawyer
+
+__all__ = ["Sawyer"]

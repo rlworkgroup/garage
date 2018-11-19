@@ -1,8 +1,8 @@
 import gym
 import numpy as np
 
-from garage.core import Serializable
-from garage.misc.ext import get_seed
+from sawyer.garage.core import Serializable
+from sawyer.garage.misc.ext import get_seed
 
 
 class RosEnv(gym.Env, Serializable):
@@ -26,7 +26,7 @@ class RosEnv(gym.Env, Serializable):
         pass
 
     # =======================================================
-    # The functions that base garage Env asks to implement
+    # The functions that base sawyer.garage.Env asks to implement
     # =======================================================
     def step(self, action):
         raise NotImplementedError
@@ -66,7 +66,7 @@ class RosEnv(gym.Env, Serializable):
         """
         raise NotImplementedError
 
-    def reward(self, achieved_goal, goal, *args, **kwargs):
+    def reward(self, achieved_goal, goal):
         """
         Compute the reward for current step.
         """

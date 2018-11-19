@@ -3,13 +3,13 @@ import os.path as osp
 
 import gym
 from gym.envs.robotics import rotations
-from gym.envs.robotics.utils import reset_mocap_welds, reset_mocap2body_xpos
+from gym.envs.robotics.utils import reset_mocap2body_xpos, reset_mocap_welds
 from gym.spaces import Box
 import numpy as np
 
-from garage.envs.mujoco import MujocoEnv
-from garage.envs.mujoco.mujoco_env import MODEL_DIR
-from garage.misc.overrides import overrides
+from sawyer.garage.envs.mujoco import MujocoEnv
+from sawyer.garage.envs.mujoco.mujoco_env import MODEL_DIR
+from sawyer.garage.misc.overrides import overrides
 
 # 'head',
 # 'screen',
