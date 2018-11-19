@@ -12,7 +12,7 @@ class Model(Parameterized):
         """Initialize a model."""
         Parameterized.__init__(self)
 
-    def build_model(self):
+    def build_model(self, inputs=None, reuse=tf.AUTO_REUSE):
         """
         Build the whole graph for the model.
 
@@ -24,7 +24,7 @@ class Model(Parameterized):
         raise NotImplementedError
 
     @property
-    def inputs(self, inputs=None, reuse=tf.AUTO_REUSE):
+    def inputs(self):
         """Tensors of the inputs."""
         return self._inputs
 
