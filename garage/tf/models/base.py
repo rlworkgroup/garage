@@ -24,7 +24,7 @@ class Model(Parameterized):
         raise NotImplementedError
 
     @property
-    def inputs(self):
+    def inputs(self, inputs=None, reuse=tf.AUTO_REUSE):
         """Tensors of the inputs."""
         return self._inputs
 

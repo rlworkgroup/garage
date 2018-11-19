@@ -62,8 +62,6 @@ class GaussianMLPModel(Model, Serializable):
         super(GaussianMLPModel, self).__init__()
 
         self.name = name
-        self._variable_scope = tf.variable_scope(
-            self.name, reuse=tf.AUTO_REUSE)
         self._name_scope = tf.name_scope(self.name)
 
         # Network parameters
@@ -104,16 +102,16 @@ class GaussianMLPModel(Model, Serializable):
         inputs, outputs, model_info = self.build_model()
         self._inputs = inputs["input_var"]
 
-        self._mean = outputs["mean"]
-        self._std = outputs["std"]
-        self._std_param = outputs["std_param"]
-        self._sample = outputs["sample"]
-        self._dist = model_info["dist"]
+        self.mean = outputs["mean"]
+        self.std = outputs["std"]
+        self.std_param = outputs["std_param"]
+        self.sample = outputs["sample"]
+        self.dist = model_info["dist"]
 
         self._outputs = outputs
 
     @overrides
-    def build_model(self):
+    def build_model(self, inputs=None, reuse=tf.AUTO_REUSE):
         """
         Build the graph.
 
@@ -123,12 +121,15 @@ class GaussianMLPModel(Model, Serializable):
                 std, parameterized std and sample tensors
             model_info: a dict that contains the distribution tensor
         """
-        input_var = tf.placeholder(
-            shape=[None, self._input_dim],
-            dtype=tf.float32,
-        )
+        if inputs is None:
+            input_var = tf.placeholder(
+                shape=[None, self._input_dim],
+                dtype=tf.float32,
+            )
+        else:
+            input_var = inputs
 
-        with self._variable_scope:
+        with tf.variable_scope(self.name, reuse=reuse):
             if self._std_share_network:
                 # mean and std networks share an MLP
                 b = np.concatenate(
