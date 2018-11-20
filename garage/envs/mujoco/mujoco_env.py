@@ -6,11 +6,13 @@ import warnings
 from cached_property import cached_property
 import gym
 import gym.spaces
+from gym.utils import seeding
 import mako.lookup
 import mako.template
 from mujoco_py import functions
 from mujoco_py import load_model_from_path
 from mujoco_py import MjSim
+from mujoco_py import MjSimState
 from mujoco_py import MjViewer
 import numpy as np
 
@@ -45,7 +47,11 @@ class MujocoEnv(gym.Env):
         type=float,
         help='Noise added to the controls, which will be '
         'proportional to the action bounds')
-    def __init__(self, action_noise=0.0, file_path=None, template_args=None):
+    def __init__(self,
+                 action_noise=0.0,
+                 frame_skip=1,
+                 file_path=None,
+                 template_args=None):
         # compile template
         if file_path is None:
             if self.__class__.FILE is None:
@@ -79,11 +85,16 @@ class MujocoEnv(gym.Env):
         self.qvel_dim = self.init_qvel.size
         self.ctrl_dim = self.init_ctrl.size
         self.action_noise = action_noise
-        self.frame_skip = 1
+        self.frame_skip = frame_skip
         self.dcom = None
         self.current_com = None
+        self.seed()
         self.reset()
         super().__init__()
+
+    def seed(self, seed=None):
+        self.np_random, seed = seeding.np_random(seed)
+        return [seed]
 
     @cached_property
     @overrides
@@ -99,6 +110,10 @@ class MujocoEnv(gym.Env):
         shp = self.get_current_obs().shape
         ub = BIG * np.ones(shp)
         return gym.spaces.Box(ub * -1, ub, dtype=np.float32)
+
+    @property
+    def dt(self):
+        return self.model.opt.timestep * self.frame_skip
 
     @property
     def action_bounds(self):
@@ -130,6 +145,15 @@ class MujocoEnv(gym.Env):
         self.current_com = self.sim.data.subtree_com[0]
         self.dcom = np.zeros_like(self.current_com)
         return self.get_current_obs()
+
+    def set_state(self, qpos, qvel):
+        assert qpos.shape == (self.model.nq, ) and qvel.shape == (
+            self.model.nv, )
+        old_state = self.sim.get_state()
+        new_state = MjSimState(old_state.time, qpos, qvel, old_state.act,
+                               old_state.udd_state)
+        self.sim.set_state(new_state)
+        self.sim.forward()
 
     def get_current_obs(self):
         return self._get_full_obs()
@@ -188,6 +212,11 @@ class MujocoEnv(gym.Env):
             self.viewer = MjViewer(self.sim)
         return self.viewer
 
+    def do_simulation(self, ctrl, n_frames):
+        self.sim.data.ctrl[:] = ctrl
+        for _ in range(n_frames):
+            self.sim.step()
+
     def render(self, close=False, mode='human'):
         if mode == 'human':
             viewer = self.get_viewer()
@@ -233,3 +262,11 @@ class MujocoEnv(gym.Env):
 
     def action_from_key(self, key):
         raise NotImplementedError
+
+    def state_vector(self):
+        return np.concatenate(
+            [self.sim.data.qpos.flat, self.sim.data.qvel.flat])
+
+
+def get_asset_xml(xml_name):
+    return osp.join(MODEL_DIR, xml_name)

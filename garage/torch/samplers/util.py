@@ -107,7 +107,9 @@ def split_paths_to_dict(paths):
 
 
 def get_stat_in_paths(paths, dict_name, scalar_name):
-    if paths.size == 0:
+    if isinstance(paths, list) and not paths:
+        return np.array([[]])
+    if isinstance(paths, np.ndarray) and paths.size == 0:
         return np.array([[]])
 
     if type(paths[0][dict_name]) == dict:

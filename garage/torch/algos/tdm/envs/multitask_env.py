@@ -214,7 +214,9 @@ def _extract_list_of_goals(paths):
     :param paths:
     :return:
     """
-    if paths.size == 0:
+    if isinstance(paths, list) and not paths:
+        return None
+    if isinstance(paths, np.ndarray) and paths.size == 0:
         return None
 
     if 'goals' in paths[0]:

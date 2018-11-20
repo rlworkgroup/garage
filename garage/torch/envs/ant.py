@@ -1,11 +1,12 @@
 import numpy as np
 
-from garage.torch.envs.mujoco_env import MujocoEnv
+from garage.envs.mujoco import MujocoEnv
 
 
 class AntEnv(MujocoEnv):
+    FILE = 'low_gear_ratio_ant.xml'
+
     def __init__(self, use_low_gear_ratio=True):
-        self.init_serialization(locals())
         if use_low_gear_ratio:
             xml_path = 'low_gear_ratio_ant.xml'
         else:
@@ -13,7 +14,6 @@ class AntEnv(MujocoEnv):
         super().__init__(
             xml_path,
             frame_skip=5,
-            automatically_set_obs_and_action_space=True,
         )
 
     def step(self, a):
@@ -31,7 +31,7 @@ class AntEnv(MujocoEnv):
         notdone = np.isfinite(state).all() \
                   and state[2] >= 0.2 and state[2] <= 1.0
         done = not notdone
-        ob = self._get_obs()
+        ob = self.get_current_obs()
         return ob, reward, done, dict(
             reward_forward=forward_reward,
             reward_ctrl=-ctrl_cost,
@@ -40,18 +40,23 @@ class AntEnv(MujocoEnv):
             torso_velocity=torso_velocity,
         )
 
-    def _get_obs(self):
+    def get_current_obs(self):
         return np.concatenate([
             self.sim.data.qpos.flat[2:],
             self.sim.data.qvel.flat,
         ])
+
+    def reset(self):
+        self.sim.reset()
+        ob = self.reset_model()
+        return ob
 
     def reset_model(self):
         qpos = self.init_qpos + self.np_random.uniform(
             size=self.model.nq, low=-.1, high=.1)
         qvel = self.init_qvel + self.np_random.randn(self.model.nv) * .1
         self.set_state(qpos, qvel)
-        return self._get_obs()
+        return self.get_current_obs()
 
     def viewer_setup(self):
         self.viewer.cam.distance = self.model.stat.extent * 0.5

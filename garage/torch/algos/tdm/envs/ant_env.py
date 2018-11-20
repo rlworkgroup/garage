@@ -44,7 +44,7 @@ class GoalXYPosAnt(AntEnv, MultitaskEnv, Serializable):
     def convert_obs_to_goals(self, obs):
         return obs[:, 27:29]
 
-    def _get_obs(self):
+    def get_current_obs(self):
         return np.concatenate([
             self.sim.data.qpos.flat[2:],
             self.sim.data.qvel.flat,
@@ -126,6 +126,7 @@ class GoalXYPosAndVelAnt(AntEnv, MultitaskEnv, Serializable):
     ):
         Serializable.quick_init(self, locals())
         self.max_distance = max_distance
+        self.last_velocity = np.zeros(3)
         self.max_speed = max_speed
         self.speed_weight = speed_weight
         self.done_threshold = done_threshold
@@ -179,15 +180,18 @@ class GoalXYPosAndVelAnt(AntEnv, MultitaskEnv, Serializable):
         site_pos[0, 2] = 0.5
         self.model.site_pos[:] = site_pos
 
-    def _get_obs(self):
-        raise NotImplementedError()
+    def get_current_obs(self):
+        return np.concatenate([
+            self.sim.data.qpos.flat[2:], self.sim.data.qvel.flat,
+            self.get_body_com("torso"), self.last_velocity[:]
+        ])
 
     def step(self, action):
         # get_body_comvel doesn't work, so you need to save the last position
         torso_xyz_before = self.get_body_com("torso")
         self.do_simulation(action, self.frame_skip)
         torso_xyz_after = self.get_body_com("torso")
-        torso_velocity = torso_xyz_after - torso_xyz_before
+        self.last_velocity = torso_velocity = torso_xyz_after - torso_xyz_before
 
         done = False
 
@@ -220,6 +224,7 @@ class GoalXYPosAndVelAnt(AntEnv, MultitaskEnv, Serializable):
             size=self.model.nq, low=-.1, high=.1)
         qvel = self.init_qvel + self.np_random.randn(self.model.nv) * .1
         self.set_state(qpos, qvel)
+        self.last_velocity = np.zeros(3)
         return np.hstack((
             self.sim.data.qpos.flat[2:],
             self.sim.data.qvel.flat,
