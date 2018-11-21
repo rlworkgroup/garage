@@ -78,21 +78,21 @@ class Reacher7DofMultitaskEnv(MultitaskEnv, mujoco_env.MujocoEnv,
         qvel[-7:] = 0
         self.set_state(qpos, qvel)
         self._set_goal_xyz(self._desired_xyz)
-        return self._get_obs()
+        return self.get_current_obs()
 
-    def _get_obs(self):
+    def get_current_obs(self):
         return np.concatenate([
-            self.model.data.qpos.flat[:7],
-            self.model.data.qvel.flat[:7],
+            self.sim.data.qpos.flat[:7],
+            self.sim.data.qvel.flat[:7],
             self.get_body_com("tips_arm"),
         ])
 
-    def _step(self, a):
+    def step(self, a):
         distance = np.linalg.norm(
             self.get_body_com("tips_arm") - self._desired_xyz)
         reward = -distance
         self.do_simulation(a, self.frame_skip)
-        ob = self._get_obs()
+        ob = self.get_current_obs()
         done = False
         return ob, reward, done, dict(
             distance=distance,
@@ -102,8 +102,8 @@ class Reacher7DofMultitaskEnv(MultitaskEnv, mujoco_env.MujocoEnv,
         )
 
     def _set_goal_xyz(self, xyz_pos):
-        current_qpos = self.model.data.qpos.flat
-        current_qvel = self.model.data.qvel.flat.copy()
+        current_qpos = self.sim.data.qpos.flat
+        current_qvel = self.sim.data.qvel.flat.copy()
         new_qpos = current_qpos.copy()
         new_qpos[-7:-4] = xyz_pos
         self._desired_xyz = xyz_pos
@@ -127,8 +127,8 @@ class Reacher7DofMultitaskEnv(MultitaskEnv, mujoco_env.MujocoEnv,
             logger.record_tabular(key, value)
 
     def joints_to_full_state(self, joints):
-        current_qpos = self.model.data.qpos.flat.copy()
-        current_qvel = self.model.data.qvel.flat.copy()
+        current_qpos = self.sim.data.qpos.flat.copy()
+        current_qvel = self.sim.data.qvel.flat.copy()
 
         new_qpos = current_qpos.copy()
         new_qpos[:7] = joints
@@ -158,8 +158,8 @@ class Reacher7DofFullGoal(Reacher7DofMultitaskEnv):
         return goal
 
     def _set_goal_xyz_automatically(self, goal):
-        current_qpos = self.model.data.qpos.flat.copy()
-        current_qvel = self.model.data.qvel.flat.copy()
+        current_qpos = self.sim.data.qpos.flat.copy()
+        current_qvel = self.sim.data.qvel.flat.copy()
 
         new_qpos = current_qpos.copy()
         new_qpos[:7] = goal[:7]
