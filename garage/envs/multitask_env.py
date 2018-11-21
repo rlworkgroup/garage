@@ -1,7 +1,4 @@
-"""
-This file contains a Multi-tasks Environment wrapper
-that is used for meta learning or multitask RL.
-"""
+"""Multitask environment."""
 
 import gym
 import numpy as np
@@ -9,7 +6,7 @@ import numpy as np
 from garage.core import Serializable
 
 
-class MultitaskEnv(gym.Wrapper):
+class MultitaskEnv(gym.Wrapper, Serializable):
     """
     Multitask Environment wrapper.
 
@@ -20,13 +17,14 @@ class MultitaskEnv(gym.Wrapper):
 
     def __init__(self, wrapped_env, tasks, task_sample_method="round_robin"):
         """
-        Initialize a MultitaskEnv
+        Initialize a MultitaskEnv.
 
         Args
             wrapped_env: the environment that is wrapped. Note that
                          this environment need a task space.
             tasks: a list of tasks to be sampled from.
-            task_sample_method: how to sample/reset a task. Options are: "round_robin" and "random".
+            task_sample_method: how to sample/reset a task.
+                          Options are: "round_robin" and "random".
         """
         assert wrapped_env.task_space
 
@@ -35,6 +33,7 @@ class MultitaskEnv(gym.Wrapper):
         self.n_tasks = len(tasks)
         self.task_sample_method = task_sample_method
         self.running_task_id = 0
+        Serializable.quick_init(self, locals())
 
     def reset(self, reset_task=True):
         """
@@ -54,7 +53,7 @@ class MultitaskEnv(gym.Wrapper):
         Sample a task and reset it with the wrapped environment.
 
         Args
-            task_id: an id of the task to be set. If None, a tasks 
+            task_id: an id of the task to be set. If None, a tasks
                     will be sample with method of self.task_sample_method.
         """
         if task_id is not None:

@@ -1,9 +1,10 @@
-import numpy as np
 import pickle
 import unittest
 
-from garage.envs.point_env import PointEnv
+import numpy as np
+
 from garage.envs.multitask_env import MultitaskEnv
+from garage.envs.point_env import PointEnv
 from tests.helpers import step_env
 
 
