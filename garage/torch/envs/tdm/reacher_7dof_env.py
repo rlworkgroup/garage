@@ -9,7 +9,7 @@ from garage.torch.core.eval_util import create_stats_ordered_dict
 from garage.torch.core.serializable import Serializable
 from garage.envs.mujoco.mujoco_env import get_asset_xml
 from garage.torch.samplers.util import get_stat_in_paths
-from garage.torch.algos.tdm.envs.multitask_env import MultitaskEnv
+from garage.torch.envs.tdm.multitask_env import MultitaskEnv
 
 
 class Reacher7DofMultitaskEnv(MultitaskEnv, mujoco_env.MujocoEnv,

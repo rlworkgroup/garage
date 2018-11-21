@@ -5,7 +5,7 @@ from garage.torch.exploration_strategies.base import \
 from garage.torch.exploration_strategies.ou_strategy import OUStrategy
 from garage.torch.launchers.launcher_util import setup_logger
 from garage.torch.algos.modules import HuberLoss
-from garage.torch.algos.tdm.envs.ant_env import GoalXYPosAndVelAnt
+from garage.torch.envs.tdm.ant_env import GoalXYPosAndVelAnt
 from garage.torch.algos.tdm.her_replay_buffer import HerReplayBuffer
 from garage.torch.algos.tdm.networks import TdmNormalizer, TdmQf, TdmPolicy
 from garage.torch.algos.tdm.tdm import TemporalDifferenceModel
