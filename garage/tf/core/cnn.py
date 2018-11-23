@@ -54,7 +54,7 @@ def cnn(input_var,
             if hidden_nonlinearity is not None:
                 h = hidden_nonlinearity(h)
 
-        # convert conv to densevfxz
+        # convert conv to dense
         dim = tf.reduce_prod(h.get_shape()[1:].as_list())
         h = tf.reshape(h, [-1, dim.eval()])
         h = tf.layers.dense(
@@ -157,7 +157,8 @@ def _conv(input_var,
     b_shape = [1, 1, 1, num_filter]
 
     with tf.variable_scope(name):
-        w = tf.get_variable('w', w_shape, initializer=hidden_w_init)
-        b = tf.get_variable('b', b_shape, initializer=hidden_b_init)
+        weight = tf.get_variable('weight', w_shape, initializer=hidden_w_init)
+        bias = tf.get_variable('bias', b_shape, initializer=hidden_b_init)
 
-        return tf.nn.conv2d(input_var, w, strides=strides, padding=padding) + b
+        return tf.nn.conv2d(
+            input_var, weight, strides=strides, padding=padding) + bias

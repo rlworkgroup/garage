@@ -26,7 +26,8 @@ class TestCNN(TfGraphTestCase):
 
         self.hidden_nonlinearity = tf.nn.relu
 
-        # Build the default cnn
+    def test_output_shape(self):
+
         with tf.variable_scope("CNN"):
             self.cnn = cnn(
                 input_var=self._input_ph,
@@ -41,12 +42,26 @@ class TestCNN(TfGraphTestCase):
 
         self.sess.run(tf.global_variables_initializer())
 
-    def test_output_shape(self):
         result = self.sess.run(
             self.cnn, feed_dict={self._input_ph: self.obs_input})
         assert result.shape[1] == self._output_shape
 
     def test_output_with_identity_filter(self):
+
+        with tf.variable_scope("CNN"):
+            self.cnn = cnn(
+                input_var=self._input_ph,
+                output_dim=self._output_shape,
+                filter_dims=self.filter_sizes,
+                num_filters=self.out_channels,
+                stride=1,
+                name="cnn1",
+                padding="VALID",
+                hidden_w_init=tf.constant_initializer(1),
+                hidden_nonlinearity=self.hidden_nonlinearity)
+
+        self.sess.run(tf.global_variables_initializer())
+
         result = self.sess.run(
             self.cnn, feed_dict={self._input_ph: self.obs_input})
 
@@ -72,41 +87,11 @@ class TestCNN(TfGraphTestCase):
         dense_in = tf.matmul(h_out, out_w) + out_b
         np.testing.assert_array_equal(dense_in.eval(), result)
 
-    def test_output_with_random_filter(self):
-
-        stride = 1
-        # Build a cnn with random filter weights
-        with tf.variable_scope("CNN"):
-            self.cnn2 = cnn(
-                input_var=self._input_ph,
-                output_dim=self._output_shape,
-                filter_dims=self.filter_sizes,
-                num_filters=self.out_channels,
-                stride=stride,
-                name="cnn2",
-                padding="VALID",
-                hidden_nonlinearity=self.hidden_nonlinearity)
-
-        self.sess.run(tf.global_variables_initializer())
-
-        result = self.sess.run(
-            self.cnn2, feed_dict={self._input_ph: self.obs_input})
-
-        # get weight values
-        with tf.variable_scope("CNN", reuse=True):
-            h0_w = tf.get_variable("cnn2/h0/w").eval()
-            h0_b = tf.get_variable("cnn2/h0/b").eval()
-            out_w = tf.get_variable("cnn2/output/kernel")
-            out_b = tf.get_variable("cnn2/output/bias")
-
-        filter_weights = (h0_w, )
-        filter_biass = (h0_b, )
+    def convolve(self, input, filter_weights, filter_biass, stride):
 
         in_width = self.input_width
         in_height = self.input_height
 
-        input_val = self.obs_input
-        # convolution according to TensorFlow's approach
         for filter_size, in_shape, filter_weight, filter_bias in zip(
                 self.filter_sizes, self.in_channels, filter_weights,
                 filter_biass):
@@ -124,14 +109,53 @@ class TestCNN(TfGraphTestCase):
                         for dw in range(filter_size):
                             for dh in range(filter_size):
                                 for in_c in range(in_shape):
-                                    sliding_window[dw][dh][in_c] = input_val[
+                                    sliding_window[dw][dh][in_c] = input[
                                         batch][w + dw][h + dh][in_c]
                         image_vector[batch][w][h] = sliding_window.flatten()
-            input_val = np.dot(image_vector, reshape_filter) + filter_bias
-            input_val = self.hidden_nonlinearity(input_val).eval()
+            input = np.dot(image_vector, reshape_filter) + filter_bias
+            input = self.hidden_nonlinearity(input).eval()
 
             in_width = out_width
             in_height = out_height
+
+        return input
+
+    def test_output_with_random_filter(self):
+
+        stride = 1
+        # Build a cnn with random filter weights
+        with tf.variable_scope("CNN"):
+            self.cnn2 = cnn(
+                input_var=self._input_ph,
+                output_dim=self._output_shape,
+                filter_dims=self.filter_sizes,
+                num_filters=self.out_channels,
+                stride=stride,
+                name="cnn1",
+                padding="VALID",
+                hidden_nonlinearity=self.hidden_nonlinearity)
+
+        self.sess.run(tf.global_variables_initializer())
+
+        result = self.sess.run(
+            self.cnn2, feed_dict={self._input_ph: self.obs_input})
+
+        # get weight values
+        with tf.variable_scope("CNN", reuse=True):
+            h0_w = tf.get_variable("cnn1/h0/weight").eval()
+            h0_b = tf.get_variable("cnn1/h0/bias").eval()
+            out_w = tf.get_variable("cnn1/output/kernel")
+            out_b = tf.get_variable("cnn1/output/bias")
+
+        filter_weights = (h0_w, )
+        filter_biass = (h0_b, )
+
+        # convolution according to TensorFlow's approach
+        input_val = self.convolve(
+            input=self.obs_input,
+            filter_weights=filter_weights,
+            filter_biass=filter_biass,
+            stride=stride)
 
         # flatten
         input_val = input_val.reshape((self.batch_size, -1)).astype(np.float32)
@@ -152,7 +176,7 @@ class TestCNN(TfGraphTestCase):
                 filter_dims=self.filter_sizes,
                 num_filters=self.out_channels,
                 stride=stride,
-                name="cnn2",
+                name="cnn1",
                 pool_shape=(pool_shape, pool_shape),
                 pool_stride=(pool_stride, pool_stride),
                 padding="VALID",
@@ -166,41 +190,20 @@ class TestCNN(TfGraphTestCase):
 
         # get weight values
         with tf.variable_scope("CNN", reuse=True):
-            h0_w = tf.get_variable("cnn2/h0/w").eval()
-            h0_b = tf.get_variable("cnn2/h0/b").eval()
-            out_w = tf.get_variable("cnn2/output/kernel")
-            out_b = tf.get_variable("cnn2/output/bias")
+            h0_w = tf.get_variable("cnn1/h0/weight").eval()
+            h0_b = tf.get_variable("cnn1/h0/bias").eval()
+            out_w = tf.get_variable("cnn1/output/kernel")
+            out_b = tf.get_variable("cnn1/output/bias")
 
         filter_weights = (h0_w, )
         filter_biass = (h0_b, )
 
-        in_width = self.input_width
-        in_height = self.input_height
-
-        input_val = self.obs_input
         # convolution according to TensorFlow's approach
-        for filter_size, in_shape, filter_weight, filter_bias in zip(
-                self.filter_sizes, self.in_channels, filter_weights,
-                filter_biass):
-            out_width = int((in_width - filter_size) / stride) + 1
-            out_height = int((in_height - filter_size) / stride) + 1
-            flatten_filter_size = filter_size * filter_size * in_shape
-            reshape_filter = filter_weight.reshape(flatten_filter_size, -1)
-            image_vector = np.empty((self.batch_size, out_width, out_height,
-                                     flatten_filter_size))
-            for batch in range(self.batch_size):
-                for w in range(out_width):
-                    for h in range(out_height):
-                        sliding_window = np.empty((filter_size, filter_size,
-                                                   in_shape))
-                        for dw in range(filter_size):
-                            for dh in range(filter_size):
-                                for in_c in range(in_shape):
-                                    sliding_window[dw][dh][in_c] = input_val[
-                                        batch][w + dw][h + dh][in_c]
-                        image_vector[batch][w][h] = sliding_window.flatten()
-            input_val = np.dot(image_vector, reshape_filter) + filter_bias
-            input_val = self.hidden_nonlinearity(input_val).eval()
+        input_val = self.convolve(
+            input=self.obs_input,
+            filter_weights=filter_weights,
+            filter_biass=filter_biass,
+            stride=stride)
 
         # max pooling
         results = np.empty((self.batch_size,

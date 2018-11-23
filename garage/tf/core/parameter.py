@@ -1,4 +1,4 @@
-"""Parameter variable in TensorFlow."""
+"""Parameter layer in TensorFlow."""
 
 import tensorflow as tf
 from tensorflow.python.ops.gen_array_ops import broadcast_to
@@ -11,10 +11,12 @@ def parameter(input_var,
               trainable=True,
               name="parameter"):
     """
-    Parameter variable.
+    Parameter layer.
 
-    It creates variables that could be broadcast to a certain shape to
-    match with input var.
+    Used as layer that could be broadcast to a certain shape to
+    match with input variable during training.
+    Example: A trainable parameter variable with shape (2,), it needs to be
+    broadcasted to (32, 2) when applied to a batch with size 32.
 
     Args:
         input_var: Input tf.Tensor.
@@ -25,7 +27,7 @@ def parameter(input_var,
         name: variable scope of the variables.
 
     Return:
-        A tensor of broadcasted variables.
+        A tensor of the broadcasted variables.
     """
     with tf.variable_scope(name):
         p = tf.get_variable(

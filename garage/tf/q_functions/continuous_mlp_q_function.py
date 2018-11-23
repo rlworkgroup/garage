@@ -55,11 +55,11 @@ class ContinuousMLPQFunction(QFunction, LayersPowered, Serializable):
         self._action_merge_layer = action_merge_layer
         self._output_nonlinearity = output_nonlinearity
         self._batch_norm = bn
-        self._f_qval, self._output_layer, self._obs_layer, self._action_layer = self._build_net(  # noqa: E501
+        self._f_qval, self._output_layer, self._obs_layer, self._action_layer = self.build_net(  # noqa: E501
             name=self.name)
         LayersPowered.__init__(self, [self._output_layer])
 
-    def _build_net(self, trainable=True, name=None):
+    def build_net(self, trainable=True, name=None):
         """
         Set up q network based on class attributes. This function uses layers
         defined in garage.tf.

@@ -41,7 +41,14 @@ class DiscreteMLPQFunction(QFunction):
         self._layer_norm = layer_norm
 
     @overrides
-    def _build_net(self, name, input):
+    def build_net(self, name, input):
+        """
+        Set up q network based on class attributes.
+
+        Args:
+            name: Network variable scope.
+            input: Input tf.placeholder to the network.
+        """
         return mlp(
             input_var=input,
             output_dim=self._action_dim,
