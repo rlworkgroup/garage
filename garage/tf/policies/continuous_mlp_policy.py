@@ -69,11 +69,11 @@ class ContinuousMLPPolicy(Policy, LayersPowered, Serializable):
         self._batch_norm = bn
         self._policy_network_name = "policy_network"
         # Build the network and initialized as Parameterized
-        self._f_prob_online, self._output_layer, self._obs_layer = self._build_net(  # noqa: E501
+        self._f_prob_online, self._output_layer, self._obs_layer = self.build_net(  # noqa: E501
             name=self.name)
         LayersPowered.__init__(self, [self._output_layer])
 
-    def _build_net(self, trainable=True, name=None):
+    def build_net(self, trainable=True, name=None):
         """
         Set up q network based on class attributes.
 

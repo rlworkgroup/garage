@@ -89,9 +89,9 @@ class DDPG(OffPolicyRLAlgorithm):
     def init_opt(self):
         with tf.name_scope(self.name, "DDPG"):
             # Create target policy and qf network
-            self.target_policy_f_prob_online, _, _ = self.policy._build_net(
+            self.target_policy_f_prob_online, _, _ = self.policy.build_net(
                 trainable=False, name="target_policy")
-            self.target_qf_f_prob_online, _, _, _ = self.qf._build_net(
+            self.target_qf_f_prob_online, _, _, _ = self.qf.build_net(
                 trainable=False, name="target_qf")
 
             # Set up target init and update function

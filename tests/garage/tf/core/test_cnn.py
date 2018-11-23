@@ -27,7 +27,6 @@ class TestCNN(TfGraphTestCase):
         self.hidden_nonlinearity = tf.nn.relu
 
     def test_output_shape(self):
-
         with tf.variable_scope("CNN"):
             self.cnn = cnn(
                 input_var=self._input_ph,
@@ -47,7 +46,6 @@ class TestCNN(TfGraphTestCase):
         assert result.shape[1] == self._output_shape
 
     def test_output_with_identity_filter(self):
-
         with tf.variable_scope("CNN"):
             self.cnn = cnn(
                 input_var=self._input_ph,
@@ -87,8 +85,7 @@ class TestCNN(TfGraphTestCase):
         dense_in = tf.matmul(h_out, out_w) + out_b
         np.testing.assert_array_equal(dense_in.eval(), result)
 
-    def convolve(self, input, filter_weights, filter_biass, stride):
-
+    def convolve(self, _input, filter_weights, filter_biass, stride):
         in_width = self.input_width
         in_height = self.input_height
 
@@ -109,19 +106,18 @@ class TestCNN(TfGraphTestCase):
                         for dw in range(filter_size):
                             for dh in range(filter_size):
                                 for in_c in range(in_shape):
-                                    sliding_window[dw][dh][in_c] = input[
+                                    sliding_window[dw][dh][in_c] = _input[
                                         batch][w + dw][h + dh][in_c]
                         image_vector[batch][w][h] = sliding_window.flatten()
-            input = np.dot(image_vector, reshape_filter) + filter_bias
-            input = self.hidden_nonlinearity(input).eval()
+            _input = np.dot(image_vector, reshape_filter) + filter_bias
+            _input = self.hidden_nonlinearity(_input).eval()
 
             in_width = out_width
             in_height = out_height
 
-        return input
+        return _input
 
     def test_output_with_random_filter(self):
-
         stride = 1
         # Build a cnn with random filter weights
         with tf.variable_scope("CNN"):
@@ -152,7 +148,7 @@ class TestCNN(TfGraphTestCase):
 
         # convolution according to TensorFlow's approach
         input_val = self.convolve(
-            input=self.obs_input,
+            _input=self.obs_input,
             filter_weights=filter_weights,
             filter_biass=filter_biass,
             stride=stride)
@@ -164,7 +160,6 @@ class TestCNN(TfGraphTestCase):
         np.testing.assert_array_almost_equal(dense_in.eval(), result)
 
     def test_output_with_max_pooling(self):
-
         stride = 1
         pool_shape = 2
         pool_stride = 2
@@ -200,7 +195,7 @@ class TestCNN(TfGraphTestCase):
 
         # convolution according to TensorFlow's approach
         input_val = self.convolve(
-            input=self.obs_input,
+            _input=self.obs_input,
             filter_weights=filter_weights,
             filter_biass=filter_biass,
             stride=stride)
