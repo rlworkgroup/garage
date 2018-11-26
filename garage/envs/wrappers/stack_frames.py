@@ -26,7 +26,7 @@ class StackFrames(gym.Wrapper):
             ValueError: If observation space shape is not 2.
 
         """
-        super(StackFrames, self).__init__(env)
+        super().__init__(env)
         if len(env.observation_space.shape) != 2:
             raise ValueError(
                 "Stack frames only works with 2D single channel images")
@@ -42,7 +42,7 @@ class StackFrames(gym.Wrapper):
         return np.stack(self._frames, axis=2)
 
     def reset(self):
-        """Gym env reset function."""
+        """gym.Env reset function."""
         observation = self.env.reset()
         self._frames.clear()
         for i in range(self.n_frames):
@@ -51,7 +51,7 @@ class StackFrames(gym.Wrapper):
         return self._stack_frames()
 
     def step(self, action):
-        """Gym env step function."""
+        """gym.Env step function."""
         new_observation, reward, done, info = self.env.step(action)
         self._frames.append(new_observation)
 

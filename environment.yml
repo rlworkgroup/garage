@@ -49,6 +49,7 @@ dependencies:
         - pyprind
         - python-dateutil
         - pyzmq
+        - scikit-image
         - scipy
         - tensorboard
         - tensorflow<1.10,>=1.9.0

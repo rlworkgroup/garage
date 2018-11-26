@@ -1,8 +1,7 @@
-"""Resize wrapper for gym env."""
+"""Resize wrapper for gym.Env."""
 import gym
 from gym.spaces import Box
 import numpy as np
-# from skimage.transform import resize
 from scipy.misc import imresize
 
 
@@ -18,14 +17,13 @@ class Resize(gym.Wrapper):
             width: resized frame width.
             height: resized frame height.
         """
-        super(Resize, self).__init__(env)
+        super().__init__(env)
         self.observation_space = Box(
             0.0, 1.0, shape=[width, height], dtype=np.float32)
         self.width = width
         self.height = height
 
     def _observation(self, obs):
-        # obs = resize(obs, (self.width, self.height))
         obs = imresize(obs, (self.width, self.height))
         return obs
 

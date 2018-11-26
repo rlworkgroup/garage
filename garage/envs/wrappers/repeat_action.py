@@ -11,9 +11,9 @@ class RepeatAction(gym.Wrapper):
 
         Args:
             env: gym.Env to wrap.
-            n_frame_to_repeat: number of frame to repeat action.
+            n_frame_to_repeat: number of frames to repeat action.
         """
-        super(RepeatAction, self).__init__(env)
+        super().__init__(env)
         self.n_frame_to_repeat = n_frame_to_repeat
 
     def step(self, action):

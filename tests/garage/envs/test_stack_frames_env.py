@@ -24,22 +24,18 @@ class TestStackFrames(unittest.TestCase):
 
     def test_stack_frames_multiple_channel(self):
         with self.assertRaises(ValueError):
-            env_invalid = StackFrames(gym.make("Breakout-v0"), n_frames=4)
+            StackFrames(gym.make("Breakout-v0"), n_frames=4)
 
     def test_stack_frames_for_reset(self):
-
         frame_stack = self.obs
         for i in range(3):
             frame_stack = np.dstack((frame_stack, self.obs))
 
-        width = self.env.observation_space.shape[0]
-        height = self.env.observation_space.shape[1]
         assert self.obs_stack.shape == (self.frame_width, self.frame_height, 4)
 
         np.testing.assert_array_equal(self.obs_stack, frame_stack)
 
     def test_stack_frames_for_step(self):
-
         frame_stack = np.empty((self.frame_width, self.frame_height, 4))
         for i in range(10):
             frame_stack = frame_stack[:, :, 1:]
