@@ -107,7 +107,7 @@ Pickled Mode Experiments
     from garage.baselines.linear_feature_baseline import LinearFeatureBaseline
     from garage.envs.box2d.cartpole_env import CartpoleEnv
     from garage.envs.normalized_env import normalize
-    from garage.misc.instrument import run_experiment
+    from garage.experiment import run_experiment
     from garage.policies.gaussian_mlp_policy import GaussianMLPPolicy
 
 

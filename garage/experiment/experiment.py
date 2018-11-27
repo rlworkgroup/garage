@@ -324,10 +324,8 @@ def run_experiment(method_call=None,
             task["exp_name"] = "%s_%s_%04d" % (exp_prefix, timestamp,
                                                exp_count)
         if task.get("log_dir", None) is None:
-            task["log_dir"] = config.LOG_DIR + "/local/" + \
-                              exp_prefix.replace("_", "-") + \
-                              "/" + \
-                              task["exp_name"]
+            task["log_dir"] = (config.LOG_DIR + "/local/" + exp_prefix.replace(
+                "_", "-") + "/" + task["exp_name"])
         if task.get("variant", None) is not None:
             variant = task.pop("variant")
             if "exp_name" not in variant:
@@ -830,14 +828,14 @@ def launch_ec2(params_list,
                             sleep 5
                         fi
                     done & echo log sync initiated
-                """.format(  # noqa: E501
+                """.format(  # noqa: E501, W605
                     log_dir=log_dir,
                     remote_log_dir=remote_log_dir))
         if use_gpu:
             sio.write("""
                 for i in {1..800}; do su -c "nvidia-modprobe -u -c=0" ubuntu && break || sleep 3; done
                 systemctl start nvidia-docker
-            """)  # noqa: E501
+            """)  # noqa: E501, W605
         sio.write("""
             {command}
         """.format(
@@ -988,7 +986,7 @@ def s3_sync_code(config, dry=False, added_project_directories=[]):
         try:
             current_commit = subprocess.check_output(
                 ["git", "rev-parse", "HEAD"]).strip().decode("utf-8")
-        except subprocess.CalledProcessError as _:
+        except subprocess.CalledProcessError:
             print("Warning: failed to execute git commands")
             current_commit = None
 
@@ -1038,29 +1036,27 @@ def s3_sync_code(config, dry=False, added_project_directories=[]):
                 ["git", "rev-parse", "HEAD"]).strip().decode("utf-8")
             clean_state = not subprocess.check_output(
                 ["git", "status", "--porcelain"])
-        except subprocess.CalledProcessError as _:
+        except subprocess.CalledProcessError:
             print("Warning: failed to execute git commands")
             has_git = False
         dir_hash = base64.b64encode(subprocess.check_output(
             ["pwd"])).decode("utf-8")
-        code_path = "%s_%s" % (dir_hash, (current_commit
-                                          if clean_state else "%s_dirty_%s" %
-                                          (current_commit, timestamp))
-                               if has_git else timestamp)
+        code_path = "{}_{}".format(dir_hash, (current_commit if clean_state
+                                              else "{}_dirty_{}".format(
+                                                  current_commit, timestamp))
+                                   if has_git else timestamp)
+
         full_path = "%s/%s" % (base, code_path)
         cache_path = "%s/%s" % (base, dir_hash)
-        cache_cmds = ["aws", "s3", "cp", "--recursive"] + \
-                     flatten(["--exclude", "%s" % pattern]
-                             for pattern in config.CODE_SYNC_IGNORES) + \
-                     [cache_path, full_path]
-        cmds = ["aws", "s3", "cp", "--recursive"] + \
-               flatten(["--exclude", "%s" % pattern]
-                       for pattern in config.CODE_SYNC_IGNORES) + \
-               [".", full_path]
-        caching_cmds = ["aws", "s3", "cp", "--recursive"] + \
-                       flatten(["--exclude", "%s" % pattern]
-                               for pattern in config.CODE_SYNC_IGNORES) + \
-                       [full_path, cache_path]
+        cache_cmds = (["aws", "s3", "cp", "--recursive"] + flatten(
+            ["--exclude", "%s" % pattern]
+            for pattern in config.CODE_SYNC_IGNORES) + [cache_path, full_path])
+        cmds = (["aws", "s3", "cp", "--recursive"] + flatten(
+            ["--exclude", "%s" % pattern]
+            for pattern in config.CODE_SYNC_IGNORES) + [".", full_path])
+        caching_cmds = (["aws", "s3", "cp", "--recursive"] + flatten(
+            ["--exclude", "%s" % pattern]
+            for pattern in config.CODE_SYNC_IGNORES) + [full_path, cache_path])
         mujoco_key_cmd = [
             "aws", "s3", "sync", config.MUJOCO_KEY_PATH,
             "{}/.mujoco/".format(base)
@@ -1202,9 +1198,9 @@ def to_lab_kube_pod(params,
     if pre_commands is not None:
         command_list.extend(pre_commands)
     command_list.append("echo \"Running in docker\"")
-    command_list.append("%s 2>&1 | tee -a %s" % (to_local_command(
-        params, python_command=python_command, script=script),
-                                                 "%s/stdouterr.log" % log_dir))
+    command_list.append("{} 2>&1 | tee -a {}".format(
+        to_local_command(params, python_command=python_command, script=script),
+        "{}/stdouterr.log".format(log_dir)))
     if post_commands is not None:
         command_list.extend(post_commands)
     command = "; ".join(command_list)

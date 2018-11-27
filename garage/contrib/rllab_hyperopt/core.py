@@ -13,7 +13,7 @@ from hyperopt.mongoexp import MongoTrials
 import polling
 
 from garage import config
-from garage.misc.instrument import run_experiment
+from garage.experiment import run_experiment
 
 
 class S3SyncThread(threading.Thread):

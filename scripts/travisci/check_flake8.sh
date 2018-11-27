@@ -50,6 +50,7 @@ ignored_errors_changed=(
 # style, this rule is ignored.
 D     # docstring rules disabled
 W503  # line break before binary operator
+W504  # line break after binary operator
 )
 
 # Files or directories to exclude from checks applied to changed files.
