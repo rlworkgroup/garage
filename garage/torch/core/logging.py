@@ -184,15 +184,18 @@ class Logger(object):
 
         :param data: Something pickle'able.
         """
-        file_name = osp.join(self._snapshot_dir, file_name)
-        if mode == 'joblib':
-            import joblib
-            joblib.dump(data, file_name, compress=3)
-        elif mode == 'pickle':
-            pickle.dump(data, open(file_name, "wb"))
-        else:
-            raise ValueError("Invalid mode: {}".format(mode))
-        return file_name
+        if self._snapshot_dir:
+            file_name = osp.join(self._snapshot_dir, file_name)
+            if mode == 'joblib':
+                import joblib
+                joblib.dump(data, file_name, compress=3)
+            elif mode == 'pickle':
+                pickle.dump(data, open(file_name, "wb"))
+            else:
+                raise ValueError("Invalid mode: {}".format(mode))
+            return file_name
+
+        return None
 
     def get_table_dict(self, ):
         return dict(self._tabular)

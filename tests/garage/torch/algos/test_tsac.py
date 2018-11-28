@@ -5,7 +5,6 @@ import numpy as np
 import gym
 import garage.torch.algos.pytorch_util as ptu
 from garage.torch.envs.wrappers import NormalizedBoxEnv
-from garage.torch.launchers.launcher_util import setup_logger
 from garage.torch.policies import TanhGaussianPolicy
 from garage.torch.algos.networks import FlattenMlp
 from garage.torch.algos.sac.twin_sac import TwinSAC
@@ -28,7 +27,6 @@ class TestTSAC(unittest.TestCase):
             ),
             net_size=300,
         )
-        setup_logger('common-test', variant=variant)
 
         env = NormalizedBoxEnv(gym.make('HalfCheetah-v2'))
         obs_dim = int(np.prod(env.observation_space.shape))

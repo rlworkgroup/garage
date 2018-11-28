@@ -12,7 +12,7 @@ The example scripts have tuned hyperparameters. Specifically, the following hype
 
 
 ## Creating your own environment for TDM
-A [MultitaskEnv](envs/multitask_env.py) instances needs to implement 3 functions:
+A [MultitaskEnv](envs/tdm/multitask_env.py) instances needs to implement 3 functions:
 
 ```python
     def goal_dim(self) -> int:
@@ -30,8 +30,8 @@ A [MultitaskEnv](envs/multitask_env.py) instances needs to implement 3 functions
         pass
 ```
 
-If you want to see how to make an existing environment multitask, see [GoalXVelHalfCheetah](envs/half_cheetah_env.py), which builds off of Gym's HalfCheetah environments.
+If you want to see how to make an existing environment multitask, see [GoalXVelHalfCheetah](../../envs/tdm/half_cheetah_env.py), which builds off of Gym's HalfCheetah environments.
 
-Another useful example might be [GoalXYPosAnt](envs/ant_env.py), which builds off a custom environment.
+Another useful example might be [GoalXYPosAnt](../../envs/tdm/ant_env.py), which builds off a custom environment.
 
 One important thing is that the environment should *not* include the goal as part of the state, since the goal will be separately given to the networks.

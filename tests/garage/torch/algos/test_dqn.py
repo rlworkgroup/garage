@@ -5,7 +5,6 @@ import numpy as np
 from torch import nn as nn
 
 import garage.torch.algos.pytorch_util as ptu
-from garage.torch.launchers.launcher_util import setup_logger
 from garage.torch.algos.dqn.dqn import DQN
 from garage.torch.algos.networks import Mlp
 
@@ -26,7 +25,6 @@ class TestDQN(unittest.TestCase):
                 save_environment=
                 False,  # Can't serialize CartPole for some reason
             ), )
-        setup_logger('common-test', variant=variant)
 
         env = gym.make('CartPole-v0')
         training_env = gym.make('CartPole-v0')

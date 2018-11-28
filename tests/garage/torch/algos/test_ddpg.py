@@ -6,7 +6,6 @@ from garage.torch.envs.wrappers import NormalizedBoxEnv
 from garage.torch.exploration_strategies.base import (
     PolicyWrappedWithExplorationStrategy)
 from garage.torch.exploration_strategies.ou_strategy import OUStrategy
-from garage.torch.launchers.launcher_util import setup_logger
 from garage.torch.algos.networks import FlattenMlp, TanhMlpPolicy
 from garage.torch.algos.ddpg.ddpg import DDPG
 import garage.torch.algos.pytorch_util as ptu
@@ -27,7 +26,6 @@ class TestDDPG(unittest.TestCase):
                 qf_learning_rate=1e-3,
                 policy_learning_rate=1e-4,
             ), )
-        setup_logger('common-test', variant=variant)
 
         env = NormalizedBoxEnv(HalfCheetahEnv())
         # Or for a specific version:

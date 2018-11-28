@@ -7,7 +7,6 @@ from garage.torch.envs.wrappers import NormalizedBoxEnv
 from garage.torch.exploration_strategies.base import \
     PolicyWrappedWithExplorationStrategy
 from garage.torch.exploration_strategies.gaussian_strategy import GaussianStrategy
-from garage.torch.launchers.launcher_util import setup_logger
 from garage.torch.algos.networks import FlattenMlp, TanhMlpPolicy
 from garage.torch.algos.td3.td3 import TD3
 
@@ -24,7 +23,6 @@ class TestTD3(unittest.TestCase):
                 discount=0.99,
                 replay_buffer_size=int(1E6),
             ), )
-        setup_logger('common-test', variant=variant)
 
         env = NormalizedBoxEnv(HopperEnv())
         es = GaussianStrategy(

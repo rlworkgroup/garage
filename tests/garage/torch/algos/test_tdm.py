@@ -5,7 +5,6 @@ from garage.torch.envs.wrappers import NormalizedBoxEnv
 from garage.torch.exploration_strategies.base import \
     PolicyWrappedWithExplorationStrategy
 from garage.torch.exploration_strategies.ou_strategy import OUStrategy
-from garage.torch.launchers.launcher_util import setup_logger
 from garage.torch.algos.modules import HuberLoss
 from garage.torch.envs.tdm.half_cheetah_env import GoalXVelHalfCheetah
 from garage.torch.algos.tdm.her_replay_buffer import HerReplayBuffer
@@ -36,7 +35,6 @@ class TestTDM(unittest.TestCase):
             ),
             algorithm="TDM",
         )
-        setup_logger('common-test', variant=variant)
 
         env = NormalizedBoxEnv(GoalXVelHalfCheetah())
         max_tau = variant['tdm_kwargs']['max_tau']
