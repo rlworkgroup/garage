@@ -99,7 +99,7 @@ def _mediawiki_row_with_attrs(separator, cell_values, colwidths, colaligns):
 def _latex_line_begin_tabular(colwidths, colaligns):
     alignment = {"left": "l", "right": "r", "center": "c", "decimal": "r"}
     tabular_columns_fmt = "".join([alignment.get(a, "l") for a in colaligns])
-    return "\\begin{tabular}{" + tabular_columns_fmt + "}\n\hline"
+    return "\\begin{tabular}{" + tabular_columns_fmt + "}\n\\hline"
 
 
 _table_formats = {
@@ -198,8 +198,8 @@ _table_formats = {
 
 tabulate_formats = list(sorted(_table_formats.keys()))
 
-_invisible_codes = re.compile("\x1b\[\d*m")  # ANSI color codes
-_invisible_codes_bytes = re.compile(b"\x1b\[\d*m")  # ANSI color codes
+_invisible_codes = re.compile("\x1b\\[\\d*m")  # ANSI color codes
+_invisible_codes_bytes = re.compile(b"\x1b\\[\\d*m")  # ANSI color codes
 
 
 def simple_separated_format(separator):
@@ -224,7 +224,7 @@ def simple_separated_format(separator):
 
 def _isconvertible(conv, string):
     try:
-        n = conv(string)
+        conv(string)
         return True
     except ValueError:
         return False
@@ -585,7 +585,7 @@ def tabulate(tabular_data,
              numalign="decimal",
              stralign="left",
              missingval=""):
-    """Format a fixed width table for pretty printing.
+    r"""Format a fixed width table for pretty printing.
 
     >>> print(tabulate([[1, 2.34], [-56, "8.999"], ["2", "10001"]]))
     ---  ---------

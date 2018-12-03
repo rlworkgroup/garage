@@ -86,7 +86,7 @@ class Logger():
             arr.append(file_name)
             fds[file_name] = open(file_name, mode)
 
-    def _remove_output(file_name, arr, fds):
+    def _remove_output(self, file_name, arr, fds):
         if file_name in arr:
             fds[file_name].close()
             del fds[file_name]
