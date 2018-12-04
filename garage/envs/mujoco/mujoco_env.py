@@ -5,6 +5,7 @@ import warnings
 
 from cached_property import cached_property
 import gym
+import gym.spaces
 import mako.lookup
 import mako.template
 from mujoco_py import functions
