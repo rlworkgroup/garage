@@ -5,6 +5,7 @@ import warnings
 
 from cached_property import cached_property
 import gym
+import gym.spaces
 import mako.lookup
 import mako.template
 from mujoco_py import functions
@@ -167,8 +168,7 @@ class MujocoEnv(gym.Env):
 
     def inject_action_noise(self, action):
         # generate action noise
-        noise = self.action_noise * \
-                np.random.normal(size=action.shape)
+        noise = self.action_noise * np.random.normal(size=action.shape)
         # rescale the noise to make it proportional to the action bounds
         lb, ub = self.action_bounds
         noise = 0.5 * (ub - lb) * noise
