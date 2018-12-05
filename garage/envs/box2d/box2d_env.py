@@ -2,6 +2,7 @@ from copy import copy
 import os.path as osp
 
 import gym
+import gym.spaces
 import mako.lookup
 import mako.template
 import numpy as np
