@@ -9,7 +9,7 @@ class Grayscale(gym.Wrapper):
     """
     Grayscale wrapper for gym.Env, converting frames to grayscale.
 
-    Only works with Box environment with 2D RGB frames.
+    Only works with gym.spaces.Box environment with 2D RGB frames.
     The last dimension (RGB) of environment observation space will be removed.
 
     Example:
@@ -23,13 +23,15 @@ class Grayscale(gym.Wrapper):
         env: gym.Env to wrap.
 
     Raises:
-        ValueError: If observation space shape is not 3 or environment is not Box.
+        ValueError: If observation space shape is not 3
+            or environment is not gym.spaces.Box.
 
     """
 
     def __init__(self, env):
         if not isinstance(env.observation_space, Box):
-            raise ValueError("Grayscale only works with Box environment.")
+            raise ValueError(
+                "Grayscale only works with gym.spaces.Box environment.")
 
         if len(env.observation_space.shape) != 3:
             raise ValueError("Grayscale only works with 2D RGB images")
@@ -46,6 +48,7 @@ class Grayscale(gym.Wrapper):
 
     @property
     def observation_space(self):
+        """gym.Env observation space."""
         return self._observation_space
 
     @observation_space.setter

@@ -1,9 +1,9 @@
 import unittest
+from unittest import mock
 
-import gym
+from gym.spaces import Box
 import numpy as np
 
-from garage.envs.wrappers import GrayScale
 from garage.envs.wrappers import StackFrames
 from garage.misc.overrides import overrides
 
@@ -11,35 +11,54 @@ from garage.misc.overrides import overrides
 class TestStackFrames(unittest.TestCase):
     @overrides
     def setUp(self):
-        self.env_stack = StackFrames(
-            GrayScale(gym.make("Breakout-v0")), n_frames=4)
-        self.env = GrayScale(gym.make("Breakout-v0"))
+        self.shape = (50, 50)
+        self.env = mock.Mock()
+        self.env.observation_space = Box(
+            low=0, high=255, shape=self.shape, dtype=np.uint8)
+        self.env.reset.return_value = np.zeros(self.shape)
+        self.env.step.side_effect = self._step
 
-        self.env.seed(0)
-        self.env_stack.seed(0)
+        self._n_frames = 4
+        self.env_s = StackFrames(self.env, n_frames=self._n_frames)
+
         self.obs = self.env.reset()
-        self.obs_stack = self.env_stack.reset()
+        self.obs_s = self.env_s.reset()
         self.frame_width = self.env.observation_space.shape[0]
         self.frame_height = self.env.observation_space.shape[1]
 
-    def test_stack_frames_multiple_channel(self):
+    def _step(self, action):
+        def generate():
+            for i in range(0, 255):
+                yield np.full(self.shape, i)
+
+        generator = generate()
+
+        return next(generator), 0, False, dict()
+
+    def test_stack_frames_environment_shape(self):
         with self.assertRaises(ValueError):
-            StackFrames(gym.make("Breakout-v0"), n_frames=4)
+            self.env.observation_space = Box(
+                low=0, high=255, shape=(4, ), dtype=np.uint8)
+            StackFrames(self.env, n_frames=4)
+
+    def test_stack_frames_output_shape(self):
+        assert self.obs_s.shape == (self.frame_width, self.frame_height,
+                                    self._n_frames)
 
     def test_stack_frames_for_reset(self):
         frame_stack = self.obs
-        for i in range(3):
+        for i in range(self._n_frames - 1):
             frame_stack = np.dstack((frame_stack, self.obs))
 
-        assert self.obs_stack.shape == (self.frame_width, self.frame_height, 4)
-
-        np.testing.assert_array_equal(self.obs_stack, frame_stack)
+        np.testing.assert_array_equal(self.obs_s, frame_stack)
 
     def test_stack_frames_for_step(self):
-        frame_stack = np.empty((self.frame_width, self.frame_height, 4))
+        frame_stack = np.empty((self.frame_width, self.frame_height,
+                                self._n_frames))
         for i in range(10):
             frame_stack = frame_stack[:, :, 1:]
-            obs, _, _, _ = self.env.step(1)
+            obs, _, _, _ = self.env.step(0)
             frame_stack = np.dstack((frame_stack, obs))
-            obs_stack, _, _, _ = self.env_stack.step(1)
+
+        obs_stack, _, _, _ = self.env_s.step(0)
         np.testing.assert_array_equal(obs_stack, frame_stack)

@@ -8,35 +8,47 @@ import numpy as np
 
 class StackFrames(gym.Wrapper):
     """
-    Stack frames wrapper.
-
     gym.Env wrapper to stack multiple frames.
+
     Useful for training feed-forward agents on dynamic games.
+    Only works with gym.spaces.Box environment with 2D single channel frames.
+
+    Args:
+        env: gym.Env to wrap.
+        n_frames: number of frames to stack.
+
+    Raises:
+        ValueError: If observation space shape is not 2 or environment is not gym.spaces.Box.  # noqa: E501
+
     """
 
     def __init__(self, env, n_frames):
-        """
-        Stack frames wrapper.
+        if not isinstance(env.observation_space, Box):
+            raise ValueError("Stack frames only works with Box environment.")
 
-        Args:
-            env: gym.Env to wrap.
-            n_frames: number of frames to stack.
-
-        Raises:
-            ValueError: If observation space shape is not 2.
-
-        """
-        super().__init__(env)
         if len(env.observation_space.shape) != 2:
             raise ValueError(
                 "Stack frames only works with 2D single channel images")
+
+        super().__init__(env)
 
         self.n_frames = n_frames
         self._frames = deque(maxlen=n_frames)
 
         new_obs_space_shape = env.observation_space.shape + (n_frames, )
-        self.observation_space = Box(
-            0.0, 1.0, shape=new_obs_space_shape, dtype=np.float32)
+        _low = env.observation_space.low.flatten()[0]
+        _high = env.observation_space.high.flatten()[0]
+        self._observation_space = Box(
+            _low, _high, shape=new_obs_space_shape, dtype=np.float32)
+
+    @property
+    def observation_space(self):
+        """gym.Env observation space."""
+        return self._observation_space
+
+    @observation_space.setter
+    def observation_space(self, observation_space):
+        self._observation_space = observation_space
 
     def _stack_frames(self):
         return np.stack(self._frames, axis=2)
