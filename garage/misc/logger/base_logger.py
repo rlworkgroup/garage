@@ -16,7 +16,6 @@ import numpy as np
 from garage.misc.autoargs import get_all_parameters
 from garage.misc.console import colorize, mkdir_p
 from garage.misc.logger.tabulate import tabulate
-from garage.misc.logger.tensorboard_output import TensorBoardOutput
 
 
 class TerminalTablePrinter:
@@ -79,9 +78,6 @@ class Logger():
 
         self.table_printer = TerminalTablePrinter()
 
-        self._tensorboard_step_key = None
-        self._tensorboard = TensorBoardOutput()
-
     def _add_output(self, file_name, arr, fds, mode='a'):
         if file_name not in arr:
             mkdir_p(os.path.dirname(file_name))
@@ -115,10 +111,6 @@ class Logger():
         self._remove_output(file_name, self._tabular_outputs,
                             self._tabular_fds)
 
-    def set_tensorboard_dir(self, dir_name):
-        self._tensorboard.set_dir(dir_name)
-        self.log("tensorboard data will be logged into:" + dir_name)
-
     def set_snapshot_dir(self, dir_name):
         self._snapshot_dir = dir_name
 
@@ -139,9 +131,6 @@ class Logger():
 
     def set_log_tabular_only(self, log_tabular_only):
         self._log_tabular_only = log_tabular_only
-
-    def set_tensorboard_step_key(self, key):
-        self._tensorboard_step_key = key
 
     def get_log_tabular_only(self):
         return self._log_tabular_only
@@ -169,25 +158,6 @@ class Logger():
                 fd.flush()
             sys.stdout.flush()
 
-    def record_tabular(self, key, val):
-        self._tensorboard.record_scalar(str(key), val)
-        self._tabular.append((self._tabular_prefix_str + str(key), str(val)))
-
-    def record_tensor(self, key, val):
-        """Record tf.Tensor into tensorboard with Tensor.name and its value."""
-        self._tensorboard.record_tensor(key, val)
-
-    def record_histogram(self, key, val):
-        self._tensorboard.record_histogram(str(key), val)
-
-    def record_histogram_by_type(self,
-                                 histogram_type,
-                                 key=None,
-                                 shape=[1000],
-                                 **kwargs):
-        self._tensorboard.record_histogram_by_type(histogram_type, key, shape,
-                                                   **kwargs)
-
     def push_tabular_prefix(self, key):
         self._tabular_prefixes.append(key)
         self._tabular_prefix_str = ''.join(self._tabular_prefixes)
@@ -209,14 +179,6 @@ class Logger():
         self.push_tabular_prefix(key)
         yield
         self.pop_tabular_prefix()
-
-    def dump_tensorboard(self, *args, **kwargs):
-        if self._tabular:
-            tabular_dict = dict(self._tabular)
-        step = None
-        if self._tensorboard_step_key and self._tensorboard_step_key in tabular_dict:
-            step = tabular_dict[self._tensorboard_step_key]
-        self._tensorboard.dump_tensorboard(step)
 
     def dump_tabular(self, *args, **kwargs):
         wh = kwargs.pop("write_header", None)
@@ -240,10 +202,6 @@ class Logger():
                 writer.writerow(tabular_dict)
                 tabular_fd.flush()
             del self._tabular[:]
-
-        # write to the tensorboard folder
-        # This assumes that the keys in each iteration won't change!
-        self.dump_tensorboard(args, kwargs)
 
     def pop_prefix(self):
         del self._prefixes[-1]
