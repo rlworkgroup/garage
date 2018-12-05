@@ -1,3 +1,5 @@
+"""Base Logger."""
+# flake8: noqa
 from contextlib import contextmanager
 import csv
 import datetime

@@ -1,3 +1,8 @@
+"""Global logger module.
+
+This module instantiates a global logger according to configuration.
+Use LOG_TENSORBOARD=True in config.py to enable Tensorboard.
+"""
 import garage.config as config
 
 if getattr(config, "LOG_TENSORBOARD", False):

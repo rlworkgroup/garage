@@ -1,3 +1,4 @@
+# flake8: noqa
 from os.path import abspath
 from os.path import dirname
 import shutil

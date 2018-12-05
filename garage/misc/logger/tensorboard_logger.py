@@ -1,3 +1,10 @@
+"""Tensorboard Logger.
+
+This logger adds tensorboard functionalities to base logger.
+When LOG_TENSORBORAD is set to True in config.py,
+garage.misc.logger will be instantiated as a TensorboardLogger
+"""
+# flake8: noqa
 from garage.misc.logger.base_logger import Logger
 from garage.misc.logger.tensorboard_output import TensorBoardOutput
 
