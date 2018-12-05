@@ -13,7 +13,6 @@ import dateutil.tz
 import joblib
 import numpy as np
 
-from garage.misc.autoargs import get_all_parameters
 from garage.misc.console import colorize, mkdir_p
 from garage.misc.logger.tabulate import tabulate
 
@@ -112,6 +111,7 @@ class Logger():
                             self._tabular_fds)
 
     def set_snapshot_dir(self, dir_name):
+        mkdir_p(dir_name)
         self._snapshot_dir = dir_name
 
     def get_snapshot_dir(self):
@@ -225,25 +225,6 @@ class Logger():
                 pass
             else:
                 raise NotImplementedError
-
-    def log_parameters(self, log_file, args, classes):
-        log_params = {}
-        for param_name, param_value in args.__dict__.items():
-            if any([param_name.startswith(x) for x in list(classes.keys())]):
-                continue
-            log_params[param_name] = param_value
-        for name, cls in classes.items():
-            if isinstance(cls, type):
-                params = get_all_parameters(cls, args)
-                params["_name"] = getattr(args, name)
-                log_params[name] = params
-            else:
-                log_params[name] = getattr(cls, "__kwargs", dict())
-                log_params[name][
-                    "_name"] = cls.__module__ + "." + cls.__class__.__name__
-        mkdir_p(os.path.dirname(log_file))
-        with open(log_file, "w") as f:
-            json.dump(log_params, f, indent=2, sort_keys=True)
 
     def log_parameters_lite(self, log_file, args):
         log_params = {}
