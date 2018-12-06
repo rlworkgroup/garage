@@ -11,7 +11,7 @@ from garage.misc import logger
 
 class TestLogger(unittest.TestCase):
     def test_logger(self):
-        args = SimpleNamespace
+        args = SimpleNamespace()
         args.args_data = ""
 
         logger.set_snapshot_dir("exp")
