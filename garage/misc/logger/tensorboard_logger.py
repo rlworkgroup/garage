@@ -23,8 +23,8 @@ class TensorboardLogger(Logger):
         self._tensorboard_step_key = key
 
     def record_tabular(self, key, val):
+        super(TensorboardLogger, self).record_tabular(key, val)
         self._tensorboard.record_scalar(str(key), val)
-        self._tabular.append((self._tabular_prefix_str + str(key), str(val)))
 
     def record_tensor(self, key, val):
         """Record tf.Tensor into tensorboard with Tensor.name and its value."""

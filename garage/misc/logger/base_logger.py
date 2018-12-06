@@ -180,6 +180,9 @@ class Logger():
         yield
         self.pop_tabular_prefix()
 
+    def record_tabular(self, key, val):
+        self._tabular.append((self._tabular_prefix_str + str(key), str(val)))
+
     def dump_tabular(self, *args, **kwargs):
         wh = kwargs.pop("write_header", None)
         if self._tabular:
