@@ -3,8 +3,8 @@ Auxiliary coverage test for logger.
 
 This test covers snapshot and parameter logging.
 """
-import unittest
 from types import SimpleNamespace
+import unittest
 
 from garage.misc import logger
 
