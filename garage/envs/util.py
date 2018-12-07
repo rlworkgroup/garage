@@ -1,4 +1,4 @@
-import gym.spaces
+import gym
 import numpy as np
 
 from garage.misc import special

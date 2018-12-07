@@ -2,17 +2,11 @@ import pickle
 import unittest
 
 from garage.envs.box2d import CartpoleEnv
-from garage.envs.mujoco import SwimmerEnv
-from garage.envs.normalized_env import normalize, NormalizedEnv
+from garage.envs.normalized_env import NormalizedEnv
 from tests.helpers import step_env
 
 
 class TestNormalizedEnv(unittest.TestCase):
-    def test_can_create_env(self):
-        # Fixes https://github.com/rlworkgroup/garage/pull/420
-        env = normalize(SwimmerEnv())
-        assert env
-
     def test_pickleable(self):
         inner_env = CartpoleEnv(obs_noise=5.)
         env = NormalizedEnv(inner_env, scale_reward=10.)

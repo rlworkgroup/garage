@@ -1,5 +1,4 @@
 import gym
-import gym.spaces
 import numpy as np
 
 from garage.core import Serializable
