@@ -6,7 +6,6 @@ import tensorflow as tf
 
 from garage.envs.dm_control import DmControlEnv
 import garage.misc.logger as logger
-from garage.misc.tensorboard_output import TensorBoardOutput
 
 
 class TfTestCase(unittest.TestCase):
@@ -25,7 +24,7 @@ class TfGraphTestCase(unittest.TestCase):
         self.graph = tf.Graph()
         self.sess = tf.Session(graph=self.graph)
         self.sess.__enter__()
-        logger._tensorboard = TensorBoardOutput()
+        logger.reset()
 
     def tearDown(self):
         self.sess.close()
