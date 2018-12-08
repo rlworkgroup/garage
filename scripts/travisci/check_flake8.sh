@@ -63,6 +63,7 @@ exclude_changed=(
 
 # Error codes applied to added files
 ignored_errors_added=(
+D107  # missing docstring in __init__
 W503  # line break before binary operator
 )
 
