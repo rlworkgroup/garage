@@ -10,7 +10,7 @@ from collections import namedtuple
 import dateutil.tz
 import numpy as np
 
-from garage.torch.core import logger
+from garage.misc import logger
 from garage.torch.launchers import config
 from garage.torch.algos.pytorch_util import set_gpu_mode
 

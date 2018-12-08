@@ -11,6 +11,7 @@ import sys
 
 import dateutil.tz
 import joblib
+import pickle
 import numpy as np
 
 from garage.misc.console import colorize, mkdir_p
@@ -166,6 +167,9 @@ class Logger():
         del self._tabular_prefixes[-1]
         self._tabular_prefix_str = ''.join(self._tabular_prefixes)
 
+    def get_table_key_set(self, ):
+        return set(key for key, value in self._tabular)
+
     @contextmanager
     def prefix(self, key):
         self.push_prefix(key)
@@ -228,6 +232,22 @@ class Logger():
                 pass
             else:
                 raise NotImplementedError
+
+    def save_extra_data(self, data, file_name='extra_data.pkl', mode='joblib'):
+        """
+        Data saved here will always override the last entry
+
+        :param data: Something pickle'able.
+        """
+        file_name = osp.join(self._snapshot_dir, file_name)
+        if mode == 'joblib':
+            import joblib
+            joblib.dump(data, file_name, compress=3)
+        elif mode == 'pickle':
+            pickle.dump(data, open(file_name, "wb"))
+        else:
+            raise ValueError("Invalid mode: {}".format(mode))
+        return file_name
 
     def log_parameters_lite(self, log_file, args):
         log_params = {}

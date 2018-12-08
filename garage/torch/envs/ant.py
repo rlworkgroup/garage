@@ -6,11 +6,8 @@ from garage.envs.mujoco import MujocoEnv
 class AntEnv(MujocoEnv):
     FILE = 'low_gear_ratio_ant.xml'
 
-    def __init__(self, use_low_gear_ratio=True):
-        if use_low_gear_ratio:
-            xml_path = 'low_gear_ratio_ant.xml'
-        else:
-            xml_path = 'normal_gear_ratio_ant.xml'
+    def __init__(self):
+        xml_path = 'low_gear_ratio_ant.xml'
         super().__init__(
             xml_path,
             frame_skip=5,

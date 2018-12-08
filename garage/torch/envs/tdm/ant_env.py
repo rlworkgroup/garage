@@ -4,21 +4,20 @@ import numpy as np
 
 from garage.torch.envs.ant import AntEnv
 
+from garage.misc import logger as default_logger
 from garage.torch.core.eval_util import create_stats_ordered_dict
 from garage.torch.core.serializable import Serializable
-from garage.torch.core import logger as default_logger
 from garage.torch.samplers.util import get_stat_in_paths
 from garage.torch.envs.tdm.multitask_env import MultitaskEnv
 
 
 class GoalXYPosAnt(AntEnv, MultitaskEnv, Serializable):
-    def __init__(self, min_distance=0, max_distance=2,
-                 use_low_gear_ratio=True):
+    def __init__(self, min_distance=0, max_distance=2):
         Serializable.quick_init(self, locals())
         self.max_distance = max_distance
         self.min_distance = min_distance
         MultitaskEnv.__init__(self)
-        super().__init__(use_low_gear_ratio=use_low_gear_ratio)
+        super().__init__()
         self.set_goal(np.array([self.max_distance, self.max_distance]))
 
     @property
@@ -119,7 +118,6 @@ class GoalXYPosAndVelAnt(AntEnv, MultitaskEnv, Serializable):
             self,
             max_speed=0.05,
             max_distance=1,
-            use_low_gear_ratio=True,
             speed_weight=0.9,
             done_threshold=0.005,
             goal_dim_weights=None,
@@ -135,7 +133,7 @@ class GoalXYPosAndVelAnt(AntEnv, MultitaskEnv, Serializable):
         if speed_weight is None:
             self.speed_weight = 0.9  # just for init to work
         MultitaskEnv.__init__(self, goal_dim_weights=goal_dim_weights)
-        super().__init__(use_low_gear_ratio=use_low_gear_ratio)
+        super().__init__()
         self.set_goal(
             np.array([
                 self.max_distance,

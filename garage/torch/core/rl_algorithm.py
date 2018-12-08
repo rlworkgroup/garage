@@ -6,8 +6,8 @@ from collections import OrderedDict
 import gtimer as gt
 import numpy as np
 
+from garage.misc import logger
 from garage.torch.core import eval_util
-from garage.torch.core import logger
 from garage.torch.data_management.env_replay_buffer import EnvReplayBuffer
 from garage.torch.data_management.path_builder import PathBuilder
 from garage.torch.policies.base import ExplorationPolicy

@@ -4,10 +4,10 @@ from collections import OrderedDict
 import numpy as np
 from gym.spaces import Box
 
+from garage.misc import logger as default_logger
 from garage.torch.core.eval_util import create_stats_ordered_dict
 from garage.torch.envs.wrappers import ProxyEnv
 from garage.torch.core.serializable import Serializable
-from garage.torch.core import logger as default_logger
 
 
 class MultitaskEnv(object, metaclass=abc.ABCMeta):
