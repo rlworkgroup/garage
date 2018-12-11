@@ -3,12 +3,13 @@ Example of running PyTorch implementation of DDPG on HalfCheetah.
 """
 from gym.envs.mujoco import HalfCheetahEnv
 
+from garage.experiment import run_experiment
 from garage.torch.envs.wrappers import NormalizedBoxEnv
 from garage.torch.exploration_strategies.base import (
     PolicyWrappedWithExplorationStrategy)
 from garage.torch.exploration_strategies.ou_strategy import OUStrategy
-from garage.torch.launchers.launcher_util import setup_logger
-from garage.torch.algos.networks import FlattenMlp, TanhMlpPolicy
+from garage.torch.algos.networks import FlattenMlp
+from garage.torch.policies import TanhMlpPolicy
 from garage.torch.algos.ddpg.ddpg import DDPG
 import garage.torch.algos.pytorch_util as ptu
 
@@ -45,8 +46,7 @@ def experiment(variant):
     algorithm.train()
 
 
-if __name__ == "__main__":
-    # noinspection PyTypeChecker
+def run_task(*_):
     variant = dict(
         algo_params=dict(
             num_epochs=1000,
@@ -60,5 +60,17 @@ if __name__ == "__main__":
             qf_learning_rate=1e-3,
             policy_learning_rate=1e-4,
         ), )
-    setup_logger('name-of-experiment', variant=variant)
     experiment(variant)
+
+
+run_experiment(
+    run_task,
+    # Number of parallel workers for sampling
+    n_parallel=1,
+    # Only keep the snapshot parameters for the last iteration
+    snapshot_mode="last",
+    # Specifies the seed for the experiment. If this is not provided, a random
+    # seed will be used
+    seed=1,
+    # plot=True,
+)

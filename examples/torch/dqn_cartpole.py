@@ -6,8 +6,8 @@ import gym
 import numpy as np
 from torch import nn as nn
 
+from garage.experiment import run_experiment
 import garage.torch.algos.pytorch_util as ptu
-from garage.torch.launchers.launcher_util import setup_logger
 from garage.torch.algos.dqn.dqn import DQN
 from garage.torch.algos.networks import Mlp
 
@@ -34,8 +34,7 @@ def experiment(variant):
     algorithm.train()
 
 
-if __name__ == "__main__":
-    # noinspection PyTypeChecker
+def run_task(*_):
     variant = dict(
         algo_params=dict(
             num_epochs=500,
@@ -49,5 +48,17 @@ if __name__ == "__main__":
             hard_update_period=1000,
             save_environment=False,  # Can't serialize CartPole for some reason
         ), )
-    setup_logger('name-of-experiment', variant=variant)
     experiment(variant)
+
+
+run_experiment(
+    run_task,
+    # Number of parallel workers for sampling
+    n_parallel=1,
+    # Only keep the snapshot parameters for the last iteration
+    snapshot_mode="last",
+    # Specifies the seed for the experiment. If this is not provided, a random
+    # seed will be used
+    seed=1,
+    # plot=True,
+)

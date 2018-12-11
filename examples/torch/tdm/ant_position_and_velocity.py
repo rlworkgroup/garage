@@ -1,9 +1,9 @@
+from garage.experiment import run_experiment
 import garage.torch.algos.pytorch_util as ptu
 from garage.torch.envs.wrappers import NormalizedBoxEnv
 from garage.torch.exploration_strategies.base import \
     PolicyWrappedWithExplorationStrategy
 from garage.torch.exploration_strategies.ou_strategy import OUStrategy
-from garage.torch.launchers.launcher_util import setup_logger
 from garage.torch.algos.modules import HuberLoss
 from garage.torch.envs.tdm.ant_env import GoalXYPosAndVelAnt
 from garage.torch.algos.tdm.her_replay_buffer import HerReplayBuffer
@@ -63,7 +63,7 @@ def experiment(variant):
     algorithm.train()
 
 
-if __name__ == "__main__":
+def run_task(*_):
     variant = dict(
         tdm_kwargs=dict(
             # TDM parameters
@@ -85,5 +85,17 @@ if __name__ == "__main__":
         ),
         algorithm="TDM",
     )
-    setup_logger('name-of-tdm-ant-pos-and-vel-experiment', variant=variant)
     experiment(variant)
+
+
+run_experiment(
+    run_task,
+    # Number of parallel workers for sampling
+    n_parallel=1,
+    # Only keep the snapshot parameters for the last iteration
+    snapshot_mode="last",
+    # Specifies the seed for the experiment. If this is not provided, a random
+    # seed will be used
+    seed=1,
+    # plot=True,
+)

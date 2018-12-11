@@ -8,12 +8,12 @@ Note that one epoch = 5k steps, so 200 epochs = 1 million steps.
 """
 from gym.envs.mujoco import HopperEnv
 
+from garage.experiment import run_experiment
 import garage.torch.algos.pytorch_util as ptu
 from garage.torch.envs.wrappers import NormalizedBoxEnv
 from garage.torch.exploration_strategies.base import \
     PolicyWrappedWithExplorationStrategy
 from garage.torch.exploration_strategies.gaussian_strategy import GaussianStrategy
-from garage.torch.launchers.launcher_util import setup_logger
 from garage.torch.algos.networks import FlattenMlp
 from garage.torch.policies import TanhMlpPolicy
 from garage.torch.algos.td3.td3 import TD3
@@ -58,7 +58,7 @@ def experiment(variant):
     algorithm.train()
 
 
-if __name__ == "__main__":
+def run_task(*_):
     variant = dict(
         algo_kwargs=dict(
             num_epochs=200,
@@ -69,5 +69,17 @@ if __name__ == "__main__":
             discount=0.99,
             replay_buffer_size=int(1E6),
         ), )
-    setup_logger('name-of-td3-experiment', variant=variant)
     experiment(variant)
+
+
+run_experiment(
+    run_task,
+    # Number of parallel workers for sampling
+    n_parallel=1,
+    # Only keep the snapshot parameters for the last iteration
+    snapshot_mode="last",
+    # Specifies the seed for the experiment. If this is not provided, a random
+    # seed will be used
+    seed=1,
+    # plot=True,
+)

@@ -4,9 +4,9 @@ from TD3: https://arxiv.org/pdf/1802.09477.pdf
 """
 import numpy as np
 
+from garage.experiment import run_experiment
 import garage.torch.algos.pytorch_util as ptu
 from garage.torch.envs.wrappers import NormalizedBoxEnv
-from garage.torch.launchers.launcher_util import setup_logger
 from garage.torch.policies import TanhGaussianPolicy
 from garage.torch.algos.networks import FlattenMlp
 from garage.torch.algos.sac.twin_sac import TwinSAC
@@ -51,8 +51,7 @@ def experiment(variant):
     algorithm.train()
 
 
-if __name__ == "__main__":
-    # noinspection PyTypeChecker
+def run_task(*_):
     variant = dict(
         algo_params=dict(
             num_epochs=1000,
@@ -68,5 +67,17 @@ if __name__ == "__main__":
         ),
         net_size=300,
     )
-    setup_logger('name-of-experiment', variant=variant)
     experiment(variant)
+
+
+run_experiment(
+    run_task,
+    # Number of parallel workers for sampling
+    n_parallel=1,
+    # Only keep the snapshot parameters for the last iteration
+    snapshot_mode="last",
+    # Specifies the seed for the experiment. If this is not provided, a random
+    # seed will be used
+    seed=1,
+    # plot=True,
+)
