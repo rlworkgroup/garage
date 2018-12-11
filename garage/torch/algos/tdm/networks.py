@@ -2,7 +2,8 @@ import numpy as np
 import torch
 
 from garage.torch.algos.data_management.normalizer import TorchFixedNormalizer
-from garage.torch.algos.networks import TanhMlpPolicy, FlattenMlp
+from garage.torch.algos.networks import FlattenMlp
+from garage.torch.policies import TanhMlpPolicy
 
 
 class TdmNormalizer(object):

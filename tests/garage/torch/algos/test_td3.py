@@ -7,7 +7,8 @@ from garage.torch.envs.wrappers import NormalizedBoxEnv
 from garage.torch.exploration_strategies.base import \
     PolicyWrappedWithExplorationStrategy
 from garage.torch.exploration_strategies.gaussian_strategy import GaussianStrategy
-from garage.torch.algos.networks import FlattenMlp, TanhMlpPolicy
+from garage.torch.algos.networks import FlattenMlp
+from garage.torch.policies import TanhMlpPolicy
 from garage.torch.algos.td3.td3 import TD3
 
 

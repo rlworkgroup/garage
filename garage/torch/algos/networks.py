@@ -7,10 +7,8 @@ import torch
 from torch import nn as nn
 from torch.nn import functional as F
 
-from garage.torch.policies.base import Policy
 from garage.torch.algos import pytorch_util as ptu
 from garage.torch.algos.core import PyTorchModule
-from garage.torch.algos.data_management.normalizer import TorchFixedNormalizer
 from garage.torch.algos.modules import LayerNorm
 
 
@@ -87,39 +85,3 @@ class FlattenMlp(Mlp):
     def forward(self, *inputs, **kwargs):
         flat_inputs = torch.cat(inputs, dim=1)
         return super().forward(flat_inputs, **kwargs)
-
-
-class MlpPolicy(Mlp, Policy):
-    """
-    A simpler interface for creating policies.
-    """
-
-    def __init__(self,
-                 *args,
-                 obs_normalizer: TorchFixedNormalizer = None,
-                 **kwargs):
-        self.save_init_params(locals())
-        super().__init__(*args, **kwargs)
-        self.obs_normalizer = obs_normalizer
-
-    def forward(self, obs, **kwargs):
-        if self.obs_normalizer:
-            obs = self.obs_normalizer.normalize(obs)
-        return super().forward(obs, **kwargs)
-
-    def get_action(self, obs_np):
-        actions = self.get_actions(obs_np[None])
-        return actions[0, :], {}
-
-    def get_actions(self, obs):
-        return self.eval_np(obs)
-
-
-class TanhMlpPolicy(MlpPolicy):
-    """
-    A helper class since most policies have a tanh output activation.
-    """
-
-    def __init__(self, *args, **kwargs):
-        self.save_init_params(locals())
-        super().__init__(*args, output_activation=torch.tanh, **kwargs)

@@ -6,7 +6,8 @@ from garage.torch.envs.wrappers import NormalizedBoxEnv
 from garage.torch.exploration_strategies.base import (
     PolicyWrappedWithExplorationStrategy)
 from garage.torch.exploration_strategies.ou_strategy import OUStrategy
-from garage.torch.algos.networks import FlattenMlp, TanhMlpPolicy
+from garage.torch.algos.networks import FlattenMlp
+from garage.torch.policies import TanhMlpPolicy
 from garage.torch.algos.ddpg.ddpg import DDPG
 import garage.torch.algos.pytorch_util as ptu
 
