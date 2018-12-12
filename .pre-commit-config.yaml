@@ -13,8 +13,8 @@ repos:
         entry: scripts/travisci/check_flake8.sh
         stages: [commit, push]
     -   id: pylint
-        name: pyLint
-        entry: python -m pylint.__main__
+        name: pylint
+        entry: pylint
         args: ['--rcfile=setup.cfg']
         stages: [commit, push]
         language: system
