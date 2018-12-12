@@ -55,11 +55,11 @@ class ContinuousMLPQFunction(QFunction, LayersPowered, Serializable):
         self._action_merge_layer = action_merge_layer
         self._output_nonlinearity = output_nonlinearity
         self._batch_norm = bn
-        self._f_qval, self._output_layer, self._obs_layer, self._action_layer = self._build_net(  # noqa: E501
+        self._f_qval, self._output_layer, self._obs_layer, self._action_layer = self.build_net(  # noqa: E501
             name=self.name)
         LayersPowered.__init__(self, [self._output_layer])
 
-    def _build_net(self, trainable=True, name=None):
+    def build_net(self, trainable=True, name=None):
         """
         Set up q network based on class attributes. This function uses layers
         defined in garage.tf.
@@ -127,22 +127,3 @@ class ContinuousMLPQFunction(QFunction, LayersPowered, Serializable):
                 self._action_layer: action_var
             }, **kwargs)
             return qvals
-
-    def log_diagnostics(self, paths):
-        pass
-
-    def get_trainable_vars(self, scope=None):
-        scope = scope if scope else self.name
-        return tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=scope)
-
-    def get_global_vars(self, scope=None):
-        scope = scope if scope else self.name
-        return tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=scope)
-
-    def get_regularizable_vars(self, scope=None):
-        scope = scope if scope else self.name
-        reg_vars = [
-            var for var in self.get_trainable_vars(scope=scope)
-            if 'W' in var.name and 'output' not in var.name
-        ]
-        return reg_vars

@@ -94,7 +94,7 @@ class ReplayBuffer(metaclass=abc.ABCMeta):
         """
         Convert the shape of episode_buffer.
 
-        episode_buffer: {time_horizon, algo.rollout_batch_size, falt_dim}.
+        episode_buffer: {time_horizon, algo.rollout_batch_size, flat_dim}.
         buffer: {size, time_horizon, flat_dim}.
         """
         transitions = {}

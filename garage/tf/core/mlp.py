@@ -1,12 +1,6 @@
-"""
-Multilayer Perceptrons (MLP) with tensorflow as the only dependency.
+"""MLP model in TensorFlow."""
 
-The module contains MLP which serves as the base of all networks.
-It aims to replace existing implementation of MLP class
-(garage.tf.core.network), which is under development.
-"""
 import tensorflow as tf
-from tensorflow.python.ops.gen_array_ops import broadcast_to
 
 
 def mlp(input_var,
@@ -21,7 +15,7 @@ def mlp(input_var,
         output_b_init=tf.zeros_initializer(),
         layer_normalization=False):
     """
-    MLP function.
+    MLP model.
 
     Args:
         input_var: Input tf.Tensor to the MLP.
@@ -57,6 +51,7 @@ def mlp(input_var,
                 name="hidden_{}".format(idx))
             if layer_normalization:
                 l_hid = tf.contrib.layers.layer_norm(l_hid)
+
         l_out = tf.layers.dense(
             inputs=l_hid,
             units=output_dim,
@@ -65,38 +60,3 @@ def mlp(input_var,
             bias_initializer=output_b_init,
             name="output")
     return l_out
-
-
-def parameter(input_var,
-              length,
-              initializer=tf.zeros_initializer(),
-              dtype=tf.float32,
-              trainable=True,
-              name="parameter"):
-    """
-    Paramter function that creates  variables that could be
-    broadcast to a certain shape to match with input var.
-
-    Args:
-        input_var: Input tf.Tensor.
-        length: Integer dimension of the variables.
-        initializer: Initializer of the variables.
-        dtype: Data type of the variables.
-        trainable: Whether these variables are trainable.
-        name: variable scope of the variables.
-    Return:
-        A tensor of broadcasted variables
-    """
-    with tf.variable_scope(name):
-        p = tf.get_variable(
-            "parameter",
-            shape=(length, ),
-            dtype=dtype,
-            initializer=initializer,
-            trainable=trainable)
-
-        ndim = input_var.get_shape().ndims
-        broadcast_shape = tf.concat(
-            axis=0, values=[tf.shape(input_var)[:ndim - 1], [length]])
-        p_broadcast = broadcast_to(p, shape=broadcast_shape)
-        return p_broadcast
