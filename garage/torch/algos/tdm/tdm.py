@@ -1,10 +1,7 @@
 import numpy as np
 
-import garage.torch.algos.pytorch_util as ptu
-from garage.torch.core.eval_util import create_stats_ordered_dict
 from garage.torch.algos.ddpg.ddpg import DDPG
-from garage.torch.data_management.path_builder import PathBuilder
-
+import garage.torch.algos.pytorch_util as ptu
 from garage.torch.algos.tdm.base import RandomUniversalPolicy
 from garage.torch.algos.tdm.networks import TdmNormalizer
 from garage.torch.algos.tdm.sampling import (
@@ -12,6 +9,8 @@ from garage.torch.algos.tdm.sampling import (
     multitask_rollout,
 )
 from garage.torch.algos.torch_rl_algorithm import np_to_pytorch_batch
+from garage.torch.core.eval_util import create_stats_ordered_dict
+from garage.torch.data_management.path_builder import PathBuilder
 
 
 class TemporalDifferenceModel(DDPG):
@@ -31,8 +30,9 @@ class TemporalDifferenceModel(DDPG):
         """
         :param max_tau: Maximum tau (planning horizon) to train with.
         :param vectorized: Train the QF in vectorized form?
-        :param goal_weights: None or the weights for the different goal
-        dimensions. These weights are used to compute the distances to the goal.
+        :param goal_weights: None or the weights
+        for the different goal dimensions.
+        These weights are used to compute the distances to the goal.
         """
         DDPG.__init__(
             self,

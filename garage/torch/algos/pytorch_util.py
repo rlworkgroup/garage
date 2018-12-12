@@ -1,5 +1,5 @@
-import torch
 import numpy as np
+import torch
 
 
 def soft_update_from_to(source, target, tau):
@@ -64,7 +64,7 @@ def set_device(gpu_id):
 
 
 # noinspection PyPep8Naming
-def FloatTensor(*args, **kwargs):
+def FloatTensor(*args, **kwargs):  # noqa: N802
     return torch.FloatTensor(*args, **kwargs).to(device)
 
 

@@ -4,9 +4,9 @@ from typing import Iterable
 import numpy as np
 from torch.autograd import Variable
 
-from garage.torch.core.rl_algorithm import RLAlgorithm
 from garage.torch.algos import pytorch_util as ptu
 from garage.torch.algos.core import PyTorchModule
+from garage.torch.core.rl_algorithm import RLAlgorithm
 
 
 class TorchRLAlgorithm(RLAlgorithm, metaclass=abc.ABCMeta):
@@ -24,7 +24,7 @@ class TorchRLAlgorithm(RLAlgorithm, metaclass=abc.ABCMeta):
             net.train(mode)
 
     def to(self, device=None):
-        if device == None:
+        if device is None:
             device = ptu.device
         for net in self.networks:
             net.to(device)

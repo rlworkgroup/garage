@@ -1,15 +1,15 @@
 import numpy as np
 import torch
-import torch.optim as optim
 from torch import nn as nn
+import torch.optim as optim
 
 import garage.torch.algos.pytorch_util as ptu
+from garage.torch.algos.torch_rl_algorithm import TorchRLAlgorithm
+from garage.torch.core.eval_util import create_stats_ordered_dict
 from garage.torch.exploration_strategies.base import (
     PolicyWrappedWithExplorationStrategy)
 from garage.torch.exploration_strategies.epsilon_greedy import EpsilonGreedy
-from garage.torch.core.eval_util import create_stats_ordered_dict
 from garage.torch.policies.argmax import ArgmaxDiscretePolicy
-from garage.torch.algos.torch_rl_algorithm import TorchRLAlgorithm
 
 
 class DQN(TorchRLAlgorithm):

@@ -7,9 +7,9 @@ import numpy as np
 from torch import nn as nn
 
 from garage.experiment import run_experiment
-import garage.torch.algos.pytorch_util as ptu
 from garage.torch.algos.dqn.dqn import DQN
 from garage.torch.algos.networks import Mlp
+import garage.torch.algos.pytorch_util as ptu
 
 
 def experiment(variant):

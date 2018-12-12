@@ -3,9 +3,9 @@ import torch
 from torch import nn as nn
 
 from garage.torch.algos.data_management.normalizer import TorchFixedNormalizer
-from garage.torch.policies.base import ExplorationPolicy, Policy
 from garage.torch.algos.distributions import TanhNormal
 from garage.torch.algos.networks import Mlp
+from garage.torch.policies.base import ExplorationPolicy, Policy
 
 LOG_SIG_MAX = 2
 LOG_SIG_MIN = -20
@@ -74,7 +74,8 @@ class TanhGaussianPolicy(Mlp, ExplorationPolicy):
         """
         :param obs: Observation
         :param deterministic: If True, do not sample
-        :param return_log_prob: If True, return a sample and its log probability
+        :param return_log_prob: If True, return
+        a sample and its log probability
         """
         h = obs
         for i, fc in enumerate(self.fcs):

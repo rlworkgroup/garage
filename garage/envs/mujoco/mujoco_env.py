@@ -270,11 +270,3 @@ class MujocoEnv(gym.Env):
 
 def get_asset_xml(xml_name):
     return osp.join(MODEL_DIR, xml_name)
-
-    def state_vector(self):
-        return np.concatenate(
-            [self.sim.data.qpos.flat, self.sim.data.qvel.flat])
-
-
-def get_asset_xml(xml_name):
-    return osp.join(MODEL_DIR, xml_name)

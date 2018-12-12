@@ -1,10 +1,10 @@
 import numpy as np
-import torch.optim as optim
 from torch import nn as nn
+import torch.optim as optim
 
 import garage.torch.algos.pytorch_util as ptu
-from garage.torch.core.eval_util import create_stats_ordered_dict
 from garage.torch.algos.torch_rl_algorithm import TorchRLAlgorithm
+from garage.torch.core.eval_util import create_stats_ordered_dict
 from garage.torch.policies import MakeDeterministic
 
 
@@ -75,7 +75,8 @@ class SoftActorCritic(TorchRLAlgorithm):
 
         q_pred = self.qf(obs, actions)
         v_pred = self.vf(obs)
-        # Make sure policy accounts for squashing functions like tanh correctly!
+        # Make sure policy accounts for
+        # squashing functions like tanh correctly!
         policy_outputs = self.policy(
             obs,
             reparameterize=self.train_policy_with_reparameterization,
@@ -108,7 +109,8 @@ class SoftActorCritic(TorchRLAlgorithm):
         pre_tanh_value = policy_outputs[-1]
         pre_activation_reg_loss = self.policy_pre_activation_weight * (
             (pre_tanh_value**2).sum(dim=1).mean())
-        policy_reg_loss = mean_reg_loss + std_reg_loss + pre_activation_reg_loss
+        policy_reg_loss = mean_reg_loss + std_reg_loss \
+            + pre_activation_reg_loss
         policy_loss = policy_loss + policy_reg_loss
         """
         Update networks

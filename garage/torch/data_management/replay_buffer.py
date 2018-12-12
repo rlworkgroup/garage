@@ -40,7 +40,8 @@ class ReplayBuffer(object, metaclass=abc.ABCMeta):
         NOTE: You should NOT call "terminate_episode" after calling add_path.
         It's assumed that this function handles the episode termination.
 
-        :param path: Dict like one outputted by garage.torch.samplers.util.rollout
+        :param path: Dict like one outputted
+        by garage.torch.samplers.util.rollout
         """
         for i, (obs, action, reward, next_obs, terminal, agent_info,
                 env_info) in enumerate(

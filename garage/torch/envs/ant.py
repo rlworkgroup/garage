@@ -26,7 +26,7 @@ class AntEnv(MujocoEnv):
         reward = forward_reward - ctrl_cost - contact_cost + survive_reward
         state = self.state_vector()
         notdone = np.isfinite(state).all() \
-                  and state[2] >= 0.2 and state[2] <= 1.0
+            and state[2] >= 0.2 and state[2] <= 1.0
         done = not notdone
         ob = self.get_current_obs()
         return ob, reward, done, dict(

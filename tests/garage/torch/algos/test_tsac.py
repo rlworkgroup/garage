@@ -1,13 +1,13 @@
 import unittest
 
+import gym
 import numpy as np
 
-import gym
+from garage.torch.algos.networks import FlattenMlp
 import garage.torch.algos.pytorch_util as ptu
+from garage.torch.algos.sac.twin_sac import TwinSAC
 from garage.torch.envs.wrappers import NormalizedBoxEnv
 from garage.torch.policies import TanhGaussianPolicy
-from garage.torch.algos.networks import FlattenMlp
-from garage.torch.algos.sac.twin_sac import TwinSAC
 
 
 class TestTSAC(unittest.TestCase):

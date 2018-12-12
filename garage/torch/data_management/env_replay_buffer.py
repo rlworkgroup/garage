@@ -1,6 +1,8 @@
-import numpy as np
-from garage.torch.data_management.simple_replay_buffer import SimpleReplayBuffer
 from gym.spaces import Box, Discrete, Tuple
+import numpy as np
+
+from garage.torch.data_management.simple_replay_buffer \
+    import SimpleReplayBuffer
 
 
 class EnvReplayBuffer(SimpleReplayBuffer):

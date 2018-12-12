@@ -1,13 +1,13 @@
 import abc
 from collections import OrderedDict
 
-import numpy as np
 from gym.spaces import Box
+import numpy as np
 
 from garage.misc import logger as default_logger
 from garage.torch.core.eval_util import create_stats_ordered_dict
-from garage.torch.envs.wrappers import ProxyEnv
 from garage.torch.core.serializable import Serializable
+from garage.torch.envs.wrappers import ProxyEnv
 
 
 class MultitaskEnv(object, metaclass=abc.ABCMeta):

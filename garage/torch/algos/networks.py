@@ -5,7 +5,7 @@ Algorithm-specific networks should go else-where.
 """
 import torch
 from torch import nn as nn
-from torch.nn import functional as F
+from torch.nn.functional import relu
 
 from garage.torch.algos import pytorch_util as ptu
 from garage.torch.algos.core import PyTorchModule
@@ -23,7 +23,7 @@ class Mlp(PyTorchModule):
             output_size,
             input_size,
             init_w=3e-3,
-            hidden_activation=F.relu,
+            hidden_activation=relu,
             output_activation=identity,
             hidden_init=ptu.fanin_init,
             b_init_value=0.1,

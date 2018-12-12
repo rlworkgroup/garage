@@ -1,9 +1,9 @@
 import numpy as np
 import torch
 
+from garage.torch.algos.dqn.dqn import DQN
 import garage.torch.algos.pytorch_util as ptu
 from garage.torch.core.eval_util import create_stats_ordered_dict
-from garage.torch.algos.dqn.dqn import DQN
 
 
 class DoubleDQN(DQN):

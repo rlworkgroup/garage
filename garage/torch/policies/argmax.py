@@ -2,9 +2,10 @@
 Torch argmax policy
 """
 import numpy as np
+
+from garage.torch.algos.core import PyTorchModule
 import garage.torch.algos.pytorch_util as ptu
 from garage.torch.policies.base import SerializablePolicy
-from garage.torch.algos.core import PyTorchModule
 
 
 class ArgmaxDiscretePolicy(PyTorchModule, SerializablePolicy):

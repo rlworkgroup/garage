@@ -4,14 +4,14 @@ Example of running PyTorch implementation of DDPG on HalfCheetah.
 from gym.envs.mujoco import HalfCheetahEnv
 
 from garage.experiment import run_experiment
+from garage.torch.algos.ddpg.ddpg import DDPG
+from garage.torch.algos.networks import FlattenMlp
+import garage.torch.algos.pytorch_util as ptu
 from garage.torch.envs.wrappers import NormalizedBoxEnv
 from garage.torch.exploration_strategies.base import (
     PolicyWrappedWithExplorationStrategy)
 from garage.torch.exploration_strategies.ou_strategy import OUStrategy
-from garage.torch.algos.networks import FlattenMlp
 from garage.torch.policies import TanhMlpPolicy
-from garage.torch.algos.ddpg.ddpg import DDPG
-import garage.torch.algos.pytorch_util as ptu
 
 
 def experiment(variant):

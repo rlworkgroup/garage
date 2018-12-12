@@ -1,11 +1,11 @@
 import numpy as np
 import torch
-import torch.optim as optim
 from torch import nn as nn
+import torch.optim as optim
 
 import garage.torch.algos.pytorch_util as ptu
-from garage.torch.core.eval_util import create_stats_ordered_dict
 from garage.torch.algos.torch_rl_algorithm import TorchRLAlgorithm
+from garage.torch.core.eval_util import create_stats_ordered_dict
 
 
 class TD3(TorchRLAlgorithm):
@@ -107,7 +107,8 @@ class TD3(TorchRLAlgorithm):
         self.qf2_optimizer.step()
 
         policy_actions = policy_loss = None
-        if self._n_train_steps_total % self.policy_and_target_update_period == 0:
+        if (self._n_train_steps_total %
+                self.policy_and_target_update_period == 0):
             policy_actions = self.policy(obs)
             q_output = self.qf1(obs, policy_actions)
             policy_loss = -q_output.mean()

@@ -1,7 +1,7 @@
 import abc
-import numpy as np
 from collections import OrderedDict
 
+import numpy as np
 from torch import nn as nn
 from torch.autograd import Variable
 

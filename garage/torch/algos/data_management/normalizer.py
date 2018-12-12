@@ -1,7 +1,7 @@
 import torch
-import garage.torch.algos.pytorch_util as ptu
 
-from garage.torch.data_management.normalizer import Normalizer, FixedNormalizer
+import garage.torch.algos.pytorch_util as ptu
+from garage.torch.data_management.normalizer import FixedNormalizer, Normalizer
 
 
 class TorchNormalizer(Normalizer):

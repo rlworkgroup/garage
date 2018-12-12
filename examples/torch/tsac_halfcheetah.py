@@ -5,11 +5,11 @@ from TD3: https://arxiv.org/pdf/1802.09477.pdf
 import numpy as np
 
 from garage.experiment import run_experiment
+from garage.torch.algos.networks import FlattenMlp
 import garage.torch.algos.pytorch_util as ptu
+from garage.torch.algos.sac.twin_sac import TwinSAC
 from garage.torch.envs.wrappers import NormalizedBoxEnv
 from garage.torch.policies import TanhGaussianPolicy
-from garage.torch.algos.networks import FlattenMlp
-from garage.torch.algos.sac.twin_sac import TwinSAC
 
 
 def experiment(variant):

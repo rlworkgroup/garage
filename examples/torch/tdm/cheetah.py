@@ -1,14 +1,14 @@
 from garage.experiment import run_experiment
+from garage.torch.algos.modules import HuberLoss
 import garage.torch.algos.pytorch_util as ptu
+from garage.torch.algos.tdm.her_replay_buffer import HerReplayBuffer
+from garage.torch.algos.tdm.networks import TdmNormalizer, TdmPolicy, TdmQf
+from garage.torch.algos.tdm.tdm import TemporalDifferenceModel
+from garage.torch.envs.tdm.half_cheetah_env import GoalXVelHalfCheetah
 from garage.torch.envs.wrappers import NormalizedBoxEnv
 from garage.torch.exploration_strategies.base import \
     PolicyWrappedWithExplorationStrategy
 from garage.torch.exploration_strategies.ou_strategy import OUStrategy
-from garage.torch.algos.modules import HuberLoss
-from garage.torch.envs.tdm.half_cheetah_env import GoalXVelHalfCheetah
-from garage.torch.algos.tdm.her_replay_buffer import HerReplayBuffer
-from garage.torch.algos.tdm.networks import TdmNormalizer, TdmQf, TdmPolicy
-from garage.torch.algos.tdm.tdm import TemporalDifferenceModel
 
 
 def experiment(variant):

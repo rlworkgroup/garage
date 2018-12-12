@@ -1,7 +1,7 @@
 import abc
+from collections import OrderedDict
 import pickle
 import time
-from collections import OrderedDict
 
 import gtimer as gt
 import numpy as np
@@ -273,16 +273,11 @@ class RLAlgorithm(metaclass=abc.ABCMeta):
         :param path:
         :return:
         """
-        for (ob, action, reward, next_ob, terminal, agent_info,
-             env_info) in zip(
-                 path["observations"],
-                 path["actions"],
-                 path["rewards"],
-                 path["next_observations"],
-                 path["terminals"],
-                 path["agent_infos"],
-                 path["env_infos"],
-             ):
+        for (ob, action, reward,
+             next_ob, terminal, agent_info, env_info) in zip(
+                 path["observations"], path["actions"], path["rewards"],
+                 path["next_observations"], path["terminals"],
+                 path["agent_infos"], path["env_infos"]):
             self._handle_step(
                 ob,
                 action,

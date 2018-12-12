@@ -1,13 +1,13 @@
 import unittest
 
-import numpy as np
 from gym.envs.mujoco import HalfCheetahEnv
+import numpy as np
 
+from garage.torch.algos.networks import FlattenMlp
 import garage.torch.algos.pytorch_util as ptu
+from garage.torch.algos.sac.sac import SoftActorCritic
 from garage.torch.envs.wrappers import NormalizedBoxEnv
 from garage.torch.policies import TanhGaussianPolicy
-from garage.torch.algos.sac.sac import SoftActorCritic
-from garage.torch.algos.networks import FlattenMlp
 
 
 class TestSAC(unittest.TestCase):

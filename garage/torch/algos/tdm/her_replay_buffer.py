@@ -112,8 +112,8 @@ class HerReplayBuffer(EnvReplayBuffer):
         next_obs_idxs = []
         for i in indices:
             possible_next_obs_idxs = self._idx_to_future_obs_idx[i]
-            # This is generally faster than random.choice. Makes you wonder what
-            # random.choice is doing
+            # This is generally faster than random.choice.
+            # Makes you wonder what random.choice is doing
             num_options = len(possible_next_obs_idxs)
             if num_options == 1:
                 next_obs_i = 0

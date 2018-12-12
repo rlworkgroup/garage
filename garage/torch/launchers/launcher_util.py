@@ -1,3 +1,4 @@
+from collections import namedtuple
 import datetime
 import json
 import os
@@ -5,14 +6,13 @@ import os.path as osp
 import pickle
 import random
 import sys
-from collections import namedtuple
 
 import dateutil.tz
 import numpy as np
 
 from garage.misc import logger
-from garage.torch.launchers import config
 from garage.torch.algos.pytorch_util import set_gpu_mode
+from garage.torch.launchers import config
 
 GitInfo = namedtuple(
     'GitInfo',
@@ -46,7 +46,7 @@ def get_git_infos(dirs):
                         commit_hash=repo.head.commit.hexsha,
                         branch_name=branch_name,
                     ))
-            except git.exc.InvalidGitRepositoryError as e:
+            except git.exc.InvalidGitRepositoryError:
                 print("Not a valid git repo: {}".format(directory))
     except ImportError:
         git_infos = None

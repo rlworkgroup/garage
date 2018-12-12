@@ -2,13 +2,12 @@ from collections import OrderedDict
 
 import numpy as np
 
-from garage.torch.envs.ant import AntEnv
-
 from garage.misc import logger as default_logger
 from garage.torch.core.eval_util import create_stats_ordered_dict
 from garage.torch.core.serializable import Serializable
-from garage.torch.samplers.util import get_stat_in_paths
+from garage.torch.envs.ant import AntEnv
 from garage.torch.envs.tdm.multitask_env import MultitaskEnv
+from garage.torch.samplers.util import get_stat_in_paths
 
 
 class GoalXYPosAnt(AntEnv, MultitaskEnv, Serializable):
@@ -189,7 +188,8 @@ class GoalXYPosAndVelAnt(AntEnv, MultitaskEnv, Serializable):
         torso_xyz_before = self.get_body_com("torso")
         self.do_simulation(action, self.frame_skip)
         torso_xyz_after = self.get_body_com("torso")
-        self.last_velocity = torso_velocity = torso_xyz_after - torso_xyz_before
+        self.last_velocity = torso_velocity \
+            = torso_xyz_after - torso_xyz_before
 
         done = False
 

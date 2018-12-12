@@ -4,9 +4,9 @@ import gym
 import numpy as np
 from torch import nn as nn
 
-import garage.torch.algos.pytorch_util as ptu
 from garage.torch.algos.dqn.dqn import DQN
 from garage.torch.algos.networks import Mlp
+import garage.torch.algos.pytorch_util as ptu
 
 
 class TestDQN(unittest.TestCase):
@@ -22,8 +22,8 @@ class TestDQN(unittest.TestCase):
                 epsilon=0.2,
                 tau=0.001,
                 hard_update_period=10,
-                save_environment=
-                False,  # Can't serialize CartPole for some reason
+                # Can't serialize CartPole for some reason
+                save_environment=False,
             ), )
 
         env = gym.make('CartPole-v0')

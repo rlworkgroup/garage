@@ -3,9 +3,9 @@ import torch
 import torch.optim as optim
 
 import garage.torch.algos.pytorch_util as ptu
+from garage.torch.algos.torch_rl_algorithm import TorchRLAlgorithm
 from garage.torch.core.eval_util import create_stats_ordered_dict
 from garage.torch.policies import MakeDeterministic
-from garage.torch.algos.torch_rl_algorithm import TorchRLAlgorithm
 
 
 class TwinSAC(TorchRLAlgorithm):
@@ -94,7 +94,8 @@ class TwinSAC(TorchRLAlgorithm):
         q1_pred = self.qf1(obs, actions)
         q2_pred = self.qf2(obs, actions)
         v_pred = self.vf(obs)
-        # Make sure policy accounts for squashing functions like tanh correctly!
+        # Make sure policy accounts for
+        # squashing functions like tanh correctly!
         policy_outputs = self.policy(
             obs,
             reparameterize=self.train_policy_with_reparameterization,
@@ -143,14 +144,15 @@ class TwinSAC(TorchRLAlgorithm):
                 log_policy_target = q_new_actions - v_pred
                 policy_loss = (
                     log_pi * (log_pi - log_policy_target).detach()).mean()
-            mean_reg_loss = self.policy_mean_reg_weight * (policy_mean**
-                                                           2).mean()
-            std_reg_loss = self.policy_std_reg_weight * (policy_log_std**
-                                                         2).mean()
+            mean_reg_loss = self.policy_mean_reg_weight \
+                * (policy_mean ** 2).mean()
+            std_reg_loss = self.policy_std_reg_weight \
+                * (policy_log_std ** 2).mean()
             pre_tanh_value = policy_outputs[-1]
             pre_activation_reg_loss = self.policy_pre_activation_weight * (
                 (pre_tanh_value**2).sum(dim=1).mean())
-            policy_reg_loss = mean_reg_loss + std_reg_loss + pre_activation_reg_loss
+            policy_reg_loss = mean_reg_loss + std_reg_loss \
+                + pre_activation_reg_loss
             policy_loss = policy_loss + policy_reg_loss
 
             self.policy_optimizer.zero_grad()
@@ -173,14 +175,15 @@ class TwinSAC(TorchRLAlgorithm):
                     policy_loss = (
                         log_pi * (log_pi - log_policy_target).detach()).mean()
 
-                mean_reg_loss = self.policy_mean_reg_weight * (policy_mean**
-                                                               2).mean()
-                std_reg_loss = self.policy_std_reg_weight * (policy_log_std**
-                                                             2).mean()
+                mean_reg_loss = self.policy_mean_reg_weight \
+                    * (policy_mean ** 2).mean()
+                std_reg_loss = self.policy_std_reg_weight \
+                    * (policy_log_std ** 2).mean()
                 pre_tanh_value = policy_outputs[-1]
                 pre_activation_reg_loss = self.policy_pre_activation_weight * (
                     (pre_tanh_value**2).sum(dim=1).mean())
-                policy_reg_loss = mean_reg_loss + std_reg_loss + pre_activation_reg_loss
+                policy_reg_loss = mean_reg_loss + std_reg_loss \
+                    + pre_activation_reg_loss
                 policy_loss = policy_loss + policy_reg_loss
 
             self.eval_statistics['QF1 Loss'] = np.mean(ptu.get_numpy(qf1_loss))

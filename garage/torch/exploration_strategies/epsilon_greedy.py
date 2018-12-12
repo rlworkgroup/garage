@@ -2,8 +2,8 @@ import random
 
 from gym.spaces import Discrete
 
-from garage.torch.exploration_strategies.base import RawExplorationStrategy
 from garage.torch.core.serializable import Serializable
+from garage.torch.exploration_strategies.base import RawExplorationStrategy
 
 
 class EpsilonGreedy(RawExplorationStrategy, Serializable):

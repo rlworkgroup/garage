@@ -1,11 +1,13 @@
-from garage.torch.exploration_strategies.base import RawExplorationStrategy
-from garage.torch.core.serializable import Serializable
 import numpy as np
+
+from garage.torch.core.serializable import Serializable
+from garage.torch.exploration_strategies.base import RawExplorationStrategy
 
 
 class GaussianStrategy(RawExplorationStrategy, Serializable):
     """
-    This strategy adds Gaussian noise to the action taken by the deterministic policy.
+    This strategy adds Gaussian noise to the action taken
+    by the deterministic policy.
 
     Based on the rllab implementation.
     """

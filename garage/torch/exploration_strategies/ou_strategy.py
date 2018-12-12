@@ -1,8 +1,8 @@
 import numpy as np
 import numpy.random as nr
 
-from garage.torch.exploration_strategies.base import RawExplorationStrategy
 from garage.torch.core.serializable import Serializable
+from garage.torch.exploration_strategies.base import RawExplorationStrategy
 
 
 class OUStrategy(RawExplorationStrategy, Serializable):

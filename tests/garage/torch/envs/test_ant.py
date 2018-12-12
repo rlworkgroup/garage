@@ -1,7 +1,7 @@
 import unittest
 
-from garage.torch.envs.tdm.ant_env import GoalXYPosAnt
 from garage.torch.envs.tdm.ant_env import GoalXYPosAndVelAnt
+from garage.torch.envs.tdm.ant_env import GoalXYPosAnt
 
 
 class TestAnt(unittest.TestCase):

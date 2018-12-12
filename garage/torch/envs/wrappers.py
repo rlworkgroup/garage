@@ -1,6 +1,6 @@
-import numpy as np
 from gym import Env
 from gym.spaces import Box
+import numpy as np
 
 from garage.torch.core.serializable import Serializable
 

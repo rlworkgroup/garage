@@ -1,14 +1,14 @@
 import numpy as np
+import torch
+from torch import nn as nn
 import torch.optim as optim
 
+from garage.torch.algos.data_management.normalizer import TorchFixedNormalizer
 import garage.torch.algos.pytorch_util as ptu
-import torch
+from garage.torch.algos.torch_rl_algorithm import TorchRLAlgorithm
 from garage.torch.core.eval_util import create_stats_ordered_dict
 from garage.torch.policies.simple import RandomPolicy
 from garage.torch.samplers.util import rollout
-from garage.torch.algos.torch_rl_algorithm import TorchRLAlgorithm
-from garage.torch.algos.data_management.normalizer import TorchFixedNormalizer
-from torch import nn as nn
 
 
 class DDPG(TorchRLAlgorithm):
