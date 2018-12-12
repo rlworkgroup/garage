@@ -12,6 +12,13 @@ repos:
         language: script
         entry: scripts/travisci/check_flake8.sh
         stages: [commit, push]
+    -   id: pylint
+        name: pyLint
+        entry: python -m pylint.__main__
+        args: ['--rcfile=setup.cfg']
+        stages: [commit, push]
+        language: system
+        files: \.py$
 
 -   repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v1.3.0
@@ -86,12 +93,4 @@ repos:
     hooks:
     -   id: yapf
         args: ['-dpr']
-        stages: [commit, push]
-
--   repo: https://github.com/pre-commit/mirrors-pylint
-    rev: v1.9.1
-    stages: [commit, push]
-    hooks:
-    -   id: pylint
-        args: ['--rcfile=setup.cfg']
         stages: [commit, push]
