@@ -1,8 +1,4 @@
 #!/usr/bin/env bash
-export TF_CPP_MIN_LOG_LEVEL=3      # shut TensorFlow up
-export DISABLE_MUJOCO_RENDERING=1  # silence glfw
-export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${HOME}/.mujoco/mjpro150/bin"
-
 status=0
 
 if [[ "${TRAVIS_PULL_REQUEST}" != "false" && "${TRAVIS}" == "true" ]]; then
