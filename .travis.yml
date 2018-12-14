@@ -61,8 +61,6 @@ before_script:
     }
 
 script:
-  - docker-run scripts/travisci/check_flake8.sh
-  - docker-run scripts/travisci/check_imports.sh
   - docker-run scripts/travisci/check_precommit.sh
   - |
     if [[ "${TRAVIS_EVENT_TYPE}" == "cron" ]]; then

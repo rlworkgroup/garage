@@ -36,7 +36,7 @@ W605  # invalid escape sequence
 
 # Files or directories to exclude from checks applied to all files.
 exclude_all=(
-./tests/'*'
+./tests/'*',.git,__pycache__
 )
 
 
@@ -87,6 +87,7 @@ W503  # line break before binary operator
 
 # Files or directories to exclude from checks applied to all files.
 test_exclude_all=(
+  .git,__pycache__
 )
 
 
@@ -122,16 +123,16 @@ test_exclude_added=(
 # repository.
 if [[ "${TRAVIS}" == "true" && "${TRAVIS_PULL_REQUEST}" != "false" ]]; then
   files_changed="$(git diff "${TRAVIS_COMMIT_RANGE}" -M --diff-filter={M,R} \
-                     --name-only | grep ".*\.py")"
+                     --name-only | grep ".*\.py$")"
   files_added="$(git diff "${TRAVIS_COMMIT_RANGE}" -M --diff-filter=A \
-                   --name-only | grep ".*\.py")"
+                   --name-only | grep ".*\.py$")"
 else
   git remote set-branches --add origin master
   git fetch
   files_changed="$(git diff origin/master -M --diff-filter={M,R} --name-only \
-                     | grep ".*\.py")"
+                     | grep ".*\.py$")"
   files_added="$(git diff origin/master -M --diff-filter=A --name-only \
-                   | grep ".*\.py")"
+                   | grep ".*\.py$")"
 fi
 
 # Obtain the files that have been added or modified in the repository that
