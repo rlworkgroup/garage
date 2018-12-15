@@ -2,6 +2,7 @@ import unittest
 from unittest import mock
 
 from gym.spaces import Box
+from gym.spaces import Discrete
 import numpy as np
 
 from garage.envs.wrappers import StackFrames
@@ -35,15 +36,21 @@ class TestStackFrames(unittest.TestCase):
 
         return next(generator), 0, False, dict()
 
-    def test_stack_frames_environment_shape(self):
+    def test_stack_frames_invalid_environment_type(self):
+        with self.assertRaises(ValueError):
+            self.env.observation_space = Discrete(64)
+            StackFrames(self.env, n_frames=4)
+
+    def test_stack_frames_invalid_environment_shape(self):
         with self.assertRaises(ValueError):
             self.env.observation_space = Box(
                 low=0, high=255, shape=(4, ), dtype=np.uint8)
             StackFrames(self.env, n_frames=4)
 
-    def test_stack_frames_output_shape(self):
-        assert self.obs_s.shape == (self.frame_width, self.frame_height,
-                                    self._n_frames)
+    def test_stack_frames_output_observation_space(self):
+        assert self.env_s.observation_space.shape == (self.frame_width,
+                                                      self.frame_height,
+                                                      self._n_frames)
 
     def test_stack_frames_for_reset(self):
         frame_stack = self.obs

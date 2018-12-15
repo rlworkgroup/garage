@@ -18,7 +18,8 @@ class StackFrames(gym.Wrapper):
         n_frames: number of frames to stack.
 
     Raises:
-        ValueError: If observation space shape is not 2 or environment is not gym.spaces.Box.  # noqa: E501
+        ValueError: If observation space shape is not 2 or
+        environment is not gym.spaces.Box.
 
     """
 
@@ -32,7 +33,7 @@ class StackFrames(gym.Wrapper):
 
         super().__init__(env)
 
-        self.n_frames = n_frames
+        self._n_frames = n_frames
         self._frames = deque(maxlen=n_frames)
 
         new_obs_space_shape = env.observation_space.shape + (n_frames, )
@@ -57,7 +58,7 @@ class StackFrames(gym.Wrapper):
         """gym.Env reset function."""
         observation = self.env.reset()
         self._frames.clear()
-        for i in range(self.n_frames):
+        for i in range(self._n_frames):
             self._frames.append(observation)
 
         return self._stack_frames()

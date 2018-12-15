@@ -2,7 +2,7 @@
 import gym
 from gym.spaces import Box
 import numpy as np
-from scipy.misc import imresize
+from skimage.transform import resize
 
 
 class Resize(gym.Wrapper):
@@ -56,8 +56,7 @@ class Resize(gym.Wrapper):
         self._observation_space = observation_space
 
     def _observation(self, obs):
-        obs = imresize(obs, (self._width, self._height))
-        return obs
+        return resize(obs, (self._width, self._height))
 
     def reset(self):
         """gym.Env reset function."""
