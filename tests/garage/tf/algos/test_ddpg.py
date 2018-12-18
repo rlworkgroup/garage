@@ -50,4 +50,4 @@ class TestDDPG(TfGraphTestCase):
             exploration_strategy=action_noise,
         )
         last_avg_ret = algo.train(sess=self.sess)
-        assert last_avg_ret > 30
+        assert last_avg_ret > 60
