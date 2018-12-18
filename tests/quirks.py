@@ -20,9 +20,3 @@ KNOWN_GYM_RENDER_NOT_IMPLEMENTED = [
     "NChain-v0",
     "Roulette-v0",
 ]
-
-KNOWN_GYM_NOT_CLOSE_VIEWER = [
-    # Please keep alphabetized
-    "gym.envs.mujoco",
-    "gym.envs.robotics"
-]
