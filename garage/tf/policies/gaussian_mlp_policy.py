@@ -83,25 +83,27 @@ class GaussianMLPPolicy(StochasticPolicy, Parameterized, Serializable):
     def vectorized(self):
         return True
 
-    def get_action(self, observation):
-        sess = tf.get_default_session()
+    def get_action(self, observation, sess=None):
+        if sess is None:
+            sess = tf.get_default_session()
         flat_obs = self.observation_space.flatten(observation)
         feed_dict = {self.model.inputs: flat_obs}
         action, mean, std = sess.run(
             [self.model.sample, self.model.mean, self.model.std], 
             feed_dict=feed_dict
         )
-        return action, dict(mean=mean, log_std=std) # TODO 
+        return action, dict(mean=mean, log_std=std) 
 
-    def get_actions(self, observations):
-        sess = tf.get_default_session()
+    def get_actions(self, observations, sess=None):
+        if sess is None:
+            sess = tf.get_default_session()
         flat_obs = self.observation_space.flatten_n(observations)
         feed_dict = {self.model.inputs: flat_obs}
         actions, means, stds = sess.run(
             [self.model.sample, self.model.mean, self.model.std_param], 
             feed_dict=feed_dict
         )
-        return actions, dict(mean=means, log_std=stds) # TODO
+        return actions, dict(mean=means, log_std=stds)
 
     @property
     def distribution(self):

@@ -10,7 +10,12 @@ from garage.tf.models import Model
 
 
 class GaussianMLPModel(Model, Serializable):
-    """Gaussian MLP Model."""
+    """
+    Gaussian MLP Model.
+
+    This model models a gaussian distribution whose
+    mean and std are parameterized by an MLP.
+    """
 
     def __init__(
             self,
@@ -61,7 +66,7 @@ class GaussianMLPModel(Model, Serializable):
         Serializable.quick_init(self, locals())
         super(GaussianMLPModel, self).__init__()
 
-        self.name = name
+        self._name = name
         self._name_scope = tf.name_scope(self.name)
 
         # Network parameters
@@ -100,7 +105,7 @@ class GaussianMLPModel(Model, Serializable):
             raise NotImplementedError
 
         inputs, outputs, model_info = self.build_model()
-        self._inputs = inputs["input_var"]
+        self.inputs = inputs["input_var"]
 
         self.mean = outputs["mean"]
         self.std = outputs["std"]
@@ -108,7 +113,7 @@ class GaussianMLPModel(Model, Serializable):
         self.sample = outputs["sample"]
         self.dist = model_info["dist"]
 
-        self._outputs = outputs
+        self.outputs = outputs
 
     @overrides
     def build_model(self, inputs=None, reuse=tf.AUTO_REUSE):

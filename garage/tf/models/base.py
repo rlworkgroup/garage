@@ -1,15 +1,24 @@
-"""This file contains the abstraction class for models."""
+"""This file contains the tautology for garage models."""
 import tensorflow as tf
+from tensorflow.keras.models import Model as KerasModel
 
 from garage.misc.overrides import overrides
 from garage.tf.core import Parameterized
 
 
-class Model(Parameterized):
-    """Abstraction class for models."""
+class Model(KerasModel, Parameterized):
+    """
+    A model define a neural network model to build a graph for
+    other primitivs (e.g. GaussianMLPPolicy and GaussianMLPBaseline).
+    A model can be built by assembling different models. For example,
+    to define a VAEGaussianMLP Model, we need to build a VAE model
+    and a GaussianMLP Model. Then, we can assemble them in the
+    build_model function.
+    """
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         """Initialize a model."""
+        super(Model, self).__init__(*args, **kwargs)
         Parameterized.__init__(self)
 
     def build_model(self, inputs=None, reuse=tf.AUTO_REUSE):
@@ -23,16 +32,6 @@ class Model(Parameterized):
         """
         raise NotImplementedError
 
-    @property
-    def inputs(self):
-        """Tensors of the inputs."""
-        return self._inputs
-
-    @property
-    def outputs(self):
-        """Tensors of the outputs."""
-        return self._outputs
-
     @overrides
     def get_params_internal(self, **tags):
         """
@@ -41,7 +40,7 @@ class Model(Parameterized):
         Args
             tags: a dictionary of tags, only support trainable for now.
         Return
-            parameters of the model.
+            parameters of the model in tf.Tensor.
         """
         if tags.get("trainable"):
             params = [v for v in tf.trainable_variables(scope=self.name)]

@@ -48,9 +48,10 @@ class TestGaussianMLPModel(TfGraphTestCase):
             output_dim=2,
             hidden_sizes=[3, 3],
         )
-        model_pickled = pickle.loads(pickle.dumps(model))
         self.sess.run(tf.global_variables_initializer())
+        model_pickled = pickle.loads(pickle.dumps(model))
         data = np.array([[1., 2.]])
+
         results = self.sess.run(model.outputs, feed_dict={model.inputs: data})
         results_pickled = self.sess.run(
             model_pickled.outputs, feed_dict={model_pickled.inputs: data})
