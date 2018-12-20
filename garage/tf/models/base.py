@@ -8,6 +8,8 @@ from garage.tf.core import Parameterized
 
 class Model(KerasModel, Parameterized):
     """
+    This is a tautology for all the garage models.
+
     A model define a neural network model to build a graph for
     other primitivs (e.g. GaussianMLPPolicy and GaussianMLPBaseline).
     A model can be built by assembling different models. For example,

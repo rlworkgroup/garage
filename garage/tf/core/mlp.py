@@ -60,4 +60,3 @@ def mlp(input_var,
             bias_initializer=output_b_init,
             name="output")
     return l_out
-

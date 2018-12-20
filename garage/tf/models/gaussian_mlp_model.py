@@ -5,7 +5,8 @@ import tensorflow as tf
 from garage.core import Serializable
 from garage.misc import ext
 from garage.misc.overrides import overrides
-from garage.tf.core.networks import mlp, parameter
+from garage.tf.core.mlp import mlp
+from garage.tf.core.parameter import parameter
 from garage.tf.models import Model
 
 

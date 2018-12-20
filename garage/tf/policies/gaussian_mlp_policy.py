@@ -12,7 +12,6 @@ from garage.tf.spaces import Box
 
 
 class GaussianMLPPolicy(StochasticPolicy, Parameterized, Serializable):
-
     def __init__(self,
                  env_spec,
                  name="GaussianMLPPolicy",
@@ -59,7 +58,7 @@ class GaussianMLPPolicy(StochasticPolicy, Parameterized, Serializable):
         super(GaussianMLPPolicy, self).__init__(env_spec)
         Parameterized.__init__(self)
         self.name = name
-        
+
         self.model = GaussianMLPModel(
             input_dim=env_spec.observation_space.flat_dim,
             output_dim=env_spec.action_space.flat_dim,
@@ -89,10 +88,9 @@ class GaussianMLPPolicy(StochasticPolicy, Parameterized, Serializable):
         flat_obs = self.observation_space.flatten(observation)
         feed_dict = {self.model.inputs: flat_obs}
         action, mean, std = sess.run(
-            [self.model.sample, self.model.mean, self.model.std], 
-            feed_dict=feed_dict
-        )
-        return action, dict(mean=mean, log_std=std) 
+            [self.model.sample, self.model.mean, self.model.std],
+            feed_dict=feed_dict)
+        return action, dict(mean=mean, log_std=std)
 
     def get_actions(self, observations, sess=None):
         if sess is None:
@@ -100,15 +98,14 @@ class GaussianMLPPolicy(StochasticPolicy, Parameterized, Serializable):
         flat_obs = self.observation_space.flatten_n(observations)
         feed_dict = {self.model.inputs: flat_obs}
         actions, means, stds = sess.run(
-            [self.model.sample, self.model.mean, self.model.std_param], 
-            feed_dict=feed_dict
-        )
+            [self.model.sample, self.model.mean, self.model.std_param],
+            feed_dict=feed_dict)
         return actions, dict(mean=means, log_std=stds)
 
     @property
     def distribution(self):
         return self._dist
-    
+
     def log_diagnostics(self, paths):
         log_stds = np.vstack(
             [path["agent_infos"]["log_std"] for path in paths])
