@@ -18,12 +18,12 @@ class LinearFeatureBaseline(Baseline):
         self._coeffs = val
 
     def _features(self, path):
-        o = np.clip(path["observations"], -10, 10)
-        l = len(path["rewards"])
-        al = np.arange(l).reshape(-1, 1) / 100.0
+        obs = np.clip(path["observations"], -10, 10)
+        length = len(path["rewards"])
+        al = np.arange(length).reshape(-1, 1) / 100.0
         return np.concatenate(
-            [o, o**2, al, al**2, al**3,
-             np.ones((l, 1))], axis=1)
+            [obs, obs**2, al, al**2, al**3,
+             np.ones((length, 1))], axis=1)
 
     @overrides
     def fit(self, paths):
@@ -34,7 +34,8 @@ class LinearFeatureBaseline(Baseline):
             self._coeffs = np.linalg.lstsq(
                 featmat.T.dot(featmat) +
                 reg_coeff * np.identity(featmat.shape[1]),
-                featmat.T.dot(returns))[0]
+                featmat.T.dot(returns),
+                rcond=-1)[0]
             if not np.any(np.isnan(self._coeffs)):
                 break
             reg_coeff *= 10

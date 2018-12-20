@@ -1,4 +1,4 @@
-from garage.tf.algos import NPO
+from garage.tf.algos.npo import NPO
 from garage.tf.algos.npo import PGLoss
 from garage.tf.optimizers import FirstOrderOptimizer
 
