@@ -132,13 +132,15 @@ def set_seed(seed):
     seed %= 4294967294
     global seed_
     seed_ = seed
-    import lasagne
     random.seed(seed)
     np.random.seed(seed)
-    lasagne.random.set_rng(np.random.RandomState(seed))
+    if "theano" in sys.modules:
+        import lasagne
+        lasagne.random.set_rng(np.random.RandomState(seed))
     try:
-        import tensorflow as tf
-        tf.set_random_seed(seed)
+        if "tensorflow" in sys.modules:
+            import tensorflow as tf
+            tf.set_random_seed(seed)
     except Exception as e:
         print(e)
 
