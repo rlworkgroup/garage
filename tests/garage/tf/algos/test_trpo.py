@@ -18,10 +18,10 @@ class TestTRPO(TfGraphTestCase):
     def test_trpo_pendulum(self):
         """Test TRPO with Pendulum environment."""
         logger.reset()
-        env = TfEnv(normalize(gym.make("Pendulum-v0")))
+        env = TfEnv(normalize(gym.make("InvertedDoublePendulum-v2")))
         policy = GaussianMLPPolicy(
             env_spec=env.spec,
-            hidden_sizes=(32, 32),
+            hidden_sizes=(64, 64),
             hidden_nonlinearity=tf.nn.tanh,
             output_nonlinearity=None,
         )
@@ -33,7 +33,7 @@ class TestTRPO(TfGraphTestCase):
             env=env,
             policy=policy,
             baseline=baseline,
-            batch_size=1024,
+            batch_size=2048,
             max_path_length=100,
             n_itr=10,
             discount=0.99,
@@ -42,4 +42,34 @@ class TestTRPO(TfGraphTestCase):
             plot=False,
         )
         last_avg_ret = algo.train(sess=self.sess)
-        assert last_avg_ret > -1000
+        assert last_avg_ret > 50
+
+    def test_trpo_unknown_kl_constraint(self):
+        """Test TRPO with unkown KL constraints."""
+        logger.reset()
+        env = TfEnv(normalize(gym.make("InvertedDoublePendulum-v2")))
+        policy = GaussianMLPPolicy(
+            env_spec=env.spec,
+            hidden_sizes=(64, 64),
+            hidden_nonlinearity=tf.nn.tanh,
+            output_nonlinearity=None,
+        )
+        baseline = GaussianMLPBaseline(
+            env_spec=env.spec,
+            regressor_args=dict(hidden_sizes=(32, 32)),
+        )
+        with self.assertRaises(NotImplementedError) as context:
+            TRPO(
+                env=env,
+                policy=policy,
+                baseline=baseline,
+                batch_size=2048,
+                max_path_length=100,
+                n_itr=10,
+                discount=0.99,
+                gae_lambda=0.98,
+                policy_ent_coeff=0.0,
+                plot=False,
+                kl_constraint="random kl_constraint",
+            )
+        assert "Unknown KLConstraint" in str(context.exception)

@@ -15,7 +15,9 @@ class KLConstraint(Enum):
 
 class TRPO(NPO):
     """
-    Trust Region Policy Optimization
+    Trust Region Policy Optimization.
+
+    See https://arxiv.org/abs/1502.05477.
     """
 
     def __init__(self,
@@ -35,7 +37,7 @@ class TRPO(NPO):
             optimizer_args = dict()
 
         super(TRPO, self).__init__(
-            pg_loss=PGLoss.VANILLA,
+            pg_loss=PGLoss.SURROGATE,
             optimizer=optimizer,
             optimizer_args=optimizer_args,
             name="TRPO",

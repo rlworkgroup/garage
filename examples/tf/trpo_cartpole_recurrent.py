@@ -25,9 +25,9 @@ algo = TRPO(
     baseline=baseline,
     batch_size=4000,
     max_path_length=100,
-    n_itr=10,
+    n_itr=100,
     discount=0.99,
-    step_size=0.01,
+    max_kl_step=0.01,
     optimizer=ConjugateGradientOptimizer,
     optimizer_args=dict(hvp_approach=FiniteDifferenceHvp(base_eps=1e-5)))
 algo.train()
