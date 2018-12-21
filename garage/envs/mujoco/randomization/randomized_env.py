@@ -2,7 +2,7 @@ import os.path as osp
 
 from cached_property import cached_property
 import gym
-from mujoco_py import load_model_from_xml
+from mujoco_py import load_model_from_path
 from mujoco_py import MjSim
 
 from garage.core import Serializable
@@ -33,7 +33,7 @@ class RandomizedEnv(gym.Env, Serializable):
         corresponding parameters in the MuJoCo environment class are
         set.
         """
-        self._wrapped_env.model = load_model_from_xml(
+        self._wrapped_env.model = load_model_from_path(
             self._variations.get_randomized_xml_model())
         if hasattr(self._wrapped_env, 'action_space'):
             del self._wrapped_env.__dict__['action_space']

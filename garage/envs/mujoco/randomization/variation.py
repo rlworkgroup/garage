@@ -1,16 +1,19 @@
 from enum import Enum
+import os
 
 from lxml import etree
 import numpy as np
+
+from garage.envs.mujoco.mujoco_env import MODEL_DIR
 
 
 class Method(Enum):
     """
     The random coefficient is applied according to these methods.
     """
-    """ The randomization is the product of the coefficient and the dynamic parameter """
+    # Randomization = coefficient * dynamic parameter
     COEFFICIENT = 1
-    """ The randomization is equal to the coefficient """
+    # Randomization = coefficient
     ABSOLUTE = 2
 
 
@@ -28,7 +31,7 @@ class Variation:
     """
     Each dynamic parameter to be randomized is represented by a Variation. This
     class works more like a data structure to store the data fields required
-    to find the corresponding dynamic parameter and apply the randomization to it.
+    to find the corresponding dynamic parameter and apply randomization to it.
     """
 
     def __init__(self,
@@ -158,6 +161,7 @@ class Variations:
         string
             XML string of the model with the randomized dynamic parameters
         """
+
         for v in self._list:
             e = self._elem_cache[v]
             if v.distribution == Distribution.GAUSSIAN:
@@ -170,17 +174,26 @@ class Variations:
             # Check if the sampled value has the same shape with default value
             if np.array(c).shape != np.array(self._default_cache[v]).shape:
                 raise ValueError(
-                    "Sampled value you input %s don't match with default value %s in the xml node %s"
-                    % (c, self._default_cache[v], v.xpath))
+                    "Sampled value you input %s does not match with default "
+                    "value %s in the xml node %s" % (c, self._default_cache[v],
+                                                     v.xpath))
 
             if v.method == Method.COEFFICIENT:
-                e.attrib[v.attrib] = str(c * self._default_cache[v])
+                # store attrib. convert numpy print to xml-friendly print
+                e.attrib[v.attrib] = \
+                    str(c * self._default_cache[v]).strip("[],")
             elif v.method == Method.ABSOLUTE:
-                e.attrib[v.attrib] = str(c)
+                # store attrib. convert numpy print to xml-friendly print
+                e.attrib[v.attrib] = str(c).strip("[],")
             else:
                 raise ValueError("Unknown method")
 
-        return etree.tostring(self._parsed_model.getroot()).decode("ascii")
+        et = etree.ElementTree(self._parsed_model.getroot())
+        filename = os.path.join(MODEL_DIR, "varied_params.xml")
+        et.write(filename, pretty_print=True)
+
+        return filename
+        # return etree.tostring(self._parsed_model.getroot()).decode("ascii")
 
     def get_list(self):
         """
