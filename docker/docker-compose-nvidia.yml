@@ -1,0 +1,18 @@
+version: '2.2'
+services:
+  garage-base-nvidia:
+    build:
+      cache_from:
+        - rlworkgroup/garage-nvidia:latest
+      context: ../
+      dockerfile: docker/Dockerfile
+      args:
+        - PARENT_IMAGE=nvidia/opengl:1.0-glvnd-runtime-ubuntu16.04
+    image: rlworkgroup/garage-nvidia-base
+  garage-nvidia:
+    build:
+      context: ../
+      dockerfile: docker/Dockerfile.nvidia
+      args:
+        - PARENT_IMAGE=rlworkgroup/garage-nvidia-base
+    image: rlworkgroup/garage-nvidia
