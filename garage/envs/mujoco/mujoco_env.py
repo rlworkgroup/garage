@@ -120,7 +120,7 @@ class MujocoEnv(gym.Env):
                 datum = getattr(self.sim.data, datum_name)
                 datum_dim = datum.shape[0]
                 datum = init_state[start:start + datum_dim]
-                setattr(self.sim.data, datum_name, datum)
+                exec('self.sim.data.%s[:] = datum' % datum_name)
                 start += datum_dim
 
     @overrides
