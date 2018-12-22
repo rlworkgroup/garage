@@ -1,10 +1,7 @@
 from enum import Enum
-import os
 
 from lxml import etree
 import numpy as np
-
-from garage.envs.mujoco.mujoco_env import MODEL_DIR
 
 
 class Method(Enum):
@@ -173,27 +170,21 @@ class Variations:
 
             # Check if the sampled value has the same shape with default value
             if np.array(c).shape != np.array(self._default_cache[v]).shape:
-                raise ValueError(
-                    "Sampled value you input %s does not match with default "
-                    "value %s in the xml node %s" % (c, self._default_cache[v],
-                                                     v.xpath))
+                raise ValueError("Sampled value you input {0} does not match "
+                                 "with default value {1} in the xml node {2}"
+                                 .format(c, self._default_cache[v], v.xpath))
 
             if v.method == Method.COEFFICIENT:
                 # store attrib. convert numpy print to xml-friendly print
-                e.attrib[v.attrib] = \
-                    str(c * self._default_cache[v]).strip("[],")
+                e.attrib[v.attrib] = str(
+                    c * self._default_cache[v]).strip("[],")
             elif v.method == Method.ABSOLUTE:
                 # store attrib. convert numpy print to xml-friendly print
                 e.attrib[v.attrib] = str(c).strip("[],")
             else:
                 raise ValueError("Unknown method")
 
-        et = etree.ElementTree(self._parsed_model.getroot())
-        filename = os.path.join(MODEL_DIR, "varied_params.xml")
-        et.write(filename, pretty_print=True)
-
-        return filename
-        # return etree.tostring(self._parsed_model.getroot()).decode("ascii")
+        return etree.tostring(self._parsed_model.getroot(), encoding='unicode')
 
     def get_list(self):
         """
