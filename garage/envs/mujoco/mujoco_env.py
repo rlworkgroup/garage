@@ -116,12 +116,34 @@ class MujocoEnv(gym.Env):
             self.sim.data.ctrl[:] = self.init_ctrl
         else:
             start = 0
-            for datum_name in ["qpos", "qvel", "qacc", "ctrl"]:
-                datum = getattr(self.sim.data, datum_name)
-                datum_dim = datum.shape[0]
-                datum = init_state[start:start + datum_dim]
-                exec('self.sim.data.%s[:] = datum' % datum_name)
-                start += datum_dim
+
+            # update qpos
+            datum = self.sim.data.qpos
+            datum_dim = datum.shape[0]
+            datum = init_state[start:start + datum_dim]
+            self.sim.data.qpos[:] = datum
+            start += datum_dim
+
+            # update qvel
+            datum = self.sim.data.qvel
+            datum_dim = datum.shape[0]
+            datum = init_state[start:start + datum_dim]
+            self.sim.data.qvel[:] = datum
+            start += datum_dim
+
+            # update qacc
+            datum = self.sim.data.qacc
+            datum_dim = datum.shape[0]
+            datum = init_state[start:start + datum_dim]
+            self.sim.data.qacc[:] = datum
+            start += datum_dim
+
+            # update ctrl
+            datum = self.sim.data.ctrl
+            datum_dim = datum.shape[0]
+            datum = init_state[start:start + datum_dim]
+            self.sim.data.ctrl[:] = datum
+            start += datum_dim
 
     @overrides
     def reset(self, init_state=None):
