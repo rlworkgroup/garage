@@ -9,7 +9,7 @@ class Method(Enum):
     The random coefficient is applied according to these methods.
     """
     # Randomization = coefficient * dynamic parameter
-    COEFFICIENT = 1
+    SCALED = 1
     # Randomization = coefficient
     ABSOLUTE = 2
 
@@ -174,7 +174,7 @@ class Variations:
                                  "with default value {1} in the xml node {2}"
                                  .format(c, self._default_cache[v], v.xpath))
 
-            if v.method == Method.COEFFICIENT:
+            if v.method == Method.SCALED:
                 # store attrib. convert numpy print to xml-friendly print
                 e.attrib[v.attrib] = str(
                     c * self._default_cache[v]).strip("[],")
