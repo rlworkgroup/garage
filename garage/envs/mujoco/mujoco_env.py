@@ -115,35 +115,17 @@ class MujocoEnv(gym.Env):
             self.sim.data.qacc[:] = self.init_qacc
             self.sim.data.ctrl[:] = self.init_ctrl
         else:
-            start = 0
+            datums = [
+                self.sim.data.qpos,
+                self.sim.data.qvel,
+                self.sim.data.qacc,
+                self.sim.data.ctrl,
+            ]
+            dims = [d.shape[0] for d in datums]
+            offsets = [0] + list(np.cumsum(dims)[:-1])
 
-            # update qpos
-            datum = self.sim.data.qpos
-            datum_dim = datum.shape[0]
-            datum = init_state[start:start + datum_dim]
-            self.sim.data.qpos[:] = datum
-            start += datum_dim
-
-            # update qvel
-            datum = self.sim.data.qvel
-            datum_dim = datum.shape[0]
-            datum = init_state[start:start + datum_dim]
-            self.sim.data.qvel[:] = datum
-            start += datum_dim
-
-            # update qacc
-            datum = self.sim.data.qacc
-            datum_dim = datum.shape[0]
-            datum = init_state[start:start + datum_dim]
-            self.sim.data.qacc[:] = datum
-            start += datum_dim
-
-            # update ctrl
-            datum = self.sim.data.ctrl
-            datum_dim = datum.shape[0]
-            datum = init_state[start:start + datum_dim]
-            self.sim.data.ctrl[:] = datum
-            start += datum_dim
+            for datum, dim, offset in zip(datums, dims, offsets):
+                datum[:] = init_state[offset:offset + dim]
 
     @overrides
     def reset(self, init_state=None):
