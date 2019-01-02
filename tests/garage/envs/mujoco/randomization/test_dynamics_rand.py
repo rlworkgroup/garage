@@ -11,11 +11,16 @@ from garage.envs.mujoco.swimmer_env import SwimmerEnv
 
 class TestDynamicsRand(unittest.TestCase):
     def setUp(self):
+        self._env = SwimmerEnv()
         self._bodyname = "mid"
         self._attribute = "pos"
+
+        # values for UNIFORM Distributions
         self._lower_bound = np.array([0.5, 0.5, 0.5])
         self._upper_bound = np.array([1.5, 1.5, 1.5])
-        self._env = SwimmerEnv()
+        # values for GAUSSIAN Distributions
+        self._mean = self._lower_bound
+        self._std_dev = self._lower_bound * 2
 
         # ensure you have legit bounds for randomization
         assert all(self._lower_bound != 1)
@@ -29,12 +34,12 @@ class TestDynamicsRand(unittest.TestCase):
     def test_absolute_method(self):
         # Create variation with absolute method of sampling
         variations = Variations()
-        variations.randomize()\
-            .at_xpath("//body[@name=\'{0}\']".format(self._bodyname))\
-            .attribute("{0}".format(self._attribute))\
-            .with_method(Method.ABSOLUTE)\
-            .sampled_from(Distribution.UNIFORM)\
-            .with_range(self._lower_bound, self._upper_bound)\
+        variations.randomize() \
+            .at_xpath("//body[@name=\'{0}\']".format(self._bodyname)) \
+            .attribute("{0}".format(self._attribute)) \
+            .with_method(Method.ABSOLUTE) \
+            .sampled_from(Distribution.UNIFORM) \
+            .with_range(self._lower_bound, self._upper_bound) \
             .add()
 
         randomized_env = randomize(self._env, variations)
@@ -66,12 +71,12 @@ class TestDynamicsRand(unittest.TestCase):
     def test_scaled_method(self):
         # Create variation with absolute method of sampling
         variations = Variations()
-        variations.randomize()\
-            .at_xpath("//body[@name=\'{0}\']".format(self._bodyname))\
-            .attribute("{0}".format(self._attribute))\
-            .with_method(Method.SCALED)\
-            .sampled_from(Distribution.UNIFORM)\
-            .with_range(self._lower_bound, self._upper_bound)\
+        variations.randomize() \
+            .at_xpath("//body[@name=\'{0}\']".format(self._bodyname)) \
+            .attribute("{0}".format(self._attribute)) \
+            .with_method(Method.SCALED) \
+            .sampled_from(Distribution.UNIFORM) \
+            .with_range(self._lower_bound, self._upper_bound) \
             .add()
 
         randomized_env = randomize(self._env, variations)
@@ -110,8 +115,150 @@ class TestDynamicsRand(unittest.TestCase):
             .with_range(self._lower_bound, self._upper_bound) \
             .add()
 
+        second_var = "torso"  # Add a second
+        variations.randomize() \
+            .at_xpath("//body[@name=\'{0}\']".format(second_var)) \
+            .attribute("{0}".format(self._attribute)) \
+            .with_method(Method.ABSOLUTE) \
+            .sampled_from(Distribution.UNIFORM) \
+            .with_range(self._lower_bound, self._upper_bound) \
+            .add()
+
         randomized_env = randomize(self._env, variations)
 
         # step() shouldn't error out (so it actually steps the wrapped env)
         for j in range(5):
             randomized_env.step(randomized_env.action_space.sample())
+
+    def test_xml_node_exception(self):
+        fake_node = "fake_node"
+        variations = Variations()
+
+        variations.randomize() \
+            .at_xpath("//body[@name=\'{0}\']".format(fake_node)) \
+            .attribute("{0}".format(self._attribute)) \
+            .with_method(Method.ABSOLUTE) \
+            .sampled_from(Distribution.UNIFORM) \
+            .with_range(self._lower_bound, self._upper_bound) \
+            .add()
+        with self.assertRaises(ValueError) as context:
+            randomize(self._env, variations)
+
+        assert fake_node in str(context.exception)
+
+    def test_xml_attrib_exception(self):
+        fake_attrib = "fake_attrib"
+        variations = Variations()
+
+        variations.randomize() \
+            .at_xpath("//body[@name=\'{0}\']".format(self._bodyname)) \
+            .attribute("{0}".format(fake_attrib)) \
+            .with_method(Method.ABSOLUTE) \
+            .sampled_from(Distribution.UNIFORM) \
+            .with_range(self._lower_bound, self._upper_bound) \
+            .add()
+        with self.assertRaises(ValueError) as context:
+            randomize(self._env, variations)
+
+        assert fake_attrib in str(context.exception)
+
+    def test_exception_gaussian_dist(self):
+        variations = Variations()
+        with self.assertRaises(ValueError) as context:
+            variations.randomize() \
+                .at_xpath("//body[@name=\'{0}\']".format(self._bodyname)) \
+                .attribute("{0}".format(self._attribute)) \
+                .with_method(Method.ABSOLUTE) \
+                .sampled_from(Distribution.GAUSSIAN) \
+                .with_range(self._lower_bound, self._upper_bound) \
+                .add()
+        assert "Need to call with_mean_std when sampled from Gaussian" \
+               in str(context.exception)
+
+    def test_exception_bad_distribution(self):
+        # Use unused distribution Enum value for test
+        variations = Variations()
+        variations.randomize() \
+            .at_xpath("//body[@name=\'{0}\']".format(self._bodyname)) \
+            .attribute("{0}".format(self._attribute)) \
+            .with_method(Method.ABSOLUTE) \
+            .sampled_from(3) \
+            .with_range(self._lower_bound, self._upper_bound) \
+            .add()
+
+        randomized_env = randomize(self._env, variations)
+
+        with self.assertRaises(ValueError) as context:
+            randomized_env.reset()
+        assert "Unknown distribution" in str(context.exception)
+
+    def test_exception_uniform_dist(self):
+        variations = Variations()
+        with self.assertRaises(ValueError) as context:
+            variations.randomize() \
+                .at_xpath("//body[@name=\'{0}\']".format(self._bodyname)) \
+                .attribute("{0}".format(self._attribute)) \
+                .with_method(Method.ABSOLUTE) \
+                .sampled_from(Distribution.UNIFORM) \
+                .with_mean_std(self._lower_bound, self._upper_bound) \
+                .add()
+        print(context.exception)
+        assert "Need to call with_range when sampled from Uniform" \
+               in str(context.exception)
+
+    def test_exception_bad_sampling_method(self):
+        # Use unused distribution Enum value for test
+        variations = Variations()
+        variations.randomize() \
+            .at_xpath("//body[@name=\'{0}\']".format(self._bodyname)) \
+            .attribute("{0}".format(self._attribute)) \
+            .with_method(3) \
+            .sampled_from(Distribution.UNIFORM) \
+            .with_range(self._lower_bound, self._upper_bound) \
+            .add()
+
+        randomized_env = randomize(self._env, variations)
+
+        with self.assertRaises(ValueError) as context:
+            randomized_env.reset()
+        assert "Unknown method" in str(context.exception)
+
+    def test_prop_elem(self):
+        variations = Variations()
+        variations.randomize() \
+            .at_xpath("//body[@name=\'{0}\']".format(self._bodyname)) \
+            .attribute("{0}".format(self._attribute)) \
+            .with_method(Method.ABSOLUTE) \
+            .sampled_from(Distribution.UNIFORM) \
+            .with_range(self._lower_bound, self._upper_bound) \
+            .add()
+
+        assert variations.get_list()[0].elem is None
+
+    def test_prop_get_list(self):
+        variations = Variations()
+        assert variations.get_list() == []
+
+    def test_prop_default(self):
+        variations = Variations()
+        variations.randomize() \
+            .at_xpath("//body[@name=\'{0}\']".format(self._bodyname)) \
+            .attribute("{0}".format(self._attribute)) \
+            .with_method(Method.ABSOLUTE) \
+            .sampled_from(Distribution.UNIFORM) \
+            .with_range(self._lower_bound, self._upper_bound) \
+            .add()
+
+        assert variations.get_list()[0].default is None
+
+    def test_prop_mean_std(self):
+        variations = Variations()
+        variations.randomize() \
+            .at_xpath("//body[@name=\'{0}\']".format(self._bodyname)) \
+            .attribute("{0}".format(self._attribute)) \
+            .with_method(Method.ABSOLUTE) \
+            .sampled_from(Distribution.GAUSSIAN) \
+            .with_mean_std(self._mean, self._std_dev) \
+            .add()
+
+        assert variations.get_list()[0].mean_std == (self._mean, self._std_dev)

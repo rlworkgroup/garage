@@ -216,8 +216,8 @@ class VariationSpec:
         self._attrib = None
         self._method = Method.ABSOLUTE
         self._distribution = Distribution.UNIFORM
-        self._mean_std = (0.0, 1.0)
-        self._var_range = (0.0, 1.0)
+        self._mean_std = None  # needs to be user specified
+        self._var_range = None  # needs to be user specified
         self._elem = None
         self._default = None
 
