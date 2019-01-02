@@ -9,7 +9,7 @@ class Box(Space):
     I.e., each coordinate is bounded.
     """
 
-    def __init__(self, low, high, shape=None):
+    def __init__(self, low, high, shape=None, dtype=None):
         """
         Two kinds of valid input:
             Box(-1.0, 1.0, (3,4)) # low and high are scalars, and shape is
@@ -26,10 +26,19 @@ class Box(Space):
             self.low = low + np.zeros(shape)
             self.high = high + np.zeros(shape)
 
+        if dtype is None:
+            all_high = (high == 255).all() if shape is None else (high == 255)
+            if all_high:
+                self._dtype = np.uint8
+            else:
+                self._dtype = np.float32
+        else:
+            self._dtype = dtype
+
     def sample(self):
         return np.random.uniform(
             low=self.low, high=self.high,
-            size=self.low.shape).astype(np.float32)
+            size=self.low.shape).astype(self.dtype)
 
     def contains(self, x):
         return x.shape == self.shape and (x >= self.low).all() and (
@@ -42,6 +51,17 @@ class Box(Space):
     @property
     def flat_dim(self):
         return np.prod(self.low.shape)
+
+    @property
+    def dtype(self):
+        """
+        The space data type.
+        """
+        return self._dtype
+
+    @dtype.setter
+    def dtype(self, dtype):
+        self._dtype = dtype
 
     @property
     def bounds(self):

@@ -40,7 +40,10 @@ class StackFrames(gym.Wrapper):
         _low = env.observation_space.low.flatten()[0]
         _high = env.observation_space.high.flatten()[0]
         self._observation_space = Box(
-            _low, _high, shape=new_obs_space_shape, dtype=np.float32)
+            _low,
+            _high,
+            shape=new_obs_space_shape,
+            dtype=env.observation_space.dtype)
 
     @property
     def observation_space(self):
