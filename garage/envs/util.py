@@ -17,7 +17,10 @@ def flat_dim(space):
     elif isinstance(space, gym.spaces.Tuple):
         return np.sum([flat_dim(x) for x in space.spaces])
     else:
-        raise NotImplementedError
+        try:
+            return space.flat_dim
+        except AttributeError:
+            raise NotImplementedError
 
 
 def flatten(space, obs):
@@ -31,7 +34,10 @@ def flatten(space, obs):
         return np.concatenate(
             [flatten(c, xi) for c, xi in zip(space.spaces, obs)])
     else:
-        raise NotImplementedError
+        try:
+            return space.flatten(obs)
+        except AttributeError:
+            raise NotImplementedError
 
 
 def flatten_n(space, obs):
