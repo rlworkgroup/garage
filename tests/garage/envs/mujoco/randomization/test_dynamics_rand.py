@@ -1,5 +1,7 @@
+import io
 import unittest
 
+from lxml import etree
 import numpy as np
 
 from garage.envs.mujoco.randomization import Distribution
@@ -22,6 +24,13 @@ class TestDynamicsRand(unittest.TestCase):
         self._mean = self._lower_bound
         self._std_dev = self._lower_bound * 2
 
+        # Properties for mocking model generation
+        self._counter = 0
+        self._mocks_abs = [[1.0, 1.0, 1.0], [0.9, 0.87, 0.59], [0.5, 0.5, 0.5],
+                           [1, 0.5, 1.5], [0.89, 1.25, 1.36]]
+        self._mocks_scaled = [[0.25, 0, 0], [0.5, 0, 0], [0.3, 0, 0],
+                              [0.7, 0, 0], [0.64, 0, 0]]
+
         # ensure you have legit bounds for randomization
         assert all(self._lower_bound != 1)
         assert all(self._upper_bound != 1)
@@ -31,8 +40,27 @@ class TestDynamicsRand(unittest.TestCase):
         body_id = self._env.sim.model._body_name2id[self._bodyname]
         self._orig_val = np.array(self._env.sim.model.body_pos[body_id])
 
+    def create_randomized_xml(self):
+        with io.StringIO() as model_xml:
+            self._env.sim.save(model_xml, 'xml')
+            model_xml.seek(0)
+            root_node = etree.parse(model_xml)
+
+        if self._testMethodName == 'test_absolute_method':
+            mock_vals = self._mocks_abs
+        elif self._testMethodName == 'test_scaled_method':
+            mock_vals = self._mocks_scaled
+        else:
+            mock_vals = None
+            assert ValueError, "Specify mock values for new test method"
+
+        e = root_node.find("//body[@name=\'{0}\']".format(self._bodyname))
+        mock_val = str(mock_vals[self._counter]).strip("[]").replace(',', '')
+        self._counter += 1
+        e.attrib[self._attribute] = mock_val
+        return etree.tostring(root_node.getroot(), encoding='unicode')
+
     def test_absolute_method(self):
-        # Create variation with absolute method of sampling
         variations = Variations()
         variations.randomize() \
             .at_xpath("//body[@name=\'{0}\']".format(self._bodyname)) \
@@ -46,7 +74,10 @@ class TestDynamicsRand(unittest.TestCase):
         randomized_vals = []
 
         for i in range(5):
-            randomized_env.reset()
+            with unittest.mock.patch(
+                    'garage.envs.mujoco.randomization.variation.Variations.'
+                    'get_randomized_xml_model', self.create_randomized_xml):
+                randomized_env.reset()
             body_id = randomized_env.wrapped_env.sim.model._body_name2id[
                 self._bodyname]
             randomized_val = np.array(
@@ -63,13 +94,12 @@ class TestDynamicsRand(unittest.TestCase):
 
         # check that you have actual variation
         randomized_vals = np.array(randomized_vals)
-        assert np.std(randomized_vals) > 0, ("Std Dev of randomized values "
-                                             "not > 0. Getting the exact "
-                                             "same numbers?\n {0}"
-                                             .format(randomized_vals))
+        assert np.std(randomized_vals) > 0, (
+            "Std Dev of randomized values "
+            "not > 0. Getting the exact "
+            "same numbers?\n {0}".format(randomized_vals))
 
     def test_scaled_method(self):
-        # Create variation with absolute method of sampling
         variations = Variations()
         variations.randomize() \
             .at_xpath("//body[@name=\'{0}\']".format(self._bodyname)) \
@@ -83,7 +113,10 @@ class TestDynamicsRand(unittest.TestCase):
         randomized_vals = []
 
         for i in range(5):
-            randomized_env.reset()
+            with unittest.mock.patch(
+                    'garage.envs.mujoco.randomization.variation.Variations.'
+                    'get_randomized_xml_model', self.create_randomized_xml):
+                randomized_env.reset()
             body_id = randomized_env.wrapped_env.sim.model._body_name2id[
                 self._bodyname]
             randomized_val = np.array(
@@ -100,10 +133,10 @@ class TestDynamicsRand(unittest.TestCase):
 
         # check that you have actual variation
         randomized_vals = np.array(randomized_vals)
-        assert np.std(randomized_vals) > 0, ("Std Dev of randomized values "
-                                             "not > 0. Getting the exact "
-                                             "same numbers?\n {0}"
-                                             .format(randomized_vals))
+        assert np.std(randomized_vals) > 0, (
+            "Std Dev of randomized values "
+            "not > 0. Getting the exact "
+            "same numbers?\n {0}".format(randomized_vals))
 
     def test_env_step(self):
         variations = Variations()
@@ -202,7 +235,6 @@ class TestDynamicsRand(unittest.TestCase):
                 .sampled_from(Distribution.UNIFORM) \
                 .with_mean_std(self._lower_bound, self._upper_bound) \
                 .add()
-        print(context.exception)
         assert "Need to call with_range when sampled from Uniform" \
                in str(context.exception)
 

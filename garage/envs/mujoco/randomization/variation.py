@@ -177,10 +177,10 @@ class Variations:
             if v.method == Method.SCALED:
                 # store attrib. convert numpy print to xml-friendly print
                 e.attrib[v.attrib] = str(
-                    c * self._default_cache[v]).strip("[],")
+                    c * self._default_cache[v]).strip("[]").replace(',', '')
             elif v.method == Method.ABSOLUTE:
                 # store attrib. convert numpy print to xml-friendly print
-                e.attrib[v.attrib] = str(c).strip("[],")
+                e.attrib[v.attrib] = str(c).strip("[]").replace(',', '')
             else:
                 raise ValueError("Unknown method")
 
