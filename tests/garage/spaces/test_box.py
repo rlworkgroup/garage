@@ -24,6 +24,15 @@ class TestBox(unittest.TestCase):
         box = Box(low=0, high=255, shape=(3, 4), dtype=type2)
         assert box.dtype == type2
 
+    def test_invalid_env(self):
+        with self.assertRaises(AttributeError):
+            Box(low=0.0, high=1.0)
+
+        with self.assertRaises(AssertionError):
+            Box(low=np.array([-1.0, -2.0]),
+                high=np.array([1.0, 2.0]),
+                shape=(2, 2))
+
     def test_float32_env(self):
         box = Box(low=0.0, high=1.0, shape=(3, 4))
         assert box.dtype == np.float32

@@ -1,3 +1,5 @@
+import warnings
+
 import numpy as np
 
 from garage.spaces import Space
@@ -16,6 +18,11 @@ class Box(Space):
             provided
             Box(np.array([-1.0,-2.0]), np.array([2.0,4.0])) # low and high are
             arrays of the same shape
+
+        If dtype is not specified, we assume dtype to be np.float32,
+        but when low=0 and high=255, it is very likely to be np.uint8.
+        We autodetect this case and warn user. It is different from gym.Box,
+        where they warn user as long as dtype is not specified.
         """
         if shape is None:
             assert low.shape == high.shape
@@ -27,13 +34,15 @@ class Box(Space):
             self.high = high + np.zeros(shape)
 
         if dtype is None:
-            all_high = (high == 255).all() if shape is None else (high == 255)
-            if all_high:
-                self._dtype = np.uint8
+            if (self.low == 0).all() and (self.high == 255).all():
+                self.dtype = np.uint8
+                warnings.warn("garage.spaces.Box detected dtype as np.uint8.\
+                    Please provide explicit dtype.")
             else:
-                self._dtype = np.float32
+                self.dtype = np.float32
+
         else:
-            self._dtype = dtype
+            self.dtype = dtype
 
     def sample(self):
         return np.random.uniform(
@@ -51,17 +60,6 @@ class Box(Space):
     @property
     def flat_dim(self):
         return np.prod(self.low.shape)
-
-    @property
-    def dtype(self):
-        """
-        The space data type.
-        """
-        return self._dtype
-
-    @dtype.setter
-    def dtype(self, dtype):
-        self._dtype = dtype
 
     @property
     def bounds(self):

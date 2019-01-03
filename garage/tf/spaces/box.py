@@ -18,10 +18,10 @@ class Box(GarageBox):
         """
         if flatten:
             return tf.placeholder(
-                self._dtype,
+                self.dtype,
                 shape=[None] * extra_dims + [self.flat_dim],
                 name=name)
         return tf.placeholder(
-            self._dtype,
+            self.dtype,
             shape=[None] * extra_dims + list(self.shape),
             name=name)

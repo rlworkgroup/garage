@@ -61,6 +61,11 @@ class Resize(gym.Wrapper):
 
     def _observation(self, obs):
         with warnings.catch_warnings():
+            """
+            Suppressing warnings for
+            1. possible precision loss when converting from float64 to uint8
+            2. anti-aliasing will be enabled by default in skimage 0.15
+            """
             warnings.simplefilter("ignore")
             obs = resize(obs, (self._width, self._height))  # now it's float
             if self._dtype == np.uint8:
