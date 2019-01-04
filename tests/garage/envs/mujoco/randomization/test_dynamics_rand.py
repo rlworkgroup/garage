@@ -10,6 +10,11 @@ from garage.envs.mujoco.randomization import randomize
 from garage.envs.mujoco.randomization import Variations
 from garage.envs.mujoco.swimmer_env import SwimmerEnv
 
+MOCK_ABS = [[1.0, 1.0, 1.0], [0.9, 0.87, 0.59], [0.5, 0.5, 0.5], [1, 0.5, 1.5],
+            [0.89, 1.25, 1.36]]
+MOCK_SCALED = [[0.25, 0, 0], [0.5, 0, 0], [0.3, 0, 0], [0.7, 0, 0],
+               [0.64, 0, 0]]
+
 
 class TestDynamicsRand(unittest.TestCase):
     def setUp(self):
@@ -25,11 +30,8 @@ class TestDynamicsRand(unittest.TestCase):
         self._std_dev = self._lower_bound * 2
 
         # Properties for mocking model generation
-        self._counter = 0
-        self._mocks_abs = [[1.0, 1.0, 1.0], [0.9, 0.87, 0.59], [0.5, 0.5, 0.5],
-                           [1, 0.5, 1.5], [0.89, 1.25, 1.36]]
-        self._mocks_scaled = [[0.25, 0, 0], [0.5, 0, 0], [0.3, 0, 0],
-                              [0.7, 0, 0], [0.64, 0, 0]]
+        self._mock_counter = 0
+        self._randomizing_method = None  # defined in individual tests
 
         # ensure you have legit bounds for randomization
         assert all(self._lower_bound != 1)
@@ -46,26 +48,28 @@ class TestDynamicsRand(unittest.TestCase):
             model_xml.seek(0)
             root_node = etree.parse(model_xml)
 
-        if self._testMethodName == 'test_absolute_method':
-            mock_vals = self._mocks_abs
-        elif self._testMethodName == 'test_scaled_method':
-            mock_vals = self._mocks_scaled
+        if self._randomizing_method == Method.ABSOLUTE:
+            mock_vals = MOCK_ABS
+        elif self._randomizing_method == Method.SCALED:
+            mock_vals = MOCK_SCALED
         else:
             mock_vals = None
-            assert ValueError, "Specify mock values for new test method"
+            assert ValueError, "Specify mock values for new randomizing method"
 
         e = root_node.find("//body[@name=\'{0}\']".format(self._bodyname))
-        mock_val = str(mock_vals[self._counter]).strip("[]").replace(',', '')
-        self._counter += 1
+        mock_val = str(mock_vals[self._mock_counter]).strip("[]")\
+            .replace(',', '')
+        self._mock_counter += 1
         e.attrib[self._attribute] = mock_val
         return etree.tostring(root_node.getroot(), encoding='unicode')
 
     def test_absolute_method(self):
+        self._randomizing_method = Method.ABSOLUTE
         variations = Variations()
         variations.randomize() \
             .at_xpath("//body[@name=\'{0}\']".format(self._bodyname)) \
             .attribute("{0}".format(self._attribute)) \
-            .with_method(Method.ABSOLUTE) \
+            .with_method(self._randomizing_method) \
             .sampled_from(Distribution.UNIFORM) \
             .with_range(self._lower_bound, self._upper_bound) \
             .add()
@@ -100,11 +104,12 @@ class TestDynamicsRand(unittest.TestCase):
             "same numbers?\n {0}".format(randomized_vals))
 
     def test_scaled_method(self):
+        self._randomizing_method = Method.SCALED
         variations = Variations()
         variations.randomize() \
             .at_xpath("//body[@name=\'{0}\']".format(self._bodyname)) \
             .attribute("{0}".format(self._attribute)) \
-            .with_method(Method.SCALED) \
+            .with_method(self._randomizing_method) \
             .sampled_from(Distribution.UNIFORM) \
             .with_range(self._lower_bound, self._upper_bound) \
             .add()
@@ -139,11 +144,12 @@ class TestDynamicsRand(unittest.TestCase):
             "same numbers?\n {0}".format(randomized_vals))
 
     def test_env_step(self):
+        self._randomizing_method = Method.ABSOLUTE
         variations = Variations()
         variations.randomize() \
             .at_xpath("//body[@name=\'{0}\']".format(self._bodyname)) \
             .attribute("{0}".format(self._attribute)) \
-            .with_method(Method.ABSOLUTE) \
+            .with_method(self._randomizing_method) \
             .sampled_from(Distribution.UNIFORM) \
             .with_range(self._lower_bound, self._upper_bound) \
             .add()
@@ -152,7 +158,7 @@ class TestDynamicsRand(unittest.TestCase):
         variations.randomize() \
             .at_xpath("//body[@name=\'{0}\']".format(second_var)) \
             .attribute("{0}".format(self._attribute)) \
-            .with_method(Method.ABSOLUTE) \
+            .with_method(self._randomizing_method) \
             .sampled_from(Distribution.UNIFORM) \
             .with_range(self._lower_bound, self._upper_bound) \
             .add()
@@ -161,16 +167,17 @@ class TestDynamicsRand(unittest.TestCase):
 
         # step() shouldn't error out (so it actually steps the wrapped env)
         for j in range(5):
-            randomized_env.step(randomized_env.action_space.sample())
+            assert randomized_env.step(randomized_env.action_space.sample())
 
     def test_xml_node_exception(self):
         fake_node = "fake_node"
+        self._randomizing_method = Method.ABSOLUTE
         variations = Variations()
 
         variations.randomize() \
             .at_xpath("//body[@name=\'{0}\']".format(fake_node)) \
             .attribute("{0}".format(self._attribute)) \
-            .with_method(Method.ABSOLUTE) \
+            .with_method(self._randomizing_method) \
             .sampled_from(Distribution.UNIFORM) \
             .with_range(self._lower_bound, self._upper_bound) \
             .add()
@@ -181,12 +188,13 @@ class TestDynamicsRand(unittest.TestCase):
 
     def test_xml_attrib_exception(self):
         fake_attrib = "fake_attrib"
+        self._randomizing_method = Method.ABSOLUTE
         variations = Variations()
 
         variations.randomize() \
             .at_xpath("//body[@name=\'{0}\']".format(self._bodyname)) \
             .attribute("{0}".format(fake_attrib)) \
-            .with_method(Method.ABSOLUTE) \
+            .with_method(self._randomizing_method) \
             .sampled_from(Distribution.UNIFORM) \
             .with_range(self._lower_bound, self._upper_bound) \
             .add()
@@ -196,12 +204,13 @@ class TestDynamicsRand(unittest.TestCase):
         assert fake_attrib in str(context.exception)
 
     def test_exception_gaussian_dist(self):
+        self._randomizing_method = Method.ABSOLUTE
         variations = Variations()
         with self.assertRaises(ValueError) as context:
             variations.randomize() \
                 .at_xpath("//body[@name=\'{0}\']".format(self._bodyname)) \
                 .attribute("{0}".format(self._attribute)) \
-                .with_method(Method.ABSOLUTE) \
+                .with_method(self._randomizing_method) \
                 .sampled_from(Distribution.GAUSSIAN) \
                 .with_range(self._lower_bound, self._upper_bound) \
                 .add()
@@ -210,11 +219,12 @@ class TestDynamicsRand(unittest.TestCase):
 
     def test_exception_bad_distribution(self):
         # Use unused distribution Enum value for test
+        self._randomizing_method = Method.ABSOLUTE
         variations = Variations()
         variations.randomize() \
             .at_xpath("//body[@name=\'{0}\']".format(self._bodyname)) \
             .attribute("{0}".format(self._attribute)) \
-            .with_method(Method.ABSOLUTE) \
+            .with_method(self._randomizing_method) \
             .sampled_from(3) \
             .with_range(self._lower_bound, self._upper_bound) \
             .add()
@@ -226,12 +236,13 @@ class TestDynamicsRand(unittest.TestCase):
         assert "Unknown distribution" in str(context.exception)
 
     def test_exception_uniform_dist(self):
+        self._randomizing_method = Method.ABSOLUTE
         variations = Variations()
         with self.assertRaises(ValueError) as context:
             variations.randomize() \
                 .at_xpath("//body[@name=\'{0}\']".format(self._bodyname)) \
                 .attribute("{0}".format(self._attribute)) \
-                .with_method(Method.ABSOLUTE) \
+                .with_method(self._randomizing_method) \
                 .sampled_from(Distribution.UNIFORM) \
                 .with_mean_std(self._lower_bound, self._upper_bound) \
                 .add()
@@ -239,12 +250,13 @@ class TestDynamicsRand(unittest.TestCase):
                in str(context.exception)
 
     def test_exception_bad_sampling_method(self):
-        # Use unused distribution Enum value for test
+        # Use unused Enum value for test
+        self._randomizing_method = 3
         variations = Variations()
         variations.randomize() \
             .at_xpath("//body[@name=\'{0}\']".format(self._bodyname)) \
             .attribute("{0}".format(self._attribute)) \
-            .with_method(3) \
+            .with_method(self._randomizing_method) \
             .sampled_from(Distribution.UNIFORM) \
             .with_range(self._lower_bound, self._upper_bound) \
             .add()
@@ -256,11 +268,12 @@ class TestDynamicsRand(unittest.TestCase):
         assert "Unknown method" in str(context.exception)
 
     def test_prop_elem(self):
+        self._randomizing_method = Method.ABSOLUTE
         variations = Variations()
         variations.randomize() \
             .at_xpath("//body[@name=\'{0}\']".format(self._bodyname)) \
             .attribute("{0}".format(self._attribute)) \
-            .with_method(Method.ABSOLUTE) \
+            .with_method(self._randomizing_method) \
             .sampled_from(Distribution.UNIFORM) \
             .with_range(self._lower_bound, self._upper_bound) \
             .add()
@@ -272,11 +285,12 @@ class TestDynamicsRand(unittest.TestCase):
         assert variations.get_list() == []
 
     def test_prop_default(self):
+        self._randomizing_method = Method.ABSOLUTE
         variations = Variations()
         variations.randomize() \
             .at_xpath("//body[@name=\'{0}\']".format(self._bodyname)) \
             .attribute("{0}".format(self._attribute)) \
-            .with_method(Method.ABSOLUTE) \
+            .with_method(self._randomizing_method) \
             .sampled_from(Distribution.UNIFORM) \
             .with_range(self._lower_bound, self._upper_bound) \
             .add()
@@ -284,11 +298,12 @@ class TestDynamicsRand(unittest.TestCase):
         assert variations.get_list()[0].default is None
 
     def test_prop_mean_std(self):
+        self._randomizing_method = Method.ABSOLUTE
         variations = Variations()
         variations.randomize() \
             .at_xpath("//body[@name=\'{0}\']".format(self._bodyname)) \
             .attribute("{0}".format(self._attribute)) \
-            .with_method(Method.ABSOLUTE) \
+            .with_method(self._randomizing_method) \
             .sampled_from(Distribution.GAUSSIAN) \
             .with_mean_std(self._mean, self._std_dev) \
             .add()
