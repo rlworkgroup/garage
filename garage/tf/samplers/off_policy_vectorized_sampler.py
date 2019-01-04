@@ -58,7 +58,7 @@ class OffPolicyVectorizedSampler(BatchSampler):
         self.vec_env.close()
 
     @overrides
-    def obtain_samples(self, itr):
+    def obtain_samples(self, itr, sess=None):
         """
         Collect samples for the given iteration number.
 
@@ -87,7 +87,7 @@ class OffPolicyVectorizedSampler(BatchSampler):
                 input_obses = obses
             if self.algo.es:
                 actions, agent_infos = self.algo.es.get_actions(
-                    input_obses, self.algo.policy)
+                    itr, input_obses, self.algo.policy, sess)
             else:
                 actions, agent_infos = self.algo.policy.get_actions(
                     input_obses)

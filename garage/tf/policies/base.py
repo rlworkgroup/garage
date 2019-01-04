@@ -8,10 +8,10 @@ class Policy(Parameterized):
 
     # Should be implemented by all policies
 
-    def get_action(self, observation):
+    def get_action(self, observation, sess=None):
         raise NotImplementedError
 
-    def get_actions(self, observations):
+    def get_actions(self, observations, sess=None):
         raise NotImplementedError
 
     def reset(self, dones=None):

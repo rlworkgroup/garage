@@ -64,7 +64,7 @@ class OUStrategy(ExplorationStrategy):
             self.action_dim)
 
     @overrides
-    def get_action(self, t, observation, policy, **kwargs):
+    def get_action(self, t, observation, policy):
         """Return an action with noise.
 
         Args:
@@ -81,7 +81,8 @@ class OUStrategy(ExplorationStrategy):
         return np.clip(action + ou_state, self.action_space.low,
                        self.action_space.high), agent_infos
 
-    def get_actions(self, observations, policy):
+    @overrides
+    def get_actions(self, t, observations, policy):
         actions, agent_infos = policy.get_actions(observations)
         ou_state = self.simulate()
         return np.clip(actions + ou_state, self.action_space.low,
