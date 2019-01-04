@@ -45,9 +45,9 @@ class Box(Space):
             self.dtype = dtype
 
     def sample(self):
+        high = self.high + 1 if self.dtype == np.uint8 else self.high
         return np.random.uniform(
-            low=self.low, high=self.high,
-            size=self.low.shape).astype(self.dtype)
+            low=self.low, high=high, size=self.low.shape).astype(self.dtype)
 
     def contains(self, x):
         return x.shape == self.shape and (x >= self.low).all() and (

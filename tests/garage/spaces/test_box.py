@@ -40,6 +40,10 @@ class TestBox(unittest.TestCase):
         box = Box(low=np.array([-1.0, -2.0]), high=np.array([1.0, 2.0]))
         assert box.dtype == np.float32
 
+    def test_uint8_action_coverage(self):
+        box = Box(low=0, high=3, shape=(10, 10), dtype=np.uint8)
+        assert set([0, 1, 2, 3]).issubset(set(box.sample().flatten()))
+
     def test_uint8_env(self):
         box = Box(low=0, high=255, shape=(3, 4))
         assert box.dtype == np.uint8
