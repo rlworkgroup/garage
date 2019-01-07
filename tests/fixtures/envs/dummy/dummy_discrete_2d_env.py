@@ -2,14 +2,15 @@ import gym
 import numpy as np
 
 
-class DummyDiscreteEnv(gym.Env):
+class DummyDiscrete2DEnv(gym.Env):
     """A dummy discrete environment."""
 
     @property
     def observation_space(self):
         """Return an observation space."""
+        self.shape = (2, 2)
         return gym.spaces.Box(
-            low=-np.inf, high=np.inf, shape=(1, ), dtype=np.float32)
+            low=-np.inf, high=np.inf, shape=self.shape, dtype=np.float32)
 
     @property
     def action_space(self):
@@ -18,7 +19,7 @@ class DummyDiscreteEnv(gym.Env):
 
     def reset(self):
         """Reset the environment."""
-        return np.zeros(1)
+        return np.zeros(self.shape)
 
     def step(self, action):
         """Step the environment."""
