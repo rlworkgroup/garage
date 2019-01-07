@@ -7,7 +7,6 @@ import numpy as np
 
 from garage.exploration_strategies import ExplorationStrategy
 from garage.misc.overrides import overrides
-from garage.spaces import Box
 
 
 class EpsilonGreedyStrategy(ExplorationStrategy):
@@ -23,7 +22,7 @@ class EpsilonGreedyStrategy(ExplorationStrategy):
 
     Args:
         env_spec: Environment specification
-        total_step: Total steps in the training.
+        total_step: Total steps in the training, max_path_length * n_epochs.
         max_epsilon: The maximum(starting) value of epsilon.
         min_epsilon: The minimum(terminal) value of epsilon.
         decay_ratio: Fraction of total steps for epsilon decay.
@@ -68,12 +67,7 @@ class EpsilonGreedyStrategy(ExplorationStrategy):
         opt_action = policy.get_action(observation, sess)
 
         if np.random.random() < self._epsilon:
-            if isinstance(self._action_space, Box):
-                opt_action = np.random.uniform(self._action_space.low,
-                                               self._action_space.high,
-                                               self._action_space.shape)
-            else:
-                opt_action = np.random.randint(0, self._action_space.n)
+            opt_action = self._action_space.sample()
 
         return opt_action
 
@@ -98,12 +92,6 @@ class EpsilonGreedyStrategy(ExplorationStrategy):
         opt_actions = policy.get_actions(observations, sess)
         for itr in range(len(opt_actions)):
             if np.random.random() < self._epsilon:
-                if isinstance(self._action_space, Box):
-                    opt_actions[itr] = np.random.uniform(
-                        self._action_space.low, self._action_space.high,
-                        self._action_space.shape)
-                else:
-                    opt_actions[itr] = np.random.randint(
-                        0, self._action_space.n)
+                opt_actions[itr] = self._action_space.sample()
 
         return opt_actions

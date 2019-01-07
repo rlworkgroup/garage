@@ -7,47 +7,34 @@ from unittest import mock
 import numpy as np
 import tensorflow as tf
 
-from garage.misc.overrides import overrides
-from garage.spaces import Box
-from garage.spaces import Discrete
 from garage.tf.core.mlp import mlp
-from garage.tf.policies import QfDerivedPolicy
+from garage.tf.envs import TfEnv
+from garage.tf.policies import DiscreteQfDerivedPolicy
 from tests.fixtures import TfGraphTestCase
+from tests.fixtures.envs.dummy import DummyDiscreteEnv
 
 
 class TestQfDerivedPolicy(TfGraphTestCase):
-    @overrides
-    def setUp(self):
-        self.observation_shape = (4, )
-        self.action_shape = 2
-        self.env = mock.Mock()
-        env_spec = mock.Mock()
-        env_spec.observation_space = Box(
-            low=0, high=1, shape=self.observation_shape)
-        env_spec.action_space = Discrete(self.action_shape)
-        self.env.env_spec = env_spec
-        self.env.reset.return_value = np.zeros(self.observation_shape)
-        self.env.step.side_effect = self._step
-
-        super().setUp()
-
-    def _step(self, action):
-        return np.random.uniform(0., 1.,
-                                 self.observation_shape), 0, False, dict()
-
-    def test_qf_derived_policy(self):
-        obs_ph = tf.placeholder(tf.float32, shape=(None, 4))
-        qf = mlp(
+    def test_discrete_qf_derived_policy(self):
+        # mock a q_function
+        env = TfEnv(DummyDiscreteEnv())
+        obs_ph = tf.placeholder(
+            tf.float32, shape=(None, ) + env.observation_space.shape)
+        qf_function = mock.Mock()
+        qf_function.q_val = mlp(
             input_var=obs_ph,
-            output_dim=2,
+            output_dim=env.action_space.flat_dim,
             hidden_sizes=(32, 32),
             hidden_nonlinearity=tf.nn.relu,
             name="mlp")
-        policy = QfDerivedPolicy(
-            env_spec=self.env.env_spec, qf=qf, obs_ph=obs_ph)
+        qf_function.obs_ph = obs_ph
+
+        policy = DiscreteQfDerivedPolicy(env_spec=env, qf=qf_function)
 
         self.sess.run(tf.global_variables_initializer())
 
-        obs, _, _, _ = self.env.step(1)
-        policy.get_action(obs, self.sess)
-        policy.get_actions([obs], self.sess)
+        obs, _, _, _ = env.step(1)
+        action = policy.get_action(obs, self.sess)
+        assert action in np.arange(env.action_space.n)
+        actions = policy.get_actions([obs], self.sess)
+        assert actions in np.arange(env.action_space.n)

@@ -126,12 +126,12 @@ class ContinuousMLPPolicy(Policy, LayersPowered, Serializable):
             return tf.multiply(actions, self._action_bound)
 
     @overrides
-    def get_action(self, observation):
+    def get_action(self, observation, sess=None):
         """Return a single action."""
         return self._f_prob_online([observation])[0], dict()
 
     @overrides
-    def get_actions(self, observations):
+    def get_actions(self, observations, sess=None):
         """Return multiple actions."""
         return self._f_prob_online(observations), dict()
 

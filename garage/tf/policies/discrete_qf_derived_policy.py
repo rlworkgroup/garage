@@ -11,24 +11,22 @@ from garage.spaces import Discrete
 from garage.tf.policies import Policy
 
 
-class QfDerivedPolicy(Policy, Serializable):
+class DiscreteQfDerivedPolicy(Policy, Serializable):
     """
-    QfDerived policy.
+    DiscreteQfDerived policy.
 
     Args:
         env_spec: Environment specification.
         qf: The q-function used.
-        obs_ph: The place holder for observation.
     """
 
-    def __init__(self, env_spec, qf, obs_ph):
+    def __init__(self, env_spec, qf):
         Serializable.quick_init(self, locals())
         super().__init__(env_spec)
 
         assert isinstance(env_spec.action_space, Discrete)
         self._env_spec = env_spec
         self._qf = qf
-        self._obs_ph = obs_ph
 
     @property
     def vectorized(self):
@@ -42,12 +40,14 @@ class QfDerivedPolicy(Policy, Serializable):
 
         Args:
             observation: Observation from environment.
+            sess: tf.Session provided.
 
         Returns:
             opt_action: Optimal action from this policy.
 
         """
-        q_vals = sess.run(self._qf, feed_dict={self._obs_ph: [observation]})
+        q_vals = sess.run(
+            self._qf.q_val, feed_dict={self._qf.obs_ph: [observation]})
         opt_action = np.argmax(q_vals)
 
         return opt_action
@@ -59,12 +59,14 @@ class QfDerivedPolicy(Policy, Serializable):
 
         Args:
             observations: Observations from environment.
+            sess: tf.Session provided.
 
         Returns:
             opt_actions: Optimal actions from this policy.
 
         """
-        q_vals = sess.run(self._qf, feed_dict={self._obs_ph: observations})
+        q_vals = sess.run(
+            self._qf.q_val, feed_dict={self._qf.obs_ph: observations})
         opt_actions = np.argmax(q_vals, axis=1)
 
         return opt_actions
