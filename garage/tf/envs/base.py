@@ -42,7 +42,7 @@ class TfEnv(GarageEnv):
             space (garage.tf.spaces)
         """
         if isinstance(space, GymBox):
-            return Box(low=space.low, high=space.high)
+            return Box(low=space.low, high=space.high, dtype=space.dtype)
         elif isinstance(space, GymDict):
             return Dict(space.spaces)
         elif isinstance(space, GymDiscrete):
