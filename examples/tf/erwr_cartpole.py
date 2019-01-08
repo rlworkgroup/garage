@@ -1,11 +1,11 @@
 """
 This is an example to train a task with ERWR algorithm.
 
-Here it run CartpoleEnv on ERWR with 40 iterations.
+Here it runs CartpoleEnv on ERWR with 100 iterations.
 
 Results:
-    AverageDiscountedReturn: 120
-    RiseTime: itr 2
+    AverageReturn: 600
+    RiseTime: itr 57
 """
 from garage.baselines import LinearFeatureBaseline
 from garage.envs import normalize
@@ -31,7 +31,7 @@ def run_task(*_):
         baseline=baseline,
         batch_size=10000,
         max_path_length=100,
-        n_itr=40,
+        n_itr=100,
         discount=0.99)
     algo.train()
 

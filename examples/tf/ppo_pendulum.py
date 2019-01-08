@@ -39,7 +39,7 @@ def run_task(*_):
         max_path_length=100,
         n_itr=488,
         discount=0.99,
-        step_size=0.01,
+        lr_clip_range=0.01,
         optimizer_args=dict(batch_size=32, max_epochs=10),
         plot=False)
     algo.train()
