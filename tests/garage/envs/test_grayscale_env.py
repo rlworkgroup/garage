@@ -13,8 +13,8 @@ from tests.fixtures.envs.dummy import DummyDiscretePixelEnv
 class TestGrayscale(unittest.TestCase):
     @overrides
     def setUp(self):
-        self.env = TfEnv(DummyDiscretePixelEnv())
-        self.env_g = TfEnv(Grayscale(DummyDiscretePixelEnv()))
+        self.env = TfEnv(DummyDiscretePixelEnv(random=False))
+        self.env_g = TfEnv(Grayscale(DummyDiscretePixelEnv(random=False)))
 
     def test_gray_scale_invalid_environment_type(self):
         with self.assertRaises(ValueError):
@@ -28,8 +28,8 @@ class TestGrayscale(unittest.TestCase):
             Grayscale(self.env)
 
     def test_grayscale_observation_space(self):
-        assert self.env_g.observation_space.shape == \
-            self.env.observation_space.shape[:-1]
+        assert self.env_g.observation_space.shape == (
+            self.env.observation_space.shape[:-1])
 
     def test_grayscale_reset(self):
         """
@@ -48,8 +48,10 @@ class TestGrayscale(unittest.TestCase):
                                              self.env_g.reset())
 
     def test_grayscale_step(self):
-        obs, _, _, _ = self.env.step(0)
-        obs_g, _, _, _ = self.env_g.step(0)
+        self.env.reset()
+        self.env_g.reset()
+        obs, _, _, _ = self.env.step(1)
+        obs_g, _, _, _ = self.env_g.step(1)
 
         gray_scale_output = np.round(
             np.dot(obs[:, :, :3], [0.2125, 0.7154, 0.0721])).astype(np.uint8)

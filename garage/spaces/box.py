@@ -36,8 +36,8 @@ class Box(Space):
         if dtype is None:
             if (self.low == 0).all() and (self.high == 255).all():
                 self.dtype = np.uint8
-                warnings.warn("garage.spaces.Box detected dtype as np.uint8.\
-                    Please provide explicit dtype.")
+                warnings.warn("garage.spaces.Box detected dtype as np.uint8. "
+                              "Please provide explicit dtype.")
             else:
                 self.dtype = np.float32
 

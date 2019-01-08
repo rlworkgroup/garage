@@ -37,6 +37,6 @@ class TestResize(unittest.TestCase):
         assert self.env_r.reset().shape == (self.width, self.height)
 
     def test_resize_output_step(self):
-        obs_r, _, _, _ = self.env_r.step(0)
-
+        self.env_r.reset()
+        obs_r, _, _, _ = self.env_r.step(1)
         assert obs_r.shape == (self.width, self.height)

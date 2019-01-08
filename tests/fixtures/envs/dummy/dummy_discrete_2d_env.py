@@ -1,16 +1,21 @@
 import gym
 import numpy as np
 
+from tests.fixtures.envs.dummy import DummyEnv
 
-class DummyDiscrete2DEnv(gym.Env):
+
+class DummyDiscrete2DEnv(DummyEnv):
     """A dummy discrete environment."""
+
+    def __init__(self, random=True):
+        super().__init__(random)
 
     @property
     def observation_space(self):
         """Return an observation space."""
         self.shape = (2, 2)
         return gym.spaces.Box(
-            low=-np.inf, high=np.inf, shape=self.shape, dtype=np.float32)
+            low=-1, high=1, shape=self.shape, dtype=np.float32)
 
     @property
     def action_space(self):
@@ -19,8 +24,17 @@ class DummyDiscrete2DEnv(gym.Env):
 
     def reset(self):
         """Reset the environment."""
-        return np.zeros(self.shape)
+        self.state = np.zeros(self.shape)
+        return self.state
 
     def step(self, action):
         """Step the environment."""
-        return self.observation_space.sample(), 0, True, dict()
+        if self.state is not None:
+            if self.random:
+                obs = self.observation_space.sample()
+            else:
+                obs = self.state + action / 10.
+        else:
+            raise RuntimeError(
+                "DummyEnv: reset() must be called before step()!")
+        return obs, 0, True, dict()

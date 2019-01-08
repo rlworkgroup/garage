@@ -14,9 +14,10 @@ class TestStackFrames(unittest.TestCase):
     @overrides
     def setUp(self):
         self.n_frames = 4
-        self.env = TfEnv(DummyDiscrete2DEnv())
+        self.env = TfEnv(DummyDiscrete2DEnv(random=False))
         self.env_s = TfEnv(
-            StackFrames(DummyDiscrete2DEnv(), n_frames=self.n_frames))
+            StackFrames(
+                DummyDiscrete2DEnv(random=False), n_frames=self.n_frames))
         self.width, self.height = self.env.observation_space.shape
 
     def test_stack_frames_invalid_environment_type(self):
@@ -42,12 +43,14 @@ class TestStackFrames(unittest.TestCase):
         np.testing.assert_array_equal(self.env_s.reset(), frame_stack)
 
     def test_stack_frames_for_step(self):
+        self.env.reset()
+        self.env_s.reset()
+
         frame_stack = np.empty((self.width, self.height, self.n_frames))
         for i in range(10):
             frame_stack = frame_stack[:, :, 1:]
-            obs, _, _, _ = self.env.step(0)
+            obs, _, _, _ = self.env.step(1)
             frame_stack = np.dstack((frame_stack, obs))
+            obs_stack, _, _, _ = self.env_s.step(1)
 
-        self.env_s.reset()
-        obs_stack, _, _, _ = self.env_s.step(0)
         np.testing.assert_array_equal(obs_stack, frame_stack)
