@@ -11,7 +11,7 @@ class Box(Space):
     I.e., each coordinate is bounded.
     """
 
-    def __init__(self, low, high, shape=None, dtype=None):
+    def __init__(self, low, high, shape=None, dtype=np.float32):
         """
         Two kinds of valid input:
             Box(-1.0, 1.0, (3,4)) # low and high are scalars, and shape is
@@ -33,16 +33,11 @@ class Box(Space):
             self.low = low + np.zeros(shape)
             self.high = high + np.zeros(shape)
 
-        if dtype is None:
-            if (self.low == 0).all() and (self.high == 255).all():
-                self.dtype = np.uint8
-                warnings.warn("garage.spaces.Box detected dtype as np.uint8. "
-                              "Please provide explicit dtype.")
-            else:
-                self.dtype = np.float32
+        if (self.low == 0).all() and (self.high == 255).all():
+            warnings.warn("garage.spaces.Box detected dtype as np.uint8. "
+                          "Please provide explicit dtype.")
 
-        else:
-            self.dtype = dtype
+        self.dtype = dtype
 
     def sample(self):
         if self.dtype == np.uint8:

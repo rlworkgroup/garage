@@ -33,16 +33,18 @@ class TestBox(unittest.TestCase):
                 high=np.array([1.0, 2.0]),
                 shape=(2, 2))
 
-    def test_float32_env(self):
+    def test_default_float32_env(self):
         box = Box(low=0.0, high=1.0, shape=(3, 4))
         assert box.dtype == np.float32
 
         box = Box(low=np.array([-1.0, -2.0]), high=np.array([1.0, 2.0]))
         assert box.dtype == np.float32
 
-    def test_uint8_env(self):
-        box = Box(low=0, high=255, shape=(3, 4))
-        assert box.dtype == np.uint8
+    def test_uint8_warning_env(self):
+        with self.assertWarns(UserWarning):
+            box = Box(low=0, high=255, shape=(3, 4))
+            assert box.dtype == np.float32
 
-        box = Box(low=np.array([0, 0]), high=np.array([255, 255]))
-        assert box.dtype == np.uint8
+        with self.assertWarns(UserWarning):
+            box = Box(low=np.array([0, 0]), high=np.array([255, 255]))
+            assert box.dtype == np.float32
