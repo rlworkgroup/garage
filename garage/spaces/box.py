@@ -33,9 +33,10 @@ class Box(Space):
             self.low = low + np.zeros(shape)
             self.high = high + np.zeros(shape)
 
-        if (self.low == 0).all() and (self.high == 255).all():
-            warnings.warn("garage.spaces.Box detected dtype as np.uint8. "
-                          "Please provide explicit dtype.")
+        if (self.low == 0).all() and (
+                self.high == 255).all() and dtype != np.uint8:
+            warnings.warn("Creating a garage.spaces.Box with low=0, high=255 "
+                          "and dtype=np.float32.")
 
         self.dtype = dtype
 
