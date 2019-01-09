@@ -29,7 +29,7 @@ class BatchSampler(BaseSampler):
     def shutdown_worker(self):
         parallel_sampler.terminate_task(scope=self.algo.scope)
 
-    def obtain_samples(self, itr, sess=None):
+    def obtain_samples(self, itr):
         cur_policy_params = self.algo.policy.get_param_values()
         paths = parallel_sampler.sample_paths(
             policy_params=cur_policy_params,

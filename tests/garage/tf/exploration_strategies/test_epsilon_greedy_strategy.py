@@ -43,8 +43,7 @@ class TestEpsilonGreedyStrategy(TfGraphTestCase):
 
         obs, _, _, _ = env.step(1)
 
-        action = epilson_greedy_strategy.get_action(0, obs, policy, self.sess)
+        action = epilson_greedy_strategy.get_action(0, obs, policy)
         assert action in np.arange(env.action_space.n)
-        actions = epilson_greedy_strategy.get_actions(0, [obs], policy,
-                                                      self.sess)
+        actions = epilson_greedy_strategy.get_actions(0, [obs], policy)
         assert actions in np.arange(env.action_space.n)

@@ -4,6 +4,7 @@ QfDerived policy.
 This policy chooses the action that yields to the largest q-value.
 """
 import numpy as np
+import tensorflow as tf
 
 from garage.core import Serializable
 from garage.misc.overrides import overrides
@@ -34,7 +35,7 @@ class DiscreteQfDerivedPolicy(Policy, Serializable):
         return True
 
     @overrides
-    def get_action(self, observation, sess=None):
+    def get_action(self, observation):
         """
         Get action from this policy for the input observation.
 
@@ -46,6 +47,7 @@ class DiscreteQfDerivedPolicy(Policy, Serializable):
             opt_action: Optimal action from this policy.
 
         """
+        sess = tf.get_default_session()
         q_vals = sess.run(
             self._qf.q_val, feed_dict={self._qf.obs_ph: [observation]})
         opt_action = np.argmax(q_vals)
@@ -53,7 +55,7 @@ class DiscreteQfDerivedPolicy(Policy, Serializable):
         return opt_action
 
     @overrides
-    def get_actions(self, observations, sess=None):
+    def get_actions(self, observations):
         """
         Get actions from this policy for the input observations.
 
@@ -65,6 +67,7 @@ class DiscreteQfDerivedPolicy(Policy, Serializable):
             opt_actions: Optimal actions from this policy.
 
         """
+        sess = tf.get_default_session()
         q_vals = sess.run(
             self._qf.q_val, feed_dict={self._qf.obs_ph: observations})
         opt_actions = np.argmax(q_vals, axis=1)

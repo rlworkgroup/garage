@@ -34,7 +34,7 @@ class TestQfDerivedPolicy(TfGraphTestCase):
         self.sess.run(tf.global_variables_initializer())
 
         obs, _, _, _ = env.step(1)
-        action = policy.get_action(obs, self.sess)
+        action = policy.get_action(obs)
         assert action in np.arange(env.action_space.n)
-        actions = policy.get_actions([obs], self.sess)
+        actions = policy.get_actions([obs])
         assert actions in np.arange(env.action_space.n)

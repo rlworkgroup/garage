@@ -47,7 +47,7 @@ class EpsilonGreedyStrategy(ExplorationStrategy):
         self._epsilon = self._max_epsilon
 
     @overrides
-    def get_action(self, t, observation, policy, sess=None, **kwargs):
+    def get_action(self, t, observation, policy, **kwargs):
         """
         Get action from this policy for the input observation.
 
@@ -64,7 +64,7 @@ class EpsilonGreedyStrategy(ExplorationStrategy):
             self._epsilon -= (
                 self._max_epsilon - self._min_epsilon) / self._decay_period
 
-        opt_action = policy.get_action(observation, sess)
+        opt_action = policy.get_action(observation)
 
         if np.random.random() < self._epsilon:
             opt_action = self._action_space.sample()
@@ -72,7 +72,7 @@ class EpsilonGreedyStrategy(ExplorationStrategy):
         return opt_action
 
     @overrides
-    def get_actions(self, t, observations, policy, sess=None, **kwargs):
+    def get_actions(self, t, observations, policy, **kwargs):
         """
         Get actions from this policy for the input observations.
 
@@ -89,7 +89,7 @@ class EpsilonGreedyStrategy(ExplorationStrategy):
             self._epsilon -= (
                 self._max_epsilon - self._min_epsilon) / self._decay_period
 
-        opt_actions = policy.get_actions(observations, sess)
+        opt_actions = policy.get_actions(observations)
         for itr in range(len(opt_actions)):
             if np.random.random() < self._epsilon:
                 opt_actions[itr] = self._action_space.sample()
