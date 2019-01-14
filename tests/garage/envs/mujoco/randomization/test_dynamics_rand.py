@@ -219,7 +219,7 @@ class TestDynamicsRand(unittest.TestCase):
 
     def test_exception_bad_distribution(self):
         # Use unused distribution Enum value for test
-        self._randomizing_method = Method.ABSOLUTE
+        self._randomizing_method = Method.SCALED
         variations = Variations()
         variations.randomize() \
             .at_xpath("//body[@name=\'{0}\']".format(self._bodyname)) \
