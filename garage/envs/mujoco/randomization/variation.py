@@ -8,9 +8,9 @@ class Method(Enum):
     """
     The random coefficient is applied according to these methods.
     """
-    """ The randomization is the product of the coefficient and the dynamic parameter """
-    COEFFICIENT = 1
-    """ The randomization is equal to the coefficient """
+    # Randomization = coefficient * dynamic parameter
+    SCALED = 1
+    # Randomization = coefficient
     ABSOLUTE = 2
 
 
@@ -28,7 +28,7 @@ class Variation:
     """
     Each dynamic parameter to be randomized is represented by a Variation. This
     class works more like a data structure to store the data fields required
-    to find the corresponding dynamic parameter and apply the randomization to it.
+    to find the corresponding dynamic parameter and apply randomization to it.
     """
 
     def __init__(self,
@@ -158,6 +158,7 @@ class Variations:
         string
             XML string of the model with the randomized dynamic parameters
         """
+
         for v in self._list:
             e = self._elem_cache[v]
             if v.distribution == Distribution.GAUSSIAN:
@@ -169,18 +170,21 @@ class Variations:
 
             # Check if the sampled value has the same shape with default value
             if np.array(c).shape != np.array(self._default_cache[v]).shape:
-                raise ValueError(
-                    "Sampled value you input %s don't match with default value %s in the xml node %s"
-                    % (c, self._default_cache[v], v.xpath))
+                raise ValueError("Sampled value you input {0} does not match "
+                                 "with default value {1} in the xml node {2}"
+                                 .format(c, self._default_cache[v], v.xpath))
 
-            if v.method == Method.COEFFICIENT:
-                e.attrib[v.attrib] = str(c * self._default_cache[v])
+            if v.method == Method.SCALED:
+                # store attrib. convert numpy print to xml-friendly print
+                e.attrib[v.attrib] = str(
+                    c * self._default_cache[v]).strip("[]").replace(',', '')
             elif v.method == Method.ABSOLUTE:
-                e.attrib[v.attrib] = str(c)
+                # store attrib. convert numpy print to xml-friendly print
+                e.attrib[v.attrib] = str(c).strip("[]").replace(',', '')
             else:
                 raise ValueError("Unknown method")
 
-        return etree.tostring(self._parsed_model.getroot()).decode("ascii")
+        return etree.tostring(self._parsed_model.getroot(), encoding='unicode')
 
     def get_list(self):
         """
@@ -212,8 +216,8 @@ class VariationSpec:
         self._attrib = None
         self._method = Method.ABSOLUTE
         self._distribution = Distribution.UNIFORM
-        self._mean_std = (0.0, 1.0)
-        self._var_range = (0.0, 1.0)
+        self._mean_std = None  # needs to be user specified
+        self._var_range = None  # needs to be user specified
         self._elem = None
         self._default = None
 
