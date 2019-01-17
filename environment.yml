@@ -10,7 +10,6 @@ dependencies:
     # cma requires numpy to install
     - numpy==1.14.5
     # dev dependencies below this line
-    - pre_commit
     - pip:
         # Please keep alphabetized
         - awscli
@@ -41,6 +40,7 @@ dependencies:
         - path.py
         - git+https://github.com/plotly/plotly.py.git@2594076e29584ede2d09f2aa40a8a195b3f3fc66#egg=plotly
         - polling
+        - pre_commit
         - protobuf
         - psutil
         - pygame
