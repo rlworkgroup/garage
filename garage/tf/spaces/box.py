@@ -18,19 +18,10 @@ class Box(GarageBox):
         """
         if flatten:
             return tf.placeholder(
-                tf.float32,
+                self.dtype,
                 shape=[None] * extra_dims + [self.flat_dim],
                 name=name)
         return tf.placeholder(
-            tf.float32,
+            self.dtype,
             shape=[None] * extra_dims + list(self.shape),
             name=name)
-
-    @property
-    def dtype(self):
-        """
-        Return the Tensor element's type.
-
-        :return: data type of the Tensor element
-        """
-        return tf.float32

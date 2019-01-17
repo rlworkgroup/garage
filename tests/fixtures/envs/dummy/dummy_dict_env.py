@@ -1,9 +1,14 @@
 import gym
 import numpy as np
 
+from tests.fixtures.envs.dummy import DummyEnv
 
-class DummyDictEnv(gym.Env):
+
+class DummyDictEnv(DummyEnv):
     """A dummy dict environment."""
+
+    def __init__(self, random=True):
+        super().__init__(random)
 
     @property
     def observation_space(self):

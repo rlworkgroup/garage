@@ -1,8 +1,11 @@
 """Grayscale wrapper for gym.Env."""
+import warnings
+
 import gym
 from gym.spaces import Box
 import numpy as np
 from skimage import color
+from skimage import img_as_ubyte
 
 
 class Grayscale(gym.Wrapper):
@@ -40,11 +43,13 @@ class Grayscale(gym.Wrapper):
 
         _low = env.observation_space.low.flatten()[0]
         _high = env.observation_space.high.flatten()[0]
+        assert _low == 0
+        assert _high == 255
         self._observation_space = Box(
             _low,
             _high,
             shape=env.observation_space.shape[:-1],
-            dtype=np.float32)
+            dtype=np.uint8)
 
     @property
     def observation_space(self):
@@ -56,8 +61,13 @@ class Grayscale(gym.Wrapper):
         self._observation_space = observation_space
 
     def _observation(self, obs):
-        obs = color.rgb2gray(np.asarray(obs, dtype=np.uint8))
-        return obs
+        with warnings.catch_warnings():
+            """
+            Suppressing warning for possible precision loss
+            when converting from float64 to uint8
+            """
+            warnings.simplefilter("ignore")
+            return img_as_ubyte(color.rgb2gray((obs)))
 
     def reset(self):
         """gym.Env reset function."""

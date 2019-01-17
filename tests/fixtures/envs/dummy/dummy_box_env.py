@@ -1,15 +1,19 @@
 import gym
 import numpy as np
 
+from tests.fixtures.envs.dummy import DummyEnv
 
-class DummyBoxEnv(gym.Env):
+
+class DummyBoxEnv(DummyEnv):
     """A dummy box environment."""
+
+    def __init__(self, random=True):
+        super().__init__(random)
 
     @property
     def observation_space(self):
         """Return an observation space."""
-        return gym.spaces.Box(
-            low=-np.inf, high=np.inf, shape=(1, ), dtype=np.float32)
+        return gym.spaces.Box(low=-1, high=1, shape=(1, ), dtype=np.float32)
 
     @property
     def action_space(self):
@@ -23,4 +27,4 @@ class DummyBoxEnv(gym.Env):
 
     def step(self, action):
         """Step the environment."""
-        return np.zeros(1), 0, True, dict()
+        return self.observation_space.sample(), 0, True, dict()

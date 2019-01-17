@@ -1,7 +1,10 @@
 """Resize wrapper for gym.Env."""
+import warnings
+
 import gym
 from gym.spaces import Box
 import numpy as np
+from skimage import img_as_ubyte
 from skimage.transform import resize
 
 
@@ -40,8 +43,9 @@ class Resize(gym.Wrapper):
 
         _low = env.observation_space.low.flatten()[0]
         _high = env.observation_space.high.flatten()[0]
+        self._dtype = env.observation_space.dtype
         self._observation_space = Box(
-            _low, _high, shape=[width, height], dtype=np.float32)
+            _low, _high, shape=[width, height], dtype=self._dtype)
 
         self._width = width
         self._height = height
@@ -56,7 +60,17 @@ class Resize(gym.Wrapper):
         self._observation_space = observation_space
 
     def _observation(self, obs):
-        return resize(obs, (self._width, self._height))
+        with warnings.catch_warnings():
+            """
+            Suppressing warnings for
+            1. possible precision loss when converting from float64 to uint8
+            2. anti-aliasing will be enabled by default in skimage 0.15
+            """
+            warnings.simplefilter("ignore")
+            obs = resize(obs, (self._width, self._height))  # now it's float
+            if self._dtype == np.uint8:
+                obs = img_as_ubyte(obs)
+        return obs
 
     def reset(self):
         """gym.Env reset function."""

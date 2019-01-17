@@ -4,7 +4,7 @@ import numpy as np
 from tests.fixtures.envs.dummy import DummyEnv
 
 
-class DummyDiscreteEnv(DummyEnv):
+class DummyDiscrete2DEnv(DummyEnv):
     """A dummy discrete environment."""
 
     def __init__(self, random=True):
@@ -13,7 +13,9 @@ class DummyDiscreteEnv(DummyEnv):
     @property
     def observation_space(self):
         """Return an observation space."""
-        return gym.spaces.Box(low=-1, high=1, shape=(1, ), dtype=np.float32)
+        self.shape = (2, 2)
+        return gym.spaces.Box(
+            low=-1, high=1, shape=self.shape, dtype=np.float32)
 
     @property
     def action_space(self):
@@ -22,7 +24,7 @@ class DummyDiscreteEnv(DummyEnv):
 
     def reset(self):
         """Reset the environment."""
-        self.state = np.zeros(1)
+        self.state = np.zeros(self.shape)
         return self.state
 
     def step(self, action):
