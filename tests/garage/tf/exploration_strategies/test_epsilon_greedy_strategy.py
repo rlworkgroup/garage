@@ -2,15 +2,13 @@
 This script creates a unittest that tests Gaussian policies in
 garage.tf.policies.
 """
-from unittest import mock
-
 import numpy as np
 import tensorflow as tf
 
-from garage.tf.core.mlp import mlp
 from garage.tf.envs import TfEnv
 from garage.tf.exploration_strategies import EpsilonGreedyStrategy
 from garage.tf.policies import DiscreteQfDerivedPolicy
+from garage.tf.q_functions import DiscreteMLPQFunction
 from tests.fixtures import TfGraphTestCase
 from tests.fixtures.envs.dummy import DummyDiscreteEnv
 
@@ -18,19 +16,8 @@ from tests.fixtures.envs.dummy import DummyDiscreteEnv
 class TestEpsilonGreedyStrategy(TfGraphTestCase):
     def test_epsilon_greedy_strategy(self):
         env = TfEnv(DummyDiscreteEnv())
-        # mock a q_function
-        obs_ph = tf.placeholder(
-            tf.float32, shape=(None, ) + env.observation_space.shape)
-        qf_function = mock.Mock()
-        qf_function.q_val = mlp(
-            input_var=obs_ph,
-            output_dim=env.action_space.flat_dim,
-            hidden_sizes=(32, 32),
-            hidden_nonlinearity=tf.nn.relu,
-            name="mlp")
-        qf_function.obs_ph = obs_ph
-
-        policy = DiscreteQfDerivedPolicy(env_spec=env, qf=qf_function)
+        qf = DiscreteMLPQFunction(env.spec)
+        policy = DiscreteQfDerivedPolicy(env_spec=env, qf=qf)
 
         epilson_greedy_strategy = EpsilonGreedyStrategy(
             env_spec=env,
@@ -41,6 +28,7 @@ class TestEpsilonGreedyStrategy(TfGraphTestCase):
 
         self.sess.run(tf.global_variables_initializer())
 
+        env.reset()
         obs, _, _, _ = env.step(1)
 
         action = epilson_greedy_strategy.get_action(0, obs, policy)

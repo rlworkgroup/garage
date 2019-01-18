@@ -4,7 +4,10 @@ from garage.tf.core import Parameterized
 
 
 class QFunction(Parameterized):
-    def build_net(self, name, input_var):
+    def build_net(self, name):
+        raise NotImplementedError
+
+    def get_qval_sym(self, input_phs):
         raise NotImplementedError
 
     def log_diagnostics(self, paths):
