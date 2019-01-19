@@ -41,7 +41,6 @@ class DiscreteMLPQFunction(QFunction):
             self.q_val, self.obs_ph = self.build_net(name)
 
     def _build_ph(self, scope):
-
         obs_dim = self._env_spec.observation_space.shape
 
         with tf.name_scope(scope):
