@@ -1,0 +1,16 @@
+version: '2.2'
+services:
+  garage-base:
+    build:
+      cache_from:
+        - ${TAG}:latest
+      context: ../
+      dockerfile: docker/Dockerfile
+    image: rlworkgroup/garage-base
+  garage-headless:
+    build:
+      context: ../
+      dockerfile: docker/Dockerfile.headless
+      args:
+        - PARENT_IMAGE=rlworkgroup/garage-base
+    image: ${TAG}

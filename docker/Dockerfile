@@ -2,7 +2,8 @@
 # and scripts/setup_macos.sh, if there's any changes applied to this file,
 # specially regarding the installation of dependencies, apply those same
 # changes to the mentioned files.
-FROM ubuntu:16.04
+ARG PARENT_IMAGE=ubuntu:16.04
+FROM $PARENT_IMAGE
 
 # http://bugs.python.org/issue19846
 # > At the moment, setting "LANG=C" on a Linux system *fundamentally breaks Python 3*, and that's not OK.
@@ -99,13 +100,6 @@ WORKDIR /root/code/garage
 COPY .pre-commit-config.yaml /root/code/garage
 RUN ["/bin/bash", "-c", "source activate garage && git init && pre-commit"]
 
-# Pull CodeClimate reporter
-RUN curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > /root/code/garage/cc-test-reporter && \
-  chmod +x /root/code/garage/cc-test-reporter
-
 # Add code stub last
 COPY . /root/code/garage
 RUN ["/bin/bash", "-c", "source activate garage && pip install -e /root/code/garage && source deactivate garage"]
-
-# Ready, set, go.
-ENTRYPOINT ["docker/docker-entrypoint.sh"]

@@ -8,6 +8,9 @@ addons:
     packages:
       - docker-ce
 
+env:
+  - DOCKER_COMPOSE_VERSION=1.23.2
+
 python:
   - "3.6.6"
 
@@ -24,49 +27,29 @@ before_install:
       "max-concurrent-uploads": 50
     }' | sudo tee /etc/docker/daemon.json
   - sudo service docker restart
-  # prevent garage from exiting on config
-  - cp garage/config_personal_template.py garage/config_personal.py
+  # Reinstall docker compose with the specified version. For more information, see:
+  # https://docs.travis-ci.com/user/docker/#using-docker-compose
+  - sudo rm /usr/local/bin/docker-compose
+  - curl -L https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose
+  - chmod +x docker-compose
+  - sudo mv docker-compose /usr/local/bin
   # Pull cached docker image
   - docker pull rlworkgroup/garage-ci:latest
+  # Pull CodeClimate reporter
+  - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > cc-test-reporter
+  - chmod +x cc-test-reporter
 
 install:
   - tag="rlworkgroup/garage-ci:${TRAVIS_BUILD_NUMBER}"
-  - |
-    docker build \
-      -f docker/Dockerfile.ci \
-      --cache-from rlworkgroup/garage-ci:latest \
-      --build-arg MJKEY="${MJKEY}" \
-      -t "${tag}" \
-      .
-
-before_script:
-  # Codecov utility to capture environment variables it needs
-  # This should be passed as an environment variable after `docker run`.
-  # e.g. `docker run ${ci_env} ...`
-  - ci_env="$(bash <(curl -s https://codecov.io/env))"
-  - |
-    docker-run() {
-      docker run \
-      ${ci_env} \
-      -e COVERALLS_REPO_TOKEN \
-      -e COVERALLS_SERVICE_NAME \
-      -e CODACY_PROJECT_TOKEN \
-      -e CC_TEST_REPORTER_ID \
-      -e TRAVIS_BRANCH \
-      -e TRAVIS_PULL_REQUEST \
-      -e TRAVIS_COMMIT_RANGE \
-      -e TRAVIS \
-      -e MJKEY \
-      "${tag}" "$@"
-    }
+  - TAG="${tag}" make build-ci
 
 script:
-  - docker-run scripts/travisci/check_precommit.sh
+  - TAG="${tag}" make run-ci RUN_CMD="scripts/travisci/check_precommit.sh"
   - |
     if [[ "${TRAVIS_EVENT_TYPE}" == "cron" ]]; then
-      docker-run scripts/travisci/check_cronjob_tests.sh
+      TAG="${tag}" make run-ci RUN_CMD="scripts/travisci/check_cronjob_tests.sh"
     else
-      docker-run scripts/travisci/check_tests.sh
+      TAG="${tag}" make run-ci RUN_CMD="scripts/travisci/check_tests.sh"
     fi
 
 after_success:
