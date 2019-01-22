@@ -1,1 +1,1 @@
-"""Garage Module."""
+"""Garage Base."""
