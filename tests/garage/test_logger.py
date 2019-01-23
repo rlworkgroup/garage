@@ -7,10 +7,7 @@ import os
 from types import SimpleNamespace
 import unittest
 
-import matplotlib.pyplot as plt
-import numpy as np
-
-from garage.misc import logger
+from garage.logger import logger, snapshotter, StdOutput, tabular
 
 
 class TestLogger(unittest.TestCase):
@@ -18,18 +15,10 @@ class TestLogger(unittest.TestCase):
         args = SimpleNamespace()
         args.args_data = ""
 
-        logger.set_snapshot_dir("exp")
-        logger.save_itr_params(1, {})
-        logger.log_parameters_lite("exp-log", args)
-        logger.log_variant("exp-log", {})
-        logger.record_tabular_misc_stat("key", 1)
+        logger.add_output(StdOutput())
+        snapshotter.set_snapshot_dir("exp")
+        snapshotter.save_itr_params(1, {})
+        tabular.record_misc_stat("key", 1)
         if os.path.isfile("exp-log"):
             os.remove("exp-log")
-
-    def test_record_matplotlib(self):
-        fig = plt.figure()
-        ax = fig.gca()
-        xs = np.arange(10.0)
-        ys = np.random.rand(10)
-        ax.scatter(xs, ys)
-        logger.record_matplotlib("foo", fig)
+        logger.log(tabular)
