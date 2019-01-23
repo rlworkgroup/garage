@@ -127,7 +127,7 @@ def rk4(derivs, y0, t, *args, **kwargs):
         ## 1D system
         alpha = 2
         def derivs(x,t):
-            return -alpha*x + exp(-t)
+            return -alpha*x + experiment(-t)
 
         y0 = 1
         yout = rk4(derivs, y0, t)

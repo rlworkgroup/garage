@@ -714,7 +714,7 @@ class SpatialExpectedSoftmaxLayer(Layer):
         with tf.name_scope(self.name, values=[input]):
             return spatial_expected_softmax(input)  # , self.temp)
         # max_ = tf.reduce_max(input, reduction_indices=[1, 2], keep_dims=True)
-        # exp = tf.exp(input - max_) + 1e-5
+        # experiment = tf.experiment(input - max_) + 1e-5
 
         # vals = []
         #
@@ -725,7 +725,7 @@ class SpatialExpectedSoftmaxLayer(Layer):
         #     lin = tf.expand_dims(lin, 0)
         #     lin = tf.expand_dims(lin, 3)
         #     m = tf.reduce_max(input, [1, 2], keep_dims=True)
-        #     e = tf.exp(input - m) + 1e-5
+        #     e = tf.experiment(input - m) + 1e-5
         #     val = tf.reduce_sum(e * lin, [1, 2]) / (tf.reduce_sum(e, [1, 2]))
         #     vals.append(tf.expand_dims(val, 2))
         #
@@ -735,7 +735,7 @@ class SpatialExpectedSoftmaxLayer(Layer):
         # import ipdb; ipdb.set_trace()
 
         # input.get_shape()
-        # exp / tf.reduce_sum(exp, reduction_indices=[1, 2], keep_dims=True)
+        # experiment / tf.reduce_sum(experiment, reduction_indices=[1, 2], keep_dims=True)
         # import ipdb;
         # ipdb.set_trace()
         # spatial softmax?
@@ -747,7 +747,7 @@ class SpatialExpectedSoftmaxLayer(Layer):
         #     lin = tf.expand_dims(lin, 0)
         #     lin = tf.expand_dims(lin, 3)
         #     m = tf.reduce_max(e, [1, 2], keep_dims=True)
-        #     e = tf.exp(e - m) + 1e-3
+        #     e = tf.experiment(e - m) + 1e-3
         #     val = tf.reduce_sum(e * lin, [1, 2]) / (tf.reduce_sum(e, [1, 2]))
 
 

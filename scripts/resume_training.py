@@ -7,8 +7,8 @@ import uuid
 import joblib
 
 from garage.algos import BatchPolopt
-from garage.experiment import to_local_command
 from garage.misc import logger
+from garage.run_experiment import to_local_command
 
 filename = str(uuid.uuid4())
 

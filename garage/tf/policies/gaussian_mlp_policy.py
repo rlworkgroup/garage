@@ -29,7 +29,7 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
                  output_nonlinearity=None,
                  mean_network=None,
                  std_network=None,
-                 std_parametrization='exp'):
+                 std_parametrization='experiment'):
         """
         :param env_spec:
         :param hidden_sizes: list of sizes for the fully-connected hidden
@@ -49,9 +49,9 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
         :param std_network: custom network for the output log std
         :param std_parametrization: how the std should be parametrized. There
          are a few options:
-            - exp: the logarithm of the std will be stored, and applied a
+            - experiment: the logarithm of the std will be stored, and applied a
              exponential transformation
-            - softplus: the std will be computed as log(1+exp(x))
+            - softplus: the std will be computed as log(1+experiment(x))
         :return:
         """
         assert isinstance(env_spec.action_space, Box)
@@ -69,7 +69,7 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
             # create network
             if mean_network is None:
                 if std_share_network:
-                    if std_parametrization == "exp":
+                    if std_parametrization == "experiment":
                         init_std_param = np.log(init_std)
                     elif std_parametrization == "softplus":
                         init_std_param = np.log(np.exp(init_std) - 1)
@@ -114,7 +114,7 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
             if std_network is not None:
                 l_std_param = std_network.output_layer
             else:
-                if std_parametrization == 'exp':
+                if std_parametrization == 'experiment':
                     init_std_param = np.log(init_std)
                 elif std_parametrization == 'softplus':
                     init_std_param = np.log(np.exp(init_std) - 1)
@@ -152,7 +152,7 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
 
             self.std_parametrization = std_parametrization
 
-            if std_parametrization == 'exp':
+            if std_parametrization == 'experiment':
                 min_std_param = np.log(min_std)
             elif std_parametrization == 'softplus':
                 min_std_param = np.log(np.exp(min_std) - 1)
@@ -199,7 +199,7 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
                 std_param_var = L.get_output(self._l_std_param, obs_var)
             if self.min_std_param is not None:
                 std_param_var = tf.maximum(std_param_var, self.min_std_param)
-            if self.std_parametrization == 'exp':
+            if self.std_parametrization == 'experiment':
                 log_std_var = std_param_var
             elif self.std_parametrization == 'softplus':
                 log_std_var = tf.log(tf.log(1. + tf.exp(std_param_var)))

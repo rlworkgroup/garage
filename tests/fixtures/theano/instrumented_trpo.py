@@ -1,7 +1,7 @@
 """This file is a copy of garage/theano/algos/trpo.py
 
 The only difference is the use of InstrumentedNPO to notify the test of the
-different stages in the experiment lifecycle.
+different stages in the run_experiment lifecycle.
 """
 
 from garage.theano.optimizers import ConjugateGradientOptimizer

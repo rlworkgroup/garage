@@ -4,13 +4,13 @@ from os import path
 import gym
 import numpy as np
 
-from garage.contrib.exp.checkpointers import DiskCheckpointer
+from garage.experiment import DiskCheckpointer
 
 
 class TestDiskCheckpointer(unittest.TestCase):
     def test_disk_checkpointer(self):
         exp_dir = "test_disk_checkpointer"
-        prefix = "exp"
+        prefix = "experiment"
 
         foo = "TestString"
         bar = {

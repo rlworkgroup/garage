@@ -1,8 +1,8 @@
 from nose2.tools import such
 
-from garage.experiment.experiment import concretize
-from garage.experiment.experiment import variant
-from garage.experiment.experiment import VariantGenerator
+from garage.run_experiment.run_experiment import concretize
+from garage.run_experiment.run_experiment import variant
+from garage.run_experiment.run_experiment import VariantGenerator
 
 # https://gist.github.com/jrast/109f70f9b4c52bab4252
 

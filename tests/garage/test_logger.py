@@ -14,8 +14,8 @@ class TestLogger(unittest.TestCase):
         args = SimpleNamespace()
         args.args_data = ""
 
-        logger.set_snapshot_dir("exp")
+        logger.set_snapshot_dir("experiment")
         logger.save_itr_params(1, {})
-        logger.log_parameters_lite("exp-log", args)
-        logger.log_variant("exp-log", {})
+        logger.log_parameters_lite("experiment-log", args)
+        logger.log_variant("experiment-log", {})
         logger.record_tabular_misc_stat("key", 1)

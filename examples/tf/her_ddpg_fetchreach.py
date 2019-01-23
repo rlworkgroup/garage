@@ -10,8 +10,8 @@ Results (may vary by seed):
 import gym
 import tensorflow as tf
 
-from garage.experiment import run_experiment
 from garage.replay_buffer import HerReplayBuffer
+from garage.run_experiment import run_experiment
 from garage.tf.algos import DDPG
 from garage.tf.envs import TfEnv
 from garage.tf.exploration_strategies import OUStrategy

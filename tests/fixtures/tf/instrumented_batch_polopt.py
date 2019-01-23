@@ -1,7 +1,7 @@
 """This file overrides the train method of garage/tf/algos/batch_polopt.py.
 
 A socket has been added to notify the test of interrupted experiments about the
-different stages in the experiment lifecycle.
+different stages in the run_experiment lifecycle.
 """
 
 from multiprocessing.connection import Client

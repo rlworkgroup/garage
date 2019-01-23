@@ -171,7 +171,7 @@ class Selector:
                         self._custom_filters + [filter])
 
     def _check_exp(self, exp):
-        # or exp.flat_params.get(k, None) is None
+        # or experiment.flat_params.get(k, None) is None
         return all(
             ((str(exp.flat_params.get(k, None)) == str(v) or
               (k not in exp.flat_params)) for k, v in self._filters)) and all(
@@ -265,14 +265,14 @@ def hex_to_rgb(hex, opacity=1.0):
 #         to_plot = []
 #         for v in vs:
 #             filtered_data = selector.where(k, v).extract()
-#             returns = [exp.progress[self._plot_key] for exp in filtered_data]
+#             returns = [experiment.progress[self._plot_key] for experiment in filtered_data]
 #             sizes = map(len, returns)
 #             max_size = max(sizes)
-#             for exp, retlen in zip(filtered_data, sizes):
+#             for experiment, retlen in zip(filtered_data, sizes):
 #                 if retlen < max_size:
 #                     self.log("Excluding {exp_name} since the
 #                       trajectory is shorter: {thislen} vs. {maxlen}".format(
-#                         exp_name=exp.params["exp_name"],
+#                         exp_name=experiment.params["exp_name"],
 #                           thislen=retlen, maxlen=max_size))
 #             returns = [ret for ret in returns if len(ret) == max_size]
 #             mean_returns = np.mean(returns, axis=0)

@@ -68,7 +68,7 @@ class ReplayPool(Serializable):
                              concat_observations, concat_length, rng)
 
     def __getstate__(self):
-        """Get the experiment state."""
+        """Get the run_experiment state."""
         d = super(ReplayPool, self).__getstate__()
         d["bottom"] = self.bottom
         d["top"] = self.top
@@ -82,14 +82,13 @@ class ReplayPool(Serializable):
         return d
 
     def __setstate__(self, d):
-        """Set the experiment state."""
+        """Set the run_experiment state."""
         super(ReplayPool, self).__setstate__(d)
         self.bottom, self.top, self.size, self.observations, self.actions, \
-        self.rewards, self.terminals, self.extras, self.rng = extract(
-            d,
-            "bottom", "top", "size", "observations", "actions", "rewards",
-            "terminals", "extras", "rng"
-        )
+            self.rewards, self.terminals, self.extras, self.rng = extract(
+                d,
+                "bottom", "top", "size", "observations", "actions", "rewards",
+                "terminals", "extras", "rng")
 
     def add_sample(self, observation, action, reward, terminal, extra=None):
         """Add a time step record.

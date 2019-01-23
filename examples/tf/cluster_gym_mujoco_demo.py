@@ -4,9 +4,9 @@ import gym
 
 from garage.baselines import LinearFeatureBaseline
 from garage.envs import normalize
-from garage.experiment import run_experiment
-from garage.experiment.experiment import variant
-from garage.experiment.experiment import VariantGenerator
+from garage.run_experiment import run_experiment
+from garage.run_experiment.run_experiment import variant
+from garage.run_experiment.run_experiment import VariantGenerator
 from garage.tf.algos import TRPO
 from garage.tf.envs import TfEnv
 from garage.tf.policies import GaussianMLPPolicy
@@ -58,7 +58,7 @@ for v in variants:
         n_parallel=1,
         # Only keep the snapshot parameters for the last iteration
         snapshot_mode="last",
-        # Specifies the seed for the experiment. If this is not provided, a
+        # Specifies the seed for the run_experiment. If this is not provided, a
         # random seed will be used
         seed=v["seed"],
         # mode="local",

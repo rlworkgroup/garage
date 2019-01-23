@@ -13,12 +13,12 @@ import joblib
 import psutil
 
 from garage import config
-from garage.experiment.experiment import concretize
 from garage.misc.console import colorize
 from garage.misc.ext import is_iterable
 from garage.misc.ext import set_seed
 import garage.misc.logger as logger
 import garage.plotter
+from garage.run_experiment.run_experiment import concretize
 from garage.sampler import parallel_sampler
 from garage.sampler.utils import mask_signals
 import garage.tf.plotter
@@ -44,7 +44,7 @@ def run_experiment(argv):
         '--exp_name',
         type=str,
         default=default_exp_name,
-        help='Name of the experiment.')
+        help='Name of the run_experiment.')
     parser.add_argument(
         '--log_dir',
         type=str,
@@ -93,7 +93,7 @@ def run_experiment(argv):
         '--resume_from',
         type=str,
         default=None,
-        help='Name of the pickle file to resume experiment from.')
+        help='Name of the pickle file to resume run_experiment from.')
     parser.add_argument(
         '--plot',
         type=ast.literal_eval,

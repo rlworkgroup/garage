@@ -3,7 +3,7 @@ import sys
 from garage.baselines import LinearFeatureBaseline
 from garage.envs import normalize
 from garage.envs.box2d import CartpoleEnv
-from garage.experiment import run_experiment
+from garage.run_experiment import run_experiment
 from garage.theano.algos import TRPO
 from garage.theano.envs import TheanoEnv
 from garage.theano.policies import GaussianMLPPolicy
@@ -45,8 +45,8 @@ for step_size in [0.01, 0.05, 0.1]:
             n_parallel=1,
             # Only keep the snapshot parameters for the last iteration
             snapshot_mode="last",
-            # Specifies the seed for the experiment. If this is not provided, a
-            # random seed will be used
+            # Specifies the seed for the run_experiment.
+            # If this is not provided, a random seed will be used
             seed=seed,
             # mode="local",
             mode="ec2",

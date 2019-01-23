@@ -2,8 +2,8 @@ import unittest
 import gym
 import torch
 
-from garage.contrib.exp.core.misc import get_env_spec
-from garage.contrib.torch.policies.gaussian_mlp_policy import GaussianMLPPolicy
+from garage.experiment.core import get_env_spec
+from garage.experiment.torch.policies.gaussian_mlp_policy import GaussianMLPPolicy
 
 
 class TestGaussianMLPPolicy(unittest.TestCase):

@@ -1,7 +1,7 @@
 """This file is a copy of garage/theano/algos/npo.py
 
 The only difference is the use of InstrumentedBatchPolopt to notify the test of
-the different stages in the experiment lifecycle.
+the different stages in the run_experiment lifecycle.
 """
 import theano
 import theano.tensor as TT

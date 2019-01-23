@@ -28,7 +28,7 @@ class ExpLifecycle(IntEnum):
 
 
 def interrupt_experiment(experiment_script, lifecycle_stage):
-    """Interrupt the experiment and verify no children processes remain."""
+    """Interrupt the run_experiment and verify no children processes remain."""
 
     args = ["python", experiment_script]
     # The pre-executed function setpgrp allows to create a process group
@@ -37,7 +37,7 @@ def interrupt_experiment(experiment_script, lifecycle_stage):
     launcher_proc = psutil.Process(proc.pid)
 
     # This socket connects with the client in the algorithm, so we're
-    # notified of the different stages in the experiment lifecycle.
+    # notified of the different stages in the run_experiment lifecycle.
     address = ("localhost", 6000)
     listener = Listener(address)
     conn = listener.accept()
@@ -94,7 +94,7 @@ class TestSigInt(unittest.TestCase):
 
     @params(*test_sigint_params)
     def test_sigint(self, experiment_script, exp_stage):
-        """Interrupt the experiment in different stages of its lifecyle."""
+        """Interrupt the run_experiment in different stages of its lifecyle."""
         interrupt_experiment(experiment_script, exp_stage)
 
     test_sigint.flaky = True

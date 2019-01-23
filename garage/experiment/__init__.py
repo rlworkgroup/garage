@@ -1,12 +1,7 @@
-"""Experiment functions."""
-from garage.experiment.experiment import run_experiment
-from garage.experiment.experiment import to_local_command
-from garage.experiment.experiment import variant
-from garage.experiment.experiment import VariantGenerator
+from garage.experiment.checkpointers import Checkpointer
+from garage.experiment.core import Agent
+from garage.experiment.experiment import Experiment
+from garage.experiment.loggers import Logger
+from garage.experiment.samplers import Sampler
 
-__all__ = [
-    "run_experiment",
-    "to_local_command",
-    "variant",
-    "VariantGenerator",
-]
+__all__ = ['Experiment', 'Agent', 'Checkpointer', 'Logger', 'Sampler']

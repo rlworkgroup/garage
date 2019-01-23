@@ -1,8 +1,8 @@
 from garage.envs import normalize
 from garage.envs.box2d import CartpoleEnv
-from garage.experiment import run_experiment
 from garage.exploration_strategies import OUStrategy
 from garage.replay_buffer import SimpleReplayBuffer
+from garage.run_experiment import run_experiment
 from garage.theano.algos import DDPG
 from garage.theano.envs import TheanoEnv
 from garage.theano.policies import DeterministicMLPPolicy
@@ -53,8 +53,8 @@ run_experiment(
     n_parallel=1,
     # Only keep the snapshot parameters for the last iteration
     snapshot_mode="last",
-    # Specifies the seed for the experiment. If this is not provided, a random
-    # seed will be used
+    # Specifies the seed for the run_experiment.
+    # If this is not provided, a random seed will be used
     seed=1,
     # plot=True,
 )

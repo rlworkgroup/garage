@@ -225,7 +225,7 @@ def summary_name(exp, selector=None):
     #     name = ""
     #     for k in rest_params:
     #         name += "%s=%s;" % (k.split(".")[-1],
-    #                             str(exp.flat_params.get(k, "")).split(".")[-1])
+    #                             str(experiment.flat_params.get(k, "")).split(".")[-1])
     #     return name
     return exp.params["exp_name"]
 

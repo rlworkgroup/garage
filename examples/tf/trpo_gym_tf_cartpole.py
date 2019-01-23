@@ -1,7 +1,7 @@
 import gym
 
 from garage.baselines import LinearFeatureBaseline
-from garage.experiment import run_experiment
+from garage.run_experiment import run_experiment
 from garage.tf.algos import TRPO
 from garage.tf.envs import TfEnv
 from garage.tf.policies import CategoricalMLPPolicy
