@@ -10,35 +10,33 @@ MJKEY_PATH ?= ~/.mujoco/mjkey.txt
 # is already created
 CONFIG_PERSONAL := garage/config_personal.py
 
-build-ci: TAG ?= rlworkgroup/garage-ci
-build-ci: docker/docker-compose-headless.yml copy_config_personal
+build-ci: TAG ?= rlworkgroup/garage-ci:latest
+build-ci: docker/docker-compose-ci.yml copy_config_personal
 	TAG=${TAG} \
 	docker-compose \
-		-f docker/docker-compose-headless.yml \
+		-f docker/docker-compose-ci.yml \
 		build \
-		--build-arg MJKEY="$${MJKEY}"
+		${ADD_ARGS}
 
-build-headless: TAG ?= rlworkgroup/garage-headless
+build-headless: TAG ?= rlworkgroup/garage-headless:latest
 build-headless: docker/docker-compose-headless.yml check-mjkey copy_config_personal
 	TAG=${TAG} \
 	docker-compose \
 		-f docker/docker-compose-headless.yml \
 		build \
-		--build-arg MJKEY="$$(cat ${MJKEY_PATH})"
+		${ADD_ARGS}
 
+build-nvidia: TAG ?= rlworkgroup/garage-nvidia:latest
 build-nvidia: docker/docker-compose-nvidia.yml check-mjkey copy_config_personal
+	TAG=${TAG} \
 	docker-compose \
 		-f docker/docker-compose-nvidia.yml \
 		build \
-		--build-arg MJKEY="$$(cat ${MJKEY_PATH})"
+		${ADD_ARGS}
 
-run-ci: SHELL := /usr/bin/env bash
 run-ci: TAG ?= rlworkgroup/garage-ci
-# The CI container requires environment variables to run CodeCov
-run-ci: CI_ENV := $$(bash <(curl -s https://codecov.io/env))
 run-ci:
 	docker run \
-		"${CI_ENV}" \
 		-e COVERALLS_REPO_TOKEN \
 		-e COVERALLS_SERVICE_NAME \
 		-e CODACY_PROJECT_TOKEN \
@@ -48,6 +46,7 @@ run-ci:
 		-e TRAVIS_COMMIT_RANGE \
 		-e TRAVIS \
 		-e MJKEY \
+		${ADD_ARGS} \
 		${TAG} ${RUN_CMD}
 
 run-headless: CONTAINER_NAME ?= garage-headless
@@ -58,6 +57,7 @@ run-headless: build-headless
 		-v $(DATA_PATH)/data/$(CONTAINER_NAME):/root/code/garage/data \
 		-e MJKEY="$$(cat $(MJKEY_PATH))" \
 		--name $(CONTAINER_NAME) \
+		${ADD_ARGS} \
 		rlworkgroup/garage-headless $(RUN_CMD)
 
 run-nvidia: CONTAINER_NAME ?= garage-nvidia
@@ -73,6 +73,7 @@ run-nvidia: build-nvidia
 		-e QT_X11_NO_MITSHM=1 \
 		-e MJKEY="$$(cat $(MJKEY_PATH))" \
 		--name $(CONTAINER_NAME) \
+		${ADD_ARGS} \
 		rlworkgroup/garage-nvidia $(RUN_CMD)
 
 check-mjkey:

@@ -44,12 +44,13 @@ install:
   - TAG="${tag}" make build-ci
 
 script:
-  - TAG="${tag}" make run-ci RUN_CMD="scripts/travisci/check_precommit.sh"
+  - ci_env="$(bash <(curl -s https://codecov.io/env))"
+  - ADD_ARGS="${ci_env}" TAG="${tag}" make run-ci RUN_CMD="scripts/travisci/check_precommit.sh"
   - |
     if [[ "${TRAVIS_EVENT_TYPE}" == "cron" ]]; then
-      TAG="${tag}" make run-ci RUN_CMD="scripts/travisci/check_cronjob_tests.sh"
+      ADD_ARGS="${ci_env}" TAG="${tag}" make run-ci RUN_CMD="scripts/travisci/check_cronjob_tests.sh"
     else
-      TAG="${tag}" make run-ci RUN_CMD="scripts/travisci/check_tests.sh"
+      ADD_ARGS="${ci_env}" TAG="${tag}" make run-ci RUN_CMD="scripts/travisci/check_tests.sh"
     fi
 
 after_success:
