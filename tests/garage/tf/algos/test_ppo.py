@@ -6,13 +6,12 @@ import gym
 import tensorflow as tf
 
 from garage.envs import normalize
+from garage.logger import logger
 from garage.experiment import LocalRunner
-import garage.misc.logger as logger
 from garage.tf.algos import PPO
 from garage.tf.baselines import GaussianMLPBaseline
 from garage.tf.envs import TfEnv
-from garage.tf.policies import GaussianLSTMPolicy
-from garage.tf.policies import GaussianMLPPolicy
+from garage.tf.policies import GaussianLSTMPolicy, GaussianMLPPolicy
 from tests.fixtures import TfGraphTestCase
 
 

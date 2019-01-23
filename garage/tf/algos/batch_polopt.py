@@ -1,7 +1,7 @@
 import tensorflow as tf
 
 from garage.algos import RLAlgorithm
-import garage.misc.logger as logger
+from garage.logger import logger
 
 
 class BatchPolopt(RLAlgorithm):

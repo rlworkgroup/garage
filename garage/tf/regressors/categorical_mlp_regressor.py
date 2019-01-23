@@ -2,15 +2,13 @@ import numpy as np
 import tensorflow as tf
 
 from garage.core import Serializable
-from garage.misc import logger
-from garage.tf.core import LayersPowered
-from garage.tf.core import Parameterized
+from garage.logger import tabular
+from garage.tf.core import LayersPowered, Parameterized
 import garage.tf.core.layers as L
 from garage.tf.core.network import MLP
 from garage.tf.distributions import Categorical
 from garage.tf.misc import tensor_utils
-from garage.tf.optimizers import ConjugateGradientOptimizer
-from garage.tf.optimizers import LbfgsOptimizer
+from garage.tf.optimizers import ConjugateGradientOptimizer, LbfgsOptimizer
 
 NONE = list()
 
@@ -156,11 +154,11 @@ class CategoricalMLPRegressor(LayersPowered, Serializable, Parameterized):
             prefix = self.name + "/"
         else:
             prefix = ""
-        logger.record_tabular(prefix + 'LossBefore', loss_before)
+        tabular.record(prefix + 'LossBefore', loss_before)
         optimizer.optimize(inputs)
         loss_after = optimizer.loss(inputs)
-        logger.record_tabular(prefix + 'LossAfter', loss_after)
-        logger.record_tabular(prefix + 'dLoss', loss_before - loss_after)
+        tabular.record(prefix + 'LossAfter', loss_after)
+        tabular.record(prefix + 'dLoss', loss_before - loss_after)
         self.first_optimized = True
 
     def predict(self, xs):

@@ -3,11 +3,10 @@ import numpy as np
 
 from garage.algos.base import RLAlgorithm
 from garage.core import Serializable
-import garage.misc.logger as logger
+from garage.logger import logger, snapshotter, tabular
 from garage.misc.special import discount_cumsum
 from garage.plotter import Plotter
-from garage.sampler import parallel_sampler
-from garage.sampler import stateful_pool
+from garage.sampler import parallel_sampler, stateful_pool
 from garage.sampler.utils import rollout
 
 
@@ -115,27 +114,25 @@ class CMAES(RLAlgorithm, Serializable):
             es.tell(xs, fs)
 
             logger.push_prefix('itr #%d | ' % itr)
-            logger.record_tabular('Iteration', itr)
-            logger.record_tabular('CurStdMean', np.mean(cur_std))
+            tabular.record('Iteration', itr)
+            tabular.record('CurStdMean', np.mean(cur_std))
             undiscounted_returns = np.array(
                 [info['undiscounted_return'] for info in infos])
-            logger.record_tabular('AverageReturn',
-                                  np.mean(undiscounted_returns))
-            logger.record_tabular('StdReturn', np.mean(undiscounted_returns))
-            logger.record_tabular('MaxReturn', np.max(undiscounted_returns))
-            logger.record_tabular('MinReturn', np.min(undiscounted_returns))
-            logger.record_tabular('AverageDiscountedReturn', np.mean(fs))
-            logger.record_tabular(
-                'AvgTrajLen',
-                np.mean([len(info['returns']) for info in infos]))
+            tabular.record('AverageReturn', np.mean(undiscounted_returns))
+            tabular.record('StdReturn', np.mean(undiscounted_returns))
+            tabular.record('MaxReturn', np.max(undiscounted_returns))
+            tabular.record('MinReturn', np.min(undiscounted_returns))
+            tabular.record('AverageDiscountedReturn', np.mean(fs))
+            tabular.record('AvgTrajLen',
+                           np.mean([len(info['returns']) for info in infos]))
             self.policy.log_diagnostics(infos)
-            logger.save_itr_params(
+            snapshotter.save_itr_params(
                 itr, dict(
                     itr=itr,
                     policy=self.policy,
                     env=self.env,
                 ))
-            logger.dump_tabular(with_prefix=False)
+            logger.log(tabular, with_prefix=False)
             if self.plot:
                 self.plotter.update_plot(self.policy, self.max_path_length)
             logger.pop_prefix()

@@ -4,7 +4,7 @@ import pyprind
 import tensorflow as tf
 
 from garage.core import Serializable
-from garage.misc import logger
+from garage.logger import logger
 from garage.optimizers import BatchDataset
 from garage.tf.misc import tensor_utils
 from garage.tf.optimizers.utils import LazyDict

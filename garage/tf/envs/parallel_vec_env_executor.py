@@ -3,7 +3,7 @@ import uuid
 
 import numpy as np
 
-from garage.misc import logger
+from garage.logger import logger
 from garage.sampler import singleton_pool
 from garage.tf.misc import tensor_utils
 

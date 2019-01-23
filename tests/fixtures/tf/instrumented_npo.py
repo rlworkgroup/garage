@@ -3,24 +3,18 @@
 The only difference is the use of InstrumentedBatchPolopt to notify the test of
 the different stages in the experiment lifecycle.
 """
-from enum import Enum
-from enum import unique
+from enum import Enum, unique
 
 import numpy as np
 import tensorflow as tf
 
-from garage.misc import logger
+from garage.logger import logger, tabular
 from garage.misc import special
 from garage.misc.overrides import overrides
 from garage.tf.misc import tensor_utils
-from garage.tf.misc.tensor_utils import compute_advantages
-from garage.tf.misc.tensor_utils import discounted_returns
-from garage.tf.misc.tensor_utils import filter_valids
-from garage.tf.misc.tensor_utils import filter_valids_dict
-from garage.tf.misc.tensor_utils import flatten_batch
-from garage.tf.misc.tensor_utils import flatten_batch_dict
-from garage.tf.misc.tensor_utils import flatten_inputs
-from garage.tf.misc.tensor_utils import graph_inputs
+from garage.tf.misc.tensor_utils import (
+    compute_advantages, discounted_returns, filter_valids, filter_valids_dict,
+    flatten_batch, flatten_batch_dict, flatten_inputs, graph_inputs)
 from garage.tf.optimizers import LbfgsOptimizer
 from tests.fixtures.tf.instrumented_batch_polopt import InstrumentedBatchPolopt
 
@@ -89,22 +83,22 @@ class InstrumentedNPO(InstrumentedBatchPolopt):
         policy_kl = self.f_policy_kl(*policy_opt_input_values)
         logger.log("Computing loss after")
         loss_after = self.optimizer.loss(policy_opt_input_values)
-        logger.record_tabular("{}/LossBefore".format(self.policy.name),
-                              loss_before)
-        logger.record_tabular("{}/LossAfter".format(self.policy.name),
-                              loss_after)
-        logger.record_tabular("{}/dLoss".format(self.policy.name),
-                              loss_before - loss_after)
-        logger.record_tabular("{}/KLBefore".format(self.policy.name),
-                              policy_kl_before)
-        logger.record_tabular("{}/KL".format(self.policy.name), policy_kl)
+        tabular.record("{}/LossBefore".format(self.policy.name), loss_before)
+        tabular.record("{}/LossAfter".format(self.policy.name), loss_after)
+        tabular.record("{}/dLoss".format(self.policy.name),
+                       loss_before - loss_after)
+        tabular.record("{}/KLBefore".format(self.policy.name),
+                       policy_kl_before)
+        tabular.record("{}/KL".format(self.policy.name), policy_kl)
 
         pol_ent = self.f_policy_entropy(*policy_opt_input_values)
-        logger.record_tabular("{}/Entropy".format(self.policy.name), pol_ent)
+        tabular.record("{}/Entropy".format(self.policy.name), pol_ent)
 
         num_traj = self.batch_size // self.max_path_length
         actions = samples_data["actions"][:num_traj, ...]
-        logger.record_histogram("{}/Actions".format(self.policy.name), actions)
+        logger.log(
+            ("{}/Actions".format(self.policy.name), actions),
+            record='histogram')
 
         self._fit_baseline(samples_data)
 
@@ -420,7 +414,7 @@ class InstrumentedNPO(InstrumentedBatchPolopt):
         # Calculate explained variance
         ev = special.explained_variance_1d(
             np.concatenate(baselines), aug_returns)
-        logger.record_tabular("Baseline/ExplainedVariance", ev)
+        tabular.record("Baseline/ExplainedVariance", ev)
 
         # Fit baseline
         logger.log("Fitting baseline...")

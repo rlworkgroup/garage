@@ -16,8 +16,14 @@ import psutil
 from garage import config
 from garage.experiment import deterministic
 from garage.experiment.experiment import concretize
+from garage.logger import CsvOutput 
+from garage.logger import TensorBoardOutput
+from garage.logger import TextOutput
+from garage.logger import logger
+from garage.logger import snapshotter
+from garage.logger.utils import dump_variant, log_parameters
 from garage.misc.console import colorize
-import garage.misc.logger as logger
+import garage.logger as logger
 import garage.plotter
 from garage.sampler import parallel_sampler
 from garage.sampler.utils import mask_signals
@@ -82,7 +88,7 @@ def run_experiment(argv):
         '--tensorboard_step_key',
         type=str,
         default=None,
-        help=("Name of the step key in tensorboard_summary."))
+        help="Name of the step key in tensorboard_summary.")
     parser.add_argument(
         '--params_log_file',
         type=str,
@@ -156,23 +162,21 @@ def run_experiment(argv):
     if args.variant_data is not None:
         variant_data = pickle.loads(base64.b64decode(args.variant_data))
         variant_log_file = osp.join(log_dir, args.variant_log_file)
-        logger.log_variant(variant_log_file, variant_data)
+        dump_variant(variant_log_file, variant_data)
     else:
         variant_data = None
 
     if not args.use_cloudpickle:
-        logger.log_parameters_lite(params_log_file, args)
+        log_parameters(params_log_file, args)
 
-    logger.add_text_output(text_log_file)
-    logger.add_tabular_output(tabular_log_file)
-    logger.set_tensorboard_dir(log_dir)
-    prev_snapshot_dir = logger.get_snapshot_dir()
-    prev_mode = logger.get_snapshot_mode()
-    logger.set_snapshot_dir(log_dir)
-    logger.set_snapshot_mode(args.snapshot_mode)
-    logger.set_snapshot_gap(args.snapshot_gap)
-    logger.set_log_tabular_only(args.log_tabular_only)
-    logger.set_tensorboard_step_key(args.tensorboard_step_key)
+    logger.add_output(TextOutput(text_log_file))
+    logger.add_output(CsvOutput(tabular_log_file))
+    logger.add_output(TensorBoardOutput(log_dir))
+    prev_snapshot_dir = snapshotter.snapshot_dir
+    prev_mode = snapshotter.snapshot_mode
+    snapshotter.snapshot_dir = log_dir
+    snapshotter.snapshot_mode = args.snapshot_mode
+    snapshotter.snapshot_gap = args.snapshot_gap
     logger.push_prefix("[%s] " % args.exp_name)
 
     if args.resume_from is not None:
@@ -201,10 +205,9 @@ def run_experiment(argv):
                 for _ in maybe_iter:
                     pass
 
-    logger.set_snapshot_mode(prev_mode)
-    logger.set_snapshot_dir(prev_snapshot_dir)
-    logger.remove_tabular_output(tabular_log_file)
-    logger.remove_text_output(text_log_file)
+    snapshotter.snapshot_mode = prev_mode
+    snapshotter.snapshot_dir = prev_snapshot_dir
+    logger.remove_all()
     logger.pop_prefix()
 
 

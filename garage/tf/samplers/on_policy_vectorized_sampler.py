@@ -3,8 +3,8 @@ import pickle
 
 import numpy as np
 
+from garage.logger import logger, tabular
 from garage.misc import tensor_utils
-import garage.misc.logger as logger
 from garage.misc.overrides import overrides
 from garage.misc.prog_bar_counter import ProgBarCounter
 from garage.sampler.utils import truncate_paths
@@ -106,9 +106,9 @@ class OnPolicyVectorizedSampler(BatchSampler):
 
         pbar.stop()
 
-        logger.record_tabular("PolicyExecTime", policy_time)
-        logger.record_tabular("EnvExecTime", env_time)
-        logger.record_tabular("ProcessExecTime", process_time)
+        tabular.record("PolicyExecTime", policy_time)
+        tabular.record("EnvExecTime", env_time)
+        tabular.record("ProcessExecTime", process_time)
 
         if whole_paths:
             return paths

@@ -48,7 +48,7 @@ of the :code:`BatchPolopt` class is the :code:`train()` method:
             samples_data = self.process_samples(itr, paths)
             self.optimize_policy(itr, samples_data)
             params = self.get_itr_snapshot(itr, samples_data)
-            logger.save_itr_params(itr, params)
+            snapshotter.save_itr_params(itr, params)
             # ...
 
 The methods :code:`obtain_samples` and :code:`process_samples` are implemented

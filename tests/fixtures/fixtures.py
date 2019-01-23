@@ -4,7 +4,8 @@ import unittest
 import tensorflow as tf
 
 from garage.experiment import deterministic
-import garage.misc.logger as logger
+from garage.logger import logger
+from garage.logger import TensorBoardOutput
 
 
 class TfTestCase(unittest.TestCase):
@@ -23,7 +24,7 @@ class TfGraphTestCase(unittest.TestCase):
         self.graph = tf.Graph()
         self.sess = tf.Session(graph=self.graph)
         self.sess.__enter__()
-        logger.reset()
+        logger.reset_output(TensorBoardOutput())
         deterministic.set_seed(1)
 
     def tearDown(self):

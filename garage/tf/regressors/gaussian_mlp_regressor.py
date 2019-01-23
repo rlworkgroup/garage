@@ -2,15 +2,13 @@ import numpy as np
 import tensorflow as tf
 
 from garage.core import Serializable
-from garage.misc import logger
-from garage.tf.core import LayersPowered
-from garage.tf.core import Parameterized
+from garage.logger import tabular
+from garage.tf.core import LayersPowered, Parameterized
 import garage.tf.core.layers as L
 from garage.tf.core.network import MLP
 from garage.tf.distributions import DiagonalGaussian
 from garage.tf.misc import tensor_utils
-from garage.tf.optimizers import LbfgsOptimizer
-from garage.tf.optimizers import PenaltyLbfgsOptimizer
+from garage.tf.optimizers import LbfgsOptimizer, PenaltyLbfgsOptimizer
 
 
 class GaussianMLPRegressor(LayersPowered, Serializable, Parameterized):
@@ -268,14 +266,14 @@ class GaussianMLPRegressor(LayersPowered, Serializable, Parameterized):
             prefix = self._name + "/"
         else:
             prefix = ""
-        logger.record_tabular(prefix + 'LossBefore', loss_before)
+        tabular.record(prefix + 'LossBefore', loss_before)
         self._optimizer.optimize(inputs)
         loss_after = self._optimizer.loss(inputs)
-        logger.record_tabular(prefix + 'LossAfter', loss_after)
+        tabular.record(prefix + 'LossAfter', loss_after)
         if self._use_trust_region:
-            logger.record_tabular(prefix + 'MeanKL',
-                                  self._optimizer.constraint_val(inputs))
-        logger.record_tabular(prefix + 'dLoss', loss_before - loss_after)
+            tabular.record(prefix + 'MeanKL',
+                           self._optimizer.constraint_val(inputs))
+        tabular.record(prefix + 'dLoss', loss_before - loss_after)
 
     def predict(self, xs):
         """

@@ -31,8 +31,9 @@ def colorize(string, color, bold=False, highlight=False):
 
 
 def mkdir_p(path):
-    if not path:
+    if path == '':
         return
+
     try:
         os.makedirs(path)
     except OSError as exc:  # Python >2.5
@@ -159,7 +160,7 @@ def tweakfun(fun, alt=None):
     args = collect_args()
     if cmd_prefix in args:
         fun = pydoc.locate(args[cmd_prefix])
-    if type(fun) == type:
+    if isinstance(fun, type):
         argspec = inspect.getargspec(fun.__init__)
     else:
         argspec = inspect.getargspec(fun)
@@ -170,7 +171,7 @@ def tweakfun(fun, alt=None):
                 or [])))
     replaced_kwargs = {}
     cmd_prefix += '-'
-    if type(fun) == type:
+    if isinstance(fun, type):
         meta = getattr(fun.__init__, '__tweak_type_hint_meta__', {})
     else:
         meta = getattr(fun, '__tweak_type_hint_meta__', {})

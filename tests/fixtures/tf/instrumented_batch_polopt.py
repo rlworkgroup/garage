@@ -9,7 +9,7 @@ import time
 
 import tensorflow as tf
 
-import garage.misc.logger as logger
+from garage.logger import logger, snapshotter, tabular
 from garage.tf.algos import BatchPolopt
 from tests.integration_tests.test_sigint import ExpLifecycle
 
@@ -54,12 +54,11 @@ class InstrumentedBatchPolopt(BatchPolopt):
                     params = self.get_itr_snapshot(itr, samples_data)
                     if self.store_paths:
                         params["paths"] = samples_data["paths"]
-                    logger.save_itr_params(itr, params)
+                    snapshotter.save_itr_params(itr, params)
                     logger.log("Saved")
-                    logger.record_tabular('Time', time.time() - start_time)
-                    logger.record_tabular('ItrTime',
-                                          time.time() - itr_start_time)
-                    logger.dump_tabular(with_prefix=False)
+                    tabular.record('Time', time.time() - start_time)
+                    tabular.record('ItrTime', time.time() - itr_start_time)
+                    logger.log(tabular)
                     if self.plot:
                         conn.send(ExpLifecycle.UPDATE_PLOT)
                         self.plotter.update_plot(self.policy,
