@@ -41,7 +41,7 @@ class TensorBoardOutput(LogOutput):
     @property
     def types_accepted(self):
         """The types that the logger may pass to this output."""
-        return tf.Tensor, TabularInput, tuple
+        return (tf.Tensor, TabularInput, tuple)
 
     def log_output(self, data, **kwargs):
         if isinstance(data, tf.Tensor):

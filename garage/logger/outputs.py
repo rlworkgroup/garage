@@ -38,7 +38,7 @@ class StdOutput(LogOutput):
     @property
     def types_accepted(self):
         """The types that the logger may pass to this output."""
-        return str, TabularInput
+        return (str, TabularInput )
 
     def log_output(self,
                    data,
@@ -74,7 +74,7 @@ class TextOutput(LogOutput):
     @property
     def types_accepted(self):
         """The types that the logger may pass to this output."""
-        return str,  # we need the comma here so the return value is iterable
+        return (str, )  # we need a comma here so the return value is a tuple
 
     def log_output(self, data, with_timestamp=True, **kwargs):
         """Log data to text file."""
@@ -103,8 +103,8 @@ class CsvOutput(LogOutput):
     @property
     def types_accepted(self):
         """The types that the logger may pass to this output."""
-        return TabularInput,  # we need the comma here so the return value
-        # is iterable
+        return (TabularInput, )  # we need the comma here so the return value
+        # is a tuple
 
     def log_output(self, data, prefix='', **kwargs):
         """Log tabular data to CSV."""
