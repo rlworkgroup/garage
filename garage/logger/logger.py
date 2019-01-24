@@ -41,7 +41,8 @@ class Logger:
                 at_least_one_logged = True
 
         if not at_least_one_logged:
-            warn("Log data was not accepted by any output")
+            warn("Log data of type " + type(data).__name__ +
+                 " was not accepted by any output")
 
     def add_output(self, output):
         """Add a new output to the logger.
