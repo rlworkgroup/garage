@@ -11,5 +11,7 @@ for i in range(N):
     sess.__enter__()
     k_val = i / float(N)
     tabular.record("app", k_val)
+    logger.log(tabular)
+    tabular.clear()
     logger.log(("gass", k_val), record='histogram')
     logger.dump(TensorBoardOutput, step=i)
