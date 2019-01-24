@@ -2,9 +2,9 @@
 # This script installs garage on macOS distributions.
 #
 # NOTICE: To keep consistency across this script, scripts/setup_linux.sh and
-# docker/Dockerfile, if there's any changes applied to this file, specially
-# regarding the installation of dependencies, apply those same changes to the
-# mentioned files.
+# docker/Dockerfile.base, if there's any changes applied to this file,
+# specially regarding the installation of dependencies, apply those same
+# changes to the mentioned files.
 
 # Exit if any error occurs
 set -e

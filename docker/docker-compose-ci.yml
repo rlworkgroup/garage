@@ -3,14 +3,14 @@ services:
   garage-base:
     build:
       cache_from:
-        - rlworkgroup/garage-headless:latest
+        - rlworkgroup/garage-ci:latest
       context: ../
       dockerfile: docker/Dockerfile.base
     image: rlworkgroup/garage-base
-  garage-headless:
+  garage-ci:
     build:
       cache_from:
-        - rlworkgroup/garage-headless:latest
+        - rlworkgroup/garage-ci:latest
       context: ../
       dockerfile: docker/Dockerfile.headless
       args:

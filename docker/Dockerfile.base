@@ -24,15 +24,12 @@ RUN \
     # For building glfw
     cmake \
     xorg-dev \
-    # Dummy X server
-    xvfb \
-    libosmesa6-dev \
-    pulseaudio \
     # mujoco_py
     # See https://github.com/openai/mujoco-py/blob/master/Dockerfile
     # 16.04 repo is too old, install glfw from source instead
     # libglfw3 \
     libglew-dev \
+    libosmesa6-dev \
     patchelf \
     # OpenAI gym
     # See https://github.com/openai/gym/blob/master/Dockerfile
@@ -82,10 +79,10 @@ RUN conda update -q -y conda
 COPY environment.yml /root/code/garage/environment.yml
 
 # We need a MuJoCo key to install mujoco_py
-# MAKE SURE TO DELETE MJKEY.TXT SO THAT WE DON'T PUBLISH THE KEY
-# NOTE: You MUST create and delete the mjkey.txt within the same RUN command
+# In this step only the presence of the file mjkey.txt is required, so we only
+# create an empty file
 ARG MJKEY
-RUN echo "${MJKEY}" > /root/.mujoco/mjkey.txt && \
+RUN touch /root/.mujoco/mjkey.txt && \
   conda env create -f /root/code/garage/environment.yml && \
   rm -rf /opt/conda/pkgs/* && \
   rm /root/.mujoco/mjkey.txt

@@ -42,24 +42,17 @@ This binds a volume between your host path and the path in garage at
 
 ### Build and run the image
 
-To build the headless image, first clone this repository and move to the root
-folder of your local repository. If you have your MuJoCo key at
-`~/.mujoco/mjkey.txt`, simply execute:
+To build the headless image, first clone this repository, move to the root
+folder of your local repository and then execute:
 ```
 make build-headless
-```
-
-Alternatively, you can specify the path to your MuJoCo key with the variable
-`MJKEY_PATH`:
-```
-make build-headless MJKEY_PATH="..."
 ```
 
 To build and run the container, execute;
 ```
 make run-headless RUN_CMD="python examples/tf/trpo_cartpole.py"
 ```
-Where RUN_CMD specifies the executable to run in the container
+Where RUN_CMD specifies the executable to run in the container.
 
 The previous command adds a volume from the data folder inside your cloned
 garage repository to the data folder in the garage container, so any experiment
@@ -74,14 +67,30 @@ If you want to specify another name for the container, do so with the variable
 make run-headless RUN_CMD="..." CONTAINER_NAME="my_container"
 ```
 
+If you need to use MuJoCo, you need to place your key at `~/.mujoco/mjkey.txt`
+or specify the corresponding path through the MJKEY_PATH variable:
+```
+make run-headless RUN_CMD="..." MJKEY_PATH="/home/user/mjkey.txt"
+```
+
+If you require to pass addtional arguments to the the make commands, you can
+use the variable ADD_ARGS, for example:
+```
+make build-headless ADD_ARGS="--build-arg MY_VAR=123"
+make run-headless ADD_ARGS="-e MY_VAR=123"
+```
+
 #### Prerequisites
 
 Be aware of the following prerequisites to build the image.
 
-- Install [Docker CE](https://docs.docker.com/install/linux/docker-ce/ubuntu/#install-docker-ce)
-- Install [Docker Compose](https://docs.docker.com/compose/install/#install-compose)
+- Install [Docker CE](https://docs.docker.com/install/linux/docker-ce/ubuntu/#install-docker-ce). Tested
+  on version 18.09.0.
+- Install [Docker Compose](https://docs.docker.com/compose/install/#install-compose). Tested
+  on version 1.23.2.
 
-Tested on Ubuntu 16.04.
+Tested on Ubuntu 16.04. It's recommended to use the versions indicated above
+for docker-ce and docker-compose.
 
 ## nvidia image
 
