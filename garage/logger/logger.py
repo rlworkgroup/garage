@@ -15,7 +15,7 @@ class Logger:
         self._prefixes = []
         self._prefix_str = ""
 
-    def log(self, data, with_prefix=True, **kwargs):
+    def log(self, data):
         """Magic method that takes in all different types of input.
 
         Any data sent to this method is sent to all outputs that accept its
@@ -29,15 +29,10 @@ class Logger:
         if not self._outputs:
             warn("No outputs have been added to the logger.")
 
-        if not with_prefix:
-            kwargs['prefix'] = ''
-        else:
-            kwargs['prefix'] = self._prefix_str
-
         at_least_one_logged = False
         for output in self._outputs:
             if isinstance(data, output.types_accepted):
-                output.log_output(data, **kwargs)
+                output.record(data, prefix=self._prefix_str)
                 at_least_one_logged = True
 
         if not at_least_one_logged:

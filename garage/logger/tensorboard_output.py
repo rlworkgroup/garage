@@ -17,7 +17,10 @@ from garage.misc.console import mkdir_p
 
 
 class TensorBoardOutput(LogOutput):
-    """Tensorboard output class for the logger."""
+    """Tensorboard output class for the logger.
+
+    :param log_dir: The directory this output should log to.
+    """
 
     def __init__(self, log_dir=config.LOG_DIR):
         self._scalars = tf.Summary()
@@ -38,23 +41,21 @@ class TensorBoardOutput(LogOutput):
         self._layout_writer = None
         self._layout_writer_dir = None
 
-        self.set_dir(log_dir)
+        self._set_dir(log_dir)
 
     @property
     def types_accepted(self):
         """The types that the logger may pass to this output."""
         return (tf.Tensor, TabularInput, tuple)
 
-    def log_output(self, data, **kwargs):
+    def record(self, data, prefix=''):
         if isinstance(data, tf.Tensor):
             self.record_tensor(data.name, data)
         elif isinstance(data, TabularInput):
             for key, value in data.get_table_dict().items():
                 self.record_scalar(key, value)
-        elif isinstance(data, tuple) and kwargs['record'] == 'histogram':
-            self.record_histogram(data[0], data[1])
 
-    def set_dir(self, dir_name):
+    def _set_dir(self, dir_name):
         if not dir_name:
             if self._writer:
                 self._writer.close()

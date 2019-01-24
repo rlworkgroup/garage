@@ -11,7 +11,7 @@ import sys
 import dateutil.tz
 
 from garage.logger.tabular_input import TabularInput
-from garage.misc.console import colorize, mkdir_p
+from garage.misc.console import mkdir_p
 
 
 class LogOutput(abc.ABC):
@@ -23,7 +23,7 @@ class LogOutput(abc.ABC):
         return ()
 
     @abc.abstractmethod
-    def log_output(self, data, **kwargs):
+    def record(self, data, prefix=''):
         """This method is called by the logger when it needs to pass data."""
         pass
 
@@ -33,28 +33,27 @@ class LogOutput(abc.ABC):
 
 
 class StdOutput(LogOutput):
-    """Standard console output for the logger."""
+    """Standard console output for the logger.
+
+    :param with_timestamp: Whether to log a timestamp before non-tabular data.
+    """
+
+    def __init__(self, with_timestamp=True):
+        self._with_timestamp = with_timestamp
 
     @property
     def types_accepted(self):
         """The types that the logger may pass to this output."""
-        return (str, TabularInput )
+        return (str, TabularInput)
 
-    def log_output(self,
-                   data,
-                   prefix='',
-                   with_timestamp=True,
-                   color=None,
-                   **kwargs):
+    def record(self, data, prefix=''):
         """Log data to console."""
         if isinstance(data, str):
             out = prefix + data
-            if with_timestamp:
+            if self._with_timestamp:
                 now = datetime.datetime.now(dateutil.tz.tzlocal())
                 timestamp = now.strftime('%Y-%m-%d %H:%M:%S')
                 out = "%s | %s" % (timestamp, out)
-            if color is not None:
-                out = colorize(out, color)
         elif isinstance(data, TabularInput):
             out = str(data)
         else:
@@ -65,24 +64,26 @@ class StdOutput(LogOutput):
 
 
 class TextOutput(LogOutput):
-    """Text file output for logger."""
+    """Text file output for logger.
 
-    def __init__(self, file_name):
+    :param file_name: The file this output should log to.
+    :param with_timestamp: Whether to log a timestamp before the data.
+    """
+
+    def __init__(self, file_name, with_timestamp=True):
         mkdir_p(os.path.dirname(file_name))
         self._log_file = open(file_name, 'a')
+        self._with_timestamp = with_timestamp
 
     @property
     def types_accepted(self):
         """The types that the logger may pass to this output."""
         return (str, )  # we need a comma here so the return value is a tuple
 
-    def log_output(self, data, with_timestamp=True, **kwargs):
+    def record(self, data, prefix=''):
         """Log data to text file."""
-        if not isinstance(data, self.types_accepted):
-            return
-
         out = data
-        if with_timestamp:
+        if self._with_timestamp:
             now = datetime.datetime.now(dateutil.tz.tzlocal())
             timestamp = now.strftime('%Y-%m-%d %H:%M:%S.%f %Z')
             out = "%s | %s" % (timestamp, out)
@@ -92,7 +93,10 @@ class TextOutput(LogOutput):
 
 
 class CsvOutput(LogOutput):
-    """CSV file output for logger."""
+    """CSV file output for logger.
+
+    :param file_name: The file this output should log to.
+    """
 
     def __init__(self, file_name):
         mkdir_p(os.path.dirname(file_name))
@@ -106,11 +110,8 @@ class CsvOutput(LogOutput):
         return (TabularInput, )  # we need the comma here so the return value
         # is a tuple
 
-    def log_output(self, data, prefix='', **kwargs):
+    def record(self, data, prefix=''):
         """Log tabular data to CSV."""
-        if not isinstance(data, self.types_accepted):
-            return
-
         writer = csv.DictWriter(
             self._log_file, fieldnames=data.get_table_key_set())
 
