@@ -1,154 +1,151 @@
 """MLP Layer based on tf.keras.layer."""
 import numpy as np
+import pickle
 import tensorflow as tf
 from tensorflow.keras.layers import Dense
-from tensorflow.keras.layers import Layer as KerasLayer
-from tensorflow.keras.models import Sequential
-from tensorflow.python.framework import tensor_shape
+from tensorflow.keras.layers import Input
+from tensorflow.keras.layers import Add
+from tensorflow.keras.layers import BatchNormalization
+from tensorflow.keras.models import Model
+from tests.fixtures import TfGraphTestCase
 
 # flake8: noqa
+# pylint: noqa
 
 
-class MLPLayer(KerasLayer):
-    def __init__(self,
-                 output_dim,
-                 hidden_sizes,
-                 hidden_nonlinearity=tf.nn.relu,
-                 hidden_w_init='uniform',
-                 hidden_b_init='zero',
-                 output_nonlinearity=None,
-                 output_w_init='uniform',
-                 output_b_init='zero',
-                 layer_normalization=False,
-                 **kwargs):
-        self.output_dim = output_dim
-        self.hidden_sizes = hidden_sizes
-        self.hidden_nonlinearity = hidden_nonlinearity
-        self.hidden_w_init = hidden_w_init
-        self.hidden_b_init = hidden_b_init
-        self.output_nonlinearity = output_nonlinearity
-        self.output_w_init = output_w_init
-        self.output_b_init = output_b_init
-        self.layer_normalization = layer_normalization
-        super().__init__(**kwargs)
-
-    def build(self, input_shape):
-        input_shape = tensor_shape.TensorShape(input_shape)
-        self.kernels = []
-        self.bias = []
-        if isinstance(self.hidden_sizes, int):
-            kernel = self.add_weight(
-                name='kernel_0',
-                shape=[input_shape[-1].value, self.output_dim],
-                initializer=self.output_w_init,
-                dtype=tf.float32)
-            bias = self.add_weight(
-                name='bias_0',
-                shape=(self.output_dim),
-                initializer=self.output_b_init)
-            self.kernels.append(kernel)
-            self.bias.append(bias)
-        else:
-            _hidden_size = self.hidden_sizes[0]
-            kernel = self.add_weight(
-                name='kernel_0',
-                shape=[input_shape[-1].value, _hidden_size],
-                initializer=self.hidden_w_init,
-                dtype=tf.float32)
-            bias = self.add_weight(
-                name='bias_0',
-                shape=(_hidden_size),
-                initializer=self.hidden_b_init)
-            self.kernels.append(kernel)
-            self.bias.append(bias)
-            for i, hidden_size in enumerate(self.hidden_sizes[1:-1]):
-                kernel = self.add_weight(
-                    name='kernel_{}'.format(i + 1),
-                    shape=[_hidden_size, hidden_size],
-                    initializer=self.hidden_w_init,
-                    dtype=tf.float32)
-                bias = self.add_weight(
-                    name='bias_{}'.format(i + 1),
-                    shape=(_hidden_size),
-                    initializer=self.hidden_b_init)
-                _hidden_size = hidden_size
-                self.kernels.append(kernel)
-                self.bias.append(bias)
-            kernel = self.add_weight(
-                name='kernel_{}'.format(len(self.hidden_sizes)),
-                shape=[_hidden_size, self.output_dim],
-                initializer=self.output_w_init,
-                dtype=tf.float32)
-            bias = self.add_weight(
-                name='bias_{}'.format(len(self.hidden_sizes)),
-                shape=(self.output_dim),
-                initializer=self.output_b_init)
-            self.kernels.append(kernel)
-            self.bias.append(bias)
-        super().build(input_shape)
-
-    def call(self, x):
-        for kernel, bias in zip(self.kernels[:-1], self.bias[:-1]):
-            x = self.hidden_nonlinearity(tf.matmul(x, kernel) + bias) \
-                if self.hidden_nonlinearity else x
-        x = self.output_nonlinearity(tf.matmul(x, self.kernels[-1]) + self.bias[-1]) \
-            if self.output_nonlinearity else x
-        return x
-
-    def compute_output_shape(self, input_shape):
-        input_shape = tensor_shape.TensorShape(input_shape)
-        # input_shape = input_shape.with_rank_at_least(2)
-        if input_shape[-1].value is None:
-            raise ValueError(
-                'The innermost dimension of input_shape must be defined, but saw: %s'
-                % input_shape)
-        return input_shape[:-1].concatenate(self.output_dim)
-
-    def get_config(self):
-        config = {
-            'output_dim': self.output_dim,
-            'hidden_sizes': self.hidden_sizes
-        }
-        base_config = super().get_config()
-        return dict(list(base_config.items()) + list(config.items()))
+def mlp(input_var,
+        output_dim,
+        hidden_sizes,
+        hidden_nonlinearity='relu',
+        hidden_w_init='glorot_uniform',
+        hidden_b_init='zeros',
+        output_nonlinearity=None,
+        output_w_init='glorot_uniform',
+        output_b_init='zero',
+        batch_normalization=False,
+        **kwargs):
+    x = input_var
+    if isinstance(hidden_sizes, int):
+        x = Dense(
+            units=hidden_sizes,
+            activation=hidden_nonlinearity,
+            kernel_initializer=hidden_w_init,
+            bias_initializer=hidden_b_init)(x)
+        if batch_normalization:
+            x = BatchNormalization(
+                hidden_sizes, activation=hidden_nonlinearity)(x)
+    else:
+        x = Dense(
+            units=hidden_sizes[0],
+            activation=hidden_nonlinearity,
+            kernel_initializer=hidden_w_init,
+            bias_initializer=hidden_b_init)(x)
+        if batch_normalization:
+            x = BatchNormalization(
+                hidden_sizes[0], activation=hidden_nonlinearity)(x)
+        for hidden_size in hidden_sizes[1:]:
+            x = Dense(
+                units=hidden_size,
+                activation=hidden_nonlinearity,
+                kernel_initializer=hidden_w_init,
+                bias_initializer=hidden_b_init)(x)
+            if batch_normalization:
+                x = BatchNormalization(
+                    hidden_size, activation=hidden_nonlinearity)(x)
+    x = Dense(
+        units=output_dim,
+        activation=output_nonlinearity,
+        kernel_initializer=output_w_init,
+        bias_initializer=output_b_init)(x)
+    return Model(inputs=input_var, outputs=x)
 
 
-if __name__ == "__main__":
+# option 1
+def GaussianMLPModel(input_var, *args, **kwargs):
+    mean = mlp(input_var, *args, **kwargs)
+    std = mlp(input_var, *args, **kwargs)
+    dist = Add()([mean.output, std.output])
+    return Model(inputs=input_var, outputs=[mean.output, std.output, dist])
 
-    custom_layer = MLPLayer(2, (32))
-    print("\n### MLPL layer: {}".format(custom_layer.get_config()))
 
-    custom_layer = MLPLayer(2, (32, 32))
-    print("\n### MLPL layer: {}".format(custom_layer.get_config()))
+# option 2
+class GaussianMLPModelC:
+    def __getstate__(self):
+        return {'model': self.model.to_json()}
 
-    custom_layer = MLPLayer(2, (32, 32, 32))
-    print("\n### MLPL layer: {}".format(custom_layer.get_config()))
+    def __setstate__(self, d):
+        model = tf.keras.models.model_from_json(self.__dict__['model'])
+        self.__dict__.update(model.__dict__)
 
-    model = Sequential()
-    model.add(Dense(5, input_dim=2))
-    model.add(MLPLayer(2, (32, 32)))
+    def __init__(self, input_var, *args, **kwargs):
+        self.model = self.build_model(input_var, *args, **kwargs)
+        self._mean = self.model.outputs[0]
+        self._std = self.model.outputs[1]
+        self._dist = self.model.outputs[2]
+        self._input = input_var
 
-    print("\n### Keras custom model : {}\n".format(model.get_config()))
-    print("\n### Keras custom model inputs: {}\n".format(model.inputs))
-    print("\n### Keras custom model outputs: {}\n".format(model.outputs))
+    def dist(self):
+        return self._dist
 
-    print("\nJSON : {}\n".format(model.to_json()))
-    fresh_model = tf.keras.models.model_from_json(
-        model.to_json(), custom_objects={'MLPLayer': MLPLayer})
-    print("\nRestore from JSON : {}\n".format(fresh_model.get_config()))
+    def input(self):
+        return self._input
 
-    print("\nYAML : {}\n".format(model.to_yaml()))
-    fresh_model = tf.keras.models.model_from_yaml(
-        model.to_yaml(), custom_objects={'MLPLayer': MLPLayer})
-    print("\nRestore from YAML: {}\n".format(fresh_model.get_config()))
+    def mean(self):
+        return self._mean
 
-    print("\n### Saving/loading weights...")
-    weights = model.get_weights()
-    weights[2] = np.ones_like(weights[2])
-    model.set_weights(weights)
-    print("\nweights being saved: {}".format(model.get_weights()))
-    model.save_weights('./test_keras.weights')
+    def build_model(self, input_var, *args, **kwargs):
+        mean = mlp(input_var, *args, **kwargs)
+        std = mlp(input_var, *args, **kwargs)
+        dist = Add()([mean.output, std.output])
+        return Model(inputs=input_var, outputs=[mean.output, std.output, dist])
 
-    print("\nweights before load: {}".format(fresh_model.get_weights()))
-    fresh_model.load_weights('./test_keras.weights')
-    print("\nweights after load: {}".format(fresh_model.get_weights()))
+
+class TestKerasModel(TfGraphTestCase):
+    def test_gaussian_mlp(self):
+        input_var = Input(shape=(5, ))
+        model = GaussianMLPModel(
+            input_var=input_var, output_dim=2, hidden_sizes=(4, 4))
+
+        modelC = GaussianMLPModelC(
+            input_var=input_var, output_dim=2, hidden_sizes=(4, 4))
+
+        pickle.dumps(model)
+
+    def test_mlp(self):
+        input_var = Input(shape=(5, ))
+        model = mlp(input_var, 2, (4))
+        self.sess.run(tf.global_variables_initializer())
+        data = np.random.random((2, 5))
+        y = self.sess.run(model.output, feed_dict={model.input: data})
+
+        print("\n### Keras custom model inputs: {}\n".format(model.inputs))
+        print("\n### Keras custom model outputs: {}\n".format(model.outputs))
+        print("\n### Keras custom model : {}\n".format(model.get_config()))
+
+        print("\nJSON : {}\n".format(model.to_json()))
+        fresh_model = tf.keras.models.model_from_json(model.to_json())
+        print("\nRestore from JSON : {}\n".format(fresh_model.get_config()))
+
+        print("\nYAML : {}\n".format(model.to_yaml()))
+        fresh_model = tf.keras.models.model_from_yaml(model.to_yaml())
+        print("\nRestore from YAML: {}\n".format(fresh_model.get_config()))
+        # print("\nJSON : {}\n".format(model.to_json()))
+        # fresh_model = tf.keras.models.model_from_json(
+        #     model.to_json(), custom_objects={'MLPLayer': MLPLayer})
+        # print("\nRestore from JSON : {}\n".format(fresh_model.get_config()))
+
+        # print("\nYAML : {}\n".format(model.to_yaml()))
+        # fresh_model = tf.keras.models.model_from_yaml(
+        #     model.to_yaml(), custom_objects={'MLPLayer': MLPLayer})
+        # print("\nRestore from YAML: {}\n".format(fresh_model.get_config()))
+
+        print("\n### Saving/loading weights...")
+        weights = model.get_weights()
+        weights[2] = np.ones_like(weights[2])
+        model.set_weights(weights)
+        print("\nweights being saved: {}".format(model.get_weights()))
+        model.save_weights('./test_keras.weights')
+
+        print("\nweights before load: {}".format(fresh_model.get_weights()))
+        fresh_model.load_weights('./test_keras.weights')
+        print("\nweights after load: {}".format(fresh_model.get_weights()))
