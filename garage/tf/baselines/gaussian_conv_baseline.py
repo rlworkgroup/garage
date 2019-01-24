@@ -1,53 +1,40 @@
-"""This module implements deterministic mlp baseline."""
+"""Gaussian Conv Baseline."""
 import numpy as np
 
 from garage.baselines import Baseline
 from garage.core import Serializable
 from garage.misc.overrides import overrides
 from garage.tf.core import Parameterized
-from garage.tf.regressors import DeterministicMLPRegressor
+from garage.tf.regressors import GaussianConvRegressor
 
 
-class DeterministicMLPBaseline(Baseline, Parameterized, Serializable):
-    """A value function using deterministic mlp network."""
+class GaussianConvBaseline(Baseline, Parameterized, Serializable):
+    """
+    A Convolutional net Baseline with Gaussian dist output.
+
+    Args:
+        env_spec: a TfEnv.spec, which contains env spaces info.
+
+    """
 
     def __init__(
             self,
             env_spec,
             subsample_factor=1.,
-            num_seq_inputs=1,
             regressor_args=None,
     ):
-        """
-        Constructor.
-
-        :param env_spec: environment specification.
-        :param subsample_factor:
-        :param num_seq_inputs: number of sequence inputs.
-        :param regressor_args: regressor arguments.
-        """
         Parameterized.__init__(self)
         Serializable.quick_init(self, locals())
-        super(DeterministicMLPBaseline, self).__init__(env_spec)
+        super(GaussianConvBaseline, self).__init__(env_spec)
+
         if regressor_args is None:
             regressor_args = dict()
 
-        self._regressor = DeterministicMLPRegressor(
-            input_shape=(
-                env_spec.observation_space.flat_dim * num_seq_inputs, ),
+        self._regressor = GaussianConvRegressor(
+            input_shape=env_spec.observation_space.shape,
             output_dim=1,
-            name="DeterministicMLPBaseline",
+            name="GaussianConvBaseline",
             **regressor_args)
-
-    @overrides
-    def get_param_values(self, **tags):
-        """Get parameter values."""
-        return self._regressor.get_param_values(**tags)
-
-    @overrides
-    def set_param_values(self, val, **tags):
-        """Set parameter values to val."""
-        self._regressor.set_param_values(val, **tags)
 
     @overrides
     def fit(self, paths):
@@ -62,5 +49,16 @@ class DeterministicMLPBaseline(Baseline, Parameterized, Serializable):
         return self._regressor.predict(path["observations"]).flatten()
 
     @overrides
+    def get_param_values(self, **tags):
+        """Get parameter values."""
+        return self._regressor.get_param_values(**tags)
+
+    @overrides
+    def set_param_values(self, flattened_params, **tags):
+        """Set parameter values to val."""
+        self._regressor.set_param_values(flattened_params, **tags)
+
+    @overrides
     def get_params_internal(self, **tags):
+        """Get parameter values."""
         return self._regressor.get_params_internal(**tags)
