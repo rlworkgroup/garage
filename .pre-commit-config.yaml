@@ -87,10 +87,19 @@ repos:
     #     stages: [commit, push]
     -   id: trailing-whitespace         # Trims trailing whitespace.
         stages: [commit, push]
-
+# First pass: check format
 -   repo: https://github.com/pre-commit/mirrors-yapf
     rev: v0.25.0
     hooks:
     -   id: yapf
-        args: ['-dipr']
+        name: Check format by yapf
+        args: ['-dpr']
+        stages: [commit, push]
+# Second pass: format in-place
+-   repo: https://github.com/pre-commit/mirrors-yapf
+    rev: v0.25.0
+    hooks:
+    -   id: yapf
+        name: Format in-place by yapf
+        args: ['-ipr']
         stages: [commit, push]
