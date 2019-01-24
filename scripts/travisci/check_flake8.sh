@@ -69,6 +69,7 @@ $(cat .gitignore)
 ignored_errors_added=(
 D107  # missing docstring in __init__
 W503  # line break before binary operator
+W504  # line break after binary operator
 )
 
 # Files or directories to exclude from checks applied to added files.
@@ -88,6 +89,7 @@ E402  # module level import not at top of file
 E713  # test for membership should be 'not in'
 F841  # local variable is assigned to but never used
 W503  # line break before binary operator
+W504  # line break after binary operator
 )
 
 # Files or directories to exclude from checks applied to all files.
