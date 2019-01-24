@@ -24,11 +24,18 @@ class LogOutput(abc.ABC):
 
     @abc.abstractmethod
     def record(self, data, prefix=''):
-        """This method is called by the logger when it needs to pass data."""
+        """This method is called by the logger when it needs to pass data.
+
+        :param data: The data to be logged by the output.
+        :param prefix: A prefix placed before a log entry in text outputs.
+        """
         pass
 
     def dump(self, step=None):
-        """This method is called by the logger to dump an output."""
+        """This method is called by the logger to dump an output.
+
+        :param step: The current run step.
+        """
         pass
 
 

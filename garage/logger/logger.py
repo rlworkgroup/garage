@@ -61,20 +61,27 @@ class Logger:
         self.add_output(output)
 
     def has_output(self, output_type):
-        """Checks to see if a given logger output is attached to the logger."""
+        """Checks to see if a given logger output is attached to the logger.
+
+        :param output_type: The type of output to check for.
+        """
         for output in self._outputs:
             if isinstance(output, output_type):
                 return True
         return False
 
     def dump_output(self, output_type, step=None):
-        """Dumps all outputs of the given type."""
+        """Dumps all outputs of the given type.
+
+        :param output_type: The type of output to check for.
+        :param step: he
+        """
         for output in self._outputs:
             if isinstance(output, output_type):
                 output.dump(step=step)
 
     @contextmanager
-    def prefix(self, key):
+    def prefix(self, prefix):
         """Add a prefix to the logger.
 
         This allows text output to be prepended with a given stack of prefixes.
@@ -83,15 +90,20 @@ class Logger:
         with logger.prefix('prefix: '):
             logger.log('test_string') # this will have the prefix
         logger.log('test_string2') # this will not have the prefix
+
+        :param prefix: The prefix string to be logged.
         """
-        self.push_prefix(key)
+        self.push_prefix(prefix)
         try:
             yield
         finally:
             self.pop_prefix()
 
     def push_prefix(self, prefix):
-        """Add prefix to prefix stack."""
+        """Add prefix to prefix stack.
+
+        :param prefix: The prefix string to be logged.
+        """
         self._prefixes.append(prefix)
         self._prefix_str = ''.join(self._prefixes)
 

@@ -72,6 +72,10 @@ class TensorBoardOutput(LogOutput):
             assert self._writer is not None
 
     def dump(self, step=None):
+        """Dumps this output to the log dir.
+
+        :param step: The current run step.
+        """
         if not self._writer:
             return
         run_step = self._default_step

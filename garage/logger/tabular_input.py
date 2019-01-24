@@ -23,12 +23,21 @@ class TabularInput:
         return tabulate.tabulate(self._tabular)
 
     def record(self, key, val):
-        """Allows the user to save key/value entries for the table."""
+        """Allows the user to save key/value entries for the table.
+
+        :param key: String key corresponding to the value.
+        :param val: Value that is to be stored in the table.
+        """
         self._tabular.append((self._prefix_str + str(key), str(val)))
         self._no_prefix_dict[key] = val
 
     def record_misc_stat(self, key, values, placement='back'):
-        """Allows the user to record statistics of an array."""
+        """Allows the user to record statistics of an array.
+
+        :param key: String key corresponding to the values.
+        :param values: Array of values to be analyzed.
+        :param placement: Whether to put the prefix in front or in the back.
+        """
         if placement == 'front':
             prefix = ""
             suffix = key
@@ -49,7 +58,7 @@ class TabularInput:
             self.record(prefix + "Max" + suffix, np.nan)
 
     @contextmanager
-    def prefix(self, key):
+    def prefix(self, prefix):
         """Handles pushing and popping of a tabular prefix.
 
         Can be used in the following way:
@@ -57,8 +66,10 @@ class TabularInput:
         with tabular.prefix('your_prefix_'):
             # your code
             tabular.record_tabular(key, val)
+
+        :param prefix: The string prefix to be prepended to logs.
         """
-        self.push_prefix(key)
+        self.push_prefix(prefix)
         try:
             yield
         finally:
@@ -68,12 +79,15 @@ class TabularInput:
         """Clears the tabular."""
         self._tabular.clear()
 
-    def push_prefix(self, key):
-        """Push prefix to be appended before printed table."""
-        self._prefixes.append(key)
+    def push_prefix(self, prefix):
+        """Push prefix to be appended before printed table.
+
+        :param prefix: The string prefix to be prepended to logs.
+        """
+        self._prefixes.append(prefix)
         self._prefix_str = ''.join(self._prefixes)
 
-    def pop_prefix(self, ):
+    def pop_prefix(self):
         """Pop prefix that was appended to the printed table."""
         del self._prefixes[-1]
         self._prefix_str = ''.join(self._prefixes)
