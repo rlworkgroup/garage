@@ -132,7 +132,7 @@ class CMAES(RLAlgorithm, Serializable):
                     policy=self.policy,
                     env=self.env,
                 ))
-            logger.log(tabular, with_prefix=False)
+            logger.log(tabular)
             if self.plot:
                 self.plotter.update_plot(self.policy, self.max_path_length)
             logger.pop_prefix()

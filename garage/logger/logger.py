@@ -21,8 +21,6 @@ class Logger:
         Any data sent to this method is sent to all outputs that accept its
         type.
 
-        :param with_prefix: Whether or not to add a prefix to the logged data,
-         if it is to be logged as text.
         :param data: Data to be logged. This can be any type specified in the
          types_accepted property of any of the logger outputs.
         """

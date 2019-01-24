@@ -101,7 +101,7 @@ class BatchPolopt(RLAlgorithm):
                     params["paths"] = samples_data["paths"]
                 snapshotter.save_itr_params(itr, params)
                 logger.log("saved")
-                logger.log(tabular, with_prefix=False)
+                logger.log(tabular)
                 if self.plot:
                     plotter.update_plot(self.policy, self.max_path_length)
                     if self.pause_for_plot:

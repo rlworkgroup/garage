@@ -177,7 +177,7 @@ class CEM(RLAlgorithm, Serializable):
                     cur_mean=cur_mean,
                     cur_std=cur_std,
                 ))
-            logger.log(tabular, with_prefix=False)
+            logger.log(tabular)
             logger.pop_prefix()
             if self.plot:
                 self.plotter.update_plot(self.policy, self.max_path_length)
