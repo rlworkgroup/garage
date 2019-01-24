@@ -17,6 +17,8 @@ from garage.misc.console import mkdir_p
 
 
 class TensorBoardOutput(LogOutput):
+    """Tensorboard output class for the logger."""
+
     def __init__(self, log_dir=config.LOG_DIR):
         self._scalars = tf.Summary()
         self._scope_tensor = {}

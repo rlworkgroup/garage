@@ -9,7 +9,7 @@ import numpy as np
 import tabulate
 
 
-class TabularInput(object):
+class TabularInput:
     """This class allows the user to create tables for easy display."""
 
     def __init__(self):
