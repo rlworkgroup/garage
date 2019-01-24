@@ -41,27 +41,6 @@ class Snapshotter:
     def snapshot_gap(self, gap):
         self._snapshot_gap = gap
 
-    def save_extra_data(self, data, file_name='extra_data.pkl', mode='joblib'):
-        """
-        Data saved here will always override the last entry.
-
-        :param mode: How the dump should be handled.
-        :param file_name: File to dump to.
-        :param data: Something pickle'able.
-        """
-        if self._snapshot_dir:
-            file_name = osp.join(self._snapshot_dir, file_name)
-            if mode == 'joblib':
-                import joblib
-                joblib.dump(data, file_name, compress=3)
-            elif mode == 'pickle':
-                pickle.dump(data, open(file_name, "wb"))
-            else:
-                raise ValueError("Invalid mode: {}".format(mode))
-            return file_name
-
-        return None
-
     def save_itr_params(self, itr, params):
         """Save the parameters if at the right iteration."""
         if self._snapshot_dir:
