@@ -47,11 +47,10 @@ $(cat .gitignore)
 
 # Error codes ignored for changed files
 ignored_errors_changed=(
-# BREAK BEFORE BINARY OPERATOR
-# It enforces the break after the operator, which is acceptable, but it's
-# preferred to do it before the operator. Since YAPF enforces the preferred
-# style, this rule is ignored.
 D     # docstring rules disabled
+# We prefer break after binary operator, but YAPF breaks before and the behavior
+# is not configurable, so we disable related rules in flake8.
+# Ref: https://github.com/google/yapf/issues/647
 W503  # line break before binary operator
 W504  # line break after binary operator
 )
