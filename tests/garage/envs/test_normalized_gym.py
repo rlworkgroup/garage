@@ -4,13 +4,13 @@ import gym
 
 from garage.envs import normalize
 from garage.misc.overrides import overrides
-from garage.theano.envs import TheanoEnv
+from garage.tf.envs import TfEnv
 
 
 class TestNormalizedGym(unittest.TestCase):
     @overrides
     def setUp(self):
-        self.env = TheanoEnv(
+        self.env = TfEnv(
             normalize(
                 gym.make('Pendulum-v0'),
                 normalize_reward=True,

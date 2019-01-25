@@ -23,7 +23,7 @@ docker run \
   -it \
   --rm \
   -e MJKEY="$(cat ~/.mujoco/mjkey.txt)" \
-  rlworkgroup/garage-headless python examples/theano/trpo_swimmer.py
+  rlworkgroup/garage-headless python examples/tf/trpo_swimmer.py
 ```
 
 To save the experiment data generated in the container, you need to specify a

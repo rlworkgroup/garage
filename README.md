@@ -12,7 +12,7 @@ garage only officially supports Python 3.5+.
 
 garage comes with support for running reinforcement learning experiments on an EC2 cluster, and tools for visualizing the results. See the [documentation](https://rlgarage.readthedocs.io/en/latest/user/cluster.html) for details.
 
-garage supports [TensorFlow](https://www.tensorflow.org/) and [Theano](http://deeplearning.net/software/theano/) for neural network frameworks. TensorFlow modules can be found under [garage/tf](https://github.com/rlworkgroup/garage/tree/master/garage/tf).
+garage supports [TensorFlow](https://www.tensorflow.org/) for neural network frameworks. TensorFlow modules can be found under [garage/tf](https://github.com/rlworkgroup/garage/tree/master/garage/tf).
 
 # Documentation
 

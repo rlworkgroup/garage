@@ -134,9 +134,6 @@ def set_seed(seed):
     seed_ = seed
     random.seed(seed)
     np.random.seed(seed)
-    if "theano" in sys.modules:
-        import lasagne
-        lasagne.random.set_rng(np.random.RandomState(seed))
     try:
         if "tensorflow" in sys.modules:
             import tensorflow as tf

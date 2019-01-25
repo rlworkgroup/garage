@@ -119,7 +119,7 @@ class BatchPolopt(RLAlgorithm):
 
     def init_opt(self):
         """
-        Initialize the optimization procedure. If using theano / cgt, this may
+        Initialize the optimization procedure. If using tf, this may
         include declaring all the variables and compiling functions
         """
         raise NotImplementedError

@@ -31,7 +31,6 @@ dependencies:
         - jsonmerge
         - joblib<0.13,>=0.12
         - jupyter
-        - git+https://github.com/Lasagne/Lasagne.git@a61b76fd991f84c50acdb7bea02118899b5fefe1#egg=lasagne
         - mako
         - matplotlib
         - memory_profiler
@@ -53,7 +52,6 @@ dependencies:
         - scipy
         - tensorboard
         - tensorflow<1.10,>=1.9.0
-        - Theano==1.0.2
         # dev dependencies below this line
         - git+https://github.com/openai/baselines.git@f2729693253c0ef4d4086231d36e0a4307ec1cb3#egg=baselines
         - codacy-coverage
