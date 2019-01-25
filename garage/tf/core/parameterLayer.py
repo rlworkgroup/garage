@@ -1,36 +1,54 @@
 """Parameter layer in TensorFlow."""
-
 import tensorflow as tf
+from tensorflow.keras.layers import Layer as KerasLayer
 from tensorflow.python.ops.gen_array_ops import broadcast_to
-from tensorflow.keras.layers import Layer
-
-# flake8: noqa
 
 
-class ParameterLayer(Layer):
+class ParameterLayer(KerasLayer):
+    """
+    Parameter layer based on tf.keras.layers.Layer.
+
+    Used as layer that could be broadcast to a certain shape to
+    match with input variable during training.
+    Example: A trainable parameter variable with shape (2,), it needs to be
+    broadcasted to (32, 2) when applied to a batch with size 32.
+    """
+
     def __init__(self,
                  length,
-                 initializer=tf.ones_initializer(),
-                 dtype=tf.float32,
+                 scope='ParameterLayer',
+                 initializer='ones',
                  trainable=True,
-                 name="parameter"):
-        self._length = length
-        self._initializer = initializer
-        self._trainable = trainable
-        super().__init__()
+                 **kwargs):
+        self.length = length
+        self.initializer = initializer
+        self.trainable = trainable
+        self.scope = scope
+        super().__init__(**kwargs)
 
     def build(self, input_shape):
-        self.kernel = self.add_weight(
-            name='kernel',
-            shape=(self._length, ),
-            initializer=self._initializer,
-            trainable=self._trainable)
-        super().build(input_shape)
+        """tf.keras.layers.Layer build."""
+        with tf.variable_scope(self.scope):
+            self.kernel = self.add_weight(
+                name='kernel',
+                shape=(self.length, ),
+                initializer=self.initializer,
+                trainable=self.trainable)
+            super().build(input_shape)
 
     def call(self, x):
+        """tf.keras.layers.Layer call."""
         broadcast_shape = tf.concat(
-            axis=0, values=[tf.shape(x)[:-1], [self._length]])
+            axis=0, values=[tf.shape(x)[:-1], [self.length]])
         return broadcast_to(self.kernel, shape=broadcast_shape)
 
-    def compute_output_shape(self, input_shape):
-        return (input_shape[0], self._length)
+    def get_config(self):
+        """Cusomterized configuration for serialization."""
+        config = {
+            'length': self.length,
+            'name': self.name,
+            'initializer': self.initializer,
+            'trainable': self.trainable
+        }
+        base_config = super().get_config()
+        return dict(list(base_config.items()) + list(config.items()))
