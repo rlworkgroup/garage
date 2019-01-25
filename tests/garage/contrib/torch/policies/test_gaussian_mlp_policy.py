@@ -1,9 +1,10 @@
 import unittest
+
 import gym
 import torch
 
-from garage.experiment.core import get_env_spec
-from garage.experiment.torch.policies.gaussian_mlp_policy import GaussianMLPPolicy
+from garage.experiment.core.misc import get_env_spec
+from garage.experiment.torch.policies import GaussianMLPPolicy
 
 
 class TestGaussianMLPPolicy(unittest.TestCase):
@@ -15,5 +16,5 @@ class TestGaussianMLPPolicy(unittest.TestCase):
         obs = torch.Tensor(env.reset())
         obs.unsqueeze_(0)
         action = policy.sample(obs)
-        logpdf = policy.logpdf(obs, action)
+        policy.logpdf(obs, action)
         # print(obs, action, logpdf)

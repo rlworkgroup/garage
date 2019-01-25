@@ -2,7 +2,7 @@ import abc
 
 
 class Sampler(abc.ABC):
-    """Base Sampler class"""
+    """Base Sampler class."""
 
     @abc.abstractmethod
     def reset(self):
@@ -10,6 +10,7 @@ class Sampler(abc.ABC):
 
         Returns:
             obs: Tensor(env_n, observation_dim)
+
         """
         raise NotImplementedError
 

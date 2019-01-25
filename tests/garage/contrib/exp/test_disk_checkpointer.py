@@ -1,10 +1,10 @@
-import unittest
 from os import path
+import unittest
 
 import gym
 import numpy as np
 
-from garage.experiment import DiskCheckpointer
+from garage.experiment.checkpointers import DiskCheckpointer
 
 
 class TestDiskCheckpointer(unittest.TestCase):

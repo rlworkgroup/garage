@@ -225,7 +225,7 @@ def summary_name(exp, selector=None):
     #     name = ""
     #     for k in rest_params:
     #         name += "%s=%s;" % (k.split(".")[-1],
-    #                             str(experiment.flat_params.get(k, "")).split(".")[-1])
+    #              str(experiment.flat_params.get(k, "")).split(".")[-1])
     #     return name
     return exp.params["exp_name"]
 
@@ -253,6 +253,9 @@ def get_plot_instruction(plot_key,
                          legend_post_processor=None,
                          normalize_error=False,
                          custom_series_splitter=None):
+    def nop_processor(x):
+        return x
+
     print(plot_key, split_key, group_key, filters)
     if filter_nan:
         nonnan_exps_data = list(filter(check_nan, exps_data))
@@ -260,7 +263,7 @@ def get_plot_instruction(plot_key,
     else:
         selector = core.Selector(exps_data)
     if legend_post_processor is None:
-        legend_post_processor = lambda x: x
+        legend_post_processor = nop_processor
     if filters is None:
         filters = dict()
     for k, v in filters.items():
@@ -316,11 +319,12 @@ def get_plot_instruction(plot_key,
             filtered_data = group_selector.extract()
             if filtered_data:
 
-                if only_show_best or only_show_best_final or only_show_best_sofar:
+                if only_show_best or only_show_best_final \
+                        or only_show_best_sofar:
                     # Group by seed and sort.
                     # -----------------------
                     filtered_params = core.extract_distinct_params(
-                        filtered_data, l=0)
+                        filtered_data, length=0)
                     filtered_params2 = [p[1] for p in filtered_params]
                     filtered_params_k = [p[0] for p in filtered_params]
                     product_space = list(itertools.product(*filtered_params2))
@@ -376,7 +380,8 @@ def get_plot_instruction(plot_key,
                                 best_regret = regret
                                 best_progress = progresses
                                 data_best_regret = data
-                                kv_string_best_regret = distinct_params_kv_string
+                                kv_string_best_regret = \
+                                    distinct_params_kv_string
 
                     print(group_selector._filters)
                     print('best regret: {}'.format(best_regret))
@@ -386,7 +391,7 @@ def get_plot_instruction(plot_key,
                             exp.progress.get(plot_key, np.array([np.nan]))
                             for exp in data_best_regret
                         ]
-                        #                         progresses = [progress[:500] for progress in progresses ]
+
                         sizes = list(map(len, progresses))
                         # more intelligent:
                         max_size = max(sizes)

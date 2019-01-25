@@ -49,8 +49,8 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
         :param std_network: custom network for the output log std
         :param std_parametrization: how the std should be parametrized. There
          are a few options:
-            - experiment: the logarithm of the std will be stored, and applied a
-             exponential transformation
+            - experiment: the logarithm of the std will be stored,
+                and applied an exponential transformation
             - softplus: the std will be computed as log(1+experiment(x))
         :return:
         """

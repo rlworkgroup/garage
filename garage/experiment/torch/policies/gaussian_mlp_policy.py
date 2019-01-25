@@ -1,8 +1,8 @@
 import math
 
 import torch
-import torch.nn as nn
 from torch.distributions.normal import Normal
+import torch.nn as nn
 
 from garage.experiment.core import Policy
 from garage.experiment.torch.core.mlp import MLP

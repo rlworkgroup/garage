@@ -46,7 +46,8 @@ class VariantDict(AttrDict):
 
 
 class VariantGenerator:
-    """
+    """Variant Generator.
+
     Usage:
 
     vg = VariantGenerator()
@@ -233,7 +234,8 @@ def run_experiment(method_call=None,
                    pre_commands=None,
                    added_project_directories=[],
                    **kwargs):
-    """
+    """Run experiment.
+
     Serialize the method call and run the run_experiment using the
     specified mode.
     :param method_call: A method call.
@@ -272,6 +274,7 @@ def run_experiment(method_call=None,
      periodically during execution.
     :param periodic_sync_interval: Time interval between each periodic sync,
      in seconds.
+
     """
     assert method_call is not None or batch_tasks is not None, \
         "Must provide at least either method_call or batch_tasks"
@@ -504,6 +507,7 @@ _find_unsafe = re.compile(r'[a-zA-Z0-9_^@%+=:,./-]').search
 def ensure_dir(dirname):
     """
     Ensure that a named directory exists; if it does not, attempt to create it.
+
     """
     try:
         os.makedirs(dirname)
@@ -577,13 +581,14 @@ def to_docker_command(params,
                       use_gpu=False,
                       env=None,
                       local_code_dir=None):
-    """
+    """Make a docker command.
     :param params: The parameters for the run_experiment. If logging directory
      parameters are provided, we will create docker volume mapping to make sure
      that the logging files are created at the correct locations
     :param docker_image: docker image to run the command on
     :param script: script command for running run_experiment
     :return:
+
     """
     log_dir = params.get("log_dir")
     docker_args = params.pop("docker_args", "")

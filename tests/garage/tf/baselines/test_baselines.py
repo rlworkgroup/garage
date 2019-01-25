@@ -13,5 +13,5 @@ class TestTfBaselines(TfGraphTestCase):
     def test_baseline(self):
         """Test the baseline initialization."""
         box_env = TfEnv(DummyBoxEnv())
-        deterministic_mlp_baseline = DeterministicMLPBaseline(env_spec=box_env)
-        gaussian_mlp_baseline = GaussianMLPBaseline(env_spec=box_env)
+        DeterministicMLPBaseline(env_spec=box_env)
+        GaussianMLPBaseline(env_spec=box_env)

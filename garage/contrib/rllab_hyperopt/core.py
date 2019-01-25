@@ -5,12 +5,12 @@ import threading
 import time
 import warnings
 
-import polling
+from hyperopt import fmin
 from hyperopt import STATUS_FAIL
 from hyperopt import STATUS_OK
-from hyperopt import fmin
 from hyperopt import tpe
 from hyperopt.mongoexp import MongoTrials
+import polling
 
 from garage import config
 from garage.run_experiment import run_experiment
@@ -84,8 +84,9 @@ def _wait_result(exp_prefix, exp_name, timeout):
 
     :param exp_prefix: str, run_experiment name prefix (dir where results are
      expected to be stored)
-    :param exp_name: str, run_experiment name. Name of dir below exp_prefix where
-     result files of individual run are expected to be stored
+    :param exp_name: str, run_experiment name.
+     Name of dir below exp_prefix where result files
+     of individual run are expected to be stored
     :param timeout: int, polling timeout in seconds
     :return bool. False if the polling times out. True if successful.
     """

@@ -9,7 +9,7 @@ from garage.experiment.samplers.sampler import Sampler
 
 
 class BatchSampler(Sampler):
-    """Multiple environments batch sampler"""
+    """Multiple environments batch sampler."""
 
     def __init__(self, env: gym.Env, n_env=1, max_path_length=100):
         self._env = env

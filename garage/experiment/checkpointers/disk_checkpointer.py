@@ -1,5 +1,5 @@
+from os import listdir, makedirs, path, remove, rmdir
 import pickle as pkl
-from os import listdir, path, remove, makedirs, rmdir
 
 from garage.experiment.checkpointers.checkpointer import Checkpointer
 from garage.experiment.checkpointers.utils import cat_for_fname
@@ -84,6 +84,7 @@ class DiskCheckpointer(Checkpointer):
 
         Returns:
             bool: if name is valid saved object filename.
+
         """
         segs = filename.split('_')
 
@@ -144,7 +145,7 @@ class DiskCheckpointer(Checkpointer):
                                                      'rb')) if not dry else ""
 
             if len(cp) == len(obj_names) and \
-                (not latest_timestamp or timestamp > latest_timestamp):
+                    (not latest_timestamp or timestamp > latest_timestamp):
                 ret_cp = cp
                 latest_timestamp = timestamp
 
@@ -163,5 +164,5 @@ class DiskCheckpointer(Checkpointer):
                 remove(file)
 
         if not latest_timestamp and path.exists(self.exp_dir) \
-            and not listdir(self.exp_dir):
+                and not listdir(self.exp_dir):
             rmdir(self.exp_dir)

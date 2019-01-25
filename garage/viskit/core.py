@@ -265,7 +265,8 @@ def hex_to_rgb(hex, opacity=1.0):
 #         to_plot = []
 #         for v in vs:
 #             filtered_data = selector.where(k, v).extract()
-#             returns = [experiment.progress[self._plot_key] for experiment in filtered_data]
+#             returns = [experiment.progress[self._plot_key] \
+#                        for experiment in filtered_data]
 #             sizes = map(len, returns)
 #             max_size = max(sizes)
 #             for experiment, retlen in zip(filtered_data, sizes):
