@@ -1038,10 +1038,9 @@ def s3_sync_code(config, dry=False, added_project_directories=[]):
             has_git = False
         dir_hash = base64.b64encode(subprocess.check_output(
             ["pwd"])).decode("utf-8")
-        code_path = "{}_{}".format(dir_hash, (current_commit if clean_state
-                                              else "{}_dirty_{}".format(
-                                                  current_commit, timestamp))
-                                   if has_git else timestamp)
+        code_path = "{}_{}".format(
+            dir_hash, (current_commit if clean_state else "{}_dirty_{}".format(
+                current_commit, timestamp)) if has_git else timestamp)
 
         full_path = "%s/%s" % (base, code_path)
         cache_path = "%s/%s" % (base, dir_hash)

@@ -11,7 +11,10 @@ import psutil
 
 from garage.misc.console import colorize
 
-scripts = ["tests/fixtures/tf/trpo_cartpole_instrumented.py"]
+scripts = [
+    "tests/fixtures/algos/nop_cartpole_instrumented.py",
+    "tests/fixtures/tf/trpo_cartpole_instrumented.py",
+]
 
 
 class ExpLifecycle(IntEnum):

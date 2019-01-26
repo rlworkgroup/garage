@@ -104,6 +104,7 @@ $(cat .gitignore)
 # Error codes ignored to changed test files
 test_ignored_errors_changed=(
 D  # docstring rules disabled
+W503  # line break before binary operator
 )
 
 # Files or directories to exclude from checks applied to changed test files.
@@ -117,6 +118,7 @@ $(cat .gitignore)
 # Error codes ignored to added test files
 test_ignored_errors_added=(
 D  # docstring rules disabled
+W503  # line break before binary operator
 )
 
 # Files or directories to exclude from checks applied to added test files.
