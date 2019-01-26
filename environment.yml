@@ -1,12 +1,7 @@
 name: garage
-channels:
-    - https://conda.anaconda.org/menpo
-    - https://conda.anaconda.org/conda-forge
 dependencies:
     - python==3.6.6
     # Please keep alphabetized
-    - mkl-service=1.1.2
-    - mkl==2017.0.4
     # cma requires numpy to install
     - numpy==1.14.5
     # dev dependencies below this line
