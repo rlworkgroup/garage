@@ -1,14 +1,13 @@
 """Gaussian MLP Model."""
 import numpy as np
 import tensorflow as tf
-from tensorflow.keras.layers import Input
 from tensorflow.keras.layers import Lambda
 from tensorflow.keras.models import Model
 
 from garage.misc import ext
-from garage.tf.core.mlp2 import mlp2
-from garage.tf.core.parameterLayer import ParameterLayer
+from garage.tf.core.parameter_layer import ParameterLayer
 from garage.tf.models import PickableModel
+from garage.tf.models.mlp_model import MLPModel
 
 
 class GaussianMLPModel(PickableModel):
@@ -45,9 +44,10 @@ class GaussianMLPModel(PickableModel):
     def __init__(self,
                  input_dim,
                  output_dim,
-                 dist=tf.contrib.distributions.MultivariateNormalDiag,
                  scope="GaussianMLPModel",
                  hidden_sizes=(32, 32),
+                 hidden_nonlinearity="relu",
+                 output_nonlinearity=None,
                  learn_std=True,
                  init_std=1.0,
                  adaptive_std=False,
@@ -55,12 +55,9 @@ class GaussianMLPModel(PickableModel):
                  std_hidden_sizes=(32, 32),
                  min_std=1e-6,
                  max_std=None,
-                 std_hidden_nonlinearity='relu',
-                 hidden_nonlinearity='relu',
-                 output_nonlinearity=None,
-                 std_parameterization='exp',
-                 *args,
-                 **kwargs):
+                 std_hidden_nonlinearity="relu",
+                 std_output_nonlinearity=None,
+                 std_parameterization="exp"):
         self._scope = scope
 
         # Network parameters
@@ -75,21 +72,21 @@ class GaussianMLPModel(PickableModel):
         self._min_std = min_std
         self._max_std = max_std
         self._std_hidden_nonlinearity = std_hidden_nonlinearity
+        self._std_output_nonlinearity = std_output_nonlinearity
         self._hidden_nonlinearity = hidden_nonlinearity
         self._output_nonlinearity = output_nonlinearity
         self._std_parameterization = std_parameterization
-        self._dist = dist
         # Tranform std arguments to parameterized space
         self._init_std_param = None
         self._min_std_param = None
         self._max_std_param = None
-        if self._std_parameterization == 'exp':
+        if self._std_parameterization == "exp":
             self._init_std_param = np.log(init_std)
             if min_std:
                 self._min_std_param = np.log(min_std)
             if max_std:
                 self._max_std_param = np.log(max_std)
-        elif self._std_parameterization == 'softplus':
+        elif self._std_parameterization == "softplus":
             self._init_std_param = np.log(np.exp(init_std) - 1)
             if min_std:
                 self._min_std_param = np.log(np.exp(min_std) - 1)
@@ -102,19 +99,15 @@ class GaussianMLPModel(PickableModel):
 
     def build_model(self):
         """Build model."""
-        input_var = Input(shape=(self._input_dim, ))
-
-        with tf.variable_scope(self._scope):
+        with tf.name_scope(self._scope):
             if self._std_share_network:
-                b = np.concatenate(
-                    [
-                        np.zeros(self._output_dim),
-                        np.full(self._output_dim, self._init_std_param)
-                    ],
-                    axis=0)
+                b = np.concatenate([
+                    np.zeros(self._output_dim),
+                    np.full(self._output_dim, self._init_std_param)
+                ], axis=0)  # yapf: disable
                 b = tf.constant_initializer(b)
-                mean_std_model = mlp2(
-                    input_var=input_var,
+                mean_std_model = MLPModel(
+                    input_dim=self._input_dim,
                     output_dim=self._output_dim * 2,
                     hidden_sizes=self._hidden_sizes,
                     hidden_nonlinearity=self._hidden_nonlinearity,
@@ -123,23 +116,25 @@ class GaussianMLPModel(PickableModel):
                     scope="mean_std_network")
                 mean_var = mean_std_model.output[..., self._output_dim:]
                 std_param_var = mean_std_model.output[..., :self._output_dim]
+                input_var = mean_std_model.input
             else:
-                mean_model = mlp2(
-                    input_var=input_var,
+                mean_model = MLPModel(
+                    input_dim=self._input_dim,
                     output_dim=self._output_dim,
                     hidden_sizes=self._hidden_sizes,
                     hidden_nonlinearity=self._hidden_nonlinearity,
                     output_nonlinearity=self._output_nonlinearity,
                     scope="mean_network")
+                input_var = mean_model.input
                 mean_var = mean_model.output
 
                 if self._adaptive_std:
-                    std_model = mlp2(
-                        input_var=input_var,
+                    std_model = MLPModel(
+                        input_dim=self._input_dim,
                         output_dim=self._output_dim,
                         hidden_sizes=self._std_hidden_sizes,
                         hidden_nonlinearity=self._std_hidden_nonlinearity,
-                        output_nonlinearity=self._output_nonlinearity,
+                        output_nonlinearity=self._std_output_nonlinearity,
                         output_b_init=b,
                         scope="std_network")
 
@@ -152,23 +147,23 @@ class GaussianMLPModel(PickableModel):
                         trainable=self._learn_std,
                         scope="std_network")(input_var)
 
-            with tf.variable_scope("std_limits"):
+            with tf.name_scope("std_limits"):
                 if self._min_std_param:
                     std_param_var = Lambda(
                         lambda x, f, p: f(x, p),
                         arguments={
-                            'f': tf.maximum,
-                            'p': self._min_std_param
+                            "f": tf.maximum,
+                            "p": self._min_std_param
                         })(std_param_var)
                 if self._max_std_param:
                     std_param_var = Lambda(
                         lambda x, f, p: f(x, p),
                         arguments={
-                            'f': tf.minimum,
-                            'p': self._max_std_param
+                            "f": tf.minimum,
+                            "p": self._max_std_param
                         })(std_param_var)
 
-        with tf.variable_scope("std_parameterization"):
+        with tf.name_scope("std_parameterization"):
             if self._std_parameterization == "exp":
                 std_var = Lambda(
                     lambda x, f: f(x), arguments={'f': tf.exp})(std_param_var)
@@ -176,8 +171,8 @@ class GaussianMLPModel(PickableModel):
                 std_var = Lambda(
                     lambda x, f, g: f(1 + g(x)),
                     arguments={
-                        'f': tf.log,
-                        'g': tf.exp
+                        "f": tf.log,
+                        "g": tf.exp
                     })(std_param_var)
             else:
                 raise NotImplementedError
@@ -185,8 +180,8 @@ class GaussianMLPModel(PickableModel):
         sample_var = Lambda(
             lambda x, f, s: f(x[0], x[1]).sample(seed=s),
             arguments={
-                'f': self._dist,
-                's': ext.get_seed()
+                "f": tf.contrib.distributions.MultivariateNormalDiag,
+                "s": ext.get_seed()
             })([mean_var, std_param_var])
 
         return Model(

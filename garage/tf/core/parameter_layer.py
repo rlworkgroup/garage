@@ -12,12 +12,18 @@ class ParameterLayer(KerasLayer):
     match with input variable during training.
     Example: A trainable parameter variable with shape (2,), it needs to be
     broadcasted to (32, 2) when applied to a batch with size 32.
+
+    Args:
+        length: Size of the parameter variable.
+        scope: Name scope of the parameter variable.
+        initializer: Initializer for the parameter variable.
+        trainable: If the parameter variable is trainable.
     """
 
     def __init__(self,
                  length,
-                 scope='ParameterLayer',
-                 initializer='ones',
+                 scope="ParameterLayer",
+                 initializer="ones",
                  trainable=True,
                  **kwargs):
         self.length = length
@@ -28,7 +34,7 @@ class ParameterLayer(KerasLayer):
 
     def build(self, input_shape):
         """tf.keras.layers.Layer build."""
-        with tf.variable_scope(self.scope):
+        with tf.name_scope(self.scope):
             self.kernel = self.add_weight(
                 name='kernel',
                 shape=(self.length, ),
@@ -46,9 +52,10 @@ class ParameterLayer(KerasLayer):
         """Cusomterized configuration for serialization."""
         config = {
             'length': self.length,
-            'name': self.name,
+            'scope': self.scope,
             'initializer': self.initializer,
             'trainable': self.trainable
         }
+
         base_config = super().get_config()
         return dict(list(base_config.items()) + list(config.items()))

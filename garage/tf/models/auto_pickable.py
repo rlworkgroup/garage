@@ -45,8 +45,7 @@ class PickleCall:
         return (None, self.args, self.kwargs, self.to_call)
 
 
-def build_layers(config, weights, **kwargs):
-    """Build a tf.keras.layer.Layer."""
+def _build_layers(config, weights, **kwargs):
     model = tf.keras.models.Model.from_config(config, custom_objects=kwargs)
     model.set_weights(weights)
     return model
@@ -69,7 +68,7 @@ class AutoPickable:
                     if "garage" in str(type(c)):  # detect subclassed layer
                         name = type(c).__name__
                         custom_objects[name] = type(c)
-                state[k] = PickleCall(build_layers,
+                state[k] = PickleCall(_build_layers,
                                       (v.get_config(), v.get_weights()),
                                       custom_objects)
         return state

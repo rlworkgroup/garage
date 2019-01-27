@@ -81,12 +81,10 @@ class GaussianConvRegressor(LayersPowered, Serializable, Parameterized):
 
             if mean_network is None:
                 if std_share_network:
-                    b = np.concatenate(
-                        [
-                            np.zeros(output_dim),
-                            np.full(output_dim, np.log(init_std))
-                        ],
-                        axis=0)
+                    b = np.concatenate([
+                        np.zeros(output_dim),
+                        np.full(output_dim, np.log(init_std))
+                    ], axis=0)  # yapf: disable
                     b = tf.constant_initializer(b)
                     mean_network = ConvNetwork(
                         name=self._mean_network_name,
