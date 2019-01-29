@@ -8,6 +8,7 @@ from garage.algos import CMAES
 from garage.algos.nop import NOP
 from garage.baselines import LinearFeatureBaseline
 from garage.baselines import ZeroBaseline
+from garage.envs import GarageEnv
 from garage.envs import GridWorldEnv
 from garage.envs.box2d import CartpoleEnv
 from tests.fixtures.policies import DummyPolicy
@@ -50,7 +51,7 @@ class TestAlgos(unittest.TestCase):
     def test_polopt_algo(self, algo_cls, env_cls, policy_cls, baseline_cls):
         print("Testing %s, %s, %s" % (algo_cls.__name__, env_cls.__name__,
                                       policy_cls.__name__))
-        env = env_cls()
+        env = GarageEnv(env_cls())
         policy = policy_cls(env_spec=env)
         baseline = baseline_cls(env_spec=env)
         algo = algo_cls(

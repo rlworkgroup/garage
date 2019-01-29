@@ -1,13 +1,21 @@
 """Wrapper class that converts gym.Env into GarageEnv."""
-from abc import ABCMeta, abstractmethod
 import collections
 import warnings
 
 import glfw
 import gym
+from gym.spaces import Box as GymBox
+from gym.spaces import Dict as GymDict
+from gym.spaces import Discrete as GymDiscrete
+from gym.spaces import Tuple as GymTuple
 
 from garage.core import Parameterized
 from garage.core import Serializable
+from garage.envs.env_spec import EnvSpec
+from garage.spaces import Box
+from garage.spaces import Dict
+from garage.spaces import Discrete
+from garage.spaces import Tuple
 
 # The gym environments using one of the packages in the following list as entry
 # points don't close their viewer windows.
@@ -18,7 +26,7 @@ KNOWN_GYM_NOT_CLOSE_VIEWER = [
 ]
 
 
-class GarageEnv(gym.Wrapper, Parameterized, Serializable, metaclass=ABCMeta):
+class GarageEnv(gym.Wrapper, Parameterized, Serializable):
     """
     Returns an abstract Garage wrapper class for gym.Env.
 
@@ -39,6 +47,11 @@ class GarageEnv(gym.Wrapper, Parameterized, Serializable, metaclass=ABCMeta):
             super().__init__(gym.make(env_name))
         else:
             super().__init__(env)
+
+        self.action_space = self._to_garage_space(self.env.action_space)
+        self.observation_space = self._to_garage_space(
+            self.env.observation_space)
+
         Parameterized.__init__(self)
         Serializable.quick_init(self, locals())
 
@@ -110,7 +123,7 @@ class GarageEnv(gym.Wrapper, Parameterized, Serializable, metaclass=ABCMeta):
         warnings.warn("log_diagnostics is deprecated", DeprecationWarning)
         pass
 
-    @abstractmethod
+    @property
     def spec(self):
         """
         Returns an EnvSpec with garage.spaces.
@@ -118,7 +131,9 @@ class GarageEnv(gym.Wrapper, Parameterized, Serializable, metaclass=ABCMeta):
         Returns:
             spec (garage.envs.EnvSpec)
         """
-        raise NotImplementedError
+        return EnvSpec(
+            observation_space=self.observation_space,
+            action_space=self.action_space)
 
     def reset(self, **kwargs):
         """
@@ -138,7 +153,6 @@ class GarageEnv(gym.Wrapper, Parameterized, Serializable, metaclass=ABCMeta):
         """
         return self.env.step(action)
 
-    @abstractmethod
     def _to_garage_space(self, space):
         """
         Converts a gym.space into a garage.space.
@@ -149,7 +163,16 @@ class GarageEnv(gym.Wrapper, Parameterized, Serializable, metaclass=ABCMeta):
         Returns:
             space (garage.spaces)
         """
-        raise NotImplementedError
+        if isinstance(space, GymBox):
+            return Box(low=space.low, high=space.high, dtype=space.dtype)
+        elif isinstance(space, GymDict):
+            return Dict(space.spaces)
+        elif isinstance(space, GymDiscrete):
+            return Discrete(space.n)
+        elif isinstance(space, GymTuple):
+            return Tuple(list(map(self._to_garage_space, space.spaces)))
+        else:
+            raise NotImplementedError
 
 
 def Step(observation, reward, done, **kwargs):  # noqa: N802
