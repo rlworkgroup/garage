@@ -6,8 +6,33 @@ from garage.envs import Step
 
 
 class PointEnv(gym.Env, Serializable):
-    def __init__(self):
-        # Always call Serializable constructor last
+    """A simple 2D point environment.
+
+    Attributes:
+        observation_space (:obj:`gym.spaces.Box`): The observation space
+        action_space (:obj:`gym.spaces.Box`): The action space
+
+    Args:
+        goal (:obj:`np.ndarray`, optional): A 2D array representing the goal
+            position
+        done_bonus (float, optional): A numerical bonus added to the reward
+            once the point as reached the goal
+        never_done (bool, optional): Never send a `done` signal, even if the
+            agent achieves the goal.
+    """
+
+    def __init__(
+            self,
+            goal=np.array((1., 1.), dtype=np.float32),
+            done_bonus=0.,
+            never_done=False,
+    ):
+        self._goal = np.array(goal, dtype=np.float32)
+        self._done_bonus = done_bonus
+        self._never_done = never_done
+
+        self._point = np.zeros_like(self._goal)
+
         Serializable.quick_init(self, locals())
 
     @property
@@ -21,20 +46,27 @@ class PointEnv(gym.Env, Serializable):
             low=-0.1, high=0.1, shape=(2, ), dtype=np.float32)
 
     def reset(self):
-        self._state = np.random.uniform(-1, 1, size=(2, ))
-        observation = np.copy(self._state)
-        return observation
+        self._point = np.zeros_like(self._goal)
+        return np.copy(self._point)
 
     def step(self, action):
-        self._state = self._state + action
-        x, y = self._state
-        reward = -(x**2 + y**2)**0.5
-        done = abs(x) < 0.01 and abs(y) < 0.01
-        next_observation = np.copy(self._state)
-        return Step(observation=next_observation, reward=reward, done=done)
+        # enforce action space
+        a = action.copy()  # NOTE: we MUST copy the action before modifying it
+        a = np.clip(a, self.action_space.low, self.action_space.high)
 
-    def render(self):
-        print('current state:', self._state)
+        dist = np.linalg.norm(self._point - self._goal)
+        done = dist < np.linalg.norm(self.action_space.low)
 
-    def log_diagnostics(self, paths):
+        # dense reward
+        reward = -dist
+        # done bonus
+        if done:
+            reward += self._done_bonus
+
+        # sometimes we don't want to terminate
+        done = done and not self._never_done
+
+        return Step(np.copy(self._point), reward, done)
+
+    def render(self, mode="human"):
         pass

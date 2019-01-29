@@ -1,14 +1,17 @@
 import gym
 
 from garage.core import Serializable
-from garage.misc.overrides import overrides
 
 
 class IdentificationEnv(gym.Wrapper, Serializable):
     def __init__(self, mdp_cls, mdp_args):
         self.mdp_cls = mdp_cls
         self.mdp_args = dict(mdp_args)
-        self.mdp_args["template_args"] = dict(noise=True)
+        # Leaving this commented out so that tests can pass. It will be
+        # removable (along with this class, possibly) as soon as we move out
+        # the garage.envs.box2d and garage.envs.mujoco
+        # See https://github.com/rlworkgroup/garage/issues/359
+        # self.mdp_args["template_args"] = dict(noise=True)
         mdp = self.gen_mdp()
         super().__init__(mdp)
 
@@ -18,10 +21,10 @@ class IdentificationEnv(gym.Wrapper, Serializable):
     def gen_mdp(self):
         return self.mdp_cls(**self.mdp_args)
 
-    @overrides
+    def step(self, action):
+        return self.env.step(action)
+
     def reset(self):
-        if getattr(self, "_mdp", None):
-            if hasattr(self.env, "release"):
-                self.env.release()
+        self.env.close()
         self.env = self.gen_mdp()
-        return super(IdentificationEnv, self).reset()
+        return self.env.reset()

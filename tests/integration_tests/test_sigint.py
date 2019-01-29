@@ -12,8 +12,8 @@ import psutil
 from garage.misc.console import colorize
 
 scripts = [
-    "tests/fixtures/algos/nop_cartpole_instrumented.py",
-    "tests/fixtures/tf/trpo_cartpole_instrumented.py",
+    "tests/fixtures/algos/nop_pendulum_instrumented.py",
+    "tests/fixtures/tf/trpo_pendulum_instrumented.py",
 ]
 
 

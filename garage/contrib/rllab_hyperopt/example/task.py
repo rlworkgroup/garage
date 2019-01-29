@@ -1,12 +1,12 @@
 from garage.baselines import LinearFeatureBaseline
 from garage.envs import normalize
-from garage.envs.box2d import CartpoleEnv
+from garage.envs import PointEnv
 from garage.tf.algos import TRPO
 from garage.tf.policies import GaussianMLPPolicy
 
 
 def run_task(v):
-    env = normalize(CartpoleEnv())
+    env = normalize(PointEnv())
 
     policy = GaussianMLPPolicy(env_spec=env.spec, hidden_sizes=(32, 32))
 
