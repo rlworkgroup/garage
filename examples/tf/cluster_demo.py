@@ -1,20 +1,29 @@
 #!/usr/bin/env python3
+"""
+This example demonstrates how to use run_experiment to send a training job to
+an Amazon EC2 cluster.
 
+Here it trains the CartPole-v1 environment for 100 iterations on each of 3 step
+sizes and 5 seeds.
+"""
 import sys
 
 from garage.baselines import LinearFeatureBaseline
-from garage.envs import normalize
-from garage.envs.box2d import CartpoleEnv
 from garage.experiment import run_experiment
 from garage.tf.algos import TRPO
 from garage.tf.envs import TfEnv
-from garage.tf.policies import GaussianMLPPolicy
+from garage.tf.policies import CategoricalMLPPolicy
 
 
 def run_task(v):
-    env = TfEnv(normalize(CartpoleEnv()))
+    """
+    We wrap the main training loop in the run_task function so that
+    run_experiment can easily execute variants of the experiment on different
+    machines
+    """
+    env = TfEnv(env_name="CartPole-v1")
 
-    policy = GaussianMLPPolicy(
+    policy = CategoricalMLPPolicy(
         env_spec=env.spec,
         # The neural network policy should have two hidden layers,
         # each with 32 hidden units.

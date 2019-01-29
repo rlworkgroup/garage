@@ -10,7 +10,7 @@ from garage.baselines import LinearFeatureBaseline
 from garage.baselines import ZeroBaseline
 from garage.envs import GarageEnv
 from garage.envs import GridWorldEnv
-from garage.envs.box2d import CartpoleEnv
+from garage.envs import PointEnv
 from tests.fixtures.policies import DummyPolicy
 from tests.fixtures.policies import DummyRecurrentPolicy
 
@@ -29,7 +29,7 @@ algo_args = {
     CMAES: dict(
         n_itr=1,
         max_path_length=100,
-        batch_size=1000,
+        batch_size=5000,
     ),
     NOP: common_batch_algo_args,
 }
@@ -38,11 +38,11 @@ polopt_cases = []
 for algo in [CEM, CMAES, NOP]:
     polopt_cases.extend([
         (algo, GridWorldEnv, DummyPolicy, ZeroBaseline),
-        (algo, CartpoleEnv, DummyPolicy, ZeroBaseline),
+        (algo, PointEnv, DummyPolicy, ZeroBaseline),
         (algo, GridWorldEnv, DummyRecurrentPolicy, ZeroBaseline),
-        (algo, CartpoleEnv, DummyRecurrentPolicy, ZeroBaseline),
+        (algo, PointEnv, DummyRecurrentPolicy, ZeroBaseline),
         (algo, GridWorldEnv, DummyPolicy, LinearFeatureBaseline),
-        (algo, CartpoleEnv, DummyPolicy, LinearFeatureBaseline),
+        (algo, PointEnv, DummyPolicy, LinearFeatureBaseline),
     ])
 
 

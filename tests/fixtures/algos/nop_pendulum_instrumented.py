@@ -1,13 +1,14 @@
+import gym
+
 from garage.baselines import LinearFeatureBaseline
 from garage.envs import normalize
-from garage.envs.box2d import CartpoleEnv
 from garage.experiment import run_experiment
 from tests.fixtures.algos.instrumented_nop import InstrumentedNOP
 from tests.fixtures.policies import DummyPolicy
 
 
 def run_task(*_):
-    env = normalize(CartpoleEnv())
+    env = normalize(gym.make("Pendulum-v0"))
 
     policy = DummyPolicy(env_spec=env)
 

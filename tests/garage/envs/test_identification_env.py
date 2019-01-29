@@ -1,24 +1,26 @@
 import pickle
 import unittest
 
-from garage.envs.box2d import CartpoleEnv
+import numpy as np
+
+from garage.envs import PointEnv
 from garage.envs.identification_env import IdentificationEnv
 from tests.helpers import step_env
 
 
 class TestIdentificationEnv(unittest.TestCase):
     def test_pickleable(self):
-        env = IdentificationEnv(CartpoleEnv, dict(obs_noise=5.))
+        env = IdentificationEnv(PointEnv, dict(goal=(1., 2.)))
         round_trip = pickle.loads(pickle.dumps(env))
         assert round_trip
         assert env.mdp_args == round_trip.mdp_args
-        assert round_trip.env.obs_noise == env.env.obs_noise
+        assert np.array_equal(round_trip.env._goal, env.env._goal)
         step_env(round_trip)
 
     def test_does_not_modify_action(self):
-        env = IdentificationEnv(CartpoleEnv, dict(obs_noise=5.))
-        a = env.action_space.sample()
+        env = IdentificationEnv(PointEnv, dict(goal=(1., 2.)))
+        a = env.action_space.high + 1.
         a_copy = a.copy()
         env.reset()
         env.step(a)
-        self.assertEquals(a.all(), a_copy.all())
+        assert np.array_equal(a, a_copy)

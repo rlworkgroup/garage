@@ -1,17 +1,15 @@
 import tensorflow as tf
 
-from garage.envs import normalize
-from garage.envs.box2d import CartpoleEnv
 from garage.experiment import run_experiment
 from garage.tf.baselines import GaussianMLPBaseline
 from garage.tf.envs import TfEnv
-from garage.tf.policies import GaussianMLPPolicy
+from garage.tf.policies import CategoricalMLPPolicy
 from tests.fixtures.tf.instrumented_trpo import InstrumentedTRPO
 
 
 def run_task(*_):
-    env = TfEnv(normalize(CartpoleEnv()))
-    policy = GaussianMLPPolicy(
+    env = TfEnv(env_name="CartPole-v1")
+    policy = CategoricalMLPPolicy(
         env_spec=env.spec,
         hidden_sizes=(32, 32),
         hidden_nonlinearity=tf.nn.tanh,
