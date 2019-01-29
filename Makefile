@@ -19,7 +19,7 @@ build-ci: docker/docker-compose-ci.yml copy_config_personal
 		${ADD_ARGS}
 
 build-headless: TAG ?= rlworkgroup/garage-headless:latest
-build-headless: docker/docker-compose-headless.yml check-mjkey copy_config_personal
+build-headless: docker/docker-compose-headless.yml copy_config_personal
 	TAG=${TAG} \
 	docker-compose \
 		-f docker/docker-compose-headless.yml \
@@ -27,7 +27,7 @@ build-headless: docker/docker-compose-headless.yml check-mjkey copy_config_perso
 		${ADD_ARGS}
 
 build-nvidia: TAG ?= rlworkgroup/garage-nvidia:latest
-build-nvidia: docker/docker-compose-nvidia.yml check-mjkey copy_config_personal
+build-nvidia: docker/docker-compose-nvidia.yml copy_config_personal
 	TAG=${TAG} \
 	docker-compose \
 		-f docker/docker-compose-nvidia.yml \
@@ -54,7 +54,7 @@ run-headless: build-headless
 	docker run \
 		-it \
 		--rm \
-		-v $(DATA_PATH)/data/$(CONTAINER_NAME):/root/code/garage/data \
+		-v $(DATA_PATH)/$(CONTAINER_NAME):/root/code/garage/data \
 		-e MJKEY="$$(cat $(MJKEY_PATH))" \
 		--name $(CONTAINER_NAME) \
 		${ADD_ARGS} \
@@ -68,19 +68,13 @@ run-nvidia: build-nvidia
 		--rm \
 		--runtime=nvidia \
 		-v /tmp/.X11-unix:/tmp/.X11-unix \
-		-v $(DATA_PATH)/data/$(CONTAINER_NAME):/root/code/garage/data \
+		-v $(DATA_PATH)/$(CONTAINER_NAME):/root/code/garage/data \
 		-e DISPLAY=$(DISPLAY) \
 		-e QT_X11_NO_MITSHM=1 \
 		-e MJKEY="$$(cat $(MJKEY_PATH))" \
 		--name $(CONTAINER_NAME) \
 		${ADD_ARGS} \
 		rlworkgroup/garage-nvidia $(RUN_CMD)
-
-check-mjkey:
-ifeq (0, $(shell [ ! -f $(MJKEY_PATH) ]; echo $$? ))
-	$(error The MJKEY was not set: make sure to pass a valid MJKEY_PATH \
-		or put your key at ~/.mujoco/mjkey.txt)
-endif
 
 copy_config_personal:
 ifeq (0, $(shell [ ! -f $(CONFIG_PERSONAL) ]; echo $$? ))
