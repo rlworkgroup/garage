@@ -43,7 +43,7 @@ print_help ()
   printf 'Usage: %s [--mjkey <arg>] [--(no-)modify-bashrc] ' "$0"
   printf '[--(no-)gpu] [-h|--help]\n'
   printf '\t%s\n' "--mjkey: Path of the MuJoCo key (no default)"
-  printf '\t%s' "--gpu,--no-gpu: Install GPU support of Tensorflow and Theano "
+  printf '\t%s' "--gpu,--no-gpu: Install GPU support of Tensorflow "
   printf '%s\n' "(off by default)"
   printf '\t%s' "--modify-bashrc,--no-modify-bashrc: Set environment variables "
   printf '%s\n' "required by garage in .bashrc (off by default)"
@@ -226,8 +226,6 @@ conda activate garage
     pip uninstall -y tensorflow
     pip install "tensorflow-gpu<1.10,>=1.9.0"
 
-    # pygpu is required by Theano to run on GPU
-    conda install pygpu
   fi
 
   # Install git hooks

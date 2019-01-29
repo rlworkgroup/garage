@@ -3,6 +3,7 @@ import time
 
 import numpy as np
 
+from garage.envs.util import flatten
 from garage.misc import tensor_utils
 
 
@@ -25,9 +26,9 @@ def rollout(env,
     while path_length < max_path_length:
         a, agent_info = agent.get_action(o)
         next_o, r, d, env_info = env.step(a)
-        observations.append(env.observation_space.flatten(o))
+        observations.append(flatten(env.observation_space, o))
         rewards.append(r)
-        actions.append(env.action_space.flatten(a))
+        actions.append(flatten(env.action_space, a))
         agent_infos.append(agent_info)
         env_infos.append(env_info)
         path_length += 1

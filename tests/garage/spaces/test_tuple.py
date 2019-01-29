@@ -2,7 +2,7 @@ import pickle
 import unittest
 
 from garage.spaces.tuple import Tuple
-from garage.theano.spaces import Discrete
+from garage.tf.spaces import Discrete
 
 
 class TestTuple(unittest.TestCase):

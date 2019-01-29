@@ -541,9 +541,6 @@ def to_local_command(params,
                                      'scripts/run_experiment.py'),
                      use_gpu=False):
     command = python_command + " " + script
-    if use_gpu and not config.USE_TF:
-        command = ("THEANO_FLAGS="
-                   "'device=gpu,dnn.enabled=auto,floatX=float32' ") + command
     for k, v in config.ENV.items():
         command = ("%s=%s " % (k, v)) + command
     pre_commands = params.pop("pre_commands", None)
@@ -1041,10 +1038,9 @@ def s3_sync_code(config, dry=False, added_project_directories=[]):
             has_git = False
         dir_hash = base64.b64encode(subprocess.check_output(
             ["pwd"])).decode("utf-8")
-        code_path = "{}_{}".format(dir_hash, (current_commit if clean_state
-                                              else "{}_dirty_{}".format(
-                                                  current_commit, timestamp))
-                                   if has_git else timestamp)
+        code_path = "{}_{}".format(
+            dir_hash, (current_commit if clean_state else "{}_dirty_{}".format(
+                current_commit, timestamp)) if has_git else timestamp)
 
         full_path = "%s/%s" % (base, code_path)
         cache_path = "%s/%s" % (base, dir_hash)

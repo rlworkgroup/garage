@@ -23,3 +23,7 @@ class ZeroBaseline(Baseline):
     @overrides
     def predict(self, path):
         return np.zeros_like(path["rewards"])
+
+    @overrides
+    def predict_n(self, paths):
+        return [np.zeros_like(path["rewards"]) for path in paths]

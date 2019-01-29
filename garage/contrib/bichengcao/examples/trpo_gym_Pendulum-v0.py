@@ -3,13 +3,13 @@ import gym
 from garage.baselines import LinearFeatureBaseline
 from garage.envs import normalize
 from garage.experiment import run_experiment
-from garage.theano.algos import TRPO
-from garage.theano.envs import TheanoEnv
-from garage.theano.policies import GaussianMLPPolicy
+from garage.tf.algos import TRPO
+from garage.tf.envs import TfEnv
+from garage.tf.policies import GaussianMLPPolicy
 
 
 def run_task(*_):
-    env = TheanoEnv(normalize(gym.make("Pendulum-v0")))
+    env = TfEnv(normalize(gym.make("Pendulum-v0")))
 
     policy = GaussianMLPPolicy(env_spec=env.spec, hidden_sizes=(32, 32))
 

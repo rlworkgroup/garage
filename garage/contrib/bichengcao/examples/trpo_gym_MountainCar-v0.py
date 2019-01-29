@@ -4,13 +4,13 @@ import gym
 from garage.baselines import LinearFeatureBaseline
 from garage.envs import normalize
 from garage.experiment import run_experiment
-from garage.theano.algos import TRPO
-from garage.theano.envs import TheanoEnv
-from garage.theano.policies import CategoricalMLPPolicy
+from garage.tf.algos import TRPO
+from garage.tf.envs import TfEnv
+from garage.tf.policies import CategoricalMLPPolicy
 
 
 def run_task(*_):
-    env = TheanoEnv(normalize(gym.make("MountainCar-v0")))
+    env = TfEnv(normalize(gym.make("MountainCar-v0")))
 
     policy = CategoricalMLPPolicy(env_spec=env.spec, hidden_sizes=(32, 32))
 

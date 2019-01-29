@@ -12,7 +12,6 @@ from garage.sampler.utils import rollout
 def _worker_init(g, id):
     if singleton_pool.n_parallel > 1:
         import os
-        os.environ['THEANO_FLAGS'] = 'device=cpu'
         os.environ['CUDA_VISIBLE_DEVICES'] = ""
     g.worker_id = id
 
