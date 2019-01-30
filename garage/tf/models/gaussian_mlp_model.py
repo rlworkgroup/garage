@@ -5,6 +5,7 @@ from tensorflow.keras.layers import Lambda
 from tensorflow.keras.models import Model
 
 from garage.misc import ext
+from garage.tf.core.distribution_layer import DistributionLayer
 from garage.tf.core.parameter_layer import ParameterLayer
 from garage.tf.models import PickableModel
 from garage.tf.models.mlp_model import MLPModel
@@ -59,7 +60,6 @@ class GaussianMLPModel(PickableModel):
                  std_output_nonlinearity=None,
                  std_parameterization="exp"):
         self._scope = scope
-
         # Network parameters
         self._output_dim = output_dim
         self._hidden_sizes = hidden_sizes
@@ -94,97 +94,94 @@ class GaussianMLPModel(PickableModel):
         else:
             raise NotImplementedError
 
-        self.model = self.build_model(input_var)
+        self.model = self._build_model(input_var)
 
-    def build_model(self, input_var):
-        """Build model."""
-        if self._std_share_network:
-            b = np.concatenate([
-                np.zeros(self._output_dim),
-                np.full(self._output_dim, self._init_std_param)
-            ], axis=0)  # yapf: disable
-            b = tf.constant_initializer(b)
-            mean_std_model = MLPModel(
-                input_var=input_var,
-                output_dim=self._output_dim * 2,
-                hidden_sizes=self._hidden_sizes,
-                hidden_nonlinearity=self._hidden_nonlinearity,
-                output_nonlinearity=self._output_nonlinearity,
-                output_b_init=b,
-                scope=self._scope + "/mean_std_network")
-            mean_var = mean_std_model.outputs[0][..., self._output_dim:]
-            std_param_var = mean_std_model.outputs[0][..., :self._output_dim]
-        else:
-            mean_model = MLPModel(
-                input_var=input_var,
-                output_dim=self._output_dim,
-                hidden_sizes=self._hidden_sizes,
-                hidden_nonlinearity=self._hidden_nonlinearity,
-                output_nonlinearity=self._output_nonlinearity,
-                scope=self._scope + "/mean_network")
-            mean_var = mean_model.outputs[0]
-
-            if self._adaptive_std:
-                b = tf.constant_initializer(self._init_std_param)
-                std_model = MLPModel(
+    def _build_model(self, input_var):
+        with tf.variable_scope(self._scope):
+            if self._std_share_network:
+                b = np.concatenate([
+                    np.zeros(self._output_dim),
+                    np.full(self._output_dim, self._init_std_param)
+                ], axis=0)  # yapf: disable
+                b = tf.constant_initializer(b)
+                mean_std_model = MLPModel(
+                    input_var=input_var,
+                    output_dim=self._output_dim * 2,
+                    hidden_sizes=self._hidden_sizes,
+                    hidden_nonlinearity=self._hidden_nonlinearity,
+                    output_nonlinearity=self._output_nonlinearity,
+                    output_b_init=b,
+                    scope="mean_std_network")
+                mean_var = mean_std_model.outputs[0][..., self._output_dim:]
+                std_param_var = mean_std_model.outputs[0][..., :self.
+                                                          _output_dim]
+            else:
+                mean_model = MLPModel(
                     input_var=input_var,
                     output_dim=self._output_dim,
-                    hidden_sizes=self._std_hidden_sizes,
-                    hidden_nonlinearity=self._std_hidden_nonlinearity,
-                    output_nonlinearity=self._std_output_nonlinearity,
-                    output_b_init=b,
-                    scope=self._scope + "/std_network")
+                    hidden_sizes=self._hidden_sizes,
+                    hidden_nonlinearity=self._hidden_nonlinearity,
+                    output_nonlinearity=self._output_nonlinearity,
+                    scope="mean_network")
+                mean_var = mean_model.outputs[0]
 
-                std_param_var = std_model.outputs[0]
-            else:
-                p = tf.constant_initializer(self._init_std_param)
-                std_param_var = ParameterLayer(
-                    length=self._output_dim,
-                    initializer=p,
-                    trainable=self._learn_std,
-                    name=self._scope + "/std_network")(input_var)
+                if self._adaptive_std:
+                    b = tf.constant_initializer(self._init_std_param)
+                    std_model = MLPModel(
+                        input_var=input_var,
+                        output_dim=self._output_dim,
+                        hidden_sizes=self._std_hidden_sizes,
+                        hidden_nonlinearity=self._std_hidden_nonlinearity,
+                        output_nonlinearity=self._std_output_nonlinearity,
+                        output_b_init=b,
+                        scope="std_network")
 
-        if self._min_std_param:
-            std_param_var = Lambda(
-                lambda x, f, p: f(x, p),
-                arguments={
-                    "f": tf.maximum,
-                    "p": self._min_std_param
-                },
-                name=self._scope + "/std_min")(std_param_var)
-        if self._max_std_param:
-            std_param_var = Lambda(
-                lambda x, f, p: f(x, p),
-                arguments={
-                    "f": tf.minimum,
-                    "p": self._max_std_param
-                },
-                name=self._scope + "/std_max")(std_param_var)
+                    std_param_var = std_model.outputs[0]
+                else:
+                    p = tf.constant_initializer(self._init_std_param)
+                    with tf.variable_scope("std_network"):
+                        std_param_var = ParameterLayer(
+                            length=self._output_dim,
+                            initializer=p,
+                            trainable=self._learn_std)(input_var)
 
-        if self._std_parameterization == "exp":
-            std_var = Lambda(
-                lambda x, f: f(x),
-                arguments={'f': tf.exp},
-                name=self._scope + "/std_parameterization")(std_param_var)
-        elif self._std_parameterization == "softplus":
-            std_var = Lambda(
-                lambda x, f, g: f(1 + g(x)),
-                arguments={
-                    "f": tf.log,
-                    "g": tf.exp
-                },
-                name=self._scope + "/std_parameterization")(std_param_var)
-        else:
-            raise NotImplementedError
+            if self._min_std_param:
+                with tf.variable_scope("std_min"):
+                    std_param_var = Lambda(
+                        lambda x, f, p: f(x, p),
+                        arguments={
+                            "f": tf.maximum,
+                            "p": self._min_std_param
+                        })(std_param_var)
+            if self._max_std_param:
+                with tf.variable_scope("std_max"):
+                    std_param_var = Lambda(
+                        lambda x, f, p: f(x, p),
+                        arguments={
+                            "f": tf.minimum,
+                            "p": self._max_std_param
+                        })(std_param_var)
 
-        sample_var = Lambda(
-            lambda x, f, s: f(x[0], x[1]).sample(seed=s),
-            arguments={
-                "f": tf.contrib.distributions.MultivariateNormalDiag,
-                "s": ext.get_seed()
-            },
-            name=self._scope + "/sample_var")([mean_var, std_param_var])
+            with tf.variable_scope("std_parameterization"):
+                if self._std_parameterization == "exp":
+                    std_var = Lambda(
+                        lambda x, f: f(x), arguments={'f':
+                                                      tf.exp})(std_param_var)
+                elif self._std_parameterization == "softplus":
+                    std_var = Lambda(
+                        lambda x, f, g: f(1 + g(x)),
+                        arguments={
+                            "f": tf.log,
+                            "g": tf.exp
+                        })(std_param_var)
+                else:
+                    raise NotImplementedError
 
-        return Model(
-            inputs=input_var,
-            outputs=[mean_var, std_var, std_param_var, sample_var])
+            with tf.variable_scope("sample_var"):
+                sample_var = DistributionLayer(
+                    tf.contrib.distributions.MultivariateNormalDiag,
+                    ext.get_seed())([mean_var, std_param_var])
+
+            return Model(
+                inputs=input_var,
+                outputs=[mean_var, std_var, std_param_var, sample_var])

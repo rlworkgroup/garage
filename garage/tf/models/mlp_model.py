@@ -1,4 +1,5 @@
 """MLP model in TensorFlow using tf.keras.models.Model."""
+import tensorflow as tf
 from tensorflow.keras.layers import BatchNormalization
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.models import Model
@@ -57,26 +58,26 @@ class MLPModel(PickableModel):
         self._output_b_init = output_b_init
         self._batch_normalization = batch_normalization
 
-        self.model = self.build_model(input_var)
+        self.model = self._build_model(input_var)
 
-    def build_model(self, input_var):
-        """Build model."""
+    def _build_model(self, input_var):
         _out = input_var
-        for idx, hidden_size in enumerate(self._hidden_sizes):
-            _out = Dense(
-                units=hidden_size,
-                activation=self._hidden_nonlinearity,
-                kernel_initializer=self._hidden_w_init,
-                bias_initializer=self._hidden_b_init,
-                name=self._scope + "/hidden_{}".format(idx))(_out)
-            if self._batch_normalization:
-                _out = BatchNormalization(
-                    hidden_size, activation=self._hidden_nonlinearity)(_out)
-        _out = Dense(
-            units=self._output_dim,
-            activation=self._output_nonlinearity,
-            kernel_initializer=self._output_w_init,
-            bias_initializer=self._output_b_init,
-            name=self._scope + "/output")(_out)
+        with tf.variable_scope(self._scope):
+            for idx, hidden_size in enumerate(self._hidden_sizes):
+                with tf.variable_scope("hidden_{}".format(idx)):
+                    _out = Dense(
+                        units=hidden_size,
+                        activation=self._hidden_nonlinearity,
+                        kernel_initializer=self._hidden_w_init,
+                        bias_initializer=self._hidden_b_init)(_out)
+                if self._batch_normalization:
+                    with tf.variable_scope("batch_norm_{}".format(idx)):
+                        _out = BatchNormalization()(_out)
+            with tf.variable_scope("output"):
+                _out = Dense(
+                    units=self._output_dim,
+                    activation=self._output_nonlinearity,
+                    kernel_initializer=self._output_w_init,
+                    bias_initializer=self._output_b_init)(_out)
 
-        return Model(inputs=input_var, outputs=_out)
+            return Model(inputs=input_var, outputs=_out)
