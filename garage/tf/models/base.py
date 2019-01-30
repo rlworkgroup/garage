@@ -17,22 +17,6 @@ class BaseModel:
         raise NotImplementedError
 
     @property
-    def input(self):
-        """Tensor input of the Model."""
-        if len(self.model.inputs) == 1:
-            return self.model.inputs[0]
-
-        return self.model.inputs
-
-    @property
-    def output(self):
-        """Tensor output of the Model."""
-        if len(self.model.outputs) == 1:
-            return self.model.outputs[0]
-
-        return self.model.outputs
-
-    @property
     def inputs(self):
         """Tensor inputs of the Model."""
         return self.model.inputs
@@ -56,22 +40,6 @@ class PickableModel(AutoPickable):
         should be created with the same parameters.
         """
         raise NotImplementedError
-
-    @property
-    def input(self):
-        """Tensor input of the Model."""
-        if len(self.model.inputs) == 1:
-            return self.model.inputs[0]
-
-        return self.model.inputs
-
-    @property
-    def output(self):
-        """Tensor output of the Model."""
-        if len(self.model.outputs) == 1:
-            return self.model.outputs[0]
-
-        return self.model.outputs
 
     @property
     def inputs(self):

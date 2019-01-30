@@ -15,32 +15,24 @@ class ParameterLayer(KerasLayer):
 
     Args:
         length: Size of the parameter variable.
-        scope: Name scope of the parameter variable.
         initializer: Initializer for the parameter variable.
         trainable: If the parameter variable is trainable.
     """
 
-    def __init__(self,
-                 length,
-                 scope="ParameterLayer",
-                 initializer="ones",
-                 trainable=True,
-                 **kwargs):
+    def __init__(self, length, initializer="ones", trainable=True, **kwargs):
         self.length = length
         self.initializer = initializer
         self.trainable = trainable
-        self.scope = scope
         super().__init__(**kwargs)
 
     def build(self, input_shape):
         """tf.keras.layers.Layer build."""
-        with tf.name_scope(self.scope):
-            self.kernel = self.add_weight(
-                name='kernel',
-                shape=(self.length, ),
-                initializer=self.initializer,
-                trainable=self.trainable)
-            super().build(input_shape)
+        self.kernel = self.add_weight(
+            name="kernel",
+            shape=(self.length, ),
+            initializer=self.initializer,
+            trainable=self.trainable)
+        super().build(input_shape)
 
     def call(self, x):
         """tf.keras.layers.Layer call."""
@@ -51,10 +43,9 @@ class ParameterLayer(KerasLayer):
     def get_config(self):
         """Cusomterized configuration for serialization."""
         config = {
-            'length': self.length,
-            'scope': self.scope,
-            'initializer': self.initializer,
-            'trainable': self.trainable
+            "length": self.length,
+            "initializer": self.initializer,
+            "trainable": self.trainable
         }
 
         base_config = super().get_config()

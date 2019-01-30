@@ -70,7 +70,9 @@ class TestKerasModel(TfGraphTestCase):
         assert np.array_equal(model_output, model_pickled_output)
 
     def test_autopickable_mlp_pickling(self):
-        mlp = MLPModel(input_dim=5, output_dim=2, hidden_sizes=(4, 4))
+        input_var = Input(shape=(5, ))
+
+        mlp = MLPModel(input_var=input_var, output_dim=2, hidden_sizes=(4, 4))
 
         self.sess.run(tf.global_variables_initializer())
 
@@ -78,29 +80,46 @@ class TestKerasModel(TfGraphTestCase):
 
         data = np.random.random((2, 5))
 
-        model_output = self.sess.run(mlp.output, feed_dict={mlp.input: data})
+        model_output = self.sess.run(
+            mlp.outputs[0], feed_dict={mlp.inputs[0]: data})
         model_pickled_output = self.sess.run(
-            fresh_mlp.output, feed_dict={fresh_mlp.input: data})
+            fresh_mlp.outputs[0], feed_dict={fresh_mlp.inputs[0]: data})
 
         assert np.array_equal(model_output, model_pickled_output)
 
     def test_autopickable_gaussian_mlp_pickling(self):
+        input_var = Input(shape=(5, ))
+
         model = GaussianMLPModel(
-            input_dim=5, output_dim=2, hidden_sizes=(4, 4), init_std=2.0)
+            input_var=input_var,
+            output_dim=2,
+            hidden_sizes=(4, 4),
+            init_std=2.0)
+
+        model2 = GaussianMLPModel(
+            input_var=input_var,
+            output_dim=2,
+            hidden_sizes=(4, 4),
+            init_std=2.0,
+            adaptive_std=True,
+            scope="GaussianMLPModel2")
 
         self.sess.run(tf.global_variables_initializer())
 
         data = np.random.random((3, 5))
 
-        result_from_model = []
-        result_from_model.append(
-            self.sess.run(model.outputs, feed_dict={model.input: data}))
+        result_from_model = self.sess.run(
+            model.outputs, feed_dict={model.inputs[0]: data})
+        result_from_model2 = self.sess.run(
+            model2.outputs, feed_dict={model2.inputs[0]: data})
 
         model_pickled = pickle.loads(pickle.dumps(model))
+        model_pickled2 = pickle.loads(pickle.dumps(model2))
 
-        result_from_pickled_model = []
-        result_from_pickled_model.append(
-            self.sess.run(
-                model_pickled.outputs, feed_dict={model_pickled.input: data}))
+        result_from_pickled_model = self.sess.run(
+            model_pickled.outputs, feed_dict={model_pickled.inputs[0]: data})
+        result_from_pickled_model2 = self.sess.run(
+            model_pickled2.outputs, feed_dict={model_pickled2.inputs[0]: data})
 
         assert np.array_equal(result_from_model, result_from_pickled_model)
+        assert np.array_equal(result_from_model2, result_from_pickled_model2)
