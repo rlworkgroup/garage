@@ -96,7 +96,3 @@ WORKDIR /root/code/garage
 # Pre-build pre-commit env
 COPY .pre-commit-config.yaml /root/code/garage
 RUN ["/bin/bash", "-c", "source activate garage && git init && pre-commit"]
-
-# Add code stub last
-COPY . /root/code/garage
-RUN ["/bin/bash", "-c", "source activate garage && pip install -e /root/code/garage && source deactivate garage"]

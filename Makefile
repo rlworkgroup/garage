@@ -1,5 +1,7 @@
-.PHONY: build-ci build-headless build-nvidia \
-	run-ci run-headless run-nvidia
+.PHONY: help test build-ci build-headless build-nvidia run-ci run-headless \
+	run-nvidia
+
+.DEFAULT_GOAL := help
 
 # Path in host where the experiment data obtained in the container is stored
 DATA_PATH ?= $(shell pwd)/data
@@ -9,6 +11,11 @@ MJKEY_PATH ?= ~/.mujoco/mjkey.txt
 # Prevent garage from exiting on config by making sure the personal config file
 # is already created
 CONFIG_PERSONAL := garage/config_personal.py
+
+test:  ## Run the CI test suite
+test: RUN_CMD = nose2 -c setup.cfg -E 'not cron_job and not huge and not flaky'
+test: run-headless
+	@echo "Running test suite..."
 
 build-ci: TAG ?= rlworkgroup/garage-ci:latest
 build-ci: docker/docker-compose-ci.yml copy_config_personal
@@ -34,6 +41,7 @@ build-nvidia: docker/docker-compose-nvidia.yml copy_config_personal
 		build \
 		${ADD_ARGS}
 
+run-ci: ## Run the CI Docker container (only used in TravisCI)
 run-ci: TAG ?= rlworkgroup/garage-ci
 run-ci:
 	docker run \
@@ -49,6 +57,7 @@ run-ci:
 		${ADD_ARGS} \
 		${TAG} ${RUN_CMD}
 
+run-headless: ## Run the Docker container for headless machines
 run-headless: CONTAINER_NAME ?= garage-headless
 run-headless: build-headless
 	docker run \
@@ -60,6 +69,7 @@ run-headless: build-headless
 		${ADD_ARGS} \
 		rlworkgroup/garage-headless $(RUN_CMD)
 
+run-nvidia: ## Run the Docker container for machines with NVIDIA GPUs
 run-nvidia: CONTAINER_NAME ?= garage-nvidia
 run-nvidia: build-nvidia
 	xhost +local:docker
@@ -82,3 +92,12 @@ ifeq (0, $(shell [ ! -f $(CONFIG_PERSONAL) ]; echo $$? ))
 		garage/config_personal_template.py)
 	cp garage/config_personal_template.py garage/config_personal.py
 endif
+
+
+# Help target
+# See https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
+help: ## Display this message
+help:
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
+		| sort \
+		| awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
