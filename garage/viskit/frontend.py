@@ -224,8 +224,10 @@ def summary_name(exp, selector=None):
     # if len(rest_params) > 0:
     #     name = ""
     #     for k in rest_params:
-    #         name += "%s=%s;" % (k.split(".")[-1],
-    #                             str(exp.flat_params.get(k, "")).split(".")[-1])
+    #         name += "%s=%s;" % (
+    #                k.split(".")[-1],
+    #                str(exp.flat_params.get(k, "")).split(".")[-1]
+    #         )
     #     return name
     return exp.params["exp_name"]
 
@@ -260,7 +262,11 @@ def get_plot_instruction(plot_key,
     else:
         selector = core.Selector(exps_data)
     if legend_post_processor is None:
-        legend_post_processor = lambda x: x
+
+        def default_legend_post_processor(x):
+            return x
+
+        legend_post_processor = default_legend_post_processor
     if filters is None:
         filters = dict()
     for k, v in filters.items():
@@ -291,7 +297,7 @@ def get_plot_instruction(plot_key,
             group_selectors = [core.Selector(list(x[1])) for x in splitted]
             group_legends = [x[0] for x in splitted]
         else:
-            if group_key and group_key is not "exp_name":
+            if group_key and group_key != "exp_name":
                 vs = [vs for k, vs in distinct_params if k == group_key][0]
                 group_selectors = [
                     split_selector.where(group_key, v) for v in vs
@@ -316,11 +322,12 @@ def get_plot_instruction(plot_key,
             filtered_data = group_selector.extract()
             if filtered_data:
 
-                if only_show_best or only_show_best_final or only_show_best_sofar:
+                if (only_show_best or only_show_best_final
+                        or only_show_best_sofar):
                     # Group by seed and sort.
                     # -----------------------
                     filtered_params = core.extract_distinct_params(
-                        filtered_data, l=0)
+                        filtered_data, l=0)  # noqa: E741
                     filtered_params2 = [p[1] for p in filtered_params]
                     filtered_params_k = [p[0] for p in filtered_params]
                     product_space = list(itertools.product(*filtered_params2))
@@ -376,7 +383,8 @@ def get_plot_instruction(plot_key,
                                 best_regret = regret
                                 best_progress = progresses
                                 data_best_regret = data
-                                kv_string_best_regret = distinct_params_kv_string
+                                kv_string_best_regret = \
+                                    distinct_params_kv_string
 
                     print(group_selector._filters)
                     print('best regret: {}'.format(best_regret))
@@ -386,7 +394,8 @@ def get_plot_instruction(plot_key,
                             exp.progress.get(plot_key, np.array([np.nan]))
                             for exp in data_best_regret
                         ]
-                        #                         progresses = [progress[:500] for progress in progresses ]
+                        # progresses = \
+                        #     [progress[:500] for progress in progresses]
                         sizes = list(map(len, progresses))
                         # more intelligent:
                         max_size = max(sizes)
@@ -434,8 +443,8 @@ def get_plot_instruction(plot_key,
                             stds = np.nanstd(progresses, axis=0)
                             if normalize_error:  # and len(progresses) > 0:
                                 stds /= np.sqrt(
-                                    np.sum(
-                                        (1. - np.isnan(progresses)), axis=0))
+                                    np.sum((1. - np.isnan(progresses)),
+                                           axis=0))
                             if smooth_curve:
                                 means = sliding_mean(means, window=window_size)
                                 stds = sliding_mean(stds, window=window_size)
