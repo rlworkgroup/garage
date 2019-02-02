@@ -58,12 +58,18 @@ RUN git clone https://github.com/glfw/glfw.git && \
   cd ../../ && \
   rm -rf glfw
 
-# MuJoCo
-RUN mkdir /root/.mujoco && \
+# MuJoCo 1.5 (for gym)
+RUN mkdir -p /root/.mujoco && \
   wget https://www.roboti.us/download/mjpro150_linux.zip -O mujoco.zip && \
   unzip mujoco.zip -d $HOME/.mujoco && \
   rm mujoco.zip
 ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mjpro150/bin
+
+# MuJoCo 2.0 (for dm_control)
+RUN mkdir -p /root/.mujoco && \
+  wget https://www.roboti.us/download/mujoco200_linux.zip -O mujoco.zip && \
+  unzip mujoco.zip -d $HOME/.mujoco && \
+  rm mujoco.zip
 
 # conda
 RUN wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh && \
