@@ -202,10 +202,10 @@ else
   print_warning "MuJoCo is already installed"
 fi
 # Set up MuJoCo 2.0 (for dm_control)
-if [[ ! -d "${HOME}/.mujoco/mjpro200" ]]; then
+if [[ ! -d "${HOME}/.mujoco/mujoco200_macos" ]]; then
   mkdir -p "${HOME}"/.mujoco
   MUJOCO_ZIP="$(mktemp -d)/mujoco.zip"
-  wget https://www.roboti.us/download/mjpro200_macos.zip -O "${MUJOCO_ZIP}"
+  wget https://www.roboti.us/download/mujoco200_macos.zip -O "${MUJOCO_ZIP}"
   unzip -u "${MUJOCO_ZIP}" -d "${HOME}"/.mujoco
 fi
 # Configure MuJoCo as a shared library
