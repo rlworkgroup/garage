@@ -169,14 +169,21 @@ if [[ "${_arg_modify_bashrc}" = on ]]; then
   echo -e "\n# Added by the garage installer" >> "${BASH_RC}"
 fi
 
-# Set up MuJoCo
+# Set up MuJoCo (for gym)
 if [[ ! -d "${HOME}/.mujoco/mjpro150" ]]; then
-  mkdir "${HOME}"/.mujoco
+  mkdir -p "${HOME}"/.mujoco
   MUJOCO_ZIP="$(mktemp -d)/mujoco.zip"
   wget https://www.roboti.us/download/mjpro150_linux.zip -O "${MUJOCO_ZIP}"
   unzip -u "${MUJOCO_ZIP}" -d "${HOME}"/.mujoco
 else
   print_warning "MuJoCo is already installed"
+fi
+# Set up MuJoCo 2.0 (for dm_control)
+if [[ ! -d "${HOME}/.mujoco/mjpro200" ]]; then
+  mkdir -p "${HOME}"/.mujoco
+  MUJOCO_ZIP="$(mktemp -d)/mujoco.zip"
+  wget https://www.roboti.us/download/mjpro200_linux.zip -O "${MUJOCO_ZIP}"
+  unzip -u "${MUJOCO_ZIP}" -d "${HOME}"/.mujoco
 fi
 # Configure MuJoCo as a shared library
 export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:${HOME}/.mujoco/mjpro150/bin"
