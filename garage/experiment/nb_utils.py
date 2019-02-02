@@ -172,8 +172,8 @@ class ExperimentDatabase:
                 plt.plot(exp.progress.get(key, [0]), color=exp_color)[0])
             if legend is not None:
                 legends.append(exp.flat_params[legend])
-            elif exp_color_key is not None and \
-                 exp_color_key not in used_legends:
+            elif (exp_color_key is not None
+                  and exp_color_key not in used_legends):
                 used_legends.append(exp_color_key)
                 legend_list.append(plots[-1])
 
