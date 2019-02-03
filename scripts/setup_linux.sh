@@ -231,7 +231,7 @@ conda activate garage
   if [[ "${_arg_gpu}" = on ]]; then
     # Remove any TensorFlow installations before installing the GPU flavor
     pip uninstall -y tensorflow
-    pip install "tensorflow-gpu<1.10,>=1.9.0"
+    pip install "tensorflow-gpu<1.13,>=1.12.0"
 
   fi
 
