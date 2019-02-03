@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from garage.baselines import LinearFeatureBaseline
 from garage.envs import normalize
 from garage.envs.mujoco import SwimmerEnv

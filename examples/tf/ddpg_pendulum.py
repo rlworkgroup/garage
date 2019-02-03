@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 This is an example to train a task with DDPG algorithm.
 
