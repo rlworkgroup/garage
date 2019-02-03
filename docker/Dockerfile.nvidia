@@ -3,7 +3,6 @@ FROM $PARENT_IMAGE
 
 # Add code stub last
 COPY . /root/code/garage
-RUN ["/bin/bash", "-c", "source activate garage && pip install -e /root/code/garage && source deactivate garage"]
 
 # Ready, set, go.
 ENTRYPOINT ["docker/entrypoint-nvidia.sh"]

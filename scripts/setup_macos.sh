@@ -247,9 +247,6 @@ conda activate garage
   # Prevent pip from complaining about available upgrades
   pip install --upgrade pip
 
-  # 'Install' garage as an editable package
-  pip install -e .
-
   # Install git hooks
   pre-commit install -t pre-commit
   pre-commit install -t pre-push
