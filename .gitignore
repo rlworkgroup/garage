@@ -134,6 +134,12 @@ dmypy.json
 # no submodules, please
 .gitmodules
 
+# pipenv
+# Including these for now, since pipenv is not the authoritative environment
+# tool
+Pipfile
+Pipfile.lock
+
 # garage-specific exclusions
 data/
 garage/config_personal.py
