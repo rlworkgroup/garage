@@ -225,9 +225,6 @@ conda activate garage
   # Prevent pip from complaining about available upgrades
   pip install --upgrade pip
 
-  # 'Install' garage as an editable package
-  pip install -e .
-
   if [[ "${_arg_gpu}" = on ]]; then
     # Remove any TensorFlow installations before installing the GPU flavor
     pip uninstall -y tensorflow

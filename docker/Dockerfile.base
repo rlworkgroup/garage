@@ -80,8 +80,12 @@ ENV PATH=$PATH:/opt/conda/bin
 RUN conda update -q -y conda
 
 # conda environment
-# Copy over just environment.yml first, so the Docker cache doesn't expire
-# until it changes
+# Copy over just environment.yml and setup.py first, so the Docker cache doesn't
+# expire until they change
+# README.md and LICENSE are also needed for setup.py
+COPY README.md /root/code/garage/README.md
+COPY LICENSE /root/code/garage/LICENSE
+COPY setup.py /root/code/garage/setup.py
 COPY environment.yml /root/code/garage/environment.yml
 
 # We need a MuJoCo key to install mujoco_py
