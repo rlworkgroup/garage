@@ -1,7 +1,10 @@
 name: garage
+channels:
+  - conda-forge
 dependencies:
     - python==3.6.6
     - numpy==1.14.5 # pycma requires numpy to install (smh)
+    - pre_commit  # See https://github.com/pre-commit/pre-commit/issues/701
     - pip:
         - -e .[all]
         - -e .[dev]

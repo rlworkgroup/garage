@@ -13,7 +13,7 @@ required = [
     # find a build dependency (absl-py). Later pip executes the `install`
     # command again and the install succeeds because absl-py has been
     # installed. This is stupid, but harmless.
-    'dm_control @ https://api.github.com/repos/deepmind/dm_control/tarball/c24ec9f5f3cb3c25c6571c89c9f60bf3350f5711',  # noqa: E501
+    'dm_control @ https://api.github.com/repos/deepmind/dm_control/tarball/92f9913013face0468442cd0964d5973ea2089ea',  # noqa: E501
     'flask',
     'gym[all]==0.10.11',
     'box2d-py>=2.3.4',

@@ -13,7 +13,7 @@ class TestDmControlTfPolicy(TfGraphTestCase):
         task = ALL_TASKS[0]
 
         with self.graph.as_default():
-            env = TfEnv(DmControlEnv(domain_name=task[0], task_name=task[1]))
+            env = TfEnv(DmControlEnv.from_suite(*task))
 
             policy = GaussianMLPPolicy(
                 env_spec=env.spec,
@@ -33,3 +33,5 @@ class TestDmControlTfPolicy(TfGraphTestCase):
                 step_size=0.01,
             )
             algo.train()
+
+        env.close()

@@ -208,6 +208,10 @@ if [[ ! -d "${HOME}/.mujoco/mujoco200_macos" ]]; then
   wget https://www.roboti.us/download/mujoco200_macos.zip -O "${MUJOCO_ZIP}"
   unzip -u "${MUJOCO_ZIP}" -d "${HOME}"/.mujoco
 fi
+# dm_control viewer requires MUJOCO_GL to be set to work
+if [[ "${_arg_modify_bashrc}" = on ]]; then
+  echo "export MUJOCO_GL=\"glfw\"" >> "${BASH_PROF}"
+fi
 # Configure MuJoCo as a shared library
 export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:${HOME}/.mujoco/mjpro150/bin"
 LD_LIB_ENV_VAR="LD_LIBRARY_PATH=\"\$LD_LIBRARY_PATH:${HOME}/.mujoco/mjpro150"
