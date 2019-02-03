@@ -14,49 +14,51 @@ class DmControlEnv(gym.Env, Serializable):
     Binding for [dm_control](https://arxiv.org/pdf/1801.00690.pdf)
     """
 
-    def __init__(
-            self,
-            domain_name,
-            task_name,
-            plot=False,
-            width=320,
-            height=240,
-    ):
-        self._env = suite.load(domain_name=domain_name, task_name=task_name)
-
-        self._total_reward = 0
-        self._render_kwargs = {'width': width, 'height': height}
-
-        if plot:
-            self._viewer = DmControlViewer()
-        else:
-            self._viewer = None
+    def __init__(self, env, name=None):
+        self._name = name or type(env.task).__name__
+        self._env = env
+        self._viewer = None
 
         # Always call Serializable constructor last
         Serializable.quick_init(self, locals())
 
+    @classmethod
+    def from_suite(cls, domain_name, task_name):
+        return cls(
+            suite.load(domain_name, task_name),
+            name='{}.{}'.format(domain_name, task_name))
+
     def step(self, action):
         time_step = self._env.step(action)
-        if time_step.reward:
-            self._total_reward += time_step.reward
         return Step(
-            flatten_observation(time_step.observation)["observations"],
+            flatten_observation(time_step.observation)['observations'],
             time_step.reward, time_step.step_type == StepType.LAST,
             **time_step.observation)
 
     def reset(self):
-        self._total_reward = 0
         time_step = self._env.reset()
-        return flatten_observation(time_step.observation)["observations"]
+        return flatten_observation(time_step.observation)['observations']
 
-    def render(self):
-        if self._viewer:
-            pixels_img = self._env.physics.render(**self._render_kwargs)
-            self._viewer.loop_once(pixels_img)
+    def render(self, mode='human'):
+        # pylint: disable=inconsistent-return-statements
+        if mode == 'human':
+            if not self._viewer:
+                title = 'dm_control {}'.format(self._name)
+                self._viewer = DmControlViewer(title=title)
+                self._viewer.launch(self._env)
+            self._viewer.render()
+            return None
+        elif mode == 'rgb_array':
+            return self._env.physics.render()
+        else:
+            raise NotImplementedError
 
     def close(self):
         if self._viewer:
-            self._viewer.finish()
+            self._viewer.close()
+        self._env.close()
+        self._viewer = None
+        self._env = None
 
     def _flat_shape(self, observation):
         return np.sum(int(np.prod(v.shape)) for k, v in observation.items())
@@ -76,7 +78,3 @@ class DmControlEnv(gym.Env, Serializable):
         flat_dim = self._flat_shape(self._env.observation_spec())
         return gym.spaces.Box(
             low=-np.inf, high=np.inf, shape=[flat_dim], dtype=np.float32)
-
-    @property
-    def total_reward(self):
-        return self._total_reward
