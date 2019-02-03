@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import gym
 
 from garage.baselines import LinearFeatureBaseline
