@@ -97,6 +97,7 @@ class GaussianMLPModel(PickableModel):
         self.model = self._build_model(input_var)
 
     def _build_model(self, input_var):
+        custom_objects = {}
         with tf.variable_scope(self._scope):
             if self._std_share_network:
                 b = np.concatenate([
@@ -144,6 +145,7 @@ class GaussianMLPModel(PickableModel):
                             length=self._output_dim,
                             initializer=p,
                             trainable=self._learn_std)(input_var)
+                        custom_objects['ParameterLayer'] = ParameterLayer
 
             if self._min_std_param:
                 with tf.variable_scope("std_min"):
@@ -181,7 +183,11 @@ class GaussianMLPModel(PickableModel):
                 sample_var = DistributionLayer(
                     tf.contrib.distributions.MultivariateNormalDiag,
                     ext.get_seed())([mean_var, std_param_var])
+                custom_objects['DistributionLayer'] = DistributionLayer
 
-            return Model(
+            model = Model(
                 inputs=input_var,
                 outputs=[mean_var, std_var, std_param_var, sample_var])
+
+            setattr(model, 'custom_objects', custom_objects)
+            return model

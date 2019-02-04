@@ -63,11 +63,7 @@ class AutoPickable:
         state = self.__dict__.copy()
         for k, v in self.__dict__.items():
             if isinstance(v, tf.keras.models.Model):
-                custom_objects = {}
-                for c in v.layers:
-                    if "keras" not in str(type(c)):  # detect subclassed layer
-                        name = type(c).__name__
-                        custom_objects[name] = type(c)
+                custom_objects = getattr(v, 'custom_objects', {})
                 state[k] = PickleCall(_build_layers,
                                       (v.get_config(), v.get_weights()),
                                       custom_objects)
