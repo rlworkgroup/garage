@@ -51,6 +51,10 @@ for line in lines:
     if len(line) == 0:
         continue
 
+    # Ignore lines containing URLs, which can get long
+    if 'http' in line:
+        continue
+
     # Error: invalid body paragraph length
     if len(line) > 72:
         print('Error: line {} of your body paragraph '
