@@ -1,4 +1,5 @@
 # flake8: noqa
+import io
 from os.path import abspath
 from os.path import dirname
 import shutil
@@ -19,6 +20,7 @@ from garage.misc.console import mkdir_p
 class TensorBoardOutput:
     def __init__(self):
         self._scalars = tf.Summary()
+        self._images = tf.Summary()
         self._scope_tensor = {}
         self._has_recorded_tensor = False
         self._has_dumped_graph = False
@@ -63,6 +65,7 @@ class TensorBoardOutput:
 
         self._dump_graph()
         self._dump_scalars(run_step)
+        self._dump_images(run_step)
         self._dump_histogram(run_step)
         self._dump_tensors()
 
@@ -128,6 +131,18 @@ class TensorBoardOutput:
             self._scalars.value.add(
                 tag=key + '/' + str(idx).strip('()'), simple_value=float(v))
 
+    def record_matplotlib(self, key, fig):
+        height, width = fig.get_size_inches() * fig.dpi
+        image_buffer = io.BytesIO()
+        fig.savefig(image_buffer, format='png')
+        image = tf.Summary.Image(
+            height=int(height),
+            width=int(width),
+            colorspace=3,  # RGB
+            encoded_image_string=image_buffer.getvalue())
+        image_buffer.close()
+        self._images.value.add(tag=key, image=image)
+
     def _get_histogram_var_by_type(self,
                                    histogram_type,
                                    shape,
@@ -185,6 +200,11 @@ class TensorBoardOutput:
         self._writer.add_summary(self._scalars, int(step))
         self._writer.flush()
         del self._scalars.value[:]
+
+    def _dump_images(self, step):
+        self._writer.add_summary(self._images, int(step))
+        self._writer.flush()
+        del self._images.value[:]
 
     def _dump_histogram(self, step):
         self.session = tf.get_default_session()
