@@ -1,5 +1,3 @@
-import collections
-
 import numpy as np
 import tensorflow as tf
 
@@ -8,8 +6,10 @@ from garage.tf.core.mlp import mlp
 from garage.tf.core.parameter import parameter
 from garage.tf.models.base import TfModel
 
+
 class GaussianMLPModel(TfModel):
     def __init__(self,
+                 output_dim,
                  name=None,
                  hidden_sizes=(32, 32),
                  learn_std=True,
@@ -47,11 +47,10 @@ class GaussianMLPModel(TfModel):
             - softplus: the std will be computed as log(1+exp(x))
         :return:
         """
-        super().__init__(name)
-
-
         # Network parameters
+        super().__init__(name)
         self._hidden_sizes = hidden_sizes
+        self._output_dim = output_dim
         self._learn_std = learn_std
         self._init_std = init_std
         self._adaptive_std = adaptive_std
@@ -87,6 +86,7 @@ class GaussianMLPModel(TfModel):
     def init_spec(self):
         return (), {
             'name': self._name,
+            'output_dim': self._output_dim,
             'hidden_sizes': self._hidden_sizes,
             'learn_std': self._learn_std,
             'init_std': self._init_std,
@@ -101,21 +101,17 @@ class GaussianMLPModel(TfModel):
             'std_parameterization': self._std_parameterization,
         }
 
-    def _build(self, inputs):
-        action_dim = 4
-        small = 1e-5
-
+    def _build(self, *inputs):
+        action_dim = self._output_dim
         state_input = inputs[0]
-
         with tf.variable_scope("dist_params"):
             if self._std_share_network:
                 # mean and std networks share an MLP
-                b = np.concatenate(
-                    [
-                        np.zeros(action_dim),
-                        np.full(action_dim, self._init_std_param)
-                    ],
-                    axis=0)
+                b = np.concatenate([
+                    np.zeros(action_dim),
+                    np.full(action_dim, self._init_std_param)
+                ],
+                                   axis=0)
                 b = tf.constant_initializer(b)
                 mean_std_network = mlp(
                     state_input,
@@ -163,16 +159,16 @@ class GaussianMLPModel(TfModel):
                         trainable=self._learn_std,
                         name="std_network")
 
-            mean_var = mean_network
-            std_param_var = std_network
+                mean_var = mean_network
+                std_param_var = std_network
 
-            with tf.variable_scope("std_limits"):
-                if self._min_std_param:
-                    std_param_var = tf.maximum(std_param_var,
-                                               self._min_std_param)
-                if self._max_std_param:
-                    std_param_var = tf.minimum(std_param_var,
-                                               self._max_std_param)
+                with tf.variable_scope("std_limits"):
+                    if self._min_std_param:
+                        std_param_var = tf.maximum(std_param_var,
+                                                   self._min_std_param)
+                    if self._max_std_param:
+                        std_param_var = tf.minimum(std_param_var,
+                                                   self._max_std_param)
 
         with tf.variable_scope("std_parameterization"):
             # build std_var with std parameterization
@@ -187,5 +183,10 @@ class GaussianMLPModel(TfModel):
             mean_var, std_var)
 
         action_var = dist.sample(seed=ext.get_seed())
+
+        self.action_var = action_var
+        self.mean_var = mean_var
+        self.std_param_var = std_param_var
+        self.dist = dist
 
         return action_var, mean_var, std_param_var, dist

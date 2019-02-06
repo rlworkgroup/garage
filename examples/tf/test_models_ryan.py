@@ -1,15 +1,12 @@
-#!/usr/bin/env python3
 import pickle
 
-import ipdb
 import numpy as np
 import tensorflow as tf
 
 from garage.tf.models.gaussian_mlp_model_ryan import GaussianMLPModel
 
-
 # Construction can happen outside a session
-g = GaussianMLPModel("model1")
+g = GaussianMLPModel(output_dim=2)
 
 # Call has to happen inside a session
 sess = tf.Session()
@@ -20,17 +17,14 @@ with sess.as_default():
     # sess.run(tf.global_variables_initializer())
 
     print('name: {}'.format(g.name))
-    print('weights: {}'.format(g.weights))
+    print('parameters: {}'.format(g.parameters))
 
-    print('zeroing weights...')
-    g.weights = {k: np.zeros_like(v) for k, v in g.weights.items()}
-    print('weights (after zeroing): {}'.format(g.weights))
+    print('zeroing parameters...')
+    g.parameters = {k: np.zeros_like(v) for k, v in g.parameters.items()}
+    print('parameters (after zeroing): {}'.format(g.parameters))
 
-    # sess.run(tf.global_variables_initializer())
-    print('weights (after reset): {}'.format(g.weights))
-
-    print('settings weights to 1...')
-    g.weights = {k: np.ones_like(v) for k, v in g.weights.items()}
+    print('settings parameters to 1...')
+    g.parameters = {k: np.ones_like(v) for k, v in g.parameters.items()}
     print('pickle data: {}'.format(g.__getstate__()))
     h_data = pickle.dumps(g)
 sess.close()
@@ -45,6 +39,5 @@ with sess.as_default():
 
     # sess.run(tf.global_variables_initializer())
 
-    print('weights (after pickling): {}'.format(h.weights))
-    ipdb.set_trace()
+    print('parameters (after pickling): {}'.format(h.parameters))
     print('done!')
