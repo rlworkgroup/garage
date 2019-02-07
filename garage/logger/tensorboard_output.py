@@ -1,6 +1,10 @@
 """Contains the output class for tensorboard.
 
 This class is sent logger data and handles the transfer to tensorboard.
+
+Note:
+Most of the methods were brought in from the old logger and should probably
+be rewritten with tensorboardX
 """
 from os.path import abspath, dirname
 import shutil
@@ -15,9 +19,8 @@ from tensorboard.plugins.custom_scalar import layout_pb2, metadata
 import tensorflow as tf
 
 from garage import config
-from garage.logger.outputs import LogOutput
-from garage.logger.tabular_input import TabularInput
-from garage.logger import HistogramInput, HistogramInputDistribution
+from garage.logger import (HistogramInput, HistogramInputDistribution,
+                           LogOutput, TabularInput)
 from garage.misc.console import mkdir_p
 
 

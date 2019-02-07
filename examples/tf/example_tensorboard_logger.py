@@ -2,7 +2,7 @@
 
 import tensorflow as tf
 
-from garage.logger import HistogramInput, TensorBoardOutput, logger, tabular
+from garage.logger import HistogramInput, logger, tabular, TensorBoardOutput
 
 tensorboard_output = TensorBoardOutput("data/local/histogram_example")
 logger.add_output(tensorboard_output)
