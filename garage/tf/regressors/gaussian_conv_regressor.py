@@ -3,7 +3,7 @@ import numpy as np
 import tensorflow as tf
 
 from garage.core import Serializable
-from garage.misc import logger
+from garage.logger import logger
 from garage.tf.core import LayersPowered
 from garage.tf.core import Parameterized
 import garage.tf.core.layers as layers

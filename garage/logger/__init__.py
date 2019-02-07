@@ -19,4 +19,5 @@ __all__ = (
     "Logger", "CsvOutput", "StdOutput", "TextOutput", "LogOutput",
     "Snapshotter", "TabularInput", "HistogramInput",
     "HistogramInputDistribution", "HistogramInputGamma", "HistogramInputNormal",
-    "HistogramInputPoisson", "HistogramInputUniform", "TensorBoardOutput")
+    "HistogramInputPoisson", "HistogramInputUniform", "TensorBoardOutput",
+    "logger", "tabular", "snapshotter")
