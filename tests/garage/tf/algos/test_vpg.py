@@ -1,3 +1,4 @@
+from garage import config
 from garage.baselines import LinearFeatureBaseline
 from garage.experiment import LocalRunner
 from garage.logger import logger

@@ -15,9 +15,9 @@ logger = Logger()
 tabular = TabularInput()
 snapshotter = Snapshotter()
 
-__all__ = (
-    "Logger", "CsvOutput", "StdOutput", "TextOutput", "LogOutput",
-    "Snapshotter", "TabularInput", "HistogramInput",
-    "HistogramInputDistribution", "HistogramInputGamma", "HistogramInputNormal",
-    "HistogramInputPoisson", "HistogramInputUniform", "TensorBoardOutput",
-    "logger", "tabular", "snapshotter")
+__all__ = ("Logger", "CsvOutput", "StdOutput", "TextOutput", "LogOutput",
+           "Snapshotter", "TabularInput", "HistogramInput",
+           "HistogramInputDistribution", "HistogramInputGamma",
+           "HistogramInputNormal", "HistogramInputPoisson",
+           "HistogramInputUniform", "TensorBoardOutput", "logger", "tabular",
+           "snapshotter")

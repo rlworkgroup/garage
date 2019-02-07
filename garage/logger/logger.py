@@ -18,6 +18,115 @@ The logger has 4 major steps:
     Some LogOutput subclasses, like StdOutput, do not instantiate this method,
     but it is necessary for the TensorBoardLogger.
 
+
+# Here's a demonstration of garage's logger:
+
+from garage.logger import logger
+
++------+
+|logger|
++------+
+
+# Let's add an output to the logger. We want to log to the console, so we'll
+#  add a StdOutput.
+
+from garage.logger import StdOutput
+logger.add_output(StdOutput())
+
++------+      +---------+
+|logger+------>StdOutput|
++------+      +---------+
+
+# Great! Now we can start logging text.
+
+logger.log("Hello Garage")
+
+# This will go straight to the console as "Hello Garage"
+
++------+                    +---------+
+|logger+---"Hello Garage"--->StdOutput|
++------+                    +---------+
+
+# Let's try adding another output.
+
+from garage.logger import TextOutput
+logger.add_output(TextOutput("log_folder/log.txt"))
+
+              +---------+
+       +------>StdOutput|
++------+      +---------+
+|logger|
++------+      +----------+
+       +------>TextOutput|
+              +----------+
+
+# And another output.
+
+from garage.logger import CsvOutput
+logger.add_output(CsvOutput("log_folder/table.csv"
+
+              +---------+
+       +------>StdOutput|
+       |      +---------+
+       |
++------+      +----------+
+|logger+------>TextOutput|
++------+      +----------+
+       |
+       |      +---------+
+       +------>CsvOutput|
+              +---------+
+
+# The logger will record anything passed to logger.log to all outputs that
+#  accept its type.
+
+logger.log("test")
+
+                    +---------+
+       +---"test"--->StdOutput|
+       |            +---------+
+       |
++------+            +----------+
+|logger+---"test"--->TextOutput|
++------+            +----------+
+       |
+       |            +---------+
+       +-----!!----->CsvOutput|
+                    +---------+
+
+# !! Note that the logger knows not to send CsvOutput the string "test"
+#  Similarly, more complex objects like tf.tensor won't be sent to (for
+#  example) TextOutput.
+# This behavior is defined in each output's types_accepted property
+
+# Here's a more complex example.
+# TabularInput, instantiated for you as the tabular, can log key/value pairs.
+
+from garage.logger import tabular
+tabular.record("key", 72)
+tabular.record("foo", "bar")
+logger.log(tabular)
+
+                     +---------+
+       +---tabular--->StdOutput|
+       |             +---------+
+       |
++------+             +----------+
+|logger+-----!!------>TextOutput|
++------+             +----------+
+       |
+       |             +---------+
+       +---tabular--->CsvOutput|
+                     +---------+
+
+# !! Note that the logger knows not to send the tabular to TextOutput
+
+# Console Output:
+---  ---
+key  72
+foo  bar
+---  ---
+
 """
 from contextlib import contextmanager
 from warnings import warn

@@ -44,7 +44,7 @@ class HistogramInputDistribution:
 
 
 class HistogramInputNormal(HistogramInputDistribution):
-    """Builds a histogram using the Normal distribution"""
+    """Builds a histogram using the Normal distribution."""
 
     def __init__(self, shape=None, name=None, mean=None, stddev=None):
         super().__init__("normal", shape=shape, name=name)
@@ -53,7 +53,7 @@ class HistogramInputNormal(HistogramInputDistribution):
 
 
 class HistogramInputGamma(HistogramInputDistribution):
-    """Builds a histogram using the Gamma distribution"""
+    """Builds a histogram using the Gamma distribution."""
 
     def __init__(self, shape=None, name=None, alpha=None):
         super().__init__("gamma", shape=shape, name=name)
@@ -61,7 +61,7 @@ class HistogramInputGamma(HistogramInputDistribution):
 
 
 class HistogramInputPoisson(HistogramInputDistribution):
-    """Builds a histogram using the Poisson distribution"""
+    """Builds a histogram using the Poisson distribution."""
 
     def __init__(self, shape=None, name=None, lam=None):
         super().__init__("poisson", shape=shape, name=name)
@@ -69,7 +69,7 @@ class HistogramInputPoisson(HistogramInputDistribution):
 
 
 class HistogramInputUniform(HistogramInputDistribution):
-    """Builds a histogram using the Uniform distribution"""
+    """Builds a histogram using the Uniform distribution."""
 
     def __init__(self, shape=None, name=None, maxval=None):
         super().__init__("uniform", shape=shape, name=name)
