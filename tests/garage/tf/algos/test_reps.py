@@ -5,8 +5,8 @@ too low.
 import gym
 
 from garage.baselines import LinearFeatureBaseline
-import garage.logger as logger
 from garage.experiment import LocalRunner
+from garage.logger import logger, TensorBoardOutput
 from garage.tf.algos import REPS
 from garage.tf.envs import TfEnv
 from garage.tf.policies import CategoricalMLPPolicy
@@ -17,7 +17,7 @@ class TestREPS(TfGraphTestCase):
     def test_reps_cartpole(self):
         """Test REPS with gym Cartpole environment."""
         with LocalRunner(self.sess) as runner:
-            logger.reset()
+            logger.reset_output(TensorBoardOutput())
             env = TfEnv(gym.make("CartPole-v0"))
 
             policy = CategoricalMLPPolicy(
