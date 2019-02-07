@@ -107,6 +107,14 @@ class Logger:
             if isinstance(output, output_type):
                 output.dump(step=step)
 
+    def dump_all(self, step=None):
+        """Dumps all outputs connected to the logger.
+
+        :param step: The current run step.
+        """
+        for output in self._outputs:
+            output.dump(step=step)
+
     @contextmanager
     def prefix(self, prefix):
         """Add a prefix to the logger.
