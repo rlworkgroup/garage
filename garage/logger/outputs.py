@@ -19,7 +19,10 @@ class LogOutput(abc.ABC):
 
     @property
     def types_accepted(self):
-        """The types that the logger may pass to this output."""
+        """The types that the logger may pass to this output.
+
+        :return: A tuple containing all valid input types.
+        """
         return ()
 
     @abc.abstractmethod
@@ -85,7 +88,7 @@ class TextOutput(LogOutput):
     @property
     def types_accepted(self):
         """The types that the logger may pass to this output."""
-        return (str, )  # we need a comma here so the return value is a tuple
+        return (str, )
 
     def record(self, data, prefix=''):
         """Log data to text file."""
@@ -114,16 +117,17 @@ class CsvOutput(LogOutput):
     @property
     def types_accepted(self):
         """The types that the logger may pass to this output."""
-        return (TabularInput, )  # we need the comma here so the return value
-        # is a tuple
+        return (TabularInput, )
 
     def record(self, data, prefix=''):
         """Log tabular data to CSV."""
+        dictionary = data.primitive_dict
+
         writer = csv.DictWriter(
-            self._log_file, fieldnames=data.get_table_key_set())
+            self._log_file, fieldnames=set(dictionary.keys()))
 
         if not self._tabular_header_written:
             writer.writeheader()
             self._tabular_header_written = True
-        writer.writerow(data.get_table_dict())
+        writer.writerow(dictionary)
         self._log_file.flush()

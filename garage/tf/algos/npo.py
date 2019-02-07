@@ -4,7 +4,7 @@ from enum import Enum, unique
 import numpy as np
 import tensorflow as tf
 
-from garage.logger import logger, tabular
+from garage.logger import HistogramInput, logger, tabular
 from garage.misc import special
 from garage.misc.overrides import overrides
 from garage.tf.algos.batch_polopt import BatchPolopt

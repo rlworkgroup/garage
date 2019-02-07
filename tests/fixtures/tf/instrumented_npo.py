@@ -8,7 +8,7 @@ from enum import Enum, unique
 import numpy as np
 import tensorflow as tf
 
-from garage.logger import logger, tabular
+from garage.logger import HistogramInput, logger, tabular
 from garage.misc import special
 from garage.misc.overrides import overrides
 from garage.tf.misc import tensor_utils
@@ -96,9 +96,9 @@ class InstrumentedNPO(InstrumentedBatchPolopt):
 
         num_traj = self.batch_size // self.max_path_length
         actions = samples_data["actions"][:num_traj, ...]
-        logger.log(
-            ("{}/Actions".format(self.policy.name), actions),
-            record='histogram')
+
+        histogram = HistogramInput(actions)
+        tabular.record("{}/Actions".format(self.policy.name), histogram)
 
         self._fit_baseline(samples_data)
 

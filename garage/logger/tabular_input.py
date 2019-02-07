@@ -1,7 +1,6 @@
 """Contains the tabular class.
 
-This class allows the recording of tabular information for later output.
-TabularInput may be passed to the logger via its log() method.
+This class holds tabular information for later output.
 """
 from contextlib import contextmanager
 
@@ -10,17 +9,19 @@ import tabulate
 
 
 class TabularInput:
-    """This class allows the user to create tables for easy display."""
+    """This class allows the user to create tables for easy display.
+
+    TabularInput may be passed to the logger via its log() method.
+    """
 
     def __init__(self):
-        self._tabular = []
-        self._no_prefix_dict = {}
+        self._dict = {}
         self._prefixes = []
         self._prefix_str = ''
 
     def __str__(self):
         """Returns a string representation of the table for the logger."""
-        return tabulate.tabulate(self._tabular)
+        return tabulate.tabulate(self.primitive_dict.items())
 
     def record(self, key, val):
         """Allows the user to save key/value entries for the table.
@@ -28,8 +29,7 @@ class TabularInput:
         :param key: String key corresponding to the value.
         :param val: Value that is to be stored in the table.
         """
-        self._tabular.append((self._prefix_str + str(key), str(val)))
-        self._no_prefix_dict[key] = val
+        self._dict[self._prefix_str + str(key)] = val
 
     def record_misc_stat(self, key, values, placement='back'):
         """Allows the user to record statistics of an array.
@@ -39,23 +39,23 @@ class TabularInput:
         :param placement: Whether to put the prefix in front or in the back.
         """
         if placement == 'front':
-            prefix = ""
-            suffix = key
+            front = ""
+            back = key
         else:
-            prefix = key
-            suffix = ""
+            front = key
+            back = ""
         if values:
-            self.record(prefix + "Average" + suffix, np.average(values))
-            self.record(prefix + "Std" + suffix, np.std(values))
-            self.record(prefix + "Median" + suffix, np.median(values))
-            self.record(prefix + "Min" + suffix, np.min(values))
-            self.record(prefix + "Max" + suffix, np.max(values))
+            self.record(front + "Average" + back, np.average(values))
+            self.record(front + "Std" + back, np.std(values))
+            self.record(front + "Median" + back, np.median(values))
+            self.record(front + "Min" + back, np.min(values))
+            self.record(front + "Max" + back, np.max(values))
         else:
-            self.record(prefix + "Average" + suffix, np.nan)
-            self.record(prefix + "Std" + suffix, np.nan)
-            self.record(prefix + "Median" + suffix, np.nan)
-            self.record(prefix + "Min" + suffix, np.nan)
-            self.record(prefix + "Max" + suffix, np.nan)
+            self.record(front + "Average" + back, np.nan)
+            self.record(front + "Std" + back, np.nan)
+            self.record(front + "Median" + back, np.nan)
+            self.record(front + "Min" + back, np.nan)
+            self.record(front + "Max" + back, np.nan)
 
     @contextmanager
     def prefix(self, prefix):
@@ -77,7 +77,7 @@ class TabularInput:
 
     def clear(self):
         """Clears the tabular."""
-        self._tabular.clear()
+        self._dict.clear()
 
     def push_prefix(self, prefix):
         """Push prefix to be appended before printed table.
@@ -92,14 +92,25 @@ class TabularInput:
         del self._prefixes[-1]
         self._prefix_str = ''.join(self._prefixes)
 
-    def get_table_dict(self):
+    @property
+    def primitive_dict(self):
+        """Returns the dictionary, excluding all nonprimitive types."""
+        primitives = (int, float, str, bool)
+
+        def is_primitive(x):
+            return isinstance(x, primitives)
+
+        return {
+            key: val
+            for key, val in self._dict.items() if is_primitive(val)
+        }
+
+    @property
+    def dict(self):
         """Returns a dictionary of the tabular items."""
-        return dict(self._tabular)
+        return self._dict
 
-    def get_no_prefix_dict(self):
-        """Returns dictionary without prefixes."""
-        return self._no_prefix_dict
-
-    def get_table_key_set(self):
+    @property
+    def key_set(self):
         """Returns a set of the table's keys."""
-        return set(dict(self._tabular).keys())
+        return set(self._dict.keys())

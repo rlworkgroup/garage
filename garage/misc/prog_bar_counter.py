@@ -13,14 +13,14 @@ class ProgBarCounter:
         self.max_progress = 1000000
         self.cur_progress = 0
         self.cur_count = 0
-        if logger.has_output(StdOutput):
+        if logger.has_output_type(StdOutput):
             self.pbar = pyprind.ProgBar(self.max_progress)
         else:
             self.pbar = None
 
     def inc(self, increment):
         """Increment function."""
-        if logger.has_output(StdOutput):
+        if logger.has_output_type(StdOutput):
             self.cur_count += increment
             new_progress = (
                 self.cur_count * self.max_progress / self.total_count)

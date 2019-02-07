@@ -69,7 +69,7 @@ class Logger:
         """Remove all outputs that have been added to this logger."""
         self._outputs.clear()
 
-    def remove_output(self, output_type):
+    def remove_output_type(self, output_type):
         """Remove all outputs of a given type.
 
         :param output_type: A LogOutput subclass type to be removed.
@@ -84,10 +84,10 @@ class Logger:
 
         :param output: An instantiation of a LogOutput subclass to be added.
         """
-        self.remove_output(type(output))
+        self.remove_output_type(type(output))
         self.add_output(output)
 
-    def has_output(self, output_type):
+    def has_output_type(self, output_type):
         """Checks to see if a given logger output is attached to the logger.
 
         :param output_type: A LogOutput subclass type to be checked for.
@@ -97,7 +97,7 @@ class Logger:
                 return True
         return False
 
-    def dump_output(self, output_type, step=None):
+    def dump_output_type(self, output_type, step=None):
         """Dumps all outputs of the given type.
 
         :param output_type: A LogOutput subclass type to be dumped.

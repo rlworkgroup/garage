@@ -1,3 +1,7 @@
+"""Contains the output class for tensorboard.
+
+This class is sent logger data and handles the transfer to tensorboard.
+"""
 from os.path import abspath, dirname
 import shutil
 
@@ -13,6 +17,7 @@ import tensorflow as tf
 from garage import config
 from garage.logger.outputs import LogOutput
 from garage.logger.tabular_input import TabularInput
+from garage.logger import HistogramInput, HistogramInputDistribution
 from garage.misc.console import mkdir_p
 
 
@@ -46,14 +51,19 @@ class TensorBoardOutput(LogOutput):
     @property
     def types_accepted(self):
         """The types that the logger may pass to this output."""
-        return (tf.Tensor, TabularInput, tuple)
+        return (TabularInput, )
 
     def record(self, data, prefix=''):
-        if isinstance(data, tf.Tensor):
-            self.record_tensor(data.name, data)
-        elif isinstance(data, TabularInput):
-            for key, value in data.get_table_dict().items():
-                self.record_scalar(key, value)
+        if isinstance(data, TabularInput):
+            for key, value in data.dict.items():
+                if isinstance(value, HistogramInput):
+                    self.record_histogram(key, value.data)
+                elif isinstance(value, HistogramInputDistribution):
+                    self.record_histogram_by_type(**vars(value))
+                elif isinstance(value, tf.Tensor):
+                    self.record_tensor(key, value)
+                else:
+                    self.record_scalar(key, value)
 
     def _set_dir(self, dir_name):
         if not dir_name:
