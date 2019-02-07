@@ -127,6 +127,8 @@ key  72
 foo  bar
 ---  ---
 
+# Feel free to add your own inputs and outputs to the logger!
+
 """
 from contextlib import contextmanager
 from warnings import warn
