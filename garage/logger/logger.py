@@ -120,6 +120,7 @@ logger.log(tabular)
                      +---------+
 
 # !! Note that the logger knows not to send the tabular to TextOutput
+# This behavior is defined in each output's types_accepted property
 
 # Console Output:
 ---  ---
