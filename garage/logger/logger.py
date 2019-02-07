@@ -156,7 +156,8 @@ class Logger:
          types_accepted property of any of the logger outputs.
         """
         if not self._outputs:
-            warn("No outputs have been added to the logger.")
+            warn("No outputs have been added to the logger.", stacklevel=2)
+            return
 
         at_least_one_logged = False
         for output in self._outputs:
@@ -166,7 +167,7 @@ class Logger:
 
         if not at_least_one_logged:
             warn("Log data of type " + type(data).__name__ +
-                 " was not accepted by any output")
+                 " was not accepted by any output", stacklevel=2)
 
     def add_output(self, output):
         """Add a new output to the logger.
