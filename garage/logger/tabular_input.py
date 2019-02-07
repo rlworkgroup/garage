@@ -65,7 +65,7 @@ class TabularInput:
 
         with tabular.prefix('your_prefix_'):
             # your code
-            tabular.record_tabular(key, val)
+            tabular.record(key, val)
 
         :param prefix: The string prefix to be prepended to logs.
         """
