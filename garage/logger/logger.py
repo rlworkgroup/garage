@@ -134,6 +134,8 @@ foo  bar
 from contextlib import contextmanager
 from warnings import warn
 
+from gym.utils import colorize
+
 
 class Logger:
     """This is the class that handles logging."""
@@ -156,7 +158,7 @@ class Logger:
          types_accepted property of any of the logger outputs.
         """
         if not self._outputs:
-            warn("No outputs have been added to the logger.", stacklevel=2)
+            self._warn("No outputs have been added to the logger.")
             return
 
         at_least_one_logged = False
@@ -166,8 +168,8 @@ class Logger:
                 at_least_one_logged = True
 
         if not at_least_one_logged:
-            warn("Log data of type " + type(data).__name__ +
-                 " was not accepted by any output", stacklevel=2)
+            self._warn("Log data of type " + type(data).__name__ +
+                       " was not accepted by any output")
 
     def add_output(self, output):
         """Add a new output to the logger.
@@ -259,3 +261,11 @@ class Logger:
         """Pop prefix from prefix stack."""
         del self._prefixes[-1]
         self._prefix_str = ''.join(self._prefixes)
+
+    def _warn(self, msg):
+        """Warns the user using warnings.warn.
+
+        The stacklevel parameter needs to be 3 to ensure the call to logger.log
+        is the one printed.
+        """
+        warn(colorize("WARN: " + msg, 'yellow'), stacklevel=3)

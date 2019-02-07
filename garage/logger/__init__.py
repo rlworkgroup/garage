@@ -3,7 +3,8 @@
 This module instantiates a global logger singleton.
 """
 from garage.logger.logger import Logger
-from garage.logger.outputs import CsvOutput, LogOutput, StdOutput, TextOutput
+from garage.logger.outputs import (CsvOutput, LogOutput, NullOutput, StdOutput,
+                                   TextOutput)
 from garage.logger.snapshotter import Snapshotter
 from garage.logger.tabular_input import TabularInput
 from garage.logger.tensorboard_inputs import (
@@ -15,8 +16,8 @@ logger = Logger()
 tabular = TabularInput()
 snapshotter = Snapshotter()
 
-__all__ = ("Logger", "CsvOutput", "StdOutput", "TextOutput", "LogOutput",
-           "Snapshotter", "TabularInput", "HistogramInput",
+__all__ = ("Logger", "NullOutput", "CsvOutput", "StdOutput", "TextOutput",
+           "LogOutput", "Snapshotter", "TabularInput", "HistogramInput",
            "HistogramInputDistribution", "HistogramInputGamma",
            "HistogramInputNormal", "HistogramInputPoisson",
            "HistogramInputUniform", "TensorBoardOutput", "logger", "tabular",

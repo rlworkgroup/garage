@@ -42,6 +42,19 @@ class LogOutput(abc.ABC):
         pass
 
 
+class NullOutput(LogOutput):
+    """Dummy output to disable 'no logger output' warnings."""
+
+    @property
+    def types_accepted(self):
+        """NullOutput accepts all types."""
+        return (object, )
+
+    def record(self, data, prefix=''):
+        """Don't do anything."""
+        pass
+
+
 class StdOutput(LogOutput):
     """Standard console output for the logger.
 
