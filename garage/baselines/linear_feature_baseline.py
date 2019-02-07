@@ -33,8 +33,8 @@ class LinearFeatureBaseline(Baseline):
         reg_coeff = self._reg_coeff
         for _ in range(5):
             self._coeffs = np.linalg.lstsq(
-                featmat.T.dot(featmat)
-                + reg_coeff * np.identity(featmat.shape[1]),
+                featmat.T.dot(featmat) +
+                reg_coeff * np.identity(featmat.shape[1]),
                 featmat.T.dot(returns),
                 rcond=-1)[0]
             if not np.any(np.isnan(self._coeffs)):
