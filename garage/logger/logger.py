@@ -144,6 +144,7 @@ class Logger:
         self._outputs = []
         self._prefixes = []
         self._prefix_str = ""
+        self._warned_once = False
 
     def log(self, data):
         """Magic method that takes in all different types of input.
@@ -268,4 +269,11 @@ class Logger:
         The stacklevel parameter needs to be 3 to ensure the call to logger.log
         is the one printed.
         """
-        warn(colorize("WARN: " + msg, 'yellow'), stacklevel=3)
+        if not self._warned_once:
+            warn(colorize(msg, 'yellow'), self.LogWarning, stacklevel=3)
+        self._warned_once = True
+
+    class LogWarning(UserWarning):
+        """Warning class for the Logger."""
+        
+        pass

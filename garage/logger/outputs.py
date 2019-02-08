@@ -47,7 +47,7 @@ class NullOutput(LogOutput):
 
     @property
     def types_accepted(self):
-        """NullOutput accepts all types."""
+        """This output accepts all types."""
         return (object, )
 
     def record(self, data, prefix=''):
