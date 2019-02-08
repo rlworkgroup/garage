@@ -41,6 +41,9 @@ class TensorboardLogger(Logger):
         self._tensorboard.record_histogram_by_type(histogram_type, key, shape,
                                                    **kwargs)
 
+    def record_matplotlib(self, key, fig):
+        self._tensorboard.record_matplotlib(str(key), fig)
+
     def dump_tensorboard(self, *args, **kwargs):
         if self._tabular:
             tabular_dict = dict(self._tabular)
