@@ -18,6 +18,8 @@ class TestOcclusionEnv(unittest.TestCase):
         assert round_trip.occlude(obs) == env.occlude(obs)
         assert np.array_equal(round_trip.env._goal, env.env._goal)
         step_env(round_trip)
+        round_trip.close()
+        env.close()
 
     def test_does_not_modify_action(self):
         inner_env = PointEnv(goal=(2, 3))
@@ -27,3 +29,4 @@ class TestOcclusionEnv(unittest.TestCase):
         env.reset()
         env.step(a)
         assert np.array_equal(a, a_copy)
+        env.close()

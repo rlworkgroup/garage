@@ -35,3 +35,5 @@ class TestTfBaselines(TfGraphTestCase):
         deterministic_mlp_baseline.get_param_values(trainable=True)
         gaussian_mlp_baseline.get_param_values(trainable=True)
         gaussian_conv_baseline.get_param_values(trainable=True)
+
+        box_env.close()

@@ -11,6 +11,8 @@ class TestPointEnv(unittest.TestCase):
         round_trip = pickle.loads(pickle.dumps(env))
         assert round_trip
         step_env(round_trip)
+        env.close()
+        round_trip.close()
 
     def test_does_not_modify_action(self):
         env = PointEnv()
@@ -19,3 +21,4 @@ class TestPointEnv(unittest.TestCase):
         env.reset()
         env.step(a)
         self.assertEquals(a.all(), a_copy.all())
+        env.close()

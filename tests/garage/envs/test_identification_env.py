@@ -16,6 +16,8 @@ class TestIdentificationEnv(unittest.TestCase):
         assert env.mdp_args == round_trip.mdp_args
         assert np.array_equal(round_trip.env._goal, env.env._goal)
         step_env(round_trip)
+        round_trip.close()
+        env.close()
 
     def test_does_not_modify_action(self):
         env = IdentificationEnv(PointEnv, dict(goal=(1., 2.)))
@@ -24,3 +26,4 @@ class TestIdentificationEnv(unittest.TestCase):
         env.reset()
         env.step(a)
         assert np.array_equal(a, a_copy)
+        env.close()

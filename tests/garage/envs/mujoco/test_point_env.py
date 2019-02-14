@@ -12,6 +12,8 @@ class TestPointEnv(unittest.TestCase):
         assert round_trip
         assert round_trip.action_noise == env.action_noise
         step_env(round_trip)
+        round_trip.close()
+        env.close()
 
     def test_does_not_modify_action(self):
         env = PointEnv(action_noise=1.0)
@@ -20,3 +22,4 @@ class TestPointEnv(unittest.TestCase):
         env.reset()
         env.step(a)
         self.assertEquals(a.all(), a_copy.all())
+        env.close()

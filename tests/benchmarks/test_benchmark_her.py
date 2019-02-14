@@ -76,10 +76,10 @@ class TestBenchmarkHER(unittest.TestCase):
                 CACHED_ENVS.clear()
                 baselines_csv = run_baselines(env_id, seed, baselines_dir)
 
-                env.close()
-
                 garage_csvs.append(garage_csv)
                 baselines_csvs.append(baselines_csv)
+
+            env.close()
 
             plot(
                 b_csvs=baselines_csvs,

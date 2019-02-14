@@ -41,3 +41,4 @@ class TestGaussianPolicies(TfGraphTestCase):
                 hvp_approach=FiniteDifferenceHvp(base_eps=1e-5)),
         )
         algo.train(sess=self.sess)
+        env.close()

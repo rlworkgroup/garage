@@ -12,6 +12,8 @@ class TestPointMazeEnv(unittest.TestCase):
         assert round_trip
         assert round_trip._n_bins == env._n_bins
         step_env(round_trip)
+        round_trip.close()
+        env.close()
 
     def test_does_not_modify_action(self):
         env = PointMazeEnv(n_bins=2)
@@ -20,3 +22,4 @@ class TestPointMazeEnv(unittest.TestCase):
         env.reset()
         env.step(a)
         self.assertEquals(a.all(), a_copy.all())
+        env.close()

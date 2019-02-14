@@ -33,5 +33,4 @@ class TestDmControlTfPolicy(TfGraphTestCase):
                 step_size=0.01,
             )
             algo.train()
-
-        env.close()
+            env.close()
