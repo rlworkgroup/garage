@@ -45,6 +45,8 @@ class TestPPO(TfGraphTestCase):
         last_avg_ret = algo.train(sess=self.sess)
         assert last_avg_ret > 40
 
+        env.close()
+
     def test_ppo_pendulum_recurrent(self):
         """Test PPO with Pendulum environment and recurrent policy."""
         logger.reset()
@@ -68,3 +70,5 @@ class TestPPO(TfGraphTestCase):
         )
         last_avg_ret = algo.train(sess=self.sess)
         assert last_avg_ret > 40
+
+        env.close()

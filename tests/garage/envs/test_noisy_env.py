@@ -18,6 +18,8 @@ class TestDelayedActionEnv(unittest.TestCase):
         assert round_trip.action_delay == env.action_delay
         assert np.array_equal(round_trip.env._goal, env.env._goal)
         step_env(round_trip)
+        round_trip.close()
+        env.close()
 
     def test_does_not_modify_action(self):
         inner_env = PointEnv(goal=(1., 2.))
@@ -28,6 +30,7 @@ class TestDelayedActionEnv(unittest.TestCase):
         env.reset()
         env.step(a)
         assert np.array_equal(a, a_copy)
+        env.close()
 
 
 class TestNoisyObservationEnv(unittest.TestCase):
@@ -39,6 +42,8 @@ class TestNoisyObservationEnv(unittest.TestCase):
         assert round_trip.obs_noise == env.obs_noise
         assert np.array_equal(round_trip.env._goal, env.env._goal)
         step_env(round_trip)
+        round_trip.close()
+        env.close()
 
     def test_does_not_modify_action(self):
         inner_env = PointEnv(goal=(1., 2.))
@@ -47,3 +52,4 @@ class TestNoisyObservationEnv(unittest.TestCase):
         a_copy = a.copy()
         env.step(a)
         assert np.array_equal(a, a_copy)
+        env.close()

@@ -74,6 +74,8 @@ class TestBenchmarkPPO(unittest.TestCase):
                 garage_csvs.append(garage_csv)
                 baselines_csvs.append(baselines_csv)
 
+            env.close()
+
             plot(
                 b_csvs=baselines_csvs,
                 g_csvs=garage_csvs,

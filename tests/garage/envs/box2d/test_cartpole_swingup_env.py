@@ -12,6 +12,8 @@ class TestCartpoleSwingupEnv(unittest.TestCase):
         assert round_trip
         assert round_trip.obs_noise == env.obs_noise
         step_env(round_trip)
+        round_trip.close()
+        env.close()
 
     def test_does_not_modify_action(self):
         env = CartpoleSwingupEnv(obs_noise=1.0)
@@ -20,3 +22,4 @@ class TestCartpoleSwingupEnv(unittest.TestCase):
         env.reset()
         env.step(a)
         self.assertEquals(a.all(), a_copy.all())
+        env.close()

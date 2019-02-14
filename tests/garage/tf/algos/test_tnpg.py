@@ -30,3 +30,5 @@ class TestTNPG(TfGraphTestCase):
 
         last_avg_ret = algo.train(sess=self.sess)
         assert last_avg_ret > 30
+
+        env.close()

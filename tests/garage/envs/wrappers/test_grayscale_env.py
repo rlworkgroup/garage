@@ -5,16 +5,18 @@ from gym.spaces import Discrete
 import numpy as np
 
 from garage.envs.wrappers import Grayscale
-from garage.misc.overrides import overrides
 from garage.tf.envs import TfEnv
 from tests.fixtures.envs.dummy import DummyDiscretePixelEnv
 
 
 class TestGrayscale(unittest.TestCase):
-    @overrides
     def setUp(self):
         self.env = TfEnv(DummyDiscretePixelEnv(random=False))
         self.env_g = TfEnv(Grayscale(DummyDiscretePixelEnv(random=False)))
+
+    def tearDown(self):
+        self.env.close()
+        self.env_g.close()
 
     def test_gray_scale_invalid_environment_type(self):
         with self.assertRaises(ValueError):

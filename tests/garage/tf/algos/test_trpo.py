@@ -44,6 +44,8 @@ class TestTRPO(TfGraphTestCase):
         last_avg_ret = algo.train(sess=self.sess)
         assert last_avg_ret > 50
 
+        env.close()
+
     def test_trpo_unknown_kl_constraint(self):
         """Test TRPO with unkown KL constraints."""
         logger.reset()
@@ -73,3 +75,5 @@ class TestTRPO(TfGraphTestCase):
                 kl_constraint="random kl_constraint",
             )
         assert "Unknown KLConstraint" in str(context.exception)
+
+        env.close()

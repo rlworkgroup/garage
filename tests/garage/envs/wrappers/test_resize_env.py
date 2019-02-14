@@ -5,19 +5,21 @@ from gym.spaces import Discrete
 import numpy as np
 
 from garage.envs.wrappers import Resize
-from garage.misc.overrides import overrides
 from garage.tf.envs import TfEnv
 from tests.fixtures.envs.dummy import DummyDiscrete2DEnv
 
 
 class TestResize(unittest.TestCase):
-    @overrides
     def setUp(self):
         self.width = 16
         self.height = 16
         self.env = TfEnv(DummyDiscrete2DEnv())
         self.env_r = TfEnv(
             Resize(DummyDiscrete2DEnv(), width=self.width, height=self.height))
+
+    def tearDown(self):
+        self.env.close()
+        self.env_r.close()
 
     def test_resize_invalid_environment_type(self):
         with self.assertRaises(ValueError):

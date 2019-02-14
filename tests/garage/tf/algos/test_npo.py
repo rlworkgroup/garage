@@ -44,6 +44,8 @@ class TestNPO(TfGraphTestCase):
         last_avg_ret = algo.train(sess=self.sess)
         assert last_avg_ret > 20
 
+        env.close()
+
     def test_npo_unknown_pg_loss(self):
         """Test NPO with unkown policy gradient loss."""
         logger.reset()
@@ -66,3 +68,5 @@ class TestNPO(TfGraphTestCase):
                 pg_loss="random pg_loss",
             )
         assert "Unknown PGLoss" in str(context.exception)
+
+        env.close()

@@ -24,6 +24,7 @@ def run_task(*_):
         step_size=0.01,
         plot=True)
     algo.train()
+    env.close()
 
 
 run_experiment(

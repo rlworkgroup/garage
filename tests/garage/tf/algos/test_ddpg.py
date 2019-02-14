@@ -51,3 +51,5 @@ class TestDDPG(TfGraphTestCase):
         )
         last_avg_ret = algo.train(sess=self.sess)
         assert last_avg_ret > 60
+
+        env.close()

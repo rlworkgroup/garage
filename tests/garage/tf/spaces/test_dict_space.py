@@ -39,3 +39,5 @@ class TestDictSpace(unittest.TestCase):
         assert tf_act.unflatten_with_keys(
             tf_act.flatten_with_keys(dummy_act_sample, iter(["action"])),
             iter(["action"]))
+
+        tf_env.close()

@@ -42,6 +42,9 @@ class TestDynamicsRand(unittest.TestCase):
         body_id = self._env.sim.model._body_name2id[self._bodyname]
         self._orig_val = np.array(self._env.sim.model.body_pos[body_id])
 
+    def tearDown(self):
+        self._env.close()
+
     def create_randomized_xml(self):
         with io.StringIO() as model_xml:
             self._env.sim.save(model_xml, 'xml')
@@ -103,6 +106,8 @@ class TestDynamicsRand(unittest.TestCase):
             "not > 0. Getting the exact "
             "same numbers?\n {0}".format(randomized_vals))
 
+        randomized_env.close()
+
     def test_scaled_method(self):
         self._randomizing_method = Method.SCALED
         variations = Variations()
@@ -143,6 +148,8 @@ class TestDynamicsRand(unittest.TestCase):
             "not > 0. Getting the exact "
             "same numbers?\n {0}".format(randomized_vals))
 
+        randomized_env.close()
+
     def test_env_step(self):
         self._randomizing_method = Method.ABSOLUTE
         variations = Variations()
@@ -168,6 +175,8 @@ class TestDynamicsRand(unittest.TestCase):
         # step() shouldn't error out (so it actually steps the wrapped env)
         for j in range(5):
             assert randomized_env.step(randomized_env.action_space.sample())
+
+        randomized_env.close()
 
     def test_xml_node_exception(self):
         fake_node = "fake_node"
@@ -235,6 +244,8 @@ class TestDynamicsRand(unittest.TestCase):
             randomized_env.reset()
         assert "Unknown distribution" in str(context.exception)
 
+        randomized_env.close()
+
     def test_exception_uniform_dist(self):
         self._randomizing_method = Method.ABSOLUTE
         variations = Variations()
@@ -266,6 +277,8 @@ class TestDynamicsRand(unittest.TestCase):
         with self.assertRaises(ValueError) as context:
             randomized_env.reset()
         assert "Unknown method" in str(context.exception)
+
+        randomized_env.close()
 
     def test_prop_elem(self):
         self._randomizing_method = Method.ABSOLUTE

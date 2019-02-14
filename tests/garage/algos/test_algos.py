@@ -61,3 +61,4 @@ class TestAlgos(unittest.TestCase):
             **(algo_args.get(algo_cls, dict())))
         algo.train()
         assert not np.any(np.isnan(policy.get_param_values()))
+        env.close()

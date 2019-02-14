@@ -32,6 +32,7 @@ def run_task(*_):
         plot=True,
     )
     algo.train()
+    env.close()
 
 
 run_experiment(

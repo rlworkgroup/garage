@@ -5,13 +5,11 @@ from gym.spaces import Discrete
 import numpy as np
 
 from garage.envs.wrappers import StackFrames
-from garage.misc.overrides import overrides
 from garage.tf.envs import TfEnv
 from tests.fixtures.envs.dummy import DummyDiscrete2DEnv
 
 
 class TestStackFrames(unittest.TestCase):
-    @overrides
     def setUp(self):
         self.n_frames = 4
         self.env = TfEnv(DummyDiscrete2DEnv(random=False))
@@ -19,6 +17,10 @@ class TestStackFrames(unittest.TestCase):
             StackFrames(
                 DummyDiscrete2DEnv(random=False), n_frames=self.n_frames))
         self.width, self.height = self.env.observation_space.shape
+
+    def tearDown(self):
+        self.env.close()
+        self.env_s.close()
 
     def test_stack_frames_invalid_environment_type(self):
         with self.assertRaises(ValueError):
