@@ -93,6 +93,10 @@ class GaussianMLPModel(TfModel):
         else:
             raise NotImplementedError
 
+    def network_output_spec(self):
+        """Network output spec."""
+        return ['sample', 'mean', 'std', 'std_param', 'distribution']
+
     def _build(self, state_input=None, dist=None):
         action_dim = self._output_dim
         assert state_input is not None
@@ -174,6 +178,4 @@ class GaussianMLPModel(TfModel):
             shape=mean_var.get_shape().as_list()[1:], seed=ext.get_seed())
         action_var = rnd * tf.exp(std_var) + mean_var
 
-        self.set_network_output_spec('sample', 'mean', 'std', 'std_param',
-                                     'distribution')
         return action_var, mean_var, std_var, std_param_var, dist

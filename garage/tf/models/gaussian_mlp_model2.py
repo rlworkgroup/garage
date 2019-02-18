@@ -85,6 +85,10 @@ class GaussianMLPModel2(TfModel):
         else:
             raise NotImplementedError
 
+    def network_output_spec(self):
+        """Network output spec."""
+        return ['sample', 'distribution']
+
     def _build(self,
                state_input=None,
                dist=None,
@@ -170,5 +174,4 @@ class GaussianMLPModel2(TfModel):
 
         action_var = distribution.sample(seed=ext.get_seed())
 
-        self.set_network_output_spec('sample', 'distribution')
         return action_var, distribution

@@ -14,11 +14,12 @@ class SimpleModel(TfModel):
         self._output_dim = output_dim
         self._hidden_sizes = hidden_sizes
 
+    def network_output_spec(self):
+        return ['state', 'action']
+
     def _build(self, obs_input):
         state = mlp(obs_input, self._output_dim, self._hidden_sizes, 'state')
         action = mlp(obs_input, self._output_dim, self._hidden_sizes, 'action')
-
-        self.set_network_output_spec('state', 'action')
         return state, action
 
 
@@ -30,9 +31,11 @@ class ComplicatedModel(TfModel):
         self._simple_model_2 = SimpleModel(
             output_dim=output_dim, name='simple_model_2')
 
+    def network_output_spec(self):
+        return ['action']
+
     def _build(self, obs_input):
         h1, _ = self._simple_model_1.build(obs_input)
-        self.set_network_output_spec('action')
         return self._simple_model_2.build(h1)[1]
 
 

@@ -284,19 +284,22 @@ class TfModel(Model):
                     'Network {} already exists!'.format(network_name))
             with _variable_scope:
                 network = Network(self, inputs, network_name)
-        c = namedtuple(network_name, [
-            *self._network_output_spec, 'input', 'output', 'inputs', 'outputs'
-        ])
-        if isinstance(network.outputs, tuple):
-            assert len(self._network_output_spec) == len(network.outputs),\
-                'network_output_spec must have same length as network.outputs!'
-            self._networks[network_name] = c(*network.outputs, network.input,
-                                             network.output, network.inputs,
-                                             network.outputs)
+        spec = self.network_output_spec()
+        if spec:
+            c = namedtuple(network_name,
+                           [*spec, 'input', 'output', 'inputs', 'outputs'])
+            if isinstance(network.outputs, tuple):
+                assert len(spec) == len(network.outputs),\
+                    'network_output_spec must have same length as outputs!'
+                self._networks[network_name] = c(
+                    *network.outputs, network.input, network.output,
+                    network.inputs, network.outputs)
+            else:
+                self._networks[network_name] = c(
+                    network.outputs, network.input, network.output,
+                    network.inputs, network.outputs)
         else:
-            self._networks[network_name] = c(network.outputs, network.input,
-                                             network.output, network.inputs,
-                                             network.outputs)
+            self._networks[network_name] = network
         return network.outputs
 
     def _build(self, *inputs):
@@ -308,14 +311,14 @@ class TfModel(Model):
         """
         pass
 
-    def set_network_output_spec(self, *inputs):
+    def network_output_spec(self):
         """
-        Set Network output spec.
+        Network output spec.
 
-        Args:
+        Return:
             *inputs: List of key(str) for the network outputs.
         """
-        self._network_output_spec = [*inputs]
+        return []
 
     @property
     def networks(self):
