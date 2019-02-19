@@ -87,7 +87,7 @@ class GaussianMLPModel2(TfModel):
 
     def network_output_spec(self):
         """Network output spec."""
-        return ['sample', 'distribution']
+        return ['sample', 'log_std', 'distribution']
 
     def _build(self,
                state_input=None,
@@ -153,25 +153,26 @@ class GaussianMLPModel2(TfModel):
                         name='std_network')
 
         mean_var = mean_network
-        std_param_var = std_network
+        log_std_var = std_network
 
         with tf.variable_scope('std_parameterization'):
             # build std_var with std parameterization
             if self._std_parameterization == 'exp':
-                std_param_var = std_param_var
+                pass
             elif self._std_parameterization == 'softplus':
-                std_param_var = tf.log(1. + tf.exp(std_param_var))
+                softplus_std_var = tf.log(1. + tf.exp(log_std_var))
+                log_std_var = tf.log(softplus_std_var)
             else:
                 raise NotImplementedError
 
         with tf.variable_scope('std_limits'):
             if self._min_std_param:
-                std_var = tf.maximum(std_param_var, self._min_std_param)
+                log_std_var = tf.maximum(log_std_var, self._min_std_param)
             if self._max_std_param:
-                std_var = tf.minimum(std_param_var, self._max_std_param)
+                log_std_var = tf.minimum(log_std_var, self._max_std_param)
 
-        distribution = dist(mean_var, std_var)
+        distribution = dist(mean_var, tf.exp(log_std_var))
 
         action_var = distribution.sample(seed=ext.get_seed())
 
-        return action_var, distribution
+        return action_var, log_std_var, distribution

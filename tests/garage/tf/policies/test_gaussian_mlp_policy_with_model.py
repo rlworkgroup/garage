@@ -67,8 +67,8 @@ class TestGaussianMLPPolicyWithModel(TfGraphTestCase):
         kl_diff_sym1 = policy1.distribution.kl_sym(dist1_sym, dist2_sym)
         objective1 = tf.reduce_mean(kl_diff_sym1)
 
-        kl_func = tensor_utils.compile_function([obs_ph], [objective1])
-        kl_func(obs, obs)  # result
+        kl_func = tensor_utils.compile_function([obs_ph], objective1)
+        kl1 = kl_func(obs, obs)
 
         # * New way *
         # equvaient to distribution.kl_sym()
@@ -77,29 +77,33 @@ class TestGaussianMLPPolicyWithModel(TfGraphTestCase):
             policy4.model.networks['default'].distribution)
         objective2 = tf.reduce_mean(kl_diff_sym2)
 
-        self.sess.run(   # result
-            [objective2],
+        kl2 = self.sess.run(
+            objective2,
             feed_dict={
                 policy3.model.networks['default'].input: obs,
                 policy4.model.networks['default'].input: obs
             })
 
+        self.assertAlmostEqual(kl1, kl2)
+
         ############################################################
         # log_likelihood_sym
         # * Existing way *
         log_prob_sym1 = policy1.distribution.log_likelihood_sym(
-            obs_ph, dist2_sym)
+            obs_ph, dist1_sym)
         log_prob_func = tensor_utils.compile_function([obs_ph], log_prob_sym1)
-        log_prob_func(obs)  # result
+        log_prob1 = log_prob_func(obs)
 
         # * New way *
         # equvaient to distribution.log_likelihood_sym(X, dist)
         log_prob_sym2 = policy3.model.networks[
             'default'].distribution.log_prob(
                 policy3.model.networks['default'].input)
-        self.sess.run(  # result
+        log_prob2 = self.sess.run(  # result
             log_prob_sym2,
             feed_dict={policy3.model.networks['default'].input: obs})
+
+        assert log_prob1 == log_prob2
 
         ############################################################
         # entropy_sym
@@ -107,41 +111,45 @@ class TestGaussianMLPPolicyWithModel(TfGraphTestCase):
         entropy_sym1 = policy1.distribution.entropy_sym(
             dist1_sym, name='entropy_sym1')
         entropy_func = tensor_utils.compile_function([obs_ph], entropy_sym1)
-        entropy_func(obs)  # result
+        entropy1 = entropy_func(obs)  # result
 
         # * New way *
         # equvaient to garage.tf.distribution.entropy_sym(dist)
         entropy_sym2 = policy3.model.networks['default'].distribution.entropy()
-        self.sess.run(  # result
+        entropy2 = self.sess.run(  # result
             entropy_sym2,
             feed_dict={policy3.model.networks['default'].input: obs})
+
+        assert entropy1 == entropy2
 
         ############################################################
         # likelihood_ratio_sym
         # * Existing way *
         likelihood_ratio_sym1 = policy1.distribution.likelihood_ratio_sym(
-            obs_ph, dist1_sym, dist2_sym, name="li_ratio_sym1")
+            obs_ph, dist1_sym, dist2_sym, name='li_ratio_sym1')
         likelihood_ratio_func = tensor_utils.compile_function(
             [obs_ph], likelihood_ratio_sym1)
-        likelihood_ratio_func(obs)  # result
+        likelihood_ratio1 = likelihood_ratio_func(obs)
 
         # * New way *
         # tf.distributions seems doesn't have this available
         # maybe do it ourselves
         with tf.name_scope('li_ratio_sym2'):
-            log_prob_diff = policy3.model.networks[
+            log_prob_diff = policy4.model.networks[
                 'default'].distribution.log_prob(
-                    obs_ph, name='log_prob_obs') - policy4.model.networks[
+                    obs_ph, name='log_prob_obs') - policy3.model.networks[
                         'default'].distribution.log_prob(obs_ph)
 
             likelihood_ratio_sym2 = tf.exp(log_prob_diff)
-            self.sess.run(  # result
+            likelihood_ratio2 = self.sess.run(  # result
                 likelihood_ratio_sym2,
                 feed_dict={
                     policy3.model.networks['default'].input: obs,
                     policy4.model.networks['default'].input: obs,
                     obs_ph: obs
                 })
+
+        assert likelihood_ratio1 == likelihood_ratio2
 
     def test_guassian_mlp_policy_pickle(self):
         box_env = TfEnv(DummyBoxEnv())

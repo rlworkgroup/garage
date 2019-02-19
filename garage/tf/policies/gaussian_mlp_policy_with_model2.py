@@ -70,7 +70,7 @@ class GaussianMLPPolicyWithModel2:
                       name=None):
         """Symbolic graph of the distribution."""
         with tf.variable_scope(self.name):
-            _, dist = self.model.build(
+            _, _, dist = self.model.build(
                 obs_var, tfp.distributions.MultivariateNormalDiag, name=name)
         return dist
 
