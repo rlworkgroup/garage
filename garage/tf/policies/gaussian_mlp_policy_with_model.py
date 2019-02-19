@@ -39,10 +39,21 @@ class GaussianMLPPolicyWithModel:
 
     def __init__(self,
                  env_spec,
-                 name="GaussianMLPPolicy",
+                 name='GaussianMLPPolicy',
                  dist=DiagonalGaussian,
-                 *args,
-                 **kwargs):
+                 hidden_sizes=(32, 32),
+                 hidden_nonlinearity=tf.nn.tanh,
+                 output_nonlinearity=None,
+                 learn_std=True,
+                 adaptive_std=False,
+                 std_share_network=False,
+                 init_std=1.0,
+                 min_std=1e-6,
+                 max_std=None,
+                 std_hidden_sizes=(32, 32),
+                 std_hidden_nonlinearity=tf.nn.tanh,
+                 std_output_nonlinearity=None,
+                 std_parameterization='exp'):
         assert isinstance(env_spec.action_space, Box)
 
         self.name = name
@@ -51,7 +62,21 @@ class GaussianMLPPolicyWithModel:
         action_dim = env_spec.action_space.flat_dim
 
         state_input = tf.placeholder(tf.float32, shape=(None, obs_dim))
-        self.model = GaussianMLPModel(output_dim=action_dim, *args, **kwargs)
+        self.model = GaussianMLPModel(
+            output_dim=action_dim,
+            hidden_sizes=hidden_sizes,
+            hidden_nonlinearity=hidden_nonlinearity,
+            output_nonlinearity=output_nonlinearity,
+            learn_std=learn_std,
+            adaptive_std=adaptive_std,
+            std_share_network=std_share_network,
+            init_std=init_std,
+            min_std=min_std,
+            max_std=max_std,
+            std_hidden_sizes=std_hidden_sizes,
+            std_hidden_nonlinearity=std_hidden_nonlinearity,
+            std_output_nonlinearity=std_output_nonlinearity,
+            std_parameterization=std_parameterization)
 
         with tf.variable_scope(name, reuse=False):
             _, self._mean_var, self._log_std_var, _, self._dist = \
@@ -66,10 +91,11 @@ class GaussianMLPPolicyWithModel:
         """Vectorized or not."""
         return True
 
-    def dist_info_sym(self, obs_var, state_info_vars=None, name=None):
+    def dist_info_sym(self,
+                      obs_var,
+                      state_info_vars=None,
+                      name='dist_info_sym'):
         """Symbolic graph of the distribution."""
-        if not name:
-            name = "dist_info_sym"
         with tf.variable_scope(
                 self.name, reuse=True, auxiliary_name_scope=False):
             _, mean_var, log_std_var, _, _ = self.model.build(
@@ -96,7 +122,7 @@ class GaussianMLPPolicyWithModel:
                                obs_var,
                                action_var,
                                old_dist_info_vars,
-                               name=None):
+                               name="get_reparam_action_sym"):
         """
         Get symbolically reparamterzied action represnetation.
 
@@ -109,8 +135,6 @@ class GaussianMLPPolicyWithModel:
         :param old_dist_info_vars:
         :return:
         """
-        if not name:
-            name = "get_reparam_action_sym"
         new_dist_info_vars = self.dist_info_sym(obs_var, name=name)
         new_mean_var, new_log_std_var = new_dist_info_vars[
             "mean"], new_dist_info_vars["log_std"]

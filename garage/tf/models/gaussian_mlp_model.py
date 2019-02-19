@@ -95,7 +95,7 @@ class GaussianMLPModel(TfModel):
 
     def network_output_spec(self):
         """Network output spec."""
-        return ['sample', 'mean', 'std', 'std_param', 'distribution']
+        return ['sample', 'mean', 'std', 'std_param', 'dist']
 
     def _build(self, state_input=None, dist=None):
         action_dim = self._output_dim

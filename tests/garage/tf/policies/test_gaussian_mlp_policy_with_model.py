@@ -5,7 +5,7 @@ This test consists of four different GaussianMLPPolicy: P1, P2, P3
 and P4. All four policies are implemented with GaussianMLPModel.
 P1 and P2 are from GaussianMLPPolicyWithModel, which uses
 garage.tf.distributions while P3 and P4 from GaussianMLPPolicyWithModel2,
-which uses tf.distributions.
+which uses tfp.distributions.
 
 It does not aim to show how GaussianMLPModel will be used in GaussianMLPPolicy,
 which is self-explanatory in the implementation of GaussianMLPPolicyWithModel.
@@ -72,9 +72,8 @@ class TestGaussianMLPPolicyWithModel(TfGraphTestCase):
 
         # * New way *
         # equvaient to distribution.kl_sym()
-        kl_diff_sym2 = tfp.distributions.kl_divergence(
-            policy3.model.networks['default'].distribution,
-            policy4.model.networks['default'].distribution)
+        kl_diff_sym2 = policy3.model.networks['default'].dist.kl_divergence(
+            policy4.model.networks['default'].dist)
         objective2 = tf.reduce_mean(kl_diff_sym2)
 
         kl2 = self.sess.run(
@@ -96,9 +95,8 @@ class TestGaussianMLPPolicyWithModel(TfGraphTestCase):
 
         # * New way *
         # equvaient to distribution.log_likelihood_sym(X, dist)
-        log_prob_sym2 = policy3.model.networks[
-            'default'].distribution.log_prob(
-                policy3.model.networks['default'].input)
+        log_prob_sym2 = policy3.model.networks['default'].dist.log_prob(
+            policy3.model.networks['default'].input)
         log_prob2 = self.sess.run(  # result
             log_prob_sym2,
             feed_dict={policy3.model.networks['default'].input: obs})
@@ -115,7 +113,7 @@ class TestGaussianMLPPolicyWithModel(TfGraphTestCase):
 
         # * New way *
         # equvaient to garage.tf.distribution.entropy_sym(dist)
-        entropy_sym2 = policy3.model.networks['default'].distribution.entropy()
+        entropy_sym2 = policy3.model.networks['default'].dist.entropy()
         entropy2 = self.sess.run(  # result
             entropy_sym2,
             feed_dict={policy3.model.networks['default'].input: obs})
@@ -132,15 +130,9 @@ class TestGaussianMLPPolicyWithModel(TfGraphTestCase):
         likelihood_ratio1 = likelihood_ratio_func(obs)
 
         # * New way *
-        # tf.distributions seems doesn't have this available
-        # maybe do it ourselves
         with tf.name_scope('li_ratio_sym2'):
-            log_prob_diff = policy4.model.networks[
-                'default'].distribution.log_prob(
-                    obs_ph, name='log_prob_obs') - policy3.model.networks[
-                        'default'].distribution.log_prob(obs_ph)
-
-            likelihood_ratio_sym2 = tf.exp(log_prob_diff)
+            likelihood_ratio_sym2 = policy4.likelihood_ratio_sym(
+                obs_ph, policy3.model.networks['default'].dist)
             likelihood_ratio2 = self.sess.run(  # result
                 likelihood_ratio_sym2,
                 feed_dict={

@@ -40,8 +40,19 @@ class GaussianMLPPolicyWithModel2:
                  env_spec,
                  name='GaussianMLPPolicy',
                  dist=tfp.distributions.MultivariateNormalDiag,
-                 *args,
-                 **kwargs):
+                 hidden_sizes=(32, 32),
+                 hidden_nonlinearity=tf.nn.tanh,
+                 output_nonlinearity=None,
+                 learn_std=True,
+                 adaptive_std=False,
+                 std_share_network=False,
+                 init_std=1.0,
+                 min_std=1e-6,
+                 max_std=None,
+                 std_hidden_sizes=(32, 32),
+                 std_hidden_nonlinearity=tf.nn.tanh,
+                 std_output_nonlinearity=None,
+                 std_parameterization='exp'):
         assert isinstance(env_spec.action_space, Box)
 
         self.name = name
@@ -49,9 +60,24 @@ class GaussianMLPPolicyWithModel2:
         obs_dim = env_spec.observation_space.flat_dim
         action_dim = env_spec.action_space.flat_dim
 
-        state_input = tf.placeholder(tf.float32, shape=(None, obs_dim))
-        self.model = GaussianMLPModel2(output_dim=action_dim, *args, **kwargs)
+        self._dist = dist
 
+        state_input = tf.placeholder(tf.float32, shape=(None, obs_dim))
+        self.model = GaussianMLPModel2(
+            output_dim=action_dim,
+            hidden_sizes=hidden_sizes,
+            hidden_nonlinearity=hidden_nonlinearity,
+            output_nonlinearity=output_nonlinearity,
+            learn_std=learn_std,
+            adaptive_std=adaptive_std,
+            std_share_network=std_share_network,
+            init_std=init_std,
+            min_std=min_std,
+            max_std=max_std,
+            std_hidden_sizes=std_hidden_sizes,
+            std_hidden_nonlinearity=std_hidden_nonlinearity,
+            std_output_nonlinearity=std_output_nonlinearity,
+            std_parameterization=std_parameterization)
         # There are two options:
         # 1. We can enforce the user to pass the input and build the model
         # once manually.
@@ -63,15 +89,17 @@ class GaussianMLPPolicyWithModel2:
         """Vectorized or not."""
         return True
 
-    def dist_info_sym(self,
-                      obs_var,
-                      state_info_vars=None,
-                      dist=tfp.distributions.MultivariateNormalDiag,
-                      name=None):
+    def likelihood_ratio_sym(self, obs_var, other_dist):
+        """Interface for likelihood ratio with another distribution."""
+        log_prob_diff = self.model.networks['default'].dist.log_prob(
+            obs_var) - other_dist.log_prob(obs_var)
+
+        return tf.exp(log_prob_diff)
+
+    def dist_info_sym(self, obs_var, state_info_vars=None, name=None):
         """Symbolic graph of the distribution."""
         with tf.variable_scope(self.name):
-            _, _, dist = self.model.build(
-                obs_var, tfp.distributions.MultivariateNormalDiag, name=name)
+            _, _, dist = self.model.build(obs_var, self._dist, name=name)
         return dist
 
     def get_action(self, observation):

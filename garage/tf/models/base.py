@@ -39,50 +39,18 @@ class BaseModel(abc.ABC):
         This function is implemented by subclasses to create their computation
         graphs, which will be managed by Model. Generally, subclasses should
         implement `build()` directly.
+
+        Args:
+            inputs: Tensor input(s) for the model.
+
+        Return:
+            output: Tensor output(s) of the model.
         """
         pass
 
     @property
     def name(self):
         """Name for this Model."""
-        pass
-
-    @property
-    def input(self):
-        """
-        Tensor input of the Model.
-
-        The input can be either a placeholder, or the output from another
-        model.
-        """
-        pass
-
-    @property
-    def output(self):
-        """
-        Tensor output of the Model.
-
-        The output can be passed to another model as an input.
-        """
-        pass
-
-    @property
-    def inputs(self):
-        """
-        Tensor inputs of the Model.
-
-        The inputs can be either placeholders, or the outputs from another
-        model.
-        """
-        pass
-
-    @property
-    def outputs(self):
-        """
-        Tensor outputs of the Model.
-
-        The outputs can be passed to another model as an input.
-        """
         pass
 
     @property
@@ -100,52 +68,6 @@ class BaseModel(abc.ABC):
     def parameters(self, parameters):
         """Set parameters of the Model."""
         pass
-
-
-class Model(BaseModel, metaclass=abc.ABCMeta):
-    """
-    Abstract class for models with automatic pickling.
-
-    This class follows the BaseModel API and handles pickling automatically.
-
-    The target weights should be assigned to self._default_parameters before
-    pickling, so that the newly created model can check if target weights exist
-    or not. When unpickled, the unserialized model will load the weights
-    from self._default_parameters.
-    """
-
-    def __init__(self):
-        self._name = type(self).__name__  # name default to class
-        self._inputs = None
-        self._outputs = None
-        self._default_parameters = None
-
-    @property
-    def name(self):
-        """Name of the model."""
-        return self._name
-
-    @property
-    def parameters(self):
-        """Parameters of the Model."""
-        raise NotImplementedError
-
-    @parameters.setter
-    def parameters(self, parameters):
-        """Set model parameters."""
-        raise NotImplementedError
-
-    def __getstate__(self):
-        """Object.__getstate__."""
-        new_dict = self.__dict__.copy()
-        del new_dict['_networks']
-        new_dict['_default_parameters'] = self.parameters
-        return new_dict
-
-    def __setstate__(self, dict):
-        """Object.__setstate__."""
-        self.__dict__.update(dict)
-        self._networks = {}
 
 
 class Network:
@@ -189,7 +111,7 @@ class Network:
         return self._outputs
 
 
-class TfModel(Model):
+class TfModel(BaseModel):
     r"""
     Model class for TensorFlow.
 
@@ -207,6 +129,11 @@ class TfModel(Model):
     will reassign random weights to the model.
     The parameters inside a model will be initialized when calling build().
     ***
+
+    Pickling is handled automatcailly. The target weights should be assigned to
+    self._default_parameters before pickling, so that the newly created model
+    can check if target weights exist or not. When unpickled, the unserialized
+    model will load the weights from self._default_parameters.
 
     The design is illustrated as the following:
 
@@ -236,8 +163,9 @@ class TfModel(Model):
 
     def __init__(self, name):
         super().__init__()
-        self._name = name or self._name
+        self._name = name or type(self).__name__  # name default to class
         self._networks = {}
+        self._default_parameters = None
 
     def build(self, *inputs, name=None):
         """
@@ -253,7 +181,7 @@ class TfModel(Model):
         parameter sharing. Different Networks must have an unique name.
 
         Args:
-          inputs: Tensor Input(s), recommended to be position arguments, e.g.
+          inputs: Tensor input(s), recommended to be position arguments, e.g.
             def build(self, state_input=None, action_input=None, name=None).
           name(str): Name of the model, which is also the name scope of the
             model.
@@ -308,6 +236,13 @@ class TfModel(Model):
 
         User should implement _build() inside their subclassed model,
         and construct the computation graphs in this function.
+
+        Args:
+            inputs: Tensor input(s), recommended to be position arguments, e.g.
+              def build(self, state_input=None, action_input=None, name=None).
+              It would be usually same as the inputs in build().
+        Return:
+            output: Tensor output(s) of the model.
         """
         pass
 
@@ -326,30 +261,6 @@ class TfModel(Model):
         return self._networks
 
     @property
-    def input(self):
-        """Tensor input of the Model."""
-        raise AttributeError(
-            'Please access the input from the Network object.')
-
-    @property
-    def output(self):
-        """Tensor output of the Model."""
-        raise AttributeError(
-            'Please access the output from the Network object.')
-
-    @property
-    def inputs(self):
-        """Tensor inputs of the Model."""
-        raise AttributeError(
-            'Please access the inputs from the Network object.')
-
-    @property
-    def outputs(self):
-        """Tensor outputs of the Model."""
-        raise AttributeError(
-            'Please access the outputs from the Network object.')
-
-    @property
     def parameters(self):
         """Parameters of the model."""
         return tf.get_default_session().run(self._get_variables())
@@ -364,5 +275,22 @@ class TfModel(Model):
             else:
                 warnings.warn('No value provided for variable {}'.format(name))
 
+    @property
+    def name(self):
+        """Name of the model."""
+        return self._name
+
     def _get_variables(self):
         return {v.name: v for v in tf.get_variable_scope().global_variables()}
+
+    def __getstate__(self):
+        """Object.__getstate__."""
+        new_dict = self.__dict__.copy()
+        del new_dict['_networks']
+        new_dict['_default_parameters'] = self.parameters
+        return new_dict
+
+    def __setstate__(self, dict):
+        """Object.__setstate__."""
+        self.__dict__.update(dict)
+        self._networks = {}

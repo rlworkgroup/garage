@@ -46,6 +46,8 @@ class GaussianMLPModel2(TfModel):
                  output_dim,
                  name=None,
                  hidden_sizes=(32, 32),
+                 hidden_nonlinearity=tf.nn.tanh,
+                 output_nonlinearity=None,
                  learn_std=True,
                  adaptive_std=False,
                  std_share_network=False,
@@ -53,6 +55,8 @@ class GaussianMLPModel2(TfModel):
                  min_std=1e-6,
                  max_std=None,
                  std_hidden_sizes=(32, 32),
+                 std_hidden_nonlinearity=tf.nn.tanh,
+                 std_output_nonlinearity=None,
                  std_parameterization='exp'):
         # Network parameters
         super().__init__(name)
@@ -64,7 +68,11 @@ class GaussianMLPModel2(TfModel):
         self._std_hidden_sizes = std_hidden_sizes
         self._min_std = min_std
         self._max_std = max_std
+        self._std_hidden_nonlinearity = std_hidden_nonlinearity
+        self._std_output_nonlinearity = std_output_nonlinearity
         self._std_parameterization = std_parameterization
+        self._hidden_nonlinearity = hidden_nonlinearity
+        self._output_nonlinearity = output_nonlinearity
 
         # Tranform std arguments to parameterized space
         self._init_std_param = None
@@ -87,7 +95,7 @@ class GaussianMLPModel2(TfModel):
 
     def network_output_spec(self):
         """Network output spec."""
-        return ['sample', 'log_std', 'distribution']
+        return ['sample', 'log_std', 'dist']
 
     def _build(self,
                state_input=None,
@@ -112,8 +120,8 @@ class GaussianMLPModel2(TfModel):
                     state_input,
                     output_dim=action_dim * 2,
                     hidden_sizes=self._hidden_sizes,
-                    hidden_nonlinearity=hidden_nonlinearity,
-                    output_nonlinearity=output_nonlinearity,
+                    hidden_nonlinearity=self._hidden_nonlinearity,
+                    output_nonlinearity=self._output_nonlinearity,
                     output_b_init=b,
                     name='mean_std_network')
                 with tf.variable_scope('mean_network'):
@@ -128,8 +136,8 @@ class GaussianMLPModel2(TfModel):
                     state_input,
                     output_dim=action_dim,
                     hidden_sizes=self._hidden_sizes,
-                    hidden_nonlinearity=hidden_nonlinearity,
-                    output_nonlinearity=output_nonlinearity,
+                    hidden_nonlinearity=self._hidden_nonlinearity,
+                    output_nonlinearity=self._output_nonlinearity,
                     name='mean_network')
 
                 # std network
@@ -139,8 +147,8 @@ class GaussianMLPModel2(TfModel):
                         state_input,
                         output_dim=action_dim,
                         hidden_sizes=self._std_hidden_sizes,
-                        hidden_nonlinearity=std_hidden_nonlinearity,
-                        output_nonlinearity=std_output_nonlinearity,
+                        hidden_nonlinearity=self._std_hidden_nonlinearity,
+                        output_nonlinearity=self._std_output_nonlinearity,
                         output_b_init=b,
                         name='std_network')
                 else:
