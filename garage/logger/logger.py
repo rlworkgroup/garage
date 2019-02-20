@@ -275,5 +275,5 @@ class Logger:
 
     class LogWarning(UserWarning):
         """Warning class for the Logger."""
-        
+
         pass

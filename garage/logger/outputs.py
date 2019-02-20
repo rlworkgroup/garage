@@ -97,6 +97,7 @@ class TextOutput(LogOutput):
         mkdir_p(os.path.dirname(file_name))
         self._log_file = open(file_name, 'a')
         self._with_timestamp = with_timestamp
+        self._delimiter = " | "
 
     @property
     def types_accepted(self):
@@ -109,7 +110,7 @@ class TextOutput(LogOutput):
         if self._with_timestamp:
             now = datetime.datetime.now(dateutil.tz.tzlocal())
             timestamp = now.strftime('%Y-%m-%d %H:%M:%S.%f %Z')
-            out = "%s | %s" % (timestamp, out)
+            out = "%s%s%s" % (timestamp, self._delimiter, out)
 
         self._log_file.write(out + '\n')
         self._log_file.flush()

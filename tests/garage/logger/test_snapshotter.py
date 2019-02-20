@@ -15,7 +15,7 @@ from garage.misc.console import mkdir_p
 
 class TestSnapshotter(unittest.TestCase):
     def test_snapshotter(self):
-        snap_dir = "exp"
+        snap_dir = "test_snapshotter"
         try:
             mkdir_p(snap_dir)
             snapshotter.snapshot_dir = snap_dir
