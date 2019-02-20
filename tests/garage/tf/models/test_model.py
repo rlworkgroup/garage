@@ -4,11 +4,11 @@ import numpy as np
 import tensorflow as tf
 
 from garage.tf.core.mlp import mlp
-from garage.tf.models.base import TfModel
+from garage.tf.models.base import Model
 from tests.fixtures import TfGraphTestCase
 
 
-class SimpleModel(TfModel):
+class SimpleModel(Model):
     def __init__(self, output_dim=2, hidden_sizes=(4, 4), name=None):
         super().__init__(name)
         self._output_dim = output_dim
@@ -23,12 +23,23 @@ class SimpleModel(TfModel):
         return state, action
 
 
-class ComplicatedModel(TfModel):
+class SimpleModel2(Model):
+    def __init__(self, output_dim=2, hidden_sizes=(4, 4), name=None):
+        super().__init__(name)
+        self._output_dim = output_dim
+        self._hidden_sizes = hidden_sizes
+
+    def _build(self, obs_input):
+        action = mlp(obs_input, self._output_dim, self._hidden_sizes, 'state')
+        return action
+
+
+class ComplicatedModel(Model):
     def __init__(self, output_dim=2, name=None):
         super().__init__(name)
         self._output_dim = output_dim
         self._simple_model_1 = SimpleModel(output_dim=4)
-        self._simple_model_2 = SimpleModel(
+        self._simple_model_2 = SimpleModel2(
             output_dim=output_dim, name='simple_model_2')
 
     def network_output_spec(self):
@@ -36,7 +47,7 @@ class ComplicatedModel(TfModel):
 
     def _build(self, obs_input):
         h1, _ = self._simple_model_1.build(obs_input)
-        return self._simple_model_2.build(h1)[1]
+        return self._simple_model_2.build(h1)
 
 
 class TestModel(TfGraphTestCase):
@@ -49,16 +60,18 @@ class TestModel(TfGraphTestCase):
             [outputs, model.networks['default'].outputs],
             feed_dict={model.networks['default'].input: data})
         assert np.array_equal(out, model_out)
+        assert model.name == type(model).__name__
 
     def test_model_creation_with_custom_name(self):
         input_var = tf.placeholder(tf.float32, shape=(None, 5))
-        model = SimpleModel(output_dim=2)
+        model = SimpleModel(output_dim=2, name="MySimpleModel")
         outputs = model.build(input_var, name='network_2')
         data = np.ones((3, 5))
         result, result2 = self.sess.run(
             [outputs, model.networks['network_2'].outputs],
             feed_dict={model.networks['network_2'].input: data})
         assert np.array_equal(result, result2)
+        assert model.name == "MySimpleModel"
 
     def test_same_model_with_no_name(self):
         input_var = tf.placeholder(tf.float32, shape=(None, 5))
@@ -108,6 +121,7 @@ class TestModel(TfGraphTestCase):
         out, model_out = self.sess.run(
             [outputs, model.networks['default'].outputs],
             feed_dict={model.networks['default'].input: data})
+
         assert np.array_equal(out, model_out)
 
     def test_model_pickle(self):
@@ -132,7 +146,7 @@ class TestModel(TfGraphTestCase):
 
         assert np.array_equal(results, results2)
 
-    def test_model_in_model_pickle_same_parameters(self):
+    def test_complicated_model_pickle(self):
         data = np.ones((3, 5))
         model = ComplicatedModel(output_dim=2)
 
@@ -155,7 +169,7 @@ class TestModel(TfGraphTestCase):
 
         assert np.array_equal(results, results2)
 
-    def test_model_pickle_same_parameters(self):
+    def test_simple_model_pickle_same_parameters(self):
         model = SimpleModel(output_dim=2)
 
         with tf.Session(graph=tf.Graph()):
@@ -176,3 +190,27 @@ class TestModel(TfGraphTestCase):
             model_pickled.build(state)
 
             np.testing.assert_equal(all_one, model_pickled.parameters)
+
+    def test_simple_model_pickle_missing_parameters(self):
+        model = SimpleModel(output_dim=2)
+
+        with tf.Session(graph=tf.Graph()):
+            state = tf.placeholder(shape=[None, 10, 5], dtype=tf.float32)
+            model.build(state)
+
+            model.parameters = {
+                k: np.zeros_like(v)
+                for k, v in model.parameters.items()
+            }
+            all_one = {k: np.ones_like(v) for k, v in model.parameters.items()}
+            model.parameters = all_one
+            h_data = pickle.dumps(model)
+
+        with tf.Session(graph=tf.Graph()):
+            model_pickled = pickle.loads(h_data)
+            state = tf.placeholder(shape=[None, 10, 5], dtype=tf.float32)
+            # remove one of the parameters
+            del model_pickled._default_parameters[
+                'SimpleModel/state/hidden_0/kernel:0']
+            with self.assertWarns(UserWarning):
+                model_pickled.build(state)

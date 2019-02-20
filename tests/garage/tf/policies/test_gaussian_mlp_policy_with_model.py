@@ -19,7 +19,6 @@ import pickle
 
 import numpy as np
 import tensorflow as tf
-import tensorflow_probability as tfp
 
 from garage.tf.envs import TfEnv
 from garage.tf.misc import tensor_utils
@@ -30,144 +29,137 @@ from tests.fixtures.envs.dummy import DummyBoxEnv
 
 
 class TestGaussianMLPPolicyWithModel(TfGraphTestCase):
-    def test_gaussian_mlp_policy_with_model(self):
-        box_env = TfEnv(DummyBoxEnv())
-        policy1 = GaussianMLPPolicyWithModel(
-            env_spec=box_env, init_std=1.1, name='P1')
-        policy2 = GaussianMLPPolicyWithModel(
-            env_spec=box_env, init_std=1.2, name='P2')
-        policy3 = GaussianMLPPolicyWithModel2(
-            env_spec=box_env, init_std=1.1, name='P3')
-        policy4 = GaussianMLPPolicyWithModel2(
-            env_spec=box_env, init_std=1.2, name='P4')
+    def setUp(self):
+        super().setUp()
+        self.box_env = TfEnv(DummyBoxEnv())
+        self.policy1 = GaussianMLPPolicyWithModel(
+            env_spec=self.box_env, init_std=1.1, name='P1')
+        self.policy2 = GaussianMLPPolicyWithModel(
+            env_spec=self.box_env, init_std=1.2, name='P2')
+        self.policy3 = GaussianMLPPolicyWithModel2(
+            env_spec=self.box_env, init_std=1.1, name='P3')
+        self.policy4 = GaussianMLPPolicyWithModel2(
+            env_spec=self.box_env, init_std=1.2, name='P4')
 
-        # self.sess.run(tf.global_variables_initializer())
+        self.obs = [self.box_env.reset()]
+        self.obs_ph = tf.placeholder(tf.float32, shape=(None, 1))
 
-        obs = [box_env.reset()]
-
-        obs_ph = tf.placeholder(tf.float32, shape=(None, 1))
-
-        ############################################################
-        # dist_info_sym
-        # API unchanged
-        #
-        # * Existing way *
         # dist1_sym and dist2_sym are still dict(mean=mean, log_std=log_std)
-        dist1_sym = policy1.dist_info_sym(obs_ph, name='p1_sym')
-        dist2_sym = policy2.dist_info_sym(obs_ph, name='p2_sym')
+        self.dist1_sym = self.policy1.dist_info_sym(self.obs_ph, name='p1_sym')
+        self.dist2_sym = self.policy2.dist_info_sym(self.obs_ph, name='p2_sym')
 
         # * New way *
         # this will be tf.distributions
-        policy3.dist_info_sym(obs_ph, name='p3_sym')
-        policy4.dist_info_sym(obs_ph, name='p4_sym')
+        self.policy3.dist_info_sym(self.obs_ph, name='p3_sym')
+        self.policy4.dist_info_sym(self.obs_ph, name='p4_sym')
 
-        ############################################################
+    def test_gaussian_mlp_policy_kl_sym(self):
         # kl_sym
         # * Existing way *
-        kl_diff_sym1 = policy1.distribution.kl_sym(dist1_sym, dist2_sym)
+        kl_diff_sym1 = self.policy1.distribution.kl_sym(
+            self.dist1_sym, self.dist2_sym)
         objective1 = tf.reduce_mean(kl_diff_sym1)
 
-        kl_func = tensor_utils.compile_function([obs_ph], objective1)
-        kl1 = kl_func(obs, obs)
+        kl_func = tensor_utils.compile_function([self.obs_ph], objective1)
+        kl1 = kl_func(self.obs, self.obs)
 
         # * New way *
         # equvaient to distribution.kl_sym()
-        kl_diff_sym2 = policy3.model.networks['default'].dist.kl_divergence(
-            policy4.model.networks['default'].dist)
+        kl_diff_sym2 = self.policy3.model.networks[
+            'default'].dist.kl_divergence(
+                self.policy4.model.networks['default'].dist)
         objective2 = tf.reduce_mean(kl_diff_sym2)
 
         kl2 = self.sess.run(
             objective2,
             feed_dict={
-                policy3.model.networks['default'].input: obs,
-                policy4.model.networks['default'].input: obs
+                self.policy3.model.networks['default'].input: self.obs,
+                self.policy4.model.networks['default'].input: self.obs
             })
 
         self.assertAlmostEqual(kl1, kl2)
 
-        ############################################################
+    def test_gaussian_mlp_policy_log_likehihood_sym(self):
         # log_likelihood_sym
         # * Existing way *
-        log_prob_sym1 = policy1.distribution.log_likelihood_sym(
-            obs_ph, dist1_sym)
-        log_prob_func = tensor_utils.compile_function([obs_ph], log_prob_sym1)
-        log_prob1 = log_prob_func(obs)
+        log_prob_sym1 = self.policy1.distribution.log_likelihood_sym(
+            self.obs_ph, self.dist1_sym)
+        log_prob_func = tensor_utils.compile_function([self.obs_ph],
+                                                      log_prob_sym1)
+        log_prob1 = log_prob_func(self.obs)
 
         # * New way *
         # equvaient to distribution.log_likelihood_sym(X, dist)
-        log_prob_sym2 = policy3.model.networks['default'].dist.log_prob(
-            policy3.model.networks['default'].input)
+        log_prob_sym2 = self.policy3.model.networks['default'].dist.log_prob(
+            self.policy3.model.networks['default'].input)
         log_prob2 = self.sess.run(  # result
             log_prob_sym2,
-            feed_dict={policy3.model.networks['default'].input: obs})
+            feed_dict={self.policy3.model.networks['default'].input: self.obs})
 
         assert log_prob1 == log_prob2
 
-        ############################################################
+    def test_gaussian_mlp_policy_entropy_sym(self):
         # entropy_sym
         # * Existing way *
-        entropy_sym1 = policy1.distribution.entropy_sym(
-            dist1_sym, name='entropy_sym1')
-        entropy_func = tensor_utils.compile_function([obs_ph], entropy_sym1)
-        entropy1 = entropy_func(obs)  # result
+        entropy_sym1 = self.policy1.distribution.entropy_sym(
+            self.dist1_sym, name='entropy_sym1')
+        entropy_func = tensor_utils.compile_function([self.obs_ph],
+                                                     entropy_sym1)
+        entropy1 = entropy_func(self.obs)  # result
 
         # * New way *
         # equvaient to garage.tf.distribution.entropy_sym(dist)
-        entropy_sym2 = policy3.model.networks['default'].dist.entropy()
+        entropy_sym2 = self.policy3.model.networks['default'].dist.entropy()
         entropy2 = self.sess.run(  # result
             entropy_sym2,
-            feed_dict={policy3.model.networks['default'].input: obs})
+            feed_dict={self.policy3.model.networks['default'].input: self.obs})
 
         assert entropy1 == entropy2
 
-        ############################################################
+    def test_gaussian_mlp_policy_likehihood_sym(self):
         # likelihood_ratio_sym
         # * Existing way *
-        likelihood_ratio_sym1 = policy1.distribution.likelihood_ratio_sym(
-            obs_ph, dist1_sym, dist2_sym, name='li_ratio_sym1')
+        likelihood_ratio_sym1 = self.policy1.distribution.likelihood_ratio_sym(
+            self.obs_ph, self.dist1_sym, self.dist2_sym, name='li_ratio_sym1')
         likelihood_ratio_func = tensor_utils.compile_function(
-            [obs_ph], likelihood_ratio_sym1)
-        likelihood_ratio1 = likelihood_ratio_func(obs)
+            [self.obs_ph], likelihood_ratio_sym1)
+        likelihood_ratio1 = likelihood_ratio_func(self.obs)
 
         # * New way *
         with tf.name_scope('li_ratio_sym2'):
-            likelihood_ratio_sym2 = policy4.likelihood_ratio_sym(
-                obs_ph, policy3.model.networks['default'].dist)
+            likelihood_ratio_sym2 = self.policy4.likelihood_ratio_sym(
+                self.obs_ph, self.policy3.model.networks['default'].dist)
             likelihood_ratio2 = self.sess.run(  # result
                 likelihood_ratio_sym2,
                 feed_dict={
-                    policy3.model.networks['default'].input: obs,
-                    policy4.model.networks['default'].input: obs,
-                    obs_ph: obs
+                    self.policy3.model.networks['default'].input: self.obs,
+                    self.policy4.model.networks['default'].input: self.obs,
+                    self.obs_ph: self.obs
                 })
 
         assert likelihood_ratio1 == likelihood_ratio2
 
     def test_guassian_mlp_policy_pickle(self):
-        box_env = TfEnv(DummyBoxEnv())
-        data = np.ones((3, 1))
         with tf.Session(graph=tf.Graph()) as sess:
-            policy = GaussianMLPPolicyWithModel2(
-                env_spec=box_env, init_std=1.1)
+            policy = GaussianMLPPolicyWithModel2(env_spec=self.box_env)
             # model is built in GaussianMLPPolicyWithModel2.__init__
             outputs = sess.run(
                 policy.model.networks['default'].sample,
-                feed_dict={policy.model.networks['default'].input: data})
+                feed_dict={policy.model.networks['default'].input: self.obs})
             p = pickle.dumps(policy)
 
         with tf.Session(graph=tf.Graph()) as sess:
             policy_pickled = pickle.loads(p)
             # After pickle, we need to build the model
             # e.g. by policy.dist_info_sym
-            input_ph = box_env.observation_space.new_tensor_variable(
+            input_ph = self.box_env.observation_space.new_tensor_variable(
                 extra_dims=1, name='input_ph')
-            policy_pickled.dist_info_sym(
-                input_ph, tfp.distributions.MultivariateNormalDiag)
+            policy_pickled.dist_info_sym(input_ph)
 
             outputs2 = sess.run(
                 policy_pickled.model.networks['default'].sample,
                 feed_dict={
-                    policy_pickled.model.networks['default'].input: data
+                    policy_pickled.model.networks['default'].input: self.obs
                 })
 
         assert np.array_equal(outputs, outputs2)

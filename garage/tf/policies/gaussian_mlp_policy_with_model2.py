@@ -1,9 +1,6 @@
 """GaussianMLPPolicy with GaussianMLPModel."""
-import numpy as np
 import tensorflow as tf
-import tensorflow_probability as tfp
 
-from garage.misc import logger
 from garage.tf.models.gaussian_mlp_model2 import GaussianMLPModel2
 from garage.tf.spaces import Box
 
@@ -39,7 +36,6 @@ class GaussianMLPPolicyWithModel2:
     def __init__(self,
                  env_spec,
                  name='GaussianMLPPolicy',
-                 dist=tfp.distributions.MultivariateNormalDiag,
                  hidden_sizes=(32, 32),
                  hidden_nonlinearity=tf.nn.tanh,
                  output_nonlinearity=None,
@@ -60,8 +56,6 @@ class GaussianMLPPolicyWithModel2:
         obs_dim = env_spec.observation_space.flat_dim
         action_dim = env_spec.action_space.flat_dim
 
-        self._dist = dist
-
         state_input = tf.placeholder(tf.float32, shape=(None, obs_dim))
         self.model = GaussianMLPModel2(
             output_dim=action_dim,
@@ -78,11 +72,8 @@ class GaussianMLPPolicyWithModel2:
             std_hidden_nonlinearity=std_hidden_nonlinearity,
             std_output_nonlinearity=std_output_nonlinearity,
             std_parameterization=std_parameterization)
-        # There are two options:
-        # 1. We can enforce the user to pass the input and build the model
-        # once manually.
-        # 2. We can build it by default.
-        self.dist_info_sym(state_input, dist)
+
+        self.dist_info_sym(state_input)
 
     @property
     def vectorized(self):
@@ -99,7 +90,7 @@ class GaussianMLPPolicyWithModel2:
     def dist_info_sym(self, obs_var, state_info_vars=None, name=None):
         """Symbolic graph of the distribution."""
         with tf.variable_scope(self.name):
-            _, _, dist = self.model.build(obs_var, self._dist, name=name)
+            _, _, dist = self.model.build(obs_var, name=name)
         return dist
 
     def get_action(self, observation):
@@ -115,39 +106,3 @@ class GaussianMLPPolicyWithModel2:
             self.model.networks['default'].sample,
             feed_dict={self.model.networks['default'].input: observations})
         return actions
-
-    def get_reparam_action_sym(self,
-                               obs_var,
-                               action_var,
-                               old_dist_info_vars,
-                               name=None):
-        """
-        Get symbolically reparamterzied action represnetation.
-
-        Given observations, old actions, and distribution of old actions,
-        return a symbolically reparameterized representation of the actions in
-        terms of the policy parameters.
-
-        :param obs_var:
-        :param action_var:
-        :param old_dist_info_vars:
-        :return:
-        """
-        if not name:
-            name = 'get_reparam_action_sym'
-        new_dist_info_vars = self.dist_info_sym(obs_var, name=name)
-        new_mean_var, new_log_std_var = new_dist_info_vars[
-            'mean'], new_dist_info_vars['log_std']
-        old_mean_var, old_log_std_var = old_dist_info_vars[
-            'mean'], old_dist_info_vars['log_std']
-        epsilon_var = (action_var - old_mean_var) / (
-            tf.exp(old_log_std_var) + 1e-8)
-        new_action_var = new_mean_var + epsilon_var * tf.exp(new_log_std_var)
-        return new_action_var
-
-    def log_diagnostics(self, paths):
-        """Log diagnostics."""
-        log_stds = np.vstack(
-            [path['agent_infos']['log_std'] for path in paths])
-        logger.record_tabular('{}/AverageStd'.format(self.name),
-                              np.mean(np.exp(log_stds)))

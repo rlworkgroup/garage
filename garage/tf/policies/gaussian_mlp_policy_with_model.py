@@ -2,8 +2,6 @@
 import numpy as np
 import tensorflow as tf
 
-from garage.misc import logger
-from garage.tf.distributions import DiagonalGaussian
 from garage.tf.models.gaussian_mlp_model import GaussianMLPModel
 from garage.tf.spaces import Box
 
@@ -40,7 +38,6 @@ class GaussianMLPPolicyWithModel:
     def __init__(self,
                  env_spec,
                  name='GaussianMLPPolicy',
-                 dist=DiagonalGaussian,
                  hidden_sizes=(32, 32),
                  hidden_nonlinearity=tf.nn.tanh,
                  output_nonlinearity=None,
@@ -79,8 +76,8 @@ class GaussianMLPPolicyWithModel:
             std_parameterization=std_parameterization)
 
         with tf.variable_scope(name, reuse=False):
-            _, self._mean_var, self._log_std_var, _, self._dist = \
-                self.model.build(state_input, dist)
+            _, self._mean_var, self._log_std_var, _, self._dist = (
+                self.model.build(state_input))
 
             self._f_dist = lambda x: tf.get_default_session().run(
                 [self._mean_var, self._log_std_var],
@@ -99,7 +96,7 @@ class GaussianMLPPolicyWithModel:
         with tf.variable_scope(
                 self.name, reuse=True, auxiliary_name_scope=False):
             _, mean_var, log_std_var, _, _ = self.model.build(
-                obs_var, DiagonalGaussian, name=name)
+                obs_var, name=name)
         return dict(mean=mean_var, log_std=log_std_var)
 
     def get_action(self, observation):
@@ -117,40 +114,6 @@ class GaussianMLPPolicyWithModel:
         rnd = np.random.normal(size=means.shape)
         actions = rnd * np.exp(log_stds) + means
         return actions, dict(mean=means, log_std=log_stds)
-
-    def get_reparam_action_sym(self,
-                               obs_var,
-                               action_var,
-                               old_dist_info_vars,
-                               name="get_reparam_action_sym"):
-        """
-        Get symbolically reparamterzied action represnetation.
-
-        Given observations, old actions, and distribution of old actions,
-        return a symbolically reparameterized representation of the actions in
-        terms of the policy parameters.
-
-        :param obs_var:
-        :param action_var:
-        :param old_dist_info_vars:
-        :return:
-        """
-        new_dist_info_vars = self.dist_info_sym(obs_var, name=name)
-        new_mean_var, new_log_std_var = new_dist_info_vars[
-            "mean"], new_dist_info_vars["log_std"]
-        old_mean_var, old_log_std_var = old_dist_info_vars[
-            "mean"], old_dist_info_vars["log_std"]
-        epsilon_var = (action_var - old_mean_var) / (
-            tf.exp(old_log_std_var) + 1e-8)
-        new_action_var = new_mean_var + epsilon_var * tf.exp(new_log_std_var)
-        return new_action_var
-
-    def log_diagnostics(self, paths):
-        """Log diagnostics."""
-        log_stds = np.vstack(
-            [path["agent_infos"]["log_std"] for path in paths])
-        logger.record_tabular("{}/AverageStd".format(self.name),
-                              np.mean(np.exp(log_stds)))
 
     @property
     def distribution(self):

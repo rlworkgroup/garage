@@ -17,17 +17,17 @@ class BaseModel(abc.ABC):
     composition of complex models with simple models much easier.
 
     Examples:
-        model = SimpleModel()
+        model = SimpleModel(output_dim=2)
         # To use a model, first create a placeholder.
         # In the case of TensorFlow, we create a tf.placeholder.
-        input_ph = tf.placeholder(tf.float32)
+        input_ph = tf.placeholder(tf.float32, shape=(None, 2))
 
         # Building the model
         output = model.build(input_ph)
 
         # We can also pass the output of a model to another model.
         # Here we pass the output from the above SimpleModel object.
-        model_2 = ComplexModel()
+        model_2 = ComplexModel(output_dim=2)
         output_2 = model_2.build(output)
 
     """
@@ -85,11 +85,6 @@ class Network:
       name: Name of the network, which is also the name scope.
     """
 
-    def __init__(self, model, inputs, name):
-        self._inputs = inputs
-        with tf.name_scope(name=name):
-            self._outputs = model._build(*inputs)
-
     @property
     def input(self):
         """Tensor input of the Network."""
@@ -111,7 +106,7 @@ class Network:
         return self._outputs
 
 
-class TfModel(BaseModel):
+class Model(BaseModel):
     r"""
     Model class for TensorFlow.
 
@@ -198,7 +193,10 @@ class TfModel(BaseModel):
         if not self._networks:
             _variable_scope = tf.variable_scope(self._name, reuse=False)
             with _variable_scope:
-                network = Network(self, inputs, network_name)
+                with tf.name_scope(name=network_name):
+                    network = Network()
+                    network._inputs = inputs
+                    network._outputs = self._build(*inputs)
                 variables = self._get_variables().values()
                 tf.get_default_session().run(
                     tf.variables_initializer(variables))
@@ -211,14 +209,17 @@ class TfModel(BaseModel):
                 raise ValueError(
                     'Network {} already exists!'.format(network_name))
             with _variable_scope:
-                network = Network(self, inputs, network_name)
+                with tf.name_scope(name=network_name):
+                    network = Network()
+                    network._inputs = inputs
+                    network._outputs = self._build(*inputs)
         spec = self.network_output_spec()
         if spec:
             c = namedtuple(network_name,
                            [*spec, 'input', 'output', 'inputs', 'outputs'])
             if isinstance(network.outputs, tuple):
-                assert len(spec) == len(network.outputs),\
-                    'network_output_spec must have same length as outputs!'
+                assert len(spec) == len(network.outputs), (
+                    'network_output_spec must have same length as outputs!')
                 self._networks[network_name] = c(
                     *network.outputs, network.input, network.output,
                     network.inputs, network.outputs)

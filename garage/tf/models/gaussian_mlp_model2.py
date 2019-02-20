@@ -1,14 +1,15 @@
 """GaussianMLPModel."""
 import numpy as np
 import tensorflow as tf
+import tensorflow_probability as tfp
 
 from garage.misc import ext
 from garage.tf.core.mlp import mlp
 from garage.tf.core.parameter import parameter
-from garage.tf.models.base import TfModel
+from garage.tf.models.base import Model
 
 
-class GaussianMLPModel2(TfModel):
+class GaussianMLPModel2(Model):
     """
     GaussianMLPModel.
 
@@ -73,7 +74,6 @@ class GaussianMLPModel2(TfModel):
         self._std_parameterization = std_parameterization
         self._hidden_nonlinearity = hidden_nonlinearity
         self._output_nonlinearity = output_nonlinearity
-
         # Tranform std arguments to parameterized space
         self._init_std_param = None
         self._min_std_param = None
@@ -97,16 +97,8 @@ class GaussianMLPModel2(TfModel):
         """Network output spec."""
         return ['sample', 'log_std', 'dist']
 
-    def _build(self,
-               state_input=None,
-               dist=None,
-               hidden_nonlinearity=tf.nn.tanh,
-               output_nonlinearity=None,
-               std_hidden_nonlinearity=tf.nn.tanh,
-               std_output_nonlinearity=None):
+    def _build(self, state_input):
         action_dim = self._output_dim
-        assert state_input is not None
-        assert dist is not None
 
         with tf.variable_scope('dist_params'):
             if self._std_share_network:
@@ -179,7 +171,8 @@ class GaussianMLPModel2(TfModel):
             if self._max_std_param:
                 log_std_var = tf.minimum(log_std_var, self._max_std_param)
 
-        distribution = dist(mean_var, tf.exp(log_std_var))
+        distribution = tfp.distributions.MultivariateNormalDiag(
+            mean_var, tf.exp(log_std_var))
 
         action_var = distribution.sample(seed=ext.get_seed())
 
