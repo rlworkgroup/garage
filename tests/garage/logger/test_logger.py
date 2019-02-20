@@ -3,6 +3,7 @@ Auxiliary coverage test for logger.
 
 This test covers snapshot and parameter logging.
 """
+import csv
 import os
 import unittest
 
@@ -35,7 +36,25 @@ class TestLogger(unittest.TestCase):
             os.remove(log_file)
 
     def test_tabular(self):
-        logger.add_output(CsvOutput())
-        tabular.record_misc_stat("key", 1)
+        log_file = 'test_tabular.csv'
+        try:
+            logger.add_output(CsvOutput(log_file))
+            tabular.record_misc_stat("key", 1)
 
-        logger.log(tabular)
+            logger.log(tabular)
+
+            with open(log_file, 'r') as file:
+                reader = csv.reader(file)
+                header = next(reader)
+                row = next(reader)
+                for key, value in zip(header, row):
+                    assert key in ['keyAverage', 'keyStd', 'keyMedian']
+                    value = float(value)
+                    if key == 'keyAverage':
+                        assert value == 1.0
+                    elif key == 'keyStd':
+                        assert value == 0
+                    elif key == 'keyMedian':
+                        assert value == 1.0
+        finally:
+            os.remove(log_file)
