@@ -267,7 +267,11 @@ class Model(BaseModel):
     @property
     def parameters(self):
         """Parameters of the model."""
-        return tf.get_default_session().run(self._get_variables())
+        _variables = self._get_variables()
+        if _variables:
+            return tf.get_default_session().run(_variables)
+        else:
+            return _variables
 
     @parameters.setter
     def parameters(self, parameters):
