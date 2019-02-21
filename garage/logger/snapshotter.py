@@ -13,7 +13,7 @@ class Snapshotter:
 
     @property
     def snapshot_dir(self, ):
-        """The directory to save the snapshots in."""
+        """Save snapshots in this directory."""
         return self._snapshot_dir
 
     @snapshot_dir.setter
@@ -22,7 +22,7 @@ class Snapshotter:
 
     @property
     def snapshot_mode(self, ):
-        """The type of snapshot to take.
+        """Take this type of snapshot.
 
         See save_itr_params.
         """
@@ -34,7 +34,7 @@ class Snapshotter:
 
     @property
     def snapshot_gap(self, ):
-        """The number of iterations between snapshots."""
+        """Wait this number of iterations before taking another snapshot."""
         return self._snapshot_gap
 
     @snapshot_gap.setter

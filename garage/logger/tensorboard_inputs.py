@@ -20,7 +20,7 @@ class HistogramInput:
 
     @property
     def data(self, ):
-        """The data to be logged in a histogram."""
+        """Log this data as a histogram."""
         return self._data
 
 

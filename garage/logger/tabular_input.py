@@ -20,11 +20,11 @@ class TabularInput:
         self._prefix_str = ''
 
     def __str__(self):
-        """Returns a string representation of the table for the logger."""
+        """Return a string representation of the table for the logger."""
         return tabulate.tabulate(self.primitive_dict.items())
 
     def record(self, key, val):
-        """Allows the user to save key/value entries for the table.
+        """Save key/value entries for the table.
 
         :param key: String key corresponding to the value.
         :param val: Value that is to be stored in the table.
@@ -32,7 +32,7 @@ class TabularInput:
         self._dict[self._prefix_str + str(key)] = val
 
     def record_misc_stat(self, key, values, placement='back'):
-        """Allows the user to record statistics of an array.
+        """Record statistics of an array.
 
         :param key: String key corresponding to the values.
         :param values: Array of values to be analyzed.
@@ -59,7 +59,7 @@ class TabularInput:
 
     @contextmanager
     def prefix(self, prefix):
-        """Handles pushing and popping of a tabular prefix.
+        """Handle pushing and popping of a tabular prefix.
 
         Can be used in the following way:
 
@@ -76,7 +76,7 @@ class TabularInput:
             self.pop_prefix()
 
     def clear(self):
-        """Clears the tabular."""
+        """Clear the tabular."""
         self._dict.clear()
 
     def push_prefix(self, prefix):
@@ -94,7 +94,7 @@ class TabularInput:
 
     @property
     def primitive_dict(self):
-        """Returns the dictionary, excluding all nonprimitive types."""
+        """Return the dictionary, excluding all nonprimitive types."""
         primitives = (int, float, str, bool)
 
         def is_primitive(x):
@@ -107,10 +107,10 @@ class TabularInput:
 
     @property
     def dict(self):
-        """Returns a dictionary of the tabular items."""
+        """Return a dictionary of the tabular items."""
         return self._dict
 
     @property
     def key_set(self):
-        """Returns a set of the table's keys."""
+        """Return a set of the table's keys."""
         return set(self._dict.keys())

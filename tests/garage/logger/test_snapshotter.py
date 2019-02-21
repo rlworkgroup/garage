@@ -1,8 +1,3 @@
-"""
-Auxiliary coverage test for snapshotter.
-
-This test covers snapshot logging.
-"""
 from os import path as osp
 import pickle
 import random

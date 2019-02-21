@@ -22,7 +22,7 @@ def log_parameters(log_file, args):
 
 
 def dump_variant(log_file, variant_data):
-    """Dumps the variant file."""
+    """Dump the variant file."""
     mkdir_p(os.path.dirname(log_file))
     with open(log_file, "w") as f:
         json.dump(variant_data, f, indent=2, sort_keys=True, cls=LogEncoder)

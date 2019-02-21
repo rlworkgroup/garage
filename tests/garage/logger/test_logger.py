@@ -1,8 +1,3 @@
-"""
-Auxiliary coverage test for logger.
-
-This test covers snapshot and parameter logging.
-"""
 import csv
 import os
 import unittest

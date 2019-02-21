@@ -204,7 +204,7 @@ class Logger:
         self.add_output(output)
 
     def has_output_type(self, output_type):
-        """Checks to see if a given logger output is attached to the logger.
+        """Check to see if a given logger output is attached to the logger.
 
         :param output_type: A LogOutput subclass type to be checked for.
         """
@@ -214,7 +214,7 @@ class Logger:
         return False
 
     def dump_output_type(self, output_type, step=None):
-        """Dumps all outputs of the given type.
+        """Dump all outputs of the given type.
 
         :param output_type: A LogOutput subclass type to be dumped.
         :param step: The current run step.
@@ -224,7 +224,7 @@ class Logger:
                 output.dump(step=step)
 
     def dump_all(self, step=None):
-        """Dumps all outputs connected to the logger.
+        """Dump all outputs connected to the logger.
 
         :param step: The current run step.
         """

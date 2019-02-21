@@ -19,7 +19,9 @@ class LogOutput(abc.ABC):
 
     @property
     def types_accepted(self):
-        """The types that the logger may pass to this output.
+        """Pass these types to this logger output.
+
+        The types in this tuple will be accepted by this output.
 
         :return: A tuple containing all valid input types.
         """
@@ -27,7 +29,7 @@ class LogOutput(abc.ABC):
 
     @abc.abstractmethod
     def record(self, data, prefix=''):
-        """This method is called by the logger when it needs to pass data.
+        """Pass logger data to this output.
 
         :param data: The data to be logged by the output.
         :param prefix: A prefix placed before a log entry in text outputs.
@@ -35,7 +37,7 @@ class LogOutput(abc.ABC):
         pass
 
     def dump(self, step=None):
-        """This method is called by the logger to dump an output.
+        """Dump the contents of this output.
 
         :param step: The current run step.
         """
@@ -47,7 +49,7 @@ class NullOutput(LogOutput):
 
     @property
     def types_accepted(self):
-        """This output accepts all types."""
+        """Accept all output types."""
         return (object, )
 
     def record(self, data, prefix=''):
@@ -66,7 +68,7 @@ class StdOutput(LogOutput):
 
     @property
     def types_accepted(self):
-        """The types that the logger may pass to this output."""
+        """Accept str and TabularInput objects."""
         return (str, TabularInput)
 
     def record(self, data, prefix=''):
@@ -101,7 +103,7 @@ class TextOutput(LogOutput):
 
     @property
     def types_accepted(self):
-        """The types that the logger may pass to this output."""
+        """Accept str objects only."""
         return (str, )
 
     def record(self, data, prefix=''):
@@ -130,7 +132,7 @@ class CsvOutput(LogOutput):
 
     @property
     def types_accepted(self):
-        """The types that the logger may pass to this output."""
+        """Accept TabularInput objects only."""
         return (TabularInput, )
 
     def record(self, data, prefix=''):
