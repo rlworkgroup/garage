@@ -2,6 +2,8 @@
 from os import path as osp
 import pickle
 
+from garage.misc.console import mkdir_p
+
 
 class Snapshotter:
     """This class handles the creation of snapshots."""
@@ -18,6 +20,7 @@ class Snapshotter:
 
     @snapshot_dir.setter
     def snapshot_dir(self, dir_name):
+        mkdir_p(dir_name)
         self._snapshot_dir = dir_name
 
     @property
