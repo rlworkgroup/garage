@@ -34,8 +34,9 @@ class TestLogger(unittest.TestCase):
         log_file = 'test_tabular.csv'
         try:
             logger.add_output(CsvOutput(log_file))
-            tabular.record_misc_stat("key", 1)
 
+            tabular.clear()
+            tabular.record_misc_stat("key", 1)
             logger.log(tabular)
 
             with open(log_file, 'r') as file:
@@ -53,3 +54,30 @@ class TestLogger(unittest.TestCase):
                         assert value == 1.0
         finally:
             os.remove(log_file)
+
+    def test_outputs(self):
+        log_files = ['test_%u.txt' % i for i in range(5)]
+        csv_output = 'text.csv'
+        try:
+            logger.disable_warnings()
+
+            logger.add_output(CsvOutput(csv_output))
+            for file in log_files:
+                logger.add_output(TextOutput(file))
+
+            logger.remove_output_type(CsvOutput)
+
+            tabular.record_misc_stat("stat", 1)
+            warn = "Log data of type " + type(tabular).__name__
+            warn += " was not accepted by any output"
+            assert logger.log(tabular) == warn
+
+            for file in log_files:
+                logger.add_output(TextOutput(file))
+
+            logger.remove_all()
+
+        finally:
+            for file in log_files:
+                os.remove(file)
+            os.remove(csv_output)

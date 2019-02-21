@@ -159,8 +159,7 @@ class Logger:
          types_accepted property of any of the logger outputs.
         """
         if not self._outputs:
-            self._warn("No outputs have been added to the logger.")
-            return
+            return self._warn("No outputs have been added to the logger.")
 
         at_least_one_logged = False
         for output in self._outputs:
@@ -169,8 +168,11 @@ class Logger:
                 at_least_one_logged = True
 
         if not at_least_one_logged:
-            self._warn("Log data of type " + type(data).__name__ +
-                       " was not accepted by any output")
+            warning = "Log data of type " + type(data).__name__
+            warning += " was not accepted by any output"
+            return self._warn(warning)
+
+        return None
 
     def add_output(self, output):
         """Add a new output to the logger.
@@ -183,6 +185,8 @@ class Logger:
 
     def remove_all(self):
         """Remove all outputs that have been added to this logger."""
+        for output in self._outputs:
+            output.close()
         self._outputs.clear()
 
     def remove_output_type(self, output_type):
@@ -190,6 +194,10 @@ class Logger:
 
         :param output_type: A LogOutput subclass type to be removed.
         """
+        for output in self._outputs:
+            if isinstance(output, output_type):
+                output.close()
+
         self._outputs = [
             output for output in self._outputs
             if not isinstance(output, output_type)
@@ -271,6 +279,11 @@ class Logger:
         """
         if not self._warned_once:
             warn(colorize(msg, 'yellow'), self.LogWarning, stacklevel=3)
+        self._warned_once = True
+        return msg
+
+    def disable_warnings(self):
+        """Disable logger warnings for testing."""
         self._warned_once = True
 
     class LogWarning(UserWarning):

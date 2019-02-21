@@ -43,6 +43,10 @@ class LogOutput(abc.ABC):
         """
         pass
 
+    def close(self):
+        """Close any files used by the output."""
+        pass
+
 
 class NullOutput(LogOutput):
     """Dummy output to disable 'no logger output' warnings."""
@@ -117,6 +121,10 @@ class TextOutput(LogOutput):
         self._log_file.write(out + '\n')
         self._log_file.flush()
 
+    def close(self):
+        """Close any files used by the output."""
+        self._log_file.close()
+
 
 class CsvOutput(LogOutput):
     """CSV file output for logger.
@@ -147,3 +155,7 @@ class CsvOutput(LogOutput):
             self._tabular_header_written = True
         writer.writerow(dictionary)
         self._log_file.flush()
+
+    def close(self):
+        """Close any files used by the output."""
+        self._log_file.close()
