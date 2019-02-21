@@ -98,7 +98,15 @@ class TabularInput:
         primitives = (int, float, str, bool)
 
         def is_primitive(x):
-            return isinstance(x, primitives)
+            if isinstance(x, primitives):
+                return True
+            elif type(x).__module__ == np.__name__:
+                try:
+                    return x.dtype in primitives
+                except AttributeError:
+                    return False
+            else:
+                return False
 
         return {
             key: val

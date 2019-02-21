@@ -1,4 +1,3 @@
-import csv
 import unittest
 
 from garage.logger import CsvOutput, logger, tabular, TextOutput
@@ -27,31 +26,6 @@ class TestLogger(unittest.TestCase):
                     read[i] = read[i].split(text_output._delimiter, 1)[1]
                 assert read[0] == text
                 assert read[1] == more_text
-        finally:
-            remove_if_exists(log_file)
-
-    def test_tabular(self):
-        log_file = 'test_tabular.csv'
-        try:
-            logger.add_output(CsvOutput(log_file))
-
-            tabular.clear()
-            tabular.record_misc_stat("key", 1)
-            logger.log(tabular)
-
-            with open(log_file, 'r') as file:
-                reader = csv.reader(file)
-                header = next(reader)
-                row = next(reader)
-                for key, value in zip(header, row):
-                    assert key in ['keyAverage', 'keyStd', 'keyMedian']
-                    value = float(value)
-                    if key == 'keyAverage':
-                        assert value == 1.0
-                    elif key == 'keyStd':
-                        assert value == 0
-                    elif key == 'keyMedian':
-                        assert value == 1.0
         finally:
             remove_if_exists(log_file)
 
