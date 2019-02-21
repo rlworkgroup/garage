@@ -44,6 +44,7 @@ required = [
     'scipy',
     'tensorboard',
     'tensorflow<1.13,>=1.12.0',
+    'tensorflow-probability'
 ]  # noqa: E501
 
 # Dependencies for optional features

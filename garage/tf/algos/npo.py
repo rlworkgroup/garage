@@ -406,7 +406,7 @@ class NPO(BatchPolopt):
                 policy_dist_info_flat = self.policy.dist_info_sym(
                     i.flat.obs_var,
                     i.flat.policy_state_info_vars,
-                    name="policy_dist_info_flat")
+                    name="policy_dist_info_flat_entropy")
                 policy_neg_log_likeli_flat = self.policy.distribution.log_likelihood_sym(  # noqa: E501
                     i.flat.action_var,
                     policy_dist_info_flat,
