@@ -161,6 +161,7 @@ class Model(BaseModel):
         self._name = name or type(self).__name__  # name default to class
         self._networks = {}
         self._default_parameters = None
+        self._variable_scope = None
 
     def build(self, *inputs, name=None):
         """
@@ -176,8 +177,8 @@ class Model(BaseModel):
         parameter sharing. Different Networks must have an unique name.
 
         Args:
-          inputs: Tensor input(s), recommended to be position arguments, e.g.
-            def build(self, state_input=None, action_input=None, name=None).
+          inputs: Tensor input(s), recommended to be positional arguments, e.g.
+            def build(self, state_input, action_input, name=None).
           name(str): Name of the model, which is also the name scope of the
             model.
 
@@ -191,8 +192,10 @@ class Model(BaseModel):
         network_name = name or 'default'
 
         if not self._networks:
-            _variable_scope = tf.variable_scope(self._name, reuse=False)
-            with _variable_scope:
+            # First time building the model, so self._networks are empty
+            # We store the variable_scope to reenter later when we reuse it
+            with tf.variable_scope(
+                    self._name, reuse=False) as self._variable_scope:
                 with tf.name_scope(name=network_name):
                     network = Network()
                     network._inputs = inputs
@@ -203,12 +206,12 @@ class Model(BaseModel):
                 if self._default_parameters:
                     self.parameters = self._default_parameters
         else:
-            _variable_scope = tf.variable_scope(
-                self._name, reuse=True, auxiliary_name_scope=False)
             if network_name in self._networks:
                 raise ValueError(
                     'Network {} already exists!'.format(network_name))
-            with _variable_scope:
+            with tf.variable_scope(
+                    self._variable_scope, reuse=True,
+                    auxiliary_name_scope=False):
                 with tf.name_scope(name=network_name):
                     network = Network()
                     network._inputs = inputs
@@ -282,7 +285,10 @@ class Model(BaseModel):
         return self._name
 
     def _get_variables(self):
-        return {v.name: v for v in tf.get_variable_scope().global_variables()}
+        if self._variable_scope:
+            return {v.name: v for v in self._variable_scope.global_variables()}
+        else:
+            return dict()
 
     def __getstate__(self):
         """Object.__getstate__."""
@@ -291,7 +297,7 @@ class Model(BaseModel):
         new_dict['_default_parameters'] = self.parameters
         return new_dict
 
-    def __setstate__(self, dict):
+    def __setstate__(self, state):
         """Object.__setstate__."""
-        self.__dict__.update(dict)
+        self.__dict__.update(state)
         self._networks = {}

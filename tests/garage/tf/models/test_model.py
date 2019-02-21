@@ -23,6 +23,7 @@ class SimpleModel(Model):
         return state, action
 
 
+# This model doesn't implement network_output_spec
 class SimpleModel2(Model):
     def __init__(self, output_dim=2, hidden_sizes=(4, 4), name=None):
         super().__init__(name)
@@ -48,6 +49,22 @@ class ComplicatedModel(Model):
     def _build(self, obs_input):
         h1, _ = self._simple_model_1.build(obs_input)
         return self._simple_model_2.build(h1)
+
+
+# This model takes another model as constructor argument
+class ComplicatedModel2(Model):
+    def __init__(self, parent_model, output_dim=2, name=None):
+        super().__init__(name)
+        self._output_dim = output_dim
+        self._parent_model = parent_model
+        self._output_model = SimpleModel2(output_dim=output_dim)
+
+    def network_output_spec(self):
+        return ['action']
+
+    def _build(self, obs_input):
+        h1, _ = self._parent_model.build(obs_input)
+        return self._output_model.build(h1)
 
 
 class TestModel(TfGraphTestCase):
@@ -124,6 +141,18 @@ class TestModel(TfGraphTestCase):
 
         assert np.array_equal(out, model_out)
 
+    def test_model_as_constructor_argument(self):
+        input_var = tf.placeholder(tf.float32, shape=(None, 5))
+        parent_model = SimpleModel(output_dim=4)
+        model = ComplicatedModel2(parent_model=parent_model, output_dim=2)
+        outputs = model.build(input_var)
+        data = np.ones((3, 5))
+        out, model_out = self.sess.run(
+            [outputs, model.networks['default'].outputs],
+            feed_dict={model.networks['default'].input: data})
+
+        assert np.array_equal(out, model_out)
+
     def test_model_pickle(self):
         data = np.ones((3, 5))
         model = SimpleModel(output_dim=2)
@@ -146,9 +175,42 @@ class TestModel(TfGraphTestCase):
 
         assert np.array_equal(results, results2)
 
+    def test_model_pickle_without_building(self):
+        model = SimpleModel(output_dim=2)
+        model_data = pickle.dumps(model)
+        model_pickled = pickle.loads(model_data)
+
+        assert np.array_equal(model.name, model_pickled.name)
+
     def test_complicated_model_pickle(self):
         data = np.ones((3, 5))
+
         model = ComplicatedModel(output_dim=2)
+
+        with tf.Session(graph=tf.Graph()) as sess:
+            input_var = tf.placeholder(tf.float32, shape=(None, 5))
+            outputs = model.build(input_var)
+
+            results = sess.run(
+                outputs, feed_dict={model.networks['default'].input: data})
+            model_data = pickle.dumps(model)
+
+        with tf.Session(graph=tf.Graph()) as sess:
+            input_var = tf.placeholder(tf.float32, shape=(None, 5))
+            model_pickled = pickle.loads(model_data)
+            model_pickled.build(input_var)
+
+            results2 = sess.run(
+                model_pickled.networks['default'].outputs,
+                feed_dict={input_var: data})
+
+        assert np.array_equal(results, results2)
+
+    def test_complicated_model2_pickle(self):
+        data = np.ones((3, 5))
+
+        parent_model = SimpleModel(output_dim=4)
+        model = ComplicatedModel2(parent_model=parent_model, output_dim=2)
 
         with tf.Session(graph=tf.Graph()) as sess:
             input_var = tf.placeholder(tf.float32, shape=(None, 5))

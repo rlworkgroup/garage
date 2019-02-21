@@ -3,10 +3,11 @@ import numpy as np
 import tensorflow as tf
 
 from garage.tf.models.gaussian_mlp_model import GaussianMLPModel
+from garage.tf.policies.base2 import StochasticPolicy2
 from garage.tf.spaces import Box
 
 
-class GaussianMLPPolicyWithModel:
+class GaussianMLPPolicyWithModel(StochasticPolicy2):
     """
     GaussianMLPPolicy with GaussianMLPModel.
 
@@ -60,6 +61,7 @@ class GaussianMLPPolicyWithModel:
 
         state_input = tf.placeholder(tf.float32, shape=(None, obs_dim))
         self.model = GaussianMLPModel(
+            name=name,
             output_dim=action_dim,
             hidden_sizes=hidden_sizes,
             hidden_nonlinearity=hidden_nonlinearity,
@@ -75,13 +77,11 @@ class GaussianMLPPolicyWithModel:
             std_output_nonlinearity=std_output_nonlinearity,
             std_parameterization=std_parameterization)
 
-        with tf.variable_scope(name, reuse=False):
-            _, self._mean_var, self._log_std_var, _, self._dist = (
-                self.model.build(state_input))
+        _, self._mean_var, self._log_std_var, _, self._dist = (
+            self.model.build(state_input))
 
-            self._f_dist = lambda x: tf.get_default_session().run(
-                [self._mean_var, self._log_std_var],
-                feed_dict={state_input: x})
+        self._f_dist = lambda x: tf.get_default_session().run(
+            [self._mean_var, self._log_std_var], feed_dict={state_input: x})
 
     @property
     def vectorized(self):
@@ -93,10 +93,7 @@ class GaussianMLPPolicyWithModel:
                       state_info_vars=None,
                       name='dist_info_sym'):
         """Symbolic graph of the distribution."""
-        with tf.variable_scope(
-                self.name, reuse=True, auxiliary_name_scope=False):
-            _, mean_var, log_std_var, _, _ = self.model.build(
-                obs_var, name=name)
+        _, mean_var, log_std_var, _, _ = self.model.build(obs_var, name=name)
         return dict(mean=mean_var, log_std=log_std_var)
 
     def get_action(self, observation):
@@ -114,6 +111,10 @@ class GaussianMLPPolicyWithModel:
         rnd = np.random.normal(size=means.shape)
         actions = rnd * np.exp(log_stds) + means
         return actions, dict(mean=means, log_std=log_stds)
+
+    def get_params(self, trainable=True):
+        """Get the trainable variables."""
+        return self.model._variable_scope.trainable_variables()
 
     @property
     def distribution(self):

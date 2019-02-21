@@ -58,6 +58,7 @@ class GaussianMLPPolicyWithModel2:
 
         state_input = tf.placeholder(tf.float32, shape=(None, obs_dim))
         self.model = GaussianMLPModel2(
+            name=name,
             output_dim=action_dim,
             hidden_sizes=hidden_sizes,
             hidden_nonlinearity=hidden_nonlinearity,
@@ -82,6 +83,8 @@ class GaussianMLPPolicyWithModel2:
 
     def likelihood_ratio_sym(self, obs_var, other_dist):
         """Interface for likelihood ratio with another distribution."""
+        assert (obs_var.shape.as_list() == self.model.networks['default'].
+                input.shape.as_list())
         log_prob_diff = self.model.networks['default'].dist.log_prob(
             obs_var) - other_dist.log_prob(obs_var)
 
@@ -89,8 +92,7 @@ class GaussianMLPPolicyWithModel2:
 
     def dist_info_sym(self, obs_var, state_info_vars=None, name=None):
         """Symbolic graph of the distribution."""
-        with tf.variable_scope(self.name):
-            _, _, dist = self.model.build(obs_var, name=name)
+        _, _, dist = self.model.build(obs_var, name=name)
         return dist
 
     def get_action(self, observation):

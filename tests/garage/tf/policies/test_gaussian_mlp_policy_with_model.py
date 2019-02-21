@@ -44,14 +44,46 @@ class TestGaussianMLPPolicyWithModel(TfGraphTestCase):
         self.obs = [self.box_env.reset()]
         self.obs_ph = tf.placeholder(tf.float32, shape=(None, 1))
 
+        # API that remains unchanged
         # dist1_sym and dist2_sym are still dict(mean=mean, log_std=log_std)
         self.dist1_sym = self.policy1.dist_info_sym(self.obs_ph, name='p1_sym')
         self.dist2_sym = self.policy2.dist_info_sym(self.obs_ph, name='p2_sym')
 
-        # * New way *
         # this will be tf.distributions
         self.policy3.dist_info_sym(self.obs_ph, name='p3_sym')
         self.policy4.dist_info_sym(self.obs_ph, name='p4_sym')
+
+        assert self.policy1.vectorized == self.policy2.vectorized
+        assert self.policy3.vectorized == self.policy4.vectorized
+
+    def test_gaussian_mlp_policy_get_action(self):
+        action1, _ = self.policy1.get_action(self.obs)
+        action2, _ = self.policy2.get_action(self.obs)
+        action3 = self.policy3.get_action(self.obs)
+        action4 = self.policy4.get_action(self.obs)
+
+        assert (self.box_env.action_space.low <= action1 <=  # noqa: W504
+                self.box_env.action_space.high)
+        assert (self.box_env.action_space.low <= action2 <=  # noqa: W504
+                self.box_env.action_space.high)
+        assert (self.box_env.action_space.low <= action3 <=  # noqa: W504
+                self.box_env.action_space.high)
+        assert (self.box_env.action_space.low <= action4 <=  # noqa: W504
+                self.box_env.action_space.high)
+
+        actions1, _ = self.policy1.get_actions(self.obs)
+        actions2, _ = self.policy2.get_actions(self.obs)
+        actions3 = self.policy3.get_actions(self.obs)
+        actions4 = self.policy4.get_actions(self.obs)
+
+        assert (self.box_env.action_space.low <= actions1 <=  # noqa: W504
+                self.box_env.action_space.high)
+        assert (self.box_env.action_space.low <= actions2 <=  # noqa: W504
+                self.box_env.action_space.high)
+        assert (self.box_env.action_space.low <= actions3 <=  # noqa: W504
+                self.box_env.action_space.high)
+        assert (self.box_env.action_space.low <= actions4 <=  # noqa: W504
+                self.box_env.action_space.high)
 
     def test_gaussian_mlp_policy_kl_sym(self):
         # kl_sym
@@ -138,6 +170,12 @@ class TestGaussianMLPPolicyWithModel(TfGraphTestCase):
                 })
 
         assert likelihood_ratio1 == likelihood_ratio2
+
+        # input with wrong shape will raise error
+        obs_ph2 = tf.placeholder(tf.float32, shape=(None, 10))
+        with self.assertRaises(AssertionError):
+            self.policy4.likelihood_ratio_sym(
+                obs_ph2, self.policy3.model.networks['default'].dist)
 
     def test_guassian_mlp_policy_pickle(self):
         with tf.Session(graph=tf.Graph()) as sess:
