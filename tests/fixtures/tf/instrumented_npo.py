@@ -3,7 +3,8 @@
 The only difference is the use of InstrumentedBatchPolopt to notify the test of
 the different stages in the experiment lifecycle.
 """
-from enum import Enum, unique
+from enum import Enum
+from enum import unique
 
 import numpy as np
 import tensorflow as tf
@@ -12,9 +13,14 @@ from garage.logger import HistogramInput, logger, tabular
 from garage.misc import special
 from garage.misc.overrides import overrides
 from garage.tf.misc import tensor_utils
-from garage.tf.misc.tensor_utils import (
-    compute_advantages, discounted_returns, filter_valids, filter_valids_dict,
-    flatten_batch, flatten_batch_dict, flatten_inputs, graph_inputs)
+from garage.tf.misc.tensor_utils import compute_advantages
+from garage.tf.misc.tensor_utils import discounted_returns
+from garage.tf.misc.tensor_utils import filter_valids
+from garage.tf.misc.tensor_utils import filter_valids_dict
+from garage.tf.misc.tensor_utils import flatten_batch
+from garage.tf.misc.tensor_utils import flatten_batch_dict
+from garage.tf.misc.tensor_utils import flatten_inputs
+from garage.tf.misc.tensor_utils import graph_inputs
 from garage.tf.optimizers import LbfgsOptimizer
 from tests.fixtures.tf.instrumented_batch_polopt import InstrumentedBatchPolopt
 

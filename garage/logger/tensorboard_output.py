@@ -19,8 +19,8 @@ from tensorboard.plugins.custom_scalar import layout_pb2, metadata
 import tensorflow as tf
 
 from garage import config
-from garage.logger import (HistogramInput, HistogramInputDistribution,
-                           LogOutput, TabularInput)
+from garage.logger import HistogramInput, HistogramInputDistribution
+from garage.logger import LogOutput, TabularInput
 from garage.misc.console import mkdir_p
 
 
