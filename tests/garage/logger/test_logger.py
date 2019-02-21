@@ -1,8 +1,8 @@
 import csv
-import os
 import unittest
 
 from garage.logger import CsvOutput, logger, tabular, TextOutput
+from garage.misc.console import remove_if_exists
 
 
 class TestLogger(unittest.TestCase):
@@ -28,7 +28,7 @@ class TestLogger(unittest.TestCase):
                 assert read[0] == text
                 assert read[1] == more_text
         finally:
-            os.remove(log_file)
+            remove_if_exists(log_file)
 
     def test_tabular(self):
         log_file = 'test_tabular.csv'
@@ -53,31 +53,61 @@ class TestLogger(unittest.TestCase):
                     elif key == 'keyMedian':
                         assert value == 1.0
         finally:
-            os.remove(log_file)
+            remove_if_exists(log_file)
 
     def test_outputs(self):
         log_files = ['test_%u.txt' % i for i in range(5)]
-        csv_output = 'text.csv'
+        csv_file = 'text.csv'
         try:
             logger.disable_warnings()
 
-            logger.add_output(CsvOutput(csv_output))
+            logger.add_output(CsvOutput(csv_file))
             for file in log_files:
                 logger.add_output(TextOutput(file))
 
+            assert logger.has_output_type(CsvOutput)
+            assert logger.has_output_type(TextOutput)
             logger.remove_output_type(CsvOutput)
+            assert not logger.has_output_type(CsvOutput)
+            assert logger.has_output_type(TextOutput)
 
             tabular.record_misc_stat("stat", 1)
             warn = "Log data of type " + type(tabular).__name__
             warn += " was not accepted by any output"
             assert logger.log(tabular) == warn
+        finally:
+            for file in log_files:
+                remove_if_exists(file)
+            remove_if_exists(csv_file)
+
+    def test_add_remove_outputs(self):
+        log_file = 'test.txt'
+        log_files = ['test_%u.txt' % i for i in range(5)]
+        csv_file = 'test.csv'
+        try:
+            logger.add_output(CsvOutput(csv_file))
+            logger.add_output(TextOutput(csv_file))
+
+            assert logger.has_output_type(CsvOutput)
+            assert logger.has_output_type(TextOutput)
+            logger.remove_output_type(CsvOutput)
+            assert not logger.has_output_type(CsvOutput)
+            assert logger.has_output_type(TextOutput)
+
+            logger.add_output(CsvOutput(csv_file))
+            assert logger.has_output_type(CsvOutput)
+            assert logger.has_output_type(TextOutput)
+            logger.remove_all()
+            assert not logger.has_output_type(CsvOutput)
+            assert not logger.has_output_type(TextOutput)
 
             for file in log_files:
                 logger.add_output(TextOutput(file))
-
-            logger.remove_all()
-
+            assert logger.has_output_type(TextOutput)
+            assert len(logger._outputs) == len(log_files)
+            logger.reset_output(TextOutput(log_file))
+            assert logger.has_output_type(TextOutput)
+            assert len(logger._outputs) == 1
         finally:
-            for file in log_files:
-                os.remove(file)
-            os.remove(csv_output)
+            remove_if_exists(log_file)
+            remove_if_exists(csv_file)

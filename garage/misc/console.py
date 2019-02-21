@@ -43,6 +43,13 @@ def mkdir_p(path):
             raise
 
 
+def remove_if_exists(filename):
+    try:
+        os.remove(filename)
+    except OSError:
+        pass
+
+
 def log(s):  # , send_telegram=False):
     print(s)
     sys.stdout.flush()
