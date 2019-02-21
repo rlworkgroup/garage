@@ -70,5 +70,3 @@ class Snapshotter:
             if file_name:
                 with open(file_name, "wb") as file:
                     pickle.dump(params, file)
-        else:
-            raise TypeError(f'Invalid snapshot dir {self._snapshot_dir}')
