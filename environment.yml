@@ -8,3 +8,5 @@ dependencies:
     - pip:
         - -e .[all]
         - -e .[dev]
+        # install metaworlds to ensure that the environments stay compatible
+        - git+https://github.com/rlworkgroup/metaworlds.git@master#egg=metaworlds
