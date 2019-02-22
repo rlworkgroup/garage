@@ -1,10 +1,7 @@
-import time
-
 import tensorflow as tf
 
 from garage.algos import RLAlgorithm
 import garage.misc.logger as logger
-from garage.tf.plotter import Plotter
 from garage.tf.samplers import BatchSampler
 from garage.tf.samplers import OnPolicyVectorizedSampler
 
@@ -79,6 +76,7 @@ class BatchPolopt(RLAlgorithm):
         self.store_paths = store_paths
         self.whole_paths = whole_paths
         self.fixed_horizon = fixed_horizon
+        self.sess = None
         if sampler_cls is None:
             if self.policy.vectorized and not force_batch_sampler:
                 sampler_cls = OnPolicyVectorizedSampler
@@ -89,66 +87,23 @@ class BatchPolopt(RLAlgorithm):
         self.sampler = sampler_cls(self, **sampler_args)
         self.init_opt()
 
-    def start_worker(self, sess):
-        self.sampler.start_worker()
-        if self.plot:
-            self.plotter = Plotter(self.env, self.policy, sess)
-            self.plotter.start()
+    def initialize(self, sess=None):
+        self.sess = tf.Session() if sess is None else sess
 
-    def shutdown_worker(self):
-        self.sampler.shutdown_worker()
-        if self.plot:
-            self.plotter.close()
-
-    def obtain_samples(self, itr):
-        return self.sampler.obtain_samples(itr)
+    def train_once(self, paths):
+        with self.sess.as_default():
+            paths = self.process_samples(paths)
+            self.log_diagnostics(paths)
+            logger.log("Optimizing policy...")
+            self.optimize_policy(paths)
+            return paths["average_return"]
 
     def process_samples(self, itr, paths):
+        logger.log("Processing samples...")
         return self.sampler.process_samples(itr, paths)
 
-    def train(self, sess=None):
-        created_session = True if (sess is None) else False
-        if sess is None:
-            sess = tf.Session()
-            sess.__enter__()
-
-        sess.run(tf.global_variables_initializer())
-        self.start_worker(sess)
-        start_time = time.time()
-        last_average_return = None
-        for itr in range(self.start_itr, self.n_itr):
-            itr_start_time = time.time()
-            with logger.prefix('itr #%d | ' % itr):
-                logger.log("Obtaining samples...")
-                paths = self.obtain_samples(itr)
-                logger.log("Processing samples...")
-                samples_data = self.process_samples(itr, paths)
-                last_average_return = samples_data["average_return"]
-                logger.log("Logging diagnostics...")
-                self.log_diagnostics(paths)
-                logger.log("Optimizing policy...")
-                self.optimize_policy(itr, samples_data)
-                logger.log("Saving snapshot...")
-                params = self.get_itr_snapshot(itr, samples_data)
-                if self.store_paths:
-                    params["paths"] = samples_data["paths"]
-                logger.save_itr_params(itr, params)
-                logger.log("Saved")
-                logger.record_tabular('Time', time.time() - start_time)
-                logger.record_tabular('ItrTime', time.time() - itr_start_time)
-                logger.dump_tabular(with_prefix=False)
-                if self.plot:
-                    self.plotter.update_plot(self.policy, self.max_path_length)
-                    if self.pause_for_plot:
-                        input("Plotting evaluation run: Press Enter to "
-                              "continue...")
-
-        self.shutdown_worker()
-        if created_session:
-            sess.close()
-        return last_average_return
-
     def log_diagnostics(self, paths):
+        logger.log("Logging diagnostics...")
         self.policy.log_diagnostics(paths)
         self.baseline.log_diagnostics(paths)
 
@@ -159,12 +114,12 @@ class BatchPolopt(RLAlgorithm):
         """
         raise NotImplementedError
 
-    def get_itr_snapshot(self, itr, samples_data):
+    def get_itr_snapshot(self, itr):
         """
         Returns all the data that should be saved in the snapshot for this
         iteration.
         """
         raise NotImplementedError
 
-    def optimize_policy(self, itr, samples_data):
+    def optimize_policy(self, samples_data):
         raise NotImplementedError
