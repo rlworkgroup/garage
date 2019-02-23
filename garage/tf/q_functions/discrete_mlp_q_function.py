@@ -37,30 +37,23 @@ class DiscreteMLPQFunction(QFunction):
         self._output_nonlinearity = output_nonlinearity
         self._layer_norm = layer_norm
 
-        with tf.name_scope(name):
-            self.q_val, self.obs_ph = self.build_net(name)
-
-    def _build_ph(self, scope):
         obs_dim = self._env_spec.observation_space.shape
 
-        with tf.name_scope(scope):
-            obs_ph = tf.placeholder(tf.float32, (None, ) + obs_dim, name="obs")
-
-        return obs_ph
+        with tf.name_scope(name):
+            self.obs_ph = tf.placeholder(tf.float32, (None, ) + obs_dim, name="obs")
+            self.q_val = self.build_net(self.obs_ph, name)
 
     @overrides
-    def build_net(self, name):
+    def build_net(self, input_var, name):
         """
         Set up q network based on class attributes.
 
         Args:
+            input_var: Input tf.placeholder to the network.
             name: Network variable scope.
-            input: Input tf.placeholder to the network.
         """
-        obs_ph = self._build_ph(name)
-
-        network = mlp(
-            input_var=obs_ph,
+        return mlp(
+            input_var=input_var,
             output_dim=self._action_dim,
             hidden_sizes=self._hidden_sizes,
             name=name,
@@ -68,11 +61,9 @@ class DiscreteMLPQFunction(QFunction):
             output_nonlinearity=self._output_nonlinearity,
             layer_normalization=self._layer_norm)
 
-        return network, obs_ph
-
     @overrides
     def get_qval_sym(self, input_phs):
-        assert len(input_phs) == 1
+        assert len(input_phs) == 1, "Only one input should be given."
 
         return mlp(
             input_var=input_phs,
