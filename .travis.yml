@@ -35,9 +35,6 @@ before_install:
   - sudo mv docker-compose /usr/local/bin
   # Pull cached docker image
   - docker pull rlworkgroup/garage-ci:latest
-  # Pull CodeClimate reporter
-  - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > cc-test-reporter
-  - chmod +x cc-test-reporter
 
 install:
   - tag="rlworkgroup/garage-ci:${TRAVIS_BUILD_NUMBER}"
