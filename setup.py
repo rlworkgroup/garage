@@ -48,9 +48,7 @@ extras['all'] = list(set(sum(extras.values(), [])))
 extras['dev'] = [
     # Please keep alphabetized
     'baselines @ https://api.github.com/repos/openai/baselines/tarball/f2729693253c0ef4d4086231d36e0a4307ec1cb3',  # noqa: E501
-    'codacy-coverage',
     'coverage',
-    'coveralls',
     'flake8',
     'flake8-docstrings==1.3.0',
     'flake8-import-order',
