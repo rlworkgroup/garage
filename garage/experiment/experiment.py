@@ -812,9 +812,9 @@ def launch_ec2(params_list,
                 #         fi
                 #     done & echo log sync initiated
                 # """.format(log_dir=log_dir, remote_log_dir=remote_log_dir, aws_region=config.AWS_REGION_NAME))  # noqa: E501
-                sio.write("""
+                sio.write('''
                     while /bin/true; do
-                        if [ -z $(curl -Is http://169.254.169.254/latest/meta-data/spot/termination-time | head -1 | grep 404 | cut -d \  -f 2) ]
+                        if [ -z $(curl -Is http://169.254.169.254/latest/meta-data/spot/termination-time | head -1 | grep 404 | cut -d \\  -f 2) ]
                           then
                             logger "Running shutdown hook."
                             aws s3 cp /home/ubuntu/user_data.log {remote_log_dir}/stdout.log
@@ -825,7 +825,7 @@ def launch_ec2(params_list,
                             sleep 5
                         fi
                     done & echo log sync initiated
-                """.format(  # noqa: E501, W605
+                '''.format(  # noqa: E501, W605
                     log_dir=log_dir,
                     remote_log_dir=remote_log_dir))
         if use_gpu:

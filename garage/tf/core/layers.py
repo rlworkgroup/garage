@@ -2,7 +2,7 @@ from collections import deque
 from collections import OrderedDict
 from difflib import get_close_matches
 import functools
-from inspect import getargspec
+import inspect
 from itertools import chain
 import math
 from warnings import warn
@@ -884,10 +884,12 @@ class ReshapeLayer(Layer):
                 # output_shape[dim] = None
                 # masked_output_shape[dim] = None
         # From the shapes, compute the sizes of the input and output tensor
-        input_size = (None if any(x is None for x in masked_input_shape) else
-                      np.prod(masked_input_shape))
-        output_size = (None if any(x is None for x in masked_output_shape) else
-                       np.prod(masked_output_shape))
+        input_size = (None if any(
+            x is None
+            for x in masked_input_shape) else np.prod(masked_input_shape))
+        output_size = (None if any(
+            x is None
+            for x in masked_output_shape) else np.prod(masked_output_shape))
         del masked_input_shape, masked_output_shape
         # Finally, infer value for -1 if needed
         if -1 in output_shape:
@@ -1534,7 +1536,6 @@ class PseudoLSTMLayer(Layer):
                 initializer=tf.concat(axis=1, values=[h0s, c0s]))
             shuffled_hcs = tf.transpose(hcs, (1, 0, 2))
             shuffled_hs = shuffled_hcs[:, :, :self.num_units]
-            shuffled_cs = shuffled_hcs[:, :, self.num_units:]
             return shuffled_hs
 
 
@@ -1734,7 +1735,6 @@ class LSTMLayer(Layer):
                 initializer=tf.concat(axis=1, values=[h0s, c0s]))
             shuffled_hcs = tf.transpose(hcs, (1, 0, 2))
             shuffled_hs = shuffled_hcs[:, :, :self.num_units]
-            shuffled_cs = shuffled_hcs[:, :, self.num_units:]
             if 'recurrent_state_output' in kwargs:
                 kwargs['recurrent_state_output'][self] = shuffled_hcs
             return shuffled_hs
@@ -1867,7 +1867,6 @@ class TfBasicLSTMLayer(Layer):
                 )
                 shuffled_hcs = tf.transpose(hcs, (1, 0, 2))
                 shuffled_hs = shuffled_hcs[:, :, :self.num_units]
-                shuffled_cs = shuffled_hcs[:, :, self.num_units:]
                 return shuffled_hs
 
     def get_output_shape_for(self, input_shape):
@@ -2101,7 +2100,8 @@ def get_output(layer_or_layers, inputs=None, **kwargs):
                     "mapping this layer to an input expression." % layer)
             all_outputs[layer] = layer.get_output_for(layer_inputs, **kwargs)
             try:
-                names, _, _, defaults = getargspec(layer.get_output_for)
+                names, _, _, defaults, _, _, _ = inspect.getfullargspec(
+                    layer.get_output_for)
             except TypeError:
                 # If introspection is not possible, skip it
                 pass

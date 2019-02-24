@@ -23,7 +23,7 @@ class TestNormalizedGym(unittest.TestCase):
         a_copy = a
         self.env.reset()
         self.env.step(a)
-        self.assertEquals(a, a_copy)
+        self.assertEqual(a, a_copy)
 
     def test_flatten(self):
         for _ in range(10):

@@ -21,5 +21,5 @@ class TestGridWorldEnv(unittest.TestCase):
         a_copy = a
         env.reset()
         env.step(a)
-        self.assertEquals(a, a_copy)
+        self.assertEqual(a, a_copy)
         env.close()

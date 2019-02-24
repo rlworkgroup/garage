@@ -31,10 +31,8 @@ class BatchSampler(BaseSampler):
 
     def obtain_samples(self, itr):
         cur_policy_params = self.algo.policy.get_param_values()
-        cur_env_params = self.algo.env.get_param_values()
         paths = parallel_sampler.sample_paths(
             policy_params=cur_policy_params,
-            env_params=cur_env_params,
             max_samples=self.algo.batch_size,
             max_path_length=self.algo.max_path_length,
             scope=self.algo.scope,
@@ -60,9 +58,9 @@ class BatchSampler(BaseSampler):
 
         for idx, path in enumerate(paths):
             path_baselines = np.append(all_path_baselines[idx], 0)
-            deltas = path["rewards"] + \
-                     self.algo.discount * path_baselines[1:] - \
-                     path_baselines[:-1]
+            deltas = path["rewards"] \
+                + self.algo.discount * path_baselines[1:] \
+                - path_baselines[:-1]
             path["advantages"] = special.discount_cumsum(
                 deltas, self.algo.discount * self.algo.gae_lambda)
             path["deltas"] = deltas
