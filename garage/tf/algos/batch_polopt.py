@@ -2,8 +2,6 @@ import tensorflow as tf
 
 from garage.algos import RLAlgorithm
 import garage.misc.logger as logger
-from garage.tf.samplers import BatchSampler
-from garage.tf.samplers import OnPolicyVectorizedSampler
 
 
 class BatchPolopt(RLAlgorithm):
@@ -18,8 +16,6 @@ class BatchPolopt(RLAlgorithm):
                  policy,
                  baseline,
                  scope=None,
-                 n_itr=500,
-                 start_itr=0,
                  batch_size=5000,
                  max_path_length=500,
                  discount=0.99,
@@ -31,9 +27,6 @@ class BatchPolopt(RLAlgorithm):
                  store_paths=False,
                  whole_paths=True,
                  fixed_horizon=False,
-                 sampler_cls=None,
-                 sampler_args=None,
-                 force_batch_sampler=False,
                  **kwargs):
         """
         :param env: Environment
@@ -63,8 +56,6 @@ class BatchPolopt(RLAlgorithm):
         self.policy = policy
         self.baseline = baseline
         self.scope = scope
-        self.n_itr = n_itr
-        self.start_itr = start_itr
         self.batch_size = batch_size
         self.max_path_length = max_path_length
         self.discount = discount
@@ -76,31 +67,16 @@ class BatchPolopt(RLAlgorithm):
         self.store_paths = store_paths
         self.whole_paths = whole_paths
         self.fixed_horizon = fixed_horizon
-        self.sess = None
-        if sampler_cls is None:
-            if self.policy.vectorized and not force_batch_sampler:
-                sampler_cls = OnPolicyVectorizedSampler
-            else:
-                sampler_cls = BatchSampler
-        if sampler_args is None:
-            sampler_args = dict()
-        self.sampler = sampler_cls(self, **sampler_args)
         self.init_opt()
 
     def initialize(self, sess=None):
         self.sess = tf.Session() if sess is None else sess
 
-    def train_once(self, paths):
-        with self.sess.as_default():
-            paths = self.process_samples(paths)
-            self.log_diagnostics(paths)
-            logger.log("Optimizing policy...")
-            self.optimize_policy(paths)
-            return paths["average_return"]
-
-    def process_samples(self, itr, paths):
-        logger.log("Processing samples...")
-        return self.sampler.process_samples(itr, paths)
+    def train_once(self, itr, paths):
+        self.log_diagnostics(paths)
+        logger.log("Optimizing policy...")
+        self.optimize_policy(itr, paths)
+        return paths["average_return"]
 
     def log_diagnostics(self, paths):
         logger.log("Logging diagnostics...")
@@ -121,5 +97,5 @@ class BatchPolopt(RLAlgorithm):
         """
         raise NotImplementedError
 
-    def optimize_policy(self, samples_data):
+    def optimize_policy(self, itr, samples_data):
         raise NotImplementedError
