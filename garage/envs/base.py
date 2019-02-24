@@ -1,6 +1,5 @@
 """Wrapper class that converts gym.Env into GarageEnv."""
 import collections
-import warnings
 
 from akro import Box
 from akro import Dict
@@ -26,7 +25,7 @@ KNOWN_GYM_NOT_CLOSE_VIEWER = [
 ]
 
 
-class GarageEnv(gym.Wrapper, Parameterized, Serializable):
+class GarageEnv(gym.Wrapper, Serializable):
     """
     Returns an abstract Garage wrapper class for gym.Env.
 
@@ -94,34 +93,6 @@ class GarageEnv(gym.Wrapper, Parameterized, Serializable):
                                 and isinstance(env_itr.viewer, MjViewer)):
                             glfw.destroy_window(env_itr.viewer.window)
                             break
-
-    def get_params_internal(self, **tags):
-        """
-        Returns an empty list if env.get_params() is called.
-
-        Returns:
-            An empty list
-        """
-        warnings.warn("get_params_internal is deprecated", DeprecationWarning)
-        return []
-
-    @property
-    def horizon(self):
-        """
-        Get the maximum episode steps for the wrapped env.
-
-        Returns:
-            max_episode_steps (int)
-        """
-        if self.env.spec is not None:
-            return self.env.spec.max_episode_steps
-        else:
-            return NotImplementedError
-
-    def log_diagnostics(self, paths, *args, **kwargs):
-        """No env supports this function call."""
-        warnings.warn("log_diagnostics is deprecated", DeprecationWarning)
-        pass
 
     @property
     def spec(self):

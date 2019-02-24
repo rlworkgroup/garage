@@ -41,7 +41,7 @@ class TestDmControlEnv(unittest.TestCase):
         a_copy = copy(a)
         env.step(a)
         if isinstance(a, collections.Iterable):
-            self.assertEquals(a.all(), a_copy.all())
+            self.assertEqual(a.all(), a_copy.all())
         else:
-            self.assertEquals(a, a_copy)
+            self.assertEqual(a, a_copy)
         env.close()
