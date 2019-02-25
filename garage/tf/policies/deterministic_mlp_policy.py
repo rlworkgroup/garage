@@ -1,3 +1,4 @@
+from akro.tf import Box
 import tensorflow as tf
 
 from garage.core import Serializable
@@ -7,7 +8,6 @@ import garage.tf.core.layers as L
 from garage.tf.core.network import MLP
 from garage.tf.misc import tensor_utils
 from garage.tf.policies import Policy
-from garage.tf.spaces import Box
 
 
 class DeterministicMLPPolicy(Policy, LayersPowered, Serializable):

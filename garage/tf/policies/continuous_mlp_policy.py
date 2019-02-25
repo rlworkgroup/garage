@@ -5,6 +5,7 @@ A continuous MLP network can be used as policy method in different RL
 algorithms. It accepts an observation of the environment and predicts an
 action.
 """
+from akro.tf import Box
 import tensorflow as tf
 
 from garage.core import Serializable
@@ -14,7 +15,6 @@ from garage.tf.core import LayersPowered
 from garage.tf.core.layers import batch_norm
 from garage.tf.misc import tensor_utils
 from garage.tf.policies import Policy
-from garage.tf.spaces import Box
 
 
 class ContinuousMLPPolicy(Policy, LayersPowered, Serializable):

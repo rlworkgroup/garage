@@ -4,6 +4,7 @@ from setuptools import setup
 # Required dependencies
 required = [
     # Please keep alphabetized
+    'akro',  # noqa: #501
     'boto3',
     'cached_property',
     'cloudpickle',

@@ -1,10 +1,10 @@
 """GaussianMLPPolicy with GaussianMLPModel."""
+from akro.tf import Box
 import numpy as np
 import tensorflow as tf
 
 from garage.tf.models.gaussian_mlp_model import GaussianMLPModel
 from garage.tf.policies.base2 import StochasticPolicy2
-from garage.tf.spaces import Box
 
 
 class GaussianMLPPolicyWithModel(StochasticPolicy2):

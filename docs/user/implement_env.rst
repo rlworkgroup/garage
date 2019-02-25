@@ -70,7 +70,7 @@ the base environment and add some imports:
 
     from garage.envs.base import Env
     from garage.envs.base import Step
-    from garage.spaces import Box
+    from akro import Box
     import numpy as np
 
 

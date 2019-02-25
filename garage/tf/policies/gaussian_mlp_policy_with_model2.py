@@ -1,8 +1,8 @@
 """GaussianMLPPolicy with GaussianMLPModel."""
+from akro.tf import Box
 import tensorflow as tf
 
 from garage.tf.models.gaussian_mlp_model2 import GaussianMLPModel2
-from garage.tf.spaces import Box
 
 
 class GaussianMLPPolicyWithModel2:

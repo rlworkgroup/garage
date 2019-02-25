@@ -1,3 +1,4 @@
+from akro.tf import Box
 import numpy as np
 import tensorflow as tf
 
@@ -10,7 +11,6 @@ from garage.tf.core.network import MLP
 from garage.tf.distributions import DiagonalGaussian
 from garage.tf.misc import tensor_utils
 from garage.tf.policies import StochasticPolicy
-from garage.tf.spaces import Box
 
 
 class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
@@ -75,12 +75,9 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
                         init_std_param = np.log(np.exp(init_std) - 1)
                     else:
                         raise NotImplementedError
-                    b = np.concatenate(
-                        [
-                            np.zeros(action_dim),
-                            np.full(action_dim, init_std_param)
-                        ],
-                        axis=0)
+                    b = np.concatenate((np.zeros(action_dim),
+                                        np.full(action_dim, init_std_param)),
+                                       axis=0)
                     b = tf.constant_initializer(b)
                     with tf.variable_scope(self._mean_network_name):
                         mean_network = MLP(
