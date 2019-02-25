@@ -1,3 +1,4 @@
+from akro.tf import Discrete
 import numpy as np
 import tensorflow as tf
 
@@ -10,7 +11,6 @@ from garage.tf.core.network import GRUNetwork
 from garage.tf.distributions import RecurrentCategorical
 from garage.tf.misc import tensor_utils
 from garage.tf.policies import StochasticPolicy
-from garage.tf.spaces import Discrete
 
 
 class CategoricalGRUPolicy(StochasticPolicy, LayersPowered, Serializable):
@@ -64,8 +64,8 @@ class CategoricalGRUPolicy(StochasticPolicy, LayersPowered, Serializable):
                             tf.shape(input)[0],
                             tf.shape(input)[1], feature_dim
                         ])),
-                    shape_op=lambda _, input_shape: (
-                        input_shape[0], input_shape[1], feature_dim))
+                    shape_op=lambda _, input_shape: (input_shape[
+                        0], input_shape[1], feature_dim))
 
             prob_network = GRUNetwork(
                 input_shape=(feature_dim, ),
@@ -168,8 +168,8 @@ class CategoricalGRUPolicy(StochasticPolicy, LayersPowered, Serializable):
             self.prev_hiddens = np.zeros((len(dones), self.hidden_dim))
 
         self.prev_actions[dones] = 0.
-        self.prev_hiddens[
-            dones] = self.prob_network.hid_init_param.eval()  # get_value()
+        self.prev_hiddens[dones] = self.prob_network.hid_init_param.eval(
+        )  # get_value()
 
     # The return value is a pair. The first item is a matrix (N, A), where each
     # entry corresponds to the action value taken. The second item is a vector

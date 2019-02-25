@@ -1,3 +1,7 @@
+from akro.tf import Box
+from akro.tf import Dict
+from akro.tf import Discrete
+from akro.tf import Tuple
 from cached_property import cached_property
 from gym.spaces import Box as GymBox
 from gym.spaces import Dict as GymDict
@@ -7,10 +11,6 @@ from gym.spaces import Tuple as GymTuple
 from garage.envs import GarageEnv
 from garage.envs.env_spec import EnvSpec
 from garage.misc.overrides import overrides
-from garage.tf.spaces import Box
-from garage.tf.spaces import Dict
-from garage.tf.spaces import Discrete
-from garage.tf.spaces import Tuple
 
 
 class TfEnv(GarageEnv):
@@ -23,8 +23,8 @@ class TfEnv(GarageEnv):
 
     def __init__(self, env=None, env_name=""):
         super().__init__(env, env_name)
-        self.action_space = self._to_garage_space(self.env.action_space)
-        self.observation_space = self._to_garage_space(
+        self.action_space = self._to_akro_space(self.env.action_space)
+        self.observation_space = self._to_akro_space(
             self.env.observation_space)
 
     @classmethod
@@ -34,12 +34,12 @@ class TfEnv(GarageEnv):
         return WrappedCls(cls, env_cls, extra_kwargs)
 
     @overrides
-    def _to_garage_space(self, space):
+    def _to_akro_space(self, space):
         """
-        Converts a gym.space to a garage.tf.space.
+        Converts a gym.space to a akro.tf space.
 
         Returns:
-            space (garage.tf.spaces)
+            space (akro.tf space)
         """
         if isinstance(space, GymBox):
             return Box(low=space.low, high=space.high, dtype=space.dtype)
@@ -48,7 +48,7 @@ class TfEnv(GarageEnv):
         elif isinstance(space, GymDiscrete):
             return Discrete(space.n)
         elif isinstance(space, GymTuple):
-            return Tuple(list(map(self._to_garage_space, space.spaces)))
+            return Tuple(list(map(self._to_akro_space, space.spaces)))
         else:
             raise NotImplementedError
 

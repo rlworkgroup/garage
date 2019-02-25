@@ -1,8 +1,9 @@
 import pickle
 import unittest
 
+from akro import Box
+
 from garage.envs.env_spec import EnvSpec
-from garage.spaces import Box
 
 
 class TestEnvSpec(unittest.TestCase):

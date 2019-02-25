@@ -1,3 +1,4 @@
+from akro.tf import Box
 import numpy as np
 import tensorflow as tf
 
@@ -10,7 +11,6 @@ from garage.tf.core.network import GRUNetwork
 from garage.tf.distributions import RecurrentDiagonalGaussian
 from garage.tf.misc import tensor_utils
 from garage.tf.policies import StochasticPolicy
-from garage.tf.spaces import Box
 
 
 class GaussianGRUPolicy(StochasticPolicy, LayersPowered, Serializable):
@@ -70,8 +70,8 @@ class GaussianGRUPolicy(StochasticPolicy, LayersPowered, Serializable):
                             tf.shape(input)[0],
                             tf.shape(input)[1], feature_dim
                         ])),
-                    shape_op=lambda _, input_shape: (
-                        input_shape[0], input_shape[1], feature_dim))
+                    shape_op=lambda _, input_shape: (input_shape[
+                        0], input_shape[1], feature_dim))
 
             if std_share_network:
                 mean_network = GRUNetwork(

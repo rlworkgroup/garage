@@ -2,6 +2,10 @@
 import collections
 import warnings
 
+from akro import Box
+from akro import Dict
+from akro import Discrete
+from akro import Tuple
 import glfw
 import gym
 from gym.spaces import Box as GymBox
@@ -12,10 +16,6 @@ from gym.spaces import Tuple as GymTuple
 from garage.core import Parameterized
 from garage.core import Serializable
 from garage.envs.env_spec import EnvSpec
-from garage.spaces import Box
-from garage.spaces import Dict
-from garage.spaces import Discrete
-from garage.spaces import Tuple
 
 # The gym environments using one of the packages in the following list as entry
 # points don't close their viewer windows.
@@ -37,7 +37,7 @@ class GarageEnv(gym.Wrapper, Parameterized, Serializable):
 
     Furthermore, classes inheriting from GarageEnv should silently
     convert action_space and observation_space from gym.Spaces to
-    garage.spaces.
+    akro.spaces.
 
     Args: env (gym.Env): the env that will be wrapped
     """
@@ -48,8 +48,8 @@ class GarageEnv(gym.Wrapper, Parameterized, Serializable):
         else:
             super().__init__(env)
 
-        self.action_space = self._to_garage_space(self.env.action_space)
-        self.observation_space = self._to_garage_space(
+        self.action_space = self._to_akro_space(self.env.action_space)
+        self.observation_space = self._to_akro_space(
             self.env.observation_space)
 
         Parameterized.__init__(self)
@@ -126,7 +126,7 @@ class GarageEnv(gym.Wrapper, Parameterized, Serializable):
     @property
     def spec(self):
         """
-        Returns an EnvSpec with garage.spaces.
+        Returns an EnvSpec with akro.spaces.
 
         Returns:
             spec (garage.envs.EnvSpec)
@@ -153,15 +153,15 @@ class GarageEnv(gym.Wrapper, Parameterized, Serializable):
         """
         return self.env.step(action)
 
-    def _to_garage_space(self, space):
+    def _to_akro_space(self, space):
         """
-        Converts a gym.space into a garage.space.
+        Converts a gym.space into an akro.space.
 
         Args:
             space (gym.spaces)
 
         Returns:
-            space (garage.spaces)
+            space (akro.spaces)
         """
         if isinstance(space, GymBox):
             return Box(low=space.low, high=space.high, dtype=space.dtype)
@@ -170,7 +170,7 @@ class GarageEnv(gym.Wrapper, Parameterized, Serializable):
         elif isinstance(space, GymDiscrete):
             return Discrete(space.n)
         elif isinstance(space, GymTuple):
-            return Tuple(list(map(self._to_garage_space, space.spaces)))
+            return Tuple(list(map(self._to_akro_space, space.spaces)))
         else:
             raise NotImplementedError
 

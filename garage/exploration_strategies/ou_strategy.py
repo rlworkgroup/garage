@@ -1,3 +1,4 @@
+from akro import Box
 import gym
 import numpy as np
 import numpy.random as nr
@@ -6,7 +7,6 @@ from garage.core import Serializable
 from garage.exploration_strategies import ExplorationStrategy
 from garage.misc.ext import AttrDict
 from garage.misc.overrides import overrides
-from garage.spaces import Box
 
 
 class OUStrategy(ExplorationStrategy, Serializable):
