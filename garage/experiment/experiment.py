@@ -21,7 +21,10 @@ from garage import config
 from garage.core import Serializable
 from garage.misc.console import mkdir_p
 from garage.misc.ext import AttrDict
-from garage.viskit.core import flatten
+
+
+def flatten(l):
+    return [item for sublist in l for item in sublist]
 
 
 class BinaryOp(Serializable):
