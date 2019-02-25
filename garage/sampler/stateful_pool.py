@@ -4,8 +4,6 @@ import sys
 import time
 import traceback
 
-from joblib.pool import MemmappingPool
-
 from garage.misc.prog_bar_counter import ProgBarCounter
 
 
@@ -21,6 +19,7 @@ class StatefulPool:
         self.worker_queue = None
         self.G = SharedGlobal()
         self.manager = None
+        self.initialized = False
 
     def initialize(self, n_parallel):
         self.n_parallel = n_parallel
@@ -34,10 +33,8 @@ class StatefulPool:
             self.manager = mp.Manager()
             self.queue = mp.Queue()
             self.worker_queue = mp.Queue()
-            self.pool = MemmappingPool(
-                self.n_parallel,
-                temp_folder="/tmp",
-            )
+            self.pool = mp.Pool(self.n_parallel)
+        self.initialized = True
 
     def close(self):
         if self.manager:

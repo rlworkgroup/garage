@@ -52,6 +52,7 @@ class BatchPolopt(RLAlgorithm):
         self.center_adv = center_adv
         self.positive_adv = positive_adv
         self.fixed_horizon = fixed_horizon
+        self.whole_paths = whole_paths
         self.init_opt()
 
     def initialize(self, sess=None):

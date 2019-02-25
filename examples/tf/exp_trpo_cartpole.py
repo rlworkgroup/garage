@@ -16,6 +16,8 @@ from garage.tf.policies import CategoricalMLPPolicy
 from garage.tf.samplers import OnPolicyVectorizedSampler
 from garage.tf.samplers import BatchSampler
 
+BatchSampler.initialize(8)
+
 with LocalRunner() as runner:
     env = TfEnv(env_name="CartPole-v1")
 

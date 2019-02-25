@@ -26,12 +26,17 @@ def dd(g):
 
 
 class BatchSampler(BaseSampler):
-    def __init__(self, algo, n_envs=None):
+    def __init__(self, algo, n_envs):
         super(BatchSampler, self).__init__(algo)
-        self.n_envs = n_envs if n_envs else cpu_count()
+        assert n_envs == singleton_pool.n_parallel
+        self.n_envs = n_envs
+
+    @staticmethod
+    def initialize(n_envs):
+        singleton_pool.initialize(n_envs)
 
     def start_worker(self):
-        singleton_pool.initialize(self.n_envs)
+        assert singleton_pool.initialized
         if singleton_pool.n_parallel > 1:
             singleton_pool.run_each(worker_init_tf)
         # singleton_pool.run_each(dd)
