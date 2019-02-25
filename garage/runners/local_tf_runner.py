@@ -3,8 +3,10 @@ import time
 import tensorflow as tf
 
 from garage.misc.logger import logger
+from garage.algos import BatchPolopt
 from garage.tf.plotter import Plotter
 from garage.tf.samplers import BatchSampler
+from garage.tf.samplers import OffPolicyVectorizedSampler
 from garage.tf.samplers import OnPolicyVectorizedSampler
 
 
@@ -20,18 +22,24 @@ class LocalRunner:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.sess.__exit__(exc_type, exc_val, exc_tb)
 
-    def setup(self, algo, env, sampler_cls=None):
+    def setup(self, algo, env, sampler_cls=None, sampler_args=None):
         self.algo = algo
         self.env = env
         self.policy = self.algo.policy
 
+        if sampler_args is None:
+            sampler_args = {}
+
         if sampler_cls is None:
-            if self.policy.vectorized:
-                self.sampler = OnPolicyVectorizedSampler(algo)
+            if isinstance(algo, BatchPolopt):
+                if self.policy.vectorized:
+                    sampler_cls = OnPolicyVectorizedSampler
+                else:
+                    sampler_cls = BatchSampler
             else:
-                self.sampler = BatchSampler(algo)
-        else:
-            self.sampler = sampler_cls(algo)
+                sampler_cls = OffPolicyVectorizedSampler
+
+        self.sampler = sampler_cls(algo, **sampler_args)
 
         self.initialize_tf_vars()
         self.has_setup = True
@@ -55,9 +63,10 @@ class LocalRunner:
         if self.plot:
             self.plotter.close()
 
-    def obtain_samples(self, itr):
-        logger.log("Obtaining samples...")
-        return self.sampler.obtain_samples(itr)
+    def obtain_samples(self, itr, batch_size):
+        if self.n_epoch_cycles == 1:
+            logger.log("Obtaining samples...")
+        return self.sampler.obtain_samples(itr, batch_size)
 
     def save_snapshot(self, itr, paths=None):
         logger.log("Saving snapshot...")
@@ -77,28 +86,38 @@ class LocalRunner:
                 input("Plotting evaluation run: Press Enter to " "continue...")
 
     def train(self,
-              n_itr,
-              batch_size=4000,
+              n_epochs,
+              n_epoch_cycles=1,
+              batch_size=None,
               plot=False,
               store_paths=False,
               pause_for_plot=False):
 
         assert self.has_setup, "Use Runner.setup() to setup runner " \
                                "before training."
+        if batch_size is None:
+            if isinstance(self.sampler, OffPolicyVectorizedSampler):
+                batch_size = self.algo.max_path_length
+            else:
+                batch_size = 40 * self.algo.max_path_length
 
-        self.algo.batch_size = batch_size
+        self.n_epoch_cycles = n_epoch_cycles
 
         self.plot = plot
         self.start_worker()
         self.start_time = time.time()
 
-        for itr in range(0, n_itr):
+        itr = 0
+        for epoch in range(n_epochs):
             self.itr_start_time = time.time()
-            with logger.prefix('itr #%d | ' % itr):
-                paths = self.obtain_samples(itr)
-                paths = self.sampler.process_samples(itr, paths)
-                self.algo.train_once(itr, paths)
-                self.save_snapshot(itr, paths if store_paths else None)
-                self.log_diagnostics(pause_for_plot)
+            paths = None
+            with logger.prefix('epoch #%d | ' % epoch):
+                for cycle in range(n_epoch_cycles):
+                    paths = self.obtain_samples(itr, batch_size)
+                    paths = self.sampler.process_samples(itr, paths)
+                    self.algo.train_once(itr, paths)
+                    itr += 1
+            self.save_snapshot(epoch, paths if store_paths else None)
+            self.log_diagnostics(pause_for_plot)
 
         self.shutdown_worker()

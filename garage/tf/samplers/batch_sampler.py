@@ -1,3 +1,5 @@
+from multiprocessing import cpu_count
+
 import numpy as np
 import tensorflow as tf
 
@@ -18,10 +20,21 @@ def worker_init_tf_vars(g):
     g.sess.run(tf.global_variables_initializer())
 
 
+def dd(g):
+    raise Exception(
+        [n.name for n in tf.get_default_graph().as_graph_def().node])
+
+
 class BatchSampler(BaseSampler):
+    def __init__(self, algo, n_envs=None):
+        super(BatchSampler, self).__init__(algo)
+        self.n_envs = n_envs if n_envs else cpu_count()
+
     def start_worker(self):
+        singleton_pool.initialize(self.n_envs)
         if singleton_pool.n_parallel > 1:
             singleton_pool.run_each(worker_init_tf)
+        # singleton_pool.run_each(dd)
         parallel_sampler.populate_task(self.algo.env, self.algo.policy)
         if singleton_pool.n_parallel > 1:
             singleton_pool.run_each(worker_init_tf_vars)
@@ -29,18 +42,21 @@ class BatchSampler(BaseSampler):
     def shutdown_worker(self):
         parallel_sampler.terminate_task(scope=self.algo.scope)
 
-    def obtain_samples(self, itr):
+    def obtain_samples(self, itr, batch_size=None):
+        if not batch_size:
+            batch_size = self.algo.max_path_length * self.n_envs
+
         cur_policy_params = self.algo.policy.get_param_values()
         paths = parallel_sampler.sample_paths(
             policy_params=cur_policy_params,
-            max_samples=self.algo.batch_size,
+            max_samples=batch_size,
             max_path_length=self.algo.max_path_length,
             scope=self.algo.scope,
         )
         if self.algo.whole_paths:
             return paths
         else:
-            paths_truncated = truncate_paths(paths, self.algo.batch_size)
+            paths_truncated = truncate_paths(paths, batch_size)
             return paths_truncated
 
     def process_samples(self, itr, paths):

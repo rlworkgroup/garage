@@ -119,7 +119,7 @@ class NPO(BatchPolopt):
         logger.record_tabular("{}/Entropy".format(self.policy.name),
                               np.mean(pol_ent))
 
-        num_traj = self.batch_size // self.max_path_length
+        num_traj = min(samples_data["actions"].shape[0], 100)
         actions = samples_data["actions"][:num_traj, ...]
         logger.record_histogram("{}/Actions".format(self.policy.name), actions)
 

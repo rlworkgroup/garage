@@ -78,6 +78,13 @@ class DDPG(OffPolicyRLAlgorithm):
         self.clip_pos_returns = clip_pos_returns
         self.clip_return = clip_return
         self.success_history = deque(maxlen=100)
+
+        self.episode_rewards = []
+        self.episode_policy_losses = []
+        self.episode_qf_losses = []
+        self.epoch_ys = []
+        self.epoch_qs = []
+
         super(DDPG, self).__init__(
             env=env,
             replay_buffer=replay_buffer,
@@ -170,94 +177,69 @@ class DDPG(OffPolicyRLAlgorithm):
             self.f_init_target = f_init_target
             self.f_update_target = f_update_target
 
-    @overrides
-    def train(self, sess=None):
-        created_session = True if (sess is None) else False
-        if sess is None:
-            sess = tf.Session()
-            sess.__enter__()
+    def train_once(self, itr, paths):
+        epoch = itr / self.n_epoch_cycles
 
-        sess.run(tf.global_variables_initializer())
-        self.start_worker(sess)
+        self.episode_rewards.extend(paths["undiscounted_returns"])
+        self.success_history.extend(paths["success_history"])
+        last_average_return = np.mean(self.episode_rewards)
+        self.log_diagnostics(paths)
+        for train_itr in range(self.n_train_steps):
+            if self.replay_buffer.n_transitions_stored >= self.min_buffer_size:  # noqa: E501
+                self.evaluate = True
+                qf_loss, y, q, policy_loss = self.optimize_policy(epoch, paths)
 
-        if self.use_target:
-            self.f_init_target()
+                self.episode_policy_losses.append(policy_loss)
+                self.episode_qf_losses.append(qf_loss)
+                self.epoch_ys.append(y)
+                self.epoch_qs.append(q)
 
-        episode_rewards = []
-        episode_policy_losses = []
-        episode_qf_losses = []
-        epoch_ys = []
-        epoch_qs = []
-        last_average_return = None
+        if itr % self.n_epoch_cycles == 0:
+            logger.log("Training finished")
+            logger.log("Saving snapshot #{}".format(epoch))
+            params = self.get_itr_snapshot(epoch, paths)
+            logger.save_itr_params(epoch, params)
+            logger.log("Saved")
+            if self.evaluate:
+                logger.record_tabular('Epoch', epoch)
+                logger.record_tabular('AverageReturn',
+                                      np.mean(self.episode_rewards))
+                logger.record_tabular('StdReturn',
+                                      np.std(self.episode_rewards))
+                logger.record_tabular('Policy/AveragePolicyLoss',
+                                      np.mean(self.episode_policy_losses))
+                logger.record_tabular('QFunction/AverageQFunctionLoss',
+                                      np.mean(self.episode_qf_losses))
+                logger.record_tabular('QFunction/AverageQ',
+                                      np.mean(self.epoch_qs))
+                logger.record_tabular('QFunction/MaxQ', np.max(self.epoch_qs))
+                logger.record_tabular('QFunction/AverageAbsQ',
+                                      np.mean(np.abs(self.epoch_qs)))
+                logger.record_tabular('QFunction/AverageY',
+                                      np.mean(self.epoch_ys))
+                logger.record_tabular('QFunction/MaxY', np.max(self.epoch_ys))
+                logger.record_tabular('QFunction/AverageAbsY',
+                                      np.mean(np.abs(self.epoch_ys)))
+                if self.input_include_goal:
+                    logger.record_tabular('AverageSuccessRate',
+                                          np.mean(self.success_history))
 
-        for epoch in range(self.n_epochs):
+            if not self.smooth_return:
+                self.episode_rewards = []
+                self.episode_policy_losses = []
+                self.episode_qf_losses = []
+                self.epoch_ys = []
+                self.epoch_qs = []
+
+            logger.dump_tabular(with_prefix=False)
+            if self.plot:
+                self.plotter.update_plot(self.policy, self.max_path_length)
+                if self.pause_for_plot:
+                    input("Plotting evaluation run: Press Enter to "
+                          "continue...")
+
             self.success_history.clear()
-            with logger.prefix('epoch #%d | ' % epoch):
-                for epoch_cycle in range(self.n_epoch_cycles):
-                    paths = self.obtain_samples(epoch)
-                    samples_data = self.process_samples(epoch, paths)
-                    episode_rewards.extend(
-                        samples_data["undiscounted_returns"])
-                    self.success_history.extend(
-                        samples_data["success_history"])
-                    self.log_diagnostics(paths)
-                    for train_itr in range(self.n_train_steps):
-                        if self.replay_buffer.n_transitions_stored >= self.min_buffer_size:  # noqa: E501
-                            self.evaluate = True
-                            qf_loss, y, q, policy_loss = self.optimize_policy(
-                                epoch, samples_data)
 
-                            episode_policy_losses.append(policy_loss)
-                            episode_qf_losses.append(qf_loss)
-                            epoch_ys.append(y)
-                            epoch_qs.append(q)
-
-                logger.log("Training finished")
-                logger.log("Saving snapshot #{}".format(epoch))
-                params = self.get_itr_snapshot(epoch, samples_data)
-                logger.save_itr_params(epoch, params)
-                logger.log("Saved")
-                if self.evaluate:
-                    logger.record_tabular('Epoch', epoch)
-                    logger.record_tabular('AverageReturn',
-                                          np.mean(episode_rewards))
-                    logger.record_tabular('StdReturn', np.std(episode_rewards))
-                    logger.record_tabular('Policy/AveragePolicyLoss',
-                                          np.mean(episode_policy_losses))
-                    logger.record_tabular('QFunction/AverageQFunctionLoss',
-                                          np.mean(episode_qf_losses))
-                    logger.record_tabular('QFunction/AverageQ',
-                                          np.mean(epoch_qs))
-                    logger.record_tabular('QFunction/MaxQ', np.max(epoch_qs))
-                    logger.record_tabular('QFunction/AverageAbsQ',
-                                          np.mean(np.abs(epoch_qs)))
-                    logger.record_tabular('QFunction/AverageY',
-                                          np.mean(epoch_ys))
-                    logger.record_tabular('QFunction/MaxY', np.max(epoch_ys))
-                    logger.record_tabular('QFunction/AverageAbsY',
-                                          np.mean(np.abs(epoch_ys)))
-                    if self.input_include_goal:
-                        logger.record_tabular('AverageSuccessRate',
-                                              np.mean(self.success_history))
-                    last_average_return = np.mean(episode_rewards)
-
-                if not self.smooth_return:
-                    episode_rewards = []
-                    episode_policy_losses = []
-                    episode_qf_losses = []
-                    epoch_ys = []
-                    epoch_qs = []
-
-                logger.dump_tabular(with_prefix=False)
-                if self.plot:
-                    self.plotter.update_plot(self.policy, self.max_path_length)
-                    if self.pause_for_plot:
-                        input("Plotting evaluation run: Press Enter to "
-                              "continue...")
-
-        self.shutdown_worker()
-        if created_session:
-            sess.close()
         return last_average_return
 
     @overrides
@@ -294,8 +276,8 @@ class DDPG(OffPolicyRLAlgorithm):
         target_qvals = self.target_qf_f_prob_online(next_inputs,
                                                     target_actions)
 
-        clip_range = (-self.clip_return, 0.
-                      if self.clip_pos_returns else self.clip_return)
+        clip_range = (-self.clip_return,
+                      0. if self.clip_pos_returns else self.clip_return)
         ys = np.clip(
             rewards + (1.0 - terminals) * self.discount * target_qvals,
             clip_range[0], clip_range[1])

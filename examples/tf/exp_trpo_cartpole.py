@@ -14,6 +14,7 @@ from garage.tf.algos import TRPO
 from garage.tf.envs import TfEnv
 from garage.tf.policies import CategoricalMLPPolicy
 from garage.tf.samplers import OnPolicyVectorizedSampler
+from garage.tf.samplers import BatchSampler
 
 with LocalRunner() as runner:
     env = TfEnv(env_name="CartPole-v1")
@@ -23,14 +24,23 @@ with LocalRunner() as runner:
 
     baseline = LinearFeatureBaseline(env_spec=env.spec)
 
+    batch_size = 4000
+    max_path_length = 500
+    n_envs = batch_size // max_path_length
+
     algo = TRPO(
         env=env,
         policy=policy,
         baseline=baseline,
-        max_path_length=500,
+        max_path_length=max_path_length,
         discount=0.99,
         max_kl_step=0.01)
 
-    runner.setup(algo=algo, env=env, sampler_cls=OnPolicyVectorizedSampler)
+    runner.setup(
+        algo=algo,
+        env=env,
+        #sampler_cls=OnPolicyVectorizedSampler,
+        sampler_cls=BatchSampler,
+        sampler_args={'n_envs': n_envs})
 
-    runner.train(n_itr=100, batch_size=4000, plot=False)
+    runner.train(n_epochs=100, batch_size=4000, plot=False)
