@@ -14,17 +14,14 @@ required = [
     # command again and the install succeeds because absl-py has been
     # installed. This is stupid, but harmless.
     'dm_control @ https://api.github.com/repos/deepmind/dm_control/tarball/92f9913013face0468442cd0964d5973ea2089ea',  # noqa: E501
-    'flask',
     'gym[all]==0.10.11',
     'hyperopt',
-    'ipywidgets',
     'jsonmerge',
     'joblib<0.13,>=0.12',
     'matplotlib',
     'mujoco-py<1.50.2,>=1.50.1',
     'numpy==1.14.5',
     'pandas',
-    'plotly @ https://api.github.com/repos/plotly/plotly.py/tarball/2594076e29584ede2d09f2aa40a8a195b3f3fc66',  # noqa: E501
     'polling',
     'protobuf',
     'psutil',
@@ -35,7 +32,7 @@ required = [
     'tensorboard',
     'tensorflow<1.13,>=1.12.0',
     'tensorflow-probability'
-]  # noqa: E501
+]
 
 # Dependencies for optional features
 extras = {}
