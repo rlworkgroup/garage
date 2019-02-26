@@ -1,5 +1,5 @@
 """
-QfDerived policy.
+Discrete QfDerived policy.
 
 This policy chooses the action that yields to the largest q-value.
 """
