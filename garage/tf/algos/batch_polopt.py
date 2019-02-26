@@ -56,7 +56,7 @@ class BatchPolopt(RLAlgorithm):
         self.init_opt()
 
     def initialize(self, sess=None):
-        self.sess = tf.Session() if sess is None else sess
+        self.sess = sess or tf.Session()
 
     def train_once(self, itr, paths):
         self.log_diagnostics(paths)

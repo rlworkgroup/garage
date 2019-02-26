@@ -51,7 +51,7 @@ class LocalRunner:
             sess: A optional tensorflow session.
                   A new session will be created immediately if not provided.
         """
-        self.sess = sess if sess else tf.Session()
+        self.sess = sess or tf.Session()
         self.has_setup = False
 
     def __enter__(self):

@@ -2,7 +2,7 @@
 import gym
 
 from garage.baselines import LinearFeatureBaseline
-from garage.runners import LocalRunner
+from garage.experiment import LocalRunner
 from garage.tf.algos import TRPO
 from garage.tf.envs import TfEnv
 from garage.tf.policies import GaussianMLPPolicy

@@ -11,7 +11,7 @@ Results:
     RiseTime: itr 13
 """
 from garage.baselines import LinearFeatureBaseline
-from garage.runners import LocalRunner
+from garage.experiment import LocalRunner
 from garage.tf.algos import TRPO
 import garage.tf.core.layers as L
 from garage.tf.envs import TfEnv

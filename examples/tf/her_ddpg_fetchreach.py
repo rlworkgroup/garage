@@ -13,7 +13,7 @@ import tensorflow as tf
 
 from garage.exploration_strategies import OUStrategy
 from garage.replay_buffer import HerReplayBuffer
-from garage.runners import LocalRunner
+from garage.experiment import LocalRunner
 from garage.tf.algos import DDPG
 from garage.tf.envs import TfEnv
 from garage.tf.policies import ContinuousMLPPolicy

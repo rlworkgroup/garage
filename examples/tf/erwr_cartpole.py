@@ -9,7 +9,7 @@ Results:
     RiseTime: itr 34
 """
 from garage.baselines import LinearFeatureBaseline
-from garage.runners import LocalRunner
+from garage.experiment import LocalRunner
 from garage.tf.algos import ERWR
 from garage.tf.envs import TfEnv
 from garage.tf.policies import CategoricalMLPPolicy

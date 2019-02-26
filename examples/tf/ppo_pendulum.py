@@ -12,7 +12,7 @@ Results:
 import gym
 
 from garage.envs import normalize
-from garage.runners import LocalRunner
+from garage.experiment import LocalRunner
 from garage.tf.algos import PPO
 from garage.tf.baselines import GaussianMLPBaseline
 from garage.tf.envs import TfEnv

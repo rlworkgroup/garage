@@ -28,7 +28,7 @@ import tensorflow as tf
 from garage.envs import normalize
 from garage.misc import ext
 from garage.misc import logger as garage_logger
-from garage.runners import LocalRunner
+from garage.experiment import LocalRunner
 from garage.tf.algos import PPO
 from garage.tf.baselines import GaussianMLPBaseline
 from garage.tf.envs import TfEnv

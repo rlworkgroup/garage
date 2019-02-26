@@ -7,7 +7,7 @@ import tensorflow as tf
 
 from garage.envs import normalize
 import garage.misc.logger as logger
-from garage.runners import LocalRunner
+from garage.experiment import LocalRunner
 from garage.tf.algos import NPO
 from garage.tf.baselines import GaussianMLPBaseline
 from garage.tf.envs import TfEnv
@@ -38,8 +38,7 @@ class TestNPO(TfGraphTestCase):
                 max_path_length=100,
                 discount=0.99,
                 gae_lambda=0.98,
-                policy_ent_coeff=0.0,
-                plot=False,
+                policy_ent_coeff=0.0
             )
             runner.setup(algo, env)
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)

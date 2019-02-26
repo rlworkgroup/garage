@@ -7,7 +7,7 @@ from nose2 import tools
 
 from garage.baselines import LinearFeatureBaseline
 from garage.envs import normalize
-from garage.runners import LocalRunner
+from garage.experiment import LocalRunner
 from garage.tf.algos import TRPO
 from garage.tf.envs import TfEnv
 from garage.tf.optimizers import ConjugateGradientOptimizer

@@ -31,7 +31,6 @@ class OffPolicyVectorizedSampler(BatchSampler):
         """
         if n_envs is None:
             n_envs = int(algo.rollout_batch_size)
-            n_envs = max(1, min(n_envs, 100))
         super(OffPolicyVectorizedSampler, self).__init__(algo, n_envs)
         self.n_envs = n_envs
 
