@@ -18,11 +18,6 @@ def worker_init_tf_vars(g):
     g.sess.run(tf.global_variables_initializer())
 
 
-def dd(g):
-    raise Exception(
-        [n.name for n in tf.get_default_graph().as_graph_def().node])
-
-
 class BatchSampler(BaseSampler):
     def __init__(self, algo, n_envs):
         super(BatchSampler, self).__init__(algo)
@@ -37,7 +32,6 @@ class BatchSampler(BaseSampler):
         assert singleton_pool.initialized
         if singleton_pool.n_parallel > 1:
             singleton_pool.run_each(worker_init_tf)
-        # singleton_pool.run_each(dd)
         parallel_sampler.populate_task(self.algo.env, self.algo.policy)
         if singleton_pool.n_parallel > 1:
             singleton_pool.run_each(worker_init_tf_vars)
