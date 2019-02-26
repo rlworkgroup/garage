@@ -17,6 +17,7 @@ from garage.exploration_strategies import OUStrategy
 from garage.misc import ext
 from garage.misc import logger as garage_logger
 from garage.replay_buffer import HerReplayBuffer
+from garage.runners import LocalRunner
 from garage.tf.algos import DDPG
 from garage.tf.envs import TfEnv
 from garage.tf.policies import ContinuousMLPPolicy
@@ -110,66 +111,70 @@ def run_garage(env, seed, log_dir):
     ext.set_seed(seed)
 
     with tf.Graph().as_default():
-        env = TfEnv(env)
+        with LocalRunner() as runner:
+            env = TfEnv(env)
 
-        action_noise = OUStrategy(env.spec, sigma=params["sigma"])
+            action_noise = OUStrategy(env.spec, sigma=params["sigma"])
 
-        policy = ContinuousMLPPolicy(
-            env_spec=env.spec,
-            name="Policy",
-            hidden_sizes=params["policy_hidden_sizes"],
-            hidden_nonlinearity=tf.nn.relu,
-            output_nonlinearity=tf.nn.tanh,
-            input_include_goal=True,
-        )
+            policy = ContinuousMLPPolicy(
+                env_spec=env.spec,
+                name="Policy",
+                hidden_sizes=params["policy_hidden_sizes"],
+                hidden_nonlinearity=tf.nn.relu,
+                output_nonlinearity=tf.nn.tanh,
+                input_include_goal=True,
+            )
 
-        qf = ContinuousMLPQFunction(
-            env_spec=env.spec,
-            name="QFunction",
-            hidden_sizes=params["qf_hidden_sizes"],
-            hidden_nonlinearity=tf.nn.relu,
-            input_include_goal=True,
-        )
+            qf = ContinuousMLPQFunction(
+                env_spec=env.spec,
+                name="QFunction",
+                hidden_sizes=params["qf_hidden_sizes"],
+                hidden_nonlinearity=tf.nn.relu,
+                input_include_goal=True,
+            )
 
-        replay_buffer = HerReplayBuffer(
-            env_spec=env.spec,
-            size_in_transitions=params["replay_buffer_size"],
-            time_horizon=params["n_rollout_steps"],
-            replay_k=0.4,
-            reward_fun=env.compute_reward,
-        )
+            replay_buffer = HerReplayBuffer(
+                env_spec=env.spec,
+                size_in_transitions=params["replay_buffer_size"],
+                time_horizon=params["n_rollout_steps"],
+                replay_k=0.4,
+                reward_fun=env.compute_reward,
+            )
 
-        algo = DDPG(
-            env,
-            policy=policy,
-            qf=qf,
-            replay_buffer=replay_buffer,
-            policy_lr=params["policy_lr"],
-            qf_lr=params["qf_lr"],
-            plot=False,
-            target_update_tau=params["tau"],
-            n_epochs=params["n_epochs"],
-            n_epoch_cycles=params["n_epoch_cycles"],
-            max_path_length=params["n_rollout_steps"],
-            n_train_steps=params["n_train_steps"],
-            discount=params["discount"],
-            exploration_strategy=action_noise,
-            policy_optimizer=tf.train.AdamOptimizer,
-            qf_optimizer=tf.train.AdamOptimizer,
-            buffer_batch_size=256,
-            input_include_goal=True,
-        )
+            algo = DDPG(
+                env,
+                policy=policy,
+                qf=qf,
+                replay_buffer=replay_buffer,
+                policy_lr=params["policy_lr"],
+                qf_lr=params["qf_lr"],
+                plot=False,
+                target_update_tau=params["tau"],
+                n_epochs=params["n_epochs"],
+                n_epoch_cycles=params["n_epoch_cycles"],
+                max_path_length=params["n_rollout_steps"],
+                n_train_steps=params["n_train_steps"],
+                discount=params["discount"],
+                exploration_strategy=action_noise,
+                policy_optimizer=tf.train.AdamOptimizer,
+                qf_optimizer=tf.train.AdamOptimizer,
+                buffer_batch_size=256,
+                input_include_goal=True,
+            )
 
-        # Set up logger since we are not using run_experiment
-        tabular_log_file = osp.join(log_dir, "progress.csv")
-        garage_logger.add_tabular_output(tabular_log_file)
-        garage_logger.set_tensorboard_dir(log_dir)
+            # Set up logger since we are not using run_experiment
+            tabular_log_file = osp.join(log_dir, "progress.csv")
+            garage_logger.add_tabular_output(tabular_log_file)
+            garage_logger.set_tensorboard_dir(log_dir)
 
-        algo.train()
+            runner.setup(algo, env)
+            runner.train(
+                n_epochs=params['n_epochs'],
+                n_epoch_cycles=params['n_epoch_cycles'])
 
-        garage_logger.remove_tabular_output(tabular_log_file)
+            garage_logger.remove_tabular_output(tabular_log_file)
 
-        return tabular_log_file
+            return tabular_log_file
 
 
 def run_baselines(env_id, seed, log_dir):
