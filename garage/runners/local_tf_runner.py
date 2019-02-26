@@ -1,3 +1,8 @@
+"""
+The Local Runner for tensorflow algorithms.
+
+
+"""
 import time
 
 import tensorflow as tf
