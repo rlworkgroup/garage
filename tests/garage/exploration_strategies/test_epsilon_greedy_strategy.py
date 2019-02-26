@@ -22,54 +22,46 @@ class SimplePolicy:
 
 
 class TestEpsilonGreedyStrategy(unittest.TestCase):
-    def test_epsilon_greedy_strategy(self):
-        env = DummyDiscreteEnv()
-        policy = SimplePolicy(env_spec=env)
-
-        # decay from 1.0 to 0.02 within 100 * 0.1 = 10 steps
-        epsilon_greedy_strategy = EpsilonGreedyStrategy(
-            env_spec=env,
+    def setUp(self):
+        super().setUp()
+        self.env = DummyDiscreteEnv()
+        self.policy = SimplePolicy(env_spec=self.env)
+        self.epsilon_greedy_strategy = EpsilonGreedyStrategy(
+            env_spec=self.env,
             total_timesteps=100,
             max_epsilon=1.0,
             min_epsilon=0.02,
             decay_ratio=0.1)
 
-        env.reset()
-        obs, _, _, _ = env.step(1)
+        self.env.reset()
 
-        action = epsilon_greedy_strategy.get_action(0, obs, policy)
-        assert env.action_space.contains(action)
+    def test_epsilon_greedy_strategy(self):
+        obs, _, _, _ = self.env.step(1)
+
+        action = self.epsilon_greedy_strategy.get_action(0, obs, self.policy)
+        assert self.env.action_space.contains(action)
 
         # epsilon decay by 1 step, new epsilon = 1 - 0.98 = 0.902
         random_rate = np.random.random(
-            100000) < epsilon_greedy_strategy._epsilon
+            100000) < self.epsilon_greedy_strategy._epsilon
         assert np.isclose([0.902], [sum(random_rate) / 100000], atol=0.01)
 
-        actions = epsilon_greedy_strategy.get_actions(0, [obs] * 5, policy)
+        actions = self.epsilon_greedy_strategy.get_actions(
+            0, [obs] * 5, self.policy)
 
         # epsilon decay by 6 steps in total, new epsilon = 1 - 6 * 0.98 = 0.412
         random_rate = np.random.random(
-            100000) < epsilon_greedy_strategy._epsilon
+            100000) < self.epsilon_greedy_strategy._epsilon
         assert np.isclose([0.412], [sum(random_rate) / 100000], atol=0.01)
 
         for action in actions:
-            assert env.action_space.contains(action)
+            assert self.env.action_space.contains(action)
 
-    def test_epsilon_greedy_strategy_pickle(self):
-        env = DummyDiscreteEnv()
-        policy = SimplePolicy(env_spec=env)
-        epsilon_greedy_strategy = EpsilonGreedyStrategy(
-            env_spec=env,
-            total_timesteps=100,
-            max_epsilon=1.0,
-            min_epsilon=0.02,
-            decay_ratio=0.1)
-
-        env.reset()
-        obs, _, _, _ = env.step(1)
+    def test_epsilon_greedy_strategy_is_pickleable(self):
+        obs, _, _, _ = self.env.step(1)
         for _ in range(5):
-            epsilon_greedy_strategy.get_action(0, obs, policy)
+            self.epsilon_greedy_strategy.get_action(0, obs, self.policy)
 
-        h_data = pickle.dumps(epsilon_greedy_strategy)
+        h_data = pickle.dumps(self.epsilon_greedy_strategy)
         strategy = pickle.loads(h_data)
-        assert strategy._epsilon == epsilon_greedy_strategy._epsilon
+        assert strategy._epsilon == self.epsilon_greedy_strategy._epsilon

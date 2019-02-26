@@ -1,8 +1,4 @@
-"""
-This script creates a unittest that tests Gaussian policies in
-garage.tf.policies.
-"""
-import numpy as np
+"""This script creates a unittest that tests qf-derived policy."""
 import tensorflow as tf
 
 from garage.tf.envs import TfEnv
@@ -26,16 +22,19 @@ class SimpleQFunction:
 
 
 class TestQfDerivedPolicy(TfGraphTestCase):
-    def test_discrete_qf_derived_policy(self):
-        env = TfEnv(DummyDiscreteEnv())
-        qf = SimpleQFunction(env.spec)
-        policy = DiscreteQfDerivedPolicy(env_spec=env, qf=qf)
-
+    def setUp(self):
+        super().setUp()
+        self.env = TfEnv(DummyDiscreteEnv())
+        self.qf = SimpleQFunction(self.env.spec)
+        self.policy = DiscreteQfDerivedPolicy(
+            env_spec=self.env.spec, qf=self.qf)
         self.sess.run(tf.global_variables_initializer())
+        self.env.reset()
 
-        env.reset()
-        obs, _, _, _ = env.step(1)
-        action = policy.get_action(obs)
-        assert action in np.arange(env.action_space.n)
-        actions = policy.get_actions([obs])
-        assert actions in np.arange(env.action_space.n)
+    def test_discrete_qf_derived_policy(self):
+        obs, _, _, _ = self.env.step(1)
+        action = self.policy.get_action(obs)
+        assert self.env.action_space.contains(action)
+        actions = self.policy.get_actions([obs])
+        for action in actions:
+            assert self.env.action_space.contains(action)
