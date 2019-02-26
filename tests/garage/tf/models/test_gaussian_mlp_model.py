@@ -60,7 +60,6 @@ class TestGaussianMLPModel(TfGraphTestCase):
         assert mean_output_weights.shape[1] == 2
         assert std_output_weights.shape[1] == 2
 
-    ############
     def test_gaussian_mlp_model2_with_std_share_network(self):
         model = GaussianMLPModel2(output_dim=2, std_share_network=True)
         outputs = model.build(self.input_var)

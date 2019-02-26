@@ -177,7 +177,7 @@ class TestGaussianMLPPolicyWithModel(TfGraphTestCase):
             self.policy4.likelihood_ratio_sym(
                 obs_ph2, self.policy3.model.networks['default'].dist)
 
-    def test_guassian_mlp_policy_pickle(self):
+    def test_guassian_mlp_policy_is_pickleable(self):
         with tf.Session(graph=tf.Graph()) as sess:
             policy = GaussianMLPPolicyWithModel(env_spec=self.box_env)
             # model is built in GaussianMLPPolicyWithModel.__init__
@@ -202,7 +202,7 @@ class TestGaussianMLPPolicyWithModel(TfGraphTestCase):
 
         assert np.array_equal(outputs, outputs2)
 
-    def test_guassian_mlp_policy2_pickle(self):
+    def test_guassian_mlp_policy2_is_pickleable(self):
         with tf.Session(graph=tf.Graph()) as sess:
             policy = GaussianMLPPolicyWithModel2(env_spec=self.box_env)
             # model is built in GaussianMLPPolicyWithModel2.__init__

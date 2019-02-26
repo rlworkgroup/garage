@@ -3,7 +3,6 @@ from akro.tf import Box
 import numpy as np
 import tensorflow as tf
 
-from garage.tf.misc import tensor_utils
 from garage.tf.models.gaussian_mlp_model import GaussianMLPModel
 from garage.tf.policies.base2 import StochasticPolicy2
 
@@ -90,16 +89,20 @@ class GaussianMLPPolicyWithModel(StochasticPolicy2):
         _, mean_var, log_std_var, _, _ = self.model.build(obs_var, name=name)
         return dict(mean=mean_var, log_std=log_std_var)
 
+    def _f_dist(self, observations):
+        mean, std = tf.get_default_session().run(
+            [
+                self.model.networks['default'].mean,
+                self.model.networks['default'].std
+            ],
+            feed_dict={self.model.networks['default'].input: observations})
+
+        return mean, std
+
     def get_action(self, observation):
         """Get action from the policy."""
         flat_obs = self.observation_space.flatten(observation)
-        _f_dist = tensor_utils.compile_function(
-            inputs=[self.model.networks['default'].input],
-            outputs=[
-                self.model.networks['default'].mean,
-                self.model.networks['default'].std
-            ])
-        mean, log_std = [x[0] for x in _f_dist([flat_obs])]
+        mean, log_std = self._f_dist([flat_obs])
         rnd = np.random.normal(size=mean.shape)
         action = rnd * np.exp(log_std) + mean
         return action, dict(mean=mean, log_std=log_std)
@@ -107,13 +110,7 @@ class GaussianMLPPolicyWithModel(StochasticPolicy2):
     def get_actions(self, observations):
         """Get actions from the policy."""
         flat_obs = self.observation_space.flatten_n(observations)
-        _f_dist = tensor_utils.compile_function(
-            inputs=[self.model.networks['default'].input],
-            outputs=[
-                self.model.networks['default'].mean,
-                self.model.networks['default'].std
-            ])
-        means, log_stds = _f_dist(flat_obs)
+        means, log_stds = self._f_dist(flat_obs)
         rnd = np.random.normal(size=means.shape)
         actions = rnd * np.exp(log_stds) + means
         return actions, dict(mean=means, log_std=log_stds)

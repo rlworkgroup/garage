@@ -153,7 +153,7 @@ class TestModel(TfGraphTestCase):
 
         assert np.array_equal(out, model_out)
 
-    def test_model_pickle(self):
+    def test_model_is_pickleable(self):
         data = np.ones((3, 5))
         model = SimpleModel(output_dim=2)
 
@@ -182,7 +182,7 @@ class TestModel(TfGraphTestCase):
 
         assert np.array_equal(model.name, model_pickled.name)
 
-    def test_complicated_model_pickle(self):
+    def test_complicated_model_is_pickleable(self):
         data = np.ones((3, 5))
 
         model = ComplicatedModel(output_dim=2)
@@ -206,7 +206,7 @@ class TestModel(TfGraphTestCase):
 
         assert np.array_equal(results, results2)
 
-    def test_complicated_model2_pickle(self):
+    def test_complicated_model2_is_pickleable(self):
         data = np.ones((3, 5))
 
         parent_model = SimpleModel(output_dim=4)
@@ -231,7 +231,7 @@ class TestModel(TfGraphTestCase):
 
         assert np.array_equal(results, results2)
 
-    def test_simple_model_pickle_same_parameters(self):
+    def test_simple_model_is_pickleable_with_same_parameters(self):
         model = SimpleModel(output_dim=2)
 
         with tf.Session(graph=tf.Graph()):
@@ -253,7 +253,7 @@ class TestModel(TfGraphTestCase):
 
             np.testing.assert_equal(all_one, model_pickled.parameters)
 
-    def test_simple_model_pickle_missing_parameters(self):
+    def test_simple_model_is_pickleable_with_missing_parameters(self):
         model = SimpleModel(output_dim=2)
 
         with tf.Session(graph=tf.Graph()):
