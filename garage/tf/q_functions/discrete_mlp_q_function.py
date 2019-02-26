@@ -8,7 +8,7 @@ from garage.tf.q_functions import QFunction
 
 class DiscreteMLPQFunction(QFunction):
     """
-    Discrete MLP Function.
+    Discrete MLP Q Function.
 
     This class implements a Q-value network. It predicts Q-value based on the
     input state and action. It uses an MLP to fit the function Q(s, a).
@@ -40,7 +40,8 @@ class DiscreteMLPQFunction(QFunction):
         obs_dim = self._env_spec.observation_space.shape
 
         with tf.name_scope(name):
-            self.obs_ph = tf.placeholder(tf.float32, (None, ) + obs_dim, name="obs")
+            self.obs_ph = tf.placeholder(
+                tf.float32, (None, ) + obs_dim, name="obs")
             self.q_val = self.build_net(self.obs_ph, name)
 
     @overrides

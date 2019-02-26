@@ -14,7 +14,7 @@ class EpsilonGreedyStrategy(ExplorationStrategy):
     ϵ-greedy exploration strategy.
 
     Select action based on the value of ϵ. ϵ will decrease from
-    max_epsilon to min_epsilon within decay_ratio * total_step.
+    max_epsilon to min_epsilon within decay_ratio * total_timesteps.
 
     At state s, with probability
     1 − ϵ: select action = argmax Q(s, a)
@@ -22,7 +22,8 @@ class EpsilonGreedyStrategy(ExplorationStrategy):
 
     Args:
         env_spec: Environment specification
-        total_step: Total steps in the training, max_path_length * n_epochs.
+        total_timesteps: Total steps in the training, equivalent to
+            max_path_length * n_epochs.
         max_epsilon: The maximum(starting) value of epsilon.
         min_epsilon: The minimum(terminal) value of epsilon.
         decay_ratio: Fraction of total steps for epsilon decay.
@@ -30,14 +31,14 @@ class EpsilonGreedyStrategy(ExplorationStrategy):
 
     def __init__(self,
                  env_spec,
-                 total_step,
+                 total_timesteps,
                  max_epsilon=1.0,
                  min_epsilon=0.02,
                  decay_ratio=0.1):
         self._env_spec = env_spec
         self._max_epsilon = max_epsilon
         self._min_epsilon = min_epsilon
-        self._decay_period = int(total_step * decay_ratio)
+        self._decay_period = int(total_timesteps * decay_ratio)
         self._action_space = env_spec.action_space
         self._epsilon = self._max_epsilon
 
@@ -55,12 +56,8 @@ class EpsilonGreedyStrategy(ExplorationStrategy):
             opt_action: optimal action from this policy.
 
         """
-        if self._epsilon > self._min_epsilon:
-            self._epsilon -= (
-                self._max_epsilon - self._min_epsilon) / self._decay_period
-
         opt_action = policy.get_action(observation)
-
+        self._decay()
         if np.random.random() < self._epsilon:
             opt_action = self._action_space.sample()
 
@@ -82,10 +79,13 @@ class EpsilonGreedyStrategy(ExplorationStrategy):
         """
         opt_actions = policy.get_actions(observations)
         for itr in range(len(opt_actions)):
-            if self._epsilon > self._min_epsilon:
-                self._epsilon -= (
-                    self._max_epsilon - self._min_epsilon) / self._decay_period
+            self._decay()
             if np.random.random() < self._epsilon:
                 opt_actions[itr] = self._action_space.sample()
 
         return opt_actions
+
+    def _decay(self):
+        if self._epsilon > self._min_epsilon:
+            self._epsilon -= (
+                self._max_epsilon - self._min_epsilon) / self._decay_period
