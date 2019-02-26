@@ -77,9 +77,8 @@ class LocalRunner:
         logger.log("Saved")
 
     def log_diagnostics(self, pause_for_plot=False):
-        logger.record_tabular('Time', time.time() - self.start_time)
-        logger.record_tabular('ItrTime', time.time() - self.itr_start_time)
-        logger.dump_tabular(with_prefix=False)
+        logger.log('Time %.2f s' % (time.time() - self.start_time))
+        logger.log('EpochTime %.2f s' % (time.time() - self.itr_start_time))
         if self.plot:
             self.plotter.update_plot(self.policy, self.algo.max_path_length)
             if pause_for_plot:
@@ -118,8 +117,8 @@ class LocalRunner:
                     paths = self.sampler.process_samples(itr, paths)
                     last_return = self.algo.train_once(itr, paths)
                     itr += 1
-            self.save_snapshot(epoch, paths if store_paths else None)
-            self.log_diagnostics(pause_for_plot)
+                self.save_snapshot(epoch, paths if store_paths else None)
+                self.log_diagnostics(pause_for_plot)
 
         self.shutdown_worker()
         return last_return
