@@ -3,12 +3,12 @@ QfDerived policy.
 
 This policy chooses the action that yields to the largest q-value.
 """
+from akro.tf import Discrete
 import numpy as np
 import tensorflow as tf
 
 from garage.core import Serializable
 from garage.misc.overrides import overrides
-from garage.spaces import Discrete
 from garage.tf.policies import Policy
 
 
