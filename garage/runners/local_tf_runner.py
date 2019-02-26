@@ -108,6 +108,7 @@ class LocalRunner:
         self.start_time = time.time()
 
         itr = 0
+        last_return = None
         for epoch in range(n_epochs):
             self.itr_start_time = time.time()
             paths = None
@@ -115,9 +116,10 @@ class LocalRunner:
                 for cycle in range(n_epoch_cycles):
                     paths = self.obtain_samples(itr, batch_size)
                     paths = self.sampler.process_samples(itr, paths)
-                    self.algo.train_once(itr, paths)
+                    last_return = self.algo.train_once(itr, paths)
                     itr += 1
             self.save_snapshot(epoch, paths if store_paths else None)
             self.log_diagnostics(pause_for_plot)
 
         self.shutdown_worker()
+        return last_return
