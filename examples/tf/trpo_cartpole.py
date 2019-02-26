@@ -9,10 +9,10 @@ Results:
     RiseTime: itr 13
 """
 from garage.baselines import LinearFeatureBaseline
+from garage.runners import LocalRunner
 from garage.tf.algos import TRPO
 from garage.tf.envs import TfEnv
 from garage.tf.policies import CategoricalMLPPolicy
-from garage.runners import LocalRunner
 
 with LocalRunner() as runner:
     env = TfEnv(env_name="CartPole-v1")

@@ -3,10 +3,10 @@
 from garage.baselines import LinearFeatureBaseline
 from garage.envs import normalize
 from garage.envs.mujoco import SwimmerEnv
+from garage.runners import LocalRunner
 from garage.tf.algos import TRPO
 from garage.tf.envs import TfEnv
 from garage.tf.policies import GaussianMLPPolicy
-from garage.runners import LocalRunner
 
 with LocalRunner() as runner:
     env = TfEnv(

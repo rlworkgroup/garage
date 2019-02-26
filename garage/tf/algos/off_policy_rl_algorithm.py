@@ -4,7 +4,6 @@ This module implements a class for off-policy rl algorithms.
 Off-policy algorithms such as DQN, DDPG can inherit from it.
 """
 from garage.algos import RLAlgorithm
-from garage.tf.plotter import Plotter
 from garage.tf.samplers import BatchSampler
 from garage.tf.samplers import OffPolicyVectorizedSampler
 

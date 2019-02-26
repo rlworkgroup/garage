@@ -1,5 +1,3 @@
-from multiprocessing import cpu_count
-
 import numpy as np
 import tensorflow as tf
 
