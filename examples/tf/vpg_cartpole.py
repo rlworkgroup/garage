@@ -14,7 +14,6 @@ from garage.tf.algos import VPG
 from garage.tf.envs import TfEnv
 from garage.tf.policies import CategoricalMLPPolicy
 
-
 with LocalRunner() as runner:
     env = TfEnv(env_name='CartPole-v1')
 

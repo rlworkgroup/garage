@@ -9,7 +9,7 @@ from tests.fixtures import TfGraphTestCase
 class TestVPG(TfGraphTestCase):
     def test_vpg_cartpole(self):
         """Test VPG with CartPole-v1 environment."""
-        with LocalRunner() as runner:
+        with LocalRunner(self.sess) as runner:
             env = TfEnv(env_name="CartPole-v1")
 
             policy = CategoricalMLPPolicy(

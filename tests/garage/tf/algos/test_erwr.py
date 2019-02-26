@@ -9,7 +9,7 @@ from tests.fixtures import TfGraphTestCase
 class TestERWR(TfGraphTestCase):
     def test_erwr_cartpole(self):
         """Test ERWR with Cartpole-v1 environment."""
-        with LocalRunner() as runner:
+        with LocalRunner(self.sess) as runner:
             env = TfEnv(env_name="CartPole-v1")
 
             policy = CategoricalMLPPolicy(

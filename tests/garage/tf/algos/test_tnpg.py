@@ -12,7 +12,7 @@ from tests.fixtures import TfGraphTestCase
 class TestTNPG(TfGraphTestCase):
     def test_tnpg_inverted_pendulum(self):
         """Test TNPG with InvertedPendulum-v2 environment."""
-        with LocalRunner() as runner:
+        with LocalRunner(self.sess) as runner:
             env = TfEnv(normalize(gym.make("InvertedPendulum-v2")))
 
             policy = GaussianMLPPolicy(

@@ -18,7 +18,7 @@ from tests.fixtures import TfGraphTestCase
 class TestPPO2(TfGraphTestCase):
     def test_ppo_pendulum_with_model(self):
         """Test PPO with model, with Pendulum environment."""
-        with LocalRunner() as runner:
+        with LocalRunner(self.sess) as runner:
             logger.reset()
             env = TfEnv(normalize(gym.make("InvertedDoublePendulum-v2")))
             policy = GaussianMLPPolicyWithModel(

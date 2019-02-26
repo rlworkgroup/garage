@@ -61,7 +61,7 @@ class LocalRunner:
             This local runner.
 
         """
-        self.sess.__enter__()
+        self.sess.as_default().__enter__()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -168,6 +168,7 @@ class LocalRunner:
         """
         logger.log('Time %.2f s' % (time.time() - self.start_time))
         logger.log('EpochTime %.2f s' % (time.time() - self.itr_start_time))
+        logger.dump_tabular(with_prefix=False)
         if self.plot:
             self.plotter.update_plot(self.policy, self.algo.max_path_length)
             if pause_for_plot:

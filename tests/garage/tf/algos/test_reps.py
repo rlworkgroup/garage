@@ -16,7 +16,7 @@ from tests.fixtures import TfGraphTestCase
 class TestREPS(TfGraphTestCase):
     def test_reps_cartpole(self):
         """Test REPS with gym Cartpole environment."""
-        with LocalRunner() as runner:
+        with LocalRunner(self.sess) as runner:
             logger.reset()
             env = TfEnv(gym.make("CartPole-v0"))
 

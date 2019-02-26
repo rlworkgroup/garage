@@ -1,20 +1,14 @@
 #!/usr/bin/env python3
+import gym
 
 from garage.baselines import LinearFeatureBaseline
-from garage.envs import normalize
-from garage.envs.mujoco import SwimmerEnv
 from garage.runners import LocalRunner
 from garage.tf.algos import TRPO
 from garage.tf.envs import TfEnv
 from garage.tf.policies import GaussianMLPPolicy
 
 with LocalRunner() as runner:
-    env = TfEnv(
-        normalize(
-            SwimmerEnv(),
-            normalize_obs=True,
-            normalize_reward=True,
-        ))
+    env = TfEnv(gym.make('Swimmer-v2'))
 
     policy = GaussianMLPPolicy(env_spec=env.spec, hidden_sizes=(32, 32))
 

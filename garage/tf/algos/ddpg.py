@@ -231,7 +231,6 @@ class DDPG(OffPolicyRLAlgorithm):
                 self.epoch_ys = []
                 self.epoch_qs = []
 
-            logger.dump_tabular(with_prefix=False)
             if self.plot:
                 self.plotter.update_plot(self.policy, self.max_path_length)
                 if self.pause_for_plot:
