@@ -77,29 +77,32 @@ class GaussianMLPPolicyWithModel(StochasticPolicy2):
             std_output_nonlinearity=std_output_nonlinearity,
             std_parameterization=std_parameterization)
 
-        _, self._mean_var, self._log_std_var, _, self._dist = (
-            self.model.build(state_input))
-
-        self._f_dist = lambda x: tf.get_default_session().run(
-            [self._mean_var, self._log_std_var], feed_dict={state_input: x})
+        self.model.build(state_input)
 
     @property
     def vectorized(self):
         """Vectorized or not."""
         return True
 
-    def dist_info_sym(self,
-                      obs_var,
-                      state_info_vars=None,
-                      name='dist_info_sym'):
+    def dist_info_sym(self, obs_var, state_info_vars=None, name='default'):
         """Symbolic graph of the distribution."""
         _, mean_var, log_std_var, _, _ = self.model.build(obs_var, name=name)
         return dict(mean=mean_var, log_std=log_std_var)
 
+    def _f_dist(self, observations):
+        mean, std = tf.get_default_session().run(
+            [
+                self.model.networks['default'].mean,
+                self.model.networks['default'].std
+            ],
+            feed_dict={self.model.networks['default'].input: observations})
+
+        return mean, std
+
     def get_action(self, observation):
         """Get action from the policy."""
         flat_obs = self.observation_space.flatten(observation)
-        mean, log_std = [x[0] for x in self._f_dist([flat_obs])]
+        mean, log_std = self._f_dist([flat_obs])
         rnd = np.random.normal(size=mean.shape)
         action = rnd * np.exp(log_std) + mean
         return action, dict(mean=mean, log_std=log_std)
@@ -119,4 +122,4 @@ class GaussianMLPPolicyWithModel(StochasticPolicy2):
     @property
     def distribution(self):
         """Policy distribution."""
-        return self._dist
+        return self.model.networks['default'].dist

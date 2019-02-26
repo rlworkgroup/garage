@@ -177,7 +177,32 @@ class TestGaussianMLPPolicyWithModel(TfGraphTestCase):
             self.policy4.likelihood_ratio_sym(
                 obs_ph2, self.policy3.model.networks['default'].dist)
 
-    def test_guassian_mlp_policy_pickle(self):
+    def test_guassian_mlp_policy_is_pickleable(self):
+        with tf.Session(graph=tf.Graph()) as sess:
+            policy = GaussianMLPPolicyWithModel(env_spec=self.box_env)
+            # model is built in GaussianMLPPolicyWithModel.__init__
+            outputs = sess.run(
+                policy.model.networks['default'].sample,
+                feed_dict={policy.model.networks['default'].input: self.obs})
+            p = pickle.dumps(policy)
+
+        with tf.Session(graph=tf.Graph()) as sess:
+            policy_pickled = pickle.loads(p)
+            # After pickle, we need to build the model
+            # e.g. by policy.dist_info_sym
+            input_ph = self.box_env.observation_space.new_tensor_variable(
+                extra_dims=1, name='input_ph')
+            policy_pickled.dist_info_sym(input_ph)
+
+            outputs2 = sess.run(
+                policy_pickled.model.networks['default'].sample,
+                feed_dict={
+                    policy_pickled.model.networks['default'].input: self.obs
+                })
+
+        assert np.array_equal(outputs, outputs2)
+
+    def test_guassian_mlp_policy2_is_pickleable(self):
         with tf.Session(graph=tf.Graph()) as sess:
             policy = GaussianMLPPolicyWithModel2(env_spec=self.box_env)
             # model is built in GaussianMLPPolicyWithModel2.__init__
