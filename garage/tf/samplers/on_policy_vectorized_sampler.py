@@ -14,7 +14,7 @@ from garage.tf.samplers import BatchSampler
 
 class OnPolicyVectorizedSampler(BatchSampler):
     def __init__(self, algo, n_envs=cpu_count()):
-        super(OnPolicyVectorizedSampler, self).__init__(algo)
+        super(OnPolicyVectorizedSampler, self).__init__(algo, n_envs)
         self.n_envs = n_envs
 
     @overrides

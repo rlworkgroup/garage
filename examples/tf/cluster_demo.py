@@ -10,6 +10,7 @@ import sys
 
 from garage.baselines import LinearFeatureBaseline
 from garage.experiment import run_experiment
+from garage.runners import LocalRunner
 from garage.tf.algos import TRPO
 from garage.tf.envs import TfEnv
 from garage.tf.policies import CategoricalMLPPolicy
@@ -21,30 +22,34 @@ def run_task(v):
     run_experiment can easily execute variants of the experiment on different
     machines
     """
-    env = TfEnv(env_name="CartPole-v1")
+    with LocalRunner() as runner:
+        env = TfEnv(env_name="CartPole-v1")
 
-    policy = CategoricalMLPPolicy(
-        env_spec=env.spec,
-        # The neural network policy should have two hidden layers,
-        # each with 32 hidden units.
-        hidden_sizes=(32, 32))
+        policy = CategoricalMLPPolicy(
+            env_spec=env.spec,
+            # The neural network policy should have two hidden layers,
+            # each with 32 hidden units.
+            hidden_sizes=(32, 32))
 
-    baseline = LinearFeatureBaseline(env_spec=env.spec)
+        baseline = LinearFeatureBaseline(env_spec=env.spec)
 
-    algo = TRPO(
-        env=env,
-        policy=policy,
-        baseline=baseline,
-        batch_size=4000,
-        max_path_length=100,
-        n_itr=40,
-        discount=0.99,
-        step_size=v["step_size"],
-        # Uncomment both lines (this and the plot parameter below) to enable
-        # plotting
-        plot=True,
-    )
-    algo.train()
+        algo = TRPO(
+            env=env,
+            policy=policy,
+            baseline=baseline,
+            max_path_length=100,
+            discount=0.99,
+            step_size=v["step_size"],
+        )
+
+        runner.setup(algo=algo, env=env)
+
+        runner.train(
+            n_epochs=40,
+            batch_size=4000,
+            # Uncomment to enable plotting
+            # plot=True
+        )
 
 
 for step_size in [0.01, 0.05, 0.1]:

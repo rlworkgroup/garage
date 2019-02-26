@@ -3,7 +3,7 @@ import time
 import tensorflow as tf
 
 from garage.misc.logger import logger
-from garage.algos import BatchPolopt
+from garage.tf.algos import BatchPolopt
 from garage.tf.plotter import Plotter
 from garage.tf.samplers import BatchSampler
 from garage.tf.samplers import OffPolicyVectorizedSampler

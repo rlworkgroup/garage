@@ -12,22 +12,15 @@ Results:
 import gym
 import tensorflow as tf
 
-from garage.experiment import run_experiment
 from garage.exploration_strategies import OUStrategy
 from garage.replay_buffer import SimpleReplayBuffer
 from garage.tf.algos import DDPG
 from garage.tf.envs import TfEnv
 from garage.tf.policies import ContinuousMLPPolicy
 from garage.tf.q_functions import ContinuousMLPQFunction
+from garage.runners import LocalRunner
 
-
-def run_task(*_):
-    """
-    Wrap DDPG training task in the run_task function.
-
-    :param _:
-    :return:
-    """
+with LocalRunner() as runner:
     env = TfEnv(gym.make('InvertedDoublePendulum-v2'))
 
     action_noise = OUStrategy(env.spec, sigma=0.2)
@@ -53,10 +46,7 @@ def run_task(*_):
         qf_lr=1e-3,
         qf=qf,
         replay_buffer=replay_buffer,
-        plot=False,
         target_update_tau=1e-2,
-        n_epochs=500,
-        n_epoch_cycles=20,
         max_path_length=100,
         n_train_steps=50,
         discount=0.9,
@@ -65,13 +55,6 @@ def run_task(*_):
         policy_optimizer=tf.train.AdamOptimizer,
         qf_optimizer=tf.train.AdamOptimizer)
 
-    ddpg.train()
+    runner.setup(algo=ddpg, env=env)
 
-
-run_experiment(
-    run_task,
-    n_parallel=1,
-    snapshot_mode="last",
-    seed=1,
-    plot=False,
-)
+    runner.train(n_epochs=500, n_epoch_cycles=20)

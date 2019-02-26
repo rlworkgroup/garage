@@ -29,10 +29,10 @@ class OffPolicyVectorizedSampler(BatchSampler):
         :param algo: Algorithms.
         :param n_envs: Number of parallelized sampling envs.
         """
-        super(OffPolicyVectorizedSampler, self).__init__(algo)
         if n_envs is None:
-            n_envs = int(self.algo.rollout_batch_size)
+            n_envs = int(algo.rollout_batch_size)
             n_envs = max(1, min(n_envs, 100))
+        super(OffPolicyVectorizedSampler, self).__init__(algo, n_envs)
         self.n_envs = n_envs
 
     @overrides

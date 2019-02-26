@@ -13,10 +13,16 @@ from garage.runners.local_tf_runner import LocalRunner
 from garage.tf.algos import TRPO
 from garage.tf.envs import TfEnv
 from garage.tf.policies import CategoricalMLPPolicy
-from garage.tf.samplers import OnPolicyVectorizedSampler
 from garage.tf.samplers import BatchSampler
 
-BatchSampler.initialize(8)
+batch_size = 4000
+max_path_length = 500
+n_envs = batch_size // max_path_length
+
+# Use BatchSampler.initialize() to setup workers before TF initialization.
+# Note: Multiprocesses MUST be forked before TF initialization.
+# Otherwise it will hang, because TF is not fork-safe.
+BatchSampler.initialize(n_envs)
 
 with LocalRunner() as runner:
     env = TfEnv(env_name="CartPole-v1")
@@ -25,10 +31,6 @@ with LocalRunner() as runner:
         name="policy", env_spec=env.spec, hidden_sizes=(32, 32))
 
     baseline = LinearFeatureBaseline(env_spec=env.spec)
-
-    batch_size = 4000
-    max_path_length = 500
-    n_envs = batch_size // max_path_length
 
     algo = TRPO(
         env=env,
@@ -41,7 +43,6 @@ with LocalRunner() as runner:
     runner.setup(
         algo=algo,
         env=env,
-        #sampler_cls=OnPolicyVectorizedSampler,
         sampler_cls=BatchSampler,
         sampler_args={'n_envs': n_envs})
 
