@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -e
 
 ./cc-test-reporter before-build
 coverage run -m nose2 -c setup.cfg -E 'not cron_job and not huge and not flaky'
