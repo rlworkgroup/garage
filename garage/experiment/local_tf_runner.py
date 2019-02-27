@@ -8,8 +8,8 @@ import time
 
 import tensorflow as tf
 
-from garage.sampler.parallel_sampler import singleton_pool
 from garage.misc.logger import logger
+from garage.sampler.parallel_sampler import singleton_pool
 from garage.tf.algos import BatchPolopt
 from garage.tf.plotter import Plotter
 from garage.tf.samplers import BatchSampler
