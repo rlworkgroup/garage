@@ -23,13 +23,9 @@ class BatchSampler(BaseSampler):
         super(BatchSampler, self).__init__(algo)
         self.n_envs = n_envs
 
-    @staticmethod
-    def initialize(n_envs):
-        singleton_pool.initialize(n_envs)
-
     def start_worker(self):
-        assert self.n_envs == singleton_pool.n_parallel
-        assert singleton_pool.initialized
+        assert singleton_pool.initialized, \
+            "Use singleton_pool.initialize(n_parallel) to setup workers."
         if singleton_pool.n_parallel > 1:
             singleton_pool.run_each(worker_init_tf)
         parallel_sampler.populate_task(self.algo.env, self.algo.policy)

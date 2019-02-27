@@ -8,6 +8,7 @@ import time
 
 import tensorflow as tf
 
+from garage.sampler.parallel_sampler import singleton_pool
 from garage.misc.logger import logger
 from garage.tf.algos import BatchPolopt
 from garage.tf.plotter import Plotter
@@ -44,13 +45,28 @@ class LocalRunner:
 
     """
 
-    def __init__(self, sess=None):
+    def __init__(self, max_cpus=1, sess=None):
         """Create a new local runner.
 
         Args:
+            max_cpus: The maximum number of parallel sampler workers.
             sess: A optional tensorflow session.
                   A new session will be created immediately if not provided.
+
+        Note:
+            The local runner will set up a joblib task pool of size max_cpus
+            possibly later used by BatchSampler. If BatchSampler is not used,
+            the processes in the pool will remain dormant.
+
+            This setup is required to use tensorflow in a multiprocess
+            environment before a tensorflow session is created
+            because tensorflow is not fork-safe.
+
+            See https://github.com/tensorflow/tensorflow/issues/2448.
+
         """
+        if max_cpus > 1:
+            singleton_pool.initialize(max_cpus)
         self.sess = sess or tf.Session()
         self.has_setup = False
 
@@ -61,12 +77,14 @@ class LocalRunner:
             This local runner.
 
         """
-        self.sess.as_default().__enter__()
+        if tf.get_default_session() is not self.sess:
+            self.sess.__enter__()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Leave session."""
-        self.sess.__exit__(exc_type, exc_val, exc_tb)
+        if tf.get_default_session() is self.sess:
+            self.sess.__exit__(exc_type, exc_val, exc_tb)
 
     def setup(self, algo, env, sampler_cls=None, sampler_args=None):
         """Set up runner for algorithm and environment.

@@ -19,12 +19,7 @@ batch_size = 4000
 max_path_length = 500
 n_envs = batch_size // max_path_length
 
-# Use BatchSampler.initialize() to setup workers before TF initialization.
-# Note: Multiprocesses MUST be forked before TF initialization.
-# Otherwise it will hang, because TF is not fork-safe.
-BatchSampler.initialize(n_envs)
-
-with LocalRunner() as runner:
+with LocalRunner(max_cpus=n_envs) as runner:
     env = TfEnv(env_name="CartPole-v1")
 
     policy = CategoricalMLPPolicy(
