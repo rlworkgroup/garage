@@ -6,10 +6,10 @@ import gym
 
 from garage.baselines import LinearFeatureBaseline
 from garage.envs import normalize
+from garage.experiment import LocalRunner
 from garage.experiment import run_experiment
 from garage.experiment.experiment import variant
 from garage.experiment.experiment import VariantGenerator
-from garage.experiment import LocalRunner
 from garage.tf.algos import TRPO
 from garage.tf.envs import TfEnv
 from garage.tf.policies import GaussianMLPPolicy

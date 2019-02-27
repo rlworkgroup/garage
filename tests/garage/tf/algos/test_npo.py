@@ -6,8 +6,8 @@ import gym
 import tensorflow as tf
 
 from garage.envs import normalize
-import garage.misc.logger as logger
 from garage.experiment import LocalRunner
+import garage.misc.logger as logger
 from garage.tf.algos import NPO
 from garage.tf.baselines import GaussianMLPBaseline
 from garage.tf.envs import TfEnv

@@ -9,8 +9,8 @@ sizes and 5 seeds.
 import sys
 
 from garage.baselines import LinearFeatureBaseline
-from garage.experiment import run_experiment
 from garage.experiment import LocalRunner
+from garage.experiment import run_experiment
 from garage.tf.algos import TRPO
 from garage.tf.envs import TfEnv
 from garage.tf.policies import CategoricalMLPPolicy
