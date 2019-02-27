@@ -31,7 +31,7 @@ required = [
     'scipy',
     'tensorboard',
     'tensorflow<1.13,>=1.12.0',
-    'tensorflow-probability'
+    'tensorflow-probability<0.6.0,>=0.5.0',  # for tensorflow 1.12
 ]
 
 # Dependencies for optional features
