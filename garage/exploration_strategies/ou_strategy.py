@@ -1,74 +1,100 @@
-from akro import Box
-import gym
-import numpy as np
-import numpy.random as nr
+"""
+This module creates an OU exploration strategy.
 
-from garage.core import Serializable
+Ornstein Uhlenbeck exploration strategy comes from the Ornstein-Uhlenbeck
+process. It is often used in DDPG algorithm because in continuous control task
+it is better to have temporally correlated exploration to get smoother
+transitions. And OU process is relatively smooth in time.
+"""
+import numpy as np
+
 from garage.exploration_strategies import ExplorationStrategy
-from garage.misc.ext import AttrDict
 from garage.misc.overrides import overrides
 
 
-class OUStrategy(ExplorationStrategy, Serializable):
+class OUStrategy(ExplorationStrategy):
     """
-    This strategy implements the Ornstein-Uhlenbeck process, which adds
-    time-correlated noise to the actions taken by the deterministic policy.
-    The OU process satisfies the following stochastic differential equation:
-    dxt = theta*(mu - xt)*dt + sigma*dWt
-    where Wt denotes the Wiener process
+    An OU exploration strategy to add noise to environment actions.
+
+    Args:
+        env_spec: Environment for OUStrategy to explore.
+        mu: A parameter to simulate the process.
+        sigma: A parameter to simulate the process.
+        theta: A parameter to simulate the process.
+        dt: A parameter to simulate the process.
+        x0: Initial state.
+
+    Example:
+        $ python garage/tf/exploration_strategies/ou_strategy.py
     """
 
-    def __init__(self, env_spec, mu=0, theta=0.15, sigma=0.3, **kwargs):
-        assert isinstance(env_spec.action_space, Box)
-        assert len(env_spec.action_space.shape) == 1
-        Serializable.quick_init(self, locals())
-        self.mu = mu
-        self.theta = theta
-        self.sigma = sigma
+    def __init__(self, env_spec, mu=0, sigma=0.3, theta=0.15, dt=1e-2,
+                 x0=None):
+        self.env_spec = env_spec
         self.action_space = env_spec.action_space
-        self.state = np.ones(self.action_space.flat_dim) * self.mu
+        self.action_dim = self.action_space.flat_dim
+        self.mu = mu
+        self.sigma = sigma
+        self.theta = theta
+        self.dt = dt
+        self.x0 = x0
         self.reset()
 
-    def __getstate__(self):
-        d = Serializable.__getstate__(self)
-        d["state"] = self.state
-        return d
+    def simulate(self):
+        """
+        Compute the next state of the exploration.
 
-    def __setstate__(self, d):
-        Serializable.__setstate__(self, d)
-        self.state = d["state"]
+        Returns:
+            self.state: Next state of the exploration.
 
-    @overrides
-    def reset(self):
-        self.state = np.ones(self.action_space.flat_dim) * self.mu
-
-    def evolve_state(self):
+        """
         x = self.state
-        dx = self.theta * (self.mu - x) + self.sigma * nr.randn(len(x))
+        dx = self.theta * (self.mu - x) * self.dt + self.sigma * np.sqrt(
+            self.dt) * np.random.normal(size=len(x))
         self.state = x + dx
         return self.state
 
     @overrides
+    def reset(self):
+        """Reset the state of the exploration."""
+        self.state = self.x0 if self.x0 is not None else self.mu * np.zeros(
+            self.action_dim)
+
+    @overrides
     def get_action(self, t, observation, policy, **kwargs):
-        action, _ = policy.get_action(observation)
-        ou_state = self.evolve_state()
+        """Return an action with noise.
+
+        Args:
+            t: Iteration.
+            observation: Observation from the environment.
+            policy: Policy network to predict action based on the observation.
+
+        Returns:
+            An action with noise explored by OUStrategy.
+
+        """
+        action, agent_infos = policy.get_action(observation)
+        ou_state = self.simulate()
         return np.clip(action + ou_state, self.action_space.low,
-                       self.action_space.high)
+                       self.action_space.high), agent_infos
+
+    def get_actions(self, t, observations, policy, **kwargs):
+        actions, agent_infos = policy.get_actions(observations)
+        ou_state = self.simulate()
+        return np.clip(actions + ou_state, self.action_space.low,
+                       self.action_space.high), agent_infos
 
 
 if __name__ == "__main__":
+    import gym
+    import matplotlib.pyplot as plt
+
     ou = OUStrategy(
-        env_spec=AttrDict(
-            action_space=gym.spaces.Box(
-                low=-1, high=1, shape=(1, ), dtype=np.float32)),
-        mu=0,
-        theta=0.15,
-        sigma=0.3,
-        dtype=np.float32)
+        env_spec=gym.make("Pendulum-v0"), mu=0, theta=0.15, sigma=0.3)
+
     states = []
     for i in range(1000):
-        states.append(ou.evolve_state()[0])
-    import matplotlib.pyplot as plt
+        states.append(ou.simulate()[0])
 
     plt.plot(states)
     plt.show()
