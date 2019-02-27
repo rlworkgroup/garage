@@ -5,11 +5,11 @@ too low.
 import gym
 import tensorflow as tf
 
+from garage.exploration_strategies import OUStrategy
 import garage.misc.logger as logger
 from garage.replay_buffer import SimpleReplayBuffer
 from garage.tf.algos import DDPG
 from garage.tf.envs import TfEnv
-from garage.tf.exploration_strategies import OUStrategy
 from garage.tf.policies import ContinuousMLPPolicy
 from garage.tf.q_functions import ContinuousMLPQFunction
 from tests.fixtures import TfGraphTestCase

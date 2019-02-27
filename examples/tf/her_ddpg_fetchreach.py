@@ -12,10 +12,10 @@ import gym
 import tensorflow as tf
 
 from garage.experiment import run_experiment
+from garage.exploration_strategies import OUStrategy
 from garage.replay_buffer import HerReplayBuffer
 from garage.tf.algos import DDPG
 from garage.tf.envs import TfEnv
-from garage.tf.exploration_strategies import OUStrategy
 from garage.tf.policies import ContinuousMLPPolicy
 from garage.tf.q_functions import ContinuousMLPQFunction
 

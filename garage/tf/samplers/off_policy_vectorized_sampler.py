@@ -87,7 +87,7 @@ class OffPolicyVectorizedSampler(BatchSampler):
                 input_obses = obses
             if self.algo.es:
                 actions, agent_infos = self.algo.es.get_actions(
-                    input_obses, self.algo.policy)
+                    itr, input_obses, self.algo.policy)
             else:
                 actions, agent_infos = self.algo.policy.get_actions(
                     input_obses)

@@ -27,12 +27,12 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 
+from garage.exploration_strategies import OUStrategy
 from garage.misc import ext
 from garage.misc import logger as garage_logger
 from garage.replay_buffer import SimpleReplayBuffer
 from garage.tf.algos import DDPG
 from garage.tf.envs import TfEnv
-from garage.tf.exploration_strategies import OUStrategy
 from garage.tf.policies import ContinuousMLPPolicy
 from garage.tf.q_functions import ContinuousMLPQFunction
 
