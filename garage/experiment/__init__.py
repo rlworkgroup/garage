@@ -7,4 +7,5 @@ from garage.experiment.local_tf_runner import LocalRunner
 
 __all__ = [
     "run_experiment", "to_local_command", "variant", "VariantGenerator",
-    "LocalRunner"]
+    "LocalRunner"
+]
