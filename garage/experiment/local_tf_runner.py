@@ -45,7 +45,7 @@ class LocalRunner:
 
     """
 
-    def __init__(self, max_cpus=1, sess=None):
+    def __init__(self, sess=None, max_cpus=1):
         """Create a new local runner.
 
         Args:
