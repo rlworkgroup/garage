@@ -31,7 +31,7 @@ class TestLogger(unittest.TestCase):
                 assert read[0] == text
                 assert read[1] == more_text
         finally:
-            logger.remove_all()
+            # logger.remove_all()
             remove_if_exists(log_file)
 
     def test_outputs(self):

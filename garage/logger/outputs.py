@@ -47,6 +47,10 @@ class LogOutput(abc.ABC):
         """Close any files used by the output."""
         pass
 
+    def __del__(self):
+        """Clean up object upon deletion."""
+        self.close()
+
 
 class NullOutput(LogOutput):
     """Dummy output to disable 'no logger output' warnings."""
@@ -92,7 +96,25 @@ class StdOutput(LogOutput):
         sys.stdout.flush()
 
 
-class TextOutput(LogOutput):
+class FileOutput(LogOutput):
+    """File output abstract class for logger.
+
+    :param file_name: The file this output should log to.
+    :param mode: File open mode ('a', 'w', etc).
+    """
+
+    def __init__(self, file_name, mode='w'):
+        mkdir_p(os.path.dirname(file_name))
+        self._log_file = open(file_name,
+                              mode)  # Open the log file in child class
+
+    def close(self):
+        """Close any files used by the output."""
+        if self._log_file and not self._log_file.closed:
+            self._log_file.close()
+
+
+class TextOutput(FileOutput):
     """Text file output for logger.
 
     :param file_name: The file this output should log to.
@@ -100,8 +122,7 @@ class TextOutput(LogOutput):
     """
 
     def __init__(self, file_name, with_timestamp=True):
-        mkdir_p(os.path.dirname(file_name))
-        self._log_file = open(file_name, 'a')
+        super().__init__(file_name, 'a')
         self._with_timestamp = with_timestamp
         self._delimiter = " | "
 
@@ -121,20 +142,15 @@ class TextOutput(LogOutput):
         self._log_file.write(out + '\n')
         self._log_file.flush()
 
-    def close(self):
-        """Close any files used by the output."""
-        self._log_file.close()
 
-
-class CsvOutput(LogOutput):
+class CsvOutput(FileOutput):
     """CSV file output for logger.
 
     :param file_name: The file this output should log to.
     """
 
     def __init__(self, file_name):
-        mkdir_p(os.path.dirname(file_name))
-        self._log_file = open(file_name, 'w')
+        super().__init__(file_name)
 
         self._tabular_header_written = False
 
@@ -155,7 +171,3 @@ class CsvOutput(LogOutput):
             self._tabular_header_written = True
         writer.writerow(dictionary)
         self._log_file.flush()
-
-    def close(self):
-        """Close any files used by the output."""
-        self._log_file.close()

@@ -185,8 +185,6 @@ class Logger:
 
     def remove_all(self):
         """Remove all outputs that have been added to this logger."""
-        for output in self._outputs:
-            output.close()
         self._outputs.clear()
 
     def remove_output_type(self, output_type):
@@ -194,10 +192,6 @@ class Logger:
 
         :param output_type: A LogOutput subclass type to be removed.
         """
-        for output in self._outputs:
-            if isinstance(output, output_type):
-                output.close()
-
         self._outputs = [
             output for output in self._outputs
             if not isinstance(output, output_type)
