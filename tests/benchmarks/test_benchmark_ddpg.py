@@ -29,10 +29,10 @@ import tensorflow as tf
 
 from garage.experiment import deterministic
 from garage.experiment import LocalRunner
+from garage.exploration_strategies import OUStrategy
 from garage.logger import CsvOutput
 from garage.logger import logger as garage_logger
 from garage.logger import TensorBoardOutput
-from garage.exploration_strategies import OUStrategy
 from garage.replay_buffer import SimpleReplayBuffer
 from garage.tf.algos import DDPG
 from garage.tf.envs import TfEnv
