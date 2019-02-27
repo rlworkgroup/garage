@@ -1,5 +1,4 @@
 import itertools
-from multiprocessing import cpu_count
 import pickle
 
 import numpy as np
@@ -13,7 +12,7 @@ from garage.tf.samplers import BatchSampler
 
 
 class OnPolicyVectorizedSampler(BatchSampler):
-    def __init__(self, algo, n_envs=cpu_count()):
+    def __init__(self, algo, n_envs=1):
         super(OnPolicyVectorizedSampler, self).__init__(algo, n_envs)
         self.n_envs = n_envs
 
