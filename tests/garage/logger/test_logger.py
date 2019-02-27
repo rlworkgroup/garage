@@ -6,6 +6,10 @@ from garage.misc.console import remove_if_exists
 
 class TestLogger(unittest.TestCase):
     def test_logger(self):
+        logger.disable_warnings()
+        assert logger.log(
+            "test") == "No outputs have been added to the logger."
+
         log_file = 'text_logger.txt'
         try:
             text_output = TextOutput(log_file)
@@ -27,6 +31,7 @@ class TestLogger(unittest.TestCase):
                 assert read[0] == text
                 assert read[1] == more_text
         finally:
+            logger.remove_all()
             remove_if_exists(log_file)
 
     def test_outputs(self):
@@ -50,6 +55,7 @@ class TestLogger(unittest.TestCase):
             warn += " was not accepted by any output"
             assert logger.log(tabular) == warn
         finally:
+            logger.remove_all()
             for file in log_files:
                 remove_if_exists(file)
             remove_if_exists(csv_file)
@@ -83,5 +89,6 @@ class TestLogger(unittest.TestCase):
             assert logger.has_output_type(TextOutput)
             assert len(logger._outputs) == 1
         finally:
+            logger.remove_all()
             remove_if_exists(log_file)
             remove_if_exists(csv_file)

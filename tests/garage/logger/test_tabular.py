@@ -25,6 +25,7 @@ class TestTabular(unittest.TestCase):
             kv_dict = {'foo': foo, 'bar': bar}
             self.check_csv_first_row(log_file, kv_dict)
         finally:
+            logger.remove_all()
             remove_if_exists(log_file)
 
     def test_tabular_misc_stat(self):
@@ -58,6 +59,7 @@ class TestTabular(unittest.TestCase):
             }
             self.check_csv_first_row(log_file, kv_dict)
         finally:
+            logger.remove_all()
             remove_if_exists(log_file)
 
     def test_prefix(self):
@@ -76,6 +78,7 @@ class TestTabular(unittest.TestCase):
             kv_dict = {'test_foo': foo, 'test_bar': bar}
             self.check_csv_first_row(log_file, kv_dict)
         finally:
+            logger.remove_all()
             remove_if_exists(log_file)
 
     def test_str(self):
