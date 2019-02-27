@@ -127,9 +127,7 @@ def run_garage(env, seed, log_dir):
                 env=env,
                 policy=policy,
                 baseline=baseline,
-                batch_size=1024,
                 max_path_length=100,
-                n_itr=976,
                 discount=0.99,
                 gae_lambda=0.98,
                 clip_range=0.1,
@@ -143,7 +141,7 @@ def run_garage(env, seed, log_dir):
             garage_logger.set_tensorboard_dir(log_dir)
 
             runner.setup(algo, env)
-            runner.train(n_epochs=876, batch_size=1024)
+            runner.train(n_epochs=976, batch_size=1024)
 
             garage_logger.remove_tabular_output(tabular_log_file)
 

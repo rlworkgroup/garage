@@ -38,8 +38,7 @@ class TestTRPO(TfGraphTestCase):
                 max_path_length=100,
                 discount=0.99,
                 gae_lambda=0.98,
-                policy_ent_coeff=0.0,
-                plot=False,
+                policy_ent_coeff=0.0
             )
             runner.setup(algo, env)
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)

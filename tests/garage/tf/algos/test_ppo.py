@@ -39,11 +39,10 @@ class TestPPO(TfGraphTestCase):
                 max_path_length=100,
                 discount=0.99,
                 lr_clip_range=0.01,
-                optimizer_args=dict(batch_size=32, max_epochs=10),
-                plot=False,
+                optimizer_args=dict(batch_size=32, max_epochs=10)
             )
             runner.setup(algo, env)
-            last_avg_ret = runner.train(n_epochs=10, n_epoch_cycles=2048)
+            last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 40
 
             env.close()
