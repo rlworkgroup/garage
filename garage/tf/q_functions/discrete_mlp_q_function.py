@@ -62,12 +62,12 @@ class DiscreteMLPQFunction:
         self.model.build(obs_ph)
 
     @overrides
-    def get_qval_sym(self, input_var, name):
+    def get_qval_sym(self, state_input, name):
         """
         Symbolic graph for q-network.
 
         Args:
-            input_var: Input tf.placeholder to the network.
+            state_input: The state input tf.Tensor to the network.
             name: Network variable scope.
         """
-        return self.model.build(input_var, name=name)
+        return self.model.build(state_input, name=name)
