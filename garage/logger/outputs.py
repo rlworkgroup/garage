@@ -110,7 +110,7 @@ class FileOutput(LogOutput):
 
     @property
     def types_accepted(self):
-        """Accept all output types."""
+        """Pass these types to this logger output."""
         return ()
 
     def close(self):
