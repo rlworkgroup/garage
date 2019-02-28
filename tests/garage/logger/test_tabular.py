@@ -17,7 +17,7 @@ class TestTabular(unittest.TestCase):
             tabular.clear()
 
             foo = random.randint(0, 999)
-            bar = random.randint(0, 999)
+            bar = np.int32(np.random.randint(999))
             tabular.record("foo", foo)
             tabular.record("bar", bar)
             logger.log(tabular)

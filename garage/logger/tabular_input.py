@@ -3,6 +3,7 @@
 This class holds tabular information for later output.
 """
 from contextlib import contextmanager
+import numbers
 
 import numpy as np
 import tabulate
@@ -98,11 +99,11 @@ class TabularInput:
         primitives = (int, float, str, bool)
 
         def is_primitive(x):
-            if isinstance(x, primitives):
+            if isinstance(x, primitives) or isinstance(x, numbers.Number):
                 return True
             elif type(x).__module__ == np.__name__:
                 try:
-                    return x.dtype in primitives
+                    return np.issubdtype(x.dtype, np.generic)
                 except AttributeError:
                     return False
             else:
