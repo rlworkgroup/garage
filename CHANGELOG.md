@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2018.10.1
+
+### Fixed
+- Avoid importing Theano when using the TensorFlow branch
+- Avoid importing MuJoCo when not required
+- Implementation bugs in tf/VPG
+- Bug when importing Box
+- Bug in test_benchmark_her
+- Bug in the CI scripts which produced false positives
+
+
 ## 2018.10.0
 garage is based on a predecessor project called [rllab](https://github.com/rll/rllab). If you want to migrate from rllab to garage, the simplest way is to execute the installation script for [Linux](https://github.com/rlworkgroup/garage/blob/master/scripts/setup_linux.sh) or [macOS](https://github.com/rlworkgroup/garage/blob/master/scripts/setup_macos.sh). A separate conda environment named "garage" will be created, so there won't be any conflicts with a previous installation of a "rllab" environment. However, be aware that both scripts try to install miniconda, so there could be conflicts if you already have a different conda installation. If you're not using conda for other purpose, the best option is to remove it as indicated [here](https://conda.io/docs/user-guide/install/linux.html?highlight=uninstall#uninstalling-anaconda-or-miniconda).
 For a more granular installation of garage, read the installation scripts and only execute those commands that are required for your system.
