@@ -56,12 +56,13 @@ extras['dev'] = [
 with open('README.md') as f:
     readme = f.read()
 
-with open('LICENSE') as f:
-    license = f.read()
+# Get the package version dynamically
+exec(open('./garage/__version__.py').read())
+version = __version__  # noqa: F821, pylint: disable=undefined-variable
 
 setup(
     name='rlgarage',
-    version='2019.02dev',
+    version=version,
     author='Reinforcement Learning Working Group',
     description='A framework for reproducible reinforcement learning research',
     url='https://github.com/rlworkgroup/garage',
@@ -70,8 +71,9 @@ setup(
     ],
     install_requires=required,
     extras_require=extras,
-    license=license,
+    license='MIT',
     long_description=readme,
+    long_description_content_type='text/markdown',
     classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
