@@ -108,6 +108,11 @@ class FileOutput(LogOutput):
         self._log_file = open(file_name,
                               mode)  # Open the log file in child class
 
+    @property
+    def types_accepted(self):
+        """Accept all output types."""
+        return ()
+
     def close(self):
         """Close any files used by the output."""
         if self._log_file and not self._log_file.closed:
