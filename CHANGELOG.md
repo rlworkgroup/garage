@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## 2018.10.1
 
 ### Fixed
-- Avoid importing Theano when using the Tensorflow branch
+- Avoid importing Theano when using the TensorFlow branch
 - Avoid importing MuJoCo when not required
 - Implementation bugs in tf/VPG
 - Bug when importing Box
