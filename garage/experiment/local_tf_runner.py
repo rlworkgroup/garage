@@ -69,6 +69,7 @@ class LocalRunner:
             singleton_pool.initialize(max_cpus)
         self.sess = sess or tf.Session()
         self.has_setup = False
+        self.plot = False
 
     def __enter__(self):
         """Set self.sess as the default session.
