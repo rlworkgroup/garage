@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Implementation bugs in tf/VPG
 - Bug when importing Box
 - Bug in test_benchmark_her
+- Bug in the CI scripts which produced false positives
 
 
 ## 2018.10.0
