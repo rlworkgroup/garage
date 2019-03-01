@@ -22,3 +22,7 @@ class NOP(RLAlgorithm, Serializable):
     @overrides
     def get_itr_snapshot(self, itr, samples_data):
         return dict()
+
+    @overrides
+    def train(self):
+        pass
