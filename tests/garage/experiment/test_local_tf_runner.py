@@ -29,13 +29,16 @@ class TestLocalRunner(unittest.TestCase):
                 tf.get_default_session(), sess,
                 "LocalRunner(sess) should use sess as default session.")
 
-    def test_batch_sampler(self):
+    def test_singleton_pool(self):
         max_cpus = 8
-        with LocalRunner(max_cpus=max_cpus) as runner:
+        with LocalRunner(max_cpus=max_cpus):
             self.assertEqual(
                 max_cpus, singleton_pool.n_parallel,
                 "LocaRunner(max_cpu) should set up singleton_pool.")
 
+    def test_batch_sampler(self):
+        max_cpus = 8
+        with LocalRunner(max_cpus=max_cpus) as runner:
             env = TfEnv(env_name='CartPole-v1')
 
             policy = CategoricalMLPPolicy(
@@ -69,6 +72,15 @@ class TestLocalRunner(unittest.TestCase):
             self.assertGreaterEqual(
                 len(paths), max_cpus, "BatchSampler should sample more than "
                 "max_cpus=%d trajectories" % max_cpus)
+
+    # Note:
+    #   test_batch_sampler should pass if tested independently
+    #   from other tests, but cannot be tested on CI.
+    #
+    #   This is because nose2 runs all tests in a single process,
+    #   when this test is run, tensorflow has already been initialized, and
+    #   later singleton_pool will hangs because tensorflow is not fork-safe.
+    test_batch_sampler.flaky = True
 
     def test_train(self):
         with LocalRunner() as runner:
