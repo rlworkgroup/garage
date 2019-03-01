@@ -4,6 +4,66 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2019.02.0
+
+### Added
+- Epsilon-greedy exploration strategy, DiscreteMLPModel, and
+  QFunctionDerivedPolicy (all needed by DQN)
+- Base Model class for TensorFlow-based primitives
+- Dump plots generated with matplotlib to TensorBoard
+- Relative Entropy Policy Search (REPS) algorithm
+- GaussianConvBaseline and GaussianConvRegressor primitives
+- New Dockerfiles, docker-compose files, and Makefiles for running garage using
+  Docker
+- Vanilla policy gradient loss to NPO
+- Truncated Natural Policy Gradient (TNPG) algorithm for TensorFlow
+- Episodic Reward Weighted Regression (ERWR) algorithm for TensorFlow
+- gym.Env wrappers used for pixel environments
+- Convolutional Neural Network primitive
+
+### Changed
+- Move dependencies from environment.yml to setup.py
+- Update dependencies:
+  - tensorflow-probability to 0.5.x
+  - dm_control to commit 92f9913
+  - TensorFlow to 1.12
+  - MuJoCo to 2.0
+  - gym to 0.10.11
+- Move dm_control tests into the unit test tree
+- Use GitHub standard .gitignore
+- Improve the implementation of RandomizedEnv (Dynamics Randomization)
+- Decouple TensorBoard from the logger
+- Move files from garage/misc/instrument to garage/experiment
+- setup.py to be canonical in format and use automatic versioning
+
+### Removed
+- Move some garage subpackages into their own repositories:
+  - garage.viskit to [rlworkgroup/viskit](https://github.com/rlworkgroup/viskit)
+  - garage.spaces to [rlworkgroup/akro](https://github.com/rlworkgroup/akro)
+- Remove Theano backend, algorithms, and dependencies
+- Custom environments which duplicated [openai/gym](https://github.com/openai/gym)
+- Some dead files from garage/misc (meta.py and viewer2d.py)
+- Remove all code coverage tracking providers except CodeCov
+
+### Fixed
+- Clean up warnings in the test suite
+- Pickling bug in GaussianMLPolicyWithModel
+- Namescope in LbfgsOptimizer
+- Correctly sample paths in OffPolicyVectorizedSampler
+- Implementation bugs in tf/VPG
+- Bug when importing Box
+- Bug in test_benchmark_her
+
+## 2018.10.1
+
+### Fixed
+- Avoid importing Theano when using the TensorFlow branch
+- Avoid importing MuJoCo when not required
+- Implementation bugs in tf/VPG
+- Bug when importing Box
+- Bug in test_benchmark_her
+- Bug in the CI scripts which produced false positives
+
 ## 2018.10.0
 garage is based on a predecessor project called [rllab](https://github.com/rll/rllab). If you want to migrate from rllab to garage, the simplest way is to execute the installation script for [Linux](https://github.com/rlworkgroup/garage/blob/master/scripts/setup_linux.sh) or [macOS](https://github.com/rlworkgroup/garage/blob/master/scripts/setup_macos.sh). A separate conda environment named "garage" will be created, so there won't be any conflicts with a previous installation of a "rllab" environment. However, be aware that both scripts try to install miniconda, so there could be conflicts if you already have a different conda installation. If you're not using conda for other purpose, the best option is to remove it as indicated [here](https://conda.io/docs/user-guide/install/linux.html?highlight=uninstall#uninstalling-anaconda-or-miniconda).
 For a more granular installation of garage, read the installation scripts and only execute those commands that are required for your system.
