@@ -13,10 +13,6 @@ from garage.tf.samplers import BatchSampler
 
 
 class TestLocalRunner(unittest.TestCase):
-    def tearDown(self):
-        tf.reset_default_graph()
-        gc.collect()
-
     def test_session(self):
         with LocalRunner():
             self.assertIsNotNone(
