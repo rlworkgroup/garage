@@ -9,7 +9,6 @@ from garage.tf.algos import VPG
 from garage.tf.envs import TfEnv
 from garage.tf.policies import CategoricalMLPPolicy
 from garage.tf.samplers import BatchSampler
-from tests.fixtures import TfGraphTestCase
 
 
 class TestLocalRunner(unittest.TestCase):
@@ -58,7 +57,7 @@ class TestLocalRunner(unittest.TestCase):
 
             try:
                 runner.initialize_tf_vars()
-            except:
+            except BaseException:
                 raise self.failureException(
                     "LocalRunner should be able to initialize tf variables.")
 
