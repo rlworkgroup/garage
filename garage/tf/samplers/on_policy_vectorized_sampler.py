@@ -7,6 +7,7 @@ from garage.misc import tensor_utils
 import garage.misc.logger as logger
 from garage.misc.overrides import overrides
 from garage.misc.prog_bar_counter import ProgBarCounter
+from garage.sampler.utils import truncate_paths
 from garage.tf.envs import VecEnvExecutor
 from garage.tf.samplers import BatchSampler
 
@@ -37,7 +38,7 @@ class OnPolicyVectorizedSampler(BatchSampler):
         self.vec_env.close()
 
     @overrides
-    def obtain_samples(self, itr, batch_size=None):
+    def obtain_samples(self, itr, batch_size=None, whole_paths=True):
         logger.log("Obtaining samples for iteration %d..." % itr)
 
         if not batch_size:
@@ -110,6 +111,12 @@ class OnPolicyVectorizedSampler(BatchSampler):
             process_time += time.time() - t
             pbar.inc(len(obses))
             obses = next_obses
+
+        if whole_paths:
+            return paths
+        else:
+            paths_truncated = truncate_paths(paths, batch_size)
+            return paths_truncated
 
         pbar.stop()
 

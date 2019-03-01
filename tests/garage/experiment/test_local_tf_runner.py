@@ -82,7 +82,7 @@ class TestLocalRunner(unittest.TestCase):
             env = TfEnv(env_name='CartPole-v1')
 
             policy = CategoricalMLPPolicy(
-                name="policy", env_spec=env.spec, hidden_sizes=(32, 32))
+                name="policy", env_spec=env.spec, hidden_sizes=(8, 8))
 
             baseline = LinearFeatureBaseline(env_spec=env.spec)
 

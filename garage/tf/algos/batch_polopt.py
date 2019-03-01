@@ -21,7 +21,6 @@ class BatchPolopt(RLAlgorithm):
                  gae_lambda=1,
                  center_adv=True,
                  positive_adv=False,
-                 whole_paths=True,
                  fixed_horizon=False,
                  **kwargs):
         """
@@ -52,7 +51,6 @@ class BatchPolopt(RLAlgorithm):
         self.center_adv = center_adv
         self.positive_adv = positive_adv
         self.fixed_horizon = fixed_horizon
-        self.whole_paths = whole_paths
         self.init_opt()
 
     def initialize(self, sess=None):

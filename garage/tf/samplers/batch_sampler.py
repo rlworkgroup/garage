@@ -35,7 +35,7 @@ class BatchSampler(BaseSampler):
     def shutdown_worker(self):
         parallel_sampler.terminate_task(scope=self.algo.scope)
 
-    def obtain_samples(self, itr, batch_size=None):
+    def obtain_samples(self, itr, batch_size=None, whole_paths=True):
         if not batch_size:
             batch_size = self.algo.max_path_length * self.n_envs
 
@@ -46,7 +46,7 @@ class BatchSampler(BaseSampler):
             max_path_length=self.algo.max_path_length,
             scope=self.algo.scope,
         )
-        if self.algo.whole_paths:
+        if whole_paths:
             return paths
         else:
             paths_truncated = truncate_paths(paths, batch_size)
