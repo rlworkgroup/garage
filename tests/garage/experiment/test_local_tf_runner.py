@@ -1,4 +1,3 @@
-import gc
 import unittest
 
 import tensorflow as tf
