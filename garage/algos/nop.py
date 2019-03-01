@@ -1,8 +1,9 @@
-from garage.algos import BatchPolopt
+from garage.algos import RLAlgorithm
+from garage.core import Serializable
 from garage.misc.overrides import overrides
 
 
-class NOP(BatchPolopt):
+class NOP(RLAlgorithm, Serializable):
     """
     NOP (no optimization performed) policy search algorithm
     """
