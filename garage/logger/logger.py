@@ -63,7 +63,7 @@ logger.add_output(TextOutput("log_folder/log.txt"))
 # And another output.
 
 from garage.logger import CsvOutput
-logger.add_output(CsvOutput("log_folder/table.csv"
+logger.add_output(CsvOutput("log_folder/table.csv"))
 
               +---------+
        +------>StdOutput|
@@ -181,6 +181,8 @@ class Logger:
 
         :param output: An instantiation of a LogOutput subclass to be added.
         """
+        if isinstance(output, type):
+            output = output()
         self._outputs.append(output)
 
     def remove_all(self):
