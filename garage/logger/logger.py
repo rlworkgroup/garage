@@ -136,6 +136,8 @@ from warnings import warn
 
 from gym.utils import colorize
 
+from garage.logger.outputs import LogOutput
+
 
 class Logger:
     """This is the class that handles logging."""
@@ -182,7 +184,9 @@ class Logger:
         :param output: An instantiation of a LogOutput subclass to be added.
         """
         if isinstance(output, type):
-            output = output()
+            raise ValueError("Output class must be instantiated.")
+        elif not isinstance(output, LogOutput):
+            raise ValueError("Output object must be a subclass of LogOutput")
         self._outputs.append(output)
 
     def remove_all(self):
