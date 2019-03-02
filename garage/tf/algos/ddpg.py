@@ -199,27 +199,23 @@ class DDPG(OffPolicyRLAlgorithm):
 
             if self.evaluate:
                 tabular.record('Epoch', epoch)
-                tabular.record('AverageReturn',
-                                      np.mean(self.episode_rewards))
-                tabular.record('StdReturn',
-                                      np.std(self.episode_rewards))
+                tabular.record('AverageReturn', np.mean(self.episode_rewards))
+                tabular.record('StdReturn', np.std(self.episode_rewards))
                 tabular.record('Policy/AveragePolicyLoss',
-                                      np.mean(self.episode_policy_losses))
+                               np.mean(self.episode_policy_losses))
                 tabular.record('QFunction/AverageQFunctionLoss',
-                                      np.mean(self.episode_qf_losses))
-                tabular.record('QFunction/AverageQ',
-                                      np.mean(self.epoch_qs))
+                               np.mean(self.episode_qf_losses))
+                tabular.record('QFunction/AverageQ', np.mean(self.epoch_qs))
                 tabular.record('QFunction/MaxQ', np.max(self.epoch_qs))
                 tabular.record('QFunction/AverageAbsQ',
-                                      np.mean(np.abs(self.epoch_qs)))
-                tabular.record('QFunction/AverageY',
-                                      np.mean(self.epoch_ys))
+                               np.mean(np.abs(self.epoch_qs)))
+                tabular.record('QFunction/AverageY', np.mean(self.epoch_ys))
                 tabular.record('QFunction/MaxY', np.max(self.epoch_ys))
                 tabular.record('QFunction/AverageAbsY',
-                                      np.mean(np.abs(self.epoch_ys)))
+                               np.mean(np.abs(self.epoch_ys)))
                 if self.input_include_goal:
                     tabular.record('AverageSuccessRate',
-                                          np.mean(self.success_history))
+                                   np.mean(self.success_history))
 
             if not self.smooth_return:
                 self.episode_rewards = []

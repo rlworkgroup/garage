@@ -182,7 +182,7 @@ def run_garage(env, seed, log_dir):
             n_epochs=params['n_epochs'],
             n_epoch_cycles=params['n_epoch_cycles'],
             batch_size=params["n_rollout_steps"])
-
+        
         garage_logger.remove_all()
 
         return tabular_log_file

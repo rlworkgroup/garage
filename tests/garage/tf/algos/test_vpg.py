@@ -1,7 +1,6 @@
-from garage import config
 from garage.baselines import LinearFeatureBaseline
 from garage.experiment import LocalRunner
-from garage.logger import logger
+from garage.logger import logger, TensorBoardOutput
 from garage.tf.algos import VPG
 from garage.tf.envs import TfEnv
 from garage.tf.policies import CategoricalMLPPolicy
@@ -11,8 +10,8 @@ from tests.fixtures import TfGraphTestCase
 class TestVPG(TfGraphTestCase):
     def test_vpg_cartpole(self):
         """Test VPG with CartPole-v1 environment."""
+        logger.reset_output(TensorBoardOutput())
         with LocalRunner(self.sess) as runner:
-            logger.reset()
             env = TfEnv(env_name="CartPole-v1")
 
             policy = CategoricalMLPPolicy(

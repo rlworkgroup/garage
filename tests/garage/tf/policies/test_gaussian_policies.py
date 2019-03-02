@@ -1,7 +1,6 @@
 import gym
 from nose2 import tools
 
-from garage import config
 from garage.baselines import LinearFeatureBaseline
 from garage.envs import normalize
 from garage.experiment import LocalRunner
@@ -21,8 +20,8 @@ policies = [GaussianGRUPolicy, GaussianLSTMPolicy, GaussianMLPPolicy]
 class TestGaussianPolicies(TfGraphTestCase):
     @tools.params(*policies)
     def test_gaussian_policies(self, policy_cls):
+        logger.reset_output(TensorBoardOutput())
         with LocalRunner(self.sess) as runner:
-            logger.reset()
             env = TfEnv(normalize(gym.make("Pendulum-v0")))
 
             policy = policy_cls(name="policy", env_spec=env.spec)

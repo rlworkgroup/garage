@@ -6,8 +6,8 @@ import gym
 import tensorflow as tf
 
 from garage.envs import normalize
-from garage.logger import logger
 from garage.experiment import LocalRunner
+from garage.logger import logger, TensorBoardOutput
 from garage.tf.algos import TRPO
 from garage.tf.baselines import GaussianMLPBaseline
 from garage.tf.envs import TfEnv
@@ -18,8 +18,8 @@ from tests.fixtures import TfGraphTestCase
 class TestTRPO(TfGraphTestCase):
     def test_trpo_pendulum(self):
         """Test TRPO with Pendulum environment."""
+        logger.reset_output(TensorBoardOutput())
         with LocalRunner(self.sess) as runner:
-            logger.reset()
             env = TfEnv(normalize(gym.make("InvertedDoublePendulum-v2")))
             policy = GaussianMLPPolicy(
                 env_spec=env.spec,

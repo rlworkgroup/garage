@@ -249,7 +249,7 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
     def log_diagnostics(self, paths):
         log_stds = paths["agent_infos"]["log_std"]
         tabular.record("{}/AverageStd".format(self.name),
-                              np.mean(np.exp(log_stds)))
+                       np.mean(np.exp(log_stds)))
 
     @property
     def distribution(self):

@@ -18,8 +18,8 @@ from tests.fixtures import TfGraphTestCase
 class TestNPO(TfGraphTestCase):
     def test_npo_pendulum(self):
         """Test NPO with Pendulum environment."""
+        logger.reset_output(TensorBoardOutput())
         with LocalRunner(self.sess) as runner:
-            logger.reset()
             env = TfEnv(normalize(gym.make("InvertedDoublePendulum-v2")))
             policy = GaussianMLPPolicy(
                 env_spec=env.spec,
