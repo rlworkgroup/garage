@@ -184,7 +184,8 @@ class Logger:
         :param output: An instantiation of a LogOutput subclass to be added.
         """
         if isinstance(output, type):
-            raise ValueError("Output class must be instantiated.")
+            msg = "Output object must be instantiated - don't pass a type."
+            raise ValueError(msg)
         elif not isinstance(output, LogOutput):
             raise ValueError("Output object must be a subclass of LogOutput")
         self._outputs.append(output)
