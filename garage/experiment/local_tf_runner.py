@@ -181,7 +181,7 @@ class LocalRunner:
         params['env'] = self.env
         if paths:
             params["paths"] = paths
-        logger.save_itr_params(itr, params)
+        snapshotter.save_itr_params(itr, params)
         logger.log("Saved")
 
     def log_diagnostics(self, pause_for_plot=False):
@@ -193,7 +193,7 @@ class LocalRunner:
         """
         logger.log('Time %.2f s' % (time.time() - self.start_time))
         logger.log('EpochTime %.2f s' % (time.time() - self.itr_start_time))
-        logger.dump_tabular(with_prefix=False)
+        logger.log(tabular)
         if self.plot:
             self.plotter.update_plot(self.policy, self.algo.max_path_length)
             if pause_for_plot:
