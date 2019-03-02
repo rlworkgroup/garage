@@ -9,6 +9,10 @@ class Snapshotter:
     """This class handles the creation of snapshots."""
 
     def __init__(self):
+        self.reset()
+
+    def reset(self):
+        """Reset the snapshotter to default settings."""
         self._snapshot_dir = None
         self._snapshot_mode = 'all'
         self._snapshot_gap = 1

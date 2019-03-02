@@ -66,7 +66,5 @@ class TestSnapshotter(unittest.TestCase):
                         data = pickle.load(pkl_file)
                         assert data == snapshot_data[num]
         finally:
-            snapshotter.snapshot_mode = 'all'
-            snapshotter.snapshot_dir = None
-            snapshotter.snapshot_gap = 1
+            snapshotter.reset()
             shutil.rmtree(snap_dir)
