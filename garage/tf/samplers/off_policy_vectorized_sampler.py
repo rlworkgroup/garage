@@ -29,16 +29,15 @@ class OffPolicyVectorizedSampler(BatchSampler):
         :param algo: Algorithms.
         :param n_envs: Number of parallelized sampling envs.
         """
-        super(OffPolicyVectorizedSampler, self).__init__(algo)
+        if n_envs is None:
+            n_envs = int(algo.rollout_batch_size)
+        super(OffPolicyVectorizedSampler, self).__init__(algo, n_envs)
         self.n_envs = n_envs
 
     @overrides
     def start_worker(self):
         """Initialize the sampler."""
         n_envs = self.n_envs
-        if n_envs is None:
-            n_envs = int(self.algo.rollout_batch_size)
-            n_envs = max(1, min(n_envs, 100))
 
         if getattr(self.algo.env, 'vectorized', False):
             self.vec_env = self.algo.env.vec_env_executor(
@@ -58,7 +57,7 @@ class OffPolicyVectorizedSampler(BatchSampler):
         self.vec_env.close()
 
     @overrides
-    def obtain_samples(self, itr):
+    def obtain_samples(self, itr, batch_size=None):
         """
         Collect samples for the given iteration number.
 
@@ -70,13 +69,14 @@ class OffPolicyVectorizedSampler(BatchSampler):
         dones = np.asarray([True] * self.vec_env.num_envs)
         running_paths = [None] * self.vec_env.num_envs
         n_samples = 0
-        batch_samples = self.vec_env.num_envs * self.algo.max_path_length
+        if not batch_size:
+            batch_size = self.n_envs * self.algo.max_path_length
 
         policy = self.algo.policy
         if self.algo.es:
             self.algo.es.reset()
 
-        while n_samples < batch_samples:
+        while n_samples < batch_size:
             policy.reset(dones)
             if self.algo.input_include_goal:
                 obs = [obs["observation"] for obs in obses]

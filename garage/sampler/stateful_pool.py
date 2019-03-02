@@ -21,6 +21,7 @@ class StatefulPool:
         self.worker_queue = None
         self.G = SharedGlobal()
         self.manager = None
+        self.initialized = False
 
     def initialize(self, n_parallel):
         self.n_parallel = n_parallel
@@ -38,6 +39,7 @@ class StatefulPool:
                 self.n_parallel,
                 temp_folder="/tmp",
             )
+        self.initialized = True
 
     def close(self):
         if self.manager:

@@ -26,6 +26,7 @@ import pandas as pd
 import tensorflow as tf
 
 from garage.envs import normalize
+from garage.experiment import LocalRunner
 from garage.misc import ext
 from garage.misc import logger as garage_logger
 from garage.tf.algos import PPO
@@ -105,56 +106,56 @@ def run_garage(env, seed, log_dir):
     ext.set_seed(seed)
 
     with tf.Graph().as_default():
-        env = TfEnv(normalize(env))
+        with LocalRunner() as runner:
+            env = TfEnv(normalize(env))
 
-        policy = GaussianMLPPolicy(
-            name="policy",
-            env_spec=env.spec,
-            hidden_sizes=(64, 64),
-            hidden_nonlinearity=tf.nn.tanh,
-            output_nonlinearity=None,
-        )
-
-        baseline = GaussianMLPBaseline(
-            env_spec=env.spec,
-            regressor_args=dict(
+            policy = GaussianMLPPolicy(
+                name="policy",
+                env_spec=env.spec,
                 hidden_sizes=(64, 64),
-                use_trust_region=True,
-            ),
-        )
+                hidden_nonlinearity=tf.nn.tanh,
+                output_nonlinearity=None,
+            )
 
-        algo = PPO(
-            env=env,
-            policy=policy,
-            baseline=baseline,
-            batch_size=2048,
-            max_path_length=100,
-            n_itr=488,
-            discount=0.99,
-            gae_lambda=0.95,
-            clip_range=0.1,
-            policy_ent_coeff=0.0,
-            optimizer_args=dict(
-                batch_size=32,
-                max_epochs=10,
-                tf_optimizer_args=dict(
-                    learning_rate=3e-4,
-                    epsilon=1e-5,
+            baseline = GaussianMLPBaseline(
+                env_spec=env.spec,
+                regressor_args=dict(
+                    hidden_sizes=(64, 64),
+                    use_trust_region=True,
                 ),
-            ),
-            plot=False,
-        )
+            )
 
-        # Set up logger since we are not using run_experiment
-        tabular_log_file = osp.join(log_dir, "progress.csv")
-        garage_logger.add_tabular_output(tabular_log_file)
-        garage_logger.set_tensorboard_dir(log_dir)
+            algo = PPO(
+                env=env,
+                policy=policy,
+                baseline=baseline,
+                max_path_length=100,
+                discount=0.99,
+                gae_lambda=0.95,
+                clip_range=0.1,
+                policy_ent_coeff=0.0,
+                optimizer_args=dict(
+                    batch_size=32,
+                    max_epochs=10,
+                    tf_optimizer_args=dict(
+                        learning_rate=3e-4,
+                        epsilon=1e-5,
+                    ),
+                ),
+                plot=False,
+            )
 
-        algo.train()
+            # Set up logger since we are not using run_experiment
+            tabular_log_file = osp.join(log_dir, "progress.csv")
+            garage_logger.add_tabular_output(tabular_log_file)
+            garage_logger.set_tensorboard_dir(log_dir)
 
-        garage_logger.remove_tabular_output(tabular_log_file)
+            runner.setup(algo, env)
+            runner.train(n_epochs=488, batch_size=2048)
 
-        return tabular_log_file
+            garage_logger.remove_tabular_output(tabular_log_file)
+
+            return tabular_log_file
 
 
 def run_baselines(env, seed, log_dir):

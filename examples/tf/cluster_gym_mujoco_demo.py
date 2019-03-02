@@ -6,6 +6,7 @@ import gym
 
 from garage.baselines import LinearFeatureBaseline
 from garage.envs import normalize
+from garage.experiment import LocalRunner
 from garage.experiment import run_experiment
 from garage.experiment.experiment import variant
 from garage.experiment.experiment import VariantGenerator
@@ -25,28 +26,31 @@ class VG(VariantGenerator):
 
 
 def run_task(vv):
+    with LocalRunner() as runner:
+        env = TfEnv(normalize(gym.make('HalfCheetah-v1')))
 
-    env = TfEnv(normalize(gym.make('HalfCheetah-v1')))
+        policy = GaussianMLPPolicy(
+            env_spec=env.spec, hidden_sizes=(32, 32), name="policy")
 
-    policy = GaussianMLPPolicy(
-        env_spec=env.spec, hidden_sizes=(32, 32), name="policy")
+        baseline = LinearFeatureBaseline(env_spec=env.spec)
 
-    baseline = LinearFeatureBaseline(env_spec=env.spec)
+        algo = TRPO(
+            env=env,
+            policy=policy,
+            baseline=baseline,
+            max_path_length=100,
+            discount=0.99,
+            step_size=vv["step_size"],
+        )
 
-    algo = TRPO(
-        env=env,
-        policy=policy,
-        baseline=baseline,
-        batch_size=4000,
-        max_path_length=100,
-        n_itr=40,
-        discount=0.99,
-        step_size=vv["step_size"],
-        # Uncomment both lines (this and the plot parameter below) to enable
-        # plotting
-        # plot=True,
-    )
-    algo.train()
+        runner.setup(algo=algo, env=env)
+
+        runner.train(
+            n_epochs=40,
+            batch_size=4000,
+            # Uncomment to enable plotting
+            # plot=True
+        )
 
 
 variants = VG().variants()

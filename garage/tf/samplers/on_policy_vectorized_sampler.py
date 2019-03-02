@@ -7,21 +7,19 @@ from garage.misc import tensor_utils
 import garage.misc.logger as logger
 from garage.misc.overrides import overrides
 from garage.misc.prog_bar_counter import ProgBarCounter
+from garage.sampler.utils import truncate_paths
 from garage.tf.envs import VecEnvExecutor
 from garage.tf.samplers import BatchSampler
 
 
 class OnPolicyVectorizedSampler(BatchSampler):
-    def __init__(self, algo, n_envs=None):
-        super(OnPolicyVectorizedSampler, self).__init__(algo)
+    def __init__(self, algo, n_envs=1):
+        super(OnPolicyVectorizedSampler, self).__init__(algo, n_envs)
         self.n_envs = n_envs
 
     @overrides
     def start_worker(self):
         n_envs = self.n_envs
-        if n_envs is None:
-            n_envs = int(self.algo.batch_size / self.algo.max_path_length)
-            n_envs = max(1, min(n_envs, 100))
 
         if getattr(self.algo.env, 'vectorized', False):
             self.vec_env = self.algo.env.vec_env_executor(
@@ -40,15 +38,19 @@ class OnPolicyVectorizedSampler(BatchSampler):
         self.vec_env.close()
 
     @overrides
-    def obtain_samples(self, itr):
+    def obtain_samples(self, itr, batch_size=None, whole_paths=True):
         logger.log("Obtaining samples for iteration %d..." % itr)
+
+        if not batch_size:
+            batch_size = self.algo.max_path_length * self.n_envs
+
         paths = []
         n_samples = 0
         obses = self.vec_env.reset()
         dones = np.asarray([True] * self.vec_env.num_envs)
         running_paths = [None] * self.vec_env.num_envs
 
-        pbar = ProgBarCounter(self.algo.batch_size)
+        pbar = ProgBarCounter(batch_size)
         policy_time = 0
         env_time = 0
         process_time = 0
@@ -56,7 +58,7 @@ class OnPolicyVectorizedSampler(BatchSampler):
         policy = self.algo.policy
 
         import time
-        while n_samples < self.algo.batch_size:
+        while n_samples < batch_size:
             t = time.time()
             policy.reset(dones)
 
@@ -109,6 +111,12 @@ class OnPolicyVectorizedSampler(BatchSampler):
             process_time += time.time() - t
             pbar.inc(len(obses))
             obses = next_obses
+
+        if whole_paths:
+            return paths
+        else:
+            paths_truncated = truncate_paths(paths, batch_size)
+            return paths_truncated
 
         pbar.stop()
 

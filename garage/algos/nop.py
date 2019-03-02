@@ -1,8 +1,9 @@
-from garage.algos import BatchPolopt
+from garage.algos import RLAlgorithm
+from garage.core import Serializable
 from garage.misc.overrides import overrides
 
 
-class NOP(BatchPolopt):
+class NOP(RLAlgorithm, Serializable):
     """
     NOP (no optimization performed) policy search algorithm
     """
@@ -21,3 +22,7 @@ class NOP(BatchPolopt):
     @overrides
     def get_itr_snapshot(self, itr, samples_data):
         return dict()
+
+    @overrides
+    def train(self):
+        pass

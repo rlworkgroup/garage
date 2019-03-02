@@ -19,7 +19,13 @@ def worker_init_tf_vars(g):
 
 
 class BatchSampler(BaseSampler):
+    def __init__(self, algo, n_envs):
+        super(BatchSampler, self).__init__(algo)
+        self.n_envs = n_envs
+
     def start_worker(self):
+        assert singleton_pool.initialized, \
+            "Use singleton_pool.initialize(n_parallel) to setup workers."
         if singleton_pool.n_parallel > 1:
             singleton_pool.run_each(worker_init_tf)
         parallel_sampler.populate_task(self.algo.env, self.algo.policy)
@@ -29,18 +35,21 @@ class BatchSampler(BaseSampler):
     def shutdown_worker(self):
         parallel_sampler.terminate_task(scope=self.algo.scope)
 
-    def obtain_samples(self, itr):
+    def obtain_samples(self, itr, batch_size=None, whole_paths=True):
+        if not batch_size:
+            batch_size = self.algo.max_path_length * self.n_envs
+
         cur_policy_params = self.algo.policy.get_param_values()
         paths = parallel_sampler.sample_paths(
             policy_params=cur_policy_params,
-            max_samples=self.algo.batch_size,
+            max_samples=batch_size,
             max_path_length=self.algo.max_path_length,
             scope=self.algo.scope,
         )
-        if self.algo.whole_paths:
+        if whole_paths:
             return paths
         else:
-            paths_truncated = truncate_paths(paths, self.algo.batch_size)
+            paths_truncated = truncate_paths(paths, batch_size)
             return paths_truncated
 
     def process_samples(self, itr, paths):

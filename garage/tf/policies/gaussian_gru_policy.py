@@ -292,6 +292,5 @@ class GaussianGRUPolicy(StochasticPolicy, LayersPowered, Serializable):
             return []
 
     def log_diagnostics(self, paths):
-        log_stds = np.vstack(
-            [path["agent_infos"]["log_std"] for path in paths])
+        log_stds = paths["agent_infos"]["log_std"]
         logger.record_tabular('AveragePolicyStd', np.mean(np.exp(log_stds)))

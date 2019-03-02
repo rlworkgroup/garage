@@ -27,7 +27,6 @@ class BatchPolopt(RLAlgorithm):
                  center_adv=True,
                  positive_adv=False,
                  store_paths=False,
-                 whole_paths=True,
                  sampler_cls=None,
                  sampler_args=None,
                  **kwargs):
@@ -70,7 +69,6 @@ class BatchPolopt(RLAlgorithm):
         self.center_adv = center_adv
         self.positive_adv = positive_adv
         self.store_paths = store_paths
-        self.whole_paths = whole_paths
         if sampler_cls is None:
             sampler_cls = BatchSampler
         if sampler_args is None:

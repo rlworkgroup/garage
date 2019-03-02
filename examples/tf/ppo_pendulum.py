@@ -12,20 +12,13 @@ Results:
 import gym
 
 from garage.envs import normalize
-from garage.experiment import run_experiment
+from garage.experiment import LocalRunner
 from garage.tf.algos import PPO
 from garage.tf.baselines import GaussianMLPBaseline
 from garage.tf.envs import TfEnv
 from garage.tf.policies import GaussianMLPPolicy
 
-
-def run_task(*_):
-    """
-    Wrap PPO training task in the run_task function.
-
-    :param _:
-    :return:
-    """
+with LocalRunner() as runner:
     env = TfEnv(normalize(gym.make("InvertedDoublePendulum-v2")))
 
     policy = GaussianMLPPolicy(env_spec=env.spec, hidden_sizes=(64, 64))
@@ -36,20 +29,11 @@ def run_task(*_):
         env=env,
         policy=policy,
         baseline=baseline,
-        batch_size=2048,
         max_path_length=100,
-        n_itr=488,
         discount=0.99,
         lr_clip_range=0.01,
-        optimizer_args=dict(batch_size=32, max_epochs=10),
-        plot=False)
-    algo.train()
+        optimizer_args=dict(batch_size=32, max_epochs=10))
 
+    runner.setup(algo, env)
 
-run_experiment(
-    run_task,
-    n_parallel=1,
-    snapshot_mode="last",
-    seed=1,
-    plot=False,
-)
+    runner.train(n_epochs=488, batch_size=2048, plot=False)
