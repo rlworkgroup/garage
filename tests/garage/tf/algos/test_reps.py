@@ -16,8 +16,8 @@ from tests.fixtures import TfGraphTestCase
 class TestREPS(TfGraphTestCase):
     def test_reps_cartpole(self):
         """Test REPS with gym Cartpole environment."""
+        logger.reset_output(TensorBoardOutput())
         with LocalRunner(self.sess) as runner:
-            logger.reset_output(TensorBoardOutput())
             env = TfEnv(gym.make("CartPole-v0"))
 
             policy = CategoricalMLPPolicy(
