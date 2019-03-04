@@ -49,6 +49,7 @@ script:
     else
       ADD_ARGS="${ci_env}" TAG="${tag}" make run-ci RUN_CMD="scripts/travisci/check_tests.sh"
     fi
+   - make run-ci RUN_CMD="bash -c 'pushd docs && make html && popd'"
 
 after_success:
   - |
