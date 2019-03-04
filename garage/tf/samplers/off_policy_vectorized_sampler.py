@@ -101,7 +101,7 @@ class OffPolicyVectorizedSampler(BatchSampler):
                 env_infos = [dict() for _ in range(self.vec_env.num_envs)]
 
             if self.algo.input_include_goal:
-                self.algo.replay_buffer.add_transition(
+                self.algo.replay_buffer.add_transitions(
                     observation=obs,
                     action=actions,
                     goal=d_g,
@@ -115,7 +115,7 @@ class OffPolicyVectorizedSampler(BatchSampler):
                     ],
                 )
             else:
-                self.algo.replay_buffer.add_transition(
+                self.algo.replay_buffer.add_transitions(
                     observation=obses,
                     action=actions,
                     reward=rewards * self.algo.reward_scale,

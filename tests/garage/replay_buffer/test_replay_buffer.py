@@ -10,7 +10,7 @@ class TestReplayBuffer(unittest.TestCase):
         obs = env.reset()
         replay_buffer = SimpleReplayBuffer(
             env_spec=env, size_in_transitions=100, time_horizon=1)
-        replay_buffer.add_transition(
+        replay_buffer.add_transitions(
             observation=[obs], action=[env.action_space.sample()])
         sample = replay_buffer.sample(1)
         sample_obs = sample['observation']

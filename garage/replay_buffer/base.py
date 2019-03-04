@@ -49,7 +49,7 @@ class ReplayBuffer(metaclass=abc.ABCMeta):
         """Sample a transition of batch_size."""
         raise NotImplementedError
 
-    def add_transition(self, **kwargs):
+    def add_transitions(self, **kwargs):
         """Add one transition into the replay buffer."""
         if not self._initialized_buffer:
             self._initialize_buffer(**kwargs)
