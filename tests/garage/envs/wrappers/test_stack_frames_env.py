@@ -5,17 +5,15 @@ from gym.spaces import Discrete
 import numpy as np
 
 from garage.envs.wrappers import StackFrames
-from garage.tf.envs import TfEnv
 from tests.fixtures.envs.dummy import DummyDiscrete2DEnv
 
 
 class TestStackFrames(unittest.TestCase):
     def setUp(self):
         self.n_frames = 4
-        self.env = TfEnv(DummyDiscrete2DEnv(random=False))
-        self.env_s = TfEnv(
-            StackFrames(
-                DummyDiscrete2DEnv(random=False), n_frames=self.n_frames))
+        self.env = DummyDiscrete2DEnv(random=False)
+        self.env_s = StackFrames(
+            DummyDiscrete2DEnv(random=False), n_frames=self.n_frames)
         self.width, self.height = self.env.observation_space.shape
 
     def tearDown(self):
