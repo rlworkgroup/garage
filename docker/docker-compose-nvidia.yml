@@ -9,10 +9,21 @@ services:
       args:
         - PARENT_IMAGE=nvidia/opengl:1.0-glvnd-runtime-ubuntu16.04
     image: rlworkgroup/garage-base-nvidia
-  garage-nvidia:
+  garage-nvidia-no-files:
     build:
+      cache_from:
+        - rlworkgroup/garage-nvidia:latest
       context: ../
       dockerfile: docker/Dockerfile.nvidia
       args:
         - PARENT_IMAGE=rlworkgroup/garage-base-nvidia
+    image: rlworkgroup/garage-nvidia-no-files
+  garage-nvidia:
+    build:
+      cache_from:
+        - rlworkgroup/garage-nvidia:latest
+      context: ../
+      dockerfile: docker/Dockerfile.runtime
+      args:
+        - PARENT_IMAGE=rlworkgroup/garage-nvidia-no-files
     image: ${TAG}
