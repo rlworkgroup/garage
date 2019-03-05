@@ -62,28 +62,20 @@ class TestGaussianMLPPolicyWithModel(TfGraphTestCase):
         action3 = self.policy3.get_action(self.obs)
         action4 = self.policy4.get_action(self.obs)
 
-        assert (self.box_env.action_space.low <= action1 <=  # noqa: W504
-                self.box_env.action_space.high)
-        assert (self.box_env.action_space.low <= action2 <=  # noqa: W504
-                self.box_env.action_space.high)
-        assert (self.box_env.action_space.low <= action3 <=  # noqa: W504
-                self.box_env.action_space.high)
-        assert (self.box_env.action_space.low <= action4 <=  # noqa: W504
-                self.box_env.action_space.high)
+        assert self.box_env.action_space.contains(np.array(action1[0]))
+        assert self.box_env.action_space.contains(np.array(action2[0]))
+        assert self.box_env.action_space.contains(np.array(action3[0]))
+        assert self.box_env.action_space.contains(np.array(action4[0]))
 
         actions1, _ = self.policy1.get_actions(self.obs)
         actions2, _ = self.policy2.get_actions(self.obs)
         actions3 = self.policy3.get_actions(self.obs)
         actions4 = self.policy4.get_actions(self.obs)
 
-        assert (self.box_env.action_space.low <= actions1 <=  # noqa: W504
-                self.box_env.action_space.high)
-        assert (self.box_env.action_space.low <= actions2 <=  # noqa: W504
-                self.box_env.action_space.high)
-        assert (self.box_env.action_space.low <= actions3 <=  # noqa: W504
-                self.box_env.action_space.high)
-        assert (self.box_env.action_space.low <= actions4 <=  # noqa: W504
-                self.box_env.action_space.high)
+        assert self.box_env.action_space.contains(np.array(actions1[0]))
+        assert self.box_env.action_space.contains(np.array(actions2[0]))
+        assert self.box_env.action_space.contains(np.array(actions3[0]))
+        assert self.box_env.action_space.contains(np.array(actions4[0]))
 
     def test_gaussian_mlp_policy_kl_sym(self):
         # kl_sym
@@ -188,12 +180,6 @@ class TestGaussianMLPPolicyWithModel(TfGraphTestCase):
 
         with tf.Session(graph=tf.Graph()) as sess:
             policy_pickled = pickle.loads(p)
-            # After pickle, we need to build the model
-            # e.g. by policy.dist_info_sym
-            input_ph = self.box_env.observation_space.new_tensor_variable(
-                extra_dims=1, name='input_ph')
-            policy_pickled.dist_info_sym(input_ph)
-
             outputs2 = sess.run(
                 policy_pickled.model.networks['default'].sample,
                 feed_dict={

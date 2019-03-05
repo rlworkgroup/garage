@@ -5,7 +5,6 @@ import tensorflow as tf
 from garage.experiment import deterministic
 from garage.tf.core.mlp import mlp
 from garage.tf.core.parameter import parameter
-from garage.tf.distributions import DiagonalGaussian
 from garage.tf.models.base import Model
 
 
@@ -58,7 +57,8 @@ class GaussianMLPModel(Model):
                  std_hidden_sizes=(32, 32),
                  std_hidden_nonlinearity=tf.nn.tanh,
                  std_output_nonlinearity=None,
-                 std_parameterization='exp'):
+                 std_parameterization='exp',
+                 layer_normalization=False):
         # Network parameters
         super().__init__(name)
         self._hidden_sizes = hidden_sizes
@@ -74,6 +74,7 @@ class GaussianMLPModel(Model):
         self._std_parameterization = std_parameterization
         self._hidden_nonlinearity = hidden_nonlinearity
         self._output_nonlinearity = output_nonlinearity
+        self._layer_normalization = layer_normalization
 
         # Tranform std arguments to parameterized space
         self._init_std_param = None
@@ -96,7 +97,7 @@ class GaussianMLPModel(Model):
 
     def network_output_spec(self):
         """Network output spec."""
-        return ['sample', 'mean', 'std', 'std_param', 'dist']
+        return ['sample', 'mean', 'std', 'std_param']
 
     def _build(self, state_input):
         action_dim = self._output_dim
@@ -116,7 +117,8 @@ class GaussianMLPModel(Model):
                     hidden_nonlinearity=self._hidden_nonlinearity,
                     output_nonlinearity=self._output_nonlinearity,
                     output_b_init=b,
-                    name='mean_std_network')
+                    name='mean_std_network',
+                    layer_normalization=self._layer_normalization)
                 with tf.variable_scope('mean_network'):
                     mean_network = mean_std_network[..., :action_dim]
                 with tf.variable_scope('std_network'):
@@ -131,7 +133,8 @@ class GaussianMLPModel(Model):
                     hidden_sizes=self._hidden_sizes,
                     hidden_nonlinearity=self._hidden_nonlinearity,
                     output_nonlinearity=self._output_nonlinearity,
-                    name='mean_network')
+                    name='mean_network',
+                    layer_normalization=self._layer_normalization)
 
                 # std network
                 if self._adaptive_std:
@@ -143,7 +146,8 @@ class GaussianMLPModel(Model):
                         hidden_nonlinearity=self._std_hidden_nonlinearity,
                         output_nonlinearity=self._std_output_nonlinearity,
                         output_b_init=b,
-                        name='std_network')
+                        name='std_network',
+                        layer_normalization=self._layer_normalization)
                 else:
                     p = tf.constant_initializer(self._init_std_param)
                     std_network = parameter(
@@ -171,11 +175,9 @@ class GaussianMLPModel(Model):
             if self._max_std_param:
                 std_var = tf.minimum(std_param_var, self._max_std_param)
 
-        dist = DiagonalGaussian(action_dim)
-
         rnd = tf.random.normal(
             shape=mean_var.get_shape().as_list()[1:],
             seed=deterministic.get_seed())
         action_var = rnd * tf.exp(std_var) + mean_var
 
-        return action_var, mean_var, std_var, std_param_var, dist
+        return action_var, mean_var, std_var, std_param_var
