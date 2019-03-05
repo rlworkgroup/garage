@@ -19,7 +19,7 @@ class SimpleReplayBuffer(ReplayBuffer):
     @overrides
     def sample(self, batch_size):
         """Sample a transition of batch_size."""
-        assert self._n_transitions_stored > batch_size
+        assert self._n_transitions_stored >= batch_size
         buffer = {}
         for key in self._buffer.keys():
             buffer[key] = self._buffer[key][:self._current_size]
