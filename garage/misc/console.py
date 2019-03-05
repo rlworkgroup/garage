@@ -4,6 +4,7 @@ import inspect
 import os
 import pydoc
 import shlex
+import shutil
 import sys
 import time
 
@@ -48,6 +49,11 @@ def remove_if_exists(filename):
         os.remove(filename)
     except OSError:
         pass
+
+
+def remove_dir_if_exists(path):
+    if os.path.exists(path) and os.path.isdir(path):
+        shutil.rmtree(path)
 
 
 def log(s):  # , send_telegram=False):

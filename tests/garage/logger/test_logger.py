@@ -92,3 +92,5 @@ class TestLogger(unittest.TestCase):
             logger.remove_all()
             remove_if_exists(log_file)
             remove_if_exists(csv_file)
+            for f in log_files:
+                remove_if_exists(f)

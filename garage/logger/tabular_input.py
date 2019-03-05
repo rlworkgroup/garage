@@ -96,18 +96,10 @@ class TabularInput:
     @property
     def primitive_dict(self):
         """Return the dictionary, excluding all nonprimitive types."""
-        primitives = (int, float, str, bool)
+        primitives = (int, float, str, bool, numbers.Number)
 
         def is_primitive(x):
-            if isinstance(x, primitives) or isinstance(x, numbers.Number):
-                return True
-            elif type(x).__module__ == np.__name__:
-                try:
-                    return np.issubdtype(x.dtype, np.generic)
-                except AttributeError:
-                    return False
-            else:
-                return False
+            return isinstance(x, primitives)
 
         return {
             key: val
@@ -118,8 +110,3 @@ class TabularInput:
     def dict(self):
         """Return a dictionary of the tabular items."""
         return self._dict
-
-    @property
-    def key_set(self):
-        """Return a set of the table's keys."""
-        return set(self._dict.keys())

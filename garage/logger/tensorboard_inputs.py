@@ -4,6 +4,8 @@ Tensorboard accepts different types of inputs, so they are defined here to keep
 tensorboard separate from the rest of the logger.
 """
 
+import numpy as np
+
 
 class HistogramInput:
     """This class holds histogram information for TensorboardOutput.
@@ -48,8 +50,8 @@ class HistogramInputNormal(HistogramInputDistribution):
 
     def __init__(self, shape=None, name=None, mean=None, stddev=None):
         super().__init__("normal", shape=shape, name=name)
-        self.mean = mean
-        self.stddev = stddev
+        self.mean = _ensure_np_float_32(mean)
+        self.stddev = _ensure_np_float_32(stddev)
 
 
 class HistogramInputGamma(HistogramInputDistribution):
@@ -57,7 +59,7 @@ class HistogramInputGamma(HistogramInputDistribution):
 
     def __init__(self, shape=None, name=None, alpha=None):
         super().__init__("gamma", shape=shape, name=name)
-        self.alpha = alpha
+        self.alpha = _ensure_np_float_32(alpha)
 
 
 class HistogramInputPoisson(HistogramInputDistribution):
@@ -65,7 +67,7 @@ class HistogramInputPoisson(HistogramInputDistribution):
 
     def __init__(self, shape=None, name=None, lam=None):
         super().__init__("poisson", shape=shape, name=name)
-        self.lam = lam
+        self.lam = _ensure_np_float_32(lam)
 
 
 class HistogramInputUniform(HistogramInputDistribution):
@@ -73,4 +75,12 @@ class HistogramInputUniform(HistogramInputDistribution):
 
     def __init__(self, shape=None, name=None, maxval=None):
         super().__init__("uniform", shape=shape, name=name)
-        self.maxval = maxval
+        self.maxval = _ensure_np_float_32(maxval)
+
+
+def _ensure_np_float_32(val):
+    """Cast to np.float32 if np.float64."""
+    if isinstance(val, np.ndarray) and val.dtype == np.float64:
+        return val.astype(np.float32)
+    else:
+        return val

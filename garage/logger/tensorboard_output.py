@@ -8,6 +8,7 @@ be rewritten with tensorboardX
 """
 from os.path import abspath, dirname
 import shutil
+from warnings import warn
 
 import google.protobuf.json_format as json_format
 from jsonmerge import merge
@@ -21,7 +22,7 @@ import tensorflow as tf
 from garage import config
 from garage.logger import HistogramInput, HistogramInputDistribution
 from garage.logger import LogOutput, TabularInput
-from garage.misc.console import mkdir_p
+from garage.misc.console import colorize, mkdir_p
 
 
 class TensorBoardOutput(LogOutput):
@@ -51,6 +52,8 @@ class TensorBoardOutput(LogOutput):
 
         self._set_dir(log_dir)
 
+        self.warned_once = False
+
     @property
     def types_accepted(self):
         """The types that the logger may pass to this output."""
@@ -62,7 +65,7 @@ class TensorBoardOutput(LogOutput):
                 if isinstance(value, HistogramInput):
                     self.record_histogram(key, value.data)
                 elif isinstance(value, HistogramInputDistribution):
-                    self.record_histogram_by_type(**vars(value))
+                    self.record_histogram_by_type(key, **vars(value))
                 elif isinstance(value, tf.Tensor):
                     self.record_tensor(key, value)
                 else:
@@ -114,8 +117,8 @@ class TensorBoardOutput(LogOutput):
         self._feed[self._histogram_ds[str(key)]] = val
 
     def record_histogram_by_type(self,
+                                 key,
                                  histogram_type,
-                                 key=None,
                                  shape=[1000],
                                  name=None,
                                  **kwargs):
@@ -224,6 +227,15 @@ class TensorBoardOutput(LogOutput):
 
     def _dump_histogram(self, step):
         self.session = tf.get_default_session()
+
+        if self.session is None:
+            if not self.warned_once:
+                msg = "Cannot dump histogram. "
+                msg += "tf.get_default_session() returned None."
+                warn(colorize(msg, 'yellow'))
+            self.warned_once = True
+            return
+
         if self._histogram_summary_op:
             summary_str = self.session.run(
                 self._histogram_summary_op_merge, feed_dict=self._feed)
