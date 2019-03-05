@@ -60,6 +60,13 @@ class TestLogger(unittest.TestCase):
                 remove_if_exists(file)
             remove_if_exists(csv_file)
 
+    def test_errors(self):
+        with self.assertRaises(ValueError):
+            logger.add_output(TextOutput)
+
+        with self.assertRaises(ValueError):
+            logger.add_output("test_string")
+
     def test_add_remove_outputs(self):
         log_file = 'test.txt'
         log_files = ['test_%u.txt' % i for i in range(5)]

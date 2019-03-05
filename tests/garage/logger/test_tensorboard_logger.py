@@ -19,8 +19,8 @@ class TestTensorBoardLogger(unittest.TestCase):
             tb_output = TensorBoardOutput(log_dir)
             logger.add_output(tb_output)
 
-            foo = random.randint(0, 999)
-            bar = random.randint(0, 999)
+            foo = random.randint(0, 998)
+            bar = random.randint(0, 998)
             baz = np.random.rand(10).tolist()
             tabular.record("foo", foo)
             tabular.record("bar", bar)
@@ -52,6 +52,12 @@ class TestTensorBoardLogger(unittest.TestCase):
 
             logger.log(tabular)
             tb_output.dump()
+
+            tabular.clear()
+            tabular.record("foo", foo + 1)
+            tabular.record("bar", bar + 1)
+            logger.log(tabular)
+            logger.dump_output_type(TensorBoardOutput)
 
         finally:
             logger.remove_all()
