@@ -112,16 +112,14 @@ class OnPolicyVectorizedSampler(BatchSampler):
             pbar.inc(len(obses))
             obses = next_obses
 
-        if whole_paths:
-            return paths
-        else:
-            paths_truncated = truncate_paths(paths, batch_size)
-            return paths_truncated
-
         pbar.stop()
 
         logger.record_tabular("PolicyExecTime", policy_time)
         logger.record_tabular("EnvExecTime", env_time)
         logger.record_tabular("ProcessExecTime", process_time)
 
-        return paths
+        if whole_paths:
+            return paths
+        else:
+            paths_truncated = truncate_paths(paths, batch_size)
+            return paths_truncated
