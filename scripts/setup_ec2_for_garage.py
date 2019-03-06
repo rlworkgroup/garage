@@ -171,8 +171,8 @@ def setup_iam():
     print("Attaching policies")
     role.attach_policy(PolicyArn='arn:aws:iam::aws:policy/AmazonS3FullAccess')
     role.attach_policy(
-        PolicyArn='arn:aws:iam::aws:policy/ResourceGroupsandTagEditorFullAccess'
-    )
+        PolicyArn='arn:aws:iam::aws:policy/ResourceGroupsandTagEditor'
+        'FullAccess')
 
     print("Creating inline policies")
     iam_client.put_role_policy(
