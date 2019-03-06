@@ -187,7 +187,7 @@ if [[ ! -d "${HOME}/.mujoco/mujoco200_linux" ]]; then
 fi
 # dm_control viewer requires MUJOCO_GL to be set to work
 if [[ "${_arg_modify_bashrc}" = on ]]; then
-  echo "export MUJOCO_GL=\"glfw\"" >> "${BASH_PROF}"
+  echo "export MUJOCO_GL=\"glfw\"" >> "${BASH_RC}"
 fi
 # Configure MuJoCo as a shared library
 export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:${HOME}/.mujoco/mjpro150/bin"
