@@ -11,7 +11,7 @@ ignored_errors_all=(
 D     # docstring rules disabled
 E121  # continuation line under-indented for hanging indent
 E126  # continuation line over-indented for hanging indent
-E127  # continuation line over-indented for visual indent
+E265  # block comment should start with '# '
 E501  # line too long (81 > 79 characters)
 E711  # comparison to None should be 'if cond is not None:'
 E721  # do not compare types, use 'isinstance()'
@@ -72,7 +72,6 @@ $(cat .gitignore)
 # Error codes ignored for all test files
 test_ignored_errors_all=(
 D     # docstring rules disabled
-E127  # continuation line over-indented for visual indent
 E402  # module level import not at top of file
 E713  # test for membership should be 'not in'
 W503  # line break before binary operator
