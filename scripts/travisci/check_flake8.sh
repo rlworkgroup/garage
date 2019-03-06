@@ -9,29 +9,20 @@ garage_packages="tests,garage,sandbox,examples"
 # Error codes ignored for all files
 ignored_errors_all=(
 D     # docstring rules disabled
-E121  # continuation line under-indented for hanging indent
 E122  # continuation line missing indentation or outdented
-E126  # continuation line over-indented for hanging indent
 E127  # continuation line over-indented for visual indent
-E265  # block comment should start with '# '
 E501  # line too long (81 > 79 characters)
 E502  # the backslash is redundant between brackets
 E701  # multiple statements on one line (colon)
-E711  # comparison to None should be 'if cond is not None:'
-E721  # do not compare types, use 'isinstance()'
 E731  # do not assign a lambda expression, use a def
-E741  # ambiguous variable name
 N802  # function names should be lowercase
 N806  # variables in functions should be lowercase
-F811  # redefinition of unused symbol
-F821  # undefined name
 F841  # local variable is assigned to but never used
 N803  # argument names should be lowercase
 N812  # lowercase symbol imported as non lowercase
 W391  # blank line at end of file
 W503  # line break before binary operator
 W504  # line break after binary operator
-W605  # invalid escape sequence
 )
 
 # Files or directories to exclude from checks applied to all files.
@@ -84,8 +75,6 @@ $(cat .gitignore)
 test_ignored_errors_all=(
 D     # docstring rules disabled
 E127  # continuation line over-indented for visual indent
-E402  # module level import not at top of file
-E713  # test for membership should be 'not in'
 F841  # local variable is assigned to but never used
 W503  # line break before binary operator
 W504  # line break after binary operator
