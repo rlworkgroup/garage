@@ -9,9 +9,6 @@ garage_packages="tests,garage,sandbox,examples"
 # Error codes ignored for all files
 ignored_errors_all=(
 D     # docstring rules disabled
-E121  # continuation line under-indented for hanging indent
-E126  # continuation line over-indented for hanging indent
-E265  # block comment should start with '# '
 E501  # line too long (81 > 79 characters)
 E711  # comparison to None should be 'if cond is not None:'
 E721  # do not compare types, use 'isinstance()'
