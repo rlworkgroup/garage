@@ -21,17 +21,17 @@ class Bernoulli(Distribution):
             old_p = old_dist_info_vars["p"]
             new_p = new_dist_info_vars["p"]
             kl = old_p * (tf.log(old_p + TINY) - tf.log(new_p + TINY)) \
-            + (1 - old_p) \
-            * (tf.log(1 - old_p + TINY) - tf.log(1 - new_p + TINY))
+                + (1 - old_p) \
+                * (tf.log(1 - old_p + TINY) - tf.log(1 - new_p + TINY))
             ndims = kl.get_shape().ndims
             return tf.reduce_sum(kl, axis=ndims - 1)
 
     def kl(self, old_dist_info, new_dist_info):
         old_p = old_dist_info["p"]
         new_p = new_dist_info["p"]
-        kl = old_p * (np.log(old_p + TINY) - np.log(new_p + TINY)) + \
-             (1 - old_p) * (np.log(1 - old_p + TINY)
-                            - np.log(1 - new_p + TINY))
+        kl = old_p * (np.log(old_p + TINY) - np.log(new_p + TINY)) \
+            + (1 - old_p) \
+            * (np.log(1 - old_p + TINY) - np.log(1 - new_p + TINY))
         return np.sum(kl, axis=-1)
 
     def sample(self, dist_info):

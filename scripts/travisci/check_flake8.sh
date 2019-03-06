@@ -9,7 +9,8 @@ garage_packages="tests,garage,sandbox,examples"
 # Error codes ignored for all files
 ignored_errors_all=(
 D     # docstring rules disabled
-E122  # continuation line missing indentation or outdented
+E121  # continuation line under-indented for hanging indent
+E126  # continuation line over-indented for hanging indent
 E127  # continuation line over-indented for visual indent
 E501  # line too long (81 > 79 characters)
 E502  # the backslash is redundant between brackets
