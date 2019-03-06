@@ -14,9 +14,9 @@ E126  # continuation line over-indented for hanging indent
 E127  # continuation line over-indented for visual indent
 E501  # line too long (81 > 79 characters)
 E502  # the backslash is redundant between brackets
-E701  # multiple statements on one line (colon)
-E731  # do not assign a lambda expression, use a def
-N802  # function names should be lowercase
+E711  # comparison to None should be 'if cond is not None:'
+E721  # do not compare types, use 'isinstance()'
+E741  # ambiguous variable name
 N806  # variables in functions should be lowercase
 F811  # redefinition of unused symbol
 F821  # undefined name
