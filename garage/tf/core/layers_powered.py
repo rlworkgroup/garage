@@ -1,6 +1,6 @@
 import itertools
 
-from garage.tf.core import layers as L
+from garage.tf.core import layers as garage_layers
 from garage.tf.core import Parameterized
 
 
@@ -11,8 +11,8 @@ class LayersPowered(Parameterized):
         Parameterized.__init__(self)
 
     def get_params_internal(self, **tags):
-        layers = L.get_all_layers(
+        layers = garage_layers.get_all_layers(
             self._output_layers, treat_as_input=self._input_layers)
         params = itertools.chain.from_iterable(
             l.get_params(**tags) for l in layers)
-        return L.unique(params)
+        return garage_layers.unique(params)
