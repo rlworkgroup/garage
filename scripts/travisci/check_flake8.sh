@@ -13,7 +13,6 @@ E121  # continuation line under-indented for hanging indent
 E126  # continuation line over-indented for hanging indent
 E127  # continuation line over-indented for visual indent
 E501  # line too long (81 > 79 characters)
-E502  # the backslash is redundant between brackets
 E711  # comparison to None should be 'if cond is not None:'
 E721  # do not compare types, use 'isinstance()'
 E741  # ambiguous variable name

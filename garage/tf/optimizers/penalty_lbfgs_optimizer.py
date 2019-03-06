@@ -143,7 +143,7 @@ class PenaltyLbfgsOptimizer(Serializable):
                 # Either constraint satisfied, or we are at the last iteration
                 # already and no alternative parameter satisfies the constraint
                 if try_constraint_val < self._max_constraint_val or \
-                        (penalty_itr == self._max_penalty_itr - 1 and \
+                        (penalty_itr == self._max_penalty_itr - 1 and
                             opt_params is None):
                     opt_params = itr_opt_params
 
