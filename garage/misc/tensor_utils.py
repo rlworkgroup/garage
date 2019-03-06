@@ -70,8 +70,8 @@ def stack_tensor_list(tensor_list):
 def stack_tensor_dict_list(tensor_dict_list):
     """
     Stack a list of dictionaries of {tensors or dictionary of tensors}.
-    :param tensor_dict_list: a list of dictionaries of {tensors or dictionary of
-     tensors}.
+    :param tensor_dict_list: a list of dictionaries of {tensors or dictionary
+     of tensors}.
     :return: a dictionary of {stacked tensors or dictionary of stacked tensors}
     """
     keys = list(tensor_dict_list[0].keys())
@@ -87,13 +87,11 @@ def stack_tensor_dict_list(tensor_dict_list):
 
 
 def concat_tensor_list_subsample(tensor_list, f):
-    return np.concatenate(
-        [
-            t[np.random.choice(
-                len(t), int(np.ceil(len(t) * f)), replace=False)]
-            for t in tensor_list
-        ],
-        axis=0)
+    sub_tensor_list = [
+        t[np.random.choice(len(t), int(np.ceil(len(t) * f)), replace=False)]
+        for t in tensor_list
+    ]
+    return np.concatenate(sub_tensor_list, axis=0)
 
 
 def concat_tensor_dict_list_subsample(tensor_dict_list, f):

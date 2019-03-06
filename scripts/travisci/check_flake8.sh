@@ -9,7 +9,6 @@ garage_packages="tests,garage,sandbox,examples"
 # Error codes ignored for all files
 ignored_errors_all=(
 D     # docstring rules disabled
-E501  # line too long (81 > 79 characters)
 E711  # comparison to None should be 'if cond is not None:'
 E721  # do not compare types, use 'isinstance()'
 E741  # ambiguous variable name
