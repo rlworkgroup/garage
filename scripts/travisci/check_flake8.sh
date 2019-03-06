@@ -21,7 +21,6 @@ N806  # variables in functions should be lowercase
 F841  # local variable is assigned to but never used
 N803  # argument names should be lowercase
 N812  # lowercase symbol imported as non lowercase
-W391  # blank line at end of file
 W503  # line break before binary operator
 W504  # line break after binary operator
 )
