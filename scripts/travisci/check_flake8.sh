@@ -9,12 +9,6 @@ garage_packages="tests,garage,sandbox,examples"
 # Error codes ignored for all files
 ignored_errors_all=(
 D     # docstring rules disabled
-E711  # comparison to None should be 'if cond is not None:'
-E721  # do not compare types, use 'isinstance()'
-E741  # ambiguous variable name
-N806  # variables in functions should be lowercase
-F811  # redefinition of unused symbol
-F821  # undefined name
 W503  # line break before binary operator
 W504  # line break after binary operator
 )
@@ -68,8 +62,6 @@ $(cat .gitignore)
 # Error codes ignored for all test files
 test_ignored_errors_all=(
 D     # docstring rules disabled
-E402  # module level import not at top of file
-E713  # test for membership should be 'not in'
 W503  # line break before binary operator
 W504  # line break after binary operator
 )
