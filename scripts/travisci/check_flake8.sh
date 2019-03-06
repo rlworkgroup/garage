@@ -18,7 +18,8 @@ E701  # multiple statements on one line (colon)
 E731  # do not assign a lambda expression, use a def
 N802  # function names should be lowercase
 N806  # variables in functions should be lowercase
-F841  # local variable is assigned to but never used
+F811  # redefinition of unused symbol
+F821  # undefined name
 W503  # line break before binary operator
 W504  # line break after binary operator
 )
@@ -73,7 +74,8 @@ $(cat .gitignore)
 test_ignored_errors_all=(
 D     # docstring rules disabled
 E127  # continuation line over-indented for visual indent
-F841  # local variable is assigned to but never used
+E402  # module level import not at top of file
+E713  # test for membership should be 'not in'
 W503  # line break before binary operator
 W504  # line break after binary operator
 )
