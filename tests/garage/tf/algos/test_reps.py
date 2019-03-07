@@ -26,7 +26,7 @@ class TestREPS(TfGraphTestCase):
             baseline = LinearFeatureBaseline(env_spec=env.spec)
 
             algo = REPS(
-                env=env,
+                env_spec=env.spec,
                 policy=policy,
                 baseline=baseline,
                 batch_size=4000,

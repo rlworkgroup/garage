@@ -154,7 +154,7 @@ def run_garage(env, seed, log_dir):
             time_horizon=params["n_rollout_steps"])
 
         ddpg = DDPG(
-            env,
+            env_spec=env.spec,
             policy=policy,
             qf=qf,
             replay_buffer=replay_buffer,

@@ -22,7 +22,7 @@ from garage.tf.samplers.batch_sampler import BatchSampler
 class OffPolicyVectorizedSampler(BatchSampler):
     """This class implements OffPolicyVectorizedSampler."""
 
-    def __init__(self, algo, n_envs=None):
+    def __init__(self, algo, env, n_envs=None):
         """
         Construct an OffPolicyVectorizedSampler.
 
@@ -31,7 +31,7 @@ class OffPolicyVectorizedSampler(BatchSampler):
         """
         if n_envs is None:
             n_envs = int(algo.rollout_batch_size)
-        super(OffPolicyVectorizedSampler, self).__init__(algo, n_envs)
+        super(OffPolicyVectorizedSampler, self).__init__(algo, env, n_envs)
         self.n_envs = n_envs
 
     @overrides
@@ -39,17 +39,17 @@ class OffPolicyVectorizedSampler(BatchSampler):
         """Initialize the sampler."""
         n_envs = self.n_envs
 
-        if getattr(self.algo.env, 'vectorized', False):
-            self.vec_env = self.algo.env.vec_env_executor(
+        if getattr(self.env, 'vectorized', False):
+            self.vec_env = self.env.vec_env_executor(
                 n_envs=n_envs, max_path_length=self.algo.max_path_length)
         else:
             envs = [
-                pickle.loads(pickle.dumps(self.algo.env))
+                pickle.loads(pickle.dumps(self.env))
                 for _ in range(n_envs)
             ]
             self.vec_env = VecEnvExecutor(
                 envs=envs, max_path_length=self.algo.max_path_length)
-        self.env_spec = self.algo.env.spec
+        self.env_spec = self.env.spec
 
     @overrides
     def shutdown_worker(self):

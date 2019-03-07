@@ -37,7 +37,7 @@ class TestDDPG(TfGraphTestCase):
                 size_in_transitions=int(1e6),
                 time_horizon=100)
             algo = DDPG(
-                env,
+                env_spec=env.spec,
                 policy=policy,
                 policy_lr=1e-4,
                 qf_lr=1e-3,

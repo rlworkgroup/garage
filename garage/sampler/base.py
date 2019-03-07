@@ -39,11 +39,12 @@ class Sampler:
 
 
 class BaseSampler(Sampler):
-    def __init__(self, algo):
+    def __init__(self, algo, env):
         """
         :type algo: BatchPolopt
         """
         self.algo = algo
+        self.env = env
 
     def process_samples(self, itr, paths):
         baselines = []

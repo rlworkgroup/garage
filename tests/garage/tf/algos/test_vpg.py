@@ -18,7 +18,7 @@ class TestVPG(TfGraphTestCase):
             baseline = LinearFeatureBaseline(env_spec=env.spec)
 
             algo = VPG(
-                env=env,
+                env_spec=env.spec,
                 policy=policy,
                 baseline=baseline,
                 max_path_length=100,

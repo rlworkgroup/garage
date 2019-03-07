@@ -121,19 +121,20 @@ class LocalRunner:
                 from garage.tf.samplers import OffPolicyVectorizedSampler
                 sampler_cls = OffPolicyVectorizedSampler
 
-        self.sampler = sampler_cls(algo, **sampler_args)
+        self.sampler = sampler_cls(algo, env, **sampler_args)
 
         self.initialize_tf_vars()
         self.has_setup = True
 
     def initialize_tf_vars(self):
         """Initialize all uninitialized variables in session."""
-        self.sess.run(
-            tf.variables_initializer([
-                v for v in tf.global_variables()
-                if v.name.split(':')[0] in str(
-                    self.sess.run(tf.report_uninitialized_variables()))
-            ]))
+        with tf.name_scope("auto-initialized"):
+            self.sess.run(
+                tf.variables_initializer([
+                    v for v in tf.global_variables()
+                    if v.name.split(':')[0] in str(
+                        self.sess.run(tf.report_uninitialized_variables()))
+                ]))
 
     def start_worker(self):
         """Start Plotter and Sampler workers."""
@@ -174,7 +175,7 @@ class LocalRunner:
 
         """
         logger.log("Saving snapshot...")
-        params = self.algo.get_itr_snapshot(itr, paths)
+        params = self.algo.get_itr_snapshot(itr)
         if paths:
             params["paths"] = paths
         logger.save_itr_params(itr, params)

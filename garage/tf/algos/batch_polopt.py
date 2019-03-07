@@ -12,7 +12,7 @@ class BatchPolopt(RLAlgorithm):
     """
 
     def __init__(self,
-                 env,
+                 env_spec,
                  policy,
                  baseline,
                  scope=None,
@@ -24,7 +24,7 @@ class BatchPolopt(RLAlgorithm):
                  fixed_horizon=False,
                  **kwargs):
         """
-        :param env: Environment
+        :param env_spec: Environment specification.
         :param policy: Policy
         :type policy: Policy
         :param baseline: Baseline
@@ -41,7 +41,7 @@ class BatchPolopt(RLAlgorithm):
          advantages will be standardized before shifting.
         :return:
         """
-        self.env = env
+        self.env_spec = env_spec
         self.policy = policy
         self.baseline = baseline
         self.scope = scope

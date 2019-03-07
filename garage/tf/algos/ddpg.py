@@ -28,7 +28,7 @@ class DDPG(OffPolicyRLAlgorithm):
     """
 
     def __init__(self,
-                 env,
+                 env_spec,
                  replay_buffer,
                  target_update_tau=0.01,
                  policy_lr=1e-4,
@@ -47,7 +47,7 @@ class DDPG(OffPolicyRLAlgorithm):
         Construct class.
 
         Args:
-            env(): Environment.
+            env_spec(): Environment specification.
             target_update_tau(float): Interpolation parameter for doing the
         soft target update.
             discount(float): Discount factor for the cumulative return.
@@ -65,7 +65,7 @@ class DDPG(OffPolicyRLAlgorithm):
             max_action(float): Maximum action magnitude.
             name(str): Name of the algorithm shown in computation graph.
         """
-        action_bound = env.action_space.high
+        action_bound = env_spec.action_space.high
         self.max_action = action_bound if max_action is None else max_action
         self.tau = target_update_tau
         self.policy_lr = policy_lr
@@ -86,7 +86,7 @@ class DDPG(OffPolicyRLAlgorithm):
         self.epoch_qs = []
 
         super(DDPG, self).__init__(
-            env=env,
+            env_spec=env_spec,
             replay_buffer=replay_buffer,
             use_target=True,
             discount=discount,
@@ -119,10 +119,10 @@ class DDPG(OffPolicyRLAlgorithm):
 
             with tf.name_scope("inputs"):
                 if self.input_include_goal:
-                    obs_dim = self.env.observation_space.flat_dim_with_keys(
-                        ["observation", "desired_goal"])
+                    obs_dim = self.env_spec.observation_space.\
+                        flat_dim_with_keys(["observation", "desired_goal"])
                 else:
-                    obs_dim = self.env.observation_space.flat_dim
+                    obs_dim = self.env_spec.observation_space.flat_dim
                 y = tf.placeholder(tf.float32, shape=(None, 1), name="input_y")
                 obs = tf.placeholder(
                     tf.float32,
@@ -130,7 +130,7 @@ class DDPG(OffPolicyRLAlgorithm):
                     name="input_observation")
                 actions = tf.placeholder(
                     tf.float32,
-                    shape=(None, self.env.action_space.flat_dim),
+                    shape=(None, self.env_spec.action_space.flat_dim),
                     name="input_action")
 
             # Set up policy training function
@@ -197,7 +197,7 @@ class DDPG(OffPolicyRLAlgorithm):
         if itr % self.n_epoch_cycles == 0:
             logger.log("Training finished")
             logger.log("Saving snapshot #{}".format(int(epoch)))
-            params = self.get_itr_snapshot(epoch, paths)
+            params = self.get_itr_snapshot(epoch)
             logger.save_itr_params(epoch, params)
             logger.log("Saved")
             if self.evaluate:
@@ -230,12 +230,6 @@ class DDPG(OffPolicyRLAlgorithm):
                 self.episode_qf_losses = []
                 self.epoch_ys = []
                 self.epoch_qs = []
-
-            if self.plot:
-                self.plotter.update_plot(self.policy, self.max_path_length)
-                if self.pause_for_plot:
-                    input("Plotting evaluation run: Press Enter to "
-                          "continue...")
 
             self.success_history.clear()
 
@@ -289,8 +283,8 @@ class DDPG(OffPolicyRLAlgorithm):
         return qval_loss, ys, qval, action_loss
 
     @overrides
-    def get_itr_snapshot(self, itr, samples_data):
-        return dict(itr=itr, policy=self.policy, env=self.env)
+    def get_itr_snapshot(self, itr):
+        return dict(itr=itr, policy=self.policy)
 
 
 def get_target_ops(variables, target_variables, tau):

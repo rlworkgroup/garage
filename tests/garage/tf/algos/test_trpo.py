@@ -32,7 +32,7 @@ class TestTRPO(TfGraphTestCase):
                 regressor_args=dict(hidden_sizes=(32, 32)),
             )
             algo = TRPO(
-                env=env,
+                env_spec=env.spec,
                 policy=policy,
                 baseline=baseline,
                 max_path_length=100,
