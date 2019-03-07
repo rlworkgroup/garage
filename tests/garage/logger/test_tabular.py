@@ -1,15 +1,15 @@
 import csv
 import math
 import random
-import unittest
 
 import numpy as np
 
 from garage.logger import CsvOutput, HistogramInput, logger, tabular
 from garage.misc.console import remove_if_exists
+from tests.garage.logger.test_logger import TestLogger
 
 
-class TestTabular(unittest.TestCase):
+class TestTabular(TestLogger):
     def test_tabular_record(self):
         log_file = 'test_tabular.csv'
         try:

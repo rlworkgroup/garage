@@ -1,15 +1,58 @@
+from contextlib import redirect_stdout
+import datetime
+import io
 import unittest
 
-from garage.logger import CsvOutput, logger, tabular, TextOutput
+import mock
+
+from garage.logger import CsvOutput, logger, StdOutput, tabular, TextOutput
 from garage.misc.console import remove_if_exists
 
 
 class TestLogger(unittest.TestCase):
-    def test_logger(self):
+    def setUp(self):
+        super().setUp()
         logger.disable_warnings()
-        assert logger.log(
-            "test") == "No outputs have been added to the logger."
 
+    def tearDown(self):
+        super().tearDown()
+        logger.remove_all()
+
+    def test_std(self):
+        tabular.clear()
+        logger.add_output(StdOutput(with_timestamp=False))
+
+        with io.StringIO() as str_out:
+            with redirect_stdout(str_out):
+                logger.log("test")
+            str_out.seek(0)
+            assert str_out.read() == "test\n"
+
+        tabular.record("foo", 100)
+        tabular.record("bar", 55)
+
+        with io.StringIO() as str_out:
+            with redirect_stdout(str_out):
+                logger.log(tabular)
+            tab = "---  ---\nfoo  100\nbar   55\n---  ---\n"
+            str_out.seek(0)
+            assert str_out.read() == tab
+
+    @mock.patch('garage.logger.outputs.datetime')
+    def test_timestamp(self, mock_datetime):
+        timestamp = '2000-01-01 00:00:00'
+        mock_datetime.datetime.now.return_value = datetime.datetime(2000, 1, 1)
+        mock_datetime.datetime.return_value.strftime.return_value = timestamp
+
+        logger.reset_output(StdOutput())
+
+        with io.StringIO() as str_out:
+            with redirect_stdout(str_out):
+                logger.log("garage")
+            str_out.seek(0)
+            assert str_out.read() == timestamp + ' | ' + 'garage\n'
+
+    def test_text(self):
         log_file = 'text_logger.txt'
         try:
             text_output = TextOutput(log_file)
@@ -31,15 +74,16 @@ class TestLogger(unittest.TestCase):
                 assert read[0] == text
                 assert read[1] == more_text
         finally:
-            logger.remove_all()
             remove_if_exists(log_file)
 
     def test_outputs(self):
+        tabular.clear()
+        err = "No outputs have been added to the logger."
+        assert logger.log("test") == err
+
         log_files = ['test_%u.txt' % i for i in range(5)]
         csv_file = 'text.csv'
         try:
-            logger.disable_warnings()
-
             logger.add_output(CsvOutput(csv_file))
             for file in log_files:
                 logger.add_output(TextOutput(file))
@@ -55,7 +99,6 @@ class TestLogger(unittest.TestCase):
             warn += " was not accepted by any output"
             assert logger.log(tabular) == warn
         finally:
-            logger.remove_all()
             for file in log_files:
                 remove_if_exists(file)
             remove_if_exists(csv_file)
@@ -96,7 +139,6 @@ class TestLogger(unittest.TestCase):
             assert logger.has_output_type(TextOutput)
             assert len(logger._outputs) == 1
         finally:
-            logger.remove_all()
             remove_if_exists(log_file)
             remove_if_exists(csv_file)
             for f in log_files:
