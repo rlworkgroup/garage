@@ -28,6 +28,7 @@ class DummyDiscretePixelEnv(DummyEnv):
         self._observation_space = gym.spaces.Box(
             low=0, high=255, shape=self._shape, dtype=np.uint8)
         self.step_called = 0
+        self._prev_action = None
 
     @property
     def observation_space(self):
@@ -70,6 +71,8 @@ class DummyDiscretePixelEnv(DummyEnv):
         if self.state is not None:
             # Simulating FIRE action
             if action == 1:
+                if self._prev_action == 2:
+                    done = True
                 obs = np.ones(self._shape, dtype=np.uint8)
             else:
                 if self.random:
@@ -86,5 +89,6 @@ class DummyDiscretePixelEnv(DummyEnv):
             raise RuntimeError(
                 "DummyEnv: reset() must be called before step()!")
         self.step_called += 1
+        self._prev_action = action
 
         return obs, 0, done, {'ale.lives': self._lives}
