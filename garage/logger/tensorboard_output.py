@@ -66,8 +66,6 @@ class TensorBoardOutput(LogOutput):
                     self.record_histogram(key, value.data)
                 elif isinstance(value, HistogramInputDistribution):
                     self.record_histogram_by_type(key, **vars(value))
-                elif isinstance(value, tf.Tensor):
-                    self.record_tensor(key, value)
                 else:
                     self.record_scalar(key, value)
 
@@ -153,19 +151,6 @@ class TensorBoardOutput(LogOutput):
 
     def record_scalar(self, key, val):
         self._scalars.value.add(tag=str(key), simple_value=float(val))
-
-    def record_tensor(self, key, val):
-        self._has_recorded_tensor = True
-        scope = str(key).split('/', 1)[0]
-        if scope not in self._scope_tensor:
-            self._scope_tensor[scope] = [key]
-        else:
-            if key not in self._scope_tensor[scope]:
-                self._scope_tensor[scope].append(key)
-
-        for idx, v in np.ndenumerate(np.array(val)):
-            self._scalars.value.add(
-                tag=key + '/' + str(idx).strip('()'), simple_value=float(v))
 
     def _get_histogram_var_by_type(self,
                                    histogram_type,

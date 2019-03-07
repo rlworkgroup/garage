@@ -10,11 +10,12 @@ from garage.misc.console import remove_dir_if_exists
 from tests.fixtures import TfTestCase
 
 
-class TestTensorBoardLogger(TfTestCase):
+class TestTensorBoardOutput(TfTestCase):
     def test_histogram(self):
         log_dir = 'test'
         remove_dir_if_exists(log_dir)
         try:
+            logger.remove_all()
             tb_output = TensorBoardOutput(log_dir)
             logger.add_output(tb_output)
 
