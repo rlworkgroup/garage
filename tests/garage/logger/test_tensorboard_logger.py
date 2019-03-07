@@ -18,6 +18,7 @@ class TestTensorBoardOutput(TfTestCase):
             logger.remove_all()
             tb_output = TensorBoardOutput(log_dir)
             logger.add_output(tb_output)
+            tabular.clear()
 
             foo = random.randint(0, 998)
             bar = random.randint(0, 998)
