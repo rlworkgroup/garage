@@ -119,10 +119,6 @@ class NPO(BatchPolopt):
         logger.record_tabular("{}/Entropy".format(self.policy.name),
                               np.mean(pol_ent))
 
-        num_traj = samples_data["actions"].shape[0]
-        actions = samples_data["actions"][:num_traj, ...]
-        logger.record_histogram("{}/Actions".format(self.policy.name), actions)
-
         self._fit_baseline(samples_data)
 
     @overrides
