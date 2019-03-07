@@ -1,17 +1,16 @@
 import random
-import unittest
 
 import numpy as np
-import tensorflow as tf
 
 from garage.logger import HistogramInput, HistogramInputGamma
 from garage.logger import HistogramInputNormal, HistogramInputPoisson
 from garage.logger import HistogramInputUniform, TensorBoardOutput
 from garage.logger import logger, tabular
 from garage.misc.console import remove_dir_if_exists
+from tests.fixtures import TfTestCase
 
 
-class TestTensorBoardLogger(unittest.TestCase):
+class TestTensorBoardLogger(TfTestCase):
     def test_histogram(self):
         log_dir = 'test'
         remove_dir_if_exists(log_dir)
@@ -46,9 +45,6 @@ class TestTensorBoardLogger(unittest.TestCase):
                         shape=[1000, 10], maxval=np.random.rand(1)))
 
             tb_output.dump()  # this should warn 'Cannot dump histogram.'
-
-            sess = tf.Session()
-            sess.__enter__()
 
             logger.log(tabular)
             tb_output.dump()

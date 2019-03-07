@@ -96,7 +96,7 @@ class StdOutput(LogOutput):
         sys.stdout.flush()
 
 
-class FileOutput(LogOutput):
+class FileOutput(LogOutput, metaclass=abc.ABCMeta):
     """File output abstract class for logger.
 
     :param file_name: The file this output should log to.
@@ -107,11 +107,6 @@ class FileOutput(LogOutput):
         mkdir_p(os.path.dirname(file_name))
         self._log_file = open(file_name,
                               mode)  # Open the log file in child class
-
-    @property
-    def types_accepted(self):
-        """Pass these types to this logger output."""
-        return ()
 
     def close(self):
         """Close any files used by the output."""
