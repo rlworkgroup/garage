@@ -47,7 +47,7 @@ class DDPG(OffPolicyRLAlgorithm):
         Construct class.
 
         Args:
-            env_spec(): Environment specification.
+            env_spec(akro.Space): Environment specification.
             target_update_tau(float): Interpolation parameter for doing the
         soft target update.
             discount(float): Discount factor for the cumulative return.

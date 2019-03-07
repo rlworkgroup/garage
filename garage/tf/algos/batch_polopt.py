@@ -25,6 +25,7 @@ class BatchPolopt(RLAlgorithm):
                  **kwargs):
         """
         :param env_spec: Environment specification.
+        :type env_spec: akro.Space
         :param policy: Policy
         :type policy: Policy
         :param baseline: Baseline
