@@ -12,11 +12,19 @@ class DummyDiscretePixelEnv(DummyEnv):
 
     It follows Atari game convention, where actions are 'NOOP', 'FIRE', ...
     It also contains self.unwrapped.ale.lives, get_action_meanings for testing.
-    Observations are as following:
+
+    Several properties are made for testing purpose as following:
+
+    -Observations are
         after reset    : np.zeros(self._shape).
         action 1 (FIRE): np.ones(self._shape).
         otherwise      : random if self.random is True,
             otherwise previous state + action.
+
+    -The environment has 5 lives.
+    -Done will be True if
+        -all 5 lives are exhausted
+        -env.step(2), followed by env.step(1)
     """
 
     def __init__(self, random=True):
