@@ -9,18 +9,6 @@ garage_packages="tests,garage,sandbox,examples"
 # Error codes ignored for all files
 ignored_errors_all=(
 D     # docstring rules disabled
-E122  # continuation line missing indentation or outdented
-E127  # continuation line over-indented for visual indent
-E501  # line too long (81 > 79 characters)
-E502  # the backslash is redundant between brackets
-E701  # multiple statements on one line (colon)
-E731  # do not assign a lambda expression, use a def
-N802  # function names should be lowercase
-N806  # variables in functions should be lowercase
-F841  # local variable is assigned to but never used
-N803  # argument names should be lowercase
-N812  # lowercase symbol imported as non lowercase
-W391  # blank line at end of file
 W503  # line break before binary operator
 W504  # line break after binary operator
 )
@@ -74,8 +62,6 @@ $(cat .gitignore)
 # Error codes ignored for all test files
 test_ignored_errors_all=(
 D     # docstring rules disabled
-E127  # continuation line over-indented for visual indent
-F841  # local variable is assigned to but never used
 W503  # line break before binary operator
 W504  # line break after binary operator
 )
@@ -149,6 +135,7 @@ check_flake8() {
   flake8 --isolated \
          --import-order-style=google \
          --application-import-names="${garage_packages}" \
+         --per-file-ignores="./garage/misc/krylov.py:N802,N803,N806" \
          "$@"
   status="$((${status} | ${?}))"
 }

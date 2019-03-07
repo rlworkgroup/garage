@@ -130,8 +130,6 @@ class ISSampler(BatchSampler):
         if not paths:
             return []
 
-        n_paths = len(paths)
-
         n_samples = min(len(paths), max_samples)
 
         if randomize_draw:

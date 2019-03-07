@@ -26,8 +26,8 @@ def overrides(method):
     """Decorator to indicate that the decorated method overrides a method in
     superclass.
 
-    The decorator code is executed while loading class. Using this method should
-    have minimal runtime performance implications.
+    The decorator code is executed while loading class. Using this method
+    should have minimal runtime performance implications.
 
     This is based on my idea about how to do this and fwc:s highly improved
     algorithm for the implementation
@@ -54,10 +54,12 @@ def overrides(method):
     """
     # nop for now due to py3 compatibility
     return method
-    # for super_class in _get_base_classes(sys._getframe(2), method.__globals__):
+    # for super_class in _get_base_classes(sys._getframe(2),
+    #                                       method.__globals__):
     #     if hasattr(super_class, method.__name__):
     #         if not method.__doc__:
-    #             method.__doc__ = getattr(super_class, method.__name__).__doc__
+    #             method.__doc__ = getattr(
+    #               super_class, method.__name__).__doc__
     #         return method
     # raise AssertionError(
     #     'No super class method found for "%s"' % method.__name__)
