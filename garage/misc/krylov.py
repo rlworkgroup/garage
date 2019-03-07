@@ -3,7 +3,7 @@ import numpy as np
 EPS = np.finfo('float64').tiny
 
 
-def cg(f_ax, b, cg_iters=10, callback=None, verbose=False, residual_tol=1e-10):
+def cg(f_Ax, b, cg_iters=10, callback=None, verbose=False, residual_tol=1e-10):
     """Demmel p 312."""
     p = b.copy()
     r = b.copy()
@@ -20,7 +20,7 @@ def cg(f_ax, b, cg_iters=10, callback=None, verbose=False, residual_tol=1e-10):
             callback(x)
         if verbose:
             print(fmtstr % (i, rdotr, np.linalg.norm(x)))
-        z = f_ax(p)
+        z = f_Ax(p)
         v = rdotr / p.dot(z)
         x += v * p
         r -= v * z
@@ -39,8 +39,8 @@ def cg(f_ax, b, cg_iters=10, callback=None, verbose=False, residual_tol=1e-10):
     return x
 
 
-def preconditioned_cg(f_ax,
-                      f_minvx,
+def preconditioned_cg(f_Ax,
+                      f_Minvx,
                       b,
                       cg_iters=10,
                       callback=None,
@@ -49,7 +49,7 @@ def preconditioned_cg(f_ax,
     """Demmel p 318."""
     x = np.zeros_like(b)
     r = b.copy()
-    p = f_minvx(b)
+    p = f_Minvx(b)
     y = p
     ydotr = y.dot(r)
 
@@ -60,14 +60,14 @@ def preconditioned_cg(f_ax,
 
     for i in range(cg_iters):
         if callback is not None:
-            callback(x, f_ax)
+            callback(x, f_Ax)
         if verbose:
             print(fmtstr % (i, ydotr, np.linalg.norm(x)))
-        z = f_ax(p)
+        z = f_Ax(p)
         v = ydotr / p.dot(z)
         x += v * p
         r -= v * z
-        y = f_minvx(r)
+        y = f_Minvx(r)
         newydotr = y.dot(r)
         mu = newydotr / ydotr
         p = y + mu * p
@@ -107,7 +107,7 @@ def test_cg():
     assert np.allclose(a.dot(x), b)
 
 
-def lanczos(f_ax, b, k):
+def lanczos(f_Ax, b, k):
     """Run Lanczos algorithm.
 
     It generate an orthogonal basis for the Krylov subspace b, Ab, A^2b, ...
@@ -127,7 +127,7 @@ def lanczos(f_ax, b, k):
     for j in range(k):
         qs.append(q)
 
-        z = f_ax(q)
+        z = f_Ax(q)
 
         alpha = q.dot(z)
         alphas.append(alpha)
@@ -148,7 +148,7 @@ def lanczos(f_ax, b, k):
         betas[:-1], 'float64')
 
 
-def lanczos2(f_ax, b, k, residual_thresh=1e-9):
+def lanczos2(f_Ax, b, k, residual_thresh=1e-9):
     """Run Lanczos algorithm.
 
     It generates an orthogonal basis for the Krylov subspace b, Ab, A^2b, ...
@@ -158,7 +158,7 @@ def lanczos2(f_ax, b, k, residual_thresh=1e-9):
     """
     b = b.astype('float64')
     assert k > 1
-    h = np.zeros((k, k))
+    H = np.zeros((k, k))
     qs = []
 
     q = b / np.linalg.norm(b)
@@ -167,9 +167,9 @@ def lanczos2(f_ax, b, k, residual_thresh=1e-9):
     for j in range(k):
         qs.append(q)
 
-        z = f_ax(q.astype('float64')).astype('float64')
+        z = f_Ax(q.astype('float64')).astype('float64')
         for (i, q) in enumerate(qs):
-            h[j, i] = h[i, j] = h = q.dot(z)
+            H[j, i] = H[i, j] = h = q.dot(z)
             z -= h * q
 
         beta = np.linalg.norm(z)
@@ -180,7 +180,7 @@ def lanczos2(f_ax, b, k, residual_thresh=1e-9):
         else:
             q = z / beta
 
-    return np.array(qs).T, h[:len(qs), :len(qs)]
+    return np.array(qs).T, H[:len(qs), :len(qs)]
 
 
 def make_tridiagonal(alphas, betas):
@@ -201,42 +201,42 @@ def tridiagonal_eigenvalues(alphas, betas):
 def test_lanczos():
     np.set_printoptions(precision=4)
 
-    a = np.random.randn(5, 5)
-    a = a.T.dot(a)
+    A = np.random.randn(5, 5)
+    A = A.T.dot(A)
     b = np.random.randn(5)
 
-    def f_ax(x):
-        a.dot(x)
+    def f_Ax(x):
+        A.dot(x)
 
-    q, alphas, betas = lanczos(f_ax, b, 10)
-    h = make_tridiagonal(alphas, betas)
-    assert np.allclose(q.T.dot(a).dot(q), h)
-    assert np.allclose(q.dot(h).dot(q.T), a)
-    assert np.allclose(np.linalg.eigvalsh(h), np.linalg.eigvalsh(a))
+    Q, alphas, betas = lanczos(f_Ax, b, 10)
+    H = make_tridiagonal(alphas, betas)
+    assert np.allclose(Q.T.dot(A).dot(Q), H)
+    assert np.allclose(Q.dot(H).dot(Q.T), A)
+    assert np.allclose(np.linalg.eigvalsh(H), np.linalg.eigvalsh(A))
 
-    q, h1 = lanczos2(f_ax, b, 10)
-    assert np.allclose(h, h1, atol=1e-6)
+    Q, H1 = lanczos2(f_Ax, b, 10)
+    assert np.allclose(H, H1, atol=1e-6)
 
     print("ritz eigvals:")
     for i in range(1, 6):
-        qi = q[:, :i]
-        hi = qi.T.dot(a).dot(qi)
-        print(np.linalg.eigvalsh(hi)[::-1])
+        Qi = Q[:, :i]
+        Hi = Qi.T.dot(A).dot(Qi)
+        print(np.linalg.eigvalsh(Hi)[::-1])
     print("true eigvals:")
-    print(np.linalg.eigvalsh(a)[::-1])
+    print(np.linalg.eigvalsh(A)[::-1])
 
     print("lanczos on ill-conditioned problem")
-    a = np.diag(10**np.arange(5))
-    q, h1 = lanczos2(f_ax, b, 10)
-    print(np.linalg.eigvalsh(h1))
+    A = np.diag(10**np.arange(5))
+    Q, H1 = lanczos2(f_Ax, b, 10)
+    print(np.linalg.eigvalsh(H1))
 
     print("lanczos on ill-conditioned problem with noise")
 
-    def f_ax_noisy(x):
-        return a.dot(x) + np.random.randn(x.size) * 1e-3
+    def f_Ax_noisy(x):
+        return A.dot(x) + np.random.randn(x.size) * 1e-3
 
-    q, h1 = lanczos2(f_ax_noisy, b, 10)
-    print(np.linalg.eigvalsh(h1))
+    Q, H1 = lanczos2(f_Ax_noisy, b, 10)
+    print(np.linalg.eigvalsh(H1))
 
 
 if __name__ == "__main__":
