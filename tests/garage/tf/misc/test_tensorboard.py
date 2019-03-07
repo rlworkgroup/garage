@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from garage.misc.logger import logger
+from garage.logger import logger
 
 
 class TestTensorboard(unittest.TestCase):
