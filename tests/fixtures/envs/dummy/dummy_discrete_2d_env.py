@@ -9,13 +9,18 @@ class DummyDiscrete2DEnv(DummyEnv):
 
     def __init__(self, random=True):
         super().__init__(random)
+        self.shape = (2, 2)
+        self._observation_space = gym.spaces.Box(
+            low=-1, high=1, shape=self.shape, dtype=np.float32)
 
     @property
     def observation_space(self):
         """Return an observation space."""
-        self.shape = (2, 2)
-        return gym.spaces.Box(
-            low=-1, high=1, shape=self.shape, dtype=np.float32)
+        return self._observation_space
+
+    @observation_space.setter
+    def observation_space(self, observation_space):
+        self._observation_space = observation_space
 
     @property
     def action_space(self):

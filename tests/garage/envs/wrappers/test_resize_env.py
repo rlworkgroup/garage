@@ -5,7 +5,6 @@ from gym.spaces import Discrete
 import numpy as np
 
 from garage.envs.wrappers import Resize
-from garage.tf.envs import TfEnv
 from tests.fixtures.envs.dummy import DummyDiscrete2DEnv
 
 
@@ -13,9 +12,9 @@ class TestResize(unittest.TestCase):
     def setUp(self):
         self.width = 16
         self.height = 16
-        self.env = TfEnv(DummyDiscrete2DEnv())
-        self.env_r = TfEnv(
-            Resize(DummyDiscrete2DEnv(), width=self.width, height=self.height))
+        self.env = DummyDiscrete2DEnv()
+        self.env_r = Resize(
+            DummyDiscrete2DEnv(), width=self.width, height=self.height)
 
     def tearDown(self):
         self.env.close()
