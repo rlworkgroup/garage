@@ -29,7 +29,7 @@ class BernoulliMLPRegressor(LayersPowered, Serializable, Parameterized):
             optimizer=None,
             tr_optimizer=None,
             use_trust_region=True,
-            step_size=0.01,
+            max_kl_step=0.01,
             normalize_inputs=True,
             no_initial_trust_region=True,
     ):
@@ -42,7 +42,7 @@ class BernoulliMLPRegressor(LayersPowered, Serializable, Parameterized):
         mean network.
         :param optimizer: Optimizer for minimizing the negative log-likelihood.
         :param use_trust_region: Whether to use trust region constraint.
-        :param step_size: KL divergence constraint for each iteration
+        :param max_kl_step: KL divergence constraint for each iteration
         """
         Parameterized.__init__(self)
         Serializable.quick_init(self, locals())
@@ -115,7 +115,7 @@ class BernoulliMLPRegressor(LayersPowered, Serializable, Parameterized):
                 target=self,
                 network_outputs=[p_var],
                 inputs=[xs_var, ys_var, old_p_var],
-                leq_constraint=(mean_kl, step_size))
+                leq_constraint=(mean_kl, max_kl_step))
 
             self.use_trust_region = use_trust_region
             self.name = name

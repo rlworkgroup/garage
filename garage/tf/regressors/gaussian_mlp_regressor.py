@@ -29,7 +29,7 @@ class GaussianMLPRegressor(LayersPowered, Serializable, Parameterized):
                  optimizer=None,
                  optimizer_args=None,
                  use_trust_region=True,
-                 step_size=0.01,
+                 max_kl_step=0.01,
                  learn_std=True,
                  init_std=1.0,
                  adaptive_std=False,
@@ -48,7 +48,7 @@ class GaussianMLPRegressor(LayersPowered, Serializable, Parameterized):
          mean network.
         :param optimizer: Optimizer for minimizing the negative log-likelihood.
         :param use_trust_region: Whether to use trust region constraint.
-        :param step_size: KL divergence constraint for each iteration
+        :param max_kl_step: KL divergence constraint for each iteration
         :param learn_std: Whether to learn the standard deviations. Only
          effective if adaptive_std is False. If adaptive_std is True, this
          parameter is ignored, and the weights for the std network are always
@@ -213,7 +213,7 @@ class GaussianMLPRegressor(LayersPowered, Serializable, Parameterized):
             )
 
             if use_trust_region:
-                optimizer_args["leq_constraint"] = (mean_kl, step_size)
+                optimizer_args["leq_constraint"] = (mean_kl, max_kl_step)
                 optimizer_args["inputs"] = [
                     xs_var, ys_var, old_means_var, old_log_stds_var
                 ]
