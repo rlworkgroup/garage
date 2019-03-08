@@ -13,9 +13,9 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import tensorflow as tf
 
+from garage.experiment import deterministic
 from garage.experiment import LocalRunner
 from garage.exploration_strategies import OUStrategy
-from garage.misc import ext
 from garage.misc import logger as garage_logger
 from garage.replay_buffer import HerReplayBuffer
 from garage.tf.algos import DDPG
@@ -108,7 +108,7 @@ def run_garage(env, seed, log_dir):
     :param log_dir: Log dir path.
     :return:
     """
-    ext.set_seed(seed)
+    deterministic.set_seed(seed)
 
     with tf.Graph().as_default():
         with LocalRunner() as runner:

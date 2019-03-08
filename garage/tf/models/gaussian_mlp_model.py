@@ -2,7 +2,7 @@
 import numpy as np
 import tensorflow as tf
 
-from garage.misc import ext
+from garage.experiment import deterministic
 from garage.tf.core.mlp import mlp
 from garage.tf.core.parameter import parameter
 from garage.tf.distributions import DiagonalGaussian
@@ -174,7 +174,8 @@ class GaussianMLPModel(Model):
         dist = DiagonalGaussian(action_dim)
 
         rnd = tf.random.normal(
-            shape=mean_var.get_shape().as_list()[1:], seed=ext.get_seed())
+            shape=mean_var.get_shape().as_list()[1:],
+            seed=deterministic.get_seed())
         action_var = rnd * tf.exp(std_var) + mean_var
 
         return action_var, mean_var, std_var, std_param_var, dist

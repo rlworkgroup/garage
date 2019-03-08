@@ -2,11 +2,10 @@ import numpy as np
 import tensorflow as tf
 
 from garage.core import Serializable
-from garage.misc import ext
 from garage.misc import krylov
 from garage.misc import logger
-from garage.misc.ext import sliced_fun
 from garage.tf.misc import tensor_utils
+from garage.tf.optimizers.utils import LazyDict, sliced_fun
 
 
 class PerlmutterHvp:
@@ -51,7 +50,7 @@ class PerlmutterHvp:
                     return tensor_utils.flatten_tensor_variables(
                         hx_plain_splits)
 
-            self.opt_fun = ext.LazyDict(
+            self.opt_fun = LazyDict(
                 f_hx_plain=lambda: tensor_utils.compile_function(
                     inputs=inputs + xs,
                     outputs=hx_plain(),
@@ -118,7 +117,7 @@ class FiniteDifferenceHvp:
                         hx = (flat_grad_dvplus - flat_grad) / eps
                     return hx
 
-            self.opt_fun = ext.LazyDict(
+            self.opt_fun = LazyDict(
                 f_grad=lambda: tensor_utils.compile_function(
                     inputs=inputs,
                     outputs=flat_grad,
@@ -244,7 +243,7 @@ class ConjugateGradientOptimizer(Serializable):
             self._max_constraint_val = constraint_value
             self._constraint_name = constraint_name
 
-            self._opt_fun = ext.LazyDict(
+            self._opt_fun = LazyDict(
                 f_loss=lambda: tensor_utils.compile_function(
                     inputs=inputs + extra_inputs,
                     outputs=loss,

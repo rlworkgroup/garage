@@ -26,8 +26,8 @@ import pandas as pd
 import tensorflow as tf
 
 from garage.envs import normalize
+from garage.experiment import deterministic
 from garage.experiment import LocalRunner
-from garage.misc import ext
 from garage.misc import logger as garage_logger
 from garage.tf.algos import PPO
 from garage.tf.baselines import GaussianMLPBaseline
@@ -103,7 +103,7 @@ def run_garage(env, seed, log_dir):
     :param log_dir: Log dir path.
     :return:
     """
-    ext.set_seed(seed)
+    deterministic.set_seed(seed)
 
     with tf.Graph().as_default():
         with LocalRunner() as runner:

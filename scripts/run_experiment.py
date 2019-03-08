@@ -13,15 +13,18 @@ import joblib
 import psutil
 
 from garage import config
+from garage.experiment import deterministic
 from garage.experiment.experiment import concretize
 from garage.misc.console import colorize
-from garage.misc.ext import is_iterable
-from garage.misc.ext import set_seed
 import garage.misc.logger as logger
 import garage.plotter
 from garage.sampler import parallel_sampler
 from garage.sampler.utils import mask_signals
 import garage.tf.plotter
+
+
+def is_iterable(obj):
+    return isinstance(obj, str) or getattr(obj, '__iter__', False)
 
 
 def run_experiment(argv):
@@ -117,7 +120,7 @@ def run_experiment(argv):
     args = parser.parse_args(argv[1:])
 
     if args.seed is not None:
-        set_seed(args.seed)
+        deterministic.set_seed(args.seed)
 
     # SIGINT is blocked for all processes created in parallel_sampler to avoid
     # the creation of sleeping and zombie processes.

@@ -2,7 +2,7 @@ import pickle
 
 import numpy as np
 
-from garage.misc import ext
+from garage.experiment import deterministic
 from garage.misc import logger
 from garage.sampler.stateful_pool import SharedGlobal
 from garage.sampler.stateful_pool import singleton_pool
@@ -74,7 +74,7 @@ def close():
 
 def _worker_set_seed(_, seed):
     logger.log("Setting seed to %d" % seed)
-    ext.set_seed(seed)
+    deterministic.set_seed(seed)
 
 
 def set_seed(seed):

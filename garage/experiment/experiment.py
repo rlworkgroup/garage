@@ -20,7 +20,12 @@ import numpy as np
 from garage import config
 from garage.core import Serializable
 from garage.misc.console import mkdir_p
-from garage.misc.ext import AttrDict
+
+
+class AttrDict(dict):
+    def __init__(self, *args, **kwargs):
+        super(AttrDict, self).__init__(*args, **kwargs)
+        self.__dict__ = self
 
 
 def flatten(l):
