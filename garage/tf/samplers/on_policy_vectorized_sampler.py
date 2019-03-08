@@ -20,10 +20,7 @@ class OnPolicyVectorizedSampler(BatchSampler):
     @overrides
     def start_worker(self):
         n_envs = self.n_envs
-        envs = [
-            pickle.loads(pickle.dumps(self.env))
-            for _ in range(n_envs)
-        ]
+        envs = [pickle.loads(pickle.dumps(self.env)) for _ in range(n_envs)]
         self.vec_env = VecEnvExecutor(
             envs=envs, max_path_length=self.algo.max_path_length)
         self.env_spec = self.env.spec
