@@ -114,10 +114,6 @@ class NPO(BatchPolopt):
         logger.record_tabular("{}/KLBefore".format(self.policy.name),
                               policy_kl_before)
         logger.record_tabular("{}/KL".format(self.policy.name), policy_kl)
-        clip_frac = self.f_clip_frac(*policy_opt_input_values)
-        logger.record_tabular("{}/ClipFrac".format(self.policy.name),
-                              clip_frac)
-
         pol_ent = self.f_policy_entropy(*policy_opt_input_values)
         logger.record_tabular("{}/Entropy".format(self.policy.name),
                               np.mean(pol_ent))
@@ -352,9 +348,6 @@ class NPO(BatchPolopt):
                         1 - self.lr_clip_range,
                         1 + self.lr_clip_range,
                         name="lr_clip")
-                    clip_frac = tf.reduce_mean(
-                        tf.to_float(
-                            tf.greater(tf.abs(lr - 1.0), self.lr_clip_range)))
                     if self.policy.recurrent:
                         surr_clip = lr_clip * advantages * i.valid_var
                     else:
@@ -377,11 +370,6 @@ class NPO(BatchPolopt):
                 flatten_inputs(self._policy_opt_inputs),
                 pol_mean_kl,
                 log_name="f_policy_kl")
-
-            self.f_clip_frac = tensor_utils.compile_function(
-                flatten_inputs(self._policy_opt_inputs),
-                clip_frac,
-                log_name="f_clip_frac")
 
             self.f_rewards = tensor_utils.compile_function(
                 flatten_inputs(self._policy_opt_inputs),
