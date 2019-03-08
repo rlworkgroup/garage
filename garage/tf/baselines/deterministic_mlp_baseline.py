@@ -17,6 +17,7 @@ class DeterministicMLPBaseline(Baseline, Parameterized, Serializable):
             subsample_factor=1.,
             num_seq_inputs=1,
             regressor_args=None,
+            name="DeterministicMLPBaseline",
     ):
         """
         Constructor.
@@ -36,8 +37,9 @@ class DeterministicMLPBaseline(Baseline, Parameterized, Serializable):
             input_shape=(
                 env_spec.observation_space.flat_dim * num_seq_inputs, ),
             output_dim=1,
-            name="DeterministicMLPBaseline",
+            name=name,
             **regressor_args)
+        self.name = name
 
     @overrides
     def get_param_values(self, **tags):

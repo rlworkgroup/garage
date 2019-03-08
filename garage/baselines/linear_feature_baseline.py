@@ -5,9 +5,10 @@ from garage.misc.overrides import overrides
 
 
 class LinearFeatureBaseline(Baseline):
-    def __init__(self, env_spec, reg_coeff=1e-5):
+    def __init__(self, env_spec, reg_coeff=1e-5, name="LinearFeatureBaseline"):
         self._coeffs = None
         self._reg_coeff = reg_coeff
+        self.name = name
 
     @overrides
     def get_param_values(self, **tags):

@@ -17,6 +17,7 @@ class GaussianMLPBaseline(Baseline, Parameterized, Serializable):
             subsample_factor=1.,
             num_seq_inputs=1,
             regressor_args=None,
+            name="GaussianMLPBaseline",
     ):
         """
         Constructor.
@@ -36,8 +37,9 @@ class GaussianMLPBaseline(Baseline, Parameterized, Serializable):
             input_shape=(
                 env_spec.observation_space.flat_dim * num_seq_inputs, ),
             output_dim=1,
-            name="GaussianMLPBaseline",
+            name=name,
             **regressor_args)
+        self.name = name
 
     @overrides
     def fit(self, paths):

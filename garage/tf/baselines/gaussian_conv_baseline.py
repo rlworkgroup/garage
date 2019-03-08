@@ -22,6 +22,7 @@ class GaussianConvBaseline(Baseline, Parameterized, Serializable):
             env_spec,
             subsample_factor=1.,
             regressor_args=None,
+            name="GaussianConvBaseline",
     ):
         Parameterized.__init__(self)
         Serializable.quick_init(self, locals())
@@ -33,8 +34,9 @@ class GaussianConvBaseline(Baseline, Parameterized, Serializable):
         self._regressor = GaussianConvRegressor(
             input_shape=env_spec.observation_space.shape,
             output_dim=1,
-            name="GaussianConvBaseline",
+            name=name,
             **regressor_args)
+        self.name = name
 
     @overrides
     def fit(self, paths):
