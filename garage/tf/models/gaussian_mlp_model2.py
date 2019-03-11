@@ -3,7 +3,7 @@ import numpy as np
 import tensorflow as tf
 import tensorflow_probability as tfp
 
-from garage.misc import ext
+from garage.experiment import deterministic
 from garage.tf.core.mlp import mlp
 from garage.tf.core.parameter import parameter
 from garage.tf.models.base import Model
@@ -174,6 +174,6 @@ class GaussianMLPModel2(Model):
         distribution = tfp.distributions.MultivariateNormalDiag(
             mean_var, tf.exp(log_std_var))
 
-        action_var = distribution.sample(seed=ext.get_seed())
+        action_var = distribution.sample(seed=deterministic.get_seed())
 
         return action_var, log_std_var, distribution

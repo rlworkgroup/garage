@@ -4,8 +4,8 @@ import scipy.optimize
 import tensorflow as tf
 
 from garage.core import Serializable
-from garage.misc import ext
 from garage.tf.misc import tensor_utils
+from garage.tf.optimizers.utils import LazyDict
 
 
 class LbfgsOptimizer(Serializable):
@@ -55,7 +55,7 @@ class LbfgsOptimizer(Serializable):
             if extra_inputs is None:
                 extra_inputs = list()
 
-            self._opt_fun = ext.LazyDict(
+            self._opt_fun = LazyDict(
                 f_loss=lambda: tensor_utils.compile_function(
                     inputs + extra_inputs, loss),
                 f_opt=lambda: tensor_utils.compile_function(
