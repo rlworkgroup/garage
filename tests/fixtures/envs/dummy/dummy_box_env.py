@@ -23,7 +23,7 @@ class DummyBoxEnv(DummyEnv):
 
     def reset(self):
         """Reset the environment."""
-        return np.zeros(1, dtype=np.float32)
+        return np.ones(1, dtype=np.float32)
 
     def step(self, action):
         """Step the environment."""

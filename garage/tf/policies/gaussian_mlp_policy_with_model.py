@@ -82,7 +82,8 @@ class GaussianMLPPolicyWithModel(StochasticPolicy2):
     def _initialize(self):
         state_input = tf.placeholder(tf.float32, shape=(None, self.obs_dim))
 
-        self.model.build(state_input)
+        with tf.variable_scope(self._variable_scope):
+            self.model.build(state_input)
 
         self._f_dist = tf.get_default_session().make_callable(
             [
@@ -98,7 +99,8 @@ class GaussianMLPPolicyWithModel(StochasticPolicy2):
 
     def dist_info_sym(self, obs_var, state_info_vars=None, name='default'):
         """Symbolic graph of the distribution."""
-        _, mean_var, log_std_var, _ = self.model.build(obs_var, name=name)
+        with tf.variable_scope(self._variable_scope):
+            _, mean_var, log_std_var, _ = self.model.build(obs_var, name=name)
         return dict(mean=mean_var, log_std=log_std_var)
 
     def get_action(self, observation):
@@ -119,7 +121,7 @@ class GaussianMLPPolicyWithModel(StochasticPolicy2):
 
     def get_params(self, trainable=True):
         """Get the trainable variables."""
-        return self.model._variable_scope.trainable_variables()
+        return self.get_trainable_vars()
 
     @property
     def distribution(self):

@@ -4,7 +4,7 @@ import tensorflow as tf
 
 from garage.misc.overrides import overrides
 from garage.tf.distributions import Categorical
-from garage.tf.models.discrete_mlp_model import DiscreteMLPModel
+from garage.tf.models.mlp_model import MLPModel
 from garage.tf.policies.base2 import StochasticPolicy2
 
 
@@ -12,7 +12,7 @@ class CategoricalMLPPolicyWithModel(StochasticPolicy2):
     """
     CategoricalMLPPolicy with model.
 
-    It only works with Discrete environment.
+    It only works with akro.tf.Discrete action space.
 
     Args:
         env_spec: Environment specification.
@@ -33,13 +33,15 @@ class CategoricalMLPPolicyWithModel(StochasticPolicy2):
                  hidden_nonlinearity=tf.nn.tanh,
                  output_nonlinearity=tf.nn.softmax,
                  layer_normalization=False):
-        assert isinstance(env_spec.action_space, Discrete), (
-            "CategoricalMLPPolicy only works with Discrete environment.")
+        assert isinstance(
+            env_spec.action_space,
+            Discrete), ("CategoricalMLPPolicy only works with akro.tf.Discrete"
+                        "action space.")
         super().__init__(name, env_spec)
         self.obs_dim = env_spec.observation_space.flat_dim
         self.action_dim = env_spec.action_space.n
 
-        self.model = DiscreteMLPModel(
+        self.model = MLPModel(
             output_dim=self.action_dim,
             name=name,
             hidden_sizes=hidden_sizes,
@@ -52,7 +54,8 @@ class CategoricalMLPPolicyWithModel(StochasticPolicy2):
     def _initialize(self):
         state_input = tf.placeholder(tf.float32, shape=(None, self.obs_dim))
 
-        self.model.build(state_input)
+        with tf.variable_scope(self._variable_scope):
+            self.model.build(state_input)
 
         self._f_prob = tf.get_default_session().make_callable(
             self.model.networks['default'].output,
@@ -66,7 +69,9 @@ class CategoricalMLPPolicyWithModel(StochasticPolicy2):
     @overrides
     def dist_info_sym(self, obs_var, state_info_vars=None, name=None):
         """Symbolic graph of the distribution."""
-        prob = self.model.build(obs_var, name=name)[0]
+        with tf.variable_scope(self._variable_scope):
+            prob = self.model.build(obs_var, name=name)[0]
+
         return dict(prob=prob)
 
     @overrides
@@ -74,10 +79,6 @@ class CategoricalMLPPolicyWithModel(StochasticPolicy2):
         """Distribution info."""
         return dict(prob=self._f_prob(obs))
 
-    # The return value is a pair. The first item is a matrix (N, A), where each
-    # entry corresponds to the action value taken. The second item is a vector
-    # of length N, where each entry is the density value for that action, under
-    # the current policy
     @overrides
     def get_action(self, observation):
         """Return a single action."""

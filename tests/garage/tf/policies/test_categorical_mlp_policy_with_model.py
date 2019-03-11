@@ -1,4 +1,3 @@
-"""This script creates a unittest that tests qf-derived policy."""
 import pickle
 
 import numpy as np
@@ -17,7 +16,7 @@ class TestCategoricalMLPPolicyWithModel(TfGraphTestCase):
         self.policy = CategoricalMLPPolicyWithModel(env_spec=self.env.spec)
         self.env.reset()
 
-    def test_categorical_mlp_policy_with_model_get_action(self):
+    def test_get_action(self):
         obs, _, _, _ = self.env.step(1)
         action, _ = self.policy.get_action(obs)
         assert self.env.action_space.contains(action)
@@ -25,15 +24,21 @@ class TestCategoricalMLPPolicyWithModel(TfGraphTestCase):
         for action in actions:
             assert self.env.action_space.contains(action)
 
-    def test_categorical_mlp_policy_with_model_is_pickleable(self):
-        with tf.Session(graph=tf.Graph()):
-            p = pickle.dumps(self.policy)
-            policy_pickled = pickle.loads(p)
-            obs, _, _, _ = self.env.step(1)
-            action, _ = policy_pickled.get_action(obs)
-            assert self.env.action_space.contains(action)
+    def test_is_pickleable(self):
+        obs, _, _, _ = self.env.step(1)
+        action1, _ = self.policy.get_action(obs)
+        p = pickle.dumps(self.policy)
 
-    def test_categorical_mlp_policy_with_model_dist_info_sym(self):
+        with tf.Session(graph=tf.Graph()):
+            policy_pickled = pickle.loads(p)
+            action2, _ = policy_pickled.get_action(obs)
+            assert self.env.action_space.contains(action2)
+
+            prob1 = self.policy.dist_info([obs])
+            prob2 = policy_pickled.dist_info([obs])
+            assert np.array_equal(prob1['prob'], prob2['prob'])
+
+    def test_dist_info_sym(self):
         obs, _, _, _ = self.env.step(1)
 
         obs_dim = self.env.spec.observation_space.flat_dim

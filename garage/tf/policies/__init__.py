@@ -6,8 +6,6 @@ from garage.tf.policies.categorical_mlp_policy import CategoricalMLPPolicy
 from garage.tf.policies.categorical_mlp_policy_with_model import (
     CategoricalMLPPolicyWithModel)
 from garage.tf.policies.continuous_mlp_policy import ContinuousMLPPolicy
-from garage.tf.policies.continuous_mlp_policy_with_model import (
-    ContinuousMLPPolicyWithModel)
 from garage.tf.policies.deterministic_mlp_policy import DeterministicMLPPolicy
 from garage.tf.policies.deterministic_mlp_policy_with_model import (
     DeterministicMLPPolicyWithModel)
@@ -29,7 +27,6 @@ __all__ = [
     "CategoricalMLPPolicy",
     "CategoricalMLPPolicyWithModel",
     "ContinuousMLPPolicy",
-    "ContinuousMLPPolicyWithModel",
     "DiscreteQfDerivedPolicy",
     "DeterministicMLPPolicy",
     "DeterministicMLPPolicyWithModel",

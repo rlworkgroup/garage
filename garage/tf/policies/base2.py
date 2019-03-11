@@ -14,6 +14,7 @@ class Policy2:
     def __init__(self, name, env_spec):
         self._name = name
         self._env_spec = env_spec
+        self._variable_scope = tf.VariableScope(name)
 
     # Should be implemented by all policies
 
@@ -94,21 +95,18 @@ class Policy2:
         """Clean up operation."""
         pass
 
-    def get_trainable_vars(self, scope=None):
+    def get_trainable_vars(self):
         """Get trainable vars."""
-        scope = scope if scope else self.name
-        return tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=scope)
+        return self._variable_scope.trainable_variables()
 
-    def get_global_vars(self, scope=None):
+    def get_global_vars(self):
         """Get global vars."""
-        scope = scope if scope else self.name
-        return tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=scope)
+        return self._variable_scope.global_variables()
 
-    def get_regularizable_vars(self, scope=None):
+    def get_regularizable_vars(self):
         """Get regularizable vars."""
-        scope = scope if scope else self.name
         reg_vars = [
-            var for var in self.get_trainable_vars(scope=scope)
+            var for var in self.get_trainable_vars()
             if 'W' in var.name and 'output' not in var.name
         ]
         return reg_vars

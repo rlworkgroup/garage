@@ -22,7 +22,7 @@ class DummyDiscreteEnv(DummyEnv):
 
     def reset(self):
         """Reset the environment."""
-        self.state = np.zeros(1, dtype=np.float32)
+        self.state = np.ones(1, dtype=np.float32)
         return self.state
 
     def step(self, action):

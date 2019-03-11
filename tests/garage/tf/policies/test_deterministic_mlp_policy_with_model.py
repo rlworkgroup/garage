@@ -1,4 +1,3 @@
-"""This script creates a unittest that tests qf-derived policy."""
 import pickle
 
 import numpy as np
@@ -17,18 +16,31 @@ class TestDeterministicMLPPolicyWithModel(TfGraphTestCase):
         self.policy = DeterministicMLPPolicyWithModel(env_spec=self.env.spec)
         self.env.reset()
 
-    def test_deterministic_mlp_policy_with_model_get_action(self):
+    def test_get_action(self):
         obs, _, _, _ = self.env.step(1)
         action, _ = self.policy.get_action(obs)
         assert self.env.action_space.contains(np.asarray([action]))
         actions, _ = self.policy.get_actions([obs])
-        for action in actions:
-            assert self.env.action_space.contains(np.asarray([action]))
+        assert self.env.action_space.contains(actions)
 
-    def test_deterministic_mlp_policy_with_model_is_pickleable(self):
+    def test_get_action_sym(self):
+        obs, _, _, _ = self.env.step(1)
+
+        obs_dim = self.env.spec.observation_space.flat_dim
+        state_input = tf.placeholder(tf.float32, shape=(None, obs_dim))
+        action_sym = self.policy.get_action_sym(state_input, name="action_sym")
+
+        action1, _ = self.policy.get_action(obs)
+        action2 = self.sess.run(action_sym, feed_dict={state_input: [obs]})
+        assert action1 == action2
+
+    def test_is_pickleable(self):
+        p = pickle.dumps(self.policy)
+        obs, _, _, _ = self.env.step(1)
+        action1, _ = self.policy.get_action(obs)
+
         with tf.Session(graph=tf.Graph()):
-            p = pickle.dumps(self.policy)
             policy_pickled = pickle.loads(p)
-            obs, _, _, _ = self.env.step(1)
-            action, _ = policy_pickled.get_action(obs)
-            assert self.env.action_space.contains(np.asarray([action]))
+            action2, _ = policy_pickled.get_action(obs)
+            assert self.env.action_space.contains(np.asarray([action2]))
+            assert action1 == action2

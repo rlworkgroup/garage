@@ -1,13 +1,18 @@
-"""Discrete MLP Model."""
+"""
+MLP Model.
+
+A model composed only of a multi-layer perceptron (MLP), which maps
+real-valued inputs to real-valued outputs.
+"""
 import tensorflow as tf
 
 from garage.tf.core.mlp import mlp
 from garage.tf.models.base import Model
 
 
-class ContinuousMLPModel(Model):
+class MLPModel(Model):
     """
-    Continuous MLP Model.
+    MLP Model.
 
     Args:
         output_dim: Dimension of the network output.
@@ -25,7 +30,6 @@ class ContinuousMLPModel(Model):
                     of output dense layer(s).
         output_b_init: Initializer function for the bias
                     of output dense layer(s).
-        output_scale: The value multipled to the network output.
         layer_normalization: Bool for using layer normalization or not.
     """
 
@@ -39,7 +43,6 @@ class ContinuousMLPModel(Model):
                  output_nonlinearity=None,
                  output_w_init=tf.contrib.layers.xavier_initializer,
                  output_b_init=tf.zeros_initializer,
-                 output_scale=1.0,
                  layer_normalization=False):
         super().__init__(name)
         self._output_dim = output_dim
@@ -50,11 +53,10 @@ class ContinuousMLPModel(Model):
         self._output_nonlinearity = output_nonlinearity
         self._output_w_init = output_w_init
         self._output_b_init = output_b_init
-        self._output_scale = output_scale
         self._layer_normalization = layer_normalization
 
     def _build(self, state_input):
-        output = mlp(
+        return mlp(
             input_var=state_input,
             output_dim=self._output_dim,
             hidden_sizes=self._hidden_sizes,
@@ -66,5 +68,3 @@ class ContinuousMLPModel(Model):
             output_w_init=self._output_w_init(),
             output_b_init=self._output_b_init(),
             layer_normalization=self._layer_normalization)
-
-        return tf.multiply(output, self._output_scale, name="scaled_action")

@@ -36,8 +36,8 @@ class DummyDictEnv(DummyEnv):
 
     def reset(self):
         """Reset the environment."""
-        return np.zeros(1)
+        return np.ones(1)
 
     def step(self, action):
         """Step the environment."""
-        return np.zeros(1), 0, True, dict()
+        return np.ones(1), 0, True, dict()
