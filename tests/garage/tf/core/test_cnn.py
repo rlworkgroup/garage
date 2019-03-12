@@ -150,7 +150,6 @@ class TestCNN(TfGraphTestCase):
             if two_layer:
                 h1_w = tf.get_variable('cnn1/h1/weight').eval()
                 h1_b = tf.get_variable('cnn1/h1/bias').eval()
-
         filter_weights = (h0_w, h1_w) if two_layer else (h0_w, )
         filter_bias = (h0_b, h1_b) if two_layer else (h0_b, )
 

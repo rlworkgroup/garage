@@ -52,6 +52,7 @@ def cnn(input_var,
                       hidden_w_init, hidden_b_init, padding)
             if hidden_nonlinearity is not None:
                 h = hidden_nonlinearity(h)
+
         # flatten
         dim = tf.reduce_prod(h.get_shape()[1:].as_list())
         return tf.reshape(h, [-1, dim])

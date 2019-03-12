@@ -61,7 +61,7 @@ class EpsilonGreedyStrategy(ExplorationStrategy):
         if np.random.random() < self._epsilon:
             opt_action = self._action_space.sample()
 
-        return opt_action
+        return opt_action, dict()
 
     @overrides
     def get_actions(self, t, observations, policy, **kwargs):
@@ -83,7 +83,7 @@ class EpsilonGreedyStrategy(ExplorationStrategy):
             if np.random.random() < self._epsilon:
                 opt_actions[itr] = self._action_space.sample()
 
-        return opt_actions
+        return opt_actions, dict()
 
     def _decay(self):
         if self._epsilon > self._min_epsilon:

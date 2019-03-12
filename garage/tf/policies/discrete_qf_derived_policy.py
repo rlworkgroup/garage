@@ -29,6 +29,10 @@ class DiscreteQfDerivedPolicy(Policy, Serializable):
         self._env_spec = env_spec
         self._qf = qf
 
+        self._f_qval = tf.get_default_session().make_callable(
+            self._qf.q_vals(),
+            feed_list=[self._qf.models[0].networks['default'].input])
+
     @property
     def vectorized(self):
         """Vectorized or not."""
@@ -47,9 +51,7 @@ class DiscreteQfDerivedPolicy(Policy, Serializable):
             opt_action: Optimal action from this policy.
 
         """
-        sess = tf.get_default_session()
-        q_vals = sess.run(
-            self._qf.q_val, feed_dict={self._qf.obs_ph: [observation]})
+        q_vals = self._f_qval([observation])
         opt_action = np.argmax(q_vals)
 
         return opt_action
@@ -67,9 +69,7 @@ class DiscreteQfDerivedPolicy(Policy, Serializable):
             opt_actions: Optimal actions from this policy.
 
         """
-        sess = tf.get_default_session()
-        q_vals = sess.run(
-            self._qf.q_val, feed_dict={self._qf.obs_ph: observations})
+        q_vals = self._f_qval(observations)
         opt_actions = np.argmax(q_vals, axis=1)
 
         return opt_actions
