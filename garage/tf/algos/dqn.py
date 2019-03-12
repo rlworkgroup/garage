@@ -187,6 +187,9 @@ class DQN(OffPolicyRLAlgorithm):
         next_observations = transitions['next_observation']
         dones = transitions['terminal']
 
+        # normalize pixel to range [0, 1] since the samples stored in the
+        # replay buffer are of type uint8 and not normalized, for memory
+        # optimization
         observations = normalize_pixel_batch(self.env_spec, observations)
         next_observations = normalize_pixel_batch(self.env_spec,
                                                   next_observations)
