@@ -1,4 +1,4 @@
-"""GaussianMLPPolicy with GaussianMLPModel."""
+"""GaussianMLPPolicy with GaussianMLPModel2"""
 from akro.tf import Box
 import tensorflow as tf
 

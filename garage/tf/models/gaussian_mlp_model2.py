@@ -1,4 +1,4 @@
-"""GaussianMLPModel."""
+"""GaussianMLPModel2 with tfp.distributions."""
 import numpy as np
 import tensorflow as tf
 import tensorflow_probability as tfp
@@ -11,7 +11,7 @@ from garage.tf.models.base import Model
 
 class GaussianMLPModel2(Model):
     """
-    GaussianMLPModel.
+    GaussianMLPModel2 with tfp.distributions.
 
     Args:
     :param output_dim: Output dimension of the model.

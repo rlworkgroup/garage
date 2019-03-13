@@ -87,8 +87,8 @@ class GaussianMLPPolicyWithModel(StochasticPolicy2):
 
         self._f_dist = tf.get_default_session().make_callable(
             [
-                self.model.networks['default'].output,
-                self.model.networks['default'].std
+                self.model.networks['default'].mean,
+                self.model.networks['default'].log_std
             ],
             feed_list=[self.model.networks['default'].input])
 

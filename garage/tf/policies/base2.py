@@ -103,14 +103,6 @@ class Policy2:
         """Get global vars."""
         return self._variable_scope.global_variables()
 
-    def get_regularizable_vars(self):
-        """Get regularizable vars."""
-        reg_vars = [
-            var for var in self.get_trainable_vars()
-            if 'W' in var.name and 'output' not in var.name
-        ]
-        return reg_vars
-
 
 class StochasticPolicy2(Policy2):
     """StochasticPolicy."""

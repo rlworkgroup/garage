@@ -97,7 +97,7 @@ class GaussianMLPModel(Model):
 
     def network_output_spec(self):
         """Network output spec."""
-        return ['sample', 'mean', 'std', 'std_param']
+        return ['sample', 'mean', 'log_std', 'log_std_param']
 
     def _build(self, state_input):
         action_dim = self._output_dim
@@ -158,26 +158,28 @@ class GaussianMLPModel(Model):
                         name='std_network')
 
         mean_var = mean_network
-        std_param_var = std_network
+        log_std_param_var = std_network
 
         with tf.variable_scope('std_parameterization'):
             # build std_var with std parameterization
             if self._std_parameterization == 'exp':
-                std_param_var = std_param_var
+                log_std_param_var = log_std_param_var
             elif self._std_parameterization == 'softplus':
-                std_param_var = tf.log(1. + tf.exp(std_param_var))
+                log_std_param_var = tf.log(1. + tf.exp(log_std_param_var))
             else:
                 raise NotImplementedError
 
         with tf.variable_scope('std_limits'):
             if self._min_std_param:
-                std_var = tf.maximum(std_param_var, self._min_std_param)
+                log_std_var = tf.maximum(log_std_param_var,
+                                         self._min_std_param)
             if self._max_std_param:
-                std_var = tf.minimum(std_param_var, self._max_std_param)
+                log_std_var = tf.minimum(log_std_param_var,
+                                         self._max_std_param)
 
         rnd = tf.random.normal(
             shape=mean_var.get_shape().as_list()[1:],
             seed=deterministic.get_seed())
-        action_var = rnd * tf.exp(std_var) + mean_var
+        action_var = rnd * tf.exp(log_std_var) + mean_var
 
-        return action_var, mean_var, std_var, std_param_var
+        return action_var, mean_var, log_std_var, log_std_param_var
