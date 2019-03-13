@@ -61,7 +61,7 @@ class GaussianConvRegressor(LayersPowered, Serializable, Parameterized):
                  optimizer=None,
                  optimizer_args=dict(),
                  use_trust_region=True,
-                 step_size=0.01):
+                 max_kl_step=0.01):
         Parameterized.__init__(self)
         Serializable.quick_init(self, locals())
         self._mean_network_name = "mean_network"
@@ -228,7 +228,7 @@ class GaussianConvRegressor(LayersPowered, Serializable, Parameterized):
             )
 
             if use_trust_region:
-                optimizer_args["leq_constraint"] = (mean_kl, step_size)
+                optimizer_args["leq_constraint"] = (mean_kl, max_kl_step)
                 optimizer_args["inputs"] = [
                     xs_var, ys_var, old_means_var, old_log_stds_var
                 ]

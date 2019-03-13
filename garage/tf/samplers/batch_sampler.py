@@ -1,3 +1,5 @@
+from collections import deque
+
 import numpy as np
 import tensorflow as tf
 
@@ -22,6 +24,7 @@ class BatchSampler(BaseSampler):
     def __init__(self, algo, n_envs):
         super(BatchSampler, self).__init__(algo)
         self.n_envs = n_envs
+        self.eprewmean = deque(maxlen=100)
 
     def start_worker(self):
         assert singleton_pool.initialized, \
@@ -120,6 +123,7 @@ class BatchSampler(BaseSampler):
             [path["returns"][0] for path in paths]))
 
         undiscounted_returns = [sum(path["rewards"]) for path in paths]
+        self.eprewmean.extend(undiscounted_returns)
 
         ent = np.sum(
             self.algo.policy.distribution.entropy(agent_infos) *
@@ -143,6 +147,8 @@ class BatchSampler(BaseSampler):
         logger.record_tabular('AverageDiscountedReturn',
                               average_discounted_return)
         logger.record_tabular('AverageReturn', np.mean(undiscounted_returns))
+        logger.record_tabular('Extras/EpisodeRewardMean',
+                              np.mean(self.eprewmean))
         logger.record_tabular('NumTrajs', len(paths))
         logger.record_tabular('Entropy', ent)
         logger.record_tabular('Perplexity', np.exp(ent))

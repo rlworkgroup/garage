@@ -2,8 +2,8 @@
 This script creates a regression test over garage-PPO and baselines-PPO.
 
 Unlike garage, baselines doesn't set max_path_length. It keeps steps the action
-until it's done. So you need to change the baselines source code to make it
-stops at length 100.
+until it's done. So we introduced tests.wrappers.AutoStopEnv wrapper to set
+done=True when it reaches max_path_length.
 """
 import datetime
 import multiprocessing
@@ -32,7 +32,9 @@ from garage.misc import logger as garage_logger
 from garage.tf.algos import PPO
 from garage.tf.baselines import GaussianMLPBaseline
 from garage.tf.envs import TfEnv
+from garage.tf.optimizers import FirstOrderOptimizer
 from garage.tf.policies import GaussianMLPPolicy
+from tests.wrappers import AutoStopEnv
 
 
 class TestBenchmarkPPO(unittest.TestCase):
@@ -45,10 +47,13 @@ class TestBenchmarkPPO(unittest.TestCase):
         mujoco1m = benchmarks.get_benchmark("Mujoco1M")
 
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S-%f")
-        benchmark_dir = "./benchmark_ppo/%s/" % timestamp
+        benchmark_dir = "./data/local/benchmarks/ppo/%s/" % timestamp
         for task in mujoco1m["tasks"]:
             env_id = task["env_id"]
+
             env = gym.make(env_id)
+            baseline_env = AutoStopEnv(env_name=env_id, max_path_length=100)
+
             seeds = random.sample(range(100), task["trials"])
 
             task_dir = osp.join(benchmark_dir, env_id)
@@ -57,20 +62,22 @@ class TestBenchmarkPPO(unittest.TestCase):
             baselines_csvs = []
             garage_csvs = []
 
-            for trail in range(task["trials"]):
-                env.reset()
-                seed = seeds[trail]
+            for trial in range(task['trials']):
+                seed = seeds[trial]
 
-                trail_dir = task_dir + "/trail_%d_seed_%d" % (trail + 1, seed)
-                garage_dir = trail_dir + "/garage"
-                baselines_dir = trail_dir + "/baselines"
+                trial_dir = task_dir + "/trial_%d_seed_%d" % (trial + 1, seed)
+                garage_dir = trial_dir + "/garage"
+                baselines_dir = trial_dir + "/baselines"
 
-                # Run garage algorithms
-                garage_csv = run_garage(env, seed, garage_dir)
+                with tf.Graph().as_default():
+                    # Run baselines algorithms
+                    baseline_env.reset()
+                    baselines_csv = run_baselines(baseline_env, seed,
+                                                  baselines_dir)
 
-                # Run baselines algorithms
-                env.reset()
-                baselines_csv = run_baselines(env, seed, baselines_dir)
+                    # Run garage algorithms
+                    env.reset()
+                    garage_csv = run_garage(env, seed, garage_dir)
 
                 garage_csvs.append(garage_csv)
                 baselines_csvs.append(baselines_csv)
@@ -81,10 +88,10 @@ class TestBenchmarkPPO(unittest.TestCase):
                 b_csvs=baselines_csvs,
                 g_csvs=garage_csvs,
                 g_x="Iteration",
-                g_y="AverageReturn",
+                g_y="EpisodeRewardMean",
                 b_x="nupdates",
                 b_y="eprewmean",
-                trails=task["trials"],
+                trials=task['trials'],
                 seeds=seeds,
                 plt_file=plt_file,
                 env_id=env_id)
@@ -99,63 +106,64 @@ def run_garage(env, seed, log_dir):
     Replace the ppo with the algorithm you want to run.
 
     :param env: Environment of the task.
-    :param seed: Random seed for the trail.
+    :param seed: Random seed for the trial.
     :param log_dir: Log dir path.
     :return:
     """
     deterministic.set_seed(seed)
 
-    with tf.Graph().as_default():
-        with LocalRunner() as runner:
-            env = TfEnv(normalize(env))
+    with LocalRunner() as runner:
+        env = TfEnv(normalize(env))
 
-            policy = GaussianMLPPolicy(
-                name="policy",
-                env_spec=env.spec,
+        policy = GaussianMLPPolicy(
+            env_spec=env.spec,
+            hidden_sizes=(64, 64),
+            hidden_nonlinearity=tf.nn.tanh,
+            output_nonlinearity=None,
+        )
+
+        baseline = GaussianMLPBaseline(
+            env_spec=env.spec,
+            regressor_args=dict(
                 hidden_sizes=(64, 64),
-                hidden_nonlinearity=tf.nn.tanh,
-                output_nonlinearity=None,
-            )
-
-            baseline = GaussianMLPBaseline(
-                env_spec=env.spec,
-                regressor_args=dict(
-                    hidden_sizes=(64, 64),
-                    use_trust_region=True,
-                ),
-            )
-
-            algo = PPO(
-                env=env,
-                policy=policy,
-                baseline=baseline,
-                max_path_length=100,
-                discount=0.99,
-                gae_lambda=0.95,
-                clip_range=0.1,
-                policy_ent_coeff=0.0,
+                use_trust_region=False,
+                optimizer=FirstOrderOptimizer,
                 optimizer_args=dict(
                     batch_size=32,
                     max_epochs=10,
-                    tf_optimizer_args=dict(
-                        learning_rate=3e-4,
-                        epsilon=1e-5,
-                    ),
+                    tf_optimizer_args=dict(learning_rate=1e-3),
                 ),
-                plot=False,
-            )
+            ),
+        )
 
-            # Set up logger since we are not using run_experiment
-            tabular_log_file = osp.join(log_dir, "progress.csv")
-            garage_logger.add_tabular_output(tabular_log_file)
-            garage_logger.set_tensorboard_dir(log_dir)
+        algo = PPO(
+            env=env,
+            policy=policy,
+            baseline=baseline,
+            max_path_length=100,
+            discount=0.99,
+            gae_lambda=0.95,
+            lr_clip_range=0.2,
+            policy_ent_coeff=0.0,
+            optimizer_args=dict(
+                batch_size=32,
+                max_epochs=10,
+                tf_optimizer_args=dict(learning_rate=1e-3),
+            ),
+            plot=False,
+        )
 
-            runner.setup(algo, env)
-            runner.train(n_epochs=488, batch_size=2048)
+        # Set up logger since we are not using run_experiment
+        tabular_log_file = osp.join(log_dir, "progress.csv")
+        garage_logger.add_tabular_output(tabular_log_file)
+        garage_logger.set_tensorboard_dir(log_dir)
 
-            garage_logger.remove_tabular_output(tabular_log_file)
+        runner.setup(algo, env)
+        runner.train(n_epochs=488, batch_size=2048)
 
-            return tabular_log_file
+        garage_logger.remove_tabular_output(tabular_log_file)
+
+        return tabular_log_file
 
 
 def run_baselines(env, seed, log_dir):
@@ -165,7 +173,7 @@ def run_baselines(env, seed, log_dir):
     Replace the ppo and its training with the algorithm you want to run.
 
     :param env: Environment of the task.
-    :param seed: Random seed for the trail.
+    :param seed: Random seed for the trial.
     :param log_dir: Log dir path.
     :return
     """
@@ -177,7 +185,7 @@ def run_baselines(env, seed, log_dir):
     tf.Session(config=config).__enter__()
 
     # Set up logger for baselines
-    configure(dir=log_dir)
+    configure(dir=log_dir, format_strs=['stdout', 'log', 'csv', 'tensorboard'])
     baselines_logger.info('rank {}: seed={}, logdir={}'.format(
         0, seed, baselines_logger.get_dir()))
 
@@ -201,16 +209,16 @@ def run_baselines(env, seed, log_dir):
         noptepochs=10,
         log_interval=1,
         ent_coef=0.0,
-        lr=3e-4,
+        lr=1e-3,
         vf_coef=0.5,
-        max_grad_norm=0.5,
-        cliprange=0.1,
+        max_grad_norm=None,
+        cliprange=0.2,
         total_timesteps=int(1e6))
 
     return osp.join(log_dir, "progress.csv")
 
 
-def plot(b_csvs, g_csvs, g_x, g_y, b_x, b_y, trails, seeds, plt_file, env_id):
+def plot(b_csvs, g_csvs, g_x, g_y, b_x, b_y, trials, seeds, plt_file, env_id):
     """
     Plot benchmark from csv files of garage and baselines.
 
@@ -220,27 +228,27 @@ def plot(b_csvs, g_csvs, g_x, g_y, b_x, b_y, trails, seeds, plt_file, env_id):
     :param g_y: Y column names of garage csv.
     :param b_x: X column names of baselines csv.
     :param b_y: Y column names of baselines csv.
-    :param trails: Number of trails in the task.
+    :param trials: Number of trials in the task.
     :param seeds: A list contains all the seeds in the task.
     :param plt_file: Path of the plot png file.
     :param env_id: String contains the id of the environment.
     :return:
     """
     assert len(b_csvs) == len(g_csvs)
-    for trail in range(trails):
-        seed = seeds[trail]
+    for trial in range(trials):
+        seed = seeds[trial]
 
-        df_g = pd.read_csv(g_csvs[trail])
-        df_b = pd.read_csv(b_csvs[trail])
+        df_g = pd.read_csv(g_csvs[trial])
+        df_b = pd.read_csv(b_csvs[trial])
 
         plt.plot(
             df_g[g_x],
             df_g[g_y],
-            label="garage_trail%d_seed%d" % (trail + 1, seed))
+            label="garage_trial%d_seed%d" % (trial + 1, seed))
         plt.plot(
             df_b[b_x],
             df_b[b_y],
-            label="baselines_trail%d_seed%d" % (trail + 1, seed))
+            label="baselines_trial%d_seed%d" % (trial + 1, seed))
 
     plt.legend()
     plt.xlabel("Iteration")
