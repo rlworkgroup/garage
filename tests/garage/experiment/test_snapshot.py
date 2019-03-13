@@ -1,6 +1,5 @@
 import datetime
 import os.path as osp
-import unittest
 import uuid
 
 import dateutil
@@ -14,9 +13,10 @@ from garage.sampler.utils import rollout
 from garage.tf.algos import TRPO
 from garage.tf.envs import TfEnv
 from garage.tf.policies import CategoricalMLPPolicy
+from tests.fixtures import TfGraphTestCase
 
 
-class TestSnapshot(unittest.TestCase):
+class TestSnapshot(TfGraphTestCase):
     def setUp(self):
         # Save snapshot in params.pkl in self.log_dir folder
         now = datetime.datetime.now(dateutil.tz.tzlocal())
