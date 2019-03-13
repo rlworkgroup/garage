@@ -27,6 +27,15 @@ class QFunction2:
         """
         raise NotImplementedError
 
+    def clone(self, name):
+        """
+        Return a clone of the Q-function.
+
+        Args:
+            name: Name of the newly created q-function.
+        """
+        raise NotImplementedError
+
     def get_trainable_vars(self):
         """Get all trainable variables under the QFunction scope."""
         return self._variable_scope.trainable_variables()

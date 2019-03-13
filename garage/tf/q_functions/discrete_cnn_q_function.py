@@ -47,8 +47,8 @@ class DiscreteCNNQFunction(QFunction2):
                  num_filters,
                  strides,
                  hidden_sizes=[256],
-                 name="DiscreteCNNQFunction",
-                 padding="SAME",
+                 name='DiscreteCNNQFunction',
+                 padding='SAME',
                  max_pooling=False,
                  pool_strides=(2, 2),
                  pool_shapes=(2, 2),
@@ -83,7 +83,7 @@ class DiscreteCNNQFunction(QFunction2):
         self._dueling = dueling
 
         obs_dim = self._env_spec.observation_space.shape
-        action_dim = env_spec.action_space.flat_dim
+        action_dim = self._env_spec.action_space.flat_dim
 
         self.models = []
 
@@ -135,6 +135,7 @@ class DiscreteCNNQFunction(QFunction2):
             for model in self.models:
                 out = model.build(out)
 
+    @property
     def q_vals(self):
         """Q values."""
         return self.models[-1].networks['default'].outputs

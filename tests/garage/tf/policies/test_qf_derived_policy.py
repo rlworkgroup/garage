@@ -14,7 +14,7 @@ class SimpleQFunction:
 
         self.obs_ph = tf.placeholder(
             tf.float32, (None, ) + obs_dim, name="obs")
-        self.q_val = self.build_net(self.obs_ph)
+        self.q_vals = self.build_net(self.obs_ph)
 
     def build_net(self, input_var):
         return tf.identity(input_var)

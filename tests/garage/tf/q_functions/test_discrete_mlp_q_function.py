@@ -5,7 +5,6 @@ from nose2.tools.params import params
 import numpy as np
 import tensorflow as tf
 
-from garage.tf.envs import TfEnv
 from garage.tf.q_functions.discrete_mlp_q_function import DiscreteMLPQFunction
 from tests.fixtures import TfGraphTestCase
 from tests.fixtures.envs.dummy import DummyDiscreteEnv

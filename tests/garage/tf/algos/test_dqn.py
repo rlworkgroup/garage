@@ -1,5 +1,5 @@
 """
-This script creates a test that fails when garage.tf.algos.DDPG performance is
+This script creates a test that fails when garage.tf.algos.DQN performance is
 too low.
 """
 import gym
@@ -27,7 +27,7 @@ class TestDQN(TfGraphTestCase):
             size_in_transitions=int(5000),
             time_horizon=max_path_length)
         qf = DiscreteMLPQFunction(env_spec=env.spec, hidden_sizes=(64, 64))
-        policy = DiscreteQfDerivedPolicy(env_spec=env, qf=qf)
+        policy = DiscreteQfDerivedPolicy(env_spec=env.spec, qf=qf)
         epilson_greedy_strategy = EpsilonGreedyStrategy(
             env_spec=env.spec,
             total_timesteps=num_timesteps,

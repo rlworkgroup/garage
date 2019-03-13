@@ -11,12 +11,12 @@ from garage.tf.algos.trpo import TRPO
 from garage.tf.algos.vpg import VPG
 
 __all__ = [
-    "OffPolicyRLAlgorithm",
     "BatchPolopt",
     "DDPG",
     "DQN",
     "ERWR",
     "NPO",
+    "OffPolicyRLAlgorithm",
     "PPO",
     "REPS",
     "TNPG",
