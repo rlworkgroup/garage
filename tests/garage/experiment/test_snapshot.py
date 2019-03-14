@@ -4,7 +4,6 @@ import uuid
 
 import dateutil
 import joblib
-import tensorflow as tf
 
 from garage.baselines import LinearFeatureBaseline
 from garage.experiment import LocalRunner
@@ -17,23 +16,25 @@ from tests.fixtures import TfGraphTestCase
 
 
 class TestSnapshot(TfGraphTestCase):
-    def setUp(self):
+    @classmethod
+    def setUpClass(cls):
         # Save snapshot in params.pkl in self.log_dir folder
         now = datetime.datetime.now(dateutil.tz.tzlocal())
         rand_id = str(uuid.uuid4())[:5]
         timestamp = now.strftime('%Y_%m_%d_%H_%M_%S_%f_%Z')
         exp_name = 'experiment_%s_%s' % (timestamp, rand_id)
-        self.log_dir = osp.join('/tmp', exp_name)
+        cls.log_dir = osp.join('/tmp', exp_name)
 
-        self.prev_log_dir = logger.get_snapshot_dir()
-        self.prev_mode = logger.get_snapshot_mode()
+        cls.prev_log_dir = logger.get_snapshot_dir()
+        cls.prev_mode = logger.get_snapshot_mode()
 
-        logger.set_snapshot_dir(self.log_dir)
+        logger.set_snapshot_dir(cls.log_dir)
         logger.set_snapshot_mode('last')
 
-    def tearDown(self):
-        logger.set_snapshot_dir(self.prev_log_dir)
-        logger.set_snapshot_mode(self.prev_mode)
+    @classmethod
+    def tearDownClass(cls):
+        logger.set_snapshot_dir(cls.prev_log_dir)
+        logger.set_snapshot_mode(cls.prev_mode)
 
     def test_snapshot(self):
         with LocalRunner() as runner:
@@ -58,13 +59,17 @@ class TestSnapshot(TfGraphTestCase):
 
             env.close()
 
-        tf.reset_default_graph()
+        self.tearDown()
+        self.setUp()
 
         # Read snapshot from self.log_dir
         # Test the presence and integrity of policy and env
         with LocalRunner():
             snapshot = joblib.load(osp.join(self.log_dir, 'params.pkl'))
+
             env = snapshot['env']
             policy = snapshot['policy']
+            assert env
+            assert policy
 
             rollout(env, policy, animated=False)
