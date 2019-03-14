@@ -9,12 +9,8 @@ import time
 import tensorflow as tf
 
 from garage.misc.logger import logger
-from garage.sampler.parallel_sampler import singleton_pool
-from garage.tf.algos import BatchPolopt
-from garage.tf.plotter import Plotter
-from garage.tf.samplers import BatchSampler
-from garage.tf.samplers import OffPolicyVectorizedSampler
-from garage.tf.samplers import OnPolicyVectorizedSampler
+
+# Note: Optional module should be imported ad hoc to break circular dependency.
 
 
 class LocalRunner:
@@ -50,7 +46,7 @@ class LocalRunner:
 
         Args:
             max_cpus: The maximum number of parallel sampler workers.
-            sess: A optional tensorflow session.
+            sess: An optional tensorflow session.
                   A new session will be created immediately if not provided.
 
         Note:
@@ -66,6 +62,7 @@ class LocalRunner:
 
         """
         if max_cpus > 1:
+            from garage.sampler import singleton_pool
             singleton_pool.initialize(max_cpus)
         self.sess = sess or tf.Session()
         self.has_setup = False
@@ -112,12 +109,16 @@ class LocalRunner:
             sampler_args = {}
 
         if sampler_cls is None:
+            from garage.tf.algos.batch_polopt import BatchPolopt
             if isinstance(algo, BatchPolopt):
                 if self.policy.vectorized:
+                    from garage.tf.samplers import OnPolicyVectorizedSampler
                     sampler_cls = OnPolicyVectorizedSampler
                 else:
+                    from garage.tf.samplers import BatchSampler
                     sampler_cls = BatchSampler
             else:
+                from garage.tf.samplers import OffPolicyVectorizedSampler
                 sampler_cls = OffPolicyVectorizedSampler
 
         self.sampler = sampler_cls(algo, **sampler_args)
@@ -138,6 +139,7 @@ class LocalRunner:
         """Start Plotter and Sampler workers."""
         self.sampler.start_worker()
         if self.plot:
+            from garage.tf.plotter import Plotter
             self.plotter = Plotter(self.env, self.policy)
             self.plotter.start()
 
@@ -219,6 +221,7 @@ class LocalRunner:
         assert self.has_setup, "Use Runner.setup() to setup runner " \
                                "before training."
         if batch_size is None:
+            from garage.tf.samplers import OffPolicyVectorizedSampler
             if isinstance(self.sampler, OffPolicyVectorizedSampler):
                 batch_size = self.algo.max_path_length
             else:
