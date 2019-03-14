@@ -196,10 +196,6 @@ class DDPG(OffPolicyRLAlgorithm):
 
         if itr % self.n_epoch_cycles == 0:
             logger.log("Training finished")
-            logger.log("Saving snapshot #{}".format(int(epoch)))
-            params = self.get_itr_snapshot(epoch)
-            logger.save_itr_params(epoch, params)
-            logger.log("Saved")
             if self.evaluate:
                 logger.record_tabular('Epoch', epoch)
                 logger.record_tabular('AverageReturn',
