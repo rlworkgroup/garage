@@ -57,11 +57,12 @@ class OffPolicyVectorizedSampler(BatchSampler):
         self.vec_env.close()
 
     @overrides
-    def obtain_samples(self, itr, batch_size=None):
+    def obtain_samples(self, itr, batch_size):
         """
         Collect samples for the given iteration number.
 
         :param itr: Iteration number.
+        :param batch_size: Batch size.
         :return: A list of paths.
         """
         paths = []
@@ -69,8 +70,6 @@ class OffPolicyVectorizedSampler(BatchSampler):
         dones = np.asarray([True] * self.vec_env.num_envs)
         running_paths = [None] * self.vec_env.num_envs
         n_samples = 0
-        if not batch_size:
-            batch_size = self.n_envs * self.algo.max_path_length
 
         policy = self.algo.policy
         if self.algo.es:

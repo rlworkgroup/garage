@@ -150,7 +150,6 @@ def run_garage(env, seed, log_dir):
             target_update_tau=params["tau"],
             n_epochs=params["n_epochs"],
             n_epoch_cycles=params["n_epoch_cycles"],
-            max_path_length=params["n_rollout_steps"],
             n_train_steps=params["n_train_steps"],
             discount=params["discount"],
             exploration_strategy=action_noise,
@@ -168,7 +167,8 @@ def run_garage(env, seed, log_dir):
         runner.setup(algo, env)
         runner.train(
             n_epochs=params['n_epochs'],
-            n_epoch_cycles=params['n_epoch_cycles'])
+            n_epoch_cycles=params['n_epoch_cycles'],
+            batch_size=params["n_rollout_steps"])
 
         garage_logger.remove_tabular_output(tabular_log_file)
 

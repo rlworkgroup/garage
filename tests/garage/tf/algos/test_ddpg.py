@@ -44,14 +44,16 @@ class TestDDPG(TfGraphTestCase):
                 qf=qf,
                 replay_buffer=replay_buffer,
                 target_update_tau=1e-2,
-                max_path_length=100,
                 n_train_steps=50,
                 discount=0.9,
                 min_buffer_size=int(1e4),
                 exploration_strategy=action_noise,
             )
             runner.setup(algo, env)
-            last_avg_ret = runner.train(n_epochs=10, n_epoch_cycles=20)
+            last_avg_ret = runner.train(
+                n_epochs=10,
+                n_epoch_cycles=20,
+                batch_size=100)
             assert last_avg_ret > 60
 
             env.close()
