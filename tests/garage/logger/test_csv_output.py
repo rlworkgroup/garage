@@ -1,20 +1,17 @@
 import csv
+import tempfile
 import unittest
 
 from garage.logger import CsvOutput, TabularInput
 from garage.logger.csv_output import CsvOutputWarning
-from garage.misc.console import remove_if_exists
 
 
 class TestCsvOutput(unittest.TestCase):
     def setUp(self):
-        self.log_file = 'test_csv_output.csv'
-        self.csv_output = CsvOutput(self.log_file)
+        self.log_file = tempfile.NamedTemporaryFile()
+        self.csv_output = CsvOutput(self.log_file.name)
         self.tabular = TabularInput()
         self.tabular.clear()
-
-    def tearDown(self):
-        remove_if_exists(self.log_file)
 
     def test_record(self):
         foo = 1
@@ -67,7 +64,7 @@ class TestCsvOutput(unittest.TestCase):
 
     def assert_csv_matches(self, correct):
         """Check the first row of a csv file and compare it to known values."""
-        with open(self.log_file, 'r') as file:
+        with open(self.log_file.name, 'r') as file:
             reader = csv.DictReader(file)
 
             for correct_row in correct:
