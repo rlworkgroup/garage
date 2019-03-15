@@ -20,8 +20,7 @@ from tensorboard.plugins.custom_scalar import layout_pb2, metadata
 import tensorflow as tf
 
 from garage import config
-from garage.logger import HistogramInput, HistogramInputDistribution
-from garage.logger import LogOutput, TabularInput
+from garage.logger import distributions, LogOutput, TabularInput
 from garage.misc.console import colorize, mkdir_p
 
 
@@ -62,10 +61,11 @@ class TensorBoardOutput(LogOutput):
     def record(self, data, prefix=''):
         if isinstance(data, TabularInput):
             for key, value in data.as_dict.items():
-                if isinstance(value, HistogramInput):
+                if isinstance(value, distributions.Empirical):
                     self.record_histogram(key, value.data)
-                elif isinstance(value, HistogramInputDistribution):
-                    self.record_histogram_by_type(key, **vars(value))
+                elif isinstance(value, distributions.Parametric):
+                    self.record_histogram_by_type(key, value.family,
+                                                  **vars(value))
                 else:
                     self.record_scalar(key, value)
 

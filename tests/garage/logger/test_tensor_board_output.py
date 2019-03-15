@@ -2,10 +2,7 @@ import random
 
 import numpy as np
 
-from garage.logger import HistogramInput, HistogramInputGamma
-from garage.logger import HistogramInputNormal, HistogramInputPoisson
-from garage.logger import HistogramInputUniform, TensorBoardOutput
-from garage.logger import logger, tabular
+from garage.logger import distributions, logger, tabular, TensorBoardOutput
 from garage.misc.console import remove_dir_if_exists
 from tests.fixtures import TfTestCase
 
@@ -23,27 +20,27 @@ class TestTensorBoardOutput(TfTestCase):
             foo = random.randint(0, 998)
             bar = random.randint(0, 998)
             baz = np.random.rand(10).tolist()
-            tabular.record("foo", foo)
-            tabular.record("bar", bar)
-            tabular.record("hi", HistogramInput(baz))
+            tabular.record('foo', foo)
+            tabular.record('bar', bar)
+            tabular.record('hi', distributions.Empirical(baz))
             with tabular.prefix('hid\\'):
                 tabular.record(
-                    "normal",
-                    HistogramInputNormal(
+                    'normal',
+                    distributions.Normal(
                         shape=[1000, 10],
                         mean=np.random.rand(1),
                         stddev=np.random.rand(1)))
                 tabular.record(
-                    "gamma",
-                    HistogramInputGamma(
+                    'gamma',
+                    distributions.Gamma(
                         shape=[1000, 10], alpha=np.random.rand(1)))
                 tabular.record(
-                    "poisson",
-                    HistogramInputPoisson(
+                    'poisson',
+                    distributions.Poisson(
                         shape=[1000, 10], lam=np.random.rand(1)))
                 tabular.record(
-                    "uniform",
-                    HistogramInputUniform(
+                    'uniform',
+                    distributions.Uniform(
                         shape=[1000, 10], maxval=np.random.rand(1)))
 
             tb_output.dump()  # this should warn 'Cannot dump histogram.'
@@ -52,8 +49,8 @@ class TestTensorBoardOutput(TfTestCase):
             tb_output.dump()
 
             tabular.clear()
-            tabular.record("foo", foo + 1)
-            tabular.record("bar", bar + 1)
+            tabular.record('foo', foo + 1)
+            tabular.record('bar', bar + 1)
             logger.log(tabular)
             logger.dump_output_type(TensorBoardOutput)
 

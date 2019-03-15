@@ -8,21 +8,12 @@ from garage.logger.tabular_input import TabularInput
 from garage.logger.csv_output import CsvOutput  # noqa: I100
 from garage.logger.outputs import TextOutput
 from garage.logger.snapshotter import Snapshotter
-from garage.logger.tensorboard_inputs import HistogramInput
-from garage.logger.tensorboard_inputs import HistogramInputDistribution
-from garage.logger.tensorboard_inputs import HistogramInputGamma
-from garage.logger.tensorboard_inputs import HistogramInputNormal
-from garage.logger.tensorboard_inputs import HistogramInputPoisson
-from garage.logger.tensorboard_inputs import HistogramInputUniform
-from garage.logger.tensorboard_output import TensorBoardOutput
+from garage.logger.tensor_board_output import TensorBoardOutput
 
 logger = Logger()
 tabular = TabularInput()
 snapshotter = Snapshotter()
 
-__all__ = ("Logger", "NullOutput", "CsvOutput", "StdOutput", "TextOutput",
-           "LogOutput", "Snapshotter", "TabularInput", "HistogramInput",
-           "HistogramInputDistribution", "HistogramInputGamma",
-           "HistogramInputNormal", "HistogramInputPoisson",
-           "HistogramInputUniform", "TensorBoardOutput", "logger", "tabular",
-           "snapshotter")
+__all__ = ('Logger', 'NullOutput', 'CsvOutput', 'StdOutput', 'TextOutput',
+           'LogOutput', 'Snapshotter', 'TabularInput', 'TensorBoardOutput',
+           'logger', 'tabular', 'snapshotter')

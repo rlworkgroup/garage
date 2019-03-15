@@ -2,19 +2,19 @@
 
 import tensorflow as tf
 
-from garage.logger import HistogramInput, logger, tabular, TensorBoardOutput
+from garage.logger import distributions, logger, tabular, TensorBoardOutput
 
-tensorboard_output = TensorBoardOutput("data/local/histogram_example")
-logger.add_output(tensorboard_output)
+tensor_board_output = TensorBoardOutput("data/local/histogram_example")
+logger.add_output(tensor_board_output)
 N = 400
 for i in range(N):
     sess = tf.Session()
     sess.__enter__()
     k_val = i / float(N)
     tabular.record("app", k_val)
-    tabular.record("gauss", HistogramInput(k_val))
+    tabular.record("gauss", distributions.Empirical(k_val))
 
     logger.log(tabular)
     tabular.clear()
 
-    tensorboard_output.dump(step=i)
+    tensor_board_output.dump(step=i)

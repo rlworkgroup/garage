@@ -1,7 +1,7 @@
 import math
 import unittest
 
-from garage.logger import HistogramInput, TabularInput
+from garage.logger import distributions, TabularInput
 
 
 class TestTabularInput(unittest.TestCase):
@@ -14,7 +14,7 @@ class TestTabularInput(unittest.TestCase):
         baz = [2, 4, 6, 8, 10, 12, 14, 16, 18, 20]
         self.tabular.record('foo', foo)
         self.tabular.record('bar', bar)
-        self.tabular.record('baz', HistogramInput(baz))
+        self.tabular.record('baz', distributions.Empirical(baz))
 
         correct_str = (
             '---  ---\n'
