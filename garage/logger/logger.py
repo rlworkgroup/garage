@@ -131,12 +131,11 @@ foo  bar
 # Feel free to add your own inputs and outputs to the logger!
 
 """
-from contextlib import contextmanager
-from warnings import warn
-
-from gym.utils import colorize
+import contextlib
+import warnings
 
 from garage.logger.outputs import LogOutput
+from garage.misc.console import colorize
 
 
 class Logger:
@@ -173,6 +172,9 @@ class Logger:
             warning = "Log data of type " + type(data).__name__
             warning += " was not accepted by any output"
             return self._warn(warning)
+
+        if hasattr(data, 'clear'):
+            data.clear()
 
         return None
 
@@ -240,7 +242,7 @@ class Logger:
         for output in self._outputs:
             output.dump(step=step)
 
-    @contextmanager
+    @contextlib.contextmanager
     def prefix(self, prefix):
         """Add a prefix to the logger.
 
@@ -279,7 +281,7 @@ class Logger:
         is the one printed.
         """
         if not self._warned_once:
-            warn(colorize(msg, 'yellow'), self.LogWarning, stacklevel=3)
+            warnings.warn(colorize(msg, 'yellow'), LogWarning, stacklevel=3)
         self._warned_once = True
         return msg
 
@@ -287,7 +289,8 @@ class Logger:
         """Disable logger warnings for testing."""
         self._warned_once = True
 
-    class LogWarning(UserWarning):
-        """Warning class for the Logger."""
 
-        pass
+class LogWarning(UserWarning):
+    """Warning class for the Logger."""
+
+    pass

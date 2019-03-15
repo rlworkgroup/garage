@@ -1,9 +1,5 @@
-"""Contains the tabular class.
-
-This class holds tabular information for later output.
-"""
+"""A `garage.logger` input for tabular (key-value) data."""
 from contextlib import contextmanager
-import numbers
 
 import numpy as np
 import tabulate
@@ -22,7 +18,7 @@ class TabularInput:
 
     def __str__(self):
         """Return a string representation of the table for the logger."""
-        return tabulate.tabulate(self.primitive_dict.items())
+        return tabulate.tabulate(self.as_primitive_dict.items())
 
     def record(self, key, val):
         """Save key/value entries for the table.
@@ -94,19 +90,16 @@ class TabularInput:
         self._prefix_str = ''.join(self._prefixes)
 
     @property
-    def primitive_dict(self):
+    def as_primitive_dict(self):
         """Return the dictionary, excluding all nonprimitive types."""
-        primitives = (int, float, str, bool, numbers.Number)
-
-        def is_primitive(x):
-            return isinstance(x, primitives)
+        primitives = (int, float, str, bool)
 
         return {
             key: val
-            for key, val in self._dict.items() if is_primitive(val)
+            for key, val in self._dict.items() if isinstance(val, primitives)
         }
 
     @property
-    def dict(self):
+    def as_dict(self):
         """Return a dictionary of the tabular items."""
         return self._dict

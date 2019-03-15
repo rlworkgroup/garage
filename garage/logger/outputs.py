@@ -3,7 +3,6 @@
 Each class is sent logger data and handles it itself.
 """
 import abc
-import csv
 import datetime
 import os
 import sys
@@ -140,34 +139,4 @@ class TextOutput(FileOutput):
             out = "%s%s%s" % (timestamp, self._delimiter, out)
 
         self._log_file.write(out + '\n')
-        self._log_file.flush()
-
-
-class CsvOutput(FileOutput):
-    """CSV file output for logger.
-
-    :param file_name: The file this output should log to.
-    """
-
-    def __init__(self, file_name):
-        super().__init__(file_name)
-
-        self._tabular_header_written = False
-
-    @property
-    def types_accepted(self):
-        """Accept TabularInput objects only."""
-        return (TabularInput, )
-
-    def record(self, data, prefix=''):
-        """Log tabular data to CSV."""
-        dictionary = data.primitive_dict
-
-        writer = csv.DictWriter(
-            self._log_file, fieldnames=set(dictionary.keys()))
-
-        if not self._tabular_header_written:
-            writer.writeheader()
-            self._tabular_header_written = True
-        writer.writerow(dictionary)
         self._log_file.flush()

@@ -61,7 +61,7 @@ class TensorBoardOutput(LogOutput):
 
     def record(self, data, prefix=''):
         if isinstance(data, TabularInput):
-            for key, value in data.dict.items():
+            for key, value in data.as_dict.items():
                 if isinstance(value, HistogramInput):
                     self.record_histogram(key, value.data)
                 elif isinstance(value, HistogramInputDistribution):

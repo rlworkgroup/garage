@@ -11,15 +11,12 @@ from garage.misc.console import remove_if_exists
 
 class TestLogger(unittest.TestCase):
     def setUp(self):
-        super().setUp()
-        logger.disable_warnings()
+        tabular.clear()
 
     def tearDown(self):
-        super().tearDown()
         logger.remove_all()
 
     def test_std(self):
-        tabular.clear()
         logger.add_output(StdOutput(with_timestamp=False))
 
         with io.StringIO() as str_out:
