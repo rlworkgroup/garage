@@ -105,7 +105,7 @@ class TensorBoardOutput(LogOutput):
 
     def record_histogram(self, key, val, name=None):
         if str(key) not in self._histogram_ds:
-            with tf.name_scope(name, "record_histogram"):
+            with tf.name_scope(name, 'record_histogram'):
                 self._histogram_ds[str(key)] = tf.Variable(val)
             self._histogram_summary_op.append(
                 tf.summary.histogram(str(key), self._histogram_ds[str(key)]))
@@ -157,21 +157,21 @@ class TensorBoardOutput(LogOutput):
                                    shape,
                                    name=None,
                                    **kwargs):
-        with tf.name_scope(name, "get_hist_{}".format(histogram_type)):
-            if histogram_type == "normal":
+        with tf.name_scope(name, 'get_hist_{}'.format(histogram_type)):
+            if histogram_type == 'normal':
                 # Make a normal distribution, with a shifting mean
                 mean = tf.Variable(kwargs['mean'])
                 stddev = tf.Variable(kwargs['stddev'])
                 return tf.random_normal(
                     shape=shape, mean=mean, stddev=stddev), [mean, stddev]
-            elif histogram_type == "gamma":
+            elif histogram_type == 'gamma':
                 # Add a gamma distribution
                 alpha = tf.Variable(kwargs['alpha'])
                 return tf.random_gamma(shape=shape, alpha=alpha), [alpha]
-            elif histogram_type == "poisson":
+            elif histogram_type == 'poisson':
                 lam = tf.Variable(kwargs['lam'])
                 return tf.random_poisson(shape=shape, lam=lam), [lam]
-            elif histogram_type == "uniform":
+            elif histogram_type == 'uniform':
                 # Add a uniform distribution
                 maxval = tf.Variable(kwargs['maxval'])
                 return tf.random_uniform(shape=shape, maxval=maxval), [maxval]
@@ -180,16 +180,16 @@ class TensorBoardOutput(LogOutput):
                             'builtin type', self._histogram_distribute_list)
 
     def _get_histogram_val_by_type(self, histogram_type, **kwargs):
-        if histogram_type == "normal":
+        if histogram_type == 'normal':
             # Make a normal distribution, with a shifting mean
             return [kwargs['mean'], kwargs['stddev']]
-        elif histogram_type == "gamma":
+        elif histogram_type == 'gamma':
             # Add a gamma distribution
             self.alpha_v = kwargs['alpha']
             return [kwargs['alpha']]
-        elif histogram_type == "poisson":
+        elif histogram_type == 'poisson':
             return [kwargs['lam']]
-        elif histogram_type == "uniform":
+        elif histogram_type == 'uniform':
             # Add a uniform distribution
             return [kwargs['maxval']]
 
@@ -215,8 +215,8 @@ class TensorBoardOutput(LogOutput):
 
         if self.session is None:
             if not self.warned_once:
-                msg = "Cannot dump histogram. "
-                msg += "tf.get_default_session() returned None."
+                msg = ('Cannot dump histogram. '
+                       'tf.get_default_session() returned None.')
                 warn(colorize(msg, 'yellow'))
             self.warned_once = True
             return

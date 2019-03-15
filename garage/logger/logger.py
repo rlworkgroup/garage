@@ -1,4 +1,4 @@
-"""This is Garage's logger.
+"""Logging facility.
 
 It takes in many different types of input and directs them to the correct
 output.
@@ -39,18 +39,18 @@ logger.add_output(StdOutput())
 
 # Great! Now we can start logging text.
 
-logger.log("Hello Garage")
+logger.log('Hello Garage')
 
-# This will go straight to the console as "Hello Garage"
+# This will go straight to the console as 'Hello Garage'
 
 +------+                    +---------+
-|logger+---"Hello Garage"--->StdOutput|
+|logger+---'Hello Garage'--->StdOutput|
 +------+                    +---------+
 
 # Let's try adding another output.
 
 from garage.logger import TextOutput
-logger.add_output(TextOutput("log_folder/log.txt"))
+logger.add_output(TextOutput('log_folder/log.txt'))
 
               +---------+
        +------>StdOutput|
@@ -63,7 +63,7 @@ logger.add_output(TextOutput("log_folder/log.txt"))
 # And another output.
 
 from garage.logger import CsvOutput
-logger.add_output(CsvOutput("log_folder/table.csv"))
+logger.add_output(CsvOutput('log_folder/table.csv'))
 
               +---------+
        +------>StdOutput|
@@ -80,21 +80,21 @@ logger.add_output(CsvOutput("log_folder/table.csv"))
 # The logger will record anything passed to logger.log to all outputs that
 #  accept its type.
 
-logger.log("test")
+logger.log('test')
 
                     +---------+
-       +---"test"--->StdOutput|
+       +---'test'--->StdOutput|
        |            +---------+
        |
 +------+            +----------+
-|logger+---"test"--->TextOutput|
+|logger+---'test'--->TextOutput|
 +------+            +----------+
        |
        |            +---------+
        +-----!!----->CsvOutput|
                     +---------+
 
-# !! Note that the logger knows not to send CsvOutput the string "test"
+# !! Note that the logger knows not to send CsvOutput the string 'test'
 #  Similarly, more complex objects like tf.tensor won't be sent to (for
 #  example) TextOutput.
 # This behavior is defined in each output's types_accepted property
@@ -103,8 +103,8 @@ logger.log("test")
 # TabularInput, instantiated for you as the tabular, can log key/value pairs.
 
 from garage.logger import tabular
-tabular.record("key", 72)
-tabular.record("foo", "bar")
+tabular.record('key', 72)
+tabular.record('foo', 'bar')
 logger.log(tabular)
 
                      +---------+
@@ -182,7 +182,7 @@ class Logger:
     def __init__(self):
         self._outputs = []
         self._prefixes = []
-        self._prefix_str = ""
+        self._prefix_str = ''
         self._warned_once = False
 
     def log(self, data):
@@ -198,7 +198,7 @@ class Logger:
          types_accepted property of any of the logger outputs.
         """
         if not self._outputs:
-            return self._warn("No outputs have been added to the logger.")
+            self._warn('No outputs have been added to the logger.')
 
         at_least_one_logged = False
         for output in self._outputs:
@@ -207,14 +207,13 @@ class Logger:
                 at_least_one_logged = True
 
         if not at_least_one_logged:
-            warning = "Log data of type " + type(data).__name__
-            warning += " was not accepted by any output"
-            return self._warn(warning)
+            warning = (
+                'Log data of type {} was not accepted by any output'.format(
+                    type(data).__name__))
+            self._warn(warning)
 
         if hasattr(data, 'clear'):
             data.clear()
-
-        return None
 
     def add_output(self, output):
         """Add a new output to the logger.
@@ -224,10 +223,10 @@ class Logger:
         :param output: An instantiation of a LogOutput subclass to be added.
         """
         if isinstance(output, type):
-            msg = "Output object must be instantiated - don't pass a type."
+            msg = 'Output object must be instantiated - don\'t pass a type.'
             raise ValueError(msg)
         elif not isinstance(output, LogOutput):
-            raise ValueError("Output object must be a subclass of LogOutput")
+            raise ValueError('Output object must be a subclass of LogOutput')
         self._outputs.append(output)
 
     def remove_all(self):
@@ -319,7 +318,7 @@ class Logger:
         is the one printed.
         """
         if not self._warned_once:
-            warnings.warn(colorize(msg, 'yellow'), LogWarning, stacklevel=3)
+            warnings.warn(colorize(msg, 'yellow'), LoggerWarning, stacklevel=3)
         self._warned_once = True
         return msg
 
@@ -328,7 +327,7 @@ class Logger:
         self._warned_once = True
 
 
-class LogWarning(UserWarning):
+class LoggerWarning(UserWarning):
     """Warning class for the Logger."""
 
     pass

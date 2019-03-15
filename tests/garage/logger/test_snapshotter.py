@@ -10,7 +10,7 @@ from garage.misc.console import mkdir_p
 
 class TestSnapshotter(unittest.TestCase):
     def test_snapshotter(self):
-        snap_dir = "test_snapshotter"
+        snap_dir = 'test_snapshotter'
         try:
             snapshotter.snapshot_dir = snap_dir
             assert snapshotter.snapshot_dir == snap_dir
@@ -52,12 +52,12 @@ class TestSnapshotter(unittest.TestCase):
                 snapshotter.snapshot_mode = 'invalid'
                 try:
                     snapshotter.save_itr_params(2, {'testparam': 'invalid'})
-                except TypeError as e:
-                    assert str(e) == "Invalid snapshot mode invalid"
+                except ValueError as e:
+                    assert str(e) == 'Invalid snapshot mode invalid'
                 except Exception as e:
-                    self.fail("Wrong exception raised: " + str(e))
+                    self.fail('Wrong exception raised: ' + str(e))
                 else:
-                    self.fail("Snapshot mode exception not raised.")
+                    self.fail('Snapshot mode exception not raised.')
 
                 for f, num in files.items():
                     filename = osp.join(snap_dir, f)

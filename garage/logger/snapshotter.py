@@ -58,22 +58,23 @@ class Snapshotter:
             elif self._snapshot_mode == 'last':
                 # override previous params
                 file_name = osp.join(self._snapshot_dir, 'params.pkl')
-            elif self._snapshot_mode == "gap":
+            elif self._snapshot_mode == 'gap':
                 if itr % self._snapshot_gap == 0:
                     file_name = osp.join(self._snapshot_dir,
                                          'itr_%d.pkl' % itr)
-            elif self._snapshot_mode == "gap_and_last":
+            elif self._snapshot_mode == 'gap_and_last':
                 if itr % self._snapshot_gap == 0:
                     file_name = osp.join(self._snapshot_dir,
                                          'itr_%d.pkl' % itr)
                 file_name_last = osp.join(self._snapshot_dir, 'params.pkl')
-                with open(file_name_last, "wb") as file:
+                with open(file_name_last, 'wb') as file:
                     pickle.dump(params, file)
             elif self._snapshot_mode == 'none':
                 pass
             else:
-                raise TypeError(f'Invalid snapshot mode {self._snapshot_mode}')
+                raise ValueError('Invalid snapshot mode {}'.format(
+                    self._snapshot_mode))
 
             if file_name:
-                with open(file_name, "wb") as file:
+                with open(file_name, 'wb') as file:
                     pickle.dump(params, file)

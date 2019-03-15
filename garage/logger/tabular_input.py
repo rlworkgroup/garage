@@ -42,17 +42,17 @@ class TabularInput:
             front = key
             back = ""
         if values:
-            self.record(front + "Average" + back, np.average(values))
-            self.record(front + "Std" + back, np.std(values))
-            self.record(front + "Median" + back, np.median(values))
-            self.record(front + "Min" + back, np.min(values))
-            self.record(front + "Max" + back, np.max(values))
+            self.record(front + 'Average' + back, np.average(values))
+            self.record(front + 'Std' + back, np.std(values))
+            self.record(front + 'Median' + back, np.median(values))
+            self.record(front + 'Min' + back, np.min(values))
+            self.record(front + 'Max' + back, np.max(values))
         else:
-            self.record(front + "Average" + back, np.nan)
-            self.record(front + "Std" + back, np.nan)
-            self.record(front + "Median" + back, np.nan)
-            self.record(front + "Min" + back, np.nan)
-            self.record(front + "Max" + back, np.nan)
+            self.record(front + 'Average' + back, np.nan)
+            self.record(front + 'Std' + back, np.nan)
+            self.record(front + 'Median' + back, np.nan)
+            self.record(front + 'Min' + back, np.nan)
+            self.record(front + 'Max' + back, np.nan)
 
     @contextmanager
     def prefix(self, prefix):

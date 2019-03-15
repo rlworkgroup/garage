@@ -1,6 +1,7 @@
 import unittest
 
 from garage.logger import CsvOutput, logger, tabular, TextOutput
+from garage.logger.logger import LoggerWarning
 from garage.misc.console import remove_if_exists
 
 
@@ -13,8 +14,8 @@ class TestLogger(unittest.TestCase):
 
     def test_outputs(self):
         tabular.clear()
-        err = "No outputs have been added to the logger."
-        assert logger.log("test") == err
+        with self.assertRaises(LoggerWarning):
+            logger.log('test')
 
         log_files = ['test_%u.txt' % i for i in range(5)]
         csv_file = 'text.csv'
@@ -29,10 +30,9 @@ class TestLogger(unittest.TestCase):
             assert not logger.has_output_type(CsvOutput)
             assert logger.has_output_type(TextOutput)
 
-            tabular.record_misc_stat("stat", 1)
-            warn = "Log data of type " + type(tabular).__name__
-            warn += " was not accepted by any output"
-            assert logger.log(tabular) == warn
+            tabular.record_misc_stat('stat', 1)
+            with self.assertWarns(LoggerWarning):
+                logger.log(tabular)
         finally:
             for file in log_files:
                 remove_if_exists(file)
@@ -43,7 +43,7 @@ class TestLogger(unittest.TestCase):
             logger.add_output(TextOutput)
 
         with self.assertRaises(ValueError):
-            logger.add_output("test_string")
+            logger.add_output('test_string')
 
     def test_add_remove_outputs(self):
         log_file = 'test.txt'

@@ -16,11 +16,11 @@ class TestCsvOutput(unittest.TestCase):
     def test_record(self):
         foo = 1
         bar = 10
-        self.tabular.record("foo", foo)
-        self.tabular.record("bar", bar)
+        self.tabular.record('foo', foo)
+        self.tabular.record('bar', bar)
         self.csv_output.record(self.tabular)
-        self.tabular.record("foo", foo * 2)
-        self.tabular.record("bar", bar * 2)
+        self.tabular.record('foo', foo * 2)
+        self.tabular.record('bar', bar * 2)
         self.csv_output.record(self.tabular)
 
         correct = [
@@ -32,10 +32,10 @@ class TestCsvOutput(unittest.TestCase):
     def test_record_inconsistent(self):
         foo = 1
         bar = 10
-        self.tabular.record("foo", foo)
+        self.tabular.record('foo', foo)
         self.csv_output.record(self.tabular)
-        self.tabular.record("foo", foo * 2)
-        self.tabular.record("bar", bar * 2)
+        self.tabular.record('foo', foo * 2)
+        self.tabular.record('bar', bar * 2)
 
         with self.assertWarns(CsvOutputWarning):
             self.csv_output.record(self.tabular)
@@ -52,10 +52,10 @@ class TestCsvOutput(unittest.TestCase):
     def test_disable_warnings(self):
         foo = 1
         bar = 10
-        self.tabular.record("foo", foo)
+        self.tabular.record('foo', foo)
         self.csv_output.record(self.tabular)
-        self.tabular.record("foo", foo * 2)
-        self.tabular.record("bar", bar * 2)
+        self.tabular.record('foo', foo * 2)
+        self.tabular.record('bar', bar * 2)
 
         self.csv_output.disable_warnings()
 

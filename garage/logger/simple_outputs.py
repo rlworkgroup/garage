@@ -48,7 +48,7 @@ class StdOutput(LogOutput):
             if self._with_timestamp:
                 now = datetime.datetime.now(dateutil.tz.tzlocal())
                 timestamp = now.strftime('%Y-%m-%d %H:%M:%S')
-                out = "%s | %s" % (timestamp, out)
+                out = '%s | %s' % (timestamp, out)
         elif isinstance(data, TabularInput):
             out = str(data)
         else:
@@ -99,7 +99,7 @@ class TextOutput(FileOutput):
         if self._with_timestamp:
             now = datetime.datetime.now(dateutil.tz.tzlocal())
             timestamp = now.strftime('%Y-%m-%d %H:%M:%S.%f %Z')
-            out = "%s%s%s" % (timestamp, self._delimiter, out)
+            out = '%s%s%s' % (timestamp, self._delimiter, out)
 
         self._log_file.write(out + '\n')
         self._log_file.flush()
