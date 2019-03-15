@@ -131,11 +131,49 @@ foo  bar
 # Feel free to add your own inputs and outputs to the logger!
 
 """
+import abc
 import contextlib
 import warnings
 
-from garage.logger.outputs import LogOutput
 from garage.misc.console import colorize
+
+
+class LogOutput(abc.ABC):
+    """Abstract class for Logger Outputs."""
+
+    @property
+    def types_accepted(self):
+        """Pass these types to this logger output.
+
+        The types in this tuple will be accepted by this output.
+
+        :return: A tuple containing all valid input types.
+        """
+        return ()
+
+    @abc.abstractmethod
+    def record(self, data, prefix=''):
+        """Pass logger data to this output.
+
+        :param data: The data to be logged by the output.
+        :param prefix: A prefix placed before a log entry in text outputs.
+        """
+        pass
+
+    def dump(self, step=None):
+        """Dump the contents of this output.
+
+        :param step: The current run step.
+        """
+        pass
+
+    def close(self):
+        """Close any files used by the output."""
+        pass
+
+    def __del__(self):
+        """Clean up object upon deletion."""
+        self.close()
 
 
 class Logger:

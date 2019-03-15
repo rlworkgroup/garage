@@ -3,7 +3,7 @@ import csv
 import warnings
 
 from garage.logger import TabularInput
-from garage.logger.outputs import FileOutput
+from garage.logger.simple_outputs import FileOutput
 from garage.misc.console import colorize
 
 

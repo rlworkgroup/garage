@@ -2,11 +2,10 @@
 
 This module instantiates a global logger singleton.
 """
-from garage.logger.logger import Logger
-from garage.logger.outputs import LogOutput, NullOutput, StdOutput
+from garage.logger.logger import Logger, LogOutput
+from garage.logger.simple_outputs import NullOutput, StdOutput, TextOutput
 from garage.logger.tabular_input import TabularInput
 from garage.logger.csv_output import CsvOutput  # noqa: I100
-from garage.logger.outputs import TextOutput
 from garage.logger.snapshotter import Snapshotter
 from garage.logger.tensor_board_output import TensorBoardOutput
 

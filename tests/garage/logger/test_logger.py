@@ -35,7 +35,7 @@ class TestLogger(unittest.TestCase):
             str_out.seek(0)
             assert str_out.read() == tab
 
-    @mock.patch('garage.logger.outputs.datetime')
+    @mock.patch('garage.logger.simple_outputs.datetime')
     def test_timestamp(self, mock_datetime):
         timestamp = '2000-01-01 00:00:00'
         mock_datetime.datetime.now.return_value = datetime.datetime(2000, 1, 1)
