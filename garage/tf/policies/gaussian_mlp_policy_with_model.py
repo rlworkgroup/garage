@@ -1,10 +1,8 @@
 """GaussianMLPPolicy with GaussianMLPModel."""
 from akro.tf import Box
-import numpy as np
 import tensorflow as tf
 
-from garage.tf.distributions import DiagonalGaussian
-from garage.tf.models.gaussian_mlp_model import GaussianMLPModel
+from garage.tf.models import GaussianMLPModel
 from garage.tf.policies.base2 import StochasticPolicy2
 
 
@@ -87,6 +85,7 @@ class GaussianMLPPolicyWithModel(StochasticPolicy2):
 
         self._f_dist = tf.get_default_session().make_callable(
             [
+                self.model.networks['default'].sample,
                 self.model.networks['default'].mean,
                 self.model.networks['default'].log_std
             ],
@@ -106,18 +105,14 @@ class GaussianMLPPolicyWithModel(StochasticPolicy2):
     def get_action(self, observation):
         """Get action from the policy."""
         flat_obs = self.observation_space.flatten(observation)
-        mean, log_std = self._f_dist([flat_obs])
-        rnd = np.random.normal(size=mean.shape)
-        action = rnd * np.exp(log_std) + mean
-        return action, dict(mean=mean, log_std=log_std)
+        sample, mean, log_std = self._f_dist([flat_obs])
+        return sample, dict(mean=mean, log_std=log_std)
 
     def get_actions(self, observations):
         """Get actions from the policy."""
         flat_obs = self.observation_space.flatten_n(observations)
-        means, log_stds = self._f_dist(flat_obs)
-        rnd = np.random.normal(size=means.shape)
-        actions = rnd * np.exp(log_stds) + means
-        return actions, dict(mean=means, log_std=log_stds)
+        samples, means, log_stds = self._f_dist(flat_obs)
+        return samples, dict(mean=means, log_std=log_stds)
 
     def get_params(self, trainable=True):
         """Get the trainable variables."""
@@ -126,7 +121,7 @@ class GaussianMLPPolicyWithModel(StochasticPolicy2):
     @property
     def distribution(self):
         """Policy distribution."""
-        return DiagonalGaussian(self.action_dim)
+        return self.model.networks['default'].dist
 
     def __getstate__(self):
         """Object.__getstate__."""

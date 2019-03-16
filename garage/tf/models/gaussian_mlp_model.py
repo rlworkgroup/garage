@@ -5,6 +5,7 @@ import tensorflow as tf
 from garage.experiment import deterministic
 from garage.tf.core.mlp import mlp
 from garage.tf.core.parameter import parameter
+from garage.tf.distributions import DiagonalGaussian
 from garage.tf.models.base import Model
 
 
@@ -97,7 +98,7 @@ class GaussianMLPModel(Model):
 
     def network_output_spec(self):
         """Network output spec."""
-        return ['sample', 'mean', 'log_std', 'log_std_param']
+        return ['sample', 'mean', 'log_std', 'dist']
 
     def _build(self, state_input):
         action_dim = self._output_dim
@@ -121,8 +122,8 @@ class GaussianMLPModel(Model):
                     layer_normalization=self._layer_normalization)
                 with tf.variable_scope('mean_network'):
                     mean_network = mean_std_network[..., :action_dim]
-                with tf.variable_scope('std_network'):
-                    std_network = mean_std_network[..., action_dim:]
+                with tf.variable_scope('log_std_network'):
+                    log_std_network = mean_std_network[..., action_dim:]
 
             else:
                 # separate MLPs for mean and std networks
@@ -139,47 +140,47 @@ class GaussianMLPModel(Model):
                 # std network
                 if self._adaptive_std:
                     b = tf.constant_initializer(self._init_std_param)
-                    std_network = mlp(
+                    log_std_network = mlp(
                         state_input,
                         output_dim=action_dim,
                         hidden_sizes=self._std_hidden_sizes,
                         hidden_nonlinearity=self._std_hidden_nonlinearity,
                         output_nonlinearity=self._std_output_nonlinearity,
                         output_b_init=b,
-                        name='std_network',
+                        name='log_std_network',
                         layer_normalization=self._layer_normalization)
                 else:
                     p = tf.constant_initializer(self._init_std_param)
-                    std_network = parameter(
+                    log_std_network = parameter(
                         state_input,
                         length=action_dim,
                         initializer=p,
                         trainable=self._learn_std,
-                        name='std_network')
+                        name='log_std_network')
 
         mean_var = mean_network
-        log_std_param_var = std_network
+        log_std_var = log_std_network
 
         with tf.variable_scope('std_parameterization'):
             # build std_var with std parameterization
             if self._std_parameterization == 'exp':
-                log_std_param_var = log_std_param_var
+                log_std_var = log_std_var
             elif self._std_parameterization == 'softplus':
-                log_std_param_var = tf.log(1. + tf.exp(log_std_param_var))
+                log_std_var = tf.log(1. + tf.exp(log_std_var))
             else:
                 raise NotImplementedError
 
         with tf.variable_scope('std_limits'):
             if self._min_std_param:
-                log_std_var = tf.maximum(log_std_param_var,
-                                         self._min_std_param)
+                log_std_var = tf.maximum(log_std_var, self._min_std_param)
             if self._max_std_param:
-                log_std_var = tf.minimum(log_std_param_var,
-                                         self._max_std_param)
+                log_std_var = tf.minimum(log_std_var, self._max_std_param)
+
+        dist = DiagonalGaussian(self._output_dim)
 
         rnd = tf.random.normal(
             shape=mean_var.get_shape().as_list()[1:],
             seed=deterministic.get_seed())
         action_var = rnd * tf.exp(log_std_var) + mean_var
 
-        return action_var, mean_var, log_std_var, log_std_param_var
+        return action_var, mean_var, log_std_var, dist

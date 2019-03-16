@@ -8,7 +8,7 @@ action.
 import tensorflow as tf
 
 from garage.misc.overrides import overrides
-from garage.tf.models.mlp_model import MLPModel
+from garage.tf.models import MLPModel
 from garage.tf.policies.base2 import Policy2
 
 
