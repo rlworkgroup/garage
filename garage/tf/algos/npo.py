@@ -466,8 +466,7 @@ class NPO(BatchPolopt):
         # Calculate explained variance
         ev = special.explained_variance_1d(
             np.concatenate(baselines), aug_returns)
-        tabular.record(
-            "{}/ExplainedVariance".format(self.baseline.name), ev)
+        tabular.record("{}/ExplainedVariance".format(self.baseline.name), ev)
 
         # Fit baseline
         logger.log("Fitting baseline...")

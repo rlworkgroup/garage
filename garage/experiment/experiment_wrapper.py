@@ -19,13 +19,13 @@ import psutil
 from garage import config
 from garage.experiment import deterministic
 from garage.experiment.experiment import concretize
-from garage.logger import CsvOutput 
-from garage.logger import TensorBoardOutput
-from garage.logger import TextOutput
+from garage.logger import CsvOutput
 from garage.logger import logger
 from garage.logger import snapshotter
-from garage.logger.utils import dump_variant, log_parameters
+from garage.logger import TensorBoardOutput
+from garage.logger import TextOutput
 from garage.misc.console import colorize
+from garage.misc.console import mkdir_p
 import garage.plotter
 from garage.sampler import parallel_sampler
 from garage.sampler.utils import mask_signals

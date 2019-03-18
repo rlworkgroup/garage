@@ -15,8 +15,8 @@ The logger has 4 major steps:
     method and handles it in whatever way is expected.
 
     4. (only in some cases) The dump method is used to dump the output to file.
-    Some LogOutput subclasses, like StdOutput, do not instantiate this method,
-    but it is necessary for the TensorBoardLogger.
+    Some LogOutput subclasses, like StdOutput, do not instantiate this method.
+    Currently no subclass needs this method.
 
 
 # Here's a demonstration of garage's logger:

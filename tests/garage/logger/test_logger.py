@@ -14,7 +14,7 @@ class TestLogger(unittest.TestCase):
 
     def test_outputs(self):
         tabular.clear()
-        with self.assertRaises(LoggerWarning):
+        with self.assertWarns(LoggerWarning):
             logger.log('test')
 
         log_files = ['test_%u.txt' % i for i in range(5)]

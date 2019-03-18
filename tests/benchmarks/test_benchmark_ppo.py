@@ -31,7 +31,6 @@ from garage.experiment import LocalRunner
 from garage.logger import CsvOutput
 from garage.logger import logger as garage_logger
 from garage.logger import TensorBoardOutput
-from garage.misc import ext
 from garage.tf.algos import PPO
 from garage.tf.baselines import GaussianMLPBaseline
 from garage.tf.envs import TfEnv

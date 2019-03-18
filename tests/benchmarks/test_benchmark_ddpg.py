@@ -176,13 +176,12 @@ def run_garage(env, seed, log_dir):
         garage_logger.add_output(CsvOutput(tabular_log_file))
         garage_logger.add_output(TensorBoardOutput(tensorboard_log_dir))
 
-
         runner.setup(ddpg, env)
         runner.train(
             n_epochs=params['n_epochs'],
             n_epoch_cycles=params['n_epoch_cycles'],
             batch_size=params["n_rollout_steps"])
-        
+
         garage_logger.remove_all()
 
         return tabular_log_file

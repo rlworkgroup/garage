@@ -146,8 +146,7 @@ class BatchSampler(BaseSampler):
         tabular.record('Iteration', itr)
         tabular.record('AverageDiscountedReturn', average_discounted_return)
         tabular.record('AverageReturn', np.mean(undiscounted_returns))
-        tabular.record('Extras/EpisodeRewardMean',
-                              np.mean(self.eprewmean))
+        tabular.record('Extras/EpisodeRewardMean', np.mean(self.eprewmean))
         tabular.record('NumTrajs', len(paths))
         tabular.record('Entropy', ent)
         tabular.record('Perplexity', np.exp(ent))
