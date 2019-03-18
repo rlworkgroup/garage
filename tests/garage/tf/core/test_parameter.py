@@ -10,7 +10,8 @@ class TestParameter(TfGraphTestCase):
         input_vars = tf.placeholder(shape=[None, 2, 3, 4], dtype=tf.float32)
         initial_params = np.array([48, 21, 33])
 
-        init = tf.constant_initializer(initial_params)
+        def init():
+            return tf.constant_initializer(initial_params)
 
         params = parameter(
             input_var=input_vars,
