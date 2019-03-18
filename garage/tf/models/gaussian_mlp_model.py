@@ -48,7 +48,11 @@ class GaussianMLPModel(Model):
                  name=None,
                  hidden_sizes=(32, 32),
                  hidden_nonlinearity=tf.nn.tanh,
+                 hidden_w_init=tf.contrib.layers.xavier_initializer,
+                 hidden_b_init=tf.zeros_initializer,
                  output_nonlinearity=None,
+                 output_w_init=tf.contrib.layers.xavier_initializer,
+                 output_b_init=tf.zeros_initializer,
                  learn_std=True,
                  adaptive_std=False,
                  std_share_network=False,
@@ -57,7 +61,11 @@ class GaussianMLPModel(Model):
                  max_std=None,
                  std_hidden_sizes=(32, 32),
                  std_hidden_nonlinearity=tf.nn.tanh,
+                 std_hidden_w_init=tf.contrib.layers.xavier_initializer,
+                 std_hidden_b_init=tf.zeros_initializer,
                  std_output_nonlinearity=None,
+                 std_output_w_init=tf.contrib.layers.xavier_initializer,
+                 std_output_b_init=tf.zeros_initializer,
                  std_parameterization='exp',
                  layer_normalization=False):
         # Network parameters
@@ -71,10 +79,18 @@ class GaussianMLPModel(Model):
         self._min_std = min_std
         self._max_std = max_std
         self._std_hidden_nonlinearity = std_hidden_nonlinearity
+        self._std_hidden_w_init = std_hidden_w_init
+        self._std_hidden_b_init = std_hidden_b_init
         self._std_output_nonlinearity = std_output_nonlinearity
+        self._std_output_w_init = std_output_w_init
+        self._std_output_b_init = std_output_b_init
         self._std_parameterization = std_parameterization
         self._hidden_nonlinearity = hidden_nonlinearity
+        self._hidden_w_init = hidden_w_init
+        self._hidden_b_init = hidden_b_init
         self._output_nonlinearity = output_nonlinearity
+        self._output_w_init = output_w_init
+        self._output_b_init = output_b_init
         self._layer_normalization = layer_normalization
 
         # Tranform std arguments to parameterized space
@@ -110,14 +126,20 @@ class GaussianMLPModel(Model):
                     np.zeros(action_dim),
                     np.full(action_dim, self._init_std_param)
                 ], axis=0)  # yapf: disable
-                b = tf.constant_initializer(b)
+
+                def p():
+                    return tf.constant_initializer(b)
+
                 mean_std_network = mlp(
                     state_input,
                     output_dim=action_dim * 2,
                     hidden_sizes=self._hidden_sizes,
                     hidden_nonlinearity=self._hidden_nonlinearity,
+                    hidden_w_init=self._hidden_w_init,
+                    hidden_b_init=self._hidden_b_init,
                     output_nonlinearity=self._output_nonlinearity,
-                    output_b_init=b,
+                    output_w_init=self._output_w_init,
+                    output_b_init=p,
                     name='mean_std_network',
                     layer_normalization=self._layer_normalization)
                 with tf.variable_scope('mean_network'):
@@ -133,24 +155,37 @@ class GaussianMLPModel(Model):
                     output_dim=action_dim,
                     hidden_sizes=self._hidden_sizes,
                     hidden_nonlinearity=self._hidden_nonlinearity,
+                    hidden_w_init=self._hidden_w_init,
+                    hidden_b_init=self._hidden_b_init,
                     output_nonlinearity=self._output_nonlinearity,
+                    output_w_init=self._output_w_init,
+                    output_b_init=self._output_b_init,
                     name='mean_network',
                     layer_normalization=self._layer_normalization)
 
                 # std network
                 if self._adaptive_std:
-                    b = tf.constant_initializer(self._init_std_param)
+
+                    def b():
+                        return tf.constant_initializer(self._init_std_param)
+
                     log_std_network = mlp(
                         state_input,
                         output_dim=action_dim,
                         hidden_sizes=self._std_hidden_sizes,
                         hidden_nonlinearity=self._std_hidden_nonlinearity,
+                        hidden_w_init=self._std_hidden_w_init,
+                        hidden_b_init=self._std_hidden_b_init,
                         output_nonlinearity=self._std_output_nonlinearity,
+                        output_w_init=self._std_output_w_init,
                         output_b_init=b,
                         name='log_std_network',
                         layer_normalization=self._layer_normalization)
                 else:
-                    p = tf.constant_initializer(self._init_std_param)
+
+                    def p():
+                        return tf.constant_initializer(self._init_std_param)
+
                     log_std_network = parameter(
                         state_input,
                         length=action_dim,

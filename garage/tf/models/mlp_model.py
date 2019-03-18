@@ -62,9 +62,9 @@ class MLPModel(Model):
             hidden_sizes=self._hidden_sizes,
             name="mlp",
             hidden_nonlinearity=self._hidden_nonlinearity,
-            hidden_w_init=self._hidden_w_init(),
-            hidden_b_init=self._hidden_b_init(),
+            hidden_w_init=self._hidden_w_init,
+            hidden_b_init=self._hidden_b_init,
             output_nonlinearity=self._output_nonlinearity,
-            output_w_init=self._output_w_init(),
-            output_b_init=self._output_b_init(),
+            output_w_init=self._output_w_init,
+            output_b_init=self._output_b_init,
             layer_normalization=self._layer_normalization)

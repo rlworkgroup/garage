@@ -23,10 +23,11 @@ class SimpleGaussianMLPModel(Model):
         return ['sample', 'mean', 'log_std', 'dist']
 
     def _build(self, obs_input):
-        mean = tf.constant(0., shape=((1, self.output_dim)))
+        mean = tf.constant(0.5, shape=((1, self.output_dim)))
         log_std = tf.constant(0.5, shape=((1, self.output_dim)))
         action = mean + log_std * 0.5
         dist = DiagonalGaussian(self.output_dim)
+        # action will be 0.5 + 0.5 * 0.5 = 0.75
         return action, mean, log_std, dist
 
 
@@ -38,31 +39,26 @@ class TestGaussianMLPPolicyWithModel(TfGraphTestCase):
         self.obs, _, _, _ = self.env.step(1)
         self.obs_ph = tf.placeholder(tf.float32, shape=(None, 1))
 
-        with mock.patch(
-                'garage.tf.policies.gaussian_mlp_policy_with_model.GaussianMLPModel',  # noqa: E501
-                new=SimpleGaussianMLPModel):
+        model_path = 'garage.tf.policies.' + \
+                     'gaussian_mlp_policy_with_model.GaussianMLPModel'
+        with mock.patch(model_path, new=SimpleGaussianMLPModel):
             self.policy = GaussianMLPPolicyWithModel(env_spec=self.env.spec)
 
     def test_get_action(self):
         action, prob = self.policy.get_action(self.obs)
         assert self.env.action_space.contains(np.array(action[0]))
-        assert action == prob['mean'] + prob['log_std'] * 0.5
+        assert action == 0.75
+        assert prob['mean'] == 0.5 and prob['log_std'] == 0.5
 
         actions, probs = self.policy.get_actions([self.obs])
         assert self.env.action_space.contains(np.array(actions[0]))
-        assert actions == probs['mean'] + probs['log_std'] * 0.5
-
-    def test_dist(self):
-        assert isinstance(self.policy.distribution, DiagonalGaussian)
+        assert actions == 0.75
+        assert probs['mean'] == 0.5 and probs['log_std'] == 0.5
 
     def test_dist_info_sym(self):
-        _, dist1 = self.policy.get_action(self.obs)
-
         dist1_sym = self.policy.dist_info_sym(self.obs_ph, name='p1_sym')
-        dist1_sym = self.sess.run(
-            dist1_sym, feed_dict={self.obs_ph: [self.obs]})
-
-        assert np.array_equal(dist1, dist1_sym)
+        prob = self.sess.run(dist1_sym, feed_dict={self.obs_ph: [self.obs]})
+        assert prob['mean'] == 0.5 and prob['log_std'] == 0.5
 
     def test_is_pickleable(self):
         outputs = self.sess.run(

@@ -32,35 +32,28 @@ class TestDeterministicMLPPolicyWithModel(TfGraphTestCase):
         self.env = TfEnv(DummyBoxEnv())
         self.env.reset()
         self.obs, _, _, _ = self.env.step(1)
-        with mock.patch(
-                'garage.tf.policies.deterministic_mlp_policy_with_model.MLPModel',  # noqa: E501
-                new=SimpleMLPModel):
+        model_path = 'garage.tf.policies.' + \
+                     'deterministic_mlp_policy_with_model.MLPModel'
+        with mock.patch(model_path, new=SimpleMLPModel):
             self.policy = DeterministicMLPPolicyWithModel(
                 env_spec=self.env.spec)
 
     def test_get_action(self):
         action, _ = self.policy.get_action(self.obs)
         assert self.env.action_space.contains(np.asarray([action]))
-
-        out = self.sess.run(
-            self.policy.model.networks['default'].output,
-            feed_dict={
-                self.policy.model.networks['default'].input: [self.obs]
-            })
-        assert action == out
+        assert action == 1.
 
         actions, _ = self.policy.get_actions([self.obs])
         assert self.env.action_space.contains(actions)
+        assert actions == 1.
 
     def test_get_action_sym(self):
         obs_dim = self.env.spec.observation_space.flat_dim
         state_input = tf.placeholder(tf.float32, shape=(None, obs_dim))
         action_sym = self.policy.get_action_sym(state_input, name="action_sym")
 
-        action1, _ = self.policy.get_action(self.obs)
-        action2 = self.sess.run(
-            action_sym, feed_dict={state_input: [self.obs]})
-        assert action1 == action2
+        action = self.sess.run(action_sym, feed_dict={state_input: [self.obs]})
+        assert action == 1.
 
     def test_is_pickleable(self):
         p = pickle.dumps(self.policy)

@@ -8,11 +8,11 @@ def mlp(input_var,
         hidden_sizes,
         name,
         hidden_nonlinearity=tf.nn.relu,
-        hidden_w_init=tf.contrib.layers.xavier_initializer(),
-        hidden_b_init=tf.zeros_initializer(),
+        hidden_w_init=tf.contrib.layers.xavier_initializer,
+        hidden_b_init=tf.zeros_initializer,
         output_nonlinearity=None,
-        output_w_init=tf.contrib.layers.xavier_initializer(),
-        output_b_init=tf.zeros_initializer(),
+        output_w_init=tf.contrib.layers.xavier_initializer,
+        output_b_init=tf.zeros_initializer,
         layer_normalization=False):
     """
     MLP model.
@@ -46,8 +46,8 @@ def mlp(input_var,
                 inputs=l_hid,
                 units=hidden_size,
                 activation=hidden_nonlinearity,
-                kernel_initializer=hidden_w_init,
-                bias_initializer=hidden_b_init,
+                kernel_initializer=hidden_w_init(),
+                bias_initializer=hidden_b_init(),
                 name="hidden_{}".format(idx))
             if layer_normalization:
                 l_hid = tf.contrib.layers.layer_norm(l_hid)
@@ -56,7 +56,7 @@ def mlp(input_var,
             inputs=l_hid,
             units=output_dim,
             activation=output_nonlinearity,
-            kernel_initializer=output_w_init,
-            bias_initializer=output_b_init,
+            kernel_initializer=output_w_init(),
+            bias_initializer=output_b_init(),
             name="output")
     return l_out

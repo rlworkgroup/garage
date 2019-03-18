@@ -32,43 +32,36 @@ class TestCategoricalMLPPolicyWithModel(TfGraphTestCase):
         self.env = TfEnv(DummyDiscreteEnv())
         self.env.reset()
         self.obs, _, _, _ = self.env.step(1)
-        with mock.patch(
-                'garage.tf.policies.categorical_mlp_policy_with_model.MLPModel',  # noqa: E501
-                new=SimpleMLPModel):
+        model_path = 'garage.tf.policies.' + \
+                     'categorical_mlp_policy_with_model.MLPModel'
+        with mock.patch(model_path, new=SimpleMLPModel):
             self.policy = CategoricalMLPPolicyWithModel(env_spec=self.env.spec)
 
-    def test_get_action(self):
+    @mock.patch('numpy.random.rand')
+    def test_get_action(self, mock_rand):
+        mock_rand.return_value = 1
         action, _ = self.policy.get_action(self.obs)
         assert self.env.action_space.contains(action)
+        assert action == 0
 
         actions, _ = self.policy.get_actions([self.obs])
         for action in actions:
             assert self.env.action_space.contains(action)
+            assert action == 0
 
     def test_dist_info(self):
         policy_prob = self.policy.dist_info([self.obs])
-
-        empirical_prob = self.sess.run(
-            self.policy.model.networks['default'].output,
-            feed_dict={
-                self.policy.model.networks['default'].input: [self.obs]
-            })
-
-        assert np.array_equal(empirical_prob, policy_prob['prob'])
+        assert np.array_equal(policy_prob['prob'], [1., 1.])
 
     def test_dist_info_sym(self):
         obs_dim = self.env.spec.observation_space.flat_dim
         state_input = tf.placeholder(tf.float32, shape=(None, obs_dim))
         dist1 = self.policy.dist_info_sym(state_input, name="policy2")
 
-        action1, prob1 = self.policy.get_action(self.obs)
-        prob1_dist_info = self.policy.dist_info([self.obs])
-
-        prob2 = self.sess.run(
+        prob = self.sess.run(
             dist1['prob'], feed_dict={state_input: [self.obs]})
 
-        assert np.array_equal(prob2, prob1['prob'])
-        assert np.array_equal(prob1_dist_info['prob'], prob1['prob'])
+        assert np.array_equal(prob, [1., 1.])
 
     def test_is_pickleable(self):
         action1, _ = self.policy.get_action(self.obs)

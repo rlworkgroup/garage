@@ -6,7 +6,7 @@ from tensorflow.python.ops.gen_array_ops import broadcast_to
 
 def parameter(input_var,
               length,
-              initializer=tf.zeros_initializer(),
+              initializer=tf.zeros_initializer,
               dtype=tf.float32,
               trainable=True,
               name="parameter"):
@@ -34,7 +34,7 @@ def parameter(input_var,
             "parameter",
             shape=(length, ),
             dtype=dtype,
-            initializer=initializer,
+            initializer=initializer(),
             trainable=trainable)
 
         broadcast_shape = tf.concat(
