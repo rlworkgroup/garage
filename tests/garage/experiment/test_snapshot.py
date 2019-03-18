@@ -1,9 +1,11 @@
 import datetime
 import os.path as osp
+import unittest
 import uuid
 
 import dateutil
 import joblib
+import tensorflow as tf
 
 from garage.baselines import LinearFeatureBaseline
 from garage.experiment import LocalRunner
@@ -12,12 +14,20 @@ from garage.sampler.utils import rollout
 from garage.tf.algos import TRPO
 from garage.tf.envs import TfEnv
 from garage.tf.policies import CategoricalMLPPolicy
-from tests.fixtures import TfGraphTestCase
 
 
-class TestSnapshot(TfGraphTestCase):
+class TestSnapshot(unittest.TestCase):
+    verifyItrs = 3
+
+    @classmethod
+    def resetTf(cls):
+        if tf.get_default_session():
+            tf.get_default_session().__exit__(None, None, None)
+        tf.reset_default_graph()
+
     @classmethod
     def setUpClass(cls):
+        cls.resetTf()
         # Save snapshot in params.pkl in self.log_dir folder
         now = datetime.datetime.now(dateutil.tz.tzlocal())
         rand_id = str(uuid.uuid4())[:5]
@@ -29,7 +39,7 @@ class TestSnapshot(TfGraphTestCase):
         cls.prev_mode = logger.get_snapshot_mode()
 
         logger.set_snapshot_dir(cls.log_dir)
-        logger.set_snapshot_mode('last')
+        logger.set_snapshot_mode('all')
 
     @classmethod
     def tearDownClass(cls):
@@ -55,21 +65,20 @@ class TestSnapshot(TfGraphTestCase):
                 max_kl_step=0.01)
 
             runner.setup(algo, env)
-            runner.train(n_epochs=1, batch_size=4000)
+            runner.train(n_epochs=self.verifyItrs, batch_size=4000)
 
             env.close()
 
-        self.tearDown()
-        self.setUp()
-
         # Read snapshot from self.log_dir
         # Test the presence and integrity of policy and env
-        with LocalRunner():
-            snapshot = joblib.load(osp.join(self.log_dir, 'params.pkl'))
+        for i in range(0, self.verifyItrs):
+            self.resetTf()
+            with LocalRunner():
+                snapshot = joblib.load(osp.join(self.log_dir, f'itr_{i}.pkl'))
 
-            env = snapshot['env']
-            policy = snapshot['policy']
-            assert env
-            assert policy
+                env = snapshot['env']
+                policy = snapshot['policy']
+                assert env
+                assert policy
 
-            rollout(env, policy, animated=False)
+                rollout(env, policy, animated=False)
