@@ -21,7 +21,7 @@ class OffPolicyRLAlgorithm(RLAlgorithm):
             discount=0.99,
             n_epochs=500,
             n_epoch_cycles=20,
-            max_path_length=100,
+            max_path_length=None,
             n_train_steps=50,
             buffer_batch_size=64,
             min_buffer_size=int(1e4),

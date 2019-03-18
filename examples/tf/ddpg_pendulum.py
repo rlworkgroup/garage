@@ -49,7 +49,6 @@ def run_task(*_):
             qf=qf,
             replay_buffer=replay_buffer,
             target_update_tau=1e-2,
-            max_path_length=100,
             n_train_steps=50,
             discount=0.9,
             min_buffer_size=int(1e4),
@@ -59,7 +58,7 @@ def run_task(*_):
 
         runner.setup(algo=ddpg, env=env)
 
-        runner.train(n_epochs=500, n_epoch_cycles=20)
+        runner.train(n_epochs=500, n_epoch_cycles=20, batch_size=100)
 
 
 run_experiment(
