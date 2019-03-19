@@ -38,7 +38,7 @@ GARAGE_DOCKER_CODE_DIR = os.environ.get('GARAGE_DOCKER_CODE_DIR',
                                         '/root/code/garage')
 
 # AWS
-GARAGE_AWS_S3_PATH = os.environ.get('GARAGE_AWS_S3_PATH', None)
+GARAGE_AWS_S3_PATH = os.environ.get('GARAGE_AWS_S3_PATH', 'INVALID_S3_PATH')
 GARAGE_AWS_IMAGE_ID = os.environ.get('GARAGE_AWS_IMAGE_ID', None)
 GARAGE_AWS_INSTANCE_TYPE = os.environ.get('GARAGE_AWS_INSTANCE_TYPE',
                                           'm4.xlarge')
