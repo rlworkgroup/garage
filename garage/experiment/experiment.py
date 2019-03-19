@@ -218,7 +218,7 @@ def run_experiment(method_call=None,
                    exp_prefix="experiment",
                    exp_name=None,
                    log_dir=None,
-                   script="scripts/run_experiment.py",
+                   script='garage.experiment.experiment_wrapper',
                    python_command="python",
                    mode="local",
                    dry=False,
@@ -379,7 +379,7 @@ def run_experiment(method_call=None,
             command = to_local_command(
                 task,
                 python_command=python_command,
-                script=osp.join(config.PROJECT_PATH, script),
+                script=script,
                 use_gpu=use_gpu)
             print(command)
             if dry:
@@ -545,10 +545,9 @@ def _to_param_val(v):
 
 def to_local_command(params,
                      python_command="python",
-                     script=osp.join(config.PROJECT_PATH,
-                                     'scripts/run_experiment.py'),
+                     script='garage.experiment.experiment_wrapper',
                      use_gpu=False):
-    command = python_command + " " + script
+    command = python_command + " -m " + script
     for k, v in config.ENV.items():
         command = ("%s=%s " % (k, v)) + command
     pre_commands = params.pop("pre_commands", None)
@@ -573,7 +572,7 @@ def to_local_command(params,
 def to_docker_command(params,
                       docker_image,
                       python_command="python",
-                      script='scripts/run_experiment.py',
+                      script='garage.experiment.experiment_wrapper',
                       pre_commands=None,
                       use_tty=False,
                       mujoco_path=None,
@@ -642,7 +641,7 @@ def to_docker_command(params,
         to_local_command(
             params,
             python_command=python_command,
-            script=osp.join(config.DOCKER_CODE_DIR, script),
+            script='garage.experiment.experiment_wrapper',
             use_gpu=use_gpu))
     # We for 2 min sleep after termination to allow for last syncs.
     if post_commands is None:
@@ -661,7 +660,7 @@ def launch_ec2(params_list,
                docker_image,
                code_full_path,
                python_command="python",
-               script='scripts/run_experiment.py',
+               script='garage.experiment.experiment_wrapper',
                aws_config=None,
                dry=False,
                terminate_machine=True,
@@ -1095,7 +1094,7 @@ def to_lab_kube_pod(params,
                     docker_image,
                     code_full_path,
                     python_command="python",
-                    script='scripts/run_experiment.py',
+                    script='garage.experiment.experiment_wrapper',
                     is_gpu=False,
                     sync_s3_pkl=False,
                     periodic_sync=True,
