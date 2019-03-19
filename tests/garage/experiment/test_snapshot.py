@@ -27,7 +27,7 @@ class TestSnapshot(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.resetTf()
+        cls.reset_tf()
         # Save snapshot in params.pkl in self.log_dir folder
         now = datetime.datetime.now(dateutil.tz.tzlocal())
         rand_id = str(uuid.uuid4())[:5]
