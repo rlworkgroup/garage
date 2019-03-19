@@ -1,3 +1,4 @@
+# flake8: noqa
 import json
 import os
 from string import Template
@@ -9,35 +10,35 @@ import botocore
 from garage import config
 from garage.misc import console
 
-ACCESS_KEY = os.environ["AWS_ACCESS_KEY"]
-ACCESS_SECRET = os.environ["AWS_ACCESS_SECRET"]
+ACCESS_KEY = os.environ["GARAGE_AWS_ACCESS_KEY"]
+ACCESS_SECRET = os.environ["GARAGE_AWS_ACCESS_SECRET"]
 S3_BUCKET_NAME = os.environ["GARAGE_S3_BUCKET"]
 
-ALL_REGION_AWS_SECURITY_GROUP_IDS = {}
-ALL_REGION_AWS_KEY_NAMES = {}
+GARAGE_ALL_REGION_AWS_SECURITY_GROUP_IDS = {}
+GARAGE_ALL_REGION_AWS_KEY_NAMES = {}
 
 CONFIG_TEMPLATE = Template("""
 import os.path as osp
 import os
 
-USE_GPU = False
+GARAGE_USE_GPU = False
 
-USE_TF = True
+GARAGE_USE_TF = True
 
-AWS_REGION_NAME = "us-west-1"
+GARAGE_AWS_REGION_NAME = "us-west-1"
 
-if USE_GPU:
-    DOCKER_IMAGE = "dementrock/rllab3-shared-gpu"
+if GARAGE_USE_GPU:
+    GARAGE_DOCKER_IMAGE = "dementrock/rllab3-shared-gpu"
 else:
-    DOCKER_IMAGE = "dementrock/rllab3-shared"
+    GARAGE_DOCKER_IMAGE = "dementrock/rllab3-shared"
 
-DOCKER_LOG_DIR = "/tmp/expt"
+GARAGE_DOCKER_LOG_DIR = "/tmp/expt"
 
-AWS_S3_PATH = "s3://$s3_bucket_name/garage/experiments"
+GARAGE_AWS_S3_PATH = "s3://$s3_bucket_name/garage/experiments"
 
-AWS_CODE_SYNC_S3_PATH = "s3://$s3_bucket_name/garage/code"
+GARAGE_AWS_CODE_SYNC_S3_PATH = "s3://$s3_bucket_name/garage/code"
 
-ALL_REGION_AWS_IMAGE_IDS = {
+GARAGE_ALL_REGION_AWS_IMAGE_IDS = {
     "ap-northeast-1": "ami-002f0167",
     "ap-northeast-2": "ami-590bd937",
     "ap-south-1": "ami-77314318",
@@ -52,34 +53,34 @@ ALL_REGION_AWS_IMAGE_IDS = {
     "us-west-2": "ami-b8b62bd8"
 }
 
-AWS_IMAGE_ID = ALL_REGION_AWS_IMAGE_IDS[AWS_REGION_NAME]
+GARAGE_AWS_IMAGE_ID = GARAGE_ALL_REGION_AWS_IMAGE_IDS[GARAGE_AWS_REGION_NAME]
 
-if USE_GPU:
-    AWS_INSTANCE_TYPE = "g2.2xlarge"
+if GARAGE_USE_GPU:
+    GARAGE_AWS_INSTANCE_TYPE = "g2.2xlarge"
 else:
-    AWS_INSTANCE_TYPE = "c4.2xlarge"
+    GARAGE_AWS_INSTANCE_TYPE = "c4.2xlarge"
 
-ALL_REGION_AWS_KEY_NAMES = $all_region_aws_key_names
+GARAGE_ALL_REGION_AWS_KEY_NAMES = $all_region_aws_key_names
 
-AWS_KEY_NAME = ALL_REGION_AWS_KEY_NAMES[AWS_REGION_NAME]
+GARAGE_AWS_KEY_NAME = GARAGE_ALL_REGION_AWS_KEY_NAMES[GARAGE_AWS_REGION_NAME]
 
-AWS_SPOT = True
+GARAGE_AWS_SPOT = True
 
-AWS_SPOT_PRICE = '0.5'
+GARAGE_AWS_SPOT_PRICE = '0.5'
 
-AWS_ACCESS_KEY = os.environ.get("AWS_ACCESS_KEY", None)
+GARAGE_AWS_ACCESS_KEY = os.environ.get("GARAGE_AWS_ACCESS_KEY", None)
 
-AWS_ACCESS_SECRET = os.environ.get("AWS_ACCESS_SECRET", None)
+GARAGE_AWS_ACCESS_SECRET = os.environ.get("GARAGE_AWS_ACCESS_SECRET", None)
 
-AWS_IAM_INSTANCE_PROFILE_NAME = "garage"
+GARAGE_AWS_IAM_INSTANCE_PROFILE_NAME = "garage"
 
-AWS_SECURITY_GROUPS = ["garage-sg"]
+GARAGE_AWS_SECURITY_GROUPS = ["garage-sg"]
 
-ALL_REGION_AWS_SECURITY_GROUP_IDS = $all_region_aws_security_group_ids
+GARAGE_ALL_REGION_AWS_SECURITY_GROUP_IDS = $all_region_aws_security_group_ids
 
-AWS_SECURITY_GROUP_IDS = ALL_REGION_AWS_SECURITY_GROUP_IDS[AWS_REGION_NAME]
+GARAGE_AWS_SECURITY_GROUP_IDS = GARAGE_ALL_REGION_AWS_SECURITY_GROUP_IDS[GARAGE_AWS_REGION_NAME]
 
-FAST_CODE_SYNC_IGNORES = [
+GARAGE_FAST_CODE_SYNC_IGNORES = [
     ".git",
     "data/local",
     "data/s3",
@@ -102,7 +103,7 @@ FAST_CODE_SYNC_IGNORES = [
     "private/key_pairs",
 ]
 
-FAST_CODE_SYNC = True
+GARAGE_FAST_CODE_SYNC = True
 
 """)
 
@@ -263,7 +264,7 @@ def setup_ec2():
             else:
                 raise e
 
-        ALL_REGION_AWS_SECURITY_GROUP_IDS[region] = [security_group.id]
+        GARAGE_ALL_REGION_AWS_SECURITY_GROUP_IDS[region] = [security_group.id]
 
         ec2_client.create_tags(
             Resources=[security_group.id],
@@ -298,8 +299,8 @@ def setup_ec2():
             else:
                 raise e
 
-        key_pair_folder_path = os.path.join(config.PROJECT_PATH, "private",
-                                            "key_pairs")
+        key_pair_folder_path = os.path.join(config.GARAGE_PROJECT_PATH,
+                                            "private", "key_pairs")
         file_name = os.path.join(key_pair_folder_path, "%s.pem" % key_name)
 
         print("Saving keypair file")
@@ -312,25 +313,20 @@ def setup_ec2():
         # adding pem file to ssh
         os.system("ssh-add %s" % file_name)
 
-        ALL_REGION_AWS_KEY_NAMES[region] = key_name
+        GARAGE_ALL_REGION_AWS_KEY_NAMES[region] = key_name
 
 
 def write_config():
     print("Writing config file...")
     content = CONFIG_TEMPLATE.substitute(
         all_region_aws_key_names=json.dumps(
-            ALL_REGION_AWS_KEY_NAMES, indent=4),
+            GARAGE_ALL_REGION_AWS_KEY_NAMES, indent=4),
         all_region_aws_security_group_ids=json.dumps(
-            ALL_REGION_AWS_SECURITY_GROUP_IDS, indent=4),
+            GARAGE_ALL_REGION_AWS_SECURITY_GROUP_IDS, indent=4),
         s3_bucket_name=S3_BUCKET_NAME,
     )
-    config_personal_file = os.path.join(config.PROJECT_PATH,
-                                        "garage/config_personal.py")
-    if os.path.exists(config_personal_file):
-        if not query_yes_no("garage/config_personal.py exists. Override?",
-                            "no"):
-            sys.exit()
-    with open(config_personal_file, "wb") as f:
+    config_file = os.path.join(config.GARAGE_PROJECT_PATH, "garage/config.py")
+    with open(config_file, "wb") as f:
         f.write(content.encode("utf-8"))
 
 

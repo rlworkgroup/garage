@@ -9,8 +9,8 @@ if __name__ == "__main__":
     parser.add_argument('--dry', action='store_true', default=False)
     parser.add_argument('--bare', action='store_true', default=False)
     args = parser.parse_args()
-    remote_dir = config.AWS_S3_PATH
-    local_dir = os.path.join(config.LOG_DIR, "s3")
+    remote_dir = config.GARAGE_AWS_S3_PATH
+    local_dir = os.path.join(config.GARAGE_LOG_DIR, "s3")
     if args.folder:
         remote_dir = os.path.join(remote_dir, args.folder)
         local_dir = os.path.join(local_dir, args.folder)

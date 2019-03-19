@@ -1,3 +1,4 @@
+# flake8: noqa
 import base64
 import collections
 import datetime
@@ -307,8 +308,8 @@ def run_experiment(method_call=None,
 
     global exp_count
     global remote_confirmed
-    config.USE_GPU = use_gpu
-    config.USE_TF = use_tf
+    config.GARAGE_USE_GPU = use_gpu
+    config.GARAGE_USE_TF = use_tf
 
     if use_tf:
         if not use_gpu:
@@ -332,8 +333,9 @@ def run_experiment(method_call=None,
             task["exp_name"] = "%s_%s_%04d" % (exp_prefix, timestamp,
                                                exp_count)
         if task.get("log_dir", None) is None:
-            task["log_dir"] = (config.LOG_DIR + "/local/" + exp_prefix.replace(
-                "_", "-") + "/" + task["exp_name"])
+            task["log_dir"] = (
+                config.GARAGE_LOG_DIR + "/local/" + exp_prefix.replace(
+                    "_", "-") + "/" + task["exp_name"])
         if task.get("variant", None) is not None:
             variant = task.pop("variant")
             if "exp_name" not in variant:
@@ -342,7 +344,7 @@ def run_experiment(method_call=None,
                 pickle.dumps(variant)).decode("utf-8")
         elif "variant" in task:
             del task["variant"]
-        task["remote_log_dir"] = osp.join(config.AWS_S3_PATH,
+        task["remote_log_dir"] = osp.join(config.GARAGE_AWS_S3_PATH,
                                           exp_prefix.replace("_", "-"),
                                           task["exp_name"])
         task["env"] = task.get("env", dict()) or dict()
@@ -358,7 +360,7 @@ def run_experiment(method_call=None,
 
     if hasattr(mode, "__call__"):
         if docker_image is None:
-            docker_image = config.DOCKER_IMAGE
+            docker_image = config.GARAGE_DOCKER_IMAGE
         mode(
             task,
             docker_image=docker_image,
@@ -395,7 +397,7 @@ def run_experiment(method_call=None,
                     raise
     elif mode == "local_docker":
         if docker_image is None:
-            docker_image = config.DOCKER_IMAGE
+            docker_image = config.GARAGE_DOCKER_IMAGE
         for task in batch_tasks:
             del task["remote_log_dir"]
             env = task.pop("env", None)
@@ -424,7 +426,7 @@ def run_experiment(method_call=None,
                 p.wait()
     elif mode == "ec2":
         if docker_image is None:
-            docker_image = config.DOCKER_IMAGE
+            docker_image = config.GARAGE_DOCKER_IMAGE
         s3_code_path = s3_sync_code(
             config,
             dry=dry,
@@ -451,15 +453,15 @@ def run_experiment(method_call=None,
         # first send code folder to s3
         s3_code_path = s3_sync_code(config, dry=dry)
         if docker_image is None:
-            docker_image = config.DOCKER_IMAGE
+            docker_image = config.GARAGE_DOCKER_IMAGE
         for task in batch_tasks:
             # if 'env' in task:
             #     assert task.pop('env') is None
             # TODO: dangerous when there are multiple tasks?
-            task["resources"] = params.pop("resources",
-                                           config.KUBE_DEFAULT_RESOURCES)
+            task["resources"] = params.pop(
+                "resources", config.GARAGE_KUBE_DEFAULT_RESOURCES)
             task["node_selector"] = params.pop(
-                "node_selector", config.KUBE_DEFAULT_NODE_SELECTOR)
+                "node_selector", config.GARAGE_KUBE_DEFAULT_NODE_SELECTOR)
             task["exp_prefix"] = exp_prefix
             pod_dict = to_lab_kube_pod(
                 task,
@@ -478,7 +480,7 @@ def run_experiment(method_call=None,
             if dry:
                 print(pod_str)
             dir = "{pod_dir}/{exp_prefix}".format(
-                pod_dir=config.POD_DIR, exp_prefix=exp_prefix)
+                pod_dir=config.GARAGE_KUBE_POD_DIR, exp_prefix=exp_prefix)
             ensure_dir(dir)
             fname = "{dir}/{exp_name}.json".format(
                 dir=dir, exp_name=task["exp_name"])
@@ -548,7 +550,7 @@ def to_local_command(params,
                      script='garage.experiment.experiment_wrapper',
                      use_gpu=False):
     command = python_command + " -m " + script
-    for k, v in config.ENV.items():
+    for k, v in config.GARAGE_ENV.items():
         command = ("%s=%s " % (k, v)) + command
     pre_commands = params.pop("pre_commands", None)
     post_commands = params.pop("post_commands", None)
@@ -596,7 +598,7 @@ def to_docker_command(params,
     if post_commands is None:
         post_commands = params.pop("post_commands", None)
     if mujoco_path is None:
-        mujoco_path = config.MUJOCO_KEY_PATH
+        mujoco_path = config.GARAGE_MUJOCO_KEY_PATH
     # script = 'garage/' + script
     # if not dry:
 
@@ -605,14 +607,14 @@ def to_docker_command(params,
         command_prefix = "nvidia-docker run"
     else:
         command_prefix = "docker run"
-    docker_log_dir = config.DOCKER_LOG_DIR
+    docker_log_dir = config.GARAGE_DOCKER_LOG_DIR
 
     if env is None:
         env = dict()
     env = dict(
         env,
-        AWS_ACCESS_KEY_ID=config.AWS_ACCESS_KEY,
-        AWS_SECRET_ACCESS_KEY=config.AWS_ACCESS_SECRET,
+        GARAGE_AWS_ACCESS_KEY_ID=config.GARAGE_AWS_ACCESS_KEY,
+        AWS_SECRET_ACCESS_KEY=config.GARAGE_AWS_ACCESS_SECRET,
     )
     if env is not None:
         for k, v in env.items():
@@ -625,9 +627,10 @@ def to_docker_command(params,
         local_log_dir=log_dir, docker_log_dir=docker_log_dir)
     command_prefix += docker_args
     if local_code_dir is None:
-        local_code_dir = config.PROJECT_PATH
+        local_code_dir = config.GARAGE_PROJECT_PATH
     command_prefix += " -v {local_code_dir}:{docker_code_dir}".format(
-        local_code_dir=local_code_dir, docker_code_dir=config.DOCKER_CODE_DIR)
+        local_code_dir=local_code_dir,
+        docker_code_dir=config.GARAGE_DOCKER_CODE_DIR)
     params = dict(params, log_dir=docker_log_dir)
     if use_tty:
         command_prefix += " -ti " + docker_image + " /bin/bash -c "
@@ -675,15 +678,15 @@ def launch_ec2(params_list,
         return
 
     default_config = dict(
-        image_id=config.AWS_IMAGE_ID,
-        instance_type=config.AWS_INSTANCE_TYPE,
-        key_name=config.AWS_KEY_NAME,
-        spot=config.AWS_SPOT,
-        spot_price=config.AWS_SPOT_PRICE,
-        iam_instance_profile_name=config.AWS_IAM_INSTANCE_PROFILE_NAME,
-        security_groups=config.AWS_SECURITY_GROUPS,
-        security_group_ids=config.AWS_SECURITY_GROUP_IDS,
-        network_interfaces=config.AWS_NETWORK_INTERFACES,
+        image_id=config.GARAGE_AWS_IMAGE_ID,
+        instance_type=config.GARAGE_AWS_INSTANCE_TYPE,
+        key_name=config.GARAGE_AWS_KEY_NAME,
+        spot=config.GARAGE_AWS_SPOT,
+        spot_price=config.GARAGE_AWS_SPOT_PRICE,
+        iam_instance_profile_name=config.GARAGE_AWS_IAM_INSTANCE_PROFILE_NAME,
+        security_groups=config.GARAGE_AWS_SECURITY_GROUPS,
+        security_group_ids=config.GARAGE_AWS_SECURITY_GROUP_IDS,
+        network_interfaces=config.GARAGE_AWS_NETWORK_INTERFACES,
     )
 
     if aws_config is None:
@@ -703,18 +706,18 @@ def launch_ec2(params_list,
         aws ec2 create-tags --resources $EC2_INSTANCE_ID --tags Key=Name,Value={exp_name} --region {aws_region}
     """.format(  # noqa: E501
         exp_name=params_list[0].get("exp_name"),
-        aws_region=config.AWS_REGION_NAME))
-    if config.LABEL:
+        aws_region=config.GARAGE_AWS_REGION_NAME))
+    if config.GARAGE_LABEL:
         sio.write("""
             aws ec2 create-tags --resources $EC2_INSTANCE_ID --tags Key=owner,Value={label} --region {aws_region}
         """.format(  # noqa: E501
-            label=config.LABEL,
-            aws_region=config.AWS_REGION_NAME))
+            label=config.GARAGE_LABEL,
+            aws_region=config.GARAGE_AWS_REGION_NAME))
     sio.write("""
         aws ec2 create-tags --resources $EC2_INSTANCE_ID --tags Key=exp_prefix,Value={exp_prefix} --region {aws_region}
     """.format(  # noqa: E501
         exp_prefix=exp_prefix,
-        aws_region=config.AWS_REGION_NAME))
+        aws_region=config.GARAGE_AWS_REGION_NAME))
     sio.write("""
         service docker start
     """)
@@ -723,50 +726,50 @@ def launch_ec2(params_list,
     """.format(docker_image=docker_image))
     sio.write("""
         export AWS_DEFAULT_REGION={aws_region}
-    """.format(aws_region=config.AWS_REGION_NAME))
-    if config.FAST_CODE_SYNC:
+    """.format(aws_region=config.GARAGE_AWS_REGION_NAME))
+    if config.GARAGE_FAST_CODE_SYNC:
         # sio.write("""
         #     aws s3 cp {code_full_path} /tmp/garage_code.tar.gz --region {aws_region}  # noqa: E501
-        # """.format(code_full_path=code_full_path, local_code_path=config.DOCKER_CODE_DIR,  # noqa: E501
-        #            aws_region=config.AWS_REGION_NAME))
+        # """.format(code_full_path=code_full_path, local_code_path=config.GARAGE_DOCKER_CODE_DIR,  # noqa: E501
+        #            aws_region=config.GARAGE_AWS_REGION_NAME))
         sio.write("""
             aws s3 cp {code_full_path} /tmp/garage_code.tar.gz
         """.format(
             code_full_path=code_full_path,
-            local_code_path=config.DOCKER_CODE_DIR))
+            local_code_path=config.GARAGE_DOCKER_CODE_DIR))
         sio.write("""
             mkdir -p {local_code_path}
         """.format(
             code_full_path=code_full_path,
-            local_code_path=config.DOCKER_CODE_DIR,
-            aws_region=config.AWS_REGION_NAME))
+            local_code_path=config.GARAGE_DOCKER_CODE_DIR,
+            aws_region=config.GARAGE_AWS_REGION_NAME))
         sio.write("""
             tar -zxvf /tmp/garage_code.tar.gz -C {local_code_path}
         """.format(
             code_full_path=code_full_path,
-            local_code_path=config.DOCKER_CODE_DIR,
-            aws_region=config.AWS_REGION_NAME))
+            local_code_path=config.GARAGE_DOCKER_CODE_DIR,
+            aws_region=config.GARAGE_AWS_REGION_NAME))
     else:
         # sio.write("""
         #     aws s3 cp --recursive {code_full_path} {local_code_path} --region {aws_region}  # noqa: E501
-        # """.format(code_full_path=code_full_path, local_code_path=config.DOCKER_CODE_DIR,  # noqa: E501
-        #            aws_region=config.AWS_REGION_NAME))
+        # """.format(code_full_path=code_full_path, local_code_path=config.GARAGE_DOCKER_CODE_DIR,  # noqa: E501
+        #            aws_region=config.GARAGE_AWS_REGION_NAME))
         sio.write("""
             aws s3 cp --recursive {code_full_path} {local_code_path}
         """.format(
             code_full_path=code_full_path,
-            local_code_path=config.DOCKER_CODE_DIR))
+            local_code_path=config.GARAGE_DOCKER_CODE_DIR))
 
-    s3_mujoco_key_path = config.AWS_CODE_SYNC_S3_PATH + '/.mujoco/'
+    s3_mujoco_key_path = config.GARAGE_AWS_CODE_SYNC_S3_PATH + '/.mujoco/'
     # sio.write("""
     #     aws s3 cp --recursive {} {} --region {}
-    # """.format(s3_mujoco_key_path, config.MUJOCO_KEY_PATH, config.AWS_REGION_NAME))  # noqa: E501
+    # """.format(s3_mujoco_key_path, config.GARAGE_MUJOCO_KEY_PATH, config.GARAGE_AWS_REGION_NAME))  # noqa: E501
     sio.write("""
         aws s3 cp --recursive {} {}
-    """.format(s3_mujoco_key_path, config.MUJOCO_KEY_PATH))
+    """.format(s3_mujoco_key_path, config.GARAGE_MUJOCO_KEY_PATH))
     sio.write("""
         cd {local_code_path}
-    """.format(local_code_path=config.DOCKER_CODE_DIR))
+    """.format(local_code_path=config.GARAGE_DOCKER_CODE_DIR))
 
     for params in params_list:
         log_dir = params.get("log_dir")
@@ -777,7 +780,7 @@ def launch_ec2(params_list,
             aws ec2 create-tags --resources $EC2_INSTANCE_ID --tags Key=Name,Value={exp_name} --region {aws_region}
         """.format(  # noqa: E501
             exp_name=params.get("exp_name"),
-            aws_region=config.AWS_REGION_NAME))
+            aws_region=config.GARAGE_AWS_REGION_NAME))
         sio.write("""
             mkdir -p {log_dir}
         """.format(log_dir=log_dir))
@@ -791,7 +794,7 @@ def launch_ec2(params_list,
             #         sleep {periodic_sync_interval}
             #     done & echo sync initiated""".format(include_png=include_png, include_pkl=include_pkl, include_log=include_log,  # noqa: E501
             #                                          log_dir=log_dir, remote_log_dir=remote_log_dir,  # noqa: E501
-            #                                          aws_region=config.AWS_REGION_NAME,
+            #                                          aws_region=config.GARAGE_AWS_REGION_NAME,
             #                                          periodic_sync_interval=periodic_sync_interval))
             sio.write("""
                 while /bin/true; do
@@ -818,7 +821,7 @@ def launch_ec2(params_list,
                 #             sleep 5
                 #         fi
                 #     done & echo log sync initiated
-                # """.format(log_dir=log_dir, remote_log_dir=remote_log_dir, aws_region=config.AWS_REGION_NAME))  # noqa: E501
+                # """.format(log_dir=log_dir, remote_log_dir=remote_log_dir, aws_region=config.GARAGE_AWS_REGION_NAME))  # noqa: E501
                 sio.write('''
                     while /bin/true; do
                         if [ -z $(curl -Is http://169.254.169.254/latest/meta-data/spot/termination-time | head -1 | grep 404 | cut -d \\  -f 2) ]
@@ -850,16 +853,16 @@ def launch_ec2(params_list,
                 script=script,
                 use_gpu=use_gpu,
                 env=env,
-                local_code_dir=config.DOCKER_CODE_DIR)))
+                local_code_dir=config.GARAGE_DOCKER_CODE_DIR)))
         # sio.write("""
         #     aws s3 cp --recursive {log_dir} {remote_log_dir} --region {aws_region}  # noqa: E501
-        # """.format(log_dir=log_dir, remote_log_dir=remote_log_dir, aws_region=config.AWS_REGION_NAME))  # noqa: E501
+        # """.format(log_dir=log_dir, remote_log_dir=remote_log_dir, aws_region=config.GARAGE_AWS_REGION_NAME))  # noqa: E501
         sio.write("""
             aws s3 cp --recursive {log_dir} {remote_log_dir}
         """.format(log_dir=log_dir, remote_log_dir=remote_log_dir))
         # sio.write("""
         #     aws s3 cp /home/ubuntu/user_data.log {remote_log_dir}/stdout.log --region {aws_region}  # noqa: E501
-        # """.format(remote_log_dir=remote_log_dir, aws_region=config.AWS_REGION_NAME))  # noqa: E501
+        # """.format(remote_log_dir=remote_log_dir, aws_region=config.GARAGE_AWS_REGION_NAME))  # noqa: E501
         sio.write("""
             aws s3 cp /home/ubuntu/user_data.log {remote_log_dir}/stdout.log
         """.format(remote_log_dir=remote_log_dir))
@@ -868,7 +871,7 @@ def launch_ec2(params_list,
         sio.write("""
             EC2_INSTANCE_ID="`wget -q -O - http://169.254.169.254/latest/meta-data/instance-id || die \"wget instance-id has failed: $?\"`"
             aws ec2 terminate-instances --instance-ids $EC2_INSTANCE_ID --region {aws_region}
-        """.format(aws_region=config.AWS_REGION_NAME))  # noqa: E501
+        """.format(aws_region=config.GARAGE_AWS_REGION_NAME))  # noqa: E501
     sio.write("} >> /home/ubuntu/user_data.log 2>&1\n")
 
     full_script = dedent(sio.getvalue())
@@ -878,16 +881,16 @@ def launch_ec2(params_list,
     if aws_config["spot"]:
         ec2 = boto3.client(
             "ec2",
-            region_name=config.AWS_REGION_NAME,
-            aws_access_key_id=config.AWS_ACCESS_KEY,
-            aws_secret_access_key=config.AWS_ACCESS_SECRET,
+            region_name=config.GARAGE_AWS_REGION_NAME,
+            aws_access_key_id=config.GARAGE_AWS_ACCESS_KEY,
+            aws_secret_access_key=config.GARAGE_AWS_ACCESS_SECRET,
         )
     else:
         ec2 = boto3.resource(
             "ec2",
-            region_name=config.AWS_REGION_NAME,
-            aws_access_key_id=config.AWS_ACCESS_KEY,
-            aws_secret_access_key=config.AWS_ACCESS_SECRET,
+            region_name=config.GARAGE_AWS_REGION_NAME,
+            aws_access_key_id=config.GARAGE_AWS_ACCESS_KEY,
+            aws_secret_access_key=config.GARAGE_AWS_ACCESS_SECRET,
         )
 
     if len(full_script) > 10000 or len(
@@ -902,7 +905,8 @@ def launch_ec2(params_list,
         chmod +x /home/ubuntu/remote_script.sh && \\
         bash /home/ubuntu/remote_script.sh
         """.format(  # noqa: E501
-            s3_path=s3_path, aws_region=config.AWS_REGION_NAME))
+            s3_path=s3_path,
+            aws_region=config.GARAGE_AWS_REGION_NAME))
         user_data = dedent(sio.getvalue())
     else:
         user_data = full_script
@@ -915,13 +919,13 @@ def launch_ec2(params_list,
         KeyName=aws_config["key_name"],
         UserData=user_data,
         InstanceType=aws_config["instance_type"],
-        EbsOptimized=config.EBS_OPTIMIZED,
+        EbsOptimized=config.GARAGE_AWS_EBS_OPTIMIZED,
         SecurityGroups=aws_config["security_groups"],
         SecurityGroupIds=aws_config["security_group_ids"],
         NetworkInterfaces=aws_config["network_interfaces"],
         IamInstanceProfile=dict(
             Name=aws_config["iam_instance_profile_name"], ),
-        **config.AWS_EXTRA_CONFIGS)
+        **config.GARAGE_AWS_EXTRA_CONFIGS)
 
     if instance_args["NetworkInterfaces"]:
         # disable_security_group = query_yes_no(
@@ -983,10 +987,10 @@ def s3_sync_code(config, dry=False, added_project_directories=[]):
     global S3_CODE_PATH
     if S3_CODE_PATH is not None:
         return S3_CODE_PATH
-    base = config.AWS_CODE_SYNC_S3_PATH
+    base = config.GARAGE_AWS_CODE_SYNC_S3_PATH
     has_git = True
 
-    if config.FAST_CODE_SYNC:
+    if config.GARAGE_FAST_CODE_SYNC:
         try:
             current_commit = subprocess.check_output(
                 ["git", "rev-parse", "HEAD"]).strip().decode("utf-8")
@@ -1000,9 +1004,9 @@ def s3_sync_code(config, dry=False, added_project_directories=[]):
 
         file_path = "/tmp/" + file_name
 
-        tar_cmd = ["tar", "-zcvf", file_path, "-C", config.PROJECT_PATH]
+        tar_cmd = ["tar", "-zcvf", file_path, "-C", config.GARAGE_PROJECT_PATH]
 
-        for pattern in config.FAST_CODE_SYNC_IGNORES:
+        for pattern in config.GARAGE_FAST_CODE_SYNC_IGNORES:
             tar_cmd += ["--exclude", pattern]
         tar_cmd += ["-h", "."]
 
@@ -1016,7 +1020,7 @@ def s3_sync_code(config, dry=False, added_project_directories=[]):
         upload_cmd = ["aws", "s3", "cp", file_path, remote_path]
 
         mujoco_key_cmd = [
-            "aws", "s3", "sync", config.MUJOCO_KEY_PATH,
+            "aws", "s3", "sync", config.GARAGE_MUJOCO_KEY_PATH,
             "{}/.mujoco/".format(base)
         ]
 
@@ -1053,15 +1057,17 @@ def s3_sync_code(config, dry=False, added_project_directories=[]):
         cache_path = "%s/%s" % (base, dir_hash)
         cache_cmds = (["aws", "s3", "cp", "--recursive"] + flatten(
             ["--exclude", "%s" % pattern]
-            for pattern in config.CODE_SYNC_IGNORES) + [cache_path, full_path])
+            for pattern in config.GARAGE_CODE_SYNC_IGNORES) +
+                      [cache_path, full_path])
         cmds = (["aws", "s3", "cp", "--recursive"] + flatten(
             ["--exclude", "%s" % pattern]
-            for pattern in config.CODE_SYNC_IGNORES) + [".", full_path])
+            for pattern in config.GARAGE_CODE_SYNC_IGNORES) + [".", full_path])
         caching_cmds = (["aws", "s3", "cp", "--recursive"] + flatten(
             ["--exclude", "%s" % pattern]
-            for pattern in config.CODE_SYNC_IGNORES) + [full_path, cache_path])
+            for pattern in config.GARAGE_CODE_SYNC_IGNORES) +
+                        [full_path, cache_path])
         mujoco_key_cmd = [
-            "aws", "s3", "sync", config.MUJOCO_KEY_PATH,
+            "aws", "s3", "sync", config.GARAGE_MUJOCO_KEY_PATH,
             "{}/.mujoco/".format(base)
         ]
         print(cache_cmds, cmds, caching_cmds, mujoco_key_cmd)
@@ -1083,7 +1089,7 @@ def upload_file_to_s3(script_content):
     f = tempfile.NamedTemporaryFile(delete=False)
     f.write(script_content.encode())
     f.close()
-    remote_path = os.path.join(config.AWS_CODE_SYNC_S3_PATH,
+    remote_path = os.path.join(config.GARAGE_AWS_CODE_SYNC_S3_PATH,
                                "oversize_bash_scripts", str(uuid.uuid4()))
     subprocess.check_call(["aws", "s3", "cp", f.name, remote_path])
     os.unlink(f.name)
@@ -1126,24 +1132,24 @@ def to_lab_kube_pod(params,
     # fetch credentials from the kubernetes secret file
     pre_commands.append('echo "[default]" >> ~/.aws/credentials')
     pre_commands.append("echo \"aws_access_key_id = %s\" >> ~/.aws/credentials"
-                        % config.AWS_ACCESS_KEY)
+                        % config.GARAGE_AWS_ACCESS_KEY)
     pre_commands.append(
         "echo \"aws_secret_access_key = %s\" >> ~/.aws/credentials" %
-        config.AWS_ACCESS_SECRET)
-    s3_mujoco_key_path = config.AWS_CODE_SYNC_S3_PATH + '/.mujoco/'
+        config.GARAGE_AWS_ACCESS_SECRET)
+    s3_mujoco_key_path = config.GARAGE_AWS_CODE_SYNC_S3_PATH + '/.mujoco/'
     pre_commands.append('aws s3 cp --recursive {} {}'.format(
         s3_mujoco_key_path, '~/.mujoco'))
 
-    if config.FAST_CODE_SYNC:
+    if config.GARAGE_FAST_CODE_SYNC:
         pre_commands.append(
             'aws s3 cp %s /tmp/garage_code.tar.gz' % code_full_path)
-        pre_commands.append('mkdir -p %s' % config.DOCKER_CODE_DIR)
-        pre_commands.append(
-            'tar -zxvf /tmp/garage_code.tar.gz -C %s' % config.DOCKER_CODE_DIR)
+        pre_commands.append('mkdir -p %s' % config.GARAGE_DOCKER_CODE_DIR)
+        pre_commands.append('tar -zxvf /tmp/garage_code.tar.gz -C %s' %
+                            config.GARAGE_DOCKER_CODE_DIR)
     else:
         pre_commands.append('aws s3 cp --recursive %s %s' %
-                            (code_full_path, config.DOCKER_CODE_DIR))
-    pre_commands.append('cd %s' % config.DOCKER_CODE_DIR)
+                            (code_full_path, config.GARAGE_DOCKER_CODE_DIR))
+    pre_commands.append('cd %s' % config.GARAGE_DOCKER_CODE_DIR)
     pre_commands.append('mkdir -p %s' % (log_dir))
 
     if sync_all_data_node_to_s3:
@@ -1157,7 +1163,7 @@ def to_lab_kube_pod(params,
                             done & echo sync initiated""".format(  # noqa: E501
                     log_dir=log_dir,
                     remote_log_dir=remote_log_dir,
-                    aws_region=config.AWS_REGION_NAME,
+                    aws_region=config.GARAGE_AWS_REGION_NAME,
                     periodic_sync_interval=periodic_sync_interval))
             else:
                 pre_commands.append("""
@@ -1167,7 +1173,7 @@ def to_lab_kube_pod(params,
                             done & echo sync initiated""".format(  # noqa: E501
                     log_dir=log_dir,
                     remote_log_dir=remote_log_dir,
-                    aws_region=config.AWS_REGION_NAME,
+                    aws_region=config.GARAGE_AWS_REGION_NAME,
                     periodic_sync_interval=periodic_sync_interval))
     else:
         if periodic_sync:
@@ -1179,7 +1185,7 @@ def to_lab_kube_pod(params,
                     done & echo sync initiated""".format(  # noqa: E501
                     log_dir=log_dir,
                     remote_log_dir=remote_log_dir,
-                    aws_region=config.AWS_REGION_NAME,
+                    aws_region=config.GARAGE_AWS_REGION_NAME,
                     periodic_sync_interval=periodic_sync_interval))
             else:
                 pre_commands.append("""
@@ -1189,7 +1195,7 @@ def to_lab_kube_pod(params,
                     done & echo sync initiated""".format(  # noqa: E501
                     log_dir=log_dir,
                     remote_log_dir=remote_log_dir,
-                    aws_region=config.AWS_REGION_NAME,
+                    aws_region=config.GARAGE_AWS_REGION_NAME,
                     periodic_sync_interval=periodic_sync_interval))
     # copy the file to s3 after execution
     post_commands = list()
@@ -1207,7 +1213,7 @@ def to_lab_kube_pod(params,
     if post_commands is not None:
         command_list.extend(post_commands)
     command = "; ".join(command_list)
-    pod_name = config.KUBE_PREFIX + params["exp_name"]
+    pod_name = config.GARAGE_KUBE_PREFIX + params["exp_name"]
     # underscore is not allowed in pod names
     pod_name = pod_name.replace("_", "-")
     print("Is gpu: ", is_gpu)
@@ -1218,7 +1224,7 @@ def to_lab_kube_pod(params,
             "metadata": {
                 "name": pod_name,
                 "labels": {
-                    "owner": config.LABEL,
+                    "owner": config.GARAGE_LABEL,
                     "expt": pod_name,
                     "exp_time": timestamp,
                     "exp_prefix": exp_prefix,
@@ -1255,7 +1261,7 @@ def to_lab_kube_pod(params,
         "metadata": {
             "name": pod_name,
             "labels": {
-                "owner": config.LABEL,
+                "owner": config.GARAGE_LABEL,
                 "expt": pod_name,
                 "exp_time": timestamp,
                 "exp_prefix": exp_prefix,
