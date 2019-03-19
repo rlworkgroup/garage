@@ -20,7 +20,7 @@ class TestSnapshot(unittest.TestCase):
     verifyItrs = 3
 
     @classmethod
-    def resetTf(cls):
+    def reset_tf(cls):
         if tf.get_default_session():
             tf.get_default_session().__exit__(None, None, None)
         tf.reset_default_graph()
@@ -72,7 +72,7 @@ class TestSnapshot(unittest.TestCase):
         # Read snapshot from self.log_dir
         # Test the presence and integrity of policy and env
         for i in range(0, self.verifyItrs):
-            self.resetTf()
+            self.reset_tf()
             with LocalRunner():
                 snapshot = joblib.load(osp.join(self.log_dir, f'itr_{i}.pkl'))
 
