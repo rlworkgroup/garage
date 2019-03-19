@@ -8,9 +8,6 @@ DATA_PATH ?= $(shell pwd)/data
 # Set the environment variable MJKEY with the contents of the file specified by
 # MJKEY_PATH.
 MJKEY_PATH ?= ~/.mujoco/mjkey.txt
-# Prevent garage from exiting on config by making sure the personal config file
-# is already created
-CONFIG_PERSONAL := garage/config_personal.py
 
 test:  ## Run the CI test suite
 test: RUN_CMD = nose2 -c setup.cfg -E 'not cron_job and not huge and not flaky'
@@ -18,7 +15,7 @@ test: run-headless
 	@echo "Running test suite..."
 
 build-ci: TAG ?= rlworkgroup/garage-ci:latest
-build-ci: docker/docker-compose-ci.yml copy_config_personal
+build-ci: docker/docker-compose-ci.yml
 	TAG=${TAG} \
 	docker-compose \
 		-f docker/docker-compose-ci.yml \
@@ -26,7 +23,7 @@ build-ci: docker/docker-compose-ci.yml copy_config_personal
 		${ADD_ARGS}
 
 build-headless: TAG ?= rlworkgroup/garage-headless:latest
-build-headless: docker/docker-compose-headless.yml copy_config_personal
+build-headless: docker/docker-compose-headless.yml
 	TAG=${TAG} \
 	docker-compose \
 		-f docker/docker-compose-headless.yml \
@@ -34,7 +31,7 @@ build-headless: docker/docker-compose-headless.yml copy_config_personal
 		${ADD_ARGS}
 
 build-nvidia: TAG ?= rlworkgroup/garage-nvidia:latest
-build-nvidia: docker/docker-compose-nvidia.yml copy_config_personal
+build-nvidia: docker/docker-compose-nvidia.yml
 	TAG=${TAG} \
 	docker-compose \
 		-f docker/docker-compose-nvidia.yml \
@@ -85,13 +82,6 @@ run-nvidia: build-nvidia
 		--name $(CONTAINER_NAME) \
 		${ADD_ARGS} \
 		rlworkgroup/garage-nvidia $(RUN_CMD)
-
-copy_config_personal:
-ifeq (0, $(shell [ ! -f $(CONFIG_PERSONAL) ]; echo $$? ))
-	$(warning No file for personal configuration was found. Copying from \
-		garage/config_personal_template.py)
-	cp garage/config_personal_template.py garage/config_personal.py
-endif
 
 
 # Help target

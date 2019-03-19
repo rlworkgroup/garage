@@ -7,8 +7,8 @@ from garage import config
 
 def process_result(exp_prefix, exp_name):
     # Open the default garage path for storing results
-    result_path = os.path.join(config.LOG_DIR, "s3", exp_prefix, exp_name,
-                               'progress.csv')
+    result_path = os.path.join(config.GARAGE_LOG_DIR, "s3", exp_prefix,
+                               exp_name, 'progress.csv')
     print("Processing result from", result_path)
 
     # This example uses pandas to easily read in results and create a simple

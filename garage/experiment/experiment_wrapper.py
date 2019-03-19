@@ -29,7 +29,7 @@ def is_iterable(obj):
 
 
 def run_experiment(argv):
-    default_log_dir = config.LOG_DIR
+    default_log_dir = config.GARAGE_LOG_DIR
     now = datetime.datetime.now(dateutil.tz.tzlocal())
 
     # avoid name clashes when running distributed jobs

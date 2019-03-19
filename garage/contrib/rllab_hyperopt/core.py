@@ -35,8 +35,8 @@ class S3SyncThread(threading.Thread):
         return self._stop_event.isSet()
 
     def run(self):
-        remote_dir = config.AWS_S3_PATH
-        local_dir = os.path.join(config.LOG_DIR, "s3")
+        remote_dir = config.GARAGE_AWS_S3_PATH
+        local_dir = os.path.join(config.GARAGE_LOG_DIR, "s3")
         command = ("aws s3 sync {remote_dir} {local_dir} "
                    "--exclude '*stdout.log' "
                    "--exclude '*stdouterr.log' "
@@ -89,8 +89,8 @@ def _wait_result(exp_prefix, exp_name, timeout):
     :param timeout: int, polling timeout in seconds
     :return bool. False if the polling times out. True if successful.
     """
-    result_path = os.path.join(config.LOG_DIR, "s3", exp_prefix, exp_name,
-                               'params.pkl')
+    result_path = os.path.join(config.GARAGE_LOG_DIR, "s3", exp_prefix,
+                               exp_name, 'params.pkl')
     print("Polling for results in", result_path)
     try:
         file_handle = polling.poll(

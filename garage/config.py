@@ -1,94 +1,75 @@
 import os
 import os.path as osp
 
-PROJECT_PATH = osp.abspath(osp.join(osp.dirname(__file__), '..'))
+# General config
+GARAGE_PROJECT_PATH = os.environ.get(
+    'GARAGE_PROJECT_PATH', osp.abspath(osp.join(osp.dirname(__file__), '..')))
+GARAGE_LOG_DIR = os.environ.get('GARAGE_LOG_DIR',
+                                osp.join(GARAGE_PROJECT_PATH, 'data'))
+GARAGE_LOG_TENSORBOARD = bool(os.environ.get('GARAGE_LOG_TENSORBOARD', True))
+GARAGE_USE_TF = bool(os.environ.get('GARAGE_USE_TF', False))
+GARAGE_USE_GPU = bool(os.environ.get('GARAGE_USE_GPU', False))
+GARAGE_MUJOCO_KEY_PATH = os.environ.get('GARAGE_MUJOCO_KEY_PATH',
+                                        osp.expanduser('~/.mujoco'))
+GARAGE_ENV = eval(os.environ.get('GARAGE_ENV', '{}'))
+GARAGE_LABEL = os.environ.get('GARAGE_LABEL', 'default')
 
-LOG_DIR = PROJECT_PATH + "/data"
+# Code copying rules (for Docker/AWS/Kubernetes)
+GARAGE_CODE_SYNC_IGNORES = eval(
+    os.environ.get(
+        'GARAGE_CODE_SYNC_IGNORES', '''[
+            "*.git/*",
+            "*data/*",
+            "*src/*",
+            "*.pods/*",
+            "*tests/*",
+            "*examples/*",
+            "docs/*"
+        ]'''))
+GARAGE_FAST_CODE_SYNC = bool(os.environ.get('GARAGE_FAST_CODE_SYNC', True))
+GARAGE_FAST_CODE_SYNC_IGNORES = eval(
+    os.environ.get('GARAGE_FAST_CODE_SYNC_IGNORES',
+                   '[".git", "data", ".pods"]'))
 
-LOG_TENSORBOARD = True
+GARAGE_DOCKER_IMAGE = os.environ.get('GARAGE_DOCKER_IMAGE',
+                                     'rlworkgroup/garage-headless')
+GARAGE_DOCKER_LOG_DIR = os.environ.get('GARAGE_DOCKER_LOG_DIR', '/tmp/expt')
+GARAGE_DOCKER_CODE_DIR = os.environ.get('GARAGE_DOCKER_CODE_DIR',
+                                        '/root/code/garage')
 
-USE_TF = False
+# AWS
+GARAGE_AWS_S3_PATH = os.environ.get('GARAGE_AWS_S3_PATH', None)
+GARAGE_AWS_IMAGE_ID = os.environ.get('GARAGE_AWS_IMAGE_ID', None)
+GARAGE_AWS_INSTANCE_TYPE = os.environ.get('GARAGE_AWS_INSTANCE_TYPE',
+                                          'm4.xlarge')
+GARAGE_AWS_KEY_NAME = os.environ.get('GARAGE_AWS_KEY_NAME', None)
+GARAGE_AWS_SPOT = bool(os.environ.get('GARAGE_AWS_SPOT', True))
+GARAGE_AWS_SPOT_PRICE = os.environ.get('GARAGE_AWS_SPOT_PRICE', '1.0')
+GARAGE_AWS_ACCESS_KEY = os.environ.get("GARAGE_AWS_ACCESS_KEY", None)
+GARAGE_AWS_ACCESS_SECRET = os.environ.get("GARAGE_AWS_ACCESS_SECRET", None)
+GARAGE_AWS_IAM_INSTANCE_PROFILE_NAME = os.environ.get(
+    'GARAGE_AWS_IAM_INSTANCE_PROFILE_NAME', 'garage')
+GARAGE_AWS_SECURITY_GROUPS = eval(
+    os.environ.get('GARAGE_AWS_SECURITY_GROUPS', '["garage"]'))
+GARAGE_AWS_SECURITY_GROUP_IDS = eval(
+    os.environ.get('GARAGE_AWS_SECURITY_GROUP_IDS', '[]'))
+GARAGE_AWS_NETWORK_INTERFACES = eval(
+    os.environ.get('GARAGE_AWS_NETWORK_INTERFACES', '[]'))
+GARAGE_AWS_EXTRA_CONFIGS = eval(
+    os.environ.get('GARAGE_AWS_EXTRA_CONFIGS', '{}'))
+GARAGE_AWS_REGION_NAME = os.environ.get('GARAGE_AWS_REGION_NAME', 'us-east-1')
+GARAGE_AWS_CODE_SYNC_S3_PATH = os.environ.get('GARAGE_AWS_CODE_SYNC_S3_PATH',
+                                              's3://to/be/overridden')
+GARAGE_AWS_EBS_OPTIMIZED = bool(
+    os.environ.get('GARAGE_AWS_EBS_OPTIMIZED', True))
 
-DOCKER_IMAGE = "DOCKER_IMAGE"
-
-DOCKERFILE_PATH = "/path/to/Dockerfile"
-
-KUBE_PREFIX = "garage_"
-
-DOCKER_LOG_DIR = "/tmp/expt"
-
-POD_DIR = PROJECT_PATH + "/.pods"
-
-AWS_S3_PATH = None
-
-AWS_IMAGE_ID = None
-
-AWS_INSTANCE_TYPE = "m4.xlarge"
-
-AWS_KEY_NAME = "AWS_KEY_NAME"
-
-AWS_SPOT = True
-
-AWS_SPOT_PRICE = '1.0'
-
-AWS_ACCESS_KEY = os.environ.get("AWS_ACCESS_KEY", None)
-
-AWS_ACCESS_SECRET = os.environ.get("AWS_ACCESS_SECRET", None)
-
-AWS_IAM_INSTANCE_PROFILE_NAME = "garage"
-
-AWS_SECURITY_GROUPS = ["garage"]
-
-AWS_SECURITY_GROUP_IDS = []
-
-AWS_NETWORK_INTERFACES = []
-
-AWS_EXTRA_CONFIGS = dict()
-
-AWS_REGION_NAME = "us-east-1"
-
-CODE_SYNC_IGNORES = ["*.git/*", "*data/*", "*.pod/*"]
-
-DOCKER_CODE_DIR = "/root/code/garage"
-
-AWS_CODE_SYNC_S3_PATH = "s3://to/be/overriden/in/personal"
-
-# whether to use fast code sync
-FAST_CODE_SYNC = True
-
-FAST_CODE_SYNC_IGNORES = [".git", "data", ".pods"]
-
-KUBE_DEFAULT_RESOURCES = {
-    "requests": {
-        "cpu": 0.8,
-    }
-}
-
-KUBE_DEFAULT_NODE_SELECTOR = {
-    "aws/type": "m4.xlarge",
-}
-
-MUJOCO_KEY_PATH = osp.expanduser("~/.mujoco")
-# MUJOCO_KEY_PATH = osp.join(osp.dirname(__file__), "../vendor/mujoco")
-
-ENV = {}
-
-EBS_OPTIMIZED = True
-
-if osp.exists(osp.join(osp.dirname(__file__), "config_personal.py")):
-    from garage.config_personal import *  # noqa: F401, F403
-else:
-    print("Creating your personal config from template...")
-    from shutil import copy
-    copy(
-        osp.join(PROJECT_PATH, "garage/config_personal_template.py"),
-        osp.join(PROJECT_PATH, "garage/config_personal.py"))
-    from garage.config_personal import *  # noqa: F401, F403
-    print("Personal config created, but you should probably edit it before "
-          "further experiments are run")
-    if 'CIRCLECI' not in os.environ:
-        print("Exiting.")
-        import sys
-        sys.exit(0)
-
-LABEL = ""
+# Kubernetes
+GARAGE_KUBE_DEFAULT_RESOURCES = eval(
+    os.environ.get('GARAGE_KUBE_DEFAULT_RESOURCES',
+                   '{"requests": {"cpu": 0.8}}'))
+GARAGE_KUBE_DEFAULT_NODE_SELECTOR = eval(
+    os.environ.get('GARAGE_KUBE_DEFAULT_NODE_SELECTOR',
+                   '{"aws/type": "m4.xlarge"}'))
+GARAGE_KUBE_PREFIX = os.environ.get('GARAGE_KUBE_PREFIX', 'garage_')
+GARAGE_KUBE_POD_DIR = os.environ.get('GARAGE_KUBE_POD_DIR',
+                                     osp.join(GARAGE_PROJECT_PATH, '/.pods'))
