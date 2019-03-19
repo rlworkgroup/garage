@@ -27,6 +27,8 @@ class TfGraphTestCase(unittest.TestCase):
         deterministic.set_seed(1)
 
     def tearDown(self):
+        if tf.get_default_session() == self.sess:
+            self.sess.__exit__(None, None, None)
         self.sess.close()
         # These del are crucial to prevent ENOMEM in the CI
         # b/c TensorFlow does not release memory explicitly
