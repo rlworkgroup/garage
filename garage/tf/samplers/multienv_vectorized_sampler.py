@@ -164,7 +164,6 @@ class MultiEnvVectorizedSampler(OnPolicyVectorizedSampler):
         """Process samples."""
         all_samples = []
         for p in paths:
-            print("..")
             processed = super().process_samples(itr, p)
             all_samples.append(processed)
         return all_samples
