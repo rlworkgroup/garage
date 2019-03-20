@@ -25,16 +25,22 @@ class TestMamlPolicies(TfGraphTestCase):
                 input_ph = tf.placeholder(
                     shape=policy_inputs.shape,
                     dtype=policy_inputs.dtype,
-                    name="task_input")
+                    name='input{}'.format(i))
                 inputs.append(input_ph)
-
-                g_i = list()
-                for p in policy_params:
-                    grad = tf.placeholder(
-                        dtype=p.dtype,
-                        shape=p.shape,
-                        name="maml_grad/task{}/{}".format(i, p.name[:-2]))
-                    g_i.append(grad)
+                policy_dist_info = maml_policy.wrapped_policy.dist_info_sym(
+                    input_ph,
+                    None,
+                    name='dist_info_{}'.format(i),
+                )
+                action = policy_dist_info[
+                    'mean'] + 0.1 * policy_dist_info['log_std']
+                g_i = tf.gradients(action, policy_params)
                 gradient_vars.append(g_i)
 
-            maml_policy.initialize(gradient_var=gradient_vars, inputs=inputs)
+            outputs, _, _ = maml_policy.initialize(
+                gradient_var=gradient_vars, inputs=inputs)
+
+            # Check gradient from action_var to policy_params
+            action_var = outputs[0][0]
+            gradient = tf.gradients(action_var, policy_params)
+            self.assertNotIn(None, gradient)
