@@ -1,7 +1,6 @@
 """Maml Policy."""
 import tensorflow as tf
 
-from garage.core import Serializable
 from garage.tf.policies.base2 import StochasticPolicy2
 
 # This is an alternative variable store for maml.
@@ -38,7 +37,6 @@ class MamlPolicy(StochasticPolicy2):
         self._create_update_opts()
 
         super().__init__(wrapped_policy._env_spec)
-        Serializable.quick_init(self, locals())
 
     def initialize(self, gradient_var, inputs):
         """
