@@ -1,4 +1,4 @@
-from garage.algos import RLAlgorithm
+from garage.algos.base import RLAlgorithm
 import garage.misc.logger as logger
 from garage.plotter import Plotter
 from garage.sampler import BatchSampler

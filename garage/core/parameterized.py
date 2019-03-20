@@ -1,6 +1,6 @@
 from contextlib import contextmanager
 
-from garage.core import Serializable
+from garage.core.serializable import Serializable
 from garage.misc.tensor_utils import flatten_tensors, unflatten_tensors
 
 load_params = True

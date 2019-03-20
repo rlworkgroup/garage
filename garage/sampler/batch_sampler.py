@@ -1,6 +1,6 @@
 """Batch Sampler class."""
-from garage.sampler import BaseSampler
 from garage.sampler import parallel_sampler
+from garage.sampler.base import BaseSampler
 from garage.sampler.utils import truncate_paths
 
 

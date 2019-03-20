@@ -9,7 +9,7 @@ from garage.misc.overrides import overrides
 from garage.misc.prog_bar_counter import ProgBarCounter
 from garage.sampler.utils import truncate_paths
 from garage.tf.envs import VecEnvExecutor
-from garage.tf.samplers import BatchSampler
+from garage.tf.samplers.batch_sampler import BatchSampler
 
 
 class OnPolicyVectorizedSampler(BatchSampler):

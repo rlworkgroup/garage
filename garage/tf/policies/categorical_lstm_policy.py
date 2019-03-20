@@ -10,7 +10,7 @@ import garage.tf.core.layers as L
 from garage.tf.core.network import LSTMNetwork
 from garage.tf.distributions import RecurrentCategorical
 from garage.tf.misc import tensor_utils
-from garage.tf.policies import StochasticPolicy
+from garage.tf.policies.base import StochasticPolicy
 
 
 class CategoricalLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):

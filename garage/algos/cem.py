@@ -3,7 +3,7 @@ from itertools import zip_longest
 
 import numpy as np
 
-from garage.algos import RLAlgorithm
+from garage.algos.base import RLAlgorithm
 from garage.core import Serializable
 import garage.misc.logger as logger
 from garage.misc.special import discount_cumsum

@@ -1,8 +1,8 @@
 import numpy as np
 import tensorflow as tf
 
-from garage.tf.distributions import Categorical
-from garage.tf.distributions import Distribution
+from garage.tf.distributions.base import Distribution
+from garage.tf.distributions.categorical import Categorical
 
 TINY = 1e-8
 

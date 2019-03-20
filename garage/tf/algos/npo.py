@@ -8,7 +8,7 @@ import tensorflow as tf
 from garage.misc import logger
 from garage.misc import special
 from garage.misc.overrides import overrides
-from garage.tf.algos import BatchPolopt
+from garage.tf.algos.batch_polopt import BatchPolopt
 from garage.tf.misc import tensor_utils
 from garage.tf.misc.tensor_utils import compute_advantages
 from garage.tf.misc.tensor_utils import discounted_returns

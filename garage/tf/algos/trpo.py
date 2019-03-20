@@ -1,7 +1,7 @@
 from enum import Enum
 from enum import unique
 
-from garage.tf.algos import NPO
+from garage.tf.algos.npo import NPO
 from garage.tf.algos.npo import PGLoss
 from garage.tf.optimizers import ConjugateGradientOptimizer
 from garage.tf.optimizers import PenaltyLbfgsOptimizer

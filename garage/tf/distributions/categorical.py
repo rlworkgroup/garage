@@ -1,7 +1,7 @@
 import numpy as np
 import tensorflow as tf
 
-from garage.tf.distributions import Distribution
+from garage.tf.distributions.base import Distribution
 from garage.tf.misc.tensor_utils import compile_function
 
 TINY = 1e-8

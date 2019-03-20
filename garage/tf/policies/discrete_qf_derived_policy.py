@@ -9,7 +9,7 @@ import tensorflow as tf
 
 from garage.core import Serializable
 from garage.misc.overrides import overrides
-from garage.tf.policies import Policy
+from garage.tf.policies.base import Policy
 
 
 class DiscreteQfDerivedPolicy(Policy, Serializable):

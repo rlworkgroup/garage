@@ -1,6 +1,6 @@
 import numpy as np
 
-from garage.baselines import Baseline
+from garage.baselines.base import Baseline
 from garage.misc.overrides import overrides
 
 
