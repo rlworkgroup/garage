@@ -4,7 +4,7 @@ from setuptools import setup
 # Required dependencies
 required = [
     # Please keep alphabetized
-    'akro @ https://api.github.com/repos/rlworkgroup/akro/tarball/ec846114881edef66a5ebdfffdcca9bee01d3aef',  # noqa: E501
+    'akro',
     'boto3',
     'cached_property',
     'cloudpickle',
