@@ -14,7 +14,7 @@ from garage.tf.core import layers as layers
 from garage.tf.core import LayersPowered
 from garage.tf.core.layers import batch_norm
 from garage.tf.misc import tensor_utils
-from garage.tf.policies import Policy
+from garage.tf.policies.base import Policy
 
 
 class ContinuousMLPPolicy(Policy, LayersPowered, Serializable):

@@ -6,7 +6,7 @@ import tensorflow as tf
 
 from garage.misc import logger
 from garage.misc.overrides import overrides
-from garage.tf.algos import BatchPolopt
+from garage.tf.algos.batch_polopt import BatchPolopt
 from garage.tf.misc import tensor_utils
 from garage.tf.misc.tensor_utils import filter_valids
 from garage.tf.misc.tensor_utils import filter_valids_dict

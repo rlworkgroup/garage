@@ -7,7 +7,7 @@ from garage.tf.core import LayersPowered
 import garage.tf.core.layers as L
 from garage.tf.core.network import MLP
 from garage.tf.misc import tensor_utils
-from garage.tf.policies import Policy
+from garage.tf.policies.base import Policy
 
 
 class DeterministicMLPPolicy(Policy, LayersPowered, Serializable):

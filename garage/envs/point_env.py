@@ -2,7 +2,7 @@ import gym
 import numpy as np
 
 from garage.core import Serializable
-from garage.envs import Step
+from garage.envs.base import Step
 
 
 class PointEnv(gym.Env, Serializable):

@@ -5,7 +5,7 @@ from garage.tf.core import LayersPowered
 import garage.tf.core.layers as L
 from garage.tf.core.layers import batch_norm
 from garage.tf.misc import tensor_utils
-from garage.tf.q_functions import QFunction
+from garage.tf.q_functions.base import QFunction
 
 
 class ContinuousMLPQFunction(QFunction, LayersPowered, Serializable):

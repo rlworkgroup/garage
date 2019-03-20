@@ -1,7 +1,7 @@
 import itertools
 
 from garage.tf.core import layers as garage_layers
-from garage.tf.core import Parameterized
+from garage.tf.core.parameterized import Parameterized
 
 
 class LayersPowered(Parameterized):

@@ -1,4 +1,4 @@
-from garage.algos import RLAlgorithm
+from garage.algos.base import RLAlgorithm
 from garage.core import Serializable
 from garage.misc.overrides import overrides
 

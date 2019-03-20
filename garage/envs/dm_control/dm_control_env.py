@@ -6,7 +6,7 @@ import numpy as np
 
 from garage.core import Serializable
 from garage.envs import Step
-from garage.envs.dm_control import DmControlViewer
+from garage.envs.dm_control.dm_control_viewer import DmControlViewer
 
 
 class DmControlEnv(gym.Env, Serializable):
