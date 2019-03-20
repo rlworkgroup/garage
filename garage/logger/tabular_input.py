@@ -18,7 +18,8 @@ class TabularInput:
 
     def __str__(self):
         """Return a string representation of the table for the logger."""
-        return tabulate.tabulate(self.as_primitive_dict.items())
+        return tabulate.tabulate(
+            sorted(self.as_primitive_dict.items(), key=lambda x: x[0]))
 
     def record(self, key, val):
         """Save key/value entries for the table.
@@ -92,11 +93,9 @@ class TabularInput:
     @property
     def as_primitive_dict(self):
         """Return the dictionary, excluding all nonprimitive types."""
-        primitives = (int, float, str, bool)
-
         return {
             key: val
-            for key, val in self._dict.items() if isinstance(val, primitives)
+            for key, val in self._dict.items() if np.isscalar(val)
         }
 
     @property

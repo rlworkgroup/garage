@@ -91,15 +91,20 @@ class TextOutput(FileOutput):
     @property
     def types_accepted(self):
         """Accept str objects only."""
-        return (str, )
+        return (str, TabularInput)
 
     def record(self, data, prefix=''):
         """Log data to text file."""
-        out = data
-        if self._with_timestamp:
-            now = datetime.datetime.now(dateutil.tz.tzlocal())
-            timestamp = now.strftime('%Y-%m-%d %H:%M:%S.%f %Z')
-            out = '%s%s%s' % (timestamp, self._delimiter, out)
+        if isinstance(data, str):
+            out = prefix + data
+            if self._with_timestamp:
+                now = datetime.datetime.now(dateutil.tz.tzlocal())
+                timestamp = now.strftime('%Y-%m-%d %H:%M:%S')
+                out = '%s | %s' % (timestamp, out)
+        elif isinstance(data, TabularInput):
+            out = str(data)
+        else:
+            return
 
         self._log_file.write(out + '\n')
         self._log_file.flush()
