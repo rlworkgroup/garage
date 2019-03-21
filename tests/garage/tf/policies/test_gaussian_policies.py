@@ -4,7 +4,6 @@ from nose2 import tools
 from garage.baselines import LinearFeatureBaseline
 from garage.envs import normalize
 from garage.experiment import LocalRunner
-from garage.logger import logger, TensorBoardOutput
 from garage.tf.algos import TRPO
 from garage.tf.envs import TfEnv
 from garage.tf.optimizers import ConjugateGradientOptimizer
@@ -20,7 +19,6 @@ policies = [GaussianGRUPolicy, GaussianLSTMPolicy, GaussianMLPPolicy]
 class TestGaussianPolicies(TfGraphTestCase):
     @tools.params(*policies)
     def test_gaussian_policies(self, policy_cls):
-        logger.reset_output(TensorBoardOutput())
         with LocalRunner(self.sess) as runner:
             env = TfEnv(normalize(gym.make("Pendulum-v0")))
 

@@ -13,6 +13,9 @@ class TestCsvOutput(unittest.TestCase):
         self.tabular = TabularInput()
         self.tabular.clear()
 
+    def tearDown(self):
+        self.log_file.close()
+
     def test_record(self):
         foo = 1
         bar = 10
@@ -22,6 +25,7 @@ class TestCsvOutput(unittest.TestCase):
         self.tabular.record('foo', foo * 2)
         self.tabular.record('bar', bar * 2)
         self.csv_output.record(self.tabular)
+        self.csv_output.dump()
 
         correct = [
             {'foo': str(foo), 'bar': str(bar)},
@@ -42,6 +46,8 @@ class TestCsvOutput(unittest.TestCase):
 
         # this should not produce a warning, because we only warn once
         self.csv_output.record(self.tabular)
+
+        self.csv_output.dump()
 
         correct = [
             {'foo': str(foo)},

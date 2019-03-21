@@ -7,7 +7,6 @@ import tensorflow as tf
 
 from garage.experiment import LocalRunner
 from garage.exploration_strategies import OUStrategy
-from garage.logger import logger, TensorBoardOutput
 from garage.replay_buffer import SimpleReplayBuffer
 from garage.tf.algos import DDPG
 from garage.tf.envs import TfEnv
@@ -19,7 +18,6 @@ from tests.fixtures import TfGraphTestCase
 class TestDDPG(TfGraphTestCase):
     def test_ddpg_pendulum(self):
         """Test PPO with Pendulum environment."""
-        logger.reset_output(TensorBoardOutput())
         with LocalRunner(self.sess) as runner:
             env = TfEnv(gym.make('InvertedDoublePendulum-v2'))
             action_noise = OUStrategy(env.spec, sigma=0.2)

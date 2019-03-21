@@ -5,7 +5,7 @@ import tensorflow as tf
 
 from garage.experiment import deterministic
 from garage.logger import logger
-from garage.logger import TensorBoardOutput
+from tests.fixtures.logger import NullOutput
 
 
 class TfTestCase(unittest.TestCase):
@@ -24,12 +24,11 @@ class TfGraphTestCase(unittest.TestCase):
         self.graph = tf.Graph()
         self.sess = tf.Session(graph=self.graph)
         self.sess.__enter__()
-        logger.reset_output(TensorBoardOutput())
+        logger.add_output(NullOutput())
         deterministic.set_seed(1)
 
     def tearDown(self):
-        if tf.get_default_session() == self.sess:
-            self.sess.__exit__(None, None, None)
+        logger.remove_all()
         self.sess.close()
         # These del are crucial to prevent ENOMEM in the CI
         # b/c TensorFlow does not release memory explicitly

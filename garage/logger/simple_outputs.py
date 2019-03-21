@@ -14,19 +14,6 @@ from garage.logger.tabular_input import TabularInput
 from garage.misc.console import mkdir_p
 
 
-class NullOutput(LogOutput):
-    """Dummy output to disable 'no logger output' warnings."""
-
-    @property
-    def types_accepted(self):
-        """Accept all output types."""
-        return (object, )
-
-    def record(self, data, prefix=''):
-        """Don't do anything."""
-        pass
-
-
 class StdOutput(LogOutput):
     """Standard console output for the logger.
 
@@ -51,10 +38,13 @@ class StdOutput(LogOutput):
                 out = '%s | %s' % (timestamp, out)
         elif isinstance(data, TabularInput):
             out = str(data)
+            data.mark_str()
         else:
-            return
+            raise ValueError("Unacceptable type")
 
         print(out)
+
+    def dump(self, step=None):
         sys.stdout.flush()
 
 
@@ -74,6 +64,9 @@ class FileOutput(LogOutput, metaclass=abc.ABCMeta):
         """Close any files used by the output."""
         if self._log_file and not self._log_file.closed:
             self._log_file.close()
+
+    def dump(self, step=None):
+        self._log_file.flush()
 
 
 class TextOutput(FileOutput):
@@ -103,8 +96,8 @@ class TextOutput(FileOutput):
                 out = '%s | %s' % (timestamp, out)
         elif isinstance(data, TabularInput):
             out = str(data)
+            data.mark_str()
         else:
-            return
+            raise ValueError("Unacceptable type.")
 
         self._log_file.write(out + '\n')
-        self._log_file.flush()

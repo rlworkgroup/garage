@@ -6,7 +6,6 @@ import gym
 
 from garage.baselines import LinearFeatureBaseline
 from garage.experiment import LocalRunner
-from garage.logger import logger, TensorBoardOutput
 from garage.tf.algos import REPS
 from garage.tf.envs import TfEnv
 from garage.tf.policies import CategoricalMLPPolicy
@@ -16,7 +15,6 @@ from tests.fixtures import TfGraphTestCase
 class TestREPS(TfGraphTestCase):
     def test_reps_cartpole(self):
         """Test REPS with gym Cartpole environment."""
-        logger.reset_output(TensorBoardOutput())
         with LocalRunner(self.sess) as runner:
             env = TfEnv(gym.make("CartPole-v0"))
 

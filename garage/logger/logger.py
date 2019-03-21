@@ -112,15 +112,16 @@ logger.log(tabular)
        |             +---------+
        |
 +------+             +----------+
-|logger+-----!!------>TextOutput|
+|logger+---tabular--->TextOutput|
 +------+             +----------+
        |
        |             +---------+
        +---tabular--->CsvOutput|
                      +---------+
 
-# !! Note that the logger knows not to send the tabular to TextOutput
-# This behavior is defined in each output's types_accepted property
+Note that LogOutputs which consume TabularInputs must call TabularInput.mark()
+on each key they log. This helps the logger detect when tabular data is not
+logged.
 
 # Console Output:
 ---  ---
@@ -183,7 +184,8 @@ class Logger:
         self._outputs = []
         self._prefixes = []
         self._prefix_str = ''
-        self._warned_once = False
+        self._warned_once = set()
+        self._disable_warnings = False
 
     def log(self, data):
         """Magic method that takes in all different types of input.
@@ -211,9 +213,6 @@ class Logger:
                 'Log data of type {} was not accepted by any output'.format(
                     type(data).__name__))
             self._warn(warning)
-
-        if hasattr(data, 'clear'):
-            data.clear()
 
     def add_output(self, output):
         """Add a new output to the logger.
@@ -317,14 +316,14 @@ class Logger:
         The stacklevel parameter needs to be 3 to ensure the call to logger.log
         is the one printed.
         """
-        if not self._warned_once:
+        if not self._disable_warnings and msg not in self._warned_once:
             warnings.warn(colorize(msg, 'yellow'), LoggerWarning, stacklevel=3)
-        self._warned_once = True
+        self._warned_once.add(msg)
         return msg
 
     def disable_warnings(self):
         """Disable logger warnings for testing."""
-        self._warned_once = True
+        self._disable_warnings = True
 
 
 class LoggerWarning(UserWarning):

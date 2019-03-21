@@ -31,6 +31,7 @@ class TestLogger(unittest.TestCase):
             assert logger.has_output_type(TextOutput)
 
             tabular.record_misc_stat('stat', 1)
+            logger.remove_output_type(TextOutput)
             with self.assertWarns(LoggerWarning):
                 logger.log(tabular)
         finally:

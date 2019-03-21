@@ -2,6 +2,7 @@ import math
 import unittest
 
 from garage.logger import TabularInput
+from garage.logger.tabular_input import TabularInputWarning
 
 
 class TestTabularInput(unittest.TestCase):
@@ -18,8 +19,8 @@ class TestTabularInput(unittest.TestCase):
 
         correct_str = (
             '---  ---\n'
-            'foo  123\n'
             'bar  456\n'
+            'foo  123\n'
             '---  ---'
         )  # yapf: disable
         assert str(self.tabular) == correct_str
@@ -80,9 +81,33 @@ class TestTabularInput(unittest.TestCase):
         bar = 10
         self.tabular.record('foo', foo)
         self.tabular.record('bar', bar)
+        self.tabular.mark_all()
+
         assert self.tabular.as_dict
         self.tabular.clear()
         assert not self.tabular.as_dict
+
+    def test_clear_warns_not_recorded_once(self):
+        self.tabular.record('foo', 1)
+
+        with self.assertWarns(TabularInputWarning):
+            self.tabular.clear()
+
+        self.tabular.record('foo', 1)
+        # This not trigger a warning, because we warned once
+        self.tabular.clear()
+
+    def test_disable_warnings(self):
+        self.tabular.record('foo', 1)
+
+        with self.assertWarns(TabularInputWarning):
+            self.tabular.clear()
+
+        self.tabular.record('bar', 2)
+        self.tabular.disable_warnings()
+
+        # This should not trigger a warning, because we disabled warnings
+        self.tabular.clear()
 
     def test_push_prefix(self):
         foo = 111
