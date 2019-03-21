@@ -61,7 +61,7 @@ with open('README.md') as f:
     readme = f.read()
 
 # Get the package version dynamically
-exec(open('./garage/__version__.py').read())
+exec(open('./garage/__version__.py').read()) # pylint: disable=exec-used
 version = __version__  # noqa: F821, pylint: disable=undefined-variable
 
 setup(

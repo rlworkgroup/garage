@@ -51,7 +51,7 @@ class InstrumentedBatchPolopt(BatchPolopt):
                     conn.send(ExpLifecycle.OPTIMIZE_POLICY)
                     self.optimize_policy(itr, samples_data)
                     logger.log("Saving snapshot...")
-                    params = self.get_itr_snapshot(itr, samples_data)
+                    params = self.get_itr_snapshot(itr)
                     if self.store_paths:
                         params["paths"] = samples_data["paths"]
                     snapshotter.save_itr_params(itr, params)

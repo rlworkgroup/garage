@@ -55,5 +55,6 @@ class TestSanpshotter(unittest.TestCase):
 
     def test_invalid_snapshot_mode(self):
         with self.assertRaises(ValueError):
+            self.snapshotter.snapshot_dir = self.snapshot_dir.name
             self.snapshotter.snapshot_mode = 'invalid'
             self.snapshotter.save_itr_params(2, {'testparam': 'invalid'})
