@@ -1,70 +1,59 @@
 from os import path as osp
 import pickle
-import random
-import shutil
+import tempfile
 import unittest
 
-from garage.logger import snapshotter
-from garage.misc.console import mkdir_p
+from nose2 import tools
+
+from garage.logger import Snapshotter
+
+configurations = [('all', {
+    'itr_1.pkl': 0,
+    'itr_2.pkl': 1
+}), ('last', {
+    'params.pkl': 1
+}), ('gap', {
+    'itr_2.pkl': 1
+}), ('gap_and_last', {
+    'itr_2.pkl': 1,
+    'params.pkl': 1
+}), ('none', {})]
 
 
-class TestSnapshotter(unittest.TestCase):
-    def test_snapshotter(self):
-        snap_dir = 'test_snapshotter'
-        try:
-            snapshotter.snapshot_dir = snap_dir
-            assert snapshotter.snapshot_dir == snap_dir
+class TestSanpshotter(unittest.TestCase):
+    def setUp(self):
+        self.snapshot_dir = tempfile.TemporaryDirectory()
+        self.snapshotter = Snapshotter()
 
-            snapfiles = {
-                'all': {
-                    'itr_1.pkl': 0,
-                    'itr_2.pkl': 1
-                },
-                'last': {
-                    'params.pkl': 1
-                },
-                'gap': {
-                    'itr_2.pkl': 1
-                },
-                'gap_and_last': {
-                    'itr_2.pkl': 1,
-                    'params.pkl': 1
-                }
-            }
+    def tearDown(self):
+        self.snapshotter.reset()
+        self.snapshot_dir.cleanup()
 
-            for mode, files in snapfiles.items():
-                shutil.rmtree(snap_dir)
-                mkdir_p(snap_dir)
+    def test_set_snapshot_dir(self):
+        self.snapshotter.snapshot_dir = self.snapshot_dir.name
+        assert self.snapshotter.snapshot_dir == self.snapshot_dir.name
 
-                snapshotter.snapshot_mode = mode
-                assert snapshotter.snapshot_mode == mode
-                snapshotter.snapshot_gap = 2
-                assert snapshotter.snapshot_gap == 2
-                snapshot_data = []
-                snapshot_data.append({'testparam': random.randint(0, 999)})
-                snapshot_data.append({'testparam': random.randint(0, 999)})
-                snapshotter.save_itr_params(1, snapshot_data[0])
-                snapshotter.save_itr_params(2, snapshot_data[1])
+    @tools.params(*configurations)
+    def test_snapshotter(self, mode, files):
+        self.snapshotter.snapshot_dir = self.snapshot_dir.name
 
-                # check none/invalid modes
-                snapshotter.snapshot_mode = 'none'
-                snapshotter.save_itr_params(2, {'testparam': 'none'})
-                snapshotter.snapshot_mode = 'invalid'
-                try:
-                    snapshotter.save_itr_params(2, {'testparam': 'invalid'})
-                except ValueError as e:
-                    assert str(e) == 'Invalid snapshot mode invalid'
-                except Exception as e:
-                    self.fail('Wrong exception raised: ' + str(e))
-                else:
-                    self.fail('Snapshot mode exception not raised.')
+        self.snapshotter.snapshot_mode = mode
+        assert self.snapshotter.snapshot_mode == mode
+        self.snapshotter.snapshot_gap = 2
+        assert self.snapshotter.snapshot_gap == 2
 
-                for f, num in files.items():
-                    filename = osp.join(snap_dir, f)
-                    assert osp.exists(filename)
-                    with open(filename, 'rb') as pkl_file:
-                        data = pickle.load(pkl_file)
-                        assert data == snapshot_data[num]
-        finally:
-            snapshotter.reset()
-            shutil.rmtree(snap_dir)
+        snapshot_data = [{'testparam': 1}, {'testparam': 4}]
+        self.snapshotter.save_itr_params(1, snapshot_data[0])
+        self.snapshotter.save_itr_params(2, snapshot_data[1])
+
+        for f, num in files.items():
+            filename = osp.join(self.snapshot_dir.name, f)
+            assert osp.exists(filename)
+            with open(filename, 'rb') as pkl_file:
+                data = pickle.load(pkl_file)
+                assert data == snapshot_data[num]
+
+    def test_invalid_snapshot_mode(self):
+        with self.assertRaises(ValueError):
+            self.snapshotter.snapshot_mode = 'invalid'
+            self.snapshotter.save_itr_params(2, {'testparam': 'invalid'})

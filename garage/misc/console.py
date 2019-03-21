@@ -4,7 +4,6 @@ import inspect
 import os
 import pydoc
 import shlex
-import shutil
 import sys
 import time
 

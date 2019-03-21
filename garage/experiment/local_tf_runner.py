@@ -224,7 +224,8 @@ class LocalRunner:
             The average return in last epoch cycle.
 
         """
-        assert self.has_setup, 'Use Runner.setup() to setup runner before training.'
+        assert self.has_setup, ('Use Runner.setup() to setup runner before '
+                                'training.')
         if batch_size is None:
             from garage.tf.samplers import OffPolicyVectorizedSampler
             if isinstance(self.sampler, OffPolicyVectorizedSampler):

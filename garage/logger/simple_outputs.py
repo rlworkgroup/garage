@@ -45,6 +45,7 @@ class StdOutput(LogOutput):
         print(out)
 
     def dump(self, step=None):
+        """Flush data to standard output stream."""
         sys.stdout.flush()
 
 
@@ -66,6 +67,7 @@ class FileOutput(LogOutput, metaclass=abc.ABCMeta):
             self._log_file.close()
 
     def dump(self, step=None):
+        """Flush data to log file."""
         self._log_file.flush()
 
 

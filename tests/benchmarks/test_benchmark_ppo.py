@@ -30,6 +30,7 @@ from garage.experiment import deterministic
 from garage.experiment import LocalRunner
 from garage.logger import CsvOutput
 from garage.logger import logger as garage_logger
+from garage.logger import StdOutput
 from garage.logger import TensorBoardOutput
 from garage.tf.algos import PPO
 from garage.tf.baselines import GaussianMLPBaseline
@@ -157,6 +158,7 @@ def run_garage(env, seed, log_dir):
 
         # Set up logger since we are not using run_experiment
         tabular_log_file = osp.join(log_dir, "progress.csv")
+        garage_logger.add_output(StdOutput())
         garage_logger.add_output(CsvOutput(tabular_log_file))
         garage_logger.add_output(TensorBoardOutput(log_dir))
 

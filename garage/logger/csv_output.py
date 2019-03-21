@@ -27,9 +27,11 @@ class CsvOutput(FileOutput):
 
     def record(self, data, prefix=''):
         """Log tabular data to CSV."""
-
         if isinstance(data, TabularInput):
             to_csv = data.as_primitive_dict
+
+            if not to_csv.keys() and not self._writer:
+                return
 
             if not self._writer:
                 self._fieldnames = set(to_csv.keys())
@@ -72,6 +74,6 @@ class CsvOutput(FileOutput):
 
 
 class CsvOutputWarning(UserWarning):
-    """Warning class for CsvOutput"""
+    """Warning class for CsvOutput."""
 
     pass

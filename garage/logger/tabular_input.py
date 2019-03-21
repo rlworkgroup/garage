@@ -36,12 +36,15 @@ class TabularInput:
         self._dict[self._prefix_str + str(key)] = val
 
     def mark(self, key):
+        """Mark key as recorded."""
         self._recorded.add(key)
 
     def mark_str(self):
+        """Mark keys in the primitive dict."""
         self._recorded |= self.as_primitive_dict.keys()
 
     def mark_all(self):
+        """Mark all keys."""
         self._recorded |= self._dict.keys()
 
     def record_misc_stat(self, key, values, placement='back'):
@@ -90,14 +93,13 @@ class TabularInput:
 
     def clear(self):
         """Clear the tabular."""
-
         # Warn if something wasn't logged
         for k, v in self._dict.items():
             if k not in self._recorded:
                 warning = (
-                    'TabularInput {{{}: type({})}} was not accepted by any output'
-                    .format(k,
-                            type(v).__name__))
+                    'TabularInput {{{}: type({})}} was not accepted by any '
+                    'output'.format(k,
+                                    type(v).__name__))
                 self._warn(warning)
 
         self._dict.clear()
@@ -147,6 +149,6 @@ class TabularInput:
 
 
 class TabularInputWarning(UserWarning):
-    """Warning class for the TabularInpuit"""
+    """Warning class for the TabularInput."""
 
     pass

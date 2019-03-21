@@ -1,5 +1,3 @@
-import mock
-import tempfile
 import unittest
 
 from garage.logger import Logger, LogOutput
@@ -8,7 +6,8 @@ from garage.logger.logger import LoggerWarning
 
 class TestLogger(unittest.TestCase):
     def setUp(self):
-        self.mock_output = mock.Mock(spec=LogOutput, types_accepted=(str, ))
+        self.mock_output = unittest.mock.Mock(
+            spec=LogOutput, types_accepted=(str, ))
         self.mock_output_type = type(self.mock_output)
         self.logger = Logger()
 
@@ -68,4 +67,3 @@ class TestLogger(unittest.TestCase):
         self.logger.add_output(self.mock_output)
         self.logger.dump_all()
         self.mock_output.dump.assert_called_with(step=None)
-

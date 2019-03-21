@@ -32,6 +32,7 @@ from garage.experiment import LocalRunner
 from garage.exploration_strategies import OUStrategy
 from garage.logger import CsvOutput
 from garage.logger import logger as garage_logger
+from garage.logger import StdOutput
 from garage.logger import TensorBoardOutput
 from garage.replay_buffer import SimpleReplayBuffer
 from garage.tf.algos import DDPG
@@ -173,6 +174,7 @@ def run_garage(env, seed, log_dir):
         # Set up logger since we are not using run_experiment
         tabular_log_file = osp.join(log_dir, "progress.csv")
         tensorboard_log_dir = osp.join(log_dir)
+        garage_logger.add_output(StdOutput())
         garage_logger.add_output(CsvOutput(tabular_log_file))
         garage_logger.add_output(TensorBoardOutput(tensorboard_log_dir))
 

@@ -70,6 +70,7 @@ class TensorBoardOutput(LogOutput):
             self._writer.add_histogram(key, samples, step)
 
     def dump(self, step=None):
+        """Flush summary writer to disk."""
         if not self._added_graph:
             # A static graph should only record once.
             self._writer.add_graph(tf.get_default_graph())
