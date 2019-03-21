@@ -1,81 +1,71 @@
+import mock
+import tempfile
 import unittest
 
-from garage.logger import CsvOutput, logger, tabular, TextOutput
+from garage.logger import Logger, LogOutput
 from garage.logger.logger import LoggerWarning
-from garage.misc.console import remove_if_exists
 
 
 class TestLogger(unittest.TestCase):
     def setUp(self):
-        tabular.clear()
+        self.mock_output = mock.Mock(spec=LogOutput, types_accepted=(str, ))
+        self.mock_output_type = type(self.mock_output)
+        self.logger = Logger()
 
-    def tearDown(self):
-        logger.remove_all()
+    def test_add_output(self):
+        self.logger.add_output(self.mock_output)
+        assert self.logger.has_output_type(self.mock_output_type)
 
-    def test_outputs(self):
-        tabular.clear()
+    def test_add_uninstantiated_output(self):
+        with self.assertRaises(ValueError):
+            self.logger.add_output(self.mock_output_type)
+
+    def test_add_unknown_output(self):
+        with self.assertRaises(ValueError):
+            self.logger.add_output('foo')
+
+    def test_log(self):
+        self.logger.add_output(self.mock_output)
+        self.logger.log('foo')
+        self.mock_output.record.assert_called_with('foo', prefix='')
+
+    def test_log_with_no_output(self):
         with self.assertWarns(LoggerWarning):
-            logger.log('test')
+            self.logger.log('foo')
 
-        log_files = ['test_%u.txt' % i for i in range(5)]
-        csv_file = 'text.csv'
-        try:
-            logger.add_output(CsvOutput(csv_file))
-            for file in log_files:
-                logger.add_output(TextOutput(file))
+    def test_log_with_no_logged(self):
+        with self.assertWarns(LoggerWarning):
+            self.logger.add_output(self.mock_output)
+            self.logger.log(dict())
 
-            assert logger.has_output_type(CsvOutput)
-            assert logger.has_output_type(TextOutput)
-            logger.remove_output_type(CsvOutput)
-            assert not logger.has_output_type(CsvOutput)
-            assert logger.has_output_type(TextOutput)
+    def test_log_with_prefix(self):
+        with self.logger.prefix('a/'):
+            self.logger.add_output(self.mock_output)
+            self.logger.log('foo')
+            self.mock_output.record.assert_called_with('foo', prefix='a/')
 
-            tabular.record_misc_stat('stat', 1)
-            logger.remove_output_type(TextOutput)
-            with self.assertWarns(LoggerWarning):
-                logger.log(tabular)
-        finally:
-            for file in log_files:
-                remove_if_exists(file)
-            remove_if_exists(csv_file)
+    def test_remove_output_type(self):
+        self.logger.add_output(self.mock_output)
+        self.logger.remove_output_type(self.mock_output_type)
+        assert not self.logger.has_output_type(self.mock_output_type)
 
-    def test_errors(self):
-        with self.assertRaises(ValueError):
-            logger.add_output(TextOutput)
+    def test_remove_all(self):
+        self.logger.add_output(self.mock_output)
+        self.logger.remove_all()
+        assert not self.logger._outputs
 
-        with self.assertRaises(ValueError):
-            logger.add_output('test_string')
+    def test_reset_output(self):
+        self.logger.add_output(self.mock_output)
+        self.logger.reset_output(self.mock_output)
+        assert self.logger.has_output_type(self.mock_output_type)
 
-    def test_add_remove_outputs(self):
-        log_file = 'test.txt'
-        log_files = ['test_%u.txt' % i for i in range(5)]
-        csv_file = 'test.csv'
-        try:
-            logger.add_output(CsvOutput(csv_file))
-            logger.add_output(TextOutput(csv_file))
+    def test_dump_output_type(self):
+        self.logger.add_output(self.mock_output)
+        self.logger.dump_output_type(self.mock_output_type)
+        self.mock_output.dump.assert_called_with(step=None)
 
-            assert logger.has_output_type(CsvOutput)
-            assert logger.has_output_type(TextOutput)
-            logger.remove_output_type(CsvOutput)
-            assert not logger.has_output_type(CsvOutput)
-            assert logger.has_output_type(TextOutput)
+    def test_dump_all(self):
+        self.logger.add_output(self.mock_output)
+        self.logger.dump_all()
+        self.mock_output.dump.assert_called_with(step=None)
 
-            logger.add_output(CsvOutput(csv_file))
-            assert logger.has_output_type(CsvOutput)
-            assert logger.has_output_type(TextOutput)
-            logger.remove_all()
-            assert not logger.has_output_type(CsvOutput)
-            assert not logger.has_output_type(TextOutput)
-
-            for file in log_files:
-                logger.add_output(TextOutput(file))
-            assert logger.has_output_type(TextOutput)
-            assert len(logger._outputs) == len(log_files)
-            logger.reset_output(TextOutput(log_file))
-            assert logger.has_output_type(TextOutput)
-            assert len(logger._outputs) == 1
-        finally:
-            remove_if_exists(log_file)
-            remove_if_exists(csv_file)
-            for f in log_files:
-                remove_if_exists(f)
