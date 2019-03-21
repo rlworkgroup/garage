@@ -1,185 +1,121 @@
-from itertools import chain, zip_longest
-
 import numpy as np
 
-from garage.core import Serializable
-from garage.logger import logger, snapshotter, tabular
-from garage.misc.special import discount_cumsum
 from garage.np.algos.base import RLAlgorithm
+from garage.core import Serializable
+from garage.logger import logger, tabular
 from garage.plotter import Plotter
-from garage.sampler import parallel_sampler, stateful_pool
-from garage.sampler.utils import rollout
-
-
-def _get_stderr_lb(x):
-    mu = np.mean(x, 0)
-    stderr = np.std(x, axis=0, ddof=1 if len(x) > 1 else 0) / np.sqrt(len(x))
-    return mu - stderr
-
-
-def _get_stderr_lb_varyinglens(x):
-    mus, stds, ns = [], [], []
-    for temp_list in zip_longest(*x, fillvalue=np.nan):
-        mus.append(np.nanmean(temp_list))
-        n = len(temp_list) - np.sum(np.isnan(temp_list))
-        stds.append(np.nanstd(temp_list, ddof=1 if n > 1 else 0))
-        ns.append(n)
-    return np.array(mus) - np.array(stds) / np.sqrt(ns)
-
-
-def _worker_rollout_policy(g, args):
-    sample_std = args['sample_std'].flatten()
-    cur_mean = args['cur_mean'].flatten()
-    n_evals = args['n_evals']
-    k = len(cur_mean)
-    params = np.random.standard_normal(k) * sample_std + cur_mean
-    g.policy.set_param_values(params)
-    paths, returns, undiscounted_returns = [], [], []
-    for _ in range(n_evals):
-        path = rollout(g.env, g.policy, args['max_path_length'])
-        path['returns'] = discount_cumsum(path['rewards'], args['discount'])
-        path['undiscounted_return'] = sum(path['rewards'])
-        paths.append(path)
-        returns.append(path['returns'])
-        undiscounted_returns.append(path['undiscounted_return'])
-
-    result_path = {'full_paths': paths}
-    result_path['undiscounted_return'] = _get_stderr_lb(undiscounted_returns)
-    result_path['returns'] = _get_stderr_lb_varyinglens(returns)
-
-    # not letting n_evals count towards below cases since n_evals is multiple
-    # eval for single paramset
-    if args['criterion'] == 'samples':
-        inc = len(path['rewards'])
-    elif args['criterion'] == 'paths':
-        inc = 1
-    else:
-        raise NotImplementedError
-    return (params, result_path), inc
 
 
 class CEM(RLAlgorithm, Serializable):
+    r"""Cross Entropy Method.
+
+    CEM works by iteratively optimizing a gaussian distribution of policy.
+
+    In each epoch, CEM does the following:
+    1. Sample n_samples policies from a gaussian distribution of
+       mean cur_mean and std cur_std.
+    2. Do rollouts for each policy.
+    3. Update cur_mean and cur_std by doing Maximum Likelihood Estimation
+       over the n_best top policies in terms of return.
+
+    Note:
+        When training CEM with LocalRunner, make sure that n_epoch_cycles for
+        runner equals to n_samples for CEM.
+
+        This implementation leverage n_epoch_cycles to do rollouts for a single
+        policy in an epoch cycle.
+
+    Attributes:
+        env_spec(EnvSpec): Environment specification.
+        policy(Policy): Action policy.
+        baseline(): Baseline for GAE (Generalized Advantage Estimation).
+        n_samples(int): Number of policies sampled in one epoch.
+        max_path_length(int):  Maximum length of a single rollout.
+        discount(float): Environment reward discount.
+        init_std(float): Initial std for policy param distribution.
+        extra_std(float): Decaying std added to param distribution.
+        extra_decay_time(float): Epochs that it takes to decay extra std.
+    """
+
     def __init__(self,
-                 env,
+                 env_spec,
                  policy,
-                 n_itr=500,
+                 baseline,
+                 n_samples,
+                 gae_lambda=1,
                  max_path_length=500,
                  discount=0.99,
-                 init_std=1.,
-                 n_samples=100,
-                 batch_size=None,
+                 init_std=1,
                  best_frac=0.05,
                  extra_std=1.,
                  extra_decay_time=100,
-                 plot=False,
-                 n_evals=1,
                  **kwargs):
-        """
-        :param n_itr: Number of iterations.
-        :param max_path_length: Maximum length of a single rollout.
-        :param batch_size: # of samples from trajs from param distribution,
-         when this is set, n_samples is ignored
-        :param discount: Discount.
-        :param plot: Plot evaluation run after each iteration.
-        :param init_std: Initial std for param distribution
-        :param extra_std: Decaying std added to param distribution at each
-         iteration
-        :param extra_decay_time: Iterations that it takes to decay extra std
-        :param n_samples: #of samples from param distribution
-        :param best_frac: Best fraction of the sampled params
-        :param n_evals: # of evals per sample from the param distr. returned
-         score is mean - stderr of evals
-        :return:
-        """
-        Serializable.quick_init(self, locals())
-        self.env = env
+        self.env_spec = env_spec
         self.policy = policy
-        self.batch_size = batch_size
-        self.plot = plot
+        self.baseline = baseline
+        self.n_samples = n_samples
         self.extra_decay_time = extra_decay_time
         self.extra_std = extra_std
         self.best_frac = best_frac
-        self.n_samples = n_samples
         self.init_std = init_std
         self.discount = discount
+        self.gae_lambda = gae_lambda
         self.max_path_length = max_path_length
-        self.n_itr = n_itr
-        self.n_evals = n_evals
         self.plotter = Plotter()
 
-    def train(self):
-        parallel_sampler.populate_task(self.env, self.policy)
-        if self.plot:
-            self.plotter.init_plot(self.env, self.policy)
+        # epoch-wise
+        self.cur_std = self.init_std
+        self.cur_mean = self.policy.get_param_values()
+        # epoch-cycle-wise
+        self.cur_params = self.cur_mean
+        self.all_returns = []
+        self.all_params = [self.cur_mean.copy()]
+        # fixed
+        self.n_best = int(n_samples * best_frac)
+        assert self.n_best >= 1, (
+            f"n_samples is too low. Make sure that n_samples * best_frac >= 1")
+        self.n_params = len(self.cur_mean)
 
-        cur_std = self.init_std
-        cur_mean = self.policy.get_param_values()
-        # K = cur_mean.size
-        n_best = max(1, int(self.n_samples * self.best_frac))
+    def sample_params(self, epoch):
+        extra_var_mult = max(1.0 - epoch / self.extra_decay_time, 0)
+        sample_std = np.sqrt(
+            np.square(self.cur_std) +
+            np.square(self.extra_std) * extra_var_mult)
+        return np.random.standard_normal(
+            self.n_params) * sample_std + self.cur_mean
 
-        for itr in range(self.n_itr):
-            # sample around the current distribution
-            extra_var_mult = max(1.0 - itr / self.extra_decay_time, 0)
-            sample_std = np.sqrt(
-                np.square(cur_std) +
-                np.square(self.extra_std) * extra_var_mult)
-            if self.batch_size is None:
-                criterion = 'paths'
-                threshold = self.n_samples
-            else:
-                criterion = 'samples'
-                threshold = self.batch_size
-            infos = stateful_pool.singleton_pool.run_collect(
-                _worker_rollout_policy,
-                threshold=threshold,
-                args=(dict(
-                    cur_mean=cur_mean,
-                    sample_std=sample_std,
-                    max_path_length=self.max_path_length,
-                    discount=self.discount,
-                    criterion=criterion,
-                    n_evals=self.n_evals), ))
-            xs = np.asarray([info[0] for info in infos])
-            paths = [info[1] for info in infos]
+    def train_once(self, itr, paths):
+        epoch = itr // self.n_samples
+        i_sample = itr - epoch * self.n_samples
+        tabular.record('Epoch', epoch)
+        tabular.record('# Sample', i_sample)
+        # -- Stage: Process path
+        rtn = paths['average_return']
+        self.all_returns.append(paths['average_return'])
 
-            fs = np.array([path['returns'][0] for path in paths])
-            print((xs.shape, fs.shape))
-            best_inds = (-fs).argsort()[:n_best]
-            best_xs = xs[best_inds]
-            cur_mean = best_xs.mean(axis=0)
-            cur_std = best_xs.std(axis=0)
-            best_x = best_xs[0]
-            logger.push_prefix('itr #{} | '.format(itr))
-            tabular.record('Iteration', itr)
-            tabular.record('CurStdMean', np.mean(cur_std))
-            undiscounted_returns = np.array(
-                [path['undiscounted_return'] for path in paths])
-            tabular.record('AverageReturn', np.mean(undiscounted_returns))
-            tabular.record('StdReturn', np.std(undiscounted_returns))
-            tabular.record('MaxReturn', np.max(undiscounted_returns))
-            tabular.record('MinReturn', np.min(undiscounted_returns))
-            tabular.record('AverageDiscountedReturn', np.mean(fs))
-            tabular.record('NumTrajs', len(paths))
-            paths = list(chain(
-                *[d['full_paths']
-                  for d in paths]))  # flatten paths for the case n_evals > 1
-            tabular.record('AvgTrajLen',
-                           np.mean([len(path['returns']) for path in paths]))
+        # -- Stage: Update policy distribution.
+        if (itr + 1) % self.n_samples == 0:
+            avg_rtns = np.array(self.all_returns)
+            best_inds = np.argsort(-avg_rtns)[:self.n_best]
+            best_params = np.array(self.all_params)[best_inds]
 
-            self.policy.set_param_values(best_x)
-            self.policy.log_diagnostics(paths)
-            snapshotter.save_itr_params(
-                itr,
-                dict(
-                    itr=itr,
-                    policy=self.policy,
-                    env=self.env,
-                    cur_mean=cur_mean,
-                    cur_std=cur_std,
-                ))
-            logger.log(tabular)
-            logger.pop_prefix()
-            if self.plot:
-                self.plotter.update_plot(self.policy, self.max_path_length)
-        parallel_sampler.terminate_task()
-        self.plotter.close()
+            # MLE of normal distribution
+            self.cur_mean = best_params.mean(axis=0)
+            self.cur_std = best_params.std(axis=0)
+            self.policy.set_param_values(self.cur_mean)
+
+            # Clear for next epoch
+            rtn = max(self.all_returns)
+            self.all_returns.clear()
+            self.all_params.clear()
+
+        # -- Stage: Generate a new policy for next path sampling
+        self.cur_params = self.sample_params(itr)
+        self.all_params.append(self.cur_params.copy())
+        self.policy.set_param_values(self.cur_params)
+
+        logger.log(tabular)
+        return rtn
+
+    def get_itr_snapshot(self, itr):
+        return dict(itr=itr, policy=self.policy, baseline=self.baseline)
