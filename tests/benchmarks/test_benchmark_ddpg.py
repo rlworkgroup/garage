@@ -22,10 +22,8 @@ from baselines.ddpg.noise import OrnsteinUhlenbeckActionNoise
 import baselines.ddpg.training as training
 from baselines.logger import configure
 import gym
-import matplotlib.pyplot as plt
 from mpi4py import MPI
 import numpy as np
-import pandas as pd
 import tensorflow as tf
 
 from garage.experiment import deterministic
@@ -40,6 +38,7 @@ from garage.tf.algos import DDPG
 from garage.tf.envs import TfEnv
 from garage.tf.policies import ContinuousMLPPolicy
 from garage.tf.q_functions import ContinuousMLPQFunction
+import tests.helpers as Rh
 from tests.wrappers import AutoStopEnv
 
 # Hyperparams for baselines and garage
@@ -60,6 +59,8 @@ params = {
 
 
 class TestBenchmarkDDPG(unittest.TestCase):
+    """Compare benchmarks between garage and baselines."""
+
     def test_benchmark_ddpg(self):
         """
         Compare benchmarks between garage and baselines.
@@ -73,7 +74,7 @@ class TestBenchmarkDDPG(unittest.TestCase):
         timestamp = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f')
         benchmark_dir = osp.join(os.getcwd(), 'data', 'local', 'benchmarks',
                                  'ddpg', timestamp)
-
+        result_json = {}
         for task in mujoco1m['tasks']:
             env_id = task['env_id']
             env = gym.make(env_id)
@@ -110,7 +111,7 @@ class TestBenchmarkDDPG(unittest.TestCase):
 
             env.close()
 
-            plot(
+            Rh.plot(
                 b_csvs=baselines_csvs,
                 g_csvs=garage_csvs,
                 g_x='Epoch',
@@ -120,7 +121,23 @@ class TestBenchmarkDDPG(unittest.TestCase):
                 trials=task['trials'],
                 seeds=seeds,
                 plt_file=plt_file,
-                env_id=env_id)
+                env_id=env_id,
+                x_label="Epoch",
+                y_label="AverageReturn")
+
+            result_json[env_id] = Rh.create_json(
+                b_csvs=baselines_csvs,
+                g_csvs=garage_csvs,
+                seeds=seeds,
+                trails=task["trials"],
+                g_x="Iteration",
+                g_y="AverageReturn",
+                b_x="nupdates",
+                b_y="total/steps",
+                factor_g=params["n_epoch_cycles"] * params["n_rollout_steps"],
+                factor_b=1)
+
+        Rh.write_file(result_json, "DDPG")
 
     test_benchmark_ddpg.huge = True
 
@@ -253,45 +270,4 @@ def run_baselines(env, seed, log_dir):
         nb_eval_steps=100,
         batch_size=64)
 
-    return osp.join(log_dir, 'progress.csv')
-
-
-def plot(b_csvs, g_csvs, g_x, g_y, b_x, b_y, trials, seeds, plt_file, env_id):
-    """
-    Plot benchmark from csv files of garage and baselines.
-
-    :param b_csvs: A list contains all csv files in the task.
-    :param g_csvs: A list contains all csv files in the task.
-    :param g_x: X column names of garage csv.
-    :param g_y: Y column names of garage csv.
-    :param b_x: X column names of baselines csv.
-    :param b_y: Y column names of baselines csv.
-    :param trials: Number of trials in the task.
-    :param seeds: A list contains all the seeds in the task.
-    :param plt_file: Path of the plot png file.
-    :param env_id: String contains the id of the environment.
-    :return:
-    """
-    assert len(b_csvs) == len(g_csvs)
-    for trial in range(trials):
-        seed = seeds[trial]
-
-        df_g = pd.read_csv(g_csvs[trial])
-        df_b = pd.read_csv(b_csvs[trial])
-
-        plt.plot(
-            df_g[g_x],
-            df_g[g_y],
-            label='garage_trial{}_seed{}'.format(trial + 1, seed))
-        plt.plot(
-            df_b[b_x],
-            df_b[b_y],
-            label='baselines_trial{}_seed{}'.format(trial + 1, seed))
-
-    plt.legend()
-    plt.xlabel('Epoch')
-    plt.ylabel('AverageReturn')
-    plt.title(env_id)
-
-    plt.savefig(plt_file)
-    plt.close()
+    return osp.join(log_dir, "progress.csv")
