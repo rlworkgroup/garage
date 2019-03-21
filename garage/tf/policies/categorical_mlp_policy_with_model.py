@@ -1,6 +1,6 @@
 """CategoricalMLPPolicy with model."""
 from akro.tf import Discrete
-import tensorflow as tf  # pylint: disable=wrong-import-order
+import tensorflow as tf
 
 from garage.misc.overrides import overrides
 from garage.tf.distributions import Categorical

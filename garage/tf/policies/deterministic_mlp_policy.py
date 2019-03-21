@@ -1,5 +1,5 @@
 from akro.tf import Box
-import tensorflow as tf  # pylint: disable=wrong-import-order
+import tensorflow as tf
 
 from garage.core import Serializable
 from garage.misc.overrides import overrides

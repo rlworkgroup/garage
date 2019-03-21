@@ -1,6 +1,6 @@
 """GaussianMLPPolicy with GaussianMLPModel."""
 from akro.tf import Box
-import tensorflow as tf  # pylint: disable=wrong-import-order
+import tensorflow as tf
 
 from garage.tf.models import GaussianMLPModel
 from garage.tf.policies.base2 import StochasticPolicy2
