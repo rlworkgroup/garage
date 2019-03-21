@@ -1,6 +1,6 @@
 """CategoricalMLPPolicy with model."""
 from akro.tf import Discrete
-import tensorflow as tf
+import tensorflow as tf  # pylint: disable=wrong-import-order
 
 from garage.misc.overrides import overrides
 from garage.tf.distributions import Categorical
@@ -58,7 +58,7 @@ class CategoricalMLPPolicyWithModel(StochasticPolicy2):
             self.model.build(state_input)
 
         self._f_prob = tf.get_default_session().make_callable(
-            self.model.networks['default'].output,
+            self.model.networks['default'].outputs,
             feed_list=[self.model.networks['default'].input])
 
     @property
@@ -70,20 +70,20 @@ class CategoricalMLPPolicyWithModel(StochasticPolicy2):
     def dist_info_sym(self, obs_var, state_info_vars=None, name=None):
         """Symbolic graph of the distribution."""
         with tf.variable_scope(self._variable_scope):
-            prob = self.model.build(obs_var, name=name)[0]
-
+            prob = self.model.build(obs_var, name=name)
         return dict(prob=prob)
 
     @overrides
     def dist_info(self, obs, state_infos=None):
         """Distribution info."""
-        return dict(prob=self._f_prob(obs))
+        prob = self._f_prob(obs)
+        return dict(prob=prob)
 
     @overrides
     def get_action(self, observation):
         """Return a single action."""
         flat_obs = self.observation_space.flatten(observation)
-        prob = self._f_prob([flat_obs])
+        prob = self._f_prob([flat_obs])[0]
         action = self.action_space.weighted_sample(prob)
         return action, dict(prob=prob)
 

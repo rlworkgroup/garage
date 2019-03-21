@@ -1,66 +1,100 @@
 import pickle
 from unittest import mock
 
+from nose2.tools.params import params
 import numpy as np
 import tensorflow as tf
 
 from garage.tf.envs import TfEnv
-from garage.tf.models import Model
 from garage.tf.policies import DeterministicMLPPolicyWithModel
 from tests.fixtures import TfGraphTestCase
 from tests.fixtures.envs.dummy import DummyBoxEnv
-
-
-class SimpleMLPModel(Model):
-    """Simple MLPModel for testing."""
-
-    def __init__(self, name, output_dim, *args, **kwargs):
-        super().__init__(name)
-        self.output_dim = output_dim
-
-    def _build(self, obs_input):
-        return tf.constant(
-            1., shape=(
-                1,
-                self.output_dim,
-            ))
+from tests.fixtures.models import SimpleMLPModel
 
 
 class TestDeterministicMLPPolicyWithModel(TfGraphTestCase):
-    def setUp(self):
-        super().setUp()
-        self.env = TfEnv(DummyBoxEnv())
-        self.env.reset()
-        self.obs, _, _, _ = self.env.step(1)
-        model_path = 'garage.tf.policies.' + \
-                     'deterministic_mlp_policy_with_model.MLPModel'
-        with mock.patch(model_path, new=SimpleMLPModel):
-            self.policy = DeterministicMLPPolicyWithModel(
-                env_spec=self.env.spec)
+    @params(
+        ((1, ), (1, )),
+        ((1, ), (2, )),
+        ((2, ), (2, )),
+        ((1, 1), (1, 1)),
+        ((1, 1), (2, 2)),
+        ((2, 2), (2, 2)),
+    )
+    def test_get_action(self, obs_dim, action_dim):
+        env = TfEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
+        with mock.patch(('garage.tf.policies.'
+                         'deterministic_mlp_policy_with_model.MLPModel'),
+                        new=SimpleMLPModel):
+            policy = DeterministicMLPPolicyWithModel(env_spec=env.spec)
 
-    def test_get_action(self):
-        action, _ = self.policy.get_action(self.obs)
-        assert self.env.action_space.contains(np.asarray([action]))
-        assert action == 1.
+        env.reset()
+        obs, _, _, _ = env.step(1)
 
-        actions, _ = self.policy.get_actions([self.obs])
-        assert self.env.action_space.contains(actions)
-        assert actions == 1.
+        action, _ = policy.get_action(obs)
 
-    def test_get_action_sym(self):
-        obs_dim = self.env.spec.observation_space.flat_dim
+        expected_action = np.full(action_dim, 0.5)
+
+        assert env.action_space.contains(action)
+        assert np.array_equal(action, expected_action)
+
+        actions, _ = policy.get_actions([obs, obs, obs])
+        for action in actions:
+            assert env.action_space.contains(action)
+            assert np.array_equal(action, expected_action)
+
+    @params(
+        ((1, ), (1, )),
+        ((1, ), (2, )),
+        ((2, ), (2, )),
+        ((1, 1), (1, 1)),
+        ((1, 1), (2, 2)),
+        ((2, 2), (2, 2)),
+    )
+    def test_get_action_sym(self, obs_dim, action_dim):
+        env = TfEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
+        with mock.patch(('garage.tf.policies.'
+                         'deterministic_mlp_policy_with_model.MLPModel'),
+                        new=SimpleMLPModel):
+            policy = DeterministicMLPPolicyWithModel(env_spec=env.spec)
+
+        env.reset()
+        obs, _, _, _ = env.step(1)
+
+        obs_dim = env.spec.observation_space.flat_dim
         state_input = tf.placeholder(tf.float32, shape=(None, obs_dim))
-        action_sym = self.policy.get_action_sym(state_input, name="action_sym")
+        action_sym = policy.get_action_sym(state_input, name="action_sym")
 
-        action = self.sess.run(action_sym, feed_dict={state_input: [self.obs]})
-        assert action == 1.
+        expected_action = np.full(action_dim, 0.5)
 
-    def test_is_pickleable(self):
-        p = pickle.dumps(self.policy)
-        action1, _ = self.policy.get_action(self.obs)
+        action = self.sess.run(
+            action_sym, feed_dict={state_input: [obs.flatten()]})
+        assert env.action_space.contains(action)
+        assert np.array_equal(action, expected_action)
 
+    @params(
+        ((1, ), (1, )),
+        ((1, ), (2, )),
+        ((2, ), (2, )),
+        ((1, 1), (1, 1)),
+        ((1, 1), (2, 2)),
+        ((2, 2), (2, 2)),
+    )
+    def test_is_pickleable(self, obs_dim, action_dim):
+        env = TfEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
+        with mock.patch(('garage.tf.policies.'
+                         'deterministic_mlp_policy_with_model.MLPModel'),
+                        new=SimpleMLPModel):
+            policy = DeterministicMLPPolicyWithModel(env_spec=env.spec)
+
+        env.reset()
+        obs, _, _, _ = env.step(1)
+
+        action1, _ = policy.get_action(obs)
+
+        p = pickle.dumps(policy)
         with tf.Session(graph=tf.Graph()):
             policy_pickled = pickle.loads(p)
-            action2, _ = policy_pickled.get_action(self.obs)
-            assert self.env.action_space.contains(np.asarray([action2]))
-            assert action1 == action2
+            action2, _ = policy_pickled.get_action(obs)
+            assert env.action_space.contains(action2)
+            assert np.array_equal(action1, action2)

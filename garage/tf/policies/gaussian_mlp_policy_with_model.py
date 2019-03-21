@@ -1,6 +1,6 @@
 """GaussianMLPPolicy with GaussianMLPModel."""
 from akro.tf import Box
-import tensorflow as tf
+import tensorflow as tf  # pylint: disable=wrong-import-order
 
 from garage.tf.models import GaussianMLPModel
 from garage.tf.policies.base2 import StochasticPolicy2
@@ -99,19 +99,28 @@ class GaussianMLPPolicyWithModel(StochasticPolicy2):
     def dist_info_sym(self, obs_var, state_info_vars=None, name='default'):
         """Symbolic graph of the distribution."""
         with tf.variable_scope(self._variable_scope):
-            _, mean_var, log_std_var, _ = self.model.build(obs_var, name=name)
+            _, mean_var, log_std_var, _, _ = self.model.build(
+                obs_var, name=name)
+        mean_var = tf.reshape(mean_var, self.action_space.shape)
+        log_std_var = tf.reshape(log_std_var, self.action_space.shape)
         return dict(mean=mean_var, log_std=log_std_var)
 
     def get_action(self, observation):
         """Get action from the policy."""
         flat_obs = self.observation_space.flatten(observation)
         sample, mean, log_std = self._f_dist([flat_obs])
+        sample = self.action_space.unflatten(sample[0])
+        mean = self.action_space.unflatten(mean[0])
+        log_std = self.action_space.unflatten(log_std[0])
         return sample, dict(mean=mean, log_std=log_std)
 
     def get_actions(self, observations):
         """Get actions from the policy."""
         flat_obs = self.observation_space.flatten_n(observations)
         samples, means, log_stds = self._f_dist(flat_obs)
+        samples = self.action_space.unflatten_n(samples)
+        means = self.action_space.unflatten_n(means)
+        log_stds = self.action_space.unflatten_n(log_stds)
         return samples, dict(mean=means, log_std=log_stds)
 
     def get_params(self, trainable=True):

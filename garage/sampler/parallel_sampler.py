@@ -74,8 +74,6 @@ def close():
 
 def _worker_set_seed(_, seed):
     logger.log("Setting seed to %d" % seed)
-    # import here to avoid circular dependency
-    from garage.experiment import deterministic
     deterministic.set_seed(seed)
 
 

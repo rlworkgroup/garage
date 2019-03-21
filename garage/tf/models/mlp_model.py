@@ -38,11 +38,11 @@ class MLPModel(Model):
                  name=None,
                  hidden_sizes=(32, 32),
                  hidden_nonlinearity=tf.nn.relu,
-                 hidden_w_init=tf.contrib.layers.xavier_initializer,
-                 hidden_b_init=tf.zeros_initializer,
+                 hidden_w_init=tf.glorot_uniform_initializer(),
+                 hidden_b_init=tf.zeros_initializer(),
                  output_nonlinearity=None,
-                 output_w_init=tf.contrib.layers.xavier_initializer,
-                 output_b_init=tf.zeros_initializer,
+                 output_w_init=tf.glorot_uniform_initializer(),
+                 output_b_init=tf.zeros_initializer(),
                  layer_normalization=False):
         super().__init__(name)
         self._output_dim = output_dim

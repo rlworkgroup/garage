@@ -4,9 +4,11 @@ import gym
 class DummyEnv(gym.Env):
     """Base dummy environment."""
 
-    def __init__(self, random):
+    def __init__(self, random, obs_dim, action_dim):
         self.random = random
         self.state = None
+        self._obs_dim = obs_dim
+        self._action_dim = action_dim
 
     @property
     def observation_space(self):

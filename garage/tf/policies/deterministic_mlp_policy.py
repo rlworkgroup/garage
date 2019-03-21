@@ -1,5 +1,5 @@
 from akro.tf import Box
-import tensorflow as tf
+import tensorflow as tf  # pylint: disable=wrong-import-order
 
 from garage.core import Serializable
 from garage.misc.overrides import overrides
@@ -62,7 +62,7 @@ class DeterministicMLPPolicy(Policy, LayersPowered, Serializable):
     @overrides
     def get_action(self, observation):
         flat_obs = self.observation_space.flatten(observation)
-        action = self._f_prob([flat_obs])[0]
+        action = self._f_prob([flat_obs])
         return action, dict()
 
     @overrides

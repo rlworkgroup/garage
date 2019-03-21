@@ -65,23 +65,31 @@ class DeterministicMLPPolicyWithModel(Policy2):
             self.model.build(state_input)
 
         self._f_prob = tf.get_default_session().make_callable(
-            self.model.networks['default'].output,
+            self.model.networks['default'].outputs,
             feed_list=[self.model.networks['default'].input])
 
     def get_action_sym(self, obs_var, name=None, **kwargs):
         """Return action sym according to obs_var."""
         with tf.variable_scope(self._variable_scope):
-            return self.model.build(obs_var, name=name)
+            action = self.model.build(obs_var, name=name)
+            action = tf.reshape(action, self.action_space.shape)
+            return action
 
     @overrides
     def get_action(self, observation):
         """Return a single action."""
-        return self._f_prob([observation])[0], dict()
+        flat_obs = self.observation_space.flatten(observation)
+        action = self._f_prob([flat_obs])
+        action = self.action_space.unflatten(action)
+        return action, dict()
 
     @overrides
     def get_actions(self, observations):
         """Return multiple actions."""
-        return self._f_prob(observations), dict()
+        flat_obs = self.observation_space.flatten_n(observations)
+        actions = self._f_prob(flat_obs)
+        actions = self.action_space.unflatten_n(actions)
+        return actions, dict()
 
     @property
     def vectorized(self):
