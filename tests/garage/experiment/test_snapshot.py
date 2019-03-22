@@ -10,11 +10,11 @@ import tensorflow as tf
 from garage.baselines import LinearFeatureBaseline
 from garage.experiment import LocalRunner
 from garage.logger import logger, snapshotter
-from garage.logger import StdOutput
 from garage.sampler.utils import rollout
 from garage.tf.algos import TRPO
 from garage.tf.envs import TfEnv
 from garage.tf.policies import CategoricalMLPPolicy
+from tests.fixtures.logger import NullOutput
 
 
 class TestSnapshot(unittest.TestCase):
@@ -42,7 +42,7 @@ class TestSnapshot(unittest.TestCase):
         snapshotter.snapshot_dir = cls.log_dir
         snapshotter.snapshot_mode = 'all'
 
-        logger.add_output(StdOutput())
+        logger.add_output(NullOutput())
 
     @classmethod
     def tearDownClass(cls):
