@@ -12,7 +12,7 @@ class TestEpisodicLife(unittest.TestCase):
         obs = env.reset()
 
         # env has reset
-        assert np.array_equal(obs, np.zeros(env.observation_space.shape))
+        assert np.array_equal(obs, np.ones(env.observation_space.shape))
         assert env.unwrapped.ale.lives() == 5
 
         obs, _, d, info = env.step(0)
@@ -21,7 +21,7 @@ class TestEpisodicLife(unittest.TestCase):
         obs = env.reset()
 
         # env has not reset
-        assert not np.array_equal(obs, np.zeros(env.observation_space.shape))
+        assert not np.array_equal(obs, np.ones(env.observation_space.shape))
 
         for _ in range(3):
             obs, r, d, info = env.step(0)
@@ -29,4 +29,4 @@ class TestEpisodicLife(unittest.TestCase):
         assert info['ale.lives'] == 0
         obs = env.reset()
         # env has reset
-        assert np.array_equal(obs, np.zeros(env.observation_space.shape))
+        assert np.array_equal(obs, np.ones(env.observation_space.shape))

@@ -7,7 +7,7 @@ from tests.fixtures.envs.dummy import DummyEnv
 class DummyBoxEnv(DummyEnv):
     """A dummy box environment."""
 
-    def __init__(self, obs_dim=(1, ), action_dim=(1, ), random=True):
+    def __init__(self, random=True, obs_dim=(4, ), action_dim=(2, )):
         super().__init__(random, obs_dim, action_dim)
 
     @property

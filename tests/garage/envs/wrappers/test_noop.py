@@ -23,7 +23,7 @@ class TestNoop(unittest.TestCase):
                 steps are multiple of 5, env will call reset at last.
                 """
                 assert np.array_equal(obs,
-                                      np.zeros(env.observation_space.shape))
+                                      np.ones(env.observation_space.shape))
             else:
-                assert not np.array_equal(
-                    obs, np.zeros(env.observation_space.shape))
+                assert not np.array_equal(obs,
+                                          np.ones(env.observation_space.shape))

@@ -7,7 +7,7 @@ from tests.fixtures.envs.dummy import DummyRewardBoxEnv
 class TestClipReward(unittest.TestCase):
     def test_clip_reward(self):
         # reward = 10 when action = 0, otherwise -10
-        env = DummyRewardBoxEnv()
+        env = DummyRewardBoxEnv(random=True)
         env_wrap = ClipReward(env)
         env.reset()
         env_wrap.reset()
