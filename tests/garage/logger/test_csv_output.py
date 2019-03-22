@@ -55,6 +55,21 @@ class TestCsvOutput(unittest.TestCase):
         ]  # yapf: disable
         self.assert_csv_matches(correct)
 
+    def test_empty_record(self):
+        self.csv_output.record(self.tabular)
+        assert not self.csv_output._writer
+
+        foo = 1
+        bar = 10
+        self.tabular.record('foo', foo)
+        self.tabular.record('bar', bar)
+        self.csv_output.record(self.tabular)
+        assert not self.csv_output._warned_once
+
+    def test_unacceptable_type(self):
+        with self.assertRaises(ValueError):
+            self.csv_output.record('foo')
+
     def test_disable_warnings(self):
         foo = 1
         bar = 10

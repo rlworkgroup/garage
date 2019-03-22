@@ -14,7 +14,11 @@ class TfTestCase(unittest.TestCase):
         self.sess.__enter__()
 
     def tearDown(self):
-        self.sess.close()
+        if tf.get_default_session() is not self.sess:
+            self.sess.close()
+        else:
+            self.sess.close()
+            self.sess.__exit__(None, None, None)
         del self.sess
         gc.collect()
 
@@ -29,7 +33,11 @@ class TfGraphTestCase(unittest.TestCase):
 
     def tearDown(self):
         logger.remove_all()
-        self.sess.close()
+        if tf.get_default_session() is not self.sess:
+            self.sess.close()
+        else:
+            self.sess.close()
+            self.sess.__exit__(None, None, None)
         # These del are crucial to prevent ENOMEM in the CI
         # b/c TensorFlow does not release memory explicitly
         del self.graph

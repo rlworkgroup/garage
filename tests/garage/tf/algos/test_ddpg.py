@@ -17,7 +17,7 @@ from tests.fixtures import TfGraphTestCase
 
 class TestDDPG(TfGraphTestCase):
     def test_ddpg_pendulum(self):
-        """Test PPO with Pendulum environment."""
+        """Test DDPG with Pendulum environment."""
         with LocalRunner(self.sess) as runner:
             env = TfEnv(gym.make('InvertedDoublePendulum-v2'))
             action_noise = OUStrategy(env.spec, sigma=0.2)

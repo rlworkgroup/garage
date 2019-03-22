@@ -67,3 +67,10 @@ class TestLogger(unittest.TestCase):
         self.logger.add_output(self.mock_output)
         self.logger.dump_all()
         self.mock_output.dump.assert_called_with(step=None)
+
+    def test_disable_warnings(self):
+        self.logger.add_output(self.mock_output)
+        self.logger.disable_warnings()
+
+        # this should not produce a warning, because we disabled warnings
+        self.logger.log(dict())
