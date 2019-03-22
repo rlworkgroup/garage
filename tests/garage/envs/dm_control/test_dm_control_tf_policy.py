@@ -23,7 +23,7 @@ class TestDmControlTfPolicy(TfGraphTestCase):
         baseline = LinearFeatureBaseline(env_spec=env.spec)
 
         algo = TRPO(
-            env=env,
+            env_spec=env.spec,
             policy=policy,
             baseline=baseline,
             batch_size=10,

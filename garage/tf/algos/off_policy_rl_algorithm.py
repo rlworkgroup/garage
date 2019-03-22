@@ -4,8 +4,6 @@ This module implements a class for off-policy rl algorithms.
 Off-policy algorithms such as DQN, DDPG can inherit from it.
 """
 from garage.algos import RLAlgorithm
-from garage.tf.samplers import BatchSampler
-from garage.tf.samplers import OffPolicyVectorizedSampler
 
 
 class OffPolicyRLAlgorithm(RLAlgorithm):
@@ -13,13 +11,12 @@ class OffPolicyRLAlgorithm(RLAlgorithm):
 
     def __init__(
             self,
-            env,
+            env_spec,
             policy,
             qf,
             replay_buffer,
             use_target=False,
             discount=0.99,
-            n_epochs=500,
             n_epoch_cycles=20,
             max_path_length=None,
             n_train_steps=50,
@@ -29,15 +26,10 @@ class OffPolicyRLAlgorithm(RLAlgorithm):
             reward_scale=1.,
             input_include_goal=False,
             smooth_return=True,
-            sampler_cls=None,
-            sampler_args=None,
-            force_batch_sampler=False,
-            plot=False,
-            pause_for_plot=False,
             exploration_strategy=None,
     ):
         """Construct an OffPolicyRLAlgorithm class."""
-        self.env = env
+        self.env_spec = env_spec
         self.policy = policy
         self.qf = qf
         self.replay_buffer = replay_buffer
@@ -52,17 +44,7 @@ class OffPolicyRLAlgorithm(RLAlgorithm):
         self.evaluate = False
         self.input_include_goal = input_include_goal
         self.smooth_return = smooth_return
-        if sampler_cls is None:
-            if policy.vectorized and not force_batch_sampler:
-                sampler_cls = OffPolicyVectorizedSampler
-            else:
-                sampler_cls = BatchSampler
-        if sampler_args is None:
-            sampler_args = dict()
-        self.sampler = sampler_cls(self, **sampler_args)
         self.max_path_length = max_path_length
-        self.plot = plot
-        self.pause_for_plot = pause_for_plot
         self.es = exploration_strategy
         self.init_opt()
 

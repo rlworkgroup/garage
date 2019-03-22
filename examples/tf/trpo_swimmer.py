@@ -17,7 +17,7 @@ def run_task(*_):
         baseline = LinearFeatureBaseline(env_spec=env.spec)
 
         algo = TRPO(
-            env=env,
+            env_spec=env.spec,
             policy=policy,
             baseline=baseline,
             max_path_length=500,

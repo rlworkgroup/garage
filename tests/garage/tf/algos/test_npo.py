@@ -32,7 +32,7 @@ class TestNPO(TfGraphTestCase):
                 regressor_args=dict(hidden_sizes=(32, 32)),
             )
             algo = NPO(
-                env=env,
+                env_spec=env.spec,
                 policy=policy,
                 baseline=baseline,
                 max_path_length=100,
@@ -61,7 +61,7 @@ class TestNPO(TfGraphTestCase):
         )
         with self.assertRaises(NotImplementedError) as context:
             NPO(
-                env=env,
+                env_spec=env.spec,
                 policy=policy,
                 baseline=baseline,
                 pg_loss="random pg_loss",

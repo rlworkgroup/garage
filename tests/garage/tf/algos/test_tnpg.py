@@ -21,7 +21,7 @@ class TestTNPG(TfGraphTestCase):
             baseline = LinearFeatureBaseline(env_spec=env.spec)
 
             algo = TNPG(
-                env=env,
+                env_spec=env.spec,
                 policy=policy,
                 baseline=baseline,
                 max_path_length=100,

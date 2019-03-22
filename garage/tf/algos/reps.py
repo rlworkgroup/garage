@@ -77,12 +77,11 @@ class REPS(BatchPolopt):
             inputs=flatten_inputs(self._policy_opt_inputs))
 
     @overrides
-    def get_itr_snapshot(self, itr, samples_data):
+    def get_itr_snapshot(self, itr):
         """Return the data should saved in the snapshot."""
         return dict(
             itr=itr,
             policy=self.policy,
-            env=self.env,
         )
 
     @overrides
@@ -309,8 +308,8 @@ class REPS(BatchPolopt):
 
         # Initialize dual params
         self.param_eta = 15.
-        self.param_v = np.random.rand(self.env.observation_space.flat_dim * 2 +
-                                      4)
+        self.param_v = np.random.rand(
+            self.env_spec.observation_space.flat_dim * 2 + 4)
 
         if is_recurrent:
             raise NotImplementedError
@@ -429,8 +428,9 @@ class REPS(BatchPolopt):
         paths = samples_data["paths"]
         feat_diff = []
         for path in paths:
-            o = np.clip(path["observations"], self.env.observation_space.low,
-                        self.env.observation_space.high)
+            o = np.clip(path["observations"],
+                        self.env_spec.observation_space.low,
+                        self.env_spec.observation_space.high)
             lr = len(path["rewards"])
             al = np.arange(lr).reshape(-1, 1) / self.max_path_length
             feats = np.concatenate(

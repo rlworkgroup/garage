@@ -121,12 +121,11 @@ class NPO(BatchPolopt):
         self._fit_baseline(samples_data)
 
     @overrides
-    def get_itr_snapshot(self, itr, samples_data):
+    def get_itr_snapshot(self, itr):
         return dict(
             itr=itr,
             policy=self.policy,
             baseline=self.baseline,
-            env=self.env,
         )
 
     def _build_inputs(self):

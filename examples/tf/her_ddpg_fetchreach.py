@@ -51,14 +51,14 @@ def run_task(*_):
             reward_fun=env.compute_reward)
 
         ddpg = DDPG(
-            env,
+            env_spec=env.spec,
             policy=policy,
             policy_lr=1e-3,
             qf_lr=1e-3,
             qf=qf,
             replay_buffer=replay_buffer,
-            plot=False,
             target_update_tau=0.05,
+            n_epoch_cycles=20,
             max_path_length=100,
             n_train_steps=40,
             discount=0.9,

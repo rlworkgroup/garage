@@ -140,7 +140,7 @@ def run_garage(env, seed, log_dir):
         )
 
         algo = DDPG(
-            env,
+            env_spec=env.spec,
             policy=policy,
             qf=qf,
             replay_buffer=replay_buffer,

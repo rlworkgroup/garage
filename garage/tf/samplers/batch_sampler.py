@@ -21,8 +21,8 @@ def worker_init_tf_vars(g):
 
 
 class BatchSampler(BaseSampler):
-    def __init__(self, algo, n_envs):
-        super(BatchSampler, self).__init__(algo)
+    def __init__(self, algo, env, n_envs):
+        super(BatchSampler, self).__init__(algo, env)
         self.n_envs = n_envs
         self.eprewmean = deque(maxlen=100)
 
@@ -31,7 +31,7 @@ class BatchSampler(BaseSampler):
             "Use singleton_pool.initialize(n_parallel) to setup workers."
         if singleton_pool.n_parallel > 1:
             singleton_pool.run_each(worker_init_tf)
-        parallel_sampler.populate_task(self.algo.env, self.algo.policy)
+        parallel_sampler.populate_task(self.env, self.algo.policy)
         if singleton_pool.n_parallel > 1:
             singleton_pool.run_each(worker_init_tf_vars)
 
