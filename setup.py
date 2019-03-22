@@ -30,7 +30,6 @@ required = [
     'scikit-image',
     'scipy',
     'tabulate',
-    'tensorboard',
     'tensorboardX',
     'tensorflow<1.13,>=1.12.0',
     'tensorflow-probability<0.6.0,>=0.5.0',  # for tensorflow 1.12
@@ -61,7 +60,7 @@ with open('README.md') as f:
     readme = f.read()
 
 # Get the package version dynamically
-exec(open('./garage/__version__.py').read()) # pylint: disable=exec-used
+exec(open('./garage/__version__.py').read())  # pylint: disable=exec-used
 version = __version__  # noqa: F821, pylint: disable=undefined-variable
 
 setup(
