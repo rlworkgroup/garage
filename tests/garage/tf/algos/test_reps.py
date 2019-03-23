@@ -6,7 +6,6 @@ import gym
 
 from garage.baselines import LinearFeatureBaseline
 from garage.experiment import LocalRunner
-import garage.misc.logger as logger
 from garage.tf.algos import REPS
 from garage.tf.envs import TfEnv
 from garage.tf.policies import CategoricalMLPPolicy
@@ -17,7 +16,6 @@ class TestREPS(TfGraphTestCase):
     def test_reps_cartpole(self):
         """Test REPS with gym Cartpole environment."""
         with LocalRunner(self.sess) as runner:
-            logger.reset()
             env = TfEnv(gym.make("CartPole-v0"))
 
             policy = CategoricalMLPPolicy(

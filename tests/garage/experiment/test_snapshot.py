@@ -9,11 +9,12 @@ import tensorflow as tf
 
 from garage.baselines import LinearFeatureBaseline
 from garage.experiment import LocalRunner
-from garage.misc.logger import logger
+from garage.logger import logger, snapshotter
 from garage.sampler.utils import rollout
 from garage.tf.algos import TRPO
 from garage.tf.envs import TfEnv
 from garage.tf.policies import CategoricalMLPPolicy
+from tests.fixtures.logger import NullOutput
 
 
 class TestSnapshot(unittest.TestCase):
@@ -35,20 +36,22 @@ class TestSnapshot(unittest.TestCase):
         exp_name = 'experiment_%s_%s' % (timestamp, rand_id)
         cls.log_dir = osp.join('/tmp', exp_name)
 
-        cls.prev_log_dir = logger.get_snapshot_dir()
-        cls.prev_mode = logger.get_snapshot_mode()
+        cls.prev_log_dir = snapshotter.snapshot_dir
+        cls.prev_mode = snapshotter.snapshot_mode
 
-        logger.set_snapshot_dir(cls.log_dir)
-        logger.set_snapshot_mode('all')
+        snapshotter.snapshot_dir = cls.log_dir
+        snapshotter.snapshot_mode = 'all'
+
+        logger.add_output(NullOutput())
 
     @classmethod
     def tearDownClass(cls):
-        logger.set_snapshot_dir(cls.prev_log_dir)
-        logger.set_snapshot_mode(cls.prev_mode)
+        snapshotter.snapshot_dir = cls.prev_log_dir
+        snapshotter.snapshot_mode = cls.prev_mode
+        logger.remove_all()
 
     def test_snapshot(self):
         with LocalRunner() as runner:
-            logger.reset()
             env = TfEnv(env_name="CartPole-v1")
 
             policy = CategoricalMLPPolicy(

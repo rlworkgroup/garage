@@ -3,7 +3,7 @@ import pickle
 import numpy as np
 
 from garage.experiment import deterministic
-from garage.misc import logger
+from garage.logger import logger
 from garage.sampler.stateful_pool import SharedGlobal
 from garage.sampler.stateful_pool import singleton_pool
 from garage.sampler.utils import rollout

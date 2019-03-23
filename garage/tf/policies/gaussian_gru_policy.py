@@ -3,7 +3,7 @@ import numpy as np
 import tensorflow as tf
 
 from garage.core import Serializable
-from garage.misc import logger
+from garage.logger import tabular
 from garage.misc.overrides import overrides
 from garage.tf.core import LayersPowered
 import garage.tf.core.layers as L
@@ -293,4 +293,4 @@ class GaussianGRUPolicy(StochasticPolicy, LayersPowered, Serializable):
 
     def log_diagnostics(self, paths):
         log_stds = paths["agent_infos"]["log_std"]
-        logger.record_tabular('AveragePolicyStd', np.mean(np.exp(log_stds)))
+        tabular.record('AveragePolicyStd', np.mean(np.exp(log_stds)))

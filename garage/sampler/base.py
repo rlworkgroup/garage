@@ -1,8 +1,7 @@
 import numpy as np
 
-from garage.misc import special
-from garage.misc import tensor_utils
-import garage.misc.logger as logger
+from garage.logger import logger, tabular
+from garage.misc import special, tensor_utils
 from garage.sampler import utils
 
 
@@ -182,16 +181,15 @@ class BaseSampler(Sampler):
             self.algo.baseline.fit(paths)
         logger.log("fitted")
 
-        logger.record_tabular('Iteration', itr)
-        logger.record_tabular('AverageDiscountedReturn',
-                              average_discounted_return)
-        logger.record_tabular('AverageReturn', np.mean(undiscounted_returns))
-        logger.record_tabular('ExplainedVariance', ev)
-        logger.record_tabular('NumTrajs', len(paths))
-        logger.record_tabular('Entropy', ent)
-        logger.record_tabular('Perplexity', np.exp(ent))
-        logger.record_tabular('StdReturn', np.std(undiscounted_returns))
-        logger.record_tabular('MaxReturn', np.max(undiscounted_returns))
-        logger.record_tabular('MinReturn', np.min(undiscounted_returns))
+        tabular.record('Iteration', itr)
+        tabular.record('AverageDiscountedReturn', average_discounted_return)
+        tabular.record('AverageReturn', np.mean(undiscounted_returns))
+        tabular.record('ExplainedVariance', ev)
+        tabular.record('NumTrajs', len(paths))
+        tabular.record('Entropy', ent)
+        tabular.record('Perplexity', np.exp(ent))
+        tabular.record('StdReturn', np.std(undiscounted_returns))
+        tabular.record('MaxReturn', np.max(undiscounted_returns))
+        tabular.record('MinReturn', np.min(undiscounted_returns))
 
         return samples_data

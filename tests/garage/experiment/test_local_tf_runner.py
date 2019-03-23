@@ -4,14 +4,22 @@ import tensorflow as tf
 
 from garage.baselines import LinearFeatureBaseline
 from garage.experiment import LocalRunner
+from garage.logger import logger
 from garage.sampler import singleton_pool
 from garage.tf.algos import VPG
 from garage.tf.envs import TfEnv
 from garage.tf.policies import CategoricalMLPPolicy
 from garage.tf.samplers import BatchSampler
+from tests.fixtures.logger import NullOutput
 
 
 class TestLocalRunner(unittest.TestCase):
+    def setUp(self):
+        logger.add_output(NullOutput())
+
+    def tearDown(self):
+        logger.remove_all()
+
     def test_session(self):
         with LocalRunner():
             self.assertIsNotNone(

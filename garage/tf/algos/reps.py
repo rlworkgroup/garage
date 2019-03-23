@@ -4,7 +4,7 @@ import numpy as np
 import scipy.optimize
 import tensorflow as tf
 
-from garage.misc import logger
+from garage.logger import logger, tabular
 from garage.misc.overrides import overrides
 from garage.tf.algos.batch_polopt import BatchPolopt
 from garage.tf.misc import tensor_utils
@@ -141,19 +141,17 @@ class REPS(BatchPolopt):
         policy_kl = self.f_policy_kl(*policy_opt_input_values)
         logger.log("Computing policy loss after")
         loss_after = self.optimizer.loss(policy_opt_input_values)
-        logger.record_tabular("EtaBefore", eta_before)
-        logger.record_tabular("EtaAfter", self.param_eta)
-        logger.record_tabular("DualBefore", dual_before)
-        logger.record_tabular("DualAfter", dual_after)
-        logger.record_tabular("{}/LossBefore".format(self.policy.name),
-                              loss_before)
-        logger.record_tabular("{}/LossAfter".format(self.policy.name),
-                              loss_after)
-        logger.record_tabular("{}/dLoss".format(self.policy.name),
-                              loss_before - loss_after)
-        logger.record_tabular("{}/KLBefore".format(self.policy.name),
-                              policy_kl_before)
-        logger.record_tabular("{}/KL".format(self.policy.name), policy_kl)
+        tabular.record("EtaBefore", eta_before)
+        tabular.record("EtaAfter", self.param_eta)
+        tabular.record("DualBefore", dual_before)
+        tabular.record("DualAfter", dual_after)
+        tabular.record("{}/LossBefore".format(self.policy.name), loss_before)
+        tabular.record("{}/LossAfter".format(self.policy.name), loss_after)
+        tabular.record("{}/dLoss".format(self.policy.name),
+                       loss_before - loss_after)
+        tabular.record("{}/KLBefore".format(self.policy.name),
+                       policy_kl_before)
+        tabular.record("{}/KL".format(self.policy.name), policy_kl)
 
     def _build_inputs(self):
         """Decalre graph inputs variables."""
