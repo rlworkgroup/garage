@@ -246,9 +246,6 @@ conda activate garage
 }
 conda deactivate
 
-# Copy template of personal configurations so users can set them later
-cp garage/config_personal_template.py garage/config_personal.py
-
 # Add garage to python modules
 
 if [[ "${_arg_modify_bashrc}" != on ]]; then
