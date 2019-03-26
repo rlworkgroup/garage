@@ -8,6 +8,7 @@ time.
 Example:
     StackFrames(GrayScale(gym.make('env')))
 """
+from garage.envs.wrappers.atari_env import AtariEnv
 from garage.envs.wrappers.clip_reward import ClipReward
 from garage.envs.wrappers.episodic_life import EpisodicLife
 from garage.envs.wrappers.fire_reset import FireReset
@@ -18,6 +19,6 @@ from garage.envs.wrappers.resize import Resize
 from garage.envs.wrappers.stack_frames import StackFrames
 
 __all__ = [
-    "ClipReward", "EpisodicLife", "FireReset", "Grayscale", "MaxAndSkip",
-    "Noop", "Resize", "StackFrames"
+    "AtariEnv", "ClipReward", "EpisodicLife", "FireReset", "Grayscale",
+    "MaxAndSkip", "Noop", "Resize", "StackFrames"
 ]

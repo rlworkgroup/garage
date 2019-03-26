@@ -153,3 +153,9 @@ def truncate_tensor_dict(tensor_dict, truncated_len):
         else:
             ret[k] = truncate_tensor_list(v, truncated_len)
     return ret
+
+
+def normalize_pixel_batch(env_spec, observations):
+    if len(env_spec.observation_space.shape) == 3:
+        return observations.astype(np.float32) / 255.0
+    return observations

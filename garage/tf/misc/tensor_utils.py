@@ -12,6 +12,7 @@ def compile_function(inputs, outputs, log_name=None):
 
     return run
 
+
 def get_target_ops(variables, target_variables, tau=None):
     """Get target network update operations."""
     update_ops = []
@@ -28,10 +29,6 @@ def get_target_ops(variables, target_variables, tau=None):
     else:
         return init_ops
 
-def normalize_pixel_batch(env_spec, observations):
-    if len(env_spec.observation_space.shape) == 3:
-        return observations.astype(np.float32) / 255.0
-    return observations
 
 def flatten_batch(t, name='flatten_batch'):
     return tf.reshape(t, [-1] + list(t.shape[2:]), name=name)

@@ -10,6 +10,8 @@ distributions. We add this feature by sampling data from a
 """
 import functools
 
+import matplotlib
+matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.stats

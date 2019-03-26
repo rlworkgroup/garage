@@ -85,12 +85,10 @@ class ReplayBuffer(metaclass=abc.ABCMeta):
         elif self._current_size < self._size:
             overflow = size_increment - (self._size - self._current_size)
             idx_a = np.arange(self._current_size, self._size)
-            # idx_b = np.random.randint(0, self._current_size, overflow)
             idx_b = np.arange(0, overflow)
             idx = np.concatenate([idx_a, idx_b])
             self._current_ptr = overflow
         else:
-            # idx = np.random.randint(0, self._size, size_increment)
             if self._current_ptr + size_increment <= self._size:
                 idx = np.arange(self._current_ptr,
                                 self._current_ptr + size_increment)

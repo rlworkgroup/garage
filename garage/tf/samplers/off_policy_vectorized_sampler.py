@@ -87,12 +87,14 @@ class OffPolicyVectorizedSampler(BatchSampler):
                 input_obses = np.concatenate((obs, d_g), axis=-1)
             else:
                 input_obses = obses
+            obs_normalized = tensor_utils.normalize_pixel_batch(
+                self.env_spec, input_obses)
             if self.algo.es:
                 actions, agent_infos = self.algo.es.get_actions(
-                    itr, input_obses, self.algo.policy)
+                    itr, obs_normalized, self.algo.policy)
             else:
                 actions, agent_infos = self.algo.policy.get_actions(
-                    input_obses)
+                    obs_normalized)
 
             next_obses, rewards, dones, env_infos = self.vec_env.step(actions)
             self._last_obses = next_obses

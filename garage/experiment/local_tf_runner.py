@@ -280,8 +280,8 @@ class LocalRunner:
             pause_for_plot(bool): Pause for plot.
 
         """
-        logger.log('Time %.2f s' % (time.time() - self.start_time))
-        logger.log('EpochTime %.2f s' % (time.time() - self.itr_start_time))
+        # logger.log('Time %.2f s' % (time.time() - self.start_time))
+        # logger.log('EpochTime %.2f s' % (time.time() - self.itr_start_time))
         logger.log(tabular)
         if self.plot:
             self.plotter.update_plot(self.policy, self.algo.max_path_length)
