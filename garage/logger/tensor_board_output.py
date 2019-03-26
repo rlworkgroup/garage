@@ -56,7 +56,7 @@ class TensorBoardOutput(LogOutput):
 
     def _record_tabular(self, data, prefix, step):
         for key, value in data.as_dict.items():
-            self._record_kv(prefix + key, value, step)
+            self._record_kv(key, value, step)
             data.mark(key)
 
     def _record_kv(self, key, value, step):
