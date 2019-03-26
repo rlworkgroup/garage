@@ -3,14 +3,15 @@ from unittest import mock
 
 import matplotlib.pyplot as plt
 import numpy as np
+import tensorflow as tf
 import tensorflow_probability as tfp
 
 from garage.logger import TabularInput
 from garage.logger import TensorBoardOutput
-from tests.fixtures import TfTestCase
+from tests.fixtures import TfGraphTestCase
 
 
-class TBOutputTest(TfTestCase):
+class TBOutputTest(TfGraphTestCase):
     def setUp(self):
         super().setUp()
         self.log_dir = tempfile.TemporaryDirectory()
@@ -50,13 +51,11 @@ class TestTensorBoardOutputMocked(TBOutputTest):
         super().setUp()
         self.mock_writer = self.tensor_board_output._writer
 
-    def test_graph_saved_only_once(self):
-        self.tabular.record('foo', 1.0)
-        self.tensor_board_output.dump()
-        self.tabular.record('foo', 2.0)
-        self.tensor_board_output.dump()
+    def test_record_graph(self):
+        foo = tf.constant(5)  # noqa: F841
+        self.tensor_board_output.record(self.graph)
 
-        self.mock_writer.add_graph.assert_called_once()
+        self.mock_writer.file_writer.add_event.assert_called_once()
 
     def test_record_scalar(self):
         foo = 5
@@ -89,8 +88,8 @@ class TestTensorBoardOutputMocked(TBOutputTest):
         self.tensor_board_output.record(self.tabular, prefix='a/')
         self.tensor_board_output.dump()
 
-        self.mock_writer.add_scalar.assert_any_call('a/foo', foo, 0)
-        self.mock_writer.add_scalar.assert_any_call('a/bar', bar, 0)
+        self.mock_writer.add_scalar.assert_any_call('foo', foo, 0)
+        self.mock_writer.add_scalar.assert_any_call('bar', bar, 0)
 
     def test_record_tfp_distribution(self):
         histo_shape = np.ones((1000, 10))

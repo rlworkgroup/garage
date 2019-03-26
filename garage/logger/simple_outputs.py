@@ -58,8 +58,8 @@ class FileOutput(LogOutput, metaclass=abc.ABCMeta):
 
     def __init__(self, file_name, mode='w'):
         mkdir_p(os.path.dirname(file_name))
-        self._log_file = open(file_name,
-                              mode)  # Open the log file in child class
+        # Open the log file in child class
+        self._log_file = open(file_name, mode)
 
     def close(self):
         """Close any files used by the output."""
@@ -81,7 +81,7 @@ class TextOutput(FileOutput):
     def __init__(self, file_name, with_timestamp=True):
         super().__init__(file_name, 'a')
         self._with_timestamp = with_timestamp
-        self._delimiter = " | "
+        self._delimiter = ' | '
 
     @property
     def types_accepted(self):
