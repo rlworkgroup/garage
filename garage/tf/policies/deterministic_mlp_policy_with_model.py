@@ -21,7 +21,7 @@ class DeterministicMLPPolicyWithModel(Policy2):
 
     Args:
         env_spec: Environment specification.
-        name: variable scope of the mlp.
+        name: Variable scope of the mlp.
         hidden_sizes: Output dimension of dense layer(s).
         hidden_nonlinearity: Activation function for
                     intermediate dense layer(s).
