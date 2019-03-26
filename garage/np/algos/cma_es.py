@@ -2,144 +2,84 @@ import cma
 import numpy as np
 
 from garage.core import Serializable
-from garage.logger import logger, snapshotter, tabular
-from garage.misc.special import discount_cumsum
+from garage.logger import logger, tabular
 from garage.np.algos.base import RLAlgorithm
-from garage.plotter import Plotter
-from garage.sampler import parallel_sampler, stateful_pool
-from garage.sampler.utils import rollout
-
-
-def sample_return(g, params, max_path_length, discount):
-    # env, policy, params, max_path_length, discount = args
-    # of course we make the strong assumption that there is no race condition
-    g.policy.set_param_values(params)
-    path = rollout(
-        g.env,
-        g.policy,
-        max_path_length,
-    )
-    path['returns'] = discount_cumsum(path['rewards'], discount)
-    path['undiscounted_return'] = sum(path['rewards'])
-    return path
 
 
 class CMAES(RLAlgorithm, Serializable):
+    r"""Covariance Matrix Adaptation Evolution Strategy.
+
+    Note:
+        The CMA-ES method can hardly learn a successful policy even for
+        simple task. It is still maintained here only for consistency with
+        original rllab paper.
+
+    Attributes:
+        env_spec(EnvSpec): Environment specification.
+        policy(Policy): Action policy.
+        baseline(): Baseline for GAE (Generalized Advantage Estimation).
+        n_samples(int): Number of policies sampled in one epoch.
+        gae_lambda(float): Lambda used for generalized advantage estimation.
+        max_path_length(int):  Maximum length of a single rollout.
+        discount(float): Environment reward discount.
+        sigma0(float): Initial std for param distribution.
+
+    """
     def __init__(self,
-                 env,
+                 env_spec,
                  policy,
-                 n_itr=500,
+                 baseline,
+                 n_samples,
+                 gae_lambda=1,
                  max_path_length=500,
                  discount=0.99,
                  sigma0=1.,
-                 batch_size=None,
-                 plot=False,
                  **kwargs):
-        """
-        :param n_itr: Number of iterations.
-        :param max_path_length: Maximum length of a single rollout.
-        :param batch_size: # of samples from trajs from param distribution,
-         when this is set, n_samples is ignored
-        :param discount: Discount.
-        :param plot: Plot evaluation run after each iteration.
-        :param sigma0: Initial std for param dist
-        :return:
-        """
-        Serializable.quick_init(self, locals())
-        self.env = env
+        self.env_spec = env_spec
         self.policy = policy
-        self.plot = plot
+        self.baseline = baseline
+        self.n_samples = n_samples
         self.sigma0 = sigma0
         self.discount = discount
+        self.gae_lambda = gae_lambda
         self.max_path_length = max_path_length
-        self.n_itr = n_itr
-        self.batch_size = batch_size
-        self.plotter = Plotter()
 
-    def train(self):
+        init_mean = self.policy.get_param_values()
+        self.es = cma.CMAEvolutionStrategy(init_mean, sigma0)
 
-        cur_std = self.sigma0
-        cur_mean = self.policy.get_param_values()
-        es = cma.CMAEvolutionStrategy(cur_mean, cur_std)
+        self.all_params = self.sample_params()
+        self.cur_params = self.all_params[0]
+        self.policy.set_param_values(self.cur_params)
+        self.all_returns = []
 
-        parallel_sampler.populate_task(self.env, self.policy)
-        if self.plot:
-            self.plotter.init_plot(self.env, self.policy)
+    def sample_params(self):
+        return self.es.ask(self.n_samples)
 
-        cur_std = self.sigma0
-        cur_mean = self.policy.get_param_values()
+    def train_once(self, itr, paths):
+        epoch = itr // self.n_samples
+        i_sample = itr - epoch * self.n_samples
 
-        itr = 0
-        while itr < self.n_itr and not es.stop():
+        tabular.record('Epoch', epoch)
+        tabular.record('# Sample', i_sample)
 
-            if self.batch_size is None:
-                # Sample from multivariate normal distribution.
-                xs = es.ask()
-                xs = np.asarray(xs)
-                # For each sample, do a rollout.
-                infos = (stateful_pool.singleton_pool.run_map(
-                    sample_return,
-                    [(x, self.max_path_length, self.discount) for x in xs]))
-            else:
-                cum_len = 0
-                infos = []
-                xss = []
-                done = False
-                while not done:
-                    sbs = stateful_pool.singleton_pool.n_parallel * 2
-                    # Sample from multivariate normal distribution.
-                    # You want to ask for sbs samples here.
-                    xs = es.ask(sbs)
-                    xs = np.asarray(xs)
+        rtn = paths['average_return']
+        self.all_returns.append(paths['average_return'])
 
-                    xss.append(xs)
-                    sinfos = stateful_pool.singleton_pool.run_map(
-                        sample_return,
-                        [(x, self.max_path_length, self.discount) for x in xs])
-                    for info in sinfos:
-                        infos.append(info)
-                        cum_len += len(info['returns'])
-                        if cum_len >= self.batch_size:
-                            xs = np.concatenate(xss)
-                            done = True
-                            break
+        if (itr + 1) % self.n_samples == 0:
+            avg_rtns = np.array(self.all_returns)
+            self.es.tell(self.all_params, -avg_rtns)
+            self.policy.set_param_values(self.es.result()[0])
 
-            # Evaluate fitness of samples (negative as it is minimization
-            # problem).
-            fs = -np.array([info['returns'][0] for info in infos])
-            # When batching, you could have generated too many samples compared
-            # to the actual evaluations. So we cut it off in this case.
-            xs = xs[:len(fs)]
-            # Update CMA-ES params based on sample fitness.
-            es.tell(xs, fs)
+            # Clear for next epoch
+            rtn = max(self.all_returns)
+            self.all_returns.clear()
+            self.all_params = self.sample_params()
 
-            logger.push_prefix('itr #{} | '.format(itr))
-            tabular.record('Iteration', itr)
-            tabular.record('CurStdMean', np.mean(cur_std))
-            undiscounted_returns = np.array(
-                [info['undiscounted_return'] for info in infos])
-            tabular.record('AverageReturn', np.mean(undiscounted_returns))
-            tabular.record('StdReturn', np.mean(undiscounted_returns))
-            tabular.record('MaxReturn', np.max(undiscounted_returns))
-            tabular.record('MinReturn', np.min(undiscounted_returns))
-            tabular.record('AverageDiscountedReturn', np.mean(fs))
-            tabular.record('AvgTrajLen',
-                           np.mean([len(info['returns']) for info in infos]))
-            self.policy.log_diagnostics(infos)
-            snapshotter.save_itr_params(
-                itr, dict(
-                    itr=itr,
-                    policy=self.policy,
-                    env=self.env,
-                ))
-            logger.log(tabular)
-            if self.plot:
-                self.plotter.update_plot(self.policy, self.max_path_length)
-            logger.pop_prefix()
-            # Update iteration.
-            itr += 1
+        self.cur_params = self.all_params[(i_sample + 1) % self.n_samples]
+        self.policy.set_param_values(self.cur_params)
 
-        # Set final params.
-        self.policy.set_param_values(es.result()[0])
-        parallel_sampler.terminate_task()
-        self.plotter.close()
+        logger.log(tabular)
+        return rtn
+
+    def get_itr_snapshot(self, itr):
+        return dict(itr=itr, policy=self.policy, baseline=self.baseline)
