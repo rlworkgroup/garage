@@ -37,13 +37,10 @@ class ProductRegressor(Serializable):
             axis=1)
 
     def predict_log_likelihood(self, xs, ys):
-        return np.sum(
-            [
-                regressor.predict_log_likelihood(xs, split_ys)
-                for regressor, split_ys in zip(self.regressors,
-                                               self._split_ys(ys))
-            ],
-            axis=0)
+        return np.sum([
+            regressor.predict_log_likelihood(xs, split_ys)
+            for regressor, split_ys in zip(self.regressors, self._split_ys(ys))
+        ], axis=0)  # yapf: disable
 
     def get_param_values(self, **tags):
         return np.concatenate([

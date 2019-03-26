@@ -1,10 +1,10 @@
 import cma
 import numpy as np
 
-from garage.algos.base import RLAlgorithm
 from garage.core import Serializable
 from garage.logger import logger, snapshotter, tabular
 from garage.misc.special import discount_cumsum
+from garage.np.algos.base import RLAlgorithm
 from garage.plotter import Plotter
 from garage.sampler import parallel_sampler, stateful_pool
 from garage.sampler.utils import rollout
@@ -19,8 +19,8 @@ def sample_return(g, params, max_path_length, discount):
         g.policy,
         max_path_length,
     )
-    path["returns"] = discount_cumsum(path["rewards"], discount)
-    path["undiscounted_return"] = sum(path["rewards"])
+    path['returns'] = discount_cumsum(path['rewards'], discount)
+    path['undiscounted_return'] = sum(path['rewards'])
     return path
 
 
@@ -113,7 +113,7 @@ class CMAES(RLAlgorithm, Serializable):
             # Update CMA-ES params based on sample fitness.
             es.tell(xs, fs)
 
-            logger.push_prefix('itr #%d | ' % itr)
+            logger.push_prefix('itr #{} | '.format(itr))
             tabular.record('Iteration', itr)
             tabular.record('CurStdMean', np.mean(cur_std))
             undiscounted_returns = np.array(

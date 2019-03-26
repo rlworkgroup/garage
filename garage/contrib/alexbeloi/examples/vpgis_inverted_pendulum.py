@@ -4,9 +4,9 @@ importance sampled iterations.
 """
 import gym
 
-from garage.baselines import LinearFeatureBaseline
 from garage.contrib.alexbeloi.is_sampler import ISSampler
 from garage.envs import normalize
+from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import VPG
 from garage.tf.policies import GaussianMLPPolicy
 

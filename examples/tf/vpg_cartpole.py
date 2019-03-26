@@ -8,8 +8,8 @@ Results:
     AverageReturn: 100
     RiseTime: itr 16
 """
-from garage.baselines import LinearFeatureBaseline
 from garage.experiment import LocalRunner, run_experiment
+from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import VPG
 from garage.tf.envs import TfEnv
 from garage.tf.policies import CategoricalMLPPolicy
@@ -20,7 +20,7 @@ def run_task(*_):
         env = TfEnv(env_name='CartPole-v1')
 
         policy = CategoricalMLPPolicy(
-            name="policy", env_spec=env.spec, hidden_sizes=(32, 32))
+            name='policy', env_spec=env.spec, hidden_sizes=(32, 32))
 
         baseline = LinearFeatureBaseline(env_spec=env.spec)
 
@@ -38,6 +38,6 @@ def run_task(*_):
 
 run_experiment(
     run_task,
-    snapshot_mode="last",
+    snapshot_mode='last',
     seed=1,
 )

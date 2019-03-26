@@ -3,14 +3,15 @@ import unittest
 from nose2 import tools
 import numpy as np
 
-from garage.algos import CEM
-from garage.algos import CMAES
-from garage.algos.nop import NOP
-from garage.baselines import LinearFeatureBaseline
-from garage.baselines import ZeroBaseline
 from garage.envs import GarageEnv
 from garage.envs import GridWorldEnv
 from garage.envs import PointEnv
+from garage.logger import logger
+from garage.np.algos import CEM
+from garage.np.algos import CMAES
+from garage.np.algos.nop import NOP
+from garage.np.baselines import LinearFeatureBaseline
+from garage.np.baselines import ZeroBaseline
 from tests.fixtures.policies import DummyPolicy
 from tests.fixtures.policies import DummyRecurrentPolicy
 
@@ -49,8 +50,8 @@ for algo in [CEM, CMAES, NOP]:
 class TestAlgos(unittest.TestCase):
     @tools.params(*polopt_cases)
     def test_polopt_algo(self, algo_cls, env_cls, policy_cls, baseline_cls):
-        print("Testing %s, %s, %s" % (algo_cls.__name__, env_cls.__name__,
-                                      policy_cls.__name__))
+        logger.log('Testing {}, {}, {}'.format(
+            algo_cls.__name__, env_cls.__name__, policy_cls.__name__))
         env = GarageEnv(env_cls())
         policy = policy_cls(env_spec=env)
         baseline = baseline_cls(env_spec=env)

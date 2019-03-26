@@ -5,7 +5,7 @@ Implementing New Algorithms (Advanced)
 ======================================
 
 In this section, we will walk through the implementation of vanilla policy gradient
-algorithm provided in the algorithm, available at :code:`garage/algos/vpg.py`. It utilizes
+algorithm provided in the algorithm, available at :code:`garage/tf/algos/vpg.py`. It utilizes
 many functionalities provided by the framework, which we describe below.
 
 
@@ -59,18 +59,22 @@ returns a dictionary of objects to be persisted per iteration.
 
 The :code:`BatchPolopt` class powers quite a few algorithms:
 
-- Vanilla Policy Gradient: :code:`garage/algos/vpg.py`
+- Vanilla Policy Gradient: :code:`garage/tf/algos/vpg.py`
 
-- Natural Policy Gradient: :code:`garage/algos/npg.py`
+- Natural Policy Gradient: :code:`garage/tf/algos/npo.py`
 
-- Reward-Weighted Regression: :code:`garage/algos/erwr.py`
+- Truncated Natural Policy Gradient: :code:`garage/tf/algos/tnpg.py`
 
-- Trust Region Policy Optimization: :code:`garage/algos/trpo.py`
+- Reward-Weighted Regression: :code:`garage/tf/algos/erwr.py`
 
-- Relative Entropy Policy Search: :code:`garage/algos/reps.py`
+- Trust Region Policy Optimization: :code:`garage/tf/algos/trpo.py`
+
+- Proximal Policy Optimization: :code:`garage/tf/algos/ppo.py`
+
+- Relative Entropy Policy Search: :code:`garage/tf/algos/reps.py`
 
 To give an illustration, here's how we might implement :code:`init_opt` for VPG
-(the actual code in :code:`garage/algos/vpg.py` is longer due to the need to log
+(the actual code in :code:`garage/tf/algos/vpg.py` is longer due to the need to log
 extra diagnostic information as well as supporting recurrent policies):
 
 .. code-block:: python
@@ -88,7 +92,7 @@ extra diagnostic information as well as supporting recurrent policies):
             'action',
             extra_dims=1,
         )
-        advantage_var = TT.vector('advantage')
+        advantage_var = tf.placeholder('advantage')
         dist = self.policy.distribution
         old_dist_info_vars = {
             k: TT.matrix('old_%s' % k)

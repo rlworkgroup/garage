@@ -8,9 +8,9 @@ sizes and 5 seeds.
 """
 import sys
 
-from garage.baselines import LinearFeatureBaseline
 from garage.experiment import LocalRunner
 from garage.experiment import run_experiment
+from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import TRPO
 from garage.tf.envs import TfEnv
 from garage.tf.policies import CategoricalMLPPolicy
@@ -23,7 +23,7 @@ def run_task(v):
     machines
     """
     with LocalRunner() as runner:
-        env = TfEnv(env_name="CartPole-v1")
+        env = TfEnv(env_name='CartPole-v1')
 
         policy = CategoricalMLPPolicy(
             env_spec=env.spec,
@@ -39,7 +39,7 @@ def run_task(v):
             baseline=baseline,
             max_path_length=100,
             discount=0.99,
-            step_size=v["step_size"],
+            step_size=v['step_size'],
         )
 
         runner.setup(algo=algo, env=env)
@@ -56,16 +56,16 @@ for step_size in [0.01, 0.05, 0.1]:
     for seed in [1, 11, 21, 31, 41]:
         run_experiment(
             run_task,
-            exp_prefix="first_exp",
+            exp_prefix='first_exp',
             # Number of parallel workers for sampling
             n_parallel=1,
             # Only keep the snapshot parameters for the last iteration
-            snapshot_mode="last",
+            snapshot_mode='last',
             # Specifies the seed for the experiment. If this is not provided, a
             # random seed will be used
             seed=seed,
             # mode="local",
-            mode="ec2",
+            mode='ec2',
             variant=dict(step_size=step_size, seed=seed)
             # plot=True,
             # terminate_machine=False,

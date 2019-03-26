@@ -5,8 +5,8 @@ Random exploration according to the value of epsilon.
 """
 import numpy as np
 
-from garage.exploration_strategies.base import ExplorationStrategy
 from garage.misc.overrides import overrides
+from garage.np.exploration_strategies.base import ExplorationStrategy
 
 
 class EpsilonGreedyStrategy(ExplorationStrategy):

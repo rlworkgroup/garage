@@ -8,13 +8,13 @@ import uuid
 
 import joblib
 
-from garage.algos import BatchPolopt
 from garage.experiment import to_local_command
 from garage.logger import logger
+from garage.np.algos import BatchPolopt
 
 filename = str(uuid.uuid4())
 
-if __name__ == "__main__":
+if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument('file', type=str, help='path to the snapshot file')
@@ -26,10 +26,10 @@ if __name__ == "__main__":
     # Look for params.json file
     args = parser.parse_args()
     parent_dir = os.path.dirname(os.path.realpath(args.file))
-    json_file_path = os.path.join(parent_dir, "params.json")
-    logger.log("Looking for params.json at %s..." % json_file_path)
+    json_file_path = os.path.join(parent_dir, 'params.json')
+    logger.log('Looking for params.json at {}...'.format(json_file_path))
     try:
-        with open(json_file_path, "r") as f:
+        with open(json_file_path, 'r') as f:
             params = json.load(f)
         # exclude certain parameters
         excluded = ['json_args']
@@ -52,7 +52,7 @@ if __name__ == "__main__":
             if isinstance(e, KeyboardInterrupt):
                 raise
     except IOError:
-        logger.log("Failed to find json file. Continuing in non-stub mode...")
+        logger.log('Failed to find json file. Continuing in non-stub mode...')
         data = joblib.load(args.file)
         assert 'algo' in data
         algo = data['algo']

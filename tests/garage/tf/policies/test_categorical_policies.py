@@ -5,9 +5,9 @@ garage.tf.policies.
 import gym
 from nose2 import tools
 
-from garage.baselines import LinearFeatureBaseline
 from garage.envs import normalize
 from garage.experiment import LocalRunner
+from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import TRPO
 from garage.tf.envs import TfEnv
 from garage.tf.optimizers import ConjugateGradientOptimizer
@@ -24,9 +24,9 @@ class TestCategoricalPolicies(TfGraphTestCase):
     @tools.params(*policies)
     def test_categorical_policies(self, policy_cls):
         with LocalRunner(self.sess) as runner:
-            env = TfEnv(normalize(gym.make("CartPole-v0")))
+            env = TfEnv(normalize(gym.make('CartPole-v0')))
 
-            policy = policy_cls(name="policy", env_spec=env.spec)
+            policy = policy_cls(name='policy', env_spec=env.spec)
 
             baseline = LinearFeatureBaseline(env_spec=env.spec)
 

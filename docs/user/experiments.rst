@@ -12,8 +12,8 @@ We use object oriented abstractions for different components required for an exp
 
     import gym
 
-    from garage.baselines import LinearFeatureBaseline
     from garage.experiment import run_experiment
+    from garage.np.baselines import LinearFeatureBaseline
     from garage.tf.algos import TRPO
     from garage.tf.envs import TfEnv
     from garage.tf.policies import CategoricalMLPPolicy

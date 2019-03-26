@@ -8,8 +8,8 @@ transitions. And OU process is relatively smooth in time.
 """
 import numpy as np
 
-from garage.exploration_strategies.base import ExplorationStrategy
 from garage.misc.overrides import overrides
+from garage.np.exploration_strategies.base import ExplorationStrategy
 
 
 class OUStrategy(ExplorationStrategy):
@@ -85,12 +85,12 @@ class OUStrategy(ExplorationStrategy):
                        self.action_space.high), agent_infos
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     import gym
     import matplotlib.pyplot as plt
 
     ou = OUStrategy(
-        env_spec=gym.make("Pendulum-v0"), mu=0, theta=0.15, sigma=0.3)
+        env_spec=gym.make('Pendulum-v0'), mu=0, theta=0.15, sigma=0.3)
 
     states = []
     for i in range(1000):

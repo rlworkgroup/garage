@@ -1,7 +1,7 @@
 import numpy as np
 
-from garage.baselines.base import Baseline
 from garage.misc.overrides import overrides
+from garage.np.baselines.base import Baseline
 
 
 class ZeroBaseline(Baseline):
@@ -22,8 +22,8 @@ class ZeroBaseline(Baseline):
 
     @overrides
     def predict(self, path):
-        return np.zeros_like(path["rewards"])
+        return np.zeros_like(path['rewards'])
 
     @overrides
     def predict_n(self, paths):
-        return [np.zeros_like(path["rewards"]) for path in paths]
+        return [np.zeros_like(path['rewards']) for path in paths]

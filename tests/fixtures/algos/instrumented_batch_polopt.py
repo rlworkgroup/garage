@@ -6,8 +6,8 @@ different stages in the experiment lifecycle.
 
 from multiprocessing.connection import Client
 
-from garage.algos import BatchPolopt
 from garage.logger import logger, snapshotter, tabular
+from garage.np.algos import BatchPolopt
 from garage.plotter import Plotter
 from tests.integration_tests.test_sigint import ExpLifecycle
 
@@ -20,7 +20,7 @@ class InstrumentedBatchPolopt(BatchPolopt):
     """
 
     def train(self):
-        address = ("localhost", 6000)
+        address = ('localhost', 6000)
         conn = Client(address)
         try:
             plotter = Plotter()
@@ -30,7 +30,7 @@ class InstrumentedBatchPolopt(BatchPolopt):
             self.start_worker()
             self.init_opt()
             for itr in range(self.current_itr, self.n_itr):
-                with logger.prefix('itr #%d | ' % itr):
+                with logger.prefix('itr #{} | '.format(itr)):
                     conn.send(ExpLifecycle.OBTAIN_SAMPLES)
                     paths = self.sampler.obtain_samples(itr)
                     conn.send(ExpLifecycle.PROCESS_SAMPLES)
@@ -38,21 +38,21 @@ class InstrumentedBatchPolopt(BatchPolopt):
                     self.log_diagnostics(paths)
                     conn.send(ExpLifecycle.OPTIMIZE_POLICY)
                     self.optimize_policy(itr, samples_data)
-                    logger.log("saving snapshot...")
+                    logger.log('saving snapshot...')
                     params = self.get_itr_snapshot(itr, samples_data)
                     self.current_itr = itr + 1
-                    params["algo"] = self
+                    params['algo'] = self
                     if self.store_paths:
-                        params["paths"] = samples_data["paths"]
+                        params['paths'] = samples_data['paths']
                     snapshotter.save_itr_params(itr, params)
-                    logger.log("saved")
+                    logger.log('saved')
                     logger.log(tabular)
                     if self.plot:
                         conn.send(ExpLifecycle.UPDATE_PLOT)
                         plotter.update_plot(self.policy, self.max_path_length)
                         if self.pause_for_plot:
-                            input("Plotting evaluation run: Press Enter to "
-                                  "continue...")
+                            input('Plotting evaluation run: Press Enter to '
+                                  'continue...')
 
             conn.send(ExpLifecycle.SHUTDOWN)
             plotter.close()

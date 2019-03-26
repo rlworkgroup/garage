@@ -3,7 +3,7 @@ This module implements a class for off-policy rl algorithms.
 
 Off-policy algorithms such as DQN, DDPG can inherit from it.
 """
-from garage.algos import RLAlgorithm
+from garage.np.algos import RLAlgorithm
 
 
 class OffPolicyRLAlgorithm(RLAlgorithm):

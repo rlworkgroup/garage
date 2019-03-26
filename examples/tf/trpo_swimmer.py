@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 import gym
 
-from garage.baselines import LinearFeatureBaseline
 from garage.experiment import LocalRunner, run_experiment
+from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import TRPO
 from garage.tf.envs import TfEnv
 from garage.tf.policies import GaussianMLPPolicy
@@ -30,6 +30,6 @@ def run_task(*_):
 
 run_experiment(
     run_task,
-    snapshot_mode="last",
+    snapshot_mode='last',
     seed=1,
 )

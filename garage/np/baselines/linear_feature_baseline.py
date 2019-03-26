@@ -1,11 +1,11 @@
 import numpy as np
 
-from garage.baselines.base import Baseline
 from garage.misc.overrides import overrides
+from garage.np.baselines.base import Baseline
 
 
 class LinearFeatureBaseline(Baseline):
-    def __init__(self, env_spec, reg_coeff=1e-5, name="LinearFeatureBaseline"):
+    def __init__(self, env_spec, reg_coeff=1e-5, name='LinearFeatureBaseline'):
         self._coeffs = None
         self._reg_coeff = reg_coeff
         self.name = name
@@ -19,8 +19,8 @@ class LinearFeatureBaseline(Baseline):
         self._coeffs = val
 
     def _features(self, path):
-        obs = np.clip(path["observations"], -10, 10)
-        length = len(path["rewards"])
+        obs = np.clip(path['observations'], -10, 10)
+        length = len(path['rewards'])
         al = np.arange(length).reshape(-1, 1) / 100.0
         return np.concatenate(
             [obs, obs**2, al, al**2, al**3,
@@ -29,7 +29,7 @@ class LinearFeatureBaseline(Baseline):
     @overrides
     def fit(self, paths):
         featmat = np.concatenate([self._features(path) for path in paths])
-        returns = np.concatenate([path["returns"] for path in paths])
+        returns = np.concatenate([path['returns'] for path in paths])
         reg_coeff = self._reg_coeff
         for _ in range(5):
             self._coeffs = np.linalg.lstsq(
@@ -44,5 +44,5 @@ class LinearFeatureBaseline(Baseline):
     @overrides
     def predict(self, path):
         if self._coeffs is None:
-            return np.zeros(len(path["rewards"]))
+            return np.zeros(len(path['rewards']))
         return self._features(path).dot(self._coeffs)

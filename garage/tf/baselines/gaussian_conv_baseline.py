@@ -1,9 +1,9 @@
 """Gaussian Conv Baseline."""
 import numpy as np
 
-from garage.baselines import Baseline
 from garage.core import Serializable
 from garage.misc.overrides import overrides
+from garage.np.baselines import Baseline
 from garage.tf.core import Parameterized
 from garage.tf.regressors import GaussianConvRegressor
 
@@ -22,7 +22,7 @@ class GaussianConvBaseline(Baseline, Parameterized, Serializable):
             env_spec,
             subsample_factor=1.,
             regressor_args=None,
-            name="GaussianConvBaseline",
+            name='GaussianConvBaseline',
     ):
         Parameterized.__init__(self)
         Serializable.quick_init(self, locals())
@@ -41,14 +41,14 @@ class GaussianConvBaseline(Baseline, Parameterized, Serializable):
     @overrides
     def fit(self, paths):
         """Fit regressor based on paths."""
-        observations = np.concatenate([p["observations"] for p in paths])
-        returns = np.concatenate([p["returns"] for p in paths])
+        observations = np.concatenate([p['observations'] for p in paths])
+        returns = np.concatenate([p['returns'] for p in paths])
         self._regressor.fit(observations, returns.reshape((-1, 1)))
 
     @overrides
     def predict(self, path):
         """Predict value based on paths."""
-        return self._regressor.predict(path["observations"]).flatten()
+        return self._regressor.predict(path['observations']).flatten()
 
     @overrides
     def get_param_values(self, **tags):

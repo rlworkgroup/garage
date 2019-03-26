@@ -2,10 +2,10 @@ from itertools import chain, zip_longest
 
 import numpy as np
 
-from garage.algos.base import RLAlgorithm
 from garage.core import Serializable
 from garage.logger import logger, snapshotter, tabular
 from garage.misc.special import discount_cumsum
+from garage.np.algos.base import RLAlgorithm
 from garage.plotter import Plotter
 from garage.sampler import parallel_sampler, stateful_pool
 from garage.sampler.utils import rollout
@@ -28,20 +28,20 @@ def _get_stderr_lb_varyinglens(x):
 
 
 def _worker_rollout_policy(g, args):
-    sample_std = args["sample_std"].flatten()
-    cur_mean = args["cur_mean"].flatten()
-    n_evals = args["n_evals"]
+    sample_std = args['sample_std'].flatten()
+    cur_mean = args['cur_mean'].flatten()
+    n_evals = args['n_evals']
     k = len(cur_mean)
     params = np.random.standard_normal(k) * sample_std + cur_mean
     g.policy.set_param_values(params)
     paths, returns, undiscounted_returns = [], [], []
     for _ in range(n_evals):
-        path = rollout(g.env, g.policy, args["max_path_length"])
-        path["returns"] = discount_cumsum(path["rewards"], args["discount"])
-        path["undiscounted_return"] = sum(path["rewards"])
+        path = rollout(g.env, g.policy, args['max_path_length'])
+        path['returns'] = discount_cumsum(path['rewards'], args['discount'])
+        path['undiscounted_return'] = sum(path['rewards'])
         paths.append(path)
-        returns.append(path["returns"])
-        undiscounted_returns.append(path["undiscounted_return"])
+        returns.append(path['returns'])
+        undiscounted_returns.append(path['undiscounted_return'])
 
     result_path = {'full_paths': paths}
     result_path['undiscounted_return'] = _get_stderr_lb(undiscounted_returns)
@@ -49,9 +49,9 @@ def _worker_rollout_policy(g, args):
 
     # not letting n_evals count towards below cases since n_evals is multiple
     # eval for single paramset
-    if args["criterion"] == "samples":
-        inc = len(path["rewards"])
-    elif args["criterion"] == "paths":
+    if args['criterion'] == 'samples':
+        inc = len(path['rewards'])
+    elif args['criterion'] == 'paths':
         inc = 1
     else:
         raise NotImplementedError
@@ -149,7 +149,7 @@ class CEM(RLAlgorithm, Serializable):
             cur_mean = best_xs.mean(axis=0)
             cur_std = best_xs.std(axis=0)
             best_x = best_xs[0]
-            logger.push_prefix('itr #%d | ' % itr)
+            logger.push_prefix('itr #{} | '.format(itr))
             tabular.record('Iteration', itr)
             tabular.record('CurStdMean', np.mean(cur_std))
             undiscounted_returns = np.array(

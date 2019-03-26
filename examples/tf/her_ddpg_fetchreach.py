@@ -12,7 +12,7 @@ import gym
 import tensorflow as tf
 
 from garage.experiment import LocalRunner, run_experiment
-from garage.exploration_strategies import OUStrategy
+from garage.np.exploration_strategies import OUStrategy
 from garage.replay_buffer import HerReplayBuffer
 from garage.tf.algos import DDPG
 from garage.tf.envs import TfEnv
@@ -28,7 +28,7 @@ def run_task(*_):
 
         policy = ContinuousMLPPolicy(
             env_spec=env.spec,
-            name="Policy",
+            name='Policy',
             hidden_sizes=[256, 256, 256],
             hidden_nonlinearity=tf.nn.relu,
             output_nonlinearity=tf.nn.tanh,
@@ -37,7 +37,7 @@ def run_task(*_):
 
         qf = ContinuousMLPQFunction(
             env_spec=env.spec,
-            name="QFunction",
+            name='QFunction',
             hidden_sizes=[256, 256, 256],
             hidden_nonlinearity=tf.nn.relu,
             input_include_goal=True,
@@ -74,4 +74,4 @@ def run_task(*_):
         runner.train(n_epochs=50, n_epoch_cycles=20)
 
 
-run_experiment(run_task, snapshot_mode="last", seed=1)
+run_experiment(run_task, snapshot_mode='last', seed=1)

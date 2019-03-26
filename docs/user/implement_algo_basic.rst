@@ -97,20 +97,17 @@ parameters. But let's keep things simple for now.
 
 .. code-block:: python
 
-    from __future__ import print_function
-    from garage.envs.box2d.cartpole_env import CartpoleEnv
-    from garage.policies.gaussian_mlp_policy import GaussianMLPPolicy
-    from garage.envs.normalized_env import normalize
+    import gym
     import numpy as np
-    import theano
-    import theano.tensor as TT
-    from lasagne.updates import adam
+
+    from garage.envs import normalize
+    from garage.tf.policies import CategoricalMLPPolicy
 
     # normalize() makes sure that the actions for the environment lies
     # within the range [-1, 1] (only works for environments with continuous actions)
-    env = normalize(CartpoleEnv())
+    env = normalize(gym.make('CartPole-v0'))
     # Initialize a neural network policy with a single hidden layer of 8 hidden units
-    policy = GaussianMLPPolicy(env.spec, hidden_sizes=(8,))
+    policy = CategoricalMLPPolicy(env.spec, hidden_sizes=(8,))
 
     # We will collect 100 trajectories per iteration
     N = 100
@@ -182,37 +179,35 @@ which helps us vectorize the implementation further.
 
 .. code-block:: python
 
-    observations = np.concatenate([p["observations"] for p in paths])
-    actions = np.concatenate([p["actions"] for p in paths])
-    returns = np.concatenate([p["returns"] for p in paths])
+    observations = np.concatenate([p['observations'] for p in paths])
+    actions = np.concatenate([p['actions'] for p in paths])
+    returns = np.concatenate([p['returns'] for p in paths])
 
 Constructing the Computation Graph
 ==================================
 
-We will use `Theano <http://deeplearning.net/software/theano/>`_ for our
+We will use `TensorFlow <https://www.tensorflow.org/>`_ for our
 implementation, and we assume that the reader has some familiarity with it.
-If not, it would be good to go through `some tutorials <http://nbviewer.jupyter.org/github/craffel/theano-tutorial/blob/master/Theano%20Tutorial.ipynb>`_
-first.
 
 First, we construct symbolic variables for the input data:
 
 .. code-block:: python
 
-    # Create a Theano variable for storing the observations
+    # Create a TensorFlow variable for storing the observations
     # We could have simply written `observations_var = TT.matrix('observations')` instead for this example. However,
     # doing it in a slightly more abstract way allows us to delegate to the environment for handling the correct data
     # type for the variable. For instance, for an environment with discrete observations, we might want to use integer
     # types if the observations are represented as one-hot vectors.
     observations_var = env.observation_space.new_tensor_variable(
-        'observations',
+        name='observations',
         # It should have 1 extra dimension since we want to represent a list of observations
         extra_dims=1
     )
     actions_var = env.action_space.new_tensor_variable(
-        'actions',
+        name='actions',
         extra_dims=1
     )
-    returns_var = TT.vector('returns')
+    returns_var = tf.placeholder(name='returns')
 
 Note that we can transform the policy gradient formula as
 
@@ -236,11 +231,11 @@ where :math:`L(\theta) = \frac{1}{NT} \sum_{i=1}^N \sum_{t=0}^{T-1} \log \pi_\th
 
     # Note that we negate the objective, since most optimizers assume a
     # minimization problem
-    surr = - TT.mean(dist.log_likelihood_sym(actions_var, dist_info_vars) * returns_var)
+    surr = - tf.reduce_mean(dist.log_likelihood_sym(actions_var, dist_info_vars) * returns_var)
 
     # Get the list of trainable parameters.
     params = policy.get_params(trainable=True)
-    grads = theano.grad(surr, params)
+    grads = tf.gradient(surr, params)
 
 Gradient Update and Diagnostics
 ===============================
@@ -249,11 +244,9 @@ We are almost done! Now, you can use your favorite stochastic optimization algor
 
 .. code-block:: python
 
-    f_train = theano.function(
+    f_train = tensor_utils.compile_function(
         inputs=[observations_var, actions_var, returns_var],
-        outputs=None,
-        updates=adam(grads, params, learning_rate=learning_rate),
-        allow_input_downcast=True
+        outputs=adam(grads, params, learning_rate=learning_rate),
     )
     f_train(observations, actions, returns)
 
@@ -261,9 +254,9 @@ Since this algorithm is on-policy, we can evaluate its performance by inspecting
 
 .. code-block:: py
 
-    print('Average Return:', np.mean([sum(path["rewards"]) for path in paths]))
+    print('Average Return:', np.mean([sum(path['rewards']) for path in paths]))
 
-The complete source code so far is available at :code:`examples/vpg_1.py`.
+The complete source code so far is available at :code:`examples/tf/vpg_cartpole.py`.
 
 Additional Tricks
 =================
@@ -283,14 +276,14 @@ this case, :math:`R_t^i - b(s_t^i)` is an estimator of
 :math:`A^\pi(s_t^i, a_t^i)`. The framework implements a few options for the
 baseline. A good balance of computational efficiency and accuracy is achieved
 by a linear baseline using state features, available
-at :code:`garage/baselines/linear_feature_baseline.py`. To use it in our implementation,
+at :code:`garage/np/baselines/linear_feature_baseline.py`. To use it in our implementation,
 the relevant code looks like the following:
 
 .. code-block:: python
 
     # ... initialization code ...
 
-    from garage.baselines.linear_feature_baseline import LinearFeatureBaseline
+    from garage.np.baselines import LinearFeatureBaseline
     baseline = LinearFeatureBaseline(env.spec)
 
     # ... inside the loop for each episode, after the samples are collected
@@ -342,7 +335,7 @@ advantages would be zero, giving us no gradient signals at all.
 
 Now, we can train the policy much faster (we need to change the learning rate
 accordingly because of the rescaling). The complete source code so far is
-available at :code:`examples/vpg_2.py`
+available at :code:`examples/tf/vpg_cartpole.py`
 
 .. [1] Williams, Ronald J. "Simple statistical gradient-following algorithms for connectionist reinforcement learning." Machine learning 8.3-4 (1992): 229-256.
 .. [2] Kingma, Diederik P., and Jimmy Ba Adam. "A method for stochastic optimization." International Conference on Learning Representation. 2015.

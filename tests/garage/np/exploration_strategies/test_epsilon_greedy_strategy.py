@@ -4,7 +4,7 @@ import unittest
 
 import numpy as np
 
-from garage.exploration_strategies import EpsilonGreedyStrategy
+from garage.np.exploration_strategies import EpsilonGreedyStrategy
 from tests.fixtures.envs.dummy import DummyDiscreteEnv
 
 
