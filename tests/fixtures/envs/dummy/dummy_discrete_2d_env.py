@@ -29,7 +29,7 @@ class DummyDiscrete2DEnv(DummyEnv):
 
     def reset(self):
         """Reset the environment."""
-        self.state = np.zeros(self.shape)
+        self.state = np.ones(self.shape)
         return self.state
 
     def step(self, action):

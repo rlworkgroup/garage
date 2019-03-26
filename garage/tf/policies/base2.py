@@ -1,4 +1,5 @@
 """Policy base classes without Parameterized."""
+import tensorflow as tf
 
 
 class Policy2:
@@ -10,8 +11,10 @@ class Policy2:
 
     """
 
-    def __init__(self, env_spec):
+    def __init__(self, name, env_spec):
+        self._name = name
         self._env_spec = env_spec
+        self._variable_scope = tf.VariableScope(name)
 
     # Should be implemented by all policies
 
@@ -26,6 +29,10 @@ class Policy2:
     def reset(self, dones=None):
         """Reset policy."""
         pass
+
+    @property
+    def name(self):
+        return self._name
 
     @property
     def vectorized(self):
@@ -87,6 +94,14 @@ class Policy2:
     def terminate(self):
         """Clean up operation."""
         pass
+
+    def get_trainable_vars(self):
+        """Get trainable vars."""
+        return self._variable_scope.trainable_variables()
+
+    def get_global_vars(self):
+        """Get global vars."""
+        return self._variable_scope.global_variables()
 
 
 class StochasticPolicy2(Policy2):

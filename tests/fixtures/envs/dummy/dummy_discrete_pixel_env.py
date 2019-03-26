@@ -16,8 +16,8 @@ class DummyDiscretePixelEnv(DummyEnv):
     Several properties are made for testing purpose as following:
 
     -Observations are
-        after reset    : np.zeros(self._shape).
-        action 1 (FIRE): np.ones(self._shape).
+        after reset    : np.ones(self._shape).
+        action 1 (FIRE): np.full(self._shape, 2).
         otherwise      : random if self.random is True,
             otherwise previous state + action.
 
@@ -28,13 +28,12 @@ class DummyDiscretePixelEnv(DummyEnv):
     """
 
     def __init__(self, random=True):
-        super().__init__(random)
+        super().__init__(random, obs_dim=(10, 10, 3), action_dim=5)
         self.unwrapped.get_action_meanings = self._get_action_meanings
         self.unwrapped.ale = mock.Mock()
         self.unwrapped.ale.lives = self.get_lives
-        self._shape = (10, 10, 3)
         self._observation_space = gym.spaces.Box(
-            low=0, high=255, shape=self._shape, dtype=np.uint8)
+            low=0, high=255, shape=self._obs_dim, dtype=np.uint8)
         self.step_called = 0
         self._prev_action = None
 
@@ -50,7 +49,7 @@ class DummyDiscretePixelEnv(DummyEnv):
     @property
     def action_space(self):
         """Return an action space."""
-        return gym.spaces.Discrete(5)
+        return gym.spaces.Discrete(self._action_dim)
 
     def _get_action_meanings(self):
         return ['NOOP', 'FIRE', 'SLEEP', 'EAT', 'PLAY']
@@ -61,7 +60,7 @@ class DummyDiscretePixelEnv(DummyEnv):
 
     def reset(self):
         """Reset the environment."""
-        self.state = np.zeros(self._shape, dtype=np.uint8)
+        self.state = np.ones(self._obs_dim, dtype=np.uint8)
         self._lives = 5
         self.step_called = 0
         return self.state
@@ -81,11 +80,11 @@ class DummyDiscretePixelEnv(DummyEnv):
             if action == 1:
                 if self._prev_action == 2:
                     done = True
-                obs = np.ones(self._shape, dtype=np.uint8)
+                obs = np.full(self._obs_dim, 2, dtype=np.uint8)
             else:
                 if self.random:
                     obs = np.random.uniform(
-                        low=0, high=256, size=self._shape).astype(np.uint8)
+                        low=0, high=256, size=self._obs_dim).astype(np.uint8)
                 else:
                     obs = self.state + action
             if self._lives == 0:

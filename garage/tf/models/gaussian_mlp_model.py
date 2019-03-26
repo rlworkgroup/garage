@@ -48,7 +48,11 @@ class GaussianMLPModel(Model):
                  name=None,
                  hidden_sizes=(32, 32),
                  hidden_nonlinearity=tf.nn.tanh,
+                 hidden_w_init=tf.glorot_uniform_initializer(),
+                 hidden_b_init=tf.zeros_initializer(),
                  output_nonlinearity=None,
+                 output_w_init=tf.glorot_uniform_initializer(),
+                 output_b_init=tf.zeros_initializer(),
                  learn_std=True,
                  adaptive_std=False,
                  std_share_network=False,
@@ -57,8 +61,13 @@ class GaussianMLPModel(Model):
                  max_std=None,
                  std_hidden_sizes=(32, 32),
                  std_hidden_nonlinearity=tf.nn.tanh,
+                 std_hidden_w_init=tf.glorot_uniform_initializer(),
+                 std_hidden_b_init=tf.zeros_initializer(),
                  std_output_nonlinearity=None,
-                 std_parameterization='exp'):
+                 std_output_w_init=tf.glorot_uniform_initializer(),
+                 std_output_b_init=tf.zeros_initializer(),
+                 std_parameterization='exp',
+                 layer_normalization=False):
         # Network parameters
         super().__init__(name)
         self._hidden_sizes = hidden_sizes
@@ -70,10 +79,19 @@ class GaussianMLPModel(Model):
         self._min_std = min_std
         self._max_std = max_std
         self._std_hidden_nonlinearity = std_hidden_nonlinearity
+        self._std_hidden_w_init = std_hidden_w_init
+        self._std_hidden_b_init = std_hidden_b_init
         self._std_output_nonlinearity = std_output_nonlinearity
+        self._std_output_w_init = std_output_w_init
+        self._std_output_b_init = std_output_b_init
         self._std_parameterization = std_parameterization
         self._hidden_nonlinearity = hidden_nonlinearity
+        self._hidden_w_init = hidden_w_init
+        self._hidden_b_init = hidden_b_init
         self._output_nonlinearity = output_nonlinearity
+        self._output_w_init = output_w_init
+        self._output_b_init = output_b_init
+        self._layer_normalization = layer_normalization
 
         # Tranform std arguments to parameterized space
         self._init_std_param = None
@@ -81,22 +99,22 @@ class GaussianMLPModel(Model):
         self._max_std_param = None
         if self._std_parameterization == 'exp':
             self._init_std_param = np.log(init_std)
-            if min_std:
+            if min_std is not None:
                 self._min_std_param = np.log(min_std)
-            if max_std:
+            if max_std is not None:
                 self._max_std_param = np.log(max_std)
         elif self._std_parameterization == 'softplus':
             self._init_std_param = np.log(np.exp(init_std) - 1)
-            if min_std:
+            if min_std is not None:
                 self._min_std_param = np.log(np.exp(min_std) - 1)
-            if max_std:
+            if max_std is not None:
                 self._max_std_param = np.log(np.exp(max_std) - 1)
         else:
             raise NotImplementedError
 
     def network_output_spec(self):
         """Network output spec."""
-        return ['sample', 'mean', 'std', 'std_param', 'dist']
+        return ['sample', 'mean', 'log_std', 'std_param', 'dist']
 
     def _build(self, state_input):
         action_dim = self._output_dim
@@ -108,19 +126,23 @@ class GaussianMLPModel(Model):
                     np.zeros(action_dim),
                     np.full(action_dim, self._init_std_param)
                 ], axis=0)  # yapf: disable
-                b = tf.constant_initializer(b)
+
                 mean_std_network = mlp(
                     state_input,
                     output_dim=action_dim * 2,
                     hidden_sizes=self._hidden_sizes,
                     hidden_nonlinearity=self._hidden_nonlinearity,
+                    hidden_w_init=self._hidden_w_init,
+                    hidden_b_init=self._hidden_b_init,
                     output_nonlinearity=self._output_nonlinearity,
-                    output_b_init=b,
-                    name='mean_std_network')
+                    output_w_init=self._output_w_init,
+                    output_b_init=tf.constant_initializer(b),
+                    name='mean_std_network',
+                    layer_normalization=self._layer_normalization)
                 with tf.variable_scope('mean_network'):
                     mean_network = mean_std_network[..., :action_dim]
-                with tf.variable_scope('std_network'):
-                    std_network = mean_std_network[..., action_dim:]
+                with tf.variable_scope('log_std_network'):
+                    log_std_network = mean_std_network[..., action_dim:]
 
             else:
                 # separate MLPs for mean and std networks
@@ -130,52 +152,59 @@ class GaussianMLPModel(Model):
                     output_dim=action_dim,
                     hidden_sizes=self._hidden_sizes,
                     hidden_nonlinearity=self._hidden_nonlinearity,
+                    hidden_w_init=self._hidden_w_init,
+                    hidden_b_init=self._hidden_b_init,
                     output_nonlinearity=self._output_nonlinearity,
-                    name='mean_network')
+                    output_w_init=self._output_w_init,
+                    output_b_init=self._output_b_init,
+                    name='mean_network',
+                    layer_normalization=self._layer_normalization)
 
                 # std network
                 if self._adaptive_std:
-                    b = tf.constant_initializer(self._init_std_param)
-                    std_network = mlp(
+                    log_std_network = mlp(
                         state_input,
                         output_dim=action_dim,
                         hidden_sizes=self._std_hidden_sizes,
                         hidden_nonlinearity=self._std_hidden_nonlinearity,
+                        hidden_w_init=self._std_hidden_w_init,
+                        hidden_b_init=self._std_hidden_b_init,
                         output_nonlinearity=self._std_output_nonlinearity,
-                        output_b_init=b,
-                        name='std_network')
+                        output_w_init=self._std_output_w_init,
+                        output_b_init=tf.constant_initializer(
+                            self._init_std_param),
+                        name='log_std_network',
+                        layer_normalization=self._layer_normalization)
                 else:
-                    p = tf.constant_initializer(self._init_std_param)
-                    std_network = parameter(
+                    log_std_network = parameter(
                         state_input,
                         length=action_dim,
-                        initializer=p,
+                        initializer=tf.constant_initializer(
+                            self._init_std_param),
                         trainable=self._learn_std,
-                        name='std_network')
+                        name='log_std_network')
 
         mean_var = mean_network
-        std_param_var = std_network
+        std_param = log_std_network
 
         with tf.variable_scope('std_parameterization'):
             # build std_var with std parameterization
             if self._std_parameterization == 'exp':
-                std_param_var = std_param_var
-            elif self._std_parameterization == 'softplus':
-                std_param_var = tf.log(1. + tf.exp(std_param_var))
-            else:
-                raise NotImplementedError
+                log_std_var = std_param
+            else:  # we know it must be softplus here
+                log_std_var = tf.log(1. + tf.exp(std_param))
 
         with tf.variable_scope('std_limits'):
-            if self._min_std_param:
-                std_var = tf.maximum(std_param_var, self._min_std_param)
-            if self._max_std_param:
-                std_var = tf.minimum(std_param_var, self._max_std_param)
+            if self._min_std_param is not None:
+                log_std_var = tf.maximum(log_std_var, self._min_std_param)
+            if self._max_std_param is not None:
+                log_std_var = tf.minimum(log_std_var, self._max_std_param)
 
-        dist = DiagonalGaussian(action_dim)
+        dist = DiagonalGaussian(self._output_dim)
 
         rnd = tf.random.normal(
             shape=mean_var.get_shape().as_list()[1:],
             seed=deterministic.get_seed())
-        action_var = rnd * tf.exp(std_var) + mean_var
+        action_var = rnd * tf.exp(log_std_var) + mean_var
 
-        return action_var, mean_var, std_var, std_param_var, dist
+        return action_var, mean_var, log_std_var, std_param, dist

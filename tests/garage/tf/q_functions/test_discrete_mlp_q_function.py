@@ -1,6 +1,7 @@
-"""This script creates a unittest that tests discrete mlp q-function."""
 import pickle
+from unittest import mock
 
+from nose2.tools.params import params
 import numpy as np
 import tensorflow as tf
 
@@ -8,42 +9,102 @@ from garage.tf.envs import TfEnv
 from garage.tf.q_functions.discrete_mlp_q_function import DiscreteMLPQFunction
 from tests.fixtures import TfGraphTestCase
 from tests.fixtures.envs.dummy import DummyDiscreteEnv
+from tests.fixtures.models import SimpleMLPModel
 
 
 class TestDiscreteMLPQFunction(TfGraphTestCase):
-    def setUp(self):
-        super().setUp()
-        self.data = np.ones((2, 1))
-        self.env = TfEnv(DummyDiscreteEnv())
-        self.qf = DiscreteMLPQFunction(self.env.spec)
+    @params(
+        ((1, ), 1),
+        ((2, ), 2),
+        ((1, 1), 1),
+        ((2, 2), 2),
+    )
+    def test_get_action(self, obs_dim, action_dim):
+        env = TfEnv(DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
+        with mock.patch(('garage.tf.q_functions.'
+                         'discrete_mlp_q_function.MLPModel'),
+                        new=SimpleMLPModel):
+            qf = DiscreteMLPQFunction(env_spec=env.spec)
+        env.reset()
+        obs, _, _, _ = env.step(1)
 
-    def test_discrete_mlp_q_function(self):
-        output1 = self.sess.run(
-            self.qf.model.networks['default'].outputs,
-            feed_dict={self.qf.model.networks['default'].input: self.data})
-        assert output1.shape == (2, self.env.action_space.n)
+        expected_output = np.full(action_dim, 0.5)
 
-    def test_discrete_mlp_q_function_is_rebuilt_output_same(self):
-        output1 = self.sess.run(
-            self.qf.model.networks['default'].outputs,
-            feed_dict={self.qf.model.networks['default'].input: self.data})
+        outputs = self.sess.run(qf.q_vals, feed_dict={qf.input: [obs]})
+        assert np.array_equal(outputs[0], expected_output)
 
-        input_var = tf.placeholder(tf.float32, shape=(None, 1))
-        q_vals = self.qf.get_qval_sym(input_var, "another")
-        output2 = self.sess.run(q_vals, feed_dict={input_var: self.data})
+        outputs = self.sess.run(
+            qf.q_vals, feed_dict={qf.input: [obs, obs, obs]})
+        for output in outputs:
+            assert np.array_equal(output, expected_output)
+
+    @params(
+        ((1, ), 1),
+        ((2, ), 2),
+        ((1, 1), 1),
+        ((2, 2), 2),
+    )
+    def test_output_shape(self, obs_dim, action_dim):
+        env = TfEnv(DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
+        with mock.patch(('garage.tf.q_functions.'
+                         'discrete_mlp_q_function.MLPModel'),
+                        new=SimpleMLPModel):
+            qf = DiscreteMLPQFunction(env_spec=env.spec)
+        env.reset()
+        obs, _, _, _ = env.step(1)
+
+        outputs = self.sess.run(qf.q_vals, feed_dict={qf.input: [obs]})
+        assert outputs.shape == (1, action_dim)
+
+    @params(
+        ((1, ), 1),
+        ((2, ), 2),
+        ((1, 1), 1),
+        ((2, 2), 2),
+    )
+    def test_get_qval_sym(self, obs_dim, action_dim):
+        env = TfEnv(DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
+        with mock.patch(('garage.tf.q_functions.'
+                         'discrete_mlp_q_function.MLPModel'),
+                        new=SimpleMLPModel):
+            qf = DiscreteMLPQFunction(env_spec=env.spec)
+        env.reset()
+        obs, _, _, _ = env.step(1)
+
+        output1 = self.sess.run(qf.q_vals, feed_dict={qf.input: [obs]})
+
+        input_var = tf.placeholder(tf.float32, shape=(None, ) + obs_dim)
+        q_vals = qf.get_qval_sym(input_var, "another")
+        output2 = self.sess.run(q_vals, feed_dict={input_var: [obs]})
+
+        expected_output = np.full(action_dim, 0.5)
 
         assert np.array_equal(output1, output2)
+        assert np.array_equal(output2[0], expected_output)
 
-    def test_discrete_mlp_q_function_is_pickleable(self):
-        output1 = self.sess.run(
-            self.qf.model.networks['default'].outputs,
-            feed_dict={self.qf.model.networks['default'].input: self.data})
-        h_data = pickle.dumps(self.qf)
+    @params(
+        ((1, ), 1),
+        ((2, ), 2),
+        ((1, 1), 1),
+        ((2, 2), 2),
+    )
+    def test_is_pickleable(self, obs_dim, action_dim):
+        env = TfEnv(DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
+        with mock.patch(('garage.tf.q_functions.'
+                         'discrete_mlp_q_function.MLPModel'),
+                        new=SimpleMLPModel):
+            qf = DiscreteMLPQFunction(env_spec=env.spec)
+        env.reset()
+        obs, _, _, _ = env.step(1)
 
+        output1 = self.sess.run(qf.q_vals, feed_dict={qf.input: [obs]})
+
+        h_data = pickle.dumps(qf)
         with tf.Session(graph=tf.Graph()) as sess:
             qf_pickled = pickle.loads(h_data)
-            input_var = tf.placeholder(tf.float32, shape=(None, 1))
+            input_var = tf.placeholder(tf.float32, shape=(None, ) + obs_dim)
+
             q_vals = qf_pickled.get_qval_sym(input_var, "another")
-            output2 = sess.run(q_vals, feed_dict={input_var: self.data})
+            output2 = sess.run(q_vals, feed_dict={input_var: [obs]})
 
         assert np.array_equal(output1, output2)

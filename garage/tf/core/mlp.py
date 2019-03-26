@@ -8,11 +8,11 @@ def mlp(input_var,
         hidden_sizes,
         name,
         hidden_nonlinearity=tf.nn.relu,
-        hidden_w_init=tf.contrib.layers.xavier_initializer(),
-        hidden_b_init=tf.zeros_initializer(),
+        hidden_w_init=tf.glorot_uniform_initializer,
+        hidden_b_init=tf.zeros_initializer,
         output_nonlinearity=None,
-        output_w_init=tf.contrib.layers.xavier_initializer(),
-        output_b_init=tf.zeros_initializer(),
+        output_w_init=tf.glorot_uniform_initializer,
+        output_b_init=tf.zeros_initializer,
         layer_normalization=False):
     """
     MLP model.

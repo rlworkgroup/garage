@@ -1,4 +1,3 @@
-"""This script creates a unittest that tests qf-derived policy."""
 import tensorflow as tf
 
 from garage.tf.envs import TfEnv

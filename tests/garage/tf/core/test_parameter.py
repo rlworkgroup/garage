@@ -10,13 +10,10 @@ class TestParameter(TfGraphTestCase):
         input_vars = tf.placeholder(shape=[None, 2, 3, 4], dtype=tf.float32)
         initial_params = np.array([48, 21, 33])
 
-        init = tf.constant_initializer(initial_params)
-
         params = parameter(
             input_var=input_vars,
             length=3,
-            initializer=init,
-        )
+            initializer=tf.constant_initializer(initial_params))
 
         data = np.zeros(shape=[5, 2, 3, 4])
         feed_dict = {
