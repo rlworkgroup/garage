@@ -1,5 +1,5 @@
-from garage.algos.base import RLAlgorithm
 from garage.logger import logger, snapshotter, tabular
+from garage.np.algos.base import RLAlgorithm
 from garage.plotter import Plotter
 from garage.sampler import BatchSampler
 
@@ -88,25 +88,25 @@ class BatchPolopt(RLAlgorithm):
         self.start_worker()
         self.init_opt()
         for itr in range(self.current_itr, self.n_itr):
-            with logger.prefix('itr #%d | ' % itr):
+            with logger.prefix('itr #{} | '.format(itr)):
                 paths = self.sampler.obtain_samples(itr)
                 samples_data = self.sampler.process_samples(itr, paths)
                 self.log_diagnostics(paths)
                 self.optimize_policy(itr, samples_data)
-                logger.log("saving snapshot...")
+                logger.log('Saving snapshot...')
                 params = self.get_itr_snapshot(itr, samples_data)
                 self.current_itr = itr + 1
-                params["algo"] = self
+                params['algo'] = self
                 if self.store_paths:
-                    params["paths"] = samples_data["paths"]
+                    params['paths'] = samples_data['paths']
                 snapshotter.save_itr_params(itr, params)
-                logger.log("saved")
+                logger.log('saved')
                 logger.log(tabular)
                 if self.plot:
                     plotter.update_plot(self.policy, self.max_path_length)
                     if self.pause_for_plot:
-                        input("Plotting evaluation run: Press Enter to "
-                              "continue...")
+                        input('Plotting evaluation run: Press Enter to '
+                              'continue...')
 
         plotter.close()
         self.shutdown_worker()

@@ -1,7 +1,7 @@
 import tensorflow as tf
 
-from garage.algos import RLAlgorithm
 from garage.logger import logger
+from garage.np.algos import RLAlgorithm
 
 
 class BatchPolopt(RLAlgorithm):
@@ -59,12 +59,12 @@ class BatchPolopt(RLAlgorithm):
 
     def train_once(self, itr, paths):
         self.log_diagnostics(paths)
-        logger.log("Optimizing policy...")
+        logger.log('Optimizing policy...')
         self.optimize_policy(itr, paths)
-        return paths["average_return"]
+        return paths['average_return']
 
     def log_diagnostics(self, paths):
-        logger.log("Logging diagnostics...")
+        logger.log('Logging diagnostics...')
         self.policy.log_diagnostics(paths)
         self.baseline.log_diagnostics(paths)
 

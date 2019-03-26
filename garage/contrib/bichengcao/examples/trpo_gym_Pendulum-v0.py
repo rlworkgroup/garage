@@ -1,15 +1,15 @@
 import gym
 
-from garage.baselines import LinearFeatureBaseline
 from garage.envs import normalize
 from garage.experiment import run_experiment
+from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import TRPO
 from garage.tf.envs import TfEnv
 from garage.tf.policies import GaussianMLPPolicy
 
 
 def run_task(*_):
-    env = TfEnv(normalize(gym.make("Pendulum-v0")))
+    env = TfEnv(normalize(gym.make('Pendulum-v0')))
 
     policy = GaussianMLPPolicy(env_spec=env.spec, hidden_sizes=(32, 32))
 
@@ -32,6 +32,6 @@ def run_task(*_):
 run_experiment(
     run_task,
     n_parallel=1,
-    snapshot_mode="last",
+    snapshot_mode='last',
     plot=True,
 )

@@ -2,9 +2,9 @@ import unittest
 
 import tensorflow as tf
 
-from garage.baselines import LinearFeatureBaseline
 from garage.experiment import LocalRunner
 from garage.logger import logger
+from garage.np.baselines import LinearFeatureBaseline
 from garage.sampler import singleton_pool
 from garage.tf.algos import VPG
 from garage.tf.envs import TfEnv
@@ -24,20 +24,20 @@ class TestLocalRunner(unittest.TestCase):
         with LocalRunner():
             self.assertIsNotNone(
                 tf.get_default_session(),
-                "LocalRunner() should provide a default tf session.")
+                'LocalRunner() should provide a default tf session.')
 
         sess = tf.Session()
         with LocalRunner(sess=sess):
             self.assertIs(
                 tf.get_default_session(), sess,
-                "LocalRunner(sess) should use sess as default session.")
+                'LocalRunner(sess) should use sess as default session.')
 
     def test_singleton_pool(self):
         max_cpus = 8
         with LocalRunner(max_cpus=max_cpus):
             self.assertEqual(
                 max_cpus, singleton_pool.n_parallel,
-                "LocaRunner(max_cpu) should set up singleton_pool.")
+                'LocaRunner(max_cpu) should set up singleton_pool.')
 
     def test_batch_sampler(self):
         max_cpus = 8
@@ -45,7 +45,7 @@ class TestLocalRunner(unittest.TestCase):
             env = TfEnv(env_name='CartPole-v1')
 
             policy = CategoricalMLPPolicy(
-                name="policy", env_spec=env.spec, hidden_sizes=(32, 32))
+                name='policy', env_spec=env.spec, hidden_sizes=(32, 32))
 
             baseline = LinearFeatureBaseline(env_spec=env.spec)
 
@@ -67,14 +67,14 @@ class TestLocalRunner(unittest.TestCase):
                 runner.initialize_tf_vars()
             except BaseException:
                 raise self.failureException(
-                    "LocalRunner should be able to initialize tf variables.")
+                    'LocalRunner should be able to initialize tf variables.')
 
             runner.start_worker()
 
             paths = runner.sampler.obtain_samples(0, 8)
             self.assertGreaterEqual(
-                len(paths), max_cpus, "BatchSampler should sample more than "
-                "max_cpus=%d trajectories" % max_cpus)
+                len(paths), max_cpus, 'BatchSampler should sample more than '
+                'max_cpus={} trajectories'.format(max_cpus))
 
     # Note:
     #   test_batch_sampler should pass if tested independently
@@ -90,7 +90,7 @@ class TestLocalRunner(unittest.TestCase):
             env = TfEnv(env_name='CartPole-v1')
 
             policy = CategoricalMLPPolicy(
-                name="policy", env_spec=env.spec, hidden_sizes=(8, 8))
+                name='policy', env_spec=env.spec, hidden_sizes=(8, 8))
 
             baseline = LinearFeatureBaseline(env_spec=env.spec)
 

@@ -4,8 +4,8 @@ too low.
 """
 import gym
 
-from garage.baselines import LinearFeatureBaseline
 from garage.experiment import LocalRunner
+from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import REPS
 from garage.tf.envs import TfEnv
 from garage.tf.policies import CategoricalMLPPolicy
@@ -16,7 +16,7 @@ class TestREPS(TfGraphTestCase):
     def test_reps_cartpole(self):
         """Test REPS with gym Cartpole environment."""
         with LocalRunner(self.sess) as runner:
-            env = TfEnv(gym.make("CartPole-v0"))
+            env = TfEnv(gym.make('CartPole-v0'))
 
             policy = CategoricalMLPPolicy(
                 env_spec=env.spec, hidden_sizes=[32, 32])

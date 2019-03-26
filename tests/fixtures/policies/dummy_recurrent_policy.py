@@ -3,7 +3,7 @@ import numpy as np
 
 from garage.core import Serializable
 from garage.misc.overrides import overrides
-from garage.policies import Policy
+from garage.np.policies import Policy
 from tests.fixtures.distributions import DummyDistribution
 
 

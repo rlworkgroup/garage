@@ -1,6 +1,6 @@
-from garage.baselines import LinearFeatureBaseline
 from garage.envs import normalize
 from garage.envs import PointEnv
+from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import TRPO
 from garage.tf.policies import GaussianMLPPolicy
 
@@ -20,7 +20,7 @@ def run_task(v):
         max_path_length=100,
         n_itr=40,
         discount=0.99,
-        step_size=v["step_size"],
+        step_size=v['step_size'],
         # plot=True,
     )
     algo.train()

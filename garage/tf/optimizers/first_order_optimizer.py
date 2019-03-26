@@ -5,7 +5,7 @@ import tensorflow as tf
 
 from garage.core import Serializable
 from garage.logger import logger
-from garage.optimizers import BatchDataset
+from garage.np.optimizers import BatchDataset
 from garage.tf.misc import tensor_utils
 from garage.tf.optimizers.utils import LazyDict
 
@@ -26,7 +26,7 @@ class FirstOrderOptimizer(Serializable):
             batch_size=32,
             callback=None,
             verbose=False,
-            name="FirstOrderOptimizer",
+            name='FirstOrderOptimizer',
             **kwargs):
         """
         :param max_epochs:
@@ -91,7 +91,7 @@ class FirstOrderOptimizer(Serializable):
     def loss(self, inputs, extra_inputs=None):
         if extra_inputs is None:
             extra_inputs = tuple()
-        return self._opt_fun["f_loss"](*(tuple(inputs) + extra_inputs))
+        return self._opt_fun['f_loss'](*(tuple(inputs) + extra_inputs))
 
     def optimize(self, inputs, extra_inputs=None, callback=None):
 
@@ -99,7 +99,7 @@ class FirstOrderOptimizer(Serializable):
             # Assumes that we should always sample mini-batches
             raise NotImplementedError
 
-        f_loss = self._opt_fun["f_loss"]
+        f_loss = self._opt_fun['f_loss']
 
         if extra_inputs is None:
             extra_inputs = tuple()
@@ -115,7 +115,7 @@ class FirstOrderOptimizer(Serializable):
 
         for epoch in range(self._max_epochs):
             if self._verbose:
-                logger.log("Epoch %d" % (epoch))
+                logger.log('Epoch {}'.format(epoch))
                 progbar = pyprind.ProgBar(len(inputs[0]))
 
             for batch in dataset.iterate(update=True):
@@ -131,7 +131,7 @@ class FirstOrderOptimizer(Serializable):
             new_loss = f_loss(*(tuple(inputs) + extra_inputs))
 
             if self._verbose:
-                logger.log("Epoch: %d | Loss: %f" % (epoch, new_loss))
+                logger.log('Epoch: {} | Loss: {}'.format(epoch, new_loss))
             if self._callback or callback:
                 elapsed = time.time() - start_time
                 callback_args = dict(

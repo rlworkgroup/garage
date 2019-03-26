@@ -8,6 +8,7 @@ log directories corresponding to baselines and garage. And there will be a plot
 plotting the average return curve from baselines and garage.
 """
 import datetime
+import os
 import os.path as osp
 import random
 import unittest
@@ -29,11 +30,11 @@ import tensorflow as tf
 
 from garage.experiment import deterministic
 from garage.experiment import LocalRunner
-from garage.exploration_strategies import OUStrategy
 from garage.logger import CsvOutput
 from garage.logger import logger as garage_logger
 from garage.logger import StdOutput
 from garage.logger import TensorBoardOutput
+from garage.np.exploration_strategies import OUStrategy
 from garage.replay_buffer import SimpleReplayBuffer
 from garage.tf.algos import DDPG
 from garage.tf.envs import TfEnv
@@ -43,18 +44,18 @@ from tests.wrappers import AutoStopEnv
 
 # Hyperparams for baselines and garage
 params = {
-    "policy_lr": 1e-4,
-    "qf_lr": 1e-3,
-    "policy_hidden_sizes": [64, 64],
-    "qf_hidden_sizes": [64, 64],
-    "n_epochs": 500,
-    "n_epoch_cycles": 20,
-    "n_rollout_steps": 100,
-    "n_train_steps": 50,
-    "discount": 0.9,
-    "tau": 1e-2,
-    "replay_buffer_size": int(1e6),
-    "sigma": 0.2,
+    'policy_lr': 1e-4,
+    'qf_lr': 1e-3,
+    'policy_hidden_sizes': [64, 64],
+    'qf_hidden_sizes': [64, 64],
+    'n_epochs': 500,
+    'n_epoch_cycles': 20,
+    'n_rollout_steps': 100,
+    'n_train_steps': 50,
+    'discount': 0.9,
+    'tau': 1e-2,
+    'replay_buffer_size': int(1e6),
+    'sigma': 0.2,
 }
 
 
@@ -67,32 +68,34 @@ class TestBenchmarkDDPG(unittest.TestCase):
         """
         # Load Mujoco1M tasks, you can check other benchmarks here
         # https://github.com/openai/baselines/blob/master/baselines/bench/benchmarks.py
-        mujoco1m = benchmarks.get_benchmark("Mujoco1M")
+        mujoco1m = benchmarks.get_benchmark('Mujoco1M')
 
-        timestamp = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S-%f")
-        benchmark_dir = "./data/local/benchmarks/ddpg/%s/" % timestamp
+        timestamp = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f')
+        benchmark_dir = osp.join(os.getcwd(), 'data', 'local', 'benchmarks',
+                                 'ddpg', timestamp)
 
-        for task in mujoco1m["tasks"]:
-            env_id = task["env_id"]
+        for task in mujoco1m['tasks']:
+            env_id = task['env_id']
             env = gym.make(env_id)
             baseline_env = AutoStopEnv(
-                env_name=env_id, max_path_length=params["n_rollout_steps"])
-            seeds = random.sample(range(100), task["trials"])
+                env_name=env_id, max_path_length=params['n_rollout_steps'])
+            seeds = random.sample(range(100), task['trials'])
 
             task_dir = osp.join(benchmark_dir, env_id)
             plt_file = osp.join(benchmark_dir,
-                                "{}_benchmark.png".format(env_id))
+                                '{}_benchmark.png'.format(env_id))
             baselines_csvs = []
             garage_csvs = []
 
-            for trial in range(task["trials"]):
+            for trial in range(task['trials']):
                 env.reset()
                 baseline_env.reset()
                 seed = seeds[trial]
 
-                trial_dir = task_dir + "/trial_%d_seed_%d" % (trial + 1, seed)
-                garage_dir = trial_dir + "/garage"
-                baselines_dir = trial_dir + "/baselines"
+                trial_dir = osp.join(
+                    task_dir, 'trial_{}_seed_{}'.format(trial + 1, seed))
+                garage_dir = osp.join(trial_dir, 'garage')
+                baselines_dir = osp.join(trial_dir, 'baselines')
 
                 with tf.Graph().as_default():
                     # Run garage algorithms
@@ -110,11 +113,11 @@ class TestBenchmarkDDPG(unittest.TestCase):
             plot(
                 b_csvs=baselines_csvs,
                 g_csvs=garage_csvs,
-                g_x="Epoch",
-                g_y="AverageReturn",
-                b_x="total/epochs",
-                b_y="rollout/return",
-                trials=task["trials"],
+                g_x='Epoch',
+                g_y='AverageReturn',
+                b_x='total/epochs',
+                b_y='rollout/return',
+                trials=task['trials'],
                 seeds=seeds,
                 plt_file=plt_file,
                 env_id=env_id)
@@ -138,41 +141,41 @@ def run_garage(env, seed, log_dir):
     with LocalRunner() as runner:
         env = TfEnv(env)
         # Set up params for ddpg
-        action_noise = OUStrategy(env.spec, sigma=params["sigma"])
+        action_noise = OUStrategy(env.spec, sigma=params['sigma'])
 
         policy = ContinuousMLPPolicy(
             env_spec=env.spec,
-            hidden_sizes=params["policy_hidden_sizes"],
+            hidden_sizes=params['policy_hidden_sizes'],
             hidden_nonlinearity=tf.nn.relu,
             output_nonlinearity=tf.nn.tanh)
 
         qf = ContinuousMLPQFunction(
             env_spec=env.spec,
-            hidden_sizes=params["qf_hidden_sizes"],
+            hidden_sizes=params['qf_hidden_sizes'],
             hidden_nonlinearity=tf.nn.relu)
 
         replay_buffer = SimpleReplayBuffer(
             env_spec=env.spec,
-            size_in_transitions=params["replay_buffer_size"],
-            time_horizon=params["n_rollout_steps"])
+            size_in_transitions=params['replay_buffer_size'],
+            time_horizon=params['n_rollout_steps'])
 
         ddpg = DDPG(
             env_spec=env.spec,
             policy=policy,
             qf=qf,
             replay_buffer=replay_buffer,
-            policy_lr=params["policy_lr"],
-            qf_lr=params["qf_lr"],
-            target_update_tau=params["tau"],
-            n_train_steps=params["n_train_steps"],
-            discount=params["discount"],
+            policy_lr=params['policy_lr'],
+            qf_lr=params['qf_lr'],
+            target_update_tau=params['tau'],
+            n_train_steps=params['n_train_steps'],
+            discount=params['discount'],
             min_buffer_size=int(1e4),
             exploration_strategy=action_noise,
             policy_optimizer=tf.train.AdamOptimizer,
             qf_optimizer=tf.train.AdamOptimizer)
 
         # Set up logger since we are not using run_experiment
-        tabular_log_file = osp.join(log_dir, "progress.csv")
+        tabular_log_file = osp.join(log_dir, 'progress.csv')
         tensorboard_log_dir = osp.join(log_dir)
         garage_logger.add_output(StdOutput())
         garage_logger.add_output(CsvOutput(tabular_log_file))
@@ -182,7 +185,7 @@ def run_garage(env, seed, log_dir):
         runner.train(
             n_epochs=params['n_epochs'],
             n_epoch_cycles=params['n_epoch_cycles'],
-            batch_size=params["n_rollout_steps"])
+            batch_size=params['n_rollout_steps'])
 
         garage_logger.remove_all()
 
@@ -216,9 +219,9 @@ def run_baselines(env, seed, log_dir):
 
     action_noise = OrnsteinUhlenbeckActionNoise(
         mu=np.zeros(nb_actions),
-        sigma=float(params["sigma"]) * np.ones(nb_actions))
+        sigma=float(params['sigma']) * np.ones(nb_actions))
     memory = Memory(
-        limit=params["replay_buffer_size"],
+        limit=params['replay_buffer_size'],
         action_shape=env.action_space.shape,
         observation_shape=env.observation_space.shape)
     critic = Critic(layer_norm=layer_norm)
@@ -232,25 +235,25 @@ def run_baselines(env, seed, log_dir):
         actor=actor,
         critic=critic,
         memory=memory,
-        nb_epochs=params["n_epochs"],
-        nb_epoch_cycles=params["n_epoch_cycles"],
+        nb_epochs=params['n_epochs'],
+        nb_epoch_cycles=params['n_epoch_cycles'],
         render_eval=False,
         reward_scale=1.,
         render=False,
         normalize_returns=False,
         normalize_observations=False,
         critic_l2_reg=0,
-        actor_lr=params["policy_lr"],
-        critic_lr=params["qf_lr"],
+        actor_lr=params['policy_lr'],
+        critic_lr=params['qf_lr'],
         popart=False,
-        gamma=params["discount"],
+        gamma=params['discount'],
         clip_norm=None,
-        nb_train_steps=params["n_train_steps"],
-        nb_rollout_steps=params["n_rollout_steps"],
+        nb_train_steps=params['n_train_steps'],
+        nb_rollout_steps=params['n_rollout_steps'],
         nb_eval_steps=100,
         batch_size=64)
 
-    return osp.join(log_dir, "progress.csv")
+    return osp.join(log_dir, 'progress.csv')
 
 
 def plot(b_csvs, g_csvs, g_x, g_y, b_x, b_y, trials, seeds, plt_file, env_id):
@@ -279,15 +282,15 @@ def plot(b_csvs, g_csvs, g_x, g_y, b_x, b_y, trials, seeds, plt_file, env_id):
         plt.plot(
             df_g[g_x],
             df_g[g_y],
-            label="garage_trial%d_seed%d" % (trial + 1, seed))
+            label='garage_trial{}_seed{}'.format(trial + 1, seed))
         plt.plot(
             df_b[b_x],
             df_b[b_y],
-            label="baselines_trial%d_seed%d" % (trial + 1, seed))
+            label='baselines_trial{}_seed{}'.format(trial + 1, seed))
 
     plt.legend()
-    plt.xlabel("Epoch")
-    plt.ylabel("AverageReturn")
+    plt.xlabel('Epoch')
+    plt.ylabel('AverageReturn')
     plt.title(env_id)
 
     plt.savefig(plt_file)

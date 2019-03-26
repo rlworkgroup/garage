@@ -1,5 +1,5 @@
-from garage.baselines import LinearFeatureBaseline
 from garage.experiment import LocalRunner
+from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import ERWR
 from garage.tf.envs import TfEnv
 from garage.tf.policies import CategoricalMLPPolicy
@@ -10,10 +10,10 @@ class TestERWR(TfGraphTestCase):
     def test_erwr_cartpole(self):
         """Test ERWR with Cartpole-v1 environment."""
         with LocalRunner(self.sess) as runner:
-            env = TfEnv(env_name="CartPole-v1")
+            env = TfEnv(env_name='CartPole-v1')
 
             policy = CategoricalMLPPolicy(
-                name="policy", env_spec=env.spec, hidden_sizes=(32, 32))
+                name='policy', env_spec=env.spec, hidden_sizes=(32, 32))
 
             baseline = LinearFeatureBaseline(env_spec=env.spec)
 

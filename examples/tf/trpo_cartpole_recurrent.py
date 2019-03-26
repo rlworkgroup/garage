@@ -10,8 +10,8 @@ Results:
     AverageReturn: 100
     RiseTime: itr 13
 """
-from garage.baselines import LinearFeatureBaseline
 from garage.experiment import LocalRunner, run_experiment
+from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import TRPO
 import garage.tf.core.layers as L
 from garage.tf.envs import TfEnv
@@ -22,10 +22,10 @@ from garage.tf.policies import CategoricalLSTMPolicy
 
 def run_task(*_):
     with LocalRunner() as runner:
-        env = TfEnv(env_name="CartPole-v1")
+        env = TfEnv(env_name='CartPole-v1')
 
         policy = CategoricalLSTMPolicy(
-            name="policy",
+            name='policy',
             env_spec=env.spec,
             lstm_layer_cls=L.TfBasicLSTMLayer,
             # gru_layer_cls=L.GRULayer,
@@ -50,6 +50,6 @@ def run_task(*_):
 
 run_experiment(
     run_task,
-    snapshot_mode="last",
+    snapshot_mode='last',
     seed=1,
 )

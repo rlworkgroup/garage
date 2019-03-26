@@ -1,8 +1,8 @@
 from dm_control.suite import ALL_TASKS
 
-from garage.baselines import LinearFeatureBaseline
 from garage.envs.dm_control import DmControlEnv
 from garage.experiment import LocalRunner
+from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import TRPO
 from garage.tf.envs import TfEnv
 from garage.tf.policies import GaussianMLPPolicy

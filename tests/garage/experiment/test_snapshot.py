@@ -1,15 +1,13 @@
-import datetime
 import os.path as osp
+import tempfile
 import unittest
-import uuid
 
-import dateutil
 import joblib
 import tensorflow as tf
 
-from garage.baselines import LinearFeatureBaseline
 from garage.experiment import LocalRunner
 from garage.logger import logger, snapshotter
+from garage.np.baselines import LinearFeatureBaseline
 from garage.sampler.utils import rollout
 from garage.tf.algos import TRPO
 from garage.tf.envs import TfEnv
@@ -29,17 +27,11 @@ class TestSnapshot(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.reset_tf()
-        # Save snapshot in params.pkl in self.log_dir folder
-        now = datetime.datetime.now(dateutil.tz.tzlocal())
-        rand_id = str(uuid.uuid4())[:5]
-        timestamp = now.strftime('%Y_%m_%d_%H_%M_%S_%f_%Z')
-        exp_name = 'experiment_%s_%s' % (timestamp, rand_id)
-        cls.log_dir = osp.join('/tmp', exp_name)
-
+        cls.log_dir = tempfile.TemporaryDirectory()
         cls.prev_log_dir = snapshotter.snapshot_dir
         cls.prev_mode = snapshotter.snapshot_mode
 
-        snapshotter.snapshot_dir = cls.log_dir
+        snapshotter.snapshot_dir = cls.log_dir.name
         snapshotter.snapshot_mode = 'all'
 
         logger.add_output(NullOutput())
@@ -49,13 +41,14 @@ class TestSnapshot(unittest.TestCase):
         snapshotter.snapshot_dir = cls.prev_log_dir
         snapshotter.snapshot_mode = cls.prev_mode
         logger.remove_all()
+        cls.log_dir.cleanup()
 
     def test_snapshot(self):
         with LocalRunner() as runner:
-            env = TfEnv(env_name="CartPole-v1")
+            env = TfEnv(env_name='CartPole-v1')
 
             policy = CategoricalMLPPolicy(
-                name="policy", env_spec=env.spec, hidden_sizes=(32, 32))
+                name='policy', env_spec=env.spec, hidden_sizes=(32, 32))
 
             baseline = LinearFeatureBaseline(env_spec=env.spec)
 
@@ -77,7 +70,8 @@ class TestSnapshot(unittest.TestCase):
         for i in range(0, self.verifyItrs):
             self.reset_tf()
             with LocalRunner():
-                snapshot = joblib.load(osp.join(self.log_dir, f'itr_{i}.pkl'))
+                snapshot = joblib.load(
+                    osp.join(self.log_dir.name, 'itr_{}.pkl'.format(i)))
 
                 env = snapshot['env']
                 policy = snapshot['policy']

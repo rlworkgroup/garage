@@ -13,7 +13,7 @@ import gym
 import tensorflow as tf
 
 from garage.experiment import LocalRunner, run_experiment
-from garage.exploration_strategies import OUStrategy
+from garage.np.exploration_strategies import OUStrategy
 from garage.replay_buffer import SimpleReplayBuffer
 from garage.tf.algos import DDPG
 from garage.tf.envs import TfEnv
@@ -63,6 +63,6 @@ def run_task(*_):
 
 run_experiment(
     run_task,
-    snapshot_mode="last",
+    snapshot_mode='last',
     seed=1,
 )

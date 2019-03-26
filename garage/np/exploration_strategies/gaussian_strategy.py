@@ -2,7 +2,7 @@ import gym
 import numpy as np
 
 from garage.core import Serializable
-from garage.exploration_strategies.base import ExplorationStrategy
+from garage.np.exploration_strategies.base import ExplorationStrategy
 
 
 class GaussianStrategy(ExplorationStrategy, Serializable):

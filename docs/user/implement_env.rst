@@ -12,7 +12,7 @@ in the file :code:`garage/envs/base.py`:
 
 .. code-block:: python
 
-    class Env(object):
+    class Env:
         def step(self, action):
             """
             Run one timestep of the environment's dynamics. When end of episode
@@ -170,11 +170,13 @@ stub mode):
 
 .. code-block:: python
 
-    from garage.algos.trpo import TRPO
-    from garage.baselines.linear_feature_baseline import LinearFeatureBaseline
-    from garage.envs.point_env import PointEnv
-    from garage.envs.normalized_env import normalize
-    from garage.policies.gaussian_mlp_policy import GaussianMLPPolicy
+
+    from garage.envs import PointEnv
+    from garage.envs import normalize
+    from garage.np.baselines import LinearFeatureBaseline
+    from garage.tf.algos.trpo import TRPO
+    from garage.tf.policies.gaussian_mlp_policy import GaussianMLPPolicy
+
 
     env = normalize(PointEnv())
     policy = GaussianMLPPolicy(
@@ -188,8 +190,8 @@ stub mode):
     )
     algo.train()
 
-Assume that the file is :code:`examples/trpo_point.py`. You can then run the script:
+Assume that the file is :code:`examples/tf/trpo_point.py`. You can then run the script:
 
 .. code-block:: bash
 
-    python examples/trpo_point.py
+    python examples/tf/trpo_point.py

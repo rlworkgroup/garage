@@ -1,6 +1,6 @@
-from garage.algos.base import RLAlgorithm
 from garage.core import Serializable
 from garage.misc.overrides import overrides
+from garage.np.algos.base import RLAlgorithm
 
 
 class NOP(RLAlgorithm, Serializable):

@@ -1,9 +1,9 @@
 """This module implements deterministic mlp baseline."""
 import numpy as np
 
-from garage.baselines import Baseline
 from garage.core import Serializable
 from garage.misc.overrides import overrides
+from garage.np.baselines import Baseline
 from garage.tf.core import Parameterized
 from garage.tf.regressors import DeterministicMLPRegressor
 
@@ -17,7 +17,7 @@ class DeterministicMLPBaseline(Baseline, Parameterized, Serializable):
             subsample_factor=1.,
             num_seq_inputs=1,
             regressor_args=None,
-            name="DeterministicMLPBaseline",
+            name='DeterministicMLPBaseline',
     ):
         """
         Constructor.
@@ -54,14 +54,14 @@ class DeterministicMLPBaseline(Baseline, Parameterized, Serializable):
     @overrides
     def fit(self, paths):
         """Fit regressor based on paths."""
-        observations = np.concatenate([p["observations"] for p in paths])
-        returns = np.concatenate([p["returns"] for p in paths])
+        observations = np.concatenate([p['observations'] for p in paths])
+        returns = np.concatenate([p['returns'] for p in paths])
         self._regressor.fit(observations, returns.reshape((-1, 1)))
 
     @overrides
     def predict(self, path):
         """Predict value based on paths."""
-        return self._regressor.predict(path["observations"]).flatten()
+        return self._regressor.predict(path['observations']).flatten()
 
     @overrides
     def get_params_internal(self, **tags):
