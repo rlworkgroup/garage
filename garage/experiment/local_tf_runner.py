@@ -12,6 +12,7 @@ from garage.logger import logger
 from garage.logger import snapshotter
 from garage.logger import tabular
 
+
 # Note: Optional module should be imported ad hoc to break circular dependency.
 
 
@@ -132,11 +133,14 @@ class LocalRunner:
     def initialize_tf_vars(self):
         """Initialize all uninitialized variables in session."""
         with tf.name_scope("initialize_tf_vars"):
+            uninited_set = [
+                e.decode()
+                for e in self.sess.run(tf.report_uninitialized_variables())
+            ]
             self.sess.run(
                 tf.variables_initializer([
                     v for v in tf.global_variables()
-                    if v.name.split(':')[0] in str(
-                        self.sess.run(tf.report_uninitialized_variables()))
+                    if v.name.split(':')[0] in uninited_set
                 ]))
 
     def start_worker(self):
