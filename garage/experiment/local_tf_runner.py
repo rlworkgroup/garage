@@ -126,6 +126,7 @@ class LocalRunner:
         self.sampler = sampler_cls(algo, env, **sampler_args)
 
         self.initialize_tf_vars()
+        logger.log(self.sess.graph)
         self.has_setup = True
 
     def initialize_tf_vars(self):
