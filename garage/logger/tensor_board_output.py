@@ -50,11 +50,11 @@ class TensorBoardOutput(LogOutput):
         """
         if isinstance(data, TabularInput):
             self._waiting_for_dump.append(
-                functools.partial(self._record_tabular, data, prefix))
+                functools.partial(self._record_tabular, data))
         else:
             raise ValueError('Unacceptable type.')
 
-    def _record_tabular(self, data, prefix, step):
+    def _record_tabular(self, data, step):
         for key, value in data.as_dict.items():
             self._record_kv(key, value, step)
             data.mark(key)

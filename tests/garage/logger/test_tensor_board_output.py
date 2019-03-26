@@ -86,11 +86,11 @@ class TestTensorBoardOutputMocked(TBOutputTest):
         bar = 10.0
         self.tabular.record('foo', foo)
         self.tabular.record('bar', bar)
-        self.tensor_board_output.record(self.tabular, prefix='a/')
+        self.tensor_board_output.record(self.tabular)
         self.tensor_board_output.dump()
 
-        self.mock_writer.add_scalar.assert_any_call('a/foo', foo, 0)
-        self.mock_writer.add_scalar.assert_any_call('a/bar', bar, 0)
+        self.mock_writer.add_scalar.assert_any_call('foo', foo, 0)
+        self.mock_writer.add_scalar.assert_any_call('bar', bar, 0)
 
     def test_record_tfp_distribution(self):
         histo_shape = np.ones((1000, 10))
