@@ -43,7 +43,7 @@ class LocalRunner:
 
     """
 
-    def __init__(self, sess=None, max_cpus=1):
+    def __init__(self, sess=None, max_cpus=1, restore_from=None):
         """Create a new local runner.
 
         Args:
@@ -70,6 +70,9 @@ class LocalRunner:
         self.sess_entered = False
         self.has_setup = False
         self.plot = False
+
+        if restore_from:
+            self.restore(restore_from)
 
     def __enter__(self):
         """Set self.sess as the default session.
@@ -175,7 +178,7 @@ class LocalRunner:
             logger.log('Obtaining samples...')
         return self.sampler.obtain_samples(itr, batch_size)
 
-    def save_snapshot(self, itr, paths=None):
+    def save(self, itr, paths=None):
         """Save snapshot of current batch.
 
         Args:
@@ -192,6 +195,11 @@ class LocalRunner:
             params['paths'] = paths
         snapshotter.save_itr_params(itr, params)
         logger.log('Saved')
+
+    def restore(self, snapshot_dir, itr='last'):
+        snapshotter.snapshot_dir = snapshot_dir
+        saved = snapshotter.load(itr)
+        self.setup(env=saved['env'], algo=saved['algo'])
 
     def log_diagnostics(self, pause_for_plot=False):
         """Log diagnostics.
@@ -257,7 +265,7 @@ class LocalRunner:
                     paths = self.sampler.process_samples(itr, paths)
                     last_return = self.algo.train_once(itr, paths)
                     itr += 1
-                self.save_snapshot(epoch, paths if store_paths else None)
+                self.save(epoch, paths if store_paths else None)
                 self.log_diagnostics(pause_for_plot)
                 logger.dump_all(itr)
                 tabular.clear()
