@@ -1,8 +1,8 @@
 import numpy as np
 
-from garage.np.algos.base import RLAlgorithm
 from garage.core import Serializable
 from garage.logger import logger, tabular
+from garage.np.algos.base import RLAlgorithm
 from garage.plotter import Plotter
 
 
