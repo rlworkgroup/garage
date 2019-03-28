@@ -116,7 +116,7 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
                 elif std_parametrization == 'softplus':
                     init_std_param = np.log(np.exp(init_std) - 1)
                 else:
-                    raise NotImplementedError
+                    raise NotImplementedError('std_parametrization')
                 if adaptive_std:
                     b = tf.constant_initializer(init_std_param)
                     std_network = MLP(

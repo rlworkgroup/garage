@@ -238,7 +238,6 @@ class GaussianMLPRegressor(LayersPowered, Serializable, Parameterized):
                 0, num_samples_tot,
                 int(num_samples_tot * self._subsample_factor))
             xs, ys = xs[idx], ys[idx]
-
         sess = tf.get_default_session()
         if self._normalize_inputs:
             # recompute normalizing constants for inputs

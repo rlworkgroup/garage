@@ -14,7 +14,7 @@ class Policy2:
     def __init__(self, name, env_spec):
         self._name = name
         self._env_spec = env_spec
-        self._variable_scope = tf.VariableScope(name)
+        self._variable_scope = tf.VariableScope(reuse=False, name=name)
 
     # Should be implemented by all policies
 
