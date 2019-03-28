@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-This is an example to train a task with CMA-ES
+"""This is an example to train a task with CMA-ES.
 
 Here it runs CartPole-v1 environment with 100 epoches.
 
@@ -9,9 +8,9 @@ Results:
     RiseTime: epoch 38 (itr 760),
               but regression is observed in the course of training.
 """
-from garage.algos import CMAES
-from garage.baselines import LinearFeatureBaseline
 from garage.experiment import LocalRunner, run_experiment
+from garage.np.algos import CMAES
+from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.envs import TfEnv
 from garage.tf.policies import CategoricalMLPPolicy
 from garage.tf.samplers import OnPolicyVectorizedSampler
