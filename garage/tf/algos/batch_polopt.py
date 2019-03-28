@@ -1,5 +1,3 @@
-import tensorflow as tf
-
 from garage.logger import logger
 from garage.np.algos import RLAlgorithm
 
@@ -53,9 +51,6 @@ class BatchPolopt(RLAlgorithm):
         self.positive_adv = positive_adv
         self.fixed_horizon = fixed_horizon
         self.init_opt()
-
-    def initialize(self, sess=None):
-        self.sess = sess or tf.Session()
 
     def train_once(self, itr, paths):
         self.log_diagnostics(paths)

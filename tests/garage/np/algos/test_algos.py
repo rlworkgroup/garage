@@ -7,7 +7,6 @@ from garage.envs import GarageEnv
 from garage.envs import GridWorldEnv
 from garage.envs import PointEnv
 from garage.logger import logger
-from garage.np.algos import CEM
 from garage.np.algos import CMAES
 from garage.np.algos.nop import NOP
 from garage.np.baselines import LinearFeatureBaseline
@@ -22,11 +21,6 @@ common_batch_algo_args = dict(
 )
 
 algo_args = {
-    CEM: dict(
-        n_itr=1,
-        max_path_length=100,
-        n_samples=5,
-    ),
     CMAES: dict(
         n_itr=1,
         max_path_length=100,
@@ -36,7 +30,7 @@ algo_args = {
 }
 
 polopt_cases = []
-for algo in [CEM, CMAES, NOP]:
+for algo in [CMAES, NOP]:
     polopt_cases.extend([
         (algo, GridWorldEnv, DummyPolicy, ZeroBaseline),
         (algo, PointEnv, DummyPolicy, ZeroBaseline),
