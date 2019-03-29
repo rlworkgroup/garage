@@ -3,9 +3,10 @@ from unittest import mock
 
 import matplotlib.pyplot as plt
 import numpy as np
+import scipy.stats
 import tensorflow as tf
-import tensorflow_probability as tfp
 
+from garage.logger import Histogram
 from garage.logger import TabularInput
 from garage.logger import TensorBoardOutput
 from tests.fixtures import TfGraphTestCase
@@ -91,14 +92,12 @@ class TestTensorBoardOutputMocked(TBOutputTest):
         self.mock_writer.add_scalar.assert_any_call('foo', foo, 0)
         self.mock_writer.add_scalar.assert_any_call('bar', bar, 0)
 
-    def test_record_tfp_distribution(self):
-        histo_shape = np.ones((1000, 10))
-        normal = tfp.distributions.Normal(
-            loc=0.1 * histo_shape, scale=2.0 * histo_shape)
-        gamma = tfp.distributions.Gamma(
-            concentration=0.2 * histo_shape, rate=4.0 * histo_shape)
-        poisson = tfp.distributions.Poisson(rate=0.3 * histo_shape)
-        uniform = tfp.distributions.Uniform(high=1.0 * histo_shape)
+    def test_record_scipy_stats_distribution(self):
+        shape = np.ones((2, 10))
+        normal = scipy.stats.norm(loc=0.1 * shape, scale=2.0 * shape)
+        gamma = scipy.stats.gamma(a=0.2 * shape)
+        poisson = scipy.stats.poisson(mu=0.3 * shape)
+        uniform = scipy.stats.randint(high=shape, low=-shape)
 
         self.tabular.record('Normal', normal)
         self.tabular.record('Gamma', gamma)
@@ -108,6 +107,26 @@ class TestTensorBoardOutputMocked(TBOutputTest):
         self.tensor_board_output.dump()
 
         assert self.mock_writer.add_histogram.call_count == 4
+
+    def test_record_scipy_stats_multivariate_distribution(self):
+        mvn = scipy.stats.multivariate_normal(
+            mean=np.ones(10), cov=2.0 * np.ones(10))
+
+        self.tabular.record('MultivariateNormal', mvn)
+        self.tensor_board_output.record(self.tabular)
+        self.tensor_board_output.dump()
+
+        assert self.mock_writer.add_histogram.call_count == 1
+
+    def test_record_histogram(self):
+        norm = scipy.stats.norm(loc=[1., 0.], scale=[0.5, 1.5])
+        samples = norm.rvs((10000, 2))
+        hist = Histogram(samples)
+        self.tabular.record('Samples', hist)
+        self.tensor_board_output.record(self.tabular)
+        self.tensor_board_output.dump()
+
+        assert self.mock_writer.add_histogram.call_count == 1
 
     def test_unknown_tabular_value(self):
         self.tabular.record('foo', dict())

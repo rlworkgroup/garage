@@ -12,10 +12,11 @@ import functools
 
 import matplotlib.pyplot as plt
 import numpy as np
+import scipy.stats
 import tensorboardX as tbx
 import tensorflow as tf
-import tensorflow_probability as tfp
 
+from garage.logger import Histogram
 from garage.logger import LogOutput
 from garage.logger import TabularInput
 
@@ -66,10 +67,14 @@ class TensorBoardOutput(LogOutput):
             self._writer.add_scalar(key, value, step)
         elif isinstance(value, plt.Figure):
             self._writer.add_figure(key, value, step)
-        elif isinstance(value, tfp.distributions.Distribution):
-            samples = tf.get_default_session().run(
-                value.sample(self._histogram_samples))
-            self._writer.add_histogram(key, samples, step)
+        elif isinstance(value, scipy.stats._distn_infrastructure.rv_frozen):
+            shape = (self._histogram_samples, ) + value.mean().shape
+            self._writer.add_histogram(key, value.rvs(shape), step)
+        elif isinstance(value, scipy.stats._multivariate.multi_rv_frozen):
+            self._writer.add_histogram(key, value.rvs(self._histogram_samples),
+                                       step)
+        elif isinstance(value, Histogram):
+            self._writer.add_histogram(key, value, step)
 
     def _record_graph(self, graph):
         graph_def = graph.as_graph_def(add_shapes=True)
