@@ -7,8 +7,8 @@ from garage.tf.baselines.gaussian_mlp_baseline_with_model import (
     GaussianMLPBaselineWithModel)
 
 __all__ = [
-    "DeterministicMLPBaseline",
-    "GaussianConvBaseline",
-    "GaussianMLPBaseline",
-    "GaussianMLPBaselineWithModel",
+    'DeterministicMLPBaseline',
+    'GaussianConvBaseline',
+    'GaussianMLPBaseline',
+    'GaussianMLPBaselineWithModel',
 ]

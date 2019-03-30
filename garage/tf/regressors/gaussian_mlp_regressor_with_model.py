@@ -1,11 +1,11 @@
-"""GaussianMLPRegressorWithModel."""
+"""A regressor based on a GaussianMLP model."""
 import numpy as np
 import tensorflow as tf
 
 from garage.logger import tabular
 from garage.tf.misc import tensor_utils
-from garage.tf.models import GaussianMLPRegressorModel
 from garage.tf.optimizers import LbfgsOptimizer, PenaltyLbfgsOptimizer
+from garage.tf.regressors import GaussianMLPRegressorModel
 from garage.tf.regressors import StochasticRegressor
 
 
@@ -42,7 +42,7 @@ class GaussianMLPRegressorWithModel(StochasticRegressor):
     def __init__(self,
                  input_shape,
                  output_dim,
-                 name="GaussianMLPRegressorWithModel",
+                 name='GaussianMLPRegressorWithModel',
                  hidden_sizes=(32, 32),
                  hidden_nonlinearity=tf.nn.tanh,
                  optimizer=None,
@@ -66,7 +66,8 @@ class GaussianMLPRegressorWithModel(StochasticRegressor):
         self._normalize_inputs = normalize_inputs
         self._normalize_outputs = normalize_outputs
 
-        with tf.variable_scope(self._variable_scope):
+        with tf.variable_scope(
+                self._name, reuse=False) as self._variable_scope:
             if optimizer_args is None:
                 optimizer_args = dict()
             if optimizer is None:
@@ -79,6 +80,7 @@ class GaussianMLPRegressorWithModel(StochasticRegressor):
             self._optimizer = optimizer
 
         self.model = GaussianMLPRegressorModel(
+            input_shape=input_shape,
             output_dim=self._output_dim,
             hidden_sizes=hidden_sizes,
             hidden_nonlinearity=hidden_nonlinearity,
@@ -104,12 +106,12 @@ class GaussianMLPRegressorWithModel(StochasticRegressor):
         with tf.variable_scope(self._variable_scope):
             self.model.build(input_var)
             ys_var = tf.placeholder(
-                dtype=tf.float32, name="ys", shape=(None, self._output_dim))
+                dtype=tf.float32, name='ys', shape=(None, self._output_dim))
             old_means_var = tf.placeholder(
-                dtype=tf.float32, name="ys", shape=(None, self._output_dim))
+                dtype=tf.float32, name='ys', shape=(None, self._output_dim))
             old_log_stds_var = tf.placeholder(
                 dtype=tf.float32,
-                name="old_log_stds",
+                name='old_log_stds',
                 shape=(None, self._output_dim))
 
             y_mean_var = self.model.networks['default'].y_mean
@@ -155,14 +157,14 @@ class GaussianMLPRegressorWithModel(StochasticRegressor):
             )
 
             if self._use_trust_region:
-                optimizer_args["leq_constraint"] = (mean_kl, self._max_kl_step)
-                optimizer_args["inputs"] = [
+                optimizer_args['leq_constraint'] = (mean_kl, self._max_kl_step)
+                optimizer_args['inputs'] = [
                     input_var, ys_var, old_means_var, old_log_stds_var
                 ]
             else:
-                optimizer_args["inputs"] = [input_var, ys_var]
+                optimizer_args['inputs'] = [input_var, ys_var]
 
-            with tf.name_scope("update_opt"):
+            with tf.name_scope('update_opt'):
                 self._optimizer.update_opt(**optimizer_args)
 
     def fit(self, xs, ys):
@@ -197,18 +199,14 @@ class GaussianMLPRegressorWithModel(StochasticRegressor):
         else:
             inputs = [xs, ys]
         loss_before = self._optimizer.loss(inputs)
-        if self._name:
-            prefix = self._name + "/"
-        else:
-            prefix = ""
-        tabular.record(prefix + 'LossBefore', loss_before)
+        tabular.record('{}/LossBefore'.format(self._name), loss_before)
         self._optimizer.optimize(inputs)
         loss_after = self._optimizer.loss(inputs)
-        tabular.record(prefix + 'LossAfter', loss_after)
+        tabular.record('{}/LossAfter'.format(self._name), loss_after)
         if self._use_trust_region:
-            tabular.record(prefix + 'MeanKL',
+            tabular.record('{}/MeanKL'.format(self._name),
                            self._optimizer.constraint_val(inputs))
-        tabular.record(prefix + 'dLoss', loss_before - loss_after)
+        tabular.record('{}/dLoss'.format(self._name), loss_before - loss_after)
 
     def predict(self, xs):
         """

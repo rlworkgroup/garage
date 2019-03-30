@@ -1,4 +1,4 @@
-"""This module implements gaussian mlp baseline."""
+"""A value function (baseline) based on a GaussianMLP model."""
 import numpy as np
 
 from garage.misc.overrides import overrides
@@ -15,7 +15,7 @@ class GaussianMLPBaselineWithModel(Baseline):
             subsample_factor=1.,
             num_seq_inputs=1,
             regressor_args=None,
-            name="GaussianMLPBaselineWithModel",
+            name='GaussianMLPBaselineWithModel',
     ):
         """
         Constructor.
@@ -40,14 +40,14 @@ class GaussianMLPBaselineWithModel(Baseline):
     @overrides
     def fit(self, paths):
         """Fit regressor based on paths."""
-        observations = np.concatenate([p["observations"] for p in paths])
-        returns = np.concatenate([p["returns"] for p in paths])
+        observations = np.concatenate([p['observations'] for p in paths])
+        returns = np.concatenate([p['returns'] for p in paths])
         self._regressor.fit(observations, returns.reshape((-1, 1)))
 
     @overrides
     def predict(self, path):
         """Predict value based on paths."""
-        return self._regressor.predict(path["observations"]).flatten()
+        return self._regressor.predict(path['observations']).flatten()
 
     @overrides
     def get_param_values(self, **tags):

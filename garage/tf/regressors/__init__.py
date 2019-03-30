@@ -7,12 +7,14 @@ from garage.tf.regressors.deterministic_mlp_regressor import (
     DeterministicMLPRegressor)
 from garage.tf.regressors.gaussian_conv_regressor import GaussianConvRegressor
 from garage.tf.regressors.gaussian_mlp_regressor import GaussianMLPRegressor
+from garage.tf.regressors.gaussian_mlp_regressor_model import (
+    GaussianMLPRegressorModel)
 from garage.tf.regressors.gaussian_mlp_regressor_with_model import (
     GaussianMLPRegressorWithModel)
 
 __all__ = [
-    "BernoulliMLPRegressor", "CategoricalMLPRegressor",
-    "DeterministicMLPRegressor", "GaussianMLPRegressor",
-    "GaussianMLPRegressorWithModel", "GaussianConvRegressor",
-    "StochasticRegressor"
+    'BernoulliMLPRegressor', 'CategoricalMLPRegressor',
+    'DeterministicMLPRegressor', 'GaussianMLPRegressor',
+    'GaussianMLPRegressorModel', 'GaussianMLPRegressorWithModel',
+    'GaussianConvRegressor', 'StochasticRegressor'
 ]

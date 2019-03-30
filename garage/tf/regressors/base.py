@@ -1,10 +1,10 @@
 """Regressor base classes with Parameterized."""
-import tensorflow as tf
+import abc
 
 from garage.tf.core import Parameterized
 
 
-class Regressor(Parameterized):
+class Regressor(Parameterized, abc.ABC):
     """
     Regressor base class.
 
@@ -19,7 +19,7 @@ class Regressor(Parameterized):
         self._input_shape = input_shape
         self._output_dim = output_dim
         self._name = name
-        self._variable_scope = tf.VariableScope(reuse=False, name=name)
+        self._variable_scope = None
 
     def fit(self, xs, ys):
         """

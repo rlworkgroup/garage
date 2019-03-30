@@ -39,9 +39,14 @@ class GaussianMLPRegressorModel(GaussianMLPModel):
     :param output_nonlinearity: Nonlinearity for the output layer.
     """
 
-    def __init__(self, output_dim, name='GaussianMLPRegressorModel', **kwargs):
+    def __init__(self,
+                 input_shape,
+                 output_dim,
+                 name='GaussianMLPRegressorModel',
+                 **kwargs):
         # Network parameters
         super().__init__(output_dim=output_dim, name=name, **kwargs)
+        self._input_shape = input_shape
 
     def network_output_spec(self):
         """Network output spec."""
@@ -51,29 +56,27 @@ class GaussianMLPRegressorModel(GaussianMLPModel):
         ]
 
     def _build(self, state_input):
-
-        input_shape = tuple(state_input.get_shape().as_list()[1:])
         with tf.variable_scope('normalized_vars'):
             x_mean_var = tf.get_variable(
-                name="x_mean",
-                shape=(1, ) + input_shape,
+                name='x_mean',
+                shape=(1, ) + self._input_shape,
                 dtype=np.float32,
                 initializer=tf.zeros_initializer(),
                 trainable=False)
             x_std_var = tf.get_variable(
-                name="x_std_var",
-                shape=(1, ) + input_shape,
+                name='x_std_var',
+                shape=(1, ) + self._input_shape,
                 dtype=np.float32,
                 initializer=tf.ones_initializer(),
                 trainable=False)
             y_mean_var = tf.get_variable(
-                name="y_mean_var",
+                name='y_mean_var',
                 shape=(1, self._output_dim),
                 dtype=np.float32,
                 initializer=tf.zeros_initializer(),
                 trainable=False)
             y_std_var = tf.get_variable(
-                name="y_std_var",
+                name='y_std_var',
                 shape=(1, self._output_dim),
                 dtype=np.float32,
                 initializer=tf.ones_initializer(),
@@ -84,10 +87,10 @@ class GaussianMLPRegressorModel(GaussianMLPModel):
         sample, normalized_mean, normalized_log_std, std_param, dist = super(
         )._build(normalized_xs_var)
 
-        with tf.name_scope("mean_network"):
+        with tf.name_scope('mean_network'):
             means_var = normalized_mean * y_std_var + y_mean_var
 
-        with tf.name_scope("std_network"):
+        with tf.name_scope('std_network'):
             log_stds_var = normalized_log_std + tf.log(y_std_var)
 
         return (sample, means_var, log_stds_var, std_param, normalized_mean,
