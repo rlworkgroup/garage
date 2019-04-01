@@ -58,25 +58,6 @@ class StochasticRegressor(Regressor):
     def __init__(self, input_shape, output_dim, name):
         super().__init__(input_shape, output_dim, name)
 
-    def sample_predict(self, xs):
-        """
-        Sample one possible output from the prediction distribution.
-
-        Args:
-            xs: Input data.
-        """
-        raise NotImplementedError
-
-    def predict_log_likelihood(self, xs, ys):
-        """
-        Return the maximum likelihood estimate of the predicted y and input ys.
-
-        Args:
-            xs: Input data.
-            ys: Label of input data.
-        """
-        raise NotImplementedError
-
     def log_likelihood_sym(self, x_var, y_var, name=None):
         """
         Symbolic graph of the log likelihood.

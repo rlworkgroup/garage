@@ -108,7 +108,9 @@ class GaussianMLPRegressorWithModel(StochasticRegressor):
             ys_var = tf.placeholder(
                 dtype=tf.float32, name='ys', shape=(None, self._output_dim))
             old_means_var = tf.placeholder(
-                dtype=tf.float32, name='ys', shape=(None, self._output_dim))
+                dtype=tf.float32,
+                name='old_means',
+                shape=(None, self._output_dim))
             old_log_stds_var = tf.placeholder(
                 dtype=tf.float32,
                 name='old_log_stds',
@@ -218,30 +220,6 @@ class GaussianMLPRegressorWithModel(StochasticRegressor):
         """
         return self._f_predict(xs)
 
-    def sample_predict(self, xs):
-        """
-        Sample one possible output from the prediction distribution.
-
-        :param xs:
-        :return:
-
-        """
-        means, log_stds = self._f_pdists(xs)
-        return self.model.networks['default'].dist.sample(
-            dict(mean=means, log_std=log_stds))
-
-    def predict_log_likelihood(self, xs, ys):
-        """
-        Return the maximum likelihood estimate of the predicted y and input ys.
-
-        Args:
-            xs: Input data.
-            ys: Label of input data.
-        """
-        means, log_stds = self._f_pdists(xs)
-        return self.model.networks['default'].dist.log_likelihood(
-            ys, dict(mean=means, log_std=log_stds))
-
     def log_likelihood_sym(self, x_var, y_var, name=None):
         """
         Symbolic graph of the log likelihood.
@@ -254,8 +232,8 @@ class GaussianMLPRegressorWithModel(StochasticRegressor):
         with tf.variable_scope(self._variable_scope):
             self.model.build(x_var, name=name)
 
-        means_var = self.model.networks[name].mean
-        log_stds_var = self.model.networks[name].log_std
+        means_var = self.model.networks[name].means
+        log_stds_var = self.model.networks[name].log_stds
 
         return self.model.networks[name].dist.log_likelihood_sym(
             y_var, dict(mean=means_var, log_std=log_stds_var))
