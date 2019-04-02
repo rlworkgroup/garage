@@ -7,7 +7,7 @@ from garage.tf.regressors import GaussianMLPRegressorWithModel
 
 
 class GaussianMLPBaselineWithModel(Baseline):
-    """A value function using gaussian mlp network."""
+    """A value function using Gaussian MLP network."""
 
     def __init__(
             self,

@@ -8,7 +8,7 @@ class SimpleGaussianMLPRegressor(StochasticRegressor):
 
     def __init__(self, input_shape, output_dim, name, *args, **kwargs):
         super().__init__(input_shape, output_dim, name)
-        self.param_values = tf.get_variable("{}/params".format(name), [100])
+        self.param_values = tf.get_variable('{}/params'.format(name), [100])
         tf.get_default_session().run(
             tf.variables_initializer([self.param_values]))
         self.ys = None

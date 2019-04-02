@@ -11,7 +11,7 @@ from garage.tf.regressors import StochasticRegressor
 
 class GaussianMLPRegressorWithModel(StochasticRegressor):
     """
-    GaussianMLPRegressorWithModel.
+    GaussianMLPRegressor with garage.tf.models.GaussianMLPRegressorModel.
 
     A class for performing regression by fitting a Gaussian distribution
     to the outputs.

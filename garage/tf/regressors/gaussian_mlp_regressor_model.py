@@ -7,7 +7,10 @@ from garage.tf.models import GaussianMLPModel
 
 class GaussianMLPRegressorModel(GaussianMLPModel):
     """
-    GaussianMLPRegressorModel.
+    GaussianMLPRegressor based on garage.tf.models.Model class.
+
+    This class can be used to perform regression by fitting a Gaussian
+    distribution to the outputs.
 
     Args:
     :param output_dim: Output dimension of the model.
