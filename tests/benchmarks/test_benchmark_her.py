@@ -47,6 +47,8 @@ BASELINES_PARAMS['rollout_batch_size'] = 1
 
 
 class TestBenchmarkHER(unittest.TestCase):
+    """Compare benchmarks between garage and baselines."""
+
     def test_benchmark_her(self):
         """
         Compare benchmarks between garage and baselines.

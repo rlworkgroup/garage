@@ -17,8 +17,6 @@ from baselines.common.tf_util import _PLACEHOLDER_CACHE
 from baselines.ppo1.mlp_policy import MlpPolicy
 from baselines.trpo_mpi import trpo_mpi
 import gym
-import matplotlib.pyplot as plt
-import pandas as pd
 import tensorflow as tf
 
 from garage.envs import normalize
@@ -32,21 +30,24 @@ from garage.tf.algos import TRPO
 from garage.tf.baselines import GaussianMLPBaseline
 from garage.tf.envs import TfEnv
 from garage.tf.policies import GaussianMLPPolicy
+import tests.helpers as Rh
 from tests.wrappers import AutoStopEnv
 
 
 class TestBenchmarkPPO(unittest.TestCase):
+    """Compare benchmarks between garage and baselines."""
+
     def test_benchmark_trpo(self):
         """
         Compare benchmarks between garage and baselines.
 
         :return:
         """
-
         mujoco1m = benchmarks.get_benchmark("Mujoco1M")
 
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S-%f")
         benchmark_dir = "./data/local/benchmarks/trpo/%s/" % timestamp
+        result_json = {}
         for task in mujoco1m["tasks"]:
             env_id = task["env_id"]
             env = gym.make(env_id)
@@ -81,19 +82,34 @@ class TestBenchmarkPPO(unittest.TestCase):
                 garage_csvs.append(garage_csv)
                 baselines_csvs.append(baselines_csv)
 
-            plot(
+            Rh.plot(
                 b_csvs=baselines_csvs,
                 g_csvs=garage_csvs,
                 g_x="Iteration",
-                g_y="EpisodeRewardMean",
+                g_y="AverageReturn",
                 b_x="EpThisIter",
                 b_y="EpRewMean",
                 trials=task["trials"],
                 seeds=seeds,
                 plt_file=plt_file,
-                env_id=env_id)
+                env_id=env_id,
+                x_label="Iteration",
+                y_label="AverageReturn")
 
+            result_json[env_id] = Rh.create_json(
+                b_csvs=baselines_csvs,
+                g_csvs=garage_csvs,
+                seeds=seeds,
+                trails=task["trials"],
+                g_x="Iteration",
+                g_y="AverageReturn",
+                b_x="TimestepsSoFar",
+                b_y="EpRewMean",
+                factor_g=1024,
+                factor_b=1)
             env.close()
+
+        Rh.write_file(result_json, "TRPO")
 
     test_benchmark_trpo.huge = True
 
@@ -166,7 +182,6 @@ def run_baselines(env, seed, log_dir):
     :param log_dir: Log dir path.
     :return
     """
-
     with tf.Session().as_default():
         baselines_logger.configure(log_dir)
 
@@ -193,44 +208,3 @@ def run_baselines(env, seed, log_dir):
         env.close()
 
     return osp.join(log_dir, "progress.csv")
-
-
-def plot(b_csvs, g_csvs, g_x, g_y, b_x, b_y, trials, seeds, plt_file, env_id):
-    """
-    Plot benchmark from csv files of garage and baselines.
-
-    :param b_csvs: A list contains all csv files in the task.
-    :param g_csvs: A list contains all csv files in the task.
-    :param g_x: X column names of garage csv.
-    :param g_y: Y column names of garage csv.
-    :param b_x: X column names of baselines csv.
-    :param b_y: Y column names of baselines csv.
-    :param trials: Number of trials in the task.
-    :param seeds: A list contains all the seeds in the task.
-    :param plt_file: Path of the plot png file.
-    :param env_id: String contains the id of the environment.
-    :return:
-    """
-    assert len(b_csvs) == len(g_csvs)
-    for trial in range(trials):
-        seed = seeds[trial]
-
-        df_g = pd.read_csv(g_csvs[trial])
-        df_b = pd.read_csv(b_csvs[trial])
-
-        plt.plot(
-            df_g[g_x],
-            df_g[g_y],
-            label="garage_trial%d_seed%d" % (trial + 1, seed))
-        plt.plot(
-            df_b[b_x],
-            df_b[b_y],
-            label="baselines_trial%d_seed%d" % (trial + 1, seed))
-
-    plt.legend()
-    plt.xlabel("Iteration")
-    plt.ylabel("AverageReturn")
-    plt.title(env_id)
-
-    plt.savefig(plt_file)
-    plt.close()
