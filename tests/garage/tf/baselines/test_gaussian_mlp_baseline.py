@@ -44,8 +44,8 @@ class TestGaussianMLPBaseline(TfGraphTestCase):
             new_gmb = GaussianMLPBaselineWithModel(
                 env_spec=box_env.spec, name='GaussianMLPBaselineWithModel2')
         old_param_values = gmb.get_param_values()
-        old_new_param_values = new_gmb.get_param_values()
-        assert not np.array_equal(old_param_values, old_new_param_values)
+        new_param_values = new_gmb.get_param_values()
+        assert not np.array_equal(old_param_values, new_param_values)
         new_gmb.set_param_values(old_param_values)
         new_param_values = new_gmb.get_param_values()
         assert np.array_equal(old_param_values, new_param_values)
