@@ -3,9 +3,12 @@ from garage.tf.baselines.deterministic_mlp_baseline import (
     DeterministicMLPBaseline)
 from garage.tf.baselines.gaussian_conv_baseline import GaussianConvBaseline
 from garage.tf.baselines.gaussian_mlp_baseline import GaussianMLPBaseline
+from garage.tf.baselines.gaussian_mlp_baseline_with_model import (
+    GaussianMLPBaselineWithModel)
 
 __all__ = [
-    "DeterministicMLPBaseline",
-    "GaussianConvBaseline",
-    "GaussianMLPBaseline",
+    'DeterministicMLPBaseline',
+    'GaussianConvBaseline',
+    'GaussianMLPBaseline',
+    'GaussianMLPBaselineWithModel',
 ]
