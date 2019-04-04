@@ -190,10 +190,19 @@ class TestGaussianMLPModel(TfGraphTestCase):
             hidden_w_init=tf.ones_initializer(),
             output_w_init=tf.ones_initializer())
         outputs = model.build(input_var)
+
+        # get output bias
+        with tf.variable_scope('GaussianMLPModel', reuse=True):
+            bias = tf.get_variable('dist_params/mean_std_network/output/bias')
+        # assign it to all ones
+        self.sess.run(tf.assign(bias, tf.ones_like(bias)))
+
         output1 = self.sess.run(outputs[:-1], feed_dict={input_var: self.obs})
+
+        h = pickle.dumps(model)
         with tf.Session(graph=tf.Graph()) as sess:
             input_var = tf.placeholder(tf.float32, shape=(None, 5))
-            model_pickled = pickle.loads(pickle.dumps(model))
+            model_pickled = pickle.loads(h)
             outputs = model_pickled.build(input_var)
             output2 = sess.run(outputs[:-1], feed_dict={input_var: self.obs})
 
@@ -215,10 +224,19 @@ class TestGaussianMLPModel(TfGraphTestCase):
             hidden_w_init=tf.ones_initializer(),
             output_w_init=tf.ones_initializer())
         outputs = model.build(input_var)
+
+        # get output bias
+        with tf.variable_scope('GaussianMLPModel', reuse=True):
+            bias = tf.get_variable('dist_params/mean_network/output/bias')
+        # assign it to all ones
+        self.sess.run(tf.assign(bias, tf.ones_like(bias)))
+
         output1 = self.sess.run(outputs[:-1], feed_dict={input_var: self.obs})
+
+        h = pickle.dumps(model)
         with tf.Session(graph=tf.Graph()) as sess:
             input_var = tf.placeholder(tf.float32, shape=(None, 5))
-            model_pickled = pickle.loads(pickle.dumps(model))
+            model_pickled = pickle.loads(h)
             outputs = model_pickled.build(input_var)
             output2 = sess.run(outputs[:-1], feed_dict={input_var: self.obs})
             assert np.array_equal(output1, output2)
@@ -243,10 +261,18 @@ class TestGaussianMLPModel(TfGraphTestCase):
             std_hidden_w_init=tf.ones_initializer(),
             std_output_w_init=tf.ones_initializer())
         outputs = model.build(input_var)
+
+        # get output bias
+        with tf.variable_scope('GaussianMLPModel', reuse=True):
+            bias = tf.get_variable('dist_params/mean_network/output/bias')
+        # assign it to all ones
+        self.sess.run(tf.assign(bias, tf.ones_like(bias)))
+
+        h = pickle.dumps(model)
         output1 = self.sess.run(outputs[:-1], feed_dict={input_var: self.obs})
         with tf.Session(graph=tf.Graph()) as sess:
             input_var = tf.placeholder(tf.float32, shape=(None, 5))
-            model_pickled = pickle.loads(pickle.dumps(model))
+            model_pickled = pickle.loads(h)
             outputs = model_pickled.build(input_var)
             output2 = sess.run(outputs[:-1], feed_dict={input_var: self.obs})
             assert np.array_equal(output1, output2)
@@ -274,7 +300,7 @@ class TestGaussianMLPModel(TfGraphTestCase):
 
         expected_mean = np.full([1, output_dim], 5 * np.prod(hidden_sizes))
         expected_std_param = np.full([1, output_dim], np.log(np.exp(2) - 1))
-        expected_log_std = np.log(1. + np.exp(expected_std_param))
+        expected_log_std = np.log(np.log(1. + np.exp(expected_std_param)))
         assert np.array_equal(mean, expected_mean)
         assert np.allclose(std_param, expected_std_param)
         assert np.allclose(log_std, expected_log_std)
@@ -298,7 +324,7 @@ class TestGaussianMLPModel(TfGraphTestCase):
             outputs[:-1], feed_dict={self.input_var: self.obs})
 
         expected_log_std = np.full([1, output_dim], np.log(10))
-        expected_std_param = np.full([1, output_dim], np.log(1))
+        expected_std_param = np.full([1, output_dim], np.log(10))
         assert np.allclose(log_std, expected_log_std)
         assert np.allclose(std_param, expected_std_param)
 
@@ -318,7 +344,7 @@ class TestGaussianMLPModel(TfGraphTestCase):
             outputs[:-1], feed_dict={self.input_var: self.obs})
 
         expected_log_std = np.full([1, output_dim], np.log(1))
-        expected_std_param = np.full([1, output_dim], np.log(10))
+        expected_std_param = np.full([1, output_dim], np.log(1))
         assert np.allclose(log_std, expected_log_std)
         assert np.allclose(std_param, expected_std_param)
 
@@ -337,8 +363,8 @@ class TestGaussianMLPModel(TfGraphTestCase):
         _, _, log_std, std_param = self.sess.run(
             outputs[:-1], feed_dict={self.input_var: self.obs})
 
-        expected_log_std = np.full([1, output_dim], np.log(np.exp(10) - 1))
-        expected_std_param = np.full([1, output_dim], np.log(np.exp(1) - 1))
+        expected_log_std = np.full([1, output_dim], np.log(10))
+        expected_std_param = np.full([1, output_dim], np.log(np.exp(10) - 1))
 
         assert np.allclose(log_std, expected_log_std)
         assert np.allclose(std_param, expected_std_param)
@@ -358,8 +384,8 @@ class TestGaussianMLPModel(TfGraphTestCase):
         _, _, log_std, std_param = self.sess.run(
             outputs[:-1], feed_dict={self.input_var: self.obs})
 
-        expected_log_std = np.full([1, output_dim], np.log(np.exp(1) - 1))
-        expected_std_param = np.full([1, output_dim], np.log(np.exp(10) - 1))
+        expected_log_std = np.full([1, output_dim], np.log(1))
+        expected_std_param = np.full([1, output_dim], np.log(np.exp(1) - 1))
 
         assert np.allclose(log_std, expected_log_std)
         assert np.allclose(std_param, expected_std_param)

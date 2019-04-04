@@ -73,8 +73,9 @@ class TestGaussianMLPPolicyWithModel(TfGraphTestCase):
 
         dist1_sym = policy.dist_info_sym(obs_ph, name='p1_sym')
 
-        expected_mean = np.full(action_dim, 0.5)
-        expected_log_std = np.full(action_dim, 0.5)
+        # flatten output
+        expected_mean = [np.full(np.prod(action_dim), 0.5)]
+        expected_log_std = [np.full(np.prod(action_dim), 0.5)]
 
         prob = self.sess.run(dist1_sym, feed_dict={obs_ph: [obs.flatten()]})
 

@@ -37,7 +37,7 @@ class GaussianMLPPolicyWithModel(StochasticPolicy2):
 
     def __init__(self,
                  env_spec,
-                 name='GaussianMLPPolicy',
+                 name='GaussianMLPPolicyWithModel',
                  hidden_sizes=(32, 32),
                  hidden_nonlinearity=tf.nn.tanh,
                  output_nonlinearity=None,
@@ -58,7 +58,7 @@ class GaussianMLPPolicyWithModel(StochasticPolicy2):
         self.action_dim = env_spec.action_space.flat_dim
 
         self.model = GaussianMLPModel(
-            name=name,
+            name='GaussianMLPModel',
             output_dim=self.action_dim,
             hidden_sizes=hidden_sizes,
             hidden_nonlinearity=hidden_nonlinearity,
@@ -101,8 +101,6 @@ class GaussianMLPPolicyWithModel(StochasticPolicy2):
         with tf.variable_scope(self._variable_scope):
             _, mean_var, log_std_var, _, _ = self.model.build(
                 obs_var, name=name)
-        mean_var = tf.reshape(mean_var, self.action_space.shape)
-        log_std_var = tf.reshape(log_std_var, self.action_space.shape)
         return dict(mean=mean_var, log_std=log_std_var)
 
     def get_action(self, observation):
