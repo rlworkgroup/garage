@@ -66,7 +66,7 @@ class LocalRunner:
         if max_cpus > 1:
             from garage.sampler import singleton_pool
             singleton_pool.initialize(max_cpus)
-        self.sess = sess or tf.Session()
+        self.sess = sess or tf.Session(config=tf.ConfigProto(use_per_session_threads=True))
         self.has_setup = False
         self.plot = False
 
