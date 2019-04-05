@@ -61,6 +61,13 @@ params = {
 class TestBenchmarkDDPG(unittest.TestCase):
     """Compare benchmarks between garage and baselines."""
 
+    def test_ddpg_fast(self):
+        params.n_epochs = 50
+        params.n_epochs_cycles = 20
+        params.n_rollout_steps = 10
+        params.n_train_steps = 5
+        self.test_benchmark_ddpg()
+
     def test_benchmark_ddpg(self):
         """
         Compare benchmarks between garage and baselines.
@@ -130,10 +137,10 @@ class TestBenchmarkDDPG(unittest.TestCase):
                 g_csvs=garage_csvs,
                 seeds=seeds,
                 trails=task["trials"],
-                g_x="Iteration",
-                g_y="AverageReturn",
-                b_x="nupdates",
-                b_y="total/steps",
+                g_x='Epoch',
+                g_y='AverageReturn',
+                b_x='total/epochs',
+                b_y='rollout/return',
                 factor_g=params["n_epoch_cycles"] * params["n_rollout_steps"],
                 factor_b=1)
 
