@@ -67,6 +67,7 @@ class LocalRunner:
             from garage.sampler import singleton_pool
             singleton_pool.initialize(max_cpus)
         self.sess = sess or tf.Session()
+        self.sess_entered = False
         self.has_setup = False
         self.plot = False
 
@@ -79,12 +80,14 @@ class LocalRunner:
         """
         if tf.get_default_session() is not self.sess:
             self.sess.__enter__()
+            self.sess_entered = True
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Leave session."""
-        if tf.get_default_session() is self.sess:
+        if tf.get_default_session() is self.sess and self.sess_entered:
             self.sess.__exit__(exc_type, exc_val, exc_tb)
+            self.sess_entered = False
 
     def setup(self, algo, env, sampler_cls=None, sampler_args=None):
         """Set up runner for algorithm and environment.
