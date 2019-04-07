@@ -61,13 +61,6 @@ params = {
 class TestBenchmarkDDPG(unittest.TestCase):
     """Compare benchmarks between garage and baselines."""
 
-    def test_ddpg_fast(self):
-        params.n_epochs = 50
-        params.n_epochs_cycles = 20
-        params.n_rollout_steps = 10
-        params.n_train_steps = 5
-        self.test_benchmark_ddpg()
-
     def test_benchmark_ddpg(self):
         """
         Compare benchmarks between garage and baselines.
