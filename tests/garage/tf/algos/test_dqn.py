@@ -18,11 +18,14 @@ class TestDQN(TfGraphTestCase):
     def test_dqn_cartpole(self):
         """Test DQN with CartPole environment."""
         with LocalRunner(self.sess) as runner:
-            num_timesteps = 20000
+            n_epochs = 20
+            n_epoch_cycles = 100
+            sampler_batch_size = 10
+            num_timesteps = n_epochs * n_epoch_cycles * sampler_batch_size
             env = TfEnv(gym.make("CartPole-v0"))
             replay_buffer = SimpleReplayBuffer(
                 env_spec=env.spec,
-                size_in_transitions=int(5000),
+                size_in_transitions=int(1e4),
                 time_horizon=1)
             qf = DiscreteMLPQFunction(env_spec=env.spec, hidden_sizes=(64, 64))
             policy = DiscreteQfDerivedPolicy(env_spec=env.spec, qf=qf)
@@ -38,18 +41,18 @@ class TestDQN(TfGraphTestCase):
                 qf=qf,
                 exploration_strategy=epilson_greedy_strategy,
                 replay_buffer=replay_buffer,
-                num_timesteps=num_timesteps,
                 qf_lr=1e-4,
-                max_path_length=1,
                 discount=1.0,
-                min_buffer_size=1e3,
+                min_buffer_size=int(1e3),
                 double_q=False,
-                target_network_update_freq=500,
+                n_train_steps=10,
+                n_epoch_cycles=n_epoch_cycles,
+                target_network_update_freq=50,
                 buffer_batch_size=32)
 
             runner.setup(algo, env)
             last_avg_ret = runner.train(
-                n_epochs=num_timesteps, n_epoch_cycles=1)
+                n_epochs=n_epochs, n_epoch_cycles=n_epoch_cycles, batch_size=sampler_batch_size)
             assert last_avg_ret > 80
 
             env.close()

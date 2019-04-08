@@ -9,7 +9,7 @@ skipping frames and stacking frames as single observation.
 import numpy as np
 import tensorflow as tf
 
-from garage.logger import tabular
+from garage.logger import logger, tabular
 from garage.misc.overrides import overrides
 from garage.misc.tensor_utils import normalize_pixel_batch
 from garage.tf.algos.off_policy_rl_algorithm import OffPolicyRLAlgorithm
@@ -24,7 +24,6 @@ class DQN(OffPolicyRLAlgorithm):
         env: Environment spec.
         max_path_length: Maximum path length. The episode will terminate when
             length of trajectory reaches max_path_length.
-        num_timesteps: Total number of timesteps.
         qf_lr: Learning rate for Q-Function.
         qf_optimizer: Optimizer for Q-Function.
         discount: Discount factor for rewards.
@@ -41,7 +40,6 @@ class DQN(OffPolicyRLAlgorithm):
                  env_spec,
                  replay_buffer,
                  max_path_length=200,
-                 num_timesteps=int(1e5),
                  qf_lr=0.001,
                  qf_optimizer=tf.train.AdamOptimizer,
                  discount=1.0,
@@ -59,7 +57,6 @@ class DQN(OffPolicyRLAlgorithm):
         self.grad_norm_clipping = grad_norm_clipping
         self.double_q = double_q
         self.print_freq = print_freq
-        self.num_timesteps = num_timesteps
         self.use_atari_wrappers = use_atari_wrappers
 
         self.episode_rewards = []
@@ -153,133 +150,30 @@ class DQN(OffPolicyRLAlgorithm):
                 outputs=[self._loss, self._optimize_loss])
 
     def train_once(self, itr, paths):
-        # with logger.prefix('Timestep #%d | ' % itr):
         self.episode_rewards.extend(paths['undiscounted_returns'])
         last_average_return = np.mean(self.episode_rewards)
-        if self.replay_buffer.n_transitions_stored >= self.min_buffer_size:  # noqa: E501
-            self.evaluate = True
-            qf_loss = self.optimize_policy(itr, None)
-            self.episode_qf_losses.append(qf_loss)
-            if itr % self.target_network_update_freq == 0:
-                self._qf_update_ops()
+        for train_itr in range(self.n_train_steps):
+            if self.replay_buffer.n_transitions_stored >= self.min_buffer_size:  # noqa: E501
+                self.evaluate = True
+                qf_loss = self.optimize_policy(itr, None)
+                self.episode_qf_losses.append(qf_loss)
 
         if self.evaluate:
-            mean100ep_rewards = round(np.mean(self.episode_rewards[-100:]), 1)
-            mean100ep_qf_loss = np.mean(self.episode_qf_losses[-100:])
-            if itr % self.print_freq == 0:
-                tabular.record('Iteration', itr)
-                tabular.record('Episode100RewardMean', mean100ep_rewards)
-                tabular.record('StdReturn', np.std(self.episode_rewards))
-                tabular.record('{}/Episode100LossMean'.format(self.qf.name),
-                               mean100ep_qf_loss)
-                # tabular.record('AverageEpisodeLength',
-                # np.mean(self.episode_length))
+            if itr % self.target_network_update_freq == 0:                    
+                self._qf_update_ops()
+
+        if itr % self.n_epoch_cycles == 0:
+            logger.log("Training finished")
+            if self.evaluate:
+                mean100ep_rewards = round(np.mean(self.episode_rewards[-100:]), 1)
+                mean100ep_qf_loss = np.mean(self.episode_qf_losses[-100:])
+                if itr % self.print_freq == 0:
+                    tabular.record('Iteration', itr)
+                    tabular.record('Episode100RewardMean', mean100ep_rewards)
+                    tabular.record('StdReturn', np.std(self.episode_rewards))
+                    tabular.record('{}/Episode100LossMean'.format(self.qf.name),
+                                   mean100ep_qf_loss)
         return last_average_return
-
-    # @overrides
-    # def train(self, sess=None):
-    #     """
-    #     Train the network.
-
-    #     A tf.Session can be provided, or will be created otherwise.
-    #     """
-    #     created_session = True if sess is None else False
-    #     if sess is None:
-    #         self.sess = tf.Session()
-    #         self.sess.__enter__()
-    #     else:
-    #         self.sess = sess
-
-    #     self.sess.run(tf.global_variables_initializer())
-
-    #     episode_rewards = []
-    #     episode_qf_losses = []
-    #     episode_length = []
-    #     ts = 0
-
-    #     self.sess.run(self._qf_update_ops, feed_dict=dict())
-
-    #     obs = self.env.reset()
-
-    #     # Baselines atari wrappers use a LazyFrame object to store the
-    #     # observation. The way to unpack it is to unpack obs as numpy array.
-    #     # For reference, see
-    #     # https://github.com/openai/baselines/blob/1259f6ab25c6f7261e33c
-    #     # 4c3b92df869188f9260/baselines/common/atari_wrappers.py#L202
-    #     if self.use_atari_wrappers:
-    #         obs = np.asarray(obs)
-    #     episode_rewards.append(0.)
-
-    #     for itr in range(self.num_timesteps):
-    #         with logger.prefix('Timestep #%d | ' % itr):
-    #             obs_normalized = tensor_utils.normalize_pixel_batch(
-    #                 self.env.spec, obs)
-
-    #             if self.es:
-    #                 action, _ = self.es.get_action(itr, obs_normalized,
-    #                                                self.policy)
-    #             else:
-    #                 action, _ = self.policy.get_action(obs_normalized)
-
-    #             next_obs, reward, done, env_info = self.env.step(action)
-
-    #             if self.use_atari_wrappers:
-    #                 next_obs = np.asarray(next_obs)
-
-    #             self.replay_buffer.add_transition(
-    #                 observation=obs,
-    #                 action=action,
-    #                 reward=reward,
-    #                 terminal=done,
-    #                 next_observation=next_obs,
-    #             )
-
-    #             episode_rewards[-1] += reward
-    #             ts += 1
-    #             obs = next_obs
-
-    #             if done:
-    #                 episode_length.append(ts)
-    #                 ts = 0
-    #                 episode_rewards.append(0.)
-    #                 obs = self.env.reset()
-    #                 if self.use_atari_wrappers:
-    #                     obs = np.asarray(obs)
-
-    #             if self.replay_buffer.n_transitions_stored >= self.min_buffer_size:  # noqa: E501
-    #                 self.evaluate = True
-    #                 qf_loss = self.optimize_policy(itr, None)
-    #                 episode_qf_losses.append(qf_loss)
-    #                 if itr % self.target_network_update_freq == 0:
-    #                     self.sess.run(self._qf_update_ops, feed_dict=dict())
-
-    #             if self.plot:
-    #                 self.plotter.update_plot(self.policy, self.max_path_length)
-    #                 if self.pause_for_plot:
-    #                     input('Plotting evaluation run: Press Enter to '
-    #                           'continue...')
-
-    #             if self.evaluate:
-    #                 mean100ep_rewards = round(
-    #                     np.mean(episode_rewards[-100:]), 1)
-    #                 mean100ep_qf_loss = np.mean(episode_qf_losses[-100:])
-    #                 if itr % self.print_freq == 0:
-    #                     logger.record_tabular('Iteration', itr)
-    #                     logger.record_tabular('Episode100RewardMean',
-    #                                           mean100ep_rewards)
-    #                     logger.record_tabular('StdReturn',
-    #                                           np.std(episode_rewards))
-    #                     logger.record_tabular('{}/Episode100LossMean'.format(self.qf.name),
-    #                                           mean100ep_qf_loss)
-    #                     logger.record_tabular('AverageEpisodeLength',
-    #                                           np.mean(episode_length))
-
-    #             logger.dump_tabular(with_prefix=False)
-
-    #     if created_session:
-    #         self.sess.close()
-
-    #     return mean100ep_rewards
 
     @overrides
     def get_itr_snapshot(self, itr):
