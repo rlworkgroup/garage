@@ -1,10 +1,10 @@
-"""
+'''
 This script creates a regression test over garage-PPO and baselines-PPO.
 
 Unlike garage, baselines doesn't set max_path_length. It keeps steps the action
 until it's done. So we introduced tests.wrappers.AutoStopEnv wrapper to set
 done=True when it reaches max_path_length.
-"""
+'''
 import datetime
 import multiprocessing
 import os.path as osp
@@ -40,38 +40,38 @@ from tests.wrappers import AutoStopEnv
 
 
 class TestBenchmarkPPO(unittest.TestCase):
-    """Compare benchmarks between garage and baselines."""
+    '''Compare benchmarks between garage and baselines.'''
 
     def test_benchmark_ppo(self):
-        """
+        '''
         Compare benchmarks between garage and baselines.
 
         :return:
-        """
-        mujoco1m = benchmarks.get_benchmark("Mujoco1M")
-        timestamp = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S-%f")
-        benchmark_dir = "./data/local/benchmarks/ppo/%s/" % timestamp
+        '''
+        mujoco1m = benchmarks.get_benchmark('Mujoco1M')
+        timestamp = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f')
+        benchmark_dir = './data/local/benchmarks/ppo/%s/' % timestamp
         result_json = {}
-        for task in mujoco1m["tasks"]:
-            env_id = task["env_id"]
+        for task in mujoco1m['tasks']:
+            env_id = task['env_id']
 
             env = gym.make(env_id)
             baseline_env = AutoStopEnv(env_name=env_id, max_path_length=100)
 
-            seeds = random.sample(range(100), task["trials"])
+            seeds = random.sample(range(100), task['trials'])
 
             task_dir = osp.join(benchmark_dir, env_id)
             plt_file = osp.join(benchmark_dir,
-                                "{}_benchmark.png".format(env_id))
+                                '{}_benchmark.png'.format(env_id))
             baselines_csvs = []
             garage_csvs = []
 
             for trial in range(task['trials']):
                 seed = seeds[trial]
 
-                trial_dir = task_dir + "/trial_%d_seed_%d" % (trial + 1, seed)
-                garage_dir = trial_dir + "/garage"
-                baselines_dir = trial_dir + "/baselines"
+                trial_dir = task_dir + '/trial_%d_seed_%d' % (trial + 1, seed)
+                garage_dir = trial_dir + '/garage'
+                baselines_dir = trial_dir + '/baselines'
 
                 with tf.Graph().as_default():
                     # Run baselines algorithms
@@ -91,36 +91,36 @@ class TestBenchmarkPPO(unittest.TestCase):
             Rh.plot(
                 b_csvs=baselines_csvs,
                 g_csvs=garage_csvs,
-                g_x="Iteration",
-                g_y="AverageReturn",
-                b_x="nupdates",
-                b_y="eprewmean",
+                g_x='Iteration',
+                g_y='AverageReturn',
+                b_x='nupdates',
+                b_y='eprewmean',
                 trials=task['trials'],
                 seeds=seeds,
                 plt_file=plt_file,
                 env_id=env_id,
-                x_label="Iteration",
-                y_label="AverageReturn")
+                x_label='Iteration',
+                y_label='AverageReturn')
 
             result_json[env_id] = Rh.create_json(
                 b_csvs=baselines_csvs,
                 g_csvs=garage_csvs,
                 seeds=seeds,
-                trails=task["trials"],
-                g_x="Iteration",
-                g_y="AverageReturn",
-                b_x="nupdates",
-                b_y="eprewmean",
+                trails=task['trials'],
+                g_x='Iteration',
+                g_y='AverageReturn',
+                b_x='nupdates',
+                b_y='eprewmean',
                 factor_g=2048,
                 factor_b=2048)
 
-        Rh.write_file(result_json, "PPO")
+        Rh.write_file(result_json, 'PPO')
 
     test_benchmark_ppo.huge = True
 
 
 def run_garage(env, seed, log_dir):
-    """
+    '''
     Create garage model and training.
 
     Replace the ppo with the algorithm you want to run.
@@ -129,7 +129,7 @@ def run_garage(env, seed, log_dir):
     :param seed: Random seed for the trial.
     :param log_dir: Log dir path.
     :return:
-    """
+    '''
     deterministic.set_seed(seed)
 
     with LocalRunner() as runner:
@@ -174,7 +174,7 @@ def run_garage(env, seed, log_dir):
         )
 
         # Set up logger since we are not using run_experiment
-        tabular_log_file = osp.join(log_dir, "progress.csv")
+        tabular_log_file = osp.join(log_dir, 'progress.csv')
         garage_logger.add_output(StdOutput())
         garage_logger.add_output(CsvOutput(tabular_log_file))
         garage_logger.add_output(TensorBoardOutput(log_dir))
@@ -188,7 +188,7 @@ def run_garage(env, seed, log_dir):
 
 
 def run_baselines(env, seed, log_dir):
-    """
+    '''
     Create baselines model and training.
 
     Replace the ppo and its training with the algorithm you want to run.
@@ -197,7 +197,7 @@ def run_baselines(env, seed, log_dir):
     :param seed: Random seed for the trial.
     :param log_dir: Log dir path.
     :return
-    """
+    '''
     ncpu = max(multiprocessing.cpu_count() // 2, 1)
     config = tf.ConfigProto(
         allow_soft_placement=True,
@@ -236,4 +236,4 @@ def run_baselines(env, seed, log_dir):
         cliprange=0.2,
         total_timesteps=int(1e6))
 
-    return osp.join(log_dir, "progress.csv")
+    return osp.join(log_dir, 'progress.csv')

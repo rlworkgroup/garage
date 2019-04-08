@@ -1,4 +1,4 @@
-"""This script creates a regression test over garage-HER and baselines-HER."""
+'''This script creates a regression test over garage-HER and baselines-HER.'''
 import datetime
 import os
 import os.path as osp
@@ -47,14 +47,14 @@ BASELINES_PARAMS['rollout_batch_size'] = 1
 
 
 class TestBenchmarkHER(unittest.TestCase):
-    """Compare benchmarks between garage and baselines."""
+    '''Compare benchmarks between garage and baselines.'''
 
     def test_benchmark_her(self):
-        """
+        '''
         Compare benchmarks between garage and baselines.
 
         :return:
-        """
+        '''
         mujoco1m = benchmarks.get_benchmark('HerDdpg')
 
         timestamp = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f')
@@ -106,7 +106,7 @@ class TestBenchmarkHER(unittest.TestCase):
 
 
 def run_garage(env, seed, log_dir):
-    """
+    '''
     Create garage model and training.
 
     Replace the ppo with the algorithm you want to run.
@@ -115,7 +115,7 @@ def run_garage(env, seed, log_dir):
     :param seed: Random seed for the trial.
     :param log_dir: Log dir path.
     :return:
-    """
+    '''
     deterministic.set_seed(seed)
     env.reset()
 
@@ -185,7 +185,7 @@ def run_garage(env, seed, log_dir):
 
 
 def run_baselines(env_id, seed, log_dir):
-    """
+    '''
     Create baselines model and training.
 
     Replace the ppo and its training with the algorithm you want to run.
@@ -194,7 +194,7 @@ def run_baselines(env_id, seed, log_dir):
     :param seed: Random seed for the trial.
     :param log_dir: Log dir path.
     :return
-    """
+    '''
     launch_params = {
         'env': env_id,
         'logdir': log_dir,
@@ -212,7 +212,7 @@ def run_baselines(env_id, seed, log_dir):
 
 
 def plot(b_csvs, g_csvs, g_x, g_y, b_x, b_y, trials, seeds, plt_file, env_id):
-    """
+    '''
     Plot benchmark from csv files of garage and baselines.
 
     :param b_csvs: A list contains all csv files in the task.
@@ -226,7 +226,7 @@ def plot(b_csvs, g_csvs, g_x, g_y, b_x, b_y, trials, seeds, plt_file, env_id):
     :param plt_file: Path of the plot png file.
     :param env_id: String contains the id of the environment.
     :return:
-    """
+    '''
     assert len(b_csvs) == len(g_csvs)
     for trial in range(trials):
         seed = seeds[trial]
