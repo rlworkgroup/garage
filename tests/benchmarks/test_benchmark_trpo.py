@@ -1,11 +1,11 @@
-"""
+'''
 This script creates a regression test over garage-TRPO and baselines-TRPO.
 
 Unlike garage, baselines doesn't set max_path_length. It keeps steps the action
 until it's done. So we introduced tests.wrappers.AutoStopEnv wrapper to set
 done=True when it reaches max_path_length. We also need to change the
 garage.tf.samplers.BatchSampler to smooth the reward curve.
-"""
+'''
 import datetime
 import os.path as osp
 import random
@@ -35,39 +35,39 @@ from tests.wrappers import AutoStopEnv
 
 
 class TestBenchmarkPPO(unittest.TestCase):
-    """Compare benchmarks between garage and baselines."""
+    '''Compare benchmarks between garage and baselines.'''
 
     def test_benchmark_trpo(self):
-        """
+        '''
         Compare benchmarks between garage and baselines.
 
         :return:
-        """
-        mujoco1m = benchmarks.get_benchmark("Mujoco1M")
+        '''
+        mujoco1m = benchmarks.get_benchmark('Mujoco1M')
 
-        timestamp = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S-%f")
-        benchmark_dir = "./data/local/benchmarks/trpo/%s/" % timestamp
+        timestamp = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f')
+        benchmark_dir = './data/local/benchmarks/trpo/%s/' % timestamp
         result_json = {}
-        for task in mujoco1m["tasks"]:
-            env_id = task["env_id"]
+        for task in mujoco1m['tasks']:
+            env_id = task['env_id']
             env = gym.make(env_id)
             baseline_env = AutoStopEnv(env_name=env_id, max_path_length=100)
 
-            seeds = random.sample(range(100), task["trials"])
+            seeds = random.sample(range(100), task['trials'])
 
             task_dir = osp.join(benchmark_dir, env_id)
             plt_file = osp.join(benchmark_dir,
-                                "{}_benchmark.png".format(env_id))
+                                '{}_benchmark.png'.format(env_id))
             baselines_csvs = []
             garage_csvs = []
 
-            for trial in range(task["trials"]):
+            for trial in range(task['trials']):
                 _PLACEHOLDER_CACHE.clear()
                 seed = seeds[trial]
 
-                trial_dir = task_dir + "/trial_%d_seed_%d" % (trial + 1, seed)
-                garage_dir = trial_dir + "/garage"
-                baselines_dir = trial_dir + "/baselines"
+                trial_dir = task_dir + '/trial_%d_seed_%d' % (trial + 1, seed)
+                garage_dir = trial_dir + '/garage'
+                baselines_dir = trial_dir + '/baselines'
 
                 with tf.Graph().as_default():
                     # Run garage algorithms
@@ -85,37 +85,37 @@ class TestBenchmarkPPO(unittest.TestCase):
             Rh.plot(
                 b_csvs=baselines_csvs,
                 g_csvs=garage_csvs,
-                g_x="Iteration",
-                g_y="AverageReturn",
-                b_x="EpThisIter",
-                b_y="EpRewMean",
-                trials=task["trials"],
+                g_x='Iteration',
+                g_y='AverageReturn',
+                b_x='EpThisIter',
+                b_y='EpRewMean',
+                trials=task['trials'],
                 seeds=seeds,
                 plt_file=plt_file,
                 env_id=env_id,
-                x_label="Iteration",
-                y_label="AverageReturn")
+                x_label='Iteration',
+                y_label='AverageReturn')
 
             result_json[env_id] = Rh.create_json(
                 b_csvs=baselines_csvs,
                 g_csvs=garage_csvs,
                 seeds=seeds,
-                trails=task["trials"],
-                g_x="Iteration",
-                g_y="AverageReturn",
-                b_x="TimestepsSoFar",
-                b_y="EpRewMean",
+                trails=task['trials'],
+                g_x='Iteration',
+                g_y='AverageReturn',
+                b_x='TimestepsSoFar',
+                b_y='EpRewMean',
                 factor_g=1024,
                 factor_b=1)
             env.close()
 
-        Rh.write_file(result_json, "TRPO")
+        Rh.write_file(result_json, 'TRPO')
 
     test_benchmark_trpo.huge = True
 
 
 def run_garage(env, seed, log_dir):
-    """
+    '''
     Create garage model and training.
 
     Replace the trpo with the algorithm you want to run.
@@ -124,7 +124,7 @@ def run_garage(env, seed, log_dir):
     :param seed: Random seed for the trial.
     :param log_dir: Log dir path.
     :return:import baselines.common.tf_util as U
-    """
+    '''
     deterministic.set_seed(seed)
 
     with LocalRunner() as runner:
@@ -158,7 +158,7 @@ def run_garage(env, seed, log_dir):
         )
 
         # Set up logger since we are not using run_experiment
-        tabular_log_file = osp.join(log_dir, "progress.csv")
+        tabular_log_file = osp.join(log_dir, 'progress.csv')
         garage_logger.add_output(CsvOutput(tabular_log_file))
         garage_logger.add_output(StdOutput())
         garage_logger.add_output(TensorBoardOutput(log_dir))
@@ -172,7 +172,7 @@ def run_garage(env, seed, log_dir):
 
 
 def run_baselines(env, seed, log_dir):
-    """
+    '''
     Create baselines model and training.
 
     Replace the trpo and its training with the algorithm you want to run.
@@ -181,7 +181,7 @@ def run_baselines(env, seed, log_dir):
     :param seed: Random seed for the trial.
     :param log_dir: Log dir path.
     :return
-    """
+    '''
     with tf.Session().as_default():
         baselines_logger.configure(log_dir)
 
@@ -207,4 +207,4 @@ def run_baselines(env, seed, log_dir):
             vf_stepsize=1e-3)
         env.close()
 
-    return osp.join(log_dir, "progress.csv")
+    return osp.join(log_dir, 'progress.csv')

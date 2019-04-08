@@ -1,4 +1,4 @@
-"""
+'''
 This script creates a regression test over garage-DDPG and baselines-DDPG.
 
 It get Mujoco1M benchmarks from baselines benchmark, and test each task in
@@ -6,7 +6,7 @@ its trial times on garage model and baselines model. For each task, there will
 be `trial` times with different random seeds. For each trial, there will be two
 log directories corresponding to baselines and garage. And there will be a plot
 plotting the average return curve from baselines and garage.
-"""
+'''
 import datetime
 import os
 import os.path as osp
@@ -59,14 +59,14 @@ params = {
 
 
 class TestBenchmarkDDPG(unittest.TestCase):
-    """Compare benchmarks between garage and baselines."""
+    '''Compare benchmarks between garage and baselines.'''
 
     def test_benchmark_ddpg(self):
-        """
+        '''
         Compare benchmarks between garage and baselines.
 
         :return:
-        """
+        '''
         # Load Mujoco1M tasks, you can check other benchmarks here
         # https://github.com/openai/baselines/blob/master/baselines/bench/benchmarks.py
         mujoco1m = benchmarks.get_benchmark('Mujoco1M')
@@ -122,28 +122,28 @@ class TestBenchmarkDDPG(unittest.TestCase):
                 seeds=seeds,
                 plt_file=plt_file,
                 env_id=env_id,
-                x_label="Epoch",
-                y_label="AverageReturn")
+                x_label='Epoch',
+                y_label='AverageReturn')
 
             result_json[env_id] = Rh.create_json(
                 b_csvs=baselines_csvs,
                 g_csvs=garage_csvs,
                 seeds=seeds,
-                trails=task["trials"],
-                g_x="Iteration",
-                g_y="AverageReturn",
-                b_x="nupdates",
-                b_y="total/steps",
-                factor_g=params["n_epoch_cycles"] * params["n_rollout_steps"],
+                trails=task['trials'],
+                g_x='Epoch',
+                g_y='AverageReturn',
+                b_x='total/epochs',
+                b_y='rollout/return',
+                factor_g=params['n_epoch_cycles'] * params['n_rollout_steps'],
                 factor_b=1)
 
-        Rh.write_file(result_json, "DDPG")
+        Rh.write_file(result_json, 'DDPG')
 
     test_benchmark_ddpg.huge = True
 
 
 def run_garage(env, seed, log_dir):
-    """
+    '''
     Create garage model and training.
 
     Replace the ddpg with the algorithm you want to run.
@@ -152,7 +152,7 @@ def run_garage(env, seed, log_dir):
     :param seed: Random seed for the trial.
     :param log_dir: Log dir path.
     :return:
-    """
+    '''
     deterministic.set_seed(seed)
 
     with LocalRunner() as runner:
@@ -210,7 +210,7 @@ def run_garage(env, seed, log_dir):
 
 
 def run_baselines(env, seed, log_dir):
-    """
+    '''
     Create baselines model and training.
 
     Replace the ddpg and its training with the algorithm you want to run.
@@ -219,7 +219,7 @@ def run_baselines(env, seed, log_dir):
     :param seed: Random seed for the trial.
     :param log_dir: Log dir path.
     :return
-    """
+    '''
     rank = MPI.COMM_WORLD.Get_rank()
     seed = seed + 1000000 * rank
     set_global_seeds(seed)
@@ -270,4 +270,4 @@ def run_baselines(env, seed, log_dir):
         nb_eval_steps=100,
         batch_size=64)
 
-    return osp.join(log_dir, "progress.csv")
+    return osp.join(log_dir, 'progress.csv')
