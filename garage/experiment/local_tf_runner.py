@@ -261,6 +261,5 @@ class LocalRunner:
                 self.log_diagnostics(pause_for_plot)
                 logger.dump_all(itr)
                 tabular.clear()
-
         self.shutdown_worker()
         return last_return
