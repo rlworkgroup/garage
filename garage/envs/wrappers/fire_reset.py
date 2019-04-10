@@ -19,6 +19,10 @@ class FireReset(gym.Wrapper):
         assert len(env.unwrapped.get_action_meanings()) >= 3, (
             'Only use fire reset wrapper for suitable environment!')
 
+    def step(self, action):
+        """gym.Env step function."""
+        return self.env.step(action)
+
     def reset(self, **kwargs):
         """gym.Env reset function."""
         self.env.reset(**kwargs)

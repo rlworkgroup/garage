@@ -23,6 +23,10 @@ class Noop(gym.Wrapper):
         assert env.unwrapped.get_action_meanings()[0] == 'NOOP', (
             "No-op should be the 0-th action but it's not in {}!".format(env))
 
+    def step(self, action):
+        """gym.Env step function."""
+        return self.env.step(action)
+
     def reset(self, **kwargs):
         """gym.Env reset function."""
         obs = self.env.reset(**kwargs)

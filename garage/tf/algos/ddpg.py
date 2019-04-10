@@ -102,10 +102,11 @@ class DDPG(OffPolicyRLAlgorithm):
                 trainable=False, name='target_qf')
 
             # Set up target init and update function
-            with tf.name_scope("setup_target"):
-                policy_init_ops, policy_update_ops = tensor_utils.get_target_ops(
+            with tf.name_scope('setup_target'):
+                ops = tensor_utils.get_target_ops(
                     self.policy.get_global_vars(),
-                    self.policy.get_global_vars("target_policy"), self.tau)
+                    self.policy.get_global_vars('target_policy'), self.tau)
+                policy_init_ops, policy_update_ops = ops
                 qf_init_ops, qf_update_ops = tensor_utils.get_target_ops(
                     self.qf.get_global_vars(),
                     self.qf.get_global_vars('target_qf'), self.tau)
@@ -290,5 +291,5 @@ class DDPG(OffPolicyRLAlgorithm):
         return qval_loss, ys, qval, action_loss
 
     @overrides
-    def get_itr_snapshot(self, itr, samples_data):
-        return dict(itr=itr, policy=self.policy, env=self.env)
+    def get_itr_snapshot(self, itr):
+        return dict(itr=itr, policy=self.policy)

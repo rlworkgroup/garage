@@ -41,6 +41,8 @@ class EpsilonGreedyStrategy(ExplorationStrategy):
         self._decay_period = int(total_timesteps * decay_ratio)
         self._action_space = env_spec.action_space
         self._epsilon = self._max_epsilon
+        self._decrement = (
+            self._max_epsilon - self._min_epsilon) / self._decay_period
 
     @overrides
     def get_action(self, t, observation, policy, **kwargs):
@@ -87,5 +89,4 @@ class EpsilonGreedyStrategy(ExplorationStrategy):
 
     def _decay(self):
         if self._epsilon > self._min_epsilon:
-            self._epsilon -= (
-                self._max_epsilon - self._min_epsilon) / self._decay_period
+            self._epsilon -= self._decrement

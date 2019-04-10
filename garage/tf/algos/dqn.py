@@ -9,7 +9,7 @@ skipping frames and stacking frames as single observation.
 import numpy as np
 import tensorflow as tf
 
-from garage.logger import logger, tabular
+from garage.logger import tabular
 from garage.misc.overrides import overrides
 from garage.misc.tensor_utils import normalize_pixel_batch
 from garage.tf.algos.off_policy_rl_algorithm import OffPolicyRLAlgorithm
@@ -39,7 +39,7 @@ class DQN(OffPolicyRLAlgorithm):
     def __init__(self,
                  env_spec,
                  replay_buffer,
-                 max_path_length=200,
+                 max_path_length=None,
                  qf_lr=0.001,
                  qf_optimizer=tf.train.AdamOptimizer,
                  discount=1.0,
@@ -82,9 +82,9 @@ class DQN(OffPolicyRLAlgorithm):
 
         # build q networks
         with tf.name_scope(self.name, 'DQN'):
-            self.action_t_ph = tf.placeholder(tf.int32, None, name="action")
-            self.reward_t_ph = tf.placeholder(tf.float32, None, name="reward")
-            self.done_t_ph = tf.placeholder(tf.float32, None, name="done")
+            self.action_t_ph = tf.placeholder(tf.int32, None, name='action')
+            self.reward_t_ph = tf.placeholder(tf.float32, None, name='reward')
+            self.done_t_ph = tf.placeholder(tf.float32, None, name='done')
 
             # clone a target q-function
             self.target_qf = self.qf.clone('target_qf')
@@ -150,6 +150,7 @@ class DQN(OffPolicyRLAlgorithm):
                 outputs=[self._loss, self._optimize_loss])
 
     def train_once(self, itr, paths):
+        """Train the algorithm once."""
         self.episode_rewards.extend(paths['undiscounted_returns'])
         last_average_return = np.mean(self.episode_rewards)
         for train_itr in range(self.n_train_steps):
@@ -159,25 +160,25 @@ class DQN(OffPolicyRLAlgorithm):
                 self.episode_qf_losses.append(qf_loss)
 
         if self.evaluate:
-            if itr % self.target_network_update_freq == 0:                    
+            if itr % self.target_network_update_freq == 0:
                 self._qf_update_ops()
 
         if itr % self.n_epoch_cycles == 0:
-            logger.log("Training finished")
             if self.evaluate:
-                mean100ep_rewards = round(np.mean(self.episode_rewards[-100:]), 1)
+                mean100ep_rewards = round(
+                    np.mean(self.episode_rewards[-100:]), 1)
                 mean100ep_qf_loss = np.mean(self.episode_qf_losses[-100:])
-                if itr % self.print_freq == 0:
-                    tabular.record('Iteration', itr)
-                    tabular.record('Episode100RewardMean', mean100ep_rewards)
-                    tabular.record('StdReturn', np.std(self.episode_rewards))
-                    tabular.record('{}/Episode100LossMean'.format(self.qf.name),
-                                   mean100ep_qf_loss)
+                tabular.record('Iteration', itr)
+                tabular.record('AverageReturn', np.mean(self.episode_rewards))
+                tabular.record('StdReturn', np.std(self.episode_rewards))
+                tabular.record('Episode100RewardMean', mean100ep_rewards)
+                tabular.record('{}/Episode100LossMean'.format(self.qf.name),
+                               mean100ep_qf_loss)
         return last_average_return
 
     @overrides
     def get_itr_snapshot(self, itr):
-        # return dict(itr=itr, policy=self.policy, env=self.env)
+        """Get snapshot of the policy."""
         return dict(itr=itr, policy=self.policy)
 
     @overrides

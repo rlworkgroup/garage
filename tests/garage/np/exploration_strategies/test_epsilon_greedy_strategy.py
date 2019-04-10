@@ -38,7 +38,8 @@ class TestEpsilonGreedyStrategy(unittest.TestCase):
     def test_epsilon_greedy_strategy(self):
         obs, _, _, _ = self.env.step(1)
 
-        action, _ = self.epsilon_greedy_strategy.get_action(0, obs, self.policy)
+        action, _ = self.epsilon_greedy_strategy.get_action(
+            0, obs, self.policy)
         assert self.env.action_space.contains(action)
 
         # epsilon decay by 1 step, new epsilon = 1 - 0.98 = 0.902

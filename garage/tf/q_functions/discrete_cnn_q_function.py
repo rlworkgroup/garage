@@ -4,7 +4,7 @@ import tensorflow as tf
 from garage.tf.models.cnn_model import CNNModel
 from garage.tf.models.cnn_model_max_pooling import CNNModelWithMaxPooling
 from garage.tf.models.discrete_mlp_dueling_model import DiscreteMLPDuelingModel
-from garage.tf.models.discrete_mlp_model import DiscreteMLPModel
+from garage.tf.models.mlp_model import MLPModel
 from garage.tf.q_functions import QFunction2
 
 
@@ -54,11 +54,11 @@ class DiscreteCNNQFunction(QFunction2):
                  pool_shapes=(2, 2),
                  cnn_hidden_nonlinearity=tf.nn.relu,
                  hidden_nonlinearity=tf.nn.relu,
-                 hidden_w_init=tf.contrib.layers.xavier_initializer,
-                 hidden_b_init=tf.zeros_initializer,
+                 hidden_w_init=tf.glorot_uniform_initializer(),
+                 hidden_b_init=tf.zeros_initializer(),
                  output_nonlinearity=None,
-                 output_w_init=tf.contrib.layers.xavier_initializer,
-                 output_b_init=tf.zeros_initializer,
+                 output_w_init=tf.glorot_uniform_initializer(),
+                 output_b_init=tf.zeros_initializer(),
                  dueling=False,
                  layer_normalization=False):
         super().__init__(name)
@@ -105,7 +105,7 @@ class DiscreteCNNQFunction(QFunction2):
                 hidden_nonlinearity=cnn_hidden_nonlinearity)
         self.models.append(cnn_model)
         if not dueling:
-            output_model = DiscreteMLPModel(
+            output_model = MLPModel(
                 output_dim=action_dim,
                 hidden_sizes=hidden_sizes,
                 hidden_nonlinearity=hidden_nonlinearity,
