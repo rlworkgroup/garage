@@ -50,7 +50,7 @@ class DeterministicMLPPolicyWithModel(Policy2):
 
         self.model = MLPModel(
             output_dim=action_dim,
-            name=name,
+            name='MLPModel',
             hidden_sizes=hidden_sizes,
             hidden_nonlinearity=hidden_nonlinearity,
             output_nonlinearity=output_nonlinearity,

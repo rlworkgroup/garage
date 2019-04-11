@@ -11,4 +11,6 @@ class SimpleMLPModel(Model):
         self.output_dim = output_dim
 
     def _build(self, obs_input):
-        return tf.fill((tf.shape(obs_input)[0], self.output_dim), 0.5)
+        return_var = tf.get_variable(
+            'return_var', (), initializer=tf.constant_initializer(0.5))
+        return tf.fill((tf.shape(obs_input)[0], self.output_dim), return_var)

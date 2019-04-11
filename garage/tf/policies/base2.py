@@ -15,9 +15,9 @@ class Policy2:
         self._name = name
         self._env_spec = env_spec
         self._variable_scope = tf.VariableScope(reuse=False, name=name)
+        self._models = []
 
     # Should be implemented by all policies
-
     def get_action(self, observation):
         """Get action given observation."""
         raise NotImplementedError
@@ -102,6 +102,32 @@ class Policy2:
     def get_global_vars(self):
         """Get global vars."""
         return self._variable_scope.global_variables()
+
+    def add_model(self, model):
+        self._models.append(model)
+
+    def build_models(self, input_var, name=None):
+        out = input_var
+        for model in self._models[:-1]:
+            out = model.build(out, name=name)
+        self.model = self._models[-1]
+        return self.model.build(out, name=name)
+
+    @property
+    def input(self):
+        return self._models[0].networks['default'].input
+
+    @property
+    def inputs(self):
+        return self._models[0].networks['default'].inputs
+
+    @property
+    def output(self):
+        return self._models[-1].networks['default'].output
+
+    @property
+    def outputs(self):
+        return self._models[-1].networks['default'].outputs
 
 
 class StochasticPolicy2(Policy2):

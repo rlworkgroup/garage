@@ -1,22 +1,31 @@
-"""CategoricalMLPPolicy with model."""
+"""CategoricalConvPolicy with model."""
 from akro.tf import Discrete
 import tensorflow as tf
 
 from garage.misc.overrides import overrides
 from garage.tf.distributions import Categorical
+from garage.tf.models import CNNModel
 from garage.tf.models import MLPModel
 from garage.tf.policies.base2 import StochasticPolicy2
 
 
-class CategoricalMLPPolicyWithModel(StochasticPolicy2):
+class CategoricalConvPolicyWithModel(StochasticPolicy2):
     """
-    CategoricalMLPPolicy with model.
+    CategoricalConvPolicy with model.
+
+    A policy that contains a CNN and a MLP to make prediction based on
+    a categorical distribution.
 
     It only works with akro.tf.Discrete action space.
 
     Args:
         env_spec: Environment specification.
-        name: variable scope of the mlp.
+        conv_filters: Number of filters.
+        conv_filter_sizes: Dimension of the filters.
+        conv_strides: The stride of the sliding window.
+        conv_pad: The type of padding algorithm to use,
+            either 'SAME' or 'VALID'.
+        name: Variable scope of the policy.
         hidden_sizes: Output dimension of dense layer(s).
         hidden_nonlinearity: Activation function for
                     intermediate dense layer(s).
@@ -28,26 +37,38 @@ class CategoricalMLPPolicyWithModel(StochasticPolicy2):
 
     def __init__(self,
                  env_spec,
-                 name="CategoricalMLPPolicy",
-                 hidden_sizes=(32, 32),
-                 hidden_nonlinearity=tf.nn.tanh,
+                 conv_filters,
+                 conv_filter_sizes,
+                 conv_strides,
+                 conv_pad,
+                 name='CategoricalConvPolicy',
+                 hidden_sizes=[],
+                 hidden_nonlinearity=tf.nn.relu,
                  output_nonlinearity=tf.nn.softmax,
                  layer_normalization=False):
-        assert isinstance(
-            env_spec.action_space,
-            Discrete), ("CategoricalMLPPolicy only works with akro.tf.Discrete"
-                        "action space.")
+        assert isinstance(env_spec.action_space, Discrete), (
+            'CategoricalConvPolicy only works with akro.tf.Discrete'
+            'action space.')
         super().__init__(name, env_spec)
         self.obs_dim = env_spec.observation_space.flat_dim
         self.action_dim = env_spec.action_space.n
 
-        self.model = MLPModel(
-            output_dim=self.action_dim,
-            hidden_sizes=hidden_sizes,
-            hidden_nonlinearity=hidden_nonlinearity,
-            output_nonlinearity=output_nonlinearity,
-            layer_normalization=layer_normalization,
-            name='MLPModel')
+        self.add_model(
+            CNNModel(
+                filter_dims=conv_filter_sizes,
+                num_filters=conv_filters,
+                strides=conv_strides,
+                padding=conv_pad,
+                hidden_nonlinearity=hidden_nonlinearity,
+                name='CNNModel'))
+        self.add_model(
+            MLPModel(
+                output_dim=self.action_dim,
+                hidden_sizes=hidden_sizes,
+                hidden_nonlinearity=hidden_nonlinearity,
+                output_nonlinearity=output_nonlinearity,
+                layer_normalization=layer_normalization,
+                name='MLPModel'))
 
         self._initialize()
 
@@ -55,11 +76,10 @@ class CategoricalMLPPolicyWithModel(StochasticPolicy2):
         state_input = tf.placeholder(tf.float32, shape=(None, self.obs_dim))
 
         with tf.variable_scope(self._variable_scope):
-            self.model.build(state_input)
+            self.build_models(state_input)
 
         self._f_prob = tf.get_default_session().make_callable(
-            self.model.networks['default'].outputs,
-            feed_list=[self.model.networks['default'].input])
+            self.outputs, feed_list=[self.input])
 
     @property
     def vectorized(self):
@@ -70,7 +90,7 @@ class CategoricalMLPPolicyWithModel(StochasticPolicy2):
     def dist_info_sym(self, obs_var, state_info_vars=None, name=None):
         """Symbolic graph of the distribution."""
         with tf.variable_scope(self._variable_scope):
-            prob = self.model.build(obs_var, name=name)
+            prob = self.build_models(obs_var, name=name)
         return dict(prob=prob)
 
     @overrides

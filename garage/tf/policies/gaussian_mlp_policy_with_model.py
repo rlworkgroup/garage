@@ -58,7 +58,6 @@ class GaussianMLPPolicyWithModel(StochasticPolicy2):
         self.action_dim = env_spec.action_space.flat_dim
 
         self.model = GaussianMLPModel(
-            name='GaussianMLPModel',
             output_dim=self.action_dim,
             hidden_sizes=hidden_sizes,
             hidden_nonlinearity=hidden_nonlinearity,
@@ -73,7 +72,8 @@ class GaussianMLPPolicyWithModel(StochasticPolicy2):
             std_hidden_nonlinearity=std_hidden_nonlinearity,
             std_output_nonlinearity=std_output_nonlinearity,
             std_parameterization=std_parameterization,
-            layer_normalization=layer_normalization)
+            layer_normalization=layer_normalization,
+            name='GaussianMLPModel')
 
         self._initialize()
 

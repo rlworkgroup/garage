@@ -53,7 +53,7 @@ def step_env_with_gym_quirks(test_case,
         assert round_trip.env.spec == env.env.spec
 
 
-def convolve(_input, filter_weights, filter_bias, stride, filter_sizes,
+def convolve(_input, filter_weights, filter_bias, strides, filter_sizes,
              in_channels, hidden_nonlinearity):
     """Convolve."""
     # in_width = self.input_width
@@ -63,8 +63,8 @@ def convolve(_input, filter_weights, filter_bias, stride, filter_sizes,
     in_width = _input.shape[1]
     in_height = _input.shape[2]
 
-    for filter_size, in_shape, filter_weight, _filter_bias in zip(
-            filter_sizes, in_channels, filter_weights, filter_bias):
+    for filter_size, in_shape, filter_weight, _filter_bias, stride in zip(
+            filter_sizes, in_channels, filter_weights, filter_bias, strides):
         out_width = int((in_width - filter_size) / stride) + 1
         out_height = int((in_height - filter_size) / stride) + 1
         flatten_filter_size = filter_size * filter_size * in_shape
