@@ -9,8 +9,6 @@ class SimpleCNNModel(Model):
     def __init__(self, name, num_filters, filter_dims, strides, padding, *args,
                  **kwargs):
         super().__init__(name)
-        if padding not in ['SAME', 'VALID']:
-            raise ValueError("Invalid padding: {}.".format(padding))
         self.num_filters = num_filters
         self.filter_dims = filter_dims
         self.strides = strides

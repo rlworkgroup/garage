@@ -25,6 +25,8 @@ class CNNModel(Model):
                  strides,
                  padding,
                  name=None,
+                 hidden_w_init=tf.glorot_uniform_initializer(),
+                 hidden_b_init=tf.zeros_initializer(),
                  hidden_nonlinearity=tf.nn.relu):
         super().__init__(name)
         self._filter_dims = filter_dims
@@ -32,12 +34,16 @@ class CNNModel(Model):
         self._strides = strides
         self._padding = padding
         self._hidden_nonlinearity = hidden_nonlinearity
+        self._hidden_w_init = hidden_w_init
+        self._hidden_b_init = hidden_b_init
 
     def _build(self, state_input):
         return cnn(
             input_var=state_input,
             filter_dims=self._filter_dims,
             hidden_nonlinearity=self._hidden_nonlinearity,
+            hidden_w_init=self._hidden_w_init,
+            hidden_b_init=self._hidden_b_init,
             num_filters=self._num_filters,
             strides=self._strides,
             padding=self._padding,

@@ -108,22 +108,13 @@ class Policy2:
 
     def build_models(self, input_var, name=None):
         out = input_var
-        for model in self._models[:-1]:
+        for model in self._models:
             out = model.build(out, name=name)
-        self.model = self._models[-1]
-        return self.model.build(out, name=name)
+        return out
 
     @property
     def input(self):
         return self._models[0].networks['default'].input
-
-    @property
-    def inputs(self):
-        return self._models[0].networks['default'].inputs
-
-    @property
-    def output(self):
-        return self._models[-1].networks['default'].output
 
     @property
     def outputs(self):

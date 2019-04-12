@@ -32,8 +32,6 @@ def cnn(input_var,
     Return:
         The output tf.Tensor of the CNN.
     """
-    if padding not in ['SAME', 'VALID']:
-        raise ValueError("Invalid padding: {}.".format(padding))
     with tf.variable_scope(name):
         h = input_var
         for index, (filter_dim, num_filter, stride) in enumerate(
@@ -82,8 +80,6 @@ def cnn_with_max_pooling(input_var,
     Return:
         The output tf.Tensor of the CNN.
     """
-    if padding not in ['SAME', 'VALID']:
-        raise ValueError("Invalid padding: {}.".format(padding))
     pool_strides = [1, pool_strides[0], pool_strides[1], 1]
     pool_shapes = [1, pool_shapes[0], pool_shapes[1], 1]
 
@@ -104,14 +100,8 @@ def cnn_with_max_pooling(input_var,
         return tf.reshape(h, [-1, dim])
 
 
-def _conv(input_var,
-          name,
-          filter_size,
-          num_filter,
-          strides,
-          hidden_w_init,
-          hidden_b_init,
-          padding="VALID"):
+def _conv(input_var, name, filter_size, num_filter, strides, hidden_w_init,
+          hidden_b_init, padding):
 
     # channel from input
     input_shape = input_var.get_shape()[-1].value

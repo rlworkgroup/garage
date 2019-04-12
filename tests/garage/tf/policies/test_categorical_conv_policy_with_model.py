@@ -189,13 +189,12 @@ class TestCategoricalConvPolicyWithModel(TfGraphTestCase):
         # assign it to all one
         self.sess.run(tf.assign(return_var, tf.ones_like(return_var)))
         output1 = self.sess.run(
-            policy.model.networks['default'].outputs,
-            feed_dict={policy.input: [obs.flatten()]})
+            policy.outputs, feed_dict={policy.input: [obs.flatten()]})
         p = pickle.dumps(policy)
 
         with tf.Session(graph=tf.Graph()) as sess:
             policy_pickled = pickle.loads(p)
             output2 = sess.run(
-                policy_pickled.model.networks['default'].outputs,
+                policy_pickled.outputs,
                 feed_dict={policy_pickled.input: [obs.flatten()]})
             assert np.array_equal(output1, output2)
