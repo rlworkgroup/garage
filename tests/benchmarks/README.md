@@ -1,9 +1,9 @@
 # flake8: noqa
 # Automated Benchmarking
-(https://github.com/rlworkgroup/benchmarks)
+[Benchmark repo](https://github.com/rlworkgroup/benchmarks)
 
-We an automated system that will run any benchmark file named "test_benchmark_*.py" in this folder /tests/benchmarks/
-The results are displayed at (https://rlworkgroup.github.io/benchmarks/)
+We have an automated system that will run any benchmark file named "test_benchmark_*.py" in this folder /tests/benchmarks/
+The results are displayed [here](https://rlworkgroup.github.io/benchmarks/)
 
 # Directions
     Following these directions to output your benchmark results as a json compatible with the display.
