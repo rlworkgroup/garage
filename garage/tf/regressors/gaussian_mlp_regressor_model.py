@@ -58,7 +58,7 @@ class GaussianMLPRegressorModel(GaussianMLPModel):
             'normalized_log_stds', 'x_mean', 'x_std', 'y_mean', 'y_std', 'dist'
         ]
 
-    def _build(self, state_input):
+    def _build(self, state_input, name=None):
         with tf.variable_scope('normalized_vars'):
             x_mean_var = tf.get_variable(
                 name='x_mean',

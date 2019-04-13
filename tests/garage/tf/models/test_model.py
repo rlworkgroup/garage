@@ -17,7 +17,7 @@ class SimpleModel(Model):
     def network_output_spec(self):
         return ['state', 'action']
 
-    def _build(self, obs_input):
+    def _build(self, obs_input, name=None):
         state = mlp(obs_input, self._output_dim, self._hidden_sizes, 'state')
         action = mlp(obs_input, self._output_dim, self._hidden_sizes, 'action')
         return state, action
@@ -30,7 +30,7 @@ class SimpleModel2(Model):
         self._output_dim = output_dim
         self._hidden_sizes = hidden_sizes
 
-    def _build(self, obs_input):
+    def _build(self, obs_input, name=None):
         action = mlp(obs_input, self._output_dim, self._hidden_sizes, 'state')
         return action
 
@@ -46,7 +46,7 @@ class ComplicatedModel(Model):
     def network_output_spec(self):
         return ['action']
 
-    def _build(self, obs_input):
+    def _build(self, obs_input, name=None):
         h1, _ = self._simple_model_1.build(obs_input)
         return self._simple_model_2.build(h1)
 
@@ -62,7 +62,7 @@ class ComplicatedModel2(Model):
     def network_output_spec(self):
         return ['action']
 
-    def _build(self, obs_input):
+    def _build(self, obs_input, name=None):
         h1, _ = self._parent_model.build(obs_input)
         return self._output_model.build(h1)
 

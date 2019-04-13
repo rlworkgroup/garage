@@ -115,7 +115,7 @@ class GaussianMLPModel(Model):
         """Network output spec."""
         return ['sample', 'mean', 'log_std', 'std_param', 'dist']
 
-    def _build(self, state_input):
+    def _build(self, state_input, name=None):
         action_dim = self._output_dim
 
         with tf.variable_scope('dist_params'):

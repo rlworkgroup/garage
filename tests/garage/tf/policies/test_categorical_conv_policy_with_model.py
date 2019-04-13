@@ -150,8 +150,8 @@ class TestCategoricalConvPolicyWithModel(TfGraphTestCase):
 
         expected_prob = np.full(action_dim, 0.5)
 
-        obs_dim = env.spec.observation_space.flat_dim
-        state_input = tf.placeholder(tf.float32, shape=(None, obs_dim))
+        obs_dim = env.spec.observation_space.shape
+        state_input = tf.placeholder(tf.float32, shape=(None, ) + obs_dim)
         dist1 = policy.dist_info_sym(state_input, name='policy2')
 
         prob = self.sess.run(dist1['prob'], feed_dict={state_input: [obs]})
