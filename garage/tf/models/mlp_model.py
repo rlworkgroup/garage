@@ -55,7 +55,7 @@ class MLPModel(Model):
         self._output_b_init = output_b_init
         self._layer_normalization = layer_normalization
 
-    def _build(self, state_input):
+    def _build(self, state_input, name=None):
         return mlp(
             input_var=state_input,
             output_dim=self._output_dim,

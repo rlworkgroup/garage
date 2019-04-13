@@ -190,7 +190,6 @@ class Model(BaseModel):
 
         """
         network_name = name or 'default'
-
         if not self._networks:
             # First time building the model, so self._networks are empty
             # We store the variable_scope to reenter later when we reuse it
@@ -199,7 +198,7 @@ class Model(BaseModel):
                 with tf.name_scope(name=network_name):
                     network = Network()
                     network._inputs = inputs
-                    network._outputs = self._build(*inputs)
+                    network._outputs = self._build(*inputs, name)
                 variables = self._get_variables().values()
                 tf.get_default_session().run(
                     tf.variables_initializer(variables))
@@ -215,7 +214,7 @@ class Model(BaseModel):
                 with tf.name_scope(name=network_name):
                     network = Network()
                     network._inputs = inputs
-                    network._outputs = self._build(*inputs)
+                    network._outputs = self._build(*inputs, name)
         spec = self.network_output_spec()
         if spec:
             c = namedtuple(network_name,
@@ -232,9 +231,10 @@ class Model(BaseModel):
                     network.inputs, network.outputs)
         else:
             self._networks[network_name] = network
+
         return network.outputs
 
-    def _build(self, *inputs):
+    def _build(self, *inputs, name=None):
         """
         Output of the model given input placeholder(s).
 
@@ -245,6 +245,7 @@ class Model(BaseModel):
             inputs: Tensor input(s), recommended to be position arguments, e.g.
               def build(self, state_input=None, action_input=None, name=None).
               It would be usually same as the inputs in build().
+            name: Variable scope of the inner model, if exist.
         Return:
             output: Tensor output(s) of the model.
         """
@@ -287,6 +288,22 @@ class Model(BaseModel):
     def name(self):
         """Name of the model."""
         return self._name
+
+    @property
+    def input(self):
+        return self.networks['default'].input
+
+    @property
+    def output(self):
+        return self.networks['default'].output
+
+    @property
+    def inputs(self):
+        return self.networks['default'].inputs
+
+    @property
+    def outputs(self):
+        return self.networks['default'].outputs
 
     def _get_variables(self):
         if self._variable_scope:

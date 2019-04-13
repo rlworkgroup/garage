@@ -14,7 +14,7 @@ class SimpleCNNModel(Model):
         self.strides = strides
         self.padding = padding
 
-    def _build(self, obs_input):
+    def _build(self, obs_input, name=None):
         current_size = obs_input.get_shape().as_list()[1]
         for filter_dim, stride in zip(self.filter_dims, self.strides):
             if self.padding == 'SAME':

@@ -6,6 +6,7 @@ from garage.misc.overrides import overrides
 from garage.tf.distributions import Categorical
 from garage.tf.models import CNNModel
 from garage.tf.models import MLPModel
+from garage.tf.models import Sequential
 from garage.tf.policies.base2 import StochasticPolicy2
 
 
@@ -20,9 +21,17 @@ class CategoricalConvPolicyWithModel(StochasticPolicy2):
 
     Args:
         env_spec: Environment specification.
-        conv_filters: Number of filters.
-        conv_filter_sizes: Dimension of the filters.
-        conv_strides: The stride of the sliding window.
+        conv_filter_sizes(tuple[int]): Dimension of the filters. For example,
+            (3, 5) means there are two convolutional layers. The filter for
+            first layer is of dimension (3 x 3) and the second one is of
+            dimension (5 x 5).
+        conv_filters(tuple[int]): Number of filters. For example, (3, 32) means
+            there are two convolutional layers. The filter for the first layer
+            has 3 channels and the second one with 32 channels.
+        conv_strides(tuple[int]): The stride of the sliding window. For
+            example, (1, 2) means there are two convolutional layers. The
+            stride of the filter for first layer is 1 and that of the second
+            layer is 2.
         conv_pad: The type of padding algorithm to use,
             either 'SAME' or 'VALID'.
         name: Variable scope of the policy.
@@ -50,18 +59,17 @@ class CategoricalConvPolicyWithModel(StochasticPolicy2):
             'CategoricalConvPolicy only works with akro.tf.Discrete'
             'action space.')
         super().__init__(name, env_spec)
-        self.obs_dim = env_spec.observation_space.flat_dim
+        self.obs_dim = env_spec.observation_space.shape
         self.action_dim = env_spec.action_space.n
 
-        self.add_model(
+        self.model = Sequential(
             CNNModel(
                 filter_dims=conv_filter_sizes,
                 num_filters=conv_filters,
                 strides=conv_strides,
                 padding=conv_pad,
                 hidden_nonlinearity=hidden_nonlinearity,
-                name='CNNModel'))
-        self.add_model(
+                name='CNNModel'),
             MLPModel(
                 output_dim=self.action_dim,
                 hidden_sizes=hidden_sizes,
@@ -73,13 +81,13 @@ class CategoricalConvPolicyWithModel(StochasticPolicy2):
         self._initialize()
 
     def _initialize(self):
-        state_input = tf.placeholder(tf.float32, shape=(None, self.obs_dim))
+        state_input = tf.placeholder(tf.float32, shape=(None, ) + self.obs_dim)
 
         with tf.variable_scope(self._variable_scope):
-            self.build_models(state_input)
+            self.model.build(state_input)
 
         self._f_prob = tf.get_default_session().make_callable(
-            self.outputs, feed_list=[self.input])
+            self.model.outputs, feed_list=[self.model.input])
 
     @property
     def vectorized(self):
@@ -90,7 +98,7 @@ class CategoricalConvPolicyWithModel(StochasticPolicy2):
     def dist_info_sym(self, obs_var, state_info_vars=None, name=None):
         """Symbolic graph of the distribution."""
         with tf.variable_scope(self._variable_scope):
-            prob = self.build_models(obs_var, name=name)
+            prob = self.model.build(obs_var, name=name)
         return dict(prob=prob)
 
     @overrides
@@ -102,15 +110,15 @@ class CategoricalConvPolicyWithModel(StochasticPolicy2):
     @overrides
     def get_action(self, observation):
         """Return a single action."""
-        flat_obs = self.observation_space.flatten(observation)
-        prob = self._f_prob([flat_obs])[0]
+        # flat_obs = self.observation_space.flatten(observation)
+        prob = self._f_prob([observation])[0]
         action = self.action_space.weighted_sample(prob)
         return action, dict(prob=prob)
 
     def get_actions(self, observations):
         """Return multiple actions."""
-        flat_obs = self.observation_space.flatten_n(observations)
-        probs = self._f_prob(flat_obs)
+        # flat_obs = self.observation_space.flatten_n(observations)
+        probs = self._f_prob(observations)
         actions = list(map(self.action_space.weighted_sample, probs))
         return actions, dict(prob=probs)
 

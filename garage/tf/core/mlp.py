@@ -1,4 +1,4 @@
-"""MLP model in TensorFlow."""
+"""MLP in TensorFlow."""
 
 import tensorflow as tf
 
@@ -15,7 +15,9 @@ def mlp(input_var,
         output_b_init=tf.zeros_initializer,
         layer_normalization=False):
     """
-    MLP model.
+    Multi-layer perceptron (MLP).
+
+    It maps real-valued inputs to real-valued outputs.
 
     Args:
         input_var: Input tf.Tensor to the MLP.

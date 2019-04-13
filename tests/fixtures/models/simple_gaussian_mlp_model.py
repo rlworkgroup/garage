@@ -14,7 +14,7 @@ class SimpleGaussianMLPModel(Model):
     def network_output_spec(self):
         return ['sample', 'mean', 'log_std', 'std_param', 'dist']
 
-    def _build(self, obs_input):
+    def _build(self, obs_input, name=None):
         mean = tf.fill((tf.shape(obs_input)[0], self.output_dim), 0.5)
         log_std = tf.fill((tf.shape(obs_input)[0], self.output_dim), 0.5)
         action = mean + log_std * 0.5

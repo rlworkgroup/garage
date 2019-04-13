@@ -1,4 +1,4 @@
-"""CNN model in TensorFlow."""
+"""CNN in TensorFlow."""
 
 import tensorflow as tf
 
@@ -13,15 +13,23 @@ def cnn(input_var,
         hidden_w_init=tf.glorot_uniform_initializer(),
         hidden_b_init=tf.zeros_initializer()):
     """
-    CNN model. Based on 'NHWC' data format: [batch, height, width, channel].
+    CNN. Based on 'NHWC' data format: [batch, height, width, channel].
 
     Args:
         input_var: Input tf.Tensor to the CNN.
-        filter_dims: Dimension of the filters.
-        num_filters: Number of filters.
-        strides: The stride of the sliding window.
+        filter_dims(tuple[int]): Dimension of the filters. For example,
+            (3, 5) means there are two convolutional layers. The filter for
+            first layer is of dimension (3 x 3) and the second one is of
+            dimension (5 x 5).
+        num_filters(tuple[int]): Number of filters. For example, (3, 32) means
+            there are two convolutional layers. The filter for the first layer
+            has 3 channels and the second one with 32 channels.
+        strides(tuple[int]): The stride of the sliding window. For example,
+            (1, 2) means there are two convolutional layers. The stride of the
+            filter for first layer is 1 and that of the second layer is 2.
         name: Variable scope of the cnn.
-        padding: The type of padding algorithm to use, from "SAME", "VALID".
+        padding: The type of padding algorithm to use,
+            either 'SAME' or 'VALID'.
         hidden_nonlinearity: Activation function for
                     intermediate dense layer(s).
         hidden_w_init: Initializer function for the weight
