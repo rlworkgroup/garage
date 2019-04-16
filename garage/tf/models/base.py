@@ -188,8 +188,7 @@ class Model(BaseModel):
         if not self._networks:
             # First time building the model, so self._networks are empty
             # We store the variable_scope to reenter later when we reuse it
-            with tf.variable_scope(
-                    self._name, reuse=False) as self._variable_scope:
+            with tf.variable_scope(self._name) as self._variable_scope:
                 with tf.name_scope(name=network_name):
                     network = Network()
                     network._inputs = inputs
@@ -241,7 +240,8 @@ class Model(BaseModel):
               def _build(self, state_input, action_input, name=None).
               It would be usually same as the inputs in build().
             name (str): Inner model name, also the variable scope of the
-                inner model, if exist.
+                inner model, if exist. One example is
+                garage.tf.models.Sequential.
 
         Return:
             output: Tensor output(s) of the model.

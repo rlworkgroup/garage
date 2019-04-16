@@ -1,5 +1,7 @@
 """Policy base classes without Parameterized."""
 
+from garage.misc.tensor_utils import flatten_tensors, unflatten_tensors
+
 
 class Policy2:
     """
@@ -102,6 +104,56 @@ class Policy2:
     def get_global_vars(self):
         """Get global vars."""
         return self._variable_scope.global_variables()
+
+    def get_params(self, trainable=True):
+        """Get the trainable variables."""
+        return self.get_trainable_vars()
+
+    def get_param_dtypes(self, **tags):
+        tag_tuple = tuple(sorted(list(tags.items()), key=lambda x: x[0]))
+        if tag_tuple not in self._cached_param_dtypes:
+            params = self.get_params(**tags)
+            param_values = tf.get_default_session().run(params)
+            self._cached_param_dtypes[tag_tuple] = [
+                val.dtype for val in param_values
+            ]
+        return self._cached_param_dtypes[tag_tuple]
+
+    def get_param_shapes(self, **tags):
+        tag_tuple = tuple(sorted(list(tags.items()), key=lambda x: x[0]))
+        if tag_tuple not in self._cached_param_shapes:
+            params = self.get_params(**tags)
+            param_values = tf.get_default_session().run(params)
+            self._cached_param_shapes[tag_tuple] = [
+                val.shape for val in param_values
+            ]
+        return self._cached_param_shapes[tag_tuple]
+
+    def get_param_values(self, **tags):
+        params = self.get_params(**tags)
+        param_values = tf.get_default_session().run(params)
+        return flatten_tensors(param_values)
+
+    def set_param_values(self, param_values, name=None, **tags):
+        ops = []
+        feed_dict = dict()
+        param_values = unflatten_tensors(param_values,
+                                         self.get_param_shapes(**tags))
+        for param, value in zip(self.get_params(**tags), param_values):
+            if param not in self._cached_assign_ops:
+                assign_placeholder = tf.placeholder(
+                    dtype=param.dtype.base_dtype)
+                assign_op = tf.assign(param, assign_placeholder)
+                self._cached_assign_ops[param] = assign_op
+                self._cached_assign_placeholders[param] = assign_placeholder
+            ops.append(self._cached_assign_ops[param])
+            feed_dict[self._cached_assign_placeholders[param]] = value
+
+        tf.get_default_session().run(ops, feed_dict=feed_dict)
+
+    def flat_to_params(self, flattened_params, **tags):
+        return unflatten_tensors(flattened_params,
+                                 self.get_param_shapes(**tags))
 
 
 class StochasticPolicy2(Policy2):

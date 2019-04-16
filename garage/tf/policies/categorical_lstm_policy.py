@@ -3,7 +3,6 @@ import numpy as np
 import tensorflow as tf
 
 from garage.core import Serializable
-from garage.misc import special
 from garage.misc.overrides import overrides
 from garage.tf.core import LayersPowered
 import garage.tf.core.layers as L
@@ -16,12 +15,18 @@ from garage.tf.policies.base import StochasticPolicy
 class CategoricalLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
     def __init__(self,
                  env_spec,
-                 name="CategoricalLSTMPolicy",
+                 name='CategoricalLSTMPolicy',
                  hidden_dim=32,
+                 hidden_nonlinearity=tf.nn.tanh,
+                 hidden_w_init=L.XavierUniformInitializer(),
+                 recurrent_nonlinearity=tf.nn.sigmoid,
+                 recurrent_w_x_init=L.XavierUniformInitializer(),
+                 recurrent_w_h_init=L.OrthogonalInitializer(),
+                 output_nonlinearity=tf.nn.softmax,
+                 output_w_init=L.XavierUniformInitializer(),
                  feature_network=None,
                  prob_network=None,
                  state_include_action=True,
-                 hidden_nonlinearity=tf.tanh,
                  forget_bias=1.0,
                  use_peepholes=False,
                  lstm_layer_cls=L.LSTMLayer):
@@ -33,8 +38,8 @@ class CategoricalLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
         """
         assert isinstance(env_spec.action_space, Discrete)
 
-        self._prob_network_name = "prob_network"
-        with tf.variable_scope(name, "CategoricalLSTMPolicy"):
+        self._prob_network_name = 'prob_network'
+        with tf.variable_scope(name, 'CategoricalLSTMPolicy'):
             Serializable.quick_init(self, locals())
             super(CategoricalLSTMPolicy, self).__init__(env_spec)
 
@@ -46,7 +51,7 @@ class CategoricalLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
             else:
                 input_dim = obs_dim
 
-            l_input = L.InputLayer(shape=(None, None, input_dim), name="input")
+            l_input = L.InputLayer(shape=(None, None, input_dim), name='input')
 
             if feature_network is None:
                 feature_dim = input_dim
@@ -58,7 +63,7 @@ class CategoricalLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
                 l_feature = L.OpLayer(
                     l_flat_feature,
                     extras=[l_input],
-                    name="reshape_feature",
+                    name='reshape_feature',
                     op=lambda flat_feature, input: tf.reshape(
                         flat_feature,
                         tf.stack([
@@ -75,7 +80,12 @@ class CategoricalLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
                     output_dim=env_spec.action_space.n,
                     hidden_dim=hidden_dim,
                     hidden_nonlinearity=hidden_nonlinearity,
-                    output_nonlinearity=tf.nn.softmax,
+                    hidden_w_init=hidden_w_init,
+                    recurrent_nonlinearity=recurrent_nonlinearity,
+                    recurrent_w_x_init=recurrent_w_x_init,
+                    recurrent_w_h_init=recurrent_w_h_init,
+                    output_nonlinearity=output_nonlinearity,
+                    output_w_init=output_w_init,
                     forget_bias=forget_bias,
                     use_peepholes=use_peepholes,
                     lstm_layer_cls=lstm_layer_cls,
@@ -87,11 +97,11 @@ class CategoricalLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
             self.state_include_action = state_include_action
 
             flat_input_var = tf.placeholder(
-                dtype=tf.float32, shape=(None, input_dim), name="flat_input")
+                dtype=tf.float32, shape=(None, input_dim), name='flat_input')
             if feature_network is None:
                 feature_var = flat_input_var
             else:
-                with tf.name_scope("feature_network", values=[flat_input_var]):
+                with tf.name_scope('feature_network', values=[flat_input_var]):
                     feature_var = L.get_output(
                         l_flat_feature,
                         {feature_network.input_layer: flat_input_var})
@@ -127,13 +137,13 @@ class CategoricalLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
 
     @overrides
     def dist_info_sym(self, obs_var, state_info_vars, name=None):
-        with tf.name_scope(name, "dist_info_sym", [obs_var, state_info_vars]):
+        with tf.name_scope(name, 'dist_info_sym', [obs_var, state_info_vars]):
             n_batches = tf.shape(obs_var)[0]
             n_steps = tf.shape(obs_var)[1]
             obs_var = tf.reshape(obs_var, tf.stack([n_batches, n_steps, -1]))
             obs_var = tf.cast(obs_var, tf.float32)
             if self.state_include_action:
-                prev_action_var = state_info_vars["prev_action"]
+                prev_action_var = state_info_vars['prev_action']
                 prev_action_var = tf.cast(prev_action_var, tf.float32)
                 all_input_var = tf.concat(
                     axis=2, values=[obs_var, prev_action_var])
@@ -176,10 +186,6 @@ class CategoricalLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
         self.prev_hiddens[dones] = self.prob_network.hid_init_param.eval()
         self.prev_cells[dones] = self.prob_network.cell_init_param.eval()
 
-    # The return value is a pair. The first item is a matrix (N, A), where each
-    # entry corresponds to the action value taken. The second item is a vector
-    # of length N, where each entry is the density value for that action, under
-    # the current policy
     @overrides
     def get_action(self, observation):
         actions, agent_infos = self.get_actions([observation])
@@ -196,15 +202,14 @@ class CategoricalLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
         probs, hidden_vec, cell_vec = self.f_step_prob(
             all_input,
             np.concatenate([self.prev_hiddens, self.prev_cells], axis=-1))
-        actions = special.weighted_sample_n(probs,
-                                            np.arange(self.action_space.n))
+        actions = list(map(self.action_space.weighted_sample, probs))
         prev_actions = self.prev_actions
         self.prev_actions = self.action_space.flatten_n(actions)
         self.prev_hiddens = hidden_vec
         self.prev_cells = cell_vec
         agent_info = dict(prob=probs)
         if self.state_include_action:
-            agent_info["prev_action"] = np.copy(prev_actions)
+            agent_info['prev_action'] = np.copy(prev_actions)
         return actions, agent_info
 
     @property
@@ -220,7 +225,7 @@ class CategoricalLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
     def state_info_specs(self):
         if self.state_include_action:
             return [
-                ("prev_action", (self.action_dim, )),
+                ('prev_action', (self.action_dim, )),
             ]
         else:
             return []

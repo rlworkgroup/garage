@@ -97,9 +97,7 @@ class TestCategoricalMLPPolicyWithModel(TfGraphTestCase):
         ((1, 1), 1),
         ((2, 2), 2),
     )
-    @mock.patch('numpy.random.rand')
-    def test_is_pickleable(self, obs_dim, action_dim, mock_rand):
-        mock_rand.return_value = 0
+    def test_is_pickleable(self, obs_dim, action_dim):
         env = TfEnv(DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
         with mock.patch(('garage.tf.policies.'
                          'categorical_mlp_policy_with_model.MLPModel'),
