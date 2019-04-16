@@ -235,21 +235,29 @@ class GaussianMLPRegressor(LayersPowered, Serializable, Parameterized):
             if self._normalize_inputs:
                 self._x_mean_var_ph = tf.placeholder(
                     shape=(1, ) + input_shape,
-                    dtype=tf.float32,)
+                    dtype=tf.float32,
+                )
                 self._x_std_var_ph = tf.placeholder(
                     shape=(1, ) + input_shape,
-                    dtype=tf.float32,)
-                self._assign_x_mean = tf.assign(self._x_mean_var, self._x_mean_var_ph)
-                self._assign_x_std = tf.assign(self._x_std_var, self._x_std_var_ph)
+                    dtype=tf.float32,
+                )
+                self._assign_x_mean = tf.assign(self._x_mean_var,
+                                                self._x_mean_var_ph)
+                self._assign_x_std = tf.assign(self._x_std_var,
+                                               self._x_std_var_ph)
             if self._normalize_outputs:
                 self._y_mean_var_ph = tf.placeholder(
                     shape=(1, output_dim),
-                    dtype=tf.float32,)
+                    dtype=tf.float32,
+                )
                 self._y_std_var_ph = tf.placeholder(
                     shape=(1, output_dim),
-                    dtype=tf.float32,)
-                self._assign_y_mean = tf.assign(self._y_mean_var, self._y_mean_var_ph)
-                self._assign_y_std = tf.assign(self._y_std_var, self._y_std_var_ph)
+                    dtype=tf.float32,
+                )
+                self._assign_y_mean = tf.assign(self._y_mean_var,
+                                                self._y_mean_var_ph)
+                self._assign_y_std = tf.assign(self._y_std_var,
+                                               self._y_std_var_ph)
 
     def fit(self, xs, ys):
         if self._subsample_factor < 1:
@@ -265,14 +273,19 @@ class GaussianMLPRegressor(LayersPowered, Serializable, Parameterized):
                 self._x_mean_var_ph: np.mean(xs, axis=0, keepdims=True),
                 self._x_std_var_ph: np.std(xs, axis=0, keepdims=True) + 1e-8,
             }
-            sess.run([self._assign_x_mean, self._assign_x_std,], feed_dict=feed_dict)
+            sess.run([
+                self._assign_x_mean,
+                self._assign_x_std,
+            ],
+                     feed_dict=feed_dict)
         if self._normalize_outputs:
             # recompute normalizing constants for outputs
             feed_dict = {
                 self._y_mean_var_ph: np.mean(ys, axis=0, keepdims=True),
                 self._y_std_var_ph: np.std(ys, axis=0, keepdims=True) + 1e-8,
             }
-            sess.run([self._assign_y_mean, self._assign_y_std], feed_dict=feed_dict)
+            sess.run([self._assign_y_mean, self._assign_y_std],
+                     feed_dict=feed_dict)
         if self._use_trust_region:
             old_means, old_log_stds = self._f_pdists(xs)
             inputs = [xs, ys, old_means, old_log_stds]

@@ -6,7 +6,6 @@ from tests.fixtures import TfGraphTestCase
 
 
 class TestGaussianMlpRegressor(TfGraphTestCase):
-
     def test_fit_normalized(self):
         gmr = GaussianMLPRegressor(input_shape=(1, ), output_dim=1)
         self.sess.run(tf.global_variables_initializer())
@@ -21,14 +20,16 @@ class TestGaussianMlpRegressor(TfGraphTestCase):
             # There will be assign operation in the first
             # iteration so let's take the second one to check.
             if i == 1:
-                assign_ops_counts = np.sum(np.array([
-                    'Assign' in n.name
-                    for n in tf.get_default_graph().as_graph_def().node
-                ]).astype(int))
-        assign_ops_counts_after = np.sum(np.array([
-            'Assign' in n.name
-            for n in tf.get_default_graph().as_graph_def().node
-        ]).astype(int))
+                assign_ops_counts = np.sum(
+                    np.array([
+                        'Assign' in n.name
+                        for n in tf.get_default_graph().as_graph_def().node
+                    ]).astype(int))
+        assign_ops_counts_after = np.sum(
+            np.array([
+                'Assign' in n.name
+                for n in tf.get_default_graph().as_graph_def().node
+            ]).astype(int))
 
         assert assign_ops_counts == assign_ops_counts_after
 
