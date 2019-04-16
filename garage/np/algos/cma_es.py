@@ -36,6 +36,7 @@ class CMAES(RLAlgorithm, Serializable):
                  discount=0.99,
                  sigma0=1.,
                  **kwargs):
+        self.quick_init(locals())
         self.env_spec = env_spec
         self.policy = policy
         self.baseline = baseline

@@ -25,6 +25,7 @@ class TRPO(NPO):
                  optimizer=None,
                  optimizer_args=None,
                  **kwargs):
+        self.quick_init(locals())
         if not optimizer:
             if kl_constraint == KLConstraint.HARD:
                 optimizer = ConjugateGradientOptimizer

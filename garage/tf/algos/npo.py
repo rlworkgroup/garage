@@ -56,6 +56,7 @@ class NPO(BatchPolopt):
                  use_neg_logli_entropy=False,
                  stop_entropy_gradient=False,
                  **kwargs):
+        self.quick_init(locals())
         self.name = name
         self._name_scope = tf.name_scope(self.name)
         self._use_softplus_entropy = use_softplus_entropy

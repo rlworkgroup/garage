@@ -18,6 +18,7 @@ import psutil
 
 from garage import config
 from garage.experiment import deterministic
+from garage.experiment.local_tf_runner import LocalRunner
 from garage.experiment.experiment import concretize
 from garage.logger import CsvOutput
 from garage.logger import logger
@@ -184,10 +185,9 @@ def run_experiment(argv):
     logger.push_prefix("[%s] " % args.exp_name)
 
     if args.resume_from is not None:
-        data = joblib.load(args.resume_from)
-        assert 'algo' in data
-        algo = data['algo']
-        algo.train()
+        with LocalRunner() as runner:
+            runner.restore(args.resume_from)
+            runner.train(10000)
     else:
         # read from stdin
         if args.use_cloudpickle:

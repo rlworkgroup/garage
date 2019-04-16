@@ -28,6 +28,7 @@ class ERWR(VPG):
                  optimizer_args=None,
                  positive_adv=True,
                  **kwargs):
+        self.quick_init(locals())
         if optimizer is None:
             optimizer = LbfgsOptimizer
             if optimizer_args is None:

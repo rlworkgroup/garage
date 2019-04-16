@@ -9,6 +9,7 @@ class VPG(NPO):
     """
 
     def __init__(self, optimizer=None, optimizer_args=None, **kwargs):
+        self.quick_init(locals())
         if optimizer is None:
             default_args = dict(
                 batch_size=None,

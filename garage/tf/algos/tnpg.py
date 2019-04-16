@@ -12,6 +12,7 @@ class TNPG(NPO):
     """
 
     def __init__(self, optimizer=None, optimizer_args=None, **kwargs):
+        self.quick_init(locals())
         if optimizer is None:
             optimizer = ConjugateGradientOptimizer
             default_args = dict(max_backtracks=1)

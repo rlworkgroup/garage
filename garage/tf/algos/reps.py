@@ -50,6 +50,7 @@ class REPS(BatchPolopt):
                  dual_optimizer_args=dict(maxiter=50),
                  name="REPS",
                  **kwargs):
+        self.quick_init(locals())
         self.name = name
         self._name_scope = tf.name_scope(self.name)
 

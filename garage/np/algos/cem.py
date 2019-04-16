@@ -50,6 +50,7 @@ class CEM(RLAlgorithm, Serializable):
                  extra_std=1.,
                  extra_decay_time=100,
                  **kwargs):
+        self.quick_init(locals())
         self.env_spec = env_spec
         self.policy = policy
         self.baseline = baseline

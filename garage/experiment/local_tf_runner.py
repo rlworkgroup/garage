@@ -73,6 +73,8 @@ class LocalRunner:
 
         if restore_from:
             self.restore(restore_from)
+        self.setup_args = None
+        self.train_args = None
 
     def __enter__(self):
         """Set self.sess as the default session.
@@ -135,9 +137,14 @@ class LocalRunner:
         logger.log(self.sess.graph)
         self.has_setup = True
 
+        self.setup_args = dict(
+            sampler_cls=sampler_cls,
+            sampler_args=sampler_args
+        )
+
     def initialize_tf_vars(self):
         """Initialize all uninitialized variables in session."""
-        with tf.name_scope('initialize_tf_vars'):
+        with tf.name_scope("initialize_tf_vars"):
             uninited_set = [
                 e.decode()
                 for e in self.sess.run(tf.report_uninitialized_variables())
@@ -178,7 +185,7 @@ class LocalRunner:
             logger.log('Obtaining samples...')
         return self.sampler.obtain_samples(itr, batch_size)
 
-    def save(self, itr, paths=None):
+    def save(self, epoch, paths=None):
         """Save snapshot of current batch.
 
         Args:
@@ -188,18 +195,56 @@ class LocalRunner:
         """
         assert self.has_setup
 
-        logger.log('Saving snapshot...')
-        params = self.algo.get_itr_snapshot(itr)
+        logger.log("Saving snapshot...")
+
+        params = dict()
+        # Saves arguments
+        params['setup_args'] = self.setup_args
+        params['train_args'] = self.train_args
+
+        # Save states
         params['env'] = self.env
+        params['algo'] = self.algo
         if paths:
             params['paths'] = paths
-        snapshotter.save_itr_params(itr, params)
+        params['epoch'] = epoch
+
+        snapshotter.save_itr_params(epoch, params)
+
         logger.log('Saved')
+
 
     def restore(self, snapshot_dir, itr='last'):
         snapshotter.snapshot_dir = snapshot_dir
         saved = snapshotter.load(itr)
-        self.setup(env=saved['env'], algo=saved['algo'])
+
+        self.setup_args = saved['setup_args']
+        self.train_args = saved['train_args']
+
+        self.setup(
+            env=saved['env'],
+            algo=saved['algo'],
+            sampler_cls=self.setup_args['sampler_cls'],
+            sampler_args=self.setup_args['sampler_args']
+        )
+
+        n_epochs = self.train_args['epochs']
+        start_epochs = self.train_args['epoch']
+        n_epoch_cycles = self.train_args['n_epoch_cycles']
+        batch_size = self.train_args['batch_size']
+        store_paths = self.train_args['store_path']
+        pause_for_plot = self.train_args['pause_for_plot']
+
+        logger.log("Restore from epoch " + start_epochs)
+
+        self.train_internal(
+            n_epochs,
+            start_epochs=start_epochs,
+            n_epoch_cycles=n_epoch_cycles,
+            batch_size=batch_size,
+            store_paths=store_paths,
+            pause_for_plot=pause_for_plot
+        )
 
     def log_diagnostics(self, pause_for_plot=False):
         """Log diagnostics.
@@ -215,6 +260,37 @@ class LocalRunner:
             self.plotter.update_plot(self.policy, self.algo.max_path_length)
             if pause_for_plot:
                 input('Plotting evaluation run: Press Enter to " "continue...')
+
+    def train_internal(self,
+                       n_epochs,
+                       start_epochs,
+                       n_epoch_cycles=1,
+                       batch_size=None,
+                       store_paths=False,
+                       pause_for_plot=False):
+        assert self.has_setup, ('Use Runner.setup() to setup runner before '
+                                'training.')
+
+        self.start_worker()
+        self.start_time = time.time()
+
+        itr = start_epochs * n_epoch_cycles
+        last_return = None
+        for epoch in range(start_epochs):
+            self.itr_start_time = time.time()
+            paths = None
+            with logger.prefix('epoch #%d | ' % epoch):
+                for cycle in range(n_epoch_cycles):
+                    paths = self.obtain_samples(itr, batch_size)
+                    paths = self.sampler.process_samples(itr, paths)
+                    last_return = self.algo.train_once(itr, paths)
+                    itr += 1
+                self.save(epoch, paths if store_paths else None)
+                self.log_diagnostics(pause_for_plot)
+                logger.dump_all(itr)
+                tabular.clear()
+        self.shutdown_worker()
+        return last_return
 
     def train(self,
               n_epochs,
@@ -248,26 +324,23 @@ class LocalRunner:
             else:
                 batch_size = 40 * self.algo.max_path_length
 
-        self.n_epoch_cycles = n_epoch_cycles
+        # Save arguments for restore
+        self.train_args = dict(
+            n_epochs=n_epochs,
+            n_epoch_cycles=n_epoch_cycles,
+            batch_size=batch_size,
+            plot=plot,
+            store_paths=store_paths,
+            pause_for_plot=pause_for_plot
+        )
 
-        self.plot = plot
-        self.start_worker()
-        self.start_time = time.time()
+        last_return = self.train_internal(
+            n_epochs,
+            0,
+            n_epoch_cycles,
+            batch_size,
+            store_paths,
+            pause_for_plot
+        )
 
-        itr = 0
-        last_return = None
-        for epoch in range(n_epochs):
-            self.itr_start_time = time.time()
-            paths = None
-            with logger.prefix('epoch #%d | ' % epoch):
-                for cycle in range(n_epoch_cycles):
-                    paths = self.obtain_samples(itr, batch_size)
-                    paths = self.sampler.process_samples(itr, paths)
-                    last_return = self.algo.train_once(itr, paths)
-                    itr += 1
-                self.save(epoch, paths if store_paths else None)
-                self.log_diagnostics(pause_for_plot)
-                logger.dump_all(itr)
-                tabular.clear()
-        self.shutdown_worker()
         return last_return

@@ -65,6 +65,7 @@ class DDPG(OffPolicyRLAlgorithm):
             max_action(float): Maximum action magnitude.
             name(str): Name of the algorithm shown in computation graph.
         """
+        self.quick_init(locals())
         action_bound = env_spec.action_space.high
         self.max_action = action_bound if max_action is None else max_action
         self.tau = target_update_tau
