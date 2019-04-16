@@ -17,7 +17,7 @@ class TestGaussianMlpRegressor(TfGraphTestCase):
         returns = returns.reshape((-1, 1))
         for i in range(150):
             gmr.fit(observations, returns)
-            # There will be assign operation in the first
+            # There will be new assign operations created in the first
             # iteration so let's take the second one to check.
             if i == 1:
                 assign_ops_counts = np.sum(
