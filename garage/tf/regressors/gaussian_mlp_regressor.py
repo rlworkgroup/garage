@@ -276,7 +276,7 @@ class GaussianMLPRegressor(LayersPowered, Serializable, Parameterized):
             sess.run([
                 self._assign_x_mean,
                 self._assign_x_std,
-                ], feed_dict=feed_dict)  # yapf: disable
+            ], feed_dict=feed_dict)  # yapf: disable
         if self._normalize_outputs:
             # recompute normalizing constants for outputs
             feed_dict = {
