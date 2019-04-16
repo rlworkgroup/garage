@@ -95,3 +95,4 @@ The collection of these jsons are consolidated by benchmarks/compile_file.py, wh
     }
 }
 ```
+# flake8: noqa
