@@ -19,6 +19,7 @@ exclude_all=(
 .git
 __pycache__
 $(cat .gitignore)
+*.md
 )
 
 
@@ -38,6 +39,7 @@ W504  # line break after binary operator
 exclude_changed=(
 ./tests/'*'
 $(cat .gitignore)
+*.md
 )
 
 
@@ -54,6 +56,7 @@ W504  # line break after binary operator
 exclude_added=(
 ./tests/'*'
 $(cat .gitignore)
+*.md
 )
 
 
@@ -71,6 +74,7 @@ test_exclude_all=(
 .git
 __pycache__
 $(cat .gitignore)
+*.md
 )
 
 
@@ -85,6 +89,7 @@ W503  # line break before binary operator
 # Files or directories to exclude from checks applied to changed test files.
 test_exclude_changed=(
 $(cat .gitignore)
+*.md
 )
 
 
@@ -99,6 +104,7 @@ W503  # line break before binary operator
 # Files or directories to exclude from checks applied to added test files.
 test_exclude_added=(
 $(cat .gitignore)
+*.md
 )
 
 
