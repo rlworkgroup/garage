@@ -28,7 +28,7 @@ class Noop(gym.Wrapper):
         obs = self.env.reset(**kwargs)
         noops = np.random.randint(1, self._noop_max + 1)
         for _ in range(noops):
-            obs, _, done, _ = self.env.step(self._noop_action)
+            obs, _, done, _ = self.step(self._noop_action)
             if done:
                 obs = self.env.reset(**kwargs)
         return obs
