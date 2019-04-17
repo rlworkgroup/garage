@@ -173,7 +173,7 @@ def compute_advantages(discount,
                        baselines,
                        rewards,
                        name=None):
-    with tf.name_scope(name, "compute_advantages",
+    with tf.name_scope(name, 'compute_advantages',
                        [discount, gae_lambda, max_len, baselines, rewards]):
         # Calculate advantages
         #
