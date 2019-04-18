@@ -13,16 +13,16 @@ def compile_function(inputs, outputs, log_name=None):
     return run
 
 
-def flatten_batch(t, name="flatten_batch"):
+def flatten_batch(t, name='flatten_batch'):
     return tf.reshape(t, [-1] + list(t.shape[2:]), name=name)
 
 
 def flatten_batch_dict(d, name=None):
-    with tf.name_scope(name, "flatten_batch_dict", [d]):
+    with tf.name_scope(name, 'flatten_batch_dict', [d]):
         return {k: flatten_batch(v) for k, v in d.items()}
 
 
-def filter_valids(t, valid, name="filter_valids"):
+def filter_valids(t, valid, name='filter_valids'):
     # 'valid' is either 0 or 1 with dtype of tf.float32
     # Must round before cast to prevent floating-error
     return tf.dynamic_partition(
@@ -30,7 +30,7 @@ def filter_valids(t, valid, name="filter_valids"):
 
 
 def filter_valids_dict(d, valid, name=None):
-    with tf.name_scope(name, "filter_valids_dict", [d, valid]):
+    with tf.name_scope(name, 'filter_valids_dict', [d, valid]):
         return {k: filter_valids(v, valid) for k, v in d.items()}
 
 
@@ -55,7 +55,7 @@ def flatten_tensor_variables(ts):
     return tf.concat(
         axis=0,
         values=[tf.reshape(x, [-1]) for x in ts],
-        name="flatten_tensor_variables")
+        name='flatten_tensor_variables')
 
 
 def unflatten_tensor_variables(flatarr, shapes, symb_arrs):
@@ -173,7 +173,7 @@ def compute_advantages(discount,
                        baselines,
                        rewards,
                        name=None):
-    with tf.name_scope(name, "compute_advantages",
+    with tf.name_scope(name, 'compute_advantages',
                        [discount, gae_lambda, max_len, baselines, rewards]):
         # Calculate advantages
         #
@@ -222,8 +222,24 @@ def compute_advantages(discount,
     return advantages
 
 
+def center_advs(advs, axes, eps, offset=0, scale=1, name=None):
+    """ Normalize the advs tensor """
+    with tf.name_scope(name, 'center_adv', [advs, axes, eps]):
+        mean, var = tf.nn.moments(advs, axes=axes)
+        advs = tf.nn.batch_normalization(advs, mean, var, offset, scale, eps)
+    return advs
+
+
+def positive_advs(advs, eps, name=None):
+    """ Make all the values in the advs tensor positive """
+    with tf.name_scope(name, 'positive_adv', [advs, eps]):
+        m = tf.reduce_min(advs)
+        advs = (advs - m) + eps
+    return advs
+
+
 def discounted_returns(discount, max_len, rewards, name=None):
-    with tf.name_scope(name, "discounted_returns",
+    with tf.name_scope(name, 'discounted_returns',
                        [discount, max_len, rewards]):
         gamma = tf.constant(
             float(discount), dtype=tf.float32, shape=[max_len, 1, 1])

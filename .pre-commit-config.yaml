@@ -59,8 +59,8 @@ repos:
     #     stages: [commit, push]
     -   id: detect-private-key          # Checks for the existence of private keys.
         stages: [commit, push]
-    # -   id: double-quote-string-fixer   # This hook replaces double quoted strings with single quoted strings.
-    #     stages: [commit, push]
+    -   id: double-quote-string-fixer   # This hook replaces double quoted strings with single quoted strings.
+        stages: [commit, push]
     -   id: end-of-file-fixer           # Makes sure files end in a newline and only a newline.
         stages: [commit, push]
     # -   id: fix-encoding-pragma         # Add # -*- coding: utf-8 -*- to the top of python files.
