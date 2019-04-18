@@ -22,17 +22,20 @@ from garage.tf.samplers.batch_sampler import BatchSampler
 class OffPolicyVectorizedSampler(BatchSampler):
     """This class implements OffPolicyVectorizedSampler."""
 
-    def __init__(self, algo, env, n_envs=None):
+    def __init__(self, algo, env, n_envs=None, no_reset=True):
         """
         Construct an OffPolicyVectorizedSampler.
 
         :param algo: Algorithms.
         :param n_envs: Number of parallelized sampling envs.
+        :param no_reset: If Ture, don't reset environement after sampling.
         """
         if n_envs is None:
             n_envs = int(algo.rollout_batch_size)
         super(OffPolicyVectorizedSampler, self).__init__(algo, env, n_envs)
         self.n_envs = n_envs
+        self.no_reset = no_reset
+        self.last_obses = None
 
     @overrides
     def start_worker(self):
@@ -58,7 +61,10 @@ class OffPolicyVectorizedSampler(BatchSampler):
         :return: A list of paths.
         """
         paths = []
-        obses = self.vec_env.reset()
+        if not self.no_reset or self.last_obses is None:
+            obses = self.vec_env.reset()
+        else:
+            obses = self.last_obses
         dones = np.asarray([True] * self.vec_env.num_envs)
         running_paths = [None] * self.vec_env.num_envs
         n_samples = 0
@@ -84,8 +90,11 @@ class OffPolicyVectorizedSampler(BatchSampler):
                     input_obses)
 
             next_obses, rewards, dones, env_infos = self.vec_env.step(actions)
+            self.last_obses = next_obses
             agent_infos = tensor_utils.split_tensor_dict_list(agent_infos)
             env_infos = tensor_utils.split_tensor_dict_list(env_infos)
+            n_samples += len(next_obses)
+
             if agent_infos is None:
                 agent_infos = [dict() for _ in range(self.vec_env.num_envs)]
             if env_infos is None:
@@ -118,20 +127,20 @@ class OffPolicyVectorizedSampler(BatchSampler):
                                                    env_infos, dones):
                 if running_paths[idx] is None:
                     running_paths[idx] = dict(
-                        rewards=[],
-                        env_infos=[],
-                    )
+                        rewards=[], env_infos=[], dones=[])
                 running_paths[idx]["rewards"].append(reward)
                 running_paths[idx]["env_infos"].append(env_info)
+                running_paths[idx]["dones"].append(done)
 
-                if done:
+                if done or n_samples >= batch_size:
                     paths.append(
                         dict(
                             rewards=tensor_utils.stack_tensor_list(
                                 running_paths[idx]["rewards"]),
+                            dones=tensor_utils.stack_tensor_list(
+                                running_paths[idx]["dones"]),
                             env_infos=tensor_utils.stack_tensor_dict_list(
                                 running_paths[idx]["env_infos"])))
-                    n_samples += len(running_paths[idx]["rewards"])
                     running_paths[idx] = None
 
                     if self.algo.es:
