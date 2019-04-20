@@ -13,7 +13,8 @@ class Sequential(Model):
 
     Args:
         name: Variable scope of the Sequential model.
-        models: The models to be connected in sequential order.
+        models (list[garage.Model]): The models to be connected
+            in sequential order.
     """
 
     def __init__(self, *models, name=None):

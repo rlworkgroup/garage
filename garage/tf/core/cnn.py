@@ -71,13 +71,25 @@ def cnn_with_max_pooling(input_var,
     Args:
         input_var: Input tf.Tensor to the CNN.
         output_dim: Dimension of the network output.
-        filter_dims: Dimension of the filters.
-        num_filters: Number of filters.
-        strides: The strides of the sliding window.
+        filter_dims(tuple[int]): Dimension of the filters. For example,
+            (3, 5) means there are two convolutional layers. The filter for
+            first layer is of dimension (3 x 3) and the second one is of
+            dimension (5 x 5).
+        num_filters(tuple[int]): Number of filters. For example, (3, 32) means
+            there are two convolutional layers. The filter for the first layer
+            has 3 channels and the second one with 32 channels.
+        strides(tuple[int]): The stride of the sliding window. For example,
+            (1, 2) means there are two convolutional layers. The stride of the
+            filter for first layer is 1 and that of the second layer is 2.
         name: Variable scope of the cnn.
-        pool_shapes: Dimension of the pooling layer(s).
-        pool_strides: The strides of the pooling layer(s).
-        padding: The type of padding algorithm to use, from "SAME", "VALID".
+        pool_shapes(tuple[int]): Dimension of the pooling layer(s). For
+            example, (2, 2) means that all the pooling layers have
+            shape (2, 2).
+        pool_strides(tuple[int]): The strides of the pooling layer(s). For
+            example, (2, 2) means that all the pooling layers have
+            strides (2, 2).
+        padding: The type of padding algorithm to use,
+            either 'SAME' or 'VALID'.
         hidden_nonlinearity: Activation function for
                     intermediate dense layer(s).
         hidden_w_init: Initializer function for the weight
