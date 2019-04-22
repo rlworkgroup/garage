@@ -28,7 +28,7 @@ class OffPolicyVectorizedSampler(BatchSampler):
 
         :param algo: Algorithms.
         :param n_envs: Number of parallelized sampling envs.
-        :param no_reset: If Ture, don't reset environement after sampling.
+        :param no_reset: If True, don't reset environement after sampling.
         """
         if n_envs is None:
             n_envs = int(algo.rollout_batch_size)
@@ -80,9 +80,9 @@ class OffPolicyVectorizedSampler(BatchSampler):
         while n_samples < batch_size:
             policy.reset(dones)
             if self.algo.input_include_goal:
-                obs = [obs["observation"] for obs in obses]
-                d_g = [obs["desired_goal"] for obs in obses]
-                a_g = [obs["achieved_goal"] for obs in obses]
+                obs = [obs['observation'] for obs in obses]
+                d_g = [obs['desired_goal'] for obs in obses]
+                a_g = [obs['achieved_goal'] for obs in obses]
                 input_obses = np.concatenate((obs, d_g), axis=-1)
             else:
                 input_obses = obses
@@ -112,10 +112,10 @@ class OffPolicyVectorizedSampler(BatchSampler):
                     achieved_goal=a_g,
                     terminal=dones,
                     next_observation=[
-                        next_obs["observation"] for next_obs in next_obses
+                        next_obs['observation'] for next_obs in next_obses
                     ],
                     next_achieved_goal=[
-                        next_obs["achieved_goal"] for next_obs in next_obses
+                        next_obs['achieved_goal'] for next_obs in next_obses
                     ],
                 )
             else:
@@ -141,33 +141,33 @@ class OffPolicyVectorizedSampler(BatchSampler):
                         running_length=self._last_running_length[idx],
                         success_count=self._last_success_count[idx])
 
-                running_paths[idx]["rewards"].append(reward)
-                running_paths[idx]["env_infos"].append(env_info)
-                running_paths[idx]["dones"].append(done)
-                running_paths[idx]["running_length"] += 1
-                running_paths[idx]["undiscounted_return"] += reward
-                running_paths[idx]["success_count"] += env_info.get(
-                    "is_success") or 0
+                running_paths[idx]['rewards'].append(reward)
+                running_paths[idx]['env_infos'].append(env_info)
+                running_paths[idx]['dones'].append(done)
+                running_paths[idx]['running_length'] += 1
+                running_paths[idx]['undiscounted_return'] += reward
+                running_paths[idx]['success_count'] += env_info.get(
+                    'is_success') or 0
 
                 self._last_uncounted_discount[idx] += reward
                 self._last_success_count[idx] += env_info.get(
-                    "is_success") or 0
+                    'is_success') or 0
                 self._last_running_length[idx] += 1
 
                 if done or n_samples >= batch_size:
                     paths.append(
                         dict(
                             rewards=tensor_utils.stack_tensor_list(
-                                running_paths[idx]["rewards"]),
+                                running_paths[idx]['rewards']),
                             dones=tensor_utils.stack_tensor_list(
-                                running_paths[idx]["dones"]),
+                                running_paths[idx]['dones']),
                             env_infos=tensor_utils.stack_tensor_dict_list(
-                                running_paths[idx]["env_infos"]),
+                                running_paths[idx]['env_infos']),
                             running_length=running_paths[idx]
-                            ["running_length"],
+                            ['running_length'],
                             undiscounted_return=running_paths[idx]
-                            ["undiscounted_return"],
-                            success_count=running_paths[idx]["success_count"]))
+                            ['undiscounted_return'],
+                            success_count=running_paths[idx]['success_count']))
                     running_paths[idx] = None
 
                     if done:
@@ -190,15 +190,10 @@ class OffPolicyVectorizedSampler(BatchSampler):
         :param paths: A list of collected paths.
         :return: Processed sample data.
         """
-        success_history = []
-        for path in paths:
-            success_history.append(
-                path["success_count"] / path["running_length"])
-
         success_history = [
-            path["success_count"] / path["running_length"] for path in paths
+            path['success_count'] / path['running_length'] for path in paths
         ]
-        undiscounted_returns = [path["undiscounted_return"] for path in paths]
+        undiscounted_returns = [path['undiscounted_return'] for path in paths]
         samples_data = dict(
             undiscounted_returns=undiscounted_returns,
             success_history=success_history)

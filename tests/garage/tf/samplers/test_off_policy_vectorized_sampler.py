@@ -54,15 +54,15 @@ class TestOffPolicyVectorizedSampler(TfGraphTestCase):
             paths1 = sampler.obtain_samples(0, 5)
             paths2 = sampler.obtain_samples(0, 5)
 
-            len1 = sum([len(path["rewards"]) for path in paths1])
-            len2 = sum([len(path["rewards"]) for path in paths2])
+            len1 = sum([len(path['rewards']) for path in paths1])
+            len2 = sum([len(path['rewards']) for path in paths2])
 
             assert len1 == 5 and len2 == 5, \
-                "Sampler should respect batch_size"
+                'Sampler should respect batch_size'
 
-            assert len1 + len2 == paths2[0]["running_length"], \
-                "Running length should be the length of full path"
+            assert len1 + len2 == paths2[0]['running_length'], \
+                'Running length should be the length of full path'
 
-            assert ((paths1[0]["rewards"] + paths2[0]["rewards"]).sum()
-                    == paths2[0]["undiscounted_return"]), \
-                "Undiscounted_return should be the sum of rewards of full path"
+            assert ((paths1[0]['rewards'] + paths2[0]['rewards']).sum()
+                    == paths2[0]['undiscounted_return']), \
+                'Undiscounted_return should be the sum of rewards of full path'
