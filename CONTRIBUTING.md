@@ -37,7 +37,25 @@ These are garage-specific rules which are not part of the aforementioned style g
 * Python package imports should be sorted alphabetically within their PEP8 groupings. The sorting is alphabetical from left to right, ignoring case and Python keywords (i.e. `import`, `from`, `as`). Notable exceptions apply in `__init__.py` files, where sometimes this rule will trigger a circular import.
 * We prefer single-quoted strings (`'foo'`) over double-quoted strings (`"foo"`), unless there is a compelling escape or formatting reason for using single quotes (e.g. a single quote appears inside the string).
 * Add convenience imports in `__init__.py` of a package for shallow first-level repetitive imports, but not for subpackages, even if that subpackage is defined in a single `.py` file. For instance, if an import line reads `from garage.foo.bar import Bar` then you should add `from garage.foo.bar import Bar` to `garage/foo/__init__.py` so that users may instead write `from garage.foo import Bar`. However, if an import line reads `from garage.foo.bar.stuff import Baz`, *do not* add `from garage.foo.bar.stuff import Baz` to `garage/foo/__init__.py`, because that obscures the `stuff` subpackage.
-* Newly created python files should follow [PEP257](https://www.python.org/dev/peps/pep-0257/) docstring conventions and [PEP287](https://www.python.org/dev/peps/pep-0287/) docstring formatting. A good PEP257 example can be found [here](https://blog.dolphm.com/pep257-good-python-docstrings-by-example/). However, docstring for `__init__` should be included in the class docstring as suggested in the [Google example](https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html).
+
+## Documentation
+Python files should provide docstrings for all public methods which follow [PEP257](https://www.python.org/dev/peps/pep-0257/) docstring conventions and [Google](http://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings) docstring formatting. A good docstring example can be found [here](https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html).
+
+Additional standards:
+* Docstrings for `__init__` should be included in the class docstring as suggested in the [Google example](https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html).
+* Docstrings should provide full type information for all arguments, return values, exceptions, etc. according to the Google format
+
+### Application guide
+**Newly created** Python files should follow all of the above standards for docstrings.
+
+**Non-trivially modified** Python files should be submitted with updated docstrings according to the above standard.
+
+**New or heavily-redesigned** modules with non-trivial APIs and functionality should provide full text documentation, in addition to docstrings, which covers:
+* Explanation of the purpose of the module or API
+* Brief overview of its design
+* Usage examples for the most common use cases
+* Explicitly calls out common gotchas, misunderstandings, etc.
+* A quick summary of how to go about advanced usage, configuration, or extension
 
 ### Other languages
 Non-Python files (including XML, HTML, CSS, JS, and Shell Scripts) should follow the [Google Style Guide](https://github.com/google/styleguide) for that language
@@ -77,7 +95,7 @@ Do's and Don'ts for avoiding accidental merge commits and other headaches:
 Please see [this guide](https://gist.github.com/markreid/12e7c2203916b93d23c27a263f6091a0) for a tutorial on the workflow. Note: unlike the guide, we don't use separate `develop`/`master` branches, so all PRs should be based on `master` rather than `develop`
 
 ### Commit message format
-garage follows the git commit message guidelines documented [here](https://gist.github.com/robertpainsi/b632364184e70900af4ab688decf6f53) and [here](https://chris.beams.io/posts/git-commit/).
+garage follows the git commit message guidelines documented [here](https://gist.github.com/robertpainsi/b632364184e70900af4ab688decf6f53) and [here](https://chris.beams.io/posts/git-commit/). You can also find an in-depth guide to writing great commit messages [here](https://github.com/RomuloOliveira/commit-messages-guide/blob/master/README.md)
 
 In short:
 * All commit messages have an informative subject line of 50 characters
