@@ -5,10 +5,10 @@ import numpy as np
 
 class AtariEnv(gym.Wrapper):
     """
-    Episodic life wrapper for gym.Env.
+    Atari environment wrapper for gym.Env.
 
-    This wrapper makes episode end when a life is lost, but only reset
-    when all lives are lost.
+    This wrapper convert the observations returned from baselines wrapped
+        environment, which is a LazyFrames object into numpy arrays.
 
     Args:
         env: The environment to be wrapped.
@@ -23,9 +23,5 @@ class AtariEnv(gym.Wrapper):
         return np.asarray(obs), reward, done, info
 
     def reset(self, **kwargs):
-        """
-        gym.Env reset function.
-
-        Reset only when lives are lost.
-        """
+        """gym.Env reset function."""
         return np.asarray(self.env.reset())

@@ -128,7 +128,7 @@ class DiscreteCNNQFunction(QFunction2):
                 layer_normalization=layer_normalization)
         self.models.append(output_model)
 
-        obs_ph = tf.placeholder(tf.float32, (None, ) + obs_dim, name="obs")
+        obs_ph = tf.placeholder(tf.float32, (None, ) + obs_dim, name='obs')
 
         with tf.variable_scope(self._variable_scope):
             out = obs_ph

@@ -25,16 +25,16 @@ class SimpleReplayBuffer(ReplayBuffer):
             buffer[key] = self._buffer[key][:self._current_size]
 
         # Select which episodes to use
-        time_horizon = buffer["action"].shape[1]
-        rollout_batch_size = buffer["action"].shape[0]
+        time_horizon = buffer['action'].shape[1]
+        rollout_batch_size = buffer['action'].shape[0]
         episode_idxs = np.random.randint(rollout_batch_size, size=batch_size)
         # Select time steps to use
         t_samples = np.random.randint(time_horizon, size=batch_size)
 
         transitions = {}
         for key in buffer.keys():
-            samples = buffer[key][episode_idxs, t_samples].copy()
+            samples = buffer[key][episode_idxs, t_samples]
             transitions[key] = samples.reshape(batch_size, *samples.shape[1:])
 
-        assert (transitions["action"].shape[0] == batch_size)
+        assert (transitions['action'].shape[0] == batch_size)
         return transitions

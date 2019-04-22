@@ -129,7 +129,6 @@ def cnn_with_max_pooling(input_var,
 
 def _conv(input_var, name, filter_size, num_filter, strides, hidden_w_init,
           hidden_b_init, padding):
-
     # channel from input
     input_shape = input_var.get_shape()[-1].value
     # [filter_height, filter_width, in_channels, out_channels]

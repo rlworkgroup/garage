@@ -32,8 +32,6 @@ class DQN(OffPolicyRLAlgorithm):
         grad_norm_clipping: How much to clip gradient.
         double_q: Bool for using double q-network.
         print_freq: Log every print_freq steps.
-        use_atari_wrappers: Bool for using atari wrappers. If True,
-            observations need to be processed before use.
     """
 
     def __init__(self,
@@ -47,8 +45,6 @@ class DQN(OffPolicyRLAlgorithm):
                  target_network_update_freq=5,
                  grad_norm_clipping=None,
                  double_q=False,
-                 print_freq=1000,
-                 use_atari_wrappers=False,
                  **kwargs):
         self.qf_lr = qf_lr
         self.qf_optimizer = qf_optimizer
@@ -56,12 +52,9 @@ class DQN(OffPolicyRLAlgorithm):
         self.target_network_update_freq = target_network_update_freq
         self.grad_norm_clipping = grad_norm_clipping
         self.double_q = double_q
-        self.print_freq = print_freq
-        self.use_atari_wrappers = use_atari_wrappers
 
         self.episode_rewards = []
         self.episode_qf_losses = []
-        # self.episode_length = [0]
 
         super().__init__(
             env_spec=env_spec,
@@ -124,8 +117,8 @@ class DQN(OffPolicyRLAlgorithm):
                 # else reward + discount * future_best_q_val
                 target_q_values = self.reward_t_ph + self.discount * q_best_masked  # noqa: E501
 
-                td_error = tf.stop_gradient(target_q_values) - q_selected
-                loss = tf.square(td_error)
+                td_error = q_selected - tf.stop_gradient(target_q_values)
+                loss = huber_loss(td_error)
                 self._loss = tf.reduce_mean(loss)
 
             with tf.name_scope('optimize_ops'):
@@ -151,12 +144,14 @@ class DQN(OffPolicyRLAlgorithm):
 
     def train_once(self, itr, paths):
         """Train the algorithm once."""
+        epoch = itr / self.n_epoch_cycles
+
         self.episode_rewards.extend(paths['undiscounted_returns'])
         last_average_return = np.mean(self.episode_rewards)
         for train_itr in range(self.n_train_steps):
             if self.replay_buffer.n_transitions_stored >= self.min_buffer_size:  # noqa: E501
                 self.evaluate = True
-                qf_loss = self.optimize_policy(itr, None)
+                qf_loss = self.optimize_policy(epoch, None)
                 self.episode_qf_losses.append(qf_loss)
 
         if self.evaluate:
@@ -168,7 +163,7 @@ class DQN(OffPolicyRLAlgorithm):
                 mean100ep_rewards = round(
                     np.mean(self.episode_rewards[-100:]), 1)
                 mean100ep_qf_loss = np.mean(self.episode_qf_losses[-100:])
-                tabular.record('Iteration', itr)
+                tabular.record('Epoch', epoch)
                 tabular.record('AverageReturn', np.mean(self.episode_rewards))
                 tabular.record('StdReturn', np.std(self.episode_rewards))
                 tabular.record('Episode100RewardMean', mean100ep_rewards)
@@ -195,8 +190,14 @@ class DQN(OffPolicyRLAlgorithm):
         observations = normalize_pixel_batch(self.env_spec, observations)
         next_observations = normalize_pixel_batch(self.env_spec,
                                                   next_observations)
-
         loss, _ = self._train_qf(observations, actions, rewards, dones,
                                  next_observations)
 
         return loss
+
+
+def huber_loss(x, delta=1.0):
+    """Reference: https://en.wikipedia.org/wiki/Huber_loss."""
+    return tf.where(
+        tf.abs(x) < delta,
+        tf.square(x) * 0.5, delta * (tf.abs(x) - 0.5 * delta))

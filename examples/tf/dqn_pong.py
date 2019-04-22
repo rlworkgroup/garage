@@ -1,7 +1,7 @@
 """
 This is an example to train a task with DQN algorithm in pixel environment.
 
-Here it creates a gym environment Breakout, and trains a DQN with 1M steps.
+Here it creates a gym environment Pong, and trains a DQN with 1M steps.
 """
 import gym
 
@@ -25,11 +25,11 @@ from garage.tf.q_functions import DiscreteCNNQFunction
 def run_task(*_):
     """Run task."""
     with LocalRunner() as runner:
-        n_epochs = 20
-        n_epoch_cycles = 100
+        n_epochs = 100
+        n_epoch_cycles = 20
         sampler_batch_size = 500
         num_timesteps = n_epochs * n_epoch_cycles * sampler_batch_size
-        env = gym.make("PongNoFrameskip-v4")
+        env = gym.make('PongNoFrameskip-v4')
         env = Noop(env, noop_max=30)
         env = MaxAndSkip(env, skip=4)
         env = EpisodicLife(env)
@@ -43,9 +43,7 @@ def run_task(*_):
         env = TfEnv(env)
 
         replay_buffer = SimpleReplayBuffer(
-            env_spec=env.spec,
-            size_in_transitions=int(5e4),
-            time_horizon=1)
+            env_spec=env.spec, size_in_transitions=int(5e4), time_horizon=1)
 
         qf = DiscreteCNNQFunction(
             env_spec=env.spec,
@@ -87,7 +85,7 @@ def run_task(*_):
 run_experiment(
     run_task,
     n_parallel=1,
-    snapshot_mode="last",
+    snapshot_mode='last',
     seed=1,
     plot=False,
 )

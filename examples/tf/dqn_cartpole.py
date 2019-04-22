@@ -21,11 +21,9 @@ def run_task(*_):
         n_epoch_cycles = 10
         sampler_batch_size = 500
         num_timesteps = n_epochs * n_epoch_cycles * sampler_batch_size
-        env = TfEnv(gym.make("CartPole-v0"))
+        env = TfEnv(gym.make('CartPole-v0'))
         replay_buffer = SimpleReplayBuffer(
-            env_spec=env.spec,
-            size_in_transitions=int(1e4),
-            time_horizon=1)
+            env_spec=env.spec, size_in_transitions=int(1e4), time_horizon=1)
         qf = DiscreteMLPQFunction(env_spec=env.spec, hidden_sizes=(64, 64))
         policy = DiscreteQfDerivedPolicy(env_spec=env.spec, qf=qf)
         epilson_greedy_strategy = EpsilonGreedyStrategy(
@@ -56,8 +54,4 @@ def run_task(*_):
             batch_size=sampler_batch_size)
 
 
-run_experiment(
-    run_task,
-    snapshot_mode="last",
-    seed=1
-)
+run_experiment(run_task, snapshot_mode='last', seed=1)

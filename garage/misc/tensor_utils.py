@@ -1,3 +1,4 @@
+from akro import Box
 import numpy as np
 
 
@@ -156,6 +157,7 @@ def truncate_tensor_dict(tensor_dict, truncated_len):
 
 
 def normalize_pixel_batch(env_spec, observations):
-    if len(env_spec.observation_space.shape) == 3:
-        return [obs.astype(np.float32) / 255.0 for obs in observations]
+    if isinstance(env_spec.observation_space, Box):
+        if len(env_spec.observation_space.shape) == 3:
+            return [obs.astype(np.float32) / 255.0 for obs in observations]
     return observations

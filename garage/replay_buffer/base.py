@@ -38,7 +38,7 @@ class ReplayBuffer(metaclass=abc.ABCMeta):
     def store_episode(self):
         """Add an episode to the buffer."""
         episode_buffer = self._convert_episode_to_batch_major()
-        rollout_batch_size = len(episode_buffer["observation"])
+        rollout_batch_size = len(episode_buffer['observation'])
         idx = self._get_storage_idx(rollout_batch_size)
 
         for key in self._buffer.keys():
@@ -63,7 +63,7 @@ class ReplayBuffer(metaclass=abc.ABCMeta):
         for key, value in kwargs.items():
             self._episode_buffer[key].append(value)
 
-        if len(self._episode_buffer["observation"]) == self._time_horizon:
+        if len(self._episode_buffer['observation']) == self._time_horizon:
             self.store_episode()
             for key in self._episode_buffer.keys():
                 self._episode_buffer[key].clear()

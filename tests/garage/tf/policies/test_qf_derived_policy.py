@@ -13,7 +13,7 @@ class SimpleQFunction:
         obs_dim = env_spec.observation_space.shape
 
         self.obs_ph = tf.placeholder(
-            tf.float32, (None, ) + obs_dim, name="obs")
+            tf.float32, (None, ) + obs_dim, name='obs')
         self.q_vals = self.build_net(self.obs_ph)
 
     def build_net(self, input_var):
