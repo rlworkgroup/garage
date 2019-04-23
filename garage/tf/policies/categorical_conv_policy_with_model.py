@@ -20,7 +20,7 @@ class CategoricalConvPolicyWithModel(StochasticPolicy2):
     It only works with akro.tf.Discrete action space.
 
     Args:
-        env_spec: Environment specification.
+        env_spec (garage.envs.env_spec.EnvSpec): Environment specification.
         conv_filter_sizes(tuple[int]): Dimension of the filters. For example,
             (3, 5) means there are two convolutional layers. The filter for
             first layer is of dimension (3 x 3) and the second one is of
@@ -32,15 +32,17 @@ class CategoricalConvPolicyWithModel(StochasticPolicy2):
             example, (1, 2) means there are two convolutional layers. The
             stride of the filter for first layer is 1 and that of the second
             layer is 2.
-        conv_pad: The type of padding algorithm to use,
+        conv_pad (str): The type of padding algorithm to use,
             either 'SAME' or 'VALID'.
-        name: Variable scope of the policy.
-        hidden_sizes: Output dimension of dense layer(s).
+        name (str): Policy name, also the variable scope of the policy.
+        hidden_sizes (list[int]): Output dimension of dense layer(s).
+            For example, (32, 32) means the MLP of this policy consists
+            of two hidden layers, each with 32 hidden units.
         hidden_nonlinearity: Activation function for
                     intermediate dense layer(s).
         output_nonlinearity: Activation function for
                     output dense layer.
-        layer_normalization: Bool for using layer normalization or not.
+        layer_normalization (bool): Bool for using layer normalization or not.
 
     """
 

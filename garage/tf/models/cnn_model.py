@@ -20,8 +20,8 @@ class CNNModel(Model):
         strides(tuple[int]): The stride of the sliding window. For example,
             (1, 2) means there are two convolutional layers. The stride of the
             filter for first layer is 1 and that of the second layer is 2.
-        name: Variable scope of the cnn model.
-        padding: The type of padding algorithm to use,
+        name (str): Model name, also the variable scope.
+        padding (str): The type of padding algorithm to use,
             either 'SAME' or 'VALID'.
         hidden_nonlinearity: Activation function for
                     intermediate dense layer(s).

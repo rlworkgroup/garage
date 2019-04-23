@@ -16,19 +16,19 @@ def cnn(input_var,
     CNN. Based on 'NHWC' data format: [batch, height, width, channel].
 
     Args:
-        input_var: Input tf.Tensor to the CNN.
-        filter_dims(tuple[int]): Dimension of the filters. For example,
+        input_var (tf.Tensor): Input tf.Tensor to the CNN.
+        filter_dims (tuple[int]): Dimension of the filters. For example,
             (3, 5) means there are two convolutional layers. The filter for
             first layer is of dimension (3 x 3) and the second one is of
             dimension (5 x 5).
-        num_filters(tuple[int]): Number of filters. For example, (3, 32) means
+        num_filters (tuple[int]): Number of filters. For example, (3, 32) means
             there are two convolutional layers. The filter for the first layer
             has 3 channels and the second one with 32 channels.
-        strides(tuple[int]): The stride of the sliding window. For example,
+        strides (tuple[int]): The stride of the sliding window. For example,
             (1, 2) means there are two convolutional layers. The stride of the
             filter for first layer is 1 and that of the second layer is 2.
-        name: Variable scope of the cnn.
-        padding: The type of padding algorithm to use,
+        name (str): Network name, also the variable scope.
+        padding (str): The type of padding algorithm to use,
             either 'SAME' or 'VALID'.
         hidden_nonlinearity: Activation function for
                     intermediate dense layer(s).
@@ -69,26 +69,26 @@ def cnn_with_max_pooling(input_var,
     CNN model. Based on 'NHWC' data format: [batch, height, width, channel].
 
     Args:
-        input_var: Input tf.Tensor to the CNN.
-        output_dim: Dimension of the network output.
-        filter_dims(tuple[int]): Dimension of the filters. For example,
+        input_var (tf.Tensor): Input tf.Tensor to the CNN.
+        output_dim (int): Dimension of the network output.
+        filter_dims (tuple[int]): Dimension of the filters. For example,
             (3, 5) means there are two convolutional layers. The filter for
             first layer is of dimension (3 x 3) and the second one is of
             dimension (5 x 5).
-        num_filters(tuple[int]): Number of filters. For example, (3, 32) means
+        num_filters (tuple[int]): Number of filters. For example, (3, 32) means
             there are two convolutional layers. The filter for the first layer
             has 3 channels and the second one with 32 channels.
-        strides(tuple[int]): The stride of the sliding window. For example,
+        strides (tuple[int]): The stride of the sliding window. For example,
             (1, 2) means there are two convolutional layers. The stride of the
             filter for first layer is 1 and that of the second layer is 2.
-        name: Variable scope of the cnn.
-        pool_shapes(tuple[int]): Dimension of the pooling layer(s). For
+        name (str): Model name, also the variable scope of the cnn.
+        pool_shapes (tuple[int]): Dimension of the pooling layer(s). For
             example, (2, 2) means that all the pooling layers have
             shape (2, 2).
-        pool_strides(tuple[int]): The strides of the pooling layer(s). For
+        pool_strides (tuple[int]): The strides of the pooling layer(s). For
             example, (2, 2) means that all the pooling layers have
             strides (2, 2).
-        padding: The type of padding algorithm to use,
+        padding (str): The type of padding algorithm to use,
             either 'SAME' or 'VALID'.
         hidden_nonlinearity: Activation function for
                     intermediate dense layer(s).

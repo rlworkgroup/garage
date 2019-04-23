@@ -12,7 +12,7 @@ class Sequential(Model):
     Sequential Model.
 
     Args:
-        name: Variable scope of the Sequential model.
+        name (str): Model name, also the variable scope.
         models (list[garage.Model]): The models to be connected
             in sequential order.
     """

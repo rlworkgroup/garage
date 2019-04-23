@@ -13,33 +13,36 @@ class GaussianMLPModel(Model):
     GaussianMLPModel.
 
     Args:
-    :param output_dim: Output dimension of the model.
-    :param name: Name of the model.
-    :param hidden_sizes: List of sizes for the fully-connected hidden
-        layers.
-    :param learn_std: Is std trainable.
-    :param init_std: Initial value for std.
-    :param adaptive_std: Is std a neural network. If False, it will be a
-        parameter.
-    :param std_share_network: Boolean for whether mean and std share the same
-        network.
-    :param std_hidden_sizes: List of sizes for the fully-connected layers
-        for std.
-    :param min_std: Whether to make sure that the std is at least some
-        threshold value, to avoid numerical issues.
-    :param max_std: Whether to make sure that the std is at most some
-        threshold value, to avoid numerical issues.
-    :param std_hidden_nonlinearity: Nonlinearity for each hidden layer in
-        the std network.
-    :param std_output_nonlinearity: Nonlinearity for output layer in
-        the std network.
-    :param std_parametrization: How the std should be parametrized. There
-        are a few options:
-        - exp: the logarithm of the std will be stored, and applied a
-            exponential transformation
-        - softplus: the std will be computed as log(1+exp(x))
-    :param hidden_nonlinearity: Nonlinearity used for each hidden layer.
-    :param output_nonlinearity: Nonlinearity for the output layer.
+        output_dim (int): Output dimension of the model.
+        name (str): Model name, also the variable scope.
+        hidden_sizes (list[int]): Output dimension of dense layer(s) for
+            the MLP for mean. For example, (32, 32) means the MLP consists
+            of two hidden layers, each with 32 hidden units.
+        hidden_nonlinearity: Nonlinearity used for each hidden layer.
+        output_nonlinearity: Nonlinearity for the output layer.
+        learn_std (bool): Is std trainable.
+        init_std (float): Initial value for std.
+        adaptive_std (bool): Is std a neural network. If False, it will be a
+            parameter.
+        std_share_network (bool): Boolean for whether mean and std share
+            the same network.
+        std_hidden_sizes (list[int]): Output dimension of dense layer(s) for
+            the MLP for std. For example, (32, 32) means the MLP consists
+            of two hidden layers, each with 32 hidden units.
+        min_std (float): If not None, the std is at least the value of min_std,
+            to avoid numerical issues.
+        max_std (float): If not None, the std is at most the value of max_std,
+            to avoid numerical issues.
+        std_hidden_nonlinearity: Nonlinearity for each hidden layer in
+            the std network.
+        std_output_nonlinearity: Nonlinearity for output layer in
+            the std network.
+        std_parametrization (str): How the std should be parametrized. There
+            are two options:
+            - exp: the logarithm of the std will be stored, and applied a
+               exponential transformation
+            - softplus: the std will be computed as log(1+exp(x))
+        layer_normalization (bool): Bool for using layer normalization or not.
     """
 
     def __init__(self,

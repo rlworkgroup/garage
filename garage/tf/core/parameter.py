@@ -19,12 +19,12 @@ def parameter(input_var,
     broadcasted to (32, 2) when applied to a batch with size 32.
 
     Args:
-        input_var: Input tf.Tensor.
-        length: Integer dimension of the variables.
+        input_var (tf.Tensor): Input tf.Tensor.
+        length (int): Integer dimension of the variables.
         initializer: Initializer of the variables.
         dtype: Data type of the variables.
-        trainable: Whether these variables are trainable.
-        name: variable scope of the variables.
+        trainable (bool): Whether these variables are trainable.
+        name (str): Variable scope of the variables.
 
     Return:
         A tensor of the broadcasted variables.

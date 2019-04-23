@@ -21,14 +21,20 @@ class CategoricalMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
             prob_network=None,
     ):
         """
-        :param env_spec: A spec for the mdp.
-        :param hidden_sizes: list of sizes for the fully connected
-        hidden layers
-        :param hidden_nonlinearity: nonlinearity used for each hidden layer
-        :param prob_network: manually specified network for this policy, other
-         network params
-        are ignored
-        :return:
+        CategoricalMLPPolicy.
+
+        A policy that uses a MLP to estimate a categorical distribution.
+
+        Args:
+            env_spec (garage.envs.env_spec.EnvSpec): Environment specification.
+            hidden_sizes (list[int]): Output dimension of dense layer(s).
+                For example, (32, 32) means the MLP of this policy consists
+                of two hidden layers, each with 32 hidden units.
+            hidden_nonlinearity: Activation function for
+                        intermediate dense layer(s).
+            prob_network (tf.Tensor): manually specified network for this
+                policy. If None, a MLP with the network parameters will be
+                created. If not None, other network params are ignored.
         """
         assert isinstance(env_spec.action_space, Discrete)
 

@@ -78,11 +78,6 @@ class Network:
     When a Network is built, it appears as a subgraph in the computation
     graphs, scoped by the Network name. All Networks built with the same
     model share the same parameters, i.e same inputs yield to same outputs.
-
-    Args:
-      model: The model building this network.
-      inputs: Input Tensor(s).
-      name: Name of the network, which is also the name scope.
     """
 
     @property
@@ -177,9 +172,9 @@ class Model(BaseModel):
         parameter sharing. Different Networks must have an unique name.
 
         Args:
-          inputs: Tensor input(s), recommended to be positional arguments, e.g.
-            def build(self, state_input, action_input, name=None).
-          name(str): Name of the model, which is also the name scope of the
+          inputs : Tensor input(s), recommended to be positional arguments,
+            e.g. def build(self, state_input, action_input, name=None).
+          name (str): Name of the model, which is also the name scope of the
             model.
 
         Raises:
@@ -243,9 +238,11 @@ class Model(BaseModel):
 
         Args:
             inputs: Tensor input(s), recommended to be position arguments, e.g.
-              def build(self, state_input=None, action_input=None, name=None).
+              def _build(self, state_input, action_input, name=None).
               It would be usually same as the inputs in build().
-            name: Variable scope of the inner model, if exist.
+            name (str): Inner model name, also the variable scope of the
+                inner model, if exist.
+
         Return:
             output: Tensor output(s) of the model.
         """
@@ -256,7 +253,7 @@ class Model(BaseModel):
         Network output spec.
 
         Return:
-            *inputs: List of key(str) for the network outputs.
+            *inputs (list[str]): List of key(str) for the network outputs.
         """
         return []
 
@@ -286,23 +283,55 @@ class Model(BaseModel):
 
     @property
     def name(self):
-        """Name of the model."""
+        """
+        Name (str) of the model.
+
+        This is also the variable scope of the model.
+        """
         return self._name
 
     @property
     def input(self):
+        """
+        Default input (tf.Tensor) of the model.
+
+        When the model is built the first time, by default it
+        creates the 'default' network. This property creates
+        a reference to the input of the network.
+        """
         return self.networks['default'].input
 
     @property
     def output(self):
+        """
+        Default output (tf.Tensor) of the model.
+
+        When the model is built the first time, by default it
+        creates the 'default' network. This property creates
+        a reference to the output of the network.
+        """
         return self.networks['default'].output
 
     @property
     def inputs(self):
+        """
+        Default inputs (tf.Tensor) of the model.
+
+        When the model is built the first time, by default it
+        creates the 'default' network. This property creates
+        a reference to the inputs of the network.
+        """
         return self.networks['default'].inputs
 
     @property
     def outputs(self):
+        """
+        Default outputs (tf.Tensor) of the model.
+
+        When the model is built the first time, by default it
+        creates the 'default' network. This property creates
+        a reference to the outputs of the network.
+        """
         return self.networks['default'].outputs
 
     def _get_variables(self):

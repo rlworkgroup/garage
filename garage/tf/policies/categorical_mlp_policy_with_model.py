@@ -12,17 +12,22 @@ class CategoricalMLPPolicyWithModel(StochasticPolicy2):
     """
     CategoricalMLPPolicy with model.
 
+    A policy that contains a MLP to make prediction based on
+    a categorical distribution.
+
     It only works with akro.tf.Discrete action space.
 
     Args:
-        env_spec: Environment specification.
-        name: variable scope of the mlp.
-        hidden_sizes: Output dimension of dense layer(s).
+        env_spec (garage.envs.env_spec.EnvSpec): Environment specification.
+        name (str): Policy name, also the variable scope.
+        hidden_sizes (list[int]): Output dimension of dense layer(s).
+            For example, (32, 32) means the MLP of this policy consists of two
+            hidden layers, each with 32 hidden units.
         hidden_nonlinearity: Activation function for
                     intermediate dense layer(s).
         output_nonlinearity: Activation function for
                     output dense layer.
-        layer_normalization: Bool for using layer normalization or not.
+        layer_normalization (bool): Bool for using layer normalization or not.
 
     """
 

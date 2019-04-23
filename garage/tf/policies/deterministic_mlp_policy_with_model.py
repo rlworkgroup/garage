@@ -20,16 +20,17 @@ class DeterministicMLPPolicyWithModel(Policy2):
     It uses neural nets to fit the function of pi(s).
 
     Args:
-        env_spec: Environment specification.
-        name: Variable scope of the mlp.
-        hidden_sizes: Output dimension of dense layer(s).
+        env_spec (garage.envs.env_spec.EnvSpec): Environment specification.
+        name (str): Policy name, also the variable scope.
+        hidden_sizes (list[int]): Output dimension of dense layer(s).
+            For example, (32, 32) means the MLP of this policy consists of two
+            hidden layers, each with 32 hidden units.
         hidden_nonlinearity: Activation function for
                     intermediate dense layer(s).
         output_nonlinearity: Activation function for
                     output dense layer.
-        input_include_goal: Include goal or not.
-        layer_normalization: Bool for using layer normalization or not.
-
+        input_include_goal (bool): Include goal in the observation or not.
+        layer_normalization (bool): Bool for using layer normalization or not.
     """
 
     def __init__(self,

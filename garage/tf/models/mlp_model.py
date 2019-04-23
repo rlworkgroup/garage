@@ -15,9 +15,11 @@ class MLPModel(Model):
     MLP Model.
 
     Args:
-        output_dim: Dimension of the network output.
-        name: variable scope of the mlp.
-        hidden_sizes: Output dimension of dense layer(s).
+        output_dim (int): Dimension of the network output.
+        hidden_sizes (list[int]): Output dimension of dense layer(s).
+            For example, (32, 32) means this MLP consists of two
+            hidden layers, each with 32 hidden units.
+        name (str): Model name, also the variable scope.
         hidden_nonlinearity: Activation function for
                     intermediate dense layer(s).
         hidden_w_init: Initializer function for the weight
@@ -30,7 +32,7 @@ class MLPModel(Model):
                     of output dense layer(s).
         output_b_init: Initializer function for the bias
                     of output dense layer(s).
-        layer_normalization: Bool for using layer normalization or not.
+        layer_normalization (bool): Bool for using layer normalization or not.
     """
 
     def __init__(self,
