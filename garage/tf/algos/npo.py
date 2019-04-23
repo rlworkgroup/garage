@@ -449,7 +449,7 @@ class NPO(BatchPolopt):
         # Augment reward from baselines
         rewards_tensor = self.f_rewards(*policy_opt_input_values)
         returns_tensor = self.f_returns(*policy_opt_input_values)
-        returns_tensor = np.squeeze(returns_tensor)
+        returns_tensor = np.squeeze(returns_tensor, -1)
 
         paths = samples_data['paths']
         valids = samples_data['valids']
