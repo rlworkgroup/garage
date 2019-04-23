@@ -1,10 +1,10 @@
 """Allows the taking of snapshots."""
 import errno
 import os
-from os import path as osp
 from os import listdir
-import re
+from os import path as osp
 import pickle
+import re
 
 from garage.misc.console import mkdir_p
 
@@ -94,11 +94,14 @@ class Snapshotter:
             dict: Loaded snapshot
 
         """
+        if itr is None:
+            itr = 'last'
 
-        if isinstance(itr, int):
-            snapshot_file = osp.join(self._snapshot_dir, 'itr_%d.pkl' % itr)
+        if isinstance(itr, int) or itr.isdigit():
+            snapshot_file = osp.join(self._snapshot_dir,
+                                     'itr_{}.pkl'.format(itr))
         else:
-            if not (itr == 'last' or itr == 'first'):
+            if not (itr in ('last', 'first')):
                 raise ValueError(
                     "itr should be an integer or 'last' or 'first'")
 

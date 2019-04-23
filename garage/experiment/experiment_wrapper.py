@@ -7,19 +7,18 @@ from enum import Enum
 import json
 import os
 import os.path as osp
-import pickle as pickle
+import pickle
 import signal
 import sys
 import uuid
 
 import dateutil.tz
-import joblib
 import psutil
 
 from garage import config
 from garage.experiment import deterministic
-from garage.experiment.local_tf_runner import LocalRunner
 from garage.experiment.experiment import concretize
+from garage.experiment.local_tf_runner import LocalRunner
 from garage.logger import CsvOutput
 from garage.logger import logger
 from garage.logger import snapshotter
@@ -67,7 +66,7 @@ def run_experiment(argv):
     parser.add_argument(
         '--snapshot_mode',
         type=str,
-        default='all',
+        default='last',
         help='Mode to save the snapshot. Can be either "all" '
         '(all iterations will be saved), "last" (only '
         'the last iteration will be saved), "gap" (every'
@@ -104,10 +103,17 @@ def run_experiment(argv):
         default='variant.json',
         help='Name of the variant log file (in json).')
     parser.add_argument(
-        '--resume_from',
+        '--resume_from_dir',
         type=str,
         default=None,
-        help='Name of the pickle file to resume experiment from.')
+        help='Directory of the pickle file to resume experiment from.')
+    parser.add_argument(
+        '--resume_epoch',
+        type=str,
+        default=None,
+        help='Index of iteration to restore from. '
+        'Can be "first", "last" or a number. '
+        'Not applicable when snapshot_mode="last"')
     parser.add_argument(
         '--plot',
         type=ast.literal_eval,
@@ -156,7 +162,10 @@ def run_experiment(argv):
         garage.tf.plotter.Plotter.disable()
 
     if args.log_dir is None:
-        log_dir = osp.join(default_log_dir, args.exp_name)
+        if args.resume_from_dir is None:
+            log_dir = osp.join(default_log_dir, args.exp_name)
+        else:
+            log_dir = args.resume_from_dir
     else:
         log_dir = args.log_dir
     tabular_log_file = osp.join(log_dir, args.tabular_log_file)
@@ -184,10 +193,12 @@ def run_experiment(argv):
     snapshotter.snapshot_gap = args.snapshot_gap
     logger.push_prefix("[%s] " % args.exp_name)
 
-    if args.resume_from is not None:
+    if args.resume_from_dir is not None:
         with LocalRunner() as runner:
-            runner.restore(args.resume_from)
-            runner.train(10000)
+            runner.restore(
+                args.resume_from_dir,
+                from_epoch=args.resume_epoch,
+                resume_now=True)
     else:
         # read from stdin
         if args.use_cloudpickle:

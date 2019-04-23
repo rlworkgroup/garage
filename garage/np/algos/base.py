@@ -1,5 +1,6 @@
 from garage.core import Serializable
 
+
 class Algorithm:
     pass
 

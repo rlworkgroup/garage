@@ -211,9 +211,46 @@ class LocalRunner:
 
         logger.log('Saved')
 
-    def restore(self, snapshot_dir, itr='last', resume_now=False):
+    def restore(self, snapshot_dir, from_epoch='last', resume_now=True):
+        """Restore experiment from snapshot.
+
+        Args:
+            snapshot_dir: Directory of snapshot.
+            from_epoch: The epoch to restore from.
+                Can be 'first', 'last' or a number.
+                Not applicable when snapshot_mode='last'.
+            resume_now: Resume training immediately.
+                If False, runner will be set up but not train.
+                And the arguments for train() will be returned as a dict.
+                See examples below.
+
+        Returns:
+            None if resume_now=True.
+            Otherwise a dict of arguments for train().
+
+        Examples:
+            1. Resume experiment immediately.
+            with LocalRunner() as runner:
+                runner.restore(snapshot_dir)
+
+            2. Resume experiment with modified training arguments.
+             with LocalRunner() as runner:
+                args = runner.restore(snapshot_dir, resume_now=False)
+                args['n_epochs'] = 20
+                runner.train(**args)
+
+            3. Resume via command line.
+            ./examples/resume_training.py --snapshot_dir /saved/dir
+
+        Note:
+            When resume via command line, new snapshots will be
+            saved into the SAME directory if not specified.
+
+            When resume programmatically, snapshot directory should be
+            specify manually or through run_experiment() interface.
+        """
         snapshotter.snapshot_dir = snapshot_dir
-        saved = snapshotter.load(itr)
+        saved = snapshotter.load(from_epoch)
 
         self.setup_args = saved['setup_args']
         self.train_args = saved['train_args']
@@ -241,16 +278,16 @@ class LocalRunner:
         logger.log('{:<20} {:<15}'.format('pause_for_plot', pause_for_plot))
 
         if resume_now:
-            self.train(
+            return self.train(
                 n_epochs,
-                start_epoch=last_epoch + 1,
+                _start_epoch=last_epoch + 1,
                 n_epoch_cycles=n_epoch_cycles,
                 batch_size=batch_size,
                 store_paths=store_paths,
                 pause_for_plot=pause_for_plot)
         else:
             args = self.train_args.copy()
-            args.update(start_epoch=last_epoch + 1)
+            args.update(_start_epoch=last_epoch + 1)
             return args
 
     def log_diagnostics(self, pause_for_plot=False):
@@ -271,11 +308,11 @@ class LocalRunner:
     def train(self,
               n_epochs,
               n_epoch_cycles=1,
-              start_epoch=0,
               batch_size=None,
               plot=False,
               store_paths=False,
-              pause_for_plot=False):
+              pause_for_plot=False,
+              _start_epoch=0):
         """Start training.
 
         Args:
@@ -287,6 +324,8 @@ class LocalRunner:
             plot: Visualize policy by doing rollout after each epoch.
             store_paths: Save paths in snapshot.
             pause_for_plot: Pause for plot.
+            _start_epoch: (internal) The starting epoch.
+                Use for experiment resuming.
 
         Returns:
             The average return in last epoch cycle.
@@ -305,19 +344,19 @@ class LocalRunner:
         self.train_args = dict(
             n_epochs=n_epochs,
             n_epoch_cycles=n_epoch_cycles,
-            start_epoch=start_epoch,
             batch_size=batch_size,
             plot=plot,
             store_paths=store_paths,
-            pause_for_plot=pause_for_plot)
+            pause_for_plot=pause_for_plot,
+            _start_epoch=_start_epoch)
 
         self.start_worker()
 
         self.start_time = time.time()
-        itr = start_epoch * n_epoch_cycles
+        itr = _start_epoch * n_epoch_cycles
 
         last_return = None
-        for epoch in range(start_epoch, n_epochs):
+        for epoch in range(_start_epoch, n_epochs):
             self.itr_start_time = time.time()
             paths = None
             with logger.prefix('epoch #%d | ' % epoch):

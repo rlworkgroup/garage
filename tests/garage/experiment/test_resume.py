@@ -1,12 +1,12 @@
 import os
+import shutil
+import tempfile
 import unittest
 
 import psutil
-import shutil
-import tempfile
 
 from garage.experiment import LocalRunner
-from garage.logger import logger, snapshotter, StdOutput
+from garage.logger import snapshotter
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import VPG
 from garage.tf.envs import TfEnv
@@ -36,21 +36,26 @@ def fixture_exp():
 
 class TestResume(unittest.TestCase):
     def test_resume(self):
+        # Manually create and remove temp folder
+        # Otherwise, tempfile unexpectedly removes folder in child folder
         folder = tempfile.mkdtemp()
-        logger.add_output(StdOutput())
         snapshotter.snapshot_dir = folder
         snapshotter.snapshot_mode = 'last'
-        logger.log('log to ' + folder)
 
         newpid = os.fork()
         if newpid == 0:
             fixture_exp()
         else:
-            print('Child pid ', newpid)
             childproc = psutil.Process(newpid)
+            # Wait for first experiment to finish
             psutil.wait_procs([childproc])
             with LocalRunner() as runner:
-                args = runner.restore(folder)
+                args = runner.restore(folder, resume_now=False)
+                assert args['n_epochs'] == 5, \
+                    'Snapshot should save training parameters'
+                assert args['start_epoch'] == 5, \
+                    'Last experiment should end at 5th iterations'
                 args['n_epochs'] = 10
                 runner.train(**args)
+
             shutil.rmtree(folder)
