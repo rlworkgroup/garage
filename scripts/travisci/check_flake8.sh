@@ -131,20 +131,20 @@ $(cat .gitignore)
 # If Travis CI is running this script and there's a valid pull request,
 # use the commits defined by TRAVIS_COMMIT_RANGE to get a list of changed
 # and added files introduced in the feature branch,
-# Otherwise, obtain the lists by comparing against the master branch in the
-# repository.
+# Otherwise, obtain the lists by comparing against the release-2019.02 branch
+# in the repository.
 if [[ "${TRAVIS}" == "true" && "${TRAVIS_PULL_REQUEST}" != "false" ]]; then
   files_changed="$(git diff "${TRAVIS_COMMIT_RANGE}" -M --diff-filter={M,R} \
                      --name-only | grep ".*\.py$")"
   files_added="$(git diff "${TRAVIS_COMMIT_RANGE}" -M --diff-filter=A \
                    --name-only | grep ".*\.py$")"
 else
-  git remote set-branches --add origin master
+  git remote set-branches --add origin release-2019.02
   git fetch
-  files_changed="$(git diff origin/master -M --diff-filter={M,R} --name-only \
-                     | grep ".*\.py$")"
-  files_added="$(git diff origin/master -M --diff-filter=A --name-only \
-                   | grep ".*\.py$")"
+  files_changed="$(git diff origin/release-2019.02 -M --diff-filter={M,R} \
+                   --name-only | grep ".*\.py$")"
+  files_added="$(git diff origin/release-2019.02 -M --diff-filter=A \
+                   --name-only | grep ".*\.py$")"
 fi
 
 # Obtain the files that have been added or modified in the repository that
