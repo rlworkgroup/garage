@@ -286,8 +286,8 @@ class GaussianMLPRegressor(LayersPowered, Serializable, Parameterized):
                 self._y_mean_var_ph: np.mean(ys, axis=0, keepdims=True),
                 self._y_std_var_ph: np.std(ys, axis=0, keepdims=True) + 1e-8,
             }
-            sess.run([self._assign_y_mean, self._assign_y_std],
-                     feed_dict=feed_dict)
+            sess.run(
+                [self._assign_y_mean, self._assign_y_std], feed_dict=feed_dict)
         if self._use_trust_region:
             old_means, old_log_stds = self._f_pdists(xs)
             inputs = [xs, ys, old_means, old_log_stds]
