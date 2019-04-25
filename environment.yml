@@ -9,6 +9,7 @@ dependencies:
     - mkl==2017.0.4
     # cma requires numpy to install
     - numpy==1.14.5
+    - pip==9.0.3
     # dev dependencies below this line
     - pre_commit
     - pip:
@@ -50,7 +51,8 @@ dependencies:
         - python-dateutil
         - pyzmq
         - scipy
-        - tensorboard
+        - setuptools<=39.1.0
+        - tensorboard<1.10.0,>=1.9.0
         - tensorflow<1.10,>=1.9.0
         - Theano==1.0.2
         # dev dependencies below this line
