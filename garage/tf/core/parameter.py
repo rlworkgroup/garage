@@ -9,7 +9,7 @@ def parameter(input_var,
               initializer=tf.zeros_initializer(),
               dtype=tf.float32,
               trainable=True,
-              name="parameter"):
+              name='parameter'):
     """
     Parameter layer.
 
@@ -19,19 +19,20 @@ def parameter(input_var,
     broadcasted to (32, 2) when applied to a batch with size 32.
 
     Args:
-        input_var: Input tf.Tensor.
-        length: Integer dimension of the variables.
-        initializer: Initializer of the variables.
-        dtype: Data type of the variables.
-        trainable: Whether these variables are trainable.
-        name: variable scope of the variables.
+        input_var (tf.Tensor): Input tf.Tensor.
+        length (int): Integer dimension of the variables.
+        initializer (callable): Initializer of the variables. The function
+            should return a tf.Tensor.
+        dtype: Data type of the variables (default is tf.float32).
+        trainable (bool): Whether these variables are trainable.
+        name (str): Variable scope of the variables.
 
     Return:
         A tensor of the broadcasted variables.
     """
     with tf.variable_scope(name):
         p = tf.get_variable(
-            "parameter",
+            'parameter',
             shape=(length, ),
             dtype=dtype,
             initializer=initializer,

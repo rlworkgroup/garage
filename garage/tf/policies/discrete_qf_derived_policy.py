@@ -17,8 +17,8 @@ class DiscreteQfDerivedPolicy(Policy, Serializable):
     DiscreteQfDerived policy.
 
     Args:
-        env_spec: Environment specification.
-        qf: The q-function used.
+        env_spec (garage.envs.env_spec.EnvSpec): Environment specification.
+        qf (garage.q_functions.QFunction): The q-function used.
     """
 
     def __init__(self, env_spec, qf):

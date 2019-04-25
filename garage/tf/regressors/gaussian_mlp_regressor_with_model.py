@@ -16,27 +16,53 @@ class GaussianMLPRegressorWithModel(StochasticRegressor):
     A class for performing regression by fitting a Gaussian distribution
     to the outputs.
 
-    :param input_shape: Shape of the input data.
-    :param output_dim: Dimension of output.
-    :param hidden_sizes: Number of hidden units of each layer of the mean
-     network.
-    :param hidden_nonlinearity: Non-linearity used for each layer of the
-     mean network.
-    :param optimizer: Optimizer for minimizing the negative log-likelihood.
-    :param use_trust_region: Whether to use trust region constraint.
-    :param max_kl_step: KL divergence constraint for each iteration
-    :param learn_std: Whether to learn the standard deviations. Only
-     effective if adaptive_std is False. If adaptive_std is True, this
-     parameter is ignored, and the weights for the std network are always
-     earned.
-    :param adaptive_std: Whether to make the std a function of the states.
-    :param std_share_network: Whether to use the same network as the mean.
-    :param std_hidden_sizes: Number of hidden units of each layer of the
-     std network. Only used if `std_share_network` is False. It defaults to
-     the same architecture as the mean.
-    :param std_nonlinearity: Non-linearity used for each layer of the std
-     network. Only used if `std_share_network` is False. It defaults to the
-     same non-linearity as the mean.
+    Args:
+        input_shape (tuple[int]): Input shape of the training data.
+        output_dim (int): Output dimension of the model.
+        name (str): Model name, also the variable scope.
+        hidden_sizes (list[int]): Output dimension of dense layer(s) for
+            the MLP for mean. For example, (32, 32) means the MLP consists
+            of two hidden layers, each with 32 hidden units.
+        hidden_nonlinearity (callable): Activation function for intermediate
+            dense layer(s). It should return a tf.Tensor. Set it to
+            None to maintain a linear activation.
+        hidden_w_init (callable): Initializer function for the weight
+            of intermediate dense layer(s). The function should return a
+            tf.Tensor.
+        hidden_b_init (callable): Initializer function for the bias
+            of intermediate dense layer(s). The function should return a
+            tf.Tensor.
+        output_nonlinearity (callable): Activation function for output dense
+            layer. It should return a tf.Tensor. Set it to None to
+            maintain a linear activation.
+        output_w_init (callable): Initializer function for the weight
+            of output dense layer(s). The function should return a
+            tf.Tensor.
+        output_b_init (callable): Initializer function for the bias
+            of output dense layer(s). The function should return a
+            tf.Tensor.
+        optimizer (tf.Optimizer): Optimizer for minimizing the negative
+            log-likelihood.
+        optimizer_args (dict): Arguments for the optimizer. Default is None,
+            which means no arguments.
+        use_trust_region (bool): Whether to use trust region constraint.
+        max_kl_step (float): KL divergence constraint for each iteration.
+        learn_std (bool): Is std trainable.
+        init_std (float): Initial value for std.
+        adaptive_std (bool): Is std a neural network. If False, it will be a
+            parameter.
+        std_share_network (bool): Boolean for whether mean and std share
+            the same network.
+        std_hidden_sizes (list[int]): Output dimension of dense layer(s) for
+            the MLP for std. For example, (32, 32) means the MLP consists
+            of two hidden layers, each with 32 hidden units.
+        std_nonlinearity: Nonlinearity for each hidden layer in
+            the std network.
+        layer_normalization (bool): Bool for using layer normalization or not.
+        normalize_inputs (bool): Bool for normalizing inputs or not.
+        normalize_outputs (bool): Bool for normalizing outputs or not.
+        subsample_factor (float): The factor to subsample the data. By default
+            it is 1.0, which means using all the data.
     """
 
     def __init__(self,
@@ -45,6 +71,11 @@ class GaussianMLPRegressorWithModel(StochasticRegressor):
                  name='GaussianMLPRegressorWithModel',
                  hidden_sizes=(32, 32),
                  hidden_nonlinearity=tf.nn.tanh,
+                 hidden_w_init=tf.glorot_uniform_initializer(),
+                 hidden_b_init=tf.zeros_initializer(),
+                 output_nonlinearity=None,
+                 output_w_init=tf.glorot_uniform_initializer(),
+                 output_b_init=tf.zeros_initializer(),
                  optimizer=None,
                  optimizer_args=None,
                  use_trust_region=True,
@@ -84,7 +115,11 @@ class GaussianMLPRegressorWithModel(StochasticRegressor):
             output_dim=self._output_dim,
             hidden_sizes=hidden_sizes,
             hidden_nonlinearity=hidden_nonlinearity,
+            hidden_w_init=hidden_w_init,
+            hidden_b_init=hidden_b_init,
             output_nonlinearity=None,
+            output_w_init=output_w_init,
+            output_b_init=output_b_init,
             learn_std=learn_std,
             adaptive_std=adaptive_std,
             std_share_network=std_share_network,

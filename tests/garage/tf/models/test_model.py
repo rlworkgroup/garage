@@ -17,7 +17,7 @@ class SimpleModel(Model):
     def network_output_spec(self):
         return ['state', 'action']
 
-    def _build(self, obs_input):
+    def _build(self, obs_input, name=None):
         state = mlp(obs_input, self._output_dim, self._hidden_sizes, 'state')
         action = mlp(obs_input, self._output_dim, self._hidden_sizes, 'action')
         return state, action
@@ -30,7 +30,7 @@ class SimpleModel2(Model):
         self._output_dim = output_dim
         self._hidden_sizes = hidden_sizes
 
-    def _build(self, obs_input):
+    def _build(self, obs_input, name=None):
         action = mlp(obs_input, self._output_dim, self._hidden_sizes, 'state')
         return action
 
@@ -46,7 +46,7 @@ class ComplicatedModel(Model):
     def network_output_spec(self):
         return ['action']
 
-    def _build(self, obs_input):
+    def _build(self, obs_input, name=None):
         h1, _ = self._simple_model_1.build(obs_input)
         return self._simple_model_2.build(h1)
 
@@ -62,7 +62,7 @@ class ComplicatedModel2(Model):
     def network_output_spec(self):
         return ['action']
 
-    def _build(self, obs_input):
+    def _build(self, obs_input, name=None):
         h1, _ = self._parent_model.build(obs_input)
         return self._output_model.build(h1)
 
@@ -81,14 +81,14 @@ class TestModel(TfGraphTestCase):
 
     def test_model_creation_with_custom_name(self):
         input_var = tf.placeholder(tf.float32, shape=(None, 5))
-        model = SimpleModel(output_dim=2, name="MySimpleModel")
+        model = SimpleModel(output_dim=2, name='MySimpleModel')
         outputs = model.build(input_var, name='network_2')
         data = np.ones((3, 5))
         result, result2 = self.sess.run(
             [outputs, model.networks['network_2'].outputs],
             feed_dict={model.networks['network_2'].input: data})
         assert np.array_equal(result, result2)
-        assert model.name == "MySimpleModel"
+        assert model.name == 'MySimpleModel'
 
     def test_same_model_with_no_name(self):
         input_var = tf.placeholder(tf.float32, shape=(None, 5))

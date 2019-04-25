@@ -20,7 +20,7 @@ class GaussianMLPRegressor(LayersPowered, Serializable, Parameterized):
     def __init__(self,
                  input_shape,
                  output_dim,
-                 name="GaussianMLPRegressor",
+                 name='GaussianMLPRegressor',
                  mean_network=None,
                  hidden_sizes=(32, 32),
                  hidden_nonlinearity=tf.nn.tanh,
@@ -62,8 +62,8 @@ class GaussianMLPRegressor(LayersPowered, Serializable, Parameterized):
         """
         Parameterized.__init__(self)
         Serializable.quick_init(self, locals())
-        self._mean_network_name = "mean_network"
-        self._std_network_name = "std_network"
+        self._mean_network_name = 'mean_network'
+        self._std_network_name = 'std_network'
 
         with tf.variable_scope(name):
             if optimizer_args is None:
@@ -83,7 +83,7 @@ class GaussianMLPRegressor(LayersPowered, Serializable, Parameterized):
             if mean_network is None:
                 if std_share_network:
                     mean_network = MLP(
-                        name="mean_network",
+                        name='mean_network',
                         input_shape=input_shape,
                         output_dim=2 * output_dim,
                         hidden_sizes=hidden_sizes,
@@ -93,11 +93,11 @@ class GaussianMLPRegressor(LayersPowered, Serializable, Parameterized):
                     l_mean = L.SliceLayer(
                         mean_network.output_layer,
                         slice(output_dim),
-                        name="mean_slice",
+                        name='mean_slice',
                     )
                 else:
                     mean_network = MLP(
-                        name="mean_network",
+                        name='mean_network',
                         input_shape=input_shape,
                         output_dim=output_dim,
                         hidden_sizes=hidden_sizes,
@@ -108,7 +108,7 @@ class GaussianMLPRegressor(LayersPowered, Serializable, Parameterized):
 
             if adaptive_std:
                 l_log_std = MLP(
-                    name="log_std_network",
+                    name='log_std_network',
                     input_shape=input_shape,
                     input_var=mean_network.input_layer.input_var,
                     output_dim=output_dim,
@@ -120,14 +120,14 @@ class GaussianMLPRegressor(LayersPowered, Serializable, Parameterized):
                 l_log_std = L.SliceLayer(
                     mean_network.output_layer,
                     slice(output_dim, 2 * output_dim),
-                    name="log_std_slice",
+                    name='log_std_slice',
                 )
             else:
                 l_log_std = L.ParamLayer(
                     mean_network.input_layer,
                     num_units=output_dim,
                     param=tf.constant_initializer(np.log(init_std)),
-                    name="output_log_std",
+                    name='output_log_std',
                     trainable=learn_std,
                 )
 
@@ -135,29 +135,29 @@ class GaussianMLPRegressor(LayersPowered, Serializable, Parameterized):
 
             xs_var = mean_network.input_layer.input_var
             ys_var = tf.placeholder(
-                dtype=tf.float32, name="ys", shape=(None, output_dim))
+                dtype=tf.float32, name='ys', shape=(None, output_dim))
             old_means_var = tf.placeholder(
-                dtype=tf.float32, name="ys", shape=(None, output_dim))
+                dtype=tf.float32, name='ys', shape=(None, output_dim))
             old_log_stds_var = tf.placeholder(
                 dtype=tf.float32,
-                name="old_log_stds",
+                name='old_log_stds',
                 shape=(None, output_dim))
 
             x_mean_var = tf.Variable(
                 np.zeros((1, ) + input_shape, dtype=np.float32),
-                name="x_mean",
+                name='x_mean',
             )
             x_std_var = tf.Variable(
                 np.ones((1, ) + input_shape, dtype=np.float32),
-                name="x_std",
+                name='x_std',
             )
             y_mean_var = tf.Variable(
                 np.zeros((1, output_dim), dtype=np.float32),
-                name="y_mean",
+                name='y_mean',
             )
             y_std_var = tf.Variable(
                 np.ones((1, output_dim), dtype=np.float32),
-                name="y_std",
+                name='y_std',
             )
 
             normalized_xs_var = (xs_var - x_mean_var) / x_std_var
@@ -211,12 +211,12 @@ class GaussianMLPRegressor(LayersPowered, Serializable, Parameterized):
             )
 
             if use_trust_region:
-                optimizer_args["leq_constraint"] = (mean_kl, max_kl_step)
-                optimizer_args["inputs"] = [
+                optimizer_args['leq_constraint'] = (mean_kl, max_kl_step)
+                optimizer_args['inputs'] = [
                     xs_var, ys_var, old_means_var, old_log_stds_var
                 ]
             else:
-                optimizer_args["inputs"] = [xs_var, ys_var]
+                optimizer_args['inputs'] = [xs_var, ys_var]
 
             self._optimizer.update_opt(**optimizer_args)
 
@@ -292,9 +292,9 @@ class GaussianMLPRegressor(LayersPowered, Serializable, Parameterized):
             inputs = [xs, ys]
         loss_before = self._optimizer.loss(inputs)
         if self._name:
-            prefix = self._name + "/"
+            prefix = self._name + '/'
         else:
-            prefix = ""
+            prefix = ''
         tabular.record(prefix + 'LossBefore', loss_before)
         self._optimizer.optimize(inputs)
         loss_after = self._optimizer.loss(inputs)
@@ -327,7 +327,7 @@ class GaussianMLPRegressor(LayersPowered, Serializable, Parameterized):
             mean=means, log_std=log_stds))
 
     def log_likelihood_sym(self, x_var, y_var, name=None):
-        with tf.name_scope(name, "log_likelihood_sym", [x_var, y_var]):
+        with tf.name_scope(name, 'log_likelihood_sym', [x_var, y_var]):
             normalized_xs_var = (x_var - self._x_mean_var) / self._x_std_var
 
             with tf.name_scope(

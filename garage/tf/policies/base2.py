@@ -7,7 +7,8 @@ class Policy2:
     Policy base class without Parameterzied.
 
     Args:
-        env_spec: Environment specification.
+        name (str): Policy name, also the variable scope.
+        env_spec (garage.envs.env_spec.EnvSpec): Environment specification.
 
     """
 
@@ -15,9 +16,9 @@ class Policy2:
         self._name = name
         self._env_spec = env_spec
         self._variable_scope = tf.VariableScope(reuse=False, name=name)
+        self._models = []
 
     # Should be implemented by all policies
-
     def get_action(self, observation):
         """Get action given observation."""
         raise NotImplementedError
@@ -112,15 +113,18 @@ class StochasticPolicy2(Policy2):
         """Distribution."""
         raise NotImplementedError
 
-    def dist_info_sym(self, obs_var, state_info_vars, name="dist_info_sym"):
+    def dist_info_sym(self, obs_var, state_info_vars, name='dist_info_sym'):
         """
         Symbolic graph of the distribution.
 
         Return the symbolic distribution information about the actions.
-        :param obs_var: symbolic variable for observations
-        :param state_info_vars: a dictionary whose values should contain
-         information about the state of the policy at
-        the time it received the observation
+        Args:
+            obs_var (tf.Tensor): symbolic variable for observations
+            state_info_vars (dict): a dictionary whose values should contain
+                information about the state of the policy at the time it
+                received the observation.
+            name (str): Name of the symbolic graph.
+
         :return:
         """
         raise NotImplementedError
@@ -130,10 +134,11 @@ class StochasticPolicy2(Policy2):
         Distribution info.
 
         Return the distribution information about the actions.
-        :param obs_var: observation values
-        :param state_info_vars: a dictionary whose values should contain
-         information about the state of the policy at the time it received the
-         observation
-        :return:
+
+        Args:
+            obs_var (tf.Tensor): observation values
+            state_info_vars (dict): a dictionary whose values should contain
+                information about the state of the policy at the time it
+                received the observation
         """
         raise NotImplementedError

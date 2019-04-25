@@ -13,33 +13,55 @@ class GaussianMLPModel(Model):
     GaussianMLPModel.
 
     Args:
-    :param output_dim: Output dimension of the model.
-    :param name: Name of the model.
-    :param hidden_sizes: List of sizes for the fully-connected hidden
-        layers.
-    :param learn_std: Is std trainable.
-    :param init_std: Initial value for std.
-    :param adaptive_std: Is std a neural network. If False, it will be a
-        parameter.
-    :param std_share_network: Boolean for whether mean and std share the same
-        network.
-    :param std_hidden_sizes: List of sizes for the fully-connected layers
-        for std.
-    :param min_std: Whether to make sure that the std is at least some
-        threshold value, to avoid numerical issues.
-    :param max_std: Whether to make sure that the std is at most some
-        threshold value, to avoid numerical issues.
-    :param std_hidden_nonlinearity: Nonlinearity for each hidden layer in
-        the std network.
-    :param std_output_nonlinearity: Nonlinearity for output layer in
-        the std network.
-    :param std_parametrization: How the std should be parametrized. There
-        are a few options:
-        - exp: the logarithm of the std will be stored, and applied a
-            exponential transformation
-        - softplus: the std will be computed as log(1+exp(x))
-    :param hidden_nonlinearity: Nonlinearity used for each hidden layer.
-    :param output_nonlinearity: Nonlinearity for the output layer.
+        output_dim (int): Output dimension of the model.
+        name (str): Model name, also the variable scope.
+        hidden_sizes (list[int]): Output dimension of dense layer(s) for
+            the MLP for mean. For example, (32, 32) means the MLP consists
+            of two hidden layers, each with 32 hidden units.
+        hidden_nonlinearity (callable): Activation function for intermediate
+            dense layer(s). It should return a tf.Tensor. Set it to
+            None to maintain a linear activation.
+        hidden_w_init (callable): Initializer function for the weight
+            of intermediate dense layer(s). The function should return a
+            tf.Tensor.
+        hidden_b_init (callable): Initializer function for the bias
+            of intermediate dense layer(s). The function should return a
+            tf.Tensor.
+        output_nonlinearity (callable): Activation function for output dense
+            layer. It should return a tf.Tensor. Set it to None to
+            maintain a linear activation.
+        output_w_init (callable): Initializer function for the weight
+            of output dense layer(s). The function should return a
+            tf.Tensor.
+        output_b_init (callable): Initializer function for the bias
+            of output dense layer(s). The function should return a
+            tf.Tensor.
+        learn_std (bool): Is std trainable.
+        init_std (float): Initial value for std.
+        adaptive_std (bool): Is std a neural network. If False, it will be a
+            parameter.
+        std_share_network (bool): Boolean for whether mean and std share
+            the same network.
+        std_hidden_sizes (list[int]): Output dimension of dense layer(s) for
+            the MLP for std. For example, (32, 32) means the MLP consists
+            of two hidden layers, each with 32 hidden units.
+        min_std (float): If not None, the std is at least the value of min_std,
+            to avoid numerical issues.
+        max_std (float): If not None, the std is at most the value of max_std,
+            to avoid numerical issues.
+        std_hidden_nonlinearity: Nonlinearity for each hidden layer in
+            the std network.
+        std_output_nonlinearity (callable): Activation function for output
+            dense layer in the std network. It should return a tf.Tensor. Set
+            it to None to maintain a linear activation.
+        std_output_w_init (callable): Initializer function for the weight
+            of output dense layer(s) in the std network.
+        std_parametrization (str): How the std should be parametrized. There
+            are two options:
+            - exp: the logarithm of the std will be stored, and applied a
+               exponential transformation
+            - softplus: the std will be computed as log(1+exp(x))
+        layer_normalization (bool): Bool for using layer normalization or not.
     """
 
     def __init__(self,
@@ -64,7 +86,6 @@ class GaussianMLPModel(Model):
                  std_hidden_b_init=tf.zeros_initializer(),
                  std_output_nonlinearity=None,
                  std_output_w_init=tf.glorot_uniform_initializer(),
-                 std_output_b_init=tf.zeros_initializer(),
                  std_parameterization='exp',
                  layer_normalization=False):
         # Network parameters
@@ -82,7 +103,6 @@ class GaussianMLPModel(Model):
         self._std_hidden_b_init = std_hidden_b_init
         self._std_output_nonlinearity = std_output_nonlinearity
         self._std_output_w_init = std_output_w_init
-        self._std_output_b_init = std_output_b_init
         self._std_parameterization = std_parameterization
         self._hidden_nonlinearity = hidden_nonlinearity
         self._hidden_w_init = hidden_w_init
@@ -115,7 +135,7 @@ class GaussianMLPModel(Model):
         """Network output spec."""
         return ['sample', 'mean', 'log_std', 'std_param', 'dist']
 
-    def _build(self, state_input):
+    def _build(self, state_input, name=None):
         action_dim = self._output_dim
 
         with tf.variable_scope('dist_params'):

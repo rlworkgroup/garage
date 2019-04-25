@@ -53,7 +53,7 @@ def step_env_with_gym_quirks(test_case,
         assert round_trip.env.spec == env.env.spec
 
 
-def convolve(_input, filter_weights, filter_bias, stride, filter_sizes,
+def convolve(_input, filter_weights, filter_bias, strides, filter_sizes,
              in_channels, hidden_nonlinearity):
     """Convolve."""
     # in_width = self.input_width
@@ -63,8 +63,8 @@ def convolve(_input, filter_weights, filter_bias, stride, filter_sizes,
     in_width = _input.shape[1]
     in_height = _input.shape[2]
 
-    for filter_size, in_shape, filter_weight, _filter_bias in zip(
-            filter_sizes, in_channels, filter_weights, filter_bias):
+    for filter_size, in_shape, filter_weight, _filter_bias, stride in zip(
+            filter_sizes, in_channels, filter_weights, filter_bias, strides):
         out_width = int((in_width - filter_size) / stride) + 1
         out_height = int((in_height - filter_size) / stride) + 1
         flatten_filter_size = filter_size * filter_size * in_shape
@@ -118,15 +118,15 @@ def max_pooling(_input, pool_shape, pool_stride):
 
 def write_file(result_json, algo):
     """Create new progress.json or append to existing one."""
-    latest_dir = "./latest_results"
-    latest_result = latest_dir + "/progress.json"
+    latest_dir = './latest_results'
+    latest_result = latest_dir + '/progress.json'
     res = {}
     if osp.exists(latest_result):
         res = json.loads(open(latest_result, 'r').read())
     elif not osp.exists(latest_dir):
         os.makedirs(latest_dir)
     res[algo] = result_json
-    result_file = open(latest_result, "w")
+    result_file = open(latest_result, 'w')
     result_file.write(json.dumps(res))
 
 
@@ -136,22 +136,22 @@ def create_json(b_csvs, g_csvs, trails, seeds, b_x, b_y, g_x, g_y, factor_g,
     task_result = {}
     for trail in range(trails):
         g_res, b_res = {}, {}
-        trail_seed = "trail_%d" % (trail + 1)
-        task_result["seed"] = seeds[trail]
+        trail_seed = 'trail_%d' % (trail + 1)
+        task_result['seed'] = seeds[trail]
         task_result[trail_seed] = {}
         df_g = json.loads(pd.read_csv(g_csvs[trail]).to_json())
         df_b = json.loads(pd.read_csv(b_csvs[trail]).to_json())
 
-        g_res["time_steps"] = list(
+        g_res['time_steps'] = list(
             map(lambda x: float(x) * factor_g, df_g[g_x].values()))
-        g_res["return"] = df_g[g_y]
+        g_res['return'] = df_g[g_y]
 
-        b_res["time_steps"] = list(
+        b_res['time_steps'] = list(
             map(lambda x: float(x) * factor_b, df_b[b_x].values()))
-        b_res["return"] = df_b[b_y]
+        b_res['return'] = df_b[b_y]
 
-        task_result[trail_seed]["garage"] = g_res
-        task_result[trail_seed]["baselines"] = b_res
+        task_result[trail_seed]['garage'] = g_res
+        task_result[trail_seed]['baselines'] = b_res
     return task_result
 
 
@@ -182,11 +182,11 @@ def plot(b_csvs, g_csvs, g_x, g_y, b_x, b_y, trials, seeds, plt_file, env_id,
         plt.plot(
             df_g[g_x],
             df_g[g_y],
-            label="garage_trial%d_seed%d" % (trial + 1, seed))
+            label='garage_trial%d_seed%d' % (trial + 1, seed))
         plt.plot(
             df_b[b_x],
             df_b[b_y],
-            label="baselines_trial%d_seed%d" % (trial + 1, seed))
+            label='baselines_trial%d_seed%d' % (trial + 1, seed))
 
     plt.legend()
     plt.xlabel(x_label)
