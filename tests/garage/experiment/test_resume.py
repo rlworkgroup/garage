@@ -33,6 +33,10 @@ def fixture_exp():
         runner.setup(algo, env)
         runner.train(n_epochs=5, batch_size=100)
 
+    # Exit child process manually
+    # Otherwise this process will run remaining tests
+    os._exit(0)
+
 
 class TestResume(unittest.TestCase):
     def test_resume(self):

@@ -74,8 +74,9 @@ class TestSnapshot(unittest.TestCase):
                     osp.join(self.log_dir.name, 'itr_{}.pkl'.format(i)))
 
                 env = snapshot['env']
-                policy = snapshot['policy']
+                algo = snapshot['algo']
                 assert env
-                assert policy
+                assert algo
+                assert algo.policy
 
-                rollout(env, policy, animated=False)
+                rollout(env, algo.policy, animated=False)
