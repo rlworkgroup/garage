@@ -19,7 +19,7 @@ class Noop(gym.Wrapper):
         super().__init__(env)
         self._noop_max = noop_max
         self._noop_action = 0
-        assert noop_max > 0, "noop_max should be larger than 0!"
+        assert noop_max > 0, 'noop_max should be larger than 0!'
         assert env.unwrapped.get_action_meanings()[0] == 'NOOP', (
             "No-op should be the 0-th action but it's not in {}!".format(env))
 
@@ -28,7 +28,11 @@ class Noop(gym.Wrapper):
         obs = self.env.reset(**kwargs)
         noops = np.random.randint(1, self._noop_max + 1)
         for _ in range(noops):
-            obs, _, done, _ = self.env.step(self._noop_action)
+            obs, _, done, _ = self.step(self._noop_action)
             if done:
                 obs = self.env.reset(**kwargs)
         return obs
+
+    def step(self, action):
+        """gym.Env step function."""
+        return self.env.step(action)
