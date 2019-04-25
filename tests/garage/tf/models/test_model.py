@@ -81,14 +81,14 @@ class TestModel(TfGraphTestCase):
 
     def test_model_creation_with_custom_name(self):
         input_var = tf.placeholder(tf.float32, shape=(None, 5))
-        model = SimpleModel(output_dim=2, name="MySimpleModel")
+        model = SimpleModel(output_dim=2, name='MySimpleModel')
         outputs = model.build(input_var, name='network_2')
         data = np.ones((3, 5))
         result, result2 = self.sess.run(
             [outputs, model.networks['network_2'].outputs],
             feed_dict={model.networks['network_2'].input: data})
         assert np.array_equal(result, result2)
-        assert model.name == "MySimpleModel"
+        assert model.name == 'MySimpleModel'
 
     def test_same_model_with_no_name(self):
         input_var = tf.placeholder(tf.float32, shape=(None, 5))

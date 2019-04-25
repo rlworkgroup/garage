@@ -113,7 +113,7 @@ class StochasticPolicy2(Policy2):
         """Distribution."""
         raise NotImplementedError
 
-    def dist_info_sym(self, obs_var, state_info_vars, name="dist_info_sym"):
+    def dist_info_sym(self, obs_var, state_info_vars, name='dist_info_sym'):
         """
         Symbolic graph of the distribution.
 

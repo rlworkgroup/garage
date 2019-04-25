@@ -9,7 +9,7 @@ def parameter(input_var,
               initializer=tf.zeros_initializer(),
               dtype=tf.float32,
               trainable=True,
-              name="parameter"):
+              name='parameter'):
     """
     Parameter layer.
 
@@ -31,7 +31,7 @@ def parameter(input_var,
     """
     with tf.variable_scope(name):
         p = tf.get_variable(
-            "parameter",
+            'parameter',
             shape=(length, ),
             dtype=dtype,
             initializer=initializer,

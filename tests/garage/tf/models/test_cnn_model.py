@@ -18,7 +18,7 @@ class TestCNNModel(TfGraphTestCase):
                                   self.input_height, 3))
         input_shape = self.obs_input.shape[1:]  # height, width, channel
         self._input_ph = tf.placeholder(
-            tf.float32, shape=(None, ) + input_shape, name="input")
+            tf.float32, shape=(None, ) + input_shape, name='input')
 
     @params(
         ((1, ), (3, ), (32, ), (1, )),
@@ -34,8 +34,8 @@ class TestCNNModel(TfGraphTestCase):
             filter_dims=filter_sizes,
             num_filters=out_channels,
             strides=strides,
-            name="cnn_model",
-            padding="VALID",
+            name='cnn_model',
+            padding='VALID',
             hidden_w_init=tf.constant_initializer(1),
             hidden_nonlinearity=None)
 
@@ -74,8 +74,8 @@ class TestCNNModel(TfGraphTestCase):
             filter_dims=filter_sizes,
             num_filters=out_channels,
             strides=strides,
-            name="cnn_model",
-            padding="VALID",
+            name='cnn_model',
+            padding='VALID',
             hidden_w_init=tf.constant_initializer(1),
             hidden_nonlinearity=None)
         outputs = model.build(self._input_ph)
@@ -90,7 +90,7 @@ class TestCNNModel(TfGraphTestCase):
             model_pickled = pickle.loads(h)
             input_shape = self.obs_input.shape[1:]  # height, width, channel
             input_ph = tf.placeholder(
-                tf.float32, shape=(None, ) + input_shape, name="input")
+                tf.float32, shape=(None, ) + input_shape, name='input')
             outputs = model_pickled.build(input_ph)
             output2 = sess.run(outputs, feed_dict={input_ph: self.obs_input})
 
