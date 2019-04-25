@@ -15,7 +15,7 @@ class CategoricalMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
     def __init__(
             self,
             env_spec,
-            name="CategoricalMLPPolicy",
+            name='CategoricalMLPPolicy',
             hidden_sizes=(32, 32),
             hidden_nonlinearity=tf.nn.tanh,
             prob_network=None,
@@ -31,7 +31,7 @@ class CategoricalMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
                 For example, (32, 32) means the MLP of this policy consists
                 of two hidden layers, each with 32 hidden units.
             hidden_nonlinearity: Activation function for
-                        intermediate dense layer(s).
+                intermediate dense layer(s).
             prob_network (tf.Tensor): manually specified network for this
                 policy. If None, a MLP with the network parameters will be
                 created. If not None, other network params are ignored.
@@ -41,8 +41,8 @@ class CategoricalMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
         Serializable.quick_init(self, locals())
 
         self.name = name
-        self._prob_network_name = "prob_network"
-        with tf.variable_scope(name, "CategoricalMLPPolicy"):
+        self._prob_network_name = 'prob_network'
+        with tf.variable_scope(name, 'CategoricalMLPPolicy'):
             if prob_network is None:
                 prob_network = MLP(
                     input_shape=(env_spec.observation_space.flat_dim, ),
@@ -71,7 +71,7 @@ class CategoricalMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
 
     @overrides
     def dist_info_sym(self, obs_var, state_info_vars=None, name=None):
-        with tf.name_scope(name, "dist_info_sym", [obs_var, state_info_vars]):
+        with tf.name_scope(name, 'dist_info_sym', [obs_var, state_info_vars]):
             with tf.name_scope(self._prob_network_name, values=[obs_var]):
                 prob = L.get_output(
                     self._l_prob, {self._l_obs: tf.cast(obs_var, tf.float32)})

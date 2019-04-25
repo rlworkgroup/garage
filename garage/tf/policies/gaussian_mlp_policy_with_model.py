@@ -19,8 +19,24 @@ class GaussianMLPPolicyWithModel(StochasticPolicy2):
         hidden_sizes (list[int]): Output dimension of dense layer(s) for
             the MLP for mean. For example, (32, 32) means the MLP consists
             of two hidden layers, each with 32 hidden units.
-        hidden_nonlinearity: Nonlinearity used for each hidden layer.
-        output_nonlinearity: Nonlinearity for the output layer.
+        hidden_nonlinearity (callable): Activation function for intermediate
+            dense layer(s). It should return a tf.Tensor. Set it to
+            None to maintain a linear activation.
+        hidden_w_init (callable): Initializer function for the weight
+            of intermediate dense layer(s). The function should return a
+            tf.Tensor.
+        hidden_b_init (callable): Initializer function for the bias
+            of intermediate dense layer(s). The function should return a
+            tf.Tensor.
+        output_nonlinearity (callable): Activation function for output dense
+            layer. It should return a tf.Tensor. Set it to None to
+            maintain a linear activation.
+        output_w_init (callable): Initializer function for the weight
+            of output dense layer(s). The function should return a
+            tf.Tensor.
+        output_b_init (callable): Initializer function for the bias
+            of output dense layer(s). The function should return a
+            tf.Tensor.
         learn_std (bool): Is std trainable.
         adaptive_std (bool): Is std a neural network. If False, it will be a
             parameter.
@@ -53,7 +69,11 @@ class GaussianMLPPolicyWithModel(StochasticPolicy2):
                  name='GaussianMLPPolicyWithModel',
                  hidden_sizes=(32, 32),
                  hidden_nonlinearity=tf.nn.tanh,
+                 hidden_w_init=tf.glorot_uniform_initializer(),
+                 hidden_b_init=tf.zeros_initializer(),
                  output_nonlinearity=None,
+                 output_w_init=tf.glorot_uniform_initializer(),
+                 output_b_init=tf.zeros_initializer(),
                  learn_std=True,
                  adaptive_std=False,
                  std_share_network=False,
@@ -74,7 +94,11 @@ class GaussianMLPPolicyWithModel(StochasticPolicy2):
             output_dim=self.action_dim,
             hidden_sizes=hidden_sizes,
             hidden_nonlinearity=hidden_nonlinearity,
+            hidden_w_init=hidden_w_init,
+            hidden_b_init=hidden_b_init,
             output_nonlinearity=output_nonlinearity,
+            output_w_init=output_w_init,
+            output_b_init=output_b_init,
             learn_std=learn_std,
             adaptive_std=adaptive_std,
             std_share_network=std_share_network,

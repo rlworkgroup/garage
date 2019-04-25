@@ -38,10 +38,24 @@ class CategoricalConvPolicyWithModel(StochasticPolicy2):
         hidden_sizes (list[int]): Output dimension of dense layer(s).
             For example, (32, 32) means the MLP of this policy consists
             of two hidden layers, each with 32 hidden units.
-        hidden_nonlinearity: Activation function for
-                    intermediate dense layer(s).
-        output_nonlinearity: Activation function for
-                    output dense layer.
+        hidden_nonlinearity (callable): Activation function for intermediate
+            dense layer(s). It should return a tf.Tensor. Set it to
+            None to maintain a linear activation.
+        hidden_w_init (callable): Initializer function for the weight
+            of intermediate dense layer(s). The function should return a
+            tf.Tensor.
+        hidden_b_init (callable): Initializer function for the bias
+            of intermediate dense layer(s). The function should return a
+            tf.Tensor.
+        output_nonlinearity (callable): Activation function for output dense
+            layer. It should return a tf.Tensor. Set it to None to
+            maintain a linear activation.
+        output_w_init (callable): Initializer function for the weight
+            of output dense layer(s). The function should return a
+            tf.Tensor.
+        output_b_init (callable): Initializer function for the bias
+            of output dense layer(s). The function should return a
+            tf.Tensor.
         layer_normalization (bool): Bool for using layer normalization or not.
 
     """
@@ -55,7 +69,11 @@ class CategoricalConvPolicyWithModel(StochasticPolicy2):
                  name='CategoricalConvPolicy',
                  hidden_sizes=[],
                  hidden_nonlinearity=tf.nn.relu,
+                 hidden_w_init=tf.glorot_uniform_initializer(),
+                 hidden_b_init=tf.zeros_initializer(),
                  output_nonlinearity=tf.nn.softmax,
+                 output_w_init=tf.glorot_uniform_initializer(),
+                 output_b_init=tf.zeros_initializer(),
                  layer_normalization=False):
         assert isinstance(env_spec.action_space, Discrete), (
             'CategoricalConvPolicy only works with akro.tf.Discrete'
@@ -76,7 +94,11 @@ class CategoricalConvPolicyWithModel(StochasticPolicy2):
                 output_dim=self.action_dim,
                 hidden_sizes=hidden_sizes,
                 hidden_nonlinearity=hidden_nonlinearity,
+                hidden_w_init=hidden_w_init,
+                hidden_b_init=hidden_b_init,
                 output_nonlinearity=output_nonlinearity,
+                output_w_init=output_w_init,
+                output_b_init=output_b_init,
                 layer_normalization=layer_normalization,
                 name='MLPModel'))
 

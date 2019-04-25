@@ -18,8 +18,24 @@ class GaussianMLPModel(Model):
         hidden_sizes (list[int]): Output dimension of dense layer(s) for
             the MLP for mean. For example, (32, 32) means the MLP consists
             of two hidden layers, each with 32 hidden units.
-        hidden_nonlinearity: Nonlinearity used for each hidden layer.
-        output_nonlinearity: Nonlinearity for the output layer.
+        hidden_nonlinearity (callable): Activation function for intermediate
+            dense layer(s). It should return a tf.Tensor. Set it to
+            None to maintain a linear activation.
+        hidden_w_init (callable): Initializer function for the weight
+            of intermediate dense layer(s). The function should return a
+            tf.Tensor.
+        hidden_b_init (callable): Initializer function for the bias
+            of intermediate dense layer(s). The function should return a
+            tf.Tensor.
+        output_nonlinearity (callable): Activation function for output dense
+            layer. It should return a tf.Tensor. Set it to None to
+            maintain a linear activation.
+        output_w_init (callable): Initializer function for the weight
+            of output dense layer(s). The function should return a
+            tf.Tensor.
+        output_b_init (callable): Initializer function for the bias
+            of output dense layer(s). The function should return a
+            tf.Tensor.
         learn_std (bool): Is std trainable.
         init_std (float): Initial value for std.
         adaptive_std (bool): Is std a neural network. If False, it will be a
@@ -35,8 +51,11 @@ class GaussianMLPModel(Model):
             to avoid numerical issues.
         std_hidden_nonlinearity: Nonlinearity for each hidden layer in
             the std network.
-        std_output_nonlinearity: Nonlinearity for output layer in
-            the std network.
+        std_output_nonlinearity (callable): Activation function for output
+            dense layer in the std network. It should return a tf.Tensor. Set
+            it to None to maintain a linear activation.
+        std_output_w_init (callable): Initializer function for the weight
+            of output dense layer(s) in the std network.
         std_parametrization (str): How the std should be parametrized. There
             are two options:
             - exp: the logarithm of the std will be stored, and applied a
@@ -67,7 +86,6 @@ class GaussianMLPModel(Model):
                  std_hidden_b_init=tf.zeros_initializer(),
                  std_output_nonlinearity=None,
                  std_output_w_init=tf.glorot_uniform_initializer(),
-                 std_output_b_init=tf.zeros_initializer(),
                  std_parameterization='exp',
                  layer_normalization=False):
         # Network parameters
@@ -85,7 +103,6 @@ class GaussianMLPModel(Model):
         self._std_hidden_b_init = std_hidden_b_init
         self._std_output_nonlinearity = std_output_nonlinearity
         self._std_output_w_init = std_output_w_init
-        self._std_output_b_init = std_output_b_init
         self._std_parameterization = std_parameterization
         self._hidden_nonlinearity = hidden_nonlinearity
         self._hidden_w_init = hidden_w_init

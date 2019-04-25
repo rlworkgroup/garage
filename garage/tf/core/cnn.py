@@ -30,12 +30,15 @@ def cnn(input_var,
         name (str): Network name, also the variable scope.
         padding (str): The type of padding algorithm to use,
             either 'SAME' or 'VALID'.
-        hidden_nonlinearity: Activation function for
-                    intermediate dense layer(s).
-        hidden_w_init: Initializer function for the weight
-                    of intermediate dense layer(s).
-        hidden_b_init: Initializer function for the bias
-                    of intermediate dense layer(s).
+        hidden_nonlinearity (callable): Activation function for intermediate
+            dense layer(s). It should return a tf.Tensor. Set it to
+            None to maintain a linear activation.
+        hidden_w_init (callable): Initializer function for the weight
+            of intermediate dense layer(s). The function should return a
+            tf.Tensor.
+        hidden_b_init (callable): Initializer function for the bias
+            of intermediate dense layer(s). The function should return a
+            tf.Tensor.
 
     Return:
         The output tf.Tensor of the CNN.
@@ -90,12 +93,15 @@ def cnn_with_max_pooling(input_var,
             strides (2, 2).
         padding (str): The type of padding algorithm to use,
             either 'SAME' or 'VALID'.
-        hidden_nonlinearity: Activation function for
-                    intermediate dense layer(s).
-        hidden_w_init: Initializer function for the weight
-                    of intermediate dense layer(s).
-        hidden_b_init: Initializer function for the bias
-                    of intermediate dense layer(s).
+        hidden_nonlinearity (callable): Activation function for intermediate
+            dense layer(s). It should return a tf.Tensor. Set it to
+            None to maintain a linear activation.
+        hidden_w_init (callable): Initializer function for the weight
+            of intermediate dense layer(s). The function should return a
+            tf.Tensor.
+        hidden_b_init (callable): Initializer function for the bias
+            of intermediate dense layer(s). The function should return a
+            tf.Tensor.
 
     Return:
         The output tf.Tensor of the CNN.
