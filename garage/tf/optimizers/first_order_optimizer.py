@@ -66,7 +66,7 @@ class FirstOrderOptimizer(Serializable):
         :param inputs: A list of symbolic variables as inputs
         :return: No return value.
         """
-        with tf.variable_scope(
+        with tf.name_scope(
                 self._name,
                 values=[
                     loss,
