@@ -13,7 +13,7 @@ class Sequential(Model):
 
     Args:
         name (str): Model name, also the variable scope.
-        models (list[garage.Model]): The models to be connected
+        models (list[garage.tf.models.Model]): The models to be connected
             in sequential order.
     """
 

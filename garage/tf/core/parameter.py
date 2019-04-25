@@ -21,8 +21,9 @@ def parameter(input_var,
     Args:
         input_var (tf.Tensor): Input tf.Tensor.
         length (int): Integer dimension of the variables.
-        initializer: Initializer of the variables.
-        dtype: Data type of the variables.
+        initializer (callable): Initializer of the variables. The function
+            should return a tf.Tensor.
+        dtype: Data type of the variables (default is tf.float32).
         trainable (bool): Whether these variables are trainable.
         name (str): Variable scope of the variables.
 
