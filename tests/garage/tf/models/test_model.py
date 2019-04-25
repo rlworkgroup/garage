@@ -161,6 +161,11 @@ class TestModel(TfGraphTestCase):
             input_var = tf.placeholder(tf.float32, shape=(None, 5))
             model.build(input_var)
 
+            # assign bias to all one
+            with tf.variable_scope('SimpleModel/state', reuse=True):
+                bias = tf.get_variable('hidden_0/bias')
+            sess.run(tf.assign(bias, tf.ones_like(bias)))
+
             results = sess.run(
                 model.networks['default'].outputs,
                 feed_dict={model.networks['default'].input: data})
@@ -191,6 +196,12 @@ class TestModel(TfGraphTestCase):
             input_var = tf.placeholder(tf.float32, shape=(None, 5))
             outputs = model.build(input_var)
 
+            # assign bias to all one
+            with tf.variable_scope(
+                    'ComplicatedModel/SimpleModel/state', reuse=True):
+                bias = tf.get_variable('hidden_0/bias')
+            sess.run(tf.assign(bias, tf.ones_like(bias)))
+
             results = sess.run(
                 outputs, feed_dict={model.networks['default'].input: data})
             model_data = pickle.dumps(model)
@@ -215,6 +226,12 @@ class TestModel(TfGraphTestCase):
         with tf.Session(graph=tf.Graph()) as sess:
             input_var = tf.placeholder(tf.float32, shape=(None, 5))
             outputs = model.build(input_var)
+
+            # assign bias to all one
+            with tf.variable_scope(
+                    'ComplicatedModel2/SimpleModel/state', reuse=True):
+                bias = tf.get_variable('hidden_0/bias')
+            sess.run(tf.assign(bias, tf.ones_like(bias)))
 
             results = sess.run(
                 outputs, feed_dict={model.networks['default'].input: data})

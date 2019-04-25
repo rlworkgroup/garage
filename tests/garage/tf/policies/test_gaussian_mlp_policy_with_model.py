@@ -101,14 +101,19 @@ class TestGaussianMLPPolicyWithModel(TfGraphTestCase):
         obs, _, _, _ = env.step(1)
         obs_dim = env.spec.observation_space.flat_dim
 
-        action1, prob1 = policy.get_action(obs)
+        with tf.variable_scope(
+                'GaussianMLPPolicyWithModel/GaussianMLPModel', reuse=True):
+            return_var = tf.get_variable('return_var')
+        # assign it to all one
+        self.sess.run(tf.assign(return_var, tf.ones_like(return_var)))
+        output1 = self.sess.run(
+            policy.model.outputs[:-1],
+            feed_dict={policy.model.input: [obs.flatten()]})
 
         p = pickle.dumps(policy)
-        with tf.Session(graph=tf.Graph()):
+        with tf.Session(graph=tf.Graph()) as sess:
             policy_pickled = pickle.loads(p)
-            action2, prob2 = policy_pickled.get_action(obs)
-
-        assert env.action_space.contains(action1)
-        assert np.array_equal(action1, action2)
-        assert np.array_equal(prob1['mean'], prob2['mean'])
-        assert np.array_equal(prob1['log_std'], prob2['log_std'])
+            output2 = sess.run(
+                policy_pickled.model.outputs[:-1],
+                feed_dict={policy_pickled.model.input: [obs.flatten()]})
+            assert np.array_equal(output1, output2)

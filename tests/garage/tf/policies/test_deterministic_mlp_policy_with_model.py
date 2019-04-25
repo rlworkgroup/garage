@@ -63,7 +63,7 @@ class TestDeterministicMLPPolicyWithModel(TfGraphTestCase):
 
         obs_dim = env.spec.observation_space.flat_dim
         state_input = tf.placeholder(tf.float32, shape=(None, obs_dim))
-        action_sym = policy.get_action_sym(state_input, name="action_sym")
+        action_sym = policy.get_action_sym(state_input, name='action_sym')
 
         expected_action = np.full(action_dim, 0.5)
 
@@ -90,11 +90,18 @@ class TestDeterministicMLPPolicyWithModel(TfGraphTestCase):
         env.reset()
         obs, _, _, _ = env.step(1)
 
-        action1, _ = policy.get_action(obs)
+        with tf.variable_scope('DeterministicMLPPolicy/MLPModel', reuse=True):
+            return_var = tf.get_variable('return_var')
+        # assign it to all one
+        self.sess.run(tf.assign(return_var, tf.ones_like(return_var)))
+        output1 = self.sess.run(
+            policy.model.outputs,
+            feed_dict={policy.model.input: [obs.flatten()]})
 
         p = pickle.dumps(policy)
-        with tf.Session(graph=tf.Graph()):
+        with tf.Session(graph=tf.Graph()) as sess:
             policy_pickled = pickle.loads(p)
-            action2, _ = policy_pickled.get_action(obs)
-            assert env.action_space.contains(action2)
-            assert np.array_equal(action1, action2)
+            output2 = sess.run(
+                policy_pickled.model.outputs,
+                feed_dict={policy_pickled.model.input: [obs.flatten()]})
+            assert np.array_equal(output1, output2)
