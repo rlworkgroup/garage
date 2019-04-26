@@ -103,9 +103,9 @@ class LocalRunner:
             policy weights can be loaded before setup().
 
         Args:
-            algo(RLAlgorithm): An algorithm instance.
-            env(GarageEnv): An environement instance.
-            sampler_cls(Sampler): A sampler class.
+            algo(garage.np.algos.RLAlgorithm): An algorithm instance.
+            env(garage.envs.GarageEnv): An environement instance.
+            sampler_cls(garage.sampler.Sampler): A sampler class.
             sampler_args(dict): Arguments to be passed to sampler constructor.
 
         """

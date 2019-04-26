@@ -51,7 +51,7 @@ def run_experiment(argv):
         '--n_parallel',
         type=int,
         default=1,
-        help=("Number of parallel workers to perform rollouts. "
+        help=('Number of parallel workers to perform rollouts. '
               "0 => don't start any workers"))
     parser.add_argument(
         '--exp_name',
@@ -66,7 +66,7 @@ def run_experiment(argv):
     parser.add_argument(
         '--snapshot_mode',
         type=str,
-        default='last',
+        default='all',
         help='Mode to save the snapshot. Can be either "all" '
         '(all iterations will be saved), "last" (only '
         'the last iteration will be saved), "gap" (every'
@@ -91,7 +91,7 @@ def run_experiment(argv):
         '--tensorboard_step_key',
         type=str,
         default=None,
-        help="Name of the step key in tensorboard_summary.")
+        help='Name of the step key in tensorboard_summary.')
     parser.add_argument(
         '--params_log_file',
         type=str,
@@ -191,7 +191,7 @@ def run_experiment(argv):
     snapshotter.snapshot_dir = log_dir
     snapshotter.snapshot_mode = args.snapshot_mode
     snapshotter.snapshot_gap = args.snapshot_gap
-    logger.push_prefix("[%s] " % args.exp_name)
+    logger.push_prefix('[%s] ' % args.exp_name)
 
     if args.resume_from_dir is not None:
         with LocalRunner() as runner:
@@ -231,7 +231,7 @@ def child_proc_shutdown(children):
     alive = run_exp_proc.children(recursive=True)
     for proc in alive:
         if any([
-                "multiprocessing.semaphore_tracker" in cmd
+                'multiprocessing.semaphore_tracker' in cmd
                 for cmd in proc.cmdline()
         ]):
             alive.remove(proc)
@@ -244,20 +244,20 @@ def child_proc_shutdown(children):
         if not alive:
             break
     if alive:
-        error_msg = ""
+        error_msg = ''
         for child in alive:
-            error_msg += "{}\n".format(
+            error_msg += '{}\n'.format(
                 str(
                     child.as_dict(
-                        attrs=["ppid", "pid", "name", "status", "cmdline"])))
+                        attrs=['ppid', 'pid', 'name', 'status', 'cmdline'])))
 
         error_msg = ("The following processes didn't die after the shutdown "
-                     "of run_experiment:\n") + error_msg
-        error_msg += ("This is a sign of an unclean shutdown. Please reopen "
-                      "the following issue\nwith a detailed description "
-                      "of how the error was produced:\n")
-        error_msg += ("https://github.com/rlworkgroup/garage/issues/120")
-        print(colorize(error_msg, "yellow"))
+                     'of run_experiment:\n') + error_msg
+        error_msg += ('This is a sign of an unclean shutdown. Please reopen '
+                      'the following issue\nwith a detailed description '
+                      'of how the error was produced:\n')
+        error_msg += ('https://github.com/rlworkgroup/garage/issues/120')
+        print(colorize(error_msg, 'yellow'))
 
 
 def log_parameters(log_file, args):
@@ -266,16 +266,16 @@ def log_parameters(log_file, args):
     for param_name, param_value in args.__dict__.items():
         log_params[param_name] = param_value
     if args.args_data is not None:
-        log_params["json_args"] = dict()
+        log_params['json_args'] = dict()
     mkdir_p(os.path.dirname(log_file))
-    with open(log_file, "w") as f:
+    with open(log_file, 'w') as f:
         json.dump(log_params, f, indent=2, sort_keys=True, cls=LogEncoder)
 
 
 def dump_variant(log_file, variant_data):
     """Dump the variant file."""
     mkdir_p(os.path.dirname(log_file))
-    with open(log_file, "w") as f:
+    with open(log_file, 'w') as f:
         json.dump(variant_data, f, indent=2, sort_keys=True, cls=LogEncoder)
 
 
@@ -285,16 +285,16 @@ class LogEncoder(json.JSONEncoder):
     def default(self, o):
         """Perform JSON encoding."""
         if isinstance(o, type):
-            return {'$class': o.__module__ + "." + o.__name__}
+            return {'$class': o.__module__ + '.' + o.__name__}
         elif isinstance(o, Enum):
             return {
                 '$enum':
-                o.__module__ + "." + o.__class__.__name__ + '.' + o.name
+                o.__module__ + '.' + o.__class__.__name__ + '.' + o.name
             }
         elif callable(o):
-            return {'$function': o.__module__ + "." + o.__name__}
+            return {'$function': o.__module__ + '.' + o.__name__}
         return json.JSONEncoder.default(self, o)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     run_experiment(sys.argv)

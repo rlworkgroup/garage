@@ -6,6 +6,8 @@ from os import path as osp
 import pickle
 import re
 
+import joblib
+
 from garage.misc.console import mkdir_p
 
 
@@ -121,4 +123,4 @@ class Snapshotter:
 
         assert osp.isfile(snapshot_file)
 
-        return pickle.load(open(snapshot_file, 'rb'))
+        return joblib.load(open(snapshot_file, 'rb'))

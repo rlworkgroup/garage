@@ -74,7 +74,7 @@ class CEM(RLAlgorithm, Serializable):
         # fixed
         self.n_best = int(n_samples * best_frac)
         assert self.n_best >= 1, (
-            f"n_samples is too low. Make sure that n_samples * best_frac >= 1")
+            f'n_samples is too low. Make sure that n_samples * best_frac >= 1')
         self.n_params = len(self.cur_mean)
 
     def sample_params(self, epoch):

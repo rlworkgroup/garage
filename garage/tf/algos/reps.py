@@ -48,7 +48,7 @@ class REPS(BatchPolopt):
                  optimizer_args=dict(max_opt_itr=50),
                  dual_optimizer=scipy.optimize.fmin_l_bfgs_b,
                  dual_optimizer_args=dict(maxiter=50),
-                 name="REPS",
+                 name='REPS',
                  **kwargs):
         self.quick_init(locals())
         self.name = name
@@ -96,11 +96,11 @@ class REPS(BatchPolopt):
 
         # Optimize dual
         eta_before = self.param_eta
-        logger.log("Computing dual before")
+        logger.log('Computing dual before')
         self.feat_diff = self._features(samples_data)
         dual_opt_input_values = self._dual_opt_input_values(samples_data)
         dual_before = self.f_dual(*dual_opt_input_values)
-        logger.log("Optimizing dual")
+        logger.log('Optimizing dual')
 
         def eval_dual(x):
             self.param_eta = x[0]
@@ -125,34 +125,34 @@ class REPS(BatchPolopt):
             **self.dual_optimizer_args,
         )
 
-        logger.log("Computing dual after")
+        logger.log('Computing dual after')
         self.param_eta, self.param_v = params_ast[0], params_ast[1:]
         dual_opt_input_values = self._dual_opt_input_values(samples_data)
         dual_after = self.f_dual(*dual_opt_input_values)
 
         # Optimize policy
         policy_opt_input_values = self._policy_opt_input_values(samples_data)
-        logger.log("Computing policy loss before")
+        logger.log('Computing policy loss before')
         loss_before = self.optimizer.loss(policy_opt_input_values)
-        logger.log("Computing policy KL before")
+        logger.log('Computing policy KL before')
         policy_kl_before = self.f_policy_kl(*policy_opt_input_values)
-        logger.log("Optimizing policy")
+        logger.log('Optimizing policy')
         self.optimizer.optimize(policy_opt_input_values)
-        logger.log("Computing policy KL")
+        logger.log('Computing policy KL')
         policy_kl = self.f_policy_kl(*policy_opt_input_values)
-        logger.log("Computing policy loss after")
+        logger.log('Computing policy loss after')
         loss_after = self.optimizer.loss(policy_opt_input_values)
-        tabular.record("EtaBefore", eta_before)
-        tabular.record("EtaAfter", self.param_eta)
-        tabular.record("DualBefore", dual_before)
-        tabular.record("DualAfter", dual_after)
-        tabular.record("{}/LossBefore".format(self.policy.name), loss_before)
-        tabular.record("{}/LossAfter".format(self.policy.name), loss_after)
-        tabular.record("{}/dLoss".format(self.policy.name),
+        tabular.record('EtaBefore', eta_before)
+        tabular.record('EtaAfter', self.param_eta)
+        tabular.record('DualBefore', dual_before)
+        tabular.record('DualAfter', dual_after)
+        tabular.record('{}/LossBefore'.format(self.policy.name), loss_before)
+        tabular.record('{}/LossAfter'.format(self.policy.name), loss_after)
+        tabular.record('{}/dLoss'.format(self.policy.name),
                        loss_before - loss_after)
-        tabular.record("{}/KLBefore".format(self.policy.name),
+        tabular.record('{}/KLBefore'.format(self.policy.name),
                        policy_kl_before)
-        tabular.record("{}/KL".format(self.policy.name), policy_kl)
+        tabular.record('{}/KL'.format(self.policy.name), policy_kl)
 
     def _build_inputs(self):
         """Decalre graph inputs variables."""
@@ -160,31 +160,31 @@ class REPS(BatchPolopt):
         action_space = self.policy.action_space
         policy_dist = self.policy.distribution
 
-        with tf.name_scope("inputs"):
+        with tf.name_scope('inputs'):
             obs_var = observation_space.new_tensor_variable(
-                name="obs",
+                name='obs',
                 extra_dims=2)   # yapf: disable
             action_var = action_space.new_tensor_variable(
-                name="action",
+                name='action',
                 extra_dims=2)   # yapf: disable
             reward_var = tensor_utils.new_tensor(
-                name="reward",
+                name='reward',
                 ndim=2,
                 dtype=tf.float32)   # yapf: disable
             valid_var = tensor_utils.new_tensor(
-                name="valid",
+                name='valid',
                 ndim=2,
                 dtype=tf.float32)   # yapf: disable
             feat_diff = tensor_utils.new_tensor(
-                name="feat_diff",
+                name='feat_diff',
                 ndim=2,
                 dtype=tf.float32)   # yapf: disable
             param_v = tensor_utils.new_tensor(
-                name="param_v",
+                name='param_v',
                 ndim=1,
                 dtype=tf.float32)   # yapf: disable
             param_eta = tensor_utils.new_tensor(
-                name="param_eta",
+                name='param_eta',
                 ndim=0,
                 dtype=tf.float32)   # yapf: disable
             policy_state_info_vars = {
@@ -203,7 +203,7 @@ class REPS(BatchPolopt):
                 k: tf.placeholder(
                     tf.float32,
                     shape=[None] * 2 + list(shape),
-                    name="policy_old_%s" % k)
+                    name='policy_old_%s' % k)
                 for k, shape in policy_dist.dist_info_specs
             }
             policy_old_dist_info_vars_list = [
@@ -211,41 +211,41 @@ class REPS(BatchPolopt):
                 for k in policy_dist.dist_info_keys
             ]
 
-            with tf.name_scope("flat"):
-                obs_flat = flatten_batch(obs_var, name="obs_flat")
-                action_flat = flatten_batch(action_var, name="action_flat")
-                reward_flat = flatten_batch(reward_var, name="reward_flat")
-                valid_flat = flatten_batch(valid_var, name="valid_flat")
+            with tf.name_scope('flat'):
+                obs_flat = flatten_batch(obs_var, name='obs_flat')
+                action_flat = flatten_batch(action_var, name='action_flat')
+                reward_flat = flatten_batch(reward_var, name='reward_flat')
+                valid_flat = flatten_batch(valid_var, name='valid_flat')
                 feat_diff_flat = flatten_batch(
                     feat_diff,
-                    name="feat_diff_flat")  # yapf: disable
+                    name='feat_diff_flat')  # yapf: disable
                 policy_state_info_vars_flat = flatten_batch_dict(
                     policy_state_info_vars,
-                    name="policy_state_info_vars_flat")  # yapf: disable
+                    name='policy_state_info_vars_flat')  # yapf: disable
                 policy_old_dist_info_vars_flat = flatten_batch_dict(
                     policy_old_dist_info_vars,
-                    name="policy_old_dist_info_vars_flat")
+                    name='policy_old_dist_info_vars_flat')
 
-            with tf.name_scope("valid"):
+            with tf.name_scope('valid'):
                 reward_valid = filter_valids(
                     reward_flat,
                     valid_flat,
-                    name="reward_valid")   # yapf: disable
+                    name='reward_valid')   # yapf: disable
                 action_valid = filter_valids(
                     action_flat,
                     valid_flat,
-                    name="action_valid")    # yapf: disable
+                    name='action_valid')    # yapf: disable
                 policy_state_info_vars_valid = filter_valids_dict(
                     policy_state_info_vars_flat,
                     valid_flat,
-                    name="policy_state_info_vars_valid")
+                    name='policy_state_info_vars_valid')
                 policy_old_dist_info_vars_valid = filter_valids_dict(
                     policy_old_dist_info_vars_flat,
                     valid_flat,
-                    name="policy_old_dist_info_vars_valid")
+                    name='policy_old_dist_info_vars_valid')
 
         pol_flat = graph_inputs(
-            "PolicyLossInputsFlat",
+            'PolicyLossInputsFlat',
             obs_var=obs_flat,
             action_var=action_flat,
             reward_var=reward_flat,
@@ -255,14 +255,14 @@ class REPS(BatchPolopt):
             policy_old_dist_info_vars=policy_old_dist_info_vars_flat,
         )
         pol_valid = graph_inputs(
-            "PolicyLossInputsValid",
+            'PolicyLossInputsValid',
             reward_var=reward_valid,
             action_var=action_valid,
             policy_state_info_vars=policy_state_info_vars_valid,
             policy_old_dist_info_vars=policy_old_dist_info_vars_valid,
         )
         policy_loss_inputs = graph_inputs(
-            "PolicyLossInputs",
+            'PolicyLossInputs',
             obs_var=obs_var,
             action_var=action_var,
             reward_var=reward_var,
@@ -276,7 +276,7 @@ class REPS(BatchPolopt):
             valid=pol_valid,
         )
         policy_opt_inputs = graph_inputs(
-            "PolicyOptInputs",
+            'PolicyOptInputs',
             obs_var=obs_var,
             action_var=action_var,
             reward_var=reward_var,
@@ -288,7 +288,7 @@ class REPS(BatchPolopt):
             policy_old_dist_info_vars_list=policy_old_dist_info_vars_list,
         )
         dual_opt_inputs = graph_inputs(
-            "DualOptInputs",
+            'DualOptInputs',
             reward_var=reward_var,
             valid_var=valid_var,
             feat_diff=feat_diff,
@@ -316,18 +316,18 @@ class REPS(BatchPolopt):
         policy_dist_info_flat = self.policy.dist_info_sym(
             i.flat.obs_var,
             i.flat.policy_state_info_vars,
-            name="policy_dist_info_flat")
+            name='policy_dist_info_flat')
 
         policy_dist_info_valid = filter_valids_dict(
             policy_dist_info_flat,
             i.flat.valid_var,
-            name="policy_dist_info_valid")
+            name='policy_dist_info_valid')
 
-        with tf.name_scope("bellman_error"):
+        with tf.name_scope('bellman_error'):
             delta_v = i.valid.reward_var + tf.tensordot(
                 i.feat_diff, i.param_v, 1)
 
-        with tf.name_scope("policy_loss"):
+        with tf.name_scope('policy_loss'):
             ll = pol_dist.log_likelihood_sym(i.valid.action_var,
                                              policy_dist_info_valid)
             loss = -tf.reduce_mean(ll * tf.exp(
@@ -338,14 +338,14 @@ class REPS(BatchPolopt):
                 [tf.reduce_mean(tf.square(param))
                  for param in reg_params]) / len(reg_params)
 
-        with tf.name_scope("kl"):
+        with tf.name_scope('kl'):
             kl = pol_dist.kl_sym(
                 i.valid.policy_old_dist_info_vars,
                 policy_dist_info_valid,
             )
             pol_mean_kl = tf.reduce_mean(kl)
 
-        with tf.name_scope("dual"):
+        with tf.name_scope('dual'):
             dual_loss = i.param_eta * self.epsilon + i.param_eta * tf.log(
                 tf.reduce_mean(
                     tf.exp(delta_v / i.param_eta -
@@ -360,34 +360,34 @@ class REPS(BatchPolopt):
         self.f_dual = tensor_utils.compile_function(
             flatten_inputs(self._dual_opt_inputs),
             dual_loss,
-            log_name="f_dual")
+            log_name='f_dual')
 
         self.f_dual_grad = tensor_utils.compile_function(
             flatten_inputs(self._dual_opt_inputs),
             dual_grad,
-            log_name="f_dual_grad")
+            log_name='f_dual_grad')
 
         self.f_policy_kl = tensor_utils.compile_function(
             flatten_inputs(self._policy_opt_inputs),
             pol_mean_kl,
-            log_name="f_policy_kl")
+            log_name='f_policy_kl')
 
         return loss
 
     def _dual_opt_input_values(self, samples_data):
         """Update dual func optimize input values based on samples data."""
         policy_state_info_list = [
-            samples_data["agent_infos"][k]
+            samples_data['agent_infos'][k]
             for k in self.policy.state_info_keys
         ]   # yapf: disable
         policy_old_dist_info_list = [
-            samples_data["agent_infos"][k]
+            samples_data['agent_infos'][k]
             for k in self.policy.distribution.dist_info_keys
         ]
 
         dual_opt_input_values = self._dual_opt_inputs._replace(
-            reward_var=samples_data["rewards"],
-            valid_var=samples_data["valids"],
+            reward_var=samples_data['rewards'],
+            valid_var=samples_data['valids'],
             feat_diff=self.feat_diff,
             param_eta=self.param_eta,
             param_v=self.param_v,
@@ -400,19 +400,20 @@ class REPS(BatchPolopt):
     def _policy_opt_input_values(self, samples_data):
         """Update policy optimize input values based on samples data."""
         policy_state_info_list = [
-            samples_data["agent_infos"][k]
+            samples_data['agent_infos'][k]
             for k in self.policy.state_info_keys
         ]   # yapf: disable
         policy_old_dist_info_list = [
-            samples_data["agent_infos"][k]
+            samples_data['agent_infos'][k]
             for k in self.policy.distribution.dist_info_keys
         ]
 
+        # pylint: disable=locally-disabled, unexpected-keyword-arg
         policy_opt_input_values = self._policy_opt_inputs._replace(
-            obs_var=samples_data["observations"],
-            action_var=samples_data["actions"],
-            reward_var=samples_data["rewards"],
-            valid_var=samples_data["valids"],
+            obs_var=samples_data['observations'],
+            action_var=samples_data['actions'],
+            reward_var=samples_data['rewards'],
+            valid_var=samples_data['valids'],
             feat_diff=self.feat_diff,
             param_eta=self.param_eta,
             param_v=self.param_v,
@@ -424,13 +425,13 @@ class REPS(BatchPolopt):
 
     def _features(self, samples_data):
         """Get valid view features based on samples data."""
-        paths = samples_data["paths"]
+        paths = samples_data['paths']
         feat_diff = []
         for path in paths:
-            o = np.clip(path["observations"],
+            o = np.clip(path['observations'],
                         self.env_spec.observation_space.low,
                         self.env_spec.observation_space.high)
-            lr = len(path["rewards"])
+            lr = len(path['rewards'])
             al = np.arange(lr).reshape(-1, 1) / self.max_path_length
             feats = np.concatenate(
                 [o, o**2, al, al**2, al**3,

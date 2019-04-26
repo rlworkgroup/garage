@@ -24,5 +24,5 @@ class VPG(NPO):
             pg_loss=PGLoss.VANILLA,
             optimizer=optimizer,
             optimizer_args=optimizer_args,
-            name="VPG",
+            name='VPG',
             **kwargs)

@@ -95,21 +95,21 @@ class DDPG(OffPolicyRLAlgorithm):
 
     @overrides
     def init_opt(self):
-        with tf.name_scope(self.name, "DDPG"):
+        with tf.name_scope(self.name, 'DDPG'):
             # Create target policy and qf network
             self.target_policy_f_prob_online, _, _ = self.policy.build_net(
-                trainable=False, name="target_policy")
+                trainable=False, name='target_policy')
             self.target_qf_f_prob_online, _, _, _ = self.qf.build_net(
-                trainable=False, name="target_qf")
+                trainable=False, name='target_qf')
 
             # Set up target init and update function
-            with tf.name_scope("setup_target"):
+            with tf.name_scope('setup_target'):
                 policy_init_ops, policy_update_ops = get_target_ops(
                     self.policy.get_global_vars(),
-                    self.policy.get_global_vars("target_policy"), self.tau)
+                    self.policy.get_global_vars('target_policy'), self.tau)
                 qf_init_ops, qf_update_ops = get_target_ops(
                     self.qf.get_global_vars(),
-                    self.qf.get_global_vars("target_qf"), self.tau)
+                    self.qf.get_global_vars('target_qf'), self.tau)
                 target_init_op = policy_init_ops + qf_init_ops
                 target_update_op = policy_update_ops + qf_update_ops
 
@@ -118,27 +118,27 @@ class DDPG(OffPolicyRLAlgorithm):
             f_update_target = tensor_utils.compile_function(
                 inputs=[], outputs=target_update_op)
 
-            with tf.name_scope("inputs"):
+            with tf.name_scope('inputs'):
                 if self.input_include_goal:
                     obs_dim = self.env_spec.observation_space.\
-                        flat_dim_with_keys(["observation", "desired_goal"])
+                        flat_dim_with_keys(['observation', 'desired_goal'])
                 else:
                     obs_dim = self.env_spec.observation_space.flat_dim
-                y = tf.placeholder(tf.float32, shape=(None, 1), name="input_y")
+                y = tf.placeholder(tf.float32, shape=(None, 1), name='input_y')
                 obs = tf.placeholder(
                     tf.float32,
                     shape=(None, obs_dim),
-                    name="input_observation")
+                    name='input_observation')
                 actions = tf.placeholder(
                     tf.float32,
                     shape=(None, self.env_spec.action_space.flat_dim),
-                    name="input_action")
+                    name='input_action')
 
             # Set up policy training function
-            next_action = self.policy.get_action_sym(obs, name="policy_action")
+            next_action = self.policy.get_action_sym(obs, name='policy_action')
             next_qval = self.qf.get_qval_sym(
-                obs, next_action, name="policy_action_qval")
-            with tf.name_scope("action_loss"):
+                obs, next_action, name='policy_action_qval')
+            with tf.name_scope('action_loss'):
                 action_loss = -tf.reduce_mean(next_qval)
                 if self.policy_weight_decay > 0.:
                     policy_reg = tc.layers.apply_regularization(
@@ -146,17 +146,17 @@ class DDPG(OffPolicyRLAlgorithm):
                         weights_list=self.policy.get_regularizable_vars())
                     action_loss += policy_reg
 
-            with tf.name_scope("minimize_action_loss"):
+            with tf.name_scope('minimize_action_loss'):
                 policy_train_op = self.policy_optimizer(
-                    self.policy_lr, name="PolicyOptimizer").minimize(
+                    self.policy_lr, name='PolicyOptimizer').minimize(
                         action_loss, var_list=self.policy.get_trainable_vars())
 
             f_train_policy = tensor_utils.compile_function(
                 inputs=[obs], outputs=[policy_train_op, action_loss])
 
             # Set up qf training function
-            qval = self.qf.get_qval_sym(obs, actions, name="q_value")
-            with tf.name_scope("qval_loss"):
+            qval = self.qf.get_qval_sym(obs, actions, name='q_value')
+            with tf.name_scope('qval_loss'):
                 qval_loss = tf.reduce_mean(tf.squared_difference(y, qval))
                 if self.qf_weight_decay > 0.:
                     qf_reg = tc.layers.apply_regularization(
@@ -164,9 +164,9 @@ class DDPG(OffPolicyRLAlgorithm):
                         weights_list=self.qf.get_regularizable_vars())
                     qval_loss += qf_reg
 
-            with tf.name_scope("minimize_qf_loss"):
+            with tf.name_scope('minimize_qf_loss'):
                 qf_train_op = self.qf_optimizer(
-                    self.qf_lr, name="QFunctionOptimizer").minimize(
+                    self.qf_lr, name='QFunctionOptimizer').minimize(
                         qval_loss, var_list=self.qf.get_trainable_vars())
 
             f_train_qf = tensor_utils.compile_function(
@@ -181,8 +181,8 @@ class DDPG(OffPolicyRLAlgorithm):
     def train_once(self, itr, paths):
         epoch = itr / self.n_epoch_cycles
 
-        self.episode_rewards.extend(paths["undiscounted_returns"])
-        self.success_history.extend(paths["success_history"])
+        self.episode_rewards.extend(paths['undiscounted_returns'])
+        self.success_history.extend(paths['success_history'])
         last_average_return = np.mean(self.episode_rewards)
         self.log_diagnostics(paths)
         for train_itr in range(self.n_train_steps):
@@ -196,7 +196,7 @@ class DDPG(OffPolicyRLAlgorithm):
                 self.epoch_qs.append(q)
 
         if itr % self.n_epoch_cycles == 0:
-            logger.log("Training finished")
+            logger.log('Training finished')
 
             if self.evaluate:
                 tabular.record('Epoch', epoch)
@@ -242,17 +242,17 @@ class DDPG(OffPolicyRLAlgorithm):
 
         """
         transitions = self.replay_buffer.sample(self.buffer_batch_size)
-        observations = transitions["observation"]
-        rewards = transitions["reward"]
-        actions = transitions["action"]
-        next_observations = transitions["next_observation"]
-        terminals = transitions["terminal"]
+        observations = transitions['observation']
+        rewards = transitions['reward']
+        actions = transitions['action']
+        next_observations = transitions['next_observation']
+        terminals = transitions['terminal']
 
         rewards = rewards.reshape(-1, 1)
         terminals = terminals.reshape(-1, 1)
 
         if self.input_include_goal:
-            goals = transitions["goal"]
+            goals = transitions['goal']
             next_inputs = np.concatenate((next_observations, goals), axis=-1)
             inputs = np.concatenate((observations, goals), axis=-1)
         else:

@@ -23,5 +23,5 @@ class TNPG(NPO):
         super().__init__(
             optimizer=optimizer,
             optimizer_args=optimizer_args,
-            name="TNPG",
+            name='TNPG',
             **kwargs)
