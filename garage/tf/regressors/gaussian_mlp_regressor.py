@@ -233,6 +233,34 @@ class GaussianMLPRegressor(LayersPowered, Serializable, Parameterized):
             self._y_mean_var = y_mean_var
             self._y_std_var = y_std_var
 
+            # Optionally create assign operations for normalization
+            if self._normalize_inputs:
+                self._x_mean_var_ph = tf.placeholder(
+                    shape=(1, ) + input_shape,
+                    dtype=tf.float32,
+                )
+                self._x_std_var_ph = tf.placeholder(
+                    shape=(1, ) + input_shape,
+                    dtype=tf.float32,
+                )
+                self._assign_x_mean = tf.assign(self._x_mean_var,
+                                                self._x_mean_var_ph)
+                self._assign_x_std = tf.assign(self._x_std_var,
+                                               self._x_std_var_ph)
+            if self._normalize_outputs:
+                self._y_mean_var_ph = tf.placeholder(
+                    shape=(1, output_dim),
+                    dtype=tf.float32,
+                )
+                self._y_std_var_ph = tf.placeholder(
+                    shape=(1, output_dim),
+                    dtype=tf.float32,
+                )
+                self._assign_y_mean = tf.assign(self._y_mean_var,
+                                                self._y_mean_var_ph)
+                self._assign_y_std = tf.assign(self._y_std_var,
+                                               self._y_std_var_ph)
+
     def fit(self, xs, ys):
         if self._subsample_factor < 1:
             num_samples_tot = xs.shape[0]
@@ -244,20 +272,22 @@ class GaussianMLPRegressor(LayersPowered, Serializable, Parameterized):
         sess = tf.get_default_session()
         if self._normalize_inputs:
             # recompute normalizing constants for inputs
+            feed_dict = {
+                self._x_mean_var_ph: np.mean(xs, axis=0, keepdims=True),
+                self._x_std_var_ph: np.std(xs, axis=0, keepdims=True) + 1e-8,
+            }
             sess.run([
-                tf.assign(self._x_mean_var, np.mean(xs, axis=0,
-                                                    keepdims=True)),
-                tf.assign(self._x_std_var,
-                          np.std(xs, axis=0, keepdims=True) + 1e-8),
-            ])
+                self._assign_x_mean,
+                self._assign_x_std,
+            ], feed_dict=feed_dict)  # yapf: disable
         if self._normalize_outputs:
             # recompute normalizing constants for outputs
-            sess.run([
-                tf.assign(self._y_mean_var, np.mean(ys, axis=0,
-                                                    keepdims=True)),
-                tf.assign(self._y_std_var,
-                          np.std(ys, axis=0, keepdims=True) + 1e-8),
-            ])
+            feed_dict = {
+                self._y_mean_var_ph: np.mean(ys, axis=0, keepdims=True),
+                self._y_std_var_ph: np.std(ys, axis=0, keepdims=True) + 1e-8,
+            }
+            sess.run(
+                [self._assign_y_mean, self._assign_y_std], feed_dict=feed_dict)
         if self._use_trust_region:
             old_means, old_log_stds = self._f_pdists(xs)
             inputs = [xs, ys, old_means, old_log_stds]
