@@ -1,10 +1,11 @@
 """Discrete MLP QFunction."""
 import tensorflow as tf
 
-from garage.tf.models.cnn_model import CNNModel
-from garage.tf.models.cnn_model_max_pooling import CNNModelWithMaxPooling
-from garage.tf.models.discrete_mlp_dueling_model import DiscreteMLPDuelingModel
-from garage.tf.models.mlp_model import MLPModel
+from garage.tf.models import CNNModel
+from garage.tf.models import CNNModelWithMaxPooling
+from garage.tf.models import MLPDuelingModel
+from garage.tf.models import MLPModel
+from garage.tf.models import Sequential
 from garage.tf.q_functions import QFunction2
 
 
@@ -47,7 +48,7 @@ class DiscreteCNNQFunction(QFunction2):
                  num_filters,
                  strides,
                  hidden_sizes=[256],
-                 name='DiscreteCNNQFunction',
+                 name=None,
                  padding='SAME',
                  max_pooling=False,
                  pool_strides=(2, 2),
@@ -82,10 +83,8 @@ class DiscreteCNNQFunction(QFunction2):
         self._layer_normalization = layer_normalization
         self._dueling = dueling
 
-        obs_dim = self._env_spec.observation_space.shape
+        self.obs_dim = self._env_spec.observation_space.shape
         action_dim = self._env_spec.action_space.flat_dim
-
-        self.models = []
 
         if not max_pooling:
             cnn_model = CNNModel(
@@ -103,7 +102,6 @@ class DiscreteCNNQFunction(QFunction2):
                 pool_strides=pool_strides,
                 pool_shapes=pool_shapes,
                 hidden_nonlinearity=cnn_hidden_nonlinearity)
-        self.models.append(cnn_model)
         if not dueling:
             output_model = MLPModel(
                 output_dim=action_dim,
@@ -116,7 +114,7 @@ class DiscreteCNNQFunction(QFunction2):
                 output_b_init=output_b_init,
                 layer_normalization=layer_normalization)
         else:
-            output_model = DiscreteMLPDuelingModel(
+            output_model = MLPDuelingModel(
                 output_dim=action_dim,
                 hidden_sizes=hidden_sizes,
                 hidden_nonlinearity=hidden_nonlinearity,
@@ -126,23 +124,26 @@ class DiscreteCNNQFunction(QFunction2):
                 output_w_init=output_w_init,
                 output_b_init=output_b_init,
                 layer_normalization=layer_normalization)
-        self.models.append(output_model)
 
-        obs_ph = tf.placeholder(tf.float32, (None, ) + obs_dim, name='obs')
-        with tf.variable_scope(self._variable_scope):
-            out = obs_ph
-            for model in self.models:
-                out = model.build(out)
+        self.model = Sequential(cnn_model, output_model)
+
+        self._initialize()
+
+    def _initialize(self):
+        obs_ph = tf.placeholder(
+            tf.float32, (None, ) + self.obs_dim, name='obs')
+        with tf.variable_scope(self.name, reuse=False) as self._variable_scope:
+            self.model.build(obs_ph)
 
     @property
     def q_vals(self):
         """Q values."""
-        return self.models[-1].networks['default'].outputs
+        return self.model.networks['default'].outputs
 
     @property
     def input(self):
         """Input tf.Tensor of the Q-function."""
-        return self.models[0].networks['default'].input
+        return self.model.networks['default'].input
 
     def get_qval_sym(self, state_input, name):
         """
@@ -156,11 +157,7 @@ class DiscreteCNNQFunction(QFunction2):
             The tf.Tensor output of Discrete CNN QFunction.
         """
         with tf.variable_scope(self._variable_scope):
-            out = state_input
-            for model in self.models:
-                out = model.build(out, name=name)
-
-            return out
+            return self.model.build(state_input, name=name)
 
     def clone(self, name):
         """
@@ -188,3 +185,8 @@ class DiscreteCNNQFunction(QFunction2):
             output_b_init=self._output_b_init,
             dueling=self._dueling,
             layer_normalization=self._layer_normalization)
+
+    def __setstate__(self, state):
+        """Object.__setstate__."""
+        self.__dict__.update(state)
+        self._initialize()

@@ -6,7 +6,7 @@ from garage.tf.models import Model
 class SimpleMLPModel(Model):
     """Simple MLPModel for testing."""
 
-    def __init__(self, name, output_dim, *args, **kwargs):
+    def __init__(self, output_dim, *args, name=None, **kwargs):
         super().__init__(name)
         self.output_dim = output_dim
 

@@ -1,5 +1,4 @@
 """Q-function base classes without Parameterized."""
-import tensorflow as tf
 
 
 class QFunction2:
@@ -12,8 +11,8 @@ class QFunction2:
     """
 
     def __init__(self, name):
-        self.name = name
-        self._variable_scope = tf.VariableScope(reuse=False, name=name)
+        self.name = name or type(self).__name__
+        self._variable_scope = None
 
     def get_qval_sym(self, *input_phs):
         """

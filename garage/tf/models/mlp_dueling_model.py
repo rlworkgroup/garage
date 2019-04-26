@@ -1,13 +1,13 @@
-"""Discrete MLP Dueling Model."""
+"""MLP Dueling Model."""
 import tensorflow as tf
 
 from garage.tf.core.mlp import mlp
 from garage.tf.models.base import Model
 
 
-class DiscreteMLPDuelingModel(Model):
+class MLPDuelingModel(Model):
     """
-    Discrete MLP Model with dueling network structure.
+    MLP Model with dueling network structure.
 
     Args:
         input_var: Input tf.Tensor to the MLP.

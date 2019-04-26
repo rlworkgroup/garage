@@ -30,7 +30,3 @@ class FireReset(gym.Wrapper):
         if done:
             obs = self.env.reset(**kwargs)
         return obs
-
-    def step(self, action):
-        """gym.Env step function."""
-        return self.env.step(action)

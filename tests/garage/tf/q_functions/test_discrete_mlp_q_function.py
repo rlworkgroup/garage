@@ -108,9 +108,7 @@ class TestDiscreteMLPQFunction(TfGraphTestCase):
         h_data = pickle.dumps(qf)
         with tf.Session(graph=tf.Graph()) as sess:
             qf_pickled = pickle.loads(h_data)
-            input_var = tf.placeholder(tf.float32, shape=(None, ) + obs_dim)
-
-            q_vals = qf_pickled.get_qval_sym(input_var, 'another')
-            output2 = sess.run(q_vals, feed_dict={input_var: [obs]})
+            output2 = sess.run(
+                qf_pickled.q_vals, feed_dict={qf_pickled.input: [obs]})
 
         assert np.array_equal(output1, output2)

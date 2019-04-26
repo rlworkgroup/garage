@@ -6,7 +6,13 @@ from garage.tf.models import Model
 class SimpleCNNModel(Model):
     """Simple CNNModel for testing."""
 
-    def __init__(self, name, num_filters, filter_dims, strides, padding, *args,
+    def __init__(self,
+                 num_filters,
+                 filter_dims,
+                 strides,
+                 padding,
+                 *args,
+                 name=None,
                  **kwargs):
         super().__init__(name)
         self.num_filters = num_filters

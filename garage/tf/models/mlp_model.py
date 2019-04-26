@@ -43,7 +43,7 @@ class MLPModel(Model):
 
     def __init__(self,
                  output_dim,
-                 name=None,
+                 name='MLPModel',
                  hidden_sizes=(32, 32),
                  hidden_nonlinearity=tf.nn.relu,
                  hidden_w_init=tf.glorot_uniform_initializer(),
