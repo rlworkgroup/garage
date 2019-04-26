@@ -81,7 +81,7 @@ class TestCNNModel(TfGraphTestCase):
         outputs = model.build(self._input_ph)
         with tf.variable_scope('cnn_model/cnn/h0', reuse=True):
             bias = tf.get_variable('bias')
-        bias.load(np.ones_like(bias))
+        bias.load(tf.ones_like(bias).eval())
 
         output1 = self.sess.run(
             outputs, feed_dict={self._input_ph: self.obs_input})

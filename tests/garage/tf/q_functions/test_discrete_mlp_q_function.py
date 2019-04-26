@@ -101,7 +101,7 @@ class TestDiscreteMLPQFunction(TfGraphTestCase):
                 'discrete_mlp_q_function/discrete_mlp_q_function', reuse=True):
             return_var = tf.get_variable('return_var')
         # assign it to all one
-        return_var.load(np.ones_like(return_var))
+        return_var.load(tf.ones_like(return_var).eval())
 
         output1 = self.sess.run(qf.q_vals, feed_dict={qf.input: [obs]})
 

@@ -112,7 +112,7 @@ class TestCategoricalMLPPolicyWithModel(TfGraphTestCase):
         with tf.variable_scope('CategoricalMLPPolicy/MLPModel', reuse=True):
             return_var = tf.get_variable('return_var')
         # assign it to all one
-        return_var.load(np.ones_like(return_var))
+        return_var.load(tf.ones_like(return_var).eval())
         output1 = self.sess.run(
             policy.model.outputs,
             feed_dict={policy.model.input: [obs.flatten()]})
