@@ -6,10 +6,10 @@ from garage.logger import tabular
 from garage.tf.misc import tensor_utils
 from garage.tf.optimizers import LbfgsOptimizer, PenaltyLbfgsOptimizer
 from garage.tf.regressors import GaussianMLPRegressorModel
-from garage.tf.regressors import StochasticRegressor
+from garage.tf.regressors import StochasticRegressor2
 
 
-class GaussianMLPRegressorWithModel(StochasticRegressor):
+class GaussianMLPRegressorWithModel(StochasticRegressor2):
     """
     GaussianMLPRegressor with garage.tf.models.GaussianMLPRegressorModel.
 
@@ -272,3 +272,19 @@ class GaussianMLPRegressorWithModel(StochasticRegressor):
 
         return self.model.networks[name].dist.log_likelihood_sym(
             y_var, dict(mean=means_var, log_std=log_stds_var))
+
+    def get_params_internal(self, **args):
+        """Get the params, which are the trainable variables."""
+        return self._variable_scope.trainable_variables()
+
+    def __getstate__(self):
+        """Object.__getstate__."""
+        new_dict = super().__getstate__()
+        del new_dict['_f_predict']
+        del new_dict['_f_pdists']
+        return new_dict
+
+    def __setstate__(self, state):
+        """Object.__setstate__."""
+        super().__setstate__(state)
+        self._initialize()

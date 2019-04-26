@@ -7,7 +7,11 @@ from garage.tf.models import Model
 class SimpleGaussianMLPModel(Model):
     """Simple GaussianMLPModel for testing."""
 
-    def __init__(self, name, output_dim, *args, **kwargs):
+    def __init__(self,
+                 output_dim,
+                 *args,
+                 name='SimpleGaussianMLPModel',
+                 **kwargs):
         super().__init__(name)
         self.output_dim = output_dim
 

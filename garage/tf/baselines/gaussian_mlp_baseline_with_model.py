@@ -18,12 +18,18 @@ class GaussianMLPBaselineWithModel(Baseline):
             name='GaussianMLPBaselineWithModel',
     ):
         """
-        Constructor.
+        Gaussian MLP Baseline with Model.
 
-        :param env_spec:
-        :param subsample_factor:
-        :param num_seq_inputs:
-        :param regressor_args:
+        It fits the input data to a gaussian distribution estimated by
+        a MLP.
+
+        Args:
+            env_spec (garage.envs.env_spec.EnvSpec): Environment specification.
+            subsample_factor (float): The factor to subsample the data. By
+                default it is 1.0, which means using all the data.
+            num_seq_inputs (float): Number of sequence per input. By default
+                it is 1.0, which means only one single sequence.
+            regressor_args (dict): Arguments for regressor.
         """
         super().__init__(env_spec)
         if regressor_args is None:

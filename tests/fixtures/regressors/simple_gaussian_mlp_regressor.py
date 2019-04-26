@@ -1,30 +1,43 @@
+import numpy as np
 import tensorflow as tf
 
-from garage.tf.regressors import StochasticRegressor
+from garage.tf.regressors import StochasticRegressor2
+from tests.fixtures.models import SimpleGaussianMLPModel
 
 
-class SimpleGaussianMLPRegressor(StochasticRegressor):
-    """Simple GaussianMLPModel for testing."""
+class SimpleGaussianMLPRegressor(StochasticRegressor2):
+    """Simple GaussianMLPRegressor for testing."""
 
     def __init__(self, input_shape, output_dim, name, *args, **kwargs):
         super().__init__(input_shape, output_dim, name)
-        self.param_values = tf.get_variable('{}/params'.format(name), [100])
-        tf.get_default_session().run(
-            tf.variables_initializer([self.param_values]))
+
+        self.model = SimpleGaussianMLPModel(output_dim=self._output_dim)
+
+        self._initialize()
+
+    def _initialize(self):
+        input_ph = tf.placeholder(
+            tf.float32, shape=(None, ) + self._input_shape)
+        with tf.variable_scope(self._name) as self._variable_scope:
+            self.model.build(input_ph)
         self.ys = None
 
     def fit(self, xs, ys):
         self.ys = ys
 
     def predict(self, xs):
-        return self.ys
-
-    def get_param_values(self, *args, **kwargs):
-        return tf.get_default_session().run(self.param_values)
-
-    def set_param_values(self, flattened_params, *args, **kwargs):
-        tf.get_default_session().run(
-            tf.assign(self.param_values, flattened_params))
+        if self.ys is None:
+            mean = tf.get_default_session().run(
+                self.model.networks['default'].mean,
+                feed_dict={self.model.networks['default'].input: xs})
+            return np.full((len(xs), 1), mean)
+        else:
+            return self.ys
 
     def get_params_internal(self, *args, **kwargs):
-        return [self.param_values]
+        return self._variable_scope.trainable_variables()
+
+    def __setstate__(self, state):
+        """Object.__setstate__."""
+        super().__setstate__(state)
+        self._initialize()
