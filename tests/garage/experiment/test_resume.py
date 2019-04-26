@@ -6,7 +6,7 @@ import unittest
 import psutil
 
 from garage.experiment import LocalRunner
-from garage.logger import snapshotter
+from garage.logger import snapshotter, logger, StdOutput
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import VPG
 from garage.tf.envs import TfEnv
@@ -45,6 +45,7 @@ class TestResume(unittest.TestCase):
         folder = tempfile.mkdtemp()
         snapshotter.snapshot_dir = folder
         snapshotter.snapshot_mode = 'last'
+        logger.add_output(StdOutput())
 
         newpid = os.fork()
         if newpid == 0:
