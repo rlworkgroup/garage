@@ -84,7 +84,8 @@ class DeterministicMLPPolicyWithModel(Policy2):
     def _initialize(self):
         state_input = tf.placeholder(tf.float32, shape=(None, self.obs_dim))
 
-        with tf.variable_scope(self._variable_scope):
+        with tf.variable_scope(
+                reuse=False, name=self.name) as self._variable_scope:
             self.model.build(state_input)
 
         self._f_prob = tf.get_default_session().make_callable(
