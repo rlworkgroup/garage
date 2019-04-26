@@ -164,7 +164,7 @@ class TestModel(TfGraphTestCase):
             # assign bias to all one
             with tf.variable_scope('SimpleModel/state', reuse=True):
                 bias = tf.get_variable('hidden_0/bias')
-            sess.run(tf.assign(bias, tf.ones_like(bias)))
+            bias.load(np.ones_like(bias))
 
             results = sess.run(
                 model.networks['default'].outputs,
@@ -200,7 +200,7 @@ class TestModel(TfGraphTestCase):
             with tf.variable_scope(
                     'ComplicatedModel/SimpleModel/state', reuse=True):
                 bias = tf.get_variable('hidden_0/bias')
-            sess.run(tf.assign(bias, tf.ones_like(bias)))
+            bias.load(np.ones_like(bias))
 
             results = sess.run(
                 outputs, feed_dict={model.networks['default'].input: data})
@@ -231,7 +231,7 @@ class TestModel(TfGraphTestCase):
             with tf.variable_scope(
                     'ComplicatedModel2/SimpleModel/state', reuse=True):
                 bias = tf.get_variable('hidden_0/bias')
-            sess.run(tf.assign(bias, tf.ones_like(bias)))
+            bias.load(np.ones_like(bias))
 
             results = sess.run(
                 outputs, feed_dict={model.networks['default'].input: data})

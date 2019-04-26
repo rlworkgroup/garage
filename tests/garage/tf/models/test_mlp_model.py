@@ -44,7 +44,7 @@ class TestMLPModel(TfGraphTestCase):
         # assign bias to all one
         with tf.variable_scope('MLPModel/mlp', reuse=True):
             bias = tf.get_variable('hidden_0/bias')
-        self.sess.run(tf.assign(bias, tf.ones_like(bias)))
+        bias.load(np.ones_like(bias))
 
         output1 = self.sess.run(outputs, feed_dict={self.input_var: self.obs})
 

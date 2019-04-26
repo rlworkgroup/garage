@@ -195,7 +195,7 @@ class TestGaussianMLPModel(TfGraphTestCase):
         with tf.variable_scope('GaussianMLPModel', reuse=True):
             bias = tf.get_variable('dist_params/mean_std_network/output/bias')
         # assign it to all ones
-        self.sess.run(tf.assign(bias, tf.ones_like(bias)))
+        bias.load(np.ones_like(bias))
 
         output1 = self.sess.run(outputs[:-1], feed_dict={input_var: self.obs})
 
@@ -229,7 +229,7 @@ class TestGaussianMLPModel(TfGraphTestCase):
         with tf.variable_scope('GaussianMLPModel', reuse=True):
             bias = tf.get_variable('dist_params/mean_network/output/bias')
         # assign it to all ones
-        self.sess.run(tf.assign(bias, tf.ones_like(bias)))
+        bias.load(np.ones_like(bias))
 
         output1 = self.sess.run(outputs[:-1], feed_dict={input_var: self.obs})
 
@@ -266,7 +266,7 @@ class TestGaussianMLPModel(TfGraphTestCase):
         with tf.variable_scope('GaussianMLPModel', reuse=True):
             bias = tf.get_variable('dist_params/mean_network/output/bias')
         # assign it to all ones
-        self.sess.run(tf.assign(bias, tf.ones_like(bias)))
+        bias.load(np.ones_like(bias))
 
         h = pickle.dumps(model)
         output1 = self.sess.run(outputs[:-1], feed_dict={input_var: self.obs})

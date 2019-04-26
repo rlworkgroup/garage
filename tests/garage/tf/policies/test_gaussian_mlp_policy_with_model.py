@@ -105,7 +105,7 @@ class TestGaussianMLPPolicyWithModel(TfGraphTestCase):
                 'GaussianMLPPolicyWithModel/GaussianMLPModel', reuse=True):
             return_var = tf.get_variable('return_var')
         # assign it to all one
-        self.sess.run(tf.assign(return_var, tf.ones_like(return_var)))
+        return_var.load(np.ones_like(return_var))
         output1 = self.sess.run(
             policy.model.outputs[:-1],
             feed_dict={policy.model.input: [obs.flatten()]})
