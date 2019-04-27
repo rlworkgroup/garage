@@ -213,23 +213,18 @@ class GaussianMLPRegressorWithModel(StochasticRegressor2):
                 int(num_samples_tot * self._subsample_factor))
             xs, ys = xs[idx], ys[idx]
 
-        sess = tf.get_default_session()
         if self._normalize_inputs:
             # recompute normalizing constants for inputs
-            sess.run([
-                tf.assign(self.model.networks['default'].x_mean,
-                          np.mean(xs, axis=0, keepdims=True)),
-                tf.assign(self.model.networks['default'].x_std,
-                          np.std(xs, axis=0, keepdims=True) + 1e-8),
-            ])
+            self.model.networks['default'].x_mean.load(
+                np.mean(xs, axis=0, keepdims=True))
+            self.model.networks['default'].x_std.load(
+                np.std(xs, axis=0, keepdims=True) + 1e-8)
         if self._normalize_outputs:
             # recompute normalizing constants for outputs
-            sess.run([
-                tf.assign(self.model.networks['default'].y_mean,
-                          np.mean(ys, axis=0, keepdims=True)),
-                tf.assign(self.model.networks['default'].y_std,
-                          np.std(ys, axis=0, keepdims=True) + 1e-8),
-            ])
+            self.model.networks['default'].y_mean.load(
+                np.mean(ys, axis=0, keepdims=True))
+            self.model.networks['default'].y_std.load(
+                np.std(ys, axis=0, keepdims=True) + 1e-8)
         if self._use_trust_region:
             old_means, old_log_stds = self._f_pdists(xs)
             inputs = [xs, ys, old_means, old_log_stds]

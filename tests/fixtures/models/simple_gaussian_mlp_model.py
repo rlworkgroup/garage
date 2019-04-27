@@ -9,8 +9,8 @@ class SimpleGaussianMLPModel(Model):
 
     def __init__(self,
                  output_dim,
-                 *args,
                  name='SimpleGaussianMLPModel',
+                 *args,
                  **kwargs):
         super().__init__(name)
         self.output_dim = output_dim
