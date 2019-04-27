@@ -39,13 +39,21 @@ class TestMLPModel(TfGraphTestCase):
             hidden_nonlinearity=None,
             hidden_w_init=tf.ones_initializer(),
             output_w_init=tf.ones_initializer())
-        model_pickled = pickle.loads(pickle.dumps(model))
+        outputs = model.build(self.input_var)
+
+        # assign bias to all one
+        with tf.variable_scope('MLPModel/mlp', reuse=True):
+            bias = tf.get_variable('hidden_0/bias')
+
+        bias.load(tf.ones_like(bias).eval())
+
+        output1 = self.sess.run(outputs, feed_dict={self.input_var: self.obs})
+
+        h = pickle.dumps(model)
         with tf.Session(graph=tf.Graph()) as sess:
             input_var = tf.placeholder(tf.float32, shape=(None, 5))
+            model_pickled = pickle.loads(h)
             outputs = model_pickled.build(input_var)
-            output = sess.run(outputs, feed_dict={input_var: self.obs})
+            output2 = sess.run(outputs, feed_dict={input_var: self.obs})
 
-            expected_output = np.full([1, output_dim],
-                                      5 * np.prod(hidden_sizes))
-
-            assert np.array_equal(output, expected_output)
+            assert np.array_equal(output1, output2)

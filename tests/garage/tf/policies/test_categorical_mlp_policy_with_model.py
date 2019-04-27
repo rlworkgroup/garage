@@ -85,7 +85,7 @@ class TestCategoricalMLPPolicyWithModel(TfGraphTestCase):
 
         obs_dim = env.spec.observation_space.flat_dim
         state_input = tf.placeholder(tf.float32, shape=(None, obs_dim))
-        dist1 = policy.dist_info_sym(state_input, name="policy2")
+        dist1 = policy.dist_info_sym(state_input, name='policy2')
 
         prob = self.sess.run(
             dist1['prob'], feed_dict={state_input: [obs.flatten()]})
@@ -109,18 +109,19 @@ class TestCategoricalMLPPolicyWithModel(TfGraphTestCase):
         env.reset()
         obs, _, _, _ = env.step(1)
 
-        expected_prob = np.full(action_dim, 0.5)
+        with tf.variable_scope('CategoricalMLPPolicy/MLPModel', reuse=True):
+            return_var = tf.get_variable('return_var')
+        # assign it to all one
+        return_var.load(tf.ones_like(return_var).eval())
+        output1 = self.sess.run(
+            policy.model.outputs,
+            feed_dict={policy.model.input: [obs.flatten()]})
 
         p = pickle.dumps(policy)
 
-        with tf.Session(graph=tf.Graph()):
+        with tf.Session(graph=tf.Graph()) as sess:
             policy_pickled = pickle.loads(p)
-            action, prob = policy_pickled.get_action(obs)
-            assert env.action_space.contains(action)
-            assert action == 0
-            assert np.array_equal(prob['prob'], expected_prob)
-
-            prob1 = policy.dist_info([obs.flatten()])
-            prob2 = policy_pickled.dist_info([obs.flatten()])
-            assert np.array_equal(prob1['prob'], prob2['prob'])
-            assert np.array_equal(prob2['prob'][0], expected_prob)
+            output2 = sess.run(
+                policy_pickled.model.outputs,
+                feed_dict={policy_pickled.model.input: [obs.flatten()]})
+            assert np.array_equal(output1, output2)
