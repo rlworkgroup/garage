@@ -22,6 +22,12 @@ class DummyPolicy(Policy, Serializable):
         """Return action."""
         return self.action_space.sample(), dict()
 
+    def get_actions(self, obses):
+        """Return actions."""
+        n = len(obses)
+        action, action_info = self.get_action(None)
+        return [action] * n, action_info
+
     @overrides
     def get_params_internal(self, **tags):
         """Return a list of policy internal params."""
@@ -31,6 +37,10 @@ class DummyPolicy(Policy, Serializable):
     def get_param_values(self, **tags):
         """Return values of params."""
         return np.random.uniform(-1, 1, 1000)
+
+    @overrides
+    def reset(self, *args, **kwargs):
+        pass
 
     @property
     def distribution(self):

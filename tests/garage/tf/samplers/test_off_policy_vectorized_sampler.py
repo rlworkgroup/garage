@@ -1,4 +1,5 @@
 import gym
+import numpy as np
 import tensorflow as tf
 
 from garage.experiment import LocalRunner
@@ -10,6 +11,9 @@ from garage.tf.policies import ContinuousMLPPolicy
 from garage.tf.q_functions import ContinuousMLPQFunction
 from garage.tf.samplers import OffPolicyVectorizedSampler
 from tests.fixtures import TfGraphTestCase
+from tests.fixtures.envs.dummy import DummyDictEnv
+from tests.fixtures.policies import DummyPolicy
+from tests.fixtures.tf.algos.dummy_off_policy_algo import DummyOffPolicyAlgo
 
 
 class TestOffPolicyVectorizedSampler(TfGraphTestCase):
@@ -57,12 +61,32 @@ class TestOffPolicyVectorizedSampler(TfGraphTestCase):
             len1 = sum([len(path['rewards']) for path in paths1])
             len2 = sum([len(path['rewards']) for path in paths2])
 
-            assert len1 == 5 and len2 == 5, \
-                'Sampler should respect batch_size'
+            assert len1 == 5 and len2 == 5, 'Sampler should respect batch_size'
 
-            assert len1 + len2 == paths2[0]['running_length'], \
+            assert (len(paths1[0]['rewards']) + len(paths2[0]['rewards'])
+                    == paths2[0]['running_length']), \
                 'Running length should be the length of full path'
 
-            assert ((paths1[0]['rewards'] + paths2[0]['rewards']).sum()
-                    == paths2[0]['undiscounted_return']), \
-                'Undiscounted_return should be the sum of rewards of full path'
+            assert np.isclose(
+                paths1[0]['rewards'].sum() + paths2[0]['rewards'].sum(),
+                paths2[0]['undiscounted_return']
+            ), 'Undiscounted_return should be the sum of rewards of full path'
+
+    def test_algo_with_goal_without_es(self):
+        # This tests if sampler works properly when algorithm
+        # includes goal but is without exploration policy
+        env = DummyDictEnv()
+        policy = DummyPolicy(env)
+        replay_buffer = SimpleReplayBuffer(
+            env_spec=env, size_in_transitions=int(1e6), time_horizon=100)
+        algo = DummyOffPolicyAlgo(
+            env_spec=env,
+            qf=None,
+            replay_buffer=replay_buffer,
+            policy=policy,
+            exploration_strategy=None,
+            input_include_goal=True)
+
+        sampler = OffPolicyVectorizedSampler(algo, env, 1, no_reset=True)
+        sampler.start_worker()
+        sampler.obtain_samples(0, 30)

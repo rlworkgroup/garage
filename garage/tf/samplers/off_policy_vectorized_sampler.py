@@ -20,16 +20,15 @@ from garage.tf.samplers.batch_sampler import BatchSampler
 
 
 class OffPolicyVectorizedSampler(BatchSampler):
-    """This class implements OffPolicyVectorizedSampler."""
+    """This class implements OffPolicyVectorizedSampler.
+
+    Args:
+        algo(garage.np.RLAlgorithm): Algorithm.
+        env(garage.envs.GarageEnv): Environment.
+        n_envs(int): Number of parallel environments managed by sampler.
+    """
 
     def __init__(self, algo, env, n_envs=None, no_reset=True):
-        """
-        Construct an OffPolicyVectorizedSampler.
-
-        :param algo: Algorithms.
-        :param n_envs: Number of parallelized sampling envs.
-        :param no_reset: If True, don't reset environement after sampling.
-        """
         if n_envs is None:
             n_envs = int(algo.rollout_batch_size)
         super(OffPolicyVectorizedSampler, self).__init__(algo, env, n_envs)
@@ -57,12 +56,14 @@ class OffPolicyVectorizedSampler(BatchSampler):
 
     @overrides
     def obtain_samples(self, itr, batch_size):
-        """
-        Collect samples for the given iteration number.
+        """Collect samples for the given iteration number.
 
-        :param itr: Iteration number.
-        :param batch_size: Batch size.
-        :return: A list of paths.
+        Args:
+            itr(int): Iteration number.
+            batch_size(int): Number of environment interactions in one batch.
+
+        Returns:
+            list: A list of paths.
         """
         paths = []
         if not self.no_reset or self._last_obses is None:
@@ -183,12 +184,14 @@ class OffPolicyVectorizedSampler(BatchSampler):
 
     @overrides
     def process_samples(self, itr, paths):
-        """
-        Return processed sample data based on the collected paths.
+        """Return processed sample data based on the collected paths.
 
-        :param itr: Iteration number.
-        :param paths: A list of collected paths.
-        :return: Processed sample data.
+        Args:
+            itr(int): Iteration number.
+            paths(list): A list of collected paths.
+
+        Returns:
+            list: Processed sample data.
         """
         success_history = [
             path['success_count'] / path['running_length'] for path in paths
