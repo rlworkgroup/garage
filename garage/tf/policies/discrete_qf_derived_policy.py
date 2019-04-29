@@ -32,7 +32,7 @@ class DiscreteQfDerivedPolicy(Policy2):
     def _initialize(self):
         self._f_qval = tf.get_default_session().make_callable(
             self._qf.q_vals,
-            feed_list=[self._qf.models[0].networks['default'].input])
+            feed_list=[self._qf.model.networks['default'].input])
 
     @property
     def vectorized(self):

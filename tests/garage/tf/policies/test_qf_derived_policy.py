@@ -4,20 +4,7 @@ from garage.tf.envs import TfEnv
 from garage.tf.policies import DiscreteQfDerivedPolicy
 from tests.fixtures import TfGraphTestCase
 from tests.fixtures.envs.dummy import DummyDiscreteEnv
-
-
-class SimpleQFunction:
-    """Simple QFunction for testing."""
-
-    def __init__(self, env_spec):
-        obs_dim = env_spec.observation_space.shape
-
-        self.obs_ph = tf.placeholder(
-            tf.float32, (None, ) + obs_dim, name='obs')
-        self.q_vals = self.build_net(self.obs_ph)
-
-    def build_net(self, input_var):
-        return tf.identity(input_var)
+from tests.fixtures.q_functions import SimpleQFunction
 
 
 class TestQfDerivedPolicy(TfGraphTestCase):
