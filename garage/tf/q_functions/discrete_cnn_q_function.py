@@ -1,4 +1,4 @@
-"""Discrete MLP QFunction."""
+"""Discrete CNN QFunction with CNN-MLP structure."""
 import tensorflow as tf
 
 from garage.tf.models import CNNModel
@@ -11,10 +11,11 @@ from garage.tf.q_functions import QFunction2
 
 class DiscreteCNNQFunction(QFunction2):
     """
-    Q function based on CNN for discrete action space.
+    Q function based on a CNN-MLP structure for discrete action space.
 
     This class implements a Q value network to predict Q based on the
-    input state and action. It uses an CNN to fit the function of Q(s, a).
+    input state and action. It uses an CNN and a MLP to fit the function
+    of Q(s, a).
 
     Args:
         env_spec: environment specification
