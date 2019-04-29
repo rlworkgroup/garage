@@ -1,17 +1,17 @@
-import numpy as np
 import tensorflow as tf
 
-from garage.tf.regressors import StochasticRegressor2
-from tests.fixtures.models import SimpleGaussianMLPModel
+from garage.tf.regressors import Regressor2
+from tests.fixtures.models import SimpleMLPModel
 
 
-class SimpleGaussianMLPRegressor(StochasticRegressor2):
+class SimpleMLPRegressor(Regressor2):
     """Simple GaussianMLPRegressor for testing."""
 
     def __init__(self, input_shape, output_dim, name, *args, **kwargs):
         super().__init__(input_shape, output_dim, name)
 
-        self.model = SimpleGaussianMLPModel(output_dim=self._output_dim)
+        self.model = SimpleMLPModel(
+            output_dim=self._output_dim, name='SimpleMLPModel')
 
         self._initialize()
 
@@ -28,10 +28,10 @@ class SimpleGaussianMLPRegressor(StochasticRegressor2):
 
     def predict(self, xs):
         if self.ys is None:
-            mean = tf.get_default_session().run(
-                self.model.networks['default'].mean,
+            outputs = tf.get_default_session().run(
+                self.model.networks['default'].outputs,
                 feed_dict={self.model.networks['default'].input: xs})
-            self.ys = np.full((len(xs), 1), mean)
+            self.ys = outputs
 
         return self.ys
 
