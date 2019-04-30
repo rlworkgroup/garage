@@ -5,6 +5,6 @@ class Algorithm:
     pass
 
 
-class RLAlgorithm(Algorithm, Serializable):
+class RLAlgorithm(Algorithm):
     def train(self):
         raise NotImplementedError

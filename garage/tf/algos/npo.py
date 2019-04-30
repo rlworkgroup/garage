@@ -56,7 +56,6 @@ class NPO(BatchPolopt):
                  use_neg_logli_entropy=False,
                  stop_entropy_gradient=False,
                  **kwargs):
-        self.quick_init(locals())
         self.name = name
         self._name_scope = tf.name_scope(self.name)
         self._use_softplus_entropy = use_softplus_entropy
@@ -91,6 +90,22 @@ class NPO(BatchPolopt):
             constraint_name='mean_kl')
 
         return dict()
+
+    def __getstate__(self):
+        print('__getstate__')
+        data = self.__dict__.copy()
+        del data['_name_scope']
+        del data['_policy_opt_inputs']
+        del data['f_policy_entropy']
+        del data['f_policy_kl']
+        del data['f_rewards']
+        del data['f_returns']
+        return data
+
+    def __setstate__(self, state):
+        self.__dict__ = state
+        self._name_scope = tf.name_scope(self.name)
+        self.init_opt()
 
     @overrides
     def optimize_policy(self, itr, samples_data):
