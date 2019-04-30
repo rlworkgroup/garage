@@ -76,14 +76,11 @@ class TestCNN(TfGraphTestCase):
         result = self.sess.run(
             self.cnn, feed_dict={self._input_ph: self.obs_input})
 
-        # (10-2-2) * (10-2-2) * 64 = 2304
-        assert result.shape == (self.batch_size, 2304)
-
         current_size = self.input_width
         for filter_size, stride in zip(filter_sizes, strides):
             current_size = int((current_size - filter_size) / stride) + 1
         flatten_shape = current_size * current_size * out_channels[-1]
-        assert result.shape == (5, flatten_shape)
+        assert result.shape == (self.batch_size, flatten_shape)
 
     @params(((1, ), (3, ), (32, ), (1, )), ((3, ), (3, ), (32, ), (1, )),
             ((3, ), (3, ), (32, ), (2, )), ((1, 1), (3, 32), (32, 64), (1, 1)),
