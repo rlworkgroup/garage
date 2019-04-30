@@ -42,11 +42,3 @@ class QFunction2:
     def get_global_vars(self):
         """Get all global variables under the QFunction scope."""
         return self._variable_scope.global_variables()
-
-    def get_regularizable_vars(self):
-        """Get all regularizable variables under the QFunction scope."""
-        reg_vars = [
-            var for var in self.get_trainable_vars()
-            if 'W' in var.name and 'output' not in var.name
-        ]
-        return reg_vars
