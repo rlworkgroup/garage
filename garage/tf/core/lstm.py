@@ -41,6 +41,14 @@ def lstm(name,
             initial cell state. The functino should return a tf.Tensor.
         cell_state_init_trainable (bool): Bool for whether the initial
             cell state is trainable.
+
+    Return:
+        outputs (tf.Tensor): Entire time-seried outputs.
+        output (tf.Tensor): Step output.
+        hidden (tf.Tensor): Step hidden state.
+        cell (tf.Tensor): Step cell state.
+        hidden_init_var (tf.Tensor): Initial hidden state.
+        cell_init_var (tf.Tensor): Initial cell state.
     """
     with tf.variable_scope(name):
         hidden_dim = lstm_cell.units

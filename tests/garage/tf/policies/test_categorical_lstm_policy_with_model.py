@@ -8,6 +8,7 @@ import tensorflow as tf
 from garage.tf.envs import TfEnv
 from garage.tf.policies import CategoricalLSTMPolicyWithModel
 from tests.fixtures import TfGraphTestCase
+from tests.fixtures.envs.dummy import DummyBoxEnv
 from tests.fixtures.envs.dummy import DummyDiscreteEnv
 from tests.fixtures.models import SimpleLSTMModel
 
@@ -96,6 +97,49 @@ class TestCategoricalLSTMPolicyWithModel(TfGraphTestCase):
                 policy.model.networks['p2_sym'].input,
                 feed_dict={obs_ph: [[obs.flatten()], [obs.flatten()]]})
 
+    def test_invalid_env(self):
+        env = TfEnv(DummyBoxEnv())
+        with mock.patch(('garage.tf.policies.'
+                         'categorical_lstm_policy_with_model.LSTMModel'),
+                        new=SimpleLSTMModel):
+            with self.assertRaises(ValueError):
+                CategoricalLSTMPolicyWithModel(env_spec=env.spec)
+
+    @params(
+        ((1, ), 1, 4),
+        ((2, ), 2, 4),
+        ((1, 1), 1, 4),
+        ((2, 2), 2, 4),
+    )
+    @mock.patch('numpy.random.rand')
+    def test_get_action_state_include_action(self, obs_dim, action_dim,
+                                             hidden_dim, mock_rand):
+        mock_rand.return_value = 0
+
+        env = TfEnv(DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
+
+        with mock.patch(('garage.tf.policies.'
+                         'categorical_lstm_policy_with_model.LSTMModel'),
+                        new=SimpleLSTMModel):
+            policy = CategoricalLSTMPolicyWithModel(
+                env_spec=env.spec, state_include_action=True)
+
+        policy.reset()
+        obs = env.reset()
+
+        expected_prob = np.full(action_dim, 0.5)
+
+        action, agent_info = policy.get_action(obs)
+        assert env.action_space.contains(action)
+        assert action == 0
+        assert np.array_equal(agent_info['prob'], expected_prob)
+
+        actions, agent_infos = policy.get_actions([obs])
+        for action, prob in zip(actions, agent_infos['prob']):
+            assert env.action_space.contains(action)
+            assert action == 0
+            assert np.array_equal(prob, expected_prob)
+
     @params(
         ((1, ), 1, 4),
         ((2, ), 2, 4),
@@ -111,7 +155,8 @@ class TestCategoricalLSTMPolicyWithModel(TfGraphTestCase):
         with mock.patch(('garage.tf.policies.'
                          'categorical_lstm_policy_with_model.LSTMModel'),
                         new=SimpleLSTMModel):
-            policy = CategoricalLSTMPolicyWithModel(env_spec=env.spec)
+            policy = CategoricalLSTMPolicyWithModel(
+                env_spec=env.spec, state_include_action=False)
 
         policy.reset()
         obs = env.reset()

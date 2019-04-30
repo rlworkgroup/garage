@@ -1,27 +1,18 @@
+from nose2.tools.params import params
 import numpy as np
 import tensorflow as tf
 
 from garage.tf.core.lstm import lstm
 from tests.fixtures import TfGraphTestCase
+from tests.helpers import recurrent_step
 
 
 class TestLSTM(TfGraphTestCase):
     def setUp(self):
         super().setUp()
-        self.batch_size = 1
-        self.time_step = 5
-        self.feature_shape = 3
+        self.batch_size = 2
         self.hidden_dim = 2
-        self.output_dim = 1
 
-        self.obs_inputs = np.full(
-            (self.batch_size, self.time_step, self.feature_shape), 1.)
-        self.obs_input = np.full((self.batch_size, self.feature_shape), 1.)
-
-        self._input_var = tf.placeholder(
-            tf.float32, shape=(None, None, self.feature_shape), name='input')
-        self._step_input_var = tf.placeholder(
-            tf.float32, shape=(None, self.feature_shape), name='input')
         self._step_hidden_var = tf.placeholder(
             shape=(self.batch_size, self.hidden_dim),
             name='initial_hidden',
@@ -38,23 +29,120 @@ class TestLSTM(TfGraphTestCase):
             recurrent_activation=tf.nn.sigmoid,
             recurrent_initializer=tf.constant_initializer(1),
             name='lstm_layer')
-        self.output_nonlinearity = tf.keras.layers.Dense(
-            units=self.output_dim,
+
+    @params((1, 1, 1), (1, 1, 3), (1, 3, 1), (3, 1, 1), (3, 3, 1), (3, 3, 3))
+    def test_output_value(self, time_step, input_dim, output_dim):
+        obs_inputs = np.full((self.batch_size, time_step, input_dim), 1.)
+        obs_input = np.full((self.batch_size, input_dim), 1.)
+
+        _input_var = tf.placeholder(
+            tf.float32, shape=(None, None, input_dim), name='input')
+        _step_input_var = tf.placeholder(
+            tf.float32, shape=(None, input_dim), name='input')
+        _output_nonlinearity = tf.keras.layers.Dense(
+            units=output_dim,
             activation=None,
             kernel_initializer=tf.constant_initializer(1))
         with tf.variable_scope('LSTM'):
             self.lstm = lstm(
-                all_input_var=self._input_var,
+                all_input_var=_input_var,
                 name='lstm',
                 lstm_cell=self.lstm_cell,
-                step_input_var=self._step_input_var,
+                step_input_var=_step_input_var,
                 step_hidden_var=self._step_hidden_var,
                 step_cell_var=self._step_cell_var,
-                output_nonlinearity_layer=self.output_nonlinearity)
+                output_nonlinearity_layer=_output_nonlinearity)
 
         self.sess.run(tf.global_variables_initializer())
 
-    def test_output_same_as_rnn(self):
+        # Compute output by doing t step() on the lstm cell
+        outputs_t, output_t, h_t, c_t, hidden_init, cell_init = self.lstm
+        hidden1 = hidden2 = np.full((self.batch_size, self.hidden_dim),
+                                    hidden_init.eval())
+        cell1 = cell2 = np.full((self.batch_size, self.hidden_dim),
+                                cell_init.eval())
+
+        for i in range(time_step):
+            output1, hidden1, cell1 = self.sess.run(
+                [output_t, h_t, c_t],
+                feed_dict={
+                    _step_input_var: obs_input,
+                    self._step_hidden_var: hidden1,
+                    self._step_cell_var: cell1
+                })
+
+            hidden2, cell2 = recurrent_step(
+                input_val=obs_input,
+                num_units=self.hidden_dim,
+                step_hidden=hidden2,
+                step_cell=cell2,
+                w_x_init=1.,
+                w_h_init=1.,
+                b_init=0.,
+                nonlinearity=np.tanh,
+                gate_nonlinearity=lambda x: 1. / (1. + np.exp(-x)))
+
+            output_nonlinearity = np.full(
+                (np.prod(hidden2.shape[1:]), output_dim), 1.)
+            output2 = np.matmul(hidden2, output_nonlinearity)
+
+            assert np.allclose(output1, output2)
+            assert np.allclose(hidden1, hidden2)
+            assert np.allclose(cell1, cell2)
+
+        full_output1 = self.sess.run(
+            outputs_t, feed_dict={_input_var: obs_inputs})
+
+        hidden2 = np.full((self.batch_size, self.hidden_dim),
+                          hidden_init.eval())
+        cell2 = np.full((self.batch_size, self.hidden_dim), cell_init.eval())
+        stack_hidden = None
+        for i in range(time_step):
+            hidden2, cell2 = recurrent_step(
+                input_val=obs_inputs[:, i, :],
+                num_units=self.hidden_dim,
+                step_hidden=hidden2,
+                step_cell=cell2,
+                w_x_init=1.,
+                w_h_init=1.,
+                b_init=0.,
+                nonlinearity=np.tanh,
+                gate_nonlinearity=lambda x: 1. / (1. + np.exp(-x)))
+            if stack_hidden is None:
+                stack_hidden = hidden2[:, np.newaxis, :]
+            else:
+                stack_hidden = np.concatenate(
+                    (stack_hidden, hidden2[:, np.newaxis, :]), axis=1)
+        output_nonlinearity = np.full((np.prod(hidden2.shape[1:]), output_dim),
+                                      1.)
+        full_output2 = np.matmul(stack_hidden, output_nonlinearity)
+        assert np.allclose(full_output1, full_output2)
+
+    @params((1, 1, 1), (1, 1, 2), (1, 2, 1), (2, 1, 1), (2, 2, 1), (2, 2, 2))
+    def test_output_same_as_rnn(self, time_step, input_dim, output_dim):
+        obs_inputs = np.full((self.batch_size, time_step, input_dim), 1.)
+        obs_input = np.full((self.batch_size, input_dim), 1.)
+
+        _input_var = tf.placeholder(
+            tf.float32, shape=(None, None, input_dim), name='input')
+        _step_input_var = tf.placeholder(
+            tf.float32, shape=(None, input_dim), name='input')
+        _output_nonlinearity = tf.keras.layers.Dense(
+            units=output_dim,
+            activation=None,
+            kernel_initializer=tf.constant_initializer(1))
+        with tf.variable_scope('LSTM'):
+            self.lstm = lstm(
+                all_input_var=_input_var,
+                name='lstm',
+                lstm_cell=self.lstm_cell,
+                step_input_var=_step_input_var,
+                step_hidden_var=self._step_hidden_var,
+                step_cell_var=self._step_cell_var,
+                output_nonlinearity_layer=_output_nonlinearity)
+
+        self.sess.run(tf.global_variables_initializer())
+
         # Create a RNN and compute the entire outputs
         rnn_layer = tf.keras.layers.RNN(
             cell=self.lstm_cell, return_sequences=True, return_state=True)
@@ -73,24 +161,24 @@ class TestLSTM(TfGraphTestCase):
             trainable=False,
             dtype=tf.float32)
         outputs, hiddens, cells = rnn_layer(
-            self._input_var, initial_state=[hidden_var, cell_var])
-        outputs = self.output_nonlinearity(outputs)
+            _input_var, initial_state=[hidden_var, cell_var])
+        outputs = _output_nonlinearity(outputs)
 
         self.sess.run(tf.global_variables_initializer())
 
         outputs, hiddens, cells = self.sess.run(
-            [outputs, hiddens, cells],
-            feed_dict={self._input_var: self.obs_inputs})
+            [outputs, hiddens, cells], feed_dict={_input_var: obs_inputs})
 
         # Compute output by doing t step() on the lstm cell
         # Set initial state to all 0s
         hidden = np.zeros((self.batch_size, self.hidden_dim))
         cell = np.zeros((self.batch_size, self.hidden_dim))
-        for i in range(self.time_step):
+        _, output_t, hidden_t, cell_t, _, _ = self.lstm
+        for i in range(time_step):
             output, hidden, cell = self.sess.run(
-                self.lstm[1:4],
+                [output_t, hidden_t, cell_t],
                 feed_dict={
-                    self._step_input_var: self.obs_input,
+                    _step_input_var: obs_input,
                     self._step_hidden_var: hidden,
                     self._step_cell_var: cell
                 })
@@ -101,5 +189,5 @@ class TestLSTM(TfGraphTestCase):
 
         # Also the full output from lstm
         full_outputs = self.sess.run(
-            self.lstm[0], feed_dict={self._input_var: self.obs_inputs})
+            self.lstm[0], feed_dict={_input_var: obs_inputs})
         assert np.array_equal(outputs, full_outputs)

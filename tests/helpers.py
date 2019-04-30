@@ -87,6 +87,77 @@ def convolve(_input, filter_weights, filter_bias, strides, filter_sizes,
     return _input
 
 
+def recurrent_step(input_val,
+                   num_units,
+                   step_hidden,
+                   step_cell,
+                   w_x_init,
+                   w_h_init,
+                   b_init,
+                   nonlinearity,
+                   gate_nonlinearity,
+                   forget_bias=1.0):
+    """
+    A LSTM unit implements the following update mechanism:
+
+    Incoming gate:    i(t) = f_i(x(t) @ W_xi + h(t-1) @ W_hi +
+                                 w_ci * c(t-1) + b_i)
+    Forget gate:      f(t) = f_f(x(t) @ W_xf + h(t-1) @ W_hf +
+                                 w_cf * c(t-1) + b_f)
+    Cell gate:        c(t) = f(t) * c(t - 1) + i(t) * f_c(x(t) @ W_xc +
+                             h(t-1) @ W_hc + b_c)
+    Out gate:         o(t) = f_o(x(t) @ W_xo + h(t-1) W_ho + w_co * c(t) + b_o)
+    New hidden state: h(t) = o(t) * f_h(c(t))
+
+    Note that the incoming, forget, cell, and out vectors must have the same
+    dimension as the hidden state.
+    """
+
+    def f(x):
+        return x
+
+    if nonlinearity is None:
+        nonlinearity = f
+    if gate_nonlinearity is None:
+        gate_nonlinearity = f
+
+    input_dim = np.prod(input_val.shape[1:])
+    # Weights for the input gate
+    w_xi = np.full((input_dim, num_units), w_x_init)
+    w_hi = np.full((num_units, num_units), w_h_init)
+    b_i = np.full((num_units, ), b_init)
+    # Weights for the forget gate
+    w_xf = np.full((input_dim, num_units), w_x_init)
+    w_hf = np.full((num_units, num_units), w_h_init)
+    b_f = np.full((num_units, ), b_init)
+    # Weights for the cell gate
+    w_xc = np.full((input_dim, num_units), w_x_init)
+    w_hc = np.full((num_units, num_units), w_h_init)
+    b_c = np.full((num_units, ), b_init)
+    # Weights for the out gate
+    w_xo = np.full((input_dim, num_units), w_x_init)
+    w_ho = np.full((num_units, num_units), w_h_init)
+    b_o = np.full((num_units, ), b_init)
+
+    w_x_ifco = np.concatenate([w_xi, w_xf, w_xc, w_xo], axis=1)
+    w_h_ifco = np.concatenate([w_hi, w_hf, w_hc, w_ho], axis=1)
+
+    x_ifco = np.matmul(input_val, w_x_ifco)
+    h_ifco = np.matmul(step_hidden, w_h_ifco)
+
+    x_i, x_f, x_c, x_o = np.split(x_ifco, 4, axis=1)  # noqa: E501, pylint: disable=unbalanced-tuple-unpacking
+    h_i, h_f, h_c, h_o = np.split(h_ifco, 4, axis=1)  # noqa: E501, pylint: disable=unbalanced-tuple-unpacking
+
+    i = gate_nonlinearity(x_i + h_i + b_i)
+    f = gate_nonlinearity(x_f + h_f + b_f + forget_bias)
+    o = gate_nonlinearity(x_o + h_o + b_o)
+
+    c = f * step_cell + i * nonlinearity(x_c + h_c + b_c)
+    h = o * nonlinearity(c)
+
+    return h, c
+
+
 def _construct_image_vector(_input, batch, w, h, filter_width, filter_height,
                             in_shape):
     """sw is sliding window"""

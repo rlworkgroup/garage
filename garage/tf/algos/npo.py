@@ -234,7 +234,6 @@ class NPO(BatchPolopt):
 
     def _build_policy_loss(self, i):
         pol_dist = self.policy.distribution
-        policy_entropy = self._build_entropy_term(i)
         rewards = i.reward_var
 
         with tf.name_scope('policy_loss'):
@@ -282,6 +281,10 @@ class NPO(BatchPolopt):
                     policy_dist_info_flat,
                     i.flat.valid_var,
                     name='policy_dist_info_valid')
+
+                policy_dist_info = policy_dist_info_valid
+
+            policy_entropy = self._build_entropy_term(i, policy_dist_info)
 
             # Calculate loss function and KL divergence
             with tf.name_scope('kl'):
@@ -384,14 +387,9 @@ class NPO(BatchPolopt):
 
             return loss, pol_mean_kl
 
-    def _build_entropy_term(self, i):
+    def _build_entropy_term(self, i, policy_dist_info):
         with tf.name_scope('policy_entropy'):
             if self.policy.recurrent:
-                policy_dist_info = self.policy.dist_info_sym(
-                    i.obs_var,
-                    i.policy_state_info_vars,
-                    name='policy_dist_info_entropy')
-
                 policy_neg_log_likeli = self.policy.distribution.log_likelihood_sym(  # noqa: E501
                     i.action_var,
                     policy_dist_info,
@@ -404,26 +402,16 @@ class NPO(BatchPolopt):
                         policy_dist_info)
 
             else:
-                policy_dist_info_flat = self.policy.dist_info_sym(
-                    i.flat.obs_var,
-                    i.flat.policy_state_info_vars,
-                    name='policy_dist_info_flat_entropy')
-
-                policy_dist_info_valid = filter_valids_dict(
-                    policy_dist_info_flat,
-                    i.flat.valid_var,
-                    name='policy_dist_info_valid')
-
                 policy_neg_log_likeli_valid = self.policy.distribution.log_likelihood_sym(  # noqa: E501
                     i.valid.action_var,
-                    policy_dist_info_valid,
+                    policy_dist_info,
                     name='policy_log_likeli')
 
                 if self._use_neg_logli_entropy:
                     policy_entropy = policy_neg_log_likeli_valid
                 else:
                     policy_entropy = self.policy.distribution.entropy_sym(
-                        policy_dist_info_valid)
+                        policy_dist_info)
 
             # This prevents entropy from becoming negative for small policy std
             if self._use_softplus_entropy:

@@ -81,9 +81,10 @@ class CategoricalLSTMPolicyWithModel(StochasticPolicy2):
                  state_include_action=True,
                  forget_bias=True,
                  layer_normalization=False):
-        assert isinstance(env_spec.action_space, Discrete), (
-            'CategoricalLSTMPolicy only works with akro.tf.Discrete'
-            'action space.')
+        if not isinstance(env_spec.action_space, Discrete):
+            raise ValueError('CategoricalLSTMPolicy only works'
+                             'with akro.tf.Discrete action space.')
+
         super().__init__(name, env_spec)
         self._obs_dim = env_spec.observation_space.flat_dim
         self._action_dim = env_spec.action_space.n
