@@ -15,13 +15,13 @@ class DummyDictEnv(DummyEnv):
         """Return an observation space."""
 
         return gym.spaces.Dict({
-            "achieved_goal":
+            'achieved_goal':
             gym.spaces.Box(
                 low=-200., high=200., shape=(3, ), dtype=np.float32),
-            "desired_goal":
+            'desired_goal':
             gym.spaces.Box(
                 low=-200., high=200., shape=(3, ), dtype=np.float32),
-            "observation":
+            'observation':
             gym.spaces.Box(
                 low=-200., high=200., shape=(25, ), dtype=np.float32)
         })
@@ -30,14 +30,14 @@ class DummyDictEnv(DummyEnv):
     def action_space(self):
         """Return an action space."""
         return gym.spaces.Dict({
-            "action":
+            'action':
             gym.spaces.Box(low=-5.0, high=5.0, shape=(1, ), dtype=np.float32)
         })
 
     def reset(self):
         """Reset the environment."""
-        return np.ones(1)
+        return self.observation_space.sample()
 
     def step(self, action):
         """Step the environment."""
-        return np.ones(1), 0, True, dict()
+        return self.observation_space.sample(), 0, True, dict()
