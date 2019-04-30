@@ -65,7 +65,6 @@ class DDPG(OffPolicyRLAlgorithm):
             max_action(float): Maximum action magnitude.
             name(str): Name of the algorithm shown in computation graph.
         """
-        self.quick_init(locals())
         action_bound = env_spec.action_space.high
         self.max_action = action_bound if max_action is None else max_action
         self.tau = target_update_tau
@@ -177,6 +176,20 @@ class DDPG(OffPolicyRLAlgorithm):
             self.f_train_qf = f_train_qf
             self.f_init_target = f_init_target
             self.f_update_target = f_update_target
+
+    def __getstate__(self):
+        data = self.__dict__.copy()
+        del data['target_policy_f_prob_online']
+        del data['target_qf_f_prob_online']
+        del data['f_train_policy']
+        del data['f_train_qf']
+        del data['f_init_target']
+        del data['f_update_target']
+        return data
+
+    def __setstate__(self, state):
+        self.__dict__ = state
+        self.init_opt()
 
     def train_once(self, itr, paths):
         epoch = itr / self.n_epoch_cycles

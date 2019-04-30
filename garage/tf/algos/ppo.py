@@ -19,7 +19,6 @@ class PPO(NPO):
         :param optimizer_args: Optimizer args.
         :param kwargs:
         """
-        self.quick_init(locals())
         if optimizer is None:
             optimizer = FirstOrderOptimizer
             if optimizer_args is None:

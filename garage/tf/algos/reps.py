@@ -50,7 +50,6 @@ class REPS(BatchPolopt):
                  dual_optimizer_args=dict(maxiter=50),
                  name='REPS',
                  **kwargs):
-        self.quick_init(locals())
         self.name = name
         self._name_scope = tf.name_scope(self.name)
 
@@ -76,6 +75,21 @@ class REPS(BatchPolopt):
             loss=pol_loss,
             target=self.policy,
             inputs=flatten_inputs(self._policy_opt_inputs))
+
+    def __getstate__(self):
+        data = self.__dict__.copy()
+        del data['_name_scope']
+        del data['_policy_opt_inputs']
+        del data['_dual_opt_inputs']
+        del data['f_dual']
+        del data['f_dual_grad']
+        del data['f_policy_kl']
+        return data
+
+    def __setstate__(self, state):
+        self.__dict__ = state
+        self._name_scope = tf.name_scope(self.name)
+        self.init_opt()
 
     @overrides
     def get_itr_snapshot(self, itr):
