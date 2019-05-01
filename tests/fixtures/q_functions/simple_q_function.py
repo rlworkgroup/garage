@@ -25,3 +25,7 @@ class SimpleQFunction(QFunction2):
     @property
     def q_vals(self):
         return self.model.networks['default'].outputs
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        self._initialize()

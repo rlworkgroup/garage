@@ -49,7 +49,25 @@ class TestDiscreteMLPQFunction(TfGraphTestCase):
         with mock.patch(('garage.tf.q_functions.'
                          'discrete_mlp_q_function.MLPModel'),
                         new=SimpleMLPModel):
-            qf = DiscreteMLPQFunction(env_spec=env.spec)
+            qf = DiscreteMLPQFunction(env_spec=env.spec, dueling=False)
+        env.reset()
+        obs, _, _, _ = env.step(1)
+
+        outputs = self.sess.run(qf.q_vals, feed_dict={qf.input: [obs]})
+        assert outputs.shape == (1, action_dim)
+
+    @params(
+        ((1, ), 1),
+        ((2, ), 2),
+        ((1, 1), 1),
+        ((2, 2), 2),
+    )
+    def test_output_shape_dueling(self, obs_dim, action_dim):
+        env = TfEnv(DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
+        with mock.patch(('garage.tf.q_functions.'
+                         'discrete_mlp_q_function.MLPDuelingModel'),
+                        new=SimpleMLPModel):
+            qf = DiscreteMLPQFunction(env_spec=env.spec, dueling=True)
         env.reset()
         obs, _, _, _ = env.step(1)
 
@@ -98,7 +116,7 @@ class TestDiscreteMLPQFunction(TfGraphTestCase):
         obs, _, _, _ = env.step(1)
 
         with tf.variable_scope(
-                'discrete_mlp_q_function/discrete_mlp_q_function', reuse=True):
+                'DiscreteMLPQFunction/SimpleMLPModel', reuse=True):
             return_var = tf.get_variable('return_var')
         # assign it to all one
         return_var.load(tf.ones_like(return_var).eval())
@@ -112,3 +130,19 @@ class TestDiscreteMLPQFunction(TfGraphTestCase):
                 qf_pickled.q_vals, feed_dict={qf_pickled.input: [obs]})
 
         assert np.array_equal(output1, output2)
+
+    @params(
+        ((1, ), 1, (3, )),
+        ((2, ), 2, (32, )),
+        ((1, 1), 1, (3, 3)),
+        ((2, 2), 2, (32, 32)),
+    )
+    def test_clone(self, obs_dim, action_dim, hidden_sizes):
+        env = TfEnv(DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
+        with mock.patch(('garage.tf.q_functions.'
+                         'discrete_mlp_q_function.MLPModel'),
+                        new=SimpleMLPModel):
+            qf = DiscreteMLPQFunction(
+                env_spec=env.spec, hidden_sizes=hidden_sizes)
+        qf_clone = qf.clone('another_qf')
+        assert qf_clone._hidden_sizes == qf._hidden_sizes

@@ -41,7 +41,7 @@ def run_task(*_):
             qf_lr=1e-4,
             discount=1.0,
             min_buffer_size=int(1e3),
-            double_q=False,
+            double_q=True,
             n_train_steps=500,
             n_epoch_cycles=n_epoch_cycles,
             target_network_update_freq=1,

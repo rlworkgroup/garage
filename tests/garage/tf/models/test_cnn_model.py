@@ -5,6 +5,7 @@ import numpy as np
 import tensorflow as tf
 
 from garage.tf.models import CNNModel
+from garage.tf.models import CNNModelWithMaxPooling
 from tests.fixtures import TfGraphTestCase
 
 
@@ -51,6 +52,54 @@ class TestCNNModel(TfGraphTestCase):
         current_size = self.input_width
         for filter_size, stride in zip(filter_sizes, strides):
             current_size = int((current_size - filter_size) / stride) + 1
+        flatten_shape = current_size * current_size * out_channels[-1]
+
+        # flatten
+        expected_output = np.full((self.batch_size, flatten_shape),
+                                  filter_sum,
+                                  dtype=np.float32)
+
+        assert np.array_equal(output, expected_output)
+
+    @params(((1, ), (3, ), (32, ), (1, ), (1, 1),
+             (1, 1)), ((3, ), (3, ), (32, ), (1, ), (2, 2),
+                       (1, 1)), ((3, ), (3, ), (32, ), (1, ), (1, 1), (2, 2)),
+            ((3, ), (3, ), (32, ), (1, ), (2, 2),
+             (2, 2)), ((3, ), (3, ), (32, ), (2, ), (1, 1),
+                       (2, 2)), ((3, ), (3, ), (32, ), (2, ), (2, 2), (2, 2)),
+            ((1, 1), (3, 32), (32, 64), (1, 1), (1, 1),
+             (1, 1)), ((3, 3), (3, 32), (32, 64), (1, 1), (1, 1),
+                       (1, 1)), ((3, 3), (3, 32), (32, 64), (2, 2), (1, 1),
+                                 (1, 1)))
+    def test_output_value_max_pooling(self, filter_sizes, in_channels,
+                                      out_channels, strides, pool_strides,
+                                      pool_shapes):
+        model = CNNModelWithMaxPooling(
+            filter_dims=filter_sizes,
+            num_filters=out_channels,
+            strides=strides,
+            name='cnn_model',
+            padding='VALID',
+            pool_strides=pool_strides,
+            pool_shapes=pool_shapes,
+            hidden_w_init=tf.constant_initializer(1),
+            hidden_nonlinearity=None)
+
+        outputs = model.build(self._input_ph)
+        output = self.sess.run(
+            outputs, feed_dict={self._input_ph: self.obs_input})
+
+        filter_sum = 1
+        # filter value after 3 layers of conv
+        for filter_size, in_channel in zip(filter_sizes, in_channels):
+            filter_sum *= filter_size * filter_size * in_channel
+
+        current_size = self.input_width
+        for filter_size, stride in zip(filter_sizes, strides):
+            current_size = int((current_size - filter_size) / stride) + 1
+            current_size = int(
+                (current_size - pool_shapes[0]) / pool_strides[0]) + 1
+
         flatten_shape = current_size * current_size * out_channels[-1]
 
         # flatten

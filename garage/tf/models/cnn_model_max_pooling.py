@@ -30,7 +30,9 @@ class CNNModelWithMaxPooling(Model):
                  padding='SAME',
                  pool_strides=(2, 2),
                  pool_shapes=(2, 2),
-                 hidden_nonlinearity=tf.nn.relu):
+                 hidden_nonlinearity=tf.nn.relu,
+                 hidden_w_init=tf.glorot_uniform_initializer(),
+                 hidden_b_init=tf.zeros_initializer()):
         super().__init__(name)
         self._filter_dims = filter_dims
         self._num_filters = num_filters
@@ -39,12 +41,16 @@ class CNNModelWithMaxPooling(Model):
         self._pool_strides = pool_strides
         self._pool_shapes = pool_shapes
         self._hidden_nonlinearity = hidden_nonlinearity
+        self._hidden_w_init = hidden_w_init
+        self._hidden_b_init = hidden_b_init
 
-    def _build(self, state_input):
+    def _build(self, state_input, name=None):
         return cnn_with_max_pooling(
             input_var=state_input,
             filter_dims=self._filter_dims,
             hidden_nonlinearity=self._hidden_nonlinearity,
+            hidden_w_init=self._hidden_w_init,
+            hidden_b_init=self._hidden_b_init,
             num_filters=self._num_filters,
             strides=self._strides,
             padding=self._padding,
