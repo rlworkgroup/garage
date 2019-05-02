@@ -30,9 +30,9 @@ class SimpleGaussianMLPRegressor(StochasticRegressor2):
             mean = tf.get_default_session().run(
                 self.model.networks['default'].mean,
                 feed_dict={self.model.networks['default'].input: xs})
-            return np.full((len(xs), 1), mean)
-        else:
-            return self.ys
+            self.ys = np.full((len(xs), 1), mean)
+
+        return self.ys
 
     def get_params_internal(self, *args, **kwargs):
         return self._variable_scope.trainable_variables()

@@ -44,6 +44,9 @@ class Regressor2(abc.ABC):
 
         Args:
             xs: Input data.
+
+        Return:
+            The predicted ys.
         """
         raise NotImplementedError
 
@@ -158,9 +161,12 @@ class StochasticRegressor2(Regressor2):
         Symbolic graph of the log likelihood.
 
         Args:
-            x_var: Input tf.Tensor for the input data.
-            y_var: Input tf.Tensor for the label of data.
-            name: Name of the new graph.
+            x_var (tf.Tensor): Input tf.Tensor for the input data.
+            y_var (tf.Tensor): Input tf.Tensor for the label of data.
+            name (str): Name of the new graph.
+
+        Return:
+            tf.Tensor output of the symbolic log likelihood.
         """
         raise NotImplementedError
 
@@ -169,7 +175,10 @@ class StochasticRegressor2(Regressor2):
         Symbolic graph of the distribution.
 
         Args:
-            x_var: Input tf.Tensor for the input data.
-            name: Name of the new graph.
+            x_var (tf.Tensor): Input tf.Tensor for the input data.
+            name (str): Name of the new graph.
+
+        Return:
+            tf.Tensor output of the symbolic distribution.
         """
         raise NotImplementedError
