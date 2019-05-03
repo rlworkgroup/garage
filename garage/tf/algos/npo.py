@@ -92,7 +92,6 @@ class NPO(BatchPolopt):
         return dict()
 
     def __getstate__(self):
-        print('__getstate__')
         data = self.__dict__.copy()
         del data['_name_scope']
         del data['_policy_opt_inputs']

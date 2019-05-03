@@ -1,16 +1,13 @@
-import os
 import shutil
 import tempfile
-import unittest
-
-import psutil
 
 from garage.experiment import LocalRunner
-from garage.logger import snapshotter, logger, StdOutput
+from garage.logger import snapshotter
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import VPG
 from garage.tf.envs import TfEnv
 from garage.tf.policies import CategoricalMLPPolicy
+from tests.fixtures import TfGraphTestCase
 
 
 def fixture_exp():
@@ -33,34 +30,26 @@ def fixture_exp():
         runner.setup(algo, env)
         runner.train(n_epochs=5, batch_size=100)
 
-    # Exit child process manually
-    # Otherwise this process will run remaining tests
-    os._exit(0)
 
-
-class TestResume(unittest.TestCase):
+class TestResume(TfGraphTestCase):
     def test_resume(self):
         # Manually create and remove temp folder
         # Otherwise, tempfile unexpectedly removes folder in child folder
         folder = tempfile.mkdtemp()
         snapshotter.snapshot_dir = folder
         snapshotter.snapshot_mode = 'last'
-        logger.add_output(StdOutput())
 
-        newpid = os.fork()
-        if newpid == 0:
-            fixture_exp()
-        else:
-            childproc = psutil.Process(newpid)
-            # Wait for first experiment to finish
-            psutil.wait_procs([childproc])
-            with LocalRunner() as runner:
-                args = runner.restore(folder, resume_now=False)
-                assert args['n_epochs'] == 5, \
-                    'Snapshot should save training parameters'
-                assert args['start_epoch'] == 5, \
-                    'Last experiment should end at 5th iterations'
-                args['n_epochs'] = 10
-                runner.train(**args)
+        fixture_exp()
+        self.tearDown()
+        self.setUp()
 
-            shutil.rmtree(folder)
+        with LocalRunner() as runner:
+            args = runner.restore(folder, resume_now=False)
+            assert args['n_epochs'] == 5, \
+                'Snapshot should save training parameters'
+            assert args['start_epoch'] == 5, \
+                'Last experiment should end at 5th iterations'
+            args['n_epochs'] = 10
+            runner.train(**args)
+
+        shutil.rmtree(folder)
