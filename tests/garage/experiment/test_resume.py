@@ -30,6 +30,8 @@ def fixture_exp():
         runner.setup(algo, env)
         runner.train(n_epochs=5, batch_size=100)
 
+        return policy.get_param_values()
+
 
 class TestResume(TfGraphTestCase):
     def test_resume(self):
@@ -39,12 +41,14 @@ class TestResume(TfGraphTestCase):
         snapshotter.snapshot_dir = folder
         snapshotter.snapshot_mode = 'last'
 
-        fixture_exp()
+        policy_params = fixture_exp()
         self.tearDown()
         self.setUp()
 
         with LocalRunner() as runner:
             args = runner.restore(folder, resume_now=False)
+            assert (runner.policy.get_param_values() == policy_params).all(), \
+                'Policy parameters should persist'
             assert args['n_epochs'] == 5, \
                 'Snapshot should save training parameters'
             assert args['start_epoch'] == 5, \
