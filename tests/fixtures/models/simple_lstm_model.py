@@ -16,6 +16,12 @@ class SimpleLSTMModel(Model):
         self.output_dim = output_dim
         self.hidden_dim = hidden_dim
 
+    def network_input_spec(self):
+        """Network input spec."""
+        return [
+            'full_input', 'step_input', 'step_hidden_input', 'step_cell_input'
+        ]
+
     def network_output_spec(self):
         """Network output spec."""
         return [

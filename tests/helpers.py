@@ -145,8 +145,15 @@ def recurrent_step(input_val,
     x_ifco = np.matmul(input_val, w_x_ifco)
     h_ifco = np.matmul(step_hidden, w_h_ifco)
 
-    x_i, x_f, x_c, x_o = np.split(x_ifco, 4, axis=1)  # noqa: E501, pylint: disable=unbalanced-tuple-unpacking
-    h_i, h_f, h_c, h_o = np.split(h_ifco, 4, axis=1)  # noqa: E501, pylint: disable=unbalanced-tuple-unpacking
+    x_i = x_ifco[:, :num_units]
+    x_f = x_ifco[:, num_units:num_units * 2]
+    x_c = x_ifco[:, num_units * 2:num_units * 3]
+    x_o = x_ifco[:, num_units * 3:num_units * 4]
+
+    h_i = h_ifco[:, :num_units]
+    h_f = h_ifco[:, num_units:num_units * 2]
+    h_c = h_ifco[:, num_units * 2:num_units * 3]
+    h_o = h_ifco[:, num_units * 3:num_units * 4]
 
     i = gate_nonlinearity(x_i + h_i + b_i)
     f = gate_nonlinearity(x_f + h_f + b_f + forget_bias)

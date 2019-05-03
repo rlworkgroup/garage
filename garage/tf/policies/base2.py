@@ -1,4 +1,5 @@
 """Policy base classes without Parameterized."""
+import tensorflow as tf
 
 from garage.misc.tensor_utils import flatten_tensors, unflatten_tensors
 
@@ -17,6 +18,11 @@ class Policy2:
         self._name = name
         self._env_spec = env_spec
         self._variable_scope = None
+        self._cached_params = {}
+        self._cached_param_dtypes = {}
+        self._cached_param_shapes = {}
+        self._cached_assign_ops = {}
+        self._cached_assign_placeholders = {}
 
     # Should be implemented by all policies
     def get_action(self, observation):
@@ -153,6 +159,19 @@ class Policy2:
     def flat_to_params(self, flattened_params, **tags):
         return unflatten_tensors(flattened_params,
                                  self.get_param_shapes(**tags))
+
+    def __getstate__(self):
+        """Object.__getstate__."""
+        new_dict = self.__dict__.copy()
+        del new_dict['_cached_assign_ops']
+        del new_dict['_cached_assign_placeholders']
+        return new_dict
+
+    def __setstate__(self, state):
+        """Object.__setstate__."""
+        self.__dict__.update(state)
+        self._cached_assign_ops = {}
+        self._cached_assign_placeholders = {}
 
 
 class StochasticPolicy2(Policy2):

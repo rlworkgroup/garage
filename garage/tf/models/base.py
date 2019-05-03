@@ -172,8 +172,9 @@ class Model(BaseModel):
         parameter sharing. Different Networks must have an unique name.
 
         Args:
-          inputs : Tensor input(s), recommended to be positional arguments,
-            e.g. def build(self, state_input, action_input, name=None).
+          inputs (list[tf.Tensor]) : Tensor input(s), recommended to be
+            positional arguments, for example,
+            def build(self, state_input, action_input, name=None).
           name (str): Name of the model, which is also the name scope of the
             model.
 
@@ -181,7 +182,8 @@ class Model(BaseModel):
           ValueError when a Network with the same name is already built.
 
         Returns:
-          outputs: Output tensor of the model with the given inputs.
+          outputs (list[tf.Tensor]): Output tensors of the model with the given
+            inputs.
 
         """
         network_name = name or 'default'
@@ -209,22 +211,25 @@ class Model(BaseModel):
                     network = Network()
                     network._inputs = inputs
                     network._outputs = self._build(*inputs, name)
-        spec = self.network_output_spec()
-        if spec:
-            c = namedtuple(network_name,
-                           [*spec, 'input', 'output', 'inputs', 'outputs'])
-            if isinstance(network.outputs, tuple):
-                assert len(spec) == len(network.outputs), (
-                    'network_output_spec must have same length as outputs!')
-                self._networks[network_name] = c(
-                    *network.outputs, network.input, network.output,
-                    network.inputs, network.outputs)
-            else:
-                self._networks[network_name] = c(
-                    network.outputs, network.input, network.output,
-                    network.inputs, network.outputs)
-        else:
-            self._networks[network_name] = network
+        custom_in_spec = self.network_input_spec()
+        custom_out_spec = self.network_output_spec()
+        in_spec = ['input', 'inputs']
+        out_spec = ['output', 'outputs']
+        in_args = [network.input, network.inputs]
+        out_args = [network.output, network.outputs]
+        if isinstance(network.inputs, tuple) and len(network.inputs) > 1:
+            assert len(custom_in_spec) == len(network.inputs), (
+                'network_input_spec must have same length as inputs!')
+            in_spec.extend(custom_in_spec)
+            in_args.extend(network.inputs)
+        if isinstance(network.outputs, tuple) and len(network.outputs) > 1:
+            assert len(custom_out_spec) == len(network.outputs), (
+                'network_output_spec must have same length as outputs!')
+            out_spec.extend(custom_out_spec)
+            out_args.extend(network.outputs)
+
+        c = namedtuple(network_name, [*in_spec, *out_spec])
+        self._networks[network_name] = c(*in_args, *out_args)
 
         return network.outputs
 
@@ -247,6 +252,15 @@ class Model(BaseModel):
             output: Tensor output(s) of the model.
         """
         pass
+
+    def network_input_spec(self):
+        """
+        Network input spec.
+
+        Return:
+            *inputs (list[str]): List of key(str) for the network inputs.
+        """
+        return []
 
     def network_output_spec(self):
         """

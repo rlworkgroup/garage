@@ -121,11 +121,6 @@ class CategoricalLSTMPolicyWithModel(StochasticPolicy2):
             layer_normalization=layer_normalization)
 
         self._initialize()
-        self._cached_params = {}
-        self._cached_param_dtypes = {}
-        self._cached_param_shapes = {}
-        self._cached_assign_ops = {}
-        self._cached_assign_placeholders = {}
 
     def _initialize(self):
         obs_ph = tf.placeholder(
@@ -141,7 +136,8 @@ class CategoricalLSTMPolicyWithModel(StochasticPolicy2):
             name='step_cell_input',
             dtype=tf.float32)
 
-        with tf.variable_scope(self._variable_scope):
+        with tf.variable_scope(self.name) as vs:
+            self._variable_scope = vs
             self.model.build(obs_ph, step_input_var, step_hidden_var,
                              step_cell_var)
 
@@ -175,7 +171,9 @@ class CategoricalLSTMPolicyWithModel(StochasticPolicy2):
         with tf.variable_scope(self._variable_scope):
             outputs, _, _, _, _, _ = self.model.build(
                 all_input_var,
-                *self.model.networks['default'].inputs[1:4],
+                self.model.networks['default'].step_input,
+                self.model.networks['default'].step_hidden_input,
+                self.model.networks['default'].step_cell_input,
                 name=name)
 
         return dict(prob=outputs)
@@ -246,11 +244,11 @@ class CategoricalLSTMPolicyWithModel(StochasticPolicy2):
 
     def __getstate__(self):
         """Object.__getstate__."""
-        new_dict = self.__dict__.copy()
+        new_dict = super().__getstate__()
         del new_dict['_f_step_prob']
         return new_dict
 
     def __setstate__(self, state):
         """Object.__setstate__."""
-        self.__dict__.update(state)
+        super().__setstate__(state)
         self._initialize()

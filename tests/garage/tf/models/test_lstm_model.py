@@ -59,8 +59,8 @@ class TestLSTMModel(TfGraphTestCase):
             shape=(self.batch_size, 1), name='step_hidden', dtype=tf.float32)
         step_cell_var = tf.placeholder(
             shape=(self.batch_size, 1), name='step_cell', dtype=tf.float32)
-        outputs = model.build(self._input_var, self._step_input_var,
-                              step_hidden_var, step_cell_var)
+        model.build(self._input_var, self._step_input_var, step_hidden_var,
+                    step_cell_var)
 
         # assign bias to all one
         with tf.variable_scope('LSTMModel/lstm', reuse=True):
@@ -72,9 +72,14 @@ class TestLSTMModel(TfGraphTestCase):
         cell = np.zeros((self.batch_size, 1))
 
         outputs1 = self.sess.run(
-            outputs[0], feed_dict={self._input_var: self.obs_inputs})
+            model.networks['default'].all_output,
+            feed_dict={self._input_var: self.obs_inputs})
         output1 = self.sess.run(
-            outputs[1:4],
+            [
+                model.networks['default'].step_output,
+                model.networks['default'].step_hidden,
+                model.networks['default'].step_cell
+            ],
             feed_dict={
                 self._step_input_var: self.obs_input,
                 step_hidden_var: hidden,
@@ -101,12 +106,17 @@ class TestLSTMModel(TfGraphTestCase):
                 name='initial_cell',
                 dtype=tf.float32)
 
-            outputs = model_pickled.build(input_var, step_input_var,
-                                          step_hidden_var, step_cell_var)
+            model_pickled.build(input_var, step_input_var, step_hidden_var,
+                                step_cell_var)
             outputs2 = sess.run(
-                outputs[0], feed_dict={input_var: self.obs_inputs})
+                model_pickled.networks['default'].all_output,
+                feed_dict={input_var: self.obs_inputs})
             output2 = sess.run(
-                outputs[1:4],
+                [
+                    model_pickled.networks['default'].step_output,
+                    model_pickled.networks['default'].step_hidden,
+                    model_pickled.networks['default'].step_cell
+                ],
                 feed_dict={
                     step_input_var: self.obs_input,
                     step_hidden_var: hidden,

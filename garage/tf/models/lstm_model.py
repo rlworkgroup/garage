@@ -109,6 +109,12 @@ class LSTMModel(Model):
             bias_initializer=self._output_b_init,
             name='output_layer')
 
+    def network_input_spec(self):
+        """Network input spec."""
+        return [
+            'full_input', 'step_input', 'step_hidden_input', 'step_cell_input'
+        ]
+
     def network_output_spec(self):
         """Network output spec."""
         return [
