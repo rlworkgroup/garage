@@ -1,12 +1,11 @@
 import cma
 import numpy as np
 
-from garage.core import Serializable
 from garage.logger import logger, tabular
 from garage.np.algos.base import RLAlgorithm
 
 
-class CMAES(RLAlgorithm, Serializable):
+class CMAES(RLAlgorithm):
     r"""Covariance Matrix Adaptation Evolution Strategy.
 
     Note:
@@ -34,9 +33,7 @@ class CMAES(RLAlgorithm, Serializable):
                  gae_lambda=1,
                  max_path_length=500,
                  discount=0.99,
-                 sigma0=1.,
-                 **kwargs):
-        self.quick_init(locals())
+                 sigma0=1.):
         self.env_spec = env_spec
         self.policy = policy
         self.baseline = baseline

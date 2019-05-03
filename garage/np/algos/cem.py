@@ -1,12 +1,10 @@
 import numpy as np
 
-from garage.core import Serializable
 from garage.logger import logger, tabular
 from garage.np.algos.base import RLAlgorithm
-from garage.plotter import Plotter
 
 
-class CEM(RLAlgorithm, Serializable):
+class CEM(RLAlgorithm):
     r"""Cross Entropy Method.
 
     CEM works by iteratively optimizing a gaussian distribution of policy.
@@ -26,8 +24,8 @@ class CEM(RLAlgorithm, Serializable):
         policy in an epoch cycle.
 
     Attributes:
-        env_spec(EnvSpec): Environment specification.
-        policy(Policy): Action policy.
+        env_spec(garage.envs.EnvSpec): Environment specification.
+        policy(garage.np.policies.Policy): Action policy.
         baseline(): Baseline for GAE (Generalized Advantage Estimation).
         n_samples(int): Number of policies sampled in one epoch.
         max_path_length(int):  Maximum length of a single rollout.
@@ -48,9 +46,7 @@ class CEM(RLAlgorithm, Serializable):
                  init_std=1,
                  best_frac=0.05,
                  extra_std=1.,
-                 extra_decay_time=100,
-                 **kwargs):
-        self.quick_init(locals())
+                 extra_decay_time=100):
         self.env_spec = env_spec
         self.policy = policy
         self.baseline = baseline
@@ -62,7 +58,6 @@ class CEM(RLAlgorithm, Serializable):
         self.discount = discount
         self.gae_lambda = gae_lambda
         self.max_path_length = max_path_length
-        self.plotter = Plotter()
 
         # epoch-wise
         self.cur_std = self.init_std
