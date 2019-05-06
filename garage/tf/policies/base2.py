@@ -1,5 +1,4 @@
 """Policy base classes without Parameterized."""
-import tensorflow as tf
 
 
 class Policy2:
@@ -15,7 +14,7 @@ class Policy2:
     def __init__(self, name, env_spec):
         self._name = name
         self._env_spec = env_spec
-        self._variable_scope = tf.VariableScope(reuse=False, name=name)
+        self._variable_scope = None
         self._models = []
 
     # Should be implemented by all policies

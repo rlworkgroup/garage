@@ -51,7 +51,6 @@ class DiscreteMLPQFunction:
         obs_dim = env_spec.observation_space.shape
         action_dim = env_spec.action_space.flat_dim
 
-        self._variable_scope = tf.VariableScope(reuse=False, name=name)
         self.model = MLPModel(
             output_dim=action_dim,
             name=name,
@@ -66,7 +65,8 @@ class DiscreteMLPQFunction:
 
         obs_ph = tf.placeholder(tf.float32, (None, ) + obs_dim, name='obs')
 
-        with tf.variable_scope(self._variable_scope):
+        with tf.variable_scope(name) as vs:
+            self._variable_scope = vs
             self.model.build(obs_ph)
 
     @property
