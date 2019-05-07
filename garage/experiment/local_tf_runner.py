@@ -218,14 +218,9 @@ class LocalRunner:
             from_epoch(str or int): The epoch to restore from.
                 Can be 'first', 'last' or a number.
                 Not applicable when snapshot_mode='last'.
-            resume_now(bool): Resume training immediately.
-                If False, runner will be set up but not train.
-                And the arguments for train() will be returned as a dict.
-                See examples below.
 
         Returns:
-            None if resume_now=True.
-            Otherwise a dict of arguments for train().
+            A SimpleNamespace for train()'s arguments.
 
         Examples:
             1. Resume via command line. (Recommended)
