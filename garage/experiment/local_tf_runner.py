@@ -5,6 +5,7 @@ A runner setup context for algorithms during initialization and
 pipelines data between sampler and algorithm during training.
 """
 import time
+from types import SimpleNamespace
 
 import tensorflow as tf
 
@@ -135,7 +136,7 @@ class LocalRunner:
         logger.log(self.sess.graph)
         self.has_setup = True
 
-        self.setup_args = dict(
+        self.setup_args = SimpleNamespace(
             sampler_cls=sampler_cls, sampler_args=sampler_args)
 
     def initialize_tf_vars(self):
@@ -177,7 +178,7 @@ class LocalRunner:
             One batch of samples.
 
         """
-        if self.train_args['n_epoch_cycles'] == 1:
+        if self.train_args.n_epoch_cycles == 1:
             logger.log('Obtaining samples...')
         return self.sampler.obtain_samples(itr, batch_size)
 
@@ -194,7 +195,7 @@ class LocalRunner:
         logger.log('Saving snapshot...')
 
         params = dict()
-        # Saves arguments
+        # Save arguments
         params['setup_args'] = self.setup_args
         params['train_args'] = self.train_args
 
@@ -209,7 +210,7 @@ class LocalRunner:
 
         logger.log('Saved')
 
-    def restore(self, snapshot_dir, from_epoch='last', resume_now=True):
+    def restore(self, snapshot_dir, from_epoch='last'):
         """Restore experiment from snapshot.
 
         Args:
@@ -233,12 +234,13 @@ class LocalRunner:
             2. Resume experiment immediately.
             with LocalRunner() as runner:
                 runner.restore(snapshot_dir)
+                runner.resume()
 
             3. Resume experiment with modified training arguments.
              with LocalRunner() as runner:
                 args = runner.restore(snapshot_dir, resume_now=False)
-                args['n_epochs'] = 20
-                runner.train(**args)
+                args.n_epochs = 20
+                runner.resume()
 
         Note:
             When resume via command line, new snapshots will be
@@ -256,39 +258,28 @@ class LocalRunner:
         self.setup(
             env=saved['env'],
             algo=saved['algo'],
-            sampler_cls=self.setup_args['sampler_cls'],
-            sampler_args=self.setup_args['sampler_args'])
+            sampler_cls=self.setup_args.sampler_cls,
+            sampler_args=self.setup_args.sampler_args)
 
-        n_epochs = self.train_args['n_epochs']
+        n_epochs = self.train_args.n_epochs
         last_epoch = saved['last_epoch']
-        n_epoch_cycles = self.train_args['n_epoch_cycles']
-        batch_size = self.train_args['batch_size']
-        store_paths = self.train_args['store_paths']
-        plot = self.train_args['plot']
-        pause_for_plot = self.train_args['pause_for_plot']
+        n_epoch_cycles = self.train_args.n_epoch_cycles
+        batch_size = self.train_args.batch_size
+        store_paths = self.train_args.store_paths
+        pause_for_plot = self.train_args.pause_for_plot
 
+        fmt = '{:<20} {:<15}'
         logger.log('Restore from snapshot saved in %s' % snapshot_dir)
-        logger.log('{:<20} {:<15}'.format('Train Args', 'Value'))
-        logger.log('{:<20} {:<15}'.format('n_epochs', n_epochs))
-        logger.log('{:<20} {:<15}'.format('last_epoch', last_epoch))
-        logger.log('{:<20} {:<15}'.format('n_epoch_cycles', n_epoch_cycles))
-        logger.log('{:<20} {:<15}'.format('batch_size', batch_size))
-        logger.log('{:<20} {:<15}'.format('store_paths', store_paths))
-        logger.log('{:<20} {:<15}'.format('pause_for_plot', pause_for_plot))
+        logger.log(fmt.format('Train Args', 'Value'))
+        logger.log(fmt.format('n_epochs', n_epochs))
+        logger.log(fmt.format('last_epoch', last_epoch))
+        logger.log(fmt.format('n_epoch_cycles', n_epoch_cycles))
+        logger.log(fmt.format('batch_size', batch_size))
+        logger.log(fmt.format('store_paths', store_paths))
+        logger.log(fmt.format('pause_for_plot', pause_for_plot))
 
-        if resume_now:
-            return self._train(
-                n_epochs,
-                start_epoch=last_epoch + 1,
-                n_epoch_cycles=n_epoch_cycles,
-                batch_size=batch_size,
-                store_paths=store_paths,
-                plot=plot,
-                pause_for_plot=pause_for_plot)
-        else:
-            args = self.train_args.copy()
-            args.update(start_epoch=last_epoch + 1)
-            return args
+        self.train_args.start_epoch = last_epoch + 1
+        return self.train_args
 
     def log_diagnostics(self, pause_for_plot=False):
         """Log diagnostics.
@@ -338,6 +329,18 @@ class LocalRunner:
             pause_for_plot=pause_for_plot,
             **kwargs)
 
+    def resume(self):
+        """Resume from restored experiment.
+
+        Returns:
+            The average return in last epoch cycle.
+
+        """
+        assert self.train_args is not None, \
+            'You must call restore() before resume().'
+
+        return self._train(**self.train_args.__dict__)
+
     def _train(self,
                n_epochs,
                n_epoch_cycles,
@@ -368,7 +371,7 @@ class LocalRunner:
                                 'training.')
 
         # Save arguments for restore
-        self.train_args = dict(
+        self.train_args = SimpleNamespace(
             n_epochs=n_epochs,
             n_epoch_cycles=n_epoch_cycles,
             batch_size=batch_size,

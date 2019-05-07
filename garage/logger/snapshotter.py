@@ -123,4 +123,5 @@ class Snapshotter:
 
         assert osp.isfile(snapshot_file)
 
-        return joblib.load(open(snapshot_file, 'rb'))
+        with open(snapshot_file, 'rb') as file:
+            return joblib.load(file)

@@ -46,14 +46,15 @@ class TestResume(TfGraphTestCase):
         self.setUp()
 
         with LocalRunner() as runner:
-            args = runner.restore(folder, resume_now=False)
+            args = runner.restore(folder)
             assert (runner.policy.get_param_values() == policy_params).all(), \
                 'Policy parameters should persist'
-            assert args['n_epochs'] == 5, \
+            assert args.n_epochs == 5, \
                 'Snapshot should save training parameters'
-            assert args['start_epoch'] == 5, \
+            assert args.start_epoch == 5, \
                 'Last experiment should end at 5th iterations'
-            args['n_epochs'] = 10
-            runner.train(**args)
+
+            args.n_epochs = 10
+            runner.resume()
 
         shutil.rmtree(folder)

@@ -195,10 +195,8 @@ def run_experiment(argv):
 
     if args.resume_from_dir is not None:
         with LocalRunner() as runner:
-            runner.restore(
-                args.resume_from_dir,
-                from_epoch=args.resume_epoch,
-                resume_now=True)
+            runner.restore(args.resume_from_dir, from_epoch=args.resume_epoch)
+            runner.resume()
     else:
         # read from stdin
         if args.use_cloudpickle:
