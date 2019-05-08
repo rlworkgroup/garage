@@ -72,6 +72,7 @@ setup(
     packages=[
         package for package in find_packages() if package.startswith('garage')
     ],
+    scripts=['scripts/garage'],
     install_requires=required,
     extras_require=extras,
     license='MIT',
