@@ -6,7 +6,7 @@ class QFunction2:
     Q-function base class without Parameterzied.
 
     Args:
-        name: Name of the Q-fucntion.
+        name (str): Name of the Q-fucntion, also the variable scope.
 
     """
 
@@ -21,7 +21,7 @@ class QFunction2:
         All derived classes should implement this function.
 
         Args:
-            input_phs: List of tf.Tensor inputs. recommended to be positional
+            input_phs (list[tf.Tensor]): Recommended to be positional
             arguments, e.g. def get_qval_sym(self, state_input, action_input).
         """
         raise NotImplementedError
@@ -31,7 +31,7 @@ class QFunction2:
         Return a clone of the Q-function.
 
         Args:
-            name: Name of the newly created q-function.
+            name (str): Name of the newly created q-function.
         """
         raise NotImplementedError
 

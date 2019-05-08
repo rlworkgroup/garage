@@ -18,6 +18,7 @@ class DiscreteQfDerivedPolicy(Policy2):
     Args:
         env_spec (garage.envs.env_spec.EnvSpec): Environment specification.
         qf (garage.q_functions.QFunction): The q-function used.
+        name (str): Name of the policy.
     """
 
     def __init__(self, env_spec, qf, name='DiscreteQfDerivedPolicy'):
@@ -45,11 +46,10 @@ class DiscreteQfDerivedPolicy(Policy2):
         Get action from this policy for the input observation.
 
         Args:
-            observation: Observation from environment.
-            sess: tf.Session provided.
+            observation (numpy.ndarray): Observation from environment.
 
         Returns:
-            opt_action: Optimal action from this policy.
+            Single optimal action from this policy.
 
         """
         q_vals = self._f_qval([observation])
@@ -63,11 +63,10 @@ class DiscreteQfDerivedPolicy(Policy2):
         Get actions from this policy for the input observations.
 
         Args:
-            observations: Observations from environment.
-            sess: tf.Session provided.
+            observations (numpy.ndarray): Observations from environment.
 
         Returns:
-            opt_actions: Optimal actions from this policy.
+            Optimal actions from this policy.
 
         """
         q_vals = self._f_qval(observations)

@@ -15,9 +15,11 @@ class DiscreteMLPQFunction(QFunction2):
     input state and action. It uses an MLP to fit the function Q(s, a).
 
     Args:
-        env_spec: Environment specification.
-        name: Name of the q-function, also serves as the variable scope.
-        hidden_sizes: Output dimension of dense layer(s).
+        env_spec (garage.envs.env_spec.EnvSpec): Environment specification.
+        name (str): Name of the q-function, also serves as the variable scope.
+        hidden_sizes (list[int]): Output dimension of dense layer(s).
+            For example, (32, 32) means the MLP of this q-function consists of
+            two hidden layers, each with 32 hidden units.
         hidden_nonlinearity (callable): Activation function for intermediate
             dense layer(s). It should return a tf.Tensor. Set it to
             None to maintain a linear activation.
@@ -36,7 +38,7 @@ class DiscreteMLPQFunction(QFunction2):
         output_b_init (callable): Initializer function for the bias
             of output dense layer(s). The function should return a
             tf.Tensor.
-        layer_normalization: Bool for using layer normalization or not.
+        layer_normalization (bool): Bool for using layer normalization.
     """
 
     def __init__(self,
@@ -114,8 +116,8 @@ class DiscreteMLPQFunction(QFunction2):
         Symbolic graph for q-network.
 
         Args:
-            state_input: The state input tf.Tensor to the network.
-            name: Network variable scope.
+            state_input (tf.Tensor): The state input tf.Tensor to the network.
+            name (str): Network variable scope.
 
         Return:
             The tf.Tensor output of Discrete MLP QFunction.
@@ -128,7 +130,7 @@ class DiscreteMLPQFunction(QFunction2):
         Return a clone of the Q-function.
 
         Args:
-            name: Name of the newly created q-function.
+            name (str): Name of the newly created q-function.
         """
         return self.__class__(
             name=name,
