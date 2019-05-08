@@ -1,30 +1,31 @@
 #!/usr/bin/env python3
-
-import argparse
 import os
 import subprocess
 
+import click
+
 from garage.experiment import to_local_command
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        'snapshot_dir',
-        type=str,
-        help='Directory of the pickle file to resume experiment from.')
-    parser.add_argument(
-        '--resume_epoch',
-        type=str,
-        default='last',
-        help='Index of epoch to restore from. '
-        'Can be "first", "last" or a number. '
-        'Not applicable when snapshot_mode="last"')
-    args = parser.parse_args()
 
+@click.group()
+def cli():
+    pass
+
+
+@cli.command()
+@click.option(
+    '--snapshot_dir',
+    required=True,
+    help='Directory of the pickle file to resume experiment from.')
+@click.option(
+    '--resume_epoch',
+    default='last',
+    help='Index of epoch to restore from. Can be "first", "last" or a number. '
+    'Not applicable when snapshot_mode="last"')
+def resume(snapshot_dir, resume_epoch):
     params = dict()
-    params['resume_from_dir'] = args.snapshot_dir
-    if args.resume_epoch is not None:
-        params['resume_epoch'] = args.resume_epoch
+    params['resume_from_dir'] = snapshot_dir
+    params['resume_epoch'] = resume_epoch
     command = to_local_command(
         params, script='garage.experiment.experiment_wrapper')
     print(command)
@@ -34,3 +35,7 @@ if __name__ == '__main__':
         print(e)
         if isinstance(e, KeyboardInterrupt):
             raise
+
+
+if __name__ == '__main__':
+    cli()
