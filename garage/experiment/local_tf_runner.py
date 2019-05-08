@@ -4,6 +4,7 @@ The local runner for tensorflow algorithms.
 A runner setup context for algorithms during initialization and
 pipelines data between sampler and algorithm during training.
 """
+import copy
 import time
 from types import SimpleNamespace
 
@@ -223,19 +224,15 @@ class LocalRunner:
             A SimpleNamespace for train()'s arguments.
 
         Examples:
-            1. Resume via command line. (Recommended)
-            ./examples/resume_training.py --snapshot_dir /saved/dir
-
-            2. Resume experiment immediately.
+            1. Resume experiment immediately.
             with LocalRunner() as runner:
                 runner.restore(snapshot_dir)
                 runner.resume()
 
-            3. Resume experiment with modified training arguments.
+            2. Resume experiment with modified training arguments.
              with LocalRunner() as runner:
-                args = runner.restore(snapshot_dir, resume_now=False)
-                args.n_epochs = 20
-                runner.resume()
+                runner.restore(snapshot_dir, resume_now=False)
+                runner.resume(n_epochs=20)
 
         Note:
             When resume via command line, new snapshots will be
@@ -274,7 +271,7 @@ class LocalRunner:
         logger.log(fmt.format('pause_for_plot', pause_for_plot))
 
         self.train_args.start_epoch = last_epoch + 1
-        return self.train_args
+        return copy.copy(self.train_args)
 
     def log_diagnostics(self, pause_for_plot=False):
         """Log diagnostics.
@@ -297,8 +294,7 @@ class LocalRunner:
               n_epoch_cycles=1,
               plot=False,
               store_paths=False,
-              pause_for_plot=False,
-              **kwargs):
+              pause_for_plot=False):
         """Start training.
 
         Args:
@@ -322,19 +318,37 @@ class LocalRunner:
             plot=plot,
             store_paths=store_paths,
             pause_for_plot=pause_for_plot,
-            **kwargs)
+            start_epoch=0)
 
-    def resume(self):
+    def resume(self,
+               n_epochs=None,
+               batch_size=None,
+               n_epoch_cycles=None,
+               plot=None,
+               store_paths=None,
+               pause_for_plot=None):
         """Resume from restored experiment.
+
+        This method provides the same interface as train().
+
+        If not specified, an argument will default to the
+        saved arguments from the last call to train().
 
         Returns:
             The average return in last epoch cycle.
 
         """
-        assert self.train_args is not None, \
-            'You must call restore() before resume().'
+        assert self.train_args is not None, (
+            'You must call restore() before resume().')
 
-        return self._train(**self.train_args.__dict__)
+        return self._train(
+            n_epochs=n_epochs or self.train_args.n_epochs,
+            n_epoch_cycles=n_epoch_cycles or self.train_args.n_epoch_cycles,
+            batch_size=batch_size or self.train_args.batch_size,
+            plot=plot or self.train_args.plot,
+            store_paths=store_paths or self.train_args.store_paths,
+            pause_for_plot=pause_for_plot or self.train_args.pause_for_plot,
+            start_epoch=self.train_args.start_epoch)
 
     def _train(self,
                n_epochs,

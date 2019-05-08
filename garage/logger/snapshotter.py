@@ -96,14 +96,11 @@ class Snapshotter:
             dict: Loaded snapshot
 
         """
-        if itr is None:
-            itr = 'last'
-
         if isinstance(itr, int) or itr.isdigit():
             snapshot_file = osp.join(self._snapshot_dir,
                                      'itr_{}.pkl'.format(itr))
         else:
-            if not (itr in ('last', 'first')):
+            if itr not in ('last', 'first'):
                 raise ValueError(
                     "itr should be an integer or 'last' or 'first'")
 

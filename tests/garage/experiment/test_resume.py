@@ -1,6 +1,8 @@
 import shutil
 import tempfile
 
+import numpy as np
+
 from garage.experiment import LocalRunner
 from garage.logger import snapshotter
 from garage.np.baselines import LinearFeatureBaseline
@@ -47,14 +49,14 @@ class TestResume(TfGraphTestCase):
 
         with LocalRunner() as runner:
             args = runner.restore(folder)
-            assert (runner.policy.get_param_values() == policy_params).all(), \
-                'Policy parameters should persist'
-            assert args.n_epochs == 5, \
-                'Snapshot should save training parameters'
-            assert args.start_epoch == 5, \
-                'Last experiment should end at 5th iterations'
+            assert np.isclose(
+                runner.policy.get_param_values(),
+                policy_params).all(), 'Policy parameters should persist'
+            assert args.n_epochs == 5, (
+                'Snapshot should save training parameters')
+            assert args.start_epoch == 5, (
+                'Last experiment should end at 5th iterations')
 
-            args.n_epochs = 10
-            runner.resume()
+            runner.resume(n_epochs=10)
 
         shutil.rmtree(folder)
