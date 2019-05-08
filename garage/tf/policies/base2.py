@@ -19,10 +19,7 @@ class Policy2:
         self._env_spec = env_spec
         self._variable_scope = None
         self._cached_params = {}
-        self._cached_param_dtypes = {}
         self._cached_param_shapes = {}
-        self._cached_assign_ops = {}
-        self._cached_assign_placeholders = {}
 
     # Should be implemented by all policies
     def get_action(self, observation):
@@ -114,16 +111,6 @@ class Policy2:
         """Get the trainable variables."""
         return self.get_trainable_vars()
 
-    def get_param_dtypes(self, **tags):
-        tag_tuple = tuple(sorted(list(tags.items()), key=lambda x: x[0]))
-        if tag_tuple not in self._cached_param_dtypes:
-            params = self.get_params(**tags)
-            param_values = tf.get_default_session().run(params)
-            self._cached_param_dtypes[tag_tuple] = [
-                val.dtype for val in param_values
-            ]
-        return self._cached_param_dtypes[tag_tuple]
-
     def get_param_shapes(self, **tags):
         tag_tuple = tuple(sorted(list(tags.items()), key=lambda x: x[0]))
         if tag_tuple not in self._cached_param_shapes:
@@ -140,21 +127,10 @@ class Policy2:
         return flatten_tensors(param_values)
 
     def set_param_values(self, param_values, name=None, **tags):
-        ops = []
-        feed_dict = dict()
         param_values = unflatten_tensors(param_values,
                                          self.get_param_shapes(**tags))
         for param, value in zip(self.get_params(**tags), param_values):
-            if param not in self._cached_assign_ops:
-                assign_placeholder = tf.placeholder(
-                    dtype=param.dtype.base_dtype)
-                assign_op = tf.assign(param, assign_placeholder)
-                self._cached_assign_ops[param] = assign_op
-                self._cached_assign_placeholders[param] = assign_placeholder
-            ops.append(self._cached_assign_ops[param])
-            feed_dict[self._cached_assign_placeholders[param]] = value
-
-        tf.get_default_session().run(ops, feed_dict=feed_dict)
+            param.load(value)
 
     def flat_to_params(self, flattened_params, **tags):
         return unflatten_tensors(flattened_params,
@@ -163,15 +139,13 @@ class Policy2:
     def __getstate__(self):
         """Object.__getstate__."""
         new_dict = self.__dict__.copy()
-        del new_dict['_cached_assign_ops']
-        del new_dict['_cached_assign_placeholders']
+        del new_dict['_cached_params']
         return new_dict
 
     def __setstate__(self, state):
         """Object.__setstate__."""
+        self._cached_params = {}
         self.__dict__.update(state)
-        self._cached_assign_ops = {}
-        self._cached_assign_placeholders = {}
 
 
 class StochasticPolicy2(Policy2):
