@@ -30,8 +30,8 @@ class Regressor2(abc.ABC):
         Fit with input data xs and label ys.
 
         Args:
-            xs: Input data.
-            ys: Label of input data.
+            xs (numpy.ndarray): Input data.
+            ys (numpy.ndarray): Label of input data.
         """
         raise NotImplementedError
 
@@ -40,7 +40,7 @@ class Regressor2(abc.ABC):
         Predict ys based on input xs.
 
         Args:
-            xs: Input data.
+            xs (numpy.ndarray): Input data.
 
         Return:
             The predicted ys.

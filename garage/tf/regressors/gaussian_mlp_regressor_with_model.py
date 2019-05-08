@@ -205,7 +205,13 @@ class GaussianMLPRegressorWithModel(StochasticRegressor2):
                 self._optimizer.update_opt(**optimizer_args)
 
     def fit(self, xs, ys):
-        """Fit with input data xs and label ys."""
+        """
+        Fit with input data xs and label ys.
+
+        Args:
+            xs (numpy.ndarray): Input data.
+            ys (numpy.ndarray): Label of input data.
+        """
         if self._subsample_factor < 1:
             num_samples_tot = xs.shape[0]
             idx = np.random.randint(
@@ -242,11 +248,13 @@ class GaussianMLPRegressorWithModel(StochasticRegressor2):
 
     def predict(self, xs):
         """
-        Return the maximum likelihood estimate of the predicted y.
+        Predict ys based on input xs.
 
-        :param xs:
-        :return:
+        Args:
+            xs (numpy.ndarray): Input data.
 
+        Return:
+            The predicted ys.
         """
         return self._f_predict(xs)
 
@@ -255,9 +263,12 @@ class GaussianMLPRegressorWithModel(StochasticRegressor2):
         Symbolic graph of the log likelihood.
 
         Args:
-            x_var: Input tf.Tensor for the input data.
-            y_var: Input tf.Tensor for the label of data.
-            name: Name of the new graph.
+            x_var (tf.Tensor): Input tf.Tensor for the input data.
+            y_var (tf.Tensor): Input tf.Tensor for the label of data.
+            name (str): Name of the new graph.
+
+        Return:
+            tf.Tensor output of the symbolic log likelihood.
         """
         with tf.variable_scope(self._variable_scope):
             self.model.build(x_var, name=name)
