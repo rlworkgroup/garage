@@ -23,10 +23,7 @@ class Regressor2(abc.ABC):
         self._name = name
         self._variable_scope = None
         self._cached_params = {}
-        self._cached_param_dtypes = {}
         self._cached_param_shapes = {}
-        self._cached_assign_ops = {}
-        self._cached_assign_placeholders = {}
 
     def fit(self, xs, ys):
         """
@@ -70,17 +67,6 @@ class Regressor2(abc.ABC):
             self._cached_params[tag_tuple] = self.get_params_internal(**tags)
         return self._cached_params[tag_tuple]
 
-    def get_param_dtypes(self, **tags):
-        """Get the list of dtypes for the parameters."""
-        tag_tuple = tuple(sorted(list(tags.items()), key=lambda x: x[0]))
-        if tag_tuple not in self._cached_param_dtypes:
-            params = self.get_params(**tags)
-            param_values = tf.get_default_session().run(params)
-            self._cached_param_dtypes[tag_tuple] = [
-                val.dtype for val in param_values
-            ]
-        return self._cached_param_dtypes[tag_tuple]
-
     def get_param_shapes(self, **tags):
         """Get the list of shapes for the parameters."""
         tag_tuple = tuple(sorted(list(tags.items()), key=lambda x: x[0]))
@@ -101,45 +87,20 @@ class Regressor2(abc.ABC):
     def set_param_values(self, flattened_params, name=None, **tags):
         """Set the values for the parameters."""
         with tf.name_scope(name, 'set_param_values', [flattened_params]):
-            debug = tags.pop('debug', False)
             param_values = unflatten_tensors(flattened_params,
                                              self.get_param_shapes(**tags))
-            ops = []
-            feed_dict = dict()
-            for param, dtype, value in zip(
-                    self.get_params(**tags), self.get_param_dtypes(**tags),
-                    param_values):
-                if param not in self._cached_assign_ops:
-                    assign_placeholder = tf.placeholder(
-                        dtype=param.dtype.base_dtype)
-                    assign_op = tf.assign(param, assign_placeholder)
-                    self._cached_assign_ops[param] = assign_op
-                    self._cached_assign_placeholders[
-                        param] = assign_placeholder
-                ops.append(self._cached_assign_ops[param])
-                feed_dict[self._cached_assign_placeholders[
-                    param]] = value.astype(dtype)
-                if debug:
-                    print('setting value of %s' % param.name)
-            tf.get_default_session().run(ops, feed_dict=feed_dict)
+            for param, value in zip(self.get_params(**tags), param_values):
+                param.load(value)
 
     def __getstate__(self):
         """Object.__getstate__."""
         new_dict = self.__dict__.copy()
         del new_dict['_cached_params']
-        del new_dict['_cached_param_dtypes']
-        del new_dict['_cached_param_shapes']
-        del new_dict['_cached_assign_ops']
-        del new_dict['_cached_assign_placeholders']
         return new_dict
 
     def __setstate__(self, state):
         """Object.__setstate__."""
         self._cached_params = {}
-        self._cached_param_dtypes = {}
-        self._cached_param_shapes = {}
-        self._cached_assign_ops = {}
-        self._cached_assign_placeholders = {}
         self.__dict__.update(state)
 
 
