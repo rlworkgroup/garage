@@ -11,7 +11,7 @@ class AtariEnv(gym.Wrapper):
         environment, which is a LazyFrames object into numpy arrays.
 
     Args:
-        env: The environment to be wrapped.
+        env (gym.Env): The environment to be wrapped.
     """
 
     def __init__(self, env):

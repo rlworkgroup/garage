@@ -21,17 +21,17 @@ class DQN(OffPolicyRLAlgorithm):
     DQN.
 
     Args:
-        env: Environment spec.
-        max_path_length: Maximum path length. The episode will terminate when
-            length of trajectory reaches max_path_length.
-        qf_lr: Learning rate for Q-Function.
-        qf_optimizer: Optimizer for Q-Function.
-        discount: Discount factor for rewards.
-        name: Name of the algorithm.
-        target_network_update_freq: Frequency of updating target network.
-        grad_norm_clipping: How much to clip gradient.
-        double_q: Bool for using double q-network.
-        print_freq: Log every print_freq steps.
+        env_spec (garage.envs.env_spec.EnvSpec): Environment specification.
+        max_path_length (int): Maximum path length. The episode will terminate
+            when length of trajectory reaches max_path_length.
+        qf_lr (float): Learning rate for Q-Function.
+        qf_optimizer (tf.Optimizer): Optimizer for Q-Function.
+        discount (float): Discount factor for rewards.
+        name (str): Name of the algorithm.
+        target_network_update_freq (int): Frequency of updating target network.
+        grad_norm_clipping (float): How much to clip gradient. If None, no
+            gradient clipping is done.
+        double_q (bool): Bool for using double q-network.
     """
 
     def __init__(self,

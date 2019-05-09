@@ -10,23 +10,30 @@ class MLPDuelingModel(Model):
     MLP Model with dueling network structure.
 
     Args:
-        input_var: Input tf.Tensor to the MLP.
-        output_dim: Dimension of the network output.
-        hidden_sizes: Output dimension of dense layer(s).
-        name: variable scope of the mlp.
-        hidden_nonlinearity: Activation function for
-                    intermediate dense layer(s).
-        hidden_w_init: Initializer function for the weight
-                    of intermediate dense layer(s).
-        hidden_b_init: Initializer function for the bias
-                    of intermediate dense layer(s).
-        output_nonlinearity: Activation function for
-                    output dense layer.
-        output_w_init: Initializer function for the weight
-                    of output dense layer(s).
-        output_b_init: Initializer function for the bias
-                    of output dense layer(s).
-        layer_normalization: Bool for using layer normalization or not.
+        output_dim (int): Dimension of the network output.
+        hidden_sizes (list[int]): Output dimension of dense layer(s).
+            For example, (32, 32) means this MLP consists of two
+            hidden layers, each with 32 hidden units.
+        name (str): Model name, also the variable scope.
+        hidden_nonlinearity (callable): Activation function for intermediate
+            dense layer(s). It should return a tf.Tensor. Set it to
+            None to maintain a linear activation.
+        hidden_w_init (callable): Initializer function for the weight
+            of intermediate dense layer(s). The function should return a
+            tf.Tensor.
+        hidden_b_init (callable): Initializer function for the bias
+            of intermediate dense layer(s). The function should return a
+            tf.Tensor.
+        output_nonlinearity (callable): Activation function for output dense
+            layer. It should return a tf.Tensor. Set it to None to
+            maintain a linear activation.
+        output_w_init (callable): Initializer function for the weight
+            of output dense layer(s). The function should return a
+            tf.Tensor.
+        output_b_init (callable): Initializer function for the bias
+            of output dense layer(s). The function should return a
+            tf.Tensor.
+        layer_normalization (bool): Bool for using layer normalization or not.
     """
 
     def __init__(self,

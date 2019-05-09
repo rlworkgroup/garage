@@ -9,7 +9,7 @@ class FireReset(gym.Wrapper):
     Take action "fire" on reset.
 
     Args:
-        env: The environment to be wrapped.
+        env (gym.Env): The environment to be wrapped.
     """
 
     def __init__(self, env):

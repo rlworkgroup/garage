@@ -21,12 +21,12 @@ class EpsilonGreedyStrategy(ExplorationStrategy):
     ϵ    : select a random action from an uniform distribution.
 
     Args:
-        env_spec: Environment specification
-        total_timesteps: Total steps in the training, equivalent to
+        env_spec (garage.envs.env_spec.EnvSpec): Environment specification.
+        total_timesteps (int): Total steps in the training, equivalent to
             max_path_length * n_epochs.
-        max_epsilon: The maximum(starting) value of epsilon.
-        min_epsilon: The minimum(terminal) value of epsilon.
-        decay_ratio: Fraction of total steps for epsilon decay.
+        max_epsilon (float): The maximum(starting) value of epsilon.
+        min_epsilon (float): The minimum(terminal) value of epsilon.
+        decay_ratio (float): Fraction of total steps for epsilon decay.
     """
 
     def __init__(self,

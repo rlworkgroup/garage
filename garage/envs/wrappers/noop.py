@@ -11,8 +11,8 @@ class Noop(gym.Wrapper):
     No-op is assumed to be action 0.
 
     Args:
-        env: The environment to be wrapped.
-        noop_max: Maximum number no-op to be performed on reset.
+        env (gym.Env): The environment to be wrapped.
+        noop_max (int): Maximum number no-op to be performed on reset.
     """
 
     def __init__(self, env, noop_max=30):

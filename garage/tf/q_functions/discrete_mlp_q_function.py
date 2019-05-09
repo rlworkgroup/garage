@@ -129,6 +129,9 @@ class DiscreteMLPQFunction(QFunction2):
         """
         Return a clone of the Q-function.
 
+        It only copies the configuration of the Q-function,
+        not the parameters.
+
         Args:
             name (str): Name of the newly created q-function.
         """
