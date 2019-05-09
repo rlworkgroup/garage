@@ -182,23 +182,3 @@ class OffPolicyVectorizedSampler(BatchSampler):
                         self.algo.es.reset()
             obses = next_obses
         return paths
-
-    @overrides
-    def process_samples(self, itr, paths):
-        """Return processed sample data based on the collected paths.
-
-        Args:
-            itr(int): Iteration number.
-            paths(list): A list of collected paths.
-
-        Returns:
-            list: Processed sample data.
-        """
-        success_history = [
-            path['success_count'] / path['running_length'] for path in paths
-        ]
-        undiscounted_returns = [path['undiscounted_return'] for path in paths]
-        samples_data = dict(
-            undiscounted_returns=undiscounted_returns,
-            success_history=success_history)
-        return samples_data

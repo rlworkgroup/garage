@@ -399,7 +399,6 @@ class LocalRunner:
             with logger.prefix('epoch #%d | ' % epoch):
                 for cycle in range(n_epoch_cycles):
                     paths = self.obtain_samples(itr, batch_size)
-                    paths = self.sampler.process_samples(itr, paths)
                     last_return = self.algo.train_once(itr, paths)
                     itr += 1
                 self.save(epoch, paths if store_paths else None)

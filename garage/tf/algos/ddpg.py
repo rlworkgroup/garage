@@ -193,10 +193,19 @@ class DDPG(OffPolicyRLAlgorithm):
         self.init_opt()
 
     def train_once(self, itr, paths):
+        paths = self.process_samples(itr, paths)
+
         epoch = itr / self.n_epoch_cycles
 
-        self.episode_rewards.extend(paths['undiscounted_returns'])
-        self.success_history.extend(paths['success_history'])
+        self.episode_rewards.extend([
+            path for path, complete in zip(paths['undiscounted_returns'],
+                                           paths['complete']) if complete
+        ])
+        self.success_history.extend([
+            path for path, complete in zip(paths['success_history'],
+                                           paths['complete']) if complete
+        ])
+
         last_average_return = np.mean(self.episode_rewards)
         self.log_diagnostics(paths)
         for train_itr in range(self.n_train_steps):

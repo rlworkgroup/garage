@@ -149,6 +149,7 @@ class DQN(OffPolicyRLAlgorithm):
 
     def train_once(self, itr, paths):
         """Train the algorithm once."""
+        paths = self.process_samples(itr, paths)
         epoch = itr / self.n_epoch_cycles
 
         self.episode_rewards.extend(paths['undiscounted_returns'])

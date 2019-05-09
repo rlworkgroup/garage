@@ -1,135 +1,99 @@
-from dowel import logger, tabular
+import collections
 
-from garage.experiment import snapshotter
+from dowel import tabular
+import numpy as np
+
+from garage.misc import special, tensor_utils
 from garage.np.algos.base import RLAlgorithm
-from garage.plotter import Plotter
-from garage.sampler import BatchSampler
 
 
 class BatchPolopt(RLAlgorithm):
-    """
-    Base class for batch sampling-based policy optimization methods.
-    This includes various policy gradient methods like vpg, npg, ppo, trpo,
-    etc.
+    """A batch-based algorithm interleaves sampling and policy optimization.
+    In one round of training, the runner will first instruct the sampler to do
+    environment rollout and the sampler will collect a given number of samples
+    (in terms of environment interactions). The collected paths are then
+    absorbed by `RLAlgorithm.train_once()` and an algorithm performs one step
+    of policy optimization.
+    The updated policy will then be used in the next round of sampling.
+
+    Args:
+        policy (garage.tf.policies.base.Policy): Policy.
+        baseline (garage.tf.baselines.Baseline): The baseline.
+        discount (float): Discount.
+        max_path_length (int): Maximum length of a single rollout.
     """
 
-    def __init__(self,
-                 env,
-                 policy,
-                 baseline,
-                 scope=None,
-                 n_itr=500,
-                 start_itr=0,
-                 batch_size=5000,
-                 max_path_length=500,
-                 discount=0.99,
-                 gae_lambda=1,
-                 plot=False,
-                 pause_for_plot=False,
-                 center_adv=True,
-                 positive_adv=False,
-                 store_paths=False,
-                 sampler_cls=None,
-                 sampler_args=None,
-                 **kwargs):
-        """
-        :param env: Environment
-        :param policy: Policy
-        :type policy: Policy
-        :param baseline: Baseline
-        :param scope: Scope for identifying the algorithm. Must be specified if
-         running multiple algorithms
-        simultaneously, each using different environments and policies
-        :param n_itr: Number of iterations.
-        :param start_itr: Starting iteration.
-        :param batch_size: Number of samples per iteration.
-        :param max_path_length: Maximum length of a single rollout.
-        :param discount: Discount.
-        :param gae_lambda: Lambda used for generalized advantage estimation.
-        :param plot: Plot evaluation run after each iteration.
-        :param pause_for_plot: Whether to pause before contiuing when plotting.
-        :param center_adv: Whether to rescale the advantages so that they have
-         mean 0 and standard deviation 1.
-        :param positive_adv: Whether to shift the advantages so that they are
-         always positive. When used in
-        conjunction with center_adv the advantages will be standardized before
-         shifting.
-        :param store_paths: Whether to save all paths data to the snapshot.
-        """
-        self.env = env
+    def __init__(self, policy, baseline, discount, max_path_length):
         self.policy = policy
         self.baseline = baseline
-        self.scope = scope
-        self.n_itr = n_itr
-        self.current_itr = start_itr
-        self.batch_size = batch_size
-        self.max_path_length = max_path_length
         self.discount = discount
-        self.gae_lambda = gae_lambda
-        self.plot = plot
-        self.pause_for_plot = pause_for_plot
-        self.center_adv = center_adv
-        self.positive_adv = positive_adv
-        self.store_paths = store_paths
-        if sampler_cls is None:
-            sampler_cls = BatchSampler
-        if sampler_args is None:
-            sampler_args = dict()
-        self.sampler = sampler_cls(self, **sampler_args)
+        self.max_path_length = max_path_length
 
-    def start_worker(self):
-        self.sampler.start_worker()
+        self.episode_reward_mean = collections.deque(maxlen=100)
 
-    def shutdown_worker(self):
-        self.sampler.shutdown_worker()
+    def process_samples(self, itr, paths):
+        """Return processed sample data based on the collected paths.
 
-    def train(self):
-        plotter = Plotter()
-        if self.plot:
-            plotter.init_plot(self.env, self.policy)
-        self.start_worker()
-        self.init_opt()
-        for itr in range(self.current_itr, self.n_itr):
-            with logger.prefix('itr #{} | '.format(itr)):
-                paths = self.sampler.obtain_samples(itr)
-                samples_data = self.sampler.process_samples(itr, paths)
-                self.log_diagnostics(paths)
-                self.optimize_policy(itr, samples_data)
-                logger.log('Saving snapshot...')
-                params = self.get_itr_snapshot(itr, samples_data)
-                self.current_itr = itr + 1
-                params['algo'] = self
-                if self.store_paths:
-                    params['paths'] = samples_data['paths']
-                snapshotter.save_itr_params(itr, params)
-                logger.log('saved')
-                logger.log(tabular)
-                if self.plot:
-                    plotter.update_plot(self.policy, self.max_path_length)
-                    if self.pause_for_plot:
-                        input('Plotting evaluation run: Press Enter to '
-                              'continue...')
+        Args:
+            itr (int): Iteration number.
+            paths (list[dict]): A list of collected paths
 
-        plotter.close()
-        self.shutdown_worker()
-
-    def log_diagnostics(self, paths):
-        self.policy.log_diagnostics(paths)
-        self.baseline.log_diagnostics(paths)
-
-    def init_opt(self):
+        Returns:
+            dict: Processed sample data, with key
+                * average_return: (float)
         """
-        Initialize the optimization procedure. If using tf, this may
-        include declaring all the variables and compiling functions
-        """
-        raise NotImplementedError
+        baselines = []
+        returns = []
 
-    def get_itr_snapshot(self, itr, samples_data):
-        """
-        Returns all the data that should be saved in the snapshot for this
-        iteration.
-        """
-        raise NotImplementedError
+        max_path_length = self.max_path_length
 
-    def optimize_policy(self, itr, samples_data):
-        raise NotImplementedError
+        if hasattr(self.baseline, 'predict_n'):
+            all_path_baselines = self.baseline.predict_n(paths)
+        else:
+            all_path_baselines = [
+                self.baseline.predict(path) for path in paths
+            ]
+
+        for idx, path in enumerate(paths):
+            # baselines
+            path['baselines'] = all_path_baselines[idx]
+            baselines.append(path['baselines'])
+
+            # returns
+            path['returns'] = special.discount_cumsum(path['rewards'],
+                                                      self.discount)
+            returns.append(path['returns'])
+
+        agent_infos = [path['agent_infos'] for path in paths]
+        agent_infos = tensor_utils.stack_tensor_dict_list([
+            tensor_utils.pad_tensor_dict(p, max_path_length)
+            for p in agent_infos
+        ])
+
+        valids = [np.ones_like(path['returns']) for path in paths]
+        valids = tensor_utils.pad_tensor_n(valids, max_path_length)
+
+        average_discounted_return = (np.mean(
+            [path['returns'][0] for path in paths]))
+
+        undiscounted_returns = [sum(path['rewards']) for path in paths]
+        self.episode_reward_mean.extend(undiscounted_returns)
+
+        ent = np.sum(self.policy.distribution.entropy(agent_infos) *
+                     valids) / np.sum(valids)
+
+        samples_data = dict(average_return=np.mean(undiscounted_returns))
+
+        tabular.record('Iteration', itr)
+        tabular.record('AverageDiscountedReturn', average_discounted_return)
+        tabular.record('AverageReturn', np.mean(undiscounted_returns))
+        tabular.record('Extras/EpisodeRewardMean',
+                       np.mean(self.episode_reward_mean))
+        tabular.record('NumTrajs', len(paths))
+        tabular.record('Entropy', ent)
+        tabular.record('Perplexity', np.exp(ent))
+        tabular.record('StdReturn', np.std(undiscounted_returns))
+        tabular.record('MaxReturn', np.max(undiscounted_returns))
+        tabular.record('MinReturn', np.min(undiscounted_returns))
+
+        return samples_data

@@ -1,10 +1,10 @@
 from dowel import logger, tabular
 import numpy as np
 
-from garage.np.algos.base import RLAlgorithm
+from garage.np.algos import BatchPolopt
 
 
-class CEM(RLAlgorithm):
+class CEM(BatchPolopt):
     r"""Cross Entropy Method.
 
     CEM works by iteratively optimizing a gaussian distribution of policy.
@@ -23,16 +23,17 @@ class CEM(RLAlgorithm):
         This implementation leverage n_epoch_cycles to do rollouts for a single
         policy in an epoch cycle.
 
-    Attributes:
-        env_spec(garage.envs.EnvSpec): Environment specification.
-        policy(garage.np.policies.Policy): Action policy.
-        baseline(): Baseline for GAE (Generalized Advantage Estimation).
-        n_samples(int): Number of policies sampled in one epoch.
-        max_path_length(int):  Maximum length of a single rollout.
-        discount(float): Environment reward discount.
-        init_std(float): Initial std for policy param distribution.
-        extra_std(float): Decaying std added to param distribution.
-        extra_decay_time(float): Epochs that it takes to decay extra std.
+    Args:
+        env_spec (garage.envs.EnvSpec): Environment specification.
+        policy (garage.np.policies.Policy): Action policy.
+        baseline(garage.np.baselines.Baseline): Baseline for GAE
+            (Generalized Advantage Estimation).
+        n_samples (int): Number of policies sampled in one epoch.
+        max_path_length (int): Maximum length of a single rollout.
+        discount (float): Environment reward discount.
+        init_std (float): Initial std for policy param distribution.
+        extra_std (float): Decaying std added to param distribution.
+        extra_decay_time (float): Epochs that it takes to decay extra std.
     """
 
     def __init__(self,
@@ -40,24 +41,20 @@ class CEM(RLAlgorithm):
                  policy,
                  baseline,
                  n_samples,
-                 gae_lambda=1,
-                 max_path_length=500,
                  discount=0.99,
+                 max_path_length=500,
                  init_std=1,
                  best_frac=0.05,
                  extra_std=1.,
                  extra_decay_time=100):
+        super().__init__(policy, baseline, discount, max_path_length)
         self.env_spec = env_spec
-        self.policy = policy
-        self.baseline = baseline
         self.n_samples = n_samples
-        self.extra_decay_time = extra_decay_time
-        self.extra_std = extra_std
-        self.best_frac = best_frac
+
         self.init_std = init_std
-        self.discount = discount
-        self.gae_lambda = gae_lambda
-        self.max_path_length = max_path_length
+        self.best_frac = best_frac
+        self.extra_std = extra_std
+        self.extra_decay_time = extra_decay_time
 
         # epoch-wise
         self.cur_std = self.init_std
@@ -81,6 +78,8 @@ class CEM(RLAlgorithm):
             self.n_params) * sample_std + self.cur_mean
 
     def train_once(self, itr, paths):
+        paths = self.process_samples(itr, paths)
+
         epoch = itr // self.n_samples
         i_sample = itr - epoch * self.n_samples
         tabular.record('Epoch', epoch)
