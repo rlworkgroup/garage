@@ -18,7 +18,7 @@ class TestTRPO(TfGraphTestCase):
     def test_trpo_pendulum(self):
         """Test TRPO with Pendulum environment."""
         with LocalRunner(self.sess) as runner:
-            env = TfEnv(normalize(gym.make("InvertedDoublePendulum-v2")))
+            env = TfEnv(normalize(gym.make('InvertedDoublePendulum-v2')))
             policy = GaussianMLPPolicy(
                 env_spec=env.spec,
                 hidden_sizes=(64, 64),
@@ -45,7 +45,7 @@ class TestTRPO(TfGraphTestCase):
 
     def test_trpo_unknown_kl_constraint(self):
         """Test TRPO with unkown KL constraints."""
-        env = TfEnv(normalize(gym.make("InvertedDoublePendulum-v2")))
+        env = TfEnv(normalize(gym.make('InvertedDoublePendulum-v2')))
         policy = GaussianMLPPolicy(
             env_spec=env.spec,
             hidden_sizes=(64, 64),
@@ -68,8 +68,8 @@ class TestTRPO(TfGraphTestCase):
                 gae_lambda=0.98,
                 policy_ent_coeff=0.0,
                 plot=False,
-                kl_constraint="random kl_constraint",
+                kl_constraint='random kl_constraint',
             )
-        assert "Unknown KLConstraint" in str(context.exception)
+        assert 'Unknown KLConstraint' in str(context.exception)
 
         env.close()

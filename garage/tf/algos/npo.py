@@ -283,6 +283,8 @@ class NPO(BatchPolopt):
                     i.flat.valid_var,
                     name='policy_dist_info_valid')
 
+                policy_dist_info = policy_dist_info_valid
+
             # Calculate loss function and KL divergence
             with tf.name_scope('kl'):
                 if self.policy.recurrent:
@@ -390,8 +392,7 @@ class NPO(BatchPolopt):
                 policy_dist_info = self.policy.dist_info_sym(
                     i.obs_var,
                     i.policy_state_info_vars,
-                    name='policy_dist_info')
-
+                    name='policy_dist_info_2')
                 policy_neg_log_likeli = self.policy.distribution.log_likelihood_sym(  # noqa: E501
                     i.action_var,
                     policy_dist_info,

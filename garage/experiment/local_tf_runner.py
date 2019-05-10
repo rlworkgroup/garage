@@ -134,7 +134,7 @@ class LocalRunner:
 
     def initialize_tf_vars(self):
         """Initialize all uninitialized variables in session."""
-        with tf.name_scope("initialize_tf_vars"):
+        with tf.name_scope('initialize_tf_vars'):
             uninited_set = [
                 e.decode()
                 for e in self.sess.run(tf.report_uninitialized_variables())
@@ -185,7 +185,7 @@ class LocalRunner:
         """
         assert self.has_setup
 
-        logger.log("Saving snapshot...")
+        logger.log('Saving snapshot...')
         params = self.algo.get_itr_snapshot(itr)
         params['env'] = self.env
         if paths:

@@ -1,4 +1,7 @@
 """Policy base classes without Parameterized."""
+import tensorflow as tf
+
+from garage.misc.tensor_utils import flatten_tensors, unflatten_tensors
 
 
 class Policy2:
@@ -15,7 +18,8 @@ class Policy2:
         self._name = name
         self._env_spec = env_spec
         self._variable_scope = None
-        self._models = []
+        self._cached_params = {}
+        self._cached_param_shapes = {}
 
     # Should be implemented by all policies
     def get_action(self, observation):
@@ -102,6 +106,46 @@ class Policy2:
     def get_global_vars(self):
         """Get global vars."""
         return self._variable_scope.global_variables()
+
+    def get_params(self, trainable=True):
+        """Get the trainable variables."""
+        return self.get_trainable_vars()
+
+    def get_param_shapes(self, **tags):
+        tag_tuple = tuple(sorted(list(tags.items()), key=lambda x: x[0]))
+        if tag_tuple not in self._cached_param_shapes:
+            params = self.get_params(**tags)
+            param_values = tf.get_default_session().run(params)
+            self._cached_param_shapes[tag_tuple] = [
+                val.shape for val in param_values
+            ]
+        return self._cached_param_shapes[tag_tuple]
+
+    def get_param_values(self, **tags):
+        params = self.get_params(**tags)
+        param_values = tf.get_default_session().run(params)
+        return flatten_tensors(param_values)
+
+    def set_param_values(self, param_values, name=None, **tags):
+        param_values = unflatten_tensors(param_values,
+                                         self.get_param_shapes(**tags))
+        for param, value in zip(self.get_params(**tags), param_values):
+            param.load(value)
+
+    def flat_to_params(self, flattened_params, **tags):
+        return unflatten_tensors(flattened_params,
+                                 self.get_param_shapes(**tags))
+
+    def __getstate__(self):
+        """Object.__getstate__."""
+        new_dict = self.__dict__.copy()
+        del new_dict['_cached_params']
+        return new_dict
+
+    def __setstate__(self, state):
+        """Object.__setstate__."""
+        self._cached_params = {}
+        self.__dict__.update(state)
 
 
 class StochasticPolicy2(Policy2):

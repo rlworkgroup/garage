@@ -170,11 +170,11 @@ class GaussianMLPPolicyWithModel(StochasticPolicy2):
 
     def __getstate__(self):
         """Object.__getstate__."""
-        new_dict = self.__dict__.copy()
+        new_dict = super().__getstate__()
         del new_dict['_f_dist']
         return new_dict
 
     def __setstate__(self, state):
         """Object.__setstate__."""
-        self.__dict__.update(state)
+        super().__setstate__(state)
         self._initialize()
