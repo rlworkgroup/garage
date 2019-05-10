@@ -99,7 +99,7 @@ COPY environment.yml /root/code/garage/environment.yml
 # create an empty file
 ARG MJKEY
 RUN touch /root/.mujoco/mjkey.txt && \
-  conda env create -f /root/code/garage/environment.yml -v && \
+  conda env create -f /root/code/garage/environment.yml && \
   rm -rf /opt/conda/pkgs/* && \
   rm /root/.mujoco/mjkey.txt
 
