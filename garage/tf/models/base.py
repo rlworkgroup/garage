@@ -190,7 +190,8 @@ class Model(BaseModel):
         if not self._networks:
             # First time building the model, so self._networks are empty
             # We store the variable_scope to reenter later when we reuse it
-            with tf.variable_scope(self._name) as self._variable_scope:
+            with tf.variable_scope(self._name) as vs:
+                self._variable_scope = vs
                 with tf.name_scope(name=network_name):
                     network = Network()
                     network._inputs = inputs
