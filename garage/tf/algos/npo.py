@@ -91,6 +91,21 @@ class NPO(BatchPolopt):
 
         return dict()
 
+    def __getstate__(self):
+        data = self.__dict__.copy()
+        del data['_name_scope']
+        del data['_policy_opt_inputs']
+        del data['f_policy_entropy']
+        del data['f_policy_kl']
+        del data['f_rewards']
+        del data['f_returns']
+        return data
+
+    def __setstate__(self, state):
+        self.__dict__ = state
+        self._name_scope = tf.name_scope(self.name)
+        self.init_opt()
+
     @overrides
     def optimize_policy(self, itr, samples_data):
         policy_opt_input_values = self._policy_opt_input_values(samples_data)
@@ -448,7 +463,7 @@ class NPO(BatchPolopt):
         # Augment reward from baselines
         rewards_tensor = self.f_rewards(*policy_opt_input_values)
         returns_tensor = self.f_returns(*policy_opt_input_values)
-        returns_tensor = np.squeeze(returns_tensor)
+        returns_tensor = np.squeeze(returns_tensor, -1)
 
         paths = samples_data['paths']
         valids = samples_data['valids']

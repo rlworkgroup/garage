@@ -9,8 +9,8 @@ from garage.tf.optimizers import PenaltyLbfgsOptimizer
 
 @unique
 class KLConstraint(Enum):
-    HARD = "hard"
-    SOFT = "soft"
+    HARD = 'hard'
+    SOFT = 'soft'
 
 
 class TRPO(NPO):
@@ -25,13 +25,14 @@ class TRPO(NPO):
                  optimizer=None,
                  optimizer_args=None,
                  **kwargs):
+
         if not optimizer:
             if kl_constraint == KLConstraint.HARD:
                 optimizer = ConjugateGradientOptimizer
             elif kl_constraint == KLConstraint.SOFT:
                 optimizer = PenaltyLbfgsOptimizer
             else:
-                raise NotImplementedError("Unknown KLConstraint")
+                raise NotImplementedError('Unknown KLConstraint')
 
         if optimizer_args is None:
             optimizer_args = dict()
@@ -40,5 +41,5 @@ class TRPO(NPO):
             pg_loss=PGLoss.SURROGATE,
             optimizer=optimizer,
             optimizer_args=optimizer_args,
-            name="TRPO",
+            name='TRPO',
             **kwargs)

@@ -1,60 +1,37 @@
 #!/usr/bin/env python3
 
 import argparse
-import json
 import os
 import subprocess
-import uuid
-
-import joblib
 
 from garage.experiment import to_local_command
-from garage.logger import logger
-from garage.np.algos import BatchPolopt
-
-filename = str(uuid.uuid4())
 
 if __name__ == '__main__':
-
     parser = argparse.ArgumentParser()
-    parser.add_argument('file', type=str, help='path to the snapshot file')
     parser.add_argument(
-        '--log_dir',
+        '--snapshot_dir',
         type=str,
         default=None,
-        help='path to the new log directory')
-    # Look for params.json file
+        help='Directory of the pickle file to resume experiment from.')
+    parser.add_argument(
+        '--resume_epoch',
+        type=str,
+        default=None,
+        help='Index of epoch to restore from. '
+        'Can be "first", "last" or a number. '
+        'Not applicable when snapshot_mode="last"')
+
     args = parser.parse_args()
-    parent_dir = os.path.dirname(os.path.realpath(args.file))
-    json_file_path = os.path.join(parent_dir, 'params.json')
-    logger.log('Looking for params.json at {}...'.format(json_file_path))
+    params = dict()
+    params['resume_from_dir'] = args.snapshot_dir
+    if args.resume_epoch is not None:
+        params['resume_epoch'] = args.resume_epoch
+    command = to_local_command(
+        params, script='garage.experiment.experiment_wrapper')
+    print(command)
     try:
-        with open(json_file_path, 'r') as f:
-            params = json.load(f)
-        # exclude certain parameters
-        excluded = ['json_args']
-        for k in excluded:
-            if k in params:
-                del params[k]
-        for k, v in list(params.items()):
-            if v is None:
-                del params[k]
-        if args.log_dir is not None:
-            params['log_dir'] = args.log_dir
-        params['resume_from'] = args.file
-        command = to_local_command(
-            params, script='garage.experiment.experiment_wrapper')
-        print(command)
-        try:
-            subprocess.call(command, shell=True, env=os.environ)
-        except Exception as e:
-            print(e)
-            if isinstance(e, KeyboardInterrupt):
-                raise
-    except IOError:
-        logger.log('Failed to find json file. Continuing in non-stub mode...')
-        data = joblib.load(args.file)
-        assert 'algo' in data
-        algo = data['algo']
-        assert isinstance(algo, BatchPolopt)
-        algo.train()
+        subprocess.call(command, shell=True, env=os.environ)
+    except Exception as e:
+        print(e)
+        if isinstance(e, KeyboardInterrupt):
+            raise

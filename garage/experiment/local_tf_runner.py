@@ -4,7 +4,9 @@ The local runner for tensorflow algorithms.
 A runner setup context for algorithms during initialization and
 pipelines data between sampler and algorithm during training.
 """
+import copy
 import time
+from types import SimpleNamespace
 
 import tensorflow as tf
 
@@ -47,8 +49,8 @@ class LocalRunner:
         """Create a new local runner.
 
         Args:
-            max_cpus: The maximum number of parallel sampler workers.
-            sess: An optional tensorflow session.
+            max_cpus(int): The maximum number of parallel sampler workers.
+            sess(tf.Session): An optional tensorflow session.
                   A new session will be created immediately if not provided.
 
         Note:
@@ -70,6 +72,9 @@ class LocalRunner:
         self.sess_entered = False
         self.has_setup = False
         self.plot = False
+
+        self.setup_args = None
+        self.train_args = None
 
     def __enter__(self):
         """Set self.sess as the default session.
@@ -100,10 +105,10 @@ class LocalRunner:
             policy weights can be loaded before setup().
 
         Args:
-            algo: An algorithm instance.
-            env: An environement instance.
-            sampler_cls: A sampler class.
-            sampler_args: Arguments to be passed to sampler constructor.
+            algo(garage.np.algos.RLAlgorithm): An algorithm instance.
+            env(garage.envs.GarageEnv): An environement instance.
+            sampler_cls(garage.sampler.Sampler): A sampler class.
+            sampler_args(dict): Arguments to be passed to sampler constructor.
 
         """
         self.algo = algo
@@ -131,6 +136,9 @@ class LocalRunner:
         self.initialize_tf_vars()
         logger.log(self.sess.graph)
         self.has_setup = True
+
+        self.setup_args = SimpleNamespace(
+            sampler_cls=sampler_cls, sampler_args=sampler_args)
 
     def initialize_tf_vars(self):
         """Initialize all uninitialized variables in session."""
@@ -163,41 +171,113 @@ class LocalRunner:
         """Obtain one batch of samples.
 
         Args:
-            itr: Index of iteration (epoch).
-            batch_size: Number of steps in batch.
+            itr(int): Index of iteration (epoch).
+            batch_size(int): Number of steps in batch.
                 This is a hint that the sampler may or may not respect.
 
         Returns:
             One batch of samples.
 
         """
-        if self.n_epoch_cycles == 1:
+        if self.train_args.n_epoch_cycles == 1:
             logger.log('Obtaining samples...')
         return self.sampler.obtain_samples(itr, batch_size)
 
-    def save_snapshot(self, itr, paths=None):
+    def save(self, epoch, paths=None):
         """Save snapshot of current batch.
 
         Args:
-            itr: Index of iteration (epoch).
-            paths: Batch of samples after preprocessed.
+            itr(int): Index of iteration (epoch).
+            paths(dict): Batch of samples after preprocessed.
 
         """
         assert self.has_setup
 
         logger.log('Saving snapshot...')
-        params = self.algo.get_itr_snapshot(itr)
+
+        params = dict()
+        # Save arguments
+        params['setup_args'] = self.setup_args
+        params['train_args'] = self.train_args
+
+        # Save states
         params['env'] = self.env
+        params['algo'] = self.algo
         if paths:
             params['paths'] = paths
-        snapshotter.save_itr_params(itr, params)
+        params['last_epoch'] = epoch
+
+        snapshotter.save_itr_params(epoch, params)
+
         logger.log('Saved')
+
+    def restore(self, snapshot_dir, from_epoch='last'):
+        """Restore experiment from snapshot.
+
+        Args:
+            snapshot_dir(str): Directory of snapshot.
+            from_epoch(str or int): The epoch to restore from.
+                Can be 'first', 'last' or a number.
+                Not applicable when snapshot_mode='last'.
+
+        Returns:
+            A SimpleNamespace for train()'s arguments.
+
+        Examples:
+            1. Resume experiment immediately.
+            with LocalRunner() as runner:
+                runner.restore(snapshot_dir)
+                runner.resume()
+
+            2. Resume experiment with modified training arguments.
+             with LocalRunner() as runner:
+                runner.restore(snapshot_dir, resume_now=False)
+                runner.resume(n_epochs=20)
+
+        Note:
+            When resume via command line, new snapshots will be
+            saved into the SAME directory if not specified.
+
+            When resume programmatically, snapshot directory should be
+            specify manually or through run_experiment() interface.
+        """
+        snapshotter.snapshot_dir = snapshot_dir
+        saved = snapshotter.load(from_epoch)
+
+        self.setup_args = saved['setup_args']
+        self.train_args = saved['train_args']
+
+        self.setup(
+            env=saved['env'],
+            algo=saved['algo'],
+            sampler_cls=self.setup_args.sampler_cls,
+            sampler_args=self.setup_args.sampler_args)
+
+        n_epochs = self.train_args.n_epochs
+        last_epoch = saved['last_epoch']
+        n_epoch_cycles = self.train_args.n_epoch_cycles
+        batch_size = self.train_args.batch_size
+        store_paths = self.train_args.store_paths
+        pause_for_plot = self.train_args.pause_for_plot
+
+        fmt = '{:<20} {:<15}'
+        logger.log('Restore from snapshot saved in %s' % snapshot_dir)
+        logger.log(fmt.format('Train Args', 'Value'))
+        logger.log(fmt.format('n_epochs', n_epochs))
+        logger.log(fmt.format('last_epoch', last_epoch))
+        logger.log(fmt.format('n_epoch_cycles', n_epoch_cycles))
+        logger.log(fmt.format('batch_size', batch_size))
+        logger.log(fmt.format('store_paths', store_paths))
+        logger.log(fmt.format('pause_for_plot', pause_for_plot))
+
+        self.train_args.start_epoch = last_epoch + 1
+        return copy.copy(self.train_args)
 
     def log_diagnostics(self, pause_for_plot=False):
         """Log diagnostics.
 
         Args:
-            pause_for_plot: Pause for plot.
+            pause_for_plot(bool): Pause for plot.
 
         """
         logger.log('Time %.2f s' % (time.time() - self.start_time))
@@ -210,22 +290,87 @@ class LocalRunner:
 
     def train(self,
               n_epochs,
+              batch_size,
               n_epoch_cycles=1,
-              batch_size=None,
               plot=False,
               store_paths=False,
               pause_for_plot=False):
         """Start training.
 
         Args:
-            n_epochs: Number of epochs.
-            n_epoch_cycles: Number of batches of samples in each epoch.
+            n_epochs(int): Number of epochs.
+            batch_size(int): Number of environment steps in one batch.
+            n_epoch_cycles(int): Number of batches of samples in each epoch.
                 This is only useful for off-policy algorithm.
                 For on-policy algorithm this value should always be 1.
-            batch_size: Number of steps in batch.
-            plot: Visualize policy by doing rollout after each epoch.
-            store_paths: Save paths in snapshot.
-            pause_for_plot: Pause for plot.
+            plot(bool): Visualize policy by doing rollout after each epoch.
+            store_paths(bool): Save paths in snapshot.
+            pause_for_plot(bool): Pause for plot.
+
+        Returns:
+            The average return in last epoch cycle.
+
+        """
+        return self._train(
+            n_epochs=n_epochs,
+            n_epoch_cycles=n_epoch_cycles,
+            batch_size=batch_size,
+            plot=plot,
+            store_paths=store_paths,
+            pause_for_plot=pause_for_plot,
+            start_epoch=0)
+
+    def resume(self,
+               n_epochs=None,
+               batch_size=None,
+               n_epoch_cycles=None,
+               plot=None,
+               store_paths=None,
+               pause_for_plot=None):
+        """Resume from restored experiment.
+
+        This method provides the same interface as train().
+
+        If not specified, an argument will default to the
+        saved arguments from the last call to train().
+
+        Returns:
+            The average return in last epoch cycle.
+
+        """
+        assert self.train_args is not None, (
+            'You must call restore() before resume().')
+
+        return self._train(
+            n_epochs=n_epochs or self.train_args.n_epochs,
+            n_epoch_cycles=n_epoch_cycles or self.train_args.n_epoch_cycles,
+            batch_size=batch_size or self.train_args.batch_size,
+            plot=plot or self.train_args.plot,
+            store_paths=store_paths or self.train_args.store_paths,
+            pause_for_plot=pause_for_plot or self.train_args.pause_for_plot,
+            start_epoch=self.train_args.start_epoch)
+
+    def _train(self,
+               n_epochs,
+               n_epoch_cycles,
+               batch_size,
+               plot,
+               store_paths,
+               pause_for_plot,
+               start_epoch=0):
+        """Start actual training.
+
+        Args:
+            n_epochs(int): Number of epochs.
+            n_epoch_cycles(int): Number of batches of samples in each epoch.
+                This is only useful for off-policy algorithm.
+                For on-policy algorithm this value should always be 1.
+            batch_size(int): Number of steps in batch.
+            plot(bool): Visualize policy by doing rollout after each epoch.
+            store_paths(bool): Save paths in snapshot.
+            pause_for_plot(bool): Pause for plot.
+            start_epoch: (internal) The starting epoch.
+                Use for experiment resuming.
 
         Returns:
             The average return in last epoch cycle.
@@ -233,22 +378,24 @@ class LocalRunner:
         """
         assert self.has_setup, ('Use Runner.setup() to setup runner before '
                                 'training.')
-        if batch_size is None:
-            from garage.tf.samplers import OffPolicyVectorizedSampler
-            if isinstance(self.sampler, OffPolicyVectorizedSampler):
-                batch_size = self.algo.max_path_length
-            else:
-                batch_size = 40 * self.algo.max_path_length
 
-        self.n_epoch_cycles = n_epoch_cycles
+        # Save arguments for restore
+        self.train_args = SimpleNamespace(
+            n_epochs=n_epochs,
+            n_epoch_cycles=n_epoch_cycles,
+            batch_size=batch_size,
+            plot=plot,
+            store_paths=store_paths,
+            pause_for_plot=pause_for_plot,
+            start_epoch=start_epoch)
 
-        self.plot = plot
         self.start_worker()
-        self.start_time = time.time()
 
-        itr = 0
+        self.start_time = time.time()
+        itr = start_epoch * n_epoch_cycles
+
         last_return = None
-        for epoch in range(n_epochs):
+        for epoch in range(start_epoch, n_epochs):
             self.itr_start_time = time.time()
             paths = None
             with logger.prefix('epoch #%d | ' % epoch):
@@ -257,9 +404,11 @@ class LocalRunner:
                     paths = self.sampler.process_samples(itr, paths)
                     last_return = self.algo.train_once(itr, paths)
                     itr += 1
-                self.save_snapshot(epoch, paths if store_paths else None)
+                self.save(epoch, paths if store_paths else None)
                 self.log_diagnostics(pause_for_plot)
                 logger.dump_all(itr)
                 tabular.clear()
+
         self.shutdown_worker()
+
         return last_return
