@@ -41,7 +41,7 @@ class Regressor(Parameterized, abc.ABC):
         raise NotImplementedError
 
     def get_params_internal(self, **tags):
-        """Get trainable vars."""
+        """Get the list of parameters."""
         return self._variable_scope.trainable_variables()
 
 

@@ -6,10 +6,10 @@ from garage.logger import tabular
 from garage.tf.misc import tensor_utils
 from garage.tf.optimizers import LbfgsOptimizer, PenaltyLbfgsOptimizer
 from garage.tf.regressors import GaussianMLPRegressorModel
-from garage.tf.regressors import StochasticRegressor
+from garage.tf.regressors import StochasticRegressor2
 
 
-class GaussianMLPRegressorWithModel(StochasticRegressor):
+class GaussianMLPRegressorWithModel(StochasticRegressor2):
     """
     GaussianMLPRegressor with garage.tf.models.GaussianMLPRegressorModel.
 
@@ -205,7 +205,13 @@ class GaussianMLPRegressorWithModel(StochasticRegressor):
                 self._optimizer.update_opt(**optimizer_args)
 
     def fit(self, xs, ys):
-        """Fit with input data xs and label ys."""
+        """
+        Fit with input data xs and label ys.
+
+        Args:
+            xs (numpy.ndarray): Input data.
+            ys (numpy.ndarray): Label of input data.
+        """
         if self._subsample_factor < 1:
             num_samples_tot = xs.shape[0]
             idx = np.random.randint(
@@ -213,23 +219,18 @@ class GaussianMLPRegressorWithModel(StochasticRegressor):
                 int(num_samples_tot * self._subsample_factor))
             xs, ys = xs[idx], ys[idx]
 
-        sess = tf.get_default_session()
         if self._normalize_inputs:
             # recompute normalizing constants for inputs
-            sess.run([
-                tf.assign(self.model.networks['default'].x_mean,
-                          np.mean(xs, axis=0, keepdims=True)),
-                tf.assign(self.model.networks['default'].x_std,
-                          np.std(xs, axis=0, keepdims=True) + 1e-8),
-            ])
+            self.model.networks['default'].x_mean.load(
+                np.mean(xs, axis=0, keepdims=True))
+            self.model.networks['default'].x_std.load(
+                np.std(xs, axis=0, keepdims=True) + 1e-8)
         if self._normalize_outputs:
             # recompute normalizing constants for outputs
-            sess.run([
-                tf.assign(self.model.networks['default'].y_mean,
-                          np.mean(ys, axis=0, keepdims=True)),
-                tf.assign(self.model.networks['default'].y_std,
-                          np.std(ys, axis=0, keepdims=True) + 1e-8),
-            ])
+            self.model.networks['default'].y_mean.load(
+                np.mean(ys, axis=0, keepdims=True))
+            self.model.networks['default'].y_std.load(
+                np.std(ys, axis=0, keepdims=True) + 1e-8)
         if self._use_trust_region:
             old_means, old_log_stds = self._f_pdists(xs)
             inputs = [xs, ys, old_means, old_log_stds]
@@ -247,11 +248,13 @@ class GaussianMLPRegressorWithModel(StochasticRegressor):
 
     def predict(self, xs):
         """
-        Return the maximum likelihood estimate of the predicted y.
+        Predict ys based on input xs.
 
-        :param xs:
-        :return:
+        Args:
+            xs (numpy.ndarray): Input data.
 
+        Return:
+            The predicted ys.
         """
         return self._f_predict(xs)
 
@@ -260,9 +263,12 @@ class GaussianMLPRegressorWithModel(StochasticRegressor):
         Symbolic graph of the log likelihood.
 
         Args:
-            x_var: Input tf.Tensor for the input data.
-            y_var: Input tf.Tensor for the label of data.
-            name: Name of the new graph.
+            x_var (tf.Tensor): Input tf.Tensor for the input data.
+            y_var (tf.Tensor): Input tf.Tensor for the label of data.
+            name (str): Name of the new graph.
+
+        Return:
+            tf.Tensor output of the symbolic log likelihood.
         """
         with tf.variable_scope(self._variable_scope):
             self.model.build(x_var, name=name)
@@ -272,3 +278,19 @@ class GaussianMLPRegressorWithModel(StochasticRegressor):
 
         return self.model.networks[name].dist.log_likelihood_sym(
             y_var, dict(mean=means_var, log_std=log_stds_var))
+
+    def get_params_internal(self, **args):
+        """Get the params, which are the trainable variables."""
+        return self._variable_scope.trainable_variables()
+
+    def __getstate__(self):
+        """Object.__getstate__."""
+        new_dict = super().__getstate__()
+        del new_dict['_f_predict']
+        del new_dict['_f_pdists']
+        return new_dict
+
+    def __setstate__(self, state):
+        """Object.__setstate__."""
+        super().__setstate__(state)
+        self._initialize()

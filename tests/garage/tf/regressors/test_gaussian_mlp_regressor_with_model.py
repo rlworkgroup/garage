@@ -1,3 +1,5 @@
+import pickle
+
 from nose2.tools.params import params
 import numpy as np
 import tensorflow as tf
@@ -154,3 +156,35 @@ class TestGaussianMLPRegressorWithModel(TfGraphTestCase):
         ll = gmr.model.networks['default'].dist.log_likelihood(
             [label], dict(mean=mean, log_std=log_std))
         assert np.allclose(ll, ll_from_sym, rtol=0, atol=1e-5)
+
+    def test_is_pickleable(self):
+        gmr = GaussianMLPRegressorWithModel(input_shape=(1, ), output_dim=1)
+
+        with tf.variable_scope(
+                'GaussianMLPRegressorWithModel/GaussianMLPRegressorModel',
+                reuse=True):
+            bias = tf.get_variable('dist_params/mean_network/hidden_0/bias')
+        bias.load(tf.ones_like(bias).eval())
+
+        result1 = gmr.predict(np.ones((1, 1)))
+        h = pickle.dumps(gmr)
+
+        with tf.Session(graph=tf.Graph()):
+            gmr_pickled = pickle.loads(h)
+            result2 = gmr_pickled.predict(np.ones((1, 1)))
+            assert np.array_equal(result1, result2)
+
+    def test_is_pickleable2(self):
+        gmr = GaussianMLPRegressorWithModel(input_shape=(1, ), output_dim=1)
+
+        with tf.variable_scope(
+                'GaussianMLPRegressorWithModel/GaussianMLPRegressorModel',
+                reuse=True):
+            x_mean = tf.get_variable('normalized_vars/x_mean')
+        x_mean.load(tf.ones_like(x_mean).eval())
+        x1 = gmr.model.networks['default'].x_mean.eval()
+        h = pickle.dumps(gmr)
+        with tf.Session(graph=tf.Graph()):
+            gmr_pickled = pickle.loads(h)
+            x2 = gmr_pickled.model.networks['default'].x_mean.eval()
+            assert np.array_equal(x1, x2)
