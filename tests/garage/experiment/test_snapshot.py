@@ -1,6 +1,5 @@
 import os.path as osp
 import tempfile
-import unittest
 
 import joblib
 import tensorflow as tf
@@ -12,10 +11,11 @@ from garage.sampler.utils import rollout
 from garage.tf.algos import TRPO
 from garage.tf.envs import TfEnv
 from garage.tf.policies import CategoricalMLPPolicy
+from tests.fixtures import TfGraphTestCase
 from tests.fixtures.logger import NullOutput
 
 
-class TestSnapshot(unittest.TestCase):
+class TestSnapshot(TfGraphTestCase):
     verifyItrs = 3
 
     @classmethod
