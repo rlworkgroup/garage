@@ -1,25 +1,16 @@
-import unittest
-
 import tensorflow as tf
 
 from garage.experiment import LocalRunner
-from garage.logger import logger
 from garage.np.baselines import LinearFeatureBaseline
 from garage.sampler import singleton_pool
 from garage.tf.algos import VPG
 from garage.tf.envs import TfEnv
 from garage.tf.policies import CategoricalMLPPolicy
 from garage.tf.samplers import BatchSampler
-from tests.fixtures.logger import NullOutput
+from tests.fixtures import TfGraphTestCase
 
 
-class TestLocalRunner(unittest.TestCase):
-    def setUp(self):
-        logger.add_output(NullOutput())
-
-    def tearDown(self):
-        logger.remove_all()
-
+class TestLocalRunner(TfGraphTestCase):
     def test_session(self):
         with LocalRunner():
             self.assertIsNotNone(
