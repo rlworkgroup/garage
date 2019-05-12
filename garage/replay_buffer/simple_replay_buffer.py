@@ -12,10 +12,6 @@ class SimpleReplayBuffer(ReplayBuffer):
     It uses random batch sample to minimize correlations between samples.
     """
 
-    def __init__(self, **kwargs):
-        """Initialize the data used in SimpleReplayBuffer."""
-        super(SimpleReplayBuffer, self).__init__(**kwargs)
-
     @overrides
     def sample(self, batch_size):
         """Sample a transition of batch_size."""

@@ -1,7 +1,8 @@
 """Q-function base classes without Parameterized."""
+import abc
 
 
-class QFunction2:
+class QFunction2(abc.ABC):
     """
     Q-function base class without Parameterzied.
 
@@ -22,9 +23,10 @@ class QFunction2:
 
         Args:
             input_phs (list[tf.Tensor]): Recommended to be positional
-            arguments, e.g. def get_qval_sym(self, state_input, action_input).
+                arguments, e.g. def get_qval_sym(self, state_input,
+                action_input).
         """
-        raise NotImplementedError
+        pass
 
     def clone(self, name):
         """
@@ -36,7 +38,7 @@ class QFunction2:
         Args:
             name (str): Name of the newly created q-function.
         """
-        raise NotImplementedError
+        pass
 
     def get_trainable_vars(self):
         """Get all trainable variables under the QFunction scope."""

@@ -16,16 +16,16 @@ import numpy as np
 
 
 class ReplayBuffer(metaclass=abc.ABCMeta):
-    """Abstract class for Replay Buffer."""
+    """
+    Abstract class for Replay Buffer.
+
+    Args:
+        env_spec (garage.envs.EnvSpec): Environment specification.
+        size_in_transitions (int): total size of transitions in the buffer
+        time_horizon (int): time horizon of rollout.
+    """
 
     def __init__(self, env_spec, size_in_transitions, time_horizon):
-        """
-        Initialize the data used in ReplayBuffer.
-
-        :param buffer_shapes: shape of values for each key in the buffer
-        :param size_in_transitions: total size of transitions in the buffer
-        :param time_horizon: time horizon of rollout
-        """
         self._current_size = 0
         self._current_ptr = 0
         self._n_transitions_stored = 0
@@ -56,7 +56,19 @@ class ReplayBuffer(metaclass=abc.ABCMeta):
         self.add_transitions(**transition)
 
     def add_transitions(self, **kwargs):
-        """Add multiple transitions into the replay buffer."""
+        """
+        Add multiple transitions into the replay buffer.
+
+        A transition contains one or multiple entries, e.g.
+        observation, action, reward, terminal and next_observation.
+        The same entry of all the transitions are stacked, e.g.
+        {'observation': [obs1, obs2, obs3]} where obs1 is one
+        numpy.ndarray observation from the environment.
+
+        Args:
+            kwargs (dict(str, [numpy.ndarray])): Dictionary that holds
+                the transitions.
+        """
         if not self._initialized_buffer:
             self._initialize_buffer(**kwargs)
 

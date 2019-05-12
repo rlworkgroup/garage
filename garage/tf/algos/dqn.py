@@ -29,8 +29,10 @@ class DQN(OffPolicyRLAlgorithm):
         discount (float): Discount factor for rewards.
         name (str): Name of the algorithm.
         target_network_update_freq (int): Frequency of updating target network.
-        grad_norm_clipping (float): How much to clip gradient. If None, no
-            gradient clipping is done.
+        grad_norm_clipping (float): Maximum clipping value for clipping tensor
+            values to a maximum L2-norm. It must be larger than 0. If None,
+            no gradient clipping is done. For detail, see docstring for
+            tf.clip_by_norm.
         double_q (bool): Bool for using double q-network.
     """
 
@@ -115,10 +117,12 @@ class DQN(OffPolicyRLAlgorithm):
                 q_best_masked = (1.0 - self.done_t_ph) * future_best_q_val
                 # if done, it's just reward
                 # else reward + discount * future_best_q_val
-                target_q_values = self.reward_t_ph + self.discount * q_best_masked  # noqa: E501
+                target_q_values = (
+                    self.reward_t_ph + self.discount * q_best_masked)
 
-                td_error = q_selected - tf.stop_gradient(target_q_values)
-                loss = huber_loss(td_error)
+                # td_error = q_selected - tf.stop_gradient(target_q_values)
+                loss = tf.losses.huber_loss(q_selected,
+                                            tf.stop_gradient(target_q_values))
                 self._loss = tf.reduce_mean(loss)
 
             with tf.name_scope('optimize_ops'):
@@ -130,7 +134,8 @@ class DQN(OffPolicyRLAlgorithm):
                         if grad is not None:
                             gradients[i] = (tf.clip_by_norm(
                                 grad, self.grad_norm_clipping), var)
-                    self._optimize_loss = optimizer.apply_gradients(gradients)
+                        self._optimize_loss = optimizer.apply_gradients(
+                            gradients)
                 else:
                     self._optimize_loss = optimizer.minimize(
                         self._loss, var_list=self.qf.get_trainable_vars())
@@ -149,7 +154,8 @@ class DQN(OffPolicyRLAlgorithm):
         self.episode_rewards.extend(paths['undiscounted_returns'])
         last_average_return = np.mean(self.episode_rewards)
         for train_itr in range(self.n_train_steps):
-            if self.replay_buffer.n_transitions_stored >= self.min_buffer_size:  # noqa: E501
+            if (self.replay_buffer.n_transitions_stored >=
+                    self.min_buffer_size):
                 self.evaluate = True
                 qf_loss = self.optimize_policy(epoch, None)
                 self.episode_qf_losses.append(qf_loss)
@@ -197,10 +203,3 @@ class DQN(OffPolicyRLAlgorithm):
                                  next_observations)
 
         return loss
-
-
-def huber_loss(x, delta=1.0):
-    """Reference: https://en.wikipedia.org/wiki/Huber_loss."""
-    return tf.where(
-        tf.abs(x) < delta,
-        tf.square(x) * 0.5, delta * (tf.abs(x) - 0.5 * delta))

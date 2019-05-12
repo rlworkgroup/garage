@@ -157,6 +157,15 @@ def truncate_tensor_dict(tensor_dict, truncated_len):
 
 
 def normalize_pixel_batch(env_spec, observations):
+    """
+    Normalize the observations (images).
+
+    If the input are images, it normalized into range [0, 1].
+
+    Args:
+        env_spec (garage.envs.EnvSpec): Environment specification.
+        observations (numpy.ndarray): Observations from environment.
+    """
     if isinstance(env_spec.observation_space, Box):
         if len(env_spec.observation_space.shape) == 3:
             return [obs.astype(np.float32) / 255.0 for obs in observations]

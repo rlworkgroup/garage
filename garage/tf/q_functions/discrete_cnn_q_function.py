@@ -176,8 +176,8 @@ class DiscreteCNNQFunction(QFunction2):
         Symbolic graph for q-network.
 
         Args:
-            state_input: The state input tf.Tensor to the network.
-            name: Network variable scope.
+            state_input (tf.Tensor): The state input tf.Tensor to the network.
+            name (str): Network variable scope.
 
         Return:
             The tf.Tensor output of Discrete CNN QFunction.
