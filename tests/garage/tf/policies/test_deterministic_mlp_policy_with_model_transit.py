@@ -3,7 +3,7 @@ Unit test for DeterministicMLPPolicyWithModel.
 
 This test consists of four different DeterministicMLPPolicy: P1, P2, P3
 and P4. P1 and P2 are from DeterministicMLPPolicy, which does not use
-garage.tf.models.GaussianMLPModel while P3 and P4 do use.
+garage.tf.models.DeterministicMLPModel while P3 and P4 do use.
 
 This test ensures the outputs from all the policies are the same,
 for the transition from using DeterministicMLPPolicy to
