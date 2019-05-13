@@ -99,6 +99,10 @@ class DeterministicMLPPolicyWithModel(Policy2):
             action = tf.reshape(action, self.action_space.shape)
             return action
 
+    def get_params(self, trainable=True):
+        """Get the trainable variables."""
+        return self.get_trainable_vars()
+
     @overrides
     def get_action(self, observation):
         """Return a single action."""
