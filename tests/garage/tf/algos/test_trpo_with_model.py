@@ -36,6 +36,6 @@ class TestTRPO(TfGraphTestCase):
 
             runner.setup(algo, env)
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
-            assert last_avg_ret > 90
+            assert last_avg_ret > 85
 
             env.close()
