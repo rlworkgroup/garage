@@ -13,7 +13,7 @@ from garage.tf.policies.base import Policy
 class DeterministicMLPPolicy(Policy, LayersPowered, Serializable):
     def __init__(self,
                  env_spec,
-                 name="DeterministicMLPPolicy",
+                 name='DeterministicMLPPolicy',
                  hidden_sizes=(32, 32),
                  hidden_nonlinearity=tf.nn.relu,
                  output_nonlinearity=tf.nn.tanh,
@@ -23,8 +23,8 @@ class DeterministicMLPPolicy(Policy, LayersPowered, Serializable):
 
         Serializable.quick_init(self, locals())
 
-        self._prob_network_name = "prob_network"
-        with tf.variable_scope(name, "DeterministicMLPPolicy"):
+        self._prob_network_name = 'prob_network'
+        with tf.variable_scope(name, 'DeterministicMLPPolicy'):
             if prob_network is None:
                 prob_network = MLP(
                     input_shape=(env_spec.observation_space.flat_dim, ),
@@ -33,7 +33,7 @@ class DeterministicMLPPolicy(Policy, LayersPowered, Serializable):
                     hidden_nonlinearity=hidden_nonlinearity,
                     output_nonlinearity=output_nonlinearity,
                     # batch_normalization=True,
-                    name="mlp_prob_network",
+                    name='mlp_prob_network',
                 )
 
             with tf.name_scope(self._prob_network_name):
@@ -62,7 +62,7 @@ class DeterministicMLPPolicy(Policy, LayersPowered, Serializable):
     @overrides
     def get_action(self, observation):
         flat_obs = self.observation_space.flatten(observation)
-        action = self._f_prob([flat_obs])
+        action = self._f_prob([flat_obs])[0]
         return action, dict()
 
     @overrides
@@ -72,6 +72,6 @@ class DeterministicMLPPolicy(Policy, LayersPowered, Serializable):
         return actions, dict()
 
     def get_action_sym(self, obs_var, name=None):
-        with tf.name_scope(name, "get_action_sym", values=[obs_var]):
+        with tf.name_scope(name, 'get_action_sym', values=[obs_var]):
             with tf.name_scope(self._prob_network_name, values=[obs_var]):
                 return L.get_output(self.prob_network.output_layer, obs_var)

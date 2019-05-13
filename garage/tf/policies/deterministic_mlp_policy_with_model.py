@@ -96,8 +96,11 @@ class DeterministicMLPPolicyWithModel(Policy2):
         """Return action sym according to obs_var."""
         with tf.variable_scope(self._variable_scope):
             action = self.model.build(obs_var, name=name)
-            action = tf.reshape(action, self.action_space.shape)
             return action
+
+    def get_params(self, trainable=True):
+        """Get the trainable variables."""
+        return self.get_trainable_vars()
 
     @overrides
     def get_action(self, observation):
