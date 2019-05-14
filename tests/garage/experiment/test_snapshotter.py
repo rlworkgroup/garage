@@ -5,7 +5,7 @@ import unittest
 
 from nose2 import tools
 
-from garage.logger import Snapshotter
+from garage.experiment import Snapshotter
 
 configurations = [('all', {
     'itr_1.pkl': 0,

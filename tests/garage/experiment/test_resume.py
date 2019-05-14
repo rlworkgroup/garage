@@ -3,8 +3,7 @@ import tempfile
 
 import numpy as np
 
-from garage.experiment import LocalRunner
-from garage.logger import snapshotter
+from garage.experiment import LocalRunner, snapshotter
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import VPG
 from garage.tf.envs import TfEnv

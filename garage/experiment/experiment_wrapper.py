@@ -16,12 +16,11 @@ import dateutil.tz
 import psutil
 
 from garage import config
-from garage.experiment import deterministic
+from garage.experiment import deterministic, snapshotter
 from garage.experiment.experiment import concretize
 from garage.experiment.local_tf_runner import LocalRunner
 from garage.logger import CsvOutput
 from garage.logger import logger
-from garage.logger import snapshotter
 from garage.logger import StdOutput
 from garage.logger import TensorBoardOutput
 from garage.logger import TextOutput

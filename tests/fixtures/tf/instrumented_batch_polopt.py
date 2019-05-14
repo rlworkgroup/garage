@@ -9,7 +9,8 @@ import time
 
 import tensorflow as tf
 
-from garage.logger import logger, snapshotter, tabular
+from garage.experiment import snapshotter
+from garage.logger import logger, tabular
 from garage.tf.algos import BatchPolopt
 from tests.integration_tests.test_sigint import ExpLifecycle
 
@@ -22,7 +23,7 @@ class InstrumentedBatchPolopt(BatchPolopt):
     """
 
     def train(self, sess=None):
-        address = ("localhost", 6000)
+        address = ('localhost', 6000)
         conn = Client(address)
         last_average_return = None
         try:
@@ -38,24 +39,24 @@ class InstrumentedBatchPolopt(BatchPolopt):
             for itr in range(self.start_itr, self.n_itr):
                 itr_start_time = time.time()
                 with logger.prefix('itr #%d | ' % itr):
-                    logger.log("Obtaining samples...")
+                    logger.log('Obtaining samples...')
                     conn.send(ExpLifecycle.OBTAIN_SAMPLES)
                     paths = self.obtain_samples(itr)
-                    logger.log("Processing samples...")
+                    logger.log('Processing samples...')
                     conn.send(ExpLifecycle.PROCESS_SAMPLES)
                     samples_data = self.process_samples(itr, paths)
-                    last_average_return = samples_data["average_return"]
-                    logger.log("Logging diagnostics...")
+                    last_average_return = samples_data['average_return']
+                    logger.log('Logging diagnostics...')
                     self.log_diagnostics(paths)
-                    logger.log("Optimizing policy...")
+                    logger.log('Optimizing policy...')
                     conn.send(ExpLifecycle.OPTIMIZE_POLICY)
                     self.optimize_policy(itr, samples_data)
-                    logger.log("Saving snapshot...")
+                    logger.log('Saving snapshot...')
                     params = self.get_itr_snapshot(itr)
                     if self.store_paths:
-                        params["paths"] = samples_data["paths"]
+                        params['paths'] = samples_data['paths']
                     snapshotter.save_itr_params(itr, params)
-                    logger.log("Saved")
+                    logger.log('Saved')
                     tabular.record('Time', time.time() - start_time)
                     tabular.record('ItrTime', time.time() - itr_start_time)
                     logger.log(tabular)
@@ -64,8 +65,8 @@ class InstrumentedBatchPolopt(BatchPolopt):
                         self.plotter.update_plot(self.policy,
                                                  self.max_path_length)
                         if self.pause_for_plot:
-                            input("Plotting evaluation run: Press Enter to "
-                                  "continue...")
+                            input('Plotting evaluation run: Press Enter to '
+                                  'continue...')
 
             conn.send(ExpLifecycle.SHUTDOWN)
             self.shutdown_worker()

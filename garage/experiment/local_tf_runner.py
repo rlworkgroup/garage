@@ -10,8 +10,8 @@ from types import SimpleNamespace
 
 import tensorflow as tf
 
+from garage.experiment import snapshotter
 from garage.logger import logger
-from garage.logger import snapshotter
 from garage.logger import tabular
 
 # Note: Optional module should be imported ad hoc to break circular dependency.

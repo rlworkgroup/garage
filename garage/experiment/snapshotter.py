@@ -122,3 +122,6 @@ class Snapshotter:
 
         with open(snapshot_file, 'rb') as file:
             return joblib.load(file)
+
+
+snapshotter = Snapshotter()

@@ -4,8 +4,8 @@ import tempfile
 import joblib
 import tensorflow as tf
 
-from garage.experiment import LocalRunner
-from garage.logger import logger, snapshotter
+from garage.experiment import LocalRunner, snapshotter
+from garage.logger import logger
 from garage.np.baselines import LinearFeatureBaseline
 from garage.sampler.utils import rollout
 from garage.tf.algos import TRPO

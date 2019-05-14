@@ -1,4 +1,5 @@
-from garage.logger import logger, snapshotter, tabular
+from garage.experiment import snapshotter
+from garage.logger import logger, tabular
 from garage.np.algos.base import RLAlgorithm
 from garage.plotter import Plotter
 from garage.sampler import BatchSampler
