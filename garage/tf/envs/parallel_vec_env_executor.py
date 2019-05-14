@@ -1,15 +1,15 @@
 import pickle as pickle
 import uuid
 
+from dowel import logger
 import numpy as np
 
-from garage.logger import logger
 from garage.sampler import singleton_pool
 from garage.tf.misc import tensor_utils
 
 
 def worker_init_envs(g, alloc, scope, env):
-    logger.log("initializing environment on worker %d" % g.worker_id)
+    logger.log('initializing environment on worker %d' % g.worker_id)
     if not hasattr(g, 'parallel_vec_envs'):
         g.parallel_vec_envs = dict()
         g.parallel_vec_env_template = dict()
@@ -24,14 +24,14 @@ def worker_init_envs(g, alloc, scope, env):
 
 def worker_run_reset(g, flags, scope):
     if not hasattr(g, 'parallel_vec_envs'):
-        logger.log("on worker %d" % g.worker_id)
+        logger.log('on worker %d' % g.worker_id)
         import traceback
         for line in traceback.format_stack():
             logger.log(line)
         # log the stacktrace at least
-        logger.log("oops")
+        logger.log('oops')
         for k, v in g.__dict__.items():
-            logger.log(str(k) + " : " + str(v))
+            logger.log(str(k) + ' : ' + str(v))
         assert hasattr(g, 'parallel_vec_envs')
 
     assert scope in g.parallel_vec_envs

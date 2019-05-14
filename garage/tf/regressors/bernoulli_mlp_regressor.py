@@ -1,8 +1,8 @@
+from dowel import tabular
 import numpy as np
 import tensorflow as tf
 
 from garage.core import Serializable
-from garage.logger import tabular
 from garage.tf.core import LayersPowered, Parameterized
 import garage.tf.core.layers as L
 from garage.tf.core.network import MLP
@@ -21,7 +21,7 @@ class BernoulliMLPRegressor(LayersPowered, Serializable, Parameterized):
             self,
             input_shape,
             output_dim,
-            name="BernoulliMLPRegressor",
+            name='BernoulliMLPRegressor',
             hidden_sizes=(32, 32),
             hidden_nonlinearity=tf.nn.relu,
             optimizer=None,
@@ -62,7 +62,7 @@ class BernoulliMLPRegressor(LayersPowered, Serializable, Parameterized):
                 hidden_sizes=hidden_sizes,
                 hidden_nonlinearity=hidden_nonlinearity,
                 output_nonlinearity=tf.nn.sigmoid,
-                name="p_network")
+                name='p_network')
 
             l_p = p_network.output_layer
 
@@ -70,16 +70,16 @@ class BernoulliMLPRegressor(LayersPowered, Serializable, Parameterized):
 
             xs_var = p_network.input_layer.input_var
             ys_var = tf.placeholder(
-                dtype=tf.float32, shape=(None, output_dim), name="ys")
+                dtype=tf.float32, shape=(None, output_dim), name='ys')
             old_p_var = tf.placeholder(
-                dtype=tf.float32, shape=(None, output_dim), name="old_p")
+                dtype=tf.float32, shape=(None, output_dim), name='old_p')
 
             x_mean_var = tf.get_variable(
-                name="x_mean",
+                name='x_mean',
                 initializer=tf.zeros_initializer(),
                 shape=(1, ) + input_shape)
             x_std_var = tf.get_variable(
-                name="x_std",
+                name='x_std',
                 initializer=tf.ones_initializer(),
                 shape=(1, ) + input_shape)
 
@@ -145,9 +145,9 @@ class BernoulliMLPRegressor(LayersPowered, Serializable, Parameterized):
             optimizer = self.optimizer
         loss_before = optimizer.loss(inputs)
         if self.name:
-            prefix = self.name + "/"
+            prefix = self.name + '/'
         else:
-            prefix = ""
+            prefix = ''
         tabular.record(prefix + 'LossBefore', loss_before)
         optimizer.optimize(inputs)
         loss_after = optimizer.loss(inputs)

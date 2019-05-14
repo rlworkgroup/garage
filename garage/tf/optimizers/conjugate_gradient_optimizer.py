@@ -1,8 +1,8 @@
+from dowel import logger
 import numpy as np
 import tensorflow as tf
 
 from garage.core import Serializable
-from garage.logger import logger
 from garage.misc import krylov
 from garage.tf.misc import tensor_utils
 from garage.tf.optimizers.utils import LazyDict, sliced_fun

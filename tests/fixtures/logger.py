@@ -1,4 +1,4 @@
-from garage.logger import LogOutput, TabularInput
+from dowel import LogOutput, TabularInput
 
 
 class NullOutput(LogOutput):

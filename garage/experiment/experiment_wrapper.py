@@ -13,17 +13,14 @@ import sys
 import uuid
 
 import dateutil.tz
+import dowel
+from dowel import logger
 import psutil
 
 from garage import config
 from garage.experiment import deterministic, snapshotter
 from garage.experiment.experiment import concretize
 from garage.experiment.local_tf_runner import LocalRunner
-from garage.logger import CsvOutput
-from garage.logger import logger
-from garage.logger import StdOutput
-from garage.logger import TensorBoardOutput
-from garage.logger import TextOutput
 from garage.misc.console import colorize
 from garage.misc.console import mkdir_p
 import garage.plotter
@@ -181,10 +178,10 @@ def run_experiment(argv):
     if not args.use_cloudpickle:
         log_parameters(params_log_file, args)
 
-    logger.add_output(TextOutput(text_log_file))
-    logger.add_output(CsvOutput(tabular_log_file))
-    logger.add_output(TensorBoardOutput(log_dir))
-    logger.add_output(StdOutput())
+    logger.add_output(dowel.TextOutput(text_log_file))
+    logger.add_output(dowel.CsvOutput(tabular_log_file))
+    logger.add_output(dowel.TensorBoardOutput(log_dir))
+    logger.add_output(dowel.StdOutput())
     prev_snapshot_dir = snapshotter.snapshot_dir
     prev_mode = snapshotter.snapshot_mode
     snapshotter.snapshot_dir = log_dir

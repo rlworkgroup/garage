@@ -1,8 +1,8 @@
 """A regressor based on a GaussianMLP model."""
+from dowel import tabular
 import numpy as np
 import tensorflow as tf
 
-from garage.logger import tabular
 from garage.tf.misc import tensor_utils
 from garage.tf.optimizers import LbfgsOptimizer, PenaltyLbfgsOptimizer
 from garage.tf.regressors import GaussianMLPRegressorModel

@@ -9,6 +9,8 @@ from baselines.bench import benchmarks
 from baselines.her.experiment.config import CACHED_ENVS
 from baselines.her.experiment.config import DEFAULT_PARAMS as BASELINES_PARAMS
 from baselines.her.experiment.train import launch
+import dowel
+from dowel import logger
 import gym
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -16,10 +18,6 @@ import tensorflow as tf
 
 from garage.experiment import deterministic
 from garage.experiment import LocalRunner
-from garage.logger import CsvOutput
-from garage.logger import logger
-from garage.logger import StdOutput
-from garage.logger import TensorBoardOutput
 from garage.np.exploration_strategies import OUStrategy
 from garage.replay_buffer import HerReplayBuffer
 from garage.tf.algos import DDPG
@@ -166,9 +164,9 @@ def run_garage(env, seed, log_dir):
 
         # Set up logger since we are not using run_experiment
         tabular_log_file = osp.join(log_dir, 'progress.csv')
-        logger.add_output(StdOutput())
-        logger.add_output(CsvOutput(tabular_log_file))
-        logger.add_output(TensorBoardOutput(log_dir))
+        logger.add_output(dowel.StdOutput())
+        logger.add_output(dowel.CsvOutput(tabular_log_file))
+        logger.add_output(dowel.TensorBoardOutput(log_dir))
 
         runner.setup(algo, env)
         runner.train(

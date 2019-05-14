@@ -15,23 +15,20 @@ required = [
     # command again and the install succeeds because absl-py has been
     # installed. This is stupid, but harmless.
     'dm_control @ https://api.github.com/repos/deepmind/dm_control/tarball/92f9913013face0468442cd0964d5973ea2089ea',  # noqa: E501
+    'dowel==0.0.1',
     'gym[all]==0.10.11',
     'hyperopt',
-    'jsonmerge',
     'joblib<0.13,>=0.12',
     'matplotlib',
     'mujoco-py<1.50.2,>=1.50.1',
     'numpy==1.14.5',
     'pandas',
     'polling',
-    'protobuf',
     'psutil',
     'pyprind',
     'python-dateutil',
     'scikit-image',
     'scipy',
-    'tabulate',
-    'tensorboardX',
     'tensorflow<1.13,>=1.12.0',
     'tensorflow-probability<0.6.0,>=0.5.0',  # for tensorflow 1.12
 ]

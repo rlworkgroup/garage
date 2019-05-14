@@ -1,10 +1,9 @@
 """Relative Entropy Policy Search."""
-
+from dowel import logger, tabular
 import numpy as np
 import scipy.optimize
 import tensorflow as tf
 
-from garage.logger import logger, tabular
 from garage.misc.overrides import overrides
 from garage.tf.algos.batch_polopt import BatchPolopt
 from garage.tf.misc import tensor_utils

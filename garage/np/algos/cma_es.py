@@ -1,7 +1,7 @@
 import cma
+from dowel import logger, tabular
 import numpy as np
 
-from garage.logger import logger, tabular
 from garage.np.algos.base import RLAlgorithm
 
 
