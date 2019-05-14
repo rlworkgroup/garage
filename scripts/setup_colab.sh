@@ -116,7 +116,7 @@ if [[ -z "`command -v file`" ]]; then
   apt-get install -y -q file libmagic-dev
   file --version
 fi
-  
+
 # Verify there's a file in the mjkey path
 test "$(file -b --mime-type ${_arg_mjkey})" == "text/plain" \
   || _PRINT_HELP=yes die \
@@ -177,16 +177,7 @@ if [[ "${_arg_modify_bashrc}" = on ]]; then
   echo -e "\n# Added by the garage installer" >> "${BASH_RC}"
 fi
 
-# Set up MuJoCo (for gym)
-if [[ ! -d "${HOME}/.mujoco/mjpro150" ]]; then
-  mkdir -p "${HOME}"/.mujoco
-  MUJOCO_ZIP="$(mktemp -d)/mujoco.zip"
-  wget https://www.roboti.us/download/mjpro150_linux.zip -O "${MUJOCO_ZIP}"
-  unzip -u "${MUJOCO_ZIP}" -d "${HOME}"/.mujoco
-else
-  print_warning "MuJoCo is already installed"
-fi
-# Set up MuJoCo 2.0 (for dm_control)
+# Set up MuJoCo 2.0 (for gym and dm_control)
 if [[ ! -d "${HOME}/.mujoco/mujoco200_linux" ]]; then
   mkdir -p "${HOME}"/.mujoco
   MUJOCO_ZIP="$(mktemp -d)/mujoco.zip"
@@ -198,8 +189,8 @@ if [[ "${_arg_modify_bashrc}" = on ]]; then
   echo "export MUJOCO_GL=\"glfw\"" >> "${BASH_RC}"
 fi
 # Configure MuJoCo as a shared library
-export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:${HOME}/.mujoco/mjpro150/bin"
-LD_LIB_ENV_VAR="LD_LIBRARY_PATH=\"\$LD_LIBRARY_PATH:${HOME}/.mujoco/mjpro150"
+export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:${HOME}/.mujoco/mujoco200/bin"
+LD_LIB_ENV_VAR="LD_LIBRARY_PATH=\"\$LD_LIBRARY_PATH:${HOME}/.mujoco/mujoco200"
 LD_LIB_ENV_VAR="${LD_LIB_ENV_VAR}/bin\""
 if [[ "${_arg_modify_bashrc}" = on ]]; then
   echo "export ${LD_LIB_ENV_VAR}" >> "${BASH_RC}"
@@ -211,14 +202,9 @@ cp "${_arg_mjkey}" "${HOME}/.mujoco/mjkey.txt"
   # Prevent pip from complaining about available upgrades
   pip install --upgrade pip
 
-  # install mujoco-py, given issue 66
-  # https://github.com/openai/mujoco-py/issues/66
-  # pip install git+git://github.com/openai/mujoco-py.git@1.50.1.1 # requires mujoco activation key
-  MUJOCO_150="$(mktemp -d)/mujoco_150"
-  git clone --branch 1.50.1.1 --depth 1 https://github.com/openai/mujoco-py.git $MUJOCO_150
-  pip install -e $MUJOCO_150
-  
-  
+  pip install 'mujoco-py<2.1,>=2.0'
+
+
   # install dm-control related to mujoco 1.50
   # pip install -v git+git://github.com/deepmind/dm_control.git@mujoco1.50
   pip install git+git://github.com/deepmind/dm_control.git@92f9913013face0468442cd0964d5973ea2089ea
@@ -228,7 +214,7 @@ cp "${_arg_mjkey}" "${HOME}/.mujoco/mjkey.txt"
   pip install -e .[all]
   pip install -e .[dev]
   pip install git+https://github.com/rlworkgroup/metaworlds.git@master#egg=metaworlds
-  pip install git+https://github.com/rlworkgroup/viskit.git@master#egg=viskit  
+  pip install git+https://github.com/rlworkgroup/viskit.git@master#egg=viskit
 
   if [[ "${_arg_gpu}" = on ]]; then
     # Remove any TensorFlow installations before installing the GPU flavor
@@ -240,4 +226,3 @@ cp "${_arg_mjkey}" "${HOME}/.mujoco/mjkey.txt"
 
 >&2 echo "end of setup_colab.sh"
 echo -e "\ngarage is installed!"
-
