@@ -85,11 +85,11 @@ RUN conda update -q -y conda
 #
 # Files needed to run setup.py
 # - README.md
-# - garage/__version__.py
+# - VERSION
 # - scripts/garage
 # - setup.py
 COPY README.md /root/code/garage/README.md
-COPY garage/__version__.py /root/code/garage/garage/__version__.py
+COPY VERSION /root/code/garage/VERSION
 COPY scripts/garage /root/code/garage/scripts/garage
 COPY setup.py /root/code/garage/setup.py
 COPY environment.yml /root/code/garage/environment.yml
