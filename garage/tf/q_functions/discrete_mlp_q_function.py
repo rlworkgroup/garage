@@ -2,10 +2,12 @@
 import tensorflow as tf
 
 from garage.misc.overrides import overrides
+from garage.tf.models import MLPDuelingModel
 from garage.tf.models import MLPModel
+from garage.tf.q_functions import QFunction2
 
 
-class DiscreteMLPQFunction:
+class DiscreteMLPQFunction(QFunction2):
     """
     Discrete MLP Q Function.
 
@@ -13,9 +15,11 @@ class DiscreteMLPQFunction:
     input state and action. It uses an MLP to fit the function Q(s, a).
 
     Args:
-        env_spec: Environment specification.
-        name: Name of the q-function, also serves as the variable scope.
-        hidden_sizes: Output dimension of dense layer(s).
+        env_spec (garage.envs.env_spec.EnvSpec): Environment specification.
+        name (str): Name of the q-function, also serves as the variable scope.
+        hidden_sizes (list[int]): Output dimension of dense layer(s).
+            For example, (32, 32) means the MLP of this q-function consists of
+            two hidden layers, each with 32 hidden units.
         hidden_nonlinearity (callable): Activation function for intermediate
             dense layer(s). It should return a tf.Tensor. Set it to
             None to maintain a linear activation.
@@ -34,12 +38,12 @@ class DiscreteMLPQFunction:
         output_b_init (callable): Initializer function for the bias
             of output dense layer(s). The function should return a
             tf.Tensor.
-        layer_normalization: Bool for using layer normalization or not.
+        layer_normalization (bool): Bool for using layer normalization.
     """
 
     def __init__(self,
                  env_spec,
-                 name='discrete_mlp_q_function',
+                 name=None,
                  hidden_sizes=(32, 32),
                  hidden_nonlinearity=tf.nn.relu,
                  hidden_w_init=tf.glorot_uniform_initializer(),
@@ -47,25 +51,54 @@ class DiscreteMLPQFunction:
                  output_nonlinearity=None,
                  output_w_init=tf.glorot_uniform_initializer(),
                  output_b_init=tf.zeros_initializer(),
+                 dueling=False,
                  layer_normalization=False):
-        obs_dim = env_spec.observation_space.shape
+        super().__init__(name)
+
+        self._env_spec = env_spec
+        self._hidden_sizes = hidden_sizes
+        self._hidden_nonlinearity = hidden_nonlinearity
+        self._hidden_w_init = hidden_w_init
+        self._hidden_b_init = hidden_b_init
+        self._output_nonlinearity = output_nonlinearity
+        self._output_w_init = output_w_init
+        self._output_b_init = output_b_init
+        self._dueling = dueling
+        self._layer_normalization = layer_normalization
+
+        self.obs_dim = env_spec.observation_space.shape
         action_dim = env_spec.action_space.flat_dim
 
-        self.model = MLPModel(
-            output_dim=action_dim,
-            name=name,
-            hidden_sizes=hidden_sizes,
-            hidden_nonlinearity=hidden_nonlinearity,
-            hidden_w_init=hidden_w_init,
-            hidden_b_init=hidden_b_init,
-            output_nonlinearity=output_nonlinearity,
-            output_w_init=output_w_init,
-            output_b_init=output_b_init,
-            layer_normalization=layer_normalization)
+        if not dueling:
+            self.model = MLPModel(
+                output_dim=action_dim,
+                hidden_sizes=hidden_sizes,
+                hidden_nonlinearity=hidden_nonlinearity,
+                hidden_w_init=hidden_w_init,
+                hidden_b_init=hidden_b_init,
+                output_nonlinearity=output_nonlinearity,
+                output_w_init=output_w_init,
+                output_b_init=output_b_init,
+                layer_normalization=layer_normalization)
+        else:
+            self.model = MLPDuelingModel(
+                output_dim=action_dim,
+                hidden_sizes=hidden_sizes,
+                hidden_nonlinearity=hidden_nonlinearity,
+                hidden_w_init=hidden_w_init,
+                hidden_b_init=hidden_b_init,
+                output_nonlinearity=output_nonlinearity,
+                output_w_init=output_w_init,
+                output_b_init=output_b_init,
+                layer_normalization=layer_normalization)
 
-        obs_ph = tf.placeholder(tf.float32, (None, ) + obs_dim, name='obs')
+        self._initialize()
 
-        with tf.variable_scope(name) as vs:
+    def _initialize(self):
+        obs_ph = tf.placeholder(
+            tf.float32, (None, ) + self.obs_dim, name='obs')
+
+        with tf.variable_scope(self.name) as vs:
             self._variable_scope = vs
             self.model.build(obs_ph)
 
@@ -83,8 +116,39 @@ class DiscreteMLPQFunction:
         Symbolic graph for q-network.
 
         Args:
-            state_input: The state input tf.Tensor to the network.
-            name: Network variable scope.
+            state_input (tf.Tensor): The state input tf.Tensor to the network.
+            name (str): Network variable scope.
+
+        Return:
+            The tf.Tensor output of Discrete MLP QFunction.
         """
         with tf.variable_scope(self._variable_scope):
             return self.model.build(state_input, name=name)
+
+    def clone(self, name):
+        """
+        Return a clone of the Q-function.
+
+        It only copies the configuration of the Q-function,
+        not the parameters.
+
+        Args:
+            name (str): Name of the newly created q-function.
+        """
+        return self.__class__(
+            name=name,
+            env_spec=self._env_spec,
+            hidden_sizes=self._hidden_sizes,
+            hidden_nonlinearity=self._hidden_nonlinearity,
+            hidden_w_init=self._hidden_w_init,
+            hidden_b_init=self._hidden_b_init,
+            output_nonlinearity=self._output_nonlinearity,
+            output_w_init=self._output_w_init,
+            output_b_init=self._output_b_init,
+            dueling=self._dueling,
+            layer_normalization=self._layer_normalization)
+
+    def __setstate__(self, state):
+        """Object.__setstate__."""
+        self.__dict__.update(state)
+        self._initialize()

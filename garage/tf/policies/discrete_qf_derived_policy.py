@@ -7,27 +7,33 @@ from akro.tf import Discrete
 import numpy as np
 import tensorflow as tf
 
-from garage.core import Serializable
 from garage.misc.overrides import overrides
-from garage.tf.policies.base import Policy
+from garage.tf.policies.base2 import Policy2
 
 
-class DiscreteQfDerivedPolicy(Policy, Serializable):
+class DiscreteQfDerivedPolicy(Policy2):
     """
     DiscreteQfDerived policy.
 
     Args:
         env_spec (garage.envs.env_spec.EnvSpec): Environment specification.
         qf (garage.q_functions.QFunction): The q-function used.
+        name (str): Name of the policy.
     """
 
-    def __init__(self, env_spec, qf):
-        Serializable.quick_init(self, locals())
-        super().__init__(env_spec)
+    def __init__(self, env_spec, qf, name='DiscreteQfDerivedPolicy'):
+        super().__init__(name, env_spec)
 
         assert isinstance(env_spec.action_space, Discrete)
         self._env_spec = env_spec
         self._qf = qf
+
+        self._initialize()
+
+    def _initialize(self):
+        self._f_qval = tf.get_default_session().make_callable(
+            self._qf.q_vals,
+            feed_list=[self._qf.model.networks['default'].input])
 
     @property
     def vectorized(self):
@@ -40,16 +46,13 @@ class DiscreteQfDerivedPolicy(Policy, Serializable):
         Get action from this policy for the input observation.
 
         Args:
-            observation: Observation from environment.
-            sess: tf.Session provided.
+            observation (numpy.ndarray): Observation from environment.
 
         Returns:
-            opt_action: Optimal action from this policy.
+            Single optimal action from this policy.
 
         """
-        sess = tf.get_default_session()
-        q_vals = sess.run(
-            self._qf.q_val, feed_dict={self._qf.obs_ph: [observation]})
+        q_vals = self._f_qval([observation])
         opt_action = np.argmax(q_vals)
 
         return opt_action
@@ -60,16 +63,24 @@ class DiscreteQfDerivedPolicy(Policy, Serializable):
         Get actions from this policy for the input observations.
 
         Args:
-            observations: Observations from environment.
-            sess: tf.Session provided.
+            observations (numpy.ndarray): Observations from environment.
 
         Returns:
-            opt_actions: Optimal actions from this policy.
+            Optimal actions from this policy.
 
         """
-        sess = tf.get_default_session()
-        q_vals = sess.run(
-            self._qf.q_val, feed_dict={self._qf.obs_ph: observations})
+        q_vals = self._f_qval(observations)
         opt_actions = np.argmax(q_vals, axis=1)
 
         return opt_actions
+
+    def __getstate__(self):
+        """Object.__getstate__."""
+        new_dict = self.__dict__.copy()
+        del new_dict['_f_qval']
+        return new_dict
+
+    def __setstate__(self, state):
+        """Object.__setstate__."""
+        self.__dict__.update(state)
+        self._initialize()

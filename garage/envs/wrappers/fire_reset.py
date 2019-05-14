@@ -9,7 +9,7 @@ class FireReset(gym.Wrapper):
     Take action "fire" on reset.
 
     Args:
-        env: The environment to be wrapped.
+        env (gym.Env): The environment to be wrapped.
     """
 
     def __init__(self, env):
@@ -19,6 +19,10 @@ class FireReset(gym.Wrapper):
         assert len(env.unwrapped.get_action_meanings()) >= 3, (
             'Only use fire reset wrapper for suitable environment!')
 
+    def step(self, action):
+        """gym.Env step function."""
+        return self.env.step(action)
+
     def reset(self, **kwargs):
         """gym.Env reset function."""
         self.env.reset(**kwargs)
@@ -26,7 +30,3 @@ class FireReset(gym.Wrapper):
         if done:
             obs = self.env.reset(**kwargs)
         return obs
-
-    def step(self, action):
-        """gym.Env step function."""
-        return self.env.step(action)

@@ -80,7 +80,7 @@ class TestCNN(TfGraphTestCase):
         for filter_size, stride in zip(filter_sizes, strides):
             current_size = int((current_size - filter_size) / stride) + 1
         flatten_shape = current_size * current_size * out_channels[-1]
-        assert result.shape == (5, flatten_shape)
+        assert result.shape == (self.batch_size, flatten_shape)
 
     @params(((1, ), (3, ), (32, ), (1, )), ((3, ), (3, ), (32, ), (1, )),
             ((3, ), (3, ), (32, ), (2, )), ((1, 1), (3, 32), (32, 64), (1, 1)),
@@ -150,7 +150,6 @@ class TestCNN(TfGraphTestCase):
             if two_layer:
                 h1_w = tf.get_variable('cnn1/h1/weight').eval()
                 h1_b = tf.get_variable('cnn1/h1/bias').eval()
-
         filter_weights = (h0_w, h1_w) if two_layer else (h0_w, )
         filter_bias = (h0_b, h1_b) if two_layer else (h0_b, )
 

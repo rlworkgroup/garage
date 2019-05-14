@@ -103,10 +103,11 @@ class DDPG(OffPolicyRLAlgorithm):
 
             # Set up target init and update function
             with tf.name_scope('setup_target'):
-                policy_init_ops, policy_update_ops = get_target_ops(
+                ops = tensor_utils.get_target_ops(
                     self.policy.get_global_vars(),
                     self.policy.get_global_vars('target_policy'), self.tau)
-                qf_init_ops, qf_update_ops = get_target_ops(
+                policy_init_ops, policy_update_ops = ops
+                qf_init_ops, qf_update_ops = tensor_utils.get_target_ops(
                     self.qf.get_global_vars(),
                     self.qf.get_global_vars('target_qf'), self.tau)
                 target_init_op = policy_init_ops + qf_init_ops
@@ -292,15 +293,3 @@ class DDPG(OffPolicyRLAlgorithm):
     @overrides
     def get_itr_snapshot(self, itr):
         return dict(itr=itr, policy=self.policy)
-
-
-def get_target_ops(variables, target_variables, tau):
-    """Get target network update operations."""
-    update_ops = []
-    init_ops = []
-    assert len(variables) == len(target_variables)
-    for var, target_var in zip(variables, target_variables):
-        init_ops.append(tf.assign(target_var, var))
-        update_ops.append(
-            tf.assign(target_var, tau * var + (1.0 - tau) * target_var))
-    return init_ops, update_ops

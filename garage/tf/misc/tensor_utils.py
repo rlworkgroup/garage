@@ -13,6 +13,39 @@ def compile_function(inputs, outputs, log_name=None):
     return run
 
 
+def get_target_ops(variables, target_variables, tau=None):
+    """
+    Get target variables update operations.
+
+    In RL algorithms we often update target network every n
+    steps. This function returns the tf.Operation for updating
+    target variables (denoted by target_var) from variables
+    (denote by var) with fraction tau. In other words, each time
+    we want to keep tau of the var and add (1 - tau) of target_var
+    to var.
+
+    Args:
+        variables (list[tf.Variable]): Soure variables for update.
+        target_variable (list[tf.Variable]): Target variables to
+            be updated.
+        tau (float): Fraction to update. Set it to be None for
+            hard-update.
+    """
+    update_ops = []
+    init_ops = []
+    assert len(variables) == len(target_variables)
+    for var, target_var in zip(variables, target_variables):
+        init_ops.append(tf.assign(target_var, var))
+        if tau is not None:
+            update_ops.append(
+                tf.assign(target_var, tau * var + (1.0 - tau) * target_var))
+
+    if tau is not None:
+        return init_ops, update_ops
+    else:
+        return init_ops
+
+
 def flatten_batch(t, name='flatten_batch'):
     return tf.reshape(t, [-1] + list(t.shape[2:]), name=name)
 

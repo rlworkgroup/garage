@@ -21,12 +21,12 @@ class EpsilonGreedyStrategy(ExplorationStrategy):
     ϵ    : select a random action from an uniform distribution.
 
     Args:
-        env_spec: Environment specification
-        total_timesteps: Total steps in the training, equivalent to
+        env_spec (garage.envs.env_spec.EnvSpec): Environment specification.
+        total_timesteps (int): Total steps in the training, equivalent to
             max_path_length * n_epochs.
-        max_epsilon: The maximum(starting) value of epsilon.
-        min_epsilon: The minimum(terminal) value of epsilon.
-        decay_ratio: Fraction of total steps for epsilon decay.
+        max_epsilon (float): The maximum(starting) value of epsilon.
+        min_epsilon (float): The minimum(terminal) value of epsilon.
+        decay_ratio (float): Fraction of total steps for epsilon decay.
     """
 
     def __init__(self,
@@ -41,6 +41,8 @@ class EpsilonGreedyStrategy(ExplorationStrategy):
         self._decay_period = int(total_timesteps * decay_ratio)
         self._action_space = env_spec.action_space
         self._epsilon = self._max_epsilon
+        self._decrement = (
+            self._max_epsilon - self._min_epsilon) / self._decay_period
 
     @overrides
     def get_action(self, t, observation, policy, **kwargs):
@@ -61,7 +63,7 @@ class EpsilonGreedyStrategy(ExplorationStrategy):
         if np.random.random() < self._epsilon:
             opt_action = self._action_space.sample()
 
-        return opt_action
+        return opt_action, dict()
 
     @overrides
     def get_actions(self, t, observations, policy, **kwargs):
@@ -83,9 +85,8 @@ class EpsilonGreedyStrategy(ExplorationStrategy):
             if np.random.random() < self._epsilon:
                 opt_actions[itr] = self._action_space.sample()
 
-        return opt_actions
+        return opt_actions, dict()
 
     def _decay(self):
         if self._epsilon > self._min_epsilon:
-            self._epsilon -= (
-                self._max_epsilon - self._min_epsilon) / self._decay_period
+            self._epsilon -= self._decrement

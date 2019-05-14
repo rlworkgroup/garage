@@ -1,23 +1,12 @@
+import pickle
+
 import tensorflow as tf
 
 from garage.tf.envs import TfEnv
 from garage.tf.policies import DiscreteQfDerivedPolicy
 from tests.fixtures import TfGraphTestCase
 from tests.fixtures.envs.dummy import DummyDiscreteEnv
-
-
-class SimpleQFunction:
-    """Simple QFunction for testing."""
-
-    def __init__(self, env_spec):
-        obs_dim = env_spec.observation_space.shape
-
-        self.obs_ph = tf.placeholder(
-            tf.float32, (None, ) + obs_dim, name="obs")
-        self.q_val = self.build_net(self.obs_ph)
-
-    def build_net(self, input_var):
-        return tf.identity(input_var)
+from tests.fixtures.q_functions import SimpleQFunction
 
 
 class TestQfDerivedPolicy(TfGraphTestCase):
@@ -37,3 +26,17 @@ class TestQfDerivedPolicy(TfGraphTestCase):
         actions = self.policy.get_actions([obs])
         for action in actions:
             assert self.env.action_space.contains(action)
+
+    def test_is_pickleable(self):
+        with tf.variable_scope('SimpleQFunction/SimpleMLPModel', reuse=True):
+            return_var = tf.get_variable('return_var')
+        # assign it to all one
+        return_var.load(tf.ones_like(return_var).eval())
+        obs, _, _, _ = self.env.step(1)
+        action1 = self.policy.get_action(obs)
+
+        p = pickle.dumps(self.policy)
+        with tf.Session(graph=tf.Graph()):
+            policy_pickled = pickle.loads(p)
+            action2 = policy_pickled.get_action(obs)
+            assert action1 == action2

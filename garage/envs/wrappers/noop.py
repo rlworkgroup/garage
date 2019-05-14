@@ -11,8 +11,8 @@ class Noop(gym.Wrapper):
     No-op is assumed to be action 0.
 
     Args:
-        env: The environment to be wrapped.
-        noop_max: Maximum number no-op to be performed on reset.
+        env (gym.Env): The environment to be wrapped.
+        noop_max (int): Maximum number no-op to be performed on reset.
     """
 
     def __init__(self, env, noop_max=30):
@@ -23,6 +23,10 @@ class Noop(gym.Wrapper):
         assert env.unwrapped.get_action_meanings()[0] == 'NOOP', (
             "No-op should be the 0-th action but it's not in {}!".format(env))
 
+    def step(self, action):
+        """gym.Env step function."""
+        return self.env.step(action)
+
     def reset(self, **kwargs):
         """gym.Env reset function."""
         obs = self.env.reset(**kwargs)
@@ -32,7 +36,3 @@ class Noop(gym.Wrapper):
             if done:
                 obs = self.env.reset(**kwargs)
         return obs
-
-    def step(self, action):
-        """gym.Env step function."""
-        return self.env.step(action)
