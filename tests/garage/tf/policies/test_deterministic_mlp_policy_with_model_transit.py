@@ -40,9 +40,9 @@ class TestDeterministicMLPPolicyWithModelTransit(TfGraphTestCase):
 
         self.sess.run(tf.global_variables_initializer())
         for a, b in zip(self.policy3.get_params(), self.policy1.get_params()):
-            self.sess.run(b.assign(a))
+            self.sess.run(a.assign(b))
         for a, b in zip(self.policy4.get_params(), self.policy2.get_params()):
-            self.sess.run(b.assign(a))
+            self.sess.run(a.assign(b))
 
         self.obs = [self.box_env.reset()]
 
