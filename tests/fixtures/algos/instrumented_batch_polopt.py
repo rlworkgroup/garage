@@ -6,7 +6,8 @@ different stages in the experiment lifecycle.
 
 from multiprocessing.connection import Client
 
-from garage.logger import logger, snapshotter, tabular
+from garage.experiment import snapshotter
+from garage.logger import logger, tabular
 from garage.np.algos import BatchPolopt
 from garage.plotter import Plotter
 from tests.integration_tests.test_sigint import ExpLifecycle
