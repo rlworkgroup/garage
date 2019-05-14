@@ -30,6 +30,7 @@ class ReplayBuffer(metaclass=abc.ABCMeta):
         self._current_ptr = 0
         self._n_transitions_stored = 0
         self._time_horizon = time_horizon
+        self._size_in_transitions = size_in_transitions
         self._size = size_in_transitions // time_horizon
         self._initialized_buffer = False
         self._buffer = {}
@@ -43,7 +44,9 @@ class ReplayBuffer(metaclass=abc.ABCMeta):
 
         for key in self._buffer.keys():
             self._buffer[key][idx] = episode_buffer[key]
-        self._n_transitions_stored += self._time_horizon * rollout_batch_size
+        self._n_transitions_stored = min(
+            self._size_in_transitions, self._n_transitions_stored +
+            self._time_horizon * rollout_batch_size)
 
     @abstractmethod
     def sample(self, batch_size):

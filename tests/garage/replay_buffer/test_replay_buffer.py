@@ -42,6 +42,11 @@ class TestReplayBuffer(unittest.TestCase):
         replay_buffer = SimpleReplayBuffer(
             env_spec=env, size_in_transitions=3, time_horizon=1)
         replay_buffer.add_transitions(observation=[obs, obs], action=[1, 2])
+        assert not replay_buffer.full
         replay_buffer.add_transitions(observation=[obs, obs], action=[3, 4])
+        assert replay_buffer.full
+        replay_buffer.add_transitions(observation=[obs, obs], action=[5, 6])
+        replay_buffer.add_transitions(observation=[obs, obs], action=[7, 8])
 
-        assert np.array_equal(replay_buffer._buffer['action'], [[4], [2], [3]])
+        assert np.array_equal(replay_buffer._buffer['action'], [[7], [8], [6]])
+        assert replay_buffer.n_transitions_stored == 3
