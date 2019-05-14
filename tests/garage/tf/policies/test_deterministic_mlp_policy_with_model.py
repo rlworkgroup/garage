@@ -69,7 +69,7 @@ class TestDeterministicMLPPolicyWithModel(TfGraphTestCase):
 
         action = self.sess.run(
             action_sym, feed_dict={state_input: [obs.flatten()]})
-        action = np.reshape(action, action_dim)
+        action = policy.action_space.unflatten(action)
 
         assert np.array_equal(action, expected_action)
         assert env.action_space.contains(action)

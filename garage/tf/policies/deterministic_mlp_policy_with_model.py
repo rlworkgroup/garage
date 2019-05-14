@@ -98,10 +98,6 @@ class DeterministicMLPPolicyWithModel(Policy2):
             action = self.model.build(obs_var, name=name)
             return action
 
-    def get_params(self, trainable=True):
-        """Get the trainable variables."""
-        return self.get_trainable_vars()
-
     @overrides
     def get_action(self, observation):
         """Return a single action."""
