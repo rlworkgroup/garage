@@ -1,3 +1,5 @@
+import pickle
+
 from nose2.tools.params import params
 import numpy as np
 import tensorflow as tf
@@ -83,3 +85,21 @@ class TestDeterministicMLPRegressorWithModel(TfGraphTestCase):
         y_hat_sym = self.sess.run(outputs, feed_dict={new_input_var: [data]})
         y_hat = gmr._f_predict([data])
         assert np.allclose(y_hat, y_hat_sym, rtol=0, atol=1e-5)
+
+    def test_is_pickleable(self):
+        gmr = DeterministicMLPRegressorWithModel(
+            input_shape=(1, ), output_dim=1)
+
+        with tf.variable_scope(('DeterministicMLPRegressorWithModel/'
+                                'DeterministicMLPRegressorModel'),
+                               reuse=True):
+            bias = tf.get_variable('mlp/hidden_0/bias')
+        bias.load(tf.ones_like(bias).eval())
+
+        result1 = gmr.predict(np.ones((1, 1)))
+        h = pickle.dumps(gmr)
+
+        with tf.Session(graph=tf.Graph()):
+            gmr_pickled = pickle.loads(h)
+            result2 = gmr_pickled.predict(np.ones((1, 1)))
+            assert np.array_equal(result1, result2)
