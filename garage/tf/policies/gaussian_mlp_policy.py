@@ -1,9 +1,9 @@
 from akro.tf import Box
+from dowel import tabular
 import numpy as np
 import tensorflow as tf
 
 from garage.core import Serializable
-from garage.logger import tabular
 from garage.misc.overrides import overrides
 from garage.tf.core import LayersPowered
 import garage.tf.core.layers as L
@@ -16,7 +16,7 @@ from garage.tf.policies.base import StochasticPolicy
 class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
     def __init__(self,
                  env_spec,
-                 name="GaussianMLPPolicy",
+                 name='GaussianMLPPolicy',
                  hidden_sizes=(32, 32),
                  learn_std=True,
                  init_std=1.0,
@@ -58,10 +58,10 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
 
         Serializable.quick_init(self, locals())
         self.name = name
-        self._mean_network_name = "mean_network"
-        self._std_network_name = "std_network"
+        self._mean_network_name = 'mean_network'
+        self._std_network_name = 'std_network'
 
-        with tf.variable_scope(name, "GaussianMLPPolicy"):
+        with tf.variable_scope(name, 'GaussianMLPPolicy'):
 
             obs_dim = env_spec.observation_space.flat_dim
             action_dim = env_spec.action_space.flat_dim
@@ -69,9 +69,9 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
             # create network
             if mean_network is None:
                 if std_share_network:
-                    if std_parametrization == "exp":
+                    if std_parametrization == 'exp':
                         init_std_param = np.log(init_std)
-                    elif std_parametrization == "softplus":
+                    elif std_parametrization == 'softplus':
                         init_std_param = np.log(np.exp(init_std) - 1)
                     else:
                         raise NotImplementedError
@@ -81,7 +81,7 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
                     b = tf.constant_initializer(b)
                     with tf.variable_scope(self._mean_network_name):
                         mean_network = MLP(
-                            name="mlp",
+                            name='mlp',
                             input_shape=(obs_dim, ),
                             output_dim=2 * action_dim,
                             hidden_sizes=hidden_sizes,
@@ -92,7 +92,7 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
                         l_mean = L.SliceLayer(
                             mean_network.output_layer,
                             slice(action_dim),
-                            name="mean_slice",
+                            name='mean_slice',
                         )
                 else:
                     mean_network = MLP(
@@ -136,7 +136,7 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
                         l_std_param = L.SliceLayer(
                             mean_network.output_layer,
                             slice(action_dim, 2 * action_dim),
-                            name="std_slice",
+                            name='std_slice',
                         )
                 else:
                     with tf.variable_scope(self._std_network_name):
@@ -144,7 +144,7 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
                             mean_network.input_layer,
                             num_units=action_dim,
                             param=tf.constant_initializer(init_std_param),
-                            name="output_std_param",
+                            name='output_std_param',
                             trainable=learn_std,
                         )
 
@@ -176,9 +176,9 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
 
             dist_info_sym = self.dist_info_sym(
                 mean_network.input_layer.input_var, dict())
-            mean_var = tf.identity(dist_info_sym["mean"], name="mean")
+            mean_var = tf.identity(dist_info_sym['mean'], name='mean')
             log_std_var = tf.identity(
-                dist_info_sym["log_std"], name="standard_dev")
+                dist_info_sym['log_std'], name='standard_dev')
 
             self._f_dist = tensor_utils.compile_function(
                 inputs=[obs_var],
@@ -190,7 +190,7 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
         return True
 
     def dist_info_sym(self, obs_var, state_info_vars=None, name=None):
-        with tf.name_scope(name, "dist_info_sym", [obs_var]):
+        with tf.name_scope(name, 'dist_info_sym', [obs_var]):
             with tf.name_scope(self._mean_network_name, values=[obs_var]):
                 mean_var = L.get_output(self._l_mean, obs_var)
             with tf.name_scope(self._std_network_name, values=[obs_var]):
@@ -234,13 +234,13 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
         :param old_dist_info_vars:
         :return:
         """
-        with tf.name_scope(name, "get_reparam_action_sym",
+        with tf.name_scope(name, 'get_reparam_action_sym',
                            [obs_var, action_var, old_dist_info_vars]):
             new_dist_info_vars = self.dist_info_sym(obs_var, action_var)
             new_mean_var, new_log_std_var = new_dist_info_vars[
-                "mean"], new_dist_info_vars["log_std"]
+                'mean'], new_dist_info_vars['log_std']
             old_mean_var, old_log_std_var = old_dist_info_vars[
-                "mean"], old_dist_info_vars["log_std"]
+                'mean'], old_dist_info_vars['log_std']
             epsilon_var = (action_var - old_mean_var) / (
                 tf.exp(old_log_std_var) + 1e-8)
             new_action_var = new_mean_var + epsilon_var * tf.exp(
@@ -248,8 +248,8 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
             return new_action_var
 
     def log_diagnostics(self, paths):
-        log_stds = paths["agent_infos"]["log_std"]
-        tabular.record("{}/AverageStd".format(self.name),
+        log_stds = paths['agent_infos']['log_std']
+        tabular.record('{}/AverageStd'.format(self.name),
                        np.mean(np.exp(log_stds)))
 
     @property

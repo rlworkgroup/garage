@@ -1,8 +1,8 @@
+from dowel import tabular
 import numpy as np
 import tensorflow as tf
 
 from garage.core import Serializable
-from garage.logger import tabular
 from garage.tf.core import LayersPowered, Parameterized
 import garage.tf.core.layers as L
 from garage.tf.core.network import MLP

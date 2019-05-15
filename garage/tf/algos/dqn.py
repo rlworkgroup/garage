@@ -6,10 +6,10 @@ networks. It enables Q-Learning to be applied on high complexity environments.
 To deal with pixel environments, numbers of tricks are usually needed, e.g.
 skipping frames and stacking frames as single observation.
 """
+from dowel import tabular
 import numpy as np
 import tensorflow as tf
 
-from garage.logger import tabular
 from garage.misc.overrides import overrides
 from garage.misc.tensor_utils import normalize_pixel_batch
 from garage.tf.algos.off_policy_rl_algorithm import OffPolicyRLAlgorithm

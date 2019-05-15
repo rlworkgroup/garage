@@ -1,8 +1,8 @@
+from dowel import tabular
 import numpy as np
 import tensorflow as tf
 
 from garage.core import Serializable
-from garage.logger import tabular
 from garage.tf.core import LayersPowered, Parameterized
 import garage.tf.core.layers as L
 from garage.tf.core.network import MLP
@@ -24,7 +24,7 @@ class CategoricalMLPRegressor(LayersPowered, Serializable, Parameterized):
             self,
             input_shape,
             output_dim,
-            name="CategoricalMLPRegressor",
+            name='CategoricalMLPRegressor',
             prob_network=None,
             hidden_sizes=(32, 32),
             hidden_nonlinearity=tf.nn.tanh,
@@ -49,7 +49,7 @@ class CategoricalMLPRegressor(LayersPowered, Serializable, Parameterized):
         Parameterized.__init__(self)
         Serializable.quick_init(self, locals())
 
-        with tf.variable_scope(name, "CategoricalMLPRegressor"):
+        with tf.variable_scope(name, 'CategoricalMLPRegressor'):
             if optimizer is None:
                 optimizer = LbfgsOptimizer()
             if tr_optimizer is None:
@@ -59,7 +59,7 @@ class CategoricalMLPRegressor(LayersPowered, Serializable, Parameterized):
             self.optimizer = optimizer
             self.tr_optimizer = tr_optimizer
 
-            self._prob_network_name = "prob_network"
+            self._prob_network_name = 'prob_network'
             if prob_network is None:
                 prob_network = MLP(
                     input_shape=input_shape,
@@ -75,16 +75,16 @@ class CategoricalMLPRegressor(LayersPowered, Serializable, Parameterized):
 
             xs_var = prob_network.input_layer.input_var
             ys_var = tf.placeholder(
-                dtype=tf.float32, shape=[None, output_dim], name="ys")
+                dtype=tf.float32, shape=[None, output_dim], name='ys')
             old_prob_var = tf.placeholder(
-                dtype=tf.float32, shape=[None, output_dim], name="old_prob")
+                dtype=tf.float32, shape=[None, output_dim], name='old_prob')
 
             x_mean_var = tf.get_variable(
-                name="x_mean",
+                name='x_mean',
                 shape=(1, ) + input_shape,
                 initializer=tf.constant_initializer(0., dtype=tf.float32))
             x_std_var = tf.get_variable(
-                name="x_std",
+                name='x_std',
                 shape=(1, ) + input_shape,
                 initializer=tf.constant_initializer(1., dtype=tf.float32))
 
@@ -151,9 +151,9 @@ class CategoricalMLPRegressor(LayersPowered, Serializable, Parameterized):
             optimizer = self.optimizer
         loss_before = optimizer.loss(inputs)
         if self.name:
-            prefix = self.name + "/"
+            prefix = self.name + '/'
         else:
-            prefix = ""
+            prefix = ''
         tabular.record(prefix + 'LossBefore', loss_before)
         optimizer.optimize(inputs)
         loss_after = optimizer.loss(inputs)
@@ -169,7 +169,7 @@ class CategoricalMLPRegressor(LayersPowered, Serializable, Parameterized):
         return self._dist.log_likelihood(np.asarray(ys), dict(prob=prob))
 
     def dist_info_sym(self, x_var, name=None):
-        with tf.name_scope(name, "dist_info_sym", [x_var]):
+        with tf.name_scope(name, 'dist_info_sym', [x_var]):
             normalized_xs_var = (x_var - self.x_mean_var) / self.x_std_var
             with tf.name_scope(
                     self._prob_network_name, values=[normalized_xs_var]):
@@ -179,7 +179,7 @@ class CategoricalMLPRegressor(LayersPowered, Serializable, Parameterized):
         return dict(prob=prob)
 
     def log_likelihood_sym(self, x_var, y_var, name=None):
-        with tf.name_scope(name, "log_likelihood_sym", [x_var, y_var]):
+        with tf.name_scope(name, 'log_likelihood_sym', [x_var, y_var]):
             normalized_xs_var = (x_var - self.x_mean_var) / self.x_std_var
             with tf.name_scope(
                     self._prob_network_name, values=[normalized_xs_var]):

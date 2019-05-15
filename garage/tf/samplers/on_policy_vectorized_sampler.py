@@ -1,9 +1,9 @@
 import itertools
 import pickle
 
+from dowel import logger, tabular
 import numpy as np
 
-from garage.logger import logger, tabular
 from garage.misc import tensor_utils
 from garage.misc.overrides import overrides
 from garage.misc.prog_bar_counter import ProgBarCounter
@@ -31,7 +31,7 @@ class OnPolicyVectorizedSampler(BatchSampler):
 
     @overrides
     def obtain_samples(self, itr, batch_size=None, whole_paths=True):
-        logger.log("Obtaining samples for iteration %d..." % itr)
+        logger.log('Obtaining samples for iteration %d...' % itr)
 
         if not batch_size:
             batch_size = self.algo.max_path_length * self.n_envs
@@ -79,25 +79,25 @@ class OnPolicyVectorizedSampler(BatchSampler):
                         env_infos=[],
                         agent_infos=[],
                     )
-                running_paths[idx]["observations"].append(observation)
-                running_paths[idx]["actions"].append(action)
-                running_paths[idx]["rewards"].append(reward)
-                running_paths[idx]["env_infos"].append(env_info)
-                running_paths[idx]["agent_infos"].append(agent_info)
+                running_paths[idx]['observations'].append(observation)
+                running_paths[idx]['actions'].append(action)
+                running_paths[idx]['rewards'].append(reward)
+                running_paths[idx]['env_infos'].append(env_info)
+                running_paths[idx]['agent_infos'].append(agent_info)
                 if done:
                     paths.append(
                         dict(
                             observations=self.env_spec.observation_space.
-                            flatten_n(running_paths[idx]["observations"]),
+                            flatten_n(running_paths[idx]['observations']),
                             actions=self.env_spec.action_space.flatten_n(
-                                running_paths[idx]["actions"]),
+                                running_paths[idx]['actions']),
                             rewards=tensor_utils.stack_tensor_list(
-                                running_paths[idx]["rewards"]),
+                                running_paths[idx]['rewards']),
                             env_infos=tensor_utils.stack_tensor_dict_list(
-                                running_paths[idx]["env_infos"]),
+                                running_paths[idx]['env_infos']),
                             agent_infos=tensor_utils.stack_tensor_dict_list(
-                                running_paths[idx]["agent_infos"])))
-                    n_samples += len(running_paths[idx]["rewards"])
+                                running_paths[idx]['agent_infos'])))
+                    n_samples += len(running_paths[idx]['rewards'])
                     running_paths[idx] = None
 
             process_time += time.time() - t
@@ -106,9 +106,9 @@ class OnPolicyVectorizedSampler(BatchSampler):
 
         pbar.stop()
 
-        tabular.record("PolicyExecTime", policy_time)
-        tabular.record("EnvExecTime", env_time)
-        tabular.record("ProcessExecTime", process_time)
+        tabular.record('PolicyExecTime', policy_time)
+        tabular.record('EnvExecTime', env_time)
+        tabular.record('ProcessExecTime', process_time)
 
         if whole_paths:
             return paths

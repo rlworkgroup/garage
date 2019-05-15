@@ -1,9 +1,9 @@
 """Gaussian Conv Regressor."""
+from dowel import tabular
 import numpy as np
 import tensorflow as tf
 
 from garage.core import Serializable
-from garage.logger import tabular
 from garage.tf.core import LayersPowered
 from garage.tf.core import Parameterized
 import garage.tf.core.layers as layers
@@ -42,7 +42,7 @@ class GaussianConvRegressor(LayersPowered, Serializable, Parameterized):
                  hidden_sizes,
                  hidden_nonlinearity=tf.nn.tanh,
                  output_nonlinearity=None,
-                 name="GaussianConvRegressor",
+                 name='GaussianConvRegressor',
                  mean_network=None,
                  learn_std=True,
                  init_std=1.0,
@@ -64,8 +64,8 @@ class GaussianConvRegressor(LayersPowered, Serializable, Parameterized):
                  max_kl_step=0.01):
         Parameterized.__init__(self)
         Serializable.quick_init(self, locals())
-        self._mean_network_name = "mean_network"
-        self._std_network_name = "std_network"
+        self._mean_network_name = 'mean_network'
+        self._std_network_name = 'std_network'
 
         with tf.variable_scope(name):
             if optimizer is None:
@@ -103,7 +103,7 @@ class GaussianConvRegressor(LayersPowered, Serializable, Parameterized):
                     l_mean = layers.SliceLayer(
                         mean_network.output_layer,
                         slice(output_dim),
-                        name="mean_slice",
+                        name='mean_slice',
                     )
                 else:
                     mean_network = ConvNetwork(
@@ -137,7 +137,7 @@ class GaussianConvRegressor(LayersPowered, Serializable, Parameterized):
                 l_log_std = layers.SliceLayer(
                     mean_network.output_layer,
                     slice(output_dim, 2 * output_dim),
-                    name="log_std_slice",
+                    name='log_std_slice',
                 )
             else:
                 l_log_std = layers.ParamLayer(
@@ -152,29 +152,29 @@ class GaussianConvRegressor(LayersPowered, Serializable, Parameterized):
 
             xs_var = mean_network.input_layer.input_var
             ys_var = tf.placeholder(
-                dtype=tf.float32, name="ys", shape=(None, output_dim))
+                dtype=tf.float32, name='ys', shape=(None, output_dim))
             old_means_var = tf.placeholder(
-                dtype=tf.float32, name="ys", shape=(None, output_dim))
+                dtype=tf.float32, name='ys', shape=(None, output_dim))
             old_log_stds_var = tf.placeholder(
                 dtype=tf.float32,
-                name="old_log_stds",
+                name='old_log_stds',
                 shape=(None, output_dim))
 
             x_mean_var = tf.Variable(
                 np.zeros((1, np.prod(input_shape)), dtype=np.float32),
-                name="x_mean",
+                name='x_mean',
             )
             x_std_var = tf.Variable(
                 np.ones((1, np.prod(input_shape)), dtype=np.float32),
-                name="x_std",
+                name='x_std',
             )
             y_mean_var = tf.Variable(
                 np.zeros((1, output_dim), dtype=np.float32),
-                name="y_mean",
+                name='y_mean',
             )
             y_std_var = tf.Variable(
                 np.ones((1, output_dim), dtype=np.float32),
-                name="y_std",
+                name='y_std',
             )
 
             normalized_xs_var = (xs_var - x_mean_var) / x_std_var
@@ -228,12 +228,12 @@ class GaussianConvRegressor(LayersPowered, Serializable, Parameterized):
             )
 
             if use_trust_region:
-                optimizer_args["leq_constraint"] = (mean_kl, max_kl_step)
-                optimizer_args["inputs"] = [
+                optimizer_args['leq_constraint'] = (mean_kl, max_kl_step)
+                optimizer_args['inputs'] = [
                     xs_var, ys_var, old_means_var, old_log_stds_var
                 ]
             else:
-                optimizer_args["inputs"] = [xs_var, ys_var]
+                optimizer_args['inputs'] = [xs_var, ys_var]
 
             self._optimizer.update_opt(**optimizer_args)
 
@@ -281,9 +281,9 @@ class GaussianConvRegressor(LayersPowered, Serializable, Parameterized):
             inputs = [xs, ys]
         loss_before = self._optimizer.loss(inputs)
         if self._name:
-            prefix = self._name + "/"
+            prefix = self._name + '/'
         else:
-            prefix = ""
+            prefix = ''
         tabular.record(prefix + 'LossBefore', loss_before)
         self._optimizer.optimize(inputs)
         loss_after = self._optimizer.loss(inputs)
@@ -336,7 +336,7 @@ class GaussianConvRegressor(LayersPowered, Serializable, Parameterized):
         :param name:
 
         """
-        with tf.name_scope(name, "log_likelihood_sym", [x_var, y_var]):
+        with tf.name_scope(name, 'log_likelihood_sym', [x_var, y_var]):
             normalized_xs_var = (x_var - self._x_mean_var) / self._x_std_var
 
             with tf.name_scope(

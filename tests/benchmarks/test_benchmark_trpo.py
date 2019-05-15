@@ -16,16 +16,14 @@ from baselines.bench import benchmarks
 from baselines.common.tf_util import _PLACEHOLDER_CACHE
 from baselines.ppo1.mlp_policy import MlpPolicy
 from baselines.trpo_mpi import trpo_mpi
+import dowel
+from dowel import logger as dowel_logger
 import gym
 import tensorflow as tf
 
 from garage.envs import normalize
 from garage.experiment import deterministic
 from garage.experiment import LocalRunner
-from garage.logger import CsvOutput
-from garage.logger import logger as garage_logger
-from garage.logger import StdOutput
-from garage.logger import TensorBoardOutput
 from garage.tf.algos import TRPO
 from garage.tf.baselines import GaussianMLPBaseline
 from garage.tf.envs import TfEnv
@@ -159,14 +157,14 @@ def run_garage(env, seed, log_dir):
 
         # Set up logger since we are not using run_experiment
         tabular_log_file = osp.join(log_dir, 'progress.csv')
-        garage_logger.add_output(CsvOutput(tabular_log_file))
-        garage_logger.add_output(StdOutput())
-        garage_logger.add_output(TensorBoardOutput(log_dir))
+        dowel_logger.add_output(dowel.CsvOutput(tabular_log_file))
+        dowel_logger.add_output(dowel.StdOutput())
+        dowel_logger.add_output(dowel.TensorBoardOutput(log_dir))
 
         runner.setup(algo, env)
         runner.train(n_epochs=976, batch_size=1024)
 
-        garage_logger.remove_all()
+        dowel_logger.remove_all()
 
         return tabular_log_file
 

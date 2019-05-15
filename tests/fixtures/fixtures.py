@@ -1,10 +1,10 @@
 import gc
 import unittest
 
+from dowel import logger
 import tensorflow as tf
 
 from garage.experiment import deterministic
-from garage.logger import logger
 from tests.fixtures.logger import NullOutput
 
 

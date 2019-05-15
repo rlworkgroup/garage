@@ -1,4 +1,5 @@
-from garage.logger import logger
+from dowel import logger
+
 from garage.np.algos import RLAlgorithm
 
 

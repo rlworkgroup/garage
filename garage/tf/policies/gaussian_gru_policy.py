@@ -1,9 +1,9 @@
 from akro.tf import Box
+from dowel import tabular
 import numpy as np
 import tensorflow as tf
 
 from garage.core import Serializable
-from garage.logger import tabular
 from garage.misc.overrides import overrides
 from garage.tf.core import LayersPowered
 import garage.tf.core.layers as L
@@ -17,7 +17,7 @@ class GaussianGRUPolicy(StochasticPolicy, LayersPowered, Serializable):
     def __init__(
             self,
             env_spec,
-            name="GaussianGRUPolicy",
+            name='GaussianGRUPolicy',
             hidden_dim=32,
             feature_network=None,
             state_include_action=True,
@@ -36,10 +36,10 @@ class GaussianGRUPolicy(StochasticPolicy, LayersPowered, Serializable):
         """
         assert isinstance(env_spec.action_space, Box)
 
-        self._mean_network_name = "mean_network"
-        self._std_network_name = "std_network"
+        self._mean_network_name = 'mean_network'
+        self._std_network_name = 'std_network'
 
-        with tf.variable_scope(name, "GaussianGRUPolicy"):
+        with tf.variable_scope(name, 'GaussianGRUPolicy'):
             Serializable.quick_init(self, locals())
             super(GaussianGRUPolicy, self).__init__(env_spec)
 
@@ -51,7 +51,7 @@ class GaussianGRUPolicy(StochasticPolicy, LayersPowered, Serializable):
             else:
                 input_dim = obs_dim
 
-            l_input = L.InputLayer(shape=(None, None, input_dim), name="input")
+            l_input = L.InputLayer(shape=(None, None, input_dim), name='input')
 
             if feature_network is None:
                 feature_dim = input_dim
@@ -63,7 +63,7 @@ class GaussianGRUPolicy(StochasticPolicy, LayersPowered, Serializable):
                 l_feature = L.OpLayer(
                     l_flat_feature,
                     extras=[l_input],
-                    name="reshape_feature",
+                    name='reshape_feature',
                     op=lambda flat_feature, input: tf.reshape(
                         flat_feature,
                         tf.stack([
@@ -82,27 +82,27 @@ class GaussianGRUPolicy(StochasticPolicy, LayersPowered, Serializable):
                     hidden_nonlinearity=hidden_nonlinearity,
                     output_nonlinearity=output_nonlinearity,
                     gru_layer_cls=gru_layer_cls,
-                    name="gru_mean_network")
+                    name='gru_mean_network')
 
                 l_mean = L.SliceLayer(
                     mean_network.output_layer,
                     slice(action_dim),
-                    name="mean_slice")
+                    name='mean_slice')
 
                 l_step_mean = L.SliceLayer(
                     mean_network.step_output_layer,
                     slice(action_dim),
-                    name="step_mean_slice")
+                    name='step_mean_slice')
 
                 l_log_std = L.SliceLayer(
                     mean_network.output_layer,
                     slice(action_dim, 2 * action_dim),
-                    name="log_std_slice")
+                    name='log_std_slice')
 
                 l_step_log_std = L.SliceLayer(
                     mean_network.step_output_layer,
                     slice(action_dim, 2 * action_dim),
-                    name="step_log_std_slice")
+                    name='step_log_std_slice')
             else:
                 mean_network = GRUNetwork(
                     input_shape=(feature_dim, ),
@@ -112,7 +112,7 @@ class GaussianGRUPolicy(StochasticPolicy, LayersPowered, Serializable):
                     hidden_nonlinearity=hidden_nonlinearity,
                     output_nonlinearity=output_nonlinearity,
                     gru_layer_cls=gru_layer_cls,
-                    name="gru_mean_network")
+                    name='gru_mean_network')
 
                 l_mean = mean_network.output_layer
 
@@ -122,7 +122,7 @@ class GaussianGRUPolicy(StochasticPolicy, LayersPowered, Serializable):
                     mean_network.input_layer,
                     num_units=action_dim,
                     param=tf.constant_initializer(np.log(init_std)),
-                    name="output_log_std",
+                    name='output_log_std',
                     trainable=learn_std,
                 )
 
@@ -130,7 +130,7 @@ class GaussianGRUPolicy(StochasticPolicy, LayersPowered, Serializable):
                     mean_network.step_input_layer,
                     num_units=action_dim,
                     param=l_log_std.param,
-                    name="step_output_log_std",
+                    name='step_output_log_std',
                     trainable=learn_std,
                 )
 
@@ -140,7 +140,7 @@ class GaussianGRUPolicy(StochasticPolicy, LayersPowered, Serializable):
             self.state_include_action = state_include_action
 
             flat_input_var = tf.placeholder(
-                dtype=tf.float32, shape=(None, input_dim), name="flat_input")
+                dtype=tf.float32, shape=(None, input_dim), name='flat_input')
             if feature_network is None:
                 feature_var = flat_input_var
             else:
@@ -152,16 +152,16 @@ class GaussianGRUPolicy(StochasticPolicy, LayersPowered, Serializable):
                 out_step_mean, out_step_hidden_mean = L.get_output(
                     [l_step_mean, mean_network.step_hidden_layer],
                     {mean_network.step_input_layer: feature_var})
-                out_step_mean = tf.identity(out_step_mean, "step_mean")
+                out_step_mean = tf.identity(out_step_mean, 'step_mean')
                 out_step_hidden_mean = tf.identity(out_step_hidden_mean,
-                                                   "step_hidden_mean")
+                                                   'step_hidden_mean')
 
             with tf.name_scope(self._std_network_name):
                 out_step_log_std = L.get_output(
                     l_step_log_std,
                     {mean_network.step_input_layer: feature_var})
                 out_step_log_std = tf.identity(out_step_log_std,
-                                               "step_log_std")
+                                               'step_log_std')
 
             self.f_step_mean_std = tensor_utils.compile_function([
                 flat_input_var,
@@ -188,12 +188,12 @@ class GaussianGRUPolicy(StochasticPolicy, LayersPowered, Serializable):
 
     @overrides
     def dist_info_sym(self, obs_var, state_info_vars, name=None):
-        with tf.name_scope(name, "dist_info_sym", [obs_var, state_info_vars]):
+        with tf.name_scope(name, 'dist_info_sym', [obs_var, state_info_vars]):
             n_batches = tf.shape(obs_var)[0]
             n_steps = tf.shape(obs_var)[1]
             obs_var = tf.reshape(obs_var, tf.stack([n_batches, n_steps, -1]))
             if self.state_include_action:
-                prev_action_var = state_info_vars["prev_action"]
+                prev_action_var = state_info_vars['prev_action']
                 all_input_var = tf.concat(
                     axis=2, values=[obs_var, prev_action_var])
             else:
@@ -270,7 +270,7 @@ class GaussianGRUPolicy(StochasticPolicy, LayersPowered, Serializable):
         self.prev_hiddens = hidden_vec
         agent_info = dict(mean=means, log_std=log_stds)
         if self.state_include_action:
-            agent_info["prev_action"] = np.copy(prev_actions)
+            agent_info['prev_action'] = np.copy(prev_actions)
         return actions, agent_info
 
     @property
@@ -286,11 +286,11 @@ class GaussianGRUPolicy(StochasticPolicy, LayersPowered, Serializable):
     def state_info_specs(self):
         if self.state_include_action:
             return [
-                ("prev_action", (self.action_dim, )),
+                ('prev_action', (self.action_dim, )),
             ]
         else:
             return []
 
     def log_diagnostics(self, paths):
-        log_stds = paths["agent_infos"]["log_std"]
+        log_stds = paths['agent_infos']['log_std']
         tabular.record('AveragePolicyStd', np.mean(np.exp(log_stds)))

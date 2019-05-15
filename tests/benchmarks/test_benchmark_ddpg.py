@@ -21,6 +21,8 @@ from baselines.ddpg.models import Actor, Critic
 from baselines.ddpg.noise import OrnsteinUhlenbeckActionNoise
 import baselines.ddpg.training as training
 from baselines.logger import configure
+import dowel
+from dowel import logger as dowel_logger
 import gym
 from mpi4py import MPI
 import numpy as np
@@ -28,10 +30,6 @@ import tensorflow as tf
 
 from garage.experiment import deterministic
 from garage.experiment import LocalRunner
-from garage.logger import CsvOutput
-from garage.logger import logger as garage_logger
-from garage.logger import StdOutput
-from garage.logger import TensorBoardOutput
 from garage.np.exploration_strategies import OUStrategy
 from garage.replay_buffer import SimpleReplayBuffer
 from garage.tf.algos import DDPG
@@ -194,9 +192,9 @@ def run_garage(env, seed, log_dir):
         # Set up logger since we are not using run_experiment
         tabular_log_file = osp.join(log_dir, 'progress.csv')
         tensorboard_log_dir = osp.join(log_dir)
-        garage_logger.add_output(StdOutput())
-        garage_logger.add_output(CsvOutput(tabular_log_file))
-        garage_logger.add_output(TensorBoardOutput(tensorboard_log_dir))
+        dowel_logger.add_output(dowel.StdOutput())
+        dowel_logger.add_output(dowel.CsvOutput(tabular_log_file))
+        dowel_logger.add_output(dowel.TensorBoardOutput(tensorboard_log_dir))
 
         runner.setup(ddpg, env)
         runner.train(
@@ -204,7 +202,7 @@ def run_garage(env, seed, log_dir):
             n_epoch_cycles=params['n_epoch_cycles'],
             batch_size=params['n_rollout_steps'])
 
-        garage_logger.remove_all()
+        dowel_logger.remove_all()
 
         return tabular_log_file
 

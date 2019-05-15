@@ -1,9 +1,9 @@
 import pickle
 
+from dowel import logger
 import numpy as np
 
 from garage.experiment import deterministic
-from garage.logger import logger
 from garage.sampler.stateful_pool import SharedGlobal
 from garage.sampler.stateful_pool import singleton_pool
 from garage.sampler.utils import rollout
@@ -12,7 +12,7 @@ from garage.sampler.utils import rollout
 def _worker_init(g, id):
     if singleton_pool.n_parallel > 1:
         import os
-        os.environ['CUDA_VISIBLE_DEVICES'] = ""
+        os.environ['CUDA_VISIBLE_DEVICES'] = ''
     g.worker_id = id
 
 
@@ -25,7 +25,7 @@ def initialize(n_parallel):
 def _get_scoped_g(g, scope):
     if scope is None:
         return g
-    if not hasattr(g, "scopes"):
+    if not hasattr(g, 'scopes'):
         g.scopes = dict()
     if scope not in g.scopes:
         g.scopes[scope] = SharedGlobal()
@@ -41,16 +41,16 @@ def _worker_populate_task(g, env, policy, scope=None):
 
 def _worker_terminate_task(g, scope=None):
     g = _get_scoped_g(g, scope)
-    if getattr(g, "env", None):
+    if getattr(g, 'env', None):
         g.env.close()
         g.env = None
-    if getattr(g, "policy", None):
+    if getattr(g, 'policy', None):
         g.policy.terminate()
         g.policy = None
 
 
 def populate_task(env, policy, scope=None):
-    logger.log("Populating workers...")
+    logger.log('Populating workers...')
     if singleton_pool.n_parallel > 1:
         singleton_pool.run_each(_worker_populate_task, [
             (pickle.dumps(env), pickle.dumps(policy), scope)
@@ -60,7 +60,7 @@ def populate_task(env, policy, scope=None):
         g = _get_scoped_g(singleton_pool.G, scope)
         g.env = env
         g.policy = policy
-    logger.log("Populated")
+    logger.log('Populated')
 
 
 def terminate_task(scope=None):
@@ -73,7 +73,7 @@ def close():
 
 
 def _worker_set_seed(_, seed):
-    logger.log("Setting seed to %d" % seed)
+    logger.log('Setting seed to %d' % seed)
     deterministic.set_seed(seed)
 
 
@@ -91,7 +91,7 @@ def _worker_set_policy_params(g, params, scope=None):
 def _worker_collect_one_path(g, max_path_length, scope=None):
     g = _get_scoped_g(g, scope)
     path = rollout(g.env, g.policy, max_path_length)
-    return path, len(path["rewards"])
+    return path, len(path['rewards'])
 
 
 def sample_paths(policy_params,

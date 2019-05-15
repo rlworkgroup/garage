@@ -1,8 +1,8 @@
+from dowel import tabular
 import numpy as np
 import tensorflow as tf
 
 from garage.core import Serializable
-from garage.logger import tabular
 from garage.tf.core import LayersPowered, Parameterized
 import garage.tf.core.layers as L
 from garage.tf.core.network import MLP
@@ -21,7 +21,7 @@ class DeterministicMLPRegressor(LayersPowered, Serializable, Parameterized):
             self,
             input_shape,
             output_dim,
-            name="DeterministicMLPRegressor",
+            name='DeterministicMLPRegressor',
             network=None,
             hidden_sizes=(32, 32),
             hidden_nonlinearity=tf.nn.tanh,
@@ -42,7 +42,7 @@ class DeterministicMLPRegressor(LayersPowered, Serializable, Parameterized):
         Parameterized.__init__(self)
         Serializable.quick_init(self, locals())
 
-        with tf.variable_scope(name, "DeterministicMLPRegressor"):
+        with tf.variable_scope(name, 'DeterministicMLPRegressor'):
             if optimizer_args is None:
                 optimizer_args = dict()
 
@@ -54,7 +54,7 @@ class DeterministicMLPRegressor(LayersPowered, Serializable, Parameterized):
             self.output_dim = output_dim
             self.optimizer = optimizer
 
-            self._network_name = "network"
+            self._network_name = 'network'
             if network is None:
                 network = MLP(
                     input_shape=input_shape,
@@ -70,14 +70,14 @@ class DeterministicMLPRegressor(LayersPowered, Serializable, Parameterized):
 
             xs_var = network.input_layer.input_var
             ys_var = tf.placeholder(
-                dtype=tf.float32, shape=[None, output_dim], name="ys")
+                dtype=tf.float32, shape=[None, output_dim], name='ys')
 
             x_mean_var = tf.get_variable(
-                name="x_mean",
+                name='x_mean',
                 shape=(1, ) + input_shape,
                 initializer=tf.constant_initializer(0., dtype=tf.float32))
             x_std_var = tf.get_variable(
-                name="x_std",
+                name='x_std',
                 shape=(1, ) + input_shape,
                 initializer=tf.constant_initializer(1., dtype=tf.float32))
 
@@ -98,7 +98,7 @@ class DeterministicMLPRegressor(LayersPowered, Serializable, Parameterized):
                 network_outputs=[fit_ys_var],
             )
 
-            optimizer_args["inputs"] = [xs_var, ys_var]
+            optimizer_args['inputs'] = [xs_var, ys_var]
 
             self.optimizer.update_opt(**optimizer_args)
 
@@ -110,7 +110,7 @@ class DeterministicMLPRegressor(LayersPowered, Serializable, Parameterized):
             self.x_std_var = x_std_var
 
     def predict_sym(self, xs, name=None):
-        with tf.name_scope(name, "predict_sym", values=[xs]):
+        with tf.name_scope(name, 'predict_sym', values=[xs]):
             return L.get_output(self.l_out, xs)
 
     def fit(self, xs, ys):
@@ -126,9 +126,9 @@ class DeterministicMLPRegressor(LayersPowered, Serializable, Parameterized):
         inputs = [xs, ys]
         loss_before = self.optimizer.loss(inputs)
         if self.name:
-            prefix = self.name + "/"
+            prefix = self.name + '/'
         else:
-            prefix = ""
+            prefix = ''
         tabular.record(prefix + 'LossBefore', loss_before)
         self.optimizer.optimize(inputs)
         loss_after = self.optimizer.loss(inputs)

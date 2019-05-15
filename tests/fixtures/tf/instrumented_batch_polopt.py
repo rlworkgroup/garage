@@ -7,10 +7,10 @@ different stages in the experiment lifecycle.
 from multiprocessing.connection import Client
 import time
 
+from dowel import logger, tabular
 import tensorflow as tf
 
 from garage.experiment import snapshotter
-from garage.logger import logger, tabular
 from garage.tf.algos import BatchPolopt
 from tests.integration_tests.test_sigint import ExpLifecycle
 

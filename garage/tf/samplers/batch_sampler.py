@@ -1,9 +1,9 @@
 from collections import deque
 
+from dowel import tabular
 import numpy as np
 import tensorflow as tf
 
-from garage.logger import tabular
 from garage.misc import special
 from garage.sampler import parallel_sampler, singleton_pool
 from garage.sampler.base import BaseSampler
@@ -28,7 +28,7 @@ class BatchSampler(BaseSampler):
 
     def start_worker(self):
         assert singleton_pool.initialized, \
-            "Use singleton_pool.initialize(n_parallel) to setup workers."
+            'Use singleton_pool.initialize(n_parallel) to setup workers.'
         if singleton_pool.n_parallel > 1:
             singleton_pool.run_each(worker_init_tf)
         parallel_sampler.populate_task(self.env, self.algo.policy)
@@ -61,7 +61,7 @@ class BatchSampler(BaseSampler):
 
         max_path_length = self.algo.max_path_length
 
-        if hasattr(self.algo.baseline, "predict_n"):
+        if hasattr(self.algo.baseline, 'predict_n'):
             all_path_baselines = self.algo.baseline.predict_n(paths)
         else:
             all_path_baselines = [
@@ -70,12 +70,12 @@ class BatchSampler(BaseSampler):
 
         for idx, path in enumerate(paths):
             path_baselines = np.append(all_path_baselines[idx], 0)
-            deltas = path["rewards"] \
+            deltas = path['rewards'] \
                 + self.algo.discount * path_baselines[1:] \
                 - path_baselines[:-1]
-            path["advantages"] = special.discount_cumsum(
+            path['advantages'] = special.discount_cumsum(
                 deltas, self.algo.discount * self.algo.gae_lambda)
-            path["deltas"] = deltas
+            path['deltas'] = deltas
 
         for idx, path in enumerate(paths):
             # baselines
@@ -83,46 +83,46 @@ class BatchSampler(BaseSampler):
             baselines.append(path['baselines'])
 
             # returns
-            path["returns"] = special.discount_cumsum(path["rewards"],
+            path['returns'] = special.discount_cumsum(path['rewards'],
                                                       self.algo.discount)
-            returns.append(path["returns"])
+            returns.append(path['returns'])
 
         # make all paths the same length
-        obs = [path["observations"] for path in paths]
+        obs = [path['observations'] for path in paths]
         obs = tensor_utils.pad_tensor_n(obs, max_path_length)
 
-        actions = [path["actions"] for path in paths]
+        actions = [path['actions'] for path in paths]
         actions = tensor_utils.pad_tensor_n(actions, max_path_length)
 
-        rewards = [path["rewards"] for path in paths]
+        rewards = [path['rewards'] for path in paths]
         rewards = tensor_utils.pad_tensor_n(rewards, max_path_length)
 
-        returns = [path["returns"] for path in paths]
+        returns = [path['returns'] for path in paths]
         returns = tensor_utils.pad_tensor_n(returns, max_path_length)
 
-        advantages = [path["advantages"] for path in paths]
+        advantages = [path['advantages'] for path in paths]
         advantages = tensor_utils.pad_tensor_n(advantages, max_path_length)
 
         baselines = tensor_utils.pad_tensor_n(baselines, max_path_length)
 
-        agent_infos = [path["agent_infos"] for path in paths]
+        agent_infos = [path['agent_infos'] for path in paths]
         agent_infos = tensor_utils.stack_tensor_dict_list([
             tensor_utils.pad_tensor_dict(p, max_path_length)
             for p in agent_infos
         ])
 
-        env_infos = [path["env_infos"] for path in paths]
+        env_infos = [path['env_infos'] for path in paths]
         env_infos = tensor_utils.stack_tensor_dict_list([
             tensor_utils.pad_tensor_dict(p, max_path_length) for p in env_infos
         ])
 
-        valids = [np.ones_like(path["returns"]) for path in paths]
+        valids = [np.ones_like(path['returns']) for path in paths]
         valids = tensor_utils.pad_tensor_n(valids, max_path_length)
 
         average_discounted_return = (np.mean(
-            [path["returns"][0] for path in paths]))
+            [path['returns'][0] for path in paths]))
 
-        undiscounted_returns = [sum(path["rewards"]) for path in paths]
+        undiscounted_returns = [sum(path['rewards']) for path in paths]
         self.eprewmean.extend(undiscounted_returns)
 
         ent = np.sum(

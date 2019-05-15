@@ -6,10 +6,10 @@ the different stages in the experiment lifecycle.
 from enum import Enum
 from enum import unique
 
+from dowel import Histogram, logger, tabular
 import numpy as np
 import tensorflow as tf
 
-from garage.logger import EmpiricalDistribution, logger, tabular
 from garage.misc import special
 from garage.misc.overrides import overrides
 from garage.tf.misc import tensor_utils
@@ -27,8 +27,8 @@ from tests.fixtures.tf.instrumented_batch_polopt import InstrumentedBatchPolopt
 
 @unique
 class PGLoss(Enum):
-    VANILLA = "vanilla"
-    CLIP = "clip"
+    VANILLA = 'vanilla'
+    CLIP = 'clip'
 
 
 class InstrumentedNPO(InstrumentedBatchPolopt):
@@ -37,7 +37,7 @@ class InstrumentedNPO(InstrumentedBatchPolopt):
                  clip_range=0.01,
                  optimizer=None,
                  optimizer_args=None,
-                 name="NPO",
+                 name='NPO',
                  policy=None,
                  policy_ent_coeff=1e-2,
                  use_softplus_entropy=True,
@@ -70,7 +70,7 @@ class InstrumentedNPO(InstrumentedBatchPolopt):
             target=self.policy,
             leq_constraint=(pol_kl, self.clip_range),
             inputs=flatten_inputs(self._policy_opt_inputs),
-            constraint_name="mean_kl")
+            constraint_name='mean_kl')
 
         return dict()
 
@@ -79,32 +79,32 @@ class InstrumentedNPO(InstrumentedBatchPolopt):
         policy_opt_input_values = self._policy_opt_input_values(samples_data)
 
         # Train policy network
-        logger.log("Computing loss before")
+        logger.log('Computing loss before')
         loss_before = self.optimizer.loss(policy_opt_input_values)
-        logger.log("Computing KL before")
+        logger.log('Computing KL before')
         policy_kl_before = self.f_policy_kl(*policy_opt_input_values)
-        logger.log("Optimizing")
+        logger.log('Optimizing')
         self.optimizer.optimize(policy_opt_input_values)
-        logger.log("Computing KL after")
+        logger.log('Computing KL after')
         policy_kl = self.f_policy_kl(*policy_opt_input_values)
-        logger.log("Computing loss after")
+        logger.log('Computing loss after')
         loss_after = self.optimizer.loss(policy_opt_input_values)
-        tabular.record("{}/LossBefore".format(self.policy.name), loss_before)
-        tabular.record("{}/LossAfter".format(self.policy.name), loss_after)
-        tabular.record("{}/dLoss".format(self.policy.name),
+        tabular.record('{}/LossBefore'.format(self.policy.name), loss_before)
+        tabular.record('{}/LossAfter'.format(self.policy.name), loss_after)
+        tabular.record('{}/dLoss'.format(self.policy.name),
                        loss_before - loss_after)
-        tabular.record("{}/KLBefore".format(self.policy.name),
+        tabular.record('{}/KLBefore'.format(self.policy.name),
                        policy_kl_before)
-        tabular.record("{}/KL".format(self.policy.name), policy_kl)
+        tabular.record('{}/KL'.format(self.policy.name), policy_kl)
 
         pol_ent = self.f_policy_entropy(*policy_opt_input_values)
-        tabular.record("{}/Entropy".format(self.policy.name), pol_ent)
+        tabular.record('{}/Entropy'.format(self.policy.name), pol_ent)
 
         num_traj = self.batch_size // self.max_path_length
-        actions = samples_data["actions"][:num_traj, ...]
+        actions = samples_data['actions'][:num_traj, ...]
 
-        histogram = EmpiricalDistribution(actions)
-        tabular.record("{}/Actions".format(self.policy.name), histogram)
+        histogram = Histogram(actions)
+        tabular.record('{}/Actions'.format(self.policy.name), histogram)
 
         self._fit_baseline(samples_data)
 
@@ -125,17 +125,17 @@ class InstrumentedNPO(InstrumentedBatchPolopt):
 
         policy_dist = self.policy.distribution
 
-        with tf.name_scope("inputs"):
+        with tf.name_scope('inputs'):
             obs_var = observation_space.new_tensor_variable(
-                name="obs", extra_dims=2)
+                name='obs', extra_dims=2)
             action_var = action_space.new_tensor_variable(
-                name="action", extra_dims=2)
+                name='action', extra_dims=2)
             reward_var = tensor_utils.new_tensor(
-                name="reward", ndim=2, dtype=tf.float32)
+                name='reward', ndim=2, dtype=tf.float32)
             valid_var = tf.placeholder(
-                tf.float32, shape=[None, None], name="valid")
+                tf.float32, shape=[None, None], name='valid')
             baseline_var = tensor_utils.new_tensor(
-                name="baseline", ndim=2, dtype=tf.float32)
+                name='baseline', ndim=2, dtype=tf.float32)
 
             policy_state_info_vars = {
                 k: tf.placeholder(
@@ -151,7 +151,7 @@ class InstrumentedNPO(InstrumentedBatchPolopt):
                 k: tf.placeholder(
                     tf.float32,
                     shape=[None] * 2 + list(shape),
-                    name="policy_old_%s" % k)
+                    name='policy_old_%s' % k)
                 for k, shape in policy_dist.dist_info_specs
             }
             policy_old_dist_info_vars_list = [
@@ -160,33 +160,33 @@ class InstrumentedNPO(InstrumentedBatchPolopt):
             ]
 
             # flattened view
-            with tf.name_scope("flat"):
-                obs_flat = flatten_batch(obs_var, name="obs_flat")
-                action_flat = flatten_batch(action_var, name="action_flat")
-                reward_flat = flatten_batch(reward_var, name="reward_flat")
-                valid_flat = flatten_batch(valid_var, name="valid_flat")
+            with tf.name_scope('flat'):
+                obs_flat = flatten_batch(obs_var, name='obs_flat')
+                action_flat = flatten_batch(action_var, name='action_flat')
+                reward_flat = flatten_batch(reward_var, name='reward_flat')
+                valid_flat = flatten_batch(valid_var, name='valid_flat')
                 policy_state_info_vars_flat = flatten_batch_dict(
-                    policy_state_info_vars, name="policy_state_info_vars_flat")
+                    policy_state_info_vars, name='policy_state_info_vars_flat')
                 policy_old_dist_info_vars_flat = flatten_batch_dict(
                     policy_old_dist_info_vars,
-                    name="policy_old_dist_info_vars_flat")
+                    name='policy_old_dist_info_vars_flat')
 
             # valid view
-            with tf.name_scope("valid"):
+            with tf.name_scope('valid'):
                 action_valid = filter_valids(
-                    action_flat, valid_flat, name="action_valid")
+                    action_flat, valid_flat, name='action_valid')
                 policy_state_info_vars_valid = filter_valids_dict(
                     policy_state_info_vars_flat,
                     valid_flat,
-                    name="policy_state_info_vars_valid")
+                    name='policy_state_info_vars_valid')
                 policy_old_dist_info_vars_valid = filter_valids_dict(
                     policy_old_dist_info_vars_flat,
                     valid_flat,
-                    name="policy_old_dist_info_vars_valid")
+                    name='policy_old_dist_info_vars_valid')
 
         # policy loss and optimizer inputs
         pol_flat = graph_inputs(
-            "PolicyLossInputsFlat",
+            'PolicyLossInputsFlat',
             obs_var=obs_flat,
             action_var=action_flat,
             reward_var=reward_flat,
@@ -195,13 +195,13 @@ class InstrumentedNPO(InstrumentedBatchPolopt):
             policy_old_dist_info_vars=policy_old_dist_info_vars_flat,
         )
         pol_valid = graph_inputs(
-            "PolicyLossInputsValid",
+            'PolicyLossInputsValid',
             action_var=action_valid,
             policy_state_info_vars=policy_state_info_vars_valid,
             policy_old_dist_info_vars=policy_old_dist_info_vars_valid,
         )
         policy_loss_inputs = graph_inputs(
-            "PolicyLossInputs",
+            'PolicyLossInputs',
             obs_var=obs_var,
             action_var=action_var,
             reward_var=reward_var,
@@ -213,7 +213,7 @@ class InstrumentedNPO(InstrumentedBatchPolopt):
             valid=pol_valid,
         )
         policy_opt_inputs = graph_inputs(
-            "PolicyOptInputs",
+            'PolicyOptInputs',
             obs_var=obs_var,
             action_var=action_var,
             reward_var=reward_var,
@@ -230,21 +230,21 @@ class InstrumentedNPO(InstrumentedBatchPolopt):
 
         policy_entropy = self._build_entropy_term(i)
 
-        with tf.name_scope("augmented_rewards"):
+        with tf.name_scope('augmented_rewards'):
             rewards = i.reward_var + (self.policy_ent_coeff * policy_entropy)
 
-        with tf.name_scope("policy_loss"):
+        with tf.name_scope('policy_loss'):
             advantages = compute_advantages(
                 self.discount,
                 self.gae_lambda,
                 self.max_path_length,
                 i.baseline_var,
                 rewards,
-                name="advantages")
+                name='advantages')
 
-            adv_flat = flatten_batch(advantages, name="adv_flat")
+            adv_flat = flatten_batch(advantages, name='adv_flat')
             adv_valid = filter_valids(
-                adv_flat, i.flat.valid_var, name="adv_valid")
+                adv_flat, i.flat.valid_var, name='adv_valid')
 
             if self.policy.recurrent:
                 advantages = tf.reshape(advantages, [-1, self.max_path_length])
@@ -252,12 +252,12 @@ class InstrumentedNPO(InstrumentedBatchPolopt):
             # Optionally normalize advantages
             eps = tf.constant(1e-8, dtype=tf.float32)
             if self.center_adv:
-                with tf.name_scope("center_adv"):
+                with tf.name_scope('center_adv'):
                     mean, var = tf.nn.moments(adv_valid, axes=[0])
                     adv_valid = tf.nn.batch_normalization(
                         adv_valid, mean, var, 0, 1, eps)
             if self.positive_adv:
-                with tf.name_scope("positive_adv"):
+                with tf.name_scope('positive_adv'):
                     m = tf.reduce_min(adv_valid)
                     adv_valid = (adv_valid - m) + eps
 
@@ -265,20 +265,20 @@ class InstrumentedNPO(InstrumentedBatchPolopt):
                 policy_dist_info = self.policy.dist_info_sym(
                     i.obs_var,
                     i.policy_state_info_vars,
-                    name="policy_dist_info")
+                    name='policy_dist_info')
             else:
                 policy_dist_info_flat = self.policy.dist_info_sym(
                     i.flat.obs_var,
                     i.flat.policy_state_info_vars,
-                    name="policy_dist_info_flat")
+                    name='policy_dist_info_flat')
 
                 policy_dist_info_valid = filter_valids_dict(
                     policy_dist_info_flat,
                     i.flat.valid_var,
-                    name="policy_dist_info_valid")
+                    name='policy_dist_info_valid')
 
             # Calculate loss function and KL divergence
-            with tf.name_scope("kl"):
+            with tf.name_scope('kl'):
                 if self.policy.recurrent:
                     kl = pol_dist.kl_sym(
                         i.policy_old_dist_info_vars,
@@ -294,13 +294,13 @@ class InstrumentedNPO(InstrumentedBatchPolopt):
                     pol_mean_kl = tf.reduce_mean(kl)
 
             # Calculate surrogate loss
-            with tf.name_scope("surr_loss"):
+            with tf.name_scope('surr_loss'):
                 if self.policy.recurrent:
                     lr = pol_dist.likelihood_ratio_sym(
                         i.action_var,
                         i.policy_old_dist_info_vars,
                         policy_dist_info,
-                        name="lr")
+                        name='lr')
 
                     surr_vanilla = lr * advantages * i.valid_var
                 else:
@@ -308,27 +308,27 @@ class InstrumentedNPO(InstrumentedBatchPolopt):
                         i.valid.action_var,
                         i.valid.policy_old_dist_info_vars,
                         policy_dist_info_valid,
-                        name="lr")
+                        name='lr')
 
                     surr_vanilla = lr * adv_valid
 
                 if self._pg_loss == PGLoss.VANILLA:
                     # VPG, TRPO use the standard surrogate objective
-                    surr_obj = tf.identity(surr_vanilla, name="surr_obj")
+                    surr_obj = tf.identity(surr_vanilla, name='surr_obj')
                 elif self._pg_loss == PGLoss.CLIP:
                     lr_clip = tf.clip_by_value(
                         lr,
                         1 - self.clip_range,
                         1 + self.clip_range,
-                        name="lr_clip")
+                        name='lr_clip')
                     if self.policy.recurrent:
                         surr_clip = lr_clip * advantages * i.valid_var
                     else:
                         surr_clip = lr_clip * adv_valid
                     surr_obj = tf.minimum(
-                        surr_vanilla, surr_clip, name="surr_obj")
+                        surr_vanilla, surr_clip, name='surr_obj')
                 else:
-                    raise NotImplementedError("Unknown PGLoss")
+                    raise NotImplementedError('Unknown PGLoss')
 
                 # Maximize E[surrogate objective] by minimizing
                 # -E_t[surrogate objective]
@@ -342,34 +342,34 @@ class InstrumentedNPO(InstrumentedBatchPolopt):
             self.f_policy_kl = tensor_utils.compile_function(
                 flatten_inputs(self._policy_opt_inputs),
                 pol_mean_kl,
-                log_name="f_policy_kl")
+                log_name='f_policy_kl')
 
             self.f_rewards = tensor_utils.compile_function(
                 flatten_inputs(self._policy_opt_inputs),
                 rewards,
-                log_name="f_rewards")
+                log_name='f_rewards')
 
             returns = discounted_returns(self.discount, self.max_path_length,
                                          rewards)
             self.f_returns = tensor_utils.compile_function(
                 flatten_inputs(self._policy_opt_inputs),
                 returns,
-                log_name="f_returns")
+                log_name='f_returns')
 
             return surr_loss, pol_mean_kl
 
     def _build_entropy_term(self, i):
-        with tf.name_scope("policy_entropy"):
+        with tf.name_scope('policy_entropy'):
             if self.policy.recurrent:
                 policy_dist_info_flat = self.policy.dist_info_sym(
                     i.obs_var,
                     i.policy_state_info_vars,
-                    name="policy_dist_info")
+                    name='policy_dist_info')
             else:
                 policy_dist_info_flat = self.policy.dist_info_sym(
                     i.flat.obs_var,
                     i.flat.policy_state_info_vars,
-                    name="policy_dist_info_flat")
+                    name='policy_dist_info_flat')
 
             policy_entropy_flat = self.policy.distribution.entropy_sym(
                 policy_dist_info_flat)
@@ -385,7 +385,7 @@ class InstrumentedNPO(InstrumentedBatchPolopt):
         self.f_policy_entropy = tensor_utils.compile_function(
             flatten_inputs(self._policy_opt_inputs),
             policy_entropy,
-            log_name="f_policy_entropy")
+            log_name='f_policy_entropy')
 
         return policy_entropy
 
@@ -420,10 +420,10 @@ class InstrumentedNPO(InstrumentedBatchPolopt):
         # Calculate explained variance
         ev = special.explained_variance_1d(
             np.concatenate(baselines), aug_returns)
-        tabular.record("Baseline/ExplainedVariance", ev)
+        tabular.record('Baseline/ExplainedVariance', ev)
 
         # Fit baseline
-        logger.log("Fitting baseline...")
+        logger.log('Fitting baseline...')
         if hasattr(self.baseline, 'fit_with_samples'):
             self.baseline.fit_with_samples(paths, samples_data)
         else:
@@ -432,19 +432,19 @@ class InstrumentedNPO(InstrumentedBatchPolopt):
     def _policy_opt_input_values(self, samples_data):
         """ Map rollout samples to the policy optimizer inputs """
         policy_state_info_list = [
-            samples_data["agent_infos"][k] for k in self.policy.state_info_keys
+            samples_data['agent_infos'][k] for k in self.policy.state_info_keys
         ]
         policy_old_dist_info_list = [
-            samples_data["agent_infos"][k]
+            samples_data['agent_infos'][k]
             for k in self.policy.distribution.dist_info_keys
         ]
 
         policy_opt_input_values = self._policy_opt_inputs._replace(
-            obs_var=samples_data["observations"],
-            action_var=samples_data["actions"],
-            reward_var=samples_data["rewards"],
-            baseline_var=samples_data["baselines"],
-            valid_var=samples_data["valids"],
+            obs_var=samples_data['observations'],
+            action_var=samples_data['actions'],
+            reward_var=samples_data['rewards'],
+            baseline_var=samples_data['baselines'],
+            valid_var=samples_data['valids'],
             policy_state_info_vars_list=policy_state_info_list,
             policy_old_dist_info_vars_list=policy_old_dist_info_list,
         )
