@@ -18,6 +18,7 @@ def lstm(name,
     Long Short-Term Memory (LSTM).
 
     Args:
+        name (str): Name of the variable scope.
         lstm_cell (tf.keras.layers.Layer): LSTM cell used to generate
             outputs.
         all_input_var (tf.Tensor): Place holder for entire time-seried inputs.
@@ -27,12 +28,6 @@ def lstm(name,
         output_nonlinearity (callable): Activation function for output dense
             layer. It should return a tf.Tensor. Set it to None to
             maintain a linear activation.
-        output_w_init (callable): Initializer function for the weight
-            of output dense layer(s). The function should return a
-            tf.Tensor.
-        output_b_init (callable): Initializer function for the bias
-            of output dense layer(s). The function should return a
-            tf.Tensor.
         hidden_state_init (callable): Initializer function for the
             initial hidden state. The functino should return a tf.Tensor.
         hidden_state_init_trainable (bool): Bool for whether the initial

@@ -205,7 +205,6 @@ class LocalRunner:
         if paths:
             params['paths'] = paths
         params['last_epoch'] = epoch
-
         snapshotter.save_itr_params(epoch, params)
 
         logger.log('Saved')
