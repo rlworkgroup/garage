@@ -1,15 +1,16 @@
-"""DeterministicMLPRegressorModel."""
+"""NormalizedInputMLPModel."""
 import numpy as np
 import tensorflow as tf
 
 from garage.tf.models import MLPModel
 
 
-class DeterministicMLPRegressorModel(MLPModel):
+class NormalizedInputMLPModel(MLPModel):
     """
-    DeterministicMLPRegressor based on garage.tf.models.Model class.
+    NormalizedInputMLPModel based on garage.tf.models.Model class.
 
-    This class can be used to perform linear regression to the outputs.
+    This class normalized the inputs and pass the normalized input to a
+    MLP model, which can be used to perform linear regression to the outputs.
 
     Args:
         input_shape (tuple[int]): Input shape of the training data.
@@ -36,14 +37,32 @@ class DeterministicMLPRegressorModel(MLPModel):
         output_b_init (callable): Initializer function for the bias
             of output dense layer(s). The function should return a
             tf.Tensor.
+        layer_normalization (bool): Bool for using layer normalization or not.
     """
 
     def __init__(self,
                  input_shape,
                  output_dim,
-                 name='DeterministicMLPRegressorModel',
-                 **kwargs):
-        super().__init__(output_dim=output_dim, name=name, **kwargs)
+                 name='NormalizedInputMLPModel',
+                 hidden_sizes=(32, 32),
+                 hidden_nonlinearity=tf.nn.relu,
+                 hidden_w_init=tf.glorot_uniform_initializer(),
+                 hidden_b_init=tf.zeros_initializer(),
+                 output_nonlinearity=None,
+                 output_w_init=tf.glorot_uniform_initializer(),
+                 output_b_init=tf.zeros_initializer(),
+                 layer_normalization=False):
+        super().__init__(
+            output_dim=output_dim,
+            name=name,
+            hidden_sizes=hidden_sizes,
+            hidden_nonlinearity=hidden_nonlinearity,
+            hidden_w_init=hidden_w_init,
+            hidden_b_init=hidden_b_init,
+            output_nonlinearity=output_nonlinearity,
+            output_w_init=output_w_init,
+            output_b_init=output_b_init,
+            layer_normalization=layer_normalization)
         self._input_shape = input_shape
 
     def network_output_spec(self):

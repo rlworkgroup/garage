@@ -1,12 +1,12 @@
-"""A value function (baseline) based on a GaussianMLP model."""
+"""A value function (baseline) based on a MLP model."""
 import numpy as np
 
 from garage.misc.overrides import overrides
 from garage.np.baselines import Baseline
-from garage.tf.regressors import DeterministicMLPRegressorWithModel
+from garage.tf.regressors import ContinuousMLPRegressorWithModel
 
 
-class DeterministicMLPBaselineWithModel(Baseline):
+class ContinuousMLPBaselineWithModel(Baseline):
     """A value function using a MLP network."""
 
     def __init__(
@@ -15,10 +15,10 @@ class DeterministicMLPBaselineWithModel(Baseline):
             subsample_factor=1.,
             num_seq_inputs=1,
             regressor_args=None,
-            name='DeterministicMLPBaselineWithModel',
+            name='ContinuousMLPBaselineWithModel',
     ):
         """
-        Deterministic MLP Baseline with Model.
+        Continuous MLP Baseline with Model.
 
         It fits the input data by performing linear regression
         to the outputs.
@@ -35,7 +35,7 @@ class DeterministicMLPBaselineWithModel(Baseline):
         if regressor_args is None:
             regressor_args = dict()
 
-        self._regressor = DeterministicMLPRegressorWithModel(
+        self._regressor = ContinuousMLPRegressorWithModel(
             input_shape=(
                 env_spec.observation_space.flat_dim * num_seq_inputs, ),
             output_dim=1,

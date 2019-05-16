@@ -1,19 +1,19 @@
-"""A regressor based on a GaussianMLP model."""
+"""A regressor based on a MLP model."""
 import numpy as np
 import tensorflow as tf
 
 from garage.logger import tabular
 from garage.tf.misc import tensor_utils
+from garage.tf.models import NormalizedInputMLPModel
 from garage.tf.optimizers import LbfgsOptimizer
-from garage.tf.regressors import DeterministicMLPRegressorModel
 from garage.tf.regressors import Regressor2
 
 
-class DeterministicMLPRegressorWithModel(Regressor2):
+class ContinuousMLPRegressorWithModel(Regressor2):
     """
-    DeterministicMLPRegressor.
+    ContinuousMLPRegressor.
 
-    With garage.tf.models.DeterministicMLPRegressorModel.
+    With garage.tf.models.NormalizedInputMLPModel.
 
     A class for performing linear regression to the outputs.
 
@@ -52,7 +52,7 @@ class DeterministicMLPRegressorWithModel(Regressor2):
     def __init__(self,
                  input_shape,
                  output_dim,
-                 name='DeterministicMLPRegressorWithModel',
+                 name='ContinuousMLPRegressorWithModel',
                  hidden_sizes=(32, 32),
                  hidden_nonlinearity=tf.nn.tanh,
                  hidden_w_init=tf.glorot_uniform_initializer(),
@@ -76,7 +76,7 @@ class DeterministicMLPRegressorWithModel(Regressor2):
                 optimizer = optimizer(**optimizer_args)
             self._optimizer = optimizer
 
-        self.model = DeterministicMLPRegressorModel(
+        self.model = NormalizedInputMLPModel(
             input_shape=input_shape,
             output_dim=output_dim,
             hidden_sizes=hidden_sizes,
@@ -138,8 +138,8 @@ class DeterministicMLPRegressorWithModel(Regressor2):
         Args:
             xs (numpy.ndarray): Input data.
 
-        Returns:
-
+        Return:
+            The predicted ys.
         """
         return self._f_predict(xs)
 
@@ -150,6 +150,9 @@ class DeterministicMLPRegressorWithModel(Regressor2):
         Args:
             xs (tf.Tensor): Input tf.Tensor for the input data.
             name (str): Name of the new graph.
+
+        Return:
+            tf.Tensor output of the symbolic prediction.
         """
         with tf.variable_scope(self._variable_scope):
             y_hat, _, _ = self.model.build(xs, name=name)

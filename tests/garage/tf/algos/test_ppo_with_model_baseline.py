@@ -8,7 +8,7 @@ import tensorflow as tf
 from garage.envs import normalize
 from garage.experiment import LocalRunner
 from garage.tf.algos import PPO
-from garage.tf.baselines import DeterministicMLPBaselineWithModel
+from garage.tf.baselines import ContinuousMLPBaselineWithModel
 from garage.tf.envs import TfEnv
 from garage.tf.policies import GaussianLSTMPolicy, GaussianMLPPolicy
 from tests.fixtures import TfGraphTestCase
@@ -25,7 +25,7 @@ class TestPPO(TfGraphTestCase):
                 hidden_nonlinearity=tf.nn.tanh,
                 output_nonlinearity=None,
             )
-            baseline = DeterministicMLPBaselineWithModel(
+            baseline = ContinuousMLPBaselineWithModel(
                 env_spec=env.spec,
                 regressor_args=dict(hidden_sizes=(32, 32)),
             )
@@ -48,7 +48,7 @@ class TestPPO(TfGraphTestCase):
         with LocalRunner() as runner:
             env = TfEnv(normalize(gym.make('InvertedDoublePendulum-v2')))
             policy = GaussianLSTMPolicy(env_spec=env.spec, )
-            baseline = DeterministicMLPBaselineWithModel(
+            baseline = ContinuousMLPBaselineWithModel(
                 env_spec=env.spec,
                 regressor_args=dict(hidden_sizes=(32, 32)),
             )
