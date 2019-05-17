@@ -8,10 +8,10 @@ def _worker_collect_once(_):
 class TestStatefulPool(unittest.TestCase):
     def test_stateful_pool(self):
         from garage.sampler import stateful_pool
-        stateful_pool.singleton_pool.initialize(n_parallel=3)
+        stateful_pool.singleton_pool.initialize(n_parallel=10)
         results = stateful_pool.singleton_pool.run_collect(
             _worker_collect_once, 3, show_prog_bar=False)
-        assert tuple(results) == ('a', 'a', 'a')
+        assert all([r == 'a' for r in results]) and len(results) >= 3
 
     def test_stateful_pool_over_capacity(self):
         from garage.sampler import stateful_pool
