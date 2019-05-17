@@ -15,7 +15,7 @@ from tests.fixtures import TfGraphTestCase
 
 
 class TestPPO(TfGraphTestCase):
-    def test_ppo_pendulum_deterministic_baseline(self):
+    def test_ppo_pendulum_continuous_baseline(self):
         """Test PPO with Pendulum environment."""
         with LocalRunner(self.sess) as runner:
             env = TfEnv(normalize(gym.make('InvertedDoublePendulum-v2')))
@@ -43,7 +43,7 @@ class TestPPO(TfGraphTestCase):
 
             env.close()
 
-    def test_ppo_pendulum_recurrent_deterministic_baseline(self):
+    def test_ppo_pendulum_recurrent_continuous_baseline(self):
         """Test PPO with Pendulum environment and recurrent policy."""
         with LocalRunner() as runner:
             env = TfEnv(normalize(gym.make('InvertedDoublePendulum-v2')))

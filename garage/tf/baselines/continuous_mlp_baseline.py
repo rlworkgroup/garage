@@ -1,15 +1,15 @@
-"""This module implements deterministic mlp baseline."""
+"""This module implements continuous mlp baseline."""
 import numpy as np
 
 from garage.core import Serializable
 from garage.misc.overrides import overrides
 from garage.np.baselines import Baseline
 from garage.tf.core import Parameterized
-from garage.tf.regressors import DeterministicMLPRegressor
+from garage.tf.regressors import ContinuousMLPRegressor
 
 
-class DeterministicMLPBaseline(Baseline, Parameterized, Serializable):
-    """A value function using deterministic mlp network."""
+class ContinuousMLPBaseline(Baseline, Parameterized, Serializable):
+    """A value function using a mlp network."""
 
     def __init__(
             self,
@@ -17,7 +17,7 @@ class DeterministicMLPBaseline(Baseline, Parameterized, Serializable):
             subsample_factor=1.,
             num_seq_inputs=1,
             regressor_args=None,
-            name='DeterministicMLPBaseline',
+            name='ContinuousMLPBaseline',
     ):
         """
         Constructor.
@@ -29,11 +29,11 @@ class DeterministicMLPBaseline(Baseline, Parameterized, Serializable):
         """
         Parameterized.__init__(self)
         Serializable.quick_init(self, locals())
-        super(DeterministicMLPBaseline, self).__init__(env_spec)
+        super(ContinuousMLPBaseline, self).__init__(env_spec)
         if regressor_args is None:
             regressor_args = dict()
 
-        self._regressor = DeterministicMLPRegressor(
+        self._regressor = ContinuousMLPRegressor(
             input_shape=(
                 env_spec.observation_space.flat_dim * num_seq_inputs, ),
             output_dim=1,
