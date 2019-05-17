@@ -12,7 +12,7 @@ from garage.tf.optimizers import LbfgsOptimizer
 NONE = list()
 
 
-class DeterministicMLPRegressor(LayersPowered, Serializable, Parameterized):
+class ContinuousMLPRegressor(LayersPowered, Serializable, Parameterized):
     """
     A class for performing nonlinear regression.
     """
@@ -21,7 +21,7 @@ class DeterministicMLPRegressor(LayersPowered, Serializable, Parameterized):
             self,
             input_shape,
             output_dim,
-            name='DeterministicMLPRegressor',
+            name='ContinuousMLPRegressor',
             network=None,
             hidden_sizes=(32, 32),
             hidden_nonlinearity=tf.nn.tanh,
@@ -42,7 +42,7 @@ class DeterministicMLPRegressor(LayersPowered, Serializable, Parameterized):
         Parameterized.__init__(self)
         Serializable.quick_init(self, locals())
 
-        with tf.variable_scope(name, 'DeterministicMLPRegressor'):
+        with tf.variable_scope(name, 'ContinuousMLPRegressor'):
             if optimizer_args is None:
                 optimizer_args = dict()
 

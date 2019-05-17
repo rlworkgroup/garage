@@ -117,7 +117,7 @@ class GaussianMLPRegressorWithModel(StochasticRegressor2):
             hidden_nonlinearity=hidden_nonlinearity,
             hidden_w_init=hidden_w_init,
             hidden_b_init=hidden_b_init,
-            output_nonlinearity=None,
+            output_nonlinearity=output_nonlinearity,
             output_w_init=output_w_init,
             output_b_init=output_b_init,
             learn_std=learn_std,

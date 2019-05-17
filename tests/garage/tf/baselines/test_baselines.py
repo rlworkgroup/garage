@@ -5,7 +5,7 @@ garage.tf.baselines failed to initialize.
 import tensorflow as tf
 
 from garage.envs.wrappers import Resize
-from garage.tf.baselines import DeterministicMLPBaseline
+from garage.tf.baselines import ContinuousMLPBaseline
 from garage.tf.baselines import GaussianConvBaseline
 from garage.tf.baselines import GaussianMLPBaseline
 from garage.tf.envs import TfEnv
@@ -18,7 +18,7 @@ class TestTfBaselines(TfGraphTestCase):
     def test_baseline(self):
         """Test the baseline initialization."""
         box_env = TfEnv(DummyBoxEnv())
-        deterministic_mlp_baseline = DeterministicMLPBaseline(env_spec=box_env)
+        deterministic_mlp_baseline = ContinuousMLPBaseline(env_spec=box_env)
         gaussian_mlp_baseline = GaussianMLPBaseline(env_spec=box_env)
 
         discrete_env = TfEnv(Resize(DummyDiscrete2DEnv(), width=64, height=64))
@@ -28,7 +28,7 @@ class TestTfBaselines(TfGraphTestCase):
                 conv_filters=[32, 32],
                 conv_filter_sizes=[1, 1],
                 conv_strides=[1, 1],
-                conv_pads=["VALID", "VALID"],
+                conv_pads=['VALID', 'VALID'],
                 hidden_sizes=(32, 32)))
 
         self.sess.run(tf.global_variables_initializer())
