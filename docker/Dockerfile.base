@@ -63,7 +63,7 @@ RUN mkdir -p /root/.mujoco && \
   wget https://www.roboti.us/download/mujoco200_linux.zip -O mujoco.zip && \
   unzip mujoco.zip -d $HOME/.mujoco && \
   rm mujoco.zip && \
-  cp -r $HOME/.mujoco/mujoco200_linux $HOME/.mujoco/mujoco200
+  ln -s $HOME/.mujoco/mujoco200_linux $HOME/.mujoco/mujoco200
   ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mujoco200/bin
 
 # conda
