@@ -20,9 +20,9 @@ class TestGRUModel(TfGraphTestCase):
             (self.batch_size, self.time_step, self.feature_shape), 1.)
         self.obs_input = np.full((self.batch_size, self.feature_shape), 1.)
 
-        self._input_var = tf.placeholder(
+        self.input_var = tf.placeholder(
             tf.float32, shape=(None, None, self.feature_shape), name='input')
-        self._step_input_var = tf.placeholder(
+        self.step_input_var = tf.placeholder(
             tf.float32, shape=(None, self.feature_shape), name='input')
 
     @params((1, 1), (1, 2), (3, 3))
@@ -41,10 +41,10 @@ class TestGRUModel(TfGraphTestCase):
             name='step_hidden',
             dtype=tf.float32)
 
-        outputs = model.build(self._input_var, self._step_input_var,
+        outputs = model.build(self.input_var, self.step_input_var,
                               step_hidden_var)
         output = self.sess.run(
-            outputs[0], feed_dict={self._input_var: self.obs_inputs})
+            outputs[0], feed_dict={self.input_var: self.obs_inputs})
         expected_output = np.full(
             [self.batch_size, self.time_step, output_dim], hidden_dim * -2)
         assert np.array_equal(output, expected_output)
@@ -53,7 +53,7 @@ class TestGRUModel(TfGraphTestCase):
         model = GRUModel(output_dim=1, hidden_dim=1)
         step_hidden_var = tf.placeholder(
             shape=(self.batch_size, 1), name='step_hidden', dtype=tf.float32)
-        model.build(self._input_var, self._step_input_var, step_hidden_var)
+        model.build(self.input_var, self.step_input_var, step_hidden_var)
 
         # assign bias to all one
         with tf.variable_scope('GRUModel/gru', reuse=True):
@@ -65,17 +65,18 @@ class TestGRUModel(TfGraphTestCase):
 
         outputs1 = self.sess.run(
             model.networks['default'].all_output,
-            feed_dict={self._input_var: self.obs_inputs})
+            feed_dict={self.input_var: self.obs_inputs})
         output1 = self.sess.run(
             [
                 model.networks['default'].step_output,
                 model.networks['default'].step_hidden
             ],
-            feed_dict={                                 # yapf: disable
-                self._step_input_var: self.obs_input,   # yapf: disable
-                step_hidden_var: hidden                 # yapf: disable
-            })                                          # yapf: disable
-
+            # yapf: disable
+            feed_dict={
+                self.step_input_var: self.obs_input,
+                step_hidden_var: hidden
+            })
+        # yapf: enable
         h = pickle.dumps(model)
         with tf.Session(graph=tf.Graph()) as sess:
             input_var = tf.placeholder(tf.float32, shape=(None, 5))
@@ -101,9 +102,11 @@ class TestGRUModel(TfGraphTestCase):
                     model_pickled.networks['default'].step_output,
                     model_pickled.networks['default'].step_hidden
                 ],
-                feed_dict={                               # yapf: disable
-                    step_input_var: self.obs_input,       # yapf: disable
-                    step_hidden_var: hidden               # yapf: disable
-                })                                        # yapf: disable
+                # yapf: disable
+                feed_dict={
+                    step_input_var: self.obs_input,
+                    step_hidden_var: hidden
+                })
+            # yapf: enable
             assert np.array_equal(outputs1, outputs2)
             assert np.array_equal(output1, output2)
