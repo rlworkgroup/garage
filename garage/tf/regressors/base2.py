@@ -92,6 +92,10 @@ class Regressor2(abc.ABC):
             for param, value in zip(self.get_params(**tags), param_values):
                 param.load(value)
 
+    def flat_to_params(self, flattened_params, **tags):
+        return unflatten_tensors(flattened_params,
+                                 self.get_param_shapes(**tags))
+
     def __getstate__(self):
         """Object.__getstate__."""
         new_dict = self.__dict__.copy()

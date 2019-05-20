@@ -5,6 +5,8 @@ from garage.tf.regressors.bernoulli_mlp_regressor import (
     BernoulliMLPRegressor)
 from garage.tf.regressors.categorical_mlp_regressor import (
     CategoricalMLPRegressor)
+from garage.tf.regressors.categorical_mlp_regressor_with_model import (
+    CategoricalMLPRegressorWithModel)
 from garage.tf.regressors.continuous_mlp_regressor import (
     ContinuousMLPRegressor)
 from garage.tf.regressors.continuous_mlp_regressor_with_model import (
@@ -18,8 +20,9 @@ from garage.tf.regressors.gaussian_mlp_regressor_with_model import (
 
 __all__ = [
     'BernoulliMLPRegressor', 'CategoricalMLPRegressor',
-    'ContinuousMLPRegressor', 'ContinuousMLPRegressorWithModel',
-    'GaussianMLPRegressor', 'GaussianMLPRegressorModel',
-    'GaussianMLPRegressorWithModel', 'GaussianConvRegressor', 'Regressor2',
-    'StochasticRegressor', 'StochasticRegressor2'
+    'CategoricalMLPRegressorWithModel', 'ContinuousMLPRegressor',
+    'ContinuousMLPRegressorWithModel', 'GaussianMLPRegressor',
+    'GaussianMLPRegressorModel', 'GaussianMLPRegressorWithModel',
+    'GaussianConvRegressor', 'Regressor2', 'StochasticRegressor',
+    'StochasticRegressor2'
 ]
