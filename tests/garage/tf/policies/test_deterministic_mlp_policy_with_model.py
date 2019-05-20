@@ -6,7 +6,7 @@ import pytest
 import tensorflow as tf
 
 from garage.tf.envs import TfEnv
-from garage.tf.policies import DeterministicMLPPolicyWithModel
+from garage.tf.policies import ContinuousMLPPolicyWithModel
 from tests.fixtures import TfGraphTestCase
 from tests.fixtures.envs.dummy import DummyBoxEnv
 from tests.fixtures.models import SimpleMLPModel
@@ -24,9 +24,9 @@ class TestDeterministicMLPPolicyWithModel(TfGraphTestCase):
     def test_get_action(self, obs_dim, action_dim):
         env = TfEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
         with mock.patch(('garage.tf.policies.'
-                         'deterministic_mlp_policy_with_model.MLPModel'),
+                         'continuous_mlp_policy_with_model.MLPModel'),
                         new=SimpleMLPModel):
-            policy = DeterministicMLPPolicyWithModel(env_spec=env.spec)
+            policy = ContinuousMLPPolicyWithModel(env_spec=env.spec)
 
         env.reset()
         obs, _, _, _ = env.step(1)
@@ -54,9 +54,9 @@ class TestDeterministicMLPPolicyWithModel(TfGraphTestCase):
     def test_get_action_sym(self, obs_dim, action_dim):
         env = TfEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
         with mock.patch(('garage.tf.policies.'
-                         'deterministic_mlp_policy_with_model.MLPModel'),
+                         'continuous_mlp_policy_with_model.MLPModel'),
                         new=SimpleMLPModel):
-            policy = DeterministicMLPPolicyWithModel(env_spec=env.spec)
+            policy = ContinuousMLPPolicyWithModel(env_spec=env.spec)
 
         env.reset()
         obs, _, _, _ = env.step(1)
@@ -85,14 +85,14 @@ class TestDeterministicMLPPolicyWithModel(TfGraphTestCase):
     def test_is_pickleable(self, obs_dim, action_dim):
         env = TfEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
         with mock.patch(('garage.tf.policies.'
-                         'deterministic_mlp_policy_with_model.MLPModel'),
+                         'continuous_mlp_policy_with_model.MLPModel'),
                         new=SimpleMLPModel):
-            policy = DeterministicMLPPolicyWithModel(env_spec=env.spec)
+            policy = ContinuousMLPPolicyWithModel(env_spec=env.spec)
 
         env.reset()
         obs, _, _, _ = env.step(1)
 
-        with tf.variable_scope('DeterministicMLPPolicy/MLPModel', reuse=True):
+        with tf.variable_scope('ContinuousMLPPolicy/MLPModel', reuse=True):
             return_var = tf.get_variable('return_var')
         # assign it to all one
         return_var.load(tf.ones_like(return_var).eval())

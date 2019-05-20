@@ -126,8 +126,13 @@ class DDPG(OffPolicyRLAlgorithm):
     def init_opt(self):
         with tf.name_scope(self.name, 'DDPG'):
             # Create target policy and qf network
-            self.target_policy_f_prob_online, _, _ = self.policy.build_net(
-                trainable=False, name='target_policy')
+            self.target_policy = self.policy.clone('target_policy')
+            actions = self.target_policy.model.networks['default'].outputs
+            # scale output action
+            scaled_actions = self._scale_action(actions)
+            self.target_policy_f_prob_online = tensor_utils.compile_function(
+                inputs=[self.target_policy.model.networks['default'].input],
+                outputs=scaled_actions)
             self.target_qf_f_prob_online, _, _, _ = self.qf.build_net(
                 trainable=False, name='target_qf')
 
@@ -135,7 +140,7 @@ class DDPG(OffPolicyRLAlgorithm):
             with tf.name_scope('setup_target'):
                 ops = tensor_utils.get_target_ops(
                     self.policy.get_global_vars(),
-                    self.policy.get_global_vars('target_policy'), self.tau)
+                    self.target_policy.get_global_vars(), self.tau)
                 policy_init_ops, policy_update_ops = ops
                 qf_init_ops, qf_update_ops = tensor_utils.get_target_ops(
                     self.qf.get_global_vars(),
@@ -163,9 +168,11 @@ class DDPG(OffPolicyRLAlgorithm):
                     tf.float32,
                     shape=(None, self.env_spec.action_space.flat_dim),
                     name='input_action')
+                actions = self._scale_action(actions)
 
             # Set up policy training function
             next_action = self.policy.get_action_sym(obs, name='policy_action')
+            next_action = self._scale_action(next_action)
             next_qval = self.qf.get_qval_sym(
                 obs, next_action, name='policy_action_qval')
             with tf.name_scope('action_loss'):
@@ -332,3 +339,7 @@ class DDPG(OffPolicyRLAlgorithm):
     @overrides
     def get_itr_snapshot(self, itr):
         return dict(itr=itr, policy=self.policy)
+
+    def _scale_action(self, action_input):
+        action_bound = self.env_spec.action_space.high
+        return tf.multiply(action_input, action_bound, name='scaled_action')
