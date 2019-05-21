@@ -98,7 +98,9 @@ class OffPolicyVectorizedSampler(BatchSampler):
                 actions, agent_infos = self.algo.policy.get_actions(
                     obs_normalized)
 
-            next_obses, rewards, dones, env_infos = self.vec_env.step(actions)
+            scaled_actions = np.multiply(actions, self.env.action_space.high)
+            next_obses, rewards, dones, env_infos = self.vec_env.step(
+                scaled_actions)
             self._last_obses = next_obses
             agent_infos = tensor_utils.split_tensor_dict_list(agent_infos)
             env_infos = tensor_utils.split_tensor_dict_list(env_infos)

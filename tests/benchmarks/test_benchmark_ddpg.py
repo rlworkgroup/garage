@@ -1,6 +1,5 @@
 '''
 This script creates a regression test over garage-DDPG and baselines-DDPG.
-
 It get Mujoco1M benchmarks from baselines benchmark, and test each task in
 its trial times on garage model and baselines model. For each task, there will
 be `trial` times with different random seeds. For each trial, there will be two
@@ -63,7 +62,6 @@ class TestBenchmarkDDPG:
     def test_benchmark_ddpg(self):
         '''
         Compare benchmarks between garage and baselines.
-
         :return:
         '''
         # Load Mujoco1M tasks, you can check other benchmarks here
@@ -142,9 +140,7 @@ class TestBenchmarkDDPG:
 def run_garage(env, seed, log_dir):
     '''
     Create garage model and training.
-
     Replace the ddpg with the algorithm you want to run.
-
     :param env: Environment of the task.
     :param seed: Random seed for the trial.
     :param log_dir: Log dir path.
@@ -209,9 +205,7 @@ def run_garage(env, seed, log_dir):
 def run_baselines(env, seed, log_dir):
     '''
     Create baselines model and training.
-
     Replace the ddpg and its training with the algorithm you want to run.
-
     :param env: Environment of the task.
     :param seed: Random seed for the trial.
     :param log_dir: Log dir path.

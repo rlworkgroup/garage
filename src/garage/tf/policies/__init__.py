@@ -34,9 +34,8 @@ __all__ = [
     'CategoricalGRUPolicyWithModel', 'CategoricalLSTMPolicy',
     'CategoricalLSTMPolicyWithModel', 'CategoricalMLPPolicy',
     'CategoricalMLPPolicyWithModel', 'ContinuousMLPPolicy',
-    'DiscreteQfDerivedPolicy', 'DeterministicMLPPolicy',
-    'DeterministicMLPPolicyWithModel', 'GaussianGRUPolicy',
-    'GaussianLSTMPolicy', 'GaussianGRUPolicyWithModel',
-    'GaussianLSTMPolicyWithModel', 'GaussianMLPPolicy',
-    'GaussianMLPPolicyWithModel'
+    'ContinuousMLPPolicyWithModel', 'DiscreteQfDerivedPolicy',
+    'DeterministicMLPPolicy', 'GaussianGRUPolicy', 'GaussianLSTMPolicy',
+    'GaussianGRUPolicyWithModel', 'GaussianLSTMPolicyWithModel',
+    'GaussianMLPPolicy', 'GaussianMLPPolicyWithModel'
 ]

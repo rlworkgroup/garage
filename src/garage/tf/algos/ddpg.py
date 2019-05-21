@@ -104,6 +104,8 @@ class DDPG(OffPolicyRLAlgorithm):
         self.epoch_ys = []
         self.epoch_qs = []
 
+        self.target_policy = policy.clone('target_policy')
+
         super(DDPG, self).__init__(
             env_spec=env_spec,
             policy=policy,
@@ -126,13 +128,9 @@ class DDPG(OffPolicyRLAlgorithm):
     def init_opt(self):
         with tf.name_scope(self.name, 'DDPG'):
             # Create target policy and qf network
-            self.target_policy = self.policy.clone('target_policy')
-            actions = self.target_policy.model.networks['default'].outputs
-            # scale output action
-            scaled_actions = self._scale_action(actions)
             self.target_policy_f_prob_online = tensor_utils.compile_function(
                 inputs=[self.target_policy.model.networks['default'].input],
-                outputs=scaled_actions)
+                outputs=self.target_policy.model.networks['default'].outputs)
             self.target_qf_f_prob_online, _, _, _ = self.qf.build_net(
                 trainable=False, name='target_qf')
 
@@ -168,11 +166,8 @@ class DDPG(OffPolicyRLAlgorithm):
                     tf.float32,
                     shape=(None, self.env_spec.action_space.flat_dim),
                     name='input_action')
-                actions = self._scale_action(actions)
-
             # Set up policy training function
             next_action = self.policy.get_action_sym(obs, name='policy_action')
-            next_action = self._scale_action(next_action)
             next_qval = self.qf.get_qval_sym(
                 obs, next_action, name='policy_action_qval')
             with tf.name_scope('action_loss'):
@@ -248,7 +243,7 @@ class DDPG(OffPolicyRLAlgorithm):
         for train_itr in range(self.n_train_steps):
             if self.replay_buffer.n_transitions_stored >= self.min_buffer_size:  # noqa: E501
                 self.evaluate = True
-                qf_loss, y, q, policy_loss = self.optimize_policy(epoch, paths)
+                qf_loss, y, q, policy_loss = self.optimize_policy(itr, paths)
 
                 self.episode_policy_losses.append(policy_loss)
                 self.episode_qf_losses.append(qf_loss)
@@ -339,7 +334,3 @@ class DDPG(OffPolicyRLAlgorithm):
     @overrides
     def get_itr_snapshot(self, itr):
         return dict(itr=itr, policy=self.policy)
-
-    def _scale_action(self, action_input):
-        action_bound = self.env_spec.action_space.high
-        return tf.multiply(action_input, action_bound, name='scaled_action')
