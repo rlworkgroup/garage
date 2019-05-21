@@ -161,7 +161,6 @@ def recurrent_step_lstm(input_val,
 
     c = f * step_cell + i * nonlinearity(x_c + h_c + b_c)
     h = o * nonlinearity(c)
-
     return h, c
 
 
