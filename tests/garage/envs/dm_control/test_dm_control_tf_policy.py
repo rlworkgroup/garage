@@ -27,11 +27,9 @@ class TestDmControlTfPolicy(TfGraphTestCase):
                 env_spec=env.spec,
                 policy=policy,
                 baseline=baseline,
-                batch_size=10,
                 max_path_length=5,
-                n_itr=1,
                 discount=0.99,
-                step_size=0.01,
+                max_kl_step=0.01,
             )
 
             runner.setup(algo, env)

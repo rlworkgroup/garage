@@ -6,7 +6,7 @@ from garage.np.algos import BatchPolopt
 
 
 class CMAES(BatchPolopt):
-    r"""Covariance Matrix Adaptation Evolution Strategy.
+    """Covariance Matrix Adaptation Evolution Strategy.
 
     Note:
         The CMA-ES method can hardly learn a successful policy even for
@@ -19,9 +19,10 @@ class CMAES(BatchPolopt):
         baseline (garage.np.baselines.Baseline): Baseline for GAE
             (Generalized Advantage Estimation).
         n_samples (int): Number of policies sampled in one epoch.
-        max_path_length (int): Maximum length of a single rollout.
         discount (float): Environment reward discount.
+        max_path_length (int): Maximum length of a single rollout.
         sigma0 (float): Initial std for param distribution.
+
     """
 
     def __init__(self,
@@ -32,7 +33,8 @@ class CMAES(BatchPolopt):
                  discount=0.99,
                  max_path_length=500,
                  sigma0=1.):
-        super().__init__(policy, baseline, discount, max_path_length)
+        super(CMAES, self).__init__(policy, baseline, discount,
+                                    max_path_length)
         self.env_spec = env_spec
         self.policy = policy
         self.n_samples = n_samples

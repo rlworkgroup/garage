@@ -9,18 +9,20 @@ from garage.np.algos.base import RLAlgorithm
 
 class BatchPolopt(RLAlgorithm):
     """A batch-based algorithm interleaves sampling and policy optimization.
+
     In one round of training, the runner will first instruct the sampler to do
     environment rollout and the sampler will collect a given number of samples
     (in terms of environment interactions). The collected paths are then
     absorbed by `RLAlgorithm.train_once()` and an algorithm performs one step
-    of policy optimization.
-    The updated policy will then be used in the next round of sampling.
+    of policy optimization. The updated policy will then be used in the
+    next round of sampling.
 
     Args:
         policy (garage.tf.policies.base.Policy): Policy.
         baseline (garage.tf.baselines.Baseline): The baseline.
         discount (float): Discount.
         max_path_length (int): Maximum length of a single rollout.
+
     """
 
     def __init__(self, policy, baseline, discount, max_path_length):
@@ -41,6 +43,7 @@ class BatchPolopt(RLAlgorithm):
         Returns:
             dict: Processed sample data, with key
                 * average_return: (float)
+
         """
         baselines = []
         returns = []

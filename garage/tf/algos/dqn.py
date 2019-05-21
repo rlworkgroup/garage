@@ -1,11 +1,3 @@
-"""
-DQN from https://arxiv.org/pdf/1312.5602.pdf.
-
-Known as Deep Q-Network, it estimates the Q-value function by deep neural
-networks. It enables Q-Learning to be applied on high complexity environments.
-To deal with pixel environments, numbers of tricks are usually needed, e.g.
-skipping frames and stacking frames as single observation.
-"""
 from dowel import tabular
 import numpy as np
 import tensorflow as tf
@@ -17,37 +9,67 @@ from garage.tf.misc import tensor_utils
 
 
 class DQN(OffPolicyRLAlgorithm):
-    """
-    DQN.
+    """DQN from https://arxiv.org/pdf/1312.5602.pdf.
+
+    Known as Deep Q-Network, it estimates the Q-value function by deep neural
+    networks. It enables Q-Learning to be applied on high complexity
+    environments. To deal with pixel environments, numbers of tricks are
+    usually needed, e.g. skipping frames and stacking frames as single
+    observation.
 
     Args:
         env_spec (garage.envs.env_spec.EnvSpec): Environment specification.
-        max_path_length (int): Maximum path length. The episode will terminate
-            when length of trajectory reaches max_path_length.
+        policy (garage.tf.policies.base.Policy): Policy.
+        qf (object): The q value network.
+        replay_buffer (garage.replay_buffer.ReplayBuffer): Replay buffer.
+        exploration_strategy (garage.np.exploration_strategies.
+            ExplorationStrategy): Exploration strategy.
+        n_epoch_cycles (int): Epoch cycles.
+        min_buffer_size (int): The minimum buffer size for replay buffer.
+        buffer_batch_size (int): Batch size for replay buffer.
+        rollout_batch_size (int): Roll out batch size.
+        n_train_steps (int): Training steps.
+        max_path_length (int): Maximum path length. The episode will
+            terminate when length of trajectory reaches max_path_length.
         qf_lr (float): Learning rate for Q-Function.
         qf_optimizer (tf.Optimizer): Optimizer for Q-Function.
         discount (float): Discount factor for rewards.
-        name (str): Name of the algorithm.
-        target_network_update_freq (int): Frequency of updating target network.
-        grad_norm_clipping (float): Maximum clipping value for clipping tensor
-            values to a maximum L2-norm. It must be larger than 0. If None,
-            no gradient clipping is done. For detail, see docstring for
-            tf.clip_by_norm.
+        target_network_update_freq (int): Frequency of updating target
+            network.
+        grad_norm_clipping (float): Maximum clipping value for clipping
+            tensor values to a maximum L2-norm. It must be larger than 0.
+            If None, no gradient clipping is done. For detail, see
+            docstring for tf.clip_by_norm.
         double_q (bool): Bool for using double q-network.
+        reward_scale (float): Reward scale.
+        input_include_goal (bool): Whether input includes goal.
+        smooth_return (bool): Whether to smooth the return.
+        name (str): Name of the algorithm.
+
     """
 
     def __init__(self,
                  env_spec,
+                 policy,
+                 qf,
                  replay_buffer,
+                 exploration_strategy=None,
+                 n_epoch_cycles=20,
+                 min_buffer_size=int(1e4),
+                 buffer_batch_size=64,
+                 rollout_batch_size=1,
+                 n_train_steps=50,
                  max_path_length=None,
                  qf_lr=0.001,
                  qf_optimizer=tf.train.AdamOptimizer,
                  discount=1.0,
-                 name='DQN',
                  target_network_update_freq=5,
                  grad_norm_clipping=None,
                  double_q=False,
-                 **kwargs):
+                 reward_scale=1.,
+                 input_include_goal=False,
+                 smooth_return=True,
+                 name='DQN'):
         self.qf_lr = qf_lr
         self.qf_optimizer = qf_optimizer
         self.name = name
@@ -58,12 +80,22 @@ class DQN(OffPolicyRLAlgorithm):
         self.episode_rewards = []
         self.episode_qf_losses = []
 
-        super().__init__(
+        super(DQN, self).__init__(
             env_spec=env_spec,
+            policy=policy,
+            qf=qf,
+            exploration_strategy=exploration_strategy,
+            min_buffer_size=min_buffer_size,
+            n_train_steps=n_train_steps,
+            n_epoch_cycles=n_epoch_cycles,
+            buffer_batch_size=buffer_batch_size,
+            rollout_batch_size=rollout_batch_size,
             replay_buffer=replay_buffer,
             max_path_length=max_path_length,
             discount=discount,
-            **kwargs)
+            reward_scale=reward_scale,
+            input_include_goal=input_include_goal,
+            smooth_return=smooth_return)
 
     @overrides
     def init_opt(self):

@@ -27,11 +27,8 @@ class TestREPS(TfGraphTestCase):
                 env_spec=env.spec,
                 policy=policy,
                 baseline=baseline,
-                batch_size=4000,
                 max_path_length=100,
-                n_itr=10,
-                discount=0.99,
-                max_kl_step=1e6)
+                discount=0.99)
 
             runner.setup(algo, env)
 

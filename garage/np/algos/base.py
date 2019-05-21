@@ -2,8 +2,7 @@ import abc
 
 
 class RLAlgorithm(abc.ABC):
-    """Base class for all the algorithms.
-    """
+    """Base class for all the algorithms."""
 
     @abc.abstractmethod
     def train_once(self, itr, paths):
@@ -13,5 +12,6 @@ class RLAlgorithm(abc.ABC):
         Args:
             itr (int): Iteration number.
             paths (list[dict]): A list of collected paths.
+
         """
         pass

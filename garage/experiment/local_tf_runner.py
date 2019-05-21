@@ -238,6 +238,7 @@ class LocalRunner:
 
             When resume programmatically, snapshot directory should be
             specify manually or through run_experiment() interface.
+
         """
         snapshotter.snapshot_dir = snapshot_dir
         saved = snapshotter.load(from_epoch)

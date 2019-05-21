@@ -5,7 +5,7 @@ from garage.np.algos import BatchPolopt
 
 
 class CEM(BatchPolopt):
-    r"""Cross Entropy Method.
+    """Cross Entropy Method.
 
     CEM works by iteratively optimizing a gaussian distribution of policy.
 
@@ -29,11 +29,13 @@ class CEM(BatchPolopt):
         baseline(garage.np.baselines.Baseline): Baseline for GAE
             (Generalized Advantage Estimation).
         n_samples (int): Number of policies sampled in one epoch.
-        max_path_length (int): Maximum length of a single rollout.
         discount (float): Environment reward discount.
+        max_path_length (int): Maximum length of a single rollout.
+        best_frac (float): The best fraction.
         init_std (float): Initial std for policy param distribution.
         extra_std (float): Decaying std added to param distribution.
         extra_decay_time (float): Epochs that it takes to decay extra std.
+
     """
 
     def __init__(self,
@@ -47,7 +49,7 @@ class CEM(BatchPolopt):
                  best_frac=0.05,
                  extra_std=1.,
                  extra_decay_time=100):
-        super().__init__(policy, baseline, discount, max_path_length)
+        super(CEM, self).__init__(policy, baseline, discount, max_path_length)
         self.env_spec = env_spec
         self.n_samples = n_samples
 

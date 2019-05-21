@@ -60,16 +60,13 @@ class TestTRPO(TfGraphTestCase):
         )
         with self.assertRaises(NotImplementedError) as context:
             TRPO(
-                env=env,
+                env_spec=env.spec,
                 policy=policy,
                 baseline=baseline,
-                batch_size=2048,
                 max_path_length=100,
-                n_itr=10,
                 discount=0.99,
                 gae_lambda=0.98,
                 policy_ent_coeff=0.0,
-                plot=False,
                 kl_constraint='random kl_constraint',
             )
         assert 'Unknown KLConstraint' in str(context.exception)

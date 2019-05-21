@@ -9,9 +9,9 @@ from garage.tf.misc import tensor_utils
 
 
 class BatchPolopt(RLAlgorithm):
-    """
-    Base class for batch sampling-based policy optimization methods.
-    This includes various policy gradient methods like vpg, npg, ppo, trpo,
+    """Base class for batch sampling-based policy optimization methods.
+
+    This includes various policy gradient methods like VPG, NPG, PPO, TRPO,
     etc.
 
     Args:
@@ -32,6 +32,8 @@ class BatchPolopt(RLAlgorithm):
             so that they are always positive. When used in
             conjunction with center_adv the advantages will be
             standardized before shifting.
+        fixed_horizon (bool): Whether to fix horizon.
+
     """
 
     def __init__(self,
@@ -44,8 +46,7 @@ class BatchPolopt(RLAlgorithm):
                  gae_lambda=1,
                  center_adv=True,
                  positive_adv=False,
-                 fixed_horizon=False,
-                 **kwargs):
+                 fixed_horizon=False):
         self.env_spec = env_spec
         self.policy = policy
         self.baseline = baseline
@@ -93,6 +94,7 @@ class BatchPolopt(RLAlgorithm):
                 * env_infos: (dict)
                 * paths: (list[dict])
                 * average_return: (numpy.float64)
+
         """
         baselines = []
         returns = []

@@ -26,6 +26,7 @@ class OffPolicyVectorizedSampler(BatchSampler):
         algo(garage.np.RLAlgorithm): Algorithm.
         env(garage.envs.GarageEnv): Environment.
         n_envs(int): Number of parallel environments managed by sampler.
+
     """
 
     def __init__(self, algo, env, n_envs=None, no_reset=True):
@@ -64,6 +65,7 @@ class OffPolicyVectorizedSampler(BatchSampler):
 
         Returns:
             list: A list of paths.
+
         """
         paths = []
         if not self.no_reset or self._last_obses is None:
