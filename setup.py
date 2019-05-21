@@ -16,7 +16,7 @@ required = [
     # installed. This is stupid, but harmless.
     'dm_control @ https://api.github.com/repos/deepmind/dm_control/tarball/92f9913013face0468442cd0964d5973ea2089ea',  # noqa: E501
     'dowel==0.0.2',
-    'gym[all]==0.12.0',
+    'gym[all]==0.12.1',
     'joblib<0.13,>=0.12',
     'matplotlib',
     'mujoco-py<2.1,>=2.0',

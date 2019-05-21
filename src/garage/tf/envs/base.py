@@ -9,7 +9,6 @@ from gym.spaces import Discrete as GymDiscrete
 from gym.spaces import Tuple as GymTuple
 
 from garage.envs import GarageEnv
-from garage.envs.env_spec import EnvSpec
 from garage.misc.overrides import overrides
 
 
@@ -51,19 +50,6 @@ class TfEnv(GarageEnv):
             return Tuple(list(map(self._to_akro_space, space.spaces)))
         else:
             raise NotImplementedError
-
-    @cached_property
-    @overrides
-    def spec(self):
-        """
-        Returns an EnvSpec.
-
-        Returns:
-            spec (garage.envs.EnvSpec)
-        """
-        return EnvSpec(
-            observation_space=self.observation_space,
-            action_space=self.action_space)
 
     @cached_property
     @overrides
