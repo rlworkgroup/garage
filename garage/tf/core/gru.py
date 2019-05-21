@@ -18,7 +18,7 @@ def gru(name,
         name (str): Name of the variable scope.
         gru_cell (tf.keras.layers.Layer): GRU cell used to generate
             outputs.
-        all_input_var (tf.Tensor): Place holder for entire time-seried inputs.
+        all_input_var (tf.Tensor): Place holder for entire time-series inputs.
         step_input_var (tf.Tensor): Place holder for step inputs.
         step_hidden_var (tf.Tensor): Place holder for step hidden state.
         output_nonlinearity (callable): Activation function for output dense
@@ -30,7 +30,7 @@ def gru(name,
             hidden state is trainable.
 
     Return:
-        outputs (tf.Tensor): Entire time-seried outputs.
+        outputs (tf.Tensor): Entire time-series outputs.
         output (tf.Tensor): Step output.
         hidden (tf.Tensor): Step hidden state.
         hidden_init_var (tf.Tensor): Initial hidden state.

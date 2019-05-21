@@ -49,7 +49,7 @@ class TestGRU(TfGraphTestCase):
         input_var = tf.placeholder(
             tf.float32, shape=(None, None, input_dim), name='input')
         step_input_var = tf.placeholder(
-            tf.float32, shape=(None, input_dim), name='input')
+            tf.float32, shape=(None, input_dim), name='step_input')
         output_nonlinearity = tf.keras.layers.Dense(
             units=output_dim,
             activation=None,
@@ -108,7 +108,7 @@ class TestGRU(TfGraphTestCase):
         input_var = tf.placeholder(
             tf.float32, shape=(None, None, input_dim), name='input')
         step_input_var = tf.placeholder(
-            tf.float32, shape=(None, input_dim), name='input')
+            tf.float32, shape=(None, input_dim), name='step_input')
         output_nonlinearity = tf.keras.layers.Dense(
             units=output_dim,
             activation=None,
@@ -180,7 +180,15 @@ class TestGRU(TfGraphTestCase):
         full_output2 = np.matmul(stack_hidden, output_nonlinearity)
         assert np.allclose(full_output1, full_output2)
 
-    @params((1, 1, 1), (1, 1, 3), (1, 3, 1), (3, 1, 1), (3, 3, 1), (3, 3, 3))
+    # yapf: disable
+    @params(
+        (1, 1, 1),
+        (1, 1, 3),
+        (1, 3, 1),
+        (3, 1, 1),
+        (3, 3, 1),
+        (3, 3, 3))
+    # yapf: enable
     def test_output_value_trainable_hidden_and_cell(self, time_step, input_dim,
                                                     output_dim):
         obs_inputs = np.full((self.batch_size, time_step, input_dim), 1.)
@@ -189,7 +197,7 @@ class TestGRU(TfGraphTestCase):
         input_var = tf.placeholder(
             tf.float32, shape=(None, None, input_dim), name='input')
         step_input_var = tf.placeholder(
-            tf.float32, shape=(None, input_dim), name='input')
+            tf.float32, shape=(None, input_dim), name='step_input')
         output_nonlinearity = tf.keras.layers.Dense(
             units=output_dim,
             activation=None,
@@ -256,7 +264,7 @@ class TestGRU(TfGraphTestCase):
         input_var = tf.placeholder(
             tf.float32, shape=(None, None, input_dim), name='input')
         step_input_var = tf.placeholder(
-            tf.float32, shape=(None, input_dim), name='input')
+            tf.float32, shape=(None, input_dim), name='step_input')
         output_nonlinearity = tf.keras.layers.Dense(
             units=output_dim,
             activation=None,
@@ -335,7 +343,7 @@ class TestGRU(TfGraphTestCase):
         input_var = tf.placeholder(
             tf.float32, shape=(None, None, input_dim), name='input')
         step_input_var = tf.placeholder(
-            tf.float32, shape=(None, input_dim), name='input')
+            tf.float32, shape=(None, input_dim), name='step_input')
         output_nonlinearity = tf.keras.layers.Dense(
             units=output_dim,
             activation=None,
