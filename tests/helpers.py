@@ -87,16 +87,16 @@ def convolve(_input, filter_weights, filter_bias, strides, filter_sizes,
     return _input
 
 
-def recurrent_step(input_val,
-                   num_units,
-                   step_hidden,
-                   step_cell,
-                   w_x_init,
-                   w_h_init,
-                   b_init,
-                   nonlinearity,
-                   gate_nonlinearity,
-                   forget_bias=1.0):
+def recurrent_step_lstm(input_val,
+                        num_units,
+                        step_hidden,
+                        step_cell,
+                        w_x_init,
+                        w_h_init,
+                        b_init,
+                        nonlinearity,
+                        gate_nonlinearity,
+                        forget_bias=1.0):
     """
     A LSTM unit implements the following update mechanism:
 
@@ -163,6 +163,71 @@ def recurrent_step(input_val,
     h = o * nonlinearity(c)
 
     return h, c
+
+
+def recurrent_step_gru(input_val,
+                       num_units,
+                       step_hidden,
+                       w_x_init,
+                       w_h_init,
+                       b_init,
+                       nonlinearity,
+                       gate_nonlinearity,
+                       forget_bias=1.0):
+    """
+    A GRU unit implements the following update mechanism:
+
+    Reset gate:        r(t) = f_r(x(t) @ W_xr + h(t-1) @ W_hr + b_r)
+    Update gate:       u(t) = f_u(x(t) @ W_xu + h(t-1) @ W_hu + b_u)
+    Cell gate:         c(t) = f_c(x(t) @ W_xc + r(t) * (h(t-1) @ W_hc) + b_c)
+    New hidden state:  h(t) = u_t * h(t-1) + (1 - u(t)) * c(t)
+
+    Note that the reset, update, and cell vectors must have the same dimension
+    as the hidden state.
+    """
+
+    def f(x):
+        return x
+
+    if nonlinearity is None:
+        nonlinearity = f
+    if gate_nonlinearity is None:
+        gate_nonlinearity = f
+
+    input_dim = np.prod(input_val.shape[1:])
+    # Weights for the update gate
+    w_xz = np.full((input_dim, num_units), w_x_init)
+    w_hz = np.full((num_units, num_units), w_h_init)
+    b_z = np.full((num_units, ), b_init)
+    # Weights for the reset gate
+    w_xr = np.full((input_dim, num_units), w_x_init)
+    w_hr = np.full((num_units, num_units), w_h_init)
+    b_r = np.full((num_units, ), b_init)
+    # Weights for the hidden gate
+    w_xh = np.full((input_dim, num_units), w_x_init)
+    w_hh = np.full((num_units, num_units), w_h_init)
+    b_h = np.full((num_units, ), b_init)
+
+    w_x_zrh = np.concatenate([w_xz, w_xr, w_xh], axis=1)
+    w_h_zrh = np.concatenate([w_hz, w_hr, w_hh], axis=1)
+
+    x_zrh = np.matmul(input_val, w_x_zrh)
+    h_zrh = np.matmul(step_hidden, w_h_zrh)
+
+    x_z = x_zrh[:, :num_units]
+    x_r = x_zrh[:, num_units:num_units * 2]
+    x_h = x_zrh[:, num_units * 2:num_units * 3]
+
+    h_z = h_zrh[:, :num_units]
+    h_r = h_zrh[:, num_units:num_units * 2]
+    h_h = h_zrh[:, num_units * 2:num_units * 3]
+
+    z = gate_nonlinearity(x_z + h_z + b_z)
+    r = gate_nonlinearity(x_r + h_r + b_r)
+    hh = nonlinearity(x_h + r * h_h + b_h)
+    h = z * step_hidden + (1 - z) * hh
+
+    return h
 
 
 def _construct_image_vector(_input, batch, w, h, filter_width, filter_height,

@@ -4,7 +4,7 @@ import tensorflow as tf
 
 from garage.tf.core.lstm import lstm
 from tests.fixtures import TfGraphTestCase
-from tests.helpers import recurrent_step
+from tests.helpers import recurrent_step_lstm
 
 
 class TestLSTM(TfGraphTestCase):
@@ -131,7 +131,7 @@ class TestLSTM(TfGraphTestCase):
                     self._step_cell_var: cell1
                 })
 
-            hidden2, cell2 = recurrent_step(
+            hidden2, cell2 = recurrent_step_lstm(
                 input_val=obs_input,
                 num_units=self.hidden_dim,
                 step_hidden=hidden2,
@@ -158,7 +158,7 @@ class TestLSTM(TfGraphTestCase):
         cell2 = np.full((self.batch_size, self.hidden_dim), cell_init.eval())
         stack_hidden = None
         for i in range(time_step):
-            hidden2, cell2 = recurrent_step(
+            hidden2, cell2 = recurrent_step_lstm(
                 input_val=obs_inputs[:, i, :],
                 num_units=self.hidden_dim,
                 step_hidden=hidden2,
@@ -233,7 +233,7 @@ class TestLSTM(TfGraphTestCase):
         cell2 = np.full((self.batch_size, self.hidden_dim), cell_init.eval())
         stack_hidden = None
         for i in range(time_step):
-            hidden2, cell2 = recurrent_step(
+            hidden2, cell2 = recurrent_step_lstm(
                 input_val=obs_inputs[:, i, :],
                 num_units=self.hidden_dim,
                 step_hidden=hidden2,

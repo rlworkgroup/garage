@@ -1052,7 +1052,7 @@ class GRULayer(Layer):
     Reset gate:        r(t) = f_r(x(t) @ W_xr + h(t-1) @ W_hr + b_r)
     Update gate:       u(t) = f_u(x(t) @ W_xu + h(t-1) @ W_hu + b_u)
     Cell gate:         c(t) = f_c(x(t) @ W_xc + r(t) * (h(t-1) @ W_hc) + b_c)
-    New hidden state:  h(t) = (1 - u(t)) * h(t-1) + u_t * c(t)
+    New hidden state:  h(t) = (1 - u(t)) * c(t) + u_t * h(t-1)
     Note that the reset, update, and cell vectors must have the same dimension
     as the hidden state
     """
@@ -1154,7 +1154,7 @@ class GRULayer(Layer):
                 r = self.gate_nonlinearity(x_r + h_r)
                 u = self.gate_nonlinearity(x_u + h_u)
                 c = self.nonlinearity(x_c + r * h_c)
-                h = (1 - u) * hprev + u * c
+                h = (1 - u) * c + u * hprev
                 return h
             else:
                 xb_ruc = tf.matmul(x, self.W_x_ruc) + tf.reshape(
@@ -1167,7 +1167,7 @@ class GRULayer(Layer):
                 r = self.gate_nonlinearity(xb_r + h_r)
                 u = self.gate_nonlinearity(xb_u + h_u)
                 c = self.nonlinearity(xb_c + r * h_c)
-                h = (1 - u) * hprev + u * c
+                h = (1 - u) * c + u * hprev
                 return h
 
     def get_step_layer(self, l_in, l_prev_hidden, name=None):

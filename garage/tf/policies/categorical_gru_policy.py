@@ -3,7 +3,6 @@ import numpy as np
 import tensorflow as tf
 
 from garage.core import Serializable
-from garage.misc import special
 from garage.misc.overrides import overrides
 from garage.tf.core import LayersPowered
 import garage.tf.core.layers as L
@@ -14,16 +13,19 @@ from garage.tf.policies.base import StochasticPolicy
 
 
 class CategoricalGRUPolicy(StochasticPolicy, LayersPowered, Serializable):
-    def __init__(
-            self,
-            env_spec,
-            name="CategoricalGRUPolicy",
-            hidden_dim=32,
-            feature_network=None,
-            state_include_action=True,
-            hidden_nonlinearity=tf.tanh,
-            gru_layer_cls=L.GRULayer,
-    ):
+    def __init__(self,
+                 env_spec,
+                 name='CategoricalGRUPolicy',
+                 hidden_dim=32,
+                 hidden_nonlinearity=tf.nn.tanh,
+                 recurrent_nonlinearity=tf.nn.sigmoid,
+                 recurrent_w_x_init=L.XavierUniformInitializer(),
+                 recurrent_w_h_init=L.OrthogonalInitializer(),
+                 output_nonlinearity=tf.nn.softmax,
+                 output_w_init=L.XavierUniformInitializer(),
+                 feature_network=None,
+                 state_include_action=True,
+                 gru_layer_cls=L.GRULayer):
         """
         :param env_spec: A spec for the env.
         :param hidden_dim: dimension of hidden layer
@@ -32,8 +34,8 @@ class CategoricalGRUPolicy(StochasticPolicy, LayersPowered, Serializable):
         """
         assert isinstance(env_spec.action_space, Discrete)
 
-        self._prob_network_name = "prob_network"
-        with tf.variable_scope(name, "CategoricalGRUPolicy"):
+        self._prob_network_name = 'prob_network'
+        with tf.variable_scope(name, 'CategoricalGRUPolicy'):
             Serializable.quick_init(self, locals())
             super(CategoricalGRUPolicy, self).__init__(env_spec)
 
@@ -45,7 +47,7 @@ class CategoricalGRUPolicy(StochasticPolicy, LayersPowered, Serializable):
             else:
                 input_dim = obs_dim
 
-            l_input = L.InputLayer(shape=(None, None, input_dim), name="input")
+            l_input = L.InputLayer(shape=(None, None, input_dim), name='input')
 
             if feature_network is None:
                 feature_dim = input_dim
@@ -57,7 +59,7 @@ class CategoricalGRUPolicy(StochasticPolicy, LayersPowered, Serializable):
                 l_feature = L.OpLayer(
                     l_flat_feature,
                     extras=[l_input],
-                    name="reshape_feature",
+                    name='reshape_feature',
                     op=lambda flat_feature, input: tf.reshape(
                         flat_feature,
                         tf.stack([
@@ -73,7 +75,11 @@ class CategoricalGRUPolicy(StochasticPolicy, LayersPowered, Serializable):
                 output_dim=env_spec.action_space.n,
                 hidden_dim=hidden_dim,
                 hidden_nonlinearity=hidden_nonlinearity,
-                output_nonlinearity=tf.nn.softmax,
+                recurrent_nonlinearity=recurrent_nonlinearity,
+                recurrent_w_x_init=recurrent_w_x_init,
+                recurrent_w_h_init=recurrent_w_h_init,
+                output_nonlinearity=output_nonlinearity,
+                output_w_init=output_w_init,
                 gru_layer_cls=gru_layer_cls,
                 name=self._prob_network_name)
 
@@ -83,11 +89,11 @@ class CategoricalGRUPolicy(StochasticPolicy, LayersPowered, Serializable):
             self.state_include_action = state_include_action
 
             flat_input_var = tf.placeholder(
-                dtype=tf.float32, shape=(None, input_dim), name="flat_input")
+                dtype=tf.float32, shape=(None, input_dim), name='flat_input')
             if feature_network is None:
                 feature_var = flat_input_var
             else:
-                with tf.name_scope("feature_network", values=[flat_input_var]):
+                with tf.name_scope('feature_network', values=[flat_input_var]):
                     feature_var = L.get_output(
                         l_flat_feature,
                         {feature_network.input_layer: flat_input_var})
@@ -98,9 +104,9 @@ class CategoricalGRUPolicy(StochasticPolicy, LayersPowered, Serializable):
                         prob_network.step_output_layer,
                         prob_network.step_hidden_layer
                     ], {prob_network.step_input_layer: feature_var})
-                out_prob_step = tf.identity(out_prob_step, "prob_step_output")
+                out_prob_step = tf.identity(out_prob_step, 'prob_step_output')
                 out_prob_hidden = tf.identity(out_prob_hidden,
-                                              "prob_step_hidden")
+                                              'prob_step_hidden')
 
             self.f_step_prob = tensor_utils.compile_function(
                 [flat_input_var, prob_network.step_prev_state_layer.input_var],
@@ -123,13 +129,13 @@ class CategoricalGRUPolicy(StochasticPolicy, LayersPowered, Serializable):
 
     @overrides
     def dist_info_sym(self, obs_var, state_info_vars, name=None):
-        with tf.name_scope(name, "dist_info_sym", [obs_var, state_info_vars]):
+        with tf.name_scope(name, 'dist_info_sym', [obs_var, state_info_vars]):
             n_batches = tf.shape(obs_var)[0]
             n_steps = tf.shape(obs_var)[1]
             obs_var = tf.reshape(obs_var, tf.stack([n_batches, n_steps, -1]))
             obs_var = tf.cast(obs_var, tf.float32)
             if self.state_include_action:
-                prev_action_var = tf.cast(state_info_vars["prev_action"],
+                prev_action_var = tf.cast(state_info_vars['prev_action'],
                                           tf.float32)
                 all_input_var = tf.concat(
                     axis=2, values=[obs_var, prev_action_var])
@@ -171,10 +177,6 @@ class CategoricalGRUPolicy(StochasticPolicy, LayersPowered, Serializable):
         self.prev_hiddens[dones] = self.prob_network.hid_init_param.eval(
         )  # get_value()
 
-    # The return value is a pair. The first item is a matrix (N, A), where each
-    # entry corresponds to the action value taken. The second item is a vector
-    # of length N, where each entry is the density value for that action, under
-    # the current policy
     @overrides
     def get_action(self, observation):
         actions, agent_infos = self.get_actions([observation])
@@ -189,14 +191,13 @@ class CategoricalGRUPolicy(StochasticPolicy, LayersPowered, Serializable):
         else:
             all_input = flat_obs
         probs, hidden_vec = self.f_step_prob(all_input, self.prev_hiddens)
-        actions = special.weighted_sample_n(probs,
-                                            np.arange(self.action_space.n))
+        actions = list(map(self.action_space.weighted_sample, probs))
         prev_actions = self.prev_actions
         self.prev_actions = self.action_space.flatten_n(actions)
         self.prev_hiddens = hidden_vec
         agent_info = dict(prob=probs)
         if self.state_include_action:
-            agent_info["prev_action"] = np.copy(prev_actions)
+            agent_info['prev_action'] = np.copy(prev_actions)
         return actions, agent_info
 
     @property
@@ -212,7 +213,7 @@ class CategoricalGRUPolicy(StochasticPolicy, LayersPowered, Serializable):
     def state_info_specs(self):
         if self.state_include_action:
             return [
-                ("prev_action", (self.action_dim, )),
+                ('prev_action', (self.action_dim, )),
             ]
         else:
             return []

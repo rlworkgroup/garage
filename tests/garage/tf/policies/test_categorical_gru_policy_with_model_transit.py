@@ -1,13 +1,13 @@
 """
-Unit test for Categorical LSTM Policy with Model.
+Unit test for Categorical GRU Policy with Model.
 
-This test consists of four different CategoricalLSTMPolicy: P1, P2, P3
-and P4. P1 and P2 are from CategoricalLSTMPolicy, which does not use
-garage.tf.models.LSTMModel while P3 and P4 do use.
+This test consists of four different CategoricalGRUPolicy: P1, P2, P3
+and P4. P1 and P2 are from CategoricalGRUPolicy, which does not use
+garage.tf.models.GRUModel while P3 and P4 do use.
 
 This test ensures the outputs from all the policies are the same,
-for the transition from using CategoricalLSTMPolicy to
-CategoricalLSTMPolicyWithModel.
+for the transition from using CategoricalGRUPolicy to
+CategoricalGRUPolicyWithModel.
 
 It covers get_action, get_actions, dist_info_sym, kl_sym,
 log_likelihood_sym, entropy_sym and likelihood_ratio_sym.
@@ -19,13 +19,13 @@ import tensorflow as tf
 
 from garage.tf.envs import TfEnv
 from garage.tf.misc import tensor_utils
-from garage.tf.policies import CategoricalLSTMPolicy
-from garage.tf.policies import CategoricalLSTMPolicyWithModel
+from garage.tf.policies import CategoricalGRUPolicy
+from garage.tf.policies import CategoricalGRUPolicyWithModel
 from tests.fixtures import TfGraphTestCase
 from tests.fixtures.envs.dummy import DummyDiscreteEnv
 
 
-class TestCategoricalLSTMPolicyWithModelTransit(TfGraphTestCase):
+class TestCategoricalGRUPolicyWithModelTransit(TfGraphTestCase):
     def setUp(self):
         super().setUp()
         env = TfEnv(DummyDiscreteEnv(obs_dim=(1, ), action_dim=1))
@@ -35,7 +35,7 @@ class TestCategoricalLSTMPolicyWithModelTransit(TfGraphTestCase):
         self.default_output_nonlinearity = None
         self.time_step = 1
 
-        self.policy1 = CategoricalLSTMPolicy(
+        self.policy1 = CategoricalGRUPolicy(
             env_spec=env.spec,
             hidden_dim=4,
             hidden_nonlinearity=self.default_hidden_nonlinearity,
@@ -46,7 +46,7 @@ class TestCategoricalLSTMPolicyWithModelTransit(TfGraphTestCase):
             output_w_init=self.default_initializer,
             state_include_action=True,
             name='P1')
-        self.policy2 = CategoricalLSTMPolicy(
+        self.policy2 = CategoricalGRUPolicy(
             env_spec=env.spec,
             hidden_dim=4,
             hidden_nonlinearity=self.default_hidden_nonlinearity,
@@ -60,7 +60,7 @@ class TestCategoricalLSTMPolicyWithModelTransit(TfGraphTestCase):
 
         self.sess.run(tf.global_variables_initializer())
 
-        self.policy3 = CategoricalLSTMPolicyWithModel(
+        self.policy3 = CategoricalGRUPolicyWithModel(
             env_spec=env.spec,
             hidden_dim=4,
             hidden_nonlinearity=self.default_hidden_nonlinearity,
@@ -71,7 +71,7 @@ class TestCategoricalLSTMPolicyWithModelTransit(TfGraphTestCase):
             output_w_init=self.default_initializer,
             state_include_action=True,
             name='P3')
-        self.policy4 = CategoricalLSTMPolicyWithModel(
+        self.policy4 = CategoricalGRUPolicyWithModel(
             env_spec=env.spec,
             hidden_dim=4,
             hidden_nonlinearity=self.default_hidden_nonlinearity,

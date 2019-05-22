@@ -224,6 +224,10 @@ class GRUNetwork:
                  hidden_dim,
                  name=None,
                  hidden_nonlinearity=tf.nn.relu,
+                 output_w_init=ly.XavierUniformInitializer(),
+                 recurrent_nonlinearity=tf.nn.sigmoid,
+                 recurrent_w_x_init=ly.XavierUniformInitializer(),
+                 recurrent_w_h_init=ly.OrthogonalInitializer(),
                  gru_layer_cls=ly.GRULayer,
                  output_nonlinearity=None,
                  input_var=None,
@@ -247,7 +251,10 @@ class GRUNetwork:
                 l_in,
                 num_units=hidden_dim,
                 hidden_nonlinearity=hidden_nonlinearity,
+                gate_nonlinearity=recurrent_nonlinearity,
                 hidden_init_trainable=False,
+                w_x_init=recurrent_w_x_init,
+                w_h_init=recurrent_w_h_init,
                 name='gru',
                 **layer_args)
             l_gru_flat = ly.ReshapeLayer(
@@ -256,6 +263,7 @@ class GRUNetwork:
                 l_gru_flat,
                 num_units=output_dim,
                 nonlinearity=output_nonlinearity,
+                w=output_w_init,
                 name='output_flat')
             l_output = ly.OpLayer(
                 l_output_flat,
@@ -349,7 +357,6 @@ class LSTMNetwork:
                  hidden_dim,
                  name=None,
                  hidden_nonlinearity=tf.nn.relu,
-                 hidden_w_init=ly.XavierUniformInitializer(),
                  output_w_init=ly.XavierUniformInitializer(),
                  recurrent_nonlinearity=tf.nn.sigmoid,
                  recurrent_w_x_init=ly.XavierUniformInitializer(),
