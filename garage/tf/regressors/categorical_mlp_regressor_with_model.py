@@ -43,19 +43,18 @@ class CategoricalMLPRegressorWithModel(StochasticRegressor2):
         output_b_init (callable): Initializer function for the bias
             of output dense layer(s). The function should return a
             tf.Tensor. Default is zero initializer.
-        optimizer (tf.Optimizer): Optimizer for minimizing the negative
-            log-likelihood.
+        optimizer (garage.tf.Optimizer): Optimizer for minimizing the negative
+            log-likelihood. Defaults to LbsgsOptimizer
         optimizer_args (dict): Arguments for the optimizer. Default is None,
             which means no arguments.
-        tr_optimizer (tf.Optimizer): Optimizer for trust region approximation.
+        tr_optimizer (garage.tf.Optimizer): Optimizer for trust region
+            approximation. Defaults to ConjugateGradientOptimizer.
         tr_optimizer_args (dict): Arguments for the trust region optimizer.
             Default is None, which means no arguments.
         use_trust_region (bool): Whether to use trust region constraint.
         max_kl_step (float): KL divergence constraint for each iteration.
         normalize_inputs (bool): Bool for normalizing inputs or not.
         layer_normalization (bool): Bool for using layer normalization or not.
-        no_initial_trust_region (bool): Bool to specify if trust region
-            constraint has been used initially.
     """
 
     def __init__(self,
@@ -76,22 +75,30 @@ class CategoricalMLPRegressorWithModel(StochasticRegressor2):
                  use_trust_region=True,
                  max_kl_step=0.01,
                  normalize_inputs=True,
-                 layer_normalization=False,
-                 no_initial_trust_region=True):
+                 layer_normalization=False):
 
         super().__init__(input_shape, output_dim, name)
         self._use_trust_region = use_trust_region
-        self._no_initial_trust_region = no_initial_trust_region
         self._max_kl_step = max_kl_step
         self._normalize_inputs = normalize_inputs
-        self._first_optimized = not no_initial_trust_region
 
-        with tf.variable_scope(
-                self._name, reuse=False) as self._variable_scope:
+        with tf.variable_scope(self._name, reuse=False) as vs:
+            self._variable_scope = vs
+            if optimizer_args is None:
+                optimizer_args = dict()
+            if tr_optimizer_args is None:
+                tr_optimizer_args = dict()
+
             if optimizer is None:
-                optimizer = LbfgsOptimizer()
+                optimizer = LbfgsOptimizer(**optimizer_args)
+            else:
+                optimizer = optimizer(**optimizer_args)
+
             if tr_optimizer is None:
-                tr_optimizer = ConjugateGradientOptimizer()
+                tr_optimizer = ConjugateGradientOptimizer(**tr_optimizer_args)
+            else:
+                tr_optimizer = tr_optimizer(**tr_optimizer_args)
+
             self._optimizer = optimizer
             self._tr_optimizer = tr_optimizer
 
@@ -136,8 +143,8 @@ class CategoricalMLPRegressorWithModel(StochasticRegressor2):
             loss = -tf.reduce_mean(
                 self._dist.log_likelihood_sym(ys_var, info_vars))
 
-            predicted = tensor_utils.to_onehot_sym(
-                tf.argmax(y_hat, axis=1), self._output_dim)
+            predicted = tf.one_hot(
+                tf.argmax(y_hat, axis=1), depth=self._output_dim)
 
             self._f_predict = tensor_utils.compile_function([input_var],
                                                             predicted)
@@ -170,7 +177,7 @@ class CategoricalMLPRegressorWithModel(StochasticRegressor2):
             self.model.networks['default'].x_std.load(
                 np.std(xs, axis=0, keepdims=True))
 
-        if self._use_trust_region and self._first_optimized:
+        if self._use_trust_region:
             # To use trust region constraint and optimizer
             old_prob = self._f_prob(xs)
             inputs = [xs, ys, old_prob]
@@ -210,8 +217,8 @@ class CategoricalMLPRegressorWithModel(StochasticRegressor2):
             The predicted log likelihoods.
 
         """
-        prob = self._f_prob(np.asarray(xs))
-        return self._dist.log_likelihood(np.asarray(ys), dict(prob=prob))
+        prob = self._f_prob(xs)
+        return self._dist.log_likelihood(ys, dict(prob=prob))
 
     def dist_info_sym(self, x_var, name=None):
         """Symbolic graph of the distribution."""
