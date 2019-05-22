@@ -198,6 +198,7 @@ if [[ ! -d "${HOME}/.mujoco/mujoco200_macos" ]]; then
   MUJOCO_ZIP="$(mktemp -d)/mujoco.zip"
   wget https://www.roboti.us/download/mujoco200_macos.zip -O "${MUJOCO_ZIP}"
   unzip -u "${MUJOCO_ZIP}" -d "${HOME}"/.mujoco
+  ln -s "${HOME}"/.mujoco/mujoco200_macos "${HOME}"/.mujoco/mujoco200
 fi
 # dm_control viewer requires MUJOCO_GL to be set to work
 if [[ "${_arg_modify_bashrc}" = on ]]; then
