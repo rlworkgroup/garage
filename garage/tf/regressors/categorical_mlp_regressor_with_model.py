@@ -19,7 +19,9 @@ class CategoricalMLPRegressorWithModel(StochasticRegressor2):
     always be a one hot vector
 
     Args:
-        input_shape (tuple[int]): Input shape of the training data.
+        input_shape (tuple[int]): Input shape of the training data. Since an
+            MLP model is used, implementation assumes flattened inputs. The
+            input shape of each data point should thus be of shape (x, ).
         output_dim (int): Output dimension of the model.
         name (str): Model name, also the variable scope.
         hidden_sizes (list[int]): Output dimension of dense layer(s) for
@@ -221,7 +223,16 @@ class CategoricalMLPRegressorWithModel(StochasticRegressor2):
         return self._dist.log_likelihood(ys, dict(prob=prob))
 
     def dist_info_sym(self, x_var, name=None):
-        """Symbolic graph of the distribution."""
+        """
+        Symbolic graph of the distribution.
+
+        Args:
+            x_var (tf.Tensor): Input tf.Tensor for the input data.
+            name (str): Name of the new graph.
+
+        Return:
+            tf.Tensor output of the symbolic graph of the distribution.
+        """
         with tf.variable_scope(self._variable_scope):
             prob, _, _ = self.model.build(x_var, name=name)
 
