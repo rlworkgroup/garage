@@ -170,10 +170,6 @@ def split_tensor_dict_list(tensor_dict):
     return ret
 
 
-def to_onehot_sym(inds, dim):
-    return tf.one_hot(inds, depth=dim, on_value=1, off_value=0)
-
-
 def pad_tensor(x, max_len):
     return np.concatenate([
         x,

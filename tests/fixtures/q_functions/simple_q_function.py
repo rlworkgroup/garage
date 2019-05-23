@@ -19,7 +19,8 @@ class SimpleQFunction(QFunction2):
         obs_ph = tf.placeholder(
             tf.float32, (None, ) + self.obs_dim, name='obs')
 
-        with tf.variable_scope(self.name, reuse=False) as self._variable_scope:
+        with tf.variable_scope(self.name, reuse=False) as vs:
+            self._variable_scope = vs
             self.model.build(obs_ph)
 
     @property

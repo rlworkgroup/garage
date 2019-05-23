@@ -66,8 +66,8 @@ class ContinuousMLPRegressorWithModel(Regressor2):
         super().__init__(input_shape, output_dim, name)
         self._normalize_inputs = normalize_inputs
 
-        with tf.variable_scope(
-                self._name, reuse=False) as self._variable_scope:
+        with tf.variable_scope(self._name, reuse=False) as vs:
+            self._variable_scope = vs
             if optimizer_args is None:
                 optimizer_args = dict()
             if optimizer is None:

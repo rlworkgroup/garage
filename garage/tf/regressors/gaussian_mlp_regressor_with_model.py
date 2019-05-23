@@ -97,8 +97,8 @@ class GaussianMLPRegressorWithModel(StochasticRegressor2):
         self._normalize_inputs = normalize_inputs
         self._normalize_outputs = normalize_outputs
 
-        with tf.variable_scope(
-                self._name, reuse=False) as self._variable_scope:
+        with tf.variable_scope(self._name, reuse=False) as vs:
+            self._variable_scope = vs
             if optimizer_args is None:
                 optimizer_args = dict()
             if optimizer is None:
