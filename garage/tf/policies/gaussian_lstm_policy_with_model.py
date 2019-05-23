@@ -1,5 +1,5 @@
 """GaussianLSTMPolicy with GaussianLSTMModel."""
-from akro.tf import Box
+import akro.tf
 import numpy as np
 import tensorflow as tf
 
@@ -86,9 +86,10 @@ class GaussianLSTMPolicyWithModel(StochasticPolicy2):
                  init_std=1.0,
                  layer_normalization=False,
                  state_include_action=True):
-        if not isinstance(env_spec.action_space, Box):
-            raise ValueError('GaussianLSTMPolicy only works'
-                             'with akro.tf.Box action space.')
+        if not isinstance(env_spec.action_space, akro.tf.Box):
+            raise ValueError('GaussianLSTMPolicy only works with '
+                             'akro.tf.Box action space, but not {}'.format(
+                                 type(env_spec.action_space)))
         super().__init__(name, env_spec)
         self._obs_dim = env_spec.observation_space.flat_dim
         self._action_dim = env_spec.action_space.flat_dim
@@ -199,9 +200,8 @@ class GaussianLSTMPolicyWithModel(StochasticPolicy2):
             dones (numpy.ndarray): Bool that indicates terminal state(s).
 
         """
-        if dones is None:
-            dones = [True]
-        dones = np.asarray(dones)
+        if not dones:
+            dones = np.array([True])
         if self.prev_actions is None or len(dones) != len(self.prev_actions):
             self.prev_actions = np.zeros((len(dones),
                                           self.action_space.flat_dim))
@@ -224,8 +224,8 @@ class GaussianLSTMPolicyWithModel(StochasticPolicy2):
 
         Returns:
             action (numpy.ndarray): Predicted action.
-            agent_info (dict): Mean and log std of the distribution obtained
-                after observing the given observation.
+            agent_info (dict[numpy.ndarray]): Mean and log std of the
+                distribution obtained after observing the given observation.
 
         """
         actions, agent_infos = self.get_actions([observation])
@@ -241,8 +241,8 @@ class GaussianLSTMPolicyWithModel(StochasticPolicy2):
 
         Returns:
             actions (numpy.ndarray): Predicted actions.
-            agent_infos (dict): Mean and log std of the distributions
-                obtained after observing the given observations.
+            agent_infos (dict[numpy.ndarray]): Mean and log std of the
+                distributions obtained after observing the given observations.
 
         """
         flat_obs = self.observation_space.flatten_n(observations)
