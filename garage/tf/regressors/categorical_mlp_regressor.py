@@ -104,8 +104,8 @@ class CategoricalMLPRegressor(LayersPowered, Serializable, Parameterized):
 
             loss = -tf.reduce_mean(dist.log_likelihood_sym(ys_var, info_vars))
 
-            predicted = tensor_utils.to_onehot_sym(
-                tf.argmax(prob_var, axis=1), output_dim)
+            predicted = tf.one_hot(
+                tf.argmax(prob_var, axis=1), depth=output_dim)
 
             self.prob_network = prob_network
             self.f_predict = tensor_utils.compile_function([xs_var], predicted)

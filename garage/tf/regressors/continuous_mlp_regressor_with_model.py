@@ -42,7 +42,7 @@ class ContinuousMLPRegressorWithModel(Regressor2):
         output_b_init (callable): Initializer function for the bias
             of output dense layer(s). The function should return a
             tf.Tensor.
-        optimizer (tf.Optimizer): Optimizer for minimizing the negative
+        optimizer (garage.tf.Optimizer): Optimizer for minimizing the negative
             log-likelihood.
         optimizer_args (dict): Arguments for the optimizer. Default is None,
             which means no arguments.
@@ -66,8 +66,8 @@ class ContinuousMLPRegressorWithModel(Regressor2):
         super().__init__(input_shape, output_dim, name)
         self._normalize_inputs = normalize_inputs
 
-        with tf.variable_scope(
-                self._name, reuse=False) as self._variable_scope:
+        with tf.variable_scope(self._name, reuse=False) as vs:
+            self._variable_scope = vs
             if optimizer_args is None:
                 optimizer_args = dict()
             if optimizer is None:
