@@ -46,6 +46,7 @@ class TestPPOWithModel(TfGraphTestCase):
             env.close()
 
     test_ppo_pendulum_with_model.large = True
+
     def test_ppo_pendulum_recurrent_with_model(self):
         """Test PPO with model, with Pendulum environment."""
         with LocalRunner(self.sess) as runner:

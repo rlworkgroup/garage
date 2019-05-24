@@ -46,6 +46,7 @@ class TestPPOWithModel(TfGraphTestCase):
             env.close()
 
     test_ppo_pendulum_with_model.large = True
+
     def test_ppo_pendulum_recurrent_with_model(self):
         """Test PPO with Pendulum environment and recurrent policy."""
         with LocalRunner() as runner:
@@ -63,10 +64,11 @@ class TestPPOWithModel(TfGraphTestCase):
                 discount=0.99,
                 lr_clip_range=0.01,
                 optimizer_args=dict(batch_size=32, max_epochs=10),
-                plot=False,
             )
             runner.setup(algo, env)
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 40
 
             env.close()
+
+    test_ppo_pendulum_recurrent_with_model.large = True
