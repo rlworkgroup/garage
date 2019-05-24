@@ -4,7 +4,7 @@ import unittest
 from dowel import logger
 import tensorflow as tf
 
-from garage.experiment import deterministic
+from garage.experiment import deterministic, snapshotter
 from tests.fixtures.logger import NullOutput
 
 
@@ -34,6 +34,8 @@ class TfGraphTestCase(unittest.TestCase):
         if tf.get_default_session() is self.sess:
             self.sess.__exit__(None, None, None)
         self.sess.close()
+
+        snapshotter.reset()
         # These del are crucial to prevent ENOMEM in the CI
         # b/c TensorFlow does not release memory explicitly
         del self.graph
