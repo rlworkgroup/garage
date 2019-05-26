@@ -34,3 +34,5 @@ class TestTNPG(TfGraphTestCase):
             assert last_avg_ret > 30
 
             env.close()
+
+    test_tnpg_inverted_pendulum.large = True

@@ -37,9 +37,11 @@ class TestTRPO(TfGraphTestCase):
 
             runner.setup(algo, env)
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
-            assert last_avg_ret > 85
+            assert last_avg_ret > 80
 
             env.close()
+
+    test_trpo_lstm_cartpole.large = True
 
     def test_trpo_gru_cartpole(self):
         with LocalRunner(self.sess) as runner:
@@ -62,6 +64,8 @@ class TestTRPO(TfGraphTestCase):
 
             runner.setup(algo, env)
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
-            assert last_avg_ret > 85
+            assert last_avg_ret > 80
 
             env.close()
+
+    test_trpo_gru_cartpole.large = True

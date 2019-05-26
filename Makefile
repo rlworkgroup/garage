@@ -10,7 +10,7 @@ DATA_PATH ?= $(shell pwd)/data
 MJKEY_PATH ?= ~/.mujoco/mjkey.txt
 
 test:  ## Run the CI test suite
-test: RUN_CMD = nose2 -c setup.cfg -E 'not cron_job and not huge and not flaky'
+test: RUN_CMD = nose2 -c setup.cfg -v --with-id -E 'not huge and not flaky'
 test: run-headless
 	@echo "Running test suite..."
 
@@ -42,10 +42,6 @@ run-ci: ## Run the CI Docker container (only used in TravisCI)
 run-ci: TAG ?= rlworkgroup/garage-ci
 run-ci:
 	docker run \
-		-e COVERALLS_REPO_TOKEN \
-		-e COVERALLS_SERVICE_NAME \
-		-e CODACY_PROJECT_TOKEN \
-		-e CC_TEST_REPORTER_ID \
 		-e TRAVIS_BRANCH \
 		-e TRAVIS_PULL_REQUEST \
 		-e TRAVIS_COMMIT_RANGE \

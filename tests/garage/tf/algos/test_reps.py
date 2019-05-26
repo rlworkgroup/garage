@@ -39,3 +39,5 @@ class TestREPS(TfGraphTestCase):
             assert last_avg_ret > 5
 
             env.close()
+
+    test_reps_cartpole.large = True

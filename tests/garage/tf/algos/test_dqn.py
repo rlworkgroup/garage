@@ -59,6 +59,8 @@ class TestDQN(TfGraphTestCase):
 
             env.close()
 
+    test_dqn_cartpole.large = True
+
     def test_dqn_cartpole_double_q(self):
         """Test DQN with CartPole environment."""
         with LocalRunner(self.sess) as runner:
@@ -102,6 +104,8 @@ class TestDQN(TfGraphTestCase):
             assert last_avg_ret > 20
 
             env.close()
+
+    test_dqn_cartpole_double_q.large = True
 
     def test_dqn_cartpole_grad_clip(self):
         """Test DQN with CartPole environment."""
@@ -147,3 +151,5 @@ class TestDQN(TfGraphTestCase):
             assert last_avg_ret > 20
 
             env.close()
+
+    test_dqn_cartpole_grad_clip.large = True
