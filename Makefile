@@ -1,5 +1,7 @@
-.PHONY: help test build-ci build-headless build-nvidia run-ci run-headless \
-	run-nvidia
+SHELL := /bin/bash
+
+.PHONY: help test check docs ci-job-normal ci-job-large ci-job-nightly \
+ 	build-ci build-headless build-nvidia run-ci run-headless run-nvidia
 
 .DEFAULT_GOAL := help
 
@@ -13,6 +15,26 @@ test:  ## Run the CI test suite
 test: RUN_CMD = nose2 -c setup.cfg -v --with-id -E 'not huge and not flaky'
 test: run-headless
 	@echo "Running test suite..."
+
+docs:  ## Build HTML documentation
+docs:
+	@pushd docs && make html && popd
+
+ci-precommit-check:
+	scripts/travisci/check_precommit.sh
+
+ci-job-normal: ci-precommit-check docs
+	coverage run -m nose2 -c setup.cfg -v --with-id -E 'not nightly and not huge and not flaky and not large'
+	coverage xml
+	bash <(curl -s https://codecov.io/bash)
+
+ci-job-large:
+	coverage run -m nose2 -c setup.cfg -v --with-id -A large
+	coverage xml
+	bash <(curl -s https://codecov.io/bash)
+
+ci-job-nightly:
+	nose2 -c setup.cfg -A nightly
 
 build-ci: TAG ?= rlworkgroup/garage-ci:latest
 build-ci: docker/docker-compose-ci.yml
