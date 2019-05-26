@@ -53,3 +53,5 @@ class TestDDPG(TfGraphTestCase):
             assert last_avg_ret > 60
 
             env.close()
+
+    test_ddpg_pendulum.huge = True

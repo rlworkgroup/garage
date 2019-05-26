@@ -18,7 +18,7 @@ class TestPPO(TfGraphTestCase):
     def test_ppo_pendulum(self):
         """Test PPO with Pendulum environment."""
         with LocalRunner(self.sess) as runner:
-            env = TfEnv(normalize(gym.make("InvertedDoublePendulum-v2")))
+            env = TfEnv(normalize(gym.make('InvertedDoublePendulum-v2')))
             policy = GaussianMLPPolicy(
                 env_spec=env.spec,
                 hidden_sizes=(64, 64),
@@ -46,7 +46,7 @@ class TestPPO(TfGraphTestCase):
     def test_ppo_pendulum_recurrent(self):
         """Test PPO with Pendulum environment and recurrent policy."""
         with LocalRunner() as runner:
-            env = TfEnv(normalize(gym.make("InvertedDoublePendulum-v2")))
+            env = TfEnv(normalize(gym.make('InvertedDoublePendulum-v2')))
             policy = GaussianLSTMPolicy(env_spec=env.spec, )
             baseline = GaussianMLPBaseline(
                 env_spec=env.spec,
@@ -67,3 +67,6 @@ class TestPPO(TfGraphTestCase):
             assert last_avg_ret > 40
 
             env.close()
+
+    test_ppo_pendulum.huge = True
+    test_ppo_pendulum_recurrent.huge = True

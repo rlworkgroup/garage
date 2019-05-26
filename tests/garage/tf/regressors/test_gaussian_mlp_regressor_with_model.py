@@ -188,3 +188,8 @@ class TestGaussianMLPRegressorWithModel(TfGraphTestCase):
             gmr_pickled = pickle.loads(h)
             x2 = gmr_pickled.model.networks['default'].x_mean.eval()
             assert np.array_equal(x1, x2)
+
+    test_fit_normalized.huge = True
+    test_fit_unnormalized.huge = True
+    test_fit_smaller_subsample_factor.huge = True
+    test_fit_without_trusted_region.huge = True

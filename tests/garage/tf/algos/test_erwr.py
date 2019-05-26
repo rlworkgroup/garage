@@ -30,3 +30,5 @@ class TestERWR(TfGraphTestCase):
             assert last_avg_ret > 80
 
             env.close()
+
+    test_erwr_cartpole.huge = True

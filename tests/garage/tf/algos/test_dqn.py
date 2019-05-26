@@ -147,3 +147,7 @@ class TestDQN(TfGraphTestCase):
             assert last_avg_ret > 20
 
             env.close()
+
+    test_dqn_cartpole.huge = True
+    test_dqn_cartpole_double_q.huge = True
+    test_dqn_cartpole_grad_clip.huge = True

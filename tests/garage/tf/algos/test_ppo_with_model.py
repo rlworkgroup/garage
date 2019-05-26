@@ -18,7 +18,7 @@ class TestPPOWithModel(TfGraphTestCase):
     def test_ppo_pendulum_with_model(self):
         """Test PPO with model, with Pendulum environment."""
         with LocalRunner(self.sess) as runner:
-            env = TfEnv(normalize(gym.make("InvertedDoublePendulum-v2")))
+            env = TfEnv(normalize(gym.make('InvertedDoublePendulum-v2')))
             policy = GaussianMLPPolicyWithModel(
                 env_spec=env.spec,
                 hidden_sizes=(64, 64),
@@ -43,3 +43,5 @@ class TestPPOWithModel(TfGraphTestCase):
             assert last_avg_ret > 30
 
             env.close()
+
+    test_ppo_pendulum_with_model.huge = True

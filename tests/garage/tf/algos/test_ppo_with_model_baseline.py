@@ -67,3 +67,6 @@ class TestPPO(TfGraphTestCase):
             assert last_avg_ret > 30
 
             env.close()
+
+    test_ppo_pendulum_continuous_baseline.huge = True
+    test_ppo_pendulum_recurrent_continuous_baseline.huge = True

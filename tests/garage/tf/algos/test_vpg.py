@@ -32,3 +32,5 @@ class TestVPG(TfGraphTestCase):
             assert last_avg_ret > 90
 
             env.close()
+
+    test_vpg_cartpole.huge = True

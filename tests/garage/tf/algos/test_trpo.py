@@ -39,7 +39,7 @@ class TestTRPO(TfGraphTestCase):
                 policy_ent_coeff=0.0)
             runner.setup(algo, env)
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
-            assert last_avg_ret > 50
+            assert last_avg_ret > 80
 
             env.close()
 
@@ -73,3 +73,5 @@ class TestTRPO(TfGraphTestCase):
         assert 'Unknown KLConstraint' in str(context.exception)
 
         env.close()
+
+    test_trpo_pendulum.huge = True
