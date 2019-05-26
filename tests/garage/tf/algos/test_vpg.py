@@ -33,4 +33,4 @@ class TestVPG(TfGraphTestCase):
 
             env.close()
 
-    test_vpg_cartpole.huge = True
+    test_vpg_cartpole.large = True

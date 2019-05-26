@@ -1,5 +1,7 @@
 language: python
 
+python: "3.6.6"
+
 services:
   - docker
 
@@ -8,14 +10,15 @@ addons:
     packages:
       - docker-ce
 
-env:
-  - DOCKER_COMPOSE_VERSION=1.23.2
-
-python:
-  - "3.6.6"
-
-git:
-  depth: false
+jobs:
+  include:
+    - name: "Normal tests and pre-commit checks"
+      env: JOB_RUN_CMD=scripts/travisci/check_tests.sh
+    - name: "Large tests"
+      env: JOB_RUN_CMD=scripts/travisci/check_large_tests.sh
+    - if: type = cron
+      name: "Nightly tests"
+      env: JOB_RUN_CMD=scripts/travisci/check_nightly_tests.sh
 
 before_install:
   # Reconfigure docker to be more efficient
@@ -30,7 +33,7 @@ before_install:
   # Reinstall docker compose with the specified version. For more information, see:
   # https://docs.travis-ci.com/user/docker/#using-docker-compose
   - sudo rm /usr/local/bin/docker-compose
-  - curl -L https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose
+  - curl -L https://github.com/docker/compose/releases/download/1.23.2/docker-compose-`uname -s`-`uname -m` > docker-compose
   - chmod +x docker-compose
   - sudo mv docker-compose /usr/local/bin
   # Pull cached docker image
@@ -42,14 +45,7 @@ install:
 
 script:
   - ci_env="$(bash <(curl -s https://codecov.io/env))"
-  - ADD_ARGS="${ci_env}" TAG="${tag}" make run-ci RUN_CMD="scripts/travisci/check_precommit.sh"
-  - |
-    if [[ "${TRAVIS_EVENT_TYPE}" == "cron" ]]; then
-      ADD_ARGS="${ci_env}" TAG="${tag}" make run-ci RUN_CMD="scripts/travisci/check_cronjob_tests.sh"
-    else
-      ADD_ARGS="${ci_env}" TAG="${tag}" make run-ci RUN_CMD="scripts/travisci/check_tests.sh"
-    fi
-  - ADD_ARGS="${ci_env}" TAG="${tag}" make run-ci RUN_CMD="bash -c 'pushd docs && make html && popd'"
+  - ADD_ARGS="${ci_env}" TAG="${tag}" make run-ci RUN_CMD="${JOB_RUN_CMD}"
 
 after_success:
   - |
@@ -58,6 +54,9 @@ after_success:
       docker tag "${tag}" rlworkgroup/garage-ci:latest
       docker push rlworkgroup/garage-ci
     fi
+
+git:
+  depth: false
 
 notifications:
   email: false

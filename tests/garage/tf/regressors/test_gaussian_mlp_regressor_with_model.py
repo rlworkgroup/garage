@@ -47,6 +47,8 @@ class TestGaussianMLPRegressorWithModel(TfGraphTestCase):
         assert np.allclose(y_mean, y_mean_expected)
         assert np.allclose(y_std, y_std_expected)
 
+    test_fit_normalized.large = True
+
     def test_fit_unnormalized(self):
         gmr = GaussianMLPRegressorWithModel(
             input_shape=(1, ),
@@ -87,6 +89,8 @@ class TestGaussianMLPRegressorWithModel(TfGraphTestCase):
         assert np.allclose(y_mean, y_mean_expected)
         assert np.allclose(y_std, y_std_expected)
 
+    test_fit_unnormalized.large = True
+
     def test_fit_smaller_subsample_factor(self):
         gmr = GaussianMLPRegressorWithModel(
             input_shape=(1, ), output_dim=1, subsample_factor=0.9)
@@ -107,6 +111,8 @@ class TestGaussianMLPRegressorWithModel(TfGraphTestCase):
 
         expected = [[0], [-1], [-0.707], [0], [0.707], [1], [0]]
         assert np.allclose(prediction, expected, rtol=0, atol=0.1)
+
+    test_fit_smaller_subsample_factor.large = True
 
     def test_fit_without_trusted_region(self):
         gmr = GaussianMLPRegressorWithModel(
@@ -188,8 +194,3 @@ class TestGaussianMLPRegressorWithModel(TfGraphTestCase):
             gmr_pickled = pickle.loads(h)
             x2 = gmr_pickled.model.networks['default'].x_mean.eval()
             assert np.array_equal(x1, x2)
-
-    test_fit_normalized.huge = True
-    test_fit_unnormalized.huge = True
-    test_fit_smaller_subsample_factor.huge = True
-    test_fit_without_trusted_region.huge = True

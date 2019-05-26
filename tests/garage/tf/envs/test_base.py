@@ -14,7 +14,7 @@ class TestTfEnv(unittest.TestCase):
         step_env_with_gym_quirks(self, env, spec)
         env.close()
 
-    test_all_gym_envs.cron_job = True
+    test_all_gym_envs.nightly = True
 
     @params(*list(gym.envs.registry.all()))
     def test_all_gym_envs_pickleable(self, spec):
@@ -23,4 +23,4 @@ class TestTfEnv(unittest.TestCase):
             self, env, spec, n=1, render=True, serialize_env=True)
         env.close()
 
-    test_all_gym_envs_pickleable.cron_job = True
+    test_all_gym_envs_pickleable.nightly = True

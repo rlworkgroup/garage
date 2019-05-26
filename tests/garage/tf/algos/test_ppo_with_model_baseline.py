@@ -43,6 +43,8 @@ class TestPPO(TfGraphTestCase):
 
             env.close()
 
+    test_ppo_pendulum_continuous_baseline.huge = True
+
     def test_ppo_pendulum_recurrent_continuous_baseline(self):
         """Test PPO with Pendulum environment and recurrent policy."""
         with LocalRunner() as runner:
@@ -68,5 +70,4 @@ class TestPPO(TfGraphTestCase):
 
             env.close()
 
-    test_ppo_pendulum_continuous_baseline.huge = True
-    test_ppo_pendulum_recurrent_continuous_baseline.huge = True
+    test_ppo_pendulum_recurrent_continuous_baseline.large = True

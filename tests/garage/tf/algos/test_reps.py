@@ -40,4 +40,4 @@ class TestREPS(TfGraphTestCase):
 
             env.close()
 
-    test_reps_cartpole.huge = True
+    test_reps_cartpole.large = True

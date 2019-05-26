@@ -43,6 +43,8 @@ class TestTRPO(TfGraphTestCase):
 
             env.close()
 
+    test_trpo_pendulum.large = True
+
     def test_trpo_unknown_kl_constraint(self):
         """Test TRPO with unkown KL constraints."""
         env = TfEnv(normalize(gym.make('InvertedDoublePendulum-v2')))
@@ -73,5 +75,3 @@ class TestTRPO(TfGraphTestCase):
         assert 'Unknown KLConstraint' in str(context.exception)
 
         env.close()
-
-    test_trpo_pendulum.huge = True

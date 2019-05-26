@@ -44,4 +44,4 @@ class TestPPOWithModel(TfGraphTestCase):
 
             env.close()
 
-    test_ppo_pendulum_with_model.huge = True
+    test_ppo_pendulum_with_model.large = True

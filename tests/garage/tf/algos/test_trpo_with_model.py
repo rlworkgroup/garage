@@ -41,6 +41,8 @@ class TestTRPO(TfGraphTestCase):
 
             env.close()
 
+    test_trpo_lstm_cartpole.large = True
+
     def test_trpo_gru_cartpole(self):
         with LocalRunner(self.sess) as runner:
             env = TfEnv(normalize(gym.make('CartPole-v1')))
@@ -66,5 +68,4 @@ class TestTRPO(TfGraphTestCase):
 
             env.close()
 
-    test_trpo_lstm_cartpole.huge = True
-    test_trpo_gru_cartpole.huge = True
+    test_trpo_gru_cartpole.large = True

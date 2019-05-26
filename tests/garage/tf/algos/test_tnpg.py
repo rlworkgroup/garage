@@ -35,4 +35,4 @@ class TestTNPG(TfGraphTestCase):
 
             env.close()
 
-    test_tnpg_inverted_pendulum.huge = True
+    test_tnpg_inverted_pendulum.large = True

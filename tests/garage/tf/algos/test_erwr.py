@@ -31,4 +31,4 @@ class TestERWR(TfGraphTestCase):
 
             env.close()
 
-    test_erwr_cartpole.huge = True
+    test_erwr_cartpole.large = True

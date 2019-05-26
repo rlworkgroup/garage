@@ -54,4 +54,4 @@ class TestDDPG(TfGraphTestCase):
 
             env.close()
 
-    test_ddpg_pendulum.huge = True
+    test_ddpg_pendulum.large = True

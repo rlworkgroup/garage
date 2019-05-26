@@ -37,4 +37,4 @@ class TestCEM(TfGraphTestCase):
 
             env.close()
 
-    test_cem_cartpole.huge = True
+    test_cem_cartpole.large = True
