@@ -87,10 +87,12 @@ RUN conda update -q -y conda
 # - README.md
 # - VERSION
 # - scripts/garage
+# - src/garage/__init__.py
 # - setup.py
 COPY README.md /root/code/garage/README.md
 COPY VERSION /root/code/garage/VERSION
 COPY scripts/garage /root/code/garage/scripts/garage
+COPY src/garage/__init__.py /root/code/garage/src/garage/__init__.py
 COPY setup.py /root/code/garage/setup.py
 COPY environment.yml /root/code/garage/environment.yml
 

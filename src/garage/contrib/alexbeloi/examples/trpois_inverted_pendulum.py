@@ -1,0 +1,50 @@
+"""
+Example using TRPO with ISSampler.
+
+Iterations alternate between live and importance sampled iterations.
+"""
+import gym
+
+from garage.contrib.alexbeloi.is_sampler import ISSampler
+from garage.envs import normalize
+from garage.experiment import LocalRunner, run_experiment
+from garage.np.baselines import LinearFeatureBaseline
+from garage.tf.algos import TRPO
+from garage.tf.envs import TfEnv
+from garage.tf.policies import GaussianMLPPolicy
+
+
+def run_task(*_):
+    """Run the job."""
+    with LocalRunner() as runner:
+        env = TfEnv(normalize(gym.make('InvertedPendulum-v2')))
+
+        policy = GaussianMLPPolicy(env_spec=env.spec, hidden_sizes=(32, 32))
+
+        baseline = LinearFeatureBaseline(env_spec=env.spec)
+
+        optimizer_args = dict(
+            # debug_nan=True,
+            # reg_coeff=0.1,
+            # cg_iters=2
+        )
+
+        algo = TRPO(
+            env_spec=env.spec,
+            policy=policy,
+            baseline=baseline,
+            max_path_length=100,
+            discount=0.99,
+            max_kl_step=0.01,
+            optimizer_args=optimizer_args)
+
+        runner.setup(
+            algo, env, sampler_cls=ISSampler, sampler_args=dict(n_backtrack=1))
+        runner.train(n_epochs=200, batch_size=4000)
+
+
+run_experiment(
+    run_task,
+    snapshot_mode='last',
+    seed=1,
+)

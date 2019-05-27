@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 An example to train a task with DQN algorithm.
 
