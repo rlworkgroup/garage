@@ -53,14 +53,11 @@ before_script:
   - ci_env="$(bash <(curl -s https://codecov.io/env))"
 
 script:
-  - TAG="${tag}" ADD_ARGS="${ci_env}" make run-ci RUN_CMD="${JOB_RUN_CMD}"
+  - ADD_ARGS="${ci_env}" TAG="${tag}" make run-ci RUN_CMD="${JOB_RUN_CMD}"
 
 deploy:
   provider: script
-  script:
-    - echo "${DOCKER_API_KEY}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
-    - docker tag "${tag}" rlworkgroup/garage-ci:latest
-    - docker push rlworkgroup/garage-ci
+  script: TAG="${tag}" make ci-deploy-docker
   on:
     branch: master
     condition: $DEPLOY_FROM_THIS_JOB = true
