@@ -31,4 +31,5 @@ class TestERWR(TfGraphTestCase):
 
             env.close()
 
-    test_erwr_cartpole.large = True
+    # unmarked to balance test jobs
+    # test_erwr_cartpole.large = True

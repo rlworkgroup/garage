@@ -18,7 +18,7 @@ class TestNPO(TfGraphTestCase):
     def test_npo_pendulum(self):
         """Test NPO with Pendulum environment."""
         with LocalRunner(self.sess) as runner:
-            env = TfEnv(normalize(gym.make("InvertedDoublePendulum-v2")))
+            env = TfEnv(normalize(gym.make('InvertedDoublePendulum-v2')))
             policy = GaussianMLPPolicy(
                 env_spec=env.spec,
                 hidden_sizes=(64, 64),
@@ -43,9 +43,11 @@ class TestNPO(TfGraphTestCase):
 
             env.close()
 
+    test_npo_pendulum.large = True
+
     def test_npo_unknown_pg_loss(self):
         """Test NPO with unkown policy gradient loss."""
-        env = TfEnv(normalize(gym.make("InvertedDoublePendulum-v2")))
+        env = TfEnv(normalize(gym.make('InvertedDoublePendulum-v2')))
         policy = GaussianMLPPolicy(
             env_spec=env.spec,
             hidden_sizes=(64, 64),
@@ -61,8 +63,8 @@ class TestNPO(TfGraphTestCase):
                 env_spec=env.spec,
                 policy=policy,
                 baseline=baseline,
-                pg_loss="random pg_loss",
+                pg_loss='random pg_loss',
             )
-        assert "Unknown PGLoss" in str(context.exception)
+        assert 'Unknown PGLoss' in str(context.exception)
 
         env.close()

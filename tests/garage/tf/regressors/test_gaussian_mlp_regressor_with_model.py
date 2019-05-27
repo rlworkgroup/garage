@@ -47,7 +47,8 @@ class TestGaussianMLPRegressorWithModel(TfGraphTestCase):
         assert np.allclose(y_mean, y_mean_expected)
         assert np.allclose(y_std, y_std_expected)
 
-    test_fit_normalized.large = True
+    # unmarked to balance test jobs
+    # test_fit_normalized.large = True
 
     def test_fit_unnormalized(self):
         gmr = GaussianMLPRegressorWithModel(
@@ -89,7 +90,8 @@ class TestGaussianMLPRegressorWithModel(TfGraphTestCase):
         assert np.allclose(y_mean, y_mean_expected)
         assert np.allclose(y_std, y_std_expected)
 
-    test_fit_unnormalized.large = True
+    # unmarked to balance test jobs
+    # test_fit_unnormalized.large = True
 
     def test_fit_smaller_subsample_factor(self):
         gmr = GaussianMLPRegressorWithModel(
@@ -112,7 +114,8 @@ class TestGaussianMLPRegressorWithModel(TfGraphTestCase):
         expected = [[0], [-1], [-0.707], [0], [0.707], [1], [0]]
         assert np.allclose(prediction, expected, rtol=0, atol=0.1)
 
-    test_fit_smaller_subsample_factor.large = True
+    # unmarked to balance test jobs
+    # test_fit_smaller_subsample_factor.large = True
 
     def test_fit_without_trusted_region(self):
         gmr = GaussianMLPRegressorWithModel(
@@ -134,6 +137,9 @@ class TestGaussianMLPRegressorWithModel(TfGraphTestCase):
 
         expected = [[0], [-1], [-0.707], [0], [0.707], [1], [0]]
         assert np.allclose(prediction, expected, rtol=0, atol=0.1)
+
+    # unmarked to balance test jobs
+    # test_fit_without_trusted_region.large = True
 
     @params((1, (1, )), (1, (2, )), (2, (3, )), (2, (1, 1)), (3, (2, 2)))
     def test_log_likelihood_sym(self, output_dim, input_shape):
