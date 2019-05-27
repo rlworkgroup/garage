@@ -36,8 +36,7 @@ class TestCategoricalPolicies(TfGraphTestCase):
                 baseline=baseline,
                 max_path_length=100,
                 discount=0.99,
-                step_size=0.01,
-                plot=True,
+                max_kl_step=0.01,
                 optimizer=ConjugateGradientOptimizer,
                 optimizer_args=dict(
                     hvp_approach=FiniteDifferenceHvp(base_eps=1e-5)),

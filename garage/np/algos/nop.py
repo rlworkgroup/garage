@@ -4,9 +4,7 @@ from garage.np.algos.base import RLAlgorithm
 
 
 class NOP(RLAlgorithm, Serializable):
-    """
-    NOP (no optimization performed) policy search algorithm
-    """
+    """NOP (no optimization performed) policy search algorithm"""
 
     def __init__(self, **kwargs):
         super(NOP, self).__init__(**kwargs)

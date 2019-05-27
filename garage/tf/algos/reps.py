@@ -1,4 +1,3 @@
-"""Relative Entropy Policy Search."""
 from dowel import logger, tabular
 import numpy as np
 import scipy.optimize
@@ -17,8 +16,7 @@ from garage.tf.optimizers import LbfgsOptimizer
 
 
 class REPS(BatchPolopt):
-    """
-    Relative Entropy Policy Search.
+    """Relative Entropy Policy Search.
 
     References
     ----------
@@ -29,17 +27,43 @@ class REPS(BatchPolopt):
         $ python garage/examples/tf/reps_gym_cartpole.py
 
     Args:
-        epsilon: dual func parameter.
-        l2_reg_dual: coefficient for dual func l2 regularization.
-        l2_reg_loss: coefficient for policy loss l2 regularization.
-        optimizer: policy optimizer.
-        optimizer_args: arguments of the policy optimizer.
-        dual_optimzier: dual func optimizer.
-        dual_optimizer_args: arguments of the dual optimizer.
+        env_spec (garage.envs.EnvSpec): Environment specification.
+        policy (garage.tf.policies.base.Policy): Policy.
+        baseline (garage.tf.baselines.Baseline): The baseline.
+        scope (str): Scope for identifying the algorithm.
+            Must be specified if running multiple algorithms
+            simultaneously, each using different environments
+            and policies.
+        max_path_length (int): Maximum length of a single rollout.
+        discount (float): Discount.
+        gae_lambda (float): Lambda used for generalized advantage
+            estimation.
+        center_adv (bool): Whether to rescale the advantages
+            so that they have mean 0 and standard deviation 1.
+        positive_adv (bool): Whether to shift the advantages
+            so that they are always positive. When used in
+            conjunction with center_adv the advantages will be
+            standardized before shifting.
+        fixed_horizon (bool): Whether to fix horizon.
+        epsilon (float): dual func parameter.
+        l2_reg_dual (float): coefficient for dual func l2 regularization.
+        l2_reg_loss (float): coefficient for policy loss l2 regularization.
+        dual_optimizer (object): dual func optimizer.
+        dual_optimizer_args (dict): arguments of the dual optimizer.
+        name (str): Name of the algorithm.
 
     """
 
     def __init__(self,
+                 env_spec,
+                 policy,
+                 baseline,
+                 max_path_length=500,
+                 discount=0.99,
+                 gae_lambda=1,
+                 center_adv=True,
+                 positive_adv=False,
+                 fixed_horizon=False,
                  epsilon=0.5,
                  l2_reg_dual=0.,
                  l2_reg_loss=0.,
@@ -47,8 +71,7 @@ class REPS(BatchPolopt):
                  optimizer_args=dict(max_opt_itr=50),
                  dual_optimizer=scipy.optimize.fmin_l_bfgs_b,
                  dual_optimizer_args=dict(maxiter=50),
-                 name='REPS',
-                 **kwargs):
+                 name='REPS'):
         self.name = name
         self._name_scope = tf.name_scope(self.name)
 
@@ -60,7 +83,16 @@ class REPS(BatchPolopt):
             self.l2_reg_dual = float(l2_reg_dual)
             self.l2_reg_loss = float(l2_reg_loss)
 
-        super().__init__(**kwargs)
+        super(REPS, self).__init__(
+            env_spec=env_spec,
+            policy=policy,
+            baseline=baseline,
+            max_path_length=max_path_length,
+            discount=discount,
+            gae_lambda=gae_lambda,
+            center_adv=center_adv,
+            positive_adv=positive_adv,
+            fixed_horizon=fixed_horizon)
 
     @overrides
     def init_opt(self):

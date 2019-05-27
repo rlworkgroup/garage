@@ -26,6 +26,7 @@ class OffPolicyVectorizedSampler(BatchSampler):
         algo(garage.np.RLAlgorithm): Algorithm.
         env(garage.envs.GarageEnv): Environment.
         n_envs(int): Number of parallel environments managed by sampler.
+
     """
 
     def __init__(self, algo, env, n_envs=None, no_reset=True):
@@ -64,6 +65,7 @@ class OffPolicyVectorizedSampler(BatchSampler):
 
         Returns:
             list: A list of paths.
+
         """
         paths = []
         if not self.no_reset or self._last_obses is None:
@@ -182,23 +184,3 @@ class OffPolicyVectorizedSampler(BatchSampler):
                         self.algo.es.reset()
             obses = next_obses
         return paths
-
-    @overrides
-    def process_samples(self, itr, paths):
-        """Return processed sample data based on the collected paths.
-
-        Args:
-            itr(int): Iteration number.
-            paths(list): A list of collected paths.
-
-        Returns:
-            list: Processed sample data.
-        """
-        success_history = [
-            path['success_count'] / path['running_length'] for path in paths
-        ]
-        undiscounted_returns = [path['undiscounted_return'] for path in paths]
-        samples_data = dict(
-            undiscounted_returns=undiscounted_returns,
-            success_history=success_history)
-        return samples_data

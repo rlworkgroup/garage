@@ -1,12 +1,3 @@
-"""
-This module implements a DDPG model.
-
-DDPG, also known as Deep Deterministic Policy Gradient, uses actor-critic
-method to optimize the policy and reward prediction. It uses a supervised
-method to update the critic network and policy gradient to update the actor
-network. And there are exploration strategy, replay buffer and target networks
-involved to stabilize the training process.
-"""
 from collections import deque
 
 from dowel import logger, tabular
@@ -20,51 +11,79 @@ from garage.tf.misc import tensor_utils
 
 
 class DDPG(OffPolicyRLAlgorithm):
-    """
-    A DDPG model based on https://arxiv.org/pdf/1509.02971.pdf.
+    """A DDPG model based on https://arxiv.org/pdf/1509.02971.pdf.
+
+    DDPG, also known as Deep Deterministic Policy Gradient, uses actor-critic
+    method to optimize the policy and reward prediction. It uses a supervised
+    method to update the critic network and policy gradient to update the actor
+    network. And there are exploration strategy, replay buffer and target
+    networks involved to stabilize the training process.
 
     Example:
         $ python garage/examples/tf/ddpg_pendulum.py
+
+    Args:
+        env_spec (EnvSpec): Environment specification.
+        policy (garage.tf.policies.base.Policy): Policy.
+        qf (object): The q value network.
+        replay_buffer (garage.replay_buffer.ReplayBuffer): Replay buffer.
+        n_train_steps (int): Training steps.
+        max_path_length (int): Maximum path length. The episode will
+            terminate when length of trajectory reaches max_path_length.
+        min_buffer_size (int): The minimum buffer size for replay buffer.
+        rollout_batch_size (int): Roll out batch size.
+        exploration_strategy (garage.np.exploration_strategies.
+            ExplorationStrategy): Exploration strategy.
+        target_update_tau (float): Interpolation parameter for doing the
+            soft target update.
+        policy_lr (float): Learning rate for training policy network.
+        qf_lr (float): Learning rate for training q value network.
+        discount(float): Discount factor for the cumulative return.
+        policy_weight_decay (float): L2 weight decay factor for parameters
+            of the policy network.
+        qf_weight_decay (float): L2 weight decay factor for parameters
+            of the q value network.
+        policy_optimizer (tf.Optimizer): Optimizer for training policy network.
+        qf_optimizer (tf.Optimizer): Optimizer for training q function
+            network.
+        clip_pos_returns (bool): Whether or not clip positive returns.
+        clip_return (float): Clip return to be in [-clip_return,
+            clip_return].
+        max_action (float): Maximum action magnitude.
+        reward_scale (float): Reward scale.
+        input_include_goal (bool): Whether input includes goal.
+        smooth_return (bool): Whether to smooth the return.
+        name (str): Name of the algorithm shown in computation graph.
+
     """
 
     def __init__(self,
                  env_spec,
+                 policy,
+                 qf,
                  replay_buffer,
+                 n_epoch_cycles=20,
+                 n_train_steps=50,
+                 max_path_length=None,
+                 buffer_batch_size=64,
+                 min_buffer_size=int(1e4),
+                 rollout_batch_size=1,
+                 exploration_strategy=None,
                  target_update_tau=0.01,
                  policy_lr=1e-4,
                  qf_lr=1e-3,
+                 discount=0.99,
                  policy_weight_decay=0,
                  qf_weight_decay=0,
                  policy_optimizer=tf.train.AdamOptimizer,
                  qf_optimizer=tf.train.AdamOptimizer,
                  clip_pos_returns=False,
                  clip_return=np.inf,
-                 discount=0.99,
                  max_action=None,
-                 name=None,
-                 **kwargs):
-        """
-        Construct class.
-
-        Args:
-            env_spec(EnvSpec): Environment specification.
-            target_update_tau(float): Interpolation parameter for doing the
-        soft target update.
-            discount(float): Discount factor for the cumulative return.
-            policy_lr(float): Learning rate for training policy network.
-            qf_lr(float): Learning rate for training q value network.
-            policy_weight_decay(float): L2 weight decay factor for parameters
-        of the policy network.
-            qf_weight_decay(float): L2 weight decay factor for parameters
-        of the q value network.
-            policy_optimizer(): Optimizer for training policy network.
-            qf_optimizer(): Optimizer for training q function network.
-            clip_pos_returns(boolean): Whether or not clip positive returns.
-            clip_return(float): Clip return to be in [-clip_return,
-        clip_return].
-            max_action(float): Maximum action magnitude.
-            name(str): Name of the algorithm shown in computation graph.
-        """
+                 reward_scale=1.,
+                 input_include_goal=False,
+                 smooth_return=True,
+                 name='DDPG'):
         action_bound = env_spec.action_space.high
         self.max_action = action_bound if max_action is None else max_action
         self.tau = target_update_tau
@@ -87,10 +106,21 @@ class DDPG(OffPolicyRLAlgorithm):
 
         super(DDPG, self).__init__(
             env_spec=env_spec,
+            policy=policy,
+            qf=qf,
+            n_train_steps=n_train_steps,
+            n_epoch_cycles=n_epoch_cycles,
+            max_path_length=max_path_length,
+            buffer_batch_size=buffer_batch_size,
+            min_buffer_size=min_buffer_size,
+            rollout_batch_size=rollout_batch_size,
+            exploration_strategy=exploration_strategy,
             replay_buffer=replay_buffer,
             use_target=True,
             discount=discount,
-            **kwargs)
+            reward_scale=reward_scale,
+            input_include_goal=input_include_goal,
+            smooth_return=smooth_return)
 
     @overrides
     def init_opt(self):
@@ -193,10 +223,19 @@ class DDPG(OffPolicyRLAlgorithm):
         self.init_opt()
 
     def train_once(self, itr, paths):
+        paths = self.process_samples(itr, paths)
+
         epoch = itr / self.n_epoch_cycles
 
-        self.episode_rewards.extend(paths['undiscounted_returns'])
-        self.success_history.extend(paths['success_history'])
+        self.episode_rewards.extend([
+            path for path, complete in zip(paths['undiscounted_returns'],
+                                           paths['complete']) if complete
+        ])
+        self.success_history.extend([
+            path for path, complete in zip(paths['success_history'],
+                                           paths['complete']) if complete
+        ])
+
         last_average_return = np.mean(self.episode_rewards)
         self.log_diagnostics(paths)
         for train_itr in range(self.n_train_steps):

@@ -2,26 +2,26 @@ import cma
 from dowel import logger, tabular
 import numpy as np
 
-from garage.np.algos.base import RLAlgorithm
+from garage.np.algos import BatchPolopt
 
 
-class CMAES(RLAlgorithm):
-    r"""Covariance Matrix Adaptation Evolution Strategy.
+class CMAES(BatchPolopt):
+    """Covariance Matrix Adaptation Evolution Strategy.
 
     Note:
         The CMA-ES method can hardly learn a successful policy even for
         simple task. It is still maintained here only for consistency with
         original rllab paper.
 
-    Attributes:
-        env_spec(EnvSpec): Environment specification.
-        policy(Policy): Action policy.
-        baseline(): Baseline for GAE (Generalized Advantage Estimation).
-        n_samples(int): Number of policies sampled in one epoch.
-        gae_lambda(float): Lambda used for generalized advantage estimation.
-        max_path_length(int):  Maximum length of a single rollout.
-        discount(float): Environment reward discount.
-        sigma0(float): Initial std for param distribution.
+    Args:
+        env_spec (garage.envs.EnvSpec): Environment specification.
+        policy (garage.np.policies.Policy): Action policy.
+        baseline (garage.np.baselines.Baseline): Baseline for GAE
+            (Generalized Advantage Estimation).
+        n_samples (int): Number of policies sampled in one epoch.
+        discount (float): Environment reward discount.
+        max_path_length (int): Maximum length of a single rollout.
+        sigma0 (float): Initial std for param distribution.
 
     """
 
@@ -30,18 +30,16 @@ class CMAES(RLAlgorithm):
                  policy,
                  baseline,
                  n_samples,
-                 gae_lambda=1,
-                 max_path_length=500,
                  discount=0.99,
+                 max_path_length=500,
                  sigma0=1.):
+        super(CMAES, self).__init__(policy, baseline, discount,
+                                    max_path_length)
         self.env_spec = env_spec
         self.policy = policy
-        self.baseline = baseline
         self.n_samples = n_samples
+
         self.sigma0 = sigma0
-        self.discount = discount
-        self.gae_lambda = gae_lambda
-        self.max_path_length = max_path_length
 
         init_mean = self.policy.get_param_values()
         self.es = cma.CMAEvolutionStrategy(init_mean, sigma0)
@@ -55,6 +53,8 @@ class CMAES(RLAlgorithm):
         return self.es.ask(self.n_samples)
 
     def train_once(self, itr, paths):
+        paths = self.process_samples(itr, paths)
+
         epoch = itr // self.n_samples
         i_sample = itr - epoch * self.n_samples
 

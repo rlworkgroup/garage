@@ -1,18 +1,17 @@
-"""Batch Sampler class."""
 from garage.sampler import parallel_sampler
 from garage.sampler.base import BaseSampler
 from garage.sampler.utils import truncate_paths
 
 
 class BatchSampler(BaseSampler):
-    """Class with batch-based sampling."""
+    """Class with batch-based sampling.
+
+    Args:
+        algo (garage.np.algos.RLAlgorithm): The algorithm.
+
+    """
 
     def __init__(self, algo):
-        """
-        Init function.
-
-        :type algo: BatchPolopt
-        """
         self.algo = algo
 
     def start_worker(self):
