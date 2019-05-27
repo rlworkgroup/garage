@@ -60,14 +60,13 @@ with open('VERSION') as v:
     version = v.read().strip()
 
 setup(
-    name='rlgarage',
+    name='garage',
     version=version,
     author='Reinforcement Learning Working Group',
     description='A framework for reproducible reinforcement learning research',
     url='https://github.com/rlworkgroup/garage',
-    packages=[
-        package for package in find_packages() if package.startswith('garage')
-    ],
+    packages=find_packages(where='src'),
+    package_dir={'': 'src'},
     scripts=['scripts/garage'],
     install_requires=required,
     extras_require=extras,

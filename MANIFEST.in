@@ -1,0 +1,27 @@
+# project metadata
+#
+# NOTE: README.md and VERSION are required to run setup.py. Failure to include
+# them will create a broken PyPI distribution.
+include README.md
+include VERSION
+include LICENSE
+include CONTRIBUTING.md
+include CHANGELOG.md
+
+# tests
+graft tests
+include setup.cfg
+
+# documentation
+graft docs
+prune docs/_build
+
+# examples, scripts, etc.
+include Makefile
+graft docker
+graft examples
+graft scripts
+
+# ignored files
+global-exclude *.py[co]
+global-exclude .DS_Store
