@@ -40,3 +40,6 @@ class TestGaussianMlpRegressor(TfGraphTestCase):
         prediction = gmr.predict(paths['observations'])
         expected = [[0], [-1], [-0.707], [0], [0.707], [1], [0]]
         assert np.allclose(prediction, expected, rtol=0, atol=0.1)
+
+    # unmarked to balance test jobs
+    # test_fit_normalized.large = True

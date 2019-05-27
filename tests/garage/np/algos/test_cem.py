@@ -37,4 +37,5 @@ class TestCEM(TfGraphTestCase):
 
             env.close()
 
-    test_cem_cartpole.large = True
+    # unmarked to balance test jobs
+    # test_cem_cartpole.large = True
