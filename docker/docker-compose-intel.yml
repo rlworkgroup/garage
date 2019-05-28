@@ -1,0 +1,27 @@
+version: '2.2'
+services:
+  garage-base:
+    build:
+      cache_from:
+        - rlworkgroup/garage-intel:latest
+      context: ../
+      dockerfile: docker/Dockerfile.base
+    image: rlworkgroup/garage-base
+  garage-intel-no-files:
+    build:
+      cache_from:
+        - rlworkgroup/garage-intel:latest
+      context: ../
+      dockerfile: docker/Dockerfile.intel
+      args:
+        - PARENT_IMAGE=rlworkgroup/garage-base
+    image: rlworkgroup/garage-intel-no-files
+  garage-intel:
+    build:
+      cache_from:
+        - rlworkgroup/garage-intel:latest
+      context: ../
+      dockerfile: docker/Dockerfile.runtime
+      args:
+        - PARENT_IMAGE=rlworkgroup/garage-intel-no-files
+    image: ${TAG}

@@ -34,6 +34,9 @@ required = [
 extras = {}
 extras['all'] = list(set(sum(extras.values(), [])))
 
+# Intel dependencies not included in all
+extras['intel'] = ['intel-tensorflow<1.13,>=1.12.0']
+
 # Development dependencies (*not* included in "all")
 extras['dev'] = [
     # Please keep alphabetized
