@@ -42,8 +42,6 @@ before_install:
   - curl -L https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose
   - chmod +x docker-compose
   - sudo mv docker-compose /usr/local/bin
-  # Pull cached docker image
-  - docker pull rlworkgroup/garage-ci:latest
 
 install:
   - tag="rlworkgroup/garage-ci:${TRAVIS_BUILD_NUMBER}"
@@ -54,13 +52,6 @@ before_script:
 
 script:
   - ADD_ARGS="${ci_env}" TAG="${tag}" make run-ci RUN_CMD="${JOB_RUN_CMD}"
-
-deploy:
-  provider: script
-  script: TAG="${tag}" make ci-deploy-docker
-  on:
-    branch: master
-    condition: $DEPLOY_FROM_THIS_JOB = true
 
 git:
   depth: false
