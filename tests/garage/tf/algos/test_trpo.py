@@ -33,7 +33,7 @@ class TestTRPO(TfGraphTestCase):
     @pytest.mark.large
     def test_trpo_pendulum(self):
         """Test TRPO with Pendulum environment."""
-        with LocalRunner(self.sess) as runner:
+        with LocalRunner(sess=self.sess) as runner:
             algo = TRPO(
                 env_spec=self.env.spec,
                 policy=self.policy,
@@ -63,7 +63,7 @@ class TestTRPO(TfGraphTestCase):
     @pytest.mark.large
     def test_trpo_soft_kl_constraint(self):
         """Test TRPO with unkown KL constraints."""
-        with LocalRunner(self.sess) as runner:
+        with LocalRunner(sess=self.sess) as runner:
             algo = TRPO(
                 env_spec=self.env.spec,
                 policy=self.policy,

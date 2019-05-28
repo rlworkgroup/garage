@@ -19,7 +19,7 @@ from tests.fixtures.tf.algos.dummy_off_policy_algo import DummyOffPolicyAlgo
 
 class TestOffPolicyVectorizedSampler(TfGraphTestCase):
     def test_no_reset(self):
-        with LocalRunner(self.sess) as runner:
+        with LocalRunner(sess=self.sess) as runner:
             # This tests if off-policy sampler respect batch_size
             # when no_reset is set to True
             env = TfEnv(normalize(gym.make('InvertedDoublePendulum-v2')))

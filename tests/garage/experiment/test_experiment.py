@@ -1,8 +1,8 @@
 import os
-import os.path as osp
+import pathlib
 
 from garage.experiment.experiment import concretize, variant, VariantGenerator
-from garage.experiment.experiment import ensure_dir, run_experiment
+from garage.experiment.experiment import run_experiment
 
 # https://gist.github.com/jrast/109f70f9b4c52bab4252
 
@@ -65,8 +65,8 @@ def dummy_func(*_):
 
 
 def test_default_log_dir():
-    default_path = osp.join(os.getcwd(), 'data/local/experiment')
-    ensure_dir(default_path)
+    default_path = os.path.join(os.getcwd(), 'data/local/experiment')
+    pathlib.Path(default_path).mkdir(parents=True, exist_ok=True)
 
     folder_num = len(os.listdir(default_path))
 

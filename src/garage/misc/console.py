@@ -1,7 +1,5 @@
 import collections
-import errno
 import inspect
-import os
 import pydoc
 import shlex
 import sys
@@ -28,18 +26,6 @@ def colorize(string, color, bold=False, highlight=False):
     if bold:
         attr.append('1')
     return '\x1b[%sm%s\x1b[0m' % (';'.join(attr), string)
-
-
-def mkdir_p(path):
-    if not path:
-        return
-    try:
-        os.makedirs(path)
-    except OSError as exc:  # Python >2.5
-        if exc.errno == errno.EEXIST and os.path.isdir(path):
-            pass
-        else:
-            raise
 
 
 def log(s):  # , send_telegram=False):

@@ -21,8 +21,8 @@ class TestDDPG(TfGraphTestCase):
     @pytest.mark.large
     def test_ddpg_double_pendulum(self):
         """Test DDPG with Pendulum environment."""
-        with LocalRunner(self.sess) as runner:
-            env = TfEnv(normalize(gym.make('InvertedDoublePendulum-v2')))
+        with LocalRunner(sess=self.sess) as runner:
+            env = TfEnv(gym.make('InvertedDoublePendulum-v2'))
             action_noise = OUStrategy(env.spec, sigma=0.2)
             policy = ContinuousMLPPolicyWithModel(
                 env_spec=env.spec,
@@ -64,7 +64,7 @@ class TestDDPG(TfGraphTestCase):
 
         This environment has a [-3, 3] action_space bound.
         """
-        with LocalRunner(self.sess) as runner:
+        with LocalRunner(sess=self.sess) as runner:
             env = TfEnv(normalize(gym.make('InvertedPendulum-v2')))
             action_noise = OUStrategy(env.spec, sigma=0.2)
             policy = ContinuousMLPPolicyWithModel(

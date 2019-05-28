@@ -2,7 +2,6 @@
 import base64
 import collections
 import datetime
-import errno
 import inspect
 import os
 import os.path as osp
@@ -329,17 +328,6 @@ def run_experiment(method_call=None,
 
 
 _find_unsafe = re.compile(r'[a-zA-Z0-9_^@%+=:,./-]').search
-
-
-def ensure_dir(dirname):
-    """
-    Ensure that a named directory exists; if it does not, attempt to create it.
-    """
-    try:
-        os.makedirs(dirname)
-    except OSError as e:
-        if e.errno != errno.EEXIST:
-            raise
 
 
 def _shellquote(s):

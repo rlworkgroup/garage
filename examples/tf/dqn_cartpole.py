@@ -15,9 +15,9 @@ from garage.tf.policies import DiscreteQfDerivedPolicy
 from garage.tf.q_functions import DiscreteMLPQFunction
 
 
-def run_task(*_):
+def run_task(snapshot_config, *_):
     """Run task."""
-    with LocalRunner() as runner:
+    with LocalRunner(snapshot_config=snapshot_config) as runner:
         n_epochs = 10
         n_epoch_cycles = 10
         sampler_batch_size = 500
