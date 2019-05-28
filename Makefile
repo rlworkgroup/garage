@@ -1,7 +1,7 @@
 SHELL := /bin/bash
 
 .PHONY: help test check docs ci-job-normal ci-job-large ci-job-nightly \
- 	build-ci build-headless build-nvidia run-ci run-headless run-nvidia
+ 	build-headless build-nvidia run-ci run-headless run-nvidia
 
 .DEFAULT_GOAL := help
 
@@ -43,14 +43,6 @@ ci-deploy-docker:
 	docker tag "${TAG}" rlworkgroup/garage-ci:latest
 	docker push rlworkgroup/garage-ci
 
-build-ci: TAG ?= rlworkgroup/garage-ci:latest
-build-ci: docker/docker-compose-ci.yml
-	TAG=${TAG} \
-	docker-compose \
-		-f docker/docker-compose-ci.yml \
-		build \
-		${ADD_ARGS}
-
 build-headless: TAG ?= rlworkgroup/garage-headless:latest
 build-headless: docker/docker-compose-headless.yml
 	TAG=${TAG} \
@@ -76,8 +68,8 @@ build-intel: docker/docker-compose-intel.yml
 		${ADD_ARGS}
 
 run-ci: ## Run the CI Docker container (only used in TravisCI)
-run-ci: TAG ?= rlworkgroup/garage-ci
-run-ci:
+run-ci: TAG ?= rlworkgroup/garage-headless:latest
+run-ci: build-headless
 	docker run \
 		-e TRAVIS_BRANCH \
 		-e TRAVIS_PULL_REQUEST \

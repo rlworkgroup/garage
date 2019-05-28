@@ -44,14 +44,13 @@ before_install:
   - sudo mv docker-compose /usr/local/bin
 
 install:
-  - tag="rlworkgroup/garage-ci:${TRAVIS_BUILD_NUMBER}"
-  - TAG="${tag}" make build-ci
+  - make build-headless
 
 before_script:
   - ci_env="$(bash <(curl -s https://codecov.io/env))"
 
 script:
-  - ADD_ARGS="${ci_env}" TAG="${tag}" make run-ci RUN_CMD="${JOB_RUN_CMD}"
+  - ADD_ARGS="${ci_env}" make run-ci RUN_CMD="${JOB_RUN_CMD}"
 
 git:
   depth: false
