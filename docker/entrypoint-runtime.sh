@@ -16,6 +16,6 @@ export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libGLEW.so
 export MUJOCO_GL="glfw"
 
 export TF_CPP_MIN_LOG_LEVEL=3      # shut TensorFlow up
-export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${HOME}/.mujoco/mjpro150/bin"
+export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${HOME}/.mujoco/mujoco200/bin"
 
 exec "$@"

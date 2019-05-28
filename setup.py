@@ -14,12 +14,12 @@ required = [
     # find a build dependency (absl-py). Later pip executes the `install`
     # command again and the install succeeds because absl-py has been
     # installed. This is stupid, but harmless.
-    'dm_control @ https://api.github.com/repos/deepmind/dm_control/tarball/92f9913013face0468442cd0964d5973ea2089ea',  # noqa: E501
+    'dm_control @ https://api.github.com/repos/deepmind/dm_control/tarball/7a36377879c57777e5d5b4da5aae2cd2a29b607a',  # noqa: E501
     'dowel==0.0.2',
-    'gym[all]==0.10.11',
+    'gym[all]==0.12.4',
     'joblib<0.13,>=0.12',
     'matplotlib',
-    'mujoco-py<1.50.2,>=1.50.1',
+    'mujoco-py<2.1,>=2.0',
     'numpy==1.14.5',
     'psutil',
     'pyprind',

@@ -50,6 +50,13 @@ class GarageEnv(gym.Wrapper, Serializable):
         self.action_space = self._to_akro_space(self.env.action_space)
         self.observation_space = self._to_akro_space(
             self.env.observation_space)
+        if self.spec:
+            self.spec.action_space = self.action_space
+            self.spec.observation_space = self.observation_space
+        else:
+            self.spec = EnvSpec(
+                action_space=self.action_space,
+                observation_space=self.observation_space)
 
         Parameterized.__init__(self)
         Serializable.quick_init(self, locals())
@@ -93,18 +100,6 @@ class GarageEnv(gym.Wrapper, Serializable):
                                 and isinstance(env_itr.viewer, MjViewer)):
                             glfw.destroy_window(env_itr.viewer.window)
                             break
-
-    @property
-    def spec(self):
-        """
-        Returns an EnvSpec with akro.spaces.
-
-        Returns:
-            spec (garage.envs.EnvSpec)
-        """
-        return EnvSpec(
-            observation_space=self.observation_space,
-            action_space=self.action_space)
 
     def reset(self, **kwargs):
         """

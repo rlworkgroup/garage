@@ -169,29 +169,21 @@ if [[ "${_arg_modify_bashrc}" = on ]]; then
   echo -e "\n# Added by the garage installer" >> "${BASH_RC}"
 fi
 
-# Set up MuJoCo (for gym)
-if [[ ! -d "${HOME}/.mujoco/mjpro150" ]]; then
-  mkdir -p "${HOME}"/.mujoco
-  MUJOCO_ZIP="$(mktemp -d)/mujoco.zip"
-  wget https://www.roboti.us/download/mjpro150_linux.zip -O "${MUJOCO_ZIP}"
-  unzip -u "${MUJOCO_ZIP}" -d "${HOME}"/.mujoco
-else
-  print_warning "MuJoCo is already installed"
-fi
-# Set up MuJoCo 2.0 (for dm_control)
+# Set up MuJoCo 2.0 (for gym and dm_control)
 if [[ ! -d "${HOME}/.mujoco/mujoco200_linux" ]]; then
   mkdir -p "${HOME}"/.mujoco
   MUJOCO_ZIP="$(mktemp -d)/mujoco.zip"
   wget https://www.roboti.us/download/mujoco200_linux.zip -O "${MUJOCO_ZIP}"
   unzip -u "${MUJOCO_ZIP}" -d "${HOME}"/.mujoco
+  ln -s "${HOME}"/.mujoco/mujoco200_linux "${HOME}"/.mujoco/mujoco200
 fi
 # dm_control viewer requires MUJOCO_GL to be set to work
 if [[ "${_arg_modify_bashrc}" = on ]]; then
   echo "export MUJOCO_GL=\"glfw\"" >> "${BASH_RC}"
 fi
 # Configure MuJoCo as a shared library
-export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:${HOME}/.mujoco/mjpro150/bin"
-LD_LIB_ENV_VAR="LD_LIBRARY_PATH=\"\$LD_LIBRARY_PATH:${HOME}/.mujoco/mjpro150"
+export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:${HOME}/.mujoco/mujoco200/bin"
+LD_LIB_ENV_VAR="LD_LIBRARY_PATH=\"\$LD_LIBRARY_PATH:${HOME}/.mujoco/mujoco200"
 LD_LIB_ENV_VAR="${LD_LIB_ENV_VAR}/bin\""
 if [[ "${_arg_modify_bashrc}" = on ]]; then
   echo "export ${LD_LIB_ENV_VAR}" >> "${BASH_RC}"
