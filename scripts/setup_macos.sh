@@ -161,7 +161,9 @@ echo "Installing garage dependencies"
 # Homebrew is required first to install the other dependencies
 hash brew 2>/dev/null || {
   # Install the Xcode Command Line Tools
+  set +e
   xcode-select --install
+  set -e
   # Install Homebrew
   /usr/bin/ruby -e "$(curl -fsSL \
     https://raw.githubusercontent.com/Homebrew/install/master/install)"
