@@ -67,6 +67,14 @@ build-nvidia: docker/docker-compose-nvidia.yml
 		build \
 		${ADD_ARGS}
 
+build-intel: TAG ?= rlworkgroup/garage-intel:latest
+build-intel: docker/docker-compose-intel.yml
+	TAG=${TAG} \
+	docker-compose \
+		-f docker/docker-compose-intel.yml \
+		build \
+		${ADD_ARGS}
+
 run-ci: ## Run the CI Docker container (only used in TravisCI)
 run-ci: TAG ?= rlworkgroup/garage-ci
 run-ci:
@@ -107,6 +115,22 @@ run-nvidia: build-nvidia
 		--name $(CONTAINER_NAME) \
 		${ADD_ARGS} \
 		rlworkgroup/garage-nvidia $(RUN_CMD)
+
+run-intel: ## Run the Docker container for machines with Intel CPUs
+run-intel: CONTAINER_NAME ?= garage-intel
+run-intel: build-intel
+	xhost +local:docker
+	docker run \
+		-it \
+		--rm \
+		-v /tmp/.X11-unix:/tmp/.X11-unix \
+		-v $(DATA_PATH)/$(CONTAINER_NAME):/root/code/garage/data \
+		-e DISPLAY=$(DISPLAY) \
+		-e QT_X11_NO_MITSHM=1 \
+		-e MJKEY="$$(cat $(MJKEY_PATH))" \
+		--name $(CONTAINER_NAME) \
+		${ADD_ARGS} \
+		rlworkgroup/garage-intel $(RUN_CMD)
 
 
 # Help target
