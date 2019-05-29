@@ -136,6 +136,8 @@ test_files_added="$(echo "${files_added}" |  grep "tests/*")"
 # Exit status of this script
 status=0
 
+flake8 --version
+
 # Check rules with flake8
 check_flake8() {
   flake8 --isolated \
