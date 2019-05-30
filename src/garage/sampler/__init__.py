@@ -3,6 +3,7 @@
 from garage.sampler.batch_sampler import BatchSampler
 from garage.sampler.is_sampler import ISSampler
 from garage.sampler.local_sampler import LocalSampler
+from garage.sampler.multiprocessing_sampler import MultiprocessingSampler
 from garage.sampler.off_policy_vectorized_sampler import (
     OffPolicyVectorizedSampler)
 from garage.sampler.on_policy_vectorized_sampler import (
@@ -23,6 +24,7 @@ __all__ = [
     'LocalSampler',
     'RaySampler',
     'SamplerWorker',
+    'MultiprocessingSampler',
     'ParallelVecEnvExecutor',
     'VecEnvExecutor',
     'OffPolicyVectorizedSampler',

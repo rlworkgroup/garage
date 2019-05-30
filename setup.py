@@ -30,6 +30,7 @@ REQUIRED = [
     'ray',
     'scikit-image',
     'scipy',
+    'setproctitle>=1.0',
     'tensorflow' + TF_VERSION,
     'tensorflow-probability',
     'torch>=1.0.0',
