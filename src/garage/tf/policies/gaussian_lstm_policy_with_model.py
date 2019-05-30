@@ -224,8 +224,12 @@ class GaussianLSTMPolicyWithModel(StochasticPolicy2):
 
         Returns:
             action (numpy.ndarray): Predicted action.
-            agent_info (dict[numpy.ndarray]): Mean and log std of the
-                distribution obtained after observing the given observation.
+            agent_info (dict): Distribution obtained after observing the
+                given observation, with keys
+                * mean: (numpy.ndarray)
+                * log_std: (numpy.ndarray)
+                * prev_action: (numpy.ndarray), only present if
+                    self._state_include_action is True.
 
         """
         actions, agent_infos = self.get_actions([observation])
@@ -241,8 +245,12 @@ class GaussianLSTMPolicyWithModel(StochasticPolicy2):
 
         Returns:
             actions (numpy.ndarray): Predicted actions.
-            agent_infos (dict[numpy.ndarray]): Mean and log std of the
-                distributions obtained after observing the given observations.
+            agent_infos (dict): Distribution obtained after observing the
+                given observation, with keys
+                * mean: (numpy.ndarray)
+                * log_std: (numpy.ndarray)
+                * prev_action: (numpy.ndarray), only present if
+                    self._state_include_action is True.
 
         """
         flat_obs = self.observation_space.flatten_n(observations)
@@ -258,10 +266,10 @@ class GaussianLSTMPolicyWithModel(StochasticPolicy2):
         self.prev_actions = samples
         self.prev_hiddens = hidden_vec
         self.prev_cells = cell_vec
-        agent_info = dict(mean=means, log_std=log_stds)
+        agent_infos = dict(mean=means, log_std=log_stds)
         if self._state_include_action:
-            agent_info['prev_action'] = np.copy(prev_actions)
-        return samples, agent_info
+            agent_infos['prev_action'] = np.copy(prev_actions)
+        return samples, agent_infos
 
     @property
     def recurrent(self):
