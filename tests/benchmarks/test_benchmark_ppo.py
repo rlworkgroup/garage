@@ -33,7 +33,7 @@ from garage.tf.baselines import GaussianMLPBaseline
 from garage.tf.envs import TfEnv
 from garage.tf.optimizers import FirstOrderOptimizer
 from garage.tf.policies import GaussianMLPPolicy
-import tests.helpers as Rh
+from tests.helpers import create_json, plot, write_file
 from tests.wrappers import AutoStopEnv
 
 
@@ -86,7 +86,7 @@ class TestBenchmarkPPO(unittest.TestCase):
 
             env.close()
 
-            Rh.plot(
+            plot(
                 b_csvs=baselines_csvs,
                 g_csvs=garage_csvs,
                 g_x='Iteration',
@@ -100,7 +100,7 @@ class TestBenchmarkPPO(unittest.TestCase):
                 x_label='Iteration',
                 y_label='AverageReturn')
 
-            result_json[env_id] = Rh.create_json(
+            result_json[env_id] = create_json(
                 b_csvs=baselines_csvs,
                 g_csvs=garage_csvs,
                 seeds=seeds,
@@ -112,7 +112,7 @@ class TestBenchmarkPPO(unittest.TestCase):
                 factor_g=2048,
                 factor_b=2048)
 
-        Rh.write_file(result_json, 'PPO')
+        write_file(result_json, 'PPO')
 
     test_benchmark_ppo.huge = True
 
@@ -129,8 +129,8 @@ def run_garage(env, seed, log_dir):
     :return:
     '''
     deterministic.set_seed(seed)
-
-    with LocalRunner() as runner:
+    ncpu = max(multiprocessing.cpu_count() // 2, 1)
+    with LocalRunner(max_cpus=ncpu) as runner:
         env = TfEnv(normalize(env))
 
         policy = GaussianMLPPolicy(
@@ -168,7 +168,6 @@ def run_garage(env, seed, log_dir):
                 max_epochs=10,
                 tf_optimizer_args=dict(learning_rate=1e-3),
             ),
-            plot=False,
         )
 
         # Set up logger since we are not using run_experiment

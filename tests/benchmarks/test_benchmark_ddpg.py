@@ -8,6 +8,7 @@ log directories corresponding to baselines and garage. And there will be a plot
 plotting the average return curve from baselines and garage.
 '''
 import datetime
+import multiprocessing
 import os
 import os.path as osp
 import random
@@ -36,7 +37,7 @@ from garage.tf.algos import DDPG
 from garage.tf.envs import TfEnv
 from garage.tf.policies import ContinuousMLPPolicy
 from garage.tf.q_functions import ContinuousMLPQFunction
-import tests.helpers as Rh
+from tests.helpers import create_json, plot, write_file
 from tests.wrappers import AutoStopEnv
 
 # Hyperparams for baselines and garage
@@ -109,12 +110,12 @@ class TestBenchmarkDDPG(unittest.TestCase):
 
             env.close()
 
-            Rh.plot(
+            plot(
                 b_csvs=baselines_csvs,
                 g_csvs=garage_csvs,
                 g_x='Epoch',
                 g_y='AverageReturn',
-                b_x='total/epochs',
+                b_x='total/steps',
                 b_y='rollout/return',
                 trials=task['trials'],
                 seeds=seeds,
@@ -123,19 +124,19 @@ class TestBenchmarkDDPG(unittest.TestCase):
                 x_label='Epoch',
                 y_label='AverageReturn')
 
-            result_json[env_id] = Rh.create_json(
+            result_json[env_id] = create_json(
                 b_csvs=baselines_csvs,
                 g_csvs=garage_csvs,
                 seeds=seeds,
                 trails=task['trials'],
                 g_x='Epoch',
                 g_y='AverageReturn',
-                b_x='total/epochs',
+                b_x='total/steps',
                 b_y='rollout/return',
                 factor_g=params['n_epoch_cycles'] * params['n_rollout_steps'],
                 factor_b=1)
 
-        Rh.write_file(result_json, 'DDPG')
+        write_file(result_json, 'DDPG')
 
     test_benchmark_ddpg.huge = True
 
@@ -152,8 +153,8 @@ def run_garage(env, seed, log_dir):
     :return:
     '''
     deterministic.set_seed(seed)
-
-    with LocalRunner() as runner:
+    ncpu = max(multiprocessing.cpu_count() // 2, 1)
+    with LocalRunner(max_cpus=ncpu) as runner:
         env = TfEnv(env)
         # Set up params for ddpg
         action_noise = OUStrategy(env.spec, sigma=params['sigma'])

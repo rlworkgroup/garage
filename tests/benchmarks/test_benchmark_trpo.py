@@ -7,6 +7,7 @@ done=True when it reaches max_path_length. We also need to change the
 garage.tf.samplers.BatchSampler to smooth the reward curve.
 '''
 import datetime
+import multiprocessing
 import os.path as osp
 import random
 import unittest
@@ -28,7 +29,7 @@ from garage.tf.algos import TRPO
 from garage.tf.baselines import GaussianMLPBaseline
 from garage.tf.envs import TfEnv
 from garage.tf.policies import GaussianMLPPolicy
-import tests.helpers as Rh
+from tests.helpers import create_json, plot, write_file
 from tests.wrappers import AutoStopEnv
 
 
@@ -80,7 +81,7 @@ class TestBenchmarkPPO(unittest.TestCase):
                 garage_csvs.append(garage_csv)
                 baselines_csvs.append(baselines_csv)
 
-            Rh.plot(
+            plot(
                 b_csvs=baselines_csvs,
                 g_csvs=garage_csvs,
                 g_x='Iteration',
@@ -94,7 +95,7 @@ class TestBenchmarkPPO(unittest.TestCase):
                 x_label='Iteration',
                 y_label='AverageReturn')
 
-            result_json[env_id] = Rh.create_json(
+            result_json[env_id] = create_json(
                 b_csvs=baselines_csvs,
                 g_csvs=garage_csvs,
                 seeds=seeds,
@@ -107,7 +108,7 @@ class TestBenchmarkPPO(unittest.TestCase):
                 factor_b=1)
             env.close()
 
-        Rh.write_file(result_json, 'TRPO')
+        write_file(result_json, 'TRPO')
 
     test_benchmark_trpo.huge = True
 
@@ -124,8 +125,8 @@ def run_garage(env, seed, log_dir):
     :return:import baselines.common.tf_util as U
     '''
     deterministic.set_seed(seed)
-
-    with LocalRunner() as runner:
+    ncpu = max(multiprocessing.cpu_count() // 2, 1)
+    with LocalRunner(max_cpus=ncpu) as runner:
         env = TfEnv(normalize(env))
 
         policy = GaussianMLPPolicy(
@@ -152,7 +153,6 @@ def run_garage(env, seed, log_dir):
             gae_lambda=0.98,
             max_kl_step=0.01,
             policy_ent_coeff=0.0,
-            plot=False,
         )
 
         # Set up logger since we are not using run_experiment
@@ -180,7 +180,12 @@ def run_baselines(env, seed, log_dir):
     :param log_dir: Log dir path.
     :return
     '''
-    with tf.Session().as_default():
+    ncpu = max(multiprocessing.cpu_count() // 2, 1)
+    config = tf.ConfigProto(
+        allow_soft_placement=True,
+        intra_op_parallelism_threads=ncpu,
+        inter_op_parallelism_threads=ncpu)
+    with tf.Session(config=config).as_default():
         baselines_logger.configure(log_dir)
 
         def policy_fn(name, ob_space, ac_space):
