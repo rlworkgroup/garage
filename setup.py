@@ -52,6 +52,7 @@ extras['dev'] = [
     'pep8-naming==0.7.0',
     'pre-commit',
     'pylint==1.9.2',
+    'recommonmark',
     'sphinx',
     'sphinx_rtd_theme',
     'yapf',
