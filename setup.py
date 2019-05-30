@@ -68,6 +68,7 @@ extras['dev'] = [
     'pytest>=3.6',  # Required for pytest-cov on Python 3.6
     'pytest-cov',
     'pytest-xdist',
+    'recommonmark',
     'sphinx',
     'sphinx_rtd_theme',
     'yapf',
