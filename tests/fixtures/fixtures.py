@@ -29,6 +29,10 @@ class TfGraphTestCase(unittest.TestCase):
         logger.add_output(NullOutput())
         deterministic.set_seed(1)
 
+        # initialize global singleton_pool for each test case
+        from garage.sampler import singleton_pool
+        singleton_pool.initialize(1)
+
     def tearDown(self):
         logger.remove_all()
         if tf.get_default_session() is self.sess:

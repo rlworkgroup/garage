@@ -28,6 +28,7 @@ class StatefulPool:
         if self.pool is not None:
             print('Warning: terminating existing pool')
             self.pool.terminate()
+            self.pool = None
             self.queue.close()
             self.worker_queue.close()
             self.G = SharedGlobal()
