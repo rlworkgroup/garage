@@ -84,10 +84,21 @@ class TestLSTM(TfGraphTestCase):
 
         assert full_output.shape == (self.batch_size, time_step, output_dim)
 
-    @params((1, 1, 1, 0, 0), (1, 1, 3, 0, 0), (1, 3, 1, 0, 0), (3, 1, 1, 0, 0),
-            (3, 3, 1, 0, 0), (3, 3, 3, 0, 0), (1, 1, 1, 0.5, 0.5),
-            (1, 1, 3, 0.5, 0.5), (1, 3, 1, 0.5, 0.5), (3, 1, 1, 0.5, 0.5),
-            (3, 3, 1, 0.5, 0.5), (3, 3, 3, 0.5, 0.5))
+    # yapf: disable
+    @params(
+        (1, 1, 1, 0, 0),
+        (1, 1, 3, 0, 0),
+        (1, 3, 1, 0, 0),
+        (3, 1, 1, 0, 0),
+        (3, 3, 1, 0, 0),
+        (3, 3, 3, 0, 0),
+        (1, 1, 1, 0.5, 0.5),
+        (1, 1, 3, 0.5, 0.5),
+        (1, 3, 1, 0.5, 0.5),
+        (3, 1, 1, 0.5, 0.5),
+        (3, 3, 1, 0.5, 0.5),
+        (3, 3, 3, 0.5, 0.5))
+    # yapf: enable
     def test_output_value(self, time_step, input_dim, output_dim, hidden_init,
                           cell_init):
         obs_inputs = np.full((self.batch_size, time_step, input_dim), 1.)

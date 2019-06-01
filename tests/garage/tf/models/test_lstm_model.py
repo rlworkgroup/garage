@@ -88,7 +88,6 @@ class TestLSTMModel(TfGraphTestCase):
 
         h = pickle.dumps(model)
         with tf.Session(graph=tf.Graph()) as sess:
-            input_var = tf.placeholder(tf.float32, shape=(None, 5))
             model_pickled = pickle.loads(h)
 
             input_var = tf.placeholder(

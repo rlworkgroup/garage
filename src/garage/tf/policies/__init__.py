@@ -20,6 +20,8 @@ from garage.tf.policies.discrete_qf_derived_policy import (
     DiscreteQfDerivedPolicy)
 from garage.tf.policies.gaussian_gru_policy import GaussianGRUPolicy
 from garage.tf.policies.gaussian_lstm_policy import GaussianLSTMPolicy
+from garage.tf.policies.gaussian_lstm_policy_with_model import (
+    GaussianLSTMPolicyWithModel)
 from garage.tf.policies.gaussian_mlp_policy import GaussianMLPPolicy
 from garage.tf.policies.gaussian_mlp_policy_with_model import (
     GaussianMLPPolicyWithModel)
@@ -32,5 +34,6 @@ __all__ = [
     'CategoricalMLPPolicyWithModel', 'ContinuousMLPPolicy',
     'DiscreteQfDerivedPolicy', 'DeterministicMLPPolicy',
     'DeterministicMLPPolicyWithModel', 'GaussianGRUPolicy',
-    'GaussianLSTMPolicy', 'GaussianMLPPolicy', 'GaussianMLPPolicyWithModel'
+    'GaussianLSTMPolicy', 'GaussianLSTMPolicyWithModel', 'GaussianMLPPolicy',
+    'GaussianMLPPolicyWithModel'
 ]
