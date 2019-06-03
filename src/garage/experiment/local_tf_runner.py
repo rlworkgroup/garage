@@ -388,6 +388,7 @@ class LocalRunner:
             pause_for_plot=pause_for_plot,
             start_epoch=start_epoch)
 
+        self.plot = plot
         self.start_worker()
 
         self.start_time = time.time()
