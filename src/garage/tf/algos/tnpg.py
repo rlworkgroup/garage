@@ -1,4 +1,4 @@
-from garage.tf.algos.npo import NPO, PGLoss
+from garage.tf.algos.npo import NPO
 from garage.tf.optimizers import ConjugateGradientOptimizer
 
 
@@ -26,31 +26,43 @@ class TNPG(NPO):
             conjunction with center_adv the advantages will be
             standardized before shifting.
         fixed_horizon (bool): Whether to fix horizon.
-        pg_loss (str): Objective.
+        pg_loss (str): A string from: 'vanilla', 'surrogate',
+            'surrogate_clip'. The type of loss functions to use.
         lr_clip_range (float): The limit on the likelihood ratio between
-            policies.
+            policies, as in PPO.
         max_kl_step (float): The maximum KL divergence between old and new
-            policies.
-        optimizer (float): The optimizer of the algorithm.
-        optimizer_args (dict): Optimizer args.
+            policies, as in TRPO.
+        optimizer (object): The optimizer of the algorithm. Should be the
+            optimizers in garage.tf.optimizers.
+        optimizer_args (dict): The arguments of the optimizer.
         policy_ent_coeff (float): The coefficient of the policy entropy.
-        use_softplus_entropy (bool): Whether to use softplus entropy.
-        stop_entropy_gradient (bool): Whether to stop entropy gradient.
+            Setting it to zero would mean no entropy regularization.
+        use_softplus_entropy (bool): Whether to estimate the softmax
+            distribution of the entropy to prevent the entropy from being
+            negative.
+        use_neg_logli_entropy (bool): Whether to estimate the entropy as the
+            negative log likelihood of the action.
+        stop_entropy_gradient (bool): Whether to stop the entropy gradient.
+        entropy_method (str): A string from: 'max', 'regularized',
+            'no_entropy'. The type of entropy method to use. 'max' adds the
+            dense entropy to the reward for each time step. 'regularized' adds
+            the mean entropy to the surrogate objective. See
+            https://arxiv.org/abs/1805.00909 for more details.
         name (str): The name of the algorithm.
-
     """
 
     def __init__(self,
                  env_spec,
                  policy,
                  baseline,
+                 scope=None,
                  max_path_length=500,
                  discount=0.99,
                  gae_lambda=0.98,
                  center_adv=True,
                  positive_adv=False,
                  fixed_horizon=False,
-                 pg_loss=PGLoss.SURROGATE,
+                 pg_loss='surrogate',
                  lr_clip_range=0.01,
                  max_kl_step=0.01,
                  optimizer=None,
@@ -59,6 +71,7 @@ class TNPG(NPO):
                  use_softplus_entropy=False,
                  use_neg_logli_entropy=False,
                  stop_entropy_gradient=False,
+                 entropy_method='no_entropy',
                  name='TNPG'):
         if optimizer is None:
             optimizer = ConjugateGradientOptimizer
@@ -67,10 +80,11 @@ class TNPG(NPO):
                 optimizer_args = default_args
             else:
                 optimizer_args = dict(default_args, **optimizer_args)
-        super(TNPG, self).__init__(
+        super().__init__(
             env_spec=env_spec,
             policy=policy,
             baseline=baseline,
+            scope=scope,
             max_path_length=max_path_length,
             discount=discount,
             gae_lambda=gae_lambda,
@@ -79,11 +93,12 @@ class TNPG(NPO):
             fixed_horizon=fixed_horizon,
             pg_loss=pg_loss,
             lr_clip_range=lr_clip_range,
+            max_kl_step=max_kl_step,
             optimizer=optimizer,
             optimizer_args=optimizer_args,
             policy_ent_coeff=policy_ent_coeff,
-            max_kl_step=max_kl_step,
             use_softplus_entropy=use_softplus_entropy,
             use_neg_logli_entropy=use_neg_logli_entropy,
             stop_entropy_gradient=stop_entropy_gradient,
+            entropy_method=entropy_method,
             name=name)
