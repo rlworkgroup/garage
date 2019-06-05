@@ -22,16 +22,31 @@ class BatchPolopt(RLAlgorithm):
         baseline (garage.tf.baselines.Baseline): The baseline.
         discount (float): Discount.
         max_path_length (int): Maximum length of a single rollout.
+        n_samples (int): Number of train_once calls per epoch.
 
     """
 
-    def __init__(self, policy, baseline, discount, max_path_length):
+    def __init__(self, policy, baseline, discount, max_path_length, n_samples):
         self.policy = policy
         self.baseline = baseline
         self.discount = discount
         self.max_path_length = max_path_length
+        self.n_samples = n_samples
 
         self.episode_reward_mean = collections.deque(maxlen=100)
+
+    def train(self, runner, batch_size):
+        last_return = None
+
+        for epoch in runner.step_epochs():
+            for cycle in range(self.n_samples):
+                runner.step_path = runner.obtain_samples(
+                    runner.step_itr, batch_size)
+                last_return = self.train_once(runner.step_itr,
+                                              runner.step_path)
+                runner.step_itr += 1
+
+        return last_return
 
     def process_samples(self, itr, paths):
         """Return processed sample data based on the collected paths.

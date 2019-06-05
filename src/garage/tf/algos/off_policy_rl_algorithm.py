@@ -13,7 +13,7 @@ class OffPolicyRLAlgorithm(RLAlgorithm):
         replay_buffer (garage.replay_buffer.ReplayBuffer): Replay buffer.
         use_target (bool): Whether to use target.
         discount(float): Discount factor for the cumulative return.
-        n_epoch_cycles (int): Epoch cycles.
+        n_epoch_cycles (int): Number of train_once calls per epoch.
         max_path_length (int): Maximum path length. The episode will
             terminate when length of trajectory reaches max_path_length.
         n_train_steps (int): Training steps.
@@ -63,6 +63,19 @@ class OffPolicyRLAlgorithm(RLAlgorithm):
         self.max_path_length = max_path_length
         self.es = exploration_strategy
         self.init_opt()
+
+    def train(self, runner, batch_size):
+        last_return = None
+
+        for epoch in runner.step_epochs():
+            for cycle in range(self.n_epoch_cycles):
+                runner.step_path = runner.obtain_samples(
+                    runner.step_itr, batch_size)
+                last_return = self.train_once(runner.step_itr,
+                                              runner.step_path)
+                runner.step_itr += 1
+
+        return last_return
 
     def log_diagnostics(self, paths):
         """Log diagnostic information on current paths."""

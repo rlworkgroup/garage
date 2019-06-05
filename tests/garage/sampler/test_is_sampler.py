@@ -32,7 +32,7 @@ class TestISSampler(TfGraphTestCase):
                 env,
                 sampler_cls=ISSampler,
                 sampler_args=dict(n_backtrack=1, init_is=1))
-            runner.start_worker()
+            runner._start_worker()
 
             paths = runner.sampler.obtain_samples(1)
             assert paths == [], 'Should return empty paths if no history'
@@ -76,4 +76,4 @@ class TestISSampler(TfGraphTestCase):
             runner.sampler.obtain_samples(9, 10)
             runner.sampler.obtain_samples(10, 1)
 
-            runner.shutdown_worker()
+            runner._shutdown_worker()

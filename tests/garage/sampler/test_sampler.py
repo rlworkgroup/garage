@@ -75,7 +75,7 @@ class TestSampler(unittest.TestCase):
                 raise self.failureException(
                     'LocalRunner should be able to initialize tf variables.')
 
-            runner.start_worker()
+            runner._start_worker()
 
             paths = runner.sampler.obtain_samples(
                 0, batch_size=8, whole_paths=True)
