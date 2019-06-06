@@ -11,6 +11,7 @@ It diffs from OnPolicyVectorizedSampler in two parts:
 import itertools
 import pickle
 
+from akro import Box
 import numpy as np
 
 from garage.misc import tensor_utils
@@ -98,7 +99,11 @@ class OffPolicyVectorizedSampler(BatchSampler):
                 actions, agent_infos = self.algo.policy.get_actions(
                     obs_normalized)
 
-            scaled_actions = np.multiply(actions, self.env.action_space.high)
+            if (isinstance(self.env.action_space, Box)):
+                scaled_actions = np.multiply(actions,
+                                             self.env.action_space.high)
+            else:
+                scaled_actions = actions
             next_obses, rewards, dones, env_infos = self.vec_env.step(
                 scaled_actions)
             self._last_obses = next_obses
