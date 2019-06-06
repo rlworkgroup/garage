@@ -1,13 +1,13 @@
 """
-Unit test for GaussianLSTMPolicy with Model.
+Unit test for GaussianGRUPolicy with Model.
 
-This test consists of four different GaussianLSTMPolicy: P1, P2, P3
-and P4. P1 and P2 are from GaussianLSTMPolicy, which does not use
-garage.tf.models.LSTMModel while P3 and P4 do use.
+This test consists of four different GaussianGRUPolicy: P1, P2, P3
+and P4. P1 and P2 are from GaussianGRUPolicy, which does not use
+garage.tf.models.GRUModel while P3 and P4 do use.
 
 This test ensures the outputs from all the policies are the same,
-for the transition from using GaussianLSTMPolicy to
-GaussianLSTMPolicyWithModel.
+for the transition from using GaussianGRUPolicy to
+GaussianGRUPolicyWithModel.
 
 It covers get_action, get_actions, dist_info_sym, kl_sym,
 log_likelihood_sym, entropy_sym and likelihood_ratio_sym.
@@ -19,13 +19,13 @@ import tensorflow as tf
 
 from garage.tf.envs import TfEnv
 from garage.tf.misc import tensor_utils
-from garage.tf.policies import GaussianLSTMPolicy
-from garage.tf.policies import GaussianLSTMPolicyWithModel
+from garage.tf.policies import GaussianGRUPolicy
+from garage.tf.policies import GaussianGRUPolicyWithModel
 from tests.fixtures import TfGraphTestCase
 from tests.fixtures.envs.dummy import DummyBoxEnv
 
 
-class TestGaussianLSTMPolicyWithModelTransit(TfGraphTestCase):
+class TestGaussianGRUPolicyWithModelTransit(TfGraphTestCase):
     @mock.patch('tensorflow.random.normal')
     def setUp(self, mock_rand):
         mock_rand.return_value = 0.5
@@ -37,7 +37,7 @@ class TestGaussianLSTMPolicyWithModelTransit(TfGraphTestCase):
         self.default_output_nonlinearity = None
         self.time_step = 1
 
-        self.policy1 = GaussianLSTMPolicy(
+        self.policy1 = GaussianGRUPolicy(
             env_spec=env.spec,
             hidden_dim=4,
             hidden_nonlinearity=self.default_hidden_nonlinearity,
@@ -48,7 +48,7 @@ class TestGaussianLSTMPolicyWithModelTransit(TfGraphTestCase):
             output_w_init=self.default_initializer,
             state_include_action=True,
             name='P1')
-        self.policy2 = GaussianLSTMPolicy(
+        self.policy2 = GaussianGRUPolicy(
             env_spec=env.spec,
             hidden_dim=4,
             hidden_nonlinearity=self.default_hidden_nonlinearity,
@@ -62,7 +62,7 @@ class TestGaussianLSTMPolicyWithModelTransit(TfGraphTestCase):
 
         self.sess.run(tf.global_variables_initializer())
 
-        self.policy3 = GaussianLSTMPolicyWithModel(
+        self.policy3 = GaussianGRUPolicyWithModel(
             env_spec=env.spec,
             hidden_dim=4,
             hidden_nonlinearity=self.default_hidden_nonlinearity,
@@ -73,7 +73,7 @@ class TestGaussianLSTMPolicyWithModelTransit(TfGraphTestCase):
             output_w_init=self.default_initializer,
             state_include_action=True,
             name='P3')
-        self.policy4 = GaussianLSTMPolicyWithModel(
+        self.policy4 = GaussianGRUPolicyWithModel(
             env_spec=env.spec,
             hidden_dim=4,
             hidden_nonlinearity=self.default_hidden_nonlinearity,

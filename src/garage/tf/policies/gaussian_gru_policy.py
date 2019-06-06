@@ -19,13 +19,17 @@ class GaussianGRUPolicy(StochasticPolicy, LayersPowered, Serializable):
             env_spec,
             name='GaussianGRUPolicy',
             hidden_dim=32,
+            hidden_nonlinearity=tf.tanh,
+            recurrent_nonlinearity=tf.nn.sigmoid,
+            recurrent_w_x_init=L.XavierUniformInitializer(),
+            recurrent_w_h_init=L.OrthogonalInitializer(),
+            output_nonlinearity=None,
+            output_w_init=L.XavierUniformInitializer(),
             feature_network=None,
             state_include_action=True,
-            hidden_nonlinearity=tf.tanh,
             gru_layer_cls=L.GRULayer,
             learn_std=True,
             init_std=1.0,
-            output_nonlinearity=None,
             std_share_network=False,
     ):
         """
@@ -80,7 +84,11 @@ class GaussianGRUPolicy(StochasticPolicy, LayersPowered, Serializable):
                     output_dim=2 * action_dim,
                     hidden_dim=hidden_dim,
                     hidden_nonlinearity=hidden_nonlinearity,
+                    recurrent_nonlinearity=recurrent_nonlinearity,
+                    recurrent_w_x_init=recurrent_w_x_init,
+                    recurrent_w_h_init=recurrent_w_h_init,
                     output_nonlinearity=output_nonlinearity,
+                    output_w_init=output_w_init,
                     gru_layer_cls=gru_layer_cls,
                     name='gru_mean_network')
 
@@ -110,7 +118,11 @@ class GaussianGRUPolicy(StochasticPolicy, LayersPowered, Serializable):
                     output_dim=action_dim,
                     hidden_dim=hidden_dim,
                     hidden_nonlinearity=hidden_nonlinearity,
+                    recurrent_nonlinearity=recurrent_nonlinearity,
+                    recurrent_w_x_init=recurrent_w_x_init,
+                    recurrent_w_h_init=recurrent_w_h_init,
                     output_nonlinearity=output_nonlinearity,
+                    output_w_init=output_w_init,
                     gru_layer_cls=gru_layer_cls,
                     name='gru_mean_network')
 
