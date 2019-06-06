@@ -31,7 +31,7 @@ class TestPPO(TfGraphTestCase):
         )
 
     def test_ppo_pendulum(self):
-        """Test PPO with Pendulum Environment."""
+        """Test PPO with Pendulum environment."""
         with LocalRunner(self.sess) as runner:
             algo = PPO(
                 env_spec=self.env.spec,
@@ -48,7 +48,7 @@ class TestPPO(TfGraphTestCase):
     test_ppo_pendulum.large = True
 
     def test_ppo_pendulum_recurrent(self):
-        """Test PPO with Pendulum Environment and recurrent policy."""
+        """Test PPO with Pendulum environment and recurrent policy."""
         with LocalRunner() as runner:
             algo = PPO(
                 env_spec=self.env.spec,
@@ -109,8 +109,6 @@ class TestPPO(TfGraphTestCase):
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 40
 
-    test_ppo_with_neg_log_likeli_entropy_estimation_and_max.large = True
-
     def test_ppo_with_neg_log_likeli_entropy_estimation_and_regularized(self):
         """
         Test PPO with negative log likelihood entropy estimation and
@@ -134,8 +132,6 @@ class TestPPO(TfGraphTestCase):
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 40
 
-    test_ppo_with_neg_log_likeli_entropy_estimation_and_regularized.large = True  # noqa: E501
-
     def test_ppo_with_regularized_entropy(self):
         """Test PPO with regularized entropy method."""
         with LocalRunner(self.sess) as runner:
@@ -154,8 +150,6 @@ class TestPPO(TfGraphTestCase):
             runner.setup(algo, self.env)
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 40
-
-    test_ppo_with_regularized_entropy.large = True
 
     def tearDown(self):
         self.env.close()
