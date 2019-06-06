@@ -77,8 +77,8 @@ class DQN(OffPolicyRLAlgorithm):
         self.grad_norm_clipping = grad_norm_clipping
         self.double_q = double_q
 
-        self.episode_rewards = []
-        self.episode_qf_losses = []
+        # clone a target q-function
+        self.target_qf = qf.clone('target_qf')
 
         super(DQN, self).__init__(
             env_spec=env_spec,
@@ -107,14 +107,14 @@ class DQN(OffPolicyRLAlgorithm):
         """
         action_dim = self.env_spec.action_space.n
 
+        self.episode_rewards = []
+        self.episode_qf_losses = []
+
         # build q networks
         with tf.name_scope(self.name, 'DQN'):
-            self.action_t_ph = tf.placeholder(tf.int32, None, name='action')
-            self.reward_t_ph = tf.placeholder(tf.float32, None, name='reward')
-            self.done_t_ph = tf.placeholder(tf.float32, None, name='done')
-
-            # clone a target q-function
-            self.target_qf = self.qf.clone('target_qf')
+            action_t_ph = tf.placeholder(tf.int32, None, name='action')
+            reward_t_ph = tf.placeholder(tf.float32, None, name='reward')
+            done_t_ph = tf.placeholder(tf.float32, None, name='done')
 
             with tf.name_scope('update_ops'):
                 target_update_op = tensor_utils.get_target_ops(
@@ -126,7 +126,7 @@ class DQN(OffPolicyRLAlgorithm):
 
             with tf.name_scope('td_error'):
                 # Q-value of the selected action
-                action = tf.one_hot(self.action_t_ph, action_dim)
+                action = tf.one_hot(action_t_ph, action_dim)
                 q_selected = tf.reduce_sum(
                     self.qf.q_vals * action,  # yapf: disable
                     axis=1)
@@ -146,38 +146,36 @@ class DQN(OffPolicyRLAlgorithm):
                     future_best_q_val = tf.reduce_max(
                         self.target_qf.q_vals, axis=1)
 
-                q_best_masked = (1.0 - self.done_t_ph) * future_best_q_val
+                q_best_masked = (1.0 - done_t_ph) * future_best_q_val
                 # if done, it's just reward
                 # else reward + discount * future_best_q_val
-                target_q_values = (
-                    self.reward_t_ph + self.discount * q_best_masked)
+                target_q_values = (reward_t_ph + self.discount * q_best_masked)
 
                 # td_error = q_selected - tf.stop_gradient(target_q_values)
                 loss = tf.losses.huber_loss(q_selected,
                                             tf.stop_gradient(target_q_values))
-                self._loss = tf.reduce_mean(loss)
+                loss = tf.reduce_mean(loss)
 
             with tf.name_scope('optimize_ops'):
                 optimizer = self.qf_optimizer(self.qf_lr)
                 if self.grad_norm_clipping is not None:
                     gradients = optimizer.compute_gradients(
-                        self._loss, var_list=self.qf.get_trainable_vars())
+                        loss, var_list=self.qf.get_trainable_vars())
                     for i, (grad, var) in enumerate(gradients):
                         if grad is not None:
                             gradients[i] = (tf.clip_by_norm(
                                 grad, self.grad_norm_clipping), var)
-                        self._optimize_loss = optimizer.apply_gradients(
-                            gradients)
+                        optimize_loss = optimizer.apply_gradients(gradients)
                 else:
-                    self._optimize_loss = optimizer.minimize(
-                        self._loss, var_list=self.qf.get_trainable_vars())
+                    optimize_loss = optimizer.minimize(
+                        loss, var_list=self.qf.get_trainable_vars())
 
             self._train_qf = tensor_utils.compile_function(
                 inputs=[
-                    self.qf.input, self.action_t_ph, self.reward_t_ph,
-                    self.done_t_ph, self.target_qf.input
+                    self.qf.input, action_t_ph, reward_t_ph, done_t_ph,
+                    self.target_qf.input
                 ],
-                outputs=[self._loss, self._optimize_loss])
+                outputs=[loss, optimize_loss])
 
     def train_once(self, itr, paths):
         """Train the algorithm once."""
@@ -236,3 +234,13 @@ class DQN(OffPolicyRLAlgorithm):
                                  next_observations)
 
         return loss
+
+    def __getstate__(self):
+        data = self.__dict__.copy()
+        del data['_qf_update_ops']
+        del data['_train_qf']
+        return data
+
+    def __setstate__(self, state):
+        self.__dict__ = state
+        self.init_opt()
