@@ -1,5 +1,4 @@
-from enum import Enum, unique
-
+"""Natural Policy Gradient Optimization."""
 from dowel import logger, tabular
 import numpy as np
 import tensorflow as tf
@@ -21,16 +20,9 @@ from garage.tf.misc.tensor_utils import positive_advs
 from garage.tf.optimizers import LbfgsOptimizer
 
 
-@unique
-class PGLoss(Enum):
-    VANILLA = 'vanilla'
-    SURROGATE = 'surrogate'
-    SURROGATE_CLIP = 'surrogate_clip'
-
-
 class NPO(BatchPolopt):
-    """Natural Policy Gradient Optimization.
-
+    """
+    Natural Policy Gradient Optimization.
     Args:
         env_spec (garage.envs.EnvSpec): Environment specification.
         policy (garage.tf.policies.base.Policy): Policy.
@@ -50,18 +42,39 @@ class NPO(BatchPolopt):
             conjunction with center_adv the advantages will be
             standardized before shifting.
         fixed_horizon (bool): Whether to fix horizon.
-        pg_loss (str): Objective.
+        pg_loss (str): A string from: 'vanilla', 'surrogate',
+            'surrogate_clip'. The type of loss functions to use.
         lr_clip_range (float): The limit on the likelihood ratio between
             policies, as in PPO.
         max_kl_step (float): The maximum KL divergence between old and new
             policies, as in TRPO.
-        optimizer (float): The optimizer of the algorithm.
-        optimizer_args (dict): Optimizer args.
+        optimizer (object): The optimizer of the algorithm. Should be the
+            optimizers in garage.tf.optimizers.
+        optimizer_args (dict): The arguments of the optimizer.
         policy_ent_coeff (float): The coefficient of the policy entropy.
-        use_softplus_entropy (bool): Whether to use softplus entropy.
-        stop_entropy_gradient (bool): Whether to stop entropy gradient.
+            Setting it to zero would mean no entropy regularization.
+        use_softplus_entropy (bool): Whether to estimate the softmax
+            distribution of the entropy to prevent the entropy from being
+            negative.
+        use_neg_logli_entropy (bool): Whether to estimate the entropy as the
+            negative log likelihood of the action.
+        stop_entropy_gradient (bool): Whether to stop the entropy gradient.
+        entropy_method (str): A string from: 'max', 'regularized',
+            'no_entropy'. The type of entropy method to use. 'max' adds the
+            dense entropy to the reward for each time step. 'regularized' adds
+            the mean entropy to the surrogate objective. See
+            https://arxiv.org/abs/1805.00909 for more details.
         name (str): The name of the algorithm.
-
+    Note:
+        sane defaults for entropy configuration:
+            - entropy_method='max', center_adv=False, stop_gradient=True
+              (center_adv normalizes the advantages tensor, which will
+              significantly alleviate the effect of entropy. It is also
+              recommended to turn off entropy gradient so that the agent
+              will focus on high-entropy actions instead of increasing the
+              variance of the distribution.)
+            - entropy_method='regularized', stop_gradient=False,
+              use_neg_logli_entropy=False
     """
 
     def __init__(self,
@@ -75,7 +88,7 @@ class NPO(BatchPolopt):
                  center_adv=True,
                  positive_adv=False,
                  fixed_horizon=False,
-                 pg_loss=PGLoss.SURROGATE,
+                 pg_loss='surrogate',
                  lr_clip_range=0.01,
                  max_kl_step=0.01,
                  optimizer=None,
@@ -84,18 +97,25 @@ class NPO(BatchPolopt):
                  use_softplus_entropy=False,
                  use_neg_logli_entropy=False,
                  stop_entropy_gradient=False,
+                 entropy_method='no_entropy',
                  name='NPO'):
         self.name = name
         self._name_scope = tf.name_scope(self.name)
         self._use_softplus_entropy = use_softplus_entropy
         self._use_neg_logli_entropy = use_neg_logli_entropy
         self._stop_entropy_gradient = stop_entropy_gradient
-
         self._pg_loss = pg_loss
         if optimizer is None:
             if optimizer_args is None:
                 optimizer_args = dict()
             optimizer = LbfgsOptimizer
+
+        self._check_entropy_configuration(
+            entropy_method, center_adv, stop_entropy_gradient,
+            use_neg_logli_entropy, policy_ent_coeff)
+
+        if pg_loss not in ['vanilla', 'surrogate', 'surrogate_clip']:
+            raise ValueError('Invalid pg_loss')
 
         with self._name_scope:
             self.optimizer = optimizer(**optimizer_args)
@@ -103,7 +123,7 @@ class NPO(BatchPolopt):
             self.max_kl_step = float(max_kl_step)
             self.policy_ent_coeff = float(policy_ent_coeff)
 
-        super(NPO, self).__init__(
+        super().__init__(
             env_spec=env_spec,
             policy=policy,
             baseline=baseline,
@@ -129,21 +149,6 @@ class NPO(BatchPolopt):
             constraint_name='mean_kl')
 
         return dict()
-
-    def __getstate__(self):
-        data = self.__dict__.copy()
-        del data['_name_scope']
-        del data['_policy_opt_inputs']
-        del data['f_policy_entropy']
-        del data['f_policy_kl']
-        del data['f_rewards']
-        del data['f_returns']
-        return data
-
-    def __setstate__(self, state):
-        self.__dict__ = state
-        self._name_scope = tf.name_scope(self.name)
-        self.init_opt()
 
     @overrides
     def optimize_policy(self, itr, samples_data):
@@ -291,6 +296,10 @@ class NPO(BatchPolopt):
         policy_entropy = self._build_entropy_term(i)
         rewards = i.reward_var
 
+        if self._maximum_entropy:
+            with tf.name_scope('augmented_rewards'):
+                rewards = i.reward_var + self.policy_ent_coeff * policy_entropy
+
         with tf.name_scope('policy_loss'):
             adv = compute_advantages(
                 self.discount,
@@ -391,13 +400,13 @@ class NPO(BatchPolopt):
 
             # Finalize objective function
             with tf.name_scope('loss'):
-                if self._pg_loss == PGLoss.VANILLA:
+                if self._pg_loss == 'vanilla':
                     # VPG uses the vanilla objective
                     obj = tf.identity(vanilla, name='vanilla_obj')
-                elif self._pg_loss == PGLoss.SURROGATE:
+                elif self._pg_loss == 'surrogate':
                     # TRPO uses the standard surrogate objective
                     obj = tf.identity(surrogate, name='surr_obj')
-                elif self._pg_loss == PGLoss.SURROGATE_CLIP:
+                elif self._pg_loss == 'surrogate_clip':
                     lr_clip = tf.clip_by_value(
                         lr,
                         1 - self.lr_clip_range,
@@ -408,10 +417,9 @@ class NPO(BatchPolopt):
                     else:
                         surr_clip = lr_clip * adv_valid
                     obj = tf.minimum(surrogate, surr_clip, name='surr_obj')
-                else:
-                    raise NotImplementedError('Unknown PGLoss')
 
-                obj += self.policy_ent_coeff * policy_entropy
+                if self._entropy_regularzied:
+                    obj += self.policy_ent_coeff * policy_entropy
 
                 # Maximize E[surrogate objective] by minimizing
                 # -E_t[surrogate objective]
@@ -447,7 +455,8 @@ class NPO(BatchPolopt):
                     i.obs_var,
                     i.policy_state_info_vars,
                     name='policy_dist_info_2')
-                policy_neg_log_likeli = self.policy.distribution.log_likelihood_sym(  # noqa: E501
+
+                policy_neg_log_likeli = -self.policy.distribution.log_likelihood_sym(  # noqa: E501
                     i.action_var,
                     policy_dist_info,
                     name='policy_log_likeli')
@@ -457,28 +466,43 @@ class NPO(BatchPolopt):
                 else:
                     policy_entropy = self.policy.distribution.entropy_sym(
                         policy_dist_info)
-
             else:
                 policy_dist_info_flat = self.policy.dist_info_sym(
                     i.flat.obs_var,
                     i.flat.policy_state_info_vars,
-                    name='policy_dist_info_flat_entropy')
+                    name='policy_dist_info_flat_2')
+
+                policy_neg_log_likeli_flat = -self.policy.distribution.log_likelihood_sym(  # noqa: E501
+                    i.flat.action_var,
+                    policy_dist_info_flat,
+                    name='policy_log_likeli_flat')
 
                 policy_dist_info_valid = filter_valids_dict(
                     policy_dist_info_flat,
                     i.flat.valid_var,
-                    name='policy_dist_info_valid')
+                    name='policy_dist_info_valid_2')
 
-                policy_neg_log_likeli_valid = self.policy.distribution.log_likelihood_sym(  # noqa: E501
+                policy_neg_log_likeli_valid = -self.policy.distribution.log_likelihood_sym(  # noqa: E501
                     i.valid.action_var,
                     policy_dist_info_valid,
-                    name='policy_log_likeli')
+                    name='policy_log_likeli_valid')
 
                 if self._use_neg_logli_entropy:
-                    policy_entropy = policy_neg_log_likeli_valid
+                    if self._maximum_entropy:
+                        policy_entropy = tf.reshape(policy_neg_log_likeli_flat,
+                                                    [-1, self.max_path_length])
+                    else:
+                        policy_entropy = policy_neg_log_likeli_valid
                 else:
-                    policy_entropy = self.policy.distribution.entropy_sym(
-                        policy_dist_info_valid)
+                    if self._maximum_entropy:
+                        policy_entropy_flat = self.policy.distribution.entropy_sym(  # noqa: E501
+                            policy_dist_info_flat)
+                        policy_entropy = tf.reshape(policy_entropy_flat,
+                                                    [-1, self.max_path_length])
+                    else:
+                        policy_entropy_valid = self.policy.distribution.entropy_sym(  # noqa: E501
+                            policy_dist_info_valid)
+                        policy_entropy = policy_entropy_valid
 
             # This prevents entropy from becoming negative for small policy std
             if self._use_softplus_entropy:
@@ -555,3 +579,42 @@ class NPO(BatchPolopt):
         )
 
         return flatten_inputs(policy_opt_input_values)
+
+    def _check_entropy_configuration(self, entropy_method, center_adv,
+                                     stop_entropy_gradient,
+                                     use_neg_logli_entropy, policy_ent_coeff):
+        if entropy_method == 'max':
+            if center_adv:
+                raise ValueError('center_adv should be False when '
+                                 'entropy_method is max')
+            if not stop_entropy_gradient:
+                raise ValueError('stop_gradient should be True when '
+                                 'entropy_method is max')
+            self._maximum_entropy = True
+            self._entropy_regularzied = False
+        elif entropy_method == 'regularized':
+            self._maximum_entropy = False
+            self._entropy_regularzied = True
+        elif entropy_method == 'no_entropy':
+            if policy_ent_coeff != 0.0:
+                raise ValueError('policy_ent_coeff should be zero '
+                                 'when there is no entropy method')
+            self._maximum_entropy = False
+            self._entropy_regularzied = False
+        else:
+            raise ValueError('Invalid entropy_method')
+
+    def __getstate__(self):
+        data = self.__dict__.copy()
+        del data['_name_scope']
+        del data['_policy_opt_inputs']
+        del data['f_policy_entropy']
+        del data['f_policy_kl']
+        del data['f_rewards']
+        del data['f_returns']
+        return data
+
+    def __setstate__(self, state):
+        self.__dict__ = state
+        self._name_scope = tf.name_scope(self.name)
+        self.init_opt()
