@@ -24,18 +24,27 @@ class OffPolicyVectorizedSampler(BatchSampler):
     """This class implements OffPolicyVectorizedSampler.
 
     Args:
-        algo(garage.np.RLAlgorithm): Algorithm.
-        env(garage.envs.GarageEnv): Environment.
-        n_envs(int): Number of parallel environments managed by sampler.
+        algo (garage.np.RLAlgorithm): Algorithm.
+        env (garage.envs.GarageEnv): Environment.
+        n_envs (int): Number of parallel environments managed by sampler.
+        no_reset (bool): Reset environment between samples or not.
+        scale_outputs (bool): Scale output by action space upper bound or
+            not.
 
     """
 
-    def __init__(self, algo, env, n_envs=None, no_reset=True):
+    def __init__(self,
+                 algo,
+                 env,
+                 n_envs=None,
+                 no_reset=True,
+                 scale_outputs=False):
         if n_envs is None:
             n_envs = int(algo.rollout_batch_size)
         super(OffPolicyVectorizedSampler, self).__init__(algo, env, n_envs)
         self.n_envs = n_envs
         self.no_reset = no_reset
+        self.scale_outputs = scale_outputs
 
         self._last_obses = None
         self._last_uncounted_discount = [0] * n_envs
@@ -99,7 +108,7 @@ class OffPolicyVectorizedSampler(BatchSampler):
                 actions, agent_infos = self.algo.policy.get_actions(
                     obs_normalized)
 
-            if (isinstance(self.env.action_space, Box)):
+            if (isinstance(self.env.action_space, Box) and self.scale_outputs):
                 scaled_actions = np.multiply(actions,
                                              self.env.action_space.high)
             else:

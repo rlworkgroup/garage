@@ -93,9 +93,9 @@ class TestDDPG(TfGraphTestCase):
                 min_buffer_size=int(1e4),
                 exploration_strategy=action_noise,
             )
-            runner.setup(algo, env)
+            runner.setup(algo, env, sampler_args={'scale_outputs': True})
             last_avg_ret = runner.train(
                 n_epochs=10, n_epoch_cycles=20, batch_size=100)
-            assert last_avg_ret > 15
+            assert last_avg_ret > 10
 
             env.close()

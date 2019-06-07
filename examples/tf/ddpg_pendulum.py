@@ -56,7 +56,8 @@ def run_task(*_):
             policy_optimizer=tf.train.AdamOptimizer,
             qf_optimizer=tf.train.AdamOptimizer)
 
-        runner.setup(algo=ddpg, env=env)
+        runner.setup(
+            algo=ddpg, env=env, sampler_args={'normalize_outputs': True})
 
         runner.train(n_epochs=500, n_epoch_cycles=20, batch_size=100)
 
