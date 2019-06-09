@@ -13,6 +13,7 @@ from tests.fixtures import TfGraphTestCase
 def get_labels(input_shape, xs, output_dim):
     if input_shape == (1, ):
         label = [0, 0]
+        # [0, 1] if sign is positive else [1, 0]
         ys = 0 if np.sin(xs) <= 0 else 1
         label[ys] = 1
 
@@ -21,6 +22,7 @@ def get_labels(input_shape, xs, output_dim):
         if output_dim == 1:
             label = ys
         else:
+            # [0, 1] if XOR is 1 else [1, 0]
             label = [0, 0]
             label[ys] = 1
     return label
@@ -28,6 +30,7 @@ def get_labels(input_shape, xs, output_dim):
 
 def get_train_data(input_shape, output_dim):
     if input_shape == (1, ):
+        # Sign of sin function
         data = np.linspace(-np.pi, np.pi, 1000)
         obs = [{
             'observations': [[x]],
@@ -35,7 +38,7 @@ def get_train_data(input_shape, output_dim):
         } for x in data]
 
     elif input_shape == (2, ):
-        # Generate 1000 points with coordinates in [0, 1]
+        # Generate 1000 points with coordinates in [0, 1] for XOR data
         x = np.linspace(0, 1, 100)
         y = np.linspace(0, 1, 10)
         data = np.dstack(np.meshgrid(x, y)).reshape(-1, 2)
@@ -67,41 +70,17 @@ def get_test_data(input_shape, output_dim):
 
 
 class TestBernoulliMLPRegressorWithModel(TfGraphTestCase):
-    @classmethod
-    def setUpClass(cls):
-        cls.train_1dx2d = get_train_data((1, ), 2)
-        cls.train_2dx1d = get_train_data((2, ), 1)
-        cls.train_2dx2d = get_train_data((2, ), 2)
-
-        cls.test_1dx2d = get_test_data((1, ), 2)
-        cls.test_2dx1d = get_test_data((2, ), 1)
-        cls.test_2dx2d = get_test_data((2, ), 2)
-
     @params(((1, ), 2), ((2, ), 1), ((2, ), 2))
     def test_fit_normalized(self, input_shape, output_dim):
         bmr = BernoulliMLPRegressorWithModel(
             input_shape=input_shape, output_dim=output_dim)
 
-        if input_shape == (1, ):
-            train_data = self.train_1dx2d
-        elif input_shape == (2, ):
-            if output_dim == 1:
-                train_data = self.train_2dx1d
-            else:
-                train_data = self.train_2dx2d
-        observations, returns = train_data
+        observations, returns = get_train_data(input_shape, output_dim)
 
         for _ in range(150):
             bmr.fit(observations, returns)
 
-        if input_shape == (1, ):
-            test_data = self.test_1dx2d
-        elif input_shape == (2, ):
-            if output_dim == 1:
-                test_data = self.test_2dx1d
-            else:
-                test_data = self.test_2dx2d
-        paths, expected = test_data
+        paths, expected = get_test_data(input_shape, output_dim)
 
         prediction = np.cast['int'](bmr.predict(paths['observations']))
         assert np.allclose(prediction, expected, rtol=0, atol=0.1)
@@ -121,26 +100,12 @@ class TestBernoulliMLPRegressorWithModel(TfGraphTestCase):
             output_dim=output_dim,
             normalize_inputs=False)
 
-        if input_shape == (1, ):
-            train_data = self.train_1dx2d
-        elif input_shape == (2, ):
-            if output_dim == 1:
-                train_data = self.train_2dx1d
-            else:
-                train_data = self.train_2dx2d
-        observations, returns = train_data
+        observations, returns = get_train_data(input_shape, output_dim)
 
         for _ in range(150):
             bmr.fit(observations, returns)
 
-        if input_shape == (1, ):
-            test_data = self.test_1dx2d
-        elif input_shape == (2, ):
-            if output_dim == 1:
-                test_data = self.test_2dx1d
-            else:
-                test_data = self.test_2dx2d
-        paths, expected = test_data
+        paths, expected = get_test_data(input_shape, output_dim)
 
         prediction = np.cast['int'](bmr.predict(paths['observations']))
 
@@ -161,26 +126,12 @@ class TestBernoulliMLPRegressorWithModel(TfGraphTestCase):
             output_dim=output_dim,
             use_trust_region=False)
 
-        if input_shape == (1, ):
-            train_data = self.train_1dx2d
-        elif input_shape == (2, ):
-            if output_dim == 1:
-                train_data = self.train_2dx1d
-            else:
-                train_data = self.train_2dx2d
-        observations, returns = train_data
+        observations, returns = get_train_data(input_shape, output_dim)
 
         for _ in range(150):
             bmr.fit(observations, returns)
 
-        if input_shape == (1, ):
-            test_data = self.test_1dx2d
-        elif input_shape == (2, ):
-            if output_dim == 1:
-                test_data = self.test_2dx1d
-            else:
-                test_data = self.test_2dx2d
-        paths, expected = test_data
+        paths, expected = get_test_data(input_shape, output_dim)
         prediction = np.cast['int'](bmr.predict(paths['observations']))
 
         assert np.allclose(prediction, expected, rtol=0, atol=0.1)
@@ -202,10 +153,9 @@ class TestBernoulliMLPRegressorWithModel(TfGraphTestCase):
         new_ys_var = tf.placeholder(
             dtype=tf.float32, name='ys', shape=(None, output_dim))
 
-        data = np.random.random(size=input_shape)
-        label = np.random.randint(0, output_dim, size=(input_shape[0]))
+        data = np.full(input_shape, 0.5)
         one_hot_label = np.zeros((input_shape[0], output_dim))
-        one_hot_label[np.arange(input_shape[0]), label] = 1
+        one_hot_label[np.arange(input_shape[0]), 0] = 1
 
         p = bmr._f_prob(np.asarray(data))
         ll = bmr._dist.log_likelihood(np.asarray(one_hot_label), dict(p=p))
