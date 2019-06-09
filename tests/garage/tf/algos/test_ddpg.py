@@ -11,7 +11,7 @@ from garage.replay_buffer import SimpleReplayBuffer
 from garage.tf.algos import DDPG
 from garage.tf.envs import TfEnv
 from garage.tf.policies import ContinuousMLPPolicy
-from garage.tf.q_functions import ContinuousMLPQFunction
+from garage.tf.q_functions import ContinuousMLPQFunctionWithModel
 from tests.fixtures import TfGraphTestCase
 
 
@@ -26,7 +26,7 @@ class TestDDPG(TfGraphTestCase):
                 hidden_sizes=[64, 64],
                 hidden_nonlinearity=tf.nn.relu,
                 output_nonlinearity=tf.nn.tanh)
-            qf = ContinuousMLPQFunction(
+            qf = ContinuousMLPQFunctionWithModel(
                 env_spec=env.spec,
                 hidden_sizes=[64, 64],
                 hidden_nonlinearity=tf.nn.relu)

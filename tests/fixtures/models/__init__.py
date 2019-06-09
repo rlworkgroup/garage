@@ -9,6 +9,7 @@ from tests.fixtures.models.simple_gaussian_mlp_model import (
     SimpleGaussianMLPModel)
 from tests.fixtures.models.simple_gru_model import SimpleGRUModel
 from tests.fixtures.models.simple_lstm_model import SimpleLSTMModel
+from tests.fixtures.models.simple_mlp_merge_model import SimpleMLPMergeModel
 from tests.fixtures.models.simple_mlp_model import SimpleMLPModel
 
 __all__ = [
@@ -19,5 +20,6 @@ __all__ = [
     'SimpleGaussianMLPModel',
     'SimpleGRUModel',
     'SimpleLSTMModel',
+    'SimpleMLPMergeModel',
     'SimpleMLPModel',
 ]

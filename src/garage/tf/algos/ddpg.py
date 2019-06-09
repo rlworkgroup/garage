@@ -104,6 +104,8 @@ class DDPG(OffPolicyRLAlgorithm):
         self.epoch_ys = []
         self.epoch_qs = []
 
+        self.target_qf = qf.clone('target_qf')
+
         super(DDPG, self).__init__(
             env_spec=env_spec,
             policy=policy,
@@ -128,8 +130,7 @@ class DDPG(OffPolicyRLAlgorithm):
             # Create target policy and qf network
             self.target_policy_f_prob_online, _, _ = self.policy.build_net(
                 trainable=False, name='target_policy')
-            self.target_qf_f_prob_online, _, _, _ = self.qf.build_net(
-                trainable=False, name='target_qf')
+            self.target_qf_f_prob_online = self.target_qf.get_qval
 
             # Set up target init and update function
             with tf.name_scope('setup_target'):
@@ -139,7 +140,7 @@ class DDPG(OffPolicyRLAlgorithm):
                 policy_init_ops, policy_update_ops = ops
                 qf_init_ops, qf_update_ops = tensor_utils.get_target_ops(
                     self.qf.get_global_vars(),
-                    self.qf.get_global_vars('target_qf'), self.tau)
+                    self.target_qf.get_global_vars(), self.tau)
                 target_init_op = policy_init_ops + qf_init_ops
                 target_update_op = policy_update_ops + qf_update_ops
 

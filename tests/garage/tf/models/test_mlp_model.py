@@ -5,6 +5,7 @@ import numpy as np
 import tensorflow as tf
 
 from garage.tf.models import MLPDuelingModel
+from garage.tf.models import MLPMergeModel
 from garage.tf.models import MLPModel
 from tests.fixtures import TfGraphTestCase
 
@@ -45,6 +46,30 @@ class TestMLPModel(TfGraphTestCase):
 
         expected_output = np.full([1, output_dim], 5 * np.prod(hidden_sizes))
 
+        assert np.array_equal(output, expected_output)
+
+    @params((1, (0, )), (1, (1, )), (1, (2, )), (2, (3, )), (2, (1, 1)),
+            (3, (2, 2)))
+    def test_output_values_merging(self, output_dim, hidden_sizes):
+        model = MLPMergeModel(
+            output_dim=output_dim,
+            hidden_sizes=hidden_sizes,
+            concat_layer=0,
+            hidden_nonlinearity=None,
+            hidden_w_init=tf.ones_initializer(),
+            output_w_init=tf.ones_initializer())
+
+        input_var2 = tf.placeholder(tf.float32, shape=(None, 5))
+        obs2 = np.ones((1, 5))
+
+        outputs = model.build(self.input_var, input_var2)
+        output = self.sess.run(
+            outputs, feed_dict={
+                self.input_var: self.obs,
+                input_var2: obs2
+            })
+
+        expected_output = np.full([1, output_dim], 10 * np.prod(hidden_sizes))
         assert np.array_equal(output, expected_output)
 
     @params((1, (0, )), (1, (1, )), (1, (2, )), (2, (3, )), (2, (1, 1)),
