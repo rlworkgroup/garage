@@ -5,10 +5,10 @@ Iterations alternate between live and importance sampled iterations.
 """
 import gym
 
-from garage.contrib.alexbeloi.is_sampler import ISSampler
 from garage.envs import normalize
 from garage.experiment import LocalRunner, run_experiment
 from garage.np.baselines import LinearFeatureBaseline
+from garage.sampler import ISSampler
 from garage.tf.algos import VPG
 from garage.tf.envs import TfEnv
 from garage.tf.policies import GaussianMLPPolicy

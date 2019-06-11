@@ -13,32 +13,35 @@ class ISSampler(BatchSampler):
     """
     Sampler which alternates between live sampling iterations using
     BatchSampler and importance sampling iterations.
+
+    Args:
+        algo (garage.np.algos.RLAlgorithm): An algorithm instance.
+        env (garage.envs.GarageEnv): An environement instance.
+        n_backtrack (str/int): Number of past policies to update from
+        n_is_pretrain (int): Number of importance sampling iterations to
+            perform in beginning of training
+        init_is (bool): Set initial iteration (after pretrain) an
+            importance sampling iteration.
+        skip_is_itrs (bool): Do not do any importance sampling
+            iterations (after pretrain).
+        hist_variance_penalty (int): Penalize variance of historical policy.
+        max_is_ratio (int): Maximum allowed importance sampling ratio.
+        ess_threshold (int): Minimum effective sample size required.
+        randomize_draw (bool): Whether to randomize important samples.
+
     """
 
-    def __init__(
-            self,
-            algo,
-            n_backtrack='all',
-            n_is_pretrain=0,
-            init_is=0,
-            skip_is_itrs=False,
-            hist_variance_penalty=0.0,
-            max_is_ratio=0,
-            ess_threshold=0,
-    ):
-        """
-        :type algo: BatchPolopt
-        :param n_backtrack: Number of past policies to update from
-        :param n_is_pretrain: Number of importance sampling iterations to
-            perform in beginning of training
-        :param init_is: (True/False) set initial iteration (after pretrain) an
-            importance sampling iteration
-        :param skip_is_itrs: (True/False) do not do any importance sampling
-            iterations (after pretrain)
-        :param hist_variance_penalty: penalize variance of historical policy
-        :param max_is_ratio: maximum allowed importance sampling ratio
-        :param ess_threshold: minimum effective sample size required
-        """
+    def __init__(self,
+                 algo,
+                 env,
+                 n_backtrack='all',
+                 n_is_pretrain=0,
+                 init_is=0,
+                 skip_is_itrs=False,
+                 hist_variance_penalty=0.0,
+                 max_is_ratio=0,
+                 ess_threshold=0,
+                 randomize_draw=False):
         self.n_backtrack = n_backtrack
         self.n_is_pretrain = n_is_pretrain
         self.skip_is_itrs = skip_is_itrs
@@ -46,11 +49,12 @@ class ISSampler(BatchSampler):
         self.hist_variance_penalty = hist_variance_penalty
         self.max_is_ratio = max_is_ratio
         self.ess_threshold = ess_threshold
+        self.randomize_draw = randomize_draw
 
         self._hist = []
         self._is_itr = init_is
 
-        super(ISSampler, self).__init__(algo)
+        super().__init__(algo, env)
 
     @property
     def history(self):
@@ -74,65 +78,61 @@ class ISSampler(BatchSampler):
             return self._hist
         return self._hist[-min(n_past, len(self._hist)):]
 
-    def obtain_samples(self, itr):
+    def obtain_samples(self, itr, batch_size=None, whole_paths=True):
         # Importance sampling for first self.n_is_pretrain iterations
         if itr < self.n_is_pretrain:
-            paths = self.obtain_is_samples(itr)
+            paths = self._obtain_is_samples(itr, batch_size, whole_paths)
             return paths
 
         # Alternate between importance sampling and live sampling
         if self._is_itr and not self.skip_is_itrs:
-            paths = self.obtain_is_samples(itr)
+            paths = self._obtain_is_samples(itr, batch_size, whole_paths)
         else:
-            paths = super(ISSampler, self).obtain_samples(itr)
+            paths = super().obtain_samples(itr, batch_size, whole_paths)
             if not self.skip_is_itrs:
                 self.add_history(self.algo.policy.distribution, paths)
 
         self._is_itr = (self._is_itr + 1) % 2
         return paths
 
-    def obtain_is_samples(self, itr):
+    def _obtain_is_samples(self, itr, batch_size=None, whole_paths=True):
+        if batch_size is None:
+            batch_size = self.algo.max_path_length
+
         paths = []
         for hist_policy_distribution, hist_paths in self.get_history_list(
                 self.n_backtrack):
-            h_paths = self.sample_isweighted_paths(
+            h_paths = self._sample_isweighted_paths(
                 policy=self.algo.policy,
                 hist_policy_distribution=hist_policy_distribution,
-                max_samples=self.algo.batch_size,
-                max_path_length=self.algo.max_path_length,
+                max_samples=batch_size,
                 paths=hist_paths,
                 hist_variance_penalty=self.hist_variance_penalty,
                 max_is_ratio=self.max_is_ratio,
                 ess_threshold=self.ess_threshold,
             )
             paths.extend(h_paths)
-        if len(paths) > self.algo.batch_size:
-            paths = random.sample(paths, self.algo.batch_size)
-        if self.algo.whole_paths:
-            return paths
-        else:
-            paths_truncated = truncate_paths(paths, self.algo.batch_size)
-            return paths_truncated
 
-    def sample_isweighted_paths(
-            self,
-            policy,
-            hist_policy_distribution,
-            max_samples,
-            max_path_length=100,
-            paths=None,
-            randomize_draw=False,
-            hist_variance_penalty=0.0,
-            max_is_ratio=10,
-            ess_threshold=0,
-    ):
+        if len(paths) > batch_size:
+            paths = random.sample(paths, batch_size)
 
+        return paths if whole_paths else truncate_paths(paths, batch_size)
+
+    def _sample_isweighted_paths(self,
+                                 policy,
+                                 hist_policy_distribution,
+                                 max_samples,
+                                 paths=None,
+                                 hist_variance_penalty=0.0,
+                                 max_is_ratio=10,
+                                 ess_threshold=0):
         if not paths:
             return []
 
         n_samples = min(len(paths), max_samples)
 
-        if randomize_draw:
+        samples = None
+        if self.randomize_draw:
             samples = random.sample(paths, n_samples)
         elif paths:
             if n_samples == len(paths):
@@ -172,11 +172,11 @@ class ISSampler(BatchSampler):
             path['rewards'] *= is_ratio
 
         if ess_threshold:
-            if kong_ess(is_weights) < ess_threshold:
+            # Effective sample size estimate.
+            # Kong, Augustine. "A note on importance sampling using
+            # standardized weights." University of Chicago, Dept.
+            # of Statistics, Tech. Rep 348 (1992).
+            if len(is_weights) / (1 + var(is_weights)) < ess_threshold:
                 return []
 
         return samples
-
-
-def kong_ess(weights):
-    return len(weights) / (1 + var(weights))
