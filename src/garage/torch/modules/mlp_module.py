@@ -6,7 +6,7 @@ real-valued inputs to real-valued outputs.
 """
 
 from torch import nn as nn
-from torch.nn import functional as func
+from torch.nn import functional as F  # NOQA
 
 
 class MLPModule(nn.Module):
@@ -47,14 +47,14 @@ class MLPModule(nn.Module):
                  input_dim,
                  output_dim,
                  hidden_sizes,
-                 hidden_nonlinearity=func.relu,
+                 hidden_nonlinearity=F.relu,
                  hidden_w_init=nn.init.xavier_normal_,
                  hidden_b_init=nn.init.zeros_,
                  output_nonlinearity=None,
                  output_w_init=nn.init.xavier_normal_,
                  output_b_init=nn.init.zeros_,
                  layer_normalization=False):
-        super(MLPModule, self).__init__()
+        super().__init__()
 
         self._input_dim = input_dim
         self._output_dim = output_dim
@@ -86,7 +86,7 @@ class MLPModule(nn.Module):
                 x = nn.LayerNorm(x.shape[1])(x)
 
         x = self._layers[-1](x)
-        if self._output_nonlinearity:
+        if self._output_nonlinearity is not None:
             x = self._output_nonlinearity(x)
 
         return x
