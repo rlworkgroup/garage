@@ -16,7 +16,6 @@ def get_labels(input_shape, xs, output_dim):
         # [0, 1] if sign is positive else [1, 0]
         ys = 0 if np.sin(xs) <= 0 else 1
         label[ys] = 1
-
     elif input_shape == (2, ):
         ys = int(np.round(xs[0])) ^ int(np.round(xs[1]))
         if output_dim == 1:
@@ -36,7 +35,6 @@ def get_train_data(input_shape, output_dim):
             'observations': [[x]],
             'returns': [get_labels(input_shape, x, output_dim)]
         } for x in data]
-
     elif input_shape == (2, ):
         # Generate 1000 points with coordinates in [0, 1] for XOR data
         x = np.linspace(0, 1, 100)
@@ -59,7 +57,6 @@ def get_test_data(input_shape, output_dim):
                              [np.pi / 4], [np.pi / 3], [np.pi / 4]]
         }
         expected = [[1, 0], [1, 0], [1, 0], [0, 1], [0, 1], [0, 1]]
-
     elif input_shape == (2, ):
         paths = {'observations': [[0, 0], [0, 1], [1, 0], [1, 1]]}
         if output_dim == 1:
