@@ -24,10 +24,12 @@ required = [
     'psutil',
     'pyprind',
     'python-dateutil',
+    'torch==1.1.0',
     'scikit-image',
     'scipy',
     'tensorflow<1.13,>=1.12.0',
     'tensorflow-probability<0.6.0,>=0.5.0',  # for tensorflow 1.12
+    'torchvision==0.3.0'
 ]
 
 # Dependencies for optional features
