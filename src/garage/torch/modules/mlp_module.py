@@ -81,7 +81,9 @@ class MLPModule(nn.Module):
         """Forward method."""
         x = input_val
         for layer in self._layers[:-1]:
-            x = self._hidden_nonlinearity(layer(x))
+            x = layer(x)
+            if self._hidden_nonlinearity is not None:
+                x = self._hidden_nonlinearity(x)
             if self._layer_normalization:
                 x = nn.LayerNorm(x.shape[1])(x)
 

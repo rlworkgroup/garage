@@ -17,6 +17,7 @@ class TestMLPModel(unittest.TestCase):
         module = MLPModule(
             input_dim=input_dim,
             output_dim=output_dim,
+            hidden_nonlinearity=None,
             hidden_sizes=hidden_sizes,
             hidden_w_init=nn.init.ones_,
             output_w_init=nn.init.ones_)
@@ -35,6 +36,7 @@ class TestMLPModel(unittest.TestCase):
         module = MLPModule(
             input_dim=input_dim,
             output_dim=output_dim,
+            hidden_nonlinearity=None,
             hidden_sizes=hidden_sizes,
             hidden_w_init=nn.init.ones_,
             output_w_init=nn.init.ones_)
