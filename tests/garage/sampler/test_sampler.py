@@ -1,13 +1,26 @@
 import unittest
 
+from dowel import logger
 import numpy as np
 
+from garage.experiment import LocalRunner
+from garage.np.baselines import LinearFeatureBaseline
 from garage.sampler.utils import truncate_paths
+from garage.tf.algos import VPG
+from garage.tf.envs import TfEnv
+from garage.tf.policies import CategoricalMLPPolicy
+from garage.tf.samplers import BatchSampler
+from tests.fixtures.logger import NullOutput
 
 
 class TestSampler(unittest.TestCase):
-    def test_truncate_paths(self):
+    def setUp(self):
+        logger.add_output(NullOutput())
 
+    def tearDown(self):
+        logger.remove_all()
+
+    def test_truncate_paths(self):
         paths = [
             dict(
                 observations=np.zeros((100, 1)),
@@ -27,8 +40,54 @@ class TestSampler(unittest.TestCase):
 
         truncated = truncate_paths(paths, 130)
         assert len(truncated) == 2
-        assert len(truncated[-1]["observations"]) == 30
-        assert len(truncated[0]["observations"]) == 100
+        assert len(truncated[-1]['observations']) == 30
+        assert len(truncated[0]['observations']) == 100
         # make sure not to change the original one
         assert len(paths) == 2
-        assert len(paths[-1]["observations"]) == 50
+        assert len(paths[-1]['observations']) == 50
+
+    def test_tf_batch_sampler(self):
+        max_cpus = 8
+        with LocalRunner(max_cpus=max_cpus) as runner:
+            env = TfEnv(env_name='CartPole-v1')
+
+            policy = CategoricalMLPPolicy(
+                name='policy', env_spec=env.spec, hidden_sizes=(32, 32))
+
+            baseline = LinearFeatureBaseline(env_spec=env.spec)
+
+            algo = VPG(
+                env_spec=env.spec,
+                policy=policy,
+                baseline=baseline,
+                max_path_length=1,
+                discount=0.99)
+
+            runner.setup(
+                algo,
+                env,
+                sampler_cls=BatchSampler,
+                sampler_args={'n_envs': max_cpus})
+
+            try:
+                runner.initialize_tf_vars()
+            except BaseException:
+                raise self.failureException(
+                    'LocalRunner should be able to initialize tf variables.')
+
+            runner.start_worker()
+
+            paths = runner.sampler.obtain_samples(
+                0, batch_size=8, whole_paths=True)
+            self.assertGreaterEqual(
+                len(paths), max_cpus, 'BatchSampler should sample more than '
+                'max_cpus={} trajectories'.format(max_cpus))
+
+    # Note:
+    #   test_batch_sampler should pass if tested independently
+    #   from other tests, but cannot be tested on CI.
+    #
+    #   This is because nose2 runs all tests in a single process,
+    #   when this test is running, tensorflow has already been initialized,
+    #   and later singleton_pool will hang because tensorflow is not fork-safe.
+    test_tf_batch_sampler.flaky = True
