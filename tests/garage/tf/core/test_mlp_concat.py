@@ -2,7 +2,7 @@ from nose2.tools.params import params
 import numpy as np
 import tensorflow as tf
 
-from garage.tf.core.mlp import mlp_concat
+from garage.tf.core.mlp import mlp
 from tests.fixtures import TfGraphTestCase
 
 
@@ -25,11 +25,11 @@ class TestMLPConcat(TfGraphTestCase):
 
         # We build a default mlp
         with tf.variable_scope('MLP_Concat'):
-            self.mlp_f = mlp_concat(
-                input_var1=self._obs_input,
-                input_var2=self._act_input,
+            self.mlp_f = mlp(
+                input_var=self._obs_input,
                 output_dim=self._output_shape,
                 hidden_sizes=(32, 32),
+                input_var2=self._act_input,
                 concat_layer=0,
                 hidden_nonlinearity=self.hidden_nonlinearity,
                 name='mlp1')
@@ -39,11 +39,11 @@ class TestMLPConcat(TfGraphTestCase):
     def test_multiple_same_mlp(self):
         # We create another mlp with the same name, trying to reuse it
         with tf.variable_scope('MLP_Concat', reuse=True):
-            self.mlp_same_copy = mlp_concat(
-                input_var1=self._obs_input,
-                input_var2=self._act_input,
+            self.mlp_same_copy = mlp(
+                input_var=self._obs_input,
                 output_dim=self._output_shape,
                 hidden_sizes=(32, 32),
+                input_var2=self._act_input,
                 concat_layer=0,
                 hidden_nonlinearity=self.hidden_nonlinearity,
                 name='mlp1')
@@ -71,11 +71,11 @@ class TestMLPConcat(TfGraphTestCase):
     def test_different_mlp(self):
         # We create another mlp with different name
         with tf.variable_scope('MLP_Concat'):
-            self.mlp_different_copy = mlp_concat(
-                input_var1=self._obs_input,
-                input_var2=self._act_input,
+            self.mlp_different_copy = mlp(
+                input_var=self._obs_input,
                 output_dim=self._output_shape,
                 hidden_sizes=(32, 32),
+                input_var2=self._act_input,
                 concat_layer=0,
                 hidden_nonlinearity=self.hidden_nonlinearity,
                 name='mlp2')
@@ -152,11 +152,11 @@ class TestMLPConcat(TfGraphTestCase):
     def test_layer_normalization(self):
         # Create a mlp with layer normalization
         with tf.variable_scope('MLP_Concat'):
-            self.mlp_f_w_n = mlp_concat(
-                input_var1=self._obs_input,
-                input_var2=self._act_input,
+            self.mlp_f_w_n = mlp(
+                input_var=self._obs_input,
                 output_dim=self._output_shape,
                 hidden_sizes=(32, 32),
+                input_var2=self._act_input,
                 concat_layer=0,
                 hidden_nonlinearity=self.hidden_nonlinearity,
                 name='mlp2',
@@ -213,11 +213,11 @@ class TestMLPConcat(TfGraphTestCase):
     @params(2, 1, 0, -1, -2)
     def test_concat_layer(self, concat_idx):
         with tf.variable_scope('mlp_concat_test'):
-            _ = mlp_concat(
-                input_var1=self._obs_input,
-                input_var2=self._act_input,
+            _ = mlp(
+                input_var=self._obs_input,
                 output_dim=self._output_shape,
                 hidden_sizes=(64, 32),
+                input_var2=self._act_input,
                 concat_layer=concat_idx,
                 hidden_nonlinearity=self.hidden_nonlinearity,
                 name='mlp2')
@@ -235,6 +235,60 @@ class TestMLPConcat(TfGraphTestCase):
 
             actual_units.append(h1_w.shape[0].value)
             actual_units.append(h2_w.shape[0].value)
+            actual_units.append(out_w.shape[0].value)
+
+        assert np.array_equal(expected_units, actual_units)
+
+    @params(2, 1, 0, -1, -2)
+    def test_invalid_concat_args(self, concat_idx):
+        with tf.variable_scope('mlp_concat_test'):
+            _ = mlp(
+                input_var=self._obs_input,
+                output_dim=self._output_shape,
+                hidden_sizes=(64, 32),
+                concat_layer=concat_idx,
+                hidden_nonlinearity=self.hidden_nonlinearity,
+                name='mlp_no_input2')
+
+        obs_input_size = self._obs_input.shape[1].value
+
+        # concat_layer argument should be silently ignored.
+        expected_units = [obs_input_size, 64, 32]
+
+        actual_units = []
+        with tf.variable_scope('mlp_concat_test', reuse=True):
+            h1_w = tf.get_variable('mlp_no_input2/hidden_0/kernel')
+            h2_w = tf.get_variable('mlp_no_input2/hidden_1/kernel')
+            out_w = tf.get_variable('mlp_no_input2/output/kernel')
+
+            actual_units.append(h1_w.shape[0].value)
+            actual_units.append(h2_w.shape[0].value)
+            actual_units.append(out_w.shape[0].value)
+
+        assert np.array_equal(expected_units, actual_units)
+
+    @params(2, 1, 0, -1, -2)
+    def test_no_hidden(self, concat_idx):
+        with tf.variable_scope('mlp_concat_test'):
+            _ = mlp(
+                input_var=self._obs_input,
+                output_dim=self._output_shape,
+                hidden_sizes=(),
+                input_var2=self._act_input,
+                concat_layer=concat_idx,
+                hidden_nonlinearity=self.hidden_nonlinearity,
+                name='mlp2')
+
+        obs_input_size = self._obs_input.shape[1].value
+        act_input_size = self._act_input.shape[1].value
+
+        # concat_layer argument should be reset to point to input_var.
+        expected_units = [obs_input_size]
+        expected_units[0] += act_input_size
+
+        actual_units = []
+        with tf.variable_scope('mlp_concat_test', reuse=True):
+            out_w = tf.get_variable('mlp2/output/kernel')
             actual_units.append(out_w.shape[0].value)
 
         assert np.array_equal(expected_units, actual_units)

@@ -23,7 +23,8 @@ class ContinuousMLPQFunctionWithModel(QFunction2):
             action inputs with the network. The indexing works like standard
             python list indexing. Index of 0 refers to the input layer
             (observation input) while an index of -1 points to the last
-            hidden layer.
+            hidden layer. Default parameter points to second layer from the
+            end.
         hidden_nonlinearity (callable): Activation function for intermediate
             dense layer(s). It should return a tf.Tensor. Set it to
             None to maintain a linear activation.

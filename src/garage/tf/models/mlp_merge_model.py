@@ -1,18 +1,21 @@
 """
-MLP Model.
+MLP Merge Model.
 
 A model composed only of a multi-layer perceptron (MLP), which maps
-real-valued inputs to real-valued outputs.
+real-valued inputs to real-valued outputs. This model is called an
+MLP Merge Model because it takes two inputs and concatenates the second
+input with the layer at a specified index. It can be merged with any layer
+from the input layer to the last hidden layer.
 """
 import tensorflow as tf
 
-from garage.tf.core.mlp import mlp_concat
+from garage.tf.core.mlp import mlp
 from garage.tf.models.base import Model
 
 
 class MLPMergeModel(Model):
     """
-    MLP Model.
+    MLP Merge Model.
 
     Args:
         output_dim (int): Dimension of the network output.
@@ -24,7 +27,7 @@ class MLPMergeModel(Model):
             input_var2 with the network. The indexing works like standard
             python list indexing. Index of 0 refers to the input layer
             (input_var1) while an index of -1 points to the last hidden
-            layer.
+            layer. Default parameter points to second layer from the end.
         hidden_nonlinearity (callable): Activation function for intermediate
             dense layer(s). It should return a tf.Tensor. Set it to
             None to maintain a linear activation.
@@ -75,11 +78,11 @@ class MLPMergeModel(Model):
         return ['input_var1', 'input_var2']
 
     def _build(self, state_input, action_input, name=None):
-        return mlp_concat(
-            input_var1=state_input,
-            input_var2=action_input,
+        return mlp(
+            input_var=state_input,
             output_dim=self._output_dim,
             hidden_sizes=self._hidden_sizes,
+            input_var2=action_input,
             concat_layer=self._concat_layer,
             name='mlp_concat',
             hidden_nonlinearity=self._hidden_nonlinearity,
