@@ -114,15 +114,6 @@ class GarageEnv(gym.Wrapper, Serializable):
                     (isinstance(self.env.viewer, Viewer)
                      or isinstance(self.env.viewer, SimpleImageViewer))):
                     self.env.viewer.close()
-                else:
-                    env_itr = self.env
-                    while hasattr(env_itr, 'env'):
-                        env_itr = env_itr.env
-                        if (hasattr(env_itr, 'viewer') and
-                            (isinstance(env_itr.viewer, Viewer) or isinstance(
-                                env_itr.viewer, SimpleImageViewer))):
-                            env_itr.viewer.close()
-                            break
 
     def reset(self, **kwargs):
         """
