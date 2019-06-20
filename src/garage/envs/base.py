@@ -100,14 +100,6 @@ class GarageEnv(gym.Wrapper, Serializable):
                 if (hasattr(self.env, 'viewer')
                         and isinstance(self.env.viewer, MjViewer)):
                     glfw.destroy_window(self.env.viewer.window)
-                else:
-                    env_itr = self.env
-                    while hasattr(env_itr, 'env'):
-                        env_itr = env_itr.env
-                        if (hasattr(env_itr, 'viewer')
-                                and isinstance(env_itr.viewer, MjViewer)):
-                            glfw.destroy_window(env_itr.viewer.window)
-                            break
             elif any(package in self.env.spec._entry_point
                      for package in KNOWN_GYM_NOT_CLOSE_VIEWER):
                 if (hasattr(self.env, 'viewer') and
