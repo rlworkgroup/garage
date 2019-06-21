@@ -56,6 +56,20 @@ class TestResume(TfGraphTestCase):
             assert args.start_epoch == 5, (
                 'Last experiment should end at 5th iterations')
 
-            runner.resume(n_epochs=10)
+            batch_size = runner.train_args.batch_size
+            n_epoch_cycles = runner.train_args.n_epoch_cycles
+
+            runner.resume(
+                n_epochs=10,
+                plot=False,
+                store_paths=True,
+                pause_for_plot=False)
+
+            self.assertEqual(runner.train_args.n_epochs, 10)
+            self.assertEqual(runner.train_args.batch_size, batch_size)
+            self.assertEqual(runner.train_args.n_epoch_cycles, n_epoch_cycles)
+            self.assertEqual(runner.train_args.plot, False)
+            self.assertEqual(runner.train_args.store_paths, True)
+            self.assertEqual(runner.train_args.pause_for_plot, False)
 
         shutil.rmtree(folder)

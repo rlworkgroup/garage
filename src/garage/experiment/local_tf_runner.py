@@ -152,7 +152,7 @@ class LocalRunner:
                     if v.name.split(':')[0] in uninited_set
                 ]))
 
-    def start_worker(self):
+    def _start_worker(self):
         """Start Plotter and Sampler workers."""
         self.sampler.start_worker()
         if self.plot:
@@ -160,7 +160,7 @@ class LocalRunner:
             self.plotter = Plotter(self.env, self.policy)
             self.plotter.start()
 
-    def shutdown_worker(self):
+    def _shutdown_worker(self):
         """Shutdown Plotter and Sampler workers."""
         self.sampler.shutdown_worker()
         if self.plot:
@@ -187,7 +187,8 @@ class LocalRunner:
 
         Args:
             itr(int): Index of iteration (epoch).
-            paths(dict): Batch of samples after preprocessed.
+            paths(dict): Batch of samples after preprocessed. If None,
+                no paths will be logged to the snapshot.
 
         """
         assert self.has_setup
@@ -279,8 +280,8 @@ class LocalRunner:
             pause_for_plot(bool): Pause for plot.
 
         """
-        logger.log('Time %.2f s' % (time.time() - self.start_time))
-        logger.log('EpochTime %.2f s' % (time.time() - self.itr_start_time))
+        logger.log('Time %.2f s' % (time.time() - self._start_time))
+        logger.log('EpochTime %.2f s' % (time.time() - self._itr_start_time))
         logger.log(tabular)
         if self.plot:
             self.plotter.update_plot(self.policy, self.algo.max_path_length)
@@ -310,7 +311,11 @@ class LocalRunner:
             The average return in last epoch cycle.
 
         """
-        return self._train(
+        assert self.has_setup, ('Use Runner.setup() to setup runner before '
+                                'training.')
+
+        # Save arguments for restore
+        self.train_args = SimpleNamespace(
             n_epochs=n_epochs,
             n_epoch_cycles=n_epoch_cycles,
             batch_size=batch_size,
@@ -318,6 +323,52 @@ class LocalRunner:
             store_paths=store_paths,
             pause_for_plot=pause_for_plot,
             start_epoch=0)
+
+        self.plot = plot
+
+        return self.algo.train(self, batch_size)
+
+    def step_epochs(self):
+        """Generator for training.
+
+        This function serves as a generator. It is used to separate
+        services such as snapshotting, sampler control from the actual
+        training loop. It is used inside train() in each algorithm.
+
+        The generator initializes two variables: `self.step_itr` and
+        `self.step_path`. To use the generator, these two have to be
+        updated manually in each epoch, as the example shows below.
+
+        Yields:
+            int: The next training epoch.
+
+        Examples:
+            for epoch in runner.step_epochs():
+                runner.step_path = runner.obtain_samples(...)
+                self.train_once(...)
+                runner.step_itr += 1
+
+        """
+        try:
+            self._start_worker()
+            self._start_time = time.time()
+            self.step_itr = (
+                self.train_args.start_epoch * self.train_args.n_epoch_cycles)
+            self.step_path = None
+
+            for epoch in range(self.train_args.start_epoch,
+                               self.train_args.n_epochs):
+                self._itr_start_time = time.time()
+                with logger.prefix('epoch #%d | ' % epoch):
+                    yield epoch
+                    save_path = (self.step_path
+                                 if self.train_args.store_paths else None)
+                    self.save(epoch, save_path)
+                    self.log_diagnostics(self.train_args.pause_for_plot)
+                    logger.dump_all(self.step_itr)
+                    tabular.clear()
+        finally:
+            self._shutdown_worker()
 
     def resume(self,
                n_epochs=None,
@@ -340,74 +391,16 @@ class LocalRunner:
         assert self.train_args is not None, (
             'You must call restore() before resume().')
 
-        return self._train(
-            n_epochs=n_epochs or self.train_args.n_epochs,
-            n_epoch_cycles=n_epoch_cycles or self.train_args.n_epoch_cycles,
-            batch_size=batch_size or self.train_args.batch_size,
-            plot=plot or self.train_args.plot,
-            store_paths=store_paths or self.train_args.store_paths,
-            pause_for_plot=pause_for_plot or self.train_args.pause_for_plot,
-            start_epoch=self.train_args.start_epoch)
+        self.train_args.n_epochs = n_epochs or self.train_args.n_epochs
+        self.train_args.batch_size = batch_size or self.train_args.batch_size
+        self.train_args.n_epoch_cycles = (n_epoch_cycles
+                                          or self.train_args.n_epoch_cycles)
 
-    def _train(self,
-               n_epochs,
-               n_epoch_cycles,
-               batch_size,
-               plot,
-               store_paths,
-               pause_for_plot,
-               start_epoch=0):
-        """Start actual training.
+        if plot is not None:
+            self.train_args.plot = plot
+        if store_paths is not None:
+            self.train_args.store_paths = store_paths
+        if pause_for_plot is not None:
+            self.train_args.pause_for_plot = pause_for_plot
 
-        Args:
-            n_epochs(int): Number of epochs.
-            n_epoch_cycles(int): Number of batches of samples in each epoch.
-                This is only useful for off-policy algorithm.
-                For on-policy algorithm this value should always be 1.
-            batch_size(int): Number of steps in batch.
-            plot(bool): Visualize policy by doing rollout after each epoch.
-            store_paths(bool): Save paths in snapshot.
-            pause_for_plot(bool): Pause for plot.
-            start_epoch: (internal) The starting epoch.
-                Use for experiment resuming.
-
-        Returns:
-            The average return in last epoch cycle.
-
-        """
-        assert self.has_setup, ('Use Runner.setup() to setup runner before '
-                                'training.')
-
-        # Save arguments for restore
-        self.train_args = SimpleNamespace(
-            n_epochs=n_epochs,
-            n_epoch_cycles=n_epoch_cycles,
-            batch_size=batch_size,
-            plot=plot,
-            store_paths=store_paths,
-            pause_for_plot=pause_for_plot,
-            start_epoch=start_epoch)
-
-        self.plot = plot
-        self.start_worker()
-
-        self.start_time = time.time()
-        itr = start_epoch * n_epoch_cycles
-
-        last_return = None
-        for epoch in range(start_epoch, n_epochs):
-            self.itr_start_time = time.time()
-            paths = None
-            with logger.prefix('epoch #%d | ' % epoch):
-                for cycle in range(n_epoch_cycles):
-                    paths = self.obtain_samples(itr, batch_size)
-                    last_return = self.algo.train_once(itr, paths)
-                    itr += 1
-                self.save(epoch, paths if store_paths else None)
-                self.log_diagnostics(pause_for_plot)
-                logger.dump_all(itr)
-                tabular.clear()
-
-        self.shutdown_worker()
-
-        return last_return
+        return self.algo.train(self, batch_size)
