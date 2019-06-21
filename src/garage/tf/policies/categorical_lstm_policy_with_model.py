@@ -1,5 +1,5 @@
 """CategoricalLSTMPolicy with model."""
-from akro.tf import Discrete
+import akro
 import numpy as np
 import tensorflow as tf
 
@@ -15,7 +15,7 @@ class CategoricalLSTMPolicyWithModel(StochasticPolicy2):
     A policy that contains a LSTM to make prediction based on
     a categorical distribution.
 
-    It only works with akro.tf.Discrete action space.
+    It only works with akro.Discrete action space.
 
     Args:
         env_spec (garage.envs.env_spec.EnvSpec): Environment specification.
@@ -81,9 +81,9 @@ class CategoricalLSTMPolicyWithModel(StochasticPolicy2):
                  state_include_action=True,
                  forget_bias=True,
                  layer_normalization=False):
-        if not isinstance(env_spec.action_space, Discrete):
+        if not isinstance(env_spec.action_space, akro.Discrete):
             raise ValueError('CategoricalLSTMPolicy only works'
-                             'with akro.tf.Discrete action space.')
+                             'with akro.Discrete action space.')
 
         super().__init__(name, env_spec)
         self._obs_dim = env_spec.observation_space.flat_dim

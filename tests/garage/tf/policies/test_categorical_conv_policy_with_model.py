@@ -34,7 +34,7 @@ class TestCategoricalConvPolicyWithModel(TfGraphTestCase):
             ((2, 2), 2, (32, 64), (3, 3), (1, 1), 'SAME', (4, 4)),
             ((2, 2), 2, (32, 64), (3, 3), (2, 2), 'SAME', (4, 4)),
         ])
-    @mock.patch('numpy.random.rand')
+    @mock.patch('numpy.random.choice')
     def test_get_action(self, mock_rand, obs_dim, action_dim, filter_dims,
                         filter_sizes, strides, padding, hidden_sizes):
         mock_rand.return_value = 0
@@ -169,7 +169,7 @@ class TestCategoricalConvPolicyWithModel(TfGraphTestCase):
         ((1, 1), 1),
         ((2, 2), 2),
     ])
-    @mock.patch('numpy.random.rand')
+    @mock.patch('numpy.random.choice')
     def test_is_pickleable(self, mock_rand, obs_dim, action_dim):
         mock_rand.return_value = 0
         env = TfEnv(DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))

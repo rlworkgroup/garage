@@ -1,18 +1,11 @@
 """Wrapper class that converts gym.Env into GarageEnv."""
 import collections
 
-from akro import Box
-from akro import Dict
-from akro import Discrete
-from akro import Tuple
+import akro
 import glfw
 import gym
 from gym.envs.classic_control.rendering import SimpleImageViewer
 from gym.envs.classic_control.rendering import Viewer
-from gym.spaces import Box as GymBox
-from gym.spaces import Dict as GymDict
-from gym.spaces import Discrete as GymDiscrete
-from gym.spaces import Tuple as GymTuple
 
 from garage.core import Serializable
 from garage.envs.env_spec import EnvSpec
@@ -55,9 +48,8 @@ class GarageEnv(gym.Wrapper, Serializable):
         else:
             super().__init__(env)
 
-        self.action_space = self._to_akro_space(self.env.action_space)
-        self.observation_space = self._to_akro_space(
-            self.env.observation_space)
+        self.action_space = akro.from_gym(self.env.action_space)
+        self.observation_space = akro.from_gym(self.env.observation_space)
         if self.spec:
             self.spec.action_space = self.action_space
             self.spec.observation_space = self.observation_space
@@ -124,27 +116,6 @@ class GarageEnv(gym.Wrapper, Serializable):
         Calls step on wrapped env.
         """
         return self.env.step(action)
-
-    def _to_akro_space(self, space):
-        """
-        Converts a gym.space into an akro.space.
-
-        Args:
-            space (gym.spaces)
-
-        Returns:
-            space (akro.spaces)
-        """
-        if isinstance(space, GymBox):
-            return Box(low=space.low, high=space.high, dtype=space.dtype)
-        elif isinstance(space, GymDict):
-            return Dict(space.spaces)
-        elif isinstance(space, GymDiscrete):
-            return Discrete(space.n)
-        elif isinstance(space, GymTuple):
-            return Tuple(list(map(self._to_akro_space, space.spaces)))
-        else:
-            raise NotImplementedError
 
 
 def Step(observation, reward, done, **kwargs):  # noqa: N802

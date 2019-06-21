@@ -1,4 +1,4 @@
-from akro.tf import Box
+import akro
 import tensorflow as tf
 
 from garage.core import Serializable
@@ -19,7 +19,7 @@ class DeterministicMLPPolicy(Policy, LayersPowered, Serializable):
                  output_nonlinearity=tf.nn.tanh,
                  prob_network=None,
                  bn=False):
-        assert isinstance(env_spec.action_space, Box)
+        assert isinstance(env_spec.action_space, akro.Box)
 
         Serializable.quick_init(self, locals())
 

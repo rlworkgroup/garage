@@ -1,5 +1,5 @@
 """GaussianLSTMPolicy with GaussianLSTMModel."""
-import akro.tf
+import akro
 import numpy as np
 import tensorflow as tf
 
@@ -86,9 +86,9 @@ class GaussianLSTMPolicyWithModel(StochasticPolicy2):
                  init_std=1.0,
                  layer_normalization=False,
                  state_include_action=True):
-        if not isinstance(env_spec.action_space, akro.tf.Box):
+        if not isinstance(env_spec.action_space, akro.Box):
             raise ValueError('GaussianLSTMPolicy only works with '
-                             'akro.tf.Box action space, but not {}'.format(
+                             'akro.Box action space, but not {}'.format(
                                  env_spec.action_space))
         super().__init__(name, env_spec)
         self._obs_dim = env_spec.observation_space.flat_dim

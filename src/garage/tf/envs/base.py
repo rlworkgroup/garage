@@ -1,12 +1,5 @@
-from akro.tf import Box
-from akro.tf import Dict
-from akro.tf import Discrete
-from akro.tf import Tuple
+import akro
 from cached_property import cached_property
-from gym.spaces import Box as GymBox
-from gym.spaces import Dict as GymDict
-from gym.spaces import Discrete as GymDiscrete
-from gym.spaces import Tuple as GymTuple
 
 from garage.envs import GarageEnv
 from garage.misc.overrides import overrides
@@ -20,30 +13,16 @@ class TfEnv(GarageEnv):
         env (gym.Env): the env that will be wrapped
     """
 
+    def __init__(self, env=None, env_name=''):
+        super().__init__(env, env_name)
+        self.action_space = akro.from_gym(self.env.action_space)
+        self.observation_space = akro.from_gym(self.env.observation_space)
+
     @classmethod
     def wrap(cls, env_cls, **extra_kwargs):
         # Use a class wrapper rather than a lambda method for smoother
         # serialization
         return WrappedCls(cls, env_cls, extra_kwargs)
-
-    @overrides
-    def _to_akro_space(self, space):
-        """
-        Converts a gym.space to a akro.tf space.
-
-        Returns:
-            space (akro.tf space)
-        """
-        if isinstance(space, GymBox):
-            return Box(low=space.low, high=space.high, dtype=space.dtype)
-        elif isinstance(space, GymDict):
-            return Dict(space.spaces)
-        elif isinstance(space, GymDiscrete):
-            return Discrete(space.n)
-        elif isinstance(space, GymTuple):
-            return Tuple(list(map(self._to_akro_space, space.spaces)))
-        else:
-            raise NotImplementedError
 
     @cached_property
     @overrides

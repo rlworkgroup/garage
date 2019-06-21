@@ -68,10 +68,11 @@ the base environment and add some imports:
 
 .. code-block:: python
 
+    import akro
+    import numpy as np
+
     from garage.envs.base import Env
     from garage.envs.base import Step
-    from akro import Box
-    import numpy as np
 
 
     class PointEnv(Env):
@@ -90,11 +91,11 @@ property methods:
 
         @property
         def observation_space(self):
-            return Box(low=-np.inf, high=np.inf, shape=(2,))
+            return akro.Box(low=-np.inf, high=np.inf, shape=(2,))
 
         @property
         def action_space(self):
-            return Box(low=-0.1, high=0.1, shape=(2,))
+            return akro.Box(low=-0.1, high=0.1, shape=(2,))
 
 The :code:`Box` space means that the observations and actions are 2D vectors
 with continuous values. The observations can have arbitrary values, while the

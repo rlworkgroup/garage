@@ -1,4 +1,4 @@
-from akro.tf import Discrete
+import akro
 import tensorflow as tf
 
 from garage.core import Serializable
@@ -36,7 +36,7 @@ class CategoricalMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
                 policy. If None, a MLP with the network parameters will be
                 created. If not None, other network params are ignored.
         """
-        assert isinstance(env_spec.action_space, Discrete)
+        assert isinstance(env_spec.action_space, akro.Discrete)
 
         Serializable.quick_init(self, locals())
 

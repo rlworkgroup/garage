@@ -1,5 +1,5 @@
 """GaussianMLPPolicy with GaussianMLPModel."""
-from akro.tf import Box
+import akro
 import tensorflow as tf
 
 from garage.tf.models import GaussianMLPModel
@@ -85,7 +85,7 @@ class GaussianMLPPolicyWithModel(StochasticPolicy2):
                  std_output_nonlinearity=None,
                  std_parameterization='exp',
                  layer_normalization=False):
-        assert isinstance(env_spec.action_space, Box)
+        assert isinstance(env_spec.action_space, akro.Box)
         super().__init__(name, env_spec)
         self.obs_dim = env_spec.observation_space.flat_dim
         self.action_dim = env_spec.action_space.flat_dim

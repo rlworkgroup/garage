@@ -1,4 +1,4 @@
-from akro.tf import Box
+import akro
 import numpy as np
 import tensorflow as tf
 
@@ -38,7 +38,7 @@ class GaussianLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
         :param hidden_nonlinearity: nonlinearity used for each hidden layer
         :return:
         """
-        assert isinstance(env_spec.action_space, Box)
+        assert isinstance(env_spec.action_space, akro.Box)
 
         self._mean_network_name = 'mean_network'
         self._std_network_name = 'std_network'
