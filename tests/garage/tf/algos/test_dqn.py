@@ -6,6 +6,7 @@ import pickle
 
 import gym
 import numpy as np
+import pytest
 import tensorflow as tf
 
 from garage.experiment import LocalRunner
@@ -19,6 +20,7 @@ from tests.fixtures import TfGraphTestCase
 
 
 class TestDQN(TfGraphTestCase):
+    @pytest.mark.large
     def test_dqn_cartpole(self):
         """Test DQN with CartPole environment."""
         with LocalRunner(self.sess) as runner:
@@ -63,8 +65,7 @@ class TestDQN(TfGraphTestCase):
 
             env.close()
 
-    test_dqn_cartpole.large = True
-
+    @pytest.mark.large
     def test_dqn_cartpole_double_q(self):
         """Test DQN with CartPole environment."""
         with LocalRunner(self.sess) as runner:
@@ -109,8 +110,7 @@ class TestDQN(TfGraphTestCase):
 
             env.close()
 
-    test_dqn_cartpole_double_q.large = True
-
+    @pytest.mark.large
     def test_dqn_cartpole_grad_clip(self):
         """Test DQN with CartPole environment."""
         with LocalRunner(self.sess) as runner:
@@ -155,8 +155,6 @@ class TestDQN(TfGraphTestCase):
             assert last_avg_ret > 15
 
             env.close()
-
-    test_dqn_cartpole_grad_clip.large = True
 
     def test_dqn_cartpole_pickle(self):
         """Test DQN with CartPole environment."""

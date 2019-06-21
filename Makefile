@@ -12,7 +12,7 @@ DATA_PATH ?= $(shell pwd)/data
 MJKEY_PATH ?= ~/.mujoco/mjkey.txt
 
 test:  ## Run the CI test suite
-test: RUN_CMD = nose2 -c setup.cfg -v --with-id -E 'not huge and not flaky'
+test: RUN_CMD = pytest -v -m 'not huge and not flaky'
 test: run-headless
 	@echo "Running test suite..."
 
@@ -24,18 +24,18 @@ ci-precommit-check:
 	scripts/travisci/check_precommit.sh
 
 ci-job-normal: ci-precommit-check docs
-	coverage run -m nose2 -c setup.cfg -v --with-id -E \
+	coverage run -m pytest -v -m \
 	    'not nightly and not huge and not flaky and not large'
 	coverage xml
 	bash <(curl -s https://codecov.io/bash)
 
 ci-job-large:
-	coverage run -m nose2 -c setup.cfg -v --with-id -A large
+	coverage run -m pytest -v -m large
 	coverage xml
 	bash <(curl -s https://codecov.io/bash)
 
 ci-job-nightly:
-	nose2 -c setup.cfg -A nightly
+	pytest -v -m nightly
 
 ci-deploy-docker:
 	echo "${DOCKER_API_KEY}" | docker login -u "${DOCKER_USERNAME}" \

@@ -1,8 +1,8 @@
 import pickle
 from unittest import mock
 
-from nose2.tools.params import params
 import numpy as np
+import pytest
 import tensorflow as tf
 
 from garage.tf.models import GaussianLSTMModel
@@ -11,8 +11,8 @@ from tests.helpers import recurrent_step_lstm
 
 
 class TestGaussianLSTMModel(TfGraphTestCase):
-    def setUp(self):
-        super().setUp()
+    def setup_method(self):
+        super().setup_method()
         self.batch_size = 1
         self.time_step = 2
         self.feature_shape = 2
@@ -28,14 +28,15 @@ class TestGaussianLSTMModel(TfGraphTestCase):
             tf.float32, shape=(None, self.feature_shape), name='step_input')
 
     # yapf: disable
-    @params(
+    @pytest.mark.parametrize('output_dim, hidden_dim', [
         (1, 1),
         (2, 2),
-        (3, 3))
+        (3, 3)
+    ])
     # yapf: enable
     @mock.patch('tensorflow.random.normal')
-    def test_std_share_network_output_values(self, output_dim, hidden_dim,
-                                             mock_normal):
+    def test_std_share_network_output_values(self, mock_normal, output_dim,
+                                             hidden_dim):
         mock_normal.return_value = 0.5
         model = GaussianLSTMModel(
             output_dim=output_dim,
@@ -103,10 +104,11 @@ class TestGaussianLSTMModel(TfGraphTestCase):
             assert np.allclose(action, expected_action)
 
     # yapf: disable
-    @params(
+    @pytest.mark.parametrize('output_dim, hidden_dim', [
         (1, 1),
         (2, 2),
-        (3, 3))
+        (3, 3)
+    ])
     # yapf: enable
     def test_std_share_network_shapes(self, output_dim, hidden_dim):
         model = GaussianLSTMModel(
@@ -142,10 +144,15 @@ class TestGaussianLSTMModel(TfGraphTestCase):
         assert std_share_output_weights.shape[1] == output_dim * 2
         assert std_share_output_bias.shape == output_dim * 2
 
-    @params((1, 1, 1), (1, 1, 2), (1, 2, 1), (1, 2, 2), (3, 3, 1), (3, 3, 2))
+    @pytest.mark.parametrize('output_dim, hidden_dim, init_std', [(1, 1, 1),
+                                                                  (1, 1, 2),
+                                                                  (1, 2, 1),
+                                                                  (1, 2, 2),
+                                                                  (3, 3, 1),
+                                                                  (3, 3, 2)])
     @mock.patch('tensorflow.random.normal')
     def test_without_std_share_network_output_values(
-            self, output_dim, hidden_dim, init_std, mock_normal):
+            self, mock_normal, output_dim, hidden_dim, init_std):
         mock_normal.return_value = 0.5
         model = GaussianLSTMModel(
             output_dim=output_dim,
@@ -216,10 +223,11 @@ class TestGaussianLSTMModel(TfGraphTestCase):
             assert np.allclose(action, expected_action)
 
     # yapf: disable
-    @params(
+    @pytest.mark.parametrize('output_dim, hidden_dim', [
         (1, 1),
         (2, 2),
-        (3, 3))
+        (3, 3)
+    ])
     # yapf: enable
     def test_without_std_share_network_shapes(self, output_dim, hidden_dim):
         model = GaussianLSTMModel(
@@ -259,14 +267,15 @@ class TestGaussianLSTMModel(TfGraphTestCase):
         assert log_std_param.shape == output_dim
 
     # yapf: disable
-    @params(
+    @pytest.mark.parametrize('output_dim, hidden_dim', [
         (1, 1),
         (2, 2),
-        (3, 3))
+        (3, 3)
+    ])
     # yapf: enable
     @mock.patch('tensorflow.random.normal')
-    def test_std_share_network_is_pickleable(self, output_dim, hidden_dim,
-                                             mock_normal):
+    def test_std_share_network_is_pickleable(self, mock_normal, output_dim,
+                                             hidden_dim):
         mock_normal.return_value = 0.5
         model = GaussianLSTMModel(
             output_dim=output_dim,
@@ -348,14 +357,15 @@ class TestGaussianLSTMModel(TfGraphTestCase):
             assert np.array_equal(output1, output2)
 
     # yapf: disable
-    @params(
+    @pytest.mark.parametrize('output_dim, hidden_dim', [
         (1, 1),
         (2, 2),
-        (3, 3))
+        (3, 3)
+    ])
     # yapf: enable
     @mock.patch('tensorflow.random.normal')
-    def test_without_std_share_network_is_pickleable(self, output_dim,
-                                                     hidden_dim, mock_normal):
+    def test_without_std_share_network_is_pickleable(self, mock_normal,
+                                                     output_dim, hidden_dim):
         mock_normal.return_value = 0.5
         model = GaussianLSTMModel(
             output_dim=output_dim,

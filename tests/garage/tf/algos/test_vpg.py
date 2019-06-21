@@ -1,3 +1,5 @@
+import pytest
+
 from garage.experiment import LocalRunner
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import VPG
@@ -7,6 +9,7 @@ from tests.fixtures import TfGraphTestCase
 
 
 class TestVPG(TfGraphTestCase):
+    @pytest.mark.large
     def test_vpg_cartpole(self):
         """Test VPG with CartPole-v1 environment."""
         with LocalRunner(self.sess) as runner:
@@ -32,5 +35,3 @@ class TestVPG(TfGraphTestCase):
             assert last_avg_ret > 90
 
             env.close()
-
-    test_vpg_cartpole.large = True

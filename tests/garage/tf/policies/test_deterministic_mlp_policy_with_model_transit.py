@@ -24,30 +24,32 @@ from tests.fixtures.envs.dummy import DummyBoxEnv
 
 
 class TestDeterministicMLPPolicyWithModelTransit(TfGraphTestCase):
-    @mock.patch('tensorflow.random.normal')
-    def setUp(self, mock_rand):
-        mock_rand.return_value = 0.5
-        super().setUp()
-        self.box_env = TfEnv(DummyBoxEnv())
-        self.policy1 = DeterministicMLPPolicy(
-            env_spec=self.box_env, hidden_sizes=(32, 32), name='P1')
-        self.policy2 = DeterministicMLPPolicy(
-            env_spec=self.box_env, hidden_sizes=(64, 64), name='P2')
-        self.policy3 = DeterministicMLPPolicyWithModel(
-            env_spec=self.box_env, hidden_sizes=(32, 32), name='P3')
-        self.policy4 = DeterministicMLPPolicyWithModel(
-            env_spec=self.box_env, hidden_sizes=(64, 64), name='P4')
+    def setup_method(self):
+        with mock.patch('tensorflow.random.normal') as mock_rand:
+            mock_rand.return_value = 0.5
+            super().setup_method()
+            self.box_env = TfEnv(DummyBoxEnv())
+            self.policy1 = DeterministicMLPPolicy(
+                env_spec=self.box_env, hidden_sizes=(32, 32), name='P1')
+            self.policy2 = DeterministicMLPPolicy(
+                env_spec=self.box_env, hidden_sizes=(64, 64), name='P2')
+            self.policy3 = DeterministicMLPPolicyWithModel(
+                env_spec=self.box_env, hidden_sizes=(32, 32), name='P3')
+            self.policy4 = DeterministicMLPPolicyWithModel(
+                env_spec=self.box_env, hidden_sizes=(64, 64), name='P4')
 
-        self.sess.run(tf.global_variables_initializer())
-        for a, b in zip(self.policy3.get_params(), self.policy1.get_params()):
-            self.sess.run(a.assign(b))
-        for a, b in zip(self.policy4.get_params(), self.policy2.get_params()):
-            self.sess.run(a.assign(b))
+            self.sess.run(tf.global_variables_initializer())
+            for a, b in zip(self.policy3.get_params(),
+                            self.policy1.get_params()):
+                self.sess.run(a.assign(b))
+            for a, b in zip(self.policy4.get_params(),
+                            self.policy2.get_params()):
+                self.sess.run(a.assign(b))
 
-        self.obs = [self.box_env.reset()]
+            self.obs = [self.box_env.reset()]
 
-        assert self.policy1.vectorized == self.policy2.vectorized
-        assert self.policy3.vectorized == self.policy4.vectorized
+            assert self.policy1.vectorized == self.policy2.vectorized
+            assert self.policy3.vectorized == self.policy4.vectorized
 
     @mock.patch('numpy.random.normal')
     def test_get_action(self, mock_rand):

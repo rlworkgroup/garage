@@ -15,6 +15,7 @@ log_likelihood_sym, entropy_sym and likelihood_ratio_sym.
 from unittest import mock
 
 import numpy as np
+import pytest
 import tensorflow as tf
 
 from garage.tf.envs import TfEnv
@@ -26,40 +27,47 @@ from tests.fixtures.envs.dummy import DummyBoxEnv
 
 
 class TestGaussianMLPPolicyWithModelTransit(TfGraphTestCase):
-    @mock.patch('tensorflow.random.normal')
-    def setUp(self, mock_rand):
-        mock_rand.return_value = 0.5
-        super().setUp()
-        self.box_env = TfEnv(DummyBoxEnv())
-        self.policy1 = GaussianMLPPolicy(
-            env_spec=self.box_env, init_std=1.0, name='P1')
-        self.policy2 = GaussianMLPPolicy(
-            env_spec=self.box_env, init_std=1.2, name='P2')
-        self.policy3 = GaussianMLPPolicyWithModel(
-            env_spec=self.box_env, init_std=1.0, name='P3')
-        self.policy4 = GaussianMLPPolicyWithModel(
-            env_spec=self.box_env, init_std=1.2, name='P4')
+    def setup_method(self):
+        with mock.patch('tensorflow.random.normal') as mock_rand:
+            mock_rand.return_value = 0.5
+            super().setup_method()
+            self.box_env = TfEnv(DummyBoxEnv())
+            self.policy1 = GaussianMLPPolicy(
+                env_spec=self.box_env, init_std=1.0, name='P1')
+            self.policy2 = GaussianMLPPolicy(
+                env_spec=self.box_env, init_std=1.2, name='P2')
+            self.policy3 = GaussianMLPPolicyWithModel(
+                env_spec=self.box_env, init_std=1.0, name='P3')
+            self.policy4 = GaussianMLPPolicyWithModel(
+                env_spec=self.box_env, init_std=1.2, name='P4')
 
-        self.sess.run(tf.global_variables_initializer())
+            self.sess.run(tf.global_variables_initializer())
 
-        for a, b in zip(self.policy3.get_params(), self.policy1.get_params()):
-            self.sess.run(tf.assign(b, a))
-        for a, b in zip(self.policy4.get_params(), self.policy2.get_params()):
-            self.sess.run(tf.assign(b, a))
+            for a, b in zip(self.policy3.get_params(),
+                            self.policy1.get_params()):
+                self.sess.run(tf.assign(b, a))
+            for a, b in zip(self.policy4.get_params(),
+                            self.policy2.get_params()):
+                self.sess.run(tf.assign(b, a))
 
-        self.obs = [self.box_env.reset()]
-        self.obs_ph = tf.placeholder(
-            tf.float32, shape=(None, self.box_env.observation_space.flat_dim))
-        self.action_ph = tf.placeholder(
-            tf.float32, shape=(None, self.box_env.action_space.flat_dim))
+            self.obs = [self.box_env.reset()]
+            self.obs_ph = tf.placeholder(
+                tf.float32,
+                shape=(None, self.box_env.observation_space.flat_dim))
+            self.action_ph = tf.placeholder(
+                tf.float32, shape=(None, self.box_env.action_space.flat_dim))
 
-        self.dist1_sym = self.policy1.dist_info_sym(self.obs_ph, name='p1_sym')
-        self.dist2_sym = self.policy2.dist_info_sym(self.obs_ph, name='p2_sym')
-        self.dist3_sym = self.policy3.dist_info_sym(self.obs_ph, name='p3_sym')
-        self.dist4_sym = self.policy4.dist_info_sym(self.obs_ph, name='p4_sym')
+            self.dist1_sym = self.policy1.dist_info_sym(
+                self.obs_ph, name='p1_sym')
+            self.dist2_sym = self.policy2.dist_info_sym(
+                self.obs_ph, name='p2_sym')
+            self.dist3_sym = self.policy3.dist_info_sym(
+                self.obs_ph, name='p3_sym')
+            self.dist4_sym = self.policy4.dist_info_sym(
+                self.obs_ph, name='p4_sym')
 
-        assert self.policy1.vectorized == self.policy2.vectorized
-        assert self.policy3.vectorized == self.policy4.vectorized
+            assert self.policy1.vectorized == self.policy2.vectorized
+            assert self.policy3.vectorized == self.policy4.vectorized
 
     def test_dist_info_sym_output(self):
         dist1 = self.sess.run(
@@ -116,7 +124,7 @@ class TestGaussianMLPPolicyWithModelTransit(TfGraphTestCase):
         kl2 = kl_func(self.obs, self.obs)
 
         assert np.array_equal(kl1, kl2)
-        self.assertAlmostEqual(kl1, kl2)
+        assert kl1 == pytest.approx(kl2)
 
     def test_log_likehihood_sym(self):
         log_prob_sym1 = self.policy1.distribution.log_likelihood_sym(

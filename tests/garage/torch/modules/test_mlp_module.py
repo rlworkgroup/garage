@@ -1,17 +1,23 @@
 import pickle
-import unittest
 
-from nose2.tools.params import params
 import numpy as np
+import pytest
 import torch
 import torch.nn as nn
 
 from garage.torch.modules import MLPModule
 
 
-class TestMLPModel(unittest.TestCase):
-    @params((5, 1, (1, )), (5, 1, (2, )), (5, 2, (3, )), (5, 2, (1, 1)),
-            (5, 3, (2, 2)))
+class TestMLPModel:
+    # yapf: disable
+    @pytest.mark.parametrize('input_dim, output_dim, hidden_sizes', [
+        (5, 1, (1, )),
+        (5, 1, (2, )),
+        (5, 2, (3, )),
+        (5, 2, (1, 1)),
+        (5, 3, (2, 2))
+    ])
+    # yapf: enable
     def test_output_values(self, input_dim, output_dim, hidden_sizes):
         input_val = torch.ones([1, 5], dtype=torch.float32)
         module = MLPModule(
@@ -27,10 +33,14 @@ class TestMLPModel(unittest.TestCase):
                                      fill_value=5 * np.prod(hidden_sizes),
                                      dtype=torch.float32)
 
-        self.assertEqual(torch.all(torch.eq(output, expected_output)), True)
+        assert torch.all(torch.eq(output, expected_output))
 
-    @params((5, 1, (1, )), (5, 1, (2, )), (5, 2, (3, )), (5, 2, (1, 1)),
-            (5, 3, (2, 2)))
+    # yapf: disable
+    @pytest.mark.parametrize('input_dim, output_dim, hidden_sizes', [
+        (5, 1, (1, )), (5, 1, (2, )), (5, 2, (3, )), (5, 2, (1, 1)),
+        (5, 3, (2, 2))
+    ])
+    # yapf: enable
     def test_is_pickleable(self, input_dim, output_dim, hidden_sizes):
         input_val = torch.ones([1, 5], dtype=torch.float32)
         module = MLPModule(

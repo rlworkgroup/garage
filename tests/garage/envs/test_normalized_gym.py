@@ -1,13 +1,11 @@
-import unittest
-
 import gym
 
 from garage.envs import normalize
 from garage.tf.envs import TfEnv
 
 
-class TestNormalizedGym(unittest.TestCase):
-    def setUp(self):
+class TestNormalizedGym:
+    def setup_method(self):
         self.env = TfEnv(
             normalize(
                 gym.make('Pendulum-v0'),
@@ -15,7 +13,7 @@ class TestNormalizedGym(unittest.TestCase):
                 normalize_obs=True,
                 flatten_obs=True))
 
-    def tearDown(self):
+    def teardown_method(self):
         self.env.close()
 
     def test_does_not_modify_action(self):
@@ -23,7 +21,7 @@ class TestNormalizedGym(unittest.TestCase):
         a_copy = a
         self.env.reset()
         self.env.step(a)
-        self.assertEqual(a, a_copy)
+        assert a == a_copy
 
     def test_flatten(self):
         for _ in range(10):
@@ -32,8 +30,7 @@ class TestNormalizedGym(unittest.TestCase):
                 self.env.render()
                 action = self.env.action_space.sample()
                 next_obs, _, done, _ = self.env.step(action)
-                self.assertEqual(next_obs.shape,
-                                 self.env.observation_space.low.shape)
+                assert next_obs.shape == self.env.observation_space.low.shape
                 if done:
                     break
 
@@ -43,8 +40,7 @@ class TestNormalizedGym(unittest.TestCase):
             for _ in range(5):
                 action = self.env.action_space.sample()
                 next_obs, _, done, _ = self.env.step(action)
-                self.assertEqual(
-                    self.env.observation_space.flatten(next_obs).shape,
-                    self.env.observation_space.flat_dim)
+                assert self.env.observation_space.flatten(next_obs).shape == \
+                    self.env.observation_space.flat_dim
                 if done:
                     break

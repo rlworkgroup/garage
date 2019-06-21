@@ -43,8 +43,8 @@ class TestResume(TfGraphTestCase):
         snapshotter.snapshot_mode = 'last'
 
         policy_params = fixture_exp()
-        self.tearDown()
-        self.setUp()
+        self.teardown_method()
+        self.setup_method()
 
         with LocalRunner() as runner:
             args = runner.restore(folder)

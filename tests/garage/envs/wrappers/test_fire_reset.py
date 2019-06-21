@@ -1,12 +1,10 @@
-import unittest
-
 import numpy as np
 
 from garage.envs.wrappers import FireReset
 from tests.fixtures.envs.dummy import DummyDiscretePixelEnv
 
 
-class TestFireReset(unittest.TestCase):
+class TestFireReset:
     def test_fire_reset(self):
         env = DummyDiscretePixelEnv()
         env_wrap = FireReset(env)

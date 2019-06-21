@@ -1,32 +1,31 @@
-import unittest
-
 from gym.spaces import Box
 from gym.spaces import Discrete
 import numpy as np
+import pytest
 
 from garage.envs.wrappers import Resize
 from tests.fixtures.envs.dummy import DummyDiscrete2DEnv
 
 
-class TestResize(unittest.TestCase):
-    def setUp(self):
+class TestResize:
+    def setup_method(self):
         self.width = 16
         self.height = 16
         self.env = DummyDiscrete2DEnv()
         self.env_r = Resize(
             DummyDiscrete2DEnv(), width=self.width, height=self.height)
 
-    def tearDown(self):
+    def teardown_method(self):
         self.env.close()
         self.env_r.close()
 
     def test_resize_invalid_environment_type(self):
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             self.env.observation_space = Discrete(64)
             Resize(self.env, width=self.width, height=self.height)
 
     def test_resize_invalid_environment_shape(self):
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             self.env.observation_space = Box(
                 low=0, high=255, shape=(4, ), dtype=np.uint8)
             Resize(self.env, width=self.width, height=self.height)

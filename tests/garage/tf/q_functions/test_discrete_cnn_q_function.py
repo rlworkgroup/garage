@@ -1,8 +1,8 @@
 import pickle
 from unittest import mock
 
-from nose2.tools.params import params
 import numpy as np
+import pytest
 import tensorflow as tf
 
 from garage.tf.envs import TfEnv
@@ -15,15 +15,14 @@ from tests.fixtures.models import SimpleMLPModel
 
 
 class TestDiscreteCNNQFunction(TfGraphTestCase):
-    def setUp(self):
-        super().setUp()
+    def setup_method(self):
+        super().setup_method()
         self.env = TfEnv(DummyDiscretePixelEnv())
         self.obs = self.env.reset()
 
-    @params(
-        ((3, ), (5, ), (1, )),      # yapf: disable
-        ((3, ), (5, ), (2, )),      # yapf: disable
-        ((3, 3), (5, 5), (1, 1)))   # yapf: disable
+    @pytest.mark.parametrize('filter_dims, num_filters, strides',
+                             [((3, ), (5, ), (1, )), ((3, ), (5, ), (2, )),
+                              ((3, 3), (5, 5), (1, 1))])
     def test_get_action(self, filter_dims, num_filters, strides):
         with mock.patch(('garage.tf.q_functions.'
                          'discrete_cnn_q_function.CNNModel'),
@@ -47,10 +46,9 @@ class TestDiscreteCNNQFunction(TfGraphTestCase):
         for output in outputs:
             assert np.array_equal(output, expected_output)
 
-    @params(
-        ((3, ), (5, ), (1, )),      # yapf: disable
-        ((3, ), (5, ), (2, )),      # yapf: disable
-        ((3, 3), (5, 5), (1, 1)))   # yapf: disable
+    @pytest.mark.parametrize('filter_dims, num_filters, strides',
+                             [((3, ), (5, ), (1, )), ((3, ), (5, ), (2, )),
+                              ((3, 3), (5, 5), (1, 1))])
     def test_get_action_dueling(self, filter_dims, num_filters, strides):
         with mock.patch(('garage.tf.q_functions.'
                          'discrete_cnn_q_function.CNNModel'),
@@ -74,11 +72,12 @@ class TestDiscreteCNNQFunction(TfGraphTestCase):
         for output in outputs:
             assert np.array_equal(output, expected_output)
 
-    @params(
-        ((3, ), (5, ), (1, ), (1, 1), (1, 1)),     # yapf: disable
-        ((3, ), (5, ), (2, ), (2, 2), (2, 2)),     # yapf: disable
-        ((3, 3), (5, 5), (1, 1), (1, 1), (1, 1)),  # yapf: disable
-        ((3, 3), (5, 5), (1, 1), (2, 2), (2, 2)))  # yapf: disable
+    @pytest.mark.parametrize(
+        'filter_dims, num_filters, strides, pool_strides, pool_shapes',
+        [((3, ), (5, ), (1, ), (1, 1), (1, 1)),
+         ((3, ), (5, ), (2, ), (2, 2), (2, 2)),
+         ((3, 3), (5, 5), (1, 1), (1, 1), (1, 1)),
+         ((3, 3), (5, 5), (1, 1), (2, 2), (2, 2))])
     def test_get_action_max_pooling(self, filter_dims, num_filters, strides,
                                     pool_strides, pool_shapes):
         with mock.patch(('garage.tf.q_functions.'
@@ -106,10 +105,9 @@ class TestDiscreteCNNQFunction(TfGraphTestCase):
         for output in outputs:
             assert np.array_equal(output, expected_output)
 
-    @params(
-        ((3, ), (5, ), (1, )),      # yapf: disable
-        ((3, ), (5, ), (2, )),      # yapf: disable
-        ((3, 3), (5, 5), (1, 1)))   # yapf: disable
+    @pytest.mark.parametrize('filter_dims, num_filters, strides',
+                             [((3, ), (5, ), (1, )), ((3, ), (5, ), (2, )),
+                              ((3, 3), (5, 5), (1, 1))])
     def test_get_qval_sym(self, filter_dims, num_filters, strides):
         with mock.patch(('garage.tf.q_functions.'
                          'discrete_cnn_q_function.CNNModel'),
@@ -137,10 +135,9 @@ class TestDiscreteCNNQFunction(TfGraphTestCase):
         assert np.array_equal(output1, output2)
         assert np.array_equal(output2[0], expected_output)
 
-    @params(
-        ((3, ), (5, ), (1, )),      # yapf: disable
-        ((3, ), (5, ), (2, )),      # yapf: disable
-        ((3, 3), (5, 5), (1, 1)))   # yapf: disable
+    @pytest.mark.parametrize('filter_dims, num_filters, strides',
+                             [((3, ), (5, ), (1, )), ((3, ), (5, ), (2, )),
+                              ((3, 3), (5, 5), (1, 1))])
     def test_is_pickleable(self, filter_dims, num_filters, strides):
         with mock.patch(('garage.tf.q_functions.'
                          'discrete_cnn_q_function.CNNModel'),
@@ -170,10 +167,9 @@ class TestDiscreteCNNQFunction(TfGraphTestCase):
 
         assert np.array_equal(output1, output2)
 
-    @params(
-        ((3, ), (5, ), (1, )),      # yapf: disable
-        ((3, ), (5, ), (2, )),      # yapf: disable
-        ((3, 3), (5, 5), (1, 1)))   # yapf: disable
+    @pytest.mark.parametrize('filter_dims, num_filters, strides',
+                             [((3, ), (5, ), (1, )), ((3, ), (5, ), (2, )),
+                              ((3, 3), (5, 5), (1, 1))])
     def test_clone(self, filter_dims, num_filters, strides):
         with mock.patch(('garage.tf.q_functions.'
                          'discrete_cnn_q_function.CNNModel'),

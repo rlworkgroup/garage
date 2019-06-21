@@ -14,13 +14,13 @@ from tests.fixtures.envs.dummy import DummyBoxEnv, DummyDiscreteEnv
 
 
 class TestDiscretePolicies(TfGraphTestCase):
-    def setUp(self):
-        super().setUp()
+    def setup_method(self):
+        super().setup_method()
         self.env = TfEnv(DummyDiscreteEnv())
 
-    def tearDown(self):
+    def teardown_method(self):
         self.env.close()
-        super().tearDown()
+        super().teardown_method()
 
     def test_categorial_gru_policy(self):
         categorical_gru_policy = CategoricalGRUPolicy(
@@ -52,13 +52,13 @@ class TestDiscretePolicies(TfGraphTestCase):
 
 
 class TestContinuousPolicies(TfGraphTestCase):
-    def setUp(self):
-        super().setUp()
+    def setup_method(self):
+        super().setup_method()
         self.env = TfEnv(DummyBoxEnv())
 
-    def tearDown(self):
+    def teardown_method(self):
         self.env.close()
-        super().tearDown()
+        super().teardown_method()
 
     def test_continuous_mlp_policy(self):
         continuous_mlp_policy = ContinuousMLPPolicy(

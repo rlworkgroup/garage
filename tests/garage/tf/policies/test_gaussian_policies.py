@@ -1,5 +1,5 @@
 import gym
-from nose2 import tools
+import pytest
 
 from garage.envs import normalize
 from garage.experiment import LocalRunner
@@ -17,7 +17,7 @@ policies = [GaussianGRUPolicy, GaussianLSTMPolicy, GaussianMLPPolicy]
 
 
 class TestGaussianPolicies(TfGraphTestCase):
-    @tools.params(*policies)
+    @pytest.mark.parametrize('policy_cls', policies)
     def test_gaussian_policies(self, policy_cls):
         with LocalRunner(self.sess) as runner:
             env = TfEnv(normalize(gym.make('Pendulum-v0')))

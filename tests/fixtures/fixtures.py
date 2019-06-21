@@ -1,5 +1,4 @@
 import gc
-import unittest
 
 from dowel import logger
 import tensorflow as tf
@@ -8,12 +7,12 @@ from garage.experiment import deterministic, snapshotter
 from tests.fixtures.logger import NullOutput
 
 
-class TfTestCase(unittest.TestCase):
-    def setUp(self):
+class TfTestCase:
+    def setup_method(self):
         self.sess = tf.Session()
         self.sess.__enter__()
 
-    def tearDown(self):
+    def teardown_method(self):
         if tf.get_default_session() is self.sess:
             self.sess.__exit__(None, None, None)
         self.sess.close()
@@ -21,8 +20,8 @@ class TfTestCase(unittest.TestCase):
         gc.collect()
 
 
-class TfGraphTestCase(unittest.TestCase):
-    def setUp(self):
+class TfGraphTestCase():
+    def setup_method(self):
         self.graph = tf.Graph()
         self.sess = tf.Session(graph=self.graph)
         self.sess.__enter__()
@@ -33,7 +32,7 @@ class TfGraphTestCase(unittest.TestCase):
         from garage.sampler import singleton_pool
         singleton_pool.initialize(1)
 
-    def tearDown(self):
+    def teardown_method(self):
         logger.remove_all()
         if tf.get_default_session() is self.sess:
             self.sess.__exit__(None, None, None)

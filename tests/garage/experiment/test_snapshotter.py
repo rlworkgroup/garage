@@ -1,9 +1,8 @@
 from os import path as osp
 import pickle
 import tempfile
-import unittest
 
-from nose2 import tools
+import pytest
 
 from garage.experiment import Snapshotter
 
@@ -20,12 +19,12 @@ configurations = [('all', {
 }), ('none', {})]
 
 
-class TestSanpshotter(unittest.TestCase):
-    def setUp(self):
+class TestSanpshotter:
+    def setup_method(self):
         self.snapshot_dir = tempfile.TemporaryDirectory()
         self.snapshotter = Snapshotter()
 
-    def tearDown(self):
+    def teardown_method(self):
         self.snapshotter.reset()
         self.snapshot_dir.cleanup()
 
@@ -33,7 +32,7 @@ class TestSanpshotter(unittest.TestCase):
         self.snapshotter.snapshot_dir = self.snapshot_dir.name
         assert self.snapshotter.snapshot_dir == self.snapshot_dir.name
 
-    @tools.params(*configurations)
+    @pytest.mark.parametrize('mode, files', [*configurations])
     def test_snapshotter(self, mode, files):
         self.snapshotter.snapshot_dir = self.snapshot_dir.name
 
@@ -54,7 +53,7 @@ class TestSanpshotter(unittest.TestCase):
                 assert data == snapshot_data[num]
 
     def test_invalid_snapshot_mode(self):
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             self.snapshotter.snapshot_dir = self.snapshot_dir.name
             self.snapshotter.snapshot_mode = 'invalid'
             self.snapshotter.save_itr_params(2, {'testparam': 'invalid'})

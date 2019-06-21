@@ -9,7 +9,6 @@ import datetime
 import multiprocessing
 import os.path as osp
 import random
-import unittest
 
 from baselines import bench
 from baselines import logger as baselines_logger
@@ -23,6 +22,7 @@ from baselines.ppo2.policies import MlpPolicy
 import dowel
 from dowel import logger as dowel_logger
 import gym
+import pytest
 import tensorflow as tf
 
 from garage.envs import normalize
@@ -37,9 +37,10 @@ import tests.helpers as Rh
 from tests.wrappers import AutoStopEnv
 
 
-class TestBenchmarkPPO(unittest.TestCase):
+class TestBenchmarkPPO:
     '''Compare benchmarks between garage and baselines.'''
 
+    @pytest.mark.huge
     def test_benchmark_ppo(self):
         '''
         Compare benchmarks between garage and baselines.
@@ -114,8 +115,6 @@ class TestBenchmarkPPO(unittest.TestCase):
 
         Rh.write_file(result_json, 'PPO')
 
-    test_benchmark_ppo.huge = True
-
 
 def run_garage(env, seed, log_dir):
     '''
@@ -168,7 +167,6 @@ def run_garage(env, seed, log_dir):
                 max_epochs=10,
                 tf_optimizer_args=dict(learning_rate=1e-3),
             ),
-            plot=False,
         )
 
         # Set up logger since we are not using run_experiment

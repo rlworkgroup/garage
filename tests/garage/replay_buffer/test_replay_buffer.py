@@ -1,12 +1,10 @@
-import unittest
-
 import numpy as np
 
 from garage.replay_buffer import SimpleReplayBuffer
 from tests.fixtures.envs.dummy import DummyDiscreteEnv
 
 
-class TestReplayBuffer(unittest.TestCase):
+class TestReplayBuffer:
     def test_add_transition_dtype(self):
         env = DummyDiscreteEnv()
         obs = env.reset()

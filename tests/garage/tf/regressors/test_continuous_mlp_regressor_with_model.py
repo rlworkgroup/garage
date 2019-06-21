@@ -1,7 +1,7 @@
 import pickle
 
-from nose2.tools.params import params
 import numpy as np
+import pytest
 import tensorflow as tf
 
 from garage.tf.optimizers import LbfgsOptimizer
@@ -67,7 +67,9 @@ class TestContinuousMLPRegressorWithModel(TfGraphTestCase):
         assert np.array_equal(x_mean, x_mean_expected)
         assert np.array_equal(x_std, x_std_expected)
 
-    @params((1, (1, )), (1, (2, )), (2, (3, )), (2, (1, 1)), (3, (2, 2)))
+    @pytest.mark.parametrize('output_dim, input_shape',
+                             [(1, (1, )), (1, (2, )), (2, (3, )), (2, (1, 1)),
+                              (3, (2, 2))])
     def test_predict_sym(self, output_dim, input_shape):
         cmr = ContinuousMLPRegressorWithModel(
             input_shape=input_shape,

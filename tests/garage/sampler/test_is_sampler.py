@@ -40,10 +40,10 @@ class TestISSampler(TfGraphTestCase):
             # test importance and live sampling get called alternatively
             with unittest.mock.patch.object(ISSampler,
                                             '_obtain_is_samples') as mocked:
-                self.assertTrue(runner.sampler.obtain_samples(2, 20))
+                assert runner.sampler.obtain_samples(2, 20)
                 mocked.assert_not_called()
 
-                self.assertTrue(runner.sampler.obtain_samples(3))
+                assert runner.sampler.obtain_samples(3)
                 mocked.assert_called_once()
 
             # test importance sampling for first n_is_pretrain iterations
@@ -59,7 +59,7 @@ class TestISSampler(TfGraphTestCase):
 
             # test random draw important samples
             runner.sampler.randomize_draw = True
-            self.assertTrue(runner.sampler.obtain_samples(6, 1))
+            assert runner.sampler.obtain_samples(6, 1)
             runner.sampler.randomize_draw = False
 
             runner.sampler.obtain_samples(7, 30)

@@ -1,8 +1,6 @@
 import os
 import os.path as osp
 
-from nose2.tools import such
-
 from garage.experiment.experiment import concretize, variant, VariantGenerator
 from garage.experiment.experiment import ensure_dir, run_experiment
 
@@ -19,31 +17,27 @@ class TestClass:
         return [dict(a=1)]
 
 
-with such.A('instrument') as it:
-
-    @it.should
-    def test_concretize():
-        it.assertEqual(concretize([5]), [5])
-        it.assertEqual(concretize((5, )), (5, ))
+class TestExperiment:
+    def test_concretize(self):
+        assert concretize([5]) == [5]
+        assert concretize((5, )) == (5, )
         fake_globals = dict(TestClass=TestClass)
         modified = fake_globals['TestClass']
-        it.assertEqual(concretize((5, )), (5, ))
-        it.assertIsInstance(concretize(modified()), TestClass)
+        assert concretize((5, )) == (5, )
+        assert isinstance(concretize(modified()), TestClass)
 
-    @it.should
-    def test_chained_call():
+    def test_chained_call(self):
         fake_globals = dict(TestClass=TestClass)
         modified = fake_globals['TestClass']
-        it.assertEqual(concretize(modified().arr[0]), 1)
+        assert concretize(modified().arr[0]) == 1
 
-    @it.should
-    def test_variant_generator():
+    def test_variant_generator(self):
 
         vg = VariantGenerator()
         vg.add('key1', [1, 2, 3])
         vg.add('key2', [True, False])
         vg.add('key3', lambda key2: [1] if key2 else [1, 2])
-        it.assertEqual(len(vg.variants()), 9)
+        assert len(vg.variants()) == 9
 
         class VG(VariantGenerator):
             @variant
@@ -63,10 +57,7 @@ with such.A('instrument') as it:
                     yield 1
                     yield 2
 
-        it.assertEqual(len(VG().variants()), 9)
-
-
-it.createTests(globals())
+        assert len(VG().variants()) == 9
 
 
 def dummy_func(*_):

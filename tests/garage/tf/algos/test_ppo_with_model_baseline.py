@@ -3,6 +3,7 @@ This script creates a test that fails when garage.tf.algos.PPO performance is
 too low.
 """
 import gym
+import pytest
 import tensorflow as tf
 
 from garage.envs import normalize
@@ -15,6 +16,7 @@ from tests.fixtures import TfGraphTestCase
 
 
 class TestPPO(TfGraphTestCase):
+    @pytest.mark.huge
     def test_ppo_pendulum_continuous_baseline(self):
         """Test PPO with Pendulum environment."""
         with LocalRunner(self.sess) as runner:
@@ -43,8 +45,7 @@ class TestPPO(TfGraphTestCase):
 
             env.close()
 
-    test_ppo_pendulum_continuous_baseline.huge = True
-
+    @pytest.mark.large
     def test_ppo_pendulum_recurrent_continuous_baseline(self):
         """Test PPO with Pendulum environment and recurrent policy."""
         with LocalRunner() as runner:
@@ -67,5 +68,3 @@ class TestPPO(TfGraphTestCase):
             assert last_avg_ret > 30
 
             env.close()
-
-    test_ppo_pendulum_recurrent_continuous_baseline.large = True

@@ -3,6 +3,7 @@ This script creates a test that fails when garage.tf.algos.TRPO performance is
 too low.
 """
 import gym
+import pytest
 
 from garage.envs import normalize
 from garage.experiment import LocalRunner
@@ -17,6 +18,7 @@ from tests.fixtures import TfGraphTestCase
 
 
 class TestTRPO(TfGraphTestCase):
+    @pytest.mark.large
     def test_trpo_lstm_cartpole(self):
         with LocalRunner(self.sess) as runner:
             env = TfEnv(normalize(gym.make('CartPole-v1')))
@@ -43,8 +45,7 @@ class TestTRPO(TfGraphTestCase):
 
             env.close()
 
-    test_trpo_lstm_cartpole.large = True
-
+    @pytest.mark.large
     def test_trpo_gru_cartpole(self):
         with LocalRunner(self.sess) as runner:
             env = TfEnv(normalize(gym.make('CartPole-v1')))
@@ -69,5 +70,3 @@ class TestTRPO(TfGraphTestCase):
             assert last_avg_ret > 80
 
             env.close()
-
-    test_trpo_gru_cartpole.large = True

@@ -3,6 +3,7 @@ This script creates a test that fails when garage.tf.algos.NPO performance is
 too low.
 """
 import gym
+import pytest
 import tensorflow as tf
 
 from garage.envs import normalize
@@ -15,8 +16,8 @@ from tests.fixtures import TfGraphTestCase
 
 
 class TestNPO(TfGraphTestCase):
-    def setUp(self):
-        super().setUp()
+    def setup_method(self):
+        super().setup_method()
         self.env = TfEnv(normalize(gym.make('InvertedDoublePendulum-v2')))
         self.policy = GaussianMLPPolicy(
             env_spec=self.env.spec,
@@ -29,6 +30,7 @@ class TestNPO(TfGraphTestCase):
             regressor_args=dict(hidden_sizes=(32, 32)),
         )
 
+    @pytest.mark.large
     def test_npo_pendulum(self):
         """Test NPO with Pendulum environment."""
         with LocalRunner(self.sess) as runner:
@@ -46,7 +48,7 @@ class TestNPO(TfGraphTestCase):
 
     def test_npo_with_unknown_pg_loss(self):
         """Test NPO with unkown pg loss."""
-        with self.assertRaises(ValueError, msg='Invalid pg_loss'):
+        with pytest.raises(ValueError, match='Invalid pg_loss'):
             NPO(
                 env_spec=self.env.spec,
                 policy=self.policy,
@@ -56,7 +58,7 @@ class TestNPO(TfGraphTestCase):
 
     def test_npo_with_invalid_entropy_method(self):
         """Test NPO with invalid entropy method."""
-        with self.assertRaises(ValueError, msg='Invalid entropy_method'):
+        with pytest.raises(ValueError, match='Invalid entropy_method'):
             NPO(
                 env_spec=self.env.spec,
                 policy=self.policy,
@@ -66,7 +68,7 @@ class TestNPO(TfGraphTestCase):
 
     def test_npo_with_max_entropy_and_center_adv(self):
         """Test NPO with max entropy and center_adv."""
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             NPO(
                 env_spec=self.env.spec,
                 policy=self.policy,
@@ -77,7 +79,7 @@ class TestNPO(TfGraphTestCase):
 
     def test_npo_with_max_entropy_and_no_stop_entropy_gradient(self):
         """Test NPO with max entropy and false stop_entropy_gradient."""
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             NPO(
                 env_spec=self.env.spec,
                 policy=self.policy,
@@ -88,7 +90,7 @@ class TestNPO(TfGraphTestCase):
 
     def test_npo_with_invalid_no_entropy_configuration(self):
         """Test NPO with invalid no entropy configuration."""
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             NPO(
                 env_spec=self.env.spec,
                 policy=self.policy,
@@ -97,6 +99,6 @@ class TestNPO(TfGraphTestCase):
                 policy_ent_coeff=0.02,
             )
 
-    def tearDown(self):
+    def teardown_method(self):
         self.env.close()
-        super().tearDown()
+        super().teardown_method()

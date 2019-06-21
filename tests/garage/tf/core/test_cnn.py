@@ -1,5 +1,5 @@
-from nose2.tools.params import params
 import numpy as np
+import pytest
 import tensorflow as tf
 
 from garage.tf.core.cnn import cnn
@@ -10,8 +10,8 @@ from tests.helpers import max_pooling
 
 
 class TestCNN(TfGraphTestCase):
-    def setUp(self):
-        super().setUp()
+    def setup_method(self):
+        super().setup_method()
         self.batch_size = 5
         self.input_width = 10
         self.input_height = 10
@@ -23,14 +23,14 @@ class TestCNN(TfGraphTestCase):
             tf.float32, shape=(None, ) + input_shape, name='input')
         self.hidden_nonlinearity = tf.nn.relu
 
-    @params(
+    @pytest.mark.parametrize('filter_sizes, out_channels, strides', [
         ((1, ), (32, ), (1, )),
         ((3, ), (32, ), (1, )),
         ((3, ), (32, ), (2, )),
         ((1, 1), (32, 64), (1, 1)),
         ((3, 3), (32, 64), (1, 1)),
         ((3, 3), (32, 64), (2, 2)),
-    )
+    ])
     def test_output_shape_same(self, filter_sizes, out_channels, strides):
         with tf.variable_scope('CNN'):
             self.cnn = cnn(
@@ -56,9 +56,14 @@ class TestCNN(TfGraphTestCase):
         flatten_shape = current_size * current_size * out_channels[-1]
         assert result.shape == (5, flatten_shape)
 
-    @params(((1, ), (32, ), (1, )), ((3, ), (32, ), (1, )),
-            ((3, ), (32, ), (2, )), ((1, 1), (32, 64), (1, 1)),
-            ((3, 3), (32, 64), (1, 1)), ((3, 3), (32, 64), (2, 2)))
+    @pytest.mark.parametrize('filter_sizes, out_channels, strides', [
+        ((1, ), (32, ), (1, )),
+        ((3, ), (32, ), (1, )),
+        ((3, ), (32, ), (2, )),
+        ((1, 1), (32, 64), (1, 1)),
+        ((3, 3), (32, 64), (1, 1)),
+        ((3, 3), (32, 64), (2, 2)),
+    ])
     def test_output_shape_valid(self, filter_sizes, out_channels, strides):
         with tf.variable_scope('CNN'):
             self.cnn = cnn(
@@ -82,10 +87,12 @@ class TestCNN(TfGraphTestCase):
         flatten_shape = current_size * current_size * out_channels[-1]
         assert result.shape == (self.batch_size, flatten_shape)
 
-    @params(((1, ), (3, ), (32, ), (1, )), ((3, ), (3, ), (32, ), (1, )),
-            ((3, ), (3, ), (32, ), (2, )), ((1, 1), (3, 32), (32, 64), (1, 1)),
-            ((3, 3), (3, 32), (32, 64), (1, 1)), ((3, 3), (3, 32), (32, 64),
-                                                  (2, 2)))
+    @pytest.mark.parametrize(
+        'filter_sizes, in_channels, out_channels, strides',
+        [((1, ), (3, ), (32, ), (1, )), ((3, ), (3, ), (32, ), (1, )),
+         ((3, ), (3, ), (32, ), (2, )), ((1, 1), (3, 32), (32, 64), (1, 1)),
+         ((3, 3), (3, 32), (32, 64), (1, 1)),
+         ((3, 3), (3, 32), (32, 64), (2, 2))])
     def test_output_with_identity_filter(self, filter_sizes, in_channels,
                                          out_channels, strides):
         with tf.variable_scope('CNN'):
@@ -120,10 +127,12 @@ class TestCNN(TfGraphTestCase):
                         dtype=np.float32)
         np.testing.assert_array_equal(h_out, result)
 
-    @params(((1, ), (3, ), (32, ), (1, )), ((3, ), (3, ), (32, ), (1, )),
-            ((3, ), (3, ), (32, ), (2, )), ((1, 1), (3, 32), (32, 64), (1, 1)),
-            ((3, 3), (3, 32), (32, 64), (1, 1)), ((3, 3), (3, 32), (32, 64),
-                                                  (2, 2)))
+    @pytest.mark.parametrize(
+        'filter_sizes, in_channels, out_channels, strides',
+        [((1, ), (3, ), (32, ), (1, )), ((3, ), (3, ), (32, ), (1, )),
+         ((3, ), (3, ), (32, ), (2, )), ((1, 1), (3, 32), (32, 64), (1, 1)),
+         ((3, 3), (3, 32), (32, 64), (1, 1)),
+         ((3, 3), (3, 32), (32, 64), (2, 2))])
     def test_output_with_random_filter(self, filter_sizes, in_channels,
                                        out_channels, strides):
         # Build a cnn with random filter weights
@@ -167,13 +176,17 @@ class TestCNN(TfGraphTestCase):
         dense_out = input_val.reshape((self.batch_size, -1)).astype(np.float32)
         np.testing.assert_array_almost_equal(dense_out, result)
 
-    @params(
-        ((1, ), (3, ), (32, ), (1, ), 1, 1),
-        ((3, ), (3, ), (32, ), (1, ), 1, 1),
-        ((3, ), (3, ), (32, ), (2, ), 2, 2),
-        ((1, 1), (3, 32), (32, 64), (1, 1), 1, 1),
-        ((3, 3), (3, 32), (32, 64), (1, 1), 1, 1),
-    )
+    # yapf: disable
+    @pytest.mark.parametrize(
+        'filter_sizes, in_channels, out_channels, '
+        'strides, pool_shape, pool_stride', [
+            ((1, ), (3, ), (32, ), (1, ), 1, 1),
+            ((3, ), (3, ), (32, ), (1, ), 1, 1),
+            ((3, ), (3, ), (32, ), (2, ), 2, 2),
+            ((1, 1), (3, 32), (32, 64), (1, 1), 1, 1),
+            ((3, 3), (3, 32), (32, 64), (1, 1), 1, 1)
+        ])
+    # yapf: enable
     def test_output_with_max_pooling(self, filter_sizes, in_channels,
                                      out_channels, strides, pool_shape,
                                      pool_stride):
@@ -234,7 +247,7 @@ class TestCNN(TfGraphTestCase):
         np.testing.assert_array_equal(dense_out, result)
 
     def test_invalid_padding(self):
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             with tf.variable_scope('CNN'):
                 self.cnn = cnn(
                     input_var=self._input_ph,
@@ -245,7 +258,7 @@ class TestCNN(TfGraphTestCase):
                     padding='UNKNOWN')
 
     def test_invalid_padding_max_pooling(self):
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             with tf.variable_scope('CNN'):
                 self.cnn = cnn_with_max_pooling(
                     input_var=self._input_ph,

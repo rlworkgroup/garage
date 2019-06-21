@@ -20,6 +20,7 @@ write_file(result_json, 'Algo name')
 # Example
 
 ```python
+@pytest.mark.huge
 def test_benchmark_ddpg(self):
     #
     #
@@ -44,8 +45,6 @@ def test_benchmark_ddpg(self):
             factor_b=TimeStepsConversionFactorBenchmark)
 
     write_file(result_json, 'DDPG')
-
-test_benchmark_ddpg.huge = True
 ```
 
 # Json Schema

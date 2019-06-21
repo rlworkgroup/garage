@@ -26,94 +26,102 @@ from tests.fixtures.envs.dummy import DummyBoxEnv
 
 
 class TestGaussianLSTMPolicyWithModelTransit(TfGraphTestCase):
-    @mock.patch('tensorflow.random.normal')
-    def setUp(self, mock_rand):
-        mock_rand.return_value = 0.5
-        super().setUp()
-        env = TfEnv(DummyBoxEnv(obs_dim=(1, ), action_dim=(1, )))
-        self.default_initializer = tf.constant_initializer(1)
-        self.default_hidden_nonlinearity = tf.nn.tanh
-        self.default_recurrent_nonlinearity = tf.nn.sigmoid
-        self.default_output_nonlinearity = None
-        self.time_step = 1
+    def setup_method(self):
+        super().setup_method()
+        with mock.patch('tensorflow.random.normal') as mock_rand:
+            mock_rand.return_value = 0.5
+            env = TfEnv(DummyBoxEnv(obs_dim=(1, ), action_dim=(1, )))
+            self.default_initializer = tf.constant_initializer(1)
+            self.default_hidden_nonlinearity = tf.nn.tanh
+            self.default_recurrent_nonlinearity = tf.nn.sigmoid
+            self.default_output_nonlinearity = None
+            self.time_step = 1
 
-        self.policy1 = GaussianLSTMPolicy(
-            env_spec=env.spec,
-            hidden_dim=4,
-            hidden_nonlinearity=self.default_hidden_nonlinearity,
-            recurrent_nonlinearity=self.default_recurrent_nonlinearity,
-            recurrent_w_x_init=self.default_initializer,
-            recurrent_w_h_init=self.default_initializer,
-            output_nonlinearity=self.default_output_nonlinearity,
-            output_w_init=self.default_initializer,
-            state_include_action=True,
-            name='P1')
-        self.policy2 = GaussianLSTMPolicy(
-            env_spec=env.spec,
-            hidden_dim=4,
-            hidden_nonlinearity=self.default_hidden_nonlinearity,
-            recurrent_nonlinearity=self.default_recurrent_nonlinearity,
-            recurrent_w_x_init=self.default_initializer,
-            recurrent_w_h_init=self.default_initializer,
-            output_nonlinearity=self.default_output_nonlinearity,
-            output_w_init=tf.constant_initializer(2),
-            state_include_action=True,
-            name='P2')
+            self.policy1 = GaussianLSTMPolicy(
+                env_spec=env.spec,
+                hidden_dim=4,
+                hidden_nonlinearity=self.default_hidden_nonlinearity,
+                recurrent_nonlinearity=self.default_recurrent_nonlinearity,
+                recurrent_w_x_init=self.default_initializer,
+                recurrent_w_h_init=self.default_initializer,
+                output_nonlinearity=self.default_output_nonlinearity,
+                output_w_init=self.default_initializer,
+                state_include_action=True,
+                name='P1')
+            self.policy2 = GaussianLSTMPolicy(
+                env_spec=env.spec,
+                hidden_dim=4,
+                hidden_nonlinearity=self.default_hidden_nonlinearity,
+                recurrent_nonlinearity=self.default_recurrent_nonlinearity,
+                recurrent_w_x_init=self.default_initializer,
+                recurrent_w_h_init=self.default_initializer,
+                output_nonlinearity=self.default_output_nonlinearity,
+                output_w_init=tf.constant_initializer(2),
+                state_include_action=True,
+                name='P2')
 
-        self.sess.run(tf.global_variables_initializer())
+            self.sess.run(tf.global_variables_initializer())
 
-        self.policy3 = GaussianLSTMPolicyWithModel(
-            env_spec=env.spec,
-            hidden_dim=4,
-            hidden_nonlinearity=self.default_hidden_nonlinearity,
-            hidden_w_init=self.default_initializer,
-            recurrent_nonlinearity=self.default_recurrent_nonlinearity,
-            recurrent_w_init=self.default_initializer,
-            output_nonlinearity=self.default_output_nonlinearity,
-            output_w_init=self.default_initializer,
-            state_include_action=True,
-            name='P3')
-        self.policy4 = GaussianLSTMPolicyWithModel(
-            env_spec=env.spec,
-            hidden_dim=4,
-            hidden_nonlinearity=self.default_hidden_nonlinearity,
-            hidden_w_init=self.default_initializer,
-            recurrent_nonlinearity=self.default_recurrent_nonlinearity,
-            recurrent_w_init=self.default_initializer,
-            output_nonlinearity=self.default_output_nonlinearity,
-            output_w_init=tf.constant_initializer(2),
-            state_include_action=True,
-            name='P4')
+            self.policy3 = GaussianLSTMPolicyWithModel(
+                env_spec=env.spec,
+                hidden_dim=4,
+                hidden_nonlinearity=self.default_hidden_nonlinearity,
+                hidden_w_init=self.default_initializer,
+                recurrent_nonlinearity=self.default_recurrent_nonlinearity,
+                recurrent_w_init=self.default_initializer,
+                output_nonlinearity=self.default_output_nonlinearity,
+                output_w_init=self.default_initializer,
+                state_include_action=True,
+                name='P3')
+            self.policy4 = GaussianLSTMPolicyWithModel(
+                env_spec=env.spec,
+                hidden_dim=4,
+                hidden_nonlinearity=self.default_hidden_nonlinearity,
+                hidden_w_init=self.default_initializer,
+                recurrent_nonlinearity=self.default_recurrent_nonlinearity,
+                recurrent_w_init=self.default_initializer,
+                output_nonlinearity=self.default_output_nonlinearity,
+                output_w_init=tf.constant_initializer(2),
+                state_include_action=True,
+                name='P4')
 
-        self.policy1.reset()
-        self.policy2.reset()
-        self.policy3.reset()
-        self.policy4.reset()
-        self.obs = [env.reset()]
-        self.obs = np.concatenate([self.obs for _ in range(self.time_step)],
-                                  axis=0)
+            self.policy1.reset()
+            self.policy2.reset()
+            self.policy3.reset()
+            self.policy4.reset()
+            self.obs = [env.reset()]
+            self.obs = np.concatenate(
+                [self.obs for _ in range(self.time_step)], axis=0)
 
-        self.obs_ph = tf.placeholder(
-            tf.float32, shape=(None, None, env.observation_space.flat_dim))
-        self.action_ph = tf.placeholder(
-            tf.float32, shape=(None, None, env.action_space.flat_dim))
+            self.obs_ph = tf.placeholder(
+                tf.float32, shape=(None, None, env.observation_space.flat_dim))
+            self.action_ph = tf.placeholder(
+                tf.float32, shape=(None, None, env.action_space.flat_dim))
 
-        self.dist1_sym = self.policy1.dist_info_sym(
-            obs_var=self.obs_ph,
-            state_info_vars={'prev_action': np.zeros((2, self.time_step, 1))},
-            name='p1_sym')
-        self.dist2_sym = self.policy2.dist_info_sym(
-            obs_var=self.obs_ph,
-            state_info_vars={'prev_action': np.zeros((2, self.time_step, 1))},
-            name='p2_sym')
-        self.dist3_sym = self.policy3.dist_info_sym(
-            obs_var=self.obs_ph,
-            state_info_vars={'prev_action': np.zeros((2, self.time_step, 1))},
-            name='p3_sym')
-        self.dist4_sym = self.policy4.dist_info_sym(
-            obs_var=self.obs_ph,
-            state_info_vars={'prev_action': np.zeros((2, self.time_step, 1))},
-            name='p4_sym')
+            self.dist1_sym = self.policy1.dist_info_sym(
+                obs_var=self.obs_ph,
+                state_info_vars={
+                    'prev_action': np.zeros((2, self.time_step, 1))
+                },
+                name='p1_sym')
+            self.dist2_sym = self.policy2.dist_info_sym(
+                obs_var=self.obs_ph,
+                state_info_vars={
+                    'prev_action': np.zeros((2, self.time_step, 1))
+                },
+                name='p2_sym')
+            self.dist3_sym = self.policy3.dist_info_sym(
+                obs_var=self.obs_ph,
+                state_info_vars={
+                    'prev_action': np.zeros((2, self.time_step, 1))
+                },
+                name='p3_sym')
+            self.dist4_sym = self.policy4.dist_info_sym(
+                obs_var=self.obs_ph,
+                state_info_vars={
+                    'prev_action': np.zeros((2, self.time_step, 1))
+                },
+                name='p4_sym')
 
     def test_dist_info_sym_output(self):
         # batch size = 2

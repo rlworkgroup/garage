@@ -1,16 +1,15 @@
 import collections
 from copy import copy
 import pickle
-import unittest
 
 import dm_control.suite
-from nose2.tools import params
+import pytest
 
 from garage.envs.dm_control import DmControlEnv
 from tests.helpers import step_env
 
 
-class TestDmControlEnv(unittest.TestCase):
+class TestDmControlEnv:
     def test_can_step(self):
         domain_name, task_name = dm_control.suite.ALL_TASKS[0]
         env = DmControlEnv.from_suite(domain_name, task_name)
@@ -24,7 +23,9 @@ class TestDmControlEnv(unittest.TestCase):
         step_env(env, render=False)
         env.close()
 
-    @params(*dm_control.suite.ALL_TASKS)
+    @pytest.mark.nightly
+    @pytest.mark.parametrize('domain_name, task_name',
+                             dm_control.suite.ALL_TASKS)
     def test_all_can_step(self, domain_name, task_name):
         env = DmControlEnv.from_suite(domain_name, task_name)
         ob_space = env.observation_space
@@ -37,8 +38,6 @@ class TestDmControlEnv(unittest.TestCase):
         step_env(env, render=False)
         env.close()
 
-    test_all_can_step.nightly = True
-
     def test_pickleable(self):
         domain_name, task_name = dm_control.suite.ALL_TASKS[0]
         env = DmControlEnv.from_suite(domain_name, task_name)
@@ -49,7 +48,9 @@ class TestDmControlEnv(unittest.TestCase):
         round_trip.close()
         env.close()
 
-    @params(*dm_control.suite.ALL_TASKS)
+    @pytest.mark.nightly
+    @pytest.mark.parametrize('domain_name, task_name',
+                             dm_control.suite.ALL_TASKS)
     def test_all_pickleable(self, domain_name, task_name):
         env = DmControlEnv.from_suite(domain_name, task_name)
         round_trip = pickle.loads(pickle.dumps(env))
@@ -59,8 +60,6 @@ class TestDmControlEnv(unittest.TestCase):
         round_trip.close()
         env.close()
 
-    test_all_pickleable.nightly = True
-
     def test_does_not_modify_actions(self):
         domain_name, task_name = dm_control.suite.ALL_TASKS[0]
         env = DmControlEnv.from_suite(domain_name, task_name)
@@ -68,21 +67,21 @@ class TestDmControlEnv(unittest.TestCase):
         a_copy = copy(a)
         env.step(a)
         if isinstance(a, collections.Iterable):
-            self.assertEqual(a.all(), a_copy.all())
+            assert a.all() == a_copy.all()
         else:
-            self.assertEqual(a, a_copy)
+            assert a == a_copy
         env.close()
 
-    @params(*dm_control.suite.ALL_TASKS)
+    @pytest.mark.nightly
+    @pytest.mark.parametrize('domain_name, task_name',
+                             dm_control.suite.ALL_TASKS)
     def test_all_does_not_modify_actions(self, domain_name, task_name):
         env = DmControlEnv.from_suite(domain_name, task_name)
         a = env.action_space.sample()
         a_copy = copy(a)
         env.step(a)
         if isinstance(a, collections.Iterable):
-            self.assertEqual(a.all(), a_copy.all())
+            assert a.all() == a_copy.all()
         else:
-            self.assertEqual(a, a_copy)
+            assert a == a_copy
         env.close()
-
-    test_all_does_not_modify_actions.nightly = True

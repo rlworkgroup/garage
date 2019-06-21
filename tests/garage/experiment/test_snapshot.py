@@ -25,7 +25,7 @@ class TestSnapshot(TfGraphTestCase):
         tf.reset_default_graph()
 
     @classmethod
-    def setUpClass(cls):
+    def setup_class(cls):
         cls.reset_tf()
         cls.log_dir = tempfile.TemporaryDirectory()
         cls.prev_log_dir = snapshotter.snapshot_dir
@@ -37,7 +37,7 @@ class TestSnapshot(TfGraphTestCase):
         logger.add_output(NullOutput())
 
     @classmethod
-    def tearDownClass(cls):
+    def teardown_class(cls):
         snapshotter.snapshot_dir = cls.prev_log_dir
         snapshotter.snapshot_mode = cls.prev_mode
         logger.remove_all()

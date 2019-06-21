@@ -1,6 +1,5 @@
 """Tests for epsilon greedy strategy."""
 import pickle
-import unittest
 
 import numpy as np
 
@@ -21,9 +20,8 @@ class SimplePolicy:
         return np.full(len(observations), self.env_spec.action_space.sample())
 
 
-class TestEpsilonGreedyStrategy(unittest.TestCase):
-    def setUp(self):
-        super().setUp()
+class TestEpsilonGreedyStrategy:
+    def setup_method(self):
         self.env = DummyDiscreteEnv()
         self.policy = SimplePolicy(env_spec=self.env)
         self.epsilon_greedy_strategy = EpsilonGreedyStrategy(

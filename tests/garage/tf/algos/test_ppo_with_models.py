@@ -3,6 +3,7 @@ This script creates a test that fails when garage.tf.algos.PPO performance is
 too low.
 """
 import gym
+import pytest
 import tensorflow as tf
 
 from garage.envs import normalize
@@ -17,6 +18,7 @@ from tests.fixtures import TfGraphTestCase
 
 
 class TestPPOWithModel(TfGraphTestCase):
+    @pytest.mark.large
     def test_ppo_pendulum_with_model(self):
         """Test PPO with model, with Pendulum environment."""
         with LocalRunner(self.sess) as runner:
@@ -46,8 +48,7 @@ class TestPPOWithModel(TfGraphTestCase):
 
             env.close()
 
-    test_ppo_pendulum_with_model.large = True
-
+    @pytest.mark.large
     def test_ppo_pendulum_lstm_with_model(self):
         """Test PPO with model, with Pendulum environment."""
         with LocalRunner(self.sess) as runner:
@@ -97,5 +98,3 @@ class TestPPOWithModel(TfGraphTestCase):
             assert last_avg_ret > 40
 
             env.close()
-
-    test_ppo_pendulum_gru_with_model.large = True

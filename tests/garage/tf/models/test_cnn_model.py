@@ -1,7 +1,7 @@
 import pickle
 
-from nose2.tools.params import params
 import numpy as np
+import pytest
 import tensorflow as tf
 
 from garage.tf.models import CNNModel
@@ -10,8 +10,8 @@ from tests.fixtures import TfGraphTestCase
 
 
 class TestCNNModel(TfGraphTestCase):
-    def setUp(self):
-        super().setUp()
+    def setup_method(self):
+        super().setup_method()
         self.batch_size = 5
         self.input_width = 10
         self.input_height = 10
@@ -21,14 +21,15 @@ class TestCNNModel(TfGraphTestCase):
         self._input_ph = tf.placeholder(
             tf.float32, shape=(None, ) + input_shape, name='input')
 
-    @params(
-        ((1, ), (3, ), (32, ), (1, )),
-        ((3, ), (3, ), (32, ), (1, )),
-        ((3, ), (3, ), (32, ), (2, )),
-        ((1, 1), (3, 32), (32, 64), (1, 1)),
-        ((3, 3), (3, 32), (32, 64), (1, 1)),
-        ((3, 3), (3, 32), (32, 64), (2, 2)),
-    )
+    @pytest.mark.parametrize(
+        'filter_sizes, in_channels, out_channels, strides', [
+            ((1, ), (3, ), (32, ), (1, )),
+            ((3, ), (3, ), (32, ), (1, )),
+            ((3, ), (3, ), (32, ), (2, )),
+            ((1, 1), (3, 32), (32, 64), (1, 1)),
+            ((3, 3), (3, 32), (32, 64), (1, 1)),
+            ((3, 3), (3, 32), (32, 64), (2, 2)),
+        ])
     def test_output_value(self, filter_sizes, in_channels, out_channels,
                           strides):
         model = CNNModel(
@@ -61,15 +62,18 @@ class TestCNNModel(TfGraphTestCase):
 
         assert np.array_equal(output, expected_output)
 
-    @params(((1, ), (3, ), (32, ), (1, ), (1, 1), (1, 1)),        # noqa: E501, yapf: disable
-            ((3, ), (3, ), (32, ), (1, ), (2, 2), (1, 1)),        # noqa: E501, yapf: disable
-            ((3, ), (3, ), (32, ), (1, ), (1, 1), (2, 2)),        # noqa: E501, yapf: disable
-            ((3, ), (3, ), (32, ), (1, ), (2, 2), (2, 2)),        # noqa: E501, yapf: disable
-            ((3, ), (3, ), (32, ), (2, ), (1, 1), (2, 2)),        # noqa: E501, yapf: disable
-            ((3, ), (3, ), (32, ), (2, ), (2, 2), (2, 2)),        # noqa: E501, yapf: disable
-            ((1, 1), (3, 32), (32, 64), (1, 1), (1, 1), (1, 1)),  # noqa: E501, yapf: disable
-            ((3, 3), (3, 32), (32, 64), (1, 1), (1, 1), (1, 1)),  # noqa: E501, yapf: disable
-            ((3, 3), (3, 32), (32, 64), (2, 2), (1, 1), (1, 1)))  # noqa: E501, yapf: disable
+    @pytest.mark.parametrize('filter_sizes, in_channels, out_channels, '
+                             'strides, pool_strides, pool_shapes', [
+        ((1,), (3,), (32,), (1,), (1, 1), (1, 1)),  # noqa: E501, yapf: disable
+        ((3,), (3,), (32,), (1,), (2, 2), (1, 1)),  # noqa: E501, yapf: disable
+        ((3,), (3,), (32,), (1,), (1, 1), (2, 2)),  # noqa: E501, yapf: disable
+        ((3,), (3,), (32,), (1,), (2, 2), (2, 2)),  # noqa: E501, yapf: disable
+        ((3,), (3,), (32,), (2,), (1, 1), (2, 2)),  # noqa: E501, yapf: disable
+        ((3,), (3,), (32,), (2,), (2, 2), (2, 2)),  # noqa: E501, yapf: disable
+        ((1, 1), (3, 32), (32, 64), (1, 1), (1, 1), (1, 1)),  # noqa: E501, yapf: disable
+        ((3, 3), (3, 32), (32, 64), (1, 1), (1, 1), (1, 1)),  # noqa: E501, yapf: disable
+        ((3, 3), (3, 32), (32, 64), (2, 2), (1, 1), (1, 1))   # noqa: E501, yapf: disable
+    ])  # noqa: E501, yapf: disable
     def test_output_value_max_pooling(self, filter_sizes, in_channels,
                                       out_channels, strides, pool_strides,
                                       pool_shapes):
@@ -108,14 +112,15 @@ class TestCNNModel(TfGraphTestCase):
 
         assert np.array_equal(output, expected_output)
 
-    @params(
-        ((1, ), (3, ), (32, ), (1, )),
-        ((3, ), (3, ), (32, ), (1, )),
-        ((3, ), (3, ), (32, ), (2, )),
-        ((1, 1), (3, 32), (32, 64), (1, 1)),
-        ((3, 3), (3, 32), (32, 64), (1, 1)),
-        ((3, 3), (3, 32), (32, 64), (2, 2)),
-    )
+    @pytest.mark.parametrize(
+        'filter_sizes, in_channels, out_channels, strides', [   # noqa: E501, yapf: disable
+        ((1, ), (3, ), (32, ), (1, )),  # noqa: E501, yapf: disable
+        ((3, ), (3, ), (32, ), (1, )),  # noqa: E501, yapf: disable
+        ((3, ), (3, ), (32, ), (2, )),  # noqa: E501, yapf: disable
+        ((1, 1), (3, 32), (32, 64), (1, 1)),    # noqa: E501, yapf: disable
+        ((3, 3), (3, 32), (32, 64), (1, 1)),    # noqa: E501, yapf: disable
+        ((3, 3), (3, 32), (32, 64), (2, 2)),    # noqa: E501, yapf: disable
+    ])  # noqa: E501, yapf: disable
     def test_is_pickleable(self, filter_sizes, in_channels, out_channels,
                            strides):
         model = CNNModel(

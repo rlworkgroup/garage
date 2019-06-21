@@ -1,12 +1,10 @@
-import unittest
-
 import numpy as np
 
 from garage.envs.wrappers import Noop
 from tests.fixtures.envs.dummy import DummyDiscretePixelEnv
 
 
-class TestNoop(unittest.TestCase):
+class TestNoop:
     def test_noop(self):
         env = Noop(DummyDiscretePixelEnv(), noop_max=3)
 

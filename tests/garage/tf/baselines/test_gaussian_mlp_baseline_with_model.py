@@ -1,8 +1,8 @@
 import pickle
 from unittest import mock
 
-from nose2.tools.params import params
 import numpy as np
+import pytest
 import tensorflow as tf
 
 from garage.tf.baselines import GaussianMLPBaselineWithModel
@@ -13,7 +13,7 @@ from tests.fixtures.regressors import SimpleGaussianMLPRegressor
 
 
 class TestGaussianMLPBaselineWithModel(TfGraphTestCase):
-    @params([1], [2], [1, 1], [2, 2])
+    @pytest.mark.parametrize('obs_dim', [[1], [2], [1, 1], [2, 2]])
     def test_fit(self, obs_dim):
         box_env = TfEnv(DummyBoxEnv(obs_dim=obs_dim))
         with mock.patch(('garage.tf.baselines.'
@@ -34,7 +34,7 @@ class TestGaussianMLPBaselineWithModel(TfGraphTestCase):
         prediction = gmb.predict(obs)
         assert np.array_equal(prediction, [1, 2])
 
-    @params([1], [2], [1, 1], [2, 2])
+    @pytest.mark.parametrize('obs_dim', [[1], [2], [1, 1], [2, 2]])
     def test_param_values(self, obs_dim):
         box_env = TfEnv(DummyBoxEnv(obs_dim=obs_dim))
         with mock.patch(('garage.tf.baselines.'
@@ -57,7 +57,7 @@ class TestGaussianMLPBaselineWithModel(TfGraphTestCase):
         new_param_values = new_gmb.get_param_values()
         assert np.array_equal(old_param_values, new_param_values)
 
-    @params([1], [2], [1, 1], [2, 2])
+    @pytest.mark.parametrize('obs_dim', [[1], [2], [1, 1], [2, 2]])
     def test_get_params_internal(self, obs_dim):
         box_env = TfEnv(DummyBoxEnv(obs_dim=obs_dim))
         with mock.patch(('garage.tf.baselines.'

@@ -1,8 +1,8 @@
 import pickle
 from unittest import mock
 
-from nose2.tools.params import params
 import numpy as np
+import pytest
 import tensorflow as tf
 
 from garage.tf.optimizers import ConjugateGradientOptimizer, LbfgsOptimizer
@@ -56,7 +56,8 @@ def get_test_data(input_shape):
 
 
 class TestCategoricalMLPRegressorWithModel(TfGraphTestCase):
-    @params(((1, ), 2), ((2, ), 2))
+    @pytest.mark.parametrize('input_shape, output_dim', [((1, ), 2),
+                                                         ((2, ), 2)])
     def test_fit_normalized(self, input_shape, output_dim):
         cmr = CategoricalMLPRegressorWithModel(
             input_shape=input_shape, output_dim=output_dim)
@@ -83,7 +84,8 @@ class TestCategoricalMLPRegressorWithModel(TfGraphTestCase):
         assert np.allclose(x_mean, x_mean_expected)
         assert np.allclose(x_std, x_std_expected)
 
-    @params(((1, ), 2), ((2, ), 2))
+    @pytest.mark.parametrize('input_shape, output_dim', [((1, ), 2),
+                                                         ((2, ), 2)])
     def test_fit_unnormalized(self, input_shape, output_dim):
         cmr = CategoricalMLPRegressorWithModel(
             input_shape=input_shape,
@@ -112,7 +114,8 @@ class TestCategoricalMLPRegressorWithModel(TfGraphTestCase):
         assert np.allclose(x_mean, x_mean_expected)
         assert np.allclose(x_std, x_std_expected)
 
-    @params(((1, ), 2), ((2, ), 2))
+    @pytest.mark.parametrize('input_shape, output_dim', [((1, ), 2),
+                                                         ((2, ), 2)])
     def test_fit_without_initial_trust_region(self, input_shape, output_dim):
         cmr = CategoricalMLPRegressorWithModel(
             input_shape=input_shape,
@@ -141,7 +144,9 @@ class TestCategoricalMLPRegressorWithModel(TfGraphTestCase):
         assert np.allclose(x_mean, x_mean_expected)
         assert np.allclose(x_std, x_std_expected)
 
-    @params((1, (1, )), (1, (2, )), (2, (3, )), (2, (1, 1)), (3, (2, 2)))
+    @pytest.mark.parametrize('output_dim, input_shape',
+                             [(1, (1, )), (1, (2, )), (2, (3, )), (2, (1, 1)),
+                              (3, (2, 2))])
     def test_dist_info_sym(self, output_dim, input_shape):
         cmr = CategoricalMLPRegressorWithModel(
             input_shape=input_shape, output_dim=output_dim)
@@ -160,7 +165,9 @@ class TestCategoricalMLPRegressorWithModel(TfGraphTestCase):
 
         assert np.allclose(prob['prob'], expected_prob, rtol=0, atol=1e-5)
 
-    @params((1, (1, )), (1, (2, )), (2, (3, )), (2, (1, 1)), (3, (2, 2)))
+    @pytest.mark.parametrize('output_dim, input_shape',
+                             [(1, (1, )), (1, (2, )), (2, (3, )), (2, (1, 1)),
+                              (3, (2, 2))])
     def test_log_likelihood_sym(self, output_dim, input_shape):
         cmr = CategoricalMLPRegressorWithModel(
             input_shape=input_shape, output_dim=output_dim)

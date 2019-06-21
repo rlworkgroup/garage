@@ -1,8 +1,8 @@
 import pickle
 from unittest import mock
 
-from nose2.tools.params import params
 import numpy as np
+import pytest
 import tensorflow as tf
 
 from garage.tf.envs import TfEnv
@@ -14,27 +14,29 @@ from tests.fixtures.models import SimpleMLPModel
 
 
 class TestCategoricalConvPolicyWithModel(TfGraphTestCase):
-    @params(
-        ((1, ), 1, (32, ), (3, ), (1, ), 'VALID', (4, )),
-        ((2, ), 2, (32, ), (3, ), (1, ), 'VALID', (4, )),
-        ((2, ), 2, (32, 64), (3, 3), (1, 1), 'VALID', (4, 4)),
-        ((2, ), 2, (32, 64), (3, 3), (2, 2), 'VALID', (4, 4)),
-        ((1, 1), 1, (32, ), (3, ), (1, ), 'VALID', (4, )),
-        ((2, 2), 2, (32, ), (3, ), (1, ), 'VALID', (4, )),
-        ((2, 2), 2, (32, 64), (3, 3), (1, 1), 'VALID', (4, 4)),
-        ((2, 2), 2, (32, 64), (3, 3), (2, 2), 'VALID', (4, 4)),
-        ((1, ), 1, (32, ), (3, ), (1, ), 'SAME', (4, )),
-        ((2, ), 2, (32, ), (3, ), (1, ), 'SAME', (4, )),
-        ((2, ), 2, (32, 64), (3, 3), (1, 1), 'SAME', (4, 4)),
-        ((2, ), 2, (32, 64), (3, 3), (2, 2), 'SAME', (4, 4)),
-        ((1, 1), 1, (32, ), (3, ), (1, ), 'SAME', (4, )),
-        ((2, 2), 2, (32, ), (3, ), (1, ), 'SAME', (4, )),
-        ((2, 2), 2, (32, 64), (3, 3), (1, 1), 'SAME', (4, 4)),
-        ((2, 2), 2, (32, 64), (3, 3), (2, 2), 'SAME', (4, 4)),
-    )
+    @pytest.mark.parametrize(
+        'obs_dim, action_dim, filter_dims, filter_sizes, '
+        'strides, padding, hidden_sizes', [
+            ((1, ), 1, (32, ), (3, ), (1, ), 'VALID', (4, )),
+            ((2, ), 2, (32, ), (3, ), (1, ), 'VALID', (4, )),
+            ((2, ), 2, (32, 64), (3, 3), (1, 1), 'VALID', (4, 4)),
+            ((2, ), 2, (32, 64), (3, 3), (2, 2), 'VALID', (4, 4)),
+            ((1, 1), 1, (32, ), (3, ), (1, ), 'VALID', (4, )),
+            ((2, 2), 2, (32, ), (3, ), (1, ), 'VALID', (4, )),
+            ((2, 2), 2, (32, 64), (3, 3), (1, 1), 'VALID', (4, 4)),
+            ((2, 2), 2, (32, 64), (3, 3), (2, 2), 'VALID', (4, 4)),
+            ((1, ), 1, (32, ), (3, ), (1, ), 'SAME', (4, )),
+            ((2, ), 2, (32, ), (3, ), (1, ), 'SAME', (4, )),
+            ((2, ), 2, (32, 64), (3, 3), (1, 1), 'SAME', (4, 4)),
+            ((2, ), 2, (32, 64), (3, 3), (2, 2), 'SAME', (4, 4)),
+            ((1, 1), 1, (32, ), (3, ), (1, ), 'SAME', (4, )),
+            ((2, 2), 2, (32, ), (3, ), (1, ), 'SAME', (4, )),
+            ((2, 2), 2, (32, 64), (3, 3), (1, 1), 'SAME', (4, 4)),
+            ((2, 2), 2, (32, 64), (3, 3), (2, 2), 'SAME', (4, 4)),
+        ])
     @mock.patch('numpy.random.rand')
-    def test_get_action(self, obs_dim, action_dim, filter_dims, filter_sizes,
-                        strides, padding, hidden_sizes, mock_rand):
+    def test_get_action(self, mock_rand, obs_dim, action_dim, filter_dims,
+                        filter_sizes, strides, padding, hidden_sizes):
         mock_rand.return_value = 0
         env = TfEnv(DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
         with mock.patch(('garage.tf.policies.'
@@ -67,24 +69,26 @@ class TestCategoricalConvPolicyWithModel(TfGraphTestCase):
             assert action == 0
             assert np.array_equal(prob, expected_prob)
 
-    @params(
-        ((1, ), 1, (32, ), (3, ), (1, ), 'VALID', (4, )),
-        ((2, ), 2, (32, ), (3, ), (1, ), 'VALID', (4, )),
-        ((2, ), 2, (32, 64), (3, 3), (1, 1), 'VALID', (4, 4)),
-        ((2, ), 2, (32, 64), (3, 3), (2, 2), 'VALID', (4, 4)),
-        ((1, 1), 1, (32, ), (3, ), (1, ), 'VALID', (4, )),
-        ((2, 2), 2, (32, ), (3, ), (1, ), 'VALID', (4, )),
-        ((2, 2), 2, (32, 64), (3, 3), (1, 1), 'VALID', (4, 4)),
-        ((2, 2), 2, (32, 64), (3, 3), (2, 2), 'VALID', (4, 4)),
-        ((1, ), 1, (32, ), (3, ), (1, ), 'SAME', (4, )),
-        ((2, ), 2, (32, ), (3, ), (1, ), 'SAME', (4, )),
-        ((2, ), 2, (32, 64), (3, 3), (1, 1), 'SAME', (4, 4)),
-        ((2, ), 2, (32, 64), (3, 3), (2, 2), 'SAME', (4, 4)),
-        ((1, 1), 1, (32, ), (3, ), (1, ), 'SAME', (4, )),
-        ((2, 2), 2, (32, ), (3, ), (1, ), 'SAME', (4, )),
-        ((2, 2), 2, (32, 64), (3, 3), (1, 1), 'SAME', (4, 4)),
-        ((2, 2), 2, (32, 64), (3, 3), (2, 2), 'SAME', (4, 4)),
-    )
+    @pytest.mark.parametrize(
+        'obs_dim, action_dim, filter_dims, filter_sizes, '
+        'strides, padding, hidden_sizes', [
+            ((1, ), 1, (32, ), (3, ), (1, ), 'VALID', (4, )),
+            ((2, ), 2, (32, ), (3, ), (1, ), 'VALID', (4, )),
+            ((2, ), 2, (32, 64), (3, 3), (1, 1), 'VALID', (4, 4)),
+            ((2, ), 2, (32, 64), (3, 3), (2, 2), 'VALID', (4, 4)),
+            ((1, 1), 1, (32, ), (3, ), (1, ), 'VALID', (4, )),
+            ((2, 2), 2, (32, ), (3, ), (1, ), 'VALID', (4, )),
+            ((2, 2), 2, (32, 64), (3, 3), (1, 1), 'VALID', (4, 4)),
+            ((2, 2), 2, (32, 64), (3, 3), (2, 2), 'VALID', (4, 4)),
+            ((1, ), 1, (32, ), (3, ), (1, ), 'SAME', (4, )),
+            ((2, ), 2, (32, ), (3, ), (1, ), 'SAME', (4, )),
+            ((2, ), 2, (32, 64), (3, 3), (1, 1), 'SAME', (4, 4)),
+            ((2, ), 2, (32, 64), (3, 3), (2, 2), 'SAME', (4, 4)),
+            ((1, 1), 1, (32, ), (3, ), (1, ), 'SAME', (4, )),
+            ((2, 2), 2, (32, ), (3, ), (1, ), 'SAME', (4, )),
+            ((2, 2), 2, (32, 64), (3, 3), (1, 1), 'SAME', (4, 4)),
+            ((2, 2), 2, (32, 64), (3, 3), (2, 2), 'SAME', (4, 4)),
+        ])
     def test_dist_info(self, obs_dim, action_dim, filter_dims, filter_sizes,
                        strides, padding, hidden_sizes):
         env = TfEnv(DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
@@ -110,24 +114,26 @@ class TestCategoricalConvPolicyWithModel(TfGraphTestCase):
         policy_probs = policy.dist_info([obs])
         assert np.array_equal(policy_probs['prob'][0], expected_prob)
 
-    @params(
-        ((1, ), 1, (32, ), (3, ), (1, ), 'VALID', (4, )),
-        ((2, ), 2, (32, ), (3, ), (1, ), 'VALID', (4, )),
-        ((2, ), 2, (32, 64), (3, 3), (1, 1), 'VALID', (4, 4)),
-        ((2, ), 2, (32, 64), (3, 3), (2, 2), 'VALID', (4, 4)),
-        ((1, 1), 1, (32, ), (3, ), (1, ), 'VALID', (4, )),
-        ((2, 2), 2, (32, ), (3, ), (1, ), 'VALID', (4, )),
-        ((2, 2), 2, (32, 64), (3, 3), (1, 1), 'VALID', (4, 4)),
-        ((2, 2), 2, (32, 64), (3, 3), (2, 2), 'VALID', (4, 4)),
-        ((1, ), 1, (32, ), (3, ), (1, ), 'SAME', (4, )),
-        ((2, ), 2, (32, ), (3, ), (1, ), 'SAME', (4, )),
-        ((2, ), 2, (32, 64), (3, 3), (1, 1), 'SAME', (4, 4)),
-        ((2, ), 2, (32, 64), (3, 3), (2, 2), 'SAME', (4, 4)),
-        ((1, 1), 1, (32, ), (3, ), (1, ), 'SAME', (4, )),
-        ((2, 2), 2, (32, ), (3, ), (1, ), 'SAME', (4, )),
-        ((2, 2), 2, (32, 64), (3, 3), (1, 1), 'SAME', (4, 4)),
-        ((2, 2), 2, (32, 64), (3, 3), (2, 2), 'SAME', (4, 4)),
-    )
+    @pytest.mark.parametrize(
+        'obs_dim, action_dim, filter_dims, filter_sizes, '
+        'strides, padding, hidden_sizes', [
+            ((1, ), 1, (32, ), (3, ), (1, ), 'VALID', (4, )),
+            ((2, ), 2, (32, ), (3, ), (1, ), 'VALID', (4, )),
+            ((2, ), 2, (32, 64), (3, 3), (1, 1), 'VALID', (4, 4)),
+            ((2, ), 2, (32, 64), (3, 3), (2, 2), 'VALID', (4, 4)),
+            ((1, 1), 1, (32, ), (3, ), (1, ), 'VALID', (4, )),
+            ((2, 2), 2, (32, ), (3, ), (1, ), 'VALID', (4, )),
+            ((2, 2), 2, (32, 64), (3, 3), (1, 1), 'VALID', (4, 4)),
+            ((2, 2), 2, (32, 64), (3, 3), (2, 2), 'VALID', (4, 4)),
+            ((1, ), 1, (32, ), (3, ), (1, ), 'SAME', (4, )),
+            ((2, ), 2, (32, ), (3, ), (1, ), 'SAME', (4, )),
+            ((2, ), 2, (32, 64), (3, 3), (1, 1), 'SAME', (4, 4)),
+            ((2, ), 2, (32, 64), (3, 3), (2, 2), 'SAME', (4, 4)),
+            ((1, 1), 1, (32, ), (3, ), (1, ), 'SAME', (4, )),
+            ((2, 2), 2, (32, ), (3, ), (1, ), 'SAME', (4, )),
+            ((2, 2), 2, (32, 64), (3, 3), (1, 1), 'SAME', (4, 4)),
+            ((2, 2), 2, (32, 64), (3, 3), (2, 2), 'SAME', (4, 4)),
+        ])
     def test_dist_info_sym(self, obs_dim, action_dim, filter_dims,
                            filter_sizes, strides, padding, hidden_sizes):
         env = TfEnv(DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
@@ -157,14 +163,14 @@ class TestCategoricalConvPolicyWithModel(TfGraphTestCase):
         prob = self.sess.run(dist1['prob'], feed_dict={state_input: [obs]})
         assert np.array_equal(prob[0], expected_prob)
 
-    @params(
+    @pytest.mark.parametrize('obs_dim, action_dim', [
         ((1, ), 1),
         ((2, ), 2),
         ((1, 1), 1),
         ((2, 2), 2),
-    )
+    ])
     @mock.patch('numpy.random.rand')
-    def test_is_pickleable(self, obs_dim, action_dim, mock_rand):
+    def test_is_pickleable(self, mock_rand, obs_dim, action_dim):
         mock_rand.return_value = 0
         env = TfEnv(DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
         with mock.patch(('garage.tf.policies.'
