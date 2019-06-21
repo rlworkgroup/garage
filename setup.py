@@ -52,6 +52,8 @@ extras['dev'] = [
     'pep8-naming==0.7.0',
     'pre-commit',
     'pylint==1.9.2',
+    'pytest>=3.6',  # Required for pytest-cov on Python 3.6
+    'pytest-cov',
     'sphinx',
     'sphinx_rtd_theme',
     'yapf',
