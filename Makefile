@@ -24,13 +24,13 @@ ci-precommit-check:
 	scripts/travisci/check_precommit.sh
 
 ci-job-normal: ci-precommit-check docs
-	coverage run -m pytest -v -m \
+	pytest --cov=garage -v -m \
 	    'not nightly and not huge and not flaky and not large'
 	coverage xml
 	bash <(curl -s https://codecov.io/bash)
 
 ci-job-large:
-	coverage run -m pytest -v -m large
+	pytest --cov=garage -v -m large
 	coverage xml
 	bash <(curl -s https://codecov.io/bash)
 
