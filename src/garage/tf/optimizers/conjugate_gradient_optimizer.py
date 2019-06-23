@@ -133,6 +133,16 @@ class FiniteDifferenceHvp:
 
         return eval
 
+    def __getstate__(self):
+        """Object.__getstate__."""
+        new_dict = self.__dict__.copy()
+        del new_dict['opt_fun']
+        return new_dict
+
+    def __setstate__(self, state):
+        """Object.__setstate__."""
+        self.__dict__.update(state)
+
 
 class ConjugateGradientOptimizer(Serializable):
     """Performs constrained optimization via line search.
