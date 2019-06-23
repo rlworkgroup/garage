@@ -56,9 +56,16 @@ class CategoricalMLPPolicyWithModel(StochasticPolicy2):
                  output_w_init=tf.glorot_uniform_initializer(),
                  output_b_init=tf.zeros_initializer(),
                  layer_normalization=False):
+<<<<<<< HEAD
         assert isinstance(env_spec.action_space, akro.Discrete), (
             'CategoricalMLPPolicy only works with akro.Discrete action '
             'space.')
+=======
+        assert isinstance(
+            env_spec.action_space,
+            Discrete), ('CategoricalMLPPolicy only works with akro.Discrete'
+                        'action space.')
+>>>>>>> Remove scale option
         super().__init__(name, env_spec)
         self.obs_dim = env_spec.observation_space.flat_dim
         self.action_dim = env_spec.action_space.n
