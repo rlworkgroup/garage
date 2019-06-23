@@ -12,7 +12,6 @@ from gym.spaces import Dict as GymDict
 from gym.spaces import Discrete as GymDiscrete
 from gym.spaces import Tuple as GymTuple
 
-from garage.core import Parameterized
 from garage.core import Serializable
 from garage.envs.env_spec import EnvSpec
 
@@ -58,7 +57,6 @@ class GarageEnv(gym.Wrapper, Serializable):
                 action_space=self.action_space,
                 observation_space=self.observation_space)
 
-        Parameterized.__init__(self)
         Serializable.quick_init(self, locals())
 
     def close(self):
