@@ -47,3 +47,15 @@ class QFunction2(abc.ABC):
     def get_global_vars(self):
         """Get all global variables under the QFunction scope."""
         return self._variable_scope.global_variables()
+
+    def get_regularizable_vars(self):
+        """Get all network weight variables under the QFunction scope."""
+        trainable = self._variable_scope.global_variables()
+        return [
+            var for var in trainable
+            if 'hidden' in var.name and 'kernel' in var.name
+        ]
+
+    def log_diagnostics(self, paths):
+        """Log extra information per iteration based on the collected paths."""
+        pass
