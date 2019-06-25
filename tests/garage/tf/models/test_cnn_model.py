@@ -21,15 +21,17 @@ class TestCNNModel(TfGraphTestCase):
         self._input_ph = tf.placeholder(
             tf.float32, shape=(None, ) + input_shape, name='input')
 
-    @pytest.mark.parametrize(
-        'filter_sizes, in_channels, out_channels, strides', [
-            ((1, ), (3, ), (32, ), (1, )),
-            ((3, ), (3, ), (32, ), (1, )),
-            ((3, ), (3, ), (32, ), (2, )),
-            ((1, 1), (3, 32), (32, 64), (1, 1)),
-            ((3, 3), (3, 32), (32, 64), (1, 1)),
-            ((3, 3), (3, 32), (32, 64), (2, 2)),
-        ])
+    # yapf: disable
+    @pytest.mark.parametrize('filter_sizes, in_channels, out_channels, '
+                             'strides', [
+        ((1,), (3,), (32,), (1,)),  # noqa: E122
+        ((3,), (3,), (32,), (1,)),
+        ((3,), (3,), (32,), (2,)),
+        ((1, 1), (3, 32), (32, 64), (1, 1)),
+        ((3, 3), (3, 32), (32, 64), (1, 1)),
+        ((3, 3), (3, 32), (32, 64), (2, 2)),
+    ])
+    # yapf: enable
     def test_output_value(self, filter_sizes, in_channels, out_channels,
                           strides):
         model = CNNModel(
@@ -62,18 +64,20 @@ class TestCNNModel(TfGraphTestCase):
 
         assert np.array_equal(output, expected_output)
 
+    # yapf: disable
     @pytest.mark.parametrize('filter_sizes, in_channels, out_channels, '
                              'strides, pool_strides, pool_shapes', [
-        ((1,), (3,), (32,), (1,), (1, 1), (1, 1)),  # noqa: E501, yapf: disable
-        ((3,), (3,), (32,), (1,), (2, 2), (1, 1)),  # noqa: E501, yapf: disable
-        ((3,), (3,), (32,), (1,), (1, 1), (2, 2)),  # noqa: E501, yapf: disable
-        ((3,), (3,), (32,), (1,), (2, 2), (2, 2)),  # noqa: E501, yapf: disable
-        ((3,), (3,), (32,), (2,), (1, 1), (2, 2)),  # noqa: E501, yapf: disable
-        ((3,), (3,), (32,), (2,), (2, 2), (2, 2)),  # noqa: E501, yapf: disable
-        ((1, 1), (3, 32), (32, 64), (1, 1), (1, 1), (1, 1)),  # noqa: E501, yapf: disable
-        ((3, 3), (3, 32), (32, 64), (1, 1), (1, 1), (1, 1)),  # noqa: E501, yapf: disable
-        ((3, 3), (3, 32), (32, 64), (2, 2), (1, 1), (1, 1))   # noqa: E501, yapf: disable
-    ])  # noqa: E501, yapf: disable
+        ((1,), (3,), (32,), (1,), (1, 1), (1, 1)),  # noqa: E122
+        ((3,), (3,), (32,), (1,), (2, 2), (1, 1)),
+        ((3,), (3,), (32,), (1,), (1, 1), (2, 2)),
+        ((3,), (3,), (32,), (1,), (2, 2), (2, 2)),
+        ((3,), (3,), (32,), (2,), (1, 1), (2, 2)),
+        ((3,), (3,), (32,), (2,), (2, 2), (2, 2)),
+        ((1, 1), (3, 32), (32, 64), (1, 1), (1, 1), (1, 1)),
+        ((3, 3), (3, 32), (32, 64), (1, 1), (1, 1), (1, 1)),
+        ((3, 3), (3, 32), (32, 64), (2, 2), (1, 1), (1, 1)),
+    ])
+    # yapf: enable
     def test_output_value_max_pooling(self, filter_sizes, in_channels,
                                       out_channels, strides, pool_strides,
                                       pool_shapes):
@@ -112,15 +116,17 @@ class TestCNNModel(TfGraphTestCase):
 
         assert np.array_equal(output, expected_output)
 
-    @pytest.mark.parametrize(
-        'filter_sizes, in_channels, out_channels, strides', [   # noqa: E501, yapf: disable
-        ((1, ), (3, ), (32, ), (1, )),  # noqa: E501, yapf: disable
-        ((3, ), (3, ), (32, ), (1, )),  # noqa: E501, yapf: disable
-        ((3, ), (3, ), (32, ), (2, )),  # noqa: E501, yapf: disable
-        ((1, 1), (3, 32), (32, 64), (1, 1)),    # noqa: E501, yapf: disable
-        ((3, 3), (3, 32), (32, 64), (1, 1)),    # noqa: E501, yapf: disable
-        ((3, 3), (3, 32), (32, 64), (2, 2)),    # noqa: E501, yapf: disable
-    ])  # noqa: E501, yapf: disable
+    # yapf: disable
+    @pytest.mark.parametrize('filter_sizes, in_channels, out_channels, '
+                             'strides', [
+        ((1, ), (3, ), (32, ), (1, )),  # noqa: E122
+        ((3, ), (3, ), (32, ), (1, )),
+        ((3, ), (3, ), (32, ), (2, )),
+        ((1, 1), (3, 32), (32, 64), (1, 1)),
+        ((3, 3), (3, 32), (32, 64), (1, 1)),
+        ((3, 3), (3, 32), (32, 64), (2, 2)),
+    ])
+    # yapf: enable
     def test_is_pickleable(self, filter_sizes, in_channels, out_channels,
                            strides):
         model = CNNModel(

@@ -87,7 +87,7 @@ def interrupt_experiment(experiment_script, lifecycle_stage):
     assert clean_exit, colorize(error_msg, 'red')
 
 
-class TestSigInt():
+class TestSigInt:
 
     test_sigint_params = list(itertools.product(scripts, ExpLifecycle))
 

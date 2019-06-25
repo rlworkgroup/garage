@@ -20,7 +20,7 @@ class TfTestCase:
         gc.collect()
 
 
-class TfGraphTestCase():
+class TfGraphTestCase:
     def setup_method(self):
         self.graph = tf.Graph()
         self.sess = tf.Session(graph=self.graph)

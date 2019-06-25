@@ -30,12 +30,23 @@ class TestLSTM(TfGraphTestCase):
             recurrent_initializer=tf.constant_initializer(1),
             name='lstm_layer')
 
-    @pytest.mark.parametrize(
-        'time_step, input_dim, output_dim, hidden_init, cell_init',
-        [(1, 1, 1, 0, 0), (1, 1, 3, 0, 0), (1, 3, 1, 0, 0), (3, 1, 1, 0, 0),
-         (3, 3, 1, 0, 0), (3, 3, 3, 0, 0), (1, 1, 1, 0.5, 0.5),
-         (1, 1, 3, 0.5, 0.5), (1, 3, 1, 0.5, 0.5), (3, 1, 1, 0.5, 0.5),
-         (3, 3, 1, 0.5, 0.5), (3, 3, 3, 0.5, 0.5)])
+    # yapf: disable
+    @pytest.mark.parametrize('time_step, input_dim, output_dim, '
+                             'hidden_init, cell_init', [
+        (1, 1, 1, 0, 0),  # noqa: E122
+        (1, 1, 3, 0, 0),
+        (1, 3, 1, 0, 0),
+        (3, 1, 1, 0, 0),
+        (3, 3, 1, 0, 0),
+        (3, 3, 3, 0, 0),
+        (1, 1, 1, 0.5, 0.5),
+        (1, 1, 3, 0.5, 0.5),
+        (1, 3, 1, 0.5, 0.5),
+        (3, 1, 1, 0.5, 0.5),
+        (3, 3, 1, 0.5, 0.5),
+        (3, 3, 3, 0.5, 0.5),
+    ])
+    # yapf: enable
     def test_output_shapes(self, time_step, input_dim, output_dim, hidden_init,
                            cell_init):
         obs_inputs = np.full((self.batch_size, time_step, input_dim), 1.)
@@ -87,20 +98,20 @@ class TestLSTM(TfGraphTestCase):
         assert full_output.shape == (self.batch_size, time_step, output_dim)
 
     # yapf: disable
-    @pytest.mark.parametrize(
-        'time_step, input_dim, output_dim, hidden_init, cell_init', [
-        (1, 1, 1, 0, 0),    # noqa: E501
-        (1, 1, 3, 0, 0),    # noqa: E501
-        (1, 3, 1, 0, 0),    # noqa: E501
-        (3, 1, 1, 0, 0),    # noqa: E501
-        (3, 3, 1, 0, 0),    # noqa: E501
-        (3, 3, 3, 0, 0),    # noqa: E501
-        (1, 1, 1, 0.5, 0.5),    # noqa: E501
-        (1, 1, 3, 0.5, 0.5),    # noqa: E501
-        (1, 3, 1, 0.5, 0.5),    # noqa: E501
-        (3, 1, 1, 0.5, 0.5),    # noqa: E501
-        (3, 3, 1, 0.5, 0.5),    # noqa: E501
-        (3, 3, 3, 0.5, 0.5)    # noqa: E501
+    @pytest.mark.parametrize('time_step, input_dim, output_dim, '
+                             'hidden_init, cell_init', [
+        (1, 1, 1, 0, 0),  # noqa: E122
+        (1, 1, 3, 0, 0),
+        (1, 3, 1, 0, 0),
+        (3, 1, 1, 0, 0),
+        (3, 3, 1, 0, 0),
+        (3, 3, 3, 0, 0),
+        (1, 1, 1, 0.5, 0.5),
+        (1, 1, 3, 0.5, 0.5),
+        (1, 3, 1, 0.5, 0.5),
+        (3, 1, 1, 0.5, 0.5),
+        (3, 3, 1, 0.5, 0.5),
+        (3, 3, 3, 0.5, 0.5),
     ])
     # yapf: enable
     def test_output_value(self, time_step, input_dim, output_dim, hidden_init,
@@ -193,12 +204,16 @@ class TestLSTM(TfGraphTestCase):
         full_output2 = np.matmul(stack_hidden, output_nonlinearity)
         assert np.allclose(full_output1, full_output2)
 
-    @pytest.mark.parametrize('time_step, input_dim, output_dim', [(1, 1, 1),
-                                                                  (1, 1, 3),
-                                                                  (1, 3, 1),
-                                                                  (3, 1, 1),
-                                                                  (3, 3, 1),
-                                                                  (3, 3, 3)])
+    # yapf: disable
+    @pytest.mark.parametrize('time_step, input_dim, output_dim', [
+        (1, 1, 1),
+        (1, 1, 3),
+        (1, 3, 1),
+        (3, 1, 1),
+        (3, 3, 1),
+        (3, 3, 3),
+    ])
+    # yapf: enable
     def test_output_value_trainable_hidden_and_cell(self, time_step, input_dim,
                                                     output_dim):
         obs_inputs = np.full((self.batch_size, time_step, input_dim), 1.)
@@ -362,12 +377,23 @@ class TestLSTM(TfGraphTestCase):
         with pytest.raises(TypeError):
             self.sess.run(grads_step_c, feed_dict={_input_var: obs_inputs})
 
-    @pytest.mark.parametrize(
-        'time_step, input_dim, output_dim, hidden_init, cell_init',
-        [(1, 1, 1, 0, 0), (1, 1, 3, 0, 0), (1, 3, 1, 0, 0), (3, 1, 1, 0, 0),
-         (3, 3, 1, 0, 0), (3, 3, 3, 0, 0), (1, 1, 1, 0.5, 0.5),
-         (1, 1, 3, 0.5, 0.5), (1, 3, 1, 0.5, 0.5), (3, 1, 1, 0.5, 0.5),
-         (3, 3, 1, 0.5, 0.5), (3, 3, 3, 0.5, 0.5)])
+    # yapf: disable
+    @pytest.mark.parametrize('time_step, input_dim, output_dim, '
+                             'hidden_init, cell_init', [
+        (1, 1, 1, 0, 0),  # noqa: E122
+        (1, 1, 3, 0, 0),
+        (1, 3, 1, 0, 0),
+        (3, 1, 1, 0, 0),
+        (3, 3, 1, 0, 0),
+        (3, 3, 3, 0, 0),
+        (1, 1, 1, 0.5, 0.5),
+        (1, 1, 3, 0.5, 0.5),
+        (1, 3, 1, 0.5, 0.5),
+        (3, 1, 1, 0.5, 0.5),
+        (3, 3, 1, 0.5, 0.5),
+        (3, 3, 3, 0.5, 0.5),
+    ])
+    # yapf: enable
     def test_output_same_as_rnn(self, time_step, input_dim, output_dim,
                                 hidden_init, cell_init):
         obs_inputs = np.full((self.batch_size, time_step, input_dim), 1.)

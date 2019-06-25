@@ -37,8 +37,11 @@ class TestMLPModel:
 
     # yapf: disable
     @pytest.mark.parametrize('input_dim, output_dim, hidden_sizes', [
-        (5, 1, (1, )), (5, 1, (2, )), (5, 2, (3, )), (5, 2, (1, 1)),
-        (5, 3, (2, 2))
+        (5, 1, (1, )),
+        (5, 1, (2, )),
+        (5, 2, (3, )),
+        (5, 2, (1, 1)),
+        (5, 3, (2, 2)),
     ])
     # yapf: enable
     def test_is_pickleable(self, input_dim, output_dim, hidden_sizes):

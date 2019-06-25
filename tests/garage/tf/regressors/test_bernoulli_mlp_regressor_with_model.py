@@ -69,7 +69,9 @@ def get_test_data(input_shape, output_dim):
 class TestBernoulliMLPRegressorWithModel(TfGraphTestCase):
     # yapf: disable
     @pytest.mark.parametrize('input_shape, output_dim', [
-        ((1, ), 2), ((2, ), 1), ((2, ), 2)
+        ((1, ), 2),
+        ((2, ), 1),
+        ((2, ), 2),
     ])
     # yapf: enable
     def test_fit_normalized(self, input_shape, output_dim):
@@ -96,7 +98,9 @@ class TestBernoulliMLPRegressorWithModel(TfGraphTestCase):
 
     # yapf: disable
     @pytest.mark.parametrize('input_shape, output_dim', [
-        ((1, ), 2), ((2, ), 2), ((2, ), 1)
+        ((1, ), 2),
+        ((2, ), 2),
+        ((2, ), 1),
     ])
     # yapf: enable
     def test_fit_unnormalized(self, input_shape, output_dim):
@@ -126,7 +130,9 @@ class TestBernoulliMLPRegressorWithModel(TfGraphTestCase):
 
     # yapf: disable
     @pytest.mark.parametrize('input_shape, output_dim', [
-        ((1, ), 2), ((2, ), 2), ((2, ), 1)
+        ((1, ), 2),
+        ((2, ), 2),
+        ((2, ), 1),
     ])
     # yapf: enable
     def test_fit_with_no_trust_region(self, input_shape, output_dim):
@@ -155,7 +161,10 @@ class TestBernoulliMLPRegressorWithModel(TfGraphTestCase):
 
     # yapf: disable
     @pytest.mark.parametrize('output_dim, input_shape', [
-        (1, (1, 1)), (1, (2, 2)), (2, (3, 2)), (3, (2, 2))
+        (1, (1, 1)),
+        (1, (2, 2)),
+        (2, (3, 2)),
+        (3, (2, 2)),
     ])
     # yapf: enable
     def test_log_likelihood_sym(self, output_dim, input_shape):
