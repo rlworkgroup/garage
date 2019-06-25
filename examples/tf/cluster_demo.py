@@ -39,7 +39,7 @@ def run_task(v):
             baseline=baseline,
             max_path_length=100,
             discount=0.99,
-            step_size=v['step_size'],
+            max_kl_step=v['step_size'],
         )
 
         runner.setup(algo=algo, env=env)
