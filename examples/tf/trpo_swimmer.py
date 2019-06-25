@@ -22,7 +22,7 @@ def run_task(*_):
             baseline=baseline,
             max_path_length=500,
             discount=0.99,
-            step_size=0.01)
+            max_kl_step=0.01)
 
         runner.setup(algo, env)
         runner.train(n_epochs=40, batch_size=4000)
