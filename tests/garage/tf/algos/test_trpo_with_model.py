@@ -6,7 +6,6 @@ import gym
 
 from garage.envs import normalize
 from garage.experiment import LocalRunner
-from garage.experiment import snapshotter
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import TRPO
 from garage.tf.envs import TfEnv
@@ -36,7 +35,6 @@ class TestTRPO(TfGraphTestCase):
                 optimizer_args=dict(
                     hvp_approach=FiniteDifferenceHvp(base_eps=1e-5)))
 
-            snapshotter.snapshot_dir = './'
             runner.setup(algo, env)
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 80
