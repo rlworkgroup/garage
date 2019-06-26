@@ -7,3 +7,6 @@ class DummyOffPolicyAlgo(OffPolicyRLAlgorithm):
 
     def train_once(self, itr, paths):
         pass
+
+    def train(self, runner, batch_size):
+        pass
