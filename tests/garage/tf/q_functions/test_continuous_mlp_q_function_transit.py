@@ -25,34 +25,34 @@ from tests.fixtures.envs.dummy import DummyBoxEnv
 
 
 class TestContinuousMLPQFunctionTransit(TfGraphTestCase):
-    @mock.patch('tensorflow.random.normal')
-    def setUp(self, mock_rand):
-        mock_rand.return_value = 0.5
-        super().setUp()
-        self.obs_dim = (5, )
-        self.act_dim = (2, )
-        self.box_env = TfEnv(
-            DummyBoxEnv(obs_dim=self.obs_dim, action_dim=self.act_dim))
-        self.qf1 = ContinuousMLPQFunction(
-            env_spec=self.box_env, hidden_sizes=(32, 32), name='QF1')
-        self.qf2 = ContinuousMLPQFunction(
-            env_spec=self.box_env, hidden_sizes=(64, 64), name='QF2')
-        self.qf3 = ContinuousMLPQFunctionWithModel(
-            env_spec=self.box_env, hidden_sizes=(32, 32), name='QF3')
-        self.qf4 = ContinuousMLPQFunctionWithModel(
-            env_spec=self.box_env, hidden_sizes=(64, 64), name='QF4')
+    def setup_method(self):
+        with mock.patch('tensorflow.random.normal') as mock_rand:
+            mock_rand.return_value = 0.5
+            super().setup_method()
+            self.obs_dim = (5, )
+            self.act_dim = (2, )
+            self.box_env = TfEnv(
+                DummyBoxEnv(obs_dim=self.obs_dim, action_dim=self.act_dim))
+            self.qf1 = ContinuousMLPQFunction(
+                env_spec=self.box_env, hidden_sizes=(32, 32), name='QF1')
+            self.qf2 = ContinuousMLPQFunction(
+                env_spec=self.box_env, hidden_sizes=(64, 64), name='QF2')
+            self.qf3 = ContinuousMLPQFunctionWithModel(
+                env_spec=self.box_env, hidden_sizes=(32, 32), name='QF3')
+            self.qf4 = ContinuousMLPQFunctionWithModel(
+                env_spec=self.box_env, hidden_sizes=(64, 64), name='QF4')
 
-        self.sess.run(tf.global_variables_initializer())
+            self.sess.run(tf.global_variables_initializer())
 
-        for a, b in zip(self.qf3.get_trainable_vars(),
-                        self.qf1.get_trainable_vars()):
-            self.sess.run(a.assign(b))
-        for a, b in zip(self.qf4.get_trainable_vars(),
-                        self.qf2.get_trainable_vars()):
-            self.sess.run(a.assign(b))
+            for a, b in zip(self.qf3.get_trainable_vars(),
+                            self.qf1.get_trainable_vars()):
+                self.sess.run(a.assign(b))
+            for a, b in zip(self.qf4.get_trainable_vars(),
+                            self.qf2.get_trainable_vars()):
+                self.sess.run(a.assign(b))
 
-        self.obs = self.box_env.reset()
-        self.act = np.full((2, ), 0.5)
+            self.obs = self.box_env.reset()
+            self.act = np.full((2, ), 0.5)
 
     def test_get_qval(self):
         q_val1 = self.qf1.get_qval([self.obs], [self.act])

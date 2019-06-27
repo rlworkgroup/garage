@@ -1,8 +1,8 @@
 import pickle
 from unittest import mock
 
-from nose2.tools.params import params
 import numpy as np
+import pytest
 import tensorflow as tf
 
 from garage.tf.envs import TfEnv
@@ -13,12 +13,12 @@ from tests.fixtures.models import SimpleMLPMergeModel
 
 
 class TestContinuousMLPQFunctionWithModel(TfGraphTestCase):
-    @params(
+    @pytest.mark.parametrize('obs_dim, action_dim', [
         ((1, ), (1, )),
         ((2, ), (2, )),
         ((1, 1), (1, )),
         ((2, 2), (2, )),
-    )
+    ])
     def test_q_vals(self, obs_dim, action_dim):
         env = TfEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
         with mock.patch(('garage.tf.q_functions.'
@@ -64,12 +64,12 @@ class TestContinuousMLPQFunctionWithModel(TfGraphTestCase):
         for output in outputs:
             assert np.array_equal(output, expected_output)
 
-    @params(
+    @pytest.mark.parametrize('obs_dim, action_dim', [
         ((1, ), (1, )),
         ((2, ), (2, )),
         ((1, 1), (1, )),
         ((2, 2), (2, )),
-    )
+    ])
     def test_output_shape(self, obs_dim, action_dim):
         env = TfEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
         with mock.patch(('garage.tf.q_functions.'
@@ -86,12 +86,12 @@ class TestContinuousMLPQFunctionWithModel(TfGraphTestCase):
 
         assert outputs.shape == (1, 1)
 
-    @params(
+    @pytest.mark.parametrize('obs_dim, action_dim', [
         ((1, ), (1, )),
         ((2, ), (2, )),
         ((1, 1), (1, )),
         ((2, 2), (2, )),
-    )
+    ])
     def test_get_qval_sym(self, obs_dim, action_dim):
         env = TfEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
         with mock.patch(('garage.tf.q_functions.'
@@ -120,12 +120,12 @@ class TestContinuousMLPQFunctionWithModel(TfGraphTestCase):
         assert np.array_equal(output1, output2)
         assert np.array_equal(output2[0], expected_output)
 
-    @params(
+    @pytest.mark.parametrize('obs_dim, action_dim', [
         ((1, ), (1, )),
         ((2, ), (2, )),
         ((1, 1), (1, )),
         ((2, 2), (2, )),
-    )
+    ])
     def test_is_pickleable(self, obs_dim, action_dim):
         env = TfEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
         with mock.patch(('garage.tf.q_functions.'
@@ -155,12 +155,12 @@ class TestContinuousMLPQFunctionWithModel(TfGraphTestCase):
 
         assert np.array_equal(output1, output2)
 
-    @params(
+    @pytest.mark.parametrize('obs_dim, action_dim, hidden_sizes', [
         ((1, ), (1, ), (3, )),
         ((2, ), (2, ), (32, )),
         ((1, 1), (1, ), (3, 3)),
         ((2, 2), (2, ), (32, 32)),
-    )
+    ])
     def test_clone(self, obs_dim, action_dim, hidden_sizes):
         env = TfEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
         with mock.patch(('garage.tf.q_functions.'

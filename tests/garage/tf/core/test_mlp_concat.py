@@ -1,5 +1,5 @@
-from nose2.tools.params import params
 import numpy as np
+import pytest
 import tensorflow as tf
 
 from garage.tf.core.mlp import mlp
@@ -7,8 +7,8 @@ from tests.fixtures import TfGraphTestCase
 
 
 class TestMLPConcat(TfGraphTestCase):
-    def setUp(self):
-        super(TestMLPConcat, self).setUp()
+    def setup_method(self):
+        super(TestMLPConcat, self).setup_method()
         self.obs_input = np.array([[1, 2, 3, 4]])
         self.act_input = np.array([[1, 2, 3, 4]])
         input_shape_1 = self.obs_input.shape[1:]  # 4
@@ -210,7 +210,7 @@ class TestMLPConcat(TfGraphTestCase):
 
         np.testing.assert_array_almost_equal(out, mlp_output)
 
-    @params(2, 1, 0, -1, -2)
+    @pytest.mark.parametrize('concat_idx', [2, 1, 0, -1, -2])
     def test_concat_layer(self, concat_idx):
         with tf.variable_scope('mlp_concat_test'):
             _ = mlp(
@@ -239,7 +239,7 @@ class TestMLPConcat(TfGraphTestCase):
 
         assert np.array_equal(expected_units, actual_units)
 
-    @params(2, 1, 0, -1, -2)
+    @pytest.mark.parametrize('concat_idx', [2, 1, 0, -1, -2])
     def test_invalid_concat_args(self, concat_idx):
         with tf.variable_scope('mlp_concat_test'):
             _ = mlp(
@@ -267,7 +267,7 @@ class TestMLPConcat(TfGraphTestCase):
 
         assert np.array_equal(expected_units, actual_units)
 
-    @params(2, 1, 0, -1, -2)
+    @pytest.mark.parametrize('concat_idx', [2, 1, 0, -1, -2])
     def test_no_hidden(self, concat_idx):
         with tf.variable_scope('mlp_concat_test'):
             _ = mlp(
