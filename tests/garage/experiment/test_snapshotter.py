@@ -19,7 +19,7 @@ configurations = [('all', {
 }), ('none', {})]
 
 
-class TestSanpshotter:
+class TestSnapshotter:
     def setup_method(self):
         self.snapshot_dir = tempfile.TemporaryDirectory()
         self.snapshotter = Snapshotter()

@@ -23,7 +23,7 @@ class TestMLPModel(TfGraphTestCase):
         (1, (2, )),
         (2, (3, )),
         (2, (1, 1)),
-        (3, (2, 2))
+        (3, (2, 2)),
     ])
     # yapf: enable
     def test_output_values(self, output_dim, hidden_sizes):
@@ -41,13 +41,13 @@ class TestMLPModel(TfGraphTestCase):
         assert np.array_equal(output, expected_output)
 
     # yapf: disable
-    @pytest.mark.parametrize('output_dim, hidden_sizes',[
+    @pytest.mark.parametrize('output_dim, hidden_sizes', [
         (1, (0, )),
         (1, (1, )),
         (1, (2, )),
         (2, (3, )),
         (2, (1, 1)),
-        (3, (2, 2))
+        (3, (2, 2)),
     ])
     # yapf: enable
     def test_output_values_dueling(self, output_dim, hidden_sizes):
@@ -71,7 +71,7 @@ class TestMLPModel(TfGraphTestCase):
         (1, (2, )),
         (2, (3, )),
         (2, (1, 1)),
-        (3, (2, 2))
+        (3, (2, 2)),
     ])
     # yapf: enable
     def test_output_values_merging(self, output_dim, hidden_sizes):
@@ -97,13 +97,13 @@ class TestMLPModel(TfGraphTestCase):
         assert np.array_equal(output, expected_output)
 
     # yapf: disable
-    @pytest.mark.parametrize('output_dim, hidden_sizes',[
+    @pytest.mark.parametrize('output_dim, hidden_sizes', [
         (1, (0, )),
         (1, (1, )),
         (1, (2, )),
         (2, (3, )),
         (2, (1, 1)),
-        (3, (2, 2))
+        (3, (2, 2)),
     ])
     # yapf: enable
     def test_is_pickleable(self, output_dim, hidden_sizes):

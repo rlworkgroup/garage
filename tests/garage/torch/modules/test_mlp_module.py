@@ -15,7 +15,7 @@ class TestMLPModel:
         (5, 1, (2, )),
         (5, 2, (3, )),
         (5, 2, (1, 1)),
-        (5, 3, (2, 2))
+        (5, 3, (2, 2)),
     ])
     # yapf: enable
     def test_output_values(self, input_dim, output_dim, hidden_sizes):
