@@ -17,7 +17,6 @@ import dowel
 from dowel import logger
 import psutil
 
-from garage import config
 from garage.experiment import deterministic, snapshotter
 from garage.experiment.experiment import concretize
 from garage.experiment.local_tf_runner import LocalRunner
@@ -34,7 +33,6 @@ def is_iterable(obj):
 
 
 def run_experiment(argv):
-    default_log_dir = config.GARAGE_LOG_DIR
     now = datetime.datetime.now(dateutil.tz.tzlocal())
 
     # avoid name clashes when running distributed jobs
@@ -159,11 +157,12 @@ def run_experiment(argv):
 
     if args.log_dir is None:
         if args.resume_from_dir is None:
-            log_dir = osp.join(default_log_dir, args.exp_name)
+            log_dir = osp.join(osp.join(os.getcwd(), 'data'), args.exp_name)
         else:
             log_dir = args.resume_from_dir
     else:
         log_dir = args.log_dir
+
     tabular_log_file = osp.join(log_dir, args.tabular_log_file)
     text_log_file = osp.join(log_dir, args.text_log_file)
     params_log_file = osp.join(log_dir, args.params_log_file)
