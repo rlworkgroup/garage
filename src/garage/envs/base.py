@@ -7,6 +7,8 @@ from akro import Discrete
 from akro import Tuple
 import glfw
 import gym
+from gym.envs.classic_control.rendering import SimpleImageViewer
+from gym.envs.classic_control.rendering import Viewer
 from gym.spaces import Box as GymBox
 from gym.spaces import Dict as GymDict
 from gym.spaces import Discrete as GymDiscrete
@@ -15,9 +17,16 @@ from gym.spaces import Tuple as GymTuple
 from garage.core import Serializable
 from garage.envs.env_spec import EnvSpec
 
-# The gym environments using one of the packages in the following list as entry
-# points don't close their viewer windows.
+# The gym environments using one of the packages in the following lists as
+# entry points don't close their viewer windows.
 KNOWN_GYM_NOT_CLOSE_VIEWER = [
+    # Please keep alphabetized
+    'gym.envs.atari',
+    'gym.envs.box2d',
+    'gym.envs.classic_control'
+]
+
+KNOWN_GYM_NOT_CLOSE_MJ_VIEWER = [
     # Please keep alphabetized
     'gym.envs.mujoco',
     'gym.envs.robotics'
@@ -66,38 +75,37 @@ class GarageEnv(gym.Wrapper, Serializable):
         Returns:
             None
         """
-        self._close_mjviewer_window()
+        self._close_viewer_window()
         self.env.close()
 
-    def _close_mjviewer_window(self):
+    def _close_viewer_window(self):
         """
-        Close the MjViewer window.
+        Close viewer window.
 
-        Unfortunately, the gym environments using MuJoCo don't close the viewer
-        windows properly, which leads to "out of memory" issues when several
-        of these environments are tested one after the other.
-        This method searches for the viewer object of type MjViewer, and if the
-        environment is wrapped in other environment classes, it performs depth
-        search in those as well.
+        Unfortunately, some gym environments don't close the viewer windows
+        properly, which leads to "out of memory" issues when several of
+        these environments are tested one after the other.
+        This method searches for the viewer object of type MjViewer, Viewer
+        or SimpleImageViewer, based on environment, and if the environment
+        is wrapped in other environment classes, it performs depth search
+        in those as well.
         This method can be removed once OpenAI solves the issue.
         """
         if self.env.spec:
             if any(package in self.env.spec._entry_point
-                   for package in KNOWN_GYM_NOT_CLOSE_VIEWER):
+                   for package in KNOWN_GYM_NOT_CLOSE_MJ_VIEWER):
                 # This import is not in the header to avoid a MuJoCo dependency
                 # with non-MuJoCo environments that use this base class.
                 from mujoco_py.mjviewer import MjViewer
                 if (hasattr(self.env, 'viewer')
                         and isinstance(self.env.viewer, MjViewer)):
                     glfw.destroy_window(self.env.viewer.window)
-                else:
-                    env_itr = self.env
-                    while hasattr(env_itr, 'env'):
-                        env_itr = env_itr.env
-                        if (hasattr(env_itr, 'viewer')
-                                and isinstance(env_itr.viewer, MjViewer)):
-                            glfw.destroy_window(env_itr.viewer.window)
-                            break
+            elif any(package in self.env.spec._entry_point
+                     for package in KNOWN_GYM_NOT_CLOSE_VIEWER):
+                if (hasattr(self.env, 'viewer') and
+                    (isinstance(self.env.viewer, Viewer)
+                     or isinstance(self.env.viewer, SimpleImageViewer))):
+                    self.env.viewer.close()
 
     def reset(self, **kwargs):
         """

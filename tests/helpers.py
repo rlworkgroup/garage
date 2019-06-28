@@ -47,6 +47,8 @@ def step_env_with_gym_quirks(test_case,
         if done:
             break
 
+    env.close()
+
     if serialize_env:
         # Roundtrip serialization
         round_trip = pickle.loads(pickle.dumps(env))
