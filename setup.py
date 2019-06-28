@@ -43,11 +43,9 @@ extras['intel'] = ['intel-tensorflow<1.13,>=1.12.0']
 extras['dev'] = [
     # Please keep alphabetized
     'baselines @ https://api.github.com/repos/openai/baselines/tarball/f2729693253c0ef4d4086231d36e0a4307ec1cb3',  # noqa: E501
-    'coverage',
     'flake8',
     'flake8-docstrings==1.3.0',
     'flake8-import-order',
-    'nose2',
     'pandas',
     'pep8-naming==0.7.0',
     'pre-commit',
