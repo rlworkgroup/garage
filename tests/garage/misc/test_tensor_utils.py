@@ -1,7 +1,6 @@
 """
 This script creates a test that tests functions in garage.misc.tensor_utils.
 """
-import unittest
 
 import numpy as np
 
@@ -11,7 +10,7 @@ from tests.fixtures.envs.dummy import DummyBoxEnv
 from tests.fixtures.envs.dummy import DummyDiscretePixelEnv
 
 
-class TestTensorUtil(unittest.TestCase):
+class TestTensorUtil:
     def test_normalize_pixel_patch(self):
         env = TfEnv(DummyDiscretePixelEnv())
         obs = env.reset()

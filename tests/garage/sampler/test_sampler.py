@@ -1,7 +1,6 @@
-import unittest
-
 from dowel import logger
 import numpy as np
+import pytest
 
 from garage.experiment import LocalRunner
 from garage.np.baselines import LinearFeatureBaseline
@@ -13,11 +12,11 @@ from garage.tf.samplers import BatchSampler
 from tests.fixtures.logger import NullOutput
 
 
-class TestSampler(unittest.TestCase):
-    def setUp(self):
+class TestSampler:
+    def setup_method(self):
         logger.add_output(NullOutput())
 
-    def tearDown(self):
+    def teardown_method(self):
         logger.remove_all()
 
     def test_truncate_paths(self):
@@ -46,6 +45,14 @@ class TestSampler(unittest.TestCase):
         assert len(paths) == 2
         assert len(paths[-1]['observations']) == 50
 
+    # Note:
+    #   test_batch_sampler should pass if tested independently
+    #   from other tests, but cannot be tested on CI.
+    #
+    #   This is because nose2 runs all tests in a single process,
+    #   when this test is running, tensorflow has already been initialized,
+    #   and later singleton_pool will hang because tensorflow is not fork-safe.
+    @pytest.mark.flaky
     def test_tf_batch_sampler(self):
         max_cpus = 8
         with LocalRunner(max_cpus=max_cpus) as runner:
@@ -72,22 +79,13 @@ class TestSampler(unittest.TestCase):
             try:
                 runner.initialize_tf_vars()
             except BaseException:
-                raise self.failureException(
+                raise AssertionError(
                     'LocalRunner should be able to initialize tf variables.')
 
             runner._start_worker()
 
             paths = runner.sampler.obtain_samples(
                 0, batch_size=8, whole_paths=True)
-            self.assertGreaterEqual(
-                len(paths), max_cpus, 'BatchSampler should sample more than '
-                'max_cpus={} trajectories'.format(max_cpus))
-
-    # Note:
-    #   test_batch_sampler should pass if tested independently
-    #   from other tests, but cannot be tested on CI.
-    #
-    #   This is because nose2 runs all tests in a single process,
-    #   when this test is running, tensorflow has already been initialized,
-    #   and later singleton_pool will hang because tensorflow is not fork-safe.
-    test_tf_batch_sampler.flaky = True
+            assert len(paths) >= max_cpus, (
+                'BatchSampler should sample more than max_cpus={} '
+                'trajectories'.format(max_cpus))

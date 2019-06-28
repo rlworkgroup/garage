@@ -13,22 +13,19 @@ from tests.fixtures import TfGraphTestCase
 class TestLocalRunner(TfGraphTestCase):
     def test_session(self):
         with LocalRunner():
-            self.assertIsNotNone(
-                tf.get_default_session(),
+            assert tf.get_default_session is not None, (
                 'LocalRunner() should provide a default tf session.')
 
         sess = tf.Session()
         with LocalRunner(sess=sess):
-            self.assertIs(
-                tf.get_default_session(), sess,
+            assert tf.get_default_session() is sess, (
                 'LocalRunner(sess) should use sess as default session.')
 
     def test_singleton_pool(self):
         max_cpus = 8
         with LocalRunner(max_cpus=max_cpus):
-            self.assertEqual(
-                max_cpus, singleton_pool.n_parallel,
-                'LocaRunner(max_cpu) should set up singleton_pool.')
+            assert max_cpus == singleton_pool.n_parallel, (
+                'LocalRunner(max_cpu) should set up singleton_pool.')
 
     def test_train(self):
         with LocalRunner() as runner:

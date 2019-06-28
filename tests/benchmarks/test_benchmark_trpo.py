@@ -9,7 +9,6 @@ garage.tf.samplers.BatchSampler to smooth the reward curve.
 import datetime
 import os.path as osp
 import random
-import unittest
 
 from baselines import logger as baselines_logger
 from baselines.bench import benchmarks
@@ -19,6 +18,7 @@ from baselines.trpo_mpi import trpo_mpi
 import dowel
 from dowel import logger as dowel_logger
 import gym
+import pytest
 import tensorflow as tf
 
 from garage.envs import normalize
@@ -32,9 +32,10 @@ import tests.helpers as Rh
 from tests.wrappers import AutoStopEnv
 
 
-class TestBenchmarkPPO(unittest.TestCase):
+class TestBenchmarkPPO:
     '''Compare benchmarks between garage and baselines.'''
 
+    @pytest.mark.huge
     def test_benchmark_trpo(self):
         '''
         Compare benchmarks between garage and baselines.
@@ -109,8 +110,6 @@ class TestBenchmarkPPO(unittest.TestCase):
 
         Rh.write_file(result_json, 'TRPO')
 
-    test_benchmark_trpo.huge = True
-
 
 def run_garage(env, seed, log_dir):
     '''
@@ -152,7 +151,6 @@ def run_garage(env, seed, log_dir):
             gae_lambda=0.98,
             max_kl_step=0.01,
             policy_ent_coeff=0.0,
-            plot=False,
         )
 
         # Set up logger since we are not using run_experiment

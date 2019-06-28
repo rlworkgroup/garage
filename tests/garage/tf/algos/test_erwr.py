@@ -7,6 +7,8 @@ from tests.fixtures import TfGraphTestCase
 
 
 class TestERWR(TfGraphTestCase):
+    # unmarked to balance test jobs
+    # @pytest.mark.large
     def test_erwr_cartpole(self):
         """Test ERWR with Cartpole-v1 environment."""
         with LocalRunner(self.sess) as runner:
@@ -30,6 +32,3 @@ class TestERWR(TfGraphTestCase):
             assert last_avg_ret > 80
 
             env.close()
-
-    # unmarked to balance test jobs
-    # test_erwr_cartpole.large = True

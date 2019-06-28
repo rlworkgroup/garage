@@ -43,8 +43,8 @@ class TestResume(TfGraphTestCase):
         snapshotter.snapshot_mode = 'last'
 
         policy_params = fixture_exp()
-        self.tearDown()
-        self.setUp()
+        self.teardown_method()
+        self.setup_method()
 
         with LocalRunner() as runner:
             args = runner.restore(folder)
@@ -65,11 +65,11 @@ class TestResume(TfGraphTestCase):
                 store_paths=True,
                 pause_for_plot=False)
 
-            self.assertEqual(runner.train_args.n_epochs, 10)
-            self.assertEqual(runner.train_args.batch_size, batch_size)
-            self.assertEqual(runner.train_args.n_epoch_cycles, n_epoch_cycles)
-            self.assertEqual(runner.train_args.plot, False)
-            self.assertEqual(runner.train_args.store_paths, True)
-            self.assertEqual(runner.train_args.pause_for_plot, False)
+            assert runner.train_args.n_epochs == 10
+            assert runner.train_args.batch_size == batch_size
+            assert runner.train_args.n_epoch_cycles == n_epoch_cycles
+            assert not runner.train_args.plot
+            assert runner.train_args.store_paths
+            assert not runner.train_args.pause_for_plot
 
         shutil.rmtree(folder)

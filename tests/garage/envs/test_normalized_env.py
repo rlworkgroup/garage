@@ -1,5 +1,4 @@
 import pickle
-import unittest
 
 import numpy as np
 
@@ -8,7 +7,7 @@ from garage.envs.normalized_env import NormalizedEnv
 from tests.helpers import step_env
 
 
-class TestNormalizedEnv(unittest.TestCase):
+class TestNormalizedEnv:
     def test_pickleable(self):
         inner_env = PointEnv(goal=(1., 2.))
         env = NormalizedEnv(inner_env, scale_reward=10.)

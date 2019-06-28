@@ -1,7 +1,7 @@
 import pickle
 
-from nose2.tools.params import params
 import numpy as np
+import pytest
 import tensorflow as tf
 
 from garage.tf.models import MLPDuelingModel
@@ -11,13 +11,21 @@ from tests.fixtures import TfGraphTestCase
 
 
 class TestMLPModel(TfGraphTestCase):
-    def setUp(self):
-        super().setUp()
+    def setup_method(self):
+        super().setup_method()
         self.input_var = tf.placeholder(tf.float32, shape=(None, 5))
         self.obs = np.ones((1, 5))
 
-    @params((1, (0, )), (1, (1, )), (1, (2, )), (2, (3, )), (2, (1, 1)),
-            (3, (2, 2)))
+    # yapf: disable
+    @pytest.mark.parametrize('output_dim, hidden_sizes', [
+        (1, (0, )),
+        (1, (1, )),
+        (1, (2, )),
+        (2, (3, )),
+        (2, (1, 1)),
+        (3, (2, 2)),
+    ])
+    # yapf: enable
     def test_output_values(self, output_dim, hidden_sizes):
         model = MLPModel(
             output_dim=output_dim,
@@ -32,8 +40,16 @@ class TestMLPModel(TfGraphTestCase):
 
         assert np.array_equal(output, expected_output)
 
-    @params((1, (0, )), (1, (1, )), (1, (2, )), (2, (3, )), (2, (1, 1)),
-            (3, (2, 2)))
+    # yapf: disable
+    @pytest.mark.parametrize('output_dim, hidden_sizes', [
+        (1, (0, )),
+        (1, (1, )),
+        (1, (2, )),
+        (2, (3, )),
+        (2, (1, 1)),
+        (3, (2, 2)),
+    ])
+    # yapf: enable
     def test_output_values_dueling(self, output_dim, hidden_sizes):
         model = MLPDuelingModel(
             output_dim=output_dim,
@@ -48,8 +64,16 @@ class TestMLPModel(TfGraphTestCase):
 
         assert np.array_equal(output, expected_output)
 
-    @params((1, (0, )), (1, (1, )), (1, (2, )), (2, (3, )), (2, (1, 1)),
-            (3, (2, 2)))
+    # yapf: disable
+    @pytest.mark.parametrize('output_dim, hidden_sizes', [
+        (1, (0, )),
+        (1, (1, )),
+        (1, (2, )),
+        (2, (3, )),
+        (2, (1, 1)),
+        (3, (2, 2)),
+    ])
+    # yapf: enable
     def test_output_values_merging(self, output_dim, hidden_sizes):
         model = MLPMergeModel(
             output_dim=output_dim,
@@ -72,8 +96,16 @@ class TestMLPModel(TfGraphTestCase):
         expected_output = np.full([1, output_dim], 10 * np.prod(hidden_sizes))
         assert np.array_equal(output, expected_output)
 
-    @params((1, (0, )), (1, (1, )), (1, (2, )), (2, (3, )), (2, (1, 1)),
-            (3, (2, 2)))
+    # yapf: disable
+    @pytest.mark.parametrize('output_dim, hidden_sizes', [
+        (1, (0, )),
+        (1, (1, )),
+        (1, (2, )),
+        (2, (3, )),
+        (2, (1, 1)),
+        (3, (2, 2)),
+    ])
+    # yapf: enable
     def test_is_pickleable(self, output_dim, hidden_sizes):
         model = MLPModel(
             output_dim=output_dim,

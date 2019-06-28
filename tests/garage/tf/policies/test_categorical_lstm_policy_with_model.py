@@ -1,8 +1,8 @@
 import pickle
 from unittest import mock
 
-from nose2.tools.params import params
 import numpy as np
+import pytest
 import tensorflow as tf
 
 from garage.tf.envs import TfEnv
@@ -14,12 +14,12 @@ from tests.fixtures.models import SimpleLSTMModel
 
 
 class TestCategoricalLSTMPolicyWithModel(TfGraphTestCase):
-    @params(
+    @pytest.mark.parametrize('obs_dim, action_dim, hidden_dim', [
         ((1, ), 1, 4),
         ((2, ), 2, 4),
         ((1, 1), 1, 4),
         ((2, 2), 2, 4),
-    )
+    ])
     def test_dist_info_sym(self, obs_dim, action_dim, hidden_dim):
         env = TfEnv(DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
 
@@ -42,12 +42,12 @@ class TestCategoricalLSTMPolicyWithModel(TfGraphTestCase):
 
         assert np.array_equal(dist['prob'], np.full((2, 1, action_dim), 0.5))
 
-    @params(
+    @pytest.mark.parametrize('obs_dim, action_dim', [
         ((1, ), 1),
         ((2, ), 2),
         ((1, 1), 1),
         ((2, 2), 2),
-    )
+    ])
     def test_dist_info_sym_include_action(self, obs_dim, action_dim):
         env = TfEnv(DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
 
@@ -92,7 +92,7 @@ class TestCategoricalLSTMPolicyWithModel(TfGraphTestCase):
             state_info_vars={'prev_action': np.zeros((3, 1, 1))},
             name='p2_sym')
         # observation batch size = 2 but prev_action batch size = 3
-        with self.assertRaises(tf.errors.InvalidArgumentError):
+        with pytest.raises(tf.errors.InvalidArgumentError):
             self.sess.run(
                 policy.model.networks['p2_sym'].input,
                 feed_dict={obs_ph: [[obs.flatten()], [obs.flatten()]]})
@@ -102,18 +102,18 @@ class TestCategoricalLSTMPolicyWithModel(TfGraphTestCase):
         with mock.patch(('garage.tf.policies.'
                          'categorical_lstm_policy_with_model.LSTMModel'),
                         new=SimpleLSTMModel):
-            with self.assertRaises(ValueError):
+            with pytest.raises(ValueError):
                 CategoricalLSTMPolicyWithModel(env_spec=env.spec)
 
-    @params(
+    @pytest.mark.parametrize('obs_dim, action_dim, hidden_dim', [
         ((1, ), 1, 4),
         ((2, ), 2, 4),
         ((1, 1), 1, 4),
         ((2, 2), 2, 4),
-    )
+    ])
     @mock.patch('numpy.random.rand')
-    def test_get_action_state_include_action(self, obs_dim, action_dim,
-                                             hidden_dim, mock_rand):
+    def test_get_action_state_include_action(self, mock_rand, obs_dim,
+                                             action_dim, hidden_dim):
         mock_rand.return_value = 0
 
         env = TfEnv(DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
@@ -140,14 +140,14 @@ class TestCategoricalLSTMPolicyWithModel(TfGraphTestCase):
             assert action == 0
             assert np.array_equal(prob, expected_prob)
 
-    @params(
+    @pytest.mark.parametrize('obs_dim, action_dim, hidden_dim', [
         ((1, ), 1, 4),
         ((2, ), 2, 4),
         ((1, 1), 1, 4),
         ((2, 2), 2, 4),
-    )
+    ])
     @mock.patch('numpy.random.rand')
-    def test_get_action(self, obs_dim, action_dim, hidden_dim, mock_rand):
+    def test_get_action(self, mock_rand, obs_dim, action_dim, hidden_dim):
         mock_rand.return_value = 0
 
         env = TfEnv(DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))

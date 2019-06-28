@@ -1,6 +1,7 @@
 import pickle
 
 import numpy as np
+import pytest
 import tensorflow as tf
 
 from garage.tf.core.mlp import mlp
@@ -95,11 +96,11 @@ class TestModel(TfGraphTestCase):
         another_input_var = tf.placeholder(tf.float32, shape=(None, 5))
         model = SimpleModel(output_dim=2)
         model.build(input_var)
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             model.build(another_input_var)
 
         model2 = SimpleModel(output_dim=2)
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             model2.build(another_input_var)
 
     def test_model_with_different_name(self):
@@ -291,5 +292,5 @@ class TestModel(TfGraphTestCase):
             # remove one of the parameters
             del model_pickled._default_parameters[
                 'SimpleModel/state/hidden_0/kernel:0']
-            with self.assertWarns(UserWarning):
+            with pytest.warns(UserWarning):
                 model_pickled.build(state)

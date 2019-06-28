@@ -26,8 +26,8 @@ from tests.fixtures.envs.dummy import DummyDiscreteEnv
 
 
 class TestCategoricalLSTMPolicyWithModelTransit(TfGraphTestCase):
-    def setUp(self):
-        super().setUp()
+    def setup_method(self):
+        super().setup_method()
         env = TfEnv(DummyDiscreteEnv(obs_dim=(1, ), action_dim=1))
         self.default_initializer = tf.constant_initializer(1)
         self.default_hidden_nonlinearity = tf.nn.tanh

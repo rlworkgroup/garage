@@ -3,6 +3,7 @@ This script creates a test that fails when garage.tf.algos.TRPO performance is
 too low.
 """
 import gym
+import pytest
 import tensorflow as tf
 
 from garage.envs import normalize
@@ -15,8 +16,8 @@ from tests.fixtures import TfGraphTestCase
 
 
 class TestTRPO(TfGraphTestCase):
-    def setUp(self):
-        super().setUp()
+    def setup_method(self):
+        super().setup_method()
         self.env = TfEnv(normalize(gym.make('InvertedDoublePendulum-v2')))
         self.policy = GaussianMLPPolicy(
             env_spec=self.env.spec,
@@ -46,7 +47,7 @@ class TestTRPO(TfGraphTestCase):
 
     def test_trpo_unknown_kl_constraint(self):
         """Test TRPO with unkown KL constraints."""
-        with self.assertRaises(ValueError, msg='Invalid kl_constraint'):
+        with pytest.raises(ValueError, match='Invalid kl_constraint'):
             TRPO(
                 env_spec=self.env.spec,
                 policy=self.policy,
@@ -74,6 +75,6 @@ class TestTRPO(TfGraphTestCase):
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 50
 
-    def tearDown(self):
+    def teardown_method(self):
         self.env.close()
-        super().tearDown()
+        super().teardown_method()

@@ -3,6 +3,7 @@ This script creates a test that fails when garage.tf.algos.PPO performance is
 too low.
 """
 import gym
+import pytest
 import tensorflow as tf
 
 from garage.envs import normalize
@@ -15,8 +16,8 @@ from tests.fixtures import TfGraphTestCase
 
 
 class TestPPO(TfGraphTestCase):
-    def setUp(self):
-        super().setUp()
+    def setup_method(self):
+        super().setup_method()
         self.env = TfEnv(normalize(gym.make('InvertedDoublePendulum-v2')))
         self.policy = GaussianMLPPolicy(
             env_spec=self.env.spec,
@@ -30,6 +31,7 @@ class TestPPO(TfGraphTestCase):
             regressor_args=dict(hidden_sizes=(32, 32)),
         )
 
+    @pytest.mark.large
     def test_ppo_pendulum(self):
         """Test PPO with Pendulum environment."""
         with LocalRunner(self.sess) as runner:
@@ -45,8 +47,7 @@ class TestPPO(TfGraphTestCase):
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 40
 
-    test_ppo_pendulum.large = True
-
+    @pytest.mark.large
     def test_ppo_pendulum_recurrent(self):
         """Test PPO with Pendulum environment and recurrent policy."""
         with LocalRunner() as runner:
@@ -63,8 +64,7 @@ class TestPPO(TfGraphTestCase):
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 40
 
-    test_ppo_pendulum_recurrent.large = True
-
+    @pytest.mark.large
     def test_ppo_with_maximum_entropy(self):
         """Test PPO with maxium entropy method."""
         with LocalRunner(self.sess) as runner:
@@ -83,8 +83,6 @@ class TestPPO(TfGraphTestCase):
             runner.setup(algo, self.env)
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 40
-
-    test_ppo_with_maximum_entropy.large = True
 
     def test_ppo_with_neg_log_likeli_entropy_estimation_and_max(self):
         """
@@ -151,6 +149,6 @@ class TestPPO(TfGraphTestCase):
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 40
 
-    def tearDown(self):
+    def teardown_method(self):
         self.env.close()
-        super().tearDown()
+        super().teardown_method()

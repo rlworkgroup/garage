@@ -1,7 +1,7 @@
 import pickle
 
-from nose2.tools.params import params
 import numpy as np
+import pytest
 import tensorflow as tf
 
 from garage.tf.models import GRUModel
@@ -9,8 +9,8 @@ from tests.fixtures import TfGraphTestCase
 
 
 class TestGRUModel(TfGraphTestCase):
-    def setUp(self):
-        super().setUp()
+    def setup_method(self):
+        super().setup_method()
         self.batch_size = 1
         self.time_step = 1
         self.feature_shape = 2
@@ -25,7 +25,8 @@ class TestGRUModel(TfGraphTestCase):
         self.step_input_var = tf.placeholder(
             tf.float32, shape=(None, self.feature_shape), name='input')
 
-    @params((1, 1), (1, 2), (3, 3))
+    @pytest.mark.parametrize('output_dim, hidden_dim', [(1, 1), (1, 2),
+                                                        (3, 3)])
     def test_output_values(self, output_dim, hidden_dim):
         model = GRUModel(
             output_dim=output_dim,

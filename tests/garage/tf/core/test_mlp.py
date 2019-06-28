@@ -6,42 +6,42 @@ from tests.fixtures import TfGraphTestCase
 
 
 class TestMLP(TfGraphTestCase):
-    def setUp(self):
-        super(TestMLP, self).setUp()
+    def setup_method(self):
+        super(TestMLP, self).setup_method()
         self.obs_input = np.array([[1, 2, 3, 4]])
         input_shape = self.obs_input.shape[1:]  # 4
         self.hidden_nonlinearity = tf.nn.relu
 
         self._input = tf.placeholder(
-            tf.float32, shape=(None, ) + input_shape, name="input")
+            tf.float32, shape=(None, ) + input_shape, name='input')
 
         self._output_shape = 2
 
         # We build a default mlp
-        with tf.variable_scope("MLP"):
+        with tf.variable_scope('MLP'):
             self.mlp_f = mlp(
                 input_var=self._input,
                 output_dim=self._output_shape,
                 hidden_sizes=(32, 32),
                 hidden_nonlinearity=self.hidden_nonlinearity,
-                name="mlp1")
+                name='mlp1')
 
         self.sess.run(tf.global_variables_initializer())
 
     def test_multiple_same_mlp(self):
         # We create another mlp with the same name, trying to reuse it
-        with tf.variable_scope("MLP", reuse=True):
+        with tf.variable_scope('MLP', reuse=True):
             self.mlp_same_copy = mlp(
                 input_var=self._input,
                 output_dim=self._output_shape,
                 hidden_sizes=(32, 32),
                 hidden_nonlinearity=self.hidden_nonlinearity,
-                name="mlp1")
+                name='mlp1')
 
         # We modify the weight of the default mlp and feed
         # The another mlp created should output the same result
-        with tf.variable_scope("MLP", reuse=True):
-            w = tf.get_variable("mlp1/hidden_0/kernel")
+        with tf.variable_scope('MLP', reuse=True):
+            w = tf.get_variable('mlp1/hidden_0/kernel')
             self.sess.run(w.assign(w + 1))
             mlp_output = self.sess.run(
                 self.mlp_f, feed_dict={self._input: self.obs_input})
@@ -52,21 +52,21 @@ class TestMLP(TfGraphTestCase):
 
     def test_different_mlp(self):
         # We create another mlp with different name
-        with tf.variable_scope("MLP"):
+        with tf.variable_scope('MLP'):
             self.mlp_different_copy = mlp(
                 input_var=self._input,
                 output_dim=self._output_shape,
                 hidden_sizes=(32, 32),
                 hidden_nonlinearity=self.hidden_nonlinearity,
-                name="mlp2")
+                name='mlp2')
 
         # Initialize the new mlp variables
         self.sess.run(tf.global_variables_initializer())
 
         # We modify the weight of the default mlp and feed
         # The another mlp created should output different result
-        with tf.variable_scope("MLP", reuse=True):
-            w = tf.get_variable("mlp1/hidden_0/kernel")
+        with tf.variable_scope('MLP', reuse=True):
+            w = tf.get_variable('mlp1/hidden_0/kernel')
             self.sess.run(w.assign(w + 1))
             mlp_output = self.sess.run(
                 self.mlp_f, feed_dict={self._input: self.obs_input})
@@ -83,13 +83,13 @@ class TestMLP(TfGraphTestCase):
         assert mlp_output.shape[1] == self._output_shape
 
     def test_output_value(self):
-        with tf.variable_scope("MLP", reuse=True):
-            h1_w = tf.get_variable("mlp1/hidden_0/kernel")
-            h1_b = tf.get_variable("mlp1/hidden_0/bias")
-            h2_w = tf.get_variable("mlp1/hidden_1/kernel")
-            h2_b = tf.get_variable("mlp1/hidden_1/bias")
-            out_w = tf.get_variable("mlp1/output/kernel")
-            out_b = tf.get_variable("mlp1/output/bias")
+        with tf.variable_scope('MLP', reuse=True):
+            h1_w = tf.get_variable('mlp1/hidden_0/kernel')
+            h1_b = tf.get_variable('mlp1/hidden_0/bias')
+            h2_w = tf.get_variable('mlp1/hidden_1/kernel')
+            h2_b = tf.get_variable('mlp1/hidden_1/bias')
+            out_w = tf.get_variable('mlp1/output/kernel')
+            out_b = tf.get_variable('mlp1/output/bias')
 
         mlp_output = self.sess.run(
             self.mlp_f, feed_dict={self._input: self.obs_input})
@@ -110,29 +110,29 @@ class TestMLP(TfGraphTestCase):
 
     def test_layer_normalization(self):
         # Create a mlp with layer normalization
-        with tf.variable_scope("MLP"):
+        with tf.variable_scope('MLP'):
             self.mlp_f_w_n = mlp(
                 input_var=self._input,
                 output_dim=self._output_shape,
                 hidden_sizes=(32, 32),
                 hidden_nonlinearity=self.hidden_nonlinearity,
-                name="mlp2",
+                name='mlp2',
                 layer_normalization=True)
 
         # Initialize the new mlp variables
         self.sess.run(tf.global_variables_initializer())
 
-        with tf.variable_scope("MLP", reuse=True):
-            h1_w = tf.get_variable("mlp2/hidden_0/kernel")
-            h1_b = tf.get_variable("mlp2/hidden_0/bias")
-            h2_w = tf.get_variable("mlp2/hidden_1/kernel")
-            h2_b = tf.get_variable("mlp2/hidden_1/bias")
-            out_w = tf.get_variable("mlp2/output/kernel")
-            out_b = tf.get_variable("mlp2/output/bias")
-            beta_1 = tf.get_variable("mlp2/LayerNorm/beta")
-            gamma_1 = tf.get_variable("mlp2/LayerNorm/gamma")
-            beta_2 = tf.get_variable("mlp2/LayerNorm_1/beta")
-            gamma_2 = tf.get_variable("mlp2/LayerNorm_1/gamma")
+        with tf.variable_scope('MLP', reuse=True):
+            h1_w = tf.get_variable('mlp2/hidden_0/kernel')
+            h1_b = tf.get_variable('mlp2/hidden_0/bias')
+            h2_w = tf.get_variable('mlp2/hidden_1/kernel')
+            h2_b = tf.get_variable('mlp2/hidden_1/bias')
+            out_w = tf.get_variable('mlp2/output/kernel')
+            out_b = tf.get_variable('mlp2/output/bias')
+            beta_1 = tf.get_variable('mlp2/LayerNorm/beta')
+            gamma_1 = tf.get_variable('mlp2/LayerNorm/gamma')
+            beta_2 = tf.get_variable('mlp2/LayerNorm_1/beta')
+            gamma_2 = tf.get_variable('mlp2/LayerNorm_1/gamma')
 
         # First layer
         y = tf.matmul(self._input, h1_w) + h1_b

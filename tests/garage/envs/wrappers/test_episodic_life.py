@@ -1,12 +1,10 @@
-import unittest
-
 import numpy as np
 
 from garage.envs.wrappers import EpisodicLife
 from tests.fixtures.envs.dummy import DummyDiscretePixelEnv
 
 
-class TestEpisodicLife(unittest.TestCase):
+class TestEpisodicLife:
     def test_episodic_life_reset(self):
         env = EpisodicLife(DummyDiscretePixelEnv())
         obs = env.reset()

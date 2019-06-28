@@ -1,5 +1,3 @@
-import unittest
-
 from garage.sampler.stateful_pool import StatefulPool
 
 
@@ -7,7 +5,7 @@ def _worker_collect_once(_):
     return 'a', 1
 
 
-class TestStatefulPool(unittest.TestCase):
+class TestStatefulPool:
     def test_stateful_pool(self):
         stateful_pool = StatefulPool()
         stateful_pool.initialize(n_parallel=10)

@@ -3,7 +3,6 @@ import datetime
 import os
 import os.path as osp
 import random
-import unittest
 
 from baselines.bench import benchmarks
 from baselines.her.experiment.config import CACHED_ENVS
@@ -14,6 +13,7 @@ from dowel import logger
 import gym
 import matplotlib.pyplot as plt
 import pandas as pd
+import pytest
 import tensorflow as tf
 
 from garage.experiment import deterministic
@@ -44,9 +44,10 @@ params = {
 BASELINES_PARAMS['rollout_batch_size'] = 1
 
 
-class TestBenchmarkHER(unittest.TestCase):
+class TestBenchmarkHER:
     '''Compare benchmarks between garage and baselines.'''
 
+    @pytest.mark.huge
     def test_benchmark_her(self):
         '''
         Compare benchmarks between garage and baselines.
@@ -99,8 +100,6 @@ class TestBenchmarkHER(unittest.TestCase):
                 seeds=seeds,
                 plt_file=plt_file,
                 env_id=env_id)
-
-    test_benchmark_her.huge = True
 
 
 def run_garage(env, seed, log_dir):

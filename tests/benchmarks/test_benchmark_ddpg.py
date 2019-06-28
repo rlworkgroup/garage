@@ -11,7 +11,6 @@ import datetime
 import os
 import os.path as osp
 import random
-import unittest
 
 from baselines import logger as baselines_logger
 from baselines.bench import benchmarks
@@ -26,6 +25,7 @@ from dowel import logger as dowel_logger
 import gym
 from mpi4py import MPI
 import numpy as np
+import pytest
 import tensorflow as tf
 
 from garage.experiment import deterministic
@@ -56,9 +56,10 @@ params = {
 }
 
 
-class TestBenchmarkDDPG(unittest.TestCase):
+class TestBenchmarkDDPG:
     '''Compare benchmarks between garage and baselines.'''
 
+    @pytest.mark.huge
     def test_benchmark_ddpg(self):
         '''
         Compare benchmarks between garage and baselines.
@@ -136,8 +137,6 @@ class TestBenchmarkDDPG(unittest.TestCase):
                 factor_b=1)
 
         Rh.write_file(result_json, 'DDPG')
-
-    test_benchmark_ddpg.huge = True
 
 
 def run_garage(env, seed, log_dir):

@@ -1,17 +1,15 @@
-import unittest
-
 import numpy as np
 
 from garage.envs.wrappers import MaxAndSkip
 from tests.fixtures.envs.dummy import DummyDiscretePixelEnv
 
 
-class TestMaxAndSkip(unittest.TestCase):
-    def setUp(self):
+class TestMaxAndSkip:
+    def setup_method(self):
         self.env = DummyDiscretePixelEnv(random=False)
         self.env_wrap = MaxAndSkip(DummyDiscretePixelEnv(random=False), skip=4)
 
-    def tearDown(self):
+    def teardown_method(self):
         self.env.close()
         self.env_wrap.close()
 

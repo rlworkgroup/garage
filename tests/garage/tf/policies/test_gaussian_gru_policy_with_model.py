@@ -1,8 +1,8 @@
 import pickle
 from unittest import mock
 
-from nose2.tools.params import params
 import numpy as np
+import pytest
 import tensorflow as tf
 
 from garage.tf.envs import TfEnv
@@ -14,12 +14,12 @@ from tests.fixtures.models import SimpleGaussianGRUModel
 
 
 class TestGaussianLSTMPolicyWithModel(TfGraphTestCase):
-    @params(
+    @pytest.mark.parametrize('obs_dim, action_dim, hidden_dim', [
         ((1, ), (1, ), 4),
         ((2, ), (2, ), 4),
         ((1, 1), (1, ), 4),
         ((2, 2), (2, ), 4),
-    )
+    ])
     def test_dist_info_sym(self, obs_dim, action_dim, hidden_dim):
         env = TfEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
 
@@ -45,12 +45,12 @@ class TestGaussianLSTMPolicyWithModel(TfGraphTestCase):
         assert np.array_equal(dist['log_std'], np.full((2, 1) + action_dim,
                                                        0.5))
 
-    @params(
+    @pytest.mark.parametrize('obs_dim, action_dim, hidden_dim', [
         ((1, ), (1, ), 4),
         ((2, ), (2, ), 4),
         ((1, 1), (1, ), 4),
         ((2, 2), (2, ), 4),
-    )
+    ])
     def test_dist_info_sym_include_action(self, obs_dim, action_dim,
                                           hidden_dim):
         env = TfEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
@@ -97,22 +97,23 @@ class TestGaussianLSTMPolicyWithModel(TfGraphTestCase):
                 state_info_vars={'prev_action': np.zeros((3, 1, 1))},
                 name='p2_sym')
         # observation batch size = 2 but prev_action batch size = 3
-        with self.assertRaises(tf.errors.InvalidArgumentError):
+        with pytest.raises(tf.errors.InvalidArgumentError):
             self.sess.run(
                 policy.model.networks['p2_sym'].input,
                 feed_dict={obs_ph: [[obs.flatten()], [obs.flatten()]]})
 
     def test_invalid_env(self):
         env = TfEnv(DummyDiscreteEnv())
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             GaussianGRUPolicyWithModel(env_spec=env.spec)
 
     # yapf: disable
-    @params(
+    @pytest.mark.parametrize('obs_dim, action_dim, hidden_dim', [
         ((1, ), (1, ), 4),
         ((2, ), (2, ), 4),
         ((1, 1), (1, ), 4),
-        ((2, 2), (2, ), 4))
+        ((2, 2), (2, ), 4)
+    ])
     # yapf: enable
     def test_get_action_state_include_action(self, obs_dim, action_dim,
                                              hidden_dim):
@@ -150,11 +151,12 @@ class TestGaussianLSTMPolicyWithModel(TfGraphTestCase):
             assert np.array_equal(prev_action, expected_prev_action)
 
     # yapf: disable
-    @params(
+    @pytest.mark.parametrize('obs_dim, action_dim, hidden_dim', [
         ((1, ), (1, ), 4),
         ((2, ), (2, ), 4),
         ((1, 1), (1, ), 4),
-        ((2, 2), (2, ), 4))
+        ((2, 2), (2, ), 4)
+    ])
     # yapf: enable
     def test_get_action(self, obs_dim, action_dim, hidden_dim):
         env = TfEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))

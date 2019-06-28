@@ -3,6 +3,7 @@ This script creates a test that fails when garage.tf.algos.REPS performance is
 too low.
 """
 import gym
+import pytest
 
 from garage.experiment import LocalRunner
 from garage.np.baselines import LinearFeatureBaseline
@@ -13,6 +14,7 @@ from tests.fixtures import TfGraphTestCase
 
 
 class TestREPS(TfGraphTestCase):
+    @pytest.mark.large
     def test_reps_cartpole(self):
         """Test REPS with gym Cartpole environment."""
         with LocalRunner(self.sess) as runner:
@@ -36,5 +38,3 @@ class TestREPS(TfGraphTestCase):
             assert last_avg_ret > 5
 
             env.close()
-
-    test_reps_cartpole.large = True

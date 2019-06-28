@@ -1,4 +1,5 @@
 import gym
+import pytest
 
 from garage.envs import normalize
 from garage.experiment import LocalRunner
@@ -10,6 +11,7 @@ from tests.fixtures import TfGraphTestCase
 
 
 class TestTNPG(TfGraphTestCase):
+    @pytest.mark.large
     def test_tnpg_inverted_pendulum(self):
         """Test TNPG with InvertedPendulum-v2 environment."""
         with LocalRunner(self.sess) as runner:
@@ -34,5 +36,3 @@ class TestTNPG(TfGraphTestCase):
             assert last_avg_ret > 30
 
             env.close()
-
-    test_tnpg_inverted_pendulum.large = True

@@ -1,7 +1,7 @@
 import pickle
 
-from nose2.tools.params import params
 import numpy as np
+import pytest
 import tensorflow as tf
 
 from garage.tf.optimizers import PenaltyLbfgsOptimizer
@@ -10,6 +10,8 @@ from tests.fixtures import TfGraphTestCase
 
 
 class TestGaussianMLPRegressorWithModel(TfGraphTestCase):
+    # unmarked to balance test jobs
+    # @pytest.mark.large
     def test_fit_normalized(self):
         gmr = GaussianMLPRegressorWithModel(input_shape=(1, ), output_dim=1)
         data = np.linspace(-np.pi, np.pi, 1000)
@@ -48,8 +50,7 @@ class TestGaussianMLPRegressorWithModel(TfGraphTestCase):
         assert np.allclose(y_std, y_std_expected)
 
     # unmarked to balance test jobs
-    # test_fit_normalized.large = True
-
+    # @pytest.mark.large
     def test_fit_unnormalized(self):
         gmr = GaussianMLPRegressorWithModel(
             input_shape=(1, ),
@@ -91,8 +92,7 @@ class TestGaussianMLPRegressorWithModel(TfGraphTestCase):
         assert np.allclose(y_std, y_std_expected)
 
     # unmarked to balance test jobs
-    # test_fit_unnormalized.large = True
-
+    # @pytest.mark.large
     def test_fit_smaller_subsample_factor(self):
         gmr = GaussianMLPRegressorWithModel(
             input_shape=(1, ), output_dim=1, subsample_factor=0.9)
@@ -115,8 +115,7 @@ class TestGaussianMLPRegressorWithModel(TfGraphTestCase):
         assert np.allclose(prediction, expected, rtol=0, atol=0.1)
 
     # unmarked to balance test jobs
-    # test_fit_smaller_subsample_factor.large = True
-
+    # @pytest.mark.large
     def test_fit_without_trusted_region(self):
         gmr = GaussianMLPRegressorWithModel(
             input_shape=(1, ), output_dim=1, use_trust_region=False)
@@ -138,10 +137,9 @@ class TestGaussianMLPRegressorWithModel(TfGraphTestCase):
         expected = [[0], [-1], [-0.707], [0], [0.707], [1], [0]]
         assert np.allclose(prediction, expected, rtol=0, atol=0.1)
 
-    # unmarked to balance test jobs
-    # test_fit_without_trusted_region.large = True
-
-    @params((1, (1, )), (1, (2, )), (2, (3, )), (2, (1, 1)), (3, (2, 2)))
+    @pytest.mark.parametrize('output_dim, input_shape',
+                             [(1, (1, )), (1, (2, )), (2, (3, )), (2, (1, 1)),
+                              (3, (2, 2))])
     def test_log_likelihood_sym(self, output_dim, input_shape):
         gmr = GaussianMLPRegressorWithModel(
             input_shape=input_shape,

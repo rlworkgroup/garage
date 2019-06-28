@@ -1,3 +1,5 @@
+import pytest
+
 from garage.experiment import LocalRunner
 from garage.np.algos import CEM
 from garage.np.baselines import LinearFeatureBaseline
@@ -8,6 +10,7 @@ from tests.fixtures import TfGraphTestCase
 
 
 class TestCEM(TfGraphTestCase):
+    @pytest.mark.large
     def test_cem_cartpole(self):
         """Test CEM with Cartpole-v1 environment."""
         with LocalRunner() as runner:
@@ -36,5 +39,3 @@ class TestCEM(TfGraphTestCase):
             assert rtn > 40
 
             env.close()
-
-    test_cem_cartpole.large = True

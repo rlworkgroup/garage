@@ -1,8 +1,8 @@
 import pickle
 from unittest import mock
 
-from nose2.tools.params import params
 import numpy as np
+import pytest
 import tensorflow as tf
 
 from garage.tf.envs import TfEnv
@@ -13,14 +13,14 @@ from tests.fixtures.models import SimpleMLPModel
 
 
 class TestCategoricalMLPPolicyWithModel(TfGraphTestCase):
-    @params(
+    @pytest.mark.parametrize('obs_dim, action_dim', [
         ((1, ), 1),
         ((2, ), 2),
         ((1, 1), 1),
         ((2, 2), 2),
-    )
+    ])
     @mock.patch('numpy.random.rand')
-    def test_get_action(self, obs_dim, action_dim, mock_rand):
+    def test_get_action(self, mock_rand, obs_dim, action_dim):
         mock_rand.return_value = 0
         env = TfEnv(DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
         with mock.patch(('garage.tf.policies.'
@@ -44,12 +44,12 @@ class TestCategoricalMLPPolicyWithModel(TfGraphTestCase):
             assert action == 0
             assert np.array_equal(prob, expected_prob)
 
-    @params(
+    @pytest.mark.parametrize('obs_dim, action_dim', [
         ((1, ), 1),
         ((2, ), 2),
         ((1, 1), 1),
         ((2, 2), 2),
-    )
+    ])
     def test_dist_info(self, obs_dim, action_dim):
         env = TfEnv(DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
         with mock.patch(('garage.tf.policies.'
@@ -65,12 +65,12 @@ class TestCategoricalMLPPolicyWithModel(TfGraphTestCase):
         policy_probs = policy.dist_info([obs.flatten()])
         assert np.array_equal(policy_probs['prob'][0], expected_prob)
 
-    @params(
+    @pytest.mark.parametrize('obs_dim, action_dim', [
         ((1, ), 1),
         ((2, ), 2),
         ((1, 1), 1),
         ((2, 2), 2),
-    )
+    ])
     def test_dist_info_sym(self, obs_dim, action_dim):
         env = TfEnv(DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
         with mock.patch(('garage.tf.policies.'
@@ -91,12 +91,12 @@ class TestCategoricalMLPPolicyWithModel(TfGraphTestCase):
             dist1['prob'], feed_dict={state_input: [obs.flatten()]})
         assert np.array_equal(prob[0], expected_prob)
 
-    @params(
+    @pytest.mark.parametrize('obs_dim, action_dim', [
         ((1, ), 1),
         ((2, ), 2),
         ((1, 1), 1),
         ((2, 2), 2),
-    )
+    ])
     def test_is_pickleable(self, obs_dim, action_dim):
         env = TfEnv(DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
         with mock.patch(('garage.tf.policies.'

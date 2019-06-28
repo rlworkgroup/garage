@@ -1,5 +1,5 @@
-from nose2.tools.params import params
 import numpy as np
+import pytest
 import tensorflow as tf
 
 from garage.tf.core.lstm import lstm
@@ -8,8 +8,8 @@ from tests.helpers import recurrent_step_lstm
 
 
 class TestLSTM(TfGraphTestCase):
-    def setUp(self):
-        super().setUp()
+    def setup_method(self):
+        super().setup_method()
         self.batch_size = 2
         self.hidden_dim = 2
 
@@ -30,10 +30,23 @@ class TestLSTM(TfGraphTestCase):
             recurrent_initializer=tf.constant_initializer(1),
             name='lstm_layer')
 
-    @params((1, 1, 1, 0, 0), (1, 1, 3, 0, 0), (1, 3, 1, 0, 0), (3, 1, 1, 0, 0),
-            (3, 3, 1, 0, 0), (3, 3, 3, 0, 0), (1, 1, 1, 0.5, 0.5),
-            (1, 1, 3, 0.5, 0.5), (1, 3, 1, 0.5, 0.5), (3, 1, 1, 0.5, 0.5),
-            (3, 3, 1, 0.5, 0.5), (3, 3, 3, 0.5, 0.5))
+    # yapf: disable
+    @pytest.mark.parametrize('time_step, input_dim, output_dim, '
+                             'hidden_init, cell_init', [
+        (1, 1, 1, 0, 0),  # noqa: E122
+        (1, 1, 3, 0, 0),
+        (1, 3, 1, 0, 0),
+        (3, 1, 1, 0, 0),
+        (3, 3, 1, 0, 0),
+        (3, 3, 3, 0, 0),
+        (1, 1, 1, 0.5, 0.5),
+        (1, 1, 3, 0.5, 0.5),
+        (1, 3, 1, 0.5, 0.5),
+        (3, 1, 1, 0.5, 0.5),
+        (3, 3, 1, 0.5, 0.5),
+        (3, 3, 3, 0.5, 0.5),
+    ])
+    # yapf: enable
     def test_output_shapes(self, time_step, input_dim, output_dim, hidden_init,
                            cell_init):
         obs_inputs = np.full((self.batch_size, time_step, input_dim), 1.)
@@ -85,8 +98,9 @@ class TestLSTM(TfGraphTestCase):
         assert full_output.shape == (self.batch_size, time_step, output_dim)
 
     # yapf: disable
-    @params(
-        (1, 1, 1, 0, 0),
+    @pytest.mark.parametrize('time_step, input_dim, output_dim, '
+                             'hidden_init, cell_init', [
+        (1, 1, 1, 0, 0),  # noqa: E122
         (1, 1, 3, 0, 0),
         (1, 3, 1, 0, 0),
         (3, 1, 1, 0, 0),
@@ -97,7 +111,8 @@ class TestLSTM(TfGraphTestCase):
         (1, 3, 1, 0.5, 0.5),
         (3, 1, 1, 0.5, 0.5),
         (3, 3, 1, 0.5, 0.5),
-        (3, 3, 3, 0.5, 0.5))
+        (3, 3, 3, 0.5, 0.5),
+    ])
     # yapf: enable
     def test_output_value(self, time_step, input_dim, output_dim, hidden_init,
                           cell_init):
@@ -189,7 +204,16 @@ class TestLSTM(TfGraphTestCase):
         full_output2 = np.matmul(stack_hidden, output_nonlinearity)
         assert np.allclose(full_output1, full_output2)
 
-    @params((1, 1, 1), (1, 1, 3), (1, 3, 1), (3, 1, 1), (3, 3, 1), (3, 3, 3))
+    # yapf: disable
+    @pytest.mark.parametrize('time_step, input_dim, output_dim', [
+        (1, 1, 1),
+        (1, 1, 3),
+        (1, 3, 1),
+        (3, 1, 1),
+        (3, 3, 1),
+        (3, 3, 3),
+    ])
+    # yapf: enable
     def test_output_value_trainable_hidden_and_cell(self, time_step, input_dim,
                                                     output_dim):
         obs_inputs = np.full((self.batch_size, time_step, input_dim), 1.)
@@ -324,7 +348,7 @@ class TestLSTM(TfGraphTestCase):
         grads_step_c = tf.gradients(c_t, _input_var)
 
         # No gradient flow
-        with self.assertRaises(TypeError):
+        with pytest.raises(TypeError):
             self.sess.run(
                 grads_step_o_i,
                 feed_dict={
@@ -332,7 +356,7 @@ class TestLSTM(TfGraphTestCase):
                     self._step_hidden_var: hidden,
                     self._step_cell_var: cell
                 })
-        with self.assertRaises(TypeError):
+        with pytest.raises(TypeError):
             self.sess.run(
                 grads_step_o_h,
                 feed_dict={
@@ -340,7 +364,7 @@ class TestLSTM(TfGraphTestCase):
                     self._step_hidden_var: hidden,
                     self._step_cell_var: cell
                 })
-        with self.assertRaises(TypeError):
+        with pytest.raises(TypeError):
             self.sess.run(
                 grads_step_o_c,
                 feed_dict={
@@ -348,15 +372,28 @@ class TestLSTM(TfGraphTestCase):
                     self._step_hidden_var: hidden,
                     self._step_cell_var: cell
                 })
-        with self.assertRaises(TypeError):
+        with pytest.raises(TypeError):
             self.sess.run(grads_step_h, feed_dict={_input_var: obs_inputs})
-        with self.assertRaises(TypeError):
+        with pytest.raises(TypeError):
             self.sess.run(grads_step_c, feed_dict={_input_var: obs_inputs})
 
-    @params((1, 1, 1, 0, 0), (1, 1, 3, 0, 0), (1, 3, 1, 0, 0), (3, 1, 1, 0, 0),
-            (3, 3, 1, 0, 0), (3, 3, 3, 0, 0), (1, 1, 1, 0.5, 0.5),
-            (1, 1, 3, 0.5, 0.5), (1, 3, 1, 0.5, 0.5), (3, 1, 1, 0.5, 0.5),
-            (3, 3, 1, 0.5, 0.5), (3, 3, 3, 0.5, 0.5))
+    # yapf: disable
+    @pytest.mark.parametrize('time_step, input_dim, output_dim, '
+                             'hidden_init, cell_init', [
+        (1, 1, 1, 0, 0),  # noqa: E122
+        (1, 1, 3, 0, 0),
+        (1, 3, 1, 0, 0),
+        (3, 1, 1, 0, 0),
+        (3, 3, 1, 0, 0),
+        (3, 3, 3, 0, 0),
+        (1, 1, 1, 0.5, 0.5),
+        (1, 1, 3, 0.5, 0.5),
+        (1, 3, 1, 0.5, 0.5),
+        (3, 1, 1, 0.5, 0.5),
+        (3, 3, 1, 0.5, 0.5),
+        (3, 3, 3, 0.5, 0.5),
+    ])
+    # yapf: enable
     def test_output_same_as_rnn(self, time_step, input_dim, output_dim,
                                 hidden_init, cell_init):
         obs_inputs = np.full((self.batch_size, time_step, input_dim), 1.)

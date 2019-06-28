@@ -3,7 +3,7 @@ This script creates a unittest that tests Categorical policies in
 garage.tf.policies.
 """
 import gym
-from nose2 import tools
+import pytest
 
 from garage.envs import normalize
 from garage.experiment import LocalRunner
@@ -21,7 +21,7 @@ policies = [CategoricalGRUPolicy, CategoricalLSTMPolicy, CategoricalMLPPolicy]
 
 
 class TestCategoricalPolicies(TfGraphTestCase):
-    @tools.params(*policies)
+    @pytest.mark.parametrize('policy_cls', [*policies])
     def test_categorical_policies(self, policy_cls):
         with LocalRunner(self.sess) as runner:
             env = TfEnv(normalize(gym.make('CartPole-v0')))

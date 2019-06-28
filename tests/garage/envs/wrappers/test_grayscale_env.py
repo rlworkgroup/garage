@@ -1,29 +1,28 @@
-import unittest
-
 from gym.spaces import Box
 from gym.spaces import Discrete
 import numpy as np
+import pytest
 
 from garage.envs.wrappers import Grayscale
 from tests.fixtures.envs.dummy import DummyDiscretePixelEnv
 
 
-class TestGrayscale(unittest.TestCase):
-    def setUp(self):
+class TestGrayscale:
+    def setup_method(self):
         self.env = DummyDiscretePixelEnv(random=False)
         self.env_g = Grayscale(DummyDiscretePixelEnv(random=False))
 
-    def tearDown(self):
+    def teardown_method(self):
         self.env.close()
         self.env_g.close()
 
     def test_grayscale_invalid_environment_type(self):
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             self.env.observation_space = Discrete(64)
             Grayscale(self.env)
 
     def test_grayscale_invalid_environment_shape(self):
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             self.env.observation_space = Box(
                 low=0, high=255, shape=(4, ), dtype=np.uint8)
             Grayscale(self.env)

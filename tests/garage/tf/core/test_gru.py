@@ -1,5 +1,5 @@
-from nose2.tools.params import params
 import numpy as np
+import pytest
 import tensorflow as tf
 
 from garage.tf.core.gru import gru
@@ -8,8 +8,8 @@ from tests.helpers import recurrent_step_gru
 
 
 class TestGRU(TfGraphTestCase):
-    def setUp(self):
-        super().setUp()
+    def setup_method(self):
+        super().setup_method()
         self.batch_size = 2
         self.hidden_dim = 2
 
@@ -27,8 +27,9 @@ class TestGRU(TfGraphTestCase):
             name='lstm_layer')
 
     # yapf: disable
-    @params(
-        (1, 1, 1, 0, 0),
+    @pytest.mark.parametrize('time_step, input_dim, output_dim, '
+                             'hidden_init, cell_init', [
+        (1, 1, 1, 0, 0),  # noqa: E122
         (1, 1, 3, 0, 0),
         (1, 3, 1, 0, 0),
         (3, 1, 1, 0, 0),
@@ -39,7 +40,8 @@ class TestGRU(TfGraphTestCase):
         (1, 3, 1, 0.5, 0.5),
         (3, 1, 1, 0.5, 0.5),
         (3, 3, 1, 0.5, 0.5),
-        (3, 3, 3, 0.5, 0.5))
+        (3, 3, 3, 0.5, 0.5),
+    ])
     # yapf: enable
     def test_output_shapes(self, time_step, input_dim, output_dim, hidden_init,
                            cell_init):
@@ -86,8 +88,9 @@ class TestGRU(TfGraphTestCase):
         assert full_output.shape == (self.batch_size, time_step, output_dim)
 
     # yapf: disable
-    @params(
-        (1, 1, 1, 0, 0),
+    @pytest.mark.parametrize('time_step, input_dim, output_dim, '
+                             'hidden_init, cell_init', [
+        (1, 1, 1, 0, 0),  # noqa: E122
         (1, 1, 3, 0, 0),
         (1, 3, 1, 0, 0),
         (3, 1, 1, 0, 0),
@@ -98,7 +101,8 @@ class TestGRU(TfGraphTestCase):
         (1, 3, 1, 0.5, 0.5),
         (3, 1, 1, 0.5, 0.5),
         (3, 3, 1, 0.5, 0.5),
-        (3, 3, 3, 0.5, 0.5))
+        (3, 3, 3, 0.5, 0.5),
+    ])
     # yapf: enable
     def test_output_value(self, time_step, input_dim, output_dim, hidden_init,
                           cell_init):
@@ -181,13 +185,14 @@ class TestGRU(TfGraphTestCase):
         assert np.allclose(full_output1, full_output2)
 
     # yapf: disable
-    @params(
+    @pytest.mark.parametrize('time_step, input_dim, output_dim', [
         (1, 1, 1),
         (1, 1, 3),
         (1, 3, 1),
         (3, 1, 1),
         (3, 3, 1),
-        (3, 3, 3))
+        (3, 3, 3),
+    ])
     # yapf: enable
     def test_output_value_trainable_hidden_and_cell(self, time_step, input_dim,
                                                     output_dim):
@@ -303,26 +308,27 @@ class TestGRU(TfGraphTestCase):
         grads_step_h = tf.gradients(h_t, input_var)
 
         # No gradient flow
-        with self.assertRaises(TypeError):
+        with pytest.raises(TypeError):
             self.sess.run(
                 grads_step_o_i,
                 feed_dict={
                     step_input_var: obs_input,
                     self.step_hidden_var: hidden,
                 })
-        with self.assertRaises(TypeError):
+        with pytest.raises(TypeError):
             self.sess.run(
                 grads_step_o_h,
                 feed_dict={
                     step_input_var: obs_input,
                     self.step_hidden_var: hidden,
                 })
-        with self.assertRaises(TypeError):
+        with pytest.raises(TypeError):
             self.sess.run(grads_step_h, feed_dict={input_var: obs_inputs})
 
     # yapf: disable
-    @params(
-        (1, 1, 1, 0, 0),
+    @pytest.mark.parametrize('time_step, input_dim, output_dim, '
+                             'hidden_init, cell_init', [
+        (1, 1, 1, 0, 0),  # noqa: E122
         (1, 1, 3, 0, 0),
         (1, 3, 1, 0, 0),
         (3, 1, 1, 0, 0),
@@ -333,7 +339,8 @@ class TestGRU(TfGraphTestCase):
         (1, 3, 1, 0.5, 0.5),
         (3, 1, 1, 0.5, 0.5),
         (3, 3, 1, 0.5, 0.5),
-        (3, 3, 3, 0.5, 0.5))
+        (3, 3, 3, 0.5, 0.5),
+    ])
     # yapf: enable
     def test_output_same_as_rnn(self, time_step, input_dim, output_dim,
                                 hidden_init, cell_init):

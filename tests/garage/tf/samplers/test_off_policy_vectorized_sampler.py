@@ -63,9 +63,11 @@ class TestOffPolicyVectorizedSampler(TfGraphTestCase):
 
             assert len1 == 5 and len2 == 5, 'Sampler should respect batch_size'
 
+            # yapf: disable
             assert (len(paths1[0]['rewards']) + len(paths2[0]['rewards'])
-                    == paths2[0]['running_length']), \
-                'Running length should be the length of full path'
+                    == paths2[0]['running_length']), (
+                'Running length should be the length of full path')
+            # yapf: enable
 
             assert np.isclose(
                 paths1[0]['rewards'].sum() + paths2[0]['rewards'].sum(),

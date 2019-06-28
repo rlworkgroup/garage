@@ -1,8 +1,8 @@
 import pickle
 from unittest import mock
 
-from nose2.tools.params import params
 import numpy as np
+import pytest
 import tensorflow as tf
 
 from garage.tf.envs import TfEnv
@@ -13,14 +13,14 @@ from tests.fixtures.models import SimpleGaussianMLPModel
 
 
 class TestGaussianMLPPolicyWithModel(TfGraphTestCase):
-    @params(
+    @pytest.mark.parametrize('obs_dim, action_dim', [
         ((1, ), (1, )),
         ((1, ), (2, )),
         ((2, ), (2, )),
         ((1, 1), (1, 1)),
         ((1, 1), (2, 2)),
         ((2, 2), (2, 2)),
-    )
+    ])
     def test_get_action(self, obs_dim, action_dim):
         env = TfEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
         with mock.patch(('garage.tf.policies.'
@@ -50,14 +50,14 @@ class TestGaussianMLPPolicyWithModel(TfGraphTestCase):
             assert np.array_equal(prob['mean'], expected_mean)
             assert np.array_equal(prob['log_std'], expected_log_std)
 
-    @params(
+    @pytest.mark.parametrize('obs_dim, action_dim', [
         ((1, ), (1, )),
         ((1, ), (2, )),
         ((2, ), (2, )),
         ((1, 1), (1, 1)),
         ((1, 1), (2, 2)),
         ((2, 2), (2, 2)),
-    )
+    ])
     def test_dist_info_sym(self, obs_dim, action_dim):
         env = TfEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
         with mock.patch(('garage.tf.policies.'
@@ -82,14 +82,14 @@ class TestGaussianMLPPolicyWithModel(TfGraphTestCase):
         assert np.array_equal(prob['mean'], expected_mean)
         assert np.array_equal(prob['log_std'], expected_log_std)
 
-    @params(
+    @pytest.mark.parametrize('obs_dim, action_dim', [
         ((1, ), (1, )),
         ((1, ), (2, )),
         ((2, ), (2, )),
         ((1, 1), (1, 1)),
         ((1, 1), (2, 2)),
         ((2, 2), (2, 2)),
-    )
+    ])
     def test_is_pickleable(self, obs_dim, action_dim):
         env = TfEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
         with mock.patch(('garage.tf.policies.'

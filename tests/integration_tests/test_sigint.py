@@ -4,16 +4,15 @@ from multiprocessing.connection import Listener
 import os
 import signal
 import subprocess
-import unittest
 
-from nose2.tools import params
 import psutil
+import pytest
 
 from garage.misc.console import colorize
 
 scripts = [
-    "tests/fixtures/algos/nop_pendulum_instrumented.py",
-    "tests/fixtures/tf/trpo_pendulum_instrumented.py",
+    'tests/fixtures/algos/nop_pendulum_instrumented.py',
+    'tests/fixtures/tf/trpo_pendulum_instrumented.py',
 ]
 
 
@@ -30,7 +29,7 @@ class ExpLifecycle(IntEnum):
 def interrupt_experiment(experiment_script, lifecycle_stage):
     """Interrupt the experiment and verify no children processes remain."""
 
-    args = ["python", experiment_script]
+    args = ['python', experiment_script]
     # The pre-executed function setpgrp allows to create a process group
     # so signals are propagated to all the process in the group.
     proc = subprocess.Popen(args, preexec_fn=os.setpgrp)
@@ -38,7 +37,7 @@ def interrupt_experiment(experiment_script, lifecycle_stage):
 
     # This socket connects with the client in the algorithm, so we're
     # notified of the different stages in the experiment lifecycle.
-    address = ("localhost", 6000)
+    address = ('localhost', 6000)
     listener = Listener(address)
     conn = listener.accept()
 
@@ -55,7 +54,7 @@ def interrupt_experiment(experiment_script, lifecycle_stage):
             # we cannot stop its execution.
             for child in children:
                 if any([
-                        "multiprocessing.semaphore_tracker" in cmd
+                        'multiprocessing.semaphore_tracker' in cmd
                         for cmd in child.cmdline()
                 ]):
                     children.remove(child)
@@ -73,10 +72,10 @@ def interrupt_experiment(experiment_script, lifecycle_stage):
 
     # If any, notify the zombie and sleeping processes and fail the test
     clean_exit = True
-    error_msg = ""
+    error_msg = ''
     for child in alive:
         error_msg += (str(
-            child.as_dict(attrs=["pid", "name", "status", "cmdline"])) + "\n")
+            child.as_dict(attrs=['pid', 'name', 'status', 'cmdline'])) + '\n')
         clean_exit = False
 
     error_msg = ("These processes didn't die during %s:\n" % (lifecycle_stage)
@@ -85,16 +84,16 @@ def interrupt_experiment(experiment_script, lifecycle_stage):
     for child in alive:
         os.kill(child.pid, signal.SIGINT)
 
-    assert clean_exit, colorize(error_msg, "red")
+    assert clean_exit, colorize(error_msg, 'red')
 
 
-class TestSigInt(unittest.TestCase):
+class TestSigInt:
 
     test_sigint_params = list(itertools.product(scripts, ExpLifecycle))
 
-    @params(*test_sigint_params)
+    @pytest.mark.flaky
+    @pytest.mark.parametrize('experiment_script, exp_stage',
+                             test_sigint_params)
     def test_sigint(self, experiment_script, exp_stage):
         """Interrupt the experiment in different stages of its lifecyle."""
         interrupt_experiment(experiment_script, exp_stage)
-
-    test_sigint.flaky = True

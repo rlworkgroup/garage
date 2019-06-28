@@ -3,6 +3,7 @@ This script creates a test that fails when garage.tf.algos.DDPG performance is
 too low.
 """
 import gym
+import pytest
 import tensorflow as tf
 
 from garage.experiment import LocalRunner
@@ -16,6 +17,7 @@ from tests.fixtures import TfGraphTestCase
 
 
 class TestDDPG(TfGraphTestCase):
+    @pytest.mark.large
     def test_ddpg_pendulum(self):
         """Test DDPG with Pendulum environment."""
         with LocalRunner(self.sess) as runner:
@@ -53,5 +55,3 @@ class TestDDPG(TfGraphTestCase):
             assert last_avg_ret > 60
 
             env.close()
-
-    test_ddpg_pendulum.large = True

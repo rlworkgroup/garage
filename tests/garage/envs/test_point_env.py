@@ -1,11 +1,10 @@
 import pickle
-import unittest
 
 from garage.envs.point_env import PointEnv
 from tests.helpers import step_env
 
 
-class TestPointEnv(unittest.TestCase):
+class TestPointEnv:
     def test_pickleable(self):
         env = PointEnv()
         round_trip = pickle.loads(pickle.dumps(env))
@@ -20,5 +19,5 @@ class TestPointEnv(unittest.TestCase):
         a_copy = a.copy()
         env.reset()
         env.step(a)
-        self.assertEqual(a.all(), a_copy.all())
+        assert a.all() == a_copy.all()
         env.close()

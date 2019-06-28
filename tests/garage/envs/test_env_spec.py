@@ -1,12 +1,11 @@
 import pickle
-import unittest
 
 from akro import Box
 
 from garage.envs.env_spec import EnvSpec
 
 
-class TestEnvSpec(unittest.TestCase):
+class TestEnvSpec:
     def test_pickleable(self):
         env_spec = EnvSpec(Box(-1, 1, (1)), Box(-2, 2, (2)))
         round_trip = pickle.loads(pickle.dumps(env_spec))

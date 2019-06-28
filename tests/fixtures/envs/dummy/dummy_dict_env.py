@@ -1,6 +1,7 @@
 import gym
 import numpy as np
 
+from garage.envs import EnvSpec
 from tests.fixtures.envs.dummy import DummyEnv
 
 
@@ -9,6 +10,9 @@ class DummyDictEnv(DummyEnv):
 
     def __init__(self, random=True):
         super().__init__(random)
+        self.spec = EnvSpec(
+            action_space=self.action_space,
+            observation_space=self.observation_space)
 
     @property
     def observation_space(self):

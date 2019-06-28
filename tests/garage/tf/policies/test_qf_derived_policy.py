@@ -10,8 +10,8 @@ from tests.fixtures.q_functions import SimpleQFunction
 
 
 class TestQfDerivedPolicy(TfGraphTestCase):
-    def setUp(self):
-        super().setUp()
+    def setup_method(self):
+        super().setup_method()
         self.env = TfEnv(DummyDiscreteEnv())
         self.qf = SimpleQFunction(self.env.spec)
         self.policy = DiscreteQfDerivedPolicy(

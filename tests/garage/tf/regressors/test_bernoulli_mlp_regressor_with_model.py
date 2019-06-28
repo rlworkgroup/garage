@@ -1,8 +1,8 @@
 import pickle
 from unittest import mock
 
-from nose2.tools.params import params
 import numpy as np
+import pytest
 import tensorflow as tf
 
 from garage.tf.optimizers import ConjugateGradientOptimizer, LbfgsOptimizer
@@ -67,7 +67,13 @@ def get_test_data(input_shape, output_dim):
 
 
 class TestBernoulliMLPRegressorWithModel(TfGraphTestCase):
-    @params(((1, ), 2), ((2, ), 1), ((2, ), 2))
+    # yapf: disable
+    @pytest.mark.parametrize('input_shape, output_dim', [
+        ((1, ), 2),
+        ((2, ), 1),
+        ((2, ), 2),
+    ])
+    # yapf: enable
     def test_fit_normalized(self, input_shape, output_dim):
         bmr = BernoulliMLPRegressorWithModel(
             input_shape=input_shape, output_dim=output_dim)
@@ -90,7 +96,13 @@ class TestBernoulliMLPRegressorWithModel(TfGraphTestCase):
         assert np.allclose(x_mean, x_mean_expected)
         assert np.allclose(x_std, x_std_expected)
 
-    @params(((1, ), 2), ((2, ), 2), ((2, ), 1))
+    # yapf: disable
+    @pytest.mark.parametrize('input_shape, output_dim', [
+        ((1, ), 2),
+        ((2, ), 2),
+        ((2, ), 1),
+    ])
+    # yapf: enable
     def test_fit_unnormalized(self, input_shape, output_dim):
         bmr = BernoulliMLPRegressorWithModel(
             input_shape=input_shape,
@@ -116,7 +128,13 @@ class TestBernoulliMLPRegressorWithModel(TfGraphTestCase):
         assert np.allclose(x_mean, x_mean_expected)
         assert np.allclose(x_std, x_std_expected)
 
-    @params(((1, ), 2), ((2, ), 2), ((2, ), 1))
+    # yapf: disable
+    @pytest.mark.parametrize('input_shape, output_dim', [
+        ((1, ), 2),
+        ((2, ), 2),
+        ((2, ), 1),
+    ])
+    # yapf: enable
     def test_fit_with_no_trust_region(self, input_shape, output_dim):
         bmr = BernoulliMLPRegressorWithModel(
             input_shape=input_shape,
@@ -141,7 +159,14 @@ class TestBernoulliMLPRegressorWithModel(TfGraphTestCase):
         assert np.allclose(x_mean, x_mean_expected)
         assert np.allclose(x_std, x_std_expected)
 
-    @params((1, (1, 1)), (1, (2, 2)), (2, (3, 2)), (3, (2, 2)))
+    # yapf: disable
+    @pytest.mark.parametrize('output_dim, input_shape', [
+        (1, (1, 1)),
+        (1, (2, 2)),
+        (2, (3, 2)),
+        (3, (2, 2)),
+    ])
+    # yapf: enable
     def test_log_likelihood_sym(self, output_dim, input_shape):
         bmr = BernoulliMLPRegressorWithModel(
             input_shape=(input_shape[1], ), output_dim=output_dim)
