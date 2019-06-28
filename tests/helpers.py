@@ -7,6 +7,7 @@ import pickle
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import pytest
 
 from tests.quirks import KNOWN_GYM_RENDER_NOT_IMPLEMENTED
 
@@ -22,11 +23,7 @@ def step_env(env, n=10, render=True):
             break
 
 
-def step_env_with_gym_quirks(test_case,
-                             env,
-                             spec,
-                             n=10,
-                             render=True,
+def step_env_with_gym_quirks(env, spec, n=10, render=True,
                              serialize_env=False):
     """Step env gym helper."""
     if serialize_env:
@@ -42,7 +39,7 @@ def step_env_with_gym_quirks(test_case,
             if spec.id not in KNOWN_GYM_RENDER_NOT_IMPLEMENTED:
                 env.render()
             else:
-                with test_case.assertRaises(NotImplementedError):
+                with pytest.raises(NotImplementedError):
                     env.render()
         if done:
             break
