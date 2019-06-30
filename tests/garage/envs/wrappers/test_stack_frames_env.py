@@ -1,5 +1,4 @@
-from gym.spaces import Box
-from gym.spaces import Discrete
+import gym.spaces
 import numpy as np
 import pytest
 
@@ -21,12 +20,12 @@ class TestStackFrames:
 
     def test_stack_frames_invalid_environment_type(self):
         with pytest.raises(ValueError):
-            self.env.observation_space = Discrete(64)
+            self.env.observation_space = gym.spaces.Discrete(64)
             StackFrames(self.env, n_frames=4)
 
     def test_stack_frames_invalid_environment_shape(self):
         with pytest.raises(ValueError):
-            self.env.observation_space = Box(
+            self.env.observation_space = gym.spaces.Box(
                 low=0, high=255, shape=(4, ), dtype=np.uint8)
             StackFrames(self.env, n_frames=4)
 

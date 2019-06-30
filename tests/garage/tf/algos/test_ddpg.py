@@ -19,7 +19,7 @@ from tests.fixtures import TfGraphTestCase
 
 class TestDDPG(TfGraphTestCase):
     @pytest.mark.large
-    def test_ddpg_pendulum(self):
+    def test_ddpg_double_pendulum(self):
         """Test DDPG with Pendulum environment."""
         with LocalRunner(self.sess) as runner:
             env = TfEnv(normalize(gym.make('InvertedDoublePendulum-v2')))

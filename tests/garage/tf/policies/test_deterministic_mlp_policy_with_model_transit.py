@@ -32,9 +32,9 @@ class TestDeterministicMLPPolicyWithModelTransit(TfGraphTestCase):
                 env_spec=self.box_env, hidden_sizes=(32, 32), name='P1')
             self.policy2 = DeterministicMLPPolicy(
                 env_spec=self.box_env, hidden_sizes=(64, 64), name='P2')
-            self.policy3 = DeterministicMLPPolicyWithModel(
+            self.policy3 = ContinuousMLPPolicyWithModel(
                 env_spec=self.box_env, hidden_sizes=(32, 32), name='P3')
-            self.policy4 = DeterministicMLPPolicyWithModel(
+            self.policy4 = ContinuousMLPPolicyWithModel(
                 env_spec=self.box_env, hidden_sizes=(64, 64), name='P4')
 
             self.sess.run(tf.global_variables_initializer())
