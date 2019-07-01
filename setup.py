@@ -5,7 +5,6 @@ from setuptools import setup
 required = [
     # Please keep alphabetized
     'akro==0.0.2',
-    'boto3',
     'cached_property',
     'click',
     'cloudpickle',
