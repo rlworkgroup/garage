@@ -1,0 +1,618 @@
+import pickle
+from unittest import mock
+
+import numpy as np
+import pytest
+import tensorflow as tf
+
+from garage.tf.models import GaussianConvModel
+from tests.fixtures import TfGraphTestCase
+
+
+class TestGaussianConvModel(TfGraphTestCase):
+    def setup_method(self):
+        super().setup_method()
+        self.batch_size = 5
+        self.input_width = 10
+        self.input_height = 10
+        self.obs = np.full(
+            (self.batch_size, self.input_width, self.input_height, 3), 0.001)
+        input_shape = self.obs.shape[1:]  # height, width, channel
+        self._input_ph = tf.placeholder(
+            tf.float32, shape=(None, ) + input_shape, name='input')
+
+    @mock.patch('tensorflow.random.normal')
+    @pytest.mark.parametrize(
+        'filter_sizes, in_channels, out_channels, '
+        'strides, output_dim, hidden_sizes',
+        [
+            ((1, ), (3, ), (3, ), (1, ), 1, (1, )),  # noqa: E122
+            ((3, ), (3, ), (3, ), (1, ), 2, (2, )),
+            ((3, ), (3, ), (3, ), (2, ), 1, (1, 1)),
+            ((1, 1), (3, 3), (3, 6), (1, 1), 2, (2, 2)),
+            ((3, 3), (3, 3), (3, 6), (2, 2), 2, (2, 2))
+        ])
+    def test_std_share_network_output_values(
+            self, mock_normal, filter_sizes, in_channels, out_channels,
+            strides, output_dim, hidden_sizes):
+        mock_normal.return_value = 0.5
+        model = GaussianConvModel(
+            filter_dims=filter_sizes,
+            num_filters=out_channels,
+            strides=strides,
+            padding='VALID',
+            output_dim=output_dim,
+            hidden_sizes=hidden_sizes,
+            std_share_network=True,
+            hidden_nonlinearity=None,
+            std_parameterization='exp',
+            hidden_w_init=tf.constant_initializer(1),
+            output_w_init=tf.constant_initializer(1))
+        outputs = model.build(self._input_ph)
+
+        action, mean, log_std, std_param = self.sess.run(
+            outputs[:-1], feed_dict={self._input_ph: self.obs})
+
+        filter_sum = 0.001
+
+        for filter_size, in_channel in zip(filter_sizes, in_channels):
+            filter_sum *= filter_size * filter_size * in_channel
+
+        current_size = self.input_width
+        for filter_size, stride in zip(filter_sizes, strides):
+            current_size = int((current_size - filter_size) / stride) + 1
+        flatten_shape = current_size * current_size * out_channels[-1]
+
+        network_output = filter_sum * flatten_shape * np.prod(hidden_sizes)
+        expected_mean = np.full((self.batch_size, output_dim),
+                                network_output,
+                                dtype=np.float32)
+        expected_std_param = np.full((self.batch_size, output_dim),
+                                     network_output,
+                                     dtype=np.float32)
+        expected_log_std = np.full((self.batch_size, output_dim),
+                                   network_output,
+                                   dtype=np.float32)
+
+        assert np.allclose(mean, expected_mean)
+
+        assert np.allclose(std_param, expected_std_param)
+        assert np.allclose(log_std, expected_log_std)
+
+        expected_action = 0.5 * np.exp(expected_log_std) + expected_mean
+        assert np.allclose(action, expected_action)
+
+    @pytest.mark.parametrize('output_dim, hidden_sizes',
+                             [(1, (0, )), (1, (1, )), (1, (2, )), (2, (3, )),
+                              (2, (1, 1)), (3, (2, 2))])
+    def test_std_share_network_shapes(self, output_dim, hidden_sizes):
+        # should be 2 * output_dim
+        model = GaussianConvModel(
+            num_filters=[3, 6],
+            filter_dims=[3, 3],
+            strides=[1, 1],
+            padding='SAME',
+            hidden_sizes=hidden_sizes,
+            output_dim=output_dim,
+            std_share_network=True)
+        model.build(self._input_ph)
+        with tf.variable_scope(model.name, reuse=True):
+            std_share_output_weights = tf.get_variable(
+                'dist_params/mean_std_network/output/kernel')
+            std_share_output_bias = tf.get_variable(
+                'dist_params/mean_std_network/output/bias')
+        assert std_share_output_weights.shape[1] == output_dim * 2
+        assert std_share_output_bias.shape == output_dim * 2
+
+    @mock.patch('tensorflow.random.normal')
+    @pytest.mark.parametrize(
+        'filter_sizes, in_channels, out_channels, '
+        'strides, output_dim, hidden_sizes',
+        [
+            ((1, ), (3, ), (3, ), (1, ), 1, (1, )),  # noqa: E122
+            ((3, ), (3, ), (3, ), (1, ), 2, (2, )),
+            ((3, ), (3, ), (3, ), (2, ), 1, (1, 1)),
+            ((1, 1), (3, 3), (3, 6), (1, 1), 2, (2, 2)),
+            ((3, 3), (3, 3), (3, 6), (2, 2), 2, (2, 2))
+        ])
+    def test_without_std_share_network_output_values(
+            self, mock_normal, filter_sizes, in_channels, out_channels,
+            strides, output_dim, hidden_sizes):
+        mock_normal.return_value = 0.5
+        model = GaussianConvModel(
+            filter_dims=filter_sizes,
+            num_filters=out_channels,
+            strides=strides,
+            padding='VALID',
+            output_dim=output_dim,
+            init_std=2,
+            hidden_sizes=hidden_sizes,
+            std_share_network=False,
+            adaptive_std=False,
+            hidden_nonlinearity=None,
+            std_parameterization='exp',
+            hidden_w_init=tf.constant_initializer(1),
+            output_w_init=tf.constant_initializer(1))
+        outputs = model.build(self._input_ph)
+
+        action, mean, log_std, std_param = self.sess.run(
+            outputs[:-1], feed_dict={self._input_ph: self.obs})
+
+        filter_sum = 0.001
+
+        for filter_size, in_channel in zip(filter_sizes, in_channels):
+            filter_sum *= filter_size * filter_size * in_channel
+
+        current_size = self.input_width
+        for filter_size, stride in zip(filter_sizes, strides):
+            current_size = int((current_size - filter_size) / stride) + 1
+        flatten_shape = current_size * current_size * out_channels[-1]
+
+        network_output = filter_sum * flatten_shape * np.prod(hidden_sizes)
+        expected_mean = np.full((self.batch_size, output_dim),
+                                network_output,
+                                dtype=np.float32)
+        expected_std_param = np.full((self.batch_size, output_dim),
+                                     np.log(2),
+                                     dtype=np.float32)
+        expected_log_std = np.full((self.batch_size, output_dim),
+                                   np.log(2),
+                                   dtype=np.float32)
+
+        assert np.allclose(mean, expected_mean)
+
+        assert np.allclose(std_param, expected_std_param)
+        assert np.allclose(log_std, expected_log_std)
+
+        expected_action = 0.5 * np.exp(expected_log_std) + expected_mean
+        assert np.allclose(action, expected_action)
+
+    @pytest.mark.parametrize('output_dim, hidden_sizes',
+                             [(1, (0, )), (1, (1, )), (1, (2, )), (2, (3, )),
+                              (2, (1, 1)), (3, (2, 2))])
+    def test_without_std_share_network_shapes(self, output_dim, hidden_sizes):
+        model = GaussianConvModel(
+            num_filters=[3, 6],
+            filter_dims=[3, 3],
+            strides=[1, 1],
+            padding='SAME',
+            hidden_sizes=hidden_sizes,
+            output_dim=output_dim,
+            std_share_network=False,
+            adaptive_std=False)
+        model.build(self._input_ph)
+        with tf.variable_scope(model.name, reuse=True):
+            mean_output_weights = tf.get_variable(
+                'dist_params/mean_network/output/kernel')
+            mean_output_bias = tf.get_variable(
+                'dist_params/mean_network/output/bias')
+            log_std_output_weights = tf.get_variable(
+                'dist_params/log_std_network/parameter')
+        assert mean_output_weights.shape[1] == output_dim
+        assert mean_output_bias.shape == output_dim
+        assert log_std_output_weights.shape == output_dim
+
+    @mock.patch('tensorflow.random.normal')
+    @pytest.mark.parametrize(
+        'filter_sizes, in_channels, out_channels, '
+        'strides, output_dim, hidden_sizes',
+        [
+            ((1, ), (3, ), (3, ), (1, ), 1, (1, )),  # noqa: E122
+            ((3, ), (3, ), (3, ), (1, ), 2, (2, )),
+            ((3, ), (3, ), (3, ), (2, ), 1, (1, 1)),
+            ((1, 1), (3, 3), (3, 6), (1, 1), 2, (2, 2)),
+            ((3, 3), (3, 3), (3, 6), (2, 2), 2, (2, 2))
+        ])
+    def test_adaptive_std_network_output_values(
+            self, mock_normal, filter_sizes, in_channels, out_channels,
+            strides, output_dim, hidden_sizes):
+        mock_normal.return_value = 0.5
+        model = GaussianConvModel(
+            filter_dims=filter_sizes,
+            num_filters=out_channels,
+            strides=strides,
+            padding='VALID',
+            output_dim=output_dim,
+            hidden_sizes=hidden_sizes,
+            std_share_network=False,
+            adaptive_std=True,
+            hidden_nonlinearity=None,
+            std_hidden_nonlinearity=None,
+            std_filter_dims=filter_sizes,
+            std_num_filters=out_channels,
+            std_strides=strides,
+            std_padding='VALID',
+            std_hidden_sizes=hidden_sizes,
+            hidden_w_init=tf.constant_initializer(1),
+            output_w_init=tf.constant_initializer(1),
+            std_hidden_w_init=tf.constant_initializer(1),
+            std_output_w_init=tf.constant_initializer(1))
+        outputs = model.build(self._input_ph)
+
+        action, mean, log_std, std_param = self.sess.run(
+            outputs[:-1], feed_dict={self._input_ph: self.obs})
+
+        filter_sum = 0.001
+
+        for filter_size, in_channel in zip(filter_sizes, in_channels):
+            filter_sum *= filter_size * filter_size * in_channel
+
+        current_size = self.input_width
+        for filter_size, stride in zip(filter_sizes, strides):
+            current_size = int((current_size - filter_size) / stride) + 1
+        flatten_shape = current_size * current_size * out_channels[-1]
+
+        network_output = filter_sum * flatten_shape * np.prod(hidden_sizes)
+        expected_mean = np.full((self.batch_size, output_dim),
+                                network_output,
+                                dtype=np.float32)
+        expected_std_param = np.full((self.batch_size, output_dim),
+                                     network_output,
+                                     dtype=np.float32)
+        expected_log_std = np.full((self.batch_size, output_dim),
+                                   network_output,
+                                   dtype=np.float32)
+
+        assert np.allclose(mean, expected_mean)
+
+        assert np.allclose(std_param, expected_std_param)
+        assert np.allclose(log_std, expected_log_std)
+
+        expected_action = 0.5 * np.exp(expected_log_std) + expected_mean
+        assert np.allclose(action, expected_action)
+
+    @pytest.mark.parametrize('output_dim, hidden_sizes, std_hidden_sizes',
+                             [(1, (0, ), (0, )), (1, (1, ), (1, )),
+                              (1, (2, ), (2, )), (2, (3, ), (3, )),
+                              (2, (1, 1), (1, 1)), (3, (2, 2), (2, 2))])
+    def test_adaptive_std_output_shape(self, output_dim, hidden_sizes,
+                                       std_hidden_sizes):
+        model = GaussianConvModel(
+            num_filters=[3, 6],
+            filter_dims=[3, 3],
+            strides=[1, 1],
+            padding='SAME',
+            output_dim=output_dim,
+            hidden_sizes=hidden_sizes,
+            std_share_network=False,
+            adaptive_std=True,
+            hidden_nonlinearity=None,
+            std_hidden_nonlinearity=None,
+            std_filter_dims=[3, 3],
+            std_num_filters=[3, 6],
+            std_strides=[1, 1],
+            std_padding='SAME',
+            std_hidden_sizes=hidden_sizes,
+            hidden_w_init=tf.constant_initializer(1),
+            output_w_init=tf.constant_initializer(1),
+            std_hidden_w_init=tf.constant_initializer(1),
+            std_output_w_init=tf.constant_initializer(1))
+
+        model.build(self._input_ph)
+        with tf.variable_scope(model.name, reuse=True):
+            mean_output_weights = tf.get_variable(
+                'dist_params/mean_network/output/kernel')
+            mean_output_bias = tf.get_variable(
+                'dist_params/mean_network/output/bias')
+            log_std_output_weights = tf.get_variable(
+                'dist_params/log_std_network/output/kernel')
+            log_std_output_bias = tf.get_variable(
+                'dist_params/log_std_network/output/bias')
+
+        assert mean_output_weights.shape[1] == output_dim
+        assert mean_output_bias.shape == output_dim
+        assert log_std_output_weights.shape[1] == output_dim
+        assert log_std_output_bias.shape == output_dim
+
+    @pytest.mark.parametrize('output_dim, hidden_sizes',
+                             [(1, (0, )), (1, (1, )), (1, (2, )), (2, (3, )),
+                              (2, (1, 1)), (3, (2, 2))])
+    @mock.patch('tensorflow.random.normal')
+    def test_std_share_network_is_pickleable(self, mock_normal, output_dim,
+                                             hidden_sizes):
+        mock_normal.return_value = 0.5
+        input_var = tf.placeholder(tf.float32, shape=(None, 10, 10, 3))
+        model = GaussianConvModel(
+            num_filters=[3, 6],
+            filter_dims=[3, 3],
+            strides=[1, 1],
+            padding='SAME',
+            hidden_sizes=hidden_sizes,
+            output_dim=output_dim,
+            std_share_network=True)
+        outputs = model.build(input_var)
+
+        # get output bias
+        with tf.variable_scope('GaussianConvModel', reuse=True):
+            bias = tf.get_variable('dist_params/mean_std_network/output/bias')
+        # assign it to all ones
+        bias.load(tf.ones_like(bias).eval())
+
+        output1 = self.sess.run(outputs[:-1], feed_dict={input_var: self.obs})
+
+        h = pickle.dumps(model)
+        with tf.Session(graph=tf.Graph()) as sess:
+            input_var = tf.placeholder(tf.float32, shape=(None, 10, 10, 3))
+            model_pickled = pickle.loads(h)
+            outputs = model_pickled.build(input_var)
+            output2 = sess.run(outputs[:-1], feed_dict={input_var: self.obs})
+
+            assert np.array_equal(output1, output2)
+
+    @pytest.mark.parametrize('output_dim, hidden_sizes',
+                             [(1, (0, )), (1, (1, )), (1, (2, )), (2, (3, )),
+                              (2, (1, 1)), (3, (2, 2))])
+    @mock.patch('tensorflow.random.normal')
+    def test_without_std_share_network_is_pickleable(self, mock_normal,
+                                                     output_dim, hidden_sizes):
+        mock_normal.return_value = 0.5
+        input_var = tf.placeholder(tf.float32, shape=(None, 10, 10, 3))
+        model = GaussianConvModel(
+            num_filters=[3, 6],
+            filter_dims=[3, 3],
+            strides=[1, 1],
+            padding='SAME',
+            hidden_sizes=hidden_sizes,
+            output_dim=output_dim,
+            std_share_network=False,
+            adaptive_std=False)
+        outputs = model.build(input_var)
+
+        # get output bias
+        with tf.variable_scope('GaussianConvModel', reuse=True):
+            bias = tf.get_variable('dist_params/mean_network/output/bias')
+        # assign it to all ones
+        bias.load(tf.ones_like(bias).eval())
+
+        output1 = self.sess.run(outputs[:-1], feed_dict={input_var: self.obs})
+
+        h = pickle.dumps(model)
+        with tf.Session(graph=tf.Graph()) as sess:
+            input_var = tf.placeholder(tf.float32, shape=(None, 10, 10, 3))
+            model_pickled = pickle.loads(h)
+            outputs = model_pickled.build(input_var)
+            output2 = sess.run(outputs[:-1], feed_dict={input_var: self.obs})
+            assert np.array_equal(output1, output2)
+
+    @pytest.mark.parametrize('output_dim, hidden_sizes, std_hidden_sizes',
+                             [(1, (0, ), (0, )), (1, (1, ), (1, )),
+                              (1, (2, ), (2, )), (2, (3, ), (3, )),
+                              (2, (1, 1), (1, 1)), (3, (2, 2), (2, 2))])
+    @mock.patch('tensorflow.random.normal')
+    def test_adaptive_std_is_pickleable(self, mock_normal, output_dim,
+                                        hidden_sizes, std_hidden_sizes):
+        mock_normal.return_value = 0.5
+        input_var = tf.placeholder(tf.float32, shape=(None, 10, 10, 3))
+        model = GaussianConvModel(
+            num_filters=[3, 6],
+            filter_dims=[3, 3],
+            strides=[1, 1],
+            padding='SAME',
+            output_dim=output_dim,
+            hidden_sizes=hidden_sizes,
+            std_share_network=False,
+            adaptive_std=True,
+            hidden_nonlinearity=None,
+            std_hidden_nonlinearity=None,
+            std_filter_dims=[3, 3],
+            std_num_filters=[3, 6],
+            std_strides=[1, 1],
+            std_padding='SAME',
+            std_hidden_sizes=hidden_sizes,
+            hidden_w_init=tf.constant_initializer(1),
+            output_w_init=tf.constant_initializer(1),
+            std_hidden_w_init=tf.constant_initializer(1),
+            std_output_w_init=tf.constant_initializer(1))
+        outputs = model.build(input_var)
+
+        # get output bias
+        with tf.variable_scope('GaussianConvModel', reuse=True):
+            bias = tf.get_variable('dist_params/mean_network/output/bias')
+        # assign it to all ones
+        bias.load(tf.ones_like(bias).eval())
+
+        h = pickle.dumps(model)
+        output1 = self.sess.run(outputs[:-1], feed_dict={input_var: self.obs})
+        with tf.Session(graph=tf.Graph()) as sess:
+            input_var = tf.placeholder(tf.float32, shape=(None, 10, 10, 3))
+            model_pickled = pickle.loads(h)
+            outputs = model_pickled.build(input_var)
+            output2 = sess.run(outputs[:-1], feed_dict={input_var: self.obs})
+            assert np.array_equal(output1, output2)
+
+    @pytest.mark.parametrize('output_dim, hidden_sizes',
+                             [(1, (0, )), (1, (1, )), (1, (2, )), (2, (3, )),
+                              (2, (1, 1)), (3, (2, 2))])
+    @mock.patch('tensorflow.random.normal')
+    def test_softplus_output_values(self, mock_normal, output_dim,
+                                    hidden_sizes):
+        mock_normal.return_value = 0.5
+        filter_sizes = [3, 3]
+        in_channels = [3, 3]
+        out_channels = [3, 6]
+        strides = [1, 1]
+
+        model = GaussianConvModel(
+            filter_dims=filter_sizes,
+            num_filters=out_channels,
+            strides=strides,
+            padding='VALID',
+            output_dim=output_dim,
+            init_std=2.0,
+            hidden_sizes=hidden_sizes,
+            std_share_network=False,
+            adaptive_std=False,
+            hidden_nonlinearity=None,
+            std_parameterization='softplus',
+            hidden_w_init=tf.constant_initializer(1),
+            output_w_init=tf.constant_initializer(1))
+        outputs = model.build(self._input_ph)
+
+        action, mean, log_std, std_param = self.sess.run(
+            outputs[:-1], feed_dict={self._input_ph: self.obs})
+
+        filter_sum = 0.001
+        for filter_size, in_channel in zip(filter_sizes, in_channels):
+            filter_sum *= filter_size * filter_size * in_channel
+
+        current_size = self.input_width
+        for filter_size, stride in zip(filter_sizes, strides):
+            current_size = int((current_size - filter_size) / stride) + 1
+        flatten_shape = current_size * current_size * out_channels[-1]
+
+        network_output = filter_sum * flatten_shape * np.prod(hidden_sizes)
+        expected_mean = np.full((self.batch_size, output_dim),
+                                network_output,
+                                dtype=np.float32)
+        expected_std_param = np.full((self.batch_size, output_dim),
+                                     np.log(np.exp(2) - 1),
+                                     dtype=np.float32)
+        expected_log_std = np.log(np.log(1. + np.exp(expected_std_param)))
+
+        assert np.allclose(mean, expected_mean)
+        assert np.allclose(std_param, expected_std_param)
+        assert np.allclose(log_std, expected_log_std)
+
+        expected_action = 0.5 * np.exp(expected_log_std) + expected_mean
+        assert np.allclose(action, expected_action)
+
+    @pytest.mark.parametrize('output_dim, hidden_sizes',
+                             [(1, (0, )), (1, (1, )), (1, (2, )), (2, (3, )),
+                              (2, (1, 1)), (3, (2, 2))])
+    def test_exp_min_std(self, output_dim, hidden_sizes):
+        filter_sizes = [3, 3]
+        out_channels = [3, 6]
+        strides = [1, 1]
+
+        model = GaussianConvModel(
+            filter_dims=filter_sizes,
+            num_filters=out_channels,
+            strides=strides,
+            padding='VALID',
+            output_dim=output_dim,
+            init_std=2.0,
+            hidden_sizes=hidden_sizes,
+            std_share_network=False,
+            adaptive_std=False,
+            hidden_nonlinearity=None,
+            std_parameterization='exp',
+            min_std=10,
+            hidden_w_init=tf.constant_initializer(1),
+            output_w_init=tf.constant_initializer(1))
+        outputs = model.build(self._input_ph)
+        action, mean, log_std, std_param = self.sess.run(
+            outputs[:-1], feed_dict={self._input_ph: self.obs})
+
+        expected_log_std = np.full([1, output_dim], np.log(10))
+        expected_std_param = np.full([1, output_dim], np.log(10))
+        assert np.allclose(log_std, expected_log_std)
+        assert np.allclose(std_param, expected_std_param)
+
+    @pytest.mark.parametrize('output_dim, hidden_sizes',
+                             [(1, (0, )), (1, (1, )), (1, (2, )), (2, (3, )),
+                              (2, (1, 1)), (3, (2, 2))])
+    def test_exp_max_std(self, output_dim, hidden_sizes):
+        filter_sizes = [3, 3]
+        out_channels = [3, 6]
+        strides = [1, 1]
+
+        model = GaussianConvModel(
+            filter_dims=filter_sizes,
+            num_filters=out_channels,
+            strides=strides,
+            padding='VALID',
+            output_dim=output_dim,
+            init_std=10.0,
+            hidden_sizes=hidden_sizes,
+            std_share_network=False,
+            adaptive_std=False,
+            hidden_nonlinearity=None,
+            std_parameterization='exp',
+            max_std=1.0,
+            hidden_w_init=tf.constant_initializer(1),
+            output_w_init=tf.constant_initializer(1))
+        outputs = model.build(self._input_ph)
+        action, mean, log_std, std_param = self.sess.run(
+            outputs[:-1], feed_dict={self._input_ph: self.obs})
+
+        expected_log_std = np.full([1, output_dim], np.log(1))
+        expected_std_param = np.full([1, output_dim], np.log(1))
+        assert np.allclose(log_std, expected_log_std)
+        assert np.allclose(std_param, expected_std_param)
+
+    @pytest.mark.parametrize('output_dim, hidden_sizes',
+                             [(1, (0, )), (1, (1, )), (1, (2, )), (2, (3, )),
+                              (2, (1, 1)), (3, (2, 2))])
+    def test_softplus_min_std(self, output_dim, hidden_sizes):
+        filter_sizes = [3, 3]
+        out_channels = [3, 6]
+        strides = [1, 1]
+
+        model = GaussianConvModel(
+            filter_dims=filter_sizes,
+            num_filters=out_channels,
+            strides=strides,
+            padding='VALID',
+            output_dim=output_dim,
+            init_std=2.0,
+            hidden_sizes=hidden_sizes,
+            std_share_network=False,
+            adaptive_std=False,
+            hidden_nonlinearity=None,
+            std_parameterization='softplus',
+            min_std=10,
+            hidden_w_init=tf.constant_initializer(1),
+            output_w_init=tf.constant_initializer(1))
+        outputs = model.build(self._input_ph)
+        action, mean, log_std, std_param = self.sess.run(
+            outputs[:-1], feed_dict={self._input_ph: self.obs})
+
+        expected_log_std = np.full([1, output_dim], np.log(10))
+        expected_std_param = np.full([1, output_dim], np.log(np.exp(10) - 1))
+
+        assert np.allclose(log_std, expected_log_std)
+        assert np.allclose(std_param, expected_std_param)
+
+    @pytest.mark.parametrize('output_dim, hidden_sizes',
+                             [(1, (0, )), (1, (1, )), (1, (2, )), (2, (3, )),
+                              (2, (1, 1)), (3, (2, 2))])
+    def test_softplus_max_std(self, output_dim, hidden_sizes):
+        filter_sizes = [3, 3]
+        out_channels = [3, 6]
+        strides = [1, 1]
+
+        model = GaussianConvModel(
+            filter_dims=filter_sizes,
+            num_filters=out_channels,
+            strides=strides,
+            padding='VALID',
+            output_dim=output_dim,
+            init_std=10.0,
+            hidden_sizes=hidden_sizes,
+            std_share_network=False,
+            adaptive_std=False,
+            hidden_nonlinearity=None,
+            std_parameterization='softplus',
+            max_std=1.0,
+            hidden_w_init=tf.constant_initializer(1),
+            output_w_init=tf.constant_initializer(1))
+        outputs = model.build(self._input_ph)
+        action, mean, log_std, std_param = self.sess.run(
+            outputs[:-1], feed_dict={self._input_ph: self.obs})
+
+        expected_log_std = np.full([1, output_dim], np.log(1))
+        expected_std_param = np.full([1, output_dim], np.log(np.exp(1) - 1))
+
+        assert np.allclose(log_std, expected_log_std)
+        assert np.allclose(std_param, expected_std_param)
+
+    def test_unknown_std_parameterization(self):
+        with pytest.raises(NotImplementedError):
+            _ = GaussianConvModel(
+                num_filters=[3, 6],
+                filter_dims=[3, 3],
+                strides=[1, 1],
+                padding='SAME',
+                hidden_sizes=(1, ),
+                output_dim=1,
+                std_parameterization='unknown')

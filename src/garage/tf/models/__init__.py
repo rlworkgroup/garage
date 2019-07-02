@@ -1,6 +1,7 @@
 from garage.tf.models.base import Model
 from garage.tf.models.cnn_model import CNNModel
 from garage.tf.models.cnn_model_max_pooling import CNNModelWithMaxPooling
+from garage.tf.models.gaussian_conv_model import GaussianConvModel
 from garage.tf.models.gaussian_gru_model import GaussianGRUModel
 from garage.tf.models.gaussian_lstm_model import GaussianLSTMModel
 from garage.tf.models.gaussian_mlp_model import GaussianMLPModel
@@ -15,7 +16,7 @@ from garage.tf.models.sequential import Sequential
 
 __all__ = [
     'CNNModel', 'CNNModelWithMaxPooling', 'LSTMModel', 'Model',
-    'GaussianGRUModel', 'GaussianLSTMModel', 'GaussianMLPModel', 'GRUModel',
-    'MLPDuelingModel', 'MLPMergeModel', 'MLPModel', 'NormalizedInputMLPModel',
-    'Sequential'
+    'GaussianConvModel', 'GaussianGRUModel', 'GaussianLSTMModel',
+    'GaussianMLPModel', 'GRUModel', 'MLPDuelingModel', 'MLPMergeModel',
+    'MLPModel', 'NormalizedInputMLPModel', 'Sequential'
 ]
