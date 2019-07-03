@@ -2,16 +2,16 @@ import numpy as np
 import tensorflow as tf
 
 from garage.tf.regressors import StochasticRegressor2
-from tests.fixtures.models import SimpleGaussianConvModel
+from tests.fixtures.models import SimpleGaussianCNNModel
 
 
-class SimpleGaussianConvRegressor(StochasticRegressor2):
-    """Simple GaussianConvRegressor for testing."""
+class SimpleGaussianCNNRegressor(StochasticRegressor2):
+    """Simple GaussianCNNRegressor for testing."""
 
     def __init__(self, input_shape, output_dim, name, *args, **kwargs):
         super().__init__(input_shape, output_dim, name)
 
-        self.model = SimpleGaussianConvModel(output_dim=self._output_dim)
+        self.model = SimpleGaussianCNNModel(output_dim=self._output_dim)
 
         self._initialize()
 

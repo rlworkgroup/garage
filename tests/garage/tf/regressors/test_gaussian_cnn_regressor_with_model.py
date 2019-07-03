@@ -6,7 +6,7 @@ import pytest
 import tensorflow as tf
 
 from garage.tf.optimizers import LbfgsOptimizer
-from garage.tf.regressors import GaussianConvRegressorWithModel
+from garage.tf.regressors import GaussianCNNRegressorWithModel
 from tests.fixtures import TfGraphTestCase
 
 
@@ -29,10 +29,10 @@ def get_train_test_data():
     return (observations, returns), (paths, expected)
 
 
-class TestGaussianConvRegressorWithModel(TfGraphTestCase):
+class TestGaussianCNNRegressorWithModel(TfGraphTestCase):
     @pytest.mark.large
     def test_fit_normalized(self):
-        gcr = GaussianConvRegressorWithModel(
+        gcr = GaussianCNNRegressorWithModel(
             input_shape=(28, 28, 3),
             num_filters=(3, 6),
             filter_dims=(3, 3),
@@ -76,7 +76,7 @@ class TestGaussianConvRegressorWithModel(TfGraphTestCase):
 
     @pytest.mark.large
     def test_fit_unnormalized(self):
-        gcr = GaussianConvRegressorWithModel(
+        gcr = GaussianCNNRegressorWithModel(
             input_shape=(28, 28, 3),
             num_filters=(3, 6),
             filter_dims=(3, 3),
@@ -120,7 +120,7 @@ class TestGaussianConvRegressorWithModel(TfGraphTestCase):
 
     @pytest.mark.large
     def test_fit_smaller_subsample_factor(self):
-        gcr = GaussianConvRegressorWithModel(
+        gcr = GaussianCNNRegressorWithModel(
             input_shape=(28, 28, 3),
             num_filters=(3, 6),
             filter_dims=(3, 3),
@@ -147,7 +147,7 @@ class TestGaussianConvRegressorWithModel(TfGraphTestCase):
 
     @pytest.mark.large
     def test_fit_without_trusted_region(self):
-        gcr = GaussianConvRegressorWithModel(
+        gcr = GaussianCNNRegressorWithModel(
             input_shape=(28, 28, 3),
             num_filters=(3, 6),
             filter_dims=(3, 3),
@@ -175,7 +175,7 @@ class TestGaussianConvRegressorWithModel(TfGraphTestCase):
     @pytest.mark.parametrize('output_dim', [(1), (2), (3)])
     def test_log_likelihood_sym(self, output_dim):
         input_shape = (28, 28, 3)
-        gcr = GaussianConvRegressorWithModel(
+        gcr = GaussianCNNRegressorWithModel(
             input_shape=input_shape,
             num_filters=(3, 6),
             filter_dims=(3, 3),
@@ -207,11 +207,11 @@ class TestGaussianConvRegressorWithModel(TfGraphTestCase):
         assert np.allclose(ll, ll_from_sym, rtol=0, atol=1e-5)
 
     @mock.patch('tests.garage.tf.regressors.'
-                'test_gaussian_conv_regressor_with_model.'
+                'test_gaussian_cnn_regressor_with_model.'
                 'LbfgsOptimizer')
     def test_optimizer_args(self, mock_lbfgs):
         lbfgs_args = dict(max_opt_itr=25)
-        gcr = GaussianConvRegressorWithModel(
+        gcr = GaussianCNNRegressorWithModel(
             input_shape=(10, 10, 3),
             num_filters=(3, 6),
             filter_dims=(3, 3),
@@ -229,7 +229,7 @@ class TestGaussianConvRegressorWithModel(TfGraphTestCase):
 
     def test_is_pickleable(self):
         input_shape = (28, 28, 3)
-        gcr = GaussianConvRegressorWithModel(
+        gcr = GaussianCNNRegressorWithModel(
             input_shape=input_shape,
             num_filters=(3, 6),
             filter_dims=(3, 3),
@@ -241,7 +241,7 @@ class TestGaussianConvRegressorWithModel(TfGraphTestCase):
             use_trust_region=False)
 
         with tf.variable_scope(
-                'GaussianConvRegressorWithModel/GaussianConvRegressorModel',
+                'GaussianCNNRegressorWithModel/GaussianCNNRegressorModel',
                 reuse=True):
             bias = tf.get_variable('dist_params/mean_network/hidden_0/bias')
         bias.load(tf.ones_like(bias).eval())
@@ -256,7 +256,7 @@ class TestGaussianConvRegressorWithModel(TfGraphTestCase):
 
     def test_is_pickleable2(self):
         input_shape = (28, 28, 3)
-        gcr = GaussianConvRegressorWithModel(
+        gcr = GaussianCNNRegressorWithModel(
             input_shape=input_shape,
             num_filters=(3, 6),
             filter_dims=(3, 3),
@@ -268,7 +268,7 @@ class TestGaussianConvRegressorWithModel(TfGraphTestCase):
             use_trust_region=False)
 
         with tf.variable_scope(
-                'GaussianConvRegressorWithModel/GaussianConvRegressorModel',
+                'GaussianCNNRegressorWithModel/GaussianCNNRegressorModel',
                 reuse=True):
             x_mean = tf.get_variable('normalized_vars/x_mean')
         x_mean.load(tf.ones_like(x_mean).eval())

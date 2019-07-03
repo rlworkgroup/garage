@@ -5,13 +5,13 @@ import tensorflow as tf
 
 from garage.tf.misc import tensor_utils
 from garage.tf.optimizers import LbfgsOptimizer, PenaltyLbfgsOptimizer
-from garage.tf.regressors import GaussianConvRegressorModel
+from garage.tf.regressors import GaussianCNNRegressorModel
 from garage.tf.regressors import StochasticRegressor2
 
 
-class GaussianConvRegressorWithModel(StochasticRegressor2):
+class GaussianCNNRegressorWithModel(StochasticRegressor2):
     """
-    GaussianConvRegressor with garage.tf.models.GaussianConvRegressorModel.
+    GaussianCNNRegressor with garage.tf.models.GaussianCNNRegressorModel.
 
     A class for performing regression by fitting a Gaussian distribution
     to the outputs.
@@ -117,7 +117,7 @@ class GaussianConvRegressorWithModel(StochasticRegressor2):
                  output_nonlinearity=None,
                  output_w_init=tf.glorot_uniform_initializer(),
                  output_b_init=tf.zeros_initializer(),
-                 name='GaussianConvRegressorWithModel',
+                 name='GaussianCNNRegressorWithModel',
                  learn_std=True,
                  init_std=1.0,
                  adaptive_std=False,
@@ -158,7 +158,7 @@ class GaussianConvRegressorWithModel(StochasticRegressor2):
                 optimizer = optimizer(**optimizer_args)
             self._optimizer = optimizer
 
-        self.model = GaussianConvRegressorModel(
+        self.model = GaussianCNNRegressorModel(
             input_shape=input_shape,
             output_dim=output_dim,
             num_filters=num_filters,

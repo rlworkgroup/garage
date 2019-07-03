@@ -1,13 +1,13 @@
-"""GaussianConvRegressorModel."""
+"""GaussianCNNRegressorModel."""
 import numpy as np
 import tensorflow as tf
 
-from garage.tf.models import GaussianConvModel
+from garage.tf.models import GaussianCNNModel
 
 
-class GaussianConvRegressorModel(GaussianConvModel):
+class GaussianCNNRegressorModel(GaussianCNNModel):
     """
-    GaussianConvRegressor based on garage.tf.models.Model class.
+    GaussianCNNRegressor based on garage.tf.models.Model class.
 
     This class can be used to perform regression by fitting a Gaussian
     distribution to the outputs.
@@ -91,7 +91,7 @@ class GaussianConvRegressorModel(GaussianConvModel):
     def __init__(self,
                  input_shape,
                  output_dim,
-                 name='GaussianConvRegressorModel',
+                 name='GaussianCNNRegressorModel',
                  **kwargs):
         super().__init__(output_dim=output_dim, name=name, **kwargs)
         self._input_shape = input_shape

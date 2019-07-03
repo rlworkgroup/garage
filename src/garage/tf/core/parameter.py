@@ -6,11 +6,11 @@ from tensorflow.python.ops.gen_array_ops import broadcast_to
 
 def parameter(input_var,
               length,
+              batch_dim=None,
               initializer=tf.zeros_initializer(),
               dtype=tf.float32,
               trainable=True,
-              name='parameter',
-              pixel_env=False):
+              name='parameter'):
     """
     Parameter layer.
 
@@ -40,11 +40,8 @@ def parameter(input_var,
             initializer=initializer,
             trainable=trainable)
 
-        if pixel_env:
-            batch_dim = [tf.shape(input_var)[0]]
-        else:
+        if batch_dim is None:
             batch_dim = tf.shape(input_var)[:-1]
-
         broadcast_shape = tf.concat(axis=0, values=[batch_dim, [length]])
         p_broadcast = broadcast_to(p, shape=broadcast_shape)
         return p_broadcast

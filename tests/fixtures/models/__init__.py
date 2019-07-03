@@ -1,8 +1,8 @@
 from tests.fixtures.models.simple_cnn_model import SimpleCNNModel
 from tests.fixtures.models.simple_cnn_model_with_max_pooling import (
     SimpleCNNModelWithMaxPooling)
-from tests.fixtures.models.simple_gaussian_conv_model import (
-    SimpleGaussianConvModel)
+from tests.fixtures.models.simple_gaussian_cnn_model import (
+    SimpleGaussianCNNModel)
 from tests.fixtures.models.simple_gaussian_gru_model import (
     SimpleGaussianGRUModel)
 from tests.fixtures.models.simple_gaussian_lstm_model import (
@@ -17,7 +17,7 @@ from tests.fixtures.models.simple_mlp_model import SimpleMLPModel
 __all__ = [
     'SimpleCNNModel',
     'SimpleCNNModelWithMaxPooling',
-    'SimpleGaussianConvModel',
+    'SimpleGaussianCNNModel',
     'SimpleGaussianGRUModel',
     'SimpleGaussianLSTMModel',
     'SimpleGaussianMLPModel',

@@ -4,12 +4,12 @@ from garage.tf.distributions import DiagonalGaussian
 from garage.tf.models import Model
 
 
-class SimpleGaussianConvModel(Model):
-    """Simple GaussianConvModel for testing."""
+class SimpleGaussianCNNModel(Model):
+    """Simple GaussianCNNModel for testing."""
 
     def __init__(self,
                  output_dim,
-                 name='SimpleGaussianConvModel',
+                 name='SimpleGaussianCNNModel',
                  *args,
                  **kwargs):
         super().__init__(name)

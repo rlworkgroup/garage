@@ -1,38 +1,37 @@
-"""Gaussian Conv Baseline."""
+"""Gaussian CNN Baseline."""
+
 import numpy as np
 
 from garage.misc.overrides import overrides
 from garage.np.baselines import Baseline
-from garage.tf.regressors import GaussianConvRegressorWithModel
+from garage.tf.regressors import GaussianCNNRegressorWithModel
 
 
-class GaussianConvBaselineWithModel(Baseline):
-    """A value function using Gaussian Conv network."""
+class GaussianCNNBaselineWithModel(Baseline):
+    """
+    GaussianCNNBaseline With Model.
+
+    It fits the input data to a gaussian distribution estimated by a CNN.
+
+    Args:
+        env_spec (garage.envs.env_spec.EnvSpec): Environment specification.
+        subsample_factor (float): The factor to subsample the data. By
+            default it is 1.0, which means using all the data.
+        regressor_args (dict): Arguments for regressor.
+    """
 
     def __init__(
             self,
             env_spec,
             subsample_factor=1.,
             regressor_args=None,
-            name='GaussianConvBaselineWithModel',
+            name='GaussianCNNBaselineWithModel',
     ):
-        """
-        Gaussian Conv Baseline with Model.
-
-        It fits the input data to a gaussian distribution estimated by
-        a Conv.
-
-        Args:
-            env_spec (garage.envs.env_spec.EnvSpec): Environment specification.
-            subsample_factor (float): The factor to subsample the data. By
-                default it is 1.0, which means using all the data.
-            regressor_args (dict): Arguments for regressor.
-        """
         super().__init__(env_spec)
         if regressor_args is None:
             regressor_args = dict()
 
-        self._regressor = GaussianConvRegressorWithModel(
+        self._regressor = GaussianCNNRegressorWithModel(
             input_shape=(env_spec.observation_space.shape),
             output_dim=1,
             name=name,

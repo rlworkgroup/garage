@@ -1,4 +1,4 @@
-"""GaussianConvModel."""
+"""GaussianCNNModel."""
 import numpy as np
 import tensorflow as tf
 
@@ -9,9 +9,9 @@ from garage.tf.distributions import DiagonalGaussian
 from garage.tf.models.base import Model
 
 
-class GaussianConvModel(Model):
+class GaussianCNNModel(Model):
     """
-    GaussianConvModel.
+    GaussianCNNModel.
 
     Args:
         filter_dims(tuple[int]): Dimension of the filters. For example,
@@ -269,14 +269,15 @@ class GaussianConvModel(Model):
                         name='log_std_network',
                         layer_normalization=self._layer_normalization)
                 else:
+                    batch_dim = tf.shape(state_input)[0]
                     log_std_network = parameter(
                         state_input,
                         length=action_dim,
+                        batch_dim=[batch_dim],
                         initializer=tf.constant_initializer(
                             self._init_std_param),
                         trainable=self._learn_std,
-                        name='log_std_network',
-                        pixel_env=True)
+                        name='log_std_network')
 
         mean_var = mean_network
         std_param = log_std_network

@@ -13,11 +13,11 @@ from garage.tf.regressors.continuous_mlp_regressor import (
     ContinuousMLPRegressor)
 from garage.tf.regressors.continuous_mlp_regressor_with_model import (
     ContinuousMLPRegressorWithModel)
+from garage.tf.regressors.gaussian_cnn_regressor_model import (
+    GaussianCNNRegressorModel)
+from garage.tf.regressors.gaussian_cnn_regressor_with_model import (
+    GaussianCNNRegressorWithModel)
 from garage.tf.regressors.gaussian_conv_regressor import GaussianConvRegressor
-from garage.tf.regressors.gaussian_conv_regressor_model import (
-    GaussianConvRegressorModel)
-from garage.tf.regressors.gaussian_conv_regressor_with_model import (
-    GaussianConvRegressorWithModel)
 from garage.tf.regressors.gaussian_mlp_regressor import GaussianMLPRegressor
 from garage.tf.regressors.gaussian_mlp_regressor_model import (
     GaussianMLPRegressorModel)
@@ -28,7 +28,7 @@ __all__ = [
     'BernoulliMLPRegressor', 'BernoulliMLPRegressorWithModel',
     'CategoricalMLPRegressor', 'CategoricalMLPRegressorWithModel',
     'ContinuousMLPRegressor', 'ContinuousMLPRegressorWithModel',
-    'GaussianConvRegressorModel', 'GaussianConvRegressorWithModel',
+    'GaussianCNNRegressorModel', 'GaussianCNNRegressorWithModel',
     'GaussianMLPRegressor', 'GaussianMLPRegressorModel',
     'GaussianMLPRegressorWithModel', 'GaussianConvRegressor', 'Regressor2',
     'StochasticRegressor', 'StochasticRegressor2'

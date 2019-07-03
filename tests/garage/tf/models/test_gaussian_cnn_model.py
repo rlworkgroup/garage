@@ -5,11 +5,11 @@ import numpy as np
 import pytest
 import tensorflow as tf
 
-from garage.tf.models import GaussianConvModel
+from garage.tf.models import GaussianCNNModel
 from tests.fixtures import TfGraphTestCase
 
 
-class TestGaussianConvModel(TfGraphTestCase):
+class TestGaussianCNNModel(TfGraphTestCase):
     def setup_method(self):
         super().setup_method()
         self.batch_size = 5
@@ -29,14 +29,14 @@ class TestGaussianConvModel(TfGraphTestCase):
             ((1, ), (3, ), (3, ), (1, ), 1, (1, )),  # noqa: E122
             ((3, ), (3, ), (3, ), (1, ), 2, (2, )),
             ((3, ), (3, ), (3, ), (2, ), 1, (1, 1)),
-            ((1, 1), (3, 3), (3, 6), (1, 1), 2, (2, 2)),
-            ((3, 3), (3, 3), (3, 6), (2, 2), 2, (2, 2))
+            ((1, 1), (3, 3), (3, 3), (1, 1), 2, (2, 2)),
+            ((3, 3), (3, 3), (3, 3), (2, 2), 2, (2, 2))
         ])
     def test_std_share_network_output_values(
             self, mock_normal, filter_sizes, in_channels, out_channels,
             strides, output_dim, hidden_sizes):
         mock_normal.return_value = 0.5
-        model = GaussianConvModel(
+        model = GaussianCNNModel(
             filter_dims=filter_sizes,
             num_filters=out_channels,
             strides=strides,
@@ -80,14 +80,14 @@ class TestGaussianConvModel(TfGraphTestCase):
         assert np.allclose(log_std, expected_log_std)
 
         expected_action = 0.5 * np.exp(expected_log_std) + expected_mean
-        assert np.allclose(action, expected_action)
+        assert np.allclose(action, expected_action, rtol=0, atol=0.1)
 
     @pytest.mark.parametrize('output_dim, hidden_sizes',
                              [(1, (0, )), (1, (1, )), (1, (2, )), (2, (3, )),
                               (2, (1, 1)), (3, (2, 2))])
     def test_std_share_network_shapes(self, output_dim, hidden_sizes):
         # should be 2 * output_dim
-        model = GaussianConvModel(
+        model = GaussianCNNModel(
             num_filters=[3, 6],
             filter_dims=[3, 3],
             strides=[1, 1],
@@ -112,14 +112,14 @@ class TestGaussianConvModel(TfGraphTestCase):
             ((1, ), (3, ), (3, ), (1, ), 1, (1, )),  # noqa: E122
             ((3, ), (3, ), (3, ), (1, ), 2, (2, )),
             ((3, ), (3, ), (3, ), (2, ), 1, (1, 1)),
-            ((1, 1), (3, 3), (3, 6), (1, 1), 2, (2, 2)),
-            ((3, 3), (3, 3), (3, 6), (2, 2), 2, (2, 2))
+            ((1, 1), (3, 3), (3, 3), (1, 1), 2, (2, 2)),
+            ((3, 3), (3, 3), (3, 3), (2, 2), 2, (2, 2))
         ])
     def test_without_std_share_network_output_values(
             self, mock_normal, filter_sizes, in_channels, out_channels,
             strides, output_dim, hidden_sizes):
         mock_normal.return_value = 0.5
-        model = GaussianConvModel(
+        model = GaussianCNNModel(
             filter_dims=filter_sizes,
             num_filters=out_channels,
             strides=strides,
@@ -165,13 +165,13 @@ class TestGaussianConvModel(TfGraphTestCase):
         assert np.allclose(log_std, expected_log_std)
 
         expected_action = 0.5 * np.exp(expected_log_std) + expected_mean
-        assert np.allclose(action, expected_action)
+        assert np.allclose(action, expected_action, rtol=0, atol=0.1)
 
     @pytest.mark.parametrize('output_dim, hidden_sizes',
                              [(1, (0, )), (1, (1, )), (1, (2, )), (2, (3, )),
                               (2, (1, 1)), (3, (2, 2))])
     def test_without_std_share_network_shapes(self, output_dim, hidden_sizes):
-        model = GaussianConvModel(
+        model = GaussianCNNModel(
             num_filters=[3, 6],
             filter_dims=[3, 3],
             strides=[1, 1],
@@ -200,14 +200,14 @@ class TestGaussianConvModel(TfGraphTestCase):
             ((1, ), (3, ), (3, ), (1, ), 1, (1, )),  # noqa: E122
             ((3, ), (3, ), (3, ), (1, ), 2, (2, )),
             ((3, ), (3, ), (3, ), (2, ), 1, (1, 1)),
-            ((1, 1), (3, 3), (3, 6), (1, 1), 2, (2, 2)),
-            ((3, 3), (3, 3), (3, 6), (2, 2), 2, (2, 2))
+            ((1, 1), (3, 3), (3, 3), (1, 1), 2, (2, 2)),
+            ((3, 3), (3, 3), (3, 3), (2, 2), 2, (2, 2))
         ])
     def test_adaptive_std_network_output_values(
             self, mock_normal, filter_sizes, in_channels, out_channels,
             strides, output_dim, hidden_sizes):
         mock_normal.return_value = 0.5
-        model = GaussianConvModel(
+        model = GaussianCNNModel(
             filter_dims=filter_sizes,
             num_filters=out_channels,
             strides=strides,
@@ -259,7 +259,7 @@ class TestGaussianConvModel(TfGraphTestCase):
         assert np.allclose(log_std, expected_log_std)
 
         expected_action = 0.5 * np.exp(expected_log_std) + expected_mean
-        assert np.allclose(action, expected_action)
+        assert np.allclose(action, expected_action, rtol=0, atol=0.1)
 
     @pytest.mark.parametrize('output_dim, hidden_sizes, std_hidden_sizes',
                              [(1, (0, ), (0, )), (1, (1, ), (1, )),
@@ -267,7 +267,7 @@ class TestGaussianConvModel(TfGraphTestCase):
                               (2, (1, 1), (1, 1)), (3, (2, 2), (2, 2))])
     def test_adaptive_std_output_shape(self, output_dim, hidden_sizes,
                                        std_hidden_sizes):
-        model = GaussianConvModel(
+        model = GaussianCNNModel(
             num_filters=[3, 6],
             filter_dims=[3, 3],
             strides=[1, 1],
@@ -312,7 +312,7 @@ class TestGaussianConvModel(TfGraphTestCase):
                                              hidden_sizes):
         mock_normal.return_value = 0.5
         input_var = tf.placeholder(tf.float32, shape=(None, 10, 10, 3))
-        model = GaussianConvModel(
+        model = GaussianCNNModel(
             num_filters=[3, 6],
             filter_dims=[3, 3],
             strides=[1, 1],
@@ -323,7 +323,7 @@ class TestGaussianConvModel(TfGraphTestCase):
         outputs = model.build(input_var)
 
         # get output bias
-        with tf.variable_scope('GaussianConvModel', reuse=True):
+        with tf.variable_scope('GaussianCNNModel', reuse=True):
             bias = tf.get_variable('dist_params/mean_std_network/output/bias')
         # assign it to all ones
         bias.load(tf.ones_like(bias).eval())
@@ -347,7 +347,7 @@ class TestGaussianConvModel(TfGraphTestCase):
                                                      output_dim, hidden_sizes):
         mock_normal.return_value = 0.5
         input_var = tf.placeholder(tf.float32, shape=(None, 10, 10, 3))
-        model = GaussianConvModel(
+        model = GaussianCNNModel(
             num_filters=[3, 6],
             filter_dims=[3, 3],
             strides=[1, 1],
@@ -359,7 +359,7 @@ class TestGaussianConvModel(TfGraphTestCase):
         outputs = model.build(input_var)
 
         # get output bias
-        with tf.variable_scope('GaussianConvModel', reuse=True):
+        with tf.variable_scope('GaussianCNNModel', reuse=True):
             bias = tf.get_variable('dist_params/mean_network/output/bias')
         # assign it to all ones
         bias.load(tf.ones_like(bias).eval())
@@ -383,7 +383,7 @@ class TestGaussianConvModel(TfGraphTestCase):
                                         hidden_sizes, std_hidden_sizes):
         mock_normal.return_value = 0.5
         input_var = tf.placeholder(tf.float32, shape=(None, 10, 10, 3))
-        model = GaussianConvModel(
+        model = GaussianCNNModel(
             num_filters=[3, 6],
             filter_dims=[3, 3],
             strides=[1, 1],
@@ -406,7 +406,7 @@ class TestGaussianConvModel(TfGraphTestCase):
         outputs = model.build(input_var)
 
         # get output bias
-        with tf.variable_scope('GaussianConvModel', reuse=True):
+        with tf.variable_scope('GaussianCNNModel', reuse=True):
             bias = tf.get_variable('dist_params/mean_network/output/bias')
         # assign it to all ones
         bias.load(tf.ones_like(bias).eval())
@@ -432,7 +432,7 @@ class TestGaussianConvModel(TfGraphTestCase):
         out_channels = [3, 6]
         strides = [1, 1]
 
-        model = GaussianConvModel(
+        model = GaussianCNNModel(
             filter_dims=filter_sizes,
             num_filters=out_channels,
             strides=strides,
@@ -474,7 +474,7 @@ class TestGaussianConvModel(TfGraphTestCase):
         assert np.allclose(log_std, expected_log_std)
 
         expected_action = 0.5 * np.exp(expected_log_std) + expected_mean
-        assert np.allclose(action, expected_action)
+        assert np.allclose(action, expected_action, rtol=0, atol=0.1)
 
     @pytest.mark.parametrize('output_dim, hidden_sizes',
                              [(1, (0, )), (1, (1, )), (1, (2, )), (2, (3, )),
@@ -484,7 +484,7 @@ class TestGaussianConvModel(TfGraphTestCase):
         out_channels = [3, 6]
         strides = [1, 1]
 
-        model = GaussianConvModel(
+        model = GaussianCNNModel(
             filter_dims=filter_sizes,
             num_filters=out_channels,
             strides=strides,
@@ -516,7 +516,7 @@ class TestGaussianConvModel(TfGraphTestCase):
         out_channels = [3, 6]
         strides = [1, 1]
 
-        model = GaussianConvModel(
+        model = GaussianCNNModel(
             filter_dims=filter_sizes,
             num_filters=out_channels,
             strides=strides,
@@ -548,7 +548,7 @@ class TestGaussianConvModel(TfGraphTestCase):
         out_channels = [3, 6]
         strides = [1, 1]
 
-        model = GaussianConvModel(
+        model = GaussianCNNModel(
             filter_dims=filter_sizes,
             num_filters=out_channels,
             strides=strides,
@@ -581,7 +581,7 @@ class TestGaussianConvModel(TfGraphTestCase):
         out_channels = [3, 6]
         strides = [1, 1]
 
-        model = GaussianConvModel(
+        model = GaussianCNNModel(
             filter_dims=filter_sizes,
             num_filters=out_channels,
             strides=strides,
@@ -608,7 +608,7 @@ class TestGaussianConvModel(TfGraphTestCase):
 
     def test_unknown_std_parameterization(self):
         with pytest.raises(NotImplementedError):
-            _ = GaussianConvModel(
+            _ = GaussianCNNModel(
                 num_filters=[3, 6],
                 filter_dims=[3, 3],
                 strides=[1, 1],
