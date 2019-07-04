@@ -1,4 +1,4 @@
-from akro.tf import Discrete
+import akro
 import numpy as np
 import tensorflow as tf
 
@@ -32,7 +32,7 @@ class CategoricalGRUPolicy(StochasticPolicy, LayersPowered, Serializable):
         :param hidden_nonlinearity: nonlinearity used for each hidden layer
         :return:
         """
-        assert isinstance(env_spec.action_space, Discrete)
+        assert isinstance(env_spec.action_space, akro.Discrete)
 
         self._prob_network_name = 'prob_network'
         with tf.variable_scope(name, 'CategoricalGRUPolicy'):

@@ -84,6 +84,7 @@ class TestPPO(TfGraphTestCase):
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 40
 
+    @pytest.mark.large
     def test_ppo_with_neg_log_likeli_entropy_estimation_and_max(self):
         """
         Test PPO with negative log likelihood entropy estimation and max
@@ -107,6 +108,7 @@ class TestPPO(TfGraphTestCase):
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 40
 
+    @pytest.mark.large
     def test_ppo_with_neg_log_likeli_entropy_estimation_and_regularized(self):
         """
         Test PPO with negative log likelihood entropy estimation and
@@ -130,6 +132,7 @@ class TestPPO(TfGraphTestCase):
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 40
 
+    @pytest.mark.large
     def test_ppo_with_regularized_entropy(self):
         """Test PPO with regularized entropy method."""
         with LocalRunner(self.sess) as runner:

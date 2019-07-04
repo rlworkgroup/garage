@@ -3,7 +3,7 @@ Discrete QfDerived policy.
 
 This policy chooses the action that yields to the largest q-value.
 """
-from akro.tf import Discrete
+import akro
 import numpy as np
 import tensorflow as tf
 
@@ -24,7 +24,7 @@ class DiscreteQfDerivedPolicy(Policy2):
     def __init__(self, env_spec, qf, name='DiscreteQfDerivedPolicy'):
         super().__init__(name, env_spec)
 
-        assert isinstance(env_spec.action_space, Discrete)
+        assert isinstance(env_spec.action_space, akro.Discrete)
         self._env_spec = env_spec
         self._qf = qf
 

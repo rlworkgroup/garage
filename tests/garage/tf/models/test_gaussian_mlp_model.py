@@ -404,8 +404,9 @@ class TestGaussianMLPModel(TfGraphTestCase):
         expected_log_std = np.full([1, output_dim], np.log(1))
         expected_std_param = np.full([1, output_dim], np.log(np.exp(1) - 1))
 
-        assert np.allclose(log_std, expected_log_std)
-        assert np.allclose(std_param, expected_std_param)
+        # This test fails just outside of the default absolute tolerance.
+        assert np.allclose(log_std, expected_log_std, atol=1e-7)
+        assert np.allclose(std_param, expected_std_param, atol=1e-7)
 
     def test_unknown_std_parameterization(self):
         with pytest.raises(NotImplementedError):

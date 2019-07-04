@@ -1,4 +1,4 @@
-from akro import Box
+import gym.spaces
 import numpy as np
 
 
@@ -166,7 +166,7 @@ def normalize_pixel_batch(env_spec, observations):
         env_spec (garage.envs.EnvSpec): Environment specification.
         observations (numpy.ndarray): Observations from environment.
     """
-    if isinstance(env_spec.observation_space, Box):
+    if isinstance(env_spec.observation_space, gym.spaces.Box):
         if len(env_spec.observation_space.shape) == 3:
             return [obs.astype(np.float32) / 255.0 for obs in observations]
     return observations

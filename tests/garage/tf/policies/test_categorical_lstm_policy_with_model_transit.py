@@ -127,7 +127,7 @@ class TestCategoricalLSTMPolicyWithModelTransit(TfGraphTestCase):
         assert np.array_equal(dist1['prob'], dist3['prob'])
         assert np.array_equal(dist2['prob'], dist4['prob'])
 
-    @mock.patch('numpy.random.rand')
+    @mock.patch('numpy.random.choice')
     def test_get_action(self, mock_rand):
         mock_rand.return_value = 0
 

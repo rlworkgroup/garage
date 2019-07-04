@@ -19,7 +19,7 @@ class TestCategoricalMLPPolicyWithModel(TfGraphTestCase):
         ((1, 1), 1),
         ((2, 2), 2),
     ])
-    @mock.patch('numpy.random.rand')
+    @mock.patch('numpy.random.choice')
     def test_get_action(self, mock_rand, obs_dim, action_dim):
         mock_rand.return_value = 0
         env = TfEnv(DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))

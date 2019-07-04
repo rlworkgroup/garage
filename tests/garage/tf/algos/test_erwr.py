@@ -1,3 +1,5 @@
+import pytest
+
 from garage.experiment import LocalRunner
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import ERWR
@@ -7,8 +9,7 @@ from tests.fixtures import TfGraphTestCase
 
 
 class TestERWR(TfGraphTestCase):
-    # unmarked to balance test jobs
-    # @pytest.mark.large
+    @pytest.mark.large
     def test_erwr_cartpole(self):
         """Test ERWR with Cartpole-v1 environment."""
         with LocalRunner(self.sess) as runner:

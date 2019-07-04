@@ -111,7 +111,7 @@ class TestCategoricalLSTMPolicyWithModel(TfGraphTestCase):
         ((1, 1), 1, 4),
         ((2, 2), 2, 4),
     ])
-    @mock.patch('numpy.random.rand')
+    @mock.patch('numpy.random.choice')
     def test_get_action_state_include_action(self, mock_rand, obs_dim,
                                              action_dim, hidden_dim):
         mock_rand.return_value = 0
@@ -146,7 +146,7 @@ class TestCategoricalLSTMPolicyWithModel(TfGraphTestCase):
         ((1, 1), 1, 4),
         ((2, 2), 2, 4),
     ])
-    @mock.patch('numpy.random.rand')
+    @mock.patch('numpy.random.choice')
     def test_get_action(self, mock_rand, obs_dim, action_dim, hidden_dim):
         mock_rand.return_value = 0
 

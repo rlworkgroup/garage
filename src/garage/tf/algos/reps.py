@@ -206,12 +206,12 @@ class REPS(BatchPolopt):
         policy_dist = self.policy.distribution
 
         with tf.name_scope('inputs'):
-            obs_var = observation_space.new_tensor_variable(
+            obs_var = observation_space.to_tf_placeholder(
                 name='obs',
-                extra_dims=2)   # yapf: disable
-            action_var = action_space.new_tensor_variable(
+                batch_dims=2)   # yapf: disable
+            action_var = action_space.to_tf_placeholder(
                 name='action',
-                extra_dims=2)   # yapf: disable
+                batch_dims=2)   # yapf: disable
             reward_var = tensor_utils.new_tensor(
                 name='reward',
                 ndim=2,

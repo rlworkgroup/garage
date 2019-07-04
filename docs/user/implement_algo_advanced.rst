@@ -84,13 +84,13 @@ extra diagnostic information as well as supporting recurrent policies):
     # ...
 
     def init_opt(self):
-        obs_var = self.env.observation_space.new_tensor_variable(
+        obs_var = self.env.observation_space.to_tf_placeholder(
             'obs',
-            extra_dims=1,
+            batch_dims=1,
         )
-        action_var = self.env.action_space.new_tensor_variable(
+        action_var = self.env.action_space.to_tf_placeholder(
             'action',
-            extra_dims=1,
+            batch_dims=1,
         )
         advantage_var = tf.placeholder('advantage')
         dist = self.policy.distribution

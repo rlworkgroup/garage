@@ -1,4 +1,4 @@
-from akro.tf import Discrete
+import akro
 import tensorflow as tf
 
 from garage.core import Serializable
@@ -35,7 +35,7 @@ class CategoricalConvPolicy(StochasticPolicy, LayersPowered, Serializable):
         are ignored
         :return:
         """
-        assert isinstance(env_spec.action_space, Discrete)
+        assert isinstance(env_spec.action_space, akro.Discrete)
 
         Serializable.quick_init(self, locals())
 
