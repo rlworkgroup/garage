@@ -30,6 +30,7 @@ class TestTRPO(TfGraphTestCase):
             regressor_args=dict(hidden_sizes=(32, 32)),
         )
 
+    @pytest.mark.large
     def test_trpo_pendulum(self):
         """Test TRPO with Pendulum environment."""
         with LocalRunner(self.sess) as runner:
@@ -59,6 +60,7 @@ class TestTRPO(TfGraphTestCase):
                 kl_constraint='random kl_constraint',
             )
 
+    @pytest.mark.large
     def test_trpo_soft_kl_constraint(self):
         """Test TRPO with unkown KL constraints."""
         with LocalRunner(self.sess) as runner:
