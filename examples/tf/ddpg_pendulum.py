@@ -24,7 +24,7 @@ from garage.tf.q_functions import ContinuousMLPQFunction
 
 def run_task(*_):
     with LocalRunner() as runner:
-        env = TfEnv(normalize(gym.make('InvertedPendulum-v2')))
+        env = TfEnv(normalize(gym.make('InvertedDoublePendulum-v2')))
 
         action_noise = OUStrategy(env.spec, sigma=0.2)
 

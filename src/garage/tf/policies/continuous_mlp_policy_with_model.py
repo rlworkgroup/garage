@@ -2,7 +2,7 @@
 This modules creates a continuous MLP policy network.
 
 A continuous MLP network can be used as policy method in different RL
-algorithms. It accepts an observation of the environment and predicts an
+algorithms. It accepts an observation of the environment and predicts a
 continuous action.
 """
 import tensorflow as tf

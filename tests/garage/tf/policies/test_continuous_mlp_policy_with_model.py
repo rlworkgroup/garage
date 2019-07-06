@@ -12,7 +12,7 @@ from tests.fixtures.envs.dummy import DummyBoxEnv
 from tests.fixtures.models import SimpleMLPModel
 
 
-class TestDeterministicMLPPolicyWithModel(TfGraphTestCase):
+class TestContinuousMLPPolicyWithModel(TfGraphTestCase):
     @pytest.mark.parametrize('obs_dim, action_dim', [
         ((1, ), (1, )),
         ((1, ), (2, )),
