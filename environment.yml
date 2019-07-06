@@ -3,10 +3,11 @@ channels:
   - conda-forge
 dependencies:
     - python==3.5
-    - pip>=18.1 # required so that conda doesn't complain
+    - pip # required so that conda doesn't complain
     - numpy==1.14.5 # pycma requires numpy to install (smh)
     - pre_commit  # See https://github.com/pre-commit/pre-commit/issues/701
     - pip:
+        - pip==18.1
         - -e .[all]
         - -e .[dev]
         # install sister packages to make sure environments stay compatible
