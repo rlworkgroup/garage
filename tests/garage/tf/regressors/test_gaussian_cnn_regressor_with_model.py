@@ -11,18 +11,18 @@ from tests.fixtures import TfGraphTestCase
 
 
 def get_train_test_data():
-    np.random.seed(1)
-    data = [np.random.rand(28, 28, 3) * np.random.rand() for _ in range(100)]
+    matrices = [
+        np.linspace(i - 0.5, i + 0.5, 300).reshape((10, 10, 3))
+        for i in range(110)
+    ]
+    data = [np.sin(matrices[i]) for i in range(100)]
     obs = [{'observations': [x], 'returns': [np.mean(x)]} for x in data]
 
     observations = np.concatenate([p['observations'] for p in obs])
     returns = np.concatenate([p['returns'] for p in obs])
     returns = returns.reshape((-1, 1))
 
-    paths = {
-        'observations':
-        [np.random.rand(28, 28, 3) * np.random.rand() for _ in range(10)]
-    }
+    paths = {'observations': [np.sin(matrices[i]) for i in range(100, 110)]}
 
     expected = [[np.mean(x)] for x in paths['observations']]
 
@@ -33,7 +33,7 @@ class TestGaussianCNNRegressorWithModel(TfGraphTestCase):
     @pytest.mark.large
     def test_fit_normalized(self):
         gcr = GaussianCNNRegressorWithModel(
-            input_shape=(28, 28, 3),
+            input_shape=(10, 10, 3),
             num_filters=(3, 6),
             filter_dims=(3, 3),
             strides=(1, 1),
@@ -77,7 +77,7 @@ class TestGaussianCNNRegressorWithModel(TfGraphTestCase):
     @pytest.mark.large
     def test_fit_unnormalized(self):
         gcr = GaussianCNNRegressorWithModel(
-            input_shape=(28, 28, 3),
+            input_shape=(10, 10, 3),
             num_filters=(3, 6),
             filter_dims=(3, 3),
             strides=(1, 1),
@@ -121,7 +121,7 @@ class TestGaussianCNNRegressorWithModel(TfGraphTestCase):
     @pytest.mark.large
     def test_fit_smaller_subsample_factor(self):
         gcr = GaussianCNNRegressorWithModel(
-            input_shape=(28, 28, 3),
+            input_shape=(10, 10, 3),
             num_filters=(3, 6),
             filter_dims=(3, 3),
             strides=(1, 1),
@@ -148,7 +148,7 @@ class TestGaussianCNNRegressorWithModel(TfGraphTestCase):
     @pytest.mark.large
     def test_fit_without_trusted_region(self):
         gcr = GaussianCNNRegressorWithModel(
-            input_shape=(28, 28, 3),
+            input_shape=(10, 10, 3),
             num_filters=(3, 6),
             filter_dims=(3, 3),
             strides=(1, 1),

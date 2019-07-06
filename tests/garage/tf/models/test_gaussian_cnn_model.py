@@ -16,7 +16,7 @@ class TestGaussianCNNModel(TfGraphTestCase):
         self.input_width = 10
         self.input_height = 10
         self.obs = np.full(
-            (self.batch_size, self.input_width, self.input_height, 3), 0.001)
+            (self.batch_size, self.input_width, self.input_height, 3), 1)
         input_shape = self.obs.shape[1:]  # height, width, channel
         self._input_ph = tf.placeholder(
             tf.float32, shape=(None, ) + input_shape, name='input')
@@ -46,17 +46,20 @@ class TestGaussianCNNModel(TfGraphTestCase):
             std_share_network=True,
             hidden_nonlinearity=None,
             std_parameterization='exp',
-            hidden_w_init=tf.constant_initializer(1),
+            hidden_w_init=tf.constant_initializer(0.01),
             output_w_init=tf.constant_initializer(1))
         outputs = model.build(self._input_ph)
 
         action, mean, log_std, std_param = self.sess.run(
             outputs[:-1], feed_dict={self._input_ph: self.obs})
 
-        filter_sum = 0.001
+        filter_sum = 1
 
         for filter_size, in_channel in zip(filter_sizes, in_channels):
-            filter_sum *= filter_size * filter_size * in_channel
+            filter_sum *= 0.01 * filter_size * filter_size * in_channel
+
+        for hidden_size in hidden_sizes:
+            filter_sum *= 0.01
 
         current_size = self.input_width
         for filter_size, stride in zip(filter_sizes, strides):
@@ -131,17 +134,20 @@ class TestGaussianCNNModel(TfGraphTestCase):
             adaptive_std=False,
             hidden_nonlinearity=None,
             std_parameterization='exp',
-            hidden_w_init=tf.constant_initializer(1),
+            hidden_w_init=tf.constant_initializer(0.01),
             output_w_init=tf.constant_initializer(1))
         outputs = model.build(self._input_ph)
 
         action, mean, log_std, std_param = self.sess.run(
             outputs[:-1], feed_dict={self._input_ph: self.obs})
 
-        filter_sum = 0.001
+        filter_sum = 1
 
         for filter_size, in_channel in zip(filter_sizes, in_channels):
-            filter_sum *= filter_size * filter_size * in_channel
+            filter_sum *= 0.01 * filter_size * filter_size * in_channel
+
+        for hidden_size in hidden_sizes:
+            filter_sum *= 0.01
 
         current_size = self.input_width
         for filter_size, stride in zip(filter_sizes, strides):
@@ -223,19 +229,22 @@ class TestGaussianCNNModel(TfGraphTestCase):
             std_strides=strides,
             std_padding='VALID',
             std_hidden_sizes=hidden_sizes,
-            hidden_w_init=tf.constant_initializer(1),
+            hidden_w_init=tf.constant_initializer(0.01),
             output_w_init=tf.constant_initializer(1),
-            std_hidden_w_init=tf.constant_initializer(1),
+            std_hidden_w_init=tf.constant_initializer(0.01),
             std_output_w_init=tf.constant_initializer(1))
         outputs = model.build(self._input_ph)
 
         action, mean, log_std, std_param = self.sess.run(
             outputs[:-1], feed_dict={self._input_ph: self.obs})
 
-        filter_sum = 0.001
+        filter_sum = 1
 
         for filter_size, in_channel in zip(filter_sizes, in_channels):
-            filter_sum *= filter_size * filter_size * in_channel
+            filter_sum *= 0.01 * filter_size * filter_size * in_channel
+
+        for hidden_size in hidden_sizes:
+            filter_sum *= 0.01
 
         current_size = self.input_width
         for filter_size, stride in zip(filter_sizes, strides):
@@ -283,9 +292,9 @@ class TestGaussianCNNModel(TfGraphTestCase):
             std_strides=[1, 1],
             std_padding='SAME',
             std_hidden_sizes=hidden_sizes,
-            hidden_w_init=tf.constant_initializer(1),
+            hidden_w_init=tf.constant_initializer(0.01),
             output_w_init=tf.constant_initializer(1),
-            std_hidden_w_init=tf.constant_initializer(1),
+            std_hidden_w_init=tf.constant_initializer(0.01),
             std_output_w_init=tf.constant_initializer(1))
 
         model.build(self._input_ph)
@@ -444,16 +453,19 @@ class TestGaussianCNNModel(TfGraphTestCase):
             adaptive_std=False,
             hidden_nonlinearity=None,
             std_parameterization='softplus',
-            hidden_w_init=tf.constant_initializer(1),
+            hidden_w_init=tf.constant_initializer(0.01),
             output_w_init=tf.constant_initializer(1))
         outputs = model.build(self._input_ph)
 
         action, mean, log_std, std_param = self.sess.run(
             outputs[:-1], feed_dict={self._input_ph: self.obs})
 
-        filter_sum = 0.001
+        filter_sum = 1
         for filter_size, in_channel in zip(filter_sizes, in_channels):
-            filter_sum *= filter_size * filter_size * in_channel
+            filter_sum *= 0.01 * filter_size * filter_size * in_channel
+
+        for hidden_size in hidden_sizes:
+            filter_sum *= 0.01
 
         current_size = self.input_width
         for filter_size, stride in zip(filter_sizes, strides):
@@ -497,7 +509,7 @@ class TestGaussianCNNModel(TfGraphTestCase):
             hidden_nonlinearity=None,
             std_parameterization='exp',
             min_std=10,
-            hidden_w_init=tf.constant_initializer(1),
+            hidden_w_init=tf.constant_initializer(0.01),
             output_w_init=tf.constant_initializer(1))
         outputs = model.build(self._input_ph)
         action, mean, log_std, std_param = self.sess.run(
@@ -529,7 +541,7 @@ class TestGaussianCNNModel(TfGraphTestCase):
             hidden_nonlinearity=None,
             std_parameterization='exp',
             max_std=1.0,
-            hidden_w_init=tf.constant_initializer(1),
+            hidden_w_init=tf.constant_initializer(0.01),
             output_w_init=tf.constant_initializer(1))
         outputs = model.build(self._input_ph)
         action, mean, log_std, std_param = self.sess.run(
@@ -561,7 +573,7 @@ class TestGaussianCNNModel(TfGraphTestCase):
             hidden_nonlinearity=None,
             std_parameterization='softplus',
             min_std=10,
-            hidden_w_init=tf.constant_initializer(1),
+            hidden_w_init=tf.constant_initializer(0.01),
             output_w_init=tf.constant_initializer(1))
         outputs = model.build(self._input_ph)
         action, mean, log_std, std_param = self.sess.run(
@@ -594,7 +606,7 @@ class TestGaussianCNNModel(TfGraphTestCase):
             hidden_nonlinearity=None,
             std_parameterization='softplus',
             max_std=1.0,
-            hidden_w_init=tf.constant_initializer(1),
+            hidden_w_init=tf.constant_initializer(0.01),
             output_w_init=tf.constant_initializer(1))
         outputs = model.build(self._input_ph)
         action, mean, log_std, std_param = self.sess.run(

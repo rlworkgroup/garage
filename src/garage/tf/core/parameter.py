@@ -27,7 +27,6 @@ def parameter(input_var,
         dtype: Data type of the variables (default is tf.float32).
         trainable (bool): Whether these variables are trainable.
         name (str): Variable scope of the variables.
-        pixel_env (bool): Whether the environment is pixel based or not.
 
     Return:
         A tensor of the broadcasted variables.
