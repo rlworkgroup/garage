@@ -2,7 +2,7 @@
 from collections import deque
 
 import gym
-from gym.spaces import Box
+import gym.spaces
 import numpy as np
 
 
@@ -24,8 +24,9 @@ class StackFrames(gym.Wrapper):
     """
 
     def __init__(self, env, n_frames):
-        if not isinstance(env.observation_space, Box):
-            raise ValueError('Stack frames only works with Box environment.')
+        if not isinstance(env.observation_space, gym.spaces.Box):
+            raise ValueError('Stack frames only works with gym.spaces.Box '
+                             'environment.')
 
         if len(env.observation_space.shape) != 2:
             raise ValueError(
@@ -39,7 +40,7 @@ class StackFrames(gym.Wrapper):
         new_obs_space_shape = env.observation_space.shape + (n_frames, )
         _low = env.observation_space.low.flatten()[0]
         _high = env.observation_space.high.flatten()[0]
-        self._observation_space = Box(
+        self._observation_space = gym.spaces.Box(
             _low,
             _high,
             shape=new_obs_space_shape,

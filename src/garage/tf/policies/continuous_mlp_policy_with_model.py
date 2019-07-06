@@ -1,9 +1,9 @@
 """
-This modules creates a deterministic MLP policy network.
+This modules creates a continuous MLP policy network.
 
-A deterministic MLP network can be used as policy method in different RL
-algorithms. It accepts an observation of the environment and predicts an
-action.
+A continuous MLP network can be used as policy method in different RL
+algorithms. It accepts an observation of the environment and predicts a
+continuous action.
 """
 import tensorflow as tf
 
@@ -12,9 +12,9 @@ from garage.tf.models import MLPModel
 from garage.tf.policies.base2 import Policy2
 
 
-class DeterministicMLPPolicyWithModel(Policy2):
+class ContinuousMLPPolicyWithModel(Policy2):
     """
-    DeterministicMLPPolicy with model.
+    ContinuousMLPPolicy with model.
 
     The policy network selects action based on the state of the environment.
     It uses neural nets to fit the function of pi(s).
@@ -49,7 +49,7 @@ class DeterministicMLPPolicyWithModel(Policy2):
 
     def __init__(self,
                  env_spec,
-                 name='DeterministicMLPPolicy',
+                 name='ContinuousMLPPolicy',
                  hidden_sizes=(64, 64),
                  hidden_nonlinearity=tf.nn.relu,
                  hidden_w_init=tf.glorot_uniform_initializer(),
@@ -61,7 +61,16 @@ class DeterministicMLPPolicyWithModel(Policy2):
                  layer_normalization=False):
         super().__init__(name, env_spec)
         action_dim = env_spec.action_space.flat_dim
-        if input_include_goal:
+        self._hidden_sizes = hidden_sizes
+        self._hidden_nonlinearity = hidden_nonlinearity
+        self._hidden_w_init = hidden_w_init
+        self._hidden_b_init = hidden_b_init
+        self._output_nonlinearity = output_nonlinearity
+        self._output_w_init = output_w_init
+        self._output_b_init = output_b_init
+        self._input_include_goal = input_include_goal
+        self._layer_normalization = layer_normalization
+        if self._input_include_goal:
             self.obs_dim = env_spec.observation_space.flat_dim_with_keys(
                 ['observation', 'desired_goal'])
         else:
@@ -92,15 +101,32 @@ class DeterministicMLPPolicyWithModel(Policy2):
             self.model.networks['default'].outputs,
             feed_list=[self.model.networks['default'].input])
 
-    def get_action_sym(self, obs_var, name=None, **kwargs):
-        """Return action sym according to obs_var."""
+    def get_action_sym(self, obs_var, name=None):
+        """
+        Symbolic graph of the action.
+
+        Args:
+            obs_var (tf.Tensor): Tensor input for symbolic graph.
+            name (str): Name for symbolic graph.
+
+        """
         with tf.variable_scope(self._variable_scope):
-            action = self.model.build(obs_var, name=name)
-            return action
+            return self.model.build(obs_var, name=name)
 
     @overrides
     def get_action(self, observation):
-        """Return a single action."""
+        """
+        Get single action from this policy for the input observation.
+
+        Args:
+            observation (numpy.ndarray): Observation from environment.
+
+        Returns:
+            action (numpy.ndarray): Predicted action.
+            agent_info (dict): Empty dict since this policy does
+                not model a distribution.
+
+        """
         flat_obs = self.observation_space.flatten(observation)
         action = self._f_prob([flat_obs])
         action = self.action_space.unflatten(action)
@@ -108,7 +134,18 @@ class DeterministicMLPPolicyWithModel(Policy2):
 
     @overrides
     def get_actions(self, observations):
-        """Return multiple actions."""
+        """
+        Get multiple actions from this policy for the input observations.
+
+        Args:
+            observations (numpy.ndarray): Observations from environment.
+
+        Returns:
+            actions (numpy.ndarray): Predicted actions.
+            agent_infos (dict): Empty dict since this policy does
+                not model a distribution.
+
+        """
         flat_obs = self.observation_space.flatten_n(observations)
         actions = self._f_prob(flat_obs)
         actions = self.action_space.unflatten_n(actions)
@@ -118,6 +155,29 @@ class DeterministicMLPPolicyWithModel(Policy2):
     def vectorized(self):
         """Vectorized or not."""
         return True
+
+    def clone(self, name):
+        """
+        Return a clone of the policy.
+
+        It only copies the configuration of the Q-function,
+        not the parameters.
+
+        Args:
+            name (str): Name of the newly created policy.
+        """
+        return self.__class__(
+            name=name,
+            env_spec=self._env_spec,
+            hidden_sizes=self._hidden_sizes,
+            hidden_nonlinearity=self._hidden_nonlinearity,
+            hidden_w_init=self._hidden_w_init,
+            hidden_b_init=self._hidden_b_init,
+            output_nonlinearity=self._output_nonlinearity,
+            output_w_init=self._output_w_init,
+            output_b_init=self._output_b_init,
+            input_include_goal=self._input_include_goal,
+            layer_normalization=self._layer_normalization)
 
     def __getstate__(self):
         """Object.__getstate__."""

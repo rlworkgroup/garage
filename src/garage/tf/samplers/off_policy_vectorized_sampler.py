@@ -23,9 +23,10 @@ class OffPolicyVectorizedSampler(BatchSampler):
     """This class implements OffPolicyVectorizedSampler.
 
     Args:
-        algo(garage.np.RLAlgorithm): Algorithm.
-        env(garage.envs.GarageEnv): Environment.
-        n_envs(int): Number of parallel environments managed by sampler.
+        algo (garage.np.RLAlgorithm): Algorithm.
+        env (garage.envs.GarageEnv): Environment.
+        n_envs (int): Number of parallel environments managed by sampler.
+        no_reset (bool): Reset environment between samples or not.
 
     """
 

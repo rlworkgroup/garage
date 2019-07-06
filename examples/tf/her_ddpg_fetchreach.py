@@ -11,22 +11,23 @@ Results (may vary by seed):
 import gym
 import tensorflow as tf
 
+from garage.envs import normalize
 from garage.experiment import LocalRunner, run_experiment
 from garage.np.exploration_strategies import OUStrategy
 from garage.replay_buffer import HerReplayBuffer
 from garage.tf.algos import DDPG
 from garage.tf.envs import TfEnv
-from garage.tf.policies import ContinuousMLPPolicy
+from garage.tf.policies import ContinuousMLPPolicyWithModel
 from garage.tf.q_functions import ContinuousMLPQFunction
 
 
 def run_task(*_):
     with LocalRunner() as runner:
-        env = TfEnv(gym.make('FetchReach-v1'))
+        env = TfEnv(normalize(gym.make('FetchReach-v1')))
 
         action_noise = OUStrategy(env.spec, sigma=0.2)
 
-        policy = ContinuousMLPPolicy(
+        policy = ContinuousMLPPolicyWithModel(
             env_spec=env.spec,
             name='Policy',
             hidden_sizes=[256, 256, 256],
@@ -71,7 +72,7 @@ def run_task(*_):
 
         runner.setup(algo=ddpg, env=env)
 
-        runner.train(n_epochs=50, n_epoch_cycles=20)
+        runner.train(n_epochs=50, batch_size=100, n_epoch_cycles=20)
 
 
 run_experiment(run_task, snapshot_mode='last', seed=1)

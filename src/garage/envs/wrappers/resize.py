@@ -2,7 +2,7 @@
 import warnings
 
 import gym
-from gym.spaces import Box
+import gym.spaces
 import numpy as np
 from skimage import img_as_ubyte
 from skimage.transform import resize
@@ -33,7 +33,7 @@ class Resize(gym.Wrapper):
     """
 
     def __init__(self, env, width, height):
-        if not isinstance(env.observation_space, Box):
+        if not isinstance(env.observation_space, gym.spaces.Box):
             raise ValueError('Resize only works with Box environment.')
 
         if len(env.observation_space.shape) != 2:
@@ -44,7 +44,7 @@ class Resize(gym.Wrapper):
         _low = env.observation_space.low.flatten()[0]
         _high = env.observation_space.high.flatten()[0]
         self._dtype = env.observation_space.dtype
-        self._observation_space = Box(
+        self._observation_space = gym.spaces.Box(
             _low, _high, shape=[width, height], dtype=self._dtype)
 
         self._width = width

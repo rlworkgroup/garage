@@ -2,7 +2,7 @@
 import warnings
 
 import gym
-from gym.spaces import Box
+import gym.spaces
 import numpy as np
 from skimage import color
 from skimage import img_as_ubyte
@@ -32,7 +32,7 @@ class Grayscale(gym.Wrapper):
     """
 
     def __init__(self, env):
-        if not isinstance(env.observation_space, Box):
+        if not isinstance(env.observation_space, gym.spaces.Box):
             raise ValueError(
                 'Grayscale only works with gym.spaces.Box environment.')
 
@@ -45,7 +45,7 @@ class Grayscale(gym.Wrapper):
         _high = env.observation_space.high.flatten()[0]
         assert _low == 0
         assert _high == 255
-        self._observation_space = Box(
+        self._observation_space = gym.spaces.Box(
             _low,
             _high,
             shape=env.observation_space.shape[:-1],
