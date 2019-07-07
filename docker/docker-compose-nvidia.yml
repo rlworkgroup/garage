@@ -5,9 +5,9 @@ services:
       cache_from:
         - rlworkgroup/garage-nvidia:latest
       context: ../
-      dockerfile: docker/Dockerfile.base
+      dockerfile: docker/Dockerfile.base.18.04
       args:
-        - PARENT_IMAGE=nvidia/opengl:1.0-glvnd-runtime-ubuntu16.04
+        - PARENT_IMAGE=nvidia/opengl:1.0-glvnd-runtime-ubuntu18.04
     image: rlworkgroup/garage-base-nvidia
   garage-nvidia-no-files:
     build:
