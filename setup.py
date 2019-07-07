@@ -48,6 +48,9 @@ extras['dev'] = [
     'pandas',
     'pep8-naming==0.7.0',
     'pre-commit',
+    # pydocstyle 4.0.0 breaks flake8-docstrings 1.3.0
+    # See https://gitlab.com/pycqa/flake8-docstrings/issues/36
+    'pydocstyle<4.0.0',
     'pylint==1.9.2',
     'pytest>=3.6',  # Required for pytest-cov on Python 3.6
     'pytest-cov',
