@@ -1,7 +1,8 @@
 SHELL := /bin/bash
 
 .PHONY: help test check docs ci-job-normal ci-job-large ci-job-nightly \
- 	build-ci build-headless build-nvidia run-ci run-headless run-nvidia
+	ci-job-verify-envs ci-verify-conda ci-verify-pipenv build-ci \
+	build-headless build-nvidia run-ci run-headless run-nvidia
 
 .DEFAULT_GOAL := help
 
@@ -12,7 +13,7 @@ DATA_PATH ?= $(shell pwd)/data
 MJKEY_PATH ?= ~/.mujoco/mjkey.txt
 
 test:  ## Run the CI test suite
-test: RUN_CMD = pytest -v -m 'not huge and not flaky'
+test: RUN_CMD = pytest -n $$(($$(nproc)/4)) -v -m 'not huge and not flaky'
 test: run-headless
 	@echo "Running test suite..."
 
@@ -24,18 +25,49 @@ ci-precommit-check:
 	scripts/travisci/check_precommit.sh
 
 ci-job-normal: ci-precommit-check docs
-	pytest --cov=garage -v -m \
+	pytest -n $$(nproc) --cov=garage -v -m \
 	    'not nightly and not huge and not flaky and not large'
 	coverage xml
 	bash <(curl -s https://codecov.io/bash)
 
 ci-job-large:
-	pytest --cov=garage -v -m large
+	pytest -n $$(nproc) --cov=garage -v -m large
 	coverage xml
 	bash <(curl -s https://codecov.io/bash)
 
 ci-job-nightly:
-	pytest -v -m nightly
+	pytest -n $$(nproc) -v -m nightly
+
+ci-job-verify-envs: ci-verify-conda ci-verify-pipenv
+
+ci-verify-conda: CONDA_ROOT := $$HOME/miniconda
+ci-verify-conda: CONDA := $(CONDA_ROOT)/bin/conda
+ci-verify-conda: GARAGE_BIN = $(CONDA_ROOT)/envs/garage/bin
+ci-verify-conda:
+	wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+	bash miniconda.sh -b -p $(CONDA_ROOT)
+	hash -r
+	$(CONDA) config --set always_yes yes --set changeps1 no
+	$(CONDA) update -q conda
+	$(CONDA) init
+	# Useful for debugging any issues with conda
+	$(CONDA) info -a
+	$(CONDA) env create -f environment.yml
+	# pylint will verify all imports work
+	$(GARAGE_BIN)/pylint -j0 --rcfile=setup.cfg garage
+
+# The following two lines remove the Dockerfile's built-in virtualenv from the
+# path, so we can test with pipenv directly
+ci-verify-pipenv: export PATH=$(shell echo $$PATH | awk -v RS=: -v ORS=: '/venv/ {next} {print}')
+ci-verify-pipenv: export VIRTUAL_ENV=
+ci-verify-pipenv:
+	pip3 install --upgrade pipenv setuptools
+	pipenv --three
+	pipenv install numpy==1.14.5  # cma is dumb and requires numpy to execute setup.py
+	pipenv install .[all,dev]
+	pipenv graph
+	# pylint will verify all imports work
+	pipenv run pylint -j0 --rcfile=setup.cfg garage
 
 ci-deploy-docker:
 	echo "${DOCKER_API_KEY}" | docker login -u "${DOCKER_USERNAME}" \

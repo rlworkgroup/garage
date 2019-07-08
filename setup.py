@@ -1,6 +1,15 @@
 from setuptools import find_packages
 from setuptools import setup
 
+try:
+    # pylint: disable=unused-import
+    import numpy  # noqa: F401
+except ImportError:
+    raise RuntimeError(
+        'garage requires numpy in the environment to install. '
+        'Please install numpy==1.14.5 and try again. See '
+        'https://github.com/rlworkgroup/garage/issues/800 for more info.')
+
 # Required dependencies
 required = [
     # Please keep alphabetized
@@ -58,6 +67,7 @@ extras['dev'] = [
     'pylint==1.9.2',
     'pytest>=3.6',  # Required for pytest-cov on Python 3.6
     'pytest-cov',
+    'pytest-xdist',
     'sphinx',
     'sphinx_rtd_theme',
     'yapf',
@@ -79,6 +89,7 @@ setup(
     packages=find_packages(where='src'),
     package_dir={'': 'src'},
     scripts=['scripts/garage'],
+    python_requires='>=3.5',
     install_requires=required,
     extras_require=extras,
     license='MIT',

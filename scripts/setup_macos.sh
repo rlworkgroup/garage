@@ -216,56 +216,16 @@ if [[ "${_arg_modify_bashrc}" = on ]]; then
   echo "export ${LD_LIB_ENV_VAR}" >> "${BASH_PROF}"
 fi
 
-# Set up conda
-CONDA_SH="${HOME}/miniconda2/etc/profile.d/conda.sh"
-if [[ ! -d "${HOME}/miniconda2" ]]; then
-  CONDA_INSTALLER="$(mktemp -d)/miniconda.sh"
-  wget https://repo.continuum.io/miniconda/Miniconda2-latest-MacOSX-x86_64.sh \
-    -O "${CONDA_INSTALLER}"
-  chmod u+x "${CONDA_INSTALLER}"
-  bash "${CONDA_INSTALLER}" -b -u
-  if [[ "${_arg_modify_bashrc}" = on ]]; then
-    echo ". ${CONDA_SH}" >> "${BASH_PROF}"
-  fi
-fi
-# Export conda in this script
-. "${CONDA_SH}"
-conda update -q -y conda
-
 # We need a MuJoCo key to import mujoco_py
 cp "${_arg_mjkey}" "${HOME}/.mujoco/mjkey.txt"
-
-# Create conda environment
-conda env create -f environment.yml
-if [[ "${?}" -ne 0 ]]; then
-  print_error "Error: conda environment could not be created"
-fi
-
-# Extras
-conda activate garage
-{
-  # Prevent pip from complaining about available upgrades
-  pip install --upgrade pip
-
-  # Install git hooks
-  pre-commit install -t pre-commit
-  pre-commit install -t pre-push
-  pre-commit install -t commit-msg
-
-  # Install a virtualenv for the hooks
-  pre-commit
-}
-conda deactivate
 
 # Add garage to python modules
 if [[ "${_arg_modify_bashrc}" != on ]]; then
   echo -e "\nRemember to execute the following commands before running garage:"
   echo "${LD_LIB_ENV_VAR}"
-  echo ". ${CONDA_SH}"
   echo "You may wish to edit your .bash_profile to prepend these commands."
 fi
 
-echo -e "\ngarage is installed! To make the changes take effect, work under" \
-  "a new terminal. Also, make sure to run \`conda activate garage\`" \
-  "whenever you open a new terminal and want to run programs under garage." \
+echo -e "\ngarage pre-requisites are installed! To make the changes take " \
+        "effect, open a new terminal or call 'source ~/.bash_profile'" \
   | fold -s

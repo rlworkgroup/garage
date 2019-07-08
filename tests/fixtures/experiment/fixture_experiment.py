@@ -5,8 +5,8 @@ from garage.tf.envs import TfEnv
 from garage.tf.policies import CategoricalMLPPolicy
 
 
-def fixture_exp(snapshot_config):
-    with LocalRunner(snapshot_config=snapshot_config) as runner:
+def fixture_exp(snapshot_config, sess):
+    with LocalRunner(snapshot_config=snapshot_config, sess=sess) as runner:
         env = TfEnv(env_name='CartPole-v1')
 
         policy = CategoricalMLPPolicy(

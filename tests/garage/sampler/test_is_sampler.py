@@ -44,7 +44,7 @@ class TestISSampler(TfGraphTestCase):
                 mocked.assert_not_called()
 
                 assert runner.sampler.obtain_samples(3)
-                mocked.assert_called_once()
+                mocked.assert_called_once_with(3, None, True)
 
             # test importance sampling for first n_is_pretrain iterations
             with unittest.mock.patch.object(ISSampler,
@@ -53,7 +53,7 @@ class TestISSampler(TfGraphTestCase):
                 runner.sampler.n_backtrack = 'all'
                 runner.sampler.obtain_samples(4)
 
-                mocked.assert_called_once()
+                mocked.assert_called_once_with(4, None, True)
 
             runner.sampler.obtain_samples(5)
 

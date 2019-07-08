@@ -35,16 +35,13 @@ _positionals=()
 # THE DEFAULTS INITIALIZATION - OPTIONALS
 _arg_mjkey=
 _arg_modify_bashrc="off"
-_arg_gpu="off"
 
 print_help ()
 {
   printf '%s\n' "Installer of garage for Linux."
   printf 'Usage: %s [--mjkey <arg>] [--(no-)modify-bashrc] ' "$0"
-  printf '[--(no-)gpu] [-h|--help]\n'
+  printf '[-h|--help]\n'
   printf '\t%s\n' "--mjkey: Path of the MuJoCo key (no default)"
-  printf '\t%s' "--gpu,--no-gpu: Install GPU support of Tensorflow "
-  printf '%s\n' "(off by default)"
   printf '\t%s' "--modify-bashrc,--no-modify-bashrc: Set environment variables "
   printf '%s\n' "required by garage in .bashrc (off by default)"
   printf '\t%s\n' "-h,--help: Prints help"
@@ -68,10 +65,6 @@ parse_commandline ()
       --no-modify-bashrc|--modify-bashrc)
         _arg_modify_bashrc="on"
         test "${1:0:5}" = "--no-" && _arg_modify_bashrc="off"
-        ;;
-      --no-gpu|--gpu)
-        _arg_gpu="on"
-        test "${1:0:5}" = "--no-" && _arg_gpu="off"
         ;;
       -h|--help)
         print_help
@@ -189,65 +182,15 @@ if [[ "${_arg_modify_bashrc}" = on ]]; then
   echo "export ${LD_LIB_ENV_VAR}" >> "${BASH_RC}"
 fi
 
-# Set up conda
-CONDA_SH="${HOME}/miniconda2/etc/profile.d/conda.sh"
-if [[ ! -d "${HOME}/miniconda2" ]]; then
-  CONDA_INSTALLER="$(mktemp -d)/miniconda.sh"
-  wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh \
-    -O "${CONDA_INSTALLER}"
-  chmod u+x "${CONDA_INSTALLER}"
-  bash "${CONDA_INSTALLER}" -b -u
-  . "${CONDA_SH}"
-  if [[ "${_arg_modify_bashrc}" = on ]]; then
-    echo ". ${CONDA_SH}" >> "${BASH_RC}"
-  fi
-fi
-# Export conda in this script
-. "${CONDA_SH}"
-conda update -q -y conda
-
 # We need a MuJoCo key to import mujoco_py
 cp "${_arg_mjkey}" "${HOME}/.mujoco/mjkey.txt"
-
-# Create conda environment
-conda env create -f environment.yml
-if [[ "${?}" -ne 0 ]]; then
-  print_error "Error: conda environment could not be created"
-fi
-
-# Extras
-conda activate garage
-{
-  # Prevent pip from complaining about available upgrades
-  pip install --upgrade pip
-
-  if [[ "${_arg_gpu}" = on ]]; then
-    # Remove any TensorFlow installations before installing the GPU flavor
-    pip uninstall -y tensorflow
-    pip install "tensorflow-gpu<1.13,>=1.12.0"
-
-  fi
-
-  # Install git hooks
-  pre-commit install -t pre-commit
-  pre-commit install -t pre-push
-  pre-commit install -t commit-msg
-
-  # Install a virtualenv for the hooks
-  pre-commit
-}
-conda deactivate
-
-# Add garage to python modules
 
 if [[ "${_arg_modify_bashrc}" != on ]]; then
   echo -e "\nRemember to execute the following commands before running garage:"
   echo "export ${LD_LIB_ENV_VAR}"
-  echo ". ${CONDA_SH}"
   echo "You may wish to edit your .bashrc to prepend these commands."
 fi
 
-echo -e "\ngarage is installed! To make the changes take effect, work under" \
-  "a new terminal. Also, make sure to run \`conda activate garage\`" \
-  "whenever you open a new terminal and want to run programs under garage." \
+echo -e "\ngarage pre-requisites are installed! To make the changes take " \
+        "effect, open a new terminal or call 'source ~/.bashrc'" \
   | fold -s

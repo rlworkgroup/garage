@@ -8,25 +8,27 @@ from tests.fixtures.experiment import fixture_exp
 
 
 class TestResume(TfGraphTestCase):
-    temp_dir = tempfile.TemporaryDirectory()
-    snapshot_config = SnapshotConfig(
-        snapshot_dir=temp_dir.name, snapshot_mode='last', snapshot_gap=1)
-    policy_params = None
+    def setup_method(self):
+        super().setup_method()
+        self.temp_dir = tempfile.TemporaryDirectory()
+        self.snapshot_config = SnapshotConfig(
+            snapshot_dir=self.temp_dir.name,
+            snapshot_mode='last',
+            snapshot_gap=1)
+        self.policy_params = fixture_exp(self.snapshot_config, self.sess)
+        for c in self.graph.collections:
+            self.graph.clear_collection(c)
 
-    @classmethod
-    def teardown_class(cls):
-        cls.temp_dir.cleanup()
-
-    def test_before_resume(self):
-        self.__class__.policy_params = fixture_exp(
-            self.__class__.snapshot_config)
+    def teardown_method(self):
+        self.temp_dir.cleanup()
+        super().teardown_method()
 
     def test_resume(self):
-        with LocalRunner(self.__class__.snapshot_config) as runner:
-            args = runner.restore(self.__class__.temp_dir.name)
-            assert np.isclose(
-                runner.policy.get_param_values(), self.__class__.
-                policy_params).all(), 'Policy parameters should persist'
+        with LocalRunner(self.snapshot_config, self.sess) as runner:
+            args = runner.restore(self.temp_dir.name)
+            assert np.equal(
+                runner.policy.get_param_values(),
+                self.policy_params).all(), 'Policy parameters should persist'
             assert args.n_epochs == 5, (
                 'Snapshot should save training parameters')
             assert args.start_epoch == 5, (
