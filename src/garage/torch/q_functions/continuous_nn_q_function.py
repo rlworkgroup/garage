@@ -1,32 +1,24 @@
-"""This modules creates a continuous MLP Q fcuntion network."""
+"""This modules creates a continuous Q-function network."""
 
 
-class ContinuousMLPQFunction:
+class ContinuousNNQFunction:
     """
-    This class implements a q value network.
+    Implements a module-agnostic Q-value network.
 
     It predicts the q value for all actions based on the input state. It uses
-    an MLP to fit the function of Q(s, a).
+    a PyTorch neural network module to fit the function of Q(s, a).
     """
 
-    def __init__(self,
-                 env_spec,
-                 nn_module,
-                 name='ContinuousMLPQFunction',
-                 input_include_goal=False):
+    def __init__(self, env_spec, nn_module, input_include_goal=False):
         """
         Initialize class with multiple attributes.
 
         Args:
-            env_spec():
-            nn_module():
-                A PyTorch module.
-            name(str, optional):
-                A str contains the name of the policy.
+            env_spec (garage.envs.env_spec.EnvSpec): Environment specification.
+            nn_module (nn.Module): Neural network module in PyTorch.
         """
         self._env_spec = env_spec
         self._nn_module = nn_module
-        self._name = name
         if input_include_goal:
             self._obs_dim = env_spec.observation_space.flat_dim_with_keys(
                 ['observation', 'desired_goal'])

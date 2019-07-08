@@ -1,5 +1,5 @@
-"""Pytorch q functions."""
-from garage.torch.q_functions.continuous_mlp_q_function import (
-    ContinuousMLPQFunction)
+"""PyTorch Q-functions."""
+from garage.torch.q_functions.continuous_nn_q_function import (
+    ContinuousNNQFunction)
 
-__all__ = ['ContinuousMLPQFunction']
+__all__ = ['ContinuousNNQFunction']

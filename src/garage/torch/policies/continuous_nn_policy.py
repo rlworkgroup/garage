@@ -1,39 +1,36 @@
 """
-This modules creates a continuous MLP policy network.
+This modules creates a continuous policy network.
 
-A continuous MLP network can be used as policy method in different RL
+A continuous neural network can be used as policy method in different RL
 algorithms. It accepts an observation of the environment and predicts an
 action.
 """
 import akro
 import torch
 
-from garage.misc.overrides import overrides
 from garage.tf.policies.base import Policy
 
 
-class ContinuousMLPPolicy(Policy):
+class ContinuousNNPolicy(Policy):
     """
-    This class implements a policy network.
+    Implements a module-agnostic policy network.
 
     The policy network selects action based on the state of the environment.
-    It uses neural nets to fit the function of pi(s).
+    It uses a PyTorch neural network module to fit the function of pi(s).
     """
 
     def __init__(self,
                  env_spec,
                  nn_module,
-                 name='ContinuousMLPPolicy',
+                 policy_type='Deterministic',
                  input_include_goal=False):
         """
         Initialize class with multiple attributes.
 
         Args:
-            env_spec():
-            nn_module():
-                A PyTorch module.
-            name(str, optional):
-                A str contains the name of the policy.
+            env_spec (garage.envs.env_spec.EnvSpec): Environment specification.
+            nn_module (nn.Module): Neural network module in PyTorch.
+            policy_type (str): Type of policy, deterministic or stochastic.
         """
         assert isinstance(env_spec.action_space, akro.Box)
 
@@ -41,7 +38,7 @@ class ContinuousMLPPolicy(Policy):
 
         self._env_spec = env_spec
         self._nn_module = nn_module
-        self._name = name
+        self._policy_type = policy_type
         if input_include_goal:
             self._obs_dim = env_spec.observation_space.flat_dim_with_keys(
                 ['observation', 'desired_goal'])
@@ -52,19 +49,22 @@ class ContinuousMLPPolicy(Policy):
 
     def forward(self, input_val):
         """Forward method."""
-        x = torch.FloatTensor(self._nn_module(input_val))
-        return torch.distributions.Uniform(x, x)
+        return self._nn_module(input_val)
 
-    @overrides
     def get_action(self, observation):
         """Return a single action."""
         with torch.no_grad():
-            d = self.forward(observation.unsqueeze(0))
-            return d.sample().detach().numpy()
+            x = self.forward(observation.unsqueeze(0))
+            if self._policy_type == 'Deterministic':
+                return x.detach().numpy().squeeze(0)
+            else:
+                return x.sample().detach().numpy().squeeze(0)
 
-    @overrides
     def get_actions(self, observations):
         """Return multiple actions."""
         with torch.no_grad():
-            d = self.forward(observations)
-            return d.sample().detach().numpy()
+            x = self.forward(observations)
+            if self._policy_type == 'Deterministic':
+                return x.detach().numpy()
+            else:
+                return x.sample().detach().numpy()
