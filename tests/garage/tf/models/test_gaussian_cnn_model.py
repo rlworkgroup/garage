@@ -22,16 +22,13 @@ class TestGaussianCNNModel(TfGraphTestCase):
             tf.float32, shape=(None, ) + input_shape, name='input')
 
     @mock.patch('tensorflow.random.normal')
-    @pytest.mark.parametrize(
-        'filter_sizes, in_channels, out_channels, '
-        'strides, output_dim, hidden_sizes',
-        [
-            ((1, ), (3, ), (3, ), (1, ), 1, (1, )),  # noqa: E122
-            ((3, ), (3, ), (3, ), (1, ), 2, (2, )),
-            ((3, ), (3, ), (3, ), (2, ), 1, (1, 1)),
-            ((1, 1), (3, 3), (3, 3), (1, 1), 2, (2, 2)),
-            ((3, 3), (3, 3), (3, 3), (2, 2), 2, (2, 2))
-        ])
+    @pytest.mark.parametrize('filter_sizes, in_channels, out_channels, '
+                             'strides, output_dim, hidden_sizes',
+                             [((1, ), (3, ), (3, ), (1, ), 1, (1, )),
+                              ((3, ), (3, ), (3, ), (1, ), 2, (2, )),
+                              ((3, ), (3, ), (3, ), (2, ), 1, (1, 1)),
+                              ((1, 1), (3, 3), (3, 3), (1, 1), 2, (2, 2)),
+                              ((3, 3), (3, 3), (3, 3), (2, 2), 2, (2, 2))])
     def test_std_share_network_output_values(
             self, mock_normal, filter_sizes, in_channels, out_channels,
             strides, output_dim, hidden_sizes):
@@ -108,16 +105,13 @@ class TestGaussianCNNModel(TfGraphTestCase):
         assert std_share_output_bias.shape == output_dim * 2
 
     @mock.patch('tensorflow.random.normal')
-    @pytest.mark.parametrize(
-        'filter_sizes, in_channels, out_channels, '
-        'strides, output_dim, hidden_sizes',
-        [
-            ((1, ), (3, ), (3, ), (1, ), 1, (1, )),  # noqa: E122
-            ((3, ), (3, ), (3, ), (1, ), 2, (2, )),
-            ((3, ), (3, ), (3, ), (2, ), 1, (1, 1)),
-            ((1, 1), (3, 3), (3, 3), (1, 1), 2, (2, 2)),
-            ((3, 3), (3, 3), (3, 3), (2, 2), 2, (2, 2))
-        ])
+    @pytest.mark.parametrize('filter_sizes, in_channels, out_channels, '
+                             'strides, output_dim, hidden_sizes',
+                             [((1, ), (3, ), (3, ), (1, ), 1, (1, )),
+                              ((3, ), (3, ), (3, ), (1, ), 2, (2, )),
+                              ((3, ), (3, ), (3, ), (2, ), 1, (1, 1)),
+                              ((1, 1), (3, 3), (3, 3), (1, 1), 2, (2, 2)),
+                              ((3, 3), (3, 3), (3, 3), (2, 2), 2, (2, 2))])
     def test_without_std_share_network_output_values(
             self, mock_normal, filter_sizes, in_channels, out_channels,
             strides, output_dim, hidden_sizes):
@@ -199,16 +193,13 @@ class TestGaussianCNNModel(TfGraphTestCase):
         assert log_std_output_weights.shape == output_dim
 
     @mock.patch('tensorflow.random.normal')
-    @pytest.mark.parametrize(
-        'filter_sizes, in_channels, out_channels, '
-        'strides, output_dim, hidden_sizes',
-        [
-            ((1, ), (3, ), (3, ), (1, ), 1, (1, )),  # noqa: E122
-            ((3, ), (3, ), (3, ), (1, ), 2, (2, )),
-            ((3, ), (3, ), (3, ), (2, ), 1, (1, 1)),
-            ((1, 1), (3, 3), (3, 3), (1, 1), 2, (2, 2)),
-            ((3, 3), (3, 3), (3, 3), (2, 2), 2, (2, 2))
-        ])
+    @pytest.mark.parametrize('filter_sizes, in_channels, out_channels, '
+                             'strides, output_dim, hidden_sizes',
+                             [((1, ), (3, ), (3, ), (1, ), 1, (1, )),
+                              ((3, ), (3, ), (3, ), (1, ), 2, (2, )),
+                              ((3, ), (3, ), (3, ), (2, ), 1, (1, 1)),
+                              ((1, 1), (3, 3), (3, 3), (1, 1), 2, (2, 2)),
+                              ((3, 3), (3, 3), (3, 3), (2, 2), 2, (2, 2))])
     def test_adaptive_std_network_output_values(
             self, mock_normal, filter_sizes, in_channels, out_channels,
             strides, output_dim, hidden_sizes):

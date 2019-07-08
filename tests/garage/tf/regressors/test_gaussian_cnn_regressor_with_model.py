@@ -191,7 +191,7 @@ class TestGaussianCNNRegressorWithModel(TfGraphTestCase):
         new_ys_var = tf.placeholder(
             dtype=tf.float32, name='ys', shape=(None, output_dim))
 
-        data = np.random.random(size=input_shape)
+        data = np.full(input_shape, 0.5)
         label = np.ones(output_dim)
 
         outputs = gcr.log_likelihood_sym(
