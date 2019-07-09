@@ -12,7 +12,10 @@ from tests.fixtures.policies.ray_sampler_utils import MockAlgo, ScriptedPolicy
 class TestSampler():
     @staticmethod
     def test_ray_batch_sampler():
-        ray.init(local_mode=True, ignore_reinit_error=True)
+        ray.init(
+            ignore_reinit_error=True,
+            object_store_memory=10000000,
+            redis_max_memory=10000000)
         gym.envs.register(
             id='GridWorldEnv-v0',
             entry_point='garage.envs:GridWorldEnv',
