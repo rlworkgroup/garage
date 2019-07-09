@@ -1,5 +1,7 @@
 """This modules creates a continuous Q-function network."""
 
+import torch
+
 
 class ContinuousNNQFunction:
     """
@@ -27,6 +29,6 @@ class ContinuousNNQFunction:
         self._action_dim = env_spec.action_space.flat_dim
         self._action_bound = env_spec.action_space.high
 
-    def get_qval(self, observations):
+    def get_qval(self, observations, actions):
         """Return Q value."""
-        return self._nn_module.forward(observations)
+        return self._nn_module.forward(torch.cat([observations, actions], 0))
