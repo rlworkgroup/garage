@@ -23,7 +23,7 @@ class TestDQN(TfGraphTestCase):
     @pytest.mark.large
     def test_dqn_cartpole(self):
         """Test DQN with CartPole environment."""
-        with LocalRunner(self.sess) as runner:
+        with LocalRunner(sess=self.sess) as runner:
             n_epochs = 10
             n_epoch_cycles = 10
             sampler_batch_size = 500
@@ -68,7 +68,7 @@ class TestDQN(TfGraphTestCase):
     @pytest.mark.large
     def test_dqn_cartpole_double_q(self):
         """Test DQN with CartPole environment."""
-        with LocalRunner(self.sess) as runner:
+        with LocalRunner(sess=self.sess) as runner:
             n_epochs = 10
             n_epoch_cycles = 10
             sampler_batch_size = 500
@@ -113,7 +113,7 @@ class TestDQN(TfGraphTestCase):
     @pytest.mark.large
     def test_dqn_cartpole_grad_clip(self):
         """Test DQN with CartPole environment."""
-        with LocalRunner(self.sess) as runner:
+        with LocalRunner(sess=self.sess) as runner:
             n_epochs = 10
             n_epoch_cycles = 10
             sampler_batch_size = 500
@@ -158,7 +158,7 @@ class TestDQN(TfGraphTestCase):
 
     def test_dqn_cartpole_pickle(self):
         """Test DQN with CartPole environment."""
-        with LocalRunner(self.sess) as runner:
+        with LocalRunner(sess=self.sess) as runner:
             n_epochs = 10
             n_epoch_cycles = 10
             sampler_batch_size = 500

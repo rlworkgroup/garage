@@ -3,10 +3,10 @@ import argparse
 import ast
 import base64
 import datetime
-from enum import Enum
+import enum
 import json
 import os
-import os.path as osp
+import pathlib
 import pickle
 import signal
 import sys
@@ -17,11 +17,10 @@ import dowel
 from dowel import logger
 import psutil
 
-from garage.experiment import deterministic, snapshotter
+from garage.experiment import deterministic, SnapshotConfig
 from garage.experiment.experiment import concretize
 from garage.experiment.local_tf_runner import LocalRunner
 from garage.misc.console import colorize
-from garage.misc.console import mkdir_p
 import garage.plotter
 from garage.sampler import parallel_sampler
 from garage.sampler.utils import mask_signals
@@ -60,7 +59,7 @@ def run_experiment(argv):
     parser.add_argument(
         '--snapshot_mode',
         type=str,
-        default='all',
+        default='last',
         help='Mode to save the snapshot. Can be either "all" '
         '(all iterations will be saved), "last" (only '
         'the last iteration will be saved), "gap" (every'
@@ -118,7 +117,8 @@ def run_experiment(argv):
         type=ast.literal_eval,
         default=False,
         help='Print only the tabular log information (in a horizontal format)')
-    parser.add_argument('--seed', type=int, help='Random seed for numpy')
+    parser.add_argument(
+        '--seed', type=int, default=None, help='Random seed for numpy')
     parser.add_argument(
         '--args_data', type=str, help='Pickled data for objects')
     parser.add_argument(
@@ -157,19 +157,20 @@ def run_experiment(argv):
 
     if args.log_dir is None:
         if args.resume_from_dir is None:
-            log_dir = osp.join(osp.join(os.getcwd(), 'data'), args.exp_name)
+            log_dir = os.path.join(
+                os.path.join(os.getcwd(), 'data'), args.exp_name)
         else:
             log_dir = args.resume_from_dir
     else:
         log_dir = args.log_dir
 
-    tabular_log_file = osp.join(log_dir, args.tabular_log_file)
-    text_log_file = osp.join(log_dir, args.text_log_file)
-    params_log_file = osp.join(log_dir, args.params_log_file)
+    tabular_log_file = os.path.join(log_dir, args.tabular_log_file)
+    text_log_file = os.path.join(log_dir, args.text_log_file)
+    params_log_file = os.path.join(log_dir, args.params_log_file)
 
     if args.variant_data is not None:
         variant_data = pickle.loads(base64.b64decode(args.variant_data))
-        variant_log_file = osp.join(log_dir, args.variant_log_file)
+        variant_log_file = os.path.join(log_dir, args.variant_log_file)
         dump_variant(variant_log_file, variant_data)
     else:
         variant_data = None
@@ -181,16 +182,18 @@ def run_experiment(argv):
     logger.add_output(dowel.CsvOutput(tabular_log_file))
     logger.add_output(dowel.TensorBoardOutput(log_dir))
     logger.add_output(dowel.StdOutput())
-    prev_snapshot_dir = snapshotter.snapshot_dir
-    prev_mode = snapshotter.snapshot_mode
-    snapshotter.snapshot_dir = log_dir
-    snapshotter.snapshot_mode = args.snapshot_mode
-    snapshotter.snapshot_gap = args.snapshot_gap
+
     logger.push_prefix('[%s] ' % args.exp_name)
 
+    snapshot_config = SnapshotConfig(
+        snapshot_dir=log_dir,
+        snapshot_mode=args.snapshot_mode,
+        snapshot_gap=args.snapshot_gap)
+
     if args.resume_from_dir is not None:
-        with LocalRunner() as runner:
-            runner.restore(args.resume_from_dir, from_epoch=args.resume_epoch)
+        with LocalRunner(snapshot_config=snapshot_config) as runner:
+            runner.restore(
+                from_dir=args.resume_from_dir, from_epoch=args.resume_epoch)
             runner.resume()
     else:
         # read from stdin
@@ -198,7 +201,7 @@ def run_experiment(argv):
             import cloudpickle
             method_call = cloudpickle.loads(base64.b64decode(args.args_data))
             try:
-                method_call(variant_data)
+                method_call(snapshot_config, variant_data)
             except BaseException:
                 children = garage.plotter.Plotter.get_plotters()
                 children += garage.tf.plotter.Plotter.get_plotters()
@@ -213,8 +216,6 @@ def run_experiment(argv):
                 for _ in maybe_iter:
                     pass
 
-    snapshotter.snapshot_mode = prev_mode
-    snapshotter.snapshot_dir = prev_snapshot_dir
     logger.remove_all()
     logger.pop_prefix()
 
@@ -260,14 +261,14 @@ def log_parameters(log_file, args):
         log_params[param_name] = param_value
     if args.args_data is not None:
         log_params['json_args'] = dict()
-    mkdir_p(os.path.dirname(log_file))
+    pathlib.Path(os.path.dirname(log_file)).mkdir(parents=True, exist_ok=True)
     with open(log_file, 'w') as f:
         json.dump(log_params, f, indent=2, sort_keys=True, cls=LogEncoder)
 
 
 def dump_variant(log_file, variant_data):
     """Dump the variant file."""
-    mkdir_p(os.path.dirname(log_file))
+    pathlib.Path(os.path.dirname(log_file)).mkdir(parents=True, exist_ok=True)
     with open(log_file, 'w') as f:
         json.dump(variant_data, f, indent=2, sort_keys=True, cls=LogEncoder)
 
@@ -279,7 +280,7 @@ class LogEncoder(json.JSONEncoder):
         """Perform JSON encoding."""
         if isinstance(o, type):
             return {'$class': o.__module__ + '.' + o.__name__}
-        elif isinstance(o, Enum):
+        elif isinstance(o, enum.Enum):
             return {
                 '$enum':
                 o.__module__ + '.' + o.__class__.__name__ + '.' + o.name

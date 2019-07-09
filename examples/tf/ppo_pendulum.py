@@ -18,8 +18,8 @@ from garage.tf.envs import TfEnv
 from garage.tf.policies import GaussianMLPPolicy
 
 
-def run_task(*_):
-    with LocalRunner() as runner:
+def run_task(snapshot_config, *_):
+    with LocalRunner(snapshot_config=snapshot_config) as runner:
         env = TfEnv(normalize(gym.make('InvertedDoublePendulum-v2')))
 
         policy = GaussianMLPPolicy(

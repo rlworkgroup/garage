@@ -19,9 +19,9 @@ from garage.tf.optimizers import FiniteDifferenceHvp
 from garage.tf.policies import CategoricalLSTMPolicyWithModel
 
 
-def run_task(*_):
+def run_task(snapshot_config, *_):
     """Run task."""
-    with LocalRunner() as runner:
+    with LocalRunner(snapshot_config=snapshot_config) as runner:
         env = TfEnv(env_name='CartPole-v1')
 
         policy = CategoricalLSTMPolicyWithModel(

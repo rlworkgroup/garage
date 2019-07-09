@@ -12,7 +12,7 @@ class TestERWR(TfGraphTestCase):
     @pytest.mark.large
     def test_erwr_cartpole(self):
         """Test ERWR with Cartpole-v1 environment."""
-        with LocalRunner(self.sess) as runner:
+        with LocalRunner(sess=self.sess) as runner:
             env = TfEnv(env_name='CartPole-v1')
 
             policy = CategoricalMLPPolicy(

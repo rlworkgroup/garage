@@ -25,8 +25,8 @@ class VG(VariantGenerator):
         return [1, 11, 21, 31, 41]
 
 
-def run_task(vv):
-    with LocalRunner() as runner:
+def run_task(snapshot_config, vv):
+    with LocalRunner(snapshot_config=snapshot_config) as runner:
         env = TfEnv(normalize(gym.make('HalfCheetah-v1')))
 
         policy = GaussianMLPPolicy(

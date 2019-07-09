@@ -16,13 +16,13 @@ from garage.tf.envs import TfEnv
 from garage.tf.policies import CategoricalMLPPolicy
 
 
-def run_task(v):
+def run_task(snapshot_config, v):
     """
     We wrap the main training loop in the run_task function so that
     run_experiment can easily execute variants of the experiment on different
     machines
     """
-    with LocalRunner() as runner:
+    with LocalRunner(snapshot_config=snapshot_config) as runner:
         env = TfEnv(env_name='CartPole-v1')
 
         policy = CategoricalMLPPolicy(

@@ -16,9 +16,9 @@ from garage.tf.policies import CategoricalMLPPolicy
 from garage.tf.samplers import OnPolicyVectorizedSampler
 
 
-def run_task(*_):
+def run_task(snapshot_config, *_):
     """Train CEM with Cartpole-v1 environment."""
-    with LocalRunner() as runner:
+    with LocalRunner(snapshot_config=snapshot_config) as runner:
         env = TfEnv(env_name='CartPole-v1')
 
         policy = CategoricalMLPPolicy(

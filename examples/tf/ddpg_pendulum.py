@@ -12,7 +12,6 @@ Results:
 import gym
 import tensorflow as tf
 
-from garage.envs import normalize
 from garage.experiment import LocalRunner, run_experiment
 from garage.np.exploration_strategies import OUStrategy
 from garage.replay_buffer import SimpleReplayBuffer
@@ -22,9 +21,9 @@ from garage.tf.policies import ContinuousMLPPolicyWithModel
 from garage.tf.q_functions import ContinuousMLPQFunction
 
 
-def run_task(*_):
-    with LocalRunner() as runner:
-        env = TfEnv(normalize(gym.make('InvertedDoublePendulum-v2')))
+def run_task(snapshot_config, *_):
+    with LocalRunner(snapshot_config=snapshot_config) as runner:
+        env = TfEnv(gym.make('InvertedDoublePendulum-v2'))
 
         action_noise = OUStrategy(env.spec, sigma=0.2)
 

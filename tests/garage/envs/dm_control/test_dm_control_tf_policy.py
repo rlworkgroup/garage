@@ -13,7 +13,7 @@ class TestDmControlTfPolicy(TfGraphTestCase):
     def test_dm_control_tf_policy(self):
         task = ALL_TASKS[0]
 
-        with LocalRunner(self.sess) as runner:
+        with LocalRunner(sess=self.sess) as runner:
             env = TfEnv(DmControlEnv.from_suite(*task))
 
             policy = GaussianMLPPolicy(

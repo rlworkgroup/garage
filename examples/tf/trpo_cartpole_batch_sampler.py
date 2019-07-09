@@ -20,8 +20,9 @@ max_path_length = 500
 n_envs = batch_size // max_path_length
 
 
-def run_task(*_):
-    with LocalRunner(max_cpus=n_envs) as runner:
+def run_task(snapshot_config, *_):
+    with LocalRunner(
+            snapshot_config=snapshot_config, max_cpus=n_envs) as runner:
         env = TfEnv(env_name='CartPole-v1')
 
         policy = CategoricalMLPPolicy(
@@ -46,8 +47,4 @@ def run_task(*_):
         runner.train(n_epochs=100, batch_size=4000, plot=False)
 
 
-run_experiment(
-    run_task,
-    snapshot_mode='last',
-    seed=1,
-)
+run_experiment(run_task, snapshot_mode='last', seed=1)

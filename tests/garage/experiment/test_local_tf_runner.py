@@ -1,3 +1,4 @@
+import pytest
 import tensorflow as tf
 
 from garage.experiment import LocalRunner
@@ -78,3 +79,13 @@ class TestLocalRunner(TfGraphTestCase):
 
             assert isinstance(runner.plotter, Plotter), (
                 'self.plotter in LocalRunner should be set to Plotter.')
+
+    def test_call_train_before_set_up(self):
+        with pytest.raises(Exception):
+            with LocalRunner() as runner:
+                runner.train(n_epochs=1, batch_size=100)
+
+    def test_call_save_before_set_up(self):
+        with pytest.raises(Exception):
+            with LocalRunner() as runner:
+                runner.save(0)

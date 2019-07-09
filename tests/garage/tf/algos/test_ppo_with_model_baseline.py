@@ -19,7 +19,7 @@ class TestPPO(TfGraphTestCase):
     @pytest.mark.huge
     def test_ppo_pendulum_continuous_baseline(self):
         """Test PPO with Pendulum environment."""
-        with LocalRunner(self.sess) as runner:
+        with LocalRunner(sess=self.sess) as runner:
             env = TfEnv(normalize(gym.make('InvertedDoublePendulum-v2')))
             policy = GaussianMLPPolicy(
                 env_spec=env.spec,

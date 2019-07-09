@@ -12,7 +12,7 @@ class TestVPG(TfGraphTestCase):
     @pytest.mark.large
     def test_vpg_cartpole(self):
         """Test VPG with CartPole-v1 environment."""
-        with LocalRunner(self.sess) as runner:
+        with LocalRunner(sess=self.sess) as runner:
             env = TfEnv(env_name='CartPole-v1')
 
             policy = CategoricalMLPPolicy(

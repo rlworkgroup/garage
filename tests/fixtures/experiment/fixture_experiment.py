@@ -1,26 +1,16 @@
-#!/usr/bin/env python3
-"""
-This is an example to train a task with VPG algorithm.
-
-Here it runs CartPole-v1 environment with 100 iterations.
-
-Results:
-    AverageReturn: 100
-    RiseTime: itr 16
-"""
-from garage.experiment import LocalRunner, run_experiment
+from garage.experiment import LocalRunner
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import VPG
 from garage.tf.envs import TfEnv
 from garage.tf.policies import CategoricalMLPPolicy
 
 
-def run_task(snapshot_config, *_):
+def fixture_exp(snapshot_config):
     with LocalRunner(snapshot_config=snapshot_config) as runner:
         env = TfEnv(env_name='CartPole-v1')
 
         policy = CategoricalMLPPolicy(
-            name='policy', env_spec=env.spec, hidden_sizes=(32, 32))
+            name='policy', env_spec=env.spec, hidden_sizes=(8, 8))
 
         baseline = LinearFeatureBaseline(env_spec=env.spec)
 
@@ -33,11 +23,6 @@ def run_task(snapshot_config, *_):
             optimizer_args=dict(tf_optimizer_args=dict(learning_rate=0.01, )))
 
         runner.setup(algo, env)
-        runner.train(n_epochs=100, batch_size=10000)
+        runner.train(n_epochs=5, batch_size=100)
 
-
-run_experiment(
-    run_task,
-    snapshot_mode='last',
-    seed=1,
-)
+        return policy.get_param_values()

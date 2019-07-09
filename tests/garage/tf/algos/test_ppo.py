@@ -34,7 +34,7 @@ class TestPPO(TfGraphTestCase):
     @pytest.mark.large
     def test_ppo_pendulum(self):
         """Test PPO with Pendulum environment."""
-        with LocalRunner(self.sess) as runner:
+        with LocalRunner(sess=self.sess) as runner:
             algo = PPO(
                 env_spec=self.env.spec,
                 policy=self.policy,
@@ -67,7 +67,7 @@ class TestPPO(TfGraphTestCase):
     @pytest.mark.large
     def test_ppo_with_maximum_entropy(self):
         """Test PPO with maxium entropy method."""
-        with LocalRunner(self.sess) as runner:
+        with LocalRunner(sess=self.sess) as runner:
             algo = PPO(
                 env_spec=self.env.spec,
                 policy=self.policy,
@@ -90,7 +90,7 @@ class TestPPO(TfGraphTestCase):
         Test PPO with negative log likelihood entropy estimation and max
         entropy method.
         """
-        with LocalRunner(self.sess) as runner:
+        with LocalRunner(sess=self.sess) as runner:
             algo = PPO(
                 env_spec=self.env.spec,
                 policy=self.policy,
@@ -114,7 +114,7 @@ class TestPPO(TfGraphTestCase):
         Test PPO with negative log likelihood entropy estimation and
         regularized entropy method.
         """
-        with LocalRunner(self.sess) as runner:
+        with LocalRunner(sess=self.sess) as runner:
             algo = PPO(
                 env_spec=self.env.spec,
                 policy=self.policy,
@@ -135,7 +135,7 @@ class TestPPO(TfGraphTestCase):
     @pytest.mark.large
     def test_ppo_with_regularized_entropy(self):
         """Test PPO with regularized entropy method."""
-        with LocalRunner(self.sess) as runner:
+        with LocalRunner(sess=self.sess) as runner:
             algo = PPO(
                 env_spec=self.env.spec,
                 policy=self.policy,

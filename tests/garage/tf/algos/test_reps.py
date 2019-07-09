@@ -17,7 +17,7 @@ class TestREPS(TfGraphTestCase):
     @pytest.mark.large
     def test_reps_cartpole(self):
         """Test REPS with gym Cartpole environment."""
-        with LocalRunner(self.sess) as runner:
+        with LocalRunner(sess=self.sess) as runner:
             env = TfEnv(gym.make('CartPole-v0'))
 
             policy = CategoricalMLPPolicy(

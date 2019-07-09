@@ -19,7 +19,7 @@ policies = [GaussianGRUPolicy, GaussianLSTMPolicy, GaussianMLPPolicy]
 class TestGaussianPolicies(TfGraphTestCase):
     @pytest.mark.parametrize('policy_cls', policies)
     def test_gaussian_policies(self, policy_cls):
-        with LocalRunner(self.sess) as runner:
+        with LocalRunner(sess=self.sess) as runner:
             env = TfEnv(normalize(gym.make('Pendulum-v0')))
 
             policy = policy_cls(name='policy', env_spec=env.spec)

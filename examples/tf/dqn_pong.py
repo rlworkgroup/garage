@@ -23,13 +23,14 @@ from garage.tf.policies import DiscreteQfDerivedPolicy
 from garage.tf.q_functions import DiscreteCNNQFunction
 
 
-def run_task(*_):
+def run_task(snapshot_config, *_):
     """Run task."""
-    with LocalRunner() as runner:
+    with LocalRunner(snapshot_config=snapshot_config) as runner:
         n_epochs = 100
         n_epoch_cycles = 20
         sampler_batch_size = 500
         num_timesteps = n_epochs * n_epoch_cycles * sampler_batch_size
+
         env = gym.make('PongNoFrameskip-v4')
         env = Noop(env, noop_max=30)
         env = MaxAndSkip(env, skip=4)
