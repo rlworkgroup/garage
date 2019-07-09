@@ -28,7 +28,7 @@ required = [
     'pyprind',
     'python-dateutil',
     'torch==1.1.0',
-    'ray'
+    'ray',
     'scikit-image',
     'scipy',
     'tensorflow<1.13,>=1.12.0',
