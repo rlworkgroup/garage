@@ -1,7 +1,6 @@
 """Parameter layer in TensorFlow."""
 
 import tensorflow as tf
-from tensorflow.python.ops.gen_array_ops import broadcast_to
 
 
 def parameter(input_var,
@@ -42,5 +41,5 @@ def parameter(input_var,
         if batch_dim is None:
             batch_dim = tf.shape(input_var)[:-1]
         broadcast_shape = tf.concat(axis=0, values=[batch_dim, [length]])
-        p_broadcast = broadcast_to(p, shape=broadcast_shape)
+        p_broadcast = tf.broadcast_to(p, shape=broadcast_shape)
         return p_broadcast
