@@ -1,6 +1,5 @@
 """GRU in TensorFlow."""
 import tensorflow as tf
-from tensorflow.python.ops.gen_array_ops import broadcast_to
 
 
 def gru(name,
@@ -47,7 +46,7 @@ def gru(name,
             trainable=hidden_state_init_trainable,
             dtype=tf.float32)
 
-        hidden_init_var_b = broadcast_to(
+        hidden_init_var_b = tf.broadcast_to(
             hidden_init_var, shape=[tf.shape(all_input_var)[0], hidden_dim])
 
         def step(hprev, x):

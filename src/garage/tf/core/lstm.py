@@ -1,6 +1,5 @@
 """LSTM in TensorFlow."""
 import tensorflow as tf
-from tensorflow.python.ops.gen_array_ops import broadcast_to
 
 
 def lstm(name,
@@ -64,9 +63,9 @@ def lstm(name,
             trainable=cell_state_init_trainable,
             dtype=tf.float32)
 
-        hidden_init_var_b = broadcast_to(
+        hidden_init_var_b = tf.broadcast_to(
             hidden_init_var, shape=[tf.shape(all_input_var)[0], hidden_dim])
-        cell_init_var_b = broadcast_to(
+        cell_init_var_b = tf.broadcast_to(
             cell_init_var, shape=[tf.shape(all_input_var)[0], hidden_dim])
 
         def step(hcprev, x):
