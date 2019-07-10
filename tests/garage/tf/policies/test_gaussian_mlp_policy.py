@@ -6,13 +6,13 @@ import pytest
 import tensorflow as tf
 
 from garage.tf.envs import TfEnv
-from garage.tf.policies import GaussianMLPPolicyWithModel
+from garage.tf.policies import GaussianMLPPolicy
 from tests.fixtures import TfGraphTestCase
 from tests.fixtures.envs.dummy import DummyBoxEnv
 from tests.fixtures.models import SimpleGaussianMLPModel
 
 
-class TestGaussianMLPPolicyWithModel(TfGraphTestCase):
+class TestGaussianMLPPolicy(TfGraphTestCase):
     @pytest.mark.parametrize('obs_dim, action_dim', [
         ((1, ), (1, )),
         ((1, ), (2, )),
@@ -24,9 +24,9 @@ class TestGaussianMLPPolicyWithModel(TfGraphTestCase):
     def test_get_action(self, obs_dim, action_dim):
         env = TfEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
         with mock.patch(('garage.tf.policies.'
-                         'gaussian_mlp_policy_with_model.GaussianMLPModel'),
+                         'gaussian_mlp_policy.GaussianMLPModel'),
                         new=SimpleGaussianMLPModel):
-            policy = GaussianMLPPolicyWithModel(env_spec=env.spec)
+            policy = GaussianMLPPolicy(env_spec=env.spec)
 
         env.reset()
         obs, _, _, _ = env.step(1)
@@ -61,9 +61,9 @@ class TestGaussianMLPPolicyWithModel(TfGraphTestCase):
     def test_dist_info_sym(self, obs_dim, action_dim):
         env = TfEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
         with mock.patch(('garage.tf.policies.'
-                         'gaussian_mlp_policy_with_model.GaussianMLPModel'),
+                         'gaussian_mlp_policy.GaussianMLPModel'),
                         new=SimpleGaussianMLPModel):
-            policy = GaussianMLPPolicyWithModel(env_spec=env.spec)
+            policy = GaussianMLPPolicy(env_spec=env.spec)
 
         env.reset()
         obs, _, _, _ = env.step(1)
@@ -93,16 +93,16 @@ class TestGaussianMLPPolicyWithModel(TfGraphTestCase):
     def test_is_pickleable(self, obs_dim, action_dim):
         env = TfEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
         with mock.patch(('garage.tf.policies.'
-                         'gaussian_mlp_policy_with_model.GaussianMLPModel'),
+                         'gaussian_mlp_policy.GaussianMLPModel'),
                         new=SimpleGaussianMLPModel):
-            policy = GaussianMLPPolicyWithModel(env_spec=env.spec)
+            policy = GaussianMLPPolicy(env_spec=env.spec)
 
         env.reset()
         obs, _, _, _ = env.step(1)
         obs_dim = env.spec.observation_space.flat_dim
 
         with tf.variable_scope(
-                'GaussianMLPPolicyWithModel/GaussianMLPModel', reuse=True):
+                'GaussianMLPPolicy/GaussianMLPModel', reuse=True):
             return_var = tf.get_variable('return_var')
         # assign it to all one
         return_var.load(tf.ones_like(return_var).eval())

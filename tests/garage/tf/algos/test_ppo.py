@@ -45,7 +45,7 @@ class TestPPO(TfGraphTestCase):
                 optimizer_args=dict(batch_size=32, max_epochs=10))
             runner.setup(algo, self.env)
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
-            assert last_avg_ret > 40
+            assert last_avg_ret > 30
 
     @pytest.mark.large
     def test_ppo_pendulum_recurrent(self):
@@ -82,7 +82,7 @@ class TestPPO(TfGraphTestCase):
                 center_adv=False)
             runner.setup(algo, self.env)
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
-            assert last_avg_ret > 40
+            assert last_avg_ret > 30
 
     @pytest.mark.large
     def test_ppo_with_neg_log_likeli_entropy_estimation_and_max(self):
@@ -106,7 +106,7 @@ class TestPPO(TfGraphTestCase):
                 center_adv=False)
             runner.setup(algo, self.env)
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
-            assert last_avg_ret > 40
+            assert last_avg_ret > 30
 
     @pytest.mark.large
     def test_ppo_with_neg_log_likeli_entropy_estimation_and_regularized(self):
@@ -130,7 +130,7 @@ class TestPPO(TfGraphTestCase):
                 center_adv=True)
             runner.setup(algo, self.env)
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
-            assert last_avg_ret > 40
+            assert last_avg_ret > 30
 
     @pytest.mark.large
     def test_ppo_with_regularized_entropy(self):
@@ -150,7 +150,7 @@ class TestPPO(TfGraphTestCase):
                 center_adv=True)
             runner.setup(algo, self.env)
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
-            assert last_avg_ret > 40
+            assert last_avg_ret > 30
 
     def teardown_method(self):
         self.env.close()

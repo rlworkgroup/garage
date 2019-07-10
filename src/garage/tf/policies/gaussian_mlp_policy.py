@@ -1,257 +1,180 @@
+"""GaussianMLPPolicy with GaussianMLPModel."""
 import akro
-from dowel import tabular
-import numpy as np
 import tensorflow as tf
 
-from garage.core import Serializable
-from garage.misc.overrides import overrides
-from garage.tf.core import LayersPowered
-import garage.tf.core.layers as L
-from garage.tf.core.network import MLP
-from garage.tf.distributions import DiagonalGaussian
-from garage.tf.misc import tensor_utils
-from garage.tf.policies.base import StochasticPolicy
+from garage.tf.models import GaussianMLPModel
+from garage.tf.policies.base2 import StochasticPolicy2
 
 
-class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
+class GaussianMLPPolicy(StochasticPolicy2):
+    """
+    GaussianMLPPolicy with GaussianMLPModel.
+
+    A policy that contains a MLP to make prediction based on
+    a gaussian distribution.
+
+    Args:
+        env_spec (garage.envs.env_spec.EnvSpec): Environment specification.
+        name (str): Model name, also the variable scope.
+        hidden_sizes (list[int]): Output dimension of dense layer(s) for
+            the MLP for mean. For example, (32, 32) means the MLP consists
+            of two hidden layers, each with 32 hidden units.
+        hidden_nonlinearity (callable): Activation function for intermediate
+            dense layer(s). It should return a tf.Tensor. Set it to
+            None to maintain a linear activation.
+        hidden_w_init (callable): Initializer function for the weight
+            of intermediate dense layer(s). The function should return a
+            tf.Tensor.
+        hidden_b_init (callable): Initializer function for the bias
+            of intermediate dense layer(s). The function should return a
+            tf.Tensor.
+        output_nonlinearity (callable): Activation function for output dense
+            layer. It should return a tf.Tensor. Set it to None to
+            maintain a linear activation.
+        output_w_init (callable): Initializer function for the weight
+            of output dense layer(s). The function should return a
+            tf.Tensor.
+        output_b_init (callable): Initializer function for the bias
+            of output dense layer(s). The function should return a
+            tf.Tensor.
+        learn_std (bool): Is std trainable.
+        adaptive_std (bool): Is std a neural network. If False, it will be a
+            parameter.
+        std_share_network (bool): Boolean for whether mean and std share
+            the same network.
+        init_std (float): Initial value for std.
+        std_hidden_sizes (list[int]): Output dimension of dense layer(s) for
+            the MLP for std. For example, (32, 32) means the MLP consists
+            of two hidden layers, each with 32 hidden units.
+        min_std (float): If not None, the std is at least the value of min_std,
+            to avoid numerical issues.
+        max_std (float): If not None, the std is at most the value of max_std,
+            to avoid numerical issues.
+        std_hidden_nonlinearity: Nonlinearity for each hidden layer in
+            the std network.
+        std_output_nonlinearity: Nonlinearity for output layer in
+            the std network.
+        std_parametrization (str): How the std should be parametrized. There
+            are a few options:
+        - exp: the logarithm of the std will be stored, and applied a
+            exponential transformation
+        - softplus: the std will be computed as log(1+exp(x))
+        layer_normalization (bool): Bool for using layer normalization or not.
+    :return:
+
+    """
+
     def __init__(self,
                  env_spec,
                  name='GaussianMLPPolicy',
                  hidden_sizes=(32, 32),
+                 hidden_nonlinearity=tf.nn.tanh,
+                 hidden_w_init=tf.glorot_uniform_initializer(),
+                 hidden_b_init=tf.zeros_initializer(),
+                 output_nonlinearity=None,
+                 output_w_init=tf.glorot_uniform_initializer(),
+                 output_b_init=tf.zeros_initializer(),
                  learn_std=True,
-                 init_std=1.0,
                  adaptive_std=False,
                  std_share_network=False,
-                 std_hidden_sizes=(32, 32),
+                 init_std=1.0,
                  min_std=1e-6,
+                 max_std=None,
+                 std_hidden_sizes=(32, 32),
                  std_hidden_nonlinearity=tf.nn.tanh,
-                 hidden_nonlinearity=tf.nn.tanh,
-                 output_nonlinearity=None,
-                 mean_network=None,
-                 std_network=None,
-                 std_parametrization='exp'):
-        """
-        :param env_spec:
-        :param hidden_sizes: list of sizes for the fully-connected hidden
-        layers
-        :param learn_std: Is std trainable
-        :param init_std: Initial std
-        :param adaptive_std:
-        :param std_share_network:
-        :param std_hidden_sizes: list of sizes for the fully-connected layers
-         for std
-        :param min_std: whether to make sure that the std is at least some
-         threshold value, to avoid numerical issues
-        :param std_hidden_nonlinearity:
-        :param hidden_nonlinearity: nonlinearity used for each hidden layer
-        :param output_nonlinearity: nonlinearity for the output layer
-        :param mean_network: custom network for the output mean
-        :param std_network: custom network for the output log std
-        :param std_parametrization: how the std should be parametrized. There
-         are a few options:
-            - exp: the logarithm of the std will be stored, and applied a
-             exponential transformation
-            - softplus: the std will be computed as log(1+exp(x))
-        :return:
-        """
+                 std_output_nonlinearity=None,
+                 std_parameterization='exp',
+                 layer_normalization=False):
         assert isinstance(env_spec.action_space, akro.Box)
+        super().__init__(name, env_spec)
+        self.obs_dim = env_spec.observation_space.flat_dim
+        self.action_dim = env_spec.action_space.flat_dim
 
-        Serializable.quick_init(self, locals())
-        self.name = name
-        self._mean_network_name = 'mean_network'
-        self._std_network_name = 'std_network'
+        self.model = GaussianMLPModel(
+            output_dim=self.action_dim,
+            hidden_sizes=hidden_sizes,
+            hidden_nonlinearity=hidden_nonlinearity,
+            hidden_w_init=hidden_w_init,
+            hidden_b_init=hidden_b_init,
+            output_nonlinearity=output_nonlinearity,
+            output_w_init=output_w_init,
+            output_b_init=output_b_init,
+            learn_std=learn_std,
+            adaptive_std=adaptive_std,
+            std_share_network=std_share_network,
+            init_std=init_std,
+            min_std=min_std,
+            max_std=max_std,
+            std_hidden_sizes=std_hidden_sizes,
+            std_hidden_nonlinearity=std_hidden_nonlinearity,
+            std_output_nonlinearity=std_output_nonlinearity,
+            std_parameterization=std_parameterization,
+            layer_normalization=layer_normalization,
+            name='GaussianMLPModel')
 
-        with tf.variable_scope(name, 'GaussianMLPPolicy'):
+        self._initialize()
 
-            obs_dim = env_spec.observation_space.flat_dim
-            action_dim = env_spec.action_space.flat_dim
+    def _initialize(self):
+        state_input = tf.placeholder(tf.float32, shape=(None, self.obs_dim))
 
-            # create network
-            if mean_network is None:
-                if std_share_network:
-                    if std_parametrization == 'exp':
-                        init_std_param = np.log(init_std)
-                    elif std_parametrization == 'softplus':
-                        init_std_param = np.log(np.exp(init_std) - 1)
-                    else:
-                        raise NotImplementedError
-                    b = np.concatenate((np.zeros(action_dim),
-                                        np.full(action_dim, init_std_param)),
-                                       axis=0)
-                    b = tf.constant_initializer(b)
-                    with tf.variable_scope(self._mean_network_name):
-                        mean_network = MLP(
-                            name='mlp',
-                            input_shape=(obs_dim, ),
-                            output_dim=2 * action_dim,
-                            hidden_sizes=hidden_sizes,
-                            hidden_nonlinearity=hidden_nonlinearity,
-                            output_nonlinearity=output_nonlinearity,
-                            output_b_init=b,
-                        )
-                        l_mean = L.SliceLayer(
-                            mean_network.output_layer,
-                            slice(action_dim),
-                            name='mean_slice',
-                        )
-                else:
-                    mean_network = MLP(
-                        name=self._mean_network_name,
-                        input_shape=(obs_dim, ),
-                        output_dim=action_dim,
-                        hidden_sizes=hidden_sizes,
-                        hidden_nonlinearity=hidden_nonlinearity,
-                        output_nonlinearity=output_nonlinearity,
-                    )
-                    l_mean = mean_network.output_layer
-            self._mean_network = mean_network
+        with tf.variable_scope(self.name) as vs:
+            self._variable_scope = vs
+            self.model.build(state_input)
 
-            obs_var = mean_network.input_layer.input_var
-
-            if std_network is not None:
-                l_std_param = std_network.output_layer
-            else:
-                if std_parametrization == 'exp':
-                    init_std_param = np.log(init_std)
-                elif std_parametrization == 'softplus':
-                    init_std_param = np.log(np.exp(init_std) - 1)
-                else:
-                    raise ValueError('Invalid argument for std_parametrization'
-                                     ': {}'.format(std_parametrization))
-                if adaptive_std:
-                    b = tf.constant_initializer(init_std_param)
-                    std_network = MLP(
-                        name=self._std_network_name,
-                        input_shape=(obs_dim, ),
-                        input_layer=mean_network.input_layer,
-                        output_dim=action_dim,
-                        hidden_sizes=std_hidden_sizes,
-                        hidden_nonlinearity=std_hidden_nonlinearity,
-                        output_nonlinearity=None,
-                        output_b_init=b,
-                    )
-                    l_std_param = std_network.output_layer
-                elif std_share_network:
-                    with tf.variable_scope(self._std_network_name):
-                        l_std_param = L.SliceLayer(
-                            mean_network.output_layer,
-                            slice(action_dim, 2 * action_dim),
-                            name='std_slice',
-                        )
-                else:
-                    with tf.variable_scope(self._std_network_name):
-                        l_std_param = L.ParamLayer(
-                            mean_network.input_layer,
-                            num_units=action_dim,
-                            param=tf.constant_initializer(init_std_param),
-                            name='output_std_param',
-                            trainable=learn_std,
-                        )
-
-            self.std_parametrization = std_parametrization
-
-            if std_parametrization == 'exp':
-                min_std_param = np.log(min_std)
-            elif std_parametrization == 'softplus':
-                min_std_param = np.log(np.exp(min_std) - 1)
-            else:
-                raise NotImplementedError
-
-            self.min_std_param = min_std_param
-
-            # mean_var, log_std_var = L.get_output([l_mean, l_std_param])
-            #
-            # if self.min_std_param is not None:
-            #     log_std_var = tf.maximum(log_std_var, np.log(min_std))
-            #
-            # self._mean_var, self._log_std_var = mean_var, log_std_var
-
-            self._l_mean = l_mean
-            self._l_std_param = l_std_param
-
-            self._dist = DiagonalGaussian(action_dim)
-
-            LayersPowered.__init__(self, [l_mean, l_std_param])
-            super(GaussianMLPPolicy, self).__init__(env_spec)
-
-            dist_info_sym = self.dist_info_sym(
-                mean_network.input_layer.input_var, dict())
-            mean_var = tf.identity(dist_info_sym['mean'], name='mean')
-            log_std_var = tf.identity(
-                dist_info_sym['log_std'], name='standard_dev')
-
-            self._f_dist = tensor_utils.compile_function(
-                inputs=[obs_var],
-                outputs=[mean_var, log_std_var],
-            )
+        self._f_dist = tf.get_default_session().make_callable(
+            [
+                self.model.networks['default'].sample,
+                self.model.networks['default'].mean,
+                self.model.networks['default'].log_std
+            ],
+            feed_list=[self.model.networks['default'].input])
 
     @property
     def vectorized(self):
+        """Vectorized or not."""
         return True
 
-    def dist_info_sym(self, obs_var, state_info_vars=None, name=None):
-        with tf.name_scope(name, 'dist_info_sym', [obs_var]):
-            with tf.name_scope(self._mean_network_name, values=[obs_var]):
-                mean_var = L.get_output(self._l_mean, obs_var)
-            with tf.name_scope(self._std_network_name, values=[obs_var]):
-                std_param_var = L.get_output(self._l_std_param, obs_var)
-            if self.min_std_param is not None:
-                std_param_var = tf.maximum(std_param_var, self.min_std_param)
-            if self.std_parametrization == 'exp':
-                log_std_var = std_param_var
-            elif self.std_parametrization == 'softplus':
-                log_std_var = tf.log(tf.log(1. + tf.exp(std_param_var)))
-            else:
-                raise NotImplementedError
-            return dict(mean=mean_var, log_std=log_std_var)
+    def dist_info_sym(self, obs_var, state_info_vars=None, name='default'):
+        """Symbolic graph of the distribution."""
+        with tf.variable_scope(self._variable_scope):
+            _, mean_var, log_std_var, _, _ = self.model.build(
+                obs_var, name=name)
+        return dict(mean=mean_var, log_std=log_std_var)
 
-    @overrides
     def get_action(self, observation):
+        """Get action from the policy."""
         flat_obs = self.observation_space.flatten(observation)
-        mean, log_std = [x[0] for x in self._f_dist([flat_obs])]
-        rnd = np.random.normal(size=mean.shape)
-        action = rnd * np.exp(log_std) + mean
-        return action, dict(mean=mean, log_std=log_std)
+        sample, mean, log_std = self._f_dist([flat_obs])
+        sample = self.action_space.unflatten(sample[0])
+        mean = self.action_space.unflatten(mean[0])
+        log_std = self.action_space.unflatten(log_std[0])
+        return sample, dict(mean=mean, log_std=log_std)
 
     def get_actions(self, observations):
+        """Get actions from the policy."""
         flat_obs = self.observation_space.flatten_n(observations)
-        means, log_stds = self._f_dist(flat_obs)
-        rnd = np.random.normal(size=means.shape)
-        actions = rnd * np.exp(log_stds) + means
-        return actions, dict(mean=means, log_std=log_stds)
+        samples, means, log_stds = self._f_dist(flat_obs)
+        samples = self.action_space.unflatten_n(samples)
+        means = self.action_space.unflatten_n(means)
+        log_stds = self.action_space.unflatten_n(log_stds)
+        return samples, dict(mean=means, log_std=log_stds)
 
-    def get_reparam_action_sym(self,
-                               obs_var,
-                               action_var,
-                               old_dist_info_vars,
-                               name=None):
-        """
-        Given observations, old actions, and distribution of old actions,
-        return a symbolically reparameterized representation of the actions in
-        terms of the policy parameters
-        :param obs_var:
-        :param action_var:
-        :param old_dist_info_vars:
-        :return:
-        """
-        with tf.name_scope(name, 'get_reparam_action_sym',
-                           [obs_var, action_var, old_dist_info_vars]):
-            new_dist_info_vars = self.dist_info_sym(obs_var, action_var)
-            new_mean_var, new_log_std_var = new_dist_info_vars[
-                'mean'], new_dist_info_vars['log_std']
-            old_mean_var, old_log_std_var = old_dist_info_vars[
-                'mean'], old_dist_info_vars['log_std']
-            epsilon_var = (action_var - old_mean_var) / (
-                tf.exp(old_log_std_var) + 1e-8)
-            new_action_var = new_mean_var + epsilon_var * tf.exp(
-                new_log_std_var)
-            return new_action_var
-
-    def log_diagnostics(self, paths):
-        log_stds = paths['agent_infos']['log_std']
-        tabular.record('{}/AverageStd'.format(self.name),
-                       np.mean(np.exp(log_stds)))
+    def get_params(self, trainable=True):
+        """Get the trainable variables."""
+        return self.get_trainable_vars()
 
     @property
     def distribution(self):
-        return self._dist
+        """Policy distribution."""
+        return self.model.networks['default'].dist
+
+    def __getstate__(self):
+        """Object.__getstate__."""
+        new_dict = super().__getstate__()
+        del new_dict['_f_dist']
+        return new_dict
+
+    def __setstate__(self, state):
+        """Object.__setstate__."""
+        super().__setstate__(state)
+        self._initialize()

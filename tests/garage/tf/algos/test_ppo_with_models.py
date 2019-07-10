@@ -9,11 +9,11 @@ import tensorflow as tf
 from garage.envs import normalize
 from garage.experiment import LocalRunner
 from garage.tf.algos import PPO
-from garage.tf.baselines import GaussianMLPBaselineWithModel
+from garage.tf.baselines import GaussianMLPBaseline
 from garage.tf.envs import TfEnv
 from garage.tf.policies import GaussianGRUPolicyWithModel
 from garage.tf.policies import GaussianLSTMPolicyWithModel
-from garage.tf.policies import GaussianMLPPolicyWithModel
+from garage.tf.policies import GaussianMLPPolicy
 from tests.fixtures import TfGraphTestCase
 
 
@@ -23,13 +23,13 @@ class TestPPOWithModel(TfGraphTestCase):
         """Test PPO with model, with Pendulum environment."""
         with LocalRunner(sess=self.sess) as runner:
             env = TfEnv(normalize(gym.make('InvertedDoublePendulum-v2')))
-            policy = GaussianMLPPolicyWithModel(
+            policy = GaussianMLPPolicy(
                 env_spec=env.spec,
                 hidden_sizes=(64, 64),
                 hidden_nonlinearity=tf.nn.tanh,
                 output_nonlinearity=None,
             )
-            baseline = GaussianMLPBaselineWithModel(
+            baseline = GaussianMLPBaseline(
                 env_spec=env.spec,
                 regressor_args=dict(hidden_sizes=(32, 32)),
             )
@@ -54,7 +54,7 @@ class TestPPOWithModel(TfGraphTestCase):
         with LocalRunner(sess=self.sess) as runner:
             env = TfEnv(normalize(gym.make('InvertedDoublePendulum-v2')))
             policy = GaussianLSTMPolicyWithModel(env_spec=env.spec, )
-            baseline = GaussianMLPBaselineWithModel(
+            baseline = GaussianMLPBaseline(
                 env_spec=env.spec,
                 regressor_args=dict(hidden_sizes=(32, 32)),
             )
@@ -73,14 +73,12 @@ class TestPPOWithModel(TfGraphTestCase):
 
             env.close()
 
-    test_ppo_pendulum_lstm_with_model.large = True
-
     def test_ppo_pendulum_gru_with_model(self):
         """Test PPO with model, with Pendulum environment."""
         with LocalRunner(sess=self.sess) as runner:
             env = TfEnv(normalize(gym.make('InvertedDoublePendulum-v2')))
             policy = GaussianGRUPolicyWithModel(env_spec=env.spec, )
-            baseline = GaussianMLPBaselineWithModel(
+            baseline = GaussianMLPBaseline(
                 env_spec=env.spec,
                 regressor_args=dict(hidden_sizes=(32, 32)),
             )

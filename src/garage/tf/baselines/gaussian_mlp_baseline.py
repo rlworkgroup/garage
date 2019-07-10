@@ -1,15 +1,13 @@
-"""This module implements gaussian mlp baseline."""
+"""A value function (baseline) based on a GaussianMLP model."""
 import numpy as np
 
-from garage.core import Serializable
 from garage.misc.overrides import overrides
 from garage.np.baselines import Baseline
-from garage.tf.core import Parameterized
 from garage.tf.regressors import GaussianMLPRegressor
 
 
-class GaussianMLPBaseline(Baseline, Parameterized, Serializable):
-    """A value function using gaussian mlp network."""
+class GaussianMLPBaseline(Baseline):
+    """A value function using Gaussian MLP network."""
 
     def __init__(
             self,
@@ -20,16 +18,20 @@ class GaussianMLPBaseline(Baseline, Parameterized, Serializable):
             name='GaussianMLPBaseline',
     ):
         """
-        Constructor.
+        Gaussian MLP Baseline.
 
-        :param env_spec:
-        :param subsample_factor:
-        :param num_seq_inputs:
-        :param regressor_args:
+        It fits the input data to a gaussian distribution estimated by
+        a MLP.
+
+        Args:
+            env_spec (garage.envs.env_spec.EnvSpec): Environment specification.
+            subsample_factor (float): The factor to subsample the data. By
+                default it is 1.0, which means using all the data.
+            num_seq_inputs (float): Number of sequence per input. By default
+                it is 1.0, which means only one single sequence.
+            regressor_args (dict): Arguments for regressor.
         """
-        Parameterized.__init__(self)
-        Serializable.quick_init(self, locals())
-        super(GaussianMLPBaseline, self).__init__(env_spec)
+        super().__init__(env_spec)
         if regressor_args is None:
             regressor_args = dict()
 
@@ -65,4 +67,5 @@ class GaussianMLPBaseline(Baseline, Parameterized, Serializable):
 
     @overrides
     def get_params_internal(self, **tags):
+        """Get internal parameters."""
         return self._regressor.get_params_internal(**tags)

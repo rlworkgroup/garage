@@ -5,22 +5,22 @@ import numpy as np
 import pytest
 import tensorflow as tf
 
-from garage.tf.baselines import GaussianMLPBaselineWithModel
+from garage.tf.baselines import GaussianMLPBaseline
 from garage.tf.envs import TfEnv
 from tests.fixtures import TfGraphTestCase
 from tests.fixtures.envs.dummy import DummyBoxEnv
 from tests.fixtures.regressors import SimpleGaussianMLPRegressor
 
 
-class TestGaussianMLPBaselineWithModel(TfGraphTestCase):
+class TestGaussianMLPBaseline(TfGraphTestCase):
     @pytest.mark.parametrize('obs_dim', [[1], [2], [1, 1], [2, 2]])
     def test_fit(self, obs_dim):
         box_env = TfEnv(DummyBoxEnv(obs_dim=obs_dim))
         with mock.patch(('garage.tf.baselines.'
-                         'gaussian_mlp_baseline_with_model.'
-                         'GaussianMLPRegressorWithModel'),
+                         'gaussian_mlp_baseline.'
+                         'GaussianMLPRegressor'),
                         new=SimpleGaussianMLPRegressor):
-            gmb = GaussianMLPBaselineWithModel(env_spec=box_env.spec)
+            gmb = GaussianMLPBaseline(env_spec=box_env.spec)
         paths = [{
             'observations': [np.full(obs_dim, 1)],
             'returns': [1]
@@ -38,15 +38,15 @@ class TestGaussianMLPBaselineWithModel(TfGraphTestCase):
     def test_param_values(self, obs_dim):
         box_env = TfEnv(DummyBoxEnv(obs_dim=obs_dim))
         with mock.patch(('garage.tf.baselines.'
-                         'gaussian_mlp_baseline_with_model.'
-                         'GaussianMLPRegressorWithModel'),
+                         'gaussian_mlp_baseline.'
+                         'GaussianMLPRegressor'),
                         new=SimpleGaussianMLPRegressor):
-            gmb = GaussianMLPBaselineWithModel(env_spec=box_env.spec)
-            new_gmb = GaussianMLPBaselineWithModel(
-                env_spec=box_env.spec, name='GaussianMLPBaselineWithModel2')
+            gmb = GaussianMLPBaseline(env_spec=box_env.spec)
+            new_gmb = GaussianMLPBaseline(
+                env_spec=box_env.spec, name='GaussianMLPBaseline2')
 
-        # Manual change the parameter of GaussianMLPBaselineWithModel
-        with tf.variable_scope('GaussianMLPBaselineWithModel', reuse=True):
+        # Manual change the parameter of GaussianMLPBaseline
+        with tf.variable_scope('GaussianMLPBaseline', reuse=True):
             return_var = tf.get_variable('SimpleGaussianMLPModel/return_var')
         return_var.load(1.0)
 
@@ -61,26 +61,25 @@ class TestGaussianMLPBaselineWithModel(TfGraphTestCase):
     def test_get_params_internal(self, obs_dim):
         box_env = TfEnv(DummyBoxEnv(obs_dim=obs_dim))
         with mock.patch(('garage.tf.baselines.'
-                         'gaussian_mlp_baseline_with_model.'
-                         'GaussianMLPRegressorWithModel'),
+                         'gaussian_mlp_baseline.'
+                         'GaussianMLPRegressor'),
                         new=SimpleGaussianMLPRegressor):
-            gmb = GaussianMLPBaselineWithModel(
+            gmb = GaussianMLPBaseline(
                 env_spec=box_env.spec, regressor_args=dict())
         params_interal = gmb.get_params_internal()
-        trainable_params = tf.trainable_variables(
-            scope='GaussianMLPBaselineWithModel')
+        trainable_params = tf.trainable_variables(scope='GaussianMLPBaseline')
         assert np.array_equal(params_interal, trainable_params)
 
     def test_is_pickleable(self):
         box_env = TfEnv(DummyBoxEnv(obs_dim=(1, )))
         with mock.patch(('garage.tf.baselines.'
-                         'gaussian_mlp_baseline_with_model.'
-                         'GaussianMLPRegressorWithModel'),
+                         'gaussian_mlp_baseline.'
+                         'GaussianMLPRegressor'),
                         new=SimpleGaussianMLPRegressor):
-            gmb = GaussianMLPBaselineWithModel(env_spec=box_env.spec)
+            gmb = GaussianMLPBaseline(env_spec=box_env.spec)
         obs = {'observations': [np.full(1, 1), np.full(1, 1)]}
 
-        with tf.variable_scope('GaussianMLPBaselineWithModel', reuse=True):
+        with tf.variable_scope('GaussianMLPBaseline', reuse=True):
             return_var = tf.get_variable('SimpleGaussianMLPModel/return_var')
         return_var.load(1.0)
 

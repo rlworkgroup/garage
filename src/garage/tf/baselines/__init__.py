@@ -6,8 +6,6 @@ from garage.tf.baselines.gaussian_cnn_baseline_with_model import (
     GaussianCNNBaselineWithModel)
 from garage.tf.baselines.gaussian_conv_baseline import GaussianConvBaseline
 from garage.tf.baselines.gaussian_mlp_baseline import GaussianMLPBaseline
-from garage.tf.baselines.gaussian_mlp_baseline_with_model import (
-    GaussianMLPBaselineWithModel)
 
 __all__ = [
     'ContinuousMLPBaseline',
@@ -15,5 +13,4 @@ __all__ = [
     'GaussianConvBaseline',
     'GaussianCNNBaselineWithModel',
     'GaussianMLPBaseline',
-    'GaussianMLPBaselineWithModel',
 ]
