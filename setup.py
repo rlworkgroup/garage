@@ -21,6 +21,10 @@ required = [
     'mujoco-py<2.1,>=2.0',
     'numpy==1.14.5',
     'psutil',
+    # Pyglet 1.4.0 introduces some api change which breaks some
+    # gym environments
+    # See: https://github.com/openai/gym/issues/1588
+    'pyglet<1.4.0,>=1.3.0',
     'pyprind',
     'python-dateutil',
     'torch==1.1.0',
