@@ -3,7 +3,7 @@ import numpy as np
 import tensorflow as tf
 
 from garage.tf.core.mlp import mlp
-from garage.tf.core.parameter import Parameter
+from garage.tf.core.parameter import parameter
 from garage.tf.distributions import DiagonalGaussian
 from garage.tf.models.base import Model
 
@@ -195,7 +195,7 @@ class GaussianMLPModel(Model):
                         name='log_std_network',
                         layer_normalization=self._layer_normalization)
                 else:
-                    log_std_network = Parameter(
+                    log_std_network, _ = parameter(
                         state_input,
                         length=action_dim,
                         initializer=tf.constant_initializer(
@@ -204,7 +204,7 @@ class GaussianMLPModel(Model):
                         name='log_std_network')
 
         mean_var = mean_network
-        std_param = log_std_network.reshaped_param
+        std_param = log_std_network
 
         with tf.variable_scope('std_limits'):
             if self._min_std_param is not None:

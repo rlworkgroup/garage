@@ -4,7 +4,7 @@ import tensorflow as tf
 
 from garage.tf.core.cnn import cnn
 from garage.tf.core.mlp import mlp
-from garage.tf.core.parameter import Parameter
+from garage.tf.core.parameter import parameter
 from garage.tf.distributions import DiagonalGaussian
 from garage.tf.models.base import Model
 
@@ -270,7 +270,7 @@ class GaussianCNNModel(Model):
                         layer_normalization=self._layer_normalization)
                 else:
                     batch_dim = tf.shape(state_input)[0]
-                    log_std_network = Parameter(
+                    log_std_network, _ = parameter(
                         state_input,
                         length=action_dim,
                         batch_dim=[batch_dim],
@@ -280,7 +280,7 @@ class GaussianCNNModel(Model):
                         name='log_std_network')
 
         mean_var = mean_network
-        std_param = log_std_network.reshaped_param
+        std_param = log_std_network
 
         with tf.variable_scope('std_limits'):
             if self._min_std_param is not None:

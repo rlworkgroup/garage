@@ -3,7 +3,7 @@ import numpy as np
 import tensorflow as tf
 
 from garage.tf.core.lstm import lstm
-from garage.tf.core.parameter import Parameter
+from garage.tf.core.parameter import parameter
 from garage.tf.distributions import DiagonalGaussian
 from garage.tf.models import Model
 
@@ -198,28 +198,27 @@ class GaussianLSTMModel(Model):
                      cell_state_init_trainable=self._cell_state_init_trainable,
                      output_nonlinearity_layer=self.
                      _mean_output_nonlinearity_layer)
-                log_std_var = Parameter(
+                log_std_var, log_std_var_param = parameter(
                     state_input,
                     length=action_dim,
                     initializer=tf.constant_initializer(self._init_std_param),
                     trainable=self._learn_std,
                     name='log_std_param')
-                step_log_std_var = Parameter(
+                step_log_std_var, _ = parameter(
                     step_input,
                     length=action_dim,
-                    param=log_std_var.param,
+                    param=log_std_var_param,
                     initializer=tf.constant_initializer(self._init_std_param),
                     trainable=self._learn_std,
                     name='step_log_std_param')
 
         dist = DiagonalGaussian(self._output_dim)
         rnd = tf.random.normal(shape=step_mean_var.get_shape().as_list()[1:])
-        action_var = rnd * tf.exp(
-            step_log_std_var.reshaped_param) + step_mean_var
+        action_var = rnd * tf.exp(step_log_std_var) + step_mean_var
 
-        return (action_var, mean_var, step_mean_var,
-                log_std_var.reshaped_param, step_log_std_var.reshaped_param,
-                step_hidden, step_cell, hidden_init_var, cell_init_var, dist)
+        return (action_var, mean_var, step_mean_var, log_std_var,
+                step_log_std_var, step_hidden, step_cell, hidden_init_var,
+                cell_init_var, dist)
 
     def __getstate__(self):
         """Object.__getstate__."""

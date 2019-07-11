@@ -3,7 +3,14 @@
 import tensorflow as tf
 
 
-class Parameter:
+def parameter(input_var,
+              length,
+              param=None,
+              batch_dim=None,
+              initializer=tf.zeros_initializer(),
+              dtype=tf.float32,
+              trainable=True,
+              name='parameter'):
     """
     Parameter layer.
 
@@ -26,36 +33,15 @@ class Parameter:
     Return:
         A tensor of the broadcasted variables.
     """
-
-    def __init__(self,
-                 input_var,
-                 length,
-                 param=None,
-                 batch_dim=None,
-                 initializer=tf.zeros_initializer(),
-                 dtype=tf.float32,
-                 trainable=True,
-                 name='parameter'):
-        with tf.variable_scope(name):
-            if param is None:
-                self._param = tf.get_variable(
-                    'parameter',
-                    shape=(length, ),
-                    dtype=dtype,
-                    initializer=initializer,
-                    trainable=trainable)
-            else:
-                self._param = param
-            if batch_dim is None:
-                batch_dim = tf.shape(input_var)[:-1]
-            broadcast_shape = tf.concat(axis=0, values=[batch_dim, [length]])
-            self._reshaped_param = tf.broadcast_to(
-                self._param, shape=broadcast_shape)
-
-    @property
-    def reshaped_param(self):
-        return self._reshaped_param
-
-    @property
-    def param(self):
-        return self._param
+    with tf.variable_scope(name):
+        if param is None:
+            param = tf.get_variable(
+                'parameter',
+                shape=(length, ),
+                dtype=dtype,
+                initializer=initializer,
+                trainable=trainable)
+        if batch_dim is None:
+            batch_dim = tf.shape(input_var)[:-1]
+        broadcast_shape = tf.concat(axis=0, values=[batch_dim, [length]])
+        return tf.broadcast_to(param, shape=broadcast_shape), param
