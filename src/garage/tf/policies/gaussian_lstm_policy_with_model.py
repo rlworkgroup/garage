@@ -200,7 +200,7 @@ class GaussianLSTMPolicyWithModel(StochasticPolicy2):
             dones (numpy.ndarray): Bool that indicates terminal state(s).
 
         """
-        if not dones:
+        if dones is None:
             dones = np.array([True])
         if self.prev_actions is None or len(dones) != len(self.prev_actions):
             self.prev_actions = np.zeros((len(dones),
