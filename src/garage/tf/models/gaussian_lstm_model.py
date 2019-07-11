@@ -5,6 +5,7 @@ import tensorflow as tf
 from garage.tf.core.lstm import lstm
 from garage.tf.core.parameter import parameter
 from garage.tf.distributions import DiagonalGaussian
+from garage.tf.misc.tensor_utils import broadcast
 from garage.tf.models import Model
 
 
@@ -198,19 +199,13 @@ class GaussianLSTMModel(Model):
                      cell_state_init_trainable=self._cell_state_init_trainable,
                      output_nonlinearity_layer=self.
                      _mean_output_nonlinearity_layer)
-                log_std_var, log_std_var_param = parameter(
-                    state_input,
+                log_std_var_param = parameter(
                     length=action_dim,
                     initializer=tf.constant_initializer(self._init_std_param),
                     trainable=self._learn_std,
                     name='log_std_param')
-                step_log_std_var, _ = parameter(
-                    step_input,
-                    length=action_dim,
-                    param=log_std_var_param,
-                    initializer=tf.constant_initializer(self._init_std_param),
-                    trainable=self._learn_std,
-                    name='step_log_std_param')
+                log_std_var = broadcast(log_std_var_param, state_input)
+                step_log_std_var = broadcast(log_std_var_param, step_input)
 
         dist = DiagonalGaussian(self._output_dim)
         rnd = tf.random.normal(shape=step_mean_var.get_shape().as_list()[1:])

@@ -2,31 +2,35 @@ import numpy as np
 import tensorflow as tf
 
 from garage.tf.core.parameter import parameter
+from garage.tf.misc.tensor_utils import broadcast
 from tests.fixtures import TfGraphTestCase
 
 
 class TestParameter(TfGraphTestCase):
-    def test_param(self):
-        input_vars = tf.placeholder(shape=[None, 2, 3, 4], dtype=tf.float32)
-        initial_params = np.array([48, 21, 33])
+    def setup_method(self):
+        super().setup_method()
+        self.input_vars = tf.placeholder(
+            shape=[None, 2, 3, 4], dtype=tf.float32)
+        self.initial_params = np.array([48, 21, 33])
 
-        reshaped_param, param = parameter(
-            input_var=input_vars,
-            length=3,
-            initializer=tf.constant_initializer(initial_params))
+        self.param = parameter(
+            length=3, initializer=tf.constant_initializer(self.initial_params))
 
-        data = np.zeros(shape=[5, 2, 3, 4])
-        feed_dict = {
-            input_vars: data,
+        self.data = np.zeros(shape=[5, 2, 3, 4])
+        self.feed_dict = {
+            self.input_vars: self.data,
         }
-
         self.sess.run(tf.global_variables_initializer())
-        p = self.sess.run(reshaped_param, feed_dict=feed_dict)
 
-        assert p.shape[:-1] == data.shape[:-1]
-        assert np.all(p[0, 0, 0, :] == initial_params)
-
-        p = self.sess.run(param, feed_dict=feed_dict)
+    def test_param(self):
+        p = self.sess.run(self.param, feed_dict=self.feed_dict)
 
         assert p.shape == (3, )
-        assert np.all(p == initial_params)
+        assert np.all(p == self.initial_params)
+
+    def test_broadcast(self):
+        broadcast_param = broadcast(self.param, self.input_vars)
+        p = self.sess.run(broadcast_param, feed_dict=self.feed_dict)
+
+        assert p.shape[:-1] == self.data.shape[:-1]
+        assert np.all(p[0, 0, 0, :] == self.initial_params)
