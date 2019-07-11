@@ -3,7 +3,7 @@ import numpy as np
 import tensorflow as tf
 
 from garage.tf.core.gru import gru
-from garage.tf.core.parameter import parameter
+from garage.tf.core.parameter import Parameter
 from garage.tf.distributions import DiagonalGaussian
 from garage.tf.models import Model
 
@@ -168,14 +168,15 @@ class GaussianGRUModel(Model):
                     _hidden_state_init_trainable,
                     output_nonlinearity_layer=self.
                     _mean_output_nonlinearity_layer)
-                log_std_var = parameter(
+                log_std_var = Parameter(
                     state_input,
                     length=action_dim,
                     initializer=tf.constant_initializer(self._init_std_param),
                     trainable=self._learn_std,
                     name='log_std_param')
-                step_log_std_var = parameter(
+                step_log_std_var = Parameter(
                     step_input,
+                    param=log_std_var.param,
                     length=action_dim,
                     initializer=tf.constant_initializer(self._init_std_param),
                     trainable=self._learn_std,
@@ -183,10 +184,12 @@ class GaussianGRUModel(Model):
 
         dist = DiagonalGaussian(self._output_dim)
         rnd = tf.random.normal(shape=step_mean_var.get_shape().as_list()[1:])
-        action_var = rnd * tf.exp(step_log_std_var) + step_mean_var
+        action_var = rnd * tf.exp(
+            step_log_std_var.reshaped_param) + step_mean_var
 
-        return (action_var, mean_var, step_mean_var, log_std_var,
-                step_log_std_var, step_hidden, hidden_init_var, dist)
+        return (action_var, mean_var, step_mean_var,
+                log_std_var.reshaped_param, step_log_std_var.reshaped_param,
+                step_hidden, hidden_init_var, dist)
 
     def __getstate__(self):
         """Object.__getstate__."""
