@@ -6,12 +6,12 @@ from garage.sampler.utils import truncate_paths
 
 
 def worker_init_tf(g):
-    g.sess = tf.Session()
+    g.sess = tf.compat.v1.Session()
     g.sess.__enter__()
 
 
 def worker_init_tf_vars(g):
-    g.sess.run(tf.global_variables_initializer())
+    g.sess.run(tf.compat.v1.global_variables_initializer())
 
 
 class BatchSampler(BaseSampler):

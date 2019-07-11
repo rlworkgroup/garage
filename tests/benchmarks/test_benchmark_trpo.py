@@ -178,7 +178,7 @@ def run_baselines(env, seed, log_dir):
     :param log_dir: Log dir path.
     :return
     '''
-    with tf.Session().as_default():
+    with tf.compat.v1.Session().as_default():
         baselines_logger.configure(log_dir)
 
         def policy_fn(name, ob_space, ac_space):

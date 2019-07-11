@@ -69,7 +69,7 @@ class TestGaussianMLPPolicyWithModel(TfGraphTestCase):
         obs, _, _, _ = env.step(1)
 
         obs_dim = env.spec.observation_space.flat_dim
-        obs_ph = tf.placeholder(tf.float32, shape=(None, obs_dim))
+        obs_ph = tf.compat.v1.placeholder(tf.float32, shape=(None, obs_dim))
 
         dist1_sym = policy.dist_info_sym(obs_ph, name='p1_sym')
 
@@ -101,9 +101,9 @@ class TestGaussianMLPPolicyWithModel(TfGraphTestCase):
         obs, _, _, _ = env.step(1)
         obs_dim = env.spec.observation_space.flat_dim
 
-        with tf.variable_scope(
+        with tf.compat.v1.variable_scope(
                 'GaussianMLPPolicyWithModel/GaussianMLPModel', reuse=True):
-            return_var = tf.get_variable('return_var')
+            return_var = tf.compat.v1.get_variable('return_var')
         # assign it to all one
         return_var.load(tf.ones_like(return_var).eval())
         output1 = self.sess.run(
@@ -111,7 +111,7 @@ class TestGaussianMLPPolicyWithModel(TfGraphTestCase):
             feed_dict={policy.model.input: [obs.flatten()]})
 
         p = pickle.dumps(policy)
-        with tf.Session(graph=tf.Graph()) as sess:
+        with tf.compat.v1.Session(graph=tf.Graph()) as sess:
             policy_pickled = pickle.loads(p)
             output2 = sess.run(
                 policy_pickled.model.outputs[:-1],

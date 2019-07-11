@@ -21,7 +21,7 @@ def set_seed(seed):
     np.random.seed(seed)
     if 'tensorflow' in sys.modules:
         import tensorflow as tf
-        tf.set_random_seed(seed)
+        tf.compat.v1.set_random_seed(seed)
 
 
 def get_seed():

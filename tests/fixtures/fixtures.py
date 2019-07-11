@@ -9,7 +9,7 @@ from tests.fixtures.logger import NullOutput
 
 class TfTestCase:
     def setup_method(self):
-        self.sess = tf.Session()
+        self.sess = tf.compat.v1.Session()
         self.sess.__enter__()
 
     def teardown_method(self):

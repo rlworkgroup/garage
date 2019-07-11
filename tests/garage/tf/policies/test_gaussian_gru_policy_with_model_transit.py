@@ -60,7 +60,7 @@ class TestGaussianGRUPolicyWithModelTransit(TfGraphTestCase):
                 state_include_action=True,
                 name='P2')
 
-            self.sess.run(tf.global_variables_initializer())
+            self.sess.run(tf.compat.v1.global_variables_initializer())
 
             self.policy3 = GaussianGRUPolicyWithModel(
                 env_spec=env.spec,
@@ -93,9 +93,9 @@ class TestGaussianGRUPolicyWithModelTransit(TfGraphTestCase):
             self.obs = np.concatenate(
                 [self.obs for _ in range(self.time_step)], axis=0)
 
-            self.obs_ph = tf.placeholder(
+            self.obs_ph = tf.compat.v1.placeholder(
                 tf.float32, shape=(None, None, env.observation_space.flat_dim))
-            self.action_ph = tf.placeholder(
+            self.action_ph = tf.compat.v1.placeholder(
                 tf.float32, shape=(None, None, env.action_space.flat_dim))
 
             self.dist1_sym = self.policy1.dist_info_sym(

@@ -34,7 +34,7 @@ class SimpleGaussianGRUModel(Model):
                step_hidden,
                step_cell,
                name=None):
-        return_var = tf.get_variable(
+        return_var = tf.compat.v1.get_variable(
             'return_var', (), initializer=tf.constant_initializer(0.5))
         mean = log_std = tf.fill(
             (tf.shape(obs_input)[0], tf.shape(obs_input)[1], self.output_dim),
@@ -42,7 +42,7 @@ class SimpleGaussianGRUModel(Model):
         step_mean = step_log_std = tf.fill(
             (tf.shape(step_obs_input)[0], self.output_dim), return_var)
 
-        hidden_init_var = tf.get_variable(
+        hidden_init_var = tf.compat.v1.get_variable(
             name='initial_hidden',
             shape=(self.hidden_dim, ),
             initializer=tf.zeros_initializer(),

@@ -207,7 +207,7 @@ First, we construct symbolic variables for the input data:
         name='actions',
         batch_dims=1
     )
-    returns_var = tf.placeholder(name='returns')
+    returns_var = tf.compat.v1.placeholder(name='returns')
 
 Note that we can transform the policy gradient formula as
 

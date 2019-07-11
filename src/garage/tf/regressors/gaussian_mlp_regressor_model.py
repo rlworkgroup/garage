@@ -78,26 +78,26 @@ class GaussianMLPRegressorModel(GaussianMLPModel):
         ]
 
     def _build(self, state_input, name=None):
-        with tf.variable_scope('normalized_vars'):
-            x_mean_var = tf.get_variable(
+        with tf.compat.v1.variable_scope('normalized_vars'):
+            x_mean_var = tf.compat.v1.get_variable(
                 name='x_mean',
                 shape=(1, ) + self._input_shape,
                 dtype=np.float32,
                 initializer=tf.zeros_initializer(),
                 trainable=False)
-            x_std_var = tf.get_variable(
+            x_std_var = tf.compat.v1.get_variable(
                 name='x_std_var',
                 shape=(1, ) + self._input_shape,
                 dtype=np.float32,
                 initializer=tf.ones_initializer(),
                 trainable=False)
-            y_mean_var = tf.get_variable(
+            y_mean_var = tf.compat.v1.get_variable(
                 name='y_mean_var',
                 shape=(1, self._output_dim),
                 dtype=np.float32,
                 initializer=tf.zeros_initializer(),
                 trainable=False)
-            y_std_var = tf.get_variable(
+            y_std_var = tf.compat.v1.get_variable(
                 name='y_std_var',
                 shape=(1, self._output_dim),
                 dtype=np.float32,
@@ -113,7 +113,7 @@ class GaussianMLPRegressorModel(GaussianMLPModel):
             means_var = normalized_mean * y_std_var + y_mean_var
 
         with tf.name_scope('std_network'):
-            log_stds_var = normalized_log_std + tf.log(y_std_var)
+            log_stds_var = normalized_log_std + tf.math.log(y_std_var)
 
         return (sample, means_var, log_stds_var, std_param, normalized_mean,
                 normalized_log_std, x_mean_var, x_std_var, y_mean_var,

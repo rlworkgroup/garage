@@ -92,7 +92,7 @@ extra diagnostic information as well as supporting recurrent policies):
             'action',
             batch_dims=1,
         )
-        advantage_var = tf.placeholder('advantage')
+        advantage_var = tf.compat.v1.placeholder('advantage')
         dist = self.policy.distribution
         old_dist_info_vars = {
             k: TT.matrix('old_%s' % k)

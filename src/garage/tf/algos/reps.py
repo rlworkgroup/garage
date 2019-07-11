@@ -233,7 +233,7 @@ class REPS(BatchPolopt):
                 ndim=0,
                 dtype=tf.float32)   # yapf: disable
             policy_state_info_vars = {
-                k: tf.placeholder(
+                k: tf.compat.v1.placeholder(
                     tf.float32,
                     shape=[None] * 2 + list(shape),
                     name=k)
@@ -245,7 +245,7 @@ class REPS(BatchPolopt):
             ]   # yapf: disable
 
             policy_old_dist_info_vars = {
-                k: tf.placeholder(
+                k: tf.compat.v1.placeholder(
                     tf.float32,
                     shape=[None] * 2 + list(shape),
                     name='policy_old_%s' % k)
@@ -391,7 +391,7 @@ class REPS(BatchPolopt):
             pol_mean_kl = tf.reduce_mean(kl)
 
         with tf.name_scope('dual'):
-            dual_loss = i.param_eta * self.epsilon + i.param_eta * tf.log(
+            dual_loss = i.param_eta * self.epsilon + i.param_eta * tf.math.log(
                 tf.reduce_mean(
                     tf.exp(delta_v / i.param_eta -
                            tf.reduce_max(delta_v / i.param_eta)))

@@ -91,13 +91,14 @@ class ContinuousMLPPolicyWithModel(Policy2):
         self._initialize()
 
     def _initialize(self):
-        state_input = tf.placeholder(tf.float32, shape=(None, self.obs_dim))
+        state_input = tf.compat.v1.placeholder(
+            tf.float32, shape=(None, self.obs_dim))
 
-        with tf.variable_scope(self.name) as vs:
+        with tf.compat.v1.variable_scope(self.name) as vs:
             self._variable_scope = vs
             self.model.build(state_input)
 
-        self._f_prob = tf.get_default_session().make_callable(
+        self._f_prob = tf.compat.v1.get_default_session().make_callable(
             self.model.networks['default'].outputs,
             feed_list=[self.model.networks['default'].input])
 
@@ -110,7 +111,7 @@ class ContinuousMLPPolicyWithModel(Policy2):
             name (str): Name for symbolic graph.
 
         """
-        with tf.variable_scope(self._variable_scope):
+        with tf.compat.v1.variable_scope(self._variable_scope):
             return self.model.build(obs_var, name=name)
 
     @overrides

@@ -46,8 +46,10 @@ class TestGaussianCNNBaselineWithModel(TfGraphTestCase):
                 env_spec=box_env.spec, name='GaussianCNNBaselineWithModel2')
 
         # Manual change the parameter of GaussianCNNBaselineWithModel
-        with tf.variable_scope('GaussianCNNBaselineWithModel', reuse=True):
-            return_var = tf.get_variable('SimpleGaussianCNNModel/return_var')
+        with tf.compat.v1.variable_scope(
+                'GaussianCNNBaselineWithModel', reuse=True):
+            return_var = tf.compat.v1.get_variable(
+                'SimpleGaussianCNNModel/return_var')
         return_var.load(1.0)
 
         old_param_values = gcb.get_param_values()
@@ -67,7 +69,7 @@ class TestGaussianCNNBaselineWithModel(TfGraphTestCase):
             gcb = GaussianCNNBaselineWithModel(
                 env_spec=box_env.spec, regressor_args=dict())
         params_interal = gcb.get_params_internal()
-        trainable_params = tf.trainable_variables(
+        trainable_params = tf.compat.v1.trainable_variables(
             scope='GaussianCNNBaselineWithModel')
         assert np.array_equal(params_interal, trainable_params)
 
@@ -80,15 +82,17 @@ class TestGaussianCNNBaselineWithModel(TfGraphTestCase):
             gcb = GaussianCNNBaselineWithModel(env_spec=box_env.spec)
         obs = {'observations': [np.full(1, 1), np.full(1, 1)]}
 
-        with tf.variable_scope('GaussianCNNBaselineWithModel', reuse=True):
-            return_var = tf.get_variable('SimpleGaussianCNNModel/return_var')
+        with tf.compat.v1.variable_scope(
+                'GaussianCNNBaselineWithModel', reuse=True):
+            return_var = tf.compat.v1.get_variable(
+                'SimpleGaussianCNNModel/return_var')
         return_var.load(1.0)
 
         prediction = gcb.predict(obs)
 
         h = pickle.dumps(gcb)
 
-        with tf.Session(graph=tf.Graph()):
+        with tf.compat.v1.Session(graph=tf.Graph()):
             gcb_pickled = pickle.loads(h)
             prediction2 = gcb_pickled.predict(obs)
 

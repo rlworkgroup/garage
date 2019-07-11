@@ -61,7 +61,7 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
         self._mean_network_name = 'mean_network'
         self._std_network_name = 'std_network'
 
-        with tf.variable_scope(name, 'GaussianMLPPolicy'):
+        with tf.compat.v1.variable_scope(name, 'GaussianMLPPolicy'):
 
             obs_dim = env_spec.observation_space.flat_dim
             action_dim = env_spec.action_space.flat_dim
@@ -79,7 +79,7 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
                                         np.full(action_dim, init_std_param)),
                                        axis=0)
                     b = tf.constant_initializer(b)
-                    with tf.variable_scope(self._mean_network_name):
+                    with tf.compat.v1.variable_scope(self._mean_network_name):
                         mean_network = MLP(
                             name='mlp',
                             input_shape=(obs_dim, ),
@@ -132,14 +132,14 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
                     )
                     l_std_param = std_network.output_layer
                 elif std_share_network:
-                    with tf.variable_scope(self._std_network_name):
+                    with tf.compat.v1.variable_scope(self._std_network_name):
                         l_std_param = L.SliceLayer(
                             mean_network.output_layer,
                             slice(action_dim, 2 * action_dim),
                             name='std_slice',
                         )
                 else:
-                    with tf.variable_scope(self._std_network_name):
+                    with tf.compat.v1.variable_scope(self._std_network_name):
                         l_std_param = L.ParamLayer(
                             mean_network.input_layer,
                             num_units=action_dim,
@@ -200,7 +200,8 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
             if self.std_parametrization == 'exp':
                 log_std_var = std_param_var
             elif self.std_parametrization == 'softplus':
-                log_std_var = tf.log(tf.log(1. + tf.exp(std_param_var)))
+                log_std_var = tf.math.log(
+                    tf.math.log(1. + tf.exp(std_param_var)))
             else:
                 raise NotImplementedError
             return dict(mean=mean_var, log_std=log_std_var)

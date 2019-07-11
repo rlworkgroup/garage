@@ -42,7 +42,7 @@ class TestContinuousMLPQFunctionTransit(TfGraphTestCase):
             self.qf4 = ContinuousMLPQFunctionWithModel(
                 env_spec=self.box_env, hidden_sizes=(64, 64), name='QF4')
 
-            self.sess.run(tf.global_variables_initializer())
+            self.sess.run(tf.compat.v1.global_variables_initializer())
 
             for a, b in zip(self.qf3.get_trainable_vars(),
                             self.qf1.get_trainable_vars()):
@@ -69,11 +69,13 @@ class TestContinuousMLPQFunctionTransit(TfGraphTestCase):
         q_val4 = self.qf4.get_qval([self.obs, self.obs], [self.act, self.act])
 
         assert np.array_equal(q_val1, q_val3)
-        assert np.array_equal(q_val2, q_val4)
+        assert np.allclose(q_val2, q_val4)
 
     def test_get_qval_sym(self):
-        obs_ph = tf.placeholder(tf.float32, shape=(None, ) + self.obs_dim)
-        act_ph = tf.placeholder(tf.float32, shape=(None, ) + self.act_dim)
+        obs_ph = tf.compat.v1.placeholder(
+            tf.float32, shape=(None, ) + self.obs_dim)
+        act_ph = tf.compat.v1.placeholder(
+            tf.float32, shape=(None, ) + self.act_dim)
 
         qval_sym1 = self.qf1.get_qval_sym(obs_ph, act_ph, name='qval_sym')
         qval_sym2 = self.qf2.get_qval_sym(obs_ph, act_ph, name='qval_sym')

@@ -42,7 +42,7 @@ class GaussianLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
 
         self._mean_network_name = 'mean_network'
         self._std_network_name = 'std_network'
-        with tf.variable_scope(name, 'GaussianLSTMPolicy'):
+        with tf.compat.v1.variable_scope(name, 'GaussianLSTMPolicy'):
             Serializable.quick_init(self, locals())
             super(GaussianLSTMPolicy, self).__init__(env_spec)
 
@@ -159,7 +159,7 @@ class GaussianLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
             self.state_include_action = state_include_action
             self.name = name
 
-            flat_input_var = tf.placeholder(
+            flat_input_var = tf.compat.v1.placeholder(
                 dtype=tf.float32, shape=(None, input_dim), name='flat_input')
             if feature_network is None:
                 feature_var = flat_input_var

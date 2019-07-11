@@ -20,9 +20,9 @@ class TestLSTMModel(TfGraphTestCase):
             (self.batch_size, self.time_step, self.feature_shape), 1.)
         self.obs_input = np.full((self.batch_size, self.feature_shape), 1.)
 
-        self._input_var = tf.placeholder(
+        self._input_var = tf.compat.v1.placeholder(
             tf.float32, shape=(None, None, self.feature_shape), name='input')
-        self._step_input_var = tf.placeholder(
+        self._step_input_var = tf.compat.v1.placeholder(
             tf.float32, shape=(None, self.feature_shape), name='input')
 
     @pytest.mark.parametrize('output_dim, hidden_dim', [(1, 1), (1, 2),
@@ -37,11 +37,11 @@ class TestLSTMModel(TfGraphTestCase):
             recurrent_w_init=tf.constant_initializer(1),
             output_w_init=tf.constant_initializer(1))
 
-        step_hidden_var = tf.placeholder(
+        step_hidden_var = tf.compat.v1.placeholder(
             shape=(self.batch_size, hidden_dim),
             name='step_hidden',
             dtype=tf.float32)
-        step_cell_var = tf.placeholder(
+        step_cell_var = tf.compat.v1.placeholder(
             shape=(self.batch_size, hidden_dim),
             name='step_cell',
             dtype=tf.float32)
@@ -56,16 +56,16 @@ class TestLSTMModel(TfGraphTestCase):
 
     def test_is_pickleable(self):
         model = LSTMModel(output_dim=1, hidden_dim=1)
-        step_hidden_var = tf.placeholder(
+        step_hidden_var = tf.compat.v1.placeholder(
             shape=(self.batch_size, 1), name='step_hidden', dtype=tf.float32)
-        step_cell_var = tf.placeholder(
+        step_cell_var = tf.compat.v1.placeholder(
             shape=(self.batch_size, 1), name='step_cell', dtype=tf.float32)
         model.build(self._input_var, self._step_input_var, step_hidden_var,
                     step_cell_var)
 
         # assign bias to all one
-        with tf.variable_scope('LSTMModel/lstm', reuse=True):
-            init_hidden = tf.get_variable('initial_hidden')
+        with tf.compat.v1.variable_scope('LSTMModel/lstm', reuse=True):
+            init_hidden = tf.compat.v1.get_variable('initial_hidden')
 
         init_hidden.load(tf.ones_like(init_hidden).eval())
 
@@ -88,20 +88,20 @@ class TestLSTMModel(TfGraphTestCase):
             })
 
         h = pickle.dumps(model)
-        with tf.Session(graph=tf.Graph()) as sess:
+        with tf.compat.v1.Session(graph=tf.Graph()) as sess:
             model_pickled = pickle.loads(h)
 
-            input_var = tf.placeholder(
+            input_var = tf.compat.v1.placeholder(
                 tf.float32,
                 shape=(None, None, self.feature_shape),
                 name='input')
-            step_input_var = tf.placeholder(
+            step_input_var = tf.compat.v1.placeholder(
                 tf.float32, shape=(None, self.feature_shape), name='input')
-            step_hidden_var = tf.placeholder(
+            step_hidden_var = tf.compat.v1.placeholder(
                 shape=(self.batch_size, 1),
                 name='initial_hidden',
                 dtype=tf.float32)
-            step_cell_var = tf.placeholder(
+            step_cell_var = tf.compat.v1.placeholder(
                 shape=(self.batch_size, 1),
                 name='initial_cell',
                 dtype=tf.float32)

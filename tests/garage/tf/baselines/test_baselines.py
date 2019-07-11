@@ -31,7 +31,7 @@ class TestTfBaselines(TfGraphTestCase):
                 conv_pads=['VALID', 'VALID'],
                 hidden_sizes=(32, 32)))
 
-        self.sess.run(tf.global_variables_initializer())
+        self.sess.run(tf.compat.v1.global_variables_initializer())
         deterministic_mlp_baseline.get_param_values(trainable=True)
         gaussian_mlp_baseline.get_param_values(trainable=True)
         gaussian_conv_baseline.get_param_values(trainable=True)

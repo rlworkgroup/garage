@@ -27,8 +27,8 @@ class RecurrentCategorical(Distribution):
             new_prob_var = new_dist_info_vars['prob']
             # Assume layout is N * T * A
             return tf.reduce_sum(
-                old_prob_var *
-                (tf.log(old_prob_var + TINY) - tf.log(new_prob_var + TINY)),
+                old_prob_var * (tf.math.log(old_prob_var + TINY) -
+                                tf.math.log(new_prob_var + TINY)),
                 axis=2)
 
     def kl(self, old_dist_info, new_dist_info):
@@ -65,7 +65,7 @@ class RecurrentCategorical(Distribution):
     def entropy_sym(self, dist_info_vars, name=None):
         with tf.name_scope(name, 'entropy_sym', [dist_info_vars]):
             probs = dist_info_vars['prob']
-            return -tf.reduce_sum(probs * tf.log(probs + TINY), 2)
+            return -tf.reduce_sum(probs * tf.math.log(probs + TINY), 2)
 
     def log_likelihood_sym(self, xs, dist_info_vars, name=None):
         with tf.name_scope(name, 'log_likelihood_sym', [xs, dist_info_vars]):

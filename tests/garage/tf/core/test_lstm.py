@@ -13,11 +13,11 @@ class TestLSTM(TfGraphTestCase):
         self.batch_size = 2
         self.hidden_dim = 2
 
-        self._step_hidden_var = tf.placeholder(
+        self._step_hidden_var = tf.compat.v1.placeholder(
             shape=(self.batch_size, self.hidden_dim),
             name='initial_hidden',
             dtype=tf.float32)
-        self._step_cell_var = tf.placeholder(
+        self._step_cell_var = tf.compat.v1.placeholder(
             shape=(self.batch_size, self.hidden_dim),
             name='initial_cell',
             dtype=tf.float32)
@@ -52,15 +52,15 @@ class TestLSTM(TfGraphTestCase):
         obs_inputs = np.full((self.batch_size, time_step, input_dim), 1.)
         obs_input = np.full((self.batch_size, input_dim), 1.)
 
-        _input_var = tf.placeholder(
+        _input_var = tf.compat.v1.placeholder(
             tf.float32, shape=(None, None, input_dim), name='input')
-        _step_input_var = tf.placeholder(
+        _step_input_var = tf.compat.v1.placeholder(
             tf.float32, shape=(None, input_dim), name='input')
         _output_nonlinearity = tf.keras.layers.Dense(
             units=output_dim,
             activation=None,
             kernel_initializer=tf.constant_initializer(1))
-        with tf.variable_scope('LSTM'):
+        with tf.compat.v1.variable_scope('LSTM'):
             self.lstm = lstm(
                 all_input_var=_input_var,
                 name='lstm',
@@ -72,7 +72,7 @@ class TestLSTM(TfGraphTestCase):
                 cell_state_init=tf.constant_initializer(cell_init),
                 output_nonlinearity_layer=_output_nonlinearity)
 
-        self.sess.run(tf.global_variables_initializer())
+        self.sess.run(tf.compat.v1.global_variables_initializer())
 
         # Compute output by doing t step() on the lstm cell
         outputs_t, output_t, h_t, c_t, hidden_init, cell_init = self.lstm
@@ -119,15 +119,15 @@ class TestLSTM(TfGraphTestCase):
         obs_inputs = np.full((self.batch_size, time_step, input_dim), 1.)
         obs_input = np.full((self.batch_size, input_dim), 1.)
 
-        _input_var = tf.placeholder(
+        _input_var = tf.compat.v1.placeholder(
             tf.float32, shape=(None, None, input_dim), name='input')
-        _step_input_var = tf.placeholder(
+        _step_input_var = tf.compat.v1.placeholder(
             tf.float32, shape=(None, input_dim), name='input')
         _output_nonlinearity = tf.keras.layers.Dense(
             units=output_dim,
             activation=None,
             kernel_initializer=tf.constant_initializer(1))
-        with tf.variable_scope('LSTM'):
+        with tf.compat.v1.variable_scope('LSTM'):
             self.lstm = lstm(
                 all_input_var=_input_var,
                 name='lstm',
@@ -139,7 +139,7 @@ class TestLSTM(TfGraphTestCase):
                 cell_state_init=tf.constant_initializer(cell_init),
                 output_nonlinearity_layer=_output_nonlinearity)
 
-        self.sess.run(tf.global_variables_initializer())
+        self.sess.run(tf.compat.v1.global_variables_initializer())
 
         # Compute output by doing t step() on the lstm cell
         outputs_t, output_t, h_t, c_t, hidden_init, cell_init = self.lstm
@@ -219,15 +219,15 @@ class TestLSTM(TfGraphTestCase):
         obs_inputs = np.full((self.batch_size, time_step, input_dim), 1.)
         obs_input = np.full((self.batch_size, input_dim), 1.)
 
-        _input_var = tf.placeholder(
+        _input_var = tf.compat.v1.placeholder(
             tf.float32, shape=(None, None, input_dim), name='input')
-        _step_input_var = tf.placeholder(
+        _step_input_var = tf.compat.v1.placeholder(
             tf.float32, shape=(None, input_dim), name='input')
         _output_nonlinearity = tf.keras.layers.Dense(
             units=output_dim,
             activation=None,
             kernel_initializer=tf.constant_initializer(1))
-        with tf.variable_scope('LSTM'):
+        with tf.compat.v1.variable_scope('LSTM'):
             self.lstm = lstm(
                 all_input_var=_input_var,
                 name='lstm',
@@ -239,7 +239,7 @@ class TestLSTM(TfGraphTestCase):
                 cell_state_init_trainable=True,
                 output_nonlinearity_layer=_output_nonlinearity)
 
-        self.sess.run(tf.global_variables_initializer())
+        self.sess.run(tf.compat.v1.global_variables_initializer())
 
         # Compute output by doing t step() on the lstm cell
         outputs_t, output_t, h_t, c_t, hidden_init, cell_init = self.lstm
@@ -254,11 +254,11 @@ class TestLSTM(TfGraphTestCase):
                 self._step_hidden_var: hidden,
                 self._step_cell_var: cell
             })
-        with tf.variable_scope('LSTM/lstm', reuse=True):
-            hidden_init_var = tf.get_variable(name='initial_hidden')
-            cell_init_var = tf.get_variable(name='initial_cell')
-            assert hidden_init_var in tf.trainable_variables()
-            assert cell_init_var in tf.trainable_variables()
+        with tf.compat.v1.variable_scope('LSTM/lstm', reuse=True):
+            hidden_init_var = tf.compat.v1.get_variable(name='initial_hidden')
+            cell_init_var = tf.compat.v1.get_variable(name='initial_cell')
+            assert hidden_init_var in tf.compat.v1.trainable_variables()
+            assert cell_init_var in tf.compat.v1.trainable_variables()
 
         full_output1 = self.sess.run(
             outputs_t, feed_dict={_input_var: obs_inputs})
@@ -295,15 +295,15 @@ class TestLSTM(TfGraphTestCase):
         obs_inputs = np.full((self.batch_size, time_step, input_dim), 1.)
         obs_input = np.full((self.batch_size, input_dim), 1.)
 
-        _input_var = tf.placeholder(
+        _input_var = tf.compat.v1.placeholder(
             tf.float32, shape=(None, None, input_dim), name='input')
-        _step_input_var = tf.placeholder(
+        _step_input_var = tf.compat.v1.placeholder(
             tf.float32, shape=(None, input_dim), name='input')
         _output_nonlinearity = tf.keras.layers.Dense(
             units=output_dim,
             activation=None,
             kernel_initializer=tf.constant_initializer(1))
-        with tf.variable_scope('LSTM'):
+        with tf.compat.v1.variable_scope('LSTM'):
             self.lstm = lstm(
                 all_input_var=_input_var,
                 name='lstm',
@@ -313,7 +313,7 @@ class TestLSTM(TfGraphTestCase):
                 step_cell_var=self._step_cell_var,
                 output_nonlinearity_layer=_output_nonlinearity)
 
-        self.sess.run(tf.global_variables_initializer())
+        self.sess.run(tf.compat.v1.global_variables_initializer())
 
         # Compute output by doing t step() on the lstm cell
         outputs_t, output_t, h_t, c_t, hidden_init, cell_init = self.lstm
@@ -399,15 +399,15 @@ class TestLSTM(TfGraphTestCase):
         obs_inputs = np.full((self.batch_size, time_step, input_dim), 1.)
         obs_input = np.full((self.batch_size, input_dim), 1.)
 
-        _input_var = tf.placeholder(
+        _input_var = tf.compat.v1.placeholder(
             tf.float32, shape=(None, None, input_dim), name='input')
-        _step_input_var = tf.placeholder(
+        _step_input_var = tf.compat.v1.placeholder(
             tf.float32, shape=(None, input_dim), name='input')
         _output_nonlinearity = tf.keras.layers.Dense(
             units=output_dim,
             activation=None,
             kernel_initializer=tf.constant_initializer(1))
-        with tf.variable_scope('LSTM'):
+        with tf.compat.v1.variable_scope('LSTM'):
             self.lstm = lstm(
                 all_input_var=_input_var,
                 name='lstm',
@@ -419,20 +419,20 @@ class TestLSTM(TfGraphTestCase):
                 cell_state_init=tf.constant_initializer(cell_init),
                 output_nonlinearity_layer=_output_nonlinearity)
 
-        self.sess.run(tf.global_variables_initializer())
+        self.sess.run(tf.compat.v1.global_variables_initializer())
 
         # Create a RNN and compute the entire outputs
         rnn_layer = tf.keras.layers.RNN(
             cell=self.lstm_cell, return_sequences=True, return_state=True)
 
         # Set initial state to all 0s
-        hidden_var = tf.get_variable(
+        hidden_var = tf.compat.v1.get_variable(
             name='initial_hidden',
             shape=(self.batch_size, self.hidden_dim),
             initializer=tf.constant_initializer(hidden_init),
             trainable=False,
             dtype=tf.float32)
-        cell_var = tf.get_variable(
+        cell_var = tf.compat.v1.get_variable(
             name='initial_cell',
             shape=(self.batch_size, self.hidden_dim),
             initializer=tf.constant_initializer(cell_init),
@@ -442,7 +442,7 @@ class TestLSTM(TfGraphTestCase):
             _input_var, initial_state=[hidden_var, cell_var])
         outputs = _output_nonlinearity(outputs)
 
-        self.sess.run(tf.global_variables_initializer())
+        self.sess.run(tf.compat.v1.global_variables_initializer())
 
         outputs, hiddens, cells = self.sess.run(
             [outputs, hiddens, cells], feed_dict={_input_var: obs_inputs})

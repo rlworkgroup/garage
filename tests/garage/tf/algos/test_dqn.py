@@ -192,20 +192,20 @@ class TestDQN(TfGraphTestCase):
                 target_network_update_freq=1,
                 buffer_batch_size=32)
             runner.setup(algo, env)
-            with tf.variable_scope(
+            with tf.compat.v1.variable_scope(
                     'DiscreteMLPQFunction/MLPModel/mlp/hidden_0', reuse=True):
-                bias = tf.get_variable('bias')
+                bias = tf.compat.v1.get_variable('bias')
                 # assign it to all one
                 old_bias = tf.ones_like(bias).eval()
                 bias.load(old_bias)
                 h = pickle.dumps(algo)
 
-            with tf.Session(graph=tf.Graph()):
+            with tf.compat.v1.Session(graph=tf.Graph()):
                 pickle.loads(h)
-                with tf.variable_scope(
+                with tf.compat.v1.variable_scope(
                         'DiscreteMLPQFunction/MLPModel/mlp/hidden_0',
                         reuse=True):
-                    new_bias = tf.get_variable('bias')
+                    new_bias = tf.compat.v1.get_variable('bias')
                     new_bias = new_bias.eval()
                     assert np.array_equal(old_bias, new_bias)
 

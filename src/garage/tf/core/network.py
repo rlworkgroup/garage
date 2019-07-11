@@ -27,7 +27,7 @@ class MLP(LayersPowered, Serializable):
 
         Serializable.quick_init(self, locals())
 
-        with tf.variable_scope(name, 'MLP'):
+        with tf.compat.v1.variable_scope(name, 'MLP'):
             if input_layer is None:
                 l_in = ly.InputLayer(
                     shape=(None, ) + input_shape,
@@ -120,7 +120,7 @@ class ConvNetwork(LayersPowered, Serializable):
          fc layers
         hidden_sizes: a list of numbers of hidden units for all fc layers
         """
-        with tf.variable_scope(name, 'ConvNetwork'):
+        with tf.compat.v1.variable_scope(name, 'ConvNetwork'):
             if input_layer is not None:
                 l_in = input_layer
                 l_hid = l_in
@@ -233,7 +233,7 @@ class GRUNetwork:
                  input_var=None,
                  input_layer=None,
                  layer_args=None):
-        with tf.variable_scope(name, 'GRUNetwork'):
+        with tf.compat.v1.variable_scope(name, 'GRUNetwork'):
             if input_layer is None:
                 l_in = ly.InputLayer(
                     shape=(None, None) + input_shape,
@@ -368,7 +368,7 @@ class LSTMNetwork:
                  forget_bias=1.0,
                  use_peepholes=False,
                  layer_args=None):
-        with tf.variable_scope(name, 'LSTMNetwork'):
+        with tf.compat.v1.variable_scope(name, 'LSTMNetwork'):
             if input_layer is None:
                 l_in = ly.InputLayer(
                     shape=(None, None) + input_shape,
@@ -538,7 +538,7 @@ class ConvMergeNetwork(LayersPowered, Serializable):
         if extra_hidden_sizes is None:
             extra_hidden_sizes = []
 
-        with tf.variable_scope(name, 'ConvMergeNetwork'):
+        with tf.compat.v1.variable_scope(name, 'ConvMergeNetwork'):
 
             input_flat_dim = np.prod(input_shape)
             extra_input_flat_dim = np.prod(extra_input_shape)

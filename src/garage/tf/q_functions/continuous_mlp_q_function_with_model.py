@@ -97,15 +97,16 @@ class ContinuousMLPQFunctionWithModel(QFunction2):
         self._initialize()
 
     def _initialize(self):
-        obs_ph = tf.placeholder(tf.float32, (None, self._obs_dim), name='obs')
-        action_ph = tf.placeholder(
+        obs_ph = tf.compat.v1.placeholder(
+            tf.float32, (None, self._obs_dim), name='obs')
+        action_ph = tf.compat.v1.placeholder(
             tf.float32, (None, self._action_dim), name='act')
 
-        with tf.variable_scope(self.name) as vs:
+        with tf.compat.v1.variable_scope(self.name) as vs:
             self._variable_scope = vs
             self.model.build(obs_ph, action_ph)
 
-        self._f_qval = tf.get_default_session().make_callable(
+        self._f_qval = tf.compat.v1.get_default_session().make_callable(
             self.model.networks['default'].outputs,
             feed_list=[obs_ph, action_ph])
 
@@ -130,7 +131,7 @@ class ContinuousMLPQFunctionWithModel(QFunction2):
         Return:
             The tf.Tensor output of Discrete MLP QFunction.
         """
-        with tf.variable_scope(self._variable_scope):
+        with tf.compat.v1.variable_scope(self._variable_scope):
             return self.model.build(state_input, action_input, name=name)
 
     def clone(self, name):

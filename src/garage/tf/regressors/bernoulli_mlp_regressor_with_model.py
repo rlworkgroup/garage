@@ -83,7 +83,7 @@ class BernoulliMLPRegressorWithModel(StochasticRegressor2):
         self._max_kl_step = max_kl_step
         self._normalize_inputs = normalize_inputs
 
-        with tf.variable_scope(self._name, reuse=False) as vs:
+        with tf.compat.v1.variable_scope(self._name, reuse=False) as vs:
             self._variable_scope = vs
             if optimizer_args is None:
                 optimizer_args = dict()
@@ -120,16 +120,16 @@ class BernoulliMLPRegressorWithModel(StochasticRegressor2):
         self._initialize()
 
     def _initialize(self):
-        input_var = tf.placeholder(
+        input_var = tf.compat.v1.placeholder(
             tf.float32, shape=(None, ) + self._input_shape)
 
-        with tf.variable_scope(self._variable_scope):
+        with tf.compat.v1.variable_scope(self._variable_scope):
             self.model.build(input_var)
 
-            ys_var = tf.placeholder(
+            ys_var = tf.compat.v1.placeholder(
                 dtype=tf.float32, name='ys', shape=(None, self._output_dim))
 
-            old_prob_var = tf.placeholder(
+            old_prob_var = tf.compat.v1.placeholder(
                 dtype=tf.float32,
                 name='old_prob',
                 shape=(None, self._output_dim))
@@ -219,7 +219,7 @@ class BernoulliMLPRegressorWithModel(StochasticRegressor2):
         Return:
             tf.Tensor output of the symbolic log likelihood.
         """
-        with tf.variable_scope(self._variable_scope):
+        with tf.compat.v1.variable_scope(self._variable_scope):
             prob, _, _ = self.model.build(x_var, name=name)
 
         return self._dist.log_likelihood_sym(y_var, dict(p=prob))

@@ -43,7 +43,7 @@ class CategoricalConvPolicy(StochasticPolicy, LayersPowered, Serializable):
         self._env_spec = env_spec
         self._prob_network_name = 'prob_network'
 
-        with tf.variable_scope(name, 'CategoricalConvPolicy'):
+        with tf.compat.v1.variable_scope(name, 'CategoricalConvPolicy'):
             if prob_network is None:
                 prob_network = ConvNetwork(
                     input_shape=env_spec.observation_space.shape,

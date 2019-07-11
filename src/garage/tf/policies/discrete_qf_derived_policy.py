@@ -31,7 +31,7 @@ class DiscreteQfDerivedPolicy(Policy2):
         self._initialize()
 
     def _initialize(self):
-        self._f_qval = tf.get_default_session().make_callable(
+        self._f_qval = tf.compat.v1.get_default_session().make_callable(
             self._qf.q_vals,
             feed_list=[self._qf.model.networks['default'].input])
 

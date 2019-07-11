@@ -141,7 +141,8 @@ class TestDiscreteCNNQFunction(TfGraphTestCase):
         obs_dim = self.env.observation_space.shape
         action_dim = self.env.action_space.n
 
-        input_var = tf.placeholder(tf.float32, shape=(None, ) + obs_dim)
+        input_var = tf.compat.v1.placeholder(
+            tf.float32, shape=(None, ) + obs_dim)
         q_vals = qf.get_qval_sym(input_var, 'another')
         output2 = self.sess.run(q_vals, feed_dict={input_var: [self.obs]})
 
@@ -170,16 +171,16 @@ class TestDiscreteCNNQFunction(TfGraphTestCase):
                     num_filters=num_filters,
                     strides=strides,
                     dueling=False)
-        with tf.variable_scope(
+        with tf.compat.v1.variable_scope(
                 'DiscreteCNNQFunction/Sequential/SimpleMLPModel', reuse=True):
-            return_var = tf.get_variable('return_var')
+            return_var = tf.compat.v1.get_variable('return_var')
         # assign it to all one
         return_var.load(tf.ones_like(return_var).eval())
 
         output1 = self.sess.run(qf.q_vals, feed_dict={qf.input: [self.obs]})
 
         h_data = pickle.dumps(qf)
-        with tf.Session(graph=tf.Graph()) as sess:
+        with tf.compat.v1.Session(graph=tf.Graph()) as sess:
             qf_pickled = pickle.loads(h_data)
             output2 = sess.run(
                 qf_pickled.q_vals, feed_dict={qf_pickled.input: [self.obs]})

@@ -38,7 +38,7 @@ class CategoricalLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
         assert isinstance(env_spec.action_space, akro.Discrete)
 
         self._prob_network_name = 'prob_network'
-        with tf.variable_scope(name, 'CategoricalLSTMPolicy'):
+        with tf.compat.v1.variable_scope(name, 'CategoricalLSTMPolicy'):
             Serializable.quick_init(self, locals())
             super(CategoricalLSTMPolicy, self).__init__(env_spec)
 
@@ -94,7 +94,7 @@ class CategoricalLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
             self.l_input = l_input
             self.state_include_action = state_include_action
 
-            flat_input_var = tf.placeholder(
+            flat_input_var = tf.compat.v1.placeholder(
                 dtype=tf.float32, shape=(None, input_dim), name='flat_input')
             if feature_network is None:
                 feature_var = flat_input_var

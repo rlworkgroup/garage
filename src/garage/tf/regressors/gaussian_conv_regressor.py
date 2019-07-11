@@ -67,7 +67,7 @@ class GaussianConvRegressor(LayersPowered, Serializable, Parameterized):
         self._mean_network_name = 'mean_network'
         self._std_network_name = 'std_network'
 
-        with tf.variable_scope(name):
+        with tf.compat.v1.variable_scope(name):
             if optimizer is None:
                 if use_trust_region:
                     optimizer = PenaltyLbfgsOptimizer(**optimizer_args)
@@ -151,11 +151,11 @@ class GaussianConvRegressor(LayersPowered, Serializable, Parameterized):
             LayersPowered.__init__(self, [l_mean, l_log_std])
 
             xs_var = mean_network.input_layer.input_var
-            ys_var = tf.placeholder(
+            ys_var = tf.compat.v1.placeholder(
                 dtype=tf.float32, name='ys', shape=(None, output_dim))
-            old_means_var = tf.placeholder(
+            old_means_var = tf.compat.v1.placeholder(
                 dtype=tf.float32, name='ys', shape=(None, output_dim))
-            old_log_stds_var = tf.placeholder(
+            old_log_stds_var = tf.compat.v1.placeholder(
                 dtype=tf.float32,
                 name='old_log_stds',
                 shape=(None, output_dim))
@@ -190,10 +190,11 @@ class GaussianConvRegressor(LayersPowered, Serializable, Parameterized):
                     l_log_std, {mean_network.input_layer: normalized_xs_var})
 
             means_var = normalized_means_var * y_std_var + y_mean_var
-            log_stds_var = normalized_log_stds_var + tf.log(y_std_var)
+            log_stds_var = normalized_log_stds_var + tf.math.log(y_std_var)
 
             normalized_old_means_var = (old_means_var - y_mean_var) / y_std_var
-            normalized_old_log_stds_var = old_log_stds_var - tf.log(y_std_var)
+            normalized_old_log_stds_var = (
+                old_log_stds_var - tf.math.log(y_std_var))
 
             dist = self._dist = DiagonalGaussian(output_dim)
 
@@ -257,22 +258,22 @@ class GaussianConvRegressor(LayersPowered, Serializable, Parameterized):
                 int(num_samples_tot * self._subsample_factor))
             xs, ys = xs[idx], ys[idx]
 
-        sess = tf.get_default_session()
+        sess = tf.compat.v1.get_default_session()
         if self._normalize_inputs:
             # recompute normalizing constants for inputs
             sess.run([
-                tf.assign(self._x_mean_var, np.mean(xs, axis=0,
-                                                    keepdims=True)),
-                tf.assign(self._x_std_var,
-                          np.std(xs, axis=0, keepdims=True) + 1e-8),
+                tf.compat.v1.assign(self._x_mean_var,
+                                    np.mean(xs, axis=0, keepdims=True)),
+                tf.compat.v1.assign(self._x_std_var,
+                                    np.std(xs, axis=0, keepdims=True) + 1e-8),
             ])
         if self._normalize_outputs:
             # recompute normalizing constants for outputs
             sess.run([
-                tf.assign(self._y_mean_var, np.mean(ys, axis=0,
-                                                    keepdims=True)),
-                tf.assign(self._y_std_var,
-                          np.std(ys, axis=0, keepdims=True) + 1e-8),
+                tf.compat.v1.assign(self._y_mean_var,
+                                    np.mean(ys, axis=0, keepdims=True)),
+                tf.compat.v1.assign(self._y_std_var,
+                                    np.std(ys, axis=0, keepdims=True) + 1e-8),
             ])
         if self._use_trust_region:
             old_means, old_log_stds = self._f_pdists(xs)
@@ -352,7 +353,8 @@ class GaussianConvRegressor(LayersPowered, Serializable, Parameterized):
 
             means_var = (
                 normalized_means_var * self._y_std_var + self._y_mean_var)
-            log_stds_var = normalized_log_stds_var + tf.log(self._y_std_var)
+            log_stds_var = normalized_log_stds_var + tf.math.log(
+                self._y_std_var)
 
             return self._dist.log_likelihood_sym(
                 y_var, dict(mean=means_var, log_std=log_stds_var))

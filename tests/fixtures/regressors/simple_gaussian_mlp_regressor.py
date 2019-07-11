@@ -16,9 +16,9 @@ class SimpleGaussianMLPRegressor(StochasticRegressor2):
         self._initialize()
 
     def _initialize(self):
-        input_ph = tf.placeholder(
+        input_ph = tf.compat.v1.placeholder(
             tf.float32, shape=(None, ) + self._input_shape)
-        with tf.variable_scope(self._name) as vs:
+        with tf.compat.v1.variable_scope(self._name) as vs:
             self._variable_scope = vs
             self.model.build(input_ph)
         self.ys = None
@@ -28,7 +28,7 @@ class SimpleGaussianMLPRegressor(StochasticRegressor2):
 
     def predict(self, xs):
         if self.ys is None:
-            mean = tf.get_default_session().run(
+            mean = tf.compat.v1.get_default_session().run(
                 self.model.networks['default'].mean,
                 feed_dict={self.model.networks['default'].input: xs})
             self.ys = np.full((len(xs), 1), mean)

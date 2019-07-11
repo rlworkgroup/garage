@@ -19,7 +19,7 @@ class SimpleGaussianCNNModel(Model):
         return ['sample', 'mean', 'log_std', 'std_param', 'dist']
 
     def _build(self, obs_input, name=None):
-        return_var = tf.get_variable(
+        return_var = tf.compat.v1.get_variable(
             'return_var', (), initializer=tf.constant_initializer(0.5))
         mean = tf.fill((tf.shape(obs_input)[0], self.output_dim), return_var)
         log_std = tf.fill((tf.shape(obs_input)[0], self.output_dim), 0.5)

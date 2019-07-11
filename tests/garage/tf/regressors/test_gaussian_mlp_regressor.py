@@ -10,7 +10,7 @@ class TestGaussianMlpRegressor(TfGraphTestCase):
     # @pytest.mark.large
     def test_fit_normalized(self):
         gmr = GaussianMLPRegressor(input_shape=(1, ), output_dim=1)
-        self.sess.run(tf.global_variables_initializer())
+        self.sess.run(tf.compat.v1.global_variables_initializer())
         data = np.linspace(-np.pi, np.pi, 1000)
         obs = [{'observations': [[x]], 'returns': [np.sin(x)]} for x in data]
 

@@ -123,25 +123,25 @@ class CategoricalLSTMPolicyWithModel(StochasticPolicy2):
         self._initialize()
 
     def _initialize(self):
-        obs_ph = tf.placeholder(
+        obs_ph = tf.compat.v1.placeholder(
             tf.float32, shape=(None, None, self._input_dim))
-        step_input_var = tf.placeholder(
+        step_input_var = tf.compat.v1.placeholder(
             shape=(None, self._input_dim), name='step_input', dtype=tf.float32)
-        step_hidden_var = tf.placeholder(
+        step_hidden_var = tf.compat.v1.placeholder(
             shape=(None, self._hidden_dim),
             name='step_hidden_input',
             dtype=tf.float32)
-        step_cell_var = tf.placeholder(
+        step_cell_var = tf.compat.v1.placeholder(
             shape=(None, self._hidden_dim),
             name='step_cell_input',
             dtype=tf.float32)
 
-        with tf.variable_scope(self.name) as vs:
+        with tf.compat.v1.variable_scope(self.name) as vs:
             self._variable_scope = vs
             self.model.build(obs_ph, step_input_var, step_hidden_var,
                              step_cell_var)
 
-        self._f_step_prob = tf.get_default_session().make_callable(
+        self._f_step_prob = tf.compat.v1.get_default_session().make_callable(
             [
                 self.model.networks['default'].step_output,
                 self.model.networks['default'].step_hidden,
@@ -168,7 +168,7 @@ class CategoricalLSTMPolicyWithModel(StochasticPolicy2):
         else:
             all_input_var = obs_var
 
-        with tf.variable_scope(self._variable_scope):
+        with tf.compat.v1.variable_scope(self._variable_scope):
             outputs, _, _, _, _, _ = self.model.build(
                 all_input_var,
                 self.model.networks['default'].step_input,

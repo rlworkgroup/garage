@@ -97,7 +97,7 @@ class GaussianMLPRegressorWithModel(StochasticRegressor2):
         self._normalize_inputs = normalize_inputs
         self._normalize_outputs = normalize_outputs
 
-        with tf.variable_scope(self._name, reuse=False) as vs:
+        with tf.compat.v1.variable_scope(self._name, reuse=False) as vs:
             self._variable_scope = vs
             if optimizer_args is None:
                 optimizer_args = dict()
@@ -135,18 +135,18 @@ class GaussianMLPRegressorWithModel(StochasticRegressor2):
         self._initialize()
 
     def _initialize(self):
-        input_var = tf.placeholder(
+        input_var = tf.compat.v1.placeholder(
             tf.float32, shape=(None, ) + self._input_shape)
 
-        with tf.variable_scope(self._variable_scope):
+        with tf.compat.v1.variable_scope(self._variable_scope):
             self.model.build(input_var)
-            ys_var = tf.placeholder(
+            ys_var = tf.compat.v1.placeholder(
                 dtype=tf.float32, name='ys', shape=(None, self._output_dim))
-            old_means_var = tf.placeholder(
+            old_means_var = tf.compat.v1.placeholder(
                 dtype=tf.float32,
                 name='old_means',
                 shape=(None, self._output_dim))
-            old_log_stds_var = tf.placeholder(
+            old_log_stds_var = tf.compat.v1.placeholder(
                 dtype=tf.float32,
                 name='old_log_stds',
                 shape=(None, self._output_dim))
@@ -163,7 +163,8 @@ class GaussianMLPRegressorWithModel(StochasticRegressor2):
             normalized_ys_var = (ys_var - y_mean_var) / y_std_var
 
             normalized_old_means_var = (old_means_var - y_mean_var) / y_std_var
-            normalized_old_log_stds_var = old_log_stds_var - tf.log(y_std_var)
+            normalized_old_log_stds_var = (
+                old_log_stds_var - tf.math.log(y_std_var))
 
             normalized_dist_info_vars = dict(
                 mean=normalized_means_var, log_std=normalized_log_stds_var)
@@ -270,7 +271,7 @@ class GaussianMLPRegressorWithModel(StochasticRegressor2):
         Return:
             tf.Tensor output of the symbolic log likelihood.
         """
-        with tf.variable_scope(self._variable_scope):
+        with tf.compat.v1.variable_scope(self._variable_scope):
             self.model.build(x_var, name=name)
 
         means_var = self.model.networks[name].means

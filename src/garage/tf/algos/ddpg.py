@@ -75,8 +75,8 @@ class DDPG(OffPolicyRLAlgorithm):
                  discount=0.99,
                  policy_weight_decay=0,
                  qf_weight_decay=0,
-                 policy_optimizer=tf.train.AdamOptimizer,
-                 qf_optimizer=tf.train.AdamOptimizer,
+                 policy_optimizer=tf.compat.v1.train.AdamOptimizer,
+                 qf_optimizer=tf.compat.v1.train.AdamOptimizer,
                  clip_pos_returns=False,
                  clip_return=np.inf,
                  max_action=None,
@@ -157,12 +157,13 @@ class DDPG(OffPolicyRLAlgorithm):
                         flat_dim_with_keys(['observation', 'desired_goal'])
                 else:
                     obs_dim = self.env_spec.observation_space.flat_dim
-                y = tf.placeholder(tf.float32, shape=(None, 1), name='input_y')
-                obs = tf.placeholder(
+                y = tf.compat.v1.placeholder(
+                    tf.float32, shape=(None, 1), name='input_y')
+                obs = tf.compat.v1.placeholder(
                     tf.float32,
                     shape=(None, obs_dim),
                     name='input_observation')
-                actions = tf.placeholder(
+                actions = tf.compat.v1.placeholder(
                     tf.float32,
                     shape=(None, self.env_spec.action_space.flat_dim),
                     name='input_action')
@@ -189,7 +190,8 @@ class DDPG(OffPolicyRLAlgorithm):
             # Set up qf training function
             qval = self.qf.get_qval_sym(obs, actions, name='q_value')
             with tf.name_scope('qval_loss'):
-                qval_loss = tf.reduce_mean(tf.squared_difference(y, qval))
+                qval_loss = tf.reduce_mean(
+                    tf.compat.v1.squared_difference(y, qval))
                 if self.qf_weight_decay > 0.:
                     qf_reg = tc.layers.apply_regularization(
                         tc.layers.l2_regularizer(self.qf_weight_decay),

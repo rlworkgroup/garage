@@ -15,9 +15,9 @@ class TestTensorUtil(TfGraphTestCase):
         discount = 1
         gae_lambda = 1
         max_len = 1
-        rewards = tf.placeholder(
+        rewards = tf.compat.v1.placeholder(
             dtype=tf.float32, name='reward', shape=[None, None])
-        baselines = tf.placeholder(
+        baselines = tf.compat.v1.placeholder(
             dtype=tf.float32, name='baseline', shape=[None, None])
         adv = compute_advantages(discount, gae_lambda, max_len, baselines,
                                  rewards)
@@ -36,22 +36,22 @@ class TestTensorUtil(TfGraphTestCase):
         assert np.array_equal(adv, desired_val)
 
     def test_get_target_ops(self):
-        var = tf.get_variable(
+        var = tf.compat.v1.get_variable(
             'var', [1], initializer=tf.constant_initializer(1))
-        target_var = tf.get_variable(
+        target_var = tf.compat.v1.get_variable(
             'target_var', [1], initializer=tf.constant_initializer(2))
-        self.sess.run(tf.global_variables_initializer())
+        self.sess.run(tf.compat.v1.global_variables_initializer())
         assert target_var.eval() == 2
         update_ops = get_target_ops([var], [target_var])
         self.sess.run(update_ops)
         assert target_var.eval() == 1
 
     def test_get_target_ops_tau(self):
-        var = tf.get_variable(
+        var = tf.compat.v1.get_variable(
             'var', [1], initializer=tf.constant_initializer(1))
-        target_var = tf.get_variable(
+        target_var = tf.compat.v1.get_variable(
             'target_var', [1], initializer=tf.constant_initializer(2))
-        self.sess.run(tf.global_variables_initializer())
+        self.sess.run(tf.compat.v1.global_variables_initializer())
         assert target_var.eval() == 2
         init_ops, update_ops = get_target_ops([var], [target_var], tau=0.2)
         self.sess.run(update_ops)

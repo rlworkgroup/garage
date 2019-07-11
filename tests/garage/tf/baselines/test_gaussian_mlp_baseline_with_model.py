@@ -46,8 +46,10 @@ class TestGaussianMLPBaselineWithModel(TfGraphTestCase):
                 env_spec=box_env.spec, name='GaussianMLPBaselineWithModel2')
 
         # Manual change the parameter of GaussianMLPBaselineWithModel
-        with tf.variable_scope('GaussianMLPBaselineWithModel', reuse=True):
-            return_var = tf.get_variable('SimpleGaussianMLPModel/return_var')
+        with tf.compat.v1.variable_scope(
+                'GaussianMLPBaselineWithModel', reuse=True):
+            return_var = tf.compat.v1.get_variable(
+                'SimpleGaussianMLPModel/return_var')
         return_var.load(1.0)
 
         old_param_values = gmb.get_param_values()
@@ -67,7 +69,7 @@ class TestGaussianMLPBaselineWithModel(TfGraphTestCase):
             gmb = GaussianMLPBaselineWithModel(
                 env_spec=box_env.spec, regressor_args=dict())
         params_interal = gmb.get_params_internal()
-        trainable_params = tf.trainable_variables(
+        trainable_params = tf.compat.v1.trainable_variables(
             scope='GaussianMLPBaselineWithModel')
         assert np.array_equal(params_interal, trainable_params)
 
@@ -80,15 +82,17 @@ class TestGaussianMLPBaselineWithModel(TfGraphTestCase):
             gmb = GaussianMLPBaselineWithModel(env_spec=box_env.spec)
         obs = {'observations': [np.full(1, 1), np.full(1, 1)]}
 
-        with tf.variable_scope('GaussianMLPBaselineWithModel', reuse=True):
-            return_var = tf.get_variable('SimpleGaussianMLPModel/return_var')
+        with tf.compat.v1.variable_scope(
+                'GaussianMLPBaselineWithModel', reuse=True):
+            return_var = tf.compat.v1.get_variable(
+                'SimpleGaussianMLPModel/return_var')
         return_var.load(1.0)
 
         prediction = gmb.predict(obs)
 
         h = pickle.dumps(gmb)
 
-        with tf.Session(graph=tf.Graph()):
+        with tf.compat.v1.Session(graph=tf.Graph()):
             gmb_pickled = pickle.loads(h)
             prediction2 = gmb_pickled.predict(obs)
 

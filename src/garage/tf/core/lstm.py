@@ -44,19 +44,19 @@ def lstm(name,
         hidden_init_var (tf.Tensor): Initial hidden state.
         cell_init_var (tf.Tensor): Initial cell state.
     """
-    with tf.variable_scope(name):
+    with tf.compat.v1.variable_scope(name):
         hidden_dim = lstm_cell.units
         output, [hidden, cell] = lstm_cell(
             step_input_var, states=(step_hidden_var, step_cell_var))
         output = output_nonlinearity_layer(output)
 
-        hidden_init_var = tf.get_variable(
+        hidden_init_var = tf.compat.v1.get_variable(
             name='initial_hidden',
             shape=(hidden_dim, ),
             initializer=hidden_state_init,
             trainable=hidden_state_init_trainable,
             dtype=tf.float32)
-        cell_init_var = tf.get_variable(
+        cell_init_var = tf.compat.v1.get_variable(
             name='initial_cell',
             shape=(hidden_dim, ),
             initializer=cell_state_init,

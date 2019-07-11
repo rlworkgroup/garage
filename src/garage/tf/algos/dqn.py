@@ -61,7 +61,7 @@ class DQN(OffPolicyRLAlgorithm):
                  n_train_steps=50,
                  max_path_length=None,
                  qf_lr=0.001,
-                 qf_optimizer=tf.train.AdamOptimizer,
+                 qf_optimizer=tf.compat.v1.train.AdamOptimizer,
                  discount=1.0,
                  target_network_update_freq=5,
                  grad_norm_clipping=None,
@@ -112,9 +112,11 @@ class DQN(OffPolicyRLAlgorithm):
 
         # build q networks
         with tf.name_scope(self.name, 'DQN'):
-            action_t_ph = tf.placeholder(tf.int32, None, name='action')
-            reward_t_ph = tf.placeholder(tf.float32, None, name='reward')
-            done_t_ph = tf.placeholder(tf.float32, None, name='done')
+            action_t_ph = tf.compat.v1.placeholder(
+                tf.int32, None, name='action')
+            reward_t_ph = tf.compat.v1.placeholder(
+                tf.float32, None, name='reward')
+            done_t_ph = tf.compat.v1.placeholder(tf.float32, None, name='done')
 
             with tf.name_scope('update_ops'):
                 target_update_op = tensor_utils.get_target_ops(
@@ -152,8 +154,8 @@ class DQN(OffPolicyRLAlgorithm):
                 target_q_values = (reward_t_ph + self.discount * q_best_masked)
 
                 # td_error = q_selected - tf.stop_gradient(target_q_values)
-                loss = tf.losses.huber_loss(q_selected,
-                                            tf.stop_gradient(target_q_values))
+                loss = tf.compat.v1.losses.huber_loss(
+                    q_selected, tf.stop_gradient(target_q_values))
                 loss = tf.reduce_mean(loss)
 
             with tf.name_scope('optimize_ops'):

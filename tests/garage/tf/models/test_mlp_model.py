@@ -13,7 +13,7 @@ from tests.fixtures import TfGraphTestCase
 class TestMLPModel(TfGraphTestCase):
     def setup_method(self):
         super().setup_method()
-        self.input_var = tf.placeholder(tf.float32, shape=(None, 5))
+        self.input_var = tf.compat.v1.placeholder(tf.float32, shape=(None, 5))
         self.obs = np.ones((1, 5))
 
     # yapf: disable
@@ -83,7 +83,7 @@ class TestMLPModel(TfGraphTestCase):
             hidden_w_init=tf.ones_initializer(),
             output_w_init=tf.ones_initializer())
 
-        input_var2 = tf.placeholder(tf.float32, shape=(None, 5))
+        input_var2 = tf.compat.v1.placeholder(tf.float32, shape=(None, 5))
         obs2 = np.ones((1, 5))
 
         outputs = model.build(self.input_var, input_var2)
@@ -116,16 +116,16 @@ class TestMLPModel(TfGraphTestCase):
         outputs = model.build(self.input_var)
 
         # assign bias to all one
-        with tf.variable_scope('MLPModel/mlp', reuse=True):
-            bias = tf.get_variable('hidden_0/bias')
+        with tf.compat.v1.variable_scope('MLPModel/mlp', reuse=True):
+            bias = tf.compat.v1.get_variable('hidden_0/bias')
 
         bias.load(tf.ones_like(bias).eval())
 
         output1 = self.sess.run(outputs, feed_dict={self.input_var: self.obs})
 
         h = pickle.dumps(model)
-        with tf.Session(graph=tf.Graph()) as sess:
-            input_var = tf.placeholder(tf.float32, shape=(None, 5))
+        with tf.compat.v1.Session(graph=tf.Graph()) as sess:
+            input_var = tf.compat.v1.placeholder(tf.float32, shape=(None, 5))
             model_pickled = pickle.loads(h)
             outputs = model_pickled.build(input_var)
             output2 = sess.run(outputs, feed_dict={input_var: self.obs})

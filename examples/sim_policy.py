@@ -22,9 +22,9 @@ if __name__ == '__main__':
 
     # If the snapshot file use tensorflow, do:
     # import tensorflow as tf
-    # with tf.Session():
+    # with tf.compat.v1.Session():
     #     [rest of the code]
-    with tf.Session() as sess:
+    with tf.compat.v1.Session() as sess:
         data = joblib.load(args.file)
         policy = data['algo'].policy
         env = data['env']

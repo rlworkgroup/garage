@@ -65,7 +65,7 @@ class GaussianMLPRegressor(LayersPowered, Serializable, Parameterized):
         self._mean_network_name = 'mean_network'
         self._std_network_name = 'std_network'
 
-        with tf.variable_scope(name):
+        with tf.compat.v1.variable_scope(name):
             if optimizer_args is None:
                 optimizer_args = dict()
 
@@ -134,11 +134,11 @@ class GaussianMLPRegressor(LayersPowered, Serializable, Parameterized):
             LayersPowered.__init__(self, [l_mean, l_log_std])
 
             xs_var = mean_network.input_layer.input_var
-            ys_var = tf.placeholder(
+            ys_var = tf.compat.v1.placeholder(
                 dtype=tf.float32, name='ys', shape=(None, output_dim))
-            old_means_var = tf.placeholder(
+            old_means_var = tf.compat.v1.placeholder(
                 dtype=tf.float32, name='ys', shape=(None, output_dim))
-            old_log_stds_var = tf.placeholder(
+            old_log_stds_var = tf.compat.v1.placeholder(
                 dtype=tf.float32,
                 name='old_log_stds',
                 shape=(None, output_dim))
@@ -173,10 +173,11 @@ class GaussianMLPRegressor(LayersPowered, Serializable, Parameterized):
                     l_log_std, {mean_network.input_layer: normalized_xs_var})
 
             means_var = normalized_means_var * y_std_var + y_mean_var
-            log_stds_var = normalized_log_stds_var + tf.log(y_std_var)
+            log_stds_var = normalized_log_stds_var + tf.math.log(y_std_var)
 
             normalized_old_means_var = (old_means_var - y_mean_var) / y_std_var
-            normalized_old_log_stds_var = old_log_stds_var - tf.log(y_std_var)
+            normalized_old_log_stds_var = old_log_stds_var - tf.math.log(
+                y_std_var)
 
             dist = self._dist = DiagonalGaussian(output_dim)
 
@@ -233,31 +234,31 @@ class GaussianMLPRegressor(LayersPowered, Serializable, Parameterized):
 
             # Optionally create assign operations for normalization
             if self._normalize_inputs:
-                self._x_mean_var_ph = tf.placeholder(
+                self._x_mean_var_ph = tf.compat.v1.placeholder(
                     shape=(1, ) + input_shape,
                     dtype=tf.float32,
                 )
-                self._x_std_var_ph = tf.placeholder(
+                self._x_std_var_ph = tf.compat.v1.placeholder(
                     shape=(1, ) + input_shape,
                     dtype=tf.float32,
                 )
-                self._assign_x_mean = tf.assign(self._x_mean_var,
-                                                self._x_mean_var_ph)
-                self._assign_x_std = tf.assign(self._x_std_var,
-                                               self._x_std_var_ph)
+                self._assign_x_mean = tf.compat.v1.assign(
+                    self._x_mean_var, self._x_mean_var_ph)
+                self._assign_x_std = tf.compat.v1.assign(
+                    self._x_std_var, self._x_std_var_ph)
             if self._normalize_outputs:
-                self._y_mean_var_ph = tf.placeholder(
+                self._y_mean_var_ph = tf.compat.v1.placeholder(
                     shape=(1, output_dim),
                     dtype=tf.float32,
                 )
-                self._y_std_var_ph = tf.placeholder(
+                self._y_std_var_ph = tf.compat.v1.placeholder(
                     shape=(1, output_dim),
                     dtype=tf.float32,
                 )
-                self._assign_y_mean = tf.assign(self._y_mean_var,
-                                                self._y_mean_var_ph)
-                self._assign_y_std = tf.assign(self._y_std_var,
-                                               self._y_std_var_ph)
+                self._assign_y_mean = tf.compat.v1.assign(
+                    self._y_mean_var, self._y_mean_var_ph)
+                self._assign_y_std = tf.compat.v1.assign(
+                    self._y_std_var, self._y_std_var_ph)
 
     def fit(self, xs, ys):
         if self._subsample_factor < 1:
@@ -266,7 +267,7 @@ class GaussianMLPRegressor(LayersPowered, Serializable, Parameterized):
                 0, num_samples_tot,
                 int(num_samples_tot * self._subsample_factor))
             xs, ys = xs[idx], ys[idx]
-        sess = tf.get_default_session()
+        sess = tf.compat.v1.get_default_session()
         if self._normalize_inputs:
             # recompute normalizing constants for inputs
             feed_dict = {
@@ -343,7 +344,8 @@ class GaussianMLPRegressor(LayersPowered, Serializable, Parameterized):
 
             means_var = (
                 normalized_means_var * self._y_std_var + self._y_mean_var)
-            log_stds_var = normalized_log_stds_var + tf.log(self._y_std_var)
+            log_stds_var = normalized_log_stds_var + tf.math.log(
+                self._y_std_var)
 
             return self._dist.log_likelihood_sym(
                 y_var, dict(mean=means_var, log_std=log_stds_var))

@@ -38,8 +38,8 @@ required = [
     'torch==1.1.0',
     'scikit-image',
     'scipy',
-    'tensorflow<1.13,>=1.12.0',
-    'tensorflow-probability<0.6.0,>=0.5.0',  # for tensorflow 1.12
+    'tensorflow<1.15,>=1.14.0',
+    'tensorflow-probability<0.8.0,>=0.7.0',  # for tensorflow 1.12
     'torchvision==0.3.0'
 ]
 

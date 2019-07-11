@@ -95,10 +95,10 @@ class DiscreteMLPQFunction(QFunction2):
         self._initialize()
 
     def _initialize(self):
-        obs_ph = tf.placeholder(
+        obs_ph = tf.compat.v1.placeholder(
             tf.float32, (None, ) + self.obs_dim, name='obs')
 
-        with tf.variable_scope(self.name) as vs:
+        with tf.compat.v1.variable_scope(self.name) as vs:
             self._variable_scope = vs
             self.model.build(obs_ph)
 
@@ -122,7 +122,7 @@ class DiscreteMLPQFunction(QFunction2):
         Return:
             The tf.Tensor output of Discrete MLP QFunction.
         """
-        with tf.variable_scope(self._variable_scope):
+        with tf.compat.v1.variable_scope(self._variable_scope):
             return self.model.build(state_input, name=name)
 
     def clone(self, name):
