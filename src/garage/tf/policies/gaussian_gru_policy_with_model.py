@@ -175,6 +175,10 @@ class GaussianGRUPolicyWithModel(StochasticPolicy2):
         """
         Reset the policy.
 
+        If dones is None, it will be by default np.array([True]) which implies
+        the policy will not be "vectorized", i.e. number of parallel
+        environments for training data sampling = 1.
+
         Args:
             dones (numpy.ndarray): Bool that indicates terminal state(s).
 
