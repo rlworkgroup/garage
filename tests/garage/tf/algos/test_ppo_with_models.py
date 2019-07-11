@@ -39,12 +39,20 @@ class TestPPOWithModel(TfGraphTestCase):
                 baseline=baseline,
                 max_path_length=100,
                 discount=0.99,
-                lr_clip_range=0.01,
-                optimizer_args=dict(batch_size=32, max_epochs=10),
+                gae_lambda=0.95,
+                lr_clip_range=0.2,
+                optimizer_args=dict(
+                    batch_size=32,
+                    max_epochs=10,
+                ),
+                stop_entropy_gradient=True,
+                entropy_method='max',
+                policy_ent_coeff=0.02,
+                center_adv=False,
             )
             runner.setup(algo, env)
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
-            assert last_avg_ret > 30
+            assert last_avg_ret > 60
 
             env.close()
 
@@ -64,17 +72,24 @@ class TestPPOWithModel(TfGraphTestCase):
                 baseline=baseline,
                 max_path_length=100,
                 discount=0.99,
-                lr_clip_range=0.01,
-                optimizer_args=dict(batch_size=32, max_epochs=10),
+                gae_lambda=0.95,
+                lr_clip_range=0.2,
+                optimizer_args=dict(
+                    batch_size=32,
+                    max_epochs=10,
+                ),
+                stop_entropy_gradient=True,
+                entropy_method='max',
+                policy_ent_coeff=0.02,
+                center_adv=False,
             )
             runner.setup(algo, env)
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
-            assert last_avg_ret > 40
+            assert last_avg_ret > 80
 
             env.close()
 
-    test_ppo_pendulum_lstm_with_model.large = True
-
+    @pytest.mark.large
     def test_ppo_pendulum_gru_with_model(self):
         """Test PPO with model, with Pendulum environment."""
         with LocalRunner(sess=self.sess) as runner:
@@ -90,11 +105,19 @@ class TestPPOWithModel(TfGraphTestCase):
                 baseline=baseline,
                 max_path_length=100,
                 discount=0.99,
-                lr_clip_range=0.01,
-                optimizer_args=dict(batch_size=32, max_epochs=10),
+                gae_lambda=0.95,
+                lr_clip_range=0.2,
+                optimizer_args=dict(
+                    batch_size=32,
+                    max_epochs=10,
+                ),
+                stop_entropy_gradient=True,
+                entropy_method='max',
+                policy_ent_coeff=0.02,
+                center_adv=False,
             )
             runner.setup(algo, env)
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
-            assert last_avg_ret > 40
+            assert last_avg_ret > 80
 
             env.close()
