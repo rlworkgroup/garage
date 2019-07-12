@@ -2,7 +2,7 @@ import numpy as np
 import tensorflow as tf
 
 from garage.tf.core.parameter import parameter
-from garage.tf.misc.tensor_utils import broadcast
+from garage.tf.misc.tensor_utils import broadcast_with_batch
 from tests.fixtures import TfGraphTestCase
 
 
@@ -28,8 +28,8 @@ class TestParameter(TfGraphTestCase):
         assert p.shape == (3, )
         assert np.all(p == self.initial_params)
 
-    def test_broadcast(self):
-        broadcast_param = broadcast(self.param, self.input_vars)
+    def test_broadcast_with_batch(self):
+        broadcast_param = broadcast_with_batch(self.param, self.input_vars)
         p = self.sess.run(broadcast_param, feed_dict=self.feed_dict)
 
         assert p.shape[:-1] == self.data.shape[:-1]

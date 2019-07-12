@@ -564,7 +564,7 @@ class TestGaussianCNNModel(TfGraphTestCase):
             hidden_nonlinearity=None,
             std_parameterization='softplus',
             min_std=10,
-            hidden_w_init=tf.constant_initializer(0.01),
+            hidden_w_init=tf.constant_initializer(0.1),
             output_w_init=tf.constant_initializer(1))
         outputs = model.build(self._input_ph)
         action, mean, log_std, std_param = self.sess.run(
@@ -597,7 +597,7 @@ class TestGaussianCNNModel(TfGraphTestCase):
             hidden_nonlinearity=None,
             std_parameterization='softplus',
             max_std=1.0,
-            hidden_w_init=tf.constant_initializer(0.01),
+            hidden_w_init=tf.constant_initializer(0.1),
             output_w_init=tf.constant_initializer(1))
         outputs = model.build(self._input_ph)
         action, mean, log_std, std_param = self.sess.run(
@@ -606,8 +606,8 @@ class TestGaussianCNNModel(TfGraphTestCase):
         expected_log_std = np.full([1, output_dim], np.log(1))
         expected_std_param = np.full([1, output_dim], np.log(np.exp(1) - 1))
 
-        assert np.allclose(log_std, expected_log_std)
-        assert np.allclose(std_param, expected_std_param)
+        assert np.allclose(log_std, expected_log_std, rtol=0, atol=0.0001)
+        assert np.allclose(std_param, expected_std_param, rtol=0, atol=0.0001)
 
     def test_unknown_std_parameterization(self):
         with pytest.raises(NotImplementedError):

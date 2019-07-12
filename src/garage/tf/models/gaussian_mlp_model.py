@@ -5,7 +5,7 @@ import tensorflow as tf
 from garage.tf.core.mlp import mlp
 from garage.tf.core.parameter import parameter
 from garage.tf.distributions import DiagonalGaussian
-from garage.tf.misc.tensor_utils import broadcast
+from garage.tf.misc.tensor_utils import broadcast_with_batch
 from garage.tf.models.base import Model
 
 
@@ -202,7 +202,8 @@ class GaussianMLPModel(Model):
                             self._init_std_param),
                         trainable=self._learn_std,
                         name='log_std_network')
-                    log_std_network = broadcast(log_std_param, state_input)
+                    log_std_network = broadcast_with_batch(
+                        log_std_param, state_input)
 
         mean_var = mean_network
         std_param = log_std_network

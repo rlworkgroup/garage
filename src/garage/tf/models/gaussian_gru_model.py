@@ -5,7 +5,7 @@ import tensorflow as tf
 from garage.tf.core.gru import gru
 from garage.tf.core.parameter import parameter
 from garage.tf.distributions import DiagonalGaussian
-from garage.tf.misc.tensor_utils import broadcast
+from garage.tf.misc.tensor_utils import broadcast_with_batch
 from garage.tf.models import Model
 
 
@@ -174,8 +174,10 @@ class GaussianGRUModel(Model):
                     initializer=tf.constant_initializer(self._init_std_param),
                     trainable=self._learn_std,
                     name='log_std_param')
-                log_std_var = broadcast(log_std_param, state_input)
-                step_log_std_var = broadcast(log_std_param, step_input)
+                log_std_var = broadcast_with_batch(
+                    log_std_param, state_input, batch_dim=2)
+                step_log_std_var = broadcast_with_batch(
+                    log_std_param, step_input, batch_dim=1)
 
         dist = DiagonalGaussian(self._output_dim)
         rnd = tf.random.normal(shape=step_mean_var.get_shape().as_list()[1:])
