@@ -4,6 +4,7 @@ This is an example to train a task with TRPO algorithm.
 
 Uses Ray_batched sampler instead of on_policy vectorized
 sampler.
+Test
 Here it runs Swimmer-v2 environment with 40 iterations.
 """
 import gym
