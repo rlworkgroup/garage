@@ -13,6 +13,7 @@ import numpy as np
 import psutil
 import ray
 
+from garage.experiment import deterministic
 from garage.misc import tensor_utils
 from garage.misc.prog_bar_counter import ProgBarCounter
 from garage.sampler.base import BaseSampler
@@ -33,34 +34,33 @@ class RaySampler(BaseSampler):
     def __init__(self,
                  algo,
                  env,
+                 seed,
                  should_render=False,
                  num_processors=None,
                  sampler_worker_cls=None):
-        self.SamplerWorker = ray.remote(SamplerWorker if sampler_worker_cls is
-                                        None else sampler_worker_cls)
-
-        self.env = env
-        self.algo = algo
-        self.max_path_length = self.algo.max_path_length
-        self.should_render = should_render
+        self._sampler_worker = ray.remote(SamplerWorker if sampler_worker_cls
+                                          is None else sampler_worker_cls)
+        self._env = env
+        self._algo = algo
+        self._seed = seed
+        deterministic.set_seed(self._seed)
+        self._max_path_length = self._algo.max_path_length
+        self._should_render = should_render
         if not ray.is_initialized():
             ray.init(ignore_reinit_error=True)
-        self.num_workers = num_processors if num_processors \
+        self._num_workers = num_processors if num_processors \
             else psutil.cpu_count(logical=False)
-        self.all_workers = defaultdict(None)
-        self.active_workers = []
-        self.active_worker_ids = []
+        self._all_workers = defaultdict(None)
 
     def start_worker(self):
         """Initialize a new ray worker."""
-        env_pkl = pickle.dumps(self.env)
-        agent_pkl = pickle.dumps(self.algo.policy)
-        env_pkl_id, agent_pkl_id = ray.put(env_pkl), ray.put(agent_pkl)
-        for worker_id in range(self.num_workers):
-            self.all_workers[worker_id] = (self.SamplerWorker.remote(
-                worker_id, env_pkl_id, agent_pkl_id, self.max_path_length,
-                self.should_render))
-        self.idle_worker_ids = list(range(self.num_workers))
+        env_pkl_id = ray.put(pickle.dumps(self._env))
+        agent_pkl_id = ray.put(pickle.dumps(self._algo.policy))
+        for worker_id in range(self._num_workers):
+            self._all_workers[worker_id] = (self._sampler_worker.remote(
+                worker_id, env_pkl_id, agent_pkl_id, self._seed,
+                self._max_path_length, self._should_render))
+        self._idle_worker_ids = list(range(self._num_workers))
 
     def obtain_samples(self, itr, num_samples):
         """Sample the policy for new trajectories.
@@ -69,39 +69,37 @@ class RaySampler(BaseSampler):
             - itr(int): iteration number
             - num_samples(int):number of steps the the sampler should collect
         """
+        self._active_workers = []
+        self._active_worker_ids = []
         pbar = ProgBarCounter(num_samples)
         completed_samples = 0
         traj = []
         updating_workers = []
-        self.idle_worker_ids = list(range(self.num_workers))
-
-        curr_policy_params = self.algo.policy.get_param_values()
+        self._idle_worker_ids = list(range(self._num_workers))
+        curr_policy_params = self._algo.policy.get_param_values()
         params_id = ray.put(curr_policy_params)
-        while self.idle_worker_ids:
-            worker_id = self.idle_worker_ids.pop()
-            worker = self.all_workers[worker_id]
+        while self._idle_worker_ids:
+            worker_id = self._idle_worker_ids.pop()
+            worker = self._all_workers[worker_id]
             updating_workers.append(worker.set_agent.remote(params_id))
-
         while completed_samples < num_samples:
             updated, updating_workers = ray.wait(
                 updating_workers, num_returns=1, timeout=0.1)
             upd = [ray.get(up) for up in updated]
-            self.idle_worker_ids.extend(upd)
-            while self.idle_worker_ids:
-                idle_worker_id = self.idle_worker_ids.pop()
-                self.active_worker_ids.append(idle_worker_id)
-                worker = self.all_workers[idle_worker_id]
-                self.active_workers.append(worker.rollout.remote())
-
+            self._idle_worker_ids.extend(upd)
+            while self._idle_worker_ids:
+                idle_worker_id = self._idle_worker_ids.pop()
+                self._active_worker_ids.append(idle_worker_id)
+                worker = self._all_workers[idle_worker_id]
+                self._active_workers.append(worker.rollout.remote())
             ready, not_ready = ray.wait(
-                self.active_workers, num_returns=1, timeout=0.001)
-            self.active_workers = not_ready
+                self._active_workers, num_returns=1, timeout=0.001)
+            self._active_workers = not_ready
             for result in ready:
                 trajectory, num_returned_samples = self._process_trajectory(
                     result)
                 completed_samples += num_returned_samples
                 pbar.inc(num_returned_samples)
-
                 traj.append(trajectory)
         pbar.stop()
         return traj
@@ -113,12 +111,12 @@ class RaySampler(BaseSampler):
     def _process_trajectory(self, result):
         trajectory = ray.get(result)
         ready_worker_id = trajectory[0]
-        self.active_worker_ids.remove(ready_worker_id)
-        self.idle_worker_ids.append(ready_worker_id)
+        self._active_worker_ids.remove(ready_worker_id)
+        self._idle_worker_ids.append(ready_worker_id)
         trajectory = dict(
-            observations=self.algo.env_spec.observation_space.flatten_n(
+            observations=self._algo.env_spec.observation_space.flatten_n(
                 trajectory[1]),
-            actions=self.algo.env_spec.action_space.flatten_n(trajectory[2]),
+            actions=self._algo.env_spec.action_space.flatten_n(trajectory[2]),
             rewards=tensor_utils.stack_tensor_list(trajectory[3]),
             agent_infos=trajectory[4],
             env_infos=trajectory[5])
@@ -145,13 +143,16 @@ class SamplerWorker:
                  worker_id,
                  env,
                  agent,
+                 seed,
                  max_path_length,
                  should_render=False):
         self.worker_id = worker_id
-        self.env = pickle.loads(env)
+        self._env = pickle.loads(env)
         self.agent = pickle.loads(agent)
-        self.max_path_length = max_path_length
-        self.should_render = should_render
+        self._seed = seed + self.worker_id
+        deterministic.set_seed(self._seed)
+        self._max_path_length = max_path_length
+        self._should_render = should_render
         self.agent_updates = 0
 
     def set_agent(self, flattened_params):
@@ -185,13 +186,13 @@ class SamplerWorker:
         rewards = []
         agent_infos = defaultdict(list)
         env_infos = defaultdict(list)
-        o = self.env.reset()
+        o = self._env.reset()
         self.agent.reset()
         next_o = None
         path_length = 0
-        while path_length < self.max_path_length:
+        while path_length < self._max_path_length:
             a, agent_info = self.agent.get_action(o)
-            next_o, r, d, env_info = self.env.step(a)
+            next_o, r, d, env_info = self._env.step(a)
             observations.append(o)
             rewards.append(r)
             actions.append(a)

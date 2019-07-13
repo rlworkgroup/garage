@@ -15,6 +15,8 @@ from garage.tf.envs import TfEnv
 from garage.tf.policies import GaussianMLPPolicyWithModel
 from garage.tf.samplers.ray_batched_sampler import RaySamplerTF
 
+seed = 100
+
 
 def run_task(*_):
     """."""
@@ -35,12 +37,13 @@ def run_task(*_):
             max_kl_step=0.01)
 
         # runner.setup(algo, env)
-        runner.setup(algo, env, sampler_cls=RaySamplerTF)
+        runner.setup(
+            algo, env, sampler_cls=RaySamplerTF, sampler_args={'seed': seed})
         runner.train(n_epochs=40, batch_size=4000)
 
 
 run_experiment(
     run_task,
     snapshot_mode='last',
-    seed=1,
+    seed=seed,
 )

@@ -17,10 +17,16 @@ class RaySamplerTF(RaySampler):
         - Same as garage.samplers.RaySampler
     """
 
-    def __init__(self, algo, env, should_render=False, num_processors=None):
+    def __init__(self,
+                 algo,
+                 env,
+                 seed,
+                 should_render=False,
+                 num_processors=None):
         super().__init__(
             algo,
             env,
+            seed,
             should_render=False,
             num_processors=None,
             sampler_worker_cls=SamplerWorkerTF)
@@ -39,8 +45,14 @@ class SamplerWorkerTF(SamplerWorker):
                  worker_id,
                  env,
                  agent,
+                 seed,
                  max_path_length,
                  should_render=False):
         self.sess = tf.InteractiveSession()
         super().__init__(
-            worker_id, env, agent, max_path_length, should_render=False)
+            worker_id,
+            env,
+            agent,
+            seed,
+            max_path_length,
+            should_render=should_render)
