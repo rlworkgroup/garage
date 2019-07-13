@@ -29,7 +29,11 @@ class TestSampler():
 
         algo = MockAlgo(env.spec, policy)
         sampler1 = RaySampler(
-            algo, env, num_processors=1, sampler_worker_cls=SamplerWorker)
+            algo,
+            env,
+            seed=100,
+            num_processors=1,
+            sampler_worker_cls=SamplerWorker)
         sampler1.start_worker()
 
         sampler2 = OnPolicyVectorizedSampler(algo, env)
