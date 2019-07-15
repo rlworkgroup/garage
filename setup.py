@@ -4,7 +4,7 @@ from setuptools import setup
 # Required dependencies
 required = [
     # Please keep alphabetized
-    'akro==0.0.5',
+    'akro==0.0.6',
     'cached_property',
     'click',
     'cloudpickle',
