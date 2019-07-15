@@ -3,6 +3,7 @@
 Currently the same as garage.samplers.RaySampler but includes
 support for Tensorflow sessions
 """
+import ray
 import tensorflow as tf
 
 from garage.sampler import RaySampler, SamplerWorker
@@ -31,6 +32,14 @@ class RaySamplerTF(RaySampler):
             num_processors=None,
             sampler_worker_cls=SamplerWorkerTF)
 
+    def shutdown(self):
+        """Shuts down the worker."""
+        temp = []
+        for worker in self._all_workers.values():
+            temp.append(worker.shutdown.remote())
+        ray.get(temp)
+        ray.shutdown()
+
 
 class SamplerWorkerTF(SamplerWorker):
     """Sampler Worker for tensorflow on policy algorithms.
@@ -38,7 +47,6 @@ class SamplerWorkerTF(SamplerWorker):
     - Same as garage.samplers.SamplerWorker, except it
     initializes a tensorflow session, because each worker
     is in a separate process.
-
     """
 
     def __init__(self,
@@ -48,7 +56,8 @@ class SamplerWorkerTF(SamplerWorker):
                  seed,
                  max_path_length,
                  should_render=False):
-        self.sess = tf.InteractiveSession()
+        self.sess = tf.Session()
+        self.sess.__enter__()
         super().__init__(
             worker_id,
             env,
@@ -56,3 +65,7 @@ class SamplerWorkerTF(SamplerWorker):
             seed,
             max_path_length,
             should_render=should_render)
+
+    def shutdown(self):
+        """Perform shutdown processes for TF."""
+        self.sess.__exit__(None, None, None)
