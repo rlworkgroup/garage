@@ -29,7 +29,8 @@ class TestParameter(TfGraphTestCase):
         assert np.all(p == self.initial_params)
 
     def test_broadcast_with_batch(self):
-        broadcast_param = broadcast_with_batch(self.param, self.input_vars)
+        broadcast_param = broadcast_with_batch(
+            self.param, self.input_vars, batch_dim=3)
         p = self.sess.run(broadcast_param, feed_dict=self.feed_dict)
 
         assert p.shape[:-1] == self.data.shape[:-1]
