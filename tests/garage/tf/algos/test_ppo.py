@@ -3,7 +3,6 @@ This script creates a test that fails when garage.tf.algos.PPO performance is
 too low.
 """
 import gym
-import pytest
 import tensorflow as tf
 
 from garage.envs import normalize
@@ -31,7 +30,8 @@ class TestPPO(TfGraphTestCase):
             regressor_args=dict(hidden_sizes=(32, 32)),
         )
 
-    @pytest.mark.large
+    # large marker removed to balance test jobs
+    # @pytest.mark.large
     def test_ppo_pendulum(self):
         """Test PPO with Pendulum environment."""
         with LocalRunner(sess=self.sess) as runner:
@@ -47,7 +47,8 @@ class TestPPO(TfGraphTestCase):
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 40
 
-    @pytest.mark.large
+    # large marker removed to balance test jobs
+    # @pytest.mark.large
     def test_ppo_pendulum_recurrent(self):
         """Test PPO with Pendulum environment and recurrent policy."""
         with LocalRunner() as runner:
@@ -64,7 +65,8 @@ class TestPPO(TfGraphTestCase):
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 40
 
-    @pytest.mark.large
+    # large marker removed to balance test jobs
+    # @pytest.mark.large
     def test_ppo_with_maximum_entropy(self):
         """Test PPO with maxium entropy method."""
         with LocalRunner(sess=self.sess) as runner:
@@ -84,7 +86,8 @@ class TestPPO(TfGraphTestCase):
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 40
 
-    @pytest.mark.large
+    # large marker removed to balance test jobs
+    # @pytest.mark.large
     def test_ppo_with_neg_log_likeli_entropy_estimation_and_max(self):
         """
         Test PPO with negative log likelihood entropy estimation and max
@@ -108,7 +111,8 @@ class TestPPO(TfGraphTestCase):
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 40
 
-    @pytest.mark.large
+    # large marker removed to balance test jobs
+    # @pytest.mark.large
     def test_ppo_with_neg_log_likeli_entropy_estimation_and_regularized(self):
         """
         Test PPO with negative log likelihood entropy estimation and
@@ -132,7 +136,8 @@ class TestPPO(TfGraphTestCase):
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 40
 
-    @pytest.mark.large
+    # large marker removed to balance test jobs
+    # @pytest.mark.large
     def test_ppo_with_regularized_entropy(self):
         """Test PPO with regularized entropy method."""
         with LocalRunner(sess=self.sess) as runner:

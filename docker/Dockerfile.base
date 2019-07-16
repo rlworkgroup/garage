@@ -14,7 +14,7 @@ RUN \
   apt-get -y -q update && \
   # Prevents debconf from prompting for user input
   # See https://github.com/phusion/baseimage-docker/issues/58
-  DEBIAN_FRONTEND=noninteractive apt-get install -y \
+  DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
     # Dockerfile deps
     wget \
     bzip2 \
@@ -22,6 +22,7 @@ RUN \
     git \
     curl \
     # For building glfw
+    build-essential \
     cmake \
     xorg-dev \
     # mujoco_py
@@ -31,6 +32,7 @@ RUN \
     libglew-dev \
     libosmesa6-dev \
     patchelf \
+    python3-dev \
     # OpenAI gym
     # See https://github.com/openai/gym/blob/master/Dockerfile
     libpq-dev \
@@ -40,7 +42,12 @@ RUN \
     libsdl2-dev \
     # OpenAI baselines
     libopenmpi-dev \
-    openmpi-bin && \
+    openmpi-bin \
+    # virtualenv
+    python3 \
+    python3-pip \
+    python3-tk \
+    python3-virtualenv && \
   apt-get clean && \
   rm -rf /var/lib/apt/lists/*
 
@@ -58,7 +65,7 @@ RUN git clone https://github.com/glfw/glfw.git && \
   cd ../../ && \
   rm -rf glfw
 
-# MuJoCo 2.0 (for dm_control)
+# MuJoCo 2.0 (for dm_control and gym)
 RUN mkdir -p /root/.mujoco && \
   wget https://www.roboti.us/download/mujoco200_linux.zip -O mujoco.zip && \
   unzip mujoco.zip -d $HOME/.mujoco && \
@@ -66,17 +73,8 @@ RUN mkdir -p /root/.mujoco && \
   ln -s $HOME/.mujoco/mujoco200_linux $HOME/.mujoco/mujoco200
   ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mujoco200/bin
 
-# conda
-RUN wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh && \
-  bash miniconda.sh -b -p /opt/conda && \
-  rm miniconda.sh && \
-  ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh
-ENV PATH=$PATH:/opt/conda/bin
-RUN conda update -q -y conda
-
-# conda environment
-# Copy over just environment.yml and setup.py first, so the Docker cache doesn't
-# expire until they change
+# Copy over just setup.py first, so the Docker cache doesn't expire until
+# dependencies change
 #
 # Files needed to run setup.py
 # - README.md
@@ -89,23 +87,28 @@ COPY VERSION /root/code/garage/VERSION
 COPY scripts/garage /root/code/garage/scripts/garage
 COPY src/garage/__init__.py /root/code/garage/src/garage/__init__.py
 COPY setup.py /root/code/garage/setup.py
-COPY environment.yml /root/code/garage/environment.yml
+WORKDIR /root/code/garage
+
+# Create virtualenv
+ENV VIRTUAL_ENV=/root/venv
+RUN python3 -m virtualenv --python=/usr/bin/python3 $VIRTUAL_ENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+# Prevent pip from complaining about available upgrades
+RUN pip install --upgrade pip
 
 # We need a MuJoCo key to install mujoco_py
 # In this step only the presence of the file mjkey.txt is required, so we only
 # create an empty file
-ARG MJKEY
 RUN touch /root/.mujoco/mjkey.txt && \
-  conda env create -f /root/code/garage/environment.yml && \
-  rm -rf /opt/conda/pkgs/* && \
+  # cma is dumb and requires numpy to run setup.py
+  pip install numpy==1.14.5 && \
+  pip install -e .[all,dev] && \
+  rm -r /root/.cache/pip && \
   rm /root/.mujoco/mjkey.txt
 
-# Extras
-# prevent pip from complaining about available upgrades
-RUN ["/bin/bash", "-c", "source activate garage && pip install --upgrade pip"]
-
 # Setup repo
-WORKDIR /root/code/garage
 # Pre-build pre-commit env
 COPY .pre-commit-config.yaml /root/code/garage
-RUN ["/bin/bash", "-c", "source activate garage && git init && pre-commit"]
+RUN git init && \
+  pre-commit

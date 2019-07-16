@@ -8,9 +8,12 @@ Installation
 Express Install
 ===============
 
+Install System Dependencies
+---------------------------
+
 The fastest way to set up dependencies for garage is via running the setup script.
 
-Clone our repo (https://github.com/rlworkgroup/garage) and navigate to its directory.
+Clone our repository (https://github.com/rlworkgroup/garage) and navigate to its directory.
 
 A MuJoCo key is required for installation. You can get one here: https://www.roboti.us/license.html
 
@@ -28,91 +31,92 @@ Make sure you run these scripts from the root directory of the repo, not from th
 
     ./scripts/setup_macos.sh --mjkey path-to-your-mjkey.txt --modify-bashrc
 
+Install Garage in a Python Environment
+--------------------------------------
 
-The script sets up a conda environment, which is similar to :code:`virtualenv`. To start using it, run the following:
+The script sets up pre-requisites for each platform, but does not install the Python package. We recommend you build your project using a Python environment manager which supports dependency resolution, such as `pipenv <https://docs.pipenv.org/en/latest/>`_, `conda <https://docs.conda.io/en/latest/>`_, or `poetry <https://poetry.eustace.io/>`_. We test against `pipenv` and `conda`.
 
+garage is also tested using `virtualenv <https://virtualenv.pypa.io/en/latest/>`_, but we recommend against building your project using `virtualenv`, because it has difficulty resolving dependency conflicts which may arise between garage and other packages in your project. You are of course free to install garage as a system-wide Python package using `pip`, but we don't recommend this for the same reasons we recommend against using `virtualenv`.
+
+NOTE: garage only supports Python 3.5+, so make sure you Python environment is using this or a later version.
+
+- pipenv
 .. code-block:: bash
 
-    source activate garage
+    pipenv --three  # garage only supports Python 3.5+
+    pipenv run pip install numpy==1.14.5  # pycma requires numpy to install
+    pipenv install --pre garage  # --pre required because garage has some dependencies with verion numbers <1.0
 
 
-Optionally, if you would like to run experiments that depends on the MuJoCo environment, you can set it up by running the following command:
-
+- conda (environment named "myenv")
 .. code-block:: bash
 
-    ./scripts/setup_mujoco.sh
+    source activate myenv
+    pip install numpy==1.14.5
+    pip install garage
 
-and follow the instructions. You need to have the zip file for Mujoco v1.50 and the license file ready.
+Alternatively, you can add garage in the pip section of your `environment.yml`
+.. code-block:: yaml
+    name: myenv
+    channels:
+      - conda-forge
+    dependencies:
+    - python>=3.5
+    - pip
+    - numpy==1.14.5 # pycma requires numpy to install
+    - pip
+      - garage
 
-
-
-Manual Install
-==============
-
-Anaconda
-------------
-
-:code:`garage` assumes that you are using Anaconda Python distribution. You can download it from `https://www.continuum.io/downloads<https://www.continuum.io/downloads`.  Make sure to download the installer for Python 2.7.
-
-
-System dependencies for pygame
-------------------------------
-
-A few environments in garage are implemented using Box2D, which uses pygame for visualization.
-It requires a few system dependencies to be installed first.
-
-On Linux, run the following:
-
+- virtualenv (environment named "myenv")
 .. code-block:: bash
 
-  sudo apt-get install swig
-  sudo apt-get build-dep python-pygame
+    source myenv/bin/activate
+    pip install numpy==1.14.5  # pycma requires numpy to install
+    pip install garage
 
-On macOS, run the following:
 
+Extra Steps for Developers
+--------------------------
+
+If you plan on developing the garage repository, as opposed to simply using it as a library, you will probably prefer to install your copy of the garage repository as an editable library instead. After installing the pre-requisites using the instructions in `Install System Dependencies`_, you should install garage in your environment as below.
+
+- pipenv
 .. code-block:: bash
 
-  brew install swig sdl sdl_image sdl_mixer sdl_ttf portmidi
+    cd path/to/garage/repo
+    pipenv --three
+    pipenv run pip install numpy==1.14.5
+    pipenv install --pre -e .[all,dev]
 
-System dependencies for scipy
------------------------------
 
-This step is only needed under Linux:
-
+- conda
 .. code-block:: bash
 
-  sudo apt-get install build-dep python-scipy
+    source activate myenv
+    cd path/to/garage/repo
+    pip install numpy=1.14.5
+    pip install -e .[all,dev]
 
-Install Python modules
-----------------------
 
+- virtualenv
 .. code-block:: bash
 
-  conda env create -f environment.yml
+    source myenv/bin/activate
+    cd path/to/garage/repo
+    pip install numpy==1.14.5
+    pip install -e .[all,dev]
+
 
 GPU Support
 ===========
 
-To enable GPU support, you need to run the express installation script with the argument :code:`--gpu`. This options installs GPU-supported Tensorflow and modules needed by Theano.
+To enable GPU support, install the `garage[gpu]` extra package into your Python environment.
 
-Before you run garage, you need to specify the directory for the CUDA library in environment variable :code:`LD_LIBRARY_PATH`. You may need to replace the directory conforming to your CUDA version accordingly.
+Before you run garage, you need to specify the directory for the CUDA library in environment variable :code:`LD_LIBRARY_PATH`. You may need to replace the directory conforming to your CUDA version accordingly. We recommend you add this to your shell profile (e.g. `~/.bashrc`) for convenience.
 
 .. code-block:: bash
 
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda-9.0/lib64
 
 
-You should now be able to use GPU in Tensorflow. For Theano, two additional steps are needed.
-
-* Specify CUDA root in :code:`~/.theanorc` (Create the file if it doesn't exist)
-
-.. code-block:: ini
-
-    [cuda]
-    root = /usr/local/cuda-9.0
-
-* | `Enable GPU for theano <http://deeplearning.net/software/theano/tutorial/using_gpu.html>`_ by
-
-.. code-block:: bash
-
-    export THEANO_FLAGS=device=cuda,floatX=float32,force_device=True
+You should now be able to use your GPU with TensorFlow and PyTorch.

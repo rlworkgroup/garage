@@ -1,6 +1,6 @@
 language: python
 
-python: "3.6.6"
+python: "3.5"
 
 services:
   - docker
@@ -22,6 +22,8 @@ jobs:
         - DEPLOY_FROM_THIS_JOB="true"
     - name: "Large tests"
       env: JOB_RUN_CMD="make ci-job-large"
+    - name: "Verify conda and pipenv installations"
+      env: JOB_RUN_CMD="make ci-job-verify-envs"
     - if: type = cron
       name: "Nightly tests"
       env: JOB_RUN_CMD="make ci-job-nightly"

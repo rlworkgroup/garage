@@ -13,16 +13,20 @@ configurations = [('last', 4), ('first', 0), (3, 3)]
 
 
 class TestSnapshot(TfGraphTestCase):
-    temp_dir = tempfile.TemporaryDirectory()
-    snapshot_config = SnapshotConfig(
-        snapshot_dir=temp_dir.name, snapshot_mode='all', snapshot_gap=1)
+    def setup_method(self):
+        super().setup_method()
+        self.temp_dir = tempfile.TemporaryDirectory()
+        snapshot_config = SnapshotConfig(
+            snapshot_dir=self.temp_dir.name,
+            snapshot_mode='all',
+            snapshot_gap=1)
+        fixture_exp(snapshot_config, self.sess)
+        for c in self.graph.collections:
+            self.graph.clear_collection(c)
 
-    @classmethod
-    def teardown_class(cls):
-        cls.temp_dir.cleanup()
-
-    def test_before_load(self):
-        fixture_exp(self.__class__.snapshot_config)
+    def teardown_method(self):
+        self.temp_dir.cleanup()
+        super().teardown_method()
 
     @pytest.mark.parametrize('load_mode, last_epoch', [*configurations])
     def test_load(self, load_mode, last_epoch):

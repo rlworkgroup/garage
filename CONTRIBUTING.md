@@ -21,7 +21,11 @@ After following the standard garage setup steps, make sure to run to install the
 
 To setup pre-commit in your repo:
 ```sh
-conda activate garage
+# make sure your Python environment is activated, e.g.
+# conda activate garage
+# pipenv shell
+# poetry shell
+# source venv/bin/activate
 pre-commit install -t pre-commit
 pre-commit install -t pre-push
 pre-commit install -t commit-msg
