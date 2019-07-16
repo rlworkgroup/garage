@@ -196,7 +196,7 @@ class GaussianMLPModel(Model):
                         layer_normalization=self._layer_normalization)
                 else:
                     log_std_network = parameter(
-                        state_input,
+                        input_var=state_input,
                         length=action_dim,
                         initializer=tf.constant_initializer(
                             self._init_std_param),

@@ -269,11 +269,9 @@ class GaussianCNNModel(Model):
                         name='log_std_network',
                         layer_normalization=self._layer_normalization)
                 else:
-                    batch_dim = tf.shape(state_input)[0]
                     log_std_network = parameter(
-                        state_input,
+                        input_var=state_input,
                         length=action_dim,
-                        batch_dim=[batch_dim],
                         initializer=tf.constant_initializer(
                             self._init_std_param),
                         trainable=self._learn_std,

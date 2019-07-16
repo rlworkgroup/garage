@@ -3,7 +3,7 @@ import numpy as np
 import tensorflow as tf
 
 from garage.tf.core.gru import gru
-from garage.tf.core.parameter import parameter
+from garage.tf.core.parameter import recurrent_parameter
 from garage.tf.distributions import DiagonalGaussian
 from garage.tf.models import Model
 
@@ -168,18 +168,13 @@ class GaussianGRUModel(Model):
                     _hidden_state_init_trainable,
                     output_nonlinearity_layer=self.
                     _mean_output_nonlinearity_layer)
-                log_std_var = parameter(
-                    state_input,
+                log_std_var, step_log_std_var = recurrent_parameter(
+                    input_var=state_input,
+                    step_input_var=step_input,
                     length=action_dim,
                     initializer=tf.constant_initializer(self._init_std_param),
                     trainable=self._learn_std,
                     name='log_std_param')
-                step_log_std_var = parameter(
-                    step_input,
-                    length=action_dim,
-                    initializer=tf.constant_initializer(self._init_std_param),
-                    trainable=self._learn_std,
-                    name='step_log_std_param')
 
         dist = DiagonalGaussian(self._output_dim)
         rnd = tf.random.normal(shape=step_mean_var.get_shape().as_list()[1:])
