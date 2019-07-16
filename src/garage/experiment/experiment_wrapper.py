@@ -19,7 +19,6 @@ import psutil
 
 from garage.experiment import deterministic, SnapshotConfig
 from garage.experiment.experiment import concretize
-from garage.experiment.local_tf_runner import LocalRunner
 from garage.misc.console import colorize
 import garage.plotter
 from garage.sampler import parallel_sampler
@@ -71,6 +70,18 @@ def run_experiment(argv):
         default=1,
         help='Gap between snapshot iterations.')
     parser.add_argument(
+        '--resume_from_dir',
+        type=str,
+        default=None,
+        help='Directory of the pickle file to resume experiment from.')
+    parser.add_argument(
+        '--resume_from_epoch',
+        type=str,
+        default=None,
+        help='Index of iteration to restore from. '
+        'Can be "first", "last" or a number. '
+        'Not applicable when snapshot_mode="last"')
+    parser.add_argument(
         '--tabular_log_file',
         type=str,
         default='progress.csv',
@@ -95,18 +106,6 @@ def run_experiment(argv):
         type=str,
         default='variant.json',
         help='Name of the variant log file (in json).')
-    parser.add_argument(
-        '--resume_from_dir',
-        type=str,
-        default=None,
-        help='Directory of the pickle file to resume experiment from.')
-    parser.add_argument(
-        '--resume_epoch',
-        type=str,
-        default=None,
-        help='Index of iteration to restore from. '
-        'Can be "first", "last" or a number. '
-        'Not applicable when snapshot_mode="last"')
     parser.add_argument(
         '--plot',
         type=ast.literal_eval,
@@ -156,11 +155,8 @@ def run_experiment(argv):
         garage.tf.plotter.Plotter.disable()
 
     if args.log_dir is None:
-        if args.resume_from_dir is None:
-            log_dir = os.path.join(
-                os.path.join(os.getcwd(), 'data'), args.exp_name)
-        else:
-            log_dir = args.resume_from_dir
+        log_dir = os.path.join(
+            os.path.join(os.getcwd(), 'data'), args.exp_name)
     else:
         log_dir = args.log_dir
 
@@ -190,31 +186,26 @@ def run_experiment(argv):
         snapshot_mode=args.snapshot_mode,
         snapshot_gap=args.snapshot_gap)
 
-    if args.resume_from_dir is not None:
-        with LocalRunner(snapshot_config=snapshot_config) as runner:
-            runner.restore(
-                from_dir=args.resume_from_dir, from_epoch=args.resume_epoch)
-            runner.resume()
+    # read from stdin
+    if args.use_cloudpickle:
+        import cloudpickle
+        method_call = cloudpickle.loads(base64.b64decode(args.args_data))
+        try:
+            method_call(snapshot_config, variant_data, args.resume_from_dir,
+                        args.resume_from_epoch)
+        except BaseException:
+            children = garage.plotter.Plotter.get_plotters()
+            children += garage.tf.plotter.Plotter.get_plotters()
+            if args.n_parallel > 0:
+                children += [parallel_sampler]
+            child_proc_shutdown(children)
+            raise
     else:
-        # read from stdin
-        if args.use_cloudpickle:
-            import cloudpickle
-            method_call = cloudpickle.loads(base64.b64decode(args.args_data))
-            try:
-                method_call(snapshot_config, variant_data)
-            except BaseException:
-                children = garage.plotter.Plotter.get_plotters()
-                children += garage.tf.plotter.Plotter.get_plotters()
-                if args.n_parallel > 0:
-                    children += [parallel_sampler]
-                child_proc_shutdown(children)
-                raise
-        else:
-            data = pickle.loads(base64.b64decode(args.args_data))
-            maybe_iter = concretize(data)
-            if is_iterable(maybe_iter):
-                for _ in maybe_iter:
-                    pass
+        data = pickle.loads(base64.b64decode(args.args_data))
+        maybe_iter = concretize(data)
+        if is_iterable(maybe_iter):
+            for _ in maybe_iter:
+                pass
 
     logger.remove_all()
     logger.pop_prefix()

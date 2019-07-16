@@ -1,10 +1,7 @@
 #!/usr/bin/env python3
-import os
-import subprocess
-
 import click
 
-from garage.experiment import to_local_command
+from garage.experiment import LocalRunner, run_experiment
 
 
 @click.group()
@@ -13,28 +10,31 @@ def cli():
 
 
 @cli.command()
+@click.argument('from_dir')
 @click.option(
-    '--snapshot_dir',
-    required=True,
-    help='Directory of the pickle file to resume experiment from.')
-@click.option(
-    '--resume_epoch',
+    '--from_epoch',
     default='last',
     help='Index of epoch to restore from. Can be "first", "last" or a number. '
     'Not applicable when snapshot_mode="last"')
-def resume(snapshot_dir, resume_epoch):
-    params = dict()
-    params['resume_from_dir'] = snapshot_dir
-    params['resume_epoch'] = resume_epoch
-    command = to_local_command(
-        params, script='garage.experiment.experiment_wrapper')
-    print(command)
-    try:
-        subprocess.call(command, shell=True, env=os.environ)
-    except Exception as e:
-        print(e)
-        if isinstance(e, KeyboardInterrupt):
-            raise
+@click.option(
+    '--log_dir',
+    default=None,
+    help='Path to save the log snapshot. If not specified, will be the same '
+    'as from_dir.')
+def resume(from_dir, from_epoch, log_dir):
+    if log_dir is None:
+        log_dir = from_dir
+
+    def run_task(_snapshot_config, _variant_data, _from_dir, _from_epoch):
+        with LocalRunner() as runner:
+            runner.restore(from_dir=_from_dir, from_epoch=_from_epoch)
+            runner.resume()
+
+    run_experiment(
+        run_task,
+        log_dir=log_dir,
+        resume_from_dir=from_dir,
+        resume_from_epoch=from_epoch)
 
 
 if __name__ == '__main__':
