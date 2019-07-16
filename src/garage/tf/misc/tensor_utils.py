@@ -13,22 +13,6 @@ def compile_function(inputs, outputs, log_name=None):
     return run
 
 
-def broadcast_with_batch(param, input_var, batch_dim=1):
-    """
-    Broadcast an existing variable to match input batch dimension.
-
-    Args:
-        param (tf.Tensor): Variable to broadcast.
-        input_var (tf.Tensor): Input batch variable.
-        batch_dim (int): Define the first `batch_dim` dimension as
-            Batch dimension. If None, default to be 1.
-    """
-    assert batch_dim > 0
-    batch_shape = tf.shape(input_var)[:batch_dim]
-    broadcast_shape = tf.concat(axis=0, values=[batch_shape, tf.shape(param)])
-    return tf.broadcast_to(param, shape=broadcast_shape)
-
-
 def get_target_ops(variables, target_variables, tau=None):
     """
     Get target variables update operations.
