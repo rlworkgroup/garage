@@ -4,7 +4,7 @@
    contain the root `toctree` directive.
 
 Welcome to garage
-================
+=================
 
 garage is a framework for developing and evaluating reinforcement learning algorithms.
 
@@ -27,7 +27,7 @@ The garage user guide explains how to install garage, how to run experiments, an
 
 
 Citing garage
-============
+=============
 
 If you use garage for academic research, you are highly encouraged to cite the following paper:
 
@@ -40,4 +40,3 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-
