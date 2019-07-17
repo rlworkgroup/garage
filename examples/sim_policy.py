@@ -8,7 +8,7 @@ import tensorflow as tf
 from garage.misc.console import query_yes_no
 from garage.sampler.utils import rollout
 
-if __name__ == "__main__":
+if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument('file', type=str, help='path to the snapshot file')
@@ -26,7 +26,7 @@ if __name__ == "__main__":
     #     [rest of the code]
     with tf.Session() as sess:
         data = joblib.load(args.file)
-        policy = data['policy']
+        policy = data['algo'].policy
         env = data['env']
         while True:
             path = rollout(
