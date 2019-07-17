@@ -82,9 +82,14 @@ RUN conda update -q -y conda
 # conda environment
 # Copy over just environment.yml and setup.py first, so the Docker cache doesn't
 # expire until they change
-# README.md is needed for setup.py
+#
+# Files needed to run setup.py
+# - README.md
+# - VERSION
+# - scripts/garage
+# - setup.py
 COPY README.md /root/code/garage/README.md
-COPY garage/__version__.py /root/code/garage/garage/__version__.py
+COPY VERSION /root/code/garage/VERSION
 COPY setup.py /root/code/garage/setup.py
 COPY environment.yml /root/code/garage/environment.yml
 
