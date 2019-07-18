@@ -70,6 +70,8 @@ git:
 branches:
   only:
   - master
+  - release-*
+  - /^v\d+\.\d+(\.\d+)?(-\S*)?$/  # regex for release tags
 
 notifications:
   email: false
