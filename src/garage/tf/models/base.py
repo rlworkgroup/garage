@@ -230,7 +230,8 @@ class Model(BaseModel):
             out_args.extend(network.outputs)
 
         c = namedtuple(network_name, [*in_spec, *out_spec])
-        self._networks[network_name] = c(*in_args, *out_args)
+        all_args = in_args + out_args
+        self._networks[network_name] = c(*all_args)
 
         return network.outputs
 

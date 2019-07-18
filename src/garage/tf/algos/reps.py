@@ -167,8 +167,7 @@ class REPS(BatchPolopt):
             x0=x0,
             fprime=eval_dual_grad,
             bounds=bounds,
-            **self.dual_optimizer_args,
-        )
+            **self.dual_optimizer_args)
 
         logger.log('Computing dual after')
         self.param_eta, self.param_v = params_ast[0], params_ast[1:]
