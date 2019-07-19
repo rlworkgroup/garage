@@ -37,12 +37,10 @@ class DeterministicPolicy:
         """Return a single action."""
         with torch.no_grad():
             x = self.forward(observation.unsqueeze(0))
-            d = torch.distributions.Uniform(x, x)
-            return d.rsample().numpy().squeeze(0)
+            return x.squeeze(0).numpy()
 
     def get_actions(self, observations):
         """Return multiple actions."""
         with torch.no_grad():
             x = self.forward(observations)
-            d = torch.distributions.Uniform(x, x)
-            return d.rsample().numpy()
+            return x.numpy()
