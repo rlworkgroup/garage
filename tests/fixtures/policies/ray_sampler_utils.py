@@ -1,11 +1,4 @@
-class MockAlgo():
-    def __init__(self, env_spec, policy, max_path_length=16):
-        self.env_spec = env_spec
-        self.policy = policy
-        self.max_path_length = max_path_length
-
-
-class ScriptedPolicy():
+class ScriptedPolicy:
     """
     A mock policy for 4x4 gridworldenv
 
