@@ -63,16 +63,27 @@ class TestOffPolicyVectorizedSampler(TfGraphTestCase):
             len2 = sum([len(path['rewards']) for path in paths2])
 
             assert len1 == 5 and len2 == 5, 'Sampler should respect batch_size'
-
             # yapf: disable
-            assert (len(paths1[0]['rewards']) + len(paths2[0]['rewards'])
-                    == paths2[0]['running_length']), (
-                'Running length should be the length of full path')
-            # yapf: enable
+            # When done is False in 1st sampling, the next sampling should be
+            # stacked with the last batch in 1st sampling
+            case1 = (len(paths1[-1]['rewards']) + len(paths2[0]['rewards'])
+                     == paths2[0]['running_length'])
+            # When done is True in 1st sampling, the next sampling should be
+            # separated
+            case2 = len(paths2[0]['rewards']) == paths2[0]['running_length']
+            done = paths1[-1]['dones'][-1]
+            assert (
+                (not done and case1) or (done and case2)
+            ), 'Running length should be the length of full path'
 
-            assert np.isclose(
-                paths1[0]['rewards'].sum() + paths2[0]['rewards'].sum(),
-                paths2[0]['undiscounted_return']
+            # yapf: enable
+            case1 = np.isclose(
+                paths1[-1]['rewards'].sum() + paths2[0]['rewards'].sum(),
+                paths2[0]['undiscounted_return'])
+            case2 = np.isclose(paths2[0]['rewards'].sum(),
+                               paths2[0]['undiscounted_return'])
+            assert (
+                (not done and case1) or (done and case2)
             ), 'Undiscounted_return should be the sum of rewards of full path'
 
     def test_algo_with_goal_without_es(self):
