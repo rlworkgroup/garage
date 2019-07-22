@@ -1,11 +1,11 @@
 import pytest
 import tensorflow as tf
 
-from garage.experiment import LocalRunner
 from garage.np.baselines import LinearFeatureBaseline
 from garage.sampler import singleton_pool
 from garage.tf.algos import VPG
 from garage.tf.envs import TfEnv
+from garage.tf.experiment import LocalTFRunner
 from garage.tf.plotter import Plotter
 from garage.tf.policies import CategoricalMLPPolicy
 from tests.fixtures import TfGraphTestCase
@@ -13,23 +13,23 @@ from tests.fixtures import TfGraphTestCase
 
 class TestLocalRunner(TfGraphTestCase):
     def test_session(self):
-        with LocalRunner():
-            assert tf.compat.v1.get_default_session is not None, (
+        with LocalTFRunner():
+            assert tf.compat.v1.get_default_session() is not None, (
                 'LocalRunner() should provide a default tf session.')
 
         sess = tf.compat.v1.Session()
-        with LocalRunner(sess=sess):
+        with LocalTFRunner(sess=sess):
             assert tf.compat.v1.get_default_session() is sess, (
                 'LocalRunner(sess) should use sess as default session.')
 
     def test_singleton_pool(self):
         max_cpus = 8
-        with LocalRunner(max_cpus=max_cpus):
+        with LocalTFRunner(max_cpus=max_cpus):
             assert max_cpus == singleton_pool.n_parallel, (
                 'LocalRunner(max_cpu) should set up singleton_pool.')
 
     def test_train(self):
-        with LocalRunner() as runner:
+        with LocalTFRunner() as runner:
             env = TfEnv(env_name='CartPole-v1')
 
             policy = CategoricalMLPPolicy(
@@ -51,13 +51,13 @@ class TestLocalRunner(TfGraphTestCase):
 
     def test_external_sess(self):
         with tf.compat.v1.Session() as sess:
-            with LocalRunner(sess=sess):
+            with LocalTFRunner(sess=sess):
                 pass
             # sess should still be the default session here.
             tf.no_op().run()
 
     def test_set_plot(self):
-        with LocalRunner() as runner:
+        with LocalTFRunner() as runner:
             env = TfEnv(env_name='CartPole-v1')
 
             policy = CategoricalMLPPolicy(
@@ -82,10 +82,10 @@ class TestLocalRunner(TfGraphTestCase):
 
     def test_call_train_before_set_up(self):
         with pytest.raises(Exception):
-            with LocalRunner() as runner:
+            with LocalTFRunner() as runner:
                 runner.train(n_epochs=1, batch_size=100)
 
     def test_call_save_before_set_up(self):
         with pytest.raises(Exception):
-            with LocalRunner() as runner:
+            with LocalTFRunner() as runner:
                 runner.save(0)

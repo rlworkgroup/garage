@@ -29,11 +29,11 @@ import tensorflow as tf
 
 from garage.envs import normalize
 from garage.experiment import deterministic
-from garage.experiment import LocalRunner
 from garage.np.exploration_strategies import OUStrategy
 from garage.replay_buffer import SimpleReplayBuffer
 from garage.tf.algos import DDPG
 from garage.tf.envs import TfEnv
+from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import ContinuousMLPPolicyWithModel
 from garage.tf.q_functions import ContinuousMLPQFunction
 import tests.helpers as Rh
@@ -149,7 +149,7 @@ def run_garage(env, seed, log_dir):
     '''
     deterministic.set_seed(seed)
 
-    with LocalRunner() as runner:
+    with LocalTFRunner() as runner:
         env = TfEnv(normalize(env))
         # Set up params for ddpg
         action_noise = OUStrategy(env.spec, sigma=params['sigma'])

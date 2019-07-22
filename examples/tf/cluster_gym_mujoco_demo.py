@@ -5,13 +5,13 @@ import sys
 import gym
 
 from garage.envs import normalize
-from garage.experiment import LocalRunner
 from garage.experiment import run_experiment
 from garage.experiment.experiment import variant
 from garage.experiment.experiment import VariantGenerator
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import TRPO
 from garage.tf.envs import TfEnv
+from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import GaussianMLPPolicy
 
 
@@ -26,7 +26,7 @@ class VG(VariantGenerator):
 
 
 def run_task(snapshot_config, vv):
-    with LocalRunner(snapshot_config=snapshot_config) as runner:
+    with LocalTFRunner(snapshot_config=snapshot_config) as runner:
         env = TfEnv(normalize(gym.make('HalfCheetah-v1')))
 
         policy = GaussianMLPPolicy(

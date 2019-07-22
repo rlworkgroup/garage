@@ -8,11 +8,11 @@ sizes and 5 seeds.
 """
 import sys
 
-from garage.experiment import LocalRunner
 from garage.experiment import run_experiment
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import TRPO
 from garage.tf.envs import TfEnv
+from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import CategoricalMLPPolicy
 
 
@@ -22,7 +22,7 @@ def run_task(snapshot_config, v):
     run_experiment can easily execute variants of the experiment on different
     machines
     """
-    with LocalRunner(snapshot_config=snapshot_config) as runner:
+    with LocalTFRunner(snapshot_config=snapshot_config) as runner:
         env = TfEnv(env_name='CartPole-v1')
 
         policy = CategoricalMLPPolicy(

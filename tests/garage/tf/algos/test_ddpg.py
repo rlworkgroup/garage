@@ -7,11 +7,11 @@ import pytest
 import tensorflow as tf
 
 from garage.envs import normalize
-from garage.experiment import LocalRunner
 from garage.np.exploration_strategies import OUStrategy
 from garage.replay_buffer import SimpleReplayBuffer
 from garage.tf.algos import DDPG
 from garage.tf.envs import TfEnv
+from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import ContinuousMLPPolicyWithModel
 from garage.tf.q_functions import ContinuousMLPQFunction
 from tests.fixtures import TfGraphTestCase
@@ -21,7 +21,7 @@ class TestDDPG(TfGraphTestCase):
     @pytest.mark.large
     def test_ddpg_double_pendulum(self):
         """Test DDPG with Pendulum environment."""
-        with LocalRunner(sess=self.sess) as runner:
+        with LocalTFRunner(sess=self.sess) as runner:
             env = TfEnv(gym.make('InvertedDoublePendulum-v2'))
             action_noise = OUStrategy(env.spec, sigma=0.2)
             policy = ContinuousMLPPolicyWithModel(
@@ -64,7 +64,7 @@ class TestDDPG(TfGraphTestCase):
 
         This environment has a [-3, 3] action_space bound.
         """
-        with LocalRunner(sess=self.sess) as runner:
+        with LocalTFRunner(sess=self.sess) as runner:
             env = TfEnv(normalize(gym.make('InvertedPendulum-v2')))
             action_noise = OUStrategy(env.spec, sigma=0.2)
             policy = ContinuousMLPPolicyWithModel(

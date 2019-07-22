@@ -6,17 +6,18 @@ Iterations alternate between live and importance sampled iterations.
 import gym
 
 from garage.envs import normalize
-from garage.experiment import LocalRunner, run_experiment
+from garage.experiment import run_experiment
 from garage.np.baselines import LinearFeatureBaseline
 from garage.sampler import ISSampler
 from garage.tf.algos import TRPO
 from garage.tf.envs import TfEnv
+from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import GaussianMLPPolicy
 
 
 def run_task(snapshot_config, *_):
     """Run the job."""
-    with LocalRunner(snapshot_config=snapshot_config) as runner:
+    with LocalTFRunner(snapshot_config=snapshot_config) as runner:
         env = TfEnv(normalize(gym.make('InvertedPendulum-v2')))
 
         policy = GaussianMLPPolicy(env_spec=env.spec, hidden_sizes=(32, 32))

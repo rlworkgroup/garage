@@ -23,10 +23,10 @@ import tensorflow as tf
 
 from garage.envs import normalize
 from garage.experiment import deterministic
-from garage.experiment import LocalRunner
 from garage.tf.algos import TRPO
 from garage.tf.baselines import GaussianMLPBaseline
 from garage.tf.envs import TfEnv
+from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import GaussianMLPPolicy
 import tests.helpers as Rh
 from tests.wrappers import AutoStopEnv
@@ -124,7 +124,7 @@ def run_garage(env, seed, log_dir):
     '''
     deterministic.set_seed(seed)
 
-    with LocalRunner() as runner:
+    with LocalTFRunner() as runner:
         env = TfEnv(normalize(env))
 
         policy = GaussianMLPPolicy(
