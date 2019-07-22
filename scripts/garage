@@ -26,7 +26,7 @@ def resume(from_dir, from_epoch, log_dir):
         log_dir = from_dir
 
     def run_task(_snapshot_config, _variant_data, _from_dir, _from_epoch):
-        with LocalRunner() as runner:
+        with LocalRunner(snapshot_config=_snapshot_config) as runner:
             runner.restore(from_dir=_from_dir, from_epoch=_from_epoch)
             runner.resume()
 
