@@ -1,3 +1,4 @@
+"""setuptools based setup module."""
 from setuptools import find_packages
 from setuptools import setup
 
@@ -74,7 +75,7 @@ extras['dev'] = [
     'recommonmark',
     'sphinx',
     'sphinx_rtd_theme',
-    'yapf',
+    'yapf==0.28.0',
 ]
 
 with open('README.md') as f:

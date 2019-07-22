@@ -111,4 +111,5 @@ RUN touch /root/.mujoco/mjkey.txt && \
 # Pre-build pre-commit env
 COPY .pre-commit-config.yaml /root/code/garage
 RUN git init && \
-  pre-commit
+  pre-commit install && \
+  pre-commit install-hooks
