@@ -56,7 +56,9 @@ NOTE: garage only supports Python 3.5+, so make sure you Python environment is u
     pip install garage
 
 Alternatively, you can add garage in the pip section of your `environment.yml`
+
 .. code-block:: yaml
+
     name: myenv
     channels:
       - conda-forge
