@@ -67,8 +67,8 @@ class TestContinuousMLPPolicyWithModel(TfGraphTestCase):
 
         expected_action = np.full(action_dim, 0.5)
 
-        action = self.sess.run(
-            action_sym, feed_dict={state_input: [obs.flatten()]})
+        action = self.sess.run(action_sym,
+                               feed_dict={state_input: [obs.flatten()]})
         action = policy.action_space.unflatten(action)
 
         assert np.array_equal(action, expected_action)

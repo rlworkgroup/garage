@@ -102,7 +102,6 @@ class GaussianCNNRegressorWithModel(StochasticRegressor2):
             it is 1.0, which means using all the data.
 
     """
-
     def __init__(self,
                  input_shape,
                  output_dim,
@@ -190,21 +189,20 @@ class GaussianCNNRegressorWithModel(StochasticRegressor2):
         self._initialize()
 
     def _initialize(self):
-        input_var = tf.placeholder(
-            tf.float32, shape=(None, ) + self._input_shape)
+        input_var = tf.placeholder(tf.float32,
+                                   shape=(None, ) + self._input_shape)
 
         with tf.variable_scope(self._variable_scope):
             self.model.build(input_var)
-            ys_var = tf.placeholder(
-                dtype=tf.float32, name='ys', shape=(None, self._output_dim))
-            old_means_var = tf.placeholder(
-                dtype=tf.float32,
-                name='old_means',
-                shape=(None, self._output_dim))
-            old_log_stds_var = tf.placeholder(
-                dtype=tf.float32,
-                name='old_log_stds',
-                shape=(None, self._output_dim))
+            ys_var = tf.placeholder(dtype=tf.float32,
+                                    name='ys',
+                                    shape=(None, self._output_dim))
+            old_means_var = tf.placeholder(dtype=tf.float32,
+                                           name='old_means',
+                                           shape=(None, self._output_dim))
+            old_log_stds_var = tf.placeholder(dtype=tf.float32,
+                                              name='old_log_stds',
+                                              shape=(None, self._output_dim))
 
             y_mean_var = self.model.networks['default'].y_mean
             y_std_var = self.model.networks['default'].y_std
@@ -220,14 +218,13 @@ class GaussianCNNRegressorWithModel(StochasticRegressor2):
             normalized_old_means_var = (old_means_var - y_mean_var) / y_std_var
             normalized_old_log_stds_var = old_log_stds_var - tf.log(y_std_var)
 
-            normalized_dist_info_vars = dict(
-                mean=normalized_means_var, log_std=normalized_log_stds_var)
+            normalized_dist_info_vars = dict(mean=normalized_means_var,
+                                             log_std=normalized_log_stds_var)
 
             mean_kl = tf.reduce_mean(
                 self.model.networks['default'].dist.kl_sym(
-                    dict(
-                        mean=normalized_old_means_var,
-                        log_std=normalized_old_log_stds_var),
+                    dict(mean=normalized_old_means_var,
+                         log_std=normalized_old_log_stds_var),
                     normalized_dist_info_vars,
                 ))
 

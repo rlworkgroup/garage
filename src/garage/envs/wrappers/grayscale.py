@@ -30,7 +30,6 @@ class Grayscale(gym.Wrapper):
             or environment is not gym.spaces.Box.
 
     """
-
     def __init__(self, env):
         if not isinstance(env.observation_space, gym.spaces.Box):
             raise ValueError(

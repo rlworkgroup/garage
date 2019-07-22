@@ -72,9 +72,9 @@ class Parameterized:
                                              self.get_param_shapes(**tags))
             ops = []
             feed_dict = dict()
-            for param, dtype, value in zip(
-                    self.get_params(**tags), self.get_param_dtypes(**tags),
-                    param_values):
+            for param, dtype, value in zip(self.get_params(**tags),
+                                           self.get_param_dtypes(**tags),
+                                           param_values):
                 if param not in self._cached_assign_ops:
                     assign_placeholder = tf.placeholder(
                         dtype=param.dtype.base_dtype)
@@ -83,8 +83,9 @@ class Parameterized:
                     self._cached_assign_placeholders[
                         param] = assign_placeholder
                 ops.append(self._cached_assign_ops[param])
-                feed_dict[self._cached_assign_placeholders[
-                    param]] = value.astype(dtype)
+                feed_dict[
+                    self._cached_assign_placeholders[param]] = value.astype(
+                        dtype)
                 if debug:
                     print('setting value of %s' % param.name)
             tf.get_default_session().run(ops, feed_dict=feed_dict)

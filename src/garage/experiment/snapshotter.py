@@ -24,7 +24,6 @@ class Snapshotter:
             of iterations before taking another snapshot.
 
     """
-
     def __init__(self, snapshot_dir=None, snapshot_mode='last',
                  snapshot_gap=1):
         if snapshot_dir:

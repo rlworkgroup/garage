@@ -12,14 +12,13 @@ class Policy(abc.ABC):
         env_spec (garage.envs.env_spec.EnvSpec): Environment specification.
 
     """
-
     def __init__(self, env_spec):
         self._env_spec = env_spec
 
     def get_action(self, observation):
         """Get action given observation."""
-        return np.squeeze(
-            self.get_actions(np.expand_dims(observation, axis=0)))
+        return np.squeeze(self.get_actions(np.expand_dims(observation,
+                                                          axis=0)))
 
     @abc.abstractmethod
     def get_actions(self, observations):

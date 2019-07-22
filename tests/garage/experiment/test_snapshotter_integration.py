@@ -16,10 +16,9 @@ class TestSnapshot(TfGraphTestCase):
     def setup_method(self):
         super().setup_method()
         self.temp_dir = tempfile.TemporaryDirectory()
-        snapshot_config = SnapshotConfig(
-            snapshot_dir=self.temp_dir.name,
-            snapshot_mode='all',
-            snapshot_gap=1)
+        snapshot_config = SnapshotConfig(snapshot_dir=self.temp_dir.name,
+                                         snapshot_mode='all',
+                                         snapshot_gap=1)
         fixture_exp(snapshot_config, self.sess)
         for c in self.graph.collections:
             self.graph.clear_collection(c)

@@ -9,8 +9,9 @@ def fixture_exp(snapshot_config, sess):
     with LocalRunner(snapshot_config=snapshot_config, sess=sess) as runner:
         env = TfEnv(env_name='CartPole-v1')
 
-        policy = CategoricalMLPPolicy(
-            name='policy', env_spec=env.spec, hidden_sizes=(8, 8))
+        policy = CategoricalMLPPolicy(name='policy',
+                                      env_spec=env.spec,
+                                      hidden_sizes=(8, 8))
 
         baseline = LinearFeatureBaseline(env_spec=env.spec)
 

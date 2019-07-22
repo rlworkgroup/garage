@@ -29,14 +29,12 @@ class TestOffPolicyVectorizedSampler(TfGraphTestCase):
                 hidden_sizes=[64, 64],
                 hidden_nonlinearity=tf.nn.relu,
                 output_nonlinearity=tf.nn.tanh)
-            qf = ContinuousMLPQFunction(
-                env_spec=env.spec,
-                hidden_sizes=[64, 64],
-                hidden_nonlinearity=tf.nn.relu)
-            replay_buffer = SimpleReplayBuffer(
-                env_spec=env.spec,
-                size_in_transitions=int(1e6),
-                time_horizon=100)
+            qf = ContinuousMLPQFunction(env_spec=env.spec,
+                                        hidden_sizes=[64, 64],
+                                        hidden_nonlinearity=tf.nn.relu)
+            replay_buffer = SimpleReplayBuffer(env_spec=env.spec,
+                                               size_in_transitions=int(1e6),
+                                               time_horizon=100)
             algo = DDPG(
                 env_spec=env.spec,
                 policy=policy,
@@ -91,15 +89,15 @@ class TestOffPolicyVectorizedSampler(TfGraphTestCase):
         # includes goal but is without exploration policy
         env = DummyDictEnv()
         policy = DummyPolicy(env)
-        replay_buffer = SimpleReplayBuffer(
-            env_spec=env, size_in_transitions=int(1e6), time_horizon=100)
-        algo = DummyOffPolicyAlgo(
-            env_spec=env,
-            qf=None,
-            replay_buffer=replay_buffer,
-            policy=policy,
-            exploration_strategy=None,
-            input_include_goal=True)
+        replay_buffer = SimpleReplayBuffer(env_spec=env,
+                                           size_in_transitions=int(1e6),
+                                           time_horizon=100)
+        algo = DummyOffPolicyAlgo(env_spec=env,
+                                  qf=None,
+                                  replay_buffer=replay_buffer,
+                                  policy=policy,
+                                  exploration_strategy=None,
+                                  input_include_goal=True)
 
         sampler = OffPolicyVectorizedSampler(algo, env, 1, no_reset=True)
         sampler.start_worker()

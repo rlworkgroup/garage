@@ -3,7 +3,6 @@ import abc
 
 class RLAlgorithm(abc.ABC):
     """Base class for all the algorithms."""
-
     @abc.abstractmethod
     def train_once(self, itr, paths):
         """Performs one step of policy optimization given one batch of samples.

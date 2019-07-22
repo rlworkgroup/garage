@@ -30,11 +30,10 @@ def resume(from_dir, from_epoch, log_dir):
             runner.restore(from_dir=_from_dir, from_epoch=_from_epoch)
             runner.resume()
 
-    run_experiment(
-        run_task,
-        log_dir=log_dir,
-        resume_from_dir=from_dir,
-        resume_from_epoch=from_epoch)
+    run_experiment(run_task,
+                   log_dir=log_dir,
+                   resume_from_dir=from_dir,
+                   resume_from_epoch=from_epoch)
 
 
 if __name__ == '__main__':

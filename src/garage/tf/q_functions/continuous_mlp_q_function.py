@@ -13,7 +13,6 @@ class ContinuousMLPQFunction(QFunction, LayersPowered, Serializable):
     This class implements a q value network to predict q based on the input
     state and action. It uses an MLP to fit the function of Q(s, a).
     """
-
     def __init__(self,
                  env_spec,
                  name='ContinuousMLPQFunction',
@@ -70,8 +69,8 @@ class ContinuousMLPQFunction(QFunction, LayersPowered, Serializable):
         """
         with tf.variable_scope(name):
             l_obs = L.InputLayer(shape=(None, self._obs_dim), name='obs')
-            l_action = L.InputLayer(
-                shape=(None, self._action_dim), name='actions')
+            l_action = L.InputLayer(shape=(None, self._action_dim),
+                                    name='actions')
 
             n_layers = len(self._hidden_sizes) + 1
 
@@ -90,22 +89,20 @@ class ContinuousMLPQFunction(QFunction, LayersPowered, Serializable):
                 if idx == action_merge_layer:
                     l_hidden = L.ConcatLayer([l_hidden, l_action])
 
-                l_hidden = L.DenseLayer(
-                    l_hidden,
-                    num_units=size,
-                    nonlinearity=self._hidden_nonlinearity,
-                    trainable=trainable,
-                    name='hidden_%d' % (idx + 1))
+                l_hidden = L.DenseLayer(l_hidden,
+                                        num_units=size,
+                                        nonlinearity=self._hidden_nonlinearity,
+                                        trainable=trainable,
+                                        name='hidden_%d' % (idx + 1))
 
             if action_merge_layer == n_layers:
                 l_hidden = L.ConcatLayer([l_hidden, l_action])
 
-            l_output = L.DenseLayer(
-                l_hidden,
-                num_units=1,
-                nonlinearity=self._output_nonlinearity,
-                trainable=trainable,
-                name='output')
+            l_output = L.DenseLayer(l_hidden,
+                                    num_units=1,
+                                    nonlinearity=self._output_nonlinearity,
+                                    trainable=trainable,
+                                    name='output')
 
             output_var = L.get_output(l_output)
 

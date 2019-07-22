@@ -56,7 +56,6 @@ class DDPG(OffPolicyRLAlgorithm):
         name (str): Name of the algorithm shown in computation graph.
 
     """
-
     def __init__(self,
                  env_spec,
                  policy,
@@ -106,23 +105,22 @@ class DDPG(OffPolicyRLAlgorithm):
 
         self.target_policy = policy.clone('target_policy')
 
-        super(DDPG, self).__init__(
-            env_spec=env_spec,
-            policy=policy,
-            qf=qf,
-            n_train_steps=n_train_steps,
-            n_epoch_cycles=n_epoch_cycles,
-            max_path_length=max_path_length,
-            buffer_batch_size=buffer_batch_size,
-            min_buffer_size=min_buffer_size,
-            rollout_batch_size=rollout_batch_size,
-            exploration_strategy=exploration_strategy,
-            replay_buffer=replay_buffer,
-            use_target=True,
-            discount=discount,
-            reward_scale=reward_scale,
-            input_include_goal=input_include_goal,
-            smooth_return=smooth_return)
+        super(DDPG, self).__init__(env_spec=env_spec,
+                                   policy=policy,
+                                   qf=qf,
+                                   n_train_steps=n_train_steps,
+                                   n_epoch_cycles=n_epoch_cycles,
+                                   max_path_length=max_path_length,
+                                   buffer_batch_size=buffer_batch_size,
+                                   min_buffer_size=min_buffer_size,
+                                   rollout_batch_size=rollout_batch_size,
+                                   exploration_strategy=exploration_strategy,
+                                   replay_buffer=replay_buffer,
+                                   use_target=True,
+                                   discount=discount,
+                                   reward_scale=reward_scale,
+                                   input_include_goal=input_include_goal,
+                                   smooth_return=smooth_return)
 
     @overrides
     def init_opt(self):
@@ -158,18 +156,18 @@ class DDPG(OffPolicyRLAlgorithm):
                 else:
                     obs_dim = self.env_spec.observation_space.flat_dim
                 y = tf.placeholder(tf.float32, shape=(None, 1), name='input_y')
-                obs = tf.placeholder(
-                    tf.float32,
-                    shape=(None, obs_dim),
-                    name='input_observation')
+                obs = tf.placeholder(tf.float32,
+                                     shape=(None, obs_dim),
+                                     name='input_observation')
                 actions = tf.placeholder(
                     tf.float32,
                     shape=(None, self.env_spec.action_space.flat_dim),
                     name='input_action')
             # Set up policy training function
             next_action = self.policy.get_action_sym(obs, name='policy_action')
-            next_qval = self.qf.get_qval_sym(
-                obs, next_action, name='policy_action_qval')
+            next_qval = self.qf.get_qval_sym(obs,
+                                             next_action,
+                                             name='policy_action_qval')
             with tf.name_scope('action_loss'):
                 action_loss = -tf.reduce_mean(next_qval)
                 if self.policy_weight_decay > 0.:

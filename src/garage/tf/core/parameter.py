@@ -33,12 +33,11 @@ def parameter(input_var,
         A tensor of the broadcasted variables.
     """
     with tf.variable_scope(name):
-        p = tf.get_variable(
-            'parameter',
-            shape=(length, ),
-            dtype=dtype,
-            initializer=initializer,
-            trainable=trainable)
+        p = tf.get_variable('parameter',
+                            shape=(length, ),
+                            dtype=dtype,
+                            initializer=initializer,
+                            trainable=trainable)
         batch_dim = tf.shape(input_var)[0]
         broadcast_shape = tf.concat(axis=0, values=[[batch_dim], [length]])
         p_broadcast = tf.broadcast_to(p, shape=broadcast_shape)
@@ -77,17 +76,16 @@ def recurrent_parameter(input_var,
             inputs, one for step inputs.
     """
     with tf.variable_scope(name):
-        p = tf.get_variable(
-            'parameter',
-            shape=(length, ),
-            dtype=dtype,
-            initializer=initializer,
-            trainable=trainable)
+        p = tf.get_variable('parameter',
+                            shape=(length, ),
+                            dtype=dtype,
+                            initializer=initializer,
+                            trainable=trainable)
         batch_dim = tf.shape(input_var)[:2]
         step_batch_dim = tf.shape(step_input_var)[:1]
         broadcast_shape = tf.concat(axis=0, values=[batch_dim, [length]])
-        step_broadcast_shape = tf.concat(
-            axis=0, values=[step_batch_dim, [length]])
+        step_broadcast_shape = tf.concat(axis=0,
+                                         values=[step_batch_dim, [length]])
         p_broadcast = tf.broadcast_to(p, shape=broadcast_shape)
         step_p_broadcast = tf.broadcast_to(p, shape=step_broadcast_shape)
         return p_broadcast, step_p_broadcast

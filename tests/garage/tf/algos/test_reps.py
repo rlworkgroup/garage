@@ -20,17 +20,16 @@ class TestREPS(TfGraphTestCase):
         with LocalRunner(sess=self.sess) as runner:
             env = TfEnv(gym.make('CartPole-v0'))
 
-            policy = CategoricalMLPPolicy(
-                env_spec=env.spec, hidden_sizes=[32, 32])
+            policy = CategoricalMLPPolicy(env_spec=env.spec,
+                                          hidden_sizes=[32, 32])
 
             baseline = LinearFeatureBaseline(env_spec=env.spec)
 
-            algo = REPS(
-                env_spec=env.spec,
-                policy=policy,
-                baseline=baseline,
-                max_path_length=100,
-                discount=0.99)
+            algo = REPS(env_spec=env.spec,
+                        policy=policy,
+                        baseline=baseline,
+                        max_path_length=100,
+                        discount=0.99)
 
             runner.setup(algo, env)
 

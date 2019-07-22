@@ -16,7 +16,6 @@ class ContinuousMLPRegressor(LayersPowered, Serializable, Parameterized):
     """
     A class for performing nonlinear regression.
     """
-
     def __init__(
             self,
             input_shape,
@@ -56,30 +55,30 @@ class ContinuousMLPRegressor(LayersPowered, Serializable, Parameterized):
 
             self._network_name = 'network'
             if network is None:
-                network = MLP(
-                    input_shape=input_shape,
-                    output_dim=output_dim,
-                    hidden_sizes=hidden_sizes,
-                    hidden_nonlinearity=hidden_nonlinearity,
-                    output_nonlinearity=output_nonlinearity,
-                    name=self._network_name)
+                network = MLP(input_shape=input_shape,
+                              output_dim=output_dim,
+                              hidden_sizes=hidden_sizes,
+                              hidden_nonlinearity=hidden_nonlinearity,
+                              output_nonlinearity=output_nonlinearity,
+                              name=self._network_name)
 
             l_out = network.output_layer
 
             LayersPowered.__init__(self, [l_out])
 
             xs_var = network.input_layer.input_var
-            ys_var = tf.placeholder(
-                dtype=tf.float32, shape=[None, output_dim], name='ys')
+            ys_var = tf.placeholder(dtype=tf.float32,
+                                    shape=[None, output_dim],
+                                    name='ys')
 
-            x_mean_var = tf.get_variable(
-                name='x_mean',
-                shape=(1, ) + input_shape,
-                initializer=tf.constant_initializer(0., dtype=tf.float32))
-            x_std_var = tf.get_variable(
-                name='x_std',
-                shape=(1, ) + input_shape,
-                initializer=tf.constant_initializer(1., dtype=tf.float32))
+            x_mean_var = tf.get_variable(name='x_mean',
+                                         shape=(1, ) + input_shape,
+                                         initializer=tf.constant_initializer(
+                                             0., dtype=tf.float32))
+            x_std_var = tf.get_variable(name='x_std',
+                                        shape=(1, ) + input_shape,
+                                        initializer=tf.constant_initializer(
+                                            1., dtype=tf.float32))
 
             normalized_xs_var = (xs_var - x_mean_var) / x_std_var
 

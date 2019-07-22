@@ -9,7 +9,6 @@ from tests.fixtures.distributions import DummyDistribution
 
 class DummyRecurrentPolicy(Policy, Serializable):
     """Dummy Recurrent Policy."""
-
     def __init__(
             self,
             env_spec,

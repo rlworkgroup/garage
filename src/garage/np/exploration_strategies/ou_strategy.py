@@ -27,7 +27,6 @@ class OUStrategy(ExplorationStrategy):
     Example:
         $ python garage/tf/exploration_strategies/ou_strategy.py
     """
-
     def __init__(self, env_spec, mu=0, sigma=0.3, theta=0.15, dt=1e-2,
                  x0=None):
         self.env_spec = env_spec
@@ -89,8 +88,10 @@ if __name__ == '__main__':
     import gym
     import matplotlib.pyplot as plt
 
-    ou = OUStrategy(
-        env_spec=gym.make('Pendulum-v0'), mu=0, theta=0.15, sigma=0.3)
+    ou = OUStrategy(env_spec=gym.make('Pendulum-v0'),
+                    mu=0,
+                    theta=0.15,
+                    sigma=0.3)
 
     states = []
     for i in range(1000):

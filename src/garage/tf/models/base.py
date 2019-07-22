@@ -31,7 +31,6 @@ class BaseModel(abc.ABC):
         output_2 = model_2.build(output)
 
     """
-
     def build(self, *inputs):
         """
         Output of model with the given input placeholder(s).
@@ -79,7 +78,6 @@ class Network:
     graphs, scoped by the Network name. All Networks built with the same
     model share the same parameters, i.e same inputs yield to same outputs.
     """
-
     @property
     def input(self):
         """Tensor input of the Network."""
@@ -150,7 +148,6 @@ class Model(BaseModel):
       name (str): Name of the model. It will also become the variable scope
       of the model. Every model should have a unique name.
     """
-
     def __init__(self, name):
         super().__init__()
         self._name = name or type(self).__name__  # name default to class
@@ -205,9 +202,9 @@ class Model(BaseModel):
             if network_name in self._networks:
                 raise ValueError(
                     'Network {} already exists!'.format(network_name))
-            with tf.variable_scope(
-                    self._variable_scope, reuse=True,
-                    auxiliary_name_scope=False):
+            with tf.variable_scope(self._variable_scope,
+                                   reuse=True,
+                                   auxiliary_name_scope=False):
                 with tf.name_scope(name=network_name):
                     network = Network()
                     network._inputs = inputs

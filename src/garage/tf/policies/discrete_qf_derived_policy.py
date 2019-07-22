@@ -20,7 +20,6 @@ class DiscreteQfDerivedPolicy(Policy2):
         qf (garage.q_functions.QFunction): The q-function used.
         name (str): Name of the policy.
     """
-
     def __init__(self, env_spec, qf, name='DiscreteQfDerivedPolicy'):
         super().__init__(name, env_spec)
 

@@ -11,7 +11,6 @@ class SimpleReplayBuffer(ReplayBuffer):
 
     It uses random batch sample to minimize correlations between samples.
     """
-
     @overrides
     def sample(self, batch_size):
         """Sample a transition of batch_size."""

@@ -39,7 +39,6 @@ class NormalizedInputMLPModel(MLPModel):
             tf.Tensor.
         layer_normalization (bool): Bool for using layer normalization or not.
     """
-
     def __init__(self,
                  input_shape,
                  output_dim,
@@ -52,17 +51,16 @@ class NormalizedInputMLPModel(MLPModel):
                  output_w_init=tf.glorot_uniform_initializer(),
                  output_b_init=tf.zeros_initializer(),
                  layer_normalization=False):
-        super().__init__(
-            output_dim=output_dim,
-            name=name,
-            hidden_sizes=hidden_sizes,
-            hidden_nonlinearity=hidden_nonlinearity,
-            hidden_w_init=hidden_w_init,
-            hidden_b_init=hidden_b_init,
-            output_nonlinearity=output_nonlinearity,
-            output_w_init=output_w_init,
-            output_b_init=output_b_init,
-            layer_normalization=layer_normalization)
+        super().__init__(output_dim=output_dim,
+                         name=name,
+                         hidden_sizes=hidden_sizes,
+                         hidden_nonlinearity=hidden_nonlinearity,
+                         hidden_w_init=hidden_w_init,
+                         hidden_b_init=hidden_b_init,
+                         output_nonlinearity=output_nonlinearity,
+                         output_w_init=output_w_init,
+                         output_b_init=output_b_init,
+                         layer_normalization=layer_normalization)
         self._input_shape = input_shape
 
     def network_output_spec(self):
@@ -71,18 +69,16 @@ class NormalizedInputMLPModel(MLPModel):
 
     def _build(self, state_input, name=None):
         with tf.variable_scope('normalized_vars'):
-            x_mean_var = tf.get_variable(
-                name='x_mean',
-                shape=(1, ) + self._input_shape,
-                dtype=np.float32,
-                initializer=tf.zeros_initializer(),
-                trainable=False)
-            x_std_var = tf.get_variable(
-                name='x_std_var',
-                shape=(1, ) + self._input_shape,
-                dtype=np.float32,
-                initializer=tf.ones_initializer(),
-                trainable=False)
+            x_mean_var = tf.get_variable(name='x_mean',
+                                         shape=(1, ) + self._input_shape,
+                                         dtype=np.float32,
+                                         initializer=tf.zeros_initializer(),
+                                         trainable=False)
+            x_std_var = tf.get_variable(name='x_std_var',
+                                        shape=(1, ) + self._input_shape,
+                                        dtype=np.float32,
+                                        initializer=tf.ones_initializer(),
+                                        trainable=False)
 
         normalized_xs_var = (state_input - x_mean_var) / x_std_var
 

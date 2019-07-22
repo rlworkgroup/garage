@@ -27,7 +27,6 @@ class OffPolicyRLAlgorithm(RLAlgorithm):
             ExplorationStrategy): Exploration strategy.
 
     """
-
     def __init__(self,
                  env_spec,
                  policy,
@@ -104,10 +103,9 @@ class OffPolicyRLAlgorithm(RLAlgorithm):
         # check if the last path is complete
         complete = [path['dones'][-1] for path in paths]
 
-        samples_data = dict(
-            undiscounted_returns=undiscounted_returns,
-            success_history=success_history,
-            complete=complete)
+        samples_data = dict(undiscounted_returns=undiscounted_returns,
+                            success_history=success_history,
+                            complete=complete)
 
         return samples_data
 

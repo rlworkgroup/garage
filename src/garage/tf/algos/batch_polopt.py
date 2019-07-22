@@ -35,7 +35,6 @@ class BatchPolopt(RLAlgorithm):
         fixed_horizon (bool): Whether to fix horizon.
 
     """
-
     def __init__(self,
                  env_spec,
                  policy,

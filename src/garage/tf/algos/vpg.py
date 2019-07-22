@@ -48,7 +48,6 @@ class VPG(NPO):
             https://arxiv.org/abs/1805.00909 for more details.
         name (str): The name of the algorithm.
     """
-
     def __init__(self,
                  env_spec,
                  policy,
@@ -81,25 +80,24 @@ class VPG(NPO):
                 optimizer_args = default_args
             else:
                 optimizer_args = dict(default_args, **optimizer_args)
-        super().__init__(
-            env_spec=env_spec,
-            policy=policy,
-            baseline=baseline,
-            scope=scope,
-            max_path_length=max_path_length,
-            discount=discount,
-            gae_lambda=gae_lambda,
-            center_adv=center_adv,
-            positive_adv=positive_adv,
-            fixed_horizon=fixed_horizon,
-            pg_loss=pg_loss,
-            lr_clip_range=lr_clip_range,
-            max_kl_step=max_kl_step,
-            optimizer=optimizer,
-            optimizer_args=optimizer_args,
-            policy_ent_coeff=policy_ent_coeff,
-            use_softplus_entropy=use_softplus_entropy,
-            use_neg_logli_entropy=use_neg_logli_entropy,
-            stop_entropy_gradient=stop_entropy_gradient,
-            entropy_method=entropy_method,
-            name=name)
+        super().__init__(env_spec=env_spec,
+                         policy=policy,
+                         baseline=baseline,
+                         scope=scope,
+                         max_path_length=max_path_length,
+                         discount=discount,
+                         gae_lambda=gae_lambda,
+                         center_adv=center_adv,
+                         positive_adv=positive_adv,
+                         fixed_horizon=fixed_horizon,
+                         pg_loss=pg_loss,
+                         lr_clip_range=lr_clip_range,
+                         max_kl_step=max_kl_step,
+                         optimizer=optimizer,
+                         optimizer_args=optimizer_args,
+                         policy_ent_coeff=policy_ent_coeff,
+                         use_softplus_entropy=use_softplus_entropy,
+                         use_neg_logli_entropy=use_neg_logli_entropy,
+                         stop_entropy_gradient=stop_entropy_gradient,
+                         entropy_method=entropy_method,
+                         name=name)

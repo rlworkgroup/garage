@@ -26,14 +26,15 @@ class DummyDiscretePixelEnv(DummyEnv):
         -all 5 lives are exhausted
         -env.step(2), followed by env.step(1)
     """
-
     def __init__(self, random=True):
         super().__init__(random, obs_dim=(10, 10, 3), action_dim=5)
         self.unwrapped.get_action_meanings = self._get_action_meanings
         self.unwrapped.ale = mock.Mock()
         self.unwrapped.ale.lives = self.get_lives
-        self._observation_space = gym.spaces.Box(
-            low=0, high=255, shape=self._obs_dim, dtype=np.uint8)
+        self._observation_space = gym.spaces.Box(low=0,
+                                                 high=255,
+                                                 shape=self._obs_dim,
+                                                 dtype=np.uint8)
         self.step_called = 0
         self._prev_action = None
 
@@ -83,18 +84,20 @@ class DummyDiscretePixelEnv(DummyEnv):
                 obs = np.full(self._obs_dim, 2, dtype=np.uint8)
             else:
                 if self.random:
-                    obs = np.random.uniform(
-                        low=0, high=256, size=self._obs_dim).astype(np.uint8)
+                    obs = np.random.uniform(low=0,
+                                            high=256,
+                                            size=self._obs_dim).astype(
+                                                np.uint8)
                 else:
                     obs = self.state + action
             if self._lives == 0:
-                raise RuntimeError("DummyEnv: Cannot step when lives = 0!")
+                raise RuntimeError('DummyEnv: Cannot step when lives = 0!')
             self._lives -= 1
             if self._lives == 0:
                 done = True
         else:
             raise RuntimeError(
-                "DummyEnv: reset() must be called before step()!")
+                'DummyEnv: reset() must be called before step()!')
         self.step_called += 1
         self._prev_action = action
 

@@ -95,8 +95,9 @@ class TestGaussianLSTMPolicyWithModelTransit(TfGraphTestCase):
 
             self.obs_ph = tf.placeholder(
                 tf.float32, shape=(None, None, env.observation_space.flat_dim))
-            self.action_ph = tf.placeholder(
-                tf.float32, shape=(None, None, env.action_space.flat_dim))
+            self.action_ph = tf.placeholder(tf.float32,
+                                            shape=(None, None,
+                                                   env.action_space.flat_dim))
 
             self.dist1_sym = self.policy1.dist_info_sym(
                 obs_var=self.obs_ph,
@@ -125,14 +126,14 @@ class TestGaussianLSTMPolicyWithModelTransit(TfGraphTestCase):
 
     def test_dist_info_sym_output(self):
         # batch size = 2
-        dist1 = self.sess.run(
-            self.dist1_sym, feed_dict={self.obs_ph: [self.obs, self.obs]})
-        dist2 = self.sess.run(
-            self.dist2_sym, feed_dict={self.obs_ph: [self.obs, self.obs]})
-        dist3 = self.sess.run(
-            self.dist3_sym, feed_dict={self.obs_ph: [self.obs, self.obs]})
-        dist4 = self.sess.run(
-            self.dist4_sym, feed_dict={self.obs_ph: [self.obs, self.obs]})
+        dist1 = self.sess.run(self.dist1_sym,
+                              feed_dict={self.obs_ph: [self.obs, self.obs]})
+        dist2 = self.sess.run(self.dist2_sym,
+                              feed_dict={self.obs_ph: [self.obs, self.obs]})
+        dist3 = self.sess.run(self.dist3_sym,
+                              feed_dict={self.obs_ph: [self.obs, self.obs]})
+        dist4 = self.sess.run(self.dist4_sym,
+                              feed_dict={self.obs_ph: [self.obs, self.obs]})
 
         assert np.array_equal(dist1['mean'], dist3['mean'])
         assert np.array_equal(dist1['log_std'], dist3['log_std'])
@@ -237,8 +238,8 @@ class TestGaussianLSTMPolicyWithModelTransit(TfGraphTestCase):
             name='li_ratio_sym1')
         likelihood_ratio_func = tensor_utils.compile_function(
             [self.action_ph, self.obs_ph], likelihood_ratio_sym1)
-        likelihood_ratio1 = likelihood_ratio_func(
-            np.ones((2, 1, 1)), [self.obs, self.obs])
+        likelihood_ratio1 = likelihood_ratio_func(np.ones((2, 1, 1)),
+                                                  [self.obs, self.obs])
 
         likelihood_ratio_sym2 = self.policy3.distribution.likelihood_ratio_sym(
             self.action_ph,
@@ -247,7 +248,7 @@ class TestGaussianLSTMPolicyWithModelTransit(TfGraphTestCase):
             name='li_ratio_sym2')
         likelihood_ratio_func = tensor_utils.compile_function(
             [self.action_ph, self.obs_ph], likelihood_ratio_sym2)
-        likelihood_ratio2 = likelihood_ratio_func(
-            np.ones((2, 1, 1)), [self.obs, self.obs])
+        likelihood_ratio2 = likelihood_ratio_func(np.ones((2, 1, 1)),
+                                                  [self.obs, self.obs])
 
         assert np.array_equal(likelihood_ratio1, likelihood_ratio2)

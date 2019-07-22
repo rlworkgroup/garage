@@ -90,20 +90,18 @@ def test_cg():
     x = cg(lambda x: a.dot(x), b, cg_iters=5, verbose=True)
     assert np.allclose(a.dot(x), b)
 
-    x = preconditioned_cg(
-        lambda x: a.dot(x),
-        lambda x: np.linalg.solve(a, x),
-        b,
-        cg_iters=5,
-        verbose=True)  # pylint: disable=W0108
+    x = preconditioned_cg(lambda x: a.dot(x),
+                          lambda x: np.linalg.solve(a, x),
+                          b,
+                          cg_iters=5,
+                          verbose=True)  # pylint: disable=W0108
     assert np.allclose(a.dot(x), b)
 
-    x = preconditioned_cg(
-        lambda x: a.dot(x),
-        lambda x: x / np.diag(a),
-        b,
-        cg_iters=5,
-        verbose=True)  # pylint: disable=W0108
+    x = preconditioned_cg(lambda x: a.dot(x),
+                          lambda x: x / np.diag(a),
+                          b,
+                          cg_iters=5,
+                          verbose=True)  # pylint: disable=W0108
     assert np.allclose(a.dot(x), b)
 
 

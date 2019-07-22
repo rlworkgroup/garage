@@ -17,18 +17,18 @@ class TestTNPG(TfGraphTestCase):
         with LocalRunner(sess=self.sess) as runner:
             env = TfEnv(normalize(gym.make('InvertedPendulum-v2')))
 
-            policy = GaussianMLPPolicy(
-                name='policy', env_spec=env.spec, hidden_sizes=(32, 32))
+            policy = GaussianMLPPolicy(name='policy',
+                                       env_spec=env.spec,
+                                       hidden_sizes=(32, 32))
 
             baseline = LinearFeatureBaseline(env_spec=env.spec)
 
-            algo = TNPG(
-                env_spec=env.spec,
-                policy=policy,
-                baseline=baseline,
-                max_path_length=100,
-                discount=0.99,
-                optimizer_args=dict(reg_coeff=5e-1))
+            algo = TNPG(env_spec=env.spec,
+                        policy=policy,
+                        baseline=baseline,
+                        max_path_length=100,
+                        discount=0.99,
+                        optimizer_args=dict(reg_coeff=5e-1))
 
             runner.setup(algo, env)
 

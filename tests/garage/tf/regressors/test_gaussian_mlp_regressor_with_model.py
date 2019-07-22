@@ -52,12 +52,11 @@ class TestGaussianMLPRegressorWithModel(TfGraphTestCase):
     # unmarked to balance test jobs
     # @pytest.mark.large
     def test_fit_unnormalized(self):
-        gmr = GaussianMLPRegressorWithModel(
-            input_shape=(1, ),
-            output_dim=1,
-            subsample_factor=0.9,
-            normalize_inputs=False,
-            normalize_outputs=False)
+        gmr = GaussianMLPRegressorWithModel(input_shape=(1, ),
+                                            output_dim=1,
+                                            subsample_factor=0.9,
+                                            normalize_inputs=False,
+                                            normalize_outputs=False)
         data = np.linspace(-np.pi, np.pi, 1000)
         obs = [{'observations': [[x]], 'returns': [np.sin(x)]} for x in data]
 
@@ -94,8 +93,9 @@ class TestGaussianMLPRegressorWithModel(TfGraphTestCase):
     # unmarked to balance test jobs
     # @pytest.mark.large
     def test_fit_smaller_subsample_factor(self):
-        gmr = GaussianMLPRegressorWithModel(
-            input_shape=(1, ), output_dim=1, subsample_factor=0.9)
+        gmr = GaussianMLPRegressorWithModel(input_shape=(1, ),
+                                            output_dim=1,
+                                            subsample_factor=0.9)
         data = np.linspace(-np.pi, np.pi, 1000)
         obs = [{'observations': [[x]], 'returns': [np.sin(x)]} for x in data]
 
@@ -117,8 +117,9 @@ class TestGaussianMLPRegressorWithModel(TfGraphTestCase):
     # unmarked to balance test jobs
     # @pytest.mark.large
     def test_fit_without_trusted_region(self):
-        gmr = GaussianMLPRegressorWithModel(
-            input_shape=(1, ), output_dim=1, use_trust_region=False)
+        gmr = GaussianMLPRegressorWithModel(input_shape=(1, ),
+                                            output_dim=1,
+                                            use_trust_region=False)
         data = np.linspace(-np.pi, np.pi, 1000)
         obs = [{'observations': [[x]], 'returns': [np.sin(x)]} for x in data]
 
@@ -141,27 +142,28 @@ class TestGaussianMLPRegressorWithModel(TfGraphTestCase):
                              [(1, (1, )), (1, (2, )), (2, (3, )), (2, (1, 1)),
                               (3, (2, 2))])
     def test_log_likelihood_sym(self, output_dim, input_shape):
-        gmr = GaussianMLPRegressorWithModel(
-            input_shape=input_shape,
-            output_dim=output_dim,
-            optimizer=PenaltyLbfgsOptimizer,
-            optimizer_args=dict())
+        gmr = GaussianMLPRegressorWithModel(input_shape=input_shape,
+                                            output_dim=output_dim,
+                                            optimizer=PenaltyLbfgsOptimizer,
+                                            optimizer_args=dict())
 
-        new_input_var = tf.placeholder(
-            tf.float32, shape=(None, ) + input_shape)
-        new_ys_var = tf.placeholder(
-            dtype=tf.float32, name='ys', shape=(None, output_dim))
+        new_input_var = tf.placeholder(tf.float32,
+                                       shape=(None, ) + input_shape)
+        new_ys_var = tf.placeholder(dtype=tf.float32,
+                                    name='ys',
+                                    shape=(None, output_dim))
 
         data = np.random.random(size=input_shape)
         label = np.ones(output_dim)
 
-        outputs = gmr.log_likelihood_sym(
-            new_input_var, new_ys_var, name='ll_sym')
-        ll_from_sym = self.sess.run(
-            outputs, feed_dict={
-                new_input_var: [data],
-                new_ys_var: [label]
-            })
+        outputs = gmr.log_likelihood_sym(new_input_var,
+                                         new_ys_var,
+                                         name='ll_sym')
+        ll_from_sym = self.sess.run(outputs,
+                                    feed_dict={
+                                        new_input_var: [data],
+                                        new_ys_var: [label]
+                                    })
         mean, log_std = gmr._f_pdists([data])
         ll = gmr.model.networks['default'].dist.log_likelihood(
             [label], dict(mean=mean, log_std=log_std))

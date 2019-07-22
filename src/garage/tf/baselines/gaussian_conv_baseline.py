@@ -16,7 +16,6 @@ class GaussianConvBaseline(Baseline, Parameterized, Serializable):
         env_spec: a TfEnv.spec, which contains env spaces info.
 
     """
-
     def __init__(
             self,
             env_spec,

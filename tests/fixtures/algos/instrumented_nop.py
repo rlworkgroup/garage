@@ -13,7 +13,6 @@ class InstrumentedNOP(InstrumentedBatchPolopt):
     """
     NOP (no optimization performed) policy search algorithm
     """
-
     def __init__(self, **kwargs):
         super(InstrumentedNOP, self).__init__(**kwargs)
 

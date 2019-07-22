@@ -75,8 +75,8 @@ class TestBernoulliMLPRegressorWithModel(TfGraphTestCase):
     ])
     # yapf: enable
     def test_fit_normalized(self, input_shape, output_dim):
-        bmr = BernoulliMLPRegressorWithModel(
-            input_shape=input_shape, output_dim=output_dim)
+        bmr = BernoulliMLPRegressorWithModel(input_shape=input_shape,
+                                             output_dim=output_dim)
 
         observations, returns = get_train_data(input_shape, output_dim)
 
@@ -104,10 +104,9 @@ class TestBernoulliMLPRegressorWithModel(TfGraphTestCase):
     ])
     # yapf: enable
     def test_fit_unnormalized(self, input_shape, output_dim):
-        bmr = BernoulliMLPRegressorWithModel(
-            input_shape=input_shape,
-            output_dim=output_dim,
-            normalize_inputs=False)
+        bmr = BernoulliMLPRegressorWithModel(input_shape=input_shape,
+                                             output_dim=output_dim,
+                                             normalize_inputs=False)
 
         observations, returns = get_train_data(input_shape, output_dim)
 
@@ -136,10 +135,9 @@ class TestBernoulliMLPRegressorWithModel(TfGraphTestCase):
     ])
     # yapf: enable
     def test_fit_with_no_trust_region(self, input_shape, output_dim):
-        bmr = BernoulliMLPRegressorWithModel(
-            input_shape=input_shape,
-            output_dim=output_dim,
-            use_trust_region=False)
+        bmr = BernoulliMLPRegressorWithModel(input_shape=input_shape,
+                                             output_dim=output_dim,
+                                             use_trust_region=False)
 
         observations, returns = get_train_data(input_shape, output_dim)
 
@@ -168,12 +166,13 @@ class TestBernoulliMLPRegressorWithModel(TfGraphTestCase):
     ])
     # yapf: enable
     def test_log_likelihood_sym(self, output_dim, input_shape):
-        bmr = BernoulliMLPRegressorWithModel(
-            input_shape=(input_shape[1], ), output_dim=output_dim)
+        bmr = BernoulliMLPRegressorWithModel(input_shape=(input_shape[1], ),
+                                             output_dim=output_dim)
 
         new_xs_var = tf.placeholder(tf.float32, input_shape)
-        new_ys_var = tf.placeholder(
-            dtype=tf.float32, name='ys', shape=(None, output_dim))
+        new_ys_var = tf.placeholder(dtype=tf.float32,
+                                    name='ys',
+                                    shape=(None, output_dim))
 
         data = np.full(input_shape, 0.5)
         one_hot_label = np.zeros((input_shape[0], output_dim))
@@ -184,11 +183,11 @@ class TestBernoulliMLPRegressorWithModel(TfGraphTestCase):
 
         outputs = bmr.log_likelihood_sym(new_xs_var, new_ys_var, name='ll_sym')
 
-        ll_from_sym = self.sess.run(
-            outputs, feed_dict={
-                new_xs_var: data,
-                new_ys_var: one_hot_label
-            })
+        ll_from_sym = self.sess.run(outputs,
+                                    feed_dict={
+                                        new_xs_var: data,
+                                        new_ys_var: one_hot_label
+                                    })
 
         assert np.allclose(ll, ll_from_sym, rtol=0, atol=1e-5)
 

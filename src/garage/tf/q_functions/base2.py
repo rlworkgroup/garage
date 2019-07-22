@@ -10,7 +10,6 @@ class QFunction2(abc.ABC):
         name (str): Name of the Q-fucntion, also the variable scope.
 
     """
-
     def __init__(self, name):
         self.name = name or type(self).__name__
         self._variable_scope = None

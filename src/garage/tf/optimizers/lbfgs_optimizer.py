@@ -12,7 +12,6 @@ class LbfgsOptimizer(Serializable):
     """
     Performs unconstrained optimization via L-BFGS.
     """
-
     def __init__(self, max_opt_itr=20, callback=None):
         Serializable.quick_init(self, locals())
         self._max_opt_itr = max_opt_itr

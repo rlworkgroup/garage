@@ -16,7 +16,6 @@ class Regressor2(abc.ABC):
         output_dim (int): Output dimension.
         name (str): Name of the regressor.
     """
-
     def __init__(self, input_shape, output_dim, name):
         self._input_shape = input_shape
         self._output_dim = output_dim
@@ -117,7 +116,6 @@ class StochasticRegressor2(Regressor2):
         output_dim (int): Output dimension.
         name (str): Name of the regressor.
     """
-
     def __init__(self, input_shape, output_dim, name):
         super().__init__(input_shape, output_dim, name)
 

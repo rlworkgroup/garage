@@ -5,7 +5,6 @@ from garage.tf.models import Model
 
 class SimpleCNNModel(Model):
     """Simple CNNModel for testing."""
-
     def __init__(self,
                  num_filters,
                  filter_dims,
@@ -30,6 +29,6 @@ class SimpleCNNModel(Model):
             else:
                 current_size = int((current_size - filter_dim) / stride) + 1
         flatten_shape = current_size * current_size * self.num_filters[-1]
-        return_var = tf.get_variable(
-            'return_var', (), initializer=tf.constant_initializer(0.5))
+        return_var = tf.get_variable('return_var', (),
+                                     initializer=tf.constant_initializer(0.5))
         return tf.fill((tf.shape(obs_input)[0], flatten_shape), return_var)

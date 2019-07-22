@@ -63,7 +63,6 @@ class GaussianMLPPolicyWithModel(StochasticPolicy2):
     :return:
 
     """
-
     def __init__(self,
                  env_spec,
                  name='GaussianMLPPolicyWithModel',
@@ -137,8 +136,8 @@ class GaussianMLPPolicyWithModel(StochasticPolicy2):
     def dist_info_sym(self, obs_var, state_info_vars=None, name='default'):
         """Symbolic graph of the distribution."""
         with tf.variable_scope(self._variable_scope):
-            _, mean_var, log_std_var, _, _ = self.model.build(
-                obs_var, name=name)
+            _, mean_var, log_std_var, _, _ = self.model.build(obs_var,
+                                                              name=name)
         return dict(mean=mean_var, log_std=log_std_var)
 
     def get_action(self, observation):

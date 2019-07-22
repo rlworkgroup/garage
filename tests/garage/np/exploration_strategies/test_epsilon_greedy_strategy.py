@@ -9,7 +9,6 @@ from tests.fixtures.envs.dummy import DummyDiscreteEnv
 
 class SimplePolicy:
     """Simple policy for testing."""
-
     def __init__(self, env_spec):
         self.env_spec = env_spec
 

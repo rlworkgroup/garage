@@ -93,8 +93,8 @@ class ParallelVecEnvExecutor:
             start_id += n_allocs
             rest_alloc = max(0, rest_alloc - envs_per_worker)
 
-        singleton_pool.run_each(
-            worker_init_envs, [(alloc, scope, env) for alloc in alloc_env_ids])
+        singleton_pool.run_each(worker_init_envs, [(alloc, scope, env)
+                                                   for alloc in alloc_env_ids])
 
         self._alloc_env_ids = alloc_env_ids
         self._action_space = env.action_space

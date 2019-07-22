@@ -29,10 +29,9 @@ class MLP(LayersPowered, Serializable):
 
         with tf.variable_scope(name, 'MLP'):
             if input_layer is None:
-                l_in = ly.InputLayer(
-                    shape=(None, ) + input_shape,
-                    input_var=input_var,
-                    name='input')
+                l_in = ly.InputLayer(shape=(None, ) + input_shape,
+                                     input_var=input_var,
+                                     name='input')
             else:
                 l_in = input_layer
             self._layers = [l_in]
@@ -51,14 +50,13 @@ class MLP(LayersPowered, Serializable):
                 if batch_normalization:
                     l_hid = ly.batch_norm(l_hid)
                 self._layers.append(l_hid)
-            l_out = ly.DenseLayer(
-                l_hid,
-                num_units=output_dim,
-                nonlinearity=output_nonlinearity,
-                name='output',
-                w=output_w_init,
-                b=output_b_init,
-                weight_normalization=weight_normalization)
+            l_out = ly.DenseLayer(l_hid,
+                                  num_units=output_dim,
+                                  nonlinearity=output_nonlinearity,
+                                  name='output',
+                                  w=output_w_init,
+                                  b=output_b_init,
+                                  weight_normalization=weight_normalization)
             if batch_normalization:
                 l_out = ly.batch_norm(l_out)
             self._layers.append(l_out)
@@ -125,25 +123,22 @@ class ConvNetwork(LayersPowered, Serializable):
                 l_in = input_layer
                 l_hid = l_in
             elif len(input_shape) == 3:
-                l_in = ly.InputLayer(
-                    shape=(None, np.prod(input_shape)),
-                    input_var=input_var,
-                    name='input')
-                l_hid = ly.reshape(
-                    l_in, ([0], ) + input_shape, name='reshape_input')
+                l_in = ly.InputLayer(shape=(None, np.prod(input_shape)),
+                                     input_var=input_var,
+                                     name='input')
+                l_hid = ly.reshape(l_in, ([0], ) + input_shape,
+                                   name='reshape_input')
             elif len(input_shape) == 2:
-                l_in = ly.InputLayer(
-                    shape=(None, np.prod(input_shape)),
-                    input_var=input_var,
-                    name='input')
+                l_in = ly.InputLayer(shape=(None, np.prod(input_shape)),
+                                     input_var=input_var,
+                                     name='input')
                 input_shape = (1, ) + input_shape
-                l_hid = ly.reshape(
-                    l_in, ([0], ) + input_shape, name='reshape_input')
+                l_hid = ly.reshape(l_in, ([0], ) + input_shape,
+                                   name='reshape_input')
             else:
-                l_in = ly.InputLayer(
-                    shape=(None, ) + input_shape,
-                    input_var=input_var,
-                    name='input')
+                l_in = ly.InputLayer(shape=(None, ) + input_shape,
+                                     input_var=input_var,
+                                     name='input')
                 l_hid = l_in
 
             if batch_normalization:
@@ -235,56 +230,54 @@ class GRUNetwork:
                  layer_args=None):
         with tf.variable_scope(name, 'GRUNetwork'):
             if input_layer is None:
-                l_in = ly.InputLayer(
-                    shape=(None, None) + input_shape,
-                    input_var=input_var,
-                    name='input')
+                l_in = ly.InputLayer(shape=(None, None) + input_shape,
+                                     input_var=input_var,
+                                     name='input')
             else:
                 l_in = input_layer
-            l_step_input = ly.InputLayer(
-                shape=(None, ) + input_shape, name='step_input')
-            l_step_prev_state = ly.InputLayer(
-                shape=(None, hidden_dim), name='step_prev_state')
+            l_step_input = ly.InputLayer(shape=(None, ) + input_shape,
+                                         name='step_input')
+            l_step_prev_state = ly.InputLayer(shape=(None, hidden_dim),
+                                              name='step_prev_state')
             if layer_args is None:
                 layer_args = dict()
-            l_gru = gru_layer_cls(
-                l_in,
-                num_units=hidden_dim,
-                hidden_nonlinearity=hidden_nonlinearity,
-                gate_nonlinearity=recurrent_nonlinearity,
-                hidden_init_trainable=False,
-                w_x_init=recurrent_w_x_init,
-                w_h_init=recurrent_w_h_init,
-                name='gru',
-                **layer_args)
-            l_gru_flat = ly.ReshapeLayer(
-                l_gru, shape=(-1, hidden_dim), name='gru_flat')
-            l_output_flat = ly.DenseLayer(
-                l_gru_flat,
-                num_units=output_dim,
-                nonlinearity=output_nonlinearity,
-                w=output_w_init,
-                name='output_flat')
+            l_gru = gru_layer_cls(l_in,
+                                  num_units=hidden_dim,
+                                  hidden_nonlinearity=hidden_nonlinearity,
+                                  gate_nonlinearity=recurrent_nonlinearity,
+                                  hidden_init_trainable=False,
+                                  w_x_init=recurrent_w_x_init,
+                                  w_h_init=recurrent_w_h_init,
+                                  name='gru',
+                                  **layer_args)
+            l_gru_flat = ly.ReshapeLayer(l_gru,
+                                         shape=(-1, hidden_dim),
+                                         name='gru_flat')
+            l_output_flat = ly.DenseLayer(l_gru_flat,
+                                          num_units=output_dim,
+                                          nonlinearity=output_nonlinearity,
+                                          w=output_w_init,
+                                          name='output_flat')
             l_output = ly.OpLayer(
                 l_output_flat,
                 op=lambda flat_output, l_input: tf.reshape(
                     flat_output,
-                    tf.stack((tf.shape(l_input)[0], tf.shape(l_input)[1], -1))
-                ),
-                shape_op=lambda flat_output_shape, l_input_shape: (
-                    l_input_shape[0], l_input_shape[1], flat_output_shape[-1]),
+                    tf.stack(
+                        (tf.shape(l_input)[0], tf.shape(l_input)[1], -1))),
+                shape_op=lambda flat_output_shape, l_input_shape:
+                (l_input_shape[0], l_input_shape[1], flat_output_shape[-1]),
                 extras=[l_in],
                 name='output')
-            l_step_state = l_gru.get_step_layer(
-                l_step_input, l_step_prev_state, name='step_state')
+            l_step_state = l_gru.get_step_layer(l_step_input,
+                                                l_step_prev_state,
+                                                name='step_state')
             l_step_hidden = l_step_state
-            l_step_output = ly.DenseLayer(
-                l_step_hidden,
-                num_units=output_dim,
-                nonlinearity=output_nonlinearity,
-                w=l_output_flat.w,
-                b=l_output_flat.b,
-                name='step_output')
+            l_step_output = ly.DenseLayer(l_step_hidden,
+                                          num_units=output_dim,
+                                          nonlinearity=output_nonlinearity,
+                                          w=l_output_flat.w,
+                                          b=l_output_flat.b,
+                                          name='step_output')
 
             self._l_in = l_in
             self._hid_init_param = l_gru.h0
@@ -370,65 +363,63 @@ class LSTMNetwork:
                  layer_args=None):
         with tf.variable_scope(name, 'LSTMNetwork'):
             if input_layer is None:
-                l_in = ly.InputLayer(
-                    shape=(None, None) + input_shape,
-                    input_var=input_var,
-                    name='input')
+                l_in = ly.InputLayer(shape=(None, None) + input_shape,
+                                     input_var=input_var,
+                                     name='input')
             else:
                 l_in = input_layer
-            l_step_input = ly.InputLayer(
-                shape=(None, ) + input_shape, name='step_input')
+            l_step_input = ly.InputLayer(shape=(None, ) + input_shape,
+                                         name='step_input')
             # contains previous hidden and cell state
-            l_step_prev_state = ly.InputLayer(
-                shape=(None, hidden_dim * 2), name='step_prev_state')
+            l_step_prev_state = ly.InputLayer(shape=(None, hidden_dim * 2),
+                                              name='step_prev_state')
             if layer_args is None:
                 layer_args = dict()
-            l_lstm = lstm_layer_cls(
-                l_in,
-                num_units=hidden_dim,
-                hidden_nonlinearity=hidden_nonlinearity,
-                gate_nonlinearity=recurrent_nonlinearity,
-                hidden_init_trainable=False,
-                name='lstm_layer',
-                forget_bias=forget_bias,
-                cell_init_trainable=False,
-                w_x_init=recurrent_w_x_init,
-                w_h_init=recurrent_w_h_init,
-                use_peepholes=use_peepholes,
-                **layer_args)
-            l_lstm_flat = ly.ReshapeLayer(
-                l_lstm, shape=(-1, hidden_dim), name='lstm_flat')
-            l_output_flat = ly.DenseLayer(
-                l_lstm_flat,
-                num_units=output_dim,
-                nonlinearity=output_nonlinearity,
-                w=output_w_init,
-                name='output_flat')
+            l_lstm = lstm_layer_cls(l_in,
+                                    num_units=hidden_dim,
+                                    hidden_nonlinearity=hidden_nonlinearity,
+                                    gate_nonlinearity=recurrent_nonlinearity,
+                                    hidden_init_trainable=False,
+                                    name='lstm_layer',
+                                    forget_bias=forget_bias,
+                                    cell_init_trainable=False,
+                                    w_x_init=recurrent_w_x_init,
+                                    w_h_init=recurrent_w_h_init,
+                                    use_peepholes=use_peepholes,
+                                    **layer_args)
+            l_lstm_flat = ly.ReshapeLayer(l_lstm,
+                                          shape=(-1, hidden_dim),
+                                          name='lstm_flat')
+            l_output_flat = ly.DenseLayer(l_lstm_flat,
+                                          num_units=output_dim,
+                                          nonlinearity=output_nonlinearity,
+                                          w=output_w_init,
+                                          name='output_flat')
             l_output = ly.OpLayer(
                 l_output_flat,
                 op=lambda flat_output, l_input: tf.reshape(
                     flat_output,
-                    tf.stack((tf.shape(l_input)[0], tf.shape(l_input)[1], -1))
-                ),
-                shape_op=lambda flat_output_shape, l_input_shape: (
-                    l_input_shape[0], l_input_shape[1], flat_output_shape[-1]),
+                    tf.stack(
+                        (tf.shape(l_input)[0], tf.shape(l_input)[1], -1))),
+                shape_op=lambda flat_output_shape, l_input_shape:
+                (l_input_shape[0], l_input_shape[1], flat_output_shape[-1]),
                 extras=[l_in],
                 name='output')
-            l_step_state = l_lstm.get_step_layer(
-                l_step_input, l_step_prev_state, name='step_state')
-            l_step_hidden = ly.SliceLayer(
-                l_step_state, indices=slice(hidden_dim), name='step_hidden')
-            l_step_cell = ly.SliceLayer(
-                l_step_state,
-                indices=slice(hidden_dim, None),
-                name='step_cell')
-            l_step_output = ly.DenseLayer(
-                l_step_hidden,
-                num_units=output_dim,
-                nonlinearity=output_nonlinearity,
-                w=l_output_flat.w,
-                b=l_output_flat.b,
-                name='step_output')
+            l_step_state = l_lstm.get_step_layer(l_step_input,
+                                                 l_step_prev_state,
+                                                 name='step_state')
+            l_step_hidden = ly.SliceLayer(l_step_state,
+                                          indices=slice(hidden_dim),
+                                          name='step_hidden')
+            l_step_cell = ly.SliceLayer(l_step_state,
+                                        indices=slice(hidden_dim, None),
+                                        name='step_cell')
+            l_step_output = ly.DenseLayer(l_step_hidden,
+                                          num_units=output_dim,
+                                          nonlinearity=output_nonlinearity,
+                                          w=l_output_flat.w,
+                                          b=l_output_flat.b,
+                                          name='step_output')
 
             self._l_in = l_in
             self._hid_init_param = l_lstm.h0
@@ -497,8 +488,8 @@ class LSTMNetwork:
 
     @property
     def state_init_param(self):
-        return tf.concat(
-            axis=0, values=[self._hid_init_param, self._cell_init_param])
+        return tf.concat(axis=0,
+                         values=[self._hid_init_param, self._cell_init_param])
 
 
 class ConvMergeNetwork(LayersPowered, Serializable):
@@ -513,7 +504,6 @@ class ConvMergeNetwork(LayersPowered, Serializable):
     input entry, with both the aforementioned components flattened out and then
     concatenated together
     """
-
     def __init__(self,
                  input_shape,
                  extra_input_shape,
@@ -545,24 +535,23 @@ class ConvMergeNetwork(LayersPowered, Serializable):
             total_input_flat_dim = input_flat_dim + extra_input_flat_dim
 
             if input_layer is None:
-                l_in = ly.InputLayer(
-                    shape=(None, total_input_flat_dim),
-                    input_var=input_var,
-                    name='input')
+                l_in = ly.InputLayer(shape=(None, total_input_flat_dim),
+                                     input_var=input_var,
+                                     name='input')
             else:
                 l_in = input_layer
 
-            l_conv_in = ly.reshape(
-                ly.SliceLayer(
-                    l_in, indices=slice(input_flat_dim), name='conv_slice'),
-                ([0], ) + input_shape,
-                name='conv_reshaped')
-            l_extra_in = ly.reshape(
-                ly.SliceLayer(
-                    l_in,
-                    indices=slice(input_flat_dim, None),
-                    name='extra_slice'), ([0], ) + extra_input_shape,
-                name='extra_reshaped')
+            l_conv_in = ly.reshape(ly.SliceLayer(l_in,
+                                                 indices=slice(input_flat_dim),
+                                                 name='conv_slice'),
+                                   ([0], ) + input_shape,
+                                   name='conv_reshaped')
+            l_extra_in = ly.reshape(ly.SliceLayer(l_in,
+                                                  indices=slice(
+                                                      input_flat_dim, None),
+                                                  name='extra_slice'),
+                                    ([0], ) + extra_input_shape,
+                                    name='extra_reshaped')
 
             l_conv_hid = l_conv_in
             for idx, conv_filter, filter_size, stride, pad in zip(

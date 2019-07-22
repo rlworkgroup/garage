@@ -61,7 +61,6 @@ class GaussianMLPRegressorModel(GaussianMLPModel):
         - softplus: the std will be computed as log(1+exp(x))
         layer_normalization (bool): Bool for using layer normalization or not.
     """
-
     def __init__(self,
                  input_shape,
                  output_dim,
@@ -79,30 +78,26 @@ class GaussianMLPRegressorModel(GaussianMLPModel):
 
     def _build(self, state_input, name=None):
         with tf.variable_scope('normalized_vars'):
-            x_mean_var = tf.get_variable(
-                name='x_mean',
-                shape=(1, ) + self._input_shape,
-                dtype=np.float32,
-                initializer=tf.zeros_initializer(),
-                trainable=False)
-            x_std_var = tf.get_variable(
-                name='x_std_var',
-                shape=(1, ) + self._input_shape,
-                dtype=np.float32,
-                initializer=tf.ones_initializer(),
-                trainable=False)
-            y_mean_var = tf.get_variable(
-                name='y_mean_var',
-                shape=(1, self._output_dim),
-                dtype=np.float32,
-                initializer=tf.zeros_initializer(),
-                trainable=False)
-            y_std_var = tf.get_variable(
-                name='y_std_var',
-                shape=(1, self._output_dim),
-                dtype=np.float32,
-                initializer=tf.ones_initializer(),
-                trainable=False)
+            x_mean_var = tf.get_variable(name='x_mean',
+                                         shape=(1, ) + self._input_shape,
+                                         dtype=np.float32,
+                                         initializer=tf.zeros_initializer(),
+                                         trainable=False)
+            x_std_var = tf.get_variable(name='x_std_var',
+                                        shape=(1, ) + self._input_shape,
+                                        dtype=np.float32,
+                                        initializer=tf.ones_initializer(),
+                                        trainable=False)
+            y_mean_var = tf.get_variable(name='y_mean_var',
+                                         shape=(1, self._output_dim),
+                                         dtype=np.float32,
+                                         initializer=tf.zeros_initializer(),
+                                         trainable=False)
+            y_std_var = tf.get_variable(name='y_std_var',
+                                        shape=(1, self._output_dim),
+                                        dtype=np.float32,
+                                        initializer=tf.ones_initializer(),
+                                        trainable=False)
 
         normalized_xs_var = (state_input - x_mean_var) / x_std_var
 

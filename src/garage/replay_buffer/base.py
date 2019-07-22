@@ -24,7 +24,6 @@ class ReplayBuffer(metaclass=abc.ABCMeta):
         size_in_transitions (int): total size of transitions in the buffer
         time_horizon (int): time horizon of rollout.
     """
-
     def __init__(self, env_spec, size_in_transitions, time_horizon):
         self._current_size = 0
         self._current_ptr = 0

@@ -34,7 +34,6 @@ from tests.wrappers import AutoStopEnv
 
 class TestBenchmarkPPO:
     '''Compare benchmarks between garage and baselines.'''
-
     @pytest.mark.huge
     def test_benchmark_trpo(self):
         '''
@@ -81,31 +80,29 @@ class TestBenchmarkPPO:
                 garage_csvs.append(garage_csv)
                 baselines_csvs.append(baselines_csv)
 
-            Rh.plot(
-                b_csvs=baselines_csvs,
-                g_csvs=garage_csvs,
-                g_x='Iteration',
-                g_y='AverageReturn',
-                b_x='EpThisIter',
-                b_y='EpRewMean',
-                trials=task['trials'],
-                seeds=seeds,
-                plt_file=plt_file,
-                env_id=env_id,
-                x_label='Iteration',
-                y_label='AverageReturn')
+            Rh.plot(b_csvs=baselines_csvs,
+                    g_csvs=garage_csvs,
+                    g_x='Iteration',
+                    g_y='AverageReturn',
+                    b_x='EpThisIter',
+                    b_y='EpRewMean',
+                    trials=task['trials'],
+                    seeds=seeds,
+                    plt_file=plt_file,
+                    env_id=env_id,
+                    x_label='Iteration',
+                    y_label='AverageReturn')
 
-            result_json[env_id] = Rh.create_json(
-                b_csvs=baselines_csvs,
-                g_csvs=garage_csvs,
-                seeds=seeds,
-                trails=task['trials'],
-                g_x='Iteration',
-                g_y='AverageReturn',
-                b_x='TimestepsSoFar',
-                b_y='EpRewMean',
-                factor_g=1024,
-                factor_b=1)
+            result_json[env_id] = Rh.create_json(b_csvs=baselines_csvs,
+                                                 g_csvs=garage_csvs,
+                                                 seeds=seeds,
+                                                 trails=task['trials'],
+                                                 g_x='Iteration',
+                                                 g_y='AverageReturn',
+                                                 b_x='TimestepsSoFar',
+                                                 b_y='EpRewMean',
+                                                 factor_g=1024,
+                                                 factor_b=1)
             env.close()
 
         Rh.write_file(result_json, 'TRPO')
@@ -182,25 +179,23 @@ def run_baselines(env, seed, log_dir):
         baselines_logger.configure(log_dir)
 
         def policy_fn(name, ob_space, ac_space):
-            return MlpPolicy(
-                name=name,
-                ob_space=ob_space,
-                ac_space=ac_space,
-                hid_size=32,
-                num_hid_layers=2)
+            return MlpPolicy(name=name,
+                             ob_space=ob_space,
+                             ac_space=ac_space,
+                             hid_size=32,
+                             num_hid_layers=2)
 
-        trpo_mpi.learn(
-            env,
-            policy_fn,
-            timesteps_per_batch=1024,
-            max_kl=0.01,
-            cg_iters=10,
-            cg_damping=0.1,
-            max_timesteps=int(1e6),
-            gamma=0.99,
-            lam=0.98,
-            vf_iters=5,
-            vf_stepsize=1e-3)
+        trpo_mpi.learn(env,
+                       policy_fn,
+                       timesteps_per_batch=1024,
+                       max_kl=0.01,
+                       cg_iters=10,
+                       cg_damping=0.1,
+                       max_timesteps=int(1e6),
+                       gamma=0.99,
+                       lam=0.98,
+                       vf_iters=5,
+                       vf_stepsize=1e-3)
         env.close()
 
     return osp.join(log_dir, 'progress.csv')

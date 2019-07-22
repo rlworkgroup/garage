@@ -24,7 +24,6 @@ class ContinuousMLPPolicy(Policy, LayersPowered, Serializable):
     The policy network selects action based on the state of the environment.
     It uses neural nets to fit the function of pi(s).
     """
-
     def __init__(self,
                  env_spec,
                  hidden_sizes=(64, 64),
@@ -107,11 +106,12 @@ class ContinuousMLPPolicy(Policy, LayersPowered, Serializable):
 
             with tf.name_scope(self._policy_network_name):
                 action = layers.get_output(l_output)
-                scaled_action = tf.multiply(
-                    action, self._action_bound, name='scaled_action')
+                scaled_action = tf.multiply(action,
+                                            self._action_bound,
+                                            name='scaled_action')
 
-        f_prob_online = tensor_utils.compile_function(
-            inputs=[l_in.input_var], outputs=scaled_action)
+        f_prob_online = tensor_utils.compile_function(inputs=[l_in.input_var],
+                                                      outputs=scaled_action)
         output_layer = l_output
         obs_layer = l_in
 
@@ -121,8 +121,9 @@ class ContinuousMLPPolicy(Policy, LayersPowered, Serializable):
         """Return action sym according to obs_var."""
         with tf.name_scope(name, 'get_action_sym', [obs_var]):
             with tf.name_scope(self._policy_network_name):
-                actions = layers.get_output(
-                    self._output_layer, {self._obs_layer: obs_var}, **kwargs)
+                actions = layers.get_output(self._output_layer,
+                                            {self._obs_layer: obs_var},
+                                            **kwargs)
             return tf.multiply(actions, self._action_bound)
 
     @overrides

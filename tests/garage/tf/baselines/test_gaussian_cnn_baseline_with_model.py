@@ -64,8 +64,8 @@ class TestGaussianCNNBaselineWithModel(TfGraphTestCase):
                          'gaussian_cnn_baseline_with_model.'
                          'GaussianCNNRegressorWithModel'),
                         new=SimpleGaussianCNNRegressor):
-            gcb = GaussianCNNBaselineWithModel(
-                env_spec=box_env.spec, regressor_args=dict())
+            gcb = GaussianCNNBaselineWithModel(env_spec=box_env.spec,
+                                               regressor_args=dict())
         params_interal = gcb.get_params_internal()
         trainable_params = tf.trainable_variables(
             scope='GaussianCNNBaselineWithModel')

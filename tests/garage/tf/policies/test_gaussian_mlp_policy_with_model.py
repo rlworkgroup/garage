@@ -101,8 +101,8 @@ class TestGaussianMLPPolicyWithModel(TfGraphTestCase):
         obs, _, _, _ = env.step(1)
         obs_dim = env.spec.observation_space.flat_dim
 
-        with tf.variable_scope(
-                'GaussianMLPPolicyWithModel/GaussianMLPModel', reuse=True):
+        with tf.variable_scope('GaussianMLPPolicyWithModel/GaussianMLPModel',
+                               reuse=True):
             return_var = tf.get_variable('return_var')
         # assign it to all one
         return_var.load(tf.ones_like(return_var).eval())

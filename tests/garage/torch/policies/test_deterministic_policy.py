@@ -24,13 +24,12 @@ class TestContinuousNNPolicies:
     def test_get_action(self, obs_dim, act_dim, hidden_sizes):
         env_spec = TfEnv(DummyBoxEnv())
         obs = torch.ones([1, obs_dim], dtype=torch.float32)
-        nn_module = MLPModule(
-            input_dim=obs_dim,
-            output_dim=act_dim,
-            hidden_nonlinearity=None,
-            hidden_sizes=hidden_sizes,
-            hidden_w_init=nn.init.ones_,
-            output_w_init=nn.init.ones_)
+        nn_module = MLPModule(input_dim=obs_dim,
+                              output_dim=act_dim,
+                              hidden_nonlinearity=None,
+                              hidden_sizes=hidden_sizes,
+                              hidden_w_init=nn.init.ones_,
+                              output_w_init=nn.init.ones_)
 
         policy = DeterministicPolicy(env_spec, nn_module)
         expected_output = np.full([1, act_dim],
@@ -50,13 +49,12 @@ class TestContinuousNNPolicies:
     def test_get_actions(self, obs_dim, act_dim, batch_size, hidden_sizes):
         env_spec = TfEnv(DummyBoxEnv())
         obs = torch.ones([batch_size, obs_dim], dtype=torch.float32)
-        nn_module = MLPModule(
-            input_dim=obs_dim,
-            output_dim=act_dim,
-            hidden_nonlinearity=None,
-            hidden_sizes=hidden_sizes,
-            hidden_w_init=nn.init.ones_,
-            output_w_init=nn.init.ones_)
+        nn_module = MLPModule(input_dim=obs_dim,
+                              output_dim=act_dim,
+                              hidden_nonlinearity=None,
+                              hidden_sizes=hidden_sizes,
+                              hidden_w_init=nn.init.ones_,
+                              output_w_init=nn.init.ones_)
 
         policy = DeterministicPolicy(env_spec, nn_module)
         expected_output = np.full([batch_size, act_dim],
@@ -76,13 +74,12 @@ class TestContinuousNNPolicies:
     def test_is_pickleable(self, obs_dim, act_dim, batch_size, hidden_sizes):
         env_spec = TfEnv(DummyBoxEnv())
         obs = torch.ones([batch_size, obs_dim], dtype=torch.float32)
-        nn_module = MLPModule(
-            input_dim=obs_dim,
-            output_dim=act_dim,
-            hidden_nonlinearity=None,
-            hidden_sizes=hidden_sizes,
-            hidden_w_init=nn.init.ones_,
-            output_w_init=nn.init.ones_)
+        nn_module = MLPModule(input_dim=obs_dim,
+                              output_dim=act_dim,
+                              hidden_nonlinearity=None,
+                              hidden_sizes=hidden_sizes,
+                              hidden_w_init=nn.init.ones_,
+                              output_w_init=nn.init.ones_)
 
         policy = DeterministicPolicy(env_spec, nn_module)
         output1 = policy.get_actions(obs)

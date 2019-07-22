@@ -50,7 +50,6 @@ class GaussianGRUModel(Model):
             the same network.
         layer_normalization (bool): Bool for using layer normalization or not.
     """
-
     def __init__(self,
                  output_dim,
                  hidden_dim=32,

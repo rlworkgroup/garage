@@ -87,8 +87,8 @@ class TestCategoricalMLPPolicyWithModel(TfGraphTestCase):
         state_input = tf.placeholder(tf.float32, shape=(None, obs_dim))
         dist1 = policy.dist_info_sym(state_input, name='policy2')
 
-        prob = self.sess.run(
-            dist1['prob'], feed_dict={state_input: [obs.flatten()]})
+        prob = self.sess.run(dist1['prob'],
+                             feed_dict={state_input: [obs.flatten()]})
         assert np.array_equal(prob[0], expected_prob)
 
     @pytest.mark.parametrize('obs_dim, action_dim', [

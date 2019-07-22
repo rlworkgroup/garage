@@ -8,10 +8,11 @@ class TestReplayBuffer:
     def test_add_transition_dtype(self):
         env = DummyDiscreteEnv()
         obs = env.reset()
-        replay_buffer = SimpleReplayBuffer(
-            env_spec=env, size_in_transitions=3, time_horizon=1)
-        replay_buffer.add_transition(
-            observation=obs, action=env.action_space.sample())
+        replay_buffer = SimpleReplayBuffer(env_spec=env,
+                                           size_in_transitions=3,
+                                           time_horizon=1)
+        replay_buffer.add_transition(observation=obs,
+                                     action=env.action_space.sample())
         sample = replay_buffer.sample(1)
         sample_obs = sample['observation']
         sample_action = sample['action']
@@ -22,10 +23,11 @@ class TestReplayBuffer:
     def test_add_transitions_dtype(self):
         env = DummyDiscreteEnv()
         obs = env.reset()
-        replay_buffer = SimpleReplayBuffer(
-            env_spec=env, size_in_transitions=3, time_horizon=1)
-        replay_buffer.add_transitions(
-            observation=[obs], action=[env.action_space.sample()])
+        replay_buffer = SimpleReplayBuffer(env_spec=env,
+                                           size_in_transitions=3,
+                                           time_horizon=1)
+        replay_buffer.add_transitions(observation=[obs],
+                                      action=[env.action_space.sample()])
         sample = replay_buffer.sample(1)
         sample_obs = sample['observation']
         sample_action = sample['action']
@@ -37,8 +39,9 @@ class TestReplayBuffer:
         env = DummyDiscreteEnv()
         obs = env.reset()
 
-        replay_buffer = SimpleReplayBuffer(
-            env_spec=env, size_in_transitions=3, time_horizon=1)
+        replay_buffer = SimpleReplayBuffer(env_spec=env,
+                                           size_in_transitions=3,
+                                           time_horizon=1)
         replay_buffer.add_transitions(observation=[obs, obs], action=[1, 2])
         assert not replay_buffer.full
         replay_buffer.add_transitions(observation=[obs, obs], action=[3, 4])

@@ -12,7 +12,6 @@ class TfEnv(GarageEnv):
     Args:
         env (gym.Env): the env that will be wrapped
     """
-
     def __init__(self, env=None, env_name=''):
         super().__init__(env, env_name)
         self.action_space = akro.from_gym(self.env.action_space)

@@ -37,7 +37,6 @@ class CEM(BatchPolopt):
         extra_decay_time (float): Epochs that it takes to decay extra std.
 
     """
-
     def __init__(self,
                  env_spec,
                  policy,

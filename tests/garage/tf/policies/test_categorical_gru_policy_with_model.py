@@ -23,20 +23,22 @@ class TestCategoricalGRUPolicyWithModel(TfGraphTestCase):
     def test_dist_info_sym(self, obs_dim, action_dim, hidden_dim):
         env = TfEnv(DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
 
-        obs_ph = tf.placeholder(
-            tf.float32, shape=(None, None, env.observation_space.flat_dim))
+        obs_ph = tf.placeholder(tf.float32,
+                                shape=(None, None,
+                                       env.observation_space.flat_dim))
 
         with mock.patch(('garage.tf.policies.'
                          'categorical_gru_policy_with_model.GRUModel'),
                         new=SimpleGRUModel):
-            policy = CategoricalGRUPolicyWithModel(
-                env_spec=env.spec, state_include_action=False)
+            policy = CategoricalGRUPolicyWithModel(env_spec=env.spec,
+                                                   state_include_action=False)
 
         policy.reset()
         obs = env.reset()
 
-        dist_sym = policy.dist_info_sym(
-            obs_var=obs_ph, state_info_vars=None, name='p2_sym')
+        dist_sym = policy.dist_info_sym(obs_var=obs_ph,
+                                        state_info_vars=None,
+                                        name='p2_sym')
         dist = self.sess.run(
             dist_sym, feed_dict={obs_ph: [[obs.flatten()], [obs.flatten()]]})
 
@@ -51,14 +53,15 @@ class TestCategoricalGRUPolicyWithModel(TfGraphTestCase):
     def test_dist_info_sym_include_action(self, obs_dim, action_dim):
         env = TfEnv(DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
 
-        obs_ph = tf.placeholder(
-            tf.float32, shape=(None, None, env.observation_space.flat_dim))
+        obs_ph = tf.placeholder(tf.float32,
+                                shape=(None, None,
+                                       env.observation_space.flat_dim))
 
         with mock.patch(('garage.tf.policies.'
                          'categorical_gru_policy_with_model.GRUModel'),
                         new=SimpleGRUModel):
-            policy = CategoricalGRUPolicyWithModel(
-                env_spec=env.spec, state_include_action=True)
+            policy = CategoricalGRUPolicyWithModel(env_spec=env.spec,
+                                                   state_include_action=True)
 
         policy.reset()
         obs = env.reset()
@@ -75,14 +78,15 @@ class TestCategoricalGRUPolicyWithModel(TfGraphTestCase):
     def test_dist_info_sym_wrong_input(self):
         env = TfEnv(DummyDiscreteEnv(obs_dim=(1, ), action_dim=1))
 
-        obs_ph = tf.placeholder(
-            tf.float32, shape=(None, None, env.observation_space.flat_dim))
+        obs_ph = tf.placeholder(tf.float32,
+                                shape=(None, None,
+                                       env.observation_space.flat_dim))
 
         with mock.patch(('garage.tf.policies.'
                          'categorical_gru_policy_with_model.GRUModel'),
                         new=SimpleGRUModel):
-            policy = CategoricalGRUPolicyWithModel(
-                env_spec=env.spec, state_include_action=True)
+            policy = CategoricalGRUPolicyWithModel(env_spec=env.spec,
+                                                   state_include_action=True)
 
         policy.reset()
         obs = env.reset()
@@ -121,8 +125,8 @@ class TestCategoricalGRUPolicyWithModel(TfGraphTestCase):
         with mock.patch(('garage.tf.policies.'
                          'categorical_gru_policy_with_model.GRUModel'),
                         new=SimpleGRUModel):
-            policy = CategoricalGRUPolicyWithModel(
-                env_spec=env.spec, state_include_action=True)
+            policy = CategoricalGRUPolicyWithModel(env_spec=env.spec,
+                                                   state_include_action=True)
 
         policy.reset()
         obs = env.reset()
@@ -155,8 +159,8 @@ class TestCategoricalGRUPolicyWithModel(TfGraphTestCase):
         with mock.patch(('garage.tf.policies.'
                          'categorical_gru_policy_with_model.GRUModel'),
                         new=SimpleGRUModel):
-            policy = CategoricalGRUPolicyWithModel(
-                env_spec=env.spec, state_include_action=False)
+            policy = CategoricalGRUPolicyWithModel(env_spec=env.spec,
+                                                   state_include_action=False)
 
         policy.reset()
         obs = env.reset()
@@ -179,14 +183,14 @@ class TestCategoricalGRUPolicyWithModel(TfGraphTestCase):
         with mock.patch(('garage.tf.policies.'
                          'categorical_gru_policy_with_model.GRUModel'),
                         new=SimpleGRUModel):
-            policy = CategoricalGRUPolicyWithModel(
-                env_spec=env.spec, state_include_action=False)
+            policy = CategoricalGRUPolicyWithModel(env_spec=env.spec,
+                                                   state_include_action=False)
 
         env.reset()
         obs = env.reset()
 
-        with tf.variable_scope(
-                'CategoricalGRUPolicyWithModel/prob_network', reuse=True):
+        with tf.variable_scope('CategoricalGRUPolicyWithModel/prob_network',
+                               reuse=True):
             return_var = tf.get_variable('return_var')
         # assign it to all one
         return_var.load(tf.ones_like(return_var).eval())
@@ -199,10 +203,9 @@ class TestCategoricalGRUPolicyWithModel(TfGraphTestCase):
 
         with tf.Session(graph=tf.Graph()) as sess:
             policy_pickled = pickle.loads(p)
-            output2 = sess.run(
-                policy_pickled.model.outputs[0],
-                feed_dict={
-                    policy_pickled.model.input: [[obs.flatten()],
-                                                 [obs.flatten()]]
-                })
+            output2 = sess.run(policy_pickled.model.outputs[0],
+                               feed_dict={
+                                   policy_pickled.model.input:
+                                   [[obs.flatten()], [obs.flatten()]]
+                               })
             assert np.array_equal(output1, output2)

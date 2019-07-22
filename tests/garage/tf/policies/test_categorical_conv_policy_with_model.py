@@ -189,18 +189,17 @@ class TestCategoricalConvPolicyWithModel(TfGraphTestCase):
         env.reset()
         obs, _, _, _ = env.step(1)
 
-        with tf.variable_scope(
-                'CategoricalConvPolicy/Sequential/MLPModel', reuse=True):
+        with tf.variable_scope('CategoricalConvPolicy/Sequential/MLPModel',
+                               reuse=True):
             return_var = tf.get_variable('return_var')
         # assign it to all one
         return_var.load(tf.ones_like(return_var).eval())
-        output1 = self.sess.run(
-            policy.model.outputs, feed_dict={policy.model.input: [obs]})
+        output1 = self.sess.run(policy.model.outputs,
+                                feed_dict={policy.model.input: [obs]})
         p = pickle.dumps(policy)
 
         with tf.Session(graph=tf.Graph()) as sess:
             policy_pickled = pickle.loads(p)
-            output2 = sess.run(
-                policy_pickled.model.outputs,
-                feed_dict={policy_pickled.model.input: [obs]})
+            output2 = sess.run(policy_pickled.model.outputs,
+                               feed_dict={policy_pickled.model.input: [obs]})
             assert np.array_equal(output1, output2)

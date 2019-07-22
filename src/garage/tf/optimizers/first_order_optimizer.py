@@ -15,7 +15,6 @@ class FirstOrderOptimizer(Serializable):
     Performs (stochastic) gradient descent, possibly using fancier methods like
     ADAM etc.
     """
-
     def __init__(
             self,
             tf_optimizer_cls=None,
@@ -66,12 +65,12 @@ class FirstOrderOptimizer(Serializable):
         :param inputs: A list of symbolic variables as inputs
         :return: No return value.
         """
-        with tf.name_scope(
-                self._name,
-                values=[
-                    loss,
-                    target.get_params(trainable=True), inputs, extra_inputs
-                ]):
+        with tf.name_scope(self._name,
+                           values=[
+                               loss,
+                               target.get_params(trainable=True), inputs,
+                               extra_inputs
+                           ]):
 
             self._target = target
 
@@ -108,8 +107,9 @@ class FirstOrderOptimizer(Serializable):
 
         start_time = time.time()
 
-        dataset = BatchDataset(
-            inputs, self._batch_size, extra_inputs=extra_inputs)
+        dataset = BatchDataset(inputs,
+                               self._batch_size,
+                               extra_inputs=extra_inputs)
 
         sess = tf.get_default_session()
 

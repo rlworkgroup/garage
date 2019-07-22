@@ -47,7 +47,6 @@ class ContinuousMLPQFunctionWithModel(QFunction2):
         layer_normalization (bool): Bool for using layer normalization.
 
     """
-
     def __init__(self,
                  env_spec,
                  name=None,
@@ -82,24 +81,23 @@ class ContinuousMLPQFunctionWithModel(QFunction2):
             self._obs_dim = env_spec.observation_space.flat_dim
         self._action_dim = env_spec.action_space.flat_dim
 
-        self.model = MLPMergeModel(
-            output_dim=1,
-            hidden_sizes=hidden_sizes,
-            concat_layer=self._action_merge_layer,
-            hidden_nonlinearity=hidden_nonlinearity,
-            hidden_w_init=hidden_w_init,
-            hidden_b_init=hidden_b_init,
-            output_nonlinearity=output_nonlinearity,
-            output_w_init=output_w_init,
-            output_b_init=output_b_init,
-            layer_normalization=layer_normalization)
+        self.model = MLPMergeModel(output_dim=1,
+                                   hidden_sizes=hidden_sizes,
+                                   concat_layer=self._action_merge_layer,
+                                   hidden_nonlinearity=hidden_nonlinearity,
+                                   hidden_w_init=hidden_w_init,
+                                   hidden_b_init=hidden_b_init,
+                                   output_nonlinearity=output_nonlinearity,
+                                   output_w_init=output_w_init,
+                                   output_b_init=output_b_init,
+                                   layer_normalization=layer_normalization)
 
         self._initialize()
 
     def _initialize(self):
         obs_ph = tf.placeholder(tf.float32, (None, self._obs_dim), name='obs')
-        action_ph = tf.placeholder(
-            tf.float32, (None, self._action_dim), name='act')
+        action_ph = tf.placeholder(tf.float32, (None, self._action_dim),
+                                   name='act')
 
         with tf.variable_scope(self.name) as vs:
             self._variable_scope = vs
@@ -143,18 +141,17 @@ class ContinuousMLPQFunctionWithModel(QFunction2):
         Args:
             name (str): Name of the newly created q-function.
         """
-        return self.__class__(
-            name=name,
-            env_spec=self._env_spec,
-            hidden_sizes=self._hidden_sizes,
-            action_merge_layer=self._action_merge_layer,
-            hidden_nonlinearity=self._hidden_nonlinearity,
-            hidden_w_init=self._hidden_w_init,
-            hidden_b_init=self._hidden_b_init,
-            output_nonlinearity=self._output_nonlinearity,
-            output_w_init=self._output_w_init,
-            output_b_init=self._output_b_init,
-            layer_normalization=self._layer_normalization)
+        return self.__class__(name=name,
+                              env_spec=self._env_spec,
+                              hidden_sizes=self._hidden_sizes,
+                              action_merge_layer=self._action_merge_layer,
+                              hidden_nonlinearity=self._hidden_nonlinearity,
+                              hidden_w_init=self._hidden_w_init,
+                              hidden_b_init=self._hidden_b_init,
+                              output_nonlinearity=self._output_nonlinearity,
+                              output_w_init=self._output_w_init,
+                              output_b_init=self._output_b_init,
+                              layer_normalization=self._layer_normalization)
 
     def __getstate__(self):
         """Object.__getstate__."""

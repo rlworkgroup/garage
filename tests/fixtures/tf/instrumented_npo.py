@@ -65,12 +65,12 @@ class InstrumentedNPO(InstrumentedBatchPolopt):
         self._policy_opt_inputs = pol_opt_inputs
 
         pol_loss, pol_kl = self._build_policy_loss(pol_loss_inputs)
-        self.optimizer.update_opt(
-            loss=pol_loss,
-            target=self.policy,
-            leq_constraint=(pol_kl, self.clip_range),
-            inputs=flatten_inputs(self._policy_opt_inputs),
-            constraint_name='mean_kl')
+        self.optimizer.update_opt(loss=pol_loss,
+                                  target=self.policy,
+                                  leq_constraint=(pol_kl, self.clip_range),
+                                  inputs=flatten_inputs(
+                                      self._policy_opt_inputs),
+                                  constraint_name='mean_kl')
 
         return dict()
 
@@ -126,20 +126,24 @@ class InstrumentedNPO(InstrumentedBatchPolopt):
         policy_dist = self.policy.distribution
 
         with tf.name_scope('inputs'):
-            obs_var = observation_space.to_tf_placeholder(
-                name='obs', batch_dims=2)
-            action_var = action_space.to_tf_placeholder(
-                name='action', batch_dims=2)
-            reward_var = tensor_utils.new_tensor(
-                name='reward', ndim=2, dtype=tf.float32)
-            valid_var = tf.placeholder(
-                tf.float32, shape=[None, None], name='valid')
-            baseline_var = tensor_utils.new_tensor(
-                name='baseline', ndim=2, dtype=tf.float32)
+            obs_var = observation_space.to_tf_placeholder(name='obs',
+                                                          batch_dims=2)
+            action_var = action_space.to_tf_placeholder(name='action',
+                                                        batch_dims=2)
+            reward_var = tensor_utils.new_tensor(name='reward',
+                                                 ndim=2,
+                                                 dtype=tf.float32)
+            valid_var = tf.placeholder(tf.float32,
+                                       shape=[None, None],
+                                       name='valid')
+            baseline_var = tensor_utils.new_tensor(name='baseline',
+                                                   ndim=2,
+                                                   dtype=tf.float32)
 
             policy_state_info_vars = {
-                k: tf.placeholder(
-                    tf.float32, shape=[None] * 2 + list(shape), name=k)
+                k: tf.placeholder(tf.float32,
+                                  shape=[None] * 2 + list(shape),
+                                  name=k)
                 for k, shape in self.policy.state_info_specs
             }
             policy_state_info_vars_list = [
@@ -148,10 +152,9 @@ class InstrumentedNPO(InstrumentedBatchPolopt):
 
             # old policy distribution
             policy_old_dist_info_vars = {
-                k: tf.placeholder(
-                    tf.float32,
-                    shape=[None] * 2 + list(shape),
-                    name='policy_old_%s' % k)
+                k: tf.placeholder(tf.float32,
+                                  shape=[None] * 2 + list(shape),
+                                  name='policy_old_%s' % k)
                 for k, shape in policy_dist.dist_info_specs
             }
             policy_old_dist_info_vars_list = [
@@ -173,8 +176,9 @@ class InstrumentedNPO(InstrumentedBatchPolopt):
 
             # valid view
             with tf.name_scope('valid'):
-                action_valid = filter_valids(
-                    action_flat, valid_flat, name='action_valid')
+                action_valid = filter_valids(action_flat,
+                                             valid_flat,
+                                             name='action_valid')
                 policy_state_info_vars_valid = filter_valids_dict(
                     policy_state_info_vars_flat,
                     valid_flat,
@@ -234,17 +238,17 @@ class InstrumentedNPO(InstrumentedBatchPolopt):
             rewards = i.reward_var + (self.policy_ent_coeff * policy_entropy)
 
         with tf.name_scope('policy_loss'):
-            advantages = compute_advantages(
-                self.discount,
-                self.gae_lambda,
-                self.max_path_length,
-                i.baseline_var,
-                rewards,
-                name='advantages')
+            advantages = compute_advantages(self.discount,
+                                            self.gae_lambda,
+                                            self.max_path_length,
+                                            i.baseline_var,
+                                            rewards,
+                                            name='advantages')
 
             adv_flat = flatten_batch(advantages, name='adv_flat')
-            adv_valid = filter_valids(
-                adv_flat, i.flat.valid_var, name='adv_valid')
+            adv_valid = filter_valids(adv_flat,
+                                      i.flat.valid_var,
+                                      name='adv_valid')
 
             if self.policy.recurrent:
                 advantages = tf.reshape(advantages, [-1, self.max_path_length])
@@ -316,17 +320,17 @@ class InstrumentedNPO(InstrumentedBatchPolopt):
                     # VPG, TRPO use the standard surrogate objective
                     surr_obj = tf.identity(surr_vanilla, name='surr_obj')
                 elif self._pg_loss == PGLoss.CLIP:
-                    lr_clip = tf.clip_by_value(
-                        lr,
-                        1 - self.clip_range,
-                        1 + self.clip_range,
-                        name='lr_clip')
+                    lr_clip = tf.clip_by_value(lr,
+                                               1 - self.clip_range,
+                                               1 + self.clip_range,
+                                               name='lr_clip')
                     if self.policy.recurrent:
                         surr_clip = lr_clip * advantages * i.valid_var
                     else:
                         surr_clip = lr_clip * adv_valid
-                    surr_obj = tf.minimum(
-                        surr_vanilla, surr_clip, name='surr_obj')
+                    surr_obj = tf.minimum(surr_vanilla,
+                                          surr_clip,
+                                          name='surr_obj')
                 else:
                     raise NotImplementedError('Unknown PGLoss')
 
@@ -418,8 +422,8 @@ class InstrumentedNPO(InstrumentedBatchPolopt):
         samples_data['returns'] = aug_returns
 
         # Calculate explained variance
-        ev = special.explained_variance_1d(
-            np.concatenate(baselines), aug_returns)
+        ev = special.explained_variance_1d(np.concatenate(baselines),
+                                           aug_returns)
         tabular.record('Baseline/ExplainedVariance', ev)
 
         # Fit baseline

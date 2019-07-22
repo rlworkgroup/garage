@@ -40,8 +40,9 @@ class TestContinuousMLPRegressorWithModel(TfGraphTestCase):
         assert np.allclose(x_std, x_std_expected)
 
     def test_fit_unnormalized(self):
-        cmr = ContinuousMLPRegressorWithModel(
-            input_shape=(1, ), output_dim=1, normalize_inputs=False)
+        cmr = ContinuousMLPRegressorWithModel(input_shape=(1, ),
+                                              output_dim=1,
+                                              normalize_inputs=False)
         data = np.linspace(-np.pi, np.pi, 1000)
         obs = [{'observations': [[x]], 'returns': [np.sin(x)]} for x in data]
 
@@ -71,14 +72,13 @@ class TestContinuousMLPRegressorWithModel(TfGraphTestCase):
                              [(1, (1, )), (1, (2, )), (2, (3, )), (2, (1, 1)),
                               (3, (2, 2))])
     def test_predict_sym(self, output_dim, input_shape):
-        cmr = ContinuousMLPRegressorWithModel(
-            input_shape=input_shape,
-            output_dim=output_dim,
-            optimizer=LbfgsOptimizer,
-            optimizer_args=dict())
+        cmr = ContinuousMLPRegressorWithModel(input_shape=input_shape,
+                                              output_dim=output_dim,
+                                              optimizer=LbfgsOptimizer,
+                                              optimizer_args=dict())
 
-        new_input_var = tf.placeholder(
-            tf.float32, shape=(None, ) + input_shape)
+        new_input_var = tf.placeholder(tf.float32,
+                                       shape=(None, ) + input_shape)
 
         data = np.random.random(size=input_shape)
 

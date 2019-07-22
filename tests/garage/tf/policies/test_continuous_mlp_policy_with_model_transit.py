@@ -31,14 +31,18 @@ class TestContinuousMLPPolicyWithModelTransit(TfGraphTestCase):
             mock_rand.return_value = 0.5
             super().setup_method()
             self.box_env = TfEnv(DummyBoxEnv())
-            self.policy1 = ContinuousMLPPolicy(
-                env_spec=self.box_env, hidden_sizes=(32, 32), name='P1')
-            self.policy2 = ContinuousMLPPolicy(
-                env_spec=self.box_env, hidden_sizes=(64, 64), name='P2')
-            self.policy3 = ContinuousMLPPolicyWithModel(
-                env_spec=self.box_env, hidden_sizes=(32, 32), name='P3')
-            self.policy4 = ContinuousMLPPolicyWithModel(
-                env_spec=self.box_env, hidden_sizes=(64, 64), name='P4')
+            self.policy1 = ContinuousMLPPolicy(env_spec=self.box_env,
+                                               hidden_sizes=(32, 32),
+                                               name='P1')
+            self.policy2 = ContinuousMLPPolicy(env_spec=self.box_env,
+                                               hidden_sizes=(64, 64),
+                                               name='P2')
+            self.policy3 = ContinuousMLPPolicyWithModel(env_spec=self.box_env,
+                                                        hidden_sizes=(32, 32),
+                                                        name='P3')
+            self.policy4 = ContinuousMLPPolicyWithModel(env_spec=self.box_env,
+                                                        hidden_sizes=(64, 64),
+                                                        name='P4')
 
             self.sess.run(tf.global_variables_initializer())
             for a, b in zip(self.policy3.get_params(),
@@ -76,23 +80,23 @@ class TestContinuousMLPPolicyWithModelTransit(TfGraphTestCase):
         obs_dim = self.box_env.spec.observation_space.flat_dim
         state_input = tf.placeholder(tf.float32, shape=(None, obs_dim))
 
-        action_sym1 = self.policy1.get_action_sym(
-            state_input, name='action_sym')
-        action_sym2 = self.policy2.get_action_sym(
-            state_input, name='action_sym')
-        action_sym3 = self.policy3.get_action_sym(
-            state_input, name='action_sym')
-        action_sym4 = self.policy4.get_action_sym(
-            state_input, name='action_sym')
+        action_sym1 = self.policy1.get_action_sym(state_input,
+                                                  name='action_sym')
+        action_sym2 = self.policy2.get_action_sym(state_input,
+                                                  name='action_sym')
+        action_sym3 = self.policy3.get_action_sym(state_input,
+                                                  name='action_sym')
+        action_sym4 = self.policy4.get_action_sym(state_input,
+                                                  name='action_sym')
 
-        action1 = self.sess.run(
-            action_sym1, feed_dict={state_input: [self.obs]})
-        action2 = self.sess.run(
-            action_sym2, feed_dict={state_input: [self.obs]})
-        action3 = self.sess.run(
-            action_sym3, feed_dict={state_input: [self.obs]})
-        action4 = self.sess.run(
-            action_sym4, feed_dict={state_input: [self.obs]})
+        action1 = self.sess.run(action_sym1,
+                                feed_dict={state_input: [self.obs]})
+        action2 = self.sess.run(action_sym2,
+                                feed_dict={state_input: [self.obs]})
+        action3 = self.sess.run(action_sym3,
+                                feed_dict={state_input: [self.obs]})
+        action4 = self.sess.run(action_sym4,
+                                feed_dict={state_input: [self.obs]})
 
         assert np.array_equal(action1, action3 * self.action_bound)
         assert np.array_equal(action2, action4 * self.action_bound)

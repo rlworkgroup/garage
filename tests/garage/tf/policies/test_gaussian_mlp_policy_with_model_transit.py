@@ -32,14 +32,18 @@ class TestGaussianMLPPolicyWithModelTransit(TfGraphTestCase):
             mock_rand.return_value = 0.5
             super().setup_method()
             self.box_env = TfEnv(DummyBoxEnv())
-            self.policy1 = GaussianMLPPolicy(
-                env_spec=self.box_env, init_std=1.0, name='P1')
-            self.policy2 = GaussianMLPPolicy(
-                env_spec=self.box_env, init_std=1.2, name='P2')
-            self.policy3 = GaussianMLPPolicyWithModel(
-                env_spec=self.box_env, init_std=1.0, name='P3')
-            self.policy4 = GaussianMLPPolicyWithModel(
-                env_spec=self.box_env, init_std=1.2, name='P4')
+            self.policy1 = GaussianMLPPolicy(env_spec=self.box_env,
+                                             init_std=1.0,
+                                             name='P1')
+            self.policy2 = GaussianMLPPolicy(env_spec=self.box_env,
+                                             init_std=1.2,
+                                             name='P2')
+            self.policy3 = GaussianMLPPolicyWithModel(env_spec=self.box_env,
+                                                      init_std=1.0,
+                                                      name='P3')
+            self.policy4 = GaussianMLPPolicyWithModel(env_spec=self.box_env,
+                                                      init_std=1.2,
+                                                      name='P4')
 
             self.sess.run(tf.global_variables_initializer())
 
@@ -57,27 +61,27 @@ class TestGaussianMLPPolicyWithModelTransit(TfGraphTestCase):
             self.action_ph = tf.placeholder(
                 tf.float32, shape=(None, self.box_env.action_space.flat_dim))
 
-            self.dist1_sym = self.policy1.dist_info_sym(
-                self.obs_ph, name='p1_sym')
-            self.dist2_sym = self.policy2.dist_info_sym(
-                self.obs_ph, name='p2_sym')
-            self.dist3_sym = self.policy3.dist_info_sym(
-                self.obs_ph, name='p3_sym')
-            self.dist4_sym = self.policy4.dist_info_sym(
-                self.obs_ph, name='p4_sym')
+            self.dist1_sym = self.policy1.dist_info_sym(self.obs_ph,
+                                                        name='p1_sym')
+            self.dist2_sym = self.policy2.dist_info_sym(self.obs_ph,
+                                                        name='p2_sym')
+            self.dist3_sym = self.policy3.dist_info_sym(self.obs_ph,
+                                                        name='p3_sym')
+            self.dist4_sym = self.policy4.dist_info_sym(self.obs_ph,
+                                                        name='p4_sym')
 
             assert self.policy1.vectorized == self.policy2.vectorized
             assert self.policy3.vectorized == self.policy4.vectorized
 
     def test_dist_info_sym_output(self):
-        dist1 = self.sess.run(
-            self.dist1_sym, feed_dict={self.obs_ph: self.obs})
-        dist2 = self.sess.run(
-            self.dist2_sym, feed_dict={self.obs_ph: self.obs})
-        dist3 = self.sess.run(
-            self.dist3_sym, feed_dict={self.obs_ph: self.obs})
-        dist4 = self.sess.run(
-            self.dist4_sym, feed_dict={self.obs_ph: self.obs})
+        dist1 = self.sess.run(self.dist1_sym,
+                              feed_dict={self.obs_ph: self.obs})
+        dist2 = self.sess.run(self.dist2_sym,
+                              feed_dict={self.obs_ph: self.obs})
+        dist3 = self.sess.run(self.dist3_sym,
+                              feed_dict={self.obs_ph: self.obs})
+        dist4 = self.sess.run(self.dist4_sym,
+                              feed_dict={self.obs_ph: self.obs})
 
         assert np.array_equal(dist1['mean'], dist3['mean'])
         assert np.array_equal(dist1['log_std'], dist3['log_std'])

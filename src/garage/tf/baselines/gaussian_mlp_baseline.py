@@ -10,7 +10,6 @@ from garage.tf.regressors import GaussianMLPRegressor
 
 class GaussianMLPBaseline(Baseline, Parameterized, Serializable):
     """A value function using gaussian mlp network."""
-
     def __init__(
             self,
             env_spec,
@@ -34,8 +33,8 @@ class GaussianMLPBaseline(Baseline, Parameterized, Serializable):
             regressor_args = dict()
 
         self._regressor = GaussianMLPRegressor(
-            input_shape=(
-                env_spec.observation_space.flat_dim * num_seq_inputs, ),
+            input_shape=(env_spec.observation_space.flat_dim *
+                         num_seq_inputs, ),
             output_dim=1,
             name=name,
             **regressor_args)

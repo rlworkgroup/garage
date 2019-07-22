@@ -13,7 +13,6 @@ class Policy2:
         env_spec (garage.envs.env_spec.EnvSpec): Environment specification.
 
     """
-
     def __init__(self, name, env_spec):
         self._name = name
         self._env_spec = env_spec
@@ -150,7 +149,6 @@ class Policy2:
 
 class StochasticPolicy2(Policy2):
     """StochasticPolicy."""
-
     @property
     def distribution(self):
         """Distribution."""

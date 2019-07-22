@@ -14,8 +14,8 @@ class TestQfDerivedPolicy(TfGraphTestCase):
         super().setup_method()
         self.env = TfEnv(DummyDiscreteEnv())
         self.qf = SimpleQFunction(self.env.spec)
-        self.policy = DiscreteQfDerivedPolicy(
-            env_spec=self.env.spec, qf=self.qf)
+        self.policy = DiscreteQfDerivedPolicy(env_spec=self.env.spec,
+                                              qf=self.qf)
         self.sess.run(tf.global_variables_initializer())
         self.env.reset()
 

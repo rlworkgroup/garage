@@ -20,7 +20,6 @@ class InstrumentedBatchPolopt(BatchPolopt):
     This includes various policy gradient methods like vpg, npg, ppo, trpo,
     etc.
     """
-
     def train(self):
         address = ('localhost', 6000)
         conn = Client(address)
@@ -31,7 +30,7 @@ class InstrumentedBatchPolopt(BatchPolopt):
             conn.send(ExpLifecycle.START)
             self.start_worker()
             self.init_opt()
-            for itr in range(self.current_itr, self.n_itr):
+            for itr in range(self.n_itr):
                 with logger.prefix('itr #{} | '.format(itr)):
                     conn.send(ExpLifecycle.OBTAIN_SAMPLES)
                     paths = self.sampler.obtain_samples(itr)

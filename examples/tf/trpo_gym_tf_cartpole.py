@@ -13,8 +13,9 @@ def run_task(snapshot_config, *_):
     with LocalRunner(snapshot_config=snapshot_config) as runner:
         env = TfEnv(gym.make('CartPole-v0'))
 
-        policy = CategoricalMLPPolicy(
-            name='policy', env_spec=env.spec, hidden_sizes=(32, 32))
+        policy = CategoricalMLPPolicy(name='policy',
+                                      env_spec=env.spec,
+                                      hidden_sizes=(32, 32))
 
         baseline = LinearFeatureBaseline(env_spec=env.spec)
 

@@ -3,7 +3,6 @@ import gym
 
 class DummyEnv(gym.Env):
     """Base dummy environment."""
-
     def __init__(self, random, obs_dim=(4, ), action_dim=(2, )):
         self.random = random
         self.state = None

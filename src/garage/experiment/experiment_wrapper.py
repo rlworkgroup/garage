@@ -44,85 +44,76 @@ def run_experiment(argv):
         default=1,
         help=('Number of parallel workers to perform rollouts. '
               "0 => don't start any workers"))
-    parser.add_argument(
-        '--exp_name',
-        type=str,
-        default=default_exp_name,
-        help='Name of the experiment.')
-    parser.add_argument(
-        '--log_dir',
-        type=str,
-        default=None,
-        help='Path to save the log and iteration snapshot.')
-    parser.add_argument(
-        '--snapshot_mode',
-        type=str,
-        default='last',
-        help='Mode to save the snapshot. Can be either "all" '
-        '(all iterations will be saved), "last" (only '
-        'the last iteration will be saved), "gap" (every'
-        '`snapshot_gap` iterations are saved), or "none" '
-        '(do not save snapshots)')
-    parser.add_argument(
-        '--snapshot_gap',
-        type=int,
-        default=1,
-        help='Gap between snapshot iterations.')
+    parser.add_argument('--exp_name',
+                        type=str,
+                        default=default_exp_name,
+                        help='Name of the experiment.')
+    parser.add_argument('--log_dir',
+                        type=str,
+                        default=None,
+                        help='Path to save the log and iteration snapshot.')
+    parser.add_argument('--snapshot_mode',
+                        type=str,
+                        default='last',
+                        help='Mode to save the snapshot. Can be either "all" '
+                        '(all iterations will be saved), "last" (only '
+                        'the last iteration will be saved), "gap" (every'
+                        '`snapshot_gap` iterations are saved), or "none" '
+                        '(do not save snapshots)')
+    parser.add_argument('--snapshot_gap',
+                        type=int,
+                        default=1,
+                        help='Gap between snapshot iterations.')
     parser.add_argument(
         '--resume_from_dir',
         type=str,
         default=None,
         help='Directory of the pickle file to resume experiment from.')
-    parser.add_argument(
-        '--resume_from_epoch',
-        type=str,
-        default=None,
-        help='Index of iteration to restore from. '
-        'Can be "first", "last" or a number. '
-        'Not applicable when snapshot_mode="last"')
-    parser.add_argument(
-        '--tabular_log_file',
-        type=str,
-        default='progress.csv',
-        help='Name of the tabular log file (in csv).')
-    parser.add_argument(
-        '--text_log_file',
-        type=str,
-        default='debug.log',
-        help='Name of the text log file (in pure text).')
-    parser.add_argument(
-        '--tensorboard_step_key',
-        type=str,
-        default=None,
-        help='Name of the step key in tensorboard_summary.')
-    parser.add_argument(
-        '--params_log_file',
-        type=str,
-        default='params.json',
-        help='Name of the parameter log file (in json).')
-    parser.add_argument(
-        '--variant_log_file',
-        type=str,
-        default='variant.json',
-        help='Name of the variant log file (in json).')
-    parser.add_argument(
-        '--plot',
-        type=ast.literal_eval,
-        default=False,
-        help='Whether to plot the iteration results')
+    parser.add_argument('--resume_from_epoch',
+                        type=str,
+                        default=None,
+                        help='Index of iteration to restore from. '
+                        'Can be "first", "last" or a number. '
+                        'Not applicable when snapshot_mode="last"')
+    parser.add_argument('--tabular_log_file',
+                        type=str,
+                        default='progress.csv',
+                        help='Name of the tabular log file (in csv).')
+    parser.add_argument('--text_log_file',
+                        type=str,
+                        default='debug.log',
+                        help='Name of the text log file (in pure text).')
+    parser.add_argument('--tensorboard_step_key',
+                        type=str,
+                        default=None,
+                        help='Name of the step key in tensorboard_summary.')
+    parser.add_argument('--params_log_file',
+                        type=str,
+                        default='params.json',
+                        help='Name of the parameter log file (in json).')
+    parser.add_argument('--variant_log_file',
+                        type=str,
+                        default='variant.json',
+                        help='Name of the variant log file (in json).')
+    parser.add_argument('--plot',
+                        type=ast.literal_eval,
+                        default=False,
+                        help='Whether to plot the iteration results')
     parser.add_argument(
         '--log_tabular_only',
         type=ast.literal_eval,
         default=False,
         help='Print only the tabular log information (in a horizontal format)')
-    parser.add_argument(
-        '--seed', type=int, default=None, help='Random seed for numpy')
-    parser.add_argument(
-        '--args_data', type=str, help='Pickled data for objects')
-    parser.add_argument(
-        '--variant_data',
-        type=str,
-        help='Pickled data for variant configuration')
+    parser.add_argument('--seed',
+                        type=int,
+                        default=None,
+                        help='Random seed for numpy')
+    parser.add_argument('--args_data',
+                        type=str,
+                        help='Pickled data for objects')
+    parser.add_argument('--variant_data',
+                        type=str,
+                        help='Pickled data for variant configuration')
 
     args = parser.parse_args(argv[1:])
 
@@ -152,8 +143,8 @@ def run_experiment(argv):
         garage.tf.plotter.Plotter.disable()
 
     if args.log_dir is None:
-        log_dir = os.path.join(
-            os.path.join(os.getcwd(), 'data'), args.exp_name)
+        log_dir = os.path.join(os.path.join(os.getcwd(), 'data'),
+                               args.exp_name)
     else:
         log_dir = args.log_dir
 
@@ -177,10 +168,9 @@ def run_experiment(argv):
 
     logger.push_prefix('[%s] ' % args.exp_name)
 
-    snapshot_config = SnapshotConfig(
-        snapshot_dir=log_dir,
-        snapshot_mode=args.snapshot_mode,
-        snapshot_gap=args.snapshot_gap)
+    snapshot_config = SnapshotConfig(snapshot_dir=log_dir,
+                                     snapshot_mode=args.snapshot_mode,
+                                     snapshot_gap=args.snapshot_gap)
 
     method_call = pickle.loads(base64.b64decode(args.args_data))
     try:
@@ -253,7 +243,6 @@ def dump_variant(log_file, variant_data):
 
 class LogEncoder(json.JSONEncoder):
     """Encoder to be used as cls in json.dump."""
-
     def default(self, o):
         """Perform JSON encoding."""
         if isinstance(o, type):

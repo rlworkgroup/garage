@@ -23,20 +23,19 @@ class TestTRPO(TfGraphTestCase):
         with LocalRunner(sess=self.sess) as runner:
             env = TfEnv(normalize(gym.make('CartPole-v1')))
 
-            policy = CategoricalLSTMPolicyWithModel(
-                name='policy', env_spec=env.spec)
+            policy = CategoricalLSTMPolicyWithModel(name='policy',
+                                                    env_spec=env.spec)
 
             baseline = LinearFeatureBaseline(env_spec=env.spec)
 
-            algo = TRPO(
-                env_spec=env.spec,
-                policy=policy,
-                baseline=baseline,
-                max_path_length=100,
-                discount=0.99,
-                max_kl_step=0.01,
-                optimizer_args=dict(
-                    hvp_approach=FiniteDifferenceHvp(base_eps=1e-5)))
+            algo = TRPO(env_spec=env.spec,
+                        policy=policy,
+                        baseline=baseline,
+                        max_path_length=100,
+                        discount=0.99,
+                        max_kl_step=0.01,
+                        optimizer_args=dict(hvp_approach=FiniteDifferenceHvp(
+                            base_eps=1e-5)))
 
             snapshotter.snapshot_dir = './'
             runner.setup(algo, env)
@@ -50,20 +49,19 @@ class TestTRPO(TfGraphTestCase):
         with LocalRunner(sess=self.sess) as runner:
             env = TfEnv(normalize(gym.make('CartPole-v1')))
 
-            policy = CategoricalGRUPolicyWithModel(
-                name='policy', env_spec=env.spec)
+            policy = CategoricalGRUPolicyWithModel(name='policy',
+                                                   env_spec=env.spec)
 
             baseline = LinearFeatureBaseline(env_spec=env.spec)
 
-            algo = TRPO(
-                env_spec=env.spec,
-                policy=policy,
-                baseline=baseline,
-                max_path_length=100,
-                discount=0.99,
-                max_kl_step=0.01,
-                optimizer_args=dict(
-                    hvp_approach=FiniteDifferenceHvp(base_eps=1e-5)))
+            algo = TRPO(env_spec=env.spec,
+                        policy=policy,
+                        baseline=baseline,
+                        max_path_length=100,
+                        discount=0.99,
+                        max_kl_step=0.01,
+                        optimizer_args=dict(hvp_approach=FiniteDifferenceHvp(
+                            base_eps=1e-5)))
 
             runner.setup(algo, env)
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)

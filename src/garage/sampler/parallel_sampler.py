@@ -18,8 +18,9 @@ def _worker_init(g, id):
 
 def initialize(n_parallel):
     singleton_pool.initialize(n_parallel)
-    singleton_pool.run_each(
-        _worker_init, [(id, ) for id in range(singleton_pool.n_parallel)])
+    singleton_pool.run_each(_worker_init,
+                            [(id, )
+                             for id in range(singleton_pool.n_parallel)])
 
 
 def _get_scoped_g(g, scope):
@@ -52,9 +53,10 @@ def _worker_terminate_task(g, scope=None):
 def populate_task(env, policy, scope=None):
     logger.log('Populating workers...')
     if singleton_pool.n_parallel > 1:
-        singleton_pool.run_each(_worker_populate_task, [
-            (pickle.dumps(env), pickle.dumps(policy), scope)
-        ] * singleton_pool.n_parallel)
+        singleton_pool.run_each(
+            _worker_populate_task,
+            [(pickle.dumps(env), pickle.dumps(policy), scope)] *
+            singleton_pool.n_parallel)
     else:
         # avoid unnecessary copying
         g = _get_scoped_g(singleton_pool.G, scope)
@@ -108,11 +110,10 @@ def sample_paths(policy_params,
     :param max_path_length: horizon / maximum length of a single trajectory
     :return: a list of collected paths
     """
-    singleton_pool.run_each(
-        _worker_set_policy_params,
-        [(policy_params, scope)] * singleton_pool.n_parallel)
-    return singleton_pool.run_collect(
-        _worker_collect_one_path,
-        threshold=max_samples,
-        args=(max_path_length, scope),
-        show_prog_bar=True)
+    singleton_pool.run_each(_worker_set_policy_params,
+                            [(policy_params, scope)] *
+                            singleton_pool.n_parallel)
+    return singleton_pool.run_collect(_worker_collect_one_path,
+                                      threshold=max_samples,
+                                      args=(max_path_length, scope),
+                                      show_prog_bar=True)

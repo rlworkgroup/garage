@@ -22,7 +22,6 @@ class StackFrames(gym.Wrapper):
         environment is not gym.spaces.Box.
 
     """
-
     def __init__(self, env, n_frames):
         if not isinstance(env.observation_space, gym.spaces.Box):
             raise ValueError('Stack frames only works with gym.spaces.Box '

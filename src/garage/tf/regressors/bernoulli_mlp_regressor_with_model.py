@@ -57,7 +57,6 @@ class BernoulliMLPRegressorWithModel(StochasticRegressor2):
         normalize_inputs (bool): Bool for normalizing inputs or not.
         layer_normalization (bool): Bool for using layer normalization or not.
     """
-
     def __init__(self,
                  input_shape,
                  output_dim,
@@ -120,19 +119,19 @@ class BernoulliMLPRegressorWithModel(StochasticRegressor2):
         self._initialize()
 
     def _initialize(self):
-        input_var = tf.placeholder(
-            tf.float32, shape=(None, ) + self._input_shape)
+        input_var = tf.placeholder(tf.float32,
+                                   shape=(None, ) + self._input_shape)
 
         with tf.variable_scope(self._variable_scope):
             self.model.build(input_var)
 
-            ys_var = tf.placeholder(
-                dtype=tf.float32, name='ys', shape=(None, self._output_dim))
+            ys_var = tf.placeholder(dtype=tf.float32,
+                                    name='ys',
+                                    shape=(None, self._output_dim))
 
-            old_prob_var = tf.placeholder(
-                dtype=tf.float32,
-                name='old_prob',
-                shape=(None, self._output_dim))
+            old_prob_var = tf.placeholder(dtype=tf.float32,
+                                          name='old_prob',
+                                          shape=(None, self._output_dim))
 
             y_hat = self.model.networks['default'].y_hat
 
@@ -151,11 +150,10 @@ class BernoulliMLPRegressorWithModel(StochasticRegressor2):
                                                             predicted)
             self._f_prob = tensor_utils.compile_function([input_var], y_hat)
 
-            self._optimizer.update_opt(
-                loss=loss,
-                target=self,
-                network_output=[y_hat],
-                inputs=[input_var, ys_var])
+            self._optimizer.update_opt(loss=loss,
+                                       target=self,
+                                       network_output=[y_hat],
+                                       inputs=[input_var, ys_var])
             self._tr_optimizer.update_opt(
                 loss=loss,
                 target=self,

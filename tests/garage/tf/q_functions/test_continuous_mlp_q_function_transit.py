@@ -33,14 +33,18 @@ class TestContinuousMLPQFunctionTransit(TfGraphTestCase):
             self.act_dim = (2, )
             self.box_env = TfEnv(
                 DummyBoxEnv(obs_dim=self.obs_dim, action_dim=self.act_dim))
-            self.qf1 = ContinuousMLPQFunction(
-                env_spec=self.box_env, hidden_sizes=(32, 32), name='QF1')
-            self.qf2 = ContinuousMLPQFunction(
-                env_spec=self.box_env, hidden_sizes=(64, 64), name='QF2')
-            self.qf3 = ContinuousMLPQFunctionWithModel(
-                env_spec=self.box_env, hidden_sizes=(32, 32), name='QF3')
-            self.qf4 = ContinuousMLPQFunctionWithModel(
-                env_spec=self.box_env, hidden_sizes=(64, 64), name='QF4')
+            self.qf1 = ContinuousMLPQFunction(env_spec=self.box_env,
+                                              hidden_sizes=(32, 32),
+                                              name='QF1')
+            self.qf2 = ContinuousMLPQFunction(env_spec=self.box_env,
+                                              hidden_sizes=(64, 64),
+                                              name='QF2')
+            self.qf3 = ContinuousMLPQFunctionWithModel(env_spec=self.box_env,
+                                                       hidden_sizes=(32, 32),
+                                                       name='QF3')
+            self.qf4 = ContinuousMLPQFunctionWithModel(env_spec=self.box_env,
+                                                       hidden_sizes=(64, 64),
+                                                       name='QF4')
 
             self.sess.run(tf.global_variables_initializer())
 
@@ -80,26 +84,26 @@ class TestContinuousMLPQFunctionTransit(TfGraphTestCase):
         qval_sym3 = self.qf3.get_qval_sym(obs_ph, act_ph, name='qval_sym')
         qval_sym4 = self.qf4.get_qval_sym(obs_ph, act_ph, name='qval_sym')
 
-        q_val1 = self.sess.run(
-            qval_sym1, feed_dict={
-                obs_ph: [self.obs],
-                act_ph: [self.act]
-            })
-        q_val2 = self.sess.run(
-            qval_sym2, feed_dict={
-                obs_ph: [self.obs],
-                act_ph: [self.act]
-            })
-        q_val3 = self.sess.run(
-            qval_sym3, feed_dict={
-                obs_ph: [self.obs],
-                act_ph: [self.act]
-            })
-        q_val4 = self.sess.run(
-            qval_sym4, feed_dict={
-                obs_ph: [self.obs],
-                act_ph: [self.act]
-            })
+        q_val1 = self.sess.run(qval_sym1,
+                               feed_dict={
+                                   obs_ph: [self.obs],
+                                   act_ph: [self.act]
+                               })
+        q_val2 = self.sess.run(qval_sym2,
+                               feed_dict={
+                                   obs_ph: [self.obs],
+                                   act_ph: [self.act]
+                               })
+        q_val3 = self.sess.run(qval_sym3,
+                               feed_dict={
+                                   obs_ph: [self.obs],
+                                   act_ph: [self.act]
+                               })
+        q_val4 = self.sess.run(qval_sym4,
+                               feed_dict={
+                                   obs_ph: [self.obs],
+                                   act_ph: [self.act]
+                               })
 
         assert np.array_equal(q_val1, q_val3)
         assert np.array_equal(q_val2, q_val4)

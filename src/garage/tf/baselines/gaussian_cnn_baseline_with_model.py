@@ -19,7 +19,6 @@ class GaussianCNNBaselineWithModel(Baseline):
             default it is 1.0, which means using all the data.
         regressor_args (dict): Arguments for regressor.
     """
-
     def __init__(
             self,
             env_spec,

@@ -6,7 +6,6 @@ from tests.fixtures.models import SimpleMLPModel
 
 class SimpleQFunction(QFunction2):
     """Simple QFunction for testing."""
-
     def __init__(self, env_spec, name='SimpleQFunction'):
         super().__init__(name)
         self.obs_dim = env_spec.observation_space.shape
@@ -16,8 +15,8 @@ class SimpleQFunction(QFunction2):
         self._initialize()
 
     def _initialize(self):
-        obs_ph = tf.placeholder(
-            tf.float32, (None, ) + self.obs_dim, name='obs')
+        obs_ph = tf.placeholder(tf.float32, (None, ) + self.obs_dim,
+                                name='obs')
 
         with tf.variable_scope(self.name, reuse=False) as vs:
             self._variable_scope = vs

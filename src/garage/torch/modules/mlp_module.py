@@ -42,7 +42,6 @@ class MLPModule(nn.Module):
     Return:
         The output torch.Tensor of the MLP
     """
-
     def __init__(self,
                  input_dim,
                  output_dim,

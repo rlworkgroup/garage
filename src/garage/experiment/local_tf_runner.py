@@ -62,7 +62,6 @@ class LocalRunner:
             runner.train(n_epochs=100, batch_size=4000)
 
     """
-
     def __init__(self, snapshot_config=None, sess=None, max_cpus=1):
         if snapshot_config:
             self._snapshotter = Snapshotter(snapshot_config.snapshot_dir,
@@ -143,8 +142,8 @@ class LocalRunner:
         logger.log(self.sess.graph)
         self.has_setup = True
 
-        self._setup_args = types.SimpleNamespace(
-            sampler_cls=sampler_cls, sampler_args=sampler_args)
+        self._setup_args = types.SimpleNamespace(sampler_cls=sampler_cls,
+                                                 sampler_args=sampler_args)
 
     def initialize_tf_vars(self):
         """Initialize all uninitialized variables in session."""
@@ -255,11 +254,10 @@ class LocalRunner:
         self._setup_args = saved['setup_args']
         self.train_args = saved['train_args']
 
-        self.setup(
-            env=saved['env'],
-            algo=saved['algo'],
-            sampler_cls=self._setup_args.sampler_cls,
-            sampler_args=self._setup_args.sampler_args)
+        self.setup(env=saved['env'],
+                   algo=saved['algo'],
+                   sampler_cls=self._setup_args.sampler_cls,
+                   sampler_args=self._setup_args.sampler_args)
 
         n_epochs = self.train_args.n_epochs
         last_epoch = saved['last_epoch']
@@ -324,14 +322,13 @@ class LocalRunner:
             raise Exception('Use setup() to setup runner before training.')
 
         # Save arguments for restore
-        self.train_args = types.SimpleNamespace(
-            n_epochs=n_epochs,
-            n_epoch_cycles=n_epoch_cycles,
-            batch_size=batch_size,
-            plot=plot,
-            store_paths=store_paths,
-            pause_for_plot=pause_for_plot,
-            start_epoch=0)
+        self.train_args = types.SimpleNamespace(n_epochs=n_epochs,
+                                                n_epoch_cycles=n_epoch_cycles,
+                                                batch_size=batch_size,
+                                                plot=plot,
+                                                store_paths=store_paths,
+                                                pause_for_plot=pause_for_plot,
+                                                start_epoch=0)
 
         self.plot = plot
 
@@ -361,8 +358,8 @@ class LocalRunner:
         try:
             self._start_worker()
             self._start_time = time.time()
-            self.step_itr = (
-                self.train_args.start_epoch * self.train_args.n_epoch_cycles)
+            self.step_itr = (self.train_args.start_epoch *
+                             self.train_args.n_epoch_cycles)
             self.step_path = None
 
             for epoch in range(self.train_args.start_epoch,

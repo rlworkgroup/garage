@@ -69,8 +69,8 @@ class CategoricalLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
                             tf.shape(input)[0],
                             tf.shape(input)[1], feature_dim
                         ])),
-                    shape_op=lambda _, input_shape: (input_shape[
-                        0], input_shape[1], feature_dim))
+                    shape_op=lambda _, input_shape:
+                    (input_shape[0], input_shape[1], feature_dim))
 
             if prob_network is None:
                 prob_network = LSTMNetwork(
@@ -94,8 +94,9 @@ class CategoricalLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
             self.l_input = l_input
             self.state_include_action = state_include_action
 
-            flat_input_var = tf.placeholder(
-                dtype=tf.float32, shape=(None, input_dim), name='flat_input')
+            flat_input_var = tf.placeholder(dtype=tf.float32,
+                                            shape=(None, input_dim),
+                                            name='flat_input')
             if feature_network is None:
                 feature_var = flat_input_var
             else:
@@ -143,22 +144,21 @@ class CategoricalLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
             if self.state_include_action:
                 prev_action_var = state_info_vars['prev_action']
                 prev_action_var = tf.cast(prev_action_var, tf.float32)
-                all_input_var = tf.concat(
-                    axis=2, values=[obs_var, prev_action_var])
+                all_input_var = tf.concat(axis=2,
+                                          values=[obs_var, prev_action_var])
             else:
                 all_input_var = obs_var
             if self.feature_network is None:
-                with tf.name_scope(
-                        self._prob_network_name, values=[all_input_var]):
+                with tf.name_scope(self._prob_network_name,
+                                   values=[all_input_var]):
                     prob = L.get_output(self.prob_network.output_layer,
                                         {self.l_input: all_input_var})
                 return dict(prob=prob)
             else:
                 flat_input_var = tf.reshape(all_input_var,
                                             (-1, self.input_dim))
-                with tf.name_scope(
-                        self._prob_network_name,
-                        values=[all_input_var, flat_input_var]):
+                with tf.name_scope(self._prob_network_name,
+                                   values=[all_input_var, flat_input_var]):
                     prob = L.get_output(
                         self.prob_network.output_layer, {
                             self.l_input: all_input_var,
@@ -175,8 +175,8 @@ class CategoricalLSTMPolicy(StochasticPolicy, LayersPowered, Serializable):
             dones = [True]
         dones = np.asarray(dones)
         if self.prev_actions is None or len(dones) != len(self.prev_actions):
-            self.prev_actions = np.zeros((len(dones),
-                                          self.action_space.flat_dim))
+            self.prev_actions = np.zeros(
+                (len(dones), self.action_space.flat_dim))
             self.prev_hiddens = np.zeros((len(dones), self.hidden_dim))
             self.prev_cells = np.zeros((len(dones), self.hidden_dim))
 

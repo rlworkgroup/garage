@@ -22,10 +22,12 @@ class TestGaussianGRUModel(TfGraphTestCase):
             (self.batch_size, self.time_step, self.feature_shape), 1.)
         self.obs_input = np.full((self.batch_size, self.feature_shape), 1.)
 
-        self.input_var = tf.placeholder(
-            tf.float32, shape=(None, None, self.feature_shape), name='input')
-        self.step_input_var = tf.placeholder(
-            tf.float32, shape=(None, self.feature_shape), name='step_input')
+        self.input_var = tf.placeholder(tf.float32,
+                                        shape=(None, None, self.feature_shape),
+                                        name='input')
+        self.step_input_var = tf.placeholder(tf.float32,
+                                             shape=(None, self.feature_shape),
+                                             name='step_input')
 
     # yapf: disable
     @pytest.mark.parametrize('output_dim, hidden_dim', [
@@ -38,22 +40,21 @@ class TestGaussianGRUModel(TfGraphTestCase):
     def test_std_share_network_output_values(self, mock_normal, output_dim,
                                              hidden_dim):
         mock_normal.return_value = 0.5
-        model = GaussianGRUModel(
-            output_dim=output_dim,
-            hidden_dim=hidden_dim,
-            std_share_network=True,
-            hidden_nonlinearity=None,
-            recurrent_nonlinearity=None,
-            hidden_w_init=self.default_initializer,
-            recurrent_w_init=self.default_initializer,
-            output_w_init=self.default_initializer)
-        step_hidden_var = tf.placeholder(
-            shape=(self.batch_size, hidden_dim),
-            name='step_hidden',
-            dtype=tf.float32)
+        model = GaussianGRUModel(output_dim=output_dim,
+                                 hidden_dim=hidden_dim,
+                                 std_share_network=True,
+                                 hidden_nonlinearity=None,
+                                 recurrent_nonlinearity=None,
+                                 hidden_w_init=self.default_initializer,
+                                 recurrent_w_init=self.default_initializer,
+                                 output_w_init=self.default_initializer)
+        step_hidden_var = tf.placeholder(shape=(self.batch_size, hidden_dim),
+                                         name='step_hidden',
+                                         dtype=tf.float32)
         (action_var, mean_var, step_mean_var, log_std_var, step_log_std_var,
-         step_hidden, hidden_init_var, dist) = model.build(
-             self.input_var, self.step_input_var, step_hidden_var)
+         step_hidden, hidden_init_var,
+         dist) = model.build(self.input_var, self.step_input_var,
+                             step_hidden_var)
 
         hidden1 = hidden2 = np.full((self.batch_size, hidden_dim),
                                     hidden_init_var.eval())
@@ -70,15 +71,14 @@ class TestGaussianGRUModel(TfGraphTestCase):
                     step_hidden_var: hidden1
                 })
 
-            hidden2 = recurrent_step_gru(
-                input_val=self.obs_input,
-                num_units=hidden_dim,
-                step_hidden=hidden2,
-                w_x_init=0.1,
-                w_h_init=0.1,
-                b_init=0.,
-                nonlinearity=None,
-                gate_nonlinearity=None)
+            hidden2 = recurrent_step_gru(input_val=self.obs_input,
+                                         num_units=hidden_dim,
+                                         step_hidden=hidden2,
+                                         w_x_init=0.1,
+                                         w_h_init=0.1,
+                                         b_init=0.,
+                                         nonlinearity=None,
+                                         gate_nonlinearity=None)
 
             output_nonlinearity = np.full(
                 (np.prod(hidden2.shape[1:]), output_dim), 0.1)
@@ -98,22 +98,21 @@ class TestGaussianGRUModel(TfGraphTestCase):
     ])
     # yapf: enable
     def test_std_share_network_shapes(self, output_dim, hidden_dim):
-        model = GaussianGRUModel(
-            output_dim=output_dim,
-            hidden_dim=hidden_dim,
-            std_share_network=True,
-            hidden_nonlinearity=None,
-            recurrent_nonlinearity=None,
-            hidden_w_init=self.default_initializer,
-            recurrent_w_init=self.default_initializer,
-            output_w_init=self.default_initializer)
-        step_hidden_var = tf.placeholder(
-            shape=(self.batch_size, hidden_dim),
-            name='step_hidden',
-            dtype=tf.float32)
+        model = GaussianGRUModel(output_dim=output_dim,
+                                 hidden_dim=hidden_dim,
+                                 std_share_network=True,
+                                 hidden_nonlinearity=None,
+                                 recurrent_nonlinearity=None,
+                                 hidden_w_init=self.default_initializer,
+                                 recurrent_w_init=self.default_initializer,
+                                 output_w_init=self.default_initializer)
+        step_hidden_var = tf.placeholder(shape=(self.batch_size, hidden_dim),
+                                         name='step_hidden',
+                                         dtype=tf.float32)
         (action_var, mean_var, step_mean_var, log_std_var, step_log_std_var,
-         step_hidden, hidden_init_var, dist) = model.build(
-             self.input_var, self.step_input_var, step_hidden_var)
+         step_hidden, hidden_init_var,
+         dist) = model.build(self.input_var, self.step_input_var,
+                             step_hidden_var)
 
         # output layer is a tf.keras.layers.Dense object,
         # which cannot be access by tf.variable_scope.
@@ -137,26 +136,26 @@ class TestGaussianGRUModel(TfGraphTestCase):
     ])
     # yapf: enable
     @mock.patch('tensorflow.random.normal')
-    def test_without_std_share_network_output_values(
-            self, mock_normal, output_dim, hidden_dim, init_std):
+    def test_without_std_share_network_output_values(self, mock_normal,
+                                                     output_dim, hidden_dim,
+                                                     init_std):
         mock_normal.return_value = 0.5
-        model = GaussianGRUModel(
-            output_dim=output_dim,
-            hidden_dim=hidden_dim,
-            std_share_network=False,
-            hidden_nonlinearity=None,
-            recurrent_nonlinearity=None,
-            hidden_w_init=self.default_initializer,
-            recurrent_w_init=self.default_initializer,
-            output_w_init=self.default_initializer,
-            init_std=init_std)
-        step_hidden_var = tf.placeholder(
-            shape=(self.batch_size, hidden_dim),
-            name='step_hidden',
-            dtype=tf.float32)
+        model = GaussianGRUModel(output_dim=output_dim,
+                                 hidden_dim=hidden_dim,
+                                 std_share_network=False,
+                                 hidden_nonlinearity=None,
+                                 recurrent_nonlinearity=None,
+                                 hidden_w_init=self.default_initializer,
+                                 recurrent_w_init=self.default_initializer,
+                                 output_w_init=self.default_initializer,
+                                 init_std=init_std)
+        step_hidden_var = tf.placeholder(shape=(self.batch_size, hidden_dim),
+                                         name='step_hidden',
+                                         dtype=tf.float32)
         (action_var, mean_var, step_mean_var, log_std_var, step_log_std_var,
-         step_hidden, hidden_init_var, dist) = model.build(
-             self.input_var, self.step_input_var, step_hidden_var)
+         step_hidden, hidden_init_var,
+         dist) = model.build(self.input_var, self.step_input_var,
+                             step_hidden_var)
 
         hidden1 = hidden2 = np.full((self.batch_size, hidden_dim),
                                     hidden_init_var.eval())
@@ -173,15 +172,14 @@ class TestGaussianGRUModel(TfGraphTestCase):
                     step_hidden_var: hidden1
                 })
 
-            hidden2 = recurrent_step_gru(
-                input_val=self.obs_input,
-                num_units=hidden_dim,
-                step_hidden=hidden2,
-                w_x_init=0.1,
-                w_h_init=0.1,
-                b_init=0.,
-                nonlinearity=None,
-                gate_nonlinearity=None)
+            hidden2 = recurrent_step_gru(input_val=self.obs_input,
+                                         num_units=hidden_dim,
+                                         step_hidden=hidden2,
+                                         w_x_init=0.1,
+                                         w_h_init=0.1,
+                                         b_init=0.,
+                                         nonlinearity=None,
+                                         gate_nonlinearity=None)
 
             output_nonlinearity = np.full(
                 (np.prod(hidden2.shape[1:]), output_dim), 0.1)
@@ -203,22 +201,21 @@ class TestGaussianGRUModel(TfGraphTestCase):
     ])
     # yapf: enable
     def test_without_std_share_network_shapes(self, output_dim, hidden_dim):
-        model = GaussianGRUModel(
-            output_dim=output_dim,
-            hidden_dim=hidden_dim,
-            std_share_network=False,
-            hidden_nonlinearity=None,
-            recurrent_nonlinearity=None,
-            hidden_w_init=self.default_initializer,
-            recurrent_w_init=self.default_initializer,
-            output_w_init=self.default_initializer)
-        step_hidden_var = tf.placeholder(
-            shape=(self.batch_size, hidden_dim),
-            name='step_hidden',
-            dtype=tf.float32)
+        model = GaussianGRUModel(output_dim=output_dim,
+                                 hidden_dim=hidden_dim,
+                                 std_share_network=False,
+                                 hidden_nonlinearity=None,
+                                 recurrent_nonlinearity=None,
+                                 hidden_w_init=self.default_initializer,
+                                 recurrent_w_init=self.default_initializer,
+                                 output_w_init=self.default_initializer)
+        step_hidden_var = tf.placeholder(shape=(self.batch_size, hidden_dim),
+                                         name='step_hidden',
+                                         dtype=tf.float32)
         (action_var, mean_var, step_mean_var, log_std_var, step_log_std_var,
-         step_hidden, hidden_init_var, dist) = model.build(
-             self.input_var, self.step_input_var, step_hidden_var)
+         step_hidden, hidden_init_var,
+         dist) = model.build(self.input_var, self.step_input_var,
+                             step_hidden_var)
 
         # output layer is a tf.keras.layers.Dense object,
         # which cannot be access by tf.variable_scope.
@@ -245,22 +242,20 @@ class TestGaussianGRUModel(TfGraphTestCase):
     def test_std_share_network_is_pickleable(self, mock_normal, output_dim,
                                              hidden_dim):
         mock_normal.return_value = 0.5
-        model = GaussianGRUModel(
-            output_dim=output_dim,
-            hidden_dim=hidden_dim,
-            std_share_network=True,
-            hidden_nonlinearity=None,
-            recurrent_nonlinearity=None,
-            hidden_w_init=self.default_initializer,
-            recurrent_w_init=self.default_initializer,
-            output_w_init=self.default_initializer)
-        step_hidden_var = tf.placeholder(
-            shape=(self.batch_size, hidden_dim),
-            name='step_hidden',
-            dtype=tf.float32)
-        (_, mean_var, step_mean_var, log_std_var,
-         step_log_std_var, step_hidden, _, _) = model.build(
-             self.input_var, self.step_input_var, step_hidden_var)
+        model = GaussianGRUModel(output_dim=output_dim,
+                                 hidden_dim=hidden_dim,
+                                 std_share_network=True,
+                                 hidden_nonlinearity=None,
+                                 recurrent_nonlinearity=None,
+                                 hidden_w_init=self.default_initializer,
+                                 recurrent_w_init=self.default_initializer,
+                                 output_w_init=self.default_initializer)
+        step_hidden_var = tf.placeholder(shape=(self.batch_size, hidden_dim),
+                                         name='step_hidden',
+                                         dtype=tf.float32)
+        (_, mean_var, step_mean_var, log_std_var, step_log_std_var,
+         step_hidden, _, _) = model.build(self.input_var, self.step_input_var,
+                                          step_hidden_var)
 
         # output layer is a tf.keras.layers.Dense object,
         # which cannot be access by tf.variable_scope.
@@ -283,22 +278,21 @@ class TestGaussianGRUModel(TfGraphTestCase):
         with tf.Session(graph=tf.Graph()) as sess:
             model_pickled = pickle.loads(h)
 
-            input_var = tf.placeholder(
-                tf.float32,
-                shape=(None, None, self.feature_shape),
-                name='input')
-            step_input_var = tf.placeholder(
-                tf.float32,
-                shape=(None, self.feature_shape),
-                name='step_input')
-            step_hidden_var = tf.placeholder(
-                shape=(self.batch_size, hidden_dim),
-                name='initial_hidden',
-                dtype=tf.float32)
+            input_var = tf.placeholder(tf.float32,
+                                       shape=(None, None, self.feature_shape),
+                                       name='input')
+            step_input_var = tf.placeholder(tf.float32,
+                                            shape=(None, self.feature_shape),
+                                            name='step_input')
+            step_hidden_var = tf.placeholder(shape=(self.batch_size,
+                                                    hidden_dim),
+                                             name='initial_hidden',
+                                             dtype=tf.float32)
 
-            (_, mean_var2, step_mean_var2, log_std_var2,
-             step_log_std_var2, step_hidden2, _, _) = model_pickled.build(
-                 input_var, step_input_var, step_hidden_var)
+            (_, mean_var2, step_mean_var2, log_std_var2, step_log_std_var2,
+             step_hidden2, _, _) = model_pickled.build(input_var,
+                                                       step_input_var,
+                                                       step_hidden_var)
 
             outputs2 = sess.run([mean_var2, log_std_var2],
                                 feed_dict={input_var: self.obs_inputs})
@@ -322,22 +316,20 @@ class TestGaussianGRUModel(TfGraphTestCase):
     def test_without_std_share_network_is_pickleable(self, mock_normal,
                                                      output_dim, hidden_dim):
         mock_normal.return_value = 0.5
-        model = GaussianGRUModel(
-            output_dim=output_dim,
-            hidden_dim=hidden_dim,
-            std_share_network=False,
-            hidden_nonlinearity=None,
-            recurrent_nonlinearity=None,
-            hidden_w_init=self.default_initializer,
-            recurrent_w_init=self.default_initializer,
-            output_w_init=self.default_initializer)
-        step_hidden_var = tf.placeholder(
-            shape=(self.batch_size, hidden_dim),
-            name='step_hidden',
-            dtype=tf.float32)
-        (_, mean_var, step_mean_var, log_std_var,
-         step_log_std_var, step_hidden, _, _) = model.build(
-             self.input_var, self.step_input_var, step_hidden_var)
+        model = GaussianGRUModel(output_dim=output_dim,
+                                 hidden_dim=hidden_dim,
+                                 std_share_network=False,
+                                 hidden_nonlinearity=None,
+                                 recurrent_nonlinearity=None,
+                                 hidden_w_init=self.default_initializer,
+                                 recurrent_w_init=self.default_initializer,
+                                 output_w_init=self.default_initializer)
+        step_hidden_var = tf.placeholder(shape=(self.batch_size, hidden_dim),
+                                         name='step_hidden',
+                                         dtype=tf.float32)
+        (_, mean_var, step_mean_var, log_std_var, step_log_std_var,
+         step_hidden, _, _) = model.build(self.input_var, self.step_input_var,
+                                          step_hidden_var)
 
         # output layer is a tf.keras.layers.Dense object,
         # which cannot be access by tf.variable_scope.
@@ -360,22 +352,21 @@ class TestGaussianGRUModel(TfGraphTestCase):
         with tf.Session(graph=tf.Graph()) as sess:
             model_pickled = pickle.loads(h)
 
-            input_var = tf.placeholder(
-                tf.float32,
-                shape=(None, None, self.feature_shape),
-                name='input')
-            step_input_var = tf.placeholder(
-                tf.float32,
-                shape=(None, self.feature_shape),
-                name='step_input')
-            step_hidden_var = tf.placeholder(
-                shape=(self.batch_size, hidden_dim),
-                name='initial_hidden',
-                dtype=tf.float32)
+            input_var = tf.placeholder(tf.float32,
+                                       shape=(None, None, self.feature_shape),
+                                       name='input')
+            step_input_var = tf.placeholder(tf.float32,
+                                            shape=(None, self.feature_shape),
+                                            name='step_input')
+            step_hidden_var = tf.placeholder(shape=(self.batch_size,
+                                                    hidden_dim),
+                                             name='initial_hidden',
+                                             dtype=tf.float32)
 
-            (_, mean_var2, step_mean_var2, log_std_var2,
-             step_log_std_var2, step_hidden2, _, _) = model_pickled.build(
-                 input_var, step_input_var, step_hidden_var)
+            (_, mean_var2, step_mean_var2, log_std_var2, step_log_std_var2,
+             step_hidden2, _, _) = model_pickled.build(input_var,
+                                                       step_input_var,
+                                                       step_hidden_var)
 
             outputs2 = sess.run([mean_var2, log_std_var2],
                                 feed_dict={input_var: self.obs_inputs})

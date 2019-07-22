@@ -20,7 +20,6 @@ class PointEnv(gym.Env, Serializable):
         never_done (bool, optional): Never send a `done` signal, even if the
             agent achieves the goal.
     """
-
     def __init__(
             self,
             goal=np.array((1., 1.), dtype=np.float32),
@@ -37,13 +36,17 @@ class PointEnv(gym.Env, Serializable):
 
     @property
     def observation_space(self):
-        return gym.spaces.Box(
-            low=-np.inf, high=np.inf, shape=(2, ), dtype=np.float32)
+        return gym.spaces.Box(low=-np.inf,
+                              high=np.inf,
+                              shape=(2, ),
+                              dtype=np.float32)
 
     @property
     def action_space(self):
-        return gym.spaces.Box(
-            low=-0.1, high=0.1, shape=(2, ), dtype=np.float32)
+        return gym.spaces.Box(low=-0.1,
+                              high=0.1,
+                              shape=(2, ),
+                              dtype=np.float32)
 
     def reset(self):
         self._point = np.zeros_like(self._goal)

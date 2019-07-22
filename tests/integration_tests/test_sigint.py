@@ -74,12 +74,13 @@ def interrupt_experiment(experiment_script, lifecycle_stage):
     clean_exit = True
     error_msg = ''
     for child in alive:
-        error_msg += (str(
-            child.as_dict(attrs=['pid', 'name', 'status', 'cmdline'])) + '\n')
+        error_msg += (
+            str(child.as_dict(attrs=['pid', 'name', 'status', 'cmdline'])) +
+            '\n')
         clean_exit = False
 
-    error_msg = ("These processes didn't die during %s:\n" % (lifecycle_stage)
-                 + error_msg)
+    error_msg = ("These processes didn't die during %s:\n" %
+                 (lifecycle_stage) + error_msg)
 
     for child in alive:
         os.kill(child.pid, signal.SIGINT)

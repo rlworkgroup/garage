@@ -5,16 +5,15 @@ import shlex
 import sys
 import time
 
-color2num = dict(
-    gray=30,
-    red=31,
-    green=32,
-    yellow=33,
-    blue=34,
-    magenta=35,
-    cyan=36,
-    white=37,
-    crimson=38)
+color2num = dict(gray=30,
+                 red=31,
+                 green=32,
+                 yellow=33,
+                 blue=34,
+                 magenta=35,
+                 cyan=36,
+                 white=37,
+                 crimson=38)
 
 
 def colorize(string, color, bold=False, highlight=False):
@@ -44,8 +43,8 @@ class SimpleMessage:
 
     def __exit__(self, etype, *args):
         maybe_exc = '' if etype is None else ' (with exception)'
-        self.logger(
-            'done%s in %.3f seconds' % (maybe_exc, time.time() - self.tstart))
+        self.logger('done%s in %.3f seconds' %
+                    (maybe_exc, time.time() - self.tstart))
 
 
 MESSAGE_DEPTH = 0
@@ -164,8 +163,8 @@ def tweakfun(fun, alt=None):
         if k.startswith(cmd_prefix):
             stripped = k[len(cmd_prefix):].replace('-', '_')
             if stripped in meta:
-                log('replacing %s in %s with %s' % (stripped, str(fun),
-                                                    str(v)))
+                log('replacing %s in %s with %s' %
+                    (stripped, str(fun), str(v)))
                 replaced_kwargs[stripped] = meta[stripped](v)
             elif stripped not in argspec.args:
                 raise ValueError('%s is not an explicit parameter of %s' %
@@ -179,8 +178,8 @@ def tweakfun(fun, alt=None):
                     'Cannot infer type of %s in method %s from None value' %
                     (stripped, str(fun)))
             else:
-                log('replacing %s in %s with %s' % (stripped, str(fun),
-                                                    str(v)))
+                log('replacing %s in %s with %s' %
+                    (stripped, str(fun), str(v)))
                 # TODO more proper conversions
                 replaced_kwargs[stripped] = type(defaults[stripped])(v)
 

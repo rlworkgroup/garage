@@ -41,8 +41,8 @@ class ComplicatedModel(Model):
         super().__init__(name)
         self._output_dim = output_dim
         self._simple_model_1 = SimpleModel(output_dim=4)
-        self._simple_model_2 = SimpleModel2(
-            output_dim=output_dim, name='simple_model_2')
+        self._simple_model_2 = SimpleModel2(output_dim=output_dim,
+                                            name='simple_model_2')
 
     def network_output_spec(self):
         return ['action']
@@ -198,8 +198,8 @@ class TestModel(TfGraphTestCase):
             outputs = model.build(input_var)
 
             # assign bias to all one
-            with tf.variable_scope(
-                    'ComplicatedModel/SimpleModel/state', reuse=True):
+            with tf.variable_scope('ComplicatedModel/SimpleModel/state',
+                                   reuse=True):
                 bias = tf.get_variable('hidden_0/bias')
             bias.load(tf.ones_like(bias).eval())
 
@@ -212,9 +212,8 @@ class TestModel(TfGraphTestCase):
             model_pickled = pickle.loads(model_data)
             model_pickled.build(input_var)
 
-            results2 = sess.run(
-                model_pickled.networks['default'].outputs,
-                feed_dict={input_var: data})
+            results2 = sess.run(model_pickled.networks['default'].outputs,
+                                feed_dict={input_var: data})
 
         assert np.array_equal(results, results2)
 
@@ -229,8 +228,8 @@ class TestModel(TfGraphTestCase):
             outputs = model.build(input_var)
 
             # assign bias to all one
-            with tf.variable_scope(
-                    'ComplicatedModel2/SimpleModel/state', reuse=True):
+            with tf.variable_scope('ComplicatedModel2/SimpleModel/state',
+                                   reuse=True):
                 bias = tf.get_variable('hidden_0/bias')
             bias.load(tf.ones_like(bias).eval())
 
@@ -243,9 +242,8 @@ class TestModel(TfGraphTestCase):
             model_pickled = pickle.loads(model_data)
             model_pickled.build(input_var)
 
-            results2 = sess.run(
-                model_pickled.networks['default'].outputs,
-                feed_dict={input_var: data})
+            results2 = sess.run(model_pickled.networks['default'].outputs,
+                                feed_dict={input_var: data})
 
         assert np.array_equal(results, results2)
 

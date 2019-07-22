@@ -25,20 +25,19 @@ class TestContinuousNNQFunction:
         env_spec = TfEnv(DummyBoxEnv())
         obs = torch.ones(obs_dim, dtype=torch.float32).unsqueeze(0)
         act = torch.ones(act_dim, dtype=torch.float32).unsqueeze(0)
-        nn_module = MLPModule(
-            input_dim=obs_dim + act_dim,
-            output_dim=output_dim,
-            hidden_nonlinearity=None,
-            hidden_sizes=hidden_sizes,
-            hidden_w_init=nn.init.ones_,
-            output_w_init=nn.init.ones_)
+        nn_module = MLPModule(input_dim=obs_dim + act_dim,
+                              output_dim=output_dim,
+                              hidden_nonlinearity=None,
+                              hidden_sizes=hidden_sizes,
+                              hidden_w_init=nn.init.ones_,
+                              output_w_init=nn.init.ones_)
 
         qf = ContinuousNNQFunction(env_spec, nn_module)
         output = qf.get_qval(obs, act)
-        expected_output = torch.full(
-            [1, output_dim],
-            fill_value=(obs_dim + act_dim) * np.prod(hidden_sizes),
-            dtype=torch.float32)
+        expected_output = torch.full([1, output_dim],
+                                     fill_value=(obs_dim + act_dim) *
+                                     np.prod(hidden_sizes),
+                                     dtype=torch.float32)
         assert torch.eq(output, expected_output)
 
     # yapf: disable
@@ -54,13 +53,12 @@ class TestContinuousNNQFunction:
         env_spec = TfEnv(DummyBoxEnv())
         obs = torch.ones(obs_dim, dtype=torch.float32).unsqueeze(0)
         act = torch.ones(act_dim, dtype=torch.float32).unsqueeze(0)
-        nn_module = MLPModule(
-            input_dim=obs_dim + act_dim,
-            output_dim=output_dim,
-            hidden_nonlinearity=None,
-            hidden_sizes=hidden_sizes,
-            hidden_w_init=nn.init.ones_,
-            output_w_init=nn.init.ones_)
+        nn_module = MLPModule(input_dim=obs_dim + act_dim,
+                              output_dim=output_dim,
+                              hidden_nonlinearity=None,
+                              hidden_sizes=hidden_sizes,
+                              hidden_w_init=nn.init.ones_,
+                              output_w_init=nn.init.ones_)
 
         qf = ContinuousNNQFunction(env_spec, nn_module)
         output = qf.get_qval(obs, act)
@@ -80,13 +78,12 @@ class TestContinuousNNQFunction:
         env_spec = TfEnv(DummyBoxEnv())
         obs = torch.ones(obs_dim, dtype=torch.float32).unsqueeze(0)
         act = torch.ones(act_dim, dtype=torch.float32).unsqueeze(0)
-        nn_module = MLPModule(
-            input_dim=obs_dim + act_dim,
-            output_dim=output_dim,
-            hidden_nonlinearity=None,
-            hidden_sizes=hidden_sizes,
-            hidden_w_init=nn.init.ones_,
-            output_w_init=nn.init.ones_)
+        nn_module = MLPModule(input_dim=obs_dim + act_dim,
+                              output_dim=output_dim,
+                              hidden_nonlinearity=None,
+                              hidden_sizes=hidden_sizes,
+                              hidden_w_init=nn.init.ones_,
+                              output_w_init=nn.init.ones_)
 
         qf = ContinuousNNQFunction(env_spec, nn_module)
         output1 = qf.get_qval(obs, act)

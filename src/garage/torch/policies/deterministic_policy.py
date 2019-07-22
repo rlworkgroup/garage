@@ -14,7 +14,6 @@ class DeterministicPolicy:
     The policy network selects action based on the state of the environment.
     It uses a PyTorch neural network module to fit the function of pi(s).
     """
-
     def __init__(self, env_spec, nn_module):
         """
         Initialize class with multiple attributes.

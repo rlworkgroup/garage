@@ -46,7 +46,6 @@ class ContinuousMLPPolicyWithModel(Policy2):
         input_include_goal (bool): Include goal in the observation or not.
         layer_normalization (bool): Bool for using layer normalization or not.
     """
-
     def __init__(self,
                  env_spec,
                  name='ContinuousMLPPolicy',
@@ -76,17 +75,16 @@ class ContinuousMLPPolicyWithModel(Policy2):
         else:
             self.obs_dim = env_spec.observation_space.flat_dim
 
-        self.model = MLPModel(
-            output_dim=action_dim,
-            name='MLPModel',
-            hidden_sizes=hidden_sizes,
-            hidden_nonlinearity=hidden_nonlinearity,
-            hidden_w_init=hidden_w_init,
-            hidden_b_init=hidden_b_init,
-            output_nonlinearity=output_nonlinearity,
-            output_w_init=output_w_init,
-            output_b_init=output_b_init,
-            layer_normalization=layer_normalization)
+        self.model = MLPModel(output_dim=action_dim,
+                              name='MLPModel',
+                              hidden_sizes=hidden_sizes,
+                              hidden_nonlinearity=hidden_nonlinearity,
+                              hidden_w_init=hidden_w_init,
+                              hidden_b_init=hidden_b_init,
+                              output_nonlinearity=output_nonlinearity,
+                              output_w_init=output_w_init,
+                              output_b_init=output_b_init,
+                              layer_normalization=layer_normalization)
 
         self._initialize()
 
@@ -166,18 +164,17 @@ class ContinuousMLPPolicyWithModel(Policy2):
         Args:
             name (str): Name of the newly created policy.
         """
-        return self.__class__(
-            name=name,
-            env_spec=self._env_spec,
-            hidden_sizes=self._hidden_sizes,
-            hidden_nonlinearity=self._hidden_nonlinearity,
-            hidden_w_init=self._hidden_w_init,
-            hidden_b_init=self._hidden_b_init,
-            output_nonlinearity=self._output_nonlinearity,
-            output_w_init=self._output_w_init,
-            output_b_init=self._output_b_init,
-            input_include_goal=self._input_include_goal,
-            layer_normalization=self._layer_normalization)
+        return self.__class__(name=name,
+                              env_spec=self._env_spec,
+                              hidden_sizes=self._hidden_sizes,
+                              hidden_nonlinearity=self._hidden_nonlinearity,
+                              hidden_w_init=self._hidden_w_init,
+                              hidden_b_init=self._hidden_b_init,
+                              output_nonlinearity=self._output_nonlinearity,
+                              output_w_init=self._output_w_init,
+                              output_b_init=self._output_b_init,
+                              input_include_goal=self._input_include_goal,
+                              layer_normalization=self._layer_normalization)
 
     def __getstate__(self):
         """Object.__getstate__."""

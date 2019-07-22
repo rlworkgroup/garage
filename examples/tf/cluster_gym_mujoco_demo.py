@@ -29,8 +29,9 @@ def run_task(snapshot_config, vv):
     with LocalRunner(snapshot_config=snapshot_config) as runner:
         env = TfEnv(normalize(gym.make('HalfCheetah-v1')))
 
-        policy = GaussianMLPPolicy(
-            env_spec=env.spec, hidden_sizes=(32, 32), name='policy')
+        policy = GaussianMLPPolicy(env_spec=env.spec,
+                                   hidden_sizes=(32, 32),
+                                   name='policy')
 
         baseline = LinearFeatureBaseline(env_spec=env.spec)
 

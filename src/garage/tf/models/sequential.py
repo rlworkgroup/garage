@@ -16,7 +16,6 @@ class Sequential(Model):
         models (list[garage.tf.models.Model]): The models to be connected
             in sequential order.
     """
-
     def __init__(self, *models, name=None):
         super().__init__(name)
         self._models = models

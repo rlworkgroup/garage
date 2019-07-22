@@ -13,7 +13,6 @@ class DmControlEnv(gym.Env, Serializable):
     """
     Binding for [dm_control](https://arxiv.org/pdf/1801.00690.pdf)
     """
-
     def __init__(self, env, name=None):
         self._name = name or type(env.task).__name__
         self._env = env
@@ -24,9 +23,8 @@ class DmControlEnv(gym.Env, Serializable):
 
     @classmethod
     def from_suite(cls, domain_name, task_name):
-        return cls(
-            suite.load(domain_name, task_name),
-            name='{}.{}'.format(domain_name, task_name))
+        return cls(suite.load(domain_name, task_name),
+                   name='{}.{}'.format(domain_name, task_name))
 
     def step(self, action):
         time_step = self._env.step(action)
@@ -70,11 +68,14 @@ class DmControlEnv(gym.Env, Serializable):
                                               np.inf in action_spec.maximum):
             return gym.spaces.Discrete(np.prod(action_spec.shape))
         else:
-            return gym.spaces.Box(
-                action_spec.minimum, action_spec.maximum, dtype=np.float32)
+            return gym.spaces.Box(action_spec.minimum,
+                                  action_spec.maximum,
+                                  dtype=np.float32)
 
     @property
     def observation_space(self):
         flat_dim = self._flat_shape(self._env.observation_spec())
-        return gym.spaces.Box(
-            low=-np.inf, high=np.inf, shape=[flat_dim], dtype=np.float32)
+        return gym.spaces.Box(low=-np.inf,
+                              high=np.inf,
+                              shape=[flat_dim],
+                              dtype=np.float32)

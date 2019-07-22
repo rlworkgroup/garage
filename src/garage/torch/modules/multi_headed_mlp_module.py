@@ -37,7 +37,6 @@ class MultiHeadedMLPModule(nn.Module):
     Return:
         The list of output torch. Tensor of the MLP
     """
-
     def __init__(self,
                  n_heads,
                  input_dim,

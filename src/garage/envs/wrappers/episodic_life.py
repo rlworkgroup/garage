@@ -12,7 +12,6 @@ class EpisodicLife(gym.Wrapper):
     Args:
         env: The environment to be wrapped.
     """
-
     def __init__(self, env):
         super().__init__(env)
         self._lives = 0

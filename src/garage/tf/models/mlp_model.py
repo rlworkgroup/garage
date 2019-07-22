@@ -40,7 +40,6 @@ class MLPModel(Model):
             tf.Tensor.
         layer_normalization (bool): Bool for using layer normalization or not.
     """
-
     def __init__(self,
                  output_dim,
                  name='MLPModel',
@@ -64,15 +63,14 @@ class MLPModel(Model):
         self._layer_normalization = layer_normalization
 
     def _build(self, state_input, name=None):
-        return mlp(
-            input_var=state_input,
-            output_dim=self._output_dim,
-            hidden_sizes=self._hidden_sizes,
-            name='mlp',
-            hidden_nonlinearity=self._hidden_nonlinearity,
-            hidden_w_init=self._hidden_w_init,
-            hidden_b_init=self._hidden_b_init,
-            output_nonlinearity=self._output_nonlinearity,
-            output_w_init=self._output_w_init,
-            output_b_init=self._output_b_init,
-            layer_normalization=self._layer_normalization)
+        return mlp(input_var=state_input,
+                   output_dim=self._output_dim,
+                   hidden_sizes=self._hidden_sizes,
+                   name='mlp',
+                   hidden_nonlinearity=self._hidden_nonlinearity,
+                   hidden_w_init=self._hidden_w_init,
+                   hidden_b_init=self._hidden_b_init,
+                   output_nonlinearity=self._output_nonlinearity,
+                   output_w_init=self._output_w_init,
+                   output_b_init=self._output_b_init,
+                   layer_normalization=self._layer_normalization)

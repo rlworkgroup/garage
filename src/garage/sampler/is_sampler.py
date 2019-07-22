@@ -30,7 +30,6 @@ class ISSampler(BatchSampler):
         randomize_draw (bool): Whether to randomize important samples.
 
     """
-
     def __init__(self,
                  algo,
                  env,

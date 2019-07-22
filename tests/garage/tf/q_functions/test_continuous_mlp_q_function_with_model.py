@@ -46,8 +46,8 @@ class TestContinuousMLPQFunctionWithModel(TfGraphTestCase):
         with mock.patch(('garage.tf.q_functions.'
                          'continuous_mlp_q_function_with_model.MLPMergeModel'),
                         new=SimpleMLPMergeModel):
-            qf = ContinuousMLPQFunctionWithModel(
-                env_spec=env.spec, input_include_goal=True)
+            qf = ContinuousMLPQFunctionWithModel(env_spec=env.spec,
+                                                 input_include_goal=True)
         env.reset()
         obs, _, _, _ = env.step(1)
         obs = np.concatenate((obs['observation'], obs['desired_goal']),
@@ -109,11 +109,11 @@ class TestContinuousMLPQFunctionWithModel(TfGraphTestCase):
         input_var1 = tf.placeholder(tf.float32, shape=(None, obs.shape[0]))
         input_var2 = tf.placeholder(tf.float32, shape=(None, act.shape[0]))
         q_vals = qf.get_qval_sym(input_var1, input_var2, 'another')
-        output2 = self.sess.run(
-            q_vals, feed_dict={
-                input_var1: [obs],
-                input_var2: [act]
-            })
+        output2 = self.sess.run(q_vals,
+                                feed_dict={
+                                    input_var1: [obs],
+                                    input_var2: [act]
+                                })
 
         expected_output = np.full((1, ), 0.5)
 
@@ -166,7 +166,7 @@ class TestContinuousMLPQFunctionWithModel(TfGraphTestCase):
         with mock.patch(('garage.tf.q_functions.'
                          'continuous_mlp_q_function_with_model.MLPMergeModel'),
                         new=SimpleMLPMergeModel):
-            qf = ContinuousMLPQFunctionWithModel(
-                env_spec=env.spec, hidden_sizes=hidden_sizes)
+            qf = ContinuousMLPQFunctionWithModel(env_spec=env.spec,
+                                                 hidden_sizes=hidden_sizes)
         qf_clone = qf.clone('another_qf')
         assert qf_clone._hidden_sizes == qf._hidden_sizes

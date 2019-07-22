@@ -25,7 +25,6 @@ class BatchPolopt(RLAlgorithm):
         n_samples (int): Number of train_once calls per epoch.
 
     """
-
     def __init__(self, policy, baseline, discount, max_path_length, n_samples):
         self.policy = policy
         self.baseline = baseline

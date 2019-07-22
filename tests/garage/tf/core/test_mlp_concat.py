@@ -15,24 +15,25 @@ class TestMLPConcat(TfGraphTestCase):
         input_shape_2 = self.act_input.shape[1:]  # 4
         self.hidden_nonlinearity = tf.nn.relu
 
-        self._obs_input = tf.placeholder(
-            tf.float32, shape=(None, ) + input_shape_1, name='input')
+        self._obs_input = tf.placeholder(tf.float32,
+                                         shape=(None, ) + input_shape_1,
+                                         name='input')
 
-        self._act_input = tf.placeholder(
-            tf.float32, shape=(None, ) + input_shape_2, name='input')
+        self._act_input = tf.placeholder(tf.float32,
+                                         shape=(None, ) + input_shape_2,
+                                         name='input')
 
         self._output_shape = 2
 
         # We build a default mlp
         with tf.variable_scope('MLP_Concat'):
-            self.mlp_f = mlp(
-                input_var=self._obs_input,
-                output_dim=self._output_shape,
-                hidden_sizes=(32, 32),
-                input_var2=self._act_input,
-                concat_layer=0,
-                hidden_nonlinearity=self.hidden_nonlinearity,
-                name='mlp1')
+            self.mlp_f = mlp(input_var=self._obs_input,
+                             output_dim=self._output_shape,
+                             hidden_sizes=(32, 32),
+                             input_var2=self._act_input,
+                             concat_layer=0,
+                             hidden_nonlinearity=self.hidden_nonlinearity,
+                             name='mlp1')
 
         self.sess.run(tf.global_variables_initializer())
 
@@ -53,18 +54,16 @@ class TestMLPConcat(TfGraphTestCase):
         with tf.variable_scope('MLP_Concat', reuse=True):
             w = tf.get_variable('mlp1/hidden_0/kernel')
             self.sess.run(w.assign(w + 1))
-            mlp_output = self.sess.run(
-                self.mlp_f,
-                feed_dict={
-                    self._obs_input: self.obs_input,
-                    self._act_input: self.act_input
-                })
-            mlp_output2 = self.sess.run(
-                self.mlp_same_copy,
-                feed_dict={
-                    self._obs_input: self.obs_input,
-                    self._act_input: self.act_input
-                })
+            mlp_output = self.sess.run(self.mlp_f,
+                                       feed_dict={
+                                           self._obs_input: self.obs_input,
+                                           self._act_input: self.act_input
+                                       })
+            mlp_output2 = self.sess.run(self.mlp_same_copy,
+                                        feed_dict={
+                                            self._obs_input: self.obs_input,
+                                            self._act_input: self.act_input
+                                        })
 
         np.testing.assert_array_almost_equal(mlp_output, mlp_output2)
 
@@ -88,28 +87,25 @@ class TestMLPConcat(TfGraphTestCase):
         with tf.variable_scope('MLP_Concat', reuse=True):
             w = tf.get_variable('mlp1/hidden_0/kernel')
             self.sess.run(w.assign(w + 1))
-            mlp_output = self.sess.run(
-                self.mlp_f,
-                feed_dict={
-                    self._obs_input: self.obs_input,
-                    self._act_input: self.act_input
-                })
-            mlp_output2 = self.sess.run(
-                self.mlp_different_copy,
-                feed_dict={
-                    self._obs_input: self.obs_input,
-                    self._act_input: self.act_input
-                })
+            mlp_output = self.sess.run(self.mlp_f,
+                                       feed_dict={
+                                           self._obs_input: self.obs_input,
+                                           self._act_input: self.act_input
+                                       })
+            mlp_output2 = self.sess.run(self.mlp_different_copy,
+                                        feed_dict={
+                                            self._obs_input: self.obs_input,
+                                            self._act_input: self.act_input
+                                        })
 
         assert not np.array_equal(mlp_output, mlp_output2)
 
     def test_output_shape(self):
-        mlp_output = self.sess.run(
-            self.mlp_f,
-            feed_dict={
-                self._obs_input: self.obs_input,
-                self._act_input: self.act_input
-            })
+        mlp_output = self.sess.run(self.mlp_f,
+                                   feed_dict={
+                                       self._obs_input: self.obs_input,
+                                       self._act_input: self.act_input
+                                   })
 
         assert mlp_output.shape[1] == self._output_shape
 
@@ -122,16 +118,15 @@ class TestMLPConcat(TfGraphTestCase):
             out_w = tf.get_variable('mlp1/output/kernel')
             out_b = tf.get_variable('mlp1/output/bias')
 
-        mlp_output = self.sess.run(
-            self.mlp_f,
-            feed_dict={
-                self._obs_input: self.obs_input,
-                self._act_input: self.act_input
-            })
+        mlp_output = self.sess.run(self.mlp_f,
+                                   feed_dict={
+                                       self._obs_input: self.obs_input,
+                                       self._act_input: self.act_input
+                                   })
 
         # First layer
-        h2_in = tf.matmul(
-            tf.concat([self._obs_input, self._act_input], 1), h1_w) + h1_b
+        h2_in = tf.matmul(tf.concat([self._obs_input, self._act_input], 1),
+                          h1_w) + h1_b
         h2_in = self.hidden_nonlinearity(h2_in)
 
         # Second layer
@@ -140,27 +135,25 @@ class TestMLPConcat(TfGraphTestCase):
 
         # Output layer
         h3_out = tf.matmul(h3_in, out_w) + out_b
-        out = self.sess.run(
-            h3_out,
-            feed_dict={
-                self._obs_input: self.obs_input,
-                self._act_input: self.act_input
-            })
+        out = self.sess.run(h3_out,
+                            feed_dict={
+                                self._obs_input: self.obs_input,
+                                self._act_input: self.act_input
+                            })
 
         np.testing.assert_array_equal(out, mlp_output)
 
     def test_layer_normalization(self):
         # Create a mlp with layer normalization
         with tf.variable_scope('MLP_Concat'):
-            self.mlp_f_w_n = mlp(
-                input_var=self._obs_input,
-                output_dim=self._output_shape,
-                hidden_sizes=(32, 32),
-                input_var2=self._act_input,
-                concat_layer=0,
-                hidden_nonlinearity=self.hidden_nonlinearity,
-                name='mlp2',
-                layer_normalization=True)
+            self.mlp_f_w_n = mlp(input_var=self._obs_input,
+                                 output_dim=self._output_shape,
+                                 hidden_sizes=(32, 32),
+                                 input_var2=self._act_input,
+                                 concat_layer=0,
+                                 hidden_nonlinearity=self.hidden_nonlinearity,
+                                 name='mlp2',
+                                 layer_normalization=True)
 
         # Initialize the new mlp variables
         self.sess.run(tf.global_variables_initializer())
@@ -195,32 +188,29 @@ class TestMLPConcat(TfGraphTestCase):
         # Output layer
         y = tf.matmul(y_out, out_w) + out_b
 
-        out = self.sess.run(
-            y,
-            feed_dict={
-                self._obs_input: self.obs_input,
-                self._act_input: self.act_input
-            })
-        mlp_output = self.sess.run(
-            self.mlp_f_w_n,
-            feed_dict={
-                self._obs_input: self.obs_input,
-                self._act_input: self.act_input
-            })
+        out = self.sess.run(y,
+                            feed_dict={
+                                self._obs_input: self.obs_input,
+                                self._act_input: self.act_input
+                            })
+        mlp_output = self.sess.run(self.mlp_f_w_n,
+                                   feed_dict={
+                                       self._obs_input: self.obs_input,
+                                       self._act_input: self.act_input
+                                   })
 
         np.testing.assert_array_almost_equal(out, mlp_output)
 
     @pytest.mark.parametrize('concat_idx', [2, 1, 0, -1, -2])
     def test_concat_layer(self, concat_idx):
         with tf.variable_scope('mlp_concat_test'):
-            _ = mlp(
-                input_var=self._obs_input,
-                output_dim=self._output_shape,
-                hidden_sizes=(64, 32),
-                input_var2=self._act_input,
-                concat_layer=concat_idx,
-                hidden_nonlinearity=self.hidden_nonlinearity,
-                name='mlp2')
+            _ = mlp(input_var=self._obs_input,
+                    output_dim=self._output_shape,
+                    hidden_sizes=(64, 32),
+                    input_var2=self._act_input,
+                    concat_layer=concat_idx,
+                    hidden_nonlinearity=self.hidden_nonlinearity,
+                    name='mlp2')
         obs_input_size = self._obs_input.shape[1].value
         act_input_size = self._act_input.shape[1].value
 
@@ -242,13 +232,12 @@ class TestMLPConcat(TfGraphTestCase):
     @pytest.mark.parametrize('concat_idx', [2, 1, 0, -1, -2])
     def test_invalid_concat_args(self, concat_idx):
         with tf.variable_scope('mlp_concat_test'):
-            _ = mlp(
-                input_var=self._obs_input,
-                output_dim=self._output_shape,
-                hidden_sizes=(64, 32),
-                concat_layer=concat_idx,
-                hidden_nonlinearity=self.hidden_nonlinearity,
-                name='mlp_no_input2')
+            _ = mlp(input_var=self._obs_input,
+                    output_dim=self._output_shape,
+                    hidden_sizes=(64, 32),
+                    concat_layer=concat_idx,
+                    hidden_nonlinearity=self.hidden_nonlinearity,
+                    name='mlp_no_input2')
 
         obs_input_size = self._obs_input.shape[1].value
 
@@ -270,14 +259,13 @@ class TestMLPConcat(TfGraphTestCase):
     @pytest.mark.parametrize('concat_idx', [2, 1, 0, -1, -2])
     def test_no_hidden(self, concat_idx):
         with tf.variable_scope('mlp_concat_test'):
-            _ = mlp(
-                input_var=self._obs_input,
-                output_dim=self._output_shape,
-                hidden_sizes=(),
-                input_var2=self._act_input,
-                concat_layer=concat_idx,
-                hidden_nonlinearity=self.hidden_nonlinearity,
-                name='mlp2')
+            _ = mlp(input_var=self._obs_input,
+                    output_dim=self._output_shape,
+                    hidden_sizes=(),
+                    input_var2=self._act_input,
+                    concat_layer=concat_idx,
+                    hidden_nonlinearity=self.hidden_nonlinearity,
+                    name='mlp2')
 
         obs_input_size = self._obs_input.shape[1].value
         act_input_size = self._act_input.shape[1].value

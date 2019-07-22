@@ -48,7 +48,6 @@ class ContinuousMLPRegressorWithModel(Regressor2):
             which means no arguments.
         normalize_inputs (bool): Bool for normalizing inputs or not.
     """
-
     def __init__(self,
                  input_shape,
                  output_dim,
@@ -90,14 +89,15 @@ class ContinuousMLPRegressorWithModel(Regressor2):
         self._initialize()
 
     def _initialize(self):
-        input_var = tf.placeholder(
-            tf.float32, shape=(None, ) + self._input_shape)
+        input_var = tf.placeholder(tf.float32,
+                                   shape=(None, ) + self._input_shape)
 
         with tf.variable_scope(self._name) as vs:
             self._variable_scope = vs
             self.model.build(input_var)
-            ys_var = tf.placeholder(
-                dtype=tf.float32, name='ys', shape=(None, self._output_dim))
+            ys_var = tf.placeholder(dtype=tf.float32,
+                                    name='ys',
+                                    shape=(None, self._output_dim))
 
             y_hat = self.model.networks['default'].y_hat
             loss = tf.reduce_mean(tf.square(y_hat - ys_var))

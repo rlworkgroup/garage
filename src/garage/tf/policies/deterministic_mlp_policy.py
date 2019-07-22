@@ -37,8 +37,8 @@ class DeterministicMLPPolicy(Policy, LayersPowered, Serializable):
                 )
 
             with tf.name_scope(self._prob_network_name):
-                prob_network_output = L.get_output(
-                    prob_network.output_layer, deterministic=True)
+                prob_network_output = L.get_output(prob_network.output_layer,
+                                                   deterministic=True)
             self._l_prob = prob_network.output_layer
             self._l_obs = prob_network.input_layer
             self._f_prob = tensor_utils.compile_function(

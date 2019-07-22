@@ -39,7 +39,6 @@ class CNNModelWithMaxPooling(Model):
             of intermediate dense layer(s). The function should return a
             tf.Tensor.
     """
-
     def __init__(self,
                  filter_dims,
                  num_filters,

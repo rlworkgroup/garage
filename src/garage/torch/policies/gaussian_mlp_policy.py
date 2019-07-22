@@ -18,7 +18,6 @@ class GaussianMLPPolicy(nn.Module, Policy):
     :return:
 
     """
-
     def __init__(self, env_spec, module):
         nn.Module.__init__(self)
         Policy.__init__(self, env_spec)

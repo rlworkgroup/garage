@@ -9,7 +9,6 @@ class ProductRegressor(Serializable):
     the outputs. A separate regressor will be trained for each individual input
     distribution.
     """
-
     def __init__(self, regressors):
         """
         :param regressors: List of individual regressors

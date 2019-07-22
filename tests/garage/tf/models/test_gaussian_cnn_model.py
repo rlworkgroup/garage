@@ -18,8 +18,9 @@ class TestGaussianCNNModel(TfGraphTestCase):
         self.obs = np.full(
             (self.batch_size, self.input_width, self.input_height, 3), 1)
         input_shape = self.obs.shape[1:]  # height, width, channel
-        self._input_ph = tf.placeholder(
-            tf.float32, shape=(None, ) + input_shape, name='input')
+        self._input_ph = tf.placeholder(tf.float32,
+                                        shape=(None, ) + input_shape,
+                                        name='input')
 
     @mock.patch('tensorflow.random.normal')
     @pytest.mark.parametrize('filter_sizes, in_channels, out_channels, '
@@ -29,22 +30,22 @@ class TestGaussianCNNModel(TfGraphTestCase):
                               ((3, ), (3, ), (3, ), (2, ), 1, (1, 1)),
                               ((1, 1), (3, 3), (3, 3), (1, 1), 2, (2, 2)),
                               ((3, 3), (3, 3), (3, 3), (2, 2), 2, (2, 2))])
-    def test_std_share_network_output_values(
-            self, mock_normal, filter_sizes, in_channels, out_channels,
-            strides, output_dim, hidden_sizes):
+    def test_std_share_network_output_values(self, mock_normal, filter_sizes,
+                                             in_channels, out_channels,
+                                             strides, output_dim,
+                                             hidden_sizes):
         mock_normal.return_value = 0.5
-        model = GaussianCNNModel(
-            filter_dims=filter_sizes,
-            num_filters=out_channels,
-            strides=strides,
-            padding='VALID',
-            output_dim=output_dim,
-            hidden_sizes=hidden_sizes,
-            std_share_network=True,
-            hidden_nonlinearity=None,
-            std_parameterization='exp',
-            hidden_w_init=tf.constant_initializer(0.01),
-            output_w_init=tf.constant_initializer(1))
+        model = GaussianCNNModel(filter_dims=filter_sizes,
+                                 num_filters=out_channels,
+                                 strides=strides,
+                                 padding='VALID',
+                                 output_dim=output_dim,
+                                 hidden_sizes=hidden_sizes,
+                                 std_share_network=True,
+                                 hidden_nonlinearity=None,
+                                 std_parameterization='exp',
+                                 hidden_w_init=tf.constant_initializer(0.01),
+                                 output_w_init=tf.constant_initializer(1))
         outputs = model.build(self._input_ph)
 
         action, mean, log_std, std_param = self.sess.run(
@@ -87,14 +88,13 @@ class TestGaussianCNNModel(TfGraphTestCase):
                               (2, (1, 1)), (3, (2, 2))])
     def test_std_share_network_shapes(self, output_dim, hidden_sizes):
         # should be 2 * output_dim
-        model = GaussianCNNModel(
-            num_filters=[3, 6],
-            filter_dims=[3, 3],
-            strides=[1, 1],
-            padding='SAME',
-            hidden_sizes=hidden_sizes,
-            output_dim=output_dim,
-            std_share_network=True)
+        model = GaussianCNNModel(num_filters=[3, 6],
+                                 filter_dims=[3, 3],
+                                 strides=[1, 1],
+                                 padding='SAME',
+                                 hidden_sizes=hidden_sizes,
+                                 output_dim=output_dim,
+                                 std_share_network=True)
         model.build(self._input_ph)
         with tf.variable_scope(model.name, reuse=True):
             std_share_output_weights = tf.get_variable(
@@ -112,24 +112,24 @@ class TestGaussianCNNModel(TfGraphTestCase):
                               ((3, ), (3, ), (3, ), (2, ), 1, (1, 1)),
                               ((1, 1), (3, 3), (3, 3), (1, 1), 2, (2, 2)),
                               ((3, 3), (3, 3), (3, 3), (2, 2), 2, (2, 2))])
-    def test_without_std_share_network_output_values(
-            self, mock_normal, filter_sizes, in_channels, out_channels,
-            strides, output_dim, hidden_sizes):
+    def test_without_std_share_network_output_values(self, mock_normal,
+                                                     filter_sizes, in_channels,
+                                                     out_channels, strides,
+                                                     output_dim, hidden_sizes):
         mock_normal.return_value = 0.5
-        model = GaussianCNNModel(
-            filter_dims=filter_sizes,
-            num_filters=out_channels,
-            strides=strides,
-            padding='VALID',
-            output_dim=output_dim,
-            init_std=2,
-            hidden_sizes=hidden_sizes,
-            std_share_network=False,
-            adaptive_std=False,
-            hidden_nonlinearity=None,
-            std_parameterization='exp',
-            hidden_w_init=tf.constant_initializer(0.01),
-            output_w_init=tf.constant_initializer(1))
+        model = GaussianCNNModel(filter_dims=filter_sizes,
+                                 num_filters=out_channels,
+                                 strides=strides,
+                                 padding='VALID',
+                                 output_dim=output_dim,
+                                 init_std=2,
+                                 hidden_sizes=hidden_sizes,
+                                 std_share_network=False,
+                                 adaptive_std=False,
+                                 hidden_nonlinearity=None,
+                                 std_parameterization='exp',
+                                 hidden_w_init=tf.constant_initializer(0.01),
+                                 output_w_init=tf.constant_initializer(1))
         outputs = model.build(self._input_ph)
 
         action, mean, log_std, std_param = self.sess.run(
@@ -171,15 +171,14 @@ class TestGaussianCNNModel(TfGraphTestCase):
                              [(1, (0, )), (1, (1, )), (1, (2, )), (2, (3, )),
                               (2, (1, 1)), (3, (2, 2))])
     def test_without_std_share_network_shapes(self, output_dim, hidden_sizes):
-        model = GaussianCNNModel(
-            num_filters=[3, 6],
-            filter_dims=[3, 3],
-            strides=[1, 1],
-            padding='SAME',
-            hidden_sizes=hidden_sizes,
-            output_dim=output_dim,
-            std_share_network=False,
-            adaptive_std=False)
+        model = GaussianCNNModel(num_filters=[3, 6],
+                                 filter_dims=[3, 3],
+                                 strides=[1, 1],
+                                 padding='SAME',
+                                 hidden_sizes=hidden_sizes,
+                                 output_dim=output_dim,
+                                 std_share_network=False,
+                                 adaptive_std=False)
         model.build(self._input_ph)
         with tf.variable_scope(model.name, reuse=True):
             mean_output_weights = tf.get_variable(
@@ -200,9 +199,10 @@ class TestGaussianCNNModel(TfGraphTestCase):
                               ((3, ), (3, ), (3, ), (2, ), 1, (1, 1)),
                               ((1, 1), (3, 3), (3, 3), (1, 1), 2, (2, 2)),
                               ((3, 3), (3, 3), (3, 3), (2, 2), 2, (2, 2))])
-    def test_adaptive_std_network_output_values(
-            self, mock_normal, filter_sizes, in_channels, out_channels,
-            strides, output_dim, hidden_sizes):
+    def test_adaptive_std_network_output_values(self, mock_normal,
+                                                filter_sizes, in_channels,
+                                                out_channels, strides,
+                                                output_dim, hidden_sizes):
         mock_normal.return_value = 0.5
         model = GaussianCNNModel(
             filter_dims=filter_sizes,
@@ -312,14 +312,13 @@ class TestGaussianCNNModel(TfGraphTestCase):
                                              hidden_sizes):
         mock_normal.return_value = 0.5
         input_var = tf.placeholder(tf.float32, shape=(None, 10, 10, 3))
-        model = GaussianCNNModel(
-            num_filters=[3, 6],
-            filter_dims=[3, 3],
-            strides=[1, 1],
-            padding='SAME',
-            hidden_sizes=hidden_sizes,
-            output_dim=output_dim,
-            std_share_network=True)
+        model = GaussianCNNModel(num_filters=[3, 6],
+                                 filter_dims=[3, 3],
+                                 strides=[1, 1],
+                                 padding='SAME',
+                                 hidden_sizes=hidden_sizes,
+                                 output_dim=output_dim,
+                                 std_share_network=True)
         outputs = model.build(input_var)
 
         # get output bias
@@ -347,15 +346,14 @@ class TestGaussianCNNModel(TfGraphTestCase):
                                                      output_dim, hidden_sizes):
         mock_normal.return_value = 0.5
         input_var = tf.placeholder(tf.float32, shape=(None, 10, 10, 3))
-        model = GaussianCNNModel(
-            num_filters=[3, 6],
-            filter_dims=[3, 3],
-            strides=[1, 1],
-            padding='SAME',
-            hidden_sizes=hidden_sizes,
-            output_dim=output_dim,
-            std_share_network=False,
-            adaptive_std=False)
+        model = GaussianCNNModel(num_filters=[3, 6],
+                                 filter_dims=[3, 3],
+                                 strides=[1, 1],
+                                 padding='SAME',
+                                 hidden_sizes=hidden_sizes,
+                                 output_dim=output_dim,
+                                 std_share_network=False,
+                                 adaptive_std=False)
         outputs = model.build(input_var)
 
         # get output bias
@@ -383,26 +381,25 @@ class TestGaussianCNNModel(TfGraphTestCase):
                                         hidden_sizes, std_hidden_sizes):
         mock_normal.return_value = 0.5
         input_var = tf.placeholder(tf.float32, shape=(None, 10, 10, 3))
-        model = GaussianCNNModel(
-            num_filters=[3, 6],
-            filter_dims=[3, 3],
-            strides=[1, 1],
-            padding='SAME',
-            output_dim=output_dim,
-            hidden_sizes=hidden_sizes,
-            std_share_network=False,
-            adaptive_std=True,
-            hidden_nonlinearity=None,
-            std_hidden_nonlinearity=None,
-            std_filter_dims=[3, 3],
-            std_num_filters=[3, 6],
-            std_strides=[1, 1],
-            std_padding='SAME',
-            std_hidden_sizes=hidden_sizes,
-            hidden_w_init=tf.constant_initializer(1),
-            output_w_init=tf.constant_initializer(1),
-            std_hidden_w_init=tf.constant_initializer(1),
-            std_output_w_init=tf.constant_initializer(1))
+        model = GaussianCNNModel(num_filters=[3, 6],
+                                 filter_dims=[3, 3],
+                                 strides=[1, 1],
+                                 padding='SAME',
+                                 output_dim=output_dim,
+                                 hidden_sizes=hidden_sizes,
+                                 std_share_network=False,
+                                 adaptive_std=True,
+                                 hidden_nonlinearity=None,
+                                 std_hidden_nonlinearity=None,
+                                 std_filter_dims=[3, 3],
+                                 std_num_filters=[3, 6],
+                                 std_strides=[1, 1],
+                                 std_padding='SAME',
+                                 std_hidden_sizes=hidden_sizes,
+                                 hidden_w_init=tf.constant_initializer(1),
+                                 output_w_init=tf.constant_initializer(1),
+                                 std_hidden_w_init=tf.constant_initializer(1),
+                                 std_output_w_init=tf.constant_initializer(1))
         outputs = model.build(input_var)
 
         # get output bias
@@ -432,20 +429,19 @@ class TestGaussianCNNModel(TfGraphTestCase):
         out_channels = [3, 6]
         strides = [1, 1]
 
-        model = GaussianCNNModel(
-            filter_dims=filter_sizes,
-            num_filters=out_channels,
-            strides=strides,
-            padding='VALID',
-            output_dim=output_dim,
-            init_std=2.0,
-            hidden_sizes=hidden_sizes,
-            std_share_network=False,
-            adaptive_std=False,
-            hidden_nonlinearity=None,
-            std_parameterization='softplus',
-            hidden_w_init=tf.constant_initializer(0.01),
-            output_w_init=tf.constant_initializer(1))
+        model = GaussianCNNModel(filter_dims=filter_sizes,
+                                 num_filters=out_channels,
+                                 strides=strides,
+                                 padding='VALID',
+                                 output_dim=output_dim,
+                                 init_std=2.0,
+                                 hidden_sizes=hidden_sizes,
+                                 std_share_network=False,
+                                 adaptive_std=False,
+                                 hidden_nonlinearity=None,
+                                 std_parameterization='softplus',
+                                 hidden_w_init=tf.constant_initializer(0.01),
+                                 output_w_init=tf.constant_initializer(1))
         outputs = model.build(self._input_ph)
 
         action, mean, log_std, std_param = self.sess.run(
@@ -487,21 +483,20 @@ class TestGaussianCNNModel(TfGraphTestCase):
         out_channels = [3, 6]
         strides = [1, 1]
 
-        model = GaussianCNNModel(
-            filter_dims=filter_sizes,
-            num_filters=out_channels,
-            strides=strides,
-            padding='VALID',
-            output_dim=output_dim,
-            init_std=2.0,
-            hidden_sizes=hidden_sizes,
-            std_share_network=False,
-            adaptive_std=False,
-            hidden_nonlinearity=None,
-            std_parameterization='exp',
-            min_std=10,
-            hidden_w_init=tf.constant_initializer(0.01),
-            output_w_init=tf.constant_initializer(1))
+        model = GaussianCNNModel(filter_dims=filter_sizes,
+                                 num_filters=out_channels,
+                                 strides=strides,
+                                 padding='VALID',
+                                 output_dim=output_dim,
+                                 init_std=2.0,
+                                 hidden_sizes=hidden_sizes,
+                                 std_share_network=False,
+                                 adaptive_std=False,
+                                 hidden_nonlinearity=None,
+                                 std_parameterization='exp',
+                                 min_std=10,
+                                 hidden_w_init=tf.constant_initializer(0.01),
+                                 output_w_init=tf.constant_initializer(1))
         outputs = model.build(self._input_ph)
         action, mean, log_std, std_param = self.sess.run(
             outputs[:-1], feed_dict={self._input_ph: self.obs})
@@ -519,21 +514,20 @@ class TestGaussianCNNModel(TfGraphTestCase):
         out_channels = [3, 6]
         strides = [1, 1]
 
-        model = GaussianCNNModel(
-            filter_dims=filter_sizes,
-            num_filters=out_channels,
-            strides=strides,
-            padding='VALID',
-            output_dim=output_dim,
-            init_std=10.0,
-            hidden_sizes=hidden_sizes,
-            std_share_network=False,
-            adaptive_std=False,
-            hidden_nonlinearity=None,
-            std_parameterization='exp',
-            max_std=1.0,
-            hidden_w_init=tf.constant_initializer(0.01),
-            output_w_init=tf.constant_initializer(1))
+        model = GaussianCNNModel(filter_dims=filter_sizes,
+                                 num_filters=out_channels,
+                                 strides=strides,
+                                 padding='VALID',
+                                 output_dim=output_dim,
+                                 init_std=10.0,
+                                 hidden_sizes=hidden_sizes,
+                                 std_share_network=False,
+                                 adaptive_std=False,
+                                 hidden_nonlinearity=None,
+                                 std_parameterization='exp',
+                                 max_std=1.0,
+                                 hidden_w_init=tf.constant_initializer(0.01),
+                                 output_w_init=tf.constant_initializer(1))
         outputs = model.build(self._input_ph)
         action, mean, log_std, std_param = self.sess.run(
             outputs[:-1], feed_dict={self._input_ph: self.obs})
@@ -551,21 +545,20 @@ class TestGaussianCNNModel(TfGraphTestCase):
         out_channels = [3, 6]
         strides = [1, 1]
 
-        model = GaussianCNNModel(
-            filter_dims=filter_sizes,
-            num_filters=out_channels,
-            strides=strides,
-            padding='VALID',
-            output_dim=output_dim,
-            init_std=2.0,
-            hidden_sizes=hidden_sizes,
-            std_share_network=False,
-            adaptive_std=False,
-            hidden_nonlinearity=None,
-            std_parameterization='softplus',
-            min_std=10,
-            hidden_w_init=tf.constant_initializer(0.1),
-            output_w_init=tf.constant_initializer(1))
+        model = GaussianCNNModel(filter_dims=filter_sizes,
+                                 num_filters=out_channels,
+                                 strides=strides,
+                                 padding='VALID',
+                                 output_dim=output_dim,
+                                 init_std=2.0,
+                                 hidden_sizes=hidden_sizes,
+                                 std_share_network=False,
+                                 adaptive_std=False,
+                                 hidden_nonlinearity=None,
+                                 std_parameterization='softplus',
+                                 min_std=10,
+                                 hidden_w_init=tf.constant_initializer(0.1),
+                                 output_w_init=tf.constant_initializer(1))
         outputs = model.build(self._input_ph)
         action, mean, log_std, std_param = self.sess.run(
             outputs[:-1], feed_dict={self._input_ph: self.obs})
@@ -584,21 +577,20 @@ class TestGaussianCNNModel(TfGraphTestCase):
         out_channels = [3, 6]
         strides = [1, 1]
 
-        model = GaussianCNNModel(
-            filter_dims=filter_sizes,
-            num_filters=out_channels,
-            strides=strides,
-            padding='VALID',
-            output_dim=output_dim,
-            init_std=10.0,
-            hidden_sizes=hidden_sizes,
-            std_share_network=False,
-            adaptive_std=False,
-            hidden_nonlinearity=None,
-            std_parameterization='softplus',
-            max_std=1.0,
-            hidden_w_init=tf.constant_initializer(0.1),
-            output_w_init=tf.constant_initializer(1))
+        model = GaussianCNNModel(filter_dims=filter_sizes,
+                                 num_filters=out_channels,
+                                 strides=strides,
+                                 padding='VALID',
+                                 output_dim=output_dim,
+                                 init_std=10.0,
+                                 hidden_sizes=hidden_sizes,
+                                 std_share_network=False,
+                                 adaptive_std=False,
+                                 hidden_nonlinearity=None,
+                                 std_parameterization='softplus',
+                                 max_std=1.0,
+                                 hidden_w_init=tf.constant_initializer(0.1),
+                                 output_w_init=tf.constant_initializer(1))
         outputs = model.build(self._input_ph)
         action, mean, log_std, std_param = self.sess.run(
             outputs[:-1], feed_dict={self._input_ph: self.obs})
@@ -611,11 +603,10 @@ class TestGaussianCNNModel(TfGraphTestCase):
 
     def test_unknown_std_parameterization(self):
         with pytest.raises(NotImplementedError):
-            _ = GaussianCNNModel(
-                num_filters=[3, 6],
-                filter_dims=[3, 3],
-                strides=[1, 1],
-                padding='SAME',
-                hidden_sizes=(1, ),
-                output_dim=1,
-                std_parameterization='unknown')
+            _ = GaussianCNNModel(num_filters=[3, 6],
+                                 filter_dims=[3, 3],
+                                 strides=[1, 1],
+                                 padding='SAME',
+                                 hidden_sizes=(1, ),
+                                 output_dim=1,
+                                 std_parameterization='unknown')

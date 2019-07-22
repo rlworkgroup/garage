@@ -35,14 +35,13 @@ class TestPPO(TfGraphTestCase):
     def test_ppo_pendulum(self):
         """Test PPO with Pendulum environment."""
         with LocalRunner(sess=self.sess) as runner:
-            algo = PPO(
-                env_spec=self.env.spec,
-                policy=self.policy,
-                baseline=self.baseline,
-                max_path_length=100,
-                discount=0.99,
-                lr_clip_range=0.01,
-                optimizer_args=dict(batch_size=32, max_epochs=10))
+            algo = PPO(env_spec=self.env.spec,
+                       policy=self.policy,
+                       baseline=self.baseline,
+                       max_path_length=100,
+                       discount=0.99,
+                       lr_clip_range=0.01,
+                       optimizer_args=dict(batch_size=32, max_epochs=10))
             runner.setup(algo, self.env)
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 40
@@ -70,18 +69,17 @@ class TestPPO(TfGraphTestCase):
     def test_ppo_with_maximum_entropy(self):
         """Test PPO with maxium entropy method."""
         with LocalRunner(sess=self.sess) as runner:
-            algo = PPO(
-                env_spec=self.env.spec,
-                policy=self.policy,
-                baseline=self.baseline,
-                max_path_length=100,
-                discount=0.99,
-                lr_clip_range=0.01,
-                optimizer_args=dict(batch_size=32, max_epochs=10),
-                stop_entropy_gradient=True,
-                entropy_method='max',
-                policy_ent_coeff=0.02,
-                center_adv=False)
+            algo = PPO(env_spec=self.env.spec,
+                       policy=self.policy,
+                       baseline=self.baseline,
+                       max_path_length=100,
+                       discount=0.99,
+                       lr_clip_range=0.01,
+                       optimizer_args=dict(batch_size=32, max_epochs=10),
+                       stop_entropy_gradient=True,
+                       entropy_method='max',
+                       policy_ent_coeff=0.02,
+                       center_adv=False)
             runner.setup(algo, self.env)
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 40
@@ -94,19 +92,18 @@ class TestPPO(TfGraphTestCase):
         entropy method.
         """
         with LocalRunner(sess=self.sess) as runner:
-            algo = PPO(
-                env_spec=self.env.spec,
-                policy=self.policy,
-                baseline=self.baseline,
-                max_path_length=100,
-                discount=0.99,
-                lr_clip_range=0.01,
-                optimizer_args=dict(batch_size=32, max_epochs=10),
-                stop_entropy_gradient=True,
-                use_neg_logli_entropy=True,
-                entropy_method='max',
-                policy_ent_coeff=0.02,
-                center_adv=False)
+            algo = PPO(env_spec=self.env.spec,
+                       policy=self.policy,
+                       baseline=self.baseline,
+                       max_path_length=100,
+                       discount=0.99,
+                       lr_clip_range=0.01,
+                       optimizer_args=dict(batch_size=32, max_epochs=10),
+                       stop_entropy_gradient=True,
+                       use_neg_logli_entropy=True,
+                       entropy_method='max',
+                       policy_ent_coeff=0.02,
+                       center_adv=False)
             runner.setup(algo, self.env)
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 40
@@ -119,19 +116,18 @@ class TestPPO(TfGraphTestCase):
         regularized entropy method.
         """
         with LocalRunner(sess=self.sess) as runner:
-            algo = PPO(
-                env_spec=self.env.spec,
-                policy=self.policy,
-                baseline=self.baseline,
-                max_path_length=100,
-                discount=0.99,
-                lr_clip_range=0.01,
-                optimizer_args=dict(batch_size=32, max_epochs=10),
-                stop_entropy_gradient=True,
-                use_neg_logli_entropy=True,
-                entropy_method='regularized',
-                policy_ent_coeff=0.0,
-                center_adv=True)
+            algo = PPO(env_spec=self.env.spec,
+                       policy=self.policy,
+                       baseline=self.baseline,
+                       max_path_length=100,
+                       discount=0.99,
+                       lr_clip_range=0.01,
+                       optimizer_args=dict(batch_size=32, max_epochs=10),
+                       stop_entropy_gradient=True,
+                       use_neg_logli_entropy=True,
+                       entropy_method='regularized',
+                       policy_ent_coeff=0.0,
+                       center_adv=True)
             runner.setup(algo, self.env)
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 40
@@ -141,18 +137,17 @@ class TestPPO(TfGraphTestCase):
     def test_ppo_with_regularized_entropy(self):
         """Test PPO with regularized entropy method."""
         with LocalRunner(sess=self.sess) as runner:
-            algo = PPO(
-                env_spec=self.env.spec,
-                policy=self.policy,
-                baseline=self.baseline,
-                max_path_length=100,
-                discount=0.99,
-                lr_clip_range=0.01,
-                optimizer_args=dict(batch_size=32, max_epochs=10),
-                stop_entropy_gradient=False,
-                entropy_method='regularized',
-                policy_ent_coeff=0.02,
-                center_adv=True)
+            algo = PPO(env_spec=self.env.spec,
+                       policy=self.policy,
+                       baseline=self.baseline,
+                       max_path_length=100,
+                       discount=0.99,
+                       lr_clip_range=0.01,
+                       optimizer_args=dict(batch_size=32, max_epochs=10),
+                       stop_entropy_gradient=False,
+                       entropy_method='regularized',
+                       policy_ent_coeff=0.02,
+                       center_adv=True)
             runner.setup(algo, self.env)
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 40

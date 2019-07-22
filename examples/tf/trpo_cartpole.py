@@ -19,18 +19,18 @@ def run_task(snapshot_config, *_):
     with LocalRunner(snapshot_config=snapshot_config) as runner:
         env = TfEnv(env_name='CartPole-v1')
 
-        policy = CategoricalMLPPolicy(
-            name='policy', env_spec=env.spec, hidden_sizes=(32, 32))
+        policy = CategoricalMLPPolicy(name='policy',
+                                      env_spec=env.spec,
+                                      hidden_sizes=(32, 32))
 
         baseline = LinearFeatureBaseline(env_spec=env.spec)
 
-        algo = TRPO(
-            env_spec=env.spec,
-            policy=policy,
-            baseline=baseline,
-            max_path_length=100,
-            discount=0.99,
-            max_kl_step=0.01)
+        algo = TRPO(env_spec=env.spec,
+                    policy=policy,
+                    baseline=baseline,
+                    max_path_length=100,
+                    discount=0.99,
+                    max_kl_step=0.01)
 
         runner.setup(algo, env)
         runner.train(n_epochs=100, batch_size=4000)

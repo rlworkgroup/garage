@@ -16,7 +16,6 @@ class BernoulliMLPRegressor(LayersPowered, Serializable, Parameterized):
     A class for performing regression (or classification, really) by fitting a
     bernoulli distribution to each of the output units.
     """
-
     def __init__(
             self,
             input_shape,
@@ -56,32 +55,31 @@ class BernoulliMLPRegressor(LayersPowered, Serializable, Parameterized):
             self.optimizer = optimizer
             self.tr_optimizer = tr_optimizer
 
-            p_network = MLP(
-                input_shape=input_shape,
-                output_dim=output_dim,
-                hidden_sizes=hidden_sizes,
-                hidden_nonlinearity=hidden_nonlinearity,
-                output_nonlinearity=tf.nn.sigmoid,
-                name='p_network')
+            p_network = MLP(input_shape=input_shape,
+                            output_dim=output_dim,
+                            hidden_sizes=hidden_sizes,
+                            hidden_nonlinearity=hidden_nonlinearity,
+                            output_nonlinearity=tf.nn.sigmoid,
+                            name='p_network')
 
             l_p = p_network.output_layer
 
             LayersPowered.__init__(self, [l_p])
 
             xs_var = p_network.input_layer.input_var
-            ys_var = tf.placeholder(
-                dtype=tf.float32, shape=(None, output_dim), name='ys')
-            old_p_var = tf.placeholder(
-                dtype=tf.float32, shape=(None, output_dim), name='old_p')
+            ys_var = tf.placeholder(dtype=tf.float32,
+                                    shape=(None, output_dim),
+                                    name='ys')
+            old_p_var = tf.placeholder(dtype=tf.float32,
+                                       shape=(None, output_dim),
+                                       name='old_p')
 
-            x_mean_var = tf.get_variable(
-                name='x_mean',
-                initializer=tf.zeros_initializer(),
-                shape=(1, ) + input_shape)
-            x_std_var = tf.get_variable(
-                name='x_std',
-                initializer=tf.ones_initializer(),
-                shape=(1, ) + input_shape)
+            x_mean_var = tf.get_variable(name='x_mean',
+                                         initializer=tf.zeros_initializer(),
+                                         shape=(1, ) + input_shape)
+            x_std_var = tf.get_variable(name='x_std',
+                                        initializer=tf.ones_initializer(),
+                                        shape=(1, ) + input_shape)
 
             normalized_xs_var = (xs_var - x_mean_var) / x_std_var
 
@@ -103,17 +101,15 @@ class BernoulliMLPRegressor(LayersPowered, Serializable, Parameterized):
             self.f_p = tensor_utils.compile_function([xs_var], p_var)
             self.l_p = l_p
 
-            self.optimizer.update_opt(
-                loss=loss,
-                target=self,
-                network_outputs=[p_var],
-                inputs=[xs_var, ys_var])
-            self.tr_optimizer.update_opt(
-                loss=loss,
-                target=self,
-                network_outputs=[p_var],
-                inputs=[xs_var, ys_var, old_p_var],
-                leq_constraint=(mean_kl, max_kl_step))
+            self.optimizer.update_opt(loss=loss,
+                                      target=self,
+                                      network_outputs=[p_var],
+                                      inputs=[xs_var, ys_var])
+            self.tr_optimizer.update_opt(loss=loss,
+                                         target=self,
+                                         network_outputs=[p_var],
+                                         inputs=[xs_var, ys_var, old_p_var],
+                                         leq_constraint=(mean_kl, max_kl_step))
 
             self.use_trust_region = use_trust_region
             self.name = name

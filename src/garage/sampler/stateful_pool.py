@@ -66,8 +66,9 @@ class StatefulPool:
             args_list = [tuple()] * self.n_parallel
         assert len(args_list) == self.n_parallel
         if self.n_parallel > 1:
-            results = self.pool.map_async(
-                _worker_run_each, [(runner, args) for args in args_list])
+            results = self.pool.map_async(_worker_run_each,
+                                          [(runner, args)
+                                           for args in args_list])
             for i in range(self.n_parallel):
                 self.worker_queue.get()
             for i in range(self.n_parallel):
@@ -98,8 +99,9 @@ class StatefulPool:
             'garage.sampler.stateful_pool.SharedGlobal')
 
         if self.n_parallel > 1:
-            for x in self.pool.imap_unordered(
-                    _worker_run_map, [(runner, args) for args in args_list]):
+            for x in self.pool.imap_unordered(_worker_run_map,
+                                              [(runner, args)
+                                               for args in args_list]):
                 yield x
         else:
             for args in args_list:
@@ -142,9 +144,10 @@ class StatefulPool:
         if self.pool:
             counter = self.manager.Value('i', 0)
             lock = self.manager.RLock()
-            results = self.pool.map_async(_worker_run_collect, [
-                (collect_once, counter, lock, threshold, args)
-            ] * self.n_parallel)
+            results = self.pool.map_async(
+                _worker_run_collect,
+                [(collect_once, counter, lock, threshold, args)] *
+                self.n_parallel)
             if show_prog_bar:
                 pbar = ProgBarCounter(threshold)
             last_value = 0

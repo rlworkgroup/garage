@@ -24,12 +24,11 @@ class TestTfBaselines(TfGraphTestCase):
         discrete_env = TfEnv(Resize(DummyDiscrete2DEnv(), width=64, height=64))
         gaussian_conv_baseline = GaussianConvBaseline(
             env_spec=discrete_env,
-            regressor_args=dict(
-                conv_filters=[32, 32],
-                conv_filter_sizes=[1, 1],
-                conv_strides=[1, 1],
-                conv_pads=['VALID', 'VALID'],
-                hidden_sizes=(32, 32)))
+            regressor_args=dict(conv_filters=[32, 32],
+                                conv_filter_sizes=[1, 1],
+                                conv_strides=[1, 1],
+                                conv_pads=['VALID', 'VALID'],
+                                hidden_sizes=(32, 32)))
 
         self.sess.run(tf.global_variables_initializer())
         deterministic_mlp_baseline.get_param_values(trainable=True)

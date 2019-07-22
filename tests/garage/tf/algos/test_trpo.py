@@ -34,14 +34,13 @@ class TestTRPO(TfGraphTestCase):
     def test_trpo_pendulum(self):
         """Test TRPO with Pendulum environment."""
         with LocalRunner(sess=self.sess) as runner:
-            algo = TRPO(
-                env_spec=self.env.spec,
-                policy=self.policy,
-                baseline=self.baseline,
-                max_path_length=100,
-                discount=0.99,
-                gae_lambda=0.98,
-                policy_ent_coeff=0.0)
+            algo = TRPO(env_spec=self.env.spec,
+                        policy=self.policy,
+                        baseline=self.baseline,
+                        max_path_length=100,
+                        discount=0.99,
+                        gae_lambda=0.98,
+                        policy_ent_coeff=0.0)
             runner.setup(algo, self.env)
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 50
@@ -64,15 +63,14 @@ class TestTRPO(TfGraphTestCase):
     def test_trpo_soft_kl_constraint(self):
         """Test TRPO with unkown KL constraints."""
         with LocalRunner(sess=self.sess) as runner:
-            algo = TRPO(
-                env_spec=self.env.spec,
-                policy=self.policy,
-                baseline=self.baseline,
-                max_path_length=100,
-                discount=0.99,
-                gae_lambda=0.98,
-                policy_ent_coeff=0.0,
-                kl_constraint='soft')
+            algo = TRPO(env_spec=self.env.spec,
+                        policy=self.policy,
+                        baseline=self.baseline,
+                        max_path_length=100,
+                        discount=0.99,
+                        gae_lambda=0.98,
+                        policy_ent_coeff=0.0,
+                        kl_constraint='soft')
             runner.setup(algo, self.env)
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 50

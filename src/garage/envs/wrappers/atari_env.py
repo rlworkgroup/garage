@@ -13,7 +13,6 @@ class AtariEnv(gym.Wrapper):
     Args:
         env (gym.Env): The environment to be wrapped.
     """
-
     def __init__(self, env):
         super().__init__(env)
 

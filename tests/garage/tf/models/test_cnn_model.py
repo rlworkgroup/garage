@@ -15,11 +15,12 @@ class TestCNNModel(TfGraphTestCase):
         self.batch_size = 5
         self.input_width = 10
         self.input_height = 10
-        self.obs_input = np.ones((self.batch_size, self.input_width,
-                                  self.input_height, 3))
+        self.obs_input = np.ones(
+            (self.batch_size, self.input_width, self.input_height, 3))
         input_shape = self.obs_input.shape[1:]  # height, width, channel
-        self._input_ph = tf.placeholder(
-            tf.float32, shape=(None, ) + input_shape, name='input')
+        self._input_ph = tf.placeholder(tf.float32,
+                                        shape=(None, ) + input_shape,
+                                        name='input')
 
     # yapf: disable
     @pytest.mark.parametrize('filter_sizes, in_channels, out_channels, '
@@ -34,18 +35,17 @@ class TestCNNModel(TfGraphTestCase):
     # yapf: enable
     def test_output_value(self, filter_sizes, in_channels, out_channels,
                           strides):
-        model = CNNModel(
-            filter_dims=filter_sizes,
-            num_filters=out_channels,
-            strides=strides,
-            name='cnn_model',
-            padding='VALID',
-            hidden_w_init=tf.constant_initializer(1),
-            hidden_nonlinearity=None)
+        model = CNNModel(filter_dims=filter_sizes,
+                         num_filters=out_channels,
+                         strides=strides,
+                         name='cnn_model',
+                         padding='VALID',
+                         hidden_w_init=tf.constant_initializer(1),
+                         hidden_nonlinearity=None)
 
         outputs = model.build(self._input_ph)
-        output = self.sess.run(
-            outputs, feed_dict={self._input_ph: self.obs_input})
+        output = self.sess.run(outputs,
+                               feed_dict={self._input_ph: self.obs_input})
 
         filter_sum = 1
         # filter value after 3 layers of conv
@@ -93,8 +93,8 @@ class TestCNNModel(TfGraphTestCase):
             hidden_nonlinearity=None)
 
         outputs = model.build(self._input_ph)
-        output = self.sess.run(
-            outputs, feed_dict={self._input_ph: self.obs_input})
+        output = self.sess.run(outputs,
+                               feed_dict={self._input_ph: self.obs_input})
 
         filter_sum = 1
         # filter value after 3 layers of conv
@@ -129,27 +129,27 @@ class TestCNNModel(TfGraphTestCase):
     # yapf: enable
     def test_is_pickleable(self, filter_sizes, in_channels, out_channels,
                            strides):
-        model = CNNModel(
-            filter_dims=filter_sizes,
-            num_filters=out_channels,
-            strides=strides,
-            name='cnn_model',
-            padding='VALID',
-            hidden_w_init=tf.constant_initializer(1),
-            hidden_nonlinearity=None)
+        model = CNNModel(filter_dims=filter_sizes,
+                         num_filters=out_channels,
+                         strides=strides,
+                         name='cnn_model',
+                         padding='VALID',
+                         hidden_w_init=tf.constant_initializer(1),
+                         hidden_nonlinearity=None)
         outputs = model.build(self._input_ph)
         with tf.variable_scope('cnn_model/cnn/h0', reuse=True):
             bias = tf.get_variable('bias')
         bias.load(tf.ones_like(bias).eval())
 
-        output1 = self.sess.run(
-            outputs, feed_dict={self._input_ph: self.obs_input})
+        output1 = self.sess.run(outputs,
+                                feed_dict={self._input_ph: self.obs_input})
         h = pickle.dumps(model)
         with tf.Session(graph=tf.Graph()) as sess:
             model_pickled = pickle.loads(h)
             input_shape = self.obs_input.shape[1:]  # height, width, channel
-            input_ph = tf.placeholder(
-                tf.float32, shape=(None, ) + input_shape, name='input')
+            input_ph = tf.placeholder(tf.float32,
+                                      shape=(None, ) + input_shape,
+                                      name='input')
             outputs = model_pickled.build(input_ph)
             output2 = sess.run(outputs, feed_dict={input_ph: self.obs_input})
 

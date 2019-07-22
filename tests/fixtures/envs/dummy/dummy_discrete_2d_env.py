@@ -6,12 +6,13 @@ from tests.fixtures.envs.dummy import DummyEnv
 
 class DummyDiscrete2DEnv(DummyEnv):
     """A dummy discrete environment."""
-
     def __init__(self, random=True):
         super().__init__(random)
         self.shape = (2, 2)
-        self._observation_space = gym.spaces.Box(
-            low=-1, high=1, shape=self.shape, dtype=np.float32)
+        self._observation_space = gym.spaces.Box(low=-1,
+                                                 high=1,
+                                                 shape=self.shape,
+                                                 dtype=np.float32)
 
     @property
     def observation_space(self):
@@ -41,5 +42,5 @@ class DummyDiscrete2DEnv(DummyEnv):
                 obs = self.state + action / 10.
         else:
             raise RuntimeError(
-                "DummyEnv: reset() must be called before step()!")
+                'DummyEnv: reset() must be called before step()!')
         return obs, 0, True, dict()

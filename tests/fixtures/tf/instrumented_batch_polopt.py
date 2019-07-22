@@ -21,7 +21,6 @@ class InstrumentedBatchPolopt(BatchPolopt):
     This includes various policy gradient methods like vpg, npg, ppo, trpo,
     etc.
     """
-
     def train(self, sess=None):
         address = ('localhost', 6000)
         conn = Client(address)

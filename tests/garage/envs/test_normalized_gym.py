@@ -7,11 +7,10 @@ from garage.tf.envs import TfEnv
 class TestNormalizedGym:
     def setup_method(self):
         self.env = TfEnv(
-            normalize(
-                gym.make('Pendulum-v0'),
-                normalize_reward=True,
-                normalize_obs=True,
-                flatten_obs=True))
+            normalize(gym.make('Pendulum-v0'),
+                      normalize_reward=True,
+                      normalize_obs=True,
+                      flatten_obs=True))
 
     def teardown_method(self):
         self.env.close()

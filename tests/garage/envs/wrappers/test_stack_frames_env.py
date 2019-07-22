@@ -10,8 +10,8 @@ class TestStackFrames:
     def setup_method(self):
         self.n_frames = 4
         self.env = DummyDiscrete2DEnv(random=False)
-        self.env_s = StackFrames(
-            DummyDiscrete2DEnv(random=False), n_frames=self.n_frames)
+        self.env_s = StackFrames(DummyDiscrete2DEnv(random=False),
+                                 n_frames=self.n_frames)
         self.width, self.height = self.env.observation_space.shape
 
     def teardown_method(self):
@@ -25,8 +25,10 @@ class TestStackFrames:
 
     def test_stack_frames_invalid_environment_shape(self):
         with pytest.raises(ValueError):
-            self.env.observation_space = gym.spaces.Box(
-                low=0, high=255, shape=(4, ), dtype=np.uint8)
+            self.env.observation_space = gym.spaces.Box(low=0,
+                                                        high=255,
+                                                        shape=(4, ),
+                                                        dtype=np.uint8)
             StackFrames(self.env, n_frames=4)
 
     def test_stack_frames_output_observation_space(self):

@@ -15,15 +15,14 @@ from tests.fixtures.tf.instrumented_npo import PGLoss
 
 @unique
 class KLConstraint(Enum):
-    HARD = "hard"
-    SOFT = "soft"
+    HARD = 'hard'
+    SOFT = 'soft'
 
 
 class InstrumentedTRPO(InstrumentedNPO):
     """
     Trust Region Policy Optimization
     """
-
     def __init__(self,
                  kl_constraint=KLConstraint.HARD,
                  optimizer=None,
@@ -35,13 +34,12 @@ class InstrumentedTRPO(InstrumentedNPO):
             elif kl_constraint == KLConstraint.SOFT:
                 optimizer = PenaltyLbfgsOptimizer
             else:
-                raise NotImplementedError("Unknown KLConstraint")
+                raise NotImplementedError('Unknown KLConstraint')
 
         if optimizer_args is None:
             optimizer_args = dict()
 
-        super(InstrumentedTRPO, self).__init__(
-            pg_loss=PGLoss.VANILLA,
-            optimizer=optimizer,
-            optimizer_args=optimizer_args,
-            **kwargs)
+        super(InstrumentedTRPO, self).__init__(pg_loss=PGLoss.VANILLA,
+                                               optimizer=optimizer,
+                                               optimizer_args=optimizer_args,
+                                               **kwargs)

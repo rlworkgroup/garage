@@ -11,14 +11,14 @@ class BatchSampler(BaseSampler):
         env (gym.Env): The environment.
 
     """
-
     def __init__(self, algo, env):
         super(BatchSampler, self).__init__(algo, env)
 
     def start_worker(self):
         """Start worker function."""
-        parallel_sampler.populate_task(
-            self.env, self.algo.policy, scope=self.algo.scope)
+        parallel_sampler.populate_task(self.env,
+                                       self.algo.policy,
+                                       scope=self.algo.scope)
 
     def shutdown_worker(self):
         """Shutdown worker function."""

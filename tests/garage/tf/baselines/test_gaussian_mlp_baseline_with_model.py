@@ -64,8 +64,8 @@ class TestGaussianMLPBaselineWithModel(TfGraphTestCase):
                          'gaussian_mlp_baseline_with_model.'
                          'GaussianMLPRegressorWithModel'),
                         new=SimpleGaussianMLPRegressor):
-            gmb = GaussianMLPBaselineWithModel(
-                env_spec=box_env.spec, regressor_args=dict())
+            gmb = GaussianMLPBaselineWithModel(env_spec=box_env.spec,
+                                               regressor_args=dict())
         params_interal = gmb.get_params_internal()
         trainable_params = tf.trainable_variables(
             scope='GaussianMLPBaselineWithModel')

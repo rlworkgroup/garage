@@ -13,7 +13,6 @@ class Regressor(Parameterized, abc.ABC):
         output_dim: Output dimension.
         name: Name of the regressor.
     """
-
     def __init__(self, input_shape, output_dim, name):
         Parameterized.__init__(self)
         self._input_shape = input_shape
@@ -54,7 +53,6 @@ class StochasticRegressor(Regressor):
         output_dim: Output dimension.
         name: Name of the regressor.
     """
-
     def __init__(self, input_shape, output_dim, name):
         super().__init__(input_shape, output_dim, name)
 

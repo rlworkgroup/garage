@@ -10,7 +10,6 @@ class GaussianStrategy(ExplorationStrategy, Serializable):
     This strategy adds Gaussian noise to the action taken by the deterministic
     policy.
     """
-
     def __init__(self,
                  env_spec,
                  max_sigma=1.0,

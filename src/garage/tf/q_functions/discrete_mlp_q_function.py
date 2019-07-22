@@ -40,7 +40,6 @@ class DiscreteMLPQFunction(QFunction2):
             tf.Tensor.
         layer_normalization (bool): Bool for using layer normalization.
     """
-
     def __init__(self,
                  env_spec,
                  name=None,
@@ -70,16 +69,15 @@ class DiscreteMLPQFunction(QFunction2):
         action_dim = env_spec.action_space.flat_dim
 
         if not dueling:
-            self.model = MLPModel(
-                output_dim=action_dim,
-                hidden_sizes=hidden_sizes,
-                hidden_nonlinearity=hidden_nonlinearity,
-                hidden_w_init=hidden_w_init,
-                hidden_b_init=hidden_b_init,
-                output_nonlinearity=output_nonlinearity,
-                output_w_init=output_w_init,
-                output_b_init=output_b_init,
-                layer_normalization=layer_normalization)
+            self.model = MLPModel(output_dim=action_dim,
+                                  hidden_sizes=hidden_sizes,
+                                  hidden_nonlinearity=hidden_nonlinearity,
+                                  hidden_w_init=hidden_w_init,
+                                  hidden_b_init=hidden_b_init,
+                                  output_nonlinearity=output_nonlinearity,
+                                  output_w_init=output_w_init,
+                                  output_b_init=output_b_init,
+                                  layer_normalization=layer_normalization)
         else:
             self.model = MLPDuelingModel(
                 output_dim=action_dim,
@@ -95,8 +93,8 @@ class DiscreteMLPQFunction(QFunction2):
         self._initialize()
 
     def _initialize(self):
-        obs_ph = tf.placeholder(
-            tf.float32, (None, ) + self.obs_dim, name='obs')
+        obs_ph = tf.placeholder(tf.float32, (None, ) + self.obs_dim,
+                                name='obs')
 
         with tf.variable_scope(self.name) as vs:
             self._variable_scope = vs
@@ -135,18 +133,17 @@ class DiscreteMLPQFunction(QFunction2):
         Args:
             name (str): Name of the newly created q-function.
         """
-        return self.__class__(
-            name=name,
-            env_spec=self._env_spec,
-            hidden_sizes=self._hidden_sizes,
-            hidden_nonlinearity=self._hidden_nonlinearity,
-            hidden_w_init=self._hidden_w_init,
-            hidden_b_init=self._hidden_b_init,
-            output_nonlinearity=self._output_nonlinearity,
-            output_w_init=self._output_w_init,
-            output_b_init=self._output_b_init,
-            dueling=self._dueling,
-            layer_normalization=self._layer_normalization)
+        return self.__class__(name=name,
+                              env_spec=self._env_spec,
+                              hidden_sizes=self._hidden_sizes,
+                              hidden_nonlinearity=self._hidden_nonlinearity,
+                              hidden_w_init=self._hidden_w_init,
+                              hidden_b_init=self._hidden_b_init,
+                              output_nonlinearity=self._output_nonlinearity,
+                              output_w_init=self._output_w_init,
+                              output_b_init=self._output_b_init,
+                              dueling=self._dueling,
+                              layer_normalization=self._layer_normalization)
 
     def __setstate__(self, state):
         """Object.__setstate__."""

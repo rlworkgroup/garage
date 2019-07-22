@@ -16,5 +16,8 @@ class TestTfEnv:
     @pytest.mark.parametrize('spec', list(gym.envs.registry.all()))
     def test_all_gym_envs_pickleable(self, spec):
         env = TfEnv(env_name=spec.id)
-        step_env_with_gym_quirks(
-            env, spec, n=1, render=True, serialize_env=True)
+        step_env_with_gym_quirks(env,
+                                 spec,
+                                 n=1,
+                                 render=True,
+                                 serialize_env=True)

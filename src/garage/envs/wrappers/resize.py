@@ -31,7 +31,6 @@ class Resize(gym.Wrapper):
             or environment is not gym.spaces.Box.
 
     """
-
     def __init__(self, env, width, height):
         if not isinstance(env.observation_space, gym.spaces.Box):
             raise ValueError('Resize only works with Box environment.')
@@ -44,8 +43,10 @@ class Resize(gym.Wrapper):
         _low = env.observation_space.low.flatten()[0]
         _high = env.observation_space.high.flatten()[0]
         self._dtype = env.observation_space.dtype
-        self._observation_space = gym.spaces.Box(
-            _low, _high, shape=[width, height], dtype=self._dtype)
+        self._observation_space = gym.spaces.Box(_low,
+                                                 _high,
+                                                 shape=[width, height],
+                                                 dtype=self._dtype)
 
         self._width = width
         self._height = height

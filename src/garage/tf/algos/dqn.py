@@ -47,7 +47,6 @@ class DQN(OffPolicyRLAlgorithm):
         name (str): Name of the algorithm.
 
     """
-
     def __init__(self,
                  env_spec,
                  policy,
@@ -80,22 +79,21 @@ class DQN(OffPolicyRLAlgorithm):
         # clone a target q-function
         self.target_qf = qf.clone('target_qf')
 
-        super(DQN, self).__init__(
-            env_spec=env_spec,
-            policy=policy,
-            qf=qf,
-            exploration_strategy=exploration_strategy,
-            min_buffer_size=min_buffer_size,
-            n_train_steps=n_train_steps,
-            n_epoch_cycles=n_epoch_cycles,
-            buffer_batch_size=buffer_batch_size,
-            rollout_batch_size=rollout_batch_size,
-            replay_buffer=replay_buffer,
-            max_path_length=max_path_length,
-            discount=discount,
-            reward_scale=reward_scale,
-            input_include_goal=input_include_goal,
-            smooth_return=smooth_return)
+        super(DQN, self).__init__(env_spec=env_spec,
+                                  policy=policy,
+                                  qf=qf,
+                                  exploration_strategy=exploration_strategy,
+                                  min_buffer_size=min_buffer_size,
+                                  n_train_steps=n_train_steps,
+                                  n_epoch_cycles=n_epoch_cycles,
+                                  buffer_batch_size=buffer_batch_size,
+                                  rollout_batch_size=rollout_batch_size,
+                                  replay_buffer=replay_buffer,
+                                  max_path_length=max_path_length,
+                                  discount=discount,
+                                  reward_scale=reward_scale,
+                                  input_include_goal=input_include_goal,
+                                  smooth_return=smooth_return)
 
     @overrides
     def init_opt(self):
@@ -138,13 +136,13 @@ class DQN(OffPolicyRLAlgorithm):
                     future_best_q_val_action = tf.argmax(
                         target_qval_with_online_q, 1)
                     future_best_q_val = tf.reduce_sum(
-                        self.target_qf.q_vals * tf.one_hot(
-                            future_best_q_val_action, action_dim),
+                        self.target_qf.q_vals *
+                        tf.one_hot(future_best_q_val_action, action_dim),
                         axis=1)
                 else:
                     # r + max_a(Q'(s', _)) - Q(s, a)
-                    future_best_q_val = tf.reduce_max(
-                        self.target_qf.q_vals, axis=1)
+                    future_best_q_val = tf.reduce_max(self.target_qf.q_vals,
+                                                      axis=1)
 
                 q_best_masked = (1.0 - done_t_ph) * future_best_q_val
                 # if done, it's just reward
@@ -197,8 +195,8 @@ class DQN(OffPolicyRLAlgorithm):
 
         if itr % self.n_epoch_cycles == 0:
             if self.evaluate:
-                mean100ep_rewards = round(
-                    np.mean(self.episode_rewards[-100:]), 1)
+                mean100ep_rewards = round(np.mean(self.episode_rewards[-100:]),
+                                          1)
                 mean100ep_qf_loss = np.mean(self.episode_qf_losses[-100:])
                 tabular.record('Epoch', epoch)
                 tabular.record('AverageReturn', np.mean(self.episode_rewards))

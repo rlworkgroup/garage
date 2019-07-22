@@ -46,7 +46,6 @@ def sliced_fun(f, n_slices):
 
 class LazyDict:
     """An immutable, lazily-evaluated dict."""
-
     def __init__(self, **kwargs):
         self._lazy_dict = kwargs
         self._dict = {}

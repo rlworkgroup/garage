@@ -37,7 +37,6 @@ class BaseSampler(Sampler):
         env (gym.Env): The environment.
 
     """
-
     def __init__(self, algo, env):
         self.algo = algo
         self.env = env

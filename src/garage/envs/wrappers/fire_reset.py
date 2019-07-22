@@ -11,7 +11,6 @@ class FireReset(gym.Wrapper):
     Args:
         env (gym.Env): The environment to be wrapped.
     """
-
     def __init__(self, env):
         super().__init__(env)
         assert env.unwrapped.get_action_meanings()[1] == 'FIRE', (

@@ -28,7 +28,6 @@ class EpsilonGreedyStrategy(ExplorationStrategy):
         min_epsilon (float): The minimum(terminal) value of epsilon.
         decay_ratio (float): Fraction of total steps for epsilon decay.
     """
-
     def __init__(self,
                  env_spec,
                  total_timesteps,
@@ -41,8 +40,8 @@ class EpsilonGreedyStrategy(ExplorationStrategy):
         self._decay_period = int(total_timesteps * decay_ratio)
         self._action_space = env_spec.action_space
         self._epsilon = self._max_epsilon
-        self._decrement = (
-            self._max_epsilon - self._min_epsilon) / self._decay_period
+        self._decrement = (self._max_epsilon -
+                           self._min_epsilon) / self._decay_period
 
     @overrides
     def get_action(self, t, observation, policy, **kwargs):

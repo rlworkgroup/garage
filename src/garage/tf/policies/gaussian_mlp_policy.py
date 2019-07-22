@@ -177,8 +177,8 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
             dist_info_sym = self.dist_info_sym(
                 mean_network.input_layer.input_var, dict())
             mean_var = tf.identity(dist_info_sym['mean'], name='mean')
-            log_std_var = tf.identity(
-                dist_info_sym['log_std'], name='standard_dev')
+            log_std_var = tf.identity(dist_info_sym['log_std'],
+                                      name='standard_dev')
 
             self._f_dist = tensor_utils.compile_function(
                 inputs=[obs_var],
@@ -241,8 +241,8 @@ class GaussianMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
                 'mean'], new_dist_info_vars['log_std']
             old_mean_var, old_log_std_var = old_dist_info_vars[
                 'mean'], old_dist_info_vars['log_std']
-            epsilon_var = (action_var - old_mean_var) / (
-                tf.exp(old_log_std_var) + 1e-8)
+            epsilon_var = (action_var -
+                           old_mean_var) / (tf.exp(old_log_std_var) + 1e-8)
             new_action_var = new_mean_var + epsilon_var * tf.exp(
                 new_log_std_var)
             return new_action_var

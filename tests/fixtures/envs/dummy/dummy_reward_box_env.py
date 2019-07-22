@@ -3,7 +3,6 @@ from tests.fixtures.envs.dummy import DummyBoxEnv
 
 class DummyRewardBoxEnv(DummyBoxEnv):
     """A dummy box environment."""
-
     def __init__(self, random=True):
         super().__init__(random)
 

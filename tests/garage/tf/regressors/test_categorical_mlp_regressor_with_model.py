@@ -59,8 +59,8 @@ class TestCategoricalMLPRegressorWithModel(TfGraphTestCase):
     @pytest.mark.parametrize('input_shape, output_dim', [((1, ), 2),
                                                          ((2, ), 2)])
     def test_fit_normalized(self, input_shape, output_dim):
-        cmr = CategoricalMLPRegressorWithModel(
-            input_shape=input_shape, output_dim=output_dim)
+        cmr = CategoricalMLPRegressorWithModel(input_shape=input_shape,
+                                               output_dim=output_dim)
         obs = get_train_data(input_shape)
 
         observations = np.concatenate([p['observations'] for p in obs])
@@ -87,10 +87,9 @@ class TestCategoricalMLPRegressorWithModel(TfGraphTestCase):
     @pytest.mark.parametrize('input_shape, output_dim', [((1, ), 2),
                                                          ((2, ), 2)])
     def test_fit_unnormalized(self, input_shape, output_dim):
-        cmr = CategoricalMLPRegressorWithModel(
-            input_shape=input_shape,
-            output_dim=output_dim,
-            normalize_inputs=False)
+        cmr = CategoricalMLPRegressorWithModel(input_shape=input_shape,
+                                               output_dim=output_dim,
+                                               normalize_inputs=False)
         obs = get_train_data(input_shape)
 
         observations = np.concatenate([p['observations'] for p in obs])
@@ -117,10 +116,9 @@ class TestCategoricalMLPRegressorWithModel(TfGraphTestCase):
     @pytest.mark.parametrize('input_shape, output_dim', [((1, ), 2),
                                                          ((2, ), 2)])
     def test_fit_without_initial_trust_region(self, input_shape, output_dim):
-        cmr = CategoricalMLPRegressorWithModel(
-            input_shape=input_shape,
-            output_dim=output_dim,
-            use_trust_region=False)
+        cmr = CategoricalMLPRegressorWithModel(input_shape=input_shape,
+                                               output_dim=output_dim,
+                                               use_trust_region=False)
         obs = get_train_data(input_shape)
 
         observations = np.concatenate([p['observations'] for p in obs])
@@ -148,8 +146,8 @@ class TestCategoricalMLPRegressorWithModel(TfGraphTestCase):
                              [(1, (1, )), (1, (2, )), (2, (3, )), (2, (1, 1)),
                               (3, (2, 2))])
     def test_dist_info_sym(self, output_dim, input_shape):
-        cmr = CategoricalMLPRegressorWithModel(
-            input_shape=input_shape, output_dim=output_dim)
+        cmr = CategoricalMLPRegressorWithModel(input_shape=input_shape,
+                                               output_dim=output_dim)
 
         new_xs_var = tf.placeholder(tf.float32, shape=(None, ) + input_shape)
 
@@ -169,12 +167,13 @@ class TestCategoricalMLPRegressorWithModel(TfGraphTestCase):
                              [(1, (1, )), (1, (2, )), (2, (3, )), (2, (1, 1)),
                               (3, (2, 2))])
     def test_log_likelihood_sym(self, output_dim, input_shape):
-        cmr = CategoricalMLPRegressorWithModel(
-            input_shape=input_shape, output_dim=output_dim)
+        cmr = CategoricalMLPRegressorWithModel(input_shape=input_shape,
+                                               output_dim=output_dim)
 
         new_xs_var = tf.placeholder(tf.float32, shape=(None, ) + input_shape)
-        new_ys_var = tf.placeholder(
-            dtype=tf.float32, name='ys', shape=(None, output_dim))
+        new_ys_var = tf.placeholder(dtype=tf.float32,
+                                    name='ys',
+                                    shape=(None, output_dim))
 
         data = np.random.random(size=input_shape)
         label = np.random.randint(0, output_dim)
@@ -185,12 +184,11 @@ class TestCategoricalMLPRegressorWithModel(TfGraphTestCase):
 
         outputs = cmr.log_likelihood_sym(new_xs_var, new_ys_var, name='ll_sym')
 
-        ll_from_sym = self.sess.run(
-            outputs,
-            feed_dict={
-                new_xs_var: [data],
-                new_ys_var: [one_hot_label]
-            })
+        ll_from_sym = self.sess.run(outputs,
+                                    feed_dict={
+                                        new_xs_var: [data],
+                                        new_ys_var: [one_hot_label]
+                                    })
 
         assert np.allclose(ll, ll_from_sym, rtol=0, atol=1e-5)
 

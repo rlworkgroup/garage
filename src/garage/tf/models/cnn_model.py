@@ -33,7 +33,6 @@ class CNNModel(Model):
             of intermediate dense layer(s). The function should return a
             tf.Tensor.
     """
-
     def __init__(self,
                  filter_dims,
                  num_filters,
@@ -53,13 +52,12 @@ class CNNModel(Model):
         self._hidden_b_init = hidden_b_init
 
     def _build(self, state_input, name=None):
-        return cnn(
-            input_var=state_input,
-            filter_dims=self._filter_dims,
-            hidden_nonlinearity=self._hidden_nonlinearity,
-            hidden_w_init=self._hidden_w_init,
-            hidden_b_init=self._hidden_b_init,
-            num_filters=self._num_filters,
-            strides=self._strides,
-            padding=self._padding,
-            name='cnn')
+        return cnn(input_var=state_input,
+                   filter_dims=self._filter_dims,
+                   hidden_nonlinearity=self._hidden_nonlinearity,
+                   hidden_w_init=self._hidden_w_init,
+                   hidden_b_init=self._hidden_b_init,
+                   num_filters=self._num_filters,
+                   strides=self._strides,
+                   padding=self._padding,
+                   name='cnn')

@@ -45,8 +45,9 @@ def cnn(input_var,
     """
     with tf.variable_scope(name):
         h = input_var
-        for index, (filter_dim, num_filter, stride) in enumerate(
-                zip(filter_dims, num_filters, strides)):
+        for index, (filter_dim, num_filter,
+                    stride) in enumerate(zip(filter_dims, num_filters,
+                                             strides)):
             _stride = [1, stride, stride, 1]
             h = _conv(h, 'h{}'.format(index), filter_dim, num_filter, _stride,
                       hidden_w_init, hidden_b_init, padding)
@@ -112,15 +113,18 @@ def cnn_with_max_pooling(input_var,
 
     with tf.variable_scope(name):
         h = input_var
-        for index, (filter_dim, num_filter, stride) in enumerate(
-                zip(filter_dims, num_filters, strides)):
+        for index, (filter_dim, num_filter,
+                    stride) in enumerate(zip(filter_dims, num_filters,
+                                             strides)):
             _stride = [1, stride, stride, 1]
             h = _conv(h, 'h{}'.format(index), filter_dim, num_filter, _stride,
                       hidden_w_init, hidden_b_init, padding)
             if hidden_nonlinearity is not None:
                 h = hidden_nonlinearity(h)
-            h = tf.nn.max_pool(
-                h, ksize=pool_shapes, strides=pool_strides, padding=padding)
+            h = tf.nn.max_pool(h,
+                               ksize=pool_shapes,
+                               strides=pool_strides,
+                               padding=padding)
 
         # flatten
         dim = tf.reduce_prod(h.get_shape()[1:].as_list())

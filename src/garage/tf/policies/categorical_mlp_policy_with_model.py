@@ -44,7 +44,6 @@ class CategoricalMLPPolicyWithModel(StochasticPolicy2):
         layer_normalization (bool): Bool for using layer normalization or not.
 
     """
-
     def __init__(self,
                  env_spec,
                  name='CategoricalMLPPolicy',
@@ -63,17 +62,16 @@ class CategoricalMLPPolicyWithModel(StochasticPolicy2):
         self.obs_dim = env_spec.observation_space.flat_dim
         self.action_dim = env_spec.action_space.n
 
-        self.model = MLPModel(
-            output_dim=self.action_dim,
-            hidden_sizes=hidden_sizes,
-            hidden_nonlinearity=hidden_nonlinearity,
-            hidden_w_init=hidden_w_init,
-            hidden_b_init=hidden_b_init,
-            output_nonlinearity=output_nonlinearity,
-            output_w_init=output_w_init,
-            output_b_init=output_b_init,
-            layer_normalization=layer_normalization,
-            name='MLPModel')
+        self.model = MLPModel(output_dim=self.action_dim,
+                              hidden_sizes=hidden_sizes,
+                              hidden_nonlinearity=hidden_nonlinearity,
+                              hidden_w_init=hidden_w_init,
+                              hidden_b_init=hidden_b_init,
+                              output_nonlinearity=output_nonlinearity,
+                              output_w_init=output_w_init,
+                              output_b_init=output_b_init,
+                              layer_normalization=layer_normalization,
+                              name='MLPModel')
 
         self._initialize()
 

@@ -32,8 +32,8 @@ class DiagonalGaussian(Distribution):
         numerator = np.square(old_means - new_means) + \
             np.square(old_std) - np.square(new_std)
         denominator = 2 * np.square(new_std) + 1e-8
-        return np.sum(
-            numerator / denominator + new_log_stds - old_log_stds, axis=-1)
+        return np.sum(numerator / denominator + new_log_stds - old_log_stds,
+                      axis=-1)
 
     def kl_sym(self, old_dist_info_vars, new_dist_info_vars, name=None):
         with tf.name_scope(name, 'kl_sym',
@@ -56,8 +56,9 @@ class DiagonalGaussian(Distribution):
             numerator = tf.square(old_means - new_means) + \
                 tf.square(old_std) - tf.square(new_std)
             denominator = 2 * tf.square(new_std) + 1e-8
-            return tf.reduce_sum(
-                numerator / denominator + new_log_stds - old_log_stds, axis=-1)
+            return tf.reduce_sum(numerator / denominator + new_log_stds -
+                                 old_log_stds,
+                                 axis=-1)
 
     def likelihood_ratio_sym(self,
                              x_var,
@@ -101,8 +102,9 @@ class DiagonalGaussian(Distribution):
     def entropy_sym(self, dist_info_var, name=None):
         with tf.name_scope(name, 'entropy_sym', [dist_info_var]):
             log_std_var = dist_info_var['log_std']
-            return tf.reduce_sum(
-                log_std_var + np.log(np.sqrt(2 * np.pi * np.e)), axis=-1)
+            return tf.reduce_sum(log_std_var +
+                                 np.log(np.sqrt(2 * np.pi * np.e)),
+                                 axis=-1)
 
     @property
     def dist_info_specs(self):

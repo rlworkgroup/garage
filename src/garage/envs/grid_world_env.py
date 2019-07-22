@@ -42,7 +42,6 @@ class GridWorldEnv(gym.Env, Serializable):
 
 
     """
-
     def __init__(self, desc='4x4'):
         if isinstance(desc, str):
             desc = MAPS[desc]

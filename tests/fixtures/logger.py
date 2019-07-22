@@ -3,7 +3,6 @@ from dowel import LogOutput, TabularInput
 
 class NullOutput(LogOutput):
     """Dummy output to disable 'no logger output' warnings."""
-
     @property
     def types_accepted(self):
         """Accept all output types."""

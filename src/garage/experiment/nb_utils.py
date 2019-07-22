@@ -55,8 +55,8 @@ class Experiment:
         flat_params = dict()
         for k, v in params.items():
             if isinstance(v, dict) and depth != 0:
-                for subk, subv in self._flatten_params(
-                        v, depth=depth - 1).items():
+                for subk, subv in self._flatten_params(v, depth=depth -
+                                                       1).items():
                     if subk == '_name':
                         flat_params[k] = subv
                     else:

@@ -41,7 +41,6 @@ class GarageEnv(gym.Wrapper, Serializable):
 
     Args: env (gym.Env): the env that will be wrapped
     """
-
     def __init__(self, env=None, env_name=''):
         if env_name:
             super().__init__(gym.make(env_name))
@@ -54,9 +53,8 @@ class GarageEnv(gym.Wrapper, Serializable):
             self.spec.action_space = self.action_space
             self.spec.observation_space = self.observation_space
         else:
-            self.spec = EnvSpec(
-                action_space=self.action_space,
-                observation_space=self.observation_space)
+            self.spec = EnvSpec(action_space=self.action_space,
+                                observation_space=self.observation_space)
 
         Serializable.quick_init(self, locals())
 

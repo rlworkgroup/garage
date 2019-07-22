@@ -20,13 +20,12 @@ class TestMLPModel:
     # yapf: enable
     def test_output_values(self, input_dim, output_dim, hidden_sizes):
         input_val = torch.ones([1, 5], dtype=torch.float32)
-        module = MLPModule(
-            input_dim=input_dim,
-            output_dim=output_dim,
-            hidden_nonlinearity=None,
-            hidden_sizes=hidden_sizes,
-            hidden_w_init=nn.init.ones_,
-            output_w_init=nn.init.ones_)
+        module = MLPModule(input_dim=input_dim,
+                           output_dim=output_dim,
+                           hidden_nonlinearity=None,
+                           hidden_sizes=hidden_sizes,
+                           hidden_w_init=nn.init.ones_,
+                           output_w_init=nn.init.ones_)
         output = module(input_val)
 
         expected_output = torch.full([1, output_dim],
@@ -46,13 +45,12 @@ class TestMLPModel:
     # yapf: enable
     def test_is_pickleable(self, input_dim, output_dim, hidden_sizes):
         input_val = torch.ones([1, 5], dtype=torch.float32)
-        module = MLPModule(
-            input_dim=input_dim,
-            output_dim=output_dim,
-            hidden_nonlinearity=None,
-            hidden_sizes=hidden_sizes,
-            hidden_w_init=nn.init.ones_,
-            output_w_init=nn.init.ones_)
+        module = MLPModule(input_dim=input_dim,
+                           output_dim=output_dim,
+                           hidden_nonlinearity=None,
+                           hidden_sizes=hidden_sizes,
+                           hidden_w_init=nn.init.ones_,
+                           output_w_init=nn.init.ones_)
         output1 = module(input_val)
 
         h = pickle.dumps(module)

@@ -29,7 +29,6 @@ class OffPolicyVectorizedSampler(BatchSampler):
         no_reset (bool): Reset environment between samples or not.
 
     """
-
     def __init__(self, algo, env, n_envs=None, no_reset=True):
         if n_envs is None:
             n_envs = int(algo.rollout_batch_size)

@@ -36,11 +36,12 @@ class DummyDiscretePixelEnvBaselines(DummyEnv):
 
     This environment is for testing garge.envs.wrapper.AtariEnv.
     """
-
     def __init__(self):
         super().__init__(random=False, obs_dim=(10, 10, 3), action_dim=5)
-        self._observation_space = gym.spaces.Box(
-            low=0, high=255, shape=self._obs_dim, dtype=np.uint8)
+        self._observation_space = gym.spaces.Box(low=0,
+                                                 high=255,
+                                                 shape=self._obs_dim,
+                                                 dtype=np.uint8)
 
     @property
     def observation_space(self):

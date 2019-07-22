@@ -34,12 +34,11 @@ class TestDiscreteCNNQFunction(TfGraphTestCase):
             with mock.patch(('garage.tf.q_functions.'
                              'discrete_cnn_q_function.MLPModel'),
                             new=SimpleMLPModel):
-                qf = DiscreteCNNQFunction(
-                    env_spec=self.env.spec,
-                    filter_dims=filter_dims,
-                    num_filters=num_filters,
-                    strides=strides,
-                    dueling=False)
+                qf = DiscreteCNNQFunction(env_spec=self.env.spec,
+                                          filter_dims=filter_dims,
+                                          num_filters=num_filters,
+                                          strides=strides,
+                                          dueling=False)
 
         action_dim = self.env.action_space.n
         expected_output = np.full(action_dim, 0.5)
@@ -64,12 +63,11 @@ class TestDiscreteCNNQFunction(TfGraphTestCase):
             with mock.patch(('garage.tf.q_functions.'
                              'discrete_cnn_q_function.MLPDuelingModel'),
                             new=SimpleMLPModel):
-                qf = DiscreteCNNQFunction(
-                    env_spec=self.env.spec,
-                    filter_dims=filter_dims,
-                    num_filters=num_filters,
-                    strides=strides,
-                    dueling=True)
+                qf = DiscreteCNNQFunction(env_spec=self.env.spec,
+                                          filter_dims=filter_dims,
+                                          num_filters=num_filters,
+                                          strides=strides,
+                                          dueling=True)
 
         action_dim = self.env.action_space.n
         expected_output = np.full(action_dim, 0.5)
@@ -97,15 +95,14 @@ class TestDiscreteCNNQFunction(TfGraphTestCase):
             with mock.patch(('garage.tf.q_functions.'
                              'discrete_cnn_q_function.MLPModel'),
                             new=SimpleMLPModel):
-                qf = DiscreteCNNQFunction(
-                    env_spec=self.env.spec,
-                    filter_dims=filter_dims,
-                    num_filters=num_filters,
-                    strides=strides,
-                    max_pooling=True,
-                    pool_strides=pool_strides,
-                    pool_shapes=pool_shapes,
-                    dueling=False)
+                qf = DiscreteCNNQFunction(env_spec=self.env.spec,
+                                          filter_dims=filter_dims,
+                                          num_filters=num_filters,
+                                          strides=strides,
+                                          max_pooling=True,
+                                          pool_strides=pool_strides,
+                                          pool_shapes=pool_shapes,
+                                          dueling=False)
 
         action_dim = self.env.action_space.n
         expected_output = np.full(action_dim, 0.5)
@@ -130,12 +127,11 @@ class TestDiscreteCNNQFunction(TfGraphTestCase):
             with mock.patch(('garage.tf.q_functions.'
                              'discrete_cnn_q_function.MLPModel'),
                             new=SimpleMLPModel):
-                qf = DiscreteCNNQFunction(
-                    env_spec=self.env.spec,
-                    filter_dims=filter_dims,
-                    num_filters=num_filters,
-                    strides=strides,
-                    dueling=False)
+                qf = DiscreteCNNQFunction(env_spec=self.env.spec,
+                                          filter_dims=filter_dims,
+                                          num_filters=num_filters,
+                                          strides=strides,
+                                          dueling=False)
         output1 = self.sess.run(qf.q_vals, feed_dict={qf.input: [self.obs]})
 
         obs_dim = self.env.observation_space.shape
@@ -164,12 +160,11 @@ class TestDiscreteCNNQFunction(TfGraphTestCase):
             with mock.patch(('garage.tf.q_functions.'
                              'discrete_cnn_q_function.MLPModel'),
                             new=SimpleMLPModel):
-                qf = DiscreteCNNQFunction(
-                    env_spec=self.env.spec,
-                    filter_dims=filter_dims,
-                    num_filters=num_filters,
-                    strides=strides,
-                    dueling=False)
+                qf = DiscreteCNNQFunction(env_spec=self.env.spec,
+                                          filter_dims=filter_dims,
+                                          num_filters=num_filters,
+                                          strides=strides,
+                                          dueling=False)
         with tf.variable_scope(
                 'DiscreteCNNQFunction/Sequential/SimpleMLPModel', reuse=True):
             return_var = tf.get_variable('return_var')
@@ -181,8 +176,8 @@ class TestDiscreteCNNQFunction(TfGraphTestCase):
         h_data = pickle.dumps(qf)
         with tf.Session(graph=tf.Graph()) as sess:
             qf_pickled = pickle.loads(h_data)
-            output2 = sess.run(
-                qf_pickled.q_vals, feed_dict={qf_pickled.input: [self.obs]})
+            output2 = sess.run(qf_pickled.q_vals,
+                               feed_dict={qf_pickled.input: [self.obs]})
 
         assert np.array_equal(output1, output2)
 
@@ -200,12 +195,11 @@ class TestDiscreteCNNQFunction(TfGraphTestCase):
             with mock.patch(('garage.tf.q_functions.'
                              'discrete_cnn_q_function.MLPModel'),
                             new=SimpleMLPModel):
-                qf = DiscreteCNNQFunction(
-                    env_spec=self.env.spec,
-                    filter_dims=filter_dims,
-                    num_filters=num_filters,
-                    strides=strides,
-                    dueling=False)
+                qf = DiscreteCNNQFunction(env_spec=self.env.spec,
+                                          filter_dims=filter_dims,
+                                          num_filters=num_filters,
+                                          strides=strides,
+                                          dueling=False)
         qf_clone = qf.clone('another_qf')
         assert qf_clone._filter_dims == qf._filter_dims
         assert qf_clone._num_filters == qf._num_filters

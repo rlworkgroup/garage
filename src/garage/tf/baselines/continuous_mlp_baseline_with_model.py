@@ -8,7 +8,6 @@ from garage.tf.regressors import ContinuousMLPRegressorWithModel
 
 class ContinuousMLPBaselineWithModel(Baseline):
     """A value function using a MLP network."""
-
     def __init__(
             self,
             env_spec,
@@ -36,8 +35,8 @@ class ContinuousMLPBaselineWithModel(Baseline):
             regressor_args = dict()
 
         self._regressor = ContinuousMLPRegressorWithModel(
-            input_shape=(
-                env_spec.observation_space.flat_dim * num_seq_inputs, ),
+            input_shape=(env_spec.observation_space.flat_dim *
+                         num_seq_inputs, ),
             output_dim=1,
             name=name,
             **regressor_args)

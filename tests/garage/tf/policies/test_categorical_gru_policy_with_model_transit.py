@@ -91,10 +91,12 @@ class TestCategoricalGRUPolicyWithModelTransit(TfGraphTestCase):
         self.obs = np.concatenate([self.obs for _ in range(self.time_step)],
                                   axis=0)
 
-        self.obs_ph = tf.placeholder(
-            tf.float32, shape=(None, None, env.observation_space.flat_dim))
-        self.action_ph = tf.placeholder(
-            tf.float32, shape=(None, None, env.action_space.flat_dim))
+        self.obs_ph = tf.placeholder(tf.float32,
+                                     shape=(None, None,
+                                            env.observation_space.flat_dim))
+        self.action_ph = tf.placeholder(tf.float32,
+                                        shape=(None, None,
+                                               env.action_space.flat_dim))
 
         self.dist1_sym = self.policy1.dist_info_sym(
             obs_var=self.obs_ph,
@@ -115,14 +117,14 @@ class TestCategoricalGRUPolicyWithModelTransit(TfGraphTestCase):
 
     def test_dist_info_sym_output(self):
         # batch size = 2
-        dist1 = self.sess.run(
-            self.dist1_sym, feed_dict={self.obs_ph: [self.obs, self.obs]})
-        dist2 = self.sess.run(
-            self.dist2_sym, feed_dict={self.obs_ph: [self.obs, self.obs]})
-        dist3 = self.sess.run(
-            self.dist3_sym, feed_dict={self.obs_ph: [self.obs, self.obs]})
-        dist4 = self.sess.run(
-            self.dist4_sym, feed_dict={self.obs_ph: [self.obs, self.obs]})
+        dist1 = self.sess.run(self.dist1_sym,
+                              feed_dict={self.obs_ph: [self.obs, self.obs]})
+        dist2 = self.sess.run(self.dist2_sym,
+                              feed_dict={self.obs_ph: [self.obs, self.obs]})
+        dist3 = self.sess.run(self.dist3_sym,
+                              feed_dict={self.obs_ph: [self.obs, self.obs]})
+        dist4 = self.sess.run(self.dist4_sym,
+                              feed_dict={self.obs_ph: [self.obs, self.obs]})
 
         assert np.array_equal(dist1['prob'], dist3['prob'])
         assert np.array_equal(dist2['prob'], dist4['prob'])
@@ -221,8 +223,8 @@ class TestCategoricalGRUPolicyWithModelTransit(TfGraphTestCase):
             name='li_ratio_sym1')
         likelihood_ratio_func = tensor_utils.compile_function(
             [self.action_ph, self.obs_ph], likelihood_ratio_sym1)
-        likelihood_ratio1 = likelihood_ratio_func(
-            np.ones((2, 1, 1)), [self.obs, self.obs])
+        likelihood_ratio1 = likelihood_ratio_func(np.ones((2, 1, 1)),
+                                                  [self.obs, self.obs])
 
         likelihood_ratio_sym2 = self.policy3.distribution.likelihood_ratio_sym(
             self.action_ph,
@@ -231,7 +233,7 @@ class TestCategoricalGRUPolicyWithModelTransit(TfGraphTestCase):
             name='li_ratio_sym2')
         likelihood_ratio_func = tensor_utils.compile_function(
             [self.action_ph, self.obs_ph], likelihood_ratio_sym2)
-        likelihood_ratio2 = likelihood_ratio_func(
-            np.ones((2, 1, 1)), [self.obs, self.obs])
+        likelihood_ratio2 = likelihood_ratio_func(np.ones((2, 1, 1)),
+                                                  [self.obs, self.obs])
 
         assert np.array_equal(likelihood_ratio1, likelihood_ratio2)

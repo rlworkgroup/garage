@@ -63,7 +63,6 @@ class GaussianMLPModel(Model):
             - softplus: the std will be computed as log(1+exp(x))
         layer_normalization (bool): Bool for using layer normalization or not.
     """
-
     def __init__(self,
                  output_dim,
                  name=None,

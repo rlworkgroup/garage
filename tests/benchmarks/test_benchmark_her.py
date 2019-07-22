@@ -47,7 +47,6 @@ BASELINES_PARAMS['rollout_batch_size'] = 1
 
 class TestBenchmarkHER:
     '''Compare benchmarks between garage and baselines.'''
-
     @pytest.mark.huge
     def test_benchmark_her(self):
         '''
@@ -90,17 +89,16 @@ class TestBenchmarkHER:
 
             env.close()
 
-            plot(
-                b_csvs=baselines_csvs,
-                g_csvs=garage_csvs,
-                g_x='Epoch',
-                g_y='AverageSuccessRate',
-                b_x='epoch',
-                b_y='train/success_rate',
-                trials=task['trials'],
-                seeds=seeds,
-                plt_file=plt_file,
-                env_id=env_id)
+            plot(b_csvs=baselines_csvs,
+                 g_csvs=garage_csvs,
+                 g_x='Epoch',
+                 g_y='AverageSuccessRate',
+                 b_x='epoch',
+                 b_y='train/success_rate',
+                 trials=task['trials'],
+                 seeds=seeds,
+                 plt_file=plt_file,
+                 env_id=env_id)
 
 
 def run_garage(env, seed, log_dir):
@@ -169,10 +167,9 @@ def run_garage(env, seed, log_dir):
         logger.add_output(dowel.TensorBoardOutput(log_dir))
 
         runner.setup(algo, env)
-        runner.train(
-            n_epochs=params['n_epochs'],
-            n_epoch_cycles=params['n_epoch_cycles'],
-            batch_size=params['n_rollout_steps'])
+        runner.train(n_epochs=params['n_epochs'],
+                     n_epoch_cycles=params['n_epoch_cycles'],
+                     batch_size=params['n_rollout_steps'])
 
         logger.remove_all()
 
@@ -229,14 +226,12 @@ def plot(b_csvs, g_csvs, g_x, g_y, b_x, b_y, trials, seeds, plt_file, env_id):
         df_g = pd.read_csv(g_csvs[trial])
         df_b = pd.read_csv(b_csvs[trial])
 
-        plt.plot(
-            df_g[g_x],
-            df_g[g_y],
-            label='garage_trial{}_seed{}'.format(trial + 1, seed))
-        plt.plot(
-            df_b[b_x],
-            df_b[b_y],
-            label='baselines_trial{}_seed{}'.format(trial + 1, seed))
+        plt.plot(df_g[g_x],
+                 df_g[g_y],
+                 label='garage_trial{}_seed{}'.format(trial + 1, seed))
+        plt.plot(df_b[b_x],
+                 df_b[b_y],
+                 label='baselines_trial{}_seed{}'.format(trial + 1, seed))
 
     plt.legend()
     plt.xlabel('Iteration')

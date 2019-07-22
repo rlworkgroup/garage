@@ -24,7 +24,6 @@ class CMAES(BatchPolopt):
         sigma0 (float): Initial std for param distribution.
 
     """
-
     def __init__(self,
                  env_spec,
                  policy,

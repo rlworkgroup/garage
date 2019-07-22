@@ -32,16 +32,15 @@ def get_train_test_data():
 class TestGaussianCNNRegressorWithModel(TfGraphTestCase):
     @pytest.mark.large
     def test_fit_normalized(self):
-        gcr = GaussianCNNRegressorWithModel(
-            input_shape=(10, 10, 3),
-            num_filters=(3, 6),
-            filter_dims=(3, 3),
-            strides=(1, 1),
-            padding='SAME',
-            hidden_sizes=(32, ),
-            output_dim=1,
-            adaptive_std=False,
-            use_trust_region=True)
+        gcr = GaussianCNNRegressorWithModel(input_shape=(10, 10, 3),
+                                            num_filters=(3, 6),
+                                            filter_dims=(3, 3),
+                                            strides=(1, 1),
+                                            padding='SAME',
+                                            hidden_sizes=(32, ),
+                                            output_dim=1,
+                                            adaptive_std=False,
+                                            use_trust_region=True)
 
         train_data, test_data = get_train_test_data()
         observations, returns = train_data
@@ -76,17 +75,16 @@ class TestGaussianCNNRegressorWithModel(TfGraphTestCase):
 
     @pytest.mark.large
     def test_fit_unnormalized(self):
-        gcr = GaussianCNNRegressorWithModel(
-            input_shape=(10, 10, 3),
-            num_filters=(3, 6),
-            filter_dims=(3, 3),
-            strides=(1, 1),
-            padding='SAME',
-            hidden_sizes=(32, ),
-            output_dim=1,
-            adaptive_std=True,
-            normalize_inputs=False,
-            normalize_outputs=False)
+        gcr = GaussianCNNRegressorWithModel(input_shape=(10, 10, 3),
+                                            num_filters=(3, 6),
+                                            filter_dims=(3, 3),
+                                            strides=(1, 1),
+                                            padding='SAME',
+                                            hidden_sizes=(32, ),
+                                            output_dim=1,
+                                            adaptive_std=True,
+                                            normalize_inputs=False,
+                                            normalize_outputs=False)
 
         train_data, test_data = get_train_test_data()
         observations, returns = train_data
@@ -120,16 +118,15 @@ class TestGaussianCNNRegressorWithModel(TfGraphTestCase):
 
     @pytest.mark.large
     def test_fit_smaller_subsample_factor(self):
-        gcr = GaussianCNNRegressorWithModel(
-            input_shape=(10, 10, 3),
-            num_filters=(3, 6),
-            filter_dims=(3, 3),
-            strides=(1, 1),
-            padding='SAME',
-            hidden_sizes=(32, ),
-            output_dim=1,
-            subsample_factor=0.9,
-            adaptive_std=False)
+        gcr = GaussianCNNRegressorWithModel(input_shape=(10, 10, 3),
+                                            num_filters=(3, 6),
+                                            filter_dims=(3, 3),
+                                            strides=(1, 1),
+                                            padding='SAME',
+                                            hidden_sizes=(32, ),
+                                            output_dim=1,
+                                            subsample_factor=0.9,
+                                            adaptive_std=False)
         train_data, test_data = get_train_test_data()
         observations, returns = train_data
 
@@ -147,16 +144,15 @@ class TestGaussianCNNRegressorWithModel(TfGraphTestCase):
 
     @pytest.mark.large
     def test_fit_without_trusted_region(self):
-        gcr = GaussianCNNRegressorWithModel(
-            input_shape=(10, 10, 3),
-            num_filters=(3, 6),
-            filter_dims=(3, 3),
-            strides=(1, 1),
-            padding='SAME',
-            hidden_sizes=(32, ),
-            output_dim=1,
-            adaptive_std=False,
-            use_trust_region=False)
+        gcr = GaussianCNNRegressorWithModel(input_shape=(10, 10, 3),
+                                            num_filters=(3, 6),
+                                            filter_dims=(3, 3),
+                                            strides=(1, 1),
+                                            padding='SAME',
+                                            hidden_sizes=(32, ),
+                                            output_dim=1,
+                                            adaptive_std=False,
+                                            use_trust_region=False)
         train_data, test_data = get_train_test_data()
         observations, returns = train_data
 
@@ -175,32 +171,33 @@ class TestGaussianCNNRegressorWithModel(TfGraphTestCase):
     @pytest.mark.parametrize('output_dim', [(1), (2), (3)])
     def test_log_likelihood_sym(self, output_dim):
         input_shape = (28, 28, 3)
-        gcr = GaussianCNNRegressorWithModel(
-            input_shape=input_shape,
-            num_filters=(3, 6),
-            filter_dims=(3, 3),
-            strides=(1, 1),
-            padding='SAME',
-            hidden_sizes=(32, ),
-            output_dim=1,
-            adaptive_std=False,
-            use_trust_region=False)
+        gcr = GaussianCNNRegressorWithModel(input_shape=input_shape,
+                                            num_filters=(3, 6),
+                                            filter_dims=(3, 3),
+                                            strides=(1, 1),
+                                            padding='SAME',
+                                            hidden_sizes=(32, ),
+                                            output_dim=1,
+                                            adaptive_std=False,
+                                            use_trust_region=False)
 
-        new_input_var = tf.placeholder(
-            tf.float32, shape=(None, ) + input_shape)
-        new_ys_var = tf.placeholder(
-            dtype=tf.float32, name='ys', shape=(None, output_dim))
+        new_input_var = tf.placeholder(tf.float32,
+                                       shape=(None, ) + input_shape)
+        new_ys_var = tf.placeholder(dtype=tf.float32,
+                                    name='ys',
+                                    shape=(None, output_dim))
 
         data = np.full(input_shape, 0.5)
         label = np.ones(output_dim)
 
-        outputs = gcr.log_likelihood_sym(
-            new_input_var, new_ys_var, name='ll_sym')
-        ll_from_sym = self.sess.run(
-            outputs, feed_dict={
-                new_input_var: [data],
-                new_ys_var: [label]
-            })
+        outputs = gcr.log_likelihood_sym(new_input_var,
+                                         new_ys_var,
+                                         name='ll_sym')
+        ll_from_sym = self.sess.run(outputs,
+                                    feed_dict={
+                                        new_input_var: [data],
+                                        new_ys_var: [label]
+                                    })
         mean, log_std = gcr._f_pdists([data])
         ll = gcr.model.networks['default'].dist.log_likelihood(
             [label], dict(mean=mean, log_std=log_std))
@@ -211,17 +208,16 @@ class TestGaussianCNNRegressorWithModel(TfGraphTestCase):
                 'LbfgsOptimizer')
     def test_optimizer_args(self, mock_lbfgs):
         lbfgs_args = dict(max_opt_itr=25)
-        gcr = GaussianCNNRegressorWithModel(
-            input_shape=(10, 10, 3),
-            num_filters=(3, 6),
-            filter_dims=(3, 3),
-            strides=(1, 1),
-            padding='SAME',
-            hidden_sizes=(32, ),
-            output_dim=1,
-            optimizer=LbfgsOptimizer,
-            optimizer_args=lbfgs_args,
-            use_trust_region=True)
+        gcr = GaussianCNNRegressorWithModel(input_shape=(10, 10, 3),
+                                            num_filters=(3, 6),
+                                            filter_dims=(3, 3),
+                                            strides=(1, 1),
+                                            padding='SAME',
+                                            hidden_sizes=(32, ),
+                                            output_dim=1,
+                                            optimizer=LbfgsOptimizer,
+                                            optimizer_args=lbfgs_args,
+                                            use_trust_region=True)
 
         assert mock_lbfgs.return_value is gcr._optimizer
 
@@ -229,16 +225,15 @@ class TestGaussianCNNRegressorWithModel(TfGraphTestCase):
 
     def test_is_pickleable(self):
         input_shape = (28, 28, 3)
-        gcr = GaussianCNNRegressorWithModel(
-            input_shape=input_shape,
-            num_filters=(3, 6),
-            filter_dims=(3, 3),
-            strides=(1, 1),
-            padding='SAME',
-            hidden_sizes=(32, ),
-            output_dim=1,
-            adaptive_std=False,
-            use_trust_region=False)
+        gcr = GaussianCNNRegressorWithModel(input_shape=input_shape,
+                                            num_filters=(3, 6),
+                                            filter_dims=(3, 3),
+                                            strides=(1, 1),
+                                            padding='SAME',
+                                            hidden_sizes=(32, ),
+                                            output_dim=1,
+                                            adaptive_std=False,
+                                            use_trust_region=False)
 
         with tf.variable_scope(
                 'GaussianCNNRegressorWithModel/GaussianCNNRegressorModel',
@@ -256,16 +251,15 @@ class TestGaussianCNNRegressorWithModel(TfGraphTestCase):
 
     def test_is_pickleable2(self):
         input_shape = (28, 28, 3)
-        gcr = GaussianCNNRegressorWithModel(
-            input_shape=input_shape,
-            num_filters=(3, 6),
-            filter_dims=(3, 3),
-            strides=(1, 1),
-            padding='SAME',
-            hidden_sizes=(32, ),
-            output_dim=1,
-            adaptive_std=False,
-            use_trust_region=False)
+        gcr = GaussianCNNRegressorWithModel(input_shape=input_shape,
+                                            num_filters=(3, 6),
+                                            filter_dims=(3, 3),
+                                            strides=(1, 1),
+                                            padding='SAME',
+                                            hidden_sizes=(32, ),
+                                            output_dim=1,
+                                            adaptive_std=False,
+                                            use_trust_region=False)
 
         with tf.variable_scope(
                 'GaussianCNNRegressorWithModel/GaussianCNNRegressorModel',

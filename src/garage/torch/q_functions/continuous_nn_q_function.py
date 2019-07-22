@@ -10,7 +10,6 @@ class ContinuousNNQFunction:
     It predicts the Q-value for all actions based on the input state. It uses
     a PyTorch neural network module to fit the function of Q(s, a).
     """
-
     def __init__(self, env_spec, nn_module):
         """
         Initialize class with multiple attributes.

@@ -98,7 +98,6 @@ def sign(x):
 
 class MaskSignals():
     """Context Manager to mask a list of signals."""
-
     def __init__(self, signals):
         self.signals = signals
 

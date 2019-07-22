@@ -33,8 +33,8 @@ def make_her_sample(replay_k, reward_fun):
         # Select which episodes to use
         time_horizon = episode_batch['action'].shape[1]
         rollout_batch_size = episode_batch['action'].shape[0]
-        episode_idxs = np.random.randint(
-            rollout_batch_size, size=sample_batch_size)
+        episode_idxs = np.random.randint(rollout_batch_size,
+                                         size=sample_batch_size)
         # Select time steps to use
         t_samples = np.random.randint(time_horizon, size=sample_batch_size)
         transitions = {
@@ -80,7 +80,6 @@ class HerReplayBuffer(ReplayBuffer):
 
     It constructs hindsight examples using future strategy.
     """
-
     def __init__(self, replay_k, reward_fun, **kwargs):
         self._sample_transitions = make_her_sample(replay_k, reward_fun)
         super(HerReplayBuffer, self).__init__(**kwargs)

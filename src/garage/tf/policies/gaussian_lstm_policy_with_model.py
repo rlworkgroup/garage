@@ -63,7 +63,6 @@ class GaussianLSTMPolicyWithModel(StochasticPolicy2):
             If True, input dimension will be
             (observation dimension + action dimension).
     """
-
     def __init__(self,
                  env_spec,
                  hidden_dim=32,
@@ -126,18 +125,17 @@ class GaussianLSTMPolicyWithModel(StochasticPolicy2):
         self._initialize()
 
     def _initialize(self):
-        obs_ph = tf.placeholder(
-            tf.float32, shape=(None, None, self._input_dim))
-        step_input_var = tf.placeholder(
-            shape=(None, self._input_dim), name='step_input', dtype=tf.float32)
-        step_hidden_var = tf.placeholder(
-            shape=(None, self._hidden_dim),
-            name='step_hidden_input',
-            dtype=tf.float32)
-        step_cell_var = tf.placeholder(
-            shape=(None, self._hidden_dim),
-            name='step_cell_input',
-            dtype=tf.float32)
+        obs_ph = tf.placeholder(tf.float32,
+                                shape=(None, None, self._input_dim))
+        step_input_var = tf.placeholder(shape=(None, self._input_dim),
+                                        name='step_input',
+                                        dtype=tf.float32)
+        step_hidden_var = tf.placeholder(shape=(None, self._hidden_dim),
+                                         name='step_hidden_input',
+                                         dtype=tf.float32)
+        step_cell_var = tf.placeholder(shape=(None, self._hidden_dim),
+                                       name='step_cell_input',
+                                       dtype=tf.float32)
 
         with tf.variable_scope(self.name) as vs:
             self._variable_scope = vs
@@ -177,8 +175,8 @@ class GaussianLSTMPolicyWithModel(StochasticPolicy2):
         if self._state_include_action:
             prev_action_var = state_info_vars['prev_action']
             prev_action_var = tf.cast(prev_action_var, tf.float32)
-            all_input_var = tf.concat(
-                axis=2, values=[obs_var, prev_action_var])
+            all_input_var = tf.concat(axis=2,
+                                      values=[obs_var, prev_action_var])
         else:
             all_input_var = obs_var
 
@@ -207,8 +205,8 @@ class GaussianLSTMPolicyWithModel(StochasticPolicy2):
         if dones is None:
             dones = np.array([True])
         if self.prev_actions is None or len(dones) != len(self.prev_actions):
-            self.prev_actions = np.zeros((len(dones),
-                                          self.action_space.flat_dim))
+            self.prev_actions = np.zeros(
+                (len(dones), self.action_space.flat_dim))
             self.prev_hiddens = np.zeros((len(dones), self._hidden_dim))
             self.prev_cells = np.zeros((len(dones), self._hidden_dim))
 

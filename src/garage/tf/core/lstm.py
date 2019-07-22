@@ -46,8 +46,9 @@ def lstm(name,
     """
     with tf.variable_scope(name):
         hidden_dim = lstm_cell.units
-        output, [hidden, cell] = lstm_cell(
-            step_input_var, states=(step_hidden_var, step_cell_var))
+        output, [hidden,
+                 cell] = lstm_cell(step_input_var,
+                                   states=(step_hidden_var, step_cell_var))
         output = output_nonlinearity_layer(output)
 
         hidden_init_var = tf.get_variable(
@@ -56,12 +57,11 @@ def lstm(name,
             initializer=hidden_state_init,
             trainable=hidden_state_init_trainable,
             dtype=tf.float32)
-        cell_init_var = tf.get_variable(
-            name='initial_cell',
-            shape=(hidden_dim, ),
-            initializer=cell_state_init,
-            trainable=cell_state_init_trainable,
-            dtype=tf.float32)
+        cell_init_var = tf.get_variable(name='initial_cell',
+                                        shape=(hidden_dim, ),
+                                        initializer=cell_state_init,
+                                        trainable=cell_state_init_trainable,
+                                        dtype=tf.float32)
 
         hidden_init_var_b = tf.broadcast_to(
             hidden_init_var, shape=[tf.shape(all_input_var)[0], hidden_dim])
@@ -78,8 +78,8 @@ def lstm(name,
         hcs = tf.scan(
             step,
             elems=shuffled_input,
-            initializer=tf.concat(
-                axis=1, values=[hidden_init_var_b, cell_init_var_b]),
+            initializer=tf.concat(axis=1,
+                                  values=[hidden_init_var_b, cell_init_var_b]),
         )
         hcs = tf.transpose(hcs, (1, 0, 2))
         hs = hcs[:, :, :hidden_dim]

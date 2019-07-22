@@ -13,7 +13,6 @@ class PenaltyLbfgsOptimizer(Serializable):
     Performs constrained optimization via penalized L-BFGS. The penalty term is
     adaptively adjusted to make sure that the constraint is satisfied.
     """
-
     def __init__(self,
                  max_opt_itr=20,
                  initial_penalty=1.0,
@@ -70,8 +69,8 @@ class PenaltyLbfgsOptimizer(Serializable):
             self._constraint_name = constraint_name
 
             def get_opt_output():
-                with tf.name_scope(
-                        'get_opt_output', values=[params, penalized_loss]):
+                with tf.name_scope('get_opt_output',
+                                   values=[params, penalized_loss]):
                     grads = tf.gradients(penalized_loss, params)
                     for idx, (grad, param) in enumerate(zip(grads, params)):
                         if grad is None:

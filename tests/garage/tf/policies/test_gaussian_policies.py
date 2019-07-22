@@ -34,8 +34,8 @@ class TestGaussianPolicies(TfGraphTestCase):
                 discount=0.99,
                 max_kl_step=0.01,
                 optimizer=ConjugateGradientOptimizer,
-                optimizer_args=dict(
-                    hvp_approach=FiniteDifferenceHvp(base_eps=1e-5)),
+                optimizer_args=dict(hvp_approach=FiniteDifferenceHvp(
+                    base_eps=1e-5)),
             )
 
             runner.setup(algo, env)

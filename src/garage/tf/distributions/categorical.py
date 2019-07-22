@@ -19,12 +19,13 @@ class Categorical(Distribution):
         with tf.variable_scope(name, 'Categorical'):
             self._dim = dim
             self._name = name
-            weights_var = tf.placeholder(
-                dtype=tf.float32, shape=(None, dim), name='weights')
+            weights_var = tf.placeholder(dtype=tf.float32,
+                                         shape=(None, dim),
+                                         name='weights')
             self._f_sample = compile_function(
                 inputs=[weights_var],
-                outputs=tf.multinomial(
-                    tf.log(weights_var + 1e-8), num_samples=1)[:, 0],
+                outputs=tf.multinomial(tf.log(weights_var + 1e-8),
+                                       num_samples=1)[:, 0],
             )
 
     @property
@@ -52,9 +53,9 @@ class Categorical(Distribution):
         """
         old_prob = old_dist_info['prob']
         new_prob = new_dist_info['prob']
-        return np.sum(
-            old_prob * (np.log(old_prob + TINY) - np.log(new_prob + TINY)),
-            axis=-1)
+        return np.sum(old_prob *
+                      (np.log(old_prob + TINY) - np.log(new_prob + TINY)),
+                      axis=-1)
 
     def likelihood_ratio_sym(self,
                              x_var,
@@ -86,8 +87,8 @@ class Categorical(Distribution):
             new_prob_var = new_dist_info_vars['prob']
             ndims = old_prob_var.get_shape().ndims
             # Assume layout is N * A
-            return tf.reduce_sum(
-                old_prob_var * (-tf.log(new_prob_var + TINY)), axis=ndims - 1)
+            return tf.reduce_sum(old_prob_var * (-tf.log(new_prob_var + TINY)),
+                                 axis=ndims - 1)
 
     def entropy(self, info):
         probs = info['prob']
@@ -119,5 +120,5 @@ class Categorical(Distribution):
             probs = dist_info['prob']
             samples = tf.multinomial(tf.log(probs + 1e-8), num_samples=1)[:, 0]
 
-            return tf.nn.embedding_lookup(
-                np.eye(self.dim, dtype=np.float32), samples)
+            return tf.nn.embedding_lookup(np.eye(self.dim, dtype=np.float32),
+                                          samples)

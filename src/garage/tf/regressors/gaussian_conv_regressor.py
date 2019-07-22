@@ -31,7 +31,6 @@ class GaussianConvRegressor(LayersPowered, Serializable, Parameterized):
          fc layers.
 
     """
-
     def __init__(self,
                  input_shape,
                  output_dim,
@@ -151,14 +150,15 @@ class GaussianConvRegressor(LayersPowered, Serializable, Parameterized):
             LayersPowered.__init__(self, [l_mean, l_log_std])
 
             xs_var = mean_network.input_layer.input_var
-            ys_var = tf.placeholder(
-                dtype=tf.float32, name='ys', shape=(None, output_dim))
-            old_means_var = tf.placeholder(
-                dtype=tf.float32, name='ys', shape=(None, output_dim))
-            old_log_stds_var = tf.placeholder(
-                dtype=tf.float32,
-                name='old_log_stds',
-                shape=(None, output_dim))
+            ys_var = tf.placeholder(dtype=tf.float32,
+                                    name='ys',
+                                    shape=(None, output_dim))
+            old_means_var = tf.placeholder(dtype=tf.float32,
+                                           name='ys',
+                                           shape=(None, output_dim))
+            old_log_stds_var = tf.placeholder(dtype=tf.float32,
+                                              name='old_log_stds',
+                                              shape=(None, output_dim))
 
             x_mean_var = tf.Variable(
                 np.zeros((1, np.prod(input_shape)), dtype=np.float32),
@@ -180,12 +180,12 @@ class GaussianConvRegressor(LayersPowered, Serializable, Parameterized):
             normalized_xs_var = (xs_var - x_mean_var) / x_std_var
             normalized_ys_var = (ys_var - y_mean_var) / y_std_var
 
-            with tf.name_scope(
-                    self._mean_network_name, values=[normalized_xs_var]):
+            with tf.name_scope(self._mean_network_name,
+                               values=[normalized_xs_var]):
                 normalized_means_var = layers.get_output(
                     l_mean, {mean_network.input_layer: normalized_xs_var})
-            with tf.name_scope(
-                    self._std_network_name, values=[normalized_xs_var]):
+            with tf.name_scope(self._std_network_name,
+                               values=[normalized_xs_var]):
                 normalized_log_stds_var = layers.get_output(
                     l_log_std, {mean_network.input_layer: normalized_xs_var})
 
@@ -197,14 +197,13 @@ class GaussianConvRegressor(LayersPowered, Serializable, Parameterized):
 
             dist = self._dist = DiagonalGaussian(output_dim)
 
-            normalized_dist_info_vars = dict(
-                mean=normalized_means_var, log_std=normalized_log_stds_var)
+            normalized_dist_info_vars = dict(mean=normalized_means_var,
+                                             log_std=normalized_log_stds_var)
 
             mean_kl = tf.reduce_mean(
                 dist.kl_sym(
-                    dict(
-                        mean=normalized_old_means_var,
-                        log_std=normalized_old_log_stds_var),
+                    dict(mean=normalized_old_means_var,
+                         log_std=normalized_old_log_stds_var),
                     normalized_dist_info_vars,
                 ))
 
@@ -324,8 +323,8 @@ class GaussianConvRegressor(LayersPowered, Serializable, Parameterized):
 
         """
         means, log_stds = self._f_pdists(xs)
-        return self._dist.log_likelihood(ys, dict(
-            mean=means, log_std=log_stds))
+        return self._dist.log_likelihood(ys, dict(mean=means,
+                                                  log_std=log_stds))
 
     def log_likelihood_sym(self, x_var, y_var, name=None):
         """
@@ -339,19 +338,19 @@ class GaussianConvRegressor(LayersPowered, Serializable, Parameterized):
         with tf.name_scope(name, 'log_likelihood_sym', [x_var, y_var]):
             normalized_xs_var = (x_var - self._x_mean_var) / self._x_std_var
 
-            with tf.name_scope(
-                    self._mean_network_name, values=[normalized_xs_var]):
+            with tf.name_scope(self._mean_network_name,
+                               values=[normalized_xs_var]):
                 normalized_means_var = layers.get_output(
                     self._l_mean,
                     {self._mean_network.input_layer: normalized_xs_var})
-            with tf.name_scope(
-                    self._std_network_name, values=[normalized_xs_var]):
+            with tf.name_scope(self._std_network_name,
+                               values=[normalized_xs_var]):
                 normalized_log_stds_var = layers.get_output(
                     self._l_log_std,
                     {self._mean_network.input_layer: normalized_xs_var})
 
-            means_var = (
-                normalized_means_var * self._y_std_var + self._y_mean_var)
+            means_var = (normalized_means_var * self._y_std_var +
+                         self._y_mean_var)
             log_stds_var = normalized_log_stds_var + tf.log(self._y_std_var)
 
             return self._dist.log_likelihood_sym(

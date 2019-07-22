@@ -37,9 +37,9 @@ class RecurrentCategorical(Distribution):
         """
         old_prob = old_dist_info['prob']
         new_prob = new_dist_info['prob']
-        return np.sum(
-            old_prob * (np.log(old_prob + TINY) - np.log(new_prob + TINY)),
-            axis=2)
+        return np.sum(old_prob *
+                      (np.log(old_prob + TINY) - np.log(new_prob + TINY)),
+                      axis=2)
 
     def likelihood_ratio_sym(self,
                              x_var,

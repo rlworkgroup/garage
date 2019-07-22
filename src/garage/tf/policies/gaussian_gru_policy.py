@@ -74,8 +74,8 @@ class GaussianGRUPolicy(StochasticPolicy, LayersPowered, Serializable):
                             tf.shape(input)[0],
                             tf.shape(input)[1], feature_dim
                         ])),
-                    shape_op=lambda _, input_shape: (input_shape[
-                        0], input_shape[1], feature_dim))
+                    shape_op=lambda _, input_shape:
+                    (input_shape[0], input_shape[1], feature_dim))
 
             if std_share_network:
                 mean_network = GRUNetwork(
@@ -92,25 +92,22 @@ class GaussianGRUPolicy(StochasticPolicy, LayersPowered, Serializable):
                     gru_layer_cls=gru_layer_cls,
                     name='gru_mean_network')
 
-                l_mean = L.SliceLayer(
-                    mean_network.output_layer,
-                    slice(action_dim),
-                    name='mean_slice')
+                l_mean = L.SliceLayer(mean_network.output_layer,
+                                      slice(action_dim),
+                                      name='mean_slice')
 
-                l_step_mean = L.SliceLayer(
-                    mean_network.step_output_layer,
-                    slice(action_dim),
-                    name='step_mean_slice')
+                l_step_mean = L.SliceLayer(mean_network.step_output_layer,
+                                           slice(action_dim),
+                                           name='step_mean_slice')
 
-                l_log_std = L.SliceLayer(
-                    mean_network.output_layer,
-                    slice(action_dim, 2 * action_dim),
-                    name='log_std_slice')
+                l_log_std = L.SliceLayer(mean_network.output_layer,
+                                         slice(action_dim, 2 * action_dim),
+                                         name='log_std_slice')
 
-                l_step_log_std = L.SliceLayer(
-                    mean_network.step_output_layer,
-                    slice(action_dim, 2 * action_dim),
-                    name='step_log_std_slice')
+                l_step_log_std = L.SliceLayer(mean_network.step_output_layer,
+                                              slice(action_dim,
+                                                    2 * action_dim),
+                                              name='step_log_std_slice')
             else:
                 mean_network = GRUNetwork(
                     input_shape=(feature_dim, ),
@@ -151,8 +148,9 @@ class GaussianGRUPolicy(StochasticPolicy, LayersPowered, Serializable):
             self.l_input = l_input
             self.state_include_action = state_include_action
 
-            flat_input_var = tf.placeholder(
-                dtype=tf.float32, shape=(None, input_dim), name='flat_input')
+            flat_input_var = tf.placeholder(dtype=tf.float32,
+                                            shape=(None, input_dim),
+                                            name='flat_input')
             if feature_network is None:
                 feature_var = flat_input_var
             else:
@@ -206,33 +204,31 @@ class GaussianGRUPolicy(StochasticPolicy, LayersPowered, Serializable):
             obs_var = tf.reshape(obs_var, tf.stack([n_batches, n_steps, -1]))
             if self.state_include_action:
                 prev_action_var = state_info_vars['prev_action']
-                all_input_var = tf.concat(
-                    axis=2, values=[obs_var, prev_action_var])
+                all_input_var = tf.concat(axis=2,
+                                          values=[obs_var, prev_action_var])
             else:
                 all_input_var = obs_var
             if self.feature_network is None:
-                with tf.name_scope(
-                        self._mean_network_name, values=[all_input_var]):
+                with tf.name_scope(self._mean_network_name,
+                                   values=[all_input_var]):
                     means = L.get_output(self.mean_network.output_layer,
                                          {self.l_input: all_input_var})
-                with tf.name_scope(
-                        self._std_network_name, values=[all_input_var]):
+                with tf.name_scope(self._std_network_name,
+                                   values=[all_input_var]):
                     log_stds = L.get_output(self.l_log_std,
                                             {self.l_input: all_input_var})
             else:
                 flat_input_var = tf.reshape(all_input_var,
                                             (-1, self.input_dim))
-                with tf.name_scope(
-                        self._mean_network_name,
-                        values=[all_input_var, flat_input_var]):
+                with tf.name_scope(self._mean_network_name,
+                                   values=[all_input_var, flat_input_var]):
                     means = L.get_output(
                         self.mean_network.output_layer, {
                             self.l_input: all_input_var,
                             self.feature_network.input_layer: flat_input_var
                         })
-                with tf.name_scope(
-                        self._mean_network_name,
-                        values=[all_input_var, flat_input_var]):
+                with tf.name_scope(self._mean_network_name,
+                                   values=[all_input_var, flat_input_var]):
                     log_stds = L.get_output(
                         self.l_log_std, {
                             self.l_input: all_input_var,
@@ -249,8 +245,8 @@ class GaussianGRUPolicy(StochasticPolicy, LayersPowered, Serializable):
             dones = [True]
         dones = np.asarray(dones)
         if self.prev_actions is None or len(dones) != len(self.prev_actions):
-            self.prev_actions = np.zeros((len(dones),
-                                          self.action_space.flat_dim))
+            self.prev_actions = np.zeros(
+                (len(dones), self.action_space.flat_dim))
             self.prev_hiddens = np.zeros((len(dones), self.hidden_dim))
 
         self.prev_actions[dones] = 0.

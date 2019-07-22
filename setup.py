@@ -70,7 +70,7 @@ extras['dev'] = [
     'recommonmark',
     'sphinx',
     'sphinx_rtd_theme',
-    'yapf',
+    'yapf==0.25.0',
 ]
 
 with open('README.md') as f:
