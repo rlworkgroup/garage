@@ -4,7 +4,7 @@ import tensorflow as tf
 
 from garage.misc.overrides import overrides
 from garage.misc.tensor_utils import normalize_pixel_batch
-from garage.tf.algos.off_policy_rl_algorithm import OffPolicyRLAlgorithm
+from garage.np.algos.off_policy_rl_algorithm import OffPolicyRLAlgorithm
 from garage.tf.misc import tensor_utils
 
 

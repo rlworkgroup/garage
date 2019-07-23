@@ -1,4 +1,4 @@
-from garage.tf.algos import OffPolicyRLAlgorithm
+from garage.np.algos import OffPolicyRLAlgorithm
 
 
 class DummyOffPolicyAlgo(OffPolicyRLAlgorithm):
