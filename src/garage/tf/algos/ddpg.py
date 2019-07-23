@@ -6,7 +6,7 @@ import tensorflow as tf
 import tensorflow.contrib as tc
 
 from garage.misc.overrides import overrides
-from garage.tf.algos.off_policy_rl_algorithm import OffPolicyRLAlgorithm
+from garage.np.algos.off_policy_rl_algorithm import OffPolicyRLAlgorithm
 from garage.tf.misc import tensor_utils
 
 
