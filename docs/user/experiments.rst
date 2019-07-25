@@ -6,7 +6,7 @@ Running Experiments
 ===================
 
 
-We use object oriented abstractions for different components required for an experiment. To run an experiment, simply construct the corresponding objects for the environment, algorithm, etc. and call the appropriate train method on the algorithm. A sample script is provided in :code:`examples/trpo_cartpole.py`. The code is also pasted below for a quick glance:
+We use object oriented abstractions for different components required for an experiment. To run an experiment, simply construct the corresponding objects for the environment, algorithm, etc. and call the appropriate train method on the algorithm. A sample script is provided in :code:`examples/tf/trpo_cartpole.py`. The code is also pasted below for a quick glance:
 
 .. code-block:: python
 
