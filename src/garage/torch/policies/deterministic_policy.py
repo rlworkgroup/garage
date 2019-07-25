@@ -31,16 +31,21 @@ class DeterministicPolicy:
 
     def forward(self, input_val):
         """Forward method."""
+        input_val = torch.FloatTensor(input_val)
         return self._nn_module(input_val)
 
     def get_action(self, observation):
         """Return a single action."""
         with torch.no_grad():
             x = self.forward(observation.unsqueeze(0))
-            return x.squeeze(0).numpy()
+            return x.squeeze(0).numpy(), dict()
 
     def get_actions(self, observations):
         """Return multiple actions."""
         with torch.no_grad():
             x = self.forward(observations)
-            return x.numpy()
+            return x.numpy(), dict()
+
+    def reset(self, dones=None):
+        """Reset policy."""
+        pass
