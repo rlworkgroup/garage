@@ -88,5 +88,15 @@ def test_experiment_with_not_callable_task():
 
 
 def test_experiment_with_variant():
-    variant = {'exp_name': 'test'}
-    run_experiment(dummy_func, variant=variant)
+    # Note: exp_name in variant does nothing.
+    variant = {'exp_name': 'test_name'}
+    exp_path = os.path.join(os.getcwd(), 'data/local/test-prefix')
+    pathlib.Path(exp_path).mkdir(parents=True, exist_ok=True)
+
+    old_folder_contents = set(os.listdir(exp_path))
+    run_experiment(dummy_func, exp_prefix='test_prefix', variant=variant)
+    new_folder_contents = set(os.listdir(exp_path))
+    folder_content_diff = new_folder_contents - old_folder_contents
+    assert len(folder_content_diff) == 1
+    exp_folder_name = folder_content_diff.pop()
+    assert exp_folder_name.startswith('test_prefix')
