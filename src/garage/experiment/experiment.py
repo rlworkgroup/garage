@@ -218,7 +218,6 @@ def run_experiment(method_call=None,
                    variant=None,
                    use_tf=False,
                    use_gpu=False,
-                   use_cloudpickle=None,
                    pre_commands=None,
                    **kwargs):
     """Serialize the method call and run the experiment using the
@@ -241,20 +240,19 @@ def run_experiment(method_call=None,
         use_gpu (bool): Whether the launched task is running on GPU.
             This triggers a few configuration changes including certain
             environment flags.
-        use_cloudpickle (bool): Whether to use cloudpickle or not.
         pre_commands (str): Pre commands to run the experiment.
 
     """
-    assert method_call is not None or batch_tasks is not None, (
-        'Must provide at least either method_call or batch_tasks')
+    if method_call is None and batch_tasks is None:
+        raise Exception(
+            'Must provide at least either method_call or batch_tasks')
 
-    if use_cloudpickle is None:
-        for task in (batch_tasks or [method_call]):
-            assert hasattr(task, '__call__')
-            use_cloudpickle = True
-            # ensure variant exists
-            if variant is None:
-                variant = dict()
+    for task in (batch_tasks or [method_call]):
+        if not hasattr(task, '__call__'):
+            raise ValueError('batch_tasks should be callable')
+        # ensure variant exists
+        if variant is None:
+            variant = dict()
 
     if batch_tasks is None:
         batch_tasks = [
@@ -265,8 +263,7 @@ def run_experiment(method_call=None,
                 exp_name=exp_name,
                 log_dir=log_dir,
                 env=env,
-                variant=variant,
-                use_cloudpickle=use_cloudpickle)
+                variant=variant)
         ]
 
     global exp_count
@@ -279,11 +276,7 @@ def run_experiment(method_call=None,
 
     for task in batch_tasks:
         call = task.pop('method_call')
-        if use_cloudpickle:
-            import cloudpickle
-            data = base64.b64encode(cloudpickle.dumps(call)).decode('utf-8')
-        else:
-            data = base64.b64encode(pickle.dumps(call)).decode('utf-8')
+        data = base64.b64encode(pickle.dumps(call)).decode('utf-8')
         task['args_data'] = data
         exp_count += 1
 

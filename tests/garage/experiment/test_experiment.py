@@ -1,6 +1,8 @@
 import os
 import pathlib
 
+import pytest
+
 from garage.experiment.experiment import concretize, variant, VariantGenerator
 from garage.experiment.experiment import run_experiment
 
@@ -73,3 +75,18 @@ def test_default_log_dir():
     run_experiment(dummy_func)
 
     assert len(os.listdir(default_path)) == folder_num + 1
+
+
+def test_experiment_with_none_task():
+    with pytest.raises(Exception):
+        run_experiment()
+
+
+def test_experiment_with_not_callable_task():
+    with pytest.raises(ValueError):
+        run_experiment(1)
+
+
+def test_experiment_with_variant():
+    variant = {'exp_name': 'test'}
+    run_experiment(dummy_func, variant=variant)

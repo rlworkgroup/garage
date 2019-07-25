@@ -1,6 +1,7 @@
 import base64
+import pickle
 
-import cloudpickle
+import pytest
 
 from garage.experiment import SnapshotConfig
 from garage.experiment.experiment_wrapper import run_experiment
@@ -16,15 +17,17 @@ def method_call(snapshot_config, variant_data, from_dir, from_epoch):
     assert from_epoch == 'first'
 
 
+def invalid_method_call():
+    pass
+
+
 class TestExperimentWrapper:
     def test_experiment_wrapper_method_call(self):
-        data = base64.b64encode(cloudpickle.dumps(method_call)).decode('utf-8')
+        data = base64.b64encode(pickle.dumps(method_call)).decode('utf-8')
         args = [
             '',
             '--args_data',
             data,
-            '--use_cloudpickle',
-            'True',
             '--log_dir',
             'data/',
             '--resume_from_dir',
@@ -33,3 +36,10 @@ class TestExperimentWrapper:
             'first',
         ]
         run_experiment(args)
+
+    def test_experiment_wrapper_invalid_method_call(self):
+        data = base64.b64encode(
+            pickle.dumps(invalid_method_call)).decode('utf-8')
+        args = ['', '--args_data', data]
+        with pytest.raises(BaseException):
+            run_experiment(args)
