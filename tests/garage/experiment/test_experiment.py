@@ -67,6 +67,10 @@ def dummy_func(*_):
 
 
 def test_default_log_dir():
+    # Because this test uses the default log directory, if any other tests are
+    # run in parallel with it that use this directory, it will fail.
+    # For this reason, all tests which use run_experiment, must pass a
+    # non-default exp_prefix or log_dir.
     default_path = os.path.join(os.getcwd(), 'data/local/experiment')
     pathlib.Path(default_path).mkdir(parents=True, exist_ok=True)
 
@@ -88,5 +92,16 @@ def test_experiment_with_not_callable_task():
 
 
 def test_experiment_with_variant():
-    variant = {'exp_name': 'test'}
-    run_experiment(dummy_func, variant=variant)
+    # Note: exp_name in variant does nothing.
+    variant = {'exp_name': 'test_name'}
+    exp_path = os.path.join(os.getcwd(), 'data/local/test-prefix')
+    pathlib.Path(exp_path).mkdir(parents=True, exist_ok=True)
+
+    old_folder_contents = set(os.listdir(exp_path))
+    # Pass a non-default exp_prefix, so test_default_log_dir is safe.
+    run_experiment(dummy_func, exp_prefix='test_prefix', variant=variant)
+    new_folder_contents = set(os.listdir(exp_path))
+    folder_content_diff = new_folder_contents - old_folder_contents
+    assert len(folder_content_diff) == 1
+    exp_folder_name = folder_content_diff.pop()
+    assert exp_folder_name.startswith('test_prefix')
