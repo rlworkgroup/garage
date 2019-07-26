@@ -59,6 +59,9 @@ class SamplerWorkerTF(SamplerWorker):
                  local=False):
         self.sess = tf.get_default_session()
         if not self.sess:
+            # create a tf session for all
+            # sampler worker processes in
+            # order to execute the policy.
             self.sess = tf.Session()
             self.sess.__enter__()
         super().__init__(

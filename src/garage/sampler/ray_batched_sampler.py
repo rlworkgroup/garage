@@ -75,6 +75,9 @@ class RaySampler(BaseSampler):
         completed_samples = 0
         traj = []
         updating_workers = []
+
+        # update the policy params of each worker before sampling
+        # for the current iteration
         self._idle_worker_ids = list(range(self._num_workers))
         curr_policy_params = self._algo.policy.get_param_values()
         params_id = ray.put(curr_policy_params)
@@ -82,16 +85,29 @@ class RaySampler(BaseSampler):
             worker_id = self._idle_worker_ids.pop()
             worker = self._all_workers[worker_id]
             updating_workers.append(worker.set_agent.remote(params_id))
+
         while completed_samples < num_samples:
-            updated, updating_workers = ray.wait(
-                updating_workers, num_returns=1, timeout=0.1)
-            upd = [ray.get(up) for up in updated]
-            self._idle_worker_ids.extend(upd)
+            # if there are workers still being updated, check
+            # which ones are still updating and take the workers that
+            # are done updating, and start collecting trajectories on
+            # those workers.
+            if updating_workers:
+                updated, updating_workers = ray.wait(
+                    updating_workers, num_returns=1, timeout=0.1)
+                upd = [ray.get(up) for up in updated]
+                self._idle_worker_ids.extend(upd)
+
+            # if there are idle workers, use them to collect trajectories
+            # mark the newly busy workers as active
             while self._idle_worker_ids:
                 idle_worker_id = self._idle_worker_ids.pop()
                 self._active_worker_ids.append(idle_worker_id)
                 worker = self._all_workers[idle_worker_id]
                 self._active_workers.append(worker.rollout.remote())
+
+            # check which workers are done/not done collecting a sample
+            # if any are done, send them to process the collected trajectory
+            # if they are not, keep checking if they are done
             ready, not_ready = ray.wait(
                 self._active_workers, num_returns=1, timeout=0.001)
             self._active_workers = not_ready
@@ -109,6 +125,13 @@ class RaySampler(BaseSampler):
         ray.shutdown()
 
     def _process_trajectory(self, result):
+        """Collect trajectory from ray object store.
+
+        Converts that trajectory to garage friendly format.
+
+        Args:
+            - result: ray object id of ready to be collected trajectory.
+        """
         trajectory = ray.get(result)
         ready_worker_id = trajectory[0]
         self._active_worker_ids.remove(ready_worker_id)
