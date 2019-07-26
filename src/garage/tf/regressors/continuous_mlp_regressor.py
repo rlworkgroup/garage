@@ -42,7 +42,7 @@ class ContinuousMLPRegressor(LayersPowered, Serializable, Parameterized):
         Parameterized.__init__(self)
         Serializable.quick_init(self, locals())
 
-        with tf.variable_scope(name, 'ContinuousMLPRegressor'):
+        with tf.compat.v1.variable_scope(name, 'ContinuousMLPRegressor'):
             if optimizer_args is None:
                 optimizer_args = dict()
 
@@ -69,14 +69,14 @@ class ContinuousMLPRegressor(LayersPowered, Serializable, Parameterized):
             LayersPowered.__init__(self, [l_out])
 
             xs_var = network.input_layer.input_var
-            ys_var = tf.placeholder(
+            ys_var = tf.compat.v1.placeholder(
                 dtype=tf.float32, shape=[None, output_dim], name='ys')
 
-            x_mean_var = tf.get_variable(
+            x_mean_var = tf.compat.v1.get_variable(
                 name='x_mean',
                 shape=(1, ) + input_shape,
                 initializer=tf.constant_initializer(0., dtype=tf.float32))
-            x_std_var = tf.get_variable(
+            x_std_var = tf.compat.v1.get_variable(
                 name='x_std',
                 shape=(1, ) + input_shape,
                 initializer=tf.constant_initializer(1., dtype=tf.float32))
@@ -118,10 +118,10 @@ class ContinuousMLPRegressor(LayersPowered, Serializable, Parameterized):
             # recompute normalizing constants for inputs
             new_mean = np.mean(xs, axis=0, keepdims=True)
             new_std = np.std(xs, axis=0, keepdims=True) + 1e-8
-            tf.get_default_session().run(
+            tf.compat.v1.get_default_session().run(
                 tf.group(
-                    tf.assign(self.x_mean_var, new_mean),
-                    tf.assign(self.x_std_var, new_std),
+                    tf.compat.v1.assign(self.x_mean_var, new_mean),
+                    tf.compat.v1.assign(self.x_std_var, new_std),
                 ))
         inputs = [xs, ys]
         loss_before = self.optimizer.loss(inputs)

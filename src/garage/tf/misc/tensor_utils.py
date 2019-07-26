@@ -7,7 +7,7 @@ import tensorflow as tf
 
 def compile_function(inputs, outputs, log_name=None):
     def run(*input_vals):
-        sess = tf.get_default_session()
+        sess = tf.compat.v1.get_default_session()
         return sess.run(outputs, feed_dict=dict(list(zip(inputs, input_vals))))
 
     return run
@@ -35,10 +35,11 @@ def get_target_ops(variables, target_variables, tau=None):
     init_ops = []
     assert len(variables) == len(target_variables)
     for var, target_var in zip(variables, target_variables):
-        init_ops.append(tf.assign(target_var, var))
+        init_ops.append(tf.compat.v1.assign(target_var, var))
         if tau is not None:
             update_ops.append(
-                tf.assign(target_var, tau * var + (1.0 - tau) * target_var))
+                tf.compat.v1.assign(target_var,
+                                    tau * var + (1.0 - tau) * target_var))
 
     if tau is not None:
         return init_ops, update_ops
@@ -59,7 +60,7 @@ def filter_valids(t, valid, name='filter_valids'):
     # 'valid' is either 0 or 1 with dtype of tf.float32
     # Must round before cast to prevent floating-error
     return tf.dynamic_partition(
-        t, tf.to_int32(tf.round(valid)), 2, name=name)[1]
+        t, tf.cast(tf.round(valid), tf.int32), 2, name=name)[1]
 
 
 def filter_valids_dict(d, valid, name=None):
@@ -103,7 +104,8 @@ def unflatten_tensor_variables(flatarr, shapes, symb_arrs):
 
 
 def new_tensor(name, ndim, dtype):
-    return tf.placeholder(dtype=dtype, shape=[None] * ndim, name=name)
+    return tf.compat.v1.placeholder(
+        dtype=dtype, shape=[None] * ndim, name=name)
 
 
 def new_tensor_like(name, arr_like):
@@ -236,7 +238,7 @@ def compute_advantages(discount,
             float(discount) * float(gae_lambda),
             dtype=tf.float32,
             shape=[max_len, 1, 1])
-        advantage_filter = tf.cumprod(gamma_lambda, exclusive=True)
+        advantage_filter = tf.compat.v1.cumprod(gamma_lambda, exclusive=True)
 
         # Calculate deltas
         pad = tf.zeros_like(baselines[:, :1])
@@ -272,7 +274,7 @@ def discounted_returns(discount, max_len, rewards, name=None):
                        [discount, max_len, rewards]):
         gamma = tf.constant(
             float(discount), dtype=tf.float32, shape=[max_len, 1, 1])
-        return_filter = tf.cumprod(gamma, exclusive=True)
+        return_filter = tf.math.cumprod(gamma, exclusive=True)
         rewards_pad = tf.expand_dims(
             tf.concat([rewards, tf.zeros_like(rewards[:, :-1])], axis=1),
             axis=2)

@@ -34,12 +34,12 @@ def gru(name,
         hidden (tf.Tensor): Step hidden state.
         hidden_init_var (tf.Tensor): Initial hidden state.
     """
-    with tf.variable_scope(name):
+    with tf.compat.v1.variable_scope(name):
         hidden_dim = gru_cell.units
         output, [hidden] = gru_cell(step_input_var, states=[step_hidden_var])
         output = output_nonlinearity_layer(output)
 
-        hidden_init_var = tf.get_variable(
+        hidden_init_var = tf.compat.v1.get_variable(
             name='initial_hidden',
             shape=(hidden_dim, ),
             initializer=hidden_state_init,

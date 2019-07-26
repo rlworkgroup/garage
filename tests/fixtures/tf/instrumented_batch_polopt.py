@@ -29,10 +29,10 @@ class InstrumentedBatchPolopt(BatchPolopt):
         try:
             created_session = True if (sess is None) else False
             if sess is None:
-                sess = tf.Session()
+                sess = tf.compat.v1.Session()
                 sess.__enter__()
 
-            sess.run(tf.global_variables_initializer())
+            sess.run(tf.compat.v1.global_variables_initializer())
             conn.send(ExpLifecycle.START)
             self.start_worker(sess)
             start_time = time.time()

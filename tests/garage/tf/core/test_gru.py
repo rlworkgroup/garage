@@ -13,7 +13,7 @@ class TestGRU(TfGraphTestCase):
         self.batch_size = 2
         self.hidden_dim = 2
 
-        self.step_hidden_var = tf.placeholder(
+        self.step_hidden_var = tf.compat.v1.placeholder(
             shape=(self.batch_size, self.hidden_dim),
             name='initial_hidden',
             dtype=tf.float32)
@@ -48,15 +48,15 @@ class TestGRU(TfGraphTestCase):
         obs_inputs = np.full((self.batch_size, time_step, input_dim), 1.)
         obs_input = np.full((self.batch_size, input_dim), 1.)
 
-        input_var = tf.placeholder(
+        input_var = tf.compat.v1.placeholder(
             tf.float32, shape=(None, None, input_dim), name='input')
-        step_input_var = tf.placeholder(
+        step_input_var = tf.compat.v1.placeholder(
             tf.float32, shape=(None, input_dim), name='step_input')
         output_nonlinearity = tf.keras.layers.Dense(
             units=output_dim,
             activation=None,
             kernel_initializer=tf.constant_initializer(1))
-        with tf.variable_scope('GRU'):
+        with tf.compat.v1.variable_scope('GRU'):
             self.gru = gru(
                 all_input_var=input_var,
                 name='gru',
@@ -66,7 +66,7 @@ class TestGRU(TfGraphTestCase):
                 hidden_state_init=tf.constant_initializer(hidden_init),
                 output_nonlinearity_layer=output_nonlinearity)
 
-        self.sess.run(tf.global_variables_initializer())
+        self.sess.run(tf.compat.v1.global_variables_initializer())
 
         # Compute output by doing t step() on the gru cell
         outputs_t, output_t, h_t, hidden_init = self.gru
@@ -109,15 +109,15 @@ class TestGRU(TfGraphTestCase):
         obs_inputs = np.full((self.batch_size, time_step, input_dim), 1.)
         obs_input = np.full((self.batch_size, input_dim), 1.)
 
-        input_var = tf.placeholder(
+        input_var = tf.compat.v1.placeholder(
             tf.float32, shape=(None, None, input_dim), name='input')
-        step_input_var = tf.placeholder(
+        step_input_var = tf.compat.v1.placeholder(
             tf.float32, shape=(None, input_dim), name='step_input')
         output_nonlinearity = tf.keras.layers.Dense(
             units=output_dim,
             activation=None,
             kernel_initializer=tf.constant_initializer(1))
-        with tf.variable_scope('GRU'):
+        with tf.compat.v1.variable_scope('GRU'):
             self.gru = gru(
                 all_input_var=input_var,
                 name='gru',
@@ -127,7 +127,7 @@ class TestGRU(TfGraphTestCase):
                 hidden_state_init=tf.constant_initializer(hidden_init),
                 output_nonlinearity_layer=output_nonlinearity)
 
-        self.sess.run(tf.global_variables_initializer())
+        self.sess.run(tf.compat.v1.global_variables_initializer())
 
         # Compute output by doing t step() on the gru cell
         outputs_t, output_t, h_t, hidden_init = self.gru
@@ -199,15 +199,15 @@ class TestGRU(TfGraphTestCase):
         obs_inputs = np.full((self.batch_size, time_step, input_dim), 1.)
         obs_input = np.full((self.batch_size, input_dim), 1.)
 
-        input_var = tf.placeholder(
+        input_var = tf.compat.v1.placeholder(
             tf.float32, shape=(None, None, input_dim), name='input')
-        step_input_var = tf.placeholder(
+        step_input_var = tf.compat.v1.placeholder(
             tf.float32, shape=(None, input_dim), name='step_input')
         output_nonlinearity = tf.keras.layers.Dense(
             units=output_dim,
             activation=None,
             kernel_initializer=tf.constant_initializer(1))
-        with tf.variable_scope('GRU'):
+        with tf.compat.v1.variable_scope('GRU'):
             self.gru = gru(
                 all_input_var=input_var,
                 name='gru',
@@ -217,7 +217,7 @@ class TestGRU(TfGraphTestCase):
                 hidden_state_init_trainable=True,
                 output_nonlinearity_layer=output_nonlinearity)
 
-        self.sess.run(tf.global_variables_initializer())
+        self.sess.run(tf.compat.v1.global_variables_initializer())
 
         # Compute output by doing t step() on the gru cell
         outputs_t, output_t, h_t, hidden_init = self.gru
@@ -229,9 +229,9 @@ class TestGRU(TfGraphTestCase):
                                            step_input_var: obs_input,
                                            self.step_hidden_var: hidden,
                                        })  # noqa: E126
-        with tf.variable_scope('GRU/gru', reuse=True):
-            hidden_init_var = tf.get_variable(name='initial_hidden')
-            assert hidden_init_var in tf.trainable_variables()
+        with tf.compat.v1.variable_scope('GRU/gru', reuse=True):
+            hidden_init_var = tf.compat.v1.get_variable(name='initial_hidden')
+            assert hidden_init_var in tf.compat.v1.trainable_variables()
 
         full_output1 = self.sess.run(
             outputs_t, feed_dict={input_var: obs_inputs})
@@ -266,15 +266,15 @@ class TestGRU(TfGraphTestCase):
         obs_inputs = np.full((self.batch_size, time_step, input_dim), 1.)
         obs_input = np.full((self.batch_size, input_dim), 1.)
 
-        input_var = tf.placeholder(
+        input_var = tf.compat.v1.placeholder(
             tf.float32, shape=(None, None, input_dim), name='input')
-        step_input_var = tf.placeholder(
+        step_input_var = tf.compat.v1.placeholder(
             tf.float32, shape=(None, input_dim), name='step_input')
         output_nonlinearity = tf.keras.layers.Dense(
             units=output_dim,
             activation=None,
             kernel_initializer=tf.constant_initializer(1))
-        with tf.variable_scope('GRU'):
+        with tf.compat.v1.variable_scope('GRU'):
             self.gru = gru(
                 all_input_var=input_var,
                 name='gru',
@@ -283,7 +283,7 @@ class TestGRU(TfGraphTestCase):
                 step_hidden_var=self.step_hidden_var,
                 output_nonlinearity_layer=output_nonlinearity)
 
-        self.sess.run(tf.global_variables_initializer())
+        self.sess.run(tf.compat.v1.global_variables_initializer())
 
         # Compute output by doing t step() on the gru cell
         outputs_t, output_t, h_t, hidden_init = self.gru
@@ -347,15 +347,15 @@ class TestGRU(TfGraphTestCase):
         obs_inputs = np.full((self.batch_size, time_step, input_dim), 1.)
         obs_input = np.full((self.batch_size, input_dim), 1.)
 
-        input_var = tf.placeholder(
+        input_var = tf.compat.v1.placeholder(
             tf.float32, shape=(None, None, input_dim), name='input')
-        step_input_var = tf.placeholder(
+        step_input_var = tf.compat.v1.placeholder(
             tf.float32, shape=(None, input_dim), name='step_input')
         output_nonlinearity = tf.keras.layers.Dense(
             units=output_dim,
             activation=None,
             kernel_initializer=tf.constant_initializer(1))
-        with tf.variable_scope('GRU'):
+        with tf.compat.v1.variable_scope('GRU'):
             self.gru = gru(
                 all_input_var=input_var,
                 name='gru',
@@ -365,14 +365,14 @@ class TestGRU(TfGraphTestCase):
                 hidden_state_init=tf.constant_initializer(hidden_init),
                 output_nonlinearity_layer=output_nonlinearity)
 
-        self.sess.run(tf.global_variables_initializer())
+        self.sess.run(tf.compat.v1.global_variables_initializer())
 
         # Create a RNN and compute the entire outputs
         rnn_layer = tf.keras.layers.RNN(
             cell=self.gru_cell, return_sequences=True, return_state=True)
 
         # Set initial state to all 0s
-        hidden_var = tf.get_variable(
+        hidden_var = tf.compat.v1.get_variable(
             name='initial_hidden',
             shape=(self.batch_size, self.hidden_dim),
             initializer=tf.constant_initializer(hidden_init),
@@ -381,7 +381,7 @@ class TestGRU(TfGraphTestCase):
         outputs, hiddens = rnn_layer(input_var, initial_state=[hidden_var])
         outputs = output_nonlinearity(outputs)
 
-        self.sess.run(tf.global_variables_initializer())
+        self.sess.run(tf.compat.v1.global_variables_initializer())
 
         outputs, hiddens = self.sess.run([outputs, hiddens],
                                          feed_dict={input_var: obs_inputs})

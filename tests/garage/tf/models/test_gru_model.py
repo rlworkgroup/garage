@@ -20,9 +20,9 @@ class TestGRUModel(TfGraphTestCase):
             (self.batch_size, self.time_step, self.feature_shape), 1.)
         self.obs_input = np.full((self.batch_size, self.feature_shape), 1.)
 
-        self.input_var = tf.placeholder(
+        self.input_var = tf.compat.v1.placeholder(
             tf.float32, shape=(None, None, self.feature_shape), name='input')
-        self.step_input_var = tf.placeholder(
+        self.step_input_var = tf.compat.v1.placeholder(
             tf.float32, shape=(None, self.feature_shape), name='input')
 
     @pytest.mark.parametrize('output_dim, hidden_dim', [(1, 1), (1, 2),
@@ -37,7 +37,7 @@ class TestGRUModel(TfGraphTestCase):
             recurrent_w_init=tf.constant_initializer(1),
             output_w_init=tf.constant_initializer(1))
 
-        step_hidden_var = tf.placeholder(
+        step_hidden_var = tf.compat.v1.placeholder(
             shape=(self.batch_size, hidden_dim),
             name='step_hidden',
             dtype=tf.float32)
@@ -52,13 +52,13 @@ class TestGRUModel(TfGraphTestCase):
 
     def test_is_pickleable(self):
         model = GRUModel(output_dim=1, hidden_dim=1)
-        step_hidden_var = tf.placeholder(
+        step_hidden_var = tf.compat.v1.placeholder(
             shape=(self.batch_size, 1), name='step_hidden', dtype=tf.float32)
         model.build(self.input_var, self.step_input_var, step_hidden_var)
 
         # assign bias to all one
-        with tf.variable_scope('GRUModel/gru', reuse=True):
-            init_hidden = tf.get_variable('initial_hidden')
+        with tf.compat.v1.variable_scope('GRUModel/gru', reuse=True):
+            init_hidden = tf.compat.v1.get_variable('initial_hidden')
 
         init_hidden.load(tf.ones_like(init_hidden).eval())
 
@@ -79,17 +79,17 @@ class TestGRUModel(TfGraphTestCase):
             })
         # yapf: enable
         h = pickle.dumps(model)
-        with tf.Session(graph=tf.Graph()) as sess:
-            input_var = tf.placeholder(tf.float32, shape=(None, 5))
+        with tf.compat.v1.Session(graph=tf.Graph()) as sess:
+            input_var = tf.compat.v1.placeholder(tf.float32, shape=(None, 5))
             model_pickled = pickle.loads(h)
 
-            input_var = tf.placeholder(
+            input_var = tf.compat.v1.placeholder(
                 tf.float32,
                 shape=(None, None, self.feature_shape),
                 name='input')
-            step_input_var = tf.placeholder(
+            step_input_var = tf.compat.v1.placeholder(
                 tf.float32, shape=(None, self.feature_shape), name='input')
-            step_hidden_var = tf.placeholder(
+            step_hidden_var = tf.compat.v1.placeholder(
                 shape=(self.batch_size, 1),
                 name='initial_hidden',
                 dtype=tf.float32)

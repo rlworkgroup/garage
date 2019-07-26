@@ -33,7 +33,7 @@ def create_param(spec, shape, name, trainable=True, regularizable=True):
             return tf.constant(0.)
 
         regularizer = f
-    return tf.get_variable(
+    return tf.compat.v1.get_variable(
         name=name,
         shape=shape,
         initializer=spec,
@@ -139,7 +139,7 @@ class Layer:
         self.name = name
         self.variable_reuse = variable_reuse
         self.get_output_kwargs = []
-        self.variable_scope = tf.variable_scope(
+        self.variable_scope = tf.compat.v1.variable_scope(
             name, reuse=self.variable_reuse)
 
         if any(d is not None and d <= 0 for d in self.input_shape):
@@ -221,8 +221,8 @@ class InputLayer(Layer):
         super(InputLayer, self).__init__(shape, **kwargs)
         self.shape = shape
         if input_var is None:
-            with tf.variable_scope(self.name):
-                input_var = tf.placeholder(
+            with tf.compat.v1.variable_scope(self.name):
+                input_var = tf.compat.v1.placeholder(
                     tf.float32, shape=shape, name='input')
         self.input_var = input_var
 
@@ -330,8 +330,8 @@ class XavierUniformInitializer:
             n_outputs = shape[-1] * receptive_field_size
         init_range = math.sqrt(6.0 / (n_inputs + n_outputs))
         with tf.name_scope(name, 'XavierUniformInitializer'):
-            return tf.random_uniform_initializer(
-                -init_range, init_range, dtype=dtype)(shape)
+            return tf.random_uniform_initializer(-init_range, init_range)(
+                shape, dtype=dtype)
 
 
 class HeUniformInitializer:
@@ -1078,7 +1078,7 @@ class GRULayer(Layer):
 
         super(GRULayer, self).__init__(incoming, **kwargs)
 
-        with tf.variable_scope('gru_layer_step'):
+        with tf.compat.v1.variable_scope('gru_layer_step'):
             input_shape = self.input_shape[2:]
 
             input_dim = np.prod(input_shape)
@@ -1135,9 +1135,9 @@ class GRULayer(Layer):
 
             # pre-run the step method to initialize the normalization
             # parameters
-            h_dummy = tf.placeholder(
+            h_dummy = tf.compat.v1.placeholder(
                 dtype=tf.float32, shape=(None, num_units), name='h_dummy')
-            x_dummy = tf.placeholder(
+            x_dummy = tf.compat.v1.placeholder(
                 dtype=tf.float32, shape=(None, input_dim), name='x_dummy')
             self.step(h_dummy, x_dummy)
 
@@ -1243,19 +1243,20 @@ class TfGRULayer(Layer):
         Layer.__init__(self, incoming=incoming, **kwargs)
         # dummy input variable
 
-        with tf.variable_scope(self.name) as vs:
-            input_dummy = tf.placeholder(tf.float32, (None, input_dim),
-                                         'input_dummy')
-            hidden_dummy = tf.placeholder(tf.float32, (None, num_units),
-                                          'hidden_dummy')
+        with tf.compat.v1.variable_scope(self.name) as vs:
+            input_dummy = tf.compat.v1.placeholder(
+                tf.float32, (None, input_dim), 'input_dummy')
+            hidden_dummy = tf.compat.v1.placeholder(
+                tf.float32, (None, num_units), 'hidden_dummy')
             gru(input_dummy, hidden_dummy, scope=vs)
             vs.reuse_variables()
             self.scope = vs
             all_vars = [
-                v for v in tf.global_variables() if v.name.startswith(vs.name)
+                v for v in tf.compat.v1.global_variables()
+                if v.name.startswith(vs.name)
             ]
             trainable_vars = [
-                v for v in tf.trainable_variables()
+                v for v in tf.compat.v1.trainable_variables()
                 if v.name.startswith(vs.name)
             ]
 
@@ -1367,7 +1368,7 @@ class PseudoLSTMLayer(Layer):
 
         super(PseudoLSTMLayer, self).__init__(incoming, **kwargs)
 
-        with tf.variable_scope('pseudo_lstm_layer'):
+        with tf.compat.v1.variable_scope('pseudo_lstm_layer'):
             self.layer_normalization = layer_normalization
 
             input_shape = self.input_shape[2:]
@@ -1582,7 +1583,7 @@ class LSTMLayer(Layer):
 
         super(LSTMLayer, self).__init__(incoming, **kwargs)
 
-        with tf.variable_scope('lstm_layer'):
+        with tf.compat.v1.variable_scope('lstm_layer'):
             self.layer_normalization = layer_normalization
 
             input_shape = self.input_shape[2:]
@@ -1789,25 +1790,25 @@ class TfBasicLSTMLayer(Layer):
         self.hidden_nonlinearity = hidden_nonlinearity
         Layer.__init__(self, incoming=incoming, **kwargs)
 
-        with tf.variable_scope(self.name):
+        with tf.compat.v1.variable_scope(self.name):
             # dummy input variable
-            input_dummy = tf.placeholder(tf.float32, (None, input_dim),
-                                         'input_dummy')
-            hidden_dummy = tf.placeholder(tf.float32, (None, num_units),
-                                          'hidden_dummy')
-            cell_dummy = tf.placeholder(tf.float32, (None, num_units),
-                                        'cell_dummy')
+            input_dummy = tf.compat.v1.placeholder(
+                tf.float32, (None, input_dim), 'input_dummy')
+            hidden_dummy = tf.compat.v1.placeholder(
+                tf.float32, (None, num_units), 'hidden_dummy')
+            cell_dummy = tf.compat.v1.placeholder(
+                tf.float32, (None, num_units), 'cell_dummy')
 
-            with tf.variable_scope('lstm') as vs:
+            with tf.compat.v1.variable_scope('lstm') as vs:
                 lstm(input_dummy, (cell_dummy, hidden_dummy), scope=vs)
                 vs.reuse_variables()
                 self.scope = vs
                 all_vars = [
-                    v for v in tf.global_variables()
+                    v for v in tf.compat.v1.global_variables()
                     if v.name.startswith(vs.name)
                 ]
                 trainable_vars = [
-                    v for v in tf.trainable_variables()
+                    v for v in tf.compat.v1.trainable_variables()
                     if v.name.startswith(vs.name)
                 ]
 

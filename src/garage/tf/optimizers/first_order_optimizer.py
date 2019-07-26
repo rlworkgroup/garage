@@ -43,7 +43,7 @@ class FirstOrderOptimizer(Serializable):
         self._target = None
         self._callback = callback
         if tf_optimizer_cls is None:
-            tf_optimizer_cls = tf.train.AdamOptimizer
+            tf_optimizer_cls = tf.compat.v1.train.AdamOptimizer
         if tf_optimizer_args is None:
             tf_optimizer_args = dict(learning_rate=1e-3)
         self._tf_optimizer = tf_optimizer_cls(**tf_optimizer_args)
@@ -111,7 +111,7 @@ class FirstOrderOptimizer(Serializable):
         dataset = BatchDataset(
             inputs, self._batch_size, extra_inputs=extra_inputs)
 
-        sess = tf.get_default_session()
+        sess = tf.compat.v1.get_default_session()
 
         for epoch in range(self._max_epochs):
             if self._verbose:

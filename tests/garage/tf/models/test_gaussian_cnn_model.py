@@ -18,7 +18,7 @@ class TestGaussianCNNModel(TfGraphTestCase):
         self.obs = np.full(
             (self.batch_size, self.input_width, self.input_height, 3), 1)
         input_shape = self.obs.shape[1:]  # height, width, channel
-        self._input_ph = tf.placeholder(
+        self._input_ph = tf.compat.v1.placeholder(
             tf.float32, shape=(None, ) + input_shape, name='input')
 
     @mock.patch('tensorflow.random.normal')
@@ -96,10 +96,10 @@ class TestGaussianCNNModel(TfGraphTestCase):
             output_dim=output_dim,
             std_share_network=True)
         model.build(self._input_ph)
-        with tf.variable_scope(model.name, reuse=True):
-            std_share_output_weights = tf.get_variable(
+        with tf.compat.v1.variable_scope(model.name, reuse=True):
+            std_share_output_weights = tf.compat.v1.get_variable(
                 'dist_params/mean_std_network/output/kernel')
-            std_share_output_bias = tf.get_variable(
+            std_share_output_bias = tf.compat.v1.get_variable(
                 'dist_params/mean_std_network/output/bias')
         assert std_share_output_weights.shape[1] == output_dim * 2
         assert std_share_output_bias.shape == output_dim * 2
@@ -181,12 +181,12 @@ class TestGaussianCNNModel(TfGraphTestCase):
             std_share_network=False,
             adaptive_std=False)
         model.build(self._input_ph)
-        with tf.variable_scope(model.name, reuse=True):
-            mean_output_weights = tf.get_variable(
+        with tf.compat.v1.variable_scope(model.name, reuse=True):
+            mean_output_weights = tf.compat.v1.get_variable(
                 'dist_params/mean_network/output/kernel')
-            mean_output_bias = tf.get_variable(
+            mean_output_bias = tf.compat.v1.get_variable(
                 'dist_params/mean_network/output/bias')
-            log_std_output_weights = tf.get_variable(
+            log_std_output_weights = tf.compat.v1.get_variable(
                 'dist_params/log_std_network/parameter')
         assert mean_output_weights.shape[1] == output_dim
         assert mean_output_bias.shape == output_dim
@@ -289,14 +289,14 @@ class TestGaussianCNNModel(TfGraphTestCase):
             std_output_w_init=tf.constant_initializer(1))
 
         model.build(self._input_ph)
-        with tf.variable_scope(model.name, reuse=True):
-            mean_output_weights = tf.get_variable(
+        with tf.compat.v1.variable_scope(model.name, reuse=True):
+            mean_output_weights = tf.compat.v1.get_variable(
                 'dist_params/mean_network/output/kernel')
-            mean_output_bias = tf.get_variable(
+            mean_output_bias = tf.compat.v1.get_variable(
                 'dist_params/mean_network/output/bias')
-            log_std_output_weights = tf.get_variable(
+            log_std_output_weights = tf.compat.v1.get_variable(
                 'dist_params/log_std_network/output/kernel')
-            log_std_output_bias = tf.get_variable(
+            log_std_output_bias = tf.compat.v1.get_variable(
                 'dist_params/log_std_network/output/bias')
 
         assert mean_output_weights.shape[1] == output_dim
@@ -311,7 +311,8 @@ class TestGaussianCNNModel(TfGraphTestCase):
     def test_std_share_network_is_pickleable(self, mock_normal, output_dim,
                                              hidden_sizes):
         mock_normal.return_value = 0.5
-        input_var = tf.placeholder(tf.float32, shape=(None, 10, 10, 3))
+        input_var = tf.compat.v1.placeholder(
+            tf.float32, shape=(None, 10, 10, 3))
         model = GaussianCNNModel(
             num_filters=[3, 6],
             filter_dims=[3, 3],
@@ -323,16 +324,18 @@ class TestGaussianCNNModel(TfGraphTestCase):
         outputs = model.build(input_var)
 
         # get output bias
-        with tf.variable_scope('GaussianCNNModel', reuse=True):
-            bias = tf.get_variable('dist_params/mean_std_network/output/bias')
+        with tf.compat.v1.variable_scope('GaussianCNNModel', reuse=True):
+            bias = tf.compat.v1.get_variable(
+                'dist_params/mean_std_network/output/bias')
         # assign it to all ones
         bias.load(tf.ones_like(bias).eval())
 
         output1 = self.sess.run(outputs[:-1], feed_dict={input_var: self.obs})
 
         h = pickle.dumps(model)
-        with tf.Session(graph=tf.Graph()) as sess:
-            input_var = tf.placeholder(tf.float32, shape=(None, 10, 10, 3))
+        with tf.compat.v1.Session(graph=tf.Graph()) as sess:
+            input_var = tf.compat.v1.placeholder(
+                tf.float32, shape=(None, 10, 10, 3))
             model_pickled = pickle.loads(h)
             outputs = model_pickled.build(input_var)
             output2 = sess.run(outputs[:-1], feed_dict={input_var: self.obs})
@@ -346,7 +349,8 @@ class TestGaussianCNNModel(TfGraphTestCase):
     def test_without_std_share_network_is_pickleable(self, mock_normal,
                                                      output_dim, hidden_sizes):
         mock_normal.return_value = 0.5
-        input_var = tf.placeholder(tf.float32, shape=(None, 10, 10, 3))
+        input_var = tf.compat.v1.placeholder(
+            tf.float32, shape=(None, 10, 10, 3))
         model = GaussianCNNModel(
             num_filters=[3, 6],
             filter_dims=[3, 3],
@@ -359,16 +363,18 @@ class TestGaussianCNNModel(TfGraphTestCase):
         outputs = model.build(input_var)
 
         # get output bias
-        with tf.variable_scope('GaussianCNNModel', reuse=True):
-            bias = tf.get_variable('dist_params/mean_network/output/bias')
+        with tf.compat.v1.variable_scope('GaussianCNNModel', reuse=True):
+            bias = tf.compat.v1.get_variable(
+                'dist_params/mean_network/output/bias')
         # assign it to all ones
         bias.load(tf.ones_like(bias).eval())
 
         output1 = self.sess.run(outputs[:-1], feed_dict={input_var: self.obs})
 
         h = pickle.dumps(model)
-        with tf.Session(graph=tf.Graph()) as sess:
-            input_var = tf.placeholder(tf.float32, shape=(None, 10, 10, 3))
+        with tf.compat.v1.Session(graph=tf.Graph()) as sess:
+            input_var = tf.compat.v1.placeholder(
+                tf.float32, shape=(None, 10, 10, 3))
             model_pickled = pickle.loads(h)
             outputs = model_pickled.build(input_var)
             output2 = sess.run(outputs[:-1], feed_dict={input_var: self.obs})
@@ -382,7 +388,8 @@ class TestGaussianCNNModel(TfGraphTestCase):
     def test_adaptive_std_is_pickleable(self, mock_normal, output_dim,
                                         hidden_sizes, std_hidden_sizes):
         mock_normal.return_value = 0.5
-        input_var = tf.placeholder(tf.float32, shape=(None, 10, 10, 3))
+        input_var = tf.compat.v1.placeholder(
+            tf.float32, shape=(None, 10, 10, 3))
         model = GaussianCNNModel(
             num_filters=[3, 6],
             filter_dims=[3, 3],
@@ -406,15 +413,17 @@ class TestGaussianCNNModel(TfGraphTestCase):
         outputs = model.build(input_var)
 
         # get output bias
-        with tf.variable_scope('GaussianCNNModel', reuse=True):
-            bias = tf.get_variable('dist_params/mean_network/output/bias')
+        with tf.compat.v1.variable_scope('GaussianCNNModel', reuse=True):
+            bias = tf.compat.v1.get_variable(
+                'dist_params/mean_network/output/bias')
         # assign it to all ones
         bias.load(tf.ones_like(bias).eval())
 
         h = pickle.dumps(model)
         output1 = self.sess.run(outputs[:-1], feed_dict={input_var: self.obs})
-        with tf.Session(graph=tf.Graph()) as sess:
-            input_var = tf.placeholder(tf.float32, shape=(None, 10, 10, 3))
+        with tf.compat.v1.Session(graph=tf.Graph()) as sess:
+            input_var = tf.compat.v1.placeholder(
+                tf.float32, shape=(None, 10, 10, 3))
             model_pickled = pickle.loads(h)
             outputs = model_pickled.build(input_var)
             output2 = sess.run(outputs[:-1], feed_dict={input_var: self.obs})

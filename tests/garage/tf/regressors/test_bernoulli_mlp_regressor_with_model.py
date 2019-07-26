@@ -171,8 +171,8 @@ class TestBernoulliMLPRegressorWithModel(TfGraphTestCase):
         bmr = BernoulliMLPRegressorWithModel(
             input_shape=(input_shape[1], ), output_dim=output_dim)
 
-        new_xs_var = tf.placeholder(tf.float32, input_shape)
-        new_ys_var = tf.placeholder(
+        new_xs_var = tf.compat.v1.placeholder(tf.float32, input_shape)
+        new_ys_var = tf.compat.v1.placeholder(
             dtype=tf.float32, name='ys', shape=(None, output_dim))
 
         data = np.full(input_shape, 0.5)
@@ -219,39 +219,39 @@ class TestBernoulliMLPRegressorWithModel(TfGraphTestCase):
     def test_is_pickleable(self):
         bmr = BernoulliMLPRegressorWithModel(input_shape=(1, ), output_dim=2)
 
-        with tf.variable_scope(
+        with tf.compat.v1.variable_scope(
                 'BernoulliMLPRegressorWithModel/NormalizedInputMLPModel',
                 reuse=True):
-            bias = tf.get_variable('mlp/hidden_0/bias')
+            bias = tf.compat.v1.get_variable('mlp/hidden_0/bias')
         bias.load(tf.ones_like(bias).eval())
         bias1 = bias.eval()
 
         result1 = np.cast['int'](bmr.predict(np.ones((1, 1))))
         h = pickle.dumps(bmr)
 
-        with tf.Session(graph=tf.Graph()):
+        with tf.compat.v1.Session(graph=tf.Graph()):
             bmr_pickled = pickle.loads(h)
             result2 = np.cast['int'](bmr_pickled.predict(np.ones((1, 1))))
             assert np.array_equal(result1, result2)
 
-            with tf.variable_scope(
+            with tf.compat.v1.variable_scope(
                     'BernoulliMLPRegressorWithModel/NormalizedInputMLPModel',
                     reuse=True):
-                bias2 = tf.get_variable('mlp/hidden_0/bias').eval()
+                bias2 = tf.compat.v1.get_variable('mlp/hidden_0/bias').eval()
 
             assert np.array_equal(bias1, bias2)
 
     def test_is_pickleable2(self):
         bmr = BernoulliMLPRegressorWithModel(input_shape=(1, ), output_dim=2)
 
-        with tf.variable_scope(
+        with tf.compat.v1.variable_scope(
                 'BernoulliMLPRegressorWithModel/NormalizedInputMLPModel',
                 reuse=True):
-            x_mean = tf.get_variable('normalized_vars/x_mean')
+            x_mean = tf.compat.v1.get_variable('normalized_vars/x_mean')
         x_mean.load(tf.ones_like(x_mean).eval())
         x1 = bmr.model.networks['default'].x_mean.eval()
         h = pickle.dumps(bmr)
-        with tf.Session(graph=tf.Graph()):
+        with tf.compat.v1.Session(graph=tf.Graph()):
             bmr_pickled = pickle.loads(h)
             x2 = bmr_pickled.model.networks['default'].x_mean.eval()
             assert np.array_equal(x1, x2)

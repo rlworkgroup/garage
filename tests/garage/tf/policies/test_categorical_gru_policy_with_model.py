@@ -23,7 +23,7 @@ class TestCategoricalGRUPolicyWithModel(TfGraphTestCase):
     def test_dist_info_sym(self, obs_dim, action_dim, hidden_dim):
         env = TfEnv(DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
 
-        obs_ph = tf.placeholder(
+        obs_ph = tf.compat.v1.placeholder(
             tf.float32, shape=(None, None, env.observation_space.flat_dim))
 
         with mock.patch(('garage.tf.policies.'
@@ -51,7 +51,7 @@ class TestCategoricalGRUPolicyWithModel(TfGraphTestCase):
     def test_dist_info_sym_include_action(self, obs_dim, action_dim):
         env = TfEnv(DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
 
-        obs_ph = tf.placeholder(
+        obs_ph = tf.compat.v1.placeholder(
             tf.float32, shape=(None, None, env.observation_space.flat_dim))
 
         with mock.patch(('garage.tf.policies.'
@@ -75,7 +75,7 @@ class TestCategoricalGRUPolicyWithModel(TfGraphTestCase):
     def test_dist_info_sym_wrong_input(self):
         env = TfEnv(DummyDiscreteEnv(obs_dim=(1, ), action_dim=1))
 
-        obs_ph = tf.placeholder(
+        obs_ph = tf.compat.v1.placeholder(
             tf.float32, shape=(None, None, env.observation_space.flat_dim))
 
         with mock.patch(('garage.tf.policies.'
@@ -185,9 +185,9 @@ class TestCategoricalGRUPolicyWithModel(TfGraphTestCase):
         env.reset()
         obs = env.reset()
 
-        with tf.variable_scope(
+        with tf.compat.v1.variable_scope(
                 'CategoricalGRUPolicyWithModel/prob_network', reuse=True):
-            return_var = tf.get_variable('return_var')
+            return_var = tf.compat.v1.get_variable('return_var')
         # assign it to all one
         return_var.load(tf.ones_like(return_var).eval())
 
@@ -197,7 +197,7 @@ class TestCategoricalGRUPolicyWithModel(TfGraphTestCase):
 
         p = pickle.dumps(policy)
 
-        with tf.Session(graph=tf.Graph()) as sess:
+        with tf.compat.v1.Session(graph=tf.Graph()) as sess:
             policy_pickled = pickle.loads(p)
             output2 = sess.run(
                 policy_pickled.model.outputs[0],

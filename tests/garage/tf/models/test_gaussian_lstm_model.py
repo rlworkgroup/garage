@@ -22,9 +22,9 @@ class TestGaussianLSTMModel(TfGraphTestCase):
             (self.batch_size, self.time_step, self.feature_shape), 1.)
         self.obs_input = np.full((self.batch_size, self.feature_shape), 1.)
 
-        self.input_var = tf.placeholder(
+        self.input_var = tf.compat.v1.placeholder(
             tf.float32, shape=(None, None, self.feature_shape), name='input')
-        self.step_input_var = tf.placeholder(
+        self.step_input_var = tf.compat.v1.placeholder(
             tf.float32, shape=(None, self.feature_shape), name='step_input')
 
     # yapf: disable
@@ -47,11 +47,11 @@ class TestGaussianLSTMModel(TfGraphTestCase):
             hidden_w_init=self.default_initializer,
             recurrent_w_init=self.default_initializer,
             output_w_init=self.default_initializer)
-        step_hidden_var = tf.placeholder(
+        step_hidden_var = tf.compat.v1.placeholder(
             shape=(self.batch_size, hidden_dim),
             name='step_hidden',
             dtype=tf.float32)
-        step_cell_var = tf.placeholder(
+        step_cell_var = tf.compat.v1.placeholder(
             shape=(self.batch_size, hidden_dim),
             name='step_cell',
             dtype=tf.float32)
@@ -120,11 +120,11 @@ class TestGaussianLSTMModel(TfGraphTestCase):
             hidden_w_init=self.default_initializer,
             recurrent_w_init=self.default_initializer,
             output_w_init=self.default_initializer)
-        step_hidden_var = tf.placeholder(
+        step_hidden_var = tf.compat.v1.placeholder(
             shape=(self.batch_size, hidden_dim),
             name='step_hidden',
             dtype=tf.float32)
-        step_cell_var = tf.placeholder(
+        step_cell_var = tf.compat.v1.placeholder(
             shape=(self.batch_size, hidden_dim),
             name='step_cell',
             dtype=tf.float32)
@@ -134,9 +134,9 @@ class TestGaussianLSTMModel(TfGraphTestCase):
                              step_hidden_var, step_cell_var)
 
         # output layer is a tf.keras.layers.Dense object,
-        # which cannot be access by tf.variable_scope.
-        # A workaround is to access in tf.global_variables()
-        for var in tf.global_variables():
+        # which cannot be access by tf.compat.v1.variable_scope.
+        # A workaround is to access in tf.compat.v1.global_variables()
+        for var in tf.compat.v1.global_variables():
             if 'output_layer/kernel' in var.name:
                 std_share_output_weights = var
             if 'output_layer/bias' in var.name:
@@ -164,11 +164,11 @@ class TestGaussianLSTMModel(TfGraphTestCase):
             recurrent_w_init=self.default_initializer,
             output_w_init=self.default_initializer,
             init_std=init_std)
-        step_hidden_var = tf.placeholder(
+        step_hidden_var = tf.compat.v1.placeholder(
             shape=(self.batch_size, hidden_dim),
             name='step_hidden',
             dtype=tf.float32)
-        step_cell_var = tf.placeholder(
+        step_cell_var = tf.compat.v1.placeholder(
             shape=(self.batch_size, hidden_dim),
             name='step_cell',
             dtype=tf.float32)
@@ -239,11 +239,11 @@ class TestGaussianLSTMModel(TfGraphTestCase):
             hidden_w_init=self.default_initializer,
             recurrent_w_init=self.default_initializer,
             output_w_init=self.default_initializer)
-        step_hidden_var = tf.placeholder(
+        step_hidden_var = tf.compat.v1.placeholder(
             shape=(self.batch_size, hidden_dim),
             name='step_hidden',
             dtype=tf.float32)
-        step_cell_var = tf.placeholder(
+        step_cell_var = tf.compat.v1.placeholder(
             shape=(self.batch_size, hidden_dim),
             name='step_cell',
             dtype=tf.float32)
@@ -253,9 +253,9 @@ class TestGaussianLSTMModel(TfGraphTestCase):
                              step_hidden_var, step_cell_var)
 
         # output layer is a tf.keras.layers.Dense object,
-        # which cannot be access by tf.variable_scope.
-        # A workaround is to access in tf.global_variables()
-        for var in tf.global_variables():
+        # which cannot be access by tf.compat.v1.variable_scope.
+        # A workaround is to access in tf.compat.v1.global_variables()
+        for var in tf.compat.v1.global_variables():
             if 'output_layer/kernel' in var.name:
                 std_share_output_weights = var
             if 'output_layer/bias' in var.name:
@@ -286,11 +286,11 @@ class TestGaussianLSTMModel(TfGraphTestCase):
             hidden_w_init=self.default_initializer,
             recurrent_w_init=self.default_initializer,
             output_w_init=self.default_initializer)
-        step_hidden_var = tf.placeholder(
+        step_hidden_var = tf.compat.v1.placeholder(
             shape=(self.batch_size, hidden_dim),
             name='step_hidden',
             dtype=tf.float32)
-        step_cell_var = tf.placeholder(
+        step_cell_var = tf.compat.v1.placeholder(
             shape=(self.batch_size, hidden_dim),
             name='step_cell',
             dtype=tf.float32)
@@ -300,9 +300,9 @@ class TestGaussianLSTMModel(TfGraphTestCase):
              step_cell_var)
 
         # output layer is a tf.keras.layers.Dense object,
-        # which cannot be access by tf.variable_scope.
-        # A workaround is to access in tf.global_variables()
-        for var in tf.global_variables():
+        # which cannot be access by tf.compat.v1.variable_scope.
+        # A workaround is to access in tf.compat.v1.global_variables()
+        for var in tf.compat.v1.global_variables():
             if 'output_layer/bias' in var.name:
                 var.load(tf.ones_like(var).eval())
 
@@ -320,22 +320,22 @@ class TestGaussianLSTMModel(TfGraphTestCase):
             })
 
         h = pickle.dumps(model)
-        with tf.Session(graph=tf.Graph()) as sess:
+        with tf.compat.v1.Session(graph=tf.Graph()) as sess:
             model_pickled = pickle.loads(h)
 
-            input_var = tf.placeholder(
+            input_var = tf.compat.v1.placeholder(
                 tf.float32,
                 shape=(None, None, self.feature_shape),
                 name='input')
-            step_input_var = tf.placeholder(
+            step_input_var = tf.compat.v1.placeholder(
                 tf.float32,
                 shape=(None, self.feature_shape),
                 name='step_input')
-            step_hidden_var = tf.placeholder(
+            step_hidden_var = tf.compat.v1.placeholder(
                 shape=(self.batch_size, hidden_dim),
                 name='initial_hidden',
                 dtype=tf.float32)
-            step_cell_var = tf.placeholder(
+            step_cell_var = tf.compat.v1.placeholder(
                 shape=(self.batch_size, hidden_dim),
                 name='initial_cell',
                 dtype=tf.float32)
@@ -376,11 +376,11 @@ class TestGaussianLSTMModel(TfGraphTestCase):
             hidden_w_init=self.default_initializer,
             recurrent_w_init=self.default_initializer,
             output_w_init=self.default_initializer)
-        step_hidden_var = tf.placeholder(
+        step_hidden_var = tf.compat.v1.placeholder(
             shape=(self.batch_size, hidden_dim),
             name='step_hidden',
             dtype=tf.float32)
-        step_cell_var = tf.placeholder(
+        step_cell_var = tf.compat.v1.placeholder(
             shape=(self.batch_size, hidden_dim),
             name='step_cell',
             dtype=tf.float32)
@@ -390,9 +390,9 @@ class TestGaussianLSTMModel(TfGraphTestCase):
              step_cell_var)
 
         # output layer is a tf.keras.layers.Dense object,
-        # which cannot be access by tf.variable_scope.
-        # A workaround is to access in tf.global_variables()
-        for var in tf.global_variables():
+        # which cannot be access by tf.compat.v1.variable_scope.
+        # A workaround is to access in tf.compat.v1.global_variables()
+        for var in tf.compat.v1.global_variables():
             if 'output_layer/bias' in var.name:
                 var.load(tf.ones_like(var).eval())
 
@@ -410,22 +410,22 @@ class TestGaussianLSTMModel(TfGraphTestCase):
             })
 
         h = pickle.dumps(model)
-        with tf.Session(graph=tf.Graph()) as sess:
+        with tf.compat.v1.Session(graph=tf.Graph()) as sess:
             model_pickled = pickle.loads(h)
 
-            input_var = tf.placeholder(
+            input_var = tf.compat.v1.placeholder(
                 tf.float32,
                 shape=(None, None, self.feature_shape),
                 name='input')
-            step_input_var = tf.placeholder(
+            step_input_var = tf.compat.v1.placeholder(
                 tf.float32,
                 shape=(None, self.feature_shape),
                 name='step_input')
-            step_hidden_var = tf.placeholder(
+            step_hidden_var = tf.compat.v1.placeholder(
                 shape=(self.batch_size, hidden_dim),
                 name='initial_hidden',
                 dtype=tf.float32)
-            step_cell_var = tf.placeholder(
+            step_cell_var = tf.compat.v1.placeholder(
                 shape=(self.batch_size, hidden_dim),
                 name='initial_cell',
                 dtype=tf.float32)

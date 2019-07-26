@@ -132,13 +132,13 @@ class InstrumentedNPO(InstrumentedBatchPolopt):
                 name='action', batch_dims=2)
             reward_var = tensor_utils.new_tensor(
                 name='reward', ndim=2, dtype=tf.float32)
-            valid_var = tf.placeholder(
+            valid_var = tf.compat.v1.placeholder(
                 tf.float32, shape=[None, None], name='valid')
             baseline_var = tensor_utils.new_tensor(
                 name='baseline', ndim=2, dtype=tf.float32)
 
             policy_state_info_vars = {
-                k: tf.placeholder(
+                k: tf.compat.v1.placeholder(
                     tf.float32, shape=[None] * 2 + list(shape), name=k)
                 for k, shape in self.policy.state_info_specs
             }
@@ -148,7 +148,7 @@ class InstrumentedNPO(InstrumentedBatchPolopt):
 
             # old policy distribution
             policy_old_dist_info_vars = {
-                k: tf.placeholder(
+                k: tf.compat.v1.placeholder(
                     tf.float32,
                     shape=[None] * 2 + list(shape),
                     name='policy_old_%s' % k)

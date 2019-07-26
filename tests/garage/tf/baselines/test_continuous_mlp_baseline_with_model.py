@@ -46,8 +46,9 @@ class TestContinuousMLPBaselineWithModel(TfGraphTestCase):
                 env_spec=box_env.spec, name='ContinuousMLPBaselineWithModel2')
 
         # Manual change the parameter of ContinuousMLPBaselineWithModel
-        with tf.variable_scope('ContinuousMLPBaselineWithModel2', reuse=True):
-            return_var = tf.get_variable('SimpleMLPModel/return_var')
+        with tf.compat.v1.variable_scope(
+                'ContinuousMLPBaselineWithModel2', reuse=True):
+            return_var = tf.compat.v1.get_variable('SimpleMLPModel/return_var')
         return_var.load(1.0)
 
         old_param_values = cmb.get_param_values()
@@ -66,7 +67,7 @@ class TestContinuousMLPBaselineWithModel(TfGraphTestCase):
                         new=SimpleMLPRegressor):
             cmb = ContinuousMLPBaselineWithModel(env_spec=box_env.spec)
         params_interal = cmb.get_params_internal()
-        trainable_params = tf.trainable_variables(
+        trainable_params = tf.compat.v1.trainable_variables(
             scope='ContinuousMLPBaselineWithModel')
         assert np.array_equal(params_interal, trainable_params)
 
@@ -79,15 +80,16 @@ class TestContinuousMLPBaselineWithModel(TfGraphTestCase):
             cmb = ContinuousMLPBaselineWithModel(env_spec=box_env.spec)
         obs = {'observations': [np.full(1, 1), np.full(1, 1)]}
 
-        with tf.variable_scope('ContinuousMLPBaselineWithModel', reuse=True):
-            return_var = tf.get_variable('SimpleMLPModel/return_var')
+        with tf.compat.v1.variable_scope(
+                'ContinuousMLPBaselineWithModel', reuse=True):
+            return_var = tf.compat.v1.get_variable('SimpleMLPModel/return_var')
         return_var.load(1.0)
 
         prediction = cmb.predict(obs)
 
         h = pickle.dumps(cmb)
 
-        with tf.Session(graph=tf.Graph()):
+        with tf.compat.v1.Session(graph=tf.Graph()):
             cmb_pickled = pickle.loads(h)
             prediction2 = cmb_pickled.predict(obs)
 

@@ -147,9 +147,9 @@ class TestGaussianMLPRegressorWithModel(TfGraphTestCase):
             optimizer=PenaltyLbfgsOptimizer,
             optimizer_args=dict())
 
-        new_input_var = tf.placeholder(
+        new_input_var = tf.compat.v1.placeholder(
             tf.float32, shape=(None, ) + input_shape)
-        new_ys_var = tf.placeholder(
+        new_ys_var = tf.compat.v1.placeholder(
             dtype=tf.float32, name='ys', shape=(None, output_dim))
 
         data = np.random.random(size=input_shape)
@@ -170,16 +170,17 @@ class TestGaussianMLPRegressorWithModel(TfGraphTestCase):
     def test_is_pickleable(self):
         gmr = GaussianMLPRegressorWithModel(input_shape=(1, ), output_dim=1)
 
-        with tf.variable_scope(
+        with tf.compat.v1.variable_scope(
                 'GaussianMLPRegressorWithModel/GaussianMLPRegressorModel',
                 reuse=True):
-            bias = tf.get_variable('dist_params/mean_network/hidden_0/bias')
+            bias = tf.compat.v1.get_variable(
+                'dist_params/mean_network/hidden_0/bias')
         bias.load(tf.ones_like(bias).eval())
 
         result1 = gmr.predict(np.ones((1, 1)))
         h = pickle.dumps(gmr)
 
-        with tf.Session(graph=tf.Graph()):
+        with tf.compat.v1.Session(graph=tf.Graph()):
             gmr_pickled = pickle.loads(h)
             result2 = gmr_pickled.predict(np.ones((1, 1)))
             assert np.array_equal(result1, result2)
@@ -187,14 +188,14 @@ class TestGaussianMLPRegressorWithModel(TfGraphTestCase):
     def test_is_pickleable2(self):
         gmr = GaussianMLPRegressorWithModel(input_shape=(1, ), output_dim=1)
 
-        with tf.variable_scope(
+        with tf.compat.v1.variable_scope(
                 'GaussianMLPRegressorWithModel/GaussianMLPRegressorModel',
                 reuse=True):
-            x_mean = tf.get_variable('normalized_vars/x_mean')
+            x_mean = tf.compat.v1.get_variable('normalized_vars/x_mean')
         x_mean.load(tf.ones_like(x_mean).eval())
         x1 = gmr.model.networks['default'].x_mean.eval()
         h = pickle.dumps(gmr)
-        with tf.Session(graph=tf.Graph()):
+        with tf.compat.v1.Session(graph=tf.Graph()):
             gmr_pickled = pickle.loads(h)
             x2 = gmr_pickled.model.networks['default'].x_mean.eval()
             assert np.array_equal(x1, x2)

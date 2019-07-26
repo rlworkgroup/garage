@@ -66,7 +66,7 @@ class ContinuousMLPRegressorWithModel(Regressor2):
         super().__init__(input_shape, output_dim, name)
         self._normalize_inputs = normalize_inputs
 
-        with tf.variable_scope(self._name, reuse=False) as vs:
+        with tf.compat.v1.variable_scope(self._name, reuse=False) as vs:
             self._variable_scope = vs
             if optimizer_args is None:
                 optimizer_args = dict()
@@ -90,13 +90,13 @@ class ContinuousMLPRegressorWithModel(Regressor2):
         self._initialize()
 
     def _initialize(self):
-        input_var = tf.placeholder(
+        input_var = tf.compat.v1.placeholder(
             tf.float32, shape=(None, ) + self._input_shape)
 
-        with tf.variable_scope(self._name) as vs:
+        with tf.compat.v1.variable_scope(self._name) as vs:
             self._variable_scope = vs
             self.model.build(input_var)
-            ys_var = tf.placeholder(
+            ys_var = tf.compat.v1.placeholder(
                 dtype=tf.float32, name='ys', shape=(None, self._output_dim))
 
             y_hat = self.model.networks['default'].y_hat
@@ -154,7 +154,7 @@ class ContinuousMLPRegressorWithModel(Regressor2):
         Return:
             tf.Tensor output of the symbolic prediction.
         """
-        with tf.variable_scope(self._variable_scope):
+        with tf.compat.v1.variable_scope(self._variable_scope):
             y_hat, _, _ = self.model.build(xs, name=name)
 
         return y_hat

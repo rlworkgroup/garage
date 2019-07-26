@@ -15,11 +15,13 @@ class QFunction(Parameterized):
 
     def get_trainable_vars(self, scope=None):
         scope = scope if scope else self.name
-        return tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=scope)
+        return tf.compat.v1.get_collection(
+            tf.compat.v1.GraphKeys.TRAINABLE_VARIABLES, scope=scope)
 
     def get_global_vars(self, scope=None):
         scope = scope if scope else self.name
-        return tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=scope)
+        return tf.compat.v1.get_collection(
+            tf.compat.v1.GraphKeys.GLOBAL_VARIABLES, scope=scope)
 
     def get_regularizable_vars(self, scope=None):
         scope = scope if scope else self.name

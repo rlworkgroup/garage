@@ -38,8 +38,10 @@ class Plotter:
         Plotter.__plotters.append(self)
         self.env = env
         self.policy = policy
-        self.sess = tf.get_default_session() if sess is None else sess
-        self.graph = tf.get_default_graph() if graph is None else graph
+        self.sess = tf.compat.v1.get_default_session(
+        ) if sess is None else sess
+        self.graph = tf.compat.v1.get_default_graph(
+        ) if graph is None else graph
         self.rollout = rollout
         self.worker_thread = Thread(target=self._start_worker, daemon=True)
         self.queue = Queue()
@@ -124,7 +126,7 @@ class Plotter:
         if not Plotter.enable:
             return
         if not self.worker_thread.is_alive():
-            tf.get_variable_scope().reuse_variables()
+            tf.compat.v1.get_variable_scope().reuse_variables()
             self.worker_thread.start()
             self.queue.put(
                 Message(

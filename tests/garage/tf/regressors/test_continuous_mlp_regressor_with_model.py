@@ -77,7 +77,7 @@ class TestContinuousMLPRegressorWithModel(TfGraphTestCase):
             optimizer=LbfgsOptimizer,
             optimizer_args=dict())
 
-        new_input_var = tf.placeholder(
+        new_input_var = tf.compat.v1.placeholder(
             tf.float32, shape=(None, ) + input_shape)
 
         data = np.random.random(size=input_shape)
@@ -90,16 +90,16 @@ class TestContinuousMLPRegressorWithModel(TfGraphTestCase):
     def test_is_pickleable(self):
         cmr = ContinuousMLPRegressorWithModel(input_shape=(1, ), output_dim=1)
 
-        with tf.variable_scope(('ContinuousMLPRegressorWithModel/'
-                                'NormalizedInputMLPModel'),
-                               reuse=True):
-            bias = tf.get_variable('mlp/hidden_0/bias')
+        with tf.compat.v1.variable_scope(('ContinuousMLPRegressorWithModel/'
+                                          'NormalizedInputMLPModel'),
+                                         reuse=True):
+            bias = tf.compat.v1.get_variable('mlp/hidden_0/bias')
         bias.load(tf.ones_like(bias).eval())
 
         result1 = cmr.predict(np.ones((1, 1)))
         h = pickle.dumps(cmr)
 
-        with tf.Session(graph=tf.Graph()):
+        with tf.compat.v1.Session(graph=tf.Graph()):
             cmr_pickled = pickle.loads(h)
             result2 = cmr_pickled.predict(np.ones((1, 1)))
             assert np.array_equal(result1, result2)

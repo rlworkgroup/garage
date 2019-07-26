@@ -14,12 +14,12 @@ from tests.fixtures import TfGraphTestCase
 class TestLocalRunner(TfGraphTestCase):
     def test_session(self):
         with LocalRunner():
-            assert tf.get_default_session is not None, (
+            assert tf.compat.v1.get_default_session is not None, (
                 'LocalRunner() should provide a default tf session.')
 
-        sess = tf.Session()
+        sess = tf.compat.v1.Session()
         with LocalRunner(sess=sess):
-            assert tf.get_default_session() is sess, (
+            assert tf.compat.v1.get_default_session() is sess, (
                 'LocalRunner(sess) should use sess as default session.')
 
     def test_singleton_pool(self):
@@ -50,7 +50,7 @@ class TestLocalRunner(TfGraphTestCase):
             runner.train(n_epochs=1, batch_size=100)
 
     def test_external_sess(self):
-        with tf.Session() as sess:
+        with tf.compat.v1.Session() as sess:
             with LocalRunner(sess=sess):
                 pass
             # sess should still be the default session here.

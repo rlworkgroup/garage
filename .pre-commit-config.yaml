@@ -15,7 +15,7 @@ repos:
     -   id: pylint
         name: pylint
         entry: pylint
-        args: ['-j 0', '--rcfile=setup.cfg']
+        args: ['-j 2', '--rcfile=setup.cfg']
         stages: [commit, push]
         language: system
         files: \.py$

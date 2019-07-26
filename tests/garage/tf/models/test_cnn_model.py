@@ -18,7 +18,7 @@ class TestCNNModel(TfGraphTestCase):
         self.obs_input = np.ones((self.batch_size, self.input_width,
                                   self.input_height, 3))
         input_shape = self.obs_input.shape[1:]  # height, width, channel
-        self._input_ph = tf.placeholder(
+        self._input_ph = tf.compat.v1.placeholder(
             tf.float32, shape=(None, ) + input_shape, name='input')
 
     # yapf: disable
@@ -138,17 +138,17 @@ class TestCNNModel(TfGraphTestCase):
             hidden_w_init=tf.constant_initializer(1),
             hidden_nonlinearity=None)
         outputs = model.build(self._input_ph)
-        with tf.variable_scope('cnn_model/cnn/h0', reuse=True):
-            bias = tf.get_variable('bias')
+        with tf.compat.v1.variable_scope('cnn_model/cnn/h0', reuse=True):
+            bias = tf.compat.v1.get_variable('bias')
         bias.load(tf.ones_like(bias).eval())
 
         output1 = self.sess.run(
             outputs, feed_dict={self._input_ph: self.obs_input})
         h = pickle.dumps(model)
-        with tf.Session(graph=tf.Graph()) as sess:
+        with tf.compat.v1.Session(graph=tf.Graph()) as sess:
             model_pickled = pickle.loads(h)
             input_shape = self.obs_input.shape[1:]  # height, width, channel
-            input_ph = tf.placeholder(
+            input_ph = tf.compat.v1.placeholder(
                 tf.float32, shape=(None, ) + input_shape, name='input')
             outputs = model_pickled.build(input_ph)
             output2 = sess.run(outputs, feed_dict={input_ph: self.obs_input})

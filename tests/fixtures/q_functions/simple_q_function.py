@@ -16,10 +16,10 @@ class SimpleQFunction(QFunction2):
         self._initialize()
 
     def _initialize(self):
-        obs_ph = tf.placeholder(
+        obs_ph = tf.compat.v1.placeholder(
             tf.float32, (None, ) + self.obs_dim, name='obs')
 
-        with tf.variable_scope(self.name, reuse=False) as vs:
+        with tf.compat.v1.variable_scope(self.name, reuse=False) as vs:
             self._variable_scope = vs
             self.model.build(obs_ph)
 

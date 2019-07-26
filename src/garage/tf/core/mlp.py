@@ -70,7 +70,7 @@ def mlp(input_var,
         else:
             _concat_layer = 0
 
-    with tf.variable_scope(name):
+    with tf.compat.v1.variable_scope(name):
         l_hid = input_var
         for idx, hidden_size in enumerate(hidden_sizes):
             if _merge_inputs and idx == _concat_layer:

@@ -186,9 +186,9 @@ class TestGaussianCNNRegressorWithModel(TfGraphTestCase):
             adaptive_std=False,
             use_trust_region=False)
 
-        new_input_var = tf.placeholder(
+        new_input_var = tf.compat.v1.placeholder(
             tf.float32, shape=(None, ) + input_shape)
-        new_ys_var = tf.placeholder(
+        new_ys_var = tf.compat.v1.placeholder(
             dtype=tf.float32, name='ys', shape=(None, output_dim))
 
         data = np.full(input_shape, 0.5)
@@ -240,16 +240,17 @@ class TestGaussianCNNRegressorWithModel(TfGraphTestCase):
             adaptive_std=False,
             use_trust_region=False)
 
-        with tf.variable_scope(
+        with tf.compat.v1.variable_scope(
                 'GaussianCNNRegressorWithModel/GaussianCNNRegressorModel',
                 reuse=True):
-            bias = tf.get_variable('dist_params/mean_network/hidden_0/bias')
+            bias = tf.compat.v1.get_variable(
+                'dist_params/mean_network/hidden_0/bias')
         bias.load(tf.ones_like(bias).eval())
 
         result1 = gcr.predict([np.ones(input_shape)])
         h = pickle.dumps(gcr)
 
-        with tf.Session(graph=tf.Graph()):
+        with tf.compat.v1.Session(graph=tf.Graph()):
             gcr_pickled = pickle.loads(h)
             result2 = gcr_pickled.predict([np.ones(input_shape)])
             assert np.array_equal(result1, result2)
@@ -267,14 +268,14 @@ class TestGaussianCNNRegressorWithModel(TfGraphTestCase):
             adaptive_std=False,
             use_trust_region=False)
 
-        with tf.variable_scope(
+        with tf.compat.v1.variable_scope(
                 'GaussianCNNRegressorWithModel/GaussianCNNRegressorModel',
                 reuse=True):
-            x_mean = tf.get_variable('normalized_vars/x_mean')
+            x_mean = tf.compat.v1.get_variable('normalized_vars/x_mean')
         x_mean.load(tf.ones_like(x_mean).eval())
         x1 = gcr.model.networks['default'].x_mean.eval()
         h = pickle.dumps(gcr)
-        with tf.Session(graph=tf.Graph()):
+        with tf.compat.v1.Session(graph=tf.Graph()):
             gcr_pickled = pickle.loads(h)
             x2 = gcr_pickled.model.networks['default'].x_mean.eval()
             assert np.array_equal(x1, x2)

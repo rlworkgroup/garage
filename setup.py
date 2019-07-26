@@ -10,6 +10,8 @@ except ImportError:
         'Please install numpy==1.14.5 and try again. See '
         'https://github.com/rlworkgroup/garage/issues/800 for more info.')
 
+TF_VERSION = '<1.15,>=1.14.0'
+
 # Required dependencies
 required = [
     # Please keep alphabetized
@@ -38,8 +40,8 @@ required = [
     'torch==1.1.0',
     'scikit-image',
     'scipy',
-    'tensorflow<1.13,>=1.12.0',
-    'tensorflow-probability<0.6.0,>=0.5.0',  # for tensorflow 1.12
+    'tensorflow' + TF_VERSION,
+    'tensorflow-probability<0.8.0,>=0.7.0',  # for tensorflow 1.12
     'torchvision==0.3.0'
 ]
 
@@ -48,7 +50,7 @@ extras = {}
 extras['all'] = list(set(sum(extras.values(), [])))
 
 # Intel dependencies not included in all
-extras['intel'] = ['intel-tensorflow<1.13,>=1.12.0']
+extras['intel'] = ['intel-tensorflow' + TF_VERSION]
 
 # Development dependencies (*not* included in "all")
 extras['dev'] = [

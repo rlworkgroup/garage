@@ -70,14 +70,14 @@ class NormalizedInputMLPModel(MLPModel):
         return ['y_hat', 'x_mean', 'x_std']
 
     def _build(self, state_input, name=None):
-        with tf.variable_scope('normalized_vars'):
-            x_mean_var = tf.get_variable(
+        with tf.compat.v1.variable_scope('normalized_vars'):
+            x_mean_var = tf.compat.v1.get_variable(
                 name='x_mean',
                 shape=(1, ) + self._input_shape,
                 dtype=np.float32,
                 initializer=tf.zeros_initializer(),
                 trainable=False)
-            x_std_var = tf.get_variable(
+            x_std_var = tf.compat.v1.get_variable(
                 name='x_std_var',
                 shape=(1, ) + self._input_shape,
                 dtype=np.float32,

@@ -12,7 +12,7 @@ from tests.fixtures import TfGraphTestCase
 class TestGaussianMLPModel(TfGraphTestCase):
     def setup_method(self):
         super().setup_method()
-        self.input_var = tf.placeholder(tf.float32, shape=(None, 5))
+        self.input_var = tf.compat.v1.placeholder(tf.float32, shape=(None, 5))
         self.obs = np.ones((1, 5))
 
     @mock.patch('tensorflow.random.normal')
@@ -56,10 +56,10 @@ class TestGaussianMLPModel(TfGraphTestCase):
             hidden_sizes=hidden_sizes,
             std_share_network=True)
         model.build(self.input_var)
-        with tf.variable_scope(model.name, reuse=True):
-            std_share_output_weights = tf.get_variable(
+        with tf.compat.v1.variable_scope(model.name, reuse=True):
+            std_share_output_weights = tf.compat.v1.get_variable(
                 'dist_params/mean_std_network/output/kernel')
-            std_share_output_bias = tf.get_variable(
+            std_share_output_bias = tf.compat.v1.get_variable(
                 'dist_params/mean_std_network/output/bias')
         assert std_share_output_weights.shape[1] == output_dim * 2
         assert std_share_output_bias.shape == output_dim * 2
@@ -106,12 +106,12 @@ class TestGaussianMLPModel(TfGraphTestCase):
             std_share_network=False,
             adaptive_std=False)
         model.build(self.input_var)
-        with tf.variable_scope(model.name, reuse=True):
-            mean_output_weights = tf.get_variable(
+        with tf.compat.v1.variable_scope(model.name, reuse=True):
+            mean_output_weights = tf.compat.v1.get_variable(
                 'dist_params/mean_network/output/kernel')
-            mean_output_bias = tf.get_variable(
+            mean_output_bias = tf.compat.v1.get_variable(
                 'dist_params/mean_network/output/bias')
-            log_std_output_weights = tf.get_variable(
+            log_std_output_weights = tf.compat.v1.get_variable(
                 'dist_params/log_std_network/parameter')
         assert mean_output_weights.shape[1] == output_dim
         assert mean_output_bias.shape == output_dim
@@ -168,14 +168,14 @@ class TestGaussianMLPModel(TfGraphTestCase):
             std_share_network=False,
             adaptive_std=True)
         model.build(self.input_var)
-        with tf.variable_scope(model.name, reuse=True):
-            mean_output_weights = tf.get_variable(
+        with tf.compat.v1.variable_scope(model.name, reuse=True):
+            mean_output_weights = tf.compat.v1.get_variable(
                 'dist_params/mean_network/output/kernel')
-            mean_output_bias = tf.get_variable(
+            mean_output_bias = tf.compat.v1.get_variable(
                 'dist_params/mean_network/output/bias')
-            log_std_output_weights = tf.get_variable(
+            log_std_output_weights = tf.compat.v1.get_variable(
                 'dist_params/log_std_network/output/kernel')
-            log_std_output_bias = tf.get_variable(
+            log_std_output_bias = tf.compat.v1.get_variable(
                 'dist_params/log_std_network/output/bias')
 
         assert mean_output_weights.shape[1] == output_dim
@@ -190,7 +190,7 @@ class TestGaussianMLPModel(TfGraphTestCase):
     def test_std_share_network_is_pickleable(self, mock_normal, output_dim,
                                              hidden_sizes):
         mock_normal.return_value = 0.5
-        input_var = tf.placeholder(tf.float32, shape=(None, 5))
+        input_var = tf.compat.v1.placeholder(tf.float32, shape=(None, 5))
         model = GaussianMLPModel(
             output_dim=output_dim,
             hidden_sizes=hidden_sizes,
@@ -201,16 +201,17 @@ class TestGaussianMLPModel(TfGraphTestCase):
         outputs = model.build(input_var)
 
         # get output bias
-        with tf.variable_scope('GaussianMLPModel', reuse=True):
-            bias = tf.get_variable('dist_params/mean_std_network/output/bias')
+        with tf.compat.v1.variable_scope('GaussianMLPModel', reuse=True):
+            bias = tf.compat.v1.get_variable(
+                'dist_params/mean_std_network/output/bias')
         # assign it to all ones
         bias.load(tf.ones_like(bias).eval())
 
         output1 = self.sess.run(outputs[:-1], feed_dict={input_var: self.obs})
 
         h = pickle.dumps(model)
-        with tf.Session(graph=tf.Graph()) as sess:
-            input_var = tf.placeholder(tf.float32, shape=(None, 5))
+        with tf.compat.v1.Session(graph=tf.Graph()) as sess:
+            input_var = tf.compat.v1.placeholder(tf.float32, shape=(None, 5))
             model_pickled = pickle.loads(h)
             outputs = model_pickled.build(input_var)
             output2 = sess.run(outputs[:-1], feed_dict={input_var: self.obs})
@@ -224,7 +225,7 @@ class TestGaussianMLPModel(TfGraphTestCase):
     def test_without_std_share_network_is_pickleable(self, mock_normal,
                                                      output_dim, hidden_sizes):
         mock_normal.return_value = 0.5
-        input_var = tf.placeholder(tf.float32, shape=(None, 5))
+        input_var = tf.compat.v1.placeholder(tf.float32, shape=(None, 5))
         model = GaussianMLPModel(
             output_dim=output_dim,
             hidden_sizes=hidden_sizes,
@@ -236,16 +237,17 @@ class TestGaussianMLPModel(TfGraphTestCase):
         outputs = model.build(input_var)
 
         # get output bias
-        with tf.variable_scope('GaussianMLPModel', reuse=True):
-            bias = tf.get_variable('dist_params/mean_network/output/bias')
+        with tf.compat.v1.variable_scope('GaussianMLPModel', reuse=True):
+            bias = tf.compat.v1.get_variable(
+                'dist_params/mean_network/output/bias')
         # assign it to all ones
         bias.load(tf.ones_like(bias).eval())
 
         output1 = self.sess.run(outputs[:-1], feed_dict={input_var: self.obs})
 
         h = pickle.dumps(model)
-        with tf.Session(graph=tf.Graph()) as sess:
-            input_var = tf.placeholder(tf.float32, shape=(None, 5))
+        with tf.compat.v1.Session(graph=tf.Graph()) as sess:
+            input_var = tf.compat.v1.placeholder(tf.float32, shape=(None, 5))
             model_pickled = pickle.loads(h)
             outputs = model_pickled.build(input_var)
             output2 = sess.run(outputs[:-1], feed_dict={input_var: self.obs})
@@ -259,7 +261,7 @@ class TestGaussianMLPModel(TfGraphTestCase):
     def test_adaptive_std_is_pickleable(self, mock_normal, output_dim,
                                         hidden_sizes, std_hidden_sizes):
         mock_normal.return_value = 0.5
-        input_var = tf.placeholder(tf.float32, shape=(None, 5))
+        input_var = tf.compat.v1.placeholder(tf.float32, shape=(None, 5))
         model = GaussianMLPModel(
             output_dim=output_dim,
             hidden_sizes=hidden_sizes,
@@ -275,15 +277,16 @@ class TestGaussianMLPModel(TfGraphTestCase):
         outputs = model.build(input_var)
 
         # get output bias
-        with tf.variable_scope('GaussianMLPModel', reuse=True):
-            bias = tf.get_variable('dist_params/mean_network/output/bias')
+        with tf.compat.v1.variable_scope('GaussianMLPModel', reuse=True):
+            bias = tf.compat.v1.get_variable(
+                'dist_params/mean_network/output/bias')
         # assign it to all ones
         bias.load(tf.ones_like(bias).eval())
 
         h = pickle.dumps(model)
         output1 = self.sess.run(outputs[:-1], feed_dict={input_var: self.obs})
-        with tf.Session(graph=tf.Graph()) as sess:
-            input_var = tf.placeholder(tf.float32, shape=(None, 5))
+        with tf.compat.v1.Session(graph=tf.Graph()) as sess:
+            input_var = tf.compat.v1.placeholder(tf.float32, shape=(None, 5))
             model_pickled = pickle.loads(h)
             outputs = model_pickled.build(input_var)
             output2 = sess.run(outputs[:-1], feed_dict={input_var: self.obs})

@@ -32,8 +32,8 @@ def parameter(input_var,
     Return:
         A tensor of the broadcasted variables.
     """
-    with tf.variable_scope(name):
-        p = tf.get_variable(
+    with tf.compat.v1.variable_scope(name):
+        p = tf.compat.v1.get_variable(
             'parameter',
             shape=(length, ),
             dtype=dtype,

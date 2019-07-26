@@ -106,8 +106,10 @@ class TestContinuousMLPQFunctionWithModel(TfGraphTestCase):
 
         output1 = qf.get_qval([obs], [act])
 
-        input_var1 = tf.placeholder(tf.float32, shape=(None, obs.shape[0]))
-        input_var2 = tf.placeholder(tf.float32, shape=(None, act.shape[0]))
+        input_var1 = tf.compat.v1.placeholder(
+            tf.float32, shape=(None, obs.shape[0]))
+        input_var2 = tf.compat.v1.placeholder(
+            tf.float32, shape=(None, act.shape[0]))
         q_vals = qf.get_qval_sym(input_var1, input_var2, 'another')
         output2 = self.sess.run(
             q_vals, feed_dict={
@@ -138,17 +140,17 @@ class TestContinuousMLPQFunctionWithModel(TfGraphTestCase):
         act = np.full(action_dim, 0.5).flatten()
         obs_ph, act_ph = qf.inputs
 
-        with tf.variable_scope(
+        with tf.compat.v1.variable_scope(
                 'ContinuousMLPQFunctionWithModel/SimpleMLPMergeModel',
                 reuse=True):
-            return_var = tf.get_variable('return_var')
+            return_var = tf.compat.v1.get_variable('return_var')
         # assign it to all one
         return_var.load(tf.ones_like(return_var).eval())
 
         output1 = qf.get_qval([obs], [act])
 
         h_data = pickle.dumps(qf)
-        with tf.Session(graph=tf.Graph()):
+        with tf.compat.v1.Session(graph=tf.Graph()):
             qf_pickled = pickle.loads(h_data)
             obs_ph_pickled, act_ph_pickled = qf_pickled.inputs
             output2 = qf_pickled.get_qval([obs], [act])

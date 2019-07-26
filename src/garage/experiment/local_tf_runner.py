@@ -74,7 +74,7 @@ class LocalRunner:
         if max_cpus > 1:
             from garage.sampler import singleton_pool
             singleton_pool.initialize(max_cpus)
-        self.sess = sess or tf.Session()
+        self.sess = sess or tf.compat.v1.Session()
         self.sess_entered = False
         self.has_setup = False
         self.plot = False
@@ -89,14 +89,15 @@ class LocalRunner:
             This local runner.
 
         """
-        if tf.get_default_session() is not self.sess:
+        if tf.compat.v1.get_default_session() is not self.sess:
             self.sess.__enter__()
             self.sess_entered = True
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Leave session."""
-        if tf.get_default_session() is self.sess and self.sess_entered:
+        if tf.compat.v1.get_default_session(
+        ) is self.sess and self.sess_entered:
             self.sess.__exit__(exc_type, exc_val, exc_tb)
             self.sess_entered = False
 
@@ -150,12 +151,12 @@ class LocalRunner:
         """Initialize all uninitialized variables in session."""
         with tf.name_scope('initialize_tf_vars'):
             uninited_set = [
-                e.decode()
-                for e in self.sess.run(tf.report_uninitialized_variables())
+                e.decode() for e in self.sess.run(
+                    tf.compat.v1.report_uninitialized_variables())
             ]
             self.sess.run(
-                tf.variables_initializer([
-                    v for v in tf.global_variables()
+                tf.compat.v1.variables_initializer([
+                    v for v in tf.compat.v1.global_variables()
                     if v.name.split(':')[0] in uninited_set
                 ]))
 

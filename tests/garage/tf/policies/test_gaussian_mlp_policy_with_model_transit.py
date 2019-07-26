@@ -41,20 +41,20 @@ class TestGaussianMLPPolicyWithModelTransit(TfGraphTestCase):
             self.policy4 = GaussianMLPPolicyWithModel(
                 env_spec=self.box_env, init_std=1.2, name='P4')
 
-            self.sess.run(tf.global_variables_initializer())
+            self.sess.run(tf.compat.v1.global_variables_initializer())
 
             for a, b in zip(self.policy3.get_params(),
                             self.policy1.get_params()):
-                self.sess.run(tf.assign(b, a))
+                self.sess.run(tf.compat.v1.assign(b, a))
             for a, b in zip(self.policy4.get_params(),
                             self.policy2.get_params()):
-                self.sess.run(tf.assign(b, a))
+                self.sess.run(tf.compat.v1.assign(b, a))
 
             self.obs = [self.box_env.reset()]
-            self.obs_ph = tf.placeholder(
+            self.obs_ph = tf.compat.v1.placeholder(
                 tf.float32,
                 shape=(None, self.box_env.observation_space.flat_dim))
-            self.action_ph = tf.placeholder(
+            self.action_ph = tf.compat.v1.placeholder(
                 tf.float32, shape=(None, self.box_env.action_space.flat_dim))
 
             self.dist1_sym = self.policy1.dist_info_sym(

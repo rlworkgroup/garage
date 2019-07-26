@@ -7,8 +7,8 @@ from garage.tf.core.parameterized import Parameterized, suppress_params_loading
 class Simple(Parameterized, Serializable):
     def __init__(self, name):
         Serializable.quick_init(self, locals())
-        with tf.variable_scope(name):
-            self.w = tf.get_variable('w', [10, 10])
+        with tf.compat.v1.variable_scope(name):
+            self.w = tf.compat.v1.get_variable('w', [10, 10])
 
     def get_params_internal(self, **tags):
         return [self.w]

@@ -24,7 +24,7 @@ class DeterministicMLPPolicy(Policy, LayersPowered, Serializable):
         Serializable.quick_init(self, locals())
 
         self._prob_network_name = 'prob_network'
-        with tf.variable_scope(name, 'DeterministicMLPPolicy'):
+        with tf.compat.v1.variable_scope(name, 'DeterministicMLPPolicy'):
             if prob_network is None:
                 prob_network = MLP(
                     input_shape=(env_spec.observation_space.flat_dim, ),

@@ -83,7 +83,7 @@ class ContinuousMLPPolicy(Policy, LayersPowered, Serializable):
             reuse: A bool indicates whether reuse variables in the same scope.
             trainable: A bool indicates whether variables are trainable.
         """
-        with tf.variable_scope(name):
+        with tf.compat.v1.variable_scope(name):
             l_in = layers.InputLayer(shape=(None, self._obs_dim), name='obs')
 
             l_hidden = l_in

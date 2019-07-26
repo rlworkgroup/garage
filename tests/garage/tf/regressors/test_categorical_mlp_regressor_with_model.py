@@ -151,7 +151,8 @@ class TestCategoricalMLPRegressorWithModel(TfGraphTestCase):
         cmr = CategoricalMLPRegressorWithModel(
             input_shape=input_shape, output_dim=output_dim)
 
-        new_xs_var = tf.placeholder(tf.float32, shape=(None, ) + input_shape)
+        new_xs_var = tf.compat.v1.placeholder(
+            tf.float32, shape=(None, ) + input_shape)
 
         data = np.random.random(size=input_shape)
         label = np.random.randint(0, output_dim)
@@ -172,8 +173,9 @@ class TestCategoricalMLPRegressorWithModel(TfGraphTestCase):
         cmr = CategoricalMLPRegressorWithModel(
             input_shape=input_shape, output_dim=output_dim)
 
-        new_xs_var = tf.placeholder(tf.float32, shape=(None, ) + input_shape)
-        new_ys_var = tf.placeholder(
+        new_xs_var = tf.compat.v1.placeholder(
+            tf.float32, shape=(None, ) + input_shape)
+        new_ys_var = tf.compat.v1.placeholder(
             dtype=tf.float32, name='ys', shape=(None, output_dim))
 
         data = np.random.random(size=input_shape)
@@ -221,16 +223,16 @@ class TestCategoricalMLPRegressorWithModel(TfGraphTestCase):
     def test_is_pickleable(self):
         cmr = CategoricalMLPRegressorWithModel(input_shape=(1, ), output_dim=2)
 
-        with tf.variable_scope(
+        with tf.compat.v1.variable_scope(
                 'CategoricalMLPRegressorWithModel/NormalizedInputMLPModel',
                 reuse=True):
-            bias = tf.get_variable('mlp/hidden_0/bias')
+            bias = tf.compat.v1.get_variable('mlp/hidden_0/bias')
         bias.load(tf.ones_like(bias).eval())
 
         result1 = cmr.predict(np.ones((1, 1)))
 
         h = pickle.dumps(cmr)
-        with tf.Session(graph=tf.Graph()):
+        with tf.compat.v1.Session(graph=tf.Graph()):
             cmr_pickled = pickle.loads(h)
             result2 = cmr_pickled.predict(np.ones((1, 1)))
             assert np.array_equal(result1, result2)
@@ -238,14 +240,14 @@ class TestCategoricalMLPRegressorWithModel(TfGraphTestCase):
     def test_is_pickleable2(self):
         cmr = CategoricalMLPRegressorWithModel(input_shape=(1, ), output_dim=2)
 
-        with tf.variable_scope(
+        with tf.compat.v1.variable_scope(
                 'CategoricalMLPRegressorWithModel/NormalizedInputMLPModel',
                 reuse=True):
-            x_mean = tf.get_variable('normalized_vars/x_mean')
+            x_mean = tf.compat.v1.get_variable('normalized_vars/x_mean')
         x_mean.load(tf.ones_like(x_mean).eval())
         x1 = cmr.model.networks['default'].x_mean.eval()
         h = pickle.dumps(cmr)
-        with tf.Session(graph=tf.Graph()):
+        with tf.compat.v1.Session(graph=tf.Graph()):
             cmr_pickled = pickle.loads(h)
             x2 = cmr_pickled.model.networks['default'].x_mean.eval()
             assert np.array_equal(x1, x2)

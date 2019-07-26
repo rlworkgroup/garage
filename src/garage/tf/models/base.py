@@ -13,14 +13,14 @@ class BaseModel(abc.ABC):
     A Model contains the structure/configuration of a set of computation
     graphs, or can be understood as a set of networks. Using a model
     requires calling `build()` with given input placeholder, which can be
-    either tf.placeholder, or the output from another model. This makes
-    composition of complex models with simple models much easier.
+    either tf.compat.v1.placeholder, or the output from another model. This
+    makes composition of complex models with simple models much easier.
 
     Examples:
         model = SimpleModel(output_dim=2)
         # To use a model, first create a placeholder.
-        # In the case of TensorFlow, we create a tf.placeholder.
-        input_ph = tf.placeholder(tf.float32, shape=(None, 2))
+        # In the case of TensorFlow, we create a tf.compat.v1.placeholder.
+        input_ph = tf.compat.v1.placeholder(tf.float32, shape=(None, 2))
 
         # Building the model
         output = model.build(input_ph)
@@ -190,22 +190,22 @@ class Model(BaseModel):
         if not self._networks:
             # First time building the model, so self._networks are empty
             # We store the variable_scope to reenter later when we reuse it
-            with tf.variable_scope(self._name) as vs:
+            with tf.compat.v1.variable_scope(self._name) as vs:
                 self._variable_scope = vs
                 with tf.name_scope(name=network_name):
                     network = Network()
                     network._inputs = inputs
                     network._outputs = self._build(*inputs, name)
                 variables = self._get_variables().values()
-                tf.get_default_session().run(
-                    tf.variables_initializer(variables))
+                tf.compat.v1.get_default_session().run(
+                    tf.compat.v1.variables_initializer(variables))
                 if self._default_parameters:
                     self.parameters = self._default_parameters
         else:
             if network_name in self._networks:
                 raise ValueError(
                     'Network {} already exists!'.format(network_name))
-            with tf.variable_scope(
+            with tf.compat.v1.variable_scope(
                     self._variable_scope, reuse=True,
                     auxiliary_name_scope=False):
                 with tf.name_scope(name=network_name):
@@ -230,7 +230,8 @@ class Model(BaseModel):
             out_args.extend(network.outputs)
 
         c = namedtuple(network_name, [*in_spec, *out_spec])
-        self._networks[network_name] = c(*in_args, *out_args)
+        all_args = in_args + out_args
+        self._networks[network_name] = c(*all_args)
 
         return network.outputs
 
@@ -282,7 +283,7 @@ class Model(BaseModel):
         """Parameters of the model."""
         _variables = self._get_variables()
         if _variables:
-            return tf.get_default_session().run(_variables)
+            return tf.compat.v1.get_default_session().run(_variables)
         else:
             return _variables
 

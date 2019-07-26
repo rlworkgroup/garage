@@ -199,7 +199,7 @@ def run_baselines(env, seed, log_dir):
         allow_soft_placement=True,
         intra_op_parallelism_threads=ncpu,
         inter_op_parallelism_threads=ncpu)
-    tf.Session(config=config).__enter__()
+    tf.compat.v1.Session(config=config).__enter__()
 
     # Set up logger for baselines
     configure(dir=log_dir, format_strs=['stdout', 'log', 'csv', 'tensorboard'])

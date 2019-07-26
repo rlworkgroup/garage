@@ -70,7 +70,7 @@ class ComplicatedModel2(Model):
 
 class TestModel(TfGraphTestCase):
     def test_model_creation(self):
-        input_var = tf.placeholder(tf.float32, shape=(None, 5))
+        input_var = tf.compat.v1.placeholder(tf.float32, shape=(None, 5))
         model = SimpleModel(output_dim=2)
         outputs = model.build(input_var)
         data = np.ones((3, 5))
@@ -81,7 +81,7 @@ class TestModel(TfGraphTestCase):
         assert model.name == type(model).__name__
 
     def test_model_creation_with_custom_name(self):
-        input_var = tf.placeholder(tf.float32, shape=(None, 5))
+        input_var = tf.compat.v1.placeholder(tf.float32, shape=(None, 5))
         model = SimpleModel(output_dim=2, name='MySimpleModel')
         outputs = model.build(input_var, name='network_2')
         data = np.ones((3, 5))
@@ -92,8 +92,9 @@ class TestModel(TfGraphTestCase):
         assert model.name == 'MySimpleModel'
 
     def test_same_model_with_no_name(self):
-        input_var = tf.placeholder(tf.float32, shape=(None, 5))
-        another_input_var = tf.placeholder(tf.float32, shape=(None, 5))
+        input_var = tf.compat.v1.placeholder(tf.float32, shape=(None, 5))
+        another_input_var = tf.compat.v1.placeholder(
+            tf.float32, shape=(None, 5))
         model = SimpleModel(output_dim=2)
         model.build(input_var)
         with pytest.raises(ValueError):
@@ -104,8 +105,9 @@ class TestModel(TfGraphTestCase):
             model2.build(another_input_var)
 
     def test_model_with_different_name(self):
-        input_var = tf.placeholder(tf.float32, shape=(None, 5))
-        another_input_var = tf.placeholder(tf.float32, shape=(None, 5))
+        input_var = tf.compat.v1.placeholder(tf.float32, shape=(None, 5))
+        another_input_var = tf.compat.v1.placeholder(
+            tf.float32, shape=(None, 5))
         model = SimpleModel(output_dim=2)
         outputs_1 = model.build(input_var)
         outputs_2 = model.build(another_input_var, name='network_2')
@@ -118,8 +120,9 @@ class TestModel(TfGraphTestCase):
         assert np.array_equal(results_1, results_2)
 
     def test_model_with_different_name_in_different_order(self):
-        input_var = tf.placeholder(tf.float32, shape=(None, 5))
-        another_input_var = tf.placeholder(tf.float32, shape=(None, 5))
+        input_var = tf.compat.v1.placeholder(tf.float32, shape=(None, 5))
+        another_input_var = tf.compat.v1.placeholder(
+            tf.float32, shape=(None, 5))
         model = SimpleModel(output_dim=2)
         outputs_1 = model.build(input_var, name='network_1')
         outputs_2 = model.build(another_input_var)
@@ -132,7 +135,7 @@ class TestModel(TfGraphTestCase):
         assert np.array_equal(results_1, results_2)
 
     def test_model_in_model(self):
-        input_var = tf.placeholder(tf.float32, shape=(None, 5))
+        input_var = tf.compat.v1.placeholder(tf.float32, shape=(None, 5))
         model = ComplicatedModel(output_dim=2)
         outputs = model.build(input_var)
         data = np.ones((3, 5))
@@ -143,7 +146,7 @@ class TestModel(TfGraphTestCase):
         assert np.array_equal(out, model_out)
 
     def test_model_as_constructor_argument(self):
-        input_var = tf.placeholder(tf.float32, shape=(None, 5))
+        input_var = tf.compat.v1.placeholder(tf.float32, shape=(None, 5))
         parent_model = SimpleModel(output_dim=4)
         model = ComplicatedModel2(parent_model=parent_model, output_dim=2)
         outputs = model.build(input_var)
@@ -158,13 +161,13 @@ class TestModel(TfGraphTestCase):
         data = np.ones((3, 5))
         model = SimpleModel(output_dim=2)
 
-        with tf.Session(graph=tf.Graph()) as sess:
-            input_var = tf.placeholder(tf.float32, shape=(None, 5))
+        with tf.compat.v1.Session(graph=tf.Graph()) as sess:
+            input_var = tf.compat.v1.placeholder(tf.float32, shape=(None, 5))
             model.build(input_var)
 
             # assign bias to all one
-            with tf.variable_scope('SimpleModel/state', reuse=True):
-                bias = tf.get_variable('hidden_0/bias')
+            with tf.compat.v1.variable_scope('SimpleModel/state', reuse=True):
+                bias = tf.compat.v1.get_variable('hidden_0/bias')
             bias.load(tf.ones_like(bias).eval())
 
             results = sess.run(
@@ -172,8 +175,8 @@ class TestModel(TfGraphTestCase):
                 feed_dict={model.networks['default'].input: data})
             model_data = pickle.dumps(model)
 
-        with tf.Session(graph=tf.Graph()) as sess:
-            input_var = tf.placeholder(tf.float32, shape=(None, 5))
+        with tf.compat.v1.Session(graph=tf.Graph()) as sess:
+            input_var = tf.compat.v1.placeholder(tf.float32, shape=(None, 5))
             model_pickled = pickle.loads(model_data)
             outputs = model_pickled.build(input_var)
 
@@ -193,22 +196,22 @@ class TestModel(TfGraphTestCase):
 
         model = ComplicatedModel(output_dim=2)
 
-        with tf.Session(graph=tf.Graph()) as sess:
-            input_var = tf.placeholder(tf.float32, shape=(None, 5))
+        with tf.compat.v1.Session(graph=tf.Graph()) as sess:
+            input_var = tf.compat.v1.placeholder(tf.float32, shape=(None, 5))
             outputs = model.build(input_var)
 
             # assign bias to all one
-            with tf.variable_scope(
+            with tf.compat.v1.variable_scope(
                     'ComplicatedModel/SimpleModel/state', reuse=True):
-                bias = tf.get_variable('hidden_0/bias')
+                bias = tf.compat.v1.get_variable('hidden_0/bias')
             bias.load(tf.ones_like(bias).eval())
 
             results = sess.run(
                 outputs, feed_dict={model.networks['default'].input: data})
             model_data = pickle.dumps(model)
 
-        with tf.Session(graph=tf.Graph()) as sess:
-            input_var = tf.placeholder(tf.float32, shape=(None, 5))
+        with tf.compat.v1.Session(graph=tf.Graph()) as sess:
+            input_var = tf.compat.v1.placeholder(tf.float32, shape=(None, 5))
             model_pickled = pickle.loads(model_data)
             model_pickled.build(input_var)
 
@@ -224,22 +227,22 @@ class TestModel(TfGraphTestCase):
         parent_model = SimpleModel(output_dim=4)
         model = ComplicatedModel2(parent_model=parent_model, output_dim=2)
 
-        with tf.Session(graph=tf.Graph()) as sess:
-            input_var = tf.placeholder(tf.float32, shape=(None, 5))
+        with tf.compat.v1.Session(graph=tf.Graph()) as sess:
+            input_var = tf.compat.v1.placeholder(tf.float32, shape=(None, 5))
             outputs = model.build(input_var)
 
             # assign bias to all one
-            with tf.variable_scope(
+            with tf.compat.v1.variable_scope(
                     'ComplicatedModel2/SimpleModel/state', reuse=True):
-                bias = tf.get_variable('hidden_0/bias')
+                bias = tf.compat.v1.get_variable('hidden_0/bias')
             bias.load(tf.ones_like(bias).eval())
 
             results = sess.run(
                 outputs, feed_dict={model.networks['default'].input: data})
             model_data = pickle.dumps(model)
 
-        with tf.Session(graph=tf.Graph()) as sess:
-            input_var = tf.placeholder(tf.float32, shape=(None, 5))
+        with tf.compat.v1.Session(graph=tf.Graph()) as sess:
+            input_var = tf.compat.v1.placeholder(tf.float32, shape=(None, 5))
             model_pickled = pickle.loads(model_data)
             model_pickled.build(input_var)
 
@@ -252,8 +255,9 @@ class TestModel(TfGraphTestCase):
     def test_simple_model_is_pickleable_with_same_parameters(self):
         model = SimpleModel(output_dim=2)
 
-        with tf.Session(graph=tf.Graph()):
-            state = tf.placeholder(shape=[None, 10, 5], dtype=tf.float32)
+        with tf.compat.v1.Session(graph=tf.Graph()):
+            state = tf.compat.v1.placeholder(
+                shape=[None, 10, 5], dtype=tf.float32)
             model.build(state)
 
             model.parameters = {
@@ -264,9 +268,10 @@ class TestModel(TfGraphTestCase):
             model.parameters = all_one
             h_data = pickle.dumps(model)
 
-        with tf.Session(graph=tf.Graph()):
+        with tf.compat.v1.Session(graph=tf.Graph()):
             model_pickled = pickle.loads(h_data)
-            state = tf.placeholder(shape=[None, 10, 5], dtype=tf.float32)
+            state = tf.compat.v1.placeholder(
+                shape=[None, 10, 5], dtype=tf.float32)
             model_pickled.build(state)
 
             np.testing.assert_equal(all_one, model_pickled.parameters)
@@ -274,8 +279,9 @@ class TestModel(TfGraphTestCase):
     def test_simple_model_is_pickleable_with_missing_parameters(self):
         model = SimpleModel(output_dim=2)
 
-        with tf.Session(graph=tf.Graph()):
-            state = tf.placeholder(shape=[None, 10, 5], dtype=tf.float32)
+        with tf.compat.v1.Session(graph=tf.Graph()):
+            state = tf.compat.v1.placeholder(
+                shape=[None, 10, 5], dtype=tf.float32)
             model.build(state)
 
             model.parameters = {
@@ -286,9 +292,10 @@ class TestModel(TfGraphTestCase):
             model.parameters = all_one
             h_data = pickle.dumps(model)
 
-        with tf.Session(graph=tf.Graph()):
+        with tf.compat.v1.Session(graph=tf.Graph()):
             model_pickled = pickle.loads(h_data)
-            state = tf.placeholder(shape=[None, 10, 5], dtype=tf.float32)
+            state = tf.compat.v1.placeholder(
+                shape=[None, 10, 5], dtype=tf.float32)
             # remove one of the parameters
             del model_pickled._default_parameters[
                 'SimpleModel/state/hidden_0/kernel:0']

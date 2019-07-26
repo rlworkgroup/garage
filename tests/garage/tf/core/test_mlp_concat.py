@@ -15,16 +15,16 @@ class TestMLPConcat(TfGraphTestCase):
         input_shape_2 = self.act_input.shape[1:]  # 4
         self.hidden_nonlinearity = tf.nn.relu
 
-        self._obs_input = tf.placeholder(
+        self._obs_input = tf.compat.v1.placeholder(
             tf.float32, shape=(None, ) + input_shape_1, name='input')
 
-        self._act_input = tf.placeholder(
+        self._act_input = tf.compat.v1.placeholder(
             tf.float32, shape=(None, ) + input_shape_2, name='input')
 
         self._output_shape = 2
 
         # We build a default mlp
-        with tf.variable_scope('MLP_Concat'):
+        with tf.compat.v1.variable_scope('MLP_Concat'):
             self.mlp_f = mlp(
                 input_var=self._obs_input,
                 output_dim=self._output_shape,
@@ -34,11 +34,11 @@ class TestMLPConcat(TfGraphTestCase):
                 hidden_nonlinearity=self.hidden_nonlinearity,
                 name='mlp1')
 
-        self.sess.run(tf.global_variables_initializer())
+        self.sess.run(tf.compat.v1.global_variables_initializer())
 
     def test_multiple_same_mlp(self):
         # We create another mlp with the same name, trying to reuse it
-        with tf.variable_scope('MLP_Concat', reuse=True):
+        with tf.compat.v1.variable_scope('MLP_Concat', reuse=True):
             self.mlp_same_copy = mlp(
                 input_var=self._obs_input,
                 output_dim=self._output_shape,
@@ -50,8 +50,8 @@ class TestMLPConcat(TfGraphTestCase):
 
         # We modify the weight of the default mlp and feed
         # The another mlp created should output the same result
-        with tf.variable_scope('MLP_Concat', reuse=True):
-            w = tf.get_variable('mlp1/hidden_0/kernel')
+        with tf.compat.v1.variable_scope('MLP_Concat', reuse=True):
+            w = tf.compat.v1.get_variable('mlp1/hidden_0/kernel')
             self.sess.run(w.assign(w + 1))
             mlp_output = self.sess.run(
                 self.mlp_f,
@@ -70,7 +70,7 @@ class TestMLPConcat(TfGraphTestCase):
 
     def test_different_mlp(self):
         # We create another mlp with different name
-        with tf.variable_scope('MLP_Concat'):
+        with tf.compat.v1.variable_scope('MLP_Concat'):
             self.mlp_different_copy = mlp(
                 input_var=self._obs_input,
                 output_dim=self._output_shape,
@@ -81,12 +81,12 @@ class TestMLPConcat(TfGraphTestCase):
                 name='mlp2')
 
         # Initialize the new mlp variables
-        self.sess.run(tf.global_variables_initializer())
+        self.sess.run(tf.compat.v1.global_variables_initializer())
 
         # We modify the weight of the default mlp and feed
         # The another mlp created should output different result
-        with tf.variable_scope('MLP_Concat', reuse=True):
-            w = tf.get_variable('mlp1/hidden_0/kernel')
+        with tf.compat.v1.variable_scope('MLP_Concat', reuse=True):
+            w = tf.compat.v1.get_variable('mlp1/hidden_0/kernel')
             self.sess.run(w.assign(w + 1))
             mlp_output = self.sess.run(
                 self.mlp_f,
@@ -114,13 +114,13 @@ class TestMLPConcat(TfGraphTestCase):
         assert mlp_output.shape[1] == self._output_shape
 
     def test_output_value(self):
-        with tf.variable_scope('MLP_Concat', reuse=True):
-            h1_w = tf.get_variable('mlp1/hidden_0/kernel')
-            h1_b = tf.get_variable('mlp1/hidden_0/bias')
-            h2_w = tf.get_variable('mlp1/hidden_1/kernel')
-            h2_b = tf.get_variable('mlp1/hidden_1/bias')
-            out_w = tf.get_variable('mlp1/output/kernel')
-            out_b = tf.get_variable('mlp1/output/bias')
+        with tf.compat.v1.variable_scope('MLP_Concat', reuse=True):
+            h1_w = tf.compat.v1.get_variable('mlp1/hidden_0/kernel')
+            h1_b = tf.compat.v1.get_variable('mlp1/hidden_0/bias')
+            h2_w = tf.compat.v1.get_variable('mlp1/hidden_1/kernel')
+            h2_b = tf.compat.v1.get_variable('mlp1/hidden_1/bias')
+            out_w = tf.compat.v1.get_variable('mlp1/output/kernel')
+            out_b = tf.compat.v1.get_variable('mlp1/output/bias')
 
         mlp_output = self.sess.run(
             self.mlp_f,
@@ -151,7 +151,7 @@ class TestMLPConcat(TfGraphTestCase):
 
     def test_layer_normalization(self):
         # Create a mlp with layer normalization
-        with tf.variable_scope('MLP_Concat'):
+        with tf.compat.v1.variable_scope('MLP_Concat'):
             self.mlp_f_w_n = mlp(
                 input_var=self._obs_input,
                 output_dim=self._output_shape,
@@ -163,19 +163,19 @@ class TestMLPConcat(TfGraphTestCase):
                 layer_normalization=True)
 
         # Initialize the new mlp variables
-        self.sess.run(tf.global_variables_initializer())
+        self.sess.run(tf.compat.v1.global_variables_initializer())
 
-        with tf.variable_scope('MLP_Concat', reuse=True):
-            h1_w = tf.get_variable('mlp2/hidden_0/kernel')
-            h1_b = tf.get_variable('mlp2/hidden_0/bias')
-            h2_w = tf.get_variable('mlp2/hidden_1/kernel')
-            h2_b = tf.get_variable('mlp2/hidden_1/bias')
-            out_w = tf.get_variable('mlp2/output/kernel')
-            out_b = tf.get_variable('mlp2/output/bias')
-            beta_1 = tf.get_variable('mlp2/LayerNorm/beta')
-            gamma_1 = tf.get_variable('mlp2/LayerNorm/gamma')
-            beta_2 = tf.get_variable('mlp2/LayerNorm_1/beta')
-            gamma_2 = tf.get_variable('mlp2/LayerNorm_1/gamma')
+        with tf.compat.v1.variable_scope('MLP_Concat', reuse=True):
+            h1_w = tf.compat.v1.get_variable('mlp2/hidden_0/kernel')
+            h1_b = tf.compat.v1.get_variable('mlp2/hidden_0/bias')
+            h2_w = tf.compat.v1.get_variable('mlp2/hidden_1/kernel')
+            h2_b = tf.compat.v1.get_variable('mlp2/hidden_1/bias')
+            out_w = tf.compat.v1.get_variable('mlp2/output/kernel')
+            out_b = tf.compat.v1.get_variable('mlp2/output/bias')
+            beta_1 = tf.compat.v1.get_variable('mlp2/LayerNorm/beta')
+            gamma_1 = tf.compat.v1.get_variable('mlp2/LayerNorm/gamma')
+            beta_2 = tf.compat.v1.get_variable('mlp2/LayerNorm_1/beta')
+            gamma_2 = tf.compat.v1.get_variable('mlp2/LayerNorm_1/gamma')
 
         # First layer
         y = tf.matmul(tf.concat([self._obs_input, self._act_input], 1),
@@ -212,7 +212,7 @@ class TestMLPConcat(TfGraphTestCase):
 
     @pytest.mark.parametrize('concat_idx', [2, 1, 0, -1, -2])
     def test_concat_layer(self, concat_idx):
-        with tf.variable_scope('mlp_concat_test'):
+        with tf.compat.v1.variable_scope('mlp_concat_test'):
             _ = mlp(
                 input_var=self._obs_input,
                 output_dim=self._output_shape,
@@ -228,10 +228,10 @@ class TestMLPConcat(TfGraphTestCase):
         expected_units[concat_idx] += act_input_size
 
         actual_units = []
-        with tf.variable_scope('mlp_concat_test', reuse=True):
-            h1_w = tf.get_variable('mlp2/hidden_0/kernel')
-            h2_w = tf.get_variable('mlp2/hidden_1/kernel')
-            out_w = tf.get_variable('mlp2/output/kernel')
+        with tf.compat.v1.variable_scope('mlp_concat_test', reuse=True):
+            h1_w = tf.compat.v1.get_variable('mlp2/hidden_0/kernel')
+            h2_w = tf.compat.v1.get_variable('mlp2/hidden_1/kernel')
+            out_w = tf.compat.v1.get_variable('mlp2/output/kernel')
 
             actual_units.append(h1_w.shape[0].value)
             actual_units.append(h2_w.shape[0].value)
@@ -241,7 +241,7 @@ class TestMLPConcat(TfGraphTestCase):
 
     @pytest.mark.parametrize('concat_idx', [2, 1, 0, -1, -2])
     def test_invalid_concat_args(self, concat_idx):
-        with tf.variable_scope('mlp_concat_test'):
+        with tf.compat.v1.variable_scope('mlp_concat_test'):
             _ = mlp(
                 input_var=self._obs_input,
                 output_dim=self._output_shape,
@@ -256,10 +256,10 @@ class TestMLPConcat(TfGraphTestCase):
         expected_units = [obs_input_size, 64, 32]
 
         actual_units = []
-        with tf.variable_scope('mlp_concat_test', reuse=True):
-            h1_w = tf.get_variable('mlp_no_input2/hidden_0/kernel')
-            h2_w = tf.get_variable('mlp_no_input2/hidden_1/kernel')
-            out_w = tf.get_variable('mlp_no_input2/output/kernel')
+        with tf.compat.v1.variable_scope('mlp_concat_test', reuse=True):
+            h1_w = tf.compat.v1.get_variable('mlp_no_input2/hidden_0/kernel')
+            h2_w = tf.compat.v1.get_variable('mlp_no_input2/hidden_1/kernel')
+            out_w = tf.compat.v1.get_variable('mlp_no_input2/output/kernel')
 
             actual_units.append(h1_w.shape[0].value)
             actual_units.append(h2_w.shape[0].value)
@@ -269,7 +269,7 @@ class TestMLPConcat(TfGraphTestCase):
 
     @pytest.mark.parametrize('concat_idx', [2, 1, 0, -1, -2])
     def test_no_hidden(self, concat_idx):
-        with tf.variable_scope('mlp_concat_test'):
+        with tf.compat.v1.variable_scope('mlp_concat_test'):
             _ = mlp(
                 input_var=self._obs_input,
                 output_dim=self._output_shape,
@@ -287,8 +287,8 @@ class TestMLPConcat(TfGraphTestCase):
         expected_units[0] += act_input_size
 
         actual_units = []
-        with tf.variable_scope('mlp_concat_test', reuse=True):
-            out_w = tf.get_variable('mlp2/output/kernel')
+        with tf.compat.v1.variable_scope('mlp_concat_test', reuse=True):
+            out_w = tf.compat.v1.get_variable('mlp2/output/kernel')
             actual_units.append(out_w.shape[0].value)
 
         assert np.array_equal(expected_units, actual_units)

@@ -84,7 +84,8 @@ class TestCategoricalMLPPolicyWithModel(TfGraphTestCase):
         expected_prob = np.full(action_dim, 0.5)
 
         obs_dim = env.spec.observation_space.flat_dim
-        state_input = tf.placeholder(tf.float32, shape=(None, obs_dim))
+        state_input = tf.compat.v1.placeholder(
+            tf.float32, shape=(None, obs_dim))
         dist1 = policy.dist_info_sym(state_input, name='policy2')
 
         prob = self.sess.run(
@@ -107,8 +108,9 @@ class TestCategoricalMLPPolicyWithModel(TfGraphTestCase):
         env.reset()
         obs, _, _, _ = env.step(1)
 
-        with tf.variable_scope('CategoricalMLPPolicy/MLPModel', reuse=True):
-            return_var = tf.get_variable('return_var')
+        with tf.compat.v1.variable_scope(
+                'CategoricalMLPPolicy/MLPModel', reuse=True):
+            return_var = tf.compat.v1.get_variable('return_var')
         # assign it to all one
         return_var.load(tf.ones_like(return_var).eval())
         output1 = self.sess.run(
@@ -117,7 +119,7 @@ class TestCategoricalMLPPolicyWithModel(TfGraphTestCase):
 
         p = pickle.dumps(policy)
 
-        with tf.Session(graph=tf.Graph()) as sess:
+        with tf.compat.v1.Session(graph=tf.Graph()) as sess:
             policy_pickled = pickle.loads(p)
             output2 = sess.run(
                 policy_pickled.model.outputs,

@@ -91,7 +91,8 @@ class TestDiscreteMLPQFunction(TfGraphTestCase):
 
         output1 = self.sess.run(qf.q_vals, feed_dict={qf.input: [obs]})
 
-        input_var = tf.placeholder(tf.float32, shape=(None, ) + obs_dim)
+        input_var = tf.compat.v1.placeholder(
+            tf.float32, shape=(None, ) + obs_dim)
         q_vals = qf.get_qval_sym(input_var, 'another')
         output2 = self.sess.run(q_vals, feed_dict={input_var: [obs]})
 
@@ -115,16 +116,16 @@ class TestDiscreteMLPQFunction(TfGraphTestCase):
         env.reset()
         obs, _, _, _ = env.step(1)
 
-        with tf.variable_scope(
+        with tf.compat.v1.variable_scope(
                 'DiscreteMLPQFunction/SimpleMLPModel', reuse=True):
-            return_var = tf.get_variable('return_var')
+            return_var = tf.compat.v1.get_variable('return_var')
         # assign it to all one
         return_var.load(tf.ones_like(return_var).eval())
 
         output1 = self.sess.run(qf.q_vals, feed_dict={qf.input: [obs]})
 
         h_data = pickle.dumps(qf)
-        with tf.Session(graph=tf.Graph()) as sess:
+        with tf.compat.v1.Session(graph=tf.Graph()) as sess:
             qf_pickled = pickle.loads(h_data)
             output2 = sess.run(
                 qf_pickled.q_vals, feed_dict={qf_pickled.input: [obs]})

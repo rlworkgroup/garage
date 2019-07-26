@@ -40,7 +40,7 @@ class TestContinuousMLPPolicyWithModelTransit(TfGraphTestCase):
             self.policy4 = ContinuousMLPPolicyWithModel(
                 env_spec=self.box_env, hidden_sizes=(64, 64), name='P4')
 
-            self.sess.run(tf.global_variables_initializer())
+            self.sess.run(tf.compat.v1.global_variables_initializer())
             for a, b in zip(self.policy3.get_params(),
                             self.policy1.get_params()):
                 self.sess.run(a.assign(b))
@@ -74,7 +74,8 @@ class TestContinuousMLPPolicyWithModelTransit(TfGraphTestCase):
 
     def test_get_action_sym(self):
         obs_dim = self.box_env.spec.observation_space.flat_dim
-        state_input = tf.placeholder(tf.float32, shape=(None, obs_dim))
+        state_input = tf.compat.v1.placeholder(
+            tf.float32, shape=(None, obs_dim))
 
         action_sym1 = self.policy1.get_action_sym(
             state_input, name='action_sym')

@@ -133,7 +133,7 @@ class GaussianGRUModel(Model):
     def _build(self, state_input, step_input, hidden_input, name=None):
         action_dim = self._output_dim
 
-        with tf.variable_scope('dist_params'):
+        with tf.compat.v1.variable_scope('dist_params'):
             if self._std_share_network:
                 # mean and std networks share an MLP
                 (outputs, step_outputs, step_hidden, hidden_init_var) = gru(
@@ -147,10 +147,10 @@ class GaussianGRUModel(Model):
                     _hidden_state_init_trainable,
                     output_nonlinearity_layer=self.
                     _mean_std_output_nonlinearity_layer)
-                with tf.variable_scope('mean_network'):
+                with tf.compat.v1.variable_scope('mean_network'):
                     mean_var = outputs[..., :action_dim]
                     step_mean_var = step_outputs[..., :action_dim]
-                with tf.variable_scope('log_std_network'):
+                with tf.compat.v1.variable_scope('log_std_network'):
                     log_std_var = outputs[..., action_dim:]
                     step_log_std_var = step_outputs[..., action_dim:]
 

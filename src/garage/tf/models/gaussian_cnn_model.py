@@ -180,7 +180,7 @@ class GaussianCNNModel(Model):
     def _build(self, state_input, name=None):
         action_dim = self._output_dim
 
-        with tf.variable_scope('dist_params'):
+        with tf.compat.v1.variable_scope('dist_params'):
             if self._std_share_network:
                 # mean and std networks share an CNN
                 b = np.concatenate([
@@ -210,9 +210,9 @@ class GaussianCNNModel(Model):
                     output_b_init=tf.constant_initializer(b),
                     name='mean_std_network',
                     layer_normalization=self._layer_normalization)
-                with tf.variable_scope('mean_network'):
+                with tf.compat.v1.variable_scope('mean_network'):
                     mean_network = mean_std_network[..., :action_dim]
-                with tf.variable_scope('log_std_network'):
+                with tf.compat.v1.variable_scope('log_std_network'):
                     log_std_network = mean_std_network[..., action_dim:]
 
             else:
@@ -280,18 +280,18 @@ class GaussianCNNModel(Model):
         mean_var = mean_network
         std_param = log_std_network
 
-        with tf.variable_scope('std_limits'):
+        with tf.compat.v1.variable_scope('std_limits'):
             if self._min_std_param is not None:
                 std_param = tf.maximum(std_param, self._min_std_param)
             if self._max_std_param is not None:
                 std_param = tf.minimum(std_param, self._max_std_param)
 
-        with tf.variable_scope('std_parameterization'):
+        with tf.compat.v1.variable_scope('std_parameterization'):
             # build std_var with std parameterization
             if self._std_parameterization == 'exp':
                 log_std_var = std_param
             else:  # we know it must be softplus here
-                log_std_var = tf.log(tf.log(1. + tf.exp(std_param)))
+                log_std_var = tf.math.log(tf.math.log(1. + tf.exp(std_param)))
 
         dist = DiagonalGaussian(self._output_dim)
         rnd = tf.random.normal(shape=mean_var.get_shape().as_list()[1:])

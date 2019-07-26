@@ -25,7 +25,7 @@ class TestDiscretePolicies(TfGraphTestCase):
     def test_categorial_gru_policy(self):
         categorical_gru_policy = CategoricalGRUPolicy(
             env_spec=self.env, hidden_dim=1)
-        self.sess.run(tf.global_variables_initializer())
+        self.sess.run(tf.compat.v1.global_variables_initializer())
 
         categorical_gru_policy.reset()
 
@@ -35,7 +35,7 @@ class TestDiscretePolicies(TfGraphTestCase):
     def test_categorical_lstm_policy(self):
         categorical_lstm_policy = CategoricalLSTMPolicy(
             env_spec=self.env, hidden_dim=1)
-        self.sess.run(tf.global_variables_initializer())
+        self.sess.run(tf.compat.v1.global_variables_initializer())
 
         categorical_lstm_policy.reset()
 
@@ -45,7 +45,7 @@ class TestDiscretePolicies(TfGraphTestCase):
     def test_categorial_mlp_policy(self):
         categorical_mlp_policy = CategoricalMLPPolicy(
             env_spec=self.env, hidden_sizes=(1, ))
-        self.sess.run(tf.global_variables_initializer())
+        self.sess.run(tf.compat.v1.global_variables_initializer())
 
         obs = self.env.observation_space.high
         assert categorical_mlp_policy.get_action(obs)
@@ -63,7 +63,7 @@ class TestContinuousPolicies(TfGraphTestCase):
     def test_continuous_mlp_policy(self):
         continuous_mlp_policy = ContinuousMLPPolicy(
             env_spec=self.env, hidden_sizes=(1, ))
-        self.sess.run(tf.global_variables_initializer())
+        self.sess.run(tf.compat.v1.global_variables_initializer())
 
         obs = self.env.observation_space.high
         assert continuous_mlp_policy.get_action(obs)
@@ -71,7 +71,7 @@ class TestContinuousPolicies(TfGraphTestCase):
     def test_deterministic_mlp_policy(self):
         deterministic_mlp_policy = DeterministicMLPPolicy(
             env_spec=self.env, hidden_sizes=(1, ))
-        self.sess.run(tf.global_variables_initializer())
+        self.sess.run(tf.compat.v1.global_variables_initializer())
 
         obs = self.env.observation_space.high
         assert deterministic_mlp_policy.get_action(obs)
@@ -79,7 +79,7 @@ class TestContinuousPolicies(TfGraphTestCase):
     def test_gaussian_gru_policy(self):
         gaussian_gru_policy = GaussianGRUPolicy(
             env_spec=self.env, hidden_dim=1)
-        self.sess.run(tf.global_variables_initializer())
+        self.sess.run(tf.compat.v1.global_variables_initializer())
 
         gaussian_gru_policy.reset()
 
@@ -89,7 +89,7 @@ class TestContinuousPolicies(TfGraphTestCase):
     def test_gaussian_lstm_policy(self):
         gaussian_lstm_policy = GaussianLSTMPolicy(
             env_spec=self.env, hidden_dim=1)
-        self.sess.run(tf.global_variables_initializer())
+        self.sess.run(tf.compat.v1.global_variables_initializer())
 
         gaussian_lstm_policy.reset()
 
@@ -99,7 +99,7 @@ class TestContinuousPolicies(TfGraphTestCase):
     def test_gaussian_mlp_policy(self):
         gaussian_mlp_policy = GaussianMLPPolicy(
             env_spec=self.env, hidden_sizes=(1, ))
-        self.sess.run(tf.global_variables_initializer())
+        self.sess.run(tf.compat.v1.global_variables_initializer())
 
         obs = self.env.observation_space.high
         assert gaussian_mlp_policy.get_action(obs)

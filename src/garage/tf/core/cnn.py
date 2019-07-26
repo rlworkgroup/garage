@@ -43,7 +43,7 @@ def cnn(input_var,
     Return:
         The output tf.Tensor of the CNN.
     """
-    with tf.variable_scope(name):
+    with tf.compat.v1.variable_scope(name):
         h = input_var
         for index, (filter_dim, num_filter, stride) in enumerate(
                 zip(filter_dims, num_filters, strides)):
@@ -110,7 +110,7 @@ def cnn_with_max_pooling(input_var,
     pool_strides = [1, pool_strides[0], pool_strides[1], 1]
     pool_shapes = [1, pool_shapes[0], pool_shapes[1], 1]
 
-    with tf.variable_scope(name):
+    with tf.compat.v1.variable_scope(name):
         h = input_var
         for index, (filter_dim, num_filter, stride) in enumerate(
                 zip(filter_dims, num_filters, strides)):
@@ -119,7 +119,7 @@ def cnn_with_max_pooling(input_var,
                       hidden_w_init, hidden_b_init, padding)
             if hidden_nonlinearity is not None:
                 h = hidden_nonlinearity(h)
-            h = tf.nn.max_pool(
+            h = tf.nn.max_pool2d(
                 h, ksize=pool_shapes, strides=pool_strides, padding=padding)
 
         # flatten
@@ -135,9 +135,11 @@ def _conv(input_var, name, filter_size, num_filter, strides, hidden_w_init,
     w_shape = [filter_size, filter_size, input_shape, num_filter]
     b_shape = [1, 1, 1, num_filter]
 
-    with tf.variable_scope(name):
-        weight = tf.get_variable('weight', w_shape, initializer=hidden_w_init)
-        bias = tf.get_variable('bias', b_shape, initializer=hidden_b_init)
+    with tf.compat.v1.variable_scope(name):
+        weight = tf.compat.v1.get_variable(
+            'weight', w_shape, initializer=hidden_w_init)
+        bias = tf.compat.v1.get_variable(
+            'bias', b_shape, initializer=hidden_b_init)
 
         return tf.nn.conv2d(
             input_var, weight, strides=strides, padding=padding) + bias
