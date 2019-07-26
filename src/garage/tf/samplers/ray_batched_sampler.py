@@ -32,7 +32,7 @@ class RaySamplerTF(RaySampler):
             num_processors=None,
             sampler_worker_cls=SamplerWorkerTF)
 
-    def shutdown(self):
+    def shutdown_worker(self, local=False):
         """Shuts down the worker."""
         temp = []
         for worker in self._all_workers.values():
@@ -55,9 +55,12 @@ class SamplerWorkerTF(SamplerWorker):
                  agent,
                  seed,
                  max_path_length,
-                 should_render=False):
-        self.sess = tf.Session()
-        self.sess.__enter__()
+                 should_render=False,
+                 local=False):
+        self.sess = tf.get_default_session()
+        if not self.sess:
+            self.sess = tf.Session()
+            self.sess.__enter__()
         super().__init__(
             worker_id,
             env,
@@ -68,4 +71,5 @@ class SamplerWorkerTF(SamplerWorker):
 
     def shutdown(self):
         """Perform shutdown processes for TF."""
-        self.sess.__exit__(None, None, None)
+        if tf.get_default_session():
+            self.sess.__exit__(None, None, None)

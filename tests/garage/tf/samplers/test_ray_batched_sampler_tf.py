@@ -54,4 +54,4 @@ class TestRaySamplerTF():
         sampler1 = RaySamplerTF(
             self.algo, self.env, seed=100, num_processors=1)
         sampler1.start_worker()
-        sampler1.shutdown_worker()
+        sampler1.shutdown_worker(local=True)
