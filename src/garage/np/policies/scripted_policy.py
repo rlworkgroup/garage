@@ -12,8 +12,8 @@ class ScriptedPolicy:
     """
 
     def __init__(self, scripted_actions, agent_env_infos=None):
-        self.scripted_actions = scripted_actions
-        self.agent_env_infos = agent_env_infos
+        self._scripted_actions = scripted_actions
+        self._agent_env_infos = agent_env_infos
 
     def set_param_values(self, params):
         """Set param values of policy."""
@@ -29,16 +29,16 @@ class ScriptedPolicy:
 
     def get_action(self, obs):
         """Return action sampled from the policy."""
-        if self.agent_env_infos:
-            a_info = self.agent_env_infos[obs]
+        if self._agent_env_infos:
+            a_info = self._agent_env_infos[obs]
         else:
             a_info = dict()
-        return self.scripted_actions[obs], a_info
+        return self._scripted_actions[obs], a_info
 
     def get_actions(self, obses):
         """Return ACTIONS sampled from the policy."""
-        if self.agent_env_infos:
-            a_info = self.agent_env_infos[obses[0]]
+        if self._agent_env_infos:
+            a_info = self._agent_env_infos[obses[0]]
         else:
             a_info = dict()
-        return [self.scripted_actions[obs] for obs in obses], a_info
+        return [self._scripted_actions[obs] for obs in obses], a_info
