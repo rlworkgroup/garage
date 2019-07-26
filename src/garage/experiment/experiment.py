@@ -10,6 +10,7 @@ import re
 import subprocess
 import sys
 
+import cloudpickle
 import dateutil.tz
 import numpy as np
 
@@ -276,7 +277,7 @@ def run_experiment(method_call=None,
 
     for task in batch_tasks:
         call = task.pop('method_call')
-        data = base64.b64encode(pickle.dumps(call)).decode('utf-8')
+        data = base64.b64encode(cloudpickle.dumps(call)).decode('utf-8')
         task['args_data'] = data
         exp_count += 1
 

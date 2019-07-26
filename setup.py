@@ -18,6 +18,7 @@ required = [
     'akro==0.0.6',
     'cached_property',
     'click',
+    'cloudpickle',
     'cma==1.1.06',
     # dm_control throws an error during install about not being able to
     # find a build dependency (absl-py). Later pip executes the `install`

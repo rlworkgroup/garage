@@ -12,6 +12,7 @@ import signal
 import sys
 import uuid
 
+import cloudpickle
 import dateutil.tz
 import dowel
 from dowel import logger
@@ -182,7 +183,7 @@ def run_experiment(argv):
         snapshot_mode=args.snapshot_mode,
         snapshot_gap=args.snapshot_gap)
 
-    method_call = pickle.loads(base64.b64decode(args.args_data))
+    method_call = cloudpickle.loads(base64.b64decode(args.args_data))
     try:
         method_call(snapshot_config, variant_data, args.resume_from_dir,
                     args.resume_from_epoch)
