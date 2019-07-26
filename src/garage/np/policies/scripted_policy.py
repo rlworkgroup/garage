@@ -1,3 +1,6 @@
+"""Simulates a garage policy object."""
+
+
 class ScriptedPolicy:
     """Simulates a garage policy object.
 
@@ -13,15 +16,19 @@ class ScriptedPolicy:
         self.agent_env_infos = agent_env_infos
 
     def set_param_values(self, params):
-        return params
+        """Set param values of policy."""
+        pass
 
     def get_param_values(self):
-        return 'ScriptedPolicy'
+        """Return policy params as a list."""
+        return []
 
     def reset(self, dones=None):
+        """Reset Policy to initial state."""
         pass
 
     def get_action(self, obs):
+        """Return action sampled from the policy."""
         if self.agent_env_infos:
             a_info = self.agent_env_infos[obs]
         else:
@@ -29,6 +36,7 @@ class ScriptedPolicy:
         return self.scripted_actions[obs], a_info
 
     def get_actions(self, obses):
+        """Return ACTIONS sampled from the policy."""
         if self.agent_env_infos:
             a_info = self.agent_env_infos[obses[0]]
         else:

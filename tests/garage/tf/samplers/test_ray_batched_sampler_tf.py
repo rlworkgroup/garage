@@ -11,9 +11,9 @@ from unittest.mock import Mock
 import ray
 
 from garage.envs.grid_world_env import GridWorldEnv
+from garage.np.policies import ScriptedPolicy
 from garage.tf.envs import TfEnv
 from garage.tf.samplers import RaySamplerTF
-from tests.fixtures.policies.scripted_policy import ScriptedPolicy
 
 
 class TestRaySamplerTF():

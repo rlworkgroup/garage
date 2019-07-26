@@ -4,11 +4,11 @@ import numpy as np
 import ray
 
 from garage.envs.grid_world_env import GridWorldEnv
+from garage.np.policies import ScriptedPolicy
 from garage.sampler import RaySampler, SamplerWorker
 from garage.tf.envs import TfEnv
 from garage.tf.samplers.on_policy_vectorized_sampler \
     import OnPolicyVectorizedSampler
-from tests.fixtures.policies.scripted_policy import ScriptedPolicy
 
 
 class TestSampler():
