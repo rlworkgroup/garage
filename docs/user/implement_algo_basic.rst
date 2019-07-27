@@ -256,8 +256,6 @@ Since this algorithm is on-policy, we can evaluate its performance by inspecting
 
     print('Average Return:', np.mean([sum(path['rewards']) for path in paths]))
 
-The complete source code so far is available at :code:`examples/tf/vpg_cartpole.py`.
-
 Additional Tricks
 =================
 
@@ -334,8 +332,7 @@ from each state, and if the baseline could fit the data perfectly, then all the
 advantages would be zero, giving us no gradient signals at all.
 
 Now, we can train the policy much faster (we need to change the learning rate
-accordingly because of the rescaling). The complete source code so far is
-available at :code:`examples/tf/vpg_cartpole.py`
+accordingly because of the rescaling). 
 
 .. [1] Williams, Ronald J. "Simple statistical gradient-following algorithms for connectionist reinforcement learning." Machine learning 8.3-4 (1992): 229-256.
 .. [2] Kingma, Diederik P., and Jimmy Ba Adam. "A method for stochastic optimization." International Conference on Learning Representation. 2015.
