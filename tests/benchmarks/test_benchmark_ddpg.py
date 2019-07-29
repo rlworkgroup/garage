@@ -109,19 +109,18 @@ class TestBenchmarkDDPG:
 
             env.close()
 
-            Rh.plot(
-                b_csvs=baselines_csvs,
-                g_csvs=garage_csvs,
-                g_x='Epoch',
-                g_y='AverageReturn',
-                b_x='total/epochs',
-                b_y='rollout/return',
-                trials=task['trials'],
-                seeds=seeds,
-                plt_file=plt_file,
-                env_id=env_id,
-                x_label='Epoch',
-                y_label='AverageReturn')
+            Rh.plot(b_csvs=baselines_csvs,
+                    g_csvs=garage_csvs,
+                    g_x='Epoch',
+                    g_y='AverageReturn',
+                    b_x='total/epochs',
+                    b_y='rollout/return',
+                    trials=task['trials'],
+                    seeds=seeds,
+                    plt_file=plt_file,
+                    env_id=env_id,
+                    x_label='Epoch',
+                    y_label='AverageReturn')
 
             result_json[env_id] = Rh.create_json(
                 b_csvs=baselines_csvs,
@@ -160,30 +159,28 @@ def run_garage(env, seed, log_dir):
             hidden_nonlinearity=tf.nn.relu,
             output_nonlinearity=tf.nn.tanh)
 
-        qf = ContinuousMLPQFunction(
-            env_spec=env.spec,
-            hidden_sizes=params['qf_hidden_sizes'],
-            hidden_nonlinearity=tf.nn.relu)
+        qf = ContinuousMLPQFunction(env_spec=env.spec,
+                                    hidden_sizes=params['qf_hidden_sizes'],
+                                    hidden_nonlinearity=tf.nn.relu)
 
         replay_buffer = SimpleReplayBuffer(
             env_spec=env.spec,
             size_in_transitions=params['replay_buffer_size'],
             time_horizon=params['n_rollout_steps'])
 
-        ddpg = DDPG(
-            env_spec=env.spec,
-            policy=policy,
-            qf=qf,
-            replay_buffer=replay_buffer,
-            policy_lr=params['policy_lr'],
-            qf_lr=params['qf_lr'],
-            target_update_tau=params['tau'],
-            n_train_steps=params['n_train_steps'],
-            discount=params['discount'],
-            min_buffer_size=int(1e4),
-            exploration_strategy=action_noise,
-            policy_optimizer=tf.train.AdamOptimizer,
-            qf_optimizer=tf.train.AdamOptimizer)
+        ddpg = DDPG(env_spec=env.spec,
+                    policy=policy,
+                    qf=qf,
+                    replay_buffer=replay_buffer,
+                    policy_lr=params['policy_lr'],
+                    qf_lr=params['qf_lr'],
+                    target_update_tau=params['tau'],
+                    n_train_steps=params['n_train_steps'],
+                    discount=params['discount'],
+                    min_buffer_size=int(1e4),
+                    exploration_strategy=action_noise,
+                    policy_optimizer=tf.train.AdamOptimizer,
+                    qf_optimizer=tf.train.AdamOptimizer)
 
         # Set up logger since we are not using run_experiment
         tabular_log_file = osp.join(log_dir, 'progress.csv')
@@ -193,10 +190,9 @@ def run_garage(env, seed, log_dir):
         dowel_logger.add_output(dowel.TensorBoardOutput(tensorboard_log_dir))
 
         runner.setup(ddpg, env)
-        runner.train(
-            n_epochs=params['n_epochs'],
-            n_epoch_cycles=params['n_epoch_cycles'],
-            batch_size=params['n_rollout_steps'])
+        runner.train(n_epochs=params['n_epochs'],
+                     n_epoch_cycles=params['n_epoch_cycles'],
+                     batch_size=params['n_rollout_steps'])
 
         dowel_logger.remove_all()
 
@@ -226,40 +222,38 @@ def run_baselines(env, seed, log_dir):
     nb_actions = env.action_space.shape[-1]
     layer_norm = False
 
-    action_noise = OrnsteinUhlenbeckActionNoise(
-        mu=np.zeros(nb_actions),
-        sigma=float(params['sigma']) * np.ones(nb_actions))
-    memory = Memory(
-        limit=params['replay_buffer_size'],
-        action_shape=env.action_space.shape,
-        observation_shape=env.observation_space.shape)
+    action_noise = OrnsteinUhlenbeckActionNoise(mu=np.zeros(nb_actions),
+                                                sigma=float(params['sigma']) *
+                                                np.ones(nb_actions))
+    memory = Memory(limit=params['replay_buffer_size'],
+                    action_shape=env.action_space.shape,
+                    observation_shape=env.observation_space.shape)
     critic = Critic(layer_norm=layer_norm)
     actor = Actor(nb_actions, layer_norm=layer_norm)
 
-    training.train(
-        env=env,
-        eval_env=None,
-        param_noise=None,
-        action_noise=action_noise,
-        actor=actor,
-        critic=critic,
-        memory=memory,
-        nb_epochs=params['n_epochs'],
-        nb_epoch_cycles=params['n_epoch_cycles'],
-        render_eval=False,
-        reward_scale=1.,
-        render=False,
-        normalize_returns=False,
-        normalize_observations=False,
-        critic_l2_reg=0,
-        actor_lr=params['policy_lr'],
-        critic_lr=params['qf_lr'],
-        popart=False,
-        gamma=params['discount'],
-        clip_norm=None,
-        nb_train_steps=params['n_train_steps'],
-        nb_rollout_steps=params['n_rollout_steps'],
-        nb_eval_steps=100,
-        batch_size=64)
+    training.train(env=env,
+                   eval_env=None,
+                   param_noise=None,
+                   action_noise=action_noise,
+                   actor=actor,
+                   critic=critic,
+                   memory=memory,
+                   nb_epochs=params['n_epochs'],
+                   nb_epoch_cycles=params['n_epoch_cycles'],
+                   render_eval=False,
+                   reward_scale=1.,
+                   render=False,
+                   normalize_returns=False,
+                   normalize_observations=False,
+                   critic_l2_reg=0,
+                   actor_lr=params['policy_lr'],
+                   critic_lr=params['qf_lr'],
+                   popart=False,
+                   gamma=params['discount'],
+                   clip_norm=None,
+                   nb_train_steps=params['n_train_steps'],
+                   nb_rollout_steps=params['n_rollout_steps'],
+                   nb_eval_steps=100,
+                   batch_size=64)
 
     return osp.join(log_dir, 'progress.csv')

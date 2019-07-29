@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""Script for resuming training from command line."""
 import click
 
 from garage.experiment import run_experiment
@@ -6,7 +7,7 @@ from garage.tf.experiment import LocalTFRunner
 
 
 @click.group()
-def cli():
+def cli():  # noqa: D103
     pass
 
 
@@ -23,6 +24,7 @@ def cli():
     help='Path to save the log snapshot. If not specified, will be the same '
     'as from_dir.')
 def resume(from_dir, from_epoch, log_dir):
+    """Resume from command line."""
     if log_dir is None:
         log_dir = from_dir
 
@@ -31,11 +33,10 @@ def resume(from_dir, from_epoch, log_dir):
             runner.restore(from_dir=_from_dir, from_epoch=_from_epoch)
             runner.resume()
 
-    run_experiment(
-        run_task,
-        log_dir=log_dir,
-        resume_from_dir=from_dir,
-        resume_from_epoch=from_epoch)
+    run_experiment(run_task,
+                   log_dir=log_dir,
+                   resume_from_dir=from_dir,
+                   resume_from_epoch=from_epoch)
 
 
 if __name__ == '__main__':

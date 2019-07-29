@@ -44,14 +44,17 @@ class TestRaySamplerTF():
         self.env = TfEnv(GridWorldEnv(desc='4x4'))
         self.policy = ScriptedPolicy(
             scripted_actions=[2, 2, 1, 0, 3, 1, 1, 1, 2, 2, 1, 1, 1, 2, 2, 1])
-        self.algo = Mock(
-            env_spec=self.env.spec, policy=self.policy, max_path_length=16)
+        self.algo = Mock(env_spec=self.env.spec,
+                         policy=self.policy,
+                         max_path_length=16)
 
     def teardown_method(self):
         self.env.close()
 
     def test_ray_batch_sampler(self):
-        sampler1 = RaySamplerTF(
-            self.algo, self.env, seed=100, num_processors=1)
+        sampler1 = RaySamplerTF(self.algo,
+                                self.env,
+                                seed=100,
+                                num_processors=1)
         sampler1.start_worker()
         sampler1.shutdown_worker(local=True)

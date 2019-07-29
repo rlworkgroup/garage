@@ -10,6 +10,7 @@ from tests.fixtures import TfGraphTestCase
 
 
 class TestDmControlTfPolicy(TfGraphTestCase):
+
     def test_dm_control_tf_policy(self):
         task = ALL_TASKS[0]
 

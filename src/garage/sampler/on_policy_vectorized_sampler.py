@@ -1,5 +1,4 @@
 """BatchSampler which uses VecEnvExecutor to run multiple environments."""
-
 import itertools
 import pickle
 
@@ -10,6 +9,7 @@ from garage.misc import tensor_utils
 from garage.misc.overrides import overrides
 from garage.misc.prog_bar_counter import ProgBarCounter
 from garage.sampler.batch_sampler import BatchSampler
+from garage.sampler.stateful_pool import singleton_pool
 from garage.sampler.utils import truncate_paths
 from garage.sampler.vec_env_executor import VecEnvExecutor
 
@@ -17,7 +17,9 @@ from garage.sampler.vec_env_executor import VecEnvExecutor
 class OnPolicyVectorizedSampler(BatchSampler):
     """BatchSampler which uses VecEnvExecutor to run multiple environments."""
 
-    def __init__(self, algo, env, n_envs=1):
+    def __init__(self, algo, env, n_envs=None):
+        if n_envs is None:
+            n_envs = singleton_pool.n_parallel * 4
         super().__init__(algo, env)
         self.n_envs = n_envs
 

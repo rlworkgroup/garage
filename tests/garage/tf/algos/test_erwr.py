@@ -9,23 +9,24 @@ from tests.fixtures import TfGraphTestCase
 
 
 class TestERWR(TfGraphTestCase):
+
     @pytest.mark.large
     def test_erwr_cartpole(self):
         """Test ERWR with Cartpole-v1 environment."""
         with LocalTFRunner(sess=self.sess) as runner:
             env = TfEnv(env_name='CartPole-v1')
 
-            policy = CategoricalMLPPolicy(
-                name='policy', env_spec=env.spec, hidden_sizes=(32, 32))
+            policy = CategoricalMLPPolicy(name='policy',
+                                          env_spec=env.spec,
+                                          hidden_sizes=(32, 32))
 
             baseline = LinearFeatureBaseline(env_spec=env.spec)
 
-            algo = ERWR(
-                env_spec=env.spec,
-                policy=policy,
-                baseline=baseline,
-                max_path_length=100,
-                discount=0.99)
+            algo = ERWR(env_spec=env.spec,
+                        policy=policy,
+                        baseline=baseline,
+                        max_path_length=100,
+                        discount=0.99)
 
             runner.setup(algo, env)
 

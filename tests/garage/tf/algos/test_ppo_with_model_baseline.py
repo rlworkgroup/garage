@@ -16,6 +16,7 @@ from tests.fixtures import TfGraphTestCase
 
 
 class TestPPO(TfGraphTestCase):
+
     @pytest.mark.huge
     def test_ppo_pendulum_continuous_baseline(self):
         """Test PPO with Pendulum environment."""

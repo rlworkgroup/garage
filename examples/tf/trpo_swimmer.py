@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""An example to train a task with TRPO algorithm."""
 import gym
 
 from garage.experiment import run_experiment
@@ -10,6 +11,7 @@ from garage.tf.policies import GaussianMLPPolicy
 
 
 def run_task(snapshot_config, *_):
+    """Run task."""
     with LocalTFRunner(snapshot_config=snapshot_config) as runner:
         env = TfEnv(gym.make('Swimmer-v2'))
 
@@ -17,13 +19,12 @@ def run_task(snapshot_config, *_):
 
         baseline = LinearFeatureBaseline(env_spec=env.spec)
 
-        algo = TRPO(
-            env_spec=env.spec,
-            policy=policy,
-            baseline=baseline,
-            max_path_length=500,
-            discount=0.99,
-            max_kl_step=0.01)
+        algo = TRPO(env_spec=env.spec,
+                    policy=policy,
+                    baseline=baseline,
+                    max_path_length=500,
+                    discount=0.99,
+                    max_kl_step=0.01)
 
         runner.setup(algo, env)
         runner.train(n_epochs=40, batch_size=4000)

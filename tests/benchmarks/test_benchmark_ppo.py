@@ -87,31 +87,29 @@ class TestBenchmarkPPO:
 
             env.close()
 
-            Rh.plot(
-                b_csvs=baselines_csvs,
-                g_csvs=garage_csvs,
-                g_x='Iteration',
-                g_y='AverageReturn',
-                b_x='nupdates',
-                b_y='eprewmean',
-                trials=task['trials'],
-                seeds=seeds,
-                plt_file=plt_file,
-                env_id=env_id,
-                x_label='Iteration',
-                y_label='AverageReturn')
+            Rh.plot(b_csvs=baselines_csvs,
+                    g_csvs=garage_csvs,
+                    g_x='Iteration',
+                    g_y='AverageReturn',
+                    b_x='nupdates',
+                    b_y='eprewmean',
+                    trials=task['trials'],
+                    seeds=seeds,
+                    plt_file=plt_file,
+                    env_id=env_id,
+                    x_label='Iteration',
+                    y_label='AverageReturn')
 
-            result_json[env_id] = Rh.create_json(
-                b_csvs=baselines_csvs,
-                g_csvs=garage_csvs,
-                seeds=seeds,
-                trails=task['trials'],
-                g_x='Iteration',
-                g_y='AverageReturn',
-                b_x='nupdates',
-                b_y='eprewmean',
-                factor_g=2048,
-                factor_b=2048)
+            result_json[env_id] = Rh.create_json(b_csvs=baselines_csvs,
+                                                 g_csvs=garage_csvs,
+                                                 seeds=seeds,
+                                                 trails=task['trials'],
+                                                 g_x='Iteration',
+                                                 g_y='AverageReturn',
+                                                 b_x='nupdates',
+                                                 b_y='eprewmean',
+                                                 factor_g=2048,
+                                                 factor_b=2048)
 
         Rh.write_file(result_json, 'PPO')
 
@@ -195,10 +193,9 @@ def run_baselines(env, seed, log_dir):
     :return
     '''
     ncpu = max(multiprocessing.cpu_count() // 2, 1)
-    config = tf.ConfigProto(
-        allow_soft_placement=True,
-        intra_op_parallelism_threads=ncpu,
-        inter_op_parallelism_threads=ncpu)
+    config = tf.ConfigProto(allow_soft_placement=True,
+                            intra_op_parallelism_threads=ncpu,
+                            inter_op_parallelism_threads=ncpu)
     tf.compat.v1.Session(config=config).__enter__()
 
     # Set up logger for baselines
@@ -207,8 +204,9 @@ def run_baselines(env, seed, log_dir):
         0, seed, baselines_logger.get_dir()))
 
     def make_env():
-        monitor = bench.Monitor(
-            env, baselines_logger.get_dir(), allow_early_resets=True)
+        monitor = bench.Monitor(env,
+                                baselines_logger.get_dir(),
+                                allow_early_resets=True)
         return monitor
 
     env = DummyVecEnv([make_env])
@@ -216,20 +214,19 @@ def run_baselines(env, seed, log_dir):
 
     set_global_seeds(seed)
     policy = MlpPolicy
-    ppo2.learn(
-        policy=policy,
-        env=env,
-        nsteps=2048,
-        nminibatches=32,
-        lam=0.95,
-        gamma=0.99,
-        noptepochs=10,
-        log_interval=1,
-        ent_coef=0.0,
-        lr=1e-3,
-        vf_coef=0.5,
-        max_grad_norm=None,
-        cliprange=0.2,
-        total_timesteps=int(1e6))
+    ppo2.learn(policy=policy,
+               env=env,
+               nsteps=2048,
+               nminibatches=32,
+               lam=0.95,
+               gamma=0.99,
+               noptepochs=10,
+               log_interval=1,
+               ent_coef=0.0,
+               lr=1e-3,
+               vf_coef=0.5,
+               max_grad_norm=None,
+               cliprange=0.2,
+               total_timesteps=int(1e6))
 
     return osp.join(log_dir, 'progress.csv')

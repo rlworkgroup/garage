@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 """
 This is an example to train a task with PPO algorithm.
+
 Here it creates InvertedDoublePendulum using gym. And uses a PPO with 1M
 steps.
+
 Results:
     AverageDiscountedReturn: 500
     RiseTime: itr 40
+
 """
 import gym
 import tensorflow as tf
@@ -20,6 +23,7 @@ from garage.tf.policies import GaussianMLPPolicy
 
 
 def run_task(snapshot_config, *_):
+    """Run task."""
     with LocalTFRunner(snapshot_config=snapshot_config) as runner:
         env = TfEnv(normalize(gym.make('InvertedDoublePendulum-v2')))
 

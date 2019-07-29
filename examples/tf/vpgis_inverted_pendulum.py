@@ -33,8 +33,10 @@ def run_task(snapshot_config, *_):
             max_kl_step=0.01,
         )
 
-        runner.setup(
-            algo, env, sampler_cls=ISSampler, sampler_args=dict(n_backtrack=1))
+        runner.setup(algo,
+                     env,
+                     sampler_cls=ISSampler,
+                     sampler_args=dict(n_backtrack=1))
         runner.train(n_epochs=40, batch_size=4000)
 
 

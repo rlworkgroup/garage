@@ -18,6 +18,7 @@ from tests.fixtures import TfGraphTestCase
 
 
 class TestDDPG(TfGraphTestCase):
+
     @pytest.mark.large
     def test_ddpg_double_pendulum(self):
         """Test DDPG with Pendulum environment."""
@@ -29,14 +30,12 @@ class TestDDPG(TfGraphTestCase):
                 hidden_sizes=[64, 64],
                 hidden_nonlinearity=tf.nn.relu,
                 output_nonlinearity=tf.nn.tanh)
-            qf = ContinuousMLPQFunction(
-                env_spec=env.spec,
-                hidden_sizes=[64, 64],
-                hidden_nonlinearity=tf.nn.relu)
-            replay_buffer = SimpleReplayBuffer(
-                env_spec=env.spec,
-                size_in_transitions=int(1e6),
-                time_horizon=100)
+            qf = ContinuousMLPQFunction(env_spec=env.spec,
+                                        hidden_sizes=[64, 64],
+                                        hidden_nonlinearity=tf.nn.relu)
+            replay_buffer = SimpleReplayBuffer(env_spec=env.spec,
+                                               size_in_transitions=int(1e6),
+                                               time_horizon=100)
             algo = DDPG(
                 env_spec=env.spec,
                 policy=policy,
@@ -51,8 +50,9 @@ class TestDDPG(TfGraphTestCase):
                 exploration_strategy=action_noise,
             )
             runner.setup(algo, env)
-            last_avg_ret = runner.train(
-                n_epochs=10, n_epoch_cycles=20, batch_size=100)
+            last_avg_ret = runner.train(n_epochs=10,
+                                        n_epoch_cycles=20,
+                                        batch_size=100)
             assert last_avg_ret > 60
 
             env.close()
@@ -72,14 +72,12 @@ class TestDDPG(TfGraphTestCase):
                 hidden_sizes=[64, 64],
                 hidden_nonlinearity=tf.nn.relu,
                 output_nonlinearity=tf.nn.tanh)
-            qf = ContinuousMLPQFunction(
-                env_spec=env.spec,
-                hidden_sizes=[64, 64],
-                hidden_nonlinearity=tf.nn.relu)
-            replay_buffer = SimpleReplayBuffer(
-                env_spec=env.spec,
-                size_in_transitions=int(1e6),
-                time_horizon=100)
+            qf = ContinuousMLPQFunction(env_spec=env.spec,
+                                        hidden_sizes=[64, 64],
+                                        hidden_nonlinearity=tf.nn.relu)
+            replay_buffer = SimpleReplayBuffer(env_spec=env.spec,
+                                               size_in_transitions=int(1e6),
+                                               time_horizon=100)
             algo = DDPG(
                 env_spec=env.spec,
                 policy=policy,
@@ -94,8 +92,9 @@ class TestDDPG(TfGraphTestCase):
                 exploration_strategy=action_noise,
             )
             runner.setup(algo, env)
-            last_avg_ret = runner.train(
-                n_epochs=10, n_epoch_cycles=20, batch_size=100)
+            last_avg_ret = runner.train(n_epochs=10,
+                                        n_epoch_cycles=20,
+                                        batch_size=100)
             assert last_avg_ret > 10
 
             env.close()

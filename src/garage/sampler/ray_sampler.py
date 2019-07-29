@@ -95,8 +95,9 @@ class RaySampler(BaseSampler):
             # are done updating, and start collecting trajectories on
             # those workers.
             if updating_workers:
-                updated, updating_workers = ray.wait(
-                    updating_workers, num_returns=1, timeout=0.1)
+                updated, updating_workers = ray.wait(updating_workers,
+                                                     num_returns=1,
+                                                     timeout=0.1)
                 upd = [ray.get(up) for up in updated]
                 self._idle_worker_ids.extend(upd)
 
@@ -111,8 +112,9 @@ class RaySampler(BaseSampler):
             # check which workers are done/not done collecting a sample
             # if any are done, send them to process the collected trajectory
             # if they are not, keep checking if they are done
-            ready, not_ready = ray.wait(
-                self._active_workers, num_returns=1, timeout=0.001)
+            ready, not_ready = ray.wait(self._active_workers,
+                                        num_returns=1,
+                                        timeout=0.001)
             self._active_workers = not_ready
             for result in ready:
                 trajectory, num_returned_samples = self._process_trajectory(

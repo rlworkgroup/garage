@@ -13,6 +13,7 @@ from tests.fixtures.logger import NullOutput
 
 
 class TestSampler:
+
     def setup_method(self):
         logger.add_output(NullOutput())
 
@@ -58,23 +59,22 @@ class TestSampler:
         with LocalTFRunner(max_cpus=max_cpus) as runner:
             env = TfEnv(env_name='CartPole-v1')
 
-            policy = CategoricalMLPPolicy(
-                name='policy', env_spec=env.spec, hidden_sizes=(32, 32))
+            policy = CategoricalMLPPolicy(name='policy',
+                                          env_spec=env.spec,
+                                          hidden_sizes=(32, 32))
 
             baseline = LinearFeatureBaseline(env_spec=env.spec)
 
-            algo = VPG(
-                env_spec=env.spec,
-                policy=policy,
-                baseline=baseline,
-                max_path_length=1,
-                discount=0.99)
+            algo = VPG(env_spec=env.spec,
+                       policy=policy,
+                       baseline=baseline,
+                       max_path_length=1,
+                       discount=0.99)
 
-            runner.setup(
-                algo,
-                env,
-                sampler_cls=BatchSampler,
-                sampler_args={'n_envs': max_cpus})
+            runner.setup(algo,
+                         env,
+                         sampler_cls=BatchSampler,
+                         sampler_args={'n_envs': max_cpus})
 
             try:
                 runner.initialize_tf_vars()
@@ -84,8 +84,9 @@ class TestSampler:
 
             runner._start_worker()
 
-            paths = runner.sampler.obtain_samples(
-                0, batch_size=8, whole_paths=True)
+            paths = runner.sampler.obtain_samples(0,
+                                                  batch_size=8,
+                                                  whole_paths=True)
             assert len(paths) >= max_cpus, (
                 'BatchSampler should sample more than max_cpus={} '
                 'trajectories'.format(max_cpus))

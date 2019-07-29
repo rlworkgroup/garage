@@ -17,20 +17,21 @@ from garage.tf.policies import CategoricalMLPPolicy
 
 
 def run_task(snapshot_config, *_):
+    """Run task."""
     with LocalTFRunner(snapshot_config=snapshot_config) as runner:
         env = TfEnv(env_name='CartPole-v1')
 
-        policy = CategoricalMLPPolicy(
-            name='policy', env_spec=env.spec, hidden_sizes=(32, 32))
+        policy = CategoricalMLPPolicy(name='policy',
+                                      env_spec=env.spec,
+                                      hidden_sizes=(32, 32))
 
         baseline = LinearFeatureBaseline(env_spec=env.spec)
 
-        algo = ERWR(
-            env_spec=env.spec,
-            policy=policy,
-            baseline=baseline,
-            max_path_length=100,
-            discount=0.99)
+        algo = ERWR(env_spec=env.spec,
+                    policy=policy,
+                    baseline=baseline,
+                    max_path_length=100,
+                    discount=0.99)
 
         runner.setup(algo=algo, env=env)
 

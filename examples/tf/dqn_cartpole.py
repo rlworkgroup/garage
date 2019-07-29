@@ -24,8 +24,9 @@ def run_task(snapshot_config, *_):
         sampler_batch_size = 500
         num_timesteps = n_epochs * n_epoch_cycles * sampler_batch_size
         env = TfEnv(gym.make('CartPole-v0'))
-        replay_buffer = SimpleReplayBuffer(
-            env_spec=env.spec, size_in_transitions=int(1e4), time_horizon=1)
+        replay_buffer = SimpleReplayBuffer(env_spec=env.spec,
+                                           size_in_transitions=int(1e4),
+                                           time_horizon=1)
         qf = DiscreteMLPQFunction(env_spec=env.spec, hidden_sizes=(64, 64))
         policy = DiscreteQfDerivedPolicy(env_spec=env.spec, qf=qf)
         epilson_greedy_strategy = EpsilonGreedyStrategy(
@@ -34,26 +35,24 @@ def run_task(snapshot_config, *_):
             max_epsilon=1.0,
             min_epsilon=0.02,
             decay_ratio=0.1)
-        algo = DQN(
-            env_spec=env.spec,
-            policy=policy,
-            qf=qf,
-            exploration_strategy=epilson_greedy_strategy,
-            replay_buffer=replay_buffer,
-            qf_lr=1e-4,
-            discount=1.0,
-            min_buffer_size=int(1e3),
-            double_q=True,
-            n_train_steps=500,
-            n_epoch_cycles=n_epoch_cycles,
-            target_network_update_freq=1,
-            buffer_batch_size=32)
+        algo = DQN(env_spec=env.spec,
+                   policy=policy,
+                   qf=qf,
+                   exploration_strategy=epilson_greedy_strategy,
+                   replay_buffer=replay_buffer,
+                   qf_lr=1e-4,
+                   discount=1.0,
+                   min_buffer_size=int(1e3),
+                   double_q=True,
+                   n_train_steps=500,
+                   n_epoch_cycles=n_epoch_cycles,
+                   target_network_update_freq=1,
+                   buffer_batch_size=32)
 
         runner.setup(algo, env)
-        runner.train(
-            n_epochs=n_epochs,
-            n_epoch_cycles=n_epoch_cycles,
-            batch_size=sampler_batch_size)
+        runner.train(n_epochs=n_epochs,
+                     n_epoch_cycles=n_epoch_cycles,
+                     batch_size=sampler_batch_size)
 
 
 run_experiment(run_task, snapshot_mode='last', seed=1)
