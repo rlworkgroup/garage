@@ -1,3 +1,7 @@
+codecov:
+  ci:
+    - !travis-ci.org
+
 coverage:
   range: 60..100
   status:
