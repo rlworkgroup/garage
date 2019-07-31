@@ -47,7 +47,7 @@ class RaySampler(BaseSampler):
         self._max_path_length = self._algo.max_path_length
         self._should_render = should_render
         if not ray.is_initialized():
-            ray.init(ignore_reinit_error=True)
+            ray.init()
         self._num_workers = (num_processors if num_processors else
                              psutil.cpu_count(logical=False))
         self._all_workers = defaultdict(None)
