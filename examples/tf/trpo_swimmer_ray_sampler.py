@@ -2,7 +2,7 @@
 """
 This is an example to train a task with TRPO algorithm.
 
-Uses Ray_batched sampler instead of on_policy vectorized
+Uses Ray sampler instead of on_policy vectorized
 sampler.
 Test
 Here it runs Swimmer-v2 environment with 40 iterations.
@@ -14,7 +14,7 @@ from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import TRPO
 from garage.tf.envs import TfEnv
 from garage.tf.policies import GaussianMLPPolicyWithModel
-from garage.tf.samplers.ray_batched_sampler import RaySamplerTF
+from garage.tf.samplers import RaySamplerTF
 
 seed = 100
 

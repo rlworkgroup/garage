@@ -3,8 +3,7 @@ from garage.tf.samplers.off_policy_vectorized_sampler import (
     OffPolicyVectorizedSampler)
 from garage.tf.samplers.on_policy_vectorized_sampler import (
     OnPolicyVectorizedSampler)
-from garage.tf.samplers.ray_batched_sampler import (RaySamplerTF,
-                                                    SamplerWorkerTF)
+from garage.tf.samplers.ray_sampler import (RaySamplerTF, SamplerWorkerTF)
 
 __all__ = [
     'BatchSampler', 'OffPolicyVectorizedSampler', 'OnPolicyVectorizedSampler',
