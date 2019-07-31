@@ -11,7 +11,7 @@ from garage.tf.samplers.on_policy_vectorized_sampler \
     import OnPolicyVectorizedSampler
 
 
-class TestSampler():
+class TestSampler:
     """
     Uses mock policy for 4x4 gridworldenv
     '4x4': [

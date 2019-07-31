@@ -48,8 +48,8 @@ class RaySampler(BaseSampler):
         self._should_render = should_render
         if not ray.is_initialized():
             ray.init(ignore_reinit_error=True)
-        self._num_workers = num_processors if num_processors \
-            else psutil.cpu_count(logical=False)
+        self._num_workers = (num_processors if num_processors else
+                             psutil.cpu_count(logical=False))
         self._all_workers = defaultdict(None)
 
     def start_worker(self):
@@ -57,9 +57,9 @@ class RaySampler(BaseSampler):
         env_pkl_id = ray.put(pickle.dumps(self._env))
         agent_pkl_id = ray.put(pickle.dumps(self._algo.policy))
         for worker_id in range(self._num_workers):
-            self._all_workers[worker_id] = (self._sampler_worker.remote(
+            self._all_workers[worker_id] = self._sampler_worker.remote(
                 worker_id, env_pkl_id, agent_pkl_id, self._seed,
-                self._max_path_length, self._should_render))
+                self._max_path_length, self._should_render)
         self._idle_worker_ids = list(range(self._num_workers))
 
     def obtain_samples(self, itr, num_samples):
