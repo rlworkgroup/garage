@@ -134,3 +134,7 @@ class BatchPolopt(RLAlgorithm):
         tabular.record('MinReturn', np.min(undiscounted_returns))
 
         return samples_data
+
+    def get_itr_snapshot(self, itr, samples_data):
+        """Return data saved in the snapshot for this iteration."""
+        return {}

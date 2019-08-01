@@ -1,5 +1,6 @@
 """This modules creates a DDPG model in PyTorch."""
 from collections import deque
+import copy
 
 from dowel import logger, tabular
 import numpy as np
@@ -12,10 +13,10 @@ class DDPG(OffPolicyRLAlgorithm):
     """A DDPG model implemented with PyTorch.
 
     DDPG, also known as Deep Deterministic Policy Gradient, uses actor-critic
-    method to optimize the policy and reward prediction. It uses a supervised
-    method to update the critic network and policy gradient to update the actor
-    network. And there are exploration strategy, replay buffer and target
-    networks involved to stabilize the training process.
+    method to optimize the policy and Q-function prediction. It uses a
+    supervised method to update the critic network and policy gradient to
+    update the actor network. And there are exploration strategy, replay
+    buffer and target networks involved to stabilize the training process.
 
     Args:
         env_spec (EnvSpec): Environment specification.
@@ -58,9 +59,7 @@ class DDPG(OffPolicyRLAlgorithm):
     def __init__(self,
                  env_spec,
                  policy,
-                 target_policy,
                  qf,
-                 target_qf,
                  replay_buffer,
                  n_epoch_cycles=20,
                  n_train_steps=50,
@@ -76,28 +75,21 @@ class DDPG(OffPolicyRLAlgorithm):
                  policy_weight_decay=0,
                  qf_weight_decay=0,
                  optimizer=torch.optim.Adam,
-                 qf_criterion=torch.nn.MSELoss(),
                  clip_pos_returns=False,
                  clip_return=np.inf,
                  max_action=None,
                  reward_scale=1.,
-                 input_include_goal=False,
-                 smooth_return=True,
-                 name='DDPG'):
+                 smooth_return=True):
         action_bound = env_spec.action_space.high
-        self.target_policy = target_policy
-        self.target_qf = target_qf
         self.tau = target_update_tau
         self.policy_lr = policy_lr
         self.qf_lr = qf_lr
         self.policy_weight_decay = policy_weight_decay
         self.qf_weight_decay = qf_weight_decay
-        self.qf_criterion = qf_criterion
         self.clip_pos_returns = clip_pos_returns
         self.clip_return = clip_return
         self.max_action = action_bound if max_action is None else max_action
         self.evaluate = False
-        self.name = name
 
         self.success_history = deque(maxlen=100)
         self.episode_rewards = []
@@ -121,13 +113,13 @@ class DDPG(OffPolicyRLAlgorithm):
             use_target=True,
             discount=discount,
             reward_scale=reward_scale,
-            input_include_goal=input_include_goal,
             smooth_return=smooth_return)
 
+        self.target_policy = copy.deepcopy(self.policy)
+        self.target_qf = copy.deepcopy(self.qf)
         self.policy_optimizer = optimizer(
-            self.policy._nn_module.parameters(), lr=self.policy_lr)
-        self.qf_optimizer = optimizer(
-            self.qf._nn_module.parameters(), lr=self.qf_lr)
+            self.policy.parameters(), lr=self.policy_lr)
+        self.qf_optimizer = optimizer(self.qf.parameters(), lr=self.qf_lr)
 
     def train_once(self, itr, paths):
         """Perform one iteration of training."""
@@ -148,8 +140,9 @@ class DDPG(OffPolicyRLAlgorithm):
         for train_itr in range(self.n_train_steps):
             if self.replay_buffer.n_transitions_stored >= self.min_buffer_size:  # noqa: E501
                 self.evaluate = True
+                samples = self.replay_buffer.sample(self.buffer_batch_size)
                 qf_loss, y, q, policy_loss = self.torch_to_np(
-                    self.optimize_policy(itr, paths))  # pylint: disable=all
+                    self.optimize_policy(itr, samples))  # pylint: disable=all
 
                 self.episode_policy_losses.append(policy_loss)
                 self.episode_qf_losses.append(qf_loss)
@@ -190,7 +183,7 @@ class DDPG(OffPolicyRLAlgorithm):
 
         return last_average_return
 
-    def optimize_policy(self, itr, samples_data):
+    def optimize_policy(self, itr, samples):
         """
         Perform algorithm optimizing.
 
@@ -201,8 +194,7 @@ class DDPG(OffPolicyRLAlgorithm):
             qval: Q-value predicted by the Q-network.
 
         """
-        transitions = self.replay_buffer.sample(self.buffer_batch_size)
-        transitions = self.np_to_torch(transitions)
+        transitions = self.np_to_torch(samples)
         observations = transitions['observation']
         rewards = transitions['reward']
         actions = transitions['action']
@@ -220,8 +212,8 @@ class DDPG(OffPolicyRLAlgorithm):
             next_inputs = next_observations
             inputs = observations
         with torch.no_grad():
-            next_actions = self.target_policy._nn_module(next_inputs)
-            target_qvals = self.target_qf.get_qval(next_inputs, next_actions)
+            next_actions = self.target_policy(next_inputs)
+            target_qvals = self.target_qf(next_inputs, next_actions)
 
         clip_range = (-self.clip_return,
                       0. if self.clip_pos_returns else self.clip_return)
@@ -230,15 +222,16 @@ class DDPG(OffPolicyRLAlgorithm):
         y_target = torch.clamp(y_target, clip_range[0], clip_range[1])
 
         # optimize critic
-        qval = self.qf.get_qval(inputs, actions)
-        qval_loss = self.qf_criterion(qval, y_target)
+        qval = self.qf(inputs, actions)
+        qf_loss = torch.nn.MSELoss()
+        qval_loss = qf_loss(qval, y_target)
         self.qf_optimizer.zero_grad()
         qval_loss.backward()
         self.qf_optimizer.step()
 
         # optimize actor
-        actions = self.policy._nn_module(inputs)
-        action_loss = -1 * self.qf.get_qval(inputs, actions).mean()
+        actions = self.policy(inputs)
+        action_loss = -1 * self.qf(inputs, actions).mean()
         self.policy_optimizer.zero_grad()
         action_loss.backward()
         self.policy_optimizer.step()
@@ -250,13 +243,13 @@ class DDPG(OffPolicyRLAlgorithm):
 
     def update_target(self):
         """Update parameters in the target policy and Q-value network."""
-        for t_param, param in zip(self.target_qf._nn_module.parameters(),
-                                  self.qf._nn_module.parameters()):
+        for t_param, param in zip(self.target_qf.parameters(),
+                                  self.qf.parameters()):
             t_param.data.copy_(t_param.data * (1.0 - self.tau) +
                                param.data * self.tau)
 
-        for t_param, param in zip(self.target_policy._nn_module.parameters(),
-                                  self.policy._nn_module.parameters()):
+        for t_param, param in zip(self.target_policy.parameters(),
+                                  self.policy.parameters()):
             t_param.data.copy_(t_param.data * (1.0 - self.tau) +
                                param.data * self.tau)
 
@@ -290,11 +283,3 @@ class DDPG(OffPolicyRLAlgorithm):
         for v in value_in:
             value_out.append(v.numpy())
         return tuple(value_out)
-
-    def init_opt(self):
-        """Not needed for PyTorch algorithms."""
-        pass
-
-    def get_itr_snapshot(self, itr, samples_data):
-        """Not needed for PyTorch algorithms."""
-        pass

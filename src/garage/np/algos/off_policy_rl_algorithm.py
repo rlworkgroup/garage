@@ -122,11 +122,7 @@ class OffPolicyRLAlgorithm(RLAlgorithm):
         If using tensorflow, this may
         include declaring all the variables and compiling functions.
         """
-        raise NotImplementedError
-
-    def get_itr_snapshot(self, itr, samples_data):
-        """Return data saved in the snapshot for this iteration."""
-        raise NotImplementedError
+        pass
 
     def optimize_policy(self, itr, samples_data):
         """Optimize policy network."""
