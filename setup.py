@@ -20,11 +20,6 @@ required = [
     'click',
     'cloudpickle',
     'cma==1.1.06',
-    # dm_control throws an error during install about not being able to
-    # find a build dependency (absl-py). Later pip executes the `install`
-    # command again and the install succeeds because absl-py has been
-    # installed. This is stupid, but harmless.
-    'dm_control @ https://api.github.com/repos/deepmind/dm_control/tarball/7a36377879c57777e5d5b4da5aae2cd2a29b607a',  # noqa: E501
     'dowel==0.0.2',
     'gym[all]==0.12.4',
     'joblib<0.13,>=0.12',
@@ -48,6 +43,15 @@ required = [
 
 # Dependencies for optional features
 extras = {}
+
+extras['dm_control'] = [
+    # dm_control throws an error during install about not being able to
+    # find a build dependency (absl-py). Later pip executes the `install`
+    # command again and the install succeeds because absl-py has been
+    # installed. This is stupid, but harmless.
+    'dm_control @ https://api.github.com/repos/deepmind/dm_control/tarball/7a36377879c57777e5d5b4da5aae2cd2a29b607a',  # noqa: E501
+]
+
 extras['all'] = list(set(sum(extras.values(), [])))
 
 # Intel dependencies not included in all
