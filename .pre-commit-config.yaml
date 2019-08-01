@@ -53,6 +53,7 @@ repos:
         stages: [commit, push]
     -   id: check-yaml                  # Attempts to load all yaml files to verify syntax.
         stages: [commit, push]
+        args: ['--unsafe']
     -   id: debug-statements            # Check for debugger imports and py37+ breakpoint() calls in python source.
         stages: [commit, push]
     # -   id: detect-aws-credentials      # Checks for the existence of AWS secrets that you have set up with the AWS CLI
