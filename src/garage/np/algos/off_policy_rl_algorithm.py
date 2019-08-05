@@ -1,4 +1,5 @@
 from garage.np.algos import RLAlgorithm
+from garage.tf.samplers import OffPolicyVectorizedSampler
 
 
 class OffPolicyRLAlgorithm(RLAlgorithm):
@@ -62,6 +63,9 @@ class OffPolicyRLAlgorithm(RLAlgorithm):
         self.smooth_return = smooth_return
         self.max_path_length = max_path_length
         self.es = exploration_strategy
+
+        self.sampler_cls = OffPolicyVectorizedSampler
+
         self.init_opt()
 
     def train(self, runner, batch_size):

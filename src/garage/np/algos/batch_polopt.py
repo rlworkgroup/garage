@@ -5,6 +5,7 @@ import numpy as np
 
 from garage.misc import special, tensor_utils
 from garage.np.algos.base import RLAlgorithm
+from garage.tf.samplers import BatchSampler, OnPolicyVectorizedSampler
 
 
 class BatchPolopt(RLAlgorithm):
@@ -34,6 +35,10 @@ class BatchPolopt(RLAlgorithm):
         self.n_samples = n_samples
 
         self.episode_reward_mean = collections.deque(maxlen=100)
+        if policy.vectorized:
+            self.sampler_cls = OnPolicyVectorizedSampler
+        else:
+            self.sampler_cls = BatchSampler
 
     def train(self, runner, batch_size):
         last_return = None

@@ -2,7 +2,14 @@ import abc
 
 
 class RLAlgorithm(abc.ABC):
-    """Base class for all the algorithms."""
+    """Base class for all the algorithms.
+
+    Note:
+        If sampler_cls isn't specified to the LocalRunner,
+        self.sampler_cls is required to provide default sampler
+        for algorithm.
+
+    """
 
     @abc.abstractmethod
     def train_once(self, itr, paths):
