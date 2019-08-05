@@ -3,11 +3,11 @@ import numpy as np
 import tensorflow as tf
 
 from garage.envs import normalize
-from garage.experiment import LocalRunner
 from garage.np.exploration_strategies import OUStrategy
 from garage.replay_buffer import SimpleReplayBuffer
 from garage.tf.algos import DDPG
 from garage.tf.envs import TfEnv
+from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import ContinuousMLPPolicyWithModel
 from garage.tf.q_functions import ContinuousMLPQFunction
 from garage.tf.samplers import OffPolicyVectorizedSampler
@@ -19,7 +19,7 @@ from tests.fixtures.tf.algos.dummy_off_policy_algo import DummyOffPolicyAlgo
 
 class TestOffPolicyVectorizedSampler(TfGraphTestCase):
     def test_no_reset(self):
-        with LocalRunner(sess=self.sess) as runner:
+        with LocalTFRunner(sess=self.sess) as runner:
             # This tests if off-policy sampler respect batch_size
             # when no_reset is set to True
             env = TfEnv(normalize(gym.make('InvertedDoublePendulum-v2')))

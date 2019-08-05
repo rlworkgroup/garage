@@ -6,18 +6,19 @@ Here it creates a gym environment CartPole, and trains a DQN with 50k steps.
 """
 import gym
 
-from garage.experiment import LocalRunner, run_experiment
+from garage.experiment import run_experiment
 from garage.np.exploration_strategies import EpsilonGreedyStrategy
 from garage.replay_buffer import SimpleReplayBuffer
 from garage.tf.algos import DQN
 from garage.tf.envs import TfEnv
+from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import DiscreteQfDerivedPolicy
 from garage.tf.q_functions import DiscreteMLPQFunction
 
 
 def run_task(snapshot_config, *_):
     """Run task."""
-    with LocalRunner(snapshot_config=snapshot_config) as runner:
+    with LocalTFRunner(snapshot_config=snapshot_config) as runner:
         n_epochs = 10
         n_epoch_cycles = 10
         sampler_batch_size = 500

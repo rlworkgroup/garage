@@ -6,11 +6,11 @@ import gym
 import pytest
 
 from garage.envs import normalize
-from garage.experiment import LocalRunner
 from garage.experiment import snapshotter
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import TRPO
 from garage.tf.envs import TfEnv
+from garage.tf.experiment import LocalTFRunner
 from garage.tf.optimizers import FiniteDifferenceHvp
 from garage.tf.policies import CategoricalGRUPolicyWithModel
 from garage.tf.policies import CategoricalLSTMPolicyWithModel
@@ -20,7 +20,7 @@ from tests.fixtures import TfGraphTestCase
 class TestTRPO(TfGraphTestCase):
     @pytest.mark.large
     def test_trpo_lstm_cartpole(self):
-        with LocalRunner(sess=self.sess) as runner:
+        with LocalTFRunner(sess=self.sess) as runner:
             env = TfEnv(normalize(gym.make('CartPole-v1')))
 
             policy = CategoricalLSTMPolicyWithModel(
@@ -47,7 +47,7 @@ class TestTRPO(TfGraphTestCase):
 
     @pytest.mark.large
     def test_trpo_gru_cartpole(self):
-        with LocalRunner(sess=self.sess) as runner:
+        with LocalTFRunner(sess=self.sess) as runner:
             env = TfEnv(normalize(gym.make('CartPole-v1')))
 
             policy = CategoricalGRUPolicyWithModel(

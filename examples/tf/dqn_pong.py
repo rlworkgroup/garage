@@ -14,18 +14,19 @@ from garage.envs.wrappers.max_and_skip import MaxAndSkip
 from garage.envs.wrappers.noop import Noop
 from garage.envs.wrappers.resize import Resize
 from garage.envs.wrappers.stack_frames import StackFrames
-from garage.experiment import LocalRunner, run_experiment
+from garage.experiment import run_experiment
 from garage.np.exploration_strategies import EpsilonGreedyStrategy
 from garage.replay_buffer import SimpleReplayBuffer
 from garage.tf.algos import DQN
 from garage.tf.envs import TfEnv
+from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import DiscreteQfDerivedPolicy
 from garage.tf.q_functions import DiscreteCNNQFunction
 
 
 def run_task(snapshot_config, *_):
     """Run task."""
-    with LocalRunner(snapshot_config=snapshot_config) as runner:
+    with LocalTFRunner(snapshot_config=snapshot_config) as runner:
         n_epochs = 100
         n_epoch_cycles = 20
         sampler_batch_size = 500

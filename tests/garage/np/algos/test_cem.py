@@ -1,9 +1,9 @@
 import pytest
 
-from garage.experiment import LocalRunner
 from garage.np.algos import CEM
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.envs import TfEnv
+from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import CategoricalMLPPolicy
 from garage.tf.samplers import OnPolicyVectorizedSampler
 from tests.fixtures import TfGraphTestCase
@@ -13,7 +13,7 @@ class TestCEM(TfGraphTestCase):
     @pytest.mark.large
     def test_cem_cartpole(self):
         """Test CEM with Cartpole-v1 environment."""
-        with LocalRunner() as runner:
+        with LocalTFRunner() as runner:
             env = TfEnv(env_name='CartPole-v1')
 
             policy = CategoricalMLPPolicy(

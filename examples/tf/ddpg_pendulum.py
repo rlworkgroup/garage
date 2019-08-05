@@ -12,17 +12,18 @@ Results:
 import gym
 import tensorflow as tf
 
-from garage.experiment import LocalRunner, run_experiment
+from garage.experiment import run_experiment
 from garage.np.exploration_strategies import OUStrategy
 from garage.replay_buffer import SimpleReplayBuffer
 from garage.tf.algos import DDPG
 from garage.tf.envs import TfEnv
+from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import ContinuousMLPPolicyWithModel
 from garage.tf.q_functions import ContinuousMLPQFunction
 
 
 def run_task(snapshot_config, *_):
-    with LocalRunner(snapshot_config=snapshot_config) as runner:
+    with LocalTFRunner(snapshot_config=snapshot_config) as runner:
         env = TfEnv(gym.make('InvertedDoublePendulum-v2'))
 
         action_noise = OUStrategy(env.spec, sigma=0.2)

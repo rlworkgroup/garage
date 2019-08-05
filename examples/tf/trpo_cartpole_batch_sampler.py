@@ -8,10 +8,11 @@ Results:
     AverageReturn: 100
     RiseTime: itr 13
 """
-from garage.experiment import LocalRunner, run_experiment
+from garage.experiment import run_experiment
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import TRPO
 from garage.tf.envs import TfEnv
+from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import CategoricalMLPPolicy
 from garage.tf.samplers import BatchSampler
 
@@ -21,7 +22,7 @@ n_envs = batch_size // max_path_length
 
 
 def run_task(snapshot_config, *_):
-    with LocalRunner(
+    with LocalTFRunner(
             snapshot_config=snapshot_config, max_cpus=n_envs) as runner:
         env = TfEnv(env_name='CartPole-v1')
 

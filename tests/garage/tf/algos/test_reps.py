@@ -5,10 +5,10 @@ too low.
 import gym
 import pytest
 
-from garage.experiment import LocalRunner
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import REPS
 from garage.tf.envs import TfEnv
+from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import CategoricalMLPPolicy
 from tests.fixtures import TfGraphTestCase
 
@@ -17,7 +17,7 @@ class TestREPS(TfGraphTestCase):
     @pytest.mark.large
     def test_reps_cartpole(self):
         """Test REPS with gym Cartpole environment."""
-        with LocalRunner(sess=self.sess) as runner:
+        with LocalTFRunner(sess=self.sess) as runner:
             env = TfEnv(gym.make('CartPole-v0'))
 
             policy = CategoricalMLPPolicy(

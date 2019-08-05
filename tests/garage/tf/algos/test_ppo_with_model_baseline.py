@@ -7,10 +7,10 @@ import pytest
 import tensorflow as tf
 
 from garage.envs import normalize
-from garage.experiment import LocalRunner
 from garage.tf.algos import PPO
 from garage.tf.baselines import ContinuousMLPBaselineWithModel
 from garage.tf.envs import TfEnv
+from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import GaussianLSTMPolicy, GaussianMLPPolicy
 from tests.fixtures import TfGraphTestCase
 
@@ -19,7 +19,7 @@ class TestPPO(TfGraphTestCase):
     @pytest.mark.huge
     def test_ppo_pendulum_continuous_baseline(self):
         """Test PPO with Pendulum environment."""
-        with LocalRunner(sess=self.sess) as runner:
+        with LocalTFRunner(sess=self.sess) as runner:
             env = TfEnv(normalize(gym.make('InvertedDoublePendulum-v2')))
             policy = GaussianMLPPolicy(
                 env_spec=env.spec,
@@ -57,7 +57,7 @@ class TestPPO(TfGraphTestCase):
     @pytest.mark.large
     def test_ppo_pendulum_recurrent_continuous_baseline(self):
         """Test PPO with Pendulum environment and recurrent policy."""
-        with LocalRunner() as runner:
+        with LocalTFRunner() as runner:
             env = TfEnv(normalize(gym.make('InvertedDoublePendulum-v2')))
             policy = GaussianLSTMPolicy(env_spec=env.spec, )
             baseline = ContinuousMLPBaselineWithModel(

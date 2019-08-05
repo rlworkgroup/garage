@@ -9,11 +9,11 @@ import numpy as np
 import pytest
 import tensorflow as tf
 
-from garage.experiment import LocalRunner
 from garage.np.exploration_strategies import EpsilonGreedyStrategy
 from garage.replay_buffer import SimpleReplayBuffer
 from garage.tf.algos import DQN
 from garage.tf.envs import TfEnv
+from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import DiscreteQfDerivedPolicy
 from garage.tf.q_functions import DiscreteMLPQFunction
 from tests.fixtures import TfGraphTestCase
@@ -23,7 +23,7 @@ class TestDQN(TfGraphTestCase):
     @pytest.mark.large
     def test_dqn_cartpole(self):
         """Test DQN with CartPole environment."""
-        with LocalRunner(sess=self.sess) as runner:
+        with LocalTFRunner(sess=self.sess) as runner:
             n_epochs = 10
             n_epoch_cycles = 10
             sampler_batch_size = 500
@@ -68,7 +68,7 @@ class TestDQN(TfGraphTestCase):
     @pytest.mark.large
     def test_dqn_cartpole_double_q(self):
         """Test DQN with CartPole environment."""
-        with LocalRunner(sess=self.sess) as runner:
+        with LocalTFRunner(sess=self.sess) as runner:
             n_epochs = 10
             n_epoch_cycles = 10
             sampler_batch_size = 500
@@ -113,7 +113,7 @@ class TestDQN(TfGraphTestCase):
     @pytest.mark.large
     def test_dqn_cartpole_grad_clip(self):
         """Test DQN with CartPole environment."""
-        with LocalRunner(sess=self.sess) as runner:
+        with LocalTFRunner(sess=self.sess) as runner:
             n_epochs = 10
             n_epoch_cycles = 10
             sampler_batch_size = 500
@@ -158,7 +158,7 @@ class TestDQN(TfGraphTestCase):
 
     def test_dqn_cartpole_pickle(self):
         """Test DQN with CartPole environment."""
-        with LocalRunner(sess=self.sess) as runner:
+        with LocalTFRunner(sess=self.sess) as runner:
             n_epochs = 10
             n_epoch_cycles = 10
             sampler_batch_size = 500

@@ -7,10 +7,10 @@ import pytest
 import tensorflow as tf
 
 from garage.envs import normalize
-from garage.experiment import LocalRunner
 from garage.tf.algos import PPO
 from garage.tf.baselines import GaussianMLPBaselineWithModel
 from garage.tf.envs import TfEnv
+from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import GaussianGRUPolicyWithModel
 from garage.tf.policies import GaussianLSTMPolicyWithModel
 from garage.tf.policies import GaussianMLPPolicyWithModel
@@ -21,7 +21,7 @@ class TestPPOWithModel(TfGraphTestCase):
     @pytest.mark.large
     def test_ppo_pendulum_with_model(self):
         """Test PPO with model, with Pendulum environment."""
-        with LocalRunner(sess=self.sess) as runner:
+        with LocalTFRunner(sess=self.sess) as runner:
             env = TfEnv(normalize(gym.make('InvertedDoublePendulum-v2')))
             policy = GaussianMLPPolicyWithModel(
                 env_spec=env.spec,
@@ -59,7 +59,7 @@ class TestPPOWithModel(TfGraphTestCase):
     @pytest.mark.large
     def test_ppo_pendulum_lstm_with_model(self):
         """Test PPO with model, with Pendulum environment."""
-        with LocalRunner(sess=self.sess) as runner:
+        with LocalTFRunner(sess=self.sess) as runner:
             env = TfEnv(normalize(gym.make('InvertedDoublePendulum-v2')))
             policy = GaussianLSTMPolicyWithModel(env_spec=env.spec, )
             baseline = GaussianMLPBaselineWithModel(
@@ -92,7 +92,7 @@ class TestPPOWithModel(TfGraphTestCase):
     @pytest.mark.large
     def test_ppo_pendulum_gru_with_model(self):
         """Test PPO with model, with Pendulum environment."""
-        with LocalRunner(sess=self.sess) as runner:
+        with LocalTFRunner(sess=self.sess) as runner:
             env = TfEnv(normalize(gym.make('InvertedDoublePendulum-v2')))
             policy = GaussianGRUPolicyWithModel(env_spec=env.spec, )
             baseline = GaussianMLPBaselineWithModel(

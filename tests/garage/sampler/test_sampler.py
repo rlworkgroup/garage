@@ -2,11 +2,11 @@ from dowel import logger
 import numpy as np
 import pytest
 
-from garage.experiment import LocalRunner
 from garage.np.baselines import LinearFeatureBaseline
 from garage.sampler.utils import truncate_paths
 from garage.tf.algos import VPG
 from garage.tf.envs import TfEnv
+from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import CategoricalMLPPolicy
 from garage.tf.samplers import BatchSampler
 from tests.fixtures.logger import NullOutput
@@ -55,7 +55,7 @@ class TestSampler:
     @pytest.mark.flaky
     def test_tf_batch_sampler(self):
         max_cpus = 8
-        with LocalRunner(max_cpus=max_cpus) as runner:
+        with LocalTFRunner(max_cpus=max_cpus) as runner:
             env = TfEnv(env_name='CartPole-v1')
 
             policy = CategoricalMLPPolicy(

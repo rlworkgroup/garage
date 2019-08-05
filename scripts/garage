@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 import click
 
-from garage.experiment import LocalRunner, run_experiment
+from garage.experiment import run_experiment
+from garage.tf.experiment import LocalTFRunner
 
 
 @click.group()
@@ -26,7 +27,7 @@ def resume(from_dir, from_epoch, log_dir):
         log_dir = from_dir
 
     def run_task(_snapshot_config, _variant_data, _from_dir, _from_epoch):
-        with LocalRunner(snapshot_config=_snapshot_config) as runner:
+        with LocalTFRunner(snapshot_config=_snapshot_config) as runner:
             runner.restore(from_dir=_from_dir, from_epoch=_from_epoch)
             runner.resume()
 
