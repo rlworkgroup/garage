@@ -198,7 +198,9 @@ if [[ "${_arg_modify_bashrc}" = on ]]; then
 fi
 
 # We need a MuJoCo key to import mujoco_py
-cp "${_arg_mjkey}" "${HOME}/.mujoco/mjkey.txt"
+if [[ ! -f "${HOME}/.mujoco/mjkey.txt" ]]; then
+  cp "${_arg_mjkey}" "${HOME}/.mujoco/mjkey.txt"
+fi
 {
   # Prevent pip from complaining about available upgrades
   pip install --upgrade pip
