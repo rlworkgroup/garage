@@ -4,24 +4,23 @@ This is an example to train a task with TRPO algorithm.
 
 Uses Ray sampler instead of on_policy vectorized
 sampler.
-Test
 Here it runs Swimmer-v2 environment with 40 iterations.
 """
 import gym
 
-from garage.experiment import LocalRunner, run_experiment
+from garage.experiment import run_experiment
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import TRPO
 from garage.tf.envs import TfEnv
+from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import GaussianMLPPolicyWithModel
 from garage.tf.samplers import RaySamplerTF
 
 seed = 100
 
 
-def run_task(*_):
-    """."""
-    with LocalRunner() as runner:
+def run_task(snapshot_config, *_):
+    with LocalTFRunner(snapshot_config=snapshot_config) as runner:
         env = TfEnv(gym.make('Swimmer-v2'))
 
         policy = GaussianMLPPolicyWithModel(
@@ -37,7 +36,6 @@ def run_task(*_):
             discount=0.99,
             max_kl_step=0.01)
 
-        # runner.setup(algo, env)
         runner.setup(
             algo, env, sampler_cls=RaySamplerTF, sampler_args={'seed': seed})
         runner.train(n_epochs=40, batch_size=4000)

@@ -51,8 +51,8 @@ class SamplerWorkerTF(SamplerWorker):
 
     def __init__(self,
                  worker_id,
-                 env,
-                 agent,
+                 env_pkl,
+                 agent_pkl,
                  seed,
                  max_path_length,
                  should_render=False,
@@ -66,8 +66,8 @@ class SamplerWorkerTF(SamplerWorker):
             self.sess.__enter__()
         super().__init__(
             worker_id,
-            env,
-            agent,
+            env_pkl,
+            agent_pkl,
             seed,
             max_path_length,
             should_render=should_render)

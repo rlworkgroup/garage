@@ -54,11 +54,14 @@ class RaySampler(BaseSampler):
 
     def start_worker(self):
         """Initialize a new ray worker."""
-        env_pkl_id = ray.put(pickle.dumps(self._env))
-        agent_pkl_id = ray.put(pickle.dumps(self._algo.policy))
+        # Pickle the environment once, instead of once per worker.
+        env_pkl = pickle.dumps(self._env)
+        # We need to pickle the agent so that we can e.g. set up the TF Session
+        # in the worker *before* unpicling it.
+        agent_pkl = pickle.dumps(self._algo.policy)
         for worker_id in range(self._num_workers):
             self._all_workers[worker_id] = self._sampler_worker.remote(
-                worker_id, env_pkl_id, agent_pkl_id, self._seed,
+                worker_id, env_pkl, agent_pkl, self._seed,
                 self._max_path_length, self._should_render)
         self._idle_worker_ids = list(range(self._num_workers))
 
@@ -155,7 +158,8 @@ class SamplerWorker:
 
     Args:
         - worker_id(int): the id of the sampler_worker
-        - env: gym or akro env object
+        - env_pkl: A pickled gym or akro env object
+        - agent_pkl: A pickled agent
         - max_path_length(int): max trajectory length
         - should_render(bool): if true, renders trajectories after
             sampling them
@@ -164,14 +168,14 @@ class SamplerWorker:
 
     def __init__(self,
                  worker_id,
-                 env,
-                 agent,
+                 env_pkl,
+                 agent_pkl,
                  seed,
                  max_path_length,
                  should_render=False):
         self.worker_id = worker_id
-        self._env = pickle.loads(env)
-        self.agent = pickle.loads(agent)
+        self._env = pickle.loads(env_pkl)
+        self.agent = pickle.loads(agent_pkl)
         self._seed = seed + self.worker_id
         deterministic.set_seed(self._seed)
         self._max_path_length = max_path_length
