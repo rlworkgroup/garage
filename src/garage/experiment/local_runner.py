@@ -87,20 +87,8 @@ class LocalRunner:
 
         if sampler_args is None:
             sampler_args = {}
-
         if sampler_cls is None:
-            from garage.tf.algos.batch_polopt import BatchPolopt
-            if isinstance(algo, BatchPolopt):
-                if self.policy.vectorized:
-                    from garage.tf.samplers import OnPolicyVectorizedSampler
-                    sampler_cls = OnPolicyVectorizedSampler
-                else:
-                    from garage.tf.samplers import BatchSampler
-                    sampler_cls = BatchSampler
-            else:
-                from garage.tf.samplers import OffPolicyVectorizedSampler
-                sampler_cls = OffPolicyVectorizedSampler
-
+            sampler_cls = algo.sampler_cls
         self.sampler = sampler_cls(algo, env, **sampler_args)
 
         self.has_setup = True

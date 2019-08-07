@@ -46,3 +46,18 @@ class DummyPolicy(Policy, Serializable):
     def distribution(self):
         """Return the distribution."""
         return DummyDistribution()
+
+    @property
+    def vectorized(self):
+        return True
+
+
+class DummyPolicyWithoutVectorized(DummyPolicy):
+    """Dummy Policy without vectorized"""
+
+    def __init__(self, env_spec):
+        super().__init__(env_spec=env_spec)
+
+    @property
+    def vectorized(self):
+        return False
