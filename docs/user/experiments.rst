@@ -110,8 +110,6 @@ You should see some log messages like the following:
 
 Note that the execution of the experiment (including the construction of relevant objects, like environment, policy, algorithm, etc.) has been wrapped in a function call, which is then passed to the `run_experiment` method, which serializes the fucntion call, and launches a script that actually runs the experiment.
 
-The benefit for launching experiment this way is that we separate the configuration of experiment parameters and the actual execution of the experiment. `run_experiment` supports multiple ways of running the experiment, either locally, locally in a docker container, or remotely on ec2 (see the section on :ref:`cluster`). Multiple experiments with different hyper-parameter settings can be quickly constructed and launched simultaneously on multiple ec2 machines using this abstraction.
-
 
 Additional arguments for `run_experiment`:
 
