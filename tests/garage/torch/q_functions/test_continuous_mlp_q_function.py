@@ -6,7 +6,7 @@ import torch
 from torch import nn
 
 from garage.tf.envs import TfEnv
-from garage.torch.q_functions import ContinuousNNQFunction
+from garage.torch.q_functions import ContinuousMLPQFunction
 from tests.fixtures.envs.dummy import DummyBoxEnv
 
 
@@ -22,7 +22,7 @@ class TestContinuousNNQFunction:
         obs = torch.ones(obs_dim, dtype=torch.float32).unsqueeze(0)
         act = torch.ones(act_dim, dtype=torch.float32).unsqueeze(0)
 
-        qf = ContinuousNNQFunction(
+        qf = ContinuousMLPQFunction(
             env_spec=env_spec,
             hidden_nonlinearity=None,
             hidden_sizes=hidden_sizes,
@@ -52,7 +52,7 @@ class TestContinuousNNQFunction:
         obs = torch.ones(batch_size, obs_dim, dtype=torch.float32)
         act = torch.ones(batch_size, act_dim, dtype=torch.float32)
 
-        qf = ContinuousNNQFunction(
+        qf = ContinuousMLPQFunction(
             env_spec=env_spec,
             hidden_nonlinearity=None,
             hidden_sizes=hidden_sizes,
@@ -73,7 +73,7 @@ class TestContinuousNNQFunction:
         obs = torch.ones(obs_dim, dtype=torch.float32).unsqueeze(0)
         act = torch.ones(act_dim, dtype=torch.float32).unsqueeze(0)
 
-        qf = ContinuousNNQFunction(
+        qf = ContinuousMLPQFunction(
             env_spec=env_spec,
             hidden_nonlinearity=None,
             hidden_sizes=hidden_sizes,

@@ -13,8 +13,8 @@ from garage.experiment import LocalRunner
 from garage.np.exploration_strategies import OUStrategy
 from garage.replay_buffer import SimpleReplayBuffer
 from garage.torch.algos import DDPG
-from garage.torch.policies import DeterministicPolicy
-from garage.torch.q_functions import ContinuousNNQFunction
+from garage.torch.policies import DeterministicMLPPolicy
+from garage.torch.q_functions import ContinuousMLPQFunction
 
 
 class TestDDPG:
@@ -25,13 +25,13 @@ class TestDDPG:
             env = GarageEnv(gym.make('InvertedDoublePendulum-v2'))
             action_noise = OUStrategy(env.spec, sigma=0.2)
 
-            policy = DeterministicPolicy(
+            policy = DeterministicMLPPolicy(
                 env_spec=env.spec,
                 hidden_sizes=[64, 64],
                 hidden_nonlinearity=F.relu,
                 output_nonlinearity=torch.tanh)
 
-            qf = ContinuousNNQFunction(
+            qf = ContinuousMLPQFunction(
                 env_spec=env.spec,
                 hidden_sizes=[64, 64],
                 hidden_nonlinearity=F.relu)
@@ -72,13 +72,13 @@ class TestDDPG:
             env = GarageEnv(normalize(gym.make('InvertedPendulum-v2')))
             action_noise = OUStrategy(env.spec, sigma=0.2)
 
-            policy = DeterministicPolicy(
+            policy = DeterministicMLPPolicy(
                 env_spec=env.spec,
                 hidden_sizes=[64, 64],
                 hidden_nonlinearity=F.relu,
                 output_nonlinearity=torch.tanh)
 
-            qf = ContinuousNNQFunction(
+            qf = ContinuousMLPQFunction(
                 env_spec=env.spec,
                 hidden_sizes=[64, 64],
                 hidden_nonlinearity=F.relu)

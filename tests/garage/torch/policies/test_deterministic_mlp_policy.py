@@ -6,7 +6,7 @@ import torch
 from torch import nn
 
 from garage.tf.envs import TfEnv
-from garage.torch.policies import DeterministicPolicy
+from garage.torch.policies import DeterministicMLPPolicy
 from tests.fixtures.envs.dummy import DummyBoxEnv
 
 
@@ -21,7 +21,7 @@ class TestDeterministicPolicies:
         act_dim = env_spec.action_space.flat_dim
         obs = torch.ones([1, obs_dim], dtype=torch.float32)
 
-        policy = DeterministicPolicy(
+        policy = DeterministicMLPPolicy(
             env_spec=env_spec,
             hidden_nonlinearity=None,
             hidden_sizes=hidden_sizes,
@@ -48,7 +48,7 @@ class TestDeterministicPolicies:
         act_dim = env_spec.action_space.flat_dim
         obs = torch.ones([batch_size, obs_dim], dtype=torch.float32)
 
-        policy = DeterministicPolicy(
+        policy = DeterministicMLPPolicy(
             env_spec=env_spec,
             hidden_nonlinearity=None,
             hidden_sizes=hidden_sizes,
@@ -74,7 +74,7 @@ class TestDeterministicPolicies:
         obs_dim = env_spec.observation_space.flat_dim
         obs = torch.ones([batch_size, obs_dim], dtype=torch.float32)
 
-        policy = DeterministicPolicy(
+        policy = DeterministicMLPPolicy(
             env_spec=env_spec,
             hidden_nonlinearity=None,
             hidden_sizes=hidden_sizes,

@@ -10,7 +10,7 @@ from garage.torch.modules import MLPModule
 from garage.torch.policies import Policy
 
 
-class DeterministicPolicy(MLPModule, Policy):
+class DeterministicMLPPolicy(MLPModule, Policy):
     """
     Implements a deterministic policy network.
 

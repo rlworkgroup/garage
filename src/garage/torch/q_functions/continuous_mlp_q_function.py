@@ -5,7 +5,7 @@ import torch
 from garage.torch.modules import MLPModule
 
 
-class ContinuousNNQFunction(MLPModule):
+class ContinuousMLPQFunction(MLPModule):
     """
     Implements a module-agnostic Q-value network.
 
