@@ -4,8 +4,8 @@ import uuid
 from dowel import logger
 import numpy as np
 
-from garage.sampler import singleton_pool
-from garage.tf.misc import tensor_utils
+from garage.misc import tensor_utils
+from garage.sampler.stateful_pool import singleton_pool
 
 
 def worker_init_envs(g, alloc, scope, env):

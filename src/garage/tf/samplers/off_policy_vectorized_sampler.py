@@ -15,7 +15,7 @@ import numpy as np
 
 from garage.misc import tensor_utils
 from garage.misc.overrides import overrides
-from garage.tf.envs import VecEnvExecutor
+from garage.sampler import VecEnvExecutor
 from garage.tf.samplers.batch_sampler import BatchSampler
 
 

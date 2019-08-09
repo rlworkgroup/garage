@@ -7,8 +7,8 @@ import numpy as np
 from garage.misc import tensor_utils
 from garage.misc.overrides import overrides
 from garage.misc.prog_bar_counter import ProgBarCounter
+from garage.sampler import VecEnvExecutor
 from garage.sampler.utils import truncate_paths
-from garage.tf.envs import VecEnvExecutor
 from garage.tf.samplers.batch_sampler import BatchSampler
 
 
