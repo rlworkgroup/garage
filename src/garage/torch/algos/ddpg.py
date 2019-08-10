@@ -7,6 +7,7 @@ import numpy as np
 import torch
 
 from garage.np.algos.off_policy_rl_algorithm import OffPolicyRLAlgorithm
+from garage.torch.utils import np_to_torch, torch_to_np
 
 
 class DDPG(OffPolicyRLAlgorithm):
@@ -50,8 +51,7 @@ class DDPG(OffPolicyRLAlgorithm):
             clip_return].
         max_action (float): Maximum action magnitude.
         reward_scale (float): Reward scale.
-        input_include_goal (bool): Whether input includes goal.
-        smooth_return (bool): Whether to smooth the return.
+        smooth_return (bool): Whether to smooth the return for logging.
         name (str): Name of the algorithm shown in computation graph.
 
     """
@@ -98,27 +98,26 @@ class DDPG(OffPolicyRLAlgorithm):
         self.epoch_ys = []
         self.epoch_qs = []
 
-        super(DDPG, self).__init__(
-            env_spec=env_spec,
-            policy=policy,
-            qf=qf,
-            n_train_steps=n_train_steps,
-            n_epoch_cycles=n_epoch_cycles,
-            max_path_length=max_path_length,
-            buffer_batch_size=buffer_batch_size,
-            min_buffer_size=min_buffer_size,
-            rollout_batch_size=rollout_batch_size,
-            exploration_strategy=exploration_strategy,
-            replay_buffer=replay_buffer,
-            use_target=True,
-            discount=discount,
-            reward_scale=reward_scale,
-            smooth_return=smooth_return)
+        super().__init__(env_spec=env_spec,
+                         policy=policy,
+                         qf=qf,
+                         n_train_steps=n_train_steps,
+                         n_epoch_cycles=n_epoch_cycles,
+                         max_path_length=max_path_length,
+                         buffer_batch_size=buffer_batch_size,
+                         min_buffer_size=min_buffer_size,
+                         rollout_batch_size=rollout_batch_size,
+                         exploration_strategy=exploration_strategy,
+                         replay_buffer=replay_buffer,
+                         use_target=True,
+                         discount=discount,
+                         reward_scale=reward_scale,
+                         smooth_return=smooth_return)
 
         self.target_policy = copy.deepcopy(self.policy)
         self.target_qf = copy.deepcopy(self.qf)
-        self.policy_optimizer = optimizer(
-            self.policy.parameters(), lr=self.policy_lr)
+        self.policy_optimizer = optimizer(self.policy.parameters(),
+                                          lr=self.policy_lr)
         self.qf_optimizer = optimizer(self.qf.parameters(), lr=self.qf_lr)
 
     def train_once(self, itr, paths):
@@ -141,7 +140,7 @@ class DDPG(OffPolicyRLAlgorithm):
             if self.replay_buffer.n_transitions_stored >= self.min_buffer_size:  # noqa: E501
                 self.evaluate = True
                 samples = self.replay_buffer.sample(self.buffer_batch_size)
-                qf_loss, y, q, policy_loss = self.torch_to_np(
+                qf_loss, y, q, policy_loss = torch_to_np(
                     self.optimize_policy(itr, samples))  # pylint: disable=all
 
                 self.episode_policy_losses.append(policy_loss)
@@ -168,9 +167,8 @@ class DDPG(OffPolicyRLAlgorithm):
                 tabular.record('QFunction/MaxY', np.max(self.epoch_ys))
                 tabular.record('QFunction/AverageAbsY',
                                np.mean(np.abs(self.epoch_ys)))
-                if self.input_include_goal:
-                    tabular.record('AverageSuccessRate',
-                                   np.mean(self.success_history))
+                tabular.record('AverageSuccessRate',
+                               np.mean(self.success_history))
 
             if not self.smooth_return:
                 self.episode_rewards = []
@@ -194,7 +192,7 @@ class DDPG(OffPolicyRLAlgorithm):
             qval: Q-value predicted by the Q-network.
 
         """
-        transitions = self.np_to_torch(samples)
+        transitions = np_to_torch(samples)
         observations = transitions['observation']
         rewards = transitions['reward']
         actions = transitions['action']
@@ -204,13 +202,8 @@ class DDPG(OffPolicyRLAlgorithm):
         rewards = rewards.reshape(-1, 1)
         terminals = terminals.reshape(-1, 1)
 
-        if self.input_include_goal:
-            goals = transitions['goal']
-            next_inputs = np.concatenate((next_observations, goals), axis=-1)
-            inputs = np.concatenate((observations, goals), axis=-1)
-        else:
-            next_inputs = next_observations
-            inputs = observations
+        next_inputs = next_observations
+        inputs = observations
         with torch.no_grad():
             next_actions = self.target_policy(next_inputs)
             target_qvals = self.target_qf(next_inputs, next_actions)
@@ -252,34 +245,3 @@ class DDPG(OffPolicyRLAlgorithm):
                                   self.policy.parameters()):
             t_param.data.copy_(t_param.data * (1.0 - self.tau) +
                                param.data * self.tau)
-
-    def np_to_torch(self, dict):
-        """
-        Convert numpy arrays to PyTorch tensors.
-
-         Args:
-            dict (dict): Dictionary of data in numpy arrays.
-
-        Returns:
-           Dictionary of data in PyTorch tensors.
-
-        """
-        for key, value in dict.items():
-            dict[key] = torch.FloatTensor(value)
-        return dict
-
-    def torch_to_np(self, value_in):
-        """
-        Convert PyTorch tensors to numpy arrays.
-
-         Args:
-            value_in (tuple): Tuple of data in PyTorch tensors.
-
-        Returns:
-           Tuple of data in numpy arrays.
-
-        """
-        value_out = []
-        for v in value_in:
-            value_out.append(v.numpy())
-        return tuple(value_out)
