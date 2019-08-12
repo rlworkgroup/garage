@@ -5,9 +5,6 @@
 Installation
 ============
 
-Express Install
-===============
-
 Install System Dependencies
 ---------------------------
 
@@ -41,14 +38,20 @@ garage is also tested using `virtualenv <https://virtualenv.pypa.io/en/latest/>`
 NOTE: garage only supports Python 3.5+, so make sure you Python environment is using this or a later version.
 
 - pipenv
+
+The latest release of pipenv (2018.11.26) doesn't support fetching dependencies using archive URLs, so you'd need to install it from source.
+
 .. code-block:: bash
 
+    pip install --user git+https://github.com/pypa/pipenv.git
+    # Make sure your pip installation user directory is in PATH
     pipenv --three  # garage only supports Python 3.5+
     pipenv run pip install numpy==1.14.5  # pycma requires numpy to install
-    pipenv install --pre garage  # --pre required because garage has some dependencies with verion numbers <1.0
+    pipenv install --pre garage
 
 
 - conda (environment named "myenv")
+
 .. code-block:: bash
 
     source activate myenv
@@ -70,6 +73,7 @@ Alternatively, you can add garage in the pip section of your `environment.yml`
       - garage
 
 - virtualenv (environment named "myenv")
+
 .. code-block:: bash
 
     source myenv/bin/activate
@@ -83,6 +87,7 @@ Extra Steps for Developers
 If you plan on developing the garage repository, as opposed to simply using it as a library, you will probably prefer to install your copy of the garage repository as an editable library instead. After installing the pre-requisites using the instructions in `Install System Dependencies`_, you should install garage in your environment as below.
 
 - pipenv
+
 .. code-block:: bash
 
     cd path/to/garage/repo
@@ -92,6 +97,7 @@ If you plan on developing the garage repository, as opposed to simply using it a
 
 
 - conda
+
 .. code-block:: bash
 
     source activate myenv
@@ -101,6 +107,7 @@ If you plan on developing the garage repository, as opposed to simply using it a
 
 
 - virtualenv
+
 .. code-block:: bash
 
     source myenv/bin/activate
