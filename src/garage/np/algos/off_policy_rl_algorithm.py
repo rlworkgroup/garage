@@ -1,5 +1,5 @@
 from garage.np.algos import RLAlgorithm
-from garage.tf.samplers import OffPolicyVectorizedSampler
+from garage.sampler import OffPolicyVectorizedSampler
 
 
 class OffPolicyRLAlgorithm(RLAlgorithm):

@@ -1,7 +1,8 @@
 import tensorflow as tf
 
-from garage.sampler import parallel_sampler, singleton_pool
+from garage.sampler import parallel_sampler
 from garage.sampler.base import BaseSampler
+from garage.sampler.stateful_pool import singleton_pool
 from garage.sampler.utils import truncate_paths
 
 

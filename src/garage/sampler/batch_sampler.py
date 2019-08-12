@@ -13,7 +13,7 @@ class BatchSampler(BaseSampler):
     """
 
     def __init__(self, algo, env):
-        super(BatchSampler, self).__init__(algo, env)
+        super().__init__(algo, env)
 
     def start_worker(self):
         """Start worker function."""

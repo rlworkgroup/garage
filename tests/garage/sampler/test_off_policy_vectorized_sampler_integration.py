@@ -5,12 +5,12 @@ import tensorflow as tf
 from garage.envs import normalize
 from garage.np.exploration_strategies import OUStrategy
 from garage.replay_buffer import SimpleReplayBuffer
+from garage.sampler import OffPolicyVectorizedSampler
 from garage.tf.algos import DDPG
 from garage.tf.envs import TfEnv
 from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import ContinuousMLPPolicyWithModel
 from garage.tf.q_functions import ContinuousMLPQFunction
-from garage.tf.samplers import OffPolicyVectorizedSampler
 from tests.fixtures import TfGraphTestCase
 from tests.fixtures.envs.dummy import DummyDictEnv
 from tests.fixtures.policies import DummyPolicy

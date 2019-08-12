@@ -15,8 +15,8 @@ import numpy as np
 
 from garage.misc import tensor_utils
 from garage.misc.overrides import overrides
-from garage.sampler import VecEnvExecutor
-from garage.tf.samplers.batch_sampler import BatchSampler
+from garage.sampler.batch_sampler import BatchSampler
+from garage.sampler.vec_env_executor import VecEnvExecutor
 
 
 class OffPolicyVectorizedSampler(BatchSampler):
@@ -33,7 +33,7 @@ class OffPolicyVectorizedSampler(BatchSampler):
     def __init__(self, algo, env, n_envs=None, no_reset=True):
         if n_envs is None:
             n_envs = int(algo.rollout_batch_size)
-        super(OffPolicyVectorizedSampler, self).__init__(algo, env, n_envs)
+        super().__init__(algo, env)
         self.n_envs = n_envs
         self.no_reset = no_reset
 
