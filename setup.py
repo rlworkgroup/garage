@@ -51,6 +51,9 @@ required = [
 extras = {}
 extras['all'] = list(set(sum(extras.values(), [])))
 
+# dependencies for using gpu, not included in all
+extras['gpu'] = ['tensorflow-gpu' + TF_VERSION]
+
 # Development dependencies (*not* included in "all")
 extras['dev'] = [
     # Please keep alphabetized
