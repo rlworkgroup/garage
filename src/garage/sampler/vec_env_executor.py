@@ -1,6 +1,6 @@
 import numpy as np
 
-from garage.tf.misc import tensor_utils
+from garage.misc import tensor_utils
 
 
 class VecEnvExecutor:
