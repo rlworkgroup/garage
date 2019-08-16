@@ -1,3 +1,4 @@
+"""A batch-based algorithm interleaves sampling and policy optimization."""
 import collections
 
 from dowel import tabular
@@ -42,6 +43,18 @@ class BatchPolopt(RLAlgorithm):
             self.sampler_cls = BatchSampler
 
     def train(self, runner, batch_size):
+        """Obtain samplers and start actual training for each epoch.
+
+        Args:
+            runner (LocalRunner): LocalRunner is passed to give algorithm
+                the access to runner.step_epochs(), which provides services
+                such as snapshotting and sampler control.
+            batch_size (int): Batch size used to obtain samplers.
+
+        Returns:
+            The average return in last epoch cycle.
+
+        """
         last_return = None
 
         for epoch in runner.step_epochs():

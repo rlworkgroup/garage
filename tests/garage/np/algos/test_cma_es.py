@@ -8,26 +8,25 @@ from tests.fixtures import TfGraphTestCase
 
 
 class TestCMAES(TfGraphTestCase):
+
     def test_cma_es_cartpole(self):
         """Test CMAES with Cartpole-v1 environment."""
         with LocalTFRunner() as runner:
             env = TfEnv(env_name='CartPole-v1')
 
-            policy = CategoricalMLPPolicy(
-                name='policy', env_spec=env.spec, hidden_sizes=(32, 32))
+            policy = CategoricalMLPPolicy(name='policy',
+                                          env_spec=env.spec,
+                                          hidden_sizes=(32, 32))
 
             baseline = LinearFeatureBaseline(env_spec=env.spec)
 
-            runner.initialize_tf_vars()
-
             n_samples = 20
 
-            algo = CMAES(
-                env_spec=env.spec,
-                policy=policy,
-                baseline=baseline,
-                max_path_length=100,
-                n_samples=n_samples)
+            algo = CMAES(env_spec=env.spec,
+                         policy=policy,
+                         baseline=baseline,
+                         max_path_length=100,
+                         n_samples=n_samples)
 
             runner.setup(algo, env, sampler_cls=OnPolicyVectorizedSampler)
             runner.train(n_epochs=1, batch_size=1000, n_epoch_cycles=n_samples)

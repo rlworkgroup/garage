@@ -1,3 +1,4 @@
+"""Covariance Matrix Adaptation Evolution Strategy."""
 import cma
 from dowel import logger, tabular
 import numpy as np
@@ -40,18 +41,39 @@ class CMAES(BatchPolopt):
 
         self.sigma0 = sigma0
 
-        init_mean = self.policy.get_param_values()
-        self.es = cma.CMAEvolutionStrategy(init_mean, sigma0)
+    def _sample_params(self):
+        return self.es.ask(self.n_samples)
 
-        self.all_params = self.sample_params()
+    def train(self, runner, batch_size):
+        """Initialize variables and start training.
+
+        Args:
+            runner (LocalRunner): LocalRunner is passed to give algorithm
+                the access to runner.step_epochs(), which provides services
+                such as snapshotting and sampler control.
+            batch_size (int): Batch size used to obtain samplers.
+
+        Returns:
+            The average return in last epoch cycle.
+
+        """
+        init_mean = self.policy.get_param_values()
+        self.es = cma.CMAEvolutionStrategy(init_mean, self.sigma0)
+        self.all_params = self._sample_params()
         self.cur_params = self.all_params[0]
         self.policy.set_param_values(self.cur_params)
         self.all_returns = []
 
-    def sample_params(self):
-        return self.es.ask(self.n_samples)
+        return super().train(runner, batch_size)
 
     def train_once(self, itr, paths):
+        """Perform one step of policy optimization given one batch of samples.
+
+        Args:
+            itr (int): Iteration number.
+            paths (list[dict]): A list of collected paths.
+
+        """
         paths = self.process_samples(itr, paths)
 
         epoch = itr // self.n_samples
@@ -71,13 +93,10 @@ class CMAES(BatchPolopt):
             # Clear for next epoch
             rtn = max(self.all_returns)
             self.all_returns.clear()
-            self.all_params = self.sample_params()
+            self.all_params = self._sample_params()
 
         self.cur_params = self.all_params[(i_sample + 1) % self.n_samples]
         self.policy.set_param_values(self.cur_params)
 
         logger.log(tabular)
         return rtn
-
-    def get_itr_snapshot(self, itr):
-        return dict(itr=itr, policy=self.policy, baseline=self.baseline)
