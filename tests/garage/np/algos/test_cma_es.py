@@ -1,9 +1,9 @@
 from garage.np.algos import CMAES
 from garage.np.baselines import LinearFeatureBaseline
+from garage.sampler import OnPolicyVectorizedSampler
 from garage.tf.envs import TfEnv
 from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import CategoricalMLPPolicy
-from garage.tf.samplers import OnPolicyVectorizedSampler
 from tests.fixtures import TfGraphTestCase
 
 

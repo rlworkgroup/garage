@@ -5,7 +5,8 @@ import numpy as np
 
 from garage.misc import special, tensor_utils
 from garage.np.algos.base import RLAlgorithm
-from garage.tf.samplers import BatchSampler, OnPolicyVectorizedSampler
+from garage.sampler import OnPolicyVectorizedSampler
+from garage.tf.samplers import BatchSampler
 
 
 class BatchPolopt(RLAlgorithm):

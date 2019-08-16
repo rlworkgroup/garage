@@ -11,10 +11,10 @@ Results:
 from garage.experiment import run_experiment
 from garage.np.algos import CMAES
 from garage.np.baselines import LinearFeatureBaseline
+from garage.sampler import OnPolicyVectorizedSampler
 from garage.tf.envs import TfEnv
 from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import CategoricalMLPPolicy
-from garage.tf.samplers import OnPolicyVectorizedSampler
 
 
 def run_task(snapshot_config, *_):
@@ -26,6 +26,8 @@ def run_task(snapshot_config, *_):
             name='policy', env_spec=env.spec, hidden_sizes=(32, 32))
 
         baseline = LinearFeatureBaseline(env_spec=env.spec)
+
+        runner.initialize_tf_vars()
 
         n_samples = 20
 

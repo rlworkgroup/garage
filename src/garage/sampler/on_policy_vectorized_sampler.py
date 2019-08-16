@@ -7,14 +7,14 @@ import numpy as np
 from garage.misc import tensor_utils
 from garage.misc.overrides import overrides
 from garage.misc.prog_bar_counter import ProgBarCounter
-from garage.sampler import VecEnvExecutor
+from garage.sampler.batch_sampler import BatchSampler
 from garage.sampler.utils import truncate_paths
-from garage.tf.samplers.batch_sampler import BatchSampler
+from garage.sampler.vec_env_executor import VecEnvExecutor
 
 
 class OnPolicyVectorizedSampler(BatchSampler):
     def __init__(self, algo, env, n_envs=1):
-        super(OnPolicyVectorizedSampler, self).__init__(algo, env, n_envs)
+        super().__init__(algo, env)
         self.n_envs = n_envs
 
     @overrides

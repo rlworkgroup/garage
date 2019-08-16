@@ -2,8 +2,9 @@ import gym
 
 from garage.envs import normalize
 from garage.np.baselines import LinearFeatureBaseline
+from garage.sampler import OnPolicyVectorizedSampler
 from garage.tf.envs import TfEnv
-from garage.tf.samplers import BatchSampler, OnPolicyVectorizedSampler
+from garage.tf.samplers import BatchSampler
 from tests.fixtures.algos import DummyAlgo
 from tests.fixtures.policies import DummyPolicy, DummyPolicyWithoutVectorized
 
