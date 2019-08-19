@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
-"""Example of how to load, step, and visualize an environment."""
-import gym
+"""Example of how to load, step, and visualize an environment.
+
+This example requires that garage[dm_control] be installed.
+"""
+from garage.envs.dm_control import DmControlEnv
 
 # Construct the environment
-env = gym.make('MountainCar-v0')
+env = DmControlEnv.from_suite('walker', 'run')
 
 # Reset the environment and launch the viewer
 env.reset()
