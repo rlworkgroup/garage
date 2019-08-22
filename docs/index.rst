@@ -23,7 +23,6 @@ The garage user guide explains how to install garage, how to run experiments, an
    user/implement_env
    user/implement_algo_basic
    user/implement_algo_advanced
-   user/cluster
 
 
 Citing garage
