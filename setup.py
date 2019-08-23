@@ -25,7 +25,6 @@ required = [
     'gym[all]==0.12.4',
     'joblib<0.13,>=0.12',
     'matplotlib',
-    'mujoco-py<2.1,>=2.0',
     'numpy==1.14.5',
     'psutil',
     # Pyglet 1.4.0 introduces some api change which breaks some
@@ -45,6 +44,10 @@ required = [
 
 # Dependencies for optional features
 extras = {}
+
+extras['mujoco'] = [
+    'mujoco-py<2.1,>=2.0',
+]
 
 extras['dm_control'] = [
     # dm_control throws an error during install about not being able to
