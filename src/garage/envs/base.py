@@ -4,8 +4,6 @@ import collections
 import akro
 import glfw
 import gym
-from gym.envs.classic_control.rendering import SimpleImageViewer
-from gym.envs.classic_control.rendering import Viewer
 
 from garage.core import Serializable
 from garage.envs.env_spec import EnvSpec
@@ -54,9 +52,8 @@ class GarageEnv(gym.Wrapper, Serializable):
             self.spec.action_space = self.action_space
             self.spec.observation_space = self.observation_space
         else:
-            self.spec = EnvSpec(
-                action_space=self.action_space,
-                observation_space=self.observation_space)
+            self.spec = EnvSpec(action_space=self.action_space,
+                                observation_space=self.observation_space)
 
         Serializable.quick_init(self, locals())
 
@@ -66,6 +63,7 @@ class GarageEnv(gym.Wrapper, Serializable):
 
         Returns:
             None
+
         """
         self._close_viewer_window()
         self.env.close()
@@ -94,36 +92,35 @@ class GarageEnv(gym.Wrapper, Serializable):
                     glfw.destroy_window(self.env.viewer.window)
             elif any(package in self.env.spec._entry_point
                      for package in KNOWN_GYM_NOT_CLOSE_VIEWER):
-                if (hasattr(self.env, 'viewer') and
-                    (isinstance(self.env.viewer, Viewer)
-                     or isinstance(self.env.viewer, SimpleImageViewer))):
-                    self.env.viewer.close()
+                if hasattr(self.env, 'viewer'):
+                    from gym.envs.classic_control.rendering import (
+                        Viewer, SimpleImageViewer)
+                    if (isinstance(self.env.viewer, Viewer)
+                            or isinstance(self.env.viewer, SimpleImageViewer)):
+                        self.env.viewer.close()
 
     def reset(self, **kwargs):
-        """
+        """Call reset on wrapped env.
+
         This method is necessary to suppress a deprecated warning
         thrown by gym.Wrapper.
-
-        Calls reset on wrapped env.
         """
         return self.env.reset(**kwargs)
 
     def step(self, action):
-        """
+        """Call step on wrapped env.
+
         This method is necessary to suppress a deprecated warning
         thrown by gym.Wrapper.
-
-        Calls step on wrapped env.
         """
         return self.env.step(action)
 
 
 def Step(observation, reward, done, **kwargs):  # noqa: N802
-    """
-    Convenience method for creating a namedtuple from the results of
-    environment.step(action). Provides the option to put extra
-    diagnostic info in the kwargs (if it exists) without demanding
-    an explicit positional argument.
+    """Create a namedtuple from the results of environment.step(action).
+
+    Provides the option to put extra diagnostic info in the kwargs (if it
+    exists) without demanding an explicit positional argument.
     """
     return _Step(observation, reward, done, kwargs)
 
