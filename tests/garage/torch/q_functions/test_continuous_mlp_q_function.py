@@ -22,18 +22,17 @@ class TestContinuousNNQFunction:
         obs = torch.ones(obs_dim, dtype=torch.float32).unsqueeze(0)
         act = torch.ones(act_dim, dtype=torch.float32).unsqueeze(0)
 
-        qf = ContinuousMLPQFunction(
-            env_spec=env_spec,
-            hidden_nonlinearity=None,
-            hidden_sizes=hidden_sizes,
-            hidden_w_init=nn.init.ones_,
-            output_w_init=nn.init.ones_)
+        qf = ContinuousMLPQFunction(env_spec=env_spec,
+                                    hidden_nonlinearity=None,
+                                    hidden_sizes=hidden_sizes,
+                                    hidden_w_init=nn.init.ones_,
+                                    output_w_init=nn.init.ones_)
 
         output = qf(obs, act)
-        expected_output = torch.full(
-            [1, 1],
-            fill_value=(obs_dim + act_dim) * np.prod(hidden_sizes),
-            dtype=torch.float32)
+        expected_output = torch.full([1, 1],
+                                     fill_value=(obs_dim + act_dim) *
+                                     np.prod(hidden_sizes),
+                                     dtype=torch.float32)
         assert torch.eq(output, expected_output)
 
     # yapf: disable
@@ -52,12 +51,11 @@ class TestContinuousNNQFunction:
         obs = torch.ones(batch_size, obs_dim, dtype=torch.float32)
         act = torch.ones(batch_size, act_dim, dtype=torch.float32)
 
-        qf = ContinuousMLPQFunction(
-            env_spec=env_spec,
-            hidden_nonlinearity=None,
-            hidden_sizes=hidden_sizes,
-            hidden_w_init=nn.init.ones_,
-            output_w_init=nn.init.ones_)
+        qf = ContinuousMLPQFunction(env_spec=env_spec,
+                                    hidden_nonlinearity=None,
+                                    hidden_sizes=hidden_sizes,
+                                    hidden_w_init=nn.init.ones_,
+                                    output_w_init=nn.init.ones_)
         output = qf(obs, act)
 
         assert output.shape == (batch_size, 1)
@@ -73,12 +71,11 @@ class TestContinuousNNQFunction:
         obs = torch.ones(obs_dim, dtype=torch.float32).unsqueeze(0)
         act = torch.ones(act_dim, dtype=torch.float32).unsqueeze(0)
 
-        qf = ContinuousMLPQFunction(
-            env_spec=env_spec,
-            hidden_nonlinearity=None,
-            hidden_sizes=hidden_sizes,
-            hidden_w_init=nn.init.ones_,
-            output_w_init=nn.init.ones_)
+        qf = ContinuousMLPQFunction(env_spec=env_spec,
+                                    hidden_nonlinearity=None,
+                                    hidden_sizes=hidden_sizes,
+                                    hidden_w_init=nn.init.ones_,
+                                    output_w_init=nn.init.ones_)
 
         output1 = qf(obs, act)
 

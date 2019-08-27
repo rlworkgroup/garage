@@ -27,33 +27,31 @@ def run_task(*_):
 
         action_noise = OUStrategy(env.spec, sigma=0.2)
 
-        policy = DeterministicMLPPolicy(
-            env_spec=env.spec,
-            hidden_sizes=[64, 64],
-            hidden_nonlinearity=F.relu,
-            output_nonlinearity=torch.tanh)
+        policy = DeterministicMLPPolicy(env_spec=env.spec,
+                                        hidden_sizes=[64, 64],
+                                        hidden_nonlinearity=F.relu,
+                                        output_nonlinearity=torch.tanh)
 
-        qf = ContinuousMLPQFunction(
-            env_spec=env.spec,
-            hidden_sizes=[64, 64],
-            hidden_nonlinearity=F.relu)
+        qf = ContinuousMLPQFunction(env_spec=env.spec,
+                                    hidden_sizes=[64, 64],
+                                    hidden_nonlinearity=F.relu)
 
-        replay_buffer = SimpleReplayBuffer(
-            env_spec=env.spec, size_in_transitions=int(1e6), time_horizon=100)
+        replay_buffer = SimpleReplayBuffer(env_spec=env.spec,
+                                           size_in_transitions=int(1e6),
+                                           time_horizon=100)
 
-        ddpg = DDPG(
-            env_spec=env.spec,
-            policy=policy,
-            qf=qf,
-            replay_buffer=replay_buffer,
-            n_train_steps=50,
-            min_buffer_size=int(1e4),
-            exploration_strategy=action_noise,
-            target_update_tau=1e-2,
-            policy_lr=1e-4,
-            qf_lr=1e-3,
-            discount=0.9,
-            optimizer=torch.optim.Adam)
+        ddpg = DDPG(env_spec=env.spec,
+                    policy=policy,
+                    qf=qf,
+                    replay_buffer=replay_buffer,
+                    n_train_steps=50,
+                    min_buffer_size=int(1e4),
+                    exploration_strategy=action_noise,
+                    target_update_tau=1e-2,
+                    policy_lr=1e-4,
+                    qf_lr=1e-3,
+                    discount=0.9,
+                    optimizer=torch.optim.Adam)
 
         runner.setup(algo=ddpg, env=env)
 

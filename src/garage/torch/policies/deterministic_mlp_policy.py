@@ -30,11 +30,10 @@ class DeterministicMLPPolicy(MLPModule, Policy):
         self._obs_dim = env_spec.observation_space.flat_dim
         self._action_dim = env_spec.action_space.flat_dim
 
-        MLPModule.__init__(
-            self,
-            input_dim=self._obs_dim,
-            output_dim=self._action_dim,
-            **kwargs)
+        MLPModule.__init__(self,
+                           input_dim=self._obs_dim,
+                           output_dim=self._action_dim,
+                           **kwargs)
 
     def forward(self, input_val):
         """Forward method."""

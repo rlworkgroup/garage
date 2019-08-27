@@ -25,11 +25,10 @@ class ContinuousMLPQFunction(MLPModule):
         self._obs_dim = env_spec.observation_space.flat_dim
         self._action_dim = env_spec.action_space.flat_dim
 
-        MLPModule.__init__(
-            self,
-            input_dim=self._obs_dim + self._action_dim,
-            output_dim=1,
-            **kwargs)
+        MLPModule.__init__(self,
+                           input_dim=self._obs_dim + self._action_dim,
+                           output_dim=1,
+                           **kwargs)
 
     def forward(self, observations, actions):
         """Return Q-value(s)."""

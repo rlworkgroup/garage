@@ -21,12 +21,11 @@ class TestDeterministicPolicies:
         act_dim = env_spec.action_space.flat_dim
         obs = torch.ones([1, obs_dim], dtype=torch.float32)
 
-        policy = DeterministicMLPPolicy(
-            env_spec=env_spec,
-            hidden_nonlinearity=None,
-            hidden_sizes=hidden_sizes,
-            hidden_w_init=nn.init.ones_,
-            output_w_init=nn.init.ones_)
+        policy = DeterministicMLPPolicy(env_spec=env_spec,
+                                        hidden_nonlinearity=None,
+                                        hidden_sizes=hidden_sizes,
+                                        hidden_w_init=nn.init.ones_,
+                                        output_w_init=nn.init.ones_)
 
         expected_output = np.full([1, act_dim],
                                   fill_value=obs_dim * np.prod(hidden_sizes),
@@ -48,12 +47,11 @@ class TestDeterministicPolicies:
         act_dim = env_spec.action_space.flat_dim
         obs = torch.ones([batch_size, obs_dim], dtype=torch.float32)
 
-        policy = DeterministicMLPPolicy(
-            env_spec=env_spec,
-            hidden_nonlinearity=None,
-            hidden_sizes=hidden_sizes,
-            hidden_w_init=nn.init.ones_,
-            output_w_init=nn.init.ones_)
+        policy = DeterministicMLPPolicy(env_spec=env_spec,
+                                        hidden_nonlinearity=None,
+                                        hidden_sizes=hidden_sizes,
+                                        hidden_w_init=nn.init.ones_,
+                                        output_w_init=nn.init.ones_)
 
         expected_output = np.full([batch_size, act_dim],
                                   fill_value=obs_dim * np.prod(hidden_sizes),
@@ -74,12 +72,11 @@ class TestDeterministicPolicies:
         obs_dim = env_spec.observation_space.flat_dim
         obs = torch.ones([batch_size, obs_dim], dtype=torch.float32)
 
-        policy = DeterministicMLPPolicy(
-            env_spec=env_spec,
-            hidden_nonlinearity=None,
-            hidden_sizes=hidden_sizes,
-            hidden_w_init=nn.init.ones_,
-            output_w_init=nn.init.ones_)
+        policy = DeterministicMLPPolicy(env_spec=env_spec,
+                                        hidden_nonlinearity=None,
+                                        hidden_sizes=hidden_sizes,
+                                        hidden_w_init=nn.init.ones_,
+                                        output_w_init=nn.init.ones_)
 
         output1 = policy.get_actions(obs)[0]
 

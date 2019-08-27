@@ -1,3 +1,5 @@
+"""Samplers which run agents in environments."""
+
 from garage.sampler.base import BaseSampler
 from garage.sampler.base import Sampler
 from garage.sampler.batch_sampler import BatchSampler
