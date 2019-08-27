@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # This script installs garage on https://colab.research.google.com
 #
-# NOTICE: To keep consistency across this script, scripts/setup_macos.sh and
-# docker/Dockerfile.base, if there's any changes applied to this file,
-# specially regarding the installation of dependencies, apply those same
-# changes to the mentioned files.
+# NOTICE: To keep consistency across this script, scripts/setup_macos.sh,
+# docker/Dockerfile.base.16.04 and docker/Dockerfile.base.18.04, if there's
+# any changes applied to this file, specially regarding the installation of
+# dependencies, apply those same changes to the mentioned files.
 
 # Exit if any error occurs
 set -e
