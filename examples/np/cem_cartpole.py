@@ -22,22 +22,20 @@ def run_task(snapshot_config, *_):
     with LocalTFRunner(snapshot_config=snapshot_config) as runner:
         env = TfEnv(env_name='CartPole-v1')
 
-        policy = CategoricalMLPPolicy(
-            name='policy', env_spec=env.spec, hidden_sizes=(32, 32))
+        policy = CategoricalMLPPolicy(name='policy',
+                                      env_spec=env.spec,
+                                      hidden_sizes=(32, 32))
 
         baseline = LinearFeatureBaseline(env_spec=env.spec)
 
-        runner.initialize_tf_vars()
-
         n_samples = 20
 
-        algo = CEM(
-            env_spec=env.spec,
-            policy=policy,
-            baseline=baseline,
-            best_frac=0.05,
-            max_path_length=100,
-            n_samples=n_samples)
+        algo = CEM(env_spec=env.spec,
+                   policy=policy,
+                   baseline=baseline,
+                   best_frac=0.05,
+                   max_path_length=100,
+                   n_samples=n_samples)
 
         runner.setup(algo, env, sampler_cls=OnPolicyVectorizedSampler)
         # NOTE: make sure that n_epoch_cycles == n_samples !

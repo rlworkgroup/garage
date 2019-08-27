@@ -1,3 +1,4 @@
+"""Interface of RLAlgorithm."""
 import abc
 
 
@@ -13,7 +14,7 @@ class RLAlgorithm(abc.ABC):
 
     @abc.abstractmethod
     def train_once(self, itr, paths):
-        """Performs one step of policy optimization given one batch of samples.
+        """Perform one step of policy optimization given one batch of samples.
 
         Args:
             itr (int): Iteration number.

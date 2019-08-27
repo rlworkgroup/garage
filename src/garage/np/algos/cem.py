@@ -1,3 +1,4 @@
+"""Cross Entropy Method."""
 from dowel import logger, tabular
 import numpy as np
 
@@ -53,25 +54,14 @@ class CEM(BatchPolopt):
                          n_samples)
         self.env_spec = env_spec
 
+        self.n_samples = n_samples
+        self.best_frac = best_frac
         self.init_std = init_std
         self.best_frac = best_frac
         self.extra_std = extra_std
         self.extra_decay_time = extra_decay_time
 
-        # epoch-wise
-        self.cur_std = self.init_std
-        self.cur_mean = self.policy.get_param_values()
-        # epoch-cycle-wise
-        self.cur_params = self.cur_mean
-        self.all_returns = []
-        self.all_params = [self.cur_mean.copy()]
-        # fixed
-        self.n_best = int(n_samples * best_frac)
-        assert self.n_best >= 1, (
-            'n_samples is too low. Make sure that n_samples * best_frac >= 1')
-        self.n_params = len(self.cur_mean)
-
-    def sample_params(self, epoch):
+    def _sample_params(self, epoch):
         extra_var_mult = max(1.0 - epoch / self.extra_decay_time, 0)
         sample_std = np.sqrt(
             np.square(self.cur_std) +
@@ -79,7 +69,42 @@ class CEM(BatchPolopt):
         return np.random.standard_normal(
             self.n_params) * sample_std + self.cur_mean
 
+    def train(self, runner, batch_size):
+        """Initialize variables and start training.
+
+        Args:
+            runner (LocalRunner): LocalRunner is passed to give algorithm
+                the access to runner.step_epochs(), which provides services
+                such as snapshotting and sampler control.
+            batch_size (int): Batch size used to obtain samplers.
+
+        Returns:
+            The average return in last epoch cycle.
+
+        """
+        # epoch-wise
+        self.cur_std = self.init_std
+        self.cur_mean = self.policy.get_param_values()
+        # epoch-cycle-wise
+        self.cur_params = self.cur_mean
+        self.all_returns = []
+        self.all_params = [self.cur_mean.copy()]
+        # constant
+        self.n_best = int(self.n_samples * self.best_frac)
+        assert self.n_best >= 1, (
+            'n_samples is too low. Make sure that n_samples * best_frac >= 1')
+        self.n_params = len(self.cur_mean)
+
+        return super().train(runner, batch_size)
+
     def train_once(self, itr, paths):
+        """Perform one step of policy optimization given one batch of samples.
+
+        Args:
+            itr (int): Iteration number.
+            paths (list[dict]): A list of collected paths.
+
+        """
         paths = self.process_samples(itr, paths)
 
         epoch = itr // self.n_samples
@@ -107,12 +132,9 @@ class CEM(BatchPolopt):
             self.all_params.clear()
 
         # -- Stage: Generate a new policy for next path sampling
-        self.cur_params = self.sample_params(itr)
+        self.cur_params = self._sample_params(itr)
         self.all_params.append(self.cur_params.copy())
         self.policy.set_param_values(self.cur_params)
 
         logger.log(tabular)
         return rtn
-
-    def get_itr_snapshot(self, itr):
-        return dict(itr=itr, policy=self.policy, baseline=self.baseline)
