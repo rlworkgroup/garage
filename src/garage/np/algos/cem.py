@@ -69,14 +69,13 @@ class CEM(BatchPolopt):
         return np.random.standard_normal(
             self.n_params) * sample_std + self.cur_mean
 
-    def train(self, runner, batch_size):
+    def train(self, runner):
         """Initialize variables and start training.
 
         Args:
             runner (LocalRunner): LocalRunner is passed to give algorithm
                 the access to runner.step_epochs(), which provides services
                 such as snapshotting and sampler control.
-            batch_size (int): Batch size used to obtain samplers.
 
         Returns:
             The average return in last epoch cycle.
@@ -95,7 +94,7 @@ class CEM(BatchPolopt):
             'n_samples is too low. Make sure that n_samples * best_frac >= 1')
         self.n_params = len(self.cur_mean)
 
-        return super().train(runner, batch_size)
+        return super().train(runner)
 
     def train_once(self, itr, paths):
         """Perform one step of policy optimization given one batch of samples.
