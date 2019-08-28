@@ -7,7 +7,7 @@ from garage.torch.modules import MLPModule
 
 class ContinuousMLPQFunction(MLPModule):
     """
-    Implements a module-agnostic Q-value network.
+    Implements a continuous MLP Q-value network.
 
     It predicts the Q-value for all actions based on the input state. It uses
     a PyTorch neural network module to fit the function of Q(s, a).

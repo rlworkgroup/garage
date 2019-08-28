@@ -22,40 +22,40 @@ from garage.torch.q_functions import ContinuousMLPQFunction
 
 def run_task(*_):
     """Set up environment and algorithm and run the task."""
-    with LocalRunner() as runner:
-        env = GarageEnv(normalize(gym.make('InvertedDoublePendulum-v2')))
+    runner = LocalRunner()
+    env = GarageEnv(normalize(gym.make('InvertedDoublePendulum-v2')))
 
-        action_noise = OUStrategy(env.spec, sigma=0.2)
+    action_noise = OUStrategy(env.spec, sigma=0.2)
 
-        policy = DeterministicMLPPolicy(env_spec=env.spec,
-                                        hidden_sizes=[64, 64],
-                                        hidden_nonlinearity=F.relu,
-                                        output_nonlinearity=torch.tanh)
-
-        qf = ContinuousMLPQFunction(env_spec=env.spec,
+    policy = DeterministicMLPPolicy(env_spec=env.spec,
                                     hidden_sizes=[64, 64],
-                                    hidden_nonlinearity=F.relu)
+                                    hidden_nonlinearity=F.relu,
+                                    output_nonlinearity=torch.tanh)
 
-        replay_buffer = SimpleReplayBuffer(env_spec=env.spec,
-                                           size_in_transitions=int(1e6),
-                                           time_horizon=100)
+    qf = ContinuousMLPQFunction(env_spec=env.spec,
+                                hidden_sizes=[64, 64],
+                                hidden_nonlinearity=F.relu)
 
-        ddpg = DDPG(env_spec=env.spec,
-                    policy=policy,
-                    qf=qf,
-                    replay_buffer=replay_buffer,
-                    n_train_steps=50,
-                    min_buffer_size=int(1e4),
-                    exploration_strategy=action_noise,
-                    target_update_tau=1e-2,
-                    policy_lr=1e-4,
-                    qf_lr=1e-3,
-                    discount=0.9,
-                    optimizer=torch.optim.Adam)
+    replay_buffer = SimpleReplayBuffer(env_spec=env.spec,
+                                       size_in_transitions=int(1e6),
+                                       time_horizon=100)
 
-        runner.setup(algo=ddpg, env=env)
+    ddpg = DDPG(env_spec=env.spec,
+                policy=policy,
+                qf=qf,
+                replay_buffer=replay_buffer,
+                n_train_steps=50,
+                min_buffer_size=int(1e4),
+                exploration_strategy=action_noise,
+                target_update_tau=1e-2,
+                policy_lr=1e-4,
+                qf_lr=1e-3,
+                discount=0.9,
+                optimizer=torch.optim.Adam)
 
-        runner.train(n_epochs=500, n_epoch_cycles=20, batch_size=100)
+    runner.setup(algo=ddpg, env=env)
+
+    runner.train(n_epochs=500, n_epoch_cycles=20, batch_size=100)
 
 
 run_experiment(
