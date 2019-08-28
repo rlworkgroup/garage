@@ -1,3 +1,5 @@
+"""This class implements OffPolicyRLAlgorithm for off-policy RL algorithms."""
+
 from garage.np.algos import RLAlgorithm
 from garage.sampler import OffPolicyVectorizedSampler
 
@@ -69,6 +71,18 @@ class OffPolicyRLAlgorithm(RLAlgorithm):
         self.init_opt()
 
     def train(self, runner, batch_size):
+        """Obtain samplers and start actual training for each epoch.
+
+        Args:
+            runner (LocalRunner): LocalRunner is passed to give algorithm
+                the access to runner.step_epochs(), which provides services
+                such as snapshotting and sampler control.
+            batch_size (int): Batch size used to obtain samplers.
+
+        Returns:
+            The average return in last epoch cycle.
+
+        """
         last_return = None
 
         for epoch in runner.step_epochs():
@@ -108,10 +122,9 @@ class OffPolicyRLAlgorithm(RLAlgorithm):
         # check if the last path is complete
         complete = [path['dones'][-1] for path in paths]
 
-        samples_data = dict(
-            undiscounted_returns=undiscounted_returns,
-            success_history=success_history,
-            complete=complete)
+        samples_data = dict(undiscounted_returns=undiscounted_returns,
+                            success_history=success_history,
+                            complete=complete)
 
         return samples_data
 
@@ -122,11 +135,7 @@ class OffPolicyRLAlgorithm(RLAlgorithm):
         If using tensorflow, this may
         include declaring all the variables and compiling functions.
         """
-        raise NotImplementedError
-
-    def get_itr_snapshot(self, itr, samples_data):
-        """Return data saved in the snapshot for this iteration."""
-        raise NotImplementedError
+        pass
 
     def optimize_policy(self, itr, samples_data):
         """Optimize policy network."""

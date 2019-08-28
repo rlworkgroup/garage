@@ -10,19 +10,22 @@ from tests.fixtures.policies import DummyPolicy, DummyPolicyWithoutVectorized
 
 
 class TestBatchPolopt:
+
     def setup_method(self):
         self.env = TfEnv(normalize(gym.make('CartPole-v1')))
         self.baseline = LinearFeatureBaseline(env_spec=self.env.spec)
 
     def test_default_sampler_cls(self):
         policy = DummyPolicy(env_spec=self.env.spec)
-        algo = DummyTFAlgo(
-            env_spec=self.env.spec, policy=policy, baseline=self.baseline)
+        algo = DummyTFAlgo(env_spec=self.env.spec,
+                           policy=policy,
+                           baseline=self.baseline)
         sampler = algo.sampler_cls(algo, self.env, dict())
         assert isinstance(sampler, OnPolicyVectorizedSampler)
 
         policy = DummyPolicyWithoutVectorized(env_spec=self.env.spec)
-        algo = DummyTFAlgo(
-            env_spec=self.env.spec, policy=policy, baseline=self.baseline)
+        algo = DummyTFAlgo(env_spec=self.env.spec,
+                           policy=policy,
+                           baseline=self.baseline)
         sampler = algo.sampler_cls(algo, self.env, dict())
         assert isinstance(sampler, BatchSampler)

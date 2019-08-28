@@ -1,3 +1,5 @@
+"""Collects samples in parallel using a stateful pool of workers."""
+
 import tensorflow as tf
 
 from garage.sampler import parallel_sampler
@@ -7,20 +9,25 @@ from garage.sampler.utils import truncate_paths
 
 
 def worker_init_tf(g):
+    """Initialize the tf.Session on a worker."""
     g.sess = tf.compat.v1.Session()
     g.sess.__enter__()
 
 
 def worker_init_tf_vars(g):
+    """Initialize the policy parameters on a worker."""
     g.sess.run(tf.compat.v1.global_variables_initializer())
 
 
 class BatchSampler(BaseSampler):
+    """Collects samples in parallel using a stateful pool of workers."""
+
     def __init__(self, algo, env, n_envs):
         super(BatchSampler, self).__init__(algo, env)
         self.n_envs = n_envs
 
     def start_worker(self):
+        """Initialize the sampler."""
         assert singleton_pool.initialized, (
             'Use singleton_pool.initialize(n_parallel) to setup workers.')
         if singleton_pool.n_parallel > 1:
@@ -30,9 +37,11 @@ class BatchSampler(BaseSampler):
             singleton_pool.run_each(worker_init_tf_vars)
 
     def shutdown_worker(self):
+        """Terminate workers if necessary."""
         parallel_sampler.terminate_task(scope=self.algo.scope)
 
     def obtain_samples(self, itr, batch_size=None, whole_paths=True):
+        """Collect samples for the given iteration number."""
         if not batch_size:
             batch_size = self.algo.max_path_length * self.n_envs
 

@@ -1,3 +1,5 @@
+"""Base class for batch sampling-based policy optimization methods."""
+
 import collections
 
 from dowel import logger, tabular
@@ -69,6 +71,18 @@ class BatchPolopt(RLAlgorithm):
         self.init_opt()
 
     def train(self, runner, batch_size):
+        """Obtain samplers and start actual training for each epoch.
+
+        Args:
+            runner (LocalRunner): LocalRunner is passed to give algorithm
+                the access to runner.step_epochs(), which provides services
+                such as snapshotting and sampler control.
+            batch_size (int): Batch size used to obtain samplers.
+
+        Returns:
+            The average return in last epoch cycle.
+
+        """
         last_return = None
 
         for epoch in runner.step_epochs():
@@ -80,6 +94,13 @@ class BatchPolopt(RLAlgorithm):
         return last_return
 
     def train_once(self, itr, paths):
+        """Perform one step of policy optimization given one batch of samples.
+
+        Args:
+            itr (int): Iteration number.
+            paths (list[dict]): A list of collected paths.
+
+        """
         paths = self.process_samples(itr, paths)
 
         self.log_diagnostics(paths)
@@ -88,6 +109,7 @@ class BatchPolopt(RLAlgorithm):
         return paths['average_return']
 
     def log_diagnostics(self, paths):
+        """Log diagnostic information."""
         logger.log('Logging diagnostics...')
         self.policy.log_diagnostics(paths)
         self.baseline.log_diagnostics(paths)
@@ -209,18 +231,17 @@ class BatchPolopt(RLAlgorithm):
         return samples_data
 
     def init_opt(self):
-        """
-        Initialize the optimization procedure. If using tensorflow, this may
-        include declaring all the variables and compiling functions
+        """Initialize the optimization procedure.
+
+        If using tensorflow, this may include declaring all the variables and
+        compiling functions.
         """
         raise NotImplementedError
 
     def get_itr_snapshot(self, itr):
-        """
-        Returns all the data that should be saved in the snapshot for this
-        iteration.
-        """
+        """Get all the data that should be saved in this snapshot iteration."""
         raise NotImplementedError
 
     def optimize_policy(self, itr, samples_data):
+        """Optimize the policy using the samples."""
         raise NotImplementedError

@@ -1,3 +1,5 @@
+"""BatchSampler which uses VecEnvExecutor to run multiple environments."""
+
 import itertools
 import pickle
 
@@ -13,12 +15,15 @@ from garage.sampler.vec_env_executor import VecEnvExecutor
 
 
 class OnPolicyVectorizedSampler(BatchSampler):
+    """BatchSampler which uses VecEnvExecutor to run multiple environments."""
+
     def __init__(self, algo, env, n_envs=1):
         super().__init__(algo, env)
         self.n_envs = n_envs
 
     @overrides
     def start_worker(self):
+        """Start workers."""
         n_envs = self.n_envs
         envs = [pickle.loads(pickle.dumps(self.env)) for _ in range(n_envs)]
         self.vec_env = VecEnvExecutor(
@@ -27,10 +32,12 @@ class OnPolicyVectorizedSampler(BatchSampler):
 
     @overrides
     def shutdown_worker(self):
+        """Shutdown workers."""
         self.vec_env.close()
 
     @overrides
     def obtain_samples(self, itr, batch_size=None, whole_paths=True):
+        """Obtain samples."""
         logger.log('Obtaining samples for iteration %d...' % itr)
 
         if not batch_size:
@@ -86,17 +93,16 @@ class OnPolicyVectorizedSampler(BatchSampler):
                 running_paths[idx]['agent_infos'].append(agent_info)
                 if done:
                     paths.append(
-                        dict(
-                            observations=self.env_spec.observation_space.
-                            flatten_n(running_paths[idx]['observations']),
-                            actions=self.env_spec.action_space.flatten_n(
-                                running_paths[idx]['actions']),
-                            rewards=tensor_utils.stack_tensor_list(
-                                running_paths[idx]['rewards']),
-                            env_infos=tensor_utils.stack_tensor_dict_list(
-                                running_paths[idx]['env_infos']),
-                            agent_infos=tensor_utils.stack_tensor_dict_list(
-                                running_paths[idx]['agent_infos'])))
+                        dict(observations=self.env_spec.observation_space.
+                             flatten_n(running_paths[idx]['observations']),
+                             actions=self.env_spec.action_space.flatten_n(
+                                 running_paths[idx]['actions']),
+                             rewards=tensor_utils.stack_tensor_list(
+                                 running_paths[idx]['rewards']),
+                             env_infos=tensor_utils.stack_tensor_dict_list(
+                                 running_paths[idx]['env_infos']),
+                             agent_infos=tensor_utils.stack_tensor_dict_list(
+                                 running_paths[idx]['agent_infos'])))
                     n_samples += len(running_paths[idx]['rewards'])
                     running_paths[idx] = None
 

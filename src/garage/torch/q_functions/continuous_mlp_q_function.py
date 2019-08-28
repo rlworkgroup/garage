@@ -2,16 +2,18 @@
 
 import torch
 
+from garage.torch.modules import MLPModule
 
-class ContinuousNNQFunction:
+
+class ContinuousMLPQFunction(MLPModule):
     """
-    Implements a module-agnostic Q-value network.
+    Implements a continuous MLP Q-value network.
 
     It predicts the Q-value for all actions based on the input state. It uses
     a PyTorch neural network module to fit the function of Q(s, a).
     """
 
-    def __init__(self, env_spec, nn_module):
+    def __init__(self, env_spec, **kwargs):
         """
         Initialize class with multiple attributes.
 
@@ -20,11 +22,14 @@ class ContinuousNNQFunction:
             nn_module (nn.Module): Neural network module in PyTorch.
         """
         self._env_spec = env_spec
-        self._nn_module = nn_module
         self._obs_dim = env_spec.observation_space.flat_dim
         self._action_dim = env_spec.action_space.flat_dim
-        self._action_bound = env_spec.action_space.high
 
-    def get_qval(self, observations, actions):
+        MLPModule.__init__(self,
+                           input_dim=self._obs_dim + self._action_dim,
+                           output_dim=1,
+                           **kwargs)
+
+    def forward(self, observations, actions):
         """Return Q-value(s)."""
-        return self._nn_module.forward(torch.cat([observations, actions], 1))
+        return super().forward(torch.cat([observations, actions], 1))

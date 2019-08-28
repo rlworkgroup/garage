@@ -1,3 +1,5 @@
+"""Environment wrapper that runs multiple environments in parallel."""
+
 import pickle as pickle
 import uuid
 
@@ -9,6 +11,7 @@ from garage.sampler.stateful_pool import singleton_pool
 
 
 def worker_init_envs(g, alloc, scope, env):
+    """Initialize the environment on a worker."""
     logger.log('initializing environment on worker %d' % g.worker_id)
     if not hasattr(g, 'parallel_vec_envs'):
         g.parallel_vec_envs = dict()
@@ -23,6 +26,7 @@ def worker_init_envs(g, alloc, scope, env):
 
 
 def worker_run_reset(g, flags, scope):
+    """Reset the environment on a worker."""
     if not hasattr(g, 'parallel_vec_envs'):
         logger.log('on worker %d' % g.worker_id)
         import traceback
@@ -54,6 +58,7 @@ def worker_run_reset(g, flags, scope):
 
 
 def worker_run_step(g, action_n, scope):
+    """Step the environment on a worker."""
     assert hasattr(g, 'parallel_vec_envs')
     assert scope in g.parallel_vec_envs
     env_template = g.parallel_vec_env_template[scope]
@@ -73,11 +78,9 @@ def worker_run_step(g, action_n, scope):
     return ids, obs, rewards, dones, env_infos
 
 
-def worker_collect_env_time(g):
-    return g.env_time
-
-
 class ParallelVecEnvExecutor:
+    """Environment wrapper that runs multiple environments in parallel."""
+
     def __init__(self, env, n, max_path_length, scope=None):
         if scope is None:
             # initialize random scope
@@ -93,8 +96,8 @@ class ParallelVecEnvExecutor:
             start_id += n_allocs
             rest_alloc = max(0, rest_alloc - envs_per_worker)
 
-        singleton_pool.run_each(
-            worker_init_envs, [(alloc, scope, env) for alloc in alloc_env_ids])
+        singleton_pool.run_each(worker_init_envs, [(alloc, scope, env)
+                                                   for alloc in alloc_env_ids])
 
         self._alloc_env_ids = alloc_env_ids
         self._action_space = env.action_space
@@ -105,6 +108,7 @@ class ParallelVecEnvExecutor:
         self.max_path_length = max_path_length
 
     def step(self, action_n):
+        """Step all environments using the provided actions."""
         results = singleton_pool.run_each(
             worker_run_step,
             [(action_n, self.scope) for _ in self._alloc_env_ids],
@@ -163,20 +167,25 @@ class ParallelVecEnvExecutor:
         return all_obs
 
     def reset(self):
+        """Reset all environments."""
         dones = np.asarray([True] * self.num_envs)
         return self._run_reset(dones)
 
     @property
     def num_envs(self):
+        """Read / write the number of environments."""
         return self._num_envs
 
     @property
     def action_space(self):
+        """Read / write the action space."""
         return self._action_space
 
     @property
     def observation_space(self):
+        """Read / write the observation space."""
         return self._observation_space
 
     def close(self):
+        """Close all environments."""
         pass

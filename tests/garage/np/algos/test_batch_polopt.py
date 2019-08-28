@@ -10,6 +10,7 @@ from tests.fixtures.policies import DummyPolicy, DummyPolicyWithoutVectorized
 
 
 class TestBatchPolopt:
+
     def setup_method(self):
         self.env = TfEnv(normalize(gym.make('CartPole-v1')))
         self.baseline = LinearFeatureBaseline(env_spec=self.env.spec)
