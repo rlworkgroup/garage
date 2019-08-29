@@ -1,3 +1,4 @@
+"""Provides algorithms with access to most of garage's features."""
 import copy
 import time
 import types
@@ -93,8 +94,8 @@ class LocalRunner:
 
         self.has_setup = True
 
-        self._setup_args = types.SimpleNamespace(
-            sampler_cls=sampler_cls, sampler_args=sampler_args)
+        self._setup_args = types.SimpleNamespace(sampler_cls=sampler_cls,
+                                                 sampler_args=sampler_args)
 
     def _start_worker(self):
         """Start Plotter and Sampler workers."""
@@ -110,7 +111,7 @@ class LocalRunner:
         if self.plot:
             self.plotter.close()
 
-    def obtain_samples(self, itr, batch_size):
+    def obtain_samples(self, itr, batch_size=None):
         """Obtain one batch of samples.
 
         Args:
@@ -124,7 +125,8 @@ class LocalRunner:
         """
         if self.train_args.n_epoch_cycles == 1:
             logger.log('Obtaining samples...')
-        return self.sampler.obtain_samples(itr, batch_size)
+        return self.sampler.obtain_samples(
+            itr, (batch_size or self.train_args.batch_size))
 
     def save(self, epoch, paths=None):
         """Save snapshot of current batch.
@@ -174,11 +176,10 @@ class LocalRunner:
         self._setup_args = saved['setup_args']
         self.train_args = saved['train_args']
 
-        self.setup(
-            env=saved['env'],
-            algo=saved['algo'],
-            sampler_cls=self._setup_args.sampler_cls,
-            sampler_args=self._setup_args.sampler_args)
+        self.setup(env=saved['env'],
+                   algo=saved['algo'],
+                   sampler_cls=self._setup_args.sampler_cls,
+                   sampler_args=self._setup_args.sampler_args)
 
         n_epochs = self.train_args.n_epochs
         last_epoch = saved['last_epoch']
@@ -243,25 +244,24 @@ class LocalRunner:
             raise Exception('Use setup() to setup runner before training.')
 
         # Save arguments for restore
-        self.train_args = types.SimpleNamespace(
-            n_epochs=n_epochs,
-            n_epoch_cycles=n_epoch_cycles,
-            batch_size=batch_size,
-            plot=plot,
-            store_paths=store_paths,
-            pause_for_plot=pause_for_plot,
-            start_epoch=0)
+        self.train_args = types.SimpleNamespace(n_epochs=n_epochs,
+                                                n_epoch_cycles=n_epoch_cycles,
+                                                batch_size=batch_size,
+                                                plot=plot,
+                                                store_paths=store_paths,
+                                                pause_for_plot=pause_for_plot,
+                                                start_epoch=0)
 
         self.plot = plot
 
-        return self.algo.train(self, batch_size)
+        return self.algo.train(self)
 
     def step_epochs(self):
-        """Generator for training.
+        """Step through each epoch.
 
-        This function serves as a generator. It is used to separate
-        services such as snapshotting, sampler control from the actual
-        training loop. It is used inside train() in each algorithm.
+        This function returns a magic generator. When iterated through, this
+        generator automatically performs services such as snapshotting and log
+        management. It is used inside train() in each algorithm.
 
         The generator initializes two variables: `self.step_itr` and
         `self.step_path`. To use the generator, these two have to be
@@ -280,8 +280,8 @@ class LocalRunner:
         try:
             self._start_worker()
             self._start_time = time.time()
-            self.step_itr = (
-                self.train_args.start_epoch * self.train_args.n_epoch_cycles)
+            self.step_itr = (self.train_args.start_epoch *
+                             self.train_args.n_epoch_cycles)
             self.step_path = None
 
             for epoch in range(self.train_args.start_epoch,
@@ -331,4 +331,4 @@ class LocalRunner:
         if pause_for_plot is not None:
             self.train_args.pause_for_plot = pause_for_plot
 
-        return self.algo.train(self, batch_size)
+        return self.algo.train(self)

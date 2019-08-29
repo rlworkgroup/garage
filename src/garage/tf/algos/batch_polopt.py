@@ -70,14 +70,13 @@ class BatchPolopt(RLAlgorithm):
 
         self.init_opt()
 
-    def train(self, runner, batch_size):
+    def train(self, runner):
         """Obtain samplers and start actual training for each epoch.
 
         Args:
             runner (LocalRunner): LocalRunner is passed to give algorithm
                 the access to runner.step_epochs(), which provides services
                 such as snapshotting and sampler control.
-            batch_size (int): Batch size used to obtain samplers.
 
         Returns:
             The average return in last epoch cycle.
@@ -86,8 +85,7 @@ class BatchPolopt(RLAlgorithm):
         last_return = None
 
         for epoch in runner.step_epochs():
-            runner.step_path = runner.obtain_samples(runner.step_itr,
-                                                     batch_size)
+            runner.step_path = runner.obtain_samples(runner.step_itr)
             last_return = self.train_once(runner.step_itr, runner.step_path)
             runner.step_itr += 1
 
