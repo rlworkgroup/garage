@@ -22,7 +22,7 @@ required = [
     'cloudpickle',
     'cma==1.1.06',
     'dowel==0.0.2',
-    'gym[all]==0.12.4',
+    'gym[box2d,atari]==0.12.4',
     'joblib<0.13,>=0.12',
     'matplotlib',
     'numpy==1.14.5',
@@ -47,6 +47,7 @@ extras = {}
 
 extras['mujoco'] = [
     'mujoco-py<2.1,>=2.0',
+    'gym[all]==0.12.4',
 ]
 
 extras['dm_control'] = [
