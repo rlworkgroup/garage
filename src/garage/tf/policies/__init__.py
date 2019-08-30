@@ -1,3 +1,4 @@
+"""Policies for TensorFlow-based algorithms."""
 from garage.tf.policies.base import Policy
 from garage.tf.policies.base import StochasticPolicy
 from garage.tf.policies.categorical_conv_policy import CategoricalConvPolicy
@@ -25,8 +26,6 @@ from garage.tf.policies.gaussian_lstm_policy import GaussianLSTMPolicy
 from garage.tf.policies.gaussian_lstm_policy_with_model import (
     GaussianLSTMPolicyWithModel)
 from garage.tf.policies.gaussian_mlp_policy import GaussianMLPPolicy
-from garage.tf.policies.gaussian_mlp_policy_with_model import (
-    GaussianMLPPolicyWithModel)
 
 __all__ = [
     'Policy', 'StochasticPolicy', 'CategoricalConvPolicy',
@@ -37,5 +36,5 @@ __all__ = [
     'ContinuousMLPPolicyWithModel', 'DiscreteQfDerivedPolicy',
     'DeterministicMLPPolicy', 'GaussianGRUPolicy', 'GaussianLSTMPolicy',
     'GaussianGRUPolicyWithModel', 'GaussianLSTMPolicyWithModel',
-    'GaussianMLPPolicy', 'GaussianMLPPolicyWithModel'
+    'GaussianMLPPolicy'
 ]

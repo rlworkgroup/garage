@@ -1,5 +1,4 @@
 import pickle
-from unittest import mock
 
 import numpy as np
 import pytest
@@ -10,29 +9,26 @@ from tests.fixtures import TfGraphTestCase
 
 
 class TestGaussianMLPModel(TfGraphTestCase):
+
     def setup_method(self):
         super().setup_method()
         self.input_var = tf.compat.v1.placeholder(tf.float32, shape=(None, 5))
         self.obs = np.ones((1, 5))
 
-    @mock.patch('tensorflow.random.normal')
     @pytest.mark.parametrize('output_dim, hidden_sizes',
                              [(1, (0, )), (1, (1, )), (1, (2, )), (2, (3, )),
                               (2, (1, 1)), (3, (2, 2))])
-    def test_std_share_network_output_values(self, mock_normal, output_dim,
-                                             hidden_sizes):
-        mock_normal.return_value = 0.5
-        model = GaussianMLPModel(
-            output_dim=output_dim,
-            hidden_sizes=hidden_sizes,
-            std_share_network=True,
-            hidden_nonlinearity=None,
-            std_parameterization='exp',
-            hidden_w_init=tf.ones_initializer(),
-            output_w_init=tf.ones_initializer())
+    def test_std_share_network_output_values(self, output_dim, hidden_sizes):
+        model = GaussianMLPModel(output_dim=output_dim,
+                                 hidden_sizes=hidden_sizes,
+                                 std_share_network=True,
+                                 hidden_nonlinearity=None,
+                                 std_parameterization='exp',
+                                 hidden_w_init=tf.ones_initializer(),
+                                 output_w_init=tf.ones_initializer())
         outputs = model.build(self.input_var)
 
-        action, mean, log_std, std_param = self.sess.run(
+        mean, log_std, std_param = self.sess.run(
             outputs[:-1], feed_dict={self.input_var: self.obs})
 
         expected_mean = np.full([1, output_dim], 5 * np.prod(hidden_sizes))
@@ -43,18 +39,14 @@ class TestGaussianMLPModel(TfGraphTestCase):
         assert np.array_equal(std_param, expected_std_param)
         assert np.array_equal(log_std, expected_log_std)
 
-        expected_action = 0.5 * np.exp(expected_log_std) + expected_mean
-        assert np.allclose(action, expected_action)
-
     @pytest.mark.parametrize('output_dim, hidden_sizes',
                              [(1, (0, )), (1, (1, )), (1, (2, )), (2, (3, )),
                               (2, (1, 1)), (3, (2, 2))])
     def test_std_share_network_shapes(self, output_dim, hidden_sizes):
         # should be 2 * output_dim
-        model = GaussianMLPModel(
-            output_dim=output_dim,
-            hidden_sizes=hidden_sizes,
-            std_share_network=True)
+        model = GaussianMLPModel(output_dim=output_dim,
+                                 hidden_sizes=hidden_sizes,
+                                 std_share_network=True)
         model.build(self.input_var)
         with tf.compat.v1.variable_scope(model.name, reuse=True):
             std_share_output_weights = tf.compat.v1.get_variable(
@@ -64,26 +56,22 @@ class TestGaussianMLPModel(TfGraphTestCase):
         assert std_share_output_weights.shape[1] == output_dim * 2
         assert std_share_output_bias.shape == output_dim * 2
 
-    @mock.patch('tensorflow.random.normal')
     @pytest.mark.parametrize('output_dim, hidden_sizes',
                              [(1, (0, )), (1, (1, )), (1, (2, )), (2, (3, )),
                               (2, (1, 1)), (3, (2, 2))])
-    def test_without_std_share_network_output_values(self, mock_normal,
-                                                     output_dim, hidden_sizes):
-        mock_normal.return_value = 0.5
-
-        model = GaussianMLPModel(
-            output_dim=output_dim,
-            hidden_sizes=hidden_sizes,
-            init_std=2,
-            std_share_network=False,
-            adaptive_std=False,
-            hidden_nonlinearity=None,
-            hidden_w_init=tf.ones_initializer(),
-            output_w_init=tf.ones_initializer())
+    def test_without_std_share_network_output_values(self, output_dim,
+                                                     hidden_sizes):
+        model = GaussianMLPModel(output_dim=output_dim,
+                                 hidden_sizes=hidden_sizes,
+                                 init_std=2,
+                                 std_share_network=False,
+                                 adaptive_std=False,
+                                 hidden_nonlinearity=None,
+                                 hidden_w_init=tf.ones_initializer(),
+                                 output_w_init=tf.ones_initializer())
         outputs = model.build(self.input_var)
 
-        action, mean, log_std, std_param = self.sess.run(
+        mean, log_std, std_param = self.sess.run(
             outputs[:-1], feed_dict={self.input_var: self.obs})
 
         expected_mean = np.full([1, output_dim], 5 * np.prod(hidden_sizes))
@@ -93,18 +81,14 @@ class TestGaussianMLPModel(TfGraphTestCase):
         assert np.allclose(std_param, expected_std_param)
         assert np.allclose(log_std, expected_log_std)
 
-        expected_action = 0.5 * np.exp(expected_log_std) + expected_mean
-        assert np.allclose(action, expected_action)
-
     @pytest.mark.parametrize('output_dim, hidden_sizes',
                              [(1, (0, )), (1, (1, )), (1, (2, )), (2, (3, )),
                               (2, (1, 1)), (3, (2, 2))])
     def test_without_std_share_network_shapes(self, output_dim, hidden_sizes):
-        model = GaussianMLPModel(
-            output_dim=output_dim,
-            hidden_sizes=hidden_sizes,
-            std_share_network=False,
-            adaptive_std=False)
+        model = GaussianMLPModel(output_dim=output_dim,
+                                 hidden_sizes=hidden_sizes,
+                                 std_share_network=False,
+                                 adaptive_std=False)
         model.build(self.input_var)
         with tf.compat.v1.variable_scope(model.name, reuse=True):
             mean_output_weights = tf.compat.v1.get_variable(
@@ -121,25 +105,22 @@ class TestGaussianMLPModel(TfGraphTestCase):
                              [(1, (0, ), (0, )), (1, (1, ), (1, )),
                               (1, (2, ), (2, )), (2, (3, ), (3, )),
                               (2, (1, 1), (1, 1)), (3, (2, 2), (2, 2))])
-    @mock.patch('tensorflow.random.normal')
-    def test_adaptive_std_network_output_values(
-            self, mock_normal, output_dim, hidden_sizes, std_hidden_sizes):
-        mock_normal.return_value = 0.5
-        model = GaussianMLPModel(
-            output_dim=output_dim,
-            std_share_network=False,
-            hidden_sizes=hidden_sizes,
-            std_hidden_sizes=std_hidden_sizes,
-            adaptive_std=True,
-            hidden_nonlinearity=None,
-            hidden_w_init=tf.ones_initializer(),
-            output_w_init=tf.ones_initializer(),
-            std_hidden_nonlinearity=None,
-            std_hidden_w_init=tf.ones_initializer(),
-            std_output_w_init=tf.ones_initializer())
+    def test_adaptive_std_network_output_values(self, output_dim, hidden_sizes,
+                                                std_hidden_sizes):
+        model = GaussianMLPModel(output_dim=output_dim,
+                                 std_share_network=False,
+                                 hidden_sizes=hidden_sizes,
+                                 std_hidden_sizes=std_hidden_sizes,
+                                 adaptive_std=True,
+                                 hidden_nonlinearity=None,
+                                 hidden_w_init=tf.ones_initializer(),
+                                 output_w_init=tf.ones_initializer(),
+                                 std_hidden_nonlinearity=None,
+                                 std_hidden_w_init=tf.ones_initializer(),
+                                 std_output_w_init=tf.ones_initializer())
         model.build(self.input_var)
 
-        action, mean, log_std, std_param = self.sess.run(
+        mean, log_std, std_param = self.sess.run(
             model.networks['default'].outputs[:-1],
             feed_dict={self.input_var: self.obs})
 
@@ -152,21 +133,17 @@ class TestGaussianMLPModel(TfGraphTestCase):
         assert np.array_equal(std_param, expected_std_param)
         assert np.array_equal(log_std, expected_log_std)
 
-        expected_action = 0.5 * np.exp(expected_log_std) + expected_mean
-        assert np.allclose(action, expected_action)
-
     @pytest.mark.parametrize('output_dim, hidden_sizes, std_hidden_sizes',
                              [(1, (0, ), (0, )), (1, (1, ), (1, )),
                               (1, (2, ), (2, )), (2, (3, ), (3, )),
                               (2, (1, 1), (1, 1)), (3, (2, 2), (2, 2))])
     def test_adaptive_std_output_shape(self, output_dim, hidden_sizes,
                                        std_hidden_sizes):
-        model = GaussianMLPModel(
-            output_dim=output_dim,
-            hidden_sizes=hidden_sizes,
-            std_hidden_sizes=std_hidden_sizes,
-            std_share_network=False,
-            adaptive_std=True)
+        model = GaussianMLPModel(output_dim=output_dim,
+                                 hidden_sizes=hidden_sizes,
+                                 std_hidden_sizes=std_hidden_sizes,
+                                 std_share_network=False,
+                                 adaptive_std=True)
         model.build(self.input_var)
         with tf.compat.v1.variable_scope(model.name, reuse=True):
             mean_output_weights = tf.compat.v1.get_variable(
@@ -186,18 +163,14 @@ class TestGaussianMLPModel(TfGraphTestCase):
     @pytest.mark.parametrize('output_dim, hidden_sizes',
                              [(1, (0, )), (1, (1, )), (1, (2, )), (2, (3, )),
                               (2, (1, 1)), (3, (2, 2))])
-    @mock.patch('tensorflow.random.normal')
-    def test_std_share_network_is_pickleable(self, mock_normal, output_dim,
-                                             hidden_sizes):
-        mock_normal.return_value = 0.5
+    def test_std_share_network_is_pickleable(self, output_dim, hidden_sizes):
         input_var = tf.compat.v1.placeholder(tf.float32, shape=(None, 5))
-        model = GaussianMLPModel(
-            output_dim=output_dim,
-            hidden_sizes=hidden_sizes,
-            std_share_network=True,
-            hidden_nonlinearity=None,
-            hidden_w_init=tf.ones_initializer(),
-            output_w_init=tf.ones_initializer())
+        model = GaussianMLPModel(output_dim=output_dim,
+                                 hidden_sizes=hidden_sizes,
+                                 std_share_network=True,
+                                 hidden_nonlinearity=None,
+                                 hidden_w_init=tf.ones_initializer(),
+                                 output_w_init=tf.ones_initializer())
         outputs = model.build(input_var)
 
         # get output bias
@@ -221,19 +194,16 @@ class TestGaussianMLPModel(TfGraphTestCase):
     @pytest.mark.parametrize('output_dim, hidden_sizes',
                              [(1, (0, )), (1, (1, )), (1, (2, )), (2, (3, )),
                               (2, (1, 1)), (3, (2, 2))])
-    @mock.patch('tensorflow.random.normal')
-    def test_without_std_share_network_is_pickleable(self, mock_normal,
-                                                     output_dim, hidden_sizes):
-        mock_normal.return_value = 0.5
+    def test_without_std_share_network_is_pickleable(self, output_dim,
+                                                     hidden_sizes):
         input_var = tf.compat.v1.placeholder(tf.float32, shape=(None, 5))
-        model = GaussianMLPModel(
-            output_dim=output_dim,
-            hidden_sizes=hidden_sizes,
-            std_share_network=False,
-            adaptive_std=False,
-            hidden_nonlinearity=None,
-            hidden_w_init=tf.ones_initializer(),
-            output_w_init=tf.ones_initializer())
+        model = GaussianMLPModel(output_dim=output_dim,
+                                 hidden_sizes=hidden_sizes,
+                                 std_share_network=False,
+                                 adaptive_std=False,
+                                 hidden_nonlinearity=None,
+                                 hidden_w_init=tf.ones_initializer(),
+                                 output_w_init=tf.ones_initializer())
         outputs = model.build(input_var)
 
         # get output bias
@@ -257,23 +227,20 @@ class TestGaussianMLPModel(TfGraphTestCase):
                              [(1, (0, ), (0, )), (1, (1, ), (1, )),
                               (1, (2, ), (2, )), (2, (3, ), (3, )),
                               (2, (1, 1), (1, 1)), (3, (2, 2), (2, 2))])
-    @mock.patch('tensorflow.random.normal')
-    def test_adaptive_std_is_pickleable(self, mock_normal, output_dim,
-                                        hidden_sizes, std_hidden_sizes):
-        mock_normal.return_value = 0.5
+    def test_adaptive_std_is_pickleable(self, output_dim, hidden_sizes,
+                                        std_hidden_sizes):
         input_var = tf.compat.v1.placeholder(tf.float32, shape=(None, 5))
-        model = GaussianMLPModel(
-            output_dim=output_dim,
-            hidden_sizes=hidden_sizes,
-            std_hidden_sizes=std_hidden_sizes,
-            std_share_network=False,
-            adaptive_std=True,
-            hidden_nonlinearity=None,
-            hidden_w_init=tf.ones_initializer(),
-            output_w_init=tf.ones_initializer(),
-            std_hidden_nonlinearity=None,
-            std_hidden_w_init=tf.ones_initializer(),
-            std_output_w_init=tf.ones_initializer())
+        model = GaussianMLPModel(output_dim=output_dim,
+                                 hidden_sizes=hidden_sizes,
+                                 std_hidden_sizes=std_hidden_sizes,
+                                 std_share_network=False,
+                                 adaptive_std=True,
+                                 hidden_nonlinearity=None,
+                                 hidden_w_init=tf.ones_initializer(),
+                                 output_w_init=tf.ones_initializer(),
+                                 std_hidden_nonlinearity=None,
+                                 std_hidden_w_init=tf.ones_initializer(),
+                                 std_output_w_init=tf.ones_initializer())
         outputs = model.build(input_var)
 
         # get output bias
@@ -295,23 +262,19 @@ class TestGaussianMLPModel(TfGraphTestCase):
     @pytest.mark.parametrize('output_dim, hidden_sizes',
                              [(1, (0, )), (1, (1, )), (1, (2, )), (2, (3, )),
                               (2, (1, 1)), (3, (2, 2))])
-    @mock.patch('tensorflow.random.normal')
-    def test_softplus_output_values(self, mock_normal, output_dim,
-                                    hidden_sizes):
-        mock_normal.return_value = 0.5
-        model = GaussianMLPModel(
-            output_dim=output_dim,
-            hidden_sizes=hidden_sizes,
-            hidden_nonlinearity=None,
-            std_share_network=False,
-            adaptive_std=False,
-            init_std=2,
-            std_parameterization='softplus',
-            hidden_w_init=tf.ones_initializer(),
-            output_w_init=tf.ones_initializer())
+    def test_softplus_output_values(self, output_dim, hidden_sizes):
+        model = GaussianMLPModel(output_dim=output_dim,
+                                 hidden_sizes=hidden_sizes,
+                                 hidden_nonlinearity=None,
+                                 std_share_network=False,
+                                 adaptive_std=False,
+                                 init_std=2,
+                                 std_parameterization='softplus',
+                                 hidden_w_init=tf.ones_initializer(),
+                                 output_w_init=tf.ones_initializer())
         outputs = model.build(self.input_var)
 
-        action, mean, log_std, std_param = self.sess.run(
+        mean, log_std, std_param = self.sess.run(
             outputs[:-1], feed_dict={self.input_var: self.obs})
 
         expected_mean = np.full([1, output_dim], 5 * np.prod(hidden_sizes))
@@ -321,23 +284,19 @@ class TestGaussianMLPModel(TfGraphTestCase):
         assert np.allclose(std_param, expected_std_param)
         assert np.allclose(log_std, expected_log_std)
 
-        expected_action = 0.5 * np.exp(expected_log_std) + expected_mean
-        assert np.allclose(action, expected_action)
-
     @pytest.mark.parametrize('output_dim, hidden_sizes',
                              [(1, (0, )), (1, (1, )), (1, (2, )), (2, (3, )),
                               (2, (1, 1)), (3, (2, 2))])
     def test_exp_min_std(self, output_dim, hidden_sizes):
-        model = GaussianMLPModel(
-            output_dim=output_dim,
-            hidden_sizes=hidden_sizes,
-            std_share_network=False,
-            init_std=1,
-            min_std=10,
-            std_parameterization='exp')
+        model = GaussianMLPModel(output_dim=output_dim,
+                                 hidden_sizes=hidden_sizes,
+                                 std_share_network=False,
+                                 init_std=1,
+                                 min_std=10,
+                                 std_parameterization='exp')
         outputs = model.build(self.input_var)
 
-        action, mean, log_std, std_param = self.sess.run(
+        mean, log_std, std_param = self.sess.run(
             outputs[:-1], feed_dict={self.input_var: self.obs})
 
         expected_log_std = np.full([1, output_dim], np.log(10))
@@ -349,16 +308,15 @@ class TestGaussianMLPModel(TfGraphTestCase):
                              [(1, (0, )), (1, (1, )), (1, (2, )), (2, (3, )),
                               (2, (1, 1)), (3, (2, 2))])
     def test_exp_max_std(self, output_dim, hidden_sizes):
-        model = GaussianMLPModel(
-            output_dim=output_dim,
-            hidden_sizes=hidden_sizes,
-            std_share_network=False,
-            init_std=10,
-            max_std=1,
-            std_parameterization='exp')
+        model = GaussianMLPModel(output_dim=output_dim,
+                                 hidden_sizes=hidden_sizes,
+                                 std_share_network=False,
+                                 init_std=10,
+                                 max_std=1,
+                                 std_parameterization='exp')
         outputs = model.build(self.input_var)
 
-        action, mean, log_std, std_param = self.sess.run(
+        mean, log_std, std_param = self.sess.run(
             outputs[:-1], feed_dict={self.input_var: self.obs})
 
         expected_log_std = np.full([1, output_dim], np.log(1))
@@ -370,16 +328,15 @@ class TestGaussianMLPModel(TfGraphTestCase):
                              [(1, (0, )), (1, (1, )), (1, (2, )), (2, (3, )),
                               (2, (1, 1)), (3, (2, 2))])
     def test_softplus_min_std(self, output_dim, hidden_sizes):
-        model = GaussianMLPModel(
-            output_dim=output_dim,
-            hidden_sizes=hidden_sizes,
-            std_share_network=False,
-            init_std=1,
-            min_std=10,
-            std_parameterization='softplus')
+        model = GaussianMLPModel(output_dim=output_dim,
+                                 hidden_sizes=hidden_sizes,
+                                 std_share_network=False,
+                                 init_std=1,
+                                 min_std=10,
+                                 std_parameterization='softplus')
         outputs = model.build(self.input_var)
 
-        _, _, log_std, std_param = self.sess.run(
+        _, log_std, std_param = self.sess.run(
             outputs[:-1], feed_dict={self.input_var: self.obs})
 
         expected_log_std = np.full([1, output_dim], np.log(10))
@@ -392,16 +349,15 @@ class TestGaussianMLPModel(TfGraphTestCase):
                              [(1, (0, )), (1, (1, )), (1, (2, )), (2, (3, )),
                               (2, (1, 1)), (3, (2, 2))])
     def test_softplus_max_std(self, output_dim, hidden_sizes):
-        model = GaussianMLPModel(
-            output_dim=output_dim,
-            hidden_sizes=hidden_sizes,
-            std_share_network=False,
-            init_std=10,
-            max_std=1,
-            std_parameterization='softplus')
+        model = GaussianMLPModel(output_dim=output_dim,
+                                 hidden_sizes=hidden_sizes,
+                                 std_share_network=False,
+                                 init_std=10,
+                                 max_std=1,
+                                 std_parameterization='softplus')
         outputs = model.build(self.input_var)
 
-        _, _, log_std, std_param = self.sess.run(
+        _, log_std, std_param = self.sess.run(
             outputs[:-1], feed_dict={self.input_var: self.obs})
 
         expected_log_std = np.full([1, output_dim], np.log(1))

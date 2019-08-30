@@ -74,7 +74,7 @@ class TestTRPO(TfGraphTestCase):
                         kl_constraint='soft')
             runner.setup(algo, self.env)
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
-            assert last_avg_ret > 50
+            assert last_avg_ret > 45
 
     def teardown_method(self):
         self.env.close()
