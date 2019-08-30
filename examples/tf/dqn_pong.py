@@ -45,15 +45,15 @@ def run_task(snapshot_config, *_):
 
         env = TfEnv(env)
 
-        replay_buffer = SimpleReplayBuffer(
-            env_spec=env.spec, size_in_transitions=int(5e4), time_horizon=1)
+        replay_buffer = SimpleReplayBuffer(env_spec=env.spec,
+                                           size_in_transitions=int(5e4),
+                                           time_horizon=1)
 
-        qf = DiscreteCNNQFunction(
-            env_spec=env.spec,
-            filter_dims=(8, 4, 3),
-            num_filters=(32, 64, 64),
-            strides=(4, 2, 1),
-            dueling=False)
+        qf = DiscreteCNNQFunction(env_spec=env.spec,
+                                  filter_dims=(8, 4, 3),
+                                  num_filters=(32, 64, 64),
+                                  strides=(4, 2, 1),
+                                  dueling=False)
 
         policy = DiscreteQfDerivedPolicy(env_spec=env.spec, qf=qf)
         epilson_greedy_strategy = EpsilonGreedyStrategy(
@@ -63,26 +63,24 @@ def run_task(snapshot_config, *_):
             min_epsilon=0.02,
             decay_ratio=0.1)
 
-        algo = DQN(
-            env_spec=env.spec,
-            policy=policy,
-            qf=qf,
-            exploration_strategy=epilson_greedy_strategy,
-            replay_buffer=replay_buffer,
-            qf_lr=1e-4,
-            discount=0.99,
-            min_buffer_size=int(1e4),
-            double_q=False,
-            n_train_steps=500,
-            n_epoch_cycles=n_epoch_cycles,
-            target_network_update_freq=2,
-            buffer_batch_size=32)
+        algo = DQN(env_spec=env.spec,
+                   policy=policy,
+                   qf=qf,
+                   exploration_strategy=epilson_greedy_strategy,
+                   replay_buffer=replay_buffer,
+                   qf_lr=1e-4,
+                   discount=0.99,
+                   min_buffer_size=int(1e4),
+                   double_q=False,
+                   n_train_steps=500,
+                   n_epoch_cycles=n_epoch_cycles,
+                   target_network_update_freq=2,
+                   buffer_batch_size=32)
 
         runner.setup(algo, env)
-        runner.train(
-            n_epochs=n_epochs,
-            n_epoch_cycles=n_epoch_cycles,
-            batch_size=sampler_batch_size)
+        runner.train(n_epochs=n_epochs,
+                     n_epoch_cycles=n_epoch_cycles,
+                     batch_size=sampler_batch_size)
 
 
 run_experiment(

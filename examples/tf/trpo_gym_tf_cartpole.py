@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+"""An example to train a task with TRPO algorithm."""
 import gym
 
 from garage.experiment import run_experiment
@@ -11,11 +11,13 @@ from garage.tf.policies import CategoricalMLPPolicy
 
 
 def run_task(snapshot_config, *_):
+    """Run task."""
     with LocalTFRunner(snapshot_config=snapshot_config) as runner:
         env = TfEnv(gym.make('CartPole-v0'))
 
-        policy = CategoricalMLPPolicy(
-            name='policy', env_spec=env.spec, hidden_sizes=(32, 32))
+        policy = CategoricalMLPPolicy(name='policy',
+                                      env_spec=env.spec,
+                                      hidden_sizes=(32, 32))
 
         baseline = LinearFeatureBaseline(env_spec=env.spec)
 

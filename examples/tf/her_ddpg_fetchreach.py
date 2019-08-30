@@ -22,6 +22,7 @@ from garage.tf.q_functions import ContinuousMLPQFunction
 
 
 def run_task(snapshot_config, *_):
+    """Run task."""
     with LocalTFRunner(snapshot_config=snapshot_config) as runner:
         env = TfEnv(gym.make('FetchReach-v1'))
 
@@ -44,12 +45,11 @@ def run_task(snapshot_config, *_):
             input_include_goal=True,
         )
 
-        replay_buffer = HerReplayBuffer(
-            env_spec=env.spec,
-            size_in_transitions=int(1e6),
-            time_horizon=100,
-            replay_k=0.4,
-            reward_fun=env.compute_reward)
+        replay_buffer = HerReplayBuffer(env_spec=env.spec,
+                                        size_in_transitions=int(1e6),
+                                        time_horizon=100,
+                                        replay_k=0.4,
+                                        reward_fun=env.compute_reward)
 
         ddpg = DDPG(
             env_spec=env.spec,

@@ -16,6 +16,7 @@ from tests.fixtures import TfGraphTestCase
 
 
 class TestNPO(TfGraphTestCase):
+
     def setup_method(self):
         super().setup_method()
         self.env = TfEnv(normalize(gym.make('InvertedDoublePendulum-v2')))
@@ -34,14 +35,13 @@ class TestNPO(TfGraphTestCase):
     def test_npo_pendulum(self):
         """Test NPO with Pendulum environment."""
         with LocalTFRunner(sess=self.sess) as runner:
-            algo = NPO(
-                env_spec=self.env.spec,
-                policy=self.policy,
-                baseline=self.baseline,
-                max_path_length=100,
-                discount=0.99,
-                gae_lambda=0.98,
-                policy_ent_coeff=0.0)
+            algo = NPO(env_spec=self.env.spec,
+                       policy=self.policy,
+                       baseline=self.baseline,
+                       max_path_length=100,
+                       discount=0.99,
+                       gae_lambda=0.98,
+                       policy_ent_coeff=0.0)
             runner.setup(algo, self.env)
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 20

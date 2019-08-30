@@ -13,25 +13,24 @@ from tests.fixtures import TfGraphTestCase
 
 
 class TestISSampler(TfGraphTestCase):
+
     def test_is_sampler(self):
         with LocalTFRunner(sess=self.sess) as runner:
             env = TfEnv(normalize(gym.make('InvertedPendulum-v2')))
-            policy = GaussianMLPPolicy(
-                env_spec=env.spec, hidden_sizes=(32, 32))
+            policy = GaussianMLPPolicy(env_spec=env.spec,
+                                       hidden_sizes=(32, 32))
             baseline = LinearFeatureBaseline(env_spec=env.spec)
-            algo = TRPO(
-                env_spec=env.spec,
-                policy=policy,
-                baseline=baseline,
-                max_path_length=100,
-                discount=0.99,
-                max_kl_step=0.01)
+            algo = TRPO(env_spec=env.spec,
+                        policy=policy,
+                        baseline=baseline,
+                        max_path_length=100,
+                        discount=0.99,
+                        max_kl_step=0.01)
 
-            runner.setup(
-                algo,
-                env,
-                sampler_cls=ISSampler,
-                sampler_args=dict(n_backtrack=1, init_is=1))
+            runner.setup(algo,
+                         env,
+                         sampler_cls=ISSampler,
+                         sampler_args=dict(n_backtrack=1, init_is=1))
             runner._start_worker()
 
             paths = runner.sampler.obtain_samples(1)

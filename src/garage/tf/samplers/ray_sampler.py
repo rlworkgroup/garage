@@ -24,13 +24,12 @@ class RaySamplerTF(RaySampler):
                  seed,
                  should_render=False,
                  num_processors=None):
-        super().__init__(
-            algo,
-            env,
-            seed,
-            should_render=False,
-            num_processors=None,
-            sampler_worker_cls=SamplerWorkerTF)
+        super().__init__(algo,
+                         env,
+                         seed,
+                         should_render=False,
+                         num_processors=None,
+                         sampler_worker_cls=SamplerWorkerTF)
 
     def shutdown_worker(self, local=False):
         """Shuts down the worker."""
@@ -64,13 +63,12 @@ class SamplerWorkerTF(SamplerWorker):
             # order to execute the policy.
             self.sess = tf.Session()
             self.sess.__enter__()
-        super().__init__(
-            worker_id,
-            env_pkl,
-            agent_pkl,
-            seed,
-            max_path_length,
-            should_render=should_render)
+        super().__init__(worker_id,
+                         env_pkl,
+                         agent_pkl,
+                         seed,
+                         max_path_length,
+                         should_render=should_render)
 
     def shutdown(self):
         """Perform shutdown processes for TF."""

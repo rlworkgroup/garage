@@ -9,13 +9,13 @@ from tests.fixtures.experiment import fixture_exp
 
 
 class TestResume(TfGraphTestCase):
+
     def setup_method(self):
         super().setup_method()
         self.temp_dir = tempfile.TemporaryDirectory()
-        self.snapshot_config = SnapshotConfig(
-            snapshot_dir=self.temp_dir.name,
-            snapshot_mode='last',
-            snapshot_gap=1)
+        self.snapshot_config = SnapshotConfig(snapshot_dir=self.temp_dir.name,
+                                              snapshot_mode='last',
+                                              snapshot_gap=1)
         self.policy_params = fixture_exp(self.snapshot_config, self.sess)
         for c in self.graph.collections:
             self.graph.clear_collection(c)
@@ -38,11 +38,10 @@ class TestResume(TfGraphTestCase):
             batch_size = runner.train_args.batch_size
             n_epoch_cycles = runner.train_args.n_epoch_cycles
 
-            runner.resume(
-                n_epochs=10,
-                plot=False,
-                store_paths=True,
-                pause_for_plot=False)
+            runner.resume(n_epochs=10,
+                          plot=False,
+                          store_paths=True,
+                          pause_for_plot=False)
 
             assert runner.train_args.n_epochs == 10
             assert runner.train_args.batch_size == batch_size

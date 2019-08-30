@@ -20,24 +20,26 @@ seed = 100
 
 
 def run_task(snapshot_config, *_):
+    """Run task."""
     with LocalTFRunner(snapshot_config=snapshot_config) as runner:
         env = TfEnv(gym.make('Swimmer-v2'))
 
-        policy = GaussianMLPPolicyWithModel(
-            env_spec=env.spec, hidden_sizes=(32, 32))
+        policy = GaussianMLPPolicyWithModel(env_spec=env.spec,
+                                            hidden_sizes=(32, 32))
 
         baseline = LinearFeatureBaseline(env_spec=env.spec)
 
-        algo = TRPO(
-            env_spec=env.spec,
-            policy=policy,
-            baseline=baseline,
-            max_path_length=500,
-            discount=0.99,
-            max_kl_step=0.01)
+        algo = TRPO(env_spec=env.spec,
+                    policy=policy,
+                    baseline=baseline,
+                    max_path_length=500,
+                    discount=0.99,
+                    max_kl_step=0.01)
 
-        runner.setup(
-            algo, env, sampler_cls=RaySamplerTF, sampler_args={'seed': seed})
+        runner.setup(algo,
+                     env,
+                     sampler_cls=RaySamplerTF,
+                     sampler_args={'seed': seed})
         runner.train(n_epochs=40, batch_size=4000)
 
 

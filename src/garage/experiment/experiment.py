@@ -18,6 +18,7 @@ from garage.core import Serializable
 
 
 class AttrDict(dict):
+
     def __init__(self, *args, **kwargs):
         super(AttrDict, self).__init__(*args, **kwargs)
         self.__dict__ = self
@@ -28,6 +29,7 @@ def flatten(l):
 
 
 class BinaryOp(Serializable):
+
     def __init__(self):
         Serializable.quick_init(self, locals())
 
@@ -40,6 +42,7 @@ class BinaryOp(Serializable):
 
 
 class VariantDict(AttrDict):
+
     def __init__(self, d, hidden_keys):
         super(VariantDict, self).__init__(d)
         self._hidden_keys = hidden_keys
@@ -160,6 +163,7 @@ class VariantGenerator:
 
 
 def variant(*args, **kwargs):
+
     def _variant(fn):
         fn.__is_variant = True
         fn.__variant_config = kwargs
@@ -257,14 +261,13 @@ def run_experiment(method_call=None,
 
     if batch_tasks is None:
         batch_tasks = [
-            dict(
-                kwargs,
-                pre_commands=pre_commands,
-                method_call=method_call,
-                exp_name=exp_name,
-                log_dir=log_dir,
-                env=env,
-                variant=variant)
+            dict(kwargs,
+                 pre_commands=pre_commands,
+                 method_call=method_call,
+                 exp_name=exp_name,
+                 log_dir=log_dir,
+                 env=env,
+                 variant=variant)
         ]
 
     global exp_count
@@ -306,8 +309,9 @@ def run_experiment(method_call=None,
 
     for task in batch_tasks:
         env = task.pop('env', None)
-        command = to_local_command(
-            task, python_command=python_command, script=script)
+        command = to_local_command(task,
+                                   python_command=python_command,
+                                   script=script)
         print(command)
         if dry:
             return
