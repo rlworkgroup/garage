@@ -86,7 +86,12 @@ class GarageEnv(gym.Wrapper, Serializable):
                    for package in KNOWN_GYM_NOT_CLOSE_MJ_VIEWER):
                 # This import is not in the header to avoid a MuJoCo dependency
                 # with non-MuJoCo environments that use this base class.
-                from mujoco_py.mjviewer import MjViewer
+                try:
+                    from mujoco_py.mjviewer import MjViewer
+                except ImportError:
+                    # If we can't import mujoco_py, we must not have an
+                    # instance of a class that we know how to close here.
+                    return
                 if (hasattr(self.env, 'viewer')
                         and isinstance(self.env.viewer, MjViewer)):
                     glfw.destroy_window(self.env.viewer.window)
