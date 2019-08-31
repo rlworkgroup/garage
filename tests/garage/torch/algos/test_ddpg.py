@@ -55,7 +55,7 @@ class TestDDPG:
         last_avg_ret = runner.train(n_epochs=10,
                                     n_epoch_cycles=20,
                                     batch_size=100)
-        assert last_avg_ret > 60
+        assert last_avg_ret > 50
 
         env.close()
 
