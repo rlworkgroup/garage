@@ -12,6 +12,7 @@ except ImportError:
         'https://github.com/rlworkgroup/garage/issues/800 for more info.')
 
 TF_VERSION = '<1.15,>=1.14.0'
+GYM_VERSION = '==0.12.4'
 
 # Required dependencies
 required = [
@@ -22,7 +23,7 @@ required = [
     'cloudpickle',
     'cma==1.1.06',
     'dowel==0.0.2',
-    'gym[all]==0.12.4',
+    'gym[atari,box2d,classic_control]' + GYM_VERSION,
     'joblib<0.13,>=0.12',
     'matplotlib',
     'numpy==1.14.5',
@@ -47,6 +48,7 @@ extras = {}
 
 extras['mujoco'] = [
     'mujoco-py<2.1,>=2.0',
+    'gym[all]' + GYM_VERSION,
 ]
 
 extras['dm_control'] = [
