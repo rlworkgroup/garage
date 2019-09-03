@@ -48,13 +48,10 @@ class LocalRunner:
 
     """
 
-    def __init__(self, snapshot_config=None, max_cpus=1):
-        if snapshot_config:
-            self._snapshotter = Snapshotter(snapshot_config.snapshot_dir,
-                                            snapshot_config.snapshot_mode,
-                                            snapshot_config.snapshot_gap)
-        else:
-            self._snapshotter = Snapshotter()
+    def __init__(self, snapshot_config, max_cpus=1):
+        self._snapshotter = Snapshotter(snapshot_config.snapshot_dir,
+                                        snapshot_config.snapshot_mode,
+                                        snapshot_config.snapshot_gap)
 
         if max_cpus > 1:
             from garage.sampler import singleton_pool

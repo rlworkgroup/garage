@@ -6,7 +6,7 @@ from garage.tf.algos import TRPO
 from garage.tf.envs import TfEnv
 from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import GaussianMLPPolicy
-from tests.fixtures import TfGraphTestCase
+from tests.fixtures import snapshot_config, TfGraphTestCase
 
 
 class TestDmControlTfPolicy(TfGraphTestCase):
@@ -14,7 +14,7 @@ class TestDmControlTfPolicy(TfGraphTestCase):
     def test_dm_control_tf_policy(self):
         task = ALL_TASKS[0]
 
-        with LocalTFRunner(sess=self.sess) as runner:
+        with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
             env = TfEnv(DmControlEnv.from_suite(*task))
 
             policy = GaussianMLPPolicy(

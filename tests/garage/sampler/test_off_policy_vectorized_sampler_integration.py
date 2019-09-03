@@ -11,7 +11,7 @@ from garage.tf.envs import TfEnv
 from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import ContinuousMLPPolicyWithModel
 from garage.tf.q_functions import ContinuousMLPQFunction
-from tests.fixtures import TfGraphTestCase
+from tests.fixtures import snapshot_config, TfGraphTestCase
 from tests.fixtures.envs.dummy import DummyDictEnv
 from tests.fixtures.policies import DummyPolicy
 from tests.fixtures.tf.algos.dummy_off_policy_algo import DummyOffPolicyAlgo
@@ -20,7 +20,7 @@ from tests.fixtures.tf.algos.dummy_off_policy_algo import DummyOffPolicyAlgo
 class TestOffPolicyVectorizedSampler(TfGraphTestCase):
 
     def test_no_reset(self):
-        with LocalTFRunner(sess=self.sess) as runner:
+        with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
             # This tests if off-policy sampler respect batch_size
             # when no_reset is set to True
             env = TfEnv(normalize(gym.make('InvertedDoublePendulum-v2')))

@@ -36,6 +36,7 @@ from garage.tf.envs import TfEnv
 from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import ContinuousMLPPolicyWithModel
 from garage.tf.q_functions import ContinuousMLPQFunction
+from tests.fixtures import snapshot_config
 import tests.helpers as Rh
 from tests.wrappers import AutoStopEnv
 
@@ -148,7 +149,7 @@ def run_garage(env, seed, log_dir):
     '''
     deterministic.set_seed(seed)
 
-    with LocalTFRunner() as runner:
+    with LocalTFRunner(snapshot_config) as runner:
         env = TfEnv(normalize(env))
         # Set up params for ddpg
         action_noise = OUStrategy(env.spec, sigma=params['sigma'])

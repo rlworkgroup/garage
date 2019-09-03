@@ -12,7 +12,7 @@ from garage.tf.baselines import GaussianMLPBaseline
 from garage.tf.envs import TfEnv
 from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import GaussianMLPPolicy
-from tests.fixtures import TfGraphTestCase
+from tests.fixtures import snapshot_config, TfGraphTestCase
 
 
 class TestTRPO(TfGraphTestCase):
@@ -34,7 +34,7 @@ class TestTRPO(TfGraphTestCase):
     @pytest.mark.large
     def test_trpo_pendulum(self):
         """Test TRPO with Pendulum environment."""
-        with LocalTFRunner(sess=self.sess) as runner:
+        with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
             algo = TRPO(env_spec=self.env.spec,
                         policy=self.policy,
                         baseline=self.baseline,
@@ -63,7 +63,7 @@ class TestTRPO(TfGraphTestCase):
     @pytest.mark.large
     def test_trpo_soft_kl_constraint(self):
         """Test TRPO with unkown KL constraints."""
-        with LocalTFRunner(sess=self.sess) as runner:
+        with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
             algo = TRPO(env_spec=self.env.spec,
                         policy=self.policy,
                         baseline=self.baseline,

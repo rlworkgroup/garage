@@ -11,7 +11,7 @@ from garage.tf.baselines import GaussianMLPBaseline
 from garage.tf.envs import TfEnv
 from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import GaussianLSTMPolicy, GaussianMLPPolicy
-from tests.fixtures import TfGraphTestCase
+from tests.fixtures import snapshot_config, TfGraphTestCase
 
 
 class TestPPO(TfGraphTestCase):
@@ -35,7 +35,7 @@ class TestPPO(TfGraphTestCase):
     # @pytest.mark.large
     def test_ppo_pendulum(self):
         """Test PPO with Pendulum environment."""
-        with LocalTFRunner(sess=self.sess) as runner:
+        with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
             algo = PPO(env_spec=self.env.spec,
                        policy=self.policy,
                        baseline=self.baseline,
@@ -51,7 +51,7 @@ class TestPPO(TfGraphTestCase):
     # @pytest.mark.large
     def test_ppo_pendulum_recurrent(self):
         """Test PPO with Pendulum environment and recurrent policy."""
-        with LocalTFRunner() as runner:
+        with LocalTFRunner(snapshot_config) as runner:
             algo = PPO(
                 env_spec=self.env.spec,
                 policy=self.recurrent_policy,
@@ -69,7 +69,7 @@ class TestPPO(TfGraphTestCase):
     # @pytest.mark.large
     def test_ppo_with_maximum_entropy(self):
         """Test PPO with maxium entropy method."""
-        with LocalTFRunner(sess=self.sess) as runner:
+        with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
             algo = PPO(env_spec=self.env.spec,
                        policy=self.policy,
                        baseline=self.baseline,
@@ -92,7 +92,7 @@ class TestPPO(TfGraphTestCase):
         Test PPO with negative log likelihood entropy estimation and max
         entropy method.
         """
-        with LocalTFRunner(sess=self.sess) as runner:
+        with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
             algo = PPO(env_spec=self.env.spec,
                        policy=self.policy,
                        baseline=self.baseline,
@@ -116,7 +116,7 @@ class TestPPO(TfGraphTestCase):
         Test PPO with negative log likelihood entropy estimation and
         regularized entropy method.
         """
-        with LocalTFRunner(sess=self.sess) as runner:
+        with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
             algo = PPO(env_spec=self.env.spec,
                        policy=self.policy,
                        baseline=self.baseline,
@@ -137,7 +137,7 @@ class TestPPO(TfGraphTestCase):
     # @pytest.mark.large
     def test_ppo_with_regularized_entropy(self):
         """Test PPO with regularized entropy method."""
-        with LocalTFRunner(sess=self.sess) as runner:
+        with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
             algo = PPO(env_spec=self.env.spec,
                        policy=self.policy,
                        baseline=self.baseline,

@@ -1,3 +1,4 @@
+"""Defines SnapshotConfig and Snapshotter."""
 import collections
 import errno
 import os
@@ -11,8 +12,10 @@ SnapshotConfig = collections.namedtuple(
 
 
 class Snapshotter:
-    """Snapshotter snapshots data. When training, it saves data to binary
-    files. When resuming, it loads from saved data.
+    """Snapshotter snapshots training data.
+
+    When training, it saves data to binary files. When resuming,
+    it loads from saved data.
 
     Args:
         snapshot_dir (str): Path to save the log and iteration snapshot.
@@ -25,18 +28,16 @@ class Snapshotter:
 
     """
 
-    def __init__(self, snapshot_dir=None, snapshot_mode='last',
+    def __init__(self,
+                 snapshot_dir=os.path.join(os.getcwd(),
+                                           'data/local/experiment'),
+                 snapshot_mode='last',
                  snapshot_gap=1):
-        if snapshot_dir:
-            self._snapshot_dir = snapshot_dir
-        else:
-            self._snapshot_dir = os.path.join(os.getcwd(),
-                                              'data/local/experiment')
-
-        pathlib.Path(self._snapshot_dir).mkdir(parents=True, exist_ok=True)
-
+        self._snapshot_dir = snapshot_dir
         self._snapshot_mode = snapshot_mode
         self._snapshot_gap = snapshot_gap
+
+        pathlib.Path(snapshot_dir).mkdir(parents=True, exist_ok=True)
 
     @property
     def snapshot_dir(self, ):

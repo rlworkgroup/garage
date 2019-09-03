@@ -15,7 +15,7 @@ from garage.tf.optimizers import FiniteDifferenceHvp
 from garage.tf.policies import CategoricalGRUPolicy
 from garage.tf.policies import CategoricalLSTMPolicy
 from garage.tf.policies import CategoricalMLPPolicy
-from tests.fixtures import TfGraphTestCase
+from tests.fixtures import snapshot_config, TfGraphTestCase
 
 policies = [CategoricalGRUPolicy, CategoricalLSTMPolicy, CategoricalMLPPolicy]
 
@@ -24,7 +24,7 @@ class TestCategoricalPolicies(TfGraphTestCase):
 
     @pytest.mark.parametrize('policy_cls', [*policies])
     def test_categorical_policies(self, policy_cls):
-        with LocalTFRunner(sess=self.sess) as runner:
+        with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
             env = TfEnv(normalize(gym.make('CartPole-v0')))
 
             policy = policy_cls(name='policy', env_spec=env.spec)
