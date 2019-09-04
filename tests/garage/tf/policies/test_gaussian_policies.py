@@ -11,7 +11,7 @@ from garage.tf.optimizers import FiniteDifferenceHvp
 from garage.tf.policies import GaussianGRUPolicy
 from garage.tf.policies import GaussianLSTMPolicy
 from garage.tf.policies import GaussianMLPPolicy
-from tests.fixtures import TfGraphTestCase
+from tests.fixtures import snapshot_config, TfGraphTestCase
 
 policies = [GaussianGRUPolicy, GaussianLSTMPolicy, GaussianMLPPolicy]
 
@@ -20,7 +20,7 @@ class TestGaussianPolicies(TfGraphTestCase):
 
     @pytest.mark.parametrize('policy_cls', policies)
     def test_gaussian_policies(self, policy_cls):
-        with LocalTFRunner(sess=self.sess) as runner:
+        with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
             env = TfEnv(normalize(gym.make('Pendulum-v0')))
 
             policy = policy_cls(name='policy', env_spec=env.spec)

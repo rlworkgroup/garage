@@ -1,13 +1,21 @@
 import gc
+import os
 
 from dowel import logger
 import tensorflow as tf
 
 from garage.experiment import deterministic
+from garage.experiment.snapshotter import SnapshotConfig
 from tests.fixtures.logger import NullOutput
+
+path = os.path.join(os.getcwd(), 'data/local/experiment')
+snapshot_config = SnapshotConfig(snapshot_dir=path,
+                                 snapshot_mode='last',
+                                 snapshot_gap=1)
 
 
 class TfTestCase:
+
     def setup_method(self):
         self.sess = tf.compat.v1.Session()
         self.sess.__enter__()
@@ -20,6 +28,7 @@ class TfTestCase:
 
 
 class TfGraphTestCase:
+
     def setup_method(self):
         tf.reset_default_graph()
         self.graph = tf.Graph()

@@ -10,7 +10,7 @@ from garage.tf.algos import REPS
 from garage.tf.envs import TfEnv
 from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import CategoricalMLPPolicy
-from tests.fixtures import TfGraphTestCase
+from tests.fixtures import snapshot_config, TfGraphTestCase
 
 
 class TestREPS(TfGraphTestCase):
@@ -18,7 +18,7 @@ class TestREPS(TfGraphTestCase):
     @pytest.mark.large
     def test_reps_cartpole(self):
         """Test REPS with gym Cartpole environment."""
-        with LocalTFRunner(sess=self.sess) as runner:
+        with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
             env = TfEnv(gym.make('CartPole-v0'))
 
             policy = CategoricalMLPPolicy(env_spec=env.spec,

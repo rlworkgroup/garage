@@ -15,6 +15,7 @@ from garage.replay_buffer import SimpleReplayBuffer
 from garage.torch.algos import DDPG
 from garage.torch.policies import DeterministicMLPPolicy
 from garage.torch.q_functions import ContinuousMLPQFunction
+from tests.fixtures import snapshot_config
 
 
 class TestDDPG:
@@ -22,7 +23,7 @@ class TestDDPG:
     @pytest.mark.large
     def test_ddpg_double_pendulum(self):
         """Test DDPG with Pendulum environment."""
-        runner = LocalRunner()
+        runner = LocalRunner(snapshot_config)
         env = GarageEnv(gym.make('InvertedDoublePendulum-v2'))
         action_noise = OUStrategy(env.spec, sigma=0.2)
 
@@ -66,7 +67,7 @@ class TestDDPG:
 
         This environment has a [-3, 3] action_space bound.
         """
-        runner = LocalRunner()
+        runner = LocalRunner(snapshot_config)
         env = GarageEnv(normalize(gym.make('InvertedPendulum-v2')))
         action_noise = OUStrategy(env.spec, sigma=0.2)
 

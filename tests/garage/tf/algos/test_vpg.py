@@ -5,7 +5,7 @@ from garage.tf.algos import VPG
 from garage.tf.envs import TfEnv
 from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import CategoricalMLPPolicy
-from tests.fixtures import TfGraphTestCase
+from tests.fixtures import snapshot_config, TfGraphTestCase
 
 
 class TestVPG(TfGraphTestCase):
@@ -13,7 +13,7 @@ class TestVPG(TfGraphTestCase):
     @pytest.mark.large
     def test_vpg_cartpole(self):
         """Test VPG with CartPole-v1 environment."""
-        with LocalTFRunner(sess=self.sess) as runner:
+        with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
             env = TfEnv(env_name='CartPole-v1')
 
             policy = CategoricalMLPPolicy(name='policy',

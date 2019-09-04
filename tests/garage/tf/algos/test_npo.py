@@ -12,7 +12,7 @@ from garage.tf.baselines import GaussianMLPBaseline
 from garage.tf.envs import TfEnv
 from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import GaussianMLPPolicy
-from tests.fixtures import TfGraphTestCase
+from tests.fixtures import snapshot_config, TfGraphTestCase
 
 
 class TestNPO(TfGraphTestCase):
@@ -34,7 +34,7 @@ class TestNPO(TfGraphTestCase):
     @pytest.mark.large
     def test_npo_pendulum(self):
         """Test NPO with Pendulum environment."""
-        with LocalTFRunner(sess=self.sess) as runner:
+        with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
             algo = NPO(env_spec=self.env.spec,
                        policy=self.policy,
                        baseline=self.baseline,

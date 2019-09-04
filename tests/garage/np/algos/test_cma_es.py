@@ -4,14 +4,14 @@ from garage.sampler import OnPolicyVectorizedSampler
 from garage.tf.envs import TfEnv
 from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import CategoricalMLPPolicy
-from tests.fixtures import TfGraphTestCase
+from tests.fixtures import snapshot_config, TfGraphTestCase
 
 
 class TestCMAES(TfGraphTestCase):
 
     def test_cma_es_cartpole(self):
         """Test CMAES with Cartpole-v1 environment."""
-        with LocalTFRunner() as runner:
+        with LocalTFRunner(snapshot_config) as runner:
             env = TfEnv(env_name='CartPole-v1')
 
             policy = CategoricalMLPPolicy(name='policy',

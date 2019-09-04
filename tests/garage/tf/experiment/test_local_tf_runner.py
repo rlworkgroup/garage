@@ -8,29 +8,29 @@ from garage.tf.envs import TfEnv
 from garage.tf.experiment import LocalTFRunner
 from garage.tf.plotter import Plotter
 from garage.tf.policies import CategoricalMLPPolicy
-from tests.fixtures import TfGraphTestCase
+from tests.fixtures import snapshot_config, TfGraphTestCase
 
 
 class TestLocalRunner(TfGraphTestCase):
 
     def test_session(self):
-        with LocalTFRunner():
+        with LocalTFRunner(snapshot_config):
             assert tf.compat.v1.get_default_session() is not None, (
-                'LocalRunner() should provide a default tf session.')
+                'LocalTFRunner() should provide a default tf session.')
 
         sess = tf.compat.v1.Session()
-        with LocalTFRunner(sess=sess):
+        with LocalTFRunner(snapshot_config, sess=sess):
             assert tf.compat.v1.get_default_session() is sess, (
-                'LocalRunner(sess) should use sess as default session.')
+                'LocalTFRunner(sess) should use sess as default session.')
 
     def test_singleton_pool(self):
         max_cpus = 8
-        with LocalTFRunner(max_cpus=max_cpus):
+        with LocalTFRunner(snapshot_config, max_cpus=max_cpus):
             assert max_cpus == singleton_pool.n_parallel, (
-                'LocalRunner(max_cpu) should set up singleton_pool.')
+                'LocalTFRunner(max_cpu) should set up singleton_pool.')
 
     def test_train(self):
-        with LocalTFRunner() as runner:
+        with LocalTFRunner(snapshot_config) as runner:
             env = TfEnv(env_name='CartPole-v1')
 
             policy = CategoricalMLPPolicy(name='policy',
@@ -52,13 +52,13 @@ class TestLocalRunner(TfGraphTestCase):
 
     def test_external_sess(self):
         with tf.compat.v1.Session() as sess:
-            with LocalTFRunner(sess=sess):
+            with LocalTFRunner(snapshot_config, sess=sess):
                 pass
             # sess should still be the default session here.
             tf.no_op().run()
 
     def test_set_plot(self):
-        with LocalTFRunner() as runner:
+        with LocalTFRunner(snapshot_config) as runner:
             env = TfEnv(env_name='CartPole-v1')
 
             policy = CategoricalMLPPolicy(name='policy',
@@ -79,14 +79,14 @@ class TestLocalRunner(TfGraphTestCase):
             runner.train(n_epochs=1, batch_size=100, plot=True)
 
             assert isinstance(runner.plotter, Plotter), (
-                'self.plotter in LocalRunner should be set to Plotter.')
+                'self.plotter in LocalTFRunner should be set to Plotter.')
 
     def test_call_train_before_set_up(self):
         with pytest.raises(Exception):
-            with LocalTFRunner() as runner:
+            with LocalTFRunner(snapshot_config) as runner:
                 runner.train(n_epochs=1, batch_size=100)
 
     def test_call_save_before_set_up(self):
         with pytest.raises(Exception):
-            with LocalTFRunner() as runner:
+            with LocalTFRunner(snapshot_config) as runner:
                 runner.save(0)

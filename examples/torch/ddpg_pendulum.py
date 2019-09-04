@@ -20,9 +20,9 @@ from garage.torch.policies import DeterministicMLPPolicy
 from garage.torch.q_functions import ContinuousMLPQFunction
 
 
-def run_task(*_):
+def run_task(snapshot_config, *_):
     """Set up environment and algorithm and run the task."""
-    runner = LocalRunner()
+    runner = LocalRunner(snapshot_config)
     env = GarageEnv(normalize(gym.make('InvertedDoublePendulum-v2')))
 
     action_noise = OUStrategy(env.spec, sigma=0.2)

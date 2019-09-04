@@ -33,6 +33,7 @@ from garage.tf.envs import TfEnv
 from garage.tf.experiment import LocalTFRunner
 from garage.tf.optimizers import FirstOrderOptimizer
 from garage.tf.policies import GaussianMLPPolicy
+from tests.fixtures import snapshot_config
 import tests.helpers as Rh
 from tests.wrappers import AutoStopEnv
 
@@ -127,7 +128,7 @@ def run_garage(env, seed, log_dir):
     '''
     deterministic.set_seed(seed)
 
-    with LocalTFRunner() as runner:
+    with LocalTFRunner(snapshot_config) as runner:
         env = TfEnv(normalize(env))
 
         policy = GaussianMLPPolicy(
