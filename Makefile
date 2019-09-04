@@ -63,7 +63,6 @@ ci-verify-pipenv: export VIRTUAL_ENV=
 ci-verify-pipenv:
 	pip3 install --upgrade pipenv setuptools
 	pipenv --three
-	pipenv install numpy==1.14.5  # cma is dumb and requires numpy to execute setup.py
 	pipenv install .[all,dev]
 	pipenv graph
 	# pylint will verify all imports work

@@ -90,8 +90,6 @@ RUN pip install --upgrade pip
 # In this step only the presence of the file mjkey.txt is required, so we only
 # create an empty file
 RUN touch /root/.mujoco/mjkey.txt && \
-  # cma is dumb and requires numpy to run setup.py
-  pip install numpy==1.14.5 && \
   pip install -e .[all,dev] && \
   rm -r /root/.cache/pip && \
   rm /root/.mujoco/mjkey.txt
