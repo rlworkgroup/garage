@@ -21,7 +21,7 @@ required = [
     'cached_property',
     'click',
     'cloudpickle',
-    'cma==1.1.06',
+    'cma==2.7.0',
     'dowel==0.0.2',
     'gym[atari,box2d,classic_control]' + GYM_VERSION,
     'joblib<0.13,>=0.12',
