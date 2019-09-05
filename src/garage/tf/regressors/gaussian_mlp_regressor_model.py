@@ -73,7 +73,7 @@ class GaussianMLPRegressorModel(GaussianMLPModel):
     def network_output_spec(self):
         """Network output spec."""
         return [
-            'sample', 'means', 'log_stds', 'std_param', 'normalized_means',
+            'means', 'log_stds', 'std_param', 'normalized_means',
             'normalized_log_stds', 'x_mean', 'x_std', 'y_mean', 'y_std', 'dist'
         ]
 
@@ -106,8 +106,8 @@ class GaussianMLPRegressorModel(GaussianMLPModel):
 
         normalized_xs_var = (state_input - x_mean_var) / x_std_var
 
-        sample, normalized_mean, normalized_log_std, std_param, dist = super(
-        )._build(normalized_xs_var)
+        normalized_mean, normalized_log_std, std_param, dist = super()._build(
+            normalized_xs_var)
 
         with tf.name_scope('mean_network'):
             means_var = normalized_mean * y_std_var + y_mean_var
@@ -115,6 +115,6 @@ class GaussianMLPRegressorModel(GaussianMLPModel):
         with tf.name_scope('std_network'):
             log_stds_var = normalized_log_std + tf.math.log(y_std_var)
 
-        return (sample, means_var, log_stds_var, std_param, normalized_mean,
+        return (means_var, log_stds_var, std_param, normalized_mean,
                 normalized_log_std, x_mean_var, x_std_var, y_mean_var,
                 y_std_var, dist)

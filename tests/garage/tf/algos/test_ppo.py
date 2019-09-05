@@ -45,7 +45,7 @@ class TestPPO(TfGraphTestCase):
                        optimizer_args=dict(batch_size=32, max_epochs=10))
             runner.setup(algo, self.env)
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
-            assert last_avg_ret > 40
+            assert last_avg_ret > 35
 
     # large marker removed to balance test jobs
     # @pytest.mark.large
@@ -83,7 +83,7 @@ class TestPPO(TfGraphTestCase):
                        center_adv=False)
             runner.setup(algo, self.env)
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
-            assert last_avg_ret > 40
+            assert last_avg_ret > 35
 
     # large marker removed to balance test jobs
     # @pytest.mark.large
@@ -107,7 +107,7 @@ class TestPPO(TfGraphTestCase):
                        center_adv=False)
             runner.setup(algo, self.env)
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
-            assert last_avg_ret > 40
+            assert last_avg_ret > 35
 
     # large marker removed to balance test jobs
     # @pytest.mark.large
@@ -131,7 +131,7 @@ class TestPPO(TfGraphTestCase):
                        center_adv=True)
             runner.setup(algo, self.env)
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
-            assert last_avg_ret > 40
+            assert last_avg_ret > 35
 
     # large marker removed to balance test jobs
     # @pytest.mark.large
@@ -151,7 +151,7 @@ class TestPPO(TfGraphTestCase):
                        center_adv=True)
             runner.setup(algo, self.env)
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
-            assert last_avg_ret > 40
+            assert last_avg_ret > 35
 
     def teardown_method(self):
         self.env.close()

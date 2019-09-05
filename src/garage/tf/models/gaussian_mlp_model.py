@@ -133,7 +133,7 @@ class GaussianMLPModel(Model):
 
     def network_output_spec(self):
         """Network output spec."""
-        return ['sample', 'mean', 'log_std', 'std_param', 'dist']
+        return ['mean', 'log_std', 'std_param', 'dist']
 
     def _build(self, state_input, name=None):
         action_dim = self._output_dim
@@ -220,7 +220,5 @@ class GaussianMLPModel(Model):
                 log_std_var = tf.math.log(tf.math.log(1. + tf.exp(std_param)))
 
         dist = DiagonalGaussian(self._output_dim)
-        rnd = tf.random.normal(shape=mean_var.get_shape().as_list()[1:])
-        action_var = rnd * tf.exp(log_std_var) + mean_var
 
-        return action_var, mean_var, log_std_var, std_param, dist
+        return mean_var, log_std_var, std_param, dist
