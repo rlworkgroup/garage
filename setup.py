@@ -2,15 +2,6 @@
 from setuptools import find_packages
 from setuptools import setup
 
-try:
-    # pylint: disable=unused-import
-    import numpy  # noqa: F401
-except ImportError:
-    raise RuntimeError(
-        'garage requires numpy in the environment to install. '
-        'Please install numpy==1.14.5 and try again. See '
-        'https://github.com/rlworkgroup/garage/issues/800 for more info.')
-
 TF_VERSION = '<1.15,>=1.14.0'
 GYM_VERSION = '==0.12.4'
 
@@ -21,12 +12,12 @@ required = [
     'cached_property',
     'click',
     'cloudpickle',
-    'cma==1.1.06',
+    'cma==2.7.0',
     'dowel==0.0.2',
     'gym[atari,box2d,classic_control]' + GYM_VERSION,
     'joblib<0.13,>=0.12',
     'matplotlib',
-    'numpy==1.14.5',
+    'numpy>=1.14.5',
     'psutil',
     # Pyglet 1.4.0 introduces some api change which breaks some
     # gym environments

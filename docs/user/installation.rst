@@ -45,7 +45,6 @@ NOTE: garage only supports Python 3.5+, so make sure you Python environment is u
 .. code-block:: bash
 
     pipenv --three  # garage only supports Python 3.5+
-    pipenv run pip install numpy==1.14.5  # pycma requires numpy to install
     pipenv install --pre garage  # --pre required because garage has some dependencies with verion numbers <1.0
 
 
@@ -54,7 +53,6 @@ NOTE: garage only supports Python 3.5+, so make sure you Python environment is u
 .. code-block:: bash
 
     source activate myenv
-    pip install numpy==1.14.5
     pip install garage
 
 Alternatively, you can add garage in the pip section of your `environment.yml`
@@ -67,7 +65,6 @@ Alternatively, you can add garage in the pip section of your `environment.yml`
     dependencies:
     - python>=3.5
     - pip
-    - numpy==1.14.5 # pycma requires numpy to install
     - pip
       - garage
 
@@ -76,7 +73,6 @@ Alternatively, you can add garage in the pip section of your `environment.yml`
 .. code-block:: bash
 
     source myenv/bin/activate
-    pip install numpy==1.14.5  # pycma requires numpy to install
     pip install garage
 
 
@@ -91,7 +87,6 @@ If you plan on developing the garage repository, as opposed to simply using it a
 
     cd path/to/garage/repo
     pipenv --three
-    pipenv run pip install numpy==1.14.5
     pipenv install --pre -e .[all,dev]
 
 
@@ -101,7 +96,6 @@ If you plan on developing the garage repository, as opposed to simply using it a
 
     source activate myenv
     cd path/to/garage/repo
-    pip install numpy=1.14.5
     pip install -e .[all,dev]
 
 
@@ -111,7 +105,6 @@ If you plan on developing the garage repository, as opposed to simply using it a
 
     source myenv/bin/activate
     cd path/to/garage/repo
-    pip install numpy==1.14.5
     pip install -e .[all,dev]
 
 

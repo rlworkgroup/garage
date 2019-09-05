@@ -213,7 +213,6 @@ fi
   pip install git+git://github.com/deepmind/dm_control.git@92f9913013face0468442cd0964d5973ea2089ea
 
   # equivalent of conda env -f environment.yml
-  pip install numpy==1.14.5
   pip install -e .[all]
   pip install -e .[dev]
   pip install git+https://github.com/rlworkgroup/metaworlds.git@master#egg=metaworlds

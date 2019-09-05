@@ -42,7 +42,7 @@ class CMAES(BatchPolopt):
         self.sigma0 = sigma0
 
     def _sample_params(self):
-        return self.es.ask(self.n_samples)
+        return self.es.ask()
 
     def train(self, runner):
         """Initialize variables and start training.
@@ -57,7 +57,8 @@ class CMAES(BatchPolopt):
 
         """
         init_mean = self.policy.get_param_values()
-        self.es = cma.CMAEvolutionStrategy(init_mean, self.sigma0)
+        self.es = cma.CMAEvolutionStrategy(init_mean, self.sigma0,
+                                           {'popsize': self.n_samples})
         self.all_params = self._sample_params()
         self.cur_params = self.all_params[0]
         self.policy.set_param_values(self.cur_params)
@@ -87,7 +88,7 @@ class CMAES(BatchPolopt):
         if (itr + 1) % self.n_samples == 0:
             avg_rtns = np.array(self.all_returns)
             self.es.tell(self.all_params, -avg_rtns)
-            self.policy.set_param_values(self.es.result()[0])
+            self.policy.set_param_values(self.es.best.get()[0])
 
             # Clear for next epoch
             rtn = max(self.all_returns)
