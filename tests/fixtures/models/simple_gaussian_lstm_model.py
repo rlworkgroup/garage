@@ -26,8 +26,8 @@ class SimpleGaussianLSTMModel(Model):
     def network_output_spec(self):
         """Network output spec."""
         return [
-            'sample', 'mean', 'step_mean', 'log_std', 'step_log_std',
-            'step_hidden', 'step_cell', 'init_hidden', 'init_cell', 'dist'
+            'mean', 'step_mean', 'log_std', 'step_log_std', 'step_hidden',
+            'step_cell', 'init_hidden', 'init_cell', 'dist'
         ]
 
     def _build(self,
@@ -57,8 +57,7 @@ class SimpleGaussianLSTMModel(Model):
             trainable=False,
             dtype=tf.float32)
 
-        sample = 0.5 * step_mean + step_log_std
         dist = DiagonalGaussian(self.output_dim)
         # sample = 0.5 * 0.5 + 0.5 = 0.75
-        return (sample, mean, step_mean, log_std, step_log_std, step_hidden,
-                step_cell, hidden_init_var, cell_init_var, dist)
+        return (mean, step_mean, log_std, step_log_std, step_hidden, step_cell,
+                hidden_init_var, cell_init_var, dist)
