@@ -13,7 +13,7 @@ from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import TRPO
 from garage.tf.envs import TfEnv
 from garage.tf.experiment import LocalTFRunner
-from garage.tf.policies import GaussianMLPPolicyWithModel
+from garage.tf.policies import GaussianMLPPolicy
 from garage.tf.samplers import RaySamplerTF
 
 seed = 100
@@ -24,8 +24,7 @@ def run_task(snapshot_config, *_):
     with LocalTFRunner(snapshot_config=snapshot_config) as runner:
         env = TfEnv(gym.make('Swimmer-v2'))
 
-        policy = GaussianMLPPolicyWithModel(env_spec=env.spec,
-                                            hidden_sizes=(32, 32))
+        policy = GaussianMLPPolicy(env_spec=env.spec, hidden_sizes=(32, 32))
 
         baseline = LinearFeatureBaseline(env_spec=env.spec)
 
