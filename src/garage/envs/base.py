@@ -2,7 +2,6 @@
 import collections
 
 import akro
-import glfw
 import gym
 
 from garage.core import Serializable
@@ -88,6 +87,7 @@ class GarageEnv(gym.Wrapper, Serializable):
                 # with non-MuJoCo environments that use this base class.
                 try:
                     from mujoco_py.mjviewer import MjViewer
+                    import glfw
                 except ImportError:
                     # If we can't import mujoco_py, we must not have an
                     # instance of a class that we know how to close here.
