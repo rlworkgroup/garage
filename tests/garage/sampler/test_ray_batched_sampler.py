@@ -5,7 +5,7 @@ import ray
 
 from garage.envs.grid_world_env import GridWorldEnv
 from garage.np.policies import ScriptedPolicy
-from garage.sampler import OnPolicyVectorizedSampler, RaySampler, SamplerWorker
+from garage.sampler import OnPolicyVectorizedSampler, RaySampler, SamplerConfig
 from garage.tf.envs import TfEnv
 
 
@@ -45,15 +45,14 @@ class TestSampler:
         self.env.close()
 
     def test_ray_batch_sampler(self):
-        sampler1 = RaySampler(self.algo,
-                              self.env,
-                              seed=100,
-                              num_processors=1,
-                              sampler_worker_cls=SamplerWorker)
+        config = SamplerConfig(seed=100,
+                               max_path_length=self.algo.max_path_length)
+        sampler1 = RaySampler(config, self.policy, self.env, num_processors=1)
         sampler1.start_worker()
         sampler2 = OnPolicyVectorizedSampler(self.algo, self.env)
         sampler2.start_worker()
-        trajs1 = sampler1.obtain_samples(0, 16)
+        trajs1 = sampler1.obtain_samples(0, 16,
+                                         self.algo.policy.get_param_values())
         trajs2 = sampler2.obtain_samples(0, 1)
         assert (trajs1[0]['observations'].shape == np.array(
             trajs2[0]['observations']).shape == (6, 16))

@@ -3,7 +3,7 @@
 import tensorflow as tf
 
 from garage.sampler import parallel_sampler
-from garage.sampler.base import BaseSampler
+from garage.sampler.base import Sampler
 from garage.sampler.stateful_pool import singleton_pool
 from garage.sampler.utils import truncate_paths
 
@@ -19,7 +19,7 @@ def worker_init_tf_vars(g):
     g.sess.run(tf.compat.v1.global_variables_initializer())
 
 
-class BatchSampler(BaseSampler):
+class BatchSampler(Sampler):
     """Collects samples in parallel using a stateful pool of workers."""
 
     def __init__(self, algo, env, n_envs):

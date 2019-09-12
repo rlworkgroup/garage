@@ -1,11 +1,11 @@
 """Class with batch-based sampling."""
 
 from garage.sampler import parallel_sampler
-from garage.sampler.base import BaseSampler
+from garage.sampler.base import Sampler
 from garage.sampler.utils import truncate_paths
 
 
-class BatchSampler(BaseSampler):
+class BatchSampler(Sampler):
     """Class with batch-based sampling.
 
     Args:
