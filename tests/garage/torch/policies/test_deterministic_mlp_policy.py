@@ -10,7 +10,7 @@ from garage.torch.policies import DeterministicMLPPolicy
 from tests.fixtures.envs.dummy import DummyBoxEnv
 
 
-class TestDeterministicPolicies:
+class TestDeterministicMLPPolicies:
     # yapf: disable
     @pytest.mark.parametrize('hidden_sizes', [
         (1, ), (2, ), (3, ), (1, 1), (2, 2)])

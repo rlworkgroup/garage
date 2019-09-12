@@ -1,8 +1,6 @@
 """Base Policy."""
 import abc
 
-import numpy as np
-
 
 class Policy(abc.ABC):
     """
@@ -16,10 +14,10 @@ class Policy(abc.ABC):
     def __init__(self, env_spec):
         self._env_spec = env_spec
 
+    @abc.abstractmethod
     def get_action(self, observation):
         """Get action given observation."""
-        return np.squeeze(
-            self.get_actions(np.expand_dims(observation, axis=0)))
+        pass
 
     @abc.abstractmethod
     def get_actions(self, observations):
