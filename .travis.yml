@@ -27,6 +27,22 @@ jobs:
     - if: type = cron
       name: "Nightly tests"
       env: JOB_RUN_CMD="make ci-job-nightly"
+    # special deploy stage for tag builds ONLY
+    - stage: deploy
+      if: tag IS present
+      name: "Deploy to PyPI"
+      before_install: skip
+      install: skip
+      script:
+        - echo "${TRAVIS_TAG}" > VERSION
+      after_script: skip
+      deploy:
+        provider: pypi
+        user: "__token__"
+        password: "${PYPI_TOKEN}"
+        skip_cleanup: true
+        on:
+          tags: true
 
 before_install:
   # Reconfigure docker to be more efficient
@@ -71,7 +87,7 @@ branches:
   only:
   - master
   - release-*
-  - /^v\d+\.\d+(\.\d+)?(-\S*)?$/  # regex for release tags
+  - /^v([1-9][0-9]*!)?(0|[1-9][0-9]*)(\.([0-9]*))*((a|b|rc)(0|[1-9][0-9]*))?(\.post(0|[1-9][0-9]*))?(\.dev(0|[1-9][0-9]*))?$/  # regex for release tags
 
 notifications:
   email: false
