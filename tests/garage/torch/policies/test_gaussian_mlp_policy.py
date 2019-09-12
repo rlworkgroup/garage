@@ -1,75 +1,110 @@
-from unittest import mock
+import pickle
 
-import numpy as np
 import pytest
 import torch
+from torch import nn
 
+from garage.tf.envs import TfEnv
 from garage.torch.policies import GaussianMLPPolicy
-
-test_settings = [
-    (1, 1, (1, )),
-    (1, 2, (2, )),
-    (1, 3, (3, )),
-    (1, 1, (1, 2)),
-    (1, 2, (2, 1)),
-    (1, 3, (4, 5)),
-    (2, 1, (1, )),
-    (2, 2, (2, )),
-    (2, 3, (3, )),
-    (2, 1, (1, 2)),
-    (2, 2, (2, 1)),
-    (2, 3, (4, 5)),
-    (5, 1, (1, )),
-    (5, 2, (2, )),
-    (5, 3, (3, )),
-    (5, 1, (1, 2)),
-    (5, 2, (2, 1)),
-    (5, 3, (4, 5)),
-]
+from tests.fixtures.envs.dummy import DummyBoxEnv
 
 
-@pytest.mark.parametrize('input_dim, output_dim, hidden_sizes', test_settings)
-@mock.patch('garage.torch.modules.GaussianMLPModule')
-def test_policy_get_actions(mock_model, input_dim, output_dim, hidden_sizes):
-    action = torch.randn((output_dim, ))
+class TestGaussianMLPPolicies:
+    # yapf: disable
+    @pytest.mark.parametrize('hidden_sizes', [
+        (1, ), (2, ), (3, ), (1, 4), (3, 5)])
+    # yapf: enable
+    def test_get_action(self, hidden_sizes):
+        env_spec = TfEnv(DummyBoxEnv())
+        obs_dim = env_spec.observation_space.flat_dim
+        act_dim = env_spec.action_space.flat_dim
+        obs = torch.ones(obs_dim, dtype=torch.float32)
+        init_std = 2.
 
-    mock_dist = mock.MagicMock()
-    mock_dist.rsample.return_value = action
+        policy = GaussianMLPPolicy(env_spec=env_spec,
+                                   hidden_sizes=hidden_sizes,
+                                   init_std=init_std,
+                                   hidden_nonlinearity=None,
+                                   std_parameterization='exp',
+                                   hidden_w_init=nn.init.ones_,
+                                   output_w_init=nn.init.ones_)
 
-    mock_model.return_value = mock_dist
+        dist = policy(obs)
 
-    env_spec = mock.MagicMock()
-    env_spec.observation_space.flat_dim = input_dim
-    env_spec.action_space.flat_dim = output_dim
+        expected_mean = torch.full(
+            (act_dim, ), obs_dim * (torch.Tensor(hidden_sizes).prod().item()))
+        expected_variance = init_std**2
+        action, prob = policy.get_action(obs)
 
-    policy = GaussianMLPPolicy(env_spec, mock_model)
+        assert prob['mean'].equal(expected_mean)
+        assert dist.variance.equal(torch.full((act_dim, ), expected_variance))
+        assert action.shape == (act_dim, )
 
-    input = torch.ones(input_dim)
-    sample = policy.get_actions(input)
+    # yapf: disable
+    @pytest.mark.parametrize('batch_size, hidden_sizes', [
+        (1, (1, )),
+        (5, (3, )),
+        (8, (4, )),
+        (15, (1, 2)),
+        (30, (3, 4, 10)),
+    ])
+    # yapf: enable
+    def test_get_actions(self, batch_size, hidden_sizes):
+        env_spec = TfEnv(DummyBoxEnv())
+        obs_dim = env_spec.observation_space.flat_dim
+        act_dim = env_spec.action_space.flat_dim
+        obs = torch.ones([batch_size, obs_dim], dtype=torch.float32)
+        init_std = 2.
 
-    assert np.array_equal(sample, action.detach().numpy())
+        policy = GaussianMLPPolicy(env_spec=env_spec,
+                                   hidden_sizes=hidden_sizes,
+                                   init_std=init_std,
+                                   hidden_nonlinearity=None,
+                                   std_parameterization='exp',
+                                   hidden_w_init=nn.init.ones_,
+                                   output_w_init=nn.init.ones_)
 
+        dist = policy(obs)
 
-@pytest.mark.parametrize('input_dim, output_dim, hidden_sizes', test_settings)
-@mock.patch('garage.torch.modules.GaussianMLPModule')
-def test_policy_get_action(mock_model, input_dim, output_dim, hidden_sizes):
-    action = torch.randn((
-        1,
-        output_dim,
-    ))
+        expected_mean = torch.full([batch_size, act_dim],
+                                   obs_dim *
+                                   (torch.Tensor(hidden_sizes).prod().item()))
+        expected_variance = init_std**2
+        action, prob = policy.get_actions(obs)
 
-    mock_dist = mock.MagicMock()
-    mock_dist.rsample.return_value = action
+        assert prob['mean'].equal(expected_mean)
+        assert dist.variance.equal(
+            torch.full((batch_size, act_dim), expected_variance))
+        assert action.shape == (batch_size, act_dim)
 
-    mock_model.return_value = mock_dist
+    # yapf: disable
+    @pytest.mark.parametrize('batch_size, hidden_sizes', [
+        (1, (1, )),
+        (6, (3, )),
+        (11, (6, )),
+        (25, (3, 5)),
+        (34, (2, 10, 11)),
+    ])
+    # yapf: enable
+    def test_is_pickleable(self, batch_size, hidden_sizes):
+        env_spec = TfEnv(DummyBoxEnv())
+        obs_dim = env_spec.observation_space.flat_dim
+        obs = torch.ones([batch_size, obs_dim], dtype=torch.float32)
+        init_std = 2.
 
-    env_spec = mock.MagicMock()
-    env_spec.observation_space.flat_dim = input_dim
-    env_spec.action_space.flat_dim = output_dim
+        policy = GaussianMLPPolicy(env_spec=env_spec,
+                                   hidden_sizes=hidden_sizes,
+                                   init_std=init_std,
+                                   hidden_nonlinearity=None,
+                                   std_parameterization='exp',
+                                   hidden_w_init=nn.init.ones_,
+                                   output_w_init=nn.init.ones_)
 
-    policy = GaussianMLPPolicy(env_spec, mock_model)
+        output1_action, output1_prob = policy.get_actions(obs)
 
-    input = torch.ones(input_dim)
-    sample = policy.get_action(input)
+        p = pickle.dumps(policy)
+        policy_pickled = pickle.loads(p)
+        output2_action, output2_prob = policy_pickled.get_actions(obs)
 
-    assert np.array_equal(sample, np.squeeze(action.detach().numpy()))
+        assert output1_prob['mean'].equal(output2_prob['mean'])
+        assert output1_action.shape == output2_action.shape
