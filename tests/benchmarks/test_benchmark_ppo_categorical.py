@@ -6,19 +6,9 @@ until it's done. So we introduced tests.wrappers.AutoStopEnv wrapper to set
 done=True when it reaches max_path_length.
 '''
 import datetime
-import multiprocessing
 import os.path as osp
 import random
 
-from baselines import bench
-from baselines import logger as baselines_logger
-from baselines.bench import benchmarks
-from baselines.common import set_global_seeds
-from baselines.common.vec_env.dummy_vec_env import DummyVecEnv
-from baselines.common.vec_env.vec_normalize import VecNormalize
-from baselines.logger import configure
-from baselines.ppo2 import ppo2
-from baselines.ppo2.policies import MlpPolicy
 import dowel
 from dowel import logger as dowel_logger
 import gym
@@ -28,18 +18,18 @@ import tensorflow as tf
 from garage.envs import normalize
 from garage.experiment import deterministic
 from garage.tf.algos import PPO
-from garage.tf.baselines import GaussianMLPBaseline
+from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.envs import TfEnv
 from garage.tf.experiment import LocalTFRunner
 from garage.tf.optimizers import FirstOrderOptimizer
-from garage.tf.policies import GaussianLSTMPolicy
+from garage.tf.policies import CategoricalMLPPolicy
 from tests.fixtures import snapshot_config
-from garage.tf.policies import GaussianLSTMPolicyWithModel
+from garage.tf.policies import CategoricalMLPPolicyWithModel
 import tests.helpers as Rh
 from tests.wrappers import AutoStopEnv
 
 
-class TestBenchmarkPPO:
+class TestBenchmarkPPOCategorical:
     '''Compare benchmarks between garage and baselines.'''
 
     @pytest.mark.huge
@@ -49,17 +39,21 @@ class TestBenchmarkPPO:
 
         :return:
         '''
-        mujoco1m = benchmarks.get_benchmark('Mujoco1M')
+        categorical_tasks = [
+            'LunarLander-v2', 'Assault-ramDeterministic-v4',
+            'Breakout-ramDeterministic-v4',
+            'ChopperCommand-ramDeterministic-v4',
+            'Tutankham-ramDeterministic-v4'
+        ]
         timestamp = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f')
-        benchmark_dir = './data/local/benchmarks/ppo/%s/' % timestamp
+        benchmark_dir = './data/local/benchmarks/ppo_categ/%s/' % timestamp
         result_json = {}
-        for task in mujoco1m['tasks']:
-            env_id = task['env_id']
-
+        for task in categorical_tasks:
+            env_id = task
             env = gym.make(env_id)
             # baseline_env = AutoStopEnv(env_name=env_id, max_path_length=100)
 
-            seeds = random.sample(range(100), task['trials'])
+            seeds = random.sample(range(100), 3)
 
             task_dir = osp.join(benchmark_dir, env_id)
             plt_file = osp.join(benchmark_dir,
@@ -67,7 +61,7 @@ class TestBenchmarkPPO:
             garage_models_csvs = []
             garage_csvs = []
 
-            for trial in range(task['trials']):
+            for trial in range(3):
                 seed = seeds[trial]
 
                 trial_dir = task_dir + '/trial_%d_seed_%d' % (trial + 1, seed)
@@ -83,6 +77,7 @@ class TestBenchmarkPPO:
                     # Run garage algorithms
                     env.reset()
                     garage_csv = run_garage(env, seed, garage_dir)
+                    env.reset()
                     garage_models_csv = run_garage_with_models(
                         env, seed, garage_models_dir)
                 garage_csvs.append(garage_csv)
@@ -97,7 +92,7 @@ class TestBenchmarkPPO:
                 g_y='AverageReturn',
                 b_x='Iteration',
                 b_y='AverageReturn',
-                trials=task['trials'],
+                trials=3,
                 seeds=seeds,
                 plt_file=plt_file,
                 env_id=env_id,
@@ -108,7 +103,7 @@ class TestBenchmarkPPO:
                 b_csvs=garage_models_csvs,
                 g_csvs=garage_csvs,
                 seeds=seeds,
-                trails=task['trials'],
+                trails=3,
                 g_x='Iteration',
                 g_y='AverageReturn',
                 b_x='Iteration',
@@ -139,26 +134,13 @@ def run_garage(env, seed, log_dir):
     with LocalTFRunner(snapshot_config, sess=sess, max_cpus=12) as runner:
         env = TfEnv(normalize(env))
 
-        policy = GaussianLSTMPolicy(
+        policy = CategoricalMLPPolicy(
             env_spec=env.spec,
-            hidden_dim=32,
+            hidden_sizes=(32, 32),
             hidden_nonlinearity=tf.nn.tanh,
-            output_nonlinearity=None,
         )
 
-        baseline = GaussianMLPBaseline(
-            env_spec=env.spec,
-            regressor_args=dict(
-                hidden_sizes=(64, 64),
-                use_trust_region=False,
-                optimizer=FirstOrderOptimizer,
-                optimizer_args=dict(
-                    batch_size=32,
-                    max_epochs=10,
-                    tf_optimizer_args=dict(learning_rate=1e-3),
-                ),
-            ),
-        )
+        baseline = LinearFeatureBaseline(env_spec=env.spec)
 
         algo = PPO(
             env_spec=env.spec,
@@ -183,7 +165,7 @@ def run_garage(env, seed, log_dir):
         dowel_logger.add_output(dowel.TensorBoardOutput(log_dir))
 
         runner.setup(algo, env, sampler_args=dict(n_envs=12))
-        runner.train(n_epochs=3, batch_size=2048)
+        runner.train(n_epochs=10, batch_size=2048)
         dowel_logger.remove_all()
 
         return tabular_log_file
@@ -209,27 +191,14 @@ def run_garage_with_models(env, seed, log_dir):
     with LocalTFRunner(snapshot_config, sess=sess, max_cpus=12) as runner:
         env = TfEnv(normalize(env))
 
-        policy = GaussianLSTMPolicyWithModel(
+        policy = CategoricalMLPPolicyWithModel(
             env_spec=env.spec,
-            name='GaussianLSTMPolicyBenchmark',
-            hidden_dim=32,
+            name='CategoricalMLPPolicyBenchmark',
+            hidden_sizes=(32, 32),
             hidden_nonlinearity=tf.nn.tanh,
-            output_nonlinearity=None,
         )
 
-        baseline = GaussianMLPBaseline(
-            env_spec=env.spec,
-            regressor_args=dict(
-                hidden_sizes=(64, 64),
-                use_trust_region=False,
-                optimizer=FirstOrderOptimizer,
-                optimizer_args=dict(
-                    batch_size=32,
-                    max_epochs=10,
-                    tf_optimizer_args=dict(learning_rate=1e-3),
-                ),
-            ),
-            name='GaussianMLPBaselineBenchmark')
+        baseline = LinearFeatureBaseline(env_spec=env.spec)
 
         algo = PPO(
             env_spec=env.spec,
@@ -254,58 +223,7 @@ def run_garage_with_models(env, seed, log_dir):
         dowel_logger.add_output(dowel.TensorBoardOutput(log_dir))
 
         runner.setup(algo, env, sampler_args=dict(n_envs=12))
-        runner.train(n_epochs=3, batch_size=2048)
+        runner.train(n_epochs=10, batch_size=2048)
         dowel_logger.remove_all()
 
         return tabular_log_file
-
-
-def run_baselines(env, seed, log_dir):
-    '''
-    Create baselines model and training.
-
-    Replace the ppo and its training with the algorithm you want to run.
-
-    :param env: Environment of the task.
-    :param seed: Random seed for the trial.
-    :param log_dir: Log dir path.
-    :return
-    '''
-    ncpu = max(multiprocessing.cpu_count() // 2, 1)
-    config = tf.ConfigProto(allow_soft_placement=True,
-                            intra_op_parallelism_threads=ncpu,
-                            inter_op_parallelism_threads=ncpu)
-    tf.compat.v1.Session(config=config).__enter__()
-
-    # Set up logger for baselines
-    configure(dir=log_dir, format_strs=['stdout', 'log', 'csv', 'tensorboard'])
-    baselines_logger.info('rank {}: seed={}, logdir={}'.format(
-        0, seed, baselines_logger.get_dir()))
-
-    def make_env():
-        monitor = bench.Monitor(env,
-                                baselines_logger.get_dir(),
-                                allow_early_resets=True)
-        return monitor
-
-    env = DummyVecEnv([make_env])
-    env = VecNormalize(env)
-
-    set_global_seeds(seed)
-    policy = MlpPolicy
-    ppo2.learn(policy=policy,
-               env=env,
-               nsteps=2048,
-               nminibatches=32,
-               lam=0.95,
-               gamma=0.99,
-               noptepochs=10,
-               log_interval=1,
-               ent_coef=0.0,
-               lr=1e-3,
-               vf_coef=0.5,
-               max_grad_norm=None,
-               cliprange=0.2,
-               total_timesteps=int(1e6))
-
-    return osp.join(log_dir, 'progress.csv')
