@@ -1,5 +1,6 @@
 import pickle
 
+import numpy as np
 import pytest
 import torch
 from torch import nn
@@ -36,7 +37,7 @@ class TestGaussianMLPPolicies:
         expected_variance = init_std**2
         action, prob = policy.get_action(obs)
 
-        assert prob['mean'].equal(expected_mean)
+        assert np.array_equal(prob['mean'], expected_mean.numpy())
         assert dist.variance.equal(torch.full((act_dim, ), expected_variance))
         assert action.shape == (act_dim, )
 
@@ -72,7 +73,7 @@ class TestGaussianMLPPolicies:
         expected_variance = init_std**2
         action, prob = policy.get_actions(obs)
 
-        assert prob['mean'].equal(expected_mean)
+        assert np.array_equal(prob['mean'], expected_mean.numpy())
         assert dist.variance.equal(
             torch.full((batch_size, act_dim), expected_variance))
         assert action.shape == (batch_size, act_dim)
@@ -106,5 +107,5 @@ class TestGaussianMLPPolicies:
         policy_pickled = pickle.loads(p)
         output2_action, output2_prob = policy_pickled.get_actions(obs)
 
-        assert output1_prob['mean'].equal(output2_prob['mean'])
+        assert np.array_equal(output1_prob['mean'], output2_prob['mean'])
         assert output1_action.shape == output2_action.shape

@@ -114,11 +114,11 @@ class GaussianMLPBaseModule(nn.Module):
         if self._std_parameterization not in ('exp', 'softplus'):
             raise NotImplementedError
 
-        self._init_std_param = torch.Tensor([init_std])
+        init_std_param = torch.Tensor([init_std]).log()
         if self._learn_std:
-            self._init_std = torch.nn.Parameter(self._init_std_param)
-
-        self._init_std_param = self._init_std_param.log()
+            self._init_std = torch.nn.Parameter(init_std_param)
+        else:
+            self._init_std = init_std_param
 
         self._min_std_param = self._max_std_param = None
         if min_std is not None:
@@ -205,8 +205,7 @@ class GaussianMLPModule(GaussianMLPBaseModule):
         mean = self._mean_module(inputs)
 
         broadcast_shape = list(inputs.shape[:-1]) + [self._action_dim]
-        uncentered_log_std = torch.zeros(
-            *broadcast_shape) + self._init_std_param
+        uncentered_log_std = torch.zeros(*broadcast_shape) + self._init_std
 
         return mean, uncentered_log_std
 
@@ -280,11 +279,11 @@ class GaussianMLPIndependentStdModule(GaussianMLPBaseModule):
             hidden_b_init=self._std_hidden_b_init,
             output_nonlinearity=self._std_output_nonlinearity,
             output_w_init=self._std_output_w_init,
-            output_b_init=self._init_adaptive_b,
+            output_b_init=self._init_std_b,
             layer_normalization=self._layer_normalization)
 
-    def _init_adaptive_b(self, b):
-        return nn.init.constant_(b, self._init_std_param.item())
+    def _init_std_b(self, b):
+        return nn.init.constant_(b, self._init_std.item())
 
     def _get_mean_and_log_std(self, inputs):
         return self._mean_module(inputs), self._log_std_module(inputs)
@@ -338,7 +337,7 @@ class GaussianMLPTwoHeadedModule(GaussianMLPBaseModule):
             output_w_inits=self._output_w_init,
             output_b_inits=[
                 nn.init.zeros_,
-                lambda x: nn.init.constant_(x, self._init_std_param.item())
+                lambda x: nn.init.constant_(x, self._init_std.item())
             ],
             layer_normalization=self._layer_normalization)
 

@@ -8,7 +8,6 @@ class Policy(abc.ABC):
 
     Args:
         env_spec (garage.envs.env_spec.EnvSpec): Environment specification.
-
     """
 
     def __init__(self, env_spec):
@@ -33,3 +32,8 @@ class Policy(abc.ABC):
     def action_space(self):
         """Policy action space."""
         return self._env_spec.action_space
+
+    @property
+    def vectorized(self):
+        """Vectorized or not."""
+        return False
