@@ -11,7 +11,18 @@ def rollout(env,
             max_path_length=np.inf,
             animated=False,
             speedup=1,
-            always_return_paths=False):
+            always_return_paths=False,
+            deterministic=False):
+    """ Generate a sample from a policy.
+
+    Args:
+        deterministic (bool): Boolean variable indicating whether a
+        stochastic or deterministic action should be taken during the
+        rollout. This is False (stochastic actions) by default.
+
+    Returns:
+
+    """
     observations = []
     actions = []
     rewards = []
@@ -24,6 +35,8 @@ def rollout(env,
         env.render()
     while path_length < max_path_length:
         a, agent_info = agent.get_action(o)
+        if deterministic:
+            a = agent_info['mean']
         next_o, r, d, env_info = env.step(a)
         observations.append(env.observation_space.flatten(o))
         rewards.append(r)
