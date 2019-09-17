@@ -83,6 +83,7 @@ class TestBenchmarkPPO:
                     # Run garage algorithms
                     env.reset()
                     garage_csv = run_garage(env, seed, garage_dir)
+                    env.reset()
                     garage_models_csv = run_garage_with_models(
                         env, seed, garage_models_dir)
                 garage_csvs.append(garage_csv)
