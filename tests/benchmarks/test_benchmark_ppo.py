@@ -90,31 +90,29 @@ class TestBenchmarkPPO:
 
             env.close()
 
-            Rh.plot(
-                b_csvs=garage_models_csvs,
-                g_csvs=garage_csvs,
-                g_x='Iteration',
-                g_y='AverageReturn',
-                b_x='Iteration',
-                b_y='AverageReturn',
-                trials=task['trials'],
-                seeds=seeds,
-                plt_file=plt_file,
-                env_id=env_id,
-                x_label='Iteration',
-                y_label='AverageReturn')
+            Rh.plot(b_csvs=garage_models_csvs,
+                    g_csvs=garage_csvs,
+                    g_x='Iteration',
+                    g_y='AverageReturn',
+                    b_x='Iteration',
+                    b_y='AverageReturn',
+                    trials=task['trials'],
+                    seeds=seeds,
+                    plt_file=plt_file,
+                    env_id=env_id,
+                    x_label='Iteration',
+                    y_label='AverageReturn')
 
-            result_json[env_id] = Rh.create_json(
-                b_csvs=garage_models_csvs,
-                g_csvs=garage_csvs,
-                seeds=seeds,
-                trails=task['trials'],
-                g_x='Iteration',
-                g_y='AverageReturn',
-                b_x='Iteration',
-                b_y='AverageReturn',
-                factor_g=2048,
-                factor_b=2048)
+            result_json[env_id] = Rh.create_json(b_csvs=garage_models_csvs,
+                                                 g_csvs=garage_csvs,
+                                                 seeds=seeds,
+                                                 trails=task['trials'],
+                                                 g_x='Iteration',
+                                                 g_y='AverageReturn',
+                                                 b_x='Iteration',
+                                                 b_y='AverageReturn',
+                                                 factor_g=2048,
+                                                 factor_b=2048)
 
         Rh.write_file(result_json, 'PPO')
 
@@ -131,10 +129,9 @@ def run_garage(env, seed, log_dir):
     :return:
     '''
     deterministic.set_seed(seed)
-    config = tf.ConfigProto(
-        allow_soft_placement=True,
-        intra_op_parallelism_threads=12,
-        inter_op_parallelism_threads=12)
+    config = tf.ConfigProto(allow_soft_placement=True,
+                            intra_op_parallelism_threads=12,
+                            inter_op_parallelism_threads=12)
     sess = tf.Session(config=config)
     with LocalTFRunner(snapshot_config, sess=sess, max_cpus=12) as runner:
         env = TfEnv(normalize(env))
@@ -183,7 +180,7 @@ def run_garage(env, seed, log_dir):
         dowel_logger.add_output(dowel.TensorBoardOutput(log_dir))
 
         runner.setup(algo, env, sampler_args=dict(n_envs=12))
-        runner.train(n_epochs=3, batch_size=2048)
+        runner.train(n_epochs=488, batch_size=2048)
         dowel_logger.remove_all()
 
         return tabular_log_file
@@ -201,10 +198,9 @@ def run_garage_with_models(env, seed, log_dir):
     :return:
     '''
     deterministic.set_seed(seed)
-    config = tf.ConfigProto(
-        allow_soft_placement=True,
-        intra_op_parallelism_threads=12,
-        inter_op_parallelism_threads=12)
+    config = tf.ConfigProto(allow_soft_placement=True,
+                            intra_op_parallelism_threads=12,
+                            inter_op_parallelism_threads=12)
     sess = tf.Session(config=config)
     with LocalTFRunner(snapshot_config, sess=sess, max_cpus=12) as runner:
         env = TfEnv(normalize(env))
@@ -231,21 +227,20 @@ def run_garage_with_models(env, seed, log_dir):
             ),
             name='GaussianMLPBaselineBenchmark')
 
-        algo = PPO(
-            env_spec=env.spec,
-            policy=policy,
-            baseline=baseline,
-            max_path_length=100,
-            discount=0.99,
-            gae_lambda=0.95,
-            lr_clip_range=0.2,
-            policy_ent_coeff=0.0,
-            optimizer_args=dict(
-                batch_size=32,
-                max_epochs=10,
-                tf_optimizer_args=dict(learning_rate=1e-3),
-            ),
-            name='PPOBenchmark')
+        algo = PPO(env_spec=env.spec,
+                   policy=policy,
+                   baseline=baseline,
+                   max_path_length=100,
+                   discount=0.99,
+                   gae_lambda=0.95,
+                   lr_clip_range=0.2,
+                   policy_ent_coeff=0.0,
+                   optimizer_args=dict(
+                       batch_size=32,
+                       max_epochs=10,
+                       tf_optimizer_args=dict(learning_rate=1e-3),
+                   ),
+                   name='PPOBenchmark')
 
         # Set up logger since we are not using run_experiment
         tabular_log_file = osp.join(log_dir, 'progress.csv')
@@ -254,7 +249,7 @@ def run_garage_with_models(env, seed, log_dir):
         dowel_logger.add_output(dowel.TensorBoardOutput(log_dir))
 
         runner.setup(algo, env, sampler_args=dict(n_envs=12))
-        runner.train(n_epochs=3, batch_size=2048)
+        runner.train(n_epochs=488, batch_size=2048)
         dowel_logger.remove_all()
 
         return tabular_log_file

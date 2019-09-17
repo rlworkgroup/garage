@@ -22,9 +22,9 @@ from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.envs import TfEnv
 from garage.tf.experiment import LocalTFRunner
 from garage.tf.optimizers import FirstOrderOptimizer
-from garage.tf.policies import CategoricalMLPPolicy
+from garage.tf.policies import CategoricalGRUPolicy
 from tests.fixtures import snapshot_config
-from garage.tf.policies import CategoricalMLPPolicyWithModel
+from garage.tf.policies import CategoricalGRUPolicyWithModel
 import tests.helpers as Rh
 from tests.wrappers import AutoStopEnv
 
@@ -85,31 +85,29 @@ class TestBenchmarkPPOCategorical:
 
             env.close()
 
-            Rh.plot(
-                b_csvs=garage_models_csvs,
-                g_csvs=garage_csvs,
-                g_x='Iteration',
-                g_y='AverageReturn',
-                b_x='Iteration',
-                b_y='AverageReturn',
-                trials=3,
-                seeds=seeds,
-                plt_file=plt_file,
-                env_id=env_id,
-                x_label='Iteration',
-                y_label='AverageReturn')
+            Rh.plot(b_csvs=garage_models_csvs,
+                    g_csvs=garage_csvs,
+                    g_x='Iteration',
+                    g_y='AverageReturn',
+                    b_x='Iteration',
+                    b_y='AverageReturn',
+                    trials=3,
+                    seeds=seeds,
+                    plt_file=plt_file,
+                    env_id=env_id,
+                    x_label='Iteration',
+                    y_label='AverageReturn')
 
-            result_json[env_id] = Rh.create_json(
-                b_csvs=garage_models_csvs,
-                g_csvs=garage_csvs,
-                seeds=seeds,
-                trails=3,
-                g_x='Iteration',
-                g_y='AverageReturn',
-                b_x='Iteration',
-                b_y='AverageReturn',
-                factor_g=2048,
-                factor_b=2048)
+            result_json[env_id] = Rh.create_json(b_csvs=garage_models_csvs,
+                                                 g_csvs=garage_csvs,
+                                                 seeds=seeds,
+                                                 trails=3,
+                                                 g_x='Iteration',
+                                                 g_y='AverageReturn',
+                                                 b_x='Iteration',
+                                                 b_y='AverageReturn',
+                                                 factor_g=2048,
+                                                 factor_b=2048)
 
         Rh.write_file(result_json, 'PPO')
 
@@ -126,17 +124,16 @@ def run_garage(env, seed, log_dir):
     :return:
     '''
     deterministic.set_seed(seed)
-    config = tf.ConfigProto(
-        allow_soft_placement=True,
-        intra_op_parallelism_threads=12,
-        inter_op_parallelism_threads=12)
+    config = tf.ConfigProto(allow_soft_placement=True,
+                            intra_op_parallelism_threads=12,
+                            inter_op_parallelism_threads=12)
     sess = tf.Session(config=config)
     with LocalTFRunner(snapshot_config, sess=sess, max_cpus=12) as runner:
         env = TfEnv(normalize(env))
 
-        policy = CategoricalMLPPolicy(
+        policy = CategoricalGRUPolicy(
             env_spec=env.spec,
-            hidden_sizes=(32, 32),
+            hidden_dim=32,
             hidden_nonlinearity=tf.nn.tanh,
         )
 
@@ -165,7 +162,7 @@ def run_garage(env, seed, log_dir):
         dowel_logger.add_output(dowel.TensorBoardOutput(log_dir))
 
         runner.setup(algo, env, sampler_args=dict(n_envs=12))
-        runner.train(n_epochs=10, batch_size=2048)
+        runner.train(n_epochs=488, batch_size=2048)
         dowel_logger.remove_all()
 
         return tabular_log_file
@@ -183,38 +180,36 @@ def run_garage_with_models(env, seed, log_dir):
     :return:
     '''
     deterministic.set_seed(seed)
-    config = tf.ConfigProto(
-        allow_soft_placement=True,
-        intra_op_parallelism_threads=12,
-        inter_op_parallelism_threads=12)
+    config = tf.ConfigProto(allow_soft_placement=True,
+                            intra_op_parallelism_threads=12,
+                            inter_op_parallelism_threads=12)
     sess = tf.Session(config=config)
     with LocalTFRunner(snapshot_config, sess=sess, max_cpus=12) as runner:
         env = TfEnv(normalize(env))
 
-        policy = CategoricalMLPPolicyWithModel(
+        policy = CategoricalGRUPolicyWithModel(
             env_spec=env.spec,
-            name='CategoricalMLPPolicyBenchmark',
-            hidden_sizes=(32, 32),
+            name='CategoricalGRUPolicyBenchmark',
+            hidden_dim=32,
             hidden_nonlinearity=tf.nn.tanh,
         )
 
         baseline = LinearFeatureBaseline(env_spec=env.spec)
 
-        algo = PPO(
-            env_spec=env.spec,
-            policy=policy,
-            baseline=baseline,
-            max_path_length=100,
-            discount=0.99,
-            gae_lambda=0.95,
-            lr_clip_range=0.2,
-            policy_ent_coeff=0.0,
-            optimizer_args=dict(
-                batch_size=32,
-                max_epochs=10,
-                tf_optimizer_args=dict(learning_rate=1e-3),
-            ),
-            name='PPOBenchmark')
+        algo = PPO(env_spec=env.spec,
+                   policy=policy,
+                   baseline=baseline,
+                   max_path_length=100,
+                   discount=0.99,
+                   gae_lambda=0.95,
+                   lr_clip_range=0.2,
+                   policy_ent_coeff=0.0,
+                   optimizer_args=dict(
+                       batch_size=32,
+                       max_epochs=10,
+                       tf_optimizer_args=dict(learning_rate=1e-3),
+                   ),
+                   name='PPOBenchmark')
 
         # Set up logger since we are not using run_experiment
         tabular_log_file = osp.join(log_dir, 'progress.csv')
@@ -223,7 +218,7 @@ def run_garage_with_models(env, seed, log_dir):
         dowel_logger.add_output(dowel.TensorBoardOutput(log_dir))
 
         runner.setup(algo, env, sampler_args=dict(n_envs=12))
-        runner.train(n_epochs=10, batch_size=2048)
+        runner.train(n_epochs=488, batch_size=2048)
         dowel_logger.remove_all()
 
         return tabular_log_file
