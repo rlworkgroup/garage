@@ -143,8 +143,8 @@ class GaussianLSTMModel(Model):
     def network_output_spec(self):
         """Network output spec."""
         return [
-            'sample', 'mean', 'step_mean', 'log_std', 'step_log_std',
-            'step_hidden', 'step_cell', 'init_hidden', 'init_cell', 'dist'
+            'mean', 'step_mean', 'log_std', 'step_log_std', 'step_hidden',
+            'step_cell', 'init_hidden', 'init_cell', 'dist'
         ]
 
     def _build(self,
@@ -207,12 +207,9 @@ class GaussianLSTMModel(Model):
                     name='log_std_param')
 
         dist = DiagonalGaussian(self._output_dim)
-        rnd = tf.random.normal(shape=step_mean_var.get_shape().as_list()[1:])
-        action_var = rnd * tf.exp(step_log_std_var) + step_mean_var
 
-        return (action_var, mean_var, step_mean_var, log_std_var,
-                step_log_std_var, step_hidden, step_cell, hidden_init_var,
-                cell_init_var, dist)
+        return (mean_var, step_mean_var, log_std_var, step_log_std_var,
+                step_hidden, step_cell, hidden_init_var, cell_init_var, dist)
 
     def __getstate__(self):
         """Object.__getstate__."""

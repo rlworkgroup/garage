@@ -11,7 +11,7 @@ from garage.tf.baselines import GaussianMLPBaseline
 from garage.tf.envs import TfEnv
 from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import GaussianGRUPolicyWithModel
-from garage.tf.policies import GaussianLSTMPolicyWithModel
+from garage.tf.policies import GaussianLSTMPolicy
 from tests.fixtures import snapshot_config, TfGraphTestCase
 
 
@@ -22,7 +22,7 @@ class TestPPOWithModel(TfGraphTestCase):
         """Test PPO with model, with Pendulum environment."""
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
             env = TfEnv(normalize(gym.make('InvertedDoublePendulum-v2')))
-            policy = GaussianLSTMPolicyWithModel(env_spec=env.spec, )
+            policy = GaussianLSTMPolicy(env_spec=env.spec, )
             baseline = GaussianMLPBaseline(
                 env_spec=env.spec,
                 regressor_args=dict(hidden_sizes=(32, 32)),
