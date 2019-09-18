@@ -2,158 +2,189 @@
 This modules creates a continuous MLP policy network.
 
 A continuous MLP network can be used as policy method in different RL
-algorithms. It accepts an observation of the environment and predicts an
-action.
+algorithms. It accepts an observation of the environment and predicts a
+continuous action.
 """
-import akro
 import tensorflow as tf
 
-from garage.core import Serializable
 from garage.misc.overrides import overrides
-from garage.tf.core import layers
-from garage.tf.core import LayersPowered
-from garage.tf.core.layers import batch_norm
-from garage.tf.misc import tensor_utils
-from garage.tf.policies.base import Policy
+from garage.tf.models import MLPModel
+from garage.tf.policies.base2 import Policy2
 
 
-class ContinuousMLPPolicy(Policy, LayersPowered, Serializable):
+class ContinuousMLPPolicy(Policy2):
     """
-    This class implements a policy network.
+    ContinuousMLPPolicy with model.
 
     The policy network selects action based on the state of the environment.
     It uses neural nets to fit the function of pi(s).
+
+    Args:
+        env_spec (garage.envs.env_spec.EnvSpec): Environment specification.
+        name (str): Policy name, also the variable scope.
+        hidden_sizes (list[int]): Output dimension of dense layer(s).
+            For example, (32, 32) means the MLP of this policy consists of two
+            hidden layers, each with 32 hidden units.
+        hidden_nonlinearity (callable): Activation function for intermediate
+            dense layer(s). It should return a tf.Tensor. Set it to
+            None to maintain a linear activation.
+        hidden_w_init (callable): Initializer function for the weight
+            of intermediate dense layer(s). The function should return a
+            tf.Tensor.
+        hidden_b_init (callable): Initializer function for the bias
+            of intermediate dense layer(s). The function should return a
+            tf.Tensor.
+        output_nonlinearity (callable): Activation function for output dense
+            layer. It should return a tf.Tensor. Set it to None to
+            maintain a linear activation.
+        output_w_init (callable): Initializer function for the weight
+            of output dense layer(s). The function should return a
+            tf.Tensor.
+        output_b_init (callable): Initializer function for the bias
+            of output dense layer(s). The function should return a
+            tf.Tensor.
+        input_include_goal (bool): Include goal in the observation or not.
+        layer_normalization (bool): Bool for using layer normalization or not.
     """
 
     def __init__(self,
                  env_spec,
-                 hidden_sizes=(64, 64),
                  name='ContinuousMLPPolicy',
+                 hidden_sizes=(64, 64),
                  hidden_nonlinearity=tf.nn.relu,
+                 hidden_w_init=tf.glorot_uniform_initializer(),
+                 hidden_b_init=tf.zeros_initializer(),
                  output_nonlinearity=tf.nn.tanh,
+                 output_w_init=tf.glorot_uniform_initializer(),
+                 output_b_init=tf.zeros_initializer(),
                  input_include_goal=False,
-                 bn=False):
-        """
-        Initialize class with multiple attributes.
-
-        Args:
-            env_spec():
-            hidden_sizes(list or tuple, optional):
-                A list of numbers of hidden units for all hidden layers.
-            name(str, optional):
-                A str contains the name of the policy.
-            hidden_nonlinearity(optional):
-                An activation shared by all fc layers.
-            output_nonlinearity(optional):
-                An activation used by the output layer.
-            bn(bool, optional):
-                A bool to indicate whether normalize the layer or not.
-        """
-        assert isinstance(env_spec.action_space, akro.Box)
-
-        Serializable.quick_init(self, locals())
-        super(ContinuousMLPPolicy, self).__init__(env_spec)
-
-        self.name = name
-        self._env_spec = env_spec
-        if input_include_goal:
-            self._obs_dim = env_spec.observation_space.flat_dim_with_keys(
-                ['observation', 'desired_goal'])
-        else:
-            self._obs_dim = env_spec.observation_space.flat_dim
-        self._action_dim = env_spec.action_space.flat_dim
-        self._action_bound = env_spec.action_space.high
+                 layer_normalization=False):
+        super().__init__(name, env_spec)
+        action_dim = env_spec.action_space.flat_dim
         self._hidden_sizes = hidden_sizes
         self._hidden_nonlinearity = hidden_nonlinearity
+        self._hidden_w_init = hidden_w_init
+        self._hidden_b_init = hidden_b_init
         self._output_nonlinearity = output_nonlinearity
-        self._batch_norm = bn
-        self._policy_network_name = 'policy_network'
-        # Build the network and initialized as Parameterized
-        self._f_prob_online, self._output_layer, self._obs_layer = self.build_net(  # noqa: E501
-            name=self.name)
-        LayersPowered.__init__(self, [self._output_layer])
+        self._output_w_init = output_w_init
+        self._output_b_init = output_b_init
+        self._input_include_goal = input_include_goal
+        self._layer_normalization = layer_normalization
+        if self._input_include_goal:
+            self.obs_dim = env_spec.observation_space.flat_dim_with_keys(
+                ['observation', 'desired_goal'])
+        else:
+            self.obs_dim = env_spec.observation_space.flat_dim
 
-    def build_net(self, trainable=True, name=None):
+        self.model = MLPModel(output_dim=action_dim,
+                              name='MLPModel',
+                              hidden_sizes=hidden_sizes,
+                              hidden_nonlinearity=hidden_nonlinearity,
+                              hidden_w_init=hidden_w_init,
+                              hidden_b_init=hidden_b_init,
+                              output_nonlinearity=output_nonlinearity,
+                              output_w_init=output_w_init,
+                              output_b_init=output_b_init,
+                              layer_normalization=layer_normalization)
+
+        self._initialize()
+
+    def _initialize(self):
+        state_input = tf.compat.v1.placeholder(tf.float32,
+                                               shape=(None, self.obs_dim))
+
+        with tf.compat.v1.variable_scope(self.name) as vs:
+            self._variable_scope = vs
+            self.model.build(state_input)
+
+        self._f_prob = tf.compat.v1.get_default_session().make_callable(
+            self.model.networks['default'].outputs,
+            feed_list=[self.model.networks['default'].input])
+
+    def get_action_sym(self, obs_var, name=None):
         """
-        Set up q network based on class attributes.
-
-        This function uses layers defined in garage.tf.
+        Symbolic graph of the action.
 
         Args:
-            reuse: A bool indicates whether reuse variables in the same scope.
-            trainable: A bool indicates whether variables are trainable.
+            obs_var (tf.Tensor): Tensor input for symbolic graph.
+            name (str): Name for symbolic graph.
+
         """
-        with tf.compat.v1.variable_scope(name):
-            l_in = layers.InputLayer(shape=(None, self._obs_dim), name='obs')
-
-            l_hidden = l_in
-            for idx, hidden_size in enumerate(self._hidden_sizes):
-                if self._batch_norm:
-                    l_hidden = batch_norm(l_hidden)
-
-                l_hidden = layers.DenseLayer(
-                    l_hidden,
-                    hidden_size,
-                    nonlinearity=self._hidden_nonlinearity,
-                    trainable=trainable,
-                    name='hidden_%d' % idx)
-
-            l_output = layers.DenseLayer(
-                l_hidden,
-                self._action_dim,
-                nonlinearity=self._output_nonlinearity,
-                trainable=trainable,
-                name='output')
-
-            with tf.name_scope(self._policy_network_name):
-                action = layers.get_output(l_output)
-                scaled_action = tf.multiply(
-                    action, self._action_bound, name='scaled_action')
-
-        f_prob_online = tensor_utils.compile_function(
-            inputs=[l_in.input_var], outputs=scaled_action)
-        output_layer = l_output
-        obs_layer = l_in
-
-        return f_prob_online, output_layer, obs_layer
-
-    def get_action_sym(self, obs_var, name=None, **kwargs):
-        """Return action sym according to obs_var."""
-        with tf.name_scope(name, 'get_action_sym', [obs_var]):
-            with tf.name_scope(self._policy_network_name):
-                actions = layers.get_output(
-                    self._output_layer, {self._obs_layer: obs_var}, **kwargs)
-            return tf.multiply(actions, self._action_bound)
+        with tf.compat.v1.variable_scope(self._variable_scope):
+            return self.model.build(obs_var, name=name)
 
     @overrides
     def get_action(self, observation):
-        """Return a single action."""
-        return self._f_prob_online([observation])[0], dict()
+        """
+        Get single action from this policy for the input observation.
+
+        Args:
+            observation (numpy.ndarray): Observation from environment.
+
+        Returns:
+            action (numpy.ndarray): Predicted action.
+            agent_info (dict): Empty dict since this policy does
+                not model a distribution.
+
+        """
+        flat_obs = self.observation_space.flatten(observation)
+        action = self._f_prob([flat_obs])
+        action = self.action_space.unflatten(action)
+        return action, dict()
 
     @overrides
     def get_actions(self, observations):
-        """Return multiple actions."""
-        return self._f_prob_online(observations), dict()
+        """
+        Get multiple actions from this policy for the input observations.
+
+        Args:
+            observations (numpy.ndarray): Observations from environment.
+
+        Returns:
+            actions (numpy.ndarray): Predicted actions.
+            agent_infos (dict): Empty dict since this policy does
+                not model a distribution.
+
+        """
+        flat_obs = self.observation_space.flatten_n(observations)
+        actions = self._f_prob(flat_obs)
+        actions = self.action_space.unflatten_n(actions)
+        return actions, dict()
 
     @property
     def vectorized(self):
+        """Vectorized or not."""
         return True
 
-    def log_diagnostics(self, paths):
-        pass
+    def clone(self, name):
+        """
+        Return a clone of the policy.
 
-    def get_trainable_vars(self, scope=None):
-        scope = scope if scope else self.name
-        return tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=scope)
+        It only copies the configuration of the Q-function,
+        not the parameters.
 
-    def get_global_vars(self, scope=None):
-        scope = scope if scope else self.name
-        return tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=scope)
+        Args:
+            name (str): Name of the newly created policy.
+        """
+        return self.__class__(name=name,
+                              env_spec=self._env_spec,
+                              hidden_sizes=self._hidden_sizes,
+                              hidden_nonlinearity=self._hidden_nonlinearity,
+                              hidden_w_init=self._hidden_w_init,
+                              hidden_b_init=self._hidden_b_init,
+                              output_nonlinearity=self._output_nonlinearity,
+                              output_w_init=self._output_w_init,
+                              output_b_init=self._output_b_init,
+                              input_include_goal=self._input_include_goal,
+                              layer_normalization=self._layer_normalization)
 
-    def get_regularizable_vars(self, scope=None):
-        scope = scope if scope else self.name
-        reg_vars = [
-            var for var in self.get_trainable_vars(scope=scope)
-            if 'W' in var.name and 'output' not in var.name
-        ]
-        return reg_vars
+    def __getstate__(self):
+        """Object.__getstate__."""
+        new_dict = super().__getstate__()
+        del new_dict['_f_prob']
+        return new_dict
+
+    def __setstate__(self, state):
+        """Object.__setstate__."""
+        super().__setstate__(state)
+        self._initialize()

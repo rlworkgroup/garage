@@ -17,7 +17,7 @@ from garage.replay_buffer import HerReplayBuffer
 from garage.tf.algos import DDPG
 from garage.tf.envs import TfEnv
 from garage.tf.experiment import LocalTFRunner
-from garage.tf.policies import ContinuousMLPPolicyWithModel
+from garage.tf.policies import ContinuousMLPPolicy
 from garage.tf.q_functions import ContinuousMLPQFunction
 
 
@@ -28,7 +28,7 @@ def run_task(snapshot_config, *_):
 
         action_noise = OUStrategy(env.spec, sigma=0.2)
 
-        policy = ContinuousMLPPolicyWithModel(
+        policy = ContinuousMLPPolicy(
             env_spec=env.spec,
             name='Policy',
             hidden_sizes=[256, 256, 256],

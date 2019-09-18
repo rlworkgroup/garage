@@ -12,7 +12,7 @@ from garage.replay_buffer import SimpleReplayBuffer
 from garage.tf.algos import DDPG
 from garage.tf.envs import TfEnv
 from garage.tf.experiment import LocalTFRunner
-from garage.tf.policies import ContinuousMLPPolicyWithModel
+from garage.tf.policies import ContinuousMLPPolicy
 from garage.tf.q_functions import ContinuousMLPQFunction
 from tests.fixtures import snapshot_config, TfGraphTestCase
 
@@ -25,11 +25,10 @@ class TestDDPG(TfGraphTestCase):
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
             env = TfEnv(gym.make('InvertedDoublePendulum-v2'))
             action_noise = OUStrategy(env.spec, sigma=0.2)
-            policy = ContinuousMLPPolicyWithModel(
-                env_spec=env.spec,
-                hidden_sizes=[64, 64],
-                hidden_nonlinearity=tf.nn.relu,
-                output_nonlinearity=tf.nn.tanh)
+            policy = ContinuousMLPPolicy(env_spec=env.spec,
+                                         hidden_sizes=[64, 64],
+                                         hidden_nonlinearity=tf.nn.relu,
+                                         output_nonlinearity=tf.nn.tanh)
             qf = ContinuousMLPQFunction(env_spec=env.spec,
                                         hidden_sizes=[64, 64],
                                         hidden_nonlinearity=tf.nn.relu)
@@ -67,11 +66,10 @@ class TestDDPG(TfGraphTestCase):
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
             env = TfEnv(normalize(gym.make('InvertedPendulum-v2')))
             action_noise = OUStrategy(env.spec, sigma=0.2)
-            policy = ContinuousMLPPolicyWithModel(
-                env_spec=env.spec,
-                hidden_sizes=[64, 64],
-                hidden_nonlinearity=tf.nn.relu,
-                output_nonlinearity=tf.nn.tanh)
+            policy = ContinuousMLPPolicy(env_spec=env.spec,
+                                         hidden_sizes=[64, 64],
+                                         hidden_nonlinearity=tf.nn.relu,
+                                         output_nonlinearity=tf.nn.tanh)
             qf = ContinuousMLPQFunction(env_spec=env.spec,
                                         hidden_sizes=[64, 64],
                                         hidden_nonlinearity=tf.nn.relu)
