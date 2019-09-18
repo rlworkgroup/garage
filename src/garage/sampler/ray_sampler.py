@@ -169,7 +169,7 @@ class SamplerWorker:
     """
 
     def __init__(self, worker_id, env_pkl, agent_pkl, config):
-        config.worker_init_fn(worker_id)
+        config.worker_init_fn(config, worker_id)
         self.worker_id = worker_id
         self.env = pickle.loads(env_pkl)
         self.agent = pickle.loads(agent_pkl)
@@ -177,13 +177,13 @@ class SamplerWorker:
 
     def update(self, agent_update, env_update):
         """Update the agent and environment."""
-        self.agent = self.config.agent_update_fn(self.worker_id, self.agent,
-                                                 agent_update)
-        self.env = self.config.env_update_fn(self.worker_id, self.env,
-                                             env_update)
+        self.agent = self.config.agent_update_fn(self.config, self.worker_id,
+                                                 self.agent, agent_update)
+        self.env = self.config.env_update_fn(self.config, self.worker_id,
+                                             self.env, env_update)
         return self.worker_id
 
     def rollout(self):
         """Compute one rollout of the agent in the environment."""
-        return self.config.rollout_fn(self.worker_id, self.agent, self.env,
-                                      self.config.max_path_length)
+        return self.config.rollout_fn(self.config, self.worker_id, self.agent,
+                                      self.env, self.config.max_path_length)
