@@ -24,7 +24,8 @@ if [[ "${TRAVIS_PULL_REQUEST}" != "false" && "${TRAVIS}" == "true" ]]; then
 else
   git remote set-branches --add origin master
   git fetch
-  pre-commit run --source origin/master --origin ${TRAVIS_BRANCH}
+  merge_base=$(git merge-base origin/master ${TRAVIS_BRANCH})
+  pre-commit run --source ${merge_base} --origin ${TRAVIS_BRANCH}
   status="$((${status} | ${?}))"
 
   # Check commit messages
@@ -41,7 +42,7 @@ else
       cat "${commit_msg}"
     fi
 
-  done < <(git rev-list origin/master..."${TRAVIS_BRANCH}")
+  done < <(git rev-list ^origin/master "${TRAVIS_BRANCH}")
 fi
 
 exit "${status}"
