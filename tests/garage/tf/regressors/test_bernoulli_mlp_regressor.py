@@ -66,7 +66,7 @@ def get_test_data(input_shape, output_dim):
     return paths, expected
 
 
-class TestBernoulliMLPRegressorWithModel(TfGraphTestCase):
+class TestBernoulliMLPRegressor(TfGraphTestCase):
     # yapf: disable
     @pytest.mark.parametrize('input_shape, output_dim', [
         ((1, ), 2),
@@ -192,10 +192,10 @@ class TestBernoulliMLPRegressorWithModel(TfGraphTestCase):
         assert np.allclose(ll, ll_from_sym, rtol=0, atol=1e-5)
 
     @mock.patch('tests.garage.tf.regressors.'
-                'test_bernoulli_mlp_regressor_with_model.'
+                'test_bernoulli_mlp_regressor.'
                 'LbfgsOptimizer')
     @mock.patch('tests.garage.tf.regressors.'
-                'test_bernoulli_mlp_regressor_with_model.'
+                'test_bernoulli_mlp_regressor.'
                 'ConjugateGradientOptimizer')
     def test_optimizer_args(self, mock_cg, mock_lbfgs):
         lbfgs_args = dict(max_opt_itr=25)
