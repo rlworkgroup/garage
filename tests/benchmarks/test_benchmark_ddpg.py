@@ -34,7 +34,7 @@ from garage.replay_buffer import SimpleReplayBuffer
 from garage.tf.algos import DDPG
 from garage.tf.envs import TfEnv
 from garage.tf.experiment import LocalTFRunner
-from garage.tf.policies import ContinuousMLPPolicyWithModel
+from garage.tf.policies import ContinuousMLPPolicy
 from garage.tf.q_functions import ContinuousMLPQFunction
 from tests.fixtures import snapshot_config
 import tests.helpers as Rh
@@ -154,7 +154,7 @@ def run_garage(env, seed, log_dir):
         # Set up params for ddpg
         action_noise = OUStrategy(env.spec, sigma=params['sigma'])
 
-        policy = ContinuousMLPPolicyWithModel(
+        policy = ContinuousMLPPolicy(
             env_spec=env.spec,
             hidden_sizes=params['policy_hidden_sizes'],
             hidden_nonlinearity=tf.nn.relu,

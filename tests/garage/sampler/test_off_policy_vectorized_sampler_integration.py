@@ -9,7 +9,7 @@ from garage.sampler import OffPolicyVectorizedSampler
 from garage.tf.algos import DDPG
 from garage.tf.envs import TfEnv
 from garage.tf.experiment import LocalTFRunner
-from garage.tf.policies import ContinuousMLPPolicyWithModel
+from garage.tf.policies import ContinuousMLPPolicy
 from garage.tf.q_functions import ContinuousMLPQFunction
 from tests.fixtures import snapshot_config, TfGraphTestCase
 from tests.fixtures.envs.dummy import DummyDictEnv
@@ -25,11 +25,10 @@ class TestOffPolicyVectorizedSampler(TfGraphTestCase):
             # when no_reset is set to True
             env = TfEnv(normalize(gym.make('InvertedDoublePendulum-v2')))
             action_noise = OUStrategy(env.spec, sigma=0.2)
-            policy = ContinuousMLPPolicyWithModel(
-                env_spec=env.spec,
-                hidden_sizes=[64, 64],
-                hidden_nonlinearity=tf.nn.relu,
-                output_nonlinearity=tf.nn.tanh)
+            policy = ContinuousMLPPolicy(env_spec=env.spec,
+                                         hidden_sizes=[64, 64],
+                                         hidden_nonlinearity=tf.nn.relu,
+                                         output_nonlinearity=tf.nn.tanh)
             qf = ContinuousMLPQFunction(env_spec=env.spec,
                                         hidden_sizes=[64, 64],
                                         hidden_nonlinearity=tf.nn.relu)
