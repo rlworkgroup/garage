@@ -6,14 +6,15 @@ import pytest
 import tensorflow as tf
 
 from garage.tf.envs import TfEnv
-from garage.tf.policies import CategoricalLSTMPolicyWithModel
+from garage.tf.policies import CategoricalLSTMPolicy
 from tests.fixtures import TfGraphTestCase
 from tests.fixtures.envs.dummy import DummyBoxEnv
 from tests.fixtures.envs.dummy import DummyDiscreteEnv
 from tests.fixtures.models import SimpleLSTMModel
 
 
-class TestCategoricalLSTMPolicyWithModel(TfGraphTestCase):
+class TestCategoricalLSTMPolicy(TfGraphTestCase):
+
     @pytest.mark.parametrize('obs_dim, action_dim, hidden_dim', [
         ((1, ), 1, 4),
         ((2, ), 2, 4),
@@ -27,16 +28,17 @@ class TestCategoricalLSTMPolicyWithModel(TfGraphTestCase):
             tf.float32, shape=(None, None, env.observation_space.flat_dim))
 
         with mock.patch(('garage.tf.policies.'
-                         'categorical_lstm_policy_with_model.LSTMModel'),
+                         'categorical_lstm_policy.LSTMModel'),
                         new=SimpleLSTMModel):
-            policy = CategoricalLSTMPolicyWithModel(
-                env_spec=env.spec, state_include_action=False)
+            policy = CategoricalLSTMPolicy(env_spec=env.spec,
+                                           state_include_action=False)
 
         policy.reset()
         obs = env.reset()
 
-        dist_sym = policy.dist_info_sym(
-            obs_var=obs_ph, state_info_vars=None, name='p2_sym')
+        dist_sym = policy.dist_info_sym(obs_var=obs_ph,
+                                        state_info_vars=None,
+                                        name='p2_sym')
         dist = self.sess.run(
             dist_sym, feed_dict={obs_ph: [[obs.flatten()], [obs.flatten()]]})
 
@@ -55,10 +57,10 @@ class TestCategoricalLSTMPolicyWithModel(TfGraphTestCase):
             tf.float32, shape=(None, None, env.observation_space.flat_dim))
 
         with mock.patch(('garage.tf.policies.'
-                         'categorical_lstm_policy_with_model.LSTMModel'),
+                         'categorical_lstm_policy.LSTMModel'),
                         new=SimpleLSTMModel):
-            policy = CategoricalLSTMPolicyWithModel(
-                env_spec=env.spec, state_include_action=True)
+            policy = CategoricalLSTMPolicy(env_spec=env.spec,
+                                           state_include_action=True)
 
         policy.reset()
         obs = env.reset()
@@ -79,10 +81,10 @@ class TestCategoricalLSTMPolicyWithModel(TfGraphTestCase):
             tf.float32, shape=(None, None, env.observation_space.flat_dim))
 
         with mock.patch(('garage.tf.policies.'
-                         'categorical_lstm_policy_with_model.LSTMModel'),
+                         'categorical_lstm_policy.LSTMModel'),
                         new=SimpleLSTMModel):
-            policy = CategoricalLSTMPolicyWithModel(
-                env_spec=env.spec, state_include_action=True)
+            policy = CategoricalLSTMPolicy(env_spec=env.spec,
+                                           state_include_action=True)
 
         policy.reset()
         obs = env.reset()
@@ -100,10 +102,10 @@ class TestCategoricalLSTMPolicyWithModel(TfGraphTestCase):
     def test_invalid_env(self):
         env = TfEnv(DummyBoxEnv())
         with mock.patch(('garage.tf.policies.'
-                         'categorical_lstm_policy_with_model.LSTMModel'),
+                         'categorical_lstm_policy.LSTMModel'),
                         new=SimpleLSTMModel):
             with pytest.raises(ValueError):
-                CategoricalLSTMPolicyWithModel(env_spec=env.spec)
+                CategoricalLSTMPolicy(env_spec=env.spec)
 
     @pytest.mark.parametrize('obs_dim, action_dim, hidden_dim', [
         ((1, ), 1, 4),
@@ -119,10 +121,10 @@ class TestCategoricalLSTMPolicyWithModel(TfGraphTestCase):
         env = TfEnv(DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
 
         with mock.patch(('garage.tf.policies.'
-                         'categorical_lstm_policy_with_model.LSTMModel'),
+                         'categorical_lstm_policy.LSTMModel'),
                         new=SimpleLSTMModel):
-            policy = CategoricalLSTMPolicyWithModel(
-                env_spec=env.spec, state_include_action=True)
+            policy = CategoricalLSTMPolicy(env_spec=env.spec,
+                                           state_include_action=True)
 
         policy.reset()
         obs = env.reset()
@@ -153,10 +155,10 @@ class TestCategoricalLSTMPolicyWithModel(TfGraphTestCase):
         env = TfEnv(DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
 
         with mock.patch(('garage.tf.policies.'
-                         'categorical_lstm_policy_with_model.LSTMModel'),
+                         'categorical_lstm_policy.LSTMModel'),
                         new=SimpleLSTMModel):
-            policy = CategoricalLSTMPolicyWithModel(
-                env_spec=env.spec, state_include_action=False)
+            policy = CategoricalLSTMPolicy(env_spec=env.spec,
+                                           state_include_action=False)
 
         policy.reset()
         obs = env.reset()
@@ -177,16 +179,16 @@ class TestCategoricalLSTMPolicyWithModel(TfGraphTestCase):
     def test_is_pickleable(self):
         env = TfEnv(DummyDiscreteEnv(obs_dim=(1, ), action_dim=1))
         with mock.patch(('garage.tf.policies.'
-                         'categorical_lstm_policy_with_model.LSTMModel'),
+                         'categorical_lstm_policy.LSTMModel'),
                         new=SimpleLSTMModel):
-            policy = CategoricalLSTMPolicyWithModel(
-                env_spec=env.spec, state_include_action=False)
+            policy = CategoricalLSTMPolicy(env_spec=env.spec,
+                                           state_include_action=False)
 
         env.reset()
         obs = env.reset()
 
-        with tf.compat.v1.variable_scope(
-                'CategoricalLSTMPolicyWithModel/prob_network', reuse=True):
+        with tf.compat.v1.variable_scope('CategoricalLSTMPolicy/prob_network',
+                                         reuse=True):
             return_var = tf.compat.v1.get_variable('return_var')
         # assign it to all one
         return_var.load(tf.ones_like(return_var).eval())
@@ -199,10 +201,9 @@ class TestCategoricalLSTMPolicyWithModel(TfGraphTestCase):
 
         with tf.compat.v1.Session(graph=tf.Graph()) as sess:
             policy_pickled = pickle.loads(p)
-            output2 = sess.run(
-                policy_pickled.model.outputs[0],
-                feed_dict={
-                    policy_pickled.model.input: [[obs.flatten()],
-                                                 [obs.flatten()]]
-                })
+            output2 = sess.run(policy_pickled.model.outputs[0],
+                               feed_dict={
+                                   policy_pickled.model.input:
+                                   [[obs.flatten()], [obs.flatten()]]
+                               })  # noqa: E126
             assert np.array_equal(output1, output2)
