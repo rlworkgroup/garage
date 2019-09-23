@@ -56,21 +56,21 @@ class ContinuousMLPRegressor(LayersPowered, Serializable, Parameterized):
 
             self._network_name = 'network'
             if network is None:
-                network = MLP(
-                    input_shape=input_shape,
-                    output_dim=output_dim,
-                    hidden_sizes=hidden_sizes,
-                    hidden_nonlinearity=hidden_nonlinearity,
-                    output_nonlinearity=output_nonlinearity,
-                    name=self._network_name)
+                network = MLP(input_shape=input_shape,
+                              output_dim=output_dim,
+                              hidden_sizes=hidden_sizes,
+                              hidden_nonlinearity=hidden_nonlinearity,
+                              output_nonlinearity=output_nonlinearity,
+                              name=self._network_name)
 
             l_out = network.output_layer
 
             LayersPowered.__init__(self, [l_out])
 
             xs_var = network.input_layer.input_var
-            ys_var = tf.compat.v1.placeholder(
-                dtype=tf.float32, shape=[None, output_dim], name='ys')
+            ys_var = tf.compat.v1.placeholder(dtype=tf.float32,
+                                              shape=[None, output_dim],
+                                              name='ys')
 
             x_mean_var = tf.compat.v1.get_variable(
                 name='x_mean',
@@ -87,7 +87,7 @@ class ContinuousMLPRegressor(LayersPowered, Serializable, Parameterized):
                 fit_ys_var = L.get_output(
                     l_out, {network.input_layer: normalized_xs_var})
 
-            loss = -tf.reduce_mean(tf.square(fit_ys_var - ys_var))
+            loss = tf.reduce_mean(tf.square(fit_ys_var - ys_var))
 
             self.f_predict = tensor_utils.compile_function([xs_var],
                                                            fit_ys_var)
