@@ -1,129 +1,168 @@
+"""Continuous MLP QFunction."""
 import tensorflow as tf
 
-from garage.core import Serializable
-from garage.tf.core import LayersPowered
-import garage.tf.core.layers as L
-from garage.tf.core.layers import batch_norm
-from garage.tf.misc import tensor_utils
-from garage.tf.q_functions.base import QFunction
+from garage.misc.overrides import overrides
+from garage.tf.models import MLPMergeModel
+from garage.tf.q_functions import QFunction2
 
 
-class ContinuousMLPQFunction(QFunction, LayersPowered, Serializable):
+class ContinuousMLPQFunction(QFunction2):
     """
+    Continuous MLP QFunction.
+
     This class implements a q value network to predict q based on the input
     state and action. It uses an MLP to fit the function of Q(s, a).
+
+    Args:
+        env_spec (garage.envs.env_spec.EnvSpec): Environment specification.
+        name (str): Name of the q-function, also serves as the variable scope.
+        hidden_sizes (list[int]): Output dimension of dense layer(s).
+            For example, (32, 32) means the MLP of this q-function consists of
+            two hidden layers, each with 32 hidden units.
+        action_merge_layer (int): The index of layers at which to concatenate
+            action inputs with the network. The indexing works like standard
+            python list indexing. Index of 0 refers to the input layer
+            (observation input) while an index of -1 points to the last
+            hidden layer. Default parameter points to second layer from the
+            end.
+        hidden_nonlinearity (callable): Activation function for intermediate
+            dense layer(s). It should return a tf.Tensor. Set it to
+            None to maintain a linear activation.
+        hidden_w_init (callable): Initializer function for the weight
+            of intermediate dense layer(s). The function should return a
+            tf.Tensor.
+        hidden_b_init (callable): Initializer function for the bias
+            of intermediate dense layer(s). The function should return a
+            tf.Tensor.
+        output_nonlinearity (callable): Activation function for output dense
+            layer. It should return a tf.Tensor. Set it to None to
+            maintain a linear activation.
+        output_w_init (callable): Initializer function for the weight
+            of output dense layer(s). The function should return a
+            tf.Tensor.
+        output_b_init (callable): Initializer function for the bias
+            of output dense layer(s). The function should return a
+            tf.Tensor.
+        input_include_goal (bool): Whether input includes goal.
+        layer_normalization (bool): Bool for using layer normalization.
+
     """
 
     def __init__(self,
                  env_spec,
                  name='ContinuousMLPQFunction',
                  hidden_sizes=(32, 32),
-                 hidden_nonlinearity=tf.nn.relu,
                  action_merge_layer=-2,
+                 hidden_nonlinearity=tf.nn.relu,
+                 hidden_w_init=tf.glorot_uniform_initializer(),
+                 hidden_b_init=tf.zeros_initializer(),
                  output_nonlinearity=None,
+                 output_w_init=tf.glorot_uniform_initializer(),
+                 output_b_init=tf.zeros_initializer(),
                  input_include_goal=False,
-                 bn=False):
-        """
-        Initialize class with multiple attributes.
+                 layer_normalization=False):
+        super().__init__(name)
 
-        Args:
-            env_spec():
-            name(str, optional): A str contains the name of the policy.
-            hidden_sizes(list or tuple, optional):
-                A list of numbers of hidden units for all hidden layers.
-            hidden_nonlinearity(optional):
-                An activation shared by all fc layers.
-            action_merge_layer(int, optional):
-                An index to indicate when to merge action layer.
-            output_nonlinearity(optional):
-                An activation used by the output layer.
-            bn(bool, optional):
-                A bool to indicate whether normalize the layer or not.
-        """
-        Serializable.quick_init(self, locals())
-
-        self.name = name
         self._env_spec = env_spec
-        if input_include_goal:
+        self._hidden_sizes = hidden_sizes
+        self._action_merge_layer = action_merge_layer
+        self._hidden_nonlinearity = hidden_nonlinearity
+        self._hidden_w_init = hidden_w_init
+        self._hidden_b_init = hidden_b_init
+        self._output_nonlinearity = output_nonlinearity
+        self._output_w_init = output_w_init
+        self._output_b_init = output_b_init
+        self._input_include_goal = input_include_goal
+        self._layer_normalization = layer_normalization
+
+        if self._input_include_goal:
             self._obs_dim = env_spec.observation_space.flat_dim_with_keys(
                 ['observation', 'desired_goal'])
         else:
             self._obs_dim = env_spec.observation_space.flat_dim
         self._action_dim = env_spec.action_space.flat_dim
-        self._hidden_sizes = hidden_sizes
-        self._hidden_nonlinearity = hidden_nonlinearity
-        self._action_merge_layer = action_merge_layer
-        self._output_nonlinearity = output_nonlinearity
-        self._batch_norm = bn
-        self._f_qval, self._output_layer, self._obs_layer, self._action_layer = self.build_net(  # noqa: E501
-            name=self.name)
-        LayersPowered.__init__(self, [self._output_layer])
 
-    def build_net(self, trainable=True, name=None):
+        self.model = MLPMergeModel(output_dim=1,
+                                   hidden_sizes=hidden_sizes,
+                                   concat_layer=self._action_merge_layer,
+                                   hidden_nonlinearity=hidden_nonlinearity,
+                                   hidden_w_init=hidden_w_init,
+                                   hidden_b_init=hidden_b_init,
+                                   output_nonlinearity=output_nonlinearity,
+                                   output_w_init=output_w_init,
+                                   output_b_init=output_b_init,
+                                   layer_normalization=layer_normalization)
+
+        self._initialize()
+
+    def _initialize(self):
+        obs_ph = tf.compat.v1.placeholder(tf.float32, (None, self._obs_dim),
+                                          name='obs')
+        action_ph = tf.compat.v1.placeholder(tf.float32,
+                                             (None, self._action_dim),
+                                             name='act')
+
+        with tf.compat.v1.variable_scope(self.name) as vs:
+            self._variable_scope = vs
+            self.model.build(obs_ph, action_ph)
+
+        self._f_qval = tf.compat.v1.get_default_session().make_callable(
+            self.model.networks['default'].outputs,
+            feed_list=[obs_ph, action_ph])
+
+    def get_qval(self, observation, action):
+        """Q Value of the network."""
+        return self._f_qval(observation, action)
+
+    @property
+    def inputs(self):
+        """Return the input tensor."""
+        return self.model.networks['default'].inputs
+
+    @overrides
+    def get_qval_sym(self, state_input, action_input, name):
         """
-        Set up q network based on class attributes. This function uses layers
-        defined in garage.tf.
+        Symbolic graph for q-network.
 
         Args:
-            reuse: A bool indicates whether reuse variables in the same scope.
-            trainable: A bool indicates whether variables are trainable.
+            state_input (tf.Tensor): The state input tf.Tensor to the network.
+            name (str): Network variable scope.
+
+        Return:
+            The tf.Tensor output of Discrete MLP QFunction.
         """
-        with tf.compat.v1.variable_scope(name):
-            l_obs = L.InputLayer(shape=(None, self._obs_dim), name='obs')
-            l_action = L.InputLayer(
-                shape=(None, self._action_dim), name='actions')
+        with tf.compat.v1.variable_scope(self._variable_scope):
+            return self.model.build(state_input, action_input, name=name)
 
-            n_layers = len(self._hidden_sizes) + 1
+    def clone(self, name):
+        """
+        Return a clone of the Q-function.
 
-            if n_layers > 1:
-                action_merge_layer = \
-                    (self._action_merge_layer % n_layers + n_layers) % n_layers
-            else:
-                action_merge_layer = 1
+        It only copies the configuration of the Q-function,
+        not the parameters.
 
-            l_hidden = l_obs
+        Args:
+            name (str): Name of the newly created q-function.
+        """
+        return self.__class__(name=name,
+                              env_spec=self._env_spec,
+                              hidden_sizes=self._hidden_sizes,
+                              action_merge_layer=self._action_merge_layer,
+                              hidden_nonlinearity=self._hidden_nonlinearity,
+                              hidden_w_init=self._hidden_w_init,
+                              hidden_b_init=self._hidden_b_init,
+                              output_nonlinearity=self._output_nonlinearity,
+                              output_w_init=self._output_w_init,
+                              output_b_init=self._output_b_init,
+                              layer_normalization=self._layer_normalization)
 
-            for idx, size in enumerate(self._hidden_sizes):
-                if self._batch_norm:
-                    l_hidden = batch_norm(l_hidden)
+    def __getstate__(self):
+        """Object.__getstate__."""
+        new_dict = self.__dict__.copy()
+        del new_dict['_f_qval']
+        return new_dict
 
-                if idx == action_merge_layer:
-                    l_hidden = L.ConcatLayer([l_hidden, l_action])
-
-                l_hidden = L.DenseLayer(
-                    l_hidden,
-                    num_units=size,
-                    nonlinearity=self._hidden_nonlinearity,
-                    trainable=trainable,
-                    name='hidden_%d' % (idx + 1))
-
-            if action_merge_layer == n_layers:
-                l_hidden = L.ConcatLayer([l_hidden, l_action])
-
-            l_output = L.DenseLayer(
-                l_hidden,
-                num_units=1,
-                nonlinearity=self._output_nonlinearity,
-                trainable=trainable,
-                name='output')
-
-            output_var = L.get_output(l_output)
-
-        f_qval = tensor_utils.compile_function(
-            [l_obs.input_var, l_action.input_var], output_var)
-        output_layer = l_output
-        obs_layer = l_obs
-        action_layer = l_action
-
-        return f_qval, output_layer, obs_layer, action_layer
-
-    def get_qval(self, observations, actions):
-        return self._f_qval(observations, actions)
-
-    def get_qval_sym(self, obs_var, action_var, name=None, **kwargs):
-        with tf.name_scope(name, 'get_qval_sym', values=[obs_var, action_var]):
-            qvals = L.get_output(self._output_layer, {
-                self._obs_layer: obs_var,
-                self._action_layer: action_var
-            }, **kwargs)
-            return qvals
+    def __setstate__(self, state):
+        """Object.__setstate__."""
+        self.__dict__.update(state)
+        self._initialize()
