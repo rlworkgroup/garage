@@ -11,8 +11,7 @@ from garage.tf.regressors import StochasticRegressor2
 
 
 class BernoulliMLPRegressorWithModel(StochasticRegressor2):
-    """
-    BernoulliMLPRegressor with garage.tf.models.NormalizedInputMLPModel.
+    """BernoulliMLPRegressor with garage.tf.models.NormalizedInputMLPModel.
 
     A class for performing regression by fitting a Bernoulli distribution to
     the outputs.
@@ -120,19 +119,21 @@ class BernoulliMLPRegressorWithModel(StochasticRegressor2):
         self._initialize()
 
     def _initialize(self):
-        input_var = tf.compat.v1.placeholder(
-            tf.float32, shape=(None, ) + self._input_shape)
+        input_var = tf.compat.v1.placeholder(tf.float32,
+                                             shape=(None, ) +
+                                             self._input_shape)
 
         with tf.compat.v1.variable_scope(self._variable_scope):
             self.model.build(input_var)
 
-            ys_var = tf.compat.v1.placeholder(
-                dtype=tf.float32, name='ys', shape=(None, self._output_dim))
+            ys_var = tf.compat.v1.placeholder(dtype=tf.float32,
+                                              name='ys',
+                                              shape=(None, self._output_dim))
 
-            old_prob_var = tf.compat.v1.placeholder(
-                dtype=tf.float32,
-                name='old_prob',
-                shape=(None, self._output_dim))
+            old_prob_var = tf.compat.v1.placeholder(dtype=tf.float32,
+                                                    name='old_prob',
+                                                    shape=(None,
+                                                           self._output_dim))
 
             y_hat = self.model.networks['default'].y_hat
 
@@ -151,11 +152,10 @@ class BernoulliMLPRegressorWithModel(StochasticRegressor2):
                                                             predicted)
             self._f_prob = tensor_utils.compile_function([input_var], y_hat)
 
-            self._optimizer.update_opt(
-                loss=loss,
-                target=self,
-                network_output=[y_hat],
-                inputs=[input_var, ys_var])
+            self._optimizer.update_opt(loss=loss,
+                                       target=self,
+                                       network_output=[y_hat],
+                                       inputs=[input_var, ys_var])
             self._tr_optimizer.update_opt(
                 loss=loss,
                 target=self,
@@ -165,12 +165,12 @@ class BernoulliMLPRegressorWithModel(StochasticRegressor2):
             self._first_optimized = False
 
     def fit(self, xs, ys):
-        """
-        Fit with input data xs and label ys.
+        """Fit with input data xs and label ys.
 
         Args:
             xs (numpy.ndarray): Input data.
             ys (numpy.ndarray): Label of input data.
+
         """
         if self._normalize_inputs:
             # recompute normalizing constants for inputs
@@ -196,20 +196,19 @@ class BernoulliMLPRegressorWithModel(StochasticRegressor2):
         self._first_optimized = True
 
     def predict(self, xs):
-        """
-        Predict ys based on input xs.
+        """Predict ys based on input xs.
 
         Args:
             xs (numpy.ndarray): Input data.
 
         Return:
             The predicted ys (one hot vectors).
+
         """
         return self._f_predict(xs)
 
     def log_likelihood_sym(self, x_var, y_var, name=None):
-        """
-        Symbolic graph of the log likelihood.
+        """Symbolic graph of the log likelihood.
 
         Args:
             x_var (tf.Tensor): Input tf.Tensor for the input data.
@@ -218,6 +217,7 @@ class BernoulliMLPRegressorWithModel(StochasticRegressor2):
 
         Return:
             tf.Tensor output of the symbolic log likelihood.
+
         """
         with tf.compat.v1.variable_scope(self._variable_scope):
             prob, _, _ = self.model.build(x_var, name=name)

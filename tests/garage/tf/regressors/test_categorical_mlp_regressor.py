@@ -6,7 +6,7 @@ import pytest
 import tensorflow as tf
 
 from garage.tf.optimizers import ConjugateGradientOptimizer, LbfgsOptimizer
-from garage.tf.regressors import CategoricalMLPRegressorWithModel
+from garage.tf.regressors import CategoricalMLPRegressor
 from tests.fixtures import TfGraphTestCase
 
 
@@ -55,12 +55,13 @@ def get_test_data(input_shape):
     return paths, expected
 
 
-class TestCategoricalMLPRegressorWithModel(TfGraphTestCase):
+class TestCategoricalMLPRegressor(TfGraphTestCase):
+
     @pytest.mark.parametrize('input_shape, output_dim', [((1, ), 2),
                                                          ((2, ), 2)])
     def test_fit_normalized(self, input_shape, output_dim):
-        cmr = CategoricalMLPRegressorWithModel(
-            input_shape=input_shape, output_dim=output_dim)
+        cmr = CategoricalMLPRegressor(input_shape=input_shape,
+                                      output_dim=output_dim)
         obs = get_train_data(input_shape)
 
         observations = np.concatenate([p['observations'] for p in obs])
@@ -87,10 +88,9 @@ class TestCategoricalMLPRegressorWithModel(TfGraphTestCase):
     @pytest.mark.parametrize('input_shape, output_dim', [((1, ), 2),
                                                          ((2, ), 2)])
     def test_fit_unnormalized(self, input_shape, output_dim):
-        cmr = CategoricalMLPRegressorWithModel(
-            input_shape=input_shape,
-            output_dim=output_dim,
-            normalize_inputs=False)
+        cmr = CategoricalMLPRegressor(input_shape=input_shape,
+                                      output_dim=output_dim,
+                                      normalize_inputs=False)
         obs = get_train_data(input_shape)
 
         observations = np.concatenate([p['observations'] for p in obs])
@@ -117,10 +117,9 @@ class TestCategoricalMLPRegressorWithModel(TfGraphTestCase):
     @pytest.mark.parametrize('input_shape, output_dim', [((1, ), 2),
                                                          ((2, ), 2)])
     def test_fit_without_initial_trust_region(self, input_shape, output_dim):
-        cmr = CategoricalMLPRegressorWithModel(
-            input_shape=input_shape,
-            output_dim=output_dim,
-            use_trust_region=False)
+        cmr = CategoricalMLPRegressor(input_shape=input_shape,
+                                      output_dim=output_dim,
+                                      use_trust_region=False)
         obs = get_train_data(input_shape)
 
         observations = np.concatenate([p['observations'] for p in obs])
@@ -148,11 +147,11 @@ class TestCategoricalMLPRegressorWithModel(TfGraphTestCase):
                              [(1, (1, )), (1, (2, )), (2, (3, )), (2, (1, 1)),
                               (3, (2, 2))])
     def test_dist_info_sym(self, output_dim, input_shape):
-        cmr = CategoricalMLPRegressorWithModel(
-            input_shape=input_shape, output_dim=output_dim)
+        cmr = CategoricalMLPRegressor(input_shape=input_shape,
+                                      output_dim=output_dim)
 
-        new_xs_var = tf.compat.v1.placeholder(
-            tf.float32, shape=(None, ) + input_shape)
+        new_xs_var = tf.compat.v1.placeholder(tf.float32,
+                                              shape=(None, ) + input_shape)
 
         data = np.random.random(size=input_shape)
         label = np.random.randint(0, output_dim)
@@ -170,13 +169,14 @@ class TestCategoricalMLPRegressorWithModel(TfGraphTestCase):
                              [(1, (1, )), (1, (2, )), (2, (3, )), (2, (1, 1)),
                               (3, (2, 2))])
     def test_log_likelihood_sym(self, output_dim, input_shape):
-        cmr = CategoricalMLPRegressorWithModel(
-            input_shape=input_shape, output_dim=output_dim)
+        cmr = CategoricalMLPRegressor(input_shape=input_shape,
+                                      output_dim=output_dim)
 
-        new_xs_var = tf.compat.v1.placeholder(
-            tf.float32, shape=(None, ) + input_shape)
-        new_ys_var = tf.compat.v1.placeholder(
-            dtype=tf.float32, name='ys', shape=(None, output_dim))
+        new_xs_var = tf.compat.v1.placeholder(tf.float32,
+                                              shape=(None, ) + input_shape)
+        new_ys_var = tf.compat.v1.placeholder(dtype=tf.float32,
+                                              name='ys',
+                                              shape=(None, output_dim))
 
         data = np.random.random(size=input_shape)
         label = np.random.randint(0, output_dim)
@@ -187,32 +187,30 @@ class TestCategoricalMLPRegressorWithModel(TfGraphTestCase):
 
         outputs = cmr.log_likelihood_sym(new_xs_var, new_ys_var, name='ll_sym')
 
-        ll_from_sym = self.sess.run(
-            outputs,
-            feed_dict={
-                new_xs_var: [data],
-                new_ys_var: [one_hot_label]
-            })
+        ll_from_sym = self.sess.run(outputs,
+                                    feed_dict={
+                                        new_xs_var: [data],
+                                        new_ys_var: [one_hot_label]
+                                    })
 
         assert np.allclose(ll, ll_from_sym, rtol=0, atol=1e-5)
 
     @mock.patch('tests.garage.tf.regressors.'
-                'test_categorical_mlp_regressor_with_model.'
+                'test_categorical_mlp_regressor.'
                 'LbfgsOptimizer')
     @mock.patch('tests.garage.tf.regressors.'
-                'test_categorical_mlp_regressor_with_model.'
+                'test_categorical_mlp_regressor.'
                 'ConjugateGradientOptimizer')
     def test_optimizer_args(self, mock_cg, mock_lbfgs):
         lbfgs_args = dict(max_opt_itr=25)
         cg_args = dict(cg_iters=15)
-        cmr = CategoricalMLPRegressorWithModel(
-            input_shape=(1, ),
-            output_dim=2,
-            optimizer=LbfgsOptimizer,
-            optimizer_args=lbfgs_args,
-            tr_optimizer=ConjugateGradientOptimizer,
-            tr_optimizer_args=cg_args,
-            use_trust_region=True)
+        cmr = CategoricalMLPRegressor(input_shape=(1, ),
+                                      output_dim=2,
+                                      optimizer=LbfgsOptimizer,
+                                      optimizer_args=lbfgs_args,
+                                      tr_optimizer=ConjugateGradientOptimizer,
+                                      tr_optimizer_args=cg_args,
+                                      use_trust_region=True)
 
         assert mock_lbfgs.return_value is cmr._optimizer
         assert mock_cg.return_value is cmr._tr_optimizer
@@ -221,11 +219,10 @@ class TestCategoricalMLPRegressorWithModel(TfGraphTestCase):
         mock_cg.assert_called_with(cg_iters=15)
 
     def test_is_pickleable(self):
-        cmr = CategoricalMLPRegressorWithModel(input_shape=(1, ), output_dim=2)
+        cmr = CategoricalMLPRegressor(input_shape=(1, ), output_dim=2)
 
         with tf.compat.v1.variable_scope(
-                'CategoricalMLPRegressorWithModel/NormalizedInputMLPModel',
-                reuse=True):
+                'CategoricalMLPRegressor/NormalizedInputMLPModel', reuse=True):
             bias = tf.compat.v1.get_variable('mlp/hidden_0/bias')
         bias.load(tf.ones_like(bias).eval())
 
@@ -238,11 +235,10 @@ class TestCategoricalMLPRegressorWithModel(TfGraphTestCase):
             assert np.array_equal(result1, result2)
 
     def test_is_pickleable2(self):
-        cmr = CategoricalMLPRegressorWithModel(input_shape=(1, ), output_dim=2)
+        cmr = CategoricalMLPRegressor(input_shape=(1, ), output_dim=2)
 
         with tf.compat.v1.variable_scope(
-                'CategoricalMLPRegressorWithModel/NormalizedInputMLPModel',
-                reuse=True):
+                'CategoricalMLPRegressor/NormalizedInputMLPModel', reuse=True):
             x_mean = tf.compat.v1.get_variable('normalized_vars/x_mean')
         x_mean.load(tf.ones_like(x_mean).eval())
         x1 = cmr.model.networks['default'].x_mean.eval()
