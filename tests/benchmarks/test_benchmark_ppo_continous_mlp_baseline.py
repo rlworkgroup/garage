@@ -25,10 +25,8 @@ from garage.tf.baselines import (ContinuousMLPBaseline,
                                  ContinuousMLPBaselineWithModel)
 from garage.tf.envs import TfEnv
 from garage.tf.experiment import LocalTFRunner
-from garage.tf.optimizers import FirstOrderOptimizer
 from garage.tf.policies import GaussianLSTMPolicy
 from tests.fixtures import snapshot_config
-import tests.helpers as Rh
 # from tests.wrappers import AutoStopEnv
 
 # Hyperparams for baselines and garage
@@ -52,15 +50,11 @@ policy_params = {
 # }
 
 baseline_params = {
-    'regressor_args':
-    dict(hidden_sizes=(64, 64))
-        #  use_trust_region=False,)
+    'regressor_args': dict(hidden_sizes=(64, 64))
+    #  use_trust_region=False,)
 }
 
-baseline_with_model_params = {
-    'regressor_args':
-    dict(hidden_sizes=(64, 64))
-}
+baseline_with_model_params = {'regressor_args': dict(hidden_sizes=(64, 64))}
 
 algo_params = {
     'n_envs':
@@ -110,7 +104,6 @@ class TestBenchmarkPPOContinuousMLPBaseline:
         timestamp = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f')
         benchmark_dir = osp.join(os.getcwd(), 'data', 'local', 'benchmarks',
                                  'ppo_cmb', timestamp)
-        result_json = {}
         for task in mujoco1m['tasks']:
             env_id = task['env_id']
             env = gym.make(env_id)
@@ -118,8 +111,6 @@ class TestBenchmarkPPOContinuousMLPBaseline:
             seeds = random.sample(range(100), num_trials)
 
             task_dir = osp.join(benchmark_dir, env_id)
-            plt_file = osp.join(benchmark_dir,
-                                '{}_benchmark_{}.png'.format(env_id))
             cmb_csvs = []
             cmb_with_model_csvs = []
 
@@ -142,32 +133,6 @@ class TestBenchmarkPPOContinuousMLPBaseline:
                 cmb_with_model_csvs.append(cmb_with_model_csv)
 
             env.close()
-
-        #     Rh.plot(b_csvs=cmb_with_model_csvs,
-        #             g_csvs=cmb_csvs,
-        #             g_x='Epoch',
-        #             g_y='AverageReturn',
-        #             b_x='Epoch',
-        #             b_y='AverageReturn',
-        #             trials=num_trials,
-        #             seeds=seeds,
-        #             plt_file=plt_file,
-        #             env_id=env_id,
-        #             x_label='Iteration',
-        #             y_label='AverageReturn')
-
-        #     result_json[env_id] = Rh.create_json(b_csvs=cmb_with_model_csvs,
-        #                                          g_csvs=cmb_csvs,
-        #                                          seeds=seeds,
-        #                                          trails=num_trials,
-        #                                          g_x='Epoch',
-        #                                          g_y='AverageReturn',
-        #                                          b_x='Epoch',
-        #                                          b_y='AverageReturn',
-        #                                          factor_g=2048,
-        #                                          factor_b=2048)
-
-        # Rh.write_file(result_json, 'PPO_CMB')
 
 
 def ppo_cmb(env, seed, log_dir):
