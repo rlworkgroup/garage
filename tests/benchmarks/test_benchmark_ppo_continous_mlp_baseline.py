@@ -39,25 +39,34 @@ policy_params = {
     'hidden_nonlinearity': tf.nn.tanh
 }
 
+# baseline_params = {
+#     'regressor_args':
+#     dict(hidden_sizes=(64, 64),
+#          use_trust_region=False,
+#          optimizer=FirstOrderOptimizer,
+#          optimizer_args=dict(
+#              batch_size=32,
+#              max_epochs=10,
+#              tf_optimizer_args=dict(learning_rate=1e-3),
+#          ))  # noqa
+# }
+
 baseline_params = {
     'regressor_args':
-    dict(hidden_sizes=(64, 64),
-         use_trust_region=False,
-         optimizer=FirstOrderOptimizer,
-         optimizer_args=dict(
-             batch_size=32,
-             max_epochs=10,
-             tf_optimizer_args=dict(learning_rate=1e-3),
-         ))  # noqa
+    dict(hidden_sizes=(64, 64))
+        #  use_trust_region=False,)
 }
 
-baseline_with_model_params = {}
+baseline_with_model_params = {
+    'regressor_args':
+    dict(hidden_sizes=(64, 64))
+}
 
 algo_params = {
     'n_envs':
-    12,
+    8,
     'n_epochs':
-    488,
+    20,
     'n_rollout_steps':
     2048,
     'discount':
@@ -69,13 +78,17 @@ algo_params = {
     'lr_clip_range':
     0.2,
     'policy_ent_coeff':
-    0.0,
+    0.02,
+    'entropy_method':
+    'max',
     'optimizer_args':
     dict(
         batch_size=32,
         max_epochs=10,
         tf_optimizer_args=dict(learning_rate=policy_params['policy_lr']),
-    )
+    ),
+    'center_adv':
+    False
 }
 
 # number of processing elements to use for tensorflow
@@ -106,7 +119,7 @@ class TestBenchmarkPPOContinuousMLPBaseline:
 
             task_dir = osp.join(benchmark_dir, env_id)
             plt_file = osp.join(benchmark_dir,
-                                '{}_benchmark.png'.format(env_id))
+                                '{}_benchmark_{}.png'.format(env_id))
             cmb_csvs = []
             cmb_with_model_csvs = []
 
@@ -130,31 +143,31 @@ class TestBenchmarkPPOContinuousMLPBaseline:
 
             env.close()
 
-            Rh.plot(b_csvs=cmb_with_model_csvs,
-                    g_csvs=cmb_csvs,
-                    g_x='Epoch',
-                    g_y='AverageReturn',
-                    b_x='Epoch',
-                    b_y='AverageReturn',
-                    trials=num_trials,
-                    seeds=seeds,
-                    plt_file=plt_file,
-                    env_id=env_id,
-                    x_label='Iteration',
-                    y_label='AverageReturn')
+        #     Rh.plot(b_csvs=cmb_with_model_csvs,
+        #             g_csvs=cmb_csvs,
+        #             g_x='Epoch',
+        #             g_y='AverageReturn',
+        #             b_x='Epoch',
+        #             b_y='AverageReturn',
+        #             trials=num_trials,
+        #             seeds=seeds,
+        #             plt_file=plt_file,
+        #             env_id=env_id,
+        #             x_label='Iteration',
+        #             y_label='AverageReturn')
 
-            result_json[env_id] = Rh.create_json(b_csvs=cmb_with_model_csvs,
-                                                 g_csvs=cmb_csvs,
-                                                 seeds=seeds,
-                                                 trails=num_trials,
-                                                 g_x='Epoch',
-                                                 g_y='AverageReturn',
-                                                 b_x='Epoch',
-                                                 b_y='AverageReturn',
-                                                 factor_g=2048,
-                                                 factor_b=2048)
+        #     result_json[env_id] = Rh.create_json(b_csvs=cmb_with_model_csvs,
+        #                                          g_csvs=cmb_csvs,
+        #                                          seeds=seeds,
+        #                                          trails=num_trials,
+        #                                          g_x='Epoch',
+        #                                          g_y='AverageReturn',
+        #                                          b_x='Epoch',
+        #                                          b_y='AverageReturn',
+        #                                          factor_g=2048,
+        #                                          factor_b=2048)
 
-        Rh.write_file(result_json, 'PPO_CMB')
+        # Rh.write_file(result_json, 'PPO_CMB')
 
 
 def ppo_cmb(env, seed, log_dir):
@@ -195,8 +208,11 @@ def ppo_cmb(env, seed, log_dir):
                    discount=algo_params['discount'],
                    gae_lambda=algo_params['gae_lambda'],
                    lr_clip_range=algo_params['lr_clip_range'],
+                   entropy_method=algo_params['entropy_method'],
                    policy_ent_coeff=algo_params['policy_ent_coeff'],
-                   optimizer_args=algo_params['optimizer_args'])
+                   optimizer_args=algo_params['optimizer_args'],
+                   center_adv=algo_params['center_adv'],
+                   stop_entropy_gradient=True)
 
         # Set up logger since we are not using run_experiment
         tabular_log_file = osp.join(log_dir, 'progress.csv')
@@ -253,8 +269,11 @@ def ppo_cmb_w_model(env, seed, log_dir):
                    discount=algo_params['discount'],
                    gae_lambda=algo_params['gae_lambda'],
                    lr_clip_range=algo_params['lr_clip_range'],
+                   entropy_method=algo_params['entropy_method'],
                    policy_ent_coeff=algo_params['policy_ent_coeff'],
-                   optimizer_args=algo_params['optimizer_args'])
+                   optimizer_args=algo_params['optimizer_args'],
+                   center_adv=algo_params['center_adv'],
+                   stop_entropy_gradient=True)
 
         # Set up logger since we are not using run_experiment
         tabular_log_file = osp.join(log_dir, 'progress.csv')
