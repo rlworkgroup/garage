@@ -5,13 +5,14 @@ import pytest
 import tensorflow as tf
 
 from garage.tf.optimizers import LbfgsOptimizer
-from garage.tf.regressors import ContinuousMLPRegressorWithModel
+from garage.tf.regressors import ContinuousMLPRegressor
 from tests.fixtures import TfGraphTestCase
 
 
-class TestContinuousMLPRegressorWithModel(TfGraphTestCase):
+class TestContinuousMLPRegressor(TfGraphTestCase):
+
     def test_fit_normalized(self):
-        cmr = ContinuousMLPRegressorWithModel(input_shape=(1, ), output_dim=1)
+        cmr = ContinuousMLPRegressor(input_shape=(1, ), output_dim=1)
         data = np.linspace(-np.pi, np.pi, 1000)
         obs = [{'observations': [[x]], 'returns': [np.sin(x)]} for x in data]
 
@@ -40,8 +41,9 @@ class TestContinuousMLPRegressorWithModel(TfGraphTestCase):
         assert np.allclose(x_std, x_std_expected)
 
     def test_fit_unnormalized(self):
-        cmr = ContinuousMLPRegressorWithModel(
-            input_shape=(1, ), output_dim=1, normalize_inputs=False)
+        cmr = ContinuousMLPRegressor(input_shape=(1, ),
+                                     output_dim=1,
+                                     normalize_inputs=False)
         data = np.linspace(-np.pi, np.pi, 1000)
         obs = [{'observations': [[x]], 'returns': [np.sin(x)]} for x in data]
 
@@ -71,14 +73,13 @@ class TestContinuousMLPRegressorWithModel(TfGraphTestCase):
                              [(1, (1, )), (1, (2, )), (2, (3, )), (2, (1, 1)),
                               (3, (2, 2))])
     def test_predict_sym(self, output_dim, input_shape):
-        cmr = ContinuousMLPRegressorWithModel(
-            input_shape=input_shape,
-            output_dim=output_dim,
-            optimizer=LbfgsOptimizer,
-            optimizer_args=dict())
+        cmr = ContinuousMLPRegressor(input_shape=input_shape,
+                                     output_dim=output_dim,
+                                     optimizer=LbfgsOptimizer,
+                                     optimizer_args=dict())
 
-        new_input_var = tf.compat.v1.placeholder(
-            tf.float32, shape=(None, ) + input_shape)
+        new_input_var = tf.compat.v1.placeholder(tf.float32,
+                                                 shape=(None, ) + input_shape)
 
         data = np.random.random(size=input_shape)
 
@@ -88,9 +89,9 @@ class TestContinuousMLPRegressorWithModel(TfGraphTestCase):
         assert np.allclose(y_hat, y_hat_sym, rtol=0, atol=1e-5)
 
     def test_is_pickleable(self):
-        cmr = ContinuousMLPRegressorWithModel(input_shape=(1, ), output_dim=1)
+        cmr = ContinuousMLPRegressor(input_shape=(1, ), output_dim=1)
 
-        with tf.compat.v1.variable_scope(('ContinuousMLPRegressorWithModel/'
+        with tf.compat.v1.variable_scope(('ContinuousMLPRegressor/'
                                           'NormalizedInputMLPModel'),
                                          reuse=True):
             bias = tf.compat.v1.get_variable('mlp/hidden_0/bias')
