@@ -1,15 +1,13 @@
-"""This module implements continuous mlp baseline."""
+"""A value function (baseline) based on a MLP model."""
 import numpy as np
 
-from garage.core import Serializable
 from garage.misc.overrides import overrides
 from garage.np.baselines import Baseline
-from garage.tf.core import Parameterized
 from garage.tf.regressors import ContinuousMLPRegressor
 
 
-class ContinuousMLPBaseline(Baseline, Parameterized, Serializable):
-    """A value function using a mlp network."""
+class ContinuousMLPBaseline(Baseline):
+    """A value function using a MLP network."""
 
     def __init__(
             self,
@@ -20,36 +18,30 @@ class ContinuousMLPBaseline(Baseline, Parameterized, Serializable):
             name='ContinuousMLPBaseline',
     ):
         """
-        Constructor.
+        Continuous MLP Baseline.
 
-        :param env_spec: environment specification.
-        :param subsample_factor:
-        :param num_seq_inputs: number of sequence inputs.
-        :param regressor_args: regressor arguments.
+        It fits the input data by performing linear regression
+        to the outputs.
+
+        Args:
+            env_spec (garage.envs.env_spec.EnvSpec): Environment specification.
+            subsample_factor (float): The factor to subsample the data. By
+                default it is 1.0, which means using all the data.
+            num_seq_inputs (float): Number of sequence per input. By default
+                it is 1.0, which means only one single sequence.
+            regressor_args (dict): Arguments for regressor.
         """
-        Parameterized.__init__(self)
-        Serializable.quick_init(self, locals())
-        super(ContinuousMLPBaseline, self).__init__(env_spec)
+        super().__init__(env_spec)
         if regressor_args is None:
             regressor_args = dict()
 
         self._regressor = ContinuousMLPRegressor(
-            input_shape=(
-                env_spec.observation_space.flat_dim * num_seq_inputs, ),
+            input_shape=(env_spec.observation_space.flat_dim *
+                         num_seq_inputs, ),
             output_dim=1,
             name=name,
             **regressor_args)
         self.name = name
-
-    @overrides
-    def get_param_values(self, **tags):
-        """Get parameter values."""
-        return self._regressor.get_param_values(**tags)
-
-    @overrides
-    def set_param_values(self, val, **tags):
-        """Set parameter values to val."""
-        self._regressor.set_param_values(val, **tags)
 
     @overrides
     def fit(self, paths):
@@ -64,5 +56,16 @@ class ContinuousMLPBaseline(Baseline, Parameterized, Serializable):
         return self._regressor.predict(path['observations']).flatten()
 
     @overrides
+    def get_param_values(self, **tags):
+        """Get parameter values."""
+        return self._regressor.get_param_values(**tags)
+
+    @overrides
+    def set_param_values(self, flattened_params, **tags):
+        """Set parameter values to val."""
+        self._regressor.set_param_values(flattened_params, **tags)
+
+    @overrides
     def get_params_internal(self, **tags):
+        """Get internal parameters."""
         return self._regressor.get_params_internal(**tags)
