@@ -5,22 +5,23 @@ import numpy as np
 import pytest
 import tensorflow as tf
 
-from garage.tf.baselines import GaussianCNNBaselineWithModel
+from garage.tf.baselines import GaussianCNNBaseline
 from garage.tf.envs import TfEnv
 from tests.fixtures import TfGraphTestCase
 from tests.fixtures.envs.dummy import DummyBoxEnv
 from tests.fixtures.regressors import SimpleGaussianCNNRegressor
 
 
-class TestGaussianCNNBaselineWithModel(TfGraphTestCase):
+class TestGaussianCNNBaseline(TfGraphTestCase):
+
     @pytest.mark.parametrize('obs_dim', [[1], [2], [1, 1], [2, 2]])
     def test_fit(self, obs_dim):
         box_env = TfEnv(DummyBoxEnv(obs_dim=obs_dim))
         with mock.patch(('garage.tf.baselines.'
-                         'gaussian_cnn_baseline_with_model.'
-                         'GaussianCNNRegressorWithModel'),
+                         'gaussian_cnn_baseline.'
+                         'GaussianCNNRegressor'),
                         new=SimpleGaussianCNNRegressor):
-            gcb = GaussianCNNBaselineWithModel(env_spec=box_env.spec)
+            gcb = GaussianCNNBaseline(env_spec=box_env.spec)
         paths = [{
             'observations': [np.full(obs_dim, 1)],
             'returns': [1]
@@ -38,16 +39,15 @@ class TestGaussianCNNBaselineWithModel(TfGraphTestCase):
     def test_param_values(self, obs_dim):
         box_env = TfEnv(DummyBoxEnv(obs_dim=obs_dim))
         with mock.patch(('garage.tf.baselines.'
-                         'gaussian_cnn_baseline_with_model.'
-                         'GaussianCNNRegressorWithModel'),
+                         'gaussian_cnn_baseline.'
+                         'GaussianCNNRegressor'),
                         new=SimpleGaussianCNNRegressor):
-            gcb = GaussianCNNBaselineWithModel(env_spec=box_env.spec)
-            new_gcb = GaussianCNNBaselineWithModel(
-                env_spec=box_env.spec, name='GaussianCNNBaselineWithModel2')
+            gcb = GaussianCNNBaseline(env_spec=box_env.spec)
+            new_gcb = GaussianCNNBaseline(env_spec=box_env.spec,
+                                          name='GaussianCNNBaseline2')
 
-        # Manual change the parameter of GaussianCNNBaselineWithModel
-        with tf.compat.v1.variable_scope(
-                'GaussianCNNBaselineWithModel', reuse=True):
+        # Manual change the parameter of GaussianCNNBaseline
+        with tf.compat.v1.variable_scope('GaussianCNNBaseline', reuse=True):
             return_var = tf.compat.v1.get_variable(
                 'SimpleGaussianCNNModel/return_var')
         return_var.load(1.0)
@@ -63,27 +63,26 @@ class TestGaussianCNNBaselineWithModel(TfGraphTestCase):
     def test_get_params_internal(self, obs_dim):
         box_env = TfEnv(DummyBoxEnv(obs_dim=obs_dim))
         with mock.patch(('garage.tf.baselines.'
-                         'gaussian_cnn_baseline_with_model.'
-                         'GaussianCNNRegressorWithModel'),
+                         'gaussian_cnn_baseline.'
+                         'GaussianCNNRegressor'),
                         new=SimpleGaussianCNNRegressor):
-            gcb = GaussianCNNBaselineWithModel(
-                env_spec=box_env.spec, regressor_args=dict())
+            gcb = GaussianCNNBaseline(env_spec=box_env.spec,
+                                      regressor_args=dict())
         params_interal = gcb.get_params_internal()
         trainable_params = tf.compat.v1.trainable_variables(
-            scope='GaussianCNNBaselineWithModel')
+            scope='GaussianCNNBaseline')
         assert np.array_equal(params_interal, trainable_params)
 
     def test_is_pickleable(self):
         box_env = TfEnv(DummyBoxEnv(obs_dim=(1, )))
         with mock.patch(('garage.tf.baselines.'
-                         'gaussian_cnn_baseline_with_model.'
-                         'GaussianCNNRegressorWithModel'),
+                         'gaussian_cnn_baseline.'
+                         'GaussianCNNRegressor'),
                         new=SimpleGaussianCNNRegressor):
-            gcb = GaussianCNNBaselineWithModel(env_spec=box_env.spec)
+            gcb = GaussianCNNBaseline(env_spec=box_env.spec)
         obs = {'observations': [np.full(1, 1), np.full(1, 1)]}
 
-        with tf.compat.v1.variable_scope(
-                'GaussianCNNBaselineWithModel', reuse=True):
+        with tf.compat.v1.variable_scope('GaussianCNNBaseline', reuse=True):
             return_var = tf.compat.v1.get_variable(
                 'SimpleGaussianCNNModel/return_var')
         return_var.load(1.0)
