@@ -29,6 +29,7 @@ required = [
     'ray',
     'scikit-image',
     'scipy',
+    'seaborn'
     'tensorflow' + TF_VERSION,
     'tensorflow-probability<0.8.0,>=0.7.0',  # for tensorflow 1.12
     'torchvision==0.3.0'
