@@ -1,4 +1,5 @@
-import signal
+"""Utility functions related to sampling."""
+
 import time
 
 import numpy as np
@@ -8,10 +9,36 @@ from garage.misc import tensor_utils
 
 def rollout(env,
             agent,
+            *,
             max_path_length=np.inf,
             animated=False,
             speedup=1,
-            always_return_paths=False):
+            deterministic=False):
+    """Sample a single rollout of the agent in the environment.
+
+    Args:
+        agent(Policy): Agent used to select actions.
+        env(gym.Env): Environment to perform actions in.
+        max_path_length(int): If the rollout reaches this many timesteps, it is
+            terminated.
+        animated(bool): If true, render the environment after each step.
+        speedup(float): Factor by which to decrease the wait time between
+            rendered steps. Only relevant, if animated == true.
+        deterministic (bool): If true, use the mean action returned by the
+            stochastic policy instead of sampling from the returned action
+            distribution.
+
+    Returns:
+        worker_number(int): The worker number passed into this function.
+        observations(np.array): Non-flattened array of observations.
+        actions(np.array): Non-flattened array of actions.
+        rewards(np.array): Array of rewards of shape (timesteps, 1).
+        agent_infos(dict[str, np.array]): Dictionary of stacked, non-flattened
+            `agent_info`s.
+        env_infos(dict[str, np.array]): Dictionary of stacked, non-flattened
+            `env_info`s.
+
+    """
     observations = []
     actions = []
     rewards = []
@@ -24,6 +51,8 @@ def rollout(env,
         env.render()
     while path_length < max_path_length:
         a, agent_info = agent.get_action(o)
+        if deterministic:
+            a = agent_info['mean']
         next_o, r, d, env_info = env.step(a)
         observations.append(env.observation_space.flatten(o))
         rewards.append(r)
@@ -38,8 +67,6 @@ def rollout(env,
             env.render()
             timestep = 0.05
             time.sleep(timestep / speedup)
-    if animated and not always_return_paths:
-        return None
 
     return dict(
         observations=tensor_utils.stack_tensor_list(observations),
@@ -51,14 +78,19 @@ def rollout(env,
 
 
 def truncate_paths(paths, max_samples):
-    """
-    Truncate the list of paths so that the total number of samples is exactly
-    equal to max_samples. This is done by removing extra paths at the end of
+    """Truncate the paths so that the total number of samples is max_samples.
+
+    This is done by removing extra paths at the end of
     the list, and make the last path shorter if necessary
-    :param paths: a list of paths
-    :param max_samples: the absolute maximum number of samples
-    :return: a list of paths, truncated so that the number of samples adds up
-    to max-samples
+
+    Args:
+      paths([dict[str, np.array]])
+      max_samples(int)
+
+    Returns:
+      A list of paths, truncated so that the number of samples adds up to
+      max-samples>
+
     """
     # chop samples collected by extra paths
     # make a copy
@@ -82,31 +114,3 @@ def truncate_paths(paths, max_samples):
                 raise NotImplementedError
         paths.append(truncated_last_path)
     return paths
-
-
-def center_advantages(advantages):
-    return (advantages - np.mean(advantages)) / (advantages.std() + 1e-8)
-
-
-def shift_advantages_to_positive(advantages):
-    return (advantages - np.min(advantages)) + 1e-8
-
-
-def sign(x):
-    return 1. * (x >= 0) - 1. * (x < 0)
-
-
-class MaskSignals():
-    """Context Manager to mask a list of signals."""
-
-    def __init__(self, signals):
-        self.signals = signals
-
-    def __enter__(self):
-        signal.pthread_sigmask(signal.SIG_BLOCK, self.signals)
-
-    def __exit__(self, *args):
-        signal.pthread_sigmask(signal.SIG_UNBLOCK, self.signals)
-
-
-mask_signals = MaskSignals

@@ -9,7 +9,6 @@ import json
 import os
 import pathlib
 import pickle
-import signal
 import sys
 import uuid
 
@@ -23,7 +22,6 @@ from garage.experiment import deterministic, SnapshotConfig
 from garage.misc.console import colorize
 import garage.plotter
 from garage.sampler import parallel_sampler
-from garage.sampler.utils import mask_signals
 import garage.tf.plotter
 
 
@@ -124,23 +122,10 @@ def run_experiment(argv):
     if args.seed is not None:
         deterministic.set_seed(args.seed)
 
-    # SIGINT is blocked for all processes created in parallel_sampler to avoid
-    # the creation of sleeping and zombie processes.
-    #
-    # If the user interrupts run_experiment, there's a chance some processes
-    # won't die due to a dead lock condition where one of the children in the
-    # parallel sampler exits without releasing a lock once after it catches
-    # SIGINT.
-    #
-    # Later the parent tries to acquire the same lock to proceed with his
-    # cleanup, but it remains sleeping waiting for the lock to be released.
-    # In the meantime, all the process in parallel sampler remain in the zombie
-    # state since the parent cannot proceed with their clean up.
-    with mask_signals([signal.SIGINT]):
-        if args.n_parallel > 0:
-            parallel_sampler.initialize(n_parallel=args.n_parallel)
-            if args.seed is not None:
-                parallel_sampler.set_seed(args.seed)
+    if args.n_parallel > 0:
+        parallel_sampler.initialize(n_parallel=args.n_parallel)
+        if args.seed is not None:
+            parallel_sampler.set_seed(args.seed)
 
     if not args.plot:
         garage.plotter.Plotter.disable()
