@@ -19,6 +19,7 @@ RUN \
     wget \
     unzip \
     git \
+    curl \
     # For building glfw
     cmake \
     xorg-dev \
