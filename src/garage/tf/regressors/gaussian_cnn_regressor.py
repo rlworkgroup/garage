@@ -5,11 +5,12 @@ import tensorflow as tf
 
 from garage.tf.misc import tensor_utils
 from garage.tf.optimizers import LbfgsOptimizer, PenaltyLbfgsOptimizer
-from garage.tf.regressors import GaussianCNNRegressorModel
 from garage.tf.regressors import StochasticRegressor2
+from garage.tf.regressors.gaussian_cnn_regressor_model import (
+    GaussianCNNRegressorModel)
 
 
-class GaussianCNNRegressorWithModel(StochasticRegressor2):
+class GaussianCNNRegressor(StochasticRegressor2):
     """
     GaussianCNNRegressor with garage.tf.models.GaussianCNNRegressorModel.
 
@@ -117,7 +118,7 @@ class GaussianCNNRegressorWithModel(StochasticRegressor2):
                  output_nonlinearity=None,
                  output_w_init=tf.glorot_uniform_initializer(),
                  output_b_init=tf.zeros_initializer(),
-                 name='GaussianCNNRegressorWithModel',
+                 name='GaussianCNNRegressor',
                  learn_std=True,
                  init_std=1.0,
                  adaptive_std=False,
@@ -190,17 +191,19 @@ class GaussianCNNRegressorWithModel(StochasticRegressor2):
         self._initialize()
 
     def _initialize(self):
-        input_var = tf.compat.v1.placeholder(
-            tf.float32, shape=(None, ) + self._input_shape)
+        input_var = tf.compat.v1.placeholder(tf.float32,
+                                             shape=(None, ) +
+                                             self._input_shape)
 
         with tf.compat.v1.variable_scope(self._variable_scope):
             self.model.build(input_var)
-            ys_var = tf.compat.v1.placeholder(
-                dtype=tf.float32, name='ys', shape=(None, self._output_dim))
-            old_means_var = tf.compat.v1.placeholder(
-                dtype=tf.float32,
-                name='old_means',
-                shape=(None, self._output_dim))
+            ys_var = tf.compat.v1.placeholder(dtype=tf.float32,
+                                              name='ys',
+                                              shape=(None, self._output_dim))
+            old_means_var = tf.compat.v1.placeholder(dtype=tf.float32,
+                                                     name='old_means',
+                                                     shape=(None,
+                                                            self._output_dim))
             old_log_stds_var = tf.compat.v1.placeholder(
                 dtype=tf.float32,
                 name='old_log_stds',
@@ -218,17 +221,16 @@ class GaussianCNNRegressorWithModel(StochasticRegressor2):
             normalized_ys_var = (ys_var - y_mean_var) / y_std_var
 
             normalized_old_means_var = (old_means_var - y_mean_var) / y_std_var
-            normalized_old_log_stds_var = (
-                old_log_stds_var - tf.math.log(y_std_var))
+            normalized_old_log_stds_var = (old_log_stds_var -
+                                           tf.math.log(y_std_var))
 
-            normalized_dist_info_vars = dict(
-                mean=normalized_means_var, log_std=normalized_log_stds_var)
+            normalized_dist_info_vars = dict(mean=normalized_means_var,
+                                             log_std=normalized_log_stds_var)
 
             mean_kl = tf.reduce_mean(
                 self.model.networks['default'].dist.kl_sym(
-                    dict(
-                        mean=normalized_old_means_var,
-                        log_std=normalized_old_log_stds_var),
+                    dict(mean=normalized_old_means_var,
+                         log_std=normalized_old_log_stds_var),
                     normalized_dist_info_vars,
                 ))
 

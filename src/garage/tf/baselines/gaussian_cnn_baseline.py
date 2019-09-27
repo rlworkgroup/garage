@@ -1,20 +1,23 @@
-"""Gaussian Conv Baseline."""
+"""Gaussian CNN Baseline."""
+
 import numpy as np
 
-from garage.core import Serializable
 from garage.misc.overrides import overrides
 from garage.np.baselines import Baseline
-from garage.tf.core import Parameterized
-from garage.tf.regressors import GaussianConvRegressor
+from garage.tf.regressors import GaussianCNNRegressor
 
 
-class GaussianConvBaseline(Baseline, Parameterized, Serializable):
+class GaussianCNNBaseline(Baseline):
     """
-    A Convolutional net Baseline with Gaussian dist output.
+    GaussianCNNBaseline With Model.
+
+    It fits the input data to a gaussian distribution estimated by a CNN.
 
     Args:
-        env_spec: a TfEnv.spec, which contains env spaces info.
-
+        env_spec (garage.envs.env_spec.EnvSpec): Environment specification.
+        subsample_factor (float): The factor to subsample the data. By
+            default it is 1.0, which means using all the data.
+        regressor_args (dict): Arguments for regressor.
     """
 
     def __init__(
@@ -22,17 +25,14 @@ class GaussianConvBaseline(Baseline, Parameterized, Serializable):
             env_spec,
             subsample_factor=1.,
             regressor_args=None,
-            name='GaussianConvBaseline',
+            name='GaussianCNNBaseline',
     ):
-        Parameterized.__init__(self)
-        Serializable.quick_init(self, locals())
-        super(GaussianConvBaseline, self).__init__(env_spec)
-
+        super().__init__(env_spec)
         if regressor_args is None:
             regressor_args = dict()
 
-        self._regressor = GaussianConvRegressor(
-            input_shape=env_spec.observation_space.shape,
+        self._regressor = GaussianCNNRegressor(
+            input_shape=(env_spec.observation_space.shape),
             output_dim=1,
             name=name,
             **regressor_args)
