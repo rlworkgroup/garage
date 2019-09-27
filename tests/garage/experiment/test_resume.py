@@ -1,6 +1,7 @@
 import tempfile
 
 import numpy as np
+import tensorflow as tf
 
 from garage.experiment import SnapshotConfig
 from garage.tf.experiment import LocalTFRunner
@@ -25,7 +26,8 @@ class TestResume(TfGraphTestCase):
         super().teardown_method()
 
     def test_resume(self):
-        with LocalTFRunner(self.snapshot_config, self.sess) as runner:
+        sess = tf.compat.v1.Session(graph=tf.Graph())
+        with LocalTFRunner(self.snapshot_config, sess) as runner:
             args = runner.restore(self.temp_dir.name)
             assert np.equal(
                 runner.policy.get_param_values(),

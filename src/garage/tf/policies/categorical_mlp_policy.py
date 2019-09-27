@@ -1,103 +1,146 @@
+"""CategoricalMLPPolicy with model."""
 import akro
 import tensorflow as tf
 
-from garage.core import Serializable
 from garage.misc.overrides import overrides
-from garage.tf.core import LayersPowered
-import garage.tf.core.layers as L
-from garage.tf.core.network import MLP
 from garage.tf.distributions import Categorical
-from garage.tf.misc import tensor_utils
-from garage.tf.policies.base import StochasticPolicy
+from garage.tf.models import MLPModel
+from garage.tf.policies.base2 import StochasticPolicy2
 
 
-class CategoricalMLPPolicy(StochasticPolicy, LayersPowered, Serializable):
-    def __init__(
-            self,
-            env_spec,
-            name='CategoricalMLPPolicy',
-            hidden_sizes=(32, 32),
-            hidden_nonlinearity=tf.nn.tanh,
-            prob_network=None,
-    ):
-        """
-        CategoricalMLPPolicy.
+class CategoricalMLPPolicy(StochasticPolicy2):
+    """
+    CategoricalMLPPolicy with model.
 
-        A policy that uses a MLP to estimate a categorical distribution.
+    A policy that contains a MLP to make prediction based on
+    a categorical distribution.
 
-        Args:
-            env_spec (garage.envs.env_spec.EnvSpec): Environment specification.
-            hidden_sizes (list[int]): Output dimension of dense layer(s).
-                For example, (32, 32) means the MLP of this policy consists
-                of two hidden layers, each with 32 hidden units.
-            hidden_nonlinearity: Activation function for
-                intermediate dense layer(s).
-            prob_network (tf.Tensor): manually specified network for this
-                policy. If None, a MLP with the network parameters will be
-                created. If not None, other network params are ignored.
-        """
-        assert isinstance(env_spec.action_space, akro.Discrete)
+    It only works with akro.Discrete action space.
 
-        Serializable.quick_init(self, locals())
+    Args:
+        env_spec (garage.envs.env_spec.EnvSpec): Environment specification.
+        name (str): Policy name, also the variable scope.
+        hidden_sizes (list[int]): Output dimension of dense layer(s).
+            For example, (32, 32) means the MLP of this policy consists of two
+            hidden layers, each with 32 hidden units.
+        hidden_nonlinearity (callable): Activation function for intermediate
+            dense layer(s). It should return a tf.Tensor. Set it to
+            None to maintain a linear activation.
+        hidden_w_init (callable): Initializer function for the weight
+            of intermediate dense layer(s). The function should return a
+            tf.Tensor.
+        hidden_b_init (callable): Initializer function for the bias
+            of intermediate dense layer(s). The function should return a
+            tf.Tensor.
+        output_nonlinearity (callable): Activation function for output dense
+            layer. It should return a tf.Tensor. Set it to None to
+            maintain a linear activation.
+        output_w_init (callable): Initializer function for the weight
+            of output dense layer(s). The function should return a
+            tf.Tensor.
+        output_b_init (callable): Initializer function for the bias
+            of output dense layer(s). The function should return a
+            tf.Tensor.
+        layer_normalization (bool): Bool for using layer normalization or not.
 
-        self.name = name
-        self._prob_network_name = 'prob_network'
-        with tf.compat.v1.variable_scope(name, 'CategoricalMLPPolicy'):
-            if prob_network is None:
-                prob_network = MLP(
-                    input_shape=(env_spec.observation_space.flat_dim, ),
-                    output_dim=env_spec.action_space.n,
-                    hidden_sizes=hidden_sizes,
-                    hidden_nonlinearity=hidden_nonlinearity,
-                    output_nonlinearity=tf.nn.softmax,
-                    name=self._prob_network_name,
-                )
+    """
 
-            self._l_prob = prob_network.output_layer
-            self._l_obs = prob_network.input_layer
-            with tf.name_scope(self._prob_network_name):
-                prob_network_outputs = L.get_output(prob_network.output_layer)
-            self._f_prob = tensor_utils.compile_function(
-                [prob_network.input_layer.input_var], prob_network_outputs)
+    def __init__(self,
+                 env_spec,
+                 name='CategoricalMLPPolicy',
+                 hidden_sizes=(32, 32),
+                 hidden_nonlinearity=tf.nn.tanh,
+                 hidden_w_init=tf.glorot_uniform_initializer(),
+                 hidden_b_init=tf.zeros_initializer(),
+                 output_nonlinearity=tf.nn.softmax,
+                 output_w_init=tf.glorot_uniform_initializer(),
+                 output_b_init=tf.zeros_initializer(),
+                 layer_normalization=False):
+        assert isinstance(env_spec.action_space, akro.Discrete), (
+            'CategoricalMLPPolicy only works with akro.Discrete action '
+            'space.')
+        super().__init__(name, env_spec)
+        self.obs_dim = env_spec.observation_space.flat_dim
+        self.action_dim = env_spec.action_space.n
 
-            self._dist = Categorical(env_spec.action_space.n)
+        self.model = MLPModel(output_dim=self.action_dim,
+                              hidden_sizes=hidden_sizes,
+                              hidden_nonlinearity=hidden_nonlinearity,
+                              hidden_w_init=hidden_w_init,
+                              hidden_b_init=hidden_b_init,
+                              output_nonlinearity=output_nonlinearity,
+                              output_w_init=output_w_init,
+                              output_b_init=output_b_init,
+                              layer_normalization=layer_normalization,
+                              name='MLPModel')
 
-            super(CategoricalMLPPolicy, self).__init__(env_spec)
-            LayersPowered.__init__(self, [prob_network.output_layer])
+        self._initialize()
+
+    def _initialize(self):
+        state_input = tf.compat.v1.placeholder(tf.float32,
+                                               shape=(None, self.obs_dim))
+
+        with tf.compat.v1.variable_scope(self.name) as vs:
+            self._variable_scope = vs
+            self.model.build(state_input)
+
+        self._f_prob = tf.compat.v1.get_default_session().make_callable(
+            self.model.networks['default'].outputs,
+            feed_list=[self.model.networks['default'].input])
 
     @property
     def vectorized(self):
+        """Vectorized or not."""
         return True
 
     @overrides
     def dist_info_sym(self, obs_var, state_info_vars=None, name=None):
-        with tf.name_scope(name, 'dist_info_sym', [obs_var, state_info_vars]):
-            with tf.name_scope(self._prob_network_name, values=[obs_var]):
-                prob = L.get_output(
-                    self._l_prob, {self._l_obs: tf.cast(obs_var, tf.float32)})
-            return dict(prob=prob)
+        """Symbolic graph of the distribution."""
+        with tf.compat.v1.variable_scope(self._variable_scope):
+            prob = self.model.build(obs_var, name=name)
+        return dict(prob=prob)
 
     @overrides
     def dist_info(self, obs, state_infos=None):
-        return dict(prob=self._f_prob(obs))
+        """Distribution info."""
+        prob = self._f_prob(obs)
+        return dict(prob=prob)
 
-    # The return value is a pair. The first item is a matrix (N, A), where each
-    # entry corresponds to the action value taken. The second item is a vector
-    # of length N, where each entry is the density value for that action, under
-    # the current policy
     @overrides
     def get_action(self, observation):
+        """Return a single action."""
         flat_obs = self.observation_space.flatten(observation)
         prob = self._f_prob([flat_obs])[0]
         action = self.action_space.weighted_sample(prob)
         return action, dict(prob=prob)
 
     def get_actions(self, observations):
+        """Return multiple actions."""
         flat_obs = self.observation_space.flatten_n(observations)
         probs = self._f_prob(flat_obs)
         actions = list(map(self.action_space.weighted_sample, probs))
         return actions, dict(prob=probs)
 
+    def get_regularizable_vars(self):
+        """Get regularizable weight variables under the Policy scope."""
+        trainable = self.get_trainable_vars()
+        return [
+            var for var in trainable
+            if 'hidden' in var.name and 'kernel' in var.name
+        ]
+
     @property
     def distribution(self):
-        return self._dist
+        """Policy distribution."""
+        return Categorical(self.action_dim)
+
+    def __getstate__(self):
+        """Object.__getstate__."""
+        new_dict = super().__getstate__()
+        del new_dict['_f_prob']
+        return new_dict
+
+    def __setstate__(self, state):
+        """Object.__setstate__."""
+        super().__setstate__(state)
+        self._initialize()
