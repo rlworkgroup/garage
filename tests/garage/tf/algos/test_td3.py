@@ -55,7 +55,7 @@ class TestTD3(TfGraphTestCase):
                        replay_buffer=replay_buffer,
                        target_update_tau=0.005,
                        n_epoch_cycles=20,
-                       n_train_steps=1,
+                       n_train_steps=50,
                        discount=0.99,
                        smooth_return=False,
                        min_buffer_size=int(1e4),
@@ -70,4 +70,4 @@ class TestTD3(TfGraphTestCase):
             last_avg_ret = runner.train(n_epochs=10,
                                         n_epoch_cycles=20,
                                         batch_size=250)
-            assert last_avg_ret > 20
+            assert last_avg_ret > 400
