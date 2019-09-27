@@ -101,6 +101,8 @@ class TD3(DDPG):
         self._actor_update_period = actor_update_period
         self._action_loss = None
 
+        self.target_qf2 = qf2.clone('target_qf2')
+
         super(TD3, self).__init__(env_spec=env_spec,
                                   policy=policy,
                                   qf=qf,
@@ -136,10 +138,14 @@ class TD3(DDPG):
             self.target_policy_f_prob_online = tensor_utils.compile_function(
                 inputs=[self.target_policy.model.networks['default'].input],
                 outputs=self.target_policy.model.networks['default'].outputs)
-            self.target_qf_f_prob_online, _, _, _ = self.qf.build_net(
-                trainable=False, name='target_qf')
-            self.target_qf2_f_prob_online, _, _, _ = self.qf2.build_net(
-                trainable=False, name='target_qf2')
+
+            self.target_qf_f_prob_online = tensor_utils.compile_function(
+                inputs=self.target_qf.model.networks['default'].inputs,
+                outputs=self.target_qf.model.networks['default'].outputs)
+
+            self.target_qf2_f_prob_online = tensor_utils.compile_function(
+                inputs=self.target_qf2.model.networks['default'].inputs,
+                outputs=self.target_qf2.model.networks['default'].outputs)
 
             # Set up target init and update functions
             with tf.name_scope('setup_target'):
@@ -148,10 +154,10 @@ class TD3(DDPG):
                     self.target_policy.get_global_vars(), self.tau)
                 qf_init_ops, qf_update_ops = tensor_utils.get_target_ops(
                     self.qf.get_global_vars(),
-                    self.qf.get_global_vars('target_qf'), self.tau)
+                    self.target_qf.get_global_vars(), self.tau)
                 qf2_init_ops, qf2_update_ops = tensor_utils.get_target_ops(
                     self.qf2.get_global_vars(),
-                    self.qf2.get_global_vars('target_qf2'), self.tau)
+                    self.target_qf2.get_global_vars(), self.tau)
                 target_init_op = policy_init_op + qf_init_ops + qf2_init_ops
                 target_update_op = (policy_update_op + qf_update_ops +
                                     qf2_update_ops)

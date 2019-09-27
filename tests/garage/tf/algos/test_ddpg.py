@@ -33,7 +33,7 @@ class TestDDPG(TfGraphTestCase):
                                         hidden_sizes=[64, 64],
                                         hidden_nonlinearity=tf.nn.relu)
             replay_buffer = SimpleReplayBuffer(env_spec=env.spec,
-                                               size_in_transitions=int(1e6),
+                                               size_in_transitions=int(1e5),
                                                time_horizon=100)
             algo = DDPG(
                 env_spec=env.spec,
@@ -46,7 +46,7 @@ class TestDDPG(TfGraphTestCase):
                 target_update_tau=1e-2,
                 n_train_steps=50,
                 discount=0.9,
-                min_buffer_size=int(1e4),
+                min_buffer_size=int(5e3),
                 exploration_strategy=action_noise,
             )
             runner.setup(algo, env)
@@ -87,7 +87,7 @@ class TestDDPG(TfGraphTestCase):
                 target_update_tau=1e-2,
                 n_train_steps=50,
                 discount=0.9,
-                min_buffer_size=int(1e4),
+                min_buffer_size=int(5e3),
                 exploration_strategy=action_noise,
             )
             runner.setup(algo, env)
