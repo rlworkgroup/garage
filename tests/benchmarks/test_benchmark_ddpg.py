@@ -84,6 +84,8 @@ class TestBenchmarkDDPG:
             task_dir = osp.join(benchmark_dir, env_id)
             plt_file = osp.join(benchmark_dir,
                                 '{}_benchmark.png'.format(env_id))
+            relplt_file = osp.join(benchmark_dir,
+                                   '{}_benchmark_mean.png'.format(env_id))
             baselines_csvs = []
             garage_csvs = []
 
@@ -114,14 +116,31 @@ class TestBenchmarkDDPG:
                     g_csvs=garage_csvs,
                     g_x='Epoch',
                     g_y='AverageReturn',
+                    g_z='Garage',
                     b_x='total/epochs',
                     b_y='rollout/return',
+                    b_z='Baseline',
                     trials=task['trials'],
                     seeds=seeds,
                     plt_file=plt_file,
                     env_id=env_id,
                     x_label='Epoch',
                     y_label='AverageReturn')
+
+            Rh.relplot(g_csvs=garage_csvs,
+                       b_csvs=baselines_csvs,
+                       g_x='Epoch',
+                       g_y='AverageReturn',
+                       g_z='Garage',
+                       b_x='total/epochs',
+                       b_y='rollout/return',
+                       b_z='Baseline',
+                       trials=task['trials'],
+                       seeds=seeds,
+                       plt_file=relplt_file,
+                       env_id=env_id,
+                       x_label='Epoch',
+                       y_label='AverageReturn')
 
             result_json[env_id] = Rh.create_json(
                 b_csvs=baselines_csvs,

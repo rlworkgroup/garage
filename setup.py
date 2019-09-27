@@ -75,6 +75,7 @@ extras['dev'] = [
     'pytest-xdist',
     'recommonmark',
     'rlkit @ git+https://github.com/vitchyr/rlkit/@1d469a509b797ca04a39b8734c1816ca7d108fc8',  # noqa: E501
+    'seaborn',
     'sphinx',
     'sphinx_rtd_theme',
     'yapf==0.28.0',

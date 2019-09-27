@@ -133,15 +133,16 @@ class TestBenchmarkTD3:
                     g_csvs=garage_csvs,
                     g_x='Epoch',
                     g_y='AverageReturn',
+                    g_z='garage',
                     b_x='Epoch',
                     b_y='evaluation/Average Returns',
+                    b_z='rlkit',
                     trials=task['trials'],
                     seeds=seeds,
                     plt_file=plt_file,
                     env_id=env_id,
                     x_label='Iteration',
-                    y_label='AverageReturn',
-                    baseline_label='rlkit')
+                    y_label='AverageReturn')
 
             result_json[env_id] = Rh.create_json(
                 b_csvs=rlkit_csvs,
