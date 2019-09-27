@@ -51,8 +51,8 @@ class TestSampler:
         sampler1.start_worker()
         sampler2 = OnPolicyVectorizedSampler(self.algo, self.env)
         sampler2.start_worker()
-        trajs1 = sampler1.obtain_samples(0, 16,
-                                         self.algo.policy.get_param_values())
+        trajs1 = sampler1.obtain_samples(
+            0, 16, tuple(self.algo.policy.get_param_values()))
         trajs2 = sampler2.obtain_samples(0, 1)
         assert (trajs1[0]['observations'].shape == np.array(
             trajs2[0]['observations']).shape == (6, 16))

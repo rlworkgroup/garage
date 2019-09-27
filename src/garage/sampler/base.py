@@ -16,17 +16,21 @@ class Sampler(abc.ABC):
         self.env = env
 
     @classmethod
-    def construct(cls, config, agent, env):
+    def construct(cls, config, agents, envs):
         """Construct this sampler from a config.
 
         Args:
             config(SamplerConfig): Configuration which specifies how to
                 intialize workers, update agents and environments, and perform
                 rollouts.
-            agent(Policy): Agent to use to perform rollouts. It will be passed
-                into `config.agent_update_fn` before doing any rollouts.
-            env(gym.Env): Environment rollouts are performed in. It will be
-                passed into `config.env_update_fn` before doing any rollouts.
+            agents(Agent or [Agent]): Agent(s) to use to perform rollouts. It
+                will be passed into `config.agent_update_fn` before doing any
+                rollouts. If a list is passed in, it must have length exactly
+                `config.n_workers`, and will be spread across the workers.
+            envs(gym.Env or [gym.Env]): Environment rollouts are performed in.
+                It will be passed into `config.env_update_fn` before doing any
+                rollouts. If a list is passed in, it must have length exactly
+                `config.n_workers`, and will be spread across the workers.
 
         Returns:
             Sampler: An instance of `cls`.
@@ -36,8 +40,8 @@ class Sampler(abc.ABC):
         # Relying on this implementation is deprecated, but calling this method
         # is not.
         fake_algo = copy.copy(config)
-        fake_algo.policy = agent
-        return cls(fake_algo, env)
+        fake_algo.policy = agents
+        return cls(fake_algo, envs)
 
     def start_worker(self):
         """Initialize the sampler.
@@ -57,9 +61,13 @@ class Sampler(abc.ABC):
             num_samples(int): Minimum number of transitions / timesteps to
                 sample.
             agent_update(object): Value which will be passed into the
-                `agent_update_fn` before doing rollouts.
+                `agent_update_fn` before doing rollouts. If a list is passed
+                in, it must have length exactly `config.n_workers`, and will be
+                spread across the workers.
             env_update(object): Value which will be passed into the
-                `env_update_fn` before doing rollouts.
+                `env_update_fn` before doing rollouts. If a list is passed in,
+                it must have length exactly `config.n_workers`, and will be
+                spread across the workers.
 
         Returns:
             list[dict]: A list of paths.

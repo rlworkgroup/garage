@@ -3,6 +3,7 @@
 from collections import defaultdict
 
 import numpy as np
+import psutil
 
 from garage.experiment import deterministic
 
@@ -128,6 +129,14 @@ def default_worker_init_fn(config, worker_number):
     deterministic.set_seed(config.seed + worker_number)
 
 
+def identity_function(x):
+    """Do nothing.
+
+    This function can exists so it can be pickled.
+    """
+    return x
+
+
 class SamplerConfig:
     """An object for configuring the sampler.
 
@@ -141,6 +150,7 @@ class SamplerConfig:
 
     Args:
         seed(int): The seed to use to intialize random number generators.
+        n_workers(int): The number of workers to use.
         max_path_length(int): The maximum length paths which will be sampled.
         worker_init_fn((int, SamplerConfig) -> None): Function to run in
             workers before constructing any agents or environments in them.
@@ -164,14 +174,44 @@ class SamplerConfig:
             self,
             *,  # Require passing by keyword.
             seed,
+            n_workers=psutil.cpu_count(logical=False),
             max_path_length,
             worker_init_fn=default_worker_init_fn,
             agent_update_fn=default_agent_update_fn,
             env_update_fn=default_env_update_fn,
             rollout_fn=rollout):
         self.seed = seed
+        self.n_workers = n_workers
         self.max_path_length = max_path_length
         self.worker_init_fn = worker_init_fn
         self.env_update_fn = env_update_fn
         self.agent_update_fn = agent_update_fn
         self.rollout_fn = rollout_fn
+
+    def get_worker_broadcast(self, objs, preprocess=identity_function):
+        """Take an argument and canonicalize it into a list for all workers.
+
+        This helper function is used to handle arguments in the sampler API
+        which may (optionally) be lists. Specifically, these are agent, env,
+        agent_update, and env_update. Checks that the number of parameters is
+        correct.
+
+        Args:
+            objs(object or list): Must be either a single object or a list
+                of length self.n_workers.
+            preprocess(function): Function to call on each single object before
+                creating the list.
+
+        Returns:
+            list[object]: A list of length self.n_workers.
+
+        """
+        if isinstance(objs, list):
+            print('objs', objs)
+            if len(objs) != self.n_workers:
+                raise ValueError(
+                    "Length of list doesn't match number of workers")
+            return [preprocess(obj) for obj in objs]
+        else:
+            obj = preprocess(objs)
+            return [obj for _ in range(self.n_workers)]

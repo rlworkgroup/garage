@@ -22,7 +22,8 @@ class RaySampler(Sampler):
 
     Args:
         - algo: A garage algo object
-        - env: A gym/akro env object
+        - agents: Agent(s) to run.
+        - envs: A gym/akro env object
         - sampler_worker_cls: If none, uses the default SamplerWorker
             class
 
@@ -30,15 +31,15 @@ class RaySampler(Sampler):
 
     def __init__(self,
                  config,
-                 agent,
-                 env,
+                 agents,
+                 envs,
                  num_processors=None,
                  sampler_worker_cls=None):
         self._sampler_worker = ray.remote(SamplerWorker if sampler_worker_cls
                                           is None else sampler_worker_cls)
         self._config = config
-        self._agent = agent
-        self._env = env
+        self._agents = agents
+        self._envs = self._config.get_worker_broadcast(envs)
         if not ray.is_initialized():
             ray.init(log_to_driver=False)
         self._num_workers = (num_processors if num_processors else
@@ -52,9 +53,9 @@ class RaySampler(Sampler):
         self._idle_worker_ids = list(range(self._num_workers))
 
     @classmethod
-    def construct(cls, config, agent, env):
+    def construct(cls, config, agents, envs):
         """Construct this sampler from a config."""
-        return cls(config, agent, env)
+        return cls(config, agents, envs)
 
     def start_worker(self):
         """Initialize a new ray worker."""
@@ -62,16 +63,17 @@ class RaySampler(Sampler):
             return
         else:
             self._workers_started = True
-        # Pickle the environment once, instead of once per worker.
-        env_pkl = pickle.dumps(self._env)
-        # We need to pickle the agent so that we can e.g. set up the TF Session
+        # We need to pickle the agent so that we can e.g. set up the TF.Session
         # in the worker *before* unpicling it.
-        agent_pkl = pickle.dumps(self._agent)
+        agent_pkls = self._config.get_worker_broadcast(self._agents,
+                                                       pickle.dumps)
         for worker_id in range(self._num_workers):
             self._all_workers[worker_id] = self._sampler_worker.remote(
-                worker_id, env_pkl, agent_pkl, self._config)
+                worker_id, self._envs[worker_id], agent_pkls[worker_id],
+                self._config)
 
-    def obtain_samples(self, itr, num_samples, agent_update, env_update=None):
+    def obtain_samples(self, itr, num_samples, agent_updates,
+                       env_updates=None):
         """Sample the policy for new trajectories.
 
         Args:
@@ -88,12 +90,13 @@ class RaySampler(Sampler):
         # update the policy params of each worker before sampling
         # for the current iteration
         self._idle_worker_ids = list(range(self._num_workers))
-        params_id = ray.put(agent_update)
-        env_id = ray.put(env_update)
+        param_ids = self._config.get_worker_broadcast(agent_updates, ray.put)
+        env_ids = self._config.get_worker_broadcast(env_updates, ray.put)
         while self._idle_worker_ids:
             worker_id = self._idle_worker_ids.pop()
             worker = self._all_workers[worker_id]
-            updating_workers.append(worker.update.remote(params_id, env_id))
+            updating_workers.append(
+                worker.update.remote(param_ids[worker_id], env_ids[worker_id]))
 
         while completed_samples < num_samples:
             # if there are workers still being updated, check
@@ -148,8 +151,9 @@ class RaySampler(Sampler):
         self._active_worker_ids.remove(ready_worker_id)
         self._idle_worker_ids.append(ready_worker_id)
         trajectory = dict(
-            observations=self._env.observation_space.flatten_n(trajectory[1]),
-            actions=self._env.action_space.flatten_n(trajectory[2]),
+            observations=(self._envs[0].observation_space.flatten_n(
+                trajectory[1])),
+            actions=self._envs[0].action_space.flatten_n(trajectory[2]),
             rewards=tensor_utils.stack_tensor_list(trajectory[3]),
             agent_infos=trajectory[4],
             env_infos=trajectory[5])
@@ -162,16 +166,16 @@ class SamplerWorker:
 
     Args:
         - worker_id(int): The id of the sampler_worker
-        - env_pkl: The pickled gym env
+        - env: The gym env
         - agent_pkl: The pickled agent
         - config(SamplerConfig): The sampler configuration
 
     """
 
-    def __init__(self, worker_id, env_pkl, agent_pkl, config):
+    def __init__(self, worker_id, env, agent_pkl, config):
         config.worker_init_fn(config, worker_id)
         self.worker_id = worker_id
-        self.env = pickle.loads(env_pkl)
+        self.env = env
         self.agent = pickle.loads(agent_pkl)
         self.config = config
 
