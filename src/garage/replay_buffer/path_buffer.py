@@ -86,6 +86,16 @@ class PathBuffer:
         idx = np.random.randint(self._transitions_stored, size=batch_size)
         return {key: buf_arr[idx] for key, buf_arr in self._buffer.items()}
 
+    @property
+    def n_transitions_stored(self):
+        """Return the number of transitions stored in the buffer."""
+        return self._transitions_stored
+
+    @property
+    def n_paths_stored(self):
+        """Return the number of paths stored in the buffer."""
+        return len(self._path_segments)
+
     def _next_path_segments(self, n_indices):
         """Compute where the next path should be stored."""
         if n_indices > self._capacity:
