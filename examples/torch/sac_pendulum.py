@@ -44,7 +44,7 @@ def run_task(snapshot_config, *_):
                                        size_in_transitions=int(1e6),
                                        time_horizon=100)
 
-    SAC = SAC(env_spec=env.spec,
+    sac = SAC(env_spec=env.spec,
                 policy=policy,
                 qf1=qf1,
                 qf2=qf2,
@@ -53,9 +53,9 @@ def run_task(snapshot_config, *_):
                 target_update_tau=1e-2,
                 discount=0.9)
 
-    runner.setup(algo=SAC, env=env)
+    runner.setup(algo=sac, env=env)
 
-    runner.train(n_epochs=1, n_epoch_cycles=20, batch_size=100)
+    runner.train(n_epochs=500, n_epoch_cycles=20, batch_size=100)
 
 
 run_experiment(

@@ -70,7 +70,7 @@ class SAC(OffPolicyRLAlgorithm):
         super().__init__(env_spec=env_spec,
                          policy=policy,
                          qf=qf1,
-                         n_train_steps=0,
+                         n_train_steps=1,
                          n_epoch_cycles=1,
                          max_path_length=max_path_length,
                          buffer_batch_size=buffer_batch_size,
@@ -102,7 +102,7 @@ class SAC(OffPolicyRLAlgorithm):
                     self.env_spec.action_space.shape).item()
 
         self.episode_rewards = []
-        self. success_history = []
+        self.success_history = []
 
     # 0) update policy using updated min q function
     # 1) compute targets from Q functions
@@ -124,12 +124,14 @@ class SAC(OffPolicyRLAlgorithm):
         last_average_return = np.mean(self.episode_rewards)
         # add paths to replay buffer
         for train_itr in range(self.n_train_steps):
-            if self.replay_buffer.n_transitions_stored >= self.min_buffer_size:  # noqa: E501
-                samples = self.replay_buffer.sample(self.buffer_batch_size)
-                self.update_q_functions(itr, samples)
-                self.optimize_policy(itr, samples)
-                self.adjust_temperature(itr)
-                self.update_targets()
+            # if self.replay_buffer.n_transitions_stored >= self.min_buffer_size:  # noqa: E501
+            samples = self.replay_buffer.sample(self.buffer_batch_size)
+            import ipdb; ipdb.set_trace()
+            self.update_q_functions(itr, samples)
+            import ipdb; ipdb.set_trace()
+            self.optimize_policy(itr, samples)
+            self.adjust_temperature(itr)
+            self.update_targets()
 
         return last_average_return
 
@@ -140,29 +142,28 @@ class SAC(OffPolicyRLAlgorithm):
             itr (int) - current training iteration
             samples() - samples recovered from the replay buffer
         """
-        obs = samples["obs"]
-        actions = samples["actions"]
-        rewards = samples["rewards"]
-        next_obs = samples["new_obs"]
+        obs = samples["observation"]
+        actions = samples["action"]
+        rewards = samples["reward"]
+        next_obs = samples["next_observation"]
 
-        import ipdb; ipdb.set_trace()
-        next_actions = self.policy.get_actions(torch.Tensor(next_obs))
-        next_ll = self.policy.log_likelihood(torch.Tensor(next_obs),
-                                           torch.Tensor())
+        with torch.no_grad():
+            next_actions, _ = self.policy.get_actions(torch.Tensor(next_obs))
+            next_ll = self.policy.log_likelihood(torch.Tensor(next_obs),
+                                               torch.Tensor(next_actions))
 
         qfs = [self.qf1, self.qf2]
         target_qfs = [self.target_qf1, self.target_qf2]
-        qfs = [self.qf1, self.qf2]
         qf_optimizers = [self.qf1_optimizer, self.qf2_optimizer] 
         for target_qf, qf, qf_optimizer in zip(target_qfs, qfs, qf_optimizers):
-            curr_q_val = qf(obs, actions)
+            curr_q_val = qf(torch.Tensor(obs), torch.Tensor(actions)).flatten()
             with torch.no_grad():
-                targ_out = target_qf(next_obs, next_actions)
+                targ_out = target_qf(torch.Tensor(next_obs), torch.Tensor(next_actions)).flatten()
             bootstrapped_value = targ_out - (self.alpha * next_ll)
-            bellman = rewards + self.discount*(bootstrapped_value)
+            bellman = torch.Tensor(rewards) + self.discount*(bootstrapped_value)
             q_objective = 0.5 * F.mse_loss(curr_q_val, bellman)
             qf_optimizer.zero_grad()
-            q_objective.backwards()
+            q_objective.backward()
             qf_optimizer.step()
 
     def optimize_policy(self, itr, samples):
@@ -175,7 +176,7 @@ class SAC(OffPolicyRLAlgorithm):
             None
         """
 
-        obs = samples["obs"]
+        obs = samples["observation"]
         # use the forward function instead of the get action function
         # in order to make sure that policy is differentiated. 
         action_dists = self.policy(obs)
@@ -203,46 +204,3 @@ class SAC(OffPolicyRLAlgorithm):
                                             qf.parameters()):
                         t_param.data.copy_(t_param.data * (1.0 - self.tau) +
                                         param.data * self.tau)
-
-    # def _add_transitions(self, paths):
-    #     """ Add dictionary of paths(experience) to replay buffer.
-
-    #         Args:
-    #             - paths (dict): dictionary containing transition info
-    #                             e.g. s,a,r,s', terminal state, goal state
-
-    #     """
-    #     paths = self.process_samples(itr, paths)
-    #     epoch = itr / self.n_epoch_cycles
-
-    #     rewards = paths['rewards']
-    #     terminals = paths['terminals']
-    #     obs = paths['observations']
-    #     actions = paths['actions']
-    #     next_obs = paths['next_obs']
-    #     # check if these exist in the patgh
-    #     goal = paths['goal']
-    #     achieved_goal = paths['achieved_goal']
-
-    #     if self.input_include_goal:
-    #         self.replay_buffer.add_transitions(
-    #             observation=obs,
-    #             action=actions,
-    #             goal=d_g,
-    #             achieved_goal=a_g,
-    #             terminal=dones,
-    #             next_observation=[
-    #                 next_obs['observation'] for next_obs in next_obses
-    #             ],
-    #             next_achieved_goal=[
-    #                 next_obs['achieved_goal'] for next_obs in next_obses
-    #             ],
-    #         )
-    #     else:
-    #         self.algo.replay_buffer.add_transitions(
-    #             observation=obses,
-    #             action=actions,
-    #             reward=rewards * self.algo.reward_scale,
-    #             terminal=dones,
-    #             next_observation=next_obses,
-    #         )
