@@ -31,6 +31,7 @@ class SAC(OffPolicyRLAlgorithm):
                  qf2,
                  alpha,
                  replay_buffer,
+                 gradient_steps_per_itr=1,
                  target_entropy=None,
                  use_automatic_entropy_tuning=False,
                  discount=0.99,
@@ -48,7 +49,6 @@ class SAC(OffPolicyRLAlgorithm):
                  clip_pos_returns=False,
                  clip_return=np.inf,
                  max_action=None,
-                 reward_scale=1.,
                  smooth_return=True,
                  input_include_goal=False):
 
@@ -60,6 +60,7 @@ class SAC(OffPolicyRLAlgorithm):
         self.tau = target_update_tau
         self.policy_lr = policy_lr
         self.qf_lr = qf_lr
+        self.gradient_steps = gradient_steps_per_itr
         self.policy_weight_decay = policy_weight_decay
         self.qf_weight_decay = qf_weight_decay
         self.clip_pos_returns = clip_pos_returns
@@ -70,7 +71,7 @@ class SAC(OffPolicyRLAlgorithm):
         super().__init__(env_spec=env_spec,
                          policy=policy,
                          qf=qf1,
-                         n_train_steps=1,
+                         n_train_steps=self.gradient_steps,
                          n_epoch_cycles=1,
                          max_path_length=max_path_length,
                          buffer_batch_size=buffer_batch_size,
@@ -80,7 +81,6 @@ class SAC(OffPolicyRLAlgorithm):
                          replay_buffer=replay_buffer,
                          use_target=True,
                          discount=discount,
-                         reward_scale=reward_scale,
                          smooth_return=smooth_return)
 
         self.target_policy = copy.deepcopy(self.policy)
@@ -112,7 +112,6 @@ class SAC(OffPolicyRLAlgorithm):
         """
         """
         paths = self.process_samples(itr, paths)
-        epoch = itr / self.n_epoch_cycles
         self.episode_rewards.extend([
             path for path, complete in zip(paths['undiscounted_returns'],
                                            paths['complete']) if complete
@@ -122,16 +121,14 @@ class SAC(OffPolicyRLAlgorithm):
                                            paths['complete']) if complete
         ])
         last_average_return = np.mean(self.episode_rewards)
-        # add paths to replay buffer
-        for train_itr in range(self.n_train_steps):
+        samples = self.replay_buffer.sample(self.buffer_batch_size)
+        for gradient_steps in range(self.gradient_steps):
             # if self.replay_buffer.n_transitions_stored >= self.min_buffer_size:  # noqa: E501
-            samples = self.replay_buffer.sample(self.buffer_batch_size)
-            import ipdb; ipdb.set_trace()
             self.update_q_functions(itr, samples)
-            import ipdb; ipdb.set_trace()
             self.optimize_policy(itr, samples)
             self.adjust_temperature(itr)
             self.update_targets()
+        tabular.record('reward', last_average_return)
 
         return last_average_return
 
@@ -179,16 +176,16 @@ class SAC(OffPolicyRLAlgorithm):
         obs = samples["observation"]
         # use the forward function instead of the get action function
         # in order to make sure that policy is differentiated. 
-        action_dists = self.policy(obs)
+        action_dists = self.policy(torch.Tensor(obs))
         actions = action_dists.rsample()
-        with torch.no_grad():
-            log_pi = self.policy.log_likelihood(obs,actions)
-        with torch.no_grad():
-            min_q = torch.min(self.qf1(obs, actions), self.qf2(obs, actions))
+        log_pi = action_dists.log_prob(actions)
 
-        policy_objective = ((self.alpha * log_pi) - min_q).mean()
+        with torch.no_grad():
+            min_q = torch.min(self.qf1(torch.Tensor(obs), torch.Tensor(actions)), 
+                              self.qf2(torch.Tensor(obs), torch.Tensor(actions)))
+        policy_objective = ((self.alpha * log_pi) - min_q.flatten()).mean()
         self.policy_optimizer.zero_grad()
-        policy_objective.backwards()
+        policy_objective.backward()
         self.policy_optimizer.step()
 
     def adjust_temperature(self, itr):        

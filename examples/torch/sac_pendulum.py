@@ -48,14 +48,14 @@ def run_task(snapshot_config, *_):
                 policy=policy,
                 qf1=qf1,
                 qf2=qf2,
-                alpha=0.1,
+                alpha=1,
                 replay_buffer=replay_buffer,
                 target_update_tau=1e-2,
                 discount=0.9)
 
     runner.setup(algo=sac, env=env)
 
-    runner.train(n_epochs=500, n_epoch_cycles=20, batch_size=100)
+    runner.train(n_epochs=500, batch_size=256)
 
 
 run_experiment(
