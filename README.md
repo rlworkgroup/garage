@@ -18,6 +18,25 @@ garage supports [TensorFlow](https://www.tensorflow.org/) for neural network fra
 
 Documentation is available online at [https://garage.readthedocs.org/en/latest/](https://garage.readthedocs.org/en/latest/).
 
+# Algorithms
+The table below summarizes the algorithms available in garage.
+
+| Algorithm              | Framework(s)        |
+| ---------------------- | ------------------- |
+| CEM                    | numpy               |
+| CMA-ES                 | numpy               |
+| REINFORCE (a.k.a. VPG) | PyTorch, TensorFlow |
+| DDPG                   | PyTorch, TensorFlow |
+| DQN                    | TensorFlow          |
+| DDQN                   | TensorFlow          |
+| ERWR                   | TensorFlow          |
+| NPO                    | TensorFlow          |
+| PPO                    | TensorFlow          |
+| REPS                   | TensorFlow          |
+| TD3                    | TensorFlow          |
+| TNPG                   | TensorFlow          |
+| TRPO                   | TensorFlow          |
+
 # Citing garage
 
 If you use garage for academic research, you are highly encouraged to cite the following paper on the original rllab implementation:
