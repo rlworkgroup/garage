@@ -12,7 +12,7 @@ garage is fully compatible with [OpenAI Gym](https://gym.openai.com/). All garag
 
 garage only officially supports Python 3.5+.
 
-garage supports [TensorFlow](https://www.tensorflow.org/) for neural network frameworks. TensorFlow modules can be found under [garage/tf](https://github.com/rlworkgroup/garage/tree/master/garage/tf).
+garage supports [TensorFlow](https://www.tensorflow.org/) for neural network frameworks. TensorFlow modules can be found under [garage/tf](https://github.com/rlworkgroup/garage/tree/master/src/garage/tf).
 
 # Documentation
 
