@@ -13,9 +13,8 @@ from garage.tf.regressors.gaussian_cnn_regressor_model import (
 from garage.tf.regressors.gaussian_mlp_regressor import GaussianMLPRegressor
 
 __all__ = [
-    'BernoulliMLPRegressor',
-    'CategoricalMLPRegressor', 'ContinuousMLPRegressor',
-    'GaussianCNNRegressor', 'GaussianCNNRegressorModel',
-    'GaussianMLPRegressor', 'Regressor2', 'StochasticRegressor',
-    'StochasticRegressor2'
+    'BernoulliMLPRegressor', 'CategoricalMLPRegressor',
+    'ContinuousMLPRegressor', 'GaussianCNNRegressor',
+    'GaussianCNNRegressorModel', 'GaussianMLPRegressor', 'Regressor2',
+    'StochasticRegressor', 'StochasticRegressor2'
 ]
