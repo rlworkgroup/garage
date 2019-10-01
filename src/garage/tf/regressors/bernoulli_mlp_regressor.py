@@ -10,7 +10,7 @@ from garage.tf.optimizers import ConjugateGradientOptimizer, LbfgsOptimizer
 from garage.tf.regressors import StochasticRegressor2
 
 
-class BernoulliMLPRegressorWithModel(StochasticRegressor2):
+class BernoulliMLPRegressor(StochasticRegressor2):
     """
     BernoulliMLPRegressor with garage.tf.models.NormalizedInputMLPModel.
 
@@ -61,7 +61,7 @@ class BernoulliMLPRegressorWithModel(StochasticRegressor2):
     def __init__(self,
                  input_shape,
                  output_dim,
-                 name='BernoulliMLPRegressorWithModel',
+                 name='BernoulliMLPRegressor',
                  hidden_sizes=(32, 32),
                  hidden_nonlinearity=tf.nn.relu,
                  hidden_w_init=tf.glorot_uniform_initializer(),
