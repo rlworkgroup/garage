@@ -10,7 +10,7 @@ from garage.tf.optimizers import ConjugateGradientOptimizer, LbfgsOptimizer
 from garage.tf.regressors import StochasticRegressor2
 
 
-class BernoulliMLPRegressor(StochasticRegressor2):
+class BernoulliMLPRegressorWithModel(StochasticRegressor2):
     """
     BernoulliMLPRegressor with garage.tf.models.NormalizedInputMLPModel.
 
@@ -61,7 +61,7 @@ class BernoulliMLPRegressor(StochasticRegressor2):
     def __init__(self,
                  input_shape,
                  output_dim,
-                 name='BernoulliMLPRegressor',
+                 name='BernoulliMLPRegressorWithModel',
                  hidden_sizes=(32, 32),
                  hidden_nonlinearity=tf.nn.relu,
                  hidden_w_init=tf.glorot_uniform_initializer(),
@@ -201,12 +201,44 @@ class BernoulliMLPRegressor(StochasticRegressor2):
         Predict ys based on input xs.
 
         Args:
-            xs (numpy.ndarray): Input data.
+            xs (numpy.ndarray): Input data of shape (samples, input_dim)
 
         Return:
-            The predicted ys (one hot vectors).
+            numpy.ndarray The deterministic predicted ys (one hot vectors)
+            of shape (samples, output_dim)
+
         """
         return self._f_predict(xs)
+
+    def sample_predict(self, xs):
+        """
+        Do a Bernoulli sampling given input xs.
+
+        Args:
+            xs (numpy.ndarray): Input data of shape (samples, input_dim)
+
+        Returns:
+            numpy.ndarray The stochastic sampled ys
+            of shape (samples, output_dim)
+
+        """
+        p = self._f_prob(xs)
+        return self._dist.sample(dict(p=p))
+
+    def predict_log_likelihood(self, xs, ys):
+        """
+        Log likelihood of ys given input xs.
+
+        Args:
+            xs (numpy.ndarray): Input data of shape (samples, input_dim)
+            ys (numpy.ndarray): Output data of shape (samples, output_dim)
+
+        Returns:
+            numpy.ndarray The log likelihood of shape (samples, )
+
+        """
+        p = self._f_prob(xs)
+        return self._dist.log_likelihood(ys, dict(p=p))
 
     def log_likelihood_sym(self, x_var, y_var, name=None):
         """
