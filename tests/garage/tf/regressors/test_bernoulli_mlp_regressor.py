@@ -247,8 +247,7 @@ class TestBernoulliMLPRegressor(TfGraphTestCase):
         bmr = BernoulliMLPRegressor(input_shape=(1, ), output_dim=2)
 
         with tf.compat.v1.variable_scope(
-                'BernoulliMLPRegressor/NormalizedInputMLPModel',
-                reuse=True):
+                'BernoulliMLPRegressor/NormalizedInputMLPModel', reuse=True):
             bias = tf.compat.v1.get_variable('mlp/hidden_0/bias')
         bias.load(tf.ones_like(bias).eval())
         bias1 = bias.eval()
@@ -262,7 +261,8 @@ class TestBernoulliMLPRegressor(TfGraphTestCase):
             assert np.array_equal(result1, result2)
 
             with tf.compat.v1.variable_scope(
-                    'BernoulliMLPRegressor/NormalizedInputMLPModel', reuse=True):
+                    'BernoulliMLPRegressor/NormalizedInputMLPModel',
+                    reuse=True):
                 bias2 = tf.compat.v1.get_variable('mlp/hidden_0/bias').eval()
 
             assert np.array_equal(bias1, bias2)
