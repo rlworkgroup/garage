@@ -229,14 +229,13 @@ class TestBernoulliMLPRegressor(TfGraphTestCase):
     def test_optimizer_args(self, mock_cg, mock_lbfgs):
         lbfgs_args = dict(max_opt_itr=25)
         cg_args = dict(cg_iters=15)
-        bmr = BernoulliMLPRegressor(
-            input_shape=(1, ),
-            output_dim=2,
-            optimizer=LbfgsOptimizer,
-            optimizer_args=lbfgs_args,
-            tr_optimizer=ConjugateGradientOptimizer,
-            tr_optimizer_args=cg_args,
-            use_trust_region=True)
+        bmr = BernoulliMLPRegressor(input_shape=(1, ),
+                                    output_dim=2,
+                                    optimizer=LbfgsOptimizer,
+                                    optimizer_args=lbfgs_args,
+                                    tr_optimizer=ConjugateGradientOptimizer,
+                                    tr_optimizer_args=cg_args,
+                                    use_trust_region=True)
 
         assert mock_lbfgs.return_value is bmr._optimizer
         assert mock_cg.return_value is bmr._tr_optimizer
@@ -263,8 +262,7 @@ class TestBernoulliMLPRegressor(TfGraphTestCase):
             assert np.array_equal(result1, result2)
 
             with tf.compat.v1.variable_scope(
-                    'BernoulliMLPRegressor/NormalizedInputMLPModel',
-                    reuse=True):
+                    'BernoulliMLPRegressor/NormalizedInputMLPModel', reuse=True):
                 bias2 = tf.compat.v1.get_variable('mlp/hidden_0/bias').eval()
 
             assert np.array_equal(bias1, bias2)
@@ -273,8 +271,7 @@ class TestBernoulliMLPRegressor(TfGraphTestCase):
         bmr = BernoulliMLPRegressor(input_shape=(1, ), output_dim=2)
 
         with tf.compat.v1.variable_scope(
-                'BernoulliMLPRegressor/NormalizedInputMLPModel',
-                reuse=True):
+                'BernoulliMLPRegressor/NormalizedInputMLPModel', reuse=True):
             x_mean = tf.compat.v1.get_variable('normalized_vars/x_mean')
         x_mean.load(tf.ones_like(x_mean).eval())
         x1 = bmr.model.networks['default'].x_mean.eval()
