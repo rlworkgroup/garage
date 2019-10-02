@@ -6,7 +6,7 @@ import pytest
 import tensorflow as tf
 
 from garage.tf.optimizers import ConjugateGradientOptimizer, LbfgsOptimizer
-from garage.tf.regressors import BernoulliMLPRegressorWithModel
+from garage.tf.regressors import BernoulliMLPRegressor
 from tests.fixtures import TfGraphTestCase
 
 
@@ -66,7 +66,7 @@ def get_test_data(input_shape, output_dim):
     return paths, expected
 
 
-class TestBernoulliMLPRegressorWithModel(TfGraphTestCase):
+class TestBernoulliMLPRegressor(TfGraphTestCase):
     # yapf: disable
     @pytest.mark.parametrize('input_shape, output_dim', [
         ((1, ), 2),
@@ -75,8 +75,8 @@ class TestBernoulliMLPRegressorWithModel(TfGraphTestCase):
     ])
     # yapf: enable
     def test_fit_normalized(self, input_shape, output_dim):
-        bmr = BernoulliMLPRegressorWithModel(input_shape=input_shape,
-                                             output_dim=output_dim)
+        bmr = BernoulliMLPRegressor(input_shape=input_shape,
+                                    output_dim=output_dim)
 
         observations, returns = get_train_data(input_shape, output_dim)
 
@@ -104,9 +104,9 @@ class TestBernoulliMLPRegressorWithModel(TfGraphTestCase):
     ])
     # yapf: enable
     def test_fit_unnormalized(self, input_shape, output_dim):
-        bmr = BernoulliMLPRegressorWithModel(input_shape=input_shape,
-                                             output_dim=output_dim,
-                                             normalize_inputs=False)
+        bmr = BernoulliMLPRegressor(input_shape=input_shape,
+                                    output_dim=output_dim,
+                                    normalize_inputs=False)
 
         observations, returns = get_train_data(input_shape, output_dim)
 
@@ -135,9 +135,9 @@ class TestBernoulliMLPRegressorWithModel(TfGraphTestCase):
     ])
     # yapf: enable
     def test_fit_with_no_trust_region(self, input_shape, output_dim):
-        bmr = BernoulliMLPRegressorWithModel(input_shape=input_shape,
-                                             output_dim=output_dim,
-                                             use_trust_region=False)
+        bmr = BernoulliMLPRegressor(input_shape=input_shape,
+                                    output_dim=output_dim,
+                                    use_trust_region=False)
 
         observations, returns = get_train_data(input_shape, output_dim)
 
@@ -161,8 +161,8 @@ class TestBernoulliMLPRegressorWithModel(TfGraphTestCase):
         n_sample = 100
         input_dim = 50
         output_dim = 1
-        bmr = BernoulliMLPRegressorWithModel(input_shape=(input_dim, ),
-                                             output_dim=output_dim)
+        bmr = BernoulliMLPRegressor(input_shape=(input_dim, ),
+                                    output_dim=output_dim)
 
         xs = np.random.random((input_dim, ))
         p = bmr._f_prob([xs])
@@ -175,8 +175,8 @@ class TestBernoulliMLPRegressorWithModel(TfGraphTestCase):
         n_sample = 50
         input_dim = 50
         output_dim = 1
-        bmr = BernoulliMLPRegressorWithModel(input_shape=(input_dim, ),
-                                             output_dim=output_dim)
+        bmr = BernoulliMLPRegressor(input_shape=(input_dim, ),
+                                    output_dim=output_dim)
 
         xs = np.random.random((n_sample, input_dim))
         ys = np.random.randint(2, size=(n_sample, output_dim))
@@ -195,8 +195,8 @@ class TestBernoulliMLPRegressorWithModel(TfGraphTestCase):
     ])
     # yapf: enable
     def test_log_likelihood_sym(self, output_dim, input_shape):
-        bmr = BernoulliMLPRegressorWithModel(input_shape=(input_shape[1], ),
-                                             output_dim=output_dim)
+        bmr = BernoulliMLPRegressor(input_shape=(input_shape[1], ),
+                                    output_dim=output_dim)
 
         new_xs_var = tf.compat.v1.placeholder(tf.float32, input_shape)
         new_ys_var = tf.compat.v1.placeholder(dtype=tf.float32,
@@ -221,15 +221,15 @@ class TestBernoulliMLPRegressorWithModel(TfGraphTestCase):
         assert np.allclose(ll, ll_from_sym, rtol=0, atol=1e-5)
 
     @mock.patch('tests.garage.tf.regressors.'
-                'test_bernoulli_mlp_regressor_with_model.'
+                'test_bernoulli_mlp_regressor.'
                 'LbfgsOptimizer')
     @mock.patch('tests.garage.tf.regressors.'
-                'test_bernoulli_mlp_regressor_with_model.'
+                'test_bernoulli_mlp_regressor.'
                 'ConjugateGradientOptimizer')
     def test_optimizer_args(self, mock_cg, mock_lbfgs):
         lbfgs_args = dict(max_opt_itr=25)
         cg_args = dict(cg_iters=15)
-        bmr = BernoulliMLPRegressorWithModel(
+        bmr = BernoulliMLPRegressor(
             input_shape=(1, ),
             output_dim=2,
             optimizer=LbfgsOptimizer,
@@ -245,10 +245,10 @@ class TestBernoulliMLPRegressorWithModel(TfGraphTestCase):
         mock_cg.assert_called_with(cg_iters=15)
 
     def test_is_pickleable(self):
-        bmr = BernoulliMLPRegressorWithModel(input_shape=(1, ), output_dim=2)
+        bmr = BernoulliMLPRegressor(input_shape=(1, ), output_dim=2)
 
         with tf.compat.v1.variable_scope(
-                'BernoulliMLPRegressorWithModel/NormalizedInputMLPModel',
+                'BernoulliMLPRegressor/NormalizedInputMLPModel',
                 reuse=True):
             bias = tf.compat.v1.get_variable('mlp/hidden_0/bias')
         bias.load(tf.ones_like(bias).eval())
@@ -263,17 +263,17 @@ class TestBernoulliMLPRegressorWithModel(TfGraphTestCase):
             assert np.array_equal(result1, result2)
 
             with tf.compat.v1.variable_scope(
-                    'BernoulliMLPRegressorWithModel/NormalizedInputMLPModel',
+                    'BernoulliMLPRegressor/NormalizedInputMLPModel',
                     reuse=True):
                 bias2 = tf.compat.v1.get_variable('mlp/hidden_0/bias').eval()
 
             assert np.array_equal(bias1, bias2)
 
     def test_is_pickleable2(self):
-        bmr = BernoulliMLPRegressorWithModel(input_shape=(1, ), output_dim=2)
+        bmr = BernoulliMLPRegressor(input_shape=(1, ), output_dim=2)
 
         with tf.compat.v1.variable_scope(
-                'BernoulliMLPRegressorWithModel/NormalizedInputMLPModel',
+                'BernoulliMLPRegressor/NormalizedInputMLPModel',
                 reuse=True):
             x_mean = tf.compat.v1.get_variable('normalized_vars/x_mean')
         x_mean.load(tf.ones_like(x_mean).eval())
