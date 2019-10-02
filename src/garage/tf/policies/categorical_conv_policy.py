@@ -1,109 +1,163 @@
+"""CategoricalConvPolicy with model."""
 import akro
 import tensorflow as tf
 
-from garage.core import Serializable
 from garage.misc.overrides import overrides
-from garage.tf.core import LayersPowered
-import garage.tf.core.layers as L
-from garage.tf.core.network import ConvNetwork
 from garage.tf.distributions import Categorical
-from garage.tf.misc import tensor_utils
-from garage.tf.policies import StochasticPolicy
+from garage.tf.models import CNNModel
+from garage.tf.models import MLPModel
+from garage.tf.models import Sequential
+from garage.tf.policies.base2 import StochasticPolicy2
 
 
-class CategoricalConvPolicy(StochasticPolicy, LayersPowered, Serializable):
-    def __init__(
-            self,
-            env_spec,
-            conv_filters,
-            conv_filter_sizes,
-            conv_strides,
-            conv_pads,
-            hidden_sizes=[],
-            hidden_nonlinearity=tf.nn.relu,
-            output_nonlinearity=tf.nn.softmax,
-            prob_network=None,
-            name='CategoricalConvPolicy',
-    ):
-        """
-        :param env_spec: A spec for the mdp.
-        :param hidden_sizes: list of sizes for the fully connected
-        hidden layers
-        :param hidden_nonlinearity: nonlinearity used for each hidden layer
-        :param prob_network: manually specified network for this policy, other
-         network params
-        are ignored
-        :return:
-        """
-        assert isinstance(env_spec.action_space, akro.Discrete)
+class CategoricalConvPolicy(StochasticPolicy2):
+    """
+    CategoricalConvPolicy with model.
 
-        Serializable.quick_init(self, locals())
+    A policy that contains a CNN and a MLP to make prediction based on
+    a categorical distribution.
 
-        self._name = name
-        self._env_spec = env_spec
-        self._prob_network_name = 'prob_network'
+    It only works with akro.Discrete action space.
 
-        with tf.compat.v1.variable_scope(name, 'CategoricalConvPolicy'):
-            if prob_network is None:
-                prob_network = ConvNetwork(
-                    input_shape=env_spec.observation_space.shape,
-                    output_dim=env_spec.action_space.n,
-                    conv_filters=conv_filters,
-                    conv_filter_sizes=conv_filter_sizes,
-                    conv_strides=conv_strides,
-                    conv_pads=conv_pads,
-                    hidden_sizes=hidden_sizes,
-                    hidden_nonlinearity=hidden_nonlinearity,
-                    output_nonlinearity=output_nonlinearity,
-                    name='conv_prob_network',
-                )
+    Args:
+        env_spec (garage.envs.env_spec.EnvSpec): Environment specification.
+        conv_filter_sizes(tuple[int]): Dimension of the filters. For example,
+            (3, 5) means there are two convolutional layers. The filter for
+            first layer is of dimension (3 x 3) and the second one is of
+            dimension (5 x 5).
+        conv_filters(tuple[int]): Number of filters. For example, (3, 32) means
+            there are two convolutional layers. The filter for the first layer
+            has 3 channels and the second one with 32 channels.
+        conv_strides(tuple[int]): The stride of the sliding window. For
+            example, (1, 2) means there are two convolutional layers. The
+            stride of the filter for first layer is 1 and that of the second
+            layer is 2.
+        conv_pad (str): The type of padding algorithm to use,
+            either 'SAME' or 'VALID'.
+        name (str): Policy name, also the variable scope of the policy.
+        hidden_sizes (list[int]): Output dimension of dense layer(s).
+            For example, (32, 32) means the MLP of this policy consists
+            of two hidden layers, each with 32 hidden units.
+        hidden_nonlinearity (callable): Activation function for intermediate
+            dense layer(s). It should return a tf.Tensor. Set it to
+            None to maintain a linear activation.
+        hidden_w_init (callable): Initializer function for the weight
+            of intermediate dense layer(s). The function should return a
+            tf.Tensor.
+        hidden_b_init (callable): Initializer function for the bias
+            of intermediate dense layer(s). The function should return a
+            tf.Tensor.
+        output_nonlinearity (callable): Activation function for output dense
+            layer. It should return a tf.Tensor. Set it to None to
+            maintain a linear activation.
+        output_w_init (callable): Initializer function for the weight
+            of output dense layer(s). The function should return a
+            tf.Tensor.
+        output_b_init (callable): Initializer function for the bias
+            of output dense layer(s). The function should return a
+            tf.Tensor.
+        layer_normalization (bool): Bool for using layer normalization or not.
 
-            with tf.name_scope(self._prob_network_name):
-                out_prob = L.get_output(prob_network.output_layer)
+    """
 
-            self._l_prob = prob_network.output_layer
-            self._l_obs = prob_network.input_layer
-            self._f_prob = tensor_utils.compile_function(
-                [prob_network.input_layer.input_var], [out_prob])
+    def __init__(self,
+                 env_spec,
+                 conv_filters,
+                 conv_filter_sizes,
+                 conv_strides,
+                 conv_pad,
+                 name='CategoricalConvPolicy',
+                 hidden_sizes=[],
+                 hidden_nonlinearity=tf.nn.relu,
+                 hidden_w_init=tf.glorot_uniform_initializer(),
+                 hidden_b_init=tf.zeros_initializer(),
+                 output_nonlinearity=tf.nn.softmax,
+                 output_w_init=tf.glorot_uniform_initializer(),
+                 output_b_init=tf.zeros_initializer(),
+                 layer_normalization=False):
+        assert isinstance(env_spec.action_space, akro.Discrete), (
+            'CategoricalConvPolicy only works with akro.Discrete action '
+            'space.')
+        super().__init__(name, env_spec)
+        self.obs_dim = env_spec.observation_space.shape
+        self.action_dim = env_spec.action_space.n
 
-            self._dist = Categorical(env_spec.action_space.n)
+        self.model = Sequential(
+            CNNModel(filter_dims=conv_filter_sizes,
+                     num_filters=conv_filters,
+                     strides=conv_strides,
+                     padding=conv_pad,
+                     hidden_nonlinearity=hidden_nonlinearity,
+                     name='CNNModel'),
+            MLPModel(output_dim=self.action_dim,
+                     hidden_sizes=hidden_sizes,
+                     hidden_nonlinearity=hidden_nonlinearity,
+                     hidden_w_init=hidden_w_init,
+                     hidden_b_init=hidden_b_init,
+                     output_nonlinearity=output_nonlinearity,
+                     output_w_init=output_w_init,
+                     output_b_init=output_b_init,
+                     layer_normalization=layer_normalization,
+                     name='MLPModel'))
 
-            super(CategoricalConvPolicy, self).__init__(env_spec)
-            LayersPowered.__init__(self, [prob_network.output_layer])
+        self._initialize()
+
+    def _initialize(self):
+        state_input = tf.compat.v1.placeholder(tf.float32,
+                                               shape=(None, ) + self.obs_dim)
+
+        with tf.compat.v1.variable_scope(self.name) as vs:
+            self._variable_scope = vs
+            self.model.build(state_input)
+
+        self._f_prob = tf.compat.v1.get_default_session().make_callable(
+            self.model.outputs, feed_list=[self.model.input])
 
     @property
     def vectorized(self):
+        """Vectorized or not."""
         return True
 
     @overrides
     def dist_info_sym(self, obs_var, state_info_vars=None, name=None):
-        with tf.name_scope(name, 'dist_info_sym', [obs_var]):
-            with tf.name_scope(self._prob_network_name, [obs_var]):
-                prob = L.get_output(
-                    self._l_prob, {self._l_obs: tf.cast(obs_var, tf.float32)})
-            return dict(prob)
+        """Symbolic graph of the distribution."""
+        with tf.compat.v1.variable_scope(self._variable_scope):
+            prob = self.model.build(obs_var, name=name)
+        return dict(prob=prob)
 
     @overrides
     def dist_info(self, obs, state_infos=None):
-        return dict(prob=self._f_prob(obs))
+        """Distribution info."""
+        prob = self._f_prob(obs)
+        return dict(prob=prob)
 
-    # The return value is a pair. The first item is a matrix (N, A), where each
-    # entry corresponds to the action value taken. The second item is a vector
-    # of length N, where each entry is the density value for that action, under
-    # the current policy
     @overrides
     def get_action(self, observation):
-        flat_obs = self.observation_space.flatten(observation)
-        prob = self._f_prob([flat_obs])[0]
+        """Return a single action."""
+        # flat_obs = self.observation_space.flatten(observation)
+        prob = self._f_prob([observation])[0]
         action = self.action_space.weighted_sample(prob)
         return action, dict(prob=prob)
 
     def get_actions(self, observations):
-        flat_obs = self.observation_space.flatten_n(observations)
-        probs = self._f_prob(flat_obs)
+        """Return multiple actions."""
+        # flat_obs = self.observation_space.flatten_n(observations)
+        probs = self._f_prob(observations)
         actions = list(map(self.action_space.weighted_sample, probs))
         return actions, dict(prob=probs)
 
     @property
     def distribution(self):
-        return self._dist
+        """Policy distribution."""
+        return Categorical(self.action_dim)
+
+    def __getstate__(self):
+        """Object.__getstate__."""
+        new_dict = super().__getstate__()
+        del new_dict['_f_prob']
+        return new_dict
+
+    def __setstate__(self, state):
+        """Object.__setstate__."""
+        super().__setstate__(state)
+        self._initialize()
