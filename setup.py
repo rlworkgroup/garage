@@ -60,15 +60,13 @@ extras['dev'] = [
     # Please keep alphabetized
     'baselines @ https://api.github.com/repos/openai/baselines/tarball/f2729693253c0ef4d4086231d36e0a4307ec1cb3',  # noqa: E501
     'flake8',
-    'flake8-docstrings==1.3.0',
+    'flake8-docstrings==1.4.0',
     'flake8-import-order',
     'gtimer',
     'pandas',
     'pep8-naming==0.7.0',
     'pre-commit',
-    # pydocstyle 4.0.0 breaks flake8-docstrings 1.3.0
-    # See https://gitlab.com/pycqa/flake8-docstrings/issues/36
-    'pydocstyle<4.0.0',
+    'pydocstyle<4.1,>=4.0',
     'pylint==1.9.2',
     'pytest>=3.6',  # Required for pytest-cov on Python 3.6
     'pytest-cov',
