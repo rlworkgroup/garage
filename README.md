@@ -1,4 +1,4 @@
-[![Docs](https://readthedocs.org/projects/garage/badge)](http://garage.readthedocs.org/en/latest/)
+![Docs](https://readthedocs.org/projects/garage/badge)](http://garage.readthedocs.org/en/latest/)
 [![Build Status](https://travis-ci.com/rlworkgroup/garage.svg?branch=master)](https://travis-ci.com/rlworkgroup/garage)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/rlworkgroup/garage/blob/master/LICENSE)
 [![codecov](https://codecov.io/gh/rlworkgroup/garage/branch/master/graph/badge.svg)](https://codecov.io/gh/rlworkgroup/garage)
