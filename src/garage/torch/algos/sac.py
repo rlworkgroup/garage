@@ -121,14 +121,14 @@ class SAC(OffPolicyRLAlgorithm):
                                            paths['complete']) if complete
         ])
         last_average_return = np.mean(self.episode_rewards)
-        samples = self.replay_buffer.sample(self.buffer_batch_size)
-        for gradient_steps in range(self.gradient_steps):
-            # if self.replay_buffer.n_transitions_stored >= self.min_buffer_size:  # noqa: E501
-            self.update_q_functions(itr, samples)
-            self.optimize_policy(itr, samples)
-            self.adjust_temperature(itr)
-            self.update_targets()
-        tabular.record('reward', last_average_return)
+        if self.replay_buffer.n_transitions_stored >= self.min_buffer_size:  # noqa: E501
+            samples = self.replay_buffer.sample(self.buffer_batch_size)
+            for gradient_step in range(self.gradient_steps):
+                    self.update_q_functions(itr, samples)
+                    self.optimize_policy(itr, samples)
+                    self.adjust_temperature(itr)
+                    self.update_targets()
+            tabular.record('reward', last_average_return)
 
         return last_average_return
 
@@ -180,12 +180,14 @@ class SAC(OffPolicyRLAlgorithm):
         actions = action_dists.rsample()
         log_pi = action_dists.log_prob(actions)
 
-        with torch.no_grad():
-            min_q = torch.min(self.qf1(torch.Tensor(obs), torch.Tensor(actions)), 
-                              self.qf2(torch.Tensor(obs), torch.Tensor(actions)))
+        min_q = torch.min(self.qf1(torch.Tensor(obs), torch.Tensor(actions)), 
+                            self.qf2(torch.Tensor(obs), torch.Tensor(actions)))
         policy_objective = ((self.alpha * log_pi) - min_q.flatten()).mean()
+        policy_objective *= -1
         self.policy_optimizer.zero_grad()
         policy_objective.backward()
+        for param in self.policy.named_parameters():
+            print(param[1].grad)
         self.policy_optimizer.step()
 
     def adjust_temperature(self, itr):        
