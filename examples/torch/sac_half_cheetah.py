@@ -47,7 +47,7 @@ def run_task(snapshot_config, *_):
                 qf2=qf2,
                 use_automatic_entropy_tuning=True,
                 replay_buffer=replay_buffer,
-                min_buffer_size=1e3,
+                min_buffer_size=3e3,
                 target_update_tau=5e-3,
                 discount=0.99,
                 buffer_batch_size=256)

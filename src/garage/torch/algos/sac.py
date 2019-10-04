@@ -29,7 +29,6 @@ class SAC(OffPolicyRLAlgorithm):
                  policy,
                  qf1,
                  qf2,
-                 alpha,
                  replay_buffer,
                  gradient_steps_per_itr=1,
                  target_entropy=None,
@@ -55,7 +54,6 @@ class SAC(OffPolicyRLAlgorithm):
         self.policy = policy
         self.qf1 = qf1
         self.qf2 = qf2
-        self.alpha = alpha
         self.replay_buffer = replay_buffer
         self.tau = target_update_tau
         self.policy_lr = policy_lr
@@ -100,6 +98,11 @@ class SAC(OffPolicyRLAlgorithm):
             else:
                 self.target_entropy = -np.prod(
                     self.env_spec.action_space.shape).item()
+                self.log_alpha = torch.zeros(1, dtype=torch.float, requires_grad=True)
+                self.alpha_optimizer = optimizer([self.log_alpha], lr=self.policy_lr)
+        else:
+            self.log_alpha = 0
+
 
         self.episode_rewards = []
         self.success_history = []
@@ -122,11 +125,11 @@ class SAC(OffPolicyRLAlgorithm):
         ])
         last_average_return = np.mean(self.episode_rewards)
         if self.replay_buffer.n_transitions_stored >= self.min_buffer_size:  # noqa: E501
-            samples = self.replay_buffer.sample(self.buffer_batch_size)
             for gradient_step in range(self.gradient_steps):
+                    samples = self.replay_buffer.sample(self.buffer_batch_size)
                     self.update_q_functions(itr, samples)
                     self.optimize_policy(itr, samples)
-                    self.adjust_temperature(itr)
+                    # self.adjust_temperature(itr)
                     self.update_targets()
             tabular.record('reward', last_average_return)
 
@@ -151,17 +154,22 @@ class SAC(OffPolicyRLAlgorithm):
 
         qfs = [self.qf1, self.qf2]
         target_qfs = [self.target_qf1, self.target_qf2]
-        qf_optimizers = [self.qf1_optimizer, self.qf2_optimizer] 
+        qf_optimizers = [self.qf1_optimizer, self.qf2_optimizer]
+        qf_itr = 0
         for target_qf, qf, qf_optimizer in zip(target_qfs, qfs, qf_optimizers):
             curr_q_val = qf(torch.Tensor(obs), torch.Tensor(actions)).flatten()
             with torch.no_grad():
                 targ_out = target_qf(torch.Tensor(next_obs), torch.Tensor(next_actions)).flatten()
-            bootstrapped_value = targ_out - (self.alpha * next_ll)
+                alpha = torch.exp(self.log_alpha)[0]
+            bootstrapped_value = targ_out - (alpha * next_ll)
             bellman = torch.Tensor(rewards) + self.discount*(bootstrapped_value)
             q_objective = 0.5 * F.mse_loss(curr_q_val, bellman)
             qf_optimizer.zero_grad()
             q_objective.backward()
             qf_optimizer.step()
+            tabular.record('qf_' + str(qf_itr) + '_loss', q_objective)
+            qf_itr += 1
+
 
     def optimize_policy(self, itr, samples):
         """ Optimize the policy based on the policy objective from the sac paper.
@@ -180,17 +188,22 @@ class SAC(OffPolicyRLAlgorithm):
         actions = action_dists.rsample()
         log_pi = action_dists.log_prob(actions)
 
+        if self.use_automatic_entropy_tuning:
+            alpha_loss = -(self.log_alpha * (log_pi * self.target_entropy).detach()).mean()
+            self.alpha_optimizer.zero_grad()
+            alpha_loss.backward()
+            self.alpha_optimizer.step()
+
         min_q = torch.min(self.qf1(torch.Tensor(obs), torch.Tensor(actions)), 
                             self.qf2(torch.Tensor(obs), torch.Tensor(actions)))
-        policy_objective = ((self.alpha * log_pi) - min_q.flatten()).mean()
-        policy_objective *= -1
+        with torch.no_grad():
+            alpha = torch.exp(self.log_alpha)[0]
+        policy_objective = ((alpha * log_pi) - min_q.flatten()).mean()
         self.policy_optimizer.zero_grad()
         policy_objective.backward()
-        for param in self.policy.named_parameters():
-            print(param[1].grad)
         self.policy_optimizer.step()
 
-    def adjust_temperature(self, itr):        
+    def _adjust_temperature(self, itr):        
         pass
 
     def update_targets(self):
