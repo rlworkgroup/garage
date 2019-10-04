@@ -1,3 +1,4 @@
+"""Relative Entropy Policy Search implementation in Tensorflow."""
 from dowel import logger, tabular
 import numpy as np
 import scipy.optimize
@@ -83,16 +84,15 @@ class REPS(BatchPolopt):
             self.l2_reg_dual = float(l2_reg_dual)
             self.l2_reg_loss = float(l2_reg_loss)
 
-        super(REPS, self).__init__(
-            env_spec=env_spec,
-            policy=policy,
-            baseline=baseline,
-            max_path_length=max_path_length,
-            discount=discount,
-            gae_lambda=gae_lambda,
-            center_adv=center_adv,
-            positive_adv=positive_adv,
-            fixed_horizon=fixed_horizon)
+        super(REPS, self).__init__(env_spec=env_spec,
+                                   policy=policy,
+                                   baseline=baseline,
+                                   max_path_length=max_path_length,
+                                   discount=discount,
+                                   gae_lambda=gae_lambda,
+                                   center_adv=center_adv,
+                                   positive_adv=positive_adv,
+                                   fixed_horizon=fixed_horizon)
 
     @overrides
     def init_opt(self):
@@ -102,12 +102,13 @@ class REPS(BatchPolopt):
         self._dual_opt_inputs = dual_opt_inputs
 
         pol_loss = self._build_policy_loss(pol_loss_inputs)
-        self.optimizer.update_opt(
-            loss=pol_loss,
-            target=self.policy,
-            inputs=flatten_inputs(self._policy_opt_inputs))
+        self.optimizer.update_opt(loss=pol_loss,
+                                  target=self.policy,
+                                  inputs=flatten_inputs(
+                                      self._policy_opt_inputs))
 
     def __getstate__(self):
+        """Object.__getstate__."""
         data = self.__dict__.copy()
         del data['_name_scope']
         del data['_policy_opt_inputs']
@@ -118,6 +119,7 @@ class REPS(BatchPolopt):
         return data
 
     def __setstate__(self, state):
+        """Object.__setstate__."""
         self.__dict__ = state
         self._name_scope = tf.name_scope(self.name)
         self.init_opt()
@@ -162,12 +164,11 @@ class REPS(BatchPolopt):
             v_grad = grad[1]
             return np.hstack([eta_grad, v_grad])
 
-        params_ast, _, _ = self.dual_optimizer(
-            func=eval_dual,
-            x0=x0,
-            fprime=eval_dual_grad,
-            bounds=bounds,
-            **self.dual_optimizer_args)
+        params_ast, _, _ = self.dual_optimizer(func=eval_dual,
+                                               x0=x0,
+                                               fprime=eval_dual_grad,
+                                               bounds=bounds,
+                                               **self.dual_optimizer_args)
 
         logger.log('Computing dual after')
         self.param_eta, self.param_v = params_ast[0], params_ast[1:]
@@ -244,10 +245,9 @@ class REPS(BatchPolopt):
             ]   # yapf: disable
 
             policy_old_dist_info_vars = {
-                k: tf.compat.v1.placeholder(
-                    tf.float32,
-                    shape=[None] * 2 + list(shape),
-                    name='policy_old_%s' % k)
+                k: tf.compat.v1.placeholder(tf.float32,
+                                            shape=[None] * 2 + list(shape),
+                                            name='policy_old_%s' % k)
                 for k, shape in policy_dist.dist_info_specs
             }
             policy_old_dist_info_vars_list = [
@@ -374,10 +374,11 @@ class REPS(BatchPolopt):
         with tf.name_scope('policy_loss'):
             ll = pol_dist.log_likelihood_sym(i.valid.action_var,
                                              policy_dist_info_valid)
-            loss = -tf.reduce_mean(ll * tf.exp(
-                delta_v / i.param_eta - tf.reduce_max(delta_v / i.param_eta)))
+            loss = -tf.reduce_mean(
+                ll * tf.exp(delta_v / i.param_eta -
+                            tf.reduce_max(delta_v / i.param_eta)))
 
-            reg_params = self.policy.get_params(regularizable=True)
+            reg_params = self.policy.get_regularizable_vars()
             loss += self.l2_reg_loss * tf.reduce_sum(
                 [tf.reduce_mean(tf.square(param))
                  for param in reg_params]) / len(reg_params)
@@ -396,15 +397,17 @@ class REPS(BatchPolopt):
                            tf.reduce_max(delta_v / i.param_eta)))
             ) + i.param_eta * tf.reduce_max(delta_v / i.param_eta)
 
-            dual_loss += self.l2_reg_dual * (
-                tf.square(i.param_eta) + tf.square(1 / i.param_eta))
+            dual_loss += self.l2_reg_dual * (tf.square(i.param_eta) +
+                                             tf.square(1 / i.param_eta))
 
             dual_grad = tf.gradients(dual_loss, [i.param_eta, i.param_v])
 
+        # yapf: disable
         self.f_dual = tensor_utils.compile_function(
             flatten_inputs(self._dual_opt_inputs),
             dual_loss,
             log_name='f_dual')
+        # yapf: enable
 
         self.f_dual_grad = tensor_utils.compile_function(
             flatten_inputs(self._dual_opt_inputs),
