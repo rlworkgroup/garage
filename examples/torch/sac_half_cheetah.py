@@ -47,18 +47,18 @@ def run_task(snapshot_config, *_):
                 qf2=qf2,
                 use_automatic_entropy_tuning=True,
                 replay_buffer=replay_buffer,
-                min_buffer_size=3e3,
+                min_buffer_size=1e4,
                 target_update_tau=5e-3,
                 discount=0.99,
                 buffer_batch_size=256)
 
     runner.setup(algo=sac, env=env)
 
-    runner.train(n_epochs=500, batch_size=256 ,plot=True)
+    runner.train(n_epochs=1000, batch_size=256 ,plot=True)
 
 
 run_experiment(
     run_task,
     snapshot_mode='last',
-    seed=154,
+    seed=270,
 )

@@ -40,8 +40,8 @@ class SAC(OffPolicyRLAlgorithm):
                  rollout_batch_size=1,
                  exploration_strategy=None,
                  target_update_tau=1e-2,
-                 policy_lr=1e-3,
-                 qf_lr=1e-3,
+                 policy_lr=3e-4,
+                 qf_lr=3e-4,
                  policy_weight_decay=0,
                  qf_weight_decay=0,
                  optimizer=torch.optim.Adam,
@@ -129,7 +129,6 @@ class SAC(OffPolicyRLAlgorithm):
                     samples = self.replay_buffer.sample(self.buffer_batch_size)
                     self.update_q_functions(itr, samples)
                     self.optimize_policy(itr, samples)
-                    # self.adjust_temperature(itr)
                     self.update_targets()
             tabular.record('reward', last_average_return)
 
@@ -150,12 +149,12 @@ class SAC(OffPolicyRLAlgorithm):
         with torch.no_grad():
             next_actions, _ = self.policy.get_actions(torch.Tensor(next_obs))
             next_ll = self.policy.log_likelihood(torch.Tensor(next_obs),
-                                               torch.Tensor(next_actions))
+                                            torch.Tensor(next_actions))
 
         qfs = [self.qf1, self.qf2]
         target_qfs = [self.target_qf1, self.target_qf2]
         qf_optimizers = [self.qf1_optimizer, self.qf2_optimizer]
-        qf_itr = 0
+        qf_loss = []
         for target_qf, qf, qf_optimizer in zip(target_qfs, qfs, qf_optimizers):
             curr_q_val = qf(torch.Tensor(obs), torch.Tensor(actions)).flatten()
             with torch.no_grad():
@@ -164,12 +163,11 @@ class SAC(OffPolicyRLAlgorithm):
             bootstrapped_value = targ_out - (alpha * next_ll)
             bellman = torch.Tensor(rewards) + self.discount*(bootstrapped_value)
             q_objective = 0.5 * F.mse_loss(curr_q_val, bellman)
+            qf_loss.append(q_objective.detach().numpy())
             qf_optimizer.zero_grad()
             q_objective.backward()
             qf_optimizer.step()
-            tabular.record('qf_' + str(qf_itr) + '_loss', q_objective)
-            qf_itr += 1
-
+        tabular.record("qf_loss", np.mean(qf_loss))
 
     def optimize_policy(self, itr, samples):
         """ Optimize the policy based on the policy objective from the sac paper.
