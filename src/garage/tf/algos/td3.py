@@ -45,7 +45,6 @@ class TD3(DDPG):
         discount(float): Discount factor for the cumulative return.
         max_action(float): Maximum action magnitude.
         name(str): Name of the algorithm shown in computation graph.
-        n_epoch_cycles(int): Number of batches of samples in each epoch.
         max_path_length(int): Maximum length of a path.
         n_train_steps(int): Number of optimizations in each epoch cycle.
         buffer_batch_size(int): Size of replay buffer.
@@ -82,7 +81,6 @@ class TD3(DDPG):
                  discount=0.99,
                  max_action=None,
                  name=None,
-                 n_epoch_cycles=20,
                  max_path_length=None,
                  n_train_steps=50,
                  buffer_batch_size=64,
@@ -119,7 +117,6 @@ class TD3(DDPG):
                                   discount=discount,
                                   max_action=max_action,
                                   name=name,
-                                  n_epoch_cycles=n_epoch_cycles,
                                   max_path_length=max_path_length,
                                   n_train_steps=n_train_steps,
                                   buffer_batch_size=buffer_batch_size,

@@ -8,8 +8,7 @@ class DummyAlgo(BatchPolopt):
         super().__init__(policy=policy,
                          baseline=baseline,
                          discount=0.1,
-                         max_path_length=1,
-                         n_samples=10)
+                         max_path_length=1)
 
     def train(self, runner):
         pass

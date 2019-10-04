@@ -42,7 +42,6 @@ class TestDDPG(TfGraphTestCase):
                 qf_lr=1e-3,
                 qf=qf,
                 replay_buffer=replay_buffer,
-                n_epoch_cycles=20,
                 target_update_tau=1e-2,
                 n_train_steps=50,
                 discount=0.9,

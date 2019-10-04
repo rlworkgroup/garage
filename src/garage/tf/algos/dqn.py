@@ -1,3 +1,4 @@
+"""Deep Q-Network implementation in TensorFlow."""
 from dowel import tabular
 import numpy as np
 import tensorflow as tf
@@ -24,7 +25,6 @@ class DQN(OffPolicyRLAlgorithm):
         replay_buffer (garage.replay_buffer.ReplayBuffer): Replay buffer.
         exploration_strategy (garage.np.exploration_strategies.
             ExplorationStrategy): Exploration strategy.
-        n_epoch_cycles (int): Epoch cycles.
         min_buffer_size (int): The minimum buffer size for replay buffer.
         buffer_batch_size (int): Batch size for replay buffer.
         rollout_batch_size (int): Roll out batch size.
@@ -54,7 +54,6 @@ class DQN(OffPolicyRLAlgorithm):
                  qf,
                  replay_buffer,
                  exploration_strategy=None,
-                 n_epoch_cycles=20,
                  min_buffer_size=int(1e4),
                  buffer_batch_size=64,
                  rollout_batch_size=1,
@@ -80,22 +79,20 @@ class DQN(OffPolicyRLAlgorithm):
         # clone a target q-function
         self.target_qf = qf.clone('target_qf')
 
-        super(DQN, self).__init__(
-            env_spec=env_spec,
-            policy=policy,
-            qf=qf,
-            exploration_strategy=exploration_strategy,
-            min_buffer_size=min_buffer_size,
-            n_train_steps=n_train_steps,
-            n_epoch_cycles=n_epoch_cycles,
-            buffer_batch_size=buffer_batch_size,
-            rollout_batch_size=rollout_batch_size,
-            replay_buffer=replay_buffer,
-            max_path_length=max_path_length,
-            discount=discount,
-            reward_scale=reward_scale,
-            input_include_goal=input_include_goal,
-            smooth_return=smooth_return)
+        super().__init__(env_spec=env_spec,
+                         policy=policy,
+                         qf=qf,
+                         exploration_strategy=exploration_strategy,
+                         min_buffer_size=min_buffer_size,
+                         n_train_steps=n_train_steps,
+                         buffer_batch_size=buffer_batch_size,
+                         rollout_batch_size=rollout_batch_size,
+                         replay_buffer=replay_buffer,
+                         max_path_length=max_path_length,
+                         discount=discount,
+                         reward_scale=reward_scale,
+                         input_include_goal=input_include_goal,
+                         smooth_return=smooth_return)
 
     @overrides
     def init_opt(self):
@@ -112,10 +109,12 @@ class DQN(OffPolicyRLAlgorithm):
 
         # build q networks
         with tf.name_scope(self.name, 'DQN'):
-            action_t_ph = tf.compat.v1.placeholder(
-                tf.int32, None, name='action')
-            reward_t_ph = tf.compat.v1.placeholder(
-                tf.float32, None, name='reward')
+            action_t_ph = tf.compat.v1.placeholder(tf.int32,
+                                                   None,
+                                                   name='action')
+            reward_t_ph = tf.compat.v1.placeholder(tf.float32,
+                                                   None,
+                                                   name='reward')
             done_t_ph = tf.compat.v1.placeholder(tf.float32, None, name='done')
 
             with tf.name_scope('update_ops'):
@@ -140,13 +139,13 @@ class DQN(OffPolicyRLAlgorithm):
                     future_best_q_val_action = tf.argmax(
                         target_qval_with_online_q, 1)
                     future_best_q_val = tf.reduce_sum(
-                        self.target_qf.q_vals * tf.one_hot(
-                            future_best_q_val_action, action_dim),
+                        self.target_qf.q_vals *
+                        tf.one_hot(future_best_q_val_action, action_dim),
                         axis=1)
                 else:
                     # r + max_a(Q'(s', _)) - Q(s, a)
-                    future_best_q_val = tf.reduce_max(
-                        self.target_qf.q_vals, axis=1)
+                    future_best_q_val = tf.reduce_max(self.target_qf.q_vals,
+                                                      axis=1)
 
                 q_best_masked = (1.0 - done_t_ph) * future_best_q_val
                 # if done, it's just reward
@@ -199,8 +198,8 @@ class DQN(OffPolicyRLAlgorithm):
 
         if itr % self.n_epoch_cycles == 0:
             if self.evaluate:
-                mean100ep_rewards = round(
-                    np.mean(self.episode_rewards[-100:]), 1)
+                mean100ep_rewards = round(np.mean(self.episode_rewards[-100:]),
+                                          1)
                 mean100ep_qf_loss = np.mean(self.episode_qf_losses[-100:])
                 tabular.record('Epoch', epoch)
                 tabular.record('AverageReturn', np.mean(self.episode_rewards))
@@ -238,11 +237,13 @@ class DQN(OffPolicyRLAlgorithm):
         return loss
 
     def __getstate__(self):
+        """Get state."""
         data = self.__dict__.copy()
         del data['_qf_update_ops']
         del data['_train_qf']
         return data
 
     def __setstate__(self, state):
+        """Set state."""
         self.__dict__ = state
         self.init_opt()

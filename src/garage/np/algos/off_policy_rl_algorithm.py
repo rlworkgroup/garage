@@ -16,7 +16,6 @@ class OffPolicyRLAlgorithm(RLAlgorithm):
         replay_buffer (garage.replay_buffer.ReplayBuffer): Replay buffer.
         use_target (bool): Whether to use target.
         discount(float): Discount factor for the cumulative return.
-        n_epoch_cycles (int): Number of train_once calls per epoch.
         max_path_length (int): Maximum path length. The episode will
             terminate when length of trajectory reaches max_path_length.
         n_train_steps (int): Training steps.
@@ -38,7 +37,6 @@ class OffPolicyRLAlgorithm(RLAlgorithm):
                  replay_buffer,
                  use_target=False,
                  discount=0.99,
-                 n_epoch_cycles=20,
                  max_path_length=None,
                  n_train_steps=50,
                  buffer_batch_size=64,
@@ -52,7 +50,6 @@ class OffPolicyRLAlgorithm(RLAlgorithm):
         self.policy = policy
         self.qf = qf
         self.replay_buffer = replay_buffer
-        self.n_epoch_cycles = n_epoch_cycles
         self.n_train_steps = n_train_steps
         self.buffer_batch_size = buffer_batch_size
         self.use_target = use_target
@@ -82,6 +79,7 @@ class OffPolicyRLAlgorithm(RLAlgorithm):
             The average return in last epoch cycle.
 
         """
+        self.n_epoch_cycles = runner.train_args.n_epoch_cycles
         last_return = None
 
         for epoch in runner.step_epochs():

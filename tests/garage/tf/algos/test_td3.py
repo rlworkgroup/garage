@@ -54,7 +54,6 @@ class TestTD3(TfGraphTestCase):
                        qf2=qf2,
                        replay_buffer=replay_buffer,
                        target_update_tau=0.005,
-                       n_epoch_cycles=20,
                        n_train_steps=50,
                        discount=0.99,
                        smooth_return=False,

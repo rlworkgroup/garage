@@ -62,7 +62,6 @@ def run_task(snapshot_config, *_):
                   qf2=qf2,
                   replay_buffer=replay_buffer,
                   target_update_tau=1e-2,
-                  n_epoch_cycles=20,
                   n_train_steps=1,
                   smooth_return=False,
                   discount=0.99,

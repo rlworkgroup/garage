@@ -50,11 +50,10 @@ class CEM(BatchPolopt):
                  best_frac=0.05,
                  extra_std=1.,
                  extra_decay_time=100):
-        super().__init__(policy, baseline, discount, max_path_length,
-                         n_samples)
+        super().__init__(policy, baseline, discount, max_path_length)
         self.env_spec = env_spec
-
         self.n_samples = n_samples
+
         self.best_frac = best_frac
         self.init_std = init_std
         self.best_frac = best_frac

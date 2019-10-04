@@ -51,7 +51,6 @@ class TestDQN(TfGraphTestCase):
                        min_buffer_size=int(1e3),
                        double_q=False,
                        n_train_steps=500,
-                       n_epoch_cycles=n_epoch_cycles,
                        target_network_update_freq=1,
                        buffer_batch_size=32)
 
@@ -93,7 +92,6 @@ class TestDQN(TfGraphTestCase):
                        min_buffer_size=int(1e3),
                        double_q=True,
                        n_train_steps=500,
-                       n_epoch_cycles=n_epoch_cycles,
                        target_network_update_freq=1,
                        buffer_batch_size=32)
 
@@ -136,7 +134,6 @@ class TestDQN(TfGraphTestCase):
                        double_q=False,
                        n_train_steps=500,
                        grad_norm_clipping=5.0,
-                       n_epoch_cycles=n_epoch_cycles,
                        target_network_update_freq=1,
                        buffer_batch_size=32)
 
@@ -178,7 +175,6 @@ class TestDQN(TfGraphTestCase):
                        double_q=False,
                        n_train_steps=500,
                        grad_norm_clipping=5.0,
-                       n_epoch_cycles=n_epoch_cycles,
                        target_network_update_freq=1,
                        buffer_batch_size=32)
             runner.setup(algo, env)

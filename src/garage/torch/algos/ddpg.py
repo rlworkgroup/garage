@@ -102,7 +102,6 @@ class DDPG(OffPolicyRLAlgorithm):
                          policy=policy,
                          qf=qf,
                          n_train_steps=n_train_steps,
-                         n_epoch_cycles=n_epoch_cycles,
                          max_path_length=max_path_length,
                          buffer_batch_size=buffer_batch_size,
                          min_buffer_size=min_buffer_size,

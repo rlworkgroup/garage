@@ -34,10 +34,10 @@ class CMAES(BatchPolopt):
                  discount=0.99,
                  max_path_length=500,
                  sigma0=1.):
-        super().__init__(policy, baseline, discount, max_path_length,
-                         n_samples)
+        super().__init__(policy, baseline, discount, max_path_length)
         self.env_spec = env_spec
         self.policy = policy
+        self.n_samples = n_samples
 
         self.sigma0 = sigma0
 
