@@ -22,7 +22,7 @@ from garage.torch.q_functions import ContinuousMLPQFunction
 def run_task(snapshot_config, *_):
     """Set up environment and algorithm and run the task."""
     runner = LocalRunner(snapshot_config)
-    env = GarageEnv(gym.make('InvertedPendulum-v2'))
+    env = GarageEnv(normalize(gym.make('InvertedDoublePendulum-v2')))
 
     policy = GaussianMLPPolicy(env_spec=env.spec,
                                     hidden_sizes=[64, 64],

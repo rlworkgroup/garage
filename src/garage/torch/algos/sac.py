@@ -37,13 +37,9 @@ class SAC(OffPolicyRLAlgorithm):
                  max_path_length=None,
                  buffer_batch_size=64,
                  min_buffer_size=int(1e4),
-                 rollout_batch_size=1,
-                 exploration_strategy=None,
-                 target_update_tau=1e-2,
+                 target_update_tau=5e-3,
                  policy_lr=3e-4,
                  qf_lr=3e-4,
-                 policy_weight_decay=0,
-                 qf_weight_decay=0,
                  optimizer=torch.optim.Adam,
                  clip_pos_returns=False,
                  clip_return=np.inf,
@@ -59,8 +55,6 @@ class SAC(OffPolicyRLAlgorithm):
         self.policy_lr = policy_lr
         self.qf_lr = qf_lr
         self.gradient_steps = gradient_steps_per_itr
-        self.policy_weight_decay = policy_weight_decay
-        self.qf_weight_decay = qf_weight_decay
         self.clip_pos_returns = clip_pos_returns
         self.clip_return = clip_return
         self.evaluate = False
@@ -74,8 +68,6 @@ class SAC(OffPolicyRLAlgorithm):
                          max_path_length=max_path_length,
                          buffer_batch_size=buffer_batch_size,
                          min_buffer_size=min_buffer_size,
-                         rollout_batch_size=rollout_batch_size,
-                         exploration_strategy=exploration_strategy,
                          replay_buffer=replay_buffer,
                          use_target=True,
                          discount=discount,
@@ -157,9 +149,8 @@ class SAC(OffPolicyRLAlgorithm):
         qf_loss = []
         for target_qf, qf, qf_optimizer in zip(target_qfs, qfs, qf_optimizers):
             curr_q_val = qf(torch.Tensor(obs), torch.Tensor(actions)).flatten()
-            with torch.no_grad():
-                targ_out = target_qf(torch.Tensor(next_obs), torch.Tensor(next_actions)).flatten()
-                alpha = torch.exp(self.log_alpha)[0]
+            targ_out = target_qf(torch.Tensor(next_obs), torch.Tensor(next_actions)).flatten()
+            alpha = self.log_alpha.detach().exp().item()
             bootstrapped_value = targ_out - (alpha * next_ll)
             bellman = torch.Tensor(rewards) + self.discount*(bootstrapped_value)
             q_objective = 0.5 * F.mse_loss(curr_q_val, bellman)
@@ -167,6 +158,7 @@ class SAC(OffPolicyRLAlgorithm):
             qf_optimizer.zero_grad()
             q_objective.backward()
             qf_optimizer.step()
+        
         tabular.record("qf_loss", np.mean(qf_loss))
 
     def optimize_policy(self, itr, samples):
@@ -183,28 +175,34 @@ class SAC(OffPolicyRLAlgorithm):
         # use the forward function instead of the get action function
         # in order to make sure that policy is differentiated. 
         action_dists = self.policy(torch.Tensor(obs))
+        entropy = action_dists.entropy()
+        tabular.record("mean_entropy", torch.mean(entropy).detach().numpy().item())
+        tabular.record("mean_stdev", torch.mean(action_dists.variance.detach().flatten()).item()**0.5)
         actions = action_dists.rsample()
         log_pi = action_dists.log_prob(actions)
 
         if self.use_automatic_entropy_tuning:
-            alpha_loss = -(self.log_alpha * (log_pi * self.target_entropy).detach()).mean()
+            
+            tabular.record("alpha_before", torch.exp(self.log_alpha.detach()).item())
+            alpha_loss = -(self.log_alpha * (log_pi + self.target_entropy).detach()).mean()
             self.alpha_optimizer.zero_grad()
             alpha_loss.backward()
             self.alpha_optimizer.step()
-            tabular.record("alpha_loss", alpha_loss.item())
+            tabular.record("alpha_after", torch.exp(self.log_alpha.detach()).item())
 
         min_q = torch.min(self.qf1(torch.Tensor(obs), torch.Tensor(actions)), 
                             self.qf2(torch.Tensor(obs), torch.Tensor(actions)))
-        with torch.no_grad():
-            alpha = torch.exp(self.log_alpha)[0]
+        
+        alpha = self.log_alpha.detach().exp().item()
         policy_objective = ((alpha * log_pi) - min_q.flatten()).mean()
-        logged_entropy = np.mean(alpha.detach().numpy() * -log_pi.detach().numpy())
         self.policy_optimizer.zero_grad()
-        tabular.record("mean entropy", logged_entropy)
         policy_objective.backward()
         self.policy_optimizer.step()
 
-    def _adjust_temperature(self, itr):        
+    def _adjust_temperature(self, itr):
+        """
+        implemented inside 
+        """       
         pass
 
     def update_targets(self):
