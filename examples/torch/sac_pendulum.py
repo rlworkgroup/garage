@@ -22,19 +22,19 @@ from garage.torch.q_functions import ContinuousMLPQFunction
 def run_task(snapshot_config, *_):
     """Set up environment and algorithm and run the task."""
     runner = LocalRunner(snapshot_config)
-    env = GarageEnv(normalize(gym.make('HalfCheetah-v2')))
+    env = GarageEnv(gym.make('InvertedPendulum-v2'))
 
     policy = GaussianMLPPolicy(env_spec=env.spec,
-                                    hidden_sizes=[256, 256],
+                                    hidden_sizes=[64, 64],
                                     hidden_nonlinearity=F.relu,
                                     output_nonlinearity=torch.tanh)
 
     qf1 = ContinuousMLPQFunction(env_spec=env.spec,
-                                hidden_sizes=[256, 256],
+                                hidden_sizes=[64, 64],
                                 hidden_nonlinearity=F.relu)
 
     qf2 = ContinuousMLPQFunction(env_spec=env.spec,
-                                hidden_sizes=[256, 256],
+                                hidden_sizes=[64, 64],
                                 hidden_nonlinearity=F.relu)
 
     replay_buffer = SimpleReplayBuffer(env_spec=env.spec,
@@ -50,11 +50,11 @@ def run_task(snapshot_config, *_):
                 min_buffer_size=1e3,
                 target_update_tau=5e-3,
                 discount=0.99,
-                buffer_batch_size=256)
+                buffer_batch_size=64)
 
     runner.setup(algo=sac, env=env)
 
-    runner.train(n_epochs=500, batch_size=256 ,plot=True)
+    runner.train(n_epochs=500, batch_size=64 ,plot=True)
 
 
 run_experiment(

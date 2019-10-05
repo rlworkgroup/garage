@@ -191,13 +191,16 @@ class SAC(OffPolicyRLAlgorithm):
             self.alpha_optimizer.zero_grad()
             alpha_loss.backward()
             self.alpha_optimizer.step()
+            tabular.record("alpha_loss", alpha_loss.item())
 
         min_q = torch.min(self.qf1(torch.Tensor(obs), torch.Tensor(actions)), 
                             self.qf2(torch.Tensor(obs), torch.Tensor(actions)))
         with torch.no_grad():
             alpha = torch.exp(self.log_alpha)[0]
         policy_objective = ((alpha * log_pi) - min_q.flatten()).mean()
+        logged_entropy = np.mean(alpha.detach().numpy() * -log_pi.detach().numpy())
         self.policy_optimizer.zero_grad()
+        tabular.record("mean entropy", logged_entropy)
         policy_objective.backward()
         self.policy_optimizer.step()
 
