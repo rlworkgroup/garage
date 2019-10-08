@@ -126,8 +126,8 @@ class GaussianGRUModel(Model):
     def network_output_spec(self):
         """Network output spec."""
         return [
-            'sample', 'mean', 'step_mean', 'log_std', 'step_log_std',
-            'step_hidden', 'init_hidden', 'dist'
+            'mean', 'step_mean', 'log_std', 'step_log_std', 'step_hidden',
+            'init_hidden', 'dist'
         ]
 
     def _build(self, state_input, step_input, hidden_input, name=None):
@@ -177,11 +177,9 @@ class GaussianGRUModel(Model):
                     name='log_std_param')
 
         dist = DiagonalGaussian(self._output_dim)
-        rnd = tf.random.normal(shape=step_mean_var.get_shape().as_list()[1:])
-        action_var = rnd * tf.exp(step_log_std_var) + step_mean_var
 
-        return (action_var, mean_var, step_mean_var, log_std_var,
-                step_log_std_var, step_hidden, hidden_init_var, dist)
+        return (mean_var, step_mean_var, log_std_var, step_log_std_var,
+                step_hidden, hidden_init_var, dist)
 
     def __getstate__(self):
         """Object.__getstate__."""
