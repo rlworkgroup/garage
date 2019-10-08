@@ -25,6 +25,10 @@ required = [
     'polling',
     'protobuf',
     'psutil',
+    # Pyglet 1.4.0 introduces some API change which breaks some
+    # gym environments
+    # See: https://github.com/openai/gym/issues/1588
+    'pyglet<1.4.0,>=1.3.0',
     'pyprind',
     'python-dateutil',
     'scikit-image',
