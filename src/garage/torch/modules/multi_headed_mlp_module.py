@@ -53,7 +53,6 @@ class MultiHeadedMLPModule(nn.Module):
         super().__init__()
 
         self._layers = nn.ModuleList()
-
         if n_heads < 1:
             raise ValueError(
                 'n_head should be greater than or equal to 1 but {} provided.'.
@@ -81,7 +80,7 @@ class MultiHeadedMLPModule(nn.Module):
             layer.add_module('linear', linear_layer)
 
             if hidden_nonlinearity:
-                layer.add_module('non_linearity', hidden_nonlinearity)
+                layer.add_module('non_linearity', hidden_nonlinearity())
 
             self._layers.append(layer)
             prev_size = size
@@ -96,7 +95,7 @@ class MultiHeadedMLPModule(nn.Module):
             layer.add_module('linear', linear_layer)
 
             if output_nonlinearities[i]:
-                layer.add_module('non_linearity', output_nonlinearities[i])
+                layer.add_module('non_linearity', output_nonlinearities[i]())
 
             self._output_layers.append(layer)
 

@@ -9,13 +9,14 @@ Here it creates a gym environment InvertedDoublePendulum. And uses a DDPG with
 import gym
 import torch
 from torch.nn import functional as F  # NOQA
+from torch import nn as nn
 
 from garage.envs import normalize
 from garage.envs.base import GarageEnv
 from garage.experiment import LocalRunner, run_experiment
 from garage.replay_buffer import SimpleReplayBuffer
 from garage.torch.algos import SAC
-from garage.torch.policies import GaussianMLPPolicy
+from garage.torch.policies import GaussianMLPPolicyDualHead
 from garage.torch.q_functions import ContinuousMLPQFunction
 
 
@@ -24,16 +25,24 @@ def run_task(snapshot_config, *_):
     runner = LocalRunner(snapshot_config)
     env = GarageEnv(normalize(gym.make('HalfCheetah-v2')))
 
-    policy = GaussianMLPPolicy(env_spec=env.spec,
-                                    hidden_sizes=[256, 256],
-                                    hidden_nonlinearity=F.relu,
-                                    output_nonlinearity=torch.tanh)
-
+    policy = GaussianMLPPolicyDualHead(env_spec=env.spec,
+                               hidden_sizes=[256, 256],
+                               hidden_nonlinearity=nn.ReLU,
+                               output_nonlinearity=nn.Tanh)
+    import ipdb; ipdb.set_trace()
     qf1 = ContinuousMLPQFunction(env_spec=env.spec,
                                 hidden_sizes=[256, 256],
                                 hidden_nonlinearity=F.relu)
 
     qf2 = ContinuousMLPQFunction(env_spec=env.spec,
+                                hidden_sizes=[256, 256],
+                                hidden_nonlinearity=F.relu)
+
+    target_qf1 = ContinuousMLPQFunction(env_spec=env.spec,
+                                hidden_sizes=[256, 256],
+                                hidden_nonlinearity=F.relu)
+
+    target_qf2 = ContinuousMLPQFunction(env_spec=env.spec,
                                 hidden_sizes=[256, 256],
                                 hidden_nonlinearity=F.relu)
 
@@ -45,20 +54,22 @@ def run_task(snapshot_config, *_):
                 policy=policy,
                 qf1=qf1,
                 qf2=qf2,
+                target_qf1=target_qf1,
+                target_qf2=target_qf2,
                 use_automatic_entropy_tuning=True,
                 replay_buffer=replay_buffer,
-                min_buffer_size=1e4,
+                min_buffer_size=1e3,
                 target_update_tau=5e-3,
                 discount=0.99,
                 buffer_batch_size=256)
 
     runner.setup(algo=sac, env=env)
 
-    runner.train(n_epochs=1000, batch_size=256 ,plot=True)
+    runner.train(n_epochs=1000, batch_size=1000 ,plot=True)
 
 
 run_experiment(
     run_task,
     snapshot_mode='last',
-    seed=270,
+    seed=532,
 )

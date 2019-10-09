@@ -12,6 +12,7 @@ from torch.nn import functional as F  # NOQA
 
 from garage.envs import normalize
 from garage.envs.base import GarageEnv
+from garage.envs import PointEnv
 from garage.experiment import LocalRunner, run_experiment
 from garage.replay_buffer import SimpleReplayBuffer
 from garage.torch.algos import SAC
@@ -22,19 +23,19 @@ from garage.torch.q_functions import ContinuousMLPQFunction
 def run_task(snapshot_config, *_):
     """Set up environment and algorithm and run the task."""
     runner = LocalRunner(snapshot_config)
-    env = GarageEnv(normalize(gym.make('InvertedDoublePendulum-v2')))
+    env = GarageEnv(normalize(gym.make('HalfCheetah-v2')))
 
     policy = GaussianMLPPolicy(env_spec=env.spec,
-                                    hidden_sizes=[64, 64],
+                                    hidden_sizes=[256, 256],
                                     hidden_nonlinearity=F.relu,
                                     output_nonlinearity=torch.tanh)
 
     qf1 = ContinuousMLPQFunction(env_spec=env.spec,
-                                hidden_sizes=[64, 64],
+                                hidden_sizes=[256, 256],
                                 hidden_nonlinearity=F.relu)
 
     qf2 = ContinuousMLPQFunction(env_spec=env.spec,
-                                hidden_sizes=[64, 64],
+                                hidden_sizes=[256, 256],
                                 hidden_nonlinearity=F.relu)
 
     replay_buffer = SimpleReplayBuffer(env_spec=env.spec,
@@ -47,19 +48,18 @@ def run_task(snapshot_config, *_):
                 qf2=qf2,
                 use_automatic_entropy_tuning=True,
                 replay_buffer=replay_buffer,
-                min_buffer_size=1e2,
+                min_buffer_size=1e4,
                 target_update_tau=5e-3,
                 discount=0.99,
-                gradient_steps_per_itr=100,
-                buffer_batch_size=64)
+                buffer_batch_size=256)
 
     runner.setup(algo=sac, env=env)
 
-    runner.train(n_epochs=500, batch_size=100 ,plot=True)
+    runner.train(n_epochs=1000, batch_size=256 ,plot=True)
 
 
 run_experiment(
     run_task,
     snapshot_mode='last',
-    seed=154,
+    seed=270,
 )

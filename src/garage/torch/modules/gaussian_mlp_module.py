@@ -154,7 +154,9 @@ class GaussianMLPBaseModule(nn.Module):
 
 
 class GaussianMLPModule(GaussianMLPBaseModule):
-    """GaussianMLPModule that mean and std share the same network."""
+    """GaussianMLPModule that has its own mean network.
+     Also has a learnable parameter for the standard deviation.
+    """
 
     def __init__(self,
                  input_dim,
@@ -296,7 +298,7 @@ class GaussianMLPTwoHeadedModule(GaussianMLPBaseModule):
                  input_dim,
                  output_dim,
                  hidden_sizes=(32, 32),
-                 hidden_nonlinearity=torch.tanh,
+                 hidden_nonlinearity=nn.ReLU,
                  hidden_w_init=nn.init.xavier_uniform_,
                  hidden_b_init=nn.init.zeros_,
                  output_nonlinearity=None,
@@ -324,7 +326,6 @@ class GaussianMLPTwoHeadedModule(GaussianMLPBaseModule):
                              max_std=max_std,
                              std_parameterization=std_parameterization,
                              layer_normalization=layer_normalization)
-
         self._shared_mean_log_std_network = MultiHeadedMLPModule(
             n_heads=2,
             input_dim=self._input_dim,

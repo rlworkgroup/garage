@@ -3,8 +3,6 @@
 import argparse
 
 import joblib
-import tensorflow as tf
-
 from garage.misc.console import query_yes_no
 from garage.sampler.utils import rollout
 

@@ -9,7 +9,7 @@ from tests.helpers import step_env
 
 class TestNormalizedEnv:
     def test_pickleable(self):
-        inner_env = PointEnv(goal=(1., 2.))
+        inner_env = (goal=(1., 2.))
         env = NormalizedEnv(inner_env, scale_reward=10.)
         round_trip = pickle.loads(pickle.dumps(env))
         assert round_trip
