@@ -1,4 +1,4 @@
-"""CategoricalConvPolicy with model."""
+"""CategoricalCNNPolicy with model."""
 import akro
 import tensorflow as tf
 
@@ -10,9 +10,9 @@ from garage.tf.models import Sequential
 from garage.tf.policies.base2 import StochasticPolicy2
 
 
-class CategoricalConvPolicy(StochasticPolicy2):
+class CategoricalCNNPolicy(StochasticPolicy2):
     """
-    CategoricalConvPolicy with model.
+    CategoricalCNNPolicy with model.
 
     A policy that contains a CNN and a MLP to make prediction based on
     a categorical distribution.
@@ -66,7 +66,7 @@ class CategoricalConvPolicy(StochasticPolicy2):
                  conv_filter_sizes,
                  conv_strides,
                  conv_pad,
-                 name='CategoricalConvPolicy',
+                 name='CategoricalCNNPolicy',
                  hidden_sizes=[],
                  hidden_nonlinearity=tf.nn.relu,
                  hidden_w_init=tf.glorot_uniform_initializer(),
@@ -76,7 +76,7 @@ class CategoricalConvPolicy(StochasticPolicy2):
                  output_b_init=tf.zeros_initializer(),
                  layer_normalization=False):
         assert isinstance(env_spec.action_space, akro.Discrete), (
-            'CategoricalConvPolicy only works with akro.Discrete action '
+            'CategoricalCNNPolicy only works with akro.Discrete action '
             'space.')
         super().__init__(name, env_spec)
         self.obs_dim = env_spec.observation_space.shape

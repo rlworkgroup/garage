@@ -6,14 +6,14 @@ import pytest
 import tensorflow as tf
 
 from garage.tf.envs import TfEnv
-from garage.tf.policies import CategoricalConvPolicy
+from garage.tf.policies import CategoricalCNNPolicy
 from tests.fixtures import TfGraphTestCase
 from tests.fixtures.envs.dummy import DummyDiscreteEnv
 from tests.fixtures.models import SimpleCNNModel
 from tests.fixtures.models import SimpleMLPModel
 
 
-class TestCategoricalConvPolicyWithModel(TfGraphTestCase):
+class TestCategoricalCNNPolicyWithModel(TfGraphTestCase):
 
     @pytest.mark.parametrize(
         'obs_dim, action_dim, filter_dims, filter_sizes, '
@@ -41,17 +41,17 @@ class TestCategoricalConvPolicyWithModel(TfGraphTestCase):
         mock_rand.return_value = 0
         env = TfEnv(DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
         with mock.patch(('garage.tf.policies.'
-                         'categorical_conv_policy.MLPModel'),
+                         'categorical_cnn_policy.MLPModel'),
                         new=SimpleMLPModel):
             with mock.patch(('garage.tf.policies.'
-                             'categorical_conv_policy.CNNModel'),
+                             'categorical_cnn_policy.CNNModel'),
                             new=SimpleCNNModel):
-                policy = CategoricalConvPolicy(env_spec=env.spec,
-                                               conv_filters=filter_dims,
-                                               conv_filter_sizes=filter_sizes,
-                                               conv_strides=strides,
-                                               conv_pad=padding,
-                                               hidden_sizes=hidden_sizes)
+                policy = CategoricalCNNPolicy(env_spec=env.spec,
+                                              conv_filters=filter_dims,
+                                              conv_filter_sizes=filter_sizes,
+                                              conv_strides=strides,
+                                              conv_pad=padding,
+                                              hidden_sizes=hidden_sizes)
 
         env.reset()
         obs, _, _, _ = env.step(1)
@@ -93,17 +93,17 @@ class TestCategoricalConvPolicyWithModel(TfGraphTestCase):
                        strides, padding, hidden_sizes):
         env = TfEnv(DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
         with mock.patch(('garage.tf.policies.'
-                         'categorical_conv_policy.MLPModel'),
+                         'categorical_cnn_policy.MLPModel'),
                         new=SimpleMLPModel):
             with mock.patch(('garage.tf.policies.'
-                             'categorical_conv_policy.CNNModel'),
+                             'categorical_cnn_policy.CNNModel'),
                             new=SimpleCNNModel):
-                policy = CategoricalConvPolicy(env_spec=env.spec,
-                                               conv_filters=filter_dims,
-                                               conv_filter_sizes=filter_sizes,
-                                               conv_strides=strides,
-                                               conv_pad=padding,
-                                               hidden_sizes=hidden_sizes)
+                policy = CategoricalCNNPolicy(env_spec=env.spec,
+                                              conv_filters=filter_dims,
+                                              conv_filter_sizes=filter_sizes,
+                                              conv_strides=strides,
+                                              conv_pad=padding,
+                                              hidden_sizes=hidden_sizes)
 
         env.reset()
         obs, _, _, _ = env.step(1)
@@ -137,17 +137,17 @@ class TestCategoricalConvPolicyWithModel(TfGraphTestCase):
                            filter_sizes, strides, padding, hidden_sizes):
         env = TfEnv(DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
         with mock.patch(('garage.tf.policies.'
-                         'categorical_conv_policy.MLPModel'),
+                         'categorical_cnn_policy.MLPModel'),
                         new=SimpleMLPModel):
             with mock.patch(('garage.tf.policies.'
-                             'categorical_conv_policy.CNNModel'),
+                             'categorical_cnn_policy.CNNModel'),
                             new=SimpleCNNModel):
-                policy = CategoricalConvPolicy(env_spec=env.spec,
-                                               conv_filters=filter_dims,
-                                               conv_filter_sizes=filter_sizes,
-                                               conv_strides=strides,
-                                               conv_pad=padding,
-                                               hidden_sizes=hidden_sizes)
+                policy = CategoricalCNNPolicy(env_spec=env.spec,
+                                              conv_filters=filter_dims,
+                                              conv_filter_sizes=filter_sizes,
+                                              conv_strides=strides,
+                                              conv_pad=padding,
+                                              hidden_sizes=hidden_sizes)
 
         env.reset()
         obs, _, _, _ = env.step(1)
@@ -173,22 +173,22 @@ class TestCategoricalConvPolicyWithModel(TfGraphTestCase):
         mock_rand.return_value = 0
         env = TfEnv(DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
         with mock.patch(('garage.tf.policies.'
-                         'categorical_conv_policy.MLPModel'),
+                         'categorical_cnn_policy.MLPModel'),
                         new=SimpleMLPModel):
             with mock.patch(('garage.tf.policies.'
-                             'categorical_conv_policy.CNNModel'),
+                             'categorical_cnn_policy.CNNModel'),
                             new=SimpleCNNModel):
-                policy = CategoricalConvPolicy(env_spec=env.spec,
-                                               conv_filters=(32, ),
-                                               conv_filter_sizes=(3, ),
-                                               conv_strides=(1, ),
-                                               conv_pad='SAME',
-                                               hidden_sizes=(4, ))
+                policy = CategoricalCNNPolicy(env_spec=env.spec,
+                                              conv_filters=(32, ),
+                                              conv_filter_sizes=(3, ),
+                                              conv_strides=(1, ),
+                                              conv_pad='SAME',
+                                              hidden_sizes=(4, ))
         env.reset()
         obs, _, _, _ = env.step(1)
 
         with tf.compat.v1.variable_scope(
-                'CategoricalConvPolicy/Sequential/MLPModel', reuse=True):
+                'CategoricalCNNPolicy/Sequential/MLPModel', reuse=True):
             return_var = tf.compat.v1.get_variable('return_var')
         # assign it to all one
         return_var.load(tf.ones_like(return_var).eval())
