@@ -20,6 +20,6 @@ __all__ = [
     'Policy', 'StochasticPolicy', 'CategoricalConvPolicy',
     'CategoricalConvPolicyWithModel', 'CategoricalGRUPolicy',
     'CategoricalLSTMPolicy', 'CategoricalMLPPolicy', 'ContinuousMLPPolicy',
-    'DiscreteQfDerivedPolicy', 'GaussianGRUPolicy',
-    'GaussianLSTMPolicy', 'GaussianGRUPolicyWithModel', 'GaussianMLPPolicy'
+    'DiscreteQfDerivedPolicy', 'GaussianGRUPolicy', 'GaussianLSTMPolicy',
+    'GaussianGRUPolicyWithModel', 'GaussianMLPPolicy'
 ]
