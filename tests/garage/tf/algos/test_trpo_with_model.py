@@ -13,7 +13,7 @@ from garage.tf.envs import TfEnv
 from garage.tf.experiment import LocalTFRunner
 from garage.tf.optimizers import FiniteDifferenceHvp
 from garage.tf.policies import CategoricalGRUPolicy
-from garage.tf.policies import CategoricalLSTMPolicyWithModel
+from garage.tf.policies import CategoricalLSTMPolicy
 from tests.fixtures import snapshot_config, TfGraphTestCase
 
 
@@ -24,8 +24,7 @@ class TestTRPO(TfGraphTestCase):
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
             env = TfEnv(normalize(gym.make('CartPole-v1')))
 
-            policy = CategoricalLSTMPolicyWithModel(name='policy',
-                                                    env_spec=env.spec)
+            policy = CategoricalLSTMPolicy(name='policy', env_spec=env.spec)
 
             baseline = LinearFeatureBaseline(env_spec=env.spec)
 
