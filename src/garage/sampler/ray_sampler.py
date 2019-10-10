@@ -142,8 +142,7 @@ class RaySampler(BaseSampler):
         self._active_worker_ids.remove(ready_worker_id)
         self._idle_worker_ids.append(ready_worker_id)
         trajectory = dict(
-            observations=self._algo.env_spec.observation_space.flatten_n(
-                trajectory[1]),
+            observations=np.asarray(trajectory[1]),
             actions=self._algo.env_spec.action_space.flatten_n(trajectory[2]),
             rewards=tensor_utils.stack_tensor_list(trajectory[3]),
             agent_infos=trajectory[4],
