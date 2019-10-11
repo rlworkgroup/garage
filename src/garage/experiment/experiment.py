@@ -221,8 +221,7 @@ def run_experiment(method_call=None,
                    dry=False,
                    env=None,
                    variant=None,
-                   use_tf=False,
-                   use_gpu=False,
+                   force_cpu=False,
                    pre_commands=None,
                    **kwargs):
     """Serialize the method call and run the experiment using the
@@ -240,11 +239,8 @@ def run_experiment(method_call=None,
             commands without executing them.
         env (dict): Extra environment variables.
         variant (dict): If provided, should be a dictionary of parameters.
-        use_tf (bool): Used along with the Theano and GPU configuration
-            when using TensorFlow
-        use_gpu (bool): Whether the launched task is running on GPU.
-            This triggers a few configuration changes including certain
-            environment flags.
+        force_cpu (bool): Whether to set all GPU devices invisible
+            to force use CPU.
         pre_commands (str): Pre commands to run the experiment.
 
     """
@@ -272,11 +268,8 @@ def run_experiment(method_call=None,
 
     global exp_count
 
-    if use_tf:
-        if not use_gpu:
-            os.environ['CUDA_VISIBLE_DEVICES'] = ''
-        else:
-            os.unsetenv('CUDA_VISIBLE_DEVICES')
+    if force_cpu:
+        os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
     for task in batch_tasks:
         call = task.pop('method_call')
@@ -304,8 +297,7 @@ def run_experiment(method_call=None,
         elif 'variant' in task:
             del task['variant']
         task['env'] = task.get('env', dict()) or dict()
-        task['env']['GARAGE_USE_GPU'] = str(use_gpu)
-        task['env']['GARAGE_USE_TF'] = str(use_tf)
+        task['env']['GARAGE_FORCE_CPU'] = str(force_cpu)
 
     for task in batch_tasks:
         env = task.pop('env', None)
