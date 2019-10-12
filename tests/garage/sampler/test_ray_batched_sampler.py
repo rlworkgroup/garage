@@ -58,13 +58,11 @@ class TestSampler:
         assert (trajs1[0]['observations'].shape == np.array(
             trajs2[0]['observations']).shape == (6, ))
         traj2_action_shape = np.array(trajs2[0]['actions']).shape
-        assert (trajs1[0]['actions'].shape == traj2_action_shape == (6, 4))
+        assert (trajs1[0]['actions'].shape == traj2_action_shape == (6, ))
         assert (sum(trajs1[0]['rewards']) == sum(trajs2[0]['rewards']) == 1)
 
         true_obs = np.array([0, 1, 2, 6, 10, 14])
-        true_actions = np.array([[0., 0., 1., 0.], [0., 0., 1., 0.],
-                                 [0., 1., 0., 0.], [0., 1., 0., 0.],
-                                 [0., 1., 0., 0.], [0., 0., 1., 0.]])
+        true_actions = np.array([2, 2, 1, 1, 1, 2])
         true_rewards = np.array([0, 0, 0, 0, 0, 1])
         for trajectory in trajs1:
             assert (np.array_equal(trajectory['observations'], true_obs))
