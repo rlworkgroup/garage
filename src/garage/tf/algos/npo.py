@@ -23,6 +23,7 @@ from garage.tf.optimizers import LbfgsOptimizer
 class NPO(BatchPolopt):
     """
     Natural Policy Gradient Optimization.
+
     Args:
         env_spec (garage.envs.EnvSpec): Environment specification.
         policy (garage.tf.policies.base.Policy): Policy.
@@ -98,6 +99,7 @@ class NPO(BatchPolopt):
                  use_neg_logli_entropy=False,
                  stop_entropy_gradient=False,
                  entropy_method='no_entropy',
+                 flatten_input=True,
                  name='NPO'):
         self.name = name
         self._name_scope = tf.name_scope(self.name)
@@ -110,9 +112,10 @@ class NPO(BatchPolopt):
                 optimizer_args = dict()
             optimizer = LbfgsOptimizer
 
-        self._check_entropy_configuration(
-            entropy_method, center_adv, stop_entropy_gradient,
-            use_neg_logli_entropy, policy_ent_coeff)
+        self._check_entropy_configuration(entropy_method, center_adv,
+                                          stop_entropy_gradient,
+                                          use_neg_logli_entropy,
+                                          policy_ent_coeff)
 
         if pg_loss not in ['vanilla', 'surrogate', 'surrogate_clip']:
             raise ValueError('Invalid pg_loss')
@@ -123,35 +126,37 @@ class NPO(BatchPolopt):
             self.max_kl_step = float(max_kl_step)
             self.policy_ent_coeff = float(policy_ent_coeff)
 
-        super().__init__(
-            env_spec=env_spec,
-            policy=policy,
-            baseline=baseline,
-            scope=scope,
-            max_path_length=max_path_length,
-            discount=discount,
-            gae_lambda=gae_lambda,
-            center_adv=center_adv,
-            positive_adv=positive_adv,
-            fixed_horizon=fixed_horizon)
+        super().__init__(env_spec=env_spec,
+                         policy=policy,
+                         baseline=baseline,
+                         scope=scope,
+                         max_path_length=max_path_length,
+                         discount=discount,
+                         gae_lambda=gae_lambda,
+                         center_adv=center_adv,
+                         positive_adv=positive_adv,
+                         fixed_horizon=fixed_horizon,
+                         flatten_input=flatten_input)
 
     @overrides
     def init_opt(self):
+        """Initialize optimizater."""
         pol_loss_inputs, pol_opt_inputs = self._build_inputs()
         self._policy_opt_inputs = pol_opt_inputs
 
         pol_loss, pol_kl = self._build_policy_loss(pol_loss_inputs)
-        self.optimizer.update_opt(
-            loss=pol_loss,
-            target=self.policy,
-            leq_constraint=(pol_kl, self.max_kl_step),
-            inputs=flatten_inputs(self._policy_opt_inputs),
-            constraint_name='mean_kl')
+        self.optimizer.update_opt(loss=pol_loss,
+                                  target=self.policy,
+                                  leq_constraint=(pol_kl, self.max_kl_step),
+                                  inputs=flatten_inputs(
+                                      self._policy_opt_inputs),
+                                  constraint_name='mean_kl')
 
         return dict()
 
     @overrides
     def optimize_policy(self, itr, samples_data):
+        """Optimize policy."""
         policy_opt_input_values = self._policy_opt_input_values(samples_data)
 
         # Train policy network
@@ -179,6 +184,7 @@ class NPO(BatchPolopt):
 
     @overrides
     def get_itr_snapshot(self, itr):
+        """Get iteration snapshot."""
         return dict(
             itr=itr,
             policy=self.policy,
@@ -192,20 +198,24 @@ class NPO(BatchPolopt):
         policy_dist = self.policy.distribution
 
         with tf.name_scope('inputs'):
-            obs_var = observation_space.to_tf_placeholder(
-                name='obs', batch_dims=2)
-            action_var = action_space.to_tf_placeholder(
-                name='action', batch_dims=2)
-            reward_var = tensor_utils.new_tensor(
-                name='reward', ndim=2, dtype=tf.float32)
-            valid_var = tf.compat.v1.placeholder(
-                tf.float32, shape=[None, None], name='valid')
-            baseline_var = tensor_utils.new_tensor(
-                name='baseline', ndim=2, dtype=tf.float32)
+            obs_var = observation_space.to_tf_placeholder(name='obs',
+                                                          batch_dims=2)
+            action_var = action_space.to_tf_placeholder(name='action',
+                                                        batch_dims=2)
+            reward_var = tensor_utils.new_tensor(name='reward',
+                                                 ndim=2,
+                                                 dtype=tf.float32)
+            valid_var = tf.compat.v1.placeholder(tf.float32,
+                                                 shape=[None, None],
+                                                 name='valid')
+            baseline_var = tensor_utils.new_tensor(name='baseline',
+                                                   ndim=2,
+                                                   dtype=tf.float32)
 
             policy_state_info_vars = {
-                k: tf.compat.v1.placeholder(
-                    tf.float32, shape=[None] * 2 + list(shape), name=k)
+                k: tf.compat.v1.placeholder(tf.float32,
+                                            shape=[None] * 2 + list(shape),
+                                            name=k)
                 for k, shape in self.policy.state_info_specs
             }
             policy_state_info_vars_list = [
@@ -214,10 +224,9 @@ class NPO(BatchPolopt):
 
             # old policy distribution
             policy_old_dist_info_vars = {
-                k: tf.compat.v1.placeholder(
-                    tf.float32,
-                    shape=[None] * 2 + list(shape),
-                    name='policy_old_%s' % k)
+                k: tf.compat.v1.placeholder(tf.float32,
+                                            shape=[None] * 2 + list(shape),
+                                            name='policy_old_%s' % k)
                 for k, shape in policy_dist.dist_info_specs
             }
             policy_old_dist_info_vars_list = [
@@ -239,8 +248,9 @@ class NPO(BatchPolopt):
 
             # valid view
             with tf.name_scope('valid'):
-                action_valid = filter_valids(
-                    action_flat, valid_flat, name='action_valid')
+                action_valid = filter_valids(action_flat,
+                                             valid_flat,
+                                             name='action_valid')
                 policy_state_info_vars_valid = filter_valids_dict(
                     policy_state_info_vars_flat,
                     valid_flat,
@@ -301,17 +311,17 @@ class NPO(BatchPolopt):
                 rewards = i.reward_var + self.policy_ent_coeff * policy_entropy
 
         with tf.name_scope('policy_loss'):
-            adv = compute_advantages(
-                self.discount,
-                self.gae_lambda,
-                self.max_path_length,
-                i.baseline_var,
-                rewards,
-                name='adv')
+            adv = compute_advantages(self.discount,
+                                     self.gae_lambda,
+                                     self.max_path_length,
+                                     i.baseline_var,
+                                     rewards,
+                                     name='adv')
 
             adv_flat = flatten_batch(adv, name='adv_flat')
-            adv_valid = filter_valids(
-                adv_flat, i.flat.valid_var, name='adv_valid')
+            adv_valid = filter_valids(adv_flat,
+                                      i.flat.valid_var,
+                                      name='adv_valid')
 
             if self.policy.recurrent:
                 adv = tf.reshape(adv, [-1, self.max_path_length])
@@ -367,15 +377,15 @@ class NPO(BatchPolopt):
             # Calculate vanilla loss
             with tf.name_scope('vanilla_loss'):
                 if self.policy.recurrent:
-                    ll = pol_dist.log_likelihood_sym(
-                        i.action_var, policy_dist_info, name='log_likelihood')
+                    ll = pol_dist.log_likelihood_sym(i.action_var,
+                                                     policy_dist_info,
+                                                     name='log_likelihood')
 
                     vanilla = ll * adv * i.valid_var
                 else:
-                    ll = pol_dist.log_likelihood_sym(
-                        i.valid.action_var,
-                        policy_dist_info_valid,
-                        name='log_likelihood')
+                    ll = pol_dist.log_likelihood_sym(i.valid.action_var,
+                                                     policy_dist_info_valid,
+                                                     name='log_likelihood')
 
                     vanilla = ll * adv_valid
 
@@ -407,11 +417,10 @@ class NPO(BatchPolopt):
                     # TRPO uses the standard surrogate objective
                     obj = tf.identity(surrogate, name='surr_obj')
                 elif self._pg_loss == 'surrogate_clip':
-                    lr_clip = tf.clip_by_value(
-                        lr,
-                        1 - self.lr_clip_range,
-                        1 + self.lr_clip_range,
-                        name='lr_clip')
+                    lr_clip = tf.clip_by_value(lr,
+                                               1 - self.lr_clip_range,
+                                               1 + self.lr_clip_range,
+                                               name='lr_clip')
                     if self.policy.recurrent:
                         surr_clip = lr_clip * adv * i.valid_var
                     else:
@@ -519,8 +528,7 @@ class NPO(BatchPolopt):
         return policy_entropy
 
     def _fit_baseline(self, samples_data):
-        """ Update baselines from samples. """
-
+        """Update baselines from samples."""
         policy_opt_input_values = self._policy_opt_input_values(samples_data)
 
         # Augment reward from baselines
@@ -547,8 +555,8 @@ class NPO(BatchPolopt):
         samples_data['returns'] = aug_returns
 
         # Calculate explained variance
-        ev = special.explained_variance_1d(
-            np.concatenate(baselines), aug_returns)
+        ev = special.explained_variance_1d(np.concatenate(baselines),
+                                           aug_returns)
         tabular.record('{}/ExplainedVariance'.format(self.baseline.name), ev)
 
         # Fit baseline
@@ -559,7 +567,7 @@ class NPO(BatchPolopt):
             self.baseline.fit(paths)
 
     def _policy_opt_input_values(self, samples_data):
-        """ Map rollout samples to the policy optimizer inputs. """
+        """Map rollout samples to the policy optimizer inputs."""
         policy_state_info_list = [
             samples_data['agent_infos'][k] for k in self.policy.state_info_keys
         ]
@@ -583,6 +591,7 @@ class NPO(BatchPolopt):
     def _check_entropy_configuration(self, entropy_method, center_adv,
                                      stop_entropy_gradient,
                                      use_neg_logli_entropy, policy_ent_coeff):
+        """Check entropy configuration."""
         if entropy_method == 'max':
             if center_adv:
                 raise ValueError('center_adv should be False when '
@@ -605,6 +614,7 @@ class NPO(BatchPolopt):
             raise ValueError('Invalid entropy_method')
 
     def __getstate__(self):
+        """Get state."""
         data = self.__dict__.copy()
         del data['_name_scope']
         del data['_policy_opt_inputs']
@@ -615,6 +625,7 @@ class NPO(BatchPolopt):
         return data
 
     def __setstate__(self, state):
+        """Set state."""
         self.__dict__ = state
         self._name_scope = tf.name_scope(self.name)
         self.init_opt()

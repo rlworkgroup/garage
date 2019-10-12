@@ -50,7 +50,8 @@ class BatchPolopt(RLAlgorithm):
                  gae_lambda=1,
                  center_adv=True,
                  positive_adv=False,
-                 fixed_horizon=False):
+                 fixed_horizon=False,
+                 flatten_input=True):
         self.env_spec = env_spec
         self.policy = policy
         self.baseline = baseline
@@ -61,6 +62,7 @@ class BatchPolopt(RLAlgorithm):
         self.center_adv = center_adv
         self.positive_adv = positive_adv
         self.fixed_horizon = fixed_horizon
+        self.flatten_input = flatten_input
 
         self.episode_reward_mean = collections.deque(maxlen=100)
         if policy.vectorized:
@@ -100,7 +102,6 @@ class BatchPolopt(RLAlgorithm):
 
         """
         paths = self.process_samples(itr, paths)
-
         self.log_diagnostics(paths)
         logger.log('Optimizing policy...')
         self.optimize_policy(itr, paths)
@@ -164,10 +165,16 @@ class BatchPolopt(RLAlgorithm):
             returns.append(path['returns'])
 
         # make all paths the same length
-        obs = [path['observations'] for path in paths]
+        obs = [
+            self.env_spec.observation_space.flatten_n(path['observations'])
+            if self.flatten_input else path['observations'] for path in paths
+        ]
         obs = tensor_utils.pad_tensor_n(obs, max_path_length)
 
-        actions = [path['actions'] for path in paths]
+        actions = [
+            self.env_spec.action_space.flatten_n(path['actions'])
+            if self.flatten_input else paths['actions'] for path in paths
+        ]
         actions = tensor_utils.pad_tensor_n(actions, max_path_length)
 
         rewards = [path['rewards'] for path in paths]
