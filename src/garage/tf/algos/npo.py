@@ -65,6 +65,9 @@ class NPO(BatchPolopt):
             dense entropy to the reward for each time step. 'regularized' adds
             the mean entropy to the surrogate objective. See
             https://arxiv.org/abs/1805.00909 for more details.
+        flatten_input (bool): Whether to flatten input along the observation
+            dimension. If True, for example, an observation with shape (2, 4)
+            will be flattened to 8.
         name (str): The name of the algorithm.
     Note:
         sane defaults for entropy configuration:
@@ -158,7 +161,6 @@ class NPO(BatchPolopt):
     def optimize_policy(self, itr, samples_data):
         """Optimize policy."""
         policy_opt_input_values = self._policy_opt_input_values(samples_data)
-
         # Train policy network
         logger.log('Computing loss before')
         loss_before = self.optimizer.loss(policy_opt_input_values)
@@ -198,10 +200,20 @@ class NPO(BatchPolopt):
         policy_dist = self.policy.distribution
 
         with tf.name_scope('inputs'):
-            obs_var = observation_space.to_tf_placeholder(name='obs',
-                                                          batch_dims=2)
-            action_var = action_space.to_tf_placeholder(name='action',
-                                                        batch_dims=2)
+            if self.flatten_input:
+                obs_var = tf.compat.v1.placeholder(
+                    tf.float32,
+                    shape=[None, None, observation_space.flat_dim],
+                    name='obs')
+                action_var = tf.compat.v1.placeholder(
+                    tf.float32,
+                    shape=[None, None, action_space.flat_dim],
+                    name='action')
+            else:
+                obs_var = observation_space.to_tf_placeholder(name='obs',
+                                                              batch_dims=2)
+                action_var = action_space.to_tf_placeholder(name='action',
+                                                            batch_dims=2)
             reward_var = tensor_utils.new_tensor(name='reward',
                                                  ndim=2,
                                                  dtype=tf.float32)

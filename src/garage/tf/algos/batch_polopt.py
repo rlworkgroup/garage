@@ -37,6 +37,9 @@ class BatchPolopt(RLAlgorithm):
             conjunction with center_adv the advantages will be
             standardized before shifting.
         fixed_horizon (bool): Whether to fix horizon.
+        flatten_input (bool): Whether to flatten input along the observation
+            dimension. If True, for example, an observation with shape (2, 4)
+            will be flattened to 8.
 
     """
 
@@ -139,6 +142,19 @@ class BatchPolopt(RLAlgorithm):
 
         max_path_length = self.max_path_length
 
+        if self.flatten_input:
+            paths = [
+                dict(
+                    observations=(self.env_spec.observation_space.flatten_n(
+                        path['observations'])),
+                    actions=(
+                        self.env_spec.action_space.flatten_n(  # noqa: E126
+                            path['actions'])),
+                    rewards=path['rewards'],
+                    env_infos=path['env_infos'],
+                    agent_infos=path['agent_infos']) for path in paths
+            ]
+
         if hasattr(self.baseline, 'predict_n'):
             all_path_baselines = self.baseline.predict_n(paths)
         else:
@@ -165,16 +181,10 @@ class BatchPolopt(RLAlgorithm):
             returns.append(path['returns'])
 
         # make all paths the same length
-        obs = [
-            self.env_spec.observation_space.flatten_n(path['observations'])
-            if self.flatten_input else path['observations'] for path in paths
-        ]
+        obs = [path['observations'] for path in paths]
         obs = tensor_utils.pad_tensor_n(obs, max_path_length)
 
-        actions = [
-            self.env_spec.action_space.flatten_n(path['actions'])
-            if self.flatten_input else paths['actions'] for path in paths
-        ]
+        actions = [path['actions'] for path in paths]
         actions = tensor_utils.pad_tensor_n(actions, max_path_length)
 
         rewards = [path['rewards'] for path in paths]
