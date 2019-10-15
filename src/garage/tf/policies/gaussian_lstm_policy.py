@@ -5,49 +5,45 @@ import tensorflow as tf
 
 from garage.misc.overrides import overrides
 from garage.tf.models import GaussianLSTMModel
-from garage.tf.policies.base2 import StochasticPolicy2
+from garage.tf.policies.base import StochasticPolicy
 
 
-class GaussianLSTMPolicy(StochasticPolicy2):
-    """
-    GaussianLSTMPolicy with GaussianLSTMModel.
-
-    A policy that contains a LSTM to make prediction based on
-    a gaussian distribution.
+class GaussianLSTMPolicy(StochasticPolicy):
+    """A policy which models actions with a Gaussian parameterized by an LSTM.
 
     Args:
         env_spec (garage.envs.env_spec.EnvSpec): Environment specification.
         name (str): Model name, also the variable scope.
         hidden_dim (int): Hidden dimension for LSTM cell for mean.
-        hidden_nonlinearity (callable): Activation function for intermediate
+        hidden_nonlinearity (Callable): Activation function for intermediate
             dense layer(s). It should return a tf.Tensor. Set it to
             None to maintain a linear activation.
-        hidden_w_init (callable): Initializer function for the weight
+        hidden_w_init (Callable): Initializer function for the weight
             of intermediate dense layer(s). The function should return a
             tf.Tensor.
-        hidden_b_init (callable): Initializer function for the bias
+        hidden_b_init (Callable): Initializer function for the bias
             of intermediate dense layer(s). The function should return a
             tf.Tensor.
-        recurrent_nonlinearity (callable): Activation function for recurrent
+        recurrent_nonlinearity (Callable): Activation function for recurrent
             layers. It should return a tf.Tensor. Set it to None to
             maintain a linear activation.
-        recurrent_w_init (callable): Initializer function for the weight
+        recurrent_w_init (Callable): Initializer function for the weight
             of recurrent layer(s). The function should return a
             tf.Tensor.
-        output_nonlinearity (callable): Activation function for output dense
+        output_nonlinearity (Callable): Activation function for output dense
             layer. It should return a tf.Tensor. Set it to None to
             maintain a linear activation.
-        output_w_init (callable): Initializer function for the weight
+        output_w_init (Callable): Initializer function for the weight
             of output dense layer(s). The function should return a
             tf.Tensor.
-        output_b_init (callable): Initializer function for the bias
+        output_b_init (Callable): Initializer function for the bias
             of output dense layer(s). The function should return a
             tf.Tensor.
-        hidden_state_init (callable): Initializer function for the
+        hidden_state_init (Callable): Initializer function for the
             initial hidden state. The functino should return a tf.Tensor.
         hidden_state_init_trainable (bool): Bool for whether the initial
             hidden state is trainable.
-        cell_state_init (callable): Initializer function for the
+        cell_state_init (Callable): Initializer function for the
             initial cell state. The functino should return a tf.Tensor.
         cell_state_init_trainable (bool): Bool for whether the initial
             cell state is trainable.
@@ -62,6 +58,7 @@ class GaussianLSTMPolicy(StochasticPolicy2):
         state_include_action (bool): Whether the state includes action.
             If True, input dimension will be
             (observation dimension + action dimension).
+
     """
 
     def __init__(self,
@@ -123,6 +120,9 @@ class GaussianLSTMPolicy(StochasticPolicy2):
             std_share_network=std_share_network,
             init_std=init_std)
 
+        self._prev_actions = None
+        self._prev_hiddens = None
+        self._prev_cells = None
         self._initialize()
 
     def _initialize(self):
@@ -147,7 +147,7 @@ class GaussianLSTMPolicy(StochasticPolicy2):
                              step_cell_var)
 
         self._f_step_mean_std = tf.compat.v1.get_default_session(
-        ).make_callable(
+        ).make_Callable(
             [
                 self.model.networks['default'].step_mean,
                 self.model.networks['default'].step_log_std,
@@ -156,24 +156,23 @@ class GaussianLSTMPolicy(StochasticPolicy2):
             ],
             feed_list=[step_input_var, step_hidden_var, step_cell_var])
 
-        self.prev_actions = None
-        self.prev_hiddens = None
-        self.prev_cells = None
-
     @property
     def vectorized(self):
-        """Vectorized or not."""
+        """bool: Whether this policy is vectorized."""
         return True
 
     def dist_info_sym(self, obs_var, state_info_vars, name=None):
-        """
-        Symbolic graph of the distribution.
+        """Build a symbolic graph of the action distribution parameters.
 
         Args:
             obs_var (tf.Tensor): Tensor input for symbolic graph.
             state_info_vars (dict): Extra state information, e.g.
                 previous action.
             name (str): Name for symbolic graph.
+
+        Return:
+            dict[tf.Tensor]: Output of the symbolic graph of action
+                distribution parameters.
 
         """
         if self._state_include_action:
@@ -195,12 +194,12 @@ class GaussianLSTMPolicy(StochasticPolicy2):
         return dict(mean=mean_var, log_std=log_std_var)
 
     def reset(self, dones=None):
-        """
-        Reset the policy.
+        """Reset the policy.
 
-        If dones is None, it will be by default np.array([True]) which implies
-        the policy will not be "vectorized", i.e. number of parallel
-        environments for training data sampling = 1.
+        Note:
+            If `dones` is None, it will be by default np.array([True]), which
+            implies the policy will not be "vectorized", i.e. number of
+            paralle environments for training data sampling = 1.
 
         Args:
             dones (numpy.ndarray): Bool that indicates terminal state(s).
@@ -208,34 +207,35 @@ class GaussianLSTMPolicy(StochasticPolicy2):
         """
         if dones is None:
             dones = np.array([True])
-        if self.prev_actions is None or len(dones) != len(self.prev_actions):
-            self.prev_actions = np.zeros(
+        if self._prev_actions is None or len(dones) != len(self._prev_actions):
+            self._prev_actions = np.zeros(
                 (len(dones), self.action_space.flat_dim))
-            self.prev_hiddens = np.zeros((len(dones), self._hidden_dim))
-            self.prev_cells = np.zeros((len(dones), self._hidden_dim))
+            self._prev_hiddens = np.zeros((len(dones), self._hidden_dim))
+            self._prev_cells = np.zeros((len(dones), self._hidden_dim))
 
-        self.prev_actions[dones] = 0.
-        self.prev_hiddens[dones] = self.model.networks[
+        self._prev_actions[dones] = 0.
+        self._prev_hiddens[dones] = self.model.networks[
             'default'].init_hidden.eval()
-        self.prev_cells[dones] = self.model.networks['default'].init_cell.eval(
-        )
+        self._prev_cells[dones] = self.model.networks[
+            'default'].init_cell.eval()
 
     @overrides
     def get_action(self, observation):
-        """
-        Get single action from this policy for the input observation.
+        """Get single action from this policy for the input observation.
 
         Args:
             observation (numpy.ndarray): Observation from environment.
 
         Returns:
-            action (numpy.ndarray): Predicted action.
-            agent_info (dict): Distribution obtained after observing the
-                given observation, with keys
-                * mean: (numpy.ndarray)
-                * log_std: (numpy.ndarray)
-                * prev_action: (numpy.ndarray), only present if
-                    self._state_include_action is True.
+            tuple[numpy.ndarray, dict]: Predicted action and agent information.
+
+                action (numpy.ndarray): Predicted action.
+                agent_info (dict): Distribution obtained after observing the
+                    given observation, with keys
+                    * mean: (numpy.ndarray)
+                    * log_std: (numpy.ndarray)
+                    * prev_action: (numpy.ndarray), only present if
+                        self._state_include_action is True.
 
         """
         actions, agent_infos = self.get_actions([observation])
@@ -243,37 +243,38 @@ class GaussianLSTMPolicy(StochasticPolicy2):
 
     @overrides
     def get_actions(self, observations):
-        """
-        Get multiple actions from this policy for the input observations.
+        """Get multiple actions from this policy for the input observations.
 
         Args:
             observations (numpy.ndarray): Observations from environment.
 
         Returns:
-            actions (numpy.ndarray): Predicted actions.
-            agent_infos (dict): Distribution obtained after observing the
-                given observation, with keys
-                * mean: (numpy.ndarray)
-                * log_std: (numpy.ndarray)
-                * prev_action: (numpy.ndarray), only present if
-                    self._state_include_action is True.
+            tuple[numpy.ndarray, dict]: Predicted action and agent information.
+
+                actions (numpy.ndarray): Predicted actions.
+                agent_infos (dict): Distribution obtained after observing the
+                    given observation, with keys
+                    * mean: (numpy.ndarray)
+                    * log_std: (numpy.ndarray)
+                    * prev_action: (numpy.ndarray), only present if
+                        self._state_include_action is True.
 
         """
         flat_obs = self.observation_space.flatten_n(observations)
         if self._state_include_action:
-            assert self.prev_actions is not None
-            all_input = np.concatenate([flat_obs, self.prev_actions], axis=-1)
+            assert self._prev_actions is not None
+            all_input = np.concatenate([flat_obs, self._prev_actions], axis=-1)
         else:
             all_input = flat_obs
         means, log_stds, hidden_vec, cell_vec = self._f_step_mean_std(
-            all_input, self.prev_hiddens, self.prev_cells)
+            all_input, self._prev_hiddens, self._prev_cells)
         rnd = np.random.normal(size=means.shape)
         samples = rnd * np.exp(log_stds) + means
         samples = self.action_space.unflatten_n(samples)
-        prev_actions = self.prev_actions
-        self.prev_actions = samples
-        self.prev_hiddens = hidden_vec
-        self.prev_cells = cell_vec
+        prev_actions = self._prev_actions
+        self._prev_actions = samples
+        self._prev_hiddens = hidden_vec
+        self._prev_cells = cell_vec
         agent_infos = dict(mean=means, log_std=log_stds)
         if self._state_include_action:
             agent_infos['prev_action'] = np.copy(prev_actions)
@@ -281,31 +282,31 @@ class GaussianLSTMPolicy(StochasticPolicy2):
 
     @property
     def recurrent(self):
-        """Recurrent or not."""
+        """bool: Whether this policy is recurrent or not."""
         return True
 
     @property
     def distribution(self):
-        """Policy distribution."""
+        """garage.tf.distributions.DiagonalGaussian: Policy distribution."""
         return self.model.networks['default'].dist
 
     @property
     def state_info_specs(self):
-        """State info specification."""
+        """list: State info specification."""
         if self._state_include_action:
             return [
                 ('prev_action', (self._action_dim, )),
             ]
-        else:
-            return []
+
+        return []
 
     def __getstate__(self):
-        """Object.__getstate__."""
+        """See `Object.__getstate__`."""
         new_dict = super().__getstate__()
         del new_dict['_f_step_mean_std']
         return new_dict
 
     def __setstate__(self, state):
-        """Object.__setstate__."""
+        """See `Object.__setstate__`."""
         super().__setstate__(state)
         self._initialize()

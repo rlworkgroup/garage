@@ -1,16 +1,15 @@
-"""CategoricalMLPPolicy with model."""
+"""CategoricalMLPPolicy."""
 import akro
 import tensorflow as tf
 
 from garage.misc.overrides import overrides
 from garage.tf.distributions import Categorical
 from garage.tf.models import MLPModel
-from garage.tf.policies.base2 import StochasticPolicy2
+from garage.tf.policies import StochasticPolicy
 
 
-class CategoricalMLPPolicy(StochasticPolicy2):
-    """
-    CategoricalMLPPolicy with model.
+class CategoricalMLPPolicy(StochasticPolicy):
+    """CategoricalMLPPolicy
 
     A policy that contains a MLP to make prediction based on
     a categorical distribution.

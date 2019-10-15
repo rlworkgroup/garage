@@ -1,13 +1,12 @@
 """CNN Model."""
 import tensorflow as tf
 
-from garage.tf.core.cnn import cnn
 from garage.tf.models.base import Model
+from garage.tf.models.cnn import cnn
 
 
 class CNNModel(Model):
-    """
-    CNN Model.
+    """CNN Model.
 
     Args:
         filter_dims(tuple[int]): Dimension of the filters. For example,
@@ -53,13 +52,12 @@ class CNNModel(Model):
         self._hidden_b_init = hidden_b_init
 
     def _build(self, state_input, name=None):
-        return cnn(
-            input_var=state_input,
-            filter_dims=self._filter_dims,
-            hidden_nonlinearity=self._hidden_nonlinearity,
-            hidden_w_init=self._hidden_w_init,
-            hidden_b_init=self._hidden_b_init,
-            num_filters=self._num_filters,
-            strides=self._strides,
-            padding=self._padding,
-            name='cnn')
+        return cnn(input_var=state_input,
+                   filter_dims=self._filter_dims,
+                   hidden_nonlinearity=self._hidden_nonlinearity,
+                   hidden_w_init=self._hidden_w_init,
+                   hidden_b_init=self._hidden_b_init,
+                   num_filters=self._num_filters,
+                   strides=self._strides,
+                   padding=self._padding,
+                   name='cnn')

@@ -1,30 +1,31 @@
 import numpy as np
 import tensorflow as tf
 
-from garage.tf.core.mlp import mlp
+from garage.tf.models.mlp import mlp
 from tests.fixtures import TfGraphTestCase
 
 
 class TestMLP(TfGraphTestCase):
+
     def setup_method(self):
         super(TestMLP, self).setup_method()
         self.obs_input = np.array([[1, 2, 3, 4]])
         input_shape = self.obs_input.shape[1:]  # 4
         self.hidden_nonlinearity = tf.nn.relu
 
-        self._input = tf.compat.v1.placeholder(
-            tf.float32, shape=(None, ) + input_shape, name='input')
+        self._input = tf.compat.v1.placeholder(tf.float32,
+                                               shape=(None, ) + input_shape,
+                                               name='input')
 
         self._output_shape = 2
 
         # We build a default mlp
         with tf.compat.v1.variable_scope('MLP'):
-            self.mlp_f = mlp(
-                input_var=self._input,
-                output_dim=self._output_shape,
-                hidden_sizes=(32, 32),
-                hidden_nonlinearity=self.hidden_nonlinearity,
-                name='mlp1')
+            self.mlp_f = mlp(input_var=self._input,
+                             output_dim=self._output_shape,
+                             hidden_sizes=(32, 32),
+                             hidden_nonlinearity=self.hidden_nonlinearity,
+                             name='mlp1')
 
         self.sess.run(tf.compat.v1.global_variables_initializer())
 
@@ -43,8 +44,8 @@ class TestMLP(TfGraphTestCase):
         with tf.compat.v1.variable_scope('MLP', reuse=True):
             w = tf.compat.v1.get_variable('mlp1/hidden_0/kernel')
             self.sess.run(w.assign(w + 1))
-            mlp_output = self.sess.run(
-                self.mlp_f, feed_dict={self._input: self.obs_input})
+            mlp_output = self.sess.run(self.mlp_f,
+                                       feed_dict={self._input: self.obs_input})
             mlp_output2 = self.sess.run(
                 self.mlp_same_copy, feed_dict={self._input: self.obs_input})
 
@@ -68,8 +69,8 @@ class TestMLP(TfGraphTestCase):
         with tf.compat.v1.variable_scope('MLP', reuse=True):
             w = tf.compat.v1.get_variable('mlp1/hidden_0/kernel')
             self.sess.run(w.assign(w + 1))
-            mlp_output = self.sess.run(
-                self.mlp_f, feed_dict={self._input: self.obs_input})
+            mlp_output = self.sess.run(self.mlp_f,
+                                       feed_dict={self._input: self.obs_input})
             mlp_output2 = self.sess.run(
                 self.mlp_different_copy,
                 feed_dict={self._input: self.obs_input})
@@ -77,8 +78,8 @@ class TestMLP(TfGraphTestCase):
         np.not_equal(mlp_output, mlp_output2)
 
     def test_output_shape(self):
-        mlp_output = self.sess.run(
-            self.mlp_f, feed_dict={self._input: self.obs_input})
+        mlp_output = self.sess.run(self.mlp_f,
+                                   feed_dict={self._input: self.obs_input})
 
         assert mlp_output.shape[1] == self._output_shape
 
@@ -91,8 +92,8 @@ class TestMLP(TfGraphTestCase):
             out_w = tf.compat.v1.get_variable('mlp1/output/kernel')
             out_b = tf.compat.v1.get_variable('mlp1/output/bias')
 
-        mlp_output = self.sess.run(
-            self.mlp_f, feed_dict={self._input: self.obs_input})
+        mlp_output = self.sess.run(self.mlp_f,
+                                   feed_dict={self._input: self.obs_input})
 
         # First layer
         h2_in = tf.matmul(self._input, h1_w) + h1_b
@@ -111,13 +112,12 @@ class TestMLP(TfGraphTestCase):
     def test_layer_normalization(self):
         # Create a mlp with layer normalization
         with tf.compat.v1.variable_scope('MLP'):
-            self.mlp_f_w_n = mlp(
-                input_var=self._input,
-                output_dim=self._output_shape,
-                hidden_sizes=(32, 32),
-                hidden_nonlinearity=self.hidden_nonlinearity,
-                name='mlp2',
-                layer_normalization=True)
+            self.mlp_f_w_n = mlp(input_var=self._input,
+                                 output_dim=self._output_shape,
+                                 hidden_sizes=(32, 32),
+                                 hidden_nonlinearity=self.hidden_nonlinearity,
+                                 name='mlp2',
+                                 layer_normalization=True)
 
         # Initialize the new mlp variables
         self.sess.run(tf.compat.v1.global_variables_initializer())
@@ -152,7 +152,7 @@ class TestMLP(TfGraphTestCase):
         y = tf.matmul(y_out, out_w) + out_b
 
         out = self.sess.run(y, feed_dict={self._input: self.obs_input})
-        mlp_output = self.sess.run(
-            self.mlp_f_w_n, feed_dict={self._input: self.obs_input})
+        mlp_output = self.sess.run(self.mlp_f_w_n,
+                                   feed_dict={self._input: self.obs_input})
 
         np.testing.assert_array_almost_equal(out, mlp_output)

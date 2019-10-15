@@ -1,17 +1,15 @@
-"""
-GRU Model.
+"""GRU Model.
 
 A model composed only of a Gated Recurrent Unit (GRU).
 """
 import tensorflow as tf
 
-from garage.tf.core.gru import gru
 from garage.tf.models.base import Model
+from garage.tf.models.gru import gru
 
 
 class GRUModel(Model):
-    """
-    GRU Model.
+    """GRU Model.
 
     Args:
         output_dim (int): Dimension of the network output.

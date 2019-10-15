@@ -2,12 +2,13 @@ import numpy as np
 import pytest
 import tensorflow as tf
 
-from garage.tf.core.gru import gru
+from garage.tf.models.gru import gru
 from tests.fixtures import TfGraphTestCase
 from tests.helpers import recurrent_step_gru
 
 
 class TestGRU(TfGraphTestCase):
+
     def setup_method(self):
         super().setup_method()
         self.batch_size = 2
@@ -48,10 +49,12 @@ class TestGRU(TfGraphTestCase):
         obs_inputs = np.full((self.batch_size, time_step, input_dim), 1.)
         obs_input = np.full((self.batch_size, input_dim), 1.)
 
-        input_var = tf.compat.v1.placeholder(
-            tf.float32, shape=(None, None, input_dim), name='input')
-        step_input_var = tf.compat.v1.placeholder(
-            tf.float32, shape=(None, input_dim), name='step_input')
+        input_var = tf.compat.v1.placeholder(tf.float32,
+                                             shape=(None, None, input_dim),
+                                             name='input')
+        step_input_var = tf.compat.v1.placeholder(tf.float32,
+                                                  shape=(None, input_dim),
+                                                  name='step_input')
         output_nonlinearity = tf.keras.layers.Dense(
             units=output_dim,
             activation=None,
@@ -73,7 +76,7 @@ class TestGRU(TfGraphTestCase):
         hidden = np.full((self.batch_size, self.hidden_dim),
                          hidden_init.eval())
 
-        for i in range(time_step):
+        for _ in range(time_step):
             output, hidden = self.sess.run([output_t, h_t],
                                            feed_dict={
                                                step_input_var: obs_input,
@@ -82,8 +85,8 @@ class TestGRU(TfGraphTestCase):
             assert output.shape == (self.batch_size, output_dim)
             assert hidden.shape == (self.batch_size, self.hidden_dim)
 
-        full_output = self.sess.run(
-            outputs_t, feed_dict={input_var: obs_inputs})
+        full_output = self.sess.run(outputs_t,
+                                    feed_dict={input_var: obs_inputs})
 
         assert full_output.shape == (self.batch_size, time_step, output_dim)
 
@@ -109,10 +112,12 @@ class TestGRU(TfGraphTestCase):
         obs_inputs = np.full((self.batch_size, time_step, input_dim), 1.)
         obs_input = np.full((self.batch_size, input_dim), 1.)
 
-        input_var = tf.compat.v1.placeholder(
-            tf.float32, shape=(None, None, input_dim), name='input')
-        step_input_var = tf.compat.v1.placeholder(
-            tf.float32, shape=(None, input_dim), name='step_input')
+        input_var = tf.compat.v1.placeholder(tf.float32,
+                                             shape=(None, None, input_dim),
+                                             name='input')
+        step_input_var = tf.compat.v1.placeholder(tf.float32,
+                                                  shape=(None, input_dim),
+                                                  name='step_input')
         output_nonlinearity = tf.keras.layers.Dense(
             units=output_dim,
             activation=None,
@@ -141,15 +146,15 @@ class TestGRU(TfGraphTestCase):
                                                  self.step_hidden_var: hidden1
                                              })  # noqa: E126
 
-            hidden2 = recurrent_step_gru(
-                input_val=obs_input,
-                num_units=self.hidden_dim,
-                step_hidden=hidden2,
-                w_x_init=1.,
-                w_h_init=1.,
-                b_init=0.,
-                nonlinearity=np.tanh,
-                gate_nonlinearity=lambda x: 1. / (1. + np.exp(-x)))
+            hidden2 = recurrent_step_gru(input_val=obs_input,
+                                         num_units=self.hidden_dim,
+                                         step_hidden=hidden2,
+                                         w_x_init=1.,
+                                         w_h_init=1.,
+                                         b_init=0.,
+                                         nonlinearity=np.tanh,
+                                         gate_nonlinearity=lambda x: 1. /
+                                         (1. + np.exp(-x)))
 
             output_nonlinearity = np.full(
                 (np.prod(hidden2.shape[1:]), output_dim), 1.)
@@ -158,22 +163,22 @@ class TestGRU(TfGraphTestCase):
             assert np.allclose(output1, output2)
             assert np.allclose(hidden1, hidden2)
 
-        full_output1 = self.sess.run(
-            outputs_t, feed_dict={input_var: obs_inputs})
+        full_output1 = self.sess.run(outputs_t,
+                                     feed_dict={input_var: obs_inputs})
 
         hidden2 = np.full((self.batch_size, self.hidden_dim),
                           hidden_init.eval())
         stack_hidden = None
         for i in range(time_step):
-            hidden2 = recurrent_step_gru(
-                input_val=obs_inputs[:, i, :],
-                num_units=self.hidden_dim,
-                step_hidden=hidden2,
-                w_x_init=1.,
-                w_h_init=1.,
-                b_init=0.,
-                nonlinearity=np.tanh,
-                gate_nonlinearity=lambda x: 1. / (1. + np.exp(-x)))
+            hidden2 = recurrent_step_gru(input_val=obs_inputs[:, i, :],
+                                         num_units=self.hidden_dim,
+                                         step_hidden=hidden2,
+                                         w_x_init=1.,
+                                         w_h_init=1.,
+                                         b_init=0.,
+                                         nonlinearity=np.tanh,
+                                         gate_nonlinearity=lambda x: 1. /
+                                         (1. + np.exp(-x)))
             if stack_hidden is None:
                 stack_hidden = hidden2[:, np.newaxis, :]
             else:
@@ -199,23 +204,24 @@ class TestGRU(TfGraphTestCase):
         obs_inputs = np.full((self.batch_size, time_step, input_dim), 1.)
         obs_input = np.full((self.batch_size, input_dim), 1.)
 
-        input_var = tf.compat.v1.placeholder(
-            tf.float32, shape=(None, None, input_dim), name='input')
-        step_input_var = tf.compat.v1.placeholder(
-            tf.float32, shape=(None, input_dim), name='step_input')
+        input_var = tf.compat.v1.placeholder(tf.float32,
+                                             shape=(None, None, input_dim),
+                                             name='input')
+        step_input_var = tf.compat.v1.placeholder(tf.float32,
+                                                  shape=(None, input_dim),
+                                                  name='step_input')
         output_nonlinearity = tf.keras.layers.Dense(
             units=output_dim,
             activation=None,
             kernel_initializer=tf.constant_initializer(1))
         with tf.compat.v1.variable_scope('GRU'):
-            self.gru = gru(
-                all_input_var=input_var,
-                name='gru',
-                gru_cell=self.gru_cell,
-                step_input_var=step_input_var,
-                step_hidden_var=self.step_hidden_var,
-                hidden_state_init_trainable=True,
-                output_nonlinearity_layer=output_nonlinearity)
+            self.gru = gru(all_input_var=input_var,
+                           name='gru',
+                           gru_cell=self.gru_cell,
+                           step_input_var=step_input_var,
+                           step_hidden_var=self.step_hidden_var,
+                           hidden_state_init_trainable=True,
+                           output_nonlinearity_layer=output_nonlinearity)
 
         self.sess.run(tf.compat.v1.global_variables_initializer())
 
@@ -224,31 +230,31 @@ class TestGRU(TfGraphTestCase):
         hidden = np.full((self.batch_size, self.hidden_dim),
                          hidden_init.eval())
 
-        output, hidden = self.sess.run([output_t, h_t],
-                                       feed_dict={
-                                           step_input_var: obs_input,
-                                           self.step_hidden_var: hidden,
-                                       })  # noqa: E126
+        _, hidden = self.sess.run([output_t, h_t],
+                                  feed_dict={
+                                      step_input_var: obs_input,
+                                      self.step_hidden_var: hidden,
+                                  })  # noqa: E126
         with tf.compat.v1.variable_scope('GRU/gru', reuse=True):
             hidden_init_var = tf.compat.v1.get_variable(name='initial_hidden')
             assert hidden_init_var in tf.compat.v1.trainable_variables()
 
-        full_output1 = self.sess.run(
-            outputs_t, feed_dict={input_var: obs_inputs})
+        full_output1 = self.sess.run(outputs_t,
+                                     feed_dict={input_var: obs_inputs})
 
         hidden2 = np.full((self.batch_size, self.hidden_dim),
                           hidden_init.eval())
         stack_hidden = None
         for i in range(time_step):
-            hidden2 = recurrent_step_gru(
-                input_val=obs_inputs[:, i, :],
-                num_units=self.hidden_dim,
-                step_hidden=hidden2,
-                w_x_init=1.,
-                w_h_init=1.,
-                b_init=0.,
-                nonlinearity=np.tanh,
-                gate_nonlinearity=lambda x: 1. / (1. + np.exp(-x)))
+            hidden2 = recurrent_step_gru(input_val=obs_inputs[:, i, :],
+                                         num_units=self.hidden_dim,
+                                         step_hidden=hidden2,
+                                         w_x_init=1.,
+                                         w_h_init=1.,
+                                         b_init=0.,
+                                         nonlinearity=np.tanh,
+                                         gate_nonlinearity=lambda x: 1. /
+                                         (1. + np.exp(-x)))
             if stack_hidden is None:
                 stack_hidden = hidden2[:, np.newaxis, :]
             else:
@@ -266,22 +272,23 @@ class TestGRU(TfGraphTestCase):
         obs_inputs = np.full((self.batch_size, time_step, input_dim), 1.)
         obs_input = np.full((self.batch_size, input_dim), 1.)
 
-        input_var = tf.compat.v1.placeholder(
-            tf.float32, shape=(None, None, input_dim), name='input')
-        step_input_var = tf.compat.v1.placeholder(
-            tf.float32, shape=(None, input_dim), name='step_input')
+        input_var = tf.compat.v1.placeholder(tf.float32,
+                                             shape=(None, None, input_dim),
+                                             name='input')
+        step_input_var = tf.compat.v1.placeholder(tf.float32,
+                                                  shape=(None, input_dim),
+                                                  name='step_input')
         output_nonlinearity = tf.keras.layers.Dense(
             units=output_dim,
             activation=None,
             kernel_initializer=tf.constant_initializer(1))
         with tf.compat.v1.variable_scope('GRU'):
-            self.gru = gru(
-                all_input_var=input_var,
-                name='gru',
-                gru_cell=self.gru_cell,
-                step_input_var=step_input_var,
-                step_hidden_var=self.step_hidden_var,
-                output_nonlinearity_layer=output_nonlinearity)
+            self.gru = gru(all_input_var=input_var,
+                           name='gru',
+                           gru_cell=self.gru_cell,
+                           step_input_var=step_input_var,
+                           step_hidden_var=self.step_hidden_var,
+                           output_nonlinearity_layer=output_nonlinearity)
 
         self.sess.run(tf.compat.v1.global_variables_initializer())
 
@@ -309,19 +316,17 @@ class TestGRU(TfGraphTestCase):
 
         # No gradient flow
         with pytest.raises(TypeError):
-            self.sess.run(
-                grads_step_o_i,
-                feed_dict={
-                    step_input_var: obs_input,
-                    self.step_hidden_var: hidden,
-                })
+            self.sess.run(grads_step_o_i,
+                          feed_dict={
+                              step_input_var: obs_input,
+                              self.step_hidden_var: hidden,
+                          })
         with pytest.raises(TypeError):
-            self.sess.run(
-                grads_step_o_h,
-                feed_dict={
-                    step_input_var: obs_input,
-                    self.step_hidden_var: hidden,
-                })
+            self.sess.run(grads_step_o_h,
+                          feed_dict={
+                              step_input_var: obs_input,
+                              self.step_hidden_var: hidden,
+                          })
         with pytest.raises(TypeError):
             self.sess.run(grads_step_h, feed_dict={input_var: obs_inputs})
 
@@ -347,10 +352,12 @@ class TestGRU(TfGraphTestCase):
         obs_inputs = np.full((self.batch_size, time_step, input_dim), 1.)
         obs_input = np.full((self.batch_size, input_dim), 1.)
 
-        input_var = tf.compat.v1.placeholder(
-            tf.float32, shape=(None, None, input_dim), name='input')
-        step_input_var = tf.compat.v1.placeholder(
-            tf.float32, shape=(None, input_dim), name='step_input')
+        input_var = tf.compat.v1.placeholder(tf.float32,
+                                             shape=(None, None, input_dim),
+                                             name='input')
+        step_input_var = tf.compat.v1.placeholder(tf.float32,
+                                                  shape=(None, input_dim),
+                                                  name='step_input')
         output_nonlinearity = tf.keras.layers.Dense(
             units=output_dim,
             activation=None,
@@ -368,8 +375,9 @@ class TestGRU(TfGraphTestCase):
         self.sess.run(tf.compat.v1.global_variables_initializer())
 
         # Create a RNN and compute the entire outputs
-        rnn_layer = tf.keras.layers.RNN(
-            cell=self.gru_cell, return_sequences=True, return_state=True)
+        rnn_layer = tf.keras.layers.RNN(cell=self.gru_cell,
+                                        return_sequences=True,
+                                        return_state=True)
 
         # Set initial state to all 0s
         hidden_var = tf.compat.v1.get_variable(
@@ -400,6 +408,6 @@ class TestGRU(TfGraphTestCase):
         assert np.array_equal(hidden, hiddens)
 
         # Also the full output from lstm
-        full_outputs = self.sess.run(
-            self.gru[0], feed_dict={input_var: obs_inputs})
+        full_outputs = self.sess.run(self.gru[0],
+                                     feed_dict={input_var: obs_inputs})
         assert np.array_equal(outputs, full_outputs)

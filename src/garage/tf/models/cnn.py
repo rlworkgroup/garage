@@ -12,8 +12,10 @@ def cnn(input_var,
         hidden_nonlinearity=tf.nn.relu,
         hidden_w_init=tf.glorot_uniform_initializer(),
         hidden_b_init=tf.zeros_initializer()):
-    """
-    CNN. Based on 'NHWC' data format: [batch, height, width, channel].
+    """Convolutional neural network (CNN).
+
+    Note:
+        Based on 'NHWC' data format: [batch, height, width, channel].
 
     Args:
         input_var (tf.Tensor): Input tf.Tensor to the CNN.
@@ -42,11 +44,13 @@ def cnn(input_var,
 
     Return:
         The output tf.Tensor of the CNN.
+
     """
     with tf.compat.v1.variable_scope(name):
         h = input_var
-        for index, (filter_dim, num_filter, stride) in enumerate(
-                zip(filter_dims, num_filters, strides)):
+        for index, (filter_dim, num_filter,
+                    stride) in enumerate(zip(filter_dims, num_filters,
+                                             strides)):
             _stride = [1, stride, stride, 1]
             h = _conv(h, 'h{}'.format(index), filter_dim, num_filter, _stride,
                       hidden_w_init, hidden_b_init, padding)
@@ -69,12 +73,13 @@ def cnn_with_max_pooling(input_var,
                          hidden_nonlinearity=tf.nn.relu,
                          hidden_w_init=tf.glorot_uniform_initializer(),
                          hidden_b_init=tf.zeros_initializer()):
-    """
-    CNN model. Based on 'NHWC' data format: [batch, height, width, channel].
+    """Convolutional neural network (CNN) with max-pooling.
+
+    Note:
+        Based on 'NHWC' data format: [batch, height, width, channel].
 
     Args:
         input_var (tf.Tensor): Input tf.Tensor to the CNN.
-        output_dim (int): Dimension of the network output.
         filter_dims (tuple[int]): Dimension of the filters. For example,
             (3, 5) means there are two convolutional layers. The filter for
             first layer is of dimension (3 x 3) and the second one is of
@@ -106,21 +111,25 @@ def cnn_with_max_pooling(input_var,
 
     Return:
         The output tf.Tensor of the CNN.
+
     """
     pool_strides = [1, pool_strides[0], pool_strides[1], 1]
     pool_shapes = [1, pool_shapes[0], pool_shapes[1], 1]
 
     with tf.compat.v1.variable_scope(name):
         h = input_var
-        for index, (filter_dim, num_filter, stride) in enumerate(
-                zip(filter_dims, num_filters, strides)):
+        for index, (filter_dim, num_filter,
+                    stride) in enumerate(zip(filter_dims, num_filters,
+                                             strides)):
             _stride = [1, stride, stride, 1]
             h = _conv(h, 'h{}'.format(index), filter_dim, num_filter, _stride,
                       hidden_w_init, hidden_b_init, padding)
             if hidden_nonlinearity is not None:
                 h = hidden_nonlinearity(h)
-            h = tf.nn.max_pool2d(
-                h, ksize=pool_shapes, strides=pool_strides, padding=padding)
+            h = tf.nn.max_pool2d(h,
+                                 ksize=pool_shapes,
+                                 strides=pool_strides,
+                                 padding=padding)
 
         # flatten
         dim = tf.reduce_prod(h.get_shape()[1:].as_list())
@@ -136,10 +145,12 @@ def _conv(input_var, name, filter_size, num_filter, strides, hidden_w_init,
     b_shape = [1, 1, 1, num_filter]
 
     with tf.compat.v1.variable_scope(name):
-        weight = tf.compat.v1.get_variable(
-            'weight', w_shape, initializer=hidden_w_init)
-        bias = tf.compat.v1.get_variable(
-            'bias', b_shape, initializer=hidden_b_init)
+        weight = tf.compat.v1.get_variable('weight',
+                                           w_shape,
+                                           initializer=hidden_w_init)
+        bias = tf.compat.v1.get_variable('bias',
+                                         b_shape,
+                                         initializer=hidden_b_init)
 
         return tf.nn.conv2d(
             input_var, weight, strides=strides, padding=padding) + bias

@@ -1,13 +1,12 @@
 """CNN Model."""
 import tensorflow as tf
 
-from garage.tf.core.cnn import cnn_with_max_pooling
 from garage.tf.models.base import Model
+from garage.tf.models.cnn import cnn_with_max_pooling
 
 
 class CNNModelWithMaxPooling(Model):
-    """
-    CNN Model with max pooling.
+    """CNN Model with max pooling.
 
     Args:
         filter_dims (tuple[int]): Dimension of the filters. For example,

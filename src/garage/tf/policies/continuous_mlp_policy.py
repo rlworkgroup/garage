@@ -1,5 +1,4 @@
-"""
-This modules creates a continuous MLP policy network.
+"""This modules creates a continuous MLP policy network.
 
 A continuous MLP network can be used as policy method in different RL
 algorithms. It accepts an observation of the environment and predicts a
@@ -9,12 +8,11 @@ import tensorflow as tf
 
 from garage.misc.overrides import overrides
 from garage.tf.models import MLPModel
-from garage.tf.policies.base2 import Policy2
+from garage.tf.policies import Policy
 
 
-class ContinuousMLPPolicy(Policy2):
-    """
-    ContinuousMLPPolicy with model.
+class ContinuousMLPPolicy(Policy):
+    """ContinuousMLPPolicy
 
     The policy network selects action based on the state of the environment.
     It uses neural nets to fit the function of pi(s).
@@ -102,8 +100,7 @@ class ContinuousMLPPolicy(Policy2):
             feed_list=[self.model.networks['default'].input])
 
     def get_action_sym(self, obs_var, name=None):
-        """
-        Symbolic graph of the action.
+        """Symbolic graph of the action.
 
         Args:
             obs_var (tf.Tensor): Tensor input for symbolic graph.
@@ -115,8 +112,7 @@ class ContinuousMLPPolicy(Policy2):
 
     @overrides
     def get_action(self, observation):
-        """
-        Get single action from this policy for the input observation.
+        """Get single action from this policy for the input observation.
 
         Args:
             observation (numpy.ndarray): Observation from environment.
@@ -134,8 +130,7 @@ class ContinuousMLPPolicy(Policy2):
 
     @overrides
     def get_actions(self, observations):
-        """
-        Get multiple actions from this policy for the input observations.
+        """Get multiple actions from this policy for the input observations.
 
         Args:
             observations (numpy.ndarray): Observations from environment.
@@ -157,8 +152,7 @@ class ContinuousMLPPolicy(Policy2):
         return True
 
     def clone(self, name):
-        """
-        Return a clone of the policy.
+        """Return a clone of the policy.
 
         It only copies the configuration of the Q-function,
         not the parameters.
