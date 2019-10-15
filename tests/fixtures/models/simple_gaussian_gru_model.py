@@ -24,8 +24,8 @@ class SimpleGaussianGRUModel(Model):
     def network_output_spec(self):
         """Network output spec."""
         return [
-            'sample', 'mean', 'step_mean', 'log_std', 'step_log_std',
-            'step_hidden', 'init_hidden', 'dist'
+            'mean', 'step_mean', 'log_std', 'step_log_std', 'step_hidden',
+            'init_hidden', 'dist'
         ]
 
     def _build(self,
@@ -49,8 +49,7 @@ class SimpleGaussianGRUModel(Model):
             trainable=False,
             dtype=tf.float32)
 
-        sample = 0.5 * step_mean + step_log_std
         dist = DiagonalGaussian(self.output_dim)
-        # sample = 0.5 * 0.5 + 0.5 = 0.75
-        return (sample, mean, step_mean, log_std, step_log_std, step_hidden,
+
+        return (mean, step_mean, log_std, step_log_std, step_hidden,
                 hidden_init_var, dist)
