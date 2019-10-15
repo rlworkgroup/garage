@@ -48,6 +48,7 @@ ci-verify-conda:
 	bash miniconda.sh -b -p $(CONDA_ROOT)
 	hash -r
 	$(CONDA) config --set always_yes yes --set changeps1 no
+	$(CONDA) install -c anaconda setuptools
 	$(CONDA) update -q conda
 	$(CONDA) init
 	# Useful for debugging any issues with conda
