@@ -47,14 +47,19 @@ class GarageEnv(gym.Wrapper, Serializable):
 
         self.action_space = akro.from_gym(self.env.action_space)
         self.observation_space = akro.from_gym(self.env.observation_space)
-        if self.spec:
-            self.spec.action_space = self.action_space
-            self.spec.observation_space = self.observation_space
-        else:
-            self.spec = EnvSpec(action_space=self.action_space,
-                                observation_space=self.observation_space)
+        self.__spec = EnvSpec(action_space=self.action_space,
+                              observation_space=self.observation_space)
 
         Serializable.quick_init(self, locals())
+
+    @property
+    def spec(self):
+        """Return the environment specification.
+
+        This property needs to exist, since it's defined as a property in
+        gym.Wrapper in a way that makes it difficult to overwrite.
+        """
+        return self.__spec
 
     def close(self):
         """
@@ -81,7 +86,7 @@ class GarageEnv(gym.Wrapper, Serializable):
         This method can be removed once OpenAI solves the issue.
         """
         if self.env.spec:
-            if any(package in self.env.spec._entry_point
+            if any(package in getattr(self.env.spec, '_entry_point', '')
                    for package in KNOWN_GYM_NOT_CLOSE_MJ_VIEWER):
                 # This import is not in the header to avoid a MuJoCo dependency
                 # with non-MuJoCo environments that use this base class.
@@ -95,7 +100,7 @@ class GarageEnv(gym.Wrapper, Serializable):
                 if (hasattr(self.env, 'viewer')
                         and isinstance(self.env.viewer, MjViewer)):
                     glfw.destroy_window(self.env.viewer.window)
-            elif any(package in self.env.spec._entry_point
+            elif any(package in getattr(self.env.spec, '_entry_point', '')
                      for package in KNOWN_GYM_NOT_CLOSE_VIEWER):
                 if hasattr(self.env, 'viewer'):
                     from gym.envs.classic_control.rendering import (

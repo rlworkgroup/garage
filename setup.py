@@ -3,7 +3,7 @@ from setuptools import find_packages
 from setuptools import setup
 
 TF_VERSION = '<1.15,>=1.14.0'
-GYM_VERSION = '==0.12.4'
+GYM_VERSION = '==0.15.3'
 
 # Required dependencies
 required = [
