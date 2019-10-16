@@ -100,11 +100,11 @@ class OnPolicyVectorizedSampler(BatchSampler):
                 running_paths[idx]['env_infos'].append(env_info)
                 running_paths[idx]['agent_infos'].append(agent_info)
                 if done:
+                    obs = np.asarray(running_paths[idx]['observations'])
+                    actions = np.asarray(running_paths[idx]['actions'])
                     paths.append(
-                        dict(observations=self.env_spec.observation_space.
-                             flatten_n(running_paths[idx]['observations']),
-                             actions=self.env_spec.action_space.flatten_n(
-                                 running_paths[idx]['actions']),
+                        dict(observations=obs,
+                             actions=actions,
                              rewards=tensor_utils.stack_tensor_list(
                                  running_paths[idx]['rewards']),
                              env_infos=tensor_utils.stack_tensor_dict_list(

@@ -6,12 +6,15 @@ import gym
 import tensorflow as tf
 
 from garage.envs import normalize
+from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import PPO
 from garage.tf.baselines import GaussianMLPBaseline
 from garage.tf.envs import TfEnv
 from garage.tf.experiment import LocalTFRunner
+from garage.tf.policies import CategoricalMLPPolicy
 from garage.tf.policies import GaussianLSTMPolicy, GaussianMLPPolicy
 from tests.fixtures import snapshot_config, TfGraphTestCase
+from tests.fixtures.envs.wrappers import ReshapeObservation
 
 
 class TestPPO(TfGraphTestCase):
@@ -148,10 +151,38 @@ class TestPPO(TfGraphTestCase):
                        stop_entropy_gradient=False,
                        entropy_method='regularized',
                        policy_ent_coeff=0.02,
-                       center_adv=True)
+                       center_adv=True,
+                       flatten_input=False)
             runner.setup(algo, self.env)
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 35
+
+    def test_ppo_pendulum_flatten_input(self):
+        """Test PPO with CartPole to test observation flattening."""
+        with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
+            env = TfEnv(
+                normalize(ReshapeObservation(gym.make('CartPole-v1'), (2, 2))))
+            policy = CategoricalMLPPolicy(
+                env_spec=env.spec,
+                hidden_nonlinearity=tf.nn.tanh,
+            )
+            baseline = LinearFeatureBaseline(env_spec=env.spec)
+            algo = PPO(env_spec=env.spec,
+                       policy=policy,
+                       baseline=baseline,
+                       max_path_length=100,
+                       discount=0.99,
+                       gae_lambda=0.95,
+                       lr_clip_range=0.2,
+                       policy_ent_coeff=0.0,
+                       optimizer_args=dict(
+                           batch_size=32,
+                           max_epochs=10,
+                           tf_optimizer_args=dict(learning_rate=1e-3),
+                       ))
+            runner.setup(algo, env)
+            last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
+            assert last_avg_ret > 80
 
     def teardown_method(self):
         self.env.close()
