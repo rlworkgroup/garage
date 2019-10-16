@@ -48,6 +48,11 @@ ci-verify-conda:
 	bash miniconda.sh -b -p $(CONDA_ROOT)
 	hash -r
 	$(CONDA) config --set always_yes yes --set changeps1 no
+	# Related issue: https://github.com/conda/conda/issues/9105
+	# Fix in conda: https://github.com/conda/conda/pull/9014
+	# https://repo.continuum.io/miniconda/ doesn't have the script for 4.7.12 yet,
+	# so CI fetches 4.7.10 and runs into the above issue when trying to update conda
+	$(CONDA) install -c anaconda setuptools
 	$(CONDA) update -q conda
 	$(CONDA) init
 	# Useful for debugging any issues with conda
