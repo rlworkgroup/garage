@@ -6,14 +6,15 @@ import pytest
 import tensorflow as tf
 
 from garage.tf.envs import TfEnv
-from garage.tf.policies import CategoricalConvPolicyWithModel
+from garage.tf.policies import CategoricalCNNPolicy
 from tests.fixtures import TfGraphTestCase
 from tests.fixtures.envs.dummy import DummyDiscreteEnv
 from tests.fixtures.models import SimpleCNNModel
 from tests.fixtures.models import SimpleMLPModel
 
 
-class TestCategoricalConvPolicyWithModel(TfGraphTestCase):
+class TestCategoricalCNNPolicyWithModel(TfGraphTestCase):
+
     @pytest.mark.parametrize(
         'obs_dim, action_dim, filter_dims, filter_sizes, '
         'strides, padding, hidden_sizes', [
@@ -40,18 +41,17 @@ class TestCategoricalConvPolicyWithModel(TfGraphTestCase):
         mock_rand.return_value = 0
         env = TfEnv(DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
         with mock.patch(('garage.tf.policies.'
-                         'categorical_conv_policy_with_model.MLPModel'),
+                         'categorical_cnn_policy.MLPModel'),
                         new=SimpleMLPModel):
             with mock.patch(('garage.tf.policies.'
-                             'categorical_conv_policy_with_model.CNNModel'),
+                             'categorical_cnn_policy.CNNModel'),
                             new=SimpleCNNModel):
-                policy = CategoricalConvPolicyWithModel(
-                    env_spec=env.spec,
-                    conv_filters=filter_dims,
-                    conv_filter_sizes=filter_sizes,
-                    conv_strides=strides,
-                    conv_pad=padding,
-                    hidden_sizes=hidden_sizes)
+                policy = CategoricalCNNPolicy(env_spec=env.spec,
+                                              conv_filters=filter_dims,
+                                              conv_filter_sizes=filter_sizes,
+                                              conv_strides=strides,
+                                              conv_pad=padding,
+                                              hidden_sizes=hidden_sizes)
 
         env.reset()
         obs, _, _, _ = env.step(1)
@@ -93,18 +93,17 @@ class TestCategoricalConvPolicyWithModel(TfGraphTestCase):
                        strides, padding, hidden_sizes):
         env = TfEnv(DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
         with mock.patch(('garage.tf.policies.'
-                         'categorical_conv_policy_with_model.MLPModel'),
+                         'categorical_cnn_policy.MLPModel'),
                         new=SimpleMLPModel):
             with mock.patch(('garage.tf.policies.'
-                             'categorical_conv_policy_with_model.CNNModel'),
+                             'categorical_cnn_policy.CNNModel'),
                             new=SimpleCNNModel):
-                policy = CategoricalConvPolicyWithModel(
-                    env_spec=env.spec,
-                    conv_filters=filter_dims,
-                    conv_filter_sizes=filter_sizes,
-                    conv_strides=strides,
-                    conv_pad=padding,
-                    hidden_sizes=hidden_sizes)
+                policy = CategoricalCNNPolicy(env_spec=env.spec,
+                                              conv_filters=filter_dims,
+                                              conv_filter_sizes=filter_sizes,
+                                              conv_strides=strides,
+                                              conv_pad=padding,
+                                              hidden_sizes=hidden_sizes)
 
         env.reset()
         obs, _, _, _ = env.step(1)
@@ -138,18 +137,17 @@ class TestCategoricalConvPolicyWithModel(TfGraphTestCase):
                            filter_sizes, strides, padding, hidden_sizes):
         env = TfEnv(DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
         with mock.patch(('garage.tf.policies.'
-                         'categorical_conv_policy_with_model.MLPModel'),
+                         'categorical_cnn_policy.MLPModel'),
                         new=SimpleMLPModel):
             with mock.patch(('garage.tf.policies.'
-                             'categorical_conv_policy_with_model.CNNModel'),
+                             'categorical_cnn_policy.CNNModel'),
                             new=SimpleCNNModel):
-                policy = CategoricalConvPolicyWithModel(
-                    env_spec=env.spec,
-                    conv_filters=filter_dims,
-                    conv_filter_sizes=filter_sizes,
-                    conv_strides=strides,
-                    conv_pad=padding,
-                    hidden_sizes=hidden_sizes)
+                policy = CategoricalCNNPolicy(env_spec=env.spec,
+                                              conv_filters=filter_dims,
+                                              conv_filter_sizes=filter_sizes,
+                                              conv_strides=strides,
+                                              conv_pad=padding,
+                                              hidden_sizes=hidden_sizes)
 
         env.reset()
         obs, _, _, _ = env.step(1)
@@ -157,8 +155,8 @@ class TestCategoricalConvPolicyWithModel(TfGraphTestCase):
         expected_prob = np.full(action_dim, 0.5)
 
         obs_dim = env.spec.observation_space.shape
-        state_input = tf.compat.v1.placeholder(
-            tf.float32, shape=(None, ) + obs_dim)
+        state_input = tf.compat.v1.placeholder(tf.float32,
+                                               shape=(None, ) + obs_dim)
         dist1 = policy.dist_info_sym(state_input, name='policy2')
 
         prob = self.sess.run(dist1['prob'], feed_dict={state_input: [obs]})
@@ -175,33 +173,31 @@ class TestCategoricalConvPolicyWithModel(TfGraphTestCase):
         mock_rand.return_value = 0
         env = TfEnv(DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
         with mock.patch(('garage.tf.policies.'
-                         'categorical_conv_policy_with_model.MLPModel'),
+                         'categorical_cnn_policy.MLPModel'),
                         new=SimpleMLPModel):
             with mock.patch(('garage.tf.policies.'
-                             'categorical_conv_policy_with_model.CNNModel'),
+                             'categorical_cnn_policy.CNNModel'),
                             new=SimpleCNNModel):
-                policy = CategoricalConvPolicyWithModel(
-                    env_spec=env.spec,
-                    conv_filters=(32, ),
-                    conv_filter_sizes=(3, ),
-                    conv_strides=(1, ),
-                    conv_pad='SAME',
-                    hidden_sizes=(4, ))
+                policy = CategoricalCNNPolicy(env_spec=env.spec,
+                                              conv_filters=(32, ),
+                                              conv_filter_sizes=(3, ),
+                                              conv_strides=(1, ),
+                                              conv_pad='SAME',
+                                              hidden_sizes=(4, ))
         env.reset()
         obs, _, _, _ = env.step(1)
 
         with tf.compat.v1.variable_scope(
-                'CategoricalConvPolicy/Sequential/MLPModel', reuse=True):
+                'CategoricalCNNPolicy/Sequential/MLPModel', reuse=True):
             return_var = tf.compat.v1.get_variable('return_var')
         # assign it to all one
         return_var.load(tf.ones_like(return_var).eval())
-        output1 = self.sess.run(
-            policy.model.outputs, feed_dict={policy.model.input: [obs]})
+        output1 = self.sess.run(policy.model.outputs,
+                                feed_dict={policy.model.input: [obs]})
         p = pickle.dumps(policy)
 
         with tf.compat.v1.Session(graph=tf.Graph()) as sess:
             policy_pickled = pickle.loads(p)
-            output2 = sess.run(
-                policy_pickled.model.outputs,
-                feed_dict={policy_pickled.model.input: [obs]})
+            output2 = sess.run(policy_pickled.model.outputs,
+                               feed_dict={policy_pickled.model.input: [obs]})
             assert np.array_equal(output1, output2)

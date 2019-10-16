@@ -1,4 +1,4 @@
-"""CategoricalConvPolicy with model."""
+"""CategoricalCNNPolicy with model."""
 import akro
 import tensorflow as tf
 
@@ -10,9 +10,9 @@ from garage.tf.models import Sequential
 from garage.tf.policies.base2 import StochasticPolicy2
 
 
-class CategoricalConvPolicyWithModel(StochasticPolicy2):
+class CategoricalCNNPolicy(StochasticPolicy2):
     """
-    CategoricalConvPolicy with model.
+    CategoricalCNNPolicy with model.
 
     A policy that contains a CNN and a MLP to make prediction based on
     a categorical distribution.
@@ -66,7 +66,7 @@ class CategoricalConvPolicyWithModel(StochasticPolicy2):
                  conv_filter_sizes,
                  conv_strides,
                  conv_pad,
-                 name='CategoricalConvPolicy',
+                 name='CategoricalCNNPolicy',
                  hidden_sizes=[],
                  hidden_nonlinearity=tf.nn.relu,
                  hidden_w_init=tf.glorot_uniform_initializer(),
@@ -76,37 +76,35 @@ class CategoricalConvPolicyWithModel(StochasticPolicy2):
                  output_b_init=tf.zeros_initializer(),
                  layer_normalization=False):
         assert isinstance(env_spec.action_space, akro.Discrete), (
-            'CategoricalConvPolicy only works with akro.Discrete action '
+            'CategoricalCNNPolicy only works with akro.Discrete action '
             'space.')
         super().__init__(name, env_spec)
         self.obs_dim = env_spec.observation_space.shape
         self.action_dim = env_spec.action_space.n
 
         self.model = Sequential(
-            CNNModel(
-                filter_dims=conv_filter_sizes,
-                num_filters=conv_filters,
-                strides=conv_strides,
-                padding=conv_pad,
-                hidden_nonlinearity=hidden_nonlinearity,
-                name='CNNModel'),
-            MLPModel(
-                output_dim=self.action_dim,
-                hidden_sizes=hidden_sizes,
-                hidden_nonlinearity=hidden_nonlinearity,
-                hidden_w_init=hidden_w_init,
-                hidden_b_init=hidden_b_init,
-                output_nonlinearity=output_nonlinearity,
-                output_w_init=output_w_init,
-                output_b_init=output_b_init,
-                layer_normalization=layer_normalization,
-                name='MLPModel'))
+            CNNModel(filter_dims=conv_filter_sizes,
+                     num_filters=conv_filters,
+                     strides=conv_strides,
+                     padding=conv_pad,
+                     hidden_nonlinearity=hidden_nonlinearity,
+                     name='CNNModel'),
+            MLPModel(output_dim=self.action_dim,
+                     hidden_sizes=hidden_sizes,
+                     hidden_nonlinearity=hidden_nonlinearity,
+                     hidden_w_init=hidden_w_init,
+                     hidden_b_init=hidden_b_init,
+                     output_nonlinearity=output_nonlinearity,
+                     output_w_init=output_w_init,
+                     output_b_init=output_b_init,
+                     layer_normalization=layer_normalization,
+                     name='MLPModel'))
 
         self._initialize()
 
     def _initialize(self):
-        state_input = tf.compat.v1.placeholder(
-            tf.float32, shape=(None, ) + self.obs_dim)
+        state_input = tf.compat.v1.placeholder(tf.float32,
+                                               shape=(None, ) + self.obs_dim)
 
         with tf.compat.v1.variable_scope(self.name) as vs:
             self._variable_scope = vs
