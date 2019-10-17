@@ -154,6 +154,17 @@ class BatchPolopt(RLAlgorithm):
                     env_infos=path['env_infos'],
                     agent_infos=path['agent_infos']) for path in paths
             ]
+        else:
+            paths = [
+                dict(
+                    observations=path['observations'],
+                    actions=(
+                        self.env_spec.action_space.flatten_n(  # noqa: E126
+                            path['actions'])),
+                    rewards=path['rewards'],
+                    env_infos=path['env_infos'],
+                    agent_infos=path['agent_infos']) for path in paths
+            ]
 
         if hasattr(self.baseline, 'predict_n'):
             all_path_baselines = self.baseline.predict_n(paths)

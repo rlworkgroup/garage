@@ -205,15 +205,11 @@ class NPO(BatchPolopt):
                     tf.float32,
                     shape=[None, None, observation_space.flat_dim],
                     name='obs')
-                action_var = tf.compat.v1.placeholder(
-                    tf.float32,
-                    shape=[None, None, action_space.flat_dim],
-                    name='action')
             else:
                 obs_var = observation_space.to_tf_placeholder(name='obs',
                                                               batch_dims=2)
-                action_var = action_space.to_tf_placeholder(name='action',
-                                                            batch_dims=2)
+            action_var = action_space.to_tf_placeholder(name='action',
+                                                        batch_dims=2)
             reward_var = tensor_utils.new_tensor(name='reward',
                                                  ndim=2,
                                                  dtype=tf.float32)

@@ -41,7 +41,8 @@ def run_task(snapshot_config, *_):
                     baseline=baseline,
                     max_path_length=100,
                     discount=0.99,
-                    max_kl_step=0.01)
+                    max_kl_step=0.01,
+                    flatten_input=False)
 
         runner.setup(algo, env)
         runner.train(n_epochs=100, batch_size=4000)
