@@ -16,7 +16,7 @@ from garage.envs.base import GarageEnv
 from garage.experiment import LocalRunner, run_experiment
 from garage.replay_buffer import SimpleReplayBuffer
 from garage.torch.algos import SAC
-from garage.torch.policies import GaussianMLPPolicyDualHead
+from garage.torch.policies import TanhGaussianMLPPolicy
 from garage.torch.q_functions import ContinuousMLPQFunction
 
 
@@ -25,11 +25,11 @@ def run_task(snapshot_config, *_):
     runner = LocalRunner(snapshot_config)
     env = GarageEnv(normalize(gym.make('HalfCheetah-v2')))
 
-    policy = GaussianMLPPolicyDualHead(env_spec=env.spec,
+    policy = TanhGaussianMLPPolicy(env_spec=env.spec,
                                hidden_sizes=[256, 256],
                                hidden_nonlinearity=nn.ReLU,
-                               output_nonlinearity=nn.Tanh)
-    import ipdb; ipdb.set_trace()
+                               output_nonlinearity=None)
+
     qf1 = ContinuousMLPQFunction(env_spec=env.spec,
                                 hidden_sizes=[256, 256],
                                 hidden_nonlinearity=F.relu)
@@ -65,11 +65,11 @@ def run_task(snapshot_config, *_):
 
     runner.setup(algo=sac, env=env)
 
-    runner.train(n_epochs=1000, batch_size=1000 ,plot=True)
+    runner.train(n_epochs=500, batch_size=1000 ,plot=True)
 
 
 run_experiment(
     run_task,
     snapshot_mode='last',
-    seed=532,
+    seed=134,
 )
