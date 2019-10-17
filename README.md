@@ -63,7 +63,7 @@ Our testing strategy has three pillars:
   We use continuous integration to test all modules and algorithms in garage before adding any change. The full installation and test suite is also run nightly, to detect regressions.
 * **Acceptance Testing:**
   Any commit which might change the performance of an algorithm is subjected to comprehensive benchmarks on the relevant algorithms before it is merged
-* **Bencharks and Monitoring:**
+* **Benchmarks and Monitoring:**
   We benchmark the full suite of algorithms against their relevant benchmarks and widely-used implementations regularly, to detect regressions and improvements we may have missed.
 
 ## Supported Releases
