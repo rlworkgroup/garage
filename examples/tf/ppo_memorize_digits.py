@@ -28,10 +28,10 @@ def run_task(snapshot_config, *_):
 
         baseline = GaussianCNNBaseline(env_spec=env.spec,
                                        regressor_args=dict(
-                                           conv_filters=(32, 64, 64),
-                                           conv_filter_sizes=(5, 3, 2),
-                                           conv_strides=(4, 2, 1),
-                                           conv_pads=('VALID', 'VALID'),
+                                           num_filters=(32, 64, 64),
+                                           filter_dims=(5, 3, 2),
+                                           strides=(4, 2, 1),
+                                           padding='VALID',
                                            hidden_sizes=(256, ),
                                            use_trust_region=True))
 
@@ -40,7 +40,8 @@ def run_task(snapshot_config, *_):
                    baseline=baseline,
                    max_path_length=100,
                    discount=0.99,
-                   max_kl_step=0.01)
+                   max_kl_step=0.01,
+                   flatten_input=False)
 
         runner.setup(algo, env)
         runner.train(n_epochs=1000, batch_size=2048)

@@ -19,7 +19,6 @@ def run_task(snapshot_config, *_):
     """Run task."""
     with LocalTFRunner(snapshot_config=snapshot_config) as runner:
         env = TfEnv(normalize(gym.make('CubeCrash-v0')))
-        print('shape= ', env.spec.observation_space.shape)
         policy = CategoricalCNNPolicy(env_spec=env.spec,
                                       conv_filters=(32, 64),
                                       conv_filter_sizes=(8, 4),
