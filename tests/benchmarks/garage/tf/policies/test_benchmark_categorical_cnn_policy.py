@@ -24,7 +24,6 @@ params = {
     'conv_filters': (32, 64, 64),
     'conv_filter_sizes': (5, 3, 2),
     'conv_strides': (4, 2, 1),
-    'conv_pads': ('VALID', 'VALID', 'VALID'),
     'conv_pad': 'VALID',
     'hidden_sizes': (256, ),
     'n_epochs': 1000,
@@ -132,7 +131,7 @@ def run_garage(env, seed, log_dir):
             regressor_args=dict(num_filters=params['conv_filters'],
                                 filter_dims=params['conv_filter_sizes'],
                                 strides=params['conv_strides'],
-                                padding=params['conv_pads'],
+                                padding=params['conv_pad'],
                                 hidden_sizes=params['hidden_sizes'],
                                 use_trust_region=params['use_trust_region']))
 
@@ -150,6 +149,7 @@ def run_garage(env, seed, log_dir):
                 max_epochs=10,
                 tf_optimizer_args=dict(learning_rate=1e-3),
             ),
+            flatten_input=False,
         )
 
         # Set up logger since we are not using run_experiment
