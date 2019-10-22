@@ -68,7 +68,7 @@ RUN mkdir /root/.mujoco && \
 ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mjpro150/bin
 
 # conda
-RUN wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh && \
+RUN wget https://repo.continuum.io/miniconda/Miniconda2-4.7.10-Linux-x86_64.sh -O miniconda.sh && \
   bash miniconda.sh -b -p /opt/conda && \
   rm miniconda.sh && \
   ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh
