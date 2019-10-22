@@ -41,16 +41,16 @@ params = {
 num_of_trials = 5
 
 
-class TestBenchmarkContinuousMLPQFunction:
-    '''Benchmark ContinuousMLPQFunction.'''
+class TestBenchmarkContinuousMLPPolicy:
+    '''Benchmark ContinuousMLPPolicy.'''
 
     @pytest.mark.huge
-    def test_benchmark_continuous_mlp_q_function(self):
+    def test_benchmark_continuous_mlp_policy(self):
         mujoco1m = benchmarks.get_benchmark('Mujoco1M')
 
         timestamp = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f')
         benchmark_dir = osp.join(os.getcwd(), 'data', 'local', 'benchmarks',
-                                 'continuous_mlp_q_function', timestamp)
+                                 'continuous_mlp_policy', timestamp)
         for task in mujoco1m['tasks']:
             env_id = task['env_id']
             env = gym.make(env_id)
@@ -60,7 +60,7 @@ class TestBenchmarkContinuousMLPQFunction:
             task_dir = osp.join(benchmark_dir, env_id)
             plt_file = osp.join(
                 benchmark_dir,
-                '{}_benchmark_continuous_mlp_q_function.png'.format(env_id))
+                '{}_benchmark_continuous_mlp_policy.png'.format(env_id))
             garage_csvs = []
 
             for trial in range(num_of_trials):
