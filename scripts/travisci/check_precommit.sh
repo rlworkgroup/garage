@@ -28,21 +28,23 @@ else
   pre-commit run --source ${merge_base} --origin ${TRAVIS_BRANCH}
   status="$((${status} | ${?}))"
 
+  if [[ "${TRAVIS}" != "true" ]]; then
   # Check commit messages
-  while read commit; do
-    commit_msg="$(mktemp)"
-    git log --format=%B -n 1 "${commit}" > "${commit_msg}"
-    pre-commit run --hook-stage commit-msg --commit-msg-file="${commit_msg}"
-    pass=$?
-    status="$((${status} | ${pass}))"
+    while read commit; do
+      commit_msg="$(mktemp)"
+      git log --format=%B -n 1 "${commit}" > "${commit_msg}"
+      pre-commit run --hook-stage commit-msg --commit-msg-file="${commit_msg}"
+      pass=$?
+      status="$((${status} | ${pass}))"
 
-    # Print message if it fails
-    if [[ "${pass}" -ne 0 ]]; then
-      echo "Failing commit message:"
-      cat "${commit_msg}"
-    fi
+      # Print message if it fails
+      if [[ "${pass}" -ne 0 ]]; then
+        echo "Failing commit message:"
+        cat "${commit_msg}"
+      fi
 
-  done < <(git rev-list ^origin/master "${TRAVIS_BRANCH}")
+    done < <(git rev-list ^origin/master "${TRAVIS_BRANCH}")
+  fi
 fi
 
 exit "${status}"
