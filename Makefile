@@ -59,7 +59,7 @@ ci-verify-conda:
 	$(CONDA) info -a
 	$(CONDA) env create -f environment.yml
 	# pylint will verify all imports work
-	$(GARAGE_BIN)/pylint -j0 --rcfile=setup.cfg garage
+	$(GARAGE_BIN)/pylint --disable=all --enable=import-error garage
 
 # The following two lines remove the Dockerfile's built-in virtualenv from the
 # path, so we can test with pipenv directly
@@ -71,7 +71,7 @@ ci-verify-pipenv:
 	pipenv install .[all,dev]
 	pipenv graph
 	# pylint will verify all imports work
-	pipenv run pylint -j0 --rcfile=setup.cfg garage
+	pipenv run pylint --disable=all --enable=import-error garage
 
 ci-deploy-docker:
 	echo "${DOCKER_API_KEY}" | docker login -u "${DOCKER_USERNAME}" \

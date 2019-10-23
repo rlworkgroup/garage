@@ -1,0 +1,73 @@
+[MASTER]
+# Check docstring completeness
+load-plugins = pylint.extensions.docparams, pylint.extensions.docstyle
+
+# Go as fast as you can
+jobs = 0
+
+[MESSAGES CONTROL]
+enable = all
+disable =
+    abstract-method,
+    arguments-differ,
+    assignment-from-no-return,
+    attribute-defined-outside-init,
+    bad-continuation,
+    blacklisted-name,
+    broad-except,
+    consider-iterating-dictionary,
+    consider-merging-isinstance,
+    consider-using-enumerate,
+    dangerous-default-value,
+    deprecated-method,
+    duplicate-code,
+    eval-used,
+    fixme,
+    global-statement,
+    invalid-name,
+    invalid-unary-operand-type,
+    keyword-arg-before-vararg,
+    line-too-long,
+    locally-disabled,
+    method-hidden,
+    missing-docstring,
+    no-else-return,
+    no-member,
+    no-name-in-module,
+    no-self-use,
+    pointless-string-statement,
+    protected-access,
+    raising-format-tuple,
+    redefined-argument-from-local,
+    redefined-builtin,
+    redefined-outer-name,
+    reimported,
+    superfluous-parens,
+    super-init-not-called,
+    suppressed-message,
+    too-few-public-methods,
+    too-many-arguments,
+    too-many-branches,
+    too-many-instance-attributes,
+    too-many-lines,
+    too-many-locals,
+    too-many-public-methods,
+    too-many-statements,
+    undefined-loop-variable,
+    unbalanced-tuple-unpacking,
+    unidiomatic-typecheck,
+    unnecessary-lambda,
+    unnecessary-pass,
+    unused-argument,
+    unused-format-string-argument,
+    unused-variable,
+    unused-wildcard-import,
+    useless-super-delegation,
+    useless-suppression,
+    wildcard-import,
+    not-context-manager,
+    c-extension-no-member,
+    wrong-import-order
+
+[REPORTS]
+msg-template = {path}:{symbol}:{line:3d},{column}: {msg}
