@@ -2,7 +2,7 @@
 from setuptools import find_packages
 from setuptools import setup
 
-TF_VERSION = '<1.15,>=1.14.0'
+TF_VERSION = '<1.16,>=1.15.0'
 GYM_VERSION = '==0.12.4'
 
 # Required dependencies
@@ -30,7 +30,7 @@ REQUIRED = [
     'scikit-image',
     'scipy',
     'tensorflow' + TF_VERSION,
-    'tensorflow-probability<0.8.0,>=0.7.0',  # for tensorflow 1.12
+    'tensorflow-probability',
     'torchvision==0.4.1'
 ]
 
