@@ -99,7 +99,7 @@ class LocalRunner:
         self.sampler.start_worker()
         if self.plot:
             from garage.tf.plotter import Plotter
-            self.plotter = Plotter(self.env, self.policy)
+            self.plotter = Plotter(copy.deepcopy(self.env), self.policy)
             self.plotter.start()
 
     def _shutdown_worker(self):
