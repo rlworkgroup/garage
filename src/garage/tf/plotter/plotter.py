@@ -98,7 +98,8 @@ class Plotter:
                                 policy,
                                 max_path_length=max_length,
                                 animated=True,
-                                speedup=5)
+                                speedup=5,
+                                deterministic=True)
         except KeyboardInterrupt:
             pass
 
