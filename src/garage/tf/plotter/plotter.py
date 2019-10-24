@@ -24,8 +24,6 @@ Message = namedtuple('Message', ['op', 'args', 'kwargs'])
 
 class Plotter:
 
-    # Static variable used to disable the plotter
-    enable = True
     # List containing all plotters instantiated in the process
     __plotters = []
 
@@ -114,17 +112,10 @@ class Plotter:
             self.worker_thread.join()
 
     @staticmethod
-    def disable():
-        """Disable all instances of the Plotter class."""
-        Plotter.enable = False
-
-    @staticmethod
     def get_plotters():
         return Plotter.__plotters
 
     def start(self):
-        if not Plotter.enable:
-            return
         if not self.worker_thread.is_alive():
             tf.compat.v1.get_variable_scope().reuse_variables()
             self.worker_thread.start()
@@ -134,8 +125,6 @@ class Plotter:
             atexit.register(self.close)
 
     def update_plot(self, policy, max_length=np.inf):
-        if not Plotter.enable:
-            return
         if self.worker_thread.is_alive():
             self.queue.put(
                 Message(
