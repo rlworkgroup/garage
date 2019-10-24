@@ -50,12 +50,12 @@ EXTRAS['dm_control'] = [
     'dm_control @ https://api.github.com/repos/deepmind/dm_control/tarball/7a36377879c57777e5d5b4da5aae2cd2a29b607a',  # pylint: disable=line-too-long; # noqa: E501
 ]
 
-EXTRAS['all'] = list(set(sum(extras.values(), [])))
+EXTRAS['all'] = list(set(sum(EXTRAS.values(), [])))
 
-# dependencies for using gpu, not included in all
+# dependencies for using gpu, not included in 'all'
 EXTRAS['gpu'] = ['tensorflow-gpu' + TF_VERSION]
 
-# Development dependencies (*not* included in "all")
+# Development dependencies (*not* included in 'all')
 EXTRAS['dev'] = [
     # Please keep alphabetized
     'baselines @ https://api.github.com/repos/openai/baselines/tarball/f2729693253c0ef4d4086231d36e0a4307ec1cb3',  # pylint: disable=line-too-long; # noqa: E501
