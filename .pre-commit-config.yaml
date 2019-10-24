@@ -11,7 +11,7 @@ repos:
     -   id: pylint
         name: pylint
         entry: pylint
-        args: ['-j 2', '--rcfile=setup.cfg']
+        args: ['-j 2']
         language: system
         files: \.py$
 
@@ -34,7 +34,11 @@ repos:
     -   id: double-quote-string-fixer        # This hook replaces double quoted strings with single quoted strings.
     -   id: end-of-file-fixer                # Makes sure files end in a newline and only a newline.
     -   id: flake8                           # Run flake8 on your Python files
-        additional_dependencies: ['flake8-import-order', 'flake8-docstrings', 'pydocstyle<4.0.0']
+        additional_dependencies:
+          -   'flake8-docstrings>=1.5.0'
+          -   'flake8-import-order'
+          -   'pycodestyle>=2.5.0'
+          -   'pydocstyle>=4.0.0'
     -   id: forbid-new-submodules            # Prevent addition of new git submodules.
     -   id: mixed-line-ending                # Replaces or checks mixed line ending.
     -   id: pretty-format-json               # Checks that all your JSON files have keys that are sorted and indented.
