@@ -9,6 +9,7 @@ addons:
   apt:
     packages:
       - docker-ce
+      - expect-dev  # for unbuffer (fixes colors on TravisCI)
 
 env:
   global:
@@ -71,7 +72,7 @@ before_script:
   - ci_env="$(bash <(curl -s https://codecov.io/env))"
 
 script:
-  - ADD_ARGS="${ci_env}" TAG="${tag}" make run-ci RUN_CMD="${JOB_RUN_CMD}"
+  - ADD_ARGS="${ci_env}" TAG="${tag}" unbuffer make run-ci RUN_CMD="${JOB_RUN_CMD}"
 
 deploy:
   provider: script
