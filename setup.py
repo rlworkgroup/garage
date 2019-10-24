@@ -85,7 +85,7 @@ with open('README.md') as f:
 
 # Get the package version dynamically
 with open('VERSION') as v:
-    README = v.read().strip()
+    VERSION = v.read().strip()
 
 setup(
     name='garage',
