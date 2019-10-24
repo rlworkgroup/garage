@@ -118,10 +118,6 @@ def run_experiment(argv):
     if args.seed is not None:
         deterministic.set_seed(args.seed)
 
-    if not args.plot:
-        garage.plotter.Plotter.disable()
-        garage.tf.plotter.Plotter.disable()
-
     if args.log_dir is None:
         log_dir = os.path.join(os.path.join(os.getcwd(), 'data'),
                                args.exp_name)
