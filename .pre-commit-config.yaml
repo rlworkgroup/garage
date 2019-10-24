@@ -11,7 +11,6 @@ repos:
     -   id: pylint
         name: pylint
         entry: pylint
-        args: ['-j 2']
         language: system
         files: \.py$
 
