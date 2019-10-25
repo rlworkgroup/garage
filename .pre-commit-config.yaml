@@ -8,11 +8,21 @@ repos:
         name: Check commit message
         language: script
         entry: scripts/check_commit_message
-    -   id: pylint
-        name: pylint
-        entry: pylint
+    -   id: check-pylint-normal
+        name: Check pylint (except unit tests)
+        types: [file, python]
+        exclude: ^tests/garage/.*$  # exclude unit tests
+        require_serial: true  # pylint does its own parallelism
         language: system
-        files: \.py$
+        entry: pylint
+    -   id: check-pylint-unit-tests
+        name: Check pylint for unit tests
+        types: [file, python]
+        files: ^tests/garage/.*$  # check only unit tests
+        require_serial: true  # pylint does its own parallelism
+        language: system
+        entry: pylint
+        args: [--rcfile=tests/garage/.pylintrc]
 
 -   repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v2.2.3
@@ -48,7 +58,7 @@ repos:
     rev: v0.28.0
     hooks:
     -   id: yapf
-        name: Check format by yapf
+        name: Check format with yapf
         args: ['-vv', '-dpr']
 
 # Second pass: format in-place
@@ -56,5 +66,5 @@ repos:
     rev: v0.28.0
     hooks:
     -   id: yapf
-        name: Format in-place by yapf
+        name: Format in-place with yapf
         args: ['-vv', '-ipr']

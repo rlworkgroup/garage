@@ -27,6 +27,19 @@ disable =
     too-many-locals,
     # Detection seems buggy or unhelpful
     duplicate-code,
+    # Rules disabled *for unit tests only*
+    attribute-defined-outside-init,
+    differing-param-doc,
+    differing-type-doc,
+    docstring-first-line-empty,
+    missing-docstring,
+    missing-param-doc,
+    missing-return-doc,
+    missing-return-type-doc,
+    missing-type-doc,
+    no-self-use,
+    protected-access,
+    too-few-public-methods,
 
 
 [REPORTS]
@@ -37,12 +50,3 @@ output-format = colorized
 [TYPECHECK]
 # Packages which might not admit static analysis because they have C extensions
 generated-members = torch.*
-
-
-[PARAMETER_DOCUMENTATION]
-# Docstrings are required and should be complete
-accept-no-param-doc=no
-accept-no-raise-doc=no
-accept-no-return-doc=no
-accept-no-yields-doc=no
-default-docstring-type=google
