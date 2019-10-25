@@ -5,5 +5,13 @@ load-plugins = pylint.extensions.docparams, pylint.extensions.docstyle
 # Go as fast as you can
 jobs = 0
 
+[MESSAGES CONTROL]
+disable =
+    # Algorithms and neural networks generally have a lot of variables
+    too-many-instance-attributes,
+    too-many-arguments,
+    too-many-locals,
+    invalid-name,  # let flake8 handle this
+
 [REPORTS]
 msg-template = {path}:{symbol}:{line:3d},{column}: {msg}
