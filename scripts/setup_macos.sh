@@ -224,7 +224,7 @@ fi
 CONDA_SH="${HOME}/miniconda2/etc/profile.d/conda.sh"
 if [[ ! -d "${HOME}/miniconda2" ]]; then
   CONDA_INSTALLER="$(mktemp -d)/miniconda.sh"
-  wget https://repo.continuum.io/miniconda/Miniconda2-4.7.10-MacOSX-x86_64.sh \
+  wget https://repo.continuum.io/miniconda/Miniconda2-latest-MacOSX-x86_64.sh \
     -O "${CONDA_INSTALLER}"
   chmod u+x "${CONDA_INSTALLER}"
   bash "${CONDA_INSTALLER}" -b -u
