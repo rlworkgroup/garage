@@ -41,10 +41,10 @@ class DDPG(OffPolicyRLAlgorithm):
         policy_lr (float): Learning rate for training policy network.
         qf_lr (float): Learning rate for training q value network.
         discount(float): Discount factor for the cumulative return.
-        policy_weight_decay (float): L2 weight decay factor for parameters
-            of the policy network.
-        qf_weight_decay (float): L2 weight decay factor for parameters
-            of the q value network.
+        policy_weight_decay (float): L2 regularization factor for parameters
+            of the policy network. Value of 0 means no regularization.
+        qf_weight_decay (float): L2 regularization factor for parameters
+            of the q value network. Value of 0 means no regularization.
         policy_optimizer (tf.Optimizer): Optimizer for training policy network.
         qf_optimizer (tf.Optimizer): Optimizer for training q function
             network.
@@ -217,7 +217,12 @@ class DDPG(OffPolicyRLAlgorithm):
             self.f_update_target = f_update_target
 
     def __getstate__(self):
-        """Object.__getstate__."""
+        """Object.__getstate__.
+
+        Returns:
+            dict: the state to be pickled for the instance.
+
+        """
         data = self.__dict__.copy()
         del data['target_policy_f_prob_online']
         del data['target_qf_f_prob_online']
@@ -228,7 +233,12 @@ class DDPG(OffPolicyRLAlgorithm):
         return data
 
     def __setstate__(self, state):
-        """See `Object.__setstate__`."""
+        """Object.__setstate__.
+
+        Args:
+            state (dict): unpickled state.
+
+        """
         self.__dict__.update(state)
         self.init_opt()
 
@@ -353,5 +363,13 @@ class DDPG(OffPolicyRLAlgorithm):
         return qval_loss, ys, qval, action_loss
 
     def get_itr_snapshot(self, itr):
-        """Return data saved in the snapshot for this iteration."""
+        """Return data saved in the snapshot for this iteration.
+
+        Args:
+            itr (int): Current iteration.
+
+        Returns:
+            dict: dictionary of iteration number and policy.
+
+        """
         return dict(itr=itr, policy=self.policy)
