@@ -62,7 +62,9 @@ class PenaltyLbfgsOptimizer(Serializable):
         with tf.name_scope(name, 'PenaltyLbfgsOptimizer',
                            [leq_constraint, loss, params]):
             constraint_term, constraint_value = leq_constraint
-            penalty_var = tf.compat.v1.placeholder(tf.float32, tuple(), name='penalty')
+            penalty_var = tf.compat.v1.placeholder(tf.float32,
+                                                   tuple(),
+                                                   name='penalty')
             penalized_loss = loss + penalty_var * constraint_term
 
             self._target = target
@@ -70,8 +72,8 @@ class PenaltyLbfgsOptimizer(Serializable):
             self._constraint_name = constraint_name
 
             def get_opt_output():
-                with tf.name_scope(
-                        'get_opt_output', values=[params, penalized_loss]):
+                with tf.name_scope('get_opt_output',
+                                   values=[params, penalized_loss]):
                     grads = tf.gradients(penalized_loss, params)
                     for idx, (grad, param) in enumerate(zip(grads, params)):
                         if grad is None:
@@ -83,15 +85,12 @@ class PenaltyLbfgsOptimizer(Serializable):
                     ]
 
             self._opt_fun = LazyDict(
-                f_loss=lambda: tensor_utils.compile_function(
-                    inputs, loss, log_name='f_loss'),
+                f_loss=lambda: tensor_utils.compile_function(inputs, loss),
                 f_constraint=lambda: tensor_utils.compile_function(
-                    inputs, constraint_term, log_name='f_constraint'),
+                    inputs, constraint_term),
                 f_penalized_loss=lambda: tensor_utils.compile_function(
                     inputs=inputs + [penalty_var],
-                    outputs=[penalized_loss, loss, constraint_term],
-                    log_name='f_penalized_loss',
-                ),
+                    outputs=[penalized_loss, loss, constraint_term]),
                 f_opt=lambda: tensor_utils.compile_function(
                     inputs=inputs + [penalty_var],
                     outputs=get_opt_output(),
@@ -116,6 +115,7 @@ class PenaltyLbfgsOptimizer(Serializable):
             f_penalized_loss = self._opt_fun['f_penalized_loss']
 
             def gen_f_opt(penalty):
+
                 def f(flat_params):
                     self._target.set_param_values(flat_params, trainable=True)
                     return f_opt(*(inputs + (penalty, )))

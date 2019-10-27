@@ -9,6 +9,7 @@ from garage.tf.optimizers.utils import LazyDict, sliced_fun
 
 
 class PerlmutterHvp:
+
     def __init__(self, num_slices=1):
         self.target = None
         self.reg_coeff = None
@@ -20,8 +21,9 @@ class PerlmutterHvp:
         self.reg_coeff = reg_coeff
         params = target.get_params(trainable=True)
         with tf.name_scope(name, 'PerlmutterHvp', [f, inputs, params]):
-            constraint_grads = tf.gradients(
-                f, xs=params, name='gradients_constraint')
+            constraint_grads = tf.gradients(f,
+                                            xs=params,
+                                            name='gradients_constraint')
             for idx, (grad, param) in enumerate(zip(constraint_grads, params)):
                 if grad is None:
                     constraint_grads[idx] = tf.zeros_like(param)
@@ -32,19 +34,21 @@ class PerlmutterHvp:
             ])
 
             def hx_plain():
-                with tf.name_scope(
-                        'hx_plain', values=[constraint_grads, params, xs]):
-                    with tf.name_scope(
-                            'hx_function', values=[constraint_grads, xs]):
+                with tf.name_scope('hx_plain',
+                                   values=[constraint_grads, params, xs]):
+                    with tf.name_scope('hx_function',
+                                       values=[constraint_grads, xs]):
                         hx_f = tf.reduce_sum(
                             tf.stack([
                                 tf.reduce_sum(g * x)
                                 for g, x in zip(constraint_grads, xs)
                             ])),
-                    hx_plain_splits = tf.gradients(
-                        hx_f, params, name='gradients_hx_plain')
-                    for idx, (hx, param) in enumerate(
-                            zip(hx_plain_splits, params)):
+                    hx_plain_splits = tf.gradients(hx_f,
+                                                   params,
+                                                   name='gradients_hx_plain')
+                    for idx, (hx,
+                              param) in enumerate(zip(hx_plain_splits,
+                                                      params)):
                         if hx is None:
                             hx_plain_splits[idx] = tf.zeros_like(param)
                     return tensor_utils.flatten_tensor_variables(
@@ -54,10 +58,10 @@ class PerlmutterHvp:
                 f_hx_plain=lambda: tensor_utils.compile_function(
                     inputs=inputs + xs,
                     outputs=hx_plain(),
-                    log_name='f_hx_plain',
                 ), )
 
     def build_eval(self, inputs):
+
         def eval(x):
             xs = tuple(self.target.flat_to_params(x, trainable=True))
             ret = sliced_fun(self.opt_fun['f_hx_plain'], self._num_slices)(
@@ -68,6 +72,7 @@ class PerlmutterHvp:
 
 
 class FiniteDifferenceHvp:
+
     def __init__(self,
                  base_eps=1e-8,
                  symmetric=True,
@@ -84,8 +89,9 @@ class FiniteDifferenceHvp:
         params = target.get_params(trainable=True)
         with tf.name_scope(name, 'FiniteDifferenceHvp',
                            [f, inputs, params, target]):
-            constraint_grads = tf.gradients(
-                f, xs=params, name='gradients_constraint')
+            constraint_grads = tf.gradients(f,
+                                            xs=params,
+                                            name='gradients_constraint')
             for idx, (grad, param) in enumerate(zip(constraint_grads, params)):
                 if grad is None:
                     constraint_grads[idx] = tf.zeros_like(param)
@@ -100,13 +106,13 @@ class FiniteDifferenceHvp:
                     param_val = self.target.get_param_values(trainable=True)
                     eps = np.cast['float32'](
                         self.base_eps / (np.linalg.norm(param_val) + 1e-8))
-                    self.target.set_param_values(
-                        param_val + eps * flat_xs, trainable=True)
+                    self.target.set_param_values(param_val + eps * flat_xs,
+                                                 trainable=True)
                     flat_grad_dvplus = self.opt_fun['f_grad'](*inputs_)
                     self.target.set_param_values(param_val, trainable=True)
                     if self.symmetric:
-                        self.target.set_param_values(
-                            param_val - eps * flat_xs, trainable=True)
+                        self.target.set_param_values(param_val - eps * flat_xs,
+                                                     trainable=True)
                         flat_grad_dvminus = self.opt_fun['f_grad'](*inputs_)
                         hx = (flat_grad_dvplus - flat_grad_dvminus) / (2 * eps)
                         self.target.set_param_values(param_val, trainable=True)
@@ -119,12 +125,12 @@ class FiniteDifferenceHvp:
                 f_grad=lambda: tensor_utils.compile_function(
                     inputs=inputs,
                     outputs=flat_grad,
-                    log_name='f_grad',
                 ),
                 f_hx_plain=lambda: f_hx_plain,
             )
 
     def build_eval(self, inputs):
+
         def eval(x):
             xs = tuple(self.target.flat_to_params(x, trainable=True))
             ret = sliced_fun(self.opt_fun['f_hx_plain'], self._num_slices)(
@@ -236,12 +242,11 @@ class ConjugateGradientOptimizer(Serializable):
                         grads[idx] = tf.zeros_like(param)
                 flat_grad = tensor_utils.flatten_tensor_variables(grads)
 
-            self._hvp_approach.update_opt(
-                f=constraint_term,
-                target=target,
-                inputs=inputs + extra_inputs,
-                reg_coeff=self._reg_coeff,
-                name='update_opt_' + constraint_name)
+            self._hvp_approach.update_opt(f=constraint_term,
+                                          target=target,
+                                          inputs=inputs + extra_inputs,
+                                          reg_coeff=self._reg_coeff,
+                                          name='update_opt_' + constraint_name)
 
             self._target = target
             self._max_constraint_val = constraint_value
@@ -251,22 +256,18 @@ class ConjugateGradientOptimizer(Serializable):
                 f_loss=lambda: tensor_utils.compile_function(
                     inputs=inputs + extra_inputs,
                     outputs=loss,
-                    log_name='f_loss',
                 ),
                 f_grad=lambda: tensor_utils.compile_function(
                     inputs=inputs + extra_inputs,
                     outputs=flat_grad,
-                    log_name='f_grad',
                 ),
                 f_constraint=lambda: tensor_utils.compile_function(
                     inputs=inputs + extra_inputs,
                     outputs=constraint_term,
-                    log_name='constraint',
                 ),
                 f_loss_constraint=lambda: tensor_utils.compile_function(
                     inputs=inputs + extra_inputs,
                     outputs=[loss, constraint_term],
-                    log_name='f_loss_constraint',
                 ),
             )
 
@@ -304,10 +305,10 @@ class ConjugateGradientOptimizer(Serializable):
                 subsample_inputs = tuple()
                 for inputs_grouped in subsample_grouped_inputs:
                     n_samples = len(inputs_grouped[0])
-                    inds = np.random.choice(
-                        n_samples,
-                        int(n_samples * self._subsample_factor),
-                        replace=False)
+                    inds = np.random.choice(n_samples,
+                                            int(n_samples *
+                                                self._subsample_factor),
+                                            replace=False)
                     subsample_inputs += tuple(
                         [x[inds] for x in inputs_grouped])
             else:

@@ -1,10 +1,10 @@
 """Trust Region Policy Optimization."""
-from garage.tf.algos.npo import NPO
+from garage.tf.algos.npo2 import NPO2
 from garage.tf.optimizers import ConjugateGradientOptimizer
 from garage.tf.optimizers import PenaltyLbfgsOptimizer
 
 
-class TRPO(NPO):
+class TRPO2(NPO2):
     """Trust Region Policy Optimization.
 
     See https://arxiv.org/abs/1502.05477.

@@ -6,7 +6,9 @@ import tensorflow as tf
 from garage.misc import special
 from garage.misc.overrides import overrides
 from garage.misc.tensor_utils import concat_tensor_list
-from garage.tf.algos.batch_polopt import BatchPolopt
+from garage.misc.tensor_utils import filter_valids
+from garage.misc.tensor_utils import flatten_batch
+from garage.tf.algos.batch_polopt2 import BatchPolopt2
 from garage.tf.misc import tensor_utils
 from garage.tf.misc.tensor_utils import center_advs
 from garage.tf.misc.tensor_utils import compute_advantages
@@ -21,7 +23,7 @@ from garage.tf.misc.tensor_utils import positive_advs
 from garage.tf.optimizers import LbfgsOptimizer
 
 
-class NPO(BatchPolopt):
+class NPO2(BatchPolopt2):
     """Natural Policy Gradient Optimization.
 
     Args:
@@ -185,6 +187,7 @@ class NPO(BatchPolopt):
         tabular.record('{}/Entropy'.format(self.policy.name), np.mean(pol_ent))
 
         self._fit_baseline(samples_data)
+        self._policy_update_ops()
 
     @overrides
     def get_itr_snapshot(self, itr):
@@ -196,20 +199,18 @@ class NPO(BatchPolopt):
         )
 
     def _build_inputs(self):
-        observation_space = self.policy.observation_space
         action_space = self.policy.action_space
 
-        policy_dist = self.policy.distribution
-
         with tf.name_scope('inputs'):
-            if self.flatten_input:
-                obs_var = tf.compat.v1.placeholder(
-                    tf.float32,
-                    shape=[None, None, observation_space.flat_dim],
-                    name='obs')
-            else:
-                obs_var = observation_space.to_tf_placeholder(name='obs',
-                                                              batch_dims=2)
+            obs_var = self.policy.model.networks['default'].input
+            old_obs_var = self.old_policy.model.networks['default'].input
+            # Ops to assign new policy weights to old policy
+            target_update_op = tensor_utils.get_target_ops(
+                self.policy.get_global_vars(),
+                self.old_policy.get_global_vars())
+            self._policy_update_ops = tf.get_default_session().make_callable(
+                target_update_op)
+
             action_var = action_space.to_tf_placeholder(name='action',
                                                         batch_dims=2)
             reward_var = tensor_utils.new_tensor(name='reward',
@@ -232,21 +233,8 @@ class NPO(BatchPolopt):
                 policy_state_info_vars[k] for k in self.policy.state_info_keys
             ]
 
-            # old policy distribution
-            policy_old_dist_info_vars = {
-                k: tf.compat.v1.placeholder(tf.float32,
-                                            shape=[None] * 2 + list(shape),
-                                            name='policy_old_%s' % k)
-                for k, shape in policy_dist.dist_info_specs
-            }
-            policy_old_dist_info_vars_list = [
-                policy_old_dist_info_vars[k]
-                for k in policy_dist.dist_info_keys
-            ]
-
             # flattened view
             with tf.name_scope('flat'):
-                obs_flat = flatten_batch_tensor(obs_var, name='obs_flat')
                 action_flat = flatten_batch_tensor(action_var,
                                                    name='action_flat')
                 reward_flat = flatten_batch_tensor(reward_var,
@@ -254,9 +242,6 @@ class NPO(BatchPolopt):
                 valid_flat = flatten_batch_tensor(valid_var, name='valid_flat')
                 policy_state_info_vars_flat = flatten_batch_tensor_dict(
                     policy_state_info_vars, name='policy_state_info_vars_flat')
-                policy_old_dist_info_vars_flat = flatten_batch_tensor_dict(
-                    policy_old_dist_info_vars,
-                    name='policy_old_dist_info_vars_flat')
 
             # valid view
             with tf.name_scope('valid'):
@@ -267,54 +252,48 @@ class NPO(BatchPolopt):
                     policy_state_info_vars_flat,
                     valid_flat,
                     name='policy_state_info_vars_valid')
-                policy_old_dist_info_vars_valid = filter_valids_tensor_dict(
-                    policy_old_dist_info_vars_flat,
-                    valid_flat,
-                    name='policy_old_dist_info_vars_valid')
 
         # policy loss and optimizer inputs
         pol_flat = graph_inputs(
             'PolicyLossInputsFlat',
-            obs_var=obs_flat,
+            obs_var=obs_var,
+            old_obs_var=old_obs_var,
             action_var=action_flat,
             reward_var=reward_flat,
             valid_var=valid_flat,
             policy_state_info_vars=policy_state_info_vars_flat,
-            policy_old_dist_info_vars=policy_old_dist_info_vars_flat,
         )
         pol_valid = graph_inputs(
             'PolicyLossInputsValid',
             action_var=action_valid,
             policy_state_info_vars=policy_state_info_vars_valid,
-            policy_old_dist_info_vars=policy_old_dist_info_vars_valid,
         )
         policy_loss_inputs = graph_inputs(
             'PolicyLossInputs',
             obs_var=obs_var,
+            old_obs_var=old_obs_var,
             action_var=action_var,
             reward_var=reward_var,
             baseline_var=baseline_var,
             valid_var=valid_var,
             policy_state_info_vars=policy_state_info_vars,
-            policy_old_dist_info_vars=policy_old_dist_info_vars,
             flat=pol_flat,
             valid=pol_valid,
         )
         policy_opt_inputs = graph_inputs(
             'PolicyOptInputs',
             obs_var=obs_var,
+            old_obs_var=old_obs_var,
             action_var=action_var,
             reward_var=reward_var,
             baseline_var=baseline_var,
             valid_var=valid_var,
             policy_state_info_vars_list=policy_state_info_vars_list,
-            policy_old_dist_info_vars_list=policy_old_dist_info_vars_list,
         )
 
         return policy_loss_inputs, policy_opt_inputs
 
     def _build_policy_loss(self, i):
-        pol_dist = self.policy.distribution
         policy_entropy = self._build_entropy_term(i)
         rewards = i.reward_var
 
@@ -352,71 +331,44 @@ class NPO(BatchPolopt):
                 else:
                     adv_valid = positive_advs(adv_valid, eps)
 
-            if self.policy.recurrent:
-                policy_dist_info = self.policy.dist_info_sym(
-                    i.obs_var,
-                    i.policy_state_info_vars,
-                    name='policy_dist_info')
-            else:
-                policy_dist_info_flat = self.policy.dist_info_sym(
-                    i.flat.obs_var,
-                    i.flat.policy_state_info_vars,
-                    name='policy_dist_info_flat')
-
-                policy_dist_info_valid = filter_valids_tensor_dict(
-                    policy_dist_info_flat,
-                    i.flat.valid_var,
-                    name='policy_dist_info_valid')
-
-                policy_dist_info = policy_dist_info_valid
-
             # Calculate loss function and KL divergence
             with tf.name_scope('kl'):
                 if self.policy.recurrent:
-                    kl = pol_dist.kl_sym(
-                        i.policy_old_dist_info_vars,
-                        policy_dist_info,
-                    )
+                    kl = self.old_policy.distribution.kl_divergence(
+                        self.policy.distribution)
                     pol_mean_kl = tf.reduce_sum(
                         kl * i.valid_var) / tf.reduce_sum(i.valid_var)
                 else:
-                    kl = pol_dist.kl_sym(
-                        i.valid.policy_old_dist_info_vars,
-                        policy_dist_info_valid,
-                    )
+                    kl = self.old_policy.distribution.kl_divergence(
+                        self.policy.distribution)
                     pol_mean_kl = tf.reduce_mean(kl)
 
             # Calculate vanilla loss
             with tf.name_scope('vanilla_loss'):
                 if self.policy.recurrent:
-                    ll = pol_dist.log_likelihood_sym(i.action_var,
-                                                     policy_dist_info,
-                                                     name='log_likelihood')
+                    ll = self.policy.distribution.log_prob(
+                        i.action_var, name='log_likelihood')
 
                     vanilla = ll * adv * i.valid_var
                 else:
-                    ll = pol_dist.log_likelihood_sym(i.valid.action_var,
-                                                     policy_dist_info_valid,
-                                                     name='log_likelihood')
+                    ll = self.policy.distribution.log_prob(
+                        i.valid.action_var, name='log_likelihood')
 
                     vanilla = ll * adv_valid
 
             # Calculate surrogate loss
             with tf.name_scope('surrogate_loss'):
                 if self.policy.recurrent:
-                    lr = pol_dist.likelihood_ratio_sym(
-                        i.action_var,
-                        i.policy_old_dist_info_vars,
-                        policy_dist_info,
-                        name='lr')
+                    lr = self.policy.distribution.prob(
+                        i.action_var) / tf.stop_gradient(
+                            self.old_policy.distribution.prob(i.action_var))
 
                     surrogate = lr * adv * i.valid_var
                 else:
-                    lr = pol_dist.likelihood_ratio_sym(
-                        i.valid.action_var,
-                        i.valid.policy_old_dist_info_vars,
-                        policy_dist_info_valid,
-                        name='lr')
+                    lr = self.policy.distribution.prob(
+                        i.valid.action_var) / tf.stop_gradient(
+                            self.old_policy.distribution.prob(
+                                i.valid.action_var))
 
                     surrogate = lr * adv_valid
 
@@ -459,48 +411,29 @@ class NPO(BatchPolopt):
             returns = discounted_returns(self.discount, self.max_path_length,
                                          rewards)
             self.f_returns = tensor_utils.compile_function(
-                flatten_inputs(self._policy_opt_inputs), returns)
+                flatten_inputs(self._policy_opt_inputs),
+                returns,
+            )
 
             return loss, pol_mean_kl
 
     def _build_entropy_term(self, i):
+        pol_dist = self.policy.distribution
         with tf.name_scope('policy_entropy'):
             if self.policy.recurrent:
-                policy_dist_info = self.policy.dist_info_sym(
-                    i.obs_var,
-                    i.policy_state_info_vars,
-                    name='policy_dist_info_2')
-
-                policy_neg_log_likeli = -self.policy.distribution.log_likelihood_sym(  # noqa: E501
-                    i.action_var,
-                    policy_dist_info,
-                    name='policy_log_likeli')
+                policy_neg_log_likeli = -pol_dist.log_prob(
+                    i.action_var, name='policy_log_likeli')
 
                 if self._use_neg_logli_entropy:
                     policy_entropy = policy_neg_log_likeli
                 else:
-                    policy_entropy = self.policy.distribution.entropy_sym(
-                        policy_dist_info)
+                    policy_entropy = pol_dist.entropy()
             else:
-                policy_dist_info_flat = self.policy.dist_info_sym(
-                    i.flat.obs_var,
-                    i.flat.policy_state_info_vars,
-                    name='policy_dist_info_flat_2')
+                policy_neg_log_likeli_flat = -pol_dist.log_prob(
+                    i.flat.action_var, name='policy_log_likeli_flat')
 
-                policy_neg_log_likeli_flat = -self.policy.distribution.log_likelihood_sym(  # noqa: E501
-                    i.flat.action_var,
-                    policy_dist_info_flat,
-                    name='policy_log_likeli_flat')
-
-                policy_dist_info_valid = filter_valids_tensor_dict(
-                    policy_dist_info_flat,
-                    i.flat.valid_var,
-                    name='policy_dist_info_valid_2')
-
-                policy_neg_log_likeli_valid = -self.policy.distribution.log_likelihood_sym(  # noqa: E501
-                    i.valid.action_var,
-                    policy_dist_info_valid,
-                    name='policy_log_likeli_valid')
+                policy_neg_log_likeli_valid = -pol_dist.log_prob(
+                    i.valid.action_var, name='policy_log_likeli_valid')
 
                 if self._use_neg_logli_entropy:
                     if self._maximum_entropy:
@@ -510,13 +443,11 @@ class NPO(BatchPolopt):
                         policy_entropy = policy_neg_log_likeli_valid
                 else:
                     if self._maximum_entropy:
-                        policy_entropy_flat = self.policy.distribution.entropy_sym(  # noqa: E501
-                            policy_dist_info_flat)
+                        policy_entropy_flat = pol_dist.entropy()
                         policy_entropy = tf.reshape(policy_entropy_flat,
                                                     [-1, self.max_path_length])
                     else:
-                        policy_entropy_valid = self.policy.distribution.entropy_sym(  # noqa: E501
-                            policy_dist_info_valid)
+                        policy_entropy_valid = pol_dist.entropy()
                         policy_entropy = policy_entropy_valid
 
             # This prevents entropy from becoming negative for small policy std
@@ -575,19 +506,27 @@ class NPO(BatchPolopt):
         policy_state_info_list = [
             samples_data['agent_infos'][k] for k in self.policy.state_info_keys
         ]
-        policy_old_dist_info_list = [
-            samples_data['agent_infos'][k]
-            for k in self.policy.distribution.dist_info_keys
-        ]
+
+        # This block of code does the following when policy is not recurrent:
+        # - flatten the observations along batch axis, i.e.
+        #     (batch, path, *obs_dim) -> (batch * path, *obs_dim)
+        # - Extract the valids part (same as what filter_valids does,
+        #     but filter_valids is for Tensors)
+        if not self.policy.recurrent:
+            samples_observations = flatten_batch(samples_data['observations'])
+            samples_observations = filter_valids(samples_observations,
+                                                 samples_data['valids'])
+        else:
+            samples_observations = samples_data['observations']
 
         policy_opt_input_values = self._policy_opt_inputs._replace(
-            obs_var=samples_data['observations'],
+            obs_var=samples_observations,
+            old_obs_var=samples_observations,
             action_var=samples_data['actions'],
             reward_var=samples_data['rewards'],
             baseline_var=samples_data['baselines'],
             valid_var=samples_data['valids'],
             policy_state_info_vars_list=policy_state_info_list,
-            policy_old_dist_info_vars_list=policy_old_dist_info_list,
         )
 
         return flatten_inputs(policy_opt_input_values)
@@ -626,6 +565,7 @@ class NPO(BatchPolopt):
         del data['f_policy_kl']
         del data['f_rewards']
         del data['f_returns']
+        del data['_policy_update_ops']
         return data
 
     def __setstate__(self, state):

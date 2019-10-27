@@ -1,9 +1,9 @@
 """Base class for batch sampling-based policy optimization methods."""
-
 import collections
 
 from dowel import logger, tabular
 import numpy as np
+import tensorflow as tf
 
 from garage.misc import special, tensor_utils
 from garage.np.algos import RLAlgorithm
@@ -11,7 +11,7 @@ from garage.sampler import OnPolicyVectorizedSampler
 from garage.tf.samplers import BatchSampler
 
 
-class BatchPolopt(RLAlgorithm):
+class BatchPolopt2(RLAlgorithm):
     """Base class for batch sampling-based policy optimization methods.
 
     This includes various policy gradient methods like VPG, NPG, PPO, TRPO,
@@ -56,6 +56,7 @@ class BatchPolopt(RLAlgorithm):
                  flatten_input=True):
         self.env_spec = env_spec
         self.policy = policy
+        self.old_policy = policy.clone('old_policy')
         self.baseline = baseline
         self.scope = scope
         self.max_path_length = max_path_length
@@ -103,7 +104,7 @@ class BatchPolopt(RLAlgorithm):
             paths (list[dict]): A list of collected paths.
 
         Returns:
-            float: Average return.
+            float: The average return in last epoch cycle.
 
         """
         paths = self.process_samples(itr, paths)
@@ -158,8 +159,7 @@ class BatchPolopt(RLAlgorithm):
                         self.env_spec.action_space.flatten_n(  # noqa: E126
                             path['actions'])),
                     rewards=path['rewards'],
-                    env_infos=path['env_infos'],
-                    agent_infos=path['agent_infos']) for path in paths
+                    env_infos=path['env_infos']) for path in paths
             ]
         else:
             paths = [
@@ -169,8 +169,7 @@ class BatchPolopt(RLAlgorithm):
                         self.env_spec.action_space.flatten_n(  # noqa: E126
                             path['actions'])),
                     rewards=path['rewards'],
-                    env_infos=path['env_infos'],
-                    agent_infos=path['agent_infos']) for path in paths
+                    env_infos=path['env_infos']) for path in paths
             ]
 
         if hasattr(self.baseline, 'predict_n'):
@@ -213,12 +212,6 @@ class BatchPolopt(RLAlgorithm):
 
         baselines = tensor_utils.pad_tensor_n(baselines, max_path_length)
 
-        agent_infos = [path['agent_infos'] for path in paths]
-        agent_infos = tensor_utils.stack_tensor_dict_list([
-            tensor_utils.pad_tensor_dict(p, max_path_length)
-            for p in agent_infos
-        ])
-
         env_infos = [path['env_infos'] for path in paths]
         env_infos = tensor_utils.stack_tensor_dict_list([
             tensor_utils.pad_tensor_dict(p, max_path_length) for p in env_infos
@@ -233,8 +226,12 @@ class BatchPolopt(RLAlgorithm):
         undiscounted_returns = [sum(path['rewards']) for path in paths]
         self.episode_reward_mean.extend(undiscounted_returns)
 
-        ent = np.sum(self.policy.distribution.entropy(agent_infos) *
-                     valids) / np.sum(valids)
+        valid_obs = tensor_utils.flatten_batch(obs)
+        valid_obs = tensor_utils.filter_valids(valid_obs, valids)
+
+        ent = np.sum(tf.get_default_session().run(
+            self.policy.distribution.entropy(),
+            feed_dict={self.policy.model.inputs: valid_obs})) / np.sum(valids)
 
         samples_data = dict(
             observations=obs,
@@ -243,7 +240,6 @@ class BatchPolopt(RLAlgorithm):
             baselines=baselines,
             returns=returns,
             valids=valids,
-            agent_infos=agent_infos,
             env_infos=env_infos,
             paths=paths,
             average_return=np.mean(undiscounted_returns),

@@ -7,10 +7,10 @@ import tensorflow as tf
 from garage.misc.overrides import overrides
 from garage.tf.algos.batch_polopt import BatchPolopt
 from garage.tf.misc import tensor_utils
-from garage.tf.misc.tensor_utils import filter_valids
-from garage.tf.misc.tensor_utils import filter_valids_dict
-from garage.tf.misc.tensor_utils import flatten_batch
-from garage.tf.misc.tensor_utils import flatten_batch_dict
+from garage.tf.misc.tensor_utils import filter_valids_tensor
+from garage.tf.misc.tensor_utils import filter_valids_tensor_dict
+from garage.tf.misc.tensor_utils import flatten_batch_tensor
+from garage.tf.misc.tensor_utils import flatten_batch_tensor_dict
 from garage.tf.misc.tensor_utils import flatten_inputs
 from garage.tf.misc.tensor_utils import graph_inputs
 from garage.tf.optimizers import LbfgsOptimizer
@@ -256,34 +256,36 @@ class REPS(BatchPolopt):
             ]
 
             with tf.name_scope('flat'):
-                obs_flat = flatten_batch(obs_var, name='obs_flat')
-                action_flat = flatten_batch(action_var, name='action_flat')
-                reward_flat = flatten_batch(reward_var, name='reward_flat')
-                valid_flat = flatten_batch(valid_var, name='valid_flat')
-                feat_diff_flat = flatten_batch(
+                obs_flat = flatten_batch_tensor(obs_var, name='obs_flat')
+                action_flat = flatten_batch_tensor(action_var,
+                                                   name='action_flat')
+                reward_flat = flatten_batch_tensor(reward_var,
+                                                   name='reward_flat')
+                valid_flat = flatten_batch_tensor(valid_var, name='valid_flat')
+                feat_diff_flat = flatten_batch_tensor(
                     feat_diff,
                     name='feat_diff_flat')  # yapf: disable
-                policy_state_info_vars_flat = flatten_batch_dict(
+                policy_state_info_vars_flat = flatten_batch_tensor_dict(
                     policy_state_info_vars,
                     name='policy_state_info_vars_flat')  # yapf: disable
-                policy_old_dist_info_vars_flat = flatten_batch_dict(
+                policy_old_dist_info_vars_flat = flatten_batch_tensor_dict(
                     policy_old_dist_info_vars,
                     name='policy_old_dist_info_vars_flat')
 
             with tf.name_scope('valid'):
-                reward_valid = filter_valids(
+                reward_valid = filter_valids_tensor(
                     reward_flat,
                     valid_flat,
                     name='reward_valid')   # yapf: disable
-                action_valid = filter_valids(
+                action_valid = filter_valids_tensor(
                     action_flat,
                     valid_flat,
                     name='action_valid')    # yapf: disable
-                policy_state_info_vars_valid = filter_valids_dict(
+                policy_state_info_vars_valid = filter_valids_tensor_dict(
                     policy_state_info_vars_flat,
                     valid_flat,
                     name='policy_state_info_vars_valid')
-                policy_old_dist_info_vars_valid = filter_valids_dict(
+                policy_old_dist_info_vars_valid = filter_valids_tensor_dict(
                     policy_old_dist_info_vars_flat,
                     valid_flat,
                     name='policy_old_dist_info_vars_valid')
@@ -362,7 +364,7 @@ class REPS(BatchPolopt):
             i.flat.policy_state_info_vars,
             name='policy_dist_info_flat')
 
-        policy_dist_info_valid = filter_valids_dict(
+        policy_dist_info_valid = filter_valids_tensor_dict(
             policy_dist_info_flat,
             i.flat.valid_var,
             name='policy_dist_info_valid')
@@ -405,19 +407,14 @@ class REPS(BatchPolopt):
         # yapf: disable
         self.f_dual = tensor_utils.compile_function(
             flatten_inputs(self._dual_opt_inputs),
-            dual_loss,
-            log_name='f_dual')
+            dual_loss)
         # yapf: enable
 
         self.f_dual_grad = tensor_utils.compile_function(
-            flatten_inputs(self._dual_opt_inputs),
-            dual_grad,
-            log_name='f_dual_grad')
+            flatten_inputs(self._dual_opt_inputs), dual_grad)
 
         self.f_policy_kl = tensor_utils.compile_function(
-            flatten_inputs(self._policy_opt_inputs),
-            pol_mean_kl,
-            log_name='f_policy_kl')
+            flatten_inputs(self._policy_opt_inputs), pol_mean_kl)
 
         return loss
 

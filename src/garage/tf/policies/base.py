@@ -28,6 +28,7 @@ class Policy(abc.ABC):
 
         Args:
             observation (np.ndarray): Observation from the environment.
+
         Returns:
             (np.ndarray): Action sampled from the policy.
 
@@ -39,6 +40,7 @@ class Policy(abc.ABC):
 
         Args:
             observations (list[np.ndarray]): Observations from the environment.
+
         Returns:
             (np.ndarray): Actions sampled from the policy.
 
@@ -94,7 +96,12 @@ class Policy(abc.ABC):
         return False
 
     def log_diagnostics(self, paths):
-        """Log extra information per iteration based on the collected paths."""
+        """Log extra information per iteration based on the collected paths.
+
+        Args:
+            paths (dict[numpy.ndarray]): Sample paths collected.
+
+        """
 
     @property
     def state_info_keys(self):
@@ -145,15 +152,29 @@ class Policy(abc.ABC):
     def get_params(self, trainable=True):
         """Get the trainable variables.
 
+        Args:
+            trainable (bool): Whether the params are trainable or not.
+
         Returns:
             List[tf.Variable]: A list of trainable variables in the current
             variable scope.
 
         """
-        return self.get_trainable_vars()
+        if trainable:
+            return self.get_trainable_vars()
+        return list(
+            set(self.get_global_vars()) - set(self.get_trainable_vars()))
 
     def get_param_shapes(self, **tags):
-        """Get parameter shapes."""
+        """Get parameter shapes.
+
+        Args:
+            tags (dict): A map of parameters for which the values are required.
+
+        Returns:
+            List[tuple]: Shapes of the parameters.
+
+        """
         tag_tuple = tuple(sorted(list(tags.items()), key=lambda x: x[0]))
         if tag_tuple not in self._cached_param_shapes:
             params = self.get_params(**tags)
@@ -168,22 +189,24 @@ class Policy(abc.ABC):
 
         Args:
             tags (dict): A map of parameters for which the values are required.
+
         Returns:
-            param_values (np.ndarray): Values of the parameters evaluated in
-            the current session
+            numpy.ndarray: Values of the parameters evaluated in
+            the current session.
 
         """
         params = self.get_params(**tags)
         param_values = tf.compat.v1.get_default_session().run(params)
         return flatten_tensors(param_values)
 
-    def set_param_values(self, param_values, name=None, **tags):
+    def set_param_values(self, param_values, **tags):
         """Set param values.
 
         Args:
             param_values (np.ndarray): A numpy array of parameter values.
             tags (dict): A map of parameters for which the values should be
             loaded.
+
         """
         param_values = unflatten_tensors(param_values,
                                          self.get_param_shapes(**tags))
@@ -198,21 +221,31 @@ class Policy(abc.ABC):
             tags (dict): A map specifying the parameters and their shapes.
 
         Returns:
-            tensors (List[np.ndarray]): A list of parameters reshaped to the
-            shapes specified.
+            List[np.ndarray]: A list of parameters reshaped to the
+                shapes specified.
 
         """
         return unflatten_tensors(flattened_params,
                                  self.get_param_shapes(**tags))
 
     def __getstate__(self):
-        """Object.__getstate__."""
+        """Object.__getstate__.
+
+        Returns:
+            dict: State dictionary.
+
+        """
         new_dict = self.__dict__.copy()
         del new_dict['_cached_params']
         return new_dict
 
     def __setstate__(self, state):
-        """Object.__setstate__."""
+        """Object.__setstate__.
+
+        Args:
+            state (dict): State dictionary.
+
+        """
         self._cached_params = {}
         self.__dict__.update(state)
 
@@ -230,12 +263,14 @@ class StochasticPolicy(Policy):
         """Symbolic graph of the distribution.
 
         Return the symbolic distribution information about the actions.
+
         Args:
             obs_var (tf.Tensor): symbolic variable for observations
             state_info_vars (dict): a dictionary whose values should contain
                 information about the state of the policy at the time it
                 received the observation.
             name (str): Name of the symbolic graph.
+
         """
 
     def dist_info(self, obs, state_infos):
@@ -248,4 +283,27 @@ class StochasticPolicy(Policy):
             state_infos (dict): a dictionary whose values should contain
                 information about the state of the policy at the time it
                 received the observation
+
+        """
+
+
+class StochasticPolicy2(Policy):
+    """StochasticPolicy."""
+
+    @property
+    @abc.abstractmethod
+    def distribution(self):
+        """Distribution."""
+
+    def dist_info(self, obs, state_infos):
+        """Distribution info.
+
+        Return the distribution information about the actions.
+
+        Args:
+            obs (tf.Tensor): observation values
+            state_infos (dict): a dictionary whose values should contain
+                information about the state of the policy at the time it
+                received the observation
+
         """
