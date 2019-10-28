@@ -101,7 +101,7 @@ class Regressor(abc.ABC):
 
         """
         params = self.get_params(**tags)
-        param_values = tf.compat.v1.get_default_session.run(params)
+        param_values = tf.compat.v1.get_default_session().run(params)
         return flatten_tensors(param_values)
 
     def set_param_values(self, flattened_params, name=None, **tags):

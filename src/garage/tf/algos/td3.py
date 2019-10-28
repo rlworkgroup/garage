@@ -75,8 +75,8 @@ class TD3(DDPG):
                  qf_lr=1e-3,
                  policy_weight_decay=0,
                  qf_weight_decay=0,
-                 policy_optimizer=tf.train.AdamOptimizer,
-                 qf_optimizer=tf.train.AdamOptimizer,
+                 policy_optimizer=tf.compat.v1.train.AdamOptimizer,
+                 qf_optimizer=tf.compat.v1.train.AdamOptimizer,
                  clip_pos_returns=False,
                  clip_return=np.inf,
                  discount=0.99,
@@ -202,9 +202,9 @@ class TD3(DDPG):
             qval = self.qf.get_qval_sym(obs, actions, name='q_value')
             q2val = self.qf2.get_qval_sym(obs, actions, name='q2_value')
             with tf.name_scope('qval1_loss'):
-                qval1_loss = tf.reduce_mean(tf.squared_difference(y, qval))
+                qval1_loss = tf.reduce_mean(tf.math.squared_difference(y, qval))
             with tf.name_scope('qval2_loss'):
-                qval2_loss = tf.reduce_mean(tf.squared_difference(y, q2val))
+                qval2_loss = tf.reduce_mean(tf.math.squared_difference(y, q2val))
 
             with tf.name_scope('minimize_qf_loss'):
                 qf_train_op = self.qf_optimizer(

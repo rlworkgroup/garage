@@ -128,7 +128,7 @@ class GaussianGRUPolicy(StochasticPolicy):
             self.model.build(obs_ph, step_input_var, step_hidden_var)
 
         self._f_step_mean_std = (
-            tf.compat.v1.get_default_session().make_Callable(
+            tf.compat.v1.get_default_session().make_callable(
                 [
                     self.model.networks['default'].step_mean,
                     self.model.networks['default'].step_log_std,

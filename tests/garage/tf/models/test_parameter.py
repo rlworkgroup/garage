@@ -39,7 +39,7 @@ class TestParameter(TfGraphTestCase):
                                        length=3,
                                        initializer=tf.constant_initializer(
                                            self.initial_params))
-        self.sess.run(tf.global_variables_initializer())
+        self.sess.run(tf.compat.v1.global_variables_initializer())
         p = self.sess.run(param, feed_dict=self.feed_dict)
 
         assert p.shape == (5, 2, 3)

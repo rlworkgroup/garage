@@ -62,7 +62,7 @@ class PenaltyLbfgsOptimizer(Serializable):
         with tf.name_scope(name, 'PenaltyLbfgsOptimizer',
                            [leq_constraint, loss, params]):
             constraint_term, constraint_value = leq_constraint
-            penalty_var = tf.placeholder(tf.float32, tuple(), name='penalty')
+            penalty_var = tf.compat.v1.placeholder(tf.float32, tuple(), name='penalty')
             penalized_loss = loss + penalty_var * constraint_term
 
             self._target = target

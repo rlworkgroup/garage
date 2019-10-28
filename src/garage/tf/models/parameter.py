@@ -73,8 +73,8 @@ def recurrent_parameter(input_var,
         A tensor of the two broadcasted variables: one for full time-series
             inputs, one for step inputs.
     """
-    with tf.variable_scope(name):
-        p = tf.get_variable('parameter',
+    with tf.compat.v1.variable_scope(name):
+        p = tf.compat.v1.get_variable('parameter',
                             shape=(length, ),
                             dtype=dtype,
                             initializer=initializer,
