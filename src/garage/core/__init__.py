@@ -1,4 +1,4 @@
+"""Core interfaces for garage modules."""
 from garage.core.serializable import Serializable
-from garage.core.parameterized import Parameterized  # noqa: I100
 
-__all__ = ['Serializable', 'Parameterized']
+__all__ = ['Serializable']

@@ -1,19 +1,17 @@
-"""
-Discrete QfDerived policy.
+"""A Discrete QFunction-derived policy.
 
-This policy chooses the action that yields to the largest q-value.
+This policy chooses the action that yields to the largest Q-value.
 """
 import akro
 import numpy as np
 import tensorflow as tf
 
 from garage.misc.overrides import overrides
-from garage.tf.policies.base2 import Policy2
+from garage.tf.policies import Policy
 
 
-class DiscreteQfDerivedPolicy(Policy2):
-    """
-    DiscreteQfDerived policy.
+class DiscreteQfDerivedPolicy(Policy):
+    """DiscreteQfDerived policy.
 
     Args:
         env_spec (garage.envs.env_spec.EnvSpec): Environment specification.
@@ -42,8 +40,7 @@ class DiscreteQfDerivedPolicy(Policy2):
 
     @overrides
     def get_action(self, observation):
-        """
-        Get action from this policy for the input observation.
+        """Get action from this policy for the input observation.
 
         Args:
             observation (numpy.ndarray): Observation from environment.
@@ -59,8 +56,7 @@ class DiscreteQfDerivedPolicy(Policy2):
 
     @overrides
     def get_actions(self, observations):
-        """
-        Get actions from this policy for the input observations.
+        """Get actions from this policy for the input observations.
 
         Args:
             observations (numpy.ndarray): Observations from environment.

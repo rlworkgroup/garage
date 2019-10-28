@@ -5,12 +5,11 @@ import tensorflow as tf
 
 from garage.tf.distributions import RecurrentCategorical
 from garage.tf.models import LSTMModel
-from garage.tf.policies.base2 import StochasticPolicy2
+from garage.tf.policies import StochasticPolicy
 
 
-class CategoricalLSTMPolicy(StochasticPolicy2):
-    """
-    CategoricalLSTMPolicy with model.
+class CategoricalLSTMPolicy(StochasticPolicy):
+    """CategoricalLSTMPolicy
 
     A policy that contains a LSTM to make prediction based on
     a categorical distribution.
@@ -120,6 +119,9 @@ class CategoricalLSTMPolicy(StochasticPolicy2):
             output_b_init=output_b_init,
             layer_normalization=layer_normalization)
 
+        self._prev_actions = None
+        self._prev_hiddens = None
+        self._prev_cells = None
         self._initialize()
 
     def _initialize(self):
@@ -151,10 +153,6 @@ class CategoricalLSTMPolicy(StochasticPolicy2):
             ],
             feed_list=[step_input_var, step_hidden_var, step_cell_var])
 
-        self.prev_actions = None
-        self.prev_hiddens = None
-        self.prev_cells = None
-
     @property
     def vectorized(self):
         """Vectorized or not."""
@@ -185,17 +183,17 @@ class CategoricalLSTMPolicy(StochasticPolicy2):
         if dones is None:
             dones = [True]
         dones = np.asarray(dones)
-        if self.prev_actions is None or len(dones) != len(self.prev_actions):
-            self.prev_actions = np.zeros(
+        if self._prev_actions is None or len(dones) != len(self._prev_actions):
+            self._prev_actions = np.zeros(
                 (len(dones), self.action_space.flat_dim))
-            self.prev_hiddens = np.zeros((len(dones), self._hidden_dim))
-            self.prev_cells = np.zeros((len(dones), self._hidden_dim))
+            self._prev_hiddens = np.zeros((len(dones), self._hidden_dim))
+            self._prev_cells = np.zeros((len(dones), self._hidden_dim))
 
-        self.prev_actions[dones] = 0.
-        self.prev_hiddens[dones] = self.model.networks[
+        self._prev_actions[dones] = 0.
+        self._prev_hiddens[dones] = self.model.networks[
             'default'].init_hidden.eval()
-        self.prev_cells[dones] = self.model.networks['default'].init_cell.eval(
-        )
+        self._prev_cells[dones] = self.model.networks[
+            'default'].init_cell.eval()
 
     def get_action(self, observation):
         """Return a single action."""
@@ -206,18 +204,18 @@ class CategoricalLSTMPolicy(StochasticPolicy2):
         """Return multiple actions."""
         flat_obs = self.observation_space.flatten_n(observations)
         if self._state_include_action:
-            assert self.prev_actions is not None
-            all_input = np.concatenate([flat_obs, self.prev_actions], axis=-1)
+            assert self._prev_actions is not None
+            all_input = np.concatenate([flat_obs, self._prev_actions], axis=-1)
         else:
             all_input = flat_obs
         probs, hidden_vec, cell_vec = self._f_step_prob(
-            all_input, self.prev_hiddens, self.prev_cells)
+            all_input, self._prev_hiddens, self._prev_cells)
 
         actions = list(map(self.action_space.weighted_sample, probs))
-        prev_actions = self.prev_actions
-        self.prev_actions = self.action_space.flatten_n(actions)
-        self.prev_hiddens = hidden_vec
-        self.prev_cells = cell_vec
+        prev_actions = self._prev_actions
+        self._prev_actions = self.action_space.flatten_n(actions)
+        self._prev_hiddens = hidden_vec
+        self._prev_cells = cell_vec
 
         agent_info = dict(prob=probs)
         if self._state_include_action:

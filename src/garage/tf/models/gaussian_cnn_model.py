@@ -2,16 +2,15 @@
 import numpy as np
 import tensorflow as tf
 
-from garage.tf.core.cnn import cnn
-from garage.tf.core.mlp import mlp
-from garage.tf.core.parameter import parameter
 from garage.tf.distributions import DiagonalGaussian
 from garage.tf.models.base import Model
+from garage.tf.models.cnn import cnn
+from garage.tf.models.mlp import mlp
+from garage.tf.models.parameter import parameter
 
 
 class GaussianCNNModel(Model):
-    """
-    GaussianCNNModel.
+    """GaussianCNNModel.
 
     Args:
         filter_dims(tuple[int]): Dimension of the filters. For example,
@@ -81,7 +80,7 @@ class GaussianCNNModel(Model):
             it to None to maintain a linear activation.
         std_output_w_init (callable): Initializer function for the weight
             of output dense layer(s) in the std network.
-        std_parametrization (str): How the std should be parametrized. There
+        std_parameterization (str): How the std should be parametrized. There
             are two options:
             - exp: the logarithm of the std will be stored, and applied a
                exponential transformation
@@ -218,16 +217,15 @@ class GaussianCNNModel(Model):
             else:
                 # separate MLPs for mean and std networks
                 # mean network
-                mean_conv = cnn(
-                    input_var=state_input,
-                    filter_dims=self._filter_dims,
-                    hidden_nonlinearity=self._hidden_nonlinearity,
-                    hidden_w_init=self._hidden_w_init,
-                    hidden_b_init=self._hidden_b_init,
-                    num_filters=self._num_filters,
-                    strides=self._strides,
-                    padding=self._padding,
-                    name='mean_cnn')
+                mean_conv = cnn(input_var=state_input,
+                                filter_dims=self._filter_dims,
+                                hidden_nonlinearity=self._hidden_nonlinearity,
+                                hidden_w_init=self._hidden_w_init,
+                                hidden_b_init=self._hidden_b_init,
+                                num_filters=self._num_filters,
+                                strides=self._strides,
+                                padding=self._padding,
+                                name='mean_cnn')
 
                 mean_network = mlp(
                     mean_conv,

@@ -2,12 +2,13 @@ import numpy as np
 import pytest
 import tensorflow as tf
 
-from garage.tf.core.lstm import lstm
+from garage.tf.models.lstm import lstm
 from tests.fixtures import TfGraphTestCase
 from tests.helpers import recurrent_step_lstm
 
 
 class TestLSTM(TfGraphTestCase):
+
     def setup_method(self):
         super().setup_method()
         self.batch_size = 2
@@ -17,10 +18,10 @@ class TestLSTM(TfGraphTestCase):
             shape=(self.batch_size, self.hidden_dim),
             name='initial_hidden',
             dtype=tf.float32)
-        self._step_cell_var = tf.compat.v1.placeholder(
-            shape=(self.batch_size, self.hidden_dim),
-            name='initial_cell',
-            dtype=tf.float32)
+        self._step_cell_var = tf.compat.v1.placeholder(shape=(self.batch_size,
+                                                              self.hidden_dim),
+                                                       name='initial_cell',
+                                                       dtype=tf.float32)
 
         self.lstm_cell = tf.keras.layers.LSTMCell(
             units=self.hidden_dim,
@@ -52,10 +53,12 @@ class TestLSTM(TfGraphTestCase):
         obs_inputs = np.full((self.batch_size, time_step, input_dim), 1.)
         obs_input = np.full((self.batch_size, input_dim), 1.)
 
-        _input_var = tf.compat.v1.placeholder(
-            tf.float32, shape=(None, None, input_dim), name='input')
-        _step_input_var = tf.compat.v1.placeholder(
-            tf.float32, shape=(None, input_dim), name='input')
+        _input_var = tf.compat.v1.placeholder(tf.float32,
+                                              shape=(None, None, input_dim),
+                                              name='input')
+        _step_input_var = tf.compat.v1.placeholder(tf.float32,
+                                                   shape=(None, input_dim),
+                                                   name='input')
         _output_nonlinearity = tf.keras.layers.Dense(
             units=output_dim,
             activation=None,
@@ -80,7 +83,7 @@ class TestLSTM(TfGraphTestCase):
                          hidden_init.eval())
         cell = np.full((self.batch_size, self.hidden_dim), cell_init.eval())
 
-        for i in range(time_step):
+        for _ in range(time_step):
             output, hidden, cell = self.sess.run(
                 [output_t, h_t, c_t],
                 feed_dict={
@@ -92,8 +95,8 @@ class TestLSTM(TfGraphTestCase):
             assert hidden.shape == (self.batch_size, self.hidden_dim)
             assert cell.shape == (self.batch_size, self.hidden_dim)
 
-        full_output = self.sess.run(
-            outputs_t, feed_dict={_input_var: obs_inputs})
+        full_output = self.sess.run(outputs_t,
+                                    feed_dict={_input_var: obs_inputs})
 
         assert full_output.shape == (self.batch_size, time_step, output_dim)
 
@@ -119,10 +122,12 @@ class TestLSTM(TfGraphTestCase):
         obs_inputs = np.full((self.batch_size, time_step, input_dim), 1.)
         obs_input = np.full((self.batch_size, input_dim), 1.)
 
-        _input_var = tf.compat.v1.placeholder(
-            tf.float32, shape=(None, None, input_dim), name='input')
-        _step_input_var = tf.compat.v1.placeholder(
-            tf.float32, shape=(None, input_dim), name='input')
+        _input_var = tf.compat.v1.placeholder(tf.float32,
+                                              shape=(None, None, input_dim),
+                                              name='input')
+        _step_input_var = tf.compat.v1.placeholder(tf.float32,
+                                                   shape=(None, input_dim),
+                                                   name='input')
         _output_nonlinearity = tf.keras.layers.Dense(
             units=output_dim,
             activation=None,
@@ -176,8 +181,8 @@ class TestLSTM(TfGraphTestCase):
             assert np.allclose(hidden1, hidden2)
             assert np.allclose(cell1, cell2)
 
-        full_output1 = self.sess.run(
-            outputs_t, feed_dict={_input_var: obs_inputs})
+        full_output1 = self.sess.run(outputs_t,
+                                     feed_dict={_input_var: obs_inputs})
 
         hidden2 = np.full((self.batch_size, self.hidden_dim),
                           hidden_init.eval())
@@ -219,36 +224,37 @@ class TestLSTM(TfGraphTestCase):
         obs_inputs = np.full((self.batch_size, time_step, input_dim), 1.)
         obs_input = np.full((self.batch_size, input_dim), 1.)
 
-        _input_var = tf.compat.v1.placeholder(
-            tf.float32, shape=(None, None, input_dim), name='input')
-        _step_input_var = tf.compat.v1.placeholder(
-            tf.float32, shape=(None, input_dim), name='input')
+        _input_var = tf.compat.v1.placeholder(tf.float32,
+                                              shape=(None, None, input_dim),
+                                              name='input')
+        _step_input_var = tf.compat.v1.placeholder(tf.float32,
+                                                   shape=(None, input_dim),
+                                                   name='input')
         _output_nonlinearity = tf.keras.layers.Dense(
             units=output_dim,
             activation=None,
             kernel_initializer=tf.constant_initializer(1))
         with tf.compat.v1.variable_scope('LSTM'):
-            self.lstm = lstm(
-                all_input_var=_input_var,
-                name='lstm',
-                lstm_cell=self.lstm_cell,
-                step_input_var=_step_input_var,
-                step_hidden_var=self._step_hidden_var,
-                step_cell_var=self._step_cell_var,
-                hidden_state_init_trainable=True,
-                cell_state_init_trainable=True,
-                output_nonlinearity_layer=_output_nonlinearity)
+            self.lstm = lstm(all_input_var=_input_var,
+                             name='lstm',
+                             lstm_cell=self.lstm_cell,
+                             step_input_var=_step_input_var,
+                             step_hidden_var=self._step_hidden_var,
+                             step_cell_var=self._step_cell_var,
+                             hidden_state_init_trainable=True,
+                             cell_state_init_trainable=True,
+                             output_nonlinearity_layer=_output_nonlinearity)
 
         self.sess.run(tf.compat.v1.global_variables_initializer())
 
         # Compute output by doing t step() on the lstm cell
-        outputs_t, output_t, h_t, c_t, hidden_init, cell_init = self.lstm
+        outputs_t, _, h_t, c_t, hidden_init, cell_init = self.lstm
         hidden = np.full((self.batch_size, self.hidden_dim),
                          hidden_init.eval())
         cell = np.full((self.batch_size, self.hidden_dim), cell_init.eval())
 
-        output, hidden, cell = self.sess.run(
-            [output_t, h_t, c_t],
+        hidden, cell = self.sess.run(
+            [h_t, c_t],
             feed_dict={
                 _step_input_var: obs_input,
                 self._step_hidden_var: hidden,
@@ -260,8 +266,8 @@ class TestLSTM(TfGraphTestCase):
             assert hidden_init_var in tf.compat.v1.trainable_variables()
             assert cell_init_var in tf.compat.v1.trainable_variables()
 
-        full_output1 = self.sess.run(
-            outputs_t, feed_dict={_input_var: obs_inputs})
+        full_output1 = self.sess.run(outputs_t,
+                                     feed_dict={_input_var: obs_inputs})
 
         hidden2 = np.full((self.batch_size, self.hidden_dim),
                           hidden_init.eval())
@@ -295,23 +301,24 @@ class TestLSTM(TfGraphTestCase):
         obs_inputs = np.full((self.batch_size, time_step, input_dim), 1.)
         obs_input = np.full((self.batch_size, input_dim), 1.)
 
-        _input_var = tf.compat.v1.placeholder(
-            tf.float32, shape=(None, None, input_dim), name='input')
-        _step_input_var = tf.compat.v1.placeholder(
-            tf.float32, shape=(None, input_dim), name='input')
+        _input_var = tf.compat.v1.placeholder(tf.float32,
+                                              shape=(None, None, input_dim),
+                                              name='input')
+        _step_input_var = tf.compat.v1.placeholder(tf.float32,
+                                                   shape=(None, input_dim),
+                                                   name='input')
         _output_nonlinearity = tf.keras.layers.Dense(
             units=output_dim,
             activation=None,
             kernel_initializer=tf.constant_initializer(1))
         with tf.compat.v1.variable_scope('LSTM'):
-            self.lstm = lstm(
-                all_input_var=_input_var,
-                name='lstm',
-                lstm_cell=self.lstm_cell,
-                step_input_var=_step_input_var,
-                step_hidden_var=self._step_hidden_var,
-                step_cell_var=self._step_cell_var,
-                output_nonlinearity_layer=_output_nonlinearity)
+            self.lstm = lstm(all_input_var=_input_var,
+                             name='lstm',
+                             lstm_cell=self.lstm_cell,
+                             step_input_var=_step_input_var,
+                             step_hidden_var=self._step_hidden_var,
+                             step_cell_var=self._step_cell_var,
+                             output_nonlinearity_layer=_output_nonlinearity)
 
         self.sess.run(tf.compat.v1.global_variables_initializer())
 
@@ -349,29 +356,26 @@ class TestLSTM(TfGraphTestCase):
 
         # No gradient flow
         with pytest.raises(TypeError):
-            self.sess.run(
-                grads_step_o_i,
-                feed_dict={
-                    _step_input_var: obs_input,
-                    self._step_hidden_var: hidden,
-                    self._step_cell_var: cell
-                })
+            self.sess.run(grads_step_o_i,
+                          feed_dict={
+                              _step_input_var: obs_input,
+                              self._step_hidden_var: hidden,
+                              self._step_cell_var: cell
+                          })
         with pytest.raises(TypeError):
-            self.sess.run(
-                grads_step_o_h,
-                feed_dict={
-                    _step_input_var: obs_input,
-                    self._step_hidden_var: hidden,
-                    self._step_cell_var: cell
-                })
+            self.sess.run(grads_step_o_h,
+                          feed_dict={
+                              _step_input_var: obs_input,
+                              self._step_hidden_var: hidden,
+                              self._step_cell_var: cell
+                          })
         with pytest.raises(TypeError):
-            self.sess.run(
-                grads_step_o_c,
-                feed_dict={
-                    _step_input_var: obs_input,
-                    self._step_hidden_var: hidden,
-                    self._step_cell_var: cell
-                })
+            self.sess.run(grads_step_o_c,
+                          feed_dict={
+                              _step_input_var: obs_input,
+                              self._step_hidden_var: hidden,
+                              self._step_cell_var: cell
+                          })
         with pytest.raises(TypeError):
             self.sess.run(grads_step_h, feed_dict={_input_var: obs_inputs})
         with pytest.raises(TypeError):
@@ -399,10 +403,12 @@ class TestLSTM(TfGraphTestCase):
         obs_inputs = np.full((self.batch_size, time_step, input_dim), 1.)
         obs_input = np.full((self.batch_size, input_dim), 1.)
 
-        _input_var = tf.compat.v1.placeholder(
-            tf.float32, shape=(None, None, input_dim), name='input')
-        _step_input_var = tf.compat.v1.placeholder(
-            tf.float32, shape=(None, input_dim), name='input')
+        _input_var = tf.compat.v1.placeholder(tf.float32,
+                                              shape=(None, None, input_dim),
+                                              name='input')
+        _step_input_var = tf.compat.v1.placeholder(tf.float32,
+                                                   shape=(None, input_dim),
+                                                   name='input')
         _output_nonlinearity = tf.keras.layers.Dense(
             units=output_dim,
             activation=None,
@@ -422,8 +428,9 @@ class TestLSTM(TfGraphTestCase):
         self.sess.run(tf.compat.v1.global_variables_initializer())
 
         # Create a RNN and compute the entire outputs
-        rnn_layer = tf.keras.layers.RNN(
-            cell=self.lstm_cell, return_sequences=True, return_state=True)
+        rnn_layer = tf.keras.layers.RNN(cell=self.lstm_cell,
+                                        return_sequences=True,
+                                        return_state=True)
 
         # Set initial state to all 0s
         hidden_var = tf.compat.v1.get_variable(
@@ -465,6 +472,6 @@ class TestLSTM(TfGraphTestCase):
         assert np.array_equal(cell, cells)
 
         # Also the full output from lstm
-        full_outputs = self.sess.run(
-            self.lstm[0], feed_dict={_input_var: obs_inputs})
+        full_outputs = self.sess.run(self.lstm[0],
+                                     feed_dict={_input_var: obs_inputs})
         assert np.array_equal(outputs, full_outputs)

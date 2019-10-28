@@ -5,19 +5,18 @@ import tensorflow as tf
 
 from garage.tf.misc import tensor_utils
 from garage.tf.optimizers import LbfgsOptimizer, PenaltyLbfgsOptimizer
-from garage.tf.regressors import StochasticRegressor2
+from garage.tf.regressors import StochasticRegressor
 from garage.tf.regressors.gaussian_cnn_regressor_model import (
     GaussianCNNRegressorModel)
 
 
-class GaussianCNNRegressor(StochasticRegressor2):
-    """
-    GaussianCNNRegressor with garage.tf.models.GaussianCNNRegressorModel.
-
-    A class for performing regression by fitting a Gaussian distribution
-    to the outputs.
+class GaussianCNNRegressor(StochasticRegressor):
+    """Fits a Gaussian distribution to the outputs of a CNN.
 
     Args:
+        input_shape(tuple[int]): Input shape of the model (without the batch
+            dimension).
+        output_dim (int): Output dimension of the model.
         filter_dims(tuple[int]): Dimension of the filters. For example,
             (3, 5) means there are two convolutional layers. The filter
             for first layer is of dimension (3 x 3) and the second one is of
@@ -30,41 +29,41 @@ class GaussianCNNRegressor(StochasticRegressor2):
             filter for first layer is 1 and that of the second layer is 2.
         padding (str): The type of padding algorithm to use,
             either 'SAME' or 'VALID'.
-        output_dim (int): Output dimension of the model.
         name (str): Model name, also the variable scope.
         hidden_sizes (list[int]): Output dimension of dense layer(s) for
             the Convolutional model for mean. For example, (32, 32) means the
             network consists of two dense layers, each with 32 hidden units.
-        hidden_nonlinearity (callable): Activation function for intermediate
+        hidden_nonlinearity (Callable): Activation function for intermediate
             dense layer(s). It should return a tf.Tensor. Set it to
             None to maintain a linear activation.
-        hidden_w_init (callable): Initializer function for the weight
+        hidden_w_init (Callable): Initializer function for the weight
             of intermediate dense layer(s). The function should return a
             tf.Tensor.
-        hidden_b_init (callable): Initializer function for the bias
+        hidden_b_init (Callable): Initializer function for the bias
             of intermediate dense layer(s). The function should return a
             tf.Tensor.
-        output_nonlinearity (callable): Activation function for output dense
+        output_nonlinearity (Callable): Activation function for output dense
             layer. It should return a tf.Tensor. Set it to None to
             maintain a linear activation.
-        output_w_init (callable): Initializer function for the weight
+        output_w_init (Callable): Initializer function for the weight
             of output dense layer(s). The function should return a
             tf.Tensor.
-        output_b_init (callable): Initializer function for the bias
+        output_b_init (Callable): Initializer function for the bias
             of output dense layer(s). The function should return a
             tf.Tensor.
-        optimizer (garage.tf.Optimizer): Optimizer for minimizing the negative
-            log-likelihood.
-        optimizer_args (dict): Arguments for the optimizer. Default is None,
-            which means no arguments.
-        use_trust_region (bool): Whether to use trust region constraint.
-        max_kl_step (float): KL divergence constraint for each iteration.
-        learn_std (bool): Is std trainable.
-        init_std (float): Initial value for std.
-        adaptive_std (bool): Is std a neural network. If False, it will be a
-            parameter.
-        std_share_network (bool): Boolean for whether mean and std share
-            the same network.
+        name (str): Name of this model (also used as its scope).
+        learn_std (bool): Whether to train the standard deviation parameter of
+            the Gaussian distribution.
+        init_std (float): Initial standard deviation for the Gaussian
+            distribution.
+        adaptive_std (bool): Whether to use a neural network to learn the
+            standard deviation of the Gaussian distribution. Unless True, the
+            standard deviation is learned as a parameter which is not
+            conditioned on the inputs.
+        std_share_network (bool): Boolean for whether the mean and standard
+            deviation models share a CNN network. If True, each is a head from
+            a single body network. Otherwise, the parameters are estimated
+            using the outputs of two indepedent networks.
         std_filter_dims(tuple[int]): Dimension of the filters. For example,
             (3, 5) means there are two convolutional layers. The filter
             for first layer is of dimension (3 x 3) and the second one is of
@@ -80,27 +79,22 @@ class GaussianCNNRegressor(StochasticRegressor2):
         std_hidden_sizes (list[int]): Output dimension of dense layer(s) for
             the Conv for std. For example, (32, 32) means the Conv consists
             of two hidden layers, each with 32 hidden units.
-        min_std (float): If not None, the std is at least the value of min_std,
-            to avoid numerical issues.
-        max_std (float): If not None, the std is at most the value of max_std,
-            to avoid numerical issues.
-        std_hidden_nonlinearity: Nonlinearity for each hidden layer in
-            the std network.
-        std_output_nonlinearity (callable): Activation function for output
+        std_hidden_nonlinearity (callable): Nonlinearity for each hidden layer
+            in the std network.
+        std_output_nonlinearity (Callable): Activation function for output
             dense layer in the std network. It should return a tf.Tensor. Set
             it to None to maintain a linear activation.
-        std_output_w_init (callable): Initializer function for the weight
-            of output dense layer(s) in the std network.
-        std_parametrization (str): How the std should be parametrized. There
-            are two options:
-            - exp: the logarithm of the std will be stored, and applied a
-               exponential transformation
-            - softplus: the std will be computed as log(1+exp(x))
         layer_normalization (bool): Bool for using layer normalization or not.
         normalize_inputs (bool): Bool for normalizing inputs or not.
         normalize_outputs (bool): Bool for normalizing outputs or not.
         subsample_factor (float): The factor to subsample the data. By default
             it is 1.0, which means using all the data.
+        optimizer (garage.tf.Optimizer): Optimizer used for fitting the model.
+        optimizer_args (dict): Arguments for the optimizer. Default is None,
+            which means no arguments.
+        use_trust_region (bool): Whether to use a KL-divergence constraint.
+        max_kl_step (float): KL divergence constraint for each iteration, if
+            `use_trust_region` is active.
 
     """
 
@@ -123,11 +117,11 @@ class GaussianCNNRegressor(StochasticRegressor2):
                  init_std=1.0,
                  adaptive_std=False,
                  std_share_network=False,
-                 std_filter_dims=[],
-                 std_num_filters=[],
-                 std_strides=[],
+                 std_filter_dims=(),
+                 std_num_filters=(),
+                 std_strides=(),
                  std_padding='SAME',
-                 std_hidden_sizes=[],
+                 std_hidden_sizes=(),
                  std_hidden_nonlinearity=None,
                  std_output_nonlinearity=None,
                  layer_normalization=False,
@@ -135,7 +129,7 @@ class GaussianCNNRegressor(StochasticRegressor2):
                  normalize_outputs=True,
                  subsample_factor=1.,
                  optimizer=None,
-                 optimizer_args=dict(),
+                 optimizer_args=None,
                  use_trust_region=True,
                  max_kl_step=0.01):
 
@@ -263,12 +257,12 @@ class GaussianCNNRegressor(StochasticRegressor2):
                 self._optimizer.update_opt(**optimizer_args)
 
     def fit(self, xs, ys):
-        """
-        Fit with input data xs and label ys.
+        """Fit with input data xs and label ys.
 
         Args:
             xs (numpy.ndarray): Input data.
             ys (numpy.ndarray): Label of input data.
+
         """
         if self._subsample_factor < 1:
             num_samples_tot = xs.shape[0]
@@ -305,20 +299,19 @@ class GaussianCNNRegressor(StochasticRegressor2):
         tabular.record('{}/dLoss'.format(self._name), loss_before - loss_after)
 
     def predict(self, xs):
-        """
-        Predict ys based on input xs.
+        """Predict ys based on input xs.
 
         Args:
             xs (numpy.ndarray): Input data.
 
         Return:
-            The predicted ys.
+            numpy.ndarray: The predicted ys.
+
         """
         return self._f_predict(xs)
 
     def log_likelihood_sym(self, x_var, y_var, name=None):
-        """
-        Symbolic graph of the log likelihood.
+        """Create a symbolic graph of the log likelihood.
 
         Args:
             x_var (tf.Tensor): Input tf.Tensor for the input data.
@@ -326,7 +319,27 @@ class GaussianCNNRegressor(StochasticRegressor2):
             name (str): Name of the new graph.
 
         Return:
-            tf.Tensor output of the symbolic log likelihood.
+            tf.Tensor: Output of the symbolic log-likelihood graph.
+
+        """
+        params = self.dist_info_sym(x_var, name=name)
+        means_var = params['mean']
+        log_stds_var = params['log_std']
+
+        return self.model.networks[name].dist.log_likelihood_sym(
+            y_var, dict(mean=means_var, log_std=log_stds_var))
+
+    def dist_info_sym(self, x_var, name=None):
+        """Create a symbolic graph of the distribution parameters.
+
+        Args:
+            x_var (tf.Tensor): tf.Tensor of the input data.
+            name (str): Name of the new graph.
+
+        Return:
+            dict[tf.Tensor]: Outputs of the symbolic distribution parameter
+                graph.
+
         """
         with tf.compat.v1.variable_scope(self._variable_scope):
             self.model.build(x_var, name=name)
@@ -334,21 +347,21 @@ class GaussianCNNRegressor(StochasticRegressor2):
         means_var = self.model.networks[name].means
         log_stds_var = self.model.networks[name].log_stds
 
-        return self.model.networks[name].dist.log_likelihood_sym(
-            y_var, dict(mean=means_var, log_std=log_stds_var))
+        return dict(mean=means_var, log_std=log_stds_var)
 
     def get_params_internal(self, **args):
         """Get the params, which are the trainable variables."""
+        del args
         return self._variable_scope.trainable_variables()
 
     def __getstate__(self):
-        """Object.__getstate__."""
+        """See `Object.__getstate__`."""
         new_dict = super().__getstate__()
         del new_dict['_f_predict']
         del new_dict['_f_pdists']
         return new_dict
 
     def __setstate__(self, state):
-        """Object.__setstate__."""
+        """See `Object.__setstate__`."""
         super().__setstate__(state)
         self._initialize()

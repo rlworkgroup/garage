@@ -9,13 +9,12 @@ def parameter(input_var,
               dtype=tf.float32,
               trainable=True,
               name='parameter'):
-    """
-    Parameter layer.
+    """Parameter layer.
 
     Used as layer that could be broadcast to a certain shape to
     match with input variable during training.
 
-    For recurrent usage, use garage.tf.core.recurrent_parameter().
+    For recurrent usage, use garage.tf.models.recurrent_parameter().
 
     Example: A trainable parameter variable with shape (2,), it needs to be
     broadcasted to (32, 2) when applied to a batch with size 32.
@@ -33,12 +32,11 @@ def parameter(input_var,
         A tensor of the broadcasted variables.
     """
     with tf.compat.v1.variable_scope(name):
-        p = tf.compat.v1.get_variable(
-            'parameter',
-            shape=(length, ),
-            dtype=dtype,
-            initializer=initializer,
-            trainable=trainable)
+        p = tf.compat.v1.get_variable('parameter',
+                                      shape=(length, ),
+                                      dtype=dtype,
+                                      initializer=initializer,
+                                      trainable=trainable)
         batch_dim = tf.shape(input_var)[0]
         broadcast_shape = tf.concat(axis=0, values=[[batch_dim], [length]])
         p_broadcast = tf.broadcast_to(p, shape=broadcast_shape)
@@ -52,8 +50,7 @@ def recurrent_parameter(input_var,
                         dtype=tf.float32,
                         trainable=True,
                         name='recurrent_parameter'):
-    """
-    Parameter layer for recurrent networks.
+    """Parameter layer for recurrent networks.
 
     Used as layer that could be broadcast to a certain shape to
     match with input variable during training.
@@ -76,18 +73,17 @@ def recurrent_parameter(input_var,
         A tensor of the two broadcasted variables: one for full time-series
             inputs, one for step inputs.
     """
-    with tf.variable_scope(name):
-        p = tf.get_variable(
-            'parameter',
-            shape=(length, ),
-            dtype=dtype,
-            initializer=initializer,
-            trainable=trainable)
+    with tf.compat.v1.variable_scope(name):
+        p = tf.compat.v1.get_variable('parameter',
+                            shape=(length, ),
+                            dtype=dtype,
+                            initializer=initializer,
+                            trainable=trainable)
         batch_dim = tf.shape(input_var)[:2]
         step_batch_dim = tf.shape(step_input_var)[:1]
         broadcast_shape = tf.concat(axis=0, values=[batch_dim, [length]])
-        step_broadcast_shape = tf.concat(
-            axis=0, values=[step_batch_dim, [length]])
+        step_broadcast_shape = tf.concat(axis=0,
+                                         values=[step_batch_dim, [length]])
         p_broadcast = tf.broadcast_to(p, shape=broadcast_shape)
         step_p_broadcast = tf.broadcast_to(p, shape=step_broadcast_shape)
         return p_broadcast, step_p_broadcast

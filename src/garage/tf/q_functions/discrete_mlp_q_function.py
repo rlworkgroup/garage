@@ -4,12 +4,11 @@ import tensorflow as tf
 from garage.misc.overrides import overrides
 from garage.tf.models import MLPDuelingModel
 from garage.tf.models import MLPModel
-from garage.tf.q_functions import QFunction2
+from garage.tf.q_functions import QFunction
 
 
-class DiscreteMLPQFunction(QFunction2):
-    """
-    Discrete MLP Q Function.
+class DiscreteMLPQFunction(QFunction):
+    """Discrete MLP Q Function.
 
     This class implements a Q-value network. It predicts Q-value based on the
     input state and action. It uses an MLP to fit the function Q(s, a).
@@ -70,16 +69,15 @@ class DiscreteMLPQFunction(QFunction2):
         action_dim = env_spec.action_space.flat_dim
 
         if not dueling:
-            self.model = MLPModel(
-                output_dim=action_dim,
-                hidden_sizes=hidden_sizes,
-                hidden_nonlinearity=hidden_nonlinearity,
-                hidden_w_init=hidden_w_init,
-                hidden_b_init=hidden_b_init,
-                output_nonlinearity=output_nonlinearity,
-                output_w_init=output_w_init,
-                output_b_init=output_b_init,
-                layer_normalization=layer_normalization)
+            self.model = MLPModel(output_dim=action_dim,
+                                  hidden_sizes=hidden_sizes,
+                                  hidden_nonlinearity=hidden_nonlinearity,
+                                  hidden_w_init=hidden_w_init,
+                                  hidden_b_init=hidden_b_init,
+                                  output_nonlinearity=output_nonlinearity,
+                                  output_w_init=output_w_init,
+                                  output_b_init=output_b_init,
+                                  layer_normalization=layer_normalization)
         else:
             self.model = MLPDuelingModel(
                 output_dim=action_dim,
@@ -95,8 +93,8 @@ class DiscreteMLPQFunction(QFunction2):
         self._initialize()
 
     def _initialize(self):
-        obs_ph = tf.compat.v1.placeholder(
-            tf.float32, (None, ) + self.obs_dim, name='obs')
+        obs_ph = tf.compat.v1.placeholder(tf.float32, (None, ) + self.obs_dim,
+                                          name='obs')
 
         with tf.compat.v1.variable_scope(self.name) as vs:
             self._variable_scope = vs
@@ -104,16 +102,17 @@ class DiscreteMLPQFunction(QFunction2):
 
     @property
     def q_vals(self):
+        """Return the Q values, the output of the network."""
         return self.model.networks['default'].outputs
 
     @property
     def input(self):
+        """Get input."""
         return self.model.networks['default'].input
 
     @overrides
     def get_qval_sym(self, state_input, name):
-        """
-        Symbolic graph for q-network.
+        """Symbolic graph for q-network.
 
         Args:
             state_input (tf.Tensor): The state input tf.Tensor to the network.
@@ -126,8 +125,7 @@ class DiscreteMLPQFunction(QFunction2):
             return self.model.build(state_input, name=name)
 
     def clone(self, name):
-        """
-        Return a clone of the Q-function.
+        """Return a clone of the Q-function.
 
         It only copies the configuration of the Q-function,
         not the parameters.
@@ -135,18 +133,17 @@ class DiscreteMLPQFunction(QFunction2):
         Args:
             name (str): Name of the newly created q-function.
         """
-        return self.__class__(
-            name=name,
-            env_spec=self._env_spec,
-            hidden_sizes=self._hidden_sizes,
-            hidden_nonlinearity=self._hidden_nonlinearity,
-            hidden_w_init=self._hidden_w_init,
-            hidden_b_init=self._hidden_b_init,
-            output_nonlinearity=self._output_nonlinearity,
-            output_w_init=self._output_w_init,
-            output_b_init=self._output_b_init,
-            dueling=self._dueling,
-            layer_normalization=self._layer_normalization)
+        return self.__class__(name=name,
+                              env_spec=self._env_spec,
+                              hidden_sizes=self._hidden_sizes,
+                              hidden_nonlinearity=self._hidden_nonlinearity,
+                              hidden_w_init=self._hidden_w_init,
+                              hidden_b_init=self._hidden_b_init,
+                              output_nonlinearity=self._output_nonlinearity,
+                              output_w_init=self._output_w_init,
+                              output_b_init=self._output_b_init,
+                              dueling=self._dueling,
+                              layer_normalization=self._layer_normalization)
 
     def __setstate__(self, state):
         """Object.__setstate__."""

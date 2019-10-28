@@ -16,8 +16,7 @@ def mlp(input_var,
         output_w_init=tf.glorot_uniform_initializer(),
         output_b_init=tf.zeros_initializer(),
         layer_normalization=False):
-    """
-    Multi-layer perceptron (MLP).
+    """Multi-layer perceptron (MLP).
 
     It maps real-valued inputs to real-valued outputs.
 
@@ -76,24 +75,22 @@ def mlp(input_var,
             if _merge_inputs and idx == _concat_layer:
                 l_hid = tf.keras.layers.concatenate([l_hid, input_var2])
 
-            l_hid = tf.layers.dense(
-                inputs=l_hid,
-                units=hidden_size,
-                activation=hidden_nonlinearity,
-                kernel_initializer=hidden_w_init,
-                bias_initializer=hidden_b_init,
-                name='hidden_{}'.format(idx))
+            l_hid = tf.layers.dense(inputs=l_hid,
+                                    units=hidden_size,
+                                    activation=hidden_nonlinearity,
+                                    kernel_initializer=hidden_w_init,
+                                    bias_initializer=hidden_b_init,
+                                    name='hidden_{}'.format(idx))
             if layer_normalization:
                 l_hid = tf.contrib.layers.layer_norm(l_hid)
 
         if _merge_inputs and _concat_layer == len(hidden_sizes):
             l_hid = tf.keras.layers.concatenate([l_hid, input_var2])
 
-        l_out = tf.layers.dense(
-            inputs=l_hid,
-            units=output_dim,
-            activation=output_nonlinearity,
-            kernel_initializer=output_w_init,
-            bias_initializer=output_b_init,
-            name='output')
+        l_out = tf.layers.dense(inputs=l_hid,
+                                units=output_dim,
+                                activation=output_nonlinearity,
+                                kernel_initializer=output_w_init,
+                                bias_initializer=output_b_init,
+                                name='output')
     return l_out

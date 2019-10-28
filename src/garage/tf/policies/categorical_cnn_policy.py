@@ -7,12 +7,11 @@ from garage.tf.distributions import Categorical
 from garage.tf.models import CNNModel
 from garage.tf.models import MLPModel
 from garage.tf.models import Sequential
-from garage.tf.policies.base2 import StochasticPolicy2
+from garage.tf.policies import StochasticPolicy
 
 
-class CategoricalCNNPolicy(StochasticPolicy2):
-    """
-    CategoricalCNNPolicy with model.
+class CategoricalCNNPolicy(StochasticPolicy):
+    """CategoricalCNNPolicy
 
     A policy that contains a CNN and a MLP to make prediction based on
     a categorical distribution.

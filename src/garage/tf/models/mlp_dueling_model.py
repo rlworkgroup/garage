@@ -1,13 +1,12 @@
 """MLP Dueling Model."""
 import tensorflow as tf
 
-from garage.tf.core.mlp import mlp
 from garage.tf.models.base import Model
+from garage.tf.models.mlp import mlp
 
 
 class MLPDuelingModel(Model):
-    """
-    MLP Model with dueling network structure.
+    """MLP Model with dueling network structure.
 
     Args:
         output_dim (int): Dimension of the network output.
@@ -59,30 +58,28 @@ class MLPDuelingModel(Model):
         self._layer_normalization = layer_normalization
 
     def _build(self, state_input, name=None):
-        action_out = mlp(
-            input_var=state_input,
-            output_dim=self._output_dim,
-            hidden_sizes=self._hidden_sizes,
-            name='action_value',
-            hidden_nonlinearity=self._hidden_nonlinearity,
-            hidden_w_init=self._hidden_w_init,
-            hidden_b_init=self._hidden_b_init,
-            output_nonlinearity=self._output_nonlinearity,
-            output_w_init=self._output_w_init,
-            output_b_init=self._output_b_init,
-            layer_normalization=self._layer_normalization)
-        state_out = mlp(
-            input_var=state_input,
-            output_dim=1,
-            hidden_sizes=self._hidden_sizes,
-            name='state_value',
-            hidden_nonlinearity=self._hidden_nonlinearity,
-            hidden_w_init=self._hidden_w_init,
-            hidden_b_init=self._hidden_b_init,
-            output_nonlinearity=self._output_nonlinearity,
-            output_w_init=self._output_w_init,
-            output_b_init=self._output_b_init,
-            layer_normalization=self._layer_normalization)
+        action_out = mlp(input_var=state_input,
+                         output_dim=self._output_dim,
+                         hidden_sizes=self._hidden_sizes,
+                         name='action_value',
+                         hidden_nonlinearity=self._hidden_nonlinearity,
+                         hidden_w_init=self._hidden_w_init,
+                         hidden_b_init=self._hidden_b_init,
+                         output_nonlinearity=self._output_nonlinearity,
+                         output_w_init=self._output_w_init,
+                         output_b_init=self._output_b_init,
+                         layer_normalization=self._layer_normalization)
+        state_out = mlp(input_var=state_input,
+                        output_dim=1,
+                        hidden_sizes=self._hidden_sizes,
+                        name='state_value',
+                        hidden_nonlinearity=self._hidden_nonlinearity,
+                        hidden_w_init=self._hidden_w_init,
+                        hidden_b_init=self._hidden_b_init,
+                        output_nonlinearity=self._output_nonlinearity,
+                        output_w_init=self._output_w_init,
+                        output_b_init=self._output_b_init,
+                        layer_normalization=self._layer_normalization)
 
         action_out_mean = tf.reduce_mean(action_out, 1)
         # calculate the advantage of performing certain action

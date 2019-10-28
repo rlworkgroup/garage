@@ -6,16 +6,11 @@ import tensorflow as tf
 from garage.tf.misc import tensor_utils
 from garage.tf.models import NormalizedInputMLPModel
 from garage.tf.optimizers import LbfgsOptimizer
-from garage.tf.regressors import Regressor2
+from garage.tf.regressors import Regressor
 
 
-class ContinuousMLPRegressor(Regressor2):
-    """
-    ContinuousMLPRegressor.
-
-    With garage.tf.models.NormalizedInputMLPModel.
-
-    A class for performing linear regression to the outputs.
+class ContinuousMLPRegressor(Regressor):
+    """Fits continuously-valued data to an MLP model.
 
     Args:
         input_shape (tuple[int]): Input shape of the training data.
@@ -24,22 +19,22 @@ class ContinuousMLPRegressor(Regressor2):
         hidden_sizes (list[int]): Output dimension of dense layer(s) for
             the MLP for mean. For example, (32, 32) means the MLP consists
             of two hidden layers, each with 32 hidden units.
-        hidden_nonlinearity (callable): Activation function for intermediate
+        hidden_nonlinearity (Callable): Activation function for intermediate
             dense layer(s). It should return a tf.Tensor. Set it to
             None to maintain a linear activation.
-        hidden_w_init (callable): Initializer function for the weight
+        hidden_w_init (Callable): Initializer function for the weight
             of intermediate dense layer(s). The function should return a
             tf.Tensor.
-        hidden_b_init (callable): Initializer function for the bias
+        hidden_b_init (Callable): Initializer function for the bias
             of intermediate dense layer(s). The function should return a
             tf.Tensor.
-        output_nonlinearity (callable): Activation function for output dense
+        output_nonlinearity (Callable): Activation function for output dense
             layer. It should return a tf.Tensor. Set it to None to
             maintain a linear activation.
-        output_w_init (callable): Initializer function for the weight
+        output_w_init (Callable): Initializer function for the weight
             of output dense layer(s). The function should return a
             tf.Tensor.
-        output_b_init (callable): Initializer function for the bias
+        output_b_init (Callable): Initializer function for the bias
             of output dense layer(s). The function should return a
             tf.Tensor.
         optimizer (garage.tf.Optimizer): Optimizer for minimizing the negative
@@ -47,6 +42,7 @@ class ContinuousMLPRegressor(Regressor2):
         optimizer_args (dict): Arguments for the optimizer. Default is None,
             which means no arguments.
         normalize_inputs (bool): Bool for normalizing inputs or not.
+
     """
 
     def __init__(self,
@@ -117,7 +113,13 @@ class ContinuousMLPRegressor(Regressor2):
                 self._optimizer.update_opt(**optimizer_args)
 
     def fit(self, xs, ys):
-        """Fit with input data xs and label ys."""
+        """Fit with input data xs and label ys.
+
+        Args:
+            xs (numpy.ndarray): Input data.
+            ys (numpy.ndarray): Output labels.
+
+        """
         if self._normalize_inputs:
             # recompute normalizing constants for inputs
             self.model.networks['default'].x_mean.load(
@@ -134,27 +136,27 @@ class ContinuousMLPRegressor(Regressor2):
         tabular.record('{}/dLoss'.format(self._name), loss_before - loss_after)
 
     def predict(self, xs):
-        """
-        Predict y based on input xs.
+        """Predict y based on input xs.
 
         Args:
             xs (numpy.ndarray): Input data.
 
         Return:
-            The predicted ys.
+            numpy.ndarray: The predicted ys.
+
         """
         return self._f_predict(xs)
 
     def predict_sym(self, xs, name=None):
-        """
-        Symbolic graph of the prediction.
+        """Build a symbolic graph of the model prediction.
 
         Args:
             xs (tf.Tensor): Input tf.Tensor for the input data.
             name (str): Name of the new graph.
 
         Return:
-            tf.Tensor output of the symbolic prediction.
+            tf.Tensor: Output of the symbolic prediction graph.
+
         """
         with tf.compat.v1.variable_scope(self._variable_scope):
             y_hat, _, _ = self.model.build(xs, name=name)
@@ -163,15 +165,16 @@ class ContinuousMLPRegressor(Regressor2):
 
     def get_params_internal(self, **args):
         """Get the params, which are the trainable variables."""
+        del args
         return self._variable_scope.trainable_variables()
 
     def __getstate__(self):
-        """Object.__getstate__."""
+        """See `Object.__getstate__`."""
         new_dict = super().__getstate__()
         del new_dict['_f_predict']
         return new_dict
 
     def __setstate__(self, state):
-        """Object.__setstate__."""
+        """See `Object.__setstate__`."""
         super().__setstate__(state)
         self._initialize()

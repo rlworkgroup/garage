@@ -13,8 +13,7 @@ def lstm(name,
          hidden_state_init_trainable=False,
          cell_state_init=tf.zeros_initializer(),
          cell_state_init_trainable=False):
-    """
-    Long Short-Term Memory (LSTM).
+    """Long Short-Term Memory (LSTM).
 
     Args:
         name (str): Name of the variable scope.
@@ -24,8 +23,8 @@ def lstm(name,
         step_input_var (tf.Tensor): Place holder for step inputs.
         step_hidden_var (tf.Tensor): Place holder for step hidden state.
         step_cell_var (tf.Tensor): Place holder for cell state.
-        output_nonlinearity (callable): Activation function for output dense
-            layer. It should return a tf.Tensor. Set it to None to
+        output_nonlinearity_layer (callable): Activation function for output
+            dense layer. It should return a tf.Tensor. Set it to None to
             maintain a linear activation.
         hidden_state_init (callable): Initializer function for the
             initial hidden state. The functino should return a tf.Tensor.
@@ -43,11 +42,13 @@ def lstm(name,
         cell (tf.Tensor): Step cell state.
         hidden_init_var (tf.Tensor): Initial hidden state.
         cell_init_var (tf.Tensor): Initial cell state.
+
     """
     with tf.compat.v1.variable_scope(name):
         hidden_dim = lstm_cell.units
-        output, [hidden, cell] = lstm_cell(
-            step_input_var, states=(step_hidden_var, step_cell_var))
+        output, [hidden,
+                 cell] = lstm_cell(step_input_var,
+                                   states=(step_hidden_var, step_cell_var))
         output = output_nonlinearity_layer(output)
 
         hidden_init_var = tf.compat.v1.get_variable(
@@ -78,8 +79,8 @@ def lstm(name,
         hcs = tf.scan(
             step,
             elems=shuffled_input,
-            initializer=tf.concat(
-                axis=1, values=[hidden_init_var_b, cell_init_var_b]),
+            initializer=tf.concat(axis=1,
+                                  values=[hidden_init_var_b, cell_init_var_b]),
         )
         hcs = tf.transpose(hcs, (1, 0, 2))
         hs = hcs[:, :, :hidden_dim]

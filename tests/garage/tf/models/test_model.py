@@ -4,12 +4,13 @@ import numpy as np
 import pytest
 import tensorflow as tf
 
-from garage.tf.core.mlp import mlp
 from garage.tf.models.base import Model
+from garage.tf.models.mlp import mlp
 from tests.fixtures import TfGraphTestCase
 
 
 class SimpleModel(Model):
+
     def __init__(self, output_dim=2, hidden_sizes=(4, 4), name=None):
         super().__init__(name)
         self._output_dim = output_dim
@@ -26,6 +27,7 @@ class SimpleModel(Model):
 
 # This model doesn't implement network_output_spec
 class SimpleModel2(Model):
+
     def __init__(self, output_dim=2, hidden_sizes=(4, 4), name=None):
         super().__init__(name)
         self._output_dim = output_dim
@@ -37,12 +39,13 @@ class SimpleModel2(Model):
 
 
 class ComplicatedModel(Model):
+
     def __init__(self, output_dim=2, name=None):
         super().__init__(name)
         self._output_dim = output_dim
         self._simple_model_1 = SimpleModel(output_dim=4)
-        self._simple_model_2 = SimpleModel2(
-            output_dim=output_dim, name='simple_model_2')
+        self._simple_model_2 = SimpleModel2(output_dim=output_dim,
+                                            name='simple_model_2')
 
     def network_output_spec(self):
         return ['action']
@@ -54,6 +57,7 @@ class ComplicatedModel(Model):
 
 # This model takes another model as constructor argument
 class ComplicatedModel2(Model):
+
     def __init__(self, parent_model, output_dim=2, name=None):
         super().__init__(name)
         self._output_dim = output_dim
@@ -69,6 +73,7 @@ class ComplicatedModel2(Model):
 
 
 class TestModel(TfGraphTestCase):
+
     def test_model_creation(self):
         input_var = tf.compat.v1.placeholder(tf.float32, shape=(None, 5))
         model = SimpleModel(output_dim=2)
@@ -93,8 +98,8 @@ class TestModel(TfGraphTestCase):
 
     def test_same_model_with_no_name(self):
         input_var = tf.compat.v1.placeholder(tf.float32, shape=(None, 5))
-        another_input_var = tf.compat.v1.placeholder(
-            tf.float32, shape=(None, 5))
+        another_input_var = tf.compat.v1.placeholder(tf.float32,
+                                                     shape=(None, 5))
         model = SimpleModel(output_dim=2)
         model.build(input_var)
         with pytest.raises(ValueError):
@@ -106,8 +111,8 @@ class TestModel(TfGraphTestCase):
 
     def test_model_with_different_name(self):
         input_var = tf.compat.v1.placeholder(tf.float32, shape=(None, 5))
-        another_input_var = tf.compat.v1.placeholder(
-            tf.float32, shape=(None, 5))
+        another_input_var = tf.compat.v1.placeholder(tf.float32,
+                                                     shape=(None, 5))
         model = SimpleModel(output_dim=2)
         outputs_1 = model.build(input_var)
         outputs_2 = model.build(another_input_var, name='network_2')
@@ -121,8 +126,8 @@ class TestModel(TfGraphTestCase):
 
     def test_model_with_different_name_in_different_order(self):
         input_var = tf.compat.v1.placeholder(tf.float32, shape=(None, 5))
-        another_input_var = tf.compat.v1.placeholder(
-            tf.float32, shape=(None, 5))
+        another_input_var = tf.compat.v1.placeholder(tf.float32,
+                                                     shape=(None, 5))
         model = SimpleModel(output_dim=2)
         outputs_1 = model.build(input_var, name='network_1')
         outputs_2 = model.build(another_input_var)
@@ -215,9 +220,8 @@ class TestModel(TfGraphTestCase):
             model_pickled = pickle.loads(model_data)
             model_pickled.build(input_var)
 
-            results2 = sess.run(
-                model_pickled.networks['default'].outputs,
-                feed_dict={input_var: data})
+            results2 = sess.run(model_pickled.networks['default'].outputs,
+                                feed_dict={input_var: data})
 
         assert np.array_equal(results, results2)
 
@@ -246,9 +250,8 @@ class TestModel(TfGraphTestCase):
             model_pickled = pickle.loads(model_data)
             model_pickled.build(input_var)
 
-            results2 = sess.run(
-                model_pickled.networks['default'].outputs,
-                feed_dict={input_var: data})
+            results2 = sess.run(model_pickled.networks['default'].outputs,
+                                feed_dict={input_var: data})
 
         assert np.array_equal(results, results2)
 
@@ -256,8 +259,8 @@ class TestModel(TfGraphTestCase):
         model = SimpleModel(output_dim=2)
 
         with tf.compat.v1.Session(graph=tf.Graph()):
-            state = tf.compat.v1.placeholder(
-                shape=[None, 10, 5], dtype=tf.float32)
+            state = tf.compat.v1.placeholder(shape=[None, 10, 5],
+                                             dtype=tf.float32)
             model.build(state)
 
             model.parameters = {
@@ -270,8 +273,8 @@ class TestModel(TfGraphTestCase):
 
         with tf.compat.v1.Session(graph=tf.Graph()):
             model_pickled = pickle.loads(h_data)
-            state = tf.compat.v1.placeholder(
-                shape=[None, 10, 5], dtype=tf.float32)
+            state = tf.compat.v1.placeholder(shape=[None, 10, 5],
+                                             dtype=tf.float32)
             model_pickled.build(state)
 
             np.testing.assert_equal(all_one, model_pickled.parameters)
@@ -280,8 +283,8 @@ class TestModel(TfGraphTestCase):
         model = SimpleModel(output_dim=2)
 
         with tf.compat.v1.Session(graph=tf.Graph()):
-            state = tf.compat.v1.placeholder(
-                shape=[None, 10, 5], dtype=tf.float32)
+            state = tf.compat.v1.placeholder(shape=[None, 10, 5],
+                                             dtype=tf.float32)
             model.build(state)
 
             model.parameters = {
@@ -294,8 +297,8 @@ class TestModel(TfGraphTestCase):
 
         with tf.compat.v1.Session(graph=tf.Graph()):
             model_pickled = pickle.loads(h_data)
-            state = tf.compat.v1.placeholder(
-                shape=[None, 10, 5], dtype=tf.float32)
+            state = tf.compat.v1.placeholder(shape=[None, 10, 5],
+                                             dtype=tf.float32)
             # remove one of the parameters
             del model_pickled._default_parameters[
                 'SimpleModel/state/hidden_0/kernel:0']

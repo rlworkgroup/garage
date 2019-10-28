@@ -2,25 +2,27 @@ import numpy as np
 import pytest
 import tensorflow as tf
 
-from garage.tf.core.cnn import cnn
-from garage.tf.core.cnn import cnn_with_max_pooling
+from garage.tf.models.cnn import cnn
+from garage.tf.models.cnn import cnn_with_max_pooling
 from tests.fixtures import TfGraphTestCase
 from tests.helpers import convolve
 from tests.helpers import max_pooling
 
 
 class TestCNN(TfGraphTestCase):
+
     def setup_method(self):
         super().setup_method()
         self.batch_size = 5
         self.input_width = 10
         self.input_height = 10
-        self.obs_input = np.ones((self.batch_size, self.input_width,
-                                  self.input_height, 3))
+        self.obs_input = np.ones(
+            (self.batch_size, self.input_width, self.input_height, 3))
 
         input_shape = self.obs_input.shape[1:]  # height, width, channel
-        self._input_ph = tf.compat.v1.placeholder(
-            tf.float32, shape=(None, ) + input_shape, name='input')
+        self._input_ph = tf.compat.v1.placeholder(tf.float32,
+                                                  shape=(None, ) + input_shape,
+                                                  name='input')
         self.hidden_nonlinearity = tf.nn.relu
 
     @pytest.mark.parametrize('filter_sizes, out_channels, strides', [
@@ -33,20 +35,19 @@ class TestCNN(TfGraphTestCase):
     ])
     def test_output_shape_same(self, filter_sizes, out_channels, strides):
         with tf.compat.v1.variable_scope('CNN'):
-            self.cnn = cnn(
-                input_var=self._input_ph,
-                filter_dims=filter_sizes,
-                num_filters=out_channels,
-                strides=strides,
-                name='cnn',
-                padding='SAME',
-                hidden_w_init=tf.constant_initializer(1),
-                hidden_nonlinearity=self.hidden_nonlinearity)
+            self.cnn = cnn(input_var=self._input_ph,
+                           filter_dims=filter_sizes,
+                           num_filters=out_channels,
+                           strides=strides,
+                           name='cnn',
+                           padding='SAME',
+                           hidden_w_init=tf.constant_initializer(1),
+                           hidden_nonlinearity=self.hidden_nonlinearity)
 
         self.sess.run(tf.compat.v1.global_variables_initializer())
 
-        result = self.sess.run(
-            self.cnn, feed_dict={self._input_ph: self.obs_input})
+        result = self.sess.run(self.cnn,
+                               feed_dict={self._input_ph: self.obs_input})
 
         current_size = self.input_width
         for filter_size, stride in zip(filter_sizes, strides):
@@ -66,20 +67,19 @@ class TestCNN(TfGraphTestCase):
     ])
     def test_output_shape_valid(self, filter_sizes, out_channels, strides):
         with tf.compat.v1.variable_scope('CNN'):
-            self.cnn = cnn(
-                input_var=self._input_ph,
-                filter_dims=filter_sizes,
-                num_filters=out_channels,
-                strides=strides,
-                name='cnn',
-                padding='VALID',
-                hidden_w_init=tf.constant_initializer(1),
-                hidden_nonlinearity=self.hidden_nonlinearity)
+            self.cnn = cnn(input_var=self._input_ph,
+                           filter_dims=filter_sizes,
+                           num_filters=out_channels,
+                           strides=strides,
+                           name='cnn',
+                           padding='VALID',
+                           hidden_w_init=tf.constant_initializer(1),
+                           hidden_nonlinearity=self.hidden_nonlinearity)
 
         self.sess.run(tf.compat.v1.global_variables_initializer())
 
-        result = self.sess.run(
-            self.cnn, feed_dict={self._input_ph: self.obs_input})
+        result = self.sess.run(self.cnn,
+                               feed_dict={self._input_ph: self.obs_input})
 
         current_size = self.input_width
         for filter_size, stride in zip(filter_sizes, strides):
@@ -96,20 +96,19 @@ class TestCNN(TfGraphTestCase):
     def test_output_with_identity_filter(self, filter_sizes, in_channels,
                                          out_channels, strides):
         with tf.compat.v1.variable_scope('CNN'):
-            self.cnn = cnn(
-                input_var=self._input_ph,
-                filter_dims=filter_sizes,
-                num_filters=out_channels,
-                strides=strides,
-                name='cnn1',
-                padding='VALID',
-                hidden_w_init=tf.constant_initializer(1),
-                hidden_nonlinearity=self.hidden_nonlinearity)
+            self.cnn = cnn(input_var=self._input_ph,
+                           filter_dims=filter_sizes,
+                           num_filters=out_channels,
+                           strides=strides,
+                           name='cnn1',
+                           padding='VALID',
+                           hidden_w_init=tf.constant_initializer(1),
+                           hidden_nonlinearity=self.hidden_nonlinearity)
 
         self.sess.run(tf.compat.v1.global_variables_initializer())
 
-        result = self.sess.run(
-            self.cnn, feed_dict={self._input_ph: self.obs_input})
+        result = self.sess.run(self.cnn,
+                               feed_dict={self._input_ph: self.obs_input})
 
         filter_sum = 1
         # filter value after 3 layers of conv
@@ -137,19 +136,18 @@ class TestCNN(TfGraphTestCase):
                                        out_channels, strides):
         # Build a cnn with random filter weights
         with tf.compat.v1.variable_scope('CNN'):
-            self.cnn2 = cnn(
-                input_var=self._input_ph,
-                filter_dims=filter_sizes,
-                num_filters=out_channels,
-                strides=strides,
-                name='cnn1',
-                padding='VALID',
-                hidden_nonlinearity=self.hidden_nonlinearity)
+            self.cnn2 = cnn(input_var=self._input_ph,
+                            filter_dims=filter_sizes,
+                            num_filters=out_channels,
+                            strides=strides,
+                            name='cnn1',
+                            padding='VALID',
+                            hidden_nonlinearity=self.hidden_nonlinearity)
 
         self.sess.run(tf.compat.v1.global_variables_initializer())
 
-        result = self.sess.run(
-            self.cnn2, feed_dict={self._input_ph: self.obs_input})
+        result = self.sess.run(self.cnn2,
+                               feed_dict={self._input_ph: self.obs_input})
 
         two_layer = len(filter_sizes) == 2
         # get weight values
@@ -163,14 +161,13 @@ class TestCNN(TfGraphTestCase):
         filter_bias = (h0_b, h1_b) if two_layer else (h0_b, )
 
         # convolution according to TensorFlow's approach
-        input_val = convolve(
-            _input=self.obs_input,
-            filter_weights=filter_weights,
-            filter_bias=filter_bias,
-            strides=strides,
-            filter_sizes=filter_sizes,
-            in_channels=in_channels,
-            hidden_nonlinearity=self.hidden_nonlinearity)
+        input_val = convolve(_input=self.obs_input,
+                             filter_weights=filter_weights,
+                             filter_bias=filter_bias,
+                             strides=strides,
+                             filter_sizes=filter_sizes,
+                             in_channels=in_channels,
+                             hidden_nonlinearity=self.hidden_nonlinearity)
 
         # flatten
         dense_out = input_val.reshape((self.batch_size, -1)).astype(np.float32)
@@ -206,8 +203,8 @@ class TestCNN(TfGraphTestCase):
 
         self.sess.run(tf.compat.v1.global_variables_initializer())
 
-        result = self.sess.run(
-            self.cnn2, feed_dict={self._input_ph: self.obs_input})
+        result = self.sess.run(self.cnn2,
+                               feed_dict={self._input_ph: self.obs_input})
 
         two_layer = len(filter_sizes) == 2
         # get weight values
@@ -227,20 +224,18 @@ class TestCNN(TfGraphTestCase):
         # and perform max pooling on each layer
         for filter_size, filter_weight, _filter_bias, in_channel in zip(
                 filter_sizes, filter_weights, filter_bias, in_channels):
-            input_val = convolve(
-                _input=input_val,
-                filter_weights=(filter_weight, ),
-                filter_bias=(_filter_bias, ),
-                strides=strides,
-                filter_sizes=(filter_size, ),
-                in_channels=(in_channel, ),
-                hidden_nonlinearity=self.hidden_nonlinearity)
+            input_val = convolve(_input=input_val,
+                                 filter_weights=(filter_weight, ),
+                                 filter_bias=(_filter_bias, ),
+                                 strides=strides,
+                                 filter_sizes=(filter_size, ),
+                                 in_channels=(in_channel, ),
+                                 hidden_nonlinearity=self.hidden_nonlinearity)
 
             # max pooling
-            input_val = max_pooling(
-                _input=input_val,
-                pool_shape=pool_shape,
-                pool_stride=pool_stride)
+            input_val = max_pooling(_input=input_val,
+                                    pool_shape=pool_shape,
+                                    pool_stride=pool_stride)
 
         # flatten
         dense_out = input_val.reshape((self.batch_size, -1)).astype(np.float32)
@@ -249,23 +244,21 @@ class TestCNN(TfGraphTestCase):
     def test_invalid_padding(self):
         with pytest.raises(ValueError):
             with tf.compat.v1.variable_scope('CNN'):
-                self.cnn = cnn(
-                    input_var=self._input_ph,
-                    filter_dims=(3, ),
-                    num_filters=(32, ),
-                    strides=(1, ),
-                    name='cnn',
-                    padding='UNKNOWN')
+                self.cnn = cnn(input_var=self._input_ph,
+                               filter_dims=(3, ),
+                               num_filters=(32, ),
+                               strides=(1, ),
+                               name='cnn',
+                               padding='UNKNOWN')
 
     def test_invalid_padding_max_pooling(self):
         with pytest.raises(ValueError):
             with tf.compat.v1.variable_scope('CNN'):
-                self.cnn = cnn_with_max_pooling(
-                    input_var=self._input_ph,
-                    filter_dims=(3, ),
-                    num_filters=(32, ),
-                    strides=(1, ),
-                    name='cnn',
-                    pool_shapes=(1, 1),
-                    pool_strides=(1, 1),
-                    padding='UNKNOWN')
+                self.cnn = cnn_with_max_pooling(input_var=self._input_ph,
+                                                filter_dims=(3, ),
+                                                num_filters=(32, ),
+                                                strides=(1, ),
+                                                name='cnn',
+                                                pool_shapes=(1, 1),
+                                                pool_strides=(1, 1),
+                                                padding='UNKNOWN')

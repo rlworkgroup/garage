@@ -10,8 +10,7 @@ def gru(name,
         output_nonlinearity_layer,
         hidden_state_init=tf.zeros_initializer(),
         hidden_state_init_trainable=False):
-    """
-    Gated Recurrent Unit (GRU).
+    """Gated Recurrent Unit (GRU).
 
     Args:
         name (str): Name of the variable scope.
@@ -20,8 +19,8 @@ def gru(name,
         all_input_var (tf.Tensor): Place holder for entire time-series inputs.
         step_input_var (tf.Tensor): Place holder for step inputs.
         step_hidden_var (tf.Tensor): Place holder for step hidden state.
-        output_nonlinearity (callable): Activation function for output dense
-            layer. It should return a tf.Tensor. Set it to None to
+        output_nonlinearity_layer (callable): Activation function for output
+            dense layer. It should return a tf.Tensor. Set it to None to
             maintain a linear activation.
         hidden_state_init (callable): Initializer function for the
             initial hidden state. The functino should return a tf.Tensor.
@@ -33,6 +32,7 @@ def gru(name,
         output (tf.Tensor): Step output.
         hidden (tf.Tensor): Step hidden state.
         hidden_init_var (tf.Tensor): Initial hidden state.
+
     """
     with tf.compat.v1.variable_scope(name):
         hidden_dim = gru_cell.units

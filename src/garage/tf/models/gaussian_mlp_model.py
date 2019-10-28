@@ -2,15 +2,14 @@
 import numpy as np
 import tensorflow as tf
 
-from garage.tf.core.mlp import mlp
-from garage.tf.core.parameter import parameter
 from garage.tf.distributions import DiagonalGaussian
 from garage.tf.models.base import Model
+from garage.tf.models.mlp import mlp
+from garage.tf.models.parameter import parameter
 
 
 class GaussianMLPModel(Model):
-    """
-    GaussianMLPModel.
+    """GaussianMLPModel.
 
     Args:
         output_dim (int): Output dimension of the model.
@@ -56,7 +55,7 @@ class GaussianMLPModel(Model):
             it to None to maintain a linear activation.
         std_output_w_init (callable): Initializer function for the weight
             of output dense layer(s) in the std network.
-        std_parametrization (str): How the std should be parametrized. There
+        std_parameterization (str): How the std should be parametrized. There
             are two options:
             - exp: the logarithm of the std will be stored, and applied a
                exponential transformation
