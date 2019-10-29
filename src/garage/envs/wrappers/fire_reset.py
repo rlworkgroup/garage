@@ -3,8 +3,7 @@ import gym
 
 
 class FireReset(gym.Wrapper):
-    """
-    Fire reset wrapper for gym.Env.
+    """Fire reset wrapper for gym.Env.
 
     Take action "fire" on reset.
 

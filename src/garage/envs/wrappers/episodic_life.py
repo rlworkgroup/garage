@@ -3,8 +3,7 @@ import gym
 
 
 class EpisodicLife(gym.Wrapper):
-    """
-    Episodic life wrapper for gym.Env.
+    """Episodic life wrapper for gym.Env.
 
     This wrapper makes episode end when a life is lost, but only reset
     when all lives are lost.

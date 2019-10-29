@@ -4,8 +4,7 @@ import numpy as np
 
 
 class MaxAndSkip(gym.Wrapper):
-    """
-    Max and skip wrapper for gym.Env.
+    """Max and skip wrapper for gym.Env.
 
     It returns only every `skip`-th frame. Action are repeated and rewards are
     sum for the skipped frames.
@@ -22,8 +21,8 @@ class MaxAndSkip(gym.Wrapper):
 
     def __init__(self, env, skip=4):
         super().__init__(env)
-        self._obs_buffer = np.zeros(
-            (2, ) + env.observation_space.shape, dtype=np.uint8)
+        self._obs_buffer = np.zeros((2, ) + env.observation_space.shape,
+                                    dtype=np.uint8)
         self._skip = skip
 
     def step(self, action):

@@ -25,26 +25,26 @@ class LocalRunner:
         please use LocalTFRunner().
 
     Examples:
-        # to train
-        runner = LocalRunner()
-        env = Env(...)
-        policy = Policy(...)
-        algo = Algo(
-                env=env,
-                policy=policy,
-                ...)
-        runner.setup(algo, env)
-        runner.train(n_epochs=100, batch_size=4000)
+        | # to train
+        | runner = LocalRunner()
+        | env = Env(...)
+        | policy = Policy(...)
+        | algo = Algo(
+        |         env=env,
+        |         policy=policy,
+        |         ...)
+        | runner.setup(algo, env)
+        | runner.train(n_epochs=100, batch_size=4000)
 
-        # to resume immediately.
-        runner = LocalRunner()
-        runner.restore(resume_from_dir)
-        runner.resume()
+        | # to resume immediately.
+        | runner = LocalRunner()
+        | runner.restore(resume_from_dir)
+        | runner.resume()
 
-        # to resume with modified training arguments.
-        runner = LocalRunner()
-        runner.restore(resume_from_dir)
-        runner.resume(n_epochs=20)
+        | # to resume with modified training arguments.
+        | runner = LocalRunner()
+        | runner.restore(resume_from_dir)
+        | runner.resume(n_epochs=20)
 
     """
 
