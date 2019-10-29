@@ -1,13 +1,12 @@
-from garage.core import Serializable
 from garage.tf.policies import Policy
 
 
-class UniformControlPolicy(Policy, Serializable):
+class UniformControlPolicy(Policy):
+
     def __init__(
             self,
             env_spec,
     ):
-        Serializable.quick_init(self, locals())
         super(UniformControlPolicy, self).__init__(env_spec=env_spec)
 
     @property

@@ -14,8 +14,6 @@ import cloudpickle
 import dateutil.tz
 import numpy as np
 
-from garage.core import Serializable
-
 
 class AttrDict(dict):
 
@@ -28,10 +26,7 @@ def flatten(l):
     return [item for sublist in l for item in sublist]
 
 
-class BinaryOp(Serializable):
-
-    def __init__(self):
-        Serializable.quick_init(self, locals())
+class BinaryOp:
 
     def rdiv(self, a, b):
         return b / a

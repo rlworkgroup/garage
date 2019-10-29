@@ -1,19 +1,17 @@
 """Dummy Policy for algo tests.."""
 import numpy as np
 
-from garage.core import Serializable
 from garage.np.policies import Policy
 from tests.fixtures.distributions import DummyDistribution
 
 
-class DummyPolicy(Policy, Serializable):
+class DummyPolicy(Policy):
     """Dummy Policy."""
 
     def __init__(
             self,
             env_spec,
     ):
-        Serializable.quick_init(self, locals())
         super().__init__(env_spec=env_spec)
 
     def get_action(self, observation):

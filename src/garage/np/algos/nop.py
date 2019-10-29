@@ -1,8 +1,7 @@
-from garage.core import Serializable
 from garage.np.algos.base import RLAlgorithm
 
 
-class NOP(RLAlgorithm, Serializable):
+class NOP(RLAlgorithm):
     """NOP (no optimization performed) policy search algorithm"""
 
     def __init__(self, **kwargs):

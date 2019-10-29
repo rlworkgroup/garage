@@ -4,12 +4,11 @@ from dm_control.rl.environment import StepType
 import gym
 import numpy as np
 
-from garage.core import Serializable
 from garage.envs import Step
 from garage.envs.dm_control.dm_control_viewer import DmControlViewer
 
 
-class DmControlEnv(gym.Env, Serializable):
+class DmControlEnv(gym.Env):
     """
     Binding for `dm_control <https://arxiv.org/pdf/1801.00690.pdf>`_
     """
@@ -18,9 +17,6 @@ class DmControlEnv(gym.Env, Serializable):
         self._name = name or type(env.task).__name__
         self._env = env
         self._viewer = None
-
-        # Always call Serializable constructor last
-        Serializable.quick_init(self, locals())
 
     @classmethod
     def from_suite(cls, domain_name, task_name):
@@ -80,3 +76,8 @@ class DmControlEnv(gym.Env, Serializable):
                               high=np.inf,
                               shape=[flat_dim],
                               dtype=np.float32)
+
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        d['_viewer'] = None
+        return d
