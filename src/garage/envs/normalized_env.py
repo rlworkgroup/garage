@@ -4,10 +4,10 @@ import numpy as np
 
 from garage.core import Serializable
 from garage.envs.util import flat_dim, flatten, unflatten
-from garage.misc.overrides import overrides
 
 
 class NormalizedEnv(gym.Wrapper, Serializable):
+
     def __init__(
             self,
             env,
@@ -66,7 +66,6 @@ class NormalizedEnv(gym.Wrapper, Serializable):
         self._update_reward_estimate(reward)
         return reward / (np.sqrt(self._reward_var) + 1e-8)
 
-    @overrides
     def reset(self, **kwargs):
         ret = self.env.reset(**kwargs)
         if self._normalize_obs:
@@ -85,7 +84,6 @@ class NormalizedEnv(gym.Wrapper, Serializable):
         self._obs_mean = d['_obs_mean']
         self._obs_var = d['_obs_var']
 
-    @overrides
     def step(self, action):
         if isinstance(self.action_space, gym.spaces.Box):
             # rescale the action when the bounds are not inf
@@ -113,7 +111,6 @@ class NormalizedEnv(gym.Wrapper, Serializable):
     def render(self, *args, **kwargs):
         return self.env.render(*args, **kwargs)
 
-    @overrides
     def max_episode_steps(self):
         return self.env.spec.max_episode_steps
 

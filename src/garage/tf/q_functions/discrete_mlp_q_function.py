@@ -1,7 +1,6 @@
 """Discrete MLP QFunction."""
 import tensorflow as tf
 
-from garage.misc.overrides import overrides
 from garage.tf.models import MLPDuelingModel
 from garage.tf.models import MLPModel
 from garage.tf.q_functions import QFunction
@@ -110,7 +109,6 @@ class DiscreteMLPQFunction(QFunction):
         """Get input."""
         return self.model.networks['default'].input
 
-    @overrides
     def get_qval_sym(self, state_input, name):
         """Symbolic graph for q-network.
 

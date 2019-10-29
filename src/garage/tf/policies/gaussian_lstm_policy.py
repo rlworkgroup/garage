@@ -3,7 +3,6 @@ import akro
 import numpy as np
 import tensorflow as tf
 
-from garage.misc.overrides import overrides
 from garage.tf.models import GaussianLSTMModel
 from garage.tf.policies.base import StochasticPolicy
 
@@ -219,7 +218,6 @@ class GaussianLSTMPolicy(StochasticPolicy):
         self._prev_cells[dones] = self.model.networks[
             'default'].init_cell.eval()
 
-    @overrides
     def get_action(self, observation):
         """Get single action from this policy for the input observation.
 
@@ -241,7 +239,6 @@ class GaussianLSTMPolicy(StochasticPolicy):
         actions, agent_infos = self.get_actions([observation])
         return actions[0], {k: v[0] for k, v in agent_infos.items()}
 
-    @overrides
     def get_actions(self, observations):
         """Get multiple actions from this policy for the input observations.
 

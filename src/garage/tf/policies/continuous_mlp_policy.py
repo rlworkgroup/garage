@@ -6,7 +6,6 @@ continuous action.
 """
 import tensorflow as tf
 
-from garage.misc.overrides import overrides
 from garage.tf.models import MLPModel
 from garage.tf.policies import Policy
 
@@ -110,7 +109,6 @@ class ContinuousMLPPolicy(Policy):
         with tf.compat.v1.variable_scope(self._variable_scope):
             return self.model.build(obs_var, name=name)
 
-    @overrides
     def get_action(self, observation):
         """Get single action from this policy for the input observation.
 
@@ -128,7 +126,6 @@ class ContinuousMLPPolicy(Policy):
         action = self.action_space.unflatten(action)
         return action, dict()
 
-    @overrides
     def get_actions(self, observations):
         """Get multiple actions from this policy for the input observations.
 

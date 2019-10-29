@@ -3,7 +3,6 @@ import akro
 import numpy as np
 import tensorflow as tf
 
-from garage.misc.overrides import overrides
 from garage.tf.models import GaussianGRUModel
 from garage.tf.policies import StochasticPolicy
 
@@ -195,7 +194,6 @@ class GaussianGRUPolicy(StochasticPolicy):
         self._prev_hiddens[dones] = self.model.networks[
             'default'].init_hidden.eval()
 
-    @overrides
     def get_action(self, observation):
         """Get a single action from this policy for the input observation.
 
@@ -217,7 +215,6 @@ class GaussianGRUPolicy(StochasticPolicy):
         actions, agent_infos = self.get_actions([observation])
         return actions[0], {k: v[0] for k, v in agent_infos.items()}
 
-    @overrides
     def get_actions(self, observations):
         """Get multiple actions from this policy for the input observations.
 

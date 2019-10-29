@@ -6,7 +6,6 @@ import numpy as np
 import tensorflow as tf
 import tensorflow.contrib as tc  # pylint: disable=import-error
 
-from garage.misc.overrides import overrides
 from garage.np.algos.off_policy_rl_algorithm import OffPolicyRLAlgorithm
 from garage.tf.misc import tensor_utils
 
@@ -127,7 +126,6 @@ class DDPG(OffPolicyRLAlgorithm):
                                    input_include_goal=input_include_goal,
                                    smooth_return=smooth_return)
 
-    @overrides
     def init_opt(self):
         """Build the loss function and init the optimizer."""
         with tf.name_scope(self.name, 'DDPG'):
@@ -305,7 +303,6 @@ class DDPG(OffPolicyRLAlgorithm):
             self.success_history.clear()
         return last_average_return
 
-    @overrides
     def optimize_policy(self, itr, samples_data):
         """Perform algorithm optimizing.
 
@@ -355,7 +352,6 @@ class DDPG(OffPolicyRLAlgorithm):
 
         return qval_loss, ys, qval, action_loss
 
-    @overrides
     def get_itr_snapshot(self, itr):
         """Return data saved in the snapshot for this iteration."""
         return dict(itr=itr, policy=self.policy)

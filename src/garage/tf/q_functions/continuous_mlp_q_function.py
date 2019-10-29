@@ -1,7 +1,6 @@
 """Continuous MLP QFunction."""
 import tensorflow as tf
 
-from garage.misc.overrides import overrides
 from garage.tf.models import MLPMergeModel
 from garage.tf.q_functions import QFunction
 
@@ -118,7 +117,6 @@ class ContinuousMLPQFunction(QFunction):
         """Return the input tensor."""
         return self.model.networks['default'].inputs
 
-    @overrides
     def get_qval_sym(self, state_input, action_input, name):
         """Symbolic graph for q-network.
 
