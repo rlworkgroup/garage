@@ -4,7 +4,7 @@ pull_request_rules:
       - base=master
       - -conflict
       - "#approved-reviews-by>=2"
-      - "approved-reviews-by=maintainers"
+      - "approved-reviews-by=@maintainers"
       - "#changes-requested-reviews-by=0"
       - status-success=Travis CI - Pull Request
       - status-success=codecov/patch
@@ -13,6 +13,7 @@ pull_request_rules:
     actions:
       merge:
         strict: smart
+        strict_method: rebase
         method: squash
       delete_head_branch: {}
   - name: Automatic merge queue for master (maintainers)
@@ -29,5 +30,6 @@ pull_request_rules:
     actions:
       merge:
         strict: smart
+        strict_method: rebase
         method: squash
       delete_head_branch: {}
