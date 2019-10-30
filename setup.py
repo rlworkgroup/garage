@@ -69,7 +69,7 @@ EXTRAS['dev'] = [
     'pycodestyle>=2.5.0',
     'pydocstyle>=4.0.0',
     'pylint>=2.4.3',
-    'pytest>=3.6',  # Required for pytest-cov on Python 3.6
+    'pytest>=4.5.0',  # Required for strict-markers
     'pytest-cov',
     'pytest-xdist',
     'recommonmark',
