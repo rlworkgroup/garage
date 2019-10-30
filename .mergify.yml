@@ -9,10 +9,6 @@ pull_request_rules:
       - status-success=Travis CI - Pull Request
       - status-success=codecov/patch
       - status-success=codecov/project
-      - status-success="ci/dockercloud (/docker/Dockerfile.base.16.04)"
-      - status-success="ci/dockercloud (/docker/Dockerfile.base.18.04)"
-      - status-success="ci/dockercloud (/docker/Dockerfile.headless)"
-      - status-success="ci/dockercloud (/docker/Dockerfile.nvidia)"
       - label=ready-to-merge
     actions:
       merge:
@@ -29,10 +25,6 @@ pull_request_rules:
       - status-success=Travis CI - Pull Request
       - status-success=codecov/patch
       - status-success=codecov/project
-      - status-success="ci/dockercloud (/docker/Dockerfile.base.16.04)"
-      - status-success="ci/dockercloud (/docker/Dockerfile.base.18.04)"
-      - status-success="ci/dockercloud (/docker/Dockerfile.headless)"
-      - status-success="ci/dockercloud (/docker/Dockerfile.nvidia)"
       - label=ready-to-merge
     actions:
       merge:
