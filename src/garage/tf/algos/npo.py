@@ -4,7 +4,6 @@ import numpy as np
 import tensorflow as tf
 
 from garage.misc import special
-from garage.misc.overrides import overrides
 from garage.tf.algos.batch_polopt import BatchPolopt
 from garage.tf.misc import tensor_utils
 from garage.tf.misc.tensor_utils import center_advs
@@ -141,7 +140,6 @@ class NPO(BatchPolopt):
                          fixed_horizon=fixed_horizon,
                          flatten_input=flatten_input)
 
-    @overrides
     def init_opt(self):
         """Initialize optimizater."""
         pol_loss_inputs, pol_opt_inputs = self._build_inputs()
@@ -157,7 +155,6 @@ class NPO(BatchPolopt):
 
         return dict()
 
-    @overrides
     def optimize_policy(self, itr, samples_data):
         """Optimize policy."""
         policy_opt_input_values = self._policy_opt_input_values(samples_data)
@@ -184,7 +181,6 @@ class NPO(BatchPolopt):
 
         self._fit_baseline(samples_data)
 
-    @overrides
     def get_itr_snapshot(self, itr):
         """Get iteration snapshot."""
         return dict(

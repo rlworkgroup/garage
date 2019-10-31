@@ -6,7 +6,6 @@ import akro
 import numpy as np
 import tensorflow as tf
 
-from garage.misc.overrides import overrides
 from garage.tf.policies import Policy
 
 
@@ -38,7 +37,6 @@ class DiscreteQfDerivedPolicy(Policy):
         """Vectorized or not."""
         return True
 
-    @overrides
     def get_action(self, observation):
         """Get action from this policy for the input observation.
 
@@ -54,7 +52,6 @@ class DiscreteQfDerivedPolicy(Policy):
 
         return opt_action
 
-    @overrides
     def get_actions(self, observations):
         """Get actions from this policy for the input observations.
 

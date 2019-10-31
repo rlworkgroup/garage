@@ -5,7 +5,6 @@ Random exploration according to the value of epsilon.
 """
 import numpy as np
 
-from garage.misc.overrides import overrides
 from garage.np.exploration_strategies.base import ExplorationStrategy
 
 
@@ -41,10 +40,9 @@ class EpsilonGreedyStrategy(ExplorationStrategy):
         self._decay_period = int(total_timesteps * decay_ratio)
         self._action_space = env_spec.action_space
         self._epsilon = self._max_epsilon
-        self._decrement = (
-            self._max_epsilon - self._min_epsilon) / self._decay_period
+        self._decrement = (self._max_epsilon -
+                           self._min_epsilon) / self._decay_period
 
-    @overrides
     def get_action(self, t, observation, policy, **kwargs):
         """
         Get action from this policy for the input observation.
@@ -65,7 +63,6 @@ class EpsilonGreedyStrategy(ExplorationStrategy):
 
         return opt_action, dict()
 
-    @overrides
     def get_actions(self, t, observations, policy, **kwargs):
         """
         Get actions from this policy for the input observations.

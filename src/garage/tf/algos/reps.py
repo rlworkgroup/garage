@@ -4,7 +4,6 @@ import numpy as np
 import scipy.optimize
 import tensorflow as tf
 
-from garage.misc.overrides import overrides
 from garage.tf.algos.batch_polopt import BatchPolopt
 from garage.tf.misc import tensor_utils
 from garage.tf.misc.tensor_utils import filter_valids
@@ -94,7 +93,6 @@ class REPS(BatchPolopt):
                                    positive_adv=positive_adv,
                                    fixed_horizon=fixed_horizon)
 
-    @overrides
     def init_opt(self):
         """Initialize the optimization procedure."""
         pol_loss_inputs, pol_opt_inputs, dual_opt_inputs = self._build_inputs()
@@ -124,7 +122,6 @@ class REPS(BatchPolopt):
         self._name_scope = tf.name_scope(self.name)
         self.init_opt()
 
-    @overrides
     def get_itr_snapshot(self, itr):
         """Return the data should saved in the snapshot."""
         return dict(
@@ -132,7 +129,6 @@ class REPS(BatchPolopt):
             policy=self.policy,
         )
 
-    @overrides
     def optimize_policy(self, itr, samples_data):
         """Perform the policy optimization."""
         # Initial BFGS parameter values.

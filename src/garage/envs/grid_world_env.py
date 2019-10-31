@@ -3,7 +3,6 @@ import numpy as np
 
 from garage.core import Serializable
 from garage.envs.base import Step
-from garage.misc.overrides import overrides
 
 MAPS = {
     'chain': ['GFFFFFFFFFFFFFSFFFFFFFFFFFFFG'],
@@ -143,10 +142,8 @@ class GridWorldEnv(gym.Env, Serializable):
     def observation_space(self):
         return gym.spaces.Discrete(self.n_row * self.n_col)
 
-    @overrides
     def render(self, mode='human'):
         pass
 
-    @overrides
     def log_diagnostics(self, paths):
         pass

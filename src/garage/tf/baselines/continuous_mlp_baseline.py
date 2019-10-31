@@ -1,7 +1,6 @@
 """A value function (baseline) based on a MLP model."""
 import numpy as np
 
-from garage.misc.overrides import overrides
 from garage.np.baselines import Baseline
 from garage.tf.regressors import ContinuousMLPRegressor
 
@@ -43,29 +42,24 @@ class ContinuousMLPBaseline(Baseline):
             **regressor_args)
         self.name = name
 
-    @overrides
     def fit(self, paths):
         """Fit regressor based on paths."""
         observations = np.concatenate([p['observations'] for p in paths])
         returns = np.concatenate([p['returns'] for p in paths])
         self._regressor.fit(observations, returns.reshape((-1, 1)))
 
-    @overrides
     def predict(self, path):
         """Predict value based on paths."""
         return self._regressor.predict(path['observations']).flatten()
 
-    @overrides
     def get_param_values(self, **tags):
         """Get parameter values."""
         return self._regressor.get_param_values(**tags)
 
-    @overrides
     def set_param_values(self, flattened_params, **tags):
         """Set parameter values to val."""
         self._regressor.set_param_values(flattened_params, **tags)
 
-    @overrides
     def get_params_internal(self, **tags):
         """Get internal parameters."""
         return self._regressor.get_params_internal(**tags)
