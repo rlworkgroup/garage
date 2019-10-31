@@ -4,8 +4,7 @@ import numpy as np
 
 
 class Noop(gym.Wrapper):
-    """
-    Noop wrapper for gym.Env.
+    """Noop wrapper for gym.Env.
 
     It samples initial states by taking random number of no-ops on reset.
     No-op is assumed to be action 0.

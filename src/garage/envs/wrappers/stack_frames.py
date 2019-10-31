@@ -7,8 +7,7 @@ import numpy as np
 
 
 class StackFrames(gym.Wrapper):
-    """
-    gym.Env wrapper to stack multiple frames.
+    """gym.Env wrapper to stack multiple frames.
 
     Useful for training feed-forward agents on dynamic games.
     Only works with gym.spaces.Box environment with 2D single channel frames.

@@ -5,16 +5,15 @@ import shlex
 import sys
 import time
 
-color2num = dict(
-    gray=30,
-    red=31,
-    green=32,
-    yellow=33,
-    blue=34,
-    magenta=35,
-    cyan=36,
-    white=37,
-    crimson=38)
+color2num = dict(gray=30,
+                 red=31,
+                 green=32,
+                 yellow=33,
+                 blue=34,
+                 magenta=35,
+                 cyan=36,
+                 white=37,
+                 crimson=38)
 
 
 def colorize(string, color, bold=False, highlight=False):
@@ -34,6 +33,7 @@ def log(s):  # , send_telegram=False):
 
 
 class SimpleMessage:
+
     def __init__(self, msg, logger=log):
         self.msg = msg
         self.logger = logger
@@ -44,14 +44,15 @@ class SimpleMessage:
 
     def __exit__(self, etype, *args):
         maybe_exc = '' if etype is None else ' (with exception)'
-        self.logger(
-            'done%s in %.3f seconds' % (maybe_exc, time.time() - self.tstart))
+        self.logger('done%s in %.3f seconds' %
+                    (maybe_exc, time.time() - self.tstart))
 
 
 MESSAGE_DEPTH = 0
 
 
 class Message:
+
     def __init__(self, msg):
         self.msg = msg
 
@@ -96,6 +97,7 @@ def collect_args():
 
 
 def type_hint(arg_name, arg_type):
+
     def wrap(f):
         meta = getattr(f, '__tweak_type_hint_meta__', None)
         if meta is None:
@@ -128,10 +130,11 @@ def tweakfun(fun, alt=None):
     """Make the arguments (or the function itself) tweakable from command line.
     See tests/test_misc_console.py for examples.
 
-    NOTE: this only works for the initial launched process, since other
-    processes will get different argv. What this means is that tweak() calls
-    wrapped in a function to be invoked in a child process might not behave
-    properly.
+    NOTE:
+        this only works for the initial launched process, since other
+        processes will get different argv. What this means is that tweak() calls
+        wrapped in a function to be invoked in a child process might not behave
+        properly.
     """
     cls = getattr(fun, 'im_class', None)
     method_name = fun.__name__
@@ -164,8 +167,8 @@ def tweakfun(fun, alt=None):
         if k.startswith(cmd_prefix):
             stripped = k[len(cmd_prefix):].replace('-', '_')
             if stripped in meta:
-                log('replacing %s in %s with %s' % (stripped, str(fun),
-                                                    str(v)))
+                log('replacing %s in %s with %s' %
+                    (stripped, str(fun), str(v)))
                 replaced_kwargs[stripped] = meta[stripped](v)
             elif stripped not in argspec.args:
                 raise ValueError('%s is not an explicit parameter of %s' %
@@ -179,8 +182,8 @@ def tweakfun(fun, alt=None):
                     'Cannot infer type of %s in method %s from None value' %
                     (stripped, str(fun)))
             else:
-                log('replacing %s in %s with %s' % (stripped, str(fun),
-                                                    str(v)))
+                log('replacing %s in %s with %s' %
+                    (stripped, str(fun), str(v)))
                 # TODO more proper conversions
                 replaced_kwargs[stripped] = type(defaults[stripped])(v)
 
@@ -196,12 +199,14 @@ def tweakfun(fun, alt=None):
 def query_yes_no(question, default='yes'):
     """Ask a yes/no question via raw_input() and return their answer.
 
-    "question" is a string that is presented to the user.
-    "default" is the presumed answer if the user just hits <Enter>.
-        It must be "yes" (the default), "no" or None (meaning
-        an answer is required of the user).
+    Args:
+        question (str): string that is presented to the user.
+        default (str): the presumed answer if the user just hits <Enter>.
+            It must be "yes" (the default), "no" or None (meaning
+            an answer is required of the user).
 
-    The "answer" return value is True for "yes" or False for "no".
+    Returns:
+        bool: The return value is True for "yes" or False for "no".
     """
     valid = {'yes': True, 'y': True, 'ye': True, 'no': False, 'n': False}
     if default is None:

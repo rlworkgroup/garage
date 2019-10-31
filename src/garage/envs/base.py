@@ -36,7 +36,8 @@ class GarageEnv(gym.Wrapper, Serializable):
     convert action_space and observation_space from gym.Spaces to
     akro.spaces.
 
-    Args: env (gym.Env): the env that will be wrapped
+    Args:
+        env (gym.Env): the env that will be wrapped
     """
 
     def __init__(self, env=None, env_name=''):
