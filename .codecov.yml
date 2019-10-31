@@ -4,3 +4,7 @@ coverage:
     patch:
       default:
         target: 90%
+
+codecov:
+    notify:
+        after_n_builds: 2  # do not post a PR status until at least 2 coverage reports have been received
