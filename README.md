@@ -75,11 +75,21 @@ Garage releases a new stable version approximately every 4 months, in February, 
 
 ## Citing garage
 
-If you use garage for academic research, you are highly encouraged to cite the following paper on the original rllab implementation:
+If you use garage for academic research, please cite the repository using the following BibTeX entry. You should update the `commit` field with the commit or release tag your publication uses.
 
-- Yan Duan, Xi Chen, Rein Houthooft, John Schulman, Pieter Abbeel. "[Benchmarking Deep Reinforcement Learning for Continuous Control](http://arxiv.org/abs/1604.06778)". _Proceedings of the 33rd International Conference on Machine Learning (ICML), 2016._
+```latex
+@misc{garage,
+ author = {The garage contributors},
+ title = {Garage: A toolkit for reproducible reinforcement learning research},
+ year = {2019},
+ publisher = {GitHub},
+ journal = {GitHub repository},
+ howpublished = {\url{https://github.com/rlworkgroup/garage}},
+ commit = {be070842071f736eb24f28e4b902a9f144f5c97b}
+}
+```
 
 ## Credits
-garage is based on a predecessor project called [rllab](https://github.com/rll/rllab). The garage project is grateful for the contributions of the original rllab authors, and hopes to continue advancing the state of reproducibility in RL research in the same spirit.
+The original code for garage was adopted from predecessor project called [rllab](https://github.com/rll/rllab). The garage project is grateful for the contributions of the original rllab authors, and hopes to continue advancing the state of reproducibility in RL research in the same spirit.
 
-rllab was originally developed by Rocky Duan (UC Berkeley/OpenAI), Peter Chen (UC Berkeley), Rein Houthooft (UC Berkeley/OpenAI), John Schulman (UC Berkeley/OpenAI), and Pieter Abbeel (UC Berkeley/OpenAI).
+rllab was developed by Rocky Duan (UC Berkeley/OpenAI), Peter Chen (UC Berkeley), Rein Houthooft (UC Berkeley/OpenAI), John Schulman (UC Berkeley/OpenAI), and Pieter Abbeel (UC Berkeley/OpenAI).
