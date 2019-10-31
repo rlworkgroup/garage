@@ -10,43 +10,40 @@ We use object oriented abstractions for different components required for an exp
 
 .. code-block:: python
 
-    import gym
-
     from garage.experiment import run_experiment
     from garage.np.baselines import LinearFeatureBaseline
     from garage.tf.algos import TRPO
     from garage.tf.envs import TfEnv
+    from garage.tf.experiment import LocalTFRunner
     from garage.tf.policies import CategoricalMLPPolicy
 
 
-    def run_task(*_):
-        """Wrap TRPO training task in the run_task function."""
-        env = TfEnv(env_name="CartPole-v1")
+    def run_task(snapshot_config, *_):
+        """Run task."""
+        with LocalTFRunner(snapshot_config=snapshot_config) as runner:
+            env = TfEnv(env_name='CartPole-v1')
 
-        policy = CategoricalMLPPolicy(
-            name="policy", env_spec=env.spec, hidden_sizes=(32, 32))
+            policy = CategoricalMLPPolicy(name='policy',
+                                        env_spec=env.spec,
+                                        hidden_sizes=(32, 32))
 
-        baseline = LinearFeatureBaseline(env_spec=env.spec)
+            baseline = LinearFeatureBaseline(env_spec=env.spec)
 
-        algo = TRPO(
-            env=env,
-            policy=policy,
-            baseline=baseline,
-            batch_size=4000,
-            max_path_length=100,
-            n_itr=100,
-            discount=0.99,
-            max_kl_step=0.01,
-            plot=False)
-        algo.train()
+            algo = TRPO(env_spec=env.spec,
+                        policy=policy,
+                        baseline=baseline,
+                        max_path_length=100,
+                        discount=0.99,
+                        max_kl_step=0.01)
+
+            runner.setup(algo, env)
+            runner.train(n_epochs=100, batch_size=4000)
 
 
     run_experiment(
         run_task,
-        n_parallel=1,
-        snapshot_mode="last",
+        snapshot_mode='last',
         seed=1,
-        plot=False,
     )
 
 
