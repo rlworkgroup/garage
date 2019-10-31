@@ -1,3 +1,4 @@
+"""Importance sampling sampler."""
 import copy
 from math import exp
 from math import log
@@ -10,14 +11,16 @@ from garage.sampler.utils import truncate_paths
 
 
 class ISSampler(BatchSampler):
-    """
+    """Importance sampling sampler.
+
     Sampler which alternates between live sampling iterations using
     BatchSampler and importance sampling iterations.
 
     Args:
         algo (garage.np.algos.RLAlgorithm): An algorithm instance.
         env (garage.envs.GarageEnv): An environement instance.
-        n_backtrack (str/int): Number of past policies to update from
+        n_backtrack (int): Number of past policies to update from.
+            If None, it uses all past policies.
         n_is_pretrain (int): Number of importance sampling iterations to
             perform in beginning of training
         init_is (bool): Set initial iteration (after pretrain) an
@@ -34,7 +37,7 @@ class ISSampler(BatchSampler):
     def __init__(self,
                  algo,
                  env,
-                 n_backtrack='all',
+                 n_backtrack=None,
                  n_is_pretrain=0,
                  init_is=0,
                  skip_is_itrs=False,
@@ -58,27 +61,51 @@ class ISSampler(BatchSampler):
 
     @property
     def history(self):
-        """
+        """list: History of policies.
+
         History of policies that have interacted with the environment and the
-        data from interaction episode(s)
+        data from interaction episode(s).
+
         """
         return self._hist
 
     def add_history(self, policy_distribution, paths):
-        """
-        Store policy distribution and paths in history
+        """Store policy distribution and paths in history.
+
+        Args:
+            policy_distribution (garage.tf.distributions.Distribution): Policy distribution. # noqa: E501
+            paths (list): Paths.
+
         """
         self._hist.append((policy_distribution, paths))
 
-    def get_history_list(self, n_past='all'):
+    def get_history_list(self, n_past=None):
+        """Get list of (distribution, data) tuples from history.
+
+        Args:
+            n_past (int): Number of past policies to update from.
+                If None, it uses all past policies.
+
+        Returns:
+            list: A list of paths.
+
         """
-        Get list of (distribution, data) tuples from history
-        """
-        if n_past == 'all':
+        if n_past is None:
             return self._hist
         return self._hist[-min(n_past, len(self._hist)):]
 
     def obtain_samples(self, itr, batch_size=None, whole_paths=True):
+        """Collect samples for the given iteration number.
+
+        Args:
+            itr (int): Number of iteration.
+            batch_size (int): Number of environment steps in one batch.
+            whole_paths (bool): Whether to use whole path or truncated.
+
+        Returns:
+            list[dict]: A list of paths.
+
+        """
         # Importance sampling for first self.n_is_pretrain iterations
         if itr < self.n_is_pretrain:
             paths = self._obtain_is_samples(itr, batch_size, whole_paths)
@@ -95,7 +122,18 @@ class ISSampler(BatchSampler):
         self._is_itr = (self._is_itr + 1) % 2
         return paths
 
-    def _obtain_is_samples(self, itr, batch_size=None, whole_paths=True):
+    def _obtain_is_samples(self, _itr, batch_size=None, whole_paths=True):
+        """Collect IS samples for the given iteration number.
+
+        Args:
+            _itr (int): Number of iteration.
+            batch_size (int): Number of batch size.
+            whole_paths (bool): Whether to use whole path or truncated.
+
+        Returns:
+            list: A list of paths.
+
+        """
         if batch_size is None:
             batch_size = self.algo.max_path_length
 
@@ -126,6 +164,21 @@ class ISSampler(BatchSampler):
                                  hist_variance_penalty=0.0,
                                  max_is_ratio=10,
                                  ess_threshold=0):
+        """Return sample of IS weighted paths.
+
+        Args:
+            policy (object): The policy.
+            hist_policy_distribution (list): Histogram policy distribution.
+            max_samples (int): Max number of samples.
+            paths (list): Paths.
+            hist_variance_penalty (float): Histogram variance penalty.
+            max_is_ratio (float): Maximum of IS ratio.
+            ess_threshold (float): Effective sample size estimate.
+
+        Returns:
+            list: A list of paths.
+
+        """
         if not paths:
             return []
 

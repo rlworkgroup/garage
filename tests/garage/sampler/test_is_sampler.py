@@ -49,7 +49,7 @@ class TestISSampler(TfGraphTestCase):
             with unittest.mock.patch.object(ISSampler,
                                             '_obtain_is_samples') as mocked:
                 runner._sampler.n_is_pretrain = 5
-                runner._sampler.n_backtrack = 'all'
+                runner._sampler.n_backtrack = None
                 runner._sampler.obtain_samples(4)
 
                 mocked.assert_called_once_with(4, None, True)

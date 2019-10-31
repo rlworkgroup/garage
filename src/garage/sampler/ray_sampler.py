@@ -2,9 +2,9 @@
 
 Uses a data parallel design.
 Included is a sampler that deploys sampler workers.
-
 The sampler workers must implement some type of set agent parameters
-function, and a rollout function
+function, and a rollout function.
+
 """
 from collections import defaultdict
 import pickle
@@ -222,12 +222,12 @@ class SamplerWorker:
 
         The following value for the following keys will be a 2D array,
         with the first dimension corresponding to the time dimension.
-
         - observations
         - actions
         - rewards
         - next_observations
         - terminals
+
         The next two elements will be lists of dictionaries, with
         the index into the list being the index into the time
         - agent_infos

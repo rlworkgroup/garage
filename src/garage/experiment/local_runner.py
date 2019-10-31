@@ -7,6 +7,7 @@ from dowel import logger, tabular
 
 from garage.experiment.deterministic import get_seed, set_seed
 from garage.experiment.snapshotter import Snapshotter
+from garage.sampler import parallel_sampler
 
 
 class ExperimentStats:
@@ -114,10 +115,12 @@ class LocalRunner:
                                         snapshot_config.snapshot_mode,
                                         snapshot_config.snapshot_gap)
 
-        if max_cpus > 1:
-            # pylint: disable=import-outside-toplevel
-            from garage.sampler import singleton_pool
-            singleton_pool.initialize(max_cpus)
+        parallel_sampler.initialize(max_cpus)
+
+        seed = get_seed()
+        if seed is not None:
+            parallel_sampler.set_seed(seed)
+
         self._has_setup = False
         self._plot = False
 

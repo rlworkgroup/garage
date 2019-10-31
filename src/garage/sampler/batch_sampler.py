@@ -1,5 +1,4 @@
 """Class with batch-based sampling."""
-
 from garage.sampler import parallel_sampler
 from garage.sampler.base import BaseSampler
 from garage.sampler.utils import truncate_paths
@@ -14,9 +13,6 @@ class BatchSampler(BaseSampler):
 
     """
 
-    def __init__(self, algo, env):
-        super().__init__(algo, env)
-
     def start_worker(self):
         """Start workers."""
         parallel_sampler.populate_task(self.env,
@@ -28,7 +24,17 @@ class BatchSampler(BaseSampler):
         parallel_sampler.terminate_task(scope=self.algo.scope)
 
     def obtain_samples(self, itr, batch_size=None, whole_paths=True):
-        """Obtain samples."""
+        """Obtain samples.
+
+        Args:
+            itr (int): Number of iteration.
+            batch_size (int): Number of environment steps in one batch.
+            whole_paths (bool): Whether to use whole path or truncated.
+
+        Returns:
+            list[dict]: A list of paths.
+
+        """
         if not batch_size:
             batch_size = self.algo.max_path_length
 
