@@ -2,11 +2,10 @@ import gym
 import gym.spaces
 import numpy as np
 
-from garage.core import Serializable
 from garage.envs.util import flat_dim, flatten, unflatten
 
 
-class NormalizedEnv(gym.Wrapper, Serializable):
+class NormalizedEnv(gym.Wrapper):
 
     def __init__(
             self,
@@ -33,9 +32,6 @@ class NormalizedEnv(gym.Wrapper, Serializable):
         self._reward_alpha = reward_alpha
         self._reward_mean = 0.
         self._reward_var = 1.
-
-        # Always call Serializable constructor last
-        Serializable.quick_init(self, locals())
 
     def _update_obs_estimate(self, obs):
         flat_obs = flatten(self.env.observation_space, obs)
@@ -72,17 +68,6 @@ class NormalizedEnv(gym.Wrapper, Serializable):
             return self._apply_normalize_obs(ret)
         else:
             return ret
-
-    def __getstate__(self):
-        d = Serializable.__getstate__(self)
-        d['_obs_mean'] = self._obs_mean
-        d['_obs_var'] = self._obs_var
-        return d
-
-    def __setstate__(self, d):
-        Serializable.__setstate__(self, d)
-        self._obs_mean = d['_obs_mean']
-        self._obs_var = d['_obs_var']
 
     def step(self, action):
         if isinstance(self.action_space, gym.spaces.Box):

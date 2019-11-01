@@ -4,13 +4,12 @@ from dowel import logger
 import pyprind
 import tensorflow as tf
 
-from garage.core import Serializable
 from garage.np.optimizers import BatchDataset
 from garage.tf.misc import tensor_utils
 from garage.tf.optimizers.utils import LazyDict
 
 
-class FirstOrderOptimizer(Serializable):
+class FirstOrderOptimizer:
     """
     Performs (stochastic) gradient descent, possibly using fancier methods like
     ADAM etc.
@@ -38,7 +37,6 @@ class FirstOrderOptimizer(Serializable):
         :param kwargs:
         :return:
         """
-        Serializable.quick_init(self, locals())
         self._opt_fun = None
         self._target = None
         self._callback = callback
@@ -66,12 +64,12 @@ class FirstOrderOptimizer(Serializable):
         :param inputs: A list of symbolic variables as inputs
         :return: No return value.
         """
-        with tf.name_scope(
-                self._name,
-                values=[
-                    loss,
-                    target.get_params(trainable=True), inputs, extra_inputs
-                ]):
+        with tf.name_scope(self._name,
+                           values=[
+                               loss,
+                               target.get_params(trainable=True), inputs,
+                               extra_inputs
+                           ]):
 
             self._target = target
 
@@ -89,6 +87,9 @@ class FirstOrderOptimizer(Serializable):
                     inputs + extra_inputs, loss), )
 
     def loss(self, inputs, extra_inputs=None):
+        if self._opt_fun is None:
+            raise Exception(
+                'Use update_opt() to setup the loss function first.')
         if extra_inputs is None:
             extra_inputs = tuple()
         return self._opt_fun['f_loss'](*(tuple(inputs) + extra_inputs))
@@ -98,6 +99,9 @@ class FirstOrderOptimizer(Serializable):
         if not inputs:
             # Assumes that we should always sample mini-batches
             raise NotImplementedError
+        if self._opt_fun is None:
+            raise Exception(
+                'Use update_opt() to setup the loss function first.')
 
         f_loss = self._opt_fun['f_loss']
 
@@ -108,8 +112,9 @@ class FirstOrderOptimizer(Serializable):
 
         start_time = time.time()
 
-        dataset = BatchDataset(
-            inputs, self._batch_size, extra_inputs=extra_inputs)
+        dataset = BatchDataset(inputs,
+                               self._batch_size,
+                               extra_inputs=extra_inputs)
 
         sess = tf.compat.v1.get_default_session()
 
@@ -149,3 +154,18 @@ class FirstOrderOptimizer(Serializable):
             if abs(last_loss - new_loss) < self._tolerance:
                 break
             last_loss = new_loss
+
+    def __getstate__(self):
+        """Object.__getstate__."""
+        new_dict = self.__dict__.copy()
+        del new_dict['_opt_fun']
+        del new_dict['_tf_optimizer']
+        del new_dict['_train_op']
+        del new_dict['_input_vars']
+        return new_dict
+
+    def __setstate__(self, state):
+        """Object.__setstate__."""
+        obj = type(self)()
+        self.__dict__.update(obj.__dict__)
+        self.__dict__.update(state)

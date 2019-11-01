@@ -28,7 +28,6 @@ disable =
     # Detection seems buggy or unhelpful
     duplicate-code,
 
-
 [REPORTS]
 msg-template = {path}:{line:3d},{column}: {msg} ({symbol})
 output-format = colorized

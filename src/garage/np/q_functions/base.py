@@ -1,5 +1,5 @@
-from garage.core import Parameterized
+"""Base class for Q Functions implemented in numpy."""
 
 
-class QFunction(Parameterized):
+class QFunction:
     pass
