@@ -19,8 +19,13 @@ class TestRollout:
         assert path['observations'].shape[0] == 3
         assert path['actions'].shape[0] == 3
         assert path['rewards'].shape[0] == 3
-        assert len(path['agent_infos']) == 3
-        assert len(path['env_infos']) == 3
+        agent_info = [
+            path['agent_infos'][k]
+            for k in self.policy.distribution.dist_info_keys
+        ]
+        assert agent_info[0].shape[0] == 3
+        # dummy is the env_info_key
+        assert path['env_infos']['dummy'].shape[0] == 3
 
     def test_does_not_flatten(self):
         path = utils.rollout(self.env, self.policy, max_path_length=5)
