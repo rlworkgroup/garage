@@ -6,7 +6,7 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 
-from garage.misc import special
+from garage.misc import tensor_utils
 from garage.np.algos import BatchPolopt
 from garage.torch.algos import loss_function_utils as loss_utils
 
@@ -278,8 +278,8 @@ class VPG(BatchPolopt):
 
         """
         for path in paths:
-            path['returns'] = special.discount_cumsum(path['rewards'],
-                                                      self.discount)
+            path['returns'] = tensor_utils.discount_cumsum(
+                path['rewards'], self.discount)
         average_discounted_return = (np.mean(
             [path['returns'][0] for path in paths]))
         undiscounted_returns = [sum(path['rewards']) for path in paths]
