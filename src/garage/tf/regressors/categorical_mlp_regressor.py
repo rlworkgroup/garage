@@ -157,12 +157,10 @@ class CategoricalMLPRegressor(StochasticRegressor):
 
             self._optimizer.update_opt(loss=loss,
                                        target=self,
-                                       network_output=[y_hat],
                                        inputs=[input_var, ys_var])
             self._tr_optimizer.update_opt(
                 loss=loss,
                 target=self,
-                network_output=[y_hat],
                 inputs=[input_var, ys_var, old_prob_var],
                 leq_constraint=(mean_kl, self._max_kl_step))
 
@@ -258,12 +256,26 @@ class CategoricalMLPRegressor(StochasticRegressor):
         return self._dist.log_likelihood_sym(y_var, dict(prob=prob))
 
     def get_params_internal(self, **args):
-        """Get the params, which are the trainable variables."""
+        """Get the params, which are the trainable variables.
+
+        Args:
+            args: Ignored by the function. Will be removed in future release.
+
+        Returns:
+            List[tf.Variable]: A list of trainable variables in the current
+            variable scope.
+
+        """
         del args
         return self._variable_scope.trainable_variables()
 
     def __getstate__(self):
-        """See `Object.__getstate__`."""
+        """Object.__getstate__.
+
+        Returns:
+            dict: the state to be pickled for the instance.
+
+        """
         new_dict = super().__getstate__()
         del new_dict['_f_predict']
         del new_dict['_f_prob']
@@ -271,6 +283,11 @@ class CategoricalMLPRegressor(StochasticRegressor):
         return new_dict
 
     def __setstate__(self, state):
-        """See `Object.__setstate__`."""
+        """Object.__setstate__.
+
+        Args:
+            state (dict): unpickled state.
+
+        """
         super().__setstate__(state)
         self._initialize()
