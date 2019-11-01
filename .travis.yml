@@ -16,7 +16,12 @@ env:
 
 jobs:
   include:
-    - name: "Normal tests and pre-commit checks"
+    # pre-commit checks only run for pull requests
+    - if: type = pull_request
+      name: "Pre-commit checks"
+      env:
+        - JOB_RUN_CMD="make ci-job-precommit"
+    - name: "Normal tests and docs"
       env:
         - JOB_RUN_CMD="make ci-job-normal"
         - DEPLOY_FROM_THIS_JOB="true"
