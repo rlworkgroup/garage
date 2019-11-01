@@ -8,7 +8,6 @@ import os.path as osp
 import pickle
 import re
 import subprocess
-import sys
 
 import cloudpickle
 import dateutil.tz
@@ -20,20 +19,6 @@ class AttrDict(dict):
     def __init__(self, *args, **kwargs):
         super(AttrDict, self).__init__(*args, **kwargs)
         self.__dict__ = self
-
-
-def flatten(l):
-    return [item for sublist in l for item in sublist]
-
-
-class BinaryOp:
-
-    def rdiv(self, a, b):
-        return b / a
-        # def __init__(self, opname, a, b):
-        #     self.opname = opname
-        #     self.a = a
-        #     self.b = b
 
 
 class VariantDict(AttrDict):
@@ -167,38 +152,6 @@ def variant(*args, **kwargs):
     if len(args) == 1 and isinstance(args[0], collections.Callable):
         return _variant(args[0])
     return _variant
-
-
-def query_yes_no(question, default='yes'):
-    """Ask a yes/no question via raw_input() and return their answer.
-
-    "question" is a string that is presented to the user.
-    "default" is the presumed answer if the user just hits <Enter>.
-        It must be "yes" (the default), "no" or None (meaning
-        an answer is required of the user).
-
-    The "answer" return value is True for "yes" or False for "no".
-    """
-    valid = {'yes': True, 'y': True, 'ye': True, 'no': False, 'n': False}
-    if default is None:
-        prompt = ' [y/n] '
-    elif default == 'yes':
-        prompt = ' [Y/n] '
-    elif default == 'no':
-        prompt = ' [y/N] '
-    else:
-        raise ValueError("invalid default answer: '%s'" % default)
-
-    while True:
-        sys.stdout.write(question + prompt)
-        choice = input().lower()
-        if default is not None and choice == '':
-            return valid[default]
-        elif choice in valid:
-            return valid[choice]
-        else:
-            sys.stdout.write("Please respond with 'yes' or 'no' "
-                             "(or 'y' or 'n').\n")
 
 
 exp_count = 0
@@ -363,16 +316,3 @@ def to_local_command(params,
         else:
             command += '  --{} {}'.format(k, _to_param_val(v))
     return command
-
-
-def concretize(obj):
-    if isinstance(obj, dict):
-        # make sure that there's no hidden caveat
-        ret = dict()
-        for k, v in obj.items():
-            ret[concretize(k)] = concretize(v)
-        return ret
-    elif isinstance(obj, (list, tuple)):
-        return obj.__class__(list(map(concretize, obj)))
-    else:
-        return obj

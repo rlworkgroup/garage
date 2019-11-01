@@ -19,7 +19,6 @@ from dowel import logger
 import psutil
 
 from garage.experiment import deterministic, SnapshotConfig
-from garage.misc.console import colorize
 import garage.plotter
 from garage.sampler import parallel_sampler
 import garage.tf.plotter
@@ -209,7 +208,7 @@ def child_proc_shutdown(children):
                       'the following issue\nwith a detailed description '
                       'of how the error was produced:\n')
         error_msg += ('https://github.com/rlworkgroup/garage/issues/120')
-        print(colorize(error_msg, 'yellow'))
+        print(error_msg)
 
 
 def log_parameters(log_file, args):
@@ -234,7 +233,7 @@ def dump_variant(log_file, variant_data):
 class LogEncoder(json.JSONEncoder):
     """Encoder to be used as cls in json.dump."""
 
-    def default(self, o):
+    def default(self, o):  # pylint: disable=method-hidden
         """Perform JSON encoding."""
         if isinstance(o, type):
             return {'$class': o.__module__ + '.' + o.__name__}

@@ -3,35 +3,11 @@ import pathlib
 
 import pytest
 
-from garage.experiment.experiment import concretize, variant, VariantGenerator
 from garage.experiment.experiment import run_experiment
-
-# https://gist.github.com/jrast/109f70f9b4c52bab4252
-
-
-class TestClass:
-    @property
-    def arr(self):
-        return [1, 2, 3]
-
-    @property
-    def compound_arr(self):
-        return [dict(a=1)]
+from garage.experiment.experiment import variant, VariantGenerator
 
 
 class TestExperiment:
-    def test_concretize(self):
-        assert concretize([5]) == [5]
-        assert concretize((5, )) == (5, )
-        fake_globals = dict(TestClass=TestClass)
-        modified = fake_globals['TestClass']
-        assert concretize((5, )) == (5, )
-        assert isinstance(concretize(modified()), TestClass)
-
-    def test_chained_call(self):
-        fake_globals = dict(TestClass=TestClass)
-        modified = fake_globals['TestClass']
-        assert concretize(modified().arr[0]) == 1
 
     def test_variant_generator(self):
 
@@ -42,6 +18,7 @@ class TestExperiment:
         assert len(vg.variants()) == 9
 
         class VG(VariantGenerator):
+
             @variant
             def key1(self):
                 return [1, 2, 3]
@@ -93,13 +70,13 @@ def test_experiment_with_not_callable_task():
 
 def test_experiment_with_variant():
     # Note: exp_name in variant does nothing.
-    variant = {'exp_name': 'test_name'}
+    exp_variant = {'exp_name': 'test_name'}
     exp_path = os.path.join(os.getcwd(), 'data/local/test-prefix')
     pathlib.Path(exp_path).mkdir(parents=True, exist_ok=True)
 
     old_folder_contents = set(os.listdir(exp_path))
     # Pass a non-default exp_prefix, so test_default_log_dir is safe.
-    run_experiment(dummy_func, exp_prefix='test_prefix', variant=variant)
+    run_experiment(dummy_func, exp_prefix='test_prefix', variant=exp_variant)
     new_folder_contents = set(os.listdir(exp_path))
     folder_content_diff = new_folder_contents - old_folder_contents
     assert len(folder_content_diff) == 1
