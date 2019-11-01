@@ -1,10 +1,11 @@
 """A batch-based algorithm interleaves sampling and policy optimization."""
+import abc
 import collections
 
 from dowel import tabular
 import numpy as np
 
-from garage.misc import special, tensor_utils
+from garage.misc import tensor_utils
 from garage.np.algos.base import RLAlgorithm
 from garage.sampler import OnPolicyVectorizedSampler
 from garage.tf.samplers import BatchSampler
@@ -41,6 +42,16 @@ class BatchPolopt(RLAlgorithm):
             self.sampler_cls = OnPolicyVectorizedSampler
         else:
             self.sampler_cls = BatchSampler
+
+    @abc.abstractmethod
+    def train_once(self, itr, paths):
+        """Perform one step of policy optimization given one batch of samples.
+
+        Args:
+            itr (int): Iteration number.
+            paths (list[dict]): A list of collected paths.
+
+        """
 
     def train(self, runner):
         """Obtain samplers and start actual training for each epoch.
@@ -95,8 +106,8 @@ class BatchPolopt(RLAlgorithm):
             baselines.append(path['baselines'])
 
             # returns
-            path['returns'] = special.discount_cumsum(path['rewards'],
-                                                      self.discount)
+            path['returns'] = tensor_utils.discount_cumsum(
+                path['rewards'], self.discount)
             returns.append(path['returns'])
 
         agent_infos = [path['agent_infos'] for path in paths]

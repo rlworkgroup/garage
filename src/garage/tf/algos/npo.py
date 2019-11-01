@@ -3,11 +3,12 @@ from dowel import logger, tabular
 import numpy as np
 import tensorflow as tf
 
-from garage.misc import special
+from garage.misc import tensor_utils as np_tensor_utils
 from garage.tf.algos.batch_polopt import BatchPolopt
-from garage.tf.misc import tensor_utils
 from garage.tf.misc.tensor_utils import center_advs
+from garage.tf.misc.tensor_utils import compile_function
 from garage.tf.misc.tensor_utils import compute_advantages
+from garage.tf.misc.tensor_utils import concat_tensor_list
 from garage.tf.misc.tensor_utils import discounted_returns
 from garage.tf.misc.tensor_utils import filter_valids
 from garage.tf.misc.tensor_utils import filter_valids_dict
@@ -15,6 +16,7 @@ from garage.tf.misc.tensor_utils import flatten_batch
 from garage.tf.misc.tensor_utils import flatten_batch_dict
 from garage.tf.misc.tensor_utils import flatten_inputs
 from garage.tf.misc.tensor_utils import graph_inputs
+from garage.tf.misc.tensor_utils import new_tensor
 from garage.tf.misc.tensor_utils import positive_advs
 from garage.tf.optimizers import LbfgsOptimizer
 
@@ -206,15 +208,13 @@ class NPO(BatchPolopt):
                                                               batch_dims=2)
             action_var = action_space.to_tf_placeholder(name='action',
                                                         batch_dims=2)
-            reward_var = tensor_utils.new_tensor(name='reward',
-                                                 ndim=2,
-                                                 dtype=tf.float32)
+            reward_var = new_tensor(name='reward', ndim=2, dtype=tf.float32)
             valid_var = tf.compat.v1.placeholder(tf.float32,
                                                  shape=[None, None],
                                                  name='valid')
-            baseline_var = tensor_utils.new_tensor(name='baseline',
-                                                   ndim=2,
-                                                   dtype=tf.float32)
+            baseline_var = new_tensor(name='baseline',
+                                      ndim=2,
+                                      dtype=tf.float32)
 
             policy_state_info_vars = {
                 k: tf.compat.v1.placeholder(tf.float32,
@@ -442,22 +442,22 @@ class NPO(BatchPolopt):
                     loss = -tf.reduce_mean(obj)
 
             # Diagnostic functions
-            self.f_policy_kl = tensor_utils.compile_function(
-                flatten_inputs(self._policy_opt_inputs),
-                pol_mean_kl,
-                log_name='f_policy_kl')
+            self.f_policy_kl = compile_function(flatten_inputs(
+                self._policy_opt_inputs),
+                                                pol_mean_kl,
+                                                log_name='f_policy_kl')
 
-            self.f_rewards = tensor_utils.compile_function(
-                flatten_inputs(self._policy_opt_inputs),
-                rewards,
-                log_name='f_rewards')
+            self.f_rewards = compile_function(flatten_inputs(
+                self._policy_opt_inputs),
+                                              rewards,
+                                              log_name='f_rewards')
 
             returns = discounted_returns(self.discount, self.max_path_length,
                                          rewards)
-            self.f_returns = tensor_utils.compile_function(
-                flatten_inputs(self._policy_opt_inputs),
-                returns,
-                log_name='f_returns')
+            self.f_returns = compile_function(flatten_inputs(
+                self._policy_opt_inputs),
+                                              returns,
+                                              log_name='f_returns')
 
             return loss, pol_mean_kl
 
@@ -524,10 +524,10 @@ class NPO(BatchPolopt):
             if self._stop_entropy_gradient:
                 policy_entropy = tf.stop_gradient(policy_entropy)
 
-        self.f_policy_entropy = tensor_utils.compile_function(
-            flatten_inputs(self._policy_opt_inputs),
-            policy_entropy,
-            log_name='f_policy_entropy')
+        self.f_policy_entropy = compile_function(flatten_inputs(
+            self._policy_opt_inputs),
+                                                 policy_entropy,
+                                                 log_name='f_policy_entropy')
 
         return policy_entropy
 
@@ -553,14 +553,14 @@ class NPO(BatchPolopt):
             path['returns'] = ret[val.astype(np.bool)]
             aug_rewards.append(path['rewards'])
             aug_returns.append(path['returns'])
-        aug_rewards = tensor_utils.concat_tensor_list(aug_rewards)
-        aug_returns = tensor_utils.concat_tensor_list(aug_returns)
+        aug_rewards = concat_tensor_list(aug_rewards)
+        aug_returns = concat_tensor_list(aug_returns)
         samples_data['rewards'] = aug_rewards
         samples_data['returns'] = aug_returns
 
         # Calculate explained variance
-        ev = special.explained_variance_1d(np.concatenate(baselines),
-                                           aug_returns)
+        ev = np_tensor_utils.explained_variance_1d(np.concatenate(baselines),
+                                                   aug_returns)
         tabular.record('{}/ExplainedVariance'.format(self.baseline.name), ev)
 
         # Fit baseline

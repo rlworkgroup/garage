@@ -5,7 +5,7 @@ import collections
 from dowel import logger, tabular
 import numpy as np
 
-from garage.misc import special
+from garage.misc import tensor_utils as np_tensor_utils
 from garage.np.algos import RLAlgorithm
 from garage.sampler import OnPolicyVectorizedSampler
 from garage.tf.misc import tensor_utils
@@ -177,7 +177,7 @@ class BatchPolopt(RLAlgorithm):
             path_baselines = np.append(all_path_baselines[idx], 0)
             deltas = (path['rewards'] + self.discount * path_baselines[1:] -
                       path_baselines[:-1])
-            path['advantages'] = special.discount_cumsum(
+            path['advantages'] = np_tensor_utils.discount_cumsum(
                 deltas, self.discount * self.gae_lambda)
             path['deltas'] = deltas
 
@@ -187,8 +187,8 @@ class BatchPolopt(RLAlgorithm):
             baselines.append(path['baselines'])
 
             # returns
-            path['returns'] = special.discount_cumsum(path['rewards'],
-                                                      self.discount)
+            path['returns'] = np_tensor_utils.discount_cumsum(
+                path['rewards'], self.discount)
             returns.append(path['returns'])
 
         # make all paths the same length
