@@ -21,10 +21,10 @@ docs:  ## Build HTML documentation
 docs:
 	@pushd docs && make html && popd
 
-ci-precommit-check:
+ci-job-precommit:
 	scripts/travisci/check_precommit.sh
 
-ci-job-normal: ci-precommit-check docs
+ci-job-normal: docs
 	pytest -n $$(nproc) --cov=garage -v -m \
 	    'not nightly and not huge and not flaky and not large'
 	coverage xml

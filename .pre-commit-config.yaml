@@ -1,4 +1,5 @@
 fail_fast: false # set to true to have pre-commit stop running hooks after the first failure.
+default_stages: [commit, push]
 
 repos:
 -   repo: local
