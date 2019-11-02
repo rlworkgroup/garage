@@ -48,4 +48,3 @@ class DummyEnv(gym.Env):
             mode (str): Render mode.
 
         """
-        pass

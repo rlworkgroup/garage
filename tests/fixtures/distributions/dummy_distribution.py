@@ -5,6 +5,7 @@ from garage.tf.distributions.base import Distribution
 class DummyDistribution(Distribution):
     """Dummy distribution for testing purpose."""
 
+    @property
     def dim(self):
         """Distribution dimension.
 
