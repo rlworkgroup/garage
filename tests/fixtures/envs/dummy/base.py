@@ -1,8 +1,16 @@
+"""Dummy environment for testing purpose."""
 import gym
 
 
 class DummyEnv(gym.Env):
-    """Base dummy environment."""
+    """Base dummy environment.
+
+    Args:
+        random (bool): If observations are randomly generated or not.
+        obs_dim (iterable): Observation space dimension.
+        action_dim (iterable): Action space dimension.
+
+    """
 
     def __init__(self, random, obs_dim=(4, ), action_dim=(2, )):
         self.random = random
@@ -25,5 +33,18 @@ class DummyEnv(gym.Env):
         raise NotImplementedError
 
     def step(self, action):
-        """Step the environment."""
+        """Step the environment.
+
+        Args:
+            action (int): Action input.
+
+        """
         raise NotImplementedError
+
+    def render(self, mode='human'):
+        """Render.
+
+        Args:
+            mode (str): Render mode.
+
+        """

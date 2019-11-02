@@ -19,13 +19,23 @@ class Policy(abc.ABC):
 
         Args:
             observation (np.ndarray): Observation from the environment.
+
         Returns:
             (np.ndarray): Action sampled from the policy.
 
         """
 
-    def reset(self):
-        """Reset the policy."""
+    def reset(self, dones=None):
+        """Reset the policy.
+
+        If dones is None, it will be by default np.array([True]) which implies
+        the policy will not be "vectorized", i.e. number of parallel
+        environments for training data sampling = 1.
+
+        Args:
+            dones (numpy.ndarray): Bool that indicates terminal state(s).
+
+        """
 
     @property
     def observation_space(self):
@@ -48,7 +58,12 @@ class Policy(abc.ABC):
         return False
 
     def log_diagnostics(self, paths):
-        """Log extra information per iteration based on the collected paths."""
+        """Log extra information per iteration based on the collected paths.
+
+        Args:
+            paths (list[dict]): A list of collected paths
+
+        """
 
     @property
     def state_info_keys(self):
