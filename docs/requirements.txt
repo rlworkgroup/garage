@@ -1,0 +1,27 @@
+akro@https://api.github.com/repos/rlworkgroup/akro/tarball/ec846114881edef66a5ebdfffdcca9bee01d3aef
+boto3
+cached_property
+click
+cloudpickle
+cma==1.1.06
+gym[atari, box2d, classic_control]==0.10.11
+hyperopt
+jsonmerge
+joblib<0.13,>=0.12
+matplotlib
+numpy==1.14.5
+pandas
+polling
+protobuf
+psutil
+pyprind
+python-dateutil
+scikit-image
+scipy
+tensorflow<1.13,>=1.12.0
+tensorflow-probability<0.6.0,>=0.5.0
+
+# dev dependencies
+recommonmark
+sphinx
+sphinx_rtd_theme
