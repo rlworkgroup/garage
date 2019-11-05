@@ -119,7 +119,7 @@ Additional arguments for `run_experiment`:
 - `exp_prefix`: If this is set, and if `exp_name` is not specified, the experiment folder name will be set to `{exp_prefix}_{timestamp}`.
 
 Running Experiments with TensorFlow and GPU
-=====================
+===========================================
 
 To run experiments in the TensorFlow tree of garage with the GPU enabled, set the flags use_tf and use_gpu to True when calling `run_experiment`, as shown in the code below:
 
