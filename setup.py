@@ -55,6 +55,9 @@ extras['dev'] = [
     'pre-commit',
     'pydocstyle<4.1,>=4.0',
     'pylint==1.9.2',
+    'recommonmark',
+    'sphinx',
+    'sphinx_rtd_theme',
     'yapf',
 ]
 
