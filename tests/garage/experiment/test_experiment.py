@@ -1,42 +1,10 @@
 import os
 import pathlib
+import shutil
 
 import pytest
 
-from garage.experiment.experiment import run_experiment
-from garage.experiment.experiment import variant, VariantGenerator
-
-
-class TestExperiment:
-
-    def test_variant_generator(self):
-
-        vg = VariantGenerator()
-        vg.add('key1', [1, 2, 3])
-        vg.add('key2', [True, False])
-        vg.add('key3', lambda key2: [1] if key2 else [1, 2])
-        assert len(vg.variants()) == 9
-
-        class VG(VariantGenerator):
-
-            @variant
-            def key1(self):
-                return [1, 2, 3]
-
-            @variant
-            def key2(self):
-                yield True
-                yield False
-
-            @variant
-            def key3(self, key2):
-                if key2:
-                    yield 1
-                else:
-                    yield 1
-                    yield 2
-
-        assert len(VG().variants()) == 9
+from garage.experiment.experiment import run_experiment, wrap_experiment
 
 
 def dummy_func(*_):
@@ -82,3 +50,45 @@ def test_experiment_with_variant():
     assert len(folder_content_diff) == 1
     exp_folder_name = folder_content_diff.pop()
     assert exp_folder_name.startswith('test_prefix')
+
+
+# Pylint gets confused by @wrap_experiment adding an argument.
+# pylint: disable=no-value-for-parameter
+def test_wrap_experiment_makes_log_dir():
+    prefix = 'wrap_exp_test_prefix'
+    exp_path = pathlib.Path(os.getcwd(), 'data/local', prefix)
+    shutil.rmtree(exp_path, ignore_errors=True)
+    expected_path = exp_path / 'test_exp'
+
+    @wrap_experiment(prefix=prefix)
+    def test_exp(ctxt):
+        assert expected_path.samefile(ctxt.snapshot_dir)
+
+    with pytest.raises(FileNotFoundError):
+        list(exp_path.iterdir())
+
+    test_exp()
+
+    new_folder_contents = list(exp_path.iterdir())
+    assert len(new_folder_contents) == 1
+    assert new_folder_contents[0].samefile(expected_path)
+
+    expected_path = exp_path / 'test_exp_1'
+
+    test_exp()
+
+    new_folder_contents = list(exp_path.iterdir())
+    assert len(new_folder_contents) == 2
+    assert any([
+        expected_path.samefile(directory) for directory in new_folder_contents
+    ])
+
+    expected_path = exp_path / 'test_exp_2'
+
+    test_exp()
+
+    new_folder_contents = list(exp_path.iterdir())
+    assert len(new_folder_contents) == 3
+    assert any([
+        expected_path.samefile(directory) for directory in new_folder_contents
+    ])
