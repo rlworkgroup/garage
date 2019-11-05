@@ -49,23 +49,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - All algorithms now have a default sampler ([#832](https://github.com/rlworkgroup/garage/pull/832))
 - Experiment lauchers now require an explicit `snapshot_config` to their
   `run_task` function ([#860](https://github.com/rlworkgroup/garage/pull/860))
-- Various samplers moved from `garage.tf.sampler` to `garage.sampler` (
-  [#836](https://github.com/rlworkgroup/garage/pull/836),
-  [#840](https://github.com/rlworkgroup/garage/pull/840)
-  )
+- Various samplers moved from `garage.tf.sampler` to `garage.sampler` ([#836](https://github.com/rlworkgroup/garage/pull/836),
+  [#840](https://github.com/rlworkgroup/garage/pull/840))
 - Dockerfiles are now based on Ubuntu 18.04 LTS by default ([#763](https://github.com/rlworkgroup/garage/pull/763))
 - `dm_control` is now an optional dependency, installed using the extra
   `garage[dm_control]` ([#828](https://github.com/rlworkgroup/garage/pull/828))
 - MuJoCo is now an optional dependency, installed using the extra
   `garage[mujoco]` ([#848](https://github.com/rlworkgroup/garage/pull/828))
-- Samplers no longer flatten observations and actions (
-  [#930](https://github.com/rlworkgroup/garage/pull/930),
+- Samplers no longer flatten observations and actions ([#930](https://github.com/rlworkgroup/garage/pull/930),
   [#938](https://github.com/rlworkgroup/garage/pull/938),
-  [#967](https://github.com/rlworkgroup/garage/pull/967)
-  )
+  [#967](https://github.com/rlworkgroup/garage/pull/967))
 - Implementations, tests, and benchmarks for all TensorFlow primitives, which
-  are now based on `garage.tf.Model` (
-  [#574](https://github.com/rlworkgroup/garage/pull/574),
+  are now based on `garage.tf.Model` ([#574](https://github.com/rlworkgroup/garage/pull/574),
   [#606](https://github.com/rlworkgroup/garage/pull/606),
   [#615](https://github.com/rlworkgroup/garage/pull/615),
   [#616](https://github.com/rlworkgroup/garage/pull/616),
@@ -120,17 +115,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (there were merged into garage) ([#717](https://github.com/rlworkgroup/garage/pull/717))
 - EC2 cluster documentation and examples ([#835](https://github.com/rlworkgroup/garage/pull/835))
 - `DeterministicMLPPolicy`, because it duplicated `ContinuousMLPPolicy` ([#929](https://github.com/rlworkgroup/garage/pull/929))
-- `garage.tf.layers` library a custom high-level neural network definition API,
-  replaced by `garage.tf.models` ([#939](https://github.com/rlworkgroup/garage/pull/939))
-- `Parameterized` API, which is now replaced by `garage.tf.Model` ([#942](https://github.com/rlworkgroup/garage/pull/942))
+- `garage.tf.layers`, a custom high-level neural network definition API, was replaced by `garage.tf.models` ([#939](https://github.com/rlworkgroup/garage/pull/939))
+- `Parameterized`, which was replaced by `garage.tf.Model` ([#942](https://github.com/rlworkgroup/garage/pull/942))
 - `garage.misc.overrides`, whose features are no longer needed due proper ABC
   support in Python 3 and sphinx-autodoc ([#974](https://github.com/rlworkgroup/garage/pull/942))
-- `Serializable`, which became a maintainability burden and how now been
+- `Serializable`, which became a maintainability burden and has now been
   replaced by regular pickle protocol (`__getstate__`/`__setstate__`)
   implementations, where necessary ([#982](https://github.com/rlworkgroup/garage/pull/982))
 - `garage.misc.special`, a library of mostly-unused math subroutines ([#986](https://github.com/rlworkgroup/garage/pull/986))
 - `garage.envs.util`, superceded by features in [akro](https://github.com/rlworkgroup/akro) ([#986](https://github.com/rlworkgroup/garage/pull/986))
-- `garage.misc.control`, a library of mostly-unused helper functions for writing
+- `garage.misc.console`, a library of mostly-unused helper functions for writing
   shell scripts ([#988](https://github.com/rlworkgroup/garage/pull/988))
 
 ### Fixed
