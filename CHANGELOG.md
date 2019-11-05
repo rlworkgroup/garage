@@ -129,7 +129,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   replaced by regular pickle protocol (`__getstate__`/`__setstate__`)
   implementations, where necessary ([#982](https://github.com/rlworkgroup/garage/pull/982))
 - `garage.misc.special`, a library of mostly-unused math subroutines ([#986](https://github.com/rlworkgroup/garage/pull/986))
-- `garage.envs.util`, superceded by features in [akro](https://github.com/rlworkgroup/akro) ([#986](https://github.com/rlworkgroup/garage/pull/986))
+- `garage.envs.util`, superseded by features in [akro](https://github.com/rlworkgroup/akro) ([#986](https://github.com/rlworkgroup/garage/pull/986))
 - `garage.misc.control`, a library of mostly-unused helper functions for writing
   shell scripts ([#988](https://github.com/rlworkgroup/garage/pull/988))
 
