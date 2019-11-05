@@ -2,17 +2,24 @@
 import base64
 import collections
 import datetime
+import enum
 import inspect
+import json
 import os
+import pathlib
 import os.path as osp
 import pickle
 import re
 import subprocess
+import uuid
 
 import cloudpickle
+import dowel
+from dowel import logger
 import dateutil.tz
 import numpy as np
 
+import garage.experiment
 
 class AttrDict(dict):
 
@@ -316,3 +323,88 @@ def to_local_command(params,
         else:
             command += '  --{} {}'.format(k, _to_param_val(v))
     return command
+
+
+def choose_log_dir(exp_prefix='experiment', exp_name=None, exp_num=0,
+                   start_time=None):
+    """Choose a log directory for the current experiment.
+
+    Makes use of the current directory, as well as the local time.
+
+    """
+    if start_time is None:
+        start_time = datetime.datetime.now(dateutil.tz.tzlocal())
+    this_timestamp = start_time.strftime('%Y_%m_%d_%H_%M_%S')
+    if exp_name is None:
+        exp_name = '{}_{}_{:04n}'.format(exp_prefix, this_timestamp, exp_num)
+
+    return ('{log_dir}/local/{exp_prefix}/{exp_name}'.format(
+        log_dir=osp.join(os.getcwd(), 'data'),
+        exp_prefix=exp_prefix.replace('_', '-'),
+        exp_name=exp_name))
+
+
+def setup_experiment(log_dir=None, exp_name=None, seed=None,
+                     snapshot_mode='last',
+                     snapshot_gap=1,
+                     tabular_log_file='progress.csv',
+                     text_log_file='debug.log', params_log_file='params.json',
+                     variant_log_file='variant.json',
+                     params={}, variant_data={}):
+    """Setup an experiment directory."""
+    now = datetime.datetime.now(dateutil.tz.tzlocal())
+    rand_id = str(uuid.uuid4())[:5]
+    if log_dir is None:
+        timestamp = now.strftime('%Y_%m_%d_%H_%M_%S_%f_%Z')
+        if exp_name is None:
+            exp_name = 'experiment_%s_%s' % (timestamp, rand_id)
+        log_dir = choose_log_dir(exp_name=exp_name, start_time=now)
+    tabular_log_file = os.path.join(log_dir, tabular_log_file)
+    text_log_file = os.path.join(log_dir, text_log_file)
+    params_log_file = os.path.join(log_dir, params_log_file)
+    variant_log_file = os.path.join(log_dir, variant_log_file)
+
+    dump_json(params_log_file, params)
+
+    dump_json(variant_log_file, variant_data)
+
+    logger.add_output(dowel.TextOutput(text_log_file))
+    logger.add_output(dowel.CsvOutput(tabular_log_file))
+    logger.add_output(dowel.TensorBoardOutput(log_dir))
+    logger.add_output(dowel.StdOutput())
+
+    logger.push_prefix('[%s] ' % exp_name)
+
+    snapshot_config = \
+        garage.experiment.SnapshotConfig(snapshot_dir=log_dir,
+                                         snapshot_mode=snapshot_mode,
+                                         snapshot_gap=snapshot_gap)
+    if seed is not None:
+        garage.experiment.deterministic.set_seed(seed)
+    else:
+        garage.experiment.deterministic.set_seed(int(rand_id, 16))
+    return snapshot_config
+
+
+def dump_json(log_file, variant_data):
+    """Dump the variant file."""
+    pathlib.Path(os.path.dirname(log_file)).mkdir(parents=True, exist_ok=True)
+    with open(log_file, 'w') as f:
+        json.dump(variant_data, f, indent=2, sort_keys=True, cls=LogEncoder)
+
+
+class LogEncoder(json.JSONEncoder):
+    """Encoder to be used as cls in json.dump."""
+
+    def default(self, o):
+        """Perform JSON encoding."""
+        if isinstance(o, type):
+            return {'$class': o.__module__ + '.' + o.__name__}
+        elif isinstance(o, enum.Enum):
+            return {
+                '$enum':
+                o.__module__ + '.' + o.__class__.__name__ + '.' + o.name
+            }
+        elif callable(o):
+            return {'$function': o.__module__ + '.' + o.__name__}
+        return json.JSONEncoder.default(self, o)
