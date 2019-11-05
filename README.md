@@ -43,7 +43,7 @@ The table below summarizes the algorithms available in garage.
 | REPS                   | TensorFlow          |
 | TD3                    | TensorFlow          |
 | TNPG                   | TensorFlow          |
-| TRPO                   | TensorFlow          |
+| TRPO                   | PyTorch, TensorFlow |
 
 ## Supported Tools and Frameworks
 garage supports Python 3.5+.

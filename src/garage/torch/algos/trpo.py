@@ -1,11 +1,12 @@
-"""Proximal Policy Optimization (PPO)."""
+"""Trust Region Policy Optimization."""
 import torch
 
 from garage.torch.algos import VPG
+from garage.torch.optimizers import ConjugateGradientOptimizer
 
 
-class PPO(VPG):
-    """Proximal Policy Optimization (PPO).
+class TRPO(VPG):
+    """Trust Region Policy Optimization (TRPO).
 
     Args:
         env_spec (garage.envs.EnvSpec): Environment specification.
@@ -13,12 +14,11 @@ class PPO(VPG):
         baseline (garage.np.baselines.Baseline): The baseline.
         max_path_length (int): Maximum length of a single rollout.
         policy_lr (float): Learning rate for training policy network.
-        lr_clip_range (float): The limit on the likelihood ratio between
-            policies.
-        n_samples (int): Number of train_once calls per epoch.
+        num_train_per_epoch (int): Number of train_once calls per epoch.
         discount (float): Discount.
         gae_lambda (float): Lambda used for generalized advantage
             estimation.
+        max_kl (float): Maximum KL divergence between old and new policies.
         center_adv (bool): Whether to rescale the advantages
             so that they have mean 0 and standard deviation 1.
         positive_adv (bool): Whether to shift the advantages
@@ -46,12 +46,12 @@ class PPO(VPG):
                  env_spec,
                  policy,
                  baseline,
-                 max_path_length=500,
+                 max_path_length=100,
                  policy_lr=3e-4,
-                 lr_clip_range=2e-1,
-                 n_samples=1,
+                 num_train_per_epoch=1,
                  discount=0.99,
-                 gae_lambda=0.97,
+                 gae_lambda=0.98,
+                 max_kl=0.01,
                  center_adv=True,
                  positive_adv=False,
                  optimizer=None,
@@ -60,16 +60,20 @@ class PPO(VPG):
                  use_softplus_entropy=False,
                  stop_entropy_gradient=False,
                  entropy_method='no_entropy'):
+        if optimizer is None:
+            optimizer = ConjugateGradientOptimizer
+            optimizer_args = {'max_constraint_value': max_kl}
+
         super().__init__(env_spec, policy, baseline, max_path_length,
-                         policy_lr, n_samples, discount, gae_lambda,
+                         policy_lr, num_train_per_epoch, discount, gae_lambda,
                          center_adv, positive_adv, optimizer, optimizer_args,
                          policy_ent_coeff, use_softplus_entropy,
                          stop_entropy_gradient, entropy_method)
 
-        self._lr_clip_range = lr_clip_range
+        self._kl = None
 
     def _compute_objective(self, advantages, valids, obs, actions, rewards):
-        """Compute objective using surrogate value and clipped surrogate value.
+        """Compute the surrogate objective.
 
         Args:
             advantages (torch.Tensor): Expected rewards over the actions
@@ -82,22 +86,19 @@ class PPO(VPG):
             torch.Tensor: Calculated objective values
 
         """
-        # Compute constraint
         with torch.no_grad():
             old_ll = self._old_policy.log_likelihood(obs, actions)
-        new_ll = self.policy.log_likelihood(obs, actions)
 
+        new_ll = self.policy.log_likelihood(obs, actions)
         likelihood_ratio = (new_ll - old_ll).exp()
 
         # Calculate surrogate
         surrogate = likelihood_ratio * advantages
 
-        # Clipping the constraint
-        likelihood_ratio_clip = torch.clamp(likelihood_ratio,
-                                            min=1 - self._lr_clip_range,
-                                            max=1 + self._lr_clip_range)
+        return surrogate
 
-        # Calculate surrotate clip
-        surrogate_clip = likelihood_ratio_clip * advantages
-
-        return torch.min(surrogate, surrogate_clip)
+    def _optimize(self, itr, paths, valids, obs, actions, rewards):
+        self._optimizer.step(
+            f_loss=lambda: self._compute_loss(itr, paths, valids, obs, actions,
+                                              rewards),
+            f_constraint=lambda: self._compute_kl_constraint(obs))
