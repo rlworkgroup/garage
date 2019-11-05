@@ -4,12 +4,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## 2019.02.1
+## [2019.02.2](https://github.com/rlworkgroup/garage/releases/tag/v2019.02.2)
 
 ### Fixed
-- Fix overhead in GaussianMLPRegressor by optionally creating assign operations
+- Bug in entropy regularization in TensorFlow PPO/TRPO ([#579](https://github.com/rlworkgroup/garage/pull/579))
+- Bug in which advantage normalization was broken for recurrent policies ([#626](https://github.com/rlworkgroup/garage/pull/626))
+- Bug in `examples/sim_policy.py` ([#691](https://github.com/rlworkgroup/garage/pull/691))
+- Bug in `FiniteDifferenceHvp` ([#745](https://github.com/rlworkgroup/garage/pull/745))
 
-## 2019.02.0
+## [2019.02.1](https://github.com/rlworkgroup/garage/releases/tag/v2019.02.1)
+### Fixed
+- Fix overhead in GaussianMLPRegressor by optionally creating assign operations ([#622](https://github.com/rlworkgroup/garage/pull/622))
+
+
+## [2019.02.0](https://github.com/rlworkgroup/garage/releases/tag/v2019.02.0)
 
 ### Added
 - Epsilon-greedy exploration strategy, DiscreteMLPModel, and
@@ -59,7 +67,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bug when importing Box
 - Bug in test_benchmark_her
 
-## 2018.10.1
+## [2018.10.1](https://github.com/rlworkgroup/garage/releases/tag/v2018.10.1)
 
 ### Fixed
 - Avoid importing Theano when using the TensorFlow branch
@@ -69,9 +77,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bug in test_benchmark_her
 - Bug in the CI scripts which produced false positives
 
-## 2018.10.0
-garage is based on a predecessor project called [rllab](https://github.com/rll/rllab). If you want to migrate from rllab to garage, the simplest way is to execute the installation script for [Linux](https://github.com/rlworkgroup/garage/blob/master/scripts/setup_linux.sh) or [macOS](https://github.com/rlworkgroup/garage/blob/master/scripts/setup_macos.sh). A separate conda environment named "garage" will be created, so there won't be any conflicts with a previous installation of a "rllab" environment. However, be aware that both scripts try to install miniconda, so there could be conflicts if you already have a different conda installation. If you're not using conda for other purpose, the best option is to remove it as indicated [here](https://conda.io/docs/user-guide/install/linux.html?highlight=uninstall#uninstalling-anaconda-or-miniconda).
-For a more granular installation of garage, read the installation scripts and only execute those commands that are required for your system.
+## [2018.10.0](https://github.com/rlworkgroup/garage/releases/tag/v2018.10.1)
 
 ### Added
 - PPO and DDPG for the TensorFlow branch
