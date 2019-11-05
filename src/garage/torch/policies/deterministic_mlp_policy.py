@@ -43,13 +43,13 @@ class DeterministicMLPPolicy(MLPModule, Policy):
     def get_action(self, observation):
         """Return a single action."""
         with torch.no_grad():
-            x = self.forward(observation.unsqueeze(0))
+            x = self.forward(torch.FloatTensor(observation).unsqueeze(0))
             return x.squeeze(0).numpy(), dict()
 
     def get_actions(self, observations):
         """Return multiple actions."""
         with torch.no_grad():
-            x = self.forward(observations)
+            x = self.forward(torch.FloatTensor(observations))
             return x.numpy(), dict()
 
     def reset(self, dones=None):

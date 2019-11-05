@@ -63,7 +63,7 @@ class DDPG(OffPolicyRLAlgorithm):
                  replay_buffer,
                  n_epoch_cycles=20,
                  n_train_steps=50,
-                 max_path_length=None,
+                 max_path_length=np.inf,
                  buffer_batch_size=64,
                  min_buffer_size=int(1e4),
                  rollout_batch_size=1,

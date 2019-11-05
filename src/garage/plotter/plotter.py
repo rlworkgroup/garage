@@ -37,7 +37,7 @@ class Plotter:
     def _worker_start(self):
         env = None
         policy = None
-        max_length = None
+        max_length = np.inf
         initial_rollout = True
         try:
             # Each iteration will process ALL messages currently in the
@@ -63,8 +63,7 @@ class Plotter:
                 elif Op.UPDATE in msgs:
                     env, policy = msgs[Op.UPDATE].args
                 elif Op.DEMO in msgs:
-                    param_values, max_length = msgs[Op.DEMO].args
-                    policy.set_param_values(param_values)
+                    policy, max_length = msgs[Op.DEMO].args
                     initial_rollout = False
                     rollout(
                         env,
@@ -134,5 +133,5 @@ class Plotter:
         self._queue.put(
             Message(
                 op=Op.DEMO,
-                args=(policy.get_param_values(), max_length),
+                args=(policy, max_length),
                 kwargs=None))

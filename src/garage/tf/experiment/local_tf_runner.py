@@ -4,10 +4,12 @@ The local runner for TensorFlow algorithms.
 A runner setup context for algorithms during initialization and
 pipelines data between sampler and algorithm during training.
 """
+import copy
 from dowel import logger
 import tensorflow as tf
 
 from garage.experiment import LocalRunner
+from garage.tf.plotter import Plotter
 
 
 class LocalTFRunner(LocalRunner):
@@ -131,3 +133,10 @@ class LocalTFRunner(LocalRunner):
                     v for v in tf.compat.v1.global_variables()
                     if v.name.split(':')[0] in uninited_set
                 ]))
+
+    def _start_worker(self):
+        """Start Plotter and Sampler workers."""
+        self.sampler.start_worker()
+        if self.plot:
+            self.plotter = Plotter(copy.deepcopy(self.env), self.policy)
+            self.plotter.start()

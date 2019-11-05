@@ -6,6 +6,7 @@ import types
 from dowel import logger, tabular
 
 from garage.experiment.snapshotter import Snapshotter
+from garage.plotter import Plotter
 
 
 class LocalRunner:
@@ -98,9 +99,8 @@ class LocalRunner:
         """Start Plotter and Sampler workers."""
         self.sampler.start_worker()
         if self.plot:
-            from garage.tf.plotter import Plotter
-            self.plotter = Plotter(copy.deepcopy(self.env), self.policy)
-            self.plotter.start()
+            self.plotter = Plotter()
+            self.plotter.init_plot(copy.deepcopy(self.env), self.policy)
 
     def _shutdown_worker(self):
         """Shutdown Plotter and Sampler workers."""

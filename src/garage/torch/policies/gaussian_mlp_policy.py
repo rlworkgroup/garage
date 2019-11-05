@@ -36,6 +36,7 @@ class GaussianMLPPolicy(Policy, GaussianMLPModule):
     def get_action(self, observation):
         """Get a single action given an observation."""
         with torch.no_grad():
+            observation = torch.FloatTensor(observation)
             observation = observation.unsqueeze(0)
             dist = self.forward(observation)
             return (dist.rsample().squeeze(0).numpy(),
@@ -45,6 +46,7 @@ class GaussianMLPPolicy(Policy, GaussianMLPModule):
     def get_actions(self, observations):
         """Get actions given observations."""
         with torch.no_grad():
+            observations = torch.FloatTensor(observations)
             dist = self.forward(observations)
             return (dist.rsample().numpy(),
                     dict(mean=dist.mean.numpy(),
