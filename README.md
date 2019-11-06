@@ -39,7 +39,7 @@ The table below summarizes the algorithms available in garage.
 | DDQN                   | TensorFlow          |
 | ERWR                   | TensorFlow          |
 | NPO                    | TensorFlow          |
-| PPO                    | TensorFlow          |
+| PPO                    | PyTorch, TensorFlow |
 | REPS                   | TensorFlow          |
 | TD3                    | TensorFlow          |
 | TNPG                   | TensorFlow          |
