@@ -140,6 +140,11 @@ class GarageEnv(gym.Wrapper):
         """
         return self.env.step(action)
 
+    def __getstate__(self):
+        """See `Object.__getstate__."""
+        self.close()
+        return self.__dict__
+
     def __setstate__(self, state):
         """See `Object.__setstate__.
 
