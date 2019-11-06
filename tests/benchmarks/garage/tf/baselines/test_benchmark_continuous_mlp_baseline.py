@@ -1,11 +1,4 @@
-'''
-This script creates a regression test over garage-DDPG and baselines-DDPG.
-It get Mujoco1M benchmarks from baselines benchmark, and test each task in
-its trial times on garage model and baselines model. For each task, there will
-be `trial` times with different random seeds. For each trial, there will be two
-log directories corresponding to baselines and garage. And there will be a plot
-plotting the average return curve from baselines and garage.
-'''
+""" This script is an example of benchmarking the continuous mlp baseline."""
 import datetime
 import os
 import os.path as osp
@@ -27,16 +20,13 @@ from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import GaussianLSTMPolicy
 from tests.fixtures import snapshot_config
 
-
 policy_params = {
     'policy_lr': 1e-3,
     'policy_hidden_sizes': 32,
     'hidden_nonlinearity': tf.nn.tanh
 }
 
-baseline_params = {
-    'regressor_args': dict(hidden_sizes=(64, 64))
-}
+baseline_params = {'regressor_args': dict(hidden_sizes=(64, 64))}
 
 algo_params = {
     'n_envs':
@@ -73,54 +63,48 @@ num_proc = 4 * 2
 num_trials = 3
 
 
-class TestBenchmarkPPOContinuousMLPBaseline:
-    '''Compare benchmarks between garage and baselines.'''
+@pytest.mark.huge
+def test_benchmark_ppo_continuous_mlp_baseline():
+    """ Compare benchmarks between CMB and potentially other baselines."""
+    mujoco1m = benchmarks.get_benchmark('Mujoco1M')
 
-    @pytest.mark.huge
-    def test_benchmark_ppo_continuous_mlp_baseline(self):
-        '''
-        Compare benchmarks between CMB with and without Model.
-        '''
-        mujoco1m = benchmarks.get_benchmark('Mujoco1M')
+    timestamp = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f')
+    benchmark_dir = osp.join(os.getcwd(), 'data', 'local', 'benchmarks',
+                             'ppo_cmb', timestamp)
+    for task in mujoco1m['tasks']:
+        env_id = task['env_id']
+        env = gym.make(env_id)
 
-        timestamp = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f')
-        benchmark_dir = osp.join(os.getcwd(), 'data', 'local', 'benchmarks',
-                                 'ppo_cmb', timestamp)
-        for task in mujoco1m['tasks']:
-            env_id = task['env_id']
-            env = gym.make(env_id)
+        seeds = random.sample(range(100), num_trials)
 
-            seeds = random.sample(range(100), num_trials)
+        task_dir = osp.join(benchmark_dir, env_id)
+        cmb_csvs = []
+        for trial in range(num_trials):
+            seed = seeds[trial]
 
-            task_dir = osp.join(benchmark_dir, env_id)
-            cmb_csvs = []
-            cmb_with_model_csvs = []
+            trial_dir = task_dir + '/trial_%d_seed_%d' % (trial + 1, seed)
+            cmb_dir = trial_dir + '/continuous_mlp_baseline'
 
-            for trial in range(num_trials):
-                seed = seeds[trial]
+            with tf.Graph().as_default():
+                env.reset()
+                cmb_csv = ppo_cmb(env, seed, cmb_dir)
+            cmb_csvs.append(cmb_csv)
 
-                trial_dir = task_dir + '/trial_%d_seed_%d' % (trial + 1, seed)
-                cmb_dir = trial_dir + '/continuous_mlp_baseline'
-
-                with tf.Graph().as_default():
-                    env.reset()
-                    cmb_csv = ppo_cmb(env, seed, cmb_dir)
-                cmb_csvs.append(cmb_csv)
-
-            env.close()
+        env.close()
 
 
 def ppo_cmb(env, seed, log_dir):
-    '''
-    Create test continuous mlp baseline withOUT model on ppo
+    """Create test continuous mlp baseline on ppo.
 
-    args:
-        env - Environment of the task.
-        seed - Random seed for the trial.
-        log_dir - Log dir path.
-    returns:
-        tabular_log_file - training results in csv format
-    '''
+    Args:
+        env (gym_env): Environment of the task.
+        seed (int): Random seed for the trial.
+        log_dir (str): Log dir path.
+
+    Returns:
+        str: training results in csv format.
+
+    """
     deterministic.set_seed(seed)
     config = tf.ConfigProto(allow_soft_placement=True,
                             intra_op_parallelism_threads=num_proc,
