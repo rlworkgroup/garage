@@ -28,9 +28,20 @@ The garage user guide explains how to install garage, how to run experiments, an
 Citing garage
 =============
 
-If you use garage for academic research, you are highly encouraged to cite the following paper:
+If you use garage for academic research, please cite the repository using the following BibTeX entry. You should update the `commit` field with the commit or release tag your publication uses.
 
-- Yan Duan, Xi Chen, Rein Houthooft, John Schulman, Pieter Abbeel. "`Benchmarking Deep Reinforcement Learning for Continuous Control <http://arxiv.org/abs/1604.06778>`_. *Proceedings of the 33rd International Conference on Machine Learning (ICML), 2016.*
+
+.. code-block:: text
+
+    @misc{garage,
+      author = {The garage contributors},
+      title = {Garage: A toolkit for reproducible reinforcement learning research},
+      year = {2019},
+      publisher = {GitHub},
+      journal = {GitHub repository},
+      howpublished = {\url{https://github.com/rlworkgroup/garage}},
+      commit = {ebd7800430b0212c3ffcf78fd3ec26b22097c371}
+    }
 
 
 Indices and tables
