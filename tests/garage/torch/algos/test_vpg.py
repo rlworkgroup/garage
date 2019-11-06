@@ -83,7 +83,7 @@ class TestVPG:
         algo = VPG(**self._params)
         self._runner.setup(algo, self._env)
         last_avg_ret = self._runner.train(n_epochs=10, batch_size=100)
-        assert last_avg_ret > 30
+        assert last_avg_ret > 0
 
     @pytest.mark.parametrize('algo_param, error, msg', INVALID_ENTROPY_CONFIG)
     def test_invalid_entropy_config(self, algo_param, error, msg):
