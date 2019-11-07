@@ -1,5 +1,6 @@
 """Provides algorithms with access to most of garage's features."""
 import copy
+import os
 import time
 
 from dowel import logger, tabular
@@ -377,8 +378,12 @@ class LocalRunner:
         self.step_itr = self._stats.total_itr
         self.step_path = None
 
-        for epoch in range(self._train_args.start_epoch,
-                           self._train_args.n_epochs):
+        # Used by integration tests to ensure examples can run one epoch.
+        n_epochs = int(
+            os.environ.get('GARAGE_EXAMPLE_TEST_N_EPOCHS',
+                           self._train_args.n_epochs))
+
+        for epoch in range(self._train_args.start_epoch, n_epochs):
             self._itr_start_time = time.time()
             with logger.prefix('epoch #%d | ' % epoch):
                 yield epoch

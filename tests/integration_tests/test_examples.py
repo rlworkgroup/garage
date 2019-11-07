@@ -36,10 +36,12 @@ def test_algo_examples(filepath):
         filepath (str): path string of example
 
     """
+    env = os.environ.copy()
+    env['GARAGE_EXAMPLE_TEST_N_EPOCHS'] = '1'
     # Don't use check=True, since that causes subprocess to throw an error
     # in case of failure before the assertion is evaluated
-    assert subprocess.run([filepath, '--n_epochs', '1'],
-                          check=False).returncode == 0
+    assert subprocess.run([filepath, '--n_epochs', '1'], check=False,
+                          env=env).returncode == 0
 
 
 @pytest.mark.no_cover
