@@ -21,7 +21,7 @@ jobs:
       name: "Pre-commit checks"
       env:
         - JOB_RUN_CMD="make ci-job-precommit"
-    - name: "Normal tests and docs"
+    - name: "Normal tests"
       env:
         - JOB_RUN_CMD="make ci-job-normal"
         - DEPLOY_FROM_THIS_JOB="true"
