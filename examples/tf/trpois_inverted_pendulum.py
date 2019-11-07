@@ -1,5 +1,5 @@
-"""
-Example using TRPO with ISSampler.
+#!/usr/bin/env python3
+"""Example using TRPO with ISSampler.
 
 Iterations alternate between live and importance sampled iterations.
 """
@@ -16,7 +16,14 @@ from garage.tf.policies import GaussianMLPPolicy
 
 
 def run_task(snapshot_config, *_):
-    """Run the job."""
+    """Run the job.
+
+    Args:
+        snapshot_config (garage.experiment.SnapshotConfig): Configuration
+            values for snapshotting.
+        *_ (object): Hyperparameters (unused).
+
+    """
     with LocalTFRunner(snapshot_config=snapshot_config) as runner:
         env = TfEnv(normalize(gym.make('InvertedPendulum-v2')))
 

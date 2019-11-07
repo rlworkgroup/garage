@@ -1,39 +1,58 @@
+"""This is an integration test to make sure scripts from examples/
+work when executing `./examples/**/*.py`.
 """
-This is an integration test to make sure scripts from examples/
-work when running `python examples/xx/xxx.py`.
-"""
-from garage.experiment import LocalRunner, run_experiment
-from garage.np.baselines import LinearFeatureBaseline
-from garage.tf.algos import VPG
-from garage.tf.envs import TfEnv
-from garage.tf.policies import CategoricalMLPPolicy
+import os
+import pathlib
+import subprocess
+
+import pytest
+
+EXAMPLES_ROOT_DIR = pathlib.Path('examples/')
+NON_ALGO_EXAMPLES = [
+    EXAMPLES_ROOT_DIR / 'resume_training.py',
+    EXAMPLES_ROOT_DIR / 'sim_policy.py',
+    EXAMPLES_ROOT_DIR / 'step_env.py',
+    EXAMPLES_ROOT_DIR / 'step_dm_control_env.py',
+]
 
 
-def _run_task(snapshot_config, *_):
-    with LocalRunner(snapshot_config=snapshot_config) as runner:
-        env = TfEnv(env_name='CartPole-v1')
+def enumerate_algo_examples():
+    """Return a list of paths for all algo examples
 
-        policy = CategoricalMLPPolicy(name='policy',
-                                      env_spec=env.spec,
-                                      hidden_sizes=(32, 32))
+    Returns:
+        List[str]: list of path strings
 
-        baseline = LinearFeatureBaseline(env_spec=env.spec)
-
-        algo = VPG(
-            env_spec=env.spec,
-            policy=policy,
-            baseline=baseline,
-            max_path_length=100,
-            discount=0.99,
-            optimizer_args=dict(tf_optimizer_args=dict(learning_rate=0.01, )))
-
-        runner.setup(algo, env)
-        runner.train(n_epochs=3, batch_size=100)
+    """
+    all_examples = EXAMPLES_ROOT_DIR.glob('**/*.py')
+    return [str(e) for e in all_examples if e not in NON_ALGO_EXAMPLES]
 
 
-if __name__ == '__main__':
-    run_experiment(
-        _run_task,
-        snapshot_mode='last',
-        seed=1,
-    )
+@pytest.mark.no_cover
+@pytest.mark.parametrize('filepath', enumerate_algo_examples())
+def test_algo_examples(filepath):
+    """Test algo examples.
+
+    Args:
+        filepath (str): path string of example
+
+    """
+    # Don't use check=True, since that causes subprocess to throw an error
+    # in case of failure before the assertion is evaluated
+    assert subprocess.run([filepath, '--n_epochs', '1'],
+                          check=False).returncode == 0
+
+
+@pytest.mark.no_cover
+def test_step_env():
+    """Test step_env.py."""
+    assert subprocess.run(
+        [EXAMPLES_ROOT_DIR / 'step_env.py', '--n_steps', '1'],
+        check=False).returncode == 0
+
+
+@pytest.mark.no_cover
+def test_step_dm_control_env():
+    """Test step_dm_control_env.py."""
+    assert subprocess.run(
+        [EXAMPLES_ROOT_DIR / 'step_dm_control_env.py', '--n_steps', '1'],
+        check=False).returncode == 0
