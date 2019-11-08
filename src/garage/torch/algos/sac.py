@@ -35,6 +35,7 @@ class SAC(OffPolicyRLAlgorithm):
                  alpha=None,
                  gradient_steps_per_itr=1000,
                  target_entropy=None,
+                 initial_log_entropy=0.,
                  use_automatic_entropy_tuning=False,
                  discount=0.99,
                  max_path_length=None,
@@ -57,6 +58,7 @@ class SAC(OffPolicyRLAlgorithm):
         self.tau = target_update_tau
         self.policy_lr = policy_lr
         self.qf_lr = qf_lr
+        self.initial_log_entropy = initial_log_entropy
         self.gradient_steps = gradient_steps_per_itr
         self.clip_pos_returns = clip_pos_returns
         self.clip_return = clip_return
@@ -95,11 +97,10 @@ class SAC(OffPolicyRLAlgorithm):
             else:
                 self.target_entropy = -np.prod(
                     self.env_spec.action_space.shape).item()
-                self.log_alpha = torch.tensor([0], dtype=torch.float, requires_grad=True)
+                self.log_alpha = torch.tensor([self.initial_log_entropy], dtype=torch.float, requires_grad=True)
                 self.alpha_optimizer = optimizer([self.log_alpha], lr=self.policy_lr)
         else:
             self.alpha = alpha
-
 
         self.episode_rewards = []
         self.success_history = []
@@ -131,40 +132,6 @@ class SAC(OffPolicyRLAlgorithm):
 
         return last_average_return
 
-    # def update_q_functions(self, itr, samples):
-    #     """ Update the q functions using the target q_functions.
-
-    #     Args:
-    #         itr (int) - current training iteration
-    #         samples() - samples recovered from the replay buffer
-    #     """
-    #     obs = samples["observation"]
-    #     actions = samples["action"]
-    #     rewards = samples["reward"]
-    #     next_obs = samples["next_observation"]
-
-    #     with torch.no_grad():
-    #         next_actions, _ = self.policy.get_actions(torch.Tensor(next_obs))
-    #         next_ll = self.policy.log_likelihood(torch.Tensor(next_obs),
-    #                                         torch.Tensor(next_actions))
-
-    #     # qfs = [self.qf1, self.qf2]
-        # target_qfs = [self.target_qf1, self.target_qf2]
-        # qf_optimizers = [self.qf1_optimizer, self.qf2_optimizer]
-        # qf_loss = []
-        # for target_qf, qf, qf_optimizer in zip(target_qfs, qfs, qf_optimizers):
-        #     curr_q_val = qf(torch.Tensor(obs), torch.Tensor(actions)).flatten()
-        #     targ_out = target_qf(torch.Tensor(next_obs), torch.Tensor(next_actions)).flatten()
-        #     alpha = self.log_alpha.detach().exp().item()
-        #     bootstrapped_value = targ_out - (alpha * next_ll)
-        #     bellman = torch.Tensor(rewards) + self.discount*(bootstrapped_value)
-        #     q_objective = 0.5 * F.mse_loss(curr_q_val, bellman)
-        #     qf_loss.append(q_objective.detach().numpy())
-        #     qf_optimizer.zero_grad()
-        #     q_objective.backward()
-        #     qf_optimizer.step()
-        #tabular.record("qf_loss", np.mean(qf_loss))
-
     def optimize_policy(self, itr, samples):
         """ Optimize the policy based on the policy objective from the sac paper.
 
@@ -180,11 +147,10 @@ class SAC(OffPolicyRLAlgorithm):
         rewards = samples["reward"]
         terminals = samples["terminal"]
         next_obs = samples["next_observation"]
-        # use the forward function instead of the get action function
-        # in order to make sure that policy is differentiated. 
+
         action_dists = self.policy(torch.Tensor(obs))
-        entropy = action_dists.entropy()
         if ((itr % (self.gradient_steps - 1) == 0) and itr != 0):
+            entropy = action_dists.entropy()
             tabular.record("policy/mu_entropy", torch.mean(entropy).detach().numpy().item())
             tabular.record("policy/mu_stdev", torch.mean(action_dists.variance.detach().flatten()).item()**0.5)
             tabular.record("policy/mu_mean", torch.mean(action_dists.mean.detach()).item())
@@ -193,9 +159,8 @@ class SAC(OffPolicyRLAlgorithm):
 
         # tune the coefficient alpha
         if self.use_automatic_entropy_tuning:
-            
             tabular.record("alpha_before", torch.exp(self.log_alpha.detach()).item())
-            alpha_loss = -(self.log_alpha * (log_pi + self.target_entropy).detach()).mean()
+            alpha_loss = (-(self.log_alpha)* (log_pi.detach() + self.target_entropy)).mean()
             self.alpha_optimizer.zero_grad()
             alpha_loss.backward()
             self.alpha_optimizer.step()
@@ -225,8 +190,8 @@ class SAC(OffPolicyRLAlgorithm):
         ).flatten() - alpha * new_log_pi
 
         q_target = torch.Tensor(rewards) + (1. - torch.Tensor(terminals)) * self.discount * target_q_values
-        qf1_loss = F.mse_loss(q1_pred.flatten(), q_target.detach())
-        qf2_loss = F.mse_loss(q2_pred.flatten(), q_target.detach())
+        qf1_loss = 0.5*F.mse_loss(q1_pred.flatten(), q_target.detach())
+        qf2_loss = 0.5*F.mse_loss(q2_pred.flatten(), q_target.detach())
 
         self.qf1_optimizer.zero_grad()
         qf1_loss.backward()
@@ -240,11 +205,52 @@ class SAC(OffPolicyRLAlgorithm):
         policy_objective.backward()
         self.policy_optimizer.step()
 
-    def _adjust_temperature(self, itr):
+    def temperature_objective(self, log_pi):
         """
         implemented inside optimize_policy
-        """       
-        pass
+        """
+        alpha_loss = 0
+        if self.use_automatic_entropy_tuning:
+            alpha = self.log_alpha.exp()
+            alpha_loss = (-(alpha)* (log_pi.detach() + self.target_entropy)).mean()
+        return alpha_loss
+
+    def actor_objective(self, obs, log_pi, new_actions):
+        alpha = self.log_alpha.detach().exp()
+        min_q_new_actions = torch.min(self.qf1(torch.Tensor(obs), torch.Tensor(new_actions)), 
+                            self.qf2(torch.Tensor(obs), torch.Tensor(new_actions)))
+        policy_objective = ((alpha * log_pi) - min_q_new_actions.flatten()).mean()
+        return policy_objective
+
+    def critic_objective(self,samples):
+        '''
+        QF Loss
+        '''
+        obs = samples["observation"]
+        actions = samples["action"]
+        rewards = samples["reward"]
+        terminals = samples["terminal"]
+        next_obs = samples["next_observation"]
+
+        alpha = self.log_alpha.detach().exp()
+
+        q1_pred = self.qf1(torch.Tensor(obs), torch.Tensor(actions))
+        q2_pred = self.qf2(torch.Tensor(obs), torch.Tensor(actions))
+
+        new_next_actions_dist = self.policy(torch.Tensor(next_obs))
+        new_next_actions = new_next_actions_dist.rsample()
+        new_log_pi = new_next_actions_dist.log_prob(new_next_actions)
+
+        target_q_values = torch.min(
+            self.target_qf1(torch.Tensor(next_obs), new_next_actions),
+            self.target_qf2(torch.Tensor(next_obs), new_next_actions)
+        ).flatten() - (alpha * new_log_pi)
+
+        q_target = torch.Tensor(rewards) + (1. - torch.Tensor(terminals)) * self.discount * target_q_values
+        qf1_loss = 0.5*F.mse_loss(q1_pred.flatten(), q_target.detach())
+        qf2_loss = 0.5*F.mse_loss(q2_pred.flatten(), q_target.detach())
+
+        return qf1_loss, qf2_loss
 
     def update_targets(self):
         """Update parameters in the target q-functions."""
