@@ -67,7 +67,6 @@ def run_task(snapshot_config, *_):
 
     runner.train(n_epochs=500, batch_size=1000 ,plot=True)
 
-
 run_experiment(
     run_task,
     snapshot_mode='last',
