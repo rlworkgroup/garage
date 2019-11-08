@@ -25,7 +25,6 @@ env.render()
 steps = 0
 while True:
     if steps == args.n_steps:
-        env.close()
         break
     env.step(env.action_space.sample())
     env.render()
