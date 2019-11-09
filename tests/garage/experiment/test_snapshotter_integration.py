@@ -13,13 +13,13 @@ configurations = [('last', 4), ('first', 0), (3, 3)]
 
 
 class TestSnapshot(TfGraphTestCase):
+
     def setup_method(self):
         super().setup_method()
         self.temp_dir = tempfile.TemporaryDirectory()
-        snapshot_config = SnapshotConfig(
-            snapshot_dir=self.temp_dir.name,
-            snapshot_mode='all',
-            snapshot_gap=1)
+        snapshot_config = SnapshotConfig(snapshot_dir=self.temp_dir.name,
+                                         snapshot_mode='all',
+                                         snapshot_gap=1)
         fixture_exp(snapshot_config, self.sess)
         for c in self.graph.collections:
             self.graph.clear_collection(c)
@@ -36,7 +36,7 @@ class TestSnapshot(TfGraphTestCase):
         assert isinstance(saved['algo'], VPG)
         assert isinstance(saved['env'], TfEnv)
         assert isinstance(saved['algo'].policy, CategoricalMLPPolicy)
-        assert saved['last_epoch'] == last_epoch
+        assert saved['stats'].total_epoch == last_epoch
 
     def test_load_with_invalid_load_mode(self):
         snapshotter = Snapshotter()

@@ -40,22 +40,46 @@ class Snapshotter:
         pathlib.Path(snapshot_dir).mkdir(parents=True, exist_ok=True)
 
     @property
-    def snapshot_dir(self, ):
-        """Return the directory of snapshot."""
+    def snapshot_dir(self):
+        """Return the directory of snapshot.
+
+        Returns:
+            str: The directory of snapshot
+
+        """
         return self._snapshot_dir
 
     @property
-    def snapshot_mode(self, ):
-        """Return the type of snapshot."""
+    def snapshot_mode(self):
+        """Return the type of snapshot.
+
+        Returns:
+            str: The type of snapshot. Can be "all", "last" or "gap"
+
+        """
         return self._snapshot_mode
 
     @property
-    def snapshot_gap(self, ):
-        """Return the wait number of snapshot."""
+    def snapshot_gap(self):
+        """Return the gap number of snapshot.
+
+        Returns:
+            int: The gap number of snapshot.
+
+        """
         return self._snapshot_gap
 
     def save_itr_params(self, itr, params):
-        """Save the parameters if at the right iteration."""
+        """Save the parameters if at the right iteration.
+
+        Args:
+            itr (int): Number of iterations. Used as the index of snapshot.
+            params (obj): Content of snapshot to be saved.
+
+        Raises:
+            ValueError: If snapshot_mode is not one of "all", "last" or "gap".
+
+        """
         file_name = None
 
         if self._snapshot_mode == 'all':
@@ -85,6 +109,7 @@ class Snapshotter:
                 pickle.dump(params, file)
 
     def load(self, load_dir, itr='last'):
+        # pylint: disable=no-self-use
         """Load one snapshot of parameters from disk.
 
         Args:
@@ -94,7 +119,13 @@ class Snapshotter:
                 Can be an integer, 'last' or 'first'.
 
         Returns:
-            dict: Loaded snapshot
+            dict: Loaded snapshot.
+
+        Raises:
+            ValueError: If itr is neither an integer nor
+                one of ("last", "first").
+            FileNotFoundError: If the snapshot file is not found in load_dir.
+            NotAFileError: If the snapshot exists but is not a file.
 
         """
         if isinstance(itr, int) or itr.isdigit():
@@ -116,7 +147,11 @@ class Snapshotter:
                 load_from_file = os.path.join(load_dir, load_from_file)
 
         if not os.path.isfile(load_from_file):
-            raise Exception('File not existing: ', load_from_file)
+            raise NotAFileError('File not existing: ', load_from_file)
 
         with open(load_from_file, 'rb') as file:
             return joblib.load(file)
+
+
+class NotAFileError(Exception):
+    """Raise when the snapshot is not a file."""

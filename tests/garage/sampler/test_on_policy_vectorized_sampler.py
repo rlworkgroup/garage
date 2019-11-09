@@ -34,7 +34,7 @@ class TestOnPolicyVectorizedSampler(TfGraphTestCase):
 
             runner.setup(algo, env, sampler_args=dict(n_envs=n_envs))
 
-            assert isinstance(runner.sampler, OnPolicyVectorizedSampler)
-            assert runner.sampler.n_envs == expected_n_envs
+            assert isinstance(runner._sampler, OnPolicyVectorizedSampler)
+            assert runner._sampler._n_envs == expected_n_envs
 
             env.close()

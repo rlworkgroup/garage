@@ -8,3 +8,9 @@ class DummyOffPolicyAlgo(OffPolicyRLAlgorithm):
 
     def train(self, runner):
         pass
+
+    def train_once(self, itr, paths):
+        pass
+
+    def optimize_policy(self, itr, samples_data):
+        pass

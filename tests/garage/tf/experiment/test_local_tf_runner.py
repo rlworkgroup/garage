@@ -78,7 +78,7 @@ class TestLocalRunner(TfGraphTestCase):
             runner.setup(algo, env)
             runner.train(n_epochs=1, batch_size=100, plot=True)
 
-            assert isinstance(runner.plotter, Plotter), (
+            assert isinstance(runner._plotter, Plotter), (
                 'self.plotter in LocalTFRunner should be set to Plotter.')
 
     def test_call_train_before_set_up(self):
