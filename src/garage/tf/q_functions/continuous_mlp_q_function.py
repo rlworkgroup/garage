@@ -131,6 +131,7 @@ class ContinuousMLPQFunction(QFunction):
         """
         return self.model.networks['default'].inputs
 
+    # pylint: disable=arguments-differ
     def get_qval_sym(self, state_input, action_input, name):
         """Symbolic graph for q-network.
 
@@ -157,8 +158,7 @@ class ContinuousMLPQFunction(QFunction):
             name (str): Name of the newly created q-function.
 
         Returns:
-            object: A new instance of ContinuousMLPQFunction with same
-                arguments.
+            ContinuousMLPQFunction: A new instance with same arguments.
 
         """
         return self.__class__(name=name,

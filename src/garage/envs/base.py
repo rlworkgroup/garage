@@ -1,6 +1,7 @@
 """Wrapper class that converts gym.Env into GarageEnv."""
 
 import collections
+import copy
 
 import akro
 import gym
@@ -141,19 +142,26 @@ class GarageEnv(gym.Wrapper):
         return self.env.step(action)
 
     def __getstate__(self):
-        """See `Object.__getstate__."""
-        self.close()
-        return self.__dict__
+        """See `Object.__getstate__.
 
-    def __setstate__(self, state):
-        """See `Object.__setstate__.
-
-        Args:
-            state (dict): Unpickled state of this object.
+        Returns:
+            dict: The instance’s dictionary to be pickled.
 
         """
-        obj = type(self)(state['_env'], state['_env_name'])
-        self.__dict__.update(obj.__dict__)
+        # the viewer object is not pickleable
+        # we first make a copy of the viewer
+        env = self.env
+        # detect gym.Wrapper
+        while issubclass(env.__class__, gym.Wrapper):
+            env = env.unwrapped
+        _viewer = env.viewer
+        # remove the viewer and make a copy of the state
+        env.viewer = None
+        state = copy.deepcopy(self.__dict__)
+        # assign the viewer back to self.__dict__
+        env.viewer = _viewer
+        # the returned state doesn't have the viewer
+        return state
 
 
 def Step(observation, reward, done, **kwargs):  # noqa: N802

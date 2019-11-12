@@ -47,10 +47,10 @@ def explained_variance_1d(ypred, y):
 
 
 def flatten_tensors(tensors):
-    """Flatten tensors.
+    """Flatten a list of tensors.
 
     Args:
-        tensors (numpy.ndarray): Tensors to be flattened.
+        tensors (list[numpy.ndarray]): List of tensors to be flattened.
 
     Returns:
         numpy.ndarray: Flattened tensors.
@@ -62,14 +62,14 @@ def flatten_tensors(tensors):
 
 
 def unflatten_tensors(flattened, tensor_shapes):
-    """Unflatten tensors.
+    """Unflatten a flattened tensors into a list of tensors.
 
     Args:
         flattened (numpy.ndarray): Flattened tensors.
         tensor_shapes (tuple): Tensor shapes.
 
     Returns:
-        numpy.ndarray: Unflattened tensors.
+        list[numpy.ndarray]: Unflattened list of tensors.
 
     """
     tensor_sizes = list(map(np.prod, tensor_shapes))
@@ -240,20 +240,6 @@ def split_tensor_dict_list(tensor_dict):
     return ret
 
 
-def truncate_tensor_list(tensor_list, truncated_len):
-    """Truncate list of tensor.
-
-    Args:
-        tensor_list (list[numpy.ndarray]): List of tensors.
-        truncated_len (int): Length to truncate.
-
-    Returns:
-        numpy.ndarray: list of tensor.
-
-    """
-    return tensor_list[:truncated_len]
-
-
 def truncate_tensor_dict(tensor_dict, truncated_len):
     """Truncate dictionary of list of tensor.
 
@@ -272,7 +258,7 @@ def truncate_tensor_dict(tensor_dict, truncated_len):
         if isinstance(v, dict):
             ret[k] = truncate_tensor_dict(v, truncated_len)
         else:
-            ret[k] = truncate_tensor_list(v, truncated_len)
+            ret[k] = v[:truncated_len]
     return ret
 
 
