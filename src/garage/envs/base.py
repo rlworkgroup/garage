@@ -154,14 +154,16 @@ class GarageEnv(gym.Wrapper):
         # detect gym.Wrapper
         while issubclass(env.__class__, gym.Wrapper):
             env = env.unwrapped
-        _viewer = env.viewer
-        # remove the viewer and make a copy of the state
-        env.viewer = None
-        state = copy.deepcopy(self.__dict__)
-        # assign the viewer back to self.__dict__
-        env.viewer = _viewer
-        # the returned state doesn't have the viewer
-        return state
+        if 'viewer' in env.__dict__:
+            _viewer = env.viewer
+            # remove the viewer and make a copy of the state
+            env.viewer = None
+            state = copy.deepcopy(self.__dict__)
+            # assign the viewer back to self.__dict__
+            env.viewer = _viewer
+            # the returned state doesn't have the viewer
+            return state
+        return self.__dict__
 
 
 def Step(observation, reward, done, **kwargs):  # noqa: N802
