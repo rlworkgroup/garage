@@ -48,7 +48,7 @@ class OnPolicyVectorizedSampler(BatchSampler):
         """Shutdown workers."""
         self.vec_env.close()
 
-    # pylint: disable=too-many-statements
+    # pylint: disable=too-many-statements, import-outside-toplevel
     def obtain_samples(self, itr, batch_size=None, whole_paths=True):
         """Sample the policy for new trajectories.
 
