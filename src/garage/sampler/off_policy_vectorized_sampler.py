@@ -15,7 +15,6 @@ import numpy as np
 
 from garage.experiment import deterministic
 from garage.misc import tensor_utils
-from garage.misc.overrides import overrides
 from garage.sampler.batch_sampler import BatchSampler
 from garage.sampler.vec_env_executor import VecEnvExecutor
 
@@ -43,7 +42,6 @@ class OffPolicyVectorizedSampler(BatchSampler):
         self._last_running_length = [0] * n_envs
         self._last_success_count = [0] * n_envs
 
-    @overrides
     def start_worker(self):
         """Initialize the sampler."""
         n_envs = self.n_envs
@@ -57,12 +55,10 @@ class OffPolicyVectorizedSampler(BatchSampler):
             envs=envs, max_path_length=self.algo.max_path_length)
         self.env_spec = self.env.spec
 
-    @overrides
     def shutdown_worker(self):
         """Terminate workers if necessary."""
         self.vec_env.close()
 
-    @overrides
     def obtain_samples(self, itr, batch_size):
         """Collect samples for the given iteration number.
 

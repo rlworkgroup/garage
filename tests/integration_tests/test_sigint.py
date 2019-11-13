@@ -8,8 +8,6 @@ import subprocess
 import psutil
 import pytest
 
-from garage.misc.console import colorize
-
 scripts = [
     'tests/fixtures/algos/nop_pendulum_instrumented.py',
     'tests/fixtures/tf/trpo_pendulum_instrumented.py',
@@ -74,17 +72,18 @@ def interrupt_experiment(experiment_script, lifecycle_stage):
     clean_exit = True
     error_msg = ''
     for child in alive:
-        error_msg += (str(
-            child.as_dict(attrs=['pid', 'name', 'status', 'cmdline'])) + '\n')
+        error_msg += (
+            str(child.as_dict(attrs=['pid', 'name', 'status', 'cmdline'])) +
+            '\n')
         clean_exit = False
 
-    error_msg = ("These processes didn't die during %s:\n" % (lifecycle_stage)
-                 + error_msg)
+    error_msg = ("These processes didn't die during %s:\n" %
+                 (lifecycle_stage) + error_msg)
 
     for child in alive:
         os.kill(child.pid, signal.SIGINT)
 
-    assert clean_exit, colorize(error_msg, 'red')
+    assert clean_exit, error_msg
 
 
 class TestSigInt:

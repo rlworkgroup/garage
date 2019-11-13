@@ -1,9 +1,7 @@
 import numpy as np
 
-from garage.core import Serializable
 
-
-class ProductRegressor(Serializable):
+class ProductRegressor:
     """
     A class for performing MLE regression by fitting a product distribution to
     the outputs. A separate regressor will be trained for each individual input
@@ -14,7 +12,6 @@ class ProductRegressor(Serializable):
         """
         :param regressors: List of individual regressors
         """
-        Serializable.quick_init(self, locals())
         self.regressors = regressors
         self.output_dims = [x.output_dim for x in regressors]
 

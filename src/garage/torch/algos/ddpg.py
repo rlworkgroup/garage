@@ -141,7 +141,7 @@ class DDPG(OffPolicyRLAlgorithm):
                 self.evaluate = True
                 samples = self.replay_buffer.sample(self.buffer_batch_size)
                 qf_loss, y, q, policy_loss = torch_to_np(
-                    self.optimize_policy(itr, samples))  # pylint: disable=all
+                    self.optimize_policy(itr, samples))
 
                 self.episode_policy_losses.append(policy_loss)
                 self.episode_qf_losses.append(qf_loss)

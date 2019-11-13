@@ -63,8 +63,8 @@ class TestTD3(TfGraphTestCase):
                        policy_weight_decay=0.001,
                        qf_weight_decay=0.001,
                        exploration_strategy=action_noise,
-                       policy_optimizer=tf.train.AdamOptimizer,
-                       qf_optimizer=tf.train.AdamOptimizer)
+                       policy_optimizer=tf.compat.v1.train.AdamOptimizer,
+                       qf_optimizer=tf.compat.v1.train.AdamOptimizer)
 
             runner.setup(algo, env)
             last_avg_ret = runner.train(n_epochs=10,

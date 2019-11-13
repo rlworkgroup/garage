@@ -33,10 +33,10 @@ class RaySamplerTF(RaySampler):
 
     def shutdown_worker(self, local=False):
         """Shuts down the worker."""
-        temp = []
+        shutting_down = []
         for worker in self._all_workers.values():
-            temp.append(worker.shutdown.remote())
-        ray.get(temp)
+            shutting_down.append(worker.shutdown.remote())
+        ray.get(shutting_down)
         ray.shutdown()
 
 
@@ -56,13 +56,13 @@ class SamplerWorkerTF(SamplerWorker):
                  max_path_length,
                  should_render=False,
                  local=False):
-        self.sess = tf.get_default_session()
-        if not self.sess:
+        self._sess = tf.get_default_session()
+        if not self._sess:
             # create a tf session for all
             # sampler worker processes in
             # order to execute the policy.
-            self.sess = tf.Session()
-            self.sess.__enter__()
+            self._sess = tf.Session()
+            self._sess.__enter__()
         super().__init__(worker_id,
                          env_pkl,
                          agent_pkl,
@@ -73,4 +73,4 @@ class SamplerWorkerTF(SamplerWorker):
     def shutdown(self):
         """Perform shutdown processes for TF."""
         if tf.get_default_session():
-            self.sess.__exit__(None, None, None)
+            self._sess.__exit__(None, None, None)

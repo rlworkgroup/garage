@@ -4,7 +4,6 @@ import akro
 from cached_property import cached_property
 
 from garage.envs import GarageEnv
-from garage.misc.overrides import overrides
 
 
 class TfEnv(GarageEnv):
@@ -21,7 +20,6 @@ class TfEnv(GarageEnv):
         self.observation_space = akro.from_gym(self.env.observation_space)
 
     @cached_property
-    @overrides
     def max_episode_steps(self):
         """Return gym.Env's max episode steps.
 

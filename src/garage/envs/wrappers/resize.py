@@ -9,17 +9,15 @@ from skimage.transform import resize
 
 
 class Resize(gym.Wrapper):
-    """
-    gym.Env wrapper for resizing frame to (width, height).
+    """gym.Env wrapper for resizing frame to (width, height).
 
     Only works with gym.spaces.Box environment with 2D single channel frames.
 
     Example:
-        env = gym.make('Env')
-        # env.observation_space = (100, 100)
-
-        env_wrapped = Resize(gym.make('Env'), width=64, height=64)
-        # env.observation_space = (64, 64)
+        | env = gym.make('Env')
+        | # env.observation_space = (100, 100)
+        | env_wrapped = Resize(gym.make('Env'), width=64, height=64)
+        | # env.observation_space = (64, 64)
 
     Args:
         env: gym.Env to wrap.
@@ -44,8 +42,10 @@ class Resize(gym.Wrapper):
         _low = env.observation_space.low.flatten()[0]
         _high = env.observation_space.high.flatten()[0]
         self._dtype = env.observation_space.dtype
-        self._observation_space = gym.spaces.Box(
-            _low, _high, shape=[width, height], dtype=self._dtype)
+        self._observation_space = gym.spaces.Box(_low,
+                                                 _high,
+                                                 shape=[width, height],
+                                                 dtype=self._dtype)
 
         self._width = width
         self._height = height

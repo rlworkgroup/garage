@@ -4,14 +4,13 @@ from dm_control.rl.environment import StepType
 import gym
 import numpy as np
 
-from garage.core import Serializable
 from garage.envs import Step
 from garage.envs.dm_control.dm_control_viewer import DmControlViewer
 
 
-class DmControlEnv(gym.Env, Serializable):
+class DmControlEnv(gym.Env):
     """
-    Binding for [dm_control](https://arxiv.org/pdf/1801.00690.pdf)
+    Binding for `dm_control <https://arxiv.org/pdf/1801.00690.pdf>`_
     """
 
     def __init__(self, env, name=None):
@@ -19,14 +18,10 @@ class DmControlEnv(gym.Env, Serializable):
         self._env = env
         self._viewer = None
 
-        # Always call Serializable constructor last
-        Serializable.quick_init(self, locals())
-
     @classmethod
     def from_suite(cls, domain_name, task_name):
-        return cls(
-            suite.load(domain_name, task_name),
-            name='{}.{}'.format(domain_name, task_name))
+        return cls(suite.load(domain_name, task_name),
+                   name='{}.{}'.format(domain_name, task_name))
 
     def step(self, action):
         time_step = self._env.step(action)
@@ -70,11 +65,19 @@ class DmControlEnv(gym.Env, Serializable):
                                               np.inf in action_spec.maximum):
             return gym.spaces.Discrete(np.prod(action_spec.shape))
         else:
-            return gym.spaces.Box(
-                action_spec.minimum, action_spec.maximum, dtype=np.float32)
+            return gym.spaces.Box(action_spec.minimum,
+                                  action_spec.maximum,
+                                  dtype=np.float32)
 
     @property
     def observation_space(self):
         flat_dim = self._flat_shape(self._env.observation_spec())
-        return gym.spaces.Box(
-            low=-np.inf, high=np.inf, shape=[flat_dim], dtype=np.float32)
+        return gym.spaces.Box(low=-np.inf,
+                              high=np.inf,
+                              shape=[flat_dim],
+                              dtype=np.float32)
+
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        d['_viewer'] = None
+        return d

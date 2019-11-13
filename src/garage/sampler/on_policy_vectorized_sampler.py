@@ -7,7 +7,6 @@ import numpy as np
 
 from garage.experiment import deterministic
 from garage.misc import tensor_utils
-from garage.misc.overrides import overrides
 from garage.misc.prog_bar_counter import ProgBarCounter
 from garage.sampler.batch_sampler import BatchSampler
 from garage.sampler.stateful_pool import singleton_pool
@@ -24,7 +23,6 @@ class OnPolicyVectorizedSampler(BatchSampler):
         super().__init__(algo, env)
         self.n_envs = n_envs
 
-    @overrides
     def start_worker(self):
         """Start workers."""
         n_envs = self.n_envs
@@ -38,12 +36,10 @@ class OnPolicyVectorizedSampler(BatchSampler):
             envs=envs, max_path_length=self.algo.max_path_length)
         self.env_spec = self.env.spec
 
-    @overrides
     def shutdown_worker(self):
         """Shutdown workers."""
         self.vec_env.close()
 
-    @overrides
     def obtain_samples(self, itr, batch_size=None, whole_paths=True):
         """Obtain samples."""
         logger.log('Obtaining samples for iteration %d...' % itr)
@@ -100,11 +96,11 @@ class OnPolicyVectorizedSampler(BatchSampler):
                 running_paths[idx]['env_infos'].append(env_info)
                 running_paths[idx]['agent_infos'].append(agent_info)
                 if done:
+                    obs = np.asarray(running_paths[idx]['observations'])
+                    actions = np.asarray(running_paths[idx]['actions'])
                     paths.append(
-                        dict(observations=self.env_spec.observation_space.
-                             flatten_n(running_paths[idx]['observations']),
-                             actions=self.env_spec.action_space.flatten_n(
-                                 running_paths[idx]['actions']),
+                        dict(observations=obs,
+                             actions=actions,
                              rewards=tensor_utils.stack_tensor_list(
                                  running_paths[idx]['rewards']),
                              env_infos=tensor_utils.stack_tensor_dict_list(

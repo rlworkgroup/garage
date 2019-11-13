@@ -302,8 +302,9 @@ def relplot(g_csvs, b_csvs, g_x, g_y, g_z, b_x, b_y, b_z, trials, seeds,
     """
     Plot benchmark from csv files of garage from multiple trials using Seaborn.
 
-    :param b_csvs: A list contains all csv files in the task.
     :param g_csvs: A list contains all csv files in the task.
+    :param b_csvs: A list contains all csv files in the task. Pass
+        empty list or None if only plotting garage.
     :param g_x: X column names of garage csv.
     :param g_y: Y column names of garage csv.
     :param b_x: X column names of baselines csv.
@@ -314,23 +315,20 @@ def relplot(g_csvs, b_csvs, g_x, g_y, g_z, b_x, b_y, b_z, trials, seeds,
     :param env_id: String contains the id of the environment.
     :return:
     """
-    assert len(b_csvs) == len(g_csvs)
     df_g = [pd.read_csv(g) for g in g_csvs]
-    df_b = [pd.read_csv(b) for b in b_csvs]
-
     df_gs = pd.concat(df_g, axis=0)
-    df_bs = pd.concat(df_b, axis=0)
-
     df_gs['Type'] = g_z
-    df_bs['Type'] = b_z
+    data = df_gs
 
-    df_bs = df_bs.rename(columns={b_x: g_x, b_y: g_y})
+    if b_csvs:
+        assert len(b_csvs) == len(g_csvs)
+        df_b = [pd.read_csv(b) for b in b_csvs]
+        df_bs = pd.concat(df_b, axis=0)
+        df_bs['Type'] = b_z
+        df_bs = df_bs.rename(columns={b_x: g_x, b_y: g_y})
+        data = pd.concat([df_gs, df_bs])
 
-    ax = sns.relplot(x=g_x,
-                     y=g_y,
-                     hue='Type',
-                     kind='line',
-                     data=pd.concat([df_gs, df_bs]))
+    ax = sns.relplot(x=g_x, y=g_y, hue='Type', kind='line', data=data)
     ax.axes.flatten()[0].set_title(env_id)
 
     plt.savefig(plt_file)

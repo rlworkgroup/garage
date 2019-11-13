@@ -3,18 +3,16 @@ import time
 import scipy.optimize
 import tensorflow as tf
 
-from garage.core import Serializable
 from garage.tf.misc import tensor_utils
 from garage.tf.optimizers.utils import LazyDict
 
 
-class LbfgsOptimizer(Serializable):
+class LbfgsOptimizer:
     """
     Performs unconstrained optimization via L-BFGS.
     """
 
     def __init__(self, max_opt_itr=20, callback=None):
-        Serializable.quick_init(self, locals())
         self._max_opt_itr = max_opt_itr
         self._opt_fun = None
         self._target = None
@@ -64,11 +62,18 @@ class LbfgsOptimizer(Serializable):
                 ))
 
     def loss(self, inputs, extra_inputs=None):
+        if self._opt_fun is None:
+            raise Exception(
+                'Use update_opt() to setup the loss function first.')
         if extra_inputs is None:
             extra_inputs = list()
         return self._opt_fun['f_loss'](*(list(inputs) + list(extra_inputs)))
 
     def optimize(self, inputs, extra_inputs=None, name=None):
+        if self._opt_fun is None:
+            raise Exception(
+                'Use update_opt() to setup the loss function first.')
+
         with tf.name_scope(name, 'optimize', values=[inputs, extra_inputs]):
             f_opt = self._opt_fun['f_opt']
 
@@ -105,3 +110,9 @@ class LbfgsOptimizer(Serializable):
                 maxiter=self._max_opt_itr,
                 callback=opt_callback,
             )
+
+    def __getstate__(self):
+        """Object.__getstate__."""
+        new_dict = self.__dict__.copy()
+        del new_dict['_opt_fun']
+        return new_dict

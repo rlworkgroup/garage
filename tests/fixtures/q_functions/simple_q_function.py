@@ -1,10 +1,10 @@
 import tensorflow as tf
 
-from garage.tf.q_functions import QFunction2
+from garage.tf.q_functions import QFunction
 from tests.fixtures.models import SimpleMLPModel
 
 
-class SimpleQFunction(QFunction2):
+class SimpleQFunction(QFunction):
     """Simple QFunction for testing."""
 
     def __init__(self, env_spec, name='SimpleQFunction'):
@@ -16,8 +16,8 @@ class SimpleQFunction(QFunction2):
         self._initialize()
 
     def _initialize(self):
-        obs_ph = tf.compat.v1.placeholder(
-            tf.float32, (None, ) + self.obs_dim, name='obs')
+        obs_ph = tf.compat.v1.placeholder(tf.float32, (None, ) + self.obs_dim,
+                                          name='obs')
 
         with tf.compat.v1.variable_scope(self.name, reuse=False) as vs:
             self._variable_scope = vs

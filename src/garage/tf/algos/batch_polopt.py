@@ -5,7 +5,7 @@ import collections
 from dowel import logger, tabular
 import numpy as np
 
-from garage.misc import special
+from garage.misc import tensor_utils as np_tensor_utils
 from garage.np.algos import RLAlgorithm
 from garage.sampler import OnPolicyVectorizedSampler
 from garage.tf.misc import tensor_utils
@@ -37,6 +37,9 @@ class BatchPolopt(RLAlgorithm):
             conjunction with center_adv the advantages will be
             standardized before shifting.
         fixed_horizon (bool): Whether to fix horizon.
+        flatten_input (bool): Whether to flatten input along the observation
+            dimension. If True, for example, an observation with shape (2, 4)
+            will be flattened to 8.
 
     """
 
@@ -50,7 +53,8 @@ class BatchPolopt(RLAlgorithm):
                  gae_lambda=1,
                  center_adv=True,
                  positive_adv=False,
-                 fixed_horizon=False):
+                 fixed_horizon=False,
+                 flatten_input=True):
         self.env_spec = env_spec
         self.policy = policy
         self.baseline = baseline
@@ -61,6 +65,7 @@ class BatchPolopt(RLAlgorithm):
         self.center_adv = center_adv
         self.positive_adv = positive_adv
         self.fixed_horizon = fixed_horizon
+        self.flatten_input = flatten_input
 
         self.episode_reward_mean = collections.deque(maxlen=100)
         if policy.vectorized:
@@ -100,7 +105,6 @@ class BatchPolopt(RLAlgorithm):
 
         """
         paths = self.process_samples(itr, paths)
-
         self.log_diagnostics(paths)
         logger.log('Optimizing policy...')
         self.optimize_policy(itr, paths)
@@ -138,6 +142,30 @@ class BatchPolopt(RLAlgorithm):
 
         max_path_length = self.max_path_length
 
+        if self.flatten_input:
+            paths = [
+                dict(
+                    observations=(self.env_spec.observation_space.flatten_n(
+                        path['observations'])),
+                    actions=(
+                        self.env_spec.action_space.flatten_n(  # noqa: E126
+                            path['actions'])),
+                    rewards=path['rewards'],
+                    env_infos=path['env_infos'],
+                    agent_infos=path['agent_infos']) for path in paths
+            ]
+        else:
+            paths = [
+                dict(
+                    observations=path['observations'],
+                    actions=(
+                        self.env_spec.action_space.flatten_n(  # noqa: E126
+                            path['actions'])),
+                    rewards=path['rewards'],
+                    env_infos=path['env_infos'],
+                    agent_infos=path['agent_infos']) for path in paths
+            ]
+
         if hasattr(self.baseline, 'predict_n'):
             all_path_baselines = self.baseline.predict_n(paths)
         else:
@@ -149,7 +177,7 @@ class BatchPolopt(RLAlgorithm):
             path_baselines = np.append(all_path_baselines[idx], 0)
             deltas = (path['rewards'] + self.discount * path_baselines[1:] -
                       path_baselines[:-1])
-            path['advantages'] = special.discount_cumsum(
+            path['advantages'] = np_tensor_utils.discount_cumsum(
                 deltas, self.discount * self.gae_lambda)
             path['deltas'] = deltas
 
@@ -159,8 +187,8 @@ class BatchPolopt(RLAlgorithm):
             baselines.append(path['baselines'])
 
             # returns
-            path['returns'] = special.discount_cumsum(path['rewards'],
-                                                      self.discount)
+            path['returns'] = np_tensor_utils.discount_cumsum(
+                path['rewards'], self.discount)
             returns.append(path['returns'])
 
         # make all paths the same length

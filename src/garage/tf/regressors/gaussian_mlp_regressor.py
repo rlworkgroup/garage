@@ -5,17 +5,13 @@ import tensorflow as tf
 
 from garage.tf.misc import tensor_utils
 from garage.tf.optimizers import LbfgsOptimizer, PenaltyLbfgsOptimizer
-from garage.tf.regressors import StochasticRegressor2
+from garage.tf.regressors import StochasticRegressor
 from garage.tf.regressors.gaussian_mlp_regressor_model import (
     GaussianMLPRegressorModel)
 
 
-class GaussianMLPRegressor(StochasticRegressor2):
-    """
-    GaussianMLPRegressor with garage.tf.models.GaussianMLPRegressorModel.
-
-    A class for performing regression by fitting a Gaussian distribution
-    to the outputs.
+class GaussianMLPRegressor(StochasticRegressor):
+    """Fits data to a Gaussian whose parameters are estimated by an MLP.
 
     Args:
         input_shape (tuple[int]): Input shape of the training data.
@@ -24,22 +20,22 @@ class GaussianMLPRegressor(StochasticRegressor2):
         hidden_sizes (list[int]): Output dimension of dense layer(s) for
             the MLP for mean. For example, (32, 32) means the MLP consists
             of two hidden layers, each with 32 hidden units.
-        hidden_nonlinearity (callable): Activation function for intermediate
+        hidden_nonlinearity (Callable): Activation function for intermediate
             dense layer(s). It should return a tf.Tensor. Set it to
             None to maintain a linear activation.
-        hidden_w_init (callable): Initializer function for the weight
+        hidden_w_init (Callable): Initializer function for the weight
             of intermediate dense layer(s). The function should return a
             tf.Tensor.
-        hidden_b_init (callable): Initializer function for the bias
+        hidden_b_init (Callable): Initializer function for the bias
             of intermediate dense layer(s). The function should return a
             tf.Tensor.
-        output_nonlinearity (callable): Activation function for output dense
+        output_nonlinearity (Callable): Activation function for output dense
             layer. It should return a tf.Tensor. Set it to None to
             maintain a linear activation.
-        output_w_init (callable): Initializer function for the weight
+        output_w_init (Callable): Initializer function for the weight
             of output dense layer(s). The function should return a
             tf.Tensor.
-        output_b_init (callable): Initializer function for the bias
+        output_b_init (Callable): Initializer function for the bias
             of output dense layer(s). The function should return a
             tf.Tensor.
         optimizer (garage.tf.Optimizer): Optimizer for minimizing the negative
@@ -57,13 +53,14 @@ class GaussianMLPRegressor(StochasticRegressor2):
         std_hidden_sizes (list[int]): Output dimension of dense layer(s) for
             the MLP for std. For example, (32, 32) means the MLP consists
             of two hidden layers, each with 32 hidden units.
-        std_nonlinearity: Nonlinearity for each hidden layer in
+        std_nonlinearity (Callable): Nonlinearity for each hidden layer in
             the std network.
         layer_normalization (bool): Bool for using layer normalization or not.
         normalize_inputs (bool): Bool for normalizing inputs or not.
         normalize_outputs (bool): Bool for normalizing outputs or not.
         subsample_factor (float): The factor to subsample the data. By default
             it is 1.0, which means using all the data.
+
     """
 
     def __init__(self,
@@ -208,12 +205,12 @@ class GaussianMLPRegressor(StochasticRegressor2):
                 self._optimizer.update_opt(**optimizer_args)
 
     def fit(self, xs, ys):
-        """
-        Fit with input data xs and label ys.
+        """Fit with input data xs and label ys.
 
         Args:
             xs (numpy.ndarray): Input data.
             ys (numpy.ndarray): Label of input data.
+
         """
         if self._subsample_factor < 1:
             num_samples_tot = xs.shape[0]
@@ -250,20 +247,19 @@ class GaussianMLPRegressor(StochasticRegressor2):
         tabular.record('{}/dLoss'.format(self._name), loss_before - loss_after)
 
     def predict(self, xs):
-        """
-        Predict ys based on input xs.
+        """Predict ys based on input xs.
 
         Args:
             xs (numpy.ndarray): Input data.
 
         Return:
-            The predicted ys.
+            np.ndarray: The predicted ys.
+
         """
         return self._f_predict(xs)
 
     def log_likelihood_sym(self, x_var, y_var, name=None):
-        """
-        Symbolic graph of the log likelihood.
+        """Create a symbolic graph of the log likelihood.
 
         Args:
             x_var (tf.Tensor): Input tf.Tensor for the input data.
@@ -271,7 +267,27 @@ class GaussianMLPRegressor(StochasticRegressor2):
             name (str): Name of the new graph.
 
         Return:
-            tf.Tensor output of the symbolic log likelihood.
+            tf.Tensor: Output of the symbolic log-likelihood graph.
+
+        """
+        params = self.dist_info_sym(x_var, name=name)
+        means_var = params['mean']
+        log_stds_var = params['log_std']
+
+        return self.model.networks[name].dist.log_likelihood_sym(
+            y_var, dict(mean=means_var, log_std=log_stds_var))
+
+    def dist_info_sym(self, x_var, name=None):
+        """Create a symbolic graph of the distribution parameters.
+
+        Args:
+            x_var (tf.Tensor): tf.Tensor of the input data.
+            name (str): Name of the new graph.
+
+        Return:
+            dict[tf.Tensor]: Outputs of the symbolic distribution parameter
+                graph.
+
         """
         with tf.compat.v1.variable_scope(self._variable_scope):
             self.model.build(x_var, name=name)
@@ -279,21 +295,21 @@ class GaussianMLPRegressor(StochasticRegressor2):
         means_var = self.model.networks[name].means
         log_stds_var = self.model.networks[name].log_stds
 
-        return self.model.networks[name].dist.log_likelihood_sym(
-            y_var, dict(mean=means_var, log_std=log_stds_var))
+        return dict(mean=means_var, log_std=log_stds_var)
 
     def get_params_internal(self, **args):
         """Get the params, which are the trainable variables."""
+        del args
         return self._variable_scope.trainable_variables()
 
     def __getstate__(self):
-        """Object.__getstate__."""
+        """See `Object.__getstate__`."""
         new_dict = super().__getstate__()
         del new_dict['_f_predict']
         del new_dict['_f_pdists']
         return new_dict
 
     def __setstate__(self, state):
-        """Object.__setstate__."""
+        """See `Object.__setstate__`."""
         super().__setstate__(state)
         self._initialize()

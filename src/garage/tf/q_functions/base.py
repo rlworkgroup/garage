@@ -1,32 +1,55 @@
-import tensorflow as tf
+"""Q-function base classes without Parameterized."""
+import abc
 
-from garage.tf.core import Parameterized
 
+class QFunction(abc.ABC):
+    """Q-function base class without Parameterzied.
 
-class QFunction(Parameterized):
-    def build_net(self, name):
-        raise NotImplementedError
+    Args:
+        name (str): Name of the Q-fucntion, also the variable scope.
 
-    def get_qval_sym(self, input_phs):
-        raise NotImplementedError
+    """
+
+    def __init__(self, name):
+        self.name = name or type(self).__name__
+        self._variable_scope = None
+
+    def get_qval_sym(self, *input_phs):
+        """Symbolic graph for q-network.
+
+        All derived classes should implement this function.
+
+        Args:
+            input_phs (list[tf.Tensor]): Recommended to be positional
+                arguments, e.g. def get_qval_sym(self, state_input,
+                action_input).
+        """
+
+    def clone(self, name):
+        """Return a clone of the Q-function.
+
+        It should only copy the configuration of the Q-function,
+        not the parameters.
+
+        Args:
+            name (str): Name of the newly created q-function.
+        """
+
+    def get_trainable_vars(self):
+        """Get all trainable variables under the QFunction scope."""
+        return self._variable_scope.trainable_variables()
+
+    def get_global_vars(self):
+        """Get all global variables under the QFunction scope."""
+        return self._variable_scope.global_variables()
+
+    def get_regularizable_vars(self):
+        """Get all network weight variables under the QFunction scope."""
+        trainable = self._variable_scope.global_variables()
+        return [
+            var for var in trainable
+            if 'hidden' in var.name and 'kernel' in var.name
+        ]
 
     def log_diagnostics(self, paths):
-        pass
-
-    def get_trainable_vars(self, scope=None):
-        scope = scope if scope else self.name
-        return tf.compat.v1.get_collection(
-            tf.compat.v1.GraphKeys.TRAINABLE_VARIABLES, scope=scope)
-
-    def get_global_vars(self, scope=None):
-        scope = scope if scope else self.name
-        return tf.compat.v1.get_collection(
-            tf.compat.v1.GraphKeys.GLOBAL_VARIABLES, scope=scope)
-
-    def get_regularizable_vars(self, scope=None):
-        scope = scope if scope else self.name
-        reg_vars = [
-            var for var in self.get_trainable_vars(scope=scope)
-            if 'W' in var.name and 'output' not in var.name
-        ]
-        return reg_vars
+        """Log extra information per iteration based on the collected paths."""

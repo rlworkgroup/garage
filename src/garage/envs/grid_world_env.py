@@ -1,9 +1,7 @@
 import gym
 import numpy as np
 
-from garage.core import Serializable
 from garage.envs.base import Step
-from garage.misc.overrides import overrides
 
 MAPS = {
     'chain': ['GFFFFFFFFFFFFFSFFFFFFFFFFFFFG'],
@@ -32,15 +30,13 @@ MAPS = {
 }   # yapf: disable
 
 
-class GridWorldEnv(gym.Env, Serializable):
+class GridWorldEnv(gym.Env):
     """
-    'S' : starting point
-    'F' or '.': free space
-    'W' or 'x': wall
-    'H' or 'o': hole (terminates episode)
-    'G' : goal
-
-
+    | 'S' : starting point
+    | 'F' or '.': free space
+    | 'W' or 'x': wall
+    | 'H' or 'o': hole (terminates episode)
+    | 'G' : goal
     """
 
     def __init__(self, desc='4x4'):
@@ -56,9 +52,6 @@ class GridWorldEnv(gym.Env, Serializable):
         self.start_state = start_x * self.n_col + start_y
         self.state = None
         self.domain_fig = None
-
-        # Always call Serializable constructor last
-        Serializable.quick_init(self, locals())
 
     def reset(self):
         self.state = self.start_state
@@ -143,10 +136,8 @@ class GridWorldEnv(gym.Env, Serializable):
     def observation_space(self):
         return gym.spaces.Discrete(self.n_row * self.n_col)
 
-    @overrides
     def render(self, mode='human'):
         pass
 
-    @overrides
     def log_diagnostics(self, paths):
         pass
