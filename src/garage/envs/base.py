@@ -151,8 +151,8 @@ class GarageEnv(gym.Wrapper):
         # the viewer object is not pickleable
         # we first make a copy of the viewer
         env = self.env
-        # detect gym.Wrapper
-        while issubclass(env.__class__, gym.Wrapper):
+        # get the inner env if it is a gym.Wrapper
+        if issubclass(env.__class__, gym.Wrapper):
             env = env.unwrapped
         if 'viewer' in env.__dict__:
             _viewer = env.viewer

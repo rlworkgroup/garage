@@ -138,19 +138,6 @@ def pad_tensor_dict(tensor_dict, max_len, mode='zero'):
     return ret
 
 
-def stack_tensor_list(tensor_list):
-    """Stack tensor list.
-
-    Args:
-        tensor_list (list[numpy.ndarray]): List of tensors.
-
-    Returns:
-        numpy.ndarray: Stacked list of tensor.
-
-    """
-    return np.array(tensor_list)
-
-
 def stack_tensor_dict_list(tensor_dict_list):
     """Stack a list of dictionaries of {tensors or dictionary of tensors}.
 
@@ -171,22 +158,9 @@ def stack_tensor_dict_list(tensor_dict_list):
         if isinstance(example, dict):
             v = stack_tensor_dict_list(dict_list)
         else:
-            v = stack_tensor_list(dict_list)
+            v = np.array(dict_list)
         ret[k] = v
     return ret
-
-
-def concat_tensor_list(tensor_list):
-    """Concatenate list of tensor.
-
-    Args:
-        tensor_list (list[numpy.ndarray]): List of tensors.
-
-    Returns:
-        numpy.ndarray: list of tensor.
-
-    """
-    return np.concatenate(tensor_list, axis=0)
 
 
 def concat_tensor_dict_list(tensor_dict_list):
@@ -209,7 +183,7 @@ def concat_tensor_dict_list(tensor_dict_list):
         if isinstance(example, dict):
             v = concat_tensor_dict_list(dict_list)
         else:
-            v = concat_tensor_list(dict_list)
+            v = np.concatenate(dict_list, axis=0)
         ret[k] = v
     return ret
 

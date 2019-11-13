@@ -69,9 +69,9 @@ def rollout(env,
             time.sleep(timestep / speedup)
 
     return dict(
-        observations=tensor_utils.stack_tensor_list(observations),
-        actions=tensor_utils.stack_tensor_list(actions),
-        rewards=tensor_utils.stack_tensor_list(rewards),
+        observations=np.array(observations),
+        actions=np.array(actions),
+        rewards=np.array(rewards),
         agent_infos=tensor_utils.stack_tensor_dict_list(agent_infos),
         env_infos=tensor_utils.stack_tensor_dict_list(env_infos),
     )
