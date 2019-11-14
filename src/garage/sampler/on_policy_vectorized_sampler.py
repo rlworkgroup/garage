@@ -1,6 +1,7 @@
 """BatchSampler which uses VecEnvExecutor to run multiple environments."""
 import itertools
 import pickle
+import time
 
 from dowel import logger, tabular
 import numpy as np
@@ -48,7 +49,7 @@ class OnPolicyVectorizedSampler(BatchSampler):
         """Shutdown workers."""
         self.vec_env.close()
 
-    # pylint: disable=too-many-statements, import-outside-toplevel
+    # pylint: disable=too-many-statements
     def obtain_samples(self, itr, batch_size=None, whole_paths=True):
         """Sample the policy for new trajectories.
 
@@ -88,7 +89,6 @@ class OnPolicyVectorizedSampler(BatchSampler):
 
         policy = self.algo.policy
 
-        import time
         while n_samples < batch_size:
             t = time.time()
             policy.reset(dones)
@@ -147,7 +147,4 @@ class OnPolicyVectorizedSampler(BatchSampler):
         tabular.record('EnvExecTime', env_time)
         tabular.record('ProcessExecTime', process_time)
 
-        if whole_paths:
-            return paths
-        paths_truncated = truncate_paths(paths, batch_size)
-        return paths_truncated
+        return paths if whole_paths else truncate_paths(paths, batch_size)
