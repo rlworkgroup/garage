@@ -76,7 +76,7 @@ class TestPearlmutterHvp(TfGraphTestCase):
         hvp.update_hvp(f, policy, (a, ), reg_coeff)
         hx = hvp.build_eval(np.array([a_val]))
         computed_hvp = hx(vector)
-        np.allclose(computed_hvp, expected_hvp)
+        assert np.allclose(computed_hvp, expected_hvp)
 
     @pytest.mark.parametrize('a_val, b_val, x_val, y_val, vector', [
         (1.0, 1.0, 1.0, 1.0, [10.0, 20.0]),
@@ -110,7 +110,7 @@ class TestPearlmutterHvp(TfGraphTestCase):
         hx = hvp.build_eval((np.array(a_val), np.array(b_val)))
         hvp = hx(vector[0])
         expected_hvp = expected_hvp.eval()
-        np.allclose(hvp, expected_hvp)
+        assert np.allclose(hvp, expected_hvp, atol=1e-6)
 
     @pytest.mark.parametrize('a_val, b_val, x_val, y_val, vector', [
         (1.0, 1.0, 1.0, 1.0, [10.0, 20.0]),
@@ -147,7 +147,7 @@ class TestPearlmutterHvp(TfGraphTestCase):
         hx = hvp.build_eval((np.array(a_val), np.array(b_val)))
         hvp = hx(vector[0])
         expected_hvp = expected_hvp.eval()
-        np.allclose(hvp, expected_hvp)
+        assert np.allclose(hvp, expected_hvp)
 
     def test_pickleable(self):
         policy = HelperPolicy(n_vars=1)
@@ -190,7 +190,7 @@ class TestFiniteDifferenceHvp(TfGraphTestCase):
         hvp.update_hvp(f, policy, (a, ), reg_coeff)
         hx = hvp.build_eval(np.array([a_val]))
         computed_hvp = hx(vector)
-        np.allclose(computed_hvp, expected_hvp)
+        assert np.allclose(computed_hvp, expected_hvp)
 
     @pytest.mark.parametrize('a_val, b_val, x_val, y_val, vector', [
         (1.0, 1.0, 1.0, 1.0, [10.0, 20.0]),
@@ -215,8 +215,8 @@ class TestFiniteDifferenceHvp(TfGraphTestCase):
 
         expected_hessian = compute_hessian(f, [x, y])
         expected_hvp = tf.matmul(vector, expected_hessian)
-        reg_coeff = 1e-5
-        hvp = FiniteDifferenceHvp()
+        reg_coeff = 1e-8
+        hvp = FiniteDifferenceHvp(base_eps=1.0)
 
         self.sess.run(tf.global_variables_initializer())
         self.sess.run(x.assign([x_val]))
@@ -225,7 +225,7 @@ class TestFiniteDifferenceHvp(TfGraphTestCase):
         hx = hvp.build_eval((np.array(a_val), np.array(b_val)))
         hvp = hx(vector[0])
         expected_hvp = expected_hvp.eval()
-        np.allclose(hvp, expected_hvp)
+        assert np.allclose(hvp, expected_hvp)
 
     @pytest.mark.parametrize('a_val, b_val, x_val, y_val, vector', [
         (1.0, 1.0, 1.0, 1.0, [10.0, 20.0]),
@@ -253,7 +253,7 @@ class TestFiniteDifferenceHvp(TfGraphTestCase):
         expected_hessian = compute_hessian(f, [x, y])
         expected_hvp = tf.matmul(vector, expected_hessian)
         reg_coeff = 1e-5
-        hvp = FiniteDifferenceHvp()
+        hvp = FiniteDifferenceHvp(base_eps=1)
 
         self.sess.run(tf.global_variables_initializer())
         self.sess.run(x.assign([x_val]))
@@ -262,7 +262,7 @@ class TestFiniteDifferenceHvp(TfGraphTestCase):
         hx = hvp.build_eval((np.array(a_val), np.array(b_val)))
         hvp = hx(vector[0])
         expected_hvp = expected_hvp.eval()
-        np.allclose(hvp, expected_hvp)
+        assert np.allclose(hvp, expected_hvp)
 
     def test_pickleable(self):
         policy = HelperPolicy(n_vars=1)
