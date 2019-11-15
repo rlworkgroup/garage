@@ -30,7 +30,7 @@ class TestPPO:
         self.env.close()
 
     def test_ppo_pendulum(self):
-        """Test DDPG with Pendulum environment."""
+        """Test PPO with Pendulum environment."""
         deterministic.set_seed(0)
 
         runner = LocalRunner(snapshot_config)
