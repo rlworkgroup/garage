@@ -14,7 +14,6 @@ import psutil
 import ray
 
 from garage.experiment import deterministic
-from garage.misc import tensor_utils
 from garage.misc.prog_bar_counter import ProgBarCounter
 from garage.sampler.base import BaseSampler
 
@@ -23,11 +22,13 @@ class RaySampler(BaseSampler):
     """Collects Policy Rollouts in a data parallel fashion.
 
     Args:
-        - algo: A garage algo object
-        - env: A gym/akro env object
-        - should_render(bool): should the sampler render the trajectories
-        - sampler_worker_cls: If none, uses the default SamplerWorker
-            class
+        algo (garage.np.algo.RLAlgorithm): A garage algo object
+        env (gym.Env): A gym/akro env object
+        seed (int): Random seed.
+        should_render (bool): If the sampler render the trajectories.
+        num_processors (int): Number of processors to be used.
+        sampler_worker_cls (garage.sampler.ray_sampler.SamplerWorker):
+            If none, uses the default SamplerWorker class
 
     """
 
@@ -38,41 +39,51 @@ class RaySampler(BaseSampler):
                  should_render=False,
                  num_processors=None,
                  sampler_worker_cls=None):
+        super().__init__(algo, env)
         self._sampler_worker = ray.remote(SamplerWorker if sampler_worker_cls
                                           is None else sampler_worker_cls)
-        self._env = env
-        self._algo = algo
         self._seed = seed
         deterministic.set_seed(self._seed)
-        self._max_path_length = self._algo.max_path_length
+        self._max_path_length = self.algo.max_path_length
         self._should_render = should_render
         if not ray.is_initialized():
             ray.init(log_to_driver=False)
         self._num_workers = (num_processors if num_processors else
                              psutil.cpu_count(logical=False))
         self._all_workers = defaultdict(None)
+        self._idle_worker_ids = list(range(self._num_workers))
+        self._active_worker_ids = []
 
     def start_worker(self):
         """Initialize a new ray worker."""
         # Pickle the environment once, instead of once per worker.
-        env_pkl = pickle.dumps(self._env)
+        env_pkl = pickle.dumps(self.env)
         # We need to pickle the agent so that we can e.g. set up the TF Session
         # in the worker *before* unpicling it.
-        agent_pkl = pickle.dumps(self._algo.policy)
+        agent_pkl = pickle.dumps(self.algo.policy)
         for worker_id in range(self._num_workers):
             self._all_workers[worker_id] = self._sampler_worker.remote(
                 worker_id, env_pkl, agent_pkl, self._seed,
                 self._max_path_length, self._should_render)
-        self._idle_worker_ids = list(range(self._num_workers))
 
+    # pylint: disable=arguments-differ
     def obtain_samples(self, itr, num_samples):
         """Sample the policy for new trajectories.
 
         Args:
-            - itr(int): iteration number
-            - num_samples(int):number of steps the the sampler should collect
+            itr (int): Iteration number.
+            num_samples (int): Number of steps the the sampler should collect.
+
+        Returns:
+            list[dict]: Sample paths, each path with key
+                * observations: (numpy.ndarray)
+                * actions: (numpy.ndarray)
+                * rewards: (numpy.ndarray)
+                * agent_infos: (dict)
+                * env_infos: (dict)
+
         """
-        self._active_workers = []
+        _active_workers = []
         self._active_worker_ids = []
         pbar = ProgBarCounter(num_samples)
         completed_samples = 0
@@ -81,8 +92,7 @@ class RaySampler(BaseSampler):
 
         # update the policy params of each worker before sampling
         # for the current iteration
-        self._idle_worker_ids = list(range(self._num_workers))
-        curr_policy_params = self._algo.policy.get_param_values()
+        curr_policy_params = self.algo.policy.get_param_values()
         params_id = ray.put(curr_policy_params)
         while self._idle_worker_ids:
             worker_id = self._idle_worker_ids.pop()
@@ -107,15 +117,15 @@ class RaySampler(BaseSampler):
                 idle_worker_id = self._idle_worker_ids.pop()
                 self._active_worker_ids.append(idle_worker_id)
                 worker = self._all_workers[idle_worker_id]
-                self._active_workers.append(worker.rollout.remote())
+                _active_workers.append(worker.rollout.remote())
 
             # check which workers are done/not done collecting a sample
             # if any are done, send them to process the collected trajectory
             # if they are not, keep checking if they are done
-            ready, not_ready = ray.wait(self._active_workers,
+            ready, not_ready = ray.wait(_active_workers,
                                         num_returns=1,
                                         timeout=0.001)
-            self._active_workers = not_ready
+            _active_workers = not_ready
             for result in ready:
                 trajectory, num_returned_samples = self._process_trajectory(
                     result)
@@ -135,7 +145,17 @@ class RaySampler(BaseSampler):
         Converts that trajectory to garage friendly format.
 
         Args:
-            - result: ray object id of ready to be collected trajectory.
+            result (obj): Ray object id of ready to be collected trajectory.
+
+        Returns:
+            dict: One trajectory, with keys
+                * observations: (numpy.ndarray)
+                * actions: (numpy.ndarray)
+                * rewards: (numpy.ndarray)
+                * agent_infos: (dict)
+                * env_infos: (dict)
+            int: Number of returned samples in the trajectory
+
         """
         trajectory = ray.get(result)
         ready_worker_id = trajectory[0]
@@ -143,8 +163,7 @@ class RaySampler(BaseSampler):
         self._idle_worker_ids.append(ready_worker_id)
         trajectory = dict(observations=np.asarray(trajectory[1]),
                           actions=np.asarray(trajectory[2]),
-                          rewards=tensor_utils.stack_tensor_list(
-                              trajectory[3]),
+                          rewards=np.asarray(trajectory[3]),
                           agent_infos=trajectory[4],
                           env_infos=trajectory[5])
         num_returned_samples = len(trajectory['observations'])
@@ -158,11 +177,12 @@ class SamplerWorker:
     trajectories or rollouts.
 
     Args:
-        - worker_id(int): the id of the sampler_worker
-        - env_pkl: A pickled gym or akro env object
-        - agent_pkl: A pickled agent
-        - max_path_length(int): max trajectory length
-        - should_render(bool): if true, renders trajectories after
+        worker_id (int): the id of the sampler_worker
+        env_pkl (bytes): A pickled gym or akro env object
+        agent_pkl (bytes): A pickled agent
+        seed (int): Random seed.
+        max_path_length (int): max trajectory length
+        should_render (bool): if true, renders trajectories after
             sampling them
 
     """
@@ -187,7 +207,11 @@ class SamplerWorker:
         """Set the agent params.
 
         Args:
-            - flattened_params(): model parameters in numpy format
+            flattened_params (list[np.ndarray]): model parameters
+
+        Returns:
+            int: Worker id of this sampler worker.
+
         """
         self.agent.set_param_values(flattened_params)
         self.agent_updates += 1
@@ -208,6 +232,15 @@ class SamplerWorker:
         the index into the list being the index into the time
         - agent_infos
         - env_infos
+
+        Returns:
+            int: ID of this work
+            numpy.ndarray: observations
+            numpy.ndarray: actions
+            numpy.ndarray: rewards
+            dict[list]: agent info
+            dict[list]: environment info
+
         """
         observations = []
         actions = []
