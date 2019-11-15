@@ -1,5 +1,5 @@
 """Base class for batch sampling-based policy optimization methods."""
-
+import abc
 import collections
 
 from dowel import logger, tabular
@@ -12,7 +12,7 @@ from garage.tf.misc import tensor_utils
 from garage.tf.samplers import BatchSampler
 
 
-class BatchPolopt2(RLAlgorithm):
+class BatchPolopt2(RLAlgorithm, abc.ABC):
     """Base class for batch sampling-based policy optimization methods.
 
     This includes various policy gradient methods like VPG, NPG, PPO, TRPO,
@@ -55,23 +55,23 @@ class BatchPolopt2(RLAlgorithm):
                  positive_adv=False,
                  fixed_horizon=False,
                  flatten_input=True):
-        self.env_spec = env_spec
-        self.policy = policy
-        self.baseline = baseline
-        self.scope = scope
-        self.max_path_length = max_path_length
-        self.discount = discount
-        self.gae_lambda = gae_lambda
-        self.center_adv = center_adv
-        self.positive_adv = positive_adv
-        self.fixed_horizon = fixed_horizon
-        self.flatten_input = flatten_input
+        self._env_spec = env_spec
+        self._policy = policy
+        self._baseline = baseline
+        self._scope = scope
+        self._max_path_length = max_path_length
+        self._discount = discount
+        self._gae_lambda = gae_lambda
+        self._center_adv = center_adv
+        self._positive_adv = positive_adv
+        self._fixed_horizon = fixed_horizon
+        self._flatten_input = flatten_input
 
-        self.episode_reward_mean = collections.deque(maxlen=100)
+        self._episode_reward_mean = collections.deque(maxlen=100)
         if policy.vectorized:
-            self.sampler_cls = OnPolicyVectorizedSampler
+            self._sampler_cls = OnPolicyVectorizedSampler
         else:
-            self.sampler_cls = BatchSampler
+            self._sampler_cls = BatchSampler
 
         self.init_opt()
 
@@ -121,45 +121,47 @@ class BatchPolopt2(RLAlgorithm):
 
         """
         logger.log('Logging diagnostics...')
-        self.policy.log_diagnostics(paths)
-        self.baseline.log_diagnostics(paths)
+        self._policy.log_diagnostics(paths)
+        self._baseline.log_diagnostics(paths)
 
     def process_samples(self, itr, paths):
         """Return processed sample data based on the collected paths.
+
+        The returned samples is a dictionary with keys
+        - observations: (numpy.ndarray), shape [B * (T), *obs_dims]
+        - actions: (numpy.ndarray), shape [B * (T), *act_dims]
+        - rewards : (numpy.ndarray), shape [B * (T), ]
+        - baselines: (numpy.ndarray), shape [B * (T), ]
+        - returns: (numpy.ndarray), shape [B * (T), ]
+        - lengths: (numpy.ndarray), shape [B * (T), ]
+        - agent_infos: (dict), see OnPolicyVectorizedSampler.obtain_samples()
+        - env_infos: (dict), see OnPolicyVectorizedSampler.obtain_samples()
+        - paths: (list[dict]) The original path with observation or action
+            flattened
+        - average_return: (numpy.float64)
+
+        where B = batch size, (T) = variable-length of each trajectory
 
         Args:
             itr (int): Iteration number.
             paths (list[dict]): A list of collected paths.
 
         Returns:
-            dict: Processed sample data, with key
-                * observations  : (numpy.ndarray), shape [B * (T), *obs_dims]
-                * actions       : (numpy.ndarray), shape [B * (T), *act_dims]
-                * rewards       : (numpy.ndarray), shape [B * (T), ]
-                * baselines     : (numpy.ndarray), shape [B * (T), ]
-                * returns       : (numpy.ndarray), shape [B * (T), ]
-                * agent_infos   : (dict), see
-                    OnPolicyVectorizedSampler.obtain_samples()
-                * env_infos     : (dict), see
-                    OnPolicyVectorizedSampler.obtain_samples()
-                * paths         : (list[dict]) The original path with
-                    observation or action flattened
-                * average_return: (numpy.float64)
-                where B = batch size, (T) = variable-length of each trajectory
+            dict: Processed sample data
 
         """
         baselines = []
         returns = []
 
-        max_path_length = self.max_path_length
+        max_path_length = self._max_path_length
 
-        if self.flatten_input:
+        if self._flatten_input:
             paths = [
                 dict(
-                    observations=(self.env_spec.observation_space.flatten_n(
+                    observations=(self._env_spec.observation_space.flatten_n(
                         path['observations'])),
                     actions=(
-                        self.env_spec.action_space.flatten_n(  # noqa: E126
+                        self._env_spec.action_space.flatten_n(  # noqa: E126
                             path['actions'])),
                     rewards=path['rewards'],
                     env_infos=path['env_infos'],
@@ -170,36 +172,33 @@ class BatchPolopt2(RLAlgorithm):
                 dict(
                     observations=path['observations'],
                     actions=(
-                        self.env_spec.action_space.flatten_n(  # noqa: E126
+                        self._env_spec.action_space.flatten_n(  # noqa: E126
                             path['actions'])),
                     rewards=path['rewards'],
                     env_infos=path['env_infos'],
                     agent_infos=path['agent_infos']) for path in paths
             ]
 
-        if hasattr(self.baseline, 'predict_n'):
-            all_path_baselines = self.baseline.predict_n(paths)
+        if hasattr(self._baseline, 'predict_n'):
+            all_path_baselines = self._baseline.predict_n(paths)
         else:
             all_path_baselines = [
-                self.baseline.predict(path) for path in paths
+                self._baseline.predict(path) for path in paths
             ]
 
         for idx, path in enumerate(paths):
             path_baselines = np.append(all_path_baselines[idx], 0)
-            deltas = (path['rewards'] + self.discount * path_baselines[1:] -
+            deltas = (path['rewards'] + self._discount * path_baselines[1:] -
                       path_baselines[:-1])
             path['advantages'] = np_tensor_utils.discount_cumsum(
-                deltas, self.discount * self.gae_lambda)
+                deltas, self._discount * self._gae_lambda)
             path['deltas'] = deltas
-
-        for idx, path in enumerate(paths):
             # baselines
             path['baselines'] = all_path_baselines[idx]
             baselines.append(path['baselines'])
-
             # returns
             path['returns'] = np_tensor_utils.discount_cumsum(
-                path['rewards'], self.discount)
+                path['rewards'], self._discount)
             returns.append(path['returns'])
 
         obs = np.concatenate([path['observations'] for path in paths])
@@ -210,7 +209,7 @@ class BatchPolopt2(RLAlgorithm):
 
         agent_infos_path = [path['agent_infos'] for path in paths]
         agent_infos = dict()
-        for key in self.policy.state_info_keys:
+        for key in self._policy.state_info_keys:
             agent_infos[key] = np.concatenate(
                 [infos[key] for infos in agent_infos_path])
 
@@ -220,13 +219,13 @@ class BatchPolopt2(RLAlgorithm):
         ])
 
         valids = [np.ones_like(path['returns']) for path in paths]
-        lengths = [v.sum() for v in valids]
+        lengths = np.asarray([v.sum() for v in valids])
 
         average_discounted_return = (np.mean(
             [path['returns'][0] for path in paths]))
 
         undiscounted_returns = [sum(path['rewards']) for path in paths]
-        self.episode_reward_mean.extend(undiscounted_returns)
+        self._episode_reward_mean.extend(undiscounted_returns)
 
         samples_data = dict(
             observations=obs,
@@ -245,7 +244,7 @@ class BatchPolopt2(RLAlgorithm):
         tabular.record('AverageDiscountedReturn', average_discounted_return)
         tabular.record('AverageReturn', np.mean(undiscounted_returns))
         tabular.record('Extras/EpisodeRewardMean',
-                       np.mean(self.episode_reward_mean))
+                       np.mean(self._episode_reward_mean))
         tabular.record('NumTrajs', len(paths))
         tabular.record('StdReturn', np.std(undiscounted_returns))
         tabular.record('MaxReturn', np.max(undiscounted_returns))
@@ -253,14 +252,15 @@ class BatchPolopt2(RLAlgorithm):
 
         return samples_data
 
+    @abc.abstractmethod
     def init_opt(self):
         """Initialize the optimization procedure.
 
         If using tensorflow, this may include declaring all the variables and
         compiling functions.
         """
-        raise NotImplementedError
 
+    @abc.abstractmethod
     def get_itr_snapshot(self, itr):
         """Get all the data that should be saved in this snapshot iteration.
 
@@ -268,8 +268,8 @@ class BatchPolopt2(RLAlgorithm):
             itr (int): Iteration.
 
         """
-        raise NotImplementedError
 
+    @abc.abstractmethod
     def optimize_policy(self, itr, samples_data):
         """Optimize the policy using the samples.
 
@@ -278,4 +278,3 @@ class BatchPolopt2(RLAlgorithm):
             samples_data (dict[numpy.ndarray]): Sample data.
 
         """
-        raise NotImplementedError
