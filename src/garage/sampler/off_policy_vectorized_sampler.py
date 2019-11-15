@@ -1,5 +1,4 @@
-"""
-This module implements a Vectorized Sampler used for OffPolicy Algorithms.
+"""This module implements a Vectorized Sampler used for OffPolicy Algorithms.
 
 It diffs from OnPolicyVectorizedSampler in two parts:
  - The num of envs is defined by rollout_batch_size. In
@@ -41,6 +40,8 @@ class OffPolicyVectorizedSampler(BatchSampler):
         self._last_uncounted_discount = [0] * n_envs
         self._last_running_length = [0] * n_envs
         self._last_success_count = [0] * n_envs
+        self.env_spec = self.env.spec
+        self.vec_env = None
 
     def start_worker(self):
         """Initialize the sampler."""
@@ -53,12 +54,12 @@ class OffPolicyVectorizedSampler(BatchSampler):
 
         self.vec_env = VecEnvExecutor(
             envs=envs, max_path_length=self.algo.max_path_length)
-        self.env_spec = self.env.spec
 
     def shutdown_worker(self):
         """Terminate workers if necessary."""
         self.vec_env.close()
 
+    # pylint: disable=arguments-differ, too-many-statements, too-many-branches
     def obtain_samples(self, itr, batch_size):
         """Collect samples for the given iteration number.
 
@@ -165,10 +166,8 @@ class OffPolicyVectorizedSampler(BatchSampler):
                 if done or n_samples >= batch_size:
                     paths.append(
                         dict(
-                            rewards=tensor_utils.stack_tensor_list(
-                                running_paths[idx]['rewards']),
-                            dones=tensor_utils.stack_tensor_list(
-                                running_paths[idx]['dones']),
+                            rewards=np.asarray(running_paths[idx]['rewards']),
+                            dones=np.asarray(running_paths[idx]['dones']),
                             env_infos=tensor_utils.stack_tensor_dict_list(
                                 running_paths[idx]['env_infos']),
                             running_length=running_paths[idx]

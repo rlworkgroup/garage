@@ -109,23 +109,41 @@ class ContinuousMLPQFunction(QFunction):
             feed_list=[obs_ph, action_ph])
 
     def get_qval(self, observation, action):
-        """Q Value of the network."""
+        """Q Value of the network.
+
+        Args:
+            observation (np.ndarray): Observation input.
+            action (np.ndarray): Action input.
+
+        Returns:
+            np.ndarray: Q values.
+
+        """
         return self._f_qval(observation, action)
 
     @property
     def inputs(self):
-        """Return the input tensor."""
+        """Return the input tensor.
+
+        Returns:
+            tf.Tensor: The input tensors of the model.
+
+        """
         return self.model.networks['default'].inputs
 
+    # pylint: disable=arguments-differ
     def get_qval_sym(self, state_input, action_input, name):
         """Symbolic graph for q-network.
 
         Args:
             state_input (tf.Tensor): The state input tf.Tensor to the network.
+            action_input (tf.Tensor): The action input tf.Tensor to the
+                network.
             name (str): Network variable scope.
 
         Return:
-            The tf.Tensor output of Discrete MLP QFunction.
+            tf.Tensor: The output of Discrete MLP QFunction.
+
         """
         with tf.compat.v1.variable_scope(self._variable_scope):
             return self.model.build(state_input, action_input, name=name)
@@ -138,6 +156,10 @@ class ContinuousMLPQFunction(QFunction):
 
         Args:
             name (str): Name of the newly created q-function.
+
+        Returns:
+            ContinuousMLPQFunction: A new instance with same arguments.
+
         """
         return self.__class__(name=name,
                               env_spec=self._env_spec,
@@ -149,15 +171,26 @@ class ContinuousMLPQFunction(QFunction):
                               output_nonlinearity=self._output_nonlinearity,
                               output_w_init=self._output_w_init,
                               output_b_init=self._output_b_init,
-                              layer_normalization=self._layer_normalization)
+                              layer_normalization=self._layer_normalization,
+                              input_include_goal=self._input_include_goal)
 
     def __getstate__(self):
-        """Object.__getstate__."""
+        """Object.__getstate__.
+
+        Returns:
+            dict: The state.
+
+        """
         new_dict = self.__dict__.copy()
         del new_dict['_f_qval']
         return new_dict
 
     def __setstate__(self, state):
-        """Object.__setstate__."""
+        """See `Object.__setstate__.
+
+        Args:
+            state (dict): Unpickled state of this object.
+
+        """
         self.__dict__.update(state)
         self._initialize()
