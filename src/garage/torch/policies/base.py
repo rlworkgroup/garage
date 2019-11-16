@@ -3,37 +3,88 @@ import abc
 
 
 class Policy(abc.ABC):
-    """
-    Policy base class without Parameterzied.
+    """Policy base class.
 
     Args:
         env_spec (garage.envs.env_spec.EnvSpec): Environment specification.
+        name (str): Name of policy.
+
     """
 
-    def __init__(self, env_spec):
+    def __init__(self, env_spec, name):
         self._env_spec = env_spec
+        self._name = name
 
     @abc.abstractmethod
     def get_action(self, observation):
-        """Get action given observation."""
-        pass
+        """Get a single action given an observation.
+
+        Args:
+            observation (torch.Tensor): Observation from the environment.
+
+        Returns:
+            tuple:
+                * torch.Tensor: Predicted action.
+                * dict:
+                    * list[float]: Mean of the distribution
+                    * list[float]: Log of standard deviation of the
+                        distribution
+
+        """
 
     @abc.abstractmethod
     def get_actions(self, observations):
-        """Get actions given observations."""
-        pass
+        """Get actions given observations.
+
+        Args:
+            observations (torch.Tensor): Observations from the environment.
+
+        Returns:
+            tuple:
+                * torch.Tensor: Predicted actions.
+                * dict:
+                    * list[float]: Mean of the distribution
+                    * list[float]: Log of standard deviation of the
+                        distribution
+
+        """
 
     @property
     def observation_space(self):
-        """Observation space."""
+        """The observation space for the environment.
+
+        Returns:
+            akro.Space: Observation space.
+
+        """
         return self._env_spec.observation_space
 
     @property
     def action_space(self):
-        """Policy action space."""
+        """The action space for the environment.
+
+        Returns:
+            akro.Space: Action space.
+
+        """
         return self._env_spec.action_space
 
     @property
     def vectorized(self):
-        """Vectorized or not."""
+        """Vectorized or not.
+
+        Returns:
+            bool: flag for vectorized
+
+        """
         return False
+
+    @property
+    def name(self):
+        """Name of policy.
+
+        Returns:
+            str: Name of policy
+
+        """
+        return self._name

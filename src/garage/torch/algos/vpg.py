@@ -1,5 +1,6 @@
 """Vanilla Policy Gradient (REINFORCE)."""
 import collections
+import copy
 
 from dowel import tabular
 import numpy as np
@@ -9,6 +10,7 @@ import torch.nn.functional as F
 from garage.misc import tensor_utils
 from garage.np.algos import BatchPolopt
 from garage.torch.algos import loss_function_utils
+from garage.torch.utils import flatten_batch
 
 
 class VPG(BatchPolopt):
@@ -34,6 +36,7 @@ class VPG(BatchPolopt):
             standardized before shifting.
         optimizer (object): The optimizer of the algorithm. Should be the
             optimizers in torch.optim.
+        optimizer_args (dict): Arguments required to initialize the optimizer.
         policy_ent_coeff (float): The coefficient of the policy entropy.
             Setting it to zero would mean no entropy regularization.
         use_softplus_entropy (bool): Whether to estimate the softmax
@@ -61,6 +64,7 @@ class VPG(BatchPolopt):
             center_adv=True,
             positive_adv=False,
             optimizer=None,
+            optimizer_args=None,
             policy_ent_coeff=0.0,
             use_softplus_entropy=False,
             stop_entropy_gradient=False,
@@ -83,15 +87,19 @@ class VPG(BatchPolopt):
                                           stop_entropy_gradient,
                                           policy_ent_coeff)
         self._episode_reward_mean = collections.deque(maxlen=100)
-        self._optimizer = optimizer(policy.parameters(),
-                                    lr=policy_lr,
-                                    eps=1e-5)
+
+        if optimizer_args is None:
+            optimizer_args = {'lr': policy_lr, 'eps': 1e-5}
+
+        self._optimizer = optimizer(policy.parameters(), **optimizer_args)
 
         super().__init__(policy=policy,
                          baseline=baseline,
                          discount=discount,
                          max_path_length=max_path_length,
                          n_samples=n_samples)
+
+        self._old_policy = copy.deepcopy(self.policy)
 
     @staticmethod
     def _check_entropy_configuration(entropy_method, center_adv,
@@ -124,15 +132,27 @@ class VPG(BatchPolopt):
 
         """
         valids, obs, actions, rewards = self.process_samples(itr, paths)
-        average_return = self._log(itr, paths)
 
         loss = self._compute_loss(itr, paths, valids, obs, actions, rewards)
 
+        # Memorize the policy state_dict
+        self._old_policy.load_state_dict(self.policy.state_dict())
+
         self._optimizer.zero_grad()
-        # using a negative because optimizers use gradient descent,
-        # whilst we want gradient ascent.
-        (-loss).backward()
-        self._optimizer.step()
+        loss.backward()
+
+        kl_before = self._compute_kl_constraint(obs).detach()
+        self._optimize(itr, paths, valids, obs, actions, rewards)
+
+        with torch.no_grad():
+            loss_after = self._compute_loss(itr, paths, valids, obs, actions,
+                                            rewards)
+            kl = self._compute_kl_constraint(obs)
+            policy_entropy = self._compute_policy_entropy(obs)
+            average_return = self._log(itr, paths, loss.item(),
+                                       loss_after.item(), kl_before.item(),
+                                       kl.item(),
+                                       policy_entropy.mean().item())
 
         self.baseline.fit(paths)
         return average_return
@@ -188,7 +208,31 @@ class VPG(BatchPolopt):
             objective += self._policy_ent_coeff * policy_entropies
 
         valid_objectives = loss_function_utils.filter_valids(objective, valids)
-        return torch.cat(valid_objectives).mean()
+        return -torch.cat(valid_objectives).mean()
+
+    def _compute_kl_constraint(self, obs):
+        """Compute KL divergence.
+
+        Compute the KL divergence between the old policy distribution and
+        current policy distribution.
+
+        Args:
+            obs (torch.Tensor): Observation from the environment.
+
+        Returns:
+            torch.Tensor: Calculated mean KL divergence.
+
+        """
+        flat_obs = flatten_batch(obs)
+        with torch.no_grad():
+            old_dist = self._old_policy.forward(flat_obs)
+
+        new_dist = self.policy.forward(flat_obs)
+
+        kl_constraint = torch.distributions.kl.kl_divergence(
+            old_dist, new_dist)
+
+        return kl_constraint.mean()
 
     def _compute_policy_entropy(self, obs):
         """Compute entropy value of probability distribution.
@@ -247,6 +291,9 @@ class VPG(BatchPolopt):
             return torch.Tensor(self.baseline.predict_n(path))
         return torch.Tensor(self.baseline.predict(path))
 
+    def _optimize(self, itr, paths, valids, obs, actions, rewards):  # pylint: disable=unused-argument  # noqa: E501
+        self._optimizer.step()
+
     def process_samples(self, itr, paths):
         """Process sample data based on the collected paths.
 
@@ -282,12 +329,18 @@ class VPG(BatchPolopt):
 
         return valids, obs, actions, rewards
 
-    def _log(self, itr, paths):
+    def _log(self, itr, paths, loss_before, loss_after, kl_before, kl,
+             policy_entropy):
         """Log information per iteration based on the collected paths.
 
         Args:
             itr (int): Iteration number.
             paths (list[dict]): A list of collected paths
+            loss_before (float): Loss before optimization step.
+            loss_after (float): Loss after optimization step.
+            kl_before (float): KL divergence before optimization step.
+            kl (float): KL divergence after optimization step.
+            policy_entropy (float): Policy entropy.
 
         Returns:
             float: The average return in last epoch cycle.
@@ -308,5 +361,12 @@ class VPG(BatchPolopt):
         tabular.record('StdReturn', np.std(undiscounted_returns))
         tabular.record('MaxReturn', np.max(undiscounted_returns))
         tabular.record('MinReturn', np.min(undiscounted_returns))
+        with tabular.prefix(self.policy.name):
+            tabular.record('LossBefore', loss_before)
+            tabular.record('LossAfter', loss_after)
+            tabular.record('dLoss', loss_before - loss_after)
+            tabular.record('KLBefore', kl_before)
+            tabular.record('KL', kl)
+            tabular.record('Entropy', policy_entropy)
 
         return average_return
