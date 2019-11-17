@@ -1,7 +1,4 @@
-"""
-This script creates a test that fails when garage.tf.algos.PPO performance is
-too low.
-"""
+"""This script creates a test that fails when PPO performance is too low."""
 import gym
 import torch
 
@@ -15,8 +12,10 @@ from tests.fixtures import snapshot_config
 
 
 class TestPPO:
+    """Test class for PPO."""
 
     def setup_method(self):
+        """Setup method which is called before every test."""
         self.env = GarageEnv(normalize(gym.make('InvertedDoublePendulum-v2')))
         self.policy = GaussianMLPPolicy(
             env_spec=self.env.spec,
@@ -27,6 +26,7 @@ class TestPPO:
         self.baseline = LinearFeatureBaseline(env_spec=self.env.spec)
 
     def teardown_method(self):
+        """Teardown method which is called after every test."""
         self.env.close()
 
     def test_ppo_pendulum(self):
@@ -37,12 +37,10 @@ class TestPPO:
         algo = PPO(env_spec=self.env.spec,
                    policy=self.policy,
                    baseline=self.baseline,
-                   optimizer=torch.optim.Adam,
                    max_path_length=100,
                    discount=0.99,
                    gae_lambda=0.97,
-                   lr_clip_range=2e-1,
-                   policy_lr=3e-4)
+                   lr_clip_range=2e-1)
 
         runner.setup(algo, self.env)
         last_avg_ret = runner.train(n_epochs=10, batch_size=100)

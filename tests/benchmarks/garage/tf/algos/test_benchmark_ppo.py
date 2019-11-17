@@ -171,13 +171,13 @@ def run_garage_pytorch(env, seed, log_dir):
 
     algo = PyTorch_PPO(env_spec=env.spec,
                        policy=policy,
-                       optimizer=torch.optim.Adam,
                        baseline=baseline,
+                       optimizer=torch.optim.Adam,
+                       policy_lr=hyper_parameters['learning_rate'],
                        max_path_length=hyper_parameters['max_path_length'],
                        discount=hyper_parameters['discount'],
                        gae_lambda=hyper_parameters['gae_lambda'],
                        center_adv=hyper_parameters['center_adv'],
-                       policy_lr=hyper_parameters['learning_rate'],
                        lr_clip_range=hyper_parameters['lr_clip_range'])
 
     # Set up logger since we are not using run_experiment

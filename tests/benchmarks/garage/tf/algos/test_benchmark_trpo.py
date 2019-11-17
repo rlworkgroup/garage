@@ -149,15 +149,13 @@ def run_garage_pytorch(env, seed, log_dir):
 
     baseline = LinearFeatureBaseline(env_spec=env.spec)
 
-    algo = PyTorch_TRPO(
-        env_spec=env.spec,
-        policy=policy,
-        baseline=baseline,
-        max_path_length=hyper_parameters['max_path_length'],
-        discount=hyper_parameters['discount'],
-        gae_lambda=hyper_parameters['gae_lambda'],
-        max_kl=hyper_parameters['max_kl'],
-    )
+    algo = PyTorch_TRPO(env_spec=env.spec,
+                        policy=policy,
+                        baseline=baseline,
+                        max_kl_step=hyper_parameters['max_kl'],
+                        max_path_length=hyper_parameters['max_path_length'],
+                        discount=hyper_parameters['discount'],
+                        gae_lambda=hyper_parameters['gae_lambda'])
 
     # Set up logger since we are not using run_experiment
     tabular_log_file = osp.join(log_dir, 'progress.csv')

@@ -147,11 +147,11 @@ def run_garage_pytorch(env, seed, log_dir):
     algo = PyTorch_VPG(env_spec=env.spec,
                        policy=policy,
                        optimizer=torch.optim.Adam,
+                       policy_lr=hyper_parameters['learning_rate'],
                        baseline=baseline,
                        max_path_length=hyper_parameters['max_path_length'],
                        discount=hyper_parameters['discount'],
-                       center_adv=hyper_parameters['center_adv'],
-                       policy_lr=hyper_parameters['learning_rate'])
+                       center_adv=hyper_parameters['center_adv'])
 
     # Set up logger since we are not using run_experiment
     tabular_log_file = osp.join(log_dir, 'progress.csv')

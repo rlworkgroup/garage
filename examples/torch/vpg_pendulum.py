@@ -38,12 +38,10 @@ def run_task(snapshot_config, *_):
 
     algo = VPG(env_spec=env.spec,
                policy=policy,
-               optimizer=torch.optim.Adam,
                baseline=baseline,
                max_path_length=100,
                discount=0.99,
-               center_adv=False,
-               policy_lr=1e-2)
+               center_adv=False)
 
     runner.setup(algo, env)
     runner.train(n_epochs=100, batch_size=10000)

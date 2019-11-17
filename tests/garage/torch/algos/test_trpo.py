@@ -26,7 +26,7 @@ class TestTRPO:
         self.baseline = LinearFeatureBaseline(env_spec=self.env.spec)
 
     def teardown_method(self):
-        """Teardown method which is called after eevery test."""
+        """Teardown method which is called after every test."""
         self.env.close()
 
     def test_trpo_pendulum(self):
