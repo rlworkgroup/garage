@@ -8,7 +8,6 @@ import numpy as np
 from garage.misc import tensor_utils as np_tensor_utils
 from garage.np.algos import RLAlgorithm
 from garage.sampler import OnPolicyVectorizedSampler
-from garage.tf.misc import tensor_utils
 from garage.tf.samplers import BatchSampler
 
 
@@ -68,12 +67,42 @@ class BatchPolopt2(RLAlgorithm, abc.ABC):
         self._flatten_input = flatten_input
 
         self._episode_reward_mean = collections.deque(maxlen=100)
+
         if policy.vectorized:
             self._sampler_cls = OnPolicyVectorizedSampler
         else:
             self._sampler_cls = BatchSampler
-
         self.init_opt()
+
+    @property
+    def max_path_length(self):
+        """Max path length of samples.
+
+        Returns:
+            int: Max path length.
+
+        """
+        return self._max_path_length
+
+    @property
+    def policy(self):
+        """Policy used by the algorithm.
+
+        Returns:
+            garage.tf.policies: Policy.
+
+        """
+        return self._policy
+
+    @property
+    def sampler_cls(self):
+        """Sampler class used by the algorith.
+
+        Returns:
+            garage.sampler: Sampler.
+
+        """
+        return self._sampler_cls
 
     def train(self, runner):
         """Obtain samplers and start actual training for each epoch.
@@ -133,14 +162,16 @@ class BatchPolopt2(RLAlgorithm, abc.ABC):
         - rewards : (numpy.ndarray), shape [B * (T), ]
         - baselines: (numpy.ndarray), shape [B * (T), ]
         - returns: (numpy.ndarray), shape [B * (T), ]
-        - lengths: (numpy.ndarray), shape [B * (T), ]
+        - lengths: (numpy.ndarray), shape [P, ], i-th entry represents
+            the length of i-th path.
         - agent_infos: (dict), see OnPolicyVectorizedSampler.obtain_samples()
         - env_infos: (dict), see OnPolicyVectorizedSampler.obtain_samples()
         - paths: (list[dict]) The original path with observation or action
             flattened
         - average_return: (numpy.float64)
 
-        where B = batch size, (T) = variable-length of each trajectory
+        where B = batch size, (T) = variable-length of each trajectory,
+            P = number of paths
 
         Args:
             itr (int): Iteration number.
@@ -152,8 +183,6 @@ class BatchPolopt2(RLAlgorithm, abc.ABC):
         """
         baselines = []
         returns = []
-
-        max_path_length = self._max_path_length
 
         if self._flatten_input:
             paths = [
@@ -213,10 +242,11 @@ class BatchPolopt2(RLAlgorithm, abc.ABC):
             agent_infos[key] = np.concatenate(
                 [infos[key] for infos in agent_infos_path])
 
-        env_infos = [path['env_infos'] for path in paths]
-        env_infos = tensor_utils.stack_tensor_dict_list([
-            tensor_utils.pad_tensor_dict(p, max_path_length) for p in env_infos
-        ])
+        env_infos_path = [path['env_infos'] for path in paths]
+        env_infos = dict()
+        for key in paths[0]['env_infos'].keys():
+            env_infos[key] = np.concatenate(
+                [infos[key] for infos in env_infos_path])
 
         valids = [np.ones_like(path['returns']) for path in paths]
         lengths = np.asarray([v.sum() for v in valids])

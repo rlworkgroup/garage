@@ -24,6 +24,19 @@ class OnPolicyVectorizedSampler(BatchSampler):
         n_envs (int): Number of environment instances to setup.
             This parameter has effect on sampling performance.
 
+    In obtain_samples(), N paths are generated. Each path is a dictionary,
+    with keys and values as following:
+    - observations : numpy.ndarray with shape [Batch, *obs_dims]
+    - actions      : numpy.ndarray with shape [Batch, *act_dims]
+    - rewards      : numpy.ndarray with shape [Batch, ]
+    - env_infos    : A dictionary with each key representing one environment
+        info, value being a numpy.ndarray with shape [Batch, ?]. One example
+        is "ale.lives" for atari environments.
+    - agent_infos  : A dictionary with each key representing one agent info,
+        value being a numpy.ndarray with shape [Batch, ?]. One example is
+        "prev_action", which is used for recurrent policy as previous action
+        input, merged with the observation input as the state input.
+
     """
 
     def __init__(self, algo, env, n_envs=None):
