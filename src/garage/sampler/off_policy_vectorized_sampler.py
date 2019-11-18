@@ -33,51 +33,58 @@ class OffPolicyVectorizedSampler(BatchSampler):
         if n_envs is None:
             n_envs = int(algo.rollout_batch_size)
         super().__init__(algo, env)
-        self.n_envs = n_envs
-        self.no_reset = no_reset
+        self._n_envs = n_envs
+        self._no_reset = no_reset
+
+        self._vec_env = None
+        self._env_spec = self.env.spec
 
         self._last_obses = None
         self._last_uncounted_discount = [0] * n_envs
         self._last_running_length = [0] * n_envs
         self._last_success_count = [0] * n_envs
-        self.env_spec = self.env.spec
-        self.vec_env = None
 
     def start_worker(self):
         """Initialize the sampler."""
-        n_envs = self.n_envs
+        n_envs = self._n_envs
         envs = [pickle.loads(pickle.dumps(self.env)) for _ in range(n_envs)]
 
         # Deterministically set environment seeds based on the global seed.
-        for (i, e) in enumerate(envs):
-            e.seed(deterministic.get_seed() + i)
+        seed0 = deterministic.get_seed()
+        if seed0 is not None:
+            for (i, e) in enumerate(envs):
+                e.seed(seed0 + i)
 
-        self.vec_env = VecEnvExecutor(
+        self._vec_env = VecEnvExecutor(
             envs=envs, max_path_length=self.algo.max_path_length)
 
     def shutdown_worker(self):
         """Terminate workers if necessary."""
-        self.vec_env.close()
+        self._vec_env.close()
 
-    # pylint: disable=arguments-differ, too-many-statements, too-many-branches
-    def obtain_samples(self, itr, batch_size):
+    # pylint: disable=too-many-branches, too-many-statements
+    def obtain_samples(self, itr, batch_size=None, whole_paths=True):
         """Collect samples for the given iteration number.
 
         Args:
             itr(int): Iteration number.
             batch_size(int): Number of environment interactions in one batch.
+            whole_paths(bool): Not effective. Only keep here to comply
+                with base class.
 
         Returns:
             list: A list of paths.
 
         """
+        assert batch_size is not None
+
         paths = []
-        if not self.no_reset or self._last_obses is None:
-            obses = self.vec_env.reset()
+        if not self._no_reset or self._last_obses is None:
+            obses = self._vec_env.reset()
         else:
             obses = self._last_obses
-        dones = np.asarray([True] * self.vec_env.num_envs)
-        running_paths = [None] * self.vec_env.num_envs
+        dones = np.asarray([True] * self._vec_env.num_envs)
+        running_paths = [None] * self._vec_env.num_envs
         n_samples = 0
 
         policy = self.algo.policy
@@ -94,7 +101,7 @@ class OffPolicyVectorizedSampler(BatchSampler):
             else:
                 input_obses = obses
             obs_normalized = tensor_utils.normalize_pixel_batch(
-                self.env_spec, input_obses)
+                self._env_spec, input_obses)
             if self.algo.es:
                 actions, agent_infos = self.algo.es.get_actions(
                     itr, obs_normalized, self.algo.policy)
@@ -102,16 +109,16 @@ class OffPolicyVectorizedSampler(BatchSampler):
                 actions, agent_infos = self.algo.policy.get_actions(
                     obs_normalized)
 
-            next_obses, rewards, dones, env_infos = self.vec_env.step(actions)
+            next_obses, rewards, dones, env_infos = self._vec_env.step(actions)
             self._last_obses = next_obses
             agent_infos = tensor_utils.split_tensor_dict_list(agent_infos)
             env_infos = tensor_utils.split_tensor_dict_list(env_infos)
             n_samples += len(next_obses)
 
             if agent_infos is None:
-                agent_infos = [dict() for _ in range(self.vec_env.num_envs)]
+                agent_infos = [dict() for _ in range(self._vec_env.num_envs)]
             if env_infos is None:
-                env_infos = [dict() for _ in range(self.vec_env.num_envs)]
+                env_infos = [dict() for _ in range(self._vec_env.num_envs)]
 
             if self.algo.input_include_goal:
                 self.algo.replay_buffer.add_transitions(

@@ -26,7 +26,7 @@ disable =
     too-many-arguments,
     too-many-locals,
     # Detection seems buggy or unhelpful
-    duplicate-code,
+    duplicate-code
 
 [REPORTS]
 msg-template = {path}:{line:3d},{column}: {msg} ({symbol})

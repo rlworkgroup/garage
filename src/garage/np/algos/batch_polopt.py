@@ -62,14 +62,15 @@ class BatchPolopt(RLAlgorithm):
                 such as snapshotting and sampler control.
 
         Returns:
-            The average return in last epoch cycle.
+            float: The average return in last epoch cycle.
 
         """
         last_return = None
 
-        for epoch in runner.step_epochs():
-            for cycle in range(self.n_samples):
+        for _ in runner.step_epochs():
+            for _ in range(self.n_samples):
                 runner.step_path = runner.obtain_samples(runner.step_itr)
+                tabular.record('TotalEnvSteps', runner.total_env_steps)
                 last_return = self.train_once(runner.step_itr,
                                               runner.step_path)
                 runner.step_itr += 1
@@ -145,5 +146,17 @@ class BatchPolopt(RLAlgorithm):
         return samples_data
 
     def get_itr_snapshot(self, itr, samples_data):
-        """Return data saved in the snapshot for this iteration."""
+        # pylint: disable=no-self-use
+        """Return data saved in the snapshot for this iteration.
+
+        Args:
+            itr (int): Iteration number.
+            samples_data (list[dict]): A list of collected paths
+
+        Returns:
+            dict: A dict of saved data in snapshot.
+
+        """
+        del itr
+        del samples_data
         return {}

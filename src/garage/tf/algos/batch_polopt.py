@@ -1,5 +1,5 @@
 """Base class for batch sampling-based policy optimization methods."""
-
+from abc import abstractmethod
 import collections
 
 from dowel import logger, tabular
@@ -84,13 +84,14 @@ class BatchPolopt(RLAlgorithm):
                 such as snapshotting and sampler control.
 
         Returns:
-            The average return in last epoch cycle.
+            float: The average return in last epoch cycle.
 
         """
         last_return = None
 
-        for epoch in runner.step_epochs():
+        for _ in runner.step_epochs():
             runner.step_path = runner.obtain_samples(runner.step_itr)
+            tabular.record('TotalEnvSteps', runner.total_env_steps)
             last_return = self.train_once(runner.step_itr, runner.step_path)
             runner.step_itr += 1
 
@@ -103,6 +104,9 @@ class BatchPolopt(RLAlgorithm):
             itr (int): Iteration number.
             paths (list[dict]): A list of collected paths.
 
+        Returns:
+            numpy.float64: Average return.
+
         """
         paths = self.process_samples(itr, paths)
         self.log_diagnostics(paths)
@@ -111,12 +115,18 @@ class BatchPolopt(RLAlgorithm):
         return paths['average_return']
 
     def log_diagnostics(self, paths):
-        """Log diagnostic information."""
+        """Log diagnostic information.
+
+        Args:
+            paths (list[dict]): A list of collected paths.
+
+        """
         logger.log('Logging diagnostics...')
         self.policy.log_diagnostics(paths)
         self.baseline.log_diagnostics(paths)
 
     def process_samples(self, itr, paths):
+        # pylint: disable=too-many-statements
         """Return processed sample data based on the collected paths.
 
         Args:
@@ -139,6 +149,7 @@ class BatchPolopt(RLAlgorithm):
         """
         baselines = []
         returns = []
+        total_steps = 0
 
         max_path_length = self.max_path_length
 
@@ -174,6 +185,7 @@ class BatchPolopt(RLAlgorithm):
             ]
 
         for idx, path in enumerate(paths):
+            total_steps += len(path['rewards'])
             path_baselines = np.append(all_path_baselines[idx], 0)
             deltas = (path['rewards'] + self.discount * path_baselines[1:] -
                       path_baselines[:-1])
@@ -264,10 +276,20 @@ class BatchPolopt(RLAlgorithm):
         """
         raise NotImplementedError
 
-    def get_itr_snapshot(self, itr):
-        """Get all the data that should be saved in this snapshot iteration."""
-        raise NotImplementedError
-
+    @abstractmethod
     def optimize_policy(self, itr, samples_data):
-        """Optimize the policy using the samples."""
+        """Optimize the policy using the samples.
+
+        Args:
+            itr (int): Iteration number.
+            samples_data (dict): Processed sample data.
+                See process_samples() for details.
+
+        Raises:
+            NotImplementedError: Raise when child class
+                does not overwrite this method.
+
+        """
+        del itr
+        del samples_data
         raise NotImplementedError

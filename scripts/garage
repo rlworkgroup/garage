@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Script for resuming training from command line."""
+# pylint: disable=no-name-in-module
 import click
 
 from garage.experiment import run_experiment
@@ -8,23 +9,26 @@ from garage.tf.experiment import LocalTFRunner
 
 @click.group()
 def cli():  # noqa: D103
-    pass
+    """The main command group."""
 
 
 @cli.command()
 @click.argument('from_dir')
 @click.option(
-    '--from_epoch',
-    default='last',
-    help='Index of epoch to restore from. Can be "first", "last" or a number. '
-    'Not applicable when snapshot_mode="last"')
-@click.option(
     '--log_dir',
     default=None,
-    help='Path to save the log snapshot. If not specified, will be the same '
+    help='Log path for resumed experiment. If not specified, will be the same '
     'as from_dir.')
+# pylint: disable=bad-docstring-quotes
+@click.option('--from_epoch',
+              default='last',
+              help='When there are multiple snapshots, '
+              'specify the index of epoch to restore from. '
+              'Can be "first", "last" or a number. '
+              'Not applicable when snapshot_mode="last"')
 def resume(from_dir, from_epoch, log_dir):
-    """Resume from command line."""
+    # pylint: disable=missing-param-doc, missing-type-doc
+    """Resume from experiment saved in FROM_DIR."""
     if log_dir is None:
         log_dir = from_dir
 

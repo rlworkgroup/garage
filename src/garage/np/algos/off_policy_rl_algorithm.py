@@ -1,4 +1,7 @@
 """This class implements OffPolicyRLAlgorithm for off-policy RL algorithms."""
+from abc import abstractmethod
+
+from dowel import tabular
 
 from garage.np.algos import RLAlgorithm
 from garage.sampler import OffPolicyVectorizedSampler
@@ -26,8 +29,9 @@ class OffPolicyRLAlgorithm(RLAlgorithm):
         reward_scale (float): Reward scale.
         input_include_goal (bool): Whether input includes goal.
         smooth_return (bool): Whether to smooth the return.
-        exploration_strategy (garage.np.exploration_strategies.
-            ExplorationStrategy): Exploration strategy.
+        exploration_strategy
+            (garage.np.exploration_strategies.ExplorationStrategy):
+            Exploration strategy.
 
     """
 
@@ -79,26 +83,34 @@ class OffPolicyRLAlgorithm(RLAlgorithm):
                 such as snapshotting and sampler control.
 
         Returns:
-            The average return in last epoch cycle.
+            float: The average return in last epoch cycle.
 
         """
         last_return = None
 
-        for epoch in runner.step_epochs():
+        for _ in runner.step_epochs():
             for cycle in range(self.n_epoch_cycles):
                 runner.step_path = runner.obtain_samples(runner.step_itr)
                 last_return = self.train_once(runner.step_itr,
                                               runner.step_path)
+                if cycle == 0 and self.evaluate:
+                    tabular.record('TotalEnvSteps', runner.total_env_steps)
                 runner.step_itr += 1
 
         return last_return
 
     def log_diagnostics(self, paths):
-        """Log diagnostic information on current paths."""
+        """Log diagnostic information on current paths.
+
+        Args:
+            paths (list[dict]): A list of collected paths.
+
+        """
         self.policy.log_diagnostics(paths)
         self.qf.log_diagnostics(paths)
 
     def process_samples(self, itr, paths):
+        # pylint: disable=no-self-use
         """Return processed sample data based on the collected paths.
 
         Args:
@@ -112,6 +124,8 @@ class OffPolicyRLAlgorithm(RLAlgorithm):
                 * complete (list[bool])
 
         """
+        del itr
+
         success_history = [
             path['success_count'] / path['running_length'] for path in paths
         ]
@@ -127,18 +141,25 @@ class OffPolicyRLAlgorithm(RLAlgorithm):
         return samples_data
 
     def init_opt(self):
-        """
-        Initialize the optimization procedure.
+        # pylint: disable=no-self-use
+        """Initialize the optimization procedure.
 
         If using tensorflow, this may
         include declaring all the variables and compiling functions.
         """
-        pass
 
+    @abstractmethod
     def optimize_policy(self, itr, samples_data):
-        """Optimize policy network."""
+        """Optimize policy network.
+
+        Args:
+            itr (int): Iterations.
+            samples_data (list): Processed batch data.
+
+        """
         raise NotImplementedError
 
+    @abstractmethod
     def train_once(self, itr, paths):
         """Perform one step of policy optimization given one batch of samples.
 

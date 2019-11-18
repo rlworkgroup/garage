@@ -19,9 +19,10 @@ class OnPolicyVectorizedSampler(BatchSampler):
     """BatchSampler which uses VecEnvExecutor to run multiple environments.
 
     Args:
-        algo (garage.np.algo.RLAlgorithm): A garage algo object
-        env (gym.Env): A gym/akro env object
-        n_envs (int): Number of parallel environments used for sampling.
+        algo (garage.np.algos.RLAlgorithm): An algorithm instance.
+        env (garage.envs.GarageEnv): An environement instance.
+        n_envs (int): Number of environment instances to setup.
+            This parameter has effect on sampling performance.
 
     """
 
@@ -29,25 +30,28 @@ class OnPolicyVectorizedSampler(BatchSampler):
         if n_envs is None:
             n_envs = singleton_pool.n_parallel * 4
         super().__init__(algo, env)
-        self.n_envs = n_envs
-        self.env_spec = self.env.spec
-        self.vec_env = None
+        self._n_envs = n_envs
+
+        self._vec_env = None
+        self._env_spec = self.env.spec
 
     def start_worker(self):
         """Start workers."""
-        n_envs = self.n_envs
+        n_envs = self._n_envs
         envs = [pickle.loads(pickle.dumps(self.env)) for _ in range(n_envs)]
 
         # Deterministically set environment seeds based on the global seed.
-        for (i, e) in enumerate(envs):
-            e.seed(deterministic.get_seed() + i)
+        seed0 = deterministic.get_seed()
+        if seed0 is not None:
+            for (i, e) in enumerate(envs):
+                e.seed(seed0 + i)
 
-        self.vec_env = VecEnvExecutor(
+        self._vec_env = VecEnvExecutor(
             envs=envs, max_path_length=self.algo.max_path_length)
 
     def shutdown_worker(self):
         """Shutdown workers."""
-        self.vec_env.close()
+        self._vec_env.close()
 
     # pylint: disable=too-many-statements
     def obtain_samples(self, itr, batch_size=None, whole_paths=True):
@@ -74,13 +78,13 @@ class OnPolicyVectorizedSampler(BatchSampler):
         logger.log('Obtaining samples for iteration %d...' % itr)
 
         if not batch_size:
-            batch_size = self.algo.max_path_length * self.n_envs
+            batch_size = self.algo.max_path_length * self._n_envs
 
         paths = []
         n_samples = 0
-        obses = self.vec_env.reset()
-        dones = np.asarray([True] * self.vec_env.num_envs)
-        running_paths = [None] * self.vec_env.num_envs
+        obses = self._vec_env.reset()
+        dones = np.asarray([True] * self._vec_env.num_envs)
+        running_paths = [None] * self._vec_env.num_envs
 
         pbar = ProgBarCounter(batch_size)
         policy_time = 0
@@ -97,16 +101,16 @@ class OnPolicyVectorizedSampler(BatchSampler):
 
             policy_time += time.time() - t
             t = time.time()
-            next_obses, rewards, dones, env_infos = self.vec_env.step(actions)
+            next_obses, rewards, dones, env_infos = self._vec_env.step(actions)
             env_time += time.time() - t
             t = time.time()
 
             agent_infos = tensor_utils.split_tensor_dict_list(agent_infos)
             env_infos = tensor_utils.split_tensor_dict_list(env_infos)
             if env_infos is None:
-                env_infos = [dict() for _ in range(self.vec_env.num_envs)]
+                env_infos = [dict() for _ in range(self._vec_env.num_envs)]
             if agent_infos is None:
-                agent_infos = [dict() for _ in range(self.vec_env.num_envs)]
+                agent_infos = [dict() for _ in range(self._vec_env.num_envs)]
             for idx, observation, action, reward, env_info, agent_info, done in zip(  # noqa: E501
                     itertools.count(), obses, actions, rewards, env_infos,
                     agent_infos, dones):

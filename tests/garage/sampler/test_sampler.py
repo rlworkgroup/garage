@@ -57,9 +57,9 @@ class TestSampler:
 
             runner._start_worker()
 
-            paths = runner.sampler.obtain_samples(0,
-                                                  batch_size=8,
-                                                  whole_paths=True)
+            paths = runner._sampler.obtain_samples(0,
+                                                   batch_size=8,
+                                                   whole_paths=True)
             assert len(paths) >= max_cpus, (
                 'BatchSampler should sample more than max_cpus={} '
                 'trajectories'.format(max_cpus))
