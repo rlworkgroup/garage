@@ -86,6 +86,7 @@ class TestBenchmarkPPO:  # pylint: disable=too-few-public-methods
                 garage_pytorch_csv = run_garage_pytorch(
                     env, seed, garage_pytorch_dir)
 
+                # pylint: disable=not-context-manager
                 with tf.Graph().as_default():
                     env.reset()
                     garage_tf_csv = run_garage(env, seed, garage_tf_dir)

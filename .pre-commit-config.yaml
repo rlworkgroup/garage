@@ -12,7 +12,7 @@ repos:
     -   id: check-pylint-normal
         name: Check pylint (except unit tests)
         types: [file, python]
-        exclude: ^tests/garage/.|tests/fixtures/.*$  # exclude unit tests
+        exclude: ^tests/garage/.*$  # exclude unit tests
         require_serial: true  # pylint does its own parallelism
         language: system
         entry: pylint

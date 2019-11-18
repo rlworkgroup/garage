@@ -252,7 +252,7 @@ class LocalRunner:
                 Not applicable when snapshot_mode='last'.
 
         Returns:
-            types.SimpleNamespace: A SimpleNamespace for train()'s arguments.
+            TrainArgs: Arguments for train().
 
         """
         saved = self._snapshotter.load(from_dir, from_epoch)

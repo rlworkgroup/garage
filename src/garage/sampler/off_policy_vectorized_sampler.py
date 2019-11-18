@@ -1,5 +1,4 @@
-"""
-This module implements a Vectorized Sampler used for OffPolicy Algorithms.
+"""This module implements a Vectorized Sampler used for OffPolicy Algorithms.
 
 It diffs from OnPolicyVectorizedSampler in two parts:
  - The num of envs is defined by rollout_batch_size. In

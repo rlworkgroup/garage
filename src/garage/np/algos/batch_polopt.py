@@ -146,7 +146,7 @@ class BatchPolopt(RLAlgorithm):
         return samples_data
 
     def get_itr_snapshot(self, itr, samples_data):
-        # pylint: disable=unused-argument, no-self-use
+        # pylint: disable=no-self-use
         """Return data saved in the snapshot for this iteration.
 
         Args:
@@ -157,4 +157,6 @@ class BatchPolopt(RLAlgorithm):
             dict: A dict of saved data in snapshot.
 
         """
+        del itr
+        del samples_data
         return {}
