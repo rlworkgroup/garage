@@ -42,7 +42,7 @@ ci-job-verify-envs: ci-verify-conda ci-verify-pipenv
 
 ci-verify-conda: CONDA_ROOT := $$HOME/miniconda
 ci-verify-conda: CONDA := $(CONDA_ROOT)/bin/conda
-ci-verify-conda: GARAGE_BIN = $(CONDA_ROOT)/envs/garage/bin
+ci-verify-conda: GARAGE_BIN = $(CONDA_ROOT)/envs/garage-ci/bin
 ci-verify-conda:
 	wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
 	bash miniconda.sh -b -p $(CONDA_ROOT)
@@ -57,7 +57,9 @@ ci-verify-conda:
 	$(CONDA) init
 	# Useful for debugging any issues with conda
 	$(CONDA) info -a
-	$(CONDA) env create -f environment.yml
+	$(CONDA) create -n garage-ci python=3.5 pip -y
+	$(GARAGE_BIN)/pip install --upgrade pip
+	$(GARAGE_BIN)/pip install dist/garage.tar.gz[all,dev]
 	# pylint will verify all imports work
 	$(GARAGE_BIN)/pylint --disable=all --enable=import-error garage
 
@@ -68,7 +70,7 @@ ci-verify-pipenv: export VIRTUAL_ENV=
 ci-verify-pipenv:
 	pip3 install --upgrade pipenv setuptools
 	pipenv --three
-	pipenv install .[all,dev]
+	pipenv install dist/garage.tar.gz[all,dev]
 	pipenv graph
 	# pylint will verify all imports work
 	pipenv run pylint --disable=all --enable=import-error garage
