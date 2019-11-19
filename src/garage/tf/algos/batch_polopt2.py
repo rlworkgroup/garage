@@ -172,6 +172,8 @@ class BatchPolopt2(RLAlgorithm, abc.ABC):
                 - returns: (numpy.ndarray), shape [B * (T), ]
                 - lengths: (numpy.ndarray), shape [P, ], i-th entry represents
                   the length of i-th path.
+                - valids: (numpy.ndarray), shape [P, ], [i, j] entry is 1 if
+                  the j-th sample in i-th path is valid, otherwise 0.
                 - agent_infos: (dict), see
                   OnPolicyVectorizedSampler.obtain_samples()
                 - env_infos: (dict), see
@@ -251,7 +253,7 @@ class BatchPolopt2(RLAlgorithm, abc.ABC):
             env_infos[key] = np.concatenate(
                 [infos[key] for infos in env_infos_path])
 
-        valids = [np.ones_like(path['returns']) for path in paths]
+        valids = np.asarray([np.ones_like(path['returns']) for path in paths])
         lengths = np.asarray([v.sum() for v in valids])
 
         average_discounted_return = (np.mean(
@@ -267,6 +269,7 @@ class BatchPolopt2(RLAlgorithm, abc.ABC):
             baselines=baselines,
             returns=returns,
             lengths=lengths,
+            valids=valids,
             agent_infos=agent_infos,
             env_infos=env_infos,
             paths=paths,
