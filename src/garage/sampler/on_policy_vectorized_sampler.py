@@ -1,6 +1,7 @@
 """BatchSampler which uses VecEnvExecutor to run multiple environments."""
 import itertools
 import pickle
+import time
 
 from dowel import logger, tabular
 import numpy as np
@@ -15,13 +16,22 @@ from garage.sampler.vec_env_executor import VecEnvExecutor
 
 
 class OnPolicyVectorizedSampler(BatchSampler):
-    """BatchSampler which uses VecEnvExecutor to run multiple environments."""
+    """BatchSampler which uses VecEnvExecutor to run multiple environments.
+
+    Args:
+        algo (garage.np.algo.RLAlgorithm): A garage algo object
+        env (gym.Env): A gym/akro env object
+        n_envs (int): Number of parallel environments used for sampling.
+
+    """
 
     def __init__(self, algo, env, n_envs=None):
         if n_envs is None:
             n_envs = singleton_pool.n_parallel * 4
         super().__init__(algo, env)
         self.n_envs = n_envs
+        self.env_spec = self.env.spec
+        self.vec_env = None
 
     def start_worker(self):
         """Start workers."""
@@ -34,14 +44,33 @@ class OnPolicyVectorizedSampler(BatchSampler):
 
         self.vec_env = VecEnvExecutor(
             envs=envs, max_path_length=self.algo.max_path_length)
-        self.env_spec = self.env.spec
 
     def shutdown_worker(self):
         """Shutdown workers."""
         self.vec_env.close()
 
+    # pylint: disable=too-many-statements
     def obtain_samples(self, itr, batch_size=None, whole_paths=True):
-        """Obtain samples."""
+        """Sample the policy for new trajectories.
+
+        Args:
+            itr (int): Iteration number.
+            batch_size (int): Number of samples to be collected. If None,
+                it will be default [algo.max_path_length * n_envs].
+            whole_paths (bool): Whether return all the paths or not. True
+                by default. It's possible for the paths to have total actual
+                sample size larger than batch_size, and will be truncated if
+                this flag is true.
+
+        Returns:
+            list[dict]: Sample paths, each path with key
+                * observations: (numpy.ndarray)
+                * actions: (numpy.ndarray)
+                * rewards: (numpy.ndarray)
+                * agent_infos: (dict)
+                * env_infos: (dict)
+
+        """
         logger.log('Obtaining samples for iteration %d...' % itr)
 
         if not batch_size:
@@ -60,7 +89,6 @@ class OnPolicyVectorizedSampler(BatchSampler):
 
         policy = self.algo.policy
 
-        import time
         while n_samples < batch_size:
             t = time.time()
             policy.reset(dones)
@@ -101,8 +129,7 @@ class OnPolicyVectorizedSampler(BatchSampler):
                     paths.append(
                         dict(observations=obs,
                              actions=actions,
-                             rewards=tensor_utils.stack_tensor_list(
-                                 running_paths[idx]['rewards']),
+                             rewards=np.asarray(running_paths[idx]['rewards']),
                              env_infos=tensor_utils.stack_tensor_dict_list(
                                  running_paths[idx]['env_infos']),
                              agent_infos=tensor_utils.stack_tensor_dict_list(
@@ -120,8 +147,4 @@ class OnPolicyVectorizedSampler(BatchSampler):
         tabular.record('EnvExecTime', env_time)
         tabular.record('ProcessExecTime', process_time)
 
-        if whole_paths:
-            return paths
-        else:
-            paths_truncated = truncate_paths(paths, batch_size)
-            return paths_truncated
+        return paths if whole_paths else truncate_paths(paths, batch_size)
