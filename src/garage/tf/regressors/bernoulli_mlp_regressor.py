@@ -7,15 +7,11 @@ from garage.tf.distributions import Bernoulli
 from garage.tf.misc import tensor_utils
 from garage.tf.models import NormalizedInputMLPModel
 from garage.tf.optimizers import ConjugateGradientOptimizer, LbfgsOptimizer
-from garage.tf.regressors import StochasticRegressor2
+from garage.tf.regressors import StochasticRegressor
 
 
-class BernoulliMLPRegressor(StochasticRegressor2):
-    """
-    BernoulliMLPRegressor with garage.tf.models.NormalizedInputMLPModel.
-
-    A class for performing regression by fitting a Bernoulli distribution to
-    the outputs.
+class BernoulliMLPRegressor(StochasticRegressor):
+    """Fits data to a Bernoulli distribution, parameterized by an MLP.
 
     Args:
         input_shape (tuple[int]): Input shape of the training data. Since an
@@ -26,22 +22,22 @@ class BernoulliMLPRegressor(StochasticRegressor2):
         hidden_sizes (list[int]): Output dimension of dense layer(s) for
             the MLP for the network. For example, (32, 32) means the MLP
             consists of two hidden layers, each with 32 hidden units.
-        hidden_nonlinearity (callable): Activation function for intermediate
+        hidden_nonlinearity (Callable): Activation function for intermediate
             dense layer(s). It should return a tf.Tensor. Set it to
             None to maintain a linear activation.
-        hidden_w_init (callable): Initializer function for the weight
+        hidden_w_init (Callable): Initializer function for the weight
             of intermediate dense layer(s). The function should return a
             tf.Tensor. Default is Glorot uniform initializer.
-        hidden_b_init (callable): Initializer function for the bias
+        hidden_b_init (Callable): Initializer function for the bias
             of intermediate dense layer(s). The function should return a
             tf.Tensor. Default is zero initializer.
-        output_nonlinearity (callable): Activation function for output dense
+        output_nonlinearity (Callable): Activation function for output dense
             layer. It should return a tf.Tensor. Set it to None to
             maintain a linear activation.
-        output_w_init (callable): Initializer function for the weight
+        output_w_init (Callable): Initializer function for the weight
             of output dense layer(s). The function should return a
             tf.Tensor. Default is Glorot uniform initializer.
-        output_b_init (callable): Initializer function for the bias
+        output_b_init (Callable): Initializer function for the bias
             of output dense layer(s). The function should return a
             tf.Tensor. Default is zero initializer.
         optimizer (garage.tf.Optimizer): Optimizer for minimizing the negative
@@ -56,6 +52,7 @@ class BernoulliMLPRegressor(StochasticRegressor2):
         max_kl_step (float): KL divergence constraint for each iteration.
         normalize_inputs (bool): Bool for normalizing inputs or not.
         layer_normalization (bool): Bool for using layer normalization or not.
+
     """
 
     def __init__(self,
@@ -102,6 +99,7 @@ class BernoulliMLPRegressor(StochasticRegressor2):
 
             self._optimizer = optimizer
             self._tr_optimizer = tr_optimizer
+            self._first_optimized = False
 
         self.model = NormalizedInputMLPModel(
             input_shape,
@@ -155,23 +153,20 @@ class BernoulliMLPRegressor(StochasticRegressor2):
 
             self._optimizer.update_opt(loss=loss,
                                        target=self,
-                                       network_output=[y_hat],
                                        inputs=[input_var, ys_var])
             self._tr_optimizer.update_opt(
                 loss=loss,
                 target=self,
-                network_output=[y_hat],
                 inputs=[input_var, ys_var, old_prob_var],
                 leq_constraint=(mean_kl, self._max_kl_step))
-            self._first_optimized = False
 
     def fit(self, xs, ys):
-        """
-        Fit with input data xs and label ys.
+        """Fit with input data xs and label ys.
 
         Args:
             xs (numpy.ndarray): Input data.
             ys (numpy.ndarray): Label of input data.
+
         """
         if self._normalize_inputs:
             # recompute normalizing constants for inputs
@@ -197,52 +192,48 @@ class BernoulliMLPRegressor(StochasticRegressor2):
         self._first_optimized = True
 
     def predict(self, xs):
-        """
-        Predict ys based on input xs.
+        """Predict ys based on input xs.
 
         Args:
             xs (numpy.ndarray): Input data of shape (samples, input_dim)
 
         Return:
-            numpy.ndarray The deterministic predicted ys (one hot vectors)
-            of shape (samples, output_dim)
+            numpy.ndarray: The deterministic predicted ys (one hot vectors)
+                of shape (samples, output_dim)
 
         """
         return self._f_predict(xs)
 
     def sample_predict(self, xs):
-        """
-        Do a Bernoulli sampling given input xs.
+        """Do a Bernoulli sampling given input xs.
 
         Args:
             xs (numpy.ndarray): Input data of shape (samples, input_dim)
 
         Returns:
-            numpy.ndarray The stochastic sampled ys
-            of shape (samples, output_dim)
+            numpy.ndarray: The stochastic sampled ys
+                of shape (samples, output_dim)
 
         """
         p = self._f_prob(xs)
         return self._dist.sample(dict(p=p))
 
     def predict_log_likelihood(self, xs, ys):
-        """
-        Log likelihood of ys given input xs.
+        """Log likelihood of ys given input xs.
 
         Args:
             xs (numpy.ndarray): Input data of shape (samples, input_dim)
             ys (numpy.ndarray): Output data of shape (samples, output_dim)
 
         Returns:
-            numpy.ndarray The log likelihood of shape (samples, )
+            numpy.ndarray: The log likelihood of shape (samples, )
 
         """
         p = self._f_prob(xs)
         return self._dist.log_likelihood(ys, dict(p=p))
 
     def log_likelihood_sym(self, x_var, y_var, name=None):
-        """
-        Symbolic graph of the log likelihood.
+        """Build a symbolic graph of the log-likelihood.
 
         Args:
             x_var (tf.Tensor): Input tf.Tensor for the input data.
@@ -250,25 +241,63 @@ class BernoulliMLPRegressor(StochasticRegressor2):
             name (str): Name of the new graph.
 
         Return:
-            tf.Tensor output of the symbolic log likelihood.
+            tf.Tensor: Output of the symbolic log-likelihood graph.
+
         """
         with tf.compat.v1.variable_scope(self._variable_scope):
             prob, _, _ = self.model.build(x_var, name=name)
 
         return self._dist.log_likelihood_sym(y_var, dict(p=prob))
 
+    def dist_info_sym(self, x_var, name=None):
+        """Build a symbolic graph of the distribution parameters.
+
+        Args:
+            x_var (tf.Tensor): Input tf.Tensor for the input data.
+            name (str): Name of the new graph.
+
+        Return:
+            dict[tf.Tensor]: Output of the symbolic graph of the distribution
+                parameters.
+
+        """
+        with tf.compat.v1.variable_scope(self._variable_scope):
+            prob, _, _ = self.model.build(x_var, name=name)
+
+        return dict(prob=prob)
+
     def get_params_internal(self, **args):
-        """Get the params, which are the trainable variables."""
+        """Get the params, which are the trainable variables.
+
+        Args:
+            args: Ignored by the function. Will be removed in future release.
+
+        Returns:
+            List[tf.Variable]: A list of trainable variables in the current
+            variable scope.
+
+        """
+        del args
         return self._variable_scope.trainable_variables()
 
     def __getstate__(self):
-        """Object.__getstate__."""
+        """Object.__getstate__.
+
+        Returns:
+            dict: the state to be pickled for the instance.
+
+        """
         new_dict = super().__getstate__()
         del new_dict['_f_predict']
         del new_dict['_f_prob']
         return new_dict
 
     def __setstate__(self, state):
-        """Object.__setstate__."""
+        """Object.__setstate__.
+
+        Args:
+            state (dict): unpickled state.
+
+        """
         super().__setstate__(state)
         self._initialize()

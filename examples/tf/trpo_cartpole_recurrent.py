@@ -1,20 +1,17 @@
 #!/usr/bin/env python3
-"""
-This is an example to train a task with TRPO algorithm.
+"""This is an example to train a task with TRPO algorithm.
 
-It uses an LSTM-based recurrent policy. To use a GRU-based recurrent
-policy, swap the commented lines. Here it runs CartPole-v1 environment
-with 100 iterations.
+It uses an LSTM-based recurrent policy.
+
+Here it runs CartPole-v1 environment with 100 iterations.
 
 Results:
     AverageReturn: 100
     RiseTime: itr 13
-
 """
 from garage.experiment import run_experiment
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import TRPO
-import garage.tf.core.layers as L
 from garage.tf.envs import TfEnv
 from garage.tf.experiment import LocalTFRunner
 from garage.tf.optimizers import ConjugateGradientOptimizer
@@ -23,16 +20,18 @@ from garage.tf.policies import CategoricalLSTMPolicy
 
 
 def run_task(snapshot_config, *_):
-    """Run task."""
+    """Defines the main experiment routine.
+
+    Args:
+        snapshot_config (garage.experiment.SnapshotConfig): Configuration
+            values for snapshotting.
+        *_ (object): Hyperparameters (unused).
+
+    """
     with LocalTFRunner(snapshot_config=snapshot_config) as runner:
         env = TfEnv(env_name='CartPole-v1')
 
-        policy = CategoricalLSTMPolicy(
-            name='policy',
-            env_spec=env.spec,
-            lstm_layer_cls=L.TfBasicLSTMLayer,
-            # gru_layer_cls=L.GRULayer,
-        )
+        policy = CategoricalLSTMPolicy(name='policy', env_spec=env.spec)
 
         baseline = LinearFeatureBaseline(env_spec=env.spec)
 

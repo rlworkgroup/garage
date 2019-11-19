@@ -1,20 +1,18 @@
 import numpy as np
 
-from garage.misc.overrides import overrides
 from garage.np.baselines.base import Baseline
 
 
 class LinearFeatureBaseline(Baseline):
+
     def __init__(self, env_spec, reg_coeff=1e-5, name='LinearFeatureBaseline'):
         self._coeffs = None
         self._reg_coeff = reg_coeff
         self.name = name
 
-    @overrides
     def get_param_values(self, **tags):
         return self._coeffs
 
-    @overrides
     def set_param_values(self, val, **tags):
         self._coeffs = val
 
@@ -26,7 +24,6 @@ class LinearFeatureBaseline(Baseline):
             [obs, obs**2, al, al**2, al**3,
              np.ones((length, 1))], axis=1)
 
-    @overrides
     def fit(self, paths):
         featmat = np.concatenate([self._features(path) for path in paths])
         returns = np.concatenate([path['returns'] for path in paths])
@@ -41,7 +38,6 @@ class LinearFeatureBaseline(Baseline):
                 break
             reg_coeff *= 10
 
-    @overrides
     def predict(self, path):
         if self._coeffs is None:
             return np.zeros(len(path['rewards']))

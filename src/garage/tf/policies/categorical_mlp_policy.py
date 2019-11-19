@@ -1,16 +1,14 @@
-"""CategoricalMLPPolicy with model."""
+"""CategoricalMLPPolicy."""
 import akro
 import tensorflow as tf
 
-from garage.misc.overrides import overrides
 from garage.tf.distributions import Categorical
 from garage.tf.models import MLPModel
-from garage.tf.policies.base2 import StochasticPolicy2
+from garage.tf.policies import StochasticPolicy
 
 
-class CategoricalMLPPolicy(StochasticPolicy2):
-    """
-    CategoricalMLPPolicy with model.
+class CategoricalMLPPolicy(StochasticPolicy):
+    """CategoricalMLPPolicy
 
     A policy that contains a MLP to make prediction based on
     a categorical distribution.
@@ -93,20 +91,17 @@ class CategoricalMLPPolicy(StochasticPolicy2):
         """Vectorized or not."""
         return True
 
-    @overrides
     def dist_info_sym(self, obs_var, state_info_vars=None, name=None):
         """Symbolic graph of the distribution."""
         with tf.compat.v1.variable_scope(self._variable_scope):
             prob = self.model.build(obs_var, name=name)
         return dict(prob=prob)
 
-    @overrides
     def dist_info(self, obs, state_infos=None):
         """Distribution info."""
         prob = self._f_prob(obs)
         return dict(prob=prob)
 
-    @overrides
     def get_action(self, observation):
         """Return a single action."""
         flat_obs = self.observation_space.flatten(observation)

@@ -1,11 +1,10 @@
 import gym
 import numpy as np
 
-from garage.core import Serializable
 from garage.envs.base import Step
 
 
-class PointEnv(gym.Env, Serializable):
+class PointEnv(gym.Env):
     """A simple 2D point environment.
 
     Attributes:
@@ -33,17 +32,19 @@ class PointEnv(gym.Env, Serializable):
 
         self._point = np.zeros_like(self._goal)
 
-        Serializable.quick_init(self, locals())
-
     @property
     def observation_space(self):
-        return gym.spaces.Box(
-            low=-np.inf, high=np.inf, shape=(2, ), dtype=np.float32)
+        return gym.spaces.Box(low=-np.inf,
+                              high=np.inf,
+                              shape=(2, ),
+                              dtype=np.float32)
 
     @property
     def action_space(self):
-        return gym.spaces.Box(
-            low=-0.1, high=0.1, shape=(2, ), dtype=np.float32)
+        return gym.spaces.Box(low=-0.1,
+                              high=0.1,
+                              shape=(2, ),
+                              dtype=np.float32)
 
     def reset(self):
         self._point = np.zeros_like(self._goal)

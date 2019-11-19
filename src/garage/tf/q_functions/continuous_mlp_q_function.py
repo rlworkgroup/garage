@@ -1,14 +1,12 @@
 """Continuous MLP QFunction."""
 import tensorflow as tf
 
-from garage.misc.overrides import overrides
 from garage.tf.models import MLPMergeModel
-from garage.tf.q_functions import QFunction2
+from garage.tf.q_functions import QFunction
 
 
-class ContinuousMLPQFunction(QFunction2):
-    """
-    Continuous MLP QFunction.
+class ContinuousMLPQFunction(QFunction):
+    """Continuous MLP QFunction.
 
     This class implements a q value network to predict q based on the input
     state and action. It uses an MLP to fit the function of Q(s, a).
@@ -119,10 +117,8 @@ class ContinuousMLPQFunction(QFunction2):
         """Return the input tensor."""
         return self.model.networks['default'].inputs
 
-    @overrides
     def get_qval_sym(self, state_input, action_input, name):
-        """
-        Symbolic graph for q-network.
+        """Symbolic graph for q-network.
 
         Args:
             state_input (tf.Tensor): The state input tf.Tensor to the network.
@@ -135,8 +131,7 @@ class ContinuousMLPQFunction(QFunction2):
             return self.model.build(state_input, action_input, name=name)
 
     def clone(self, name):
-        """
-        Return a clone of the Q-function.
+        """Return a clone of the Q-function.
 
         It only copies the configuration of the Q-function,
         not the parameters.

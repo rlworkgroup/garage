@@ -2,15 +2,14 @@
 import numpy as np
 import tensorflow as tf
 
-from garage.tf.core.lstm import lstm
-from garage.tf.core.parameter import recurrent_parameter
 from garage.tf.distributions import DiagonalGaussian
 from garage.tf.models import Model
+from garage.tf.models.lstm import lstm
+from garage.tf.models.parameter import recurrent_parameter
 
 
 class GaussianLSTMModel(Model):
-    """
-    GaussianLSTMModel.
+    """GaussianLSTMModel.
 
     Args:
         output_dim (int): Output dimension of the model.

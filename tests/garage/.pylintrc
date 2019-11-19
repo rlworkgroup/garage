@@ -1,0 +1,52 @@
+[MASTER]
+# Check docstring completeness
+load-plugins = pylint.extensions.docparams, pylint.extensions.docstyle
+
+# Unit tests have a special configuration which is checked separately
+ignore = tests/garage
+
+# Go as fast as you can
+jobs = 0
+
+# Packages which we need to load so we can see their C extensions
+extension-pkg-whitelist =
+    numpy.random,
+    mpi4py.MPI,
+
+
+[MESSAGES CONTROL]
+enable = all
+disable =
+    # Style rules handled by yapf/flake8
+    bad-continuation,
+    invalid-name,
+    line-too-long,
+    # Algorithms and neural networks generally have a lot of variables
+    too-many-instance-attributes,
+    too-many-arguments,
+    too-many-locals,
+    # Detection seems buggy or unhelpful
+    duplicate-code,
+    # Rules disabled *for unit tests only*
+    attribute-defined-outside-init,
+    differing-param-doc,
+    differing-type-doc,
+    docstring-first-line-empty,
+    missing-docstring,
+    missing-param-doc,
+    missing-return-doc,
+    missing-return-type-doc,
+    missing-type-doc,
+    no-self-use,
+    protected-access,
+    too-few-public-methods,
+
+
+[REPORTS]
+msg-template = {path}:{line:3d},{column}: {msg} ({symbol})
+output-format = colorized
+
+
+[TYPECHECK]
+# Packages which might not admit static analysis because they have C extensions
+generated-members = torch.*

@@ -1,3 +1,4 @@
+"""Tests for garage.tf.policies.ContinuousMLPPolicy"""
 import pickle
 from unittest import mock
 
@@ -13,6 +14,7 @@ from tests.fixtures.models import SimpleMLPModel
 
 
 class TestContinuousMLPPolicy(TfGraphTestCase):
+    """Test class for ContinuousMLPPolicy"""
 
     @pytest.mark.parametrize('obs_dim, action_dim', [
         ((1, ), (1, )),
@@ -23,6 +25,7 @@ class TestContinuousMLPPolicy(TfGraphTestCase):
         ((2, 2), (2, 2)),
     ])
     def test_get_action(self, obs_dim, action_dim):
+        """Test get_action method"""
         env = TfEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
         with mock.patch(('garage.tf.policies.'
                          'continuous_mlp_policy.MLPModel'),
@@ -53,6 +56,7 @@ class TestContinuousMLPPolicy(TfGraphTestCase):
         ((2, 2), (2, 2)),
     ])
     def test_get_action_sym(self, obs_dim, action_dim):
+        """Test get_action_sym method"""
         env = TfEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
         with mock.patch(('garage.tf.policies.'
                          'continuous_mlp_policy.MLPModel'),
@@ -85,6 +89,7 @@ class TestContinuousMLPPolicy(TfGraphTestCase):
         ((2, 2), (2, 2)),
     ])
     def test_is_pickleable(self, obs_dim, action_dim):
+        """Test if ContinuousMLPPolicy is pickleable"""
         env = TfEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
         with mock.patch(('garage.tf.policies.'
                          'continuous_mlp_policy.MLPModel'),
@@ -110,3 +115,15 @@ class TestContinuousMLPPolicy(TfGraphTestCase):
                 policy_pickled.model.outputs,
                 feed_dict={policy_pickled.model.input: [obs.flatten()]})
             assert np.array_equal(output1, output2)
+
+    @pytest.mark.parametrize('obs_dim, action_dim', [
+        ((1, ), (1, )),
+    ])
+    def test_get_regularizable_vars(self, obs_dim, action_dim):
+        """Test get_regularizable_vars method"""
+        env = TfEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
+        policy = ContinuousMLPPolicy(env_spec=env.spec)
+        reg_vars = policy.get_regularizable_vars()
+        assert len(reg_vars) == 2
+        for var in reg_vars:
+            assert ('bias' not in var.name) and ('output' not in var.name)

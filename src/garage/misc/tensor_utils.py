@@ -1,5 +1,25 @@
 import gym.spaces
 import numpy as np
+import scipy.signal
+
+
+def discount_cumsum(x, discount):
+    # See https://docs.scipy.org/doc/scipy/reference/tutorial/signal.html#difference-equation-filtering  # noqa: E501
+    # Here, we have y[t] - discount*y[t+1] = x[t]
+    # or rev(y)[t] - discount*rev(y)[t-1] = rev(x)[t]
+    return scipy.signal.lfilter([1], [1, float(-discount)], x[::-1],
+                                axis=0)[::-1]
+
+
+def explained_variance_1d(ypred, y):
+    assert y.ndim == 1 and ypred.ndim == 1
+    vary = np.var(y)
+    if np.isclose(vary, 0):
+        if np.var(ypred) > 0:
+            return 0
+        else:
+            return 1
+    return 1 - np.var(y - ypred) / (vary + 1e-8)
 
 
 def flatten_tensors(tensors):

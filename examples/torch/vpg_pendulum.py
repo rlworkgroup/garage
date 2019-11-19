@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-This is an example to train a task with VPG algorithm (PyTorch).
+"""This is an example to train a task with VPG algorithm (PyTorch).
 
 Here it runs InvertedDoublePendulum-v2 environment with 100 iterations.
 
@@ -17,7 +16,15 @@ from garage.torch.policies import GaussianMLPPolicy
 
 
 def run_task(snapshot_config, *_):
-    """Run the job."""
+    """Set up environment and algorithm and run the task.
+
+    Args:
+        snapshot_config (garage.experiment.SnapshotConfig): The snapshot
+            configuration used by LocalRunner to create the snapshotter.
+            If None, it will create one with default settings.
+        _ : Unused parameters
+
+    """
     env = TfEnv(env_name='InvertedDoublePendulum-v2')
 
     runner = LocalRunner(snapshot_config)

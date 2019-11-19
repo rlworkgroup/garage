@@ -2,11 +2,10 @@
 import gym
 import numpy as np
 
-from garage.core import Serializable
 from garage.np.exploration_strategies.base import ExplorationStrategy
 
 
-class GaussianStrategy(ExplorationStrategy, Serializable):
+class GaussianStrategy(ExplorationStrategy):
     """Add Gaussian noise to the action taken by the deterministic policy."""
 
     def __init__(self,
@@ -16,7 +15,6 @@ class GaussianStrategy(ExplorationStrategy, Serializable):
                  decay_period=1000000):
         assert isinstance(env_spec.action_space, gym.spaces.Box)
         assert len(env_spec.action_space.shape) == 1
-        Serializable.quick_init(self, locals())
         self._max_sigma = max_sigma
         self._min_sigma = min_sigma
         self._decay_period = decay_period

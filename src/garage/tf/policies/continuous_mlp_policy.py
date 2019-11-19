@@ -1,5 +1,4 @@
-"""
-This modules creates a continuous MLP policy network.
+"""This modules creates a continuous MLP policy network.
 
 A continuous MLP network can be used as policy method in different RL
 algorithms. It accepts an observation of the environment and predicts a
@@ -7,14 +6,12 @@ continuous action.
 """
 import tensorflow as tf
 
-from garage.misc.overrides import overrides
 from garage.tf.models import MLPModel
-from garage.tf.policies.base2 import Policy2
+from garage.tf.policies import Policy
 
 
-class ContinuousMLPPolicy(Policy2):
-    """
-    ContinuousMLPPolicy with model.
+class ContinuousMLPPolicy(Policy):
+    """Continuous MLP Policy Network.
 
     The policy network selects action based on the state of the environment.
     It uses neural nets to fit the function of pi(s).
@@ -45,6 +42,7 @@ class ContinuousMLPPolicy(Policy2):
             tf.Tensor.
         input_include_goal (bool): Include goal in the observation or not.
         layer_normalization (bool): Bool for using layer normalization or not.
+
     """
 
     def __init__(self,
@@ -102,29 +100,28 @@ class ContinuousMLPPolicy(Policy2):
             feed_list=[self.model.networks['default'].input])
 
     def get_action_sym(self, obs_var, name=None):
-        """
-        Symbolic graph of the action.
+        """Symbolic graph of the action.
 
         Args:
             obs_var (tf.Tensor): Tensor input for symbolic graph.
             name (str): Name for symbolic graph.
 
+        Returns:
+            tf.Tensor: symbolic graph of the action.
+
         """
         with tf.compat.v1.variable_scope(self._variable_scope):
             return self.model.build(obs_var, name=name)
 
-    @overrides
     def get_action(self, observation):
-        """
-        Get single action from this policy for the input observation.
+        """Get single action from this policy for the input observation.
 
         Args:
             observation (numpy.ndarray): Observation from environment.
 
         Returns:
-            action (numpy.ndarray): Predicted action.
-            agent_info (dict): Empty dict since this policy does
-                not model a distribution.
+            numpy.ndarray: Predicted action.
+            dict: Empty dict since this policy does not model a distribution.
 
         """
         flat_obs = self.observation_space.flatten(observation)
@@ -132,18 +129,15 @@ class ContinuousMLPPolicy(Policy2):
         action = self.action_space.unflatten(action)
         return action, dict()
 
-    @overrides
     def get_actions(self, observations):
-        """
-        Get multiple actions from this policy for the input observations.
+        """Get multiple actions from this policy for the input observations.
 
         Args:
             observations (numpy.ndarray): Observations from environment.
 
         Returns:
-            actions (numpy.ndarray): Predicted actions.
-            agent_infos (dict): Empty dict since this policy does
-                not model a distribution.
+            numpy.ndarray: Predicted actions.
+            dict: Empty dict since this policy does not model a distribution.
 
         """
         flat_obs = self.observation_space.flatten_n(observations)
@@ -151,20 +145,41 @@ class ContinuousMLPPolicy(Policy2):
         actions = self.action_space.unflatten_n(actions)
         return actions, dict()
 
+    def get_regularizable_vars(self):
+        """Get regularizable weight variables under the Policy scope.
+
+        Returns:
+            list(tf.Variable): List of regularizable variables.
+
+        """
+        trainable = self.get_trainable_vars()
+        return [
+            var for var in trainable
+            if 'hidden' in var.name and 'kernel' in var.name
+        ]
+
     @property
     def vectorized(self):
-        """Vectorized or not."""
+        """Vectorized or not.
+
+        Returns:
+            bool: vectorized or not.
+
+        """
         return True
 
     def clone(self, name):
-        """
-        Return a clone of the policy.
+        """Return a clone of the policy.
 
         It only copies the configuration of the Q-function,
         not the parameters.
 
         Args:
             name (str): Name of the newly created policy.
+
+        Returns:
+            garage.tf.policies.ContinuousMLPPolicy: Clone of this object
+
         """
         return self.__class__(name=name,
                               env_spec=self._env_spec,
@@ -179,12 +194,22 @@ class ContinuousMLPPolicy(Policy2):
                               layer_normalization=self._layer_normalization)
 
     def __getstate__(self):
-        """Object.__getstate__."""
+        """Object.__getstate__.
+
+        Returns:
+            dict: the state to be pickled as the contents for the instance.
+
+        """
         new_dict = super().__getstate__()
         del new_dict['_f_prob']
         return new_dict
 
     def __setstate__(self, state):
-        """Object.__setstate__."""
+        """Object.__setstate__.
+
+        Args:
+            state (dict): unpickled state.
+
+        """
         super().__setstate__(state)
         self._initialize()

@@ -1,4 +1,5 @@
 fail_fast: false # set to true to have pre-commit stop running hooks after the first failure.
+default_stages: [commit, push]
 
 repos:
 -   repo: local
@@ -8,12 +9,21 @@ repos:
         name: Check commit message
         language: script
         entry: scripts/check_commit_message
-    -   id: pylint
-        name: pylint
-        entry: pylint
-        args: ['-j 2', '--rcfile=setup.cfg']
+    -   id: check-pylint-normal
+        name: Check pylint (except unit tests)
+        types: [file, python]
+        exclude: ^tests/garage/.*$  # exclude unit tests
+        require_serial: true  # pylint does its own parallelism
         language: system
-        files: \.py$
+        entry: pylint
+    -   id: check-pylint-unit-tests
+        name: Check pylint for unit tests
+        types: [file, python]
+        files: ^tests/garage/.*$  # check only unit tests
+        require_serial: true  # pylint does its own parallelism
+        language: system
+        entry: pylint
+        args: [--rcfile=tests/garage/.pylintrc]
 
 -   repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v2.2.3
@@ -34,7 +44,11 @@ repos:
     -   id: double-quote-string-fixer        # This hook replaces double quoted strings with single quoted strings.
     -   id: end-of-file-fixer                # Makes sure files end in a newline and only a newline.
     -   id: flake8                           # Run flake8 on your Python files
-        additional_dependencies: ['flake8-import-order', 'flake8-docstrings', 'pydocstyle<4.0.0']
+        additional_dependencies:
+          -   'flake8-docstrings>=1.5.0'
+          -   'flake8-import-order'
+          -   'pycodestyle>=2.5.0'
+          -   'pydocstyle>=4.0.0'
     -   id: forbid-new-submodules            # Prevent addition of new git submodules.
     -   id: mixed-line-ending                # Replaces or checks mixed line ending.
     -   id: pretty-format-json               # Checks that all your JSON files have keys that are sorted and indented.
@@ -45,7 +59,7 @@ repos:
     rev: v0.28.0
     hooks:
     -   id: yapf
-        name: Check format by yapf
+        name: Check format with yapf
         args: ['-vv', '-dpr']
 
 # Second pass: format in-place
@@ -53,5 +67,5 @@ repos:
     rev: v0.28.0
     hooks:
     -   id: yapf
-        name: Format in-place by yapf
+        name: Format in-place with yapf
         args: ['-vv', '-ipr']

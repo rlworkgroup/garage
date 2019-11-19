@@ -1,7 +1,6 @@
 """This module implements a simple replay buffer."""
 import numpy as np
 
-from garage.misc.overrides import overrides
 from garage.replay_buffer.base import ReplayBuffer
 
 
@@ -12,7 +11,6 @@ class SimpleReplayBuffer(ReplayBuffer):
     It uses random batch sample to minimize correlations between samples.
     """
 
-    @overrides
     def sample(self, batch_size):
         """Sample a transition of batch_size."""
         assert self._n_transitions_stored >= batch_size

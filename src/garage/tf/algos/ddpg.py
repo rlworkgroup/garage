@@ -4,9 +4,8 @@ from collections import deque
 from dowel import logger, tabular
 import numpy as np
 import tensorflow as tf
-import tensorflow.contrib as tc
+import tensorflow.contrib as tc  # pylint: disable=import-error
 
-from garage.misc.overrides import overrides
 from garage.np.algos.off_policy_rl_algorithm import OffPolicyRLAlgorithm
 from garage.tf.misc import tensor_utils
 
@@ -28,22 +27,24 @@ class DDPG(OffPolicyRLAlgorithm):
         policy (garage.tf.policies.base.Policy): Policy.
         qf (object): The q value network.
         replay_buffer (garage.replay_buffer.ReplayBuffer): Replay buffer.
+        n_epoch_cycles (int): Number of train_once calls per epoch.
         n_train_steps (int): Training steps.
         max_path_length (int): Maximum path length. The episode will
             terminate when length of trajectory reaches max_path_length.
+        buffer_batch_size (int): Batch size of replay buffer.
         min_buffer_size (int): The minimum buffer size for replay buffer.
         rollout_batch_size (int): Roll out batch size.
-        exploration_strategy (garage.np.exploration_strategies.
-            ExplorationStrategy): Exploration strategy.
+        exploration_strategy (garage.np.exploration_strategies.ExplorationStrategy): # noqa: E501
+                Exploration strategy.
         target_update_tau (float): Interpolation parameter for doing the
             soft target update.
         policy_lr (float): Learning rate for training policy network.
         qf_lr (float): Learning rate for training q value network.
         discount(float): Discount factor for the cumulative return.
-        policy_weight_decay (float): L2 weight decay factor for parameters
-            of the policy network.
-        qf_weight_decay (float): L2 weight decay factor for parameters
-            of the q value network.
+        policy_weight_decay (float): L2 regularization factor for parameters
+            of the policy network. Value of 0 means no regularization.
+        qf_weight_decay (float): L2 regularization factor for parameters
+            of the q value network. Value of 0 means no regularization.
         policy_optimizer (tf.Optimizer): Optimizer for training policy network.
         qf_optimizer (tf.Optimizer): Optimizer for training q function
             network.
@@ -125,7 +126,6 @@ class DDPG(OffPolicyRLAlgorithm):
                                    input_include_goal=input_include_goal,
                                    smooth_return=smooth_return)
 
-    @overrides
     def init_opt(self):
         """Build the loss function and init the optimizer."""
         with tf.name_scope(self.name, 'DDPG'):
@@ -160,9 +160,9 @@ class DDPG(OffPolicyRLAlgorithm):
                         flat_dim_with_keys(['observation', 'desired_goal'])
                 else:
                     obs_dim = self.env_spec.observation_space.flat_dim
-                y = tf.compat.v1.placeholder(tf.float32,
-                                             shape=(None, 1),
-                                             name='input_y')
+                input_y = tf.compat.v1.placeholder(tf.float32,
+                                                   shape=(None, 1),
+                                                   name='input_y')
                 obs = tf.compat.v1.placeholder(tf.float32,
                                                shape=(None, obs_dim),
                                                name='input_observation')
@@ -195,7 +195,7 @@ class DDPG(OffPolicyRLAlgorithm):
             qval = self.qf.get_qval_sym(obs, actions, name='q_value')
             with tf.name_scope('qval_loss'):
                 qval_loss = tf.reduce_mean(
-                    tf.compat.v1.squared_difference(y, qval))
+                    tf.compat.v1.squared_difference(input_y, qval))
                 if self.qf_weight_decay > 0.:
                     qf_reg = tc.layers.apply_regularization(
                         tc.layers.l2_regularizer(self.qf_weight_decay),
@@ -208,7 +208,7 @@ class DDPG(OffPolicyRLAlgorithm):
                         qval_loss, var_list=self.qf.get_trainable_vars())
 
             f_train_qf = tensor_utils.compile_function(
-                inputs=[y, obs, actions],
+                inputs=[input_y, obs, actions],
                 outputs=[qf_train_op, qval_loss, qval])
 
             self.f_train_policy = f_train_policy
@@ -217,7 +217,12 @@ class DDPG(OffPolicyRLAlgorithm):
             self.f_update_target = f_update_target
 
     def __getstate__(self):
-        """Object.__getstate__."""
+        """Object.__getstate__.
+
+        Returns:
+            dict: the state to be pickled for the instance.
+
+        """
         data = self.__dict__.copy()
         del data['target_policy_f_prob_online']
         del data['target_qf_f_prob_online']
@@ -228,8 +233,13 @@ class DDPG(OffPolicyRLAlgorithm):
         return data
 
     def __setstate__(self, state):
-        """Object.__setstate__."""
-        self.__dict__ = state
+        """Object.__setstate__.
+
+        Args:
+            state (dict): unpickled state.
+
+        """
+        self.__dict__.update(state)
         self.init_opt()
 
     def train_once(self, itr, paths):
@@ -238,6 +248,9 @@ class DDPG(OffPolicyRLAlgorithm):
         Args:
             itr (int): Iteration number.
             paths (list[dict]): A list of collected paths.
+
+        Returns:
+            np.float64: Average return.
 
         """
         paths = self.process_samples(itr, paths)
@@ -255,15 +268,17 @@ class DDPG(OffPolicyRLAlgorithm):
 
         last_average_return = np.mean(self.episode_rewards)
         self.log_diagnostics(paths)
-        for train_itr in range(self.n_train_steps):
-            if self.replay_buffer.n_transitions_stored >= self.min_buffer_size:  # noqa: E501
+        for _ in range(self.n_train_steps):
+            if (self.replay_buffer.n_transitions_stored >=
+                    self.min_buffer_size):
                 self.evaluate = True
-                qf_loss, y, q, policy_loss = self.optimize_policy(itr, paths)
+                qf_loss, y_s, qval, policy_loss = self.optimize_policy(
+                    itr, paths)
 
                 self.episode_policy_losses.append(policy_loss)
                 self.episode_qf_losses.append(qf_loss)
-                self.epoch_ys.append(y)
-                self.epoch_qs.append(q)
+                self.epoch_ys.append(y_s)
+                self.epoch_qs.append(qval)
 
         if itr % self.n_epoch_cycles == 0:
             logger.log('Training finished')
@@ -296,10 +311,8 @@ class DDPG(OffPolicyRLAlgorithm):
                 self.epoch_qs = []
 
             self.success_history.clear()
-
         return last_average_return
 
-    @overrides
     def optimize_policy(self, itr, samples_data):
         """Perform algorithm optimizing.
 
@@ -308,10 +321,10 @@ class DDPG(OffPolicyRLAlgorithm):
             samples_data (list): Processed batch data.
 
         Returns:
-            action_loss (float): Loss of action predicted by the policy network
-            qval_loss (float): Loss of q value predicted by the q network.
-            ys (float): y_s.
-            qval (float): Q value predicted by the q network.
+            float: Loss of action predicted by the policy network
+            float: Loss of q value predicted by the q network.
+            float: ys.
+            float: Q value predicted by the q network.
 
         """
         transitions = self.replay_buffer.sample(self.buffer_batch_size)
@@ -349,7 +362,14 @@ class DDPG(OffPolicyRLAlgorithm):
 
         return qval_loss, ys, qval, action_loss
 
-    @overrides
     def get_itr_snapshot(self, itr):
-        """Return data saved in the snapshot for this iteration."""
+        """Return data saved in the snapshot for this iteration.
+
+        Args:
+            itr (int): Current iteration.
+
+        Returns:
+            dict: dictionary of iteration number and policy.
+
+        """
         return dict(itr=itr, policy=self.policy)

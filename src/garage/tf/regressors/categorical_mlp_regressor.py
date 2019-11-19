@@ -7,12 +7,11 @@ from garage.tf.distributions import Categorical
 from garage.tf.misc import tensor_utils
 from garage.tf.models import NormalizedInputMLPModel
 from garage.tf.optimizers import ConjugateGradientOptimizer, LbfgsOptimizer
-from garage.tf.regressors import StochasticRegressor2
+from garage.tf.regressors import StochasticRegressor
 
 
-class CategoricalMLPRegressor(StochasticRegressor2):
-    """
-    CategoricalMLPRegressor with garage.tf.models.NormalizedInputMLPModel.
+class CategoricalMLPRegressor(StochasticRegressor):
+    """Fits data to a Categorical with parameters are the output of an MLP.
 
     A class for performing regression (or classification, really) by fitting
     a Categorical distribution to the outputs. Assumes that the output will
@@ -27,22 +26,22 @@ class CategoricalMLPRegressor(StochasticRegressor2):
         hidden_sizes (list[int]): Output dimension of dense layer(s) for
             the MLP for the network. For example, (32, 32) means the MLP
             consists of two hidden layers, each with 32 hidden units.
-        hidden_nonlinearity (callable): Activation function for intermediate
+        hidden_nonlinearity (Callable): Activation function for intermediate
             dense layer(s). It should return a tf.Tensor. Set it to
             None to maintain a tanh activation.
-        hidden_w_init (callable): Initializer function for the weight
+        hidden_w_init (Callable): Initializer function for the weight
             of intermediate dense layer(s). The function should return a
             tf.Tensor. Default is Glorot uniform initializer.
-        hidden_b_init (callable): Initializer function for the bias
+        hidden_b_init (Callable): Initializer function for the bias
             of intermediate dense layer(s). The function should return a
             tf.Tensor. Default is zero initializer.
-        output_nonlinearity (callable): Activation function for output dense
+        output_nonlinearity (Callable): Activation function for output dense
             layer. It should return a tf.Tensor. Set it to None to
             maintain a softmax activation.
-        output_w_init (callable): Initializer function for the weight
+        output_w_init (Callable): Initializer function for the weight
             of output dense layer(s). The function should return a
             tf.Tensor. Default is Glorot uniform initializer.
-        output_b_init (callable): Initializer function for the bias
+        output_b_init (Callable): Initializer function for the bias
             of output dense layer(s). The function should return a
             tf.Tensor. Default is zero initializer.
         optimizer (garage.tf.Optimizer): Optimizer for minimizing the negative
@@ -104,6 +103,7 @@ class CategoricalMLPRegressor(StochasticRegressor2):
 
             self._optimizer = optimizer
             self._tr_optimizer = tr_optimizer
+            self._first_optimized = False
 
         self.model = NormalizedInputMLPModel(
             input_shape,
@@ -157,18 +157,15 @@ class CategoricalMLPRegressor(StochasticRegressor2):
 
             self._optimizer.update_opt(loss=loss,
                                        target=self,
-                                       network_output=[y_hat],
                                        inputs=[input_var, ys_var])
             self._tr_optimizer.update_opt(
                 loss=loss,
                 target=self,
-                network_output=[y_hat],
                 inputs=[input_var, ys_var, old_prob_var],
                 leq_constraint=(mean_kl, self._max_kl_step))
 
     def fit(self, xs, ys):
-        """
-        Fit with input data xs and label ys.
+        """Fit with input data xs and label ys.
 
         Args:
             xs (numpy.ndarray): Input data.
@@ -196,46 +193,44 @@ class CategoricalMLPRegressor(StochasticRegressor2):
         loss_after = optimizer.loss(inputs)
         tabular.record('{}/LossAfter'.format(self._name), loss_after)
         tabular.record('{}/dLoss'.format(self._name), loss_before - loss_after)
-        self.first_optimized = True
+        self._first_optimized = True
 
     def predict(self, xs):
-        """
-        Predict ys based on input xs.
+        """Predict ys based on input xs.
 
         Args:
             xs (numpy.ndarray): Input data.
 
         Return:
-            The predicted ys (one hot vectors).
+            numpy.ndarray: The predicted ys (one hot vectors).
 
         """
         return self._f_predict(xs)
 
     def predict_log_likelihood(self, xs, ys):
-        """
-        Predict log likelihood of output based on input xs and labels ys.
+        """Predict log-likelihood of output data conditioned on the input data.
 
         Args:
             xs (numpy.ndarray): Input data.
-            ys (numpy.ndarray): Input labels in one hot representation.
+            ys (numpy.ndarray): Output labels in one hot representation.
 
         Return:
-            The predicted log likelihoods.
+            numpy.ndarray: The predicted log likelihoods.
 
         """
         prob = self._f_prob(xs)
         return self._dist.log_likelihood(ys, dict(prob=prob))
 
     def dist_info_sym(self, x_var, name=None):
-        """
-        Symbolic graph of the distribution.
+        """Build a symbolic graph of the distribution parameters.
 
         Args:
             x_var (tf.Tensor): Input tf.Tensor for the input data.
             name (str): Name of the new graph.
 
         Return:
-            tf.Tensor output of the symbolic graph of the distribution.
+            dict[tf.Tensor]: Output of the symbolic graph of the distribution
+                parameters.
 
         """
         with tf.compat.v1.variable_scope(self._variable_scope):
@@ -244,8 +239,7 @@ class CategoricalMLPRegressor(StochasticRegressor2):
         return dict(prob=prob)
 
     def log_likelihood_sym(self, x_var, y_var, name=None):
-        """
-        Symbolic graph of the log likelihood.
+        """Build a symbolic graph of the log-likelihood.
 
         Args:
             x_var (tf.Tensor): Input tf.Tensor for the input data.
@@ -253,7 +247,7 @@ class CategoricalMLPRegressor(StochasticRegressor2):
             name (str): Name of the new graph.
 
         Return:
-            tf.Tensor output of the symbolic log likelihood.
+            tf.Tensor: Output of the symbolic log-likelihood graph.
 
         """
         with tf.compat.v1.variable_scope(self._variable_scope):
@@ -262,11 +256,26 @@ class CategoricalMLPRegressor(StochasticRegressor2):
         return self._dist.log_likelihood_sym(y_var, dict(prob=prob))
 
     def get_params_internal(self, **args):
-        """Get the params, which are the trainable variables."""
+        """Get the params, which are the trainable variables.
+
+        Args:
+            args: Ignored by the function. Will be removed in future release.
+
+        Returns:
+            List[tf.Variable]: A list of trainable variables in the current
+            variable scope.
+
+        """
+        del args
         return self._variable_scope.trainable_variables()
 
     def __getstate__(self):
-        """Object.__getstate__."""
+        """Object.__getstate__.
+
+        Returns:
+            dict: the state to be pickled for the instance.
+
+        """
         new_dict = super().__getstate__()
         del new_dict['_f_predict']
         del new_dict['_f_prob']
@@ -274,6 +283,11 @@ class CategoricalMLPRegressor(StochasticRegressor2):
         return new_dict
 
     def __setstate__(self, state):
-        """Object.__setstate__."""
+        """Object.__setstate__.
+
+        Args:
+            state (dict): unpickled state.
+
+        """
         super().__setstate__(state)
         self._initialize()

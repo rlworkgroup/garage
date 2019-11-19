@@ -1,13 +1,11 @@
 import gym
 import gym.spaces
+import gym.spaces.utils
 import numpy as np
 
-from garage.core import Serializable
-from garage.envs.util import flat_dim, flatten, unflatten
-from garage.misc.overrides import overrides
 
+class NormalizedEnv(gym.Wrapper):
 
-class NormalizedEnv(gym.Wrapper, Serializable):
     def __init__(
             self,
             env,
@@ -26,7 +24,7 @@ class NormalizedEnv(gym.Wrapper, Serializable):
         self._flatten_obs = flatten_obs
 
         self._obs_alpha = obs_alpha
-        flat_obs_dim = flat_dim(env.observation_space)
+        flat_obs_dim = gym.spaces.utils.flatdim(env.observation_space)
         self._obs_mean = np.zeros(flat_obs_dim)
         self._obs_var = np.ones(flat_obs_dim)
 
@@ -34,11 +32,8 @@ class NormalizedEnv(gym.Wrapper, Serializable):
         self._reward_mean = 0.
         self._reward_var = 1.
 
-        # Always call Serializable constructor last
-        Serializable.quick_init(self, locals())
-
     def _update_obs_estimate(self, obs):
-        flat_obs = flatten(self.env.observation_space, obs)
+        flat_obs = gym.spaces.utils.flatten(self.env.observation_space, obs)
         self._obs_mean = (
             1 - self._obs_alpha) * self._obs_mean + self._obs_alpha * flat_obs
         self._obs_var = (
@@ -55,18 +50,18 @@ class NormalizedEnv(gym.Wrapper, Serializable):
 
     def _apply_normalize_obs(self, obs):
         self._update_obs_estimate(obs)
-        normalized_obs = (flatten(self.env.observation_space, obs) -
+        flat_obs = gym.spaces.utils.flatten(self.env.observation_space, obs)
+        normalized_obs = (flat_obs -
                           self._obs_mean) / (np.sqrt(self._obs_var) + 1e-8)
         if not self._flatten_obs:
-            normalized_obs = unflatten(self.env.observation_space,
-                                       normalized_obs)
+            normalized_obs = gym.spaces.utils.unflatten(
+                self.env.observation_space, normalized_obs)
         return normalized_obs
 
     def _apply_normalize_reward(self, reward):
         self._update_reward_estimate(reward)
         return reward / (np.sqrt(self._reward_var) + 1e-8)
 
-    @overrides
     def reset(self, **kwargs):
         ret = self.env.reset(**kwargs)
         if self._normalize_obs:
@@ -74,18 +69,6 @@ class NormalizedEnv(gym.Wrapper, Serializable):
         else:
             return ret
 
-    def __getstate__(self):
-        d = Serializable.__getstate__(self)
-        d['_obs_mean'] = self._obs_mean
-        d['_obs_var'] = self._obs_var
-        return d
-
-    def __setstate__(self, d):
-        Serializable.__setstate__(self, d)
-        self._obs_mean = d['_obs_mean']
-        self._obs_var = d['_obs_var']
-
-    @overrides
     def step(self, action):
         if isinstance(self.action_space, gym.spaces.Box):
             # rescale the action when the bounds are not inf
@@ -113,7 +96,6 @@ class NormalizedEnv(gym.Wrapper, Serializable):
     def render(self, *args, **kwargs):
         return self.env.render(*args, **kwargs)
 
-    @overrides
     def max_episode_steps(self):
         return self.env.spec.max_episode_steps
 

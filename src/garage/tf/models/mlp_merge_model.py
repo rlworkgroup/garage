@@ -1,5 +1,4 @@
-"""
-MLP Merge Model.
+"""MLP Merge Model.
 
 A model composed only of a multi-layer perceptron (MLP), which maps
 real-valued inputs to real-valued outputs. This model is called an
@@ -9,13 +8,12 @@ from the input layer to the last hidden layer.
 """
 import tensorflow as tf
 
-from garage.tf.core.mlp import mlp
 from garage.tf.models.base import Model
+from garage.tf.models.mlp import mlp
 
 
 class MLPMergeModel(Model):
-    """
-    MLP Merge Model.
+    """MLP Merge Model.
 
     Args:
         output_dim (int): Dimension of the network output.
@@ -78,17 +76,16 @@ class MLPMergeModel(Model):
         return ['input_var1', 'input_var2']
 
     def _build(self, state_input, action_input, name=None):
-        return mlp(
-            input_var=state_input,
-            output_dim=self._output_dim,
-            hidden_sizes=self._hidden_sizes,
-            input_var2=action_input,
-            concat_layer=self._concat_layer,
-            name='mlp_concat',
-            hidden_nonlinearity=self._hidden_nonlinearity,
-            hidden_w_init=self._hidden_w_init,
-            hidden_b_init=self._hidden_b_init,
-            output_nonlinearity=self._output_nonlinearity,
-            output_w_init=self._output_w_init,
-            output_b_init=self._output_b_init,
-            layer_normalization=self._layer_normalization)
+        return mlp(input_var=state_input,
+                   output_dim=self._output_dim,
+                   hidden_sizes=self._hidden_sizes,
+                   input_var2=action_input,
+                   concat_layer=self._concat_layer,
+                   name='mlp_concat',
+                   hidden_nonlinearity=self._hidden_nonlinearity,
+                   hidden_w_init=self._hidden_w_init,
+                   hidden_b_init=self._hidden_b_init,
+                   output_nonlinearity=self._output_nonlinearity,
+                   output_w_init=self._output_w_init,
+                   output_b_init=self._output_b_init,
+                   layer_normalization=self._layer_normalization)

@@ -21,10 +21,10 @@ docs:  ## Build HTML documentation
 docs:
 	@pushd docs && make html && popd
 
-ci-precommit-check:
+ci-job-precommit: docs
 	scripts/travisci/check_precommit.sh
 
-ci-job-normal: ci-precommit-check docs
+ci-job-normal:
 	pytest -n $$(nproc) --cov=garage -v -m \
 	    'not nightly and not huge and not flaky and not large'
 	coverage xml
@@ -48,13 +48,18 @@ ci-verify-conda:
 	bash miniconda.sh -b -p $(CONDA_ROOT)
 	hash -r
 	$(CONDA) config --set always_yes yes --set changeps1 no
+	# Related issue: https://github.com/conda/conda/issues/9105
+	# Fix in conda: https://github.com/conda/conda/pull/9014
+	# https://repo.continuum.io/miniconda/ doesn't have the script for 4.7.12 yet,
+	# so CI fetches 4.7.10 and runs into the above issue when trying to update conda
+	$(CONDA) install -c anaconda setuptools
 	$(CONDA) update -q conda
 	$(CONDA) init
 	# Useful for debugging any issues with conda
 	$(CONDA) info -a
 	$(CONDA) env create -f environment.yml
 	# pylint will verify all imports work
-	$(GARAGE_BIN)/pylint -j0 --rcfile=setup.cfg garage
+	$(GARAGE_BIN)/pylint --disable=all --enable=import-error garage
 
 # The following two lines remove the Dockerfile's built-in virtualenv from the
 # path, so we can test with pipenv directly
@@ -66,7 +71,7 @@ ci-verify-pipenv:
 	pipenv install .[all,dev]
 	pipenv graph
 	# pylint will verify all imports work
-	pipenv run pylint -j0 --rcfile=setup.cfg garage
+	pipenv run pylint --disable=all --enable=import-error garage
 
 ci-deploy-docker:
 	echo "${DOCKER_API_KEY}" | docker login -u "${DOCKER_USERNAME}" \

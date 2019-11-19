@@ -9,8 +9,7 @@ from skimage import img_as_ubyte
 
 
 class Grayscale(gym.Wrapper):
-    """
-    Grayscale wrapper for gym.Env, converting frames to grayscale.
+    """Grayscale wrapper for gym.Env, converting frames to grayscale.
 
     Only works with gym.spaces.Box environment with 2D RGB frames.
     The last dimension (RGB) of environment observation space will be removed.

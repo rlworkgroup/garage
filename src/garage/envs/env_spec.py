@@ -1,14 +1,15 @@
-from garage.core import Serializable
+"""EnvSpec class."""
 
 
-class EnvSpec(Serializable):
+class EnvSpec:
+    """EnvSpec class.
+
+    Args:
+        observation_space (akro.Space): The observation space of the env.
+        action_space (akro.Space): The action space of the env.
+
+    """
+
     def __init__(self, observation_space, action_space):
-        """
-        :type observation_space: Space
-        :type action_space: Space
-        """
         self.observation_space = observation_space
         self.action_space = action_space
-
-        # Always call Serializable constructor last
-        Serializable.quick_init(self, locals())

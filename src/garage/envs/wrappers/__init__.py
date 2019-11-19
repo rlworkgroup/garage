@@ -1,5 +1,4 @@
-"""
-gym.Env wrappers.
+"""gym.Env wrappers.
 
 Used to transform an environment in a modular way.
 It is also possible to apply multiple wrappers at the same
@@ -7,6 +6,7 @@ time.
 
 Example:
     StackFrames(GrayScale(gym.make('env')))
+
 """
 from garage.envs.wrappers.atari_env import AtariEnv
 from garage.envs.wrappers.clip_reward import ClipReward
