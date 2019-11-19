@@ -172,10 +172,12 @@ class BatchPolopt2(RLAlgorithm, abc.ABC):
                 - returns: (numpy.ndarray), shape [B * (T), ]
                 - lengths: (numpy.ndarray), shape [P, ], i-th entry represents
                   the length of i-th path.
-                - agent_infos: (dict), see OnPolicyVectorizedSampler.obtain_samples()
-                - env_infos: (dict), see OnPolicyVectorizedSampler.obtain_samples()
-                - paths: (list[dict]) The original path with observation or action
-                  flattened
+                - agent_infos: (dict), see
+                  OnPolicyVectorizedSampler.obtain_samples()
+                - env_infos: (dict), see
+                  OnPolicyVectorizedSampler.obtain_samples()
+                - paths: (list[dict]) The original path with observation or
+                  action flattened
                 - average_return: (numpy.float64)
 
             where B = batch size, (T) = variable-length of each trajectory,
