@@ -65,10 +65,10 @@ def run_task(snapshot_config, *_):
 
     runner.setup(algo=sac, env=env)
 
-    runner.train(n_epochs=500, batch_size=1000 ,plot=True)
+    runner.train(n_epochs=500, batch_size=1000)
 
 run_experiment(
     run_task,
     snapshot_mode='last',
-    seed=134,
+    seed=521,
 )

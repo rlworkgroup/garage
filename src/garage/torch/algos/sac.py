@@ -78,17 +78,15 @@ class SAC(OffPolicyRLAlgorithm):
                          discount=discount,
                          smooth_return=smooth_return)
 
-        self.target_policy = copy.deepcopy(self.policy)
         # use 2 target q networks
-        # self.target_qf1 = copy.deepcopy(self.qf1)
-        # self.target_qf2 = copy.deepcopy(self.qf2)
-        self.target_qf1 = target_qf1
-        self.target_qf2 = target_qf2
+        self.target_qf1 = copy.deepcopy(self.qf1)
+        self.target_qf2 = copy.deepcopy(self.qf2)
+        # self.target_qf1 = target_qf1
+        # self.target_qf2 = target_qf2
         self.policy_optimizer = optimizer(self.policy.parameters(),
                                           lr=self.policy_lr)
         self.qf1_optimizer = optimizer(self.qf1.parameters(), lr=self.qf_lr)
         self.qf2_optimizer = optimizer(self.qf2.parameters(), lr=self.qf_lr)
-
         # automatic entropy coefficient tuning
         self.use_automatic_entropy_tuning = use_automatic_entropy_tuning
         if self.use_automatic_entropy_tuning and not alpha:
@@ -97,8 +95,8 @@ class SAC(OffPolicyRLAlgorithm):
             else:
                 self.target_entropy = -np.prod(
                     self.env_spec.action_space.shape).item()
-                self.log_alpha = torch.tensor([self.initial_log_entropy], dtype=torch.float, requires_grad=True)
-                self.alpha_optimizer = optimizer([self.log_alpha], lr=self.policy_lr)
+            self.log_alpha = torch.tensor([self.initial_log_entropy], dtype=torch.float, requires_grad=True)
+            self.alpha_optimizer = optimizer([self.log_alpha], lr=self.policy_lr)
         else:
             self.alpha = alpha
 
@@ -159,19 +157,16 @@ class SAC(OffPolicyRLAlgorithm):
 
         # tune the coefficient alpha
         if self.use_automatic_entropy_tuning:
-            tabular.record("alpha_before", torch.exp(self.log_alpha.detach()).item())
             alpha_loss = (-(self.log_alpha)* (log_pi.detach() + self.target_entropy)).mean()
             self.alpha_optimizer.zero_grad()
             alpha_loss.backward()
             self.alpha_optimizer.step()
-            tabular.record("alpha_after", torch.exp(self.log_alpha.detach()).item())
+            tabular.record("alpha", torch.exp(self.log_alpha.detach()).item())
             alpha = self.log_alpha.detach().exp().item()
         else:
             alpha = self.alpha
         min_q_new_actions = torch.min(self.qf1(torch.Tensor(obs), torch.Tensor(new_actions)), 
                             self.qf2(torch.Tensor(obs), torch.Tensor(new_actions)))
-        
-        
         policy_objective = ((alpha * log_pi) - min_q_new_actions.flatten()).mean()
         tabular.record("policy_loss", policy_objective.item())
 
@@ -190,8 +185,8 @@ class SAC(OffPolicyRLAlgorithm):
         ).flatten() - alpha * new_log_pi
 
         q_target = torch.Tensor(rewards) + (1. - torch.Tensor(terminals)) * self.discount * target_q_values
-        qf1_loss = 0.5*F.mse_loss(q1_pred.flatten(), q_target.detach())
-        qf2_loss = 0.5*F.mse_loss(q2_pred.flatten(), q_target.detach())
+        qf1_loss = F.mse_loss(q1_pred.flatten(), q_target.detach())
+        qf2_loss = F.mse_loss(q2_pred.flatten(), q_target.detach())
 
         self.qf1_optimizer.zero_grad()
         qf1_loss.backward()
@@ -211,8 +206,7 @@ class SAC(OffPolicyRLAlgorithm):
         """
         alpha_loss = 0
         if self.use_automatic_entropy_tuning:
-            alpha = self.log_alpha.exp()
-            alpha_loss = (-(alpha)* (log_pi.detach() + self.target_entropy)).mean()
+            alpha_loss = (-(self.log_alpha)* (log_pi.detach() + self.target_entropy)).mean()
         return alpha_loss
 
     def actor_objective(self, obs, log_pi, new_actions):
@@ -245,10 +239,10 @@ class SAC(OffPolicyRLAlgorithm):
             self.target_qf1(torch.Tensor(next_obs), new_next_actions),
             self.target_qf2(torch.Tensor(next_obs), new_next_actions)
         ).flatten() - (alpha * new_log_pi)
-
-        q_target = torch.Tensor(rewards) + (1. - torch.Tensor(terminals)) * self.discount * target_q_values
-        qf1_loss = 0.5*F.mse_loss(q1_pred.flatten(), q_target.detach())
-        qf2_loss = 0.5*F.mse_loss(q2_pred.flatten(), q_target.detach())
+        with torch.no_grad():
+            q_target = torch.Tensor(rewards) + (1. - torch.Tensor(terminals)) * self.discount * target_q_values
+        qf1_loss = F.mse_loss(q1_pred.flatten(), q_target)
+        qf2_loss = F.mse_loss(q2_pred.flatten(), q_target)
 
         return qf1_loss, qf2_loss
 
