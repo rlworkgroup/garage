@@ -349,5 +349,6 @@ intersphinx_mapping = {'https://docs.python.org/': None}
 todo_include_todos = True
 
 autodoc_mock_imports = [
-    'dm_control', 'torch', 'torchvision', 'mujoco_py', 'glfw'
+    'dm_control', 'glfw', 'mujoco_py', 'ray', 'tensorflow', 'tensorflow-probability',
+    'torch', 'torchvision'
 ]
