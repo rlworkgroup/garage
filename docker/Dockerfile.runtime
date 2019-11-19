@@ -3,3 +3,9 @@ FROM $PARENT_IMAGE
 
 # Add code stub last
 COPY . /root/code/garage
+
+# Build and install the sdist
+RUN python3 setup.py sdist && \
+    cp /root/code/garage/dist/*.tar.gz /root/code/garage/dist/garage.tar.gz && \
+    pip3 install dist/garage.tar.gz[all,dev] && \
+    rm -r /root/.cache/pip
