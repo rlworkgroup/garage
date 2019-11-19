@@ -156,29 +156,30 @@ class BatchPolopt2(RLAlgorithm, abc.ABC):
     def process_samples(self, itr, paths):
         """Return processed sample data based on the collected paths.
 
-        The returned samples is a dictionary with keys
-        - observations: (numpy.ndarray), shape [B * (T), *obs_dims]
-        - actions: (numpy.ndarray), shape [B * (T), *act_dims]
-        - rewards : (numpy.ndarray), shape [B * (T), ]
-        - baselines: (numpy.ndarray), shape [B * (T), ]
-        - returns: (numpy.ndarray), shape [B * (T), ]
-        - lengths: (numpy.ndarray), shape [P, ], i-th entry represents
-            the length of i-th path.
-        - agent_infos: (dict), see OnPolicyVectorizedSampler.obtain_samples()
-        - env_infos: (dict), see OnPolicyVectorizedSampler.obtain_samples()
-        - paths: (list[dict]) The original path with observation or action
-            flattened
-        - average_return: (numpy.float64)
-
-        where B = batch size, (T) = variable-length of each trajectory,
-            P = number of paths
-
         Args:
             itr (int): Iteration number.
             paths (list[dict]): A list of collected paths.
 
         Returns:
-            dict: Processed sample data
+            dict: Processed sample data.
+
+        Note:
+            The returned samples is a dictionary with keys
+                - observations: (numpy.ndarray), shape [B * (T), *obs_dims]
+                - actions: (numpy.ndarray), shape [B * (T), *act_dims]
+                - rewards : (numpy.ndarray), shape [B * (T), ]
+                - baselines: (numpy.ndarray), shape [B * (T), ]
+                - returns: (numpy.ndarray), shape [B * (T), ]
+                - lengths: (numpy.ndarray), shape [P, ], i-th entry represents
+                  the length of i-th path.
+                - agent_infos: (dict), see OnPolicyVectorizedSampler.obtain_samples()
+                - env_infos: (dict), see OnPolicyVectorizedSampler.obtain_samples()
+                - paths: (list[dict]) The original path with observation or action
+                  flattened
+                - average_return: (numpy.float64)
+
+            where B = batch size, (T) = variable-length of each trajectory,
+            P = number of paths
 
         """
         baselines = []
