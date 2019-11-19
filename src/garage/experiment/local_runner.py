@@ -349,7 +349,19 @@ class LocalRunner:
 
         self._plot = plot
 
-        return self._algo.train(self)
+        # For some algorithms like CMA_ES or CEM
+        self._algo.prepare_train()
+
+        last_return = None
+        for _ in self.step_epochs():
+            for _ in range(self._algo.n_samples):
+                self.step_path = self.obtain_samples(self.step_itr)
+                tabular.record('TotalEnvSteps', self.total_env_steps)
+                last_return = self._algo.train_once(self.step_itr,
+                                                    self.step_path)
+                self.step_itr += 1
+
+        return last_return
 
     def step_epochs(self):
         """Step through each epoch.
