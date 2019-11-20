@@ -56,6 +56,12 @@ class MLPModule(MultiHeadedMLPModule):
                          output_nonlinearity, output_w_init, output_b_init,
                          layer_normalization)
 
+        self._input_dim = input_dim
+        self._output_dim = output_dim
+        self._hidden_sizes = hidden_sizes
+        self._hidden_nonlinearity = hidden_nonlinearity
+        self._output_nonlinearity = output_nonlinearity
+
     # pylint: disable=arguments-differ
     def forward(self, input_value):
         """Forward method.
