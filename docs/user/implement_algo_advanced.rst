@@ -43,7 +43,7 @@ of the :code:`BatchPolopt` class is the :code:`train()` method:
     def train(self):
         # ...
         self.init_opt()
-        for itr in xrange(self.start_itr, self.n_itr):
+        for itr in range(self.start_itr, self.n_itr):
             paths = self.obtain_samples(itr)
             samples_data = self.process_samples(itr, paths)
             self.optimize_policy(itr, samples_data)

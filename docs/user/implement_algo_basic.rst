@@ -131,14 +131,14 @@ iteration.
 
     paths = []
 
-    for _ in xrange(N):
+    for _ in range(N):
         observations = []
         actions = []
         rewards = []
 
         observation = env.reset()
 
-        for _ in xrange(T):
+        for _ in range(T):
             # policy.get_action() returns a pair of values. The second one returns a dictionary, whose values contains
             # sufficient statistics for the action distribution. It should at least contain entries that would be
             # returned by calling policy.dist_info(), which is the non-symbolic analog of policy.dist_info_sym().
@@ -160,7 +160,7 @@ iteration.
         # trajectory
         returns = []
         return_so_far = 0
-        for t in xrange(len(rewards) - 1, -1, -1):
+        for t in range(len(rewards) - 1, -1, -1):
             return_so_far = rewards[t] + discount * return_so_far
             returns.append(return_so_far)
         # The returns are stored backwards in time, so we need to revert it
@@ -298,7 +298,7 @@ the relevant code looks like the following:
     advantages = []
     returns = []
     return_so_far = 0
-    for t in xrange(len(rewards) - 1, -1, -1):
+    for t in range(len(rewards) - 1, -1, -1):
         return_so_far = rewards[t] + discount * return_so_far
         returns.append(return_so_far)
         advantage = return_so_far - path_baseline[t]
