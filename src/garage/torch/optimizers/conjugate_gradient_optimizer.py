@@ -30,6 +30,8 @@ def _build_hessian_vector_product(func, params, reg_coeff=1e-5):
 
     """
     param_shapes = [p.shape or torch.Size([1]) for p in params]
+    f = func()
+    f_grads = torch.autograd.grad(f, params, create_graph=True)
 
     def _eval(vector):
         """The evaluation function.
@@ -42,9 +44,6 @@ def _build_hessian_vector_product(func, params, reg_coeff=1e-5):
             torch.Tensor: The product of Hessian of function f and v.
 
         """
-        f = func()
-        f_grads = torch.autograd.grad(f, params, create_graph=True)
-
         unflatten_vector = unflatten_tensors(vector, param_shapes)
 
         assert len(f_grads) == len(unflatten_vector)
@@ -52,7 +51,9 @@ def _build_hessian_vector_product(func, params, reg_coeff=1e-5):
             torch.stack(
                 [torch.sum(g * x) for g, x in zip(f_grads, unflatten_vector)]))
 
-        hvp = list(torch.autograd.grad(grad_vector_product, params))
+        hvp = list(
+            torch.autograd.grad(grad_vector_product, params,
+                                retain_graph=True))
         for i, (hx, p) in enumerate(zip(hvp, params)):
             if hx is None:
                 hvp[i] = torch.zeros_like(p)
@@ -159,6 +160,9 @@ class ConjugateGradientOptimizer(Optimizer):
 
         # Compute step direction
         step_dir = _conjugate_gradient(f_Ax, flat_loss_grads, self._cg_iters)
+
+        # Replace nan with 0.
+        step_dir[step_dir.ne(step_dir)] = 0.
 
         # Compute step size
         step_size = np.sqrt(2.0 * self._max_constraint_value *
