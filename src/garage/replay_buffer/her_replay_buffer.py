@@ -1,5 +1,4 @@
-"""
-This module implements a Hindsight Experience Replay (HER).
+"""This module implements a Hindsight Experience Replay (HER).
 
 See: https://arxiv.org/abs/1707.01495.
 """
@@ -11,23 +10,33 @@ from garage.replay_buffer.base import ReplayBuffer
 
 
 def make_her_sample(replay_k, reward_fun):
-    """
-    Generate a transition sampler for HER ReplayBuffer.
+    """Generate a transition sampler for HER ReplayBuffer.
 
-    :param replay_k: the ratio between HER replays and regular replays
-    :param reward_fun: function to re-compute the reward with substituted goals
-    :return:
+    Args:
+        replay_k (float): Ratio between HER replays and regular replays
+        reward_fun (callable): Function to re-compute the reward with
+            substituted goals
+
+    Returns:
+        callable: A function that returns sample transitions for HER.
+
     """
     future_p = 1 - (1. / (1 + replay_k))
 
     def _her_sample_transitions(episode_batch, sample_batch_size):
-        """
-        Generate a dictionary of transitions.
+        """Generate a dictionary of transitions.
 
-        :param episode_batch: [batch_size, T, dim]
-        :param sample_batch_size: batch_size per sample.
-        :return: transitions which transitions[key] has the shape of
-        [sample_batch_size, dim].
+        Args:
+            episode_batch (dict): Original transitions which
+                transitions[key] has shape [batch_size, T, dim]
+            sample_batch_size (int): Batch size per sample.
+
+        Returns:
+            dict[numpy.ndarray]: Transitions which transitions[key] has the
+                shape of [sample_batch_size, dim]. Keys include `observation`,
+                `action`, `goal`, `achieved_goal`, `terminal`,
+                `next_observation`, `next_achieved_goal` and `reward`.
+
         """
         # Select which episodes to use
         time_horizon = episode_batch['action'].shape[1]
@@ -67,17 +76,23 @@ def make_her_sample(replay_k, reward_fun):
                                       *transitions[k].shape[1:])
             for k in transitions.keys()
         }
-        assert (transitions['action'].shape[0] == sample_batch_size)
+        assert transitions['action'].shape[0] == sample_batch_size
         return transitions
 
     return _her_sample_transitions
 
 
 class HerReplayBuffer(ReplayBuffer):
-    """
-    This class implements HerReplayBuffer.
+    """This class implements HerReplayBuffer.
 
     It constructs hindsight examples using future strategy.
+
+    Args:
+        replay_k (float): Ratio between HER replays and regular replays
+        reward_fun (callable): Function to re-compute the reward with
+            substituted goals
+        kwargs: Keyword arguments for base class
+
     """
 
     def __init__(self, replay_k, reward_fun, **kwargs):
@@ -85,9 +100,17 @@ class HerReplayBuffer(ReplayBuffer):
         super(HerReplayBuffer, self).__init__(**kwargs)
 
     def sample(self, batch_size):
-        """Sample a transition of batch_size."""
+        """Sample a transition of batch_size.
+
+        Args:
+            batch_size (int): Batch size to sample.
+
+        Return:
+            dict[numpy.ndarray]: See _her_sample_transitions above.
+
+        """
         buffer = {}
-        for key in self._buffer.keys():
+        for key in self._buffer:
             buffer[key] = self._buffer[key][:self._current_size]
 
         transitions = self._sample_transitions(buffer, batch_size)
@@ -97,3 +120,14 @@ class HerReplayBuffer(ReplayBuffer):
             assert key in transitions, 'key %s missing from transitions' % key
 
         return transitions
+
+    def __getstate__(self):
+        """Object.__getstate__.
+
+        Returns:
+            dict: the state to be pickled for the instance.
+
+        """
+        new_dict = self.__dict__.copy()
+        del new_dict['_sample_transitions']
+        return new_dict
