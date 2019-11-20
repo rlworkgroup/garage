@@ -58,10 +58,11 @@ def run_task(snapshot_config, *_):
                 target_qf2=target_qf2,
                 use_automatic_entropy_tuning=True,
                 replay_buffer=replay_buffer,
-                min_buffer_size=1e3,
+                min_buffer_size=1e4,
                 target_update_tau=5e-3,
                 discount=0.99,
-                buffer_batch_size=256)
+                buffer_batch_size=256,
+                reward_scale=5.0)
 
     runner.setup(algo=sac, env=env)
 
