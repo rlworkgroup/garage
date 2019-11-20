@@ -78,23 +78,23 @@ class REPS(BatchPolopt):  # noqa: D416
         optimizer_args = optimizer_args or dict(max_opt_itr=50)
         dual_optimizer_args = dual_optimizer_args or dict(maxiter=50)
 
-        self.name = name
-        self._name_scope = tf.name_scope(self.name)
+        self._name = name
+        self._name_scope = tf.name_scope(self._name)
 
-        self.feat_diff = None
-        self.param_eta = None
-        self.param_v = None
-        self.f_dual = None
-        self.f_dual_grad = None
-        self.f_policy_kl = None
+        self._feat_diff = None
+        self._param_eta = None
+        self._param_v = None
+        self._f_dual = None
+        self._f_dual_grad = None
+        self._f_policy_kl = None
 
         with self._name_scope:
-            self.optimizer = optimizer(**optimizer_args)
-            self.dual_optimizer = dual_optimizer
-            self.dual_optimizer_args = dual_optimizer_args
-            self.epsilon = float(epsilon)
-            self.l2_reg_dual = float(l2_reg_dual)
-            self.l2_reg_loss = float(l2_reg_loss)
+            self._optimizer = optimizer(**optimizer_args)
+            self._dual_optimizer = dual_optimizer
+            self._dual_optimizer_args = dual_optimizer_args
+            self._epsilon = float(epsilon)
+            self._l2_reg_dual = float(l2_reg_dual)
+            self._l2_reg_loss = float(l2_reg_loss)
 
         super(REPS, self).__init__(env_spec=env_spec,
                                    policy=policy,
@@ -113,10 +113,10 @@ class REPS(BatchPolopt):  # noqa: D416
         self._dual_opt_inputs = dual_opt_inputs
 
         pol_loss = self._build_policy_loss(pol_loss_inputs)
-        self.optimizer.update_opt(loss=pol_loss,
-                                  target=self.policy,
-                                  inputs=flatten_inputs(
-                                      self._policy_opt_inputs))
+        self._optimizer.update_opt(loss=pol_loss,
+                                   target=self.policy,
+                                   inputs=flatten_inputs(
+                                       self._policy_opt_inputs))
 
     def __getstate__(self):
         """Parameters to save in snapshot.
@@ -142,7 +142,7 @@ class REPS(BatchPolopt):  # noqa: D416
 
         """
         self.__dict__ = state
-        self._name_scope = tf.name_scope(self.name)
+        self._name_scope = tf.name_scope(self._name)
         self.init_opt()
 
     def optimize_policy(self, itr, samples_data):
@@ -155,17 +155,17 @@ class REPS(BatchPolopt):  # noqa: D416
 
         """
         # Initial BFGS parameter values.
-        x0 = np.hstack([self.param_eta, self.param_v])
+        x0 = np.hstack([self._param_eta, self._param_v])
         # Set parameter boundaries: \eta>=1e-12, v unrestricted.
         bounds = [(-np.inf, np.inf) for _ in x0]
         bounds[0] = (1e-12, np.inf)
 
         # Optimize dual
-        eta_before = self.param_eta
+        eta_before = self._param_eta
         logger.log('Computing dual before')
-        self.feat_diff = self._features(samples_data)
+        self._feat_diff = self._features(samples_data)
         dual_opt_input_values = self._dual_opt_input_values(samples_data)
-        dual_before = self.f_dual(*dual_opt_input_values)
+        dual_before = self._f_dual(*dual_opt_input_values)
         logger.log('Optimizing dual')
 
         def eval_dual(x):
@@ -178,10 +178,10 @@ class REPS(BatchPolopt):  # noqa: D416
                 numpy.float64: Dual function loss.
 
             """
-            self.param_eta = x[0]
-            self.param_v = x[1:]
+            self._param_eta = x[0]
+            self._param_v = x[1:]
             dual_opt_input_values = self._dual_opt_input_values(samples_data)
-            return self.f_dual(*dual_opt_input_values)
+            return self._f_dual(*dual_opt_input_values)
 
         def eval_dual_grad(x):
             """Evaluate gradient of dual function loss.
@@ -193,39 +193,39 @@ class REPS(BatchPolopt):  # noqa: D416
                 numpy.ndarray: Gradient of dual function loss.
 
             """
-            self.param_eta = x[0]
-            self.param_v = x[1:]
+            self._param_eta = x[0]
+            self._param_v = x[1:]
             dual_opt_input_values = self._dual_opt_input_values(samples_data)
-            grad = self.f_dual_grad(*dual_opt_input_values)
+            grad = self._f_dual_grad(*dual_opt_input_values)
             eta_grad = np.float(grad[0])
             v_grad = grad[1]
             return np.hstack([eta_grad, v_grad])
 
-        params_ast, _, _ = self.dual_optimizer(func=eval_dual,
-                                               x0=x0,
-                                               fprime=eval_dual_grad,
-                                               bounds=bounds,
-                                               **self.dual_optimizer_args)
+        params_ast, _, _ = self._dual_optimizer(func=eval_dual,
+                                                x0=x0,
+                                                fprime=eval_dual_grad,
+                                                bounds=bounds,
+                                                **self._dual_optimizer_args)
 
         logger.log('Computing dual after')
-        self.param_eta, self.param_v = params_ast[0], params_ast[1:]
+        self._param_eta, self._param_v = params_ast[0], params_ast[1:]
         dual_opt_input_values = self._dual_opt_input_values(samples_data)
-        dual_after = self.f_dual(*dual_opt_input_values)
+        dual_after = self._f_dual(*dual_opt_input_values)
 
         # Optimize policy
         policy_opt_input_values = self._policy_opt_input_values(samples_data)
         logger.log('Computing policy loss before')
-        loss_before = self.optimizer.loss(policy_opt_input_values)
+        loss_before = self._optimizer.loss(policy_opt_input_values)
         logger.log('Computing policy KL before')
-        policy_kl_before = self.f_policy_kl(*policy_opt_input_values)
+        policy_kl_before = self._f_policy_kl(*policy_opt_input_values)
         logger.log('Optimizing policy')
-        self.optimizer.optimize(policy_opt_input_values)
+        self._optimizer.optimize(policy_opt_input_values)
         logger.log('Computing policy KL')
-        policy_kl = self.f_policy_kl(*policy_opt_input_values)
+        policy_kl = self._f_policy_kl(*policy_opt_input_values)
         logger.log('Computing policy loss after')
-        loss_after = self.optimizer.loss(policy_opt_input_values)
+        loss_after = self._optimizer.loss(policy_opt_input_values)
         tabular.record('EtaBefore', eta_before)
-        tabular.record('EtaAfter', self.param_eta)
+        tabular.record('EtaAfter', self._param_eta)
         tabular.record('DualBefore', dual_before)
         tabular.record('DualAfter', dual_after)
         tabular.record('{}/LossBefore'.format(self.policy.name), loss_before)
@@ -405,8 +405,8 @@ class REPS(BatchPolopt):  # noqa: D416
         is_recurrent = self.policy.recurrent
 
         # Initialize dual params
-        self.param_eta = 15.
-        self.param_v = np.random.rand(
+        self._param_eta = 15.
+        self._param_v = np.random.rand(
             self.env_spec.observation_space.flat_dim * 2 + 4)
 
         if is_recurrent:
@@ -434,7 +434,7 @@ class REPS(BatchPolopt):  # noqa: D416
                             tf.reduce_max(delta_v / i.param_eta)))
 
             reg_params = self.policy.get_regularizable_vars()
-            loss += self.l2_reg_loss * tf.reduce_sum(
+            loss += self._l2_reg_loss * tf.reduce_sum(
                 [tf.reduce_mean(tf.square(param))
                  for param in reg_params]) / len(reg_params)
 
@@ -446,30 +446,31 @@ class REPS(BatchPolopt):  # noqa: D416
             pol_mean_kl = tf.reduce_mean(kl)
 
         with tf.name_scope('dual'):
-            dual_loss = i.param_eta * self.epsilon + i.param_eta * tf.math.log(
-                tf.reduce_mean(
-                    tf.exp(delta_v / i.param_eta -
-                           tf.reduce_max(delta_v / i.param_eta)))
-            ) + i.param_eta * tf.reduce_max(delta_v / i.param_eta)
+            dual_loss = i.param_eta * self._epsilon + (
+                i.param_eta * tf.math.log(
+                    tf.reduce_mean(
+                        tf.exp(delta_v / i.param_eta -
+                               tf.reduce_max(delta_v / i.param_eta)))) +
+                i.param_eta * tf.reduce_max(delta_v / i.param_eta))
 
-            dual_loss += self.l2_reg_dual * (tf.square(i.param_eta) +
-                                             tf.square(1 / i.param_eta))
+            dual_loss += self._l2_reg_dual * (tf.square(i.param_eta) +
+                                              tf.square(1 / i.param_eta))
 
             dual_grad = tf.gradients(dual_loss, [i.param_eta, i.param_v])
 
         # yapf: disable
-        self.f_dual = tensor_utils.compile_function(
+        self._f_dual = tensor_utils.compile_function(
             flatten_inputs(self._dual_opt_inputs),
             dual_loss,
             log_name='f_dual')
         # yapf: enable
 
-        self.f_dual_grad = tensor_utils.compile_function(
+        self._f_dual_grad = tensor_utils.compile_function(
             flatten_inputs(self._dual_opt_inputs),
             dual_grad,
             log_name='f_dual_grad')
 
-        self.f_policy_kl = tensor_utils.compile_function(
+        self._f_policy_kl = tensor_utils.compile_function(
             flatten_inputs(self._policy_opt_inputs),
             pol_mean_kl,
             log_name='f_policy_kl')
@@ -499,9 +500,9 @@ class REPS(BatchPolopt):  # noqa: D416
         dual_opt_input_values = self._dual_opt_inputs._replace(
             reward_var=samples_data['rewards'],
             valid_var=samples_data['valids'],
-            feat_diff=self.feat_diff,
-            param_eta=self.param_eta,
-            param_v=self.param_v,
+            feat_diff=self._feat_diff,
+            param_eta=self._param_eta,
+            param_v=self._param_v,
             policy_state_info_vars_list=policy_state_info_list,
             policy_old_dist_info_vars_list=policy_old_dist_info_list,
         )
@@ -534,9 +535,9 @@ class REPS(BatchPolopt):  # noqa: D416
             action_var=samples_data['actions'],
             reward_var=samples_data['rewards'],
             valid_var=samples_data['valids'],
-            feat_diff=self.feat_diff,
-            param_eta=self.param_eta,
-            param_v=self.param_v,
+            feat_diff=self._feat_diff,
+            param_eta=self._param_eta,
+            param_v=self._param_v,
             policy_state_info_vars_list=policy_state_info_list,
             policy_old_dist_info_vars_list=policy_old_dist_info_list,
         )

@@ -106,8 +106,8 @@ class NPO(BatchPolopt):
                  entropy_method='no_entropy',
                  flatten_input=True,
                  name='NPO'):
-        self.name = name
-        self._name_scope = tf.name_scope(self.name)
+        self._name = name
+        self._name_scope = tf.name_scope(self._name)
         self._use_softplus_entropy = use_softplus_entropy
         self._use_neg_logli_entropy = use_neg_logli_entropy
         self._stop_entropy_gradient = stop_entropy_gradient
@@ -126,15 +126,15 @@ class NPO(BatchPolopt):
             raise ValueError('Invalid pg_loss')
 
         with self._name_scope:
-            self.optimizer = optimizer(**optimizer_args)
-            self.lr_clip_range = float(lr_clip_range)
-            self.max_kl_step = float(max_kl_step)
-            self.policy_ent_coeff = float(policy_ent_coeff)
+            self._optimizer = optimizer(**optimizer_args)
+            self._lr_clip_range = float(lr_clip_range)
+            self._max_kl_step = float(max_kl_step)
+            self._policy_ent_coeff = float(policy_ent_coeff)
 
-        self.f_rewards = None
-        self.f_returns = None
-        self.f_policy_kl = None
-        self.f_policy_entropy = None
+        self._f_rewards = None
+        self._f_returns = None
+        self._f_policy_kl = None
+        self._f_policy_entropy = None
 
         super().__init__(env_spec=env_spec,
                          policy=policy,
@@ -154,12 +154,12 @@ class NPO(BatchPolopt):
         self._policy_opt_inputs = pol_opt_inputs
 
         pol_loss, pol_kl = self._build_policy_loss(pol_loss_inputs)
-        self.optimizer.update_opt(loss=pol_loss,
-                                  target=self.policy,
-                                  leq_constraint=(pol_kl, self.max_kl_step),
-                                  inputs=flatten_inputs(
-                                      self._policy_opt_inputs),
-                                  constraint_name='mean_kl')
+        self._optimizer.update_opt(loss=pol_loss,
+                                   target=self.policy,
+                                   leq_constraint=(pol_kl, self._max_kl_step),
+                                   inputs=flatten_inputs(
+                                       self._policy_opt_inputs),
+                                   constraint_name='mean_kl')
 
     def optimize_policy(self, itr, samples_data):
         """Optimize policy.
@@ -173,15 +173,15 @@ class NPO(BatchPolopt):
         policy_opt_input_values = self._policy_opt_input_values(samples_data)
         # Train policy network
         logger.log('Computing loss before')
-        loss_before = self.optimizer.loss(policy_opt_input_values)
+        loss_before = self._optimizer.loss(policy_opt_input_values)
         logger.log('Computing KL before')
-        policy_kl_before = self.f_policy_kl(*policy_opt_input_values)
+        policy_kl_before = self._f_policy_kl(*policy_opt_input_values)
         logger.log('Optimizing')
-        self.optimizer.optimize(policy_opt_input_values)
+        self._optimizer.optimize(policy_opt_input_values)
         logger.log('Computing KL after')
-        policy_kl = self.f_policy_kl(*policy_opt_input_values)
+        policy_kl = self._f_policy_kl(*policy_opt_input_values)
         logger.log('Computing loss after')
-        loss_after = self.optimizer.loss(policy_opt_input_values)
+        loss_after = self._optimizer.loss(policy_opt_input_values)
         tabular.record('{}/LossBefore'.format(self.policy.name), loss_before)
         tabular.record('{}/LossAfter'.format(self.policy.name), loss_after)
         tabular.record('{}/dLoss'.format(self.policy.name),
@@ -189,7 +189,7 @@ class NPO(BatchPolopt):
         tabular.record('{}/KLBefore'.format(self.policy.name),
                        policy_kl_before)
         tabular.record('{}/KL'.format(self.policy.name), policy_kl)
-        pol_ent = self.f_policy_entropy(*policy_opt_input_values)
+        pol_ent = self._f_policy_entropy(*policy_opt_input_values)
         tabular.record('{}/Entropy'.format(self.policy.name), np.mean(pol_ent))
 
         self._fit_baseline(samples_data)
@@ -333,7 +333,8 @@ class NPO(BatchPolopt):
 
         if self._maximum_entropy:
             with tf.name_scope('augmented_rewards'):
-                rewards = i.reward_var + self.policy_ent_coeff * policy_entropy
+                rewards = i.reward_var + (self._policy_ent_coeff *
+                                          policy_entropy)
 
         with tf.name_scope('policy_loss'):
             adv = compute_advantages(self.discount,
@@ -443,8 +444,8 @@ class NPO(BatchPolopt):
                     obj = tf.identity(surrogate, name='surr_obj')
                 elif self._pg_loss == 'surrogate_clip':
                     lr_clip = tf.clip_by_value(lr,
-                                               1 - self.lr_clip_range,
-                                               1 + self.lr_clip_range,
+                                               1 - self._lr_clip_range,
+                                               1 + self._lr_clip_range,
                                                name='lr_clip')
                     if self.policy.recurrent:
                         surr_clip = lr_clip * adv * i.valid_var
@@ -453,7 +454,7 @@ class NPO(BatchPolopt):
                     obj = tf.minimum(surrogate, surr_clip, name='surr_obj')
 
                 if self._entropy_regularzied:
-                    obj += self.policy_ent_coeff * policy_entropy
+                    obj += self._policy_ent_coeff * policy_entropy
 
                 # Maximize E[surrogate objective] by minimizing
                 # -E_t[surrogate objective]
@@ -463,22 +464,22 @@ class NPO(BatchPolopt):
                     loss = -tf.reduce_mean(obj)
 
             # Diagnostic functions
-            self.f_policy_kl = compile_function(flatten_inputs(
+            self._f_policy_kl = compile_function(flatten_inputs(
                 self._policy_opt_inputs),
-                                                pol_mean_kl,
-                                                log_name='f_policy_kl')
+                                                 pol_mean_kl,
+                                                 log_name='f_policy_kl')
 
-            self.f_rewards = compile_function(flatten_inputs(
+            self._f_rewards = compile_function(flatten_inputs(
                 self._policy_opt_inputs),
-                                              rewards,
-                                              log_name='f_rewards')
+                                               rewards,
+                                               log_name='f_rewards')
 
             returns = discounted_returns(self.discount, self.max_path_length,
                                          rewards)
-            self.f_returns = compile_function(flatten_inputs(
+            self._f_returns = compile_function(flatten_inputs(
                 self._policy_opt_inputs),
-                                              returns,
-                                              log_name='f_returns')
+                                               returns,
+                                               log_name='f_returns')
 
             return loss, pol_mean_kl
 
@@ -554,10 +555,10 @@ class NPO(BatchPolopt):
             if self._stop_entropy_gradient:
                 policy_entropy = tf.stop_gradient(policy_entropy)
 
-        self.f_policy_entropy = compile_function(flatten_inputs(
+        self._f_policy_entropy = compile_function(flatten_inputs(
             self._policy_opt_inputs),
-                                                 policy_entropy,
-                                                 log_name='f_policy_entropy')
+                                                  policy_entropy,
+                                                  log_name='f_policy_entropy')
 
         return policy_entropy
 
@@ -572,8 +573,8 @@ class NPO(BatchPolopt):
         policy_opt_input_values = self._policy_opt_input_values(samples_data)
 
         # Augment reward from baselines
-        rewards_tensor = self.f_rewards(*policy_opt_input_values)
-        returns_tensor = self.f_returns(*policy_opt_input_values)
+        rewards_tensor = self._f_rewards(*policy_opt_input_values)
+        returns_tensor = self._f_returns(*policy_opt_input_values)
         returns_tensor = np.squeeze(returns_tensor, -1)
 
         paths = samples_data['paths']
@@ -712,5 +713,5 @@ class NPO(BatchPolopt):
 
         """
         self.__dict__ = state
-        self._name_scope = tf.name_scope(self.name)
+        self._name_scope = tf.name_scope(self._name)
         self.init_opt()
