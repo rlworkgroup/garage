@@ -24,14 +24,14 @@ def set_seed(seed):
     if 'tensorflow' in sys.modules:
         import tensorflow as tf  # pylint: disable=import-outside-toplevel
         tf.compat.v1.set_random_seed(seed)
-    if 'torch' in sys.modules:
-        warnings.warn(
-            'Enabeling deterministic mode in PyTorch can have a performance '
-            'impact when using GPU.')
-        import torch  # pylint: disable=import-outside-toplevel
-        torch.manual_seed(seed)
-        torch.backends.cudnn.deterministic = True
-        torch.backends.cudnn.benchmark = False
+    #if 'torch' in sys.modules:
+    warnings.warn(
+        'Enabeling deterministic mode in PyTorch can have a performance '
+        'impact when using GPU.')
+    import torch  # pylint: disable=import-outside-toplevel
+    torch.manual_seed(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
 
 
 def get_seed():

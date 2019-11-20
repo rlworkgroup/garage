@@ -8,5 +8,6 @@ from garage.torch.algos.ddpg import DDPG
 from garage.torch.algos.vpg import VPG
 from garage.torch.algos.ppo import PPO  # noqa: I100
 from garage.torch.algos.trpo import TRPO
+from garage.torch.algos.maml import MAML
 
-__all__ = ['DDPG', 'VPG', 'PPO', 'TRPO']
+__all__ = ['DDPG', 'VPG', 'PPO', 'TRPO', 'MAML']

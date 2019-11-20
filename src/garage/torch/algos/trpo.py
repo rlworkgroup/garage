@@ -99,8 +99,8 @@ class TRPO(VPG):
 
         return surrogate
 
-    def _optimize(self, itr, paths, valids, obs, actions, rewards):
+    def _optimize(self, itr, paths, valids, obs, actions, rewards, baselines):
         self._optimizer.step(
-            f_loss=lambda: self._compute_loss(itr, paths, valids, obs, actions,
-                                              rewards),
+            f_loss=lambda: self.compute_loss(itr, paths, valids, obs, actions,
+                                              rewards, baselines),
             f_constraint=lambda: self._compute_kl_constraint(obs))

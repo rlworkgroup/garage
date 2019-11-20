@@ -199,6 +199,9 @@ class LocalRunner:
             list[dict]: One batch of samples.
 
         """
+        #if self._train_args.n_epoch_cycles == 1:
+        #    logger.log('Obtaining samples...')
+
         paths = self._sampler.obtain_samples(
             itr, (batch_size or self._train_args.batch_size))
 

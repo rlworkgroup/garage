@@ -131,22 +131,21 @@ class VPG(BatchPolopt):
                 * average_return: (float)
 
         """
-        valids, obs, actions, rewards = self.process_samples(itr, paths)
+        valids, obs, actions, rewards, baselines = self.process_samples(itr, paths)
 
-        loss = self._compute_loss(itr, paths, valids, obs, actions, rewards)
+        loss = self.compute_loss(itr, paths, valids, obs, actions, rewards, baselines)
 
-        # Memorize the policy state_dict
         self._old_policy.load_state_dict(self.policy.state_dict())
 
         self._optimizer.zero_grad()
         loss.backward()
 
         kl_before = self._compute_kl_constraint(obs).detach()
-        self._optimize(itr, paths, valids, obs, actions, rewards)
+        self._optimize(itr, paths, valids, obs, actions, rewards, baselines)
 
         with torch.no_grad():
-            loss_after = self._compute_loss(itr, paths, valids, obs, actions,
-                                            rewards)
+            loss_after = self.compute_loss(itr, paths, valids, obs, actions,
+                                            rewards, baselines)
             kl = self._compute_kl_constraint(obs)
             policy_entropy = self._compute_policy_entropy(obs)
             average_return = self._log(itr, paths, loss.item(),
@@ -157,7 +156,7 @@ class VPG(BatchPolopt):
         self.baseline.fit(paths)
         return average_return
 
-    def _compute_loss(self, itr, paths, valids, obs, actions, rewards):
+    def compute_loss(self, itr, paths, valids, obs, actions, rewards, baselines):
         """Compute mean value of loss.
 
         Args:
@@ -174,11 +173,6 @@ class VPG(BatchPolopt):
         """
         # pylint: disable=unused-argument
         policy_entropies = self._compute_policy_entropy(obs)
-
-        baselines = torch.stack([
-            pad_to_last(self._get_baselines(path),
-                        total_length=self.max_path_length) for path in paths
-        ])
 
         if self._maximum_entropy:
             rewards += self._policy_ent_coeff * policy_entropies
@@ -289,7 +283,7 @@ class VPG(BatchPolopt):
             return torch.Tensor(self.baseline.predict_n(path))
         return torch.Tensor(self.baseline.predict(path))
 
-    def _optimize(self, itr, paths, valids, obs, actions, rewards):  # pylint: disable=unused-argument  # noqa: E501
+    def _optimize(self, itr, paths, valids, obs, actions, rewards, baselines):  # pylint: disable=unused-argument  # noqa: E501
         self._optimizer.step()
 
     def process_samples(self, itr, paths):
@@ -305,8 +299,9 @@ class VPG(BatchPolopt):
 
         """
         for path in paths:
-            path['returns'] = tensor_utils.discount_cumsum(
-                path['rewards'], self.discount)
+            if 'returns' not in path:
+                path['returns'] = tensor_utils.discount_cumsum(
+                    path['rewards'], self.discount)
 
         valids = [len(path['actions']) for path in paths]
         obs = torch.stack([
@@ -323,8 +318,11 @@ class VPG(BatchPolopt):
             pad_to_last(path['rewards'], total_length=self.max_path_length)
             for path in paths
         ])
-
-        return valids, obs, actions, rewards
+        baselines = torch.stack([
+             pad_to_last(self._get_baselines(path),
+                        total_length=self.max_path_length) for path in paths
+        ])
+        return valids, obs, actions, rewards, baselines
 
     def _log(self, itr, paths, loss_before, loss_after, kl_before, kl,
              policy_entropy):

@@ -54,7 +54,7 @@ class OnPolicyVectorizedSampler(BatchSampler):
         self._vec_env.close()
 
     # pylint: disable=too-many-statements
-    def obtain_samples(self, itr, batch_size=None, whole_paths=True):
+    def obtain_samples(self, itr, batch_size=None, whole_paths=True, show_prog_bar=False):
         """Sample the policy for new trajectories.
 
         Args:
@@ -85,7 +85,7 @@ class OnPolicyVectorizedSampler(BatchSampler):
                   the observation input as the state input.
 
         """
-        logger.log('Obtaining samples for iteration %d...' % itr)
+        #logger.log('Obtaining samples for iteration %d...' % itr)
 
         if not batch_size:
             batch_size = self.algo.max_path_length * self._n_envs
@@ -96,7 +96,8 @@ class OnPolicyVectorizedSampler(BatchSampler):
         dones = np.asarray([True] * self._vec_env.num_envs)
         running_paths = [None] * self._vec_env.num_envs
 
-        pbar = ProgBarCounter(batch_size)
+        if show_prog_bar:
+            pbar = ProgBarCounter(batch_size)
         policy_time = 0
         env_time = 0
         process_time = 0
@@ -152,10 +153,12 @@ class OnPolicyVectorizedSampler(BatchSampler):
                     running_paths[idx] = None
 
             process_time += time.time() - t
-            pbar.inc(len(obses))
+            if show_prog_bar:
+                pbar.inc(len(obses))
             obses = next_obses
 
-        pbar.stop()
+        if show_prog_bar:
+            pbar.stop()
 
         tabular.record('PolicyExecTime', policy_time)
         tabular.record('EnvExecTime', env_time)
