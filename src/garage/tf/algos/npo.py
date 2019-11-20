@@ -22,8 +22,7 @@ from garage.tf.optimizers import LbfgsOptimizer
 
 
 class NPO(BatchPolopt):
-    """
-    Natural Policy Gradient Optimization.
+    """Natural Policy Gradient Optimization.
 
     Args:
         env_spec (garage.envs.EnvSpec): Environment specification.
@@ -70,6 +69,7 @@ class NPO(BatchPolopt):
             dimension. If True, for example, an observation with shape (2, 4)
             will be flattened to 8.
         name (str): The name of the algorithm.
+
     Note:
         sane defaults for entropy configuration:
             - entropy_method='max', center_adv=False, stop_gradient=True
@@ -80,6 +80,7 @@ class NPO(BatchPolopt):
               variance of the distribution.)
             - entropy_method='regularized', stop_gradient=False,
               use_neg_logli_entropy=False
+
     """
 
     def __init__(self,
@@ -130,6 +131,11 @@ class NPO(BatchPolopt):
             self.max_kl_step = float(max_kl_step)
             self.policy_ent_coeff = float(policy_ent_coeff)
 
+        self.f_rewards = None
+        self.f_returns = None
+        self.f_policy_kl = None
+        self.f_policy_entropy = None
+
         super().__init__(env_spec=env_spec,
                          policy=policy,
                          baseline=baseline,
@@ -155,10 +161,19 @@ class NPO(BatchPolopt):
                                       self._policy_opt_inputs),
                                   constraint_name='mean_kl')
 
-        return dict()
-
     def optimize_policy(self, itr, samples_data):
-        """Optimize policy."""
+        """Optimize policy.
+
+        Args:
+            itr (int): Iteration number.
+            samples_data (dict): Processed sample data.
+                See process_samples() for details.
+
+        Raises:
+            NotImplementedError: Raise when child class
+                does not overwrite this method.
+
+        """
         policy_opt_input_values = self._policy_opt_input_values(samples_data)
         # Train policy network
         logger.log('Computing loss before')
@@ -183,15 +198,14 @@ class NPO(BatchPolopt):
 
         self._fit_baseline(samples_data)
 
-    def get_itr_snapshot(self, itr):
-        """Get iteration snapshot."""
-        return dict(
-            itr=itr,
-            policy=self.policy,
-            baseline=self.baseline,
-        )
-
     def _build_inputs(self):
+        """Build input variables.
+
+        Returns:
+            namedtuple: Collection of variables to compute policy loss.
+            namedtuple: Collection of variables to do policy optimization.
+
+        """
         observation_space = self.policy.observation_space
         action_space = self.policy.action_space
 
@@ -305,7 +319,18 @@ class NPO(BatchPolopt):
 
         return policy_loss_inputs, policy_opt_inputs
 
+    # pylint: disable=too-many-branches, too-many-statements
     def _build_policy_loss(self, i):
+        """Build policy loss and other output tensors.
+
+        Args:
+            i (namedtuple): Collection of variables to compute policy loss.
+
+        Returns:
+            tf.Tensor: Policy loss.
+            tf.Tensor: Mean policy KL divergence.
+
+        """
         pol_dist = self.policy.distribution
         policy_entropy = self._build_entropy_term(i)
         rewards = i.reward_var
@@ -462,6 +487,15 @@ class NPO(BatchPolopt):
             return loss, pol_mean_kl
 
     def _build_entropy_term(self, i):
+        """Build policy entropy tensor.
+
+        Args:
+            i (namedtuple): Collection of variables to compute policy loss.
+
+        Returns:
+            tf.Tensor: Policy entropy.
+
+        """
         with tf.name_scope('policy_entropy'):
             if self.policy.recurrent:
                 policy_dist_info = self.policy.dist_info_sym(
@@ -532,7 +566,13 @@ class NPO(BatchPolopt):
         return policy_entropy
 
     def _fit_baseline(self, samples_data):
-        """Update baselines from samples."""
+        """Update baselines from samples.
+
+        Args:
+            samples_data (dict): Processed sample data.
+                See process_samples() for details.
+
+        """
         policy_opt_input_values = self._policy_opt_input_values(samples_data)
 
         # Augment reward from baselines
@@ -571,7 +611,16 @@ class NPO(BatchPolopt):
             self.baseline.fit(paths)
 
     def _policy_opt_input_values(self, samples_data):
-        """Map rollout samples to the policy optimizer inputs."""
+        """Map rollout samples to the policy optimizer inputs.
+
+        Args:
+            samples_data (dict): Processed sample data.
+                See process_samples() for details.
+
+        Returns:
+            list(np.ndarray): Flatten policy optimization input values.
+
+        """
         policy_state_info_list = [
             samples_data['agent_infos'][k] for k in self.policy.state_info_keys
         ]
@@ -595,7 +644,33 @@ class NPO(BatchPolopt):
     def _check_entropy_configuration(self, entropy_method, center_adv,
                                      stop_entropy_gradient,
                                      use_neg_logli_entropy, policy_ent_coeff):
-        """Check entropy configuration."""
+        """Check entropy configuration.
+
+        Args:
+            entropy_method (str): A string from: 'max', 'regularized',
+                'no_entropy'. The type of entropy method to use. 'max' adds the
+                dense entropy to the reward for each time step. 'regularized'
+                adds the mean entropy to the surrogate objective. See
+                https://arxiv.org/abs/1805.00909 for more details.
+            center_adv (bool): Whether to rescale the advantages
+                so that they have mean 0 and standard deviation 1.
+            stop_entropy_gradient (bool): Whether to stop the entropy gradient.
+            use_neg_logli_entropy (bool): Whether to estimate the entropy as
+                the negative log likelihood of the action.
+            policy_ent_coeff (float): The coefficient of the policy entropy.
+                Setting it to zero would mean no entropy regularization.
+
+        Raises:
+            ValueError: If center_adv is True when entropy_method is max.
+            ValueError: If stop_gradient is False when entropy_method is max.
+            ValueError: If policy_ent_coeff is non-zero when there is
+                no entropy method.
+            ValueError: If entropy_method is not one of 'max', 'regularized',
+                'no_entropy'.
+
+        """
+        del use_neg_logli_entropy
+
         if entropy_method == 'max':
             if center_adv:
                 raise ValueError('center_adv should be False when '
@@ -618,7 +693,12 @@ class NPO(BatchPolopt):
             raise ValueError('Invalid entropy_method')
 
     def __getstate__(self):
-        """Get state."""
+        """Parameters to save in snapshot.
+
+        Returns:
+            dict: Parameters to save.
+
+        """
         data = self.__dict__.copy()
         del data['_name_scope']
         del data['_policy_opt_inputs']
@@ -629,7 +709,12 @@ class NPO(BatchPolopt):
         return data
 
     def __setstate__(self, state):
-        """Set state."""
+        """Parameters to restore from snapshot.
+
+        Args:
+            state (dict): Parameters to restore from.
+
+        """
         self.__dict__ = state
         self._name_scope = tf.name_scope(self.name)
         self.init_opt()

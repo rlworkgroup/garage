@@ -15,7 +15,8 @@ from garage.tf.misc.tensor_utils import graph_inputs
 from garage.tf.optimizers import LbfgsOptimizer
 
 
-class REPS(BatchPolopt):
+# pylint: disable=differing-param-doc, differing-type-doc
+class REPS(BatchPolopt):  # noqa: D416
     """Relative Entropy Policy Search.
 
     References
@@ -45,11 +46,13 @@ class REPS(BatchPolopt):
             conjunction with center_adv the advantages will be
             standardized before shifting.
         fixed_horizon (bool): Whether to fix horizon.
-        epsilon (float): dual func parameter.
-        l2_reg_dual (float): coefficient for dual func l2 regularization.
-        l2_reg_loss (float): coefficient for policy loss l2 regularization.
-        dual_optimizer (object): dual func optimizer.
-        dual_optimizer_args (dict): arguments of the dual optimizer.
+        epsilon (float): Dual func parameter.
+        l2_reg_dual (float): Coefficient for dual func l2 regularization.
+        l2_reg_loss (float): Coefficient for policy loss l2 regularization.
+        optimizer (object): Function optimizer.
+        optimizer_args (dict): Arguments of the optimizer.
+        dual_optimizer (object): Dual func optimizer.
+        dual_optimizer_args (dict): Arguments of the dual optimizer.
         name (str): Name of the algorithm.
 
     """
@@ -68,12 +71,22 @@ class REPS(BatchPolopt):
                  l2_reg_dual=0.,
                  l2_reg_loss=0.,
                  optimizer=LbfgsOptimizer,
-                 optimizer_args=dict(max_opt_itr=50),
+                 optimizer_args=None,
                  dual_optimizer=scipy.optimize.fmin_l_bfgs_b,
-                 dual_optimizer_args=dict(maxiter=50),
+                 dual_optimizer_args=None,
                  name='REPS'):
+        optimizer_args = optimizer_args or dict(max_opt_itr=50)
+        dual_optimizer_args = dual_optimizer_args or dict(maxiter=50)
+
         self.name = name
         self._name_scope = tf.name_scope(self.name)
+
+        self.feat_diff = None
+        self.param_eta = None
+        self.param_v = None
+        self.f_dual = None
+        self.f_dual_grad = None
+        self.f_policy_kl = None
 
         with self._name_scope:
             self.optimizer = optimizer(**optimizer_args)
@@ -106,7 +119,12 @@ class REPS(BatchPolopt):
                                       self._policy_opt_inputs))
 
     def __getstate__(self):
-        """Object.__getstate__."""
+        """Parameters to save in snapshot.
+
+        Returns:
+            dict: Parameters to save.
+
+        """
         data = self.__dict__.copy()
         del data['_name_scope']
         del data['_policy_opt_inputs']
@@ -117,20 +135,25 @@ class REPS(BatchPolopt):
         return data
 
     def __setstate__(self, state):
-        """Object.__setstate__."""
+        """Parameters to restore from snapshot.
+
+        Args:
+            state (dict): Parameters to restore from.
+
+        """
         self.__dict__ = state
         self._name_scope = tf.name_scope(self.name)
         self.init_opt()
 
-    def get_itr_snapshot(self, itr):
-        """Return the data should saved in the snapshot."""
-        return dict(
-            itr=itr,
-            policy=self.policy,
-        )
-
     def optimize_policy(self, itr, samples_data):
-        """Perform the policy optimization."""
+        """Optimize the policy using the samples.
+
+        Args:
+            itr (int): Iteration number.
+            samples_data (dict): Processed sample data.
+                See process_samples() for details.
+
+        """
         # Initial BFGS parameter values.
         x0 = np.hstack([self.param_eta, self.param_v])
         # Set parameter boundaries: \eta>=1e-12, v unrestricted.
@@ -146,12 +169,30 @@ class REPS(BatchPolopt):
         logger.log('Optimizing dual')
 
         def eval_dual(x):
+            """Evaluate dual function loss.
+
+            Args:
+                x (numpy.ndarray): Input to dual function.
+
+            Returns:
+                numpy.float64: Dual function loss.
+
+            """
             self.param_eta = x[0]
             self.param_v = x[1:]
             dual_opt_input_values = self._dual_opt_input_values(samples_data)
             return self.f_dual(*dual_opt_input_values)
 
         def eval_dual_grad(x):
+            """Evaluate gradient of dual function loss.
+
+            Args:
+                x (numpy.ndarray): Input to dual function.
+
+            Returns:
+                numpy.ndarray: Gradient of dual function loss.
+
+            """
             self.param_eta = x[0]
             self.param_v = x[1:]
             dual_opt_input_values = self._dual_opt_input_values(samples_data)
@@ -196,7 +237,13 @@ class REPS(BatchPolopt):
         tabular.record('{}/KL'.format(self.policy.name), policy_kl)
 
     def _build_inputs(self):
-        """Decalre graph inputs variables."""
+        """Build input variables.
+
+        Returns:
+            namedtuple: Collection of variables to compute policy loss.
+            namedtuple: Collection of variables to do policy optimization.
+
+        """
         observation_space = self.policy.observation_space
         action_space = self.policy.action_space
         policy_dist = self.policy.distribution
@@ -341,7 +388,19 @@ class REPS(BatchPolopt):
         return policy_loss_inputs, policy_opt_inputs, dual_opt_inputs
 
     def _build_policy_loss(self, i):
-        """Initialize policy loss complie function based on inputs i."""
+        """Build policy loss and other output tensors.
+
+        Args:
+            i (namedtuple): Collection of variables to compute policy loss.
+
+        Returns:
+            tf.Tensor: Policy loss.
+            tf.Tensor: Mean policy KL divergence.
+
+        Raises:
+            NotImplementedError: If is_recurrent is True.
+
+        """
         pol_dist = self.policy.distribution
         is_recurrent = self.policy.recurrent
 
@@ -418,7 +477,16 @@ class REPS(BatchPolopt):
         return loss
 
     def _dual_opt_input_values(self, samples_data):
-        """Update dual func optimize input values based on samples data."""
+        """Update dual func optimize input values based on samples data.
+
+        Args:
+            samples_data (dict): Processed sample data.
+                See process_samples() for details.
+
+        Returns:
+            list(np.ndarray): Flatten dual function optimization input values.
+
+        """
         policy_state_info_list = [
             samples_data['agent_infos'][k]
             for k in self.policy.state_info_keys
@@ -441,7 +509,16 @@ class REPS(BatchPolopt):
         return flatten_inputs(dual_opt_input_values)
 
     def _policy_opt_input_values(self, samples_data):
-        """Update policy optimize input values based on samples data."""
+        """Update policy optimize input values based on samples data.
+
+        Args:
+            samples_data (dict): Processed sample data.
+                See process_samples() for details.
+
+        Returns:
+            list(np.ndarray): Flatten policy optimization input values.
+
+        """
         policy_state_info_list = [
             samples_data['agent_infos'][k]
             for k in self.policy.state_info_keys
@@ -467,7 +544,16 @@ class REPS(BatchPolopt):
         return flatten_inputs(policy_opt_input_values)
 
     def _features(self, samples_data):
-        """Get valid view features based on samples data."""
+        """Get valid view features based on samples data.
+
+        Args:
+            samples_data (dict): Processed sample data.
+                See process_samples() for details.
+
+        Returns:
+            numpy.ndarray: Features for training.
+
+        """
         paths = samples_data['paths']
         feat_diff = []
         for path in paths:
@@ -479,6 +565,7 @@ class REPS(BatchPolopt):
             feats = np.concatenate(
                 [o, o**2, al, al**2, al**3,
                  np.ones((lr, 1))], axis=1)
+            # pylint: disable=unsubscriptable-object
             feats = np.vstack([feats, np.zeros(feats.shape[1])])
             feat_diff.append(feats[1:] - feats[:-1])
 

@@ -1,3 +1,4 @@
+"""Deep Q-Learning Network algorithm."""
 from dowel import tabular
 import numpy as np
 import tensorflow as tf
@@ -21,8 +22,9 @@ class DQN(OffPolicyRLAlgorithm):
         policy (garage.tf.policies.base.Policy): Policy.
         qf (object): The q value network.
         replay_buffer (garage.replay_buffer.ReplayBuffer): Replay buffer.
-        exploration_strategy (garage.np.exploration_strategies.
-            ExplorationStrategy): Exploration strategy.
+        exploration_strategy
+            (garage.np.exploration_strategies.ExplorationStrategy):
+            Exploration strategy.
         n_epoch_cycles (int): Epoch cycles.
         min_buffer_size (int): The minimum buffer size for replay buffer.
         buffer_batch_size (int): Batch size for replay buffer.
@@ -96,8 +98,7 @@ class DQN(OffPolicyRLAlgorithm):
                                   smooth_return=smooth_return)
 
     def init_opt(self):
-        """
-        Initialize the networks and Ops.
+        """Initialize the networks and Ops.
 
         Assume discrete space for dqn, so action dimension
         will always be action_space.n
@@ -179,13 +180,22 @@ class DQN(OffPolicyRLAlgorithm):
                 outputs=[loss, optimize_loss])
 
     def train_once(self, itr, paths):
-        """Train the algorithm once."""
+        """Perform one step of policy optimization given one batch of samples.
+
+        Args:
+            itr (int): Iteration number.
+            paths (list[dict]): A list of collected paths.
+
+        Returns:
+            numpy.float64: Average return.
+
+        """
         paths = self.process_samples(itr, paths)
         epoch = itr / self.n_epoch_cycles
 
         self.episode_rewards.extend(paths['undiscounted_returns'])
         last_average_return = np.mean(self.episode_rewards)
-        for train_itr in range(self.n_train_steps):
+        for _ in range(self.n_train_steps):
             if (self.replay_buffer.n_transitions_stored >=
                     self.min_buffer_size):
                 self.evaluate = True
@@ -209,12 +219,20 @@ class DQN(OffPolicyRLAlgorithm):
                                mean100ep_qf_loss)
         return last_average_return
 
-    def get_itr_snapshot(self, itr):
-        """Get snapshot of the policy."""
-        return dict(itr=itr, policy=self.policy)
+    def optimize_policy(self, itr, samples_data):
+        """Optimize network using experiences from replay buffer.
 
-    def optimize_policy(self, itr, sample_data):
-        """Optimize network using experiences from replay buffer."""
+        Args:
+            itr (int): Iterations.
+            samples_data (list): Processed batch data.
+
+        Returns:
+            numpy.float64: Loss of policy.
+
+        """
+        del itr
+        del samples_data
+
         transitions = self.replay_buffer.sample(self.buffer_batch_size)
 
         observations = transitions['observation']
@@ -235,11 +253,23 @@ class DQN(OffPolicyRLAlgorithm):
         return loss
 
     def __getstate__(self):
+        """Parameters to save in snapshot.
+
+        Returns:
+            dict: Parameters to save.
+
+        """
         data = self.__dict__.copy()
         del data['_qf_update_ops']
         del data['_train_qf']
         return data
 
     def __setstate__(self, state):
+        """Parameters to restore from snapshot.
+
+        Args:
+            state (dict): Parameters to restore from.
+
+        """
         self.__dict__ = state
         self.init_opt()

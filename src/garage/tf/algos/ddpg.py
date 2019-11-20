@@ -361,15 +361,3 @@ class DDPG(OffPolicyRLAlgorithm):
         self.f_update_target()
 
         return qval_loss, ys, qval, action_loss
-
-    def get_itr_snapshot(self, itr):
-        """Return data saved in the snapshot for this iteration.
-
-        Args:
-            itr (int): Current iteration.
-
-        Returns:
-            dict: dictionary of iteration number and policy.
-
-        """
-        return dict(itr=itr, policy=self.policy)

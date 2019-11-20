@@ -1,17 +1,28 @@
+"""Dummy algorithm."""
 from garage.tf.algos import BatchPolopt
 
 
 class DummyTFAlgo(BatchPolopt):
-    """Dummy algo for test."""
-
-    def __init__(self, env_spec, policy, baseline):
-        super().__init__(env_spec=env_spec, policy=policy, baseline=baseline)
+    """Dummy algorithm."""
 
     def init_opt(self):
-        pass
+        """Initialize the optimization procedure.
+
+        If using tensorflow, this may include declaring all the variables and
+        compiling functions.
+
+        """
 
     def optimize_policy(self, itr, samples_data):
-        pass
+        """Optimize the policy using the samples.
 
-    def get_itr_snapshot(self, itr):
-        pass
+        Args:
+            itr (int): Iteration number.
+            samples_data (dict): Processed sample data.
+                See process_samples() for details.
+
+        Raises:
+            NotImplementedError: Raise when child class
+                does not overwrite this method.
+
+        """
