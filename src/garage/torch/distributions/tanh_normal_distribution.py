@@ -7,9 +7,7 @@ from torch.distributions.transformed_distribution import TransformedDistribution
 import torch.nn.functional as F
 
 class TanhTransform(Transform):
-    """
-    Tanh transformation for torch distributions.
-    """
+    """ Tanh transformation for torch distributions."""
     domain = constraints.real
     codomain = constraints.interval(-1,1)
     bijective = True
@@ -19,7 +17,7 @@ class TanhTransform(Transform):
         return isinstance(other, TanhTransform)
 
     def _call(self, x):
-        return x.tanh().clamp(-1. + 1e-6, 1. - 1e-6)
+        return x.tanh().clamp(-1. + 3e-6, 1. - 3e-6)
 
     def _inverse(self, y):
         atanh_val = torch.log((1+y) / (1-y)) / 2
