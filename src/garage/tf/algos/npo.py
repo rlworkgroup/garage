@@ -169,10 +169,6 @@ class NPO(BatchPolopt):
             samples_data (dict): Processed sample data.
                 See process_samples() for details.
 
-        Raises:
-            NotImplementedError: Raise when child class
-                does not overwrite this method.
-
         """
         policy_opt_input_values = self._policy_opt_input_values(samples_data)
         # Train policy network

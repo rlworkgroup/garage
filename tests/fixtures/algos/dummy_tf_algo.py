@@ -21,8 +21,4 @@ class DummyTFAlgo(BatchPolopt):
             samples_data (dict): Processed sample data.
                 See process_samples() for details.
 
-        Raises:
-            NotImplementedError: Raise when child class
-                does not overwrite this method.
-
         """
