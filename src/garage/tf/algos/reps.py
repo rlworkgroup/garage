@@ -129,9 +129,9 @@ class REPS(BatchPolopt):  # noqa: D416
         del data['_name_scope']
         del data['_policy_opt_inputs']
         del data['_dual_opt_inputs']
-        del data['f_dual']
-        del data['f_dual_grad']
-        del data['f_policy_kl']
+        del data['_f_dual']
+        del data['_f_dual_grad']
+        del data['_f_policy_kl']
         return data
 
     def __setstate__(self, state):

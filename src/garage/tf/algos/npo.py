@@ -699,10 +699,10 @@ class NPO(BatchPolopt):
         data = self.__dict__.copy()
         del data['_name_scope']
         del data['_policy_opt_inputs']
-        del data['f_policy_entropy']
-        del data['f_policy_kl']
-        del data['f_rewards']
-        del data['f_returns']
+        del data['_f_policy_entropy']
+        del data['_f_policy_kl']
+        del data['_f_rewards']
+        del data['_f_returns']
         return data
 
     def __setstate__(self, state):
