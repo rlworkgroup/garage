@@ -222,6 +222,22 @@ def compute_advantages(discount,
     return advantages
 
 
+def center_advs(advs, axes, eps, offset=0, scale=1, name=None):
+    """ Normalize the advs tensor """
+    with tf.name_scope(name, "center_adv", [advs, axes, eps]):
+        mean, var = tf.nn.moments(advs, axes=axes)
+        advs = tf.nn.batch_normalization(advs, mean, var, offset, scale, eps)
+    return advs
+
+
+def positive_advs(advs, eps, name=None):
+    """ Make all the values in the advs tensor positive """
+    with tf.name_scope(name, "positive_adv", [advs, eps]):
+        m = tf.reduce_min(advs)
+        advs = (advs - m) + eps
+    return advs
+
+
 def discounted_returns(discount, max_len, rewards, name=None):
     with tf.name_scope(name, "discounted_returns",
                        [discount, max_len, rewards]):
