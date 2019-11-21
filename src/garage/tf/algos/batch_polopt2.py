@@ -183,7 +183,8 @@ class BatchPolopt2(RLAlgorithm, abc.ABC):
                 - average_return: (numpy.float64)
 
             where B = batch size, (T) = variable-length of each trajectory,
-            P = number of paths
+            P = number of paths. Notice that B * T equals to the total number
+            of environment steps in all trajectories.
 
         """
         baselines = []
