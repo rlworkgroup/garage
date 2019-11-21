@@ -35,14 +35,16 @@ class TestContinuousMLPPolicy(TfGraphTestCase):
         env.reset()
         obs, _, _, _ = env.step(1)
 
-        action, _ = policy.get_action(obs)
+        action, _ = policy.get_action(obs.flatten())
 
         expected_action = np.full(action_dim, 0.5)
 
         assert env.action_space.contains(action)
         assert np.array_equal(action, expected_action)
 
-        actions, _ = policy.get_actions([obs, obs, obs])
+        actions, _ = policy.get_actions(
+            [obs.flatten(), obs.flatten(),
+             obs.flatten()])
         for action in actions:
             assert env.action_space.contains(action)
             assert np.array_equal(action, expected_action)
