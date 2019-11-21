@@ -52,7 +52,7 @@ NOTE: garage only supports Python 3.5+, so make sure you Python environment is u
 
 .. code-block:: bash
 
-    source activate myenv
+    conda activate myenv
     pip install garage
 
 Alternatively, you can add garage in the pip section of your `environment.yml`
@@ -94,7 +94,7 @@ If you plan on developing the garage repository, as opposed to simply using it a
 
 .. code-block:: bash
 
-    source activate myenv
+    conda activate myenv
     cd path/to/garage/repo
     pip install -e .[all,dev]
 
