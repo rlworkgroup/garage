@@ -1,3 +1,4 @@
+"""This script creates a test that fails when VPG performance is too low."""
 import gym
 import pytest
 import torch
@@ -29,30 +30,32 @@ INVALID_ENTROPY_CONFIG = [
 
 
 class TestVPG:
+    """Test class for VPG."""
 
     @classmethod
     def setup_class(cls):
+        """Setup method which is called once before all tests in this class."""
         deterministic.set_seed(0)
 
     def setup_method(self):
+        """Setup method which is called before every test."""
         self._env = GarageEnv(gym.make('InvertedDoublePendulum-v2'))
         self._runner = LocalRunner(snapshot_config)
 
-        policy = GaussianMLPPolicy(env_spec=self._env.spec,
-                                   hidden_sizes=[64, 64],
-                                   hidden_nonlinearity=torch.tanh,
-                                   output_nonlinearity=None)
+        self._policy = GaussianMLPPolicy(env_spec=self._env.spec,
+                                         hidden_sizes=[64, 64],
+                                         hidden_nonlinearity=torch.tanh,
+                                         output_nonlinearity=None)
         self._params = {
             'env_spec': self._env.spec,
-            'policy': policy,
-            'optimizer': torch.optim.Adam,
+            'policy': self._policy,
             'baseline': LinearFeatureBaseline(env_spec=self._env.spec),
             'max_path_length': 100,
             'discount': 0.99,
-            'policy_lr': 1e-2
         }
 
     def teardown_method(self):
+        """Teardown method which is called after every test."""
         self._env.close()
 
     def test_vpg_no_entropy(self):
@@ -87,6 +90,7 @@ class TestVPG:
 
     @pytest.mark.parametrize('algo_param, error, msg', INVALID_ENTROPY_CONFIG)
     def test_invalid_entropy_config(self, algo_param, error, msg):
+        """Test VPG with invalid entropy config."""
         self._params.update(algo_param)
         with pytest.raises(error, match=msg):
             VPG(**self._params)

@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-This is an example to train a task with DDPG algorithm written in PyTorch.
+"""This is an example to train a task with DDPG algorithm written in PyTorch.
 
 Here it creates a gym environment InvertedDoublePendulum. And uses a DDPG with
 1M steps.
@@ -21,7 +20,15 @@ from garage.torch.q_functions import ContinuousMLPQFunction
 
 
 def run_task(snapshot_config, *_):
-    """Set up environment and algorithm and run the task."""
+    """Set up environment and algorithm and run the task.
+
+    Args:
+        snapshot_config (garage.experiment.SnapshotConfig): The snapshot
+            configuration used by LocalRunner to create the snapshotter.
+            If None, it will create one with default settings.
+        _ : Unused parameters
+
+    """
     runner = LocalRunner(snapshot_config)
     env = GarageEnv(normalize(gym.make('InvertedDoublePendulum-v2')))
 
@@ -40,6 +47,8 @@ def run_task(snapshot_config, *_):
                                        size_in_transitions=int(1e6),
                                        time_horizon=100)
 
+    policy_optimizer = (torch.optim.Adagrad, {'lr': 1e-4, 'lr_decay': 0.99})
+
     ddpg = DDPG(env_spec=env.spec,
                 policy=policy,
                 qf=qf,
@@ -48,10 +57,9 @@ def run_task(snapshot_config, *_):
                 min_buffer_size=int(1e4),
                 exploration_strategy=action_noise,
                 target_update_tau=1e-2,
-                policy_lr=1e-4,
-                qf_lr=1e-3,
                 discount=0.9,
-                optimizer=torch.optim.Adam)
+                policy_optimizer=policy_optimizer,
+                qf_optimizer=torch.optim.Adam)
 
     runner.setup(algo=ddpg, env=env)
 

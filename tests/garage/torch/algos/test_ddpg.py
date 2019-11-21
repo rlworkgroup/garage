@@ -1,7 +1,4 @@
-"""
-This script creates a test that fails when garage.tf.algos.DDPG performance is
-too low.
-"""
+"""This script creates a test that fails when DDPG performance is too low."""
 import gym
 import pytest
 import torch
@@ -9,7 +6,7 @@ from torch.nn import functional as F  # NOQA
 
 from garage.envs import normalize
 from garage.envs.base import GarageEnv
-from garage.experiment import LocalRunner
+from garage.experiment import deterministic, LocalRunner
 from garage.np.exploration_strategies import OUStrategy
 from garage.replay_buffer import SimpleReplayBuffer
 from garage.torch.algos import DDPG
@@ -19,10 +16,12 @@ from tests.fixtures import snapshot_config
 
 
 class TestDDPG:
+    """Test class for DDPG."""
 
     @pytest.mark.large
     def test_ddpg_double_pendulum(self):
         """Test DDPG with Pendulum environment."""
+        deterministic.set_seed(0)
         runner = LocalRunner(snapshot_config)
         env = GarageEnv(gym.make('InvertedDoublePendulum-v2'))
         action_noise = OUStrategy(env.spec, sigma=0.2)
@@ -48,8 +47,6 @@ class TestDDPG:
                     min_buffer_size=int(1e4),
                     exploration_strategy=action_noise,
                     target_update_tau=1e-2,
-                    policy_lr=1e-4,
-                    qf_lr=1e-3,
                     discount=0.9)
 
         runner.setup(algo, env)
@@ -62,11 +59,11 @@ class TestDDPG:
 
     @pytest.mark.large
     def test_ddpg_pendulum(self):
-        """
-        Test DDPG with Pendulum environment.
+        """Test DDPG with Pendulum environment.
 
         This environment has a [-3, 3] action_space bound.
         """
+        deterministic.set_seed(0)
         runner = LocalRunner(snapshot_config)
         env = GarageEnv(normalize(gym.make('InvertedPendulum-v2')))
         action_noise = OUStrategy(env.spec, sigma=0.2)
@@ -92,8 +89,6 @@ class TestDDPG:
                     min_buffer_size=int(1e4),
                     exploration_strategy=action_noise,
                     target_update_tau=1e-2,
-                    policy_lr=1e-4,
-                    qf_lr=1e-3,
                     discount=0.9)
 
         runner.setup(algo, env)

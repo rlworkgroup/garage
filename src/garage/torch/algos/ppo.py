@@ -1,7 +1,7 @@
 """Proximal Policy Optimization (PPO)."""
 import torch
 
-from garage.torch.algos import VPG
+from garage.torch.algos import _Default, VPG
 
 
 class PPO(VPG):
@@ -11,11 +11,15 @@ class PPO(VPG):
         env_spec (garage.envs.EnvSpec): Environment specification.
         policy (garage.torch.policies.base.Policy): Policy.
         baseline (garage.np.baselines.Baseline): The baseline.
+        optimizer (Union[type, tuple[type, dict]]): Type of optimizer.
+            This can be an optimizer type such as `torch.optim.Adam` or a
+            tuple of type and dictionary, where dictionary contains arguments
+            to initialize the optimizer e.g. `(torch.optim.Adam, {'lr' = 1e-3})`  # noqa: E501
+        policy_lr (float): Learning rate for policy parameters.
         max_path_length (int): Maximum length of a single rollout.
-        policy_lr (float): Learning rate for training policy network.
         lr_clip_range (float): The limit on the likelihood ratio between
             policies.
-        n_samples (int): Number of train_once calls per epoch.
+        num_train_per_epoch (int): Number of train_once calls per epoch.
         discount (float): Discount.
         gae_lambda (float): Lambda used for generalized advantage
             estimation.
@@ -25,9 +29,6 @@ class PPO(VPG):
             so that they are always positive. When used in
             conjunction with center_adv the advantages will be
             standardized before shifting.
-        optimizer (object): The optimizer of the algorithm. Should be the
-            optimizers in torch.optim.
-        optimizer_args (dict): Arguments required to initialize the optimizer.
         policy_ent_coeff (float): The coefficient of the policy entropy.
             Setting it to zero would mean no entropy regularization.
         use_softplus_entropy (bool): Whether to estimate the softmax
@@ -46,25 +47,35 @@ class PPO(VPG):
                  env_spec,
                  policy,
                  baseline,
+                 optimizer=torch.optim.Adam,
+                 policy_lr=_Default(3e-4),
                  max_path_length=500,
-                 policy_lr=3e-4,
                  lr_clip_range=2e-1,
-                 n_samples=1,
+                 num_train_per_epoch=1,
                  discount=0.99,
                  gae_lambda=0.97,
                  center_adv=True,
                  positive_adv=False,
-                 optimizer=None,
-                 optimizer_args=None,
                  policy_ent_coeff=0.0,
                  use_softplus_entropy=False,
                  stop_entropy_gradient=False,
                  entropy_method='no_entropy'):
-        super().__init__(env_spec, policy, baseline, max_path_length,
-                         policy_lr, n_samples, discount, gae_lambda,
-                         center_adv, positive_adv, optimizer, optimizer_args,
-                         policy_ent_coeff, use_softplus_entropy,
-                         stop_entropy_gradient, entropy_method)
+
+        super().__init__(env_spec=env_spec,
+                         policy=policy,
+                         baseline=baseline,
+                         optimizer=optimizer,
+                         policy_lr=policy_lr,
+                         max_path_length=max_path_length,
+                         num_train_per_epoch=num_train_per_epoch,
+                         discount=discount,
+                         gae_lambda=gae_lambda,
+                         center_adv=center_adv,
+                         positive_adv=positive_adv,
+                         policy_ent_coeff=policy_ent_coeff,
+                         use_softplus_entropy=use_softplus_entropy,
+                         stop_entropy_gradient=stop_entropy_gradient,
+                         entropy_method=entropy_method)
 
         self._lr_clip_range = lr_clip_range
 

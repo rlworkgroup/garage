@@ -1,6 +1,56 @@
-"""Differentiable utils typically used when computing loss functions."""
+"""Utility functions used by PyTorch algorithms."""
 import torch
 import torch.nn.functional as F
+
+
+class _Default:  # pylint: disable=too-few-public-methods
+    """A wrapper class to represent default arguments.
+
+    Args:
+        val (object): Argument value.
+
+    """
+
+    def __init__(self, val):
+        self.val = val
+
+
+def make_optimizer(optimizer_type, module, **kwargs):
+    """Create an optimizer for PyTorch algos.
+
+    Args:
+        optimizer_type (Union[type, tuple[type, dict]]): Type of optimizer.
+            This can be an optimizer type such as 'torch.optim.Adam' or a
+            tuple of type and dictionary, where dictionary contains arguments
+            to initialize the optimizer e.g. (torch.optim.Adam, {'lr' = 1e-3})
+        module (torch.nn.Module): The module whose parameters needs to be
+            optimized.
+        kwargs (dict): Other keyword arguments to initialize optimizer. This
+            is not used when `optimizer_type` is tuple.
+
+    Returns:
+        torch.optim.Optimizer: Constructed optimizer.
+
+    Raises:
+        ValueError: Raises value error when `optimizer_type` is tuple, and
+            non-default argument is passed in `kwargs`.
+
+    """
+    if isinstance(optimizer_type, tuple):
+        opt_type, opt_args = optimizer_type
+        for name, arg in kwargs.items():
+            if not isinstance(arg, _Default):
+                raise ValueError('Should not specify {} and explicit \
+                    optimizer args at the same time'.format(name))
+        return opt_type(module.parameters(), **opt_args)
+
+    opt_args = {}
+    for name, arg in kwargs.items():
+        if isinstance(arg, _Default):
+            opt_args[name] = arg.val
+        else:
+            opt_args[name] = arg
+    return optimizer_type(module.parameters(), **opt_args)
 
 
 def compute_advantages(discount, gae_lambda, max_path_length, baselines,

@@ -9,7 +9,8 @@ import torch.nn.functional as F
 
 from garage.misc import tensor_utils
 from garage.np.algos import BatchPolopt
-from garage.torch.algos import loss_function_utils
+from garage.torch.algos import (_Default, compute_advantages, filter_valids,
+                                make_optimizer, pad_to_last)
 from garage.torch.utils import flatten_batch
 
 
@@ -22,9 +23,13 @@ class VPG(BatchPolopt):
         env_spec (garage.envs.EnvSpec): Environment specification.
         policy (garage.torch.policies.base.Policy): Policy.
         baseline (garage.np.baselines.Baseline): The baseline.
+        optimizer (Union[type, tuple[type, dict]]): Type of optimizer.
+            This can be an optimizer type such as `torch.optim.Adam` or a
+            tuple of type and dictionary, where dictionary contains arguments
+            to initialize the optimizer e.g. `(torch.optim.Adam, {'lr' = 1e-3})`  # noqa: E501
+        policy_lr (float): Learning rate for policy parameters.
         max_path_length (int): Maximum length of a single rollout.
-        policy_lr (float): Learning rate for training policy network.
-        n_samples (int): Number of train_once calls per epoch.
+        num_train_per_epoch (int): Number of train_once calls per epoch.
         discount (float): Discount.
         gae_lambda (float): Lambda used for generalized advantage
             estimation.
@@ -34,9 +39,6 @@ class VPG(BatchPolopt):
             so that they are always positive. When used in
             conjunction with center_adv the advantages will be
             standardized before shifting.
-        optimizer (object): The optimizer of the algorithm. Should be the
-            optimizers in torch.optim.
-        optimizer_args (dict): Arguments required to initialize the optimizer.
         policy_ent_coeff (float): The coefficient of the policy entropy.
             Setting it to zero would mean no entropy regularization.
         use_softplus_entropy (bool): Whether to estimate the softmax
@@ -56,22 +58,20 @@ class VPG(BatchPolopt):
             env_spec,
             policy,
             baseline,
+            optimizer=torch.optim.Adam,
+            policy_lr=_Default(1e-2),
             max_path_length=500,
-            policy_lr=1e-2,
-            n_samples=1,
+            num_train_per_epoch=1,
             discount=0.99,
             gae_lambda=1,
             center_adv=True,
             positive_adv=False,
-            optimizer=None,
-            optimizer_args=None,
             policy_ent_coeff=0.0,
             use_softplus_entropy=False,
             stop_entropy_gradient=False,
             entropy_method='no_entropy',
     ):
         self._env_spec = env_spec
-        self._policy_lr = policy_lr
         self._gae_lambda = gae_lambda
         self._center_adv = center_adv
         self._positive_adv = positive_adv
@@ -88,16 +88,16 @@ class VPG(BatchPolopt):
                                           policy_ent_coeff)
         self._episode_reward_mean = collections.deque(maxlen=100)
 
-        if optimizer_args is None:
-            optimizer_args = {'lr': policy_lr, 'eps': 1e-5}
-
-        self._optimizer = optimizer(policy.parameters(), **optimizer_args)
+        self._optimizer = make_optimizer(optimizer,
+                                         policy,
+                                         lr=policy_lr,
+                                         eps=_Default(1e-5))
 
         super().__init__(policy=policy,
                          baseline=baseline,
                          discount=discount,
                          max_path_length=max_path_length,
-                         n_samples=n_samples)
+                         n_samples=num_train_per_epoch)
 
         self._old_policy = copy.deepcopy(self.policy)
 
@@ -176,23 +176,21 @@ class VPG(BatchPolopt):
         policy_entropies = self._compute_policy_entropy(obs)
 
         baselines = torch.stack([
-            loss_function_utils.pad_to_last(self._get_baselines(path),
-                                            total_length=self.max_path_length)
-            for path in paths
+            pad_to_last(self._get_baselines(path),
+                        total_length=self.max_path_length) for path in paths
         ])
 
         if self._maximum_entropy:
             rewards += self._policy_ent_coeff * policy_entropies
 
-        advantages = loss_function_utils.compute_advantages(
-            self.discount, self._gae_lambda, self.max_path_length, baselines,
-            rewards)
+        advantages = compute_advantages(self.discount, self._gae_lambda,
+                                        self.max_path_length, baselines,
+                                        rewards)
 
         if self._center_adv:
             means, variances = list(
                 zip(*[(valid_adv.mean(), valid_adv.var())
-                      for valid_adv in loss_function_utils.filter_valids(
-                          advantages, valids)]))
+                      for valid_adv in filter_valids(advantages, valids)]))
             advantages = F.batch_norm(advantages.t(),
                                       torch.Tensor(means),
                                       torch.Tensor(variances),
@@ -207,7 +205,7 @@ class VPG(BatchPolopt):
         if self._entropy_regularzied:
             objective += self._policy_ent_coeff * policy_entropies
 
-        valid_objectives = loss_function_utils.filter_valids(objective, valids)
+        valid_objectives = filter_valids(objective, valids)
         return -torch.cat(valid_objectives).mean()
 
     def _compute_kl_constraint(self, obs):
@@ -312,18 +310,17 @@ class VPG(BatchPolopt):
 
         valids = [len(path['actions']) for path in paths]
         obs = torch.stack([
-            loss_function_utils.pad_to_last(path['observations'],
-                                            total_length=self.max_path_length,
-                                            axis=0) for path in paths
+            pad_to_last(path['observations'],
+                        total_length=self.max_path_length,
+                        axis=0) for path in paths
         ])
         actions = torch.stack([
-            loss_function_utils.pad_to_last(path['actions'],
-                                            total_length=self.max_path_length,
-                                            axis=0) for path in paths
+            pad_to_last(path['actions'],
+                        total_length=self.max_path_length,
+                        axis=0) for path in paths
         ])
         rewards = torch.stack([
-            loss_function_utils.pad_to_last(path['rewards'],
-                                            total_length=self.max_path_length)
+            pad_to_last(path['rewards'], total_length=self.max_path_length)
             for path in paths
         ])
 

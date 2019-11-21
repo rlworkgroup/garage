@@ -27,10 +27,8 @@ def torch_to_np(value_in):
         tuple[numpy.ndarray]: Tuple of data in numpy arrays.
 
     """
-    value_out = []
-    for v in value_in:
-        value_out.append(v.numpy())
-    return tuple(value_out)
+    value_out = tuple(v.numpy() for v in value_in)
+    return value_out
 
 
 def flatten_batch(tensor):
