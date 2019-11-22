@@ -102,6 +102,7 @@ class TestBenchmarkPPO:
                 garage_pytorch_dir = trial_dir + '/garage/pytorch'
                 baselines_dir = trial_dir + '/baselines'
 
+                # pylint: disable=not-context-manager
                 with tf.Graph().as_default():
                     # Run baselines algorithms
                     baseline_env.reset()
