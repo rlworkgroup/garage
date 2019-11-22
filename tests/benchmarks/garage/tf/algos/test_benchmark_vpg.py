@@ -85,6 +85,7 @@ class TestBenchmarkVPG:
                 garage_tf_dir = trial_dir + '/garage/tf'
                 garage_pytorch_dir = trial_dir + '/garage/pytorch'
 
+                # pylint: disable=not-context-manager
                 with tf.Graph().as_default():
                     # Run garage algorithms
                     env.reset()
