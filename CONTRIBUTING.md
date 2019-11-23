@@ -168,12 +168,58 @@ These are garage-specific rules which are not part of the aforementioned style g
     import dowel.tabular as tabular
     ```
 
+### Other languages
+Non-Python files (including XML, HTML, CSS, JS, and Shell Scripts) should follow the [Google Style Guide](https://github.com/google/styleguide) for that language
+
+YAML files should use 2 spaces for indentation.
+
+### Whitespace (all languages)
+* Use Unix-style line endings
+* Trim trailing whitespace from all lines
+* All files should end in a single newline
+
 ## Documentation
 Python files should provide docstrings for all public methods which follow [PEP257](https://www.python.org/dev/peps/pep-0257/) docstring conventions and [Google](http://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings) docstring formatting. A good docstring example can be found [here](https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html).
 
-Additional standards:
+### Docstrings
 * Docstrings for `__init__` should be included in the class docstring as suggested in the [Google example](https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html).
 * Docstrings should provide full type information for all arguments, return values, exceptions, etc. according to the Google format
+* When documenting fields which are numpy arrays or other tensor types (and collections thereof), please carefully document the expected input shape of the field. See below for shape conventions.
+* For shapes and equations, use the Sphinx `:math:` directive to render them properly with mathematical symbols.
+
+#### Conventions for documenting tensor shapes
+Data which include a meaningful time-series dimension (e.g. trajectories) should always document that dimension explicitly, even if that dimension has been flattened out. Data containing only non time-series samples should omit the time dimension.
+
+Always use the Sphinx `:math:` directive to render your shapes properly.
+
+| Symbol    | Description                                                                                                   |
+|-----------|---------------------------------------------------------------------------------------------------------------|
+| `(...)`   | Tensor shapes are enclosed in parentheses, e.g a batch of `(N, S^*)` samples                                  |
+| `N`       | Batch dimension (e.g. trajectories or samples)                                                                |
+| `T`       | Time dimension                                                                                                |
+| `.^*`     | Variadic parts of a tensor shape, which will be broadcast or ignored are denoted with a `*`, e.g. `S^*`       |
+| `[.]`     | Variable-length dimensions are enclosed in square brackets, e.g. `[K]` if `K` is the dimension variable       |
+| `\bullet` | Flattening operator, e.g. `N \bullet T` has length `N * T`. `N \bullet [T]` has length `\sum_{i \in N} [T]_i` |
+
+**Example**
+```python
+def concatenate_time(paths):
+    """Concatenate a list of variable-length tensors along the time dimemsion.
+
+    Concatenates a list `paths` of `N` variable-length time-series tensors
+    along their time dimension, producing a single time-series tensor with the
+    component tensors arranged along a single batch dimension.
+
+    Args:
+        paths (list[numpy.ndarray]): A list of :math:`N` tensors to combine
+            into a single batch of tensors, with elements of shape
+            :math:`([T], S^*)`
+
+    Returns:
+        numpy.ndarray: Time-flattened version of `paths`, with shape
+            :math:`(N \bullet [T], S^*)`
+    """
+```
 
 ### Application guide
 **Newly created** Python files should follow all of the above standards for docstrings.
@@ -186,16 +232,6 @@ Additional standards:
 * Usage examples for the most common use cases
 * Explicitly calls out common gotchas, misunderstandings, etc.
 * A quick summary of how to go about advanced usage, configuration, or extension
-
-### Other languages
-Non-Python files (including XML, HTML, CSS, JS, and Shell Scripts) should follow the [Google Style Guide](https://github.com/google/styleguide) for that language
-
-YAML files should use 2 spaces for indentation.
-
-### Whitespace (all languages)
-* Use Unix-style line endings
-* Trim trailing whitespace from all lines
-* All files should end in a single newline
 
 ## Testing
 garage maintains a test suite to ensure that future changes do not break existing functionality. We use TravisCI to run a unit test suite on every pull request before merging.
