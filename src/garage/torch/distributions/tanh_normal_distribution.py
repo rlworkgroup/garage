@@ -9,7 +9,7 @@ import torch.nn.functional as F
 class TanhTransform(Transform):
     """ Tanh transformation for torch distributions."""
     domain = constraints.real
-    codomain = constraints.interval(-1,1)
+    codomain = constraints.interval(-1.,1.)
     bijective = True
     sign = +1
 
@@ -21,7 +21,13 @@ class TanhTransform(Transform):
 
     def _inverse(self, y):
         atanh_val = torch.log((1+y) / (1-y)) / 2
+        if(torch.isnan(atanh_val).any()):
+            import ipdb; ipdb.set_trace()
         return atanh_val
+
+    def log_prob(self, value):
+        log_prob = super.log_prob(value)
+        return log_prob
 
     def log_abs_det_jacobian(self, x, y):
         return  2. * (np.log(2.) - x - F.softplus(-2. * x))

@@ -1,6 +1,7 @@
 """GaussianMLPModule."""
 import abc
 
+import numpy as np
 import torch
 from torch import nn
 
@@ -135,10 +136,14 @@ class TanhGaussianMLPBaseModule(nn.Module):
         mean, log_std_uncentered = self._get_mean_and_log_std(inputs)
 
         if self._min_std_param or self._max_std_param:
-            log_std_uncentered = log_std_uncentered.clamp(
-                min=self._to_scalar_if_not_none(self._min_std_param),
-                max=self._to_scalar_if_not_none(self._max_std_param))
-
+            # import ipdb; ipdb.set_trace()
+            # log_std_uncentered = log_std_uncentered.clamp(
+            #     min=self._to_scalar_if_not_none(self._min_std_param),
+            #     max=self._to_scalar_if_not_none(self._max_std_param))
+            log_std_uncentered = self.softclip_tanh(log_std_uncentered, 
+                                                 self._to_scalar_if_not_none(self._min_std_param),
+                                                 self._to_scalar_if_not_none(self._max_std_param))
+                                                 
         if self._std_parameterization == 'exp':
             std = log_std_uncentered.exp()
         else:
@@ -206,3 +211,21 @@ class TanhGaussianMLPTwoHeadedModule(TanhGaussianMLPBaseModule):
 
     def _get_mean_and_log_std(self, inputs):
         return self._shared_mean_log_std_network(inputs)
+
+    def softclip_tanh(self, x, x_min, x_max, alpha=2):
+        y_scale = (x_max - x_min) / 2
+        y_offset = (x_max + x_min) / 2
+        x_scale = (2 * alpha) / (x_max - x_min)
+        x_offset = (x_max + x_min) / 2
+        return (torch.tanh((x - x_offset) * x_scale) * y_scale) + y_offset
+
+    def softclip_exp(self, x, x_min, x_max, alpha=50):
+        def unit_softclip(x, alpha):
+            return (1 / alpha) * torch.log((1 + torch.exp(alpha * x)) / (1 + torch.exp(alpha * (x - 1))))
+
+        y_scale = (x_max - x_min)
+        y_offset = -x_min
+        x_scale = 1/(x_max - x_min)
+        x_offset = x_min
+
+        return (unit_softclip((x - x_offset) * x_scale, alpha) * y_scale) - y_offset
