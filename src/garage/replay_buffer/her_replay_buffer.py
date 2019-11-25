@@ -32,10 +32,7 @@ def make_her_sample(replay_k, reward_fun):
             sample_batch_size (int): Batch size per sample.
 
         Returns:
-            dict[numpy.ndarray]: Transitions which transitions[key] has the
-                shape of [sample_batch_size, dim]. Keys include `observation`,
-                `action`, `goal`, `achieved_goal`, `terminal`,
-                `next_observation`, `next_achieved_goal` and `reward`.
+            dict[numpy.ndarray]: Transitions.
 
         """
         # Select which episodes to use
@@ -83,7 +80,7 @@ def make_her_sample(replay_k, reward_fun):
 
 
 class HerReplayBuffer(ReplayBuffer):
-    """This class implements HerReplayBuffer.
+    """Replay buffer for HER (Hindsight Experience Replay).
 
     It constructs hindsight examples using future strategy.
 
@@ -91,13 +88,18 @@ class HerReplayBuffer(ReplayBuffer):
         replay_k (float): Ratio between HER replays and regular replays
         reward_fun (callable): Function to re-compute the reward with
             substituted goals
-        kwargs: Keyword arguments for base class
+        env_spec (garage.envs.EnvSpec): Environment specification.
+        size_in_transitions (int): total size of transitions in the buffer
+        time_horizon (int): time horizon of rollout.
 
     """
 
-    def __init__(self, replay_k, reward_fun, **kwargs):
+    def __init__(self, replay_k, reward_fun, env_spec, size_in_transitions,
+                 time_horizon):
         self._sample_transitions = make_her_sample(replay_k, reward_fun)
-        super(HerReplayBuffer, self).__init__(**kwargs)
+        self._replay_k = replay_k
+        self._reward_fun = reward_fun
+        super().__init__(env_spec, size_in_transitions, time_horizon)
 
     def sample(self, batch_size):
         """Sample a transition of batch_size.
@@ -106,7 +108,10 @@ class HerReplayBuffer(ReplayBuffer):
             batch_size (int): Batch size to sample.
 
         Return:
-            dict[numpy.ndarray]: See _her_sample_transitions above.
+            dict[numpy.ndarray]: Transitions which transitions[key] has the
+                shape of :math:`(N, S^*)`. Keys include [`observation`,
+                `action`, `goal`, `achieved_goal`, `terminal`,
+                `next_observation`, `next_achieved_goal` and `reward`].
 
         """
         buffer = {}
@@ -125,9 +130,22 @@ class HerReplayBuffer(ReplayBuffer):
         """Object.__getstate__.
 
         Returns:
-            dict: the state to be pickled for the instance.
+            dict: The state to be pickled for the instance.
 
         """
         new_dict = self.__dict__.copy()
         del new_dict['_sample_transitions']
         return new_dict
+
+    # pylint: disable=attribute-defined-outside-init
+    def __setstate__(self, state):
+        """Object.__setstate__.
+
+        Args:
+            state (dict): Unpickled state.
+
+        """
+        self.__dict__ = state
+        replay_k = state['_replay_k']
+        reward_fun = state['_reward_fun']
+        self._sample_transitions = make_her_sample(replay_k, reward_fun)
