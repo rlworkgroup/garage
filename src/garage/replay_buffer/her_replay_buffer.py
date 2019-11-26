@@ -28,7 +28,7 @@ def make_her_sample(replay_k, reward_fun):
 
         Args:
             episode_batch (dict): Original transitions which
-                transitions[key] has shape [batch_size, T, dim]
+                transitions[key] has shape :math:`(N, T, S^*)`.
             sample_batch_size (int): Batch size per sample.
 
         Returns:
