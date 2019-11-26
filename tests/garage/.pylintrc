@@ -39,6 +39,7 @@ disable =
     missing-type-doc,
     no-self-use,
     protected-access,
+    redefined-outer-name,
     too-few-public-methods,
 
 
