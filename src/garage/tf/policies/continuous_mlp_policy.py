@@ -124,8 +124,7 @@ class ContinuousMLPPolicy(Policy):
             dict: Empty dict since this policy does not model a distribution.
 
         """
-        flat_obs = self.observation_space.flatten(observation)
-        action = self._f_prob([flat_obs])
+        action = self._f_prob([observation])
         action = self.action_space.unflatten(action)
         return action, dict()
 
@@ -140,8 +139,7 @@ class ContinuousMLPPolicy(Policy):
             dict: Empty dict since this policy does not model a distribution.
 
         """
-        flat_obs = self.observation_space.flatten_n(observations)
-        actions = self._f_prob(flat_obs)
+        actions = self._f_prob(observations)
         actions = self.action_space.unflatten_n(actions)
         return actions, dict()
 
