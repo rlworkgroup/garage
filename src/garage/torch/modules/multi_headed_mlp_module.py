@@ -117,5 +117,4 @@ class MultiHeadedMLPModule(nn.Module):
         x = input_val
         for layer in self._layers:
             x = layer(x)
-
         return [layer(x) for layer in self._output_layers]
