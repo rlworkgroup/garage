@@ -1,5 +1,5 @@
-"""
-This is an example to train a task with TD3 algorithm.
+#!/usr/bin/env python3
+"""This is an example to train a task with TD3 algorithm.
 
 Here, we create a gym environment InvertedDoublePendulum
 and use a TD3 with 1M steps.
@@ -22,11 +22,13 @@ from garage.tf.q_functions import ContinuousMLPQFunction
 
 
 def run_task(snapshot_config, *_):
-    """
-    Wrap TD3 training task in the run_task function.
+    """Wrap TD3 training task in the run_task function.
 
-    :param _:
-    :return:
+    Args:
+        snapshot_config (garage.experiment.SnapshotConfig): Configuration
+            values for snapshotting.
+        *_ (object): Hyperparameters (unused).
+
     """
     with LocalTFRunner(snapshot_config) as runner:
         env = TfEnv(gym.make('InvertedDoublePendulum-v2'))

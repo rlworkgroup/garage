@@ -13,7 +13,7 @@ DATA_PATH ?= $(shell pwd)/data
 MJKEY_PATH ?= ~/.mujoco/mjkey.txt
 
 test:  ## Run the CI test suite
-test: RUN_CMD = pytest -n $$(($$(nproc)/4)) -v -m 'not huge and not flaky'
+test: RUN_CMD = pytest -n $$(($$(nproc)/4)) -v -m 'not huge and not flaky' --durations=0
 test: run-headless
 	@echo "Running test suite..."
 
@@ -26,7 +26,7 @@ ci-job-precommit:
 
 ci-job-normal: docs
 	pytest -n $$(nproc) --cov=garage -v -m \
-	    'not nightly and not huge and not flaky and not large'
+	    'not nightly and not huge and not flaky and not large' --durations=0
 	coverage xml
 	bash <(curl -s https://codecov.io/bash)
 

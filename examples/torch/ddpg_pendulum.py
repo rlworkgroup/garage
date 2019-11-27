@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-This is an example to train a task with DDPG algorithm written in PyTorch.
+"""This is an example to train a task with DDPG algorithm written in PyTorch.
 
 Here it creates a gym environment InvertedDoublePendulum. And uses a DDPG with
 1M steps.
