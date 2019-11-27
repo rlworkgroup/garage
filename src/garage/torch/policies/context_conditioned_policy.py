@@ -1,5 +1,5 @@
 # pylint: disable=attribute-defined-outside-init
-"""An inference network that learns a latent probabilistic context variable Z.
+"""A policy used in training meta reinforcement learning algorithms.
 
 It is used in PEARL (Probabilistic Embeddings for Actor-Critic Reinforcement
 Learning). The paper on PEARL can be found at https://arxiv.org/abs/1903.08254.
@@ -13,49 +13,50 @@ import torch.nn.functional as F
 from garage.torch.utils import np_to_torch
 
 
-class PEARLInferenceNetwork(nn.Module):
-    """A network for infering a posterior over the latent context Z.
+class ContextConditionedPolicy(nn.Module):
+    """A policy that outputs actions based on observation and latent context.
 
     In PEARL, policies are conditioned on current state and a latent context
-    variable Z. This inference network estimates the posterior probability of
-    z given past transitions. It uses context information stored in the
-    encoder to infer the probabilistic value of z and samples from a policy
-    conditioned on z.
+    (adaptation data) variable Z. This inference network estimates the
+    posterior probability of z given past transitions. It uses context
+    information stored in the encoder to infer the probabilistic value of z and
+    samples from a policy conditioned on z.
 
     Args:
         latent_dim (int): Latent context variable dimension.
-        context_encoder (garage.torch.algo.RecurrentEncoder): Recurrent
-            context encoder.
-        policy (garage.torch.policies): Policy used to train the network.
-        **kwargs: Arbitrary keyword arguments including:
-            recurrent (bool): True if encoder is recurrent; false if it is
-                permutation-invariant.
-            use_information_bottlebeck (bool): True if latent context is not
-                deterministic.
-            use_next_obs_in_context (bool): True if next observation is used in
-                distinguishing tasks.
+        context_encoder (garage.torch.algo.RecurrentEncoder): Recurrent or
+            permutation-invariant context encoder.
+        policy (garage.torch.policies.Policy): Policy used to train the
+            network.
+        use_ib (bool): True if latent context is notdeterministic; false
+            otherwise
+        use_next_obs (bool): True if next observation is used in context
+            for distinguishing tasks; false otherwise.
 
     """
 
-    def __init__(self, latent_dim, context_encoder, policy, **kwargs):
+    def __init__(self, latent_dim, context_encoder, policy, use_ib,
+                 use_next_obs):
         super().__init__()
-        self.latent_dim = latent_dim
-        self.context_encoder = context_encoder
-        self.policy = policy
+        self._latent_dim = latent_dim
+        self._context_encoder = context_encoder
+        self._policy = policy
 
-        self.recurrent = kwargs['recurrent']
-        self.use_ib = kwargs['use_information_bottleneck']
-        self.use_next_obs_in_context = kwargs['use_next_obs_in_context']
+        self._use_ib = use_ib
+        self._use_next_obs = use_next_obs
 
-        # initialize buffers for z dist and z
+        # initialize buffers for z distribution and z
         # use buffers so latent context can be saved along with model weights
+        # z_means and z_vars are the params for the gaussian distribution
+        # over latent task belief maintained in the policy; z is a sample from
+        # this distribution that the policy is conditioned on
         self.register_buffer('z', torch.zeros(1, latent_dim))
         self.register_buffer('z_means', torch.zeros(1, latent_dim))
         self.register_buffer('z_vars', torch.zeros(1, latent_dim))
 
-        self.clear_z()
+        self.reset_belief()
 
-    def clear_z(self, num_tasks=1):
+    def reset_belief(self, num_tasks=1):
         """Reset q(z|c) to the prior and sample a new z from the prior.
 
         Args:
@@ -63,23 +64,23 @@ class PEARLInferenceNetwork(nn.Module):
 
         """
         # reset distribution over z to the prior
-        mu = torch.zeros(num_tasks, self.latent_dim)
-        if self.use_ib:
-            var = torch.ones(num_tasks, self.latent_dim)
+        mu = torch.zeros(num_tasks, self._latent_dim)
+        if self._use_ib:
+            var = torch.ones(num_tasks, self._latent_dim)
         else:
-            var = torch.zeros(num_tasks, self.latent_dim)
+            var = torch.zeros(num_tasks, self._latent_dim)
         self.z_means = mu
         self.z_vars = var
         # sample a new z from the prior
-        self.sample_z()
+        self.sample_from_belief()
         # reset the context collected so far
-        self.context = None
+        self._context = None
         # reset any hidden state in the encoder network (relevant for RNN)
-        self.context_encoder.reset(num_tasks)
+        self._context_encoder.reset(num_tasks)
 
-    def sample_z(self):
+    def sample_from_belief(self):
         """Sample z using distributions from current means and variances."""
-        if self.use_ib:
+        if self._use_ib:
             posteriors = [
                 torch.distributions.Normal(m, torch.sqrt(s)) for m, s in zip(
                     torch.unbind(self.z_means), torch.unbind(self.z_vars))
@@ -92,8 +93,6 @@ class PEARLInferenceNetwork(nn.Module):
     def detach_z(self):
         """Disable backprop through z."""
         self.z = self.z.detach()
-        if self.recurrent:
-            self.context_encoder.hidden = self.context_encoder.hidden.detach()
 
     def update_context(self, inputs):
         """Append single transition to the current context.
@@ -107,20 +106,18 @@ class PEARLInferenceNetwork(nn.Module):
         r = transitions['reward']
         a = transitions['action']
         no = transitions['next_observation']
-        o = torch.unsqueeze(torch.unsqueeze(o, 0), 0)
-        r = torch.unsqueeze(torch.unsqueeze(r, 0), 0)
-        a = torch.unsqueeze(torch.unsqueeze(a, 0), 0)
-        no = torch.unsqueeze(torch.unsqueeze(no, 0), 0)
 
-        if self.use_next_obs_in_context:
-            data = torch.cat([o, a, r, no], dim=2)
+        if self._use_next_obs:
+            data = torch.cat([o, a, r, no], dim=0)
         else:
-            data = torch.cat([o, a, r], dim=2)
+            data = torch.cat([o, a, r], dim=0)
 
-        if self.context is None:
-            self.context = data
+        data = torch.unsqueeze(torch.unsqueeze(data, 0), 0)
+
+        if self._context is None:
+            self._context = data
         else:
-            self.context = torch.cat([self.context, data], dim=1)
+            self._context = torch.cat([self._context, data], dim=1)
 
     def infer_posterior(self, context):
         """Compute q(z|c) as a function of input context and sample new z.
@@ -129,13 +126,11 @@ class PEARLInferenceNetwork(nn.Module):
             context (torch.Tensor): Context values.
 
         """
-        params = self.context_encoder(context)
-        params = params.view(context.size(0), -1,
-                             self.context_encoder.output_dim)
+        params = self._context_encoder(context)
         # given context, compute mean and variance of q(z|c)
-        if self.use_ib:
-            mu = params[..., :self.latent_dim]
-            sigma_squared = F.softplus(params[..., self.latent_dim:])
+        if self._use_ib:
+            mu = params[..., :self._latent_dim]
+            sigma_squared = F.softplus(params[..., self._latent_dim:])
             z_params = []
             # compute mu, sigma of product of gaussians
             for m, s in zip(torch.unbind(mu), torch.unbind(sigma_squared)):
@@ -147,7 +142,7 @@ class PEARLInferenceNetwork(nn.Module):
             self.z_vars = torch.stack([p[1] for p in z_params])
         else:
             self.z_means = torch.mean(params, dim=1)
-        self.sample_z()
+        self.sample_from_belief()
 
     # pylint: disable=arguments-differ
     def forward(self, obs, context):
@@ -163,7 +158,7 @@ class PEARLInferenceNetwork(nn.Module):
 
         """
         self.infer_posterior(context)
-        self.sample_z()
+        self.sample_from_belief()
         task_z = self.z
 
         # task, batch
@@ -174,7 +169,7 @@ class PEARLInferenceNetwork(nn.Module):
 
         # run policy, get log probs and new actions
         in_ = torch.cat([obs, task_z.detach()], dim=1)
-        policy_outputs = self.policy(in_)
+        policy_outputs = self._policy(in_)
 
         return policy_outputs, task_z
 
@@ -191,17 +186,17 @@ class PEARLInferenceNetwork(nn.Module):
         z = self.z
         obs = torch.unsqueeze(obs, 0)
         in_ = torch.cat([obs, z], dim=1)
-        return self.policy.get_action(in_)
+        return self._policy.get_action(in_)
 
     def compute_kl_div(self):
-        """Compute KL( q(z|c) || r(z) ).
+        """Compute KL( q(z|c) || p(z) ).
 
         Returns:
-            torch.Tensor: KL( q(z|c) || r(z) ).
+            torch.Tensor: KL( q(z|c) || p(z) ).
 
         """
-        prior = torch.distributions.Normal(torch.zeros(self.latent_dim),
-                                           torch.ones(self.latent_dim))
+        prior = torch.distributions.Normal(torch.zeros(self._latent_dim),
+                                           torch.ones(self._latent_dim))
         posteriors = [
             torch.distributions.Normal(mu, torch.sqrt(var)) for mu, var in zip(
                 torch.unbind(self.z_means), torch.unbind(self.z_vars))
@@ -221,4 +216,4 @@ class PEARLInferenceNetwork(nn.Module):
             list: Encoder and policy networks.
 
         """
-        return [self.context_encoder, self.policy]
+        return [self._context_encoder, self._policy]
