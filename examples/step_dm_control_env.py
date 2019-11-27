@@ -3,7 +3,16 @@
 
 This example requires that garage[dm_control] be installed.
 """
+import argparse
+
 from garage.envs.dm_control import DmControlEnv
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--n_steps',
+                    type=int,
+                    default=1000,
+                    help='Number of steps to run')
+args = parser.parse_args()
 
 # Construct the environment
 env = DmControlEnv.from_suite('walker', 'run')
@@ -13,11 +22,10 @@ env.reset()
 env.render()
 
 # Step randomly until interrupted
-try:
-    print('Press Ctrl-C to stop...')
-    while True:
-        env.step(env.action_space.sample())
-        env.render()
-except KeyboardInterrupt:
-    print('Exiting...')
-    env.close()
+steps = 0
+while True:
+    if steps == args.n_steps:
+        break
+    env.step(env.action_space.sample())
+    env.render()
+    steps += 1

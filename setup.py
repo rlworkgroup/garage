@@ -47,7 +47,7 @@ EXTRAS['dm_control'] = [
     # find a build dependency (absl-py). Later pip executes the `install`
     # command again and the install succeeds because absl-py has been
     # installed. This is stupid, but harmless.
-    'dm_control @ https://api.github.com/repos/deepmind/dm_control/tarball/7a36377879c57777e5d5b4da5aae2cd2a29b607a',  # pylint: disable=line-too-long; # noqa: E501
+    'dm_control @ https://api.github.com/repos/deepmind/dm_control/tarball/7a36377879c57777e5d5b4da5aae2cd2a29b607a',  # noqa: E501
 ]
 
 EXTRAS['all'] = list(set(sum(EXTRAS.values(), [])))
@@ -58,7 +58,7 @@ EXTRAS['gpu'] = ['tensorflow-gpu' + TF_VERSION]
 # Development dependencies (*not* included in 'all')
 EXTRAS['dev'] = [
     # Please keep alphabetized
-    'baselines @ https://api.github.com/repos/openai/baselines/tarball/f2729693253c0ef4d4086231d36e0a4307ec1cb3',  # pylint: disable=line-too-long; # noqa: E501
+    'baselines @ https://api.github.com/repos/openai/baselines/tarball/f2729693253c0ef4d4086231d36e0a4307ec1cb3',  # noqa: E501
     'flake8',
     'flake8-docstrings>=1.5.0',
     'flake8-import-order',
@@ -71,9 +71,10 @@ EXTRAS['dev'] = [
     'pylint>=2.4.3',
     'pytest>=4.5.0',  # Required for strict-markers
     'pytest-cov',
+    'pytest-timeout',
     'pytest-xdist',
     'recommonmark',
-    'rlkit @ git+https://github.com/vitchyr/rlkit/@1d469a509b797ca04a39b8734c1816ca7d108fc8',  # pylint: disable=line-too-long; # noqa: E501
+    'rlkit @ git+https://github.com/vitchyr/rlkit/@1d469a509b797ca04a39b8734c1816ca7d108fc8',  # noqa: E501
     'seaborn',
     'sphinx',
     'sphinx_rtd_theme',

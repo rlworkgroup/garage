@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-This is an example to train a task with TRPO algorithm.
+"""This is an example to train a task with TRPO algorithm.
 
 Uses Ray sampler instead of on_policy vectorized
 sampler.
@@ -20,7 +19,14 @@ seed = 100
 
 
 def run_task(snapshot_config, *_):
-    """Run task."""
+    """Run task.
+
+    Args:
+        snapshot_config (garage.experiment.SnapshotConfig): Configuration
+            values for snapshotting.
+        *_ (object): Hyperparameters (unused).
+
+    """
     with LocalTFRunner(snapshot_config=snapshot_config) as runner:
         env = TfEnv(gym.make('Swimmer-v2'))
 
