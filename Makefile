@@ -31,7 +31,7 @@ ci-job-normal:
 	bash <(curl -s https://codecov.io/bash)
 
 ci-job-large:
-	pytest --cov=garage -v -m large
+	pytest --cov=garage -v -m large --durations=0
 	coverage xml
 	bash <(curl -s https://codecov.io/bash)
 
