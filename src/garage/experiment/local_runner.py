@@ -108,7 +108,7 @@ class LocalRunner:
         if self.plot:
             self.plotter.close()
 
-    def obtain_samples(self, itr, batch_size=None):
+    def obtain_samples(self, itr, batch_size=None, **sampler_kwargs):
         """Obtain one batch of samples.
 
         Args:
@@ -123,7 +123,7 @@ class LocalRunner:
         if self.train_args.n_epoch_cycles == 1:
             logger.log('Obtaining samples...')
         return self.sampler.obtain_samples(
-            itr, (batch_size or self.train_args.batch_size))
+            itr, (batch_size or self.train_args.batch_size), **sampler_kwargs)
 
     def save(self, epoch, paths=None):
         """Save snapshot of current batch.

@@ -52,7 +52,7 @@ def run_task(snapshot_config, *_):
 
     replay_buffer = SimpleReplayBuffer(env_spec=env.spec,
                                        size_in_transitions=int(1e6),
-                                       time_horizon=100)
+                                       time_horizon=1)
 
     sac = SAC(env_spec=env.spec,
                 policy=policy,
@@ -60,13 +60,14 @@ def run_task(snapshot_config, *_):
                 qf2=qf2,
                 target_qf1=target_qf1,
                 target_qf2=target_qf2,
+                gradient_steps_per_itr=1,
                 use_automatic_entropy_tuning=True,
                 replay_buffer=replay_buffer,
-                min_buffer_size=1e3,
+                min_buffer_size=int(1e4),
                 target_update_tau=5e-3,
                 discount=0.99,
                 buffer_batch_size=256,
-                reward_scale=5.)
+                reward_scale=1.)
 
     runner.setup(algo=sac, env=env)
 

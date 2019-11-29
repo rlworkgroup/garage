@@ -60,6 +60,7 @@ def run_task(snapshot_config, *_):
                 qf2=qf2,
                 target_qf1=target_qf1,
                 target_qf2=target_qf2,
+                gradient_steps_per_itr=1000,
                 use_automatic_entropy_tuning=True,
                 replay_buffer=replay_buffer,
                 min_buffer_size=1e3,

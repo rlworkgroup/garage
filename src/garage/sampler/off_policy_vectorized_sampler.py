@@ -59,7 +59,7 @@ class OffPolicyVectorizedSampler(BatchSampler):
         """Terminate workers if necessary."""
         self.vec_env.close()
 
-    def obtain_samples(self, itr, batch_size):
+    def obtain_samples(self, itr, batch_size, add_transitions_to_buffer=True):
         """Collect samples for the given iteration number.
 
         Args:
@@ -113,27 +113,29 @@ class OffPolicyVectorizedSampler(BatchSampler):
                 env_infos = [dict() for _ in range(self.vec_env.num_envs)]
 
             if self.algo.input_include_goal:
-                self.algo.replay_buffer.add_transitions(
-                    observation=obs,
-                    action=actions,
-                    goal=d_g,
-                    achieved_goal=a_g,
-                    terminal=dones,
-                    next_observation=[
-                        next_obs['observation'] for next_obs in next_obses
-                    ],
-                    next_achieved_goal=[
-                        next_obs['achieved_goal'] for next_obs in next_obses
-                    ],
-                )
+                if add_transitions_to_buffer:
+                    self.algo.replay_buffer.add_transitions(
+                        observation=obs,
+                        action=actions,
+                        goal=d_g,
+                        achieved_goal=a_g,
+                        terminal=dones,
+                        next_observation=[
+                            next_obs['observation'] for next_obs in next_obses
+                        ],
+                        next_achieved_goal=[
+                            next_obs['achieved_goal'] for next_obs in next_obses
+                        ],
+                    )
             else:
-                self.algo.replay_buffer.add_transitions(
-                    observation=obses,
-                    action=actions,
-                    reward=rewards * self.algo.reward_scale,
-                    terminal=dones,
-                    next_observation=next_obses,
-                )
+                if add_transitions_to_buffer:
+                    self.algo.replay_buffer.add_transitions(
+                        observation=obses,
+                        action=actions,
+                        reward=rewards * self.algo.reward_scale,
+                        terminal=dones,
+                        next_observation=next_obses,
+                    )
 
             for idx, reward, env_info, done in zip(itertools.count(), rewards,
                                                    env_infos, dones):

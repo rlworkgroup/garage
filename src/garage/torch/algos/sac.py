@@ -32,8 +32,8 @@ class SAC(OffPolicyRLAlgorithm):
                  target_qf1,
                  target_qf2,
                  replay_buffer,
+                 gradient_steps_per_itr,
                  alpha=None,
-                 gradient_steps_per_itr=1000,
                  target_entropy=None,
                  initial_log_entropy=0.,
                  use_automatic_entropy_tuning=False,
@@ -104,6 +104,54 @@ class SAC(OffPolicyRLAlgorithm):
         self.episode_rewards = deque(maxlen=30)
         self.success_history = []
 
+    # def train_timing(self, runner, batch_size):
+    #     from line_profiler import LineProfiler
+    #     # profile = LineProfiler(self.train_helper(runner, batch_size))
+    #     lp = LineProfiler()
+    #     lp_wrapper = lp(self.train_helper)
+    #     lp_wrapper(runner, batch_size)
+    #     lp.print_stats()
+    #     import ipdb; ipdb.set_trace()
+
+    def train_helper(self, runner, batch_size):
+        eval_steps = runner.obtain_samples(-1, 30, add_transitions_to_buffer=False)
+        runner.step_path = runner.obtain_samples(runner.step_itr, batch_size)
+        tabular.record("buffer_size", self.replay_buffer.n_transitions_stored)
+        last_return = self.train_once(runner.step_itr,
+                                        eval_steps)
+        runner.step_itr += 1
+        return last_return
+
+    def train(self, runner):
+        """Obtain samplers and start actual training for each epoch.
+
+        Args:
+            runner (LocalRunner): LocalRunner is passed to give algorithm
+                the access to runner.step_epochs(), which provides services
+                such as snapshotting and sampler control.
+
+        Returns:
+            The average return in last epoch cycle.
+
+        """
+        last_return = None
+
+        for epoch in runner.step_epochs():
+            if self.replay_buffer.n_transitions_stored < self.min_buffer_size:
+                batch_size = self.min_buffer_size
+            else:
+                batch_size = None
+            for cycle in range(self.n_epoch_cycles):
+                # eval_steps = runner.obtain_samples(-1, 30, add_transitions_to_buffer=False)
+                # runner.step_path = runner.obtain_samples(runner.step_itr, batch_size)
+                # tabular.record("buffer_size", self.replay_buffer.n_transitions_stored)
+                # last_return = self.train_once(runner.step_itr,
+                #                               eval_steps)
+                # runner.step_itr += 1
+                self.train_helper(runner, batch_size)
+
+        return last_return
+
     def train_once(self, itr, paths):
         """
         """
@@ -118,12 +166,10 @@ class SAC(OffPolicyRLAlgorithm):
         #=======================================================================#
 
         self.episode_rewards.extend([
-            path for path, complete in zip(paths['undiscounted_returns'],
-                                           paths['complete']) if complete
+            path for path in paths['undiscounted_returns']
         ])
         self.success_history.extend([
-            path for path, complete in zip(paths['success_history'],
-                                           paths['complete']) if complete
+            path for path in paths['success_history']
         ])
         last_average_return = np.mean(self.episode_rewards)
         if self.replay_buffer.n_transitions_stored >= self.min_buffer_size:  # noqa: E501
@@ -203,39 +249,45 @@ class SAC(OffPolicyRLAlgorithm):
         """
 
         obs = samples["observation"]
-        # actions = samples["action"]
-        # rewards = samples["reward"]
-        # terminals = samples["terminal"]
-        # next_obs = samples["next_observation"]
 
         # ================update q functions===============#
         qf1_loss, qf2_loss = self.critic_objective(samples)
-        if ((gradient_step % (self.gradient_steps - 1) == 0) and gradient_step != 0):
+        if(self.gradient_steps == 1):
+            tabular.record("qf_loss/{}".format("qf1_loss"), float(qf1_loss))
+            tabular.record("qf_loss/{}".format("qf2_loss"), float(qf2_loss))
+        elif ((gradient_step % (self.gradient_steps - 1) == 0) and gradient_step != 0):
             tabular.record("qf_loss/{}".format("qf1_loss"), float(qf1_loss))
             tabular.record("qf_loss/{}".format("qf2_loss"), float(qf2_loss))
         self.qf1_optimizer.zero_grad()
         qf1_loss.backward()
-        for name, param in self.qf1.named_parameters():
-            if param.requires_grad and (param.grad is not None):
-                tabular.record("qf1_grads/{}".format(name), float(param.grad.norm()))
-                tabular.record("qf2_grads_max/{}".format(name), float(param.grad.max()))
-                tabular.record("qf2_grads_min/{}".format(name), float(param.grad.min()))
+        # for name, param in self.qf1.named_parameters():
+        #     if param.requires_grad and (param.grad is not None):
+        #         tabular.record("qf1_grads/{}".format(name), float(param.grad.norm()))
+        #         tabular.record("qf2_grads_max/{}".format(name), float(param.grad.max()))
+        #         tabular.record("qf2_grads_min/{}".format(name), float(param.grad.min()))
         self.qf1_optimizer.step()
         
         self.qf2_optimizer.zero_grad()
         qf2_loss.backward()
-        for name, param in self.qf2.named_parameters():
-            if param.requires_grad and (param.grad is not None):
-                tabular.record("qf2_grads/{}".format(name), float(param.grad.norm()))
-                tabular.record("qf2_grads_max/{}".format(name), float(param.grad.max()))
-                tabular.record("qf2_grads_min/{}".format(name), float(param.grad.min()))
+        # for name, param in self.qf2.named_parameters():
+        #     if param.requires_grad and (param.grad is not None):
+        #         tabular.record("qf2_grads/{}".format(name), float(param.grad.norm()))
+        #         tabular.record("qf2_grads_max/{}".format(name), float(param.grad.max()))
+        #         tabular.record("qf2_grads_min/{}".format(name), float(param.grad.min()))
         self.qf2_optimizer.step()
         #===================================================#
 
         #===================update policy===================#
         action_dists = self.policy(torch.Tensor(obs))
         # log evaluation statistics
-        if ((gradient_step % (self.gradient_steps - 1) == 0) and gradient_step != 0):
+        if(self.gradient_steps == 1):
+            entropy = action_dists.entropy()
+            tabular.record("policy/mu_entropy", torch.mean(entropy).detach().numpy().item())
+            tabular.record("policy/mu_stdev", torch.mean(action_dists.variance.detach().flatten()).item()**0.5)
+            tabular.record("policy/min_stdev", torch.min(action_dists.variance.detach().flatten()).item()**0.5)
+            tabular.record("policy/max_stdev", torch.max(action_dists.variance.detach().flatten()).item()**0.5)
+            tabular.record("policy/mu_mean", torch.mean(action_dists.mean.detach()).item())
+        elif ((gradient_step % (self.gradient_steps - 1) == 0) and gradient_step != 0):
             entropy = action_dists.entropy()
             tabular.record("policy/mu_entropy", torch.mean(entropy).detach().numpy().item())
             tabular.record("policy/mu_stdev", torch.mean(action_dists.variance.detach().flatten()).item()**0.5)
@@ -248,14 +300,16 @@ class SAC(OffPolicyRLAlgorithm):
         policy_loss = self.actor_objective(obs, log_pi, new_actions)
         self.policy_optimizer.zero_grad()
         policy_loss.backward()
-        for name, param in self.policy.named_parameters():
-            if param.requires_grad and (param.grad is not None):
-                tabular.record("policy_grads/{}".format(name), float(param.grad.norm()))
-                tabular.record("policy_grads_max/{}".format(name), float(param.grad.max()))
-                tabular.record("policy_grads_min/{}".format(name), float(param.grad.min()))
+        # for name, param in self.policy.named_parameters():
+        #     if param.requires_grad and (param.grad is not None):
+        #         tabular.record("policy_grads/{}".format(name), float(param.grad.norm()))
+        #         tabular.record("policy_grads_max/{}".format(name), float(param.grad.max()))
+        #         tabular.record("policy_grads_min/{}".format(name), float(param.grad.min()))
 
         self.policy_optimizer.step()
-        if ((gradient_step % (self.gradient_steps - 1) == 0) and gradient_step != 0):
+        if(self.gradient_steps == 1):
+            tabular.record("policy_loss", policy_loss.item())
+        elif ((gradient_step % (self.gradient_steps - 1) == 0) and gradient_step != 0):
             tabular.record("policy_loss", policy_loss.item())
         #===================================================#
 
@@ -266,5 +320,7 @@ class SAC(OffPolicyRLAlgorithm):
             self.alpha_optimizer.zero_grad()
             alpha_loss.backward()
             self.alpha_optimizer.step()
-            if ((gradient_step % (self.gradient_steps - 1) == 0) and gradient_step != 0):
+            if(self.gradient_steps == 1):
+                tabular.record("alpha", torch.exp(self.log_alpha.detach()).item())
+            elif ((gradient_step % (self.gradient_steps - 1) == 0) and gradient_step != 0):
                 tabular.record("alpha", torch.exp(self.log_alpha.detach()).item())
