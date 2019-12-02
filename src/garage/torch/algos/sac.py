@@ -29,10 +29,9 @@ class SAC(OffPolicyRLAlgorithm):
                  policy,
                  qf1,
                  qf2,
-                 target_qf1,
-                 target_qf2,
                  replay_buffer,
                  gradient_steps_per_itr,
+                 batch_sampling=True,
                  alpha=None,
                  target_entropy=None,
                  initial_log_entropy=0.,
@@ -82,8 +81,6 @@ class SAC(OffPolicyRLAlgorithm):
         # use 2 target q networks
         self.target_qf1 = copy.deepcopy(self.qf1)
         self.target_qf2 = copy.deepcopy(self.qf2)
-        # self.target_qf1 = target_qf1
-        # self.target_qf2 = target_qf2
         self.policy_optimizer = optimizer(self.policy.parameters(),
                                           lr=self.policy_lr)
         self.qf1_optimizer = optimizer(self.qf1.parameters(), lr=self.qf_lr)
@@ -104,14 +101,13 @@ class SAC(OffPolicyRLAlgorithm):
         self.episode_rewards = deque(maxlen=30)
         self.success_history = []
 
-    # def train_timing(self, runner, batch_size):
-    #     from line_profiler import LineProfiler
-    #     # profile = LineProfiler(self.train_helper(runner, batch_size))
-    #     lp = LineProfiler()
-    #     lp_wrapper = lp(self.train_helper)
-    #     lp_wrapper(runner, batch_size)
-    #     lp.print_stats()
-    #     import ipdb; ipdb.set_trace()
+    def train_timing(self, runner):
+        from line_profiler import LineProfiler
+        lp = LineProfiler()
+        lp_wrapper = lp(self._train)
+        lp_wrapper(runner)
+        lp.print_stats()
+        import ipdb; ipdb.set_trace()
 
     def train_helper(self, runner, batch_size):
         eval_steps = runner.obtain_samples(-1, 30, add_transitions_to_buffer=False)
@@ -122,7 +118,7 @@ class SAC(OffPolicyRLAlgorithm):
         runner.step_itr += 1
         return last_return
 
-    def train(self, runner):
+    def _train(self, runner):
         """Obtain samplers and start actual training for each epoch.
 
         Args:
@@ -149,7 +145,7 @@ class SAC(OffPolicyRLAlgorithm):
                 #                               eval_steps)
                 # runner.step_itr += 1
                 self.train_helper(runner, batch_size)
-
+            break
         return last_return
 
     def train_once(self, itr, paths):
