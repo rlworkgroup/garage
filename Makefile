@@ -13,7 +13,7 @@ DATA_PATH ?= $(shell pwd)/data
 MJKEY_PATH ?= ~/.mujoco/mjkey.txt
 
 test:  ## Run the CI test suite
-test: RUN_CMD = pytest -n $$(($$(nproc)/4)) -v -m 'not huge and not flaky' --durations=0
+test: RUN_CMD = nice -n 11 pytest -v -m 'not huge and not flaky' --durations=0
 test: run-headless
 	@echo "Running test suite..."
 
@@ -25,18 +25,18 @@ ci-job-precommit: docs
 	scripts/travisci/check_precommit.sh
 
 ci-job-normal:
-	pytest -n $$(nproc) --cov=garage -v -m \
+	pytest --cov=garage -v -m \
 	    'not nightly and not huge and not flaky and not large' --durations=0
 	coverage xml
 	bash <(curl -s https://codecov.io/bash)
 
 ci-job-large:
-	pytest -n $$(nproc) --cov=garage -v -m large
+	pytest --cov=garage -v -m large
 	coverage xml
 	bash <(curl -s https://codecov.io/bash)
 
 ci-job-nightly:
-	pytest -n $$(nproc) -v -m nightly
+	pytest -v -m nightly
 
 ci-job-verify-envs: ci-verify-conda ci-verify-pipenv
 
