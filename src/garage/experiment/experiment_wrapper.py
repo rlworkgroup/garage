@@ -24,13 +24,17 @@ from garage.sampler import parallel_sampler
 import garage.tf.plotter
 
 
-def is_iterable(obj):
-    """Return if instance is iterable."""
-    return isinstance(obj, str) or getattr(obj, '__iter__', False)
-
-
+# pylint: disable=too-many-statements
 def run_experiment(argv):
-    """Run experiment."""
+    """Run experiment.
+
+    Args:
+        argv (list[str]): Command line arguments.
+
+    Raises:
+        BaseException: Propagate any exception in the experiment.
+
+    """
     now = datetime.datetime.now(dateutil.tz.tzlocal())
 
     # avoid name clashes when running distributed jobs
@@ -151,8 +155,7 @@ def run_experiment(argv):
 
     logger.add_output(dowel.TextOutput(text_log_file))
     logger.add_output(dowel.CsvOutput(tabular_log_file))
-    logger.add_output(
-        dowel.TensorBoardOutput(log_dir, x_axis=['TotalEnvSteps']))
+    logger.add_output(dowel.TensorBoardOutput(log_dir, x_axis='TotalEnvSteps'))
     logger.add_output(dowel.StdOutput())
 
     logger.push_prefix('[%s] ' % args.exp_name)
@@ -178,7 +181,13 @@ def run_experiment(argv):
 
 
 def child_proc_shutdown(children):
-    """Shut down children processes."""
+    """Shut down children processes.
+
+    Args:
+        children (list[garage.plotter.Plotter]): Instances of plotter to
+            shutdown.
+
+    """
     run_exp_proc = psutil.Process()
     alive = run_exp_proc.children(recursive=True)
     for proc in alive:
@@ -213,7 +222,13 @@ def child_proc_shutdown(children):
 
 
 def log_parameters(log_file, args):
-    """Log parameters to file."""
+    """Log parameters to file.
+
+    Args:
+        log_file (str): Log filename.
+        args (argparse.Namespace): Parsed command line arguments.
+
+    """
     log_params = {}
     for param_name, param_value in args.__dict__.items():
         log_params[param_name] = param_value
@@ -225,7 +240,13 @@ def log_parameters(log_file, args):
 
 
 def dump_variant(log_file, variant_data):
-    """Dump the variant file."""
+    """Dump the variant file.
+
+    Args:
+        log_file (str): Log filename.
+        variant_data (object): Variant data.
+
+    """
     pathlib.Path(os.path.dirname(log_file)).mkdir(parents=True, exist_ok=True)
     with open(log_file, 'w') as f:
         json.dump(variant_data, f, indent=2, sort_keys=True, cls=LogEncoder)
@@ -235,15 +256,23 @@ class LogEncoder(json.JSONEncoder):
     """Encoder to be used as cls in json.dump."""
 
     def default(self, o):  # pylint: disable=method-hidden
-        """Perform JSON encoding."""
+        """Perform JSON encoding.
+
+        Args:
+            o (object): Object to encode.
+
+        Returns:
+            str: Object encoded in JSON.
+
+        """
         if isinstance(o, type):
             return {'$class': o.__module__ + '.' + o.__name__}
-        elif isinstance(o, enum.Enum):
+        if isinstance(o, enum.Enum):
             return {
                 '$enum':
                 o.__module__ + '.' + o.__class__.__name__ + '.' + o.name
             }
-        elif callable(o):
+        if callable(o):
             return {'$function': o.__module__ + '.' + o.__name__}
         return json.JSONEncoder.default(self, o)
 
