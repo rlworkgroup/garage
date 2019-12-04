@@ -16,7 +16,6 @@ REQUIRED = [
     'dowel==0.0.2',
     'gym[atari,box2d,classic_control]' + GYM_VERSION,
     'joblib<0.13,>=0.12',
-    'matplotlib',
     'numpy>=1.14.5',
     'psutil',
     # Pyglet 1.4.0 introduces some api change which breaks some
@@ -63,6 +62,7 @@ EXTRAS['dev'] = [
     'flake8-docstrings>=1.5.0',
     'flake8-import-order',
     'gtimer',
+    'matplotlib',
     'pandas',
     'pep8-naming==0.7.0',
     'pre-commit',
