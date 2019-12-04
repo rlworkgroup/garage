@@ -152,7 +152,7 @@ def run_experiment(argv):
     logger.add_output(dowel.TextOutput(text_log_file))
     logger.add_output(dowel.CsvOutput(tabular_log_file))
     logger.add_output(
-        dowel.TensorBoardOutput(log_dir, x_axes=['TotalEnvSteps']))
+        dowel.TensorBoardOutput(log_dir, x_axis=['TotalEnvSteps']))
     logger.add_output(dowel.StdOutput())
 
     logger.push_prefix('[%s] ' % args.exp_name)
