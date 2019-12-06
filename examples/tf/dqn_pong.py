@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""
-This is an example to train a task with DQN algorithm in pixel environment.
+"""This is an example to train a task with DQN algorithm in pixel environment.
 
 Here it creates a gym environment Pong, and trains a DQN with 1M steps.
 """
+import click
 import gym
 
 from garage.envs.wrappers.clip_reward import ClipReward
@@ -24,8 +24,18 @@ from garage.tf.policies import DiscreteQfDerivedPolicy
 from garage.tf.q_functions import DiscreteCNNQFunction
 
 
-def run_task(snapshot_config, *_):
-    """Run task."""
+def run_task(snapshot_config, variant_data, *_):
+    """Run task.
+
+    Args:
+        snapshot_config (garage.experiment.SnapshotConfig): The snapshot
+            configuration used by LocalRunner to create the snapshotter.
+
+        variant_data (dict): Custom arguments for the task.
+
+        *_ (object): Ignored by this function.
+
+    """
     with LocalTFRunner(snapshot_config=snapshot_config) as runner:
         n_epochs = 100
         n_epoch_cycles = 20
@@ -45,9 +55,10 @@ def run_task(snapshot_config, *_):
 
         env = TfEnv(env)
 
-        replay_buffer = SimpleReplayBuffer(env_spec=env.spec,
-                                           size_in_transitions=int(5e4),
-                                           time_horizon=1)
+        replay_buffer = SimpleReplayBuffer(
+            env_spec=env.spec,
+            size_in_transitions=variant_data['buffer_size'],
+            time_horizon=1)
 
         qf = DiscreteCNNQFunction(env_spec=env.spec,
                                   filter_dims=(8, 4, 3),
@@ -83,10 +94,27 @@ def run_task(snapshot_config, *_):
                      batch_size=sampler_batch_size)
 
 
+@click.command()
+@click.option('--buffer_size', type=int, default=int(5e4))
+def _args(buffer_size):
+    """A click command to parse arguments for automated testing purposes.
+
+    Args:
+        buffer_size (int): Size of replay buffer.
+
+    Returns:
+        int: The input argument as-is.
+
+    """
+    return buffer_size
+
+
+replay_buffer_size = _args.main(standalone_mode=False)
 run_experiment(
     run_task,
     n_parallel=1,
     snapshot_mode='last',
     seed=1,
     plot=False,
+    variant={'buffer_size': replay_buffer_size},
 )
