@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-This is an example to train a task with VPG algorithm (PyTorch).
+"""This is an example to train a task with VPG algorithm (PyTorch).
 
 Here it runs InvertedDoublePendulum-v2 environment with 100 iterations.
 

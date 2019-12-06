@@ -258,11 +258,13 @@ def run_experiment(method_call=None,
         try:
             if env is None:
                 env = dict()
-            subprocess.call(command, shell=True, env=dict(os.environ, **env))
+            subprocess.run(command,
+                           shell=True,
+                           env=dict(os.environ, **env),
+                           check=True)
         except Exception as e:
             print(e)
-            if isinstance(e, KeyboardInterrupt):
-                raise
+            raise
 
 
 _find_unsafe = re.compile(r'[a-zA-Z0-9_^@%+=:,./-]').search
