@@ -27,7 +27,7 @@ class DDPG(OffPolicyRLAlgorithm):
         policy (garage.tf.policies.base.Policy): Policy.
         qf (object): The q value network.
         replay_buffer (garage.replay_buffer.ReplayBuffer): Replay buffer.
-        n_epoch_cycles (int): Number of train_once calls per epoch.
+        steps_per_epoch (int): Number of train_once calls per epoch.
         n_train_steps (int): Training steps.
         max_path_length (int): Maximum path length. The episode will
             terminate when length of trajectory reaches max_path_length.
@@ -64,7 +64,7 @@ class DDPG(OffPolicyRLAlgorithm):
                  policy,
                  qf,
                  replay_buffer,
-                 n_epoch_cycles=20,
+                 steps_per_epoch=20,
                  n_train_steps=50,
                  max_path_length=None,
                  buffer_batch_size=64,
@@ -113,7 +113,7 @@ class DDPG(OffPolicyRLAlgorithm):
                                    policy=policy,
                                    qf=qf,
                                    n_train_steps=n_train_steps,
-                                   n_epoch_cycles=n_epoch_cycles,
+                                   steps_per_epoch=steps_per_epoch,
                                    max_path_length=max_path_length,
                                    buffer_batch_size=buffer_batch_size,
                                    min_buffer_size=min_buffer_size,
@@ -255,7 +255,7 @@ class DDPG(OffPolicyRLAlgorithm):
         """
         paths = self.process_samples(itr, paths)
 
-        epoch = itr / self.n_epoch_cycles
+        epoch = itr / self.steps_per_epoch
 
         self.episode_rewards.extend([
             path for path, complete in zip(paths['undiscounted_returns'],
@@ -280,7 +280,7 @@ class DDPG(OffPolicyRLAlgorithm):
                 self.epoch_ys.append(y_s)
                 self.epoch_qs.append(qval)
 
-        if itr % self.n_epoch_cycles == 0:
+        if itr % self.steps_per_epoch == 0:
             logger.log('Training finished')
 
             if self.evaluate:

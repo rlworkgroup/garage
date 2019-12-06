@@ -18,7 +18,14 @@ from garage.tf.policies import CategoricalMLPPolicy
 
 
 def run_task(snapshot_config, *_):
-    """Train CMA_ES with Cartpole-v1 environment."""
+    """Train CMA_ES with Cartpole-v1 environment.
+
+    Args:
+        snapshot_config (garage.experiment.SnapshotConfig): The snapshot
+            configuration used by LocalRunner to create the snapshotter.
+        *_ (object): Ignored by this function.
+
+    """
     with LocalTFRunner(snapshot_config=snapshot_config) as runner:
         env = TfEnv(env_name='CartPole-v1')
 
@@ -37,8 +44,7 @@ def run_task(snapshot_config, *_):
                      n_samples=n_samples)
 
         runner.setup(algo, env, sampler_cls=OnPolicyVectorizedSampler)
-        # NOTE: make sure that n_epoch_cycles == n_samples !
-        runner.train(n_epochs=100, batch_size=1000, n_epoch_cycles=n_samples)
+        runner.train(n_epochs=100, batch_size=1000)
 
 
 run_experiment(

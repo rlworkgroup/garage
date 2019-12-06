@@ -26,9 +26,9 @@ class TestDQN(TfGraphTestCase):
         """Test DQN with CartPole environment."""
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
             n_epochs = 10
-            n_epoch_cycles = 10
+            steps_per_epoch = 10
             sampler_batch_size = 500
-            num_timesteps = n_epochs * n_epoch_cycles * sampler_batch_size
+            num_timesteps = n_epochs * steps_per_epoch * sampler_batch_size
             env = TfEnv(gym.make('CartPole-v0'))
             replay_buffer = SimpleReplayBuffer(env_spec=env.spec,
                                                size_in_transitions=int(1e4),
@@ -51,13 +51,12 @@ class TestDQN(TfGraphTestCase):
                        min_buffer_size=int(1e3),
                        double_q=False,
                        n_train_steps=500,
-                       n_epoch_cycles=n_epoch_cycles,
+                       steps_per_epoch=steps_per_epoch,
                        target_network_update_freq=1,
                        buffer_batch_size=32)
 
             runner.setup(algo, env)
             last_avg_ret = runner.train(n_epochs=n_epochs,
-                                        n_epoch_cycles=n_epoch_cycles,
                                         batch_size=sampler_batch_size)
             assert last_avg_ret > 15
 
@@ -68,9 +67,9 @@ class TestDQN(TfGraphTestCase):
         """Test DQN with CartPole environment."""
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
             n_epochs = 10
-            n_epoch_cycles = 10
+            steps_per_epoch = 10
             sampler_batch_size = 500
-            num_timesteps = n_epochs * n_epoch_cycles * sampler_batch_size
+            num_timesteps = n_epochs * steps_per_epoch * sampler_batch_size
             env = TfEnv(gym.make('CartPole-v0'))
             replay_buffer = SimpleReplayBuffer(env_spec=env.spec,
                                                size_in_transitions=int(1e4),
@@ -93,13 +92,12 @@ class TestDQN(TfGraphTestCase):
                        min_buffer_size=int(1e3),
                        double_q=True,
                        n_train_steps=500,
-                       n_epoch_cycles=n_epoch_cycles,
+                       steps_per_epoch=steps_per_epoch,
                        target_network_update_freq=1,
                        buffer_batch_size=32)
 
             runner.setup(algo, env)
             last_avg_ret = runner.train(n_epochs=n_epochs,
-                                        n_epoch_cycles=n_epoch_cycles,
                                         batch_size=sampler_batch_size)
             assert last_avg_ret > 15
 
@@ -110,9 +108,9 @@ class TestDQN(TfGraphTestCase):
         """Test DQN with CartPole environment."""
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
             n_epochs = 10
-            n_epoch_cycles = 10
+            steps_per_epoch = 10
             sampler_batch_size = 500
-            num_timesteps = n_epochs * n_epoch_cycles * sampler_batch_size
+            num_timesteps = n_epochs * steps_per_epoch * sampler_batch_size
             env = TfEnv(gym.make('CartPole-v0'))
             replay_buffer = SimpleReplayBuffer(env_spec=env.spec,
                                                size_in_transitions=int(1e4),
@@ -136,13 +134,12 @@ class TestDQN(TfGraphTestCase):
                        double_q=False,
                        n_train_steps=500,
                        grad_norm_clipping=5.0,
-                       n_epoch_cycles=n_epoch_cycles,
+                       steps_per_epoch=steps_per_epoch,
                        target_network_update_freq=1,
                        buffer_batch_size=32)
 
             runner.setup(algo, env)
             last_avg_ret = runner.train(n_epochs=n_epochs,
-                                        n_epoch_cycles=n_epoch_cycles,
                                         batch_size=sampler_batch_size)
             assert last_avg_ret > 15
 
@@ -152,9 +149,9 @@ class TestDQN(TfGraphTestCase):
         """Test DQN with CartPole environment."""
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
             n_epochs = 10
-            n_epoch_cycles = 10
+            steps_per_epoch = 10
             sampler_batch_size = 500
-            num_timesteps = n_epochs * n_epoch_cycles * sampler_batch_size
+            num_timesteps = n_epochs * steps_per_epoch * sampler_batch_size
             env = TfEnv(gym.make('CartPole-v0'))
             replay_buffer = SimpleReplayBuffer(env_spec=env.spec,
                                                size_in_transitions=int(1e4),
@@ -178,7 +175,7 @@ class TestDQN(TfGraphTestCase):
                        double_q=False,
                        n_train_steps=500,
                        grad_norm_clipping=5.0,
-                       n_epoch_cycles=n_epoch_cycles,
+                       steps_per_epoch=steps_per_epoch,
                        target_network_update_freq=1,
                        buffer_batch_size=32)
             runner.setup(algo, env)

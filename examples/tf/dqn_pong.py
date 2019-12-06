@@ -30,17 +30,15 @@ def run_task(snapshot_config, variant_data, *_):
     Args:
         snapshot_config (garage.experiment.SnapshotConfig): The snapshot
             configuration used by LocalRunner to create the snapshotter.
-
         variant_data (dict): Custom arguments for the task.
-
         *_ (object): Ignored by this function.
 
     """
     with LocalTFRunner(snapshot_config=snapshot_config) as runner:
         n_epochs = 100
-        n_epoch_cycles = 20
+        steps_per_epoch = 20
         sampler_batch_size = 500
-        num_timesteps = n_epochs * n_epoch_cycles * sampler_batch_size
+        num_timesteps = n_epochs * steps_per_epoch * sampler_batch_size
 
         env = gym.make('PongNoFrameskip-v4')
         env = Noop(env, noop_max=30)
@@ -84,14 +82,12 @@ def run_task(snapshot_config, variant_data, *_):
                    min_buffer_size=int(1e4),
                    double_q=False,
                    n_train_steps=500,
-                   n_epoch_cycles=n_epoch_cycles,
+                   steps_per_epoch=steps_per_epoch,
                    target_network_update_freq=2,
                    buffer_batch_size=32)
 
         runner.setup(algo, env)
-        runner.train(n_epochs=n_epochs,
-                     n_epoch_cycles=n_epoch_cycles,
-                     batch_size=sampler_batch_size)
+        runner.train(n_epochs=n_epochs, batch_size=sampler_batch_size)
 
 
 @click.command()

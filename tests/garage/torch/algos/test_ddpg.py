@@ -43,6 +43,7 @@ class TestDDPG:
                     policy=policy,
                     qf=qf,
                     replay_buffer=replay_buffer,
+                    steps_per_epoch=20,
                     n_train_steps=50,
                     min_buffer_size=int(1e4),
                     exploration_strategy=action_noise,
@@ -50,9 +51,7 @@ class TestDDPG:
                     discount=0.9)
 
         runner.setup(algo, env)
-        last_avg_ret = runner.train(n_epochs=10,
-                                    n_epoch_cycles=20,
-                                    batch_size=100)
+        last_avg_ret = runner.train(n_epochs=10, batch_size=100)
         assert last_avg_ret > 45
 
         env.close()
@@ -85,6 +84,7 @@ class TestDDPG:
                     policy=policy,
                     qf=qf,
                     replay_buffer=replay_buffer,
+                    steps_per_epoch=20,
                     n_train_steps=50,
                     min_buffer_size=int(1e4),
                     exploration_strategy=action_noise,
@@ -92,9 +92,7 @@ class TestDDPG:
                     discount=0.9)
 
         runner.setup(algo, env)
-        last_avg_ret = runner.train(n_epochs=10,
-                                    n_epoch_cycles=20,
-                                    batch_size=100)
+        last_avg_ret = runner.train(n_epochs=10, batch_size=100)
         assert last_avg_ret > 10
 
         env.close()

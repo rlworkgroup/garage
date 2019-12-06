@@ -51,9 +51,6 @@ class TrainArgs:
 
     Args:
         n_epochs (int): Number of epochs.
-        n_epoch_cycles (int): Number of batches of samples in each epoch.
-            This is only useful for off-policy algorithm.
-            For on-policy algorithm this value should always be 1.
         batch_size (int): Number of environment steps in one batch.
         plot (bool): Visualize policy by doing rollout after each epoch.
         store_paths (bool): Save paths in snapshot.
@@ -62,10 +59,9 @@ class TrainArgs:
 
     """
 
-    def __init__(self, n_epochs, n_epoch_cycles, batch_size, plot, store_paths,
-                 pause_for_plot, start_epoch):
+    def __init__(self, n_epochs, batch_size, plot, store_paths, pause_for_plot,
+                 start_epoch):
         self.n_epochs = n_epochs
-        self.n_epoch_cycles = n_epoch_cycles
         self.batch_size = batch_size
         self.plot = plot
         self.store_paths = store_paths
@@ -203,9 +199,6 @@ class LocalRunner:
             list[dict]: One batch of samples.
 
         """
-        if self._train_args.n_epoch_cycles == 1:
-            logger.log('Obtaining samples...')
-
         paths = self._sampler.obtain_samples(
             itr, (batch_size or self._train_args.batch_size))
 
@@ -273,7 +266,6 @@ class LocalRunner:
         last_epoch = self._stats.total_epoch
         last_itr = self._stats.total_itr
         total_env_steps = self._stats.total_env_steps
-        n_epoch_cycles = self._train_args.n_epoch_cycles
         batch_size = self._train_args.batch_size
         store_paths = self._train_args.store_paths
         pause_for_plot = self._train_args.pause_for_plot
@@ -284,7 +276,6 @@ class LocalRunner:
         logger.log(fmt.format('-- Train Args --', '-- Value --'))
         logger.log(fmt.format('n_epochs', n_epochs))
         logger.log(fmt.format('last_epoch', last_epoch))
-        logger.log(fmt.format('n_epoch_cycles', n_epoch_cycles))
         logger.log(fmt.format('batch_size', batch_size))
         logger.log(fmt.format('store_paths', store_paths))
         logger.log(fmt.format('pause_for_plot', pause_for_plot))
@@ -313,7 +304,6 @@ class LocalRunner:
     def train(self,
               n_epochs,
               batch_size,
-              n_epoch_cycles=1,
               plot=False,
               store_paths=False,
               pause_for_plot=False):
@@ -322,9 +312,6 @@ class LocalRunner:
         Args:
             n_epochs (int): Number of epochs.
             batch_size (int): Number of environment steps in one batch.
-            n_epoch_cycles (int): Number of batches of samples in each epoch.
-                This is only useful for off-policy algorithm.
-                For on-policy algorithm this value should always be 1.
             plot (bool): Visualize policy by doing rollout after each epoch.
             store_paths (bool): Save paths in snapshot.
             pause_for_plot (bool): Pause for plot.
@@ -341,7 +328,6 @@ class LocalRunner:
 
         # Save arguments for restore
         self._train_args = TrainArgs(n_epochs=n_epochs,
-                                     n_epoch_cycles=n_epoch_cycles,
                                      batch_size=batch_size,
                                      plot=plot,
                                      store_paths=store_paths,
@@ -383,6 +369,8 @@ class LocalRunner:
             os.environ.get('GARAGE_EXAMPLE_TEST_N_EPOCHS',
                            self._train_args.n_epochs))
 
+        logger.log('Obtaining samples...')
+
         for epoch in range(self._train_args.start_epoch, n_epochs):
             self._itr_start_time = time.time()
             with logger.prefix('epoch #%d | ' % epoch):
@@ -402,7 +390,6 @@ class LocalRunner:
     def resume(self,
                n_epochs=None,
                batch_size=None,
-               n_epoch_cycles=None,
                plot=None,
                store_paths=None,
                pause_for_plot=None):
@@ -416,9 +403,6 @@ class LocalRunner:
         Args:
             n_epochs (int): Number of epochs.
             batch_size (int): Number of environment steps in one batch.
-            n_epoch_cycles (int): Number of batches of samples in each epoch.
-                This is only useful for off-policy algorithm.
-                For on-policy algorithm this value should always be 1.
             plot (bool): Visualize policy by doing rollout after each epoch.
             store_paths (bool): Save paths in snapshot.
             pause_for_plot (bool): Pause for plot.
@@ -435,8 +419,6 @@ class LocalRunner:
 
         self._train_args.n_epochs = n_epochs or self._train_args.n_epochs
         self._train_args.batch_size = batch_size or self._train_args.batch_size
-        self._train_args.n_epoch_cycles = (n_epoch_cycles
-                                           or self._train_args.n_epoch_cycles)
 
         if plot is not None:
             self._train_args.plot = plot
