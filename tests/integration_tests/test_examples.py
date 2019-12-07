@@ -55,6 +55,49 @@ def test_algo_examples(filepath):
 
 
 @pytest.mark.no_cover
+@pytest.mark.timeout(180)
+def test_dqn_pong():
+    """Test tf/dqn_pong.py with reduced replay buffer size for reduced memory
+    consumption.
+    """
+    env = os.environ.copy()
+    env['GARAGE_EXAMPLE_TEST_N_EPOCHS'] = '1'
+    assert subprocess.run(
+        [str(EXAMPLES_ROOT_DIR / 'tf/dqn_pong.py'), '--buffer_size', '5'],
+        check=False,
+        env=env).returncode == 0
+
+
+@pytest.mark.no_cover
+@pytest.mark.timeout(30)
+def test_ppo_memorize_digits():
+    """Test tf/ppo_memorize_digits.py with reduced batch size for reduced
+    memory consumption.
+    """
+    env = os.environ.copy()
+    env['GARAGE_EXAMPLE_TEST_N_EPOCHS'] = '1'
+    command = [
+        str(EXAMPLES_ROOT_DIR / 'tf/ppo_memorize_digits.py'), '--batch_size',
+        '4'
+    ]
+    assert subprocess.run(command, check=False, env=env).returncode == 0
+
+
+@pytest.mark.no_cover
+@pytest.mark.timeout(40)
+def test_trpo_cubecrash():
+    """Test tf/trpo_cubecrash.py with reduced batch size for reduced memory
+    consumption.
+    """
+    env = os.environ.copy()
+    env['GARAGE_EXAMPLE_TEST_N_EPOCHS'] = '1'
+    assert subprocess.run(
+        [str(EXAMPLES_ROOT_DIR / 'tf/trpo_cubecrash.py'), '--batch_size', '4'],
+        check=False,
+        env=env).returncode == 0
+
+
+@pytest.mark.no_cover
 @pytest.mark.timeout(10)
 def test_step_env():
     """Test step_env.py."""
