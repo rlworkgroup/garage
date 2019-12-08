@@ -6,7 +6,21 @@ from garage.tf.regressors import GaussianMLPRegressor
 
 
 class GaussianMLPBaseline(Baseline):
-    """A value function using Gaussian MLP network."""
+    """Gaussian MLP Baseline with Model.
+
+    It fits the input data to a gaussian distribution estimated by
+    a MLP.
+
+    Args:
+        env_spec (garage.envs.env_spec.EnvSpec): Environment specification.
+        subsample_factor (float): The factor to subsample the data. By
+            default it is 1.0, which means using all the data.
+        num_seq_inputs (float): Number of sequence per input. By default
+            it is 1.0, which means only one single sequence.
+        regressor_args (dict): Arguments for regressor.
+        name (str): Name of baseline.
+
+    """
 
     def __init__(
             self,
@@ -16,20 +30,6 @@ class GaussianMLPBaseline(Baseline):
             regressor_args=None,
             name='GaussianMLPBaseline',
     ):
-        """
-        Gaussian MLP Baseline with Model.
-
-        It fits the input data to a gaussian distribution estimated by
-        a MLP.
-
-        Args:
-            env_spec (garage.envs.env_spec.EnvSpec): Environment specification.
-            subsample_factor (float): The factor to subsample the data. By
-                default it is 1.0, which means using all the data.
-            num_seq_inputs (float): Number of sequence per input. By default
-                it is 1.0, which means only one single sequence.
-            regressor_args (dict): Arguments for regressor.
-        """
         super().__init__(env_spec)
         if regressor_args is None:
             regressor_args = dict()
@@ -39,6 +39,7 @@ class GaussianMLPBaseline(Baseline):
                          num_seq_inputs, ),
             output_dim=1,
             name=name,
+            subsample_factor=subsample_factor,
             **regressor_args)
         self.name = name
 
@@ -57,7 +58,7 @@ class GaussianMLPBaseline(Baseline):
         """Predict value based on paths.
 
         Args:
-            paths (list[dict]): Sample paths.
+            path (list[dict]): Sample paths.
 
         Returns:
             numpy.ndarray: Predicted value.

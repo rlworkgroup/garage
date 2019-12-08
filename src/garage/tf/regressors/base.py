@@ -51,16 +51,17 @@ class Regressor(abc.ABC):
         This internal method does not perform caching, and should
         be implemented by subclasses.
 
-        Return:
-            A list of trainable variables of type list(tf.Variable)
+        Returns:
+            list[tf.Variable]: A list of trainable variables.
 
         """
 
+    # pylint: disable=assignment-from-no-return
     def get_params(self):
         """Get the list of trainable parameters.
 
         Returns:
-            List[tf.Variable]: A list of trainable variables in the current
+            list[tf.Variable]: A list of trainable variables in the current
                 variable scope.
 
         """
@@ -110,8 +111,8 @@ class Regressor(abc.ABC):
             flattened_params (np.ndarray): A numpy array of flattened params.
 
         Returns:
-            tensors (List[np.ndarray]): A list of parameters reshaped to the
-            shapes specified.
+            list[np.ndarray]: A list of parameters reshaped to the
+                shapes specified.
 
         """
         return unflatten_tensors(flattened_params, self.get_param_shapes())
@@ -134,22 +135,12 @@ class Regressor(abc.ABC):
             state (dict): Unpickled state.
 
         """
-        self._cached_params = {}
+        self._cached_params = None
         self.__dict__.update(state)
 
 
 class StochasticRegressor(Regressor):
-    """StochasticRegressor base class.
-
-    Args:
-        input_shape (tuple[int]): Input shape.
-        output_dim (int): Output dimension.
-        name (str): Name of the regressor.
-
-    """
-
-    def __init__(self, input_shape, output_dim, name):
-        super().__init__(input_shape, output_dim, name)
+    """StochasticRegressor base class."""
 
     def log_likelihood_sym(self, x_var, y_var, name=None):
         """Symbolic graph of the log likelihood.
@@ -161,6 +152,7 @@ class StochasticRegressor(Regressor):
 
         Return:
             tf.Tensor output of the symbolic log likelihood.
+
         """
 
     def dist_info_sym(self, x_var, name=None):

@@ -1,3 +1,4 @@
+"""Penalized Limited-memory BFGS (L-BFGS) optimizer."""
 from dowel import logger
 import numpy as np
 import scipy.optimize
@@ -8,9 +9,26 @@ from garage.tf.optimizers.utils import LazyDict
 
 
 class PenaltyLbfgsOptimizer:
-    """
+    """Penalized Limited-memory BFGS (L-BFGS) optimizer.
+
     Performs constrained optimization via penalized L-BFGS. The penalty term is
     adaptively adjusted to make sure that the constraint is satisfied.
+
+    Args:
+        max_opt_itr (int): Maximum iteration for update.
+        initial_penalty (float): Initial penalty.
+        min_penalty (float): Minimum penalty allowed. Penalty will be clipped
+            if lower than this value.
+        max_penalty (float): Maximum penalty allowed. Penalty will be clipped
+            if higher than this value.
+        increase_penalty_factor (float): Factor to increase penalty in each
+            penalty iteration.
+        decrease_penalty_factor (float): Factor to decrease penalty in each
+            penalty iteration.
+        max_penalty_itr (int): Maximum penalty iterations to perform.
+        adapt_penalty (bool): Whether the penalty is adaptive or not. If false,
+            penalty will not change.
+
     """
 
     def __init__(self,
@@ -37,6 +55,7 @@ class PenaltyLbfgsOptimizer:
         self._max_constraint_val = None
         self._constraint_name = None
 
+    # pylint: disable=unused-argument
     def update_opt(self,
                    loss,
                    target,
@@ -44,17 +63,22 @@ class PenaltyLbfgsOptimizer:
                    inputs,
                    constraint_name='constraint',
                    name=None,
-                   *args,
                    **kwargs):
-        """
-        :param loss: Symbolic expression for the loss function.
-        :param target: A parameterized object to optimize over. It should
-         implement methods of the
-         :class:`garage.core.paramerized.Parameterized` class.
-        :param leq_constraint: A constraint provided as a tuple (f, epsilon),
-         of the form f(*inputs) <= epsilon.
-        :param inputs: A list of symbolic variables as inputs
-        :return: No return value.
+        """Construct operation graph for the optimizer.
+
+        Args:
+            loss (tf.Tensor): Loss objective to minimize.
+            target (object): Target object to optimize. The object should
+                implemenet `get_params()` and `get_param_values`.
+            leq_constraint (tuple): It contains a tf.Tensor and a float value.
+                The tf.Tensor represents the constraint term, and the float
+                value is the constraint value.
+            inputs (list[tf.Tensor]): List of input placeholders.
+            constraint_name (str): Constraint name for logging.
+            name (str): Name scope.
+            kwargs (dict): Extra unused keyword arguments. Some optimizers
+                have extra input, e.g. KL constraint.
+
         """
         params = target.get_params()
         with tf.name_scope(name, 'PenaltyLbfgsOptimizer',
@@ -70,6 +94,12 @@ class PenaltyLbfgsOptimizer:
             self._constraint_name = constraint_name
 
             def get_opt_output():
+                """Helper function to construct graph.
+
+                Returns:
+                    list[tf.Tensor]: Penalized loss and gradient tensor.
+
+                """
                 with tf.name_scope('get_opt_output',
                                    values=[params, penalized_loss]):
                     grads = tf.gradients(penalized_loss, params)
@@ -98,18 +128,52 @@ class PenaltyLbfgsOptimizer:
                 ))
 
     def loss(self, inputs):
+        """The loss.
+
+        Args:
+            inputs (list[numpy.ndarray]): List of input values.
+
+        Returns:
+            float: Loss.
+
+        Raises:
+            Exception: If loss function is None, i.e. not defined.
+
+        """
         if self._opt_fun is None:
             raise Exception(
                 'Use update_opt() to setup the loss function first.')
         return self._opt_fun['f_loss'](*inputs)
 
     def constraint_val(self, inputs):
+        """The constraint value.
+
+        Args:
+            inputs (list[numpy.ndarray]): List of input values.
+
+        Returns:
+            float: Constraint value.
+
+        Raises:
+            Exception: If loss function is None, i.e. not defined.
+
+        """
         if self._opt_fun is None:
             raise Exception(
                 'Use update_opt() to setup the loss function first.')
         return self._opt_fun['f_constraint'](*inputs)
 
     def optimize(self, inputs, name=None):
+        """Perform optimization.
+
+        Args:
+            inputs (list[numpy.ndarray]): List of input values.
+            name (str): Name scope.
+
+        Raises:
+            Exception: If loss function is None, i.e. not defined.
+
+        """
         if self._opt_fun is None:
             raise Exception(
                 'Use update_opt() to setup the loss function first.')
@@ -125,16 +189,33 @@ class PenaltyLbfgsOptimizer:
             f_opt = self._opt_fun['f_opt']
             f_penalized_loss = self._opt_fun['f_penalized_loss']
 
-            def gen_f_opt(penalty):
+            def gen_f_opt(penalty):  # noqa: D202
+                """Return a function that set parameters values.
+
+                Args:
+                    penalty (float): Penalty.
+
+                Returns:
+                    callable: Function that set parameters values.
+
+                """
 
                 def f(flat_params):
-                    self._target.set_param_values(flat_params, trainable=True)
+                    """Helper function to set parameters values.
+
+                    Args:
+                        flat_params (numpy.ndarray): Flatten parameter values.
+
+                    Returns:
+                        list[tf.Tensor]: Penalized loss and gradient tensor.
+
+                    """
+                    self._target.set_param_values(flat_params)
                     return f_opt(*(inputs + (penalty, )))
 
                 return f
 
-            cur_params = self._target.get_param_values(
-                trainable=True).astype('float64')
+            cur_params = self._target.get_param_values().astype('float64')
             opt_params = cur_params
 
             for penalty_itr in range(self._max_penalty_itr):
@@ -179,18 +260,23 @@ class PenaltyLbfgsOptimizer:
                     if (penalty_scale_factor > 1 and
                             try_constraint_val <= self._max_constraint_val):
                         break
-                    elif (penalty_scale_factor < 1
-                          and try_constraint_val >= self._max_constraint_val):
+                    if (penalty_scale_factor < 1 and
+                            try_constraint_val >= self._max_constraint_val):
                         break
                 try_penalty *= penalty_scale_factor
                 try_penalty = np.clip(try_penalty, self._min_penalty,
                                       self._max_penalty)
                 self._penalty = try_penalty
 
-            self._target.set_param_values(opt_params, trainable=True)
+            self._target.set_param_values(opt_params)
 
     def __getstate__(self):
-        """Object.__getstate__."""
+        """Object.__getstate__.
+
+        Returns:
+            dict: The state to be pickled for the instance.
+
+        """
         new_dict = self.__dict__.copy()
         del new_dict['_opt_fun']
         return new_dict

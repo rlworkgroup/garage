@@ -305,7 +305,6 @@ class GaussianMLPRegressor(StochasticRegressor):
             variable scope.
 
         """
-
         return self._variable_scope.trainable_variables()
 
     def __getstate__(self):

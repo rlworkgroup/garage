@@ -74,8 +74,8 @@ class Policy(abc.ABC):
 
         Returns:
             bool: Indicates whether the policy is vectorized. If True, it
-                should implement get_actions(), and support resetting with multiple
-                simultaneous states.
+                should implement get_actions(), and support resetting with
+                multiple simultaneous states.
 
         """
         return False

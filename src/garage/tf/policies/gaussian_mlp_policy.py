@@ -50,17 +50,18 @@ class GaussianMLPPolicy(StochasticPolicy):
             to avoid numerical issues.
         max_std (float): If not None, the std is at most the value of max_std,
             to avoid numerical issues.
-        std_hidden_nonlinearity: Nonlinearity for each hidden layer in
-            the std network.
-        std_output_nonlinearity: Nonlinearity for output layer in
-            the std network.
-        std_parametrization (str): How the std should be parametrized. There
+        std_hidden_nonlinearity (callable): Nonlinearity for each hidden layer
+            in the std network. It should return a tf.Tensor. Set it to None to
+            maintain a linear activation.
+        std_output_nonlinearity (callable): Nonlinearity for output layer in
+            the std network. It should return a tf.Tensor. Set it to None to
+            maintain a linear activation.
+        std_parameterization (str): How the std should be parametrized. There
             are a few options:
-        - exp: the logarithm of the std will be stored, and applied a
-            exponential transformation
-        - softplus: the std will be computed as log(1+exp(x))
+            - exp: the logarithm of the std will be stored, and applied a
+                exponential transformation
+            - softplus: the std will be computed as log(1+exp(x))
         layer_normalization (bool): Bool for using layer normalization or not.
-    :return:
 
     """
 
@@ -131,17 +132,49 @@ class GaussianMLPPolicy(StochasticPolicy):
 
     @property
     def vectorized(self):
-        """Vectorized or not."""
+        """Vectorized or not.
+
+        Returns:
+            Bool: True if primitive supports vectorized operations.
+
+        """
         return True
 
     def dist_info_sym(self, obs_var, state_info_vars=None, name='default'):
-        """Symbolic graph of the distribution."""
+        """Build a symbolic graph of the distribution parameters.
+
+        Args:
+            obs_var (tf.Tensor): Tensor input for symbolic graph.
+            state_info_vars (dict): Extra state information, e.g.
+                previous action.
+            name (str): Name for symbolic graph.
+
+        Returns:
+            dict[tf.Tensor]: Outputs of the symbolic graph of distribution
+                parameters.
+
+        """
         with tf.compat.v1.variable_scope(self._variable_scope):
             mean_var, log_std_var, _, _ = self.model.build(obs_var, name=name)
         return dict(mean=mean_var, log_std=log_std_var)
 
     def get_action(self, observation):
-        """Get action from the policy."""
+        """Get single action from this policy for the input observation.
+
+        Args:
+            observation (numpy.ndarray): Observation from environment.
+
+        Returns:
+            numpy.ndarray: Actions
+            dict: Predicted action and agent information.
+
+        Note:
+            It returns an action and a dict, with keys
+            - mean (numpy.ndarray): Mean of the distribution.
+            - log_std (numpy.ndarray): Log standard deviation of the
+                distribution.
+
+        """
         flat_obs = self.observation_space.flatten(observation)
         mean, log_std = self._f_dist([flat_obs])
         rnd = np.random.normal(size=mean.shape)
@@ -152,7 +185,22 @@ class GaussianMLPPolicy(StochasticPolicy):
         return sample, dict(mean=mean, log_std=log_std)
 
     def get_actions(self, observations):
-        """Get actions from the policy."""
+        """Get multiple actions from this policy for the input observations.
+
+        Args:
+            observations (numpy.ndarray): Observations from environment.
+
+        Returns:
+            numpy.ndarray: Actions
+            dict: Predicted action and agent information.
+
+        Note:
+            It returns actions and a dict, with keys
+            - mean (numpy.ndarray): Means of the distribution.
+            - log_std (numpy.ndarray): Log standard deviations of the
+                distribution.
+
+        """
         flat_obs = self.observation_space.flatten_n(observations)
         means, log_stds = self._f_dist(flat_obs)
         rnd = np.random.normal(size=means.shape)
@@ -162,22 +210,43 @@ class GaussianMLPPolicy(StochasticPolicy):
         log_stds = self.action_space.unflatten_n(log_stds)
         return samples, dict(mean=means, log_std=log_stds)
 
-    def get_params(self, trainable=True):
-        """Get the trainable variables."""
+    def get_params(self):
+        """Get the params, which are the trainable variables.
+
+        Returns:
+            List[tf.Variable]: A list of trainable variables in the current
+                variable scope.
+
+        """
         return self.get_trainable_vars()
 
     @property
     def distribution(self):
-        """Policy distribution."""
+        """Policy distribution.
+
+        Returns:
+            garage.tf.distributions.DiagonalGaussian: Policy distribution.
+
+        """
         return self.model.networks['default'].dist
 
     def __getstate__(self):
-        """Object.__getstate__."""
+        """Object.__getstate__.
+
+        Returns:
+            dict: the state to be pickled for the instance.
+
+        """
         new_dict = super().__getstate__()
         del new_dict['_f_dist']
         return new_dict
 
     def __setstate__(self, state):
-        """Object.__setstate__."""
+        """Object.__setstate__.
+
+        Args:
+            state (dict): Unpickled state.
+
+        """
         super().__setstate__(state)
         self._initialize()

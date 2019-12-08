@@ -169,6 +169,7 @@ class ContinuousMLPRegressor(Regressor):
         Returns:
             List[tf.Variable]: A list of trainable variables in the current
             variable scope.
+
         """
         return self._variable_scope.trainable_variables()
 
