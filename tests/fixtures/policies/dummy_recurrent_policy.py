@@ -18,11 +18,11 @@ class DummyRecurrentPolicy(Policy):
         """Return action."""
         return self.action_space.sample(), dict()
 
-    def get_params_internal(self, **tags):
+    def get_params_internal(self):
         """Return a list of policy internal params."""
         return []
 
-    def get_param_values(self, **tags):
+    def get_param_values(self):
         """Return values of params."""
         return np.random.uniform(-1, 1, 1000)
 

@@ -35,7 +35,7 @@ class SimpleGaussianMLPRegressor(StochasticRegressor):
 
         return self._ys
 
-    def get_params_internal(self, *args, **kwargs):
+    def get_params_internal(self):
         return self._variable_scope.trainable_variables()
 
     def __setstate__(self, state):

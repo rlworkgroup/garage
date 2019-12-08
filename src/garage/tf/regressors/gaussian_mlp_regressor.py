@@ -297,19 +297,35 @@ class GaussianMLPRegressor(StochasticRegressor):
 
         return dict(mean=means_var, log_std=log_stds_var)
 
-    def get_params_internal(self, **args):
-        """Get the params, which are the trainable variables."""
-        del args
+    def get_params_internal(self):
+        """Get the params, which are the trainable variables.
+
+        Returns:
+            List[tf.Variable]: A list of trainable variables in the current
+            variable scope.
+
+        """
+
         return self._variable_scope.trainable_variables()
 
     def __getstate__(self):
-        """See `Object.__getstate__`."""
+        """Object.__getstate__.
+
+        Returns:
+            dict: The state to be pickled for the instance.
+
+        """
         new_dict = super().__getstate__()
         del new_dict['_f_predict']
         del new_dict['_f_pdists']
         return new_dict
 
     def __setstate__(self, state):
-        """See `Object.__setstate__`."""
+        """Object.__setstate__.
+
+        Args:
+            state (dict): Unpickled state.
+
+        """
         super().__setstate__(state)
         self._initialize()

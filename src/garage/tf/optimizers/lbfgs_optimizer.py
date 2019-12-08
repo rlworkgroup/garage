@@ -37,7 +37,7 @@ class LbfgsOptimizer:
         :return: No return value.
         """
         self._target = target
-        params = target.get_params(trainable=True)
+        params = target.get_params()
         with tf.name_scope(name, 'LbfgsOptimizer',
                            [loss, inputs, params, extra_inputs]):
 

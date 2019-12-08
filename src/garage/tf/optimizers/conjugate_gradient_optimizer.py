@@ -108,7 +108,7 @@ class PearlmutterHvp(HessianVectorProduct):
         """
         self._target = target
         self._reg_coeff = reg_coeff
-        params = target.get_params(trainable=True)
+        params = target.get_params()
         with tf.name_scope(name, 'PearlmutterHvp', [f, inputs, params]):
             constraint_grads = tf.gradients(f,
                                             xs=params,
@@ -188,7 +188,7 @@ class FiniteDifferenceHvp(HessianVectorProduct):
         """
         self._target = target
         self._reg_coeff = reg_coeff
-        params = target.get_params(trainable=True)
+        params = target.get_params()
         with tf.name_scope(name, 'FiniteDifferenceHvp',
                            [f, inputs, params, target]):
             constraint_grads = tf.gradients(f,
@@ -331,7 +331,7 @@ class ConjugateGradientOptimizer:
                 and variable names.
 
         """
-        params = target.get_params(trainable=True)
+        params = target.get_params()
         ns_vals = [loss, target, leq_constraint, inputs, extra_inputs, params]
         with tf.name_scope(name, 'ConjugateGradientOptimizer', ns_vals):
             inputs = tuple(inputs)

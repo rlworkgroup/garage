@@ -10,10 +10,10 @@ class LinearFeatureBaseline(Baseline):
         self._reg_coeff = reg_coeff
         self.name = name
 
-    def get_param_values(self, **tags):
+    def get_param_values(self):
         return self._coeffs
 
-    def set_param_values(self, val, **tags):
+    def set_param_values(self, val):
         self._coeffs = val
 
     def _features(self, path):

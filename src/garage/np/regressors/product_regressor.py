@@ -39,14 +39,13 @@ class ProductRegressor:
             for regressor, split_ys in zip(self.regressors, self._split_ys(ys))
         ], axis=0)  # yapf: disable
 
-    def get_param_values(self, **tags):
-        return np.concatenate([
-            regressor.get_param_values(**tags) for regressor in self.regressors
-        ])
+    def get_param_values(self):
+        return np.concatenate(
+            [regressor.get_param_values() for regressor in self.regressors])
 
-    def set_param_values(self, flattened_params, **tags):
+    def set_param_values(self, flattened_params):
         param_dims = [
-            np.prod(regressor.get_param_shapes(**tags))
+            np.prod(regressor.get_param_shapes())
             for regressor in self.regressors
         ]
         split_ids = np.cumsum(param_dims)[:-1]

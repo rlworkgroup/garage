@@ -22,8 +22,8 @@ class Regressor(abc.ABC):
         self._output_dim = output_dim
         self._name = name
         self._variable_scope = None
-        self._cached_params = {}
-        self._cached_param_shapes = {}
+        self._cached_params = None
+        self._cached_param_shapes = None
 
     def fit(self, xs, ys):
         """Fit with input data xs and label ys.
@@ -45,7 +45,7 @@ class Regressor(abc.ABC):
 
         """
 
-    def get_params_internal(self, **tags):
+    def get_params_internal(self):
         """Get the list of parameters.
 
         This internal method does not perform caching, and should
@@ -56,92 +56,84 @@ class Regressor(abc.ABC):
 
         """
 
-    def get_params(self, **tags):
-        """Get the list of parameters, filtered by the provided tags.
+    def get_params(self):
+        """Get the list of trainable parameters.
 
-        Args:
-            tags (dict): Some common tags include 'regularizable' and
-            'trainable'
+        Returns:
+            List[tf.Variable]: A list of trainable variables in the current
+                variable scope.
 
         """
-        tag_tuple = tuple(sorted(list(tags.items()), key=lambda x: x[0]))
-        if tag_tuple not in self._cached_params:
-            self._cached_params[tag_tuple] = self.get_params_internal(**tags)
-        return self._cached_params[tag_tuple]
+        if self._cached_params is None:
+            self._cached_params = self.get_params_internal()
+        return self._cached_params
 
-    def get_param_shapes(self, **tags):
+    def get_param_shapes(self):
         """Get the list of shapes for the parameters.
-
-        Args:
-            tags (dict): Some common tags include 'regularizable' and
-            'trainable'
 
         Returns:
             List[tuple[int]]: A list of shapes of each parameter.
 
         """
-        tag_tuple = tuple(sorted(list(tags.items()), key=lambda x: x[0]))
-        if tag_tuple not in self._cached_param_shapes:
-            params = self.get_params(**tags)
+        if self._cached_param_shapes is None:
+            params = self.get_params()
             param_values = tf.compat.v1.get_default_session().run(params)
-            self._cached_param_shapes[tag_tuple] = [
-                val.shape for val in param_values
-            ]
-        return self._cached_param_shapes[tag_tuple]
+            self._cached_param_shapes = [val.shape for val in param_values]
+        return self._cached_param_shapes
 
-    def get_param_values(self, **tags):
+    def get_param_values(self):
         """Get the list of values for the parameters.
-
-        Args:
-            tags (dict): Some common tags include 'regularizable' and
-            'trainable'
 
         Returns:
             List[np.ndarray]: A list of values of each parameter.
 
         """
-        params = self.get_params(**tags)
+        params = self.get_params()
         param_values = tf.compat.v1.get_default_session().run(params)
         return flatten_tensors(param_values)
 
-    def set_param_values(self, flattened_params, name=None, **tags):
-        """Set the values for the parameters.
+    def set_param_values(self, param_values):
+        """Set param values.
 
         Args:
-            tags (dict): Some common tags include 'regularizable' and
-            'trainable'
+            param_values (np.ndarray): A numpy array of parameter values.
 
         """
-        with tf.name_scope(name, 'set_param_values', [flattened_params]):
-            param_values = unflatten_tensors(flattened_params,
-                                             self.get_param_shapes(**tags))
-            for param, value in zip(self.get_params(**tags), param_values):
-                param.load(value)
+        param_values = unflatten_tensors(param_values, self.get_param_shapes())
+        for param, value in zip(self.get_params(), param_values):
+            param.load(value)
 
-    def flat_to_params(self, flattened_params, **tags):
+    def flat_to_params(self, flattened_params):
         """Unflatten tensors according to their respective shapes.
 
         Args:
             flattened_params (np.ndarray): A numpy array of flattened params.
-            tags (dict): Some common tags include 'regularizable' and
-            'trainable'
 
         Returns:
             tensors (List[np.ndarray]): A list of parameters reshaped to the
             shapes specified.
 
         """
-        return unflatten_tensors(flattened_params,
-                                 self.get_param_shapes(**tags))
+        return unflatten_tensors(flattened_params, self.get_param_shapes())
 
     def __getstate__(self):
-        """Object.__getstate__."""
+        """Object.__getstate__.
+
+        Returns:
+            dict: The state to be pickled for the instance.
+
+        """
         new_dict = self.__dict__.copy()
         del new_dict['_cached_params']
         return new_dict
 
     def __setstate__(self, state):
-        """Object.__setstate__."""
+        """Object.__setstate__.
+
+        Args:
+            state (dict): Unpickled state.
+
+        """
         self._cached_params = {}
         self.__dict__.update(state)
 

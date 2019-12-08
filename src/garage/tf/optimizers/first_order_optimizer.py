@@ -64,17 +64,14 @@ class FirstOrderOptimizer:
         :param inputs: A list of symbolic variables as inputs
         :return: No return value.
         """
-        with tf.name_scope(self._name,
-                           values=[
-                               loss,
-                               target.get_params(trainable=True), inputs,
-                               extra_inputs
-                           ]):
+        with tf.name_scope(
+                self._name,
+                values=[loss, target.get_params(), inputs, extra_inputs]):
 
             self._target = target
 
             self._train_op = self._tf_optimizer.minimize(
-                loss, var_list=target.get_params(trainable=True))
+                loss, var_list=target.get_params())
 
             # updates = OrderedDict(
             #     [(k, v.astype(k.dtype)) for k, v in updates.iteritems()])

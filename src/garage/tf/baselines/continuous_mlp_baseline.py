@@ -52,14 +52,14 @@ class ContinuousMLPBaseline(Baseline):
         """Predict value based on paths."""
         return self._regressor.predict(path['observations']).flatten()
 
-    def get_param_values(self, **tags):
+    def get_param_values(self):
         """Get parameter values."""
-        return self._regressor.get_param_values(**tags)
+        return self._regressor.get_param_values()
 
-    def set_param_values(self, flattened_params, **tags):
+    def set_param_values(self, flattened_params):
         """Set parameter values to val."""
-        self._regressor.set_param_values(flattened_params, **tags)
+        self._regressor.set_param_values(flattened_params)
 
-    def get_params_internal(self, **tags):
+    def get_params_internal(self):
         """Get internal parameters."""
-        return self._regressor.get_params_internal(**tags)
+        return self._regressor.get_params_internal()

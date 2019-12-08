@@ -56,7 +56,7 @@ class PenaltyLbfgsOptimizer:
         :param inputs: A list of symbolic variables as inputs
         :return: No return value.
         """
-        params = target.get_params(trainable=True)
+        params = target.get_params()
         with tf.name_scope(name, 'PenaltyLbfgsOptimizer',
                            [leq_constraint, loss, params]):
             constraint_term, constraint_value = leq_constraint

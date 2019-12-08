@@ -43,23 +43,52 @@ class GaussianMLPBaseline(Baseline):
         self.name = name
 
     def fit(self, paths):
-        """Fit regressor based on paths."""
+        """Fit regressor based on paths.
+
+        Args:
+            paths (list[dict]): Sample paths.
+
+        """
         observations = np.concatenate([p['observations'] for p in paths])
         returns = np.concatenate([p['returns'] for p in paths])
         self._regressor.fit(observations, returns.reshape((-1, 1)))
 
     def predict(self, path):
-        """Predict value based on paths."""
+        """Predict value based on paths.
+
+        Args:
+            paths (list[dict]): Sample paths.
+
+        Returns:
+            numpy.ndarray: Predicted value.
+
+        """
         return self._regressor.predict(path['observations']).flatten()
 
-    def get_param_values(self, **tags):
-        """Get parameter values."""
-        return self._regressor.get_param_values(**tags)
+    def get_param_values(self):
+        """Get parameter values.
 
-    def set_param_values(self, flattened_params, **tags):
-        """Set parameter values to val."""
-        self._regressor.set_param_values(flattened_params, **tags)
+        Returns:
+            List[np.ndarray]: A list of values of each parameter.
 
-    def get_params_internal(self, **tags):
-        """Get internal parameters."""
-        return self._regressor.get_params_internal(**tags)
+        """
+        return self._regressor.get_param_values()
+
+    def set_param_values(self, flattened_params):
+        """Set param values.
+
+        Args:
+            flattened_params (np.ndarray): A numpy array of parameter values.
+
+        """
+        self._regressor.set_param_values(flattened_params)
+
+    def get_params_internal(self):
+        """Get the params, which are the trainable variables.
+
+        Returns:
+            List[tf.Variable]: A list of trainable variables in the current
+            variable scope.
+
+        """
+        return self._regressor.get_params_internal()
