@@ -4,6 +4,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+
+## 2019.10.1
+
+### Added
+- Integration tests which cover all example scripts (
+  [#1078](https://github.com/rlworkgroup/garage/pull/1078),
+  [#1090](https://github.com/rlworkgroup/garage/pull/1090))
+- Deterministic mode support for PyTorch ([#1068](https://github.com/rlworkgroup/garage/pull/1068))
+- Install script support for macOS 10.15.1 ([#1051](https://github.com/rlworkgroup/garage/pull/1051))
+- PyTorch modules now support either functions or modules for specifying their non-linearities ([#1038](https://github.com/rlworkgroup/garage/pull/1038))
+
+### Fixed
+- Errors in the documentation on implementing new algorithms ([#1074](https://github.com/rlworkgroup/garage/pull/1074))
+- Broken example for DDPG+HER in TensorFlow ([#1070](https://github.com/rlworkgroup/garage/pull/1070))
+- Error in the documentation for using garage with conda ([#1066](https://github.com/rlworkgroup/garage/pull/1066))
+- Broken pickling of environment wrappers ([#1061](https://github.com/rlworkgroup/garage/pull/1061))
+- `garage.torch` was not included in the PyPI distribution ([#1037](https://github.com/rlworkgroup/garage/pull/1037))
+- A few broken examples for `garage.tf` ([#1032](https://github.com/rlworkgroup/garage/pull/1032))
+
+
 ## 2019.10.0
 
 ### Added
