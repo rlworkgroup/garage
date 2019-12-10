@@ -20,7 +20,7 @@ class TestTfBaselines(TfGraphTestCase):
         gaussian_mlp_baseline = GaussianMLPBaseline(env_spec=box_env)
 
         self.sess.run(tf.compat.v1.global_variables_initializer())
-        deterministic_mlp_baseline.get_param_values(trainable=True)
-        gaussian_mlp_baseline.get_param_values(trainable=True)
+        deterministic_mlp_baseline.get_param_values()
+        gaussian_mlp_baseline.get_param_values()
 
         box_env.close()

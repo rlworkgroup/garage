@@ -7,8 +7,7 @@ from garage.tf.regressors import GaussianCNNRegressor
 
 
 class GaussianCNNBaseline(Baseline):
-    """
-    GaussianCNNBaseline With Model.
+    """GaussianCNNBaseline With Model.
 
     It fits the input data to a gaussian distribution estimated by a CNN.
 
@@ -17,6 +16,8 @@ class GaussianCNNBaseline(Baseline):
         subsample_factor (float): The factor to subsample the data. By
             default it is 1.0, which means using all the data.
         regressor_args (dict): Arguments for regressor.
+        name (str): Name of baseline.
+
     """
 
     def __init__(
@@ -33,28 +34,58 @@ class GaussianCNNBaseline(Baseline):
         self._regressor = GaussianCNNRegressor(
             input_shape=(env_spec.observation_space.shape),
             output_dim=1,
+            subsample_factor=subsample_factor,
             name=name,
             **regressor_args)
         self.name = name
 
     def fit(self, paths):
-        """Fit regressor based on paths."""
+        """Fit regressor based on paths.
+
+        Args:
+            paths (dict[numpy.ndarray]): Sample paths.
+
+        """
         observations = np.concatenate([p['observations'] for p in paths])
         returns = np.concatenate([p['returns'] for p in paths])
         self._regressor.fit(observations, returns.reshape((-1, 1)))
 
     def predict(self, path):
-        """Predict value based on paths."""
+        """Predict value based on paths.
+
+        Args:
+            path (dict[numpy.ndarray]): Sample paths.
+
+        Returns:
+            numpy.ndarray: Predicted value.
+
+        """
         return self._regressor.predict(path['observations']).flatten()
 
-    def get_param_values(self, **tags):
-        """Get parameter values."""
-        return self._regressor.get_param_values(**tags)
+    def get_param_values(self):
+        """Get parameter values.
 
-    def set_param_values(self, flattened_params, **tags):
-        """Set parameter values to val."""
-        self._regressor.set_param_values(flattened_params, **tags)
+        Returns:
+            List[np.ndarray]: A list of values of each parameter.
 
-    def get_params_internal(self, **tags):
-        """Get parameter values."""
-        return self._regressor.get_params_internal(**tags)
+        """
+        return self._regressor.get_param_values()
+
+    def set_param_values(self, flattened_params):
+        """Set param values.
+
+        Args:
+            flattened_params (np.ndarray): A numpy array of parameter values.
+
+        """
+        self._regressor.set_param_values(flattened_params)
+
+    def get_params_internal(self):
+        """Get the params, which are the trainable variables.
+
+        Returns:
+            List[tf.Variable]: A list of trainable variables in the current
+            variable scope.
+
+        """
+        return self._regressor.get_params_internal()

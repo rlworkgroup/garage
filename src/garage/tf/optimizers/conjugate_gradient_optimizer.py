@@ -67,7 +67,7 @@ class HessianVectorProduct(abc.ABC):
                 numpy.ndarray: The product of Hessian of function f and v.
 
             """
-            xs = tuple(self._target.flat_to_params(v, trainable=True))
+            xs = tuple(self._target.flat_to_params(v))
             ret = sliced_fun(self._hvp_fun['f_hx_plain'], self._num_slices)(
                 inputs, xs) + self._reg_coeff * v
             return ret
@@ -108,7 +108,7 @@ class PearlmutterHvp(HessianVectorProduct):
         """
         self._target = target
         self._reg_coeff = reg_coeff
-        params = target.get_params(trainable=True)
+        params = target.get_params()
         with tf.name_scope(name, 'PearlmutterHvp', [f, inputs, params]):
             constraint_grads = tf.gradients(f,
                                             xs=params,
@@ -188,7 +188,7 @@ class FiniteDifferenceHvp(HessianVectorProduct):
         """
         self._target = target
         self._reg_coeff = reg_coeff
-        params = target.get_params(trainable=True)
+        params = target.get_params()
         with tf.name_scope(name, 'FiniteDifferenceHvp',
                            [f, inputs, params, target]):
             constraint_grads = tf.gradients(f,
@@ -216,21 +216,18 @@ class FiniteDifferenceHvp(HessianVectorProduct):
                     xs = args[len(inputs):]
                     flat_xs = np.concatenate(
                         [np.reshape(x, (-1, )) for x in xs])
-                    param_val = self._target.get_param_values(trainable=True)
+                    param_val = self._target.get_param_values()
                     eps = np.cast['float32'](
                         self.base_eps / (np.linalg.norm(param_val) + 1e-8))
-                    self._target.set_param_values(param_val + eps * flat_xs,
-                                                  trainable=True)
+                    self._target.set_param_values(param_val + eps * flat_xs)
                     flat_grad_dvplus = self._hvp_fun['f_grad'](*inputs_)
-                    self._target.set_param_values(param_val, trainable=True)
+                    self._target.set_param_values(param_val)
                     if self.symmetric:
                         self._target.set_param_values(param_val -
-                                                      eps * flat_xs,
-                                                      trainable=True)
+                                                      eps * flat_xs)
                         flat_grad_dvminus = self._hvp_fun['f_grad'](*inputs_)
                         hx = (flat_grad_dvplus - flat_grad_dvminus) / (2 * eps)
-                        self._target.set_param_values(param_val,
-                                                      trainable=True)
+                        self._target.set_param_values(param_val)
                     else:
                         flat_grad = self._hvp_fun['f_grad'](*inputs_)
                         hx = (flat_grad_dvplus - flat_grad) / eps
@@ -331,7 +328,7 @@ class ConjugateGradientOptimizer:
                 and variable names.
 
         """
-        params = target.get_params(trainable=True)
+        params = target.get_params()
         ns_vals = [loss, target, leq_constraint, inputs, extra_inputs, params]
         with tf.name_scope(name, 'ConjugateGradientOptimizer', ns_vals):
             inputs = tuple(inputs)
@@ -444,7 +441,7 @@ class ConjugateGradientOptimizer:
                 name,
                 'optimize',
                 values=[inputs, extra_inputs, subsample_grouped_inputs]):
-            prev_param = np.copy(self._target.get_param_values(trainable=True))
+            prev_param = np.copy(self._target.get_param_values())
             inputs = tuple(inputs)
             if extra_inputs is None:
                 extra_inputs = tuple()
@@ -495,7 +492,7 @@ class ConjugateGradientOptimizer:
                     self._max_backtracks)):  # yapf: disable
                 cur_step = ratio * flat_descent_step
                 cur_param = prev_param - cur_step
-                self._target.set_param_values(cur_param, trainable=True)
+                self._target.set_param_values(cur_param)
                 loss, constraint_val = sliced_fun(
                     self._opt_fun['f_loss_constraint'],
                     self._num_slices)(inputs, extra_inputs)
@@ -517,7 +514,7 @@ class ConjugateGradientOptimizer:
                 if constraint_val >= self._max_constraint_val:
                     logger.log('Violated because constraint %s is violated' %
                                self._constraint_name)
-                self._target.set_param_values(prev_param, trainable=True)
+                self._target.set_param_values(prev_param)
             logger.log('backtrack iters: %d' % n_iter)
             logger.log('optimization finished')
 

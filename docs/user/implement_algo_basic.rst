@@ -234,7 +234,7 @@ where :math:`L(\theta) = \frac{1}{NT} \sum_{i=1}^N \sum_{t=0}^{T-1} \log \pi_\th
     surr = - tf.reduce_mean(dist.log_likelihood_sym(actions_var, dist_info_vars) * returns_var)
 
     # Get the list of trainable parameters.
-    params = policy.get_params(trainable=True)
+    params = policy.get_params()
     grads = tf.gradient(surr, params)
 
 Gradient Update and Diagnostics

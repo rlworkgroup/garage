@@ -1,23 +1,55 @@
+"""Uniform control policy."""
 from garage.tf.policies import Policy
 
 
 class UniformControlPolicy(Policy):
+    """Policy that output random action uniformly.
+
+    Args:
+        env_spec (garage.envs.env_spec.EnvSpec): Environment specification.
+
+    """
 
     def __init__(
             self,
             env_spec,
     ):
-        super(UniformControlPolicy, self).__init__(env_spec=env_spec)
+        super().__init__(env_spec=env_spec)
 
     @property
     def vectorized(self):
+        """Vectorized or not.
+
+        Returns:
+            Bool: True if primitive supports vectorized operations.
+
+        """
         return True
 
     def get_action(self, observation):
+        """Get single action from this policy for the input observation.
+
+        Args:
+            observation (numpy.ndarray): Observation from environment.
+
+        Returns:
+            numpy.ndarray: Action
+            dict: Predicted action and agent information. It returns an empty
+                dict since there is no parameterization.
+
+        """
         return self.action_space.sample(), dict()
 
     def get_actions(self, observations):
-        return self.action_space.sample_n(len(observations)), dict()
+        """Get multiple actions from this policy for the input observations.
 
-    def get_params_internal(self, **tags):
-        return []
+        Args:
+            observations (numpy.ndarray): Observations from environment.
+
+        Returns:
+            numpy.ndarray: Actions
+            dict: Predicted action and agent information. It returns an empty
+                dict since there is no parameterization.
+
+        """
+        return self.action_space.sample_n(len(observations)), dict()

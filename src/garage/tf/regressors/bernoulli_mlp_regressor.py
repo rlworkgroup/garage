@@ -266,25 +266,21 @@ class BernoulliMLPRegressor(StochasticRegressor):
 
         return dict(prob=prob)
 
-    def get_params_internal(self, **args):
+    def get_params_internal(self):
         """Get the params, which are the trainable variables.
-
-        Args:
-            args: Ignored by the function. Will be removed in future release.
 
         Returns:
             List[tf.Variable]: A list of trainable variables in the current
             variable scope.
 
         """
-        del args
         return self._variable_scope.trainable_variables()
 
     def __getstate__(self):
         """Object.__getstate__.
 
         Returns:
-            dict: the state to be pickled for the instance.
+            dict: The state to be pickled for the instance.
 
         """
         new_dict = super().__getstate__()
@@ -296,7 +292,7 @@ class BernoulliMLPRegressor(StochasticRegressor):
         """Object.__setstate__.
 
         Args:
-            state (dict): unpickled state.
+            state (dict): Unpickled state.
 
         """
         super().__setstate__(state)
