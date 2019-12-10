@@ -1,4 +1,8 @@
-"""GaussianLSTMModel."""
+"""Gaussian LSTM Model.
+
+A model represented by a Gaussian distribution
+which is parameterized by a Long short-term memory (LSTM).
+"""
 import numpy as np
 import tensorflow as tf
 import tensorflow_probability as tfp
@@ -9,7 +13,10 @@ from garage.tf.models.parameter import recurrent_parameter
 
 
 class GaussianLSTMModel2(Model):
-    """GaussianLSTMModel.
+    """Gaussian LSTM Model.
+
+    A model represented by a Gaussian distribution
+    which is parameterized by a Long short-term memory (LSTM).
 
     Args:
         output_dim (int): Output dimension of the model.
@@ -154,30 +161,40 @@ class GaussianLSTMModel2(Model):
 
         """
         return [
-            'mean', 'step_mean', 'log_std', 'step_log_std', 'step_hidden',
-            'step_cell', 'init_hidden', 'init_cell', 'dist'
+            'step_mean', 'step_log_std', 'step_hidden', 'step_cell',
+            'init_hidden', 'init_cell', 'dist'
         ]
 
-    # pylint: disable=attribute-defined-outside-init, arguments-differ
-    def _build(self, state_input, step_input, hidden_input, cell_input):
+    # pylint: disable=arguments-differ, unused-argument
+    def _build(self,
+               state_input,
+               step_input,
+               step_hidden,
+               step_cell,
+               name=None):
         """Build model.
 
         Args:
-            state_input (tf.Tensor): Entire time-series observation input.
-            step_input (tf.Tensor): Single timestep observation input.
-            hidden_input (tf.Tensor): Hidden state for step.
-            cell_input (tf.Tensor): Cell state for step.
+            state_input (tf.Tensor): Entire time-series observation input,
+                with shape :math: `(N, T, S^*)`.
+            step_input (tf.Tensor): Single timestep observation input,
+                with shape :math: `(N, S^*)`.
+            step_hidden (tf.Tensor): Hidden state for step, with shape
+                :math: `(N, S^*)`.
+            step_cell (tf.Tensor): Cell state for step, with shape
+                :math: `(N, S^*)`.
+            name (str): Inner model name, also the variable scope of the
+                inner model, if exist. One example is
+                garage.tf.models.Sequential.
 
         Returns:
-            tf.Tensor: Entire time-series means.
-            tf.Tensor: Step means.
-            tf.Tensor: Entire time-series log std.
-            tf.Tensor: Step log std.
-            tf.Tensor: Step hidden state.
-            tf.Tensor: Step cell state.
-            tf.Tensor: Initial hidden state.
-            tf.Tensor: Initial cell state.
-            tfp.distributions.MultivariateNormalDiag: Distribution.
+            tf.Tensor: Step means, with shape :math: `(N, S^*)`.
+            tf.Tensor: Step log std, with shape :math: `(N, S^*)`.
+            tf.Tensor: Step hidden state, with shape :math: `(N, S^*)`.
+            tf.Tensor: Step cell state, with shape :math: `(N, S^*)`.
+            tf.Tensor: Initial hidden state, with shape :math: `(S^*)`.
+            tf.Tensor: Initial cell state, with shape :math: `(S^*)`
+            tfp.distributions.MultivariateNormalDiag: Policy distribution.
 
         """
         action_dim = self._output_dim
@@ -191,8 +208,8 @@ class GaussianLSTMModel2(Model):
                      lstm_cell=self._mean_std_lstm_cell,
                      all_input_var=state_input,
                      step_input_var=step_input,
-                     step_hidden_var=hidden_input,
-                     step_cell_var=cell_input,
+                     step_hidden_var=step_hidden,
+                     step_cell_var=step_cell,
                      hidden_state_init=self._hidden_state_init,
                      hidden_state_init_trainable=self.
                      _hidden_state_init_trainable,
@@ -216,8 +233,8 @@ class GaussianLSTMModel2(Model):
                      lstm_cell=self._mean_lstm_cell,
                      all_input_var=state_input,
                      step_input_var=step_input,
-                     step_hidden_var=hidden_input,
-                     step_cell_var=cell_input,
+                     step_hidden_var=step_hidden,
+                     step_cell_var=step_cell,
                      hidden_state_init=self._hidden_state_init,
                      hidden_state_init_trainable=self.
                      _hidden_state_init_trainable,
@@ -236,8 +253,8 @@ class GaussianLSTMModel2(Model):
         dist = tfp.distributions.MultivariateNormalDiag(
             loc=mean_var, scale_diag=tf.exp(log_std_var))
 
-        return (mean_var, step_mean_var, log_std_var, step_log_std_var,
-                step_hidden, step_cell, hidden_init_var, cell_init_var, dist)
+        return (step_mean_var, step_log_std_var, step_hidden, step_cell,
+                hidden_init_var, cell_init_var, dist)
 
     def __getstate__(self):
         """Object.__getstate__.

@@ -1,6 +1,9 @@
-"""GaussianMLPPolicy with GaussianMLPModel2."""
+"""Gaussian MLP Policy.
+
+A policy represented by a Gaussian distribution
+which is parameterized by a multilayer perceptron (MLP).
+"""
 import akro
-import numpy as np
 import tensorflow as tf
 
 from garage.tf.models import GaussianMLPModel2
@@ -8,10 +11,10 @@ from garage.tf.policies.base import StochasticPolicy2
 
 
 class GaussianMLPPolicy2(StochasticPolicy2):
-    """GaussianMLPPolicy with GaussianMLPModel.
+    """Gaussian MLP Policy.
 
-    A policy that contains a MLP to make prediction based on
-    a gaussian distribution.
+    A policy represented by a Gaussian distribution
+    which is parameterized by a multilayer perceptron (MLP).
 
     Args:
         env_spec (garage.envs.env_spec.EnvSpec): Environment specification.
@@ -112,6 +115,9 @@ class GaussianMLPPolicy2(StochasticPolicy2):
         self._std_parameterization = std_parameterization
         self._layer_normalization = layer_normalization
 
+        self._f_dist = None
+        self._dist = None
+
         self.model = GaussianMLPModel2(
             output_dim=self.action_dim,
             hidden_sizes=hidden_sizes,
@@ -134,25 +140,21 @@ class GaussianMLPPolicy2(StochasticPolicy2):
             layer_normalization=layer_normalization,
             name='GaussianMLPModel')
 
-    # pylint: disable=attribute-defined-outside-init
     def build(self, state_input, name=None):
         """Build model.
 
         Args:
-          state_input (tf.Tensor) : State input.
+          state_input (tf.Tensor): State input.
           name (str): Name of the model, which is also the name scope.
 
         """
         with tf.compat.v1.variable_scope(self.name) as vs:
             self._variable_scope = vs
-            self.model.build(state_input, name=name)
-
+            self._dist = self.model.build(state_input, name=name)
             self._f_dist = tf.compat.v1.get_default_session().make_callable(
-                [
-                    self.model.networks['default'].mean,
-                    self.model.networks['default'].log_std
-                ],
-                feed_list=[self.model.networks['default'].input])
+                [self._dist.sample(), self._dist.loc,
+                 self._dist.stddev()],
+                feed_list=[state_input])
 
     @property
     def vectorized(self):
@@ -176,13 +178,12 @@ class GaussianMLPPolicy2(StochasticPolicy2):
 
         Note:
             It returns an action and a dict, with keys
-            - mean (numpy.ndarray): Distribution parameter.
-            - log_std (numpy.ndarray): Distribution parameter.
+            - mean (numpy.ndarray): Mean of the distribution.
+            - log_std (numpy.ndarray): Log standard deviation of the
+                distribution.
 
         """
-        mean, log_std = self._f_dist([observation])
-        rnd = np.random.normal(size=mean.shape)
-        sample = rnd * np.exp(log_std) + mean
+        sample, mean, log_std = self._f_dist([observation])
         sample = self.action_space.unflatten(sample[0])
         mean = self.action_space.unflatten(mean[0])
         log_std = self.action_space.unflatten(log_std[0])
@@ -199,14 +200,13 @@ class GaussianMLPPolicy2(StochasticPolicy2):
             dict: Predicted action and agent information.
 
         Note:
-            It returns an action and a dict, with keys
-            - mean (numpy.ndarray): Distribution parameter.
-            - log_std (numpy.ndarray): Distribution parameter.
+            It returns actions and a dict, with keys
+            - mean (numpy.ndarray): Means of the distribution.
+            - log_std (numpy.ndarray): Log standard deviations of the
+                distribution.
 
         """
-        means, log_stds = self._f_dist(observations)
-        rnd = np.random.normal(size=means.shape)
-        samples = rnd * np.exp(log_stds) + means
+        samples, means, log_stds = self._f_dist(observations)
         samples = self.action_space.unflatten_n(samples)
         means = self.action_space.unflatten_n(means)
         log_stds = self.action_space.unflatten_n(log_stds)
@@ -220,7 +220,7 @@ class GaussianMLPPolicy2(StochasticPolicy2):
             tfp.Distribution.MultivariateNormalDiag: Policy distribution.
 
         """
-        return self.model.networks['default'].dist
+        return self._dist
 
     def clone(self, name):
         """Return a clone of the policy.
@@ -268,4 +268,5 @@ class GaussianMLPPolicy2(StochasticPolicy2):
         """
         new_dict = super().__getstate__()
         del new_dict['_f_dist']
+        del new_dict['_dist']
         return new_dict

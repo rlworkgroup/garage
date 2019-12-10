@@ -1,4 +1,8 @@
-"""CategoricalMLPPolicy with model."""
+"""Categorical MLP Policy.
+
+A policy represented by a Categorical distribution
+which is parameterized by a multilayer perceptron (MLP).
+"""
 import akro
 import tensorflow as tf
 
@@ -7,10 +11,10 @@ from garage.tf.policies.base import StochasticPolicy2
 
 
 class CategoricalMLPPolicy2(StochasticPolicy2):
-    """CategoricalMLPPolicy with model.
+    """Categorical MLP Policy.
 
-    A policy that contains a MLP to make prediction based on
-    a tfp.distributions.OneHotCategorical.
+    A policy represented by a Categorical distribution
+    which is parameterized by a multilayer perceptron (MLP).
 
     It only works with akro.Discrete action space.
 
@@ -53,9 +57,9 @@ class CategoricalMLPPolicy2(StochasticPolicy2):
                  output_w_init=tf.glorot_uniform_initializer(),
                  output_b_init=tf.zeros_initializer(),
                  layer_normalization=False):
-        assert isinstance(env_spec.action_space, akro.Discrete), (
-            'CategoricalMLPPolicy only works with akro.Discrete action '
-            'space.')
+        if not isinstance(env_spec.action_space, akro.Discrete):
+            raise ValueError('CategoricalMLPPolicy only works'
+                             'with akro.Discrete action space.')
         super().__init__(name, env_spec)
         self.obs_dim = env_spec.observation_space.flat_dim
         self.action_dim = env_spec.action_space.n
@@ -69,6 +73,9 @@ class CategoricalMLPPolicy2(StochasticPolicy2):
         self._output_b_init = output_b_init
         self._layer_normalization = layer_normalization
 
+        self._f_prob = None
+        self._dist = None
+
         self.model = CategoricalMLPModel(
             output_dim=self.action_dim,
             hidden_sizes=hidden_sizes,
@@ -81,7 +88,6 @@ class CategoricalMLPPolicy2(StochasticPolicy2):
             layer_normalization=layer_normalization,
             name='CategoricalMLPModel')
 
-    # pylint: disable=attribute-defined-outside-init
     def build(self, state_input, name=None):
         """Build model.
 
@@ -92,10 +98,11 @@ class CategoricalMLPPolicy2(StochasticPolicy2):
         """
         with tf.compat.v1.variable_scope(self.name) as vs:
             self._variable_scope = vs
-            prob, _ = self.model.build(state_input, name=name)
+            self._dist = self.model.build(state_input, name=name)
 
             self._f_prob = tf.compat.v1.get_default_session().make_callable(
-                prob, feed_list=[state_input])
+                [self._dist.sample(), self._dist.logits],
+                feed_list=[state_input])
 
     @property
     def distribution(self):
@@ -105,7 +112,7 @@ class CategoricalMLPPolicy2(StochasticPolicy2):
             tfp.Distribution.OneHotCategorical: Policy distribution.
 
         """
-        return self.model.networks['default'].dist
+        return self._dist
 
     @property
     def vectorized(self):
@@ -128,9 +135,8 @@ class CategoricalMLPPolicy2(StochasticPolicy2):
             dict(numpy.ndarray): Distribution parameters.
 
         """
-        prob = self._f_prob([observation])[0]
-        action = self.action_space.weighted_sample(prob)
-        return action, dict(prob=prob)
+        sample, prob = self._f_prob([observation])
+        return sample[0], dict(prob=prob[0])
 
     def get_actions(self, observations):
         """Return multiple actions.
@@ -143,9 +149,8 @@ class CategoricalMLPPolicy2(StochasticPolicy2):
             dict(numpy.ndarray): Distribution parameters.
 
         """
-        probs = self._f_prob(observations)
-        actions = list(map(self.action_space.weighted_sample, probs))
-        return actions, dict(prob=probs)
+        samples, probs = self._f_prob(observations)
+        return samples, dict(prob=probs)
 
     def get_regularizable_vars(self):
         """Get regularizable weight variables under the Policy scope.
@@ -195,4 +200,5 @@ class CategoricalMLPPolicy2(StochasticPolicy2):
         """
         new_dict = super().__getstate__()
         del new_dict['_f_prob']
+        del new_dict['_dist']
         return new_dict

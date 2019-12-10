@@ -1,4 +1,8 @@
-"""Categorical LSTM Model."""
+"""Categorical LSTM Model.
+
+A model represented by a Categorical distribution
+which is parameterized by a Long short-term memory (LSTM).
+"""
 import tensorflow as tf
 import tensorflow_probability as tfp
 
@@ -7,6 +11,9 @@ from garage.tf.models.lstm_model import LSTMModel
 
 class CategoricalLSTMModel(LSTMModel):
     """Categorical LSTM Model.
+
+    A model represented by a Categorical distribution
+    which is parameterized by a Long short-term memory (LSTM).
 
     Args:
         output_dim (int): Dimension of the network output.
@@ -96,8 +103,8 @@ class CategoricalLSTMModel(LSTMModel):
 
         """
         return [
-            'all_output', 'step_output', 'step_hidden', 'step_cell',
-            'init_hidden', 'init_cell', 'dist'
+            'step_output', 'step_hidden', 'step_cell', 'init_hidden',
+            'init_cell', 'dist'
         ]
 
     # pylint: disable=arguments-differ
@@ -110,28 +117,35 @@ class CategoricalLSTMModel(LSTMModel):
         """Build model.
 
         Args:
-            state_input (tf.Tensor): Entire time-series observation input.
-            step_input (tf.Tensor): Single timestep observation input.
-            step_hidden (tf.Tensor): Hidden state for step.
-            step_cell (tf.Tensor): Cell state for step.
-            name (str): Name of the model, also the name scope.
+            state_input (tf.Tensor): Entire time-series observation input,
+                with shape :math: `(N, T, S^*)`.
+            step_input (tf.Tensor): Single timestep observation input,
+                with shape :math: `(N, S^*)`.
+            step_hidden (tf.Tensor): Hidden state for step, with shape
+                :math: `(N, S^*)`.
+            step_cell (tf.Tensor): Cell state for step, with shape
+                :math: `(N, S^*)`.
+            name (str): Inner model name, also the variable scope of the
+                inner model, if exist. One example is
+                garage.tf.models.Sequential.
 
         Returns:
-            tf.Tensor: Entire time-series outputs.
-            tf.Tensor: Step output.
-            tf.Tensor: Step hidden state.
-            tf.Tensor: Step cell state.
-            tf.Tensor: Initial hidden state.
-            tf.Tensor: Initial cell state.
-            tfp.distributions.OneHotCategorical: Distribution.
+            tf.Tensor: Step output, with shape :math: `(N, S^*)`
+            tf.Tensor: Step hidden state, with shape :math: `(N, S^*)`
+            tf.Tensor: Step cell state, with shape :math: `(N, S^*)`
+            tf.Tensor: Initial hidden state, used to reset the hidden state
+                when policy resets. Shape: :math: `(S^*)`
+            tf.Tensor: Initial cell state, used to reset the cell state
+                when policy resets. Shape: :math: `(S^*)`
+            tfp.distributions.Categorical: Policy distribution.
 
         """
-        (prob, step_output, step_hidden, step_cell, init_hidden,
+        (outputs, step_output, step_hidden, step_cell, init_hidden,
          init_cell) = super()._build(state_input,
                                      step_input,
                                      step_hidden,
                                      step_cell,
                                      name=name)
-        dist = tfp.distributions.OneHotCategorical(prob)
-        return (prob, step_output, step_hidden, step_cell, init_hidden,
-                init_cell, dist)
+        dist = tfp.distributions.Categorical(outputs)
+        return (step_output, step_hidden, step_cell, init_hidden, init_cell,
+                dist)

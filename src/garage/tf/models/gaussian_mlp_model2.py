@@ -1,4 +1,8 @@
-"""GaussianMLPModel."""
+"""Gaussian MLP Model.
+
+A model represented by a Gaussian distribution
+which is parameterized by a multilayer perceptron (MLP).
+"""
 import numpy as np
 import tensorflow as tf
 import tensorflow_probability as tfp
@@ -9,7 +13,10 @@ from garage.tf.models.parameter import parameter
 
 
 class GaussianMLPModel2(Model):
-    """GaussianMLPModel.
+    """Gaussian MLP Model.
+
+    A model represented by a Gaussian distribution
+    which is parameterized by a multilayer perceptron (MLP).
 
     Args:
         output_dim (int): Output dimension of the model.
@@ -140,26 +147,17 @@ class GaussianMLPModel2(Model):
                              "'softplus' but got {}".format(
                                  self._std_parameterization))
 
-    def network_output_spec(self):
-        """Network output spec.
-
-        Returns:
-            list[str]: Name of the model outputs, in order.
-
-        """
-        return ['mean', 'log_std', 'std_param', 'dist']
-
-    # pylint: disable=attribute-defined-outside-init, arguments-differ
-    def _build(self, state_input):
+    # pylint: disable=arguments-differ, unused-argument
+    def _build(self, state_input, name=None):
         """Build model.
 
         Args:
             state_input (tf.Tensor): Entire time-series observation input.
+            name (str): Inner model name, also the variable scope of the
+                inner model, if exist. One example is
+                garage.tf.models.Sequential.
 
         Returns:
-            tf.Tensor: Means output.
-            tf.Tensor: Log std output.
-            tf.Tensor: Std parameter log std.
             tfp.distributions.MultivariateNormalDiag: Distribution.
 
         """
@@ -246,7 +244,5 @@ class GaussianMLPModel2(Model):
             else:  # we know it must be softplus here
                 log_std_var = tf.math.log(tf.math.log(1. + tf.exp(std_param)))
 
-        dist = tfp.distributions.MultivariateNormalDiag(
-            [mean_var, log_std_var])
-
-        return mean_var, log_std_var, std_param, dist
+        return tfp.distributions.MultivariateNormalDiag(loc=mean_var,
+                                                        scale_diag=log_std_var)

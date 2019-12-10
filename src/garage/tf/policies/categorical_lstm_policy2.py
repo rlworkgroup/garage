@@ -1,4 +1,8 @@
-"""CategoricalLSTMPolicy with model."""
+"""Categorical LSTM Policy.
+
+A policy represented by a Categorical distribution
+which is parameterized by a Long short-term memory (LSTM).
+"""
 import akro
 import numpy as np
 import tensorflow as tf
@@ -8,10 +12,10 @@ from garage.tf.policies import StochasticPolicy2
 
 
 class CategoricalLSTMPolicy2(StochasticPolicy2):
-    """CategoricalLSTMPolicy.
+    """Categorical LSTM Policy.
 
-    A policy that contains a LSTM to make prediction based on
-    a categorical distribution.
+    A policy represented by a Categorical distribution
+    which is parameterized by a Long short-term memory (LSTM).
 
     It only works with akro.Discrete action space.
 
@@ -110,6 +114,8 @@ class CategoricalLSTMPolicy2(StochasticPolicy2):
         else:
             self._input_dim = self._obs_dim
 
+        self._f_step_prob = None
+
         self.model = CategoricalLSTMModel(
             output_dim=self._action_dim,
             hidden_dim=self._hidden_dim,
@@ -133,7 +139,6 @@ class CategoricalLSTMPolicy2(StochasticPolicy2):
         self._prev_hiddens = None
         self._prev_cells = None
 
-    # pylint: disable=attribute-defined-outside-init
     def build(self, state_input, name=None):
         """Build model.
 

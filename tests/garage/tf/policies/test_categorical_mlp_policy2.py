@@ -1,5 +1,4 @@
 import pickle
-from unittest import mock
 
 import numpy as np
 import pytest
@@ -10,7 +9,6 @@ from garage.tf.policies import CategoricalMLPPolicy2
 from tests.fixtures import TfGraphTestCase
 from tests.fixtures.envs.dummy import DummyBoxEnv
 from tests.fixtures.envs.dummy import DummyDiscreteEnv
-from tests.fixtures.models import SimpleCategoricalMLPModel
 
 
 class TestCategoricalMLPPolicy2(TfGraphTestCase):
@@ -26,36 +24,25 @@ class TestCategoricalMLPPolicy2(TfGraphTestCase):
         ((1, 1), 1),
         ((2, 2), 2),
     ])
-    @mock.patch('numpy.random.choice')
-    def test_get_action(self, mock_rand, obs_dim, action_dim):
-        mock_rand.return_value = 0
+    def test_get_action(self, obs_dim, action_dim):
         env = TfEnv(DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
         obs_var = tf.compat.v1.placeholder(
             tf.float32,
             shape=[None, env.observation_space.flat_dim],
             name='obs')
-        with mock.patch(('garage.tf.policies.'
-                         'categorical_mlp_policy2.CategoricalMLPModel'),
-                        new=SimpleCategoricalMLPModel):
-            policy = CategoricalMLPPolicy2(env_spec=env.spec)
+        policy = CategoricalMLPPolicy2(env_spec=env.spec)
 
         policy.build(obs_var)
         obs = env.reset()
 
-        action, prob = policy.get_action(obs.flatten())
-        expected_prob = np.full(action_dim, 0.5)
-
+        action, _ = policy.get_action(obs.flatten())
         assert env.action_space.contains(action)
-        assert action == 0
-        assert np.array_equal(prob['prob'], expected_prob)
 
-        actions, probs = policy.get_actions(
+        actions, _ = policy.get_actions(
             [obs.flatten(), obs.flatten(),
              obs.flatten()])
-        for action, prob in zip(actions, probs['prob']):
+        for action in actions:
             assert env.action_space.contains(action)
-            assert action == 0
-            assert np.array_equal(prob, expected_prob)
 
     @pytest.mark.parametrize('obs_dim, action_dim', [
         ((1, ), 1),
@@ -69,21 +56,18 @@ class TestCategoricalMLPPolicy2(TfGraphTestCase):
             tf.float32,
             shape=[None, env.observation_space.flat_dim],
             name='obs')
-        with mock.patch(('garage.tf.policies.'
-                         'categorical_mlp_policy2.CategoricalMLPModel'),
-                        new=SimpleCategoricalMLPModel):
-            policy = CategoricalMLPPolicy2(env_spec=env.spec)
+        policy = CategoricalMLPPolicy2(env_spec=env.spec)
 
         policy.build(obs_var)
         obs = env.reset()
 
         with tf.compat.v1.variable_scope(
                 'CategoricalMLPPolicy/CategoricalMLPModel', reuse=True):
-            return_var = tf.compat.v1.get_variable('return_var')
+            bias = tf.compat.v1.get_variable('mlp/hidden_0/bias')
         # assign it to all one
-        return_var.load(tf.ones_like(return_var).eval())
+        bias.load(tf.ones_like(bias).eval())
         output1 = self.sess.run(
-            policy.model.networks['default'].prob,
+            [policy.distribution.logits],
             feed_dict={policy.model.input: [obs.flatten()]})
 
         p = pickle.dumps(policy)
@@ -96,7 +80,7 @@ class TestCategoricalMLPPolicy2(TfGraphTestCase):
                 name='obs')
             policy_pickled.build(obs_var)
             output2 = sess.run(
-                policy_pickled.model.networks['default'].prob,
+                [policy_pickled.distribution.logits],
                 feed_dict={policy_pickled.model.input: [obs.flatten()]})
             assert np.array_equal(output1, output2)
 

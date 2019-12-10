@@ -35,7 +35,7 @@ class TestCategoricalGRUModel(TfGraphTestCase):
                                                    dtype=tf.float32)
         model.build(self.input_var, self.step_input_var, step_hidden_var)
         assert isinstance(model.networks['default'].dist,
-                          tfp.distributions.OneHotCategorical)
+                          tfp.distributions.Categorical)
 
     def test_is_pickleable(self):
         model = CategoricalGRUModel(output_dim=1, hidden_dim=1)
@@ -53,7 +53,7 @@ class TestCategoricalGRUModel(TfGraphTestCase):
 
         hidden = np.zeros((self.batch_size, 1))
 
-        outputs1 = self.sess.run(model.networks['default'].all_output,
+        outputs1 = self.sess.run(model.networks['default'].dist.logits,
                                  feed_dict={self.input_var: self.obs_inputs})
         output1 = self.sess.run(
             [
@@ -83,7 +83,7 @@ class TestCategoricalGRUModel(TfGraphTestCase):
                                                        dtype=tf.float32)
 
             model_pickled.build(input_var, step_input_var, step_hidden_var)
-            outputs2 = sess.run(model_pickled.networks['default'].all_output,
+            outputs2 = sess.run(model_pickled.networks['default'].dist.logits,
                                 feed_dict={input_var: self.obs_inputs})
             output2 = sess.run(
                 [

@@ -109,8 +109,7 @@ class StochasticPolicy(Policy, StochasticModule):
 
 class StochasticPolicy2(Policy):
     """Stochastic Policy with tfp.distribution."""
-
     @property
     @abc.abstractmethod
     def distribution(self):
-        """Distribution."""
+        """Distribution to parameterize the policy."""

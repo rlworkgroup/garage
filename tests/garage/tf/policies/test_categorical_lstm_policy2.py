@@ -1,5 +1,4 @@
 import pickle
-from unittest import mock
 
 import numpy as np
 import pytest
@@ -10,7 +9,6 @@ from garage.tf.policies import CategoricalLSTMPolicy2
 from tests.fixtures import TfGraphTestCase
 from tests.fixtures.envs.dummy import DummyBoxEnv
 from tests.fixtures.envs.dummy import DummyDiscreteEnv
-from tests.fixtures.models import SimpleCategoricalLSTMModel
 
 
 class TestCategoricalLSTMPolicy2(TfGraphTestCase):
@@ -26,39 +24,27 @@ class TestCategoricalLSTMPolicy2(TfGraphTestCase):
         ((1, 1), 1, 4),
         ((2, 2), 2, 4),
     ])
-    @mock.patch('numpy.random.choice')
-    def test_get_action_state_include_action(self, mock_rand, obs_dim,
-                                             action_dim, hidden_dim):
-        mock_rand.return_value = 0
-
+    def test_get_action_state_include_action(self, obs_dim, action_dim,
+                                             hidden_dim):
         env = TfEnv(DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
         obs_var = tf.compat.v1.placeholder(
             tf.float32,
             shape=[None, None, env.observation_space.flat_dim + action_dim],
             name='obs')
-        with mock.patch(('garage.tf.policies.'
-                         'categorical_lstm_policy2.CategoricalLSTMModel'),
-                        new=SimpleCategoricalLSTMModel):
-            policy = CategoricalLSTMPolicy2(env_spec=env.spec,
-                                            hidden_dim=hidden_dim,
-                                            state_include_action=True)
+        policy = CategoricalLSTMPolicy2(env_spec=env.spec,
+                                        hidden_dim=hidden_dim,
+                                        state_include_action=True)
 
         policy.build(obs_var)
         policy.reset()
         obs = env.reset()
 
-        expected_prob = np.full(action_dim, 0.5)
-
-        action, agent_info = policy.get_action(obs.flatten())
+        action, _ = policy.get_action(obs.flatten())
         assert env.action_space.contains(action)
-        assert action == 0
-        assert np.array_equal(agent_info['prob'], expected_prob)
 
-        actions, agent_infos = policy.get_actions([obs.flatten()])
-        for action, prob in zip(actions, agent_infos['prob']):
+        actions, _ = policy.get_actions([obs.flatten()])
+        for action in actions:
             assert env.action_space.contains(action)
-            assert action == 0
-            assert np.array_equal(prob, expected_prob)
 
     @pytest.mark.parametrize('obs_dim, action_dim, hidden_dim', [
         ((1, ), 1, 4),
@@ -66,38 +52,26 @@ class TestCategoricalLSTMPolicy2(TfGraphTestCase):
         ((1, 1), 1, 4),
         ((2, 2), 2, 4),
     ])
-    @mock.patch('numpy.random.choice')
-    def test_get_action(self, mock_rand, obs_dim, action_dim, hidden_dim):
-        mock_rand.return_value = 0
-
+    def test_get_action(self, obs_dim, action_dim, hidden_dim):
         env = TfEnv(DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
         obs_var = tf.compat.v1.placeholder(
             tf.float32,
             shape=[None, None, env.observation_space.flat_dim],
             name='obs')
-        with mock.patch(('garage.tf.policies.'
-                         'categorical_lstm_policy2.CategoricalLSTMModel'),
-                        new=SimpleCategoricalLSTMModel):
-            policy = CategoricalLSTMPolicy2(env_spec=env.spec,
-                                            hidden_dim=hidden_dim,
-                                            state_include_action=False)
+        policy = CategoricalLSTMPolicy2(env_spec=env.spec,
+                                        hidden_dim=hidden_dim,
+                                        state_include_action=False)
 
         policy.build(obs_var)
         policy.reset()
         obs = env.reset()
 
-        expected_prob = np.full(action_dim, 0.5)
-
-        action, agent_info = policy.get_action(obs.flatten())
+        action, _ = policy.get_action(obs.flatten())
         assert env.action_space.contains(action)
-        assert action == 0
-        assert np.array_equal(agent_info['prob'], expected_prob)
 
-        actions, agent_infos = policy.get_actions([obs.flatten()])
-        for action, prob in zip(actions, agent_infos['prob']):
+        actions, _ = policy.get_actions([obs.flatten()])
+        for action in actions:
             assert env.action_space.contains(action)
-            assert action == 0
-            assert np.array_equal(prob, expected_prob)
 
     def test_is_pickleable(self):
         env = TfEnv(DummyDiscreteEnv(obs_dim=(1, ), action_dim=1))
@@ -105,24 +79,18 @@ class TestCategoricalLSTMPolicy2(TfGraphTestCase):
             tf.float32,
             shape=[None, None, env.observation_space.flat_dim],
             name='obs')
-        with mock.patch(('garage.tf.policies.'
-                         'categorical_lstm_policy2.CategoricalLSTMModel'),
-                        new=SimpleCategoricalLSTMModel):
-            policy = CategoricalLSTMPolicy2(env_spec=env.spec,
-                                            state_include_action=False)
+        policy = CategoricalLSTMPolicy2(env_spec=env.spec,
+                                        state_include_action=False)
 
         policy.build(obs_var)
-        env.reset()
+        policy.reset()
         obs = env.reset()
 
-        with tf.compat.v1.variable_scope('CategoricalLSTMPolicy/prob_network',
-                                         reuse=True):
-            return_var = tf.compat.v1.get_variable('return_var')
-        # assign it to all one
-        return_var.load(tf.ones_like(return_var).eval())
+        policy.model._lstm_cell.weights[0].load(
+            tf.ones_like(policy.model._lstm_cell.weights[0]).eval())
 
         output1 = self.sess.run(
-            policy.model.outputs[0],
+            [policy.distribution.logits],
             feed_dict={policy.model.input: [[obs.flatten()], [obs.flatten()]]})
 
         p = pickle.dumps(policy)
@@ -134,7 +102,7 @@ class TestCategoricalLSTMPolicy2(TfGraphTestCase):
                 shape=[None, None, env.observation_space.flat_dim],
                 name='obs')
             policy_pickled.build(obs_var)
-            output2 = sess.run(policy_pickled.model.outputs[0],
+            output2 = sess.run([policy_pickled.distribution.logits],
                                feed_dict={
                                    policy_pickled.model.input:
                                    [[obs.flatten()], [obs.flatten()]]

@@ -1,4 +1,8 @@
-"""CategoricalGRUPolicy with model."""
+"""Categorical GRU Policy.
+
+A policy represented by a Categorical distribution
+which is parameterized by a Gated Recurrent Unit (GRU).
+"""
 import akro
 import numpy as np
 import tensorflow as tf
@@ -8,10 +12,10 @@ from garage.tf.policies import StochasticPolicy2
 
 
 class CategoricalGRUPolicy2(StochasticPolicy2):
-    """CategoricalGRUPolicy.
+    """Categorical GRU Policy.
 
-    A policy that contains a GRU to make prediction based on
-    a categorical distribution.
+    A policy represented by a Categorical distribution
+    which is parameterized by a Gated Recurrent Unit (GRU).
 
     It only works with akro.Discrete action space.
 
@@ -97,6 +101,8 @@ class CategoricalGRUPolicy2(StochasticPolicy2):
         else:
             self._input_dim = self._obs_dim
 
+        self._f_step_prob = None
+
         self.model = CategoricalGRUModel(
             output_dim=self._action_dim,
             hidden_dim=self._hidden_dim,
@@ -116,7 +122,6 @@ class CategoricalGRUPolicy2(StochasticPolicy2):
         self._prev_actions = None
         self._prev_hiddens = None
 
-    # pylint: disable=attribute-defined-outside-init
     def build(self, state_input, name=None):
         """Build model.
 

@@ -1,4 +1,8 @@
-"""GaussianGRUPolicy with GaussianGRUModel2."""
+"""Gaussian GRU Policy.
+
+A policy represented by a Gaussian distribution
+which is parameterized by a Gated Recurrent Unit (GRU).
+"""
 import akro
 import numpy as np
 import tensorflow as tf
@@ -8,7 +12,10 @@ from garage.tf.policies import StochasticPolicy2
 
 
 class GaussianGRUPolicy2(StochasticPolicy2):
-    """Models the action distribution using a Gaussian parameterized by a GRU.
+    """Gaussian GRU Policy.
+
+    A policy represented by a Gaussian distribution
+    which is parameterized by a Gated Recurrent Unit (GRU).
 
     Args:
         env_spec (garage.envs.env_spec.EnvSpec): Environment specification.
@@ -102,6 +109,8 @@ class GaussianGRUPolicy2(StochasticPolicy2):
         else:
             self._input_dim = self._obs_dim
 
+        self._f_step_mean_std = None
+
         self.model = GaussianGRUModel2(
             output_dim=self._action_dim,
             hidden_dim=hidden_dim,
@@ -124,12 +133,11 @@ class GaussianGRUPolicy2(StochasticPolicy2):
         self._prev_actions = None
         self._prev_hiddens = None
 
-    # pylint: disable=attribute-defined-outside-init
     def build(self, state_input, name=None):
         """Build model.
 
         Args:
-          state_input (tf.Tensor) : State input.
+          state_input (tf.Tensor): State input.
           name (str): Name of the model, which is also the name scope.
 
         """
@@ -202,8 +210,9 @@ class GaussianGRUPolicy2(StochasticPolicy2):
 
         Note:
             It returns an action and a dict, with keys
-            - mean (numpy.ndarray): Distribution parameter.
-            - log_std (numpy.ndarray): Distribution parameter.
+            - mean (numpy.ndarray): Mean of the distribution.
+            - log_std (numpy.ndarray): Log standard deviation of the
+                distribution.
             - prev_action (numpy.ndarray): Previous action, only present if
                 self._state_include_action is True.
 
@@ -223,8 +232,9 @@ class GaussianGRUPolicy2(StochasticPolicy2):
 
         Note:
             It returns an action and a dict, with keys
-            - mean (numpy.ndarray): Distribution parameter.
-            - log_std (numpy.ndarray): Distribution parameter.
+            - mean (numpy.ndarray): Means of the distribution.
+            - log_std (numpy.ndarray): Log standard deviations of the
+                distribution.
             - prev_action (numpy.ndarray): Previous action, only present if
                 self._state_include_action is True.
 

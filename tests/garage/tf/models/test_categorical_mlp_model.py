@@ -18,9 +18,8 @@ class TestCategoricalMLPModel(TfGraphTestCase):
 
     def test_dist(self):
         model = CategoricalMLPModel(output_dim=1)
-        model.build(self.input_var)
-        assert isinstance(model.networks['default'].dist,
-                          tfp.distributions.OneHotCategorical)
+        dist = model.build(self.input_var)
+        assert isinstance(dist, tfp.distributions.Categorical)
 
     # yapf: disable
     @pytest.mark.parametrize('output_dim, hidden_sizes', [
@@ -38,8 +37,7 @@ class TestCategoricalMLPModel(TfGraphTestCase):
                                     hidden_nonlinearity=None,
                                     hidden_w_init=tf.ones_initializer(),
                                     output_w_init=tf.ones_initializer())
-        outputs = model.build(self.input_var)
-
+        dist = model.build(self.input_var)
         # assign bias to all one
         with tf.compat.v1.variable_scope('CategoricalMLPModel/mlp',
                                          reuse=True):
@@ -47,14 +45,14 @@ class TestCategoricalMLPModel(TfGraphTestCase):
 
         bias.load(tf.ones_like(bias).eval())
 
-        output1 = self.sess.run(outputs[:-1],
+        output1 = self.sess.run(dist.logits,
                                 feed_dict={self.input_var: self.obs})
 
         h = pickle.dumps(model)
         with tf.compat.v1.Session(graph=tf.Graph()) as sess:
             input_var = tf.compat.v1.placeholder(tf.float32, shape=(None, 5))
             model_pickled = pickle.loads(h)
-            outputs = model_pickled.build(input_var)
-            output2 = sess.run(outputs[:-1], feed_dict={input_var: self.obs})
+            dist2 = model_pickled.build(input_var)
+            output2 = sess.run(dist2.logits, feed_dict={input_var: self.obs})
 
             assert np.array_equal(output1, output2)
