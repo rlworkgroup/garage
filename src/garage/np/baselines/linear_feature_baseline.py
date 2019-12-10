@@ -57,6 +57,7 @@ class LinearFeatureBaseline(Baseline):
             [obs, obs**2, al, al**2, al**3,
              np.ones((length, 1))], axis=1)
 
+    # pylint: disable=unsubscriptable-object
     def fit(self, paths):
         """Fit regressor based on paths.
 
@@ -65,13 +66,12 @@ class LinearFeatureBaseline(Baseline):
 
         """
         featmat = np.concatenate([self._features(path) for path in paths])
-        featmat_shape = featmat.shape[1]
         returns = np.concatenate([path['returns'] for path in paths])
         reg_coeff = self._reg_coeff
         for _ in range(5):
             self._coeffs = np.linalg.lstsq(
                 featmat.T.dot(featmat) +
-                reg_coeff * np.identity(featmat_shape),
+                reg_coeff * np.identity(featmat.shape[1]),
                 featmat.T.dot(returns),
                 rcond=-1)[0]
             if not np.any(np.isnan(self._coeffs)):
