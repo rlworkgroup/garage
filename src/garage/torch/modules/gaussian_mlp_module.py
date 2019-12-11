@@ -3,7 +3,8 @@ import abc
 
 import torch
 from torch import nn
-from torch.distributions import MultivariateNormal
+from torch.distributions import Normal
+from torch.distributions.independent import Independent
 
 from garage.torch.modules.mlp_module import MLPModule
 from garage.torch.modules.multi_headed_mlp_module import MultiHeadedMLPModule
@@ -144,8 +145,7 @@ class GaussianMLPBaseModule(nn.Module):
         else:
             std = log_std_uncentered.exp().exp().add(1.).log()
 
-        cov = (std**2).diag_embed()
-        dist = MultivariateNormal(mean, cov)
+        dist = Independent(Normal(mean, std), 1)
 
         return dist
 

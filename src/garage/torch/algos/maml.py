@@ -107,7 +107,7 @@ class MAML:
         theta = dict(self.policy.named_parameters())
 
         for i, task in enumerate(tasks):
-            self._env.set_task(task)
+            self._set_task(runner, task)
 
             for j in range(self._num_grad_updates + 1):
                 paths = runner.obtain_samples(runner.step_itr)
@@ -190,6 +190,10 @@ class MAML:
                 for samples in task_samples
         ]
         return torch.stack(entropies).mean()
+
+    def _set_task(self, runner, task):
+        for env in runner._sampler._vec_env.envs:
+            env.set_task(task)
 
     @property
     def _old_policy(self):
