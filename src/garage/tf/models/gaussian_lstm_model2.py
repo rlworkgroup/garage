@@ -65,7 +65,6 @@ class GaussianLSTMModel2(Model):
 
     """
 
-    # pylint: disable=assignment-from-no-return
     def __init__(self,
                  output_dim,
                  hidden_dim=32,
@@ -161,11 +160,11 @@ class GaussianLSTMModel2(Model):
 
         """
         return [
-            'step_mean', 'step_log_std', 'step_hidden', 'step_cell',
-            'init_hidden', 'init_cell', 'dist'
+            'dist', 'step_mean', 'step_log_std', 'step_hidden', 'step_cell',
+            'init_hidden', 'init_cell'
         ]
 
-    # pylint: disable=arguments-differ, unused-argument
+    # pylint: disable=arguments-differ
     def _build(self,
                state_input,
                step_input,
@@ -197,6 +196,7 @@ class GaussianLSTMModel2(Model):
             tfp.distributions.MultivariateNormalDiag: Policy distribution.
 
         """
+        del name
         action_dim = self._output_dim
 
         with tf.compat.v1.variable_scope('dist_params'):
@@ -253,8 +253,8 @@ class GaussianLSTMModel2(Model):
         dist = tfp.distributions.MultivariateNormalDiag(
             loc=mean_var, scale_diag=tf.exp(log_std_var))
 
-        return (step_mean_var, step_log_std_var, step_hidden, step_cell,
-                hidden_init_var, cell_init_var, dist)
+        return (dist, step_mean_var, step_log_std_var, step_hidden, step_cell,
+                hidden_init_var, cell_init_var)
 
     def __getstate__(self):
         """Object.__getstate__.

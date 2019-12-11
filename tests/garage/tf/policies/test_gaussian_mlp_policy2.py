@@ -91,3 +91,9 @@ class TestGaussianMLPPolicy(TfGraphTestCase):
                 ],
                 feed_dict={policy_pickled.model.input: [obs.flatten()]})
             assert np.array_equal(output1, output2)
+
+    def test_clone(self):
+        env = TfEnv(DummyBoxEnv(obs_dim=(10, ), action_dim=(4, )))
+        policy = GaussianMLPPolicy2(env_spec=env.spec)
+        policy_clone = policy.clone('GaussnaMLPPolicyClone')
+        assert policy.env_spec == policy_clone.env_spec

@@ -123,3 +123,21 @@ class TestGaussianLSTMPolicy(TfGraphTestCase):
                 })
             assert np.array_equal(output1, output2)
         # yapf: enable
+
+    def test_state_info_specs(self):
+        env = TfEnv(DummyBoxEnv(obs_dim=(4, ), action_dim=(4, )))
+        policy = GaussianLSTMPolicy2(env_spec=env.spec,
+                                     state_include_action=False)
+        assert policy.state_info_specs == []
+
+    def test_state_info_specs_with_state_include_action(self):
+        env = TfEnv(DummyBoxEnv(obs_dim=(4, ), action_dim=(4, )))
+        policy = GaussianLSTMPolicy2(env_spec=env.spec,
+                                     state_include_action=True)
+        assert policy.state_info_specs == [('prev_action', (4, ))]
+
+    def test_clone(self):
+        env = TfEnv(DummyBoxEnv(obs_dim=(4, ), action_dim=(4, )))
+        policy = GaussianLSTMPolicy2(env_spec=env.spec)
+        policy_clone = policy.clone('GaussianLSTMPolicyClone')
+        assert policy_clone.env_spec == policy.env_spec

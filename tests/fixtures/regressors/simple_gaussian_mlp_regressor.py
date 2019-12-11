@@ -18,10 +18,9 @@ class SimpleGaussianMLPRegressor(StochasticRegressor):
 
     """
 
-    # pylint: disable=unused-argument
     def __init__(self, input_shape, output_dim, name, *args, **kwargs):
         super().__init__(input_shape, output_dim, name)
-
+        del args, kwargs
         self.model = SimpleGaussianMLPModel(output_dim=self._output_dim)
 
         self._ys = None

@@ -77,7 +77,6 @@ class GaussianMLPModel2(Model):
 
     """
 
-    # pylint: disable=assignment-from-no-return
     def __init__(self,
                  output_dim,
                  name=None,
@@ -147,7 +146,7 @@ class GaussianMLPModel2(Model):
                              "'softplus' but got {}".format(
                                  self._std_parameterization))
 
-    # pylint: disable=arguments-differ, unused-argument
+    # pylint: disable=arguments-differ
     def _build(self, state_input, name=None):
         """Build model.
 
@@ -161,6 +160,7 @@ class GaussianMLPModel2(Model):
             tfp.distributions.MultivariateNormalDiag: Distribution.
 
         """
+        del name
         action_dim = self._output_dim
 
         with tf.compat.v1.variable_scope('dist_params'):

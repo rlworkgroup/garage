@@ -58,7 +58,6 @@ class GaussianGRUModel2(Model):
 
     """
 
-    # pylint: disable=assignment-from-no-return
     def __init__(self,
                  output_dim,
                  hidden_dim=32,
@@ -144,10 +143,10 @@ class GaussianGRUModel2(Model):
 
         """
         return [
-            'step_mean', 'step_log_std', 'step_hidden', 'init_hidden', 'dist'
+            'dist', 'step_mean', 'step_log_std', 'step_hidden', 'init_hidden'
         ]
 
-    # pylint: disable=arguments-differ, unused-argument
+    # pylint: disable=arguments-differ
     def _build(self, state_input, step_input, step_hidden, name=None):
         """Build model.
 
@@ -163,13 +162,14 @@ class GaussianGRUModel2(Model):
                 garage.tf.models.Sequential.
 
         Returns:
+            tfp.distributions.MultivariateNormalDiag: Policy distribution.
             tf.Tensor: Step means, with shape :math: `(N, S^*)`.
             tf.Tensor: Step log std, with shape :math: `(N, S^*)`.
             tf.Tensor: Step hidden state, with shape :math: `(N, S^*)`.
             tf.Tensor: Initial hidden state, with shape :math: `(S^*)`.
-            tfp.distributions.MultivariateNormalDiag: Policy distribution.
 
         """
+        del name
         action_dim = self._output_dim
 
         with tf.compat.v1.variable_scope('dist_params'):
@@ -218,8 +218,8 @@ class GaussianGRUModel2(Model):
         dist = tfp.distributions.MultivariateNormalDiag(
             loc=mean_var, scale_diag=tf.exp(log_std_var))
 
-        return (step_mean_var, step_log_std_var, step_hidden, hidden_init_var,
-                dist)
+        return (dist, step_mean_var, step_log_std_var, step_hidden,
+                hidden_init_var)
 
     def __getstate__(self):
         """Object.__getstate__.

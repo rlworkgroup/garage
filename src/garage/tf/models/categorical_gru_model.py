@@ -89,7 +89,7 @@ class CategoricalGRUModel(GRUModel):
             list[str]: Name of the model outputs, in order.
 
         """
-        return ['step_output', 'step_hidden', 'init_hidden', 'dist']
+        return ['dist', 'step_output', 'step_hidden', 'init_hidden']
 
     # pylint: disable=arguments-differ
     def _build(self, state_input, step_input, step_hidden, name=None):
@@ -107,14 +107,14 @@ class CategoricalGRUModel(GRUModel):
                 garage.tf.models.Sequential.
 
         Returns:
+            tfp.distributions.Categorical: Policy distribution.
             tf.Tensor: Step output, with shape :math: `(N, S^*)`.
             tf.Tensor: Step hidden state, with shape :math: `(N, S^*)`.
             tf.Tensor: Initial hidden state , used to reset the hidden state
                 when policy resets. Shape: :math: `(S^*)`.
-            tfp.distributions.Categorical: Policy distribution.
 
         """
         outputs, step_output, step_hidden, init_hidden = super()._build(
             state_input, step_input, step_hidden, name=name)
         dist = tfp.distributions.Categorical(outputs)
-        return step_output, step_hidden, init_hidden, dist
+        return dist, step_output, step_hidden, init_hidden

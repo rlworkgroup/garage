@@ -262,7 +262,6 @@ class TestGaussianMLPModel2(TfGraphTestCase):
                                feed_dict={input_var: self.obs})
             assert np.array_equal(output1, output2)
 
-    # pylint: disable=assignment-from-no-return
     @pytest.mark.parametrize('output_dim, hidden_sizes',
                              [(1, (0, )), (1, (1, )), (1, (2, )), (2, (3, )),
                               (2, (1, 1)), (3, (2, 2))])

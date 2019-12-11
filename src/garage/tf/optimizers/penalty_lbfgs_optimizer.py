@@ -55,7 +55,6 @@ class PenaltyLbfgsOptimizer:
         self._max_constraint_val = None
         self._constraint_name = None
 
-    # pylint: disable=unused-argument
     def update_opt(self,
                    loss,
                    target,
@@ -80,6 +79,7 @@ class PenaltyLbfgsOptimizer:
                 have extra input, e.g. KL constraint.
 
         """
+        del kwargs
         params = target.get_params()
         with tf.name_scope(name):
             constraint_term, constraint_value = leq_constraint

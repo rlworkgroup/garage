@@ -61,7 +61,7 @@ class TestCategoricalGRUPolicy2(TfGraphTestCase):
                                        hidden_dim=hidden_dim,
                                        state_include_action=False)
         policy.build(obs_var)
-        policy.reset()
+        policy.reset(dones=None)
         obs = env.reset()
 
         action, _ = policy.get_action(obs.flatten())
@@ -107,3 +107,21 @@ class TestCategoricalGRUPolicy2(TfGraphTestCase):
                 })
             # yapf: enable
             assert np.array_equal(output1, output2)
+
+    def test_state_info_specs(self):
+        env = TfEnv(DummyDiscreteEnv(obs_dim=(10, ), action_dim=4))
+        policy = CategoricalGRUPolicy2(env_spec=env.spec,
+                                       state_include_action=False)
+        assert policy.state_info_specs == []
+
+    def test_state_info_specs_with_state_include_action(self):
+        env = TfEnv(DummyDiscreteEnv(obs_dim=(10, ), action_dim=4))
+        policy = CategoricalGRUPolicy2(env_spec=env.spec,
+                                       state_include_action=True)
+        assert policy.state_info_specs == [('prev_action', (4, ))]
+
+    def test_clone(self):
+        env = TfEnv(DummyDiscreteEnv(obs_dim=(10, ), action_dim=4))
+        policy = CategoricalGRUPolicy2(env_spec=env.spec)
+        policy_clone = policy.clone('CategoricalGRUPolicyClone')
+        assert policy.env_spec == policy_clone.env_spec

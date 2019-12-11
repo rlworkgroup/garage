@@ -63,8 +63,9 @@ class TestGaussianGRUModel2(TfGraphTestCase):
                                                           hidden_dim),
                                                    name='step_hidden',
                                                    dtype=tf.float32)
-        (step_mean_var, step_log_std_var, step_hidden, hidden_init_var,
-         _) = model.build(self.input_var, self.step_input_var, step_hidden_var)
+        (_, step_mean_var, step_log_std_var, step_hidden,
+         hidden_init_var) = model.build(self.input_var, self.step_input_var,
+                                        step_hidden_var)
 
         hidden1 = hidden2 = np.full((self.batch_size, hidden_dim),
                                     hidden_init_var.eval())
@@ -154,8 +155,9 @@ class TestGaussianGRUModel2(TfGraphTestCase):
                                                           hidden_dim),
                                                    name='step_hidden',
                                                    dtype=tf.float32)
-        (step_mean_var, step_log_std_var, step_hidden, hidden_init_var,
-         _) = model.build(self.input_var, self.step_input_var, step_hidden_var)
+        (_, step_mean_var, step_log_std_var, step_hidden,
+         hidden_init_var) = model.build(self.input_var, self.step_input_var,
+                                        step_hidden_var)
 
         hidden1 = hidden2 = np.full((self.batch_size, hidden_dim),
                                     hidden_init_var.eval())
@@ -245,9 +247,8 @@ class TestGaussianGRUModel2(TfGraphTestCase):
                                                           hidden_dim),
                                                    name='step_hidden',
                                                    dtype=tf.float32)
-        (step_mean_var, step_log_std_var, step_hidden, _,
-         dist) = model.build(self.input_var, self.step_input_var,
-                             step_hidden_var)
+        (dist, step_mean_var, step_log_std_var, step_hidden,
+         _) = model.build(self.input_var, self.step_input_var, step_hidden_var)
 
         # output layer is a tf.keras.layers.Dense object,
         # which cannot be access by tf.compat.v1.variable_scope.
@@ -283,9 +284,9 @@ class TestGaussianGRUModel2(TfGraphTestCase):
                                                        name='initial_hidden',
                                                        dtype=tf.float32)
 
-            (step_mean_var2, step_log_std_var2, step_hidden2, _,
-             dist2) = model_pickled.build(input_var, step_input_var,
-                                          step_hidden_var)
+            (dist2, step_mean_var2, step_log_std_var2, step_hidden2,
+             _) = model_pickled.build(input_var, step_input_var,
+                                      step_hidden_var)
 
             outputs2 = sess.run([dist2.loc, dist2.scale.diag],
                                 feed_dict={input_var: self.obs_inputs})
@@ -321,9 +322,8 @@ class TestGaussianGRUModel2(TfGraphTestCase):
                                                           hidden_dim),
                                                    name='step_hidden',
                                                    dtype=tf.float32)
-        (step_mean_var, step_log_std_var, step_hidden, _,
-         dist) = model.build(self.input_var, self.step_input_var,
-                             step_hidden_var)
+        (dist, step_mean_var, step_log_std_var, step_hidden,
+         _) = model.build(self.input_var, self.step_input_var, step_hidden_var)
 
         # output layer is a tf.keras.layers.Dense object,
         # which cannot be access by tf.compat.v1.variable_scope.
@@ -358,9 +358,9 @@ class TestGaussianGRUModel2(TfGraphTestCase):
                                                        name='initial_hidden',
                                                        dtype=tf.float32)
 
-            (step_mean_var2, step_log_std_var2, step_hidden2, _,
-             dist2) = model_pickled.build(input_var, step_input_var,
-                                          step_hidden_var)
+            (dist2, step_mean_var2, step_log_std_var2, step_hidden2,
+             _) = model_pickled.build(input_var, step_input_var,
+                                      step_hidden_var)
 
             outputs2 = sess.run([dist2.loc, dist2.scale.diag],
                                 feed_dict={input_var: self.obs_inputs})

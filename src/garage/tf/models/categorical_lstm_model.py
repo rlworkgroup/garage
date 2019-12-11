@@ -103,8 +103,8 @@ class CategoricalLSTMModel(LSTMModel):
 
         """
         return [
-            'step_output', 'step_hidden', 'step_cell', 'init_hidden',
-            'init_cell', 'dist'
+            'dist', 'step_output', 'step_hidden', 'step_cell', 'init_hidden',
+            'init_cell'
         ]
 
     # pylint: disable=arguments-differ
@@ -130,6 +130,7 @@ class CategoricalLSTMModel(LSTMModel):
                 garage.tf.models.Sequential.
 
         Returns:
+            tfp.distributions.Categorical: Policy distribution.
             tf.Tensor: Step output, with shape :math: `(N, S^*)`
             tf.Tensor: Step hidden state, with shape :math: `(N, S^*)`
             tf.Tensor: Step cell state, with shape :math: `(N, S^*)`
@@ -137,7 +138,6 @@ class CategoricalLSTMModel(LSTMModel):
                 when policy resets. Shape: :math: `(S^*)`
             tf.Tensor: Initial cell state, used to reset the cell state
                 when policy resets. Shape: :math: `(S^*)`
-            tfp.distributions.Categorical: Policy distribution.
 
         """
         (outputs, step_output, step_hidden, step_cell, init_hidden,
@@ -147,5 +147,5 @@ class CategoricalLSTMModel(LSTMModel):
                                      step_cell,
                                      name=name)
         dist = tfp.distributions.Categorical(outputs)
-        return (step_output, step_hidden, step_cell, init_hidden, init_cell,
-                dist)
+        return (dist, step_output, step_hidden, step_cell, init_hidden,
+                init_cell)
