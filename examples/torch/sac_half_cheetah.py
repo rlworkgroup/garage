@@ -16,7 +16,7 @@ from torch import nn as nn
 from garage.envs import normalize
 from garage.envs.base import GarageEnv
 from garage.experiment import LocalRunner, run_experiment
-from garage.replay_buffer import SimpleReplayBuffer
+from garage.replay_buffer import SimpleReplayBuffer, SACReplayBuffer
 from garage.torch.algos import SAC
 from garage.torch.policies import TanhGaussianMLPPolicy2
 from garage.torch.q_functions import ContinuousMLPQFunction
@@ -42,24 +42,16 @@ def run_task(snapshot_config, *_):
                                 hidden_sizes=[256, 256],
                                 hidden_nonlinearity=F.relu)
 
-    target_qf1 = ContinuousMLPQFunction(env_spec=env.spec,
-                                hidden_sizes=[256, 256],
-                                hidden_nonlinearity=F.relu)
-
-    target_qf2 = ContinuousMLPQFunction(env_spec=env.spec,
-                                hidden_sizes=[256, 256],
-                                hidden_nonlinearity=F.relu)
-
-    replay_buffer = SimpleReplayBuffer(env_spec=env.spec,
-                                       size_in_transitions=int(1e6),
-                                       time_horizon=100)
+    # replay_buffer = SimpleReplayBuffer(env_spec=env.spec,
+    #                                    size_in_transitions=int(1e6),
+    #                                    time_horizon=100)
+    replay_buffer = SACReplayBuffer(env_spec=env.spec,
+                                       max_size=int(1e6))
 
     sac = SAC(env_spec=env.spec,
                 policy=policy,
                 qf1=qf1,
                 qf2=qf2,
-                target_qf1=target_qf1,
-                target_qf2=target_qf2,
                 gradient_steps_per_itr=1000,
                 use_automatic_entropy_tuning=True,
                 replay_buffer=replay_buffer,
@@ -67,7 +59,7 @@ def run_task(snapshot_config, *_):
                 target_update_tau=5e-3,
                 discount=0.99,
                 buffer_batch_size=256,
-                reward_scale=5.)
+                reward_scale=1.)
 
     runner.setup(algo=sac, env=env)
 

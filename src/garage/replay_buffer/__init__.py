@@ -6,5 +6,6 @@ The replay buffer primitives can be used for RL algorithms.
 from garage.replay_buffer.her_replay_buffer import HerReplayBuffer
 from garage.replay_buffer.path_buffer import PathBuffer
 from garage.replay_buffer.simple_replay_buffer import SimpleReplayBuffer
+from garage.replay_buffer.sac_replay_buffer import SACReplayBuffer
 
-__all__ = ['HerReplayBuffer', 'PathBuffer', 'SimpleReplayBuffer']
+__all__ = ['HerReplayBuffer', 'PathBuffer', 'SimpleReplayBuffer', "SACReplayBuffer"]
