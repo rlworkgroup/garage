@@ -38,7 +38,6 @@ class TestResume(TfGraphTestCase):
                 'Last experiment should end at 5th iterations')
 
             batch_size = runner._train_args.batch_size
-            n_epoch_cycles = runner._train_args.n_epoch_cycles
 
             runner.resume(n_epochs=10,
                           plot=False,
@@ -47,7 +46,6 @@ class TestResume(TfGraphTestCase):
 
             assert runner._train_args.n_epochs == 10
             assert runner._train_args.batch_size == batch_size
-            assert runner._train_args.n_epoch_cycles == n_epoch_cycles
             assert not runner._train_args.plot
             assert runner._train_args.store_paths
             assert not runner._train_args.pause_for_plot

@@ -42,7 +42,7 @@ class TestDDPG(TfGraphTestCase):
                 qf_lr=1e-3,
                 qf=qf,
                 replay_buffer=replay_buffer,
-                n_epoch_cycles=20,
+                steps_per_epoch=20,
                 target_update_tau=1e-2,
                 n_train_steps=50,
                 discount=0.9,
@@ -50,9 +50,7 @@ class TestDDPG(TfGraphTestCase):
                 exploration_strategy=action_noise,
             )
             runner.setup(algo, env)
-            last_avg_ret = runner.train(n_epochs=10,
-                                        n_epoch_cycles=20,
-                                        batch_size=100)
+            last_avg_ret = runner.train(n_epochs=10, batch_size=100)
             assert last_avg_ret > 60
 
             env.close()
@@ -83,6 +81,7 @@ class TestDDPG(TfGraphTestCase):
                 qf_lr=1e-3,
                 qf=qf,
                 replay_buffer=replay_buffer,
+                steps_per_epoch=20,
                 target_update_tau=1e-2,
                 n_train_steps=50,
                 discount=0.9,
@@ -90,9 +89,7 @@ class TestDDPG(TfGraphTestCase):
                 exploration_strategy=action_noise,
             )
             runner.setup(algo, env)
-            last_avg_ret = runner.train(n_epochs=10,
-                                        n_epoch_cycles=20,
-                                        batch_size=100)
+            last_avg_ret = runner.train(n_epochs=10, batch_size=100)
             assert last_avg_ret > 10
 
             env.close()
@@ -123,6 +120,7 @@ class TestDDPG(TfGraphTestCase):
                 qf_lr=1e-3,
                 qf=qf,
                 replay_buffer=replay_buffer,
+                steps_per_epoch=20,
                 target_update_tau=1e-2,
                 n_train_steps=50,
                 discount=0.9,
@@ -132,9 +130,7 @@ class TestDDPG(TfGraphTestCase):
                 exploration_strategy=action_noise,
             )
             runner.setup(algo, env)
-            last_avg_ret = runner.train(n_epochs=10,
-                                        n_epoch_cycles=20,
-                                        batch_size=100)
+            last_avg_ret = runner.train(n_epochs=10, batch_size=100)
             assert last_avg_ret > 10
 
             env.close()

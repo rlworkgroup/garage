@@ -25,7 +25,7 @@ class DQN(OffPolicyRLAlgorithm):
         exploration_strategy
             (garage.np.exploration_strategies.ExplorationStrategy):
             Exploration strategy.
-        n_epoch_cycles (int): Epoch cycles.
+        steps_per_epoch (int): Number of train_once calls per epoch.
         min_buffer_size (int): The minimum buffer size for replay buffer.
         buffer_batch_size (int): Batch size for replay buffer.
         rollout_batch_size (int): Roll out batch size.
@@ -55,7 +55,7 @@ class DQN(OffPolicyRLAlgorithm):
                  qf,
                  replay_buffer,
                  exploration_strategy=None,
-                 n_epoch_cycles=20,
+                 steps_per_epoch=20,
                  min_buffer_size=int(1e4),
                  buffer_batch_size=64,
                  rollout_batch_size=1,
@@ -87,7 +87,7 @@ class DQN(OffPolicyRLAlgorithm):
                                   exploration_strategy=exploration_strategy,
                                   min_buffer_size=min_buffer_size,
                                   n_train_steps=n_train_steps,
-                                  n_epoch_cycles=n_epoch_cycles,
+                                  steps_per_epoch=steps_per_epoch,
                                   buffer_batch_size=buffer_batch_size,
                                   rollout_batch_size=rollout_batch_size,
                                   replay_buffer=replay_buffer,
@@ -191,7 +191,7 @@ class DQN(OffPolicyRLAlgorithm):
 
         """
         paths = self.process_samples(itr, paths)
-        epoch = itr / self.n_epoch_cycles
+        epoch = itr / self.steps_per_epoch
 
         self.episode_rewards.extend(paths['undiscounted_returns'])
         last_average_return = np.mean(self.episode_rewards)
@@ -206,7 +206,7 @@ class DQN(OffPolicyRLAlgorithm):
             if itr % self.target_network_update_freq == 0:
                 self._qf_update_ops()
 
-        if itr % self.n_epoch_cycles == 0:
+        if itr % self.steps_per_epoch == 0:
             if self.evaluate:
                 mean100ep_rewards = round(np.mean(self.episode_rewards[-100:]),
                                           1)

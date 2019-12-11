@@ -34,7 +34,7 @@ params = {
     'policy_hidden_sizes': [256, 256, 256],
     'qf_hidden_sizes': [256, 256, 256],
     'n_epochs': 50,
-    'n_epoch_cycles': 20,
+    'steps_per_epoch': 20,
     'n_rollout_steps': 100,
     'n_train_steps': 40,
     'discount': 0.9,
@@ -150,6 +150,7 @@ def run_garage(env, seed, log_dir):
             policy=policy,
             qf=qf,
             replay_buffer=replay_buffer,
+            steps_per_epoch=params['steps_per_epoch'],
             policy_lr=params['policy_lr'],
             qf_lr=params['qf_lr'],
             target_update_tau=params['tau'],
@@ -170,7 +171,6 @@ def run_garage(env, seed, log_dir):
 
         runner.setup(algo, env)
         runner.train(n_epochs=params['n_epochs'],
-                     n_epoch_cycles=params['n_epoch_cycles'],
                      batch_size=params['n_rollout_steps'])
 
         logger.remove_all()

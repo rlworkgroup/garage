@@ -53,6 +53,7 @@ def run_task(snapshot_config, *_):
                 policy=policy,
                 qf=qf,
                 replay_buffer=replay_buffer,
+                steps_per_epoch=20,
                 n_train_steps=50,
                 min_buffer_size=int(1e4),
                 exploration_strategy=action_noise,
@@ -63,7 +64,7 @@ def run_task(snapshot_config, *_):
 
     runner.setup(algo=ddpg, env=env)
 
-    runner.train(n_epochs=500, n_epoch_cycles=20, batch_size=100)
+    runner.train(n_epochs=500, batch_size=100)
 
 
 run_experiment(

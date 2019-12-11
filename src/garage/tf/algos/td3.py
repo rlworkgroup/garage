@@ -1,5 +1,4 @@
-"""
-This module implements a TD3 model.
+"""This module implements a TD3 model.
 
 TD3, or Twin Delayed Deep Deterministic Policy Gradient, uses actor-critic
 method to optimize the policy and reward prediction. Notably, it uses the
@@ -22,43 +21,46 @@ class TD3(DDPG):
         $ python garage/examples/tf/td3_pendulum.py
 
     Args:
-        env_spec(garage.envs.EnvSpec): Environment.
-        policy(garage.tf.policies.base.Policy): Policy.
-        qf(garage.tf.q_functions.QFunction): Q-function.
-        qf2(garage.tf.q_functions.QFunction): Q function to use
-        target_update_tau(float): Interpolation parameter for doing the
+        env_spec (garage.envs.EnvSpec): Environment.
+        policy (garage.tf.policies.base.Policy): Policy.
+        qf (garage.tf.q_functions.QFunction): Q-function.
+        qf2 (garage.tf.q_functions.QFunction): Q function to use
+        replay_buffer (garage.replay_buffer.ReplayBuffer): Replay buffer.
+        target_update_tau (float): Interpolation parameter for doing the
             soft target update.
-        policy_lr(float): Learning rate for training policy network.
-        qf_lr(float): Learning rate for training q value network.
-        policy_weight_decay(float): L2 weight decay factor for parameters
+        policy_lr (float): Learning rate for training policy network.
+        qf_lr (float): Learning rate for training q value network.
+        policy_weight_decay (float): L2 weight decay factor for parameters
             of the policy network.
-        qf_weight_decay(float): L2 weight decay factor for parameters
+        qf_weight_decay (float): L2 weight decay factor for parameters
             of the q value network.
-        policy_optimizer(tf.python.training.optimizer.Optimizer):
+        policy_optimizer (tf.python.training.optimizer.Optimizer):
             Optimizer for training policy network.
-        qf_optimizer(tf.python.training.optimizer.Optimizer):
+        qf_optimizer (tf.python.training.optimizer.Optimizer):
             Optimizer for training q function network.
-        clip_pos_returns(boolean): Whether or not clip positive returns.
-        clip_return(float): Clip return to be in [-clip_return,
+        clip_pos_returns (boolean): Whether or not clip positive returns.
+        clip_return (float): Clip return to be in [-clip_return,
             clip_return].
-        discount(float): Discount factor for the cumulative return.
-        max_action(float): Maximum action magnitude.
-        name(str): Name of the algorithm shown in computation graph.
-        n_epoch_cycles(int): Number of batches of samples in each epoch.
-        max_path_length(int): Maximum length of a path.
-        n_train_steps(int): Number of optimizations in each epoch cycle.
-        buffer_batch_size(int): Size of replay buffer.
-        min_buffer_size(int):
+        discount (float): Discount factor for the cumulative return.
+        max_action (float): Maximum action magnitude.
+        name (str): Name of the algorithm shown in computation graph.
+        steps_per_epoch (int): Number of batches of samples in each epoch.
+        max_path_length (int): Maximum length of a path.
+        n_train_steps (int): Number of optimizations in each epoch cycle.
+        buffer_batch_size (int): Size of replay buffer.
+        min_buffer_size (int):
             Number of samples in replay buffer before first optimization.
-        rollout_batch_size(int):
-        reward_scale(float): Scale to reward.
-        input_include_goal(bool):
+        rollout_batch_size (int): Roll out batch size.
+        reward_scale (float): Scale to reward.
+        action_noise_sigma (float): Action noise sigma.
+        action_noise_clip (float): Action noise clip.
+        actor_update_period (int): Action update period.
+        input_include_goal (bool):
             True if the environment entails a goal in observation.
-        smooth_return(bool):
+        smooth_return (bool):
             If True, do statistics on all samples collection.
             Otherwise do statistics on one batch.
-        exploration_strategy(
-            garage.np.exploration_strategies.ExplorationStrategy):
+        exploration_strategy (garage.np.exploration_strategies.ExplorationStrategy): # noqa: E501
             Exploration strategy.
 
     """
@@ -81,7 +83,7 @@ class TD3(DDPG):
                  discount=0.99,
                  max_action=None,
                  name=None,
-                 n_epoch_cycles=20,
+                 steps_per_epoch=20,
                  max_path_length=None,
                  n_train_steps=50,
                  buffer_batch_size=64,
@@ -118,7 +120,7 @@ class TD3(DDPG):
                                   discount=discount,
                                   max_action=max_action,
                                   name=name,
-                                  n_epoch_cycles=n_epoch_cycles,
+                                  steps_per_epoch=steps_per_epoch,
                                   max_path_length=max_path_length,
                                   n_train_steps=n_train_steps,
                                   buffer_batch_size=buffer_batch_size,
@@ -228,7 +230,12 @@ class TD3(DDPG):
             self.f_train_qf2 = f_train_qf2
 
     def __getstate__(self):
-        """Object.__getstate__."""
+        """Object.__getstate__.
+
+        Returns:
+            dict: State dictionary.
+
+        """
         data = self.__dict__.copy()
         del data['target_policy_f_prob_online']
         del data['target_qf_f_prob_online']
@@ -241,7 +248,12 @@ class TD3(DDPG):
         return data
 
     def __setstate__(self, state):
-        """Object.__setstate__."""
+        """Object.__setstate__.
+
+        Args:
+            state (dict): Current state.
+
+        """
         self.__dict__ = state
         self.init_opt()
 

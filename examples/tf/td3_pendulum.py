@@ -64,7 +64,7 @@ def run_task(snapshot_config, *_):
                   qf2=qf2,
                   replay_buffer=replay_buffer,
                   target_update_tau=1e-2,
-                  n_epoch_cycles=20,
+                  steps_per_epoch=20,
                   n_train_steps=1,
                   smooth_return=False,
                   discount=0.99,
@@ -75,7 +75,7 @@ def run_task(snapshot_config, *_):
                   qf_optimizer=tf.train.AdamOptimizer)
 
         runner.setup(td3, env)
-        runner.train(n_epochs=500, n_epoch_cycles=20, batch_size=250)
+        runner.train(n_epochs=500, batch_size=250)
 
 
 run_experiment(

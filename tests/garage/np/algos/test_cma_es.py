@@ -29,7 +29,7 @@ class TestCMAES(TfGraphTestCase):
                          n_samples=n_samples)
 
             runner.setup(algo, env, sampler_cls=OnPolicyVectorizedSampler)
-            runner.train(n_epochs=1, batch_size=1000, n_epoch_cycles=n_samples)
+            runner.train(n_epochs=1, batch_size=1000)
             # No assertion on return because CMAES is not stable.
 
             env.close()

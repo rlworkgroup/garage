@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-This is an example to train a task with DDPG algorithm.
+"""This is an example to train a task with DDPG algorithm.
 
 Here it creates a gym environment InvertedDoublePendulum. And uses a DDPG with
 1M steps.
@@ -23,7 +22,14 @@ from garage.tf.q_functions import ContinuousMLPQFunction
 
 
 def run_task(snapshot_config, *_):
-    """Run task."""
+    """Run task.
+
+    Args:
+        snapshot_config (garage.experiment.SnapshotConfig): The snapshot
+            configuration used by LocalRunner to create the snapshotter.
+        *_ (object): Ignored by this function.
+
+    """
     with LocalTFRunner(snapshot_config=snapshot_config) as runner:
         env = TfEnv(gym.make('InvertedDoublePendulum-v2'))
 
@@ -48,6 +54,7 @@ def run_task(snapshot_config, *_):
                     qf_lr=1e-3,
                     qf=qf,
                     replay_buffer=replay_buffer,
+                    steps_per_epoch=20,
                     target_update_tau=1e-2,
                     n_train_steps=50,
                     discount=0.9,
@@ -58,7 +65,7 @@ def run_task(snapshot_config, *_):
 
         runner.setup(algo=ddpg, env=env)
 
-        runner.train(n_epochs=500, n_epoch_cycles=20, batch_size=100)
+        runner.train(n_epochs=500, batch_size=100)
 
 
 run_experiment(

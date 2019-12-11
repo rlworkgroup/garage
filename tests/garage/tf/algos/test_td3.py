@@ -53,8 +53,8 @@ class TestTD3(TfGraphTestCase):
                        qf=qf,
                        qf2=qf2,
                        replay_buffer=replay_buffer,
+                       steps_per_epoch=20,
                        target_update_tau=0.005,
-                       n_epoch_cycles=20,
                        n_train_steps=50,
                        discount=0.99,
                        smooth_return=False,
@@ -67,7 +67,5 @@ class TestTD3(TfGraphTestCase):
                        qf_optimizer=tf.compat.v1.train.AdamOptimizer)
 
             runner.setup(algo, env)
-            last_avg_ret = runner.train(n_epochs=10,
-                                        n_epoch_cycles=20,
-                                        batch_size=250)
+            last_avg_ret = runner.train(n_epochs=10, batch_size=250)
             assert last_avg_ret > 400

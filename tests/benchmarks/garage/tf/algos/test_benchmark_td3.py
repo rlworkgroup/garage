@@ -58,7 +58,7 @@ params = {
     'policy_hidden_sizes': [400, 300],
     'qf_hidden_sizes': [400, 300],
     'n_epochs': 1000,
-    'n_epoch_cycles': 20,
+    'steps_per_epoch': 20,
     'n_rollout_steps': 250,
     'n_train_steps': 1,
     'discount': 0.99,
@@ -209,10 +209,10 @@ def run_garage(env, seed, log_dir):
                   qf=qf,
                   qf2=qf2,
                   replay_buffer=replay_buffer,
+                  steps_per_epoch=params['steps_per_epoch'],
                   policy_lr=params['policy_lr'],
                   qf_lr=params['qf_lr'],
                   target_update_tau=params['tau'],
-                  n_epoch_cycles=params['n_epoch_cycles'],
                   n_train_steps=params['n_train_steps'],
                   discount=params['discount'],
                   smooth_return=params['smooth_return'],
@@ -230,8 +230,7 @@ def run_garage(env, seed, log_dir):
 
         runner.setup(td3, env)
         runner.train(n_epochs=params['n_epochs'],
-                     batch_size=params['n_rollout_steps'],
-                     n_epoch_cycles=params['n_epoch_cycles'])
+                     batch_size=params['n_rollout_steps'])
 
         dowel_logger.remove_all()
 
@@ -308,7 +307,7 @@ def run_rlkit(env, seed, log_dir):
         evaluation_data_collector=eval_path_collector,
         replay_buffer=replay_buffer,
         num_epochs=params['n_epochs'],
-        num_train_loops_per_epoch=params['n_epoch_cycles'],
+        num_train_loops_per_epoch=params['steps_per_epoch'],
         num_trains_per_train_loop=params['n_train_steps'],
         num_expl_steps_per_train_loop=params['n_rollout_steps'],
         num_eval_steps_per_epoch=params['n_rollout_steps'],
