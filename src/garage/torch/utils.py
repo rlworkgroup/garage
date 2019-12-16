@@ -46,13 +46,6 @@ def flatten_batch(tensor):
     return tensor.reshape((-1, ) + tensor.shape[2:])
 
 
-def zero_grad(params):
-    for param in params:
-        if param.grad is not None:
-            param.grad.detach_()
-            param.grad.zero_()
-
-
 def update_module_params(module, new_params):
     def update(m, name, param):
         del m._parameters[name]  # pylint: disable=protected-access # noqa: E501

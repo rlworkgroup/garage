@@ -167,3 +167,14 @@ class TrajectoryBatch(
         return super().__new__(TrajectoryBatch, env_spec, observations,
                                actions, rewards, terminals, env_infos,
                                agent_infos, lengths)
+
+class TorchTrajectoryBatch(
+        collections.namedtuple('TorchTrajectoryBatch', [
+            'paths',
+            'observations',
+            'actions',
+            'rewards',
+            'valids',
+            'baselines'
+        ])):
+    pass

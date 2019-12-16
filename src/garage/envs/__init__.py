@@ -6,6 +6,7 @@ from garage.envs.env_spec import EnvSpec
 from garage.envs.grid_world_env import GridWorldEnv
 from garage.envs.normalized_env import normalize
 from garage.envs.point_env import PointEnv
+from garage.envs.half_cheetah_vel import HalfCheetahVelEnv
 
 __all__ = [
     'GarageEnv',
@@ -14,4 +15,5 @@ __all__ = [
     'GridWorldEnv',
     'normalize',
     'PointEnv',
+    'HalfCheetahVelEnv'
 ]

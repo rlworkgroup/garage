@@ -1,4 +1,4 @@
 """Garage Base."""
-from garage._dtypes import TrajectoryBatch
+from garage._dtypes import TrajectoryBatch, TorchTrajectoryBatch
 
-__all__ = ['TrajectoryBatch']
+__all__ = ['TrajectoryBatch', 'TorchTrajectoryBatch']

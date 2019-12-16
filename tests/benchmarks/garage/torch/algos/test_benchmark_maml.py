@@ -6,7 +6,6 @@ done=True when it reaches max_path_length. We also need to change the
 garage.tf.samplers.BatchSampler to smooth the reward curve.
 """
 import datetime
-import os
 import os.path as osp
 import random
 
@@ -30,7 +29,7 @@ from garage.envs.base import GarageEnv
 from garage.experiment import deterministic, LocalRunner, SnapshotConfig
 from garage.np.baselines import LinearFeatureBaseline
 from garage.torch.algos import VPG, MAML
-from garage.torch.envs import HalfCheetahVelEnv
+from garage.envs import HalfCheetahVelEnv
 from garage.torch.policies import GaussianMLPPolicy
 from garage.torch.optimizers import ConjugateGradientOptimizer
 
@@ -40,13 +39,13 @@ import tests.helpers as Rh
 hyper_parameters = {
     'hidden_sizes': [100, 100],
     'max_kl': 0.01,
-    'lr': 0.1,
+    'inner_lr': 0.1,
     'gae_lambda': 1.0,
     'discount': 0.99,
     'max_path_length': 200,
     'fast_batch_size': 20,
-    'meta_batch_size': 2,
-    'n_epochs': 2,
+    'meta_batch_size': 40, # num of tasks
+    'n_epochs': 500,
     'n_trials': 2,
     'num_grad_update': 1,
     'n_parallel': 1,
@@ -139,9 +138,9 @@ def run_garage(env, seed, log_dir):
 
     baseline = LinearFeatureBaseline(env_spec=env.spec)    
 
-    meta_optimizer = ConjugateGradientOptimizer(
-                        policy.parameters(),
-                        max_constraint_value=hyper_parameters['max_kl'])
+    meta_optimizer = (ConjugateGradientOptimizer, {
+        'max_constraint_value': hyper_parameters['max_kl']
+    })
 
     inner_algo = VPG(env_spec=env.spec,
                 policy=policy,
@@ -154,7 +153,7 @@ def run_garage(env, seed, log_dir):
                 policy=policy,
                 baseline=baseline,
                 meta_batch_size=hyper_parameters['meta_batch_size'],
-                lr=hyper_parameters['lr'],
+                inner_lr=hyper_parameters['inner_lr'],
                 inner_algo=inner_algo,
                 num_grad_updates=hyper_parameters['num_grad_update'],
                 meta_optimizer=meta_optimizer)
@@ -226,7 +225,7 @@ def run_promp(env, seed, log_dir):
         policy=policy,
         step_size=hyper_parameters['max_kl'],
         inner_type=hyper_parameters['inner_loss'],
-        inner_lr=hyper_parameters['lr'],
+        inner_lr=hyper_parameters['inner_lr'],
         meta_batch_size=hyper_parameters['meta_batch_size'],
         num_inner_grad_steps=hyper_parameters['num_grad_update'],
         exploration=False,
@@ -246,3 +245,7 @@ def run_promp(env, seed, log_dir):
     tabular_log_file = osp.join(log_dir, 'progress.csv')
 
     return tabular_log_file
+
+if __name__ == "__main__":
+    test_cls = TestBenchmarkMAML()
+    test_cls.test_benchmark_maml()

@@ -52,10 +52,7 @@ class DiffSGD:
         update(self.module)
 
     def zero_grad(self):
-        """Do not need to zero out the gradient.
-
-        Since the optimization update does not happen in-place, new parameters
-        created by this optimizer does not have any gradients attached.
-
-        """
-
+        for param in self.module.parameters():
+            if param.grad is not None:
+                param.grad.detach_()
+                param.grad.zero_()

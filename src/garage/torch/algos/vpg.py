@@ -7,6 +7,7 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 
+from garage import TorchTrajectoryBatch
 from garage.misc import tensor_utils
 from garage.np.algos import BatchPolopt
 from garage.torch.algos import (_Default, compute_advantages, filter_valids,
@@ -131,23 +132,23 @@ class VPG(BatchPolopt):
                 * average_return: (float)
 
         """
-        valids, obs, actions, rewards, baselines = self.process_samples(itr, paths)
+        batch_samples = self.process_samples(itr, paths)
+        obs = batch_samples.observations
 
-        loss = self.compute_loss(itr, paths, valids, obs, actions, rewards, baselines)
+        loss = self.compute_loss(itr, batch_samples)
 
         self._old_policy.load_state_dict(self.policy.state_dict())
 
         self._optimizer.zero_grad()
         loss.backward()
 
-        kl_before = self._compute_kl_constraint(obs).detach()
-        self._optimize(itr, paths, valids, obs, actions, rewards, baselines)
+        kl_before = self.compute_kl_constraint(obs).detach()
+        self._optimize(itr, batch_samples)
 
         with torch.no_grad():
-            loss_after = self.compute_loss(itr, paths, valids, obs, actions,
-                                            rewards, baselines)
-            kl = self._compute_kl_constraint(obs)
-            policy_entropy = self._compute_policy_entropy(obs)
+            loss_after = self.compute_loss(itr, batch_samples)
+            kl = self.compute_kl_constraint(obs)
+            policy_entropy = self.compute_policy_entropy(obs)
             average_return = self._log(itr, paths, loss.item(),
                                        loss_after.item(), kl_before.item(),
                                        kl.item(),
@@ -156,23 +157,26 @@ class VPG(BatchPolopt):
         self.baseline.fit(paths)
         return average_return
 
-    def compute_loss(self, itr, paths, valids, obs, actions, rewards, baselines):
+    def compute_loss(self, itr, batch_samples):
         """Compute mean value of loss.
 
         Args:
             itr (int): Iteration number.
-            paths (list[dict]): A list of collected paths
-            valids (list[int]): Array of length of the valid values
-            obs (torch.Tensor): Observation from the environment.
-            actions (torch.Tensor): Predicted action.
-            rewards (torch.Tensor): Feedback from the environment.
+            batch_samples (garage.TorchTrajectoryBatch): Samples data.
 
         Returns:
             torch.Tensor: Calculated mean value of loss
 
         """
         # pylint: disable=unused-argument
-        policy_entropies = self._compute_policy_entropy(obs)
+        obs = batch_samples.observations
+        rewards = batch_samples.rewards
+        actions = batch_samples.actions
+        rewards = batch_samples.rewards
+        valids = batch_samples.valids
+        baselines = batch_samples.baselines
+
+        policy_entropies = self.compute_policy_entropy(obs)
 
         if self._maximum_entropy:
             rewards += self._policy_ent_coeff * policy_entropies
@@ -202,7 +206,7 @@ class VPG(BatchPolopt):
         valid_objectives = filter_valids(objective, valids)
         return -torch.cat(valid_objectives).mean()
 
-    def _compute_kl_constraint(self, obs):
+    def compute_kl_constraint(self, obs):
         """Compute KL divergence.
 
         Compute the KL divergence between the old policy distribution and
@@ -226,7 +230,7 @@ class VPG(BatchPolopt):
 
         return kl_constraint.mean()
 
-    def _compute_policy_entropy(self, obs):
+    def compute_policy_entropy(self, obs):
         """Compute entropy value of probability distribution.
 
         Args:
@@ -283,7 +287,7 @@ class VPG(BatchPolopt):
             return torch.Tensor(self.baseline.predict_n(path))
         return torch.Tensor(self.baseline.predict(path))
 
-    def _optimize(self, itr, paths, valids, obs, actions, rewards, baselines):  # pylint: disable=unused-argument  # noqa: E501
+    def _optimize(self, itr, batch_samples):  # pylint: disable=unused-argument  # noqa: E501
         self._optimizer.step()
 
     def process_samples(self, itr, paths):
@@ -294,8 +298,7 @@ class VPG(BatchPolopt):
             paths (list[dict]): A list of collected paths
 
         Returns:
-            dict: Processed sample data, with key
-                * average_return: (float)
+            garage.TorchTrajectoryBatch: Processed samples data.
 
         """
         for path in paths:
@@ -322,7 +325,9 @@ class VPG(BatchPolopt):
              pad_to_last(self._get_baselines(path),
                         total_length=self.max_path_length) for path in paths
         ])
-        return valids, obs, actions, rewards, baselines
+
+        batch_samples = TorchTrajectoryBatch(paths, obs, actions, rewards, valids, baselines)
+        return batch_samples
 
     def _log(self, itr, paths, loss_before, loss_after, kl_before, kl,
              policy_entropy):
