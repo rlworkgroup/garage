@@ -171,7 +171,36 @@ class GaussianGRUPolicy(StochasticPolicy):
 
         return dict(mean=mean_var, log_std=log_std_var)
 
-    def reset(self, dones=None):
+    def get_initial_state(self, dones=None):
+        """Initial state.
+
+        Note:
+            If `dones` is None, it will be by default `np.array([True])` which
+            implies the policy will not be "vectorized", i.e. number of
+            parallel environments for training data sampling = 1.
+
+        Args:
+            dones (list[bool]): Terminal signals with shape :math:`(P)`, where
+                P is the number of parallel environments for training data
+                sampling.
+
+        Returns:
+            dict: Initial state, includes previous action with
+                shape :math:`(P, S^*)` and previous hidden state with shape
+                :math:`(P, S^*)`, where P is the number of parallel
+                environments for training data sampling.
+
+        """
+        if dones is None:
+            dones = np.array([True])
+
+        initial_hidden = self.model.networks['default'].init_hidden.eval()
+        prev_actions = np.zeros((len(dones), self.action_space.flat_dim))
+        prev_hiddens = np.full((len(dones), self._hidden_dim), initial_hidden)
+
+        return dict(prev_action=prev_actions, prev_hidden=prev_hiddens)
+
+    def reset(self, agent_infos, dones=None):
         """Reset the policy.
 
         Note:
@@ -180,82 +209,96 @@ class GaussianGRUPolicy(StochasticPolicy):
             parallel environments for training data sampling = 1.
 
         Args:
-            dones (numpy.ndarray): Bool that indicates terminal state(s).
+            agent_infos (dict): Infos for previous action and hidden states.
+            dones (list[bool]): Terminal signals with shape :math:`(P)`, where
+                P is the number of parallel environments for training data
+                sampling.
+
+        Returns:
+            dict: State after reset, includes previous action with
+                shape :math:`(P, S^*)` and previous hidden state with shape
+                :math:`(P, S^*)`, where P is the number of parallel
+                environments for training data sampling.
 
         """
         if dones is None:
             dones = np.array([True])
-        if self._prev_actions is None or len(dones) != len(self._prev_actions):
-            self._prev_actions = np.zeros(
-                (len(dones), self.action_space.flat_dim))
-            self._prev_hiddens = np.zeros((len(dones), self._hidden_dim))
+        initial_hidden = self.model.networks['default'].init_hidden.eval()
+        agent_infos['prev_action'][dones] = 0.
+        agent_infos['prev_hidden'][dones] = initial_hidden
+        return agent_infos
 
-        self._prev_actions[dones] = 0.
-        self._prev_hiddens[dones] = self.model.networks[
-            'default'].init_hidden.eval()
-
-    def get_action(self, observation):
-        """Get a single action from this policy for the input observation.
+    def get_action(self, observation, agent_infos):
+        """Get single action from this policy for the input observation.
 
         Args:
             observation (numpy.ndarray): Observation from environment.
+            agent_infos (dict): Infos for previous action and hidden states.
 
         Returns:
-            tuple[numpy.ndarray, dict]: Predicted action and agent info.
+            numpy.ndarray: Actions
+            dict: Previous action and hidden states, and other agent
+                information.
 
-                action (numpy.ndarray): Predicted action.
-                agent_info (dict): Distribution obtained after observing the
-                    given observation, with keys
-                    * mean: (numpy.ndarray)
-                    * log_std: (numpy.ndarray)
-                    * prev_action: (numpy.ndarray), only present if
-                        self._state_include_action is True.
+        Note:
+            It returns an action and a dict, with keys
+            - mean (numpy.ndarray): Mean of the distribution.
+            - log_std (numpy.ndarray): Log standard deviation of the
+                distribution.
+            - prev_action (numpy.ndarray): Previous action, only present if
+                self._state_include_action is True.
+            - prev_hidden (numpy.ndarray): Previous hidden states.
 
         """
-        actions, agent_infos = self.get_actions([observation])
+        actions, agent_infos = self.get_actions([observation], agent_infos)
         return actions[0], {k: v[0] for k, v in agent_infos.items()}
 
-    def get_actions(self, observations):
+    def get_actions(self, observations, agent_infos):
         """Get multiple actions from this policy for the input observations.
 
         Args:
             observations (numpy.ndarray): Observations from environment.
+            agent_infos (dict): Infos for previous action and hidden states.
 
         Returns:
-            tuple[numpy.ndarray, dict]: Prediction actions and agent infos.
+            numpy.ndarray: Actions
+            dict: Previous action and hidden states, and other agent
+                information.
 
-                actions (numpy.ndarray): Predicted actions.
-                agent_infos (dict): Distribution obtained after observing the
-                    given observation, with keys
-                    * mean: (numpy.ndarray)
-                    * log_std: (numpy.ndarray)
-                    * prev_action: (numpy.ndarray), only present if
-                        self._state_include_action is True.
+        Note:
+            It returns an action and a dict, with keys
+            - mean (numpy.ndarray): Means of the distribution.
+            - log_std (numpy.ndarray): Log standard deviations of the
+                distribution.
+            - prev_action (numpy.ndarray): Previous action, only present
+                if self._state_include_action is True.
+            - prev_hidden (numpy.ndarray): Previous hidden states.
 
         """
-        flat_obs = self.observation_space.flatten_n(observations)
         if self._state_include_action:
-            assert self._prev_actions is not None
-            all_input = np.concatenate([flat_obs, self._prev_actions], axis=-1)
+            all_input = np.concatenate(
+                [observations, agent_infos['prev_action']], axis=-1)
         else:
-            all_input = flat_obs
+            all_input = observations
         means, log_stds, hidden_vec = self._f_step_mean_std(
-            all_input, self._prev_hiddens)
+            all_input, agent_infos['prev_hidden'])
         rnd = np.random.normal(size=means.shape)
         samples = rnd * np.exp(log_stds) + means
         samples = self.action_space.unflatten_n(samples)
-        prev_actions = self._prev_actions
-        self._prev_actions = samples
-        self._prev_hiddens = hidden_vec
-        agent_infos = dict(mean=means, log_std=log_stds)
-        if self._state_include_action:
-            agent_infos['prev_action'] = np.copy(prev_actions)
+        agent_infos['mean'] = means
+        agent_infos['log_std'] = log_stds
+        agent_infos['prev_hidden'] = hidden_vec
         return samples, agent_infos
 
     @property
     def recurrent(self):
         """bool: Whether this policy is recurrent or not."""
         return True
+
+    @property
+    def state_include_action(self):
+        """bool: Whether state includes action."""
+        return self._state_include_action
 
     @property
     def distribution(self):
@@ -273,12 +316,22 @@ class GaussianGRUPolicy(StochasticPolicy):
         return []
 
     def __getstate__(self):
-        """See `Object.__getstate__`."""
+        """Object.__getstate__.
+
+        Returns:
+            dict: the state to be pickled for the instance.
+
+        """
         new_dict = super().__getstate__()
         del new_dict['_f_step_mean_std']
         return new_dict
 
     def __setstate__(self, state):
-        """See `Object.__setstate__`."""
+        """Object.__setstate__.
+
+        Args:
+            state (dict): Unpickled state.
+
+        """
         super().__setstate__(state)
         self._initialize()

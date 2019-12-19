@@ -103,11 +103,12 @@ class OnPolicyVectorizedSampler(BatchSampler):
 
         policy = self.algo.policy
 
+        agent_infos = policy.get_initial_state(dones)
         while n_samples < batch_size:
             t = time.time()
-            policy.reset(dones)
+            agent_infos = policy.reset(agent_infos, dones)
 
-            actions, agent_infos = policy.get_actions(obses)
+            actions, agent_infos = policy.get_actions(obses, agent_infos)
 
             policy_time += time.time() - t
             t = time.time()
@@ -115,15 +116,18 @@ class OnPolicyVectorizedSampler(BatchSampler):
             env_time += time.time() - t
             t = time.time()
 
-            agent_infos = tensor_utils.split_tensor_dict_list(agent_infos)
+            agent_infos_split = tensor_utils.split_tensor_dict_list(
+                agent_infos)
             env_infos = tensor_utils.split_tensor_dict_list(env_infos)
             if env_infos is None:
                 env_infos = [dict() for _ in range(self._vec_env.num_envs)]
-            if agent_infos is None:
-                agent_infos = [dict() for _ in range(self._vec_env.num_envs)]
+            if agent_infos_split is None:
+                agent_infos_split = [
+                    dict() for _ in range(self._vec_env.num_envs)
+                ]
             for idx, observation, action, reward, env_info, agent_info, done in zip(  # noqa: E501
                     itertools.count(), obses, actions, rewards, env_infos,
-                    agent_infos, dones):
+                    agent_infos_split, dones):
                 if running_paths[idx] is None:
                     running_paths[idx] = dict(
                         observations=[],
@@ -139,10 +143,10 @@ class OnPolicyVectorizedSampler(BatchSampler):
                 running_paths[idx]['agent_infos'].append(agent_info)
                 if done:
                     obs = np.asarray(running_paths[idx]['observations'])
-                    actions = np.asarray(running_paths[idx]['actions'])
+                    _actions = np.asarray(running_paths[idx]['actions'])
                     paths.append(
                         dict(observations=obs,
-                             actions=actions,
+                             actions=_actions,
                              rewards=np.asarray(running_paths[idx]['rewards']),
                              env_infos=tensor_utils.stack_tensor_dict_list(
                                  running_paths[idx]['env_infos']),
@@ -153,6 +157,9 @@ class OnPolicyVectorizedSampler(BatchSampler):
 
             process_time += time.time() - t
             pbar.inc(len(obses))
+
+            if policy.state_include_action:
+                agent_infos['prev_action'] = actions
             obses = next_obses
 
         pbar.stop()

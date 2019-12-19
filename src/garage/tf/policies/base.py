@@ -23,11 +23,12 @@ class Policy(abc.ABC):
         self._cached_param_shapes = None
 
     @abc.abstractmethod
-    def get_action(self, observation):
+    def get_action(self, observation, agent_infos):
         """Get action sampled from the policy.
 
         Args:
             observation (np.ndarray): Observation from the environment.
+            agent_infos (dict): Infos for previous action and hidden states.
 
         Returns:
             (np.ndarray): Action sampled from the policy.
@@ -35,18 +36,19 @@ class Policy(abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_actions(self, observations):
+    def get_actions(self, observations, agent_infos):
         """Get action sampled from the policy.
 
         Args:
             observations (list[np.ndarray]): Observations from the environment.
+            agent_infos (dict): Infos for previous action and hidden states.
 
         Returns:
             (np.ndarray): Actions sampled from the policy.
 
         """
 
-    def reset(self, dones=None):
+    def reset(self, agent_infos, dones=None):
         """Reset the policy.
 
         If dones is None, it will be by default np.array([True]) which implies
@@ -54,7 +56,32 @@ class Policy(abc.ABC):
         environments for training data sampling = 1.
 
         Args:
+            agent_infos (dict): Infos for previous action and hidden states.
             dones (numpy.ndarray): Bool that indicates terminal state(s).
+
+        """
+
+    def get_initial_state(self, dones=None):
+        """Initial state.
+
+        Note:
+            If `dones` is None, it will be by default `np.array([True])` which
+            implies the policy will not be "vectorized", i.e. number of
+            parallel environments for training data sampling = 1.
+
+        Args:
+            dones (list[bool]): Terminal signals with shape :math:`(P)`, where
+                P is the number of parallel environments for training data
+                sampling.
+
+        Returns:
+            dict: Initial state. For non-recurrent policies, it will be an
+                empty dict. For GRU, it includes previous action with shape
+                :math:`(P, S^*)` and previous hidden state with shape
+                :math:`(P, S^*)`. For LSTM, it will also have previous
+                cell state with shape :math:`(P, S^*)`, where
+                P is the number of parallel environments for training data
+                sampling.
 
         """
 
