@@ -16,8 +16,18 @@ env:
 
 jobs:
   include:
+    - stage: "Build"
+      if: type = cron AND branch = master
+      name: "Build and cache docker container"
+      before_script: skip
+      install: skip
+      script:
+        - tag="rlworkgroup/garage-ci:${TRAVIS_BUILD_NUMBER}"
+        - TAG="${tag}" make build-ci
+        - TAG="${tag}" make ci-deploy-docker
+    - stage: test
     # pre-commit checks only run for pull requests
-    - if: type = pull_request
+      if: type = pull_request
       name: "Pre-commit checks"
       env:
         - JOB_RUN_CMD="make ci-job-precommit"
@@ -65,10 +75,10 @@ before_install:
   - curl -L https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose
   - chmod +x docker-compose
   - sudo mv docker-compose /usr/local/bin
-  # Pull cached docker image
-  - docker pull rlworkgroup/garage-ci:latest
 
 install:
+  # Pull cached docker image
+  - docker pull rlworkgroup/garage-ci:latest
   - tag="rlworkgroup/garage-ci:${TRAVIS_BUILD_NUMBER}"
   - TAG="${tag}" make build-ci
 
