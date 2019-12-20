@@ -1,5 +1,4 @@
-"""
-The local runner for TensorFlow algorithms.
+"""The local runner for TensorFlow algorithms.
 
 A runner setup context for algorithms during initialization and
 pipelines data between sampler and algorithm during training.
@@ -82,7 +81,7 @@ class LocalTFRunner(LocalRunner):
         """Set self.sess as the default session.
 
         Returns:
-            This local runner.
+            LocalTFRunner: This local runner.
 
         """
         if tf.compat.v1.get_default_session() is not self.sess:
@@ -91,7 +90,14 @@ class LocalTFRunner(LocalRunner):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        """Leave session."""
+        """Leave session.
+
+        Args:
+            exc_type (str): Type.
+            exc_val (object): Value.
+            exc_tb (object): Traceback.
+
+        """
         if tf.compat.v1.get_default_session(
         ) is self.sess and self.sess_entered:
             self.sess.__exit__(exc_type, exc_val, exc_tb)

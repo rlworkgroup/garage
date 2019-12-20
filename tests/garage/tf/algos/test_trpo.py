@@ -108,7 +108,7 @@ class TestTRPO(TfGraphTestCase):
 
             env.close()
 
-    @pytest.mark.large
+    @pytest.mark.flaky
     def test_trpo_gru_cartpole(self):
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
             env = TfEnv(normalize(gym.make('CartPole-v1')))
