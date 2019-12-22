@@ -132,7 +132,7 @@ class TestBenchmarkTD3:
             Rh.plot(b_csvs=rlkit_csvs,
                     g_csvs=garage_csvs,
                     g_x='Epoch',
-                    g_y='AverageReturn',
+                    g_y='Evaluation/AverageReturn',
                     g_z='garage',
                     b_x='Epoch',
                     b_y='evaluation/Average Returns',
@@ -142,7 +142,7 @@ class TestBenchmarkTD3:
                     plt_file=plt_file,
                     env_id=env_id,
                     x_label='Iteration',
-                    y_label='AverageReturn')
+                    y_label='Evaluation/AverageReturn')
 
             result_json[env_id] = Rh.create_json(
                 b_csvs=rlkit_csvs,
@@ -150,7 +150,7 @@ class TestBenchmarkTD3:
                 seeds=seeds,
                 trails=task['trials'],
                 g_x='Epoch',
-                g_y='AverageReturn',
+                g_y='Evaluation/AverageReturn',
                 b_x='Epoch',
                 b_y='evaluation/Average Returns',
                 factor_g=1,

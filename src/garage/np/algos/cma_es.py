@@ -37,12 +37,22 @@ class CMAES(BatchPolopt):
         super().__init__(policy, baseline, discount, max_path_length,
                          n_samples)
         self.env_spec = env_spec
-        self.policy = policy
 
         self.sigma0 = sigma0
 
+        self._es = None
+        self._all_params = None
+        self._cur_params = None
+        self._all_returns = None
+
     def _sample_params(self):
-        return self.es.ask()
+        """Return sample parameters.
+
+        Returns:
+            np.ndarray: A numpy array of parameter values.
+
+        """
+        return self._es.ask()
 
     def train(self, runner):
         """Initialize variables and start training.
@@ -53,16 +63,16 @@ class CMAES(BatchPolopt):
                 such as snapshotting and sampler control.
 
         Returns:
-            The average return in last epoch cycle.
+            float: The average return in last epoch cycle.
 
         """
         init_mean = self.policy.get_param_values()
-        self.es = cma.CMAEvolutionStrategy(init_mean, self.sigma0,
-                                           {'popsize': self.n_samples})
-        self.all_params = self._sample_params()
-        self.cur_params = self.all_params[0]
-        self.policy.set_param_values(self.cur_params)
-        self.all_returns = []
+        self._es = cma.CMAEvolutionStrategy(init_mean, self.sigma0,
+                                            {'popsize': self.n_samples})
+        self._all_params = self._sample_params()
+        self._cur_params = self._all_params[0]
+        self.policy.set_param_values(self._cur_params)
+        self._all_returns = []
 
         return super().train(runner)
 
@@ -72,6 +82,9 @@ class CMAES(BatchPolopt):
         Args:
             itr (int): Iteration number.
             paths (list[dict]): A list of collected paths.
+
+        Returns:
+            float: The average return in last epoch cycle.
 
         """
         paths = self.process_samples(itr, paths)
@@ -83,20 +96,20 @@ class CMAES(BatchPolopt):
         tabular.record('# Sample', i_sample)
 
         rtn = paths['average_return']
-        self.all_returns.append(paths['average_return'])
+        self._all_returns.append(paths['average_return'])
 
         if (itr + 1) % self.n_samples == 0:
-            avg_rtns = np.array(self.all_returns)
-            self.es.tell(self.all_params, -avg_rtns)
-            self.policy.set_param_values(self.es.best.get()[0])
+            avg_rtns = np.array(self._all_returns)
+            self._es.tell(self._all_params, -avg_rtns)
+            self.policy.set_param_values(self._es.best.get()[0])
 
             # Clear for next epoch
-            rtn = max(self.all_returns)
-            self.all_returns.clear()
-            self.all_params = self._sample_params()
+            rtn = max(self._all_returns)
+            self._all_returns.clear()
+            self._all_params = self._sample_params()
 
-        self.cur_params = self.all_params[(i_sample + 1) % self.n_samples]
-        self.policy.set_param_values(self.cur_params)
+        self._cur_params = self._all_params[(i_sample + 1) % self.n_samples]
+        self.policy.set_param_values(self._cur_params)
 
         logger.log(tabular)
         return rtn

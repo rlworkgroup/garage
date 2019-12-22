@@ -13,14 +13,16 @@ class SimplePolicy:
     def __init__(self, env_spec):
         self.env_spec = env_spec
 
-    def get_action(self, observation):
-        return self.env_spec.action_space.sample()
+    def get_action(self, _):
+        return self.env_spec.action_space.sample(), dict()
 
     def get_actions(self, observations):
-        return np.full(len(observations), self.env_spec.action_space.sample())
+        return np.full(len(observations),
+                       self.env_spec.action_space.sample()), dict()
 
 
 class TestEpsilonGreedyStrategy:
+
     def setup_method(self):
         self.env = DummyDiscreteEnv()
         self.policy = SimplePolicy(env_spec=self.env)

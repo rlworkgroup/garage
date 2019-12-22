@@ -16,7 +16,7 @@ def discount_cumsum(x, discount):
         discount (float): Discount factor.
 
     Returns:
-        float: Discounted cumulative sum.
+        np.ndarrary: Discounted cumulative sum.
 
     """
     return scipy.signal.lfilter([1], [1, float(-discount)], x[::-1],

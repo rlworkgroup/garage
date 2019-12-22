@@ -237,7 +237,7 @@ def plot(b_csvs, g_csvs, g_x, g_y, b_x, b_y, trials, seeds, plt_file, env_id):
 
     plt.legend()
     plt.xlabel('Iteration')
-    plt.ylabel('AverageReturn')
+    plt.ylabel('Evaluation/AverageReturn')
     plt.title(env_id)
 
     plt.savefig(plt_file)

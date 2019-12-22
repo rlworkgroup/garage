@@ -1,10 +1,11 @@
 """This class implements OffPolicyRLAlgorithm for off-policy RL algorithms."""
-from abc import abstractmethod
+import abc
 
 from dowel import tabular
 
 from garage.np.algos import RLAlgorithm
 from garage.sampler import OffPolicyVectorizedSampler
+from garage.sampler.utils import rollout
 
 
 class OffPolicyRLAlgorithm(RLAlgorithm):
@@ -94,6 +95,9 @@ class OffPolicyRLAlgorithm(RLAlgorithm):
                 last_return = self.train_once(runner.step_itr,
                                               runner.step_path)
                 if cycle == 0 and self.evaluate:
+                    self.evaluate_performance(
+                        runner.step_itr,
+                        self._obtain_evaluation_samples(runner.get_env_copy()))
                     tabular.record('TotalEnvSteps', runner.total_env_steps)
                 runner.step_itr += 1
 
@@ -144,11 +148,12 @@ class OffPolicyRLAlgorithm(RLAlgorithm):
         # pylint: disable=no-self-use
         """Initialize the optimization procedure.
 
-        If using tensorflow, this may
-        include declaring all the variables and compiling functions.
+        If using tensorflow, this may include declaring all the variables
+        and compiling functions.
+
         """
 
-    @abstractmethod
+    @abc.abstractmethod
     def optimize_policy(self, itr, samples_data):
         """Optimize policy network.
 
@@ -159,7 +164,7 @@ class OffPolicyRLAlgorithm(RLAlgorithm):
         """
         raise NotImplementedError
 
-    @abstractmethod
+    @abc.abstractmethod
     def train_once(self, itr, paths):
         """Perform one step of policy optimization given one batch of samples.
 
@@ -169,3 +174,65 @@ class OffPolicyRLAlgorithm(RLAlgorithm):
 
         """
         raise NotImplementedError
+
+    def _obtain_evaluation_samples(self,
+                                   env,
+                                   num_trajs=100,
+                                   max_path_length=1000):
+        r"""Sample the policy for 10 trajectories and return average values.
+
+        Args:
+            env (garage.envs.GarageEnv): The environement used to obtain
+                trajectories.
+            num_trajs (int): Number of trajectories.
+            max_path_length (int): Number of maximum steps in one batch.
+
+        Returns:
+            dict: Evaluation trajectories, representing the best current
+                performance of the algorithm, with keys:
+                * env_spec (garage.envs.EnvSpec): Specification for the
+                environment from which this data was sampled.
+                * observations (numpy.ndarray): A numpy array containing the
+                    observations for all time steps in this batch.
+                * actions (numpy.ndarray): A  numpy array containing the
+                    actions for all time steps in this batch.
+                * rewards (numpy.ndarray): A numpy array containing the
+                    rewards for all time steps in this batch.
+                * terminals (numpy.ndarray): A boolean numpy array
+                    containing the termination signals for all time steps
+                    in this batch.
+                * env_infos (dict): A dict of numpy arrays arbitrary
+                    environment state information.
+                * agent_infos (numpy.ndarray): A dict of numpy arrays
+                    arbitrary agent state information.
+                * lengths (numpy.ndarray): An integer numpy array
+                    containing the length of each trajectory in this batch.
+                * discount (float): Discount value.
+
+        """
+        paths = []
+
+        for _ in range(num_trajs):
+            path = rollout(env,
+                           self.policy,
+                           max_path_length=max_path_length,
+                           deterministic=True)
+            paths.append(path)
+
+        obs = [path['observations'] for path in paths]
+        actions = [path['actions'] for path in paths]
+        rewards = [path['rewards'] for path in paths]
+        agent_infos = [path['agent_infos'] for path in paths]
+        env_infos = [path['env_infos'] for path in paths]
+        terminals = [path['dones'] for path in paths]
+        lengths = [len(path['rewards']) for path in paths]
+
+        return dict(env_spec=self.env_spec,
+                    observations=obs,
+                    actions=actions,
+                    rewards=rewards,
+                    terminals=terminals,
+                    env_infos=env_infos,
+                    agent_infos=agent_infos,
+                    lengths=lengths,
+                    discount=self.discount)

@@ -1,6 +1,7 @@
 """Provides algorithms with access to most of garage's features."""
 import copy
 import os
+import pickle
 import time
 
 from dowel import logger, tabular
@@ -431,6 +432,15 @@ class LocalRunner:
             self._train_args.pause_for_plot = pause_for_plot
 
         return self._algo.train(self)
+
+    def get_env_copy(self):
+        """Get a copy of the environment.
+
+        Returns:
+            garage.envs.GarageEnv: An environement instance.
+
+        """
+        return pickle.loads(pickle.dumps(self._env))
 
     @property
     def total_env_steps(self):

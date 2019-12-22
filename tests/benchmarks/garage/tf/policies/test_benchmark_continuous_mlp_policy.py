@@ -79,7 +79,7 @@ class TestBenchmarkContinuousMLPPolicy:
             Rh.relplot(g_csvs=garage_csvs,
                        b_csvs=[],
                        g_x='Epoch',
-                       g_y='AverageReturn',
+                       g_y='Evaluation/AverageReturn',
                        g_z='Garage',
                        b_x=None,
                        b_y=None,
@@ -89,7 +89,7 @@ class TestBenchmarkContinuousMLPPolicy:
                        plt_file=plt_file,
                        env_id=env_id,
                        x_label='Iteration',
-                       y_label='AverageReturn')
+                       y_label='Evaluation/AverageReturn')
 
 
 def run_garage(env, seed, log_dir):

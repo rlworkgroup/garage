@@ -111,36 +111,55 @@ class BatchPolopt(RLAlgorithm):
                 path['rewards'], self.discount)
             returns.append(path['returns'])
 
+        obs = [path['observations'] for path in paths]
+        obs = tensor_utils.pad_tensor_n(obs, max_path_length)
+
+        actions = [path['actions'] for path in paths]
+        actions = tensor_utils.pad_tensor_n(actions, max_path_length)
+
+        rewards = [path['rewards'] for path in paths]
+        rewards = tensor_utils.pad_tensor_n(rewards, max_path_length)
+
         agent_infos = [path['agent_infos'] for path in paths]
         agent_infos = tensor_utils.stack_tensor_dict_list([
             tensor_utils.pad_tensor_dict(p, max_path_length)
             for p in agent_infos
         ])
 
+        env_infos = [path['env_infos'] for path in paths]
+        env_infos = tensor_utils.stack_tensor_dict_list([
+            tensor_utils.pad_tensor_dict(p, max_path_length) for p in env_infos
+        ])
+
+        terminals = [path['dones'] for path in paths]
+
         valids = [np.ones_like(path['returns']) for path in paths]
         valids = tensor_utils.pad_tensor_n(valids, max_path_length)
 
-        average_discounted_return = (np.mean(
-            [path['returns'][0] for path in paths]))
-
-        undiscounted_returns = [sum(path['rewards']) for path in paths]
-        self.episode_reward_mean.extend(undiscounted_returns)
+        lengths = np.asarray([v.sum() for v in valids])
 
         ent = np.sum(self.policy.distribution.entropy(agent_infos) *
                      valids) / np.sum(valids)
 
-        samples_data = dict(average_return=np.mean(undiscounted_returns))
+        undiscounted_returns = self.evaluate_performance(
+            itr,
+            dict(env_spec=None,
+                 observations=obs,
+                 actions=actions,
+                 rewards=rewards,
+                 terminals=terminals,
+                 env_infos=env_infos,
+                 agent_infos=agent_infos,
+                 lengths=lengths,
+                 discount=self.discount))
 
-        tabular.record('Iteration', itr)
-        tabular.record('AverageDiscountedReturn', average_discounted_return)
-        tabular.record('AverageReturn', np.mean(undiscounted_returns))
-        tabular.record('Extras/EpisodeRewardMean',
-                       np.mean(self.episode_reward_mean))
-        tabular.record('NumTrajs', len(paths))
+        self.episode_reward_mean.extend(undiscounted_returns)
+
         tabular.record('Entropy', ent)
         tabular.record('Perplexity', np.exp(ent))
-        tabular.record('StdReturn', np.std(undiscounted_returns))
-        tabular.record('MaxReturn', np.max(undiscounted_returns))
-        tabular.record('MinReturn', np.min(undiscounted_returns))
+        tabular.record('Extras/EpisodeRewardMean',
+                       np.mean(self.episode_reward_mean))
+
+        samples_data = dict(average_return=np.mean(undiscounted_returns))
 
         return samples_data

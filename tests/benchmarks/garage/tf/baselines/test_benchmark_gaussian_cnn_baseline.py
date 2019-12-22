@@ -66,17 +66,17 @@ class TestBenchmarkGaussianCNNBaseline:
             Rh.relplot(g_csvs=garage_csvs,
                        b_csvs=[],
                        g_x='Iteration',
-                       g_y='AverageReturn',
+                       g_y='Evaluation/AverageReturn',
                        g_z='Garage',
                        b_x='Iteration',
-                       b_y='AverageReturn',
+                       b_y='Evaluation/AverageReturn',
                        b_z='GarageWithModel',
                        trials=num_of_trials,
                        seeds=seeds,
                        plt_file=plt_file,
                        env_id=env_id,
                        x_label='Iteration',
-                       y_label='AverageReturn')
+                       y_label='Evaluation/AverageReturn')
 
 
 def run_garage(env, seed, log_dir):
