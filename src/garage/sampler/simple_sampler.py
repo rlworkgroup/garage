@@ -18,6 +18,7 @@ class SimpleSampler(BaseSampler):
         self._agent = agent
 
     def obtain_samples(self, batch_size):
+        self._env.reset()
         samples_collected = 0
         rg = rollout_generator(self._env, self._agent)
         returned_samples = [None] * batch_size
@@ -28,6 +29,7 @@ class SimpleSampler(BaseSampler):
                 samples_collected += 1
             except:
                 rg = rollout_generator(self._env, self._agent)
+        assert len(returned_samples) == samples_collected == batch_size
         return returned_samples
 
 
