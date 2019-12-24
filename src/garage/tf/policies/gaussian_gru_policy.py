@@ -171,36 +171,43 @@ class GaussianGRUPolicy(StochasticPolicy):
 
         return dict(mean=mean_var, log_std=log_std_var)
 
-    def get_initial_state(self, dones=None):
+    def get_initial_state(self):
         """Initial state.
 
-        Note:
-            If `dones` is None, it will be by default `np.array([True])` which
-            implies the policy will not be "vectorized", i.e. number of
-            parallel environments for training data sampling = 1.
-
-        Args:
-            dones (list[bool]): Terminal signals with shape :math:`(P)`, where
-                P is the number of parallel environments for training data
-                sampling.
-
         Returns:
-            dict: Initial state, includes previous action with
-                shape :math:`(P, S^*)` and previous hidden state with shape
-                :math:`(P, S^*)`, where P is the number of parallel
-                environments for training data sampling.
+            dict: Initial state, includes performed action with
+                shape :math:`(S^*)`, which is all zeros and
+                previous hidden state with shape :math:`(S^*)`
+                where P is the number of parallel environments for
+                training data sampling.
 
         """
-        if dones is None:
-            dones = np.array([True])
+        state = self.get_initial_states(batch_size=1)
+        return {k: v[0] for k, v in state.items()}
 
+    def get_initial_states(self, batch_size):
+        """Initial states.
+
+        Args:
+            batch_size (int): Number of parallel environments for
+                training data sampling.
+
+        Returns:
+            dict: Initial state, includes performed action with
+                shape :math:`(P, S^*)`, which is all zeros and
+                previous hidden state with shape :math:`(P, S^*)`
+                where P is the number of parallel environments for
+                training data sampling.
+
+        """
         initial_hidden = self.model.networks['default'].init_hidden.eval()
-        prev_actions = np.zeros((len(dones), self.action_space.flat_dim))
-        prev_hiddens = np.full((len(dones), self._hidden_dim), initial_hidden)
+        performed_actions = np.zeros((batch_size, self.action_space.flat_dim))
+        prev_hiddens = np.full((batch_size, self._hidden_dim), initial_hidden)
 
-        return dict(prev_action=prev_actions, prev_hidden=prev_hiddens)
+        return dict(performed_action=performed_actions,
+                    prev_hidden=prev_hiddens)
 
-    def reset(self, agent_infos, dones=None):
+    def reset(self, policy_infos, dones=None):
         """Reset the policy.
 
         Note:
@@ -209,7 +216,7 @@ class GaussianGRUPolicy(StochasticPolicy):
             parallel environments for training data sampling = 1.
 
         Args:
-            agent_infos (dict): Infos for previous action and hidden states.
+            policy_infos (dict): Infos for previous action and hidden states.
             dones (list[bool]): Terminal signals with shape :math:`(P)`, where
                 P is the number of parallel environments for training data
                 sampling.
@@ -224,21 +231,24 @@ class GaussianGRUPolicy(StochasticPolicy):
         if dones is None:
             dones = np.array([True])
         initial_hidden = self.model.networks['default'].init_hidden.eval()
-        agent_infos['prev_action'][dones] = 0.
-        agent_infos['prev_hidden'][dones] = initial_hidden
-        return agent_infos
+        policy_infos['performed_action'][dones] = 0.
+        policy_infos['prev_hidden'][dones] = initial_hidden
+        return policy_infos
 
-    def get_action(self, observation, agent_infos):
+    def get_action(self, observation, policy_info=None):
         """Get single action from this policy for the input observation.
 
         Args:
             observation (numpy.ndarray): Observation from environment.
-            agent_infos (dict): Infos for previous action and hidden states.
+            policy_info (dict): Infos for previous action and hidden state.
 
         Returns:
             numpy.ndarray: Actions
             dict: Previous action and hidden states, and other agent
                 information.
+
+        Raises:
+            ValueError: If policy_info is None.
 
         Note:
             It returns an action and a dict, with keys
@@ -250,20 +260,27 @@ class GaussianGRUPolicy(StochasticPolicy):
             - prev_hidden (numpy.ndarray): Previous hidden states.
 
         """
-        actions, agent_infos = self.get_actions([observation], agent_infos)
-        return actions[0], {k: v[0] for k, v in agent_infos.items()}
+        if policy_info is None:
+            raise ValueError(
+                'policy_info should not be empty for recurrent policies!')
+        policy_infos = {k: [v] for k, v in policy_info.items()}
+        actions, policy_infos = self.get_actions([observation], policy_infos)
+        return actions[0], {k: v[0] for k, v in policy_infos.items()}
 
-    def get_actions(self, observations, agent_infos):
+    def get_actions(self, observations, policy_infos=None):
         """Get multiple actions from this policy for the input observations.
 
         Args:
             observations (numpy.ndarray): Observations from environment.
-            agent_infos (dict): Infos for previous action and hidden states.
+            policy_infos (dict): Infos for previous action and hidden states.
 
         Returns:
             numpy.ndarray: Actions
             dict: Previous action and hidden states, and other agent
                 information.
+
+        Raises:
+            ValueError: If policy_info is None.
 
         Note:
             It returns an action and a dict, with keys
@@ -277,18 +294,21 @@ class GaussianGRUPolicy(StochasticPolicy):
         """
         if self._state_include_action:
             all_input = np.concatenate(
-                [observations, agent_infos['prev_action']], axis=-1)
+                [observations, policy_infos['performed_action']], axis=-1)
         else:
             all_input = observations
         means, log_stds, hidden_vec = self._f_step_mean_std(
-            all_input, agent_infos['prev_hidden'])
+            all_input, policy_infos['prev_hidden'])
         rnd = np.random.normal(size=means.shape)
         samples = rnd * np.exp(log_stds) + means
         samples = self.action_space.unflatten_n(samples)
-        agent_infos['mean'] = means
-        agent_infos['log_std'] = log_stds
-        agent_infos['prev_hidden'] = hidden_vec
-        return samples, agent_infos
+        policy_infos['mean'] = means
+        policy_infos['log_std'] = log_stds
+        policy_infos['prev_hidden'] = hidden_vec
+
+        policy_infos['prev_action'] = policy_infos['performed_action']
+        policy_infos['performed_action'] = samples
+        return samples, policy_infos
 
     @property
     def recurrent(self):

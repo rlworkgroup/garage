@@ -141,7 +141,7 @@ class BatchPolopt(RLAlgorithm):
                 * baselines: (numpy.ndarray)
                 * returns: (numpy.ndarray)
                 * valids: (numpy.ndarray)
-                * agent_infos: (dict)
+                * policy_infos: (dict)
                 * env_infos: (dict)
                 * paths: (list[dict])
                 * average_return: (numpy.float64)
@@ -163,7 +163,7 @@ class BatchPolopt(RLAlgorithm):
                             path['actions'])),
                     rewards=path['rewards'],
                     env_infos=path['env_infos'],
-                    agent_infos=path['agent_infos']) for path in paths
+                    policy_infos=path['policy_infos']) for path in paths
             ]
         else:
             paths = [
@@ -174,7 +174,7 @@ class BatchPolopt(RLAlgorithm):
                             path['actions'])),
                     rewards=path['rewards'],
                     env_infos=path['env_infos'],
-                    agent_infos=path['agent_infos']) for path in paths
+                    policy_infos=path['policy_infos']) for path in paths
             ]
 
         if hasattr(self.baseline, 'predict_n'):
@@ -218,10 +218,10 @@ class BatchPolopt(RLAlgorithm):
 
         baselines = tensor_utils.pad_tensor_n(baselines, max_path_length)
 
-        agent_infos = [path['agent_infos'] for path in paths]
-        agent_infos = tensor_utils.stack_tensor_dict_list([
+        policy_infos = [path['policy_infos'] for path in paths]
+        policy_infos = tensor_utils.stack_tensor_dict_list([
             tensor_utils.pad_tensor_dict(p, max_path_length)
-            for p in agent_infos
+            for p in policy_infos
         ])
 
         env_infos = [path['env_infos'] for path in paths]
@@ -238,7 +238,7 @@ class BatchPolopt(RLAlgorithm):
         undiscounted_returns = [sum(path['rewards']) for path in paths]
         self.episode_reward_mean.extend(undiscounted_returns)
 
-        ent = np.sum(self.policy.distribution.entropy(agent_infos) *
+        ent = np.sum(self.policy.distribution.entropy(policy_infos) *
                      valids) / np.sum(valids)
 
         samples_data = dict(
@@ -248,7 +248,7 @@ class BatchPolopt(RLAlgorithm):
             baselines=baselines,
             returns=returns,
             valids=valids,
-            agent_infos=agent_infos,
+            policy_infos=policy_infos,
             env_infos=env_infos,
             paths=paths,
             average_return=np.mean(undiscounted_returns),

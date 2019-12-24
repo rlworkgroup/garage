@@ -4,9 +4,10 @@ import abc
 import tensorflow as tf
 
 from garage.misc.tensor_utils import flatten_tensors, unflatten_tensors
+from garage.np.policies import Policy as BasePolicy
 
 
-class Policy(abc.ABC):
+class Policy(BasePolicy, abc.ABC):
     """Base class for policies in TensorFlow.
 
     Args:
@@ -16,74 +17,11 @@ class Policy(abc.ABC):
     """
 
     def __init__(self, name, env_spec):
+        super().__init__(env_spec)
         self._name = name
-        self._env_spec = env_spec
         self._variable_scope = None
         self._cached_params = None
         self._cached_param_shapes = None
-
-    @abc.abstractmethod
-    def get_action(self, observation, agent_infos):
-        """Get action sampled from the policy.
-
-        Args:
-            observation (np.ndarray): Observation from the environment.
-            agent_infos (dict): Infos for previous action and hidden states.
-
-        Returns:
-            (np.ndarray): Action sampled from the policy.
-
-        """
-
-    @abc.abstractmethod
-    def get_actions(self, observations, agent_infos):
-        """Get action sampled from the policy.
-
-        Args:
-            observations (list[np.ndarray]): Observations from the environment.
-            agent_infos (dict): Infos for previous action and hidden states.
-
-        Returns:
-            (np.ndarray): Actions sampled from the policy.
-
-        """
-
-    def reset(self, agent_infos, dones=None):
-        """Reset the policy.
-
-        If dones is None, it will be by default np.array([True]) which implies
-        the policy will not be "vectorized", i.e. number of parallel
-        environments for training data sampling = 1.
-
-        Args:
-            agent_infos (dict): Infos for previous action and hidden states.
-            dones (numpy.ndarray): Bool that indicates terminal state(s).
-
-        """
-
-    def get_initial_state(self, dones=None):
-        """Initial state.
-
-        Note:
-            If `dones` is None, it will be by default `np.array([True])` which
-            implies the policy will not be "vectorized", i.e. number of
-            parallel environments for training data sampling = 1.
-
-        Args:
-            dones (list[bool]): Terminal signals with shape :math:`(P)`, where
-                P is the number of parallel environments for training data
-                sampling.
-
-        Returns:
-            dict: Initial state. For non-recurrent policies, it will be an
-                empty dict. For GRU, it includes previous action with shape
-                :math:`(P, S^*)` and previous hidden state with shape
-                :math:`(P, S^*)`. For LSTM, it will also have previous
-                cell state with shape :math:`(P, S^*)`, where
-                P is the number of parallel environments for training data
-                sampling.
-
-        """
 
     @property
     def name(self):
@@ -95,63 +33,29 @@ class Policy(abc.ABC):
         """
         return self._name
 
-    @property
-    def vectorized(self):
-        """Boolean for vectorized.
-
-        Returns:
-            bool: Indicates whether the policy is vectorized. If True, it
-                should implement get_actions(), and support resetting with
-                multiple simultaneous states.
-
-        """
-        return False
-
-    @property
-    def observation_space(self):
-        """Observation space.
-
-        Returns:
-            akro.Space: The observation space of the environment.
-
-        """
-        return self._env_spec.observation_space
-
-    @property
-    def action_space(self):
-        """Action space.
-
-        Returns:
-            akro.Space: The action space of the environment.
-
-        """
-        return self._env_spec.action_space
-
-    @property
-    def env_spec(self):
-        """Policy environment specification.
-
-        Returns:
-            garage.EnvSpec: Environment specification.
-
-        """
-        return self._env_spec
-
-    @property
-    def recurrent(self):
-        """Whether the policy uses recurrent network or not.
-
-        Returns:
-            bool: Indicating if the policy is recurrent.
-
-        """
-        return False
-
-    def log_diagnostics(self, paths):
-        """Log extra information per iteration based on the collected paths.
+    @abc.abstractmethod
+    def get_action(self, observation, policy_info=None):
+        """Get action sampled from the policy.
 
         Args:
-            paths (dict[numpy.ndarray]): Sample paths.
+            observation (np.ndarray): Observation from the environment.
+            policy_info (dict): Info for the policy.
+
+        Returns:
+            np.ndarray: Action sampled from the policy.
+
+        """
+
+    @abc.abstractmethod
+    def get_actions(self, observations, policy_infos=None):
+        """Get actions sampled from the policy.
+
+        Args:
+            observations (list[np.ndarray]): Observations from the environment.
+            policy_infos (dict): Infos for the policy.
+
+        Returns:
+            np.ndarray: Actions sampled from the policy.
 
         """
 
@@ -176,9 +80,6 @@ class Policy(abc.ABC):
 
         """
         return list()
-
-    def terminate(self):
-        """Clean up operation."""
 
     def get_trainable_vars(self):
         """Get trainable variables.
@@ -284,7 +185,7 @@ class Policy(abc.ABC):
 
 
 class StochasticPolicy(Policy):
-    """StochasticPolicy."""
+    """Base class for stochastic policies implemented in TensorFlow."""
 
     @property
     @abc.abstractmethod

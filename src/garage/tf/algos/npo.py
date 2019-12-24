@@ -619,10 +619,11 @@ class NPO(BatchPolopt):
 
         """
         policy_state_info_list = [
-            samples_data['agent_infos'][k] for k in self.policy.state_info_keys
+            samples_data['policy_infos'][k]
+            for k in self.policy.state_info_keys
         ]
         policy_old_dist_info_list = [
-            samples_data['agent_infos'][k]
+            samples_data['policy_infos'][k]
             for k in self.policy.distribution.dist_info_keys
         ]
 

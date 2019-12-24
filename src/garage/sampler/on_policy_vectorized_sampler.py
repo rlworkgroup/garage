@@ -78,7 +78,7 @@ class OnPolicyVectorizedSampler(BatchSampler):
                   environment info, value being a numpy.ndarray with shape
                   [Batch, ?]. One example is "ale.lives" for atari
                   environments.
-                * agent_infos: A dictionary with each key representing one
+                * policy_infos: A dictionary with each key representing one
                   agent info, value being a numpy.ndarray with shape
                   [Batch, ?]. One example is "prev_action", which is used
                   for recurrent policy as previous action input, merged with
@@ -103,12 +103,14 @@ class OnPolicyVectorizedSampler(BatchSampler):
 
         policy = self.algo.policy
 
-        agent_infos = policy.get_initial_state(dones)
+        policy_infos = policy.get_initial_states(
+            batch_size=self._vec_env.num_envs)
         while n_samples < batch_size:
             t = time.time()
-            agent_infos = policy.reset(agent_infos, dones)
+            policy_infos = policy.reset(policy_infos, dones=dones)
 
-            actions, agent_infos = policy.get_actions(obses, agent_infos)
+            actions, policy_infos = policy.get_actions(
+                obses, policy_infos=policy_infos)
 
             policy_time += time.time() - t
             t = time.time()
@@ -116,31 +118,31 @@ class OnPolicyVectorizedSampler(BatchSampler):
             env_time += time.time() - t
             t = time.time()
 
-            agent_infos_split = tensor_utils.split_tensor_dict_list(
-                agent_infos)
+            policy_infos_split = tensor_utils.split_tensor_dict_list(
+                policy_infos)
             env_infos = tensor_utils.split_tensor_dict_list(env_infos)
             if env_infos is None:
                 env_infos = [dict() for _ in range(self._vec_env.num_envs)]
-            if agent_infos_split is None:
-                agent_infos_split = [
+            if policy_infos_split is None:
+                policy_infos_split = [
                     dict() for _ in range(self._vec_env.num_envs)
                 ]
             for idx, observation, action, reward, env_info, agent_info, done in zip(  # noqa: E501
                     itertools.count(), obses, actions, rewards, env_infos,
-                    agent_infos_split, dones):
+                    policy_infos_split, dones):
                 if running_paths[idx] is None:
                     running_paths[idx] = dict(
                         observations=[],
                         actions=[],
                         rewards=[],
                         env_infos=[],
-                        agent_infos=[],
+                        policy_infos=[],
                     )
                 running_paths[idx]['observations'].append(observation)
                 running_paths[idx]['actions'].append(action)
                 running_paths[idx]['rewards'].append(reward)
                 running_paths[idx]['env_infos'].append(env_info)
-                running_paths[idx]['agent_infos'].append(agent_info)
+                running_paths[idx]['policy_infos'].append(agent_info)
                 if done:
                     obs = np.asarray(running_paths[idx]['observations'])
                     _actions = np.asarray(running_paths[idx]['actions'])
@@ -150,16 +152,14 @@ class OnPolicyVectorizedSampler(BatchSampler):
                              rewards=np.asarray(running_paths[idx]['rewards']),
                              env_infos=tensor_utils.stack_tensor_dict_list(
                                  running_paths[idx]['env_infos']),
-                             agent_infos=tensor_utils.stack_tensor_dict_list(
-                                 running_paths[idx]['agent_infos'])))
+                             policy_infos=tensor_utils.stack_tensor_dict_list(
+                                 running_paths[idx]['policy_infos'])))
                     n_samples += len(running_paths[idx]['rewards'])
                     running_paths[idx] = None
 
             process_time += time.time() - t
             pbar.inc(len(obses))
 
-            if policy.state_include_action:
-                agent_infos['prev_action'] = actions
             obses = next_obses
 
         pbar.stop()
