@@ -1,4 +1,5 @@
 """Class with batch-based sampling."""
+
 from garage.sampler import parallel_sampler
 from garage.sampler.base import BaseSampler
 from garage.sampler.utils import truncate_paths
@@ -24,7 +25,7 @@ class BatchSampler(BaseSampler):
         parallel_sampler.terminate_task(scope=self.algo.scope)
 
     def obtain_samples(self, itr, batch_size=None, whole_paths=True):
-        """Obtain samples.
+        """Sample the policy for new trajectories.
 
         Args:
             itr (int): Number of iteration.
