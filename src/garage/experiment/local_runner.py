@@ -5,10 +5,14 @@ import pickle
 import time
 
 from dowel import logger, tabular
+import psutil
 
 from garage.experiment.deterministic import get_seed, set_seed
 from garage.experiment.snapshotter import Snapshotter
 from garage.sampler import parallel_sampler
+# This is avoiding a circular import
+from garage.sampler.worker import DefaultWorker
+from garage.sampler.worker_factory import WorkerFactory
 
 
 class ExperimentStats:
@@ -143,6 +147,39 @@ class LocalRunner:
         self.step_itr = None
         self.step_path = None
 
+    def make_sampler(self,
+                     sampler_cls,
+                     seed=None,
+                     n_workers=psutil.cpu_count(logical=False),
+                     worker_class=DefaultWorker,
+                     **sampler_args):
+        """Construct a Sampler from a Sampler class.
+
+        Args:
+            sampler_cls (type): The type of sampler to construct.
+            seed (int): Seed to use in sampler workers.
+            n_workers (int): The number of workers the sampler should use.
+            worker_class (type): Type of worker the Sampler should use.
+            sampler_args (dict): Additional arguments that should be passed to
+                the sampler.
+
+        Returns:
+            sampler_cls: An instance of the sampler class.
+
+        """
+        if seed is None:
+            seed = get_seed()
+        if hasattr(sampler_cls, 'from_worker_factory'):
+            return sampler_cls.from_worker_factory(WorkerFactory(
+                seed=seed,
+                max_path_length=self._algo.max_path_length,
+                n_workers=n_workers,
+                worker_class=worker_class),
+                                                   agents=self._algo.policy,
+                                                   envs=self._env)
+        else:
+            return sampler_cls(self._algo, self._env, **sampler_args)
+
     def setup(self, algo, env, sampler_cls=None, sampler_args=None):
         """Set up runner for algorithm and environment.
 
@@ -168,7 +205,7 @@ class LocalRunner:
             sampler_args = {}
         if sampler_cls is None:
             sampler_cls = algo.sampler_cls
-        self._sampler = sampler_cls(algo, env, **sampler_args)
+        self._sampler = self.make_sampler(sampler_cls)
 
         self._has_setup = True
 
@@ -204,7 +241,8 @@ class LocalRunner:
 
         """
         paths = self._sampler.obtain_samples(
-            itr, (batch_size or self._train_args.batch_size))
+            itr, (batch_size or self._train_args.batch_size),
+            agent_update=self._algo.policy.get_param_values())
 
         self._stats.total_env_steps += sum([len(p['rewards']) for p in paths])
 

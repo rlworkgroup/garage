@@ -23,17 +23,14 @@ class RaySampler(Sampler):
         worker_factory(garage.sampler.WorkerFactory): Used for worker behavior.
         agents(list[garage.Policy]): Agents to distribute across workers.
         envs(list[gym.Env]): Environments to distribute across workers.
-        sampler_worker_cls(type): If None, uses the default SamplerWorker
-            class.
 
     """
 
-    def __init__(self, worker_factory, agents, envs, sampler_worker_cls=None):
+    def __init__(self, worker_factory, agents, envs):
         # pylint: disable=super-init-not-called
         if not ray.is_initialized():
             ray.init(log_to_driver=False)
-        self._sampler_worker = ray.remote(SamplerWorker if sampler_worker_cls
-                                          is None else sampler_worker_cls)
+        self._sampler_worker = ray.remote(SamplerWorker)
         self._worker_factory = worker_factory
         self._agents = agents
         self._envs = self._worker_factory.prepare_worker_messages(envs)
@@ -207,5 +204,5 @@ class SamplerWorker:
         return (self.worker_id, self.inner_worker.rollout())
 
     def shutdown(self):
-        """Shutdown the worker."""
+        """Shuts down the worker."""
         self.inner_worker.shutdown()
