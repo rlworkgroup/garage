@@ -185,6 +185,40 @@ class TrajectoryBatch(
                                last_observations, actions, rewards, terminals,
                                env_infos, agent_infos, lengths)
 
+    @classmethod
+    def concatenate(cls, *batches):
+        """Create a TrajectoryBatch by concatenating TrajectoryBatches.
+
+        Args:
+            batches (list[TrajectoryBatch]): Batches to concatenate.
+
+        Returns:
+            TrajectoryBatch: The concatenation of the batches.
+
+        """
+        if __debug__:
+            for b in batches:
+                assert (set(b.env_infos.keys()) == set(
+                    batches[0].env_infos.keys()))
+                assert (set(b.agent_infos.keys()) == set(
+                    batches[0].agent_infos.keys()))
+        env_infos = {
+            k: np.concatenate([b.env_infos[k] for b in batches])
+            for k in batches[0].env_infos.keys()
+        }
+        agent_infos = {
+            k: np.concatenate([b.agent_infos[k] for b in batches])
+            for k in batches[0].agent_infos.keys()
+        }
+        return cls(
+            batches[0].env_spec,
+            np.concatenate([batch.observations for batch in batches]),
+            np.concatenate([batch.last_observations for batch in batches]),
+            np.concatenate([batch.actions for batch in batches]),
+            np.concatenate([batch.rewards for batch in batches]),
+            np.concatenate([batch.terminals for batch in batches]), env_infos,
+            agent_infos, np.concatenate([batch.lengths for batch in batches]))
+
 
 class TimeStep(
         collections.namedtuple('TimeStep', [

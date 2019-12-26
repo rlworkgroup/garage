@@ -55,18 +55,22 @@ class TestSampler:
             0, 1000, tuple(self.algo.policy.get_param_values()))
         trajs2 = sampler2.obtain_samples(0, 1000)
         # pylint: disable=superfluous-parens
-        assert (trajs1[0]['observations'].shape == np.array(
-            trajs2[0]['observations']).shape == (6, ))
-        traj2_action_shape = np.array(trajs2[0]['actions']).shape
-        assert trajs1[0]['actions'].shape == traj2_action_shape == (6, )
-        assert sum(trajs1[0]['rewards']) == sum(trajs2[0]['rewards']) == 1
+        assert trajs1.observations.shape[0] >= 1000
+        assert trajs1.actions.shape[0] >= 1000
+        assert (sum(trajs1.rewards[:trajs1.lengths[0]]) == sum(
+            trajs2[0]['rewards']) == 1)
 
         true_obs = np.array([0, 1, 2, 6, 10, 14])
         true_actions = np.array([2, 2, 1, 1, 1, 2])
         true_rewards = np.array([0, 0, 0, 0, 0, 1])
-        for trajectory in trajs1:
-            assert np.array_equal(trajectory['observations'], true_obs)
-            assert np.array_equal(trajectory['actions'], true_actions)
-            assert np.array_equal(trajectory['rewards'], true_rewards)
+        start = 0
+        for length in trajs1.lengths:
+            observations = trajs1.observations[start:start + length]
+            actions = trajs1.actions[start:start + length]
+            rewards = trajs1.rewards[start:start + length]
+            assert np.array_equal(observations, true_obs)
+            assert np.array_equal(actions, true_actions)
+            assert np.array_equal(rewards, true_rewards)
+            start += length
         sampler1.shutdown_worker()
         sampler2.shutdown_worker()

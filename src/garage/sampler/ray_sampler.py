@@ -9,10 +9,10 @@ function, and a rollout function.
 from collections import defaultdict
 import pickle
 
-import numpy as np
 import psutil
 import ray
 
+from garage import TrajectoryBatch
 from garage.misc.prog_bar_counter import ProgBarCounter
 from garage.sampler.sampler import Sampler
 
@@ -38,13 +38,13 @@ class RaySampler(Sampler):
                  num_processors=None,
                  sampler_worker_cls=None):
         # pylint: disable=super-init-not-called
+        if not ray.is_initialized():
+            ray.init(log_to_driver=False)
         self._sampler_worker = ray.remote(SamplerWorker if sampler_worker_cls
                                           is None else sampler_worker_cls)
         self._worker_factory = worker_factory
         self._agents = agents
         self._envs = self._worker_factory.prepare_worker_messages(envs)
-        if not ray.is_initialized():
-            ray.init(log_to_driver=False)
         self._num_workers = (num_processors if num_processors else
                              psutil.cpu_count(logical=False))
         self._all_workers = defaultdict(None)
@@ -81,7 +81,7 @@ class RaySampler(Sampler):
             return
         self._workers_started = True
         # We need to pickle the agent so that we can e.g. set up the TF.Session
-        # in the worker *before* unpicling it.
+        # in the worker *before* unpickling it.
         agent_pkls = self._worker_factory.prepare_worker_messages(
             self._agents, pickle.dumps)
         for worker_id in range(self._num_workers):
@@ -105,12 +105,7 @@ class RaySampler(Sampler):
                 spread across the workers.
 
         Returns:
-            list[dict]: Sample paths, each path with key
-                * observations: (numpy.ndarray)
-                * actions: (numpy.ndarray)
-                * rewards: (numpy.ndarray)
-                * agent_infos: (dict)
-                * env_infos: (dict)
+            TrajectoryBatch: Batch of gathered trajectories.
 
         """
         active_workers = []
@@ -118,7 +113,7 @@ class RaySampler(Sampler):
         idle_worker_ids = list(range(self._num_workers))
         pbar = ProgBarCounter(num_samples)
         completed_samples = 0
-        traj = []
+        batches = []
         updating_workers = []
 
         # update the policy params of each worker before sampling
@@ -162,52 +157,19 @@ class RaySampler(Sampler):
                                         timeout=0.001)
             active_workers = not_ready
             for result in ready:
-                trajectory, num_returned_samples = _process_trajectory(
-                    result, active_worker_ids, idle_worker_ids)
+                ready_worker_id, trajectory_batch = ray.get(result)
+                active_worker_ids.remove(ready_worker_id)
+                idle_worker_ids.append(ready_worker_id)
+                num_returned_samples = trajectory_batch.lengths.sum()
                 completed_samples += num_returned_samples
                 pbar.inc(num_returned_samples)
-                traj.append(trajectory)
+                batches.append(trajectory_batch)
         pbar.stop()
-        return traj
+        return TrajectoryBatch.concatenate(*batches)
 
     def shutdown_worker(self):
         """Shuts down the worker."""
         ray.shutdown()
-
-
-def _process_trajectory(result, active_worker_ids, idle_worker_ids):
-    """Collect trajectory from ray object store.
-
-    Converts that trajectory to garage friendly format.
-
-    Args:
-        result(object): Ray object id of ready to be collected trajectory.
-        active_worker_ids(list[int]): Active worker IDs. Workers with
-            completed trajectories will be removed.
-        idle_worker_ids(list[int]): Idle worker IDs. Workers with completed
-            trajectories will be added.
-
-    Returns:
-        dict: One trajectory, with keys
-            * observations: (numpy.ndarray)
-            * actions: (numpy.ndarray)
-            * rewards: (numpy.ndarray)
-            * agent_infos: (dict)
-            * env_infos: (dict)
-        int: Number of returned samples in the trajectory
-
-    """
-    trajectory = ray.get(result)
-    ready_worker_id = trajectory[0]
-    active_worker_ids.remove(ready_worker_id)
-    idle_worker_ids.append(ready_worker_id)
-    trajectory = dict(observations=np.asarray(trajectory[1]),
-                      actions=np.asarray(trajectory[2]),
-                      rewards=np.asarray(trajectory[3]),
-                      agent_infos=trajectory[4],
-                      env_infos=trajectory[5])
-    num_returned_samples = len(trajectory['observations'])
-    return trajectory, num_returned_samples
 
 
 class SamplerWorker:
@@ -247,7 +209,7 @@ class SamplerWorker:
         """Compute one rollout of the agent in the environment.
 
         Returns:
-            tuple: Worker id and return values of `Worker.rollout`.
+            tuple[int, garage.TrajectoryBatch]: Worker ID and batch of samples.
 
         """
-        return (self.worker_id, ) + self.inner_worker.rollout()
+        return (self.worker_id, self.inner_worker.rollout())
