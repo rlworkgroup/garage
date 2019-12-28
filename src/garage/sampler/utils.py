@@ -31,12 +31,19 @@ def rollout(env,
     Returns:
         dict[str, np.ndarray or dict]: Dictionary, with keys:
             * observations(np.array): Non-flattened array of observations.
-            * actions(np.array): Non-flattened array of actions.
-            * rewards(np.array): Array of rewards of shape (timesteps, 1).
-            * agent_infos(dict[str, np.ndarray]): Dictionary of stacked,
-                  non-flattened `agent_info`s.
-            * env_infos(dict[str, np.ndarray]): Dictionary of stacked,
-                  non-flattened `env_info`s.
+                There should be one more of these than actions. Note that
+                observations[i] (for i < len(observations) - 1) was used by the
+                agent to choose actions[i]. Should have shape (T + 1, S^*) (the
+                unflattened state space of the current environment).
+            * actions(np.array): Non-flattened array of actions. Should have
+                shape (T, S^*) (the unflattened action space of the current
+                environment).
+            * rewards(np.array): Array of rewards of shape (T,) (1D array of
+                length timesteps).
+            * agent_infos(Dict[str, np.array]): Dictionary of stacked,
+                non-flattened `agent_info` arrays.
+            * env_infos(Dict[str, np.array]): Dictionary of stacked,
+                non-flattened `env_info` arrays.
 
     """
     observations = []

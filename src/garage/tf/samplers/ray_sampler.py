@@ -15,23 +15,22 @@ class RaySamplerTF(RaySampler):
     Currently the same as garage.samplers.RaySampler
 
     Args:
-        - Same as garage.samplers.RaySampler
+        worker_factory(garage.sampler.WorkerFactory): Used for worker behavior.
+        agents(list[garage.Policy]): Agents to distribute across workers.
+        envs(list[gym.Env]): Environments to distribute across workers.
+        num_processors(int): Number of workers processes to spawn. If none,
+            defaults to number of physical CPU cores.
+
     """
 
-    def __init__(self,
-                 algo,
-                 env,
-                 seed,
-                 should_render=False,
-                 num_processors=None):
-        super().__init__(algo,
-                         env,
-                         seed,
-                         should_render=False,
-                         num_processors=None,
+    def __init__(self, worker_factory, agents, envs, num_processors=None):
+        super().__init__(worker_factory,
+                         agents,
+                         envs,
+                         num_processors,
                          sampler_worker_cls=SamplerWorkerTF)
 
-    def shutdown_worker(self, local=False):
+    def shutdown_worker(self):
         """Shuts down the worker."""
         shutting_down = []
         for worker in self._all_workers.values():
@@ -43,19 +42,16 @@ class RaySamplerTF(RaySampler):
 class SamplerWorkerTF(SamplerWorker):
     """Sampler Worker for tensorflow on policy algorithms.
 
-    - Same as garage.samplers.SamplerWorker, except it
-    initializes a tensorflow session, because each worker
-    is in a separate process.
+    Args:
+        worker_id(int): The id of the sampler_worker
+        env(gym.Env): The gym env
+        agent_pkl(bytes): The pickled agent
+        worker_factory(WorkerFactory): Factory to construct this worker's
+            behavior.
+
     """
 
-    def __init__(self,
-                 worker_id,
-                 env_pkl,
-                 agent_pkl,
-                 seed,
-                 max_path_length,
-                 should_render=False,
-                 local=False):
+    def __init__(self, worker_id, env, agent_pkl, worker_factory):
         self._sess = tf.get_default_session()
         if not self._sess:
             # create a tf session for all
@@ -63,12 +59,7 @@ class SamplerWorkerTF(SamplerWorker):
             # order to execute the policy.
             self._sess = tf.Session()
             self._sess.__enter__()
-        super().__init__(worker_id,
-                         env_pkl,
-                         agent_pkl,
-                         seed,
-                         max_path_length,
-                         should_render=should_render)
+        super().__init__(worker_id, env, agent_pkl, worker_factory)
 
     def shutdown(self):
         """Perform shutdown processes for TF."""
