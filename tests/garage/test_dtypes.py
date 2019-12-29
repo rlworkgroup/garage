@@ -2,8 +2,11 @@ import gym.spaces
 import numpy as np
 import pytest
 
+from garage import Sample
 from garage import TrajectoryBatch
 from garage.envs import EnvSpec
+
+# ===========================TrajectoryBatch-Test=========================== #
 
 
 @pytest.fixture
@@ -47,7 +50,7 @@ def traj_data():
     }
 
 
-def test_new(traj_data):
+def test_new_traj(traj_data):
     t = TrajectoryBatch(**traj_data)
     assert t.env_spec is traj_data['env_spec']
     assert t.observations is traj_data['observations']
@@ -59,7 +62,7 @@ def test_new(traj_data):
     assert t.lengths is traj_data['lengths']
 
 
-def test_lengths_shape_mismatch(traj_data):
+def test_lengths_shape_mismatch_traj(traj_data):
     with pytest.raises(ValueError,
                        match='Lengths tensor must be a tensor of shape'):
         traj_data['lengths'] = traj_data['lengths'].reshape((4, -1))
@@ -67,7 +70,7 @@ def test_lengths_shape_mismatch(traj_data):
         del t
 
 
-def test_lengths_dtype_mismatch(traj_data):
+def test_lengths_dtype_mismatch_traj(traj_data):
     with pytest.raises(ValueError,
                        match='Lengths tensor must have an integer dtype'):
         traj_data['lengths'] = traj_data['lengths'].astype(np.float32)
@@ -75,56 +78,56 @@ def test_lengths_dtype_mismatch(traj_data):
         del t
 
 
-def test_obs_env_spec_mismatch(traj_data):
+def test_obs_env_spec_mismatch_traj(traj_data):
     with pytest.raises(ValueError, match='observations must conform'):
         traj_data['observations'] = traj_data['observations'][:, :, :, :1]
         t = TrajectoryBatch(**traj_data)
         del t
 
 
-def test_obs_batch_mismatch(traj_data):
+def test_obs_batch_mismatch_traj(traj_data):
     with pytest.raises(ValueError, match='batch dimension of observations'):
         traj_data['observations'] = traj_data['observations'][:-1]
         t = TrajectoryBatch(**traj_data)
         del t
 
 
-def test_act_env_spec_mismatch(traj_data):
+def test_act_env_spec_mismatch_traj(traj_data):
     with pytest.raises(ValueError, match='actions must conform'):
         traj_data['actions'] = traj_data['actions'][:, 0]
         t = TrajectoryBatch(**traj_data)
         del t
 
 
-def test_act_batch_mismatch(traj_data):
+def test_act_batch_mismatch_traj(traj_data):
     with pytest.raises(ValueError, match='batch dimension of actions'):
         traj_data['actions'] = traj_data['actions'][:-1]
         t = TrajectoryBatch(**traj_data)
         del t
 
 
-def test_rewards_shape_mismatch(traj_data):
+def test_rewards_shape_mismatch_traj(traj_data):
     with pytest.raises(ValueError, match='Rewards tensor'):
         traj_data['rewards'] = traj_data['rewards'].reshape((2, -1))
         t = TrajectoryBatch(**traj_data)
         del t
 
 
-def test_terminals_shape_mismatch(traj_data):
+def test_terminals_shape_mismatch_traj(traj_data):
     with pytest.raises(ValueError, match='Terminals tensor must have shape'):
         traj_data['terminals'] = traj_data['terminals'].reshape((2, -1))
         t = TrajectoryBatch(**traj_data)
         del t
 
 
-def test_terminals_dtype_mismatch(traj_data):
+def test_terminals_dtype_mismatch_traj(traj_data):
     with pytest.raises(ValueError, match='Terminals tensor must be dtype'):
         traj_data['terminals'] = traj_data['terminals'].astype(np.float32)
         t = TrajectoryBatch(**traj_data)
         del t
 
 
-def test_env_infos_not_ndarray(traj_data):
+def test_env_infos_not_ndarray_traj(traj_data):
     with pytest.raises(ValueError,
                        match='entry in env_infos must be a numpy array'):
         traj_data['env_infos']['bar'] = dict()
@@ -132,7 +135,7 @@ def test_env_infos_not_ndarray(traj_data):
         del t
 
 
-def test_env_infos_batch_mismatch(traj_data):
+def test_env_infos_batch_mismatch_traj(traj_data):
     with pytest.raises(ValueError,
                        match='entry in env_infos must have a batch dimension'):
         traj_data['env_infos']['goal'] = traj_data['env_infos']['goal'][:-1]
@@ -140,7 +143,7 @@ def test_env_infos_batch_mismatch(traj_data):
         del t
 
 
-def test_agent_infos_not_ndarray(traj_data):
+def test_agent_infos_not_ndarray_traj(traj_data):
     with pytest.raises(ValueError,
                        match='entry in agent_infos must be a numpy array'):
         traj_data['agent_infos']['bar'] = list()
@@ -148,7 +151,7 @@ def test_agent_infos_not_ndarray(traj_data):
         del t
 
 
-def test_agent_infos_batch_mismatch(traj_data):
+def test_agent_infos_batch_mismatch_traj(traj_data):
     with pytest.raises(
             ValueError,
             match='entry in agent_infos must have a batch dimension'):
@@ -156,3 +159,113 @@ def test_agent_infos_batch_mismatch(traj_data):
             'hidden'][:-1]
         t = TrajectoryBatch(**traj_data)
         del t
+
+
+# ========================================================================== #
+
+
+# ===============================Samples-Test=============================== #
+@pytest.fixture
+def sample_data():
+    # spaces
+    obs_space = gym.spaces.Box(low=1,
+                               high=10,
+                               shape=(4, 3, 2),
+                               dtype=np.float32)
+    act_space = gym.spaces.MultiDiscrete([2, 5])
+    env_spec = EnvSpec(obs_space, act_space)
+
+    # generate data
+    obs = obs_space.sample()
+    next_obs = obs_space.sample()
+    act = act_space.sample()
+    rew = 10.0
+    terms = False
+
+    # env_infos
+    env_infos = dict()
+    env_infos['goal'] = np.array([[1, 1]])
+    env_infos['TimeLimit.truncated'] = not terms
+
+    # agent_infos
+    agent_infos = dict()
+    agent_infos['prev_action'] = act
+
+    return {
+        'env_spec': env_spec,
+        'observation': obs,
+        'next_observation': next_obs,
+        'action': act,
+        'reward': rew,
+        'terminal': terms,
+        'env_info': env_infos,
+        'agent_info': agent_infos,
+    }
+
+
+def test_new_sample(sample_data):
+    s = Sample(**sample_data)
+    assert s.env_spec is sample_data['env_spec']
+    assert s.observation is sample_data['observation']
+    assert s.action is sample_data['action']
+    assert s.reward is sample_data['reward']
+    assert s.terminal is sample_data['terminal']
+    assert s.env_info is sample_data['env_info']
+    assert s.agent_info is sample_data['agent_info']
+
+
+def test_obs_env_spec_mismatch_sample(sample_data):
+    with pytest.raises(ValueError,
+                       match='observations must conform to observation_space'):
+        sample_data['observation'] = sample_data['observation'][:, :, :1]
+        s = Sample(**sample_data)
+        del s
+
+
+def test_next_obs_env_spec_mismatch_sample(sample_data):
+    with pytest.raises(
+            ValueError,
+            match='next_observation must conform to observation_space'):
+        sample_data['next_observation'] = sample_data[
+            'next_observation'][:, :, :1]
+        s = Sample(**sample_data)
+        del s
+
+
+def test_act_env_spec_mismatch_sample(sample_data):
+    with pytest.raises(ValueError,
+                       match='action must conform to action_space'):
+        sample_data['action'] = sample_data['action'][:-1]
+        s = Sample(**sample_data)
+        del s
+
+
+def test_reward_dtype_mismatch_sample(sample_data):
+    with pytest.raises(ValueError, match='Rewards must be type'):
+        sample_data['reward'] = []
+        s = Sample(**sample_data)
+        del s
+
+
+def test_terminal_dtype_mismatch_sample(sample_data):
+    with pytest.raises(ValueError, match='Terminal must be dtype bool'):
+        sample_data['terminal'] = []
+        s = Sample(**sample_data)
+        del s
+
+
+def test_agent_info_dtype_mismatch_sample(sample_data):
+    with pytest.raises(ValueError, match='Agent_info must be type'):
+        sample_data['agent_info'] = []
+        s = Sample(**sample_data)
+        del s
+
+
+def test_env_info_dtype_mismatch_sample(sample_data):
+    with pytest.raises(ValueError, match='Env_info must be type'):
+        sample_data['env_info'] = []
+        s = Sample(**sample_data)
+        del s
+
+
+# ========================================================================== #
