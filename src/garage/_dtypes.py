@@ -180,7 +180,7 @@ class Sample(
             'agent_info',
         ])):
     # pylint: disable=missing-return-doc, missing-return-type-doc, missing-param-doc, missing-type-doc  # noqa: E501
-    r"""A tuple representing a batch of whole trajectories.
+    r"""A tuple representing a single sample.
 
     A :class:`Sample` represents a single sample when an agent interacts with
         an environment.
@@ -254,3 +254,40 @@ class Sample(
         return super().__new__(Sample, env_spec, observation, action, reward,
                                next_observation, terminal, env_info,
                                agent_info)
+
+
+class SamplesBatch(collections.namedtuple('SamplesBatch', [
+        'samples',
+])):
+    # pylint: disable=missing-return-doc, missing-return-type-doc, missing-param-doc, missing-type-doc, bad-docstring-quotes  # noqa: E501
+    r"""A tuple representing a batch of samples. # noqa: 410 411
+
+    A :class:`SampleBatch` represents a batch of :class:`Sample`s when
+        an agent interacts with an environment.
+
+    Attributes:
+        samples(list): an array of :class:`Sample`s that are
+            collected when an agent makes multiple interactions with
+            its environment.
+    Raises:
+        ValueError: If any of the above attributes do not conform to their
+            prescribed types.
+
+    """
+
+    def __new__(cls, samples):  # noqa: D102
+        if not isinstance(samples, list):
+            raise ValueError('Samples must be of type {}, but got argument of '
+                             'type {} instead.'.format(list, type(samples)))
+
+        if len(samples) == 0:
+            raise ValueError('samples must contain at least 1 element '
+                             'but got list of size 0.')
+
+        first_sample = samples[0]
+        if not isinstance(first_sample, Sample):
+            raise ValueError('samples should be of type garage.Sample but got '
+                             'argument of {} instead.'.format(
+                                 type(first_sample)))
+
+        return super().__new__(SamplesBatch, tuple(samples))

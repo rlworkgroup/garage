@@ -3,6 +3,7 @@ import numpy as np
 import pytest
 
 from garage import Sample
+from garage import SamplesBatch
 from garage import TrajectoryBatch
 from garage.envs import EnvSpec
 
@@ -266,6 +267,39 @@ def test_env_info_dtype_mismatch_sample(sample_data):
         sample_data['env_info'] = []
         s = Sample(**sample_data)
         del s
+
+
+# ========================================================================== #
+
+
+# =============================SamplesBatch-Test============================ #
+def test_new_sample_batch(sample_data):
+    samples_batch = [Sample(**sample_data)] * 5
+    ret = SamplesBatch(samples_batch)
+    for i in range(5):
+        assert samples_batch[i] == ret.samples[i]
+
+
+def test_new_empty_sample_batch():
+    with pytest.raises(ValueError,
+                       match='samples must contain at least 1 element'):
+        samples_batch = []
+        SamplesBatch(samples_batch)
+
+
+def test_new_sample_batch_dtype(sample_data):
+    with pytest.raises(ValueError, match='Samples must be of type'):
+        samples_batch = [Sample(**sample_data)] * 5
+        samples_batch = tuple(samples_batch)
+        SamplesBatch(samples_batch)
+
+
+def test_new_sample_batch_element_dtype():
+    with pytest.raises(
+            ValueError,
+            match='samples should be of type garage.Sample but got'):
+        samples_batch = [1, 2]
+        SamplesBatch(samples_batch)
 
 
 # ========================================================================== #
