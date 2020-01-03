@@ -148,7 +148,19 @@ class GarageEnv(gym.Wrapper):
                 debugging, and sometimes learning)
 
         """
-        return self.env.step(action)
+        observation, reward, done, info = self.env.step(action)
+        # gym envs that are wrapped in TimeLimit wrapper modify
+        # the done/termination signal to be true whenever a time
+        # limit expiration occurs. The following statement sets
+        # the done signal to be True only if caused by an
+        # environment termination, and not a time limit
+        # termination. The time limit termination signal
+        # will be saved inside env_infos as
+        # 'GarageEnv.TimeLimitTerminated'
+        if 'TimeLimit.truncated' in info:
+            info['GarageEnv.TimeLimitTerminated'] = done  # done = True always
+            done = not info['TimeLimit.truncated']
+        return observation, reward, done, info
 
     def __getstate__(self):
         """See `Object.__getstate__.
