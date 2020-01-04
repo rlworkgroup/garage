@@ -1,6 +1,7 @@
 """Samplers which run agents in environments."""
 
 from garage.sampler.batch_sampler import BatchSampler
+from garage.sampler.in_place_sampler import InPlaceSampler
 from garage.sampler.is_sampler import ISSampler
 from garage.sampler.local_sampler import LocalSampler
 from garage.sampler.off_policy_vectorized_sampler import (

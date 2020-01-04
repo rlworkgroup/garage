@@ -13,7 +13,8 @@ def rollout(env,
             max_path_length=np.inf,
             animated=False,
             speedup=1,
-            deterministic=False):
+            deterministic=False,
+            accum_context=True):
     """Sample a single rollout of the agent in the environment.
 
     Args:
@@ -27,6 +28,7 @@ def rollout(env,
         deterministic (bool): If true, use the mean action returned by the
             stochastic policy instead of sampling from the returned action
             distribution.
+        accum_context (bool): If true, update agent's current context.
 
     Returns:
         dict[str, np.ndarray or dict]: Dictionary, with keys:
@@ -63,6 +65,9 @@ def rollout(env,
         if deterministic and 'mean' in agent_infos:
             a = agent_info['mean']
         next_o, r, d, env_info = env.step(a)
+        # update the agent's current context
+        if accum_context:
+            agent.update_context([o, a, r, next_o, d, env_info])
         observations.append(o)
         rewards.append(r)
         actions.append(a)

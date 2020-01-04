@@ -50,6 +50,7 @@ class DeterministicMLPPolicy(Policy, MLPModule):
                         distribution
 
         """
+        observation = torch.Tensor(observation)
         with torch.no_grad():
             x = self.forward(torch.Tensor(observation).unsqueeze(0))
             return x.squeeze(0).numpy(), dict()
@@ -69,6 +70,7 @@ class DeterministicMLPPolicy(Policy, MLPModule):
                         distribution
 
         """
+        observations = torch.Tensor(observations)
         with torch.no_grad():
             x = self.forward(torch.Tensor(observations))
             return x.numpy(), dict()
