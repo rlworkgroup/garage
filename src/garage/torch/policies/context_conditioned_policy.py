@@ -7,7 +7,7 @@ Code is adapted from https://github.com/katerakelly/oyster.
 """
 
 import torch
-from torch import nn as nn
+from torch import nn
 import torch.nn.functional as F
 
 from garage.torch.utils import np_to_torch

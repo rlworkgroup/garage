@@ -2,7 +2,7 @@
 """A recurrent network with LSTM for encoding context of RL tasks."""
 
 import torch
-from torch import nn as nn
+from torch import nn
 
 from garage.torch.modules import MLPModule
 
