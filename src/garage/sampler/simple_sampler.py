@@ -1,7 +1,8 @@
 ''' Generic sampler can be used with all RL algos #TODO: avnishna update description'''
-# from garage.sampler.base import BaseSampler
-
-class SimpleSampler(BaseSampler):
+from garage.sampler.sampler import Sampler
+import numpy as np
+import time 
+class SimpleSampler(Sampler):
     """Generic sampler used for off policy sampling
 
     Args:

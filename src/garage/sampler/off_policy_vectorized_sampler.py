@@ -29,7 +29,7 @@ class OffPolicyVectorizedSampler(BatchSampler):
 
     """
 
-    def __init__(self, algo, env, n_envs=None, no_reset=True):
+    def __init__(self, algo, env, n_envs=1, no_reset=False):
         if n_envs is None:
             n_envs = int(algo.rollout_batch_size)
         super().__init__(algo, env)
