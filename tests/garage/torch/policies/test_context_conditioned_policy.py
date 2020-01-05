@@ -72,6 +72,9 @@ class TestContextConditionedPolicy:
         module.sample_from_belief()
         assert all([a == b for a, b in zip(module.z.shape, expected_shape)])
 
+        module.detach_z()
+        assert module.z.requires_grad is False
+
         context_dict = {}
         context_dict['observation'] = np.ones(obs_dim)
         context_dict['action'] = np.ones(action_dim)
@@ -87,10 +90,16 @@ class TestContextConditionedPolicy:
         module.infer_posterior(context)
         assert all([a == b for a, b in zip(module.z.shape, expected_shape)])
 
-        # t, b = 1, 2
-        # obs = torch.randn((t, b, obs_dim), dtype=torch.float32)
-        # policy_output, task_z_out = module.forward(obs, context)
+        t, b = 1, 2
+        obs = torch.randn((t, b, obs_dim), dtype=torch.float32)
+        policy_output, task_z_out = module.forward(obs, context)
+        assert policy_output is not None
+        expected_shape = [b, latent_dim]
+        assert all([a == b for a, b in zip(task_z_out.shape, expected_shape)])
 
         obs = torch.randn(obs_dim)
         action = module.get_action(obs)
         assert len(action) == action_dim
+
+        kl_div = module.compute_kl_div()
+        assert kl_div != 0

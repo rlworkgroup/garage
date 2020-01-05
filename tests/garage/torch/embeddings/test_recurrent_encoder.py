@@ -24,7 +24,7 @@ class TestRecurrentEncoder:
     # yapf: enable
     def test_module(self, input_dim, output_dim, hidden_sizes, num_tasks,
                     num_seq):
-        """Test forward method."""
+        """Test module methods."""
         input_val = torch.ones((num_tasks, num_seq, input_dim),
                                dtype=torch.float32)
         # last hidden size should match output size
@@ -35,12 +35,20 @@ class TestRecurrentEncoder:
                                   hidden_sizes=hidden_sizes,
                                   hidden_w_init=nn.init.ones_,
                                   output_w_init=nn.init.ones_)
-        module.reset(num_tasks=num_tasks)
-        output = module(input_val)
 
+        expected_hidden = torch.zeros(1, 1, hidden_sizes[-1])
+        assert torch.all(torch.eq(module.hidden, expected_hidden))
+
+        module.reset(num_tasks=num_tasks)
+        expected_hidden = torch.zeros(1, num_tasks, hidden_sizes[-1])
+        assert torch.all(torch.eq(module.hidden, expected_hidden))
+
+        module.detach_hidden()
+        assert module.hidden.requires_grad is False
+
+        output = module(input_val)
         # maps input of shape (task, seq, input_dim) to (task, 1, output_dim)
         expected_shape = [num_tasks, 1, output_dim]
-
         assert all([a == b for a, b in zip(output.shape, expected_shape)])
 
     # yapf: disable
