@@ -16,6 +16,8 @@ def test_obtain_samples():
 
     sampler = InPlaceSampler(env, policy, max_path_length)
 
+    sampler.start_worker()
+
     paths, steps = sampler.obtain_samples(max_samples=max_samples,
                                           max_trajs=max_trajs,
                                           accum_context=False)
@@ -32,3 +34,5 @@ def test_obtain_samples():
     assert path_length == max_path_length
     assert total_steps == max_samples
     assert steps == max_samples
+
+    sampler.shutdown_worker()
