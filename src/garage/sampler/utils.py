@@ -52,10 +52,12 @@ def rollout(env,
     observations = []
     actions = []
     rewards = []
+    terminals = []
     agent_infos = []
     env_infos = []
     dones = []
     o = env.reset()
+    next_o = None
     agent.reset()
     path_length = 0
     if animated:
@@ -65,11 +67,12 @@ def rollout(env,
         if deterministic and 'mean' in agent_infos:
             a = agent_info['mean']
         next_o, r, d, env_info = env.step(a)
-        # update the agent's current context
         if accum_context:
             agent.update_context([o, a, r, next_o, d, env_info])
+
         observations.append(o)
         rewards.append(r)
+        terminals.append(d)
         actions.append(a)
         agent_infos.append(agent_info)
         env_infos.append(env_info)
@@ -83,10 +86,21 @@ def rollout(env,
             timestep = 0.05
             time.sleep(timestep / speedup)
 
+    actions = np.array(actions)
+    if len(actions.shape) == 1:
+        actions = np.expand_dims(actions, 1)
+    observations = np.array(observations)
+    if len(observations.shape) == 1:
+        observations = np.expand_dims(observations, 1)
+        next_o = np.array([next_o])
+    next_observations = np.vstack(
+        (observations[1:, :], np.expand_dims(next_o, 0)))
     return dict(
         observations=np.array(observations),
         actions=np.array(actions),
         rewards=np.array(rewards),
+        next_observations=next_observations,
+        terminals=np.array(terminals).reshape(-1, 1),
         agent_infos=tensor_utils.stack_tensor_dict_list(agent_infos),
         env_infos=tensor_utils.stack_tensor_dict_list(env_infos),
         dones=np.array(dones),

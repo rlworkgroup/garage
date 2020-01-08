@@ -5,7 +5,9 @@ from garage.sampler.utils import rollout
 
 
 class InPlaceSampler:
-    """A sampler that just uses the current policy and environment as-is.
+    """A sampler used in meta-RL algorithms involving context.
+
+    It stores context and resample belief in the policy every step.
 
     Args:
         env (garage.envs.GarageEnv): An environement instance.
@@ -64,7 +66,7 @@ class InPlaceSampler:
             n_steps_total += len(path['observations'])
             n_trajs += 1
 
-            # resample z evert transition
+            # resample z every transition
             if accum_context and n_trajs % resample == 0:
                 self.policy.sample_from_belief()
         return paths, n_steps_total
