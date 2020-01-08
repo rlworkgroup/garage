@@ -39,7 +39,7 @@ jobs:
       env: JOB_RUN_CMD="make ci-job-large"
     - name: "Verify conda and pipenv installations"
       env: JOB_RUN_CMD="make ci-job-verify-envs"
-    - if: type = cron
+    - if: type = cron AND false  # See https://github.com/rlworkgroup/garage/issues/1122
       name: "Nightly tests"
       env: JOB_RUN_CMD="make ci-job-nightly"
     # special deploy stage for tag builds ONLY
