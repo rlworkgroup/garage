@@ -1,3 +1,4 @@
+# pylint: disable=unnecessary-pass
 """A sampler that does not perform serialization for sampling."""
 import numpy as np
 

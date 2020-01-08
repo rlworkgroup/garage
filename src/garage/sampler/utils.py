@@ -14,7 +14,7 @@ def rollout(env,
             animated=False,
             speedup=1,
             deterministic=False,
-            accum_context=True):
+            accum_context=False):
     """Sample a single rollout of the agent in the environment.
 
     Args:
@@ -86,17 +86,12 @@ def rollout(env,
             timestep = 0.05
             time.sleep(timestep / speedup)
 
-    actions = np.array(actions)
-    if len(actions.shape) == 1:
-        actions = np.expand_dims(actions, 1)
     observations = np.array(observations)
-    if len(observations.shape) == 1:
-        observations = np.expand_dims(observations, 1)
-        next_o = np.array([next_o])
-    next_observations = np.vstack(
-        (observations[1:, :], np.expand_dims(next_o, 0)))
+    next_o = np.array([next_o])
+    next_observations = np.concatenate((observations[1:], next_o))
+
     return dict(
-        observations=np.array(observations),
+        observations=observations,
         actions=np.array(actions),
         rewards=np.array(rewards),
         next_observations=next_observations,
