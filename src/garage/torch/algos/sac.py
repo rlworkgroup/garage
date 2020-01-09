@@ -31,7 +31,6 @@ class SAC(OffPolicyRLAlgorithm):
                  qf2,
                  replay_buffer,
                  gradient_steps_per_itr,
-                 batch_sampling=True,
                  alpha=None,
                  target_entropy=None,
                  initial_log_entropy=0.,
@@ -45,9 +44,6 @@ class SAC(OffPolicyRLAlgorithm):
                  qf_lr=3e-4,
                  reward_scale=1.0,
                  optimizer=torch.optim.Adam,
-                 clip_pos_returns=False,
-                 clip_return=np.inf,
-                 max_action=None,
                  smooth_return=True,
                  input_include_goal=False):
 
@@ -60,8 +56,6 @@ class SAC(OffPolicyRLAlgorithm):
         self.qf_lr = qf_lr
         self.initial_log_entropy = initial_log_entropy
         self.gradient_steps = gradient_steps_per_itr
-        self.clip_pos_returns = clip_pos_returns
-        self.clip_return = clip_return
         self.evaluate = False
         self.input_include_goal = input_include_goal
 
@@ -114,7 +108,7 @@ class SAC(OffPolicyRLAlgorithm):
         """
         def train_helper(runner, batch_size):
             runner.step_path = runner.obtain_samples(runner.step_itr, batch_size)
-            tabular.record("buffer_size", self.replay_buffer.n_transitions_stored)
+            # tabular.record("buffer_size", self.replay_buffer.n_transitions_stored)
             last_return = self.train_once(runner.step_itr,
                                             runner.step_path)
             runner.step_itr += 1
@@ -136,11 +130,11 @@ class SAC(OffPolicyRLAlgorithm):
         temp_paths = paths
         paths = self.process_samples(itr, paths)
         #====================logging returns stats=============================#
-        rewards = temp_paths[0]["rewards"]
-        tabular.record("rewards/avg", np.mean(rewards))
-        tabular.record("rewards/std", np.std(rewards))
-        tabular.record("rewards/min", np.min(rewards))
-        tabular.record("rewards/max", np.max(rewards))
+        # rewards = temp_paths[0]["rewards"]
+        # tabular.record("rewards/avg", np.mean(rewards))
+        # tabular.record("rewards/std", np.std(rewards))
+        # tabular.record("rewards/min", np.min(rewards))
+        # tabular.record("rewards/max", np.max(rewards))
         #=======================================================================#
 
         self.episode_rewards.extend([
@@ -230,28 +224,28 @@ class SAC(OffPolicyRLAlgorithm):
 
         # ================update q functions===============#
         qf1_loss, qf2_loss = self.critic_objective(samples)
-        if(self.gradient_steps == 1):
-            tabular.record("qf_loss/{}".format("qf1_loss"), float(qf1_loss))
-            tabular.record("qf_loss/{}".format("qf2_loss"), float(qf2_loss))
-        elif ((gradient_step % (self.gradient_steps - 1) == 0) and gradient_step != 0):
-            tabular.record("qf_loss/{}".format("qf1_loss"), float(qf1_loss))
-            tabular.record("qf_loss/{}".format("qf2_loss"), float(qf2_loss))
+        # if(self.gradient_steps == 1):
+        #     tabular.record("qf_loss/{}".format("qf1_loss"), float(qf1_loss))
+        #     tabular.record("qf_loss/{}".format("qf2_loss"), float(qf2_loss))
+        # elif ((gradient_step % (self.gradient_steps - 1) == 0) and gradient_step != 0):
+        tabular.record("qf_loss/{}".format("qf1_loss"), float(qf1_loss))
+        tabular.record("qf_loss/{}".format("qf2_loss"), float(qf2_loss))
         self.qf1_optimizer.zero_grad()
         qf1_loss.backward()
-        # for name, param in self.qf1.named_parameters():
-        #     if param.requires_grad and (param.grad is not None):
-        #         tabular.record("qf1_grads/{}".format(name), float(param.grad.norm()))
-        #         tabular.record("qf2_grads_max/{}".format(name), float(param.grad.max()))
-        #         tabular.record("qf2_grads_min/{}".format(name), float(param.grad.min()))
+        for name, param in self.qf1.named_parameters():
+            if param.requires_grad and (param.grad is not None):
+                tabular.record("qf1_grads/{}".format(name), float(param.grad.norm()))
+                tabular.record("qf2_grads_max/{}".format(name), float(param.grad.max()))
+                tabular.record("qf2_grads_min/{}".format(name), float(param.grad.min()))
         self.qf1_optimizer.step()
         
         self.qf2_optimizer.zero_grad()
         qf2_loss.backward()
-        # for name, param in self.qf2.named_parameters():
-        #     if param.requires_grad and (param.grad is not None):
-        #         tabular.record("qf2_grads/{}".format(name), float(param.grad.norm()))
-        #         tabular.record("qf2_grads_max/{}".format(name), float(param.grad.max()))
-        #         tabular.record("qf2_grads_min/{}".format(name), float(param.grad.min()))
+        for name, param in self.qf2.named_parameters():
+            if param.requires_grad and (param.grad is not None):
+                tabular.record("qf2_grads/{}".format(name), float(param.grad.norm()))
+                tabular.record("qf2_grads_max/{}".format(name), float(param.grad.max()))
+                tabular.record("qf2_grads_min/{}".format(name), float(param.grad.min()))
         self.qf2_optimizer.step()
         #===================================================#
 
@@ -278,11 +272,11 @@ class SAC(OffPolicyRLAlgorithm):
         policy_loss = self.actor_objective(obs, log_pi, new_actions)
         self.policy_optimizer.zero_grad()
         policy_loss.backward()
-        # for name, param in self.policy.named_parameters():
-        #     if param.requires_grad and (param.grad is not None):
-        #         tabular.record("policy_grads/{}".format(name), float(param.grad.norm()))
-        #         tabular.record("policy_grads_max/{}".format(name), float(param.grad.max()))
-        #         tabular.record("policy_grads_min/{}".format(name), float(param.grad.min()))
+        for name, param in self.policy.named_parameters():
+            if param.requires_grad and (param.grad is not None):
+                tabular.record("policy_grads/{}".format(name), float(param.grad.norm()))
+                tabular.record("policy_grads_max/{}".format(name), float(param.grad.max()))
+                tabular.record("policy_grads_min/{}".format(name), float(param.grad.min()))
 
         self.policy_optimizer.step()
         if(self.gradient_steps == 1):
