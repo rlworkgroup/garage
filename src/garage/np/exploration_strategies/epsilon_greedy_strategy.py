@@ -1,5 +1,4 @@
-"""
-ϵ-greedy exploration strategy.
+"""ϵ-greedy exploration strategy.
 
 Random exploration according to the value of epsilon.
 """
@@ -9,8 +8,7 @@ from garage.np.exploration_strategies.base import ExplorationStrategy
 
 
 class EpsilonGreedyStrategy(ExplorationStrategy):
-    """
-    ϵ-greedy exploration strategy.
+    """ϵ-greedy exploration strategy.
 
     Select action based on the value of ϵ. ϵ will decrease from
     max_epsilon to min_epsilon within decay_ratio * total_timesteps.
@@ -26,6 +24,7 @@ class EpsilonGreedyStrategy(ExplorationStrategy):
         max_epsilon (float): The maximum(starting) value of epsilon.
         min_epsilon (float): The minimum(terminal) value of epsilon.
         decay_ratio (float): Fraction of total steps for epsilon decay.
+
     """
 
     def __init__(self,
@@ -44,19 +43,20 @@ class EpsilonGreedyStrategy(ExplorationStrategy):
                            self._min_epsilon) / self._decay_period
 
     def get_action(self, t, observation, policy, **kwargs):
-        """
-        Get action from this policy for the input observation.
+        """Get action from this policy for the input observation.
 
         Args:
-            t: Iteration.
-            observation: Observation from the environment.
-            policy: Policy network to predict action based on the observation.
+            t (int): Iteration.
+            observation (numpy.ndarray): Observation from the environment.
+            policy (garage.tf.policies.base.Policy): Policy network to
+                predict action based on the observation.
+            kwargs (dict): Unused here.
 
         Returns:
             opt_action: optimal action from this policy.
 
         """
-        opt_action = policy.get_action(observation)
+        opt_action, _ = policy.get_action(observation)
         self._decay()
         if np.random.random() < self._epsilon:
             opt_action = self._action_space.sample()
@@ -64,20 +64,21 @@ class EpsilonGreedyStrategy(ExplorationStrategy):
         return opt_action, dict()
 
     def get_actions(self, t, observations, policy, **kwargs):
-        """
-        Get actions from this policy for the input observations.
+        """Get actions from this policy for the input observations.
 
         Args:
-            t: Iteration.
-            observation: Observation from the environment.
-            policy: Policy network to predict action based on the observation.
+            t (int): Iteration.
+            observations (numpy.ndarray): Observation from the environment.
+            policy (garage.tf.policies.base.Policy): Policy network to
+                predict action based on the observation.
+            kwargs (dict): Unused here.
 
         Returns:
             opt_action: optimal actions from this policy.
 
         """
-        opt_actions = policy.get_actions(observations)
-        for itr in range(len(opt_actions)):
+        opt_actions, _ = policy.get_actions(observations)
+        for itr, _ in enumerate(opt_actions):
             self._decay()
             if np.random.random() < self._epsilon:
                 opt_actions[itr] = self._action_space.sample()

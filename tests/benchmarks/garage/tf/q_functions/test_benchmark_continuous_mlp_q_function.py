@@ -1,3 +1,4 @@
+"""Benchmark for continuous MLP Q function."""
 import datetime
 import os
 import os.path as osp
@@ -42,10 +43,13 @@ num_of_trials = 5
 
 
 class TestBenchmarkContinuousMLPQFunction:
-    '''Benchmark ContinuousMLPQFunction.'''
+    # pylint: disable=too-few-public-methods
+    """Benchmark ContinuousMLPQFunction."""
 
     @pytest.mark.huge
     def test_benchmark_continuous_mlp_q_function(self):
+        # pylint: disable=no-self-use
+        """Test Continuous MLP QFunction Benchmarking."""
         mujoco1m = benchmarks.get_benchmark('Mujoco1M')
 
         timestamp = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f')
@@ -79,7 +83,7 @@ class TestBenchmarkContinuousMLPQFunction:
             Rh.relplot(g_csvs=garage_csvs,
                        b_csvs=[],
                        g_x='Epoch',
-                       g_y='AverageReturn',
+                       g_y='Evaluation/AverageReturn',
                        g_z='Garage',
                        b_x=None,
                        b_y=None,
@@ -89,18 +93,23 @@ class TestBenchmarkContinuousMLPQFunction:
                        plt_file=plt_file,
                        env_id=env_id,
                        x_label='Iteration',
-                       y_label='AverageReturn')
+                       y_label='Evaluation/AverageReturn')
 
 
 def run_garage(env, seed, log_dir):
-    '''
-    Create garage model and training.
+    """Create garage model and training.
+
     Replace the ddpg with the algorithm you want to run.
-    :param env: Environment of the task.
-    :param seed: Random seed for the trial.
-    :param log_dir: Log dir path.
-    :return:
-    '''
+
+    Args:
+        env (gym.Env): Environment of the task.
+        seed (int): Random seed for the trial.
+        log_dir (str): Log dir path.
+
+    Returns:
+        str: Log file path.
+
+    """
     deterministic.set_seed(seed)
     config = tf.ConfigProto(allow_soft_placement=True,
                             intra_op_parallelism_threads=12,

@@ -101,11 +101,12 @@ class TestBenchmarkVPG:
             env.close()
 
             benchmark_helper.plot_average_over_trials(
-                [garage_tf_csvs, garage_pytorch_csvs], ['AverageReturn'] * 2,
+                [garage_tf_csvs, garage_pytorch_csvs],
+                ['Evaluation/AverageReturn'] * 2,
                 plt_file=plt_file,
                 env_id=env_id,
                 x_label='Iteration',
-                y_label='AverageReturn',
+                y_label='Evaluation/AverageReturn',
                 names=['garage-TensorFlow', 'garage-PyTorch'])
 
             result_json[env_id] = benchmark_helper.create_json(
@@ -113,7 +114,7 @@ class TestBenchmarkVPG:
                 seeds=seeds,
                 trials=hyper_parameters['n_trials'],
                 xs=['Iteration'] * 2,
-                ys=['AverageReturn'] * 2,
+                ys=['Evaluation/AverageReturn'] * 2,
                 factors=[hyper_parameters['batch_size']] * 2,
                 names=['garage-tf', 'garage-pytorch'])
 

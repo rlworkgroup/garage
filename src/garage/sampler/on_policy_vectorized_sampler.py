@@ -83,6 +83,7 @@ class OnPolicyVectorizedSampler(BatchSampler):
                   [Batch, ?]. One example is "prev_action", which is used
                   for recurrent policy as previous action input, merged with
                   the observation input as the state input.
+                * dones: numpy.ndarray with shape [Batch, ]
 
         """
         logger.log('Obtaining samples for iteration %d...' % itr)
@@ -125,18 +126,18 @@ class OnPolicyVectorizedSampler(BatchSampler):
                     itertools.count(), obses, actions, rewards, env_infos,
                     agent_infos, dones):
                 if running_paths[idx] is None:
-                    running_paths[idx] = dict(
-                        observations=[],
-                        actions=[],
-                        rewards=[],
-                        env_infos=[],
-                        agent_infos=[],
-                    )
+                    running_paths[idx] = dict(observations=[],
+                                              actions=[],
+                                              rewards=[],
+                                              env_infos=[],
+                                              agent_infos=[],
+                                              dones=[])
                 running_paths[idx]['observations'].append(observation)
                 running_paths[idx]['actions'].append(action)
                 running_paths[idx]['rewards'].append(reward)
                 running_paths[idx]['env_infos'].append(env_info)
                 running_paths[idx]['agent_infos'].append(agent_info)
+                running_paths[idx]['dones'].append(done)
                 if done:
                     obs = np.asarray(running_paths[idx]['observations'])
                     actions = np.asarray(running_paths[idx]['actions'])
@@ -147,7 +148,8 @@ class OnPolicyVectorizedSampler(BatchSampler):
                              env_infos=tensor_utils.stack_tensor_dict_list(
                                  running_paths[idx]['env_infos']),
                              agent_infos=tensor_utils.stack_tensor_dict_list(
-                                 running_paths[idx]['agent_infos'])))
+                                 running_paths[idx]['agent_infos']),
+                             dones=np.asarray(running_paths[idx]['dones'])))
                     n_samples += len(running_paths[idx]['rewards'])
                     running_paths[idx] = None
 

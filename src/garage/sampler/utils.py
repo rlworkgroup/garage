@@ -44,6 +44,7 @@ def rollout(env,
                 non-flattened `agent_info` arrays.
             * env_infos(Dict[str, np.array]): Dictionary of stacked,
                 non-flattened `env_info` arrays.
+            * dones(np.array): Array of termination signals.
 
     """
     observations = []
@@ -51,6 +52,7 @@ def rollout(env,
     rewards = []
     agent_infos = []
     env_infos = []
+    dones = []
     o = env.reset()
     agent.reset()
     path_length = 0
@@ -58,7 +60,7 @@ def rollout(env,
         env.render()
     while path_length < max_path_length:
         a, agent_info = agent.get_action(o)
-        if deterministic:
+        if deterministic and 'mean' in agent_infos:
             a = agent_info['mean']
         next_o, r, d, env_info = env.step(a)
         observations.append(o)
@@ -66,6 +68,7 @@ def rollout(env,
         actions.append(a)
         agent_infos.append(agent_info)
         env_infos.append(env_info)
+        dones.append(d)
         path_length += 1
         if d:
             break
@@ -81,6 +84,7 @@ def rollout(env,
         rewards=np.array(rewards),
         agent_infos=tensor_utils.stack_tensor_dict_list(agent_infos),
         env_infos=tensor_utils.stack_tensor_dict_list(env_infos),
+        dones=np.array(dones),
     )
 
 
