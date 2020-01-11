@@ -1,3 +1,4 @@
+"""An environment wrapper that normalizes action, observation and reward."""
 import gym
 import gym.spaces
 import gym.spaces.utils
@@ -5,6 +6,25 @@ import numpy as np
 
 
 class NormalizedEnv(gym.Wrapper):
+    """An environment wrapper for normalization.
+
+    This wrapper normalizes action, and optionally observation and reward.
+
+    Args:
+        env (garage.envs.GarageEnv): An environment instance.
+        scale_reward (float): Scale of environment reward.
+        normalize_obs (bool): If True, normalize observation.
+        normalize_reward (bool): If True, normalize reward. scale_reward is
+            applied after normalization.
+        expected_action_scale (float): Assuming action falls in the range of
+            [-expected_action_scale, expected_action_scale] when normalize it.
+        flatten_obs (bool): Flatten observation if True.
+        obs_alpha (float): Update rate of moving average when estimating the
+            mean and variance of observations.
+        reward_alpha (float): Update rate of moving average when estimating the
+            mean and variance of rewards.
+
+    """
 
     def __init__(
             self,
@@ -12,6 +32,7 @@ class NormalizedEnv(gym.Wrapper):
             scale_reward=1.,
             normalize_obs=False,
             normalize_reward=False,
+            expected_action_scale=1.,
             flatten_obs=True,
             obs_alpha=0.001,
             reward_alpha=0.001,
@@ -21,6 +42,7 @@ class NormalizedEnv(gym.Wrapper):
         self._scale_reward = scale_reward
         self._normalize_obs = normalize_obs
         self._normalize_reward = normalize_reward
+        self._expected_action_scale = expected_action_scale
         self._flatten_obs = flatten_obs
 
         self._obs_alpha = obs_alpha
@@ -49,6 +71,15 @@ class NormalizedEnv(gym.Wrapper):
             reward - self._reward_mean)
 
     def _apply_normalize_obs(self, obs):
+        """Compute normalized observation.
+
+        Args:
+            obs (np.ndarray): Observation.
+
+        Returns:
+            np.ndarray: Normalized observation.
+
+        """
         self._update_obs_estimate(obs)
         flat_obs = gym.spaces.utils.flatten(self.env.observation_space, obs)
         normalized_obs = (flat_obs -
@@ -59,10 +90,33 @@ class NormalizedEnv(gym.Wrapper):
         return normalized_obs
 
     def _apply_normalize_reward(self, reward):
+        """Compute normalized reward.
+
+        Args:
+            reward (float): Reward.
+
+        Returns:
+            float: Normalized reward.
+
+        """
         self._update_reward_estimate(reward)
         return reward / (np.sqrt(self._reward_var) + 1e-8)
 
     def reset(self, **kwargs):
+        """Reset environment.
+
+        Args:
+            **kwargs: Additional parameters for reset.
+
+        Returns:
+            tuple:
+                * observation (np.ndarray): The observation of the environment.
+                * reward (float): The reward acquired at this time step.
+                * done (boolean): Whether the environment was completed at this
+                    time step.
+                * infos (dict): Environment-dependent additional information.
+
+        """
         ret = self.env.reset(**kwargs)
         if self._normalize_obs:
             return self._apply_normalize_obs(ret)
@@ -70,11 +124,26 @@ class NormalizedEnv(gym.Wrapper):
             return ret
 
     def step(self, action):
+        """Feed environment with one step of action and get result.
+
+        Args:
+            action (np.ndarray): An action fed to the environment.
+
+        Returns:
+            tuple:
+                * observation (np.ndarray): The observation of the environment.
+                * reward (float): The reward acquired at this time step.
+                * done (boolean): Whether the environment was completed at this
+                    time step.
+                * infos (dict): Environment-dependent additional information.
+
+        """
         if isinstance(self.action_space, gym.spaces.Box):
             # rescale the action when the bounds are not inf
             lb, ub = self.action_space.low, self.action_space.high
             if np.all(lb != -np.inf) and np.all(ub != -np.inf):
-                scaled_action = lb + (action + 1.) * 0.5 * (ub - lb)
+                scaled_action = lb + (action + self._expected_action_scale) * (
+                    0.05 * (ub - lb))
                 scaled_action = np.clip(scaled_action, lb, ub)
             else:
                 scaled_action = action
@@ -89,15 +158,6 @@ class NormalizedEnv(gym.Wrapper):
             reward = self._apply_normalize_reward(reward)
 
         return next_obs, reward * self._scale_reward, done, info
-
-    def log_diagnostics(self, paths):
-        pass
-
-    def render(self, *args, **kwargs):
-        return self.env.render(*args, **kwargs)
-
-    def max_episode_steps(self):
-        return self.env.spec.max_episode_steps
 
 
 normalize = NormalizedEnv
