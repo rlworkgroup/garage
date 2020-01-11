@@ -131,54 +131,56 @@ class VPG(BatchPolopt):
                 * average_return: (float)
 
         """
-        valids, obs, actions, rewards = self.process_samples(itr, paths)
+        obs, actions, rewards, valids, baselines = self.process_samples(
+            itr, paths)
 
-        loss = self._compute_loss(itr, paths, valids, obs, actions, rewards)
+        loss = self._compute_loss(itr, obs, actions, rewards, valids,
+                                  baselines)
 
-        # Memorize the policy state_dict
         self._old_policy.load_state_dict(self.policy.state_dict())
 
         self._optimizer.zero_grad()
         loss.backward()
 
         kl_before = self._compute_kl_constraint(obs).detach()
-        self._optimize(itr, paths, valids, obs, actions, rewards)
+        self._optimize(itr, obs, actions, rewards, valids, baselines)
 
         with torch.no_grad():
-            loss_after = self._compute_loss(itr, paths, valids, obs, actions,
-                                            rewards)
+            loss_after = self._compute_loss(itr, obs, actions, rewards, valids,
+                                            baselines)
             kl = self._compute_kl_constraint(obs)
             policy_entropy = self._compute_policy_entropy(obs)
-            average_return = self._log(itr, paths, loss.item(),
-                                       loss_after.item(), kl_before.item(),
-                                       kl.item(),
-                                       policy_entropy.mean().item())
+            average_return = self.evaluate_performance(
+                itr, {
+                    'paths': paths,
+                    'loss_before': loss.item(),
+                    'loss_after': loss_after.item(),
+                    'kl_before': kl_before.item(),
+                    'kl': kl.item(),
+                    'policy_entropy': policy_entropy.mean().item()
+                })
 
         self.baseline.fit(paths)
         return average_return
 
-    def _compute_loss(self, itr, paths, valids, obs, actions, rewards):
+    def _compute_loss(self, itr, obs, actions, rewards, valids, baselines):
         """Compute mean value of loss.
 
         Args:
             itr (int): Iteration number.
-            paths (list[dict]): A list of collected paths
-            valids (list[int]): Array of length of the valid values
             obs (torch.Tensor): Observation from the environment.
             actions (torch.Tensor): Predicted action.
             rewards (torch.Tensor): Feedback from the environment.
+            valids (list[int]): Array of length of the valid values.
+            baselines (torch.Tensor): Value function estimation at each step.
 
         Returns:
             torch.Tensor: Calculated mean value of loss
 
         """
-        # pylint: disable=unused-argument
-        policy_entropies = self._compute_policy_entropy(obs)
+        del itr
 
-        baselines = torch.stack([
-            pad_to_last(self._get_baselines(path),
-                        total_length=self.max_path_length) for path in paths
-        ])
+        policy_entropies = self._compute_policy_entropy(obs)
 
         if self._maximum_entropy:
             rewards += self._policy_ent_coeff * policy_entropies
@@ -260,8 +262,8 @@ class VPG(BatchPolopt):
         """Compute objective value.
 
         Args:
-            advantages (torch.Tensor): Expected rewards over the actions
-            valids (list[int]): Array of length of the valid values
+            advantages (torch.Tensor): Expected rewards over the actions.
+            valids (list[int]): Array of length of the valid values.
             obs (torch.Tensor): Observation from the environment.
             actions (torch.Tensor): Predicted action.
             rewards (torch.Tensor): Feedback from the environment.
@@ -289,7 +291,8 @@ class VPG(BatchPolopt):
             return torch.Tensor(self.baseline.predict_n(path))
         return torch.Tensor(self.baseline.predict(path))
 
-    def _optimize(self, itr, paths, valids, obs, actions, rewards):  # pylint: disable=unused-argument  # noqa: E501
+    def _optimize(self, itr, obs, actions, rewards, valids, baselines):
+        del itr, valids, obs, actions, rewards, baselines
         self._optimizer.step()
 
     def process_samples(self, itr, paths):
@@ -300,13 +303,19 @@ class VPG(BatchPolopt):
             paths (list[dict]): A list of collected paths
 
         Returns:
-            dict: Processed sample data, with key
-                * average_return: (float)
+            tuple:
+                * obs (torch.Tensor): The observations of the environment.
+                * actions (torch.Tensor): The actions fed to the environment.
+                * rewards (torch.Tensor): The acquired rewards.
+                * valids (list[int]): Numbers of valid steps in each paths.
+                * baselines (torch.Tensor): Value function estimation
+                    at each step.
 
         """
         for path in paths:
-            path['returns'] = tensor_utils.discount_cumsum(
-                path['rewards'], self.discount)
+            if 'returns' not in path:
+                path['returns'] = tensor_utils.discount_cumsum(
+                    path['rewards'], self.discount)
 
         valids = [len(path['actions']) for path in paths]
         obs = torch.stack([
@@ -323,26 +332,37 @@ class VPG(BatchPolopt):
             pad_to_last(path['rewards'], total_length=self.max_path_length)
             for path in paths
         ])
+        baselines = torch.stack([
+            pad_to_last(self._get_baselines(path),
+                        total_length=self.max_path_length) for path in paths
+        ])
 
-        return valids, obs, actions, rewards
+        return obs, actions, rewards, valids, baselines
 
-    def _log(self, itr, paths, loss_before, loss_after, kl_before, kl,
-             policy_entropy):
+    def evaluate_performance(self, itr, batch):
         """Log information per iteration based on the collected paths.
 
         Args:
             itr (int): Iteration number.
-            paths (list[dict]): A list of collected paths
-            loss_before (float): Loss before optimization step.
-            loss_after (float): Loss after optimization step.
-            kl_before (float): KL divergence before optimization step.
-            kl (float): KL divergence after optimization step.
-            policy_entropy (float): Policy entropy.
+            batch (dict):
+                * paths (list[dict]): A list of collected paths
+                * loss_before (float): Loss before optimization step.
+                * loss_after (float): Loss after optimization step.
+                * kl_before (float): KL divergence before optimization step.
+                * kl (float): KL divergence after optimization step.
+                * policy_entropy (float): Policy entropy.
 
         Returns:
             float: The average return in last epoch cycle.
 
         """
+        paths = batch['paths']
+        loss_before = batch['loss_before']
+        loss_after = batch['loss_after']
+        kl_before = batch['kl_before']
+        kl = batch['kl']
+        policy_entropy = batch['policy_entropy']
+
         average_discounted_return = (np.mean(
             [path['returns'][0] for path in paths]))
         undiscounted_returns = [sum(path['rewards']) for path in paths]
