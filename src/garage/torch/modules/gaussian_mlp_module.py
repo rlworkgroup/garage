@@ -3,15 +3,15 @@ import abc
 
 import torch
 from torch import nn
-from torch.distributions import MultivariateNormal
+from torch.distributions import Normal
+from torch.distributions.independent import Independent
 
 from garage.torch.modules.mlp_module import MLPModule
 from garage.torch.modules.multi_headed_mlp_module import MultiHeadedMLPModule
 
 
 class GaussianMLPBaseModule(nn.Module):
-    """
-    GaussianMLPModel.
+    """Base of GaussianMLPModel.
 
     Args:
         input_dim (int): Input dimension of the model.
@@ -40,10 +40,6 @@ class GaussianMLPBaseModule(nn.Module):
         learn_std (bool): Is std trainable.
         init_std (float): Initial value for std.
             (plain value - not log or exponentiated).
-        adaptive_std (bool): Is std a neural network. If False, it will be a
-            parameter.
-        std_share_network (bool): Boolean for whether mean and std share
-            the same network.
         std_hidden_sizes (list[int]): Output dimension of dense layer(s) for
             the MLP for std. For example, (32, 32) means the MLP consists
             of two hidden layers, each with 32 hidden units.
@@ -51,19 +47,24 @@ class GaussianMLPBaseModule(nn.Module):
             to avoid numerical issues (plain value - not log or exponentiated).
         max_std (float): If not None, the std is at most the value of max_std,
             to avoid numerical issues (plain value - not log or exponentiated).
-        std_hidden_nonlinearity: Nonlinearity for each hidden layer in
-            the std network.
+        std_hidden_nonlinearity (callable): Nonlinearity for each hidden layer
+            in the std network.
+        std_hidden_w_init (callable):  Initializer function for the weight
+            of hidden layer (s).
+        std_hidden_b_init (callable): Initializer function for the bias
+            of intermediate dense layer(s).
         std_output_nonlinearity (callable): Activation function for output
             dense layer in the std network. It should return a torch.Tensor.
             Set it to None to maintain a linear activation.
         std_output_w_init (callable): Initializer function for the weight
             of output dense layer(s) in the std network.
-        std_parametrization (str): How the std should be parametrized. There
+        std_parameterization (str): How the std should be parametrized. There
             are two options:
             - exp: the logarithm of the std will be stored, and applied a
-               exponential transformation
-            - softplus: the std will be computed as log(1+exp(x))
+               exponential transformation.
+            - softplus: the std will be computed as log(1+exp(x)).
         layer_normalization (bool): Bool for using layer normalization or not.
+
     """
 
     def __init__(self,
@@ -127,12 +128,20 @@ class GaussianMLPBaseModule(nn.Module):
             self._max_std_param = torch.Tensor([max_std]).log()
 
     @abc.abstractmethod
-    def _get_mean_and_log_std(self, inputs):
+    def _get_mean_and_log_std(self, *inputs):
         pass
 
-    def forward(self, inputs):
-        """Forward method."""
-        mean, log_std_uncentered = self._get_mean_and_log_std(inputs)
+    def forward(self, *inputs):
+        """Forward method.
+
+        Args:
+            *inputs: Input to the module.
+
+        Returns:
+            torch.Tensor: Module output.
+
+        """
+        mean, log_std_uncentered = self._get_mean_and_log_std(*inputs)
 
         if self._min_std_param or self._max_std_param:
             log_std_uncentered = log_std_uncentered.clamp(
@@ -144,17 +153,66 @@ class GaussianMLPBaseModule(nn.Module):
         else:
             std = log_std_uncentered.exp().exp().add(1.).log()
 
-        cov = (std**2).diag_embed()
-        dist = MultivariateNormal(mean, cov)
+        dist = Independent(Normal(mean, std), 1)
 
         return dist
 
+    # pylint: disable=no-self-use
     def _to_scalar_if_not_none(self, tensor):
+        """Convert torch.Tensor of a single value to a Python number.
+
+        Args:
+            tensor (torch.Tensor): A torch.Tensor of a single value.
+
+        Returns:
+            float: The value of tensor.
+
+        """
         return None if tensor is None else tensor.item()
 
 
 class GaussianMLPModule(GaussianMLPBaseModule):
-    """GaussianMLPModule that mean and std share the same network."""
+    """GaussianMLPModule that mean and std share the same network.
+
+    Args:
+        input_dim (int): Input dimension of the model.
+        output_dim (int): Output dimension of the model.
+        hidden_sizes (list[int]): Output dimension of dense layer(s) for
+            the MLP for mean. For example, (32, 32) means the MLP consists
+            of two hidden layers, each with 32 hidden units.
+        hidden_nonlinearity (callable): Activation function for intermediate
+            dense layer(s). It should return a torch.Tensor. Set it to
+            None to maintain a linear activation.
+        hidden_w_init (callable): Initializer function for the weight
+            of intermediate dense layer(s). The function should return a
+            torch.Tensor.
+        hidden_b_init (callable): Initializer function for the bias
+            of intermediate dense layer(s). The function should return a
+            torch.Tensor.
+        output_nonlinearity (callable): Activation function for output dense
+            layer. It should return a torch.Tensor. Set it to None to
+            maintain a linear activation.
+        output_w_init (callable): Initializer function for the weight
+            of output dense layer(s). The function should return a
+            torch.Tensor.
+        output_b_init (callable): Initializer function for the bias
+            of output dense layer(s). The function should return a
+            torch.Tensor.
+        learn_std (bool): Is std trainable.
+        init_std (float): Initial value for std.
+            (plain value - not log or exponentiated).
+        min_std (float): If not None, the std is at least the value of min_std,
+            to avoid numerical issues (plain value - not log or exponentiated).
+        max_std (float): If not None, the std is at most the value of max_std,
+            to avoid numerical issues (plain value - not log or exponentiated).
+        std_parameterization (str): How the std should be parametrized. There
+            are two options:
+            - exp: the logarithm of the std will be stored, and applied a
+               exponential transformation
+            - softplus: the std will be computed as log(1+exp(x))
+        layer_normalization (bool): Bool for using layer normalization or not.
+
+    """
 
     def __init__(self,
                  input_dim,
@@ -201,17 +259,83 @@ class GaussianMLPModule(GaussianMLPBaseModule):
             output_b_init=self._output_b_init,
             layer_normalization=self._layer_normalization)
 
-    def _get_mean_and_log_std(self, inputs):
-        mean = self._mean_module(inputs)
+    def _get_mean_and_log_std(self, *inputs):
+        """Get mean and std of Gaussian distribution given inputs.
 
-        broadcast_shape = list(inputs.shape[:-1]) + [self._action_dim]
+        Args:
+            *inputs: Input to the module.
+
+        Returns:
+            tuple:
+                * mean (torch.Tensor): The mean of Gaussian distribution.
+                * std (torch.Tensor): The variance of Gaussian distribution.
+
+        """
+        assert len(inputs) == 1
+        mean = self._mean_module(*inputs)
+
+        broadcast_shape = list(inputs[0].shape[:-1]) + [self._action_dim]
         uncentered_log_std = torch.zeros(*broadcast_shape) + self._init_std
 
         return mean, uncentered_log_std
 
 
 class GaussianMLPIndependentStdModule(GaussianMLPBaseModule):
-    """GaussianMLPModule which has two different mean and std network."""
+    """GaussianMLPModule which has two different mean and std network.
+
+    Args:
+        input_dim (int): Input dimension of the model.
+        output_dim (int): Output dimension of the model.
+        hidden_sizes (list[int]): Output dimension of dense layer(s) for
+            the MLP for mean. For example, (32, 32) means the MLP consists
+            of two hidden layers, each with 32 hidden units.
+        hidden_nonlinearity (callable): Activation function for intermediate
+            dense layer(s). It should return a torch.Tensor. Set it to
+            None to maintain a linear activation.
+        hidden_w_init (callable): Initializer function for the weight
+            of intermediate dense layer(s). The function should return a
+            torch.Tensor.
+        hidden_b_init (callable): Initializer function for the bias
+            of intermediate dense layer(s). The function should return a
+            torch.Tensor.
+        output_nonlinearity (callable): Activation function for output dense
+            layer. It should return a torch.Tensor. Set it to None to
+            maintain a linear activation.
+        output_w_init (callable): Initializer function for the weight
+            of output dense layer(s). The function should return a
+            torch.Tensor.
+        output_b_init (callable): Initializer function for the bias
+            of output dense layer(s). The function should return a
+            torch.Tensor.
+        learn_std (bool): Is std trainable.
+        init_std (float): Initial value for std.
+            (plain value - not log or exponentiated).
+        min_std (float): If not None, the std is at least the value of min_std,
+            to avoid numerical issues (plain value - not log or exponentiated).
+        max_std (float): If not None, the std is at most the value of max_std,
+            to avoid numerical issues (plain value - not log or exponentiated).
+        std_hidden_sizes (list[int]): Output dimension of dense layer(s) for
+            the MLP for std. For example, (32, 32) means the MLP consists
+            of two hidden layers, each with 32 hidden units.
+        std_hidden_nonlinearity (callable): Nonlinearity for each hidden layer
+            in the std network.
+        std_hidden_w_init (callable):  Initializer function for the weight
+            of hidden layer (s).
+        std_hidden_b_init (callable): Initializer function for the bias
+            of intermediate dense layer(s).
+        std_output_nonlinearity (callable): Activation function for output
+            dense layer in the std network. It should return a torch.Tensor.
+            Set it to None to maintain a linear activation.
+        std_output_w_init (callable): Initializer function for the weight
+            of output dense layer(s) in the std network.
+        std_parameterization (str): How the std should be parametrized. There
+            are two options:
+            - exp: the logarithm of the std will be stored, and applied a
+               exponential transformation
+            - softplus: the std will be computed as log(1+exp(x))
+        layer_normalization (bool): Bool for using layer normalization or not.
+
+    """
 
     def __init__(self,
                  input_dim,
@@ -283,14 +407,74 @@ class GaussianMLPIndependentStdModule(GaussianMLPBaseModule):
             layer_normalization=self._layer_normalization)
 
     def _init_std_b(self, b):
+        """Default bias initialization function.
+
+        Args:
+            b (torch.Tensor): The bias tensor.
+
+        Returns:
+            torch.Tensor: The bias tensor itself.
+
+        """
         return nn.init.constant_(b, self._init_std.item())
 
-    def _get_mean_and_log_std(self, inputs):
-        return self._mean_module(inputs), self._log_std_module(inputs)
+    def _get_mean_and_log_std(self, *inputs):
+        """Get mean and std of Gaussian distribution given inputs.
+
+        Args:
+            *inputs: Input to the module.
+
+        Returns:
+            tuple:
+                * mean (torch.Tensor): The mean of Gaussian distribution.
+                * std (torch.Tensor): The variance of Gaussian distribution.
+
+        """
+        return self._mean_module(*inputs), self._log_std_module(*inputs)
 
 
 class GaussianMLPTwoHeadedModule(GaussianMLPBaseModule):
-    """GaussianMLPModule which has only one mean network."""
+    """GaussianMLPModule which has only one mean network.
+
+    Args:
+        input_dim (int): Input dimension of the model.
+        output_dim (int): Output dimension of the model.
+        hidden_sizes (list[int]): Output dimension of dense layer(s) for
+            the MLP for mean. For example, (32, 32) means the MLP consists
+            of two hidden layers, each with 32 hidden units.
+        hidden_nonlinearity (callable): Activation function for intermediate
+            dense layer(s). It should return a torch.Tensor. Set it to
+            None to maintain a linear activation.
+        hidden_w_init (callable): Initializer function for the weight
+            of intermediate dense layer(s). The function should return a
+            torch.Tensor.
+        hidden_b_init (callable): Initializer function for the bias
+            of intermediate dense layer(s). The function should return a
+            torch.Tensor.
+        output_nonlinearity (callable): Activation function for output dense
+            layer. It should return a torch.Tensor. Set it to None to
+            maintain a linear activation.
+        output_w_init (callable): Initializer function for the weight
+            of output dense layer(s). The function should return a
+            torch.Tensor.
+        output_b_init (callable): Initializer function for the bias
+            of output dense layer(s). The function should return a
+            torch.Tensor.
+        learn_std (bool): Is std trainable.
+        init_std (float): Initial value for std.
+            (plain value - not log or exponentiated).
+        min_std (float): If not None, the std is at least the value of min_std,
+            to avoid numerical issues (plain value - not log or exponentiated).
+        max_std (float): If not None, the std is at most the value of max_std,
+            to avoid numerical issues (plain value - not log or exponentiated).
+        std_parameterization (str): How the std should be parametrized. There
+            are two options:
+            - exp: the logarithm of the std will be stored, and applied a
+               exponential transformation
+            - softplus: the std will be computed as log(1+exp(x))
+        layer_normalization (bool): Bool for using layer normalization or not.
+
+    """
 
     def __init__(self,
                  input_dim,
@@ -341,5 +525,16 @@ class GaussianMLPTwoHeadedModule(GaussianMLPBaseModule):
             ],
             layer_normalization=self._layer_normalization)
 
-    def _get_mean_and_log_std(self, inputs):
-        return self._shared_mean_log_std_network(inputs)
+    def _get_mean_and_log_std(self, *inputs):
+        """Get mean and std of Gaussian distribution given inputs.
+
+        Args:
+            *inputs: Input to the module.
+
+        Returns:
+            tuple:
+                * mean (torch.Tensor): The mean of Gaussian distribution.
+                * std (torch.Tensor): The variance of Gaussian distribution.
+
+        """
+        return self._shared_mean_log_std_network(*inputs)
