@@ -22,7 +22,7 @@ class RL2Sampler:
     Args:
         algo (garage.np.algos.RLAlgorithm): An algorithm instance.
         env (List[garage.envs.GarageEnv]): Environements to sample from.
-        meta_batch_size (int): Number of meta batch for sampling. If it is
+        meta_batch_size (int): Meta batch size for sampling. If it is
             larger than n_envs, it must be a multiple of n_envs so it can be
             evenly distributed among environments.
         n_envs (int): Number of environment instances for sampling. It it is
