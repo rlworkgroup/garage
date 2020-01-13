@@ -3,7 +3,6 @@ import collections
 import copy
 
 from dowel import tabular
-import numpy as np
 import torch
 import torch.nn.functional as F
 
@@ -150,15 +149,26 @@ class VPG(BatchPolopt):
                                             baselines)
             kl = self._compute_kl_constraint(obs)
             policy_entropy = self._compute_policy_entropy(obs)
-            average_return = self.evaluate_performance(
-                itr, {
-                    'paths': paths,
-                    'loss_before': loss.item(),
-                    'loss_after': loss_after.item(),
-                    'kl_before': kl_before.item(),
-                    'kl': kl.item(),
-                    'policy_entropy': policy_entropy.mean().item()
-                })
+
+        average_return = self.evaluate_performance(
+            itr,
+            dict(env_spec=None,
+                 observations=obs.numpy(),
+                 actions=actions.numpy(),
+                 rewards=rewards.numpy(),
+                 terminals=[path['dones'] for path in paths],
+                 env_infos=[path['env_infos'] for path in paths],
+                 agent_infos=[path['agent_infos'] for path in paths],
+                 lengths=valids,
+                 discount=self.discount))
+
+        with tabular.prefix(self.policy.name):
+            tabular.record('LossBefore', loss.item())
+            tabular.record('LossAfter', loss_after.item())
+            tabular.record('dLoss', loss.item() - loss_after.item())
+            tabular.record('KLBefore', kl_before.item())
+            tabular.record('KL', kl.item())
+            tabular.record('Entropy', policy_entropy.mean().item())
 
         self.baseline.fit(paths)
         return average_return
@@ -338,52 +348,3 @@ class VPG(BatchPolopt):
         ])
 
         return obs, actions, rewards, valids, baselines
-
-    def evaluate_performance(self, itr, batch):
-        """Log information per iteration based on the collected paths.
-
-        Args:
-            itr (int): Iteration number.
-            batch (dict):
-                * paths (list[dict]): A list of collected paths
-                * loss_before (float): Loss before optimization step.
-                * loss_after (float): Loss after optimization step.
-                * kl_before (float): KL divergence before optimization step.
-                * kl (float): KL divergence after optimization step.
-                * policy_entropy (float): Policy entropy.
-
-        Returns:
-            float: The average return in last epoch cycle.
-
-        """
-        paths = batch['paths']
-        loss_before = batch['loss_before']
-        loss_after = batch['loss_after']
-        kl_before = batch['kl_before']
-        kl = batch['kl']
-        policy_entropy = batch['policy_entropy']
-
-        average_discounted_return = (np.mean(
-            [path['returns'][0] for path in paths]))
-        undiscounted_returns = [sum(path['rewards']) for path in paths]
-        average_return = np.mean(undiscounted_returns)
-        self._episode_reward_mean.extend(undiscounted_returns)
-
-        tabular.record('Iteration', itr)
-        tabular.record('AverageDiscountedReturn', average_discounted_return)
-        tabular.record('AverageReturn', average_return)
-        tabular.record('Extras/EpisodeRewardMean',
-                       np.mean(self._episode_reward_mean))
-        tabular.record('NumTrajs', len(paths))
-        tabular.record('StdReturn', np.std(undiscounted_returns))
-        tabular.record('MaxReturn', np.max(undiscounted_returns))
-        tabular.record('MinReturn', np.min(undiscounted_returns))
-        with tabular.prefix(self.policy.name):
-            tabular.record('LossBefore', loss_before)
-            tabular.record('LossAfter', loss_after)
-            tabular.record('dLoss', loss_before - loss_after)
-            tabular.record('KLBefore', kl_before)
-            tabular.record('KL', kl)
-            tabular.record('Entropy', policy_entropy)
-
-        return average_return
