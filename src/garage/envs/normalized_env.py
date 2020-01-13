@@ -143,7 +143,7 @@ class NormalizedEnv(gym.Wrapper):
             lb, ub = self.action_space.low, self.action_space.high
             if np.all(lb != -np.inf) and np.all(ub != -np.inf):
                 scaled_action = lb + (action + self._expected_action_scale) * (
-                    0.05 * (ub - lb))
+                    0.5 * (ub - lb))
                 scaled_action = np.clip(scaled_action, lb, ub)
             else:
                 scaled_action = action
