@@ -3,6 +3,7 @@ import collections
 import copy
 
 from dowel import tabular
+import numpy as np
 import torch
 import torch.nn.functional as F
 
@@ -150,7 +151,7 @@ class VPG(BatchPolopt):
             kl = self._compute_kl_constraint(obs)
             policy_entropy = self._compute_policy_entropy(obs)
 
-        average_return = self.evaluate_performance(
+        average_returns = self.evaluate_performance(
             itr,
             dict(env_spec=None,
                  observations=obs.numpy(),
@@ -171,7 +172,7 @@ class VPG(BatchPolopt):
             tabular.record('Entropy', policy_entropy.mean().item())
 
         self.baseline.fit(paths)
-        return average_return
+        return np.mean(average_returns)
 
     def _compute_loss(self, itr, obs, actions, rewards, valids, baselines):
         """Compute mean value of loss.
