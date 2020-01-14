@@ -8,6 +8,7 @@ class TrajectoryBatch(
         collections.namedtuple('TrajectoryBatch', [
             'env_spec',
             'observations',
+            'last_observations',
             'actions',
             'rewards',
             'terminals',
@@ -44,6 +45,10 @@ class TrajectoryBatch(
             :math:`(N \bullet [T], O^*)` containing the (possibly
             multi-dimensional) observations for all time steps in this batch.
             These must conform to :obj:`env_spec.observation_space`.
+        last_observations (numpy.ndarray): A numpy array of shape
+            :math:`(N, O^*)` containing the last observation of each
+            trajectory.  This is necessary since there are one more
+            observations than actions every trajectory.
         actions (numpy.ndarray): A  numpy array of shape
             :math:`(N \bullet [T], A^*)` containing the (possibly
             multi-dimensional) actions for all time steps in this batch. These
@@ -72,8 +77,9 @@ class TrajectoryBatch(
     """
     __slots__ = ()
 
-    def __new__(cls, env_spec, observations, actions, rewards, terminals,
-                env_infos, agent_infos, lengths):  # noqa: D102
+    def __new__(cls, env_spec, observations, last_observations, actions,
+                rewards, terminals, env_infos, agent_infos,
+                lengths):  # noqa: D102
         # pylint: disable=too-many-branches
 
         first_observation = observations[0]
@@ -103,6 +109,19 @@ class TrajectoryBatch(
                 'Expected batch dimension of observations to be length {}, '
                 'but got length {} instead.'.format(inferred_batch_size,
                                                     observations.shape[0]))
+
+        # last observations
+        if not env_spec.observation_space.contains(last_observations[0]):
+            raise ValueError(
+                'last_observations must conform to observation_space {}, but '
+                'got ata with shape {} instead.'.format(
+                    env_spec.observation_space, first_observation))
+
+        if last_observations.shape[0] != len(lengths):
+            raise ValueError(
+                'Expected batch dimension of last_observations to be length '
+                '{}, but got length {} instead.'.format(
+                    len(lengths), last_observations.shape[0]))
 
         # actions
         if not env_spec.action_space.contains(first_action):
@@ -163,8 +182,8 @@ class TrajectoryBatch(
                     format(inferred_batch_size, key, val.shape[0]))
 
         return super().__new__(TrajectoryBatch, env_spec, observations,
-                               actions, rewards, terminals, env_infos,
-                               agent_infos, lengths)
+                               last_observations, actions, rewards, terminals,
+                               env_infos, agent_infos, lengths)
 
 
 class TimeStep(

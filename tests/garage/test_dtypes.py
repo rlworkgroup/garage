@@ -21,6 +21,7 @@ def traj_data():
     lens = np.array([10, 20, 7, 25, 25, 40, 10, 5])
     n_t = lens.sum()
     obs = np.stack([obs_space.low] * n_t)
+    last_obs = np.stack([obs_space.low] * len(lens))
     act = np.stack([[1, 3]] * n_t)
     rew = np.arange(n_t)
     terms = np.zeros(n_t, dtype=np.bool)
@@ -39,6 +40,7 @@ def traj_data():
     return {
         'env_spec': env_spec,
         'observations': obs,
+        'last_observations': last_obs,
         'actions': act,
         'rewards': rew,
         'terminals': terms,
@@ -52,6 +54,7 @@ def test_new_traj(traj_data):
     t = TrajectoryBatch(**traj_data)
     assert t.env_spec is traj_data['env_spec']
     assert t.observations is traj_data['observations']
+    assert t.last_observations is traj_data['last_observations']
     assert t.actions is traj_data['actions']
     assert t.rewards is traj_data['rewards']
     assert t.terminals is traj_data['terminals']
@@ -86,6 +89,22 @@ def test_obs_env_spec_mismatch_traj(traj_data):
 def test_obs_batch_mismatch_traj(traj_data):
     with pytest.raises(ValueError, match='batch dimension of observations'):
         traj_data['observations'] = traj_data['observations'][:-1]
+        t = TrajectoryBatch(**traj_data)
+        del t
+
+
+def test_last_obs_env_spec_mismatch_traj(traj_data):
+    with pytest.raises(ValueError, match='last_observations must conform'):
+        traj_data['last_observations'] = \
+                traj_data['last_observations'][:, :, :, :1]
+        t = TrajectoryBatch(**traj_data)
+        del t
+
+
+def test_last_obs_batch_mismatch_traj(traj_data):
+    with pytest.raises(ValueError,
+                       match='batch dimension of last_observations'):
+        traj_data['last_observations'] = traj_data['last_observations'][:-1]
         t = TrajectoryBatch(**traj_data)
         del t
 
