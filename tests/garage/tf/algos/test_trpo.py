@@ -7,6 +7,7 @@ import pytest
 import tensorflow as tf
 
 from garage.envs import normalize
+from garage.experiment import deterministic
 from garage.experiment import snapshotter
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import TRPO
@@ -108,8 +109,9 @@ class TestTRPO(TfGraphTestCase):
 
             env.close()
 
-    @pytest.mark.flaky
+    @pytest.mark.large
     def test_trpo_gru_cartpole(self):
+        deterministic.set_seed(2)
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
             env = TfEnv(normalize(gym.make('CartPole-v1')))
 

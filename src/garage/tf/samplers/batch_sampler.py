@@ -2,8 +2,7 @@
 
 import tensorflow as tf
 
-from garage.sampler import parallel_sampler
-from garage.sampler.base import BaseSampler
+from garage.sampler import parallel_sampler, Sampler
 from garage.sampler.stateful_pool import singleton_pool
 from garage.sampler.utils import truncate_paths
 
@@ -29,7 +28,7 @@ def worker_init_tf_vars(g):
     g.sess.run(tf.compat.v1.global_variables_initializer())
 
 
-class BatchSampler(BaseSampler):
+class BatchSampler(Sampler):
     """Collects samples in parallel using a stateful pool of workers.
 
     Args:
@@ -80,5 +79,8 @@ class BatchSampler(BaseSampler):
             max_path_length=self.algo.max_path_length,
             scope=self.algo.scope,
         )
-
-        return paths if whole_paths else truncate_paths(paths, batch_size)
+        if whole_paths:
+            return paths
+        else:
+            paths_truncated = truncate_paths(paths, batch_size)
+            return paths_truncated

@@ -19,6 +19,7 @@ LONG_RUNNING_EXAMPLES = [
     EXAMPLES_ROOT_DIR / 'tf/ppo_memorize_digits.py',
     EXAMPLES_ROOT_DIR / 'tf/dqn_pong.py',
     EXAMPLES_ROOT_DIR / 'tf/trpo_cubecrash.py',
+    EXAMPLES_ROOT_DIR / 'tf/trpo_swimmer_ray_sampler.py',
 ]
 
 
