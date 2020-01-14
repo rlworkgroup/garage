@@ -2,6 +2,7 @@
 import gym.spaces
 import numpy as np
 import scipy.signal
+import torch
 
 
 def discount_cumsum(x, discount):
@@ -19,6 +20,8 @@ def discount_cumsum(x, discount):
         float: Discounted cumulative sum.
 
     """
+    if torch.is_tensor(x):
+        x=x.cpu().numpy()
     return scipy.signal.lfilter([1], [1, float(-discount)], x[::-1],
                                 axis=0)[::-1]
 
