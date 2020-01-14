@@ -159,6 +159,8 @@ class RaySampler(Sampler):
 
     def shutdown_worker(self):
         """Shuts down the worker."""
+        for worker in self._all_workers.values():
+            worker.shutdown.remote()
         ray.shutdown()
 
 
@@ -203,3 +205,7 @@ class SamplerWorker:
 
         """
         return (self.worker_id, self.inner_worker.rollout())
+
+    def shutdown(self):
+        """Shutdown the worker."""
+        self.inner_worker.shutdown()

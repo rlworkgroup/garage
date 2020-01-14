@@ -79,6 +79,9 @@ class Worker(abc.ABC):
 
         """
 
+    def shutdown(self):
+        """Shutdown the worker."""
+
     def __getstate__(self):
         """Refuse to be pickled.
 
@@ -244,3 +247,7 @@ class DefaultWorker(Worker):
         while not self.step_rollout():
             pass
         return self.collect_rollout()
+
+    def shutdown(self):
+        """Close the worker's environment."""
+        self.env.close()
