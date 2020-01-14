@@ -133,6 +133,7 @@ def pad_to_last(nums, total_length, axis=-1, val=0):
 
     """
     tensor = torch.Tensor(nums)
+    tensor = tensor[:total_length] # clip length
     axis = (axis + len(tensor.shape)) if axis < 0 else axis
 
     if len(tensor.shape) <= axis:
