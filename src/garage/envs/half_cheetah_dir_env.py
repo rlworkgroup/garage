@@ -92,7 +92,7 @@ class HalfCheetahDirEnv(HalfCheetahEnvMetaBase):
         tasks = [{'direction': direction} for direction in directions]
         return tasks
 
-    def reset_task(self, task):
+    def set_task(self, task):
         """Reset with a task.
 
         Args:
