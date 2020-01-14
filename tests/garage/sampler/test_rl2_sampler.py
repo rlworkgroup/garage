@@ -22,7 +22,7 @@ class TestRL2Sampler(TfGraphTestCase):
         ]
         tasks = self.envs[0].sample_tasks(self.meta_batch_size)
         for ind, task in enumerate(tasks):
-            self.envs[ind].reset_task(task)
+            self.envs[ind].set_task(task)
 
     def test_rl2_sampler_n_envs(self):
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
