@@ -11,6 +11,6 @@ class TestMetaHalfCheetahEnvs:
     def test_can_sim(self, env_type):
         env = env_type()
         task = env.sample_tasks(1)[0]
-        env.reset_task(task)
+        env.set_task(task)
         for _ in range(3):
             env.step(env.action_space.sample())
