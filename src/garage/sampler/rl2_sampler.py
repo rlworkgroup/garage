@@ -1,6 +1,6 @@
 """RL2 Sampler which uses VecEnvExecutor to run multiple environments."""
 from collections import OrderedDict
-import pickle
+import copy
 import time
 
 from dowel import logger, tabular
@@ -19,6 +19,11 @@ class RL2Sampler:
 
     This sampler is for RL^2. See https://arxiv.org/pdf/1611.02779.pdf.
 
+    In RL^2, there are n environments/tasks and paths in each of them
+    will be concatenated at some point and fed to the policy.
+    This sampler uses an OrderedDict, instead of a List, to keep track
+    of the paths for each environment/task.
+
     Args:
         algo (garage.np.algos.RLAlgorithm): An algorithm instance.
         env (List[garage.envs.GarageEnv]): Environements to sample from.
@@ -29,6 +34,11 @@ class RL2Sampler:
             larger than meta_batch_size, it must be a multiple of
             meta_batch_size so batch can be evenly distributed among
             environments.
+
+    Raises:
+        ValueError: If meta_batch_size > n_envs and meta_batch_size is not
+            a multiple of n_envs, or if n_envs > meta_batch_size and n_envs
+            is not a multiple of meta_batch_size.
 
     """
 
@@ -44,15 +54,6 @@ class RL2Sampler:
         self._envs_per_worker = None
         self._vec_envs_indices = None
 
-    def start_worker(self):
-        """Start workers.
-
-        Raises:
-            ValueError: If meta_batch_size > n_envs and meta_batch_size is not
-                a multiple of n_envs, or if n_envs > meta_batch_size and n_envs
-                is not a multiple of meta_batch_size.
-
-        """
         if self._meta_batch_size > self._n_envs:
             if self._meta_batch_size % self._n_envs != 0:
                 raise ValueError(
@@ -67,11 +68,14 @@ class RL2Sampler:
             self._envs_per_worker = self._n_envs // self._meta_batch_size
             self._vec_envs_indices = [np.arange(self._meta_batch_size)]
 
+    def start_worker(self):
+        """This function is deprecated."""
+
     def shutdown_worker(self):
         """Shutdown workers."""
         self._vec_env.close()
 
-    def setup_worker(self, env_indices):
+    def _setup_worker(self, env_indices):
         """Setup workers.
 
         Args:
@@ -79,10 +83,15 @@ class RL2Sampler:
                 to workers for sampling.
 
         """
+        if self._vec_env is not None:
+            self._vec_env.close()
+
         vec_envs = []
         for env_ind in env_indices:
-            vec_env = pickle.loads(pickle.dumps(self.envs[env_ind]))
-            vec_envs.extend([vec_env for env in range(self._envs_per_worker)])
+            vec_envs.extend([
+                copy.deepcopy(self.envs[env_ind])
+                for _ in range(self._envs_per_worker)
+            ])
         seed0 = deterministic.get_seed()
         if seed0 is not None:
             for (i, e) in enumerate(vec_envs):
@@ -98,6 +107,11 @@ class RL2Sampler:
         If batch size is not specified, episode per task by default is 1 so
         batch size will be meta_batch_size * max_path_length.
 
+        When number of workers are less than meta batch size, sampling will
+        be performed for each of self._vec_envs_indices in series. The
+        i-th value of self._vec_envs_indices represents the indices of the
+        environments/tasks to be sampled for the i-th iteration.
+
         Args:
             itr (int): Iteration number.
             batch_size (int): Number of samples to be collected. If None,
@@ -108,7 +122,10 @@ class RL2Sampler:
                 this flag is true.
 
         Returns:
-            list[dict]: Sample paths.
+            OrderedDict: Sample paths. Key represents the index of the
+                environment/task and value represents all the paths sampled
+                from that particular environment/task.
+
 
         Note:
             Each path is a dictionary, with keys and values as following:
@@ -141,7 +158,7 @@ class RL2Sampler:
         # Start main loop
         batch_size_per_loop = batch_size // len(self._vec_envs_indices)
         for vec_envs_indices in self._vec_envs_indices:
-            self.setup_worker(vec_envs_indices)
+            self._setup_worker(vec_envs_indices)
 
             obses = self._vec_env.reset()
             dones = np.asarray([True] * self._vec_env.num_envs)
