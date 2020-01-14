@@ -189,7 +189,7 @@ class VPG(BatchPolopt):
 
         if self._center_adv:
             means, variances = list(
-                zip(*[(valid_adv.mean(), valid_adv.var())
+                zip(*[(valid_adv.mean(), valid_adv.var(unbiased=False))
                       for valid_adv in filter_valids(advantages, valids)]))
             advantages = F.batch_norm(advantages.t(),
                                       torch.Tensor(means),
