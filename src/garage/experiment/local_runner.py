@@ -10,6 +10,7 @@ import psutil
 from garage.experiment.deterministic import get_seed, set_seed
 from garage.experiment.snapshotter import Snapshotter
 from garage.sampler import parallel_sampler
+from garage.sampler.base import BaseSampler
 # This is avoiding a circular import
 from garage.sampler.worker import DefaultWorker
 from garage.sampler.worker_factory import WorkerFactory
@@ -169,7 +170,9 @@ class LocalRunner:
         """
         if seed is None:
             seed = get_seed()
-        if hasattr(sampler_cls, 'from_worker_factory'):
+        if issubclass(sampler_cls, BaseSampler):
+            return sampler_cls(self._algo, self._env, **sampler_args)
+        else:
             return sampler_cls.from_worker_factory(WorkerFactory(
                 seed=seed,
                 max_path_length=self._algo.max_path_length,
@@ -177,8 +180,6 @@ class LocalRunner:
                 worker_class=worker_class),
                                                    agents=self._algo.policy,
                                                    envs=self._env)
-        else:
-            return sampler_cls(self._algo, self._env, **sampler_args)
 
     def setup(self, algo, env, sampler_cls=None, sampler_args=None):
         """Set up runner for algorithm and environment.
@@ -205,7 +206,7 @@ class LocalRunner:
             sampler_args = {}
         if sampler_cls is None:
             sampler_cls = algo.sampler_cls
-        self._sampler = self.make_sampler(sampler_cls)
+        self._sampler = self.make_sampler(sampler_cls, **sampler_args)
 
         self._has_setup = True
 
@@ -240,9 +241,15 @@ class LocalRunner:
             list[dict]: One batch of samples.
 
         """
-        paths = self._sampler.obtain_samples(
-            itr, (batch_size or self._train_args.batch_size),
-            agent_update=self._algo.policy.get_param_values())
+        paths = None
+        if isinstance(self._sampler, BaseSampler):
+            paths = self._sampler.obtain_samples(
+                itr, (batch_size or self._train_args.batch_size))
+        else:
+            paths = self._sampler.obtain_samples(
+                itr, (batch_size or self._train_args.batch_size),
+                agent_update=self._algo.policy.get_param_values())
+            paths = paths.to_trajectory_list()
 
         self._stats.total_env_steps += sum([len(p['rewards']) for p in paths])
 

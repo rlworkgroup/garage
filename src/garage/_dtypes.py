@@ -1,6 +1,7 @@
 """Data types for agent-based learning."""
 import collections
 
+import akro
 import numpy as np
 
 
@@ -124,7 +125,14 @@ class TrajectoryBatch(
                     len(lengths), last_observations.shape[0]))
 
         # actions
-        if not env_spec.action_space.contains(first_action):
+        if isinstance(env_spec.action_space, akro.Box):
+            if env_spec.action_space.flat_dim != np.prod(first_action.shape):
+                raise ValueError('actions should have the same dimensionality '
+                                 'as the action_space ({}), but got data '
+                                 'with shape {} instead'.format(
+                                     env_spec.action_space.flat_dim,
+                                     first_action.shape))
+        elif not env_spec.action_space.contains(first_action):
             raise ValueError(
                 'actions must conform to action_space {}, but got data with '
                 'shape {} instead.'.format(env_spec.action_space,
@@ -218,6 +226,57 @@ class TrajectoryBatch(
             np.concatenate([batch.rewards for batch in batches]),
             np.concatenate([batch.terminals for batch in batches]), env_infos,
             agent_infos, np.concatenate([batch.lengths for batch in batches]))
+
+    def to_trajectory_list(self):
+        """Convert the batch into a list of dictionaries.
+
+        Returns:
+            list[dict[str, np.ndarray or dict[str, np.ndarray]]]: Keys:
+                * observations (np.ndarray): Non-flattened array of
+                    observations. Has shape (T, S^*) (the unflattened state
+                    space of the current environment).  observations[i] was
+                    used by the agent to choose actions[i].
+                * next_observations (np.ndarray): Non-flattened array of
+                    observations. Has shape (T, S^*). next_observations[i] was
+                    observed by the agent after taking actions[i].
+                * actions (np.ndarray): Non-flattened array of actions. Should
+                    have shape (T, S^*) (the unflattened action space of the
+                    current environment).
+                * rewards (np.ndarray): Array of rewards of shape (T,) (1D
+                    array of length timesteps).
+                * dones (np.ndarray): Array of rewards of shape (T,) (1D array
+                    of length timesteps).
+                * agent_infos (dict[str, np.ndarray]): Dictionary of stacked,
+                    non-flattened `agent_info` arrays.
+                * env_infos (dict[str, np.ndarray]): Dictionary of stacked,
+                    non-flattened `env_info` arrays.
+
+        """
+        start = 0
+        trajectories = []
+        for i, length in enumerate(self.lengths):
+            stop = start + length
+            trajectories.append({
+                'observations':
+                self.observations[start:stop],
+                'next_observations':
+                np.concatenate((self.observations[1 + start:stop],
+                                [self.last_observations[i]])),
+                'actions':
+                self.actions[start:stop],
+                'rewards':
+                self.rewards[start:stop],
+                'env_infos':
+                {k: v[start:stop]
+                 for (k, v) in self.env_infos.items()},
+                'agent_infos':
+                {k: v[start:stop]
+                 for (k, v) in self.agent_infos.items()},
+                'dones':
+                self.terminals[start:stop]
+            })
+            start = stop
+        return trajectories
 
 
 class TimeStep(
