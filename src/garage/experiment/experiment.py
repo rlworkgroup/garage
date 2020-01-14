@@ -241,7 +241,7 @@ def run_experiment(method_call=None,
             if 'exp_name' not in variant:
                 variant['exp_name'] = task['exp_name']
             task['variant_data'] = base64.b64encode(
-                pickle.dumps(variant)).decode('utf-8')
+                cloudpickle.dumps(variant)).decode('utf-8')
         elif 'variant' in task:
             del task['variant']
         task['env'] = task.get('env', dict()) or dict()
