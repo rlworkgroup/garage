@@ -9,7 +9,6 @@ function, and a rollout function.
 from collections import defaultdict
 import pickle
 
-import psutil
 import ray
 
 from garage import TrajectoryBatch
@@ -24,19 +23,12 @@ class RaySampler(Sampler):
         worker_factory(garage.sampler.WorkerFactory): Used for worker behavior.
         agents(list[garage.Policy]): Agents to distribute across workers.
         envs(list[gym.Env]): Environments to distribute across workers.
-        num_processors(int): Number of workers processes to spawn. If none,
-            defaults to number of physical CPU cores.
         sampler_worker_cls(type): If None, uses the default SamplerWorker
             class.
 
     """
 
-    def __init__(self,
-                 worker_factory,
-                 agents,
-                 envs,
-                 num_processors=None,
-                 sampler_worker_cls=None):
+    def __init__(self, worker_factory, agents, envs, sampler_worker_cls=None):
         # pylint: disable=super-init-not-called
         if not ray.is_initialized():
             ray.init(log_to_driver=False)
@@ -45,8 +37,6 @@ class RaySampler(Sampler):
         self._worker_factory = worker_factory
         self._agents = agents
         self._envs = self._worker_factory.prepare_worker_messages(envs)
-        self._num_workers = (num_processors if num_processors else
-                             psutil.cpu_count(logical=False))
         self._all_workers = defaultdict(None)
         self._workers_started = False
         self.start_worker()
@@ -84,7 +74,7 @@ class RaySampler(Sampler):
         # in the worker *before* unpickling it.
         agent_pkls = self._worker_factory.prepare_worker_messages(
             self._agents, pickle.dumps)
-        for worker_id in range(self._num_workers):
+        for worker_id in range(self._worker_factory.n_workers):
             self._all_workers[worker_id] = self._sampler_worker.remote(
                 worker_id, self._envs[worker_id], agent_pkls[worker_id],
                 self._worker_factory)
@@ -110,7 +100,7 @@ class RaySampler(Sampler):
         """
         active_workers = []
         active_worker_ids = []
-        idle_worker_ids = list(range(self._num_workers))
+        idle_worker_ids = list(range(self._worker_factory.n_workers))
         pbar = ProgBarCounter(num_samples)
         completed_samples = 0
         batches = []
@@ -118,7 +108,7 @@ class RaySampler(Sampler):
 
         # update the policy params of each worker before sampling
         # for the current iteration
-        idle_worker_ids = list(range(self._num_workers))
+        idle_worker_ids = list(range(self._worker_factory.n_workers))
         param_ids = self._worker_factory.prepare_worker_messages(
             agent_update, ray.put)
         env_ids = self._worker_factory.prepare_worker_messages(

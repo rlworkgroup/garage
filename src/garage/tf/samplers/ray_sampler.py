@@ -18,16 +18,13 @@ class RaySamplerTF(RaySampler):
         worker_factory(garage.sampler.WorkerFactory): Used for worker behavior.
         agents(list[garage.Policy]): Agents to distribute across workers.
         envs(list[gym.Env]): Environments to distribute across workers.
-        num_processors(int): Number of workers processes to spawn. If none,
-            defaults to number of physical CPU cores.
 
     """
 
-    def __init__(self, worker_factory, agents, envs, num_processors=None):
+    def __init__(self, worker_factory, agents, envs):
         super().__init__(worker_factory,
                          agents,
                          envs,
-                         num_processors,
                          sampler_worker_cls=SamplerWorkerTF)
 
     def shutdown_worker(self):

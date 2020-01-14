@@ -47,7 +47,7 @@ class TestSampler:
     def test_ray_batch_sampler(self):
         workers = WorkerFactory(seed=100,
                                 max_path_length=self.algo.max_path_length)
-        sampler1 = RaySampler(workers, self.policy, self.env, num_processors=1)
+        sampler1 = RaySampler(workers, self.policy, self.env)
         sampler1.start_worker()
         sampler2 = OnPolicyVectorizedSampler(self.algo, self.env)
         sampler2.start_worker()
