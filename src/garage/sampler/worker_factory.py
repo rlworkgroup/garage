@@ -46,8 +46,8 @@ class WorkerFactory:
             max_path_length,
             n_workers=psutil.cpu_count(logical=False),
             worker_class=DefaultWorker):
+        self.n_workers = n_workers
         self._seed = seed
-        self._n_workers = n_workers
         self._max_path_length = max_path_length
         self._worker_class = worker_class
 
@@ -73,13 +73,13 @@ class WorkerFactory:
 
         """
         if isinstance(objs, list):
-            if len(objs) != self._n_workers:
+            if len(objs) != self.n_workers:
                 raise ValueError(
                     'Length of list doesn\'t match number of workers')
             return [preprocess(obj) for obj in objs]
         else:
             obj = preprocess(objs)
-            return [obj for _ in range(self._n_workers)]
+            return [obj for _ in range(self.n_workers)]
 
     def __call__(self, worker_number):
         """Construct a worker given its number.
@@ -95,7 +95,7 @@ class WorkerFactory:
             garage.sampler.Worker: The constructed worker.
 
         """
-        if worker_number >= self._n_workers:
+        if worker_number >= self.n_workers:
             raise ValueError('Worker number is too big')
         return self._worker_class(worker_number=worker_number,
                                   seed=self._seed,
