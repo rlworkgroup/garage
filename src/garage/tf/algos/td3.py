@@ -254,7 +254,7 @@ class TD3(DDPG):
             state (dict): Current state.
 
         """
-        self.__dict__ = state
+        super().__setstate__(state)
         self.init_opt()
 
     def optimize_policy(self, itr, samples_data):
@@ -302,8 +302,7 @@ class TD3(DDPG):
         target_q2vals = self.target_qf2_f_prob_online(next_inputs,
                                                       target_actions)
         target_qvals = np.minimum(target_qvals, target_q2vals)
-        ys = (self.reward_scale * rewards +
-              (1.0 - terminals) * self.discount * target_qvals)
+        ys = (rewards + (1.0 - terminals) * self.discount * target_qvals)
 
         _, qval_loss, qval = self.f_train_qf(ys, inputs, actions)
         _, q2val_loss, q2val = self.f_train_qf2(ys, inputs, actions)
