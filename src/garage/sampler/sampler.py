@@ -88,23 +88,7 @@ class Sampler(abc.ABC):
                 spread across the workers.
 
         Returns:
-            dict[str, np.ndarray or dict]: Dictionary, with keys:
-                * observations(np.array): Non-flattened array of observations.
-                    There should be one more of these than actions. Note that
-                    observations[i] (for i < len(observations) - 1) was used by
-                    the agent to choose actions[i]. Should have shape (T + 1,
-                    S^*) (the unflattened state space of the current
-                    environment).
-                * actions(np.array): Non-flattened array of actions. Should
-                    have shape (T, S^*) (the unflattened action space of the
-                    current environment).
-                * rewards(np.array): Array of rewards of shape (T,) (1D array
-                    of length timesteps).
-                * agent_infos(Dict[str, np.array]): Dictionary of stacked,
-                    non-flattened `agent_info` arrays.
-                * env_infos(Dict[str, np.array]): Dictionary of stacked,
-                    non-flattened `env_info` arrays.
-
+            garage.TrajectoryBatch: The batch of collected trajectories.
 
         """
 
