@@ -21,6 +21,8 @@ from garage.torch.algos import SAC
 from garage.torch.policies import TanhGaussianMLPPolicy2
 from garage.torch.q_functions import ContinuousMLPQFunction
 
+from garage.sampler import SimpleSampler
+
 
 def run_task(snapshot_config, *_):
     """Set up environment and algorithm and run the task."""
@@ -47,7 +49,7 @@ def run_task(snapshot_config, *_):
     #                                    time_horizon=100)
     replay_buffer = SACReplayBuffer(env_spec=env.spec,
                                        max_size=int(1e6))
-
+    sampler_args = {'agent': policy, 'max_path_length': 1000,}
     sac = SAC(env_spec=env.spec,
                 policy=policy,
                 qf1=qf1,
@@ -61,7 +63,7 @@ def run_task(snapshot_config, *_):
                 buffer_batch_size=256,
                 reward_scale=1.)
 
-    runner.setup(algo=sac, env=env)
+    runner.setup(algo=sac, env=env, sampler_cls=SimpleSampler, sampler_args=sampler_args)
 
     runner.train(n_epochs=1000, batch_size=1000)
 
