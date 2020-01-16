@@ -251,7 +251,11 @@ class LocalRunner:
                 agent_update=self._algo.policy.get_param_values())
             paths = paths.to_trajectory_list()
 
-        self._stats.total_env_steps += sum([len(p['rewards']) for p in paths])
+        # if 'rewards' in paths[0]:
+        #     self._stats.total_env_steps += sum([len(p['rewards']) for p in paths])
+        # else:
+        # this is a quick and dirty fix
+        self._stats.total_env_steps += len(paths)
 
         return paths
 

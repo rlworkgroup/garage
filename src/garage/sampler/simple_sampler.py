@@ -1,39 +1,63 @@
-''' Generic sampler can be used with all RL algos #TODO: avnishna update description'''
-from garage.sampler.sampler import Sampler
+""" Generic sampler can be used with all RL algos #TODO: avnishna update description"""
+import time
+
 import numpy as np
-import time 
+
+from garage import TimeStep
+from garage.sampler.sampler import Sampler
+
 class SimpleSampler(Sampler):
     """Generic sampler used for off policy sampling
 
     Args:
         agent(Policy): Agent used to select actions.
         env(gym.Env): Environment to perform actions in.
+        max_path_length(int): If the rollout reaches this many timesteps, it is
+            terminated.
+        deterministic (bool): If true, use the mean action returned by the
+            stochastic policy instead of sampling from the returned action
+            distribution.
     Notes:
         - unlike the off policy vectorized sampler, simple sampler does not add
             transitions to the agent's replay buffer. That is the responsibility
             of the agent (potentially inside of its (the agent's) process samples
             function.
     """
-    def __init__(self, env, agent):
+    def __init__(self, algo, env, agent, *, max_path_length, deterministic=False):
         self._env = env
         self._agent = agent
+        self._deterministic = deterministic
+        self._max_path_length = max_path_length
 
-    def obtain_samples(self, batch_size):
-        self._env.reset()
+    def obtain_samples(self, itr, batch_size):
+        """ Obtain batch_size number of samples from the env.
+
+        Args:
+            batch_size(int): the number of samples to be collected.
+        Returns:
+            List of 
+        """
         samples_collected = 0
-        rg = rollout_generator(self._env, self._agent)
-        returned_samples = [None] * batch_size
+        rg = rollout_generator(self._env,
+                               self._agent,
+                               deterministic=self._deterministic,
+                               max_path_length=self._max_path_length)
+        returned_samples = []
         while samples_collected < batch_size:
-            try:
-                sample = rg.next()
-                returned_samples[samples_collected] = sample
-                samples_collected += 1
-            except:
-                rg = rollout_generator(self._env, self._agent)
+                rg = rollout_generator(self._env,
+                               self._agent,
+                               deterministic=self._deterministic,
+                               max_path_length=self._max_path_length)
+                for sample in rg:
+                    if samples_collected >= batch_size:
+                        break
+                    returned_samples.append(sample)
+                    samples_collected += 1
         assert len(returned_samples) == samples_collected == batch_size
         return returned_samples
-
-
+    
+    def shutdown_worker(self):
+        pass
 
 
 
@@ -59,21 +83,7 @@ def rollout_generator(env,
             distribution.
 
     Yields:
-        dict[str, np.ndarray or dict]: Dictionary, with keys:
-            * observations(np.array): Non-flattened array of observations.
-                There should be one more of these than actions. Note that
-                observations[i] (for i < len(observations) - 1) was used by the
-                agent to choose actions[i]. Should have shape (T + 1, S^*) (the
-                unflattened state space of the current environment).
-            * actions(np.array): Non-flattened array of actions. Should have
-                shape (T, S^*) (the unflattened action space of the current
-                environment).
-            * rewards(np.array): Array of rewards of shape (T,) (1D array of
-                length timesteps).
-            * agent_infos(Dict[str, np.array]): Dictionary of stacked,
-                non-flattened `agent_info` arrays.
-            * env_infos(Dict[str, np.array]): Dictionary of stacked,
-                non-flattened `env_info` arrays.
+       Garage.TimeStep
 
     """
     agent.reset()
@@ -86,14 +96,14 @@ def rollout_generator(env,
         if deterministic:
             a = agent_info['mean']
         next_o, r, d, env_info = env.step(a)
-        yield dict(
-            observation=last_observation,
-            next_observation=next_o,
-            reward=r,
-            done=d,
-            agent_info=agent_info,
-            env_info=env_info,
-        )
+        yield TimeStep(env_spec=env.spec,
+                       observation=last_observation,
+                       action=a,
+                       reward=r,
+                       next_observation=next_o,
+                       terminal=d,
+                       env_info=env_info,
+                       agent_info=agent_info)
         last_observation = next_o
         path_length += 1
         if d:

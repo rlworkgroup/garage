@@ -108,9 +108,18 @@ class SAC(OffPolicyRLAlgorithm):
         """
         def train_helper(runner, batch_size):
             runner.step_path = runner.obtain_samples(runner.step_itr, batch_size)
-            # tabular.record("buffer_size", self.replay_buffer.n_transitions_stored)
+            for sample in runner.step_path:
+                self.replay_buffer.store(obs=sample[1],
+                                         act=sample[2],
+                                         rew=sample[3],
+                                         next_obs=sample[4],
+                                         done=sample[5])
+            tabular.record("buffer_size", self.replay_buffer.n_transitions_stored)
+            self.episode_rewards.append(sum([sample[3] for sample in runner.step_path]))
+            tabular.record('average_return', np.mean(self.episode_rewards))
             last_return = self.train_once(runner.step_itr,
                                             runner.step_path)
+            
             runner.step_itr += 1
             return last_return
 
@@ -127,31 +136,13 @@ class SAC(OffPolicyRLAlgorithm):
     def train_once(self, itr, paths):
         """
         """
-        temp_paths = paths
-        paths = self.process_samples(itr, paths)
-        #====================logging returns stats=============================#
-        # rewards = temp_paths[0]["rewards"]
-        # tabular.record("rewards/avg", np.mean(rewards))
-        # tabular.record("rewards/std", np.std(rewards))
-        # tabular.record("rewards/min", np.min(rewards))
-        # tabular.record("rewards/max", np.max(rewards))
-        #=======================================================================#
-
-        self.episode_rewards.extend([
-            path for path in paths['undiscounted_returns']
-        ])
-        self.success_history.extend([
-            path for path in paths['success_history']
-        ])
-        last_average_return = np.mean(self.episode_rewards)
         if self.replay_buffer.n_transitions_stored >= self.min_buffer_size:  # noqa: E501
             for gradient_step in range(self.gradient_steps):
                     samples = self.replay_buffer.sample(self.buffer_batch_size)
                     self.optimize_policy(itr, gradient_step, samples)
                     self.update_targets()
-            tabular.record('average_return', last_average_return)
 
-        return last_average_return
+        return np.mean(self.episode_rewards)
 
     def temperature_objective(self, log_pi):
         """
