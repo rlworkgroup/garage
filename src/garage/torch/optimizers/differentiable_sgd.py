@@ -45,9 +45,7 @@ class DiffSGD:
                     # Original SGD uses param.grad.data
                     new_param = param.add(-self.lr, param.grad)
 
-                    # Q: Why del given that _parameters[name] is overwritten?
                     del module._parameters[name]  # pylint: disable=protected-access # noqa: E501
-                    # Q: Any usage of module.[param_name]?
                     setattr(module, name, new_param)
                     module._parameters[name] = new_param  # pylint: disable=protected-access # noqa: E501
 
