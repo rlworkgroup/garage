@@ -34,7 +34,7 @@ class SAC(OffPolicyRLAlgorithm):
                  alpha=None,
                  target_entropy=None,
                  initial_log_entropy=0.,
-                 use_automatic_entropy_tuning=False,
+                 use_automatic_entropy_tuning=True,
                  discount=0.99,
                  max_path_length=None,
                  buffer_batch_size=64,
@@ -223,20 +223,20 @@ class SAC(OffPolicyRLAlgorithm):
         tabular.record("qf_loss/{}".format("qf2_loss"), float(qf2_loss))
         self.qf1_optimizer.zero_grad()
         qf1_loss.backward()
-        for name, param in self.qf1.named_parameters():
-            if param.requires_grad and (param.grad is not None):
-                tabular.record("qf1_grads/{}".format(name), float(param.grad.norm()))
-                tabular.record("qf2_grads_max/{}".format(name), float(param.grad.max()))
-                tabular.record("qf2_grads_min/{}".format(name), float(param.grad.min()))
+        # for name, param in self.qf1.named_parameters():
+        #     if param.requires_grad and (param.grad is not None):
+        #         tabular.record("qf1_grads/{}".format(name), float(param.grad.norm()))
+        #         tabular.record("qf2_grads_max/{}".format(name), float(param.grad.max()))
+        #         tabular.record("qf2_grads_min/{}".format(name), float(param.grad.min()))
         self.qf1_optimizer.step()
         
         self.qf2_optimizer.zero_grad()
         qf2_loss.backward()
-        for name, param in self.qf2.named_parameters():
-            if param.requires_grad and (param.grad is not None):
-                tabular.record("qf2_grads/{}".format(name), float(param.grad.norm()))
-                tabular.record("qf2_grads_max/{}".format(name), float(param.grad.max()))
-                tabular.record("qf2_grads_min/{}".format(name), float(param.grad.min()))
+        # for name, param in self.qf2.named_parameters():
+        #     if param.requires_grad and (param.grad is not None):
+        #         tabular.record("qf2_grads/{}".format(name), float(param.grad.norm()))
+        #         tabular.record("qf2_grads_max/{}".format(name), float(param.grad.max()))
+        #         tabular.record("qf2_grads_min/{}".format(name), float(param.grad.min()))
         self.qf2_optimizer.step()
         #===================================================#
 
@@ -263,11 +263,11 @@ class SAC(OffPolicyRLAlgorithm):
         policy_loss = self.actor_objective(obs, log_pi, new_actions)
         self.policy_optimizer.zero_grad()
         policy_loss.backward()
-        for name, param in self.policy.named_parameters():
-            if param.requires_grad and (param.grad is not None):
-                tabular.record("policy_grads/{}".format(name), float(param.grad.norm()))
-                tabular.record("policy_grads_max/{}".format(name), float(param.grad.max()))
-                tabular.record("policy_grads_min/{}".format(name), float(param.grad.min()))
+        # for name, param in self.policy.named_parameters():
+        #     if param.requires_grad and (param.grad is not None):
+        #         tabular.record("policy_grads/{}".format(name), float(param.grad.norm()))
+        #         tabular.record("policy_grads_max/{}".format(name), float(param.grad.max()))
+        #         tabular.record("policy_grads_min/{}".format(name), float(param.grad.min()))
 
         self.policy_optimizer.step()
         if(self.gradient_steps == 1):

@@ -353,19 +353,21 @@ def plot(g_csvs, b_csvs, g_x, g_y, g_z, b_x, b_y, b_z, trials, seeds, plt_file,
     :param env_id: String contains the id of the environment.
     :return:
     """
-    assert len(b_csvs) == len(g_csvs)
+    # assert len(b_csvs) == len(g_csvs)
     for trial in range(trials):
         seed = seeds[trial]
 
         df_g = pd.read_csv(g_csvs[trial])
-        df_b = pd.read_csv(b_csvs[trial])
+        if b_csvs is not None:
+            df_b = pd.read_csv(b_csvs[trial])
 
         plt.plot(df_g[g_x],
                  df_g[g_y],
                  label='%s_trial%d_seed%d' % (g_z, trial + 1, seed))
-        plt.plot(df_b[b_x],
-                 df_b[b_y],
-                 label='%s_trial%d_seed%d' % (b_z, trial + 1, seed))
+        if b_csvs is not None:
+            plt.plot(df_b[b_x],
+                    df_b[b_y],
+                    label='%s_trial%d_seed%d' % (b_z, trial + 1, seed))
 
     plt.legend()
     plt.xlabel(x_label)
