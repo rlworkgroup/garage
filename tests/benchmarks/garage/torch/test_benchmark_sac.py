@@ -65,11 +65,11 @@ class TestBenchmarkSAC:
         timestamp = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f')
         benchmark_dir = osp.join(os.getcwd(), 'data', 'local', 'benchmarks',
                                  'sac', timestamp)
-        mujoco_tasks = ['HalfCheetah-v2', 'Swimmer-v2', 'Ant-v2']
+        mujoco_tasks = ['HalfCheetah-v2']
         for task in mujoco_tasks:
             env = GarageEnv(normalize(gym.make(task)))
 
-            seeds = random.sample(range(500), 3)
+            seeds = [121, 524, 4]
 
             task_dir = osp.join(benchmark_dir, task)
             plt_file = osp.join(benchmark_dir,
