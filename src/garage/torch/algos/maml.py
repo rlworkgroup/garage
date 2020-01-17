@@ -51,8 +51,8 @@ class MAML:
         else:
             self.sampler_cls = BatchSampler
 
-        self.policy = policy
         self.max_path_length = inner_algo.max_path_length
+        self._policy = policy
         self._env = env
         self._baselines = [
             copy.deepcopy(baseline) for _ in range(meta_batch_size)
@@ -61,7 +61,7 @@ class MAML:
         self._num_grad_updates = num_grad_updates
         self._meta_batch_size = meta_batch_size
         self._inner_algo = inner_algo
-        self._inner_optimizer = DiffSGD(self.policy, lr=inner_lr)
+        self._inner_optimizer = DiffSGD(self._policy, lr=inner_lr)
         self._meta_optimizer = make_optimizer(meta_optimizer,
                                               policy,
                                               lr=_Default(1e-3),
@@ -108,7 +108,7 @@ class MAML:
             float: Average return.
 
         """
-        old_theta = dict(self.policy.named_parameters())
+        old_theta = dict(self._policy.named_parameters())
 
         kl_before = self._compute_kl_constraint(itr,
                                                 all_samples,
@@ -161,7 +161,7 @@ class MAML:
         tasks = self._env.sample_tasks(self._meta_batch_size)
         all_samples = [[] for _ in range(len(tasks))]
         all_params = []
-        theta = dict(self.policy.named_parameters())
+        theta = dict(self._policy.named_parameters())
 
         for i, task in enumerate(tasks):
             self._set_task(runner, task)
@@ -176,9 +176,9 @@ class MAML:
                 if j != self._num_grad_updates:
                     self._adapt(runner.step_itr, batch_samples, set_grad=False)
 
-            all_params.append(dict(self.policy.named_parameters()))
+            all_params.append(dict(self._policy.named_parameters()))
             # Restore to pre-updated policy
-            update_module_params(self.policy, theta)
+            update_module_params(self._policy, theta)
 
         return all_samples, all_params
 
@@ -231,7 +231,7 @@ class MAML:
             torch.Tensor: Calculated mean value of loss.
 
         """
-        theta = dict(self.policy.named_parameters())
+        theta = dict(self._policy.named_parameters())
         old_theta = dict(self._old_policy.named_parameters())
 
         losses = []
@@ -244,7 +244,7 @@ class MAML:
                 loss = self._compute_loss(itr, task_samples[-1])
             losses.append(loss)
 
-            update_module_params(self.policy, theta)
+            update_module_params(self._policy, theta)
             update_module_params(self._old_policy, old_theta)
 
         return torch.stack(losses).mean()
@@ -273,7 +273,7 @@ class MAML:
             torch.Tensor: Calculated mean value of KL divergence.
 
         """
-        theta = dict(self.policy.named_parameters())
+        theta = dict(self._policy.named_parameters())
         old_theta = dict(self._old_policy.named_parameters())
 
         kls = []
@@ -288,7 +288,7 @@ class MAML:
                     task_samples[-1].observations)
             kls.append(kl)
 
-            update_module_params(self.policy, theta)
+            update_module_params(self._policy, theta)
             update_module_params(self._old_policy, old_theta)
 
         return torch.stack(kls).mean()
@@ -340,11 +340,22 @@ class MAML:
         self._inner_algo.baseline = self._cur_baseline
 
     @property
-    def _old_policy(self):
-        """Old policy of inner algorithm.
+    def policy(self):
+        """Current policy of the inner algorithm.
 
         Returns:
-            garage.torch.policies.base: Old policy of inner algorithm.
+            garage.torch.policies.Policy: Current policy of the inner
+                algorithm.
+
+        """
+        return self._policy
+
+    @property
+    def _old_policy(self):
+        """Old policy of the inner algorithm.
+
+        Returns:
+            garage.torch.policies.Policy: Old policy of the inner algorithm.
 
         """
         # pylint: disable=protected-access
@@ -417,7 +428,7 @@ class MAML:
                 tabular.record('MinReturn', np.min(undiscounted_returns))
                 tabular.record('NumTrajs', len(all_rewards))
 
-        with tabular.prefix(self.policy.name + '/'):
+        with tabular.prefix(self._policy.name + '/'):
             tabular.record('LossBefore', loss_before)
             tabular.record('LossAfter', loss_after)
             tabular.record('dLoss', loss_before - loss_after)
