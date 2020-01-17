@@ -1,3 +1,4 @@
+import akro
 import gym.spaces
 import numpy as np
 import pytest
@@ -116,6 +117,16 @@ def test_act_env_spec_mismatch_traj(traj_data):
         del t
 
 
+def test_act_box_env_spec_mismatch_traj(traj_data):
+    with pytest.raises(ValueError, match='actions should have'):
+        traj_data['env_spec'].action_space = akro.Box(low=1,
+                                                      high=np.inf,
+                                                      shape=(4, 3, 2),
+                                                      dtype=np.float32)
+        t = TrajectoryBatch(**traj_data)
+        del t
+
+
 def test_act_batch_mismatch_traj(traj_data):
     with pytest.raises(ValueError, match='batch dimension of actions'):
         traj_data['actions'] = traj_data['actions'][:-1]
@@ -176,6 +187,25 @@ def test_agent_infos_batch_mismatch_traj(traj_data):
             'hidden'][:-1]
         t = TrajectoryBatch(**traj_data)
         del t
+
+
+def test_to_trajectory_list(traj_data):
+    t = TrajectoryBatch(**traj_data)
+    t_list = t.to_trajectory_list()
+    assert len(t_list) == len(traj_data['lengths'])
+    start = 0
+    for length, last_obs, s in zip(traj_data['lengths'],
+                                   traj_data['last_observations'], t_list):
+        stop = start + length
+        assert (
+            s['observations'] == traj_data['observations'][start:stop]).all()
+        assert (s['next_observations'] == np.concatenate(
+            (traj_data['observations'][start + 1:stop], [last_obs]))).all()
+        assert (s['actions'] == traj_data['actions'][start:stop]).all()
+        assert (s['rewards'] == traj_data['rewards'][start:stop]).all()
+        assert (s['dones'] == traj_data['terminals'][start:stop]).all()
+        start = stop
+    assert start == len(traj_data['rewards'])
 
 
 @pytest.fixture

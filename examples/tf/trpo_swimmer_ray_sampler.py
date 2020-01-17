@@ -9,11 +9,11 @@ import gym
 
 from garage.experiment import run_experiment
 from garage.np.baselines import LinearFeatureBaseline
+from garage.sampler import RaySampler
 from garage.tf.algos import TRPO
 from garage.tf.envs import TfEnv
 from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import GaussianMLPPolicy
-from garage.tf.samplers import RaySamplerTF
 
 seed = 100
 
@@ -43,7 +43,7 @@ def run_task(snapshot_config, *_):
 
         runner.setup(algo,
                      env,
-                     sampler_cls=RaySamplerTF,
+                     sampler_cls=RaySampler,
                      sampler_args={'seed': seed})
         runner.train(n_epochs=40, batch_size=4000)
 

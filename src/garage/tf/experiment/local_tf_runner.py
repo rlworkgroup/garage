@@ -4,9 +4,12 @@ A runner setup context for algorithms during initialization and
 pipelines data between sampler and algorithm during training.
 """
 from dowel import logger
+import psutil
 import tensorflow as tf
 
 from garage.experiment import LocalRunner
+from garage.sampler import DefaultWorker
+from garage.tf.samplers import TFWorkerClassWrapper
 
 
 class LocalTFRunner(LocalRunner):
@@ -102,6 +105,30 @@ class LocalTFRunner(LocalRunner):
         ) is self.sess and self.sess_entered:
             self.sess.__exit__(exc_type, exc_val, exc_tb)
             self.sess_entered = False
+
+    def make_sampler(self,
+                     sampler_cls,
+                     seed=None,
+                     n_workers=psutil.cpu_count(logical=False),
+                     worker_class=DefaultWorker,
+                     **sampler_args):
+        """Construct a Sampler from a Sampler class.
+
+        Args:
+            sampler_cls (type): The type of sampler to construct.
+            seed (int): Seed to use in sampler workers.
+            n_workers (int): The number of workers the sampler should use.
+            worker_class (type): Type of worker the Sampler should use.
+            sampler_args (dict): Additional arguments that should be passed to
+                the sampler.
+
+        Returns:
+            sampler_cls: An instance of the sampler class.
+
+        """
+        return super().make_sampler(sampler_cls, seed, n_workers,
+                                    TFWorkerClassWrapper(worker_class),
+                                    **sampler_args)
 
     def setup(self, algo, env, sampler_cls=None, sampler_args=None):
         """Set up runner and sessions for algorithm and environment.

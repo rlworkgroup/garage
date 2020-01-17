@@ -12,9 +12,8 @@ import ray
 
 from garage.envs.grid_world_env import GridWorldEnv
 from garage.np.policies import ScriptedPolicy
-from garage.sampler import WorkerFactory
+from garage.sampler import RaySampler, WorkerFactory
 from garage.tf.envs import TfEnv
-from garage.tf.samplers import RaySamplerTF
 
 
 class TestRaySamplerTF():
@@ -55,6 +54,6 @@ class TestRaySamplerTF():
     def test_ray_batch_sampler(self):
         workers = WorkerFactory(seed=100,
                                 max_path_length=self.algo.max_path_length)
-        sampler1 = RaySamplerTF(workers, self.policy, self.env)
+        sampler1 = RaySampler(workers, self.policy, self.env)
         sampler1.start_worker()
         sampler1.shutdown_worker()
