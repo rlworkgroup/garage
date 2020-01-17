@@ -7,6 +7,7 @@ from garage.tf.algos.erwr import ERWR
 from garage.tf.algos.npo import NPO
 from garage.tf.algos.ppo import PPO
 from garage.tf.algos.reps import REPS
+from garage.tf.algos.rl2 import RL2
 from garage.tf.algos.td3 import TD3
 from garage.tf.algos.tnpg import TNPG
 from garage.tf.algos.trpo import TRPO
@@ -21,6 +22,7 @@ __all__ = [
     'NPO',
     'PPO',
     'REPS',
+    'RL2',
     'TD3',
     'TNPG',
     'TRPO',
