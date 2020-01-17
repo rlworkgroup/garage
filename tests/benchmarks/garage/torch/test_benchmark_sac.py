@@ -41,9 +41,9 @@ from tests.wrappers import AutoStopEnv
 
 # Hyperparams for baselines and garage
 params = {
-    'policy_hidden_sizes': [64, 64],
-    'qf_hidden_sizes': [64, 64],
-    'n_epochs': 5,
+    'policy_hidden_sizes': [256, 256],
+    'qf_hidden_sizes': [256, 256],
+    'n_epochs': 1000,
     'replay_buffer_size': int(1e6),
     'sigma': 0.2,
     'gradient_steps_per_itr': 1000,
@@ -168,7 +168,7 @@ def run_garage(env, seed, log_dir):
 
     runner.setup(algo=sac, env=env, sampler_cls=SimpleSampler, sampler_args=sampler_args)
 
-    runner.train(n_epochs=params['n_epochs'], batch_size=1000)
+    runner.train(n_epochs=params['n_epochs'], batch_size=params['gradient_steps_per_itr'])
 
     dowel_logger.remove_all()
 
