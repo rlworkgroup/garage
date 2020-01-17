@@ -10,7 +10,7 @@ from garage.misc import tensor_utils
 from garage.sampler import OnPolicyVectorizedSampler
 from garage.tf.samplers import BatchSampler
 from garage.torch.algos import _Default, make_optimizer, VPG
-from garage.torch.optimizers import DiffSGD
+from garage.torch.optimizers import ConjugateGradientOptimizer, DiffSGD
 from garage.torch.utils import update_module_params
 
 
@@ -204,11 +204,15 @@ class MAML:
             self._inner_optimizer.step()
 
     def _meta_optimize(self, itr, all_samples, all_params):
-        self._meta_optimizer.step(
-            f_loss=lambda: self._compute_meta_loss(
-                itr, all_samples, all_params, set_grad=False),
-            f_constraint=lambda: self._compute_kl_constraint(
-                itr, all_samples, all_params))
+        if isinstance(self._meta_optimizer, ConjugateGradientOptimizer):
+            self._meta_optimizer.step(
+                f_loss=lambda: self._compute_meta_loss(
+                    itr, all_samples, all_params, set_grad=False),
+                f_constraint=lambda: self._compute_kl_constraint(
+                    itr, all_samples, all_params))
+        else:
+            self._meta_optimizer.step(lambda: self._compute_meta_loss(
+                itr, all_samples, all_params, set_grad=False))
 
     def _compute_meta_loss(self, itr, all_samples, all_params, set_grad=True):
         """Compute loss to meta-optimize.
