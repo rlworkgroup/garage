@@ -9,12 +9,13 @@ import numpy as np
 from garage.experiment import deterministic
 from garage.misc import tensor_utils
 from garage.misc.prog_bar_counter import ProgBarCounter
+from garage.sampler.base import BaseSampler
 from garage.sampler.stateful_pool import singleton_pool
 from garage.sampler.utils import truncate_paths
 from garage.sampler.vec_env_executor import VecEnvExecutor
 
 
-class RL2Sampler:
+class RL2Sampler(BaseSampler):
     """Sampler which uses VecEnvExecutor to run multiple environments.
 
     This sampler is for RL^2. See https://arxiv.org/pdf/1611.02779.pdf.
@@ -43,10 +44,9 @@ class RL2Sampler:
     """
 
     def __init__(self, algo, env, meta_batch_size, n_envs=None):
+        super().__init__(algo, env)
         if n_envs is None:
             n_envs = singleton_pool.n_parallel * 4
-        self.algo = algo
-        self.env = env
 
         self._n_envs = n_envs
         self._meta_batch_size = meta_batch_size
