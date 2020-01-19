@@ -1,6 +1,6 @@
 """RL2 Sampler which uses VecEnvExecutor to run multiple environments."""
-from collections import OrderedDict
 import copy
+import itertools
 import time
 
 from dowel import logger, tabular
@@ -78,12 +78,10 @@ class RL2Sampler(BaseSampler):
     def _setup_worker(self, env_indices, tasks):
         """Setup workers.
 
-        Assign tasks to all the workers (environments) indexed in env_indices.
-
         Args:
             env_indices (List[Int]): Indices of environments to be assigned
                 to workers for sampling.
-            tasks (List[dict]): List of tasks.
+            tasks (List[dict]): List of tasks to assign.
 
         """
         if self._vec_env is not None:
@@ -152,11 +150,7 @@ class RL2Sampler(BaseSampler):
         if batch_size is None:
             batch_size = self.algo.max_path_length * self._meta_batch_size
 
-        paths = OrderedDict()
-        for i in range(self._meta_batch_size):
-            paths[i] = []
-
-        n_samples = 0
+        paths = []
 
         tasks = self.env.sample_tasks(self._meta_batch_size)
 
@@ -165,6 +159,7 @@ class RL2Sampler(BaseSampler):
         for vec_envs_indices in self._vec_envs_indices:
             self._setup_worker(vec_envs_indices, tasks)
 
+            n_samples = 0
             obses = self._vec_env.reset()
             dones = np.asarray([True] * self._vec_env.num_envs)
             running_paths = [None] * self._vec_env.num_envs
@@ -199,7 +194,7 @@ class RL2Sampler(BaseSampler):
                         dict() for _ in range(self._vec_env.num_envs)
                     ]
                 for idx, observation, action, reward, env_info, agent_info, done in zip(  # noqa: E501
-                        vec_envs_indices, obses, actions, rewards, env_infos,
+                        itertools.count(), obses, actions, rewards, env_infos,
                         agent_infos, dones):
                     if running_paths[idx] is None:
                         running_paths[idx] = dict(
@@ -219,7 +214,7 @@ class RL2Sampler(BaseSampler):
                     if done:
                         obs = np.asarray(running_paths[idx]['observations'])
                         actions = np.asarray(running_paths[idx]['actions'])
-                        paths[idx].append(
+                        paths.append(
                             dict(observations=obs,
                                  actions=actions,
                                  rewards=np.asarray(
@@ -229,7 +224,8 @@ class RL2Sampler(BaseSampler):
                                      running_paths[idx]['env_infos']),
                                  agent_infos=tensor_utils.
                                  stack_tensor_dict_list(
-                                     running_paths[idx]['agent_infos'])))
+                                     running_paths[idx]['agent_infos']),
+                                 batch_idx=idx))
                         n_samples += len(running_paths[idx]['rewards'])
                         running_paths[idx] = None
 

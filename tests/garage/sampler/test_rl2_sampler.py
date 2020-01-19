@@ -44,13 +44,11 @@ class TestRL2Sampler(TfGraphTestCase):
                 self.meta_batch_size))
             paths = runner._sampler.obtain_samples(0)
             assert len(paths) == self.meta_batch_size
-            assert len(paths[0]) == 1
-            assert len(paths[0][0]['observations']) == self.max_path_length
+            assert len(paths[0]['observations']) == self.max_path_length
             paths = runner._sampler.obtain_samples(
                 0, self.meta_batch_size * 10 * self.max_path_length)
-            assert len(paths) == self.meta_batch_size
-            assert len(paths[0]) == 10
-            assert len(paths[0][0]['observations']) == self.max_path_length
+            assert len(paths) == self.meta_batch_size * 10
+            assert len(paths[0]['observations']) == self.max_path_length
 
     def test_rl2_sampler_more_envs_than_meta_batch(self):
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
@@ -75,15 +73,14 @@ class TestRL2Sampler(TfGraphTestCase):
             assert runner._sampler._envs_per_worker == 2
             assert all(runner._sampler._vec_envs_indices[0] == np.arange(
                 self.meta_batch_size))
-            paths = runner._sampler.obtain_samples(0)
-            assert len(paths) == self.meta_batch_size
-            assert len(paths[0]) == 1
-            assert len(paths[0][0]['observations']) == self.max_path_length
+            paths = runner._sampler.obtain_samples(0, whole_paths=True)
+            # whole paths
+            assert len(paths) == self.meta_batch_size * 2
+            assert len(paths[0]['observations']) == self.max_path_length
             paths = runner._sampler.obtain_samples(
                 0, self.meta_batch_size * 10 * self.max_path_length)
-            assert len(paths) == self.meta_batch_size
-            assert len(paths[0]) == 10
-            assert len(paths[0][0]['observations']) == self.max_path_length
+            assert len(paths) == self.meta_batch_size * 10
+            assert len(paths[0]['observations']) == self.max_path_length
 
     def test_rl2_sampler_less_envs_than_meta_batch(self):
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
@@ -112,13 +109,11 @@ class TestRL2Sampler(TfGraphTestCase):
                            all_indices[i * 2:i * 2 + 2])
             paths = runner._sampler.obtain_samples(0)
             assert len(paths) == self.meta_batch_size
-            assert len(paths[0]) == 1
-            assert len(paths[0][0]['observations']) == self.max_path_length
+            assert len(paths[0]['observations']) == self.max_path_length
             paths = runner._sampler.obtain_samples(
                 0, self.meta_batch_size * 10 * self.max_path_length)
-            assert len(paths) == self.meta_batch_size
-            assert len(paths[0]) == 10
-            assert len(paths[0][0]['observations']) == self.max_path_length
+            assert len(paths) == self.meta_batch_size * 10
+            assert len(paths[0]['observations']) == self.max_path_length
 
     def test_rl2_sampler_invalid_num_of_env(self):
         with pytest.raises(
