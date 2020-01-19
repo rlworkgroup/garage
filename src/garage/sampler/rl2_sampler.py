@@ -26,7 +26,7 @@ class RL2Sampler:
 
     Args:
         algo (garage.np.algos.RLAlgorithm): An algorithm instance.
-        env (List[garage.envs.GarageEnv]): Environements to sample from.
+        env (garage.envs.GarageEnv): Environement to sample from.
         meta_batch_size (int): Meta batch size for sampling. If it is
             larger than n_envs, it must be a multiple of n_envs so it can be
             evenly distributed among environments.
@@ -46,7 +46,7 @@ class RL2Sampler:
         if n_envs is None:
             n_envs = singleton_pool.n_parallel * 4
         self.algo = algo
-        self.envs = env
+        self.env = env
 
         self._n_envs = n_envs
         self._meta_batch_size = meta_batch_size
@@ -75,12 +75,15 @@ class RL2Sampler:
         """Shutdown workers."""
         self._vec_env.close()
 
-    def _setup_worker(self, env_indices):
+    def _setup_worker(self, env_indices, tasks):
         """Setup workers.
+
+        Assign tasks to all the workers (environments) indexed in env_indices.
 
         Args:
             env_indices (List[Int]): Indices of environments to be assigned
                 to workers for sampling.
+            tasks (List[dict]): List of tasks.
 
         """
         if self._vec_env is not None:
@@ -88,10 +91,10 @@ class RL2Sampler:
 
         vec_envs = []
         for env_ind in env_indices:
-            vec_envs.extend([
-                copy.deepcopy(self.envs[env_ind])
-                for _ in range(self._envs_per_worker)
-            ])
+            for _ in range(self._envs_per_worker):
+                vec_env = copy.deepcopy(self.env)
+                vec_env.set_task(tasks[env_ind])
+                vec_envs.append(vec_env)
         seed0 = deterministic.get_seed()
         if seed0 is not None:
             for (i, e) in enumerate(vec_envs):
@@ -155,10 +158,12 @@ class RL2Sampler:
 
         n_samples = 0
 
+        tasks = self.env.sample_tasks(self._meta_batch_size)
+
         # Start main loop
         batch_size_per_loop = batch_size // len(self._vec_envs_indices)
         for vec_envs_indices in self._vec_envs_indices:
-            self._setup_worker(vec_envs_indices)
+            self._setup_worker(vec_envs_indices, tasks)
 
             obses = self._vec_env.reset()
             dones = np.asarray([True] * self._vec_env.num_envs)
