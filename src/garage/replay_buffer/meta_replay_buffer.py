@@ -10,8 +10,8 @@ class MetaReplayBuffer:
 
     Args:
         max_replay_buffer_size (int): Maximum buffer size.
-        observation_dim (numpy.ndarray): Dimension of observations.
-        action_dim (numpy.ndarray): Dimension of actions.
+        observation_dim (int): Dimension of observations.
+        action_dim (int): Dimension of actions.
 
     """
 
@@ -91,8 +91,8 @@ class MetaReplayBuffer:
         self._episode_starts = []
         self._cur_episode_start = 0
 
-    def sample_data(self, indices):
-        """Sample data from buffer given indices.
+    def get_data(self, indices):
+        """Get data from buffer given indices.
 
         Args:
             indices (list): List of indices indicating which samples to take
@@ -110,7 +110,7 @@ class MetaReplayBuffer:
             next_observations=self._next_obs[indices],
         )
 
-    def random_batch(self, batch_size):
+    def sample_batch(self, batch_size):
         """Sample a batch of random unordered transitions from buffer.
 
         Args:
@@ -121,10 +121,10 @@ class MetaReplayBuffer:
 
         """
         indices = np.random.randint(0, self._size, batch_size)
-        return self.sample_data(indices)
+        return self.get_data(indices)
 
-    def random_sequence(self, batch_size):
-        """Sample a batch of random ordered transitions from buffer.
+    def sample_trajectory(self, batch_size):
+        """Sample a batch of trajectories from buffer.
 
         Args:
             batch_size (int): Size of random batch.
@@ -142,4 +142,4 @@ class MetaReplayBuffer:
             i += 1
         indices = indices[:batch_size]
 
-        return self.sample_data(indices)
+        return self.get_data(indices)

@@ -1,6 +1,6 @@
 """This is a script to test MultiTaskReplayBuffer."""
 from garage.replay_buffer.multi_task_replay_buffer import MultiTaskReplayBuffer
-from garage.sampler import InPlaceSampler
+from garage.sampler import PEARLSampler
 from garage.tf.envs import TfEnv
 from garage.torch.policies import DeterministicMLPPolicy
 from tests.fixtures.envs.dummy import DummyBoxEnv
@@ -14,7 +14,7 @@ def test_all():
     max_samples = 50
     max_trajs = 50
 
-    sampler = InPlaceSampler(env, policy, max_path_length)
+    sampler = PEARLSampler(env, policy, max_path_length)
 
     paths, _ = sampler.obtain_samples(max_samples=max_samples,
                                       max_trajs=max_trajs,
@@ -22,10 +22,6 @@ def test_all():
 
     tasks = [0, 1, 2]
     replay_buffer = MultiTaskReplayBuffer(100, env, tasks)
-
-    print(paths[0].keys())
-    print(paths[0]['observations'])
-    print(replay_buffer)
 
     i = 0
     for t in tasks:

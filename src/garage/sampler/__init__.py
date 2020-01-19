@@ -1,7 +1,6 @@
 """Samplers which run agents in environments."""
 
 from garage.sampler.batch_sampler import BatchSampler
-from garage.sampler.in_place_sampler import InPlaceSampler
 from garage.sampler.is_sampler import ISSampler
 from garage.sampler.local_sampler import LocalSampler
 from garage.sampler.off_policy_vectorized_sampler import (
@@ -9,6 +8,7 @@ from garage.sampler.off_policy_vectorized_sampler import (
 from garage.sampler.on_policy_vectorized_sampler import (
     OnPolicyVectorizedSampler)
 from garage.sampler.parallel_vec_env_executor import ParallelVecEnvExecutor
+from garage.sampler.pearl_sampler import PEARLSampler
 from garage.sampler.ray_sampler import RaySampler, SamplerWorker
 from garage.sampler.sampler import Sampler
 from garage.sampler.stateful_pool import singleton_pool

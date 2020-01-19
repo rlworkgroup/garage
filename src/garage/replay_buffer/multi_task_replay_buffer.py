@@ -1,3 +1,4 @@
+# pylint: disable=consider-using-dict-comprehension
 """A replay buffer memory for meta-RL."""
 
 from gym.spaces import Box, Discrete, Tuple
@@ -23,14 +24,12 @@ class MultiTaskReplayBuffer:
         self.env = env
         self._obs_space = env.observation_space
         self._action_space = env.action_space
-        self.task_buffers = dict([
-            (idx,
-             MetaReplayBuffer(
-                 max_replay_buffer_size=max_replay_buffer_size,
-                 observation_dim=get_dim(self._obs_space),
-                 action_dim=get_dim(self._action_space),
-             )) for idx in tasks
-        ])
+        self.task_buffers = {
+            i: MetaReplayBuffer(max_replay_buffer_size=max_replay_buffer_size,
+                                observation_dim=get_dim(self._obs_space),
+                                action_dim=get_dim(self._action_space))
+            for i in tasks
+        }
 
     def add_sample(self, task, observation, action, reward, terminal,
                    next_observation):
@@ -95,16 +94,16 @@ class MultiTaskReplayBuffer:
         Args:
             task (int): Task index.
             batch_size (int): Size of random batch.
-            sequence (bool): True if ordered batch.
+            sequence (bool): True if sampling trajectories.
 
         Returns:
             dict: Dictionary containing random batch.
 
         """
         if sequence:
-            batch = self.task_buffers[task].random_sequence(batch_size)
+            batch = self.task_buffers[task].sample_trajectory(batch_size)
         else:
-            batch = self.task_buffers[task].random_batch(batch_size)
+            batch = self.task_buffers[task].sample_batch(batch_size)
         return batch
 
     def num_steps_can_sample(self, task):

@@ -2,7 +2,7 @@
 import numpy as np
 
 from garage.replay_buffer.meta_replay_buffer import MetaReplayBuffer
-from garage.sampler import InPlaceSampler
+from garage.sampler import PEARLSampler
 from garage.tf.envs import TfEnv
 from garage.torch.policies import DeterministicMLPPolicy
 from tests.fixtures.envs.dummy import DummyBoxEnv
@@ -16,7 +16,7 @@ def test_all():
     max_samples = 50
     max_trajs = 50
 
-    sampler = InPlaceSampler(env, policy, max_path_length)
+    sampler = PEARLSampler(env, policy, max_path_length)
 
     paths, _ = sampler.obtain_samples(max_samples=max_samples,
                                       max_trajs=max_trajs,
@@ -39,7 +39,7 @@ def test_all():
 
     batch_size = 3
     indices = np.random.randint(0, replay_buffer.size(), batch_size)
-    out = replay_buffer.sample_data(indices)
+    out = replay_buffer.get_data(indices)
     assert len(out['observations']) == batch_size
     assert len(out['actions']) == batch_size
     assert len(out['rewards']) == batch_size
@@ -47,14 +47,14 @@ def test_all():
     assert len(out['next_observations']) == batch_size
 
     batch_size = 10
-    out = replay_buffer.random_batch(batch_size)
+    out = replay_buffer.sample_batch(batch_size)
     assert len(out['observations']) == batch_size
     assert len(out['actions']) == batch_size
     assert len(out['rewards']) == batch_size
     assert len(out['terminals']) == batch_size
     assert len(out['next_observations']) == batch_size
 
-    out = replay_buffer.random_sequence(batch_size)
+    out = replay_buffer.sample_trajectory(batch_size)
     assert len(out['observations']) == batch_size
     assert len(out['actions']) == batch_size
     assert len(out['rewards']) == batch_size

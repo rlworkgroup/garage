@@ -1,6 +1,6 @@
-"""This is a script to test InPlaceSampler."""
+"""This is a script to test PEARLSampler."""
 
-from garage.sampler import InPlaceSampler
+from garage.sampler import PEARLSampler
 from garage.tf.envs import TfEnv
 from garage.torch.policies import DeterministicMLPPolicy
 from tests.fixtures.envs.dummy import DummyBoxEnv
@@ -14,7 +14,7 @@ def test_obtain_samples():
     max_samples = 20
     max_trajs = 20
 
-    sampler = InPlaceSampler(env, policy, max_path_length)
+    sampler = PEARLSampler(env, policy, max_path_length)
 
     sampler.start_worker()
 
