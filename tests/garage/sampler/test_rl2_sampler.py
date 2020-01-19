@@ -17,27 +17,22 @@ class TestRL2Sampler(TfGraphTestCase):
         super().setup_method()
         self.meta_batch_size = 10
         self.max_path_length = 100
-        self.envs = [
-            TfEnv(HalfCheetahVelEnv()) for _ in range(self.meta_batch_size)
-        ]
-        tasks = self.envs[0].sample_tasks(self.meta_batch_size)
-        for ind, task in enumerate(tasks):
-            self.envs[ind].set_task(task)
+        self.env = TfEnv(HalfCheetahVelEnv())
 
     def test_rl2_sampler_n_envs(self):
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
-            policy = GaussianMLPPolicy(env_spec=self.envs[0].spec,
+            policy = GaussianMLPPolicy(env_spec=self.env.spec,
                                        hidden_sizes=[32, 32])
 
-            baseline = LinearFeatureBaseline(env_spec=self.envs[0].spec)
+            baseline = LinearFeatureBaseline(env_spec=self.env.spec)
 
-            algo = PPO(env_spec=self.envs[0].spec,
+            algo = PPO(env_spec=self.env.spec,
                        policy=policy,
                        baseline=baseline,
                        max_path_length=self.max_path_length,
                        discount=0.99)
             runner.setup(algo,
-                         env=self.envs,
+                         env=self.env,
                          sampler_cls=RL2Sampler,
                          sampler_args=dict(
                              meta_batch_size=self.meta_batch_size,
@@ -59,18 +54,18 @@ class TestRL2Sampler(TfGraphTestCase):
 
     def test_rl2_sampler_more_envs_than_meta_batch(self):
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
-            policy = GaussianMLPPolicy(env_spec=self.envs[0].spec,
+            policy = GaussianMLPPolicy(env_spec=self.env.spec,
                                        hidden_sizes=[32, 32])
 
-            baseline = LinearFeatureBaseline(env_spec=self.envs[0].spec)
+            baseline = LinearFeatureBaseline(env_spec=self.env.spec)
 
-            algo = PPO(env_spec=self.envs[0].spec,
+            algo = PPO(env_spec=self.env.spec,
                        policy=policy,
                        baseline=baseline,
                        max_path_length=self.max_path_length,
                        discount=0.99)
             runner.setup(algo,
-                         env=self.envs,
+                         env=self.env,
                          sampler_cls=RL2Sampler,
                          sampler_args=dict(
                              meta_batch_size=self.meta_batch_size,
@@ -92,18 +87,18 @@ class TestRL2Sampler(TfGraphTestCase):
 
     def test_rl2_sampler_less_envs_than_meta_batch(self):
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
-            policy = GaussianMLPPolicy(env_spec=self.envs[0].spec,
+            policy = GaussianMLPPolicy(env_spec=self.env.spec,
                                        hidden_sizes=[32, 32])
 
-            baseline = LinearFeatureBaseline(env_spec=self.envs[0].spec)
+            baseline = LinearFeatureBaseline(env_spec=self.env.spec)
 
-            algo = PPO(env_spec=self.envs[0].spec,
+            algo = PPO(env_spec=self.env.spec,
                        policy=policy,
                        baseline=baseline,
                        max_path_length=self.max_path_length,
                        discount=0.99)
             runner.setup(algo,
-                         env=self.envs,
+                         env=self.env,
                          sampler_cls=RL2Sampler,
                          sampler_args=dict(
                              meta_batch_size=self.meta_batch_size,
@@ -130,18 +125,18 @@ class TestRL2Sampler(TfGraphTestCase):
                 ValueError,
                 match='meta_batch_size must be a multiple of n_envs'):
             with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
-                policy = GaussianMLPPolicy(env_spec=self.envs[0].spec,
+                policy = GaussianMLPPolicy(env_spec=self.env.spec,
                                            hidden_sizes=[32, 32])
 
-                baseline = LinearFeatureBaseline(env_spec=self.envs[0].spec)
+                baseline = LinearFeatureBaseline(env_spec=self.env.spec)
 
-                algo = PPO(env_spec=self.envs[0].spec,
+                algo = PPO(env_spec=self.env.spec,
                            policy=policy,
                            baseline=baseline,
                            max_path_length=self.max_path_length,
                            discount=0.99)
                 runner.setup(algo,
-                             env=self.envs,
+                             env=self.env,
                              sampler_cls=RL2Sampler,
                              sampler_args=dict(
                                  meta_batch_size=self.meta_batch_size,
@@ -154,18 +149,18 @@ class TestRL2Sampler(TfGraphTestCase):
                 ValueError,
                 match='n_envs must be a multiple of meta_batch_size'):
             with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
-                policy = GaussianMLPPolicy(env_spec=self.envs[0].spec,
+                policy = GaussianMLPPolicy(env_spec=self.env.spec,
                                            hidden_sizes=[32, 32])
 
-                baseline = LinearFeatureBaseline(env_spec=self.envs[0].spec)
+                baseline = LinearFeatureBaseline(env_spec=self.env.spec)
 
-                algo = PPO(env_spec=self.envs[0].spec,
+                algo = PPO(env_spec=self.env.spec,
                            policy=policy,
                            baseline=baseline,
                            max_path_length=self.max_path_length,
                            discount=0.99)
                 runner.setup(algo,
-                             env=self.envs,
+                             env=self.env,
                              sampler_cls=RL2Sampler,
                              sampler_args=dict(
                                  meta_batch_size=self.meta_batch_size,
