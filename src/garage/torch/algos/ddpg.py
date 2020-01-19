@@ -94,7 +94,6 @@ class DDPG(OffPolicyRLAlgorithm):
         self._clip_pos_returns = clip_pos_returns
         self._clip_return = clip_return
         self._max_action = action_bound if max_action is None else max_action
-        self._evaluate = False
 
         self._success_history = deque(maxlen=100)
         self._episode_rewards = []
@@ -152,9 +151,7 @@ class DDPG(OffPolicyRLAlgorithm):
 
         last_average_return = np.mean(self._episode_rewards)
         for _ in range(self.n_train_steps):
-            if (self.replay_buffer.n_transitions_stored >=
-                    self.min_buffer_size):
-                self._evaluate = True
+            if self._buffer_prefilled:
                 samples = self.replay_buffer.sample(self.buffer_batch_size)
                 qf_loss, y, q, policy_loss = tu.torch_to_np(
                     self.optimize_policy(itr, samples))
@@ -167,10 +164,8 @@ class DDPG(OffPolicyRLAlgorithm):
         if itr % self.steps_per_epoch == 0:
             logger.log('Training finished')
 
-            if self._evaluate:
+            if self._buffer_prefilled:
                 tabular.record('Epoch', epoch)
-                tabular.record('AverageReturn', np.mean(self._episode_rewards))
-                tabular.record('StdReturn', np.std(self._episode_rewards))
                 tabular.record('Policy/AveragePolicyLoss',
                                np.mean(self._episode_policy_losses))
                 tabular.record('QFunction/AverageQFunctionLoss',
