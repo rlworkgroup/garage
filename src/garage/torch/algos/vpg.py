@@ -255,8 +255,6 @@ class VPG(BatchPolopt):
             torch.Tensor: Calculated entropy values given observation
 
         """
-        policy_entropy = self.policy.entropy(obs)
-
         if self._stop_entropy_gradient:
             with torch.no_grad():
                 policy_entropy = self.policy.entropy(obs)

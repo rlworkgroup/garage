@@ -298,12 +298,10 @@ class MAML:
             torch.Tensor: Computed entropy value.
 
         """
+        obs = torch.stack([samples.observations for samples in task_samples])
         # pylint: disable=protected-access
-        entropies = [
-            self._inner_algo._compute_policy_entropy(samples.observations)
-            for samples in task_samples
-        ]
-        return torch.stack(entropies).mean()
+        entropies = self._inner_algo._compute_policy_entropy(obs)
+        return entropies.mean()
 
     def _set_task(self, runner, task):
         # pylint: disable=protected-access, no-self-use
