@@ -186,7 +186,8 @@ class MAML:
                 with respect to pre-updated parameters.
 
         """
-        loss = self._compute_loss(itr, batch_samples)
+        # pylint: disable=protected-access
+        loss = self._inner_algo._compute_loss(itr, *batch_samples)
 
         # Update policy parameters with one SGD step
         self._inner_optimizer.zero_grad()
@@ -233,7 +234,8 @@ class MAML:
 
             update_module_params(self._old_policy, task_params)
             with torch.set_grad_enabled(set_grad):
-                loss = self._compute_loss(itr, task_samples[-1])
+                # pylint: disable=protected-access
+                loss = self._inner_algo._compute_loss(itr, *task_samples[-1])
             losses.append(loss)
 
             update_module_params(self._policy, theta)
@@ -284,25 +286,6 @@ class MAML:
             update_module_params(self._old_policy, old_theta)
 
         return torch.stack(kls).mean()
-
-    def _compute_loss(self, itr, batch_samples):
-        """Compute loss for one task and one gradient step.
-
-        Args:
-            itr (int): Iteration number.
-            batch_samples (MAMLTrajectoryBatch): Samples data for one
-                task and one gradient step.
-
-        Returns:
-            torch.Tensor: Computed loss value.
-
-        """
-        # pylint: disable=protected-access
-        return self._inner_algo._compute_loss(itr, batch_samples.observations,
-                                              batch_samples.actions,
-                                              batch_samples.rewards,
-                                              batch_samples.lengths,
-                                              batch_samples.baselines)
 
     def _compute_policy_entropy(self, task_samples):
         """Compute policy entropy.
@@ -427,7 +410,7 @@ class MAML:
 class MAMLTrajectoryBatch(
         collections.namedtuple(
             'MAMLTrajectoryBatch',
-            ['observations', 'actions', 'rewards', 'lengths', 'baselines'])):
+            ['observations', 'actions', 'rewards', 'valids', 'baselines'])):
     r"""A tuple representing a batch of whole trajectories in MAML.
 
     A :class:`MAMLTrajectoryBatch` represents a batch of whole trajectories
@@ -461,7 +444,7 @@ class MAMLTrajectoryBatch(
         rewards (torch.Tensor): A torch tensor of shape
             :math:`(N \bullet [T])` containing the rewards for all time
             steps in this batch.
-        lengths (numpy.ndarray): An integer numpy array of shape :math:`(N, )`
+        valids (numpy.ndarray): An integer numpy array of shape :math:`(N, )`
             containing the length of each trajectory in this batch. This may be
             used to reconstruct the individual trajectories.
         baselines (numpy.ndarray): An numpy array of shape
