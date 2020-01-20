@@ -60,9 +60,6 @@ class MAML:
                                               policy,
                                               lr=_Default(1e-3),
                                               eps=_Default(1e-5))
-        self._episode_reward_mean = [
-            collections.deque(maxlen=100) for _ in range(num_grad_updates + 1)
-        ]
 
     def train(self, runner):
         """Obtain samples and start training for each epoch.
@@ -404,14 +401,11 @@ class MAML:
             ]
             undiscounted_returns = np.sum(all_rewards, axis=-1)
             average_return = np.mean(undiscounted_returns)
-            self._episode_reward_mean[i].extend(undiscounted_returns)
 
             with tabular.prefix('Update_{0}/'.format(i)):
                 tabular.record('AverageDiscountedReturn',
                                np.mean(discounted_returns))
                 tabular.record('AverageReturn', average_return)
-                tabular.record('Extras/EpisodeRewardMean',
-                               np.mean(self._episode_reward_mean[i]))
                 tabular.record('StdReturn', np.std(undiscounted_returns))
                 tabular.record('MaxReturn', np.max(undiscounted_returns))
                 tabular.record('MinReturn', np.min(undiscounted_returns))
