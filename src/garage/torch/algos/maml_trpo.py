@@ -14,6 +14,7 @@ class MAMLTRPO(MAML):
         policy (garage.torch.policies.base.Policy): Policy.
         baseline (garage.np.baselines.Baseline): The baseline.
         inner_lr (float): Adaptation learning rate.
+        outer_lr (float): Meta policy learning rate.
         max_kl_step (float): The maximum KL divergence between old and new
             policies.
         max_path_length (int): Maximum length of a single rollout.
@@ -47,6 +48,7 @@ class MAMLTRPO(MAML):
                  policy,
                  baseline,
                  inner_lr=_Default(1e-2),
+                 outer_lr=1e-3,
                  max_kl_step=0.01,
                  max_path_length=500,
                  discount=0.99,
@@ -85,4 +87,5 @@ class MAMLTRPO(MAML):
                          meta_optimizer=meta_optimizer,
                          meta_batch_size=meta_batch_size,
                          inner_lr=inner_lr,
+                         outer_lr=outer_lr,
                          num_grad_updates=num_grad_updates)

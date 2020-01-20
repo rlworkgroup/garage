@@ -27,7 +27,8 @@ class MAML:
             of type and dictionary, where dictionary contains arguments to
             initialize the optimizer e.g. `(torch.optim.Adam, {'lr' = 1e-3})`.
         meta_batch_size (int): Number of tasks sampled per batch.
-        inner_lr (double): Adaptation learning rate.
+        inner_lr (float): Adaptation learning rate.
+        outer_lr (float): Meta policy learning rate.
         num_grad_updates (int): Number of adaptation gradient steps.
         inner_algo (garage.torch.algos.VPG): The inner algorithm used for
             computing loss.
@@ -42,6 +43,7 @@ class MAML:
                  meta_optimizer,
                  meta_batch_size=40,
                  inner_lr=0.1,
+                 outer_lr=1e-3,
                  num_grad_updates=1):
         if policy.vectorized:
             self.sampler_cls = OnPolicyVectorizedSampler
@@ -58,7 +60,7 @@ class MAML:
         self._inner_optimizer = DifferentiableSGD(self._policy, lr=inner_lr)
         self._meta_optimizer = make_optimizer(meta_optimizer,
                                               policy,
-                                              lr=_Default(1e-3),
+                                              lr=_Default(outer_lr),
                                               eps=_Default(1e-5))
 
     def train(self, runner):

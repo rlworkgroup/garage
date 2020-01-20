@@ -13,6 +13,7 @@ class MAMLPPO(MAML):
         policy (garage.torch.policies.base.Policy): Policy.
         baseline (garage.np.baselines.Baseline): The baseline.
         inner_lr (float): Adaptation learning rate.
+        outer_lr (float): Meta policy learning rate.
         lr_clip_range (float): The limit on the likelihood ratio between
             policies.
         max_path_length (int): Maximum length of a single rollout.
@@ -45,18 +46,19 @@ class MAMLPPO(MAML):
                  env,
                  policy,
                  baseline,
-                 inner_lr=_Default(3e-4),
-                 lr_clip_range=2e-1,
-                 max_path_length=500,
+                 inner_lr=_Default(1e-1),
+                 outer_lr=1e-3,
+                 lr_clip_range=5e-1,
+                 max_path_length=100,
                  discount=0.99,
-                 gae_lambda=0.97,
+                 gae_lambda=1.0,
                  center_adv=True,
                  positive_adv=False,
                  policy_ent_coeff=0.0,
                  use_softplus_entropy=False,
                  stop_entropy_gradient=False,
                  entropy_method='no_entropy',
-                 meta_batch_size=40,
+                 meta_batch_size=20,
                  num_grad_updates=1):
         inner_algo = PPO(env.spec,
                          policy,
@@ -82,4 +84,5 @@ class MAMLPPO(MAML):
                          meta_optimizer=torch.optim.Adam,
                          meta_batch_size=meta_batch_size,
                          inner_lr=inner_lr,
+                         outer_lr=outer_lr,
                          num_grad_updates=num_grad_updates)
