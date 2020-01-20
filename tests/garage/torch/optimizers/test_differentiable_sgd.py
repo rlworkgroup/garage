@@ -1,7 +1,7 @@
 """Tests for DifferentialSGD optimizer."""
 import torch
 
-from garage.torch.optimizers import DiffSGD
+from garage.torch.optimizers import DifferentiableSGD
 from garage.torch.utils import update_module_params
 
 
@@ -9,7 +9,7 @@ def test_differentiable_sgd():
     """Test second order derivative after taking optimization step."""
     policy = torch.nn.Linear(10, 10, bias=False)
     lr = 0.01
-    diff_sgd = DiffSGD(policy, lr=lr)
+    diff_sgd = DifferentiableSGD(policy, lr=lr)
 
     named_theta = dict(policy.named_parameters())
     theta = list(named_theta.values())[0]

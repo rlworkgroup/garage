@@ -6,13 +6,13 @@ post-updated parameters with respect to pre-updated parameters.
 """
 
 
-class DiffSGD:
+class DifferentiableSGD:
     """Differentiable Stochastic Gradient Descent.
 
-    DiffSGD performs the same optimization step as SGD, but instead of updating
-    parameters in-place, it saves updated parameters in new tensors, so that
-    the gradient of functions of new parameters can flow back to the
-    pre-updated parameters.
+    DifferentiableSGD performs the same optimization step as SGD, but instead
+    of updating parameters in-place, it saves updated parameters in new
+    tensors, so that the gradient of functions of new parameters can flow back
+    to the pre-updated parameters.
 
     Args:
         module (torch.nn.module): A torch module whose parameters needs to be

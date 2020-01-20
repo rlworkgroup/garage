@@ -9,7 +9,8 @@ from garage.misc import tensor_utils
 from garage.sampler import OnPolicyVectorizedSampler
 from garage.tf.samplers import BatchSampler
 from garage.torch.algos import _Default, make_optimizer
-from garage.torch.optimizers import ConjugateGradientOptimizer, DiffSGD
+from garage.torch.optimizers import ConjugateGradientOptimizer
+from garage.torch.optimizers import DifferentiableSGD
 from garage.torch.utils import update_module_params
 
 
@@ -54,7 +55,7 @@ class MAML:
         self._num_grad_updates = num_grad_updates
         self._meta_batch_size = meta_batch_size
         self._inner_algo = inner_algo
-        self._inner_optimizer = DiffSGD(self._policy, lr=inner_lr)
+        self._inner_optimizer = DifferentiableSGD(self._policy, lr=inner_lr)
         self._meta_optimizer = make_optimizer(meta_optimizer,
                                               policy,
                                               lr=_Default(1e-3),
