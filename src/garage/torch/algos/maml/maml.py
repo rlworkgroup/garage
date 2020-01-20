@@ -14,7 +14,7 @@ from garage.torch.optimizers import ConjugateGradientOptimizer, DiffSGD
 from garage.torch.utils import update_module_params
 
 
-class MAMLBase:
+class MAML:
     """Model-Agnostic Meta-Learning (MAML).
 
     Args:

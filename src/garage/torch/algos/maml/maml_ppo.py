@@ -2,10 +2,10 @@
 import torch
 
 from garage.torch.algos import _Default, PPO
-from garage.torch.algos.maml.maml_base import MAMLBase
+from garage.torch.algos.maml.maml import MAML
 
 
-class MAMLPPO(MAMLBase):
+class MAMLPPO(MAML):
     """Model-Agnostic Meta-Learning (MAML) applied to PPO.
 
     Args:

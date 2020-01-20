@@ -2,10 +2,10 @@
 import torch
 
 from garage.torch.algos import _Default, VPG
-from garage.torch.algos.maml.maml_base import MAMLBase
+from garage.torch.algos.maml.maml import MAML
 
 
-class MAMLVPG(MAMLBase):
+class MAMLVPG(MAML):
     """Model-Agnostic Meta-Learning (MAML) applied to VPG.
 
     Args:

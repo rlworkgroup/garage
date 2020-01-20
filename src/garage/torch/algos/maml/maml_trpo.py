@@ -2,11 +2,11 @@
 import torch
 
 from garage.torch.algos import _Default, VPG
-from garage.torch.algos.maml.maml_base import MAMLBase
+from garage.torch.algos.maml.maml import MAML
 from garage.torch.optimizers import ConjugateGradientOptimizer
 
 
-class MAMLTRPO(MAMLBase):
+class MAMLTRPO(MAML):
     """Model-Agnostic Meta-Learning (MAML) applied to TRPO.
 
     Args:
