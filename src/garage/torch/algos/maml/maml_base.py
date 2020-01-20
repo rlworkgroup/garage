@@ -9,12 +9,12 @@ import torch
 from garage.misc import tensor_utils
 from garage.sampler import OnPolicyVectorizedSampler
 from garage.tf.samplers import BatchSampler
-from garage.torch.algos import _Default, make_optimizer, VPG
+from garage.torch.algos import _Default, make_optimizer
 from garage.torch.optimizers import ConjugateGradientOptimizer, DiffSGD
 from garage.torch.utils import update_module_params
 
 
-class MAML:
+class MAMLBase:
     """Model-Agnostic Meta-Learning (MAML).
 
     Args:
@@ -35,17 +35,14 @@ class MAML:
     """
 
     def __init__(self,
+                 inner_algo,
                  env,
                  policy,
                  baseline,
-                 meta_optimizer=torch.optim.Adam,
+                 meta_optimizer,
                  meta_batch_size=40,
                  inner_lr=0.1,
-                 num_grad_updates=1,
-                 inner_algo=None):
-        if inner_algo is None:
-            inner_algo = VPG(env.spec, policy, baseline)
-
+                 num_grad_updates=1):
         if policy.vectorized:
             self.sampler_cls = OnPolicyVectorizedSampler
         else:
