@@ -2,7 +2,7 @@
 import torch
 
 from garage.torch.algos import _Default, VPG
-from garage.torch.algos.maml.maml import MAML
+from garage.torch.algos.maml import MAML
 
 
 class MAMLVPG(MAML):

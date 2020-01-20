@@ -1,20 +1,19 @@
-"""Model-Agnostic Meta-Learning (MAML) algorithm applied to TRPO."""
+"""Model-Agnostic Meta-Learning (MAML) algorithm applied to PPO."""
 import torch
 
-from garage.torch.algos import _Default, VPG
-from garage.torch.algos.maml.maml import MAML
-from garage.torch.optimizers import ConjugateGradientOptimizer
+from garage.torch.algos import _Default, PPO
+from garage.torch.algos.maml import MAML
 
 
-class MAMLTRPO(MAML):
-    """Model-Agnostic Meta-Learning (MAML) applied to TRPO.
+class MAMLPPO(MAML):
+    """Model-Agnostic Meta-Learning (MAML) applied to PPO.
 
     Args:
         env (garage.envs.GarageEnv): A multi-task environment.
         policy (garage.torch.policies.base.Policy): Policy.
         baseline (garage.np.baselines.Baseline): The baseline.
         inner_lr (float): Adaptation learning rate.
-        max_kl_step (float): The maximum KL divergence between old and new
+        lr_clip_range (float): The limit on the likelihood ratio between
             policies.
         max_path_length (int): Maximum length of a single rollout.
         discount (float): Discount.
@@ -46,11 +45,11 @@ class MAMLTRPO(MAML):
                  env,
                  policy,
                  baseline,
-                 inner_lr=_Default(1e-2),
-                 max_kl_step=0.01,
+                 inner_lr=_Default(3e-4),
+                 lr_clip_range=2e-1,
                  max_path_length=500,
                  discount=0.99,
-                 gae_lambda=1,
+                 gae_lambda=0.97,
                  center_adv=True,
                  positive_adv=False,
                  policy_ent_coeff=0.0,
@@ -59,11 +58,12 @@ class MAMLTRPO(MAML):
                  entropy_method='no_entropy',
                  meta_batch_size=40,
                  num_grad_updates=1):
-        inner_algo = VPG(env.spec,
+        inner_algo = PPO(env.spec,
                          policy,
                          baseline,
                          optimizer=torch.optim.Adam,
                          policy_lr=inner_lr,
+                         lr_clip_range=lr_clip_range,
                          max_path_length=max_path_length,
                          num_train_per_epoch=1,
                          discount=discount,
@@ -75,14 +75,11 @@ class MAMLTRPO(MAML):
                          stop_entropy_gradient=stop_entropy_gradient,
                          entropy_method=entropy_method)
 
-        meta_optimizer = (ConjugateGradientOptimizer,
-                          dict(max_constraint_value=max_kl_step))
-
         super().__init__(inner_algo=inner_algo,
                          env=env,
                          policy=policy,
                          baseline=baseline,
-                         meta_optimizer=meta_optimizer,
+                         meta_optimizer=torch.optim.Adam,
                          meta_batch_size=meta_batch_size,
                          inner_lr=inner_lr,
                          num_grad_updates=num_grad_updates)
