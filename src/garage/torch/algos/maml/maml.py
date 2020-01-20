@@ -1,6 +1,5 @@
 """Model-Agnostic Meta-Learning (MAML) algorithm implementation for RL."""
 import collections
-import copy
 
 from dowel import tabular
 import numpy as np
@@ -51,10 +50,7 @@ class MAML:
         self.max_path_length = inner_algo.max_path_length
         self._policy = policy
         self._env = env
-        self._baselines = [
-            copy.deepcopy(baseline) for _ in range(meta_batch_size)
-        ]
-        self._cur_baseline = self._baselines[0]
+        self._baseline = baseline
         self._num_grad_updates = num_grad_updates
         self._meta_batch_size = meta_batch_size
         self._inner_algo = inner_algo
@@ -162,7 +158,6 @@ class MAML:
 
         for i, task in enumerate(tasks):
             self._set_task(runner, task)
-            self._set_baseline(i)
 
             for j in range(self._num_grad_updates + 1):
                 paths = runner.obtain_samples(runner.step_itr)
@@ -332,10 +327,6 @@ class MAML:
         for env in runner._sampler._vec_env.envs:
             env.set_task(task)
 
-    def _set_baseline(self, task_id):
-        self._cur_baseline = self._baselines[task_id]
-        self._inner_algo.baseline = self._cur_baseline
-
     @property
     def policy(self):
         """Current policy of the inner algorithm.
@@ -373,7 +364,7 @@ class MAML:
             path['returns'] = tensor_utils.discount_cumsum(
                 path['rewards'], self._inner_algo.discount)
 
-        self._cur_baseline.fit(paths)
+        self._baseline.fit(paths)
         obs, actions, rewards, valids, baselines \
             = self._inner_algo.process_samples(itr, paths)
         return MAMLTrajectoryBatch(obs, actions, rewards, valids, baselines)
