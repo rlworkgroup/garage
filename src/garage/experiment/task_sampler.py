@@ -66,7 +66,6 @@ class TaskSampler(abc.ABC):
     @property
     def n_tasks(self):
         """int or None: The number of tasks if known and finite."""
-        # pylint: disable=redundant-returns-doc
         return None
 
 

@@ -33,7 +33,7 @@ def log_performance(itr, batch, discount, prefix='Evaluation'):
 
     average_discounted_return = np.mean([rtn[0] for rtn in returns])
 
-    with tabular.prefix(prefix):
+    with tabular.prefix(prefix + '/'):
         tabular.record('Iteration', itr)
         tabular.record('NumTrajs', len(returns))
 

@@ -113,7 +113,7 @@ class LocalTFRunner(LocalRunner):
                      n_workers=psutil.cpu_count(logical=False),
                      max_path_length=None,
                      worker_class=DefaultWorker,
-                     sampler_args):
+                     sampler_args=None):
         """Construct a Sampler from a Sampler class.
 
         Args:
@@ -123,8 +123,8 @@ class LocalTFRunner(LocalRunner):
                 sampler. Paths longer than this will be truncated.
             n_workers (int): The number of workers the sampler should use.
             worker_class (type): Type of worker the Sampler should use.
-            sampler_args (dict): Additional arguments that should be passed to
-                the sampler.
+            sampler_args (dict or None): Additional arguments that should be
+                passed to the sampler.
 
         Returns:
             sampler_cls: An instance of the sampler class.

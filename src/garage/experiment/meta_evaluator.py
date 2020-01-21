@@ -55,7 +55,7 @@ class MetaEvaluator:
             policy = algo.get_exploration_policy()
             traj = self._test_sampler.obtain_samples(self._eval_itr, 1, policy,
                                                      env_up)
-            adapted_policy = algo.adapt(policy, traj)
+            adapted_policy = algo.adapt_policy(policy, traj)
             adapted_traj = self._test_sampler.obtain_samples(
                 self._eval_itr, 1, adapted_policy)
             adapted_trajectories.append(adapted_traj)

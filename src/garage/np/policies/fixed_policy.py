@@ -1,7 +1,4 @@
 """Policy that performs a fixed sequence of actions."""
-import numpy as np
-
-from garage.misc.tensor_utils import stack_tensor_dict_list
 from garage.np.policies.base import Policy
 
 
@@ -31,16 +28,16 @@ class FixedPolicy(Policy):
         Args:
             dones (None or list[bool]): Vectorized policy states to reset.
 
+        Raises:
+            ValueError: If dones has length greater than 1.
+
         """
         if dones is None:
             dones = [True]
-        while len(dones) > len(self._indices):
-            self._indices.append(0)
-        while len(self._indices) > len(dones):
-            self._indices.pop()
-        for i, d in enumerate(dones):
-            if d:
-                self._indices[i] = 0
+        if len(dones) > 1:
+            raise ValueError('FixedPolicy does not support more than one '
+                             'action at a time.')
+        self._indices[0] = 0
 
     def set_param_values(self, params):
         """Set param values of policy.
@@ -78,9 +75,6 @@ class FixedPolicy(Policy):
 
         """
         del observation
-        if len(self._indices) > 1:
-            raise ValueError('Cannot call ScriptedPolicy.get_action while '
-                             'vectorized.')
         action = self._scripted_actions[self._indices[0]]
         agent_info = self._agent_infos[self._indices[0]]
         return action, agent_info
@@ -91,15 +85,15 @@ class FixedPolicy(Policy):
         Args:
             observations (np.ndarray): Ignored.
 
+        Raises:
+            ValueError: If observations has length greater than 1.
+
         Returns:
             tuple[np.ndarray, dict[str, np.ndarray]]: The action and agent_info
                 for this time step.
 
         """
-        del observations
-        actions = []
-        agent_infos = []
-        for index in self._indices:
-            actions.append(self._scripted_actions[self._indices[index]])
-            agent_infos.append(self._agent_infos[self._indices[index]])
-        return np.asarray(actions), stack_tensor_dict_list(agent_infos)
+        if len(observations) != 1:
+            raise ValueError('FixedPolicy does not support more than one '
+                             'observation at a time.')
+        return self.get_action(observations[0])
