@@ -77,6 +77,7 @@ class FixedPolicy(Policy):
         del observation
         action = self._scripted_actions[self._indices[0]]
         agent_info = self._agent_infos[self._indices[0]]
+        self._indices[0] += 1
         return action, agent_info
 
     def get_actions(self, observations):

@@ -3,8 +3,8 @@ from unittest.mock import Mock
 import numpy as np
 import pytest
 
+from garage.envs import PointEnv
 from garage.envs.grid_world_env import GridWorldEnv
-from garage.envs.half_cheetah_vel_env import HalfCheetahVelEnv
 from garage.experiment.task_sampler import SetTaskSampler
 from garage.np.policies import FixedPolicy, ScriptedPolicy
 from garage.sampler import LocalSampler, OnPolicyVectorizedSampler, \
@@ -79,13 +79,13 @@ class TestSampler:
 
 def test_update_envs_env_update():
     max_path_length = 16
-    env = TfEnv(HalfCheetahVelEnv())
+    env = TfEnv(PointEnv())
     policy = FixedPolicy(env.spec,
                          scripted_actions=[
                              env.action_space.sample()
                              for _ in range(max_path_length)
                          ])
-    tasks = SetTaskSampler(HalfCheetahVelEnv)
+    tasks = SetTaskSampler(PointEnv)
     n_workers = 8
     workers = WorkerFactory(seed=100,
                             max_path_length=max_path_length,
@@ -96,12 +96,12 @@ def test_update_envs_env_update():
                                       np.asarray(policy.get_param_values()),
                                       env_update=tasks.sample(n_workers))
     mean_rewards = []
-    goal_velocities = []
+    goals = []
     for rollout in rollouts.split():
         mean_rewards.append(rollout.rewards.mean())
-        goal_velocities.append(rollout.env_infos['task'][0]['velocity'])
+        goals.append(rollout.env_infos['task'][0]['goal'])
     assert np.var(mean_rewards) > 0
-    assert np.var(goal_velocities) > 0
+    assert np.var(goals) > 0
     with pytest.raises(ValueError):
         sampler.obtain_samples(0,
                                10,

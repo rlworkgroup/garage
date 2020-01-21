@@ -91,7 +91,7 @@ class PointEnv(gym.Env):
         # sometimes we don't want to terminate
         done = done and not self._never_done
 
-        return Step(np.copy(self._point), reward, done)
+        return Step(np.copy(self._point), reward, done, task=self._task)
 
     def render(self, mode='human'):
         """Draw the environment.
