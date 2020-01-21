@@ -124,20 +124,23 @@ class RL2(RLAlgorithm):
             path['returns'] = np_tensor_utils.discount_cumsum(
                 path['rewards'], self._discount)
             path['lengths'] = len(path['rewards'])
-            paths_by_task[path['batch_idx']].append(path)
+            batch_id = path['batch_idx']
+            path['baselines'] = self._inner_algo.baselines[batch_id].predict(
+                path)
+            paths_by_task[batch_id].append(path)
 
         for path in paths_by_task.values():
             concatenated_path = self._concatenate_paths(path)
             concatenated_path_in_meta_batch.append(concatenated_path)
 
-        (observations, actions, rewards, _, _, valids, lengths,
+        (observations, actions, rewards, _, _, valids, baselines, lengths,
          env_infos, agent_infos) = \
             self._stack_paths(
                 max_len=self._inner_algo.max_path_length,
                 paths=concatenated_path_in_meta_batch)
 
-        (_observations, _actions, _rewards, _terminals, _, _valids, _lengths,
-         _env_infos, _agent_infos) = \
+        (_observations, _actions, _rewards, _terminals, _, _valids, _,
+         _lengths, _env_infos, _agent_infos) = \
             self._stack_paths(
                 max_len=self._max_path_length,
                 paths=paths)
@@ -169,6 +172,7 @@ class RL2(RLAlgorithm):
                                  rewards=rewards,
                                  valids=valids,
                                  lengths=lengths,
+                                 baselines=baselines,
                                  agent_infos=agent_infos,
                                  env_infos=env_infos,
                                  paths=concatenated_path_in_meta_batch,
@@ -214,7 +218,7 @@ class RL2(RLAlgorithm):
         valids = np.concatenate(
             [np.ones_like(path['rewards']) for path in paths])
         returns = np.concatenate([path['returns'] for path in paths])
-
+        baselines = np.concatenate([path['baselines'] for path in paths])
         env_infos = np_tensor_utils.concat_tensor_dict_list(
             [path['env_infos'] for path in paths])
         agent_infos = np_tensor_utils.concat_tensor_dict_list(
@@ -227,6 +231,7 @@ class RL2(RLAlgorithm):
             rewards=rewards,
             dones=dones,
             valids=valids,
+            baselines=baselines,
             lengths=lengths,
             returns=returns,
             agent_infos=agent_infos,
@@ -273,6 +278,8 @@ class RL2(RLAlgorithm):
         dones = np_tensor_utils.stack_and_pad_tensor_n(paths, 'dones', max_len)
         returns = np_tensor_utils.stack_and_pad_tensor_n(
             paths, 'returns', max_len)
+        baselines = np_tensor_utils.stack_and_pad_tensor_n(
+            paths, 'baselines', max_len)
 
         agent_infos = np_tensor_utils.stack_and_pad_tensor_n(
             paths, 'agent_infos', max_len)
@@ -285,7 +292,7 @@ class RL2(RLAlgorithm):
         lengths = np.stack([path['lengths'] for path in paths])
 
         return (observations, actions, rewards, dones, returns, valids,
-                lengths, env_infos, agent_infos)
+                baselines, lengths, env_infos, agent_infos)
 
     @property
     def policy(self):

@@ -53,6 +53,9 @@ class PPO(NPO):
             dimension. If True, for example, an observation with shape (2, 4)
             will be flattened to 8.
         name (str): The name of the algorithm.
+        num_of_env (int): Number of vectorized environment instances to be
+            used for sampling.
+
     """
 
     def __init__(self,
@@ -77,7 +80,8 @@ class PPO(NPO):
                  stop_entropy_gradient=False,
                  entropy_method='no_entropy',
                  flatten_input=True,
-                 name='PPO'):
+                 name='PPO',
+                 num_of_env=1):
         if optimizer is None:
             optimizer = FirstOrderOptimizer
             if optimizer_args is None:
@@ -103,4 +107,5 @@ class PPO(NPO):
                          stop_entropy_gradient=stop_entropy_gradient,
                          entropy_method=entropy_method,
                          flatten_input=flatten_input,
+                         num_of_env=num_of_env,
                          name=name)
