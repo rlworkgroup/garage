@@ -70,7 +70,7 @@ class TaskSampler(abc.ABC):
         return None
 
 
-class SeparateEnvSampler(TaskSampler):
+class ConstructEnvsSampler(TaskSampler):
     """TaskSampler where each task has its own constructor.
 
     Generally, this is used when the different tasks are completely different
@@ -128,6 +128,11 @@ class SetTaskSampler(TaskSampler):
     def __init__(self, env_constructor):
         self._env_constructor = env_constructor
         self._env = env_constructor()
+
+    @property
+    def n_tasks(self):
+        """int or None: The number of tasks if known and finite."""
+        return getattr(self._env, 'num_tasks', None)
 
     def sample(self, n_tasks, with_replacement=False):
         """Sample a list of environment updates.

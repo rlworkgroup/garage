@@ -39,6 +39,7 @@ EXTRAS = {}
 EXTRAS['mujoco'] = [
     'mujoco-py<2.1,>=2.0',
     'gym[all]' + GYM_VERSION,
+    'metaworld @ git+https://github.com/rlworkgroup/metaworld.git@dfdbc7cf495678ee96b360d1e6e199acc141b36c',  # noqa: E501
 ]
 
 EXTRAS['dm_control'] = [
