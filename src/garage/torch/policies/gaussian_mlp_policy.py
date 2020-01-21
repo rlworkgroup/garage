@@ -97,6 +97,7 @@ class GaussianMLPPolicy(Policy, GaussianMLPModule):
             torch.Tensor: computed values
 
         """
+        # pylint: disable=arguments-differ
         return super().forward(torch.Tensor(inputs))
 
     def get_action(self, observation):
@@ -115,7 +116,7 @@ class GaussianMLPPolicy(Policy, GaussianMLPModule):
 
         """
         with torch.no_grad():
-            observation = observation.unsqueeze(0)
+            observation = torch.Tensor(observation).unsqueeze(0)
             dist = self.forward(observation)
             return (dist.rsample().squeeze(0).numpy(),
                     dict(mean=dist.mean.squeeze(0).numpy(),

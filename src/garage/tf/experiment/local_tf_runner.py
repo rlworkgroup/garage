@@ -108,15 +108,19 @@ class LocalTFRunner(LocalRunner):
 
     def make_sampler(self,
                      sampler_cls,
+                     *,
                      seed=None,
                      n_workers=psutil.cpu_count(logical=False),
+                     max_path_length=None,
                      worker_class=DefaultWorker,
-                     **sampler_args):
+                     sampler_args):
         """Construct a Sampler from a Sampler class.
 
         Args:
             sampler_cls (type): The type of sampler to construct.
             seed (int): Seed to use in sampler workers.
+            max_path_length (int): Maximum path length to be sampled by the
+                sampler. Paths longer than this will be truncated.
             n_workers (int): The number of workers the sampler should use.
             worker_class (type): Type of worker the Sampler should use.
             sampler_args (dict): Additional arguments that should be passed to
@@ -126,9 +130,14 @@ class LocalTFRunner(LocalRunner):
             sampler_cls: An instance of the sampler class.
 
         """
-        return super().make_sampler(sampler_cls, seed, n_workers,
-                                    TFWorkerClassWrapper(worker_class),
-                                    **sampler_args)
+        # pylint: disable=useless-super-delegation
+        return super().make_sampler(
+            sampler_cls,
+            seed=seed,
+            n_workers=n_workers,
+            max_path_length=max_path_length,
+            worker_class=TFWorkerClassWrapper(worker_class),
+            sampler_args=sampler_args)
 
     def setup(self, algo, env, sampler_cls=None, sampler_args=None):
         """Set up runner and sessions for algorithm and environment.

@@ -1,8 +1,10 @@
 """Base Policy."""
 import abc
 
+import torch
 
-class Policy(abc.ABC):
+
+class Policy(abc.ABC, torch.nn.Module):
     """Policy base class.
 
     Args:
@@ -12,6 +14,8 @@ class Policy(abc.ABC):
     """
 
     def __init__(self, env_spec, name):
+        # pylint: disable=super-init-not-called
+        # See issue #1141
         self._env_spec = env_spec
         self._name = name
 
@@ -88,3 +92,25 @@ class Policy(abc.ABC):
 
         """
         return self._name
+
+    def get_param_values(self):
+        """Get the parameters to the policy.
+
+        This method is included to ensure consistency with TF policies.
+
+        Returns:
+            dict: The parameters (in the form of the state dictionary).
+
+        """
+        return self.state_dict()
+
+    def set_param_values(self, state_dict):
+        """Set the parameters to the policy.
+
+        This method is included to ensure consistency with TF policies.
+
+        Args:
+            state_dict (dict): State dictionary.
+
+        """
+        self.load_state_dict(state_dict)

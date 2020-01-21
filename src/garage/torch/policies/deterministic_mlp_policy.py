@@ -9,7 +9,7 @@ from garage.torch.modules import MLPModule
 from garage.torch.policies import Policy
 
 
-class DeterministicMLPPolicy(MLPModule, Policy):
+class DeterministicMLPPolicy(Policy, MLPModule):
     """Implements a deterministic policy network.
 
     The policy network selects action based on the state of the environment.
@@ -39,12 +39,13 @@ class DeterministicMLPPolicy(MLPModule, Policy):
         """Forward method.
 
         Args:
-            input_val (torch.Tensor): values to compute
+            input_val (torch.Tensor): values to compute.
 
         Returns:
             torch.Tensor: computed values
 
         """
+        # pylint: disable=arguments-differ
         input_val = torch.FloatTensor(input_val)
         return super().forward(input_val)
 
@@ -64,7 +65,7 @@ class DeterministicMLPPolicy(MLPModule, Policy):
 
         """
         with torch.no_grad():
-            x = self.forward(observation.unsqueeze(0))
+            x = self.forward(torch.Tensor(observation).unsqueeze(0))
             return x.squeeze(0).numpy(), dict()
 
     def get_actions(self, observations):

@@ -150,15 +150,19 @@ class LocalRunner:
 
     def make_sampler(self,
                      sampler_cls,
+                     *,
                      seed=None,
                      n_workers=psutil.cpu_count(logical=False),
+                     max_path_length=None,
                      worker_class=DefaultWorker,
-                     **sampler_args):
+                     sampler_args):
         """Construct a Sampler from a Sampler class.
 
         Args:
             sampler_cls (type): The type of sampler to construct.
             seed (int): Seed to use in sampler workers.
+            max_path_length (int): Maximum path length to be sampled by the
+                sampler. Paths longer than this will be truncated.
             n_workers (int): The number of workers the sampler should use.
             worker_class (type): Type of worker the Sampler should use.
             sampler_args (dict): Additional arguments that should be passed to
@@ -168,6 +172,8 @@ class LocalRunner:
             sampler_cls: An instance of the sampler class.
 
         """
+        if max_path_length is None:
+            max_path_length = self._algo.max_path_length
         if seed is None:
             seed = get_seed()
         if issubclass(sampler_cls, BaseSampler):
@@ -175,7 +181,7 @@ class LocalRunner:
         else:
             return sampler_cls.from_worker_factory(WorkerFactory(
                 seed=seed,
-                max_path_length=self._algo.max_path_length,
+                max_path_length=max_path_length,
                 n_workers=n_workers,
                 worker_class=worker_class),
                                                    agents=self._algo.policy,
@@ -206,7 +212,8 @@ class LocalRunner:
             sampler_args = {}
         if sampler_cls is None:
             sampler_cls = algo.sampler_cls
-        self._sampler = self.make_sampler(sampler_cls, **sampler_args)
+        self._sampler = self.make_sampler(sampler_cls,
+                                          sampler_args=sampler_args)
 
         self._has_setup = True
 
@@ -496,6 +503,17 @@ class LocalRunner:
 
         """
         return self._stats.total_env_steps
+
+    @total_env_steps.setter
+    def total_env_steps(self, total_env_steps):
+        """Set number of environment steps collected.
+
+        Args:
+            total_env_steps (int): Number of environment steps taken.
+
+        """
+        assert total_env_steps > self._stats.total_env_steps
+        self._stats.total_env_steps = total_env_steps
 
 
 class NotSetupError(Exception):
