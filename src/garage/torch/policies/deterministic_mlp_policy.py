@@ -35,29 +35,15 @@ class DeterministicMLPPolicy(Policy, MLPModule):
                            output_dim=self._action_dim,
                            **kwargs)
 
-    def forward(self, input_val):
-        """Forward method.
-
-        Args:
-            input_val (torch.Tensor): values to compute.
-
-        Returns:
-            torch.Tensor: computed values
-
-        """
-        # pylint: disable=arguments-differ
-        input_val = torch.FloatTensor(input_val)
-        return super().forward(input_val)
-
     def get_action(self, observation):
         """Get a single action given an observation.
 
         Args:
-            observation (torch.Tensor): Observation from the environment.
+            observation (np.ndarray): Observation from the environment.
 
         Returns:
             tuple:
-                * torch.Tensor: Predicted action.
+                * np.ndarray: Predicted action.
                 * dict:
                     * list[float]: Mean of the distribution
                     * list[float]: Log of standard deviation of the
@@ -72,11 +58,11 @@ class DeterministicMLPPolicy(Policy, MLPModule):
         """Get actions given observations.
 
         Args:
-            observations (torch.Tensor): Observations from the environment.
+            observations (np.ndarray): Observations from the environment.
 
         Returns:
             tuple:
-                * torch.Tensor: Predicted actions.
+                * np.ndarray: Predicted actions.
                 * dict:
                     * list[float]: Mean of the distribution
                     * list[float]: Log of standard deviation of the
@@ -84,7 +70,7 @@ class DeterministicMLPPolicy(Policy, MLPModule):
 
         """
         with torch.no_grad():
-            x = self.forward(observations)
+            x = self.forward(torch.Tensor(observations))
             return x.numpy(), dict()
 
     def reset(self, dones=None):

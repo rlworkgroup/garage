@@ -5,6 +5,7 @@ import collections
 from dowel import tabular
 import numpy as np
 
+from garage import log_performance, TrajectoryBatch
 from garage.misc import tensor_utils
 from garage.np.algos.base import RLAlgorithm
 from garage.sampler import OnPolicyVectorizedSampler
@@ -22,6 +23,7 @@ class BatchPolopt(RLAlgorithm):
     next round of sampling.
 
     Args:
+        env_spec (garage.envs.EnvSpec): Environment specification.
         policy (garage.tf.policies.base.Policy): Policy.
         baseline (garage.tf.baselines.Baseline): The baseline.
         discount (float): Discount.
@@ -30,7 +32,9 @@ class BatchPolopt(RLAlgorithm):
 
     """
 
-    def __init__(self, policy, baseline, discount, max_path_length, n_samples):
+    def __init__(self, env_spec, policy, baseline, discount, max_path_length,
+                 n_samples):
+        self.env_spec = env_spec
         self.policy = policy
         self.baseline = baseline
         self.discount = discount
@@ -131,27 +135,16 @@ class BatchPolopt(RLAlgorithm):
             tensor_utils.pad_tensor_dict(p, max_path_length) for p in env_infos
         ])
 
-        terminals = [path['dones'] for path in paths]
-
         valids = [np.ones_like(path['returns']) for path in paths]
         valids = tensor_utils.pad_tensor_n(valids, max_path_length)
-
-        lengths = np.asarray([v.sum() for v in valids])
 
         ent = np.sum(self.policy.distribution.entropy(agent_infos) *
                      valids) / np.sum(valids)
 
-        undiscounted_returns = self.evaluate_performance(
+        undiscounted_returns = log_performance(
             itr,
-            dict(env_spec=None,
-                 observations=obs,
-                 actions=actions,
-                 rewards=rewards,
-                 terminals=terminals,
-                 env_infos=env_infos,
-                 agent_infos=agent_infos,
-                 lengths=lengths,
-                 discount=self.discount))
+            TrajectoryBatch.from_trajectory_list(self.env_spec, paths),
+            discount=self.discount)
 
         self.episode_reward_mean.extend(undiscounted_returns)
 

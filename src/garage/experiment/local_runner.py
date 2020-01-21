@@ -504,17 +504,6 @@ class LocalRunner:
         """
         return self._stats.total_env_steps
 
-    @total_env_steps.setter
-    def total_env_steps(self, total_env_steps):
-        """Set number of environment steps collected.
-
-        Args:
-            total_env_steps (int): Number of environment steps taken.
-
-        """
-        assert total_env_steps > self._stats.total_env_steps
-        self._stats.total_env_steps = total_env_steps
-
 
 class NotSetupError(Exception):
     """Raise when an experiment is about to run without setup."""

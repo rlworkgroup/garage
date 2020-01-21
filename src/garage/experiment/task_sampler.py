@@ -1,4 +1,5 @@
 """Efficient and general interfaces for sampling tasks for Meta-RL."""
+import abc
 import copy
 import math
 
@@ -36,9 +37,15 @@ def _sample_indices(n_to_sample, n_available_tasks, with_replacement):
         return np.concatenate(blocks)[:n_to_sample]
 
 
-class TaskSampler:
-    """Class for sampling batches of tasks, represented as `~EnvUpdate`s."""
+class TaskSampler(abc.ABC):
+    """Class for sampling batches of tasks, represented as `~EnvUpdate`s.
 
+    Attributes:
+        n_tasks (int or None): Number of tasks, if known and finite.
+
+    """
+
+    @abc.abstractmethod
     def sample(self, n_tasks, with_replacement=False):
         """Sample a list of environment updates.
 
@@ -58,14 +65,9 @@ class TaskSampler:
 
     @property
     def n_tasks(self):
-        """Return the number of tasks, if it is known and finite.
-
-        Returns:
-            int or None: None if the number of tasks is not known or is
-                infinite.
-
-        """
+        """int or None: The number of tasks if known and finite."""
         # pylint: disable=redundant-returns-doc
+        return None
 
 
 class SeparateEnvSampler(TaskSampler):
@@ -85,12 +87,7 @@ class SeparateEnvSampler(TaskSampler):
 
     @property
     def n_tasks(self):
-        """Return the number of tasks.
-
-        Returns:
-            int: The number of tasks.
-
-        """
+        """int: the number of tasks."""
         return len(self._env_constructors)
 
     def sample(self, n_tasks, with_replacement=False):
@@ -170,12 +167,7 @@ class EnvPoolSampler(TaskSampler):
 
     @property
     def n_tasks(self):
-        """Return the number of tasks.
-
-        Returns:
-            int: The number of tasks.
-
-        """
+        """int: the number of tasks."""
         return len(self._envs)
 
     def sample(self, n_tasks, with_replacement=False):

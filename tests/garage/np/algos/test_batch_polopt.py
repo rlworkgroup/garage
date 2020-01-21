@@ -17,11 +17,15 @@ class TestBatchPolopt:
 
     def test_default_sampler_cls(self):
         policy = DummyPolicy(env_spec=self.env.spec)
-        algo = DummyAlgo(policy=policy, baseline=self.baseline)
+        algo = DummyAlgo(env_spec=self.env.spec,
+                         policy=policy,
+                         baseline=self.baseline)
         sampler = algo.sampler_cls(algo, self.env, dict())
         assert isinstance(sampler, OnPolicyVectorizedSampler)
 
         policy = DummyPolicyWithoutVectorized(env_spec=self.env.spec)
-        algo = DummyAlgo(policy=policy, baseline=self.baseline)
+        algo = DummyAlgo(env_spec=self.env.spec,
+                         policy=policy,
+                         baseline=self.baseline)
         sampler = algo.sampler_cls(algo, self.env, dict())
         assert isinstance(sampler, BatchSampler)
