@@ -8,7 +8,7 @@ from garage.envs.half_cheetah_vel_env import HalfCheetahVelEnv
 from garage.experiment import task_sampler
 
 
-@pytest.mark.huge
+@pytest.mark.large
 def test_env_pool_sampler():
     # Import, construct environments here to avoid using up too much
     # resources if this test isn't run.
@@ -36,7 +36,7 @@ def test_env_pool_sampler():
     tasks.sample(20)
 
 
-@pytest.mark.huge
+@pytest.mark.large
 def test_construct_envs_sampler_ml10():
     # pylint: disable=import-outside-toplevel
     from metaworld.envs.mujoco.env_dict import MEDIUM_MODE_ARGS_KWARGS
@@ -62,7 +62,7 @@ def test_construct_envs_sampler_ml10():
     env.close.assert_called()
 
 
-@pytest.mark.huge
+@pytest.mark.large
 def test_set_task_task_sampler_ml10():
     # pylint: disable=import-outside-toplevel
     from metaworld.benchmarks import ML10
