@@ -1,10 +1,13 @@
 from unittest.mock import Mock
 
 import numpy as np
+import pytest
 import ray
 
 from garage.envs.grid_world_env import GridWorldEnv
-from garage.np.policies import ScriptedPolicy
+from garage.envs.half_cheetah_vel_env import HalfCheetahVelEnv
+from garage.experiment.task_sampler import SetTaskSampler
+from garage.np.policies import FixedPolicy, ScriptedPolicy
 from garage.sampler import OnPolicyVectorizedSampler, RaySampler, WorkerFactory
 from garage.tf.envs import TfEnv
 
@@ -74,3 +77,35 @@ class TestSampler:
             start += length
         sampler1.shutdown_worker()
         sampler2.shutdown_worker()
+
+
+def test_update_envs_env_update():
+    max_path_length = 16
+    env = TfEnv(HalfCheetahVelEnv())
+    policy = FixedPolicy(env.spec,
+                         scripted_actions=[
+                             env.action_space.sample()
+                             for _ in range(max_path_length)
+                         ])
+    tasks = SetTaskSampler(HalfCheetahVelEnv)
+    n_workers = 8
+    workers = WorkerFactory(seed=100,
+                            max_path_length=max_path_length,
+                            n_workers=n_workers)
+    sampler = RaySampler.from_worker_factory(workers, policy, env)
+    rollouts = sampler.obtain_samples(0,
+                                      160,
+                                      np.asarray(policy.get_param_values()),
+                                      env_update=tasks.sample(n_workers))
+    mean_rewards = []
+    goal_velocities = []
+    for rollout in rollouts.split():
+        mean_rewards.append(rollout.rewards.mean())
+        goal_velocities.append(rollout.env_infos['task'][0]['velocity'])
+    assert np.var(mean_rewards) > 0
+    assert np.var(goal_velocities) > 0
+    with pytest.raises(ValueError):
+        sampler.obtain_samples(0,
+                               10,
+                               np.asarray(policy.get_param_values()),
+                               env_update=tasks.sample(n_workers + 1))
