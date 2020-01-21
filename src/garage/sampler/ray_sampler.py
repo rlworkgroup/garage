@@ -7,6 +7,7 @@ function, and a rollout function.
 
 """
 from collections import defaultdict
+import itertools
 import pickle
 
 import ray
@@ -76,6 +77,34 @@ class RaySampler(Sampler):
                 worker_id, self._envs[worker_id], agent_pkls[worker_id],
                 self._worker_factory)
 
+    def _update_workers(self, agent_update, env_update):
+        """Update all of the workers.
+
+        Args:
+            agent_update(object): Value which will be passed into the
+                `agent_update_fn` before doing rollouts. If a list is passed
+                in, it must have length exactly `factory.n_workers`, and will
+                be spread across the workers.
+            env_update(object): Value which will be passed into the
+                `env_update_fn` before doing rollouts. If a list is passed in,
+                it must have length exactly `factory.n_workers`, and will be
+                spread across the workers.
+
+        Returns:
+            list[ray._raylet.ObjectID]: Remote values of worker ids.
+
+        """
+        updating_workers = []
+        param_ids = self._worker_factory.prepare_worker_messages(
+            agent_update, ray.put)
+        env_ids = self._worker_factory.prepare_worker_messages(
+            env_update, ray.put)
+        for worker_id in range(self._worker_factory.n_workers):
+            worker = self._all_workers[worker_id]
+            updating_workers.append(
+                worker.update.remote(param_ids[worker_id], env_ids[worker_id]))
+        return updating_workers
+
     def obtain_samples(self, itr, num_samples, agent_update, env_update=None):
         """Sample the policy for new trajectories.
 
@@ -96,25 +125,14 @@ class RaySampler(Sampler):
 
         """
         active_workers = []
-        active_worker_ids = []
-        idle_worker_ids = list(range(self._worker_factory.n_workers))
         pbar = ProgBarCounter(num_samples)
         completed_samples = 0
         batches = []
-        updating_workers = []
 
         # update the policy params of each worker before sampling
         # for the current iteration
-        idle_worker_ids = list(range(self._worker_factory.n_workers))
-        param_ids = self._worker_factory.prepare_worker_messages(
-            agent_update, ray.put)
-        env_ids = self._worker_factory.prepare_worker_messages(
-            env_update, ray.put)
-        while idle_worker_ids:
-            worker_id = idle_worker_ids.pop()
-            worker = self._all_workers[worker_id]
-            updating_workers.append(
-                worker.update.remote(param_ids[worker_id], env_ids[worker_id]))
+        idle_worker_ids = []
+        updating_workers = self._update_workers(agent_update, env_update)
 
         while completed_samples < num_samples:
             # if there are workers still being updated, check
@@ -132,7 +150,6 @@ class RaySampler(Sampler):
             # mark the newly busy workers as active
             while idle_worker_ids:
                 idle_worker_id = idle_worker_ids.pop()
-                active_worker_ids.append(idle_worker_id)
                 worker = self._all_workers[idle_worker_id]
                 active_workers.append(worker.rollout.remote())
 
@@ -145,7 +162,6 @@ class RaySampler(Sampler):
             active_workers = not_ready
             for result in ready:
                 ready_worker_id, trajectory_batch = ray.get(result)
-                active_worker_ids.remove(ready_worker_id)
                 idle_worker_ids.append(ready_worker_id)
                 num_returned_samples = trajectory_batch.lengths.sum()
                 completed_samples += num_returned_samples
@@ -153,6 +169,80 @@ class RaySampler(Sampler):
                 batches.append(trajectory_batch)
         pbar.stop()
         return TrajectoryBatch.concatenate(*batches)
+
+    def obtain_exact_trajectories(self,
+                                  n_traj_per_worker,
+                                  agent_update,
+                                  env_update=None):
+        """Sample an exact number of trajectories per worker.
+
+        Args:
+            n_traj_per_worker (int): Exact number of trajectories to gather for
+                each worker.
+            agent_update(object): Value which will be passed into the
+                `agent_update_fn` before doing rollouts. If a list is passed
+                in, it must have length exactly `factory.n_workers`, and will
+                be spread across the workers.
+            env_update(object): Value which will be passed into the
+                `env_update_fn` before doing rollouts. If a list is passed in,
+                it must have length exactly `factory.n_workers`, and will be
+                spread across the workers.
+
+        Returns:
+            TrajectoryBatch: Batch of gathered trajectories. Always in worker
+                order. In other words, first all trajectories from worker 0,
+                then all trajectories from worker 1, etc.
+
+        """
+        active_workers = []
+        pbar = ProgBarCounter(self._worker_factory.n_workers)
+        trajectories = defaultdict(list)
+
+        # update the policy params of each worker before sampling
+        # for the current iteration
+        idle_worker_ids = []
+        updating_workers = self._update_workers(agent_update, env_update)
+
+        while any(
+                len(trajectories[i]) < n_traj_per_worker
+                for i in range(self._worker_factory.n_workers)):
+            # if there are workers still being updated, check
+            # which ones are still updating and take the workers that
+            # are done updating, and start collecting trajectories on
+            # those workers.
+            if updating_workers:
+                updated, updating_workers = ray.wait(updating_workers,
+                                                     num_returns=1,
+                                                     timeout=0.1)
+                upd = [ray.get(up) for up in updated]
+                idle_worker_ids.extend(upd)
+
+            # if there are idle workers, use them to collect trajectories
+            # mark the newly busy workers as active
+            while idle_worker_ids:
+                idle_worker_id = idle_worker_ids.pop()
+                worker = self._all_workers[idle_worker_id]
+                active_workers.append(worker.rollout.remote())
+
+            # check which workers are done/not done collecting a sample
+            # if any are done, send them to process the collected trajectory
+            # if they are not, keep checking if they are done
+            ready, not_ready = ray.wait(active_workers,
+                                        num_returns=1,
+                                        timeout=0.001)
+            active_workers = not_ready
+            for result in ready:
+                ready_worker_id, trajectory_batch = ray.get(result)
+                pbar.inc(1)
+                trajectories[ready_worker_id].append(trajectory_batch)
+                if len(trajectories[ready_worker_id]) < n_traj_per_worker:
+                    idle_worker_ids.append(ready_worker_id)
+        pbar.stop()
+        ordered_trajectories = list(
+            itertools.chain(*[
+                trajectories[i] for i in range(self._worker_factory.n_workers)
+            ]))
+        return TrajectoryBatch.concatenate(*ordered_trajectories)
 
     def shutdown_worker(self):
         """Shuts down the worker."""

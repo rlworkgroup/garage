@@ -110,3 +110,29 @@ def test_update_envs_env_update():
                                10,
                                np.asarray(policy.get_param_values()),
                                env_update=tasks.sample(n_workers + 1))
+
+
+def test_obtain_exact_trajectories():
+    max_path_length = 15
+    n_workers = 8
+    env = TfEnv(PointEnv())
+    per_worker_actions = [env.action_space.sample() for _ in range(n_workers)]
+    policies = [
+        FixedPolicy(env.spec, [action] * max_path_length)
+        for action in per_worker_actions
+    ]
+    workers = WorkerFactory(seed=100,
+                            max_path_length=max_path_length,
+                            n_workers=n_workers)
+    sampler = RaySampler.from_worker_factory(workers, policies, envs=env)
+    n_traj_per_worker = 3
+    rollouts = sampler.obtain_exact_trajectories(n_traj_per_worker, policies)
+    # At least one action per trajectory.
+    assert sum(rollouts.lengths) >= n_workers * n_traj_per_worker
+    # All of the trajectories.
+    assert len(rollouts.lengths) == n_workers * n_traj_per_worker
+    worker = -1
+    for count, rollout in enumerate(rollouts.split()):
+        if count % n_traj_per_worker == 0:
+            worker += 1
+        assert (rollout.actions == per_worker_actions[worker]).all()
