@@ -273,6 +273,7 @@ class RL2(RLAlgorithm):
         dones = np_tensor_utils.stack_and_pad_tensor_n(paths, 'dones', max_len)
         returns = np_tensor_utils.stack_and_pad_tensor_n(
             paths, 'returns', max_len)
+
         agent_infos = np_tensor_utils.stack_and_pad_tensor_n(
             paths, 'agent_infos', max_len)
         env_infos = np_tensor_utils.stack_and_pad_tensor_n(
