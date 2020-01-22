@@ -253,3 +253,32 @@ def normalize_pixel_batch(env_spec, observations):
         if len(env_spec.observation_space.shape) == 3:
             return [obs.astype(np.float32) / 255.0 for obs in observations]
     return observations
+
+
+def slice_nested_dict(dict_or_array, start, stop):
+    """Slice a dictionary containing arrays (or dictionaries).
+
+    This function is primarily intended for un-batching env_infos and
+    action_infos.
+
+    Args:
+        dict_or_array (dict[str, dict or np.ndarray] or np.ndarray): A nested
+            dictionary should only contain dictionaries and numpy arrays
+            (recursively).
+        start (int): First index to be included in the slice.
+        stop (int): First index to be excluded from the slice. In other words,
+            these are typical python slice indices.
+
+    Returns:
+        dict or np.ndarray: The input, but sliced.
+
+    """
+    if isinstance(dict_or_array, dict):
+        return {
+            k: slice_nested_dict(v, start, stop)
+            for (k, v) in dict_or_array.items()
+        }
+    else:
+        # It *should* be a numpy array (unless someone ignored the type
+        # signature).
+        return dict_or_array[start:stop]

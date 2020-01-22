@@ -170,13 +170,14 @@ class TrajectoryBatch(
 
         # env_infos
         for key, val in env_infos.items():
-            if not isinstance(val, np.ndarray):
+            if not isinstance(val, (dict, np.ndarray)):
                 raise ValueError(
-                    'Each entry in env_infos must be a numpy array, but got '
-                    'key {} with value type {} instead.'
-                    'instead'.format(key, type(val)))
+                    'Each entry in env_infos must be a numpy array or '
+                    'dictionary, but got key {} with value type {} instead.'.
+                    format(key, type(val)))
 
-            if val.shape[0] != inferred_batch_size:
+            if (isinstance(val, np.ndarray)
+                    and val.shape[0] != inferred_batch_size):
                 raise ValueError(
                     'Each entry in env_infos must have a batch dimension of '
                     'length {}, but got key {} with batch size {} instead.'.
@@ -184,13 +185,14 @@ class TrajectoryBatch(
 
         # agent_infos
         for key, val in agent_infos.items():
-            if not isinstance(val, np.ndarray):
+            if not isinstance(val, (dict, np.ndarray)):
                 raise ValueError(
-                    'Each entry in agent_infos must be a numpy array, but got '
-                    'key {} with value type {} instead.'
+                    'Each entry in agent_infos must be a numpy array or '
+                    'dictionary, but got key {} with value type {} instead.'
                     'instead'.format(key, type(val)))
 
-            if val.shape[0] != inferred_batch_size:
+            if (isinstance(val, np.ndarray)
+                    and val.shape[0] != inferred_batch_size):
                 raise ValueError(
                     'Each entry in agent_infos must have a batch dimension of '
                     'length {}, but got key {} with batch size {} instead.'.
@@ -255,14 +257,10 @@ class TrajectoryBatch(
                                    actions=self.actions[start:stop],
                                    rewards=self.rewards[start:stop],
                                    terminals=self.terminals[start:stop],
-                                   env_infos={
-                                       k: v[start:stop]
-                                       for (k, v) in self.env_infos.items()
-                                   },
-                                   agent_infos={
-                                       k: v[start:stop]
-                                       for (k, v) in self.env_infos.items()
-                                   },
+                                   env_infos=tensor_utils.slice_nested_dict(
+                                       self.env_infos, start, stop),
+                                   agent_infos=tensor_utils.slice_nested_dict(
+                                       self.agent_infos, start, stop),
                                    lengths=np.asarray([length]))
             trajectories.append(traj)
             start = stop
