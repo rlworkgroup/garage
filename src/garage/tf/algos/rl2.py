@@ -3,81 +3,96 @@
 Reference: https://arxiv.org/pdf/1611.02779.pdf.
 """
 import collections
+import copy
 
-from dowel import logger, tabular
+from dowel import tabular
 import numpy as np
 
-import garage
 from garage.misc import tensor_utils as np_tensor_utils
-from garage.np.algos import RLAlgorithm
+from garage.tf.algos import BatchPolopt
 
 
-class RL2(RLAlgorithm):
+class RL2(BatchPolopt):
+    # pylint: disable=abstract-method
     """RL^2 .
 
     Args:
-        inner_algo (garage.tf.algos.BatchPolopt): Inner algorithm. RL^2 only
-            works with garage.tf.algos.BatchPolopt.
-        max_path_length (int): Maximum length for trajectories with respect
-            to RL^2. Notice that it is differen from the maximum path length
-            for the inner algorithm.
-
-    Raises:
-        ValueError: If the inner algorithm is not of type
-            garage.tf.algos.BatchPolopt.
+        env_spec (garage.envs.EnvSpec): Environment specification.
+        policy (garage.tf.policies.base.Policy): Policy.
+        baseline (garage.tf.baselines.Baseline): The baseline.
+        scope (str): Scope for identifying the algorithm.
+            Must be specified if running multiple algorithms
+            simultaneously, each using different environments
+            and policies.
+        max_path_length (int): Maximum length of a single rollout.
+        episode_per_task (int): Number of episode to be sampled per task.
+        discount (float): Discount.
+        gae_lambda (float): Lambda used for generalized advantage
+            estimation.
+        center_adv (bool): Whether to rescale the advantages
+            so that they have mean 0 and standard deviation 1.
+        positive_adv (bool): Whether to shift the advantages
+            so that they are always positive. When used in
+            conjunction with center_adv the advantages will be
+            standardized before shifting.
+        fixed_horizon (bool): Whether to fix horizon.
+        flatten_input (bool): Whether to flatten input along the observation
+            dimension. If True, for example, an observation with shape (2, 4)
+            will be flattened to 8.
+        num_of_env (int): Number of vectorized environment instances to be
+            used for sampling.
 
     """
 
-    def __init__(self, inner_algo, max_path_length):
-        if not isinstance(inner_algo, garage.tf.algos.BatchPolopt):
-            raise ValueError('RL^2 only works with '
-                             'garage.tf.algos.BatchPolopt!')
-        self._inner_algo = inner_algo
-        self._max_path_length = max_path_length
-        self._env_spec = inner_algo.env_spec
-        self._flatten_input = inner_algo.flatten_input
-        self._policy = inner_algo.policy
-        self._discount = inner_algo.discount
+    def __init__(self,
+                 env_spec,
+                 policy,
+                 baseline,
+                 scope=None,
+                 max_path_length=500,
+                 episode_per_task=1,
+                 discount=0.99,
+                 gae_lambda=1,
+                 center_adv=True,
+                 positive_adv=False,
+                 fixed_horizon=False,
+                 flatten_input=True,
+                 num_of_env=1):
+        self._episode_per_task = episode_per_task
+        self._rl2_max_path_length = max_path_length // episode_per_task
+        self._num_of_env = num_of_env
+        super().__init__(env_spec=env_spec,
+                         policy=policy,
+                         baseline=baseline,
+                         scope=scope,
+                         max_path_length=max_path_length,
+                         discount=discount,
+                         gae_lambda=gae_lambda,
+                         center_adv=center_adv,
+                         positive_adv=positive_adv,
+                         fixed_horizon=fixed_horizon,
+                         flatten_input=flatten_input)
 
-    def train(self, runner):
-        """Obtain samplers and start actual training for each epoch.
+        self.baselines = [
+            copy.deepcopy(self.baseline) for i in range(num_of_env)
+        ]
 
-        Args:
-            runner (LocalRunner): LocalRunner is passed to give algorithm
-                the access to runner.step_epochs(), which provides services
-                such as snapshotting and sampler control.
+    @property
+    def rl2_max_path_length(self):
+        """Max path length for RL^2.
+
+        This is different from max_path_length, which represents maximum
+        path length for concatenated paths. This represents the maximum
+        path length for each individual paths. Usually the value would
+        be maximum_path_length * episode_per_task.
 
         Returns:
-            float: The average return in last epoch.
+            int: Maximum path length for RL^2.
 
         """
-        last_return = None
+        return self._rl2_max_path_length
 
-        for _ in runner.step_epochs():
-            runner.step_path = runner.obtain_samples(runner.step_itr)
-            tabular.record('TotalEnvSteps', runner.total_env_steps)
-            last_return = self.train_once(runner.step_itr, runner.step_path)
-            runner.step_itr += 1
-
-        return last_return
-
-    def train_once(self, itr, paths):
-        """Perform one step of policy optimization given one batch of samples.
-
-        Args:
-            itr (int): Iteration number.
-            paths (list[dict]): A list of collected paths.
-
-        Returns:
-            numpy.float64: Average return.
-
-        """
-        paths = self._process_samples(itr, paths)
-        logger.log('Optimizing policy...')
-        self._inner_algo.optimize_policy(itr, paths)
-        return paths['average_return']
-
-    def _process_samples(self, itr, paths):
+    def process_samples(self, itr, paths):
         # pylint: disable=too-many-statements
         """Return processed sample data based on the collected paths.
 
@@ -122,11 +137,10 @@ class RL2(RLAlgorithm):
         paths_by_task = collections.defaultdict(list)
         for path in paths:
             path['returns'] = np_tensor_utils.discount_cumsum(
-                path['rewards'], self._discount)
+                path['rewards'], self.discount)
             path['lengths'] = len(path['rewards'])
             batch_id = path['batch_idx']
-            path['baselines'] = self._inner_algo.baselines[batch_id].predict(
-                path)
+            path['baselines'] = self.baselines[batch_id].predict(path)
             paths_by_task[batch_id].append(path)
 
         for path in paths_by_task.values():
@@ -136,22 +150,22 @@ class RL2(RLAlgorithm):
         (observations, actions, rewards, _, _, valids, baselines, lengths,
          env_infos, agent_infos) = \
             self._stack_paths(
-                max_len=self._inner_algo.max_path_length,
+                max_len=self.max_path_length,
                 paths=concatenated_path_in_meta_batch)
 
         (_observations, _actions, _rewards, _terminals, _, _valids, _,
          _lengths, _env_infos, _agent_infos) = \
             self._stack_paths(
-                max_len=self._max_path_length,
+                max_len=self._rl2_max_path_length,
                 paths=paths)
 
-        ent = np.sum(self._policy.distribution.entropy(agent_infos) *
+        ent = np.sum(self.policy.distribution.entropy(agent_infos) *
                      valids) / np.sum(valids)
 
         # performance is evaluated across all paths
         undiscounted_returns = self.evaluate_performance(
             itr,
-            dict(env_spec=self._env_spec,
+            dict(env_spec=self.env_spec,
                  observations=_observations,
                  actions=_actions,
                  rewards=_rewards,
@@ -159,7 +173,7 @@ class RL2(RLAlgorithm):
                  env_infos=_env_infos,
                  agent_infos=_agent_infos,
                  lengths=_lengths,
-                 discount=self._discount))
+                 discount=self.discount))
 
         tabular.record('Entropy', ent)
         tabular.record('Perplexity', np.exp(ent))
@@ -201,16 +215,16 @@ class RL2(RLAlgorithm):
         """
         returns = []
 
-        if self._flatten_input:
+        if self.flatten_input:
             observations = np.concatenate([
-                self._env_spec.observation_space.flatten_n(
-                    path['observations']) for path in paths
+                self.env_spec.observation_space.flatten_n(path['observations'])
+                for path in paths
             ])
         else:
             observations = np.concatenate(
                 [path['observations'] for path in paths])
         actions = np.concatenate([
-            self._env_spec.action_space.flatten_n(path['actions'])
+            self.env_spec.action_space.flatten_n(path['actions'])
             for path in paths
         ])
         rewards = np.concatenate([path['rewards'] for path in paths])
@@ -293,23 +307,3 @@ class RL2(RLAlgorithm):
 
         return (observations, actions, rewards, dones, returns, valids,
                 baselines, lengths, env_infos, agent_infos)
-
-    @property
-    def policy(self):
-        """Policy used for inner algorithm.
-
-        Returns:
-            garage.tf.policies.base.Policy: Policy used for inner algorithm.
-
-        """
-        return self._policy
-
-    @property
-    def max_path_length(self):
-        """Maximum path length.
-
-        Returns:
-            int: Maximum path length.
-
-        """
-        return self._max_path_length

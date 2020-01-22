@@ -69,8 +69,6 @@ class NPO(BatchPolopt):
             dimension. If True, for example, an observation with shape (2, 4)
             will be flattened to 8.
         name (str): The name of the algorithm.
-        num_of_env (int): Number of vectorized environment instances to be
-            used for sampling.
 
     Note:
         sane defaults for entropy configuration:
@@ -107,8 +105,7 @@ class NPO(BatchPolopt):
                  stop_entropy_gradient=False,
                  entropy_method='no_entropy',
                  flatten_input=True,
-                 name='NPO',
-                 num_of_env=1):
+                 name='NPO'):
         self._name = name
         self._name_scope = tf.name_scope(self._name)
         self._use_softplus_entropy = use_softplus_entropy
@@ -149,8 +146,7 @@ class NPO(BatchPolopt):
                          center_adv=center_adv,
                          positive_adv=positive_adv,
                          fixed_horizon=fixed_horizon,
-                         flatten_input=flatten_input,
-                         num_of_env=num_of_env)
+                         flatten_input=flatten_input)
 
     def init_opt(self):
         """Initialize optimizater."""

@@ -5,7 +5,6 @@ from garage.experiment import run_experiment
 from garage.np.baselines import LinearFeatureBaseline
 from garage.sampler.rl2_sampler import RL2Sampler
 from garage.tf.algos import PPO
-from garage.tf.algos import RL2
 from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import GaussianGRUPolicy
 
@@ -32,16 +31,13 @@ def run_task(snapshot_config, *_):
 
         baseline = LinearFeatureBaseline(env_spec=env.spec)
 
-        inner_algo = PPO(env_spec=env.spec,
-                         policy=policy,
-                         baseline=baseline,
-                         max_path_length=max_path_length * episode_per_task,
-                         discount=0.99,
-                         lr_clip_range=0.2,
-                         num_of_env=meta_batch_size,
-                         optimizer_args=dict(max_epochs=5))
-
-        algo = RL2(inner_algo=inner_algo, max_path_length=max_path_length)
+        algo = PPO(env_spec=env.spec,
+                   policy=policy,
+                   baseline=baseline,
+                   max_path_length=max_path_length * episode_per_task,
+                   discount=0.99,
+                   lr_clip_range=0.2,
+                   optimizer_args=dict(max_epochs=5))
 
         runner.setup(algo,
                      env,

@@ -99,7 +99,7 @@ class RL2Sampler(BaseSampler):
                 e.seed(seed0 + i)
 
         self._vec_env = VecEnvExecutor(
-            envs=vec_envs, max_path_length=self.algo.max_path_length)
+            envs=vec_envs, max_path_length=self.algo.rl2_max_path_length)
 
     # pylint: disable=too-many-statements
     def obtain_samples(self, itr, batch_size=None, whole_paths=True):
