@@ -158,7 +158,7 @@ def test_terminals_dtype_mismatch_traj(traj_data):
 def test_env_infos_not_ndarray_traj(traj_data):
     with pytest.raises(ValueError,
                        match='entry in env_infos must be a numpy array'):
-        traj_data['env_infos']['bar'] = dict()
+        traj_data['env_infos']['bar'] = []
         t = TrajectoryBatch(**traj_data)
         del t
 
