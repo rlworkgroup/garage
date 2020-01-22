@@ -85,7 +85,7 @@ class TanhGaussianMLPBaseModule2(nn.Module):
                  std_hidden_nonlinearity=torch.tanh,
                  std_hidden_w_init=nn.init.xavier_uniform_,
                  std_hidden_b_init=nn.init.zeros_,
-                 std_output_nonlinearity=None,
+                 std_output_nonlinearity=torch.tanh,
                  std_output_w_init=nn.init.xavier_uniform_,
                  std_parameterization='exp',
                  layer_normalization=False):

@@ -4,9 +4,9 @@ import time
 import numpy as np
 
 from garage import TimeStep
-from garage.sampler.sampler import Sampler
+from garage.sampler.base import BaseSampler
 
-class SimpleSampler(Sampler):
+class SimpleSampler(BaseSampler):
     """Generic sampler used for off policy sampling
 
     Args:
@@ -57,6 +57,9 @@ class SimpleSampler(Sampler):
         return returned_samples
     
     def shutdown_worker(self):
+        pass
+
+    def start_worker(self):
         pass
 
 
