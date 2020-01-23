@@ -63,6 +63,7 @@ EXTRAS['dev'] = [
     'flake8-import-order',
     'gtimer',
     'matplotlib',
+    'metaworld @ git+https://github.com/rlworkgroup/metaworld.git@dfdbc7cf495678ee96b360d1e6e199acc141b36c',  # noqa: E501
     'pandas',
     'pep8-naming==0.7.0',
     'pre-commit',

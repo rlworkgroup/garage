@@ -5,6 +5,7 @@ import collections
 from dowel import logger, tabular
 import numpy as np
 
+from garage import log_performance, TrajectoryBatch
 from garage.misc import tensor_utils as np_tensor_utils
 from garage.np.algos import RLAlgorithm
 from garage.sampler import OnPolicyVectorizedSampler
@@ -153,6 +154,11 @@ class BatchPolopt(RLAlgorithm):
 
         max_path_length = self.max_path_length
 
+        undiscounted_returns = log_performance(
+            itr,
+            TrajectoryBatch.from_trajectory_list(self.env_spec, paths),
+            discount=self.discount)
+
         if self.flatten_input:
             paths = [
                 dict(
@@ -220,8 +226,6 @@ class BatchPolopt(RLAlgorithm):
 
         baselines = tensor_utils.pad_tensor_n(baselines, max_path_length)
 
-        terminals = [path['dones'] for path in paths]
-
         agent_infos = [path['agent_infos'] for path in paths]
         agent_infos = tensor_utils.stack_tensor_dict_list([
             tensor_utils.pad_tensor_dict(p, max_path_length)
@@ -240,19 +244,6 @@ class BatchPolopt(RLAlgorithm):
 
         ent = np.sum(self.policy.distribution.entropy(agent_infos) *
                      valids) / np.sum(valids)
-
-        undiscounted_returns = self.evaluate_performance(
-            itr,
-            dict(env_spec=self.env_spec,
-                 observations=obs,
-                 actions=actions,
-                 rewards=rewards,
-                 terminals=terminals,
-                 env_infos=env_infos,
-                 agent_infos=agent_infos,
-                 lengths=lengths,
-                 discount=self.discount,
-                 episode_reward_mean=self.episode_reward_mean))
 
         self.episode_reward_mean.extend(undiscounted_returns)
 

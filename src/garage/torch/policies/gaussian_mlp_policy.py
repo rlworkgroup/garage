@@ -87,27 +87,15 @@ class GaussianMLPPolicy(Policy, GaussianMLPModule):
                                    std_parameterization=std_parameterization,
                                    layer_normalization=layer_normalization)
 
-    def forward(self, inputs):
-        """Forward method.
-
-        Args:
-            inputs (torch.Tensor): values to compute
-
-        Returns:
-            torch.Tensor: computed values
-
-        """
-        return super().forward(torch.Tensor(inputs))
-
     def get_action(self, observation):
         """Get a single action given an observation.
 
         Args:
-            observation (torch.Tensor): Observation from the environment.
+            observation (np.ndarray): Observation from the environment.
 
         Returns:
             tuple:
-                * torch.Tensor: Predicted action.
+                * np.ndarray: Predicted action.
                 * dict:
                     * list[float]: Mean of the distribution
                     * list[float]: Standard deviation of logarithmic values of
@@ -115,7 +103,7 @@ class GaussianMLPPolicy(Policy, GaussianMLPModule):
 
         """
         with torch.no_grad():
-            observation = observation.unsqueeze(0)
+            observation = torch.Tensor(observation).unsqueeze(0)
             dist = self.forward(observation)
             return (dist.rsample().squeeze(0).numpy(),
                     dict(mean=dist.mean.squeeze(0).numpy(),
@@ -125,11 +113,11 @@ class GaussianMLPPolicy(Policy, GaussianMLPModule):
         """Get actions given observations.
 
         Args:
-            observations (torch.Tensor): Observations from the environment.
+            observations (np.ndarray): Observations from the environment.
 
         Returns:
             tuple:
-                * torch.Tensor: Predicted actions.
+                * np.ndarray: Predicted actions.
                 * dict:
                     * list[float]: Mean of the distribution
                     * list[float]: Standard deviation of logarithmic values of
@@ -137,7 +125,7 @@ class GaussianMLPPolicy(Policy, GaussianMLPModule):
 
         """
         with torch.no_grad():
-            dist = self.forward(observations)
+            dist = self.forward(torch.Tensor(observations))
             return (dist.rsample().numpy(),
                     dict(mean=dist.mean.numpy(),
                          log_std=(dist.variance**.5).log().numpy()))

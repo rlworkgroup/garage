@@ -7,6 +7,7 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 
+from garage import log_performance, TrajectoryBatch
 from garage.misc import tensor_utils
 from garage.np.algos import BatchPolopt
 from garage.torch.algos import (_Default, compute_advantages, filter_valids,
@@ -71,7 +72,6 @@ class VPG(BatchPolopt):
             stop_entropy_gradient=False,
             entropy_method='no_entropy',
     ):
-        self._env_spec = env_spec
         self._gae_lambda = gae_lambda
         self._center_adv = center_adv
         self._positive_adv = positive_adv
@@ -93,7 +93,8 @@ class VPG(BatchPolopt):
                                          lr=policy_lr,
                                          eps=_Default(1e-5))
 
-        super().__init__(policy=policy,
+        super().__init__(env_spec=env_spec,
+                         policy=policy,
                          baseline=baseline,
                          discount=discount,
                          max_path_length=max_path_length,
@@ -151,17 +152,10 @@ class VPG(BatchPolopt):
             kl = self._compute_kl_constraint(obs)
             policy_entropy = self._compute_policy_entropy(obs)
 
-        average_returns = self.evaluate_performance(
-            itr,
-            dict(env_spec=None,
-                 observations=obs.numpy(),
-                 actions=actions.numpy(),
-                 rewards=rewards.numpy(),
-                 terminals=[path['dones'] for path in paths],
-                 env_infos=[path['env_infos'] for path in paths],
-                 agent_infos=[path['agent_infos'] for path in paths],
-                 lengths=valids,
-                 discount=self.discount))
+        average_returns = log_performance(itr,
+                                          TrajectoryBatch.from_trajectory_list(
+                                              self.env_spec, paths),
+                                          discount=self.discount)
 
         with tabular.prefix(self.policy.name):
             tabular.record('LossBefore', loss.item())

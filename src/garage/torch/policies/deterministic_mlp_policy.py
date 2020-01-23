@@ -9,7 +9,7 @@ from garage.torch.modules import MLPModule
 from garage.torch.policies import Policy
 
 
-class DeterministicMLPPolicy(MLPModule, Policy):
+class DeterministicMLPPolicy(Policy, MLPModule):
     """Implements a deterministic policy network.
 
     The policy network selects action based on the state of the environment.
@@ -35,28 +35,15 @@ class DeterministicMLPPolicy(MLPModule, Policy):
                            output_dim=self._action_dim,
                            **kwargs)
 
-    def forward(self, input_val):
-        """Forward method.
-
-        Args:
-            input_val (torch.Tensor): values to compute
-
-        Returns:
-            torch.Tensor: computed values
-
-        """
-        input_val = torch.FloatTensor(input_val)
-        return super().forward(input_val)
-
     def get_action(self, observation):
         """Get a single action given an observation.
 
         Args:
-            observation (torch.Tensor): Observation from the environment.
+            observation (np.ndarray): Observation from the environment.
 
         Returns:
             tuple:
-                * torch.Tensor: Predicted action.
+                * np.ndarray: Predicted action.
                 * dict:
                     * list[float]: Mean of the distribution
                     * list[float]: Log of standard deviation of the
@@ -64,18 +51,18 @@ class DeterministicMLPPolicy(MLPModule, Policy):
 
         """
         with torch.no_grad():
-            x = self.forward(observation.unsqueeze(0))
+            x = self.forward(torch.Tensor(observation).unsqueeze(0))
             return x.squeeze(0).numpy(), dict()
 
     def get_actions(self, observations):
         """Get actions given observations.
 
         Args:
-            observations (torch.Tensor): Observations from the environment.
+            observations (np.ndarray): Observations from the environment.
 
         Returns:
             tuple:
-                * torch.Tensor: Predicted actions.
+                * np.ndarray: Predicted actions.
                 * dict:
                     * list[float]: Mean of the distribution
                     * list[float]: Log of standard deviation of the
@@ -83,7 +70,7 @@ class DeterministicMLPPolicy(MLPModule, Policy):
 
         """
         with torch.no_grad():
-            x = self.forward(observations)
+            x = self.forward(torch.Tensor(observations))
             return x.numpy(), dict()
 
     def reset(self, dones=None):
