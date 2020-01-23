@@ -176,7 +176,7 @@ class SAC(OffPolicyRLAlgorithm):
         q2_pred = self.qf2(torch.Tensor(obs), torch.Tensor(actions))
 
         new_next_actions_dist = self.policy(torch.Tensor(next_obs))
-        new_next_actions_pre_tanh, new_next_actions = new_next_actions_dist.rsample(return_pre_tanh_value=True)
+        new_next_actions_pre_tanh, new_next_actions = new_next_actions_dist.rsample_return_pre_tanh_value()
         new_log_pi = new_next_actions_dist.log_prob(value=new_next_actions, pre_tanh_value=new_next_actions_pre_tanh)
 
         target_q_values = torch.min(
@@ -257,7 +257,7 @@ class SAC(OffPolicyRLAlgorithm):
             tabular.record("policy/min_stdev", torch.min(action_dists.variance.detach().flatten()).item()**0.5)
             tabular.record("policy/max_stdev", torch.max(action_dists.variance.detach().flatten()).item()**0.5)
             tabular.record("policy/mu_mean", torch.mean(action_dists.mean.detach()).item())
-        new_actions_pre_tanh, new_actions = action_dists.rsample(return_pre_tanh_value=True)
+        new_actions_pre_tanh, new_actions = action_dists.rsample_return_pre_tanh_value()
         log_pi = action_dists.log_prob(value=new_actions, pre_tanh_value=new_actions_pre_tanh)
 
         policy_loss = self.actor_objective(obs, log_pi, new_actions)
