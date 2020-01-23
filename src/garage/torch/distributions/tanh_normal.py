@@ -57,60 +57,75 @@ class TanhNormal(torch.distributions.Distribution):
             axis=-1))
         return ret
 
-    def sample_return_pre_tanh_value(self, sample_shape=torch.Size()):
-        """Return a sample, sampled from this Tanh Normal Distribution.
+    # def sample_return_pre_tanh_value(self, sample_shape=torch.Size()):
+    #     """Return a sample, sampled from this Tanh Normal Distribution.
 
-        Returns the sampled value before the Tanh transform is applied and the
-        sampled value with the Tanh transform applied to it.
+    #     Returns the sampled value before the Tanh transform is applied and the
+    #     sampled value with the Tanh transform applied to it.
 
-        Args:
-            sample_shape (list): Shape of the returned value.
+    #     Args:
+    #         sample_shape (list): Shape of the returned value.
 
-        Note: Gradients `do not` pass through this operation.
+    #     Note: Gradients `do not` pass through this operation.
 
-        Returns:
-            action_infos: named tuple with fields
-                "pre_tanh_action" and "action"
+    #     Returns:
+    #         action_infos: named tuple with fields
+    #             "pre_tanh_action" and "action"
 
-        """
+    #     """
+    #     with torch.no_grad():
+    #         return self.rsample_return_pre_tanh_value(sample_shape)
+
+    # def rsample(self, sample_shape=torch.Size()):
+    #     """Return a sample, sampled from this Tanh Normal Distribution.
+
+    #     Args:
+    #         sample_shape (list): Shape of the returned value.
+
+    #     Note: Gradients pass through this operation.
+
+    #     Returns:
+    #         torch.Tensor: Sample from this Tanh Normal distribution.
+
+    #     """
+    #     z = self._normal.rsample(sample_shape=sample_shape)
+    #     return torch.tanh(z)
+
+    # def rsample_return_pre_tanh_value(self, sample_shape=torch.Size()):
+    #     """Return a sample, sampled from this Tanh Normal distribution.
+
+    #     Returns the sampled value before the Tanh transform is applied and the
+    #     sampled value with the Tanh transform applied to it.
+
+    #     Args:
+    #         sample_shape (list): shape of the return.
+
+    #     Note: Gradients pass through this operation.
+
+    #     Returns:
+    #         action_infos: named tuple with fields
+    #             "pre_tanh_action" and "action"
+
+    #     """
+    #     action_infos = namedtuple('action_infos',
+    #                               ['pre_tanh_action', 'action'])
+    #     z = self._normal.sample(sample_shape=sample_shape)
+    #     return action_infos(z, torch.tanh(z))
+
+    def sample(self, sample_shape=torch.Size(), *, return_pre_tanh_value=False):
         with torch.no_grad():
-            return self.rsample_return_pre_tanh_value(sample_shape)
-
-    def rsample(self, sample_shape=torch.Size()):
-        """Return a sample, sampled from this Tanh Normal Distribution.
-
-        Args:
-            sample_shape (list): Shape of the returned value.
-
-        Note: Gradients pass through this operation.
-
-        Returns:
-            torch.Tensor: Sample from this Tanh Normal distribution.
-
+            return self.rsample(sample_shape=sample_shape, return_pre_tanh_value=return_pre_tanh_value)
+    
+    def rsample(self, sample_shape=torch.Size(), *, return_pre_tanh_value=False):
         """
-        z = self._normal.rsample(sample_shape=sample_shape)
+        Sampling in the reparameterization case.
+        """
+        z = self._normal.rsample(sample_shape)
+        if return_pre_tanh_value:
+            action_infos = namedtuple("action_infos", ["pre_tanh_action",
+                                                       "action"])
+            return action_infos(z, torch.tanh(z))
         return torch.tanh(z)
-
-    def rsample_return_pre_tanh_value(self, sample_shape=torch.Size()):
-        """Return a sample, sampled from this Tanh Normal distribution.
-
-        Returns the sampled value before the Tanh transform is applied and the
-        sampled value with the Tanh transform applied to it.
-
-        Args:
-            sample_shape (list): shape of the return.
-
-        Note: Gradients pass through this operation.
-
-        Returns:
-            action_infos: named tuple with fields
-                "pre_tanh_action" and "action"
-
-        """
-        action_infos = namedtuple('action_infos',
-                                  ['pre_tanh_action', 'action'])
-        z = self._normal.sample(sample_shape=sample_shape)
-        return action_infos(z, torch.tanh(z))
 
     def cdf(self, value):
         """Returns the CDF at the value.
