@@ -79,6 +79,7 @@ class TestSampler:
         sampler2.shutdown_worker()
 
 
+@pytest.mark.flaky
 def test_update_envs_env_update():
     max_path_length = 16
     env = TfEnv(PointEnv())
