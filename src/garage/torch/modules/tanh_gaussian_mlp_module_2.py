@@ -5,7 +5,7 @@ import numpy as np
 import torch
 from torch import nn
 
-from garage.torch.distributions import TanhNormal2, TanhNormal
+from garage.torch.distributions import TanhNormal
 from garage.torch.modules.mlp_module import MLPModule
 from garage.torch.modules.multi_headed_mlp_module import MultiHeadedMLPModule
 
@@ -54,9 +54,6 @@ class TanhGaussianMLPBaseModule2(nn.Module):
             to avoid numerical issues (plain value - not log or exponentiated).
         std_hidden_nonlinearity: Nonlinearity for each hidden layer in
             the std network.
-        std_output_nonlinearity (callable): Activation function for output
-            dense layer in the std network. It should return a torch.Tensor.
-            Set it to None to maintain a linear activation.
         std_output_w_init (callable): Initializer function for the weight
             of output dense layer(s) in the std network.
         std_parametrization (str): How the std should be parametrized. There
@@ -82,10 +79,9 @@ class TanhGaussianMLPBaseModule2(nn.Module):
                  min_std=1e-6,
                  max_std=None,
                  std_hidden_sizes=(32, 32),
-                 std_hidden_nonlinearity=torch.tanh,
+                 std_hidden_nonlinearity=nn.ReLU,
                  std_hidden_w_init=nn.init.xavier_uniform_,
                  std_hidden_b_init=nn.init.zeros_,
-                 std_output_nonlinearity=torch.tanh,
                  std_output_w_init=nn.init.xavier_uniform_,
                  std_parameterization='exp',
                  layer_normalization=False):
@@ -101,7 +97,7 @@ class TanhGaussianMLPBaseModule2(nn.Module):
         self._std_hidden_nonlinearity = std_hidden_nonlinearity
         self._std_hidden_w_init = std_hidden_w_init
         self._std_hidden_b_init = std_hidden_b_init
-        self._std_output_nonlinearity = std_output_nonlinearity
+        self._std_output_nonlinearity = torch.tanh
         self._std_output_w_init = std_output_w_init
         self._std_parameterization = std_parameterization
         self._hidden_nonlinearity = hidden_nonlinearity
@@ -140,11 +136,7 @@ class TanhGaussianMLPBaseModule2(nn.Module):
             std = log_std_uncentered.exp()
         else:
             std = log_std_uncentered.exp().exp().add(1.).log()
-
-        # cov = (std**2).diag_embed()
-        # dist = TanhNormal2(mean, cov)
         dist = TanhNormal(mean, std)
-
         return dist
 
     def _to_scalar_if_not_none(self, tensor):

@@ -1,27 +1,25 @@
 """A Gaussian distribution with tanh transformation."""
-from collections import namedtuple
-
 import torch
 from torch.distributions import Normal
 from torch.distributions.independent import Independent
 
 
 class TanhNormal(torch.distributions.Distribution):
-    """A gaussian distribution that has a tanh transformation applied to it.
+    r"""A distribution induced by applying a tanh transformation to a Gaussian random variable.
 
     Algorithms like SAC and Pearl use this transformed distribution.
     It can be thought of as a distribution of X where
-        Y ~ N(mean, cov)
-        X ~ tanh(Y)
+        :math: `Y ~ \mathcal{N}(\mu, \sigma)`
+        :math: `X = tanh(Y)`
 
     Args:
-        mean (torch.tensor): The mean of this distribution.
-        std (torch.tensor): The stdev of this distribution.
+        loc (torch.Tensor): The mean of this distribution.
+        scale (torch.Tensor): The stdev of this distribution.
 
-    """
+    """ # noqa: 501
 
-    def __init__(self, mean, std):
-        self._normal = Independent(Normal(mean, std), 1)
+    def __init__(self, loc, scale):
+        self._normal = Independent(Normal(loc, scale), 1)
         super().__init__()
 
     def log_prob(self, value, pre_tanh_value=None, epsilon=1e-6):
@@ -35,8 +33,8 @@ class TanhNormal(torch.distributions.Distribution):
                 normal distribution.
             epsilon (float): Stabilization coefficient.
 
-        Notes:
-            - when pre_tanh_value is None, an estimate is made of what the
+        Note:
+              when pre_tanh_value is None, an estimate is made of what the
               value is. This leads to a worse estimation of the log_prob.
               If the value being used is collected from functions like
               `sample` and `rsample`, one can instead use functions like
@@ -63,7 +61,8 @@ class TanhNormal(torch.distributions.Distribution):
         Args:
             sample_shape (list): Shape of the returned value.
 
-        Note: Gradients `do not` pass through this operation.
+        Note:
+            Gradients `do not` pass through this operation.
 
         Returns:
             torch.Tensor: Sample from this Tanh Normal distribution.
@@ -71,14 +70,15 @@ class TanhNormal(torch.distributions.Distribution):
         """
         with torch.no_grad():
             return self.rsample(sample_shape=sample_shape)
-    
+
     def rsample(self, sample_shape=torch.Size()):
         """Return a sample, sampled from this Tanh Normal Distribution.
 
         Args:
             sample_shape (list): Shape of the returned value.
 
-        Note: Gradients pass through this operation.
+        Note:
+            Gradients pass through this operation.
 
         Returns:
             torch.Tensor: Sample from this Tanh Normal distribution.
@@ -87,7 +87,7 @@ class TanhNormal(torch.distributions.Distribution):
         z = self._normal.rsample(sample_shape)
         return torch.tanh(z)
 
-    def rsample_return_pre_tanh_value(self, sample_shape=torch.Size()):
+    def rsample_with_pre_tanh_value(self, sample_shape=torch.Size()):
         """Return a sample, sampled from this Tanh Normal distribution.
 
         Returns the sampled value before the Tanh transform is applied and the
@@ -96,36 +96,18 @@ class TanhNormal(torch.distributions.Distribution):
         Args:
             sample_shape (list): shape of the return.
 
-        Note: Gradients pass through this operation.
+        Note:
+            Gradients pass through this operation.
 
         Returns:
-            action_infos: named tuple with fields
-                "pre_tanh_action" and "action"
+            torch.Tensor: Samples from this distribution.
+            torch.Tensor: Samples from the underlying
+                :obj:`torch.distributions.Normal` distribution, prior to being
+                transformed with `tanh`.
 
         """
-        action_infos = namedtuple("action_infos", ["pre_tanh_action",
-                                                       "action"])
         z = self._normal.rsample(sample_shape)
-        return action_infos(z, torch.tanh(z))
-
-    def sample_return_pre_tanh_value(self, sample_shape=torch.Size()):
-        """Return a sample, sampled from this Tanh Normal Distribution.
-
-        Returns the sampled value before the Tanh transform is applied and the
-        sampled value with the Tanh transform applied to it.
-
-        Args:
-            sample_shape (list): Shape of the returned value.
-
-        Note: Gradients `do not` pass through this operation.
-
-        Returns:
-            action_infos: named tuple with fields
-                "pre_tanh_action" and "action"
-
-        """
-        with torch.no_grad():
-            return self.rsample_return_pre_tanh_value(sample_shape=sample_shape)
+        return z, torch.tanh(z)
 
     def cdf(self, value):
         """Returns the CDF at the value.
@@ -233,25 +215,12 @@ class TanhNormal(torch.distributions.Distribution):
 
     @property
     def mean(self):
-        """Returns mean of the distribution.
-
-        Note: This is the mean of the underlying normal distribution
-              with the Tanh transformation applied.
-
-        Returns:
-            torch.Tensor: mean of the distribution
-
-        """
+        """torch.Tensor: mean of the distribution."""
         return torch.tanh(self._normal.mean)
 
     @property
     def variance(self):
-        """Returns variance of the underlying normal distribution.
-
-        Returns:
-            torch.Tensor: variance of the underlying normal distribution.
-
-        """
+        """torch.Tensor: variance of the underlying normal distribution."""
         return self._normal.variance
 
     def entropy(self):
@@ -268,9 +237,9 @@ class TanhNormal(torch.distributions.Distribution):
         """Clipping function that allows for gradients to flow through.
 
         Args:
-            x(torch.tensor): value to be clipped
-            lower(float): lower bound of clipping
-            upper(float): upper bound of clipping
+            x (torch.Tensor): value to be clipped
+            lower (float): lower bound of clipping
+            upper (float): upper bound of clipping
 
         Returns:
             torch.Tensor: x clipped between lower and upper.
@@ -282,15 +251,6 @@ class TanhNormal(torch.distributions.Distribution):
             clip = ((upper - x) * clip_up + (lower - x) * clip_low)
         return x + clip
 
-    def __str__(self):
-        """Returns the Name of the class.
-
-        Returns:
-            str: The class name.
-
-        """
-        return 'TanhNormal'
-
     def __repr__(self):
         """Returns the parameterization of the distribution.
 
@@ -299,7 +259,4 @@ class TanhNormal(torch.distributions.Distribution):
                 distribution.
 
         """
-        return ('TanhNormal Dist: Mean {}, stdev {}\n \
-                 Underlying Normal Mean {}, stdev {}'.format(
-            self.mean, self.variance, self._normal.mean,
-            self._normal.variance))
+        return self.__class__.__name__
