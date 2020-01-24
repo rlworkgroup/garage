@@ -98,3 +98,46 @@ def test_meta_evaluator():
         assert (float(rows[0]['MetaTest/AverageReturn']) >= float(
             rows[0]['MetaTest/MinReturn']))
         assert float(rows[1]['MetaTest/Iteration']) == 1
+
+
+class MockAlgo:
+
+    sampler_cls = LocalSampler
+
+    def __init__(self, env, max_path_length, n_exploration_traj):
+        self.env = env
+        self.policy = RandomPolicy(self.env.spec.action_space)
+        self.max_path_length = max_path_length
+        self.n_exploration_traj = n_exploration_traj
+
+    def get_exploration_policy(self):
+        return self.policy
+
+    def adapt_policy(self, exploration_policy, exploration_trajectories):
+        del exploration_policy
+        assert (len(
+            exploration_trajectories.lengths) == self.n_exploration_traj)
+
+
+def test_meta_evaluator_n_traj():
+    set_seed(100)
+    tasks = SetTaskSampler(PointEnv)
+    max_path_length = 200
+    env = GarageEnv(PointEnv())
+    n_traj = 3
+    with tempfile.TemporaryDirectory() as log_dir_name:
+        runner = LocalRunner(
+            SnapshotConfig(snapshot_dir=log_dir_name,
+                           snapshot_mode='last',
+                           snapshot_gap=1))
+        algo = MockAlgo(env, max_path_length, n_traj)
+        runner.setup(algo, env)
+        meta_eval = MetaEvaluator(runner,
+                                  test_task_sampler=tasks,
+                                  max_path_length=max_path_length,
+                                  n_test_tasks=10,
+                                  n_exploration_traj=n_traj)
+        log_file = tempfile.NamedTemporaryFile()
+        csv_output = CsvOutput(log_file.name)
+        logger.add_output(csv_output)
+        meta_eval.evaluate(algo)
