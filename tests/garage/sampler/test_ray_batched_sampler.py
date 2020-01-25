@@ -112,6 +112,30 @@ def test_update_envs_env_update():
                                env_update=tasks.sample(n_workers + 1))
 
 
+def make_wrapped_env():
+    return TfEnv(PointEnv())
+
+
+def test_init_with_env_updates():
+    max_path_length = 16
+    env = make_wrapped_env()
+    policy = FixedPolicy(env.spec,
+                         scripted_actions=[
+                             env.action_space.sample()
+                             for _ in range(max_path_length)
+                         ])
+    tasks = SetTaskSampler(make_wrapped_env)
+    n_workers = 8
+    workers = WorkerFactory(seed=100,
+                            max_path_length=max_path_length,
+                            n_workers=n_workers)
+    sampler = RaySampler.from_worker_factory(workers,
+                                             policy,
+                                             envs=tasks.sample(n_workers))
+    rollouts = sampler.obtain_samples(0, 160, policy)
+    assert sum(rollouts.lengths) >= 160
+
+
 def test_obtain_exact_trajectories():
     max_path_length = 15
     n_workers = 8

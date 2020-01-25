@@ -36,8 +36,8 @@ class LocalSampler(Sampler):
             worker_factory(i) for i in range(worker_factory.n_workers)
         ]
         for worker, agent, env in zip(self._workers, self._agents, self._envs):
-            worker.agent = agent
-            worker.env = env
+            worker.update_agent(agent)
+            worker.update_env(env)
 
     @classmethod
     def from_worker_factory(cls, worker_factory, agents, envs):

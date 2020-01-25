@@ -264,10 +264,11 @@ class SamplerWorker:
     """
 
     def __init__(self, worker_id, env, agent_pkl, worker_factory):
+        # Must be called before pickle.loads below.
         self.inner_worker = worker_factory(worker_id)
         self.worker_id = worker_id
-        self.inner_worker.env = env
-        self.inner_worker.agent = pickle.loads(agent_pkl)
+        self.inner_worker.update_env(env)
+        self.inner_worker.update_agent(pickle.loads(agent_pkl))
 
     def update(self, agent_update, env_update):
         """Update the agent and environment.
