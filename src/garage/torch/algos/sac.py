@@ -146,27 +146,27 @@ class SAC(OffPolicyRLAlgorithm):
 
         """
         last_return = None
-    
+
         for _ in runner.step_epochs():
-            for cycle in range(self.gradient_steps):
-                if self.replay_buffer.n_transitions_stored < self.min_buffer_size:
-                    batch_size = self.min_buffer_size
-                else:
-                    batch_size = None
-                runner.step_path = runner.obtain_samples(runner.step_itr, batch_size)
-                for sample in runner.step_path:
-                    self.replay_buffer.store(obs=sample.observation,
-                                            act=sample.action,
-                                            rew=sample.reward,
-                                            next_obs=sample.next_observation,
-                                            done=sample.terminal)
-                self.episode_rewards.append(sum([sample.reward for sample in runner.step_path]))
-                last_return = self.train_once(runner.step_itr,
+            if self.replay_buffer.n_transitions_stored < self.min_buffer_size:
+                batch_size = self.min_buffer_size
+            else:
+                batch_size = None
+            runner.step_path = runner.obtain_samples(runner.step_itr, batch_size)
+            for sample in runner.step_path:
+                self.replay_buffer.store(obs=sample.observation,
+                                        act=sample.action,
+                                        rew=sample.reward,
+                                        next_obs=sample.next_observation,
+                                        done=sample.terminal)
+            self.episode_rewards.append(sum([sample.reward for sample in runner.step_path]))
+            for _ in range(self.gradient_steps):
+                last_return, policy_loss, qf1_loss, qf2_loss = self.train_once(runner.step_itr,
                                               runner.step_path)
-            import ipdb; ipdb.set_trace()
             self.evaluate_performance(
                 runner.step_itr,
-                self._obtain_evaluation_samples(runner.get_env_copy()))
+                self._obtain_evaluation_samples(runner.get_env_copy(), num_trajs=10))
+            self.log_statistics(policy_loss, qf1_loss, qf2_loss)
             tabular.record('TotalEnvSteps', runner.total_env_steps)
             runner.step_itr += 1
 

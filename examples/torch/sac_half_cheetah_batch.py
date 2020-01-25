@@ -44,11 +44,11 @@ def run_task(snapshot_config, *_):
                                 hidden_sizes=[256, 256],
                                 hidden_nonlinearity=F.relu)
 
-    # replay_buffer = SimpleReplayBuffer(env_spec=env.spec,
-    #                                    size_in_transitions=int(1e6),
-    #                                    time_horizon=100)
-    replay_buffer = SACReplayBuffer(env_spec=env.spec,
-                                       max_size=int(1e6))
+    replay_buffer = SimpleReplayBuffer(env_spec=env.spec,
+                                       size_in_transitions=int(1e6),
+                                       time_horizon=1)
+    # replay_buffer = SACReplayBuffer(env_spec=env.spec,
+    #                                    max_size=int(1e6))
     sampler_args = {'agent': policy, 'max_path_length': 1000,}
     sac = SAC(env_spec=env.spec,
                 policy=policy,
