@@ -112,19 +112,15 @@ def test_update_envs_env_update():
                                env_update=tasks.sample(n_workers + 1))
 
 
-def make_wrapped_env():
-    return TfEnv(PointEnv())
-
-
 def test_init_with_env_updates():
     max_path_length = 16
-    env = make_wrapped_env()
+    env = TfEnv(PointEnv())
     policy = FixedPolicy(env.spec,
                          scripted_actions=[
                              env.action_space.sample()
                              for _ in range(max_path_length)
                          ])
-    tasks = SetTaskSampler(make_wrapped_env)
+    tasks = SetTaskSampler(lambda: TfEnv(PointEnv()))
     n_workers = 8
     workers = WorkerFactory(seed=100,
                             max_path_length=max_path_length,

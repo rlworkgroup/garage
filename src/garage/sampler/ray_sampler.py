@@ -8,8 +8,8 @@ function, and a rollout function.
 """
 from collections import defaultdict
 import itertools
-import pickle
 
+import cloudpickle
 import ray
 
 from garage import TrajectoryBatch
@@ -71,7 +71,7 @@ class RaySampler(Sampler):
         # We need to pickle the agent so that we can e.g. set up the TF.Session
         # in the worker *before* unpickling it.
         agent_pkls = self._worker_factory.prepare_worker_messages(
-            self._agents, pickle.dumps)
+            self._agents, cloudpickle.dumps)
         for worker_id in range(self._worker_factory.n_workers):
             self._all_workers[worker_id] = self._sampler_worker.remote(
                 worker_id, self._envs[worker_id], agent_pkls[worker_id],
@@ -268,7 +268,7 @@ class SamplerWorker:
         self.inner_worker = worker_factory(worker_id)
         self.worker_id = worker_id
         self.inner_worker.update_env(env)
-        self.inner_worker.update_agent(pickle.loads(agent_pkl))
+        self.inner_worker.update_agent(cloudpickle.loads(agent_pkl))
 
     def update(self, agent_update, env_update):
         """Update the agent and environment.
