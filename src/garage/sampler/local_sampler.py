@@ -36,8 +36,8 @@ class LocalSampler(Sampler):
             worker_factory(i) for i in range(worker_factory.n_workers)
         ]
         for worker, agent, env in zip(self._workers, self._agents, self._envs):
-            worker.agent = agent
-            worker.env = env
+            worker.update_agent(agent)
+            worker.update_env(env)
 
     @classmethod
     def from_worker_factory(cls, worker_factory, agents, envs):
@@ -63,6 +63,27 @@ class LocalSampler(Sampler):
         """
         return cls(worker_factory, agents, envs)
 
+    def _update_workers(self, agent_update, env_update):
+        """Apply updates to the workers.
+
+        Args:
+            agent_update(object): Value which will be passed into the
+                `agent_update_fn` before doing rollouts. If a list is passed
+                in, it must have length exactly `factory.n_workers`, and will
+                be spread across the workers.
+            env_update(object): Value which will be passed into the
+                `env_update_fn` before doing rollouts. If a list is passed in,
+                it must have length exactly `factory.n_workers`, and will be
+                spread across the workers.
+
+        """
+        agent_updates = self._factory.prepare_worker_messages(agent_update)
+        env_updates = self._factory.prepare_worker_messages(env_update)
+        for worker, agent_up, env_up in zip(self._workers, agent_updates,
+                                            env_updates):
+            worker.update_agent(agent_up)
+            worker.update_env(env_up)
+
     def obtain_samples(self, itr, num_samples, agent_update, env_update=None):
         """Collect at least a given number transitions (timesteps).
 
@@ -84,12 +105,7 @@ class LocalSampler(Sampler):
             garage.TrajectoryBatch: The batch of collected trajectories.
 
         """
-        agent_updates = self._factory.prepare_worker_messages(agent_update)
-        env_updates = self._factory.prepare_worker_messages(env_update)
-        for worker, agent_up, env_up in zip(self._workers, agent_updates,
-                                            env_updates):
-            worker.update_agent(agent_up)
-            worker.update_env(env_up)
+        self._update_workers(agent_update, env_update)
         batches = []
         completed_samples = 0
         while True:
@@ -99,6 +115,38 @@ class LocalSampler(Sampler):
                 batches.append(batch)
                 if completed_samples > num_samples:
                     return TrajectoryBatch.concatenate(*batches)
+
+    def obtain_exact_trajectories(self,
+                                  n_traj_per_worker,
+                                  agent_update,
+                                  env_update=None):
+        """Sample an exact number of trajectories per worker.
+
+        Args:
+            n_traj_per_worker (int): Exact number of trajectories to gather for
+                each worker.
+            agent_update(object): Value which will be passed into the
+                `agent_update_fn` before doing rollouts. If a list is passed
+                in, it must have length exactly `factory.n_workers`, and will
+                be spread across the workers.
+            env_update(object): Value which will be passed into the
+                `env_update_fn` before doing rollouts. If a list is passed in,
+                it must have length exactly `factory.n_workers`, and will be
+                spread across the workers.
+
+        Returns:
+            TrajectoryBatch: Batch of gathered trajectories. Always in worker
+                order. In other words, first all trajectories from worker 0,
+                then all trajectories from worker 1, etc.
+
+        """
+        self._update_workers(agent_update, env_update)
+        batches = []
+        for worker in self._workers:
+            for _ in range(n_traj_per_worker):
+                batch = worker.rollout()
+                batches.append(batch)
+        return TrajectoryBatch.concatenate(*batches)
 
     def shutdown_worker(self):
         """Shutdown the workers."""

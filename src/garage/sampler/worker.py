@@ -178,7 +178,8 @@ class DefaultWorker(Worker):
             if isinstance(env_update, EnvUpdate):
                 self.env = env_update(self.env)
             elif isinstance(env_update, gym.Env):
-                self.env.close()
+                if self.env is not None:
+                    self.env.close()
                 self.env = env_update
             else:
                 raise TypeError('Uknown environment update type.')
