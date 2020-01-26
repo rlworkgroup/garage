@@ -92,7 +92,7 @@ def test_update_envs_env_update():
                             n_workers=n_workers)
     sampler = LocalSampler.from_worker_factory(workers, policy, env)
     rollouts = sampler.obtain_samples(0,
-                                      160,
+                                      161,
                                       np.asarray(policy.get_param_values()),
                                       env_update=tasks.sample(n_workers))
     mean_rewards = []

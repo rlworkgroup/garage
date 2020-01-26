@@ -113,7 +113,7 @@ class LocalSampler(Sampler):
                 batch = worker.rollout()
                 completed_samples += len(batch.actions)
                 batches.append(batch)
-                if completed_samples > num_samples:
+                if completed_samples >= num_samples:
                     return TrajectoryBatch.concatenate(*batches)
 
     def obtain_exact_trajectories(self,
