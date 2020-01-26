@@ -4,6 +4,7 @@ import base64
 import datetime
 import enum
 import functools
+import gc
 import json
 import os
 import os.path as osp
@@ -378,7 +379,11 @@ class ExperimentTemplate:
             return self
         else:
             ctxt = self._make_context(*args, **kwargs)
-            return self.function(ctxt, *args, **kwargs)
+            result = self.function(ctxt, *args, **kwargs)
+            logger.remove_all()
+            logger.pop_prefix()
+            gc.collect()  # See dowel issue #44
+            return result
 
 
 def wrap_experiment(function=None,

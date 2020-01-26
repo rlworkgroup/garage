@@ -4,6 +4,7 @@ import argparse
 import ast
 import base64
 import datetime
+import gc
 import json
 import os
 import pathlib
@@ -160,6 +161,7 @@ def run_experiment(argv):
 
     logger.remove_all()
     logger.pop_prefix()
+    gc.collect()  # See dowel issue #44
 
 
 def child_proc_shutdown(children):

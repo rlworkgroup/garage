@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-This is an example to train a task with PPO algorithm.
+"""This is an example to train a task with PPO algorithm.
 
 Here it creates InvertedDoublePendulum using gym. And uses a PPO with 1M
 steps.
@@ -13,8 +12,9 @@ Results:
 import gym
 import tensorflow as tf
 
+from garage import wrap_experiment
 from garage.envs import normalize
-from garage.experiment import run_experiment
+from garage.experiment.deterministic import set_seed
 from garage.tf.algos import PPO
 from garage.tf.baselines import GaussianMLPBaseline
 from garage.tf.envs import TfEnv
@@ -22,9 +22,19 @@ from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import GaussianMLPPolicy
 
 
-def run_task(snapshot_config, *_):
-    """Run task."""
-    with LocalTFRunner(snapshot_config=snapshot_config) as runner:
+@wrap_experiment
+def tf_ppo_pendulum(ctxt=None, seed=1):
+    """Train PPO with InvertedDoublePendulum-v2 environment.
+
+    Args:
+        ctxt (garage.experiment.ExperimentContext): The experiment
+            configuration used by LocalRunner to create the snapshotter.
+        seed (int): Used to seed the random number generator to produce
+            determinism.
+
+    """
+    set_seed(seed)
+    with LocalTFRunner(snapshot_config=ctxt) as runner:
         env = TfEnv(normalize(gym.make('InvertedDoublePendulum-v2')))
 
         policy = GaussianMLPPolicy(
@@ -68,4 +78,4 @@ def run_task(snapshot_config, *_):
         runner.train(n_epochs=120, batch_size=2048, plot=False)
 
 
-run_experiment(run_task, snapshot_mode='last', seed=1)
+tf_ppo_pendulum(seed=1)

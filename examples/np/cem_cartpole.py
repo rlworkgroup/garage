@@ -7,7 +7,8 @@ Results:
     AverageReturn: 100
     RiseTime: epoch 8
 """
-from garage.experiment import run_experiment
+from garage import wrap_experiment
+from garage.experiment.deterministic import set_seed
 from garage.np.algos import CEM
 from garage.np.baselines import LinearFeatureBaseline
 from garage.sampler import OnPolicyVectorizedSampler
@@ -16,16 +17,19 @@ from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import CategoricalMLPPolicy
 
 
-def run_task(snapshot_config, *_):
+@wrap_experiment
+def cem_cartpole(ctxt=None, seed=1):
     """Train CEM with Cartpole-v1 environment.
 
     Args:
-        snapshot_config (garage.experiment.SnapshotConfig): The snapshot
+        ctxt (garage.experiment.ExperimentContext): The experiment
             configuration used by LocalRunner to create the snapshotter.
-        *_ (object): Ignored by this function.
+        seed (int): Used to seed the random number generator to produce
+            determinism.
 
     """
-    with LocalTFRunner(snapshot_config=snapshot_config) as runner:
+    set_seed(seed)
+    with LocalTFRunner(snapshot_config=ctxt) as runner:
         env = TfEnv(env_name='CartPole-v1')
 
         policy = CategoricalMLPPolicy(name='policy',
@@ -47,8 +51,4 @@ def run_task(snapshot_config, *_):
         runner.train(n_epochs=100, batch_size=1000)
 
 
-run_experiment(
-    run_task,
-    snapshot_mode='last',
-    seed=1,
-)
+cem_cartpole(seed=1)
