@@ -102,10 +102,23 @@ class TrajectoryBatch(
 
         # observations
         if not env_spec.observation_space.contains(first_observation):
-            raise ValueError(
-                'observations must conform to observation_space {}, but got '
-                'data with shape {} instead.'.format(
-                    env_spec.observation_space, first_observation))
+            # Discrete actions can be either in the space normally, or one-hot
+            # encoded.
+            if isinstance(env_spec.observation_space,
+                          (akro.Box, akro.Discrete)):
+                if env_spec.observation_space.flat_dim != np.prod(
+                        first_observation.shape):
+                    raise ValueError('observations should have the same '
+                                     'dimensionality as the observation_space '
+                                     '({}), but got data with shape {} '
+                                     'instead'.format(
+                                         env_spec.observation_space.flat_dim,
+                                         first_observation.shape))
+            else:
+                raise ValueError(
+                    'observations must conform to observation_space {}, but '
+                    'got data with shape {} instead.'.format(
+                        env_spec.observation_space, first_observation))
 
         if observations.shape[0] != inferred_batch_size:
             raise ValueError(
@@ -113,12 +126,25 @@ class TrajectoryBatch(
                 'but got length {} instead.'.format(inferred_batch_size,
                                                     observations.shape[0]))
 
-        # last observations
+        # observations
         if not env_spec.observation_space.contains(last_observations[0]):
-            raise ValueError(
-                'last_observations must conform to observation_space {}, but '
-                'got ata with shape {} instead.'.format(
-                    env_spec.observation_space, first_observation))
+            # Discrete actions can be either in the space normally, or one-hot
+            # encoded.
+            if isinstance(env_spec.observation_space,
+                          (akro.Box, akro.Discrete)):
+                if env_spec.observation_space.flat_dim != np.prod(
+                        last_observations[0].shape):
+                    raise ValueError('last_observations should have the same '
+                                     'dimensionality as the observation_space '
+                                     '({}), but got data with shape {} '
+                                     'instead'.format(
+                                         env_spec.observation_space.flat_dim,
+                                         last_observations[0].shape))
+            else:
+                raise ValueError(
+                    'last_observations must conform to observation_space {}, '
+                    'but got data with shape {} instead.'.format(
+                        env_spec.observation_space, last_observations[0]))
 
         if last_observations.shape[0] != len(lengths):
             raise ValueError(
