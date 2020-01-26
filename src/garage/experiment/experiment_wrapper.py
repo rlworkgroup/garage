@@ -4,7 +4,6 @@ import argparse
 import ast
 import base64
 import datetime
-import enum
 import json
 import os
 import pathlib
@@ -18,7 +17,7 @@ import dowel
 from dowel import logger
 import psutil
 
-from garage.experiment import deterministic, SnapshotConfig
+import garage.experiment
 import garage.plotter
 import garage.tf.plotter
 
@@ -116,11 +115,7 @@ def run_experiment(argv):
     args = parser.parse_args(argv[1:])
 
     if args.seed is not None:
-        deterministic.set_seed(args.seed)
-
-    if not args.plot:
-        garage.plotter.Plotter.disable()
-        garage.tf.plotter.Plotter.disable()
+        garage.experiment.deterministic.set_seed(args.seed)
 
     if args.log_dir is None:
         log_dir = os.path.join(os.path.join(os.getcwd(), 'data'),
@@ -135,7 +130,7 @@ def run_experiment(argv):
     if args.variant_data is not None:
         variant_data = pickle.loads(base64.b64decode(args.variant_data))
         variant_log_file = os.path.join(log_dir, args.variant_log_file)
-        dump_variant(variant_log_file, variant_data)
+        garage.experiment.experiment.dump_json(variant_log_file, variant_data)
     else:
         variant_data = None
 
@@ -148,9 +143,10 @@ def run_experiment(argv):
 
     logger.push_prefix('[%s] ' % args.exp_name)
 
-    snapshot_config = SnapshotConfig(snapshot_dir=log_dir,
-                                     snapshot_mode=args.snapshot_mode,
-                                     snapshot_gap=args.snapshot_gap)
+    snapshot_config = \
+        garage.experiment.SnapshotConfig(snapshot_dir=log_dir,
+                                         snapshot_mode=args.snapshot_mode,
+                                         snapshot_gap=args.snapshot_gap)
 
     method_call = cloudpickle.loads(base64.b64decode(args.args_data))
     try:
@@ -222,45 +218,12 @@ def log_parameters(log_file, args):
         log_params['json_args'] = dict()
     pathlib.Path(os.path.dirname(log_file)).mkdir(parents=True, exist_ok=True)
     with open(log_file, 'w') as f:
-        json.dump(log_params, f, indent=2, sort_keys=True, cls=LogEncoder)
-
-
-def dump_variant(log_file, variant_data):
-    """Dump the variant file.
-
-    Args:
-        log_file (str): Log filename.
-        variant_data (object): Variant data.
-
-    """
-    pathlib.Path(os.path.dirname(log_file)).mkdir(parents=True, exist_ok=True)
-    with open(log_file, 'w') as f:
-        json.dump(variant_data, f, indent=2, sort_keys=True, cls=LogEncoder)
-
-
-class LogEncoder(json.JSONEncoder):
-    """Encoder to be used as cls in json.dump."""
-
-    def default(self, o):  # pylint: disable=method-hidden
-        """Perform JSON encoding.
-
-        Args:
-            o (object): Object to encode.
-
-        Returns:
-            str: Object encoded in JSON.
-
-        """
-        if isinstance(o, type):
-            return {'$class': o.__module__ + '.' + o.__name__}
-        if isinstance(o, enum.Enum):
-            return {
-                '$enum':
-                o.__module__ + '.' + o.__class__.__name__ + '.' + o.name
-            }
-        if callable(o):
-            return {'$function': o.__module__ + '.' + o.__name__}
-        return json.JSONEncoder.default(self, o)
+        json.dump(log_params,
+                  f,
+                  indent=2,
+                  sort_keys=True,
+                  cls=garage.experiment.experiment.LogEncoder)
+    garage.experiment.experiment.dump_json(log_file, log_params)
 
 
 if __name__ == '__main__':
