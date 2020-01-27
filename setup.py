@@ -9,6 +9,7 @@ GYM_VERSION = '==0.15.4'
 REQUIRED = [
     # Please keep alphabetized
     'akro==0.0.6',
+    'atari-py<0.2.0',
     'cached_property',
     'click',
     'cloudpickle',

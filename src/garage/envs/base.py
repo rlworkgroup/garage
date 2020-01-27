@@ -92,7 +92,7 @@ class GarageEnv(gym.Wrapper):
         # We need to do some strange things here to fix-up flaws in gym
         # pylint: disable=protected-access, import-outside-toplevel
         if self.env.spec:
-            if any(package in getattr(self.env.spec, '_entry_point', '')
+            if any(package in getattr(self.env.spec, 'entry_point', '')
                    for package in KNOWN_GYM_NOT_CLOSE_MJ_VIEWER):
                 # This import is not in the header to avoid a MuJoCo dependency
                 # with non-MuJoCo environments that use this base class.
@@ -106,7 +106,7 @@ class GarageEnv(gym.Wrapper):
                 if (hasattr(self.env, 'viewer')
                         and isinstance(self.env.viewer, MjViewer)):
                     glfw.destroy_window(self.env.viewer.window)
-            elif any(package in getattr(self.env.spec, '_entry_point', '')
+            elif any(package in getattr(self.env.spec, 'entry_point', '')
                      for package in KNOWN_GYM_NOT_CLOSE_VIEWER):
                 if hasattr(self.env, 'viewer'):
                     from gym.envs.classic_control.rendering import (
