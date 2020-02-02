@@ -12,15 +12,18 @@ import pathlib
 import pickle
 import re
 import subprocess
+import warnings
 
 import cloudpickle
 import dowel
 from dowel import logger
 import dateutil.tz
+import __main__ as main
 
 exp_count = 0
 now = datetime.datetime.now(dateutil.tz.tzlocal())
 timestamp = now.strftime('%Y_%m_%d_%H_%M_%S')
+EIGHT_MEBIBYTES = 8 * 2**20
 
 
 def run_experiment(method_call=None,
@@ -289,19 +292,25 @@ class ExperimentTemplate:
             iterations are saved), or "none" (do not save snapshots).
         snapshot_gap (int): Gap between snapshot iterations. Waits this number
             of iterations before taking another snapshot.
+        archive_launch_repo (bool): Whether to save an archive of the
+            repository containing the launcher script. This is a potentially
+            expensive operation which is useful for ensuring reproducibility.
 
     """
 
     # pylint: disable=too-few-public-methods
 
     def __init__(self, *, function, log_dir, name, prefix, snapshot_mode,
-                 snapshot_gap):
+                 snapshot_gap, archive_launch_repo):
         self.function = function
         self.log_dir = log_dir
         self.name = name
         self.prefix = prefix
         self.snapshot_mode = snapshot_mode
         self.snapshot_gap = snapshot_gap
+        self.archive_launch_repo = archive_launch_repo
+        if self.function is not None:
+            functools.update_wrapper(self, self.function)
 
     def _make_context(self, *args, **kwargs):
         """Make a context from the template information and variant args.
@@ -329,7 +338,7 @@ class ExperimentTemplate:
             if name is None:
                 name = self.function.__name__
             log_dir = ('{data}/local/{prefix}/{name}'.format(
-                data=osp.join(os.getcwd(), 'data'),
+                data=os.path.join(os.getcwd(), 'data'),
                 prefix=self.prefix,
                 name=name))
         log_dir = _make_sequential_log_dir(log_dir)
@@ -337,15 +346,21 @@ class ExperimentTemplate:
         tabular_log_file = os.path.join(log_dir, 'progress.csv')
         text_log_file = os.path.join(log_dir, 'debug.log')
         variant_log_file = os.path.join(log_dir, 'variant.json')
+        metadata_log_file = os.path.join(log_dir, 'metadata.json')
 
         dump_json(variant_log_file, kwargs)
+        git_root_path, metadata = get_metadata()
+        dump_json(metadata_log_file, metadata)
+        if git_root_path and self.archive_launch_repo:
+            make_launcher_archive(git_root_path=git_root_path, log_dir=log_dir)
 
         logger.add_output(dowel.TextOutput(text_log_file))
         logger.add_output(dowel.CsvOutput(tabular_log_file))
         logger.add_output(dowel.TensorBoardOutput(log_dir))
         logger.add_output(dowel.StdOutput())
 
-        logger.push_prefix('[%s] ' % self.name)
+        logger.push_prefix('[{}] '.format(name))
+        logger.log('Logging to {}'.format(log_dir))
 
         return ExperimentContext(snapshot_dir=log_dir,
                                  snapshot_mode=self.snapshot_mode,
@@ -392,7 +407,8 @@ def wrap_experiment(function=None,
                     prefix='experiment',
                     name=None,
                     snapshot_mode='last',
-                    snapshot_gap=1):
+                    snapshot_gap=1,
+                    archive_launch_repo=True):
     """Decorate a function to turn it into an ExperimentTemplate.
 
     When invoked, the wrapped function will receive an ExperimentContext, which
@@ -429,6 +445,10 @@ def wrap_experiment(function=None,
             iterations are saved), or "none" (do not save snapshots).
         snapshot_gap (int): Gap between snapshot iterations. Waits this number
             of iterations before taking another snapshot.
+        archive_launch_repo (bool): Whether to save an archive of the
+            repository containing the launcher script. This is a potentially
+            expensive operation which is useful for ensuring reproducibility.
+
 
     Returns:
         callable: The wrapped function.
@@ -439,7 +459,8 @@ def wrap_experiment(function=None,
                               prefix=prefix,
                               name=name,
                               snapshot_mode=snapshot_mode,
-                              snapshot_gap=snapshot_gap)
+                              snapshot_gap=snapshot_gap,
+                              archive_launch_repo=archive_launch_repo)
 
 
 def dump_json(filename, data):
@@ -453,6 +474,90 @@ def dump_json(filename, data):
     pathlib.Path(os.path.dirname(filename)).mkdir(parents=True, exist_ok=True)
     with open(filename, 'w') as f:
         json.dump(data, f, indent=2, sort_keys=True, cls=LogEncoder)
+
+
+def get_metadata():
+    """Get metadata about the main script.
+
+    The goal of this function is to capture the additional information needed
+    to re-run an experiment, assuming that the launcher script that started the
+    experiment is located in a clean git repository.
+
+    Returns:
+        tuple[str, dict[str, str]]:
+          * Absolute path to root directory of launcher's git repo.
+          * Directory containing:
+            * githash (str): Hash of the git revision of the repo the
+                experiment was started from. "-dirty" will be appended to this
+                string if the repo has uncommitted changes. May not be present
+                if the main script is not in a git repo.
+            * launcher (str): Relative path to the main script from the base of
+                the repo the experiment was started from. If the main script
+                was not started from a git repo, this will instead be an
+                absolute path to the main script.
+
+    """
+    main_file = getattr(main, '__file__', None)
+    if not main_file:
+        return None, {}
+    main_file_path = os.path.abspath(main_file)
+    try:
+        git_root_path = subprocess.check_output(
+            ('git', 'rev-parse', '--show-toplevel'),
+            cwd=os.path.dirname(main_file_path),
+            stderr=subprocess.DEVNULL)
+        git_root_path = git_root_path.strip()
+    except subprocess.CalledProcessError:
+        # This file is always considered not to exist.
+        git_root_path = ''
+    # We check that the path exists since in old versions of git the above
+    # rev-parse command silently exits with 0 when run outside of a git repo.
+    if not os.path.exists(git_root_path):
+        return None, {
+            'launcher': main_file_path,
+        }
+    launcher_path = os.path.relpath(bytes(main_file_path, encoding='utf8'),
+                                    git_root_path)
+    git_hash = subprocess.check_output(('git', 'rev-parse', 'HEAD'),
+                                       cwd=git_root_path)
+    git_hash = git_hash.decode('utf-8').strip()
+    git_status = subprocess.check_output(('git', 'status', '--short'),
+                                         cwd=git_root_path)
+    git_status = git_status.decode('utf-8').strip()
+    if git_status != '':
+        git_hash = git_hash + '-dirty'
+    return git_root_path, {
+        'githash': git_hash,
+        'launcher': launcher_path.decode('utf-8'),
+    }
+
+
+def make_launcher_archive(*, git_root_path, log_dir):
+    """Saves an archive of the launcher's git repo to the log directory.
+
+    Args:
+        git_root_path (str): Absolute path to git repo to archive.
+        log_dir (str): Absolute path to the log directory.
+
+    """
+    files_to_archive = subprocess.check_output(
+        ('git', 'ls-files', '--others', '--exclude-standard', '--cached',
+         '-z'),
+        cwd=git_root_path).strip()
+    repo_size = sum([
+        os.stat(os.path.join(git_root_path, f)).st_size
+        for f in files_to_archive.split(b'\0')
+    ])
+    if repo_size >= EIGHT_MEBIBYTES:
+        warnings.warn('Archiving a launch repo larger than 8MiB. This may be '
+                      'slow. Set archive_launch_repo=False in wrap_experiment '
+                      'to disable this behavior.')
+    archive_path = os.path.join(log_dir, 'launch_archive.tar.xz')
+    subprocess.run(('tar', '--null', '--files-from', '-', '--auto-compress',
+                    '--create', '--file', archive_path),
+                   input=files_to_archive,
+                   cwd=git_root_path,
+                   check=True)
 
 
 class LogEncoder(json.JSONEncoder):

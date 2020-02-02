@@ -1,6 +1,10 @@
 import os
 import pathlib
 import shutil
+import subprocess
+import sys
+import tempfile
+import textwrap
 
 import pytest
 
@@ -52,20 +56,28 @@ def test_experiment_with_variant():
     assert exp_folder_name.startswith('test_prefix')
 
 
-# Pylint gets confused by @wrap_experiment adding an argument.
-# pylint: disable=no-value-for-parameter
+def _hard_rmtree(path):
+    # Sometimes rmtree doesn't work, for some reason, but moving the directory
+    # to a temporary directory does.
+    shutil.rmtree(path, ignore_errors=True)
+    try:
+        with tempfile.TemporaryDirectory() as trash_dir:
+            shutil.move(str(path), trash_dir)
+    except FileNotFoundError:
+        pass
+
+
 def test_wrap_experiment_makes_log_dir():
-    prefix = 'wrap_exp_test_prefix'
+    prefix = 'wrap_exp_test_makes_log_dir'
     exp_path = pathlib.Path(os.getcwd(), 'data/local', prefix)
-    shutil.rmtree(exp_path, ignore_errors=True)
+    _hard_rmtree(exp_path)
     expected_path = exp_path / 'test_exp'
 
     @wrap_experiment(prefix=prefix)
-    def test_exp(ctxt):
+    def test_exp(ctxt=None):
         assert expected_path.samefile(ctxt.snapshot_dir)
 
-    with pytest.raises(FileNotFoundError):
-        list(exp_path.iterdir())
+    assert not exp_path.exists()
 
     test_exp()
 
@@ -92,3 +104,70 @@ def test_wrap_experiment_makes_log_dir():
     assert any([
         expected_path.samefile(directory) for directory in new_folder_contents
     ])
+
+
+def _run_launcher(launcher_path, prefix):
+    with launcher_path.open('w') as launcher_f:
+        launcher_f.write(
+            textwrap.dedent(r"""
+            from garage import wrap_experiment
+
+            @wrap_experiment(prefix='{}')
+            def test_exp(ctxt):
+                print(ctxt.snapshot_dir)
+
+            test_exp()""".format(prefix)))
+    snapshot_dir = (subprocess.check_output(
+        (sys.executable,
+         str(launcher_path))).decode('utf-8').strip().split('\n'))[-1]
+    return snapshot_dir
+
+
+def test_wrap_experiment_builds_git_archive():
+    prefix = 'wrap_exp_test_builds_git_archive'
+    exp_path = pathlib.Path(os.getcwd(), 'data/local', prefix)
+    _hard_rmtree(exp_path)
+    expected_path = exp_path / 'test_exp' / 'launch_archive.tar.xz'
+
+    # Because __main__ actually points to pytest right now, we need to run the
+    # "real" test in a subprocess.
+    with tempfile.TemporaryDirectory() as launcher_dir:
+        launch_dir = pathlib.Path(launcher_dir)
+        subprocess.check_call(('git', 'init'), cwd=launcher_dir)
+        # Make a test file, since git ls-files needs at least one commit.
+        test_txt = launch_dir / 'test.txt'
+        test_txt.touch()
+        subprocess.check_call(('git', 'add', str(test_txt)), cwd=launcher_dir)
+        subprocess.check_call(
+            ('git', '-c', 'user.name=Test User', '-c',
+             'user.email=test@example.com', 'commit', '-m', 'Initial commit'),
+            cwd=launcher_dir)
+        subdir = launch_dir / 'subdir'
+        subdir.mkdir()
+        launcher_path = pathlib.Path(launcher_dir) / 'subdir' / 'run_exp.py'
+
+        snapshot_dir = _run_launcher(launcher_path, prefix)
+
+        archive_path = os.path.join(snapshot_dir, 'launch_archive.tar.xz')
+        assert expected_path.samefile(archive_path)
+        assert expected_path.exists()
+        archive_size = expected_path.stat().st_size
+        assert archive_size > 250
+        contents = subprocess.check_output(
+            ('tar', '--list', '--file', archive_path)).decode('utf-8')
+        assert 'subdir/run_exp.py' in contents.strip()
+        assert 'test.txt' in contents.strip()
+
+
+def test_wrap_experiment_launcher_outside_git():
+    prefix = 'wrap_exp_test_launcher_outside_git'
+    exp_path = pathlib.Path(os.getcwd(), 'data/local', prefix)
+    _hard_rmtree(exp_path)
+    expected_path = exp_path / 'test_exp'
+
+    # Because this is testing a file outside of a git repo, we need to make
+    # ourselves a launcher script outside of any git repo.
+    with tempfile.TemporaryDirectory() as launcher_dir:
+        launcher_path = pathlib.Path(launcher_dir) / 'run_exp.py'
+        snapshot_dir = _run_launcher(launcher_path, prefix)
+        assert os.path.samefile(str(expected_path), str(snapshot_dir))
