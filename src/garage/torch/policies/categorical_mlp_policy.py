@@ -1,13 +1,13 @@
-"""GaussianMLPPolicy."""
+"""Categorical_MLPPolicy."""
 import torch
 from torch import nn
 
-from garage.torch.modules import GaussianMLPModule
+from garage.torch.modules import Categorical_MLPModule
 from garage.torch.policies import Policy
 
 
-class GaussianMLPPolicy(Policy, GaussianMLPModule):
-    """GaussianMLPPolicy.
+class Categorical_MLPPolicy(Policy, Categorical_MLPModule):
+    """Categorical_MLPPolicy.
 
     A policy that contains a MLP to make prediction based on a gaussian
     distribution.
@@ -65,14 +65,14 @@ class GaussianMLPPolicy(Policy, GaussianMLPModule):
                  max_std=None,
                  std_parameterization='exp',
                  layer_normalization=False,
-                 name='GaussianMLPPolicy',
+                 name='Categorical_MLPPolicy',
                  obs_transform=None):
         self._obs_dim = env_spec.observation_space.flat_dim
         self._action_dim = env_spec.action_space.flat_dim
         self.obs_transform=obs_transform
 
         Policy.__init__(self, env_spec, name)
-        GaussianMLPModule.__init__(self,
+        Categorical_MLPModule.__init__(self,
                                    input_dim=self._obs_dim,
                                    output_dim=self._action_dim,
                                    hidden_sizes=hidden_sizes,
@@ -99,9 +99,16 @@ class GaussianMLPPolicy(Policy, GaussianMLPModule):
             torch.Tensor: computed values
 
         """
-        inp=torch.tensor(inputs)
-        inp=inp.float()
-        return super().forward(inp)
+
+
+        if self.obs_transform is not None:
+            if torch.is_tensor(inputs):
+                inputs=self.obs_transform(inputs)
+            else:
+                inputs = [self.obs_transform(x) for x in inputs]
+        if type(inputs) is list:
+            inputs=torch.stack(inputs)
+        return super().forward(inputs)
 
     def get_action(self, observation):
         """Get a single action given an observation.
@@ -119,9 +126,9 @@ class GaussianMLPPolicy(Policy, GaussianMLPModule):
 
         """
         with torch.no_grad():
-            observation = observation.unsqueeze(0)
-            dist = self.forward(observation)
-            return (dist.rsample().squeeze(0).numpy(),
+            dist = self.forward([observation])
+            actions=dist.sample().squeeze(0).numpy()
+            return (actions,
                     dict(mean=dist.mean.squeeze(0).numpy(),
                          log_std=(dist.variance**.5).log().squeeze(0).numpy()))
 
@@ -142,7 +149,9 @@ class GaussianMLPPolicy(Policy, GaussianMLPModule):
         """
         with torch.no_grad():
             dist = self.forward(observations)
-            return (dist.rsample().numpy(),
+            actions = dist.sample()
+            assert torch.isfinite(actions).all() and torch.isnan(actions).any()==False, "Sampled incorrect actions from categorical policy"
+            return (actions.numpy(),
                     dict(mean=dist.mean.numpy(),
                          log_std=(dist.variance**.5).log().numpy()))
 
@@ -159,7 +168,7 @@ class GaussianMLPPolicy(Policy, GaussianMLPModule):
 
         """
         dist = self.forward(observation)
-        return dist.log_prob(action)
+        return dist.log_prob(action).squeeze(-1) # squeeze seems to be required for categorical
 
     def entropy(self, observation):
         """Get entropy given observations.
@@ -172,7 +181,7 @@ class GaussianMLPPolicy(Policy, GaussianMLPModule):
 
         """
         dist = self.forward(observation)
-        return dist.entropy()
+        return dist.entropy().squeeze(-1)
 
     def reset(self, dones=None):
         """Reset the environment.

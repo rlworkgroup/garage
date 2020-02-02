@@ -1,7 +1,9 @@
 """A linear value function (baseline) based on features."""
 import numpy as np
+import torch
 
 from garage.np.baselines.base import Baseline
+from torch.onnx.symbolic_opset9 import to
 
 
 class LinearFeatureBaseline(Baseline):
@@ -14,13 +16,14 @@ class LinearFeatureBaseline(Baseline):
 
     """
 
-    def __init__(self, env_spec, reg_coeff=1e-5, name='LinearFeatureBaseline'):
+    def __init__(self, env_spec, reg_coeff=1e-5, name='LinearFeatureBaseline',obs_transform=None):
         super().__init__(env_spec)
         self._coeffs = None
         self._reg_coeff = reg_coeff
         self.name = name
         self.lower_bound = -10
         self.upper_bound = 10
+        self.obs_transform=obs_transform
 
     def get_param_values(self):
         """Get parameter values.
@@ -50,7 +53,15 @@ class LinearFeatureBaseline(Baseline):
             numpy.ndarray: Extracted features.
 
         """
-        obs = np.clip(path['observations'], self.lower_bound, self.upper_bound)
+        obs=path['observations']
+        if self.obs_transform is not None:
+           obs=self.obs_transform(obs)
+           if obs.shape[1] == 1:
+               # HACK: quick fix to get frozenlake SLBO working?
+               obs=obs.squeeze(1)
+           if torch.is_tensor(obs):
+               obs=obs.numpy()
+        obs = np.clip(obs, self.lower_bound, self.upper_bound)
         length = len(path['rewards'])
         al = np.arange(length).reshape(-1, 1) / 100.0
         return np.concatenate(
@@ -65,6 +76,7 @@ class LinearFeatureBaseline(Baseline):
             paths (list[dict]): Sample paths.
 
         """
+
         featmat = np.concatenate([self._features(path) for path in paths])
         returns = np.concatenate([path['returns'] for path in paths])
         reg_coeff = self._reg_coeff
