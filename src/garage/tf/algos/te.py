@@ -43,7 +43,8 @@ class TaskEmbeddingWorker(DefaultWorker):
 
     def start_rollout(self):
         """Begin a new rollout."""
-        self._t = self.env.active_task_one_hot
+        # pylint: disable=protected-access
+        self._t = self.env._active_task_one_hot()
         self._z, self._latent_info = self.agent.get_latent(self._t)
         self._z = self.agent.latent_space.flatten(self._z)
         super().start_rollout()
@@ -53,12 +54,12 @@ class TaskEmbeddingWorker(DefaultWorker):
 
         Returns:
             bool: True iff the path is done, either due to the environment
-            indicating termination of due to reaching `max_path_length`.
+                indicating termination of due to reaching `max_path_length`.
 
         """
         if self._path_length < self._max_path_length:
-            a, agent_info = self.agent.get_action_from_latent(
-                self._z, self._prev_obs)
+            a, agent_info = self.agent.get_action_given_latent(
+                self._prev_obs, self._z)
             next_o, r, d, env_info = self.env.step(a)
             self._observations.append(self._prev_obs)
             self._rewards.append(r)
@@ -73,11 +74,14 @@ class TaskEmbeddingWorker(DefaultWorker):
                 self._env_infos[k].append(v)
             self._path_length += 1
             self._terminals.append(d)
+
             if not d:
                 self._prev_obs = next_o
                 return False
+
         self._lengths.append(self._path_length)
         self._last_observations.append(self._prev_obs)
+
         return True
 
     def collect_rollout(self):
@@ -125,6 +129,7 @@ class TaskEmbeddingWorker(DefaultWorker):
             agent_infos['latent_{}'.format(k)] = v
         lengths = self._lengths
         self._lengths = []
+
         return TrajectoryBatch(self.env.spec, np.asarray(observations),
                                np.asarray(last_observations),
                                np.asarray(actions), np.asarray(rewards),

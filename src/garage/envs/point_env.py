@@ -87,18 +87,22 @@ class PointEnv(gym.Env):
         self._point = np.clip(self._point + a, -self._arena_size,
                               self._arena_size)
         dist = np.linalg.norm(self._point - self._goal)
-        done = dist < np.linalg.norm(self.action_space.low)
+        succ = dist < np.linalg.norm(self.action_space.low)
 
         # dense reward
         reward = -dist
         # done bonus
-        if done:
+        if succ:
             reward += self._done_bonus
 
         # sometimes we don't want to terminate
-        done = done and not self._never_done
+        done = succ and not self._never_done
 
-        return Step(np.copy(self._point), reward, done, task=self._task)
+        return Step(np.copy(self._point),
+                    reward,
+                    done,
+                    task=self._task,
+                    success=succ)
 
     def render(self, mode='human'):
         """Draw the environment.

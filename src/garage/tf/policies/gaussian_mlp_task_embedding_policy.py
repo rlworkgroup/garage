@@ -88,12 +88,31 @@ class GaussianMLPTaskEmbeddingPolicy(TaskEmbeddingPolicy):
                  layer_normalization=False):
         assert isinstance(env_spec.action_space, akro.Box)
         super().__init__(name, env_spec, encoder)
-        self._obs_dim = env_spec.observation_space.flat_dim
-        self._action_dim = env_spec.action_space.flat_dim
+        self._hidden_sizes = hidden_sizes
+        self._hidden_nonlinearity = hidden_nonlinearity
+        self._hidden_w_init = hidden_w_init
+        self._hidden_b_init = hidden_b_init
+        self._output_nonlinearity = output_nonlinearity
+        self._output_w_init = output_w_init
+        self._output_b_init = output_b_init
+        self._learn_std = learn_std
+        self._adaptive_std = adaptive_std
+        self._std_share_network = std_share_network
+        self._init_std = init_std
+        self._min_std = min_std
+        self._max_std = max_std
+        self._std_hidden_sizes = std_hidden_sizes
+        self._std_hidden_nonlinearity = std_hidden_nonlinearity
+        self._std_output_nonlinearity = std_output_nonlinearity
+        self._std_parameterization = std_parameterization
+        self._layer_normalization = layer_normalization
+
+        self.obs_dim = env_spec.observation_space.flat_dim
+        self.action_dim = env_spec.action_space.flat_dim
         self._dist = None
 
         self.model = GaussianMLPModel(
-            output_dim=self._action_dim,
+            output_dim=self.action_dim,
             hidden_sizes=hidden_sizes,
             hidden_nonlinearity=hidden_nonlinearity,
             hidden_w_init=hidden_w_init,
@@ -117,14 +136,19 @@ class GaussianMLPTaskEmbeddingPolicy(TaskEmbeddingPolicy):
         self._initialize()
 
     def _initialize(self):
-        """Initialize policy."""
+        """Build policy to support sampling.
+
+        After build, get_action_*() methods will be available.
+
+        """
         obs_input = tf.compat.v1.placeholder(tf.float32,
                                              shape=(None, None, self._obs_dim))
         latent_input = tf.compat.v1.placeholder(
             tf.float32, shape=(None, None, self._encoder.output_dim))
 
         # Encoder should be outside policy scope
-        with tf.compat.v1.variable_scope('concat_obs_task'):
+        with tf.compat.v1.variable_scope(self._encoder.name):
+            self._encoder.build(task_input, name='te_encoder')
             latent_var = self._encoder.distribution.sample()
 
         with tf.compat.v1.variable_scope(self.name) as vs:
@@ -133,11 +157,12 @@ class GaussianMLPTaskEmbeddingPolicy(TaskEmbeddingPolicy):
             with tf.compat.v1.variable_scope('concat_obs_latent'):
                 obs_latent_input = tf.concat([obs_input, latent_input], -1)
             self._dist, mean_var, log_std_var = self.model.build(
-                obs_latent_input, name='given_latent').outputs
+                obs_latent_input,
+                # Must named 'default' to
+                # compensate tf default worker
+                name='default').outputs
 
-            with tf.compat.v1.variable_scope('concat_obs_latent_var'):
-                embed_state_input = tf.concat([obs_input, latent_var], -1)
-
+            embed_state_input = tf.concat([obs_input, latent_var], -1)
             dist_given_task, mean_g_t, log_std_g_t = self.model.build(
                 embed_state_input, name='given_task').outputs
 
@@ -149,12 +174,41 @@ class GaussianMLPTaskEmbeddingPolicy(TaskEmbeddingPolicy):
         ).make_callable([dist_given_task.sample(), mean_g_t, log_std_g_t],
                         feed_list=[obs_input, self._encoder.input])
 
+    def build(self, obs_input, task_input, name=None):
+        """Build policy to support symbolic computation.
+
+        After build, self.distribution is a Gaussian distribution conditioned
+        on (obs_input, task_input).
+
+        An auxiliary distribution conditioned on (obs_input, latent_input) will
+        also be built for sampling.
+
+        Args:
+            obs_input (tf.Tensor): Observation input.
+            task_input (tf.Tensor): One-hot task id input.
+            name (str): Name of the model, which is also the name scope.
+
+        """
+        # TODO
+        name = name or 'additional'
+        # Encoder should be outside policy scope
+        with tf.compat.v1.variable_scope(self._encoder.name):
+            self._encoder.build(task_input, name=name)
+            latent_var = self._encoder.distribution.loc
+
+        with tf.compat.v1.variable_scope(self.name) as vs:
+            self._variable_scope = vs
+
+            # with tf.compat.v1.variable_scope('concat_obs_latent_var'):
+            embed_state_input = tf.concat([obs_input, latent_var], -1)
+            self._dist, _, _ = self.model.build(embed_state_input, name=name)
+
     @property
     def distribution(self):
         """Policy action distribution.
 
         Returns:
-            garage.tf.distributions.DiagonalGaussian: Policy distribution.
+            tfp.Distribution.MultivariateNormalDiag: Policy distribution.
 
         """
         return self._dist
@@ -339,6 +393,45 @@ class GaussianMLPTaskEmbeddingPolicy(TaskEmbeddingPolicy):
         means = self.action_space.unflatten_n(np.squeeze(means, 1))
         log_stds = self.action_space.unflatten_n(np.squeeze(log_stds, 1))
         return samples, dict(mean=means, log_std=log_stds)
+
+    def clone(self, name):
+        """Return a clone of the policy.
+
+        Args:
+            name (str): Name of the newly created policy. It has to be
+                different from source policy if cloned under the same
+                computational graph.
+
+        Returns:
+            garage.tf.policies.GaussianMLPTaskEmbeddingPolicy: Cloned policy.
+
+        """
+        new_policy = self.__class__(
+            env_spec=self.env_spec,
+            encoder=self.encoder.clone('{}_encoder'.format(name)),
+            name=name,
+            hidden_sizes=self._hidden_sizes,
+            hidden_nonlinearity=self._hidden_nonlinearity,
+            hidden_w_init=self._hidden_w_init,
+            hidden_b_init=self._hidden_b_init,
+            output_nonlinearity=self._output_nonlinearity,
+            output_w_init=self._output_w_init,
+            output_b_init=self._output_b_init,
+            learn_std=self._learn_std,
+            adaptive_std=self._adaptive_std,
+            std_share_network=self._std_share_network,
+            init_std=self._init_std,
+            min_std=self._min_std,
+            max_std=self._max_std,
+            std_hidden_sizes=self._std_hidden_sizes,
+            std_hidden_nonlinearity=self._std_hidden_nonlinearity,
+            std_output_nonlinearity=self._std_output_nonlinearity,
+            std_parameterization=self._std_parameterization,
+            layer_normalization=self._layer_normalization)
+
+        # new_policy.model.parameters = self.model.parameters
+
+        return new_policy
 
     def __getstate__(self):
         """Object.__getstate__.
