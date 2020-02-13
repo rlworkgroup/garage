@@ -85,6 +85,12 @@ class DiagonalGaussian(Distribution):
         rnd = np.random.normal(size=means.shape)
         return rnd * np.exp(log_stds) + means
 
+    def sample_sym(self, dist_info_vars):
+        means = dist_info_vars['mean']
+        log_stds = dist_info_vars['log_std']
+        rnd = tf.random.normal(shape=tf.shape(means))
+        return rnd * tf.math.exp(log_stds) + means
+
     def log_likelihood(self, xs, dist_info):
         means = dist_info['mean']
         log_stds = dist_info['log_std']
