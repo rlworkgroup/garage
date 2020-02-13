@@ -157,6 +157,7 @@ class MultiEnvWrapper(gym.Wrapper):
         self.env = self._task_envs[self._active_task_index]
         obs = self.env.reset(**kwargs)
         oh_obs = self._obs_with_one_hot(obs)
+        self.env.spec.observation_space = self.observation_space
         return oh_obs
 
     def step(self, action):
