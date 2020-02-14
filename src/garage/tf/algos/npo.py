@@ -68,6 +68,8 @@ class NPO(BatchPolopt):
         flatten_input (bool): Whether to flatten input along the observation
             dimension. If True, for example, an observation with shape (2, 4)
             will be flattened to 8.
+        fit_baseline_first (bool): Whether to fit baseline first or after. If
+            true, baseline will be fitted before making prediction.
         name (str): The name of the algorithm.
 
     Note:
@@ -105,6 +107,7 @@ class NPO(BatchPolopt):
                  stop_entropy_gradient=False,
                  entropy_method='no_entropy',
                  flatten_input=True,
+                 fit_baseline_first=False,
                  name='NPO'):
         self._name = name
         self._name_scope = tf.name_scope(self._name)
@@ -112,6 +115,7 @@ class NPO(BatchPolopt):
         self._use_neg_logli_entropy = use_neg_logli_entropy
         self._stop_entropy_gradient = stop_entropy_gradient
         self._pg_loss = pg_loss
+        self._will_fit_baseline_first = fit_baseline_first
         if optimizer is None:
             if optimizer_args is None:
                 optimizer_args = dict()
@@ -170,6 +174,9 @@ class NPO(BatchPolopt):
                 See process_samples() for details.
 
         """
+        if self._will_fit_baseline_first:
+            self._fit_baseline_first(samples_data)
+
         policy_opt_input_values = self._policy_opt_input_values(samples_data)
         # Train policy network
         logger.log('Computing loss before')
@@ -192,7 +199,37 @@ class NPO(BatchPolopt):
         pol_ent = self._f_policy_entropy(*policy_opt_input_values)
         tabular.record('{}/Entropy'.format(self.policy.name), np.mean(pol_ent))
 
-        self._fit_baseline(samples_data)
+        if not self._will_fit_baseline_first:
+            self._fit_baseline_after(samples_data)
+
+    def _fit_baseline_first(self, samples_data):
+        """Update baselines from samples and get baseline prediction.
+
+        Args:
+            samples_data (dict): Processed sample data.
+                See process_samples() for details.
+
+        """
+        policy_opt_input_values = self._policy_opt_input_values(samples_data)
+
+        # Augment reward from baselines
+        rewards_tensor = self._f_rewards(*policy_opt_input_values)
+        returns_tensor = self._f_returns(*policy_opt_input_values)
+        returns_tensor = np.squeeze(returns_tensor, -1)
+
+        paths = samples_data['paths']
+        valids = samples_data['valids']
+
+        # Fit baseline
+        logger.log('Fitting baseline...')
+        for ind, path in enumerate(paths):
+            path['rewards'] = rewards_tensor[ind][valids[ind].astype(np.bool)]
+            path['returns'] = returns_tensor[ind][valids[ind].astype(np.bool)]
+        self.baseline.fit(paths)
+        baselines = [self.baseline.predict(path) for path in paths]
+        baselines = np_tensor_utils.pad_tensor_n(baselines,
+                                                 self.max_path_length)
+        samples_data['baselines'] = baselines
 
     def _build_inputs(self):
         """Build input variables.
@@ -337,12 +374,7 @@ class NPO(BatchPolopt):
                                           policy_entropy)
 
         with tf.name_scope('policy_loss'):
-            adv = compute_advantages(self.discount,
-                                     self.gae_lambda,
-                                     self.max_path_length,
-                                     i.baseline_var,
-                                     rewards,
-                                     name='adv')
+            adv = self._get_advantages(i.baseline_var, rewards, name='adv')
 
             adv_flat = flatten_batch(adv, name='adv_flat')
             adv_valid = filter_valids(adv_flat,
@@ -474,8 +506,8 @@ class NPO(BatchPolopt):
                                                rewards,
                                                log_name='f_rewards')
 
-            returns = discounted_returns(self.discount, self.max_path_length,
-                                         rewards)
+            returns = self._get_discounted_returns(rewards)
+
             self._f_returns = compile_function(flatten_inputs(
                 self._policy_opt_inputs),
                                                returns,
@@ -562,7 +594,7 @@ class NPO(BatchPolopt):
 
         return policy_entropy
 
-    def _fit_baseline(self, samples_data):
+    def _fit_baseline_after(self, samples_data):
         """Update baselines from samples.
 
         Args:
@@ -606,6 +638,39 @@ class NPO(BatchPolopt):
             self.baseline.fit_with_samples(paths, samples_data)
         else:
             self.baseline.fit(paths)
+
+    def _get_advantages(self, baseline_var, reward_var, name):
+        """Calculate advantages for the rollouts.
+
+        Args:
+            baseline_var (tf.Tensor): Tensor for baseline values.
+            reward_var (tf.Tensor): Tensor for reward values.
+            name (str): Name scope.
+
+        Returns:
+            tf.Tensor: Advantages for the rollouts.
+                Shape: :math:`[N, max_path_length]`
+
+        """
+        return compute_advantages(self.discount,
+                                  self.gae_lambda,
+                                  self.max_path_length,
+                                  baseline_var,
+                                  reward_var,
+                                  name=name)
+
+    def _get_discounted_returns(self, rewards):
+        """Calculate discounted returns for the rollouts.
+
+        Args:
+            rewards (tf.Tensor): Tensor for reward values.
+
+        Returns:
+            tf.Tensor: Returns for the rollouts.
+                Shape: :math:`[N, max_path_length]`
+
+        """
+        return discounted_returns(self.discount, self.max_path_length, rewards)
 
     def _policy_opt_input_values(self, samples_data):
         """Map rollout samples to the policy optimizer inputs.
