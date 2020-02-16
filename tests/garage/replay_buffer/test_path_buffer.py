@@ -1,3 +1,4 @@
+# pylint: disable=protected-access
 import numpy as np
 
 from garage.replay_buffer import PathBuffer
@@ -45,3 +46,7 @@ class TestPathBuffer:
         for _ in range(100):
             new_sampled_path_obs = replay_buffer.sample_path()['obs']
             assert (new_sampled_path_obs == np.array([[2], [3]])).all()
+
+        replay_buffer.clear()
+        assert replay_buffer._transitions_stored == 0
+        assert not replay_buffer._buffer

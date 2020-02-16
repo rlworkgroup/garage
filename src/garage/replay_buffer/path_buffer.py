@@ -9,8 +9,10 @@ class PathBuffer:
 
     This buffer only stores valid steps, and doesn't require paths to
     have a maximum length.
+
     Args:
-        capacity_in_steps (int): total memory allocated for the buffer
+        capacity_in_transitions (int): Total memory allocated for the buffer.
+
     """
 
     def __init__(self, capacity_in_transitions):
@@ -28,7 +30,11 @@ class PathBuffer:
         """Add a path to the buffer.
 
         Args:
-            path(dict): A dict of array of shape (path_len, flat_dim)
+            path (dict): A dict of array of shape (path_len, flat_dim).
+
+        Raises:
+            ValueError: If a key is missing from path or path has wrong shape.
+
         """
         for key, buf_arr in self._buffer.items():
             path_array = path.get(key, None)
@@ -65,7 +71,7 @@ class PathBuffer:
         """Sample a single path from the buffer.
 
         Returns:
-            A dict of arrays of shape (path_len, flat_dim)
+            path: A dict of arrays of shape (path_len, flat_dim).
 
         """
         path_idx = np.random.randint(len(self._path_segments))
@@ -79,15 +85,29 @@ class PathBuffer:
     def sample_transitions(self, batch_size):
         """Sample a batch of transitions from the buffer.
 
+        Args:
+            batch_size (int): Number of transitions to sample.
+
         Returns:
-            A dict of arrays of shape (batch_size, flat_dim)
+            dict: A dict of arrays of shape (batch_size, flat_dim).
 
         """
         idx = np.random.randint(self._transitions_stored, size=batch_size)
         return {key: buf_arr[idx] for key, buf_arr in self._buffer.items()}
 
     def _next_path_segments(self, n_indices):
-        """Compute where the next path should be stored."""
+        """Compute where the next path should be stored.
+
+        Args:
+            n_indices (int): Path length.
+
+        Returns:
+            tuple: Lists of indices where path should be stored.
+
+        Raises:
+            ValueError: If path length is greater than the size of buffer.
+
+        """
         if n_indices > self._capacity:
             raise ValueError('Path is too long to store in buffer.')
         start = self._first_idx_of_next_path
@@ -99,14 +119,43 @@ class PathBuffer:
             return (range(start, end), range(0, 0))
 
     def _get_or_allocate_key(self, key, array):
+        """Get or allocate key in the buffer.
+
+        Args:
+            key (str): Key in buffer.
+            array (numpy.ndarray): Array corresponding to key.
+
+        Returns:
+            buf_arr: A numpy.ndarray corresponding to key in the buffer.
+
+        """
         buf_arr = self._buffer.get(key, None)
         if buf_arr is None:
             buf_arr = np.zeros((self._capacity, array.shape[1]), array.dtype)
             self._buffer[key] = buf_arr
         return buf_arr
 
+    def clear(self):
+        """Clear buffer."""
+        self._transitions_stored = 0
+        self._first_idx_of_next_path = 0
+        self._path_segments.clear()
+        self._buffer.clear()
+
     @staticmethod
     def _get_path_length(path):
+        """Get path length.
+
+        Args:
+            path (dict): Path.
+
+        Returns:
+            length: Path length.
+
+        Raises:
+            ValueError: If path is empty or has inconsistent lengths.
+
+        """
         length_key = None
         length = None
         for key, value in path.items():
@@ -124,8 +173,12 @@ class PathBuffer:
     def _segments_overlap(seg_a, seg_b):
         """Compute if two segments overlap.
 
+        Args:
+            seg_a (list): List of indices of the first segment.
+            seg_b (list): List of indices of the second segment.
+
         Returns:
-            True iff the input ranges overlap at at least one index.
+            Bool: True iff the input ranges overlap at at least one index.
 
         """
         # Empty segments never overlap.
