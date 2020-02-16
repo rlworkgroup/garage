@@ -71,7 +71,7 @@ def tf_ppo_pendulum(ctxt=None, seed=1):
             entropy_method='max',
             policy_ent_coeff=0.02,
             center_adv=False,
-            fit_baseline_first=True,
+            fit_baseline_order='after',
         )
 
         runner.setup(algo, env)

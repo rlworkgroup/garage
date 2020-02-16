@@ -52,8 +52,9 @@ class PPO(NPO):
         flatten_input (bool): Whether to flatten input along the observation
             dimension. If True, for example, an observation with shape (2, 4)
             will be flattened to 8.
-        fit_baseline_first (bool): Whether to fit baseline first or after. If
-            true, baseline will be fitted before making prediction.
+        fit_baseline_order (str): Whether to fit baseline before or after,
+            either 'before' or 'after'. If 'before', baseline will be fitted
+            before making prediction. Default: 'after'.
         name (str): The name of the algorithm.
 
     """
@@ -80,7 +81,7 @@ class PPO(NPO):
                  stop_entropy_gradient=False,
                  entropy_method='no_entropy',
                  flatten_input=True,
-                 fit_baseline_first=False,
+                 fit_baseline_order='after',
                  name='PPO'):
         if optimizer is None:
             optimizer = FirstOrderOptimizer
@@ -107,5 +108,5 @@ class PPO(NPO):
                          stop_entropy_gradient=stop_entropy_gradient,
                          entropy_method=entropy_method,
                          flatten_input=flatten_input,
-                         fit_baseline_first=fit_baseline_first,
+                         fit_baseline_order=fit_baseline_order,
                          name=name)

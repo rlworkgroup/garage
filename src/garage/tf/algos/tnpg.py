@@ -1,3 +1,4 @@
+"""Truncated Natural Policy Gradient."""
 from garage.tf.algos.npo import NPO
 from garage.tf.optimizers import ConjugateGradientOptimizer
 
@@ -48,7 +49,14 @@ class TNPG(NPO):
             dense entropy to the reward for each time step. 'regularized' adds
             the mean entropy to the surrogate objective. See
             https://arxiv.org/abs/1805.00909 for more details.
+        flatten_input (bool): Whether to flatten input along the observation
+            dimension. If True, for example, an observation with shape (2, 4)
+            will be flattened to 8.
+        fit_baseline_order (str): Whether to fit baseline before or after,
+            either 'before' or 'after'. If 'before', baseline will be fitted
+            before making prediction. Default: 'after'.
         name (str): The name of the algorithm.
+
     """
 
     def __init__(self,
@@ -72,6 +80,8 @@ class TNPG(NPO):
                  use_neg_logli_entropy=False,
                  stop_entropy_gradient=False,
                  entropy_method='no_entropy',
+                 flatten_input=True,
+                 fit_baseline_order='after',
                  name='TNPG'):
         if optimizer is None:
             optimizer = ConjugateGradientOptimizer
@@ -80,25 +90,26 @@ class TNPG(NPO):
                 optimizer_args = default_args
             else:
                 optimizer_args = dict(default_args, **optimizer_args)
-        super().__init__(
-            env_spec=env_spec,
-            policy=policy,
-            baseline=baseline,
-            scope=scope,
-            max_path_length=max_path_length,
-            discount=discount,
-            gae_lambda=gae_lambda,
-            center_adv=center_adv,
-            positive_adv=positive_adv,
-            fixed_horizon=fixed_horizon,
-            pg_loss=pg_loss,
-            lr_clip_range=lr_clip_range,
-            max_kl_step=max_kl_step,
-            optimizer=optimizer,
-            optimizer_args=optimizer_args,
-            policy_ent_coeff=policy_ent_coeff,
-            use_softplus_entropy=use_softplus_entropy,
-            use_neg_logli_entropy=use_neg_logli_entropy,
-            stop_entropy_gradient=stop_entropy_gradient,
-            entropy_method=entropy_method,
-            name=name)
+        super().__init__(env_spec=env_spec,
+                         policy=policy,
+                         baseline=baseline,
+                         scope=scope,
+                         max_path_length=max_path_length,
+                         discount=discount,
+                         gae_lambda=gae_lambda,
+                         center_adv=center_adv,
+                         positive_adv=positive_adv,
+                         fixed_horizon=fixed_horizon,
+                         pg_loss=pg_loss,
+                         lr_clip_range=lr_clip_range,
+                         max_kl_step=max_kl_step,
+                         optimizer=optimizer,
+                         optimizer_args=optimizer_args,
+                         policy_ent_coeff=policy_ent_coeff,
+                         use_softplus_entropy=use_softplus_entropy,
+                         use_neg_logli_entropy=use_neg_logli_entropy,
+                         stop_entropy_gradient=stop_entropy_gradient,
+                         entropy_method=entropy_method,
+                         flatten_input=flatten_input,
+                         fit_baseline_order=fit_baseline_order,
+                         name=name)

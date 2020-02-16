@@ -45,12 +45,20 @@ class TRPO(NPO):
         use_neg_logli_entropy (bool): Whether to estimate the entropy as the
             negative log likelihood of the action.
         stop_entropy_gradient (bool): Whether to stop the entropy gradient.
+        kl_constraint (str): KL constraint, either 'hard' or 'soft'.
         entropy_method (str): A string from: 'max', 'regularized',
             'no_entropy'. The type of entropy method to use. 'max' adds the
             dense entropy to the reward for each time step. 'regularized' adds
             the mean entropy to the surrogate objective. See
             https://arxiv.org/abs/1805.00909 for more details.
+        flatten_input (bool): Whether to flatten input along the observation
+            dimension. If True, for example, an observation with shape (2, 4)
+            will be flattened to 8.
+        fit_baseline_order (str): Whether to fit baseline before or after,
+            either 'before' or 'after'. If 'before', baseline will be fitted
+            before making prediction. Default: 'after'.
         name (str): The name of the algorithm.
+
     """
 
     def __init__(self,
@@ -76,6 +84,7 @@ class TRPO(NPO):
                  kl_constraint='hard',
                  entropy_method='no_entropy',
                  flatten_input=True,
+                 fit_baseline_order='after',
                  name='TRPO'):
         if not optimizer:
             if kl_constraint == 'hard':
@@ -109,4 +118,5 @@ class TRPO(NPO):
                          stop_entropy_gradient=stop_entropy_gradient,
                          entropy_method=entropy_method,
                          flatten_input=flatten_input,
+                         fit_baseline_order=fit_baseline_order,
                          name=name)

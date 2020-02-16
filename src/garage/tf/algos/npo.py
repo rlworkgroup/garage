@@ -8,7 +8,6 @@ from garage.tf.algos.batch_polopt import BatchPolopt
 from garage.tf.misc.tensor_utils import center_advs
 from garage.tf.misc.tensor_utils import compile_function
 from garage.tf.misc.tensor_utils import compute_advantages
-from garage.tf.misc.tensor_utils import concat_tensor_list
 from garage.tf.misc.tensor_utils import discounted_returns
 from garage.tf.misc.tensor_utils import filter_valids
 from garage.tf.misc.tensor_utils import filter_valids_dict
@@ -68,8 +67,9 @@ class NPO(BatchPolopt):
         flatten_input (bool): Whether to flatten input along the observation
             dimension. If True, for example, an observation with shape (2, 4)
             will be flattened to 8.
-        fit_baseline_first (bool): Whether to fit baseline first or after. If
-            true, baseline will be fitted before making prediction.
+        fit_baseline_order (str): Whether to fit baseline before or after,
+            either 'before' or 'after'. If 'before', baseline will be fitted
+            before making prediction. Default: 'after'.
         name (str): The name of the algorithm.
 
     Note:
@@ -107,7 +107,7 @@ class NPO(BatchPolopt):
                  stop_entropy_gradient=False,
                  entropy_method='no_entropy',
                  flatten_input=True,
-                 fit_baseline_first=False,
+                 fit_baseline_order='after',
                  name='NPO'):
         self._name = name
         self._name_scope = tf.name_scope(self._name)
@@ -115,7 +115,11 @@ class NPO(BatchPolopt):
         self._use_neg_logli_entropy = use_neg_logli_entropy
         self._stop_entropy_gradient = stop_entropy_gradient
         self._pg_loss = pg_loss
-        self._will_fit_baseline_first = fit_baseline_first
+        self._fit_baseline_order = fit_baseline_order
+
+        if fit_baseline_order not in ['before', 'after']:
+            raise ValueError('Invalid fit_baseline_order')
+
         if optimizer is None:
             if optimizer_args is None:
                 optimizer_args = dict()
@@ -174,8 +178,8 @@ class NPO(BatchPolopt):
                 See process_samples() for details.
 
         """
-        if self._will_fit_baseline_first:
-            self._fit_baseline_first(samples_data)
+        if self._fit_baseline_order == 'before':
+            self._fit_baseline_before(samples_data)
 
         policy_opt_input_values = self._policy_opt_input_values(samples_data)
         # Train policy network
@@ -199,11 +203,16 @@ class NPO(BatchPolopt):
         pol_ent = self._f_policy_entropy(*policy_opt_input_values)
         tabular.record('{}/Entropy'.format(self.policy.name), np.mean(pol_ent))
 
-        if not self._will_fit_baseline_first:
+        if self._fit_baseline_order == 'after':
             self._fit_baseline_after(samples_data)
 
-    def _fit_baseline_first(self, samples_data):
-        """Update baselines from samples and get baseline prediction.
+        ev = np_tensor_utils.explained_variance_1d(samples_data['baselines'],
+                                                   samples_data['returns'],
+                                                   samples_data['valids'])
+        tabular.record('{}/ExplainedVariance'.format(self.baseline.name), ev)
+
+    def _fit_baseline(self, samples_data):
+        """Update baselines from samples.
 
         Args:
             samples_data (dict): Processed sample data.
@@ -220,16 +229,62 @@ class NPO(BatchPolopt):
         paths = samples_data['paths']
         valids = samples_data['valids']
 
+        # Recompute parts of samples_data
+        aug_rewards = []
+        aug_returns = []
+        for rew, ret, val, path in zip(rewards_tensor, returns_tensor, valids,
+                                       paths):
+            path['rewards'] = rew[val.astype(np.bool)]
+            path['returns'] = ret[val.astype(np.bool)]
+            aug_rewards.append(path['rewards'])
+            aug_returns.append(path['returns'])
+
+        # dense form
+        samples_data['rewards'] = np_tensor_utils.pad_tensor_n(
+            aug_rewards, self.max_path_length)
+        samples_data['returns'] = np_tensor_utils.pad_tensor_n(
+            aug_returns, self.max_path_length)
+
         # Fit baseline
         logger.log('Fitting baseline...')
-        for ind, path in enumerate(paths):
-            path['rewards'] = rewards_tensor[ind][valids[ind].astype(np.bool)]
-            path['returns'] = returns_tensor[ind][valids[ind].astype(np.bool)]
         self.baseline.fit(paths)
+
+    def _fit_baseline_before(self, samples_data):
+        """Update baselines from samples before optimization.
+
+        This function can be overrided by child class to perform
+        specific logic, e.g. if an algorithm fits baseline
+        after prediction, this function should be overrided and pass
+        only.
+
+        Args:
+            samples_data (dict): Processed sample data.
+                See process_samples() for details.
+
+        """
+        self._fit_baseline(samples_data)
+
+        # update baseline prediction for optimization
+        paths = samples_data['paths']
         baselines = [self.baseline.predict(path) for path in paths]
-        baselines = np_tensor_utils.pad_tensor_n(baselines,
-                                                 self.max_path_length)
-        samples_data['baselines'] = baselines
+
+        samples_data['baselines'] = np_tensor_utils.pad_tensor_n(
+            baselines, self.max_path_length)
+
+    def _fit_baseline_after(self, samples_data):
+        """Update baselines from samples after optimization.
+
+        This function can be overrided by child class to perform
+        specific logic, e.g. if an algorithm fits baseline
+        before prediction, this function should be overrided and pass
+        only.
+
+        Args:
+            samples_data (dict): Processed sample data.
+                See process_samples() for details.
+
+        """
+        self._fit_baseline(samples_data)
 
     def _build_inputs(self):
         """Build input variables.
@@ -593,51 +648,6 @@ class NPO(BatchPolopt):
                                                   log_name='f_policy_entropy')
 
         return policy_entropy
-
-    def _fit_baseline_after(self, samples_data):
-        """Update baselines from samples.
-
-        Args:
-            samples_data (dict): Processed sample data.
-                See process_samples() for details.
-
-        """
-        policy_opt_input_values = self._policy_opt_input_values(samples_data)
-
-        # Augment reward from baselines
-        rewards_tensor = self._f_rewards(*policy_opt_input_values)
-        returns_tensor = self._f_returns(*policy_opt_input_values)
-        returns_tensor = np.squeeze(returns_tensor, -1)
-
-        paths = samples_data['paths']
-        valids = samples_data['valids']
-        baselines = [path['baselines'] for path in paths]
-
-        # Recompute parts of samples_data
-        aug_rewards = []
-        aug_returns = []
-        for rew, ret, val, path in zip(rewards_tensor, returns_tensor, valids,
-                                       paths):
-            path['rewards'] = rew[val.astype(np.bool)]
-            path['returns'] = ret[val.astype(np.bool)]
-            aug_rewards.append(path['rewards'])
-            aug_returns.append(path['returns'])
-        aug_rewards = concat_tensor_list(aug_rewards)
-        aug_returns = concat_tensor_list(aug_returns)
-        samples_data['rewards'] = aug_rewards
-        samples_data['returns'] = aug_returns
-
-        # Calculate explained variance
-        ev = np_tensor_utils.explained_variance_1d(np.concatenate(baselines),
-                                                   aug_returns)
-        tabular.record('{}/ExplainedVariance'.format(self.baseline.name), ev)
-
-        # Fit baseline
-        logger.log('Fitting baseline...')
-        if hasattr(self.baseline, 'fit_with_samples'):
-            self.baseline.fit_with_samples(paths, samples_data)
-        else:
-            self.baseline.fit(paths)
 
     def _get_advantages(self, baseline_var, reward_var, name):
         """Calculate advantages for the rollouts.
