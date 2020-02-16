@@ -42,7 +42,6 @@ class RecurrentEncoder(MLPModule):
             layer_normalization (bool): Bool for using layer normalization or
                 not.
 
-
     """
 
     def __init__(self, *args, **kwargs):

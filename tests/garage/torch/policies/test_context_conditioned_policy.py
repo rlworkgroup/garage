@@ -1,4 +1,3 @@
-# pylint: disable=missing-docstring,pointless-string-statement,protected-access
 """This is a script to test the ContextConditionedPolicy module."""
 
 import akro
@@ -10,7 +9,7 @@ from torch.nn import functional as F  # NOQA
 
 from garage.envs.env_spec import EnvSpec
 from garage.tf.envs import TfEnv
-from garage.torch.embeddings import RecurrentEncoder
+from garage.torch.embeddings import MLPEncoder
 from garage.torch.policies import ContextConditionedPolicy
 from garage.torch.policies import GaussianMLPPolicy
 from tests.fixtures.envs.dummy import DummyBoxEnv
@@ -19,13 +18,13 @@ from tests.fixtures.envs.dummy import DummyBoxEnv
 class TestContextConditionedPolicy:
     """Test for ContextConditionedPolicy."""
     # yapf: disable
-    @pytest.mark.parametrize('reward_dim, latent_dim, hidden_sizes, updates', [
-        (1, 5, (3, 3, 3), 5),
-        (2, 5, (5, 7, 5), 7),
-        (3, 5, (9, 4, 2), 10),
+    @pytest.mark.parametrize('latent_dim, hidden_sizes, updates', [
+        (5, (3, 3, 3), 5),
+        (7, (5, 7, 5), 7),
+        (10, (9, 4, 2), 10),
     ])
     # yapf: enable
-    def test_module(self, reward_dim, latent_dim, hidden_sizes, updates):
+    def test_module(self, latent_dim, hidden_sizes, updates):
         """Test all methods."""
         env_spec = TfEnv(DummyBoxEnv())
         latent_space = akro.Box(low=-1,
@@ -41,29 +40,30 @@ class TestContextConditionedPolicy:
 
         obs_dim = int(np.prod(env_spec.observation_space.shape))
         action_dim = int(np.prod(env_spec.action_space.shape))
+        reward_dim = 1
         encoder_input_dim = obs_dim + action_dim + reward_dim
         encoder_output_dim = latent_dim * 2
         encoder_hidden_sizes = (3, 2, encoder_output_dim)
 
-        context_encoder = RecurrentEncoder(input_dim=encoder_input_dim,
-                                           output_dim=encoder_output_dim,
-                                           hidden_nonlinearity=None,
-                                           hidden_sizes=encoder_hidden_sizes,
-                                           hidden_w_init=nn.init.ones_,
-                                           output_w_init=nn.init.ones_)
+        context_encoder = MLPEncoder(input_dim=encoder_input_dim,
+                                     output_dim=encoder_output_dim,
+                                     hidden_nonlinearity=None,
+                                     hidden_sizes=encoder_hidden_sizes,
+                                     hidden_w_init=nn.init.ones_,
+                                     output_w_init=nn.init.ones_)
 
-        # policy needs to be able to accept obs_dim + latent_dim as input dim
-        policy = GaussianMLPPolicy(env_spec=augmented_env_spec,
-                                   hidden_sizes=hidden_sizes,
-                                   hidden_nonlinearity=F.relu,
-                                   output_nonlinearity=None)
+        context_policy = GaussianMLPPolicy(env_spec=augmented_env_spec,
+                                           hidden_sizes=hidden_sizes,
+                                           hidden_nonlinearity=F.relu,
+                                           output_nonlinearity=None)
 
         module = ContextConditionedPolicy(latent_dim=latent_dim,
                                           context_encoder=context_encoder,
-                                          policy=policy,
+                                          policy=context_policy,
                                           use_ib=True,
                                           use_next_obs=False)
 
+        module.reset()
         expected_shape = [1, latent_dim]
         module.reset_belief()
         assert torch.all(torch.eq(module.z_means, torch.zeros(expected_shape)))
@@ -73,33 +73,46 @@ class TestContextConditionedPolicy:
         assert all([a == b for a, b in zip(module.z.shape, expected_shape)])
 
         module.detach_z()
-        assert module.z.requires_grad is False
+        assert not module.z.requires_grad
 
-        context_dict = {}
-        context_dict['observation'] = np.ones(obs_dim)
-        context_dict['action'] = np.ones(action_dim)
-        context_dict['reward'] = np.ones(reward_dim)
-        context_dict['next_observation'] = np.ones(obs_dim)
+        o = np.ones(obs_dim)
+        a = np.ones(action_dim)
+        r = 1
+        no = np.ones(obs_dim)
+        dummy = np.ones(obs_dim)
 
         for _ in range(updates):
-            module.update_context(context_dict)
+            module.update_context([o, a, r, no, dummy, dummy])
         assert torch.all(
-            torch.eq(module._context, torch.ones(updates, encoder_input_dim)))
+            torch.eq(module.context, torch.ones(updates, encoder_input_dim)))
 
         context = torch.randn(1, 1, encoder_input_dim)
         module.infer_posterior(context)
         assert all([a == b for a, b in zip(module.z.shape, expected_shape)])
 
+        # pylint: disable=pointless-string-statement
+        """
+        # waiting for TanhGaussianPolicy
         t, b = 1, 2
         obs = torch.randn((t, b, obs_dim), dtype=torch.float32)
         policy_output, task_z_out = module.forward(obs, context)
-        assert policy_output is not None
+
         expected_shape = [b, latent_dim]
         assert all([a == b for a, b in zip(task_z_out.shape, expected_shape)])
+        """
 
-        obs = torch.randn(obs_dim)
-        action = module.get_action(obs)
+        obs = np.random.rand(obs_dim)
+        action, _ = module.get_action(obs)
         assert len(action) == action_dim
 
         kl_div = module.compute_kl_div()
         assert kl_div != 0
+
+        log_dict = {}
+        module.log_diagnostics(log_dict)
+        assert 'ZMeanEval' in log_dict
+        assert 'ZVarianceEval' in log_dict
+
+        nets = module.networks
+        assert nets[0]
+        assert nets[1]

@@ -1,4 +1,3 @@
-# pylint: disable=missing-docstring
 """This is a script to test the RecurrentEncoder module."""
 
 import pickle
