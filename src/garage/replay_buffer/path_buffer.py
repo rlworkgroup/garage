@@ -40,8 +40,8 @@ class PathBuffer:
             path_array = path.get(key, None)
             if path_array is None:
                 raise ValueError('Key {} missing from path.'.format(key))
-            elif (len(path_array.shape) != 2
-                  or path_array.shape[1] != buf_arr.shape[1]):
+            if (len(path_array.shape) != 2
+                    or path_array.shape[1] != buf_arr.shape[1]):
                 raise ValueError('Array {} has wrong shape.'.format(key))
         path_len = self._get_path_length(path)
         first_seg, second_seg = self._next_path_segments(path_len)
@@ -60,7 +60,7 @@ class PathBuffer:
             # pylint: disable=invalid-slice-index
             buf_arr[first_seg.start:first_seg.stop] = array[:len(first_seg)]
             buf_arr[second_seg.start:second_seg.stop] = array[len(first_seg):]
-        if second_seg.stop:
+        if second_seg.stop != 0:
             self._first_idx_of_next_path = second_seg.stop
         else:
             self._first_idx_of_next_path = first_seg.stop
@@ -126,7 +126,7 @@ class PathBuffer:
             array (numpy.ndarray): Array corresponding to key.
 
         Returns:
-            buf_arr: A numpy.ndarray corresponding to key in the buffer.
+            numpy.ndarray: A NumPy array corresponding to key in the buffer.
 
         """
         buf_arr = self._buffer.get(key, None)
