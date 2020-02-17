@@ -1,5 +1,6 @@
 # pylint: disable=protected-access
 import numpy as np
+import pytest
 
 from garage.replay_buffer import PathBuffer
 from tests.fixtures.envs.dummy import DummyDiscreteEnv
@@ -37,6 +38,13 @@ class TestPathBuffer:
 
         obs2 = np.array([[2], [3]])
         replay_buffer.add_path(dict(obs=obs2))
+
+        with pytest.raises(Exception):
+            assert replay_buffer.add_path(dict(test_obs=obs2))
+
+        obs3 = 1
+        with pytest.raises(Exception):
+            assert replay_buffer.add_path(dict(obs=obs3))
 
         # Can still sample from old path
         new_sampled_obs = replay_buffer.sample_transitions(1000)['obs']
