@@ -174,8 +174,8 @@ class PathBuffer:
         """Compute if two segments overlap.
 
         Args:
-            seg_a (list): List of indices of the first segment.
-            seg_b (list): List of indices of the second segment.
+            seg_a (range): List of indices of the first segment.
+            seg_b (range): List of indices of the second segment.
 
         Returns:
             bool: True iff the input ranges overlap at at least one index.
