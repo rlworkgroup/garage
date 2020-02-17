@@ -28,7 +28,7 @@ class RL2Env(gym.Wrapper):
         super().__init__(env)
         self._max_obs_dim = max_obs_dim
         action_space = akro.from_gym(self.env.action_space)
-        observation_space = akro.from_gym(self._create_rl2_obs_space(env))
+        observation_space = self._create_rl2_obs_space(env)
         self._spec = EnvSpec(action_space=action_space,
                              observation_space=observation_space)
 
@@ -46,9 +46,9 @@ class RL2Env(gym.Wrapper):
         action_flat_dim = np.prod(env.action_space.shape)
         if self._max_obs_dim is not None:
             obs_flat_dim = self._max_obs_dim
-        return gym.spaces.Box(low=-np.inf,
-                              high=np.inf,
-                              shape=(obs_flat_dim + action_flat_dim + 1 + 1, ))
+        return akro.Box(low=-np.inf,
+                        high=np.inf,
+                        shape=(obs_flat_dim + action_flat_dim + 1 + 1, ))
 
     # pylint: disable=arguments-differ
     def reset(self):
