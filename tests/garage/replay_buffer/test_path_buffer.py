@@ -42,9 +42,13 @@ class TestPathBuffer:
         with pytest.raises(Exception):
             assert replay_buffer.add_path(dict(test_obs=obs2))
 
-        obs3 = 1
+        obs3 = np.array([1])
         with pytest.raises(Exception):
             assert replay_buffer.add_path(dict(obs=obs3))
+
+        obs4 = np.array([[4], [5], [6], [7]])
+        with pytest.raises(Exception):
+            assert replay_buffer.add_path(dict(obs=obs4))
 
         # Can still sample from old path
         new_sampled_obs = replay_buffer.sample_transitions(1000)['obs']

@@ -178,7 +178,7 @@ class PathBuffer:
             seg_b (list): List of indices of the second segment.
 
         Returns:
-            Bool: True iff the input ranges overlap at at least one index.
+            bool: True iff the input ranges overlap at at least one index.
 
         """
         # Empty segments never overlap.
