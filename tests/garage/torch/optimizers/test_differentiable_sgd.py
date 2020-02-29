@@ -2,7 +2,7 @@
 import torch
 
 from garage.torch.optimizers import DifferentiableSGD
-from garage.torch.utils import update_module_params
+import garage.torch.utils as tu
 
 
 def test_differentiable_sgd():
@@ -20,7 +20,7 @@ def test_differentiable_sgd():
 
     theta_prime = list(policy.parameters())[0]
     loss = torch.sum(theta_prime**2)
-    update_module_params(policy, named_theta)
+    tu.update_module_params(policy, named_theta)
     diff_sgd.zero_grad()
     loss.backward()
 

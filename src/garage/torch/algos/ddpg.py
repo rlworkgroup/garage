@@ -8,7 +8,7 @@ import torch
 
 from garage.np.algos.off_policy_rl_algorithm import OffPolicyRLAlgorithm
 from garage.torch.algos import _Default, make_optimizer
-from garage.torch.utils import np_to_torch, torch_to_np
+import garage.torch.utils as tu
 
 
 class DDPG(OffPolicyRLAlgorithm):
@@ -156,7 +156,7 @@ class DDPG(OffPolicyRLAlgorithm):
                     self.min_buffer_size):
                 self._evaluate = True
                 samples = self.replay_buffer.sample(self.buffer_batch_size)
-                qf_loss, y, q, policy_loss = torch_to_np(
+                qf_loss, y, q, policy_loss = tu.torch_to_np(
                     self.optimize_policy(itr, samples))
 
                 self._episode_policy_losses.append(policy_loss)
@@ -211,7 +211,7 @@ class DDPG(OffPolicyRLAlgorithm):
             qval: Q-value predicted by the Q-network.
 
         """
-        transitions = np_to_torch(samples_data)
+        transitions = tu.dict_np_to_torch(samples_data)
         observations = transitions['observation']
         rewards = transitions['reward']
         actions = transitions['action']
