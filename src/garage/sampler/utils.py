@@ -13,8 +13,7 @@ def rollout(env,
             max_path_length=np.inf,
             animated=False,
             speedup=1,
-            deterministic=False,
-            accum_context=False):
+            deterministic=False):
     """Sample a single rollout of the agent in the environment.
 
     Args:
@@ -28,7 +27,6 @@ def rollout(env,
         deterministic (bool): If true, use the mean action returned by the
             stochastic policy instead of sampling from the returned action
             distribution.
-        accum_context (bool): If true, update agent's current context.
 
     Returns:
         dict[str, np.ndarray or dict]: Dictionary, with keys:
@@ -52,12 +50,10 @@ def rollout(env,
     observations = []
     actions = []
     rewards = []
-    terminals = []
     agent_infos = []
     env_infos = []
     dones = []
     o = env.reset()
-    next_o = None
     agent.reset()
     path_length = 0
     if animated:
@@ -67,12 +63,8 @@ def rollout(env,
         if deterministic and 'mean' in agent_infos:
             a = agent_info['mean']
         next_o, r, d, env_info = env.step(a)
-        if accum_context:
-            agent.update_context([o, a, r, next_o, d, env_info])
-
         observations.append(o)
         rewards.append(r)
-        terminals.append(d)
         actions.append(a)
         agent_infos.append(agent_info)
         env_infos.append(env_info)
@@ -86,16 +78,10 @@ def rollout(env,
             timestep = 0.05
             time.sleep(timestep / speedup)
 
-    observations = np.array(observations)
-    next_observations = np.vstack(
-        (observations[1:, :], np.expand_dims(next_o, 0)))
-
     return dict(
         observations=np.array(observations),
         actions=np.array(actions),
         rewards=np.array(rewards),
-        next_observations=next_observations,
-        terminals=np.array(terminals).reshape(-1, 1),
         agent_infos=tensor_utils.stack_tensor_dict_list(agent_infos),
         env_infos=tensor_utils.stack_tensor_dict_list(env_infos),
         dones=np.array(dones),
