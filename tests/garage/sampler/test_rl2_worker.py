@@ -5,7 +5,7 @@ from tests.fixtures.envs.dummy import DummyBoxEnv
 from tests.fixtures.policies import DummyPolicy
 
 
-class TestRL2Sampler(TfGraphTestCase):
+class TestRL2Worker(TfGraphTestCase):
 
     def test_rl2_worker(self):
         env = TfEnv(DummyBoxEnv(obs_dim=(1, )))
