@@ -10,6 +10,7 @@ from garage.sampler.on_policy_vectorized_sampler import (
 from garage.sampler.parallel_vec_env_executor import ParallelVecEnvExecutor
 from garage.sampler.ray_sampler import RaySampler, SamplerWorker
 from garage.sampler.rl2_sampler import RL2Sampler
+from garage.sampler.rl2_worker import RL2Worker
 from garage.sampler.sampler import Sampler
 from garage.sampler.stateful_pool import singleton_pool
 from garage.sampler.vec_env_executor import VecEnvExecutor
@@ -18,7 +19,7 @@ from garage.sampler.worker_factory import WorkerFactory
 
 __all__ = [
     'BatchSampler', 'Sampler', 'ISSampler', 'singleton_pool', 'LocalSampler',
-    'RaySampler', 'RL2Sampler', 'SamplerWorker', 'ParallelVecEnvExecutor',
-    'VecEnvExecutor', 'OffPolicyVectorizedSampler',
+    'RaySampler', 'RL2Sampler', 'RL2Worker', 'SamplerWorker',
+    'ParallelVecEnvExecutor', 'VecEnvExecutor', 'OffPolicyVectorizedSampler',
     'OnPolicyVectorizedSampler', 'WorkerFactory', 'Worker', 'DefaultWorker'
 ]
