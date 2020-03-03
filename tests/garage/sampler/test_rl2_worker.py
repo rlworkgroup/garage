@@ -1,4 +1,4 @@
-from garage.sampler.rl2_worker import RL2Worker
+from garage.tf.algos.rl2.rl2_worker import RL2Worker
 from garage.tf.envs import TfEnv
 from tests.fixtures import TfGraphTestCase
 from tests.fixtures.envs.dummy import DummyBoxEnv
