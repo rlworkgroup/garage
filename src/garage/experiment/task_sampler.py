@@ -121,7 +121,6 @@ class SetTaskSampler(TaskSampler):
         env_constructor (Callable[gym.Env]): Callable that produces
             an environment (for example, an environment type).
 
-
     """
 
     def __init__(self, env_constructor):
@@ -153,6 +152,57 @@ class SetTaskSampler(TaskSampler):
             SetTaskUpdate(self._env_constructor, task)
             for task in self._env.sample_tasks(n_tasks)
         ]
+
+
+class FullSetTaskSampler(TaskSampler):
+    """TaskSampler where the environment can sample "task objects".
+
+    This is used for environments that implement `sample_tasks` and `set_task`.
+    For example, :py:class:`~HalfCheetahVelEnv`, as implemented in Garage.
+
+    This sampler enforces that every available task will be sampled.
+
+    Args:
+        env_constructor (Callable[gym.Env]): Callable that produces
+            an environment (for example, an environment type).
+
+    """
+
+    def __init__(self, env_constructor):
+        self._env_constructor = env_constructor
+        self._env = env_constructor()
+        assert hasattr(self._env, 'num_tasks')
+        assert hasattr(self._env, '_task_names')
+
+    @property
+    def n_tasks(self):
+        """int or None: The number of tasks if known and finite."""
+        return getattr(self._env, 'num_tasks', None)
+
+    def sample(self, n_tasks=None, with_replacement=False):
+        """Sample a list of environment updates.
+
+        Args:
+            n_tasks (int): Number of updates to sample. Must be None or the
+                number of available tasks.
+            with_replacement (bool): Whether tasks can repeat when sampled.
+                Note that if more tasks are sampled than exist, then tasks may
+                repeat, but only after every environment has been included at
+                least once in this batch. Ignored for continuous task spaces.
+
+        Returns:
+            list[EnvUpdate]: Batch of sampled environment updates, which, when
+                invoked on environments, will configure them with new tasks.
+                See :py:class:`~EnvUpdate` for more information.
+
+        """
+        # pylint: disable=protected-access
+        n_tasks = n_tasks or self.n_tasks
+        assert n_tasks == self.n_tasks
+        self._env._sampled_all = True
+        tasks = self._env.sample_tasks(n_tasks)
+        self._env._sampled_all = False
+        return [SetTaskUpdate(self._env_constructor, task) for task in tasks]
 
 
 class EnvPoolSampler(TaskSampler):

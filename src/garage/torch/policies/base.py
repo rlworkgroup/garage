@@ -37,6 +37,19 @@ class Policy(abc.ABC, torch.nn.Module):
         """
 
     @abc.abstractmethod
+    def reset(self, dones=None):
+        """Reset the policy.
+
+        If dones is None, it will be by default torch.Tensor([True]) which
+        implies the policy will not be "vectorized", i.e. number of parallel
+        environments for training data sampling = 1.
+
+        Args:
+            dones (torch.Tensor): Bool that indicates terminal state(s).
+
+        """
+
+    @abc.abstractmethod
     def get_actions(self, observations):
         """Get actions given observations.
 

@@ -6,6 +6,20 @@ import pytest
 
 from garage.envs.half_cheetah_vel_env import HalfCheetahVelEnv
 from garage.experiment import task_sampler
+from garage.experiment.task_sampler import FullSetTaskSampler
+
+
+@pytest.mark.large
+def test_round_robin_set_task_sampler():
+    # pylint: disable=import-outside-toplevel
+    from metaworld.benchmarks import ML10
+
+    env_cls = ML10.get_train_tasks
+    sampler = FullSetTaskSampler(env_cls)
+    first = sampler.sample(sampler.n_tasks)
+    second = sampler.sample(sampler.n_tasks)
+    assert np.array_equal([task['task'] for task in first], list(range(10)))
+    assert np.array_equal([task['task'] for task in second], list(range(10)))
 
 
 @pytest.mark.large

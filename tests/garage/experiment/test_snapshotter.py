@@ -20,6 +20,7 @@ configurations = [('all', {
 
 
 class TestSnapshotter:
+
     def setup_method(self):
         self.temp_dir = tempfile.TemporaryDirectory()
 
@@ -47,6 +48,22 @@ class TestSnapshotter:
 
     def test_invalid_snapshot_mode(self):
         with pytest.raises(ValueError):
-            snapshotter = Snapshotter(
-                snapshot_dir=self.temp_dir.name, snapshot_mode='invalid')
+            snapshotter = Snapshotter(snapshot_dir=self.temp_dir.name,
+                                      snapshot_mode='invalid')
             snapshotter.save_itr_params(2, {'testparam': 'invalid'})
+
+    def test_get_available_itrs(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            many, one, none = [
+                tempfile.mkdtemp(dir=temp_dir) for _ in range(3)
+            ]
+
+            open(osp.join(many, 'itr_1.pkl'), 'a').close()
+            open(osp.join(many, 'itr_3.pkl'), 'a').close()
+            open(osp.join(many, 'itr_5.pkl'), 'a').close()
+            assert Snapshotter.get_available_itrs(many) == [1, 3, 5]
+
+            open(osp.join(one, 'params.pkl'), 'a').close()
+            assert Snapshotter.get_available_itrs(one) == ['last']
+
+            assert not Snapshotter.get_available_itrs(none)

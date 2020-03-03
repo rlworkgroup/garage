@@ -1,5 +1,8 @@
 """Evaluator which tests Meta-RL algorithms on test environments."""
-from garage import log_performance, TrajectoryBatch
+
+from dowel import tabular
+
+from garage import log_multitask_performance, TrajectoryBatch
 from garage.sampler import LocalSampler
 
 
@@ -22,6 +25,9 @@ class MetaEvaluator:
         n_exploration_traj (int): Number of trajectories to gather from the
             exploration policy before requesting the meta algorithm to produce
             an adapted policy.
+        n_evaluation_traj (int): Number of trajectories to gather from the
+            adapted policy for evaluation. This parameter determines the
+            resolution of evaluation statistics.
         prefix (str): Prefix to use when logging. Defaults to MetaTest. For
             example, this results in logging the key 'MetaTest/SuccessRate'.
             If not set to `MetaTest`, it should probably be set to `MetaTrain`.
@@ -36,17 +42,20 @@ class MetaEvaluator:
                  test_task_sampler,
                  max_path_length,
                  n_test_tasks=None,
-                 n_exploration_traj=1,
+                 n_exploration_traj=10,
+                 n_evaluation_traj=10,
                  prefix='MetaTest'):
         self._test_task_sampler = test_task_sampler
         if n_test_tasks is None:
-            n_test_tasks = test_task_sampler.n_tasks
+            n_test_tasks = 10 * test_task_sampler.n_tasks
         self._n_test_tasks = n_test_tasks
         self._n_exploration_traj = n_exploration_traj
+        self._n_evaluation_trag = n_evaluation_traj
+        self._max_path_length = max_path_length
         self._test_sampler = runner.make_sampler(
             LocalSampler, n_workers=1, max_path_length=max_path_length)
         self._eval_itr = 0
-        self._prefix = prefix
+        self._prefix = prefix + '/' if prefix else ''
 
     def evaluate(self, algo):
         """Evaluate the Meta-RL algorithm on the test tasks.
@@ -65,10 +74,15 @@ class MetaEvaluator:
             ])
             adapted_policy = algo.adapt_policy(policy, traj)
             adapted_traj = self._test_sampler.obtain_samples(
-                self._eval_itr, 1, adapted_policy)
+                self._eval_itr,
+                self._n_exploration_traj * self._max_path_length,
+                adapted_policy)
             adapted_trajectories.append(adapted_traj)
-        log_performance(self._eval_itr,
-                        TrajectoryBatch.concatenate(*adapted_trajectories),
-                        getattr(algo, 'discount', 1.0),
-                        prefix=self._prefix)
+
+        with tabular.prefix(self._prefix):
+            log_multitask_performance(
+                self._eval_itr,
+                TrajectoryBatch.concatenate(*adapted_trajectories),
+                getattr(algo, 'discount', 1.0))
+
         self._eval_itr += 1

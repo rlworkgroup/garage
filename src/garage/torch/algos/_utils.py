@@ -110,7 +110,7 @@ def compute_advantages(discount, gae_lambda, max_path_length, baselines,
     deltas = (rewards + discount * F.pad(baselines, (0, 1))[:, 1:] - baselines)
     deltas = F.pad(deltas, (0, max_path_length - 1)).unsqueeze(0).unsqueeze(0)
 
-    advantages = F.conv2d(deltas, adv_filter, stride=1).squeeze()
+    advantages = F.conv2d(deltas, adv_filter, stride=1).view(rewards.shape)
     return advantages
 
 
