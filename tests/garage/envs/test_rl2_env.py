@@ -1,5 +1,5 @@
 from garage.envs import PointEnv
-from garage.envs import RL2Env
+from garage.tf.algos.rl2 import RL2Env
 
 
 class TestRL2Env:
