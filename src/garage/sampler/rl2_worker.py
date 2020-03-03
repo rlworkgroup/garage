@@ -5,7 +5,10 @@ from garage.sampler.worker import DefaultWorker
 
 
 class RL2Worker(DefaultWorker):
-    """Initialize a worker.
+    """Initialize a worker for RL2.
+
+    In RL2, policy does not reset between trajectories in each meta batch.
+    Policy only resets once at the beginning of a trial/meta batch.
 
     Args:
         seed(int): The seed to use to intialize random number generators.
@@ -15,9 +18,8 @@ class RL2Worker(DefaultWorker):
             occurring. This argument is used to set a different seed for each
             worker.
         n_paths_per_trial (int): Number of trajectories sampled per trial/
-            meta batch. Policy does not reset in between trajectories. In
-            other words, policy only resets once at the beginning of a trial/
-            meta batch.
+            meta batch. Policy resets in the beginning of a meta batch,
+            and obtain `n_paths_per_trial` trajectories in one meta batch.
 
     Attributes:
         agent(Policy or None): The worker's agent.
