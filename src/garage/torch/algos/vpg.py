@@ -12,7 +12,7 @@ from garage.misc import tensor_utils
 from garage.np.algos import BatchPolopt
 from garage.torch.algos import (_Default, compute_advantages, filter_valids,
                                 make_optimizer, pad_to_last)
-from garage.torch.utils import flatten_batch
+import garage.torch.utils as tu
 
 
 class VPG(BatchPolopt):
@@ -228,7 +228,7 @@ class VPG(BatchPolopt):
             torch.Tensor: Calculated mean KL divergence.
 
         """
-        flat_obs = flatten_batch(obs)
+        flat_obs = tu.flatten_batch(obs)
         with torch.no_grad():
             old_dist = self._old_policy.forward(flat_obs)
 
