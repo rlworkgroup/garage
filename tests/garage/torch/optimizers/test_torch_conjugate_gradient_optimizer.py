@@ -1,4 +1,6 @@
 """Tests for garage.torch.optimizers.conjugateGradientOptimizer."""
+import pickle
+
 import numpy as np
 import pytest
 import torch
@@ -187,3 +189,53 @@ def compute_hessian(f, params):
     h = torch.stack(h)
     h = h.reshape((len(params), len(params)))
     return h
+
+
+def test_pickle_round_trip():
+    """Test that pickling works as one would normally expect."""
+    # pylint: disable=protected-access
+    p1 = torch.tensor([0.1])
+    p2 = torch.tensor([0.1])
+    params = [p1, p2]
+    optimizer = ConjugateGradientOptimizer(params, 0.01)
+    optimizer_pickled = pickle.dumps(optimizer)
+    optimizer2 = pickle.loads(optimizer_pickled)
+    assert optimizer._max_constraint_value == optimizer2._max_constraint_value
+    assert optimizer._cg_iters == optimizer2._cg_iters
+    assert optimizer._max_backtracks == optimizer2._max_backtracks
+    assert optimizer._backtrack_ratio == optimizer2._backtrack_ratio
+    assert optimizer._hvp_reg_coeff == optimizer2._hvp_reg_coeff
+    assert optimizer._accept_violation == optimizer2._accept_violation
+
+
+class BrokenPicklingConjugateGradientOptimizer(ConjugateGradientOptimizer):
+    """Used to check unpickling compat with old implementation."""
+
+    @property
+    def state(self):
+        """dict: Get the (empty) state."""
+        return dict()
+
+    @state.setter
+    def state(self, state):
+        # Pylint is confused and thinks fset doesn't exist.
+        # pylint: disable=no-member
+        ConjugateGradientOptimizer.state.fset(self, state)
+
+
+def test_unpickle_empty_state():
+    """Test that pickling works as one would normally expect."""
+    # pylint: disable=protected-access
+    p1 = torch.tensor([0.1])
+    p2 = torch.tensor([0.1])
+    params = [p1, p2]
+    optimizer = BrokenPicklingConjugateGradientOptimizer(params, 0.02)
+    optimizer_pickled = pickle.dumps(optimizer)
+    optimizer2 = pickle.loads(optimizer_pickled)
+    assert optimizer2._max_constraint_value == 0.01
+    # These asserts only pass because they contain the default values.
+    assert optimizer._cg_iters == optimizer2._cg_iters
+    assert optimizer._max_backtracks == optimizer2._max_backtracks
+    assert optimizer._backtrack_ratio == optimizer2._backtrack_ratio
+    assert optimizer._hvp_reg_coeff == optimizer2._hvp_reg_coeff
+    assert optimizer._accept_violation == optimizer2._accept_violation
