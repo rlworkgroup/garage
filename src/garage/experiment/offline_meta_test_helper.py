@@ -54,7 +54,7 @@ class OfflineTorchMetaTestHelper:
         """Read command line arguments and do meta-testing.
 
         Args:
-            env_cls (garage.envs.GarageEnv): A meta environment constructor.
+            env_cls (callable): A meta environment constructor.
                 Can be either a class or callable.
                 This environment should support sample_tasks(num_task) and
                 set_task(task).
@@ -105,8 +105,8 @@ class OfflineTorchMetaTestHelper:
                                  to_merge=to_merge,
                                  stride=stride)
 
-    @classmethod
-    def _get_tested_itrs(cls, meta_train_dir):
+    @staticmethod
+    def _get_tested_itrs(meta_train_dir):
         """Get iterations that have been tested.
 
         Args:
@@ -129,8 +129,8 @@ class OfflineTorchMetaTestHelper:
 
         return itrs
 
-    @classmethod
-    def _merge_csv(cls, folder, itrs):
+    @staticmethod
+    def _merge_csv(folder, itrs):
         """Merge per-iteration meta-test csv into a single meta-test.csv.
 
         Args:
