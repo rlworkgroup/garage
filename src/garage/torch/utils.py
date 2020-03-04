@@ -130,3 +130,43 @@ def global_device():
     # pylint: disable=global-statement
     global _DEVICE
     return _DEVICE
+
+
+def from_numpy(*args):
+    """Convert NumPy array to Torch tensor on specified device.
+    Args:
+        *args (numpy.ndarray): NumPy array.
+    Returns:
+        torch.Tensor: Converted Torch tensor.
+    """
+    return torch.from_numpy(*args).float().to(_DEVICE)
+
+
+def to_numpy(tensor):
+    """Convert Torch tensor to NumPy array.
+    Args:
+        tensor (torch.Tensor): Torch tensor.
+    Returns:
+        numpy.ndarray: Converted NumPy array.
+    """
+    return tensor.to('cpu').detach().numpy()
+
+
+def zeros(*sizes):
+    """Create a Torch tensor of zeros on specified device.
+    Args:
+        *sizes: Size of desired tensor.
+    Returns:
+        torch.Tensor: Torch tensor of zeros.
+    """
+    return torch.zeros(*sizes).to(_DEVICE)
+
+
+def ones(*sizes):
+    """Create a Torch tensor of ones on specified device.
+    Args:
+        *sizes: Size of desired tensor.
+    Returns:
+        torch.Tensor: Torch tensor of ones.
+    """
+    return torch.ones(*sizes).to(_DEVICE)

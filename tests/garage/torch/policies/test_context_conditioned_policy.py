@@ -11,7 +11,7 @@ from garage.envs.env_spec import EnvSpec
 from garage.tf.envs import TfEnv
 from garage.torch.embeddings import MLPEncoder
 from garage.torch.policies import ContextConditionedPolicy
-from garage.torch.policies import GaussianMLPPolicy
+from garage.torch.policies import TanhGaussianMLPPolicy
 from tests.fixtures.envs.dummy import DummyBoxEnv
 
 
@@ -52,10 +52,10 @@ class TestContextConditionedPolicy:
                                      hidden_w_init=nn.init.ones_,
                                      output_w_init=nn.init.ones_)
 
-        context_policy = GaussianMLPPolicy(env_spec=augmented_env_spec,
-                                           hidden_sizes=hidden_sizes,
-                                           hidden_nonlinearity=F.relu,
-                                           output_nonlinearity=None)
+        context_policy = TanhGaussianMLPPolicy(env_spec=augmented_env_spec,
+                                               hidden_sizes=hidden_sizes,
+                                               hidden_nonlinearity=F.relu,
+                                               output_nonlinearity=None)
 
         module = ContextConditionedPolicy(latent_dim=latent_dim,
                                           context_encoder=context_encoder,
@@ -90,16 +90,12 @@ class TestContextConditionedPolicy:
         module.infer_posterior(context)
         assert all([a == b for a, b in zip(module.z.shape, expected_shape)])
 
-        # pylint: disable=pointless-string-statement
-        """
-        # waiting for TanhGaussianPolicy
         t, b = 1, 2
         obs = torch.randn((t, b, obs_dim), dtype=torch.float32)
         policy_output, task_z_out = module.forward(obs, context)
 
         expected_shape = [b, latent_dim]
         assert all([a == b for a, b in zip(task_z_out.shape, expected_shape)])
-        """
 
         obs = np.random.rand(obs_dim)
         action, _ = module.get_action(obs)
