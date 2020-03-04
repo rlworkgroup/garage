@@ -94,6 +94,9 @@ class TestContextConditionedPolicy:
         obs = torch.randn((t, b, obs_dim), dtype=torch.float32)
         policy_output, task_z_out = module.forward(obs, context)
 
+        expected_shape = [b, action_dim]
+        assert all(
+            [a == b for a, b in zip(policy_output[0].shape, expected_shape)])
         expected_shape = [b, latent_dim]
         assert all([a == b for a, b in zip(task_z_out.shape, expected_shape)])
 
@@ -106,9 +109,7 @@ class TestContextConditionedPolicy:
 
         log_dict = {}
         module.log_diagnostics(log_dict)
-        assert 'ZMeanEval' in log_dict
-        assert 'ZVarianceEval' in log_dict
+        assert 'ZMeanEval' in log_dict and 'ZVarianceEval' in log_dict
 
         nets = module.networks
-        assert nets[0]
-        assert nets[1]
+        assert nets[0] and nets[1]

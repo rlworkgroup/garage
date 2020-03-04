@@ -35,7 +35,7 @@ def test_dict_np_to_torch():
         assert isinstance(tensor, torch.Tensor)
 
 
-def test_from_to_numpy(self):
+def test_from_to_numpy():
     """Test converting between NumPy array and Torch tensor."""
     np_array = np.random.rand(5)
     test_torch_tensor = tu.from_numpy(np_array)
@@ -44,13 +44,15 @@ def test_from_to_numpy(self):
     test_np_array = tu.to_numpy(test_torch_tensor)
     assert np_array.all() == test_np_array.all()
 
-def test_zeros(self):
+
+def test_zeros():
     """Test creating a Torch tensor of zeros on specified device."""
     zeros = torch.zeros(10)
     test_torch_tensor = tu.zeros(10)
     assert torch.all(torch.eq(zeros, test_torch_tensor))
 
-def test_ones(self):
+
+def test_ones():
     """Test creating a Torch tensor of ones on specified device."""
     ones = torch.ones(10)
     test_torch_tensor = tu.ones(10)
