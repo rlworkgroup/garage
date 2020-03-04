@@ -64,6 +64,9 @@ class GaussianMLPBaseModule(nn.Module):
                exponential transformation.
             - softplus: the std will be computed as log(1+exp(x)).
         layer_normalization (bool): Bool for using layer normalization or not.
+        normal_distribution_cls (torch.distribution): normal distribution class
+            to be constructed and returned by a call to forward. By default, is
+            `torch.distributions.Normal`.
 
     """
 
@@ -88,7 +91,8 @@ class GaussianMLPBaseModule(nn.Module):
                  std_output_nonlinearity=None,
                  std_output_w_init=nn.init.xavier_uniform_,
                  std_parameterization='exp',
-                 layer_normalization=False):
+                 layer_normalization=False,
+                 normal_distribution_cls=Normal):
         super().__init__()
 
         self._input_dim = input_dim
@@ -111,6 +115,7 @@ class GaussianMLPBaseModule(nn.Module):
         self._output_w_init = output_w_init
         self._output_b_init = output_b_init
         self._layer_normalization = layer_normalization
+        self._norm_dist_class = normal_distribution_cls
 
         if self._std_parameterization not in ('exp', 'softplus'):
             raise NotImplementedError
@@ -120,12 +125,30 @@ class GaussianMLPBaseModule(nn.Module):
             self._init_std = torch.nn.Parameter(init_std_param)
         else:
             self._init_std = init_std_param
+            self.register_buffer('init_std', self._init_std)
 
         self._min_std_param = self._max_std_param = None
         if min_std is not None:
             self._min_std_param = torch.Tensor([min_std]).log()
+            self.register_buffer('min_std_param', self._min_std_param)
         if max_std is not None:
             self._max_std_param = torch.Tensor([max_std]).log()
+            self.register_buffer('max_std_param', self._max_std_param)
+
+    def to(self, *args, **kwargs):
+        """Move the module to the specified device.
+
+        Args:
+            *args: args to pytorch to function.
+            **kwargs: keyword args to pytorch to function.
+
+        """
+        super().to(*args, **kwargs)
+        buffers = dict(self.named_buffers())
+        if not isinstance(self._init_std, torch.nn.Parameter):
+            self._init_std = buffers['init_std']
+        self._min_std_param = buffers['min_std_param']
+        self._max_std_param = buffers['max_std_param']
 
     @abc.abstractmethod
     def _get_mean_and_log_std(self, *inputs):
@@ -152,8 +175,10 @@ class GaussianMLPBaseModule(nn.Module):
             std = log_std_uncentered.exp()
         else:
             std = log_std_uncentered.exp().exp().add(1.).log()
-
-        dist = Independent(Normal(mean, std), 1)
+        dist = self._norm_dist_class(mean, std)
+        # Makes it so that a sample from the distribution is treated as a
+        # single sample and not dist.batch_shape samples.
+        dist = Independent(dist, len(dist.batch_shape))
 
         return dist
 
@@ -211,6 +236,9 @@ class GaussianMLPModule(GaussianMLPBaseModule):
                exponential transformation
             - softplus: the std will be computed as log(1+exp(x))
         layer_normalization (bool): Bool for using layer normalization or not.
+        normal_distribution_cls (torch.distribution): normal distribution class
+            to be constructed and returned by a call to forward. By default, is
+            `torch.distributions.Normal`.
 
     """
 
@@ -229,7 +257,8 @@ class GaussianMLPModule(GaussianMLPBaseModule):
                  min_std=1e-6,
                  max_std=None,
                  std_parameterization='exp',
-                 layer_normalization=False):
+                 layer_normalization=False,
+                 normal_distribution_cls=Normal):
         super(GaussianMLPModule,
               self).__init__(input_dim=input_dim,
                              output_dim=output_dim,
@@ -245,7 +274,8 @@ class GaussianMLPModule(GaussianMLPBaseModule):
                              min_std=min_std,
                              max_std=max_std,
                              std_parameterization=std_parameterization,
-                             layer_normalization=layer_normalization)
+                             layer_normalization=layer_normalization,
+                             normal_distribution_cls=normal_distribution_cls)
 
         self._mean_module = MLPModule(
             input_dim=self._input_dim,
@@ -266,9 +296,8 @@ class GaussianMLPModule(GaussianMLPBaseModule):
             *inputs: Input to the module.
 
         Returns:
-            tuple:
-                * mean (torch.Tensor): The mean of Gaussian distribution.
-                * std (torch.Tensor): The variance of Gaussian distribution.
+            torch.Tensor: The mean of Gaussian distribution.
+            torch.Tensor: The variance of Gaussian distribution.
 
         """
         assert len(inputs) == 1
@@ -334,6 +363,9 @@ class GaussianMLPIndependentStdModule(GaussianMLPBaseModule):
                exponential transformation
             - softplus: the std will be computed as log(1+exp(x))
         layer_normalization (bool): Bool for using layer normalization or not.
+        normal_distribution_cls (torch.distribution): normal distribution class
+            to be constructed and returned by a call to forward. By default, is
+            `torch.distributions.Normal`.
 
     """
 
@@ -358,7 +390,8 @@ class GaussianMLPIndependentStdModule(GaussianMLPBaseModule):
                  std_output_nonlinearity=None,
                  std_output_w_init=nn.init.xavier_uniform_,
                  std_parameterization='exp',
-                 layer_normalization=False):
+                 layer_normalization=False,
+                 normal_distribution_cls=Normal):
         super(GaussianMLPIndependentStdModule,
               self).__init__(input_dim=input_dim,
                              output_dim=output_dim,
@@ -380,7 +413,8 @@ class GaussianMLPIndependentStdModule(GaussianMLPBaseModule):
                              std_output_nonlinearity=std_output_nonlinearity,
                              std_output_w_init=std_output_w_init,
                              std_parameterization=std_parameterization,
-                             layer_normalization=layer_normalization)
+                             layer_normalization=layer_normalization,
+                             normal_distribution_cls=normal_distribution_cls)
 
         self._mean_module = MLPModule(
             input_dim=self._input_dim,
@@ -425,9 +459,8 @@ class GaussianMLPIndependentStdModule(GaussianMLPBaseModule):
             *inputs: Input to the module.
 
         Returns:
-            tuple:
-                * mean (torch.Tensor): The mean of Gaussian distribution.
-                * std (torch.Tensor): The variance of Gaussian distribution.
+            torch.Tensor: The mean of Gaussian distribution.
+            torch.Tensor: The variance of Gaussian distribution.
 
         """
         return self._mean_module(*inputs), self._log_std_module(*inputs)
@@ -473,6 +506,9 @@ class GaussianMLPTwoHeadedModule(GaussianMLPBaseModule):
                exponential transformation
             - softplus: the std will be computed as log(1+exp(x))
         layer_normalization (bool): Bool for using layer normalization or not.
+        normal_distribution_cls (torch.distribution): normal distribution class
+            to be constructed and returned by a call to forward. By default, is
+            `torch.distributions.Normal`.
 
     """
 
@@ -491,7 +527,8 @@ class GaussianMLPTwoHeadedModule(GaussianMLPBaseModule):
                  min_std=1e-6,
                  max_std=None,
                  std_parameterization='exp',
-                 layer_normalization=False):
+                 layer_normalization=False,
+                 normal_distribution_cls=Normal):
         super(GaussianMLPTwoHeadedModule,
               self).__init__(input_dim=input_dim,
                              output_dim=output_dim,
@@ -507,7 +544,8 @@ class GaussianMLPTwoHeadedModule(GaussianMLPBaseModule):
                              min_std=min_std,
                              max_std=max_std,
                              std_parameterization=std_parameterization,
-                             layer_normalization=layer_normalization)
+                             layer_normalization=layer_normalization,
+                             normal_distribution_cls=normal_distribution_cls)
 
         self._shared_mean_log_std_network = MultiHeadedMLPModule(
             n_heads=2,
@@ -532,9 +570,8 @@ class GaussianMLPTwoHeadedModule(GaussianMLPBaseModule):
             *inputs: Input to the module.
 
         Returns:
-            tuple:
-                * mean (torch.Tensor): The mean of Gaussian distribution.
-                * std (torch.Tensor): The variance of Gaussian distribution.
+            torch.Tensor: The mean of Gaussian distribution.
+            torch.Tensor: The variance of Gaussian distribution.
 
         """
         return self._shared_mean_log_std_network(*inputs)
