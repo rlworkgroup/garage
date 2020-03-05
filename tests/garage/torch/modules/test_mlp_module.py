@@ -138,5 +138,4 @@ class TestMLPModel:
         output.sum().backward()
 
         for tt in module.parameters():
-            if tt.grad is not None:
-                assert torch.all(torch.ne(tt.grad, 0))
+            assert torch.all(torch.ne(tt.grad, 0))

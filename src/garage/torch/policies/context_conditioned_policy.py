@@ -64,11 +64,13 @@ class ContextConditionedPolicy(nn.Module):
 
         """
         # reset distribution over z to the prior
-        mu = tu.zeros(num_tasks, self._latent_dim)
+        mu = torch.zeros(num_tasks, self._latent_dim).to(tu.global_device())
         if self._use_ib:
-            var = tu.ones(num_tasks, self._latent_dim)
+            var = torch.ones(num_tasks,
+                             self._latent_dim).to(tu.global_device())
         else:
-            var = tu.zeros(num_tasks, self._latent_dim)
+            var = torch.zeros(num_tasks,
+                              self._latent_dim).to(tu.global_device())
         self.z_means = mu
         self.z_vars = var
         # sample a new z from the prior
@@ -102,10 +104,14 @@ class ContextConditionedPolicy(nn.Module):
 
         """
         o, a, r, no, _, _ = inputs
-        o = tu.from_numpy(o[None, None, ...])
-        a = tu.from_numpy(a[None, None, ...])
-        r = tu.from_numpy(np.array([r])[None, None, ...])
-        no = tu.from_numpy(no[None, None, ...])
+        o = torch.as_tensor(o[None, None, ...],
+                            device=tu.global_device()).float()
+        a = torch.as_tensor(a[None, None, ...],
+                            device=tu.global_device()).float()
+        r = torch.as_tensor(np.array([r])[None, None, ...],
+                            device=tu.global_device()).float()
+        no = torch.as_tensor(no[None, None, ...],
+                             device=tu.global_device()).float()
 
         if self._use_next_obs:
             data = torch.cat([o, a, r, no], dim=2)
@@ -132,7 +138,7 @@ class ContextConditionedPolicy(nn.Module):
             mu = params[..., :self._latent_dim]
             sigma_squared = F.softplus(params[..., self._latent_dim:])
             z_params = [
-                _product_of_gaussians(m, s)
+                tu.product_of_gaussians(m, s)
                 for m, s in zip(torch.unbind(mu), torch.unbind(sigma_squared))
             ]
             self.z_means = torch.stack([p[0] for p in z_params])
@@ -150,7 +156,13 @@ class ContextConditionedPolicy(nn.Module):
             context (torch.Tensor): Context values.
 
         Returns:
-            torch.Tensor: Output action values.
+            tuple:
+                * torch.Tensor: Predicted action values.
+                * np.ndarray: Mean of distribution.
+                * np.ndarray: Log std of distribution.
+                * torch.Tensor: Log likelihood of distribution.
+                * torch.Tensor: Sampled values from distribution before
+                    applying tanh transformation.
             torch.Tensor: z values.
 
         """
@@ -187,7 +199,7 @@ class ContextConditionedPolicy(nn.Module):
 
         """
         z = self.z
-        obs = tu.from_numpy(obs[None])
+        obs = torch.as_tensor(obs[None], device=tu.global_device()).float()
         obs_in = torch.cat([obs, z], dim=1)
         action, info = self._policy.get_action(obs_in)
         action = np.squeeze(action, axis=0)
@@ -195,14 +207,15 @@ class ContextConditionedPolicy(nn.Module):
         return action, info
 
     def compute_kl_div(self):
-        """Compute KL( q(z|c) || p(z) ).
+        r"""Compute :math:`KL(q(z|c) \| p(z))`.
 
         Returns:
-            float: KL( q(z|c) || p(z) ).
+            float: :math:`KL(q(z|c) \| p(z))`.
 
         """
-        prior = torch.distributions.Normal(tu.zeros(self._latent_dim),
-                                           tu.ones(self._latent_dim))
+        prior = torch.distributions.Normal(
+            torch.zeros(self._latent_dim).to(tu.global_device()),
+            torch.ones(self._latent_dim).to(tu.global_device()))
         posteriors = [
             torch.distributions.Normal(mu, torch.sqrt(var)) for mu, var in zip(
                 torch.unbind(self.z_means), torch.unbind(self.z_vars))
@@ -229,8 +242,8 @@ class ContextConditionedPolicy(nn.Module):
             eval_statistics (dict): Dictionary for logging info.
 
         """
-        z_mean = np.mean(np.abs(tu.to_numpy(self.z_means[0])))
-        z_sig = np.mean(tu.to_numpy(self.z_vars[0]))
+        z_mean = np.mean(np.abs(self.z_means[0].to('cpu').detach().numpy()))
+        z_sig = np.mean(self.z_vars[0].to('cpu').detach().numpy())
         eval_statistics['ZMeanEval'] = z_mean
         eval_statistics['ZVarianceEval'] = z_sig
 
@@ -253,19 +266,3 @@ class ContextConditionedPolicy(nn.Module):
 
         """
         return self._context
-
-
-def _product_of_gaussians(mus, sigmas_squared):
-    """Compute mu, sigma of product of gaussians.
-
-    Args:
-        mus (torch.Tensor): Means.
-        sigmas_squared (torch.Tensor): Variances.
-
-    Returns:
-        torch.Tensor: Mu and sigma of product of gaussians.
-    """
-    sigmas_squared = torch.clamp(sigmas_squared, min=1e-7)
-    sigma_squared = 1. / torch.sum(torch.reciprocal(sigmas_squared), dim=0)
-    mu = sigma_squared * torch.sum(mus / sigmas_squared, dim=0)
-    return mu, sigma_squared

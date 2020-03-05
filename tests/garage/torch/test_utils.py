@@ -35,25 +35,11 @@ def test_dict_np_to_torch():
         assert isinstance(tensor, torch.Tensor)
 
 
-def test_from_to_numpy():
-    """Test converting between NumPy array and Torch tensor."""
-    np_array = np.random.rand(5)
-    test_torch_tensor = tu.from_numpy(np_array)
-    assert all([a == b for a, b in zip(np_array, test_torch_tensor)])
-
-    test_np_array = tu.to_numpy(test_torch_tensor)
-    assert np_array.all() == test_np_array.all()
-
-
-def test_zeros():
-    """Test creating a Torch tensor of zeros on specified device."""
-    zeros = torch.zeros(10)
-    test_torch_tensor = tu.zeros(10)
-    assert torch.all(torch.eq(zeros, test_torch_tensor))
-
-
-def test_ones():
-    """Test creating a Torch tensor of ones on specified device."""
-    ones = torch.ones(10)
-    test_torch_tensor = tu.ones(10)
-    assert torch.all(torch.eq(ones, test_torch_tensor))
+def test_product_of_gaussians():
+    """Test computing mu, sigma of product of gaussians."""
+    size = 5
+    mu = torch.ones(size)
+    sigmas_squared = torch.ones(size)
+    output = tu.product_of_gaussians(mu, sigmas_squared)
+    assert output[0] == 1
+    assert output[1] == 1 / size

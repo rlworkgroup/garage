@@ -132,41 +132,17 @@ def global_device():
     return _DEVICE
 
 
-def from_numpy(*args):
-    """Convert NumPy array to Torch tensor on specified device.
+def product_of_gaussians(mus, sigmas_squared):
+    """Compute mu, sigma of product of gaussians.
+
     Args:
-        *args (numpy.ndarray): NumPy array.
+        mus (torch.Tensor): Means.
+        sigmas_squared (torch.Tensor): Variances.
+
     Returns:
-        torch.Tensor: Converted Torch tensor.
+        torch.Tensor: Mu and sigma of product of gaussians.
     """
-    return torch.from_numpy(*args).float().to(_DEVICE)
-
-
-def to_numpy(tensor):
-    """Convert Torch tensor to NumPy array.
-    Args:
-        tensor (torch.Tensor): Torch tensor.
-    Returns:
-        numpy.ndarray: Converted NumPy array.
-    """
-    return tensor.to('cpu').detach().numpy()
-
-
-def zeros(*sizes):
-    """Create a Torch tensor of zeros on specified device.
-    Args:
-        *sizes: Size of desired tensor.
-    Returns:
-        torch.Tensor: Torch tensor of zeros.
-    """
-    return torch.zeros(*sizes).to(_DEVICE)
-
-
-def ones(*sizes):
-    """Create a Torch tensor of ones on specified device.
-    Args:
-        *sizes: Size of desired tensor.
-    Returns:
-        torch.Tensor: Torch tensor of ones.
-    """
-    return torch.ones(*sizes).to(_DEVICE)
+    sigmas_squared = torch.clamp(sigmas_squared, min=1e-7)
+    sigma_squared = 1. / torch.sum(torch.reciprocal(sigmas_squared), dim=0)
+    mu = sigma_squared * torch.sum(mus / sigmas_squared, dim=0)
+    return mu, sigma_squared
