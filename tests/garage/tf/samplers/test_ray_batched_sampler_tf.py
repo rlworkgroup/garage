@@ -39,8 +39,6 @@ class TestRaySamplerTF():
     """
 
     def setup_method(self):
-        ray.init(local_mode=True, ignore_reinit_error=True)
-
         self.env = TfEnv(GridWorldEnv(desc='4x4'))
         self.policy = ScriptedPolicy(
             scripted_actions=[2, 2, 1, 0, 3, 1, 1, 1, 2, 2, 1, 1, 1, 2, 2, 1])
@@ -51,7 +49,9 @@ class TestRaySamplerTF():
     def teardown_method(self):
         self.env.close()
 
-    def test_ray_batch_sampler(self):
+    def test_ray_batch_sampler(self, ray_test_fixture):
+        # pylint: disable=unused-argument
+        assert ray.is_initialized()
         workers = WorkerFactory(seed=100,
                                 max_path_length=self.algo.max_path_length)
         sampler1 = RaySampler(workers, self.policy, self.env)

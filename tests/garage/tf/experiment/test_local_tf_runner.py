@@ -1,4 +1,5 @@
 import pytest
+import ray
 import tensorflow as tf
 
 from garage.np.baselines import LinearFeatureBaseline
@@ -139,7 +140,9 @@ class TestLocalRunner(TfGraphTestCase):
             assert isinstance(runner._sampler, LocalSampler)
             runner.train(n_epochs=1, batch_size=10)
 
-    def test_make_sampler_ray_sampler(self):
+    def test_make_sampler_ray_sampler(self, ray_test_fixture):
+        # pylint: disable=unused-argument
+        assert ray.is_initialized()
         with LocalTFRunner(snapshot_config) as runner:
             env = TfEnv(env_name='CartPole-v1')
 

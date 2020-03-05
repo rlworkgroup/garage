@@ -1,3 +1,4 @@
+"""Tests for ray_batched_sampler"""
 from unittest.mock import Mock
 
 import numpy as np
@@ -35,8 +36,6 @@ class TestSampler:
     """
 
     def setup_method(self):
-        ray.init(local_mode=True, ignore_reinit_error=True)
-
         self.env = TfEnv(GridWorldEnv(desc='4x4'))
         self.policy = ScriptedPolicy(
             scripted_actions=[2, 2, 1, 0, 3, 1, 1, 1, 2, 2, 1, 1, 1, 2, 2, 1])
@@ -47,7 +46,9 @@ class TestSampler:
     def teardown_method(self):
         self.env.close()
 
-    def test_ray_batch_sampler(self):
+    def test_ray_batch_sampler(self, ray_test_fixture):
+        # pylint: disable=unused-argument
+        assert ray.is_initialized()
         workers = WorkerFactory(seed=100,
                                 max_path_length=self.algo.max_path_length)
         sampler1 = RaySampler(workers, self.policy, self.env)
@@ -79,8 +80,9 @@ class TestSampler:
         sampler2.shutdown_worker()
 
 
-@pytest.mark.flaky
-def test_update_envs_env_update():
+def test_update_envs_env_update(ray_test_fixture):
+    # pylint: disable=unused-argument
+    assert ray.is_initialized()
     max_path_length = 16
     env = TfEnv(PointEnv())
     policy = FixedPolicy(env.spec,
@@ -112,27 +114,9 @@ def test_update_envs_env_update():
                                env_update=tasks.sample(n_workers + 1))
 
 
-def test_init_with_env_updates():
-    max_path_length = 16
-    env = TfEnv(PointEnv())
-    policy = FixedPolicy(env.spec,
-                         scripted_actions=[
-                             env.action_space.sample()
-                             for _ in range(max_path_length)
-                         ])
-    tasks = SetTaskSampler(lambda: TfEnv(PointEnv()))
-    n_workers = 8
-    workers = WorkerFactory(seed=100,
-                            max_path_length=max_path_length,
-                            n_workers=n_workers)
-    sampler = RaySampler.from_worker_factory(workers,
-                                             policy,
-                                             envs=tasks.sample(n_workers))
-    rollouts = sampler.obtain_samples(0, 160, policy)
-    assert sum(rollouts.lengths) >= 160
-
-
-def test_obtain_exact_trajectories():
+def test_obtain_exact_trajectories(ray_test_fixture):
+    # pylint: disable=unused-argument
+    assert ray.is_initialized()
     max_path_length = 15
     n_workers = 8
     env = TfEnv(PointEnv())
@@ -156,3 +140,25 @@ def test_obtain_exact_trajectories():
         if count % n_traj_per_worker == 0:
             worker += 1
         assert (rollout.actions == per_worker_actions[worker]).all()
+
+
+def test_init_with_env_updates(ray_test_fixture):
+    # pylint: disable=unused-argument
+    assert ray.is_initialized()
+    max_path_length = 16
+    env = TfEnv(PointEnv())
+    policy = FixedPolicy(env.spec,
+                         scripted_actions=[
+                             env.action_space.sample()
+                             for _ in range(max_path_length)
+                         ])
+    tasks = SetTaskSampler(lambda: TfEnv(PointEnv()))
+    n_workers = 8
+    workers = WorkerFactory(seed=100,
+                            max_path_length=max_path_length,
+                            n_workers=n_workers)
+    sampler = RaySampler.from_worker_factory(workers,
+                                             policy,
+                                             envs=tasks.sample(n_workers))
+    rollouts = sampler.obtain_samples(0, 160, policy)
+    assert sum(rollouts.lengths) >= 160
