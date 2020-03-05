@@ -6,8 +6,8 @@ import akro
 import gym
 import numpy as np
 
-from garage.envs.env_spec import EnvSpec
-from garage.sampler.worker import DefaultWorker
+from garage.envs import EnvSpec
+from garage.sampler import DefaultWorker
 
 
 class RL2Env(gym.Wrapper):
