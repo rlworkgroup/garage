@@ -87,3 +87,5 @@ class TestTensorUtil:
         valids = np.array([1, 1, 1, 1, 1, 0, 0, 0, 0, 0])
         result = explained_variance_1d(y, y_hat, valids)
         assert result == 1.0
+        result = explained_variance_1d(y, y_hat)
+        np.testing.assert_almost_equal(result, 0.95)

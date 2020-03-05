@@ -23,7 +23,7 @@ def discount_cumsum(x, discount):
                                 axis=0)[::-1]
 
 
-def explained_variance_1d(ypred, y, valids):
+def explained_variance_1d(ypred, y, valids=None):
     """Explained variation for 1D inputs.
 
     It is the proportion of the variance in one variable that is explained or
@@ -34,15 +34,17 @@ def explained_variance_1d(ypred, y, valids):
             Shape: :math:`(N, max_path_length)`.
         y (np.ndarray): Sample data from the second variable.
             Shape: :math:`(N, max_path_length)`.
-        valids (np.ndarray): Array indicating valid indices.
+        valids (np.ndarray): Optional argument. Array indicating valid indices.
+            If None, it assumes the entire input array are valid.
             Shape: :math:`(N, max_path_length)`.
 
     Returns:
         float: The explained variance.
 
     """
-    ypred = ypred[valids.astype(np.bool)]
-    y = y[valids.astype(np.bool)]
+    if valids is not None:
+        ypred = ypred[valids.astype(np.bool)]
+        y = y[valids.astype(np.bool)]
     assert y.ndim == 1 and ypred.ndim == 1
     vary = np.var(y)
     if np.isclose(vary, 0):
