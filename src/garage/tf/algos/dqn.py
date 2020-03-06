@@ -196,24 +196,20 @@ class DQN(OffPolicyRLAlgorithm):
         self.episode_rewards.extend(paths['undiscounted_returns'])
         last_average_return = np.mean(self.episode_rewards)
         for _ in range(self.n_train_steps):
-            if (self.replay_buffer.n_transitions_stored >=
-                    self.min_buffer_size):
-                self.evaluate = True
+            if self._buffer_prefilled:
                 qf_loss = self.optimize_policy(epoch, None)
                 self.episode_qf_losses.append(qf_loss)
 
-        if self.evaluate:
+        if self._buffer_prefilled:
             if itr % self.target_network_update_freq == 0:
                 self._qf_update_ops()
 
         if itr % self.steps_per_epoch == 0:
-            if self.evaluate:
+            if self._buffer_prefilled:
                 mean100ep_rewards = round(np.mean(self.episode_rewards[-100:]),
                                           1)
                 mean100ep_qf_loss = np.mean(self.episode_qf_losses[-100:])
                 tabular.record('Epoch', epoch)
-                tabular.record('AverageReturn', np.mean(self.episode_rewards))
-                tabular.record('StdReturn', np.std(self.episode_rewards))
                 tabular.record('Episode100RewardMean', mean100ep_rewards)
                 tabular.record('{}/Episode100LossMean'.format(self.qf.name),
                                mean100ep_qf_loss)
