@@ -17,12 +17,18 @@ class TestTfEnv:
     @pytest.mark.nightly
     @pytest.mark.parametrize('spec', list(gym.envs.registry.all()))
     def test_all_gym_envs(self, spec):
+        if spec._env_name.startswith('Defender'):
+            pytest.skip(
+                'Defender-* envs bundled in atari-py 0.2.x don\'t load')
         env = TfEnv(spec.make())
         step_env_with_gym_quirks(env, spec)
 
     @pytest.mark.nightly
     @pytest.mark.parametrize('spec', list(gym.envs.registry.all()))
     def test_all_gym_envs_pickleable(self, spec):
+        if spec._env_name.startswith('Defender'):
+            pytest.skip(
+                'Defender-* envs bundled in atari-py 0.2.x don\'t load')
         env = TfEnv(env_name=spec.id)
         step_env_with_gym_quirks(env,
                                  spec,
