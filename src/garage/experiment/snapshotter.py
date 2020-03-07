@@ -3,8 +3,8 @@ import collections
 import errno
 import os
 import pathlib
-import pickle
 
+import cloudpickle
 import joblib
 
 SnapshotConfig = collections.namedtuple(
@@ -97,7 +97,7 @@ class Snapshotter:
                                          'itr_%d.pkl' % itr)
             file_name_last = os.path.join(self._snapshot_dir, 'params.pkl')
             with open(file_name_last, 'wb') as file:
-                pickle.dump(params, file)
+                cloudpickle.dump(params, file)
         elif self._snapshot_mode == 'none':
             pass
         else:
@@ -106,7 +106,7 @@ class Snapshotter:
 
         if file_name:
             with open(file_name, 'wb') as file:
-                pickle.dump(params, file)
+                cloudpickle.dump(params, file)
 
     def load(self, load_dir, itr='last'):
         # pylint: disable=no-self-use
