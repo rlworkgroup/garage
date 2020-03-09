@@ -131,12 +131,6 @@ class TestContextConditionedPolicy:
         kl_div = self.module.compute_kl_div()
         assert kl_div != 0
 
-    def test_log_diagnostics(self):
-        """Test log_diagnostics."""
-        log_dict = {}
-        self.module.log_diagnostics(log_dict)
-        assert 'ZMeanEval' in log_dict and 'ZVarianceEval' in log_dict
-
     def test_networks(self):
         """Test networks."""
         nets = self.module.networks

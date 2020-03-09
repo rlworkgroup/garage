@@ -138,9 +138,8 @@ class ContextConditionedPolicy(nn.Module):
 
         """
         params = self._context_encoder(context)
-        # pylint: disable=protected-access
         params = params.view(context.size(0), -1,
-                             self._context_encoder._output_dim)
+                             self._context_encoder.output_dim)
         # with probabilistic z, predict mean and variance of q(z | c)
         if self._use_information_bottleneck:
             mu = params[..., :self._latent_dim]
@@ -245,18 +244,6 @@ class ContextConditionedPolicy(nn.Module):
         ]
         kl_div_sum = torch.sum(torch.stack(kl_divs))
         return kl_div_sum
-
-    def log_diagnostics(self, eval_statistics):
-        """Log data about encodings to eval_statistics dictionary.
-
-        Args:
-            eval_statistics (dict): Dictionary for logging info.
-
-        """
-        z_mean = np.mean(np.abs(self.z_means[0].to('cpu').detach().numpy()))
-        z_sig = np.mean(self.z_vars[0].to('cpu').detach().numpy())
-        eval_statistics['ZMeanEval'] = z_mean
-        eval_statistics['ZVarianceEval'] = z_sig
 
     @property
     def networks(self):
