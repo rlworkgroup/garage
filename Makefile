@@ -14,6 +14,7 @@ MJKEY_PATH ?= ~/.mujoco/mjkey.txt
 
 test:  ## Run the CI test suite
 test: RUN_CMD = nice -n 11 pytest -v -m 'not huge and not flaky' --durations=0
+test: ADD_ARGS = --memory 7500m --memory-swap 7500m
 test: run-headless
 	@echo "Running test suite..."
 
@@ -114,6 +115,8 @@ run-ci:
 		-e TRAVIS_COMMIT_RANGE \
 		-e TRAVIS \
 		-e MJKEY \
+		--memory 7500m \
+		--memory-swap 7500m \
 		${ADD_ARGS} \
 		${TAG} ${RUN_CMD}
 
