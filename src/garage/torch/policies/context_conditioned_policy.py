@@ -246,14 +246,6 @@ class ContextConditionedPolicy(nn.Module):
         kl_div_sum = torch.sum(torch.stack(kl_divs))
         return kl_div_sum
 
-    def reset(self, dones=None):
-        """Reset the environment.
-
-        Args:
-            dones (numpy.ndarray): Reset values.
-
-        """
-
     def log_diagnostics(self, eval_statistics):
         """Log data about encodings to eval_statistics dictionary.
 

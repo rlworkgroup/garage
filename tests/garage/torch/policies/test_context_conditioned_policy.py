@@ -58,10 +58,8 @@ class TestContextConditionedPolicy:
                                                use_information_bottleneck=True,
                                                use_next_obs=False)
 
-    def test_reset(self):
-        """Test reset."""
-        self.module.reset()
-
+    def test_reset_belief(self):
+        """Test reset_belief."""
         expected_shape = [1, self.latent_dim]
         self.module.reset_belief()
         assert torch.all(
