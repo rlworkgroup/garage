@@ -6,6 +6,7 @@ import torch
 import torch.nn as nn
 from torch.nn import functional as F  # NOQA
 
+from garage import TimeStep
 from garage.envs.env_spec import EnvSpec
 from garage.tf.envs import TfEnv
 from garage.torch.embeddings import MLPEncoder
@@ -20,7 +21,7 @@ class TestContextConditionedPolicy:
     def setup_method(self):
         """Setup for all test methods."""
         self.latent_dim = 5
-        env_spec = TfEnv(DummyBoxEnv())
+        self.env_spec = TfEnv(DummyBoxEnv())
         latent_space = akro.Box(low=-1,
                                 high=1,
                                 shape=(self.latent_dim, ),
@@ -28,12 +29,12 @@ class TestContextConditionedPolicy:
 
         # add latent space to observation space to create a new space
         augmented_obs_space = akro.Tuple(
-            (env_spec.observation_space, latent_space))
+            (self.env_spec.observation_space, latent_space))
         augmented_env_spec = EnvSpec(augmented_obs_space,
-                                     env_spec.action_space)
+                                     self.env_spec.action_space)
 
-        self.obs_dim = int(np.prod(env_spec.observation_space.shape))
-        self.action_dim = int(np.prod(env_spec.action_space.shape))
+        self.obs_dim = int(np.prod(self.env_spec.observation_space.shape))
+        self.action_dim = int(np.prod(self.env_spec.action_space.shape))
         reward_dim = 1
         self.encoder_input_dim = self.obs_dim + self.action_dim + reward_dim
         encoder_output_dim = self.latent_dim * 2
@@ -54,7 +55,7 @@ class TestContextConditionedPolicy:
         self.module = ContextConditionedPolicy(latent_dim=self.latent_dim,
                                                context_encoder=context_encoder,
                                                policy=context_policy,
-                                               use_ib=True,
+                                               use_information_bottleneck=True,
                                                use_next_obs=False)
 
     def test_reset(self):
@@ -82,15 +83,17 @@ class TestContextConditionedPolicy:
 
     def test_update_context(self):
         """Test update_context."""
-        o = np.ones(self.obs_dim)
-        a = np.ones(self.action_dim)
-        r = 1
-        no = np.ones(self.obs_dim)
-        dummy = np.ones(self.obs_dim)
-
+        s = TimeStep(env_spec=self.env_spec,
+                     observation=np.ones(self.obs_dim),
+                     next_observation=np.ones(self.obs_dim),
+                     action=np.ones(self.action_dim),
+                     reward=1.0,
+                     terminal=False,
+                     env_info={},
+                     agent_info={})
         updates = 10
         for _ in range(updates):
-            self.module.update_context([o, a, r, no, dummy, dummy])
+            self.module.update_context(s)
         assert torch.all(
             torch.eq(self.module.context,
                      torch.ones(updates, self.encoder_input_dim)))

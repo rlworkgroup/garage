@@ -1,4 +1,3 @@
-# pylint: disable=attribute-defined-outside-init, protected-access
 """A policy used in training meta reinforcement learning algorithms.
 
 It is used in PEARL (Probabilistic Embeddings for Actor-Critic Reinforcement
@@ -29,20 +28,20 @@ class ContextConditionedPolicy(nn.Module):
             permutation-invariant context encoder.
         policy (garage.torch.policies.Policy): Policy used to train the
             network.
-        use_ib (bool): True if latent context is not deterministic; false
-            otherwise
+        use_information_bottleneck (bool): True if latent context is not
+            deterministic; false otherwise.
         use_next_obs (bool): True if next observation is used in context
             for distinguishing tasks; false otherwise.
 
     """
 
-    def __init__(self, latent_dim, context_encoder, policy, use_ib,
-                 use_next_obs):
+    def __init__(self, latent_dim, context_encoder, policy,
+                 use_information_bottleneck, use_next_obs):
         super().__init__()
         self._latent_dim = latent_dim
         self._context_encoder = context_encoder
         self._policy = policy
-        self._use_ib = use_ib
+        self._use_information_bottleneck = use_information_bottleneck
         self._use_next_obs = use_next_obs
 
         # initialize buffers for z distribution and z
@@ -57,7 +56,7 @@ class ContextConditionedPolicy(nn.Module):
         self.reset_belief()
 
     def reset_belief(self, num_tasks=1):
-        """Reset q(z|c) to the prior and sample a new z from the prior.
+        r"""Reset :math:`q(z \| c)` to the prior and sample a new z from the prior.
 
         Args:
             num_tasks (int): Number of tasks.
@@ -65,7 +64,7 @@ class ContextConditionedPolicy(nn.Module):
         """
         # reset distribution over z to the prior
         mu = torch.zeros(num_tasks, self._latent_dim).to(tu.global_device())
-        if self._use_ib:
+        if self._use_information_bottleneck:
             var = torch.ones(num_tasks,
                              self._latent_dim).to(tu.global_device())
         else:
@@ -80,9 +79,10 @@ class ContextConditionedPolicy(nn.Module):
         # reset any hidden state in the encoder network (relevant for RNN)
         self._context_encoder.reset(num_tasks)
 
+    # pylint: disable=attribute-defined-outside-init
     def sample_from_belief(self):
         """Sample z using distributions from current means and variances."""
-        if self._use_ib:
+        if self._use_information_bottleneck:
             posteriors = [
                 torch.distributions.Normal(m, torch.sqrt(s)) for m, s in zip(
                     torch.unbind(self.z_means), torch.unbind(self.z_vars))
@@ -94,23 +94,25 @@ class ContextConditionedPolicy(nn.Module):
 
     def detach_z(self):
         """Disable backprop through z."""
+        # pylint: disable=attribute-defined-outside-init
         self.z = self.z.detach()
 
-    def update_context(self, inputs):
+    # pylint: disable=attribute-defined-outside-init
+    def update_context(self, timestep):
         """Append single transition to the current context.
 
         Args:
-            inputs (dict): Dictionary of transition information in np arrays .
+            timestep (garage._dtypes.TimeStep): Timestep containing transition
+                information to be added to context.
 
         """
-        o, a, r, no, _, _ = inputs
-        o = torch.as_tensor(o[None, None, ...],
+        o = torch.as_tensor(timestep.observation[None, None, ...],
                             device=tu.global_device()).float()
-        a = torch.as_tensor(a[None, None, ...],
+        a = torch.as_tensor(timestep.action[None, None, ...],
                             device=tu.global_device()).float()
-        r = torch.as_tensor(np.array([r])[None, None, ...],
+        r = torch.as_tensor(np.array([timestep.reward])[None, None, ...],
                             device=tu.global_device()).float()
-        no = torch.as_tensor(no[None, None, ...],
+        no = torch.as_tensor(timestep.next_observation[None, None, ...],
                              device=tu.global_device()).float()
 
         if self._use_next_obs:
@@ -123,18 +125,24 @@ class ContextConditionedPolicy(nn.Module):
         else:
             self._context = torch.cat([self._context, data], dim=1)
 
+    # pylint: disable=attribute-defined-outside-init
     def infer_posterior(self, context):
-        """Compute q(z|c) as a function of input context and sample new z.
+        r"""Compute :math:`q(z \| c)` as a function of input context and sample new z.
 
         Args:
-            context (torch.Tensor): Context values.
+            context (torch.Tensor): Context values, with shape
+                :math:`(X, N, C)`. X is the number of tasks. C is the
+                combined size of observation, action, reward, and next
+                observation if next observation is used in context. Otherwise,
+                C is the combined size of observation, action, and reward.
 
         """
         params = self._context_encoder(context)
+        # pylint: disable=protected-access
         params = params.view(context.size(0), -1,
                              self._context_encoder._output_dim)
         # with probabilistic z, predict mean and variance of q(z | c)
-        if self._use_ib:
+        if self._use_information_bottleneck:
             mu = params[..., :self._latent_dim]
             sigma_squared = F.softplus(params[..., self._latent_dim:])
             z_params = [
@@ -152,8 +160,13 @@ class ContextConditionedPolicy(nn.Module):
         """Given observations and context, get actions and probs from policy.
 
         Args:
-            obs (torch.Tensor): Observation values.
-            context (torch.Tensor): Context values.
+            obs (torch.Tensor): Observation values, with shape
+                :math:`(X, N, O)`. X is the number of tasks.
+            context (torch.Tensor): Context values, with shape
+                :math:`(X, N, C)`. C is the combined size of observation,
+                action, reward, and next observation if next observation is
+                used in context. Otherwise, C is the combined size of
+                observation, action, and reward.
 
         Returns:
             tuple:
@@ -163,7 +176,7 @@ class ContextConditionedPolicy(nn.Module):
                 * torch.Tensor: Log likelihood of distribution.
                 * torch.Tensor: Sampled values from distribution before
                     applying tanh transformation.
-            torch.Tensor: z values.
+            torch.Tensor: z values, with shape :math:`(N, latent_dim)`.
 
         """
         self.infer_posterior(context)
@@ -192,10 +205,16 @@ class ContextConditionedPolicy(nn.Module):
         """Sample action from the policy, conditioned on the task embedding.
 
         Args:
-            obs (torch.Tensor): Observation values.
+            obs (torch.Tensor): Observation values, with shape :math:`(1, O)`.
+                O is the size of the flattened observation space.
 
         Returns:
-            torch.Tensor: Output action values.
+            torch.Tensor: Output action value, with shape :math:`(1, A)`.
+                A is the size of the flattened action space.
+            dict:
+                * np.ndarray[float]: Mean of the distribution.
+                * np.ndarray[float]: Standard deviation of logarithmic values
+                    of the distribution.
 
         """
         z = self.z
@@ -262,7 +281,11 @@ class ContextConditionedPolicy(nn.Module):
         """Return context.
 
         Returns:
-            torch.Tensor: Context values.
+            torch.Tensor: Context values, with shape :math:`(X, N, C)`.
+                X is the number of tasks. C is the combined size of
+                observation, action, reward, and next observation if next
+                observation is used in context. Otherwise, C is the combined
+                size of observation, action, and reward.
 
         """
         return self._context
