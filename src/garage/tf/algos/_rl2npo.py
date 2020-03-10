@@ -12,22 +12,6 @@ class RL2NPO(NPO):
     This is specific for RL^2
     (https://arxiv.org/pdf/1611.02779.pdf).
 
-    NPO is used as an inner algorithm for RL^2. When sampling for RL^2,
-    there are more than one environments to be sampled from. In the original
-    implementation, within each task/environment, all rollouts sampled will be
-    concatenated into one single rollout, and fed to the inner algorithm.
-    Thus, returns and advantages are calculated across the rollout.
-
-    The flag 'fit_baseline' determines if baseline is fitted before policy
-    optimization or after. We usually fit baseline after policy optimization
-    in order to obtain a more general baseline, and do not want to get baseline
-    prediction from a baseline that is trained with data in the current
-    iteration, which might lead to overfitting. This is acceptable in
-    single-task RL, where observations from different iteration are all from
-    the same distribution. However, in the case of meta-RL, observations are
-    from different environment/task in each iteration, hence the above
-    assumption might not hold. As a result, 'before' is used in this class.
-
     Args:
         env_spec (garage.envs.EnvSpec): Environment specification.
         policy (garage.tf.policies.base.Policy): Policy.
@@ -76,59 +60,7 @@ class RL2NPO(NPO):
             a more detail explanation. Currently it only supports 'before'.
         name (str): The name of the algorithm.
 
-    Raises:
-        ValueError: When argument 'fit_baseline' != 'before'.
-
     """
-
-    def __init__(self,
-                 env_spec,
-                 policy,
-                 baseline,
-                 scope=None,
-                 max_path_length=500,
-                 discount=0.99,
-                 gae_lambda=1,
-                 center_adv=True,
-                 positive_adv=False,
-                 fixed_horizon=False,
-                 pg_loss='surrogate',
-                 lr_clip_range=0.01,
-                 max_kl_step=0.01,
-                 optimizer=None,
-                 optimizer_args=None,
-                 policy_ent_coeff=0.0,
-                 use_softplus_entropy=False,
-                 use_neg_logli_entropy=False,
-                 stop_entropy_gradient=False,
-                 entropy_method='no_entropy',
-                 flatten_input=True,
-                 fit_baseline='before',
-                 name='NPO'):
-        self._fit_baseline = fit_baseline
-        if fit_baseline != 'before':
-            raise ValueError('RL2NPO only supports fit baseline before')
-        super().__init__(env_spec=env_spec,
-                         policy=policy,
-                         baseline=baseline,
-                         scope=scope,
-                         max_path_length=max_path_length,
-                         discount=discount,
-                         gae_lambda=gae_lambda,
-                         center_adv=center_adv,
-                         positive_adv=positive_adv,
-                         fixed_horizon=fixed_horizon,
-                         pg_loss=pg_loss,
-                         lr_clip_range=lr_clip_range,
-                         max_kl_step=max_kl_step,
-                         optimizer=optimizer,
-                         optimizer_args=optimizer_args,
-                         policy_ent_coeff=policy_ent_coeff,
-                         use_softplus_entropy=use_softplus_entropy,
-                         use_neg_logli_entropy=use_neg_logli_entropy,
-                         stop_entropy_gradient=stop_entropy_gradient,
-                         entropy_method=entropy_method,
-                         flatten_input=flatten_input)
 
     def optimize_policy(self, itr, samples_data):
         """Optimize policy.
@@ -139,10 +71,8 @@ class RL2NPO(NPO):
                 See process_samples() for details.
 
         """
-        if self._fit_baseline == 'before':
-            self._fit_baseline_with_data(samples_data)
-            samples_data['baselines'] = self._get_baseline_prediction(
-                samples_data)
+        self._fit_baseline_with_data(samples_data)
+        samples_data['baselines'] = self._get_baseline_prediction(samples_data)
 
         policy_opt_input_values = self._policy_opt_input_values(samples_data)
         # Train policy network

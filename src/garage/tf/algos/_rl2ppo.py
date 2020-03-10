@@ -1,5 +1,5 @@
 """Proximal Policy Optimization."""
-from garage.tf.algos.rl2npo import RL2NPO
+from garage.tf.algos._rl2npo import RL2NPO
 from garage.tf.optimizers import FirstOrderOptimizer
 
 
@@ -7,8 +7,6 @@ class RL2PPO(RL2NPO):
     """Proximal Policy Optimization specific for RL^2.
 
     See https://arxiv.org/abs/1707.06347 for algorithm reference.
-
-    See docstring in RL2NPO for detail explanation.
 
     Args:
         env_spec (garage.envs.EnvSpec): Environment specification.
@@ -35,8 +33,6 @@ class RL2PPO(RL2NPO):
             policies, as in PPO.
         max_kl_step (float): The maximum KL divergence between old and new
             policies, as in TRPO.
-        optimizer (object): The optimizer of the algorithm. Should be the
-            optimizers in garage.tf.optimizers.
         optimizer_args (dict): The arguments of the optimizer.
         policy_ent_coeff (float): The coefficient of the policy entropy.
             Setting it to zero would mean no entropy regularization.
@@ -54,8 +50,6 @@ class RL2PPO(RL2NPO):
         flatten_input (bool): Whether to flatten input along the observation
             dimension. If True, for example, an observation with shape (2, 4)
             will be flattened to 8.
-        fit_baseline (str): Either 'before' or 'after'. See above docstring for
-            a more detail explanation. Currently it only supports 'before'.
         name (str): The name of the algorithm.
 
     """
@@ -74,7 +68,6 @@ class RL2PPO(RL2NPO):
                  pg_loss='surrogate_clip',
                  lr_clip_range=0.01,
                  max_kl_step=0.01,
-                 optimizer=None,
                  optimizer_args=None,
                  policy_ent_coeff=0.0,
                  use_softplus_entropy=False,
@@ -82,12 +75,9 @@ class RL2PPO(RL2NPO):
                  stop_entropy_gradient=False,
                  entropy_method='no_entropy',
                  flatten_input=True,
-                 fit_baseline='before',
                  name='PPO'):
-        if optimizer is None:
-            optimizer = FirstOrderOptimizer
-            if optimizer_args is None:
-                optimizer_args = dict()
+        if optimizer_args is None:
+            optimizer_args = dict()
         super().__init__(env_spec=env_spec,
                          policy=policy,
                          baseline=baseline,
@@ -101,7 +91,7 @@ class RL2PPO(RL2NPO):
                          pg_loss=pg_loss,
                          lr_clip_range=lr_clip_range,
                          max_kl_step=max_kl_step,
-                         optimizer=optimizer,
+                         optimizer=FirstOrderOptimizer,
                          optimizer_args=optimizer_args,
                          policy_ent_coeff=policy_ent_coeff,
                          use_softplus_entropy=use_softplus_entropy,
@@ -109,5 +99,4 @@ class RL2PPO(RL2NPO):
                          stop_entropy_gradient=stop_entropy_gradient,
                          entropy_method=entropy_method,
                          flatten_input=flatten_input,
-                         fit_baseline=fit_baseline,
                          name=name)

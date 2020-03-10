@@ -9,13 +9,13 @@ from dowel import logger, tabular
 import gym
 import numpy as np
 
-import garage
-from garage import log_performance
-from garage import TrajectoryBatch
+from garage import log_performance, TrajectoryBatch
 from garage.envs import EnvSpec
 from garage.misc import tensor_utils as np_tensor_utils
 from garage.np.algos import MetaRLAlgorithm
 from garage.sampler import DefaultWorker
+from garage.tf.algos._rl2ppo import RL2PPO
+from garage.tf.algos._rl2trpo import RL2TRPO
 
 
 class RL2(MetaRLAlgorithm):
@@ -23,20 +23,32 @@ class RL2(MetaRLAlgorithm):
 
     Reference: https://arxiv.org/pdf/1611.02779.pdf.
 
+    When sampling for RL^2, there are more than one environments to be
+    sampled from. In the original implementation, within each task/environment,
+    all rollouts sampled will be concatenated into one single rollout, and fed
+    to the inner algorithm. Thus, returns and advantages are calculated across
+    the rollout.
+
     Args:
-        inner_algo (garage.np.algos.RLAlgorithm): Inner algorithm.
+        inner_algo (str): Inner algorithm, either 'PPO' or 'TRPO'.
         max_path_length (int): Maximum length for trajectories with respect
             to RL^2. Notice that it is differen from the maximum path length
             for the inner algorithm.
         meta_batch_size (int): Meta batch size.
         task_sampler (garage.experiment.TaskSampler): Task sampler.
+        inner_algo_args (dict): Constructor arguments for inner algorithm.
 
     """
 
     def __init__(self, *, inner_algo, max_path_length, meta_batch_size,
-                 task_sampler):
-        assert isinstance(inner_algo, garage.tf.algos.BatchPolopt)
-        self._inner_algo = inner_algo
+                 task_sampler, inner_algo_args):
+        if inner_algo not in ('PPO', 'TRPO'):
+            raise ValueError(
+                'RL2 only accepts PPO or TRPO as inner algorithm.')
+        if inner_algo == 'PPO':
+            self._inner_algo = RL2PPO(*inner_algo_args)
+        else:
+            self._inner_algo = RL2TRPO(*inner_algo_args)
         self._max_path_length = max_path_length
         self._env_spec = inner_algo.env_spec
         self._flatten_input = inner_algo.flatten_input
@@ -63,7 +75,6 @@ class RL2(MetaRLAlgorithm):
             runner.step_path = runner.obtain_samples(
                 runner.step_itr,
                 env_update=self._task_sampler.sample(self._meta_batch_size))
-            tabular.record('TotalEnvSteps', runner.total_env_steps)
             last_return = self.train_once(runner.step_itr, runner.step_path)
             runner.step_itr += 1
 

@@ -387,7 +387,9 @@ class LocalRunner:
         """
         logger.log('Time %.2f s' % (time.time() - self._start_time))
         logger.log('EpochTime %.2f s' % (time.time() - self._itr_start_time))
+        tabular.record('TotalEnvSteps', self._stats.total_env_steps)
         logger.log(tabular)
+
         if self._plot:
             self._plotter.update_plot(self._policy, self._algo.max_path_length)
             if pause_for_plot:

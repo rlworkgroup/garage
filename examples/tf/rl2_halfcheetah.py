@@ -5,10 +5,9 @@ from garage.experiment import task_sampler
 from garage.experiment.deterministic import set_seed
 from garage.np.baselines import LinearFeatureBaseline
 from garage.sampler import LocalSampler
-from garage.sampler.rl2_worker import RL2Worker
 from garage.tf.algos import RL2
-from garage.tf.algos import RL2PPO
 from garage.tf.algos.rl2 import RL2Env
+from garage.tf.algos.rl2 import RL2Worker
 from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import GaussianGRUPolicy
 
@@ -48,7 +47,7 @@ def rl2_ppo_halfcheetah(ctxt=None, seed=1):
 
         baseline = LinearFeatureBaseline(env_spec=env_spec)
 
-        inner_algo = RL2PPO(
+        inner_algo_args = dict(
             env_spec=env_spec,
             policy=policy,
             baseline=baseline,
@@ -66,10 +65,11 @@ def rl2_ppo_halfcheetah(ctxt=None, seed=1):
             center_adv=False,
         )
 
-        algo = RL2(inner_algo=inner_algo,
+        algo = RL2(inner_algo='PPO',
                    max_path_length=max_path_length,
                    meta_batch_size=meta_batch_size,
-                   task_sampler=tasks)
+                   task_sampler=tasks,
+                   inner_algo_args=inner_algo_args)
 
         runner.setup(algo,
                      tasks.sample(meta_batch_size),
