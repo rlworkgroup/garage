@@ -2,6 +2,7 @@
 """A sampler for PEARL."""
 import numpy as np
 
+from garage import TimeStep
 from garage.misc import tensor_utils
 
 
@@ -114,7 +115,6 @@ class PEARLSampler:
         env_infos = []
         o = self.env.reset()
         next_o = None
-        self.policy.reset()
         path_length = 0
         while path_length < max_path_length:
             a, agent_info = self.policy.get_action(o)
@@ -122,7 +122,15 @@ class PEARLSampler:
                 a = agent_info['mean']
             next_o, r, d, env_info = self.env.step(a)
             if accum_context:
-                self.policy.update_context([o, a, r, next_o, d, env_info])
+                s = TimeStep(env_spec=self.env,
+                             observation=o,
+                             next_observation=next_o,
+                             action=a,
+                             reward=float(r),
+                             terminal=d,
+                             env_info=env_info,
+                             agent_info=agent_info)
+                self.policy.update_context(s)
 
             observations.append(o)
             rewards.append(r)
