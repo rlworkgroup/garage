@@ -90,13 +90,13 @@ class PEARLSampler:
         Returns:
             dict[str, np.ndarray or dict]: Dictionary, with keys:
                 * observations(np.array): Non-flattened array of observations.
-                    There should be one more of these than actions. Should have
-                    shape (T, S^*) (the unflattened state space of the current
-                    environment).
-                * actions(np.array): Non-flattened array of actions. Should have
-                    shape (T, S^*).
-                * rewards(np.array): Array of rewards of shape (T,) (1D array of
-                    length timesteps).
+                    There should be one more of these than actions. Should
+                    have shape (T, S^*) (the unflattened state space of the
+                    current environment).
+                * actions(np.array): Non-flattened array of actions. Should
+                    have shape (T, S^*).
+                * rewards(np.array): Array of rewards of shape (T,) (1D array
+                    of length timesteps).
                 * next_observations(np.array):  Non-flattened array of next
                     observations. Should have shape (T, S^*).
                 * terminals(np.array): Array of terminals of shape (T, 1).
@@ -143,11 +143,7 @@ class PEARLSampler:
             observations = np.expand_dims(observations, 1)
             next_o = np.array([next_o])
         next_observations = np.vstack(
-            (
-                observations[1:, :],
-                np.expand_dims(next_o, 0)
-            )
-        )
+            (observations[1:, :], np.expand_dims(next_o, 0)))
 
         return dict(
             observations=observations,
