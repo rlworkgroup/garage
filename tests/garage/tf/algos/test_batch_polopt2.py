@@ -18,8 +18,8 @@ from tests.fixtures.envs.dummy import DummyDiscreteEnv
 
 class TestBatchPolopt2(TfGraphTestCase):
 
-    @mock.patch.multiple(BatchPolopt2, __abstractmethods__=set())
     # pylint: disable=abstract-class-instantiated, no-member
+    @mock.patch.multiple(BatchPolopt2, __abstractmethods__=set())
     def test_process_samples_continuous_non_recurrent(self):
         env = TfEnv(DummyBoxEnv())
         policy = GaussianMLPPolicy(env_spec=env.spec)

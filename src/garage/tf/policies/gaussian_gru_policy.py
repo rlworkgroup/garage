@@ -273,12 +273,22 @@ class GaussianGRUPolicy(StochasticPolicy):
         return []
 
     def __getstate__(self):
-        """See `Object.__getstate__`."""
+        """See `Object.__getstate__`.
+
+        Returns:
+            dict: Parameters to save.
+
+        """
         new_dict = super().__getstate__()
         del new_dict['_f_step_mean_std']
         return new_dict
 
     def __setstate__(self, state):
-        """See `Object.__setstate__`."""
+        """See `Object.__setstate__`.
+
+        Args:
+            state (dict): Parameters to restore from.
+
+        """
         super().__setstate__(state)
         self._initialize()
