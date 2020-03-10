@@ -1,7 +1,6 @@
 from unittest import mock
 
 import numpy as np
-import pytest
 
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import BatchPolopt2
@@ -20,8 +19,6 @@ from tests.fixtures.envs.dummy import DummyDiscreteEnv
 class TestBatchPolopt2(TfGraphTestCase):
 
     # pylint: disable=abstract-class-instantiated, no-member
-    # This test cause low memory with some reason
-    @pytest.mark.flaky
     @mock.patch.multiple(BatchPolopt2, __abstractmethods__=set())
     def test_process_samples_continuous_non_recurrent(self):
         env = TfEnv(DummyBoxEnv())
@@ -57,8 +54,6 @@ class TestBatchPolopt2(TfGraphTestCase):
             assert isinstance(samples['average_return'], float)
 
     # pylint: disable=abstract-class-instantiated, no-member
-    # This test cause low memory with some reason
-    @pytest.mark.flaky
     @mock.patch.multiple(BatchPolopt2, __abstractmethods__=set())
     def test_process_samples_continuous_recurrent(self):
         env = TfEnv(DummyBoxEnv())
@@ -95,8 +90,6 @@ class TestBatchPolopt2(TfGraphTestCase):
             assert isinstance(samples['average_return'], float)
 
     # pylint: disable=abstract-class-instantiated, no-member
-    # This test cause low memory with some reason
-    @pytest.mark.flaky
     @mock.patch.multiple(BatchPolopt2, __abstractmethods__=set())
     def test_process_samples_discrete_non_recurrent(self):
         env = TfEnv(DummyDiscreteEnv())
@@ -132,8 +125,6 @@ class TestBatchPolopt2(TfGraphTestCase):
             assert isinstance(samples['average_return'], float)
 
     # pylint: disable=abstract-class-instantiated, no-member
-    # This test cause low memory with some reason
-    @pytest.mark.flaky
     @mock.patch.multiple(BatchPolopt2, __abstractmethods__=set())
     def test_process_samples_discrete_recurrent(self):
         env = TfEnv(DummyDiscreteEnv())

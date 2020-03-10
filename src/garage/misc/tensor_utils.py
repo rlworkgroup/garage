@@ -194,7 +194,7 @@ def stack_and_pad_tensor_n(paths, key, max_len):
         ret = stack_tensor_dict_list(
             [pad_tensor_dict(p, max_len) for p in ret])
     else:
-        ret = pad_tensor_n(ret, max_len)
+        ret = pad_tensor_n(np.array(ret), max_len)
     return ret
 
 
