@@ -8,7 +8,7 @@ from garage.misc.tensor_utils import concat_tensor_dict_list
 from garage.misc.tensor_utils import explained_variance_1d
 from garage.misc.tensor_utils import normalize_pixel_batch
 from garage.misc.tensor_utils import pad_tensor
-from garage.misc.tensor_utils import stack_and_pad_tensor_n
+from garage.misc.tensor_utils import stack_and_pad_tensor_dict_list
 from garage.misc.tensor_utils import stack_tensor_dict_list
 from garage.tf.envs import TfEnv
 from tests.fixtures.envs.dummy import DummyBoxEnv
@@ -91,12 +91,11 @@ class TestTensorUtil:
         result = explained_variance_1d(y, y_hat)
         np.testing.assert_almost_equal(result, 0.95)
 
-    def test_stack_and_pad_tensor_n(self):
-        result = stack_and_pad_tensor_n(paths=self.data, key='obs', max_len=5)
-        assert np.array_equal(result,
+    def test_stack_and_pad_tensor_dict_list(self):
+        result = stack_and_pad_tensor_dict_list(self.data, max_len=5)
+        assert np.array_equal(result['obs'],
                               np.array([[1, 1, 1, 0, 0], [1, 1, 1, 0, 0]]))
-        result = stack_and_pad_tensor_n(paths=self.data, key='info', max_len=5)
-        assert np.array_equal(result['lala'],
+        assert np.array_equal(result['info']['lala'],
                               np.array([[1, 1, 0, 0, 0], [1, 1, 0, 0, 0]]))
-        assert np.array_equal(result['baba'],
+        assert np.array_equal(result['info']['baba'],
                               np.array([[2, 2, 0, 0, 0], [2, 2, 0, 0, 0]]))

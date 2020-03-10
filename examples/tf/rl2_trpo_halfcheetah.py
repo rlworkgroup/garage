@@ -9,6 +9,8 @@ from garage.tf.algos import RL2
 from garage.tf.algos.rl2 import RL2Env
 from garage.tf.algos.rl2 import RL2Worker
 from garage.tf.experiment import LocalTFRunner
+from garage.tf.optimizers import ConjugateGradientOptimizer
+from garage.tf.optimizers import FiniteDifferenceHvp
 from garage.tf.policies import GaussianGRUPolicy
 
 
@@ -47,18 +49,10 @@ def rl2_trpo_halfcheetah(ctxt=None, seed=1):
             baseline=baseline,
             max_path_length=max_path_length * episode_per_task,
             discount=0.99,
-            gae_lambda=0.95,
-            lr_clip_range=0.2,
-            pg_loss='surrogate_clip',
-            optimizer_args=dict(
-                batch_size=32,
-                max_epochs=10,
-            ),
-            stop_entropy_gradient=True,
-            entropy_method='max',
-            policy_ent_coeff=0.02,
-            center_adv=False,
-        )
+            max_kl_step=0.01,
+            optimizer=ConjugateGradientOptimizer,
+            optimizer_args=dict(hvp_approach=FiniteDifferenceHvp(
+                base_eps=1e-5)))
 
         algo = RL2(inner_algo='TRPO',
                    max_path_length=max_path_length,
