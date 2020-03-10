@@ -33,3 +33,13 @@ def test_dict_np_to_torch():
     tu.dict_np_to_torch(dic)
     for tensor in dic.values():
         assert isinstance(tensor, torch.Tensor)
+
+
+def test_product_of_gaussians():
+    """Test computing mu, sigma of product of gaussians."""
+    size = 5
+    mu = torch.ones(size)
+    sigmas_squared = torch.ones(size)
+    output = tu.product_of_gaussians(mu, sigmas_squared)
+    assert output[0] == 1
+    assert output[1] == 1 / size

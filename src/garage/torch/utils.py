@@ -130,3 +130,22 @@ def global_device():
     # pylint: disable=global-statement
     global _DEVICE
     return _DEVICE
+
+
+def product_of_gaussians(mus, sigmas_squared):
+    """Compute mu, sigma of product of gaussians.
+
+    Args:
+        mus (torch.Tensor): Means, with shape :math:`(N, M)`. M is the number
+            of mean values.
+        sigmas_squared (torch.Tensor): Variances, with shape :math:`(N, V)`. V
+            is the number of variance values.
+
+    Returns:
+        torch.Tensor: Mu of product of gaussians, with shape :math:`(N, 1)`.
+        torch.Tensor: Sigma of product of gaussians, with shape :math:`(N, 1)`.
+    """
+    sigmas_squared = torch.clamp(sigmas_squared, min=1e-7)
+    sigma_squared = 1. / torch.sum(torch.reciprocal(sigmas_squared), dim=0)
+    mu = sigma_squared * torch.sum(mus / sigmas_squared, dim=0)
+    return mu, sigma_squared
