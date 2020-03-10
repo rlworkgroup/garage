@@ -46,14 +46,14 @@ class RL2(MetaRLAlgorithm):
             raise ValueError(
                 'RL2 only accepts PPO or TRPO as inner algorithm.')
         if inner_algo == 'PPO':
-            self._inner_algo = RL2PPO(*inner_algo_args)
+            self._inner_algo = RL2PPO(**inner_algo_args)
         else:
-            self._inner_algo = RL2TRPO(*inner_algo_args)
+            self._inner_algo = RL2TRPO(**inner_algo_args)
         self._max_path_length = max_path_length
-        self._env_spec = inner_algo.env_spec
-        self._flatten_input = inner_algo.flatten_input
-        self._policy = inner_algo.policy
-        self._discount = inner_algo.discount
+        self._env_spec = self._inner_algo.env_spec
+        self._flatten_input = self._inner_algo.flatten_input
+        self._policy = self._inner_algo.policy
+        self._discount = self._inner_algo.discount
         self._meta_batch_size = meta_batch_size
         self._task_sampler = task_sampler
 

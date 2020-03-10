@@ -13,8 +13,8 @@ from garage.tf.policies import GaussianGRUPolicy
 
 
 @wrap_experiment
-def rl2_ppo_halfcheetah(ctxt=None, seed=1):
-    """Train PPO with HalfCheetah environment.
+def rl2_trpo_halfcheetah(ctxt=None, seed=1):
+    """Train TRPO with HalfCheetah environment.
 
     Args:
         ctxt (garage.experiment.ExperimentContext): The experiment
@@ -30,12 +30,6 @@ def rl2_ppo_halfcheetah(ctxt=None, seed=1):
         n_epochs = 50
         episode_per_task = 4
 
-        # ---- For ML1-push
-        # env = RL2Env(ML1.get_train_tasks('push-v1'))
-        # tasks = task_sampler.EnvPoolSampler([env])
-        # tasks.grow_pool(meta_batch_size)
-
-        # ---- For HalfCheetahVel
         tasks = task_sampler.SetTaskSampler(lambda: RL2Env(
             env=HalfCheetahVelEnv()))
 
@@ -55,6 +49,7 @@ def rl2_ppo_halfcheetah(ctxt=None, seed=1):
             discount=0.99,
             gae_lambda=0.95,
             lr_clip_range=0.2,
+            pg_loss='surrogate_clip',
             optimizer_args=dict(
                 batch_size=32,
                 max_epochs=10,
@@ -65,7 +60,7 @@ def rl2_ppo_halfcheetah(ctxt=None, seed=1):
             center_adv=False,
         )
 
-        algo = RL2(inner_algo='PPO',
+        algo = RL2(inner_algo='TRPO',
                    max_path_length=max_path_length,
                    meta_batch_size=meta_batch_size,
                    task_sampler=tasks,
@@ -82,4 +77,4 @@ def rl2_ppo_halfcheetah(ctxt=None, seed=1):
                      meta_batch_size)
 
 
-rl2_ppo_halfcheetah(seed=1)
+rl2_trpo_halfcheetah(seed=1)
