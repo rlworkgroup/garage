@@ -13,6 +13,8 @@ import torch.nn.functional as F
 import garage.torch.utils as tu
 
 
+# pylint: disable=attribute-defined-outside-init
+# pylint does not recognize attributes initialized as buffers in constructor
 class ContextConditionedPolicy(nn.Module):
     """A policy that outputs actions based on observation and latent context.
 
@@ -79,7 +81,6 @@ class ContextConditionedPolicy(nn.Module):
         # reset any hidden state in the encoder network (relevant for RNN)
         self._context_encoder.reset(num_tasks)
 
-    # pylint: disable=attribute-defined-outside-init
     def sample_from_belief(self):
         """Sample z using distributions from current means and variances."""
         if self._use_information_bottleneck:
@@ -92,12 +93,6 @@ class ContextConditionedPolicy(nn.Module):
         else:
             self.z = self.z_means
 
-    def detach_z(self):
-        """Disable backprop through z."""
-        # pylint: disable=attribute-defined-outside-init
-        self.z = self.z.detach()
-
-    # pylint: disable=attribute-defined-outside-init
     def update_context(self, timestep):
         """Append single transition to the current context.
 
@@ -125,7 +120,6 @@ class ContextConditionedPolicy(nn.Module):
         else:
             self._context = torch.cat([self._context, data], dim=1)
 
-    # pylint: disable=attribute-defined-outside-init
     def infer_posterior(self, context):
         r"""Compute :math:`q(z \| c)` as a function of input context and sample new z.
 
@@ -160,12 +154,13 @@ class ContextConditionedPolicy(nn.Module):
 
         Args:
             obs (torch.Tensor): Observation values, with shape
-                :math:`(X, N, O)`. X is the number of tasks.
+                :math:`(X, N, O)`. X is the number of tasks. N is batch size. O
+                 is the size of the flattened observation space.
             context (torch.Tensor): Context values, with shape
-                :math:`(X, N, C)`. C is the combined size of observation,
-                action, reward, and next observation if next observation is
-                used in context. Otherwise, C is the combined size of
-                observation, action, and reward.
+                :math:`(X, N, C)`. X is the number of tasks. N is batch size. C
+                is the combined size of observation, action, reward, and next
+                observation if next observation is used in context. Otherwise,
+                C is the combined size of observation, action, and reward.
 
         Returns:
             tuple:
@@ -175,8 +170,8 @@ class ContextConditionedPolicy(nn.Module):
                 * torch.Tensor: Log likelihood of distribution.
                 * torch.Tensor: Sampled values from distribution before
                     applying tanh transformation.
-            torch.Tensor: z values, with shape :math:`(N, L)`. L is the latent
-                dimension.
+            torch.Tensor: z values, with shape :math:`(N, L)`. N is batch size.
+                L is the latent dimension.
 
         """
         self.infer_posterior(context)
@@ -262,10 +257,10 @@ class ContextConditionedPolicy(nn.Module):
 
         Returns:
             torch.Tensor: Context values, with shape :math:`(X, N, C)`.
-                X is the number of tasks. C is the combined size of
-                observation, action, reward, and next observation if next
-                observation is used in context. Otherwise, C is the combined
-                size of observation, action, and reward.
+                X is the number of tasks. N is batch size. C is the combined
+                size of observation, action, reward, and next observation if
+                next observation is used in context. Otherwise, C is the
+                combined size of observation, action, and reward.
 
         """
         return self._context

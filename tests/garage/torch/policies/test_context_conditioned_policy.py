@@ -74,11 +74,6 @@ class TestContextConditionedPolicy:
         assert all(
             [a == b for a, b in zip(self.module.z.shape, expected_shape)])
 
-    def test_detach_z(self):
-        """Test detach_z."""
-        self.module.detach_z()
-        assert not self.module.z.requires_grad
-
     def test_update_context(self):
         """Test update_context."""
         s = TimeStep(env_spec=self.env_spec,
