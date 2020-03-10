@@ -131,8 +131,8 @@ class ContextConditionedPolicy(nn.Module):
 
         Args:
             context (torch.Tensor): Context values, with shape
-                :math:`(X, N, C)`. X is the number of tasks. C is the
-                combined size of observation, action, reward, and next
+                :math:`(X, N, C)`. X is the number of tasks. N is batch size. C
+                is the combined size of observation, action, reward, and next
                 observation if next observation is used in context. Otherwise,
                 C is the combined size of observation, action, and reward.
 
@@ -175,7 +175,8 @@ class ContextConditionedPolicy(nn.Module):
                 * torch.Tensor: Log likelihood of distribution.
                 * torch.Tensor: Sampled values from distribution before
                     applying tanh transformation.
-            torch.Tensor: z values, with shape :math:`(N, latent_dim)`.
+            torch.Tensor: z values, with shape :math:`(N, L)`. L is the latent
+                dimension.
 
         """
         self.infer_posterior(context)
