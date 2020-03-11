@@ -23,8 +23,8 @@ jobs:
       install: skip
       script:
         - tag="rlworkgroup/garage-ci:${TRAVIS_BUILD_NUMBER}"
-        - TAG="${tag}" make build-ci
-        - TAG="${tag}" make ci-deploy-docker
+        - make build-ci TAG="${tag}"
+        - make ci-deploy-docker TAG="${tag}"
     - stage: test
     # pre-commit checks only run for pull requests
       if: type = pull_request
@@ -80,17 +80,17 @@ install:
   # Pull cached docker image
   - docker pull rlworkgroup/garage-ci:latest
   - tag="rlworkgroup/garage-ci:${TRAVIS_BUILD_NUMBER}"
-  - TAG="${tag}" make build-ci
+  - make build-ci TAG="${tag}"
 
 before_script:
   - ci_env="$(bash <(curl -s https://codecov.io/env))"
 
 script:
-  - ADD_ARGS="${ci_env}" TAG="${tag}" make run-ci RUN_CMD="${JOB_RUN_CMD}"
+  - make run-ci RUN_CMD="${JOB_RUN_CMD}" RUN_ARGS="${ci_env}" TAG="${tag}"
 
 deploy:
   provider: script
-  script: TAG="${tag}" make ci-deploy-docker
+  script: make ci-deploy-docker TAG="${tag}"
   on:
     branch: master
     condition: $DEPLOY_FROM_THIS_JOB = true

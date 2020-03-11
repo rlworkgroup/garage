@@ -14,7 +14,7 @@ MJKEY_PATH ?= ~/.mujoco/mjkey.txt
 
 test:  ## Run the CI test suite
 test: RUN_CMD = nice -n 11 pytest -v -m 'not huge and not flaky' --durations=0
-test: ADD_ARGS = --memory 7500m --memory-swap 7500m
+test: RUN_ARGS = --memory 7500m --memory-swap 7500m
 test: run-headless
 	@echo "Running test suite..."
 
@@ -88,7 +88,7 @@ build-ci: docker/docker-compose-ci.yml
 	docker-compose \
 		-f docker/docker-compose-ci.yml \
 		build \
-		${ADD_ARGS}
+		${BUILD_ARGS}
 
 build-headless: TAG ?= rlworkgroup/garage-headless:latest
 build-headless: docker/docker-compose-headless.yml
@@ -96,7 +96,7 @@ build-headless: docker/docker-compose-headless.yml
 	docker-compose \
 		-f docker/docker-compose-headless.yml \
 		build \
-		${ADD_ARGS}
+		${BUILD_ARGS}
 
 build-nvidia: TAG ?= rlworkgroup/garage-nvidia:latest
 build-nvidia: docker/docker-compose-nvidia.yml
@@ -104,7 +104,7 @@ build-nvidia: docker/docker-compose-nvidia.yml
 	docker-compose \
 		-f docker/docker-compose-nvidia.yml \
 		build \
-		${ADD_ARGS}
+		${BUILD_ARGS}
 
 run-ci: ## Run the CI Docker container (only used in TravisCI)
 run-ci: TAG ?= rlworkgroup/garage-ci
@@ -117,7 +117,7 @@ run-ci:
 		-e MJKEY \
 		--memory 7500m \
 		--memory-swap 7500m \
-		${ADD_ARGS} \
+		${RUN_ARGS} \
 		${TAG} ${RUN_CMD}
 
 run-headless: ## Run the Docker container for headless machines
@@ -129,8 +129,8 @@ run-headless: build-headless
 		-v $(DATA_PATH)/$(CONTAINER_NAME):/root/code/garage/data \
 		-e MJKEY="$$(cat $(MJKEY_PATH))" \
 		--name $(CONTAINER_NAME) \
-		${ADD_ARGS} \
-		rlworkgroup/garage-headless $(RUN_CMD)
+		${RUN_ARGS} \
+		rlworkgroup/garage-headless ${RUN_CMD}
 
 run-nvidia: ## Run the Docker container for machines with NVIDIA GPUs
 run-nvidia: CONTAINER_NAME ?= garage-nvidia
@@ -146,8 +146,8 @@ run-nvidia: build-nvidia
 		-e QT_X11_NO_MITSHM=1 \
 		-e MJKEY="$$(cat $(MJKEY_PATH))" \
 		--name $(CONTAINER_NAME) \
-		${ADD_ARGS} \
-		rlworkgroup/garage-nvidia $(RUN_CMD)
+		${RUN_ARGS} \
+		rlworkgroup/garage-nvidia ${RUN_CMD}
 
 # Help target
 # See https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
