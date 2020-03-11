@@ -46,7 +46,7 @@ class TestSampler:
     def teardown_method(self):
         self.env.close()
 
-    def test_ray_batch_sampler(self, ray_test_fixture):
+    def test_ray_batch_sampler(self, ray_local_test_fixture):
         # pylint: disable=unused-argument
         assert ray.is_initialized()
         workers = WorkerFactory(seed=100,
@@ -80,7 +80,7 @@ class TestSampler:
         sampler2.shutdown_worker()
 
 
-def test_update_envs_env_update(ray_test_fixture):
+def test_update_envs_env_update(ray_local_test_fixture):
     # pylint: disable=unused-argument
     assert ray.is_initialized()
     max_path_length = 16
@@ -114,7 +114,7 @@ def test_update_envs_env_update(ray_test_fixture):
                                env_update=tasks.sample(n_workers + 1))
 
 
-def test_obtain_exact_trajectories(ray_test_fixture):
+def test_obtain_exact_trajectories(ray_local_test_fixture):
     # pylint: disable=unused-argument
     assert ray.is_initialized()
     max_path_length = 15
@@ -142,7 +142,7 @@ def test_obtain_exact_trajectories(ray_test_fixture):
         assert (rollout.actions == per_worker_actions[worker]).all()
 
 
-def test_init_with_env_updates(ray_test_fixture):
+def test_init_with_env_updates(ray_local_test_fixture):
     # pylint: disable=unused-argument
     assert ray.is_initialized()
     max_path_length = 16
