@@ -2,9 +2,10 @@
 import collections
 
 from dowel import tabular
-import numpy as np
 import torch
 
+from garage import log_multitask_performance
+from garage import TrajectoryBatch
 from garage.misc import tensor_utils
 from garage.sampler import OnPolicyVectorizedSampler
 from garage.tf.samplers import BatchSampler
@@ -84,11 +85,11 @@ class MAML:
 
         return last_return
 
-    def train_once(self, itr, all_samples, all_params):
+    def train_once(self, runner, all_samples, all_params):
         """Train the algorithm once.
 
         Args:
-            itr (int): Iteration number.
+            runner (garage.experiment.LocalRunner): The experiment runner.
             all_samples (list[list[MAMLTrajectoryBatch]]): A two
                 dimensional list of MAMLTrajectoryBatch of size
                 [meta_batch_size * (num_grad_updates + 1)]
@@ -100,6 +101,7 @@ class MAML:
             float: Average return.
 
         """
+        itr = runner.step_itr
         old_theta = dict(self._policy.named_parameters())
 
         kl_before = self._compute_kl_constraint(itr,
@@ -127,10 +129,12 @@ class MAML:
         with torch.no_grad():
             policy_entropy = self._compute_policy_entropy(
                 [task_samples[0] for task_samples in all_samples])
-            average_return = self.evaluate_performance(
-                itr, all_samples, meta_objective.item(), loss_after.item(),
-                kl_before.item(), kl_after.item(),
-                policy_entropy.mean().item())
+            average_return = self.log_performance(itr, all_samples,
+                                                  meta_objective.item(),
+                                                  loss_after.item(),
+                                                  kl_before.item(),
+                                                  kl_after.item(),
+                                                  policy_entropy.mean().item())
 
         tu.update_module_params(self._old_policy, old_theta)
 
@@ -186,7 +190,7 @@ class MAML:
 
         """
         # pylint: disable=protected-access
-        loss = self._inner_algo._compute_loss(itr, *batch_samples)
+        loss = self._inner_algo._compute_loss(itr, *batch_samples[1:])
 
         # Update policy parameters with one SGD step
         self._inner_optimizer.zero_grad()
@@ -234,7 +238,8 @@ class MAML:
             tu.update_module_params(self._old_policy, task_params)
             with torch.set_grad_enabled(set_grad):
                 # pylint: disable=protected-access
-                loss = self._inner_algo._compute_loss(itr, *task_samples[-1])
+                last_update = task_samples[-1]
+                loss = self._inner_algo._compute_loss(itr, *last_update[1:])
             losses.append(loss)
 
             tu.update_module_params(self._policy, theta)
@@ -347,10 +352,11 @@ class MAML:
         self._baseline.fit(paths)
         obs, actions, rewards, valids, baselines \
             = self._inner_algo.process_samples(itr, paths)
-        return MAMLTrajectoryBatch(obs, actions, rewards, valids, baselines)
+        return MAMLTrajectoryBatch(paths, obs, actions, rewards, valids,
+                                   baselines)
 
-    def evaluate_performance(self, itr, all_samples, loss_before, loss_after,
-                             kl_before, kl, policy_entropy):
+    def log_performance(self, itr, all_samples, loss_before, loss_after,
+                        kl_before, kl, policy_entropy):
         """Evaluate performance of this batch.
 
         Args:
@@ -370,28 +376,20 @@ class MAML:
         """
         tabular.record('Iteration', itr)
 
-        for i in range(self._num_grad_updates + 1):
-            all_rewards = [
-                path_rewards for task_samples in all_samples
-                for path_rewards in task_samples[i].rewards.numpy()
-            ]
+        name_map = None
+        if hasattr(self._env, 'task_names'):
+            name_map = dict(zip(self._env.task_names, self._env.task_names))
 
-            discounted_returns = [
-                tensor_utils.discount_cumsum(path_rewards,
-                                             self._inner_algo.discount)[0]
-                for path_rewards in all_rewards
-            ]
-            undiscounted_returns = np.sum(all_rewards, axis=-1)
-            average_return = np.mean(undiscounted_returns)
-
-            with tabular.prefix('Update_{0}/'.format(i)):
-                tabular.record('AverageDiscountedReturn',
-                               np.mean(discounted_returns))
-                tabular.record('AverageReturn', average_return)
-                tabular.record('StdReturn', np.std(undiscounted_returns))
-                tabular.record('MaxReturn', np.max(undiscounted_returns))
-                tabular.record('MinReturn', np.min(undiscounted_returns))
-                tabular.record('NumTrajs', len(all_rewards))
+        rtn = log_multitask_performance(
+            itr,
+            TrajectoryBatch.from_trajectory_list(
+                env_spec=self._env.spec,
+                paths=[
+                    path for task_paths in all_samples
+                    for path in task_paths[self._num_grad_updates].paths
+                ]),
+            discount=self._inner_algo.discount,
+            name_map=name_map)
 
         with tabular.prefix(self._policy.name + '/'):
             tabular.record('LossBefore', loss_before)
@@ -401,51 +399,47 @@ class MAML:
             tabular.record('KLAfter', kl)
             tabular.record('Entropy', policy_entropy)
 
-        return average_return
+        return rtn
 
 
 class MAMLTrajectoryBatch(
-        collections.namedtuple(
-            'MAMLTrajectoryBatch',
-            ['observations', 'actions', 'rewards', 'valids', 'baselines'])):
+        collections.namedtuple('MAMLTrajectoryBatch', [
+            'paths', 'observations', 'actions', 'rewards', 'valids',
+            'baselines'
+        ])):
     r"""A tuple representing a batch of whole trajectories in MAML.
 
     A :class:`MAMLTrajectoryBatch` represents a batch of whole trajectories
     produced from one environment.
-
     +-----------------------+-------------------------------------------------+
     | Symbol                | Description                                     |
     +=======================+=================================================+
     | :math:`N`             | Trajectory index dimension                      |
     +-----------------------+-------------------------------------------------+
-    | :math:`[T]`           | Variable-length time dimension of each          |
-    |                       | trajectory                                      |
+    | :math:`T`             | Maximum length of a trajectory                  |
     +-----------------------+-------------------------------------------------+
     | :math:`S^*`           | Single-step shape of a time-series tensor       |
     +-----------------------+-------------------------------------------------+
-    | :math:`N \bullet [T]` | A dimension computed by flattening a            |
-    |                       | variable-length time dimension :math:`[T]` into |
-    |                       | a single batch dimension with length            |
-    |                       | :math:`sum_{i \in N} [T]_i`                     |
-    +-----------------------+-------------------------------------------------+
 
     Attributes:
+        paths (list[dict[str, np.ndarray or dict[str, np.ndarray]]]):
+            Nonflatten original paths from sampler.
         observations (torch.Tensor): A torch tensor of shape
-            :math:`(N \bullet [T], O^*)` containing the (possibly
+            :math:`(N \bullet T, O^*)` containing the (possibly
             multi-dimensional) observations for all time steps in this batch.
             These must conform to :obj:`env_spec.observation_space`.
         actions (torch.Tensor): A torch tensor of shape
-            :math:`(N \bullet [T], A^*)` containing the (possibly
+            :math:`(N \bullet T, A^*)` containing the (possibly
             multi-dimensional) actions for all time steps in this batch. These
             must conform to :obj:`env_spec.action_space`.
         rewards (torch.Tensor): A torch tensor of shape
-            :math:`(N \bullet [T])` containing the rewards for all time
+            :math:`(N \bullet T)` containing the rewards for all time
             steps in this batch.
         valids (numpy.ndarray): An integer numpy array of shape :math:`(N, )`
             containing the length of each trajectory in this batch. This may be
             used to reconstruct the individual trajectories.
         baselines (numpy.ndarray): An numpy array of shape
-            :math:`(N \bullet [T], )` containing the value function estimation
+            :math:`(N \bullet T, )` containing the value function estimation
             at all time steps in this batch.
 
     Raises:

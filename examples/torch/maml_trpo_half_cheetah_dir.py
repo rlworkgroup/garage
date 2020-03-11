@@ -2,24 +2,28 @@
 """This is an example to train MAML-VPG on HalfCheetahDirEnv environment."""
 import torch
 
+from garage import wrap_experiment
 from garage.envs import HalfCheetahDirEnv, normalize
 from garage.envs.base import GarageEnv
-from garage.experiment import LocalRunner, run_experiment
+from garage.experiment import LocalRunner
+from garage.experiment.deterministic import set_seed
 from garage.np.baselines import LinearFeatureBaseline
 from garage.torch.algos import MAMLTRPO
 from garage.torch.policies import GaussianMLPPolicy
 
 
-def run_task(snapshot_config, *_):
+@wrap_experiment(snapshot_mode='all')
+def maml_trpo(ctxt=None, seed=1):
     """Set up environment and algorithm and run the task.
 
     Args:
-        snapshot_config (garage.experiment.SnapshotConfig): The snapshot
+        ctxt (garage.experiment.ExperimentContext): The experiment
             configuration used by LocalRunner to create the snapshotter.
-            If None, it will create one with default settings.
-        _ : Unused parameters
+        seed (int): Used to seed the random number generator to produce
+            determinism.
 
     """
+    set_seed(seed)
     env = GarageEnv(normalize(HalfCheetahDirEnv(), expected_action_scale=10.))
 
     policy = GaussianMLPPolicy(
@@ -34,7 +38,7 @@ def run_task(snapshot_config, *_):
     rollouts_per_task = 40
     max_path_length = 100
 
-    runner = LocalRunner(snapshot_config)
+    runner = LocalRunner(ctxt)
     algo = MAMLTRPO(env=env,
                     policy=policy,
                     baseline=baseline,
@@ -49,4 +53,4 @@ def run_task(snapshot_config, *_):
     runner.train(n_epochs=300, batch_size=rollouts_per_task * max_path_length)
 
 
-run_experiment(run_task, snapshot_mode='last', seed=1)
+maml_trpo(seed=1)
