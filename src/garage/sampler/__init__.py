@@ -8,7 +8,7 @@ from garage.sampler.off_policy_vectorized_sampler import (
 from garage.sampler.on_policy_vectorized_sampler import (
     OnPolicyVectorizedSampler)
 from garage.sampler.parallel_vec_env_executor import ParallelVecEnvExecutor
-from garage.sampler.pearl_sampler import PEARLSampler
+from garage.sampler.pearl_worker import PEARLWorker
 from garage.sampler.ray_sampler import RaySampler, SamplerWorker
 from garage.sampler.sampler import Sampler
 from garage.sampler.stateful_pool import singleton_pool
@@ -31,5 +31,5 @@ __all__ = [
     'WorkerFactory',
     'Worker',
     'DefaultWorker',
-    'PEARLSampler',
+    'PEARLWorker',
 ]

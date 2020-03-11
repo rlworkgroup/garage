@@ -1,4 +1,4 @@
-"""This is a script to test PEARLSampler."""
+"""This is a script to test PEARLWorker."""
 
 import akro
 import numpy as np
@@ -6,7 +6,7 @@ import torch.nn as nn
 from torch.nn import functional as F  # NOQA
 
 from garage.envs.env_spec import EnvSpec
-from garage.sampler import PEARLSampler
+from garage.sampler import PEARLWorker
 from garage.tf.envs import TfEnv
 from garage.torch.embeddings import MLPEncoder
 from garage.torch.policies import ContextConditionedPolicy
@@ -14,8 +14,8 @@ from garage.torch.policies import TanhGaussianMLPPolicy
 from tests.fixtures.envs.dummy import DummyBoxEnv
 
 
-def test_obtain_samples():
-    """Test obtain_samples method."""
+def test_methods():
+    """Test PEARLWorker methods."""
     env_spec = TfEnv(DummyBoxEnv())
     latent_dim = 5
     latent_space = akro.Box(low=-1,
@@ -53,35 +53,29 @@ def test_obtain_samples():
                                               use_information_bottleneck=True,
                                               use_next_obs=False)
 
-    max_path_length = 10
-    max_samples = 20
-    max_trajs = 20
+    max_path_length = 20
+    worker1 = PEARLWorker(seed=1,
+                          max_path_length=max_path_length,
+                          worker_number=1)
+    worker1.update_agent(context_policy)
+    worker1.update_env(env_spec)
+    rollouts = worker1.rollout()
 
-    sampler = PEARLSampler(env_spec, context_policy, max_path_length)
+    assert rollouts.observations.shape == (max_path_length, obs_dim)
+    assert rollouts.actions.shape == (max_path_length, action_dim)
+    assert rollouts.rewards.shape == (max_path_length, )
 
-    sampler.start_worker()
+    worker2 = PEARLWorker(seed=1,
+                          max_path_length=max_path_length,
+                          worker_number=1,
+                          deterministic=True,
+                          accum_context=True)
+    worker2.update_agent(context_policy)
+    worker2.update_env(env_spec)
+    rollouts = worker2.rollout()
 
-    paths, steps = sampler.obtain_samples(max_samples=max_samples,
-                                          max_trajs=max_trajs,
-                                          accum_context=False)
-
-    total_steps = 0
-    obs_dim = len(paths[0]['observations'][0])
-    act_dim = len(paths[0]['actions'][0])
-    for path in paths:
-        path_length = len(path['observations'])
-        total_steps += path_length
-
-    assert (obs_dim, ) == env_spec.observation_space.shape
-    assert (act_dim, ) == env_spec.action_space.shape
-    assert path_length == max_path_length
-    assert total_steps == max_samples
-    assert steps == max_samples
-
-    paths, steps = sampler.obtain_samples(max_samples=max_samples,
-                                          max_trajs=max_trajs,
-                                          accum_context=True)
-
-    assert (1, max_samples, encoder_input_dim) == context_policy.context.shape
-
-    sampler.shutdown_worker()
+    assert context_policy.context.shape == (1, max_path_length,
+                                            encoder_input_dim)
+    assert rollouts.observations.shape == (max_path_length, obs_dim)
+    assert rollouts.actions.shape == (max_path_length, action_dim)
+    assert rollouts.rewards.shape == (max_path_length, )
