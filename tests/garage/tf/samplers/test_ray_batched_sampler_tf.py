@@ -49,8 +49,8 @@ class TestRaySamplerTF():
     def teardown_method(self):
         self.env.close()
 
-    def test_ray_batch_sampler(self, ray_local_test_fixture):
-        # pylint: disable=unused-argument
+    def test_ray_batch_sampler(self, ray_local_session_fixture):
+        del ray_local_session_fixture
         assert ray.is_initialized()
         workers = WorkerFactory(seed=100,
                                 max_path_length=self.algo.max_path_length)
