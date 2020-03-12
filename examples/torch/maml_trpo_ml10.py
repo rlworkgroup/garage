@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 """This is an example to train MAML-TRPO on ML10 environment."""
-import torch
-
 from metaworld.benchmarks import ML10
+import torch
 
 from garage import wrap_experiment
 from garage.envs import normalize

@@ -12,13 +12,10 @@ class MetaworldTaskNamesWrapper(gym.Wrapper):
 
     def __init__(self, env):
         super().__init__(env)
-        self._env = env
         self._hidden_env = env
         while True:
             if hasattr(self._hidden_env, 'env'):
                 self._hidden_env = self._hidden_env.env
-            elif hasattr(self._hidden_env, '_env'):
-                self._hidden_env = self._hidden_env._env
             else:
                 break
         # By here, self._hidden_env should saves the underlying metaworld env
