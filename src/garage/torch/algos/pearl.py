@@ -90,10 +90,10 @@ class PEARLWorker(DefaultWorker):
             garage.TrajectoryBatch: The collected trajectory.
 
         """
+        self.agent.sample_from_belief()
         self.start_rollout()
         while not self.step_rollout():
             pass
         self._agent_infos['context'] = [self.agent.z.detach().cpu().numpy()
                                         ] * self._max_path_length
-        self.agent.sample_from_belief()
         return self.collect_rollout()
