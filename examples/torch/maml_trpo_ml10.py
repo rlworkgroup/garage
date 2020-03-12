@@ -6,7 +6,6 @@ import torch
 from garage import wrap_experiment
 from garage.envs import normalize
 from garage.envs.base import GarageEnv
-from garage.envs.metaworld_task_names_wrapper import MetaworldTaskNamesWrapper
 from garage.experiment import LocalRunner
 from garage.experiment.deterministic import set_seed
 from garage.np.baselines import LinearFeatureBaseline
@@ -27,8 +26,7 @@ def maml_trpo(ctxt=None, seed=1):
     """
     set_seed(seed)
     env = GarageEnv(
-        normalize(MetaworldTaskNamesWrapper(ML10.get_train_tasks()),
-                  expected_action_scale=10.))
+        normalize(ML10.get_train_tasks(), expected_action_scale=10.))
 
     policy = GaussianMLPPolicy(
         env_spec=env.spec,

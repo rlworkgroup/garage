@@ -377,8 +377,9 @@ class MAML:
         tabular.record('Iteration', itr)
 
         name_map = None
-        if hasattr(self._env, 'task_names'):
-            name_map = dict(zip(self._env.task_names, self._env.task_names))
+        if hasattr(self._env, 'all_task_names'):
+            names = self._env.all_task_names
+            name_map = dict(zip(names, names))
 
         rtn = log_multitask_performance(
             itr,
