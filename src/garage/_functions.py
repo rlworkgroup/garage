@@ -30,14 +30,12 @@ def log_multitask_performance(itr, batch, discount, name_map=None):
     """
     traj_by_name = defaultdict(list)
     for trajectory in batch.split():
-        try:
+        task_name = '__unnamed_task__'
+        if 'task_name' in trajectory.env_infos:
             task_name = trajectory.env_infos['task_name'][0]
-        except KeyError:
-            try:
-                task_id = trajectory.env_infos['task_id'][0]
-                task_name = name_map[task_id]
-            except KeyError:
-                task_name = 'Task #{}'.format(task_id)
+        elif 'task_id' in trajectory.env_infos:
+            task_id = trajectory.env_infos['task_id'][0]
+            task_name = name_map.get(task_id, 'Task #{}'.format(task_id))
         traj_by_name[task_name].append(trajectory)
     if name_map is None:
         task_names = traj_by_name.keys()
