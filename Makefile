@@ -39,7 +39,8 @@ ci-job-large:
 ci-job-nightly:
 	pytest -v -m nightly
 
-ci-job-verify-envs: ci-verify-conda ci-verify-pipenv
+# ci-job-verify-envs: ci-verify-conda ci-verify-pipenv
+ci-job-verify-envs: ci-verify-pipenv
 
 ci-verify-conda: CONDA_ROOT := $$HOME/miniconda
 ci-verify-conda: CONDA := $(CONDA_ROOT)/bin/conda
