@@ -2,6 +2,7 @@
 
 This module contains RL2, RL2Worker and the environment wrapper for RL2.
 """
+import abc
 import collections
 
 import akro
@@ -14,11 +15,10 @@ from garage.envs import EnvSpec
 from garage.misc import tensor_utils as np_tensor_utils
 from garage.np.algos import MetaRLAlgorithm
 from garage.sampler import DefaultWorker
-from garage.tf.algos._rl2ppo import RL2PPO
-from garage.tf.algos._rl2trpo import RL2TRPO
+from garage.tf.algos._rl2npo import RL2NPO
 
 
-class RL2(MetaRLAlgorithm):
+class RL2(MetaRLAlgorithm, abc.ABC):
     """RL^2.
 
     Reference: https://arxiv.org/pdf/1611.02779.pdf.
@@ -32,27 +32,24 @@ class RL2(MetaRLAlgorithm):
     RL2Worker is required in sampling for RL2.
     See example/tf/rl2_ppo_halfcheetah.py for reference.
 
+    User should not instantiate RL2 directly.
+    Currently garage supports PPO and TRPO as inner algorithm. Refer to
+    garage/tf/algos/rl2ppo.py and garage/tf/algos/rl2trpo.py.
+
     Args:
-        inner_algo (str): Inner algorithm, either 'PPO' or 'TRPO'.
-        max_path_length (int): Maximum length for trajectories with respect
-            to RL^2. Notice that it is differen from the maximum path length
+        rl2_max_path_length (int): Maximum length for trajectories with respect
+            to RL^2. Notice that it is different from the maximum path length
             for the inner algorithm.
         meta_batch_size (int): Meta batch size.
         task_sampler (garage.experiment.TaskSampler): Task sampler.
-        inner_algo_args (dict): Constructor arguments for inner algorithm.
+        inner_algo_args (dict): Arguments for inner algorithm.
 
     """
 
-    def __init__(self, *, inner_algo, max_path_length, meta_batch_size,
-                 task_sampler, inner_algo_args):
-        if inner_algo not in ('PPO', 'TRPO'):
-            raise ValueError(
-                'RL2 only accepts PPO or TRPO as inner algorithm.')
-        if inner_algo == 'PPO':
-            self._inner_algo = RL2PPO(**inner_algo_args)
-        else:
-            self._inner_algo = RL2TRPO(**inner_algo_args)
-        self._max_path_length = max_path_length
+    def __init__(self, rl2_max_path_length, meta_batch_size, task_sampler,
+                 **inner_algo_args):
+        self._inner_algo = RL2NPO(**inner_algo_args)
+        self._rl2_max_path_length = rl2_max_path_length
         self._env_spec = self._inner_algo.env_spec
         self._flatten_input = self._inner_algo.flatten_input
         self._policy = self._inner_algo.policy
@@ -269,7 +266,7 @@ class RL2(MetaRLAlgorithm):
             int: Maximum path length in a trajectory.
 
         """
-        return self._max_path_length
+        return self._rl2_max_path_length
 
 
 class RL2Env(gym.Wrapper):

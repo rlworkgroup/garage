@@ -1,15 +1,20 @@
-"""Trust Region Policy Optimization."""
-from garage.tf.algos._rl2npo import RL2NPO
+"""Trust Region Policy Optimization for RL2."""
+from garage.tf.algos import RL2
 from garage.tf.optimizers import ConjugateGradientOptimizer
 from garage.tf.optimizers import PenaltyLbfgsOptimizer
 
 
-class RL2TRPO(RL2NPO):
+class RL2TRPO(RL2):
     """Trust Region Policy Optimization specific for RL^2.
 
     See https://arxiv.org/abs/1502.05477.
 
     Args:
+        rl2_max_path_length (int): Maximum length for trajectories with respect
+            to RL^2. Notice that it is different from the maximum path length
+            for the inner algorithm.
+        meta_batch_size (int): Meta batch size.
+        task_sampler (garage.experiment.TaskSampler): Task sampler.
         env_spec (garage.envs.EnvSpec): Environment specification.
         policy (garage.tf.policies.base.Policy): Policy.
         baseline (garage.tf.baselines.Baseline): The baseline.
@@ -59,6 +64,9 @@ class RL2TRPO(RL2NPO):
     """
 
     def __init__(self,
+                 rl2_max_path_length,
+                 meta_batch_size,
+                 task_sampler,
                  env_spec,
                  policy,
                  baseline,
@@ -93,7 +101,10 @@ class RL2TRPO(RL2NPO):
         if optimizer_args is None:
             optimizer_args = dict()
 
-        super().__init__(env_spec=env_spec,
+        super().__init__(rl2_max_path_length=rl2_max_path_length,
+                         meta_batch_size=meta_batch_size,
+                         task_sampler=task_sampler,
+                         env_spec=env_spec,
                          policy=policy,
                          baseline=baseline,
                          scope=scope,
