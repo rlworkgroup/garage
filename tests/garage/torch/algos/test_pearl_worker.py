@@ -6,8 +6,8 @@ import torch.nn as nn
 from torch.nn import functional as F  # NOQA
 
 from garage.envs.env_spec import EnvSpec
-from garage.sampler import PEARLWorker
 from garage.tf.envs import TfEnv
+from garage.torch.algos.pearl import PEARLWorker
 from garage.torch.embeddings import MLPEncoder
 from garage.torch.policies import ContextConditionedPolicy
 from garage.torch.policies import TanhGaussianMLPPolicy

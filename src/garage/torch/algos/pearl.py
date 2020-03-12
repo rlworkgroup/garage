@@ -1,4 +1,4 @@
-"""Module for PEARLWorker."""
+"""Module for PEARL and PEARLWorker."""
 from garage import TimeStep
 from garage.sampler.worker import DefaultWorker
 
