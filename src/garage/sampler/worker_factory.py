@@ -45,11 +45,13 @@ class WorkerFactory:
             seed,
             max_path_length,
             n_workers=psutil.cpu_count(logical=False),
-            worker_class=DefaultWorker):
+            worker_class=DefaultWorker,
+            worker_args=None):
         self.n_workers = n_workers
         self._seed = seed
         self._max_path_length = max_path_length
         self._worker_class = worker_class
+        self._worker_args = worker_args
 
     def prepare_worker_messages(self, objs, preprocess=identity_function):
         """Take an argument and canonicalize it into a list for all workers.
@@ -99,4 +101,5 @@ class WorkerFactory:
             raise ValueError('Worker number is too big')
         return self._worker_class(worker_number=worker_number,
                                   seed=self._seed,
-                                  max_path_length=self._max_path_length)
+                                  max_path_length=self._max_path_length,
+                                  **self._worker_args)

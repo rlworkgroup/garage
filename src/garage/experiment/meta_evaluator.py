@@ -48,6 +48,8 @@ class MetaEvaluator:
                  prefix='MetaTest',
                  test_task_names=None):
         self._test_task_sampler = test_task_sampler
+        if worker_args is None:
+            worker_args = {}
         if n_test_tasks is None:
             n_test_tasks = test_task_sampler.n_tasks
         self._n_test_tasks = n_test_tasks

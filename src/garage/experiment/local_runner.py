@@ -158,7 +158,8 @@ class LocalRunner:
                      n_workers=psutil.cpu_count(logical=False),
                      max_path_length=None,
                      worker_class=DefaultWorker,
-                     sampler_args=None):
+                     sampler_args=None,
+                     worker_args=None):
         """Construct a Sampler from a Sampler class.
 
         Args:
@@ -181,6 +182,8 @@ class LocalRunner:
             seed = get_seed()
         if sampler_args is None:
             sampler_args = {}
+        if worker_args is None:
+            worker_args = {}
         if issubclass(sampler_cls, BaseSampler):
             return sampler_cls(self._algo, self._env, **sampler_args)
         else:
@@ -188,7 +191,8 @@ class LocalRunner:
                 seed=seed,
                 max_path_length=max_path_length,
                 n_workers=n_workers,
-                worker_class=worker_class),
+                worker_class=worker_class,
+                worker_args=worker_args),
                                                    agents=self._algo.policy,
                                                    envs=self._env)
 
