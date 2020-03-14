@@ -264,6 +264,18 @@ def test_obs_env_spec_mismatch_time_step(sample_data):
         s = TimeStep(**sample_data)
         del s
 
+    obs_space = akro.Box(low=1, high=10, shape=(4, 5, 2), dtype=np.float32)
+    act_space = gym.spaces.MultiDiscrete([2, 5])
+    env_spec = EnvSpec(obs_space, act_space)
+    sample_data['env_spec'] = env_spec
+
+    with pytest.raises(
+            ValueError,
+            match='observation should have the same dimensionality'):
+        sample_data['observation'] = sample_data['observation'][:, :, :1]
+        s = TimeStep(**sample_data)
+        del s
+
 
 def test_next_obs_env_spec_mismatch_time_step(sample_data):
     with pytest.raises(
@@ -274,10 +286,34 @@ def test_next_obs_env_spec_mismatch_time_step(sample_data):
         s = TimeStep(**sample_data)
         del s
 
+    obs_space = akro.Box(low=1, high=10, shape=(4, 3, 2), dtype=np.float32)
+    act_space = gym.spaces.MultiDiscrete([2, 5])
+    env_spec = EnvSpec(obs_space, act_space)
+    sample_data['env_spec'] = env_spec
+
+    with pytest.raises(
+            ValueError,
+            match='next_observation should have the same dimensionality'):
+        sample_data['next_observation'] = sample_data[
+            'next_observation'][:, :, :1]
+        s = TimeStep(**sample_data)
+        del s
+
 
 def test_act_env_spec_mismatch_time_step(sample_data):
     with pytest.raises(ValueError,
                        match='action must conform to action_space'):
+        sample_data['action'] = sample_data['action'][:-1]
+        s = TimeStep(**sample_data)
+        del s
+
+    obs_space = akro.Box(low=1, high=10, shape=(4, 3, 2), dtype=np.float32)
+    act_space = akro.Discrete(5)
+    env_spec = EnvSpec(obs_space, act_space)
+    sample_data['env_spec'] = env_spec
+
+    with pytest.raises(ValueError,
+                       match='action should have the same dimensionality'):
         sample_data['action'] = sample_data['action'][:-1]
         s = TimeStep(**sample_data)
         del s
