@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """Example script to run RL2 in HalfCheetah."""
 from garage import wrap_experiment
 from garage.envs.half_cheetah_vel_env import HalfCheetahVelEnv
