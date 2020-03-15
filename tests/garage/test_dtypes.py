@@ -256,6 +256,16 @@ def test_new_time_step(sample_data):
     assert s.env_info is sample_data['env_info']
     assert s.agent_info is sample_data['agent_info']
 
+    obs_space = akro.Box(low=1, high=10, shape=(4, 3, 2), dtype=np.float32)
+    act_space = akro.Discrete(10)
+    env_spec = EnvSpec(obs_space, act_space)
+    s = TimeStep(**sample_data)
+    sample_data['env_spec'] = env_spec
+
+    assert s.observation is sample_data['observation']
+    assert s.next_observation is sample_data['next_observation']
+    assert s.action is sample_data['action']
+
 
 def test_obs_env_spec_mismatch_time_step(sample_data):
     with pytest.raises(ValueError,
