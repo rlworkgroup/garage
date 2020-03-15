@@ -451,7 +451,7 @@ class TimeStep(
 
     def __new__(cls, env_spec, observation, action, reward, next_observation,
                 terminal, env_info, agent_info):  # noqa: D102
-
+        # pylint: disable=too-many-branches
         # observation
         if not env_spec.observation_space.contains(observation):
             if isinstance(env_spec.observation_space,
