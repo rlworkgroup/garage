@@ -27,12 +27,10 @@ class PointEnv(gym.Env):
             goal=np.array((1., 1.), dtype=np.float32),
             done_bonus=0.,
             never_done=False,
-            action_scale=1.,
     ):
         self._goal = np.array(goal, dtype=np.float32)
         self._done_bonus = done_bonus
         self._never_done = never_done
-        self._action_scale = action_scale
 
         self._point = np.zeros_like(self._goal)
         self._task = {'goal': self._goal}
@@ -79,7 +77,6 @@ class PointEnv(gym.Env):
         """
         # enforce action space
         a = action.copy()  # NOTE: we MUST copy the action before modifying it
-        a *= self._action_scale
         a = np.clip(a, self.action_space.low, self.action_space.high)
 
         self._point = np.clip(self._point + a, -5, 5)
