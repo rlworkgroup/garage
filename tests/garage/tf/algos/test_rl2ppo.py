@@ -2,6 +2,8 @@
 This script creates a test that fails when garage.tf.algos.RL2PPO
 performance is too low.
 """
+import pytest
+
 from garage.envs import HalfCheetahDirEnv, normalize
 from garage.experiment import task_sampler
 from garage.np.baselines import LinearFeatureBaseline
@@ -62,5 +64,38 @@ class TestRL2PPO(TfGraphTestCase):
                                         batch_size=self.episode_per_task *
                                         self.max_path_length *
                                         self.meta_batch_size)
-            print(last_avg_ret)
             assert last_avg_ret > -40
+
+    def test_ppo_pendulum_wrong_worker(self):
+        with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
+            with pytest.raises(ValueError):
+                algo = RL2PPO(rl2_max_path_length=self.max_path_length,
+                              meta_batch_size=self.meta_batch_size,
+                              task_sampler=self.tasks,
+                              env_spec=self.env_spec,
+                              policy=self.policy,
+                              baseline=self.baseline,
+                              discount=0.99,
+                              gae_lambda=0.95,
+                              lr_clip_range=0.2,
+                              pg_loss='surrogate_clip',
+                              optimizer_args=dict(
+                                  batch_size=32,
+                                  max_epochs=10,
+                              ),
+                              stop_entropy_gradient=True,
+                              entropy_method='max',
+                              policy_ent_coeff=0.02,
+                              center_adv=False,
+                              max_path_length=self.max_path_length *
+                              self.episode_per_task,
+                              flatten_input=False)
+
+                runner.setup(algo,
+                             self.tasks.sample(self.meta_batch_size),
+                             sampler_cls=LocalSampler,
+                             n_workers=self.meta_batch_size)
+
+                runner.train(n_epochs=10,
+                             batch_size=self.episode_per_task *
+                             self.max_path_length * self.meta_batch_size)
