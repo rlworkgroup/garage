@@ -255,12 +255,21 @@ def test_new_time_step(sample_data):
     assert s.terminal is sample_data['terminal']
     assert s.env_info is sample_data['env_info']
     assert s.agent_info is sample_data['agent_info']
+    del s
 
-    obs_space = akro.Box(low=1, high=10, shape=(4, 3, 2), dtype=np.float32)
-    act_space = akro.Discrete(10)
+    obs_space = akro.Box(low=-1, high=10, shape=(4, 3, 2), dtype=np.float32)
+    act_space = akro.Box(low=-1, high=10, shape=(4, 2), dtype=np.float32)
     env_spec = EnvSpec(obs_space, act_space)
-    s = TimeStep(**sample_data)
     sample_data['env_spec'] = env_spec
+    obs_space = akro.Box(low=-1000,
+                         high=1000,
+                         shape=(4, 3, 2),
+                         dtype=np.float32)
+    act_space = akro.Box(low=-1000, high=1000, shape=(4, 2), dtype=np.float32)
+    sample_data['observation'] = obs_space.sample()
+    sample_data['next_observation'] = obs_space.sample()
+    sample_data['action'] = act_space.sample()
+    s = TimeStep(**sample_data)
 
     assert s.observation is sample_data['observation']
     assert s.next_observation is sample_data['next_observation']
