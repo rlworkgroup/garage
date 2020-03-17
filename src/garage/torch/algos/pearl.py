@@ -29,13 +29,18 @@ class PEARL(MetaRLAlgorithm):
     Args:
         env (list): Batch of sampled environment updates(EnvUpdate), which,
             when invoked on environments, will configure them with new tasks.
-        policy (garage.torch.policies.Policy): Policy.
-        qf1 (torch.nn.Module): First Q-function.
-        qf2 (torch.nn.Module): SEcond Q-function.
+        policy_class (garage.torch.policies.Policy): Context-conditioned policy
+            class.
+        encoder_class (garage.torch.embeddings.ContextEncoder): Encoder class
+            for the encoder in context-conditioned policy.
+        inner_policy (garage.torch.policies.Policy): Policy.
+        qf (torch.nn.Module): Q-function.
         vf (torch.nn.Module): Value function.
         num_train_tasks (int): Number of tasks for training.
         num_test_tasks (int): Number of tasks for testing.
         latent_dim (int): Size of latent context vector.
+        encoder_hidden_sizes (list[int]): Output dimension of dense layer(s) of
+            the context encoder.
         policy_lr (float): Policy learning rate.
         qf_lr (float): Q-function learning rate.
         vf_lr (float): Value function learning rate.
@@ -85,13 +90,15 @@ class PEARL(MetaRLAlgorithm):
     # pylint: disable=too-many-statements
     def __init__(self,
                  env,
-                 policy,
-                 qf1,
-                 qf2,
+                 policy_class,
+                 inner_policy,
+                 encoder_class,
+                 qf,
                  vf,
                  num_train_tasks,
                  num_test_tasks,
                  latent_dim,
+                 encoder_hidden_sizes,
                  policy_lr=3E-4,
                  qf_lr=3E-4,
                  vf_lr=3E-4,
@@ -124,9 +131,8 @@ class PEARL(MetaRLAlgorithm):
                  eval_deterministic=True):
 
         self.env = env
-        self.policy = policy
-        self._qf1 = qf1
-        self._qf2 = qf2
+        self._qf1 = qf
+        self._qf2 = copy.deepcopy(qf)
         self._vf = vf
         self._num_train_tasks = num_train_tasks
         self._num_test_tasks = num_test_tasks
@@ -160,6 +166,25 @@ class PEARL(MetaRLAlgorithm):
         self._eval_deterministic = eval_deterministic
         self.evaluator = None
         self._task_idx = None
+
+        obs_dim = max(
+            int(np.prod(env[i]().observation_space.shape))
+            for i in range(num_train_tasks))
+        action_dim = int(np.prod(env[0]().action_space.shape))
+        reward_dim = 1
+
+        encoder_in_dim = obs_dim + action_dim + reward_dim
+        encoder_out_dim = latent_dim * 2
+        context_encoder = encoder_class(input_dim=encoder_in_dim,
+                                        output_dim=encoder_out_dim,
+                                        hidden_sizes=encoder_hidden_sizes)
+
+        self.policy = policy_class(
+            latent_dim=latent_dim,
+            context_encoder=context_encoder,
+            policy=inner_policy,
+            use_information_bottleneck=use_information_bottleneck,
+            use_next_obs=use_next_obs_in_context)
 
         # buffer for training RL update
         self._replay_buffers = {
