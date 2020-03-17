@@ -22,7 +22,8 @@ LONG_RUNNING_EXAMPLES = [
     EXAMPLES_ROOT_DIR / 'tf/trpo_swimmer_ray_sampler.py',
     EXAMPLES_ROOT_DIR / 'torch/maml_ppo_half_cheetah_dir.py',
     EXAMPLES_ROOT_DIR / 'torch/maml_trpo_half_cheetah_dir.py',
-    EXAMPLES_ROOT_DIR / 'torch/maml_vpg_half_cheetah_dir.py'
+    EXAMPLES_ROOT_DIR / 'torch/maml_vpg_half_cheetah_dir.py',
+    EXAMPLES_ROOT_DIR / 'torch/maml_trpo_ml10.py'
 ]
 
 

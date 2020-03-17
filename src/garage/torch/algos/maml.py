@@ -2,6 +2,7 @@
 import collections
 
 from dowel import tabular
+import numpy as np
 import torch
 
 from garage import log_multitask_performance
@@ -381,7 +382,7 @@ class MAML:
             names = self._env.all_task_names
             name_map = dict(zip(names, names))
 
-        rtn = log_multitask_performance(
+        rtns = log_multitask_performance(
             itr,
             TrajectoryBatch.from_trajectory_list(
                 env_spec=self._env.spec,
@@ -400,7 +401,7 @@ class MAML:
             tabular.record('KLAfter', kl)
             tabular.record('Entropy', policy_entropy)
 
-        return rtn
+        return np.mean(rtns)
 
 
 class MAMLTrajectoryBatch(
