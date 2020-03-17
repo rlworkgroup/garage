@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 """This is an example to train MAML-VPG on HalfCheetahDirEnv environment."""
+# pylint: disable=no-value-for-parameter
+import click
 import torch
 
 from garage import wrap_experiment
@@ -12,8 +14,13 @@ from garage.torch.algos import MAMLPPO
 from garage.torch.policies import GaussianMLPPolicy
 
 
+@click.command()
+@click.option('--seed', default=1)
+@click.option('--epochs', default=300)
+@click.option('--rollouts_per_task', default=40)
+@click.option('--meta_batch_size', default=20)
 @wrap_experiment(snapshot_mode='all')
-def maml_ppo(ctxt=None, seed=1):
+def maml_ppo(ctxt, seed, epochs, rollouts_per_task, meta_batch_size):
     """Set up environment and algorithm and run the task.
 
     Args:
@@ -21,6 +28,10 @@ def maml_ppo(ctxt=None, seed=1):
             configuration used by LocalRunner to create the snapshotter.
         seed (int): Used to seed the random number generator to produce
             determinism.
+        epochs (int): Number of training epochs.
+        rollouts_per_task (int): Number of rollouts per epoch per task
+            for training.
+        meta_batch_size (int): Number of tasks sampled per batch.
 
     """
     set_seed(seed)
@@ -35,7 +46,6 @@ def maml_ppo(ctxt=None, seed=1):
 
     baseline = LinearFeatureBaseline(env_spec=env.spec)
 
-    rollouts_per_task = 40
     max_path_length = 100
 
     runner = LocalRunner(ctxt)
@@ -43,14 +53,15 @@ def maml_ppo(ctxt=None, seed=1):
                    policy=policy,
                    baseline=baseline,
                    max_path_length=max_path_length,
-                   meta_batch_size=20,
+                   meta_batch_size=meta_batch_size,
                    discount=0.99,
                    gae_lambda=1.,
                    inner_lr=0.1,
                    num_grad_updates=1)
 
     runner.setup(algo, env)
-    runner.train(n_epochs=300, batch_size=rollouts_per_task * max_path_length)
+    runner.train(n_epochs=epochs,
+                 batch_size=rollouts_per_task * max_path_length)
 
 
-maml_ppo(seed=1)
+maml_ppo()

@@ -120,3 +120,25 @@ def test_step_dm_control_env():
     assert subprocess.run(
         [EXAMPLES_ROOT_DIR / 'step_dm_control_env.py', '--n_steps', '1'],
         check=False).returncode == 0
+
+
+@pytest.mark.no_cover
+@pytest.mark.timeout(30)
+def test_maml_metaworld():
+    """Test maml_trpo_ml10.py"""
+    assert subprocess.run([
+        EXAMPLES_ROOT_DIR / 'torch/maml_trpo_ml10.py', '--epochs', '1',
+        '--rollouts_per_task', '1', '--meta_batch_size', '1'
+    ],
+                          check=False).returncode == 0
+
+
+@pytest.mark.no_cover
+@pytest.mark.timeout(20)
+def test_maml_halfcheetah():
+    """Test maml_trpo_half_cheetah_dir.py"""
+    assert subprocess.run([
+        EXAMPLES_ROOT_DIR / 'torch/maml_trpo_half_cheetah_dir.py', '--epochs',
+        '1', '--rollouts_per_task', '1', '--meta_batch_size', '1'
+    ],
+                          check=False).returncode == 0
