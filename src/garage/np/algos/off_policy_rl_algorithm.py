@@ -1,8 +1,6 @@
 """This class implements OffPolicyRLAlgorithm for off-policy RL algorithms."""
 import abc
 
-from dowel import tabular
-
 from garage import log_performance, TrajectoryBatch
 from garage.np.algos import RLAlgorithm
 from garage.sampler import OffPolicyVectorizedSampler
@@ -101,7 +99,6 @@ class OffPolicyRLAlgorithm(RLAlgorithm):
                                     self._obtain_evaluation_samples(
                                         runner.get_env_copy()),
                                     discount=self.discount)
-                    tabular.record('TotalEnvSteps', runner.total_env_steps)
                 runner.step_itr += 1
 
         return last_return

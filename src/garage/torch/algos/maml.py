@@ -79,7 +79,6 @@ class MAML:
 
         for _ in runner.step_epochs():
             all_samples, all_params = self._obtain_samples(runner)
-            tabular.record('TotalEnvSteps', runner.total_env_steps)
             last_return = self.train_once(runner, all_samples, all_params)
             runner.step_itr += 1
 
