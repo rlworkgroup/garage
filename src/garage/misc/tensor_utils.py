@@ -171,7 +171,7 @@ def stack_tensor_dict_list(tensor_dict_list):
     return ret
 
 
-def stack_and_pad_tensor_n(paths, key, max_len):
+def stack_and_pad_tensor_dict_list(tensor_dict_list, max_len):
     """Stack and pad array of list of tensors.
 
     Input paths are a list of N dicts, each with values of shape
@@ -179,22 +179,26 @@ def stack_and_pad_tensor_n(paths, key, max_len):
     key with max_len, so output will be shape :math:`(N, D, S^*)`.
 
     Args:
-        paths (list[dict]): List of dict to be stacked and padded.
+        tensor_dict_list (list[dict]): List of dict to be stacked and padded.
             Value of each dict will be shape of :math:`(D, S^*)`.
-        key (str): Key of the values in the paths to be stacked and padded.
         max_len (int): Maximum length for padding.
 
     Returns:
-        numpy.ndarray: Stacked and padded tensor. Shape: :math:`(N, D, S^*)`
+        dict: a dictionary of {stacked tensors or dictionary of
+            stacked tensors}. Shape: :math:`(N, D, S^*)`
             where N is the len of input paths.
 
     """
-    ret = [path[key] for path in paths]
-    if isinstance(ret[0], dict):
-        ret = stack_tensor_dict_list(
-            [pad_tensor_dict(p, max_len) for p in ret])
-    else:
-        ret = pad_tensor_n(np.array(ret), max_len)
+    keys = list(tensor_dict_list[0].keys())
+    ret = dict()
+    for k in keys:
+        example = tensor_dict_list[0][k]
+        dict_list = [x[k] if k in x else [] for x in tensor_dict_list]
+        if isinstance(example, dict):
+            v = stack_and_pad_tensor_dict_list(dict_list, max_len)
+        else:
+            v = pad_tensor_n(np.array(dict_list), max_len)
+        ret[k] = v
     return ret
 
 

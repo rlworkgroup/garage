@@ -122,7 +122,7 @@ class LocalTFRunner(LocalRunner):
             max_path_length (int): Maximum path length to be sampled by the
                 sampler. Paths longer than this will be truncated.
             n_workers (int): The number of workers the sampler should use.
-            worker_class (type): Type of worker the Sampler should use.
+            worker_class (type): Type of worker the sampler should use.
             sampler_args (dict or None): Additional arguments that should be
                 passed to the sampler.
 
@@ -139,7 +139,13 @@ class LocalTFRunner(LocalRunner):
             worker_class=TFWorkerClassWrapper(worker_class),
             sampler_args=sampler_args)
 
-    def setup(self, algo, env, sampler_cls=None, sampler_args=None):
+    def setup(self,
+              algo,
+              env,
+              sampler_cls=None,
+              sampler_args=None,
+              n_workers=psutil.cpu_count(logical=False),
+              worker_class=DefaultWorker):
         """Set up runner and sessions for algorithm and environment.
 
         This method saves algo and env within runner and creates a sampler,
@@ -155,11 +161,14 @@ class LocalTFRunner(LocalRunner):
             env (garage.envs.GarageEnv): An environement instance.
             sampler_cls (garage.sampler.Sampler): A sampler class.
             sampler_args (dict): Arguments to be passed to sampler constructor.
+            n_workers (int): The number of workers the sampler should use.
+            worker_class (type): Type of worker the sampler should use.
 
         """
         self.initialize_tf_vars()
         logger.log(self.sess.graph)
-        super().setup(algo, env, sampler_cls, sampler_args)
+        super().setup(algo, env, sampler_cls, sampler_args, n_workers,
+                      worker_class)
 
     def initialize_tf_vars(self):
         """Initialize all uninitialized variables in session."""
