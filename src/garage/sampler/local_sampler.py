@@ -152,3 +152,30 @@ class LocalSampler(Sampler):
         """Shutdown the workers."""
         for worker in self._workers:
             worker.shutdown()
+
+    def __getstate__(self):
+        """Get the pickle state.
+
+        Returns:
+            dict: The pickled state.
+
+        """
+        state = self.__dict__.copy()
+        # Workers aren't picklable (but WorkerFactory is).
+        state['_workers'] = None
+        return state
+
+    def __setstate__(self, state):
+        """Unpickle the state.
+
+        Args:
+            state (dict): Unpickled state.
+
+        """
+        self.__dict__.update(state)
+        self._workers = [
+            self._factory(i) for i in range(self._factory.n_workers)
+        ]
+        for worker, agent, env in zip(self._workers, self._agents, self._envs):
+            worker.update_agent(agent)
+            worker.update_env(env)
