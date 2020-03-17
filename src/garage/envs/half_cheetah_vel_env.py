@@ -31,7 +31,6 @@ class HalfCheetahVelEnv(HalfCheetahEnvMetaBase):
 
     def __init__(self, task=None):
         task = task or {'velocity': 0.}
-        self._task = task
         self._goal_vel = task['velocity']
         super().__init__()
 
@@ -54,9 +53,8 @@ class HalfCheetahVelEnv(HalfCheetahEnvMetaBase):
                         control cost.
                     * reward_ctrl (float): The reward for acting i.e. the
                         control cost (always negative).
-                    * task (dict):
-                        * velocity (float): Target velocity. Usually between 0
-                            and 2.
+                    * task_vel (float): Target velocity.
+                        Usually between 0 and 2.
 
         """
         xposbefore = self.sim.data.qpos[0]
@@ -72,8 +70,8 @@ class HalfCheetahVelEnv(HalfCheetahEnvMetaBase):
         done = False
         infos = dict(reward_forward=forward_reward,
                      reward_ctrl=-ctrl_cost,
-                     task=self._task)
-        return (observation, reward, done, infos)
+                     task_vel=self._goal_vel)
+        return observation, reward, done, infos
 
     def sample_tasks(self, num_tasks):
         """Sample a list of `num_tasks` tasks.
@@ -99,5 +97,4 @@ class HalfCheetahVelEnv(HalfCheetahEnvMetaBase):
                 key, "velocity", usually between 0 and 2).
 
         """
-        self._task = task
         self._goal_vel = task['velocity']

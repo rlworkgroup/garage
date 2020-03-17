@@ -31,7 +31,6 @@ class HalfCheetahDirEnv(HalfCheetahEnvMetaBase):
 
     def __init__(self, task=None):
         task = task or {'direction': 1.}
-        self._task = task
         self._goal_dir = task['direction']
         super().__init__()
 
@@ -54,9 +53,8 @@ class HalfCheetahDirEnv(HalfCheetahEnvMetaBase):
                         control cost.
                     * reward_ctrl (float): The reward for acting i.e. the
                         control cost (always negative).
-                    * task (dict):
-                        * direction (float): 1.0 for forwards, -1.0 for
-                            backwards.
+                    * task_dir (float): Target direction. 1.0 for forwards,
+                        -1.0 for backwards.
 
         """
         xposbefore = self.sim.data.qpos[0]
@@ -72,8 +70,8 @@ class HalfCheetahDirEnv(HalfCheetahEnvMetaBase):
         done = False
         infos = dict(reward_forward=forward_reward,
                      reward_ctrl=-ctrl_cost,
-                     task=self._task)
-        return (observation, reward, done, infos)
+                     task_dir=self._goal_dir)
+        return observation, reward, done, infos
 
     def sample_tasks(self, num_tasks):
         """Sample a list of `num_tasks` tasks.
@@ -100,5 +98,4 @@ class HalfCheetahDirEnv(HalfCheetahEnvMetaBase):
                 key, "direction", mapping to -1 or 1).
 
         """
-        self._task = task
         self._goal_dir = task['direction']
