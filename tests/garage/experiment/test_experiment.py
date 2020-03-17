@@ -113,7 +113,7 @@ def _run_launcher(launcher_path, prefix):
             from garage import wrap_experiment
 
             @wrap_experiment(prefix='{}')
-            def test_exp(ctxt):
+            def test_exp(ctxt=None):
                 print(ctxt.snapshot_dir)
 
             test_exp()""".format(prefix)))
@@ -171,3 +171,22 @@ def test_wrap_experiment_launcher_outside_git():
         launcher_path = pathlib.Path(launcher_dir) / 'run_exp.py'
         snapshot_dir = _run_launcher(launcher_path, prefix)
         assert os.path.samefile(str(expected_path), str(snapshot_dir))
+
+
+def test_wrap_experiment_raises_on_non_ctxt_param_name():
+    prefix = 'wrap_exp_test_prefix2'
+    with pytest.raises(ValueError,
+                       match="named 'ctxt' instead of '_snapshot_config'"):
+
+        @wrap_experiment(prefix=prefix)
+        def _test_exp(_snapshot_config=None):
+            pass
+
+
+def test_wrap_experiment_raises_on_empty_params():
+    prefix = 'wrap_exp_test_prefix3'
+    with pytest.raises(ValueError, match="named 'ctxt'"):
+
+        @wrap_experiment(prefix=prefix)
+        def _test_exp():
+            pass
