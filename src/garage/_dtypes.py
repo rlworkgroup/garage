@@ -451,25 +451,56 @@ class TimeStep(
 
     def __new__(cls, env_spec, observation, action, reward, next_observation,
                 terminal, env_info, agent_info):  # noqa: D102
-
+        # pylint: disable=too-many-branches
         # observation
         if not env_spec.observation_space.contains(observation):
-            raise ValueError(
-                'observation must conform to observation_space {}, but got '
-                'data with shape {} instead.'.format(
-                    env_spec.observation_space, observation))
+            if isinstance(env_spec.observation_space,
+                          (akro.Box, akro.Discrete)):
+                if env_spec.observation_space.flat_dim != np.prod(
+                        observation.shape):
+                    raise ValueError('observation should have the same '
+                                     'dimensionality as the observation_space '
+                                     '({}), but got data with shape {} '
+                                     'instead'.format(
+                                         env_spec.observation_space.flat_dim,
+                                         observation.shape))
+            else:
+                raise ValueError(
+                    'observation must conform to observation_space {}, '
+                    'but got data with shape {} instead.'.format(
+                        env_spec.observation_space, observation))
 
         if not env_spec.observation_space.contains(next_observation):
-            raise ValueError(
-                'next_observation must conform to observation_space {},'
-                ' but got data with shape {} instead.'.format(
-                    env_spec.observation_space, next_observation))
+            if isinstance(env_spec.observation_space,
+                          (akro.Box, akro.Discrete)):
+                if env_spec.observation_space.flat_dim != np.prod(
+                        next_observation.shape):
+                    raise ValueError('next_observation should have the same '
+                                     'dimensionality as the observation_space '
+                                     '({}), but got data with shape {} '
+                                     'instead'.format(
+                                         env_spec.observation_space.flat_dim,
+                                         next_observation.shape))
+            else:
+                raise ValueError(
+                    'next_observation must conform to observation_space {}, '
+                    'but got data with shape {} instead.'.format(
+                        env_spec.observation_space, next_observation))
 
         # action
         if not env_spec.action_space.contains(action):
-            raise ValueError(
-                'action must conform to action_space {}, but got data with '
-                'shape {} instead.'.format(env_spec.action_space, action))
+            if isinstance(env_spec.action_space, (akro.Box, akro.Discrete)):
+                if env_spec.action_space.flat_dim != np.prod(action.shape):
+                    raise ValueError('action should have the same '
+                                     'dimensionality as the action_space '
+                                     '({}), but got data with shape {} '
+                                     'instead'.format(
+                                         env_spec.action_space.flat_dim,
+                                         action.shape))
+            else:
+                raise ValueError('action must conform to action_space {}, '
+                                 'but got data with shape {} instead.'.format(
+                                     env_spec.action_space, action))
 
         if not isinstance(agent_info, dict):
             raise ValueError('agent_info must be type {}, but got type {} '
