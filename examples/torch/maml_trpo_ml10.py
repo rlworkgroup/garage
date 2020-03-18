@@ -1,26 +1,27 @@
 #!/usr/bin/env python3
-"""This is an example to train MAML-VPG on HalfCheetahDirEnv environment."""
+"""This is an example to train MAML-TRPO on ML10 environment."""
 # pylint: disable=no-value-for-parameter
 import click
+from metaworld.benchmarks import ML10
 import torch
 
 from garage import wrap_experiment
-from garage.envs import HalfCheetahDirEnv, normalize
+from garage.envs import normalize
 from garage.envs.base import GarageEnv
 from garage.experiment import LocalRunner
 from garage.experiment.deterministic import set_seed
 from garage.np.baselines import LinearFeatureBaseline
-from garage.torch.algos import MAMLPPO
+from garage.torch.algos import MAMLTRPO
 from garage.torch.policies import GaussianMLPPolicy
 
 
 @click.command()
 @click.option('--seed', default=1)
 @click.option('--epochs', default=300)
-@click.option('--rollouts_per_task', default=40)
+@click.option('--rollouts_per_task', default=10)
 @click.option('--meta_batch_size', default=20)
 @wrap_experiment(snapshot_mode='all')
-def maml_ppo(ctxt, seed, epochs, rollouts_per_task, meta_batch_size):
+def maml_trpo(ctxt, seed, epochs, rollouts_per_task, meta_batch_size):
     """Set up environment and algorithm and run the task.
 
     Args:
@@ -35,11 +36,12 @@ def maml_ppo(ctxt, seed, epochs, rollouts_per_task, meta_batch_size):
 
     """
     set_seed(seed)
-    env = GarageEnv(normalize(HalfCheetahDirEnv(), expected_action_scale=10.))
+    env = GarageEnv(
+        normalize(ML10.get_train_tasks(), expected_action_scale=10.))
 
     policy = GaussianMLPPolicy(
         env_spec=env.spec,
-        hidden_sizes=(64, 64),
+        hidden_sizes=(100, 100),
         hidden_nonlinearity=torch.tanh,
         output_nonlinearity=None,
     )
@@ -49,19 +51,19 @@ def maml_ppo(ctxt, seed, epochs, rollouts_per_task, meta_batch_size):
     max_path_length = 100
 
     runner = LocalRunner(ctxt)
-    algo = MAMLPPO(env=env,
-                   policy=policy,
-                   baseline=baseline,
-                   max_path_length=max_path_length,
-                   meta_batch_size=meta_batch_size,
-                   discount=0.99,
-                   gae_lambda=1.,
-                   inner_lr=0.1,
-                   num_grad_updates=1)
+    algo = MAMLTRPO(env=env,
+                    policy=policy,
+                    baseline=baseline,
+                    max_path_length=max_path_length,
+                    meta_batch_size=meta_batch_size,
+                    discount=0.99,
+                    gae_lambda=1.,
+                    inner_lr=0.1,
+                    num_grad_updates=1)
 
     runner.setup(algo, env)
     runner.train(n_epochs=epochs,
                  batch_size=rollouts_per_task * max_path_length)
 
 
-maml_ppo()
+maml_trpo()
