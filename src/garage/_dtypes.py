@@ -523,3 +523,37 @@ class TimeStep(
         return super().__new__(TimeStep, env_spec, observation, action, reward,
                                next_observation, terminal, env_info,
                                agent_info)
+
+
+class InOutSpec:
+    """Describes the input and output spaces of a primitive or module.
+
+    Args:
+        input_space (akro.Space): Input space of a module.
+        output_space (akro.Space): Output space of a module.
+
+    """
+
+    def __init__(self, input_space, output_space):
+        self._input_space = input_space
+        self._output_space = output_space
+
+    @property
+    def input_space(self):
+        """Get input space of the module.
+
+        Returns:
+            akro.Space: Input space of the module.
+
+        """
+        return self._input_space
+
+    @property
+    def output_space(self):
+        """Get output space of the module.
+
+        Returns:
+            akro.Space: Output space of the module.
+
+        """
+        return self._output_space

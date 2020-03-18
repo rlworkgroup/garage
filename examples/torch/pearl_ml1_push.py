@@ -2,11 +2,9 @@
 
 import os
 
-import akro
 from metaworld.benchmarks import ML1
-import numpy as np
 
-from garage.envs import EnvSpec, GarageEnv, normalize
+from garage.envs import GarageEnv, normalize
 from garage.experiment import LocalRunner, SnapshotConfig, wrap_experiment
 from garage.experiment.deterministic import set_seed
 from garage.experiment.meta_evaluator import MetaEvaluator
@@ -71,30 +69,15 @@ def torch_pearl_ml1_push(ctxt=None, seed=1, **params):
                                      snapshot_mode='last',
                                      snapshot_gap=1)
     runner = LocalRunner(snapshot_config)
+
     # instantiate networks
     net_size = params['net_size']
-    obs_dim = max(
-        int(np.prod(env[i]().observation_space.shape))
-        for i in range(params['num_train_tasks']))
-    action_dim = int(np.prod(env[0]().action_space.shape))
 
-    space_a = akro.Box(low=-1,
-                       high=1,
-                       shape=(obs_dim + params['latent_size'], ),
-                       dtype=np.float32)
-    space_b = akro.Box(low=-1, high=1, shape=(action_dim, ), dtype=np.float32)
-    augmented_env = EnvSpec(space_a, space_b)
-
+    augmented_env = PEARL.augment_env_spec(env[0](), params['latent_size'])
     qf = ContinuousMLPQFunction(env_spec=augmented_env,
                                 hidden_sizes=[net_size, net_size, net_size])
 
-    obs_space = akro.Box(low=-1, high=1, shape=(obs_dim, ), dtype=np.float32)
-    action_space = akro.Box(low=-1,
-                            high=1,
-                            shape=(params['latent_size'], ),
-                            dtype=np.float32)
-    vf_env = EnvSpec(obs_space, action_space)
-
+    vf_env = PEARL.get_env_spec(env[0](), params['latent_size'], 'vf')
     vf = ContinuousMLPQFunction(env_spec=vf_env,
                                 hidden_sizes=[net_size, net_size, net_size])
 

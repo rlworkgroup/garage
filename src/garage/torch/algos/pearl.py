@@ -5,11 +5,13 @@ Code is adapted from https://github.com/katerakelly/oyster.
 
 import copy
 
+import akro
 from dowel import logger
 import numpy as np
 import torch
 
-from garage import TimeStep
+from garage import InOutSpec, TimeStep
+from garage.envs import EnvSpec
 from garage.np.algos.meta_rl_algorithm import MetaRLAlgorithm
 from garage.replay_buffer.path_buffer import PathBuffer
 from garage.sampler.worker import DefaultWorker
@@ -167,14 +169,9 @@ class PEARL(MetaRLAlgorithm):
         self.evaluator = None
         self._task_idx = None
 
-        obs_dim = max(
-            int(np.prod(env[i]().observation_space.shape))
-            for i in range(num_train_tasks))
-        action_dim = int(np.prod(env[0]().action_space.shape))
-        reward_dim = 1
-
-        encoder_in_dim = obs_dim + action_dim + reward_dim
-        encoder_out_dim = latent_dim * 2
+        encoder_spec = self.get_env_spec(env[0](), latent_dim, 'encoder')
+        encoder_in_dim = int(np.prod(encoder_spec.input_space.shape))
+        encoder_out_dim = int(np.prod(encoder_spec.output_space.shape))
         context_encoder = encoder_class(input_dim=encoder_in_dim,
                                         output_dim=encoder_out_dim,
                                         hidden_sizes=encoder_hidden_sizes)
@@ -575,6 +572,64 @@ class PEARL(MetaRLAlgorithm):
             device = tu.global_device()
         for net in self.networks:
             net.to(device)
+
+    @classmethod
+    def augment_env_spec(cls, env_spec, latent_dim):
+        """Augment environment by a size of latent dimension.
+
+        Args:
+            env_spec (garage.envs.EnvSpec): Environment specs to be augmented.
+            latent_dim (int): Latent dimension.
+
+        Returns:
+            garage.envs.EnvSpec: Augmented environment specs.
+
+        """
+        obs_dim = int(np.prod(env_spec.observation_space.shape))
+        action_dim = int(np.prod(env_spec.action_space.shape))
+        aug_obs = akro.Box(low=-1,
+                           high=1,
+                           shape=(obs_dim + latent_dim, ),
+                           dtype=np.float32)
+        aug_act = akro.Box(low=-1,
+                           high=1,
+                           shape=(action_dim, ),
+                           dtype=np.float32)
+        return EnvSpec(aug_obs, aug_act)
+
+    @classmethod
+    def get_env_spec(cls, env_spec, latent_dim, module):
+        """Get environment specs of encoder with latent dimension.
+
+        Args:
+            env_spec (garage.envs.EnvSpec): Environment specs.
+            latent_dim (int): Latent dimension.
+            module (str): Module to get environment specs for.
+
+        Returns:
+            garage.envs.EnvSpec: Encoder environment specs with latent
+                dimension.
+
+        """
+        obs_dim = int(np.prod(env_spec.observation_space.shape))
+        action_dim = int(np.prod(env_spec.action_space.shape))
+        if module == 'encoder':
+            in_dim = obs_dim + action_dim + 1
+            out_dim = latent_dim * 2
+        elif module == 'vf':
+            in_dim = obs_dim
+            out_dim = latent_dim
+        in_space = akro.Box(low=-1, high=1, shape=(in_dim, ), dtype=np.float32)
+        out_space = akro.Box(low=-1,
+                             high=1,
+                             shape=(out_dim, ),
+                             dtype=np.float32)
+        if module == 'encoder':
+            spec = InOutSpec(in_space, out_space)
+        elif module == 'vf':
+            spec = EnvSpec(in_space, out_space)
+
+        return spec
 
 
 class PEARLWorker(DefaultWorker):

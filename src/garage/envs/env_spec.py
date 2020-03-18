@@ -1,8 +1,10 @@
 """EnvSpec class."""
 
+from garage import InOutSpec
 
-class EnvSpec:
-    """EnvSpec class.
+
+class EnvSpec(InOutSpec):
+    """Describes the action and observation spaces of an environment.
 
     Args:
         observation_space (akro.Space): The observation space of the env.
@@ -11,5 +13,24 @@ class EnvSpec:
     """
 
     def __init__(self, observation_space, action_space):
-        self.observation_space = observation_space
-        self.action_space = action_space
+        super().__init__(action_space, observation_space)
+
+    @property
+    def action_space(self):
+        """Get action space.
+
+        Returns:
+            akro.Space: Action space of the env.
+
+        """
+        return self.input_space
+
+    @property
+    def observation_space(self):
+        """Get observation space of the env.
+
+        Returns:
+            akro.Space: Observation space.
+
+        """
+        return self.output_space
