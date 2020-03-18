@@ -123,7 +123,7 @@ def test_step_dm_control_env():
 
 
 @pytest.mark.no_cover
-@pytest.mark.timeout(30)
+@pytest.mark.timeout(60)
 def test_maml_metaworld():
     """Test maml_trpo_ml10.py"""
     assert subprocess.run([
