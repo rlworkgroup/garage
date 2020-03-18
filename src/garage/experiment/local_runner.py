@@ -171,6 +171,8 @@ class LocalRunner:
             worker_class (type): Type of worker the Sampler should use.
             sampler_args (dict or None): Additional arguments that should be
                 passed to the sampler.
+            worker_args (dict or None): Additional arguments that should be
+                passed to the worker.
 
         Returns:
             sampler_cls: An instance of the sampler class.

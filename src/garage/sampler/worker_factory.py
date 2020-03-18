@@ -36,6 +36,8 @@ class WorkerFactory:
         max_path_length(int): The maximum length paths which will be sampled.
         worker_class(type): Class of the workers. Instances should implement
             the Worker interface.
+        worker_args (dict or None): Additional arguments that should be passed
+            to the worker.
 
     """
 
@@ -51,7 +53,10 @@ class WorkerFactory:
         self._seed = seed
         self._max_path_length = max_path_length
         self._worker_class = worker_class
-        self._worker_args = worker_args
+        if worker_args is None:
+            self._worker_args = {}
+        else:
+            self._worker_args = worker_args
 
     def prepare_worker_messages(self, objs, preprocess=identity_function):
         """Take an argument and canonicalize it into a list for all workers.

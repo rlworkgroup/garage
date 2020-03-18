@@ -1,11 +1,9 @@
 """PEARL ML1 example."""
 
-import os
-
 from metaworld.benchmarks import ML1
 
 from garage.envs import GarageEnv, normalize
-from garage.experiment import LocalRunner, SnapshotConfig, wrap_experiment
+from garage.experiment import LocalRunner, wrap_experiment
 from garage.experiment.deterministic import set_seed
 from garage.experiment.meta_evaluator import MetaEvaluator
 from garage.experiment.task_sampler import SetTaskSampler
@@ -18,34 +16,31 @@ from garage.torch.policies import (ContextConditionedPolicy,
 from garage.torch.q_functions import ContinuousMLPQFunction
 import garage.torch.utils as tu
 
-algo_params = dict(
-    num_epochs=1000,
-    num_train_tasks=50,
-    num_test_tasks=10,
-    latent_size=7,
-    encoder_hidden_sizes=[200, 200, 200],
-    net_size=300,
-    meta_batch_size=16,
-    num_steps_per_epoch=4000,
-    num_initial_steps=4000,
-    num_tasks_sample=15,
-    num_steps_prior=750,
-    num_extra_rl_steps_posterior=750,
-    num_steps_per_eval=450,
-    batch_size=256,
-    embedding_batch_size=64,
-    embedding_mini_batch_size=64,
-    max_path_length=150,
-    reward_scale=10.,
-    use_information_bottleneck=True,
-    use_next_obs_in_context=False,
-    use_gpu=True,
-)
 
-
-# pylint: disable=unused-argument
+# pylint: disable=unused-argument, dangerous-default-value
 @wrap_experiment
-def torch_pearl_ml1_push(ctxt=None, seed=1, **params):
+def torch_pearl_ml1_push(ctxt=None,
+                         seed=1,
+                         num_epochs=1000,
+                         num_train_tasks=50,
+                         num_test_tasks=10,
+                         latent_size=7,
+                         encoder_hidden_sizes=[200, 200, 200],
+                         net_size=300,
+                         meta_batch_size=16,
+                         num_steps_per_epoch=4000,
+                         num_initial_steps=4000,
+                         num_tasks_sample=15,
+                         num_steps_prior=750,
+                         num_extra_rl_steps_posterior=750,
+                         batch_size=256,
+                         embedding_batch_size=64,
+                         embedding_mini_batch_size=64,
+                         max_path_length=150,
+                         reward_scale=10.,
+                         use_information_bottleneck=True,
+                         use_next_obs_in_context=False,
+                         use_gpu=True):
     """Train PEARL with ML1 environments.
 
     Args:
@@ -53,31 +48,56 @@ def torch_pearl_ml1_push(ctxt=None, seed=1, **params):
             configuration used by LocalRunner to create the snapshotter.
         seed (int): Used to seed the random number generator to produce
             determinism.
-        params (dict): Parameters for PEARL.
+        num_epochs (int): Number of training epochs.
+        num_train_tasks (int): Number of tasks for training.
+        num_test_tasks (int): Number of tasks for testing.
+        latent_size (int): Size of latent context vector.
+        encoder_hidden_sizes (list[int]): Output dimension of dense layer(s) of
+            the context encoder.
+        net_size (int): Output dimension of a dense layer of Q-function and
+            value function.
+        meta_batch_size (int): Meta batch size.
+        num_steps_per_epoch (int): Number of iterations per epoch.
+        num_initial_steps (int): Number of transitions obtained per task before
+            training.
+        num_tasks_sample (int): Number of random tasks to obtain data for each
+            iteration.
+        num_steps_prior (int): Number of transitions to obtain per task with
+            z ~ prior.
+        num_extra_rl_steps_posterior (int): Number of additional transitions
+            to obtain per task with z ~ posterior that are only used to train
+            the policy and NOT the encoder.
+        batch_size (int): Number of transitions in RL batch.
+        embedding_batch_size (int): Number of transitions in context batch.
+        embedding_mini_batch_size (int): Number of transitions in mini context
+            batch; should be same as embedding_batch_size for non-recurrent
+            encoder.
+        max_path_length (int): Maximum path length.
+        reward_scale (int): Reward scale.
+        use_information_bottleneck (bool): False means latent context is
+            deterministic.
+        use_next_obs_in_context (bool): Whether or not to use next observation
+            in distinguishing between tasks.
+        use_gpu (bool): Whether or not to use GPU for training.
 
     """
     set_seed(seed)
     # create multi-task environment and sample tasks
     env_sampler = SetTaskSampler(lambda: GarageEnv(
         normalize(ML1.get_train_tasks('push-v1'))))
-    env = env_sampler.sample(params['num_train_tasks'])
+    env = env_sampler.sample(num_train_tasks)
 
     test_env_sampler = SetTaskSampler(lambda: GarageEnv(
         normalize(ML1.get_test_tasks('push-v1'))))
-    snapshot_config = SnapshotConfig(snapshot_dir=os.path.join(
-        os.getcwd(), 'data/local/experiment'),
-                                     snapshot_mode='last',
-                                     snapshot_gap=1)
-    runner = LocalRunner(snapshot_config)
+
+    runner = LocalRunner(ctxt)
 
     # instantiate networks
-    net_size = params['net_size']
-
-    augmented_env = PEARL.augment_env_spec(env[0](), params['latent_size'])
+    augmented_env = PEARL.augment_env_spec(env[0](), latent_size)
     qf = ContinuousMLPQFunction(env_spec=augmented_env,
                                 hidden_sizes=[net_size, net_size, net_size])
 
-    vf_env = PEARL.get_env_spec(env[0](), params['latent_size'], 'vf')
+    vf_env = PEARL.get_env_spec(env[0](), latent_size, 'vf')
     vf = ContinuousMLPQFunction(env_spec=vf_env,
                                 hidden_sizes=[net_size, net_size, net_size])
 
@@ -91,45 +111,43 @@ def torch_pearl_ml1_push(ctxt=None, seed=1, **params):
         inner_policy=inner_policy,
         qf=qf,
         vf=vf,
-        num_train_tasks=params['num_train_tasks'],
-        num_test_tasks=params['num_test_tasks'],
-        latent_dim=params['latent_size'],
-        encoder_hidden_sizes=params['encoder_hidden_sizes'],
-        meta_batch_size=params['meta_batch_size'],
-        num_steps_per_epoch=params['num_steps_per_epoch'],
-        num_initial_steps=params['num_initial_steps'],
-        num_tasks_sample=params['num_tasks_sample'],
-        num_steps_prior=params['num_steps_prior'],
-        num_extra_rl_steps_posterior=params['num_extra_rl_steps_posterior'],
-        num_steps_per_eval=params['num_steps_per_eval'],
-        batch_size=params['batch_size'],
-        embedding_batch_size=params['embedding_batch_size'],
-        embedding_mini_batch_size=params['embedding_mini_batch_size'],
-        max_path_length=params['max_path_length'],
-        reward_scale=params['reward_scale'],
+        num_train_tasks=num_train_tasks,
+        num_test_tasks=num_test_tasks,
+        latent_dim=latent_size,
+        encoder_hidden_sizes=encoder_hidden_sizes,
+        meta_batch_size=meta_batch_size,
+        num_steps_per_epoch=num_steps_per_epoch,
+        num_initial_steps=num_initial_steps,
+        num_tasks_sample=num_tasks_sample,
+        num_steps_prior=num_steps_prior,
+        num_extra_rl_steps_posterior=num_extra_rl_steps_posterior,
+        batch_size=batch_size,
+        embedding_batch_size=embedding_batch_size,
+        embedding_mini_batch_size=embedding_mini_batch_size,
+        max_path_length=max_path_length,
+        reward_scale=reward_scale,
     )
 
-    tu.set_gpu_mode(params['use_gpu'], gpu_id=0)
-    if params['use_gpu']:
+    tu.set_gpu_mode(use_gpu, gpu_id=0)
+    if use_gpu:
         pearl.to()
 
     runner.setup(algo=pearl,
                  env=env[0](),
                  sampler_cls=LocalSampler,
-                 sampler_args=dict(max_path_length=params['max_path_length']),
+                 sampler_args=dict(max_path_length=max_path_length),
                  n_workers=1,
                  worker_class=PEARLWorker)
 
     worker_args = dict(deterministic=True, accum_context=True)
     meta_evaluator = MetaEvaluator(runner,
                                    test_task_sampler=test_env_sampler,
-                                   max_path_length=params['max_path_length'],
+                                   max_path_length=max_path_length,
                                    worker_class=PEARLWorker,
                                    worker_args=worker_args,
-                                   n_test_tasks=params['num_test_tasks'])
+                                   n_test_tasks=num_test_tasks)
     pearl.evaluator = meta_evaluator
-    runner.train(n_epochs=params['num_epochs'],
-                 batch_size=params['batch_size'])
+    runner.train(n_epochs=num_epochs, batch_size=batch_size)
 
 
-torch_pearl_ml1_push(**algo_params)
+torch_pearl_ml1_push()
