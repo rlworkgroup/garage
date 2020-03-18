@@ -34,3 +34,23 @@ class EnvSpec(InOutSpec):
 
         """
         return self.output_space
+
+    @action_space.setter
+    def action_space(self, action_space):
+        """Set action space of the env.
+
+        Args:
+            action_space (akro.Space): Action space.
+
+        """
+        self._input_space = action_space
+
+    @observation_space.setter
+    def observation_space(self, observation_space):
+        """Set observation space of the env.
+
+        Args:
+            observation_space (akro.Space): Observation space.
+
+        """
+        self._output_space = observation_space
