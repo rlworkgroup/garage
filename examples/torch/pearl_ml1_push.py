@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """PEARL ML1 example."""
 
 from metaworld.benchmarks import ML1
