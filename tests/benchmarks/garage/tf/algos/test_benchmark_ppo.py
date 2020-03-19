@@ -10,7 +10,6 @@ from baselines import logger as baselines_logger
 from baselines.bench import benchmarks
 from baselines.common import set_global_seeds
 from baselines.common.vec_env.dummy_vec_env import DummyVecEnv
-from baselines.common.vec_env.vec_normalize import VecNormalize
 from baselines.logger import configure
 from baselines.ppo2 import ppo2
 from baselines.ppo2.policies import MlpPolicy
@@ -25,8 +24,10 @@ from garage.envs import normalize
 from garage.experiment import deterministic, LocalRunner
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import PPO as TF_PPO
+from garage.tf.baselines import GaussianMLPBaseline as TF_GMB
 from garage.tf.envs import TfEnv
 from garage.tf.experiment import LocalTFRunner
+from garage.tf.optimizers import FirstOrderOptimizer
 from garage.tf.policies import GaussianMLPPolicy as TF_GMP
 from garage.torch.algos import PPO as PyTorch_PPO
 from garage.torch.policies import GaussianMLPPolicy as PyTorch_GMP
@@ -36,16 +37,10 @@ from tests.fixtures import snapshot_config
 from tests.wrappers import AutoStopEnv
 
 hyper_parameters = {
-    'hidden_sizes': [64, 64],
-    'center_adv': True,
-    'learning_rate': 3e-4,
-    'lr_clip_range': 0.2,
-    'gae_lambda': 0.97,
-    'discount': 0.99,
-    'n_epochs': 400,
-    'max_path_length': 100,
-    'batch_size': 2048,
-    'n_trials': 10
+    'n_epochs': 800,
+    'max_path_length': 128,
+    'batch_size': 1024,
+    'n_trials': 4,
 }
 
 
@@ -102,16 +97,15 @@ class TestBenchmarkPPO:
                 garage_pytorch_dir = trial_dir + '/garage/pytorch'
                 baselines_dir = trial_dir + '/baselines'
 
-                # pylint: disable=not-context-manager
                 with tf.Graph().as_default():
+                    # Run garage algorithms
+                    env.reset()
+                    garage_tf_csv = run_garage_tf(env, seed, garage_tf_dir)
+
                     # Run baselines algorithms
                     baseline_env.reset()
                     baseline_csv = run_baselines(baseline_env, seed,
                                                  baselines_dir)
-
-                    # Run garage algorithms
-                    env.reset()
-                    garage_tf_csv = run_garage_tf(env, seed, garage_tf_dir)
 
                 env.reset()
                 garage_pytorch_csv = run_garage_pytorch(
@@ -140,7 +134,9 @@ class TestBenchmarkPPO:
                 [baselines_csvs, garage_tf_csvs, garage_pytorch_csvs],
                 seeds=seeds,
                 trials=hyper_parameters['n_trials'],
-                xs=['nupdates', 'Iteration', 'Iteration'],
+                xs=[
+                    'nupdates', 'Evaluation/Iteration', 'Evaluation/Iteration'
+                ],
                 ys=[
                     'eprewmean', 'Evaluation/AverageReturn',
                     'Evaluation/AverageReturn'
@@ -170,7 +166,7 @@ def run_garage_pytorch(env, seed, log_dir):
     runner = LocalRunner(snapshot_config)
 
     policy = PyTorch_GMP(env.spec,
-                         hidden_sizes=hyper_parameters['hidden_sizes'],
+                         hidden_sizes=(32, 32),
                          hidden_nonlinearity=torch.tanh,
                          output_nonlinearity=None)
 
@@ -180,12 +176,14 @@ def run_garage_pytorch(env, seed, log_dir):
                        policy=policy,
                        baseline=baseline,
                        optimizer=torch.optim.Adam,
-                       policy_lr=hyper_parameters['learning_rate'],
+                       policy_lr=3e-4,
                        max_path_length=hyper_parameters['max_path_length'],
-                       discount=hyper_parameters['discount'],
-                       gae_lambda=hyper_parameters['gae_lambda'],
-                       center_adv=hyper_parameters['center_adv'],
-                       lr_clip_range=hyper_parameters['lr_clip_range'])
+                       discount=0.99,
+                       gae_lambda=0.95,
+                       center_adv=True,
+                       lr_clip_range=0.2,
+                       minibatch_size=128,
+                       max_optimization_epochs=10)
 
     # Set up logger since we are not using run_experiment
     tabular_log_file = osp.join(log_dir, 'progress.csv')
@@ -221,27 +219,38 @@ def run_garage_tf(env, seed, log_dir):
 
         policy = TF_GMP(
             env_spec=env.spec,
-            hidden_sizes=hyper_parameters['hidden_sizes'],
+            hidden_sizes=(32, 32),
             hidden_nonlinearity=tf.nn.tanh,
             output_nonlinearity=None,
         )
 
-        baseline = LinearFeatureBaseline(env_spec=env.spec)
+        baseline = TF_GMB(
+            env_spec=env.spec,
+            regressor_args=dict(
+                hidden_sizes=(32, 32),
+                use_trust_region=False,
+                optimizer=FirstOrderOptimizer,
+                optimizer_args=dict(
+                    batch_size=32,
+                    max_epochs=10,
+                    tf_optimizer_args=dict(learning_rate=3e-4),
+                ),
+            ),
+        )
 
         algo = TF_PPO(env_spec=env.spec,
                       policy=policy,
                       baseline=baseline,
                       max_path_length=hyper_parameters['max_path_length'],
-                      discount=hyper_parameters['discount'],
-                      gae_lambda=hyper_parameters['gae_lambda'],
-                      center_adv=hyper_parameters['center_adv'],
-                      lr_clip_range=hyper_parameters['lr_clip_range'],
+                      discount=0.99,
+                      gae_lambda=0.95,
+                      center_adv=True,
+                      lr_clip_range=0.2,
                       optimizer_args=dict(
-                          batch_size=None,
-                          max_epochs=1,
-                          tf_optimizer_args=dict(
-                              learning_rate=hyper_parameters['learning_rate']),
-                          verbose=True))  # yapf: disable
+                          batch_size=32,
+                          max_epochs=10,
+                          tf_optimizer_args=dict(learning_rate=3e-4),
+                          verbose=True))
 
         # Set up logger since we are not using run_experiment
         tabular_log_file = osp.join(log_dir, 'progress.csv')
@@ -285,23 +294,22 @@ def run_baselines(env, seed, log_dir):
         lambda: bench.Monitor(
             env, baselines_logger.get_dir(), allow_early_resets=True)
     ])
-    env = VecNormalize(env)
 
     set_global_seeds(seed)
     policy = MlpPolicy
+
     ppo2.learn(policy=policy,
                env=env,
                nsteps=hyper_parameters['batch_size'],
-               nminibatches=1,
-               lam=hyper_parameters['gae_lambda'],
-               gamma=hyper_parameters['discount'],
-               noptepochs=1,
+               nminibatches=32,
+               lam=0.95,
+               gamma=0.99,
+               noptepochs=10,
                log_interval=1,
                ent_coef=0.0,
-               vf_coef=0.0,
                max_grad_norm=None,
-               lr=hyper_parameters['learning_rate'],
-               cliprange=hyper_parameters['lr_clip_range'],
+               lr=3e-4,
+               cliprange=0.2,
                total_timesteps=hyper_parameters['batch_size'] * hyper_parameters['n_epochs'])  # yapf: disable  # noqa: E501
 
     return osp.join(log_dir, 'progress.csv')

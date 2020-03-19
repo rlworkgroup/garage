@@ -162,15 +162,18 @@ class GaussianMLPBaseModule(nn.Module):
             *inputs: Input to the module.
 
         Returns:
-            torch.Tensor: Module output.
+            torch.distributions.independent.Independent: Independent
+                distribution.
 
         """
         mean, log_std_uncentered = self._get_mean_and_log_std(*inputs)
 
         if self._min_std_param or self._max_std_param:
             log_std_uncentered = log_std_uncentered.clamp(
-                min=self._to_scalar_if_not_none(self._min_std_param),
-                max=self._to_scalar_if_not_none(self._max_std_param))
+                min=(None if self._min_std_param is None else
+                     self._min_std_param.item()),
+                max=(None if self._max_std_param is None else
+                     self._max_std_param.item()))
 
         if self._std_parameterization == 'exp':
             std = log_std_uncentered.exp()
@@ -187,19 +190,6 @@ class GaussianMLPBaseModule(nn.Module):
             dist = Independent(dist, 1)
 
         return dist
-
-    # pylint: disable=no-self-use
-    def _to_scalar_if_not_none(self, tensor):
-        """Convert torch.Tensor of a single value to a Python number.
-
-        Args:
-            tensor (torch.Tensor): A torch.Tensor of a single value.
-
-        Returns:
-            float: The value of tensor.
-
-        """
-        return None if tensor is None else tensor.item()
 
 
 class GaussianMLPModule(GaussianMLPBaseModule):

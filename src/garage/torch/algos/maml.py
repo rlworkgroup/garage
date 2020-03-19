@@ -105,25 +105,22 @@ class MAML:
         itr = runner.step_itr
         old_theta = dict(self._policy.named_parameters())
 
-        kl_before = self._compute_kl_constraint(itr,
-                                                all_samples,
+        kl_before = self._compute_kl_constraint(all_samples,
                                                 all_params,
                                                 set_grad=False)
 
-        meta_objective = self._compute_meta_loss(itr, all_samples, all_params)
+        meta_objective = self._compute_meta_loss(all_samples, all_params)
 
         self._meta_optimizer.zero_grad()
         meta_objective.backward()
 
-        self._meta_optimize(itr, all_samples, all_params)
+        self._meta_optimize(all_samples, all_params)
 
         # Log
-        loss_after = self._compute_meta_loss(itr,
-                                             all_samples,
+        loss_after = self._compute_meta_loss(all_samples,
                                              all_params,
                                              set_grad=False)
-        kl_after = self._compute_kl_constraint(itr,
-                                               all_samples,
+        kl_after = self._compute_kl_constraint(all_samples,
                                                all_params,
                                                set_grad=False)
 
@@ -170,7 +167,7 @@ class MAML:
 
                 # The last iteration does only sampling but no adapting
                 if j != self._num_grad_updates:
-                    self._adapt(runner.step_itr, batch_samples, set_grad=False)
+                    self._adapt(batch_samples, set_grad=False)
 
             all_params.append(dict(self._policy.named_parameters()))
             # Restore to pre-updated policy
@@ -178,11 +175,10 @@ class MAML:
 
         return all_samples, all_params
 
-    def _adapt(self, itr, batch_samples, set_grad=True):
+    def _adapt(self, batch_samples, set_grad=True):
         """Performs one MAML inner step to update the policy.
 
         Args:
-            itr (int): Iteration.
             batch_samples (MAMLTrajectoryBatch): Samples data for one
                 task and one gradient step.
             set_grad (bool): if False, update policy parameters in-place.
@@ -191,7 +187,7 @@ class MAML:
 
         """
         # pylint: disable=protected-access
-        loss = self._inner_algo._compute_loss(itr, *batch_samples[1:])
+        loss = self._inner_algo._compute_loss(*batch_samples[1:])
 
         # Update policy parameters with one SGD step
         self._inner_optimizer.zero_grad()
@@ -200,22 +196,21 @@ class MAML:
         with torch.set_grad_enabled(set_grad):
             self._inner_optimizer.step()
 
-    def _meta_optimize(self, itr, all_samples, all_params):
+    def _meta_optimize(self, all_samples, all_params):
         if isinstance(self._meta_optimizer, ConjugateGradientOptimizer):
             self._meta_optimizer.step(
                 f_loss=lambda: self._compute_meta_loss(
-                    itr, all_samples, all_params, set_grad=False),
+                    all_samples, all_params, set_grad=False),
                 f_constraint=lambda: self._compute_kl_constraint(
-                    itr, all_samples, all_params))
+                    all_samples, all_params))
         else:
             self._meta_optimizer.step(lambda: self._compute_meta_loss(
-                itr, all_samples, all_params, set_grad=False))
+                all_samples, all_params, set_grad=False))
 
-    def _compute_meta_loss(self, itr, all_samples, all_params, set_grad=True):
+    def _compute_meta_loss(self, all_samples, all_params, set_grad=True):
         """Compute loss to meta-optimize.
 
         Args:
-            itr (int): Iteration number.
             all_samples (list[list[MAMLTrajectoryBatch]]): A two
                 dimensional list of MAMLTrajectoryBatch of size
                 [meta_batch_size * (num_grad_updates + 1)]
@@ -234,13 +229,13 @@ class MAML:
         losses = []
         for task_samples, task_params in zip(all_samples, all_params):
             for i in range(self._num_grad_updates):
-                self._adapt(itr, task_samples[i], set_grad=set_grad)
+                self._adapt(task_samples[i], set_grad=set_grad)
 
             tu.update_module_params(self._old_policy, task_params)
             with torch.set_grad_enabled(set_grad):
                 # pylint: disable=protected-access
                 last_update = task_samples[-1]
-                loss = self._inner_algo._compute_loss(itr, *last_update[1:])
+                loss = self._inner_algo._compute_loss(*last_update[1:])
             losses.append(loss)
 
             tu.update_module_params(self._policy, theta)
@@ -248,18 +243,13 @@ class MAML:
 
         return torch.stack(losses).mean()
 
-    def _compute_kl_constraint(self,
-                               itr,
-                               all_samples,
-                               all_params,
-                               set_grad=True):
+    def _compute_kl_constraint(self, all_samples, all_params, set_grad=True):
         """Compute KL divergence.
 
         For each task, compute the KL divergence between the old policy
         distribution and current policy distribution.
 
         Args:
-            itr (int): Iteration number.
             all_samples (list[list[MAMLTrajectoryBatch]]): Two
                 dimensional list of MAMLTrajectoryBatch of size
                 [meta_batch_size * (num_grad_updates + 1)]
@@ -278,7 +268,7 @@ class MAML:
         kls = []
         for task_samples, task_params in zip(all_samples, all_params):
             for i in range(self._num_grad_updates):
-                self._adapt(itr, task_samples[i], set_grad=set_grad)
+                self._adapt(task_samples[i], set_grad=set_grad)
 
             tu.update_module_params(self._old_policy, task_params)
             with torch.set_grad_enabled(set_grad):

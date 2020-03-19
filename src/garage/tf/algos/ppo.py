@@ -60,7 +60,7 @@ class PPO(NPO):
                  policy,
                  baseline,
                  scope=None,
-                 max_path_length=500,
+                 max_path_length=100,
                  discount=0.99,
                  gae_lambda=1,
                  center_adv=True,
