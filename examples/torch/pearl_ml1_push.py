@@ -17,7 +17,7 @@ from garage.torch.q_functions import ContinuousMLPQFunction
 import garage.torch.utils as tu
 
 
-# pylint: disable=unused-argument, dangerous-default-value
+# pylint: disable=dangerous-default-value
 @wrap_experiment
 def torch_pearl_ml1_push(ctxt=None,
                          seed=1,
@@ -25,21 +25,19 @@ def torch_pearl_ml1_push(ctxt=None,
                          num_train_tasks=50,
                          num_test_tasks=10,
                          latent_size=7,
-                         encoder_hidden_sizes=[200, 200, 200],
-                         net_size=300,
+                         encoder_hidden_sizes=[20, 20, 20],
+                         net_size=30,
                          meta_batch_size=16,
                          num_steps_per_epoch=4000,
                          num_initial_steps=4000,
                          num_tasks_sample=15,
                          num_steps_prior=750,
                          num_extra_rl_steps_posterior=750,
-                         batch_size=256,
-                         embedding_batch_size=64,
-                         embedding_mini_batch_size=64,
+                         batch_size=32,
+                         embedding_batch_size=32,
+                         embedding_mini_batch_size=32,
                          max_path_length=150,
                          reward_scale=10.,
-                         use_information_bottleneck=True,
-                         use_next_obs_in_context=False,
                          use_gpu=False):
     """Train PEARL with ML1 environments.
 
@@ -74,10 +72,6 @@ def torch_pearl_ml1_push(ctxt=None,
             encoder.
         max_path_length (int): Maximum path length.
         reward_scale (int): Reward scale.
-        use_information_bottleneck (bool): False means latent context is
-            deterministic.
-        use_next_obs_in_context (bool): Whether or not to use next observation
-            in distinguishing between tasks.
         use_gpu (bool): Whether or not to use GPU for training.
 
     """
