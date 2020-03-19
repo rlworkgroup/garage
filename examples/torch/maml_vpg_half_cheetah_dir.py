@@ -2,8 +2,9 @@
 """This is an example to train MAML-VPG on HalfCheetahDirEnv environment."""
 import torch
 
-from garage.envs import HalfCheetahDirEnv, normalize
+from garage.envs import normalize
 from garage.envs.base import GarageEnv
+from garage.envs.mujoco import HalfCheetahDirEnv
 from garage.experiment import LocalRunner, run_experiment
 from garage.np.baselines import LinearFeatureBaseline
 from garage.torch.algos import MAMLVPG

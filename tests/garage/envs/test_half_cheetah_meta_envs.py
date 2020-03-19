@@ -1,7 +1,7 @@
 import pytest
 
-from garage.envs.half_cheetah_dir_env import HalfCheetahDirEnv
-from garage.envs.half_cheetah_vel_env import HalfCheetahVelEnv
+from garage.envs.mujoco.half_cheetah_dir_env import HalfCheetahDirEnv
+from garage.envs.mujoco.half_cheetah_vel_env import HalfCheetahVelEnv
 
 
 class TestMetaHalfCheetahEnvs:

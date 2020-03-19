@@ -4,7 +4,8 @@ performance is too low.
 """
 import pytest
 
-from garage.envs import HalfCheetahDirEnv, normalize
+from garage.envs import normalize
+from garage.envs.mujoco import HalfCheetahDirEnv
 from garage.experiment import task_sampler
 from garage.np.baselines import LinearFeatureBaseline
 from garage.sampler import LocalSampler
