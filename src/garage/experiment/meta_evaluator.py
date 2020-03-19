@@ -18,6 +18,9 @@ class MetaEvaluator:
             these should be different from the training tasks.
         max_path_length (int): Maximum path length used for evaluation
             trajectories.
+        worker_class (type): Type of worker the Sampler should use.
+        worker_args (dict or None): Additional arguments that should be
+            passed to the worker.
         n_test_tasks (int or None): Number of test tasks to sample each time
             evaluation is performed. Note that tasks are sampled "without
             replacement". If None, is set to `test_task_sampler.n_tasks`.

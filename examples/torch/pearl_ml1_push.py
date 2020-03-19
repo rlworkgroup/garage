@@ -40,7 +40,7 @@ def torch_pearl_ml1_push(ctxt=None,
                          reward_scale=10.,
                          use_information_bottleneck=True,
                          use_next_obs_in_context=False,
-                         use_gpu=True):
+                         use_gpu=False):
     """Train PEARL with ML1 environments.
 
     Args:
