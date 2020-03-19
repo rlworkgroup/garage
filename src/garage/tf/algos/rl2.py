@@ -42,20 +42,26 @@ class RL2(MetaRLAlgorithm, abc.ABC):
             for the inner algorithm.
         meta_batch_size (int): Meta batch size.
         task_sampler (garage.experiment.TaskSampler): Task sampler.
+        meta_evaluator (garage.experiment.MetaEvaluator): Evaluator for meta-RL
+            algorithms.
+        n_epochs_per_eval (int): If meta_evaluator is passed, meta-evaluation
+            will be performed every `n_epochs_per_eval` epochs.
         inner_algo_args (dict): Arguments for inner algorithm.
 
     """
 
     def __init__(self, rl2_max_path_length, meta_batch_size, task_sampler,
-                 **inner_algo_args):
+                 meta_evaluator, n_epochs_per_eval, **inner_algo_args):
         self._inner_algo = RL2NPO(**inner_algo_args)
         self._rl2_max_path_length = rl2_max_path_length
         self._env_spec = self._inner_algo.env_spec
+        self._n_epochs_per_eval = n_epochs_per_eval
         self._flatten_input = self._inner_algo.flatten_input
         self._policy = self._inner_algo.policy
         self._discount = self._inner_algo.discount
         self._meta_batch_size = meta_batch_size
         self._task_sampler = task_sampler
+        self._meta_evaluator = meta_evaluator
 
     def train(self, runner):
         """Obtain samplers and start actual training for each epoch.
@@ -72,6 +78,9 @@ class RL2(MetaRLAlgorithm, abc.ABC):
         last_return = None
 
         for _ in runner.step_epochs():
+            if runner.step_itr % self._n_epochs_per_eval == 0:
+                if self._meta_evaluator is not None:
+                    self._meta_evaluator.evaluate(self)
             runner.step_path = runner.obtain_samples(
                 runner.step_itr,
                 env_update=self._task_sampler.sample(self._meta_batch_size))
@@ -107,8 +116,63 @@ class RL2(MetaRLAlgorithm, abc.ABC):
                 used for meta-RL adaptation.
 
         """
-        return self._policy
+        self._policy.reset()
 
+        class NoResetPolicy:
+            """A policy that does not reset.
+
+            For RL2 meta-test, the policy should not reset after meta-RL
+            adapation. The hidden state will be retained as it is where
+            the adaptation takes place.
+
+            Args:
+                policy (garage.tf.policies.Policy): Policy itself.
+
+            Returns:
+                object: The wrapped policy that does not reset.
+
+            """
+
+            def __init__(self, policy):
+                self._policy = policy
+
+            def reset(self):
+                """gym.Env reset function."""
+
+            def get_action(self, obs):
+                """Get a single action from this policy for the input observation.
+
+                Args:
+                    obs (numpy.ndarray): Observation from environment.
+
+                Returns:
+                    tuple[numpy.ndarray, dict]: Predicted action and agent
+                        info.
+
+                """
+                return self._policy.get_action(obs)
+
+            def get_param_values(self):
+                """Return values of params.
+
+                Returns:
+                    np.ndarray: Policy parameters values.
+
+                """
+                return self._policy.get_param_values()
+
+            def set_param_values(self, params):
+                """Set param values.
+
+                Args:
+                    params (np.ndarray): A numpy array of parameter values.
+
+                """
+                self._policy.set_param_values(params)
+
+        return NoResetPolicy(self._policy)
+
+    # pylint: disable=protected-access
     def adapt_policy(self, exploration_policy, exploration_trajectories):
         """Produce a policy adapted for a task.
 
@@ -123,11 +187,65 @@ class RL2(MetaRLAlgorithm, abc.ABC):
                 environment.
 
         Returns:
-            garage.Policy: A policy adapted to the task represented by the
-                exploration_trajectories.
+            garage.tf.policies.Policy: A policy adapted to the task represented
+                by the exploration_trajectories.
 
         """
-        return exploration_policy
+
+        # flake8: noqa D202
+        class RL2AdaptedPolicy:
+            """A RL2 policy after adaptation.
+
+            Args:
+                policy (garage.tf.policies.Policy): Policy itself.
+
+            """
+
+            def __init__(self, policy):
+                self._initial_hiddens = policy._prev_hiddens[:]
+                self._policy = policy
+
+            def reset(self):
+                """gym.Env reset function."""
+                self._policy._prev_hiddens = self._initial_hiddens
+
+            def get_action(self, obs):
+                """Get a single action from this policy for the input observation.
+
+                Args:
+                    obs (numpy.ndarray): Observation from environment.
+
+                Returns:
+                    tuple(numpy.ndarray, dict): Predicted action and agent info.
+
+                """
+                return self._policy.get_action(obs)
+
+            def get_param_values(self):
+                """Return values of params.
+
+                Returns:
+                    tuple(np.ndarray, np.ndarray): Policy parameters values
+                        and initial hidden state that will be set every time
+                        the policy is used for meta-test.
+
+                """
+                return (self._policy.get_param_values(), self._initial_hiddens)
+
+            def set_param_values(self, params):
+                """Set param values.
+
+                Args:
+                    params (tuple(np.ndarray, np.ndarray)): Two numpy array of
+                        parameter values, one of the network parameters, one
+                        for the initial hidden state.
+
+                """
+                inner_params, hiddens = params
+                self._policy.set_param_values(inner_params)
+                self._initial_hiddens = hiddens
+
+        return RL2AdaptedPolicy(exploration_policy._policy)
 
     def _process_samples(self, itr, paths):
         # pylint: disable=too-many-statements
