@@ -73,7 +73,6 @@ def test_dqn_pong():
         env=env).returncode == 0
 
 
-@pytest.mark.flaky  # see https://github.com/rlworkgroup/garage/issues/1147
 @pytest.mark.no_cover
 @pytest.mark.timeout(30)
 def test_ppo_memorize_digits():
@@ -89,7 +88,6 @@ def test_ppo_memorize_digits():
     assert subprocess.run(command, check=False, env=env).returncode == 0
 
 
-@pytest.mark.flaky  # see https://github.com/rlworkgroup/garage/issues/1147
 @pytest.mark.no_cover
 @pytest.mark.timeout(40)
 def test_trpo_cubecrash():
