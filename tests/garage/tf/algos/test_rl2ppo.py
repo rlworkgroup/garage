@@ -44,7 +44,7 @@ class TestRL2PPO(TfGraphTestCase):
                                         state_include_action=False)
         self.baseline = LinearFeatureBaseline(env_spec=self.env_spec)
 
-    def test_ppo_pendulum(self):
+    def test_rl2_ppo_pendulum(self):
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
             algo = RL2PPO(rl2_max_path_length=self.max_path_length,
                           meta_batch_size=self.meta_batch_size,
@@ -79,7 +79,7 @@ class TestRL2PPO(TfGraphTestCase):
                                         self.meta_batch_size)
             assert last_avg_ret > -40
 
-    def test_ppo_pendulum_wrong_worker(self):
+    def test_rl2_ppo_pendulum_wrong_worker(self):
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
             with pytest.raises(ValueError):
                 algo = RL2PPO(rl2_max_path_length=self.max_path_length,
@@ -112,3 +112,13 @@ class TestRL2PPO(TfGraphTestCase):
                 runner.train(n_epochs=10,
                              batch_size=self.episode_per_task *
                              self.max_path_length * self.meta_batch_size)
+
+    def test_rl2_obs_dim_padding(self):
+        env_spec = RL2Env(env=normalize(HalfCheetahDirEnv()),
+                          max_obs_dim=20).spec
+        # observation dim 20
+        # action_dim dim 6
+        # reward dim 1
+        # terminal dim 1
+        # total dim = 28
+        assert env_spec.observation_space.shape == (28, )
