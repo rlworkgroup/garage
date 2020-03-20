@@ -1,5 +1,12 @@
-'''This script creates a regression test over garage-HER and baselines-HER.'''
-import datetime
+"""This script creates a regression test over garage-HER and baselines-HER."""
+
+import pytest
+try:
+    import mujoco_py  # noqa: F401
+except Exception:
+    pytest.skip(allow_module_level=True)
+
+import datetime  # noqa: I100
 import os
 import os.path as osp
 import random
@@ -13,7 +20,6 @@ from dowel import logger
 import gym
 import matplotlib.pyplot as plt
 import pandas as pd
-import pytest
 import tensorflow as tf
 
 from garage.envs import normalize
@@ -47,15 +53,11 @@ BASELINES_PARAMS['rollout_batch_size'] = 1
 
 
 class TestBenchmarkHER:
-    '''Compare benchmarks between garage and baselines.'''
+    """Compare benchmarks between garage and baselines."""
 
     @pytest.mark.huge
     def test_benchmark_her(self):
-        '''
-        Compare benchmarks between garage and baselines.
-
-        :return:
-        '''
+        """Compare benchmarks between garage and baselines."""
         mujoco1m = benchmarks.get_benchmark('HerDdpg')
 
         timestamp = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f')
@@ -104,8 +106,7 @@ class TestBenchmarkHER:
 
 
 def run_garage(env, seed, log_dir):
-    '''
-    Create garage model and training.
+    """Create garage model and training.
 
     Replace the ppo with the algorithm you want to run.
 
@@ -113,7 +114,8 @@ def run_garage(env, seed, log_dir):
     :param seed: Random seed for the trial.
     :param log_dir: Log dir path.
     :return:
-    '''
+
+    """
     deterministic.set_seed(seed)
     env.reset()
 
@@ -179,16 +181,15 @@ def run_garage(env, seed, log_dir):
 
 
 def run_baselines(env_id, seed, log_dir):
-    '''
-    Create baselines model and training.
+    """Create baselines model and training.
 
     Replace the ppo and its training with the algorithm you want to run.
 
     :param env: Environment of the task.
     :param seed: Random seed for the trial.
     :param log_dir: Log dir path.
-    :return
-    '''
+
+    """
     launch_params = {
         'env': env_id,
         'logdir': log_dir,
@@ -206,8 +207,7 @@ def run_baselines(env_id, seed, log_dir):
 
 
 def plot(b_csvs, g_csvs, g_x, g_y, b_x, b_y, trials, seeds, plt_file, env_id):
-    '''
-    Plot benchmark from csv files of garage and baselines.
+    """Plot benchmark from csv files of garage and baselines.
 
     :param b_csvs: A list contains all csv files in the task.
     :param g_csvs: A list contains all csv files in the task.
@@ -219,8 +219,8 @@ def plot(b_csvs, g_csvs, g_x, g_y, b_x, b_y, trials, seeds, plt_file, env_id):
     :param seeds: A list contains all the seeds in the task.
     :param plt_file: Path of the plot png file.
     :param env_id: String contains the id of the environment.
-    :return:
-    '''
+
+    """
     assert len(b_csvs) == len(g_csvs)
     for trial in range(trials):
         seed = seeds[trial]

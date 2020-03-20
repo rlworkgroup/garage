@@ -1,4 +1,9 @@
 import pytest
+try:
+    # pylint: disable=unused-import
+    import mujoco_py  # noqa: F401
+except Exception:  # pylint: disable=broad-except
+    pytest.skip(allow_module_level=True)
 
 from garage.envs.mujoco.half_cheetah_dir_env import HalfCheetahDirEnv
 from garage.envs.mujoco.half_cheetah_vel_env import HalfCheetahVelEnv

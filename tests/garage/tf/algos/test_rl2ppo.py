@@ -3,6 +3,11 @@ This script creates a test that fails when garage.tf.algos.RL2PPO
 performance is too low.
 """
 import pytest
+try:
+    # pylint: disable=unused-import
+    import mujoco_py  # noqa: F401
+except Exception:  # pylint: disable=broad-except
+    pytest.skip(allow_module_level=True)
 
 from garage.envs import normalize
 from garage.envs.mujoco import HalfCheetahDirEnv

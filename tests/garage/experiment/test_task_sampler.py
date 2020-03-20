@@ -3,6 +3,11 @@ import unittest.mock
 
 import numpy as np
 import pytest
+try:
+    # pylint: disable=unused-import
+    import mujoco_py  # noqa: F401
+except Exception:  # pylint: disable=broad-except
+    pytest.skip(allow_module_level=True)
 
 from garage.envs.mujoco.half_cheetah_vel_env import HalfCheetahVelEnv
 from garage.experiment import task_sampler
