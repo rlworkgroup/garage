@@ -40,6 +40,7 @@ class TestTRPO(TfGraphTestCase):
         )
 
     @pytest.mark.large
+    @pytest.mark.mujoco
     def test_trpo_pendulum(self):
         """Test TRPO with Pendulum environment."""
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
@@ -54,6 +55,7 @@ class TestTRPO(TfGraphTestCase):
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 50
 
+    @pytest.mark.mujoco
     def test_trpo_unknown_kl_constraint(self):
         """Test TRPO with unkown KL constraints."""
         with pytest.raises(ValueError, match='Invalid kl_constraint'):
@@ -69,6 +71,7 @@ class TestTRPO(TfGraphTestCase):
             )
 
     @pytest.mark.large
+    @pytest.mark.mujoco
     def test_trpo_soft_kl_constraint(self):
         """Test TRPO with unkown KL constraints."""
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
@@ -85,6 +88,7 @@ class TestTRPO(TfGraphTestCase):
             assert last_avg_ret > 45
 
     @pytest.mark.large
+    @pytest.mark.mujoco
     def test_trpo_lstm_cartpole(self):
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
             env = TfEnv(normalize(gym.make('CartPole-v1')))
@@ -110,6 +114,7 @@ class TestTRPO(TfGraphTestCase):
             env.close()
 
     @pytest.mark.large
+    @pytest.mark.mujoco
     def test_trpo_gru_cartpole(self):
         deterministic.set_seed(2)
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:

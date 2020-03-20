@@ -1,5 +1,6 @@
 """This script creates a test that fails when PPO performance is too low."""
 import gym
+import pytest
 import torch
 
 from garage.envs import normalize
@@ -29,6 +30,7 @@ class TestPPO:
         """Teardown method which is called after every test."""
         self.env.close()
 
+    @pytest.mark.mujoco
     def test_ppo_pendulum(self):
         """Test PPO with Pendulum environment."""
         deterministic.set_seed(0)

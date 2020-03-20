@@ -3,6 +3,7 @@ from unittest.mock import MagicMock
 
 import gym
 import numpy as np
+import pytest
 import torch
 from torch.nn import functional as F
 
@@ -171,6 +172,7 @@ def testTemperatureLoss():
     assert np.all(np.isclose(loss, expected_loss))
 
 
+@pytest.mark.mujoco
 def test_sac_inverted_pendulum():
     """Test Sac performance on inverted pendulum."""
     # pylint: disable=unexpected-keyword-arg

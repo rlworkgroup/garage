@@ -58,6 +58,7 @@ class TestVPG:
         """Teardown method which is called after every test."""
         self._env.close()
 
+    @pytest.mark.mujoco
     def test_vpg_no_entropy(self):
         """Test VPG with no_entropy."""
         self._params['positive_adv'] = True
@@ -68,6 +69,7 @@ class TestVPG:
         last_avg_ret = self._runner.train(n_epochs=10, batch_size=100)
         assert last_avg_ret > 0
 
+    @pytest.mark.mujoco
     def test_vpg_max(self):
         """Test VPG with maximum entropy."""
         self._params['center_adv'] = False
@@ -79,6 +81,7 @@ class TestVPG:
         last_avg_ret = self._runner.train(n_epochs=10, batch_size=100)
         assert last_avg_ret > 0
 
+    @pytest.mark.mujoco
     def test_vpg_regularized(self):
         """Test VPG with entropy_regularized."""
         self._params['entropy_method'] = 'regularized'
@@ -88,6 +91,7 @@ class TestVPG:
         last_avg_ret = self._runner.train(n_epochs=10, batch_size=100)
         assert last_avg_ret > 0
 
+    @pytest.mark.mujoco
     @pytest.mark.parametrize('algo_param, error, msg', INVALID_ENTROPY_CONFIG)
     def test_invalid_entropy_config(self, algo_param, error, msg):
         """Test VPG with invalid entropy config."""
