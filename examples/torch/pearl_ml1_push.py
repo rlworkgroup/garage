@@ -20,11 +20,17 @@ import garage.torch.utils as tu
 
 @click.command()
 @click.option('--num_epochs', default=1000)
+@click.option('--num_train_tasks', default=50)
+@click.option('--num_test_tasks', default=10)
+@click.option('--encoder_hidden_size', default=200)
 @click.option('--net_size', default=300)
 @click.option('--num_steps_per_epoch', default=4000)
 @click.option('--num_initial_steps', default=4000)
 @click.option('--num_steps_prior', default=750)
 @click.option('--num_extra_rl_steps_posterior', default=750)
+@click.option('--batch_size', default=256)
+@click.option('--embedding_batch_size', default=64)
+@click.option('--embedding_mini_batch_size', default=64)
 @click.option('--max_path_length', default=150)
 @wrap_experiment
 def torch_pearl_ml1_push(ctxt=None,
@@ -33,7 +39,7 @@ def torch_pearl_ml1_push(ctxt=None,
                          num_train_tasks=50,
                          num_test_tasks=10,
                          latent_size=7,
-                         encoder_hidden_sizes=(200, 200, 200),
+                         encoder_hidden_size=200,
                          net_size=300,
                          meta_batch_size=16,
                          num_steps_per_epoch=4000,
@@ -58,8 +64,8 @@ def torch_pearl_ml1_push(ctxt=None,
         num_train_tasks (int): Number of tasks for training.
         num_test_tasks (int): Number of tasks for testing.
         latent_size (int): Size of latent context vector.
-        encoder_hidden_sizes (list[int]): Output dimension of dense layer(s) of
-            the context encoder.
+        encoder_hidden_size (int): Output dimension of dense layer of the
+            context encoder.
         net_size (int): Output dimension of a dense layer of Q-function and
             value function.
         meta_batch_size (int): Meta batch size.
@@ -84,6 +90,8 @@ def torch_pearl_ml1_push(ctxt=None,
 
     """
     set_seed(seed)
+    encoder_hidden_sizes = (encoder_hidden_size, encoder_hidden_size,
+                            encoder_hidden_size)
     # create multi-task environment and sample tasks
     env_sampler = SetTaskSampler(lambda: GarageEnv(
         normalize(ML1.get_train_tasks('push-v1'))))

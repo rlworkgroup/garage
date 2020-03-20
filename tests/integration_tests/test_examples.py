@@ -133,13 +133,16 @@ def test_maml_halfcheetah():
 
 
 @pytest.mark.no_cover
-@pytest.mark.timeout(60)
+@pytest.mark.timeout(120)
 def test_pearl_ml1_push():
     """Test pearl_ml1_push.py"""
     assert subprocess.run([
         EXAMPLES_ROOT_DIR / 'torch/pearl_ml1_push.py', '--num_epochs', '1',
-        '--net_size', '32', '--num_steps_per_epoch', '20',
-        '--num_initial_steps', '20', '--num_steps_prior', '5',
-        '--num_extra_rl_steps_posterior', '5', '--max_path_length', '10'
+        '--num_train_tasks', '5', '--num_test_tasks', '1',
+        '--encoder_hidden_size', '2', '--net_size', '2',
+        '--num_steps_per_epoch', '5', '--num_initial_steps', '5',
+        '--num_steps_prior', '1', '--num_extra_rl_steps_posterior', '1',
+        '--batch_size', '4', '--embedding_batch_size', '2',
+        '--embedding_mini_batch_size', '2', '--max_path_length', '1'
     ],
                           check=False).returncode == 0
