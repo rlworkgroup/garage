@@ -132,6 +132,7 @@ def test_maml_halfcheetah():
                           check=False).returncode == 0
 
 
+@pytest.mark.flaky
 @pytest.mark.no_cover
 @pytest.mark.timeout(120)
 def test_pearl_ml1_push():
