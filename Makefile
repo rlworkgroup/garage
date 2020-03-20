@@ -46,6 +46,7 @@ ci-verify-conda: CONDA_ROOT := $$HOME/miniconda
 ci-verify-conda: CONDA := $(CONDA_ROOT)/bin/conda
 ci-verify-conda: GARAGE_BIN = $(CONDA_ROOT)/envs/garage-ci/bin
 ci-verify-conda:
+	touch $(MJKEY_PATH)
 	wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
 	bash miniconda.sh -b -p $(CONDA_ROOT)
 	hash -r
@@ -70,6 +71,7 @@ ci-verify-conda:
 ci-verify-pipenv: export PATH=$(shell echo $$PATH | awk -v RS=: -v ORS=: '/venv/ {next} {print}')
 ci-verify-pipenv: export VIRTUAL_ENV=
 ci-verify-pipenv:
+	touch $(MJKEY_PATH)
 	pip3 install --upgrade pipenv setuptools
 	pipenv --three
 	pipenv install dist/garage.tar.gz[all,dev]
