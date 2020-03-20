@@ -19,7 +19,7 @@ def rl2_ppo_ml10(ctxt=None,
                  seed=1,
                  max_path_length=150,
                  meta_batch_size=40,
-                 n_epochs=1500,
+                 n_epochs=10,
                  episode_per_task=10):
     """Train PPO with ML10 environment.
 
