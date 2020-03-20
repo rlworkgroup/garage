@@ -13,7 +13,6 @@ from baselines.common.vec_env.dummy_vec_env import DummyVecEnv
 from baselines.common.vec_env.vec_normalize import VecNormalize
 from baselines.logger import configure
 from baselines.ppo2 import ppo2
-from baselines.ppo2.policies import MlpPolicy
 import dowel
 from dowel import logger as dowel_logger
 import gym
@@ -288,8 +287,8 @@ def run_baselines(env, seed, log_dir):
     env = VecNormalize(env)
 
     set_global_seeds(seed)
-    policy = MlpPolicy
-    ppo2.learn(policy=policy,
+    policy_network = 'mlp'
+    ppo2.learn(network=policy_network,
                env=env,
                nsteps=hyper_parameters['batch_size'],
                nminibatches=1,

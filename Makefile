@@ -60,7 +60,8 @@ ci-verify-conda:
 	$(CONDA) info -a
 	$(CONDA) create -n garage-ci python=3.5 pip -y
 	$(GARAGE_BIN)/pip install --upgrade pip
-	$(GARAGE_BIN)/pip install dist/garage.tar.gz[all,dev]
+	$(GARAGE_BIN)/pip install dist/garage.tar.gz[all]
+	$(GARAGE_BIN)/pip install dist/garage.tar.gz[dev]
 	# pylint will verify all imports work
 	$(GARAGE_BIN)/pylint --disable=all --enable=import-error garage
 
@@ -71,7 +72,8 @@ ci-verify-pipenv: export VIRTUAL_ENV=
 ci-verify-pipenv:
 	pip3 install --upgrade pipenv setuptools
 	pipenv --three
-	pipenv install dist/garage.tar.gz[all,dev]
+	pipenv install dist/garage.tar.gz[all]
+	pipenv install dist/garage.tar.gz[dev]
 	pipenv graph
 	# pylint will verify all imports work
 	pipenv run pylint --disable=all --enable=import-error garage

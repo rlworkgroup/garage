@@ -543,6 +543,7 @@ class PEARL(MetaRLAlgorithm):
         Returns:
             garage.Policy: The policy used to obtain samples that are later
                 used for meta-RL adaptation.
+
         """
         return self._policy
 
@@ -574,6 +575,7 @@ class PEARL(MetaRLAlgorithm):
 
         Args:
             device (str): ID of GPU or CPU.
+
         """
         if device is None:
             device = tu.global_device()
