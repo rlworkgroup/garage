@@ -27,12 +27,17 @@ ci-job-precommit: docs
 
 ci-job-normal:
 	pytest --cov=garage -v -m \
-	    'not nightly and not huge and not flaky and not large' --durations=0
+	    'not nightly and not huge and not flaky and not large and not mujoco' --durations=0
 	coverage xml
 	bash <(curl -s https://codecov.io/bash)
 
 ci-job-large:
-	pytest --cov=garage -v -m large --durations=0
+	pytest --cov=garage -v -m 'large and not mujoco' --durations=0
+	coverage xml
+	bash <(curl -s https://codecov.io/bash)
+
+ci-job-mujoco:
+	pytest --cov=garage -v -m mujoco --durations=0
 	coverage xml
 	bash <(curl -s https://codecov.io/bash)
 

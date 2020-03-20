@@ -37,6 +37,10 @@ jobs:
         - DEPLOY_FROM_THIS_JOB="true"
     - name: "Large tests"
       env: JOB_RUN_CMD="make ci-job-large"
+    - if: type = pull_request AND head_repo != "rlworkgroup/garage"
+      name: "Mujoco based tests"
+      env:
+        - JOB_RUN_CMD="make ci-job-mujoco"
     - name: "Verify conda and pipenv installations"
       env: JOB_RUN_CMD="make ci-job-verify-envs"
     - if: type = cron
