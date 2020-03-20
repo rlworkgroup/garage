@@ -1,6 +1,6 @@
 """Example script to run RL2PPO meta test in HalfCheetah."""
 from garage import wrap_experiment
-from garage.envs.half_cheetah_vel_env import HalfCheetahVelEnv
+from garage.envs import HalfCheetahVelEnv
 from garage.experiment import task_sampler
 from garage.experiment.deterministic import set_seed
 from garage.experiment.meta_evaluator import MetaEvaluator
