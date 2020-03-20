@@ -18,7 +18,6 @@ from garage.torch.q_functions import ContinuousMLPQFunction
 import garage.torch.utils as tu
 
 
-# pylint: disable=dangerous-default-value
 @wrap_experiment
 def torch_pearl_ml1_push(ctxt=None,
                          seed=1,
@@ -26,7 +25,7 @@ def torch_pearl_ml1_push(ctxt=None,
                          num_train_tasks=50,
                          num_test_tasks=10,
                          latent_size=7,
-                         encoder_hidden_sizes=[200, 200, 200],
+                         encoder_hidden_sizes=(200, 200, 200),
                          net_size=300,
                          meta_batch_size=16,
                          num_steps_per_epoch=4000,
@@ -135,8 +134,7 @@ def torch_pearl_ml1_push(ctxt=None,
                  worker_class=PEARLWorker)
 
     worker_args = dict(deterministic=True, accum_context=True)
-    meta_evaluator = MetaEvaluator(runner,
-                                   test_task_sampler=test_env_sampler,
+    meta_evaluator = MetaEvaluator(test_task_sampler=test_env_sampler,
                                    max_path_length=max_path_length,
                                    worker_class=PEARLWorker,
                                    worker_args=worker_args,

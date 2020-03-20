@@ -107,7 +107,6 @@ class TestPEARL:
 
         worker_args = dict(deterministic=True, accum_context=True)
         meta_evaluator = MetaEvaluator(
-            runner,
             test_task_sampler=test_env_sampler,
             max_path_length=params['max_path_length'],
             worker_class=PEARLWorker,

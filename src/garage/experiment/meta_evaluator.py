@@ -18,9 +18,6 @@ class MetaEvaluator:
             these should be different from the training tasks.
         max_path_length (int): Maximum path length used for evaluation
             trajectories.
-        worker_class (type): Type of worker the Sampler should use.
-        worker_args (dict or None): Additional arguments that should be
-            passed to the worker.
         n_test_tasks (int or None): Number of test tasks to sample each time
             evaluation is performed. Note that tasks are sampled "without
             replacement". If None, is set to `test_task_sampler.n_tasks`.
@@ -36,6 +33,9 @@ class MetaEvaluator:
         test_task_names (list[str]): List of task names to test. Should be in
             an order consistent with the `task_id` env_info, if that is
             present.
+        worker_class (type): Type of worker the Sampler should use.
+        worker_args (dict or None): Additional arguments that should be
+            passed to the worker.
 
     """
 
@@ -49,10 +49,15 @@ class MetaEvaluator:
                  n_test_tasks=None,
                  n_test_rollouts=1,
                  prefix='MetaTest',
-                 test_task_names=None):
+                 test_task_names=None,
+                 worker_class=DefaultWorker,
+                 worker_args=None):
         self._test_task_sampler = test_task_sampler
+        self._worker_class = worker_class
         if worker_args is None:
-            worker_args = {}
+            self._worker_args = {}
+        else:
+            self._worker_args = worker_args
         if n_test_tasks is None:
             n_test_tasks = test_task_sampler.n_tasks
         self._n_test_tasks = n_test_tasks
@@ -81,7 +86,8 @@ class MetaEvaluator:
                 WorkerFactory(seed=get_seed(),
                               max_path_length=self._max_path_length,
                               n_workers=1,
-                              worker_class=DefaultWorker),
+                              worker_class=self._worker_class,
+                              worker_args=self._worker_args),
                 agents=algo.get_exploration_policy(),
                 envs=self._test_task_sampler.sample(1))
         for env_up in self._test_task_sampler.sample(self._n_test_tasks):

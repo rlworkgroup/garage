@@ -173,7 +173,7 @@ class PEARL(MetaRLAlgorithm):
                                         output_dim=encoder_out_dim,
                                         hidden_sizes=encoder_hidden_sizes)
 
-        self.policy = policy_class(
+        self._policy = policy_class(
             latent_dim=latent_dim,
             context_encoder=context_encoder,
             policy=inner_policy,
@@ -195,7 +195,7 @@ class PEARL(MetaRLAlgorithm):
         self.vf_criterion = torch.nn.MSELoss()
 
         self._policy_optimizer = optimizer_class(
-            self.policy.networks[1].parameters(),
+            self._policy.networks[1].parameters(),
             lr=policy_lr,
         )
         self.qf1_optimizer = optimizer_class(
@@ -211,7 +211,7 @@ class PEARL(MetaRLAlgorithm):
             lr=vf_lr,
         )
         self.context_optimizer = optimizer_class(
-            self.policy.networks[0].parameters(),
+            self._policy.networks[0].parameters(),
             lr=context_lr,
         )
 
@@ -276,7 +276,7 @@ class PEARL(MetaRLAlgorithm):
 
             logger.log('Evaluating...')
             # evaluate
-            self.policy.reset_belief()
+            self._policy.reset_belief()
             self.evaluator.evaluate(self)
 
     def _train_once(self):
@@ -296,11 +296,11 @@ class PEARL(MetaRLAlgorithm):
         num_tasks = len(indices)
         context = self._sample_context(indices)
         # clear context and reset belief of policy
-        self.policy.reset_belief(num_tasks=num_tasks)
+        self._policy.reset_belief(num_tasks=num_tasks)
 
         # data shape is (task, batch, feat)
         obs, actions, rewards, next_obs, terms = self._sample_data(indices)
-        policy_outputs, task_z = self.policy(obs, context)
+        policy_outputs, task_z = self._policy(obs, context)
         new_actions, policy_mean, policy_log_std, log_pi = policy_outputs[:4]
 
         # flatten out the task dimension
@@ -320,7 +320,7 @@ class PEARL(MetaRLAlgorithm):
         # KL constraint on z if probabilistic
         self.context_optimizer.zero_grad()
         if self._use_information_bottleneck:
-            kl_div = self.policy.compute_kl_div()
+            kl_div = self._policy.compute_kl_div()
             kl_loss = self._kl_lambda * kl_div
             kl_loss.backward(retain_graph=True)
 
@@ -388,7 +388,7 @@ class PEARL(MetaRLAlgorithm):
                 buffer.
 
         """
-        self.policy.reset_belief()
+        self._policy.reset_belief()
         total_samples = 0
 
         if update_posterior_rate != np.inf:
@@ -399,7 +399,7 @@ class PEARL(MetaRLAlgorithm):
 
         while total_samples < num_samples:
             paths = runner.obtain_samples(itr, num_samples_per_batch,
-                                          self.policy,
+                                          self._policy,
                                           self._env[self._task_idx])
             total_samples += sum([len(path['rewards']) for path in paths])
 
@@ -418,7 +418,7 @@ class PEARL(MetaRLAlgorithm):
 
             if update_posterior_rate != np.inf:
                 context = self._sample_context(self._task_idx)
-                self.policy.infer_posterior(context)
+                self._policy.infer_posterior(context)
 
     def _sample_data(self, indices):
         """Sample batch of training data from a list of tasks.
@@ -513,6 +513,16 @@ class PEARL(MetaRLAlgorithm):
                                     param.data * self._soft_target_tau)
 
     @property
+    def policy(self):
+        """Return all the policy within the model.
+
+        Returns:
+            garage.torch.policies.Policy: Policy within the model.
+
+        """
+        return self._policy
+
+    @property
     def networks(self):
         """Return all the networks within the model.
 
@@ -520,7 +530,7 @@ class PEARL(MetaRLAlgorithm):
             list: A list of networks.
 
         """
-        return self.policy.networks + [self.policy] + [
+        return self._policy.networks + [self._policy] + [
             self._qf1, self._qf2, self._vf, self.target_vf
         ]
 
@@ -534,7 +544,7 @@ class PEARL(MetaRLAlgorithm):
             garage.Policy: The policy used to obtain samples that are later
                 used for meta-RL adaptation.
         """
-        return self.policy
+        return self._policy
 
     def adapt_policy(self, exploration_policy, exploration_trajectories):
         """Produce a policy adapted for a task.
@@ -555,9 +565,9 @@ class PEARL(MetaRLAlgorithm):
 
         """
         context = self._sample_context(self._task_idx)
-        self.policy.infer_posterior(context)
+        self._policy.infer_posterior(context)
 
-        return self.policy
+        return self._policy
 
     def to(self, device=None):
         """Put all the networks within the model on device.
