@@ -10,7 +10,7 @@ from dowel import logger, tabular
 import gym
 import numpy as np
 
-from garage import log_performance, TrajectoryBatch
+from garage import log_multitask_performance, TrajectoryBatch
 from garage.envs import EnvSpec
 from garage.misc import tensor_utils as np_tensor_utils
 from garage.np.algos import MetaRLAlgorithm
@@ -374,6 +374,7 @@ class RL2(MetaRLAlgorithm, abc.ABC):
         """
         return RL2AdaptedPolicy(exploration_policy._policy)
 
+    # pylint: disable=protected-access
     def _process_samples(self, itr, paths):
         # pylint: disable=too-many-statements
         """Return processed sample data based on the collected paths.
@@ -430,9 +431,18 @@ class RL2(MetaRLAlgorithm, abc.ABC):
             np_tensor_utils.stack_and_pad_tensor_dict_list(
                 concatenated_paths, self._inner_algo.max_path_length))
 
-        undiscounted_returns = log_performance(
-            itr, TrajectoryBatch.from_trajectory_list(self._env_spec, paths),
-            self._inner_algo.discount)
+        name_map = None
+        if hasattr(self._task_sampler._envs[0].env, 'all_task_names'):
+            names = [
+                env.env.all_task_names[0] for env in self._task_sampler._envs
+            ]
+            name_map = dict(zip(names, names))
+
+        undiscounted_returns = log_multitask_performance(
+            itr,
+            TrajectoryBatch.from_trajectory_list(self._env_spec, paths),
+            self._inner_algo.discount,
+            name_map=name_map)
 
         concatenated_paths_stacked['paths'] = concatenated_paths
         concatenated_paths_stacked['average_return'] = np.mean(

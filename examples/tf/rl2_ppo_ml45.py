@@ -17,7 +17,12 @@ from garage.tf.policies import GaussianGRUPolicy
 
 
 @wrap_experiment
-def rl2_ppo_ml45(ctxt=None, seed=1):
+def rl2_ppo_ml45(ctxt=None,
+                 seed=1,
+                 max_path_length=150,
+                 meta_batch_size=40,
+                 n_epochs=1500,
+                 episode_per_task=10):
     """Train PPO with ML45 environment.
 
     Args:
@@ -25,15 +30,14 @@ def rl2_ppo_ml45(ctxt=None, seed=1):
             configuration used by LocalRunner to create the snapshotter.
         seed (int): Used to seed the random number generator to produce
             determinism.
+        max_path_length (int): Maximum length of a single rollout.
+        meta_batch_size (int): Meta batch size.
+        n_epochs (int): Total number of epochs for training.
+        episode_per_task (int): Number of training episode per task.
 
     """
     set_seed(seed)
     with LocalTFRunner(snapshot_config=ctxt) as runner:
-        max_path_length = 100
-        meta_batch_size = 10
-        n_epochs = 50
-        episode_per_task = 4
-
         ml45_train_tasks = ML45.get_train_tasks()
         ML_train_envs = [
             RL2Env(ML45.from_task(task_name),
@@ -84,4 +88,8 @@ def rl2_ppo_ml45(ctxt=None, seed=1):
                      meta_batch_size)
 
 
-rl2_ppo_ml45(seed=1)
+rl2_ppo_ml45(seed=1,
+             max_path_length=150,
+             meta_batch_size=40,
+             n_epochs=1500,
+             episode_per_task=10)
