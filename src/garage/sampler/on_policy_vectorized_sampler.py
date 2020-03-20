@@ -97,7 +97,8 @@ class OnPolicyVectorizedSampler(BatchSampler):
 
             policy_time += time.time() - t
             t = time.time()
-            next_obses, rewards, dones, env_infos = self.vec_env.step(actions)
+            next_obses, rewards, dones, env_infos = \
+                self.vec_env.step(actions)
             env_time += time.time() - t
             t = time.time()
 

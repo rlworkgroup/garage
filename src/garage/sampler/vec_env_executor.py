@@ -6,7 +6,13 @@ from garage.misc import tensor_utils
 
 
 class VecEnvExecutor:
-    """Environment wrapper that runs multiple environments."""
+    """Environment wrapper that runs multiple environments.
+
+    Args:
+        envs (list[gym.Env]): List of environments to batch together.
+        max_path_length (int): Maximum length of any path.
+
+    """
 
     def __init__(self, envs, max_path_length):
         self.envs = envs
@@ -16,43 +22,80 @@ class VecEnvExecutor:
         self.max_path_length = max_path_length
 
     def step(self, action_n):
-        """Step all environments using the provided actions."""
+        """Step all environments using the provided actions.
+
+        Inserts an environment infor 'vec_env_executor.complete' containing the
+        episode end signal (time limit reached or done signal from
+        environment).
+
+        Args:
+            action_n (np.ndarray): Array of actions.
+
+        Returns:
+            tuple: Tuple containing:
+                * observations (np.ndarray)
+                * rewards (np.ndarray)
+                * dones (np.ndarray): The done signal from the environment.
+                * env_infos (dict[str, np.ndarray])
+
+        """
         all_results = [env.step(a) for (a, env) in zip(action_n, self.envs)]
         obs, rewards, dones, env_infos = list(
             map(list, list(zip(*all_results))))
         dones = np.asarray(dones)
         rewards = np.asarray(rewards)
         self.ts += 1
+        completes = np.asarray(dones)
         if self.max_path_length is not None:
-            dones[self.ts >= self.max_path_length] = True
-        for (i, done) in enumerate(dones):
-            if done:
+            completes[self.ts >= self.max_path_length] = True
+        for (i, complete) in enumerate(completes):
+            if complete:
                 obs[i] = self.envs[i].reset()
                 self.ts[i] = 0
-        return obs, rewards, dones, tensor_utils.stack_tensor_dict_list(
-            env_infos)
+            env_infos[i]['vec_env_executor.complete'] = completes
+        return (obs, rewards, dones,
+                tensor_utils.stack_tensor_dict_list(env_infos))
 
     def reset(self):
-        """Reset all environments."""
+        """Reset all environments.
+
+        Returns:
+            np.ndarray: Observations of shape :math:`(K, O*)`
+
+        """
         results = [env.reset() for env in self.envs]
         self.ts[:] = 0
         return results
 
     @property
     def num_envs(self):
-        """Read / write the number of environments."""
+        """Read the number of environments.
+
+        Returns:
+            int: Number of environments
+
+        """
         return len(self.envs)
 
     @property
     def action_space(self):
-        """Read / write the action space."""
+        """Read the action space.
+
+        Returns:
+            gym.Space: The action space.
+
+        """
         return self._action_space
 
     @property
     def observation_space(self):
-        """Read / write the observation space."""
+        """Read the observation space.
+
+        Returns:
+            gym.Space: The observation space.
+
+        """
         return self._observation_space
 
     def close(self):
         """Close all environments."""
-        pass

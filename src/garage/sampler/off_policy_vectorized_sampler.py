@@ -76,7 +76,7 @@ class OffPolicyVectorizedSampler(BatchSampler):
             obses = self.vec_env.reset()
         else:
             obses = self._last_obses
-        dones = np.asarray([True] * self.vec_env.num_envs)
+        completes = np.asarray([True] * self.vec_env.num_envs)
         running_paths = [None] * self.vec_env.num_envs
         n_samples = 0
 
@@ -85,7 +85,7 @@ class OffPolicyVectorizedSampler(BatchSampler):
             self.algo.es.reset()
 
         while n_samples < batch_size:
-            policy.reset(dones)
+            policy.reset(completes)
             if self.algo.input_include_goal:
                 obs = [obs['observation'] for obs in obses]
                 d_g = [obs['desired_goal'] for obs in obses]
@@ -102,7 +102,9 @@ class OffPolicyVectorizedSampler(BatchSampler):
                 actions, agent_infos = self.algo.policy.get_actions(
                     obs_normalized)
 
-            next_obses, rewards, dones, env_infos = self.vec_env.step(actions)
+            next_obses, rewards, dones, env_infos = \
+                self.vec_env.step(actions)
+            completes = env_infos['vec_env_executor.complete']
             self._last_obses = next_obses
             agent_infos = tensor_utils.split_tensor_dict_list(agent_infos)
             env_infos = tensor_utils.split_tensor_dict_list(env_infos)
