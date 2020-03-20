@@ -69,7 +69,7 @@ class TestRL2TRPO(TfGraphTestCase):
                          n_workers=self.meta_batch_size,
                          worker_class=RL2Worker)
 
-            last_avg_ret = runner.train(n_epochs=10,
+            last_avg_ret = runner.train(n_epochs=1,
                                         batch_size=self.episode_per_task *
                                         self.max_path_length *
                                         self.meta_batch_size)

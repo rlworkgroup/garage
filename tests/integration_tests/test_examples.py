@@ -22,9 +22,8 @@ LONG_RUNNING_EXAMPLES = [
     EXAMPLES_ROOT_DIR / 'torch/maml_ppo_half_cheetah_dir.py',
     EXAMPLES_ROOT_DIR / 'torch/maml_trpo_half_cheetah_dir.py',
     EXAMPLES_ROOT_DIR / 'torch/maml_vpg_half_cheetah_dir.py',
-    EXAMPLES_ROOT_DIR / 'torch/maml_trpo_ml10.py',
-    EXAMPLES_ROOT_DIR / 'torch/pearl_ml1_push.py'
-    EXAMPLES_ROOT_DIR / 'tf/rl2_ppo_halfcheetah.py',
+    EXAMPLES_ROOT_DIR / 'torch/maml_trpo_ml10.py', EXAMPLES_ROOT_DIR /
+    'torch/pearl_ml1_push.py', EXAMPLES_ROOT_DIR / 'tf/rl2_ppo_halfcheetah.py',
     EXAMPLES_ROOT_DIR / 'tf/rl2_trpo_halfcheetah.py',
     EXAMPLES_ROOT_DIR / 'tf/rl2_ppo_halfcheetah_meta_test.py'
 ]
@@ -203,31 +202,33 @@ def test_maml_vpg():
 
 
 @pytest.mark.no_cover
-@pytest.mark.timeout(20)
+@pytest.mark.timeout(40)
 def test_rl2_ppo_halfcheetah():
     """Test rl2_ppo_halfcheetah.py."""
     assert subprocess.run([
         EXAMPLES_ROOT_DIR / 'tf/rl2_ppo_halfcheetah.py', '--n_epochs', '1',
-        '--episode_per_task', '1', '--meta_batch_size', '1'
+        '--episode_per_task', '4', '--meta_batch_size', '10'
     ],
                           check=False).returncode == 0
 
 
-@pytest.mark.timeout(20)
+@pytest.mark.no_cover
+@pytest.mark.timeout(40)
 def test_rl2_trpo_halfcheetah():
     """Test rl2_trpo_halfcheetah.py."""
     assert subprocess.run([
         EXAMPLES_ROOT_DIR / 'tf/rl2_trpo_halfcheetah.py', '--n_epochs', '1',
-        '--episode_per_task', '1', '--meta_batch_size', '1'
+        '--episode_per_task', '4', '--meta_batch_size', '10'
     ],
                           check=False).returncode == 0
 
-    
-@pytest.mark.timeout(20)
+
+@pytest.mark.no_cover
+@pytest.mark.timeout(40)
 def test_rl2_ppo_halfcheetah_meta_test():
     """Test rl2_ppo_halfcheetah_meta_test.py."""
     assert subprocess.run([
         EXAMPLES_ROOT_DIR / 'tf/rl2_ppo_halfcheetah_meta_test.py',
-        '--n_epochs', '1', '--episode_per_task', '1', '--meta_batch_size', '1'
+        '--n_epochs', '1', '--episode_per_task', '4', '--meta_batch_size', '10'
     ],
                           check=False).returncode == 0

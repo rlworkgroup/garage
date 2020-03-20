@@ -32,24 +32,25 @@ from tests.fixtures import snapshot_config
 class TestPEARL:
     """Test class for PEARL."""
 
+    @pytest.mark.large
     def test_pearl_ml1_push(self):
         """Test PEARL with ML1 Push environment."""
         params = dict(seed=1,
                       num_epochs=1,
-                      num_train_tasks=50,
-                      num_test_tasks=10,
+                      num_train_tasks=5,
+                      num_test_tasks=1,
                       latent_size=7,
-                      encoder_hidden_sizes=[200, 200, 200],
-                      net_size=300,
+                      encoder_hidden_sizes=[10, 10, 10],
+                      net_size=30,
                       meta_batch_size=16,
-                      num_steps_per_epoch=400,
-                      num_initial_steps=400,
+                      num_steps_per_epoch=40,
+                      num_initial_steps=40,
                       num_tasks_sample=15,
-                      num_steps_prior=150,
-                      num_extra_rl_steps_posterior=150,
+                      num_steps_prior=15,
+                      num_extra_rl_steps_posterior=15,
                       batch_size=256,
-                      embedding_batch_size=64,
-                      embedding_mini_batch_size=64,
+                      embedding_batch_size=8,
+                      embedding_mini_batch_size=8,
                       max_path_length=50,
                       reward_scale=10.,
                       use_information_bottleneck=True,
