@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """PEARL ML1 example."""
-
+import click
 from metaworld.benchmarks import ML1
 
 from garage.envs import GarageEnv, normalize
@@ -18,6 +18,14 @@ from garage.torch.q_functions import ContinuousMLPQFunction
 import garage.torch.utils as tu
 
 
+@click.command()
+@click.option('--num_epochs', default=1000)
+@click.option('--net_size', default=300)
+@click.option('--num_steps_per_epoch', default=4000)
+@click.option('--num_initial_steps', default=4000)
+@click.option('--num_steps_prior', default=750)
+@click.option('--num_extra_rl_steps_posterior', default=750)
+@click.option('--max_path_length', default=150)
 @wrap_experiment
 def torch_pearl_ml1_push(ctxt=None,
                          seed=1,
