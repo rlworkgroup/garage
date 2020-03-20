@@ -114,6 +114,7 @@ def test_step_env():
         check=False).returncode == 0
 
 
+@pytest.mark.flaky
 @pytest.mark.no_cover
 @pytest.mark.timeout(20)
 def test_step_dm_control_env():
@@ -123,6 +124,7 @@ def test_step_dm_control_env():
         check=False).returncode == 0
 
 
+@pytest.mark.flaky
 @pytest.mark.no_cover
 @pytest.mark.timeout(20)
 def test_maml_halfcheetah():
