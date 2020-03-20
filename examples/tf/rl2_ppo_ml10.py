@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
-"""Example script to run RL2 in HalfCheetah."""
+"""Example script to run RL2 in ML10."""
+from metaworld.benchmarks import ML10
+
 from garage import wrap_experiment
-from garage.envs.mujoco.half_cheetah_vel_env import HalfCheetahVelEnv
 from garage.experiment import task_sampler
 from garage.experiment.deterministic import set_seed
 from garage.np.baselines import LinearFeatureBaseline
@@ -14,13 +15,13 @@ from garage.tf.policies import GaussianGRUPolicy
 
 
 @wrap_experiment
-def rl2_ppo_halfcheetah(ctxt=None,
-                        seed=1,
-                        max_path_length=100,
-                        meta_batch_size=10,
-                        n_epochs=10,
-                        episode_per_task=4):
-    """Train PPO with HalfCheetah environment.
+def rl2_ppo_ml10(ctxt=None,
+                 seed=1,
+                 max_path_length=150,
+                 meta_batch_size=40,
+                 n_epochs=10,
+                 episode_per_task=10):
+    """Train PPO with ML10 environment.
 
     Args:
         ctxt (garage.experiment.ExperimentContext): The experiment
@@ -35,10 +36,14 @@ def rl2_ppo_halfcheetah(ctxt=None,
     """
     set_seed(seed)
     with LocalTFRunner(snapshot_config=ctxt) as runner:
-        tasks = task_sampler.SetTaskSampler(lambda: RL2Env(
-            env=HalfCheetahVelEnv()))
+        ML_train_envs = [
+            RL2Env(ML10.from_task(task_name))
+            for task_name in ML10.get_train_tasks().all_task_names
+        ]
+        tasks = task_sampler.EnvPoolSampler(ML_train_envs)
+        tasks.grow_pool(meta_batch_size)
 
-        env_spec = RL2Env(env=HalfCheetahVelEnv()).spec
+        env_spec = ML_train_envs[0].spec
         policy = GaussianGRUPolicy(name='policy',
                                    hidden_dim=64,
                                    env_spec=env_spec,
@@ -77,4 +82,4 @@ def rl2_ppo_halfcheetah(ctxt=None,
                      meta_batch_size)
 
 
-rl2_ppo_halfcheetah(seed=1)
+rl2_ppo_ml10(seed=1)

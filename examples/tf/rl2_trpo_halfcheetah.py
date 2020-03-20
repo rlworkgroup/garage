@@ -16,7 +16,12 @@ from garage.tf.policies import GaussianGRUPolicy
 
 
 @wrap_experiment
-def rl2_trpo_halfcheetah(ctxt=None, seed=1):
+def rl2_trpo_halfcheetah(ctxt=None,
+                         seed=1,
+                         max_path_length=100,
+                         meta_batch_size=10,
+                         n_epochs=10,
+                         episode_per_task=4):
     """Train TRPO with HalfCheetah environment.
 
     Args:
@@ -24,15 +29,14 @@ def rl2_trpo_halfcheetah(ctxt=None, seed=1):
             configuration used by LocalRunner to create the snapshotter.
         seed (int): Used to seed the random number generator to produce
             determinism.
+        max_path_length (int): Maximum length of a single rollout.
+        meta_batch_size (int): Meta batch size.
+        n_epochs (int): Total number of epochs for training.
+        episode_per_task (int): Number of training episode per task.
 
     """
     set_seed(seed)
     with LocalTFRunner(snapshot_config=ctxt) as runner:
-        max_path_length = 100
-        meta_batch_size = 10
-        n_epochs = 50
-        episode_per_task = 4
-
         tasks = task_sampler.SetTaskSampler(lambda: RL2Env(
             env=HalfCheetahVelEnv()))
 
