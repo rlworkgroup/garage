@@ -49,14 +49,17 @@ class RL2Env(gym.Wrapper):
                         high=np.inf,
                         shape=(obs_flat_dim + action_flat_dim + 1 + 1, ))
 
-    # pylint: disable=arguments-differ
-    def reset(self):
+    def reset(self, **kwargs):
         """gym.Env reset function.
+
+        Args:
+            kwargs: Keyword arguments.
 
         Returns:
             np.ndarray: augmented observation.
 
         """
+        del kwargs
         obs = self.env.reset()
         return np.concatenate(
             [obs, np.zeros(self.env.action_space.shape), [0], [0]])
