@@ -39,6 +39,8 @@ class MAMLPPO(MAML):
             https://arxiv.org/abs/1805.00909 for more details.
         meta_batch_size (int): Number of tasks sampled per batch.
         num_grad_updates (int): Number of adaptation gradient steps.
+        meta_evaluator (garage.experiment.MetaEvaluator): A meta evaluator for
+            meta-testing. If None, don't do meta-testing.
 
     """
 
@@ -59,7 +61,8 @@ class MAMLPPO(MAML):
                  stop_entropy_gradient=False,
                  entropy_method='no_entropy',
                  meta_batch_size=20,
-                 num_grad_updates=1):
+                 num_grad_updates=1,
+                 meta_evaluator=None):
         inner_algo = PPO(env.spec,
                          policy,
                          baseline,
@@ -85,4 +88,5 @@ class MAMLPPO(MAML):
                          meta_batch_size=meta_batch_size,
                          inner_lr=inner_lr,
                          outer_lr=outer_lr,
-                         num_grad_updates=num_grad_updates)
+                         num_grad_updates=num_grad_updates,
+                         meta_evaluator=meta_evaluator)

@@ -154,3 +154,14 @@ def test_pearl_ml1_push():
         '--embedding_mini_batch_size', '2', '--max_path_length', '1'
     ],
                           check=False).returncode == 0
+
+@pytest.mark.nightly
+@pytest.mark.no_cover
+@pytest.mark.timeout(120)
+def test_maml_ml10():
+    """Test maml_trpo_ml10.py"""
+    assert subprocess.run([
+        EXAMPLES_ROOT_DIR / 'torch/maml_trpo_ml10.py', '--epochs', '1',
+        '--rollouts_per_task', '1', '--meta_batch_size', '1'
+    ],
+                          check=False).returncode == 0
