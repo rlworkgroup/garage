@@ -67,7 +67,7 @@ def torch_sac_half_cheetah(ctxt=None, seed=1):
               discount=0.99,
               buffer_batch_size=256,
               reward_scale=1.,
-              steps_per_epoch=2)
+              steps_per_epoch=1)
 
     if torch.cuda.is_available():
         tu.set_gpu_mode(True)
@@ -75,7 +75,7 @@ def torch_sac_half_cheetah(ctxt=None, seed=1):
         tu.set_gpu_mode(False)
     sac.to()
     runner.setup(algo=sac, env=env, sampler_cls=LocalSampler)
-    runner.train(n_epochs=500, batch_size=1000)
+    runner.train(n_epochs=1000, batch_size=1000)
 
 
 s = np.random.randint(0, 1000)
