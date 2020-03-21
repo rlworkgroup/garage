@@ -1,6 +1,17 @@
 """This script is a test that fails when PEARL performance is too low."""
-
-from metaworld.benchmarks import ML1
+import pytest
+try:
+    # pylint: disable=unused-import
+    import mujoco_py  # noqa: F401
+except ImportError:
+    pytest.skip('To use mujoco-based features, please install garage[mujoco].',
+                allow_module_level=True)
+except Exception:  # pylint: disable=broad-except
+    pytest.skip(
+        'Skipping tests, failed to import mujoco. Do you have a '
+        'valid mujoco key installed?',
+        allow_module_level=True)
+from metaworld.benchmarks import ML1  # noqa: I100
 
 from garage.envs import GarageEnv, normalize
 from garage.experiment import LocalRunner
