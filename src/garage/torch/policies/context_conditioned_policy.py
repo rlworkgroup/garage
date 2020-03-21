@@ -187,9 +187,8 @@ class ContextConditionedPolicy(nn.Module):
         # run policy, get log probs and new actions
         obs_z = torch.cat([obs, task_z.detach()], dim=1)
         dist = self._policy(obs_z)
-        pre_tanh, actions = dist.base_dist.rsample_with_pre_tanh_value()
-        log_pi = dist.base_dist.log_prob(value=actions,
-                                         pre_tanh_value=pre_tanh)
+        pre_tanh, actions = dist.rsample_with_pre_tanh_value()
+        log_pi = dist.log_prob(value=actions, pre_tanh_value=pre_tanh)
         log_pi = log_pi.unsqueeze(1)
         mean = dist.mean.to('cpu').detach().numpy()
         log_std = (dist.variance**.5).log().to('cpu').detach().numpy()

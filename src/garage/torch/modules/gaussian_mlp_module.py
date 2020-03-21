@@ -6,6 +6,7 @@ from torch import nn
 from torch.distributions import Normal
 from torch.distributions.independent import Independent
 
+from garage.torch.distributions import TanhNormal
 from garage.torch.modules.mlp_module import MLPModule
 from garage.torch.modules.multi_headed_mlp_module import MultiHeadedMLPModule
 
@@ -176,9 +177,14 @@ class GaussianMLPBaseModule(nn.Module):
         else:
             std = log_std_uncentered.exp().exp().add(1.).log()
         dist = self._norm_dist_class(mean, std)
-        # Makes it so that a sample from the distribution is treated as a
-        # single sample and not dist.batch_shape samples.
-        dist = Independent(dist, len(dist.batch_shape))
+        # This control flow is needed because if a TanhNormal distribution is
+        # wrapped by torch.distributions.Independent, then custom functions
+        # such as rsample_with_pretanh_value of the TanhNormal distribution
+        # are not accessable.
+        if not isinstance(dist, TanhNormal):
+            # Makes it so that a sample from the distribution is treated as a
+            # single sample and not dist.batch_shape samples.
+            dist = Independent(dist, 1)
 
         return dist
 

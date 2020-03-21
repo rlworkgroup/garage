@@ -13,7 +13,9 @@ from garage.torch.algos.maml_ppo import MAMLPPO  # noqa: I100
 from garage.torch.algos.maml_trpo import MAMLTRPO
 from garage.torch.algos.maml_vpg import MAMLVPG
 from garage.torch.algos.pearl import PEARL
+from garage.torch.algos.sac import SAC
 
 __all__ = [
-    'DDPG', 'VPG', 'PPO', 'TRPO', 'MAMLPPO', 'MAMLTRPO', 'MAMLVPG', 'PEARL'
+    'DDPG', 'VPG', 'PPO', 'TRPO', 'MAMLPPO', 'MAMLTRPO', 'MAMLVPG', 'PEARL',
+    'SAC'
 ]
