@@ -55,6 +55,11 @@ class DiscreteQfDerivedPolicy(Policy):
                 dict since there is no parameterization.
 
         """
+        if isinstance(self.env_spec.observation_space, akro.Image) and \
+                len(observation.shape) < \
+                len(self.env_spec.observation_space.shape):
+            observation = self.env_spec.observation_space.unflatten(
+                observation)
         q_vals = self._f_qval([observation])
         opt_action = np.argmax(q_vals)
 
@@ -72,6 +77,11 @@ class DiscreteQfDerivedPolicy(Policy):
                 dict since there is no parameterization.
 
         """
+        if isinstance(self.env_spec.observation_space, akro.Image) and \
+                len(observations[0].shape) < \
+                len(self.env_spec.observation_space.shape):
+            observations = self.env_spec.observation_space.unflatten_n(
+                observations)
         q_vals = self._f_qval(observations)
         opt_actions = np.argmax(q_vals, axis=1)
 

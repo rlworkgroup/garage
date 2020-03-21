@@ -55,7 +55,6 @@ class CategoricalCNNPolicy(StochasticPolicy):
             of output dense layer(s). The function should return a
             tf.Tensor.
         layer_normalization (bool): Bool for using layer normalization or not.
-
     """
 
     def __init__(self,
@@ -73,9 +72,21 @@ class CategoricalCNNPolicy(StochasticPolicy):
                  output_w_init=tf.initializers.glorot_uniform(),
                  output_b_init=tf.zeros_initializer(),
                  layer_normalization=False):
-        assert isinstance(env_spec.action_space, akro.Discrete), (
-            'CategoricalCNNPolicy only works with akro.Discrete action '
-            'space.')
+        if not isinstance(env_spec.action_space, akro.Discrete):
+            raise ValueError(
+                'CategoricalCNNPolicy only works with akro.Discrete action '
+                'space.')
+
+        if not isinstance(env_spec.observation_space, akro.Box) or \
+                not len(env_spec.observation_space.shape) in (2, 3):
+            raise ValueError(
+                '{} can only process 2D, 3D akro.Image or'
+                ' akro.Box observations, but received an env_spec with '
+                'observation_space of type {} and shape {}'.format(
+                    type(self).__name__,
+                    type(env_spec.observation_space).__name__,
+                    env_spec.observation_space.shape))
+
         super().__init__(name, env_spec)
         self.obs_dim = env_spec.observation_space.shape
         self.action_dim = env_spec.action_space.n
@@ -101,9 +112,16 @@ class CategoricalCNNPolicy(StochasticPolicy):
         self._initialize()
 
     def _initialize(self):
-        """Initialize model."""
-        state_input = tf.compat.v1.placeholder(tf.float32,
-                                               shape=(None, ) + self.obs_dim)
+        if isinstance(self.env_spec.observation_space, akro.Image):
+            state_input = tf.compat.v1.placeholder(tf.uint8,
+                                                   shape=(None, ) +
+                                                   self.obs_dim)
+            state_input = tf.cast(state_input, tf.float32)
+            state_input /= 255.0
+        else:
+            state_input = tf.compat.v1.placeholder(tf.float32,
+                                                   shape=(None, ) +
+                                                   self.obs_dim)
 
         with tf.compat.v1.variable_scope(self.name) as vs:
             self._variable_scope = vs
@@ -118,7 +136,6 @@ class CategoricalCNNPolicy(StochasticPolicy):
 
         Returns:
             bool: True if primitive supports vectorized operations.
-
         """
         return True
 
@@ -137,6 +154,9 @@ class CategoricalCNNPolicy(StochasticPolicy):
 
         """
         with tf.compat.v1.variable_scope(self._variable_scope):
+            if isinstance(self.env_spec.observation_space, akro.Image):
+                obs_var = tf.cast(obs_var, tf.float32) / 255.0
+
             prob = self.model.build(obs_var, name=name)
         return dict(prob=prob)
 
@@ -166,6 +186,9 @@ class CategoricalCNNPolicy(StochasticPolicy):
             dict[str: np.ndarray]: Action distribution.
 
         """
+        if len(observation.shape) < len(self.obs_dim):
+            observation = self.env_spec.observation_space.unflatten(
+                observation)
         prob = self._f_prob([observation])[0]
         action = self.action_space.weighted_sample(prob)
         return action, dict(prob=prob)
@@ -181,6 +204,9 @@ class CategoricalCNNPolicy(StochasticPolicy):
             dict[str: np.ndarray]: Action distributions.
 
         """
+        if len(observations[0].shape) < len(self.obs_dim):
+            observations = self.env_spec.observation_space.unflatten_n(
+                observations)
         probs = self._f_prob(observations)
         actions = list(map(self.action_space.weighted_sample, probs))
         return actions, dict(prob=probs)

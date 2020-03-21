@@ -1,5 +1,4 @@
 """Utiliy functions for tensors."""
-import gym.spaces
 import numpy as np
 import scipy.signal
 
@@ -275,27 +274,21 @@ def truncate_tensor_dict(tensor_dict, truncated_len):
     return ret
 
 
-def normalize_pixel_batch(env_spec, observations):
+def normalize_pixel_batch(observations):
     """Normalize the observations (images).
 
-    If the observations appear to be flattened, attempts to unflatten them.
-
-    If the input are images, it normalized into range [0, 1].
+    Normalize pixel values to be between [0, 1].
 
     Args:
-        env_spec (garage.envs.EnvSpec): Environment specification.
         observations (numpy.ndarray): Observations from environment.
+            obses should be unflattened and should contain pixel
+            values.
 
     Returns:
         numpy.ndarray: Normalized observations.
 
     """
-    if isinstance(env_spec.observation_space, gym.spaces.Box):
-        if len(observations.shape) == 2:
-            observations = env_spec.observation_space.unflatten_n(observations)
-        if len(env_spec.observation_space.shape) == 3:
-            return [obs.astype(np.float32) / 255.0 for obs in observations]
-    return observations
+    return [obs.astype(np.float32) / 255.0 for obs in observations]
 
 
 def slice_nested_dict(dict_or_array, start, stop):

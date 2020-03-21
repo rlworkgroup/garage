@@ -1,4 +1,5 @@
 """Discrete CNN QFunction with CNN-MLP structure."""
+import akro
 import tensorflow as tf
 
 from garage.tf.models import CNNModel
@@ -87,6 +88,16 @@ class DiscreteCNNQFunction(QFunction):
                  output_b_init=tf.zeros_initializer(),
                  dueling=False,
                  layer_normalization=False):
+        if not isinstance(env_spec.observation_space, akro.Box) or \
+                not len(env_spec.observation_space.shape) in (2, 3):
+            raise ValueError(
+                '{} can only process 2D, 3D akro.Image or'
+                ' akro.Box observations, but received an env_spec with '
+                'observation_space of type {} and shape {}'.format(
+                    type(self).__name__,
+                    type(env_spec.observation_space).__name__,
+                    env_spec.observation_space.shape))
+
         super().__init__(name)
         self._env_spec = env_spec
         self._action_dim = env_spec.action_space.n
@@ -156,6 +167,8 @@ class DiscreteCNNQFunction(QFunction):
         """Initialize QFunction."""
         obs_ph = tf.compat.v1.placeholder(tf.float32, (None, ) + self.obs_dim,
                                           name='obs')
+        if isinstance(self._env_spec.observation_space, akro.Image):
+            obs_ph = tf.cast(obs_ph, tf.float32) / 255.0
         with tf.compat.v1.variable_scope(self.name) as vs:
             self._variable_scope = vs
             self.model.build(obs_ph)
@@ -193,6 +206,8 @@ class DiscreteCNNQFunction(QFunction):
 
         """
         with tf.compat.v1.variable_scope(self._variable_scope):
+            if isinstance(self._env_spec.observation_space, akro.Image):
+                state_input = tf.cast(state_input, tf.float32) / 255.0
             return self.model.build(state_input, name=name)
 
     def clone(self, name):

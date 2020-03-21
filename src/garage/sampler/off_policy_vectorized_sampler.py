@@ -7,6 +7,7 @@ It diffs from OnPolicyVectorizedSampler in two parts:
  from replay buffer, which only has buffer_batch_size.
  - It needs to add transitions to replay buffer throughout the rollout.
 """
+
 import itertools
 import pickle
 
@@ -93,15 +94,15 @@ class OffPolicyVectorizedSampler(BatchSampler):
 
         while n_samples < batch_size:
             policy.reset(completes)
-            input_obses = self.algo.env_spec.observation_space.flatten_n(obses)
-            obs_normalized = tensor_utils.normalize_pixel_batch(
-                self._env_spec, input_obses)
+            obs_space = self.algo.env_spec.observation_space
+            input_obses = obs_space.flatten_n(obses)
+
             if self.algo.es:
                 actions, agent_infos = self.algo.es.get_actions(
-                    itr, obs_normalized, self.algo.policy)
+                    itr, input_obses, self.algo.policy)
             else:
                 actions, agent_infos = self.algo.policy.get_actions(
-                    obs_normalized)
+                    input_obses)
 
             next_obses, rewards, dones, env_infos = \
                 self._vec_env.step(actions)
