@@ -2,9 +2,16 @@
 
 import pytest
 try:
+    # pylint: disable=unused-import
     import mujoco_py  # noqa: F401
-except Exception:
-    pytest.skip(allow_module_level=True)
+except ImportError:
+    pytest.skip('To use mujoco-based features, please install garage[mujoco].',
+                allow_module_level=True)
+except Exception:  # pylint: disable=broad-except
+    pytest.skip(
+        'Skipping tests, failed to import mujoco. Do you have a '
+        'valid mujoco key installed?',
+        allow_module_level=True)
 
 import datetime  # noqa: I100
 import os
