@@ -4,9 +4,12 @@
 Uses Ray sampler instead of OnPolicyVectorizedSampler.
 Here it runs InvertedDoublePendulum-v2 environment with 100 iterations.
 """
+import numpy as np
+import ray
 import torch
 
-from garage.experiment import LocalRunner, run_experiment
+from garage import wrap_experiment
+from garage.experiment import deterministic, LocalRunner
 from garage.np.baselines import LinearFeatureBaseline
 from garage.sampler import RaySampler
 from garage.tf.envs import TfEnv
@@ -14,19 +17,28 @@ from garage.torch.algos import TRPO
 from garage.torch.policies import GaussianMLPPolicy
 
 
-def run_task(snapshot_config, *_):
+@wrap_experiment(snapshot_mode='none')
+def trpo_ray_pendulum(ctxt=None, seed=1):
     """Set up environment and algorithm and run the task.
 
     Args:
-        snapshot_config (garage.experiment.SnapshotConfig): The snapshot
+        ctxt (garage.experiment.ExperimentContext): The experiment
             configuration used by LocalRunner to create the snapshotter.
-            If None, it will create one with default settings.
-        _ : Unused parameters
+        seed (int): Used to seed the random number generator to produce
+            determinism.
 
     """
+    # Since this is an example, we are running ray in a reduced state.
+    # One can comment this line out in order to run ray at full capacity
+    ray.init(memory=52428800,
+             object_store_memory=78643200,
+             ignore_reinit_error=True,
+             log_to_driver=False,
+             include_webui=False)
+    deterministic.set_seed(seed)
     env = TfEnv(env_name='InvertedDoublePendulum-v2')
 
-    runner = LocalRunner(snapshot_config)
+    runner = LocalRunner(ctxt)
 
     policy = GaussianMLPPolicy(env.spec,
                                hidden_sizes=[32, 32],
@@ -46,8 +58,5 @@ def run_task(snapshot_config, *_):
     runner.train(n_epochs=100, batch_size=1024)
 
 
-run_experiment(
-    run_task,
-    snapshot_mode='last',
-    seed=1,
-)
+s = np.random.randint(0, 1000)
+trpo_ray_pendulum(seed=s)

@@ -109,7 +109,7 @@ class TanhGaussianMLPPolicy(Policy, GaussianMLPTwoHeadedModule):
         """
         with torch.no_grad():
             if not isinstance(observation, torch.Tensor):
-                observation = torch.from_numpy(observation).to(
+                observation = torch.from_numpy(observation).float().to(
                     tu.global_device())
             observation = observation.unsqueeze(0)
             dist = self.forward(observation)
@@ -137,7 +137,7 @@ class TanhGaussianMLPPolicy(Policy, GaussianMLPTwoHeadedModule):
         """
         with torch.no_grad():
             if not isinstance(observations, torch.Tensor):
-                observations = torch.from_numpy(observations).to(
+                observations = torch.from_numpy(observations).float().to(
                     tu.global_device())
             dist = self.forward(observations)
             ret_mean = dist.mean.cpu().numpy()
