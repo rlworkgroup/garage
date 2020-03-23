@@ -37,6 +37,7 @@ class MAML:
         num_grad_updates (int): Number of adaptation gradient steps.
         meta_evaluator (garage.experiment.MetaEvaluator): A meta evaluator for
             meta-testing. If None, don't do meta-testing.
+        evaluate_every_n_epochs (int): Do meta-testing every this epochs.
 
     """
 
@@ -50,7 +51,8 @@ class MAML:
                  inner_lr=0.1,
                  outer_lr=1e-3,
                  num_grad_updates=1,
-                 meta_evaluator=None):
+                 meta_evaluator=None,
+                 evaluate_every_n_epochs=1):
         if policy.vectorized:
             self.sampler_cls = OnPolicyVectorizedSampler
         else:
@@ -70,6 +72,7 @@ class MAML:
                                               policy,
                                               lr=_Default(outer_lr),
                                               eps=_Default(1e-5))
+        self._evaluate_every_n_epochs = evaluate_every_n_epochs
 
     def train(self, runner):
         """Obtain samples and start training for each epoch.
@@ -140,7 +143,7 @@ class MAML:
                                                   kl_after.item(),
                                                   policy_entropy.mean().item())
 
-        if self._meta_evaluator:
+        if self._meta_evaluator and itr % self._evaluate_every_n_epochs == 0:
             self._meta_evaluator.evaluate(self)
 
         tu.update_module_params(self._old_policy, old_theta)

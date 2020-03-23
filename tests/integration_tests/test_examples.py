@@ -75,7 +75,6 @@ def test_dqn_pong():
         env=env).returncode == 0
 
 
-@pytest.mark.flaky
 @pytest.mark.no_cover
 @pytest.mark.timeout(30)
 def test_ppo_memorize_digits():
@@ -91,7 +90,6 @@ def test_ppo_memorize_digits():
     assert subprocess.run(command, check=False, env=env).returncode == 0
 
 
-@pytest.mark.flaky
 @pytest.mark.no_cover
 @pytest.mark.timeout(40)
 def test_trpo_cubecrash():
@@ -115,7 +113,6 @@ def test_step_env():
         check=False).returncode == 0
 
 
-@pytest.mark.flaky
 @pytest.mark.mujoco
 @pytest.mark.no_cover
 @pytest.mark.timeout(20)
@@ -126,7 +123,6 @@ def test_step_dm_control_env():
         check=False).returncode == 0
 
 
-@pytest.mark.flaky
 @pytest.mark.mujoco
 @pytest.mark.no_cover
 @pytest.mark.timeout(20)
@@ -139,7 +135,7 @@ def test_maml_halfcheetah():
                           check=False).returncode == 0
 
 
-@pytest.mark.flaky
+@pytest.mark.large
 @pytest.mark.no_cover
 @pytest.mark.timeout(120)
 def test_pearl_ml1_push():

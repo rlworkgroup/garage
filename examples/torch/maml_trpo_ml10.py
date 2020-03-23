@@ -8,9 +8,8 @@ import torch
 from garage import wrap_experiment
 from garage.envs import normalize
 from garage.envs.base import GarageEnv
-from garage.experiment import LocalRunner
+from garage.experiment import LocalRunner, MetaEvaluator
 from garage.experiment.deterministic import set_seed
-from garage.experiment.meta_evaluator import MetaEvaluator
 from garage.experiment.task_sampler import EnvPoolSampler
 from garage.np.baselines import LinearFeatureBaseline
 from garage.torch.algos import MAMLTRPO

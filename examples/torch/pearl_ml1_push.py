@@ -4,9 +4,8 @@ import click
 from metaworld.benchmarks import ML1
 
 from garage.envs import GarageEnv, normalize
-from garage.experiment import LocalRunner, wrap_experiment
+from garage.experiment import LocalRunner, MetaEvaluator, wrap_experiment
 from garage.experiment.deterministic import set_seed
-from garage.experiment.meta_evaluator import MetaEvaluator
 from garage.experiment.task_sampler import SetTaskSampler
 from garage.sampler import LocalSampler
 from garage.torch.algos import PEARL

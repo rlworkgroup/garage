@@ -42,6 +42,7 @@ class MAMLTRPO(MAML):
         num_grad_updates (int): Number of adaptation gradient steps.
         meta_evaluator (garage.experiment.MetaEvaluator): A meta evaluator for
             meta-testing. If None, don't do meta-testing.
+        evaluate_every_n_epochs (int): Do meta-testing every this epochs.
 
     """
 
@@ -63,7 +64,8 @@ class MAMLTRPO(MAML):
                  entropy_method='no_entropy',
                  meta_batch_size=40,
                  num_grad_updates=1,
-                 meta_evaluator=None):
+                 meta_evaluator=None,
+                 evaluate_every_n_epochs=1):
         inner_algo = VPG(env.spec,
                          policy,
                          baseline,
@@ -92,4 +94,5 @@ class MAMLTRPO(MAML):
                          inner_lr=inner_lr,
                          outer_lr=outer_lr,
                          num_grad_updates=num_grad_updates,
-                         meta_evaluator=meta_evaluator)
+                         meta_evaluator=meta_evaluator,
+                         evaluate_every_n_epochs=evaluate_every_n_epochs)
