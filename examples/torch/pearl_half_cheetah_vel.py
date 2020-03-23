@@ -1,9 +1,15 @@
 #!/usr/bin/env python3
 """PEARL HalfCheetahVel example."""
+<<<<<<< HEAD
 import click
 
 from garage.envs import GarageEnv, normalize
 from garage.envs.mujoco import HalfCheetahVelEnv
+=======
+
+from garage.envs import GarageEnv, normalize
+from garage.envs.half_cheetah_vel_env import HalfCheetahVelEnv
+>>>>>>> Add more PEARL examples
 from garage.experiment import LocalRunner, wrap_experiment
 from garage.experiment.deterministic import set_seed
 from garage.experiment.meta_evaluator import MetaEvaluator
@@ -18,6 +24,7 @@ from garage.torch.q_functions import ContinuousMLPQFunction
 import garage.torch.utils as tu
 
 
+<<<<<<< HEAD
 @click.command()
 @click.option('--num_epochs', default=500)
 @click.option('--num_train_tasks', default=100)
@@ -32,6 +39,8 @@ import garage.torch.utils as tu
 @click.option('--embedding_batch_size', default=100)
 @click.option('--embedding_mini_batch_size', default=100)
 @click.option('--max_path_length', default=200)
+=======
+>>>>>>> Add more PEARL examples
 @wrap_experiment
 def torch_pearl_half_cheetah_vel(ctxt=None,
                                  seed=1,
