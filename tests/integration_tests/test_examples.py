@@ -40,6 +40,7 @@ def enumerate_algo_examples():
     return [str(e) for e in all_examples if e not in exclude]
 
 
+@pytest.mark.mujoco
 @pytest.mark.no_cover
 @pytest.mark.timeout(70)
 @pytest.mark.parametrize('filepath', enumerate_algo_examples())
@@ -115,6 +116,7 @@ def test_step_env():
 
 
 @pytest.mark.flaky
+@pytest.mark.mujoco
 @pytest.mark.no_cover
 @pytest.mark.timeout(20)
 def test_step_dm_control_env():
@@ -125,6 +127,7 @@ def test_step_dm_control_env():
 
 
 @pytest.mark.flaky
+@pytest.mark.mujoco
 @pytest.mark.no_cover
 @pytest.mark.timeout(20)
 def test_maml_halfcheetah():

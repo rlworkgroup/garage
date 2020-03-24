@@ -13,6 +13,7 @@ from tests.fixtures import snapshot_config, TfGraphTestCase
 class TestTNPG(TfGraphTestCase):
 
     @pytest.mark.large
+    @pytest.mark.mujoco
     def test_tnpg_inverted_pendulum(self):
         """Test TNPG with InvertedPendulum-v2 environment."""
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:

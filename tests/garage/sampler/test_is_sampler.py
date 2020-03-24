@@ -1,6 +1,7 @@
 import unittest.mock
 
 import gym
+import pytest
 
 from garage.envs import normalize
 from garage.np.baselines import LinearFeatureBaseline
@@ -14,6 +15,7 @@ from tests.fixtures import snapshot_config, TfGraphTestCase
 
 class TestISSampler(TfGraphTestCase):
 
+    @pytest.mark.mujoco
     def test_is_sampler(self):
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
             env = TfEnv(normalize(gym.make('InvertedPendulum-v2')))

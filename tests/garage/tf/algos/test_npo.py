@@ -32,6 +32,7 @@ class TestNPO(TfGraphTestCase):
         )
 
     @pytest.mark.large
+    @pytest.mark.mujoco
     def test_npo_pendulum(self):
         """Test NPO with Pendulum environment."""
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
@@ -46,6 +47,7 @@ class TestNPO(TfGraphTestCase):
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 20
 
+    @pytest.mark.mujoco
     def test_npo_with_unknown_pg_loss(self):
         """Test NPO with unkown pg loss."""
         with pytest.raises(ValueError, match='Invalid pg_loss'):
@@ -56,6 +58,7 @@ class TestNPO(TfGraphTestCase):
                 pg_loss='random pg_loss',
             )
 
+    @pytest.mark.mujoco
     def test_npo_with_invalid_entropy_method(self):
         """Test NPO with invalid entropy method."""
         with pytest.raises(ValueError, match='Invalid entropy_method'):
@@ -66,6 +69,7 @@ class TestNPO(TfGraphTestCase):
                 entropy_method=None,
             )
 
+    @pytest.mark.mujoco
     def test_npo_with_max_entropy_and_center_adv(self):
         """Test NPO with max entropy and center_adv."""
         with pytest.raises(ValueError):
@@ -77,6 +81,7 @@ class TestNPO(TfGraphTestCase):
                 center_adv=True,
             )
 
+    @pytest.mark.mujoco
     def test_npo_with_max_entropy_and_no_stop_entropy_gradient(self):
         """Test NPO with max entropy and false stop_entropy_gradient."""
         with pytest.raises(ValueError):
@@ -88,6 +93,7 @@ class TestNPO(TfGraphTestCase):
                 stop_entropy_gradient=False,
             )
 
+    @pytest.mark.mujoco
     def test_npo_with_invalid_no_entropy_configuration(self):
         """Test NPO with invalid no entropy configuration."""
         with pytest.raises(ValueError):

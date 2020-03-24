@@ -3,8 +3,19 @@ import unittest.mock
 
 import numpy as np
 import pytest
+try:
+    # pylint: disable=unused-import
+    import mujoco_py  # noqa: F401
+except ImportError:
+    pytest.skip('To use mujoco-based features, please install garage[mujoco].',
+                allow_module_level=True)
+except Exception:  # pylint: disable=broad-except
+    pytest.skip(
+        'Skipping tests, failed to import mujoco. Do you have a '
+        'valid mujoco key installed?',
+        allow_module_level=True)
 
-from garage.envs.half_cheetah_vel_env import HalfCheetahVelEnv
+from garage.envs.mujoco.half_cheetah_vel_env import HalfCheetahVelEnv
 from garage.experiment import task_sampler
 
 

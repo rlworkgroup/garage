@@ -3,8 +3,20 @@ This script creates a test that fails when garage.tf.algos.RL2PPO
 performance is too low.
 """
 import pytest
+try:
+    # pylint: disable=unused-import
+    import mujoco_py  # noqa: F401
+except ImportError:
+    pytest.skip('To use mujoco-based features, please install garage[mujoco].',
+                allow_module_level=True)
+except Exception:  # pylint: disable=broad-except
+    pytest.skip(
+        'Skipping tests, failed to import mujoco. Do you have a '
+        'valid mujoco key installed?',
+        allow_module_level=True)
 
-from garage.envs import HalfCheetahDirEnv, normalize
+from garage.envs import normalize
+from garage.envs.mujoco import HalfCheetahDirEnv
 from garage.experiment import task_sampler
 from garage.np.baselines import LinearFeatureBaseline
 from garage.sampler import LocalSampler

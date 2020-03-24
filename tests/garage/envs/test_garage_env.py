@@ -1,3 +1,5 @@
+import pytest
+
 from garage.envs import EnvSpec, GarageEnv
 
 
@@ -14,6 +16,7 @@ class TestGarageEnv:
         garage_env.close()
         assert garage_env.env.viewer is None
 
+    @pytest.mark.mujoco
     def test_closes_mujoco(self):
         garage_env = GarageEnv(env_name='Ant-v2')
         garage_env.render()

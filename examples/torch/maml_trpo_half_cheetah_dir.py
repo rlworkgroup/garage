@@ -5,8 +5,9 @@ import click
 import torch
 
 from garage import wrap_experiment
-from garage.envs import HalfCheetahDirEnv, normalize
+from garage.envs import normalize
 from garage.envs.base import GarageEnv
+from garage.envs.mujoco import HalfCheetahDirEnv
 from garage.experiment import LocalRunner
 from garage.experiment.deterministic import set_seed
 from garage.np.baselines import LinearFeatureBaseline

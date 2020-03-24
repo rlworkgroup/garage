@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Example script to run RL2 in HalfCheetah."""
 from garage import wrap_experiment
-from garage.envs.half_cheetah_vel_env import HalfCheetahVelEnv
+from garage.envs.mujoco.half_cheetah_vel_env import HalfCheetahVelEnv
 from garage.experiment import task_sampler
 from garage.experiment.deterministic import set_seed
 from garage.np.baselines import LinearFeatureBaseline

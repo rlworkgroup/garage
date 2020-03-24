@@ -1,4 +1,5 @@
 from dm_control.suite import ALL_TASKS
+import pytest
 
 from garage.envs.dm_control import DmControlEnv
 from garage.np.baselines import LinearFeatureBaseline
@@ -9,6 +10,7 @@ from garage.tf.policies import GaussianMLPPolicy
 from tests.fixtures import snapshot_config, TfGraphTestCase
 
 
+@pytest.mark.mujoco
 class TestDmControlTfPolicy(TfGraphTestCase):
 
     def test_dm_control_tf_policy(self):
