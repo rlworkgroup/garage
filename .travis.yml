@@ -38,7 +38,7 @@ jobs:
     - name: "Large tests"
       env: JOB_RUN_CMD="make ci-job-large"
     - if: type != pull_request OR head_repo = "rlworkgroup/garage"
-      name: "Mujoco based tests"
+      name: "MuJoCo-based tests"
       env:
         - JOB_RUN_CMD="make ci-job-mujoco"
     - name: "Verify conda and pipenv installations"
