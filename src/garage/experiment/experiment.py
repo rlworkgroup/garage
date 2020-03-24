@@ -1,6 +1,7 @@
 """Tools for running experiments with Garage."""
 # flake8: noqa
 import base64
+import collections
 import datetime
 import enum
 import functools
@@ -339,13 +340,18 @@ class ExperimentTemplate:
         archive_launch_repo (bool): Whether to save an archive of the
             repository containing the launcher script. This is a potentially
             expensive operation which is useful for ensuring reproducibility.
+        name_parameters (str or None): Parameters to insert into the experiment
+            name. Should be either None (the default), 'all' (all parameters
+            will be used), or 'passed' (only passed parameters will be used).
+            The used parameters will be inserted in the order they appear in
+            the function definition.
 
     """
 
     # pylint: disable=too-few-public-methods
 
     def __init__(self, *, function, log_dir, name, prefix, snapshot_mode,
-                 snapshot_gap, archive_launch_repo):
+                 snapshot_gap, archive_launch_repo, name_parameters):
         self.function = function
         self.log_dir = log_dir
         self.name = name
@@ -353,6 +359,7 @@ class ExperimentTemplate:
         self.snapshot_mode = snapshot_mode
         self.snapshot_gap = snapshot_gap
         self.archive_launch_repo = archive_launch_repo
+        self.name_parameters = name_parameters
         if self.function is not None:
             self._update_wrap_params()
 
@@ -367,6 +374,40 @@ class ExperimentTemplate:
         """
         functools.update_wrapper(self, self.function)
         self.__signature__ = _make_experiment_signature(self.function)
+
+    def _augment_name(self, name, params):
+        """Augment the experiment name with parameters.
+
+        Args:
+            name (str): Name without parameter names.
+            params (dict): Dictionary of parameters.
+
+        Raises:
+            ValueError: If self.name_parameters is not set to None, "passed",
+                or "all".
+
+        Returns:
+            str: Returns the augmented name.
+
+        """
+        name_parameters = collections.OrderedDict()
+
+        if self.name_parameters == 'passed':
+            for param in self.__signature__.parameters.values():
+                try:
+                    name_parameters[param.name] = params[param.name]
+                except KeyError:
+                    pass
+        elif self.name_parameters == 'all':
+            for param in self.__signature__.parameters.values():
+                name_parameters[param.name] = params.get(
+                    param.name, param.default)
+        else:
+            raise ValueError('wrap_experiment.name_parameters should be set '
+                             'to one of None, "passed", or "all"')
+        param_str = '_'.join('{}={}'.format(k, v)
+                             for (k, v) in name_parameters.items())
+        return '{}_{}'.format(name, param_str)
 
     def _make_context(self, *args, **kwargs):
         """Make a context from the template information and variant args.
@@ -391,6 +432,8 @@ class ExperimentTemplate:
         name = self.name
         if name is None:
             name = self.function.__name__
+        if self.name_parameters:
+            name = self._augment_name(name, kwargs)
         log_dir = self.log_dir
         if log_dir is None:
             log_dir = ('{data}/local/{prefix}/{name}'.format(
@@ -465,7 +508,8 @@ def wrap_experiment(function=None,
                     name=None,
                     snapshot_mode='last',
                     snapshot_gap=1,
-                    archive_launch_repo=True):
+                    archive_launch_repo=True,
+                    name_parameters=None):
     """Decorate a function to turn it into an ExperimentTemplate.
 
     When invoked, the wrapped function will receive an ExperimentContext, which
@@ -505,7 +549,11 @@ def wrap_experiment(function=None,
         archive_launch_repo (bool): Whether to save an archive of the
             repository containing the launcher script. This is a potentially
             expensive operation which is useful for ensuring reproducibility.
-
+        name_parameters (str or None): Parameters to insert into the experiment
+            name. Should be either None (the default), 'all' (all parameters
+            will be used), or 'passed' (only passed parameters will be used).
+            The used parameters will be inserted in the order they appear in
+            the function definition.
 
     Returns:
         callable: The wrapped function.
@@ -517,7 +565,8 @@ def wrap_experiment(function=None,
                               name=name,
                               snapshot_mode=snapshot_mode,
                               snapshot_gap=snapshot_gap,
-                              archive_launch_repo=archive_launch_repo)
+                              archive_launch_repo=archive_launch_repo,
+                              name_parameters=name_parameters)
 
 
 def dump_json(filename, data):
