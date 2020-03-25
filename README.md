@@ -47,6 +47,7 @@ The table below summarizes the algorithms available in garage.
 | MAML                   | PyTorch             |
 | RL2                    | TensorFlow          |
 | PEARL                  | PyTorch             |
+| SAC                    | PyTorch             |
 
 ## Supported Tools and Frameworks
 garage supports Python 3.5+.
