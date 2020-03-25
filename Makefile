@@ -38,7 +38,8 @@ ci-job-large:
 ci-job-nightly:
 	pytest -n $$(nproc) -v -m nightly
 
-ci-job-verify-envs: ci-verify-conda ci-verify-pipenv
+# ci-job-verify-envs: ci-verify-conda ci-verify-pipenv
+ci-job-verify-envs: ci-verify-pipenv
 
 ci-verify-conda: CONDA_ROOT := $$HOME/miniconda
 ci-verify-conda: CONDA := $(CONDA_ROOT)/bin/conda
@@ -114,6 +115,7 @@ run-ci:
 		-e TRAVIS_COMMIT_RANGE \
 		-e TRAVIS \
 		-e MJKEY \
+		-e GARAGE_GH_TOKEN \
 		${ADD_ARGS} \
 		${TAG} ${RUN_CMD}
 

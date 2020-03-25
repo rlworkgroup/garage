@@ -1,7 +1,10 @@
 """setuptools based setup module."""
+import os
+
 from setuptools import find_packages
 from setuptools import setup
 
+GARAGE_GH_TOKEN = os.environ.get('GARAGE_GH_TOKEN') or 'git'
 TF_VERSION = '<1.16,>=1.15.0'
 GYM_VERSION = '==0.12.4'
 
@@ -47,8 +50,8 @@ EXTRAS['dm_control'] = [
     # find a build dependency (absl-py). Later pip executes the `install`
     # command again and the install succeeds because absl-py has been
     # installed. This is stupid, but harmless.
-    'dm_control @ https://api.github.com/repos/deepmind/dm_control/tarball/7a36377879c57777e5d5b4da5aae2cd2a29b607a',  # noqa: E501
-]
+    'dm_control @ https://{}@api.github.com/repos/deepmind/dm_control/tarball/7a36377879c57777e5d5b4da5aae2cd2a29b607a'.format(GARAGE_GH_TOKEN),  # noqa: E501
+]  # yapf: disable
 
 EXTRAS['all'] = list(set(sum(EXTRAS.values(), [])))
 
@@ -58,11 +61,12 @@ EXTRAS['gpu'] = ['tensorflow-gpu' + TF_VERSION]
 # Development dependencies (*not* included in 'all')
 EXTRAS['dev'] = [
     # Please keep alphabetized
-    'baselines @ https://api.github.com/repos/openai/baselines/tarball/f2729693253c0ef4d4086231d36e0a4307ec1cb3',  # noqa: E501
+    'baselines @ https://{}@api.github.com/repos/openai/baselines/tarball/f2729693253c0ef4d4086231d36e0a4307ec1cb3'.format(GARAGE_GH_TOKEN),  # noqa: E501
     'flake8',
     'flake8-docstrings>=1.5.0',
     'flake8-import-order',
     'gtimer',
+    'metaworld @ https://{}@api.github.com/repos/rlworkgroup/metaworld/tarball/dfdbc7cf495678ee96b360d1e6e199acc141b36c'.format(GARAGE_GH_TOKEN),  # noqa: E501
     'pandas',
     'pep8-naming==0.7.0',
     'pre-commit',
@@ -74,12 +78,12 @@ EXTRAS['dev'] = [
     'pytest-timeout',
     'pytest-xdist',
     'recommonmark',
-    'rlkit @ git+https://github.com/vitchyr/rlkit/@1d469a509b797ca04a39b8734c1816ca7d108fc8',  # noqa: E501
+    'rlkit @ https://{}@api.github.com/repos/vitchyr/rlkit/tarball/1d469a509b797ca04a39b8734c1816ca7d108fc8'.format(GARAGE_GH_TOKEN),  # noqa: E501
     'seaborn',
     'sphinx',
     'sphinx_rtd_theme',
     'yapf==0.28.0',
-]
+]  # yapf: disable
 
 with open('README.md') as f:
     README = f.read()
