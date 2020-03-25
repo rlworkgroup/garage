@@ -4,8 +4,9 @@ from functools import partial
 import pytest
 import torch
 
-from garage.envs import HalfCheetahDirEnv, normalize
+from garage.envs import normalize
 from garage.envs.base import GarageEnv
+from garage.envs.mujoco import HalfCheetahDirEnv
 from garage.np.baselines import LinearFeatureBaseline
 from garage.sampler import LocalSampler, WorkerFactory
 from garage.torch.algos import MAMLPPO
