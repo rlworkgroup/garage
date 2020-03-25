@@ -50,7 +50,7 @@ EXTRAS['dm_control'] = [
     # command again and the install succeeds because absl-py has been
     # installed. This is stupid, but harmless.
     'dm_control @ https://{}@api.github.com/repos/deepmind/dm_control/tarball/7a36377879c57777e5d5b4da5aae2cd2a29b607a'.format(GARAGE_GH_TOKEN),  # noqa: E501
-]
+]  # yapf: disable
 
 EXTRAS['all'] = list(set(sum(EXTRAS.values(), [])))
 
@@ -83,7 +83,7 @@ EXTRAS['dev'] = [
     'sphinx',
     'sphinx_rtd_theme',
     'yapf==0.28.0',
-]
+]  # yapf: disable
 
 with open('README.md') as f:
     README = f.read()
