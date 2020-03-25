@@ -123,6 +123,7 @@ run-ci:
 		-e TRAVIS_COMMIT_RANGE \
 		-e TRAVIS \
 		-e MJKEY \
+		-e GARAGE_GH_TOKEN \
 		--memory 7500m \
 		--memory-swap 7500m \
 		${RUN_ARGS} \
