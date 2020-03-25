@@ -56,6 +56,8 @@ class MLPModule(MultiHeadedMLPModule):
                          output_nonlinearity, output_w_init, output_b_init,
                          layer_normalization)
 
+        self._output_dim = output_dim
+
     # pylint: disable=arguments-differ
     def forward(self, input_value):
         """Forward method.
@@ -69,3 +71,13 @@ class MLPModule(MultiHeadedMLPModule):
 
         """
         return super().forward(input_value)[0]
+
+    @property
+    def output_dim(self):
+        """Return output dimension of network.
+
+        Returns:
+            int: Output dimension of network.
+
+        """
+        return self._output_dim

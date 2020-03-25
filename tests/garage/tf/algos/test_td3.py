@@ -1,6 +1,7 @@
 """Create a test that fails when garage.tf.algos.TD3 performance is too low."""
 
 import gym
+import pytest
 import tensorflow as tf
 
 from garage.np.exploration_strategies.gaussian_strategy import GaussianStrategy
@@ -16,6 +17,7 @@ from tests.fixtures import snapshot_config, TfGraphTestCase
 class TestTD3(TfGraphTestCase):
     """Tests for TD3 algo."""
 
+    @pytest.mark.mujoco
     def test_td3_pendulum(self):
         """Test TD3 with Pendulum environment."""
         with LocalTFRunner(snapshot_config) as runner:

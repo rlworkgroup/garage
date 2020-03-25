@@ -20,6 +20,11 @@ LONG_RUNNING_EXAMPLES = [
     EXAMPLES_ROOT_DIR / 'tf/dqn_pong.py',
     EXAMPLES_ROOT_DIR / 'tf/trpo_cubecrash.py',
     EXAMPLES_ROOT_DIR / 'tf/trpo_swimmer_ray_sampler.py',
+    EXAMPLES_ROOT_DIR / 'torch/maml_ppo_half_cheetah_dir.py',
+    EXAMPLES_ROOT_DIR / 'torch/maml_trpo_half_cheetah_dir.py',
+    EXAMPLES_ROOT_DIR / 'torch/maml_vpg_half_cheetah_dir.py',
+    EXAMPLES_ROOT_DIR / 'torch/maml_trpo_ml10.py',
+    EXAMPLES_ROOT_DIR / 'torch/pearl_ml1_push.py'
 ]
 
 
@@ -35,6 +40,7 @@ def enumerate_algo_examples():
     return [str(e) for e in all_examples if e not in exclude]
 
 
+@pytest.mark.mujoco
 @pytest.mark.no_cover
 @pytest.mark.timeout(70)
 @pytest.mark.parametrize('filepath', enumerate_algo_examples())
@@ -69,6 +75,7 @@ def test_dqn_pong():
         env=env).returncode == 0
 
 
+@pytest.mark.flaky
 @pytest.mark.no_cover
 @pytest.mark.timeout(30)
 def test_ppo_memorize_digits():
@@ -84,6 +91,7 @@ def test_ppo_memorize_digits():
     assert subprocess.run(command, check=False, env=env).returncode == 0
 
 
+@pytest.mark.flaky
 @pytest.mark.no_cover
 @pytest.mark.timeout(40)
 def test_trpo_cubecrash():
@@ -107,6 +115,8 @@ def test_step_env():
         check=False).returncode == 0
 
 
+@pytest.mark.flaky
+@pytest.mark.mujoco
 @pytest.mark.no_cover
 @pytest.mark.timeout(20)
 def test_step_dm_control_env():
@@ -114,3 +124,33 @@ def test_step_dm_control_env():
     assert subprocess.run(
         [EXAMPLES_ROOT_DIR / 'step_dm_control_env.py', '--n_steps', '1'],
         check=False).returncode == 0
+
+
+@pytest.mark.flaky
+@pytest.mark.mujoco
+@pytest.mark.no_cover
+@pytest.mark.timeout(20)
+def test_maml_halfcheetah():
+    """Test maml_trpo_half_cheetah_dir.py"""
+    assert subprocess.run([
+        EXAMPLES_ROOT_DIR / 'torch/maml_trpo_half_cheetah_dir.py', '--epochs',
+        '1', '--rollouts_per_task', '1', '--meta_batch_size', '1'
+    ],
+                          check=False).returncode == 0
+
+
+@pytest.mark.flaky
+@pytest.mark.no_cover
+@pytest.mark.timeout(120)
+def test_pearl_ml1_push():
+    """Test pearl_ml1_push.py"""
+    assert subprocess.run([
+        EXAMPLES_ROOT_DIR / 'torch/pearl_ml1_push.py', '--num_epochs', '1',
+        '--num_train_tasks', '5', '--num_test_tasks', '1',
+        '--encoder_hidden_size', '2', '--net_size', '2',
+        '--num_steps_per_epoch', '5', '--num_initial_steps', '5',
+        '--num_steps_prior', '1', '--num_extra_rl_steps_posterior', '1',
+        '--batch_size', '4', '--embedding_batch_size', '2',
+        '--embedding_mini_batch_size', '2', '--max_path_length', '1'
+    ],
+                          check=False).returncode == 0

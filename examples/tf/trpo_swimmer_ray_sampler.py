@@ -6,28 +6,39 @@ sampler.
 Here it runs Swimmer-v2 environment with 40 iterations.
 """
 import gym
+import ray
 
-from garage.experiment import run_experiment
+from garage import wrap_experiment
+from garage.experiment.deterministic import set_seed
 from garage.np.baselines import LinearFeatureBaseline
+from garage.sampler import RaySampler
 from garage.tf.algos import TRPO
 from garage.tf.envs import TfEnv
 from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import GaussianMLPPolicy
-from garage.tf.samplers import RaySamplerTF
-
-seed = 100
 
 
-def run_task(snapshot_config, *_):
-    """Run task.
+@wrap_experiment
+def tf_trpo_swimmer(ctxt=None, seed=1):
+    """tf_trpo_swimmer.
 
     Args:
-        snapshot_config (garage.experiment.SnapshotConfig): Configuration
-            values for snapshotting.
-        *_ (object): Hyperparameters (unused).
+        ctxt (garage.experiment.ExperimentContext): The experiment
+            configuration used by LocalRunner to create the snapshotter.
+        seed (int): Used to seed the random number generator to produce
+            determinism.
+
 
     """
-    with LocalTFRunner(snapshot_config=snapshot_config) as runner:
+    # Since this is an example, we are running ray in a reduced state.
+    # One can comment this line out in order to run ray at full capacity
+    ray.init(memory=52428800,
+             object_store_memory=78643200,
+             ignore_reinit_error=True,
+             log_to_driver=False,
+             include_webui=False)
+    with LocalTFRunner(snapshot_config=ctxt) as runner:
+        set_seed(seed)
         env = TfEnv(gym.make('Swimmer-v2'))
 
         policy = GaussianMLPPolicy(env_spec=env.spec, hidden_sizes=(32, 32))
@@ -43,13 +54,9 @@ def run_task(snapshot_config, *_):
 
         runner.setup(algo,
                      env,
-                     sampler_cls=RaySamplerTF,
+                     sampler_cls=RaySampler,
                      sampler_args={'seed': seed})
         runner.train(n_epochs=40, batch_size=4000)
 
 
-run_experiment(
-    run_task,
-    snapshot_mode='last',
-    seed=seed,
-)
+tf_trpo_swimmer(seed=100)

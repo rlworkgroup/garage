@@ -14,6 +14,7 @@ MJKEY_PATH ?= ~/.mujoco/mjkey.txt
 
 test:  ## Run the CI test suite
 test: RUN_CMD = nice -n 11 pytest -v -m 'not huge and not flaky' --durations=0
+test: RUN_ARGS = --memory 7500m --memory-swap 7500m
 test: run-headless
 	@echo "Running test suite..."
 
@@ -26,24 +27,31 @@ ci-job-precommit: docs
 
 ci-job-normal:
 	pytest --cov=garage -v -m \
-	    'not nightly and not huge and not flaky and not large' --durations=0
+	    'not nightly and not huge and not flaky and not large and not mujoco' --durations=0
 	coverage xml
 	bash <(curl -s https://codecov.io/bash)
 
 ci-job-large:
-	pytest --cov=garage -v -m large --durations=0
+	pytest --cov=garage -v -m 'large and not mujoco' --durations=0
+	coverage xml
+	bash <(curl -s https://codecov.io/bash)
+
+ci-job-mujoco:
+	pytest --cov=garage -v -m mujoco --durations=0
 	coverage xml
 	bash <(curl -s https://codecov.io/bash)
 
 ci-job-nightly:
 	pytest -v -m nightly
 
-ci-job-verify-envs: ci-verify-conda ci-verify-pipenv
+# ci-job-verify-envs: ci-verify-conda ci-verify-pipenv
+ci-job-verify-envs: ci-verify-pipenv
 
 ci-verify-conda: CONDA_ROOT := $$HOME/miniconda
 ci-verify-conda: CONDA := $(CONDA_ROOT)/bin/conda
 ci-verify-conda: GARAGE_BIN = $(CONDA_ROOT)/envs/garage-ci/bin
 ci-verify-conda:
+	touch $(MJKEY_PATH)
 	wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
 	bash miniconda.sh -b -p $(CONDA_ROOT)
 	hash -r
@@ -68,6 +76,7 @@ ci-verify-conda:
 ci-verify-pipenv: export PATH=$(shell echo $$PATH | awk -v RS=: -v ORS=: '/venv/ {next} {print}')
 ci-verify-pipenv: export VIRTUAL_ENV=
 ci-verify-pipenv:
+	touch $(MJKEY_PATH)
 	pip3 install --upgrade pipenv setuptools
 	pipenv --three
 	pipenv install dist/garage.tar.gz[all,dev]
@@ -87,7 +96,7 @@ build-ci: docker/docker-compose-ci.yml
 	docker-compose \
 		-f docker/docker-compose-ci.yml \
 		build \
-		${ADD_ARGS}
+		${BUILD_ARGS}
 
 build-headless: TAG ?= rlworkgroup/garage-headless:latest
 build-headless: docker/docker-compose-headless.yml
@@ -95,7 +104,7 @@ build-headless: docker/docker-compose-headless.yml
 	docker-compose \
 		-f docker/docker-compose-headless.yml \
 		build \
-		${ADD_ARGS}
+		${BUILD_ARGS}
 
 build-nvidia: TAG ?= rlworkgroup/garage-nvidia:latest
 build-nvidia: docker/docker-compose-nvidia.yml
@@ -103,7 +112,7 @@ build-nvidia: docker/docker-compose-nvidia.yml
 	docker-compose \
 		-f docker/docker-compose-nvidia.yml \
 		build \
-		${ADD_ARGS}
+		${BUILD_ARGS}
 
 run-ci: ## Run the CI Docker container (only used in TravisCI)
 run-ci: TAG ?= rlworkgroup/garage-ci
@@ -114,7 +123,10 @@ run-ci:
 		-e TRAVIS_COMMIT_RANGE \
 		-e TRAVIS \
 		-e MJKEY \
-		${ADD_ARGS} \
+		-e GARAGE_GH_TOKEN \
+		--memory 7500m \
+		--memory-swap 7500m \
+		${RUN_ARGS} \
 		${TAG} ${RUN_CMD}
 
 run-headless: ## Run the Docker container for headless machines
@@ -126,8 +138,8 @@ run-headless: build-headless
 		-v $(DATA_PATH)/$(CONTAINER_NAME):/root/code/garage/data \
 		-e MJKEY="$$(cat $(MJKEY_PATH))" \
 		--name $(CONTAINER_NAME) \
-		${ADD_ARGS} \
-		rlworkgroup/garage-headless $(RUN_CMD)
+		${RUN_ARGS} \
+		rlworkgroup/garage-headless ${RUN_CMD}
 
 run-nvidia: ## Run the Docker container for machines with NVIDIA GPUs
 run-nvidia: CONTAINER_NAME ?= garage-nvidia
@@ -143,8 +155,8 @@ run-nvidia: build-nvidia
 		-e QT_X11_NO_MITSHM=1 \
 		-e MJKEY="$$(cat $(MJKEY_PATH))" \
 		--name $(CONTAINER_NAME) \
-		${ADD_ARGS} \
-		rlworkgroup/garage-nvidia $(RUN_CMD)
+		${RUN_ARGS} \
+		rlworkgroup/garage-nvidia ${RUN_CMD}
 
 # Help target
 # See https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html

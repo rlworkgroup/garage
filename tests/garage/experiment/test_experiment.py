@@ -1,42 +1,14 @@
 import os
 import pathlib
+import shutil
+import subprocess
+import sys
+import tempfile
+import textwrap
 
 import pytest
 
-from garage.experiment.experiment import run_experiment
-from garage.experiment.experiment import variant, VariantGenerator
-
-
-class TestExperiment:
-
-    def test_variant_generator(self):
-
-        vg = VariantGenerator()
-        vg.add('key1', [1, 2, 3])
-        vg.add('key2', [True, False])
-        vg.add('key3', lambda key2: [1] if key2 else [1, 2])
-        assert len(vg.variants()) == 9
-
-        class VG(VariantGenerator):
-
-            @variant
-            def key1(self):
-                return [1, 2, 3]
-
-            @variant
-            def key2(self):
-                yield True
-                yield False
-
-            @variant
-            def key3(self, key2):
-                if key2:
-                    yield 1
-                else:
-                    yield 1
-                    yield 2
-
-        assert len(VG().variants()) == 9
+from garage.experiment.experiment import run_experiment, wrap_experiment
 
 
 def dummy_func(*_):
@@ -82,3 +54,139 @@ def test_experiment_with_variant():
     assert len(folder_content_diff) == 1
     exp_folder_name = folder_content_diff.pop()
     assert exp_folder_name.startswith('test_prefix')
+
+
+def _hard_rmtree(path):
+    # Sometimes rmtree doesn't work, for some reason, but moving the directory
+    # to a temporary directory does.
+    shutil.rmtree(path, ignore_errors=True)
+    try:
+        with tempfile.TemporaryDirectory() as trash_dir:
+            shutil.move(str(path), trash_dir)
+    except FileNotFoundError:
+        pass
+
+
+def test_wrap_experiment_makes_log_dir():
+    prefix = 'wrap_exp_test_makes_log_dir'
+    exp_path = pathlib.Path(os.getcwd(), 'data/local', prefix)
+    _hard_rmtree(exp_path)
+    expected_path = exp_path / 'test_exp'
+
+    @wrap_experiment(prefix=prefix)
+    def test_exp(ctxt=None):
+        assert expected_path.samefile(ctxt.snapshot_dir)
+
+    assert not exp_path.exists()
+
+    test_exp()
+
+    new_folder_contents = list(exp_path.iterdir())
+    assert len(new_folder_contents) == 1
+    assert new_folder_contents[0].samefile(expected_path)
+
+    expected_path = exp_path / 'test_exp_1'
+
+    test_exp()
+
+    new_folder_contents = list(exp_path.iterdir())
+    assert len(new_folder_contents) == 2
+    assert any([
+        expected_path.samefile(directory) for directory in new_folder_contents
+    ])
+
+    expected_path = exp_path / 'test_exp_2'
+
+    test_exp()
+
+    new_folder_contents = list(exp_path.iterdir())
+    assert len(new_folder_contents) == 3
+    assert any([
+        expected_path.samefile(directory) for directory in new_folder_contents
+    ])
+
+
+def _run_launcher(launcher_path, prefix):
+    with launcher_path.open('w') as launcher_f:
+        launcher_f.write(
+            textwrap.dedent(r"""
+            from garage import wrap_experiment
+
+            @wrap_experiment(prefix='{}')
+            def test_exp(ctxt=None):
+                print(ctxt.snapshot_dir)
+
+            test_exp()""".format(prefix)))
+    snapshot_dir = (subprocess.check_output(
+        (sys.executable,
+         str(launcher_path))).decode('utf-8').strip().split('\n'))[-1]
+    return snapshot_dir
+
+
+def test_wrap_experiment_builds_git_archive():
+    prefix = 'wrap_exp_test_builds_git_archive'
+    exp_path = pathlib.Path(os.getcwd(), 'data/local', prefix)
+    _hard_rmtree(exp_path)
+    expected_path = exp_path / 'test_exp' / 'launch_archive.tar.xz'
+
+    # Because __main__ actually points to pytest right now, we need to run the
+    # "real" test in a subprocess.
+    with tempfile.TemporaryDirectory() as launcher_dir:
+        launch_dir = pathlib.Path(launcher_dir)
+        subprocess.check_call(('git', 'init'), cwd=launcher_dir)
+        # Make a test file, since git ls-files needs at least one commit.
+        test_txt = launch_dir / 'test.txt'
+        test_txt.touch()
+        subprocess.check_call(('git', 'add', str(test_txt)), cwd=launcher_dir)
+        subprocess.check_call(
+            ('git', '-c', 'user.name=Test User', '-c',
+             'user.email=test@example.com', 'commit', '-m', 'Initial commit'),
+            cwd=launcher_dir)
+        subdir = launch_dir / 'subdir'
+        subdir.mkdir()
+        launcher_path = pathlib.Path(launcher_dir) / 'subdir' / 'run_exp.py'
+
+        snapshot_dir = _run_launcher(launcher_path, prefix)
+
+        archive_path = os.path.join(snapshot_dir, 'launch_archive.tar.xz')
+        assert expected_path.samefile(archive_path)
+        assert expected_path.exists()
+        archive_size = expected_path.stat().st_size
+        assert archive_size > 250
+        contents = subprocess.check_output(
+            ('tar', '--list', '--file', archive_path)).decode('utf-8')
+        assert 'subdir/run_exp.py' in contents.strip()
+        assert 'test.txt' in contents.strip()
+
+
+def test_wrap_experiment_launcher_outside_git():
+    prefix = 'wrap_exp_test_launcher_outside_git'
+    exp_path = pathlib.Path(os.getcwd(), 'data/local', prefix)
+    _hard_rmtree(exp_path)
+    expected_path = exp_path / 'test_exp'
+
+    # Because this is testing a file outside of a git repo, we need to make
+    # ourselves a launcher script outside of any git repo.
+    with tempfile.TemporaryDirectory() as launcher_dir:
+        launcher_path = pathlib.Path(launcher_dir) / 'run_exp.py'
+        snapshot_dir = _run_launcher(launcher_path, prefix)
+        assert os.path.samefile(str(expected_path), str(snapshot_dir))
+
+
+def test_wrap_experiment_raises_on_non_ctxt_param_name():
+    prefix = 'wrap_exp_test_prefix2'
+    with pytest.raises(ValueError,
+                       match="named 'ctxt' instead of '_snapshot_config'"):
+
+        @wrap_experiment(prefix=prefix)
+        def _test_exp(_snapshot_config=None):
+            pass
+
+
+def test_wrap_experiment_raises_on_empty_params():
+    prefix = 'wrap_exp_test_prefix3'
+    with pytest.raises(ValueError, match="named 'ctxt'"):
+
+        @wrap_experiment(prefix=prefix)
+        def _test_exp():
+            pass

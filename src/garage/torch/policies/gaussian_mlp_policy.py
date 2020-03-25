@@ -4,10 +4,11 @@ from torch import nn
 
 from garage.torch.modules import GaussianMLPModule
 from garage.torch.policies import Policy
+import garage.torch.utils as tu
 
 
 class GaussianMLPPolicy(Policy, GaussianMLPModule):
-    """GaussianMLPPolicy.
+    """MLP whose outputs are fed into a Normal distribution..
 
     A policy that contains a MLP to make prediction based on a gaussian
     distribution.
@@ -104,58 +105,70 @@ class GaussianMLPPolicy(Policy, GaussianMLPModule):
         return super().forward(inp)
 
     def get_action(self, observation):
-        """Get a single action given an observation.
+        r"""Get a single action given an observation.
 
         Args:
-            observation (torch.Tensor): Observation from the environment.
+            observation (np.ndarray): Observation from the environment.
+                Shape is :math:`env_spec.observation_space`.
 
         Returns:
             tuple:
-                * torch.Tensor: Predicted action.
+                * np.ndarray: Predicted action. Shape is
+                    :math:`env_spec.action_space`.
                 * dict:
-                    * list[float]: Mean of the distribution
-                    * list[float]: Standard deviation of logarithmic values of
-                        the distribution
+                    * np.ndarray[float]: Mean of the distribution
+                    * np.ndarray[float]: Standard deviation of logarithmic
+                        values of the distribution.
 
         """
         with torch.no_grad():
-            observation = observation.unsqueeze(0)
+            if not isinstance(observation, torch.Tensor):
+                observation = torch.as_tensor(observation).float().to(
+                    tu.global_device())
+            observation = torch.Tensor(observation).unsqueeze(0)
             dist = self.forward(observation)
             return (dist.rsample().squeeze(0).numpy(),
                     dict(mean=dist.mean.squeeze(0).numpy(),
                          log_std=(dist.variance**.5).log().squeeze(0).numpy()))
 
     def get_actions(self, observations):
-        """Get actions given observations.
+        r"""Get actions given observations.
 
         Args:
-            observations (torch.Tensor): Observations from the environment.
+            observations (np.ndarray): Observations from the environment.
+                Shape is :math:`batch_dim \bullet env_spec.observation_space`.
 
         Returns:
             tuple:
-                * torch.Tensor: Predicted actions.
+                * np.ndarray: Predicted actions.
+                    :math:`batch_dim \bullet env_spec.action_space`.
                 * dict:
-                    * list[float]: Mean of the distribution
-                    * list[float]: Standard deviation of logarithmic values of
-                        the distribution
+                    * np.ndarray[float]: Mean of the distribution.
+                    * np.ndarray[float]: Standard deviation of logarithmic
+                        values of the distribution.
 
         """
         with torch.no_grad():
-            dist = self.forward(observations)
+            if not isinstance(observations, torch.Tensor):
+                observations = torch.as_tensor(observations).float().to(
+                    tu.global_device())
+            dist = self.forward(torch.Tensor(observations))
             return (dist.rsample().numpy(),
                     dict(mean=dist.mean.numpy(),
-                         log_std=(dist.variance**.5).log().numpy()))
+                         log_std=(dist.variance.sqrt()).log().numpy()))
 
     def log_likelihood(self, observation, action):
         """Compute log likelihood given observations and action.
 
         Args:
             observation (torch.Tensor): Observation from the environment.
-            action (torch.Tensor): Predicted action.
+                Shape is :math:`env_spec.observation_space`.
+            action (torch.Tensor): Predicted action. Shape is
+                :math:`env_spec.action_space`.
 
         Returns:
             torch.Tensor: Calculated log likelihood value of the action given
-                observation
+                observation. Shape is :math:`1`.
 
         """
         dist = self.forward(observation)
@@ -166,9 +179,11 @@ class GaussianMLPPolicy(Policy, GaussianMLPModule):
 
         Args:
             observation (torch.Tensor): Observation from the environment.
+                Shape is :math:`env_spec.observation_space`.
 
         Returns:
-             torch.Tensor: Calculated entropy values given observation
+             torch.Tensor: Calculated entropy values given observation.
+                Shape is :math:`1`.
 
         """
         dist = self.forward(observation)

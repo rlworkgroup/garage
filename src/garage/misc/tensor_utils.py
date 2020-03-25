@@ -17,7 +17,7 @@ def discount_cumsum(x, discount):
         discount (float): Discount factor.
 
     Returns:
-        float: Discounted cumulative sum.
+        np.ndarrary: Discounted cumulative sum.
 
     """
     if torch.is_tensor(x):
@@ -26,7 +26,7 @@ def discount_cumsum(x, discount):
                                 axis=0)[::-1]
 
 
-def explained_variance_1d(ypred, y):
+def explained_variance_1d(ypred, y, valids=None):
     """Explained variation for 1D inputs.
 
     It is the proportion of the variance in one variable that is explained or
@@ -34,12 +34,20 @@ def explained_variance_1d(ypred, y):
 
     Args:
         ypred (np.ndarray): Sample data from the first variable.
+            Shape: :math:`(N, max_path_length)`.
         y (np.ndarray): Sample data from the second variable.
+            Shape: :math:`(N, max_path_length)`.
+        valids (np.ndarray): Optional argument. Array indicating valid indices.
+            If None, it assumes the entire input array are valid.
+            Shape: :math:`(N, max_path_length)`.
 
     Returns:
         float: The explained variance.
 
     """
+    if valids is not None:
+        ypred = ypred[valids.astype(np.bool)]
+        y = y[valids.astype(np.bool)]
     assert y.ndim == 1 and ypred.ndim == 1
     vary = np.var(y)
     if np.isclose(vary, 0):
@@ -166,6 +174,37 @@ def stack_tensor_dict_list(tensor_dict_list):
     return ret
 
 
+def stack_and_pad_tensor_dict_list(tensor_dict_list, max_len):
+    """Stack and pad array of list of tensors.
+
+    Input paths are a list of N dicts, each with values of shape
+    :math:`(D, S^*)`. This function stack and pad the values with the input
+    key with max_len, so output will be shape :math:`(N, D, S^*)`.
+
+    Args:
+        tensor_dict_list (list[dict]): List of dict to be stacked and padded.
+            Value of each dict will be shape of :math:`(D, S^*)`.
+        max_len (int): Maximum length for padding.
+
+    Returns:
+        dict: a dictionary of {stacked tensors or dictionary of
+            stacked tensors}. Shape: :math:`(N, D, S^*)`
+            where N is the len of input paths.
+
+    """
+    keys = list(tensor_dict_list[0].keys())
+    ret = dict()
+    for k in keys:
+        example = tensor_dict_list[0][k]
+        dict_list = [x[k] if k in x else [] for x in tensor_dict_list]
+        if isinstance(example, dict):
+            v = stack_and_pad_tensor_dict_list(dict_list, max_len)
+        else:
+            v = pad_tensor_n(np.array(dict_list), max_len)
+        ret[k] = v
+    return ret
+
+
 def concat_tensor_dict_list(tensor_dict_list):
     """Concatenate dictionary of list of tensor.
 
@@ -256,3 +295,32 @@ def normalize_pixel_batch(env_spec, observations):
         if len(env_spec.observation_space.shape) == 3:
             return [obs.astype(np.float32) / 255.0 for obs in observations]
     return observations
+
+
+def slice_nested_dict(dict_or_array, start, stop):
+    """Slice a dictionary containing arrays (or dictionaries).
+
+    This function is primarily intended for un-batching env_infos and
+    action_infos.
+
+    Args:
+        dict_or_array (dict[str, dict or np.ndarray] or np.ndarray): A nested
+            dictionary should only contain dictionaries and numpy arrays
+            (recursively).
+        start (int): First index to be included in the slice.
+        stop (int): First index to be excluded from the slice. In other words,
+            these are typical python slice indices.
+
+    Returns:
+        dict or np.ndarray: The input, but sliced.
+
+    """
+    if isinstance(dict_or_array, dict):
+        return {
+            k: slice_nested_dict(v, start, stop)
+            for (k, v) in dict_or_array.items()
+        }
+    else:
+        # It *should* be a numpy array (unless someone ignored the type
+        # signature).
+        return dict_or_array[start:stop]

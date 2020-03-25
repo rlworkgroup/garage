@@ -8,7 +8,10 @@ from garage.torch.modules.categorical_mlp_module import Categorical_MLPModule
 from garage.torch.modules.multi_headed_mlp_module import MultiHeadedMLPModule
 
 __all__ = [
-    'MLPModule', 'MultiHeadedMLPModule', 'GaussianMLPModule',
-    'GaussianMLPIndependentStdModule', 'GaussianMLPTwoHeadedModule',
-    "Categorical_MLPModule"
+    'MLPModule',
+    'MultiHeadedMLPModule',
+    'GaussianMLPModule',
+    'GaussianMLPIndependentStdModule',
+    'GaussianMLPTwoHeadedModule',
+    "Categorical_MLPModule",
 ]

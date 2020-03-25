@@ -3,7 +3,11 @@
 set -e
 
 # Get MuJoCo key from the environment
-echo "${MJKEY}" > /root/.mujoco/mjkey.txt
+if [ -z "${MJKEY}" ]; then
+  :
+else
+  echo "${MJKEY}" > /root/.mujoco/mjkey.txt
+fi
 
 # Setup dummy X server display
 # Socket for display :0 may already be in use if the container is connected

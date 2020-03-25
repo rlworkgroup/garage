@@ -5,6 +5,7 @@ import collections
 from dowel import logger, tabular
 import numpy as np
 
+from garage import log_performance, TrajectoryBatch
 from garage.misc import tensor_utils as np_tensor_utils
 from garage.np.algos import RLAlgorithm
 from garage.sampler import OnPolicyVectorizedSampler
@@ -91,7 +92,6 @@ class BatchPolopt(RLAlgorithm):
 
         for _ in runner.step_epochs():
             runner.step_path = runner.obtain_samples(runner.step_itr)
-            tabular.record('TotalEnvSteps', runner.total_env_steps)
             last_return = self.train_once(runner.step_itr, runner.step_path)
             runner.step_itr += 1
 
@@ -153,6 +153,11 @@ class BatchPolopt(RLAlgorithm):
 
         max_path_length = self.max_path_length
 
+        undiscounted_returns = log_performance(
+            itr,
+            TrajectoryBatch.from_trajectory_list(self.env_spec, paths),
+            discount=self.discount)
+
         if self.flatten_input:
             paths = [
                 dict(
@@ -163,7 +168,8 @@ class BatchPolopt(RLAlgorithm):
                             path['actions'])),
                     rewards=path['rewards'],
                     env_infos=path['env_infos'],
-                    agent_infos=path['agent_infos']) for path in paths
+                    agent_infos=path['agent_infos'],
+                    dones=path['dones']) for path in paths
             ]
         else:
             paths = [
@@ -174,7 +180,8 @@ class BatchPolopt(RLAlgorithm):
                             path['actions'])),
                     rewards=path['rewards'],
                     env_infos=path['env_infos'],
-                    agent_infos=path['agent_infos']) for path in paths
+                    agent_infos=path['agent_infos'],
+                    dones=path['dones']) for path in paths
             ]
 
         if hasattr(self.baseline, 'predict_n'):
@@ -232,14 +239,17 @@ class BatchPolopt(RLAlgorithm):
         valids = [np.ones_like(path['returns']) for path in paths]
         valids = tensor_utils.pad_tensor_n(valids, max_path_length)
 
-        average_discounted_return = (np.mean(
-            [path['returns'][0] for path in paths]))
-
-        undiscounted_returns = [sum(path['rewards']) for path in paths]
-        self.episode_reward_mean.extend(undiscounted_returns)
+        lengths = np.asarray([v.sum() for v in valids])
 
         ent = np.sum(self.policy.distribution.entropy(agent_infos) *
                      valids) / np.sum(valids)
+
+        self.episode_reward_mean.extend(undiscounted_returns)
+
+        tabular.record('Entropy', ent)
+        tabular.record('Perplexity', np.exp(ent))
+        tabular.record('Extras/EpisodeRewardMean',
+                       np.mean(self.episode_reward_mean))
 
         samples_data = dict(
             observations=obs,
@@ -248,23 +258,12 @@ class BatchPolopt(RLAlgorithm):
             baselines=baselines,
             returns=returns,
             valids=valids,
+            lengths=lengths,
             agent_infos=agent_infos,
             env_infos=env_infos,
             paths=paths,
             average_return=np.mean(undiscounted_returns),
         )
-
-        tabular.record('Iteration', itr)
-        tabular.record('AverageDiscountedReturn', average_discounted_return)
-        tabular.record('AverageReturn', np.mean(undiscounted_returns))
-        tabular.record('Extras/EpisodeRewardMean',
-                       np.mean(self.episode_reward_mean))
-        tabular.record('NumTrajs', len(paths))
-        tabular.record('Entropy', ent)
-        tabular.record('Perplexity', np.exp(ent))
-        tabular.record('StdReturn', np.std(undiscounted_returns))
-        tabular.record('MaxReturn', np.max(undiscounted_returns))
-        tabular.record('MinReturn', np.min(undiscounted_returns))
 
         return samples_data
 

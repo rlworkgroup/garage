@@ -12,9 +12,8 @@ import ray
 
 from garage.envs.grid_world_env import GridWorldEnv
 from garage.np.policies import ScriptedPolicy
-from garage.sampler import WorkerFactory
+from garage.sampler import RaySampler, WorkerFactory
 from garage.tf.envs import TfEnv
-from garage.tf.samplers import RaySamplerTF
 
 
 class TestRaySamplerTF():
@@ -40,8 +39,6 @@ class TestRaySamplerTF():
     """
 
     def setup_method(self):
-        ray.init(local_mode=True, ignore_reinit_error=True)
-
         self.env = TfEnv(GridWorldEnv(desc='4x4'))
         self.policy = ScriptedPolicy(
             scripted_actions=[2, 2, 1, 0, 3, 1, 1, 1, 2, 2, 1, 1, 1, 2, 2, 1])
@@ -52,12 +49,11 @@ class TestRaySamplerTF():
     def teardown_method(self):
         self.env.close()
 
-    def test_ray_batch_sampler(self):
+    def test_ray_batch_sampler(self, ray_local_session_fixture):
+        del ray_local_session_fixture
+        assert ray.is_initialized()
         workers = WorkerFactory(seed=100,
                                 max_path_length=self.algo.max_path_length)
-        sampler1 = RaySamplerTF(workers,
-                                self.policy,
-                                self.env,
-                                num_processors=1)
+        sampler1 = RaySampler(workers, self.policy, self.env)
         sampler1.start_worker()
         sampler1.shutdown_worker()

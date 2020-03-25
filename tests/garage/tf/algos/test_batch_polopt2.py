@@ -18,8 +18,8 @@ from tests.fixtures.envs.dummy import DummyDiscreteEnv
 
 class TestBatchPolopt2(TfGraphTestCase):
 
-    @mock.patch.multiple(BatchPolopt2, __abstractmethods__=set())
     # pylint: disable=abstract-class-instantiated, no-member
+    @mock.patch.multiple(BatchPolopt2, __abstractmethods__=set())
     def test_process_samples_continuous_non_recurrent(self):
         env = TfEnv(DummyBoxEnv())
         policy = GaussianMLPPolicy(env_spec=env.spec)
@@ -120,8 +120,6 @@ class TestBatchPolopt2(TfGraphTestCase):
             assert samples['lengths'].shape == (max_path_length, )
             # non-recurrent policy has empty agent info
             assert samples['agent_infos'] == {}
-            # non-recurrent policy has empty env info
-            assert samples['env_infos'] == {}
             assert isinstance(samples['average_return'], float)
 
     # pylint: disable=abstract-class-instantiated, no-member
@@ -157,6 +155,4 @@ class TestBatchPolopt2(TfGraphTestCase):
             for key, shape in policy.state_info_specs:
                 assert samples['agent_infos'][key].shape == (max_path_length,
                                                              np.prod(shape))
-            # non-recurrent policy has empty env info
-            assert samples['env_infos'] == {}
             assert isinstance(samples['average_return'], float)

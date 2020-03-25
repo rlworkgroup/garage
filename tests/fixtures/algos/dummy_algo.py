@@ -6,12 +6,14 @@ class DummyAlgo(BatchPolopt):
     """Dummy algo for test.
 
     Args:
+        env_spec (garage.envs.EnvSpec): Environment specification.
         policy (garage.tf.policies.base.Policy): Policy.
         baseline (garage.tf.baselines.Baseline): The baseline.
     """
 
-    def __init__(self, policy, baseline):
-        super().__init__(policy=policy,
+    def __init__(self, env_spec, policy, baseline):
+        super().__init__(env_spec=env_spec,
+                         policy=policy,
                          baseline=baseline,
                          discount=0.1,
                          max_path_length=1,

@@ -1,3 +1,4 @@
+"""Renders rollouts of the policy as it trains."""
 import atexit
 from collections import namedtuple
 from enum import Enum
@@ -14,6 +15,7 @@ __all__ = ['Plotter']
 
 
 class Op(Enum):
+    """Message types."""
     STOP = 0
     UPDATE = 1
     DEMO = 2
@@ -23,9 +25,23 @@ Message = namedtuple('Message', ['op', 'args', 'kwargs'])
 
 
 class Plotter:
+    """Renders rollouts of the policy as it trains.
 
-    # Static variable used to disable the plotter
-    enable = True
+    Usually, this class is used by sending plot=True to LocalRunner.train().
+
+    Args:
+        env (gym.Env): The environment to perform rollouts in. This will be
+        used without copying in the current process but in a separate thread,
+        so it should be given a unique copy (in particular, do not pass the
+        environment here, then try to pickle it, or you will occasionally get
+        crashes).
+        policy (garage.tf.Policy): The policy to do the rollouts with.
+        sess (tf.Session): The TensorFlow session to use.
+        graph (tf.Graph): The TensorFlow graph to use.
+        rollout (callable): The rollout function to call.
+
+    """
+
     # List containing all plotters instantiated in the process
     __plotters = []
 
@@ -47,9 +63,12 @@ class Plotter:
         self.queue = Queue()
 
         # Needed in order to draw glfw window on the main thread
-        if ('Darwin' in platform.platform()):
-            self.rollout(
-                env, policy, max_path_length=np.inf, animated=True, speedup=5)
+        if 'Darwin' in platform.platform():
+            self.rollout(env,
+                         policy,
+                         max_path_length=np.inf,
+                         animated=True,
+                         speedup=5)
 
     def _start_worker(self):
         env = None
@@ -86,25 +105,24 @@ class Plotter:
                         param_values, max_length = msgs[Op.DEMO].args
                         policy.set_param_values(param_values)
                         initial_rollout = False
-                        self.rollout(
-                            env,
-                            policy,
-                            max_path_length=max_length,
-                            animated=True,
-                            speedup=5)
+                        self.rollout(env,
+                                     policy,
+                                     max_path_length=max_length,
+                                     animated=True,
+                                     speedup=5)
                         self.queue.task_done()
                     else:
                         if max_length:
-                            self.rollout(
-                                env,
-                                policy,
-                                max_path_length=max_length,
-                                animated=True,
-                                speedup=5)
+                            self.rollout(env,
+                                         policy,
+                                         max_path_length=max_length,
+                                         animated=True,
+                                         speedup=5)
         except KeyboardInterrupt:
             pass
 
     def close(self):
+        """Stop the Plotter's worker thread."""
         if self.worker_thread.is_alive():
             while not self.queue.empty():
                 self.queue.get()
@@ -114,31 +132,37 @@ class Plotter:
             self.worker_thread.join()
 
     @staticmethod
-    def disable():
-        """Disable all instances of the Plotter class."""
-        Plotter.enable = False
-
-    @staticmethod
     def get_plotters():
+        """Return all garage.tf.Plotter's.
+
+        Returns:
+            list[garage.tf.Plotter]: All the garage.tf.Plotter's
+
+        """
         return Plotter.__plotters
 
     def start(self):
-        if not Plotter.enable:
-            return
+        """Start the Plotter's worker thread."""
         if not self.worker_thread.is_alive():
             tf.compat.v1.get_variable_scope().reuse_variables()
             self.worker_thread.start()
             self.queue.put(
-                Message(
-                    op=Op.UPDATE, args=(self.env, self.policy), kwargs=None))
+                Message(op=Op.UPDATE,
+                        args=(self.env, self.policy),
+                        kwargs=None))
             atexit.register(self.close)
 
     def update_plot(self, policy, max_length=np.inf):
-        if not Plotter.enable:
-            return
+        """Update the policy being plotted.
+
+        Args:
+            policy (garage.tf.Policy): The policy to rollout.
+            max_length (int or float): The maximum length to allow a rollout to
+                be. Defaults to infinity.
+
+        """
         if self.worker_thread.is_alive():
             self.queue.put(
-                Message(
-                    op=Op.DEMO,
-                    args=(policy.get_param_values(), max_length),
-                    kwargs=None))
+                Message(op=Op.DEMO,
+                        args=(policy.get_param_values(), max_length),
+                        kwargs=None))

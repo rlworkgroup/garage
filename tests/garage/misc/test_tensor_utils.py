@@ -5,8 +5,10 @@ This script creates a test that tests functions in garage.misc.tensor_utils.
 import numpy as np
 
 from garage.misc.tensor_utils import concat_tensor_dict_list
+from garage.misc.tensor_utils import explained_variance_1d
 from garage.misc.tensor_utils import normalize_pixel_batch
 from garage.misc.tensor_utils import pad_tensor
+from garage.misc.tensor_utils import stack_and_pad_tensor_dict_list
 from garage.misc.tensor_utils import stack_tensor_dict_list
 from garage.tf.envs import TfEnv
 from tests.fixtures.envs.dummy import DummyBoxEnv
@@ -79,3 +81,21 @@ class TestTensorUtil:
 
         results = pad_tensor(self.tensor, self.max_len, mode='last')
         assert np.array_equal(results, [1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
+
+    def test_explained_variance_1d(self):
+        y = np.array([1, 2, 3, 4, 5, 0, 0, 0, 0, 0])
+        y_hat = np.array([2, 3, 4, 5, 6, 0, 0, 0, 0, 0])
+        valids = np.array([1, 1, 1, 1, 1, 0, 0, 0, 0, 0])
+        result = explained_variance_1d(y, y_hat, valids)
+        assert result == 1.0
+        result = explained_variance_1d(y, y_hat)
+        np.testing.assert_almost_equal(result, 0.95)
+
+    def test_stack_and_pad_tensor_dict_list(self):
+        result = stack_and_pad_tensor_dict_list(self.data, max_len=5)
+        assert np.array_equal(result['obs'],
+                              np.array([[1, 1, 1, 0, 0], [1, 1, 1, 0, 0]]))
+        assert np.array_equal(result['info']['lala'],
+                              np.array([[1, 1, 0, 0, 0], [1, 1, 0, 0, 0]]))
+        assert np.array_equal(result['info']['baba'],
+                              np.array([[2, 2, 0, 0, 0], [2, 2, 0, 0, 0]]))

@@ -74,43 +74,44 @@ class TestBenchmarkCategoricalMLPPolicy:
             Rh.plot(b_csvs=garage_csvs,
                     g_csvs=garage_csvs,
                     g_x='Iteration',
-                    g_y='AverageReturn',
+                    g_y='Evaluation/AverageReturn',
                     g_z='Garage',
                     b_x='Iteration',
-                    b_y='AverageReturn',
+                    b_y='Evaluation/AverageReturn',
                     b_z='Garage',
                     trials=trials,
                     seeds=seeds,
                     plt_file=plt_file,
                     env_id=env_id,
                     x_label='Iteration',
-                    y_label='AverageReturn')
+                    y_label='Evaluation/AverageReturn')
 
             Rh.relplot(b_csvs=garage_csvs,
                        g_csvs=garage_csvs,
                        g_x='Iteration',
-                       g_y='AverageReturn',
+                       g_y='Evaluation/AverageReturn',
                        g_z='Garage',
                        b_x='Iteration',
-                       b_y='AverageReturn',
+                       b_y='Evaluation/AverageReturn',
                        b_z='Garage',
                        trials=trials,
                        seeds=seeds,
                        plt_file=relplt_file,
                        env_id=env_id,
                        x_label='Iteration',
-                       y_label='AverageReturn')
+                       y_label='Evaluation/AverageReturn')
 
-            result_json[env_id] = Rh.create_json(b_csvs=garage_csvs,
-                                                 g_csvs=garage_csvs,
-                                                 seeds=seeds,
-                                                 trails=trials,
-                                                 g_x='Iteration',
-                                                 g_y='AverageReturn',
-                                                 b_x='Iteration',
-                                                 b_y='AverageReturn',
-                                                 factor_g=2048,
-                                                 factor_b=2048)
+            result_json[env_id] = Rh.create_json(
+                b_csvs=garage_csvs,
+                g_csvs=garage_csvs,
+                seeds=seeds,
+                trails=trials,
+                g_x='Iteration',
+                g_y='Evaluation/AverageReturn',
+                b_x='Iteration',
+                b_y='Evaluation/AverageReturn',
+                factor_g=2048,
+                factor_b=2048)
 
         Rh.write_file(result_json, 'PPO')
 

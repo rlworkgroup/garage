@@ -125,11 +125,14 @@ class TestBenchmarkPPO:
 
             benchmark_helper.plot_average_over_trials(
                 [baselines_csvs, garage_tf_csvs, garage_pytorch_csvs],
-                ['eprewmean', 'AverageReturn', 'AverageReturn'],
+                [
+                    'eprewmean', 'Evaluation/AverageReturn',
+                    'Evaluation/AverageReturn'
+                ],
                 plt_file=plt_file,
                 env_id=env_id,
                 x_label='Iteration',
-                y_label='AverageReturn',
+                y_label='Evaluation/AverageReturn',
                 names=['baseline', 'garage-TensorFlow', 'garage-PyTorch'],
             )
 
@@ -138,7 +141,10 @@ class TestBenchmarkPPO:
                 seeds=seeds,
                 trials=hyper_parameters['n_trials'],
                 xs=['nupdates', 'Iteration', 'Iteration'],
-                ys=['eprewmean', 'AverageReturn', 'AverageReturn'],
+                ys=[
+                    'eprewmean', 'Evaluation/AverageReturn',
+                    'Evaluation/AverageReturn'
+                ],
                 factors=[hyper_parameters['batch_size']] * 3,
                 names=['baseline', 'garage-TF', 'garage-PT'])
 

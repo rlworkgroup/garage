@@ -36,6 +36,8 @@ class WorkerFactory:
         max_path_length(int): The maximum length paths which will be sampled.
         worker_class(type): Class of the workers. Instances should implement
             the Worker interface.
+        worker_args (dict or None): Additional arguments that should be passed
+            to the worker.
 
     """
 
@@ -45,11 +47,16 @@ class WorkerFactory:
             seed,
             max_path_length,
             n_workers=psutil.cpu_count(logical=False),
-            worker_class=DefaultWorker):
+            worker_class=DefaultWorker,
+            worker_args=None):
+        self.n_workers = n_workers
         self._seed = seed
-        self._n_workers = n_workers
         self._max_path_length = max_path_length
         self._worker_class = worker_class
+        if worker_args is None:
+            self._worker_args = {}
+        else:
+            self._worker_args = worker_args
 
     def prepare_worker_messages(self, objs, preprocess=identity_function):
         """Take an argument and canonicalize it into a list for all workers.
@@ -73,13 +80,13 @@ class WorkerFactory:
 
         """
         if isinstance(objs, list):
-            if len(objs) != self._n_workers:
+            if len(objs) != self.n_workers:
                 raise ValueError(
                     'Length of list doesn\'t match number of workers')
             return [preprocess(obj) for obj in objs]
         else:
             obj = preprocess(objs)
-            return [obj for _ in range(self._n_workers)]
+            return [obj for _ in range(self.n_workers)]
 
     def __call__(self, worker_number):
         """Construct a worker given its number.
@@ -95,8 +102,9 @@ class WorkerFactory:
             garage.sampler.Worker: The constructed worker.
 
         """
-        if worker_number >= self._n_workers:
+        if worker_number >= self.n_workers:
             raise ValueError('Worker number is too big')
         return self._worker_class(worker_number=worker_number,
                                   seed=self._seed,
-                                  max_path_length=self._max_path_length)
+                                  max_path_length=self._max_path_length,
+                                  **self._worker_args)

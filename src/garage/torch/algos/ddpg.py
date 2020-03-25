@@ -8,7 +8,7 @@ import torch
 
 from garage.np.algos.off_policy_rl_algorithm import OffPolicyRLAlgorithm
 from garage.torch.algos import _Default, make_optimizer
-from garage.torch.utils import np_to_torch, torch_to_np
+import garage.torch.utils as tu
 
 
 class DDPG(OffPolicyRLAlgorithm):
@@ -94,7 +94,6 @@ class DDPG(OffPolicyRLAlgorithm):
         self._clip_pos_returns = clip_pos_returns
         self._clip_return = clip_return
         self._max_action = action_bound if max_action is None else max_action
-        self._evaluate = False
 
         self._success_history = deque(maxlen=100)
         self._episode_rewards = []
@@ -152,11 +151,9 @@ class DDPG(OffPolicyRLAlgorithm):
 
         last_average_return = np.mean(self._episode_rewards)
         for _ in range(self.n_train_steps):
-            if (self.replay_buffer.n_transitions_stored >=
-                    self.min_buffer_size):
-                self._evaluate = True
+            if self._buffer_prefilled:
                 samples = self.replay_buffer.sample(self.buffer_batch_size)
-                qf_loss, y, q, policy_loss = torch_to_np(
+                qf_loss, y, q, policy_loss = tu.torch_to_np(
                     self.optimize_policy(itr, samples))
 
                 self._episode_policy_losses.append(policy_loss)
@@ -167,10 +164,8 @@ class DDPG(OffPolicyRLAlgorithm):
         if itr % self.steps_per_epoch == 0:
             logger.log('Training finished')
 
-            if self._evaluate:
+            if self._buffer_prefilled:
                 tabular.record('Epoch', epoch)
-                tabular.record('AverageReturn', np.mean(self._episode_rewards))
-                tabular.record('StdReturn', np.std(self._episode_rewards))
                 tabular.record('Policy/AveragePolicyLoss',
                                np.mean(self._episode_policy_losses))
                 tabular.record('QFunction/AverageQFunctionLoss',
@@ -211,7 +206,7 @@ class DDPG(OffPolicyRLAlgorithm):
             qval: Q-value predicted by the Q-network.
 
         """
-        transitions = np_to_torch(samples_data)
+        transitions = tu.dict_np_to_torch(samples_data)
         observations = transitions['observation']
         rewards = transitions['reward']
         actions = transitions['action']

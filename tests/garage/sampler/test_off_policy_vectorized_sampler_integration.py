@@ -1,5 +1,6 @@
 import gym
 import numpy as np
+import pytest
 import tensorflow as tf
 
 from garage.envs import normalize
@@ -19,6 +20,7 @@ from tests.fixtures.tf.algos.dummy_off_policy_algo import DummyOffPolicyAlgo
 
 class TestOffPolicyVectorizedSampler(TfGraphTestCase):
 
+    @pytest.mark.mujoco
     def test_no_reset(self):
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
             # This tests if off-policy sampler respect batch_size

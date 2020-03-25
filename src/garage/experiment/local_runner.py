@@ -1,13 +1,19 @@
 """Provides algorithms with access to most of garage's features."""
 import copy
 import os
+import pickle
 import time
 
 from dowel import logger, tabular
+import psutil
 
 from garage.experiment.deterministic import get_seed, set_seed
 from garage.experiment.snapshotter import Snapshotter
 from garage.sampler import parallel_sampler
+from garage.sampler.base import BaseSampler
+# This is avoiding a circular import
+from garage.sampler.worker import DefaultWorker
+from garage.sampler.worker_factory import WorkerFactory
 
 
 class ExperimentStats:
@@ -142,7 +148,57 @@ class LocalRunner:
         self.step_itr = None
         self.step_path = None
 
-    def setup(self, algo, env, sampler_cls=None, sampler_args=None):
+        self._n_workers = None
+        self._worker_class = None
+
+    def make_sampler(self,
+                     sampler_cls,
+                     *,
+                     seed=None,
+                     n_workers=psutil.cpu_count(logical=False),
+                     max_path_length=None,
+                     worker_class=DefaultWorker,
+                     sampler_args=None):
+        """Construct a Sampler from a Sampler class.
+
+        Args:
+            sampler_cls (type): The type of sampler to construct.
+            seed (int): Seed to use in sampler workers.
+            max_path_length (int): Maximum path length to be sampled by the
+                sampler. Paths longer than this will be truncated.
+            n_workers (int): The number of workers the sampler should use.
+            worker_class (type): Type of worker the Sampler should use.
+            sampler_args (dict or None): Additional arguments that should be
+                passed to the sampler.
+
+        Returns:
+            sampler_cls: An instance of the sampler class.
+
+        """
+        if max_path_length is None:
+            max_path_length = self._algo.max_path_length
+        if seed is None:
+            seed = get_seed()
+        if sampler_args is None:
+            sampler_args = {}
+        if issubclass(sampler_cls, BaseSampler):
+            return sampler_cls(self._algo, self._env, **sampler_args)
+        else:
+            return sampler_cls.from_worker_factory(WorkerFactory(
+                seed=seed,
+                max_path_length=max_path_length,
+                n_workers=n_workers,
+                worker_class=worker_class),
+                                                   agents=self._algo.policy,
+                                                   envs=self._env)
+
+    def setup(self,
+              algo,
+              env,
+              sampler_cls=None,
+              sampler_args=None,
+              n_workers=psutil.cpu_count(logical=False),
+              worker_class=DefaultWorker):
         """Set up runner for algorithm and environment.
 
         This method saves algo and env within runner and creates a sampler.
@@ -157,17 +213,24 @@ class LocalRunner:
             env (garage.envs.GarageEnv): An environement instance.
             sampler_cls (garage.sampler.Sampler): A sampler class.
             sampler_args (dict): Arguments to be passed to sampler constructor.
+            n_workers (int): The number of workers the sampler should use.
+            worker_class (type): Type of worker the sampler should use.
 
         """
         self._algo = algo
         self._env = env
         self._policy = self._algo.policy
+        self._n_workers = n_workers
+        self._worker_class = worker_class
 
         if sampler_args is None:
             sampler_args = {}
         if sampler_cls is None:
             sampler_cls = algo.sampler_cls
-        self._sampler = sampler_cls(algo, env, **sampler_args)
+        self._sampler = self.make_sampler(sampler_cls,
+                                          sampler_args=sampler_args,
+                                          n_workers=n_workers,
+                                          worker_class=worker_class)
 
         self._has_setup = True
 
@@ -190,20 +253,42 @@ class LocalRunner:
         if self._plot:
             self._plotter.close()
 
-    def obtain_samples(self, itr, batch_size=None):
+    def obtain_samples(self,
+                       itr,
+                       batch_size=None,
+                       agent_update=None,
+                       env_update=None):
         """Obtain one batch of samples.
 
         Args:
             itr (int): Index of iteration (epoch).
             batch_size (int): Number of steps in batch.
                 This is a hint that the sampler may or may not respect.
+            agent_update (object): Value which will be passed into the
+                `agent_update_fn` before doing rollouts. If a list is passed
+                in, it must have length exactly `factory.n_workers`, and will
+                be spread across the workers.
+            env_update (object): Value which will be passed into the
+                `env_update_fn` before doing rollouts. If a list is passed in,
+                it must have length exactly `factory.n_workers`, and will be
+                spread across the workers.
 
         Returns:
             list[dict]: One batch of samples.
 
         """
-        paths = self._sampler.obtain_samples(
-            itr, (batch_size or self._train_args.batch_size))
+        paths = None
+        if isinstance(self._sampler, BaseSampler):
+            paths = self._sampler.obtain_samples(
+                itr, (batch_size or self._train_args.batch_size))
+        else:
+            if agent_update is None:
+                agent_update = self._algo.policy.get_param_values()
+            paths = self._sampler.obtain_samples(
+                itr, (batch_size or self._train_args.batch_size),
+                agent_update=agent_update,
+                env_update=env_update)
+            paths = paths.to_trajectory_list()
 
         self._stats.total_env_steps += sum([len(p['rewards']) for p in paths])
 
@@ -233,6 +318,8 @@ class LocalRunner:
         # Save states
         params['env'] = self._env
         params['algo'] = self._algo
+        params['n_workers'] = self._n_workers
+        params['worker_class'] = self._worker_class
 
         self._snapshotter.save_itr_params(epoch, params)
 
@@ -263,7 +350,9 @@ class LocalRunner:
         self.setup(env=saved['env'],
                    algo=saved['algo'],
                    sampler_cls=self._setup_args.sampler_cls,
-                   sampler_args=self._setup_args.sampler_args)
+                   sampler_args=self._setup_args.sampler_args,
+                   n_workers=saved['n_workers'],
+                   worker_class=saved['worker_class'])
 
         n_epochs = self._train_args.n_epochs
         last_epoch = self._stats.total_epoch
@@ -298,7 +387,9 @@ class LocalRunner:
         """
         logger.log('Time %.2f s' % (time.time() - self._start_time))
         logger.log('EpochTime %.2f s' % (time.time() - self._itr_start_time))
+        tabular.record('TotalEnvSteps', self._stats.total_env_steps)
         logger.log(tabular)
+
         if self._plot:
             self._plotter.update_plot(self._policy, self._algo.max_path_length)
             if pause_for_plot:
@@ -431,6 +522,15 @@ class LocalRunner:
             self._train_args.pause_for_plot = pause_for_plot
 
         return self._algo.train(self)
+
+    def get_env_copy(self):
+        """Get a copy of the environment.
+
+        Returns:
+            garage.envs.GarageEnv: An environement instance.
+
+        """
+        return pickle.loads(pickle.dumps(self._env))
 
     @property
     def total_env_steps(self):

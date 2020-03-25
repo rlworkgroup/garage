@@ -5,6 +5,8 @@ computes the optimal step size that will satisfy the KL divergence constraint.
 Finally, it performs a backtracking line search to optimize the objective.
 
 """
+import warnings
+
 from dowel import logger
 import numpy as np
 import torch
@@ -129,12 +131,12 @@ class ConjugateGradientOptimizer(Optimizer):
                  hvp_reg_coeff=1e-5,
                  accept_violation=False):
         super().__init__(params, {})
+        self._max_constraint_value = max_constraint_value
         self._cg_iters = cg_iters
         self._max_backtracks = max_backtracks
         self._backtrack_ratio = backtrack_ratio
-        self._accept_violation = accept_violation
-        self._max_constraint_value = max_constraint_value
         self._hvp_reg_coeff = hvp_reg_coeff
+        self._accept_violation = accept_violation
 
     def step(self, f_loss, f_constraint):  # pylint: disable=arguments-differ
         """Take an optimization step.
@@ -177,6 +179,46 @@ class ConjugateGradientOptimizer(Optimizer):
         # Update parameters using backtracking line search
         self._backtracking_line_search(params, descent_step, f_loss,
                                        f_constraint)
+
+    @property
+    def state(self):
+        """dict: The hyper-parameters of the optimizer."""
+        return {
+            'max_constraint_value': self._max_constraint_value,
+            'cg_iters': self._cg_iters,
+            'max_backtracks': self._max_backtracks,
+            'backtrack_ratio': self._backtrack_ratio,
+            'hvp_reg_coeff': self._hvp_reg_coeff,
+            'accept_violation': self._accept_violation,
+        }
+
+    @state.setter
+    def state(self, state):
+        # _max_constraint_value doesn't have a default value in __init__.
+        # The rest of thsese should match those default values.
+        # These values should only actually get used when unpickling a
+        self._max_constraint_value = state.get('max_constraint_value', 0.01)
+        self._cg_iters = state.get('cg_iters', 10)
+        self._max_backtracks = state.get('max_backtracks', 15)
+        self._backtrack_ratio = state.get('backtrack_ratio', 0.8)
+        self._hvp_reg_coeff = state.get('hvp_reg_coeff', 1e-5)
+        self._accept_violation = state.get('accept_violation', False)
+
+    def __setstate__(self, state):
+        """Restore the optimizer state.
+
+        Args:
+            state (dict): State dictionary.
+
+        """
+        if 'hvp_reg_coeff' not in state['state']:
+            warnings.warn(
+                'Resuming ConjugateGradientOptimizer with lost state. '
+                'This behavior is fixed if pickling from garage>=2020.02.0.')
+        self.defaults = state['defaults']
+        # Set the fields manually so that the setter gets called.
+        self.state = state['state']
+        self.param_groups = state['param_groups']
 
     def _backtracking_line_search(self, params, descent_step, f_loss,
                                   f_constraint):

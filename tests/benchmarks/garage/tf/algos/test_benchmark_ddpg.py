@@ -115,7 +115,7 @@ class TestBenchmarkDDPG:
             Rh.plot(b_csvs=baselines_csvs,
                     g_csvs=garage_csvs,
                     g_x='Epoch',
-                    g_y='AverageReturn',
+                    g_y='Evaluation/AverageReturn',
                     g_z='Garage',
                     b_x='total/epochs',
                     b_y='rollout/return',
@@ -125,12 +125,12 @@ class TestBenchmarkDDPG:
                     plt_file=plt_file,
                     env_id=env_id,
                     x_label='Epoch',
-                    y_label='AverageReturn')
+                    y_label='Evaluation/AverageReturn')
 
             Rh.relplot(g_csvs=garage_csvs,
                        b_csvs=baselines_csvs,
                        g_x='Epoch',
-                       g_y='AverageReturn',
+                       g_y='Evaluation/AverageReturn',
                        g_z='Garage',
                        b_x='total/epochs',
                        b_y='rollout/return',
@@ -140,7 +140,7 @@ class TestBenchmarkDDPG:
                        plt_file=relplt_file,
                        env_id=env_id,
                        x_label='Epoch',
-                       y_label='AverageReturn')
+                       y_label='Evaluation/AverageReturn')
 
             result_json[env_id] = Rh.create_json(
                 b_csvs=baselines_csvs,
@@ -148,7 +148,7 @@ class TestBenchmarkDDPG:
                 seeds=seeds,
                 trails=task['trials'],
                 g_x='Epoch',
-                g_y='AverageReturn',
+                g_y='Evaluation/AverageReturn',
                 b_x='total/epochs',
                 b_y='rollout/return',
                 factor_g=params['steps_per_epoch'] * params['n_rollout_steps'],

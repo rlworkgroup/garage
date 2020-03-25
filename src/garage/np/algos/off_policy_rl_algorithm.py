@@ -1,10 +1,10 @@
 """This class implements OffPolicyRLAlgorithm for off-policy RL algorithms."""
-from abc import abstractmethod
+import abc
 
-from dowel import tabular
-
+from garage import log_performance, TrajectoryBatch
 from garage.np.algos import RLAlgorithm
 from garage.sampler import OffPolicyVectorizedSampler
+from garage.sampler.utils import rollout
 
 
 class OffPolicyRLAlgorithm(RLAlgorithm):
@@ -64,7 +64,6 @@ class OffPolicyRLAlgorithm(RLAlgorithm):
         self.min_buffer_size = min_buffer_size
         self.rollout_batch_size = rollout_batch_size
         self.reward_scale = reward_scale
-        self.evaluate = False
         self.input_include_goal = input_include_goal
         self.smooth_return = smooth_return
         self.max_path_length = max_path_length
@@ -91,10 +90,15 @@ class OffPolicyRLAlgorithm(RLAlgorithm):
         for _ in runner.step_epochs():
             for cycle in range(self.steps_per_epoch):
                 runner.step_path = runner.obtain_samples(runner.step_itr)
+                for path in runner.step_path:
+                    path['rewards'] *= self.reward_scale
                 last_return = self.train_once(runner.step_itr,
                                               runner.step_path)
-                if cycle == 0 and self.evaluate:
-                    tabular.record('TotalEnvSteps', runner.total_env_steps)
+                if cycle == 0 and self._buffer_prefilled:
+                    log_performance(runner.step_itr,
+                                    self._obtain_evaluation_samples(
+                                        runner.get_env_copy()),
+                                    discount=self.discount)
                 runner.step_itr += 1
 
         return last_return
@@ -144,11 +148,12 @@ class OffPolicyRLAlgorithm(RLAlgorithm):
         # pylint: disable=no-self-use
         """Initialize the optimization procedure.
 
-        If using tensorflow, this may
-        include declaring all the variables and compiling functions.
+        If using tensorflow, this may include declaring all the variables
+        and compiling functions.
+
         """
 
-    @abstractmethod
+    @abc.abstractmethod
     def optimize_policy(self, itr, samples_data):
         """Optimize policy network.
 
@@ -159,7 +164,7 @@ class OffPolicyRLAlgorithm(RLAlgorithm):
         """
         raise NotImplementedError
 
-    @abstractmethod
+    @abc.abstractmethod
     def train_once(self, itr, paths):
         """Perform one step of policy optimization given one batch of samples.
 
@@ -169,3 +174,35 @@ class OffPolicyRLAlgorithm(RLAlgorithm):
 
         """
         raise NotImplementedError
+
+    def _obtain_evaluation_samples(self,
+                                   env,
+                                   num_trajs=100,
+                                   max_path_length=1000):
+        """Sample the policy for 10 trajectories and return average values.
+
+        Args:
+            env (garage.envs.GarageEnv): The environement used to obtain
+                trajectories.
+            num_trajs (int): Number of trajectories.
+            max_path_length (int): Number of maximum steps in one batch.
+
+        Returns:
+            TrajectoryBatch: Evaluation trajectories, representing the best
+                current performance of the algorithm.
+
+        """
+        paths = []
+
+        for _ in range(num_trajs):
+            path = rollout(env,
+                           self.policy,
+                           max_path_length=max_path_length,
+                           deterministic=True)
+            paths.append(path)
+        return TrajectoryBatch.from_trajectory_list(self.env_spec, paths)
+
+    @property
+    def _buffer_prefilled(self):
+        """bool: Whether first min buffer size steps is done."""
+        return self.replay_buffer.n_transitions_stored >= self.min_buffer_size

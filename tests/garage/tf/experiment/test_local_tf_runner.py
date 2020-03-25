@@ -1,13 +1,15 @@
 import pytest
+import ray
 import tensorflow as tf
 
 from garage.np.baselines import LinearFeatureBaseline
-from garage.sampler import singleton_pool
+from garage.sampler import LocalSampler, RaySampler, singleton_pool
 from garage.tf.algos import VPG
 from garage.tf.envs import TfEnv
 from garage.tf.experiment import LocalTFRunner
 from garage.tf.plotter import Plotter
 from garage.tf.policies import CategoricalMLPPolicy
+from garage.tf.samplers import BatchSampler
 from tests.fixtures import snapshot_config, TfGraphTestCase
 
 
@@ -90,3 +92,74 @@ class TestLocalRunner(TfGraphTestCase):
         with pytest.raises(Exception):
             with LocalTFRunner(snapshot_config) as runner:
                 runner.save(0)
+
+    def test_make_sampler_batch_sampler(self):
+        with LocalTFRunner(snapshot_config) as runner:
+            env = TfEnv(env_name='CartPole-v1')
+
+            policy = CategoricalMLPPolicy(name='policy',
+                                          env_spec=env.spec,
+                                          hidden_sizes=(8, 8))
+
+            baseline = LinearFeatureBaseline(env_spec=env.spec)
+
+            algo = VPG(env_spec=env.spec,
+                       policy=policy,
+                       baseline=baseline,
+                       max_path_length=100,
+                       discount=0.99,
+                       optimizer_args=dict(
+                           tf_optimizer_args=dict(learning_rate=0.01, )))
+
+            runner.setup(algo,
+                         env,
+                         sampler_cls=BatchSampler,
+                         sampler_args=dict(n_envs=3))
+            assert isinstance(runner._sampler, BatchSampler)
+            runner.train(n_epochs=1, batch_size=10)
+
+    def test_make_sampler_local_sampler(self):
+        with LocalTFRunner(snapshot_config) as runner:
+            env = TfEnv(env_name='CartPole-v1')
+
+            policy = CategoricalMLPPolicy(name='policy',
+                                          env_spec=env.spec,
+                                          hidden_sizes=(8, 8))
+
+            baseline = LinearFeatureBaseline(env_spec=env.spec)
+
+            algo = VPG(env_spec=env.spec,
+                       policy=policy,
+                       baseline=baseline,
+                       max_path_length=100,
+                       discount=0.99,
+                       optimizer_args=dict(
+                           tf_optimizer_args=dict(learning_rate=0.01, )))
+
+            runner.setup(algo, env, sampler_cls=LocalSampler)
+            assert isinstance(runner._sampler, LocalSampler)
+            runner.train(n_epochs=1, batch_size=10)
+
+    def test_make_sampler_ray_sampler(self, ray_session_fixture):
+        del ray_session_fixture
+        assert ray.is_initialized()
+        with LocalTFRunner(snapshot_config) as runner:
+            env = TfEnv(env_name='CartPole-v1')
+
+            policy = CategoricalMLPPolicy(name='policy',
+                                          env_spec=env.spec,
+                                          hidden_sizes=(8, 8))
+
+            baseline = LinearFeatureBaseline(env_spec=env.spec)
+
+            algo = VPG(env_spec=env.spec,
+                       policy=policy,
+                       baseline=baseline,
+                       max_path_length=100,
+                       discount=0.99,
+                       optimizer_args=dict(
+                           tf_optimizer_args=dict(learning_rate=0.01, )))
+
+            runner.setup(algo, env, sampler_cls=RaySampler)
+            assert isinstance(runner._sampler, RaySampler)
+            runner.train(n_epochs=1, batch_size=10)

@@ -269,9 +269,7 @@ class DDPG(OffPolicyRLAlgorithm):
         last_average_return = np.mean(self.episode_rewards)
         self.log_diagnostics(paths)
         for _ in range(self.n_train_steps):
-            if (self.replay_buffer.n_transitions_stored >=
-                    self.min_buffer_size):
-                self.evaluate = True
+            if self._buffer_prefilled:
                 qf_loss, y_s, qval, policy_loss = self.optimize_policy(
                     itr, paths)
 
@@ -283,10 +281,8 @@ class DDPG(OffPolicyRLAlgorithm):
         if itr % self.steps_per_epoch == 0:
             logger.log('Training finished')
 
-            if self.evaluate:
+            if self._buffer_prefilled:
                 tabular.record('Epoch', epoch)
-                tabular.record('AverageReturn', np.mean(self.episode_rewards))
-                tabular.record('StdReturn', np.std(self.episode_rewards))
                 tabular.record('Policy/AveragePolicyLoss',
                                np.mean(self.episode_policy_losses))
                 tabular.record('QFunction/AverageQFunctionLoss',

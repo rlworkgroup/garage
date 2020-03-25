@@ -12,6 +12,8 @@ class RLAlgorithm(abc.ABC):
 
     """
 
+    # pylint: disable=too-few-public-methods
+
     @abc.abstractmethod
     def train(self, runner):
         """Obtain samplers and start actual training for each epoch.
@@ -25,4 +27,3 @@ class RLAlgorithm(abc.ABC):
             The average return in last epoch cycle or None.
 
         """
-        pass

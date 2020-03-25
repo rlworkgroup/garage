@@ -4,7 +4,6 @@ import errno
 import os
 import pathlib
 import cloudpickle
-
 import joblib
 
 SnapshotConfig = collections.namedtuple(
@@ -113,7 +112,7 @@ class Snapshotter:
         """Load one snapshot of parameters from disk.
 
         Args:
-            load_dir (str): Directory of the pickle file
+            load_dir (str): Directory of the cloudpickle file
                 to resume experiment from.
             itr (int or string): Iteration to load.
                 Can be an integer, 'last' or 'first'.

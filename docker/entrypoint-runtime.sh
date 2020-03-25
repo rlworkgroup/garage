@@ -3,7 +3,11 @@
 set -e
 
 # Get MuJoCo key from the environment
-echo "${MJKEY}" > /root/.mujoco/mjkey.txt
+if [ -z "${MJKEY}" ]; then
+  :
+else
+  echo "${MJKEY}" > /root/.mujoco/mjkey.txt
+fi
 
 # Fixes Segmentation Fault
 # See: https://github.com/openai/mujoco-py/pull/145#issuecomment-356938564
