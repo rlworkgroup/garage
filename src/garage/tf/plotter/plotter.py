@@ -52,10 +52,10 @@ class Plotter:
                  graph=None,
                  rollout=default_rollout):
         Plotter.__plotters.append(self)
-        self.env = env
-        self.policy = policy
-        self.sess = tf.compat.v1.get_default_session(
-        ) if sess is None else sess
+        self._env = env
+        self._policy = policy
+        self.sess = tf.compat.v1.Session() if sess is None else sess
+
         self.graph = tf.compat.v1.get_default_graph(
         ) if graph is None else graph
         self.rollout = rollout
@@ -64,15 +64,13 @@ class Plotter:
 
         # Needed in order to draw glfw window on the main thread
         if 'Darwin' in platform.platform():
-            self.rollout(env,
-                         policy,
+            self.rollout(self._env,
+                         self._policy,
                          max_path_length=np.inf,
                          animated=True,
                          speedup=5)
 
     def _start_worker(self):
-        env = None
-        policy = None
         max_length = None
         initial_rollout = True
         try:
@@ -99,22 +97,22 @@ class Plotter:
                         self.queue.task_done()
                         break
                     if Op.UPDATE in msgs:
-                        env, policy = msgs[Op.UPDATE].args
+                        self._env, self._policy = msgs[Op.UPDATE].args
                         self.queue.task_done()
                     if Op.DEMO in msgs:
                         param_values, max_length = msgs[Op.DEMO].args
-                        policy.set_param_values(param_values)
+                        self._policy.set_param_values(param_values)
                         initial_rollout = False
-                        self.rollout(env,
-                                     policy,
+                        self.rollout(self._env,
+                                     self._policy,
                                      max_path_length=max_length,
                                      animated=True,
                                      speedup=5)
                         self.queue.task_done()
                     else:
                         if max_length:
-                            self.rollout(env,
-                                         policy,
+                            self.rollout(self._env,
+                                         self._policy,
                                          max_path_length=max_length,
                                          animated=True,
                                          speedup=5)
@@ -148,7 +146,7 @@ class Plotter:
             self.worker_thread.start()
             self.queue.put(
                 Message(op=Op.UPDATE,
-                        args=(self.env, self.policy),
+                        args=(self._env, self._policy),
                         kwargs=None))
             atexit.register(self.close)
 
