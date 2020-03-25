@@ -53,9 +53,6 @@ EXTRAS['dm_control'] = [
 
 EXTRAS['all'] = list(set(sum(EXTRAS.values(), [])))
 
-# dependencies for using gpu, not included in 'all'
-EXTRAS['gpu'] = ['tensorflow-gpu' + TF_VERSION]
-
 # Development dependencies (*not* included in 'all')
 EXTRAS['dev'] = [
     # Please keep alphabetized
