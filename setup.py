@@ -5,7 +5,6 @@ from setuptools import find_packages
 from setuptools import setup
 
 GARAGE_GH_TOKEN = os.environ.get('GARAGE_GH_TOKEN') or 'git'
-TF_VERSION = '<1.16,>=1.15.0'
 GYM_VERSION = '==0.15.4'
 
 # Required dependencies
@@ -30,7 +29,7 @@ REQUIRED = [
     'ray',
     'scikit-image',
     'scipy',
-    'tensorflow' + TF_VERSION,
+    'tensorflow',
     'tensorflow-probability',
     'torch>=1.0.0',
     'torchvision>=0.2.1',
