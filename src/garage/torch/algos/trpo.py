@@ -74,18 +74,22 @@ class TRPO(VPG):
                          stop_entropy_gradient=stop_entropy_gradient,
                          entropy_method=entropy_method)
 
-    def _compute_objective(self, advantages, valids, obs, actions, rewards):
-        """Compute the surrogate objective.
+    def _compute_objective(self, advantages, obs, actions, rewards):
+        r"""Compute objective value.
 
         Args:
-            advantages (torch.Tensor): Expected rewards over the actions
-            valids (list[int]): length of the valid values for each path
-            obs (torch.Tensor): Observation from the environment.
-            actions (torch.Tensor): Predicted action.
-            rewards (torch.Tensor): Feedback from the environment.
+            advantages (torch.Tensor): Advantage value at each step
+                with shape :math:`(N \dot [T], )`.
+            obs (torch.Tensor): Observation from the environment
+                with shape :math:`(N \dot [T], O*)`.
+            actions (torch.Tensor): Actions fed to the environment
+                with shape :math:`(N \dot [T], A*)`.
+            rewards (torch.Tensor): Acquired rewards
+                with shape :math:`(N \dot [T], )`.
 
         Returns:
             torch.Tensor: Calculated objective values
+                with shape :math:`(N \dot [T], )`.
 
         """
         with torch.no_grad():
@@ -99,8 +103,21 @@ class TRPO(VPG):
 
         return surrogate
 
-    def _optimize(self, itr, obs, actions, rewards, valids, baselines):
+    def _optimize(self, obs, actions, rewards, advantages):
+        r"""Performs a optimization.
+
+        Args:
+            obs (torch.Tensor): Observation from the environment
+                with shape :math:`(N \dot [T], O*)`.
+            actions (torch.Tensor): Actions fed to the environment
+                with shape :math:`(N \dot [T], A*)`.
+            rewards (torch.Tensor): Acquired rewards
+                with shape :math:`(N \dot [T], )`.
+            advantages (torch.Tensor): Advantage value at each step
+                with shape :math:`(N \dot [T], )`.
+
+        """
         self._optimizer.step(
-            f_loss=lambda: self._compute_loss(itr, obs, actions, rewards,
-                                              valids, baselines),
+            f_loss=lambda: self._compute_loss_with_adv(obs, actions, rewards,
+                                                       advantages),
             f_constraint=lambda: self._compute_kl_constraint(obs))
