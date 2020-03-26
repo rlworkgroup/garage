@@ -75,7 +75,6 @@ def test_dqn_pong():
         env=env).returncode == 0
 
 
-@pytest.mark.flaky
 @pytest.mark.no_cover
 @pytest.mark.timeout(30)
 def test_ppo_memorize_digits():
@@ -91,7 +90,6 @@ def test_ppo_memorize_digits():
     assert subprocess.run(command, check=False, env=env).returncode == 0
 
 
-@pytest.mark.flaky
 @pytest.mark.no_cover
 @pytest.mark.timeout(40)
 def test_trpo_cubecrash():
@@ -115,7 +113,6 @@ def test_step_env():
         check=False).returncode == 0
 
 
-@pytest.mark.flaky
 @pytest.mark.mujoco
 @pytest.mark.no_cover
 @pytest.mark.timeout(20)
@@ -126,7 +123,6 @@ def test_step_dm_control_env():
         check=False).returncode == 0
 
 
-@pytest.mark.flaky
 @pytest.mark.mujoco
 @pytest.mark.no_cover
 @pytest.mark.timeout(20)
@@ -139,7 +135,7 @@ def test_maml_halfcheetah():
                           check=False).returncode == 0
 
 
-@pytest.mark.flaky
+@pytest.mark.large
 @pytest.mark.no_cover
 @pytest.mark.timeout(120)
 def test_pearl_ml1_push():
@@ -152,5 +148,50 @@ def test_pearl_ml1_push():
         '--num_steps_prior', '1', '--num_extra_rl_steps_posterior', '1',
         '--batch_size', '4', '--embedding_batch_size', '2',
         '--embedding_mini_batch_size', '2', '--max_path_length', '1'
+    ],
+                          check=False).returncode == 0
+
+
+@pytest.mark.nightly
+@pytest.mark.no_cover
+@pytest.mark.timeout(120)
+def test_maml_ml10():
+    """Test maml_trpo_ml10.py"""
+    assert subprocess.run([
+        EXAMPLES_ROOT_DIR / 'torch/maml_trpo_ml10.py', '--epochs', '1',
+        '--rollouts_per_task', '1', '--meta_batch_size', '1'
+    ],
+                          check=False).returncode == 0
+
+
+@pytest.mark.no_cover
+@pytest.mark.timeout(30)
+def test_maml_trpo():
+    """Test maml_trpo_half_cheetah_dir.py"""
+    assert subprocess.run([
+        EXAMPLES_ROOT_DIR / 'torch/maml_trpo_half_cheetah_dir.py', '--epochs',
+        '1', '--rollouts_per_task', '1', '--meta_batch_size', '1'
+    ],
+                          check=False).returncode == 0
+
+
+@pytest.mark.no_cover
+@pytest.mark.timeout(30)
+def test_maml_ppo():
+    """Test maml_ppo_half_cheetah_dir.py"""
+    assert subprocess.run([
+        EXAMPLES_ROOT_DIR / 'torch/maml_ppo_half_cheetah_dir.py', '--epochs',
+        '1', '--rollouts_per_task', '1', '--meta_batch_size', '1'
+    ],
+                          check=False).returncode == 0
+
+
+@pytest.mark.no_cover
+@pytest.mark.timeout(30)
+def test_maml_vpg():
+    """Test maml_vpg_half_cheetah_dir.py"""
+    assert subprocess.run([
+        EXAMPLES_ROOT_DIR / 'torch/maml_vpg_half_cheetah_dir.py', '--epochs',
+        '1', '--rollouts_per_task', '1', '--meta_batch_size', '1'
     ],
                           check=False).returncode == 0

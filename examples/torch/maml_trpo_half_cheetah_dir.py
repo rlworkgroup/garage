@@ -8,8 +8,9 @@ from garage import wrap_experiment
 from garage.envs import normalize
 from garage.envs.base import GarageEnv
 from garage.envs.mujoco import HalfCheetahDirEnv
-from garage.experiment import LocalRunner
+from garage.experiment import LocalRunner, MetaEvaluator
 from garage.experiment.deterministic import set_seed
+from garage.experiment.task_sampler import SetTaskSampler
 from garage.np.baselines import LinearFeatureBaseline
 from garage.torch.algos import MAMLTRPO
 from garage.torch.policies import GaussianMLPPolicy
@@ -49,6 +50,14 @@ def maml_trpo(ctxt, seed, epochs, rollouts_per_task, meta_batch_size):
 
     max_path_length = 100
 
+    task_sampler = SetTaskSampler(lambda: GarageEnv(
+        normalize(HalfCheetahDirEnv(), expected_action_scale=10.)))
+
+    meta_evaluator = MetaEvaluator(test_task_sampler=task_sampler,
+                                   max_path_length=max_path_length,
+                                   n_test_tasks=1,
+                                   n_test_rollouts=10)
+
     runner = LocalRunner(ctxt)
     algo = MAMLTRPO(env=env,
                     policy=policy,
@@ -58,7 +67,8 @@ def maml_trpo(ctxt, seed, epochs, rollouts_per_task, meta_batch_size):
                     discount=0.99,
                     gae_lambda=1.,
                     inner_lr=0.1,
-                    num_grad_updates=1)
+                    num_grad_updates=1,
+                    meta_evaluator=meta_evaluator)
 
     runner.setup(algo, env)
     runner.train(n_epochs=epochs,

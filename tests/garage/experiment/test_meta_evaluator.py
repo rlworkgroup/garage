@@ -8,10 +8,9 @@ import pytest
 import tensorflow as tf
 
 from garage.envs import GarageEnv, PointEnv
-from garage.experiment import SnapshotConfig
+from garage.experiment import MetaEvaluator, SnapshotConfig
 from garage.experiment.deterministic import set_seed
 from garage.experiment.local_runner import LocalRunner
-from garage.experiment.meta_evaluator import MetaEvaluator
 from garage.experiment.task_sampler import SetTaskSampler
 from garage.np.algos import MetaRLAlgorithm
 from garage.sampler import LocalSampler
