@@ -443,7 +443,7 @@ class MAML:
         paths = exploration_trajectories.to_trajectory_list()
         batch_samples = self._process_samples(0, paths)
 
-        self._adapt(0, batch_samples, set_grad=False)
+        self._adapt(batch_samples, set_grad=False)
 
         self._policy = old_policy
         self._inner_algo.policy = self._inner_optimizer.module = old_policy
