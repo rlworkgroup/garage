@@ -175,17 +175,13 @@ class OffPolicyRLAlgorithm(RLAlgorithm):
         """
         raise NotImplementedError
 
-    def _obtain_evaluation_samples(self,
-                                   env,
-                                   num_trajs=100,
-                                   max_path_length=1000):
+    def _obtain_evaluation_samples(self, env, num_trajs=100):
         """Sample the policy for 10 trajectories and return average values.
 
         Args:
             env (garage.envs.GarageEnv): The environement used to obtain
                 trajectories.
             num_trajs (int): Number of trajectories.
-            max_path_length (int): Number of maximum steps in one batch.
 
         Returns:
             TrajectoryBatch: Evaluation trajectories, representing the best
@@ -197,7 +193,7 @@ class OffPolicyRLAlgorithm(RLAlgorithm):
         for _ in range(num_trajs):
             path = rollout(env,
                            self.policy,
-                           max_path_length=max_path_length,
+                           max_path_length=self.max_path_length,
                            deterministic=True)
             paths.append(path)
         return TrajectoryBatch.from_trajectory_list(self.env_spec, paths)
