@@ -3,7 +3,7 @@
 import click
 
 from garage.envs import GarageEnv, normalize
-from garage.envs.half_cheetah_vel_env import HalfCheetahVelEnv
+from garage.envs.mujoco import HalfCheetahVelEnv
 from garage.experiment import LocalRunner, wrap_experiment
 from garage.experiment.deterministic import set_seed
 from garage.experiment.meta_evaluator import MetaEvaluator
