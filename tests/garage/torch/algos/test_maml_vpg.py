@@ -1,6 +1,5 @@
 """This script is a test that fails when MAML-VPG performance is too low."""
 import pytest
-
 try:
     # pylint: disable=unused-import
     import mujoco_py  # noqa: F401
