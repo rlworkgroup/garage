@@ -388,11 +388,11 @@ class ExperimentTemplate:
         if args:
             raise ValueError('garage.experiment currently only supports '
                              'keyword arguments')
+        name = self.name
+        if name is None:
+            name = self.function.__name__
         log_dir = self.log_dir
         if log_dir is None:
-            name = self.name
-            if name is None:
-                name = self.function.__name__
             log_dir = ('{data}/local/{prefix}/{name}'.format(
                 data=os.path.join(os.getcwd(), 'data'),
                 prefix=self.prefix,
