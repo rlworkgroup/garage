@@ -53,6 +53,7 @@ class PPO(NPO):
             dimension. If True, for example, an observation with shape (2, 4)
             will be flattened to 8.
         name (str): The name of the algorithm.
+
     """
 
     def __init__(self,
