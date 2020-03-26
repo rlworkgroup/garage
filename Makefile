@@ -26,12 +26,16 @@ ci-job-precommit: docs
 	scripts/travisci/check_precommit.sh
 
 ci-job-normal:
+	mv $(MJKEY_PATH) $(MJKEY_PATH).bak
+	echo "Warning: Removing $(MJKEY_PATH) and backing it up at $(MJKEY_PATH).bak"
 	pytest --cov=garage -v -m \
 	    'not nightly and not huge and not flaky and not large and not mujoco' --durations=0
 	coverage xml
 	bash <(curl -s https://codecov.io/bash)
 
 ci-job-large:
+	mv $(MJKEY_PATH) $(MJKEY_PATH).bak
+	echo "Warning: Removing $(MJKEY_PATH) and backing it up at $(MJKEY_PATH).bak"
 	pytest --cov=garage -v -m 'large and not mujoco' --durations=0
 	coverage xml
 	bash <(curl -s https://codecov.io/bash)
