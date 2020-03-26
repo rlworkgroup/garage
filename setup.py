@@ -27,13 +27,13 @@ REQUIRED = [
     'pyglet<1.4.0,>=1.3.0',
     'pyprind',
     'python-dateutil',
-    'torch==1.3.0',
     'ray',
     'scikit-image',
     'scipy',
     'tensorflow' + TF_VERSION,
     'tensorflow-probability',
-    'torchvision==0.4.1'
+    'torch>=1.0.0',
+    'torchvision>=0.2.1',
 ]
 
 # Dependencies for optional features
