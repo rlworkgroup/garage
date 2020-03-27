@@ -49,8 +49,8 @@ EXTRAS['dm_control'] = [
     # find a build dependency (absl-py). Later pip executes the `install`
     # command again and the install succeeds because absl-py has been
     # installed. This is stupid, but harmless.
-    'dm_control @ https://{}@api.github.com/repos/deepmind/dm_control/tarball/7a36377879c57777e5d5b4da5aae2cd2a29b607a'.format(GARAGE_GH_TOKEN),  # noqa: E501
-]  # yapf: disable
+    'dm_control==0.0.300771433',
+]
 
 EXTRAS['all'] = list(set(sum(EXTRAS.values(), [])))
 
