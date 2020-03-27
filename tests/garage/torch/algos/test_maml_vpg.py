@@ -24,6 +24,7 @@ from garage.torch.policies import GaussianMLPPolicy
 from tests.fixtures import snapshot_config
 
 
+@pytest.mark.mujoco
 class TestMAMLVPG:
     """Test class for MAML-VPG."""
 

@@ -2,6 +2,17 @@
 from functools import partial
 
 import pytest
+try:
+    # pylint: disable=unused-import
+    import mujoco_py  # noqa: F401
+except ImportError:
+    pytest.skip('To use mujoco-based features, please install garage[mujoco].',
+                allow_module_level=True)
+except Exception:  # pylint: disable=broad-except
+    pytest.skip(
+        'Skipping tests, failed to import mujoco. Do you have a '
+        'valid mujoco key installed?',
+        allow_module_level=True)
 import torch
 
 from garage.envs import normalize
@@ -13,6 +24,7 @@ from garage.torch.algos import MAMLPPO
 from garage.torch.policies import GaussianMLPPolicy
 
 
+@pytest.mark.mujoco
 class TestMAML:
     """Test class for MAML."""
 

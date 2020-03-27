@@ -31,7 +31,6 @@ class TestNPO(TfGraphTestCase):
             regressor_args=dict(hidden_sizes=(32, 32)),
         )
 
-    @pytest.mark.large
     @pytest.mark.mujoco
     def test_npo_pendulum(self):
         """Test NPO with Pendulum environment."""

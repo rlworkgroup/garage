@@ -135,7 +135,7 @@ def test_maml_halfcheetah():
                           check=False).returncode == 0
 
 
-@pytest.mark.large
+@pytest.mark.mujoco
 @pytest.mark.no_cover
 @pytest.mark.timeout(120)
 def test_pearl_ml1_push():
@@ -164,6 +164,7 @@ def test_maml_ml10():
                           check=False).returncode == 0
 
 
+@pytest.mark.mujoco
 @pytest.mark.no_cover
 @pytest.mark.timeout(30)
 def test_maml_trpo():
@@ -175,6 +176,7 @@ def test_maml_trpo():
                           check=False).returncode == 0
 
 
+@pytest.mark.mujoco
 @pytest.mark.no_cover
 @pytest.mark.timeout(30)
 def test_maml_ppo():
@@ -186,6 +188,7 @@ def test_maml_ppo():
                           check=False).returncode == 0
 
 
+@pytest.mark.mujoco
 @pytest.mark.no_cover
 @pytest.mark.timeout(30)
 def test_maml_vpg():

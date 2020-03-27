@@ -28,6 +28,7 @@ from garage.tf.policies import GaussianGRUPolicy
 from tests.fixtures import snapshot_config, TfGraphTestCase
 
 
+@pytest.mark.mujoco
 class TestRL2PPO(TfGraphTestCase):
 
     def setup_method(self):
