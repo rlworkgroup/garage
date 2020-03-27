@@ -65,11 +65,13 @@ class TestRL2PPO(TfGraphTestCase):
                           max_path_length=self.max_path_length *
                           self.episode_per_task)
 
-            runner.setup(algo,
-                         self.tasks.sample(self.meta_batch_size),
-                         sampler_cls=LocalSampler,
-                         n_workers=self.meta_batch_size,
-                         worker_class=RL2Worker)
+            runner.setup(
+                algo,
+                self.tasks.sample(self.meta_batch_size),
+                sampler_cls=LocalSampler,
+                n_workers=self.meta_batch_size,
+                worker_class=RL2Worker,
+                worker_args=dict(n_paths_per_trial=self.episode_per_task))
 
             last_avg_ret = runner.train(n_epochs=1,
                                         batch_size=self.episode_per_task *
@@ -216,13 +218,3 @@ class TestRL2PPO(TfGraphTestCase):
                 runner.train(n_epochs=10,
                              batch_size=self.episode_per_task *
                              self.max_path_length * self.meta_batch_size)
-
-    def test_rl2_obs_dim_padding(self):
-        env_spec = RL2Env(env=normalize(HalfCheetahDirEnv()),
-                          max_obs_dim=20).spec
-        # observation dim 20
-        # action_dim dim 6
-        # reward dim 1
-        # terminal dim 1
-        # total dim = 28
-        assert env_spec.observation_space.shape == (28, )

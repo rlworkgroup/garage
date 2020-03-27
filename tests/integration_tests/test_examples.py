@@ -205,6 +205,7 @@ def test_maml_vpg():
                           check=False).returncode == 0
 
 
+@pytest.mark.mujoco
 @pytest.mark.no_cover
 @pytest.mark.timeout(40)
 def test_rl2_ppo_halfcheetah():
@@ -216,6 +217,7 @@ def test_rl2_ppo_halfcheetah():
                           check=False).returncode == 0
 
 
+@pytest.mark.mujoco
 @pytest.mark.no_cover
 @pytest.mark.timeout(40)
 def test_rl2_trpo_halfcheetah():
@@ -227,6 +229,7 @@ def test_rl2_trpo_halfcheetah():
                           check=False).returncode == 0
 
 
+@pytest.mark.mujoco
 @pytest.mark.no_cover
 @pytest.mark.timeout(80)
 def test_rl2_ppo_halfcheetah_meta_test():
