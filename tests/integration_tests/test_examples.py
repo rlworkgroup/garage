@@ -228,7 +228,7 @@ def test_rl2_trpo_halfcheetah():
 
 
 @pytest.mark.no_cover
-@pytest.mark.timeout(40)
+@pytest.mark.timeout(80)
 def test_rl2_ppo_halfcheetah_meta_test():
     """Test rl2_ppo_halfcheetah_meta_test.py."""
     assert subprocess.run([
