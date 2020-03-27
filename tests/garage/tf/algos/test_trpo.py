@@ -39,7 +39,6 @@ class TestTRPO(TfGraphTestCase):
             regressor_args=dict(hidden_sizes=(32, 32)),
         )
 
-    @pytest.mark.large
     @pytest.mark.mujoco
     def test_trpo_pendulum(self):
         """Test TRPO with Pendulum environment."""
@@ -70,7 +69,6 @@ class TestTRPO(TfGraphTestCase):
                 kl_constraint='random kl_constraint',
             )
 
-    @pytest.mark.large
     @pytest.mark.mujoco
     def test_trpo_soft_kl_constraint(self):
         """Test TRPO with unkown KL constraints."""
@@ -87,7 +85,6 @@ class TestTRPO(TfGraphTestCase):
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 45
 
-    @pytest.mark.large
     @pytest.mark.mujoco
     def test_trpo_lstm_cartpole(self):
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
@@ -113,7 +110,6 @@ class TestTRPO(TfGraphTestCase):
 
             env.close()
 
-    @pytest.mark.large
     @pytest.mark.mujoco
     def test_trpo_gru_cartpole(self):
         deterministic.set_seed(2)

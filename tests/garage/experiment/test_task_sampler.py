@@ -19,7 +19,7 @@ from garage.envs.mujoco.half_cheetah_vel_env import HalfCheetahVelEnv
 from garage.experiment import task_sampler
 
 
-@pytest.mark.large
+@pytest.mark.mujoco
 def test_env_pool_sampler():
     # Import, construct environments here to avoid using up too much
     # resources if this test isn't run.
@@ -47,7 +47,7 @@ def test_env_pool_sampler():
     tasks.sample(20)
 
 
-@pytest.mark.large
+@pytest.mark.mujoco
 def test_construct_envs_sampler_ml10():
     # pylint: disable=import-outside-toplevel
     from metaworld.envs.mujoco.env_dict import MEDIUM_MODE_ARGS_KWARGS
@@ -73,7 +73,7 @@ def test_construct_envs_sampler_ml10():
     env.close.assert_called()
 
 
-@pytest.mark.large
+@pytest.mark.mujoco
 def test_set_task_task_sampler_ml10():
     # pylint: disable=import-outside-toplevel
     from metaworld.benchmarks import ML10
@@ -90,6 +90,7 @@ def test_set_task_task_sampler_ml10():
     env.close.assert_not_called()
 
 
+@pytest.mark.mujoco
 def test_set_task_task_sampler_half_cheetah_vel_env():
     tasks = task_sampler.SetTaskSampler(HalfCheetahVelEnv)
     assert tasks.n_tasks is None

@@ -15,6 +15,7 @@ from garage.envs.mujoco.half_cheetah_dir_env import HalfCheetahDirEnv
 from garage.envs.mujoco.half_cheetah_vel_env import HalfCheetahVelEnv
 
 
+@pytest.mark.mujoco
 class TestMetaHalfCheetahEnvs:
 
     @pytest.mark.parametrize('env_type',

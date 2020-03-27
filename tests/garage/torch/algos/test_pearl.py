@@ -28,6 +28,7 @@ import garage.torch.utils as tu
 from tests.fixtures import snapshot_config
 
 
+@pytest.mark.mujoco
 class TestPEARL:
     """Test class for PEARL."""
 

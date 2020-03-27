@@ -24,6 +24,7 @@ from tests.fixtures import snapshot_config
 from tests.fixtures.envs.dummy import DummyMultiTaskBoxEnv
 
 
+@pytest.mark.mujoco
 def test_maml_trpo_pendulum():
     """Test PPO with Pendulum environment."""
     env = GarageEnv(normalize(HalfCheetahDirEnv(), expected_action_scale=10.))

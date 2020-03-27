@@ -23,6 +23,7 @@ from garage.torch.policies import GaussianMLPPolicy
 from tests.fixtures import snapshot_config
 
 
+@pytest.mark.mujoco
 class TestMAMLPPO:
     """Test class for MAML-PPO."""
 

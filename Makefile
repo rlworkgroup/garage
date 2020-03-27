@@ -1,8 +1,8 @@
 SHELL := /bin/bash
 
 .PHONY: help test check docs ci-job-normal ci-job-large ci-job-nightly \
-	ci-job-verify-envs ci-verify-conda ci-verify-pipenv build-ci \
-	build-headless build-nvidia run-ci run-headless run-nvidia
+	ci-job-verify-envs ci-verify-envs-conda ci-verify-envs-pipenv build-ci \
+	build-headless build-nvidia run-ci run-headless run-nvidia assert-docker
 
 .DEFAULT_GOAL := help
 
@@ -22,35 +22,40 @@ docs:  ## Build HTML documentation
 docs:
 	@pushd docs && make html && popd
 
-ci-job-precommit: docs
+ci-job-precommit: assert-docker docs
 	scripts/travisci/check_precommit.sh
 
-ci-job-normal:
+ci-job-normal: assert-docker
+	mv $(MJKEY_PATH) $(MJKEY_PATH).bak
+	echo "Warning: Removing $(MJKEY_PATH) and backing it up at $(MJKEY_PATH).bak"
 	pytest --cov=garage -v -m \
 	    'not nightly and not huge and not flaky and not large and not mujoco' --durations=0
 	coverage xml
 	bash <(curl -s https://codecov.io/bash)
 
-ci-job-large:
+ci-job-large: assert-docker
+	mv $(MJKEY_PATH) $(MJKEY_PATH).bak
+	echo "Warning: Removing $(MJKEY_PATH) and backing it up at $(MJKEY_PATH).bak"
 	pytest --cov=garage -v -m 'large and not mujoco' --durations=0
 	coverage xml
 	bash <(curl -s https://codecov.io/bash)
 
-ci-job-mujoco:
-	pytest --cov=garage -v -m mujoco --durations=0
+ci-job-mujoco: assert-docker
+	pytest --cov=garage -v -m 'mujoco and not flaky' --durations=0
 	coverage xml
 	bash <(curl -s https://codecov.io/bash)
 
-ci-job-nightly:
+ci-job-nightly: assert-docker
 	pytest -v -m nightly
 
-# ci-job-verify-envs: ci-verify-conda ci-verify-pipenv
-ci-job-verify-envs: ci-verify-pipenv
+# ci-job-verify-envs: assert-docker ci-verify-envs-conda ci-verify-envs-pipenv
+ci-job-verify-envs: assert-docker ci-verify-envs-pipenv
 
-ci-verify-conda: CONDA_ROOT := $$HOME/miniconda
-ci-verify-conda: CONDA := $(CONDA_ROOT)/bin/conda
-ci-verify-conda: GARAGE_BIN = $(CONDA_ROOT)/envs/garage-ci/bin
-ci-verify-conda:
+ci-job-verify-envs-conda: assert-docker
+ci-job-verify-envs-conda: CONDA_ROOT := $$HOME/miniconda
+ci-job-verify-envs-conda: CONDA := $(CONDA_ROOT)/bin/conda
+ci-job-verify-envs-conda: GARAGE_BIN = $(CONDA_ROOT)/envs/garage-ci/bin
+ci-job-verify-envs-conda:
 	touch $(MJKEY_PATH)
 	wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
 	bash miniconda.sh -b -p $(CONDA_ROOT)
@@ -73,9 +78,10 @@ ci-verify-conda:
 
 # The following two lines remove the Dockerfile's built-in virtualenv from the
 # path, so we can test with pipenv directly
-ci-verify-pipenv: export PATH=$(shell echo $$PATH | awk -v RS=: -v ORS=: '/venv/ {next} {print}')
-ci-verify-pipenv: export VIRTUAL_ENV=
-ci-verify-pipenv:
+ci-job-verify-envs-pipenv: assert-docker
+ci-job-verify-envs-pipenv: export PATH=$(shell echo $$PATH | awk -v RS=: -v ORS=: '/venv/ {next} {print}')
+ci-job-verify-envs-pipenv: export VIRTUAL_ENV=
+ci-job-verify-envs-pipenv:
 	touch $(MJKEY_PATH)
 	pip3 install --upgrade pipenv setuptools
 	pipenv --three
@@ -84,7 +90,7 @@ ci-verify-pipenv:
 	# pylint will verify all imports work
 	pipenv run pylint --disable=all --enable=import-error garage
 
-ci-deploy-docker:
+ci-deploy-docker: assert-travis
 	echo "${DOCKER_API_KEY}" | docker login -u "${DOCKER_USERNAME}" \
 		--password-stdin
 	docker tag "${TAG}" rlworkgroup/garage-ci:latest
@@ -157,6 +163,18 @@ run-nvidia: build-nvidia
 		--name $(CONTAINER_NAME) \
 		${RUN_ARGS} \
 		rlworkgroup/garage-nvidia ${RUN_CMD}
+
+# Checks that we are in a docker container
+assert-docker:
+	@test -f /proc/1/cgroup && /bin/grep -qa docker /proc/1/cgroup \
+		|| (echo 'This recipe is only to be run inside Docker.' && exit 1)
+
+# Checks that we are in a docker container
+assert-travis:
+ifndef TRAVIS
+	@echo 'This recipe is only to be run from TravisCI'
+	@exit 1
+endif
 
 # Help target
 # See https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html

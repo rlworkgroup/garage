@@ -39,8 +39,6 @@ class TestPPO(TfGraphTestCase):
             regressor_args=dict(hidden_sizes=(32, 32)),
         )
 
-    # large marker removed to balance test jobs
-    # @pytest.mark.large
     @pytest.mark.mujoco
     def test_ppo_pendulum(self):
         """Test PPO with Pendulum environment."""
@@ -56,8 +54,6 @@ class TestPPO(TfGraphTestCase):
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 35
 
-    # large marker removed to balance test jobs
-    # @pytest.mark.large
     @pytest.mark.mujoco
     def test_ppo_with_maximum_entropy(self):
         """Test PPO with maxium entropy method."""
@@ -77,8 +73,6 @@ class TestPPO(TfGraphTestCase):
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 35
 
-    # large marker removed to balance test jobs
-    # @pytest.mark.large
     @pytest.mark.mujoco
     def test_ppo_with_neg_log_likeli_entropy_estimation_and_max(self):
         """
@@ -102,8 +96,6 @@ class TestPPO(TfGraphTestCase):
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 35
 
-    # large marker removed to balance test jobs
-    # @pytest.mark.large
     @pytest.mark.mujoco
     def test_ppo_with_neg_log_likeli_entropy_estimation_and_regularized(self):
         """
@@ -127,8 +119,6 @@ class TestPPO(TfGraphTestCase):
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 35
 
-    # large marker removed to balance test jobs
-    # @pytest.mark.large
     @pytest.mark.mujoco
     def test_ppo_with_regularized_entropy(self):
         """Test PPO with regularized entropy method."""
@@ -185,7 +175,6 @@ class TestPPO(TfGraphTestCase):
 class TestPPOContinuousBaseline(TfGraphTestCase):
 
     @pytest.mark.huge
-    @pytest.mark.mujoco
     def test_ppo_pendulum_continuous_baseline(self):
         """Test PPO with Pendulum environment."""
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
@@ -223,7 +212,6 @@ class TestPPOContinuousBaseline(TfGraphTestCase):
 
             env.close()
 
-    @pytest.mark.large
     @pytest.mark.mujoco
     def test_ppo_pendulum_recurrent_continuous_baseline(self):
         """Test PPO with Pendulum environment and recurrent policy."""
@@ -260,7 +248,6 @@ class TestPPOContinuousBaseline(TfGraphTestCase):
 
 class TestPPOPendulumLSTM(TfGraphTestCase):
 
-    @pytest.mark.large
     @pytest.mark.mujoco
     def test_ppo_pendulum_lstm(self):
         """Test PPO with Pendulum environment and recurrent policy."""
@@ -295,7 +282,6 @@ class TestPPOPendulumLSTM(TfGraphTestCase):
 
 class TestPPOPendulumGRU(TfGraphTestCase):
 
-    @pytest.mark.large
     @pytest.mark.mujoco
     def test_ppo_pendulum_gru(self):
         """Test PPO with Pendulum environment and recurrent policy."""
