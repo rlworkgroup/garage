@@ -113,7 +113,8 @@ class LocalTFRunner(LocalRunner):
                      n_workers=psutil.cpu_count(logical=False),
                      max_path_length=None,
                      worker_class=DefaultWorker,
-                     sampler_args=None):
+                     sampler_args=None,
+                     worker_args=None):
         """Construct a Sampler from a Sampler class.
 
         Args:
@@ -125,6 +126,8 @@ class LocalTFRunner(LocalRunner):
             worker_class (type): Type of worker the sampler should use.
             sampler_args (dict or None): Additional arguments that should be
                 passed to the sampler.
+            worker_args (dict or None): Additional arguments that should be
+                passed to the worker.
 
         Returns:
             sampler_cls: An instance of the sampler class.
@@ -137,7 +140,8 @@ class LocalTFRunner(LocalRunner):
             n_workers=n_workers,
             max_path_length=max_path_length,
             worker_class=TFWorkerClassWrapper(worker_class),
-            sampler_args=sampler_args)
+            sampler_args=sampler_args,
+            worker_args=worker_args)
 
     def setup(self,
               algo,
@@ -145,7 +149,8 @@ class LocalTFRunner(LocalRunner):
               sampler_cls=None,
               sampler_args=None,
               n_workers=psutil.cpu_count(logical=False),
-              worker_class=DefaultWorker):
+              worker_class=DefaultWorker,
+              worker_args=None):
         """Set up runner and sessions for algorithm and environment.
 
         This method saves algo and env within runner and creates a sampler,
@@ -163,12 +168,14 @@ class LocalTFRunner(LocalRunner):
             sampler_args (dict): Arguments to be passed to sampler constructor.
             n_workers (int): The number of workers the sampler should use.
             worker_class (type): Type of worker the sampler should use.
+            worker_args (dict or None): Additional arguments that should be
+                passed to the worker.
 
         """
         self.initialize_tf_vars()
         logger.log(self.sess.graph)
         super().setup(algo, env, sampler_cls, sampler_args, n_workers,
-                      worker_class)
+                      worker_class, worker_args)
 
     def initialize_tf_vars(self):
         """Initialize all uninitialized variables in session."""

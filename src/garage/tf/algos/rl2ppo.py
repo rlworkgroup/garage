@@ -55,6 +55,10 @@ class RL2PPO(RL2):
         flatten_input (bool): Whether to flatten input along the observation
             dimension. If True, for example, an observation with shape (2, 4)
             will be flattened to 8.
+        meta_evaluator (garage.experiment.MetaEvaluator): Evaluator for meta-RL
+            algorithms.
+        n_epochs_per_eval (int): If meta_evaluator is passed, meta-evaluation
+            will be performed every `n_epochs_per_eval` epochs.
         name (str): The name of the algorithm.
 
     """
@@ -83,6 +87,8 @@ class RL2PPO(RL2):
                  stop_entropy_gradient=False,
                  entropy_method='no_entropy',
                  flatten_input=True,
+                 meta_evaluator=None,
+                 n_epochs_per_eval=10,
                  name='PPO'):
         if optimizer_args is None:
             optimizer_args = dict()
@@ -110,4 +116,6 @@ class RL2PPO(RL2):
                          stop_entropy_gradient=stop_entropy_gradient,
                          entropy_method=entropy_method,
                          flatten_input=flatten_input,
+                         meta_evaluator=meta_evaluator,
+                         n_epochs_per_eval=n_epochs_per_eval,
                          name=name)

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Example script to run RL2 in HalfCheetah."""
+"""Example script to run RL2PPO meta test in HalfCheetah."""
 # pylint: disable=no-value-for-parameter
 import click
 
@@ -7,6 +7,7 @@ from garage import wrap_experiment
 from garage.envs.mujoco.half_cheetah_vel_env import HalfCheetahVelEnv
 from garage.experiment import task_sampler
 from garage.experiment.deterministic import set_seed
+from garage.experiment.meta_evaluator import MetaEvaluator
 from garage.np.baselines import LinearFeatureBaseline
 from garage.sampler import LocalSampler
 from garage.tf.algos import RL2PPO
@@ -23,9 +24,9 @@ from garage.tf.policies import GaussianGRUPolicy
 @click.option('--n_epochs', default=10)
 @click.option('--episode_per_task', default=4)
 @wrap_experiment
-def rl2_ppo_halfcheetah(ctxt, seed, max_path_length, meta_batch_size, n_epochs,
-                        episode_per_task):
-    """Train PPO with HalfCheetah environment.
+def rl2_ppo_halfcheetah_meta_test(ctxt, seed, max_path_length, meta_batch_size,
+                                  n_epochs, episode_per_task):
+    """Perform meta-testing on RL2PPO with HalfCheetah environment.
 
     Args:
         ctxt (garage.experiment.ExperimentContext): The experiment
@@ -51,6 +52,12 @@ def rl2_ppo_halfcheetah(ctxt, seed, max_path_length, meta_batch_size, n_epochs,
 
         baseline = LinearFeatureBaseline(env_spec=env_spec)
 
+        meta_evaluator = MetaEvaluator(test_task_sampler=tasks,
+                                       n_exploration_traj=10,
+                                       n_test_rollouts=10,
+                                       max_path_length=max_path_length,
+                                       n_test_tasks=5)
+
         algo = RL2PPO(rl2_max_path_length=max_path_length,
                       meta_batch_size=meta_batch_size,
                       task_sampler=tasks,
@@ -69,7 +76,9 @@ def rl2_ppo_halfcheetah(ctxt, seed, max_path_length, meta_batch_size, n_epochs,
                       entropy_method='max',
                       policy_ent_coeff=0.02,
                       center_adv=False,
-                      max_path_length=max_path_length * episode_per_task)
+                      max_path_length=max_path_length * episode_per_task,
+                      meta_evaluator=meta_evaluator,
+                      n_epochs_per_eval=10)
 
         runner.setup(algo,
                      tasks.sample(meta_batch_size),
@@ -83,4 +92,4 @@ def rl2_ppo_halfcheetah(ctxt, seed, max_path_length, meta_batch_size, n_epochs,
                      meta_batch_size)
 
 
-rl2_ppo_halfcheetah()
+rl2_ppo_halfcheetah_meta_test()

@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 """Example script to run RL2 in HalfCheetah."""
+# pylint: disable=no-value-for-parameter
+import click
+
 from garage import wrap_experiment
 from garage.envs.mujoco.half_cheetah_vel_env import HalfCheetahVelEnv
 from garage.experiment import task_sampler
@@ -15,8 +18,15 @@ from garage.tf.optimizers import FiniteDifferenceHvp
 from garage.tf.policies import GaussianGRUPolicy
 
 
+@click.command()
+@click.option('--seed', default=1)
+@click.option('--max_path_length', default=100)
+@click.option('--meta_batch_size', default=10)
+@click.option('--n_epochs', default=10)
+@click.option('--episode_per_task', default=4)
 @wrap_experiment
-def rl2_trpo_halfcheetah(ctxt=None, seed=1):
+def rl2_trpo_halfcheetah(ctxt, seed, max_path_length, meta_batch_size,
+                         n_epochs, episode_per_task):
     """Train TRPO with HalfCheetah environment.
 
     Args:
@@ -24,15 +34,14 @@ def rl2_trpo_halfcheetah(ctxt=None, seed=1):
             configuration used by LocalRunner to create the snapshotter.
         seed (int): Used to seed the random number generator to produce
             determinism.
+        max_path_length (int): Maximum length of a single rollout.
+        meta_batch_size (int): Meta batch size.
+        n_epochs (int): Total number of epochs for training.
+        episode_per_task (int): Number of training episode per task.
 
     """
     set_seed(seed)
     with LocalTFRunner(snapshot_config=ctxt) as runner:
-        max_path_length = 100
-        meta_batch_size = 10
-        n_epochs = 50
-        episode_per_task = 4
-
         tasks = task_sampler.SetTaskSampler(lambda: RL2Env(
             env=HalfCheetahVelEnv()))
 
@@ -61,11 +70,12 @@ def rl2_trpo_halfcheetah(ctxt=None, seed=1):
                      tasks.sample(meta_batch_size),
                      sampler_cls=LocalSampler,
                      n_workers=meta_batch_size,
-                     worker_class=RL2Worker)
+                     worker_class=RL2Worker,
+                     worker_args=dict(n_paths_per_trial=episode_per_task))
 
         runner.train(n_epochs=n_epochs,
                      batch_size=episode_per_task * max_path_length *
                      meta_batch_size)
 
 
-rl2_trpo_halfcheetah(seed=1)
+rl2_trpo_halfcheetah()

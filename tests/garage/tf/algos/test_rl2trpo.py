@@ -47,7 +47,7 @@ class TestRL2TRPO(TfGraphTestCase):
                                         state_include_action=False)
         self.baseline = LinearFeatureBaseline(env_spec=self.env_spec)
 
-    def test_ppo_pendulum(self):
+    def test_rl2_trpo_pendulum(self):
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
             algo = RL2TRPO(
                 rl2_max_path_length=self.max_path_length,
@@ -69,13 +69,13 @@ class TestRL2TRPO(TfGraphTestCase):
                          n_workers=self.meta_batch_size,
                          worker_class=RL2Worker)
 
-            last_avg_ret = runner.train(n_epochs=10,
+            last_avg_ret = runner.train(n_epochs=1,
                                         batch_size=self.episode_per_task *
                                         self.max_path_length *
                                         self.meta_batch_size)
             assert last_avg_ret > -40
 
-    def test_ppo_pendulum_default_optimizer(self):
+    def test_rl2_trpo_pendulum_default_optimizer(self):
         with LocalTFRunner(snapshot_config, sess=self.sess):
             algo = RL2TRPO(rl2_max_path_length=self.max_path_length,
                            meta_batch_size=self.meta_batch_size,
@@ -107,7 +107,7 @@ class TestRL2TRPO(TfGraphTestCase):
             assert isinstance(algo._inner_algo._optimizer,
                               PenaltyLbfgsOptimizer)
 
-    def test_ppo_pendulum_invalid_kl_constraint(self):
+    def test_rl2_trpo_pendulum_invalid_kl_constraint(self):
         with LocalTFRunner(snapshot_config, sess=self.sess):
             with pytest.raises(ValueError):
                 RL2TRPO(rl2_max_path_length=self.max_path_length,

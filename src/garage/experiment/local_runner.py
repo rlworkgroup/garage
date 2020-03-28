@@ -150,6 +150,7 @@ class LocalRunner:
 
         self._n_workers = None
         self._worker_class = None
+        self._worker_args = None
 
     def make_sampler(self,
                      sampler_cls,
@@ -158,7 +159,8 @@ class LocalRunner:
                      n_workers=psutil.cpu_count(logical=False),
                      max_path_length=None,
                      worker_class=DefaultWorker,
-                     sampler_args=None):
+                     sampler_args=None,
+                     worker_args=None):
         """Construct a Sampler from a Sampler class.
 
         Args:
@@ -169,6 +171,8 @@ class LocalRunner:
             n_workers (int): The number of workers the sampler should use.
             worker_class (type): Type of worker the Sampler should use.
             sampler_args (dict or None): Additional arguments that should be
+                passed to the sampler.
+            worker_args (dict or None): Additional arguments that should be
                 passed to the sampler.
 
         Returns:
@@ -181,6 +185,8 @@ class LocalRunner:
             seed = get_seed()
         if sampler_args is None:
             sampler_args = {}
+        if worker_args is None:
+            worker_args = {}
         if issubclass(sampler_cls, BaseSampler):
             return sampler_cls(self._algo, self._env, **sampler_args)
         else:
@@ -188,7 +194,8 @@ class LocalRunner:
                 seed=seed,
                 max_path_length=max_path_length,
                 n_workers=n_workers,
-                worker_class=worker_class),
+                worker_class=worker_class,
+                worker_args=worker_args),
                                                    agents=self._algo.policy,
                                                    envs=self._env)
 
@@ -198,7 +205,8 @@ class LocalRunner:
               sampler_cls=None,
               sampler_args=None,
               n_workers=psutil.cpu_count(logical=False),
-              worker_class=DefaultWorker):
+              worker_class=DefaultWorker,
+              worker_args=None):
         """Set up runner for algorithm and environment.
 
         This method saves algo and env within runner and creates a sampler.
@@ -215,6 +223,8 @@ class LocalRunner:
             sampler_args (dict): Arguments to be passed to sampler constructor.
             n_workers (int): The number of workers the sampler should use.
             worker_class (type): Type of worker the sampler should use.
+            worker_args (dict or None): Additional arguments that should be
+                passed to the worker.
 
         """
         self._algo = algo
@@ -222,15 +232,19 @@ class LocalRunner:
         self._policy = self._algo.policy
         self._n_workers = n_workers
         self._worker_class = worker_class
-
         if sampler_args is None:
             sampler_args = {}
         if sampler_cls is None:
             sampler_cls = algo.sampler_cls
+        if worker_args is None:
+            worker_args = {}
+
+        self._worker_args = worker_args
         self._sampler = self.make_sampler(sampler_cls,
                                           sampler_args=sampler_args,
                                           n_workers=n_workers,
-                                          worker_class=worker_class)
+                                          worker_class=worker_class,
+                                          worker_args=worker_args)
 
         self._has_setup = True
 
@@ -320,6 +334,7 @@ class LocalRunner:
         params['algo'] = self._algo
         params['n_workers'] = self._n_workers
         params['worker_class'] = self._worker_class
+        params['worker_args'] = self._worker_args
 
         self._snapshotter.save_itr_params(epoch, params)
 
@@ -352,7 +367,8 @@ class LocalRunner:
                    sampler_cls=self._setup_args.sampler_cls,
                    sampler_args=self._setup_args.sampler_args,
                    n_workers=saved['n_workers'],
-                   worker_class=saved['worker_class'])
+                   worker_class=saved['worker_class'],
+                   worker_args=saved['worker_args'])
 
         n_epochs = self._train_args.n_epochs
         last_epoch = self._stats.total_epoch

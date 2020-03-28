@@ -25,7 +25,7 @@ def test_deterministic_pytorch():
 def test_deterministic_tensorflow():
     """Test deterministic behavior of Tensorflow"""
     deterministic.set_seed(77)
-    rand_tensor = tf.random_uniform((5, 5))
+    rand_tensor = tf.random_uniform((5, 5), seed=3)
     with tf.Session() as sess:
         rand_tensor = sess.run(rand_tensor)
     deterministic_tensor = np.array(
