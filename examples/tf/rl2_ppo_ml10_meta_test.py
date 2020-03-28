@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
-"""Example script to run RL2 in ML45."""
-# pylint: disable=no-value-for-parameter, wrong-import-order
+"""Example script to run RL2 in ML10 with meta-test."""
+# pylint: disable=no-value-for-parameter
 import click
-from metaworld.benchmarks import ML45
+from metaworld.benchmarks import ML10
 
 from garage import wrap_experiment
 from garage.experiment import task_sampler
 from garage.experiment.deterministic import set_seed
+from garage.experiment.meta_evaluator import MetaEvaluator
 from garage.np.baselines import LinearFeatureBaseline
 from garage.sampler import LocalSampler
 from garage.tf.algos import RL2PPO
@@ -19,13 +20,13 @@ from garage.tf.policies import GaussianGRUPolicy
 @click.command()
 @click.option('--seed', default=1)
 @click.option('--max_path_length', default=150)
-@click.option('--meta_batch_size', default=50)
+@click.option('--meta_batch_size', default=10)
 @click.option('--n_epochs', default=10)
 @click.option('--episode_per_task', default=10)
 @wrap_experiment
-def rl2_ppo_ml45(ctxt, seed, max_path_length, meta_batch_size, n_epochs,
-                 episode_per_task):
-    """Train PPO with ML45 environment.
+def rl2_ppo_ml10_meta_test(ctxt, seed, max_path_length, meta_batch_size,
+                           n_epochs, episode_per_task):
+    """Train PPO with ML10 environment with meta-test.
 
     Args:
         ctxt (garage.experiment.ExperimentContext): The experiment
@@ -40,22 +41,26 @@ def rl2_ppo_ml45(ctxt, seed, max_path_length, meta_batch_size, n_epochs,
     """
     set_seed(seed)
     with LocalTFRunner(snapshot_config=ctxt) as runner:
-        ml45_train_tasks = ML45.get_train_tasks()
         ML_train_envs = [
-            RL2Env(ML45.from_task(task_name))
-            for task_name in ml45_train_tasks.all_task_names
+            RL2Env(ML10.from_task(task_name))
+            for task_name in ML10.get_train_tasks().all_task_names
         ]
         tasks = task_sampler.EnvPoolSampler(ML_train_envs)
         tasks.grow_pool(meta_batch_size)
 
         env_spec = ML_train_envs[0].spec
-
         policy = GaussianGRUPolicy(name='policy',
                                    hidden_dim=64,
                                    env_spec=env_spec,
                                    state_include_action=False)
 
         baseline = LinearFeatureBaseline(env_spec=env_spec)
+
+        meta_evaluator = MetaEvaluator(test_task_sampler=tasks,
+                                       n_exploration_traj=10,
+                                       n_test_rollouts=10,
+                                       max_path_length=max_path_length,
+                                       n_test_tasks=5)
 
         algo = RL2PPO(rl2_max_path_length=max_path_length,
                       meta_batch_size=meta_batch_size,
@@ -75,7 +80,9 @@ def rl2_ppo_ml45(ctxt, seed, max_path_length, meta_batch_size, n_epochs,
                       entropy_method='max',
                       policy_ent_coeff=0.02,
                       center_adv=False,
-                      max_path_length=max_path_length * episode_per_task)
+                      max_path_length=max_path_length * episode_per_task,
+                      meta_evaluator=meta_evaluator,
+                      n_epochs_per_eval=10)
 
         runner.setup(algo,
                      tasks.sample(meta_batch_size),
@@ -89,4 +96,4 @@ def rl2_ppo_ml45(ctxt, seed, max_path_length, meta_batch_size, n_epochs,
                      meta_batch_size)
 
 
-rl2_ppo_ml45()
+rl2_ppo_ml10_meta_test()

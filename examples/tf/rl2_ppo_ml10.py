@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 """Example script to run RL2 in ML10."""
+# pylint: disable=no-value-for-parameter
+import click
 from metaworld.benchmarks import ML10
 
 from garage import wrap_experiment
@@ -14,13 +16,15 @@ from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import GaussianGRUPolicy
 
 
+@click.command()
+@click.option('--seed', default=1)
+@click.option('--max_path_length', default=150)
+@click.option('--meta_batch_size', default=10)
+@click.option('--n_epochs', default=10)
+@click.option('--episode_per_task', default=10)
 @wrap_experiment
-def rl2_ppo_ml10(ctxt=None,
-                 seed=1,
-                 max_path_length=150,
-                 meta_batch_size=40,
-                 n_epochs=10,
-                 episode_per_task=10):
+def rl2_ppo_ml10(ctxt, seed, max_path_length, meta_batch_size, n_epochs,
+                 episode_per_task):
     """Train PPO with ML10 environment.
 
     Args:
@@ -75,15 +79,12 @@ def rl2_ppo_ml10(ctxt=None,
                      tasks.sample(meta_batch_size),
                      sampler_cls=LocalSampler,
                      n_workers=meta_batch_size,
-                     worker_class=RL2Worker)
+                     worker_class=RL2Worker,
+                     worker_args=dict(n_paths_per_trial=episode_per_task))
 
         runner.train(n_epochs=n_epochs,
                      batch_size=episode_per_task * max_path_length *
                      meta_batch_size)
 
 
-rl2_ppo_ml10(seed=1,
-             max_path_length=150,
-             meta_batch_size=40,
-             n_epochs=1500,
-             episode_per_task=10)
+rl2_ppo_ml10()

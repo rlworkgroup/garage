@@ -357,6 +357,7 @@ class RL2(MetaRLAlgorithm, abc.ABC):
         self._policy.reset()
         return NoResetPolicy(self._policy)
 
+    # pylint: disable=protected-access
     def adapt_policy(self, exploration_policy, exploration_trajectories):
         """Produce a policy adapted for a task.
 
@@ -435,11 +436,13 @@ class RL2(MetaRLAlgorithm, abc.ABC):
                 concatenated_paths, self._inner_algo.max_path_length))
 
         name_map = None
-        if hasattr(self._task_sampler._envs[0].env, 'all_task_names'):
-            names = [
-                env.env.all_task_names[0] for env in self._task_sampler._envs
-            ]
-            name_map = dict(zip(names, names))
+        if hasattr(self._task_sampler, '_envs'):
+            if hasattr(self._task_sampler._envs[0].env, 'all_task_names'):
+                names = [
+                    env.env.all_task_names[0]
+                    for env in self._task_sampler._envs
+                ]
+                name_map = dict(enumerate(names))
 
         undiscounted_returns = log_multitask_performance(
             itr,
