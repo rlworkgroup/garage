@@ -30,8 +30,6 @@ LONG_RUNNING_EXAMPLES = [
     EXAMPLES_ROOT_DIR / 'tf/rl2_ppo_ml10_meta_test.py',
     EXAMPLES_ROOT_DIR / 'tf/rl2_ppo_ml45.py',
     EXAMPLES_ROOT_DIR / 'tf/rl2_ppo_halfcheetah.py',
-    EXAMPLES_ROOT_DIR / 'tf/rl2_ppo_halfcheetah.py',
-    EXAMPLES_ROOT_DIR / 'tf/rl2_ppo_halfcheetah.py',
     EXAMPLES_ROOT_DIR / 'tf/rl2_trpo_halfcheetah.py',
     EXAMPLES_ROOT_DIR / 'tf/rl2_ppo_halfcheetah_meta_test.py'
 ]
