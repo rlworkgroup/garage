@@ -436,13 +436,12 @@ class RL2(MetaRLAlgorithm, abc.ABC):
                 concatenated_paths, self._inner_algo.max_path_length))
 
         name_map = None
-        if hasattr(self._task_sampler, '_envs'):
-            if hasattr(self._task_sampler._envs[0].env, 'all_task_names'):
-                names = [
-                    env.env.all_task_names[0]
-                    for env in self._task_sampler._envs
-                ]
-                name_map = dict(enumerate(names))
+        if hasattr(self._task_sampler, '_envs') and hasattr(
+                self._task_sampler._envs[0].env, 'all_task_names'):
+            names = [
+                env.env.all_task_names[0] for env in self._task_sampler._envs
+            ]
+            name_map = dict(enumerate(names))
 
         undiscounted_returns = log_multitask_performance(
             itr,

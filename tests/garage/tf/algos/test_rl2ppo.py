@@ -2,8 +2,6 @@
 This script creates a test that fails when garage.tf.algos.RL2PPO
 performance is too low.
 """
-# pylint: disable=wrong-import-order
-from metaworld.benchmarks import ML10
 import numpy as np
 import pytest
 try:
@@ -82,6 +80,8 @@ class TestRL2PPO(TfGraphTestCase):
             assert last_avg_ret > -40
 
     def test_rl2_ppo_ml10(self):
+        # pylint: disable=import-outside-toplevel
+        from metaworld.benchmarks import ML10
         ML_train_envs = [
             RL2Env(ML10.from_task(task_name))
             for task_name in ML10.get_train_tasks().all_task_names
