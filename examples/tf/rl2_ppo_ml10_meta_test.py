@@ -48,6 +48,12 @@ def rl2_ppo_ml10_meta_test(ctxt, seed, max_path_length, meta_batch_size,
         tasks = task_sampler.EnvPoolSampler(ML_train_envs)
         tasks.grow_pool(meta_batch_size)
 
+        ML_test_envs = [
+            RL2Env(ML10.from_task(task_name))
+            for task_name in ML10.get_test_tasks().all_task_names
+        ]
+        test_tasks = task_sampler.EnvPoolSampler(ML_test_envs)
+
         env_spec = ML_train_envs[0].spec
         policy = GaussianGRUPolicy(name='policy',
                                    hidden_dim=64,
@@ -56,7 +62,7 @@ def rl2_ppo_ml10_meta_test(ctxt, seed, max_path_length, meta_batch_size,
 
         baseline = LinearFeatureBaseline(env_spec=env_spec)
 
-        meta_evaluator = MetaEvaluator(test_task_sampler=tasks,
+        meta_evaluator = MetaEvaluator(test_task_sampler=test_tasks,
                                        n_exploration_traj=10,
                                        n_test_rollouts=10,
                                        max_path_length=max_path_length,
