@@ -79,6 +79,52 @@ class TestRL2PPO(TfGraphTestCase):
                                         self.meta_batch_size)
             assert last_avg_ret > -40
 
+    def test_rl2_ppo_ml10(self):
+        # pylint: disable=import-outside-toplevel
+        from metaworld.benchmarks import ML10
+        ML_train_envs = [
+            RL2Env(ML10.from_task(task_name))
+            for task_name in ML10.get_train_tasks().all_task_names
+        ]
+        tasks = task_sampler.EnvPoolSampler(ML_train_envs)
+        tasks.grow_pool(self.meta_batch_size)
+
+        env_spec = ML_train_envs[0].spec
+        policy = GaussianGRUPolicy(env_spec=env_spec,
+                                   hidden_dim=64,
+                                   state_include_action=False,
+                                   name='policy')
+        baseline = LinearFeatureBaseline(env_spec=env_spec)
+        with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
+            algo = RL2PPO(rl2_max_path_length=self.max_path_length,
+                          meta_batch_size=self.meta_batch_size,
+                          task_sampler=tasks,
+                          env_spec=env_spec,
+                          policy=policy,
+                          baseline=baseline,
+                          discount=0.99,
+                          gae_lambda=0.95,
+                          lr_clip_range=0.2,
+                          pg_loss='surrogate_clip',
+                          stop_entropy_gradient=True,
+                          entropy_method='max',
+                          policy_ent_coeff=0.02,
+                          center_adv=False,
+                          max_path_length=self.max_path_length *
+                          self.episode_per_task)
+
+            runner.setup(
+                algo,
+                self.tasks.sample(self.meta_batch_size),
+                sampler_cls=LocalSampler,
+                n_workers=self.meta_batch_size,
+                worker_class=RL2Worker,
+                worker_args=dict(n_paths_per_trial=self.episode_per_task))
+
+            runner.train(n_epochs=1,
+                         batch_size=self.episode_per_task *
+                         self.max_path_length * self.meta_batch_size)
+
     def test_rl2_ppo_pendulum_meta_test(self):
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
             meta_evaluator = MetaEvaluator(
