@@ -278,6 +278,8 @@ def truncate_tensor_dict(tensor_dict, truncated_len):
 def normalize_pixel_batch(env_spec, observations):
     """Normalize the observations (images).
 
+    If the observations appear to be flattened, attempts to unflatten them.
+
     If the input are images, it normalized into range [0, 1].
 
     Args:
@@ -289,6 +291,8 @@ def normalize_pixel_batch(env_spec, observations):
 
     """
     if isinstance(env_spec.observation_space, gym.spaces.Box):
+        if len(observations.shape) == 2:
+            observations = env_spec.observation_space.unflatten_n(observations)
         if len(env_spec.observation_space.shape) == 3:
             return [obs.astype(np.float32) / 255.0 for obs in observations]
     return observations

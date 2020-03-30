@@ -40,7 +40,6 @@ class ContinuousMLPPolicy(Policy):
         output_b_init (callable): Initializer function for the bias
             of output dense layer(s). The function should return a
             tf.Tensor.
-        input_include_goal (bool): Include goal in the observation or not.
         layer_normalization (bool): Bool for using layer normalization or not.
 
     """
@@ -55,7 +54,6 @@ class ContinuousMLPPolicy(Policy):
                  output_nonlinearity=tf.nn.tanh,
                  output_w_init=tf.glorot_uniform_initializer(),
                  output_b_init=tf.zeros_initializer(),
-                 input_include_goal=False,
                  layer_normalization=False):
         super().__init__(name, env_spec)
         action_dim = env_spec.action_space.flat_dim
@@ -66,13 +64,8 @@ class ContinuousMLPPolicy(Policy):
         self._output_nonlinearity = output_nonlinearity
         self._output_w_init = output_w_init
         self._output_b_init = output_b_init
-        self._input_include_goal = input_include_goal
         self._layer_normalization = layer_normalization
-        if self._input_include_goal:
-            self.obs_dim = env_spec.observation_space.flat_dim_with_keys(
-                ['observation', 'desired_goal'])
-        else:
-            self.obs_dim = env_spec.observation_space.flat_dim
+        self.obs_dim = env_spec.observation_space.flat_dim
 
         self.model = MLPModel(output_dim=action_dim,
                               name='MLPModel',
@@ -188,7 +181,6 @@ class ContinuousMLPPolicy(Policy):
                               output_nonlinearity=self._output_nonlinearity,
                               output_w_init=self._output_w_init,
                               output_b_init=self._output_b_init,
-                              input_include_goal=self._input_include_goal,
                               layer_normalization=self._layer_normalization)
 
     def __getstate__(self):

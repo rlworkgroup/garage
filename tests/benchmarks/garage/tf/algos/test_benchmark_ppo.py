@@ -12,7 +12,6 @@ from baselines.common import set_global_seeds
 from baselines.common.vec_env.dummy_vec_env import DummyVecEnv
 from baselines.logger import configure
 from baselines.ppo2 import ppo2
-from baselines.ppo2.policies import MlpPolicy
 import dowel
 from dowel import logger as dowel_logger
 import gym
@@ -296,9 +295,7 @@ def run_baselines(env, seed, log_dir):
     ])
 
     set_global_seeds(seed)
-    policy = MlpPolicy
-
-    ppo2.learn(policy=policy,
+    ppo2.learn(network='mlp',
                env=env,
                nsteps=hyper_parameters['batch_size'],
                nminibatches=32,

@@ -55,8 +55,6 @@ class TD3(DDPG):
         action_noise_sigma (float): Action noise sigma.
         action_noise_clip (float): Action noise clip.
         actor_update_period (int): Action update period.
-        input_include_goal (bool):
-            True if the environment entails a goal in observation.
         smooth_return (bool):
             If True, do statistics on all samples collection.
             Otherwise do statistics on one batch.
@@ -93,7 +91,6 @@ class TD3(DDPG):
                  action_noise_sigma=0.2,
                  actor_update_period=2,
                  action_noise_clip=0.5,
-                 input_include_goal=False,
                  smooth_return=True,
                  exploration_strategy=None):
         self.qf2 = qf2
@@ -127,7 +124,6 @@ class TD3(DDPG):
                                   min_buffer_size=min_buffer_size,
                                   rollout_batch_size=rollout_batch_size,
                                   reward_scale=reward_scale,
-                                  input_include_goal=input_include_goal,
                                   smooth_return=smooth_return,
                                   exploration_strategy=exploration_strategy)
 
@@ -168,11 +164,7 @@ class TD3(DDPG):
                 inputs=[], outputs=target_update_op)
 
             with tf.name_scope('inputs'):
-                if self.input_include_goal:
-                    obs_dim = self.env_spec.observation_space.\
-                        flat_dim_with_keys(['observation', 'desired_goal'])
-                else:
-                    obs_dim = self.env_spec.observation_space.flat_dim
+                obs_dim = self.env_spec.observation_space.flat_dim
                 y = tf.placeholder(tf.float32, shape=(None, 1), name='input_y')
                 obs = tf.placeholder(tf.float32,
                                      shape=(None, obs_dim),
@@ -281,13 +273,8 @@ class TD3(DDPG):
         rewards = rewards.reshape(-1, 1)
         terminals = terminals.reshape(-1, 1)
 
-        if self.input_include_goal:
-            goals = transitions['goal']
-            next_inputs = np.concatenate((next_observations, goals), axis=-1)
-            inputs = np.concatenate((observations, goals), axis=-1)
-        else:
-            next_inputs = next_observations
-            inputs = observations
+        next_inputs = next_observations
+        inputs = observations
 
         target_actions = self.target_policy_f_prob_online(next_inputs)
 

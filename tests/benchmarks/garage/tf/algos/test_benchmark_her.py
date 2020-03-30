@@ -1,5 +1,10 @@
 """This script creates a regression test over garage-HER and baselines-HER."""
 
+import datetime  # noqa: I100
+import os
+import os.path as osp
+import random
+
 import pytest
 try:
     # pylint: disable=unused-import
@@ -13,16 +18,17 @@ except Exception:  # pylint: disable=broad-except
         'valid mujoco key installed?',
         allow_module_level=True)
 
-import datetime  # noqa: I100
-import os
-import os.path as osp
-import random
+try:
+    from baselines.bench import benchmarks  # noqa: I100, I202
+    from baselines.her.experiment.config import CACHED_ENVS
+    from baselines.her.experiment.config import DEFAULT_PARAMS \
+        as BASELINES_PARAMS
+    from baselines.her.her import learn
+except ImportError:
+    pytest.skip('To run test_benchmark_her install mpi4py',
+                allow_module_level=True)
 
-from baselines.bench import benchmarks
-from baselines.her.experiment.config import CACHED_ENVS
-from baselines.her.experiment.config import DEFAULT_PARAMS as BASELINES_PARAMS
-from baselines.her.experiment.train import launch
-import dowel
+import dowel  # noqa: I100, I202
 from dowel import logger
 import gym
 import matplotlib.pyplot as plt
@@ -59,57 +65,54 @@ params = {
 BASELINES_PARAMS['rollout_batch_size'] = 1
 
 
-class TestBenchmarkHER:
+@pytest.mark.huge
+def test_benchmark_her():
     """Compare benchmarks between garage and baselines."""
 
-    @pytest.mark.huge
-    def test_benchmark_her(self):
-        """Compare benchmarks between garage and baselines."""
-        mujoco1m = benchmarks.get_benchmark('HerDdpg')
+    mujoco1m = benchmarks.get_benchmark('Fetch1M')
+    print(mujoco1m)
+    timestamp = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f')
+    benchmark_dir = osp.join(os.getcwd(), 'data', 'local', 'benchmarks', 'her',
+                             timestamp)
+    for task in mujoco1m['tasks']:
+        env_id = task['env_id']
+        env = gym.make(env_id)
+        seeds = random.sample(range(100), task['trials'])
 
-        timestamp = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f')
-        benchmark_dir = osp.join(os.getcwd(), 'data', 'local', 'benchmarks',
-                                 'her', timestamp)
-        for task in mujoco1m['tasks']:
-            env_id = task['env_id']
-            env = gym.make(env_id)
-            seeds = random.sample(range(100), task['trials'])
+        task_dir = osp.join(benchmark_dir, env_id)
+        plt_file = osp.join(benchmark_dir, '{}_benchmark.png'.format(env_id))
+        baselines_csvs = []
+        garage_csvs = []
 
-            task_dir = osp.join(benchmark_dir, env_id)
-            plt_file = osp.join(benchmark_dir,
-                                '{}_benchmark.png'.format(env_id))
-            baselines_csvs = []
-            garage_csvs = []
+        for trial in range(task['trials']):
+            seed = seeds[trial]
 
-            for trial in range(task['trials']):
-                seed = seeds[trial]
+            trial_dir = osp.join(task_dir,
+                                 'trial_{}_seed_{}'.format(trial + 1, seed))
+            garage_dir = osp.join(trial_dir, 'garage')
+            baselines_dir = osp.join(trial_dir, 'baselines')
 
-                trial_dir = osp.join(
-                    task_dir, 'trial_{}_seed_{}'.format(trial + 1, seed))
-                garage_dir = osp.join(trial_dir, 'garage')
-                baselines_dir = osp.join(trial_dir, 'baselines')
+            with tf.Graph().as_default():
+                garage_csv = run_garage(env, seed, garage_dir)
 
-                with tf.Graph().as_default():
-                    garage_csv = run_garage(env, seed, garage_dir)
+                CACHED_ENVS.clear()
+                baselines_csv = run_baselines(env, seed, baselines_dir)
 
-                    CACHED_ENVS.clear()
-                    baselines_csv = run_baselines(env_id, seed, baselines_dir)
+            garage_csvs.append(garage_csv)
+            baselines_csvs.append(baselines_csv)
 
-                garage_csvs.append(garage_csv)
-                baselines_csvs.append(baselines_csv)
+        env.close()
 
-            env.close()
-
-            plot(b_csvs=baselines_csvs,
-                 g_csvs=garage_csvs,
-                 g_x='Epoch',
-                 g_y='AverageSuccessRate',
-                 b_x='epoch',
-                 b_y='train/success_rate',
-                 trials=task['trials'],
-                 seeds=seeds,
-                 plt_file=plt_file,
-                 env_id=env_id)
+        plot(b_csvs=baselines_csvs,
+             g_csvs=garage_csvs,
+             g_x='Epoch',
+             g_y='AverageSuccessRate',
+             b_x='epoch',
+             b_y='train/success_rate',
+             trials=task['trials'],
+             seeds=seeds,
+             plt_file=plt_file,
+             env_id=env_id)
 
 
 def run_garage(env, seed, log_dir):
@@ -117,10 +120,13 @@ def run_garage(env, seed, log_dir):
 
     Replace the ppo with the algorithm you want to run.
 
-    :param env: Environment of the task.
-    :param seed: Random seed for the trial.
-    :param log_dir: Log dir path.
-    :return:
+    Args:
+        env (gym.Env): Environment of the task.
+        seed (int): Random seed for the trial.
+        log_dir (str): Log dir path.
+
+    Returns:
+        str: The log file path.
 
     """
     deterministic.set_seed(seed)
@@ -136,14 +142,12 @@ def run_garage(env, seed, log_dir):
             hidden_sizes=params['policy_hidden_sizes'],
             hidden_nonlinearity=tf.nn.relu,
             output_nonlinearity=tf.nn.tanh,
-            input_include_goal=True,
         )
 
         qf = ContinuousMLPQFunction(
             env_spec=env.spec,
             hidden_sizes=params['qf_hidden_sizes'],
             hidden_nonlinearity=tf.nn.relu,
-            input_include_goal=True,
         )
 
         replay_buffer = HerReplayBuffer(
@@ -169,7 +173,6 @@ def run_garage(env, seed, log_dir):
             policy_optimizer=tf.train.AdamOptimizer,
             qf_optimizer=tf.train.AdamOptimizer,
             buffer_batch_size=256,
-            input_include_goal=True,
         )
 
         # Set up logger since we are not using run_experiment
@@ -187,20 +190,25 @@ def run_garage(env, seed, log_dir):
         return tabular_log_file
 
 
-def run_baselines(env_id, seed, log_dir):
+def run_baselines(env, seed, log_dir):
     """Create baselines model and training.
 
     Replace the ppo and its training with the algorithm you want to run.
 
-    :param env: Environment of the task.
-    :param seed: Random seed for the trial.
-    :param log_dir: Log dir path.
+    Args:
+        env (gym.Env): Environment of the task.
+        seed (int): Random seed for the trial.
+        log_dir (str): Log dir path.
+
+    Returns:
+        str: The log file path.
 
     """
-    launch_params = {
-        'env': env_id,
+    learn_params = {
+        'network': 'mlp',
+        'env': env,
+        'total_timesteps': 1000,
         'logdir': log_dir,
-        'n_epochs': params['n_epochs'],
         'num_cpu':
         1,  # For FetchReachEnv, the performance is not relevant to num_cpu
         'seed': seed,
@@ -208,7 +216,7 @@ def run_baselines(env_id, seed, log_dir):
         'replay_strategy': 'future',
         'clip_return': 1,
     }
-    launch(**launch_params)
+    learn(**learn_params)
 
     return osp.join(log_dir, 'progress.csv')
 
@@ -216,16 +224,17 @@ def run_baselines(env_id, seed, log_dir):
 def plot(b_csvs, g_csvs, g_x, g_y, b_x, b_y, trials, seeds, plt_file, env_id):
     """Plot benchmark from csv files of garage and baselines.
 
-    :param b_csvs: A list contains all csv files in the task.
-    :param g_csvs: A list contains all csv files in the task.
-    :param g_x: X column names of garage csv.
-    :param g_y: Y column names of garage csv.
-    :param b_x: X column names of baselines csv.
-    :param b_y: Y column names of baselines csv.
-    :param trials: Number of trials in the task.
-    :param seeds: A list contains all the seeds in the task.
-    :param plt_file: Path of the plot png file.
-    :param env_id: String contains the id of the environment.
+    Args:
+        b_csvs (list[str]): A list contains all csv files in the task.
+        g_csvs (list[str]): A list contains all csv files in the task.
+        g_x (list[str]): X column names of garage csv.
+        g_y (list[str]): Y column names of garage csv.
+        b_x (list[str]): X column names of baselines csv.
+        b_y (list[str]): Y column names of baselines csv.
+        trials (int): Number of trials in the task.
+        seeds (int): A list contains all the seeds in the task.
+        plt_file (str): Path of the plot png file.
+        env_id (str): String contains the id of the environment.
 
     """
     assert len(b_csvs) == len(g_csvs)

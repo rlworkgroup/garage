@@ -93,13 +93,7 @@ class OffPolicyVectorizedSampler(BatchSampler):
 
         while n_samples < batch_size:
             policy.reset(completes)
-            if self.algo.input_include_goal:
-                obs = [obs['observation'] for obs in obses]
-                d_g = [obs['desired_goal'] for obs in obses]
-                a_g = [obs['achieved_goal'] for obs in obses]
-                input_obses = np.concatenate((obs, d_g), axis=-1)
-            else:
-                input_obses = obses
+            input_obses = self.algo.env_spec.observation_space.flatten_n(obses)
             obs_normalized = tensor_utils.normalize_pixel_batch(
                 self._env_spec, input_obses)
             if self.algo.es:
@@ -122,28 +116,13 @@ class OffPolicyVectorizedSampler(BatchSampler):
             if env_infos is None:
                 env_infos = [dict() for _ in range(self._vec_env.num_envs)]
 
-            if self.algo.input_include_goal:
-                self.algo.replay_buffer.add_transitions(
-                    observation=obs,
-                    action=actions,
-                    goal=d_g,
-                    achieved_goal=a_g,
-                    terminal=dones,
-                    next_observation=[
-                        next_obs['observation'] for next_obs in next_obses
-                    ],
-                    next_achieved_goal=[
-                        next_obs['achieved_goal'] for next_obs in next_obses
-                    ],
-                )
-            else:
-                self.algo.replay_buffer.add_transitions(
-                    observation=obses,
-                    action=actions,
-                    reward=rewards,
-                    terminal=dones,
-                    next_observation=next_obses,
-                )
+            self.algo.replay_buffer.add_transitions(
+                observation=obses,
+                action=actions,
+                reward=rewards,
+                terminal=dones,
+                next_observation=next_obses,
+            )
 
             for idx, reward, env_info, done in zip(itertools.count(), rewards,
                                                    env_infos, dones):

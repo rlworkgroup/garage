@@ -58,6 +58,10 @@ def make_her_sample(replay_k, reward_fun):
                                                    future_t]
         transitions['goal'][her_idxs] = future_ag
 
+        achieved_goals = episode_batch['achieved_goal'][episode_idxs[her_idxs],
+                                                        t_samples[her_idxs]]
+        transitions['achieved_goal'][her_idxs] = achieved_goals
+
         # Re-compute reward since we may have substituted the goal.
         reward_params_keys = inspect.signature(reward_fun).parameters.keys()
         reward_params = {
@@ -73,6 +77,17 @@ def make_her_sample(replay_k, reward_fun):
                                       *transitions[k].shape[1:])
             for k in transitions.keys()
         }
+
+        goals = transitions['goal']
+        next_inputs = np.concatenate((transitions['next_observation'], goals,
+                                      transitions['achieved_goal']),
+                                     axis=-1)
+        inputs = np.concatenate(
+            (transitions['observation'], goals, transitions['achieved_goal']),
+            axis=-1)
+        transitions['observation'] = inputs
+        transitions['next_observation'] = next_inputs
+
         assert transitions['action'].shape[0] == sample_batch_size
         return transitions
 
@@ -96,6 +111,7 @@ class HerReplayBuffer(ReplayBuffer):
 
     def __init__(self, replay_k, reward_fun, env_spec, size_in_transitions,
                  time_horizon):
+        self._env_spec = env_spec
         self._sample_transitions = make_her_sample(replay_k, reward_fun)
         self._replay_k = replay_k
         self._reward_fun = reward_fun
@@ -149,3 +165,36 @@ class HerReplayBuffer(ReplayBuffer):
         replay_k = state['_replay_k']
         reward_fun = state['_reward_fun']
         self._sample_transitions = make_her_sample(replay_k, reward_fun)
+
+    def add_transitions(self, **kwargs):
+        """Add multiple transitions into the replay buffer.
+
+        A transition contains one or multiple entries, e.g.
+        observation, action, reward, terminal and next_observation.
+        The same entry of all the transitions are stacked, e.g.
+        {'observation': [obs1, obs2, obs3]} where obs1 is one
+        numpy.ndarray observation from the environment.
+
+        Args:
+            kwargs (dict(str, [numpy.ndarray])): Dictionary that holds
+                the transitions.
+
+        """
+        obses = kwargs['observation']
+        obs = [obs['observation'] for obs in obses]
+        d_g = [obs['desired_goal'] for obs in obses]
+        a_g = [obs['achieved_goal'] for obs in obses]
+        next_obses = kwargs['next_observation']
+        super().add_transitions(
+            observation=obs,
+            action=kwargs['action'],
+            goal=d_g,
+            achieved_goal=a_g,
+            terminal=kwargs['terminal'],
+            next_observation=[
+                next_obs['observation'] for next_obs in next_obses
+            ],
+            next_achieved_goal=[
+                next_obs['achieved_goal'] for next_obs in next_obses
+            ],
+        )

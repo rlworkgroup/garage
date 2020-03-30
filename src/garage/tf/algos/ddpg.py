@@ -53,7 +53,6 @@ class DDPG(OffPolicyRLAlgorithm):
             clip_return].
         max_action (float): Maximum action magnitude.
         reward_scale (float): Reward scale.
-        input_include_goal (bool): Whether input includes goal.
         smooth_return (bool): Whether to smooth the return.
         name (str): Name of the algorithm shown in computation graph.
 
@@ -83,7 +82,6 @@ class DDPG(OffPolicyRLAlgorithm):
                  clip_return=np.inf,
                  max_action=None,
                  reward_scale=1.,
-                 input_include_goal=False,
                  smooth_return=True,
                  name='DDPG'):
         action_bound = env_spec.action_space.high
@@ -123,7 +121,6 @@ class DDPG(OffPolicyRLAlgorithm):
                                    use_target=True,
                                    discount=discount,
                                    reward_scale=reward_scale,
-                                   input_include_goal=input_include_goal,
                                    smooth_return=smooth_return)
 
     def init_opt(self):
@@ -155,11 +152,7 @@ class DDPG(OffPolicyRLAlgorithm):
                 inputs=[], outputs=target_update_op)
 
             with tf.name_scope('inputs'):
-                if self.input_include_goal:
-                    obs_dim = self.env_spec.observation_space.\
-                        flat_dim_with_keys(['observation', 'desired_goal'])
-                else:
-                    obs_dim = self.env_spec.observation_space.flat_dim
+                obs_dim = self.env_spec.observation_space.flat_dim
                 input_y = tf.compat.v1.placeholder(tf.float32,
                                                    shape=(None, 1),
                                                    name='input_y')
@@ -295,9 +288,8 @@ class DDPG(OffPolicyRLAlgorithm):
                 tabular.record('QFunction/MaxY', np.max(self.epoch_ys))
                 tabular.record('QFunction/AverageAbsY',
                                np.mean(np.abs(self.epoch_ys)))
-                if self.input_include_goal:
-                    tabular.record('AverageSuccessRate',
-                                   np.mean(self.success_history))
+                tabular.record('AverageSuccessRate',
+                               np.mean(self.success_history))
 
             if not self.smooth_return:
                 self.episode_rewards = []
@@ -333,13 +325,8 @@ class DDPG(OffPolicyRLAlgorithm):
         rewards = rewards.reshape(-1, 1)
         terminals = terminals.reshape(-1, 1)
 
-        if self.input_include_goal:
-            goals = transitions['goal']
-            next_inputs = np.concatenate((next_observations, goals), axis=-1)
-            inputs = np.concatenate((observations, goals), axis=-1)
-        else:
-            next_inputs = next_observations
-            inputs = observations
+        next_inputs = next_observations
+        inputs = observations
 
         target_actions = self.target_policy_f_prob_online(next_inputs)
         target_qvals = self.target_qf_f_prob_online(next_inputs,

@@ -10,35 +10,27 @@ class TestHerReplayBuffer:
 
     def setup_method(self):
         self.env = DummyDictEnv()
-        obs = self.env.reset()
+        self.obs = self.env.reset()
         self.replay_buffer = HerReplayBuffer(
             env_spec=self.env.spec,
             size_in_transitions=3,
             time_horizon=1,
             replay_k=0.4,
             reward_fun=self.env.compute_reward)
-        # process observations
-        self.d_g = obs['desired_goal']
-        self.a_g = obs['achieved_goal']
-        self.obs = obs['observation']
 
     def _add_single_transition(self):
         self.replay_buffer.add_transition(
             observation=self.obs,
             action=self.env.action_space.sample(),
-            goal=self.d_g,
-            achieved_goal=self.a_g,
-            next_observation=self.obs,
-            next_achieved_goal=self.a_g)
+            terminal=False,
+            next_observation=self.obs)
 
     def _add_transitions(self):
         self.replay_buffer.add_transitions(
             observation=[self.obs],
             action=[self.env.action_space.sample()],
-            goal=[self.d_g],
-            achieved_goal=[self.a_g],
-            next_observation=[self.obs],
-            next_achieved_goal=[self.a_g])
+            terminal=[False],
+            next_observation=[self.obs])
 
     def test_add_transition_dtype(self):
         self._add_single_transition()
@@ -65,16 +57,28 @@ class TestHerReplayBuffer:
         assert sample['action'].dtype == self.env.action_space.dtype
 
     def test_eviction_policy(self):
-        self.replay_buffer.add_transitions(observation=[self.obs, self.obs],
-                                           action=[1, 2])
+        self.replay_buffer.add_transitions(
+            observation=[self.obs, self.obs],
+            next_observation=[self.obs, self.obs],
+            terminal=[False, False],
+            action=[1, 2])
         assert not self.replay_buffer.full
-        self.replay_buffer.add_transitions(observation=[self.obs, self.obs],
-                                           action=[3, 4])
+        self.replay_buffer.add_transitions(
+            observation=[self.obs, self.obs],
+            next_observation=[self.obs, self.obs],
+            terminal=[False, False],
+            action=[3, 4])
         assert self.replay_buffer.full
-        self.replay_buffer.add_transitions(observation=[self.obs, self.obs],
-                                           action=[5, 6])
-        self.replay_buffer.add_transitions(observation=[self.obs, self.obs],
-                                           action=[7, 8])
+        self.replay_buffer.add_transitions(
+            observation=[self.obs, self.obs],
+            next_observation=[self.obs, self.obs],
+            terminal=[False, False],
+            action=[5, 6])
+        self.replay_buffer.add_transitions(
+            observation=[self.obs, self.obs],
+            next_observation=[self.obs, self.obs],
+            terminal=[False, False],
+            action=[7, 8])
 
         assert np.array_equal(self.replay_buffer._buffer['action'],
                               [[7], [8], [6]])

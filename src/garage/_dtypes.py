@@ -105,7 +105,7 @@ class TrajectoryBatch(
             # Discrete actions can be either in the space normally, or one-hot
             # encoded.
             if isinstance(env_spec.observation_space,
-                          (akro.Box, akro.Discrete)):
+                          (akro.Box, akro.Discrete, akro.Dict)):
                 if env_spec.observation_space.flat_dim != np.prod(
                         first_observation.shape):
                     raise ValueError('observations should have the same '
@@ -131,7 +131,7 @@ class TrajectoryBatch(
             # Discrete actions can be either in the space normally, or one-hot
             # encoded.
             if isinstance(env_spec.observation_space,
-                          (akro.Box, akro.Discrete)):
+                          (akro.Box, akro.Discrete, akro.Dict)):
                 if env_spec.observation_space.flat_dim != np.prod(
                         last_observations[0].shape):
                     raise ValueError('last_observations should have the same '
@@ -156,7 +156,8 @@ class TrajectoryBatch(
         if not env_spec.action_space.contains(first_action):
             # Discrete actions can be either in the space normally, or one-hot
             # encoded.
-            if isinstance(env_spec.action_space, (akro.Box, akro.Discrete)):
+            if isinstance(env_spec.action_space,
+                          (akro.Box, akro.Discrete, akro.Dict)):
                 if env_spec.action_space.flat_dim != np.prod(
                         first_action.shape):
                     raise ValueError('actions should have the same '
@@ -455,7 +456,7 @@ class TimeStep(
         # observation
         if not env_spec.observation_space.contains(observation):
             if isinstance(env_spec.observation_space,
-                          (akro.Box, akro.Discrete)):
+                          (akro.Box, akro.Discrete, akro.Dict)):
                 if env_spec.observation_space.flat_dim != np.prod(
                         observation.shape):
                     raise ValueError('observation should have the same '
@@ -472,7 +473,7 @@ class TimeStep(
 
         if not env_spec.observation_space.contains(next_observation):
             if isinstance(env_spec.observation_space,
-                          (akro.Box, akro.Discrete)):
+                          (akro.Box, akro.Discrete, akro.Dict)):
                 if env_spec.observation_space.flat_dim != np.prod(
                         next_observation.shape):
                     raise ValueError('next_observation should have the same '
@@ -489,7 +490,8 @@ class TimeStep(
 
         # action
         if not env_spec.action_space.contains(action):
-            if isinstance(env_spec.action_space, (akro.Box, akro.Discrete)):
+            if isinstance(env_spec.action_space,
+                          (akro.Box, akro.Discrete, akro.Dict)):
                 if env_spec.action_space.flat_dim != np.prod(action.shape):
                     raise ValueError('action should have the same '
                                      'dimensionality as the action_space '

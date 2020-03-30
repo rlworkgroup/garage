@@ -43,7 +43,6 @@ class DQN(OffPolicyRLAlgorithm):
             docstring for tf.clip_by_norm.
         double_q (bool): Bool for using double q-network.
         reward_scale (float): Reward scale.
-        input_include_goal (bool): Whether input includes goal.
         smooth_return (bool): Whether to smooth the return.
         name (str): Name of the algorithm.
 
@@ -68,7 +67,6 @@ class DQN(OffPolicyRLAlgorithm):
                  grad_norm_clipping=None,
                  double_q=False,
                  reward_scale=1.,
-                 input_include_goal=False,
                  smooth_return=True,
                  name='DQN'):
         self.qf_lr = qf_lr
@@ -94,7 +92,6 @@ class DQN(OffPolicyRLAlgorithm):
                                   max_path_length=max_path_length,
                                   discount=discount,
                                   reward_scale=reward_scale,
-                                  input_include_goal=input_include_goal,
                                   smooth_return=smooth_return)
 
     def init_opt(self):
