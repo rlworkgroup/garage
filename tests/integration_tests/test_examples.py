@@ -28,6 +28,7 @@ LONG_RUNNING_EXAMPLES = [
     EXAMPLES_ROOT_DIR / 'torch/pearl_ml1_push.py',
     EXAMPLES_ROOT_DIR / 'torch/pearl_ml10.py',
     EXAMPLES_ROOT_DIR / 'torch/pearl_ml45.py',
+    EXAMPLES_ROOT_DIR / 'tf/rl2_ppo_ml1.py',
     EXAMPLES_ROOT_DIR / 'tf/rl2_ppo_ml10.py',
     EXAMPLES_ROOT_DIR / 'tf/rl2_ppo_ml10_meta_test.py',
     EXAMPLES_ROOT_DIR / 'tf/rl2_ppo_ml45.py',
@@ -255,6 +256,18 @@ def test_maml_vpg():
     assert subprocess.run([
         EXAMPLES_ROOT_DIR / 'torch/maml_vpg_half_cheetah_dir.py', '--epochs',
         '1', '--rollouts_per_task', '1', '--meta_batch_size', '1'
+    ],
+                          check=False).returncode == 0
+
+
+@pytest.mark.mujoco
+@pytest.mark.no_cover
+@pytest.mark.timeout(40)
+def test_rl2_ml1():
+    """Test rl2_ppo_ml1.py."""
+    assert subprocess.run([
+        EXAMPLES_ROOT_DIR / 'tf/rl2_ppo_ml1.py', '--n_epochs', '1',
+        '--episode_per_task', '4', '--meta_batch_size', '10'
     ],
                           check=False).returncode == 0
 
