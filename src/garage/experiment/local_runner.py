@@ -258,7 +258,7 @@ class LocalRunner:
         if self._plot:
             # pylint: disable=import-outside-toplevel
             from garage.tf.plotter import Plotter
-            self._plotter = Plotter(self._env, self._policy)
+            self._plotter = Plotter(self.get_env_copy(), self._policy)
             self._plotter.start()
 
     def _shutdown_worker(self):
