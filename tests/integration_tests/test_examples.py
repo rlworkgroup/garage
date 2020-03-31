@@ -268,7 +268,7 @@ def test_rl2_ppo_halfcheetah_meta_test():
 def test_rl2_ml10():
     """Test rl2_ppo_ml10.py"""
     assert subprocess.run([
-        EXAMPLES_ROOT_DIR / 'torch/rl2_ppo_ml10.py', '--n_epochs', '1',
+        EXAMPLES_ROOT_DIR / 'tf/rl2_ppo_ml10.py', '--n_epochs', '1',
         '--episode_per_task', '1', '--meta_batch_size', '10'
     ],
                           check=False).returncode == 0
@@ -280,7 +280,7 @@ def test_rl2_ml10():
 def test_rl2_ml10_meta_test():
     """Test rl2_ppo_ml10_meta_test.py"""
     assert subprocess.run([
-        EXAMPLES_ROOT_DIR / 'torch/rl2_ppo_ml10_meta_test.py', '--n_epochs',
-        '1', '--episode_per_task', '1', '--meta_batch_size', '10'
+        EXAMPLES_ROOT_DIR / 'tf/rl2_ppo_ml10_meta_test.py', '--n_epochs', '1',
+        '--episode_per_task', '1', '--meta_batch_size', '10'
     ],
                           check=False).returncode == 0
