@@ -446,7 +446,10 @@ class LocalRunner:
 
         self._plot = plot
 
-        return self._algo.train(self)
+        average_return = self._algo.train(self)
+        self._shutdown_worker()
+
+        return average_return
 
     def step_epochs(self):
         """Step through each epoch.
