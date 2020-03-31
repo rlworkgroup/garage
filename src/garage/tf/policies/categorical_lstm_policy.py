@@ -103,7 +103,7 @@ class CategoricalLSTMPolicy(StochasticPolicy):
         self._cell_state_init = cell_state_init
         self._cell_stat_init_trainable = cell_state_init_trainable
         self._forget_bias = forget_bias
-        self._layere_normalization = layer_normalization
+        self._layer_normalization = layer_normalization
 
         if state_include_action:
             self._input_dim = self._obs_dim + self._action_dim
@@ -168,7 +168,7 @@ class CategoricalLSTMPolicy(StochasticPolicy):
         """Vectorized or not.
 
         Returns:
-            Bool: True if primitive supports vectorized operations.
+            bool: True if primitive supports vectorized operations.
 
         """
         return True
@@ -178,7 +178,7 @@ class CategoricalLSTMPolicy(StochasticPolicy):
 
         Args:
             obs_var (tf.Tensor): Tensor input for symbolic graph.
-            state_info_vars (dict): Extra state information, e.g.
+            state_info_vars (dict[np.ndarray]): Extra state information, e.g.
                 previous action.
             name (str): Name for symbolic graph.
 
@@ -240,7 +240,7 @@ class CategoricalLSTMPolicy(StochasticPolicy):
 
         Returns:
             numpy.ndarray: Predicted action.
-            dict: Empty dict since this policy does not model a distribution.
+            dict[str: np.ndarray]: Action distribution.
 
         """
         actions, agent_infos = self.get_actions([observation])
@@ -254,7 +254,7 @@ class CategoricalLSTMPolicy(StochasticPolicy):
 
         Returns:
             numpy.ndarray: Predicted actions.
-            dict: Empty dict since this policy does not model a distribution.
+            dict[str: np.ndarray]: Action distributions.
 
         """
         flat_obs = self.observation_space.flatten_n(observations)
@@ -282,7 +282,7 @@ class CategoricalLSTMPolicy(StochasticPolicy):
         """Recurrent or not.
 
         Returns:
-            Bool: True if policy is recurrent.
+            bool: True if policy is recurrent.
 
         """
         return True
@@ -322,7 +322,7 @@ class CategoricalLSTMPolicy(StochasticPolicy):
             name (str): Name of the newly created policy.
 
         Returns:
-            garage.tf.policies.ContinuousMLPPolicy: Clone of this object
+            garage.tf.policies.CategoricalLSTMPolicy: Clone of this object
 
         """
         return self.__class__(
@@ -343,7 +343,7 @@ class CategoricalLSTMPolicy(StochasticPolicy):
             cell_state_init_trainable=self._cell_stat_init_trainable,
             state_include_action=self._state_include_action,
             forget_bias=self._forget_bias,
-            layer_normalization=self._layere_normalization)
+            layer_normalization=self._layer_normalization)
 
     def __getstate__(self):
         """Object.__getstate__.

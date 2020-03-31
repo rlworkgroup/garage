@@ -43,7 +43,7 @@ class BaseModel(abc.ABC):
             name (str): Name of the model.
 
         Return:
-            object: Output(s) of the model.
+            list[tf.Tensor]: Output(s) of the model.
 
         """
 
@@ -60,7 +60,7 @@ class BaseModel(abc.ABC):
         function model.
 
         Returns:
-            list[object]: Parameters.
+            list[tf.Tensor]: Parameters.
 
         """
 
@@ -69,7 +69,7 @@ class BaseModel(abc.ABC):
         """Set parameters of the Model.
 
         Args:
-            parameters (list[object]): Parameters.
+            parameters (list[tf.Tensor]): Parameters.
 
         """
 
