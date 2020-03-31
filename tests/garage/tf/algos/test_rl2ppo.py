@@ -57,7 +57,6 @@ class TestRL2PPO(TfGraphTestCase):
                           discount=0.99,
                           gae_lambda=0.95,
                           lr_clip_range=0.2,
-                          pg_loss='surrogate_clip',
                           stop_entropy_gradient=True,
                           entropy_method='max',
                           policy_ent_coeff=0.02,
@@ -105,7 +104,6 @@ class TestRL2PPO(TfGraphTestCase):
                           discount=0.99,
                           gae_lambda=0.95,
                           lr_clip_range=0.2,
-                          pg_loss='surrogate_clip',
                           stop_entropy_gradient=True,
                           entropy_method='max',
                           policy_ent_coeff=0.02,
@@ -143,7 +141,6 @@ class TestRL2PPO(TfGraphTestCase):
                           discount=0.99,
                           gae_lambda=0.95,
                           lr_clip_range=0.2,
-                          pg_loss='surrogate_clip',
                           optimizer_args=dict(
                               batch_size=32,
                               max_epochs=10,
@@ -180,7 +177,6 @@ class TestRL2PPO(TfGraphTestCase):
                           discount=0.99,
                           gae_lambda=0.95,
                           lr_clip_range=0.2,
-                          pg_loss='surrogate_clip',
                           optimizer_args=dict(
                               batch_size=32,
                               max_epochs=10,
@@ -209,7 +205,6 @@ class TestRL2PPO(TfGraphTestCase):
                           discount=0.99,
                           gae_lambda=0.95,
                           lr_clip_range=0.2,
-                          pg_loss='surrogate_clip',
                           optimizer_args=dict(
                               batch_size=32,
                               max_epochs=10,
@@ -243,7 +238,6 @@ class TestRL2PPO(TfGraphTestCase):
                               discount=0.99,
                               gae_lambda=0.95,
                               lr_clip_range=0.2,
-                              pg_loss='surrogate_clip',
                               optimizer_args=dict(
                                   batch_size=32,
                                   max_epochs=10,
