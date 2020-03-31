@@ -257,9 +257,9 @@ class LocalRunner:
         self._sampler.start_worker()
         if self._plot:
             # pylint: disable=import-outside-toplevel
-            from garage.tf.plotter import Plotter
-            self._plotter = Plotter(self.get_env_copy(), self._policy)
-            self._plotter.start()
+            from garage.plotter import Plotter
+            self._plotter = Plotter()
+            self._plotter.init_plot(self.get_env_copy(), self._policy)
 
     def _shutdown_worker(self):
         """Shutdown Plotter and Sampler workers."""
