@@ -262,12 +262,12 @@ def test_maml_vpg():
 
 @pytest.mark.mujoco
 @pytest.mark.no_cover
-@pytest.mark.timeout(40)
+@pytest.mark.timeout(80)
 def test_rl2_ml1():
     """Test rl2_ppo_ml1.py."""
     assert subprocess.run([
         EXAMPLES_ROOT_DIR / 'tf/rl2_ppo_ml1.py', '--n_epochs', '1',
-        '--episode_per_task', '4', '--meta_batch_size', '10'
+        '--episode_per_task', '1', '--meta_batch_size', '10'
     ],
                           check=False).returncode == 0
 
