@@ -12,6 +12,7 @@ import torch
 
 from garage import InOutSpec, TimeStep
 from garage.envs import EnvSpec
+from garage.experiment import MetaEvaluator
 from garage.np.algos.meta_rl_algorithm import MetaRLAlgorithm
 from garage.replay_buffer.path_buffer import PathBuffer
 from garage.sampler.worker import DefaultWorker
@@ -46,6 +47,8 @@ class PEARL(MetaRLAlgorithm):
         latent_dim (int): Size of latent context vector.
         encoder_hidden_sizes (list[int]): Output dimension of dense layer(s) of
             the context encoder.
+        test_env_sampler (garage.experiment.SetTaskSampler): Sampler for test
+            tasks.
         policy_lr (float): Policy learning rate.
         qf_lr (float): Q-function learning rate.
         vf_lr (float): Value function learning rate.
@@ -85,8 +88,6 @@ class PEARL(MetaRLAlgorithm):
         reward_scale (int): Reward scale.
         update_post_train (int): How often to resample context when obtaining
             data during training (in trajectories).
-        eval_deterministic (bool): Whether to make policy deterministic during
-            evaluation.
 
     """
 
@@ -100,6 +101,7 @@ class PEARL(MetaRLAlgorithm):
                  num_test_tasks,
                  latent_dim,
                  encoder_hidden_sizes,
+                 test_env_sampler,
                  policy_class=ContextConditionedPolicy,
                  encoder_class=MLPEncoder,
                  policy_lr=3E-4,
@@ -128,8 +130,7 @@ class PEARL(MetaRLAlgorithm):
                  discount=0.99,
                  replay_buffer_size=1000000,
                  reward_scale=1,
-                 update_post_train=1,
-                 eval_deterministic=True):
+                 update_post_train=1):
 
         self._env = env
         self._qf1 = qf
@@ -162,9 +163,14 @@ class PEARL(MetaRLAlgorithm):
         self._replay_buffer_size = replay_buffer_size
         self._reward_scale = reward_scale
         self._update_post_train = update_post_train
-        self._eval_deterministic = eval_deterministic
-        self.evaluator = None
         self._task_idx = None
+
+        worker_args = dict(deterministic=True, accum_context=True)
+        self._evaluator = MetaEvaluator(test_task_sampler=test_env_sampler,
+                                        max_path_length=max_path_length,
+                                        worker_class=PEARLWorker,
+                                        worker_args=worker_args,
+                                        n_test_tasks=num_test_tasks)
 
         encoder_spec = self.get_env_spec(env[0](), latent_dim, 'encoder')
         encoder_in_dim = int(np.prod(encoder_spec.input_space.shape))
@@ -225,7 +231,7 @@ class PEARL(MetaRLAlgorithm):
         data = self.__dict__.copy()
         del data['_replay_buffers']
         del data['_context_replay_buffers']
-        del data['evaluator']
+        del data['_evaluator']
         return data
 
     def train(self, runner):
@@ -277,7 +283,7 @@ class PEARL(MetaRLAlgorithm):
             logger.log('Evaluating...')
             # evaluate
             self._policy.reset_belief()
-            self.evaluator.evaluate(self)
+            self._evaluator.evaluate(self)
 
     def _train_once(self):
         """Perform one iteration of training."""

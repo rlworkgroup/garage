@@ -5,7 +5,7 @@ import click
 from metaworld.benchmarks import ML10
 
 from garage.envs import GarageEnv, normalize
-from garage.experiment import LocalRunner, MetaEvaluator, wrap_experiment
+from garage.experiment import LocalRunner, wrap_experiment
 from garage.experiment.deterministic import set_seed
 from garage.experiment.task_sampler import EnvPoolSampler
 from garage.sampler import LocalSampler
@@ -132,6 +132,7 @@ def torch_pearl_ml10(ctxt=None,
         num_test_tasks=num_test_tasks,
         latent_dim=latent_size,
         encoder_hidden_sizes=encoder_hidden_sizes,
+        test_env_sampler=test_env_sampler,
         meta_batch_size=meta_batch_size,
         num_steps_per_epoch=num_steps_per_epoch,
         num_initial_steps=num_initial_steps,
@@ -156,13 +157,6 @@ def torch_pearl_ml10(ctxt=None,
                  n_workers=1,
                  worker_class=PEARLWorker)
 
-    worker_args = dict(deterministic=True, accum_context=True)
-    meta_evaluator = MetaEvaluator(test_task_sampler=test_env_sampler,
-                                   max_path_length=max_path_length,
-                                   worker_class=PEARLWorker,
-                                   worker_args=worker_args,
-                                   n_test_tasks=num_test_tasks)
-    pearl.evaluator = meta_evaluator
     runner.train(n_epochs=num_epochs, batch_size=batch_size)
 
 
