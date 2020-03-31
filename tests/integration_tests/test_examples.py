@@ -181,7 +181,6 @@ def test_pearl_ml1_push():
 
 @pytest.mark.mujoco
 @pytest.mark.no_cover
-@pytest.mark.timeout(200)
 def test_pearl_ml10():
     """Test pearl_ml10.py"""
     assert subprocess.run([
@@ -198,7 +197,6 @@ def test_pearl_ml10():
 
 @pytest.mark.mujoco
 @pytest.mark.no_cover
-@pytest.mark.timeout(200)
 def test_pearl_ml45():
     """Test pearl_ml45.py"""
     assert subprocess.run([
