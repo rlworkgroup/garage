@@ -231,7 +231,6 @@ class PEARL(MetaRLAlgorithm):
         data = self.__dict__.copy()
         del data['_replay_buffers']
         del data['_context_replay_buffers']
-        del data['_evaluator']
         return data
 
     def train(self, runner):
