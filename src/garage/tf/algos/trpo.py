@@ -28,8 +28,6 @@ class TRPO(NPO):
             conjunction with center_adv the advantages will be
             standardized before shifting.
         fixed_horizon (bool): Whether to fix horizon.
-        pg_loss (str): A string from: 'vanilla', 'surrogate',
-            'surrogate_clip'. The type of loss functions to use.
         lr_clip_range (float): The limit on the likelihood ratio between
             policies, as in PPO.
         max_kl_step (float): The maximum KL divergence between old and new
@@ -45,12 +43,17 @@ class TRPO(NPO):
         use_neg_logli_entropy (bool): Whether to estimate the entropy as the
             negative log likelihood of the action.
         stop_entropy_gradient (bool): Whether to stop the entropy gradient.
+        kl_constraint (str): KL constraint, either 'hard' or 'soft'.
         entropy_method (str): A string from: 'max', 'regularized',
             'no_entropy'. The type of entropy method to use. 'max' adds the
             dense entropy to the reward for each time step. 'regularized' adds
             the mean entropy to the surrogate objective. See
             https://arxiv.org/abs/1805.00909 for more details.
+        flatten_input (bool): Whether to flatten input along the observation
+            dimension. If True, for example, an observation with shape (2, 4)
+            will be flattened to 8.
         name (str): The name of the algorithm.
+
     """
 
     def __init__(self,
@@ -64,7 +67,6 @@ class TRPO(NPO):
                  center_adv=True,
                  positive_adv=False,
                  fixed_horizon=False,
-                 pg_loss='surrogate',
                  lr_clip_range=0.01,
                  max_kl_step=0.01,
                  optimizer=None,
@@ -98,7 +100,7 @@ class TRPO(NPO):
                          center_adv=center_adv,
                          positive_adv=positive_adv,
                          fixed_horizon=fixed_horizon,
-                         pg_loss=pg_loss,
+                         pg_loss='surrogate',
                          lr_clip_range=lr_clip_range,
                          max_kl_step=max_kl_step,
                          optimizer=optimizer,
