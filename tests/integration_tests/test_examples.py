@@ -26,9 +26,12 @@ LONG_RUNNING_EXAMPLES = [
     EXAMPLES_ROOT_DIR / 'torch/maml_trpo_ml10.py',
     EXAMPLES_ROOT_DIR / 'torch/pearl_half_cheetah_vel.py',
     EXAMPLES_ROOT_DIR / 'torch/pearl_ml1_push.py',
+<<<<<<< HEAD
     EXAMPLES_ROOT_DIR / 'torch/pearl_ml10.py',
     EXAMPLES_ROOT_DIR / 'torch/pearl_ml45.py',
     EXAMPLES_ROOT_DIR / 'tf/rl2_ppo_ml1.py',
+=======
+>>>>>>> Remove manual example
     EXAMPLES_ROOT_DIR / 'tf/rl2_ppo_ml10.py',
     EXAMPLES_ROOT_DIR / 'tf/rl2_ppo_ml10_meta_test.py',
     EXAMPLES_ROOT_DIR / 'tf/rl2_ppo_ml45.py',
@@ -260,7 +263,7 @@ def test_maml_vpg():
                           check=False).returncode == 0
 
 
-@pytest.mark.mujoco
+@pytest.mark.nightly
 @pytest.mark.no_cover
 @pytest.mark.timeout(80)
 def test_rl2_ml1():

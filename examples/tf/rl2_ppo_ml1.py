@@ -60,7 +60,6 @@ def rl2_ppo_ml1(ctxt, seed, max_path_length, meta_batch_size, n_epochs,
                       discount=0.99,
                       gae_lambda=0.95,
                       lr_clip_range=0.2,
-                      pg_loss='surrogate_clip',
                       optimizer_args=dict(
                           batch_size=32,
                           max_epochs=10,
