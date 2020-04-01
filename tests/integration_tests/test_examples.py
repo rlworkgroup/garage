@@ -26,9 +26,14 @@ LONG_RUNNING_EXAMPLES = [
     EXAMPLES_ROOT_DIR / 'torch/maml_trpo_ml10.py',
     EXAMPLES_ROOT_DIR / 'torch/pearl_half_cheetah_vel.py',
     EXAMPLES_ROOT_DIR / 'torch/pearl_ml1_push.py',
+    EXAMPLES_ROOT_DIR / 'torch/pearl_ml10.py',
+    EXAMPLES_ROOT_DIR / 'torch/pearl_ml45.py',
     EXAMPLES_ROOT_DIR / 'tf/rl2_ppo_ml10.py',
     EXAMPLES_ROOT_DIR / 'tf/rl2_ppo_ml10_meta_test.py',
     EXAMPLES_ROOT_DIR / 'tf/rl2_ppo_ml45.py',
+    EXAMPLES_ROOT_DIR / 'tf/rl2_ppo_halfcheetah.py',
+    EXAMPLES_ROOT_DIR / 'tf/rl2_trpo_halfcheetah.py',
+    EXAMPLES_ROOT_DIR / 'tf/rl2_ppo_halfcheetah_meta_test.py'
 ]
 # yapf: enable
 
@@ -142,7 +147,7 @@ def test_maml_halfcheetah():
 
 @pytest.mark.mujoco
 @pytest.mark.no_cover
-@pytest.mark.timeout(120)
+@pytest.mark.timeout(60)
 def test_pearl_half_cheetah_vel():
     """Test pearl_half_cheetah_vel.py"""
     assert subprocess.run([
@@ -159,7 +164,7 @@ def test_pearl_half_cheetah_vel():
 
 @pytest.mark.mujoco
 @pytest.mark.no_cover
-@pytest.mark.timeout(120)
+@pytest.mark.timeout(60)
 def test_pearl_ml1_push():
     """Test pearl_ml1_push.py"""
     assert subprocess.run([
@@ -170,6 +175,38 @@ def test_pearl_ml1_push():
         '--num_steps_prior', '1', '--num_extra_rl_steps_posterior', '1',
         '--batch_size', '4', '--embedding_batch_size', '2',
         '--embedding_mini_batch_size', '2', '--max_path_length', '1'
+    ],
+                          check=False).returncode == 0
+
+
+@pytest.mark.mujoco
+@pytest.mark.no_cover
+def test_pearl_ml10():
+    """Test pearl_ml10.py"""
+    assert subprocess.run([
+        EXAMPLES_ROOT_DIR / 'torch/pearl_ml10.py', '--num_epochs', '1',
+        '--num_train_tasks', '1', '--num_test_tasks', '1',
+        '--encoder_hidden_size', '1', '--net_size', '2',
+        '--num_steps_per_epoch', '2', '--num_initial_steps', '2',
+        '--num_steps_prior', '1', '--num_extra_rl_steps_posterior', '1',
+        '--batch_size', '2', '--embedding_batch_size', '1',
+        '--embedding_mini_batch_size', '1', '--max_path_length', '1'
+    ],
+                          check=False).returncode == 0
+
+
+@pytest.mark.mujoco
+@pytest.mark.no_cover
+def test_pearl_ml45():
+    """Test pearl_ml45.py"""
+    assert subprocess.run([
+        EXAMPLES_ROOT_DIR / 'torch/pearl_ml45.py', '--num_epochs', '1',
+        '--num_train_tasks', '1', '--num_test_tasks', '1',
+        '--encoder_hidden_size', '1', '--net_size', '2',
+        '--num_steps_per_epoch', '2', '--num_initial_steps', '2',
+        '--num_steps_prior', '1', '--num_extra_rl_steps_posterior', '1',
+        '--batch_size', '2', '--embedding_batch_size', '1',
+        '--embedding_mini_batch_size', '1', '--max_path_length', '1'
     ],
                           check=False).returncode == 0
 

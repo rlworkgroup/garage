@@ -14,7 +14,7 @@ except Exception:  # pylint: disable=broad-except
 from metaworld.benchmarks import ML1  # noqa: I100
 
 from garage.envs import GarageEnv, normalize
-from garage.experiment import LocalRunner, MetaEvaluator
+from garage.experiment import LocalRunner
 from garage.experiment.deterministic import set_seed
 from garage.experiment.task_sampler import SetTaskSampler
 from garage.sampler import LocalSampler
@@ -90,6 +90,7 @@ class TestPEARL:
             num_test_tasks=params['num_test_tasks'],
             latent_dim=params['latent_size'],
             encoder_hidden_sizes=params['encoder_hidden_sizes'],
+            test_env_sampler=test_env_sampler,
             meta_batch_size=params['meta_batch_size'],
             num_steps_per_epoch=params['num_steps_per_epoch'],
             num_initial_steps=params['num_initial_steps'],
@@ -117,13 +118,5 @@ class TestPEARL:
             n_workers=1,
             worker_class=PEARLWorker)
 
-        worker_args = dict(deterministic=True, accum_context=True)
-        meta_evaluator = MetaEvaluator(
-            test_task_sampler=test_env_sampler,
-            max_path_length=params['max_path_length'],
-            worker_class=PEARLWorker,
-            worker_args=worker_args,
-            n_test_tasks=params['num_test_tasks'])
-        pearl.evaluator = meta_evaluator
         runner.train(n_epochs=params['num_epochs'],
                      batch_size=params['batch_size'])

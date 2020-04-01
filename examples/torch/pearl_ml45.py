@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
-"""PEARL HalfCheetahVel example."""
+"""PEARL ML45 example."""
+
 import click
+from metaworld.benchmarks import ML45
 
 from garage.envs import GarageEnv, normalize
-from garage.envs.mujoco import HalfCheetahVelEnv
 from garage.experiment import LocalRunner, wrap_experiment
 from garage.experiment.deterministic import set_seed
-from garage.experiment.task_sampler import SetTaskSampler
+from garage.experiment.task_sampler import EnvPoolSampler
 from garage.sampler import LocalSampler
 from garage.torch.algos import PEARL
 from garage.torch.algos.pearl import PEARLWorker
@@ -18,41 +19,41 @@ import garage.torch.utils as tu
 
 
 @click.command()
-@click.option('--num_epochs', default=500)
-@click.option('--num_train_tasks', default=100)
-@click.option('--num_test_tasks', default=30)
+@click.option('--num_epochs', default=1000)
+@click.option('--num_train_tasks', default=50)
+@click.option('--num_test_tasks', default=10)
 @click.option('--encoder_hidden_size', default=200)
 @click.option('--net_size', default=300)
-@click.option('--num_steps_per_epoch', default=2000)
-@click.option('--num_initial_steps', default=2000)
-@click.option('--num_steps_prior', default=400)
-@click.option('--num_extra_rl_steps_posterior', default=600)
+@click.option('--num_steps_per_epoch', default=4000)
+@click.option('--num_initial_steps', default=4000)
+@click.option('--num_steps_prior', default=750)
+@click.option('--num_extra_rl_steps_posterior', default=750)
 @click.option('--batch_size', default=256)
-@click.option('--embedding_batch_size', default=100)
-@click.option('--embedding_mini_batch_size', default=100)
-@click.option('--max_path_length', default=200)
+@click.option('--embedding_batch_size', default=64)
+@click.option('--embedding_mini_batch_size', default=64)
+@click.option('--max_path_length', default=150)
 @wrap_experiment
-def torch_pearl_half_cheetah_vel(ctxt=None,
-                                 seed=1,
-                                 num_epochs=500,
-                                 num_train_tasks=100,
-                                 num_test_tasks=30,
-                                 latent_size=5,
-                                 encoder_hidden_size=200,
-                                 net_size=300,
-                                 meta_batch_size=16,
-                                 num_steps_per_epoch=2000,
-                                 num_initial_steps=2000,
-                                 num_tasks_sample=5,
-                                 num_steps_prior=400,
-                                 num_extra_rl_steps_posterior=600,
-                                 batch_size=256,
-                                 embedding_batch_size=100,
-                                 embedding_mini_batch_size=100,
-                                 max_path_length=200,
-                                 reward_scale=5.,
-                                 use_gpu=False):
-    """Train PEARL with HalfCheetahVel environment.
+def torch_pearl_ml45(ctxt=None,
+                     seed=1,
+                     num_epochs=1000,
+                     num_train_tasks=45,
+                     num_test_tasks=5,
+                     latent_size=7,
+                     encoder_hidden_size=200,
+                     net_size=300,
+                     meta_batch_size=16,
+                     num_steps_per_epoch=4000,
+                     num_initial_steps=4000,
+                     num_tasks_sample=15,
+                     num_steps_prior=750,
+                     num_extra_rl_steps_posterior=750,
+                     batch_size=256,
+                     embedding_batch_size=64,
+                     embedding_mini_batch_size=64,
+                     max_path_length=150,
+                     reward_scale=10.,
+                     use_gpu=False):
+    """Train PEARL with ML45 environments.
 
     Args:
         ctxt (garage.experiment.ExperimentContext): The experiment
@@ -92,11 +93,20 @@ def torch_pearl_half_cheetah_vel(ctxt=None,
     encoder_hidden_sizes = (encoder_hidden_size, encoder_hidden_size,
                             encoder_hidden_size)
     # create multi-task environment and sample tasks
-    env_sampler = SetTaskSampler(lambda: GarageEnv(
-        normalize(HalfCheetahVelEnv())))
+    ML_train_envs = [
+        GarageEnv(normalize(ML45.from_task(task_name)))
+        for task_name in ML45.get_train_tasks().all_task_names
+    ]
+
+    ML_test_envs = [
+        GarageEnv(normalize(ML45.from_task(task_name)))
+        for task_name in ML45.get_test_tasks().all_task_names
+    ]
+
+    env_sampler = EnvPoolSampler(ML_train_envs)
+    env_sampler.grow_pool(num_train_tasks)
     env = env_sampler.sample(num_train_tasks)
-    test_env_sampler = SetTaskSampler(lambda: GarageEnv(
-        normalize(HalfCheetahVelEnv())))
+    test_env_sampler = EnvPoolSampler(ML_test_envs)
 
     runner = LocalRunner(ctxt)
 
@@ -151,4 +161,4 @@ def torch_pearl_half_cheetah_vel(ctxt=None,
     runner.train(n_epochs=num_epochs, batch_size=batch_size)
 
 
-torch_pearl_half_cheetah_vel()
+torch_pearl_ml45()
