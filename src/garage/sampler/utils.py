@@ -58,7 +58,7 @@ def rollout(env,
     path_length = 0
     if animated:
         env.render()
-    while path_length < max_path_length:
+    while path_length < (max_path_length or np.inf):
         a, agent_info = agent.get_action(o)
         if deterministic and 'mean' in agent_infos:
             a = agent_info['mean']

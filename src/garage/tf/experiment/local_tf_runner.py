@@ -177,6 +177,15 @@ class LocalTFRunner(LocalRunner):
         super().setup(algo, env, sampler_cls, sampler_args, n_workers,
                       worker_class, worker_args)
 
+    def _start_worker(self):
+        """Start Plotter and Sampler workers."""
+        self._sampler.start_worker()
+        if self._plot:
+            # pylint: disable=import-outside-toplevel
+            from garage.tf.plotter import Plotter
+            self._plotter = Plotter(self.get_env_copy(), self._policy)
+            self._plotter.start()
+
     def initialize_tf_vars(self):
         """Initialize all uninitialized variables in session."""
         with tf.name_scope('initialize_tf_vars'):
