@@ -384,3 +384,82 @@ def test_wrap_experiment_logdir():
     assert len(prefix_contents) == 2
     assert any(
         [expected_path.samefile(directory) for directory in prefix_contents])
+
+
+def test_wrap_experiment_dynamic_log_dir():
+    prefix = 'wrap_exp_dynamic_logdir'
+    name = 'specified_logdir'
+    exp_path = pathlib.Path(os.getcwd(), 'data/local', prefix)
+    expected_path = exp_path / name
+    _hard_rmtree(exp_path)
+    logdir = 'data/local/wrap_exp_dynamic_logdir/specified_logdir'
+
+    @wrap_experiment
+    def test_exp(ctxt=None, seed=1):
+        del seed
+        assert expected_path.samefile(ctxt.snapshot_dir)
+
+    assert not exp_path.exists()
+
+    test_exp(dict(prefix=prefix, log_dir=logdir))
+
+    prefix_contents = list(exp_path.iterdir())
+    assert len(prefix_contents) == 1
+    assert prefix_contents[0].samefile(expected_path)
+
+    expected_path = pathlib.Path(os.getcwd(), logdir + '_1')
+
+    test_exp(dict(prefix=prefix, log_dir=logdir))
+
+    prefix_contents = list(exp_path.iterdir())
+    assert len(prefix_contents) == 2
+    assert any(
+        [expected_path.samefile(directory) for directory in prefix_contents])
+
+
+def test_wrap_experiment_use_existing_dir():
+    prefix = 'wrap_exp_existing_dir'
+    name = 'test_exp'
+    exp_path = pathlib.Path(os.getcwd(), 'data/local', prefix)
+    expected_path = exp_path / name
+    _hard_rmtree(exp_path)
+    logdir = 'data/local/wrap_exp_existing_dir/test_exp'
+
+    @wrap_experiment(prefix=prefix)
+    def test_exp(ctxt=None, seed=1):
+        del seed
+        assert expected_path.samefile(ctxt.snapshot_dir)
+
+    assert not exp_path.exists()
+
+    test_exp()
+
+    prefix_contents = list(exp_path.iterdir())
+    assert len(prefix_contents) == 1
+    assert prefix_contents[0].samefile(expected_path)
+
+    @wrap_experiment(prefix=prefix)
+    def test_exp_2(ctxt, seed=1):
+        del seed
+        assert expected_path.samefile(ctxt.snapshot_dir)
+
+    test_exp_2(dict(log_dir=logdir, use_existing_dir=True))
+
+    prefix_contents = list(exp_path.iterdir())
+    assert len(prefix_contents) == 1
+    assert any(
+        [expected_path.samefile(directory) for directory in prefix_contents])
+
+
+def test_wrap_experiment_invalid_options():
+    prefix = 'wrap_exp_invalid_options'
+    exp_path = pathlib.Path(os.getcwd(), 'data/local', prefix)
+    _hard_rmtree(exp_path)
+    logdir = 'data/local/wrap_exp_invalid_options/test_exp'
+
+    @wrap_experiment(prefix=prefix)
+    def test_exp(ctxt):
+        del ctxt
+
+    with pytest.raises(ValueError):
+        test_exp(dict(logdir=logdir))

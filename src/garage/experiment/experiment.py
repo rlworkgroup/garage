@@ -345,13 +345,16 @@ class ExperimentTemplate:
             will be used), or 'passed' (only passed parameters will be used).
             The used parameters will be inserted in the order they appear in
             the function definition.
+        use_existing_dir (bool): If true, (re)use the directory for this
+            experiment, even if it already contains data.
 
     """
 
     # pylint: disable=too-few-public-methods
 
     def __init__(self, *, function, log_dir, name, prefix, snapshot_mode,
-                 snapshot_gap, archive_launch_repo, name_parameters):
+                 snapshot_gap, archive_launch_repo, name_parameters,
+                 use_existing_dir):
         self.function = function
         self.log_dir = log_dir
         self.name = name
@@ -360,6 +363,7 @@ class ExperimentTemplate:
         self.snapshot_gap = snapshot_gap
         self.archive_launch_repo = archive_launch_repo
         self.name_parameters = name_parameters
+        self.use_existing_dir = use_existing_dir
         if self.function is not None:
             self._update_wrap_params()
 
@@ -375,10 +379,13 @@ class ExperimentTemplate:
         functools.update_wrapper(self, self.function)
         self.__signature__ = _make_experiment_signature(self.function)
 
-    def _augment_name(self, name, params):
+    @classmethod
+    def _augment_name(cls, options, name, params):
         """Augment the experiment name with parameters.
 
         Args:
+            options (dict): Options to `wrap_experiment` itself. See the
+                function documentation for details.
             name (str): Name without parameter names.
             params (dict): Dictionary of parameters.
 
@@ -392,55 +399,97 @@ class ExperimentTemplate:
         """
         name_parameters = collections.OrderedDict()
 
-        if self.name_parameters == 'passed':
-            for param in self.__signature__.parameters.values():
+        if options['name_parameters'] == 'passed':
+            for param in options['signature'].parameters.values():
                 try:
                     name_parameters[param.name] = params[param.name]
                 except KeyError:
                     pass
-        elif self.name_parameters == 'all':
-            for param in self.__signature__.parameters.values():
+        elif options['name_parameters'] == 'all':
+            for param in options['signature'].parameters.values():
                 name_parameters[param.name] = params.get(
                     param.name, param.default)
-        else:
+        elif options['name_parameters'] is not None:
             raise ValueError('wrap_experiment.name_parameters should be set '
                              'to one of None, "passed", or "all"')
         param_str = '_'.join('{}={}'.format(k, v)
                              for (k, v) in name_parameters.items())
-        return '{}_{}'.format(name, param_str)
+        if param_str:
+            return '{}_{}'.format(name, param_str)
+        else:
+            return name
 
-    def _make_context(self, *args, **kwargs):
+    def _get_options(self, *args):
+        """Get the options for wrap_experiment.
+
+        This method combines options passed to `wrap_experiment` itself and to
+        the wrapped experiment.
+
+        Args:
+            args (list[dict]): Unnamed arguments to the wrapped experiment. May
+                be an empty list or a list containing a single dictionary.
+
+        Raises:
+            ValueError: If args contains more than one value, or the value is
+                not a dictionary containing at most the same keys as are
+                arguments to `wrap_experiment`.
+
+        Returns:
+            dict: The final options.
+
+        """
+        options = dict(name=self.name,
+                       function=self.function,
+                       prefix=self.prefix,
+                       name_parameters=self.name_parameters,
+                       log_dir=self.log_dir,
+                       archive_launch_repo=self.archive_launch_repo,
+                       snapshot_gap=self.snapshot_gap,
+                       snapshot_mode=self.snapshot_mode,
+                       use_existing_dir=self.use_existing_dir,
+                       signature=self.__signature__)
+        if args:
+            if len(args) == 1 and isinstance(args[0], dict):
+                for k in args[0]:
+                    if k not in options:
+                        raise ValueError('Unknown key {} in wrap_experiment '
+                                         'options'.format(k))
+                options.update(args[0])
+            else:
+                raise ValueError('garage.experiment currently only supports '
+                                 'keyword arguments')
+        return options
+
+    @classmethod
+    def _make_context(cls, options, **kwargs):
         """Make a context from the template information and variant args.
 
         Currently, all arguments should be keyword arguments.
 
         Args:
-            args (list): Should be empty.
+            options (dict): Options to `wrap_experiment` itself. See the
+                function documentation for details.
             kwargs (dict): Keyword arguments for the wrapped function. Will be
                 logged to `variant.json`
 
         Returns:
             ExperimentContext: The created experiment context.
 
-        Raises:
-            ValueError: If args is not empty.
-
         """
-        if args:
-            raise ValueError('garage.experiment currently only supports '
-                             'keyword arguments')
-        name = self.name
+        name = options['name']
         if name is None:
-            name = self.function.__name__
-        if self.name_parameters:
-            name = self._augment_name(name, kwargs)
-        log_dir = self.log_dir
+            name = options['function'].__name__
+        name = cls._augment_name(options, name, kwargs)
+        log_dir = options['log_dir']
         if log_dir is None:
             log_dir = ('{data}/local/{prefix}/{name}'.format(
                 data=os.path.join(os.getcwd(), 'data'),
-                prefix=self.prefix,
+                prefix=options['prefix'],
                 name=name))
-        log_dir = _make_sequential_log_dir(log_dir)
+        if options['use_existing_dir']:
+            os.makedirs(log_dir, exist_ok=True)
+        else:
+            log_dir = _make_sequential_log_dir(log_dir)
 
         tabular_log_file = os.path.join(log_dir, 'progress.csv')
         text_log_file = os.path.join(log_dir, 'debug.log')
@@ -450,7 +499,7 @@ class ExperimentTemplate:
         dump_json(variant_log_file, kwargs)
         git_root_path, metadata = get_metadata()
         dump_json(metadata_log_file, metadata)
-        if git_root_path and self.archive_launch_repo:
+        if git_root_path and options['archive_launch_repo']:
             make_launcher_archive(git_root_path=git_root_path, log_dir=log_dir)
 
         logger.add_output(dowel.TextOutput(text_log_file))
@@ -463,8 +512,8 @@ class ExperimentTemplate:
         logger.log('Logging to {}'.format(log_dir))
 
         return ExperimentContext(snapshot_dir=log_dir,
-                                 snapshot_mode=self.snapshot_mode,
-                                 snapshot_gap=self.snapshot_gap)
+                                 snapshot_mode=options['snapshot_mode'],
+                                 snapshot_gap=options['snapshot_gap'])
 
     def __call__(self, *args, **kwargs):
         """Wrap a function to turn it into an ExperimentTemplate.
@@ -474,7 +523,9 @@ class ExperimentTemplate:
 
         Args:
             args (list): If no function has been set yet, must be a list
-                containing a single callable.
+                containing a single callable. If the function has been set, may
+                be a single value, a dictionary containing overrides for the
+                original arguments to `wrap_experiment`.
             kwargs (dict): Arguments passed onto the wrapped function.
 
         Returns:
@@ -493,8 +544,8 @@ class ExperimentTemplate:
             self._update_wrap_params()
             return self
         else:
-            ctxt = self._make_context(*args, **kwargs)
-            result = self.function(ctxt, *args, **kwargs)
+            ctxt = self._make_context(self._get_options(*args), **kwargs)
+            result = self.function(ctxt, **kwargs)
             logger.remove_all()
             logger.pop_prefix()
             gc.collect()  # See dowel issue #44
@@ -509,7 +560,8 @@ def wrap_experiment(function=None,
                     snapshot_mode='last',
                     snapshot_gap=1,
                     archive_launch_repo=True,
-                    name_parameters=None):
+                    name_parameters=None,
+                    use_existing_dir=False):
     """Decorate a function to turn it into an ExperimentTemplate.
 
     When invoked, the wrapped function will receive an ExperimentContext, which
@@ -554,6 +606,8 @@ def wrap_experiment(function=None,
             will be used), or 'passed' (only passed parameters will be used).
             The used parameters will be inserted in the order they appear in
             the function definition.
+        use_existing_dir (bool): If true, (re)use the directory for this
+            experiment, even if it already contains data.
 
     Returns:
         callable: The wrapped function.
@@ -566,7 +620,8 @@ def wrap_experiment(function=None,
                               snapshot_mode=snapshot_mode,
                               snapshot_gap=snapshot_gap,
                               archive_launch_repo=archive_launch_repo,
-                              name_parameters=name_parameters)
+                              name_parameters=name_parameters,
+                              use_existing_dir=use_existing_dir)
 
 
 def dump_json(filename, data):
