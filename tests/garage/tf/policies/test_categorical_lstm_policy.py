@@ -15,13 +15,13 @@ from tests.fixtures.models import SimpleLSTMModel
 
 class TestCategoricalLSTMPolicy(TfGraphTestCase):
 
-    @pytest.mark.parametrize('obs_dim, action_dim, hidden_dim', [
-        ((1, ), 1, 4),
-        ((2, ), 2, 4),
-        ((1, 1), 1, 4),
-        ((2, 2), 2, 4),
+    @pytest.mark.parametrize('obs_dim, action_dim', [
+        ((1, ), 1),
+        ((2, ), 2),
+        ((1, 1), 1),
+        ((2, 2), 2),
     ])
-    def test_dist_info_sym(self, obs_dim, action_dim, hidden_dim):
+    def test_dist_info_sym(self, obs_dim, action_dim):
         env = TfEnv(DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
 
         obs_ph = tf.compat.v1.placeholder(
@@ -107,15 +107,15 @@ class TestCategoricalLSTMPolicy(TfGraphTestCase):
             with pytest.raises(ValueError):
                 CategoricalLSTMPolicy(env_spec=env.spec)
 
-    @pytest.mark.parametrize('obs_dim, action_dim, hidden_dim', [
-        ((1, ), 1, 4),
-        ((2, ), 2, 4),
-        ((1, 1), 1, 4),
-        ((2, 2), 2, 4),
+    @pytest.mark.parametrize('obs_dim, action_dim', [
+        ((1, ), 1),
+        ((2, ), 2),
+        ((1, 1), 1),
+        ((2, 2), 2),
     ])
     @mock.patch('numpy.random.choice')
     def test_get_action_state_include_action(self, mock_rand, obs_dim,
-                                             action_dim, hidden_dim):
+                                             action_dim):
         mock_rand.return_value = 0
 
         env = TfEnv(DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
@@ -142,14 +142,14 @@ class TestCategoricalLSTMPolicy(TfGraphTestCase):
             assert action == 0
             assert np.array_equal(prob, expected_prob)
 
-    @pytest.mark.parametrize('obs_dim, action_dim, hidden_dim', [
-        ((1, ), 1, 4),
-        ((2, ), 2, 4),
-        ((1, 1), 1, 4),
-        ((2, 2), 2, 4),
+    @pytest.mark.parametrize('obs_dim, action_dim', [
+        ((1, ), 1),
+        ((2, ), 2),
+        ((1, 1), 1),
+        ((2, 2), 2),
     ])
     @mock.patch('numpy.random.choice')
-    def test_get_action(self, mock_rand, obs_dim, action_dim, hidden_dim):
+    def test_get_action(self, mock_rand, obs_dim, action_dim):
         mock_rand.return_value = 0
 
         env = TfEnv(DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
@@ -207,3 +207,15 @@ class TestCategoricalLSTMPolicy(TfGraphTestCase):
                                    [[obs.flatten()], [obs.flatten()]]
                                })  # noqa: E126
             assert np.array_equal(output1, output2)
+
+    def test_clone(self):
+        env = TfEnv(DummyDiscreteEnv(obs_dim=(1, ), action_dim=1))
+        with mock.patch(('garage.tf.policies.'
+                         'categorical_lstm_policy.LSTMModel'),
+                        new=SimpleLSTMModel):
+            policy = CategoricalLSTMPolicy(env_spec=env.spec,
+                                           state_include_action=False)
+            policy_cloned = policy.clone('cloned_policy')
+            assert policy_cloned.name == 'cloned_policy'
+            assert np.array_equal(policy.get_param_values(),
+                                  policy_cloned.get_param_values())
