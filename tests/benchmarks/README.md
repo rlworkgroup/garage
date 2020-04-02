@@ -5,6 +5,34 @@ We have an automated system that will run any benchmark file named "test_benchma
 
 The results are displayed [here](https://rlworkgroup.github.io/benchmarks/)
 
+# Environments
+| Observations/Actions | Discrete | Continuous |
+| --- | --- | --- |
+| On-policy & Pixel | *PIXEL_ENV_SET | \ |
+| Off-policy & Pixel | Atari1M | \ |
+| State | *STATE_ENV_SET | MuJoCo1M |
+
+```
+PIXEL_ENV_SET: [
+    'MemorizeDigits-v0',
+    'CubeCrash-v0',
+    ^'Acrobot-v1',
+    ^'MountainCar-v0',
+    ^'CartPole-v1',
+    ^'LunarLander-v2'
+]
+```
+^ Using the wrappers [PixelObservationWrapper](https://github.com/openai/gym/blob/master/gym/wrappers/pixel_observation.py) and [FrameStack](https://github.com/openai/gym/blob/master/gym/wrappers/frame_stack.py) (n=4)
+```
+STATE_ENV_SET: [
+    'LunarLander-v2',
+    'CartPole-v1',
+    'Assault-ramDeterministic-v4',
+    'Breakout-ramDeterministic-v4',
+    'ChopperCommand-ramDeterministic-v4',
+    'Tutankham-ramDeterministic-v4'
+]
+```
 # Directions
 Follow these directions to output your benchmark results as a json compatible with the display.
 ```python
