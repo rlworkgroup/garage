@@ -10,7 +10,7 @@ class PPO(VPG):
     Args:
         env_spec (garage.envs.EnvSpec): Environment specification.
         policy (garage.torch.policies.base.Policy): Policy.
-        baseline (garage.np.baselines.Baseline): The baseline.
+        value_function (garage.np.baselines.Baseline): The value function.
         optimizer (Union[type, tuple[type, dict]]): Type of optimizer.
             This can be an optimizer type such as `torch.optim.Adam` or a
             tuple of type and dictionary, where dictionary contains arguments
@@ -49,7 +49,7 @@ class PPO(VPG):
     def __init__(self,
                  env_spec,
                  policy,
-                 baseline,
+                 value_function,
                  optimizer=torch.optim.Adam,
                  policy_lr=3e-4,
                  max_path_length=500,
@@ -68,7 +68,7 @@ class PPO(VPG):
 
         super().__init__(env_spec=env_spec,
                          policy=policy,
-                         baseline=baseline,
+                         value_function=value_function,
                          optimizer=optimizer,
                          policy_lr=policy_lr,
                          max_path_length=max_path_length,

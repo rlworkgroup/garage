@@ -25,7 +25,7 @@ class MAML:
             computing loss.
         env (garage.envs.GarageEnv): A gym environment.
         policy (garage.torch.policies.Policy): Policy.
-        baseline (garage.np.baselines.Baseline): The baseline.
+        value_function (garage.np.baselines.Baseline): The value function.
         meta_optimizer (Union[torch.optim.Optimizer, tuple]):
             Type of optimizer.
             This can be an optimizer type such as `torch.optim.Adam` or a tuple
@@ -45,7 +45,7 @@ class MAML:
                  inner_algo,
                  env,
                  policy,
-                 baseline,
+                 value_function,
                  meta_optimizer,
                  meta_batch_size=40,
                  inner_lr=0.1,
@@ -63,7 +63,7 @@ class MAML:
         self._meta_evaluator = meta_evaluator
         self._policy = policy
         self._env = env
-        self._baseline = baseline
+        self._value_function = value_function
         self._num_grad_updates = num_grad_updates
         self._meta_batch_size = meta_batch_size
         self._inner_algo = inner_algo
@@ -357,7 +357,7 @@ class MAML:
             path['returns'] = tensor_utils.discount_cumsum(
                 path['rewards'], self._inner_algo.discount)
 
-        self._baseline.fit(paths)
+        self._value_function.fit(paths)
         obs, actions, rewards, valids, baselines \
             = self._inner_algo.process_samples(itr, paths)
         return MAMLTrajectoryBatch(paths, obs, actions, rewards, valids,

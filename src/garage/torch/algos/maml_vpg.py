@@ -11,7 +11,7 @@ class MAMLVPG(MAML):
     Args:
         env (garage.envs.GarageEnv): A multi-task environment.
         policy (garage.torch.policies.base.Policy): Policy.
-        baseline (garage.np.baselines.Baseline): The baseline.
+        value_function (garage.np.baselines.Baseline): The value function.
         inner_lr (float): Adaptation learning rate.
         outer_lr (float): Meta policy learning rate.
         max_path_length (int): Maximum length of a single rollout.
@@ -46,7 +46,7 @@ class MAMLVPG(MAML):
     def __init__(self,
                  env,
                  policy,
-                 baseline,
+                 value_function,
                  inner_lr=_Default(1e-1),
                  outer_lr=1e-3,
                  max_path_length=100,
@@ -64,7 +64,7 @@ class MAMLVPG(MAML):
                  evaluate_every_n_epochs=1):
         inner_algo = VPG(env.spec,
                          policy,
-                         baseline,
+                         value_function,
                          optimizer=torch.optim.Adam,
                          policy_lr=inner_lr,
                          max_path_length=max_path_length,
@@ -81,7 +81,7 @@ class MAMLVPG(MAML):
         super().__init__(inner_algo=inner_algo,
                          env=env,
                          policy=policy,
-                         baseline=baseline,
+                         value_function=value_function,
                          meta_optimizer=torch.optim.Adam,
                          meta_batch_size=meta_batch_size,
                          inner_lr=inner_lr,

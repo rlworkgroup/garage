@@ -34,7 +34,7 @@ def test_maml_trpo_pendulum():
         hidden_nonlinearity=torch.tanh,
         output_nonlinearity=None,
     )
-    baseline = LinearFeatureBaseline(env_spec=env.spec)
+    value_function = LinearFeatureBaseline(env_spec=env.spec)
 
     rollouts_per_task = 5
     max_path_length = 100
@@ -42,7 +42,7 @@ def test_maml_trpo_pendulum():
     runner = LocalRunner(snapshot_config)
     algo = MAMLTRPO(env=env,
                     policy=policy,
-                    baseline=baseline,
+                    value_function=value_function,
                     max_path_length=max_path_length,
                     meta_batch_size=5,
                     discount=0.99,
@@ -69,7 +69,7 @@ def test_maml_trpo_dummy_named_env():
         hidden_nonlinearity=torch.tanh,
         output_nonlinearity=None,
     )
-    baseline = LinearFeatureBaseline(env_spec=env.spec)
+    value_function = LinearFeatureBaseline(env_spec=env.spec)
 
     rollouts_per_task = 2
     max_path_length = 100
@@ -77,7 +77,7 @@ def test_maml_trpo_dummy_named_env():
     runner = LocalRunner(snapshot_config)
     algo = MAMLTRPO(env=env,
                     policy=policy,
-                    baseline=baseline,
+                    value_function=value_function,
                     max_path_length=max_path_length,
                     meta_batch_size=5,
                     discount=0.99,

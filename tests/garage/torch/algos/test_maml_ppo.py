@@ -37,7 +37,7 @@ class TestMAMLPPO:
             hidden_nonlinearity=torch.tanh,
             output_nonlinearity=None,
         )
-        self.baseline = LinearFeatureBaseline(env_spec=self.env.spec)
+        self.value_function = LinearFeatureBaseline(env_spec=self.env.spec)
 
     def teardown_method(self):
         """Teardown method which is called after every test."""
@@ -53,7 +53,7 @@ class TestMAMLPPO:
         runner = LocalRunner(snapshot_config)
         algo = MAMLPPO(env=self.env,
                        policy=self.policy,
-                       baseline=self.baseline,
+                       value_function=self.value_function,
                        max_path_length=max_path_length,
                        meta_batch_size=5,
                        discount=0.99,

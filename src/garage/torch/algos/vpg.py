@@ -22,7 +22,7 @@ class VPG(BatchPolopt):
     Args:
         env_spec (garage.envs.EnvSpec): Environment specification.
         policy (garage.torch.policies.base.Policy): Policy.
-        baseline (garage.np.baselines.Baseline): The baseline.
+        value_function (garage.np.baselines.Baseline): The value function.
         optimizer (Union[type, tuple[type, dict]]): Type of optimizer.
             This can be an optimizer type such as `torch.optim.Adam` or a
             tuple of type and dictionary, where dictionary contains arguments
@@ -60,7 +60,7 @@ class VPG(BatchPolopt):
             self,
             env_spec,
             policy,
-            baseline,
+            value_function,
             optimizer=torch.optim.Adam,
             policy_lr=3e-4,
             max_path_length=500,
@@ -76,6 +76,7 @@ class VPG(BatchPolopt):
             minibatch_size=None,
             max_optimization_epochs=1,
     ):
+        self._value_function = value_function
         self._gae_lambda = gae_lambda
         self._center_adv = center_adv
         self._positive_adv = positive_adv
@@ -101,7 +102,7 @@ class VPG(BatchPolopt):
 
         super().__init__(env_spec=env_spec,
                          policy=policy,
-                         baseline=baseline,
+                         baseline=value_function,
                          discount=discount,
                          max_path_length=max_path_length,
                          n_samples=num_train_per_epoch)
@@ -165,7 +166,7 @@ class VPG(BatchPolopt):
                                    rewards_flat[ids], advantages_flat[ids])
             logger.log('Mini epoch: {} | Loss: {}'.format(epoch, loss))
 
-        self.baseline.fit(paths)
+        self._value_function.fit(paths)
 
         with torch.no_grad():
             loss_after = self._compute_loss_with_adv(obs_flat, actions_flat,
@@ -389,9 +390,7 @@ class VPG(BatchPolopt):
                 where T is the path length experienced by the agent.
 
         """
-        if hasattr(self.baseline, 'predict_n'):
-            return torch.Tensor(self.baseline.predict_n(path))
-        return torch.Tensor(self.baseline.predict(path))
+        return torch.Tensor(self._value_function.predict(path))
 
     def _optimize(self, obs, actions, rewards, advantages):
         r"""Performs a optimization.

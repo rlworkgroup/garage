@@ -35,11 +35,11 @@ def torch_ppo_pendulum(ctxt=None, seed=1):
                                hidden_nonlinearity=torch.tanh,
                                output_nonlinearity=None)
 
-    baseline = LinearFeatureBaseline(env_spec=env.spec)
+    value_function = LinearFeatureBaseline(env_spec=env.spec)
 
     algo = PPO(env_spec=env.spec,
                policy=policy,
-               baseline=baseline,
+               value_function=value_function,
                max_path_length=100,
                discount=0.99,
                center_adv=False)

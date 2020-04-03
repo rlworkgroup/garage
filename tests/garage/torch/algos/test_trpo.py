@@ -24,7 +24,7 @@ class TestTRPO:
             hidden_nonlinearity=torch.tanh,
             output_nonlinearity=None,
         )
-        self.baseline = LinearFeatureBaseline(env_spec=self.env.spec)
+        self.value_function = LinearFeatureBaseline(env_spec=self.env.spec)
 
     def teardown_method(self):
         """Teardown method which is called after every test."""
@@ -38,7 +38,7 @@ class TestTRPO:
         runner = LocalRunner(snapshot_config)
         algo = TRPO(env_spec=self.env.spec,
                     policy=self.policy,
-                    baseline=self.baseline,
+                    value_function=self.value_function,
                     max_path_length=100,
                     discount=0.99,
                     gae_lambda=0.98)

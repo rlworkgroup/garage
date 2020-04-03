@@ -46,7 +46,7 @@ def maml_ppo(ctxt, seed, epochs, rollouts_per_task, meta_batch_size):
         output_nonlinearity=None,
     )
 
-    baseline = LinearFeatureBaseline(env_spec=env.spec)
+    value_function = LinearFeatureBaseline(env_spec=env.spec)
 
     max_path_length = 100
 
@@ -61,7 +61,7 @@ def maml_ppo(ctxt, seed, epochs, rollouts_per_task, meta_batch_size):
     runner = LocalRunner(ctxt)
     algo = MAMLPPO(env=env,
                    policy=policy,
-                   baseline=baseline,
+                   value_function=value_function,
                    max_path_length=max_path_length,
                    meta_batch_size=meta_batch_size,
                    discount=0.99,
