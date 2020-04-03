@@ -6,11 +6,14 @@ We have an automated system that will run any benchmark file named "test_benchma
 The results are displayed [here](https://rlworkgroup.github.io/benchmarks/)
 
 # Environments
-| Observations/Actions | Discrete | Continuous |
-| --- | --- | --- |
-| On-policy & Pixel | *PIXEL_ENV_SET | \ |
-| Off-policy & Pixel | Atari1M | \ |
-| State | *STATE_ENV_SET | MuJoCo1M |
+| Algorithm | Observation | Action | Environment Set |
+| --- | --- | --- | --- |
+| On-policy | Pixel | Discrete | *PIXEL_ENV_SET |
+| Off-policy | Pixel | Discrete | Atari1M |
+| Meta-RL | Non-Pixel | Discrete | *ML_ENV_SET |
+| MultiTask-RL | Non-Pixel | Discrete | *MT_ENV_SET |
+| ALL | Non-Pixel | Discrete | *NON_PIXEL_ENV_SET |
+| ALL | Non-Pixel | Continuous | MuJoCo1M |
 
 ```
 PIXEL_ENV_SET: [
@@ -23,6 +26,25 @@ PIXEL_ENV_SET: [
 ]
 ```
 ^ Using the wrappers [PixelObservationWrapper](https://github.com/openai/gym/blob/master/gym/wrappers/pixel_observation.py) and [FrameStack](https://github.com/openai/gym/blob/master/gym/wrappers/frame_stack.py) (n=4)
+```
+ML_ENV_SET: [
+    'ML1-push-v1',
+    'ML1-reach-v1',
+    'ML1-pick-place-v1',
+    'ML10',
+    'ML45'
+]
+```
+```
+MT_ENV_SET: [
+    'ML1-push-v1',
+    'ML1-reach-v1',
+    'ML1-pick-place-v1',
+    'MT10',
+    'MT50'
+]
+```
+See (Meta-Wrold)[https://github.com/rlworkgroup/metaworld] for ML1/ML10/ML45/MT10/MT50.
 ```
 STATE_ENV_SET: [
     'LunarLander-v2',
