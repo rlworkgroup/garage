@@ -7,8 +7,7 @@ import tensorflow as tf
 
 
 class BaseModel(abc.ABC):
-    """
-    Interface-only abstract class for models.
+    """Interface-only abstract class for models.
 
     A Model contains the structure/configuration of a set of computation
     graphs, or can be understood as a set of networks. Using a model
@@ -32,47 +31,51 @@ class BaseModel(abc.ABC):
 
     """
 
-    def build(self, *inputs):
-        """
-        Output of model with the given input placeholder(s).
+    def build(self, *inputs, name=None):
+        """Output of model with the given input placeholder(s).
 
         This function is implemented by subclasses to create their computation
         graphs, which will be managed by Model. Generally, subclasses should
         implement `build()` directly.
 
         Args:
-            inputs: Tensor input(s) for the model.
+            inputs (object): Input(s) for the model.
+            name (str): Name of the model.
 
         Return:
-            output: Tensor output(s) of the model.
+            list[tf.Tensor]: Output(s) of the model.
+
         """
-        pass
 
     @property
     def name(self):
         """Name for this Model."""
-        pass
 
     @property
     def parameters(self):
-        """
-        Parameters of the Model.
+        """Parameters of the Model.
 
         The output of a model is determined by its parameter. It could be
         the weights of a neural network model or parameters of a loss
         function model.
+
+        Returns:
+            list[tf.Tensor]: Parameters.
+
         """
-        pass
 
     @parameters.setter
     def parameters(self, parameters):
-        """Set parameters of the Model."""
-        pass
+        """Set parameters of the Model.
+
+        Args:
+            parameters (list[tf.Tensor]): Parameters.
+
+        """
 
 
 class Network:
-    """
-    Network class For TensorFlow.
+    """Network class For TensorFlow.
 
     A Network contains connectivity information by inputs/outputs.
     When a Network is built, it appears as a subgraph in the computation
@@ -80,30 +83,53 @@ class Network:
     model share the same parameters, i.e same inputs yield to same outputs.
     """
 
+    def __init__(self):
+        self._inputs = None
+        self._outputs = None
+
     @property
     def input(self):
-        """Tensor input of the Network."""
+        """Tensor input of the Network.
+
+        Returns:
+            tf.Tensor: Input.
+
+        """
         return self._inputs[0]
 
     @property
     def inputs(self):
-        """Tensor inputs of the Network."""
+        """Tensor inputs of the Network.
+
+        Returns:
+            list[tf.Tensor]: Inputs.
+
+        """
         return self._inputs
 
     @property
     def output(self):
-        """Tensor output of the Network."""
+        """Tensor output of the Network.
+
+        Returns:
+            tf.Tensor: Output.
+
+        """
         return self._outputs[0]
 
     @property
     def outputs(self):
-        """Tensor outputs of the Network."""
+        """Tensor outputs of the Network.
+
+        Returns:
+            list[tf.Tensor]: Outputs.
+
+        """
         return self._outputs
 
 
 class Model(BaseModel):
-    r"""
-    Model class for TensorFlow.
+    r"""Model class for TensorFlow.
 
     A TfModel only contains the structure/configuration of the underlying
     computation graphs. Connectivity information are all in Network class.
@@ -148,7 +174,8 @@ class Model(BaseModel):
 
     Args:
       name (str): Name of the model. It will also become the variable scope
-      of the model. Every model should have a unique name.
+          of the model. Every model should have a unique name.
+
     """
 
     def __init__(self, name):
@@ -158,9 +185,9 @@ class Model(BaseModel):
         self._default_parameters = None
         self._variable_scope = None
 
+    # pylint: disable=protected-access, assignment-from-no-return
     def build(self, *inputs, name=None):
-        """
-        Build a Network with the given input(s).
+        """Build a Network with the given input(s).
 
         ***
         Do not call tf.global_variable_initializers() after building a model
@@ -172,18 +199,18 @@ class Model(BaseModel):
         parameter sharing. Different Networks must have an unique name.
 
         Args:
-          inputs (list[tf.Tensor]) : Tensor input(s), recommended to be
-            positional arguments, for example,
-            def build(self, state_input, action_input, name=None).
-          name (str): Name of the model, which is also the name scope of the
-            model.
+            inputs (list[tf.Tensor]) : Tensor input(s), recommended to be
+                positional arguments, for example,
+                def build(self, state_input, action_input, name=None).
+            name (str): Name of the model, which is also the name scope of the
+                model.
 
         Raises:
-          ValueError when a Network with the same name is already built.
+            ValueError: When a Network with the same name is already built.
 
         Returns:
-          outputs (list[tf.Tensor]): Output tensors of the model with the given
-            inputs.
+            list[tf.Tensor]: Output tensors of the model with the given
+                inputs.
 
         """
         network_name = name or 'default'
@@ -205,9 +232,9 @@ class Model(BaseModel):
             if network_name in self._networks:
                 raise ValueError(
                     'Network {} already exists!'.format(network_name))
-            with tf.compat.v1.variable_scope(
-                    self._variable_scope, reuse=True,
-                    auxiliary_name_scope=False):
+            with tf.compat.v1.variable_scope(self._variable_scope,
+                                             reuse=True,
+                                             auxiliary_name_scope=False):
                 with tf.name_scope(name=network_name):
                     network = Network()
                     network._inputs = inputs
@@ -236,51 +263,62 @@ class Model(BaseModel):
         return network.outputs
 
     def _build(self, *inputs, name=None):
-        """
-        Output of the model given input placeholder(s).
+        """Output of the model given input placeholder(s).
 
         User should implement _build() inside their subclassed model,
         and construct the computation graphs in this function.
 
         Args:
             inputs: Tensor input(s), recommended to be position arguments, e.g.
-              def _build(self, state_input, action_input, name=None).
-              It would be usually same as the inputs in build().
+                def _build(self, state_input, action_input, name=None).
+                It would be usually same as the inputs in build().
             name (str): Inner model name, also the variable scope of the
                 inner model, if exist. One example is
                 garage.tf.models.Sequential.
 
         Return:
-            output: Tensor output(s) of the model.
-        """
-        pass
+            list[tf.Tensor]: Tensor output(s) of the model.
 
-    def network_input_spec(self):
         """
-        Network input spec.
+
+    # pylint: disable=no-self-use
+    def network_input_spec(self):
+        """Network input spec.
 
         Return:
-            *inputs (list[str]): List of key(str) for the network inputs.
+            list[str]: List of key(str) for the network inputs.
+
         """
         return []
 
+    # pylint: disable=no-self-use
     def network_output_spec(self):
-        """
-        Network output spec.
+        """Network output spec.
 
         Return:
-            *inputs (list[str]): List of key(str) for the network outputs.
+            list[str]: List of key(str) for the network outputs.
+
         """
         return []
 
     @property
     def networks(self):
-        """Networks of the model."""
+        """Networks of the model.
+
+        Returns:
+            dict[str: Network]: Networks.
+
+        """
         return self._networks
 
     @property
     def parameters(self):
-        """Parameters of the model."""
+        """Parameters of the model.
+
+        Returns:
+            np.ndarray: Parameters
+
+        """
         _variables = self._get_variables()
         if _variables:
             return tf.compat.v1.get_default_session().run(_variables)
@@ -289,7 +327,12 @@ class Model(BaseModel):
 
     @parameters.setter
     def parameters(self, parameters):
-        """Set model parameters."""
+        """Set model parameters.
+
+        Args:
+            parameters (tf.Tensor): Parameters.
+
+        """
         variables = self._get_variables()
         for name, var in variables.items():
             if name in parameters:
@@ -299,71 +342,102 @@ class Model(BaseModel):
 
     @property
     def name(self):
-        """
-        Name (str) of the model.
+        """Name (str) of the model.
 
         This is also the variable scope of the model.
+
+        Returns:
+            str: Name of the model.
+
         """
         return self._name
 
     @property
     def input(self):
-        """
-        Default input (tf.Tensor) of the model.
+        """Default input of the model.
 
         When the model is built the first time, by default it
         creates the 'default' network. This property creates
         a reference to the input of the network.
+
+        Returns:
+            tf.Tensor: Default input of the model.
+
         """
         return self.networks['default'].input
 
     @property
     def output(self):
-        """
-        Default output (tf.Tensor) of the model.
+        """Default output of the model.
 
         When the model is built the first time, by default it
         creates the 'default' network. This property creates
         a reference to the output of the network.
+
+        Returns:
+            tf.Tensor: Default output of the model.
+
         """
         return self.networks['default'].output
 
     @property
     def inputs(self):
-        """
-        Default inputs (tf.Tensor) of the model.
+        """Default inputs of the model.
 
         When the model is built the first time, by default it
         creates the 'default' network. This property creates
         a reference to the inputs of the network.
+
+        Returns:
+            list[tf.Tensor]: Default inputs of the model.
+
         """
         return self.networks['default'].inputs
 
     @property
     def outputs(self):
-        """
-        Default outputs (tf.Tensor) of the model.
+        """Default outputs of the model.
 
         When the model is built the first time, by default it
         creates the 'default' network. This property creates
         a reference to the outputs of the network.
+
+        Returns:
+            list[tf.Tensor]: Default outputs of the model.
+
         """
         return self.networks['default'].outputs
 
     def _get_variables(self):
+        """Get variables of this model.
+
+        Returns:
+            dict[str: tf.Tensor]: Variables of this model.
+
+        """
         if self._variable_scope:
             return {v.name: v for v in self._variable_scope.global_variables()}
         else:
             return dict()
 
     def __getstate__(self):
-        """Object.__getstate__."""
+        """Get the pickle state.
+
+        Returns:
+            dict: The pickled state.
+
+        """
         new_dict = self.__dict__.copy()
         del new_dict['_networks']
         new_dict['_default_parameters'] = self.parameters
         return new_dict
 
     def __setstate__(self, state):
-        """Object.__setstate__."""
+        """Object.__setstate__.
+
+        Args:
+            state (dict): unpickled state.
+
+        """
         self.__dict__.update(state)
         self._networks = {}

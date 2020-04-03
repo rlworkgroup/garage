@@ -45,6 +45,7 @@ class TFWorkerWrapper(Worker):
         # pylint: disable=super-init-not-called
         self._inner_worker = None
         self._sess = None
+        self._sess_entered = None
         self.worker_init()
 
     def worker_init(self):
@@ -55,12 +56,14 @@ class TFWorkerWrapper(Worker):
             # sampler worker processes in
             # order to execute the policy.
             self._sess = tf.compat.v1.Session()
+            self._sess_entered = True
             self._sess.__enter__()
 
     def shutdown(self):
         """Perform shutdown processes for TF."""
         self._inner_worker.shutdown()
-        if tf.get_default_session():
+        if tf.get_default_session() and self._sess_entered:
+            self._sess_entered = False
             self._sess.__exit__(None, None, None)
 
     @property

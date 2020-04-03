@@ -9,7 +9,7 @@ from garage.tf.policies import StochasticPolicy
 
 
 class CategoricalLSTMPolicy(StochasticPolicy):
-    """CategoricalLSTMPolicy
+    """Estimate action distribution with Categorical parameterized by a LSTM.
 
     A policy that contains a LSTM to make prediction based on
     a categorical distribution.
@@ -59,6 +59,7 @@ class CategoricalLSTMPolicy(StochasticPolicy):
             at initialization. It's used to reduce the scale of forgetting at
             the beginning of the training.
         layer_normalization (bool): Bool for using layer normalization or not.
+
     """
 
     def __init__(self,
@@ -88,12 +89,21 @@ class CategoricalLSTMPolicy(StochasticPolicy):
         self._obs_dim = env_spec.observation_space.flat_dim
         self._action_dim = env_spec.action_space.n
         self._hidden_dim = hidden_dim
+        self._hidden_nonlinearity = hidden_nonlinearity
+        self._hidden_w_init = hidden_w_init
+        self._hidden_b_init = hidden_b_init
+        self._recurrent_nonlinearity = recurrent_nonlinearity
+        self._recurrent_w_init = recurrent_w_init
         self._state_include_action = state_include_action
         self._output_nonlinearity = output_nonlinearity
         self._output_w_init = output_w_init
         self._output_b_init = output_b_init
         self._hidden_state_init = hidden_state_init
+        self._hidden_state_init_trainable = hidden_state_init_trainable
         self._cell_state_init = cell_state_init
+        self._cell_stat_init_trainable = cell_state_init_trainable
+        self._forget_bias = forget_bias
+        self._layer_normalization = layer_normalization
 
         if state_include_action:
             self._input_dim = self._obs_dim + self._action_dim
@@ -155,11 +165,28 @@ class CategoricalLSTMPolicy(StochasticPolicy):
 
     @property
     def vectorized(self):
-        """Vectorized or not."""
+        """Vectorized or not.
+
+        Returns:
+            bool: True if primitive supports vectorized operations.
+
+        """
         return True
 
     def dist_info_sym(self, obs_var, state_info_vars, name=None):
-        """Symbolic graph of the distribution."""
+        """Build a symbolic graph of the distribution parameters.
+
+        Args:
+            obs_var (tf.Tensor): Tensor input for symbolic graph.
+            state_info_vars (dict[np.ndarray]): Extra state information, e.g.
+                previous action.
+            name (str): Name for symbolic graph.
+
+        Returns:
+            dict[tf.Tensor]: Outputs of the symbolic graph of distribution
+                parameters.
+
+        """
         if self._state_include_action:
             prev_action_var = state_info_vars['prev_action']
             prev_action_var = tf.cast(prev_action_var, tf.float32)
@@ -179,7 +206,17 @@ class CategoricalLSTMPolicy(StochasticPolicy):
         return dict(prob=outputs)
 
     def reset(self, dones=None):
-        """Reset the policy."""
+        """Reset the policy.
+
+        Note:
+            If `dones` is None, it will be by default `np.array([True])` which
+            implies the policy will not be "vectorized", i.e. number of
+            parallel environments for training data sampling = 1.
+
+        Args:
+            dones (numpy.ndarray): Bool that indicates terminal state(s).
+
+        """
         if dones is None:
             dones = [True]
         dones = np.asarray(dones)
@@ -196,12 +233,30 @@ class CategoricalLSTMPolicy(StochasticPolicy):
             'default'].init_cell.eval()
 
     def get_action(self, observation):
-        """Return a single action."""
+        """Get single action from this policy for the input observation.
+
+        Args:
+            observation (numpy.ndarray): Observation from environment.
+
+        Returns:
+            numpy.ndarray: Predicted action.
+            dict[str: np.ndarray]: Action distribution.
+
+        """
         actions, agent_infos = self.get_actions([observation])
         return actions[0], {k: v[0] for k, v in agent_infos.items()}
 
     def get_actions(self, observations):
-        """Return multiple actions."""
+        """Get multiple actions from this policy for the input observations.
+
+        Args:
+            observations (numpy.ndarray): Observations from environment.
+
+        Returns:
+            numpy.ndarray: Predicted actions.
+            dict[str: np.ndarray]: Action distributions.
+
+        """
         flat_obs = self.observation_space.flatten_n(observations)
         if self._state_include_action:
             assert self._prev_actions is not None
@@ -224,17 +279,32 @@ class CategoricalLSTMPolicy(StochasticPolicy):
 
     @property
     def recurrent(self):
-        """Recurrent or not."""
+        """Recurrent or not.
+
+        Returns:
+            bool: True if policy is recurrent.
+
+        """
         return True
 
     @property
     def distribution(self):
-        """Policy distribution."""
+        """Policy distribution.
+
+        Returns:
+            garage.tf.distributions.DiagonalGaussian: Policy distribution.
+
+        """
         return RecurrentCategorical(self._action_dim)
 
     @property
     def state_info_specs(self):
-        """State info specification."""
+        """State info specification.
+
+        Returns:
+            list[tuple]: State info specification.
+
+        """
         if self._state_include_action:
             return [
                 ('prev_action', (self._action_dim, )),
@@ -242,13 +312,56 @@ class CategoricalLSTMPolicy(StochasticPolicy):
         else:
             return []
 
+    def clone(self, name):
+        """Return a clone of the policy.
+
+        It only copies the configuration of the Q-function,
+        not the parameters.
+
+        Args:
+            name (str): Name of the newly created policy.
+
+        Returns:
+            garage.tf.policies.CategoricalLSTMPolicy: Clone of this object
+
+        """
+        return self.__class__(
+            name=name,
+            env_spec=self._env_spec,
+            hidden_dim=self._hidden_dim,
+            hidden_nonlinearity=self._hidden_nonlinearity,
+            hidden_w_init=self._hidden_w_init,
+            hidden_b_init=self._hidden_b_init,
+            recurrent_nonlinearity=self._recurrent_nonlinearity,
+            recurrent_w_init=self._recurrent_w_init,
+            output_nonlinearity=self._output_nonlinearity,
+            output_w_init=self._output_w_init,
+            output_b_init=self._output_b_init,
+            hidden_state_init=self._hidden_state_init,
+            hidden_state_init_trainable=self._hidden_state_init_trainable,
+            cell_state_init=self._cell_state_init,
+            cell_state_init_trainable=self._cell_stat_init_trainable,
+            state_include_action=self._state_include_action,
+            forget_bias=self._forget_bias,
+            layer_normalization=self._layer_normalization)
+
     def __getstate__(self):
-        """Object.__getstate__."""
+        """Object.__getstate__.
+
+        Returns:
+            dict: the state to be pickled for the instance.
+
+        """
         new_dict = super().__getstate__()
         del new_dict['_f_step_prob']
         return new_dict
 
     def __setstate__(self, state):
-        """Object.__setstate__."""
+        """Object.__setstate__.
+
+        Args:
+            state (dict): Unpickled state.
+
+        """
         super().__setstate__(state)
         self._initialize()

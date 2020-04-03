@@ -53,11 +53,11 @@ class Plotter:
                  rollout=default_rollout):
         Plotter.__plotters.append(self)
         self._env = env
-        self._policy = policy
         self.sess = tf.compat.v1.Session() if sess is None else sess
-
         self.graph = tf.compat.v1.get_default_graph(
         ) if graph is None else graph
+        with self.sess.as_default(), self.graph.as_default():
+            self._policy = policy.clone('plotter_policy')
         self.rollout = rollout
         self.worker_thread = Thread(target=self._start_worker, daemon=True)
         self.queue = Queue()

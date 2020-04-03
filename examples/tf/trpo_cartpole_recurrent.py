@@ -9,7 +9,11 @@ Results:
     AverageReturn: 100
     RiseTime: itr 13
 """
-from garage.experiment import run_experiment
+# pylint: disable=no-value-for-parameter
+import click
+
+from garage.experiment import wrap_experiment
+from garage.experiment.deterministic import set_seed
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import TRPO
 from garage.tf.envs import TfEnv
@@ -19,16 +23,27 @@ from garage.tf.optimizers import FiniteDifferenceHvp
 from garage.tf.policies import CategoricalLSTMPolicy
 
 
-def run_task(snapshot_config, *_):
-    """Defines the main experiment routine.
+@click.command()
+@click.option('--seed', default=1)
+@click.option('--n_epochs', default=100)
+@click.option('--batch_size', default=4000)
+@click.option('--plot', default=False)
+@wrap_experiment
+def trpo_cartpole_recurrent(ctxt, seed, n_epochs, batch_size, plot):
+    """Train TRPO with a recurrent policy on CartPole.
 
     Args:
-        snapshot_config (garage.experiment.SnapshotConfig): Configuration
-            values for snapshotting.
-        *_ (object): Hyperparameters (unused).
+        ctxt (garage.experiment.ExperimentContext): The experiment
+            configuration used by LocalRunner to create the snapshotter.
+        n_epochs (int): Number of epochs for training.
+        seed (int): Used to seed the random number generator to produce
+            determinism.
+        batch_size (int): Batch size used for training.
+        plot (bool): Whether to plot or not.
 
     """
-    with LocalTFRunner(snapshot_config=snapshot_config) as runner:
+    set_seed(seed)
+    with LocalTFRunner(snapshot_config=ctxt) as runner:
         env = TfEnv(env_name='CartPole-v1')
 
         policy = CategoricalLSTMPolicy(name='policy', env_spec=env.spec)
@@ -46,11 +61,7 @@ def run_task(snapshot_config, *_):
                         base_eps=1e-5)))
 
         runner.setup(algo, env)
-        runner.train(n_epochs=100, batch_size=4000)
+        runner.train(n_epochs=n_epochs, batch_size=batch_size, plot=plot)
 
 
-run_experiment(
-    run_task,
-    snapshot_mode='last',
-    seed=1,
-)
+trpo_cartpole_recurrent()
