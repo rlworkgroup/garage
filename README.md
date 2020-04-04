@@ -6,6 +6,7 @@
 
 # garage
 
+
 garage is a toolkit for developing and evaluating reinforcement learning algorithms, and an accompanying library of state-of-the-art implementations built using that toolkit.
 
 The toolkit provides wide range of modular tools for implementing RL algorithms, including:
