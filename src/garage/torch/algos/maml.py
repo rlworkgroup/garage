@@ -178,8 +178,11 @@ class MAML:
                 all_samples[i].append(batch_samples)
 
                 # The last iteration does only sampling but no adapting
-                if j != self._num_grad_updates:
-                    self._adapt(batch_samples, set_grad=False)
+                if j < self._num_grad_updates:
+                    # A grad need to be kept for the next grad update
+                    # Except for the last grad update
+                    require_grad = j < self._num_grad_updates - 1
+                    self._adapt(batch_samples, set_grad=require_grad)
 
             all_params.append(dict(self._policy.named_parameters()))
             # Restore to pre-updated policy
@@ -241,7 +244,8 @@ class MAML:
         losses = []
         for task_samples, task_params in zip(all_samples, all_params):
             for i in range(self._num_grad_updates):
-                self._adapt(task_samples[i], set_grad=set_grad)
+                require_grad = i < self._num_grad_updates - 1 or set_grad
+                self._adapt(task_samples[i], set_grad=require_grad)
 
             tu.update_module_params(self._old_policy, task_params)
             with torch.set_grad_enabled(set_grad):
@@ -280,7 +284,8 @@ class MAML:
         kls = []
         for task_samples, task_params in zip(all_samples, all_params):
             for i in range(self._num_grad_updates):
-                self._adapt(task_samples[i], set_grad=set_grad)
+                require_grad = i < self._num_grad_updates - 1 or set_grad
+                self._adapt(task_samples[i], set_grad=require_grad)
 
             tu.update_module_params(self._old_policy, task_params)
             with torch.set_grad_enabled(set_grad):
