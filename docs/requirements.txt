@@ -18,5 +18,5 @@ tensorflow-probability<0.6.0,>=0.5.0
 
 # dev dependencies
 recommonmark
-sphinx
+sphinx==2.4.4
 sphinx_rtd_theme
