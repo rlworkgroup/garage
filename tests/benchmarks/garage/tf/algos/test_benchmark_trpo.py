@@ -5,6 +5,7 @@ until it's done. So we introduced tests.wrappers.AutoStopEnv wrapper to set
 done=True when it reaches max_path_length. We also need to change the
 garage.tf.samplers.BatchSampler to smooth the reward curve.
 """
+import csv
 import datetime
 import multiprocessing
 import os.path as osp
@@ -15,7 +16,6 @@ from baselines.bench import benchmarks
 from baselines.common import set_global_seeds
 from baselines.common.tf_util import _PLACEHOLDER_CACHE
 from baselines.logger import configure
-from baselines.ppo1.mlp_policy import MlpPolicy
 from baselines.trpo_mpi import trpo_mpi
 import dowel
 from dowel import logger as dowel_logger
@@ -104,14 +104,11 @@ class TestBenchmarkPPO:  # pylint: disable=too-few-public-methods
 
             benchmark_helper.plot_average_over_trials(
                 [baselines_csvs, garage_tf_csvs, garage_pytorch_csvs],
-                [
-                    'eprewmean', 'Evaluation/AverageReturn',
-                    'Evaluation/AverageReturn'
-                ],
+                ['Evaluation/AverageReturn'] * 3,
                 plt_file=plt_file,
                 env_id=env_id,
                 x_label='Iteration',
-                y_label='Evaluation/AverageReturn',
+                y_label='AverageReturn',
                 names=['baseline', 'garage-TensorFlow', 'garage-PyTorch'],
             )
 
@@ -119,11 +116,8 @@ class TestBenchmarkPPO:  # pylint: disable=too-few-public-methods
                 [baselines_csvs, garage_tf_csvs, garage_pytorch_csvs],
                 seeds=seeds,
                 trials=hyper_parameters['n_trials'],
-                xs=['nupdates', 'Iteration', 'Iteration'],
-                ys=[
-                    'eprewmean', 'Evaluation/AverageReturn',
-                    'Evaluation/AverageReturn'
-                ],
+                xs=['Evaluation/Iteration'] * 3,
+                ys=['Evaluation/AverageReturn'] * 3,
                 factors=[hyper_parameters['batch_size']] * 3,
                 names=['baseline', 'garage-TF', 'garage-PT'])
 
@@ -252,35 +246,32 @@ def run_baselines(env, seed, log_dir):
 
     set_global_seeds(seed)
 
-    def policy_fn(name, ob_space, ac_space):
-        """Create policy for baselines.
-
-        Args:
-            name (str): Policy name.
-            ob_space (gym.spaces.Box) : Observation space.
-            ac_space (gym.spaces.Box) : Action space.
-
-        Returns:
-            baselines.ppo1.mlp_policy: MLP policy for baselines.
-
-        """
-        return MlpPolicy(name=name,
-                         ob_space=ob_space,
-                         ac_space=ac_space,
-                         hid_size=hyper_parameters['hidden_sizes'][0],
-                         num_hid_layers=len(hyper_parameters['hidden_sizes']))
-
-    trpo_mpi.learn(env,
-                   policy_fn,
+    policy_network = 'mlp'
+    trpo_mpi.learn(network=policy_network,
+                   env=env,
+                   total_timesteps=hyper_parameters['batch_size'] *
+                   hyper_parameters['n_epochs'],
                    timesteps_per_batch=hyper_parameters['batch_size'],
+                   gamma=hyper_parameters['discount'],
+                   lam=hyper_parameters['gae_lambda'],
                    max_kl=hyper_parameters['max_kl'],
                    cg_iters=10,
                    cg_damping=0.1,
-                   max_timesteps=(hyper_parameters['batch_size'] *
-                                  hyper_parameters['n_epochs']),
-                   gamma=hyper_parameters['discount'],
-                   lam=hyper_parameters['gae_lambda'],
                    vf_iters=5,
                    vf_stepsize=1e-3)
 
-    return osp.join(log_dir, 'progress.csv')
+    log_file_path = osp.join(log_dir, 'progress.csv')
+
+    with open(log_file_path, 'r') as rf:
+        reader = csv.reader(rf)
+        columns = [[
+            'Evaluation/AverageReturn' if c == 'EpRewMean' else c
+            for c in next(reader)
+        ] + ['Evaluation/Iteration']]
+        new_lines = columns + [line + [i] for i, line in enumerate(reader)]
+
+    with open(log_file_path, 'w') as wf:
+        writer = csv.writer(wf, lineterminator='\n')
+        writer.writerows(new_lines)
+
+    return log_file_path
