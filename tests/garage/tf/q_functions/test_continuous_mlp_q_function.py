@@ -32,7 +32,6 @@ class TestContinuousMLPQFunction(TfGraphTestCase):
         act = np.full(action_dim, 0.5).flatten()
 
         expected_output = np.full((1, ), 0.5)
-        obs_ph, act_ph = qf.inputs
 
         outputs = qf.get_qval([obs], [act])
         assert np.array_equal(outputs[0], expected_output)
@@ -42,21 +41,20 @@ class TestContinuousMLPQFunction(TfGraphTestCase):
         for output in outputs:
             assert np.array_equal(output, expected_output)
 
-    def test_q_vals_input_include_goal(self):
+    def test_q_vals_goal_conditioned(self):
         env = TfEnv(DummyDictEnv())
         with mock.patch(('garage.tf.q_functions.'
                          'continuous_mlp_q_function.MLPMergeModel'),
                         new=SimpleMLPMergeModel):
-            qf = ContinuousMLPQFunction(env_spec=env.spec,
-                                        input_include_goal=True)
+            qf = ContinuousMLPQFunction(env_spec=env.spec)
         env.reset()
         obs, _, _, _ = env.step(1)
-        obs = np.concatenate((obs['observation'], obs['desired_goal']),
-                             axis=-1)
+        obs = np.concatenate(
+            (obs['observation'], obs['desired_goal'], obs['achieved_goal']),
+            axis=-1)
         act = np.full((1, ), 0.5).flatten()
 
         expected_output = np.full((1, ), 0.5)
-        obs_ph, act_ph = qf.inputs
 
         outputs = qf.get_qval([obs], [act])
         assert np.array_equal(outputs[0], expected_output)
@@ -81,7 +79,6 @@ class TestContinuousMLPQFunction(TfGraphTestCase):
         obs, _, _, _ = env.step(1)
         obs = obs.flatten()
         act = np.full(action_dim, 0.5).flatten()
-        obs_ph, act_ph = qf.inputs
 
         outputs = qf.get_qval([obs], [act])
 
@@ -103,7 +100,6 @@ class TestContinuousMLPQFunction(TfGraphTestCase):
         obs, _, _, _ = env.step(1)
         obs = obs.flatten()
         act = np.full(action_dim, 0.5).flatten()
-        obs_ph, act_ph = qf.inputs
 
         output1 = qf.get_qval([obs], [act])
 
@@ -139,7 +135,6 @@ class TestContinuousMLPQFunction(TfGraphTestCase):
         obs, _, _, _ = env.step(1)
         obs = obs.flatten()
         act = np.full(action_dim, 0.5).flatten()
-        obs_ph, act_ph = qf.inputs
 
         with tf.compat.v1.variable_scope(
                 'ContinuousMLPQFunction/SimpleMLPMergeModel', reuse=True):
@@ -152,7 +147,6 @@ class TestContinuousMLPQFunction(TfGraphTestCase):
         h_data = pickle.dumps(qf)
         with tf.compat.v1.Session(graph=tf.Graph()):
             qf_pickled = pickle.loads(h_data)
-            obs_ph_pickled, act_ph_pickled = qf_pickled.inputs
             output2 = qf_pickled.get_qval([obs], [act])
 
         assert np.array_equal(output1, output2)

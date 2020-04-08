@@ -41,7 +41,6 @@ class ContinuousMLPQFunction(QFunction):
         output_b_init (callable): Initializer function for the bias
             of output dense layer(s). The function should return a
             tf.Tensor.
-        input_include_goal (bool): Whether input includes goal.
         layer_normalization (bool): Bool for using layer normalization.
 
     """
@@ -57,7 +56,6 @@ class ContinuousMLPQFunction(QFunction):
                  output_nonlinearity=None,
                  output_w_init=tf.glorot_uniform_initializer(),
                  output_b_init=tf.zeros_initializer(),
-                 input_include_goal=False,
                  layer_normalization=False):
         super().__init__(name)
 
@@ -70,14 +68,9 @@ class ContinuousMLPQFunction(QFunction):
         self._output_nonlinearity = output_nonlinearity
         self._output_w_init = output_w_init
         self._output_b_init = output_b_init
-        self._input_include_goal = input_include_goal
         self._layer_normalization = layer_normalization
 
-        if self._input_include_goal:
-            self._obs_dim = env_spec.observation_space.flat_dim_with_keys(
-                ['observation', 'desired_goal'])
-        else:
-            self._obs_dim = env_spec.observation_space.flat_dim
+        self._obs_dim = env_spec.observation_space.flat_dim
         self._action_dim = env_spec.action_space.flat_dim
 
         self.model = MLPMergeModel(output_dim=1,
@@ -171,8 +164,7 @@ class ContinuousMLPQFunction(QFunction):
                               output_nonlinearity=self._output_nonlinearity,
                               output_w_init=self._output_w_init,
                               output_b_init=self._output_b_init,
-                              layer_normalization=self._layer_normalization,
-                              input_include_goal=self._input_include_goal)
+                              layer_normalization=self._layer_normalization)
 
     def __getstate__(self):
         """Object.__getstate__.

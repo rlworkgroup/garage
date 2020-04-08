@@ -1,29 +1,25 @@
-'''
-This script creates a regression test over garage-DDPG and baselines-DDPG.
+"""This script creates a regression test over garage-DDPG and baselines-DDPG.
 It get Mujoco1M benchmarks from baselines benchmark, and test each task in
 its trial times on garage model and baselines model. For each task, there will
 be `trial` times with different random seeds. For each trial, there will be two
 log directories corresponding to baselines and garage. And there will be a plot
 plotting the average return curve from baselines and garage.
-'''
+"""
 import datetime
 import os
 import os.path as osp
 import random
 
+from baselines import bench
 from baselines import logger as baselines_logger
 from baselines.bench import benchmarks
 from baselines.common.misc_util import set_global_seeds
-from baselines.ddpg.memory import Memory
-from baselines.ddpg.models import Actor, Critic
-from baselines.ddpg.noise import OrnsteinUhlenbeckActionNoise
-import baselines.ddpg.training as training
+from baselines.common.vec_env import DummyVecEnv
+from baselines.ddpg import ddpg
 from baselines.logger import configure
 import dowel
 from dowel import logger as dowel_logger
 import gym
-from mpi4py import MPI
-import numpy as np
 import pytest
 import tensorflow as tf
 
@@ -57,115 +53,113 @@ params = {
 }
 
 
-class TestBenchmarkDDPG:
-    '''Compare benchmarks between garage and baselines.'''
+@pytest.mark.huge
+def test_benchmark_ddpg():
+    """Compare benchmarks between garage and baselines."""
+    # Load Mujoco1M tasks, you can check other benchmarks here
+    # https://github.com/openai/baselines/blob/master/baselines/bench/benchmarks.py
+    mujoco1m = benchmarks.get_benchmark('Mujoco1M')
 
-    @pytest.mark.huge
-    def test_benchmark_ddpg(self):
-        '''
-        Compare benchmarks between garage and baselines.
-        :return:
-        '''
-        # Load Mujoco1M tasks, you can check other benchmarks here
-        # https://github.com/openai/baselines/blob/master/baselines/bench/benchmarks.py
-        mujoco1m = benchmarks.get_benchmark('Mujoco1M')
+    timestamp = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f')
+    benchmark_dir = osp.join(os.getcwd(), 'data', 'local', 'benchmarks',
+                             'ddpg', timestamp)
+    result_json = {}
+    for task in mujoco1m['tasks']:
+        env_id = task['env_id']
+        env = gym.make(env_id)
+        baseline_env = AutoStopEnv(env_name=env_id,
+                                   max_path_length=params['n_rollout_steps'])
+        seeds = random.sample(range(100), task['trials'])
 
-        timestamp = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f')
-        benchmark_dir = osp.join(os.getcwd(), 'data', 'local', 'benchmarks',
-                                 'ddpg', timestamp)
-        result_json = {}
-        for task in mujoco1m['tasks']:
-            env_id = task['env_id']
-            env = gym.make(env_id)
-            baseline_env = AutoStopEnv(
-                env_name=env_id, max_path_length=params['n_rollout_steps'])
-            seeds = random.sample(range(100), task['trials'])
+        task_dir = osp.join(benchmark_dir, env_id)
+        plt_file = osp.join(benchmark_dir, '{}_benchmark.png'.format(env_id))
+        relplt_file = osp.join(benchmark_dir,
+                               '{}_benchmark_mean.png'.format(env_id))
+        baselines_csvs = []
+        garage_csvs = []
 
-            task_dir = osp.join(benchmark_dir, env_id)
-            plt_file = osp.join(benchmark_dir,
-                                '{}_benchmark.png'.format(env_id))
-            relplt_file = osp.join(benchmark_dir,
-                                   '{}_benchmark_mean.png'.format(env_id))
-            baselines_csvs = []
-            garage_csvs = []
+        for trial in range(task['trials']):
+            env.reset()
+            baseline_env.reset()
+            seed = seeds[trial]
 
-            for trial in range(task['trials']):
-                env.reset()
-                baseline_env.reset()
-                seed = seeds[trial]
+            trial_dir = osp.join(task_dir,
+                                 'trial_{}_seed_{}'.format(trial + 1, seed))
+            garage_dir = osp.join(trial_dir, 'garage')
+            baselines_dir = osp.join(trial_dir, 'baselines')
 
-                trial_dir = osp.join(
-                    task_dir, 'trial_{}_seed_{}'.format(trial + 1, seed))
-                garage_dir = osp.join(trial_dir, 'garage')
-                baselines_dir = osp.join(trial_dir, 'baselines')
+            with tf.Graph().as_default():
+                # Run garage algorithms
+                garage_csv = run_garage(env, seed, garage_dir)
 
-                with tf.Graph().as_default():
-                    # Run garage algorithms
-                    garage_csv = run_garage(env, seed, garage_dir)
+                # Run baselines algorithms
+                baselines_csv = run_baselines(baseline_env, seed,
+                                              baselines_dir)
 
-                    # Run baselines algorithms
-                    baselines_csv = run_baselines(baseline_env, seed,
-                                                  baselines_dir)
+            garage_csvs.append(garage_csv)
+            baselines_csvs.append(baselines_csv)
 
-                garage_csvs.append(garage_csv)
-                baselines_csvs.append(baselines_csv)
+        env.close()
 
-            env.close()
-
-            Rh.plot(b_csvs=baselines_csvs,
-                    g_csvs=garage_csvs,
-                    g_x='Epoch',
-                    g_y='Evaluation/AverageReturn',
-                    g_z='Garage',
-                    b_x='total/epochs',
-                    b_y='rollout/return',
-                    b_z='Baseline',
-                    trials=task['trials'],
-                    seeds=seeds,
-                    plt_file=plt_file,
-                    env_id=env_id,
-                    x_label='Epoch',
-                    y_label='Evaluation/AverageReturn')
-
-            Rh.relplot(g_csvs=garage_csvs,
-                       b_csvs=baselines_csvs,
-                       g_x='Epoch',
-                       g_y='Evaluation/AverageReturn',
-                       g_z='Garage',
-                       b_x='total/epochs',
-                       b_y='rollout/return',
-                       b_z='Baseline',
-                       trials=task['trials'],
-                       seeds=seeds,
-                       plt_file=relplt_file,
-                       env_id=env_id,
-                       x_label='Epoch',
-                       y_label='Evaluation/AverageReturn')
-
-            result_json[env_id] = Rh.create_json(
-                b_csvs=baselines_csvs,
+        Rh.plot(b_csvs=baselines_csvs,
                 g_csvs=garage_csvs,
-                seeds=seeds,
-                trails=task['trials'],
                 g_x='Epoch',
                 g_y='Evaluation/AverageReturn',
+                g_z='Garage',
                 b_x='total/epochs',
                 b_y='rollout/return',
-                factor_g=params['steps_per_epoch'] * params['n_rollout_steps'],
-                factor_b=1)
+                b_z='Baseline',
+                trials=task['trials'],
+                seeds=seeds,
+                plt_file=plt_file,
+                env_id=env_id,
+                x_label='Epoch',
+                y_label='Evaluation/AverageReturn')
 
-        Rh.write_file(result_json, 'DDPG')
+        Rh.relplot(g_csvs=garage_csvs,
+                   b_csvs=baselines_csvs,
+                   g_x='Epoch',
+                   g_y='Evaluation/AverageReturn',
+                   g_z='Garage',
+                   b_x='total/epochs',
+                   b_y='rollout/return',
+                   b_z='Baseline',
+                   trials=task['trials'],
+                   seeds=seeds,
+                   plt_file=relplt_file,
+                   env_id=env_id,
+                   x_label='Epoch',
+                   y_label='Evaluation/AverageReturn')
+
+        result_json[env_id] = Rh.create_json(
+            b_csvs=baselines_csvs,
+            g_csvs=garage_csvs,
+            seeds=seeds,
+            trails=task['trials'],
+            g_x='Epoch',
+            g_y='Evaluation/AverageReturn',
+            b_x='total/epochs',
+            b_y='rollout/return',
+            factor_g=params['steps_per_epoch'] * params['n_rollout_steps'],
+            factor_b=1)
+
+    Rh.write_file(result_json, 'DDPG')
 
 
 def run_garage(env, seed, log_dir):
-    '''
-    Create garage model and training.
-    Replace the ddpg with the algorithm you want to run.
-    :param env: Environment of the task.
-    :param seed: Random seed for the trial.
-    :param log_dir: Log dir path.
-    :return:
-    '''
+    """Create garage model and training.
+
+    Replace the ppo with the algorithm you want to run.
+
+    Args:
+        env (gym.Env): Environment of the task.
+        seed (int): Random seed for the trial.
+        log_dir (str): Log dir path.
+
+    Returns:
+        str: The log file path.
+
+    """
     deterministic.set_seed(seed)
 
     with LocalTFRunner(snapshot_config) as runner:
@@ -188,7 +182,7 @@ def run_garage(env, seed, log_dir):
             size_in_transitions=params['replay_buffer_size'],
             time_horizon=params['n_rollout_steps'])
 
-        ddpg = DDPG(env_spec=env.spec,
+        algo = DDPG(env_spec=env.spec,
                     policy=policy,
                     qf=qf,
                     replay_buffer=replay_buffer,
@@ -210,7 +204,7 @@ def run_garage(env, seed, log_dir):
         dowel_logger.add_output(dowel.CsvOutput(tabular_log_file))
         dowel_logger.add_output(dowel.TensorBoardOutput(tensorboard_log_dir))
 
-        runner.setup(ddpg, env)
+        runner.setup(algo, env)
         runner.train(n_epochs=params['n_epochs'],
                      batch_size=params['n_rollout_steps'])
 
@@ -220,60 +214,44 @@ def run_garage(env, seed, log_dir):
 
 
 def run_baselines(env, seed, log_dir):
-    '''
-    Create baselines model and training.
-    Replace the ddpg and its training with the algorithm you want to run.
-    :param env: Environment of the task.
-    :param seed: Random seed for the trial.
-    :param log_dir: Log dir path.
-    :return
-    '''
-    rank = MPI.COMM_WORLD.Get_rank()
-    seed = seed + 1000000 * rank
+    """Create baselines model and training.
+
+    Replace the ppo and its training with the algorithm you want to run.
+
+    Args:
+        env (gym.Env): Environment of the task.
+        seed (int): Random seed for the trial.
+        log_dir (str): Log dir path.
+
+    Returns:
+        str: The log file path.
+
+    """
+    seed = seed + 1000000
     set_global_seeds(seed)
     env.seed(seed)
 
     # Set up logger for baselines
     configure(dir=log_dir, format_strs=['stdout', 'log', 'csv', 'tensorboard'])
-    baselines_logger.info('rank {}: seed={}, logdir={}'.format(
-        rank, seed, baselines_logger.get_dir()))
+    baselines_logger.info('seed={}, logdir={}'.format(
+        seed, baselines_logger.get_dir()))
 
-    # Set up params for baselines ddpg
-    nb_actions = env.action_space.shape[-1]
-    layer_norm = False
+    env = DummyVecEnv([
+        lambda: bench.Monitor(
+            env, baselines_logger.get_dir(), allow_early_resets=True)
+    ])
 
-    action_noise = OrnsteinUhlenbeckActionNoise(mu=np.zeros(nb_actions),
-                                                sigma=float(params['sigma']) *
-                                                np.ones(nb_actions))
-    memory = Memory(limit=params['replay_buffer_size'],
-                    action_shape=env.action_space.shape,
-                    observation_shape=env.observation_space.shape)
-    critic = Critic(layer_norm=layer_norm)
-    actor = Actor(nb_actions, layer_norm=layer_norm)
-
-    training.train(env=env,
-                   eval_env=None,
-                   param_noise=None,
-                   action_noise=action_noise,
-                   actor=actor,
-                   critic=critic,
-                   memory=memory,
-                   nb_epochs=params['n_epochs'],
-                   nb_epoch_cycles=params['steps_per_epoch'],
-                   render_eval=False,
-                   reward_scale=1.,
-                   render=False,
-                   normalize_returns=False,
-                   normalize_observations=False,
-                   critic_l2_reg=0,
-                   actor_lr=params['policy_lr'],
-                   critic_lr=params['qf_lr'],
-                   popart=False,
-                   gamma=params['discount'],
-                   clip_norm=None,
-                   nb_train_steps=params['n_train_steps'],
-                   nb_rollout_steps=params['n_rollout_steps'],
-                   nb_eval_steps=100,
-                   batch_size=64)
+    ddpg.learn(network='mlp',
+               env=env,
+               nb_epochs=params['n_epochs'],
+               nb_epoch_cycles=params['steps_per_epoch'],
+               normalize_observations=False,
+               critic_l2_reg=0,
+               actor_lr=params['policy_lr'],
+               critic_lr=params['qf_lr'],
+               gamma=params['discount'],
+               nb_train_steps=params['n_train_steps'],
+               nb_rollout_steps=params['n_rollout_steps'],
+               nb_eval_steps=100)
 
     return osp.join(log_dir, 'progress.csv')

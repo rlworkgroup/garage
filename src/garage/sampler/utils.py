@@ -30,7 +30,7 @@ def rollout(env,
 
     Returns:
         dict[str, np.ndarray or dict]: Dictionary, with keys:
-            * observations(np.array): Non-flattened array of observations.
+            * observations(np.array): Flattened array of observations.
                 There should be one more of these than actions. Note that
                 observations[i] (for i < len(observations) - 1) was used by the
                 agent to choose actions[i]. Should have shape (T + 1, S^*) (the
@@ -59,6 +59,7 @@ def rollout(env,
     if animated:
         env.render()
     while path_length < (max_path_length or np.inf):
+        o = env.observation_space.flatten(o)
         a, agent_info = agent.get_action(o)
         if deterministic and 'mean' in agent_infos:
             a = agent_info['mean']

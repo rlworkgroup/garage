@@ -1,6 +1,8 @@
 """This class implements OffPolicyRLAlgorithm for off-policy RL algorithms."""
 import abc
 
+import numpy as np
+
 from garage import log_performance, TrajectoryBatch
 from garage.np.algos import RLAlgorithm
 from garage.sampler import OffPolicyVectorizedSampler
@@ -27,7 +29,6 @@ class OffPolicyRLAlgorithm(RLAlgorithm):
         min_buffer_size (int): The minimum buffer size for replay buffer.
         rollout_batch_size (int): Roll out batch size.
         reward_scale (float): Reward scale.
-        input_include_goal (bool): Whether input includes goal.
         smooth_return (bool): Whether to smooth the return.
         exploration_strategy
             (garage.np.exploration_strategies.ExplorationStrategy):
@@ -49,7 +50,6 @@ class OffPolicyRLAlgorithm(RLAlgorithm):
                  min_buffer_size=int(1e4),
                  rollout_batch_size=1,
                  reward_scale=1.,
-                 input_include_goal=False,
                  smooth_return=True,
                  exploration_strategy=None):
         self.env_spec = env_spec
@@ -64,7 +64,6 @@ class OffPolicyRLAlgorithm(RLAlgorithm):
         self.min_buffer_size = min_buffer_size
         self.rollout_batch_size = rollout_batch_size
         self.reward_scale = reward_scale
-        self.input_include_goal = input_include_goal
         self.smooth_return = smooth_return
         self.max_path_length = max_path_length
         self.es = exploration_strategy
@@ -189,11 +188,15 @@ class OffPolicyRLAlgorithm(RLAlgorithm):
 
         """
         paths = []
+        max_path_length = self.max_path_length
+        # Use a finite length rollout for evaluation.
+        if max_path_length is None or np.isinf(max_path_length):
+            max_path_length = 1000
 
         for _ in range(num_trajs):
             path = rollout(env,
                            self.policy,
-                           max_path_length=self.max_path_length,
+                           max_path_length=max_path_length,
                            deterministic=True)
             paths.append(path)
         return TrajectoryBatch.from_trajectory_list(self.env_spec, paths)

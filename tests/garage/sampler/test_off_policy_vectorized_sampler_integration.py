@@ -98,8 +98,7 @@ class TestOffPolicyVectorizedSampler(TfGraphTestCase):
                                   qf=None,
                                   replay_buffer=replay_buffer,
                                   policy=policy,
-                                  exploration_strategy=None,
-                                  input_include_goal=True)
+                                  exploration_strategy=None)
 
         sampler = OffPolicyVectorizedSampler(algo, env, 1, no_reset=True)
         sampler.start_worker()

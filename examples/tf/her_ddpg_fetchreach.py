@@ -40,7 +40,6 @@ def run_task(snapshot_config, *_):
             hidden_sizes=[256, 256, 256],
             hidden_nonlinearity=tf.nn.relu,
             output_nonlinearity=tf.nn.tanh,
-            input_include_goal=True,
         )
 
         qf = ContinuousMLPQFunction(
@@ -48,7 +47,6 @@ def run_task(snapshot_config, *_):
             name='QFunction',
             hidden_sizes=[256, 256, 256],
             hidden_nonlinearity=tf.nn.relu,
-            input_include_goal=True,
         )
 
         replay_buffer = HerReplayBuffer(env_spec=env.spec,
@@ -73,7 +71,6 @@ def run_task(snapshot_config, *_):
             policy_optimizer=tf.train.AdamOptimizer,
             qf_optimizer=tf.train.AdamOptimizer,
             buffer_batch_size=256,
-            input_include_goal=True,
         )
 
         runner.setup(algo=ddpg, env=env)

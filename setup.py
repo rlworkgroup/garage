@@ -60,7 +60,7 @@ EXTRAS['gpu'] = ['tensorflow-gpu' + TF_VERSION]
 # Development dependencies (*not* included in 'all')
 EXTRAS['dev'] = [
     # Please keep alphabetized
-    'baselines @ https://{}@api.github.com/repos/openai/baselines/tarball/f2729693253c0ef4d4086231d36e0a4307ec1cb3'.format(GARAGE_GH_TOKEN),  # noqa: E501
+    'baselines @ https://{}@api.github.com/repos/openai/baselines/tarball/ea25b9e8b234e6ee1bca43083f8f3cf974143998'.format(GARAGE_GH_TOKEN),  # noqa: E501
     'flake8',
     'flake8-docstrings>=1.5.0',
     'flake8-import-order',

@@ -1,5 +1,5 @@
-"""Dummy gym.spaces.Dict environment for testing purpose."""
-import gym
+"""Dummy akro.Dict environment for testing purpose."""
+import akro
 import numpy as np
 
 from garage.envs import EnvSpec
@@ -7,7 +7,7 @@ from tests.fixtures.envs.dummy import DummyEnv
 
 
 class DummyDictEnv(DummyEnv):
-    """A dummy gym.spaces.Dict environment with predefined inner spaces.
+    """A dummy akro.Dict environment with predefined inner spaces.
 
     Args:
         random (bool): If observations are randomly generated or not.
@@ -24,22 +24,17 @@ class DummyDictEnv(DummyEnv):
         """Return the observation space.
 
         Returns:
-            gym.spaces.Dict: Observation space.
+            akro.Dict: Observation space.
 
         """
 
-        return gym.spaces.Dict({
+        return akro.Dict({
             'achieved_goal':
-            gym.spaces.Box(low=-200., high=200., shape=(3, ),
-                           dtype=np.float32),
+            akro.Box(low=-200., high=200., shape=(3, ), dtype=np.float32),
             'desired_goal':
-            gym.spaces.Box(low=-200., high=200., shape=(3, ),
-                           dtype=np.float32),
+            akro.Box(low=-200., high=200., shape=(3, ), dtype=np.float32),
             'observation':
-            gym.spaces.Box(low=-200.,
-                           high=200.,
-                           shape=(25, ),
-                           dtype=np.float32)
+            akro.Box(low=-200., high=200., shape=(25, ), dtype=np.float32)
         })
 
     @property
@@ -47,13 +42,10 @@ class DummyDictEnv(DummyEnv):
         """Return the action space.
 
         Returns:
-            gym.spaces.Box: Action space.
+            akro.Box: Action space.
 
         """
-        return gym.spaces.Box(low=-5.0,
-                              high=5.0,
-                              shape=(1, ),
-                              dtype=np.float32)
+        return akro.Box(low=-5.0, high=5.0, shape=(1, ), dtype=np.float32)
 
     def reset(self):
         """Reset the environment.
