@@ -251,7 +251,6 @@ class LocalRunner:
                                                 start_epoch=0)
 
         self.plot = plot
-
         return self.algo.train(self)
 
     def step_epochs(self):

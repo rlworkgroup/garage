@@ -37,19 +37,23 @@ class Plotter:
                  rollout=default_rollout):
         Plotter.__plotters.append(self)
         self.env = env
-        self.policy = policy
         self.sess = tf.compat.v1.get_default_session(
         ) if sess is None else sess
         self.graph = tf.compat.v1.get_default_graph(
         ) if graph is None else graph
+        with self.sess.as_default(), self.graph.as_default():
+            self.policy = policy.clone('plotter_policy')
         self.rollout = rollout
         self.worker_thread = Thread(target=self._start_worker, daemon=True)
         self.queue = Queue()
 
         # Needed in order to draw glfw window on the main thread
         if ('Darwin' in platform.platform()):
-            self.rollout(
-                env, policy, max_path_length=np.inf, animated=True, speedup=5)
+            self.rollout(env,
+                         policy,
+                         max_path_length=np.inf,
+                         animated=True,
+                         speedup=5)
 
     def _start_worker(self):
         env = None
@@ -86,21 +90,19 @@ class Plotter:
                         param_values, max_length = msgs[Op.DEMO].args
                         policy.set_param_values(param_values)
                         initial_rollout = False
-                        self.rollout(
-                            env,
-                            policy,
-                            max_path_length=max_length,
-                            animated=True,
-                            speedup=5)
+                        self.rollout(env,
+                                     policy,
+                                     max_path_length=max_length,
+                                     animated=True,
+                                     speedup=5)
                         self.queue.task_done()
                     else:
                         if max_length:
-                            self.rollout(
-                                env,
-                                policy,
-                                max_path_length=max_length,
-                                animated=True,
-                                speedup=5)
+                            self.rollout(env,
+                                         policy,
+                                         max_path_length=max_length,
+                                         animated=True,
+                                         speedup=5)
         except KeyboardInterrupt:
             pass
 
@@ -129,8 +131,9 @@ class Plotter:
             tf.compat.v1.get_variable_scope().reuse_variables()
             self.worker_thread.start()
             self.queue.put(
-                Message(
-                    op=Op.UPDATE, args=(self.env, self.policy), kwargs=None))
+                Message(op=Op.UPDATE,
+                        args=(self.env, self.policy),
+                        kwargs=None))
             atexit.register(self.close)
 
     def update_plot(self, policy, max_length=np.inf):
@@ -138,7 +141,6 @@ class Plotter:
             return
         if self.worker_thread.is_alive():
             self.queue.put(
-                Message(
-                    op=Op.DEMO,
-                    args=(policy.get_param_values(), max_length),
-                    kwargs=None))
+                Message(op=Op.DEMO,
+                        args=(policy.get_param_values(), max_length),
+                        kwargs=None))
