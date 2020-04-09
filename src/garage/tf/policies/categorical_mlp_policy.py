@@ -58,10 +58,18 @@ class CategoricalMLPPolicy(StochasticPolicy):
             'CategoricalMLPPolicy only works with akro.Discrete action '
             'space.')
         super().__init__(name, env_spec)
-        self.obs_dim = env_spec.observation_space.flat_dim
-        self.action_dim = env_spec.action_space.n
+        self._obs_dim = env_spec.observation_space.flat_dim
+        self._action_dim = env_spec.action_space.n
+        self._hidden_sizes = hidden_sizes
+        self._hidden_nonlinearity = hidden_nonlinearity
+        self._hidden_w_init = hidden_w_init
+        self._hidden_b_init = hidden_b_init
+        self._output_nonlinearity = output_nonlinearity
+        self._output_w_init = output_w_init
+        self._output_b_init = output_b_init
+        self._layer_normalization = layer_normalization
 
-        self.model = MLPModel(output_dim=self.action_dim,
+        self.model = MLPModel(output_dim=self._action_dim,
                               hidden_sizes=hidden_sizes,
                               hidden_nonlinearity=hidden_nonlinearity,
                               hidden_w_init=hidden_w_init,
@@ -76,7 +84,7 @@ class CategoricalMLPPolicy(StochasticPolicy):
 
     def _initialize(self):
         state_input = tf.compat.v1.placeholder(tf.float32,
-                                               shape=(None, self.obs_dim))
+                                               shape=(None, self._obs_dim))
 
         with tf.compat.v1.variable_scope(self.name) as vs:
             self._variable_scope = vs
@@ -127,7 +135,31 @@ class CategoricalMLPPolicy(StochasticPolicy):
     @property
     def distribution(self):
         """Policy distribution."""
-        return Categorical(self.action_dim)
+        return Categorical(self._action_dim)
+
+    def clone(self, name):
+        """Return a clone of the policy.
+
+        It only copies the configuration of the Q-function,
+        not the parameters.
+
+        Args:
+            name (str): Name of the newly created policy.
+
+        Returns:
+            garage.tf.policies.CategoricalMLPPolicy: Clone of this object
+
+        """
+        return self.__class__(name=name,
+                              env_spec=self._env_spec,
+                              hidden_sizes=self._hidden_sizes,
+                              hidden_nonlinearity=self._hidden_nonlinearity,
+                              hidden_w_init=self._hidden_w_init,
+                              hidden_b_init=self._hidden_b_init,
+                              output_nonlinearity=self._output_nonlinearity,
+                              output_w_init=self._output_w_init,
+                              output_b_init=self._output_b_init,
+                              layer_normalization=self._layer_normalization)
 
     def __getstate__(self):
         """Object.__getstate__."""

@@ -88,12 +88,21 @@ class CategoricalLSTMPolicy(StochasticPolicy):
         self._obs_dim = env_spec.observation_space.flat_dim
         self._action_dim = env_spec.action_space.n
         self._hidden_dim = hidden_dim
+        self._hidden_nonlinearity = hidden_nonlinearity
+        self._hidden_w_init = hidden_w_init
+        self._hidden_b_init = hidden_b_init
+        self._recurrent_nonlinearity = recurrent_nonlinearity
+        self._recurrent_w_init = recurrent_w_init
         self._state_include_action = state_include_action
         self._output_nonlinearity = output_nonlinearity
         self._output_w_init = output_w_init
         self._output_b_init = output_b_init
         self._hidden_state_init = hidden_state_init
+        self._hidden_state_init_trainable = hidden_state_init_trainable
         self._cell_state_init = cell_state_init
+        self._cell_stat_init_trainable = cell_state_init_trainable
+        self._forget_bias = forget_bias
+        self._layer_normalization = layer_normalization
 
         if state_include_action:
             self._input_dim = self._obs_dim + self._action_dim
@@ -241,6 +250,35 @@ class CategoricalLSTMPolicy(StochasticPolicy):
             ]
         else:
             return []
+
+    def clone(self, name):
+        """Return a clone of the policy.
+        It only copies the configuration of the Q-function,
+        not the parameters.
+        Args:
+            name (str): Name of the newly created policy.
+        Returns:
+            garage.tf.policies.CategoricalLSTMPolicy: Clone of this object
+        """
+        return self.__class__(
+            name=name,
+            env_spec=self._env_spec,
+            hidden_dim=self._hidden_dim,
+            hidden_nonlinearity=self._hidden_nonlinearity,
+            hidden_w_init=self._hidden_w_init,
+            hidden_b_init=self._hidden_b_init,
+            recurrent_nonlinearity=self._recurrent_nonlinearity,
+            recurrent_w_init=self._recurrent_w_init,
+            output_nonlinearity=self._output_nonlinearity,
+            output_w_init=self._output_w_init,
+            output_b_init=self._output_b_init,
+            hidden_state_init=self._hidden_state_init,
+            hidden_state_init_trainable=self._hidden_state_init_trainable,
+            cell_state_init=self._cell_state_init,
+            cell_state_init_trainable=self._cell_stat_init_trainable,
+            state_include_action=self._state_include_action,
+            forget_bias=self._forget_bias,
+            layer_normalization=self._layer_normalization)
 
     def __getstate__(self):
         """Object.__getstate__."""
