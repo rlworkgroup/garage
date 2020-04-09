@@ -540,7 +540,10 @@ class LocalRunner:
         if pause_for_plot is not None:
             self._train_args.pause_for_plot = pause_for_plot
 
-        return self._algo.train(self)
+        average_return = self._algo.train(self)
+        self._shutdown_worker()
+
+        return average_return
 
     def get_env_copy(self):
         """Get a copy of the environment.
