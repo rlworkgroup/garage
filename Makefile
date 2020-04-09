@@ -59,7 +59,7 @@ ci-verify-conda:
 	$(CONDA) info -a
 	$(CONDA) create -n garage-ci python=3.5 pip -y
 	$(GARAGE_BIN)/pip install --upgrade pip
-	$(GARAGE_BIN)/pip install dist/garage.tar.gz[all]
+	$(GARAGE_BIN)/pip install dist/garage.tar.gz[all] pylint
 	# pylint will verify all imports work
 	$(GARAGE_BIN)/pylint --disable=all --enable=import-error garage
 
