@@ -113,7 +113,7 @@ class TestBenchmarkVPG:
                 [garage_tf_csvs, garage_pytorch_csvs],
                 seeds=seeds,
                 trials=hyper_parameters['n_trials'],
-                xs=['Iteration'] * 2,
+                xs=['Evaluation/Iteration'] * 2,
                 ys=['Evaluation/AverageReturn'] * 2,
                 factors=[hyper_parameters['batch_size']] * 2,
                 names=['garage-tf', 'garage-pytorch'])
@@ -144,13 +144,13 @@ def run_garage_pytorch(env, seed, log_dir):
                          hidden_nonlinearity=torch.tanh,
                          output_nonlinearity=None)
 
-    baseline = LinearFeatureBaseline(env_spec=env.spec)
+    value_function = LinearFeatureBaseline(env_spec=env.spec)
 
     algo = PyTorch_VPG(env_spec=env.spec,
                        policy=policy,
                        optimizer=torch.optim.Adam,
                        policy_lr=hyper_parameters['learning_rate'],
-                       baseline=baseline,
+                       value_function=value_function,
                        max_path_length=hyper_parameters['max_path_length'],
                        discount=hyper_parameters['discount'],
                        center_adv=hyper_parameters['center_adv'])

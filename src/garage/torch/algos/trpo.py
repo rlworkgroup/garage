@@ -11,7 +11,7 @@ class TRPO(VPG):
     Args:
         env_spec (garage.envs.EnvSpec): Environment specification.
         policy (garage.torch.policies.base.Policy): Policy.
-        baseline (garage.np.baselines.Baseline): The baseline.
+        value_function (garage.np.baselines.Baseline): The value function.
         max_path_length (int): Maximum length of a single rollout.
         num_train_per_epoch (int): Number of train_once calls per epoch.
         discount (float): Discount.
@@ -42,7 +42,7 @@ class TRPO(VPG):
     def __init__(self,
                  env_spec,
                  policy,
-                 baseline,
+                 value_function,
                  max_path_length=100,
                  num_train_per_epoch=1,
                  discount=0.99,
@@ -61,7 +61,7 @@ class TRPO(VPG):
 
         super().__init__(env_spec=env_spec,
                          policy=policy,
-                         baseline=baseline,
+                         value_function=value_function,
                          optimizer=optimizer,
                          max_path_length=max_path_length,
                          num_train_per_epoch=num_train_per_epoch,

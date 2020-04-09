@@ -147,11 +147,11 @@ def run_garage_pytorch(env, seed, log_dir):
                          hidden_nonlinearity=torch.tanh,
                          output_nonlinearity=None)
 
-    baseline = LinearFeatureBaseline(env_spec=env.spec)
+    value_function = LinearFeatureBaseline(env_spec=env.spec)
 
     algo = PyTorch_TRPO(env_spec=env.spec,
                         policy=policy,
-                        baseline=baseline,
+                        value_function=value_function,
                         max_kl_step=hyper_parameters['max_kl'],
                         max_path_length=hyper_parameters['max_path_length'],
                         discount=hyper_parameters['discount'],

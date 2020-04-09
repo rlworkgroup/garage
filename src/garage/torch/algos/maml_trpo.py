@@ -12,7 +12,7 @@ class MAMLTRPO(MAML):
     Args:
         env (garage.envs.GarageEnv): A multi-task environment.
         policy (garage.torch.policies.base.Policy): Policy.
-        baseline (garage.np.baselines.Baseline): The baseline.
+        value_function (garage.np.baselines.Baseline): The value function.
         inner_lr (float): Adaptation learning rate.
         outer_lr (float): Meta policy learning rate.
         max_kl_step (float): The maximum KL divergence between old and new
@@ -49,7 +49,7 @@ class MAMLTRPO(MAML):
     def __init__(self,
                  env,
                  policy,
-                 baseline,
+                 value_function,
                  inner_lr=_Default(1e-2),
                  outer_lr=1e-3,
                  max_kl_step=0.01,
@@ -68,7 +68,7 @@ class MAMLTRPO(MAML):
                  evaluate_every_n_epochs=1):
         inner_algo = VPG(env.spec,
                          policy,
-                         baseline,
+                         value_function,
                          optimizer=torch.optim.Adam,
                          policy_lr=inner_lr,
                          max_path_length=max_path_length,
@@ -88,7 +88,7 @@ class MAMLTRPO(MAML):
         super().__init__(inner_algo=inner_algo,
                          env=env,
                          policy=policy,
-                         baseline=baseline,
+                         value_function=value_function,
                          meta_optimizer=meta_optimizer,
                          meta_batch_size=meta_batch_size,
                          inner_lr=inner_lr,

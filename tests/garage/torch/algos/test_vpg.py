@@ -49,7 +49,7 @@ class TestVPG:
         self._params = {
             'env_spec': self._env.spec,
             'policy': self._policy,
-            'baseline': LinearFeatureBaseline(env_spec=self._env.spec),
+            'value_function': LinearFeatureBaseline(env_spec=self._env.spec),
             'max_path_length': 100,
             'discount': 0.99,
         }

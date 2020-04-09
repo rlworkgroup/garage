@@ -59,8 +59,8 @@ def compute_advantages(discount, gae_lambda, max_path_length, baselines,
 
     Advantages are a discounted cumulative sum.
 
-    Calculate advantages using a baseline (value function) according to
-    Generalized Advantage Estimation (GAE)
+    Calculate advantages using a baseline according to Generalized Advantage
+    Estimation (GAE)
 
     The discounted cumulative sum can be computed using conv2d with filter.
     filter:
