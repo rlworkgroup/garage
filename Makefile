@@ -38,8 +38,7 @@ ci-job-large:
 ci-job-nightly:
 	pytest -n $$(nproc) -v -m nightly
 
-# ci-job-verify-envs: ci-verify-conda ci-verify-pipenv
-ci-job-verify-envs: ci-verify-pipenv
+ci-job-verify-envs: ci-verify-conda ci-verify-pipenv
 
 ci-verify-conda: CONDA_ROOT := $$HOME/miniconda
 ci-verify-conda: CONDA := $(CONDA_ROOT)/bin/conda
@@ -60,7 +59,7 @@ ci-verify-conda:
 	$(CONDA) info -a
 	$(CONDA) create -n garage-ci python=3.5 pip -y
 	$(GARAGE_BIN)/pip install --upgrade pip
-	$(GARAGE_BIN)/pip install dist/garage.tar.gz[all,dev]
+	$(GARAGE_BIN)/pip install dist/garage.tar.gz[all] pylint
 	# pylint will verify all imports work
 	$(GARAGE_BIN)/pylint --disable=all --enable=import-error garage
 
