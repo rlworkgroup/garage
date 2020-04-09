@@ -125,7 +125,7 @@ class TestBenchmarkPPO:
                 plt_file=plt_file,
                 env_id=env_id,
                 x_label='Iteration',
-                y_label='Evaluation/AverageReturn',
+                y_label='AverageReturn',
                 names=['baseline', 'garage-TensorFlow', 'garage-PyTorch'],
             )
 
@@ -134,7 +134,8 @@ class TestBenchmarkPPO:
                 seeds=seeds,
                 trials=hyper_parameters['n_trials'],
                 xs=[
-                    'nupdates', 'Evaluation/Iteration', 'Evaluation/Iteration'
+                    'misc/nupdates', 'Evaluation/Iteration',
+                    'Evaluation/Iteration'
                 ],
                 ys=[
                     'eprewmean', 'Evaluation/AverageReturn',
