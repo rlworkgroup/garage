@@ -1,6 +1,7 @@
 """Provides algorithms with access to most of garage's features."""
 import copy
 import os
+import pickle
 import time
 import types
 
@@ -100,7 +101,7 @@ class LocalRunner:
         self.sampler.start_worker()
         if self.plot:
             from garage.tf.plotter import Plotter
-            self.plotter = Plotter(self.env, self.policy)
+            self.plotter = Plotter(self.get_env_copy(), self.policy)
             self.plotter.start()
 
     def _shutdown_worker(self):
@@ -332,3 +333,10 @@ class LocalRunner:
             self.train_args.pause_for_plot = pause_for_plot
 
         return self.algo.train(self)
+
+    def get_env_copy(self):
+        """Get a copy of the environment.
+        Returns:
+            garage.envs.GarageEnv: An environement instance.
+        """
+        return pickle.loads(pickle.dumps(self.env))
