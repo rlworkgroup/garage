@@ -3,7 +3,8 @@ import torch
 
 from garage.torch.algos import _Default, VPG
 from garage.torch.algos.maml import MAML
-from garage.torch.optimizers import ConjugateGradientOptimizer
+from garage.torch.optimizers import (ConjugateGradientOptimizer,
+                                     OptimizerWrapper)
 
 
 class MAMLTRPO(MAML):
@@ -66,11 +67,17 @@ class MAMLTRPO(MAML):
                  num_grad_updates=1,
                  meta_evaluator=None,
                  evaluate_every_n_epochs=1):
+
+        policy_optimizer = OptimizerWrapper(
+            (torch.optim.Adam, dict(lr=inner_lr)), policy)
+        vf_optimizer = OptimizerWrapper((torch.optim.Adam, dict(lr=inner_lr)),
+                                        value_function)
+
         inner_algo = VPG(env.spec,
                          policy,
                          value_function,
-                         optimizer=torch.optim.Adam,
-                         policy_lr=inner_lr,
+                         policy_optimizer=policy_optimizer,
+                         vf_optimizer=vf_optimizer,
                          max_path_length=max_path_length,
                          num_train_per_epoch=1,
                          discount=discount,
@@ -88,7 +95,6 @@ class MAMLTRPO(MAML):
         super().__init__(inner_algo=inner_algo,
                          env=env,
                          policy=policy,
-                         value_function=value_function,
                          meta_optimizer=meta_optimizer,
                          meta_batch_size=meta_batch_size,
                          inner_lr=inner_lr,

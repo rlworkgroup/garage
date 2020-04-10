@@ -18,9 +18,9 @@ from garage.envs.base import GarageEnv
 from garage.envs.mujoco import HalfCheetahDirEnv
 from garage.experiment import deterministic, LocalRunner, MetaEvaluator
 from garage.experiment.task_sampler import SetTaskSampler
-from garage.np.baselines import LinearFeatureBaseline
 from garage.torch.algos import MAMLVPG
 from garage.torch.policies import GaussianMLPPolicy
+from garage.torch.value_functions import GaussianMLPValueFunction
 from tests.fixtures import snapshot_config
 
 
@@ -38,7 +38,8 @@ class TestMAMLVPG:
             hidden_nonlinearity=torch.tanh,
             output_nonlinearity=None,
         )
-        self.value_function = LinearFeatureBaseline(env_spec=self.env.spec)
+        self.value_function = GaussianMLPValueFunction(env_spec=self.env.spec,
+                                                       hidden_sizes=(32, 32))
 
     def teardown_method(self):
         """Teardown method which is called after every test."""

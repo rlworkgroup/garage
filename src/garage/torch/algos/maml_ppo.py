@@ -3,6 +3,7 @@ import torch
 
 from garage.torch.algos import _Default, PPO
 from garage.torch.algos.maml import MAML
+from garage.torch.optimizers import OptimizerWrapper
 
 
 class MAMLPPO(MAML):
@@ -65,11 +66,17 @@ class MAMLPPO(MAML):
                  num_grad_updates=1,
                  meta_evaluator=None,
                  evaluate_every_n_epochs=1):
+
+        policy_optimizer = OptimizerWrapper(
+            (torch.optim.Adam, dict(lr=inner_lr)), policy)
+        vf_optimizer = OptimizerWrapper((torch.optim.Adam, dict(lr=inner_lr)),
+                                        value_function)
+
         inner_algo = PPO(env.spec,
                          policy,
                          value_function,
-                         optimizer=torch.optim.Adam,
-                         policy_lr=inner_lr,
+                         policy_optimizer=policy_optimizer,
+                         vf_optimizer=vf_optimizer,
                          lr_clip_range=lr_clip_range,
                          max_path_length=max_path_length,
                          num_train_per_epoch=1,
@@ -85,7 +92,6 @@ class MAMLPPO(MAML):
         super().__init__(inner_algo=inner_algo,
                          env=env,
                          policy=policy,
-                         value_function=value_function,
                          meta_optimizer=torch.optim.Adam,
                          meta_batch_size=meta_batch_size,
                          inner_lr=inner_lr,

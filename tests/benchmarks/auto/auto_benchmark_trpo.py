@@ -1,6 +1,6 @@
 """A regression test over TRPO Algorithms for automatic benchmarking.
-(garage-PyTorch-TRPO, garage-TensorFlow-TRPO, and baselines-TRPO)
 
+(garage-PyTorch-TRPO, garage-TensorFlow-TRPO, and baselines-TRPO)
 Unlike garage, baselines doesn't set max_path_length. It keeps steps the action
 until it's done. So we introduced tests.wrappers.AutoStopEnv wrapper to set
 done=True when it reaches max_path_length. We also need to change the
@@ -24,6 +24,7 @@ from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import GaussianMLPPolicy
 from garage.torch.algos import TRPO as PyTorch_TRPO
 from garage.torch.policies import GaussianMLPPolicy as PyTorch_GMP
+from garage.torch.value_functions import GaussianMLPValueFunction
 from tests import benchmark_helper
 
 hyper_parameters = {
@@ -123,13 +124,16 @@ def auto_benchmark_trpo_garage_pytorch():
                              hidden_nonlinearity=torch.tanh,
                              output_nonlinearity=None)
 
-        value_function = LinearFeatureBaseline(env_spec=env.spec)
+        value_function = GaussianMLPValueFunction(
+            env_spec=env.spec,
+            hidden_sizes=(32, 32),
+            hidden_nonlinearity=torch.tanh,
+            output_nonlinearity=None)
 
         algo = PyTorch_TRPO(
             env_spec=env.spec,
             policy=policy,
             value_function=value_function,
-            max_kl_step=hyper_parameters['max_kl'],
             max_path_length=hyper_parameters['max_path_length'],
             discount=hyper_parameters['discount'],
             gae_lambda=hyper_parameters['gae_lambda'])

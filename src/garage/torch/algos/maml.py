@@ -25,7 +25,6 @@ class MAML:
             computing loss.
         env (garage.envs.GarageEnv): A gym environment.
         policy (garage.torch.policies.Policy): Policy.
-        value_function (garage.np.baselines.Baseline): The value function.
         meta_optimizer (Union[torch.optim.Optimizer, tuple]):
             Type of optimizer.
             This can be an optimizer type such as `torch.optim.Adam` or a tuple
@@ -45,7 +44,6 @@ class MAML:
                  inner_algo,
                  env,
                  policy,
-                 value_function,
                  meta_optimizer,
                  meta_batch_size=40,
                  inner_lr=0.1,
@@ -63,7 +61,8 @@ class MAML:
         self._meta_evaluator = meta_evaluator
         self._policy = policy
         self._env = env
-        self._value_function = value_function
+        self._value_function = copy.deepcopy(inner_algo._value_function)
+        self._initial_vf_state = self._value_function.state_dict()
         self._num_grad_updates = num_grad_updates
         self._meta_batch_size = meta_batch_size
         self._inner_algo = inner_algo
@@ -149,6 +148,34 @@ class MAML:
         tu.update_module_params(self._old_policy, old_theta)
 
         return average_return
+
+    def _train_value_function(self, paths):
+        """Train the value function.
+
+        Args:
+            paths (list[dict]): A list of collected paths.
+
+        Returns:
+            torch.Tensor: Calculated mean scalar value of value function loss
+                (float).
+
+        """
+        # MAML resets a value function to its initial state before training.
+        self._value_function.load_state_dict(self._initial_vf_state)
+
+        obs = np.concatenate([path['observations'] for path in paths], axis=0)
+        returns = np.concatenate([path['returns'] for path in paths])
+        obs = torch.from_numpy(obs)
+        returns = torch.from_numpy(returns)
+
+        vf_loss = self._value_function.compute_loss(obs, returns)
+        # pylint: disable=protected-access
+        self._inner_algo._vf_optimizer.zero_grad()
+        vf_loss.backward()
+        # pylint: disable=protected-access
+        self._inner_algo._vf_optimizer.step()
+
+        return vf_loss
 
     def _obtain_samples(self, runner):
         """Obtain samples for each task before and after the fast-adaptation.
@@ -347,7 +374,7 @@ class MAML:
 
         Args:
             itr (int): Iteration number.
-            paths (list[dict]): A list of collected paths
+            paths (list[dict]): A list of collected paths.
 
         Returns:
             MAMLTrajectoryBatch: Processed samples data.
@@ -355,10 +382,10 @@ class MAML:
         """
         for path in paths:
             path['returns'] = tensor_utils.discount_cumsum(
-                path['rewards'], self._inner_algo.discount)
+                path['rewards'], self._inner_algo.discount).copy()
 
-        self._value_function.fit(paths)
-        obs, actions, rewards, valids, baselines \
+        self._train_value_function(paths)
+        obs, actions, rewards, _, valids, baselines \
             = self._inner_algo.process_samples(itr, paths)
         return MAMLTrajectoryBatch(paths, obs, actions, rewards, valids,
                                    baselines)

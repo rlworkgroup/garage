@@ -10,11 +10,11 @@ import torch
 
 from garage import wrap_experiment
 from garage.experiment import deterministic, LocalRunner
-from garage.np.baselines import LinearFeatureBaseline
 from garage.sampler import RaySampler
 from garage.tf.envs import TfEnv
 from garage.torch.algos import TRPO
 from garage.torch.policies import GaussianMLPPolicy
+from garage.torch.value_functions import GaussianMLPValueFunction
 
 
 @wrap_experiment(snapshot_mode='none')
@@ -45,7 +45,10 @@ def trpo_ray_pendulum(ctxt=None, seed=1):
                                hidden_nonlinearity=torch.tanh,
                                output_nonlinearity=None)
 
-    value_function = LinearFeatureBaseline(env_spec=env.spec)
+    value_function = GaussianMLPValueFunction(env_spec=env.spec,
+                                              hidden_sizes=(32, 32),
+                                              hidden_nonlinearity=torch.tanh,
+                                              output_nonlinearity=None)
 
     algo = TRPO(env_spec=env.spec,
                 policy=policy,

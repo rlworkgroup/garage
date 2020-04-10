@@ -8,10 +8,10 @@ import torch
 from garage import wrap_experiment
 from garage.experiment import LocalRunner
 from garage.experiment.deterministic import set_seed
-from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.envs import TfEnv
 from garage.torch.algos import PPO
 from garage.torch.policies import GaussianMLPPolicy
+from garage.torch.value_functions import GaussianMLPValueFunction
 
 
 @wrap_experiment
@@ -35,7 +35,10 @@ def torch_ppo_pendulum(ctxt=None, seed=1):
                                hidden_nonlinearity=torch.tanh,
                                output_nonlinearity=None)
 
-    value_function = LinearFeatureBaseline(env_spec=env.spec)
+    value_function = GaussianMLPValueFunction(env_spec=env.spec,
+                                              hidden_sizes=(32, 32),
+                                              hidden_nonlinearity=torch.tanh,
+                                              output_nonlinearity=None)
 
     algo = PPO(env_spec=env.spec,
                policy=policy,

@@ -3,6 +3,7 @@ import torch
 
 from garage.torch.algos import VPG
 from garage.torch.optimizers import ConjugateGradientOptimizer
+from garage.torch.optimizers import OptimizerWrapper
 
 
 class TRPO(VPG):
@@ -11,7 +12,12 @@ class TRPO(VPG):
     Args:
         env_spec (garage.envs.EnvSpec): Environment specification.
         policy (garage.torch.policies.base.Policy): Policy.
-        value_function (garage.np.baselines.Baseline): The value function.
+        value_function (garage.torch.value_functions.ValueFunction): The value
+            function.
+        policy_optimizer (garage.torch.optimizer.OptimizerWrapper): Optimizer
+            for policy.
+        vf_optimizer (garage.torch.optimizer.OptimizerWrapper): Optimizer for
+            value function.
         max_path_length (int): Maximum length of a single rollout.
         num_train_per_epoch (int): Number of train_once calls per epoch.
         discount (float): Discount.
@@ -25,8 +31,6 @@ class TRPO(VPG):
             standardized before shifting.
         policy_ent_coeff (float): The coefficient of the policy entropy.
             Setting it to zero would mean no entropy regularization.
-        max_kl_step (float): The maximum KL divergence between old and new
-            policies.
         use_softplus_entropy (bool): Whether to estimate the softmax
             distribution of the entropy to prevent the entropy from being
             negative.
@@ -43,6 +47,8 @@ class TRPO(VPG):
                  env_spec,
                  policy,
                  value_function,
+                 policy_optimizer=None,
+                 vf_optimizer=None,
                  max_path_length=100,
                  num_train_per_epoch=1,
                  discount=0.99,
@@ -50,19 +56,26 @@ class TRPO(VPG):
                  center_adv=True,
                  positive_adv=False,
                  policy_ent_coeff=0.0,
-                 max_kl_step=0.01,
                  use_softplus_entropy=False,
                  stop_entropy_gradient=False,
                  entropy_method='no_entropy'):
 
-        optimizer = (ConjugateGradientOptimizer, {
-            'max_constraint_value': max_kl_step
-        })
+        if policy_optimizer is None:
+            policy_optimizer = OptimizerWrapper(
+                (ConjugateGradientOptimizer, dict(max_constraint_value=0.01)),
+                policy)
+        if vf_optimizer is None:
+            vf_optimizer = OptimizerWrapper(
+                (torch.optim.Adam, dict(lr=2.5e-4)),
+                value_function,
+                max_optimization_epochs=10,
+                minibatch_size=64)
 
         super().__init__(env_spec=env_spec,
                          policy=policy,
                          value_function=value_function,
-                         optimizer=optimizer,
+                         policy_optimizer=policy_optimizer,
+                         vf_optimizer=vf_optimizer,
                          max_path_length=max_path_length,
                          num_train_per_epoch=num_train_per_epoch,
                          discount=discount,
@@ -103,21 +116,29 @@ class TRPO(VPG):
 
         return surrogate
 
-    def _optimize(self, obs, actions, rewards, advantages):
-        r"""Performs a optimization.
+    def _train_policy(self, obs, actions, rewards, advantages):
+        r"""Train the policy.
 
         Args:
             obs (torch.Tensor): Observation from the environment
-                with shape :math:`(N \dot [T], O*)`.
+                with shape :math:`(N, O*)`.
             actions (torch.Tensor): Actions fed to the environment
-                with shape :math:`(N \dot [T], A*)`.
+                with shape :math:`(N, A*)`.
             rewards (torch.Tensor): Acquired rewards
-                with shape :math:`(N \dot [T], )`.
+                with shape :math:`(N, )`.
             advantages (torch.Tensor): Advantage value at each step
-                with shape :math:`(N \dot [T], )`.
+                with shape :math:`(N, )`.
+
+        Returns:
+            torch.Tensor: Calculated mean scalar value of policy loss (float).
 
         """
-        self._optimizer.step(
+        self._policy_optimizer.zero_grad()
+        loss = self._compute_loss_with_adv(obs, actions, rewards, advantages)
+        loss.backward()
+        self._policy_optimizer.step(
             f_loss=lambda: self._compute_loss_with_adv(obs, actions, rewards,
                                                        advantages),
             f_constraint=lambda: self._compute_kl_constraint(obs))
+
+        return loss
