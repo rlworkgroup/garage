@@ -146,6 +146,6 @@ class CategoricalLSTMModel(LSTMModel):
                                      step_hidden,
                                      step_cell,
                                      name=name)
-        dist = tfp.distributions.Categorical(outputs)
+        dist = tfp.distributions.OneHotCategorical(outputs)
         return (dist, step_output, step_hidden, step_cell, init_hidden,
                 init_cell)

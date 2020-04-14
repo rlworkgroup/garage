@@ -244,5 +244,5 @@ class GaussianMLPModel2(Model):
             else:  # we know it must be softplus here
                 log_std_var = tf.math.log(tf.math.log(1. + tf.exp(std_param)))
 
-        return tfp.distributions.MultivariateNormalDiag(loc=mean_var,
-                                                        scale_diag=log_std_var)
+        return tfp.distributions.MultivariateNormalDiag(
+            loc=mean_var, scale_diag=tf.exp(log_std_var))
