@@ -48,7 +48,7 @@ ci-job-mujoco: assert-docker
 ci-job-nightly: assert-docker
 	pytest -v -m nightly
 
-ci-job-verify-envs: assert-docker ci-verify-envs-conda ci-verify-envs-pipenv
+ci-job-verify-envs: assert-docker ci-job-verify-envs-conda ci-job-verify-envs-pipenv
 
 ci-job-verify-envs-conda: assert-docker
 ci-job-verify-envs-conda: CONDA_ROOT := $$HOME/miniconda
