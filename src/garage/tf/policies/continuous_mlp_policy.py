@@ -49,10 +49,10 @@ class ContinuousMLPPolicy(Policy):
                  name='ContinuousMLPPolicy',
                  hidden_sizes=(64, 64),
                  hidden_nonlinearity=tf.nn.relu,
-                 hidden_w_init=tf.glorot_uniform_initializer(),
+                 hidden_w_init=tf.initializers.glorot_uniform(),
                  hidden_b_init=tf.zeros_initializer(),
                  output_nonlinearity=tf.nn.tanh,
-                 output_w_init=tf.glorot_uniform_initializer(),
+                 output_w_init=tf.initializers.glorot_uniform(),
                  output_b_init=tf.zeros_initializer(),
                  layer_normalization=False):
         super().__init__(name, env_spec)

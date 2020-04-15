@@ -9,7 +9,7 @@ from garage.tf.policies import StochasticPolicy
 
 
 class CategoricalGRUPolicy(StochasticPolicy):
-    """CategoricalGRUPolicy
+    """CategoricalGRUPolicy.
 
     A policy that contains a GRU to make prediction based on
     a categorical distribution.
@@ -52,6 +52,7 @@ class CategoricalGRUPolicy(StochasticPolicy):
             If True, input dimension will be
             (observation dimension + action dimension).
         layer_normalization (bool): Bool for using layer normalization or not.
+
     """
 
     def __init__(self,
@@ -59,12 +60,12 @@ class CategoricalGRUPolicy(StochasticPolicy):
                  name='CategoricalGRUPolicy',
                  hidden_dim=32,
                  hidden_nonlinearity=tf.nn.tanh,
-                 hidden_w_init=tf.glorot_uniform_initializer(),
+                 hidden_w_init=tf.initializers.glorot_uniform(),
                  hidden_b_init=tf.zeros_initializer(),
                  recurrent_nonlinearity=tf.nn.sigmoid,
-                 recurrent_w_init=tf.glorot_uniform_initializer(),
+                 recurrent_w_init=tf.initializers.glorot_uniform(),
                  output_nonlinearity=tf.nn.softmax,
-                 output_w_init=tf.glorot_uniform_initializer(),
+                 output_w_init=tf.initializers.glorot_uniform(),
                  output_b_init=tf.zeros_initializer(),
                  hidden_state_init=tf.zeros_initializer(),
                  hidden_state_init_trainable=False,
@@ -111,6 +112,7 @@ class CategoricalGRUPolicy(StochasticPolicy):
         self._initialize()
 
     def _initialize(self):
+        """Initialize model."""
         obs_ph = tf.compat.v1.placeholder(tf.float32,
                                           shape=(None, None, self._input_dim))
         step_input_var = tf.compat.v1.placeholder(shape=(None,
@@ -135,11 +137,28 @@ class CategoricalGRUPolicy(StochasticPolicy):
 
     @property
     def vectorized(self):
-        """Vectorized or not."""
+        """Vectorized or not.
+
+        Returns:
+            bool: True if primitive supports vectorized operations.
+
+        """
         return True
 
     def dist_info_sym(self, obs_var, state_info_vars, name=None):
-        """Symbolic graph of the distribution."""
+        """Build a symbolic graph of the distribution parameters.
+
+        Args:
+            obs_var (tf.Tensor): Tensor input for symbolic graph.
+            state_info_vars (dict[np.ndarray]): Extra state information, e.g.
+                previous action.
+            name (str): Name for symbolic graph.
+
+        Returns:
+            dict[tf.Tensor]: Outputs of the symbolic graph of distribution
+                parameters.
+
+        """
         if self._state_include_action:
             prev_action_var = state_info_vars['prev_action']
             prev_action_var = tf.cast(prev_action_var, tf.float32)
@@ -158,7 +177,17 @@ class CategoricalGRUPolicy(StochasticPolicy):
         return dict(prob=outputs)
 
     def reset(self, dones=None):
-        """Reset the policy."""
+        """Reset the policy.
+
+        Note:
+            If `dones` is None, it will be by default `np.array([True])` which
+            implies the policy will not be "vectorized", i.e. number of
+            parallel environments for training data sampling = 1.
+
+        Args:
+            dones (numpy.ndarray): Bool that indicates terminal state(s).
+
+        """
         if dones is None:
             dones = [True]
         dones = np.asarray(dones)
@@ -172,12 +201,30 @@ class CategoricalGRUPolicy(StochasticPolicy):
             'default'].init_hidden.eval()
 
     def get_action(self, observation):
-        """Return a single action."""
+        """Get single action from this policy for the input observation.
+
+        Args:
+            observation (numpy.ndarray): Observation from environment.
+
+        Returns:
+            numpy.ndarray: Predicted action.
+            dict[str: np.ndarray]: Action distribution.
+
+        """
         actions, agent_infos = self.get_actions([observation])
         return actions[0], {k: v[0] for k, v in agent_infos.items()}
 
     def get_actions(self, observations):
-        """Return multiple actions."""
+        """Get multiple actions from this policy for the input observations.
+
+        Args:
+            observations (numpy.ndarray): Observations from environment.
+
+        Returns:
+            numpy.ndarray: Predicted actions.
+            dict[str: np.ndarray]: Action distributions.
+
+        """
         flat_obs = self.observation_space.flatten_n(observations)
         if self._state_include_action:
             assert self._prev_actions is not None
@@ -197,17 +244,32 @@ class CategoricalGRUPolicy(StochasticPolicy):
 
     @property
     def recurrent(self):
-        """Recurrent or not."""
+        """Recurrent or not.
+
+        Returns:
+            bool: True if policy is recurrent.
+
+        """
         return True
 
     @property
     def distribution(self):
-        """Policy distribution."""
+        """Policy distribution.
+
+        Returns:
+            garage.tf.distributions.DiagonalGaussian: Policy distribution.
+
+        """
         return RecurrentCategorical(self._action_dim)
 
     @property
     def state_info_specs(self):
-        """State info specification."""
+        """State info specification.
+
+        Returns:
+            list[tuple]: State info specification.
+
+        """
         if self._state_include_action:
             return [
                 ('prev_action', (self._action_dim, )),
@@ -216,12 +278,22 @@ class CategoricalGRUPolicy(StochasticPolicy):
             return []
 
     def __getstate__(self):
-        """Object.__getstate__."""
+        """Object.__getstate__.
+
+        Returns:
+            dict: the state to be pickled for the instance.
+
+        """
         new_dict = super().__getstate__()
         del new_dict['_f_step_prob']
         return new_dict
 
     def __setstate__(self, state):
-        """Object.__setstate__."""
+        """Object.__setstate__.
+
+        Args:
+            state (dict): Unpickled state.
+
+        """
         super().__setstate__(state)
         self._initialize()

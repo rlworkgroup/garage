@@ -37,6 +37,7 @@ class MLPModel(Model):
             of output dense layer(s). The function should return a
             tf.Tensor.
         layer_normalization (bool): Bool for using layer normalization or not.
+
     """
 
     def __init__(self,
@@ -44,10 +45,10 @@ class MLPModel(Model):
                  name='MLPModel',
                  hidden_sizes=(32, 32),
                  hidden_nonlinearity=tf.nn.relu,
-                 hidden_w_init=tf.glorot_uniform_initializer(),
+                 hidden_w_init=tf.initializers.glorot_uniform(),
                  hidden_b_init=tf.zeros_initializer(),
                  output_nonlinearity=None,
-                 output_w_init=tf.glorot_uniform_initializer(),
+                 output_w_init=tf.initializers.glorot_uniform(),
                  output_b_init=tf.zeros_initializer(),
                  layer_normalization=False):
         super().__init__(name)
@@ -61,7 +62,21 @@ class MLPModel(Model):
         self._output_b_init = output_b_init
         self._layer_normalization = layer_normalization
 
+    # pylint: disable=arguments-differ
     def _build(self, state_input, name=None):
+        """Build model given input placeholder(s).
+
+        Args:
+            state_input (tf.Tensor): Tensor input for state.
+            name (str): Inner model name, also the variable scope of the
+                inner model, if exist. One example is
+                garage.tf.models.Sequential.
+
+        Return:
+            tf.Tensor: Tensor output of the model.
+
+        """
+        del name
         return mlp(input_var=state_input,
                    output_dim=self._output_dim,
                    hidden_sizes=self._hidden_sizes,

@@ -10,7 +10,7 @@ from garage.tf.policies import StochasticPolicy
 
 
 class CategoricalCNNPolicy(StochasticPolicy):
-    """CategoricalCNNPolicy
+    """CategoricalCNNPolicy.
 
     A policy that contains a CNN and a MLP to make prediction based on
     a categorical distribution.
@@ -65,12 +65,12 @@ class CategoricalCNNPolicy(StochasticPolicy):
                  conv_strides,
                  conv_pad,
                  name='CategoricalCNNPolicy',
-                 hidden_sizes=[],
+                 hidden_sizes=(32, 32),
                  hidden_nonlinearity=tf.nn.relu,
-                 hidden_w_init=tf.glorot_uniform_initializer(),
+                 hidden_w_init=tf.initializers.glorot_uniform(),
                  hidden_b_init=tf.zeros_initializer(),
                  output_nonlinearity=tf.nn.softmax,
-                 output_w_init=tf.glorot_uniform_initializer(),
+                 output_w_init=tf.initializers.glorot_uniform(),
                  output_b_init=tf.zeros_initializer(),
                  layer_normalization=False):
         assert isinstance(env_spec.action_space, akro.Discrete), (
@@ -101,6 +101,7 @@ class CategoricalCNNPolicy(StochasticPolicy):
         self._initialize()
 
     def _initialize(self):
+        """Initialize model."""
         state_input = tf.compat.v1.placeholder(tf.float32,
                                                shape=(None, ) + self.obs_dim)
 
@@ -113,46 +114,104 @@ class CategoricalCNNPolicy(StochasticPolicy):
 
     @property
     def vectorized(self):
-        """Vectorized or not."""
+        """Vectorized or not.
+
+        Returns:
+            bool: True if primitive supports vectorized operations.
+
+        """
         return True
 
     def dist_info_sym(self, obs_var, state_info_vars=None, name=None):
-        """Symbolic graph of the distribution."""
+        """Build a symbolic graph of the distribution parameters.
+
+        Args:
+            obs_var (tf.Tensor): Tensor input for symbolic graph.
+            state_info_vars (dict[np.ndarray]): Extra state information, e.g.
+                previous action.
+            name (str): Name for symbolic graph.
+
+        Returns:
+            dict[tf.Tensor]: Outputs of the symbolic graph of distribution
+                parameters.
+
+        """
         with tf.compat.v1.variable_scope(self._variable_scope):
             prob = self.model.build(obs_var, name=name)
         return dict(prob=prob)
 
     def dist_info(self, obs, state_infos=None):
-        """Distribution info."""
+        """Get distribution parameters.
+
+        Args:
+            obs (np.ndarray): Observation input.
+            state_infos (dict[np.ndarray]): Extra state information, e.g.
+                previous action.
+
+        Returns:
+            dict[np.ndarray]: Distribution parameters.
+
+        """
         prob = self._f_prob(obs)
         return dict(prob=prob)
 
     def get_action(self, observation):
-        """Return a single action."""
-        # flat_obs = self.observation_space.flatten(observation)
+        """Get single action from this policy for the input observation.
+
+        Args:
+            observation (numpy.ndarray): Observation from environment.
+
+        Returns:
+            numpy.ndarray: Predicted action.
+            dict[str: np.ndarray]: Action distribution.
+
+        """
         prob = self._f_prob([observation])[0]
         action = self.action_space.weighted_sample(prob)
         return action, dict(prob=prob)
 
     def get_actions(self, observations):
-        """Return multiple actions."""
-        # flat_obs = self.observation_space.flatten_n(observations)
+        """Get multiple actions from this policy for the input observations.
+
+        Args:
+            observations (numpy.ndarray): Observations from environment.
+
+        Returns:
+            numpy.ndarray: Predicted actions.
+            dict[str: np.ndarray]: Action distributions.
+
+        """
         probs = self._f_prob(observations)
         actions = list(map(self.action_space.weighted_sample, probs))
         return actions, dict(prob=probs)
 
     @property
     def distribution(self):
-        """Policy distribution."""
+        """Policy distribution.
+
+        Returns:
+            garage.tf.distributions.Categorical: Policy distribution.
+
+        """
         return Categorical(self.action_dim)
 
     def __getstate__(self):
-        """Object.__getstate__."""
+        """Object.__getstate__.
+
+        Returns:
+            dict: The state to be pickled for the instance.
+
+        """
         new_dict = super().__getstate__()
         del new_dict['_f_prob']
         return new_dict
 
     def __setstate__(self, state):
-        """Object.__setstate__."""
+        """Object.__setstate__.
+
+        Args:
+            state (dict): Unpickled state.
+
+        """
         super().__setstate__(state)
         self._initialize()

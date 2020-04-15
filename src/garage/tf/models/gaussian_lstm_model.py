@@ -55,6 +55,7 @@ class GaussianLSTMModel(Model):
         std_share_network (bool): Boolean for whether mean and std share
             the same network.
         layer_normalization (bool): Bool for using layer normalization or not.
+
     """
 
     def __init__(self,
@@ -62,12 +63,12 @@ class GaussianLSTMModel(Model):
                  hidden_dim=32,
                  name=None,
                  hidden_nonlinearity=tf.nn.tanh,
-                 hidden_w_init=tf.glorot_uniform_initializer(),
+                 hidden_w_init=tf.initializers.glorot_uniform(),
                  hidden_b_init=tf.zeros_initializer(),
                  recurrent_nonlinearity=tf.nn.sigmoid,
-                 recurrent_w_init=tf.glorot_uniform_initializer(),
+                 recurrent_w_init=tf.initializers.glorot_uniform(),
                  output_nonlinearity=None,
-                 output_w_init=tf.glorot_uniform_initializer(),
+                 output_w_init=tf.initializers.glorot_uniform(),
                  output_b_init=tf.zeros_initializer(),
                  hidden_state_init=tf.zeros_initializer(),
                  hidden_state_init_trainable=False,
@@ -101,6 +102,7 @@ class GaussianLSTMModel(Model):
         self._initialize()
 
     def _initialize(self):
+        """Initialize model."""
         action_dim = self._output_dim
         self._mean_std_lstm_cell = tf.keras.layers.LSTMCell(
             units=self._hidden_dim,
@@ -134,24 +136,60 @@ class GaussianLSTMModel(Model):
             name='mean_output_layer')
 
     def network_input_spec(self):
-        """Network input spec."""
+        """Network input spec.
+
+        Return:
+            list[str]: List of key(str) for the network outputs.
+
+        """
         return [
             'full_input', 'step_input', 'step_hidden_input', 'step_cell_input'
         ]
 
     def network_output_spec(self):
-        """Network output spec."""
+        """Network output spec.
+
+        Return:
+            list[str]: List of key(str) for the network outputs.
+
+        """
         return [
             'mean', 'step_mean', 'log_std', 'step_log_std', 'step_hidden',
             'step_cell', 'init_hidden', 'init_cell', 'dist'
         ]
 
+    # pylint: disable=arguments-differ
     def _build(self,
                state_input,
                step_input,
                hidden_input,
                cell_input,
                name=None):
+        """Build model given input placeholder(s).
+
+        Args:
+            state_input (tf.Tensor): Place holder for entire time-series
+                inputs.
+            step_input (tf.Tensor): Place holder for step inputs.
+            hidden_input (tf.Tensor): Place holder for step hidden state.
+            cell_input (tf.Tensor): Place holder for step cell state.
+            name (str): Inner model name, also the variable scope of the
+                inner model, if exist. One example is
+                garage.tf.models.Sequential.
+
+        Return:
+            tf.Tensor: Entire time-series means.
+            tf.Tensor: Step mean.
+            tf.Tensor: Entire time-series std_log.
+            tf.Tensor: Step std_log.
+            tf.Tensor: Step hidden state.
+            tf.Tensor: Step cell state.
+            tf.Tensor: Initial hidden state.
+            tf.Tensor: Initial cell state.
+            garage.tf.distributions.DiagonalGaussian: Policy distribution.
+
+        """
+        del name
         action_dim = self._output_dim
 
         with tf.compat.v1.variable_scope('dist_params'):
@@ -211,7 +249,12 @@ class GaussianLSTMModel(Model):
                 step_hidden, step_cell, hidden_init_var, cell_init_var, dist)
 
     def __getstate__(self):
-        """Object.__getstate__."""
+        """Object.__getstate__.
+
+        Returns:
+            dict: The state to be pickled for the instance.
+
+        """
         new_dict = super().__getstate__()
         del new_dict['_mean_std_lstm_cell']
         del new_dict['_mean_lstm_cell']
@@ -220,6 +263,11 @@ class GaussianLSTMModel(Model):
         return new_dict
 
     def __setstate__(self, state):
-        """Object.__setstate__."""
+        """Object.__setstate__.
+
+        Args:
+            state (dict): Unpickled state.
+
+        """
         super().__setstate__(state)
         self._initialize()

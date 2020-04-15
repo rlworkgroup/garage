@@ -37,6 +37,7 @@ class CNNModelWithMaxPooling(Model):
         hidden_b_init (callable): Initializer function for the bias
             of intermediate dense layer(s). The function should return a
             tf.Tensor.
+
     """
 
     def __init__(self,
@@ -48,7 +49,7 @@ class CNNModelWithMaxPooling(Model):
                  pool_strides=(2, 2),
                  pool_shapes=(2, 2),
                  hidden_nonlinearity=tf.nn.relu,
-                 hidden_w_init=tf.glorot_uniform_initializer(),
+                 hidden_w_init=tf.initializers.glorot_uniform(),
                  hidden_b_init=tf.zeros_initializer()):
         super().__init__(name)
         self._filter_dims = filter_dims
@@ -61,7 +62,21 @@ class CNNModelWithMaxPooling(Model):
         self._hidden_w_init = hidden_w_init
         self._hidden_b_init = hidden_b_init
 
+    # pylint: disable=arguments-differ
     def _build(self, state_input, name=None):
+        """Build model given input placeholder(s).
+
+        Args:
+            state_input (tf.Tensor): Tensor input for state.
+            name (str): Inner model name, also the variable scope of the
+                inner model, if exist. One example is
+                garage.tf.models.Sequential.
+
+        Return:
+            tf.Tensor: Tensor output of the model.
+
+        """
+        del name
         return cnn_with_max_pooling(
             input_var=state_input,
             filter_dims=self._filter_dims,

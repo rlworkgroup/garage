@@ -67,12 +67,12 @@ class CategoricalLSTMPolicy(StochasticPolicy):
                  name='CategoricalLSTMPolicy',
                  hidden_dim=32,
                  hidden_nonlinearity=tf.nn.tanh,
-                 hidden_w_init=tf.glorot_uniform_initializer(),
+                 hidden_w_init=tf.initializers.glorot_uniform(),
                  hidden_b_init=tf.zeros_initializer(),
                  recurrent_nonlinearity=tf.nn.sigmoid,
-                 recurrent_w_init=tf.glorot_uniform_initializer(),
+                 recurrent_w_init=tf.initializers.glorot_uniform(),
                  output_nonlinearity=tf.nn.softmax,
-                 output_w_init=tf.glorot_uniform_initializer(),
+                 output_w_init=tf.initializers.glorot_uniform(),
                  output_b_init=tf.zeros_initializer(),
                  hidden_state_init=tf.zeros_initializer(),
                  hidden_state_init_trainable=False,
@@ -135,6 +135,7 @@ class CategoricalLSTMPolicy(StochasticPolicy):
         self._initialize()
 
     def _initialize(self):
+        """Initialize model."""
         obs_ph = tf.compat.v1.placeholder(tf.float32,
                                           shape=(None, None, self._input_dim))
         step_input_var = tf.compat.v1.placeholder(shape=(None,

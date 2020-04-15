@@ -51,6 +51,7 @@ class LSTMModel(Model):
             initialization. It's used to reduce the scale of forgetting at the
             beginning of the training.
         layer_normalization (bool): Bool for using layer normalization or not.
+
     """
 
     def __init__(self,
@@ -58,12 +59,12 @@ class LSTMModel(Model):
                  hidden_dim,
                  name=None,
                  hidden_nonlinearity=tf.nn.tanh,
-                 hidden_w_init=tf.glorot_uniform_initializer(),
+                 hidden_w_init=tf.initializers.glorot_uniform(),
                  hidden_b_init=tf.zeros_initializer(),
                  recurrent_nonlinearity=tf.nn.sigmoid,
-                 recurrent_w_init=tf.glorot_uniform_initializer(),
+                 recurrent_w_init=tf.initializers.glorot_uniform(),
                  output_nonlinearity=None,
-                 output_w_init=tf.glorot_uniform_initializer(),
+                 output_w_init=tf.initializers.glorot_uniform(),
                  output_b_init=tf.zeros_initializer(),
                  hidden_state_init=tf.zeros_initializer(),
                  hidden_state_init_trainable=False,
@@ -91,6 +92,7 @@ class LSTMModel(Model):
         self._initialize()
 
     def _initialize(self):
+        """Initialize model."""
         self._lstm_cell = tf.keras.layers.LSTMCell(
             units=self._hidden_dim,
             activation=self._hidden_nonlinearity,
@@ -108,24 +110,57 @@ class LSTMModel(Model):
             name='output_layer')
 
     def network_input_spec(self):
-        """Network input spec."""
+        """Network input spec.
+
+        Return:
+            list[str]: List of key(str) for the network outputs.
+
+        """
         return [
             'full_input', 'step_input', 'step_hidden_input', 'step_cell_input'
         ]
 
     def network_output_spec(self):
-        """Network output spec."""
+        """Network output spec.
+
+        Return:
+            list[str]: List of key(str) for the network outputs.
+
+        """
         return [
             'all_output', 'step_output', 'step_hidden', 'step_cell',
             'init_hidden', 'init_cell'
         ]
 
+    # pylint: disable=arguments-differ
     def _build(self,
                all_input_var,
                step_input_var,
                step_hidden_var,
                step_cell_var,
                name=None):
+        """Build model given input placeholder(s).
+
+        Args:
+            all_input_var (tf.Tensor): Place holder for entire time-series
+                inputs.
+            step_input_var (tf.Tensor): Place holder for step inputs.
+            step_hidden_var (tf.Tensor): Place holder for step hidden state.
+            step_cell_var (tf.Tensor): Place holder for step cell state.
+            name (str): Inner model name, also the variable scope of the
+                inner model, if exist. One example is
+                garage.tf.models.Sequential.
+
+        Return:
+            tf.Tensor: Entire time-series outputs.
+            tf.Tensor: Step output.
+            tf.Tensor: Step hidden state.
+            tf.Tensor: Step cell state.
+            tf.Tensor: Initial hidden state.
+            tf.Tensor: Initial cell state.
+
+        """
+        del name
         return lstm(
             name='lstm',
             lstm_cell=self._lstm_cell,
@@ -140,13 +175,23 @@ class LSTMModel(Model):
             output_nonlinearity_layer=self._output_nonlinearity_layer)
 
     def __getstate__(self):
-        """Object.__getstate__."""
+        """Object.__getstate__.
+
+        Returns:
+            dict: The state to be pickled for the instance.
+
+        """
         new_dict = super().__getstate__()
         del new_dict['_lstm_cell']
         del new_dict['_output_nonlinearity_layer']
         return new_dict
 
     def __setstate__(self, state):
-        """Object.__setstate__."""
+        """Object.__setstate__.
+
+        Args:
+            state (dict): Unpickled state.
+
+        """
         super().__setstate__(state)
         self._initialize()

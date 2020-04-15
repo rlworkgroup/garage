@@ -5,7 +5,6 @@ from setuptools import find_packages
 from setuptools import setup
 
 GARAGE_GH_TOKEN = os.environ.get('GARAGE_GH_TOKEN') or 'git'
-TF_VERSION = '<1.16,>=1.15.0'
 GYM_VERSION = '==0.15.4'
 
 # Required dependencies
@@ -31,7 +30,7 @@ REQUIRED = [
     'scikit-image',
     'scipy',
     'setproctitle>=1.0',
-    'tensorflow' + TF_VERSION,
+    'tensorflow',
     'tensorflow-probability',
     'torch>=1.0.0',
     'torchvision>=0.2.1',
@@ -56,7 +55,7 @@ EXTRAS['dm_control'] = [
 EXTRAS['all'] = list(set(sum(EXTRAS.values(), [])))
 
 # dependencies for using gpu, not included in 'all'
-EXTRAS['gpu'] = ['tensorflow-gpu' + TF_VERSION]
+EXTRAS['gpu'] = ['tensorflow-gpu']
 
 # Development dependencies (*not* included in 'all')
 EXTRAS['dev'] = [

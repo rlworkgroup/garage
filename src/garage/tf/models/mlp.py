@@ -10,10 +10,10 @@ def mlp(input_var,
         input_var2=None,
         concat_layer=-2,
         hidden_nonlinearity=tf.nn.relu,
-        hidden_w_init=tf.glorot_uniform_initializer(),
+        hidden_w_init=tf.initializers.glorot_uniform(),
         hidden_b_init=tf.zeros_initializer(),
         output_nonlinearity=None,
-        output_w_init=tf.glorot_uniform_initializer(),
+        output_w_init=tf.initializers.glorot_uniform(),
         output_b_init=tf.zeros_initializer(),
         layer_normalization=False):
     """Multi-layer perceptron (MLP).
@@ -57,7 +57,8 @@ def mlp(input_var,
         layer_normalization (bool): Bool for using layer normalization or not.
 
     Return:
-        The output tf.Tensor of the MLP
+        tf.Tensor: The output tf.Tensor of the MLP.
+
     """
     n_layers = len(hidden_sizes) + 1
     _merge_inputs = False

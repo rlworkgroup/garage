@@ -65,12 +65,12 @@ class GaussianLSTMPolicy(StochasticPolicy):
                  hidden_dim=32,
                  name='GaussianLSTMPolicy',
                  hidden_nonlinearity=tf.nn.tanh,
-                 hidden_w_init=tf.glorot_uniform_initializer(),
+                 hidden_w_init=tf.initializers.glorot_uniform(),
                  hidden_b_init=tf.zeros_initializer(),
                  recurrent_nonlinearity=tf.nn.sigmoid,
-                 recurrent_w_init=tf.glorot_uniform_initializer(),
+                 recurrent_w_init=tf.initializers.glorot_uniform(),
                  output_nonlinearity=None,
-                 output_w_init=tf.glorot_uniform_initializer(),
+                 output_w_init=tf.initializers.glorot_uniform(),
                  output_b_init=tf.zeros_initializer(),
                  hidden_state_init=tf.zeros_initializer(),
                  hidden_state_init_trainable=False,
@@ -125,6 +125,7 @@ class GaussianLSTMPolicy(StochasticPolicy):
         self._initialize()
 
     def _initialize(self):
+        """Initialize model."""
         obs_ph = tf.compat.v1.placeholder(tf.float32,
                                           shape=(None, None, self._input_dim))
         step_input_var = tf.compat.v1.placeholder(shape=(None,
@@ -157,7 +158,12 @@ class GaussianLSTMPolicy(StochasticPolicy):
 
     @property
     def vectorized(self):
-        """bool: Whether this policy is vectorized."""
+        """Vectorized or not.
+
+        Returns:
+            bool: True if primitive supports vectorized operations.
+
+        """
         return True
 
     def dist_info_sym(self, obs_var, state_info_vars, name=None):
@@ -279,17 +285,32 @@ class GaussianLSTMPolicy(StochasticPolicy):
 
     @property
     def recurrent(self):
-        """bool: Whether this policy is recurrent or not."""
+        """Recurrent or not.
+
+        Returns:
+            bool: True if primitive is recurrent.
+
+        """
         return True
 
     @property
     def distribution(self):
-        """garage.tf.distributions.DiagonalGaussian: Policy distribution."""
+        """Policy distribution.
+
+        Returns:
+            garage.tf.distributions.DiagonalGaussian: Policy distribution.
+
+        """
         return self.model.networks['default'].dist
 
     @property
     def state_info_specs(self):
-        """list: State info specification."""
+        """State info specification.
+
+        Returns:
+            list[tuple]: State info specification.
+
+        """
         if self._state_include_action:
             return [
                 ('prev_action', (self._action_dim, )),
@@ -298,12 +319,22 @@ class GaussianLSTMPolicy(StochasticPolicy):
         return []
 
     def __getstate__(self):
-        """See `Object.__getstate__`."""
+        """Object.__getstate__.
+
+        Returns:
+            dict: The state to be pickled for the instance.
+
+        """
         new_dict = super().__getstate__()
         del new_dict['_f_step_mean_std']
         return new_dict
 
     def __setstate__(self, state):
-        """See `Object.__setstate__`."""
+        """Object.__setstate__.
+
+        Args:
+            state (dict): Unpickled state.
+
+        """
         super().__setstate__(state)
         self._initialize()

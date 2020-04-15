@@ -4,7 +4,6 @@ from collections import deque
 from dowel import logger, tabular
 import numpy as np
 import tensorflow as tf
-import tensorflow.contrib as tc  # pylint: disable=import-error
 
 from garage.np.algos.off_policy_rl_algorithm import OffPolicyRLAlgorithm
 from garage.tf.misc import tensor_utils
@@ -171,9 +170,9 @@ class DDPG(OffPolicyRLAlgorithm):
             with tf.name_scope('action_loss'):
                 action_loss = -tf.reduce_mean(next_qval)
                 if self.policy_weight_decay > 0.:
-                    policy_reg = tc.layers.apply_regularization(
-                        tc.layers.l2_regularizer(self.policy_weight_decay),
-                        weights_list=self.policy.get_regularizable_vars())
+                    policy_reg = tf.keras.layers.ActivityRegularization(
+                        l2=self.policy_weight_decay,
+                        weights=self.policy.get_regularizable_vars())
                     action_loss += policy_reg
 
             with tf.name_scope('minimize_action_loss'):
@@ -190,9 +189,9 @@ class DDPG(OffPolicyRLAlgorithm):
                 qval_loss = tf.reduce_mean(
                     tf.compat.v1.squared_difference(input_y, qval))
                 if self.qf_weight_decay > 0.:
-                    qf_reg = tc.layers.apply_regularization(
-                        tc.layers.l2_regularizer(self.qf_weight_decay),
-                        weights_list=self.qf.get_regularizable_vars())
+                    qf_reg = tf.keras.layers.ActivityRegularization(
+                        l2=self.qf_weight_decay,
+                        weights=self.qf.get_regularizable_vars())
                     qval_loss += qf_reg
 
             with tf.name_scope('minimize_qf_loss'):

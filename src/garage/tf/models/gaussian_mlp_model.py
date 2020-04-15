@@ -48,8 +48,12 @@ class GaussianMLPModel(Model):
             to avoid numerical issues.
         max_std (float): If not None, the std is at most the value of max_std,
             to avoid numerical issues.
-        std_hidden_nonlinearity: Nonlinearity for each hidden layer in
-            the std network.
+        std_hidden_nonlinearity (callable): Nonlinearity for each hidden layer
+            in the std network.
+        std_hidden_w_init (callable): Initializer function for the weight
+            of intermediate dense layer(s) in the std network.
+        std_hidden_b_init (callable): Initializer function for the bias
+            of intermediate dense layer(s) in the std network.
         std_output_nonlinearity (callable): Activation function for output
             dense layer in the std network. It should return a tf.Tensor. Set
             it to None to maintain a linear activation.
@@ -61,6 +65,7 @@ class GaussianMLPModel(Model):
                exponential transformation
             - softplus: the std will be computed as log(1+exp(x))
         layer_normalization (bool): Bool for using layer normalization or not.
+
     """
 
     def __init__(self,
@@ -68,10 +73,10 @@ class GaussianMLPModel(Model):
                  name=None,
                  hidden_sizes=(32, 32),
                  hidden_nonlinearity=tf.nn.tanh,
-                 hidden_w_init=tf.glorot_uniform_initializer(),
+                 hidden_w_init=tf.initializers.glorot_uniform(),
                  hidden_b_init=tf.zeros_initializer(),
                  output_nonlinearity=None,
-                 output_w_init=tf.glorot_uniform_initializer(),
+                 output_w_init=tf.initializers.glorot_uniform(),
                  output_b_init=tf.zeros_initializer(),
                  learn_std=True,
                  adaptive_std=False,
@@ -81,10 +86,10 @@ class GaussianMLPModel(Model):
                  max_std=None,
                  std_hidden_sizes=(32, 32),
                  std_hidden_nonlinearity=tf.nn.tanh,
-                 std_hidden_w_init=tf.glorot_uniform_initializer(),
+                 std_hidden_w_init=tf.initializers.glorot_uniform(),
                  std_hidden_b_init=tf.zeros_initializer(),
                  std_output_nonlinearity=None,
-                 std_output_w_init=tf.glorot_uniform_initializer(),
+                 std_output_w_init=tf.initializers.glorot_uniform(),
                  std_parameterization='exp',
                  layer_normalization=False):
         # Network parameters
@@ -131,10 +136,32 @@ class GaussianMLPModel(Model):
             raise NotImplementedError
 
     def network_output_spec(self):
-        """Network output spec."""
+        """Network output spec.
+
+        Return:
+            list[str]: List of key(str) for the network outputs.
+
+        """
         return ['mean', 'log_std', 'std_param', 'dist']
 
+    # pylint: disable=arguments-differ
     def _build(self, state_input, name=None):
+        """Build model given input placeholder(s).
+
+        Args:
+            state_input (tf.Tensor): Place holder for state input.
+            name (str): Inner model name, also the variable scope of the
+                inner model, if exist. One example is
+                garage.tf.models.Sequential.
+
+        Return:
+            tf.Tensor: Mean.
+            tf.Tensor: Parameterized log_std.
+            tf.Tensor: log_std.
+            garage.tf.distributions.DiagonalGaussian: Policy distribution.
+
+        """
+        del name
         action_dim = self._output_dim
 
         with tf.compat.v1.variable_scope('dist_params'):
