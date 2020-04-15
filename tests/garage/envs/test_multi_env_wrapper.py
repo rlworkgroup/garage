@@ -129,6 +129,14 @@ class TestMultiEnvWrapper:
         obs = mt_env.step(1)[0]
         assert (obs[:2] == np.array([0., 1.])).all()
 
+    def test_active_task_name(self):
+        """Check if the task name of the active task corresponds to its """
+        envs = ['CartPole-v0', 'CartPole-v1']
+        mt_env = self._init_multi_env_wrapper(envs)
+        for _ in range(mt_env.num_tasks):
+            assert mt_env.active_task_name == str(mt_env.env.unwrapped)
+            mt_env.reset()
+
     def _init_multi_env_wrapper(self,
                                 env_names,
                                 sample_strategy=uniform_random_strategy):
@@ -187,3 +195,9 @@ class TestMetaWorldMultiEnvWrapper:
             _, _, _, info = self.env.step(action)
             assert not info['task_id'] == active_task_id
             active_task_id = self.env.active_task_index
+
+    def test_active_task_name(self):
+        """Assert the task name of the active task corresponds to its metaworld name."""  # noqa: E501
+        for _ in range(self.env.num_tasks):
+            self.env.reset()
+            assert self.env.active_task_name == self.env.env.all_task_names[0]

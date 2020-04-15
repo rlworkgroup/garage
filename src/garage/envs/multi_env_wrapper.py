@@ -53,7 +53,9 @@ class MultiEnvWrapper(gym.Wrapper):
         sample_strategy (function(int, int)):
             Sample strategy to be used when sampling a new task.
         metaworld_mt (bool): Set if the envs that are passed Metaworld
-            environments from Multitask Benchmark Environments.
+            environments from Multitask Benchmark Environments. Primarily
+            disables wrapper from augmenting observations with task one-hot
+            ids.
     """
 
     def __init__(self,
@@ -193,6 +195,7 @@ class MultiEnvWrapper(gym.Wrapper):
         if not self._metaworld_mt:
             obs = self._obs_with_one_hot(obs)
         info['task_id'] = self._active_task_index
+        info['task_name'] = self.active_task_name
         return obs, reward, done, info
 
     def close(self):
@@ -212,3 +215,18 @@ class MultiEnvWrapper(gym.Wrapper):
         """
         oh_obs = np.concatenate([self.active_task_one_hot, obs])
         return oh_obs
+
+    @property
+    def active_task_name(self):
+        """Return the name of the active task.
+
+        Returns:
+            str: The name of the task. If wrapping metaworld benchmark,
+                environments, this will be the name of the environment,
+                given by metaworld. Otherwise, the name is the unwrapped
+                environment's class name.
+
+        """
+        if self._metaworld_mt:
+            return self.env.all_task_names[0]
+        return str(self.env.unwrapped)
