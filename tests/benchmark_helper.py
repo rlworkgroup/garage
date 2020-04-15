@@ -1,9 +1,13 @@
 """helper functions for benchmarks."""
+import csv
 import json
+import os
+import pathlib
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import tensorflow as tf
 
 
 def create_json(csvs, trials, seeds, xs, ys, factors, names):
@@ -84,3 +88,80 @@ def plot_average_over_trials(csvs, ys, plt_file, env_id, x_label, y_label,
 
     plt.savefig(plt_file)
     plt.close()
+
+
+def iterate_experiments(func, tasks, seeds, use_tf, xcolumn, xlabel, ycolumn,
+                        ylabel):
+    """Iterator to iterate experiments.
+
+    Also it saves csv to JSON format preparing for automatic benchmarking.
+
+    Args:
+        tasks (list[dict]): List of running tasks.
+        seeds (list[int]): List of seeds.
+        func (func): The experiment function.
+        use_tf (bool): Whether TF is used.
+        xcolumn (str): Which column should be the JSON x axis.
+        xlabel (str): Label name for x axis.
+        ycolumn (str): Which column should be the JSON y axis.
+        ylabel (str): Label name for y axis.
+
+    Yields:
+        str: The next environment id to construct the env.
+        int: The next seed value.
+        str: The next experiment's log directory.
+
+    """
+    for task in tasks:
+        env_id = task['env_id']
+        for seed in seeds:
+            # This breaks algorithm and implementation name with '_'
+            # For example: ppo_garage_tf -> ppo_garage-tf
+            i = func.__name__.find('_')
+            s = func.__name__[:i + 1] + func.__name__[i + 1:].replace('_', '-')
+            name = s + '_' + env_id + '_' + str(seed)
+
+            log_dir = get_log_dir(name)
+
+            if use_tf:
+                with tf.Graph().as_default():
+                    yield env_id, seed, log_dir
+            else:
+                yield env_id, seed, log_dir
+
+            csv_to_json(log_dir, xcolumn, xlabel, ycolumn, ylabel)
+
+
+def get_log_dir(name):
+    """Get the log directory given the experiment name.
+
+    Args:
+        name (str): The experiment name.
+
+    Returns:
+        str: Log directory.
+
+    """
+    cwd = pathlib.Path.cwd()
+    return str(cwd.joinpath('data', 'local', 'benchmarks', name))
+
+
+def csv_to_json(log_dir, xcolumn, xlabel, ycolumn, ylabel):
+    """Save selected csv column to JSON preparing for automatic benchmarking.
+
+    Args:
+        log_dir (str): Log directory for csv file.
+        xcolumn (str): Which column should be the JSON x axis.
+        xlabel (str): Label name for x axis.
+        ycolumn (str): Which column should be the JSON y axis.
+        ylabel (str): Label name for y axis.
+
+    """
+    with open(os.path.join(log_dir, 'progress.csv'), 'r') as csv_file:
+        xs, ys = [], []
+        for row in csv.DictReader(csv_file):
+            xs.append(row[xcolumn])
+            ys.append(row[ycolumn])
+
+    with open(os.path.join(log_dir, 'progress.json'), 'w') as json_file:
+        json.dump(dict(x=xs, y=ys, xlabel=xlabel, ylabel=ylabel), json_file)
