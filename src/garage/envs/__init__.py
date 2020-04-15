@@ -7,7 +7,6 @@ from garage.envs.grid_world_env import GridWorldEnv
 from garage.envs.multi_env_wrapper import (MultiEnvWrapper,
                                            round_robin_strategy,
                                            uniform_random_strategy)
-from garage.envs.multi_task_meta_world_wrapper import MTMetaWorldWrapper
 from garage.envs.normalized_env import normalize
 from garage.envs.point_env import PointEnv
 from garage.envs.task_onehot_wrapper import TaskOnehotWrapper
@@ -17,7 +16,6 @@ __all__ = [
     'Step',
     'EnvSpec',
     'GridWorldEnv',
-    'MTMetaWorldWrapper',
     'MultiEnvWrapper',
     'normalize',
     'PointEnv',
