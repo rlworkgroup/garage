@@ -9,28 +9,34 @@ class PointEnv(gym.Env):
     """A simple 2D point environment.
 
     Attributes:
-        observation_space (:obj:`gym.spaces.Box`): The observation space
-        action_space (:obj:`gym.spaces.Box`): The action space
+        observation_space (gym.spaces.Box): The observation space
+        action_space (gym.spaces.Box): The action space
 
     Args:
-        goal (:obj:`np.ndarray`, optional): A 2D array representing the goal
-            position
-        done_bonus (float, optional): A numerical bonus added to the reward
+        goal (np.ndarray): A 2D array representing the goal position
+        arena_size (float): The size of arena where the point is constrained
+            within (-arena_size, arena_size) in each dimension
+        done_bonus (float): A numerical bonus added to the reward
             once the point as reached the goal
-        never_done (bool, optional): Never send a `done` signal, even if the
-            agent achieves the goal.
+        never_done (bool): Never send a `done` signal, even if the
+            agent achieves the goal
 
     """
 
     def __init__(
             self,
             goal=np.array((1., 1.), dtype=np.float32),
+            arena_size=5.,
             done_bonus=0.,
             never_done=False,
     ):
-        self._goal = np.array(goal, dtype=np.float32)
+        goal = np.array(goal, dtype=np.float32)
+        self._goal = goal
         self._done_bonus = done_bonus
         self._never_done = never_done
+        self._arena_size = arena_size
+
+        assert ((goal >= -arena_size) & (goal <= arena_size)).all()
 
         self._point = np.zeros_like(self._goal)
         self._task = {'goal': self._goal}
@@ -68,17 +74,18 @@ class PointEnv(gym.Env):
             action (np.ndarray): The action to take in the environment.
 
         Returns:
-            tuple:
-                * observation (np.ndarray): The observation of the environment.
-                * reward (float): The reward acquired at this time step.
-                * done (boolean): Whether the environment was completed at this
-                    time step. Always False for this environment.
+            np.ndarray: Observation. The observation of the environment.
+            float: Reward. The reward acquired at this time step.
+            boolean: Done. Whether the environment was completed at this
+                time step. Always False for this environment.
 
         """
         # enforce action space
         a = action.copy()  # NOTE: we MUST copy the action before modifying it
         a = np.clip(a, self.action_space.low, self.action_space.high)
 
+        self._point = np.clip(self._point + a, -self._arena_size,
+                              self._arena_size)
         dist = np.linalg.norm(self._point - self._goal)
         done = dist < np.linalg.norm(self.action_space.low)
 
@@ -111,7 +118,7 @@ class PointEnv(gym.Env):
             num_tasks (int): Number of tasks to sample.
 
         Returns:
-            list[dict[str, np.ndarray]]: A list of "tasks," where each task is
+            list[dict[str, np.ndarray]]: A list of "tasks", where each task is
                 a dictionary containing a single key, "goal", mapping to a
                 point in 2D space.
 
