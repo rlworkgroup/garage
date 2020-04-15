@@ -8,4 +8,3 @@ coverage:
 codecov:
     notify:
         wait_for_ci: yes
-        after_n_builds: 3  # do not post a PR status until at least 3 coverage reports have been received
