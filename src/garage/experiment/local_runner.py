@@ -43,13 +43,16 @@ class SetupArgs:
         sampler_cls (garage.sampler.Sampler): A sampler class.
         sampler_args (dict): Arguments to be passed to sampler constructor.
         seed (int): Random seed.
+        sync_callback (Callable[LocalRunner, subprocess.Popen]): Callback to
+            synchronize experiment result directory.
 
     """
 
-    def __init__(self, sampler_cls, sampler_args, seed):
+    def __init__(self, sampler_cls, sampler_args, seed, sync_callback):
         self.sampler_cls = sampler_cls
         self.sampler_args = sampler_args
         self.seed = seed
+        self.sync_callback = sync_callback
 
 
 class TrainArgs:
@@ -151,6 +154,7 @@ class LocalRunner:
         self._n_workers = None
         self._worker_class = None
         self._worker_args = None
+        self._sync_callback = lambda s: None
 
     def make_sampler(self,
                      sampler_cls,
@@ -206,7 +210,8 @@ class LocalRunner:
               sampler_args=None,
               n_workers=psutil.cpu_count(logical=False),
               worker_class=DefaultWorker,
-              worker_args=None):
+              worker_args=None,
+              sync_callback=None):
         """Set up runner for algorithm and environment.
 
         This method saves algo and env within runner and creates a sampler.
@@ -225,6 +230,8 @@ class LocalRunner:
             worker_class (type): Type of worker the sampler should use.
             worker_args (dict or None): Additional arguments that should be
                 passed to the worker.
+            sync_callback (Callable[LocalRunner, subprocess.Popen]): Callback
+                to synchronize experiment result directory.
 
         """
         self._algo = algo
@@ -245,12 +252,14 @@ class LocalRunner:
                                           n_workers=n_workers,
                                           worker_class=worker_class,
                                           worker_args=worker_args)
+        self._sync_callback = sync_callback
 
         self._has_setup = True
 
         self._setup_args = SetupArgs(sampler_cls=sampler_cls,
                                      sampler_args=sampler_args,
-                                     seed=get_seed())
+                                     seed=get_seed(),
+                                     sync_callback=self._sync_callback)
 
     def _start_worker(self):
         """Start Plotter and Sampler workers."""
@@ -266,6 +275,7 @@ class LocalRunner:
         self._sampler.shutdown_worker()
         if self._plot:
             self._plotter.close()
+        self._sync_snapshots(final=True)
 
     def obtain_samples(self,
                        itr,
@@ -361,6 +371,7 @@ class LocalRunner:
         self._stats = saved['stats']
 
         set_seed(self._setup_args.seed)
+        self._sync_callback = self._setup_args.sync_callback
 
         self.setup(env=saved['env'],
                    algo=saved['algo'],
@@ -446,8 +457,10 @@ class LocalRunner:
 
         self._plot = plot
 
-        average_return = self._algo.train(self)
-        self._shutdown_worker()
+        try:
+            average_return = self._algo.train(self)
+        finally:
+            self._shutdown_worker()
 
         return average_return
 
@@ -499,6 +512,21 @@ class LocalRunner:
                 self.log_diagnostics(self._train_args.pause_for_plot)
                 logger.dump_all(self.step_itr)
                 tabular.clear()
+                self._sync_snapshots()
+
+    def _sync_snapshots(self, final=False):
+        """Call external callback to sync snapshots to external service.
+
+        Args:
+            final (bool): Is the experiment complete (or crashed?).
+
+        """
+        try:
+            result = self._sync_callback(self)
+            if final and hasattr(result, 'wait'):
+                result.wait()
+        except Exception as e:  # pylint: disable=broad-except
+            logger.log('Error syncing snapshots: {}'.format(e))
 
     def resume(self,
                n_epochs=None,
@@ -540,8 +568,10 @@ class LocalRunner:
         if pause_for_plot is not None:
             self._train_args.pause_for_plot = pause_for_plot
 
-        average_return = self._algo.train(self)
-        self._shutdown_worker()
+        try:
+            average_return = self._algo.train(self)
+        finally:
+            self._shutdown_worker()
 
         return average_return
 
