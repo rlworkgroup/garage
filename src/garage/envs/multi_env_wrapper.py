@@ -10,6 +10,8 @@ import akro
 import gym
 import numpy as np
 
+from garage.envs import GarageEnv
+
 
 def round_robin_strategy(num_tasks, last_task=None):
     """A function for sampling tasks in round robin fashion.
@@ -50,18 +52,24 @@ class MultiEnvWrapper(gym.Wrapper):
             A list of objects implementing gym.Env.
         sample_strategy (function(int, int)):
             Sample strategy to be used when sampling a new task.
-
+        metaworld_mt (bool): Set if the envs that are passed Metaworld
+            environments from Multitask Benchmark Environments.
     """
 
-    def __init__(self, envs, sample_strategy=uniform_random_strategy):
+    def __init__(self,
+                 envs,
+                 sample_strategy=uniform_random_strategy,
+                 metaworld_mt=False):
 
         self._sample_strategy = sample_strategy
         self._num_tasks = len(envs)
         self._active_task_index = None
         self._observation_space = None
-
+        self._metaworld_mt = metaworld_mt
+        for i, env in enumerate(envs):
+            if not isinstance(env, GarageEnv):
+                envs[i] = GarageEnv(env)
         super().__init__(envs[0])
-
         self._task_envs = []
         for env in envs:
             if (env.observation_space.shape !=
@@ -104,7 +112,11 @@ class MultiEnvWrapper(gym.Wrapper):
             int: Index of active task.
 
         """
-        return self._active_task_index
+        if self._metaworld_mt:
+            task_id = self.env.active_task
+        else:
+            task_id = self._active_task_index
+        return task_id
 
     @property
     def observation_space(self):
@@ -114,6 +126,8 @@ class MultiEnvWrapper(gym.Wrapper):
             akro.Box: Observation space.
 
         """
+        if self._metaworld_mt:
+            return self.env.observation_space
         task_lb, task_ub = self.task_space.bounds
         env_lb, env_ub = self._observation_space.bounds
         return akro.Box(np.concatenate([task_lb, env_lb]),
@@ -137,6 +151,8 @@ class MultiEnvWrapper(gym.Wrapper):
             numpy.ndarray: one-hot representation of active task
 
         """
+        if self._metaworld_mt:
+            return self.env.active_task_one_hot
         one_hot = np.zeros(self.task_space.shape)
         index = self.active_task_index or 0
         one_hot[index] = self.task_space.high[index]
@@ -156,8 +172,9 @@ class MultiEnvWrapper(gym.Wrapper):
             self._num_tasks, self._active_task_index)
         self.env = self._task_envs[self._active_task_index]
         obs = self.env.reset(**kwargs)
-        oh_obs = self._obs_with_one_hot(obs)
-        return oh_obs
+        if not self._metaworld_mt:
+            obs = self._obs_with_one_hot(obs)
+        return obs
 
     def step(self, action):
         """gym.Env step for the active task env.
@@ -173,9 +190,10 @@ class MultiEnvWrapper(gym.Wrapper):
 
         """
         obs, reward, done, info = self.env.step(action)
-        oh_obs = self._obs_with_one_hot(obs)
+        if not self._metaworld_mt:
+            obs = self._obs_with_one_hot(obs)
         info['task_id'] = self._active_task_index
-        return oh_obs, reward, done, info
+        return obs, reward, done, info
 
     def close(self):
         """Close all task envs."""

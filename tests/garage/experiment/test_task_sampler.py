@@ -24,15 +24,10 @@ def test_env_pool_sampler():
     # Import, construct environments here to avoid using up too much
     # resources if this test isn't run.
     # pylint: disable=import-outside-toplevel
-    from metaworld.envs.mujoco.env_dict import MEDIUM_MODE_ARGS_KWARGS
-    from metaworld.envs.mujoco.env_dict import MEDIUM_MODE_CLS_DICT
-    ML10_ARGS = MEDIUM_MODE_ARGS_KWARGS
-    ML10_ENVS = MEDIUM_MODE_CLS_DICT
-
+    from metaworld.benchmarks import ML10
+    train_tasks = ML10.get_train_tasks().all_task_names
     ML10_train_envs = [
-        env(*ML10_ARGS['train'][task]['args'],
-            **ML10_ARGS['train'][task]['kwargs'])
-        for (task, env) in ML10_ENVS['train'].items()
+        ML10.from_task(train_task) for train_task in train_tasks
     ]
     tasks = task_sampler.EnvPoolSampler(ML10_train_envs)
     assert tasks.n_tasks == 10
@@ -50,15 +45,11 @@ def test_env_pool_sampler():
 @pytest.mark.mujoco
 def test_construct_envs_sampler_ml10():
     # pylint: disable=import-outside-toplevel
-    from metaworld.envs.mujoco.env_dict import MEDIUM_MODE_ARGS_KWARGS
-    from metaworld.envs.mujoco.env_dict import MEDIUM_MODE_CLS_DICT
-    ML10_ARGS = MEDIUM_MODE_ARGS_KWARGS
-    ML10_ENVS = MEDIUM_MODE_CLS_DICT
-
+    from metaworld.benchmarks import ML10
+    train_tasks = ML10.get_train_tasks().all_task_names
     ML10_constructors = [
-        functools.partial(env, *ML10_ARGS['train'][task]['args'],
-                          **ML10_ARGS['train'][task]['kwargs'])
-        for (task, env) in ML10_ENVS['train'].items()
+        functools.partial(ML10.from_task, train_task)
+        for train_task in train_tasks
     ]
     tasks = task_sampler.ConstructEnvsSampler(ML10_constructors)
     assert tasks.n_tasks == 10
