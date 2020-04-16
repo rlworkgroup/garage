@@ -72,7 +72,7 @@ class DiscreteCNNQFunction(QFunction):
                  filter_dims,
                  num_filters,
                  strides,
-                 hidden_sizes=(256),
+                 hidden_sizes=(256, ),
                  name=None,
                  padding='SAME',
                  max_pooling=False,
