@@ -167,7 +167,7 @@ def _conv(input_var, name, filter_size, num_filter, strides, hidden_w_init,
 
     """
     # channel from input
-    input_shape = input_var.get_shape()[-1].value
+    input_shape = input_var.get_shape()[-1]
     # [filter_height, filter_width, in_channels, out_channels]
     w_shape = [filter_size, filter_size, input_shape, num_filter]
     b_shape = [1, 1, 1, num_filter]

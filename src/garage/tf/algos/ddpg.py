@@ -124,7 +124,7 @@ class DDPG(OffPolicyRLAlgorithm):
 
     def init_opt(self):
         """Build the loss function and init the optimizer."""
-        with tf.name_scope(self.name, 'DDPG'):
+        with tf.name_scope(self.name):
             # Create target policy and qf network
             self.target_policy_f_prob_online = tensor_utils.compile_function(
                 inputs=[self.target_policy.model.networks['default'].input],

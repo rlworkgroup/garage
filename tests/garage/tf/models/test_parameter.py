@@ -10,9 +10,10 @@ class TestParameter(TfGraphTestCase):
 
     def setup_method(self):
         super().setup_method()
-        self.input_vars = tf.placeholder(shape=[None, 2, 5], dtype=tf.float32)
-        self.step_input_vars = tf.placeholder(shape=[None, 5],
-                                              dtype=tf.float32)
+        self.input_vars = tf.compat.v1.placeholder(shape=[None, 2, 5],
+                                                   dtype=tf.float32)
+        self.step_input_vars = tf.compat.v1.placeholder(shape=[None, 5],
+                                                        dtype=tf.float32)
         self.initial_params = np.array([48, 21, 33])
 
         self.data = np.zeros(shape=[5, 2, 5])
@@ -27,7 +28,7 @@ class TestParameter(TfGraphTestCase):
                           length=3,
                           initializer=tf.constant_initializer(
                               self.initial_params))
-        self.sess.run(tf.global_variables_initializer())
+        self.sess.run(tf.compat.v1.global_variables_initializer())
         p = self.sess.run(param, feed_dict=self.feed_dict)
 
         assert p.shape == (5, 3)

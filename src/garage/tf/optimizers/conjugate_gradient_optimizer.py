@@ -109,7 +109,7 @@ class PearlmutterHvp(HessianVectorProduct):
         self._target = target
         self._reg_coeff = reg_coeff
         params = target.get_params()
-        with tf.name_scope(name, 'PearlmutterHvp', [f, inputs, params]):
+        with tf.name_scope('PearlmutterHvp' if name is None else name):
             constraint_grads = tf.gradients(f,
                                             xs=params,
                                             name='gradients_constraint')
@@ -129,10 +129,8 @@ class PearlmutterHvp(HessianVectorProduct):
                     tf.Tensor: Symbolic result.
 
                 """
-                with tf.name_scope('hx_plain',
-                                   values=[constraint_grads, params, xs]):
-                    with tf.name_scope('hx_function',
-                                       values=[constraint_grads, xs]):
+                with tf.name_scope('hx_plain'):
+                    with tf.name_scope('hx_function'):
                         hx_f = tf.reduce_sum(
                             tf.stack([
                                 tf.reduce_sum(g * x)
@@ -189,8 +187,7 @@ class FiniteDifferenceHvp(HessianVectorProduct):
         self._target = target
         self._reg_coeff = reg_coeff
         params = target.get_params()
-        with tf.name_scope(name, 'FiniteDifferenceHvp',
-                           [f, inputs, params, target]):
+        with tf.name_scope('FiniteDifferenceHvp' if name is None else name):
             constraint_grads = tf.gradients(f,
                                             xs=params,
                                             name='gradients_constraint')
@@ -210,8 +207,7 @@ class FiniteDifferenceHvp(HessianVectorProduct):
                     tf.Tensor: Symbolic result.
 
                 """
-                with tf.name_scope('f_hx_plain', values=[inputs,
-                                                         self._target]):
+                with tf.name_scope('f_hx_plain'):
                     inputs_ = args[:len(inputs)]
                     xs = args[len(inputs):]
                     flat_xs = np.concatenate(
@@ -330,7 +326,8 @@ class ConjugateGradientOptimizer:
         """
         params = target.get_params()
         ns_vals = [loss, target, leq_constraint, inputs, extra_inputs, params]
-        with tf.name_scope(name, 'ConjugateGradientOptimizer', ns_vals):
+        with tf.name_scope(
+                'ConjugateGradientOptimizer' if name is None else name):
             inputs = tuple(inputs)
             if extra_inputs is None:
                 extra_inputs = tuple()
@@ -339,7 +336,7 @@ class ConjugateGradientOptimizer:
 
             constraint_term, constraint_value = leq_constraint
 
-            with tf.name_scope('loss_gradients', values=[loss, params]):
+            with tf.name_scope('loss_gradients'):
                 grads = tf.gradients(loss, xs=params)
                 for idx, (grad, param) in enumerate(zip(grads, params)):
                     if grad is None:
@@ -437,10 +434,7 @@ class ConjugateGradientOptimizer:
             name (str): The name argument for tf.name_scope.
 
         """
-        with tf.name_scope(
-                name,
-                'optimize',
-                values=[inputs, extra_inputs, subsample_grouped_inputs]):
+        with tf.name_scope('optimize' if name is None else name):
             prev_param = np.copy(self._target.get_param_values())
             inputs = tuple(inputs)
             if extra_inputs is None:

@@ -48,8 +48,7 @@ class LbfgsOptimizer:
         """
         self._target = target
         params = target.get_params()
-        with tf.name_scope(name, 'LbfgsOptimizer',
-                           [loss, inputs, params, extra_inputs]):
+        with tf.name_scope('LbfgsOptimizer' if name is None else name):
 
             def get_opt_output():
                 """Helper function to construct graph.
@@ -58,7 +57,7 @@ class LbfgsOptimizer:
                     list[tf.Tensor]: Loss and gradient tensor.
 
                 """
-                with tf.name_scope('get_opt_output', values=[loss, params]):
+                with tf.name_scope('get_opt_output'):
                     flat_grad = tensor_utils.flatten_tensor_variables(
                         tf.gradients(loss, params))
                     return [
@@ -114,7 +113,7 @@ class LbfgsOptimizer:
             raise Exception(
                 'Use update_opt() to setup the loss function first.')
 
-        with tf.name_scope(name, 'optimize', values=[inputs, extra_inputs]):
+        with tf.name_scope('optimize' if name is None else name):
             f_opt = self._opt_fun['f_opt']
 
             if extra_inputs is None:

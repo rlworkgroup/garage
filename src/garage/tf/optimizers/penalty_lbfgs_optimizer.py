@@ -81,8 +81,7 @@ class PenaltyLbfgsOptimizer:
 
         """
         params = target.get_params()
-        with tf.name_scope(name, 'PenaltyLbfgsOptimizer',
-                           [leq_constraint, loss, params]):
+        with tf.name_scope('PenaltyLbfgsOptimizer' if name is None else name):
             constraint_term, constraint_value = leq_constraint
             penalty_var = tf.compat.v1.placeholder(tf.float32,
                                                    tuple(),
@@ -100,8 +99,7 @@ class PenaltyLbfgsOptimizer:
                     list[tf.Tensor]: Penalized loss and gradient tensor.
 
                 """
-                with tf.name_scope('get_opt_output',
-                                   values=[params, penalized_loss]):
+                with tf.name_scope('get_opt_output'):
                     grads = tf.gradients(penalized_loss, params)
                     for idx, (grad, param) in enumerate(zip(grads, params)):
                         if grad is None:
@@ -178,7 +176,7 @@ class PenaltyLbfgsOptimizer:
             raise Exception(
                 'Use update_opt() to setup the loss function first.')
 
-        with tf.name_scope(name, 'optimize', values=[inputs]):
+        with tf.name_scope('optimize' if name is None else name):
 
             inputs = tuple(inputs)
 

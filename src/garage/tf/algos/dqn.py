@@ -106,7 +106,7 @@ class DQN(OffPolicyRLAlgorithm):
         self.episode_qf_losses = []
 
         # build q networks
-        with tf.name_scope(self.name, 'DQN'):
+        with tf.name_scope(self.name):
             action_t_ph = tf.compat.v1.placeholder(tf.int32,
                                                    None,
                                                    name='action')

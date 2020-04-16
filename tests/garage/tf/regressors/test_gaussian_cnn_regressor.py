@@ -141,7 +141,7 @@ class TestGaussianCNNRegressor(TfGraphTestCase):
         for i in range(len(expected)):
             average_error += np.abs(expected[i] - prediction[i])
         average_error /= len(expected)
-        assert average_error <= 0.05
+        assert average_error <= 0.1
 
     @pytest.mark.large
     def test_fit_without_trusted_region(self):
@@ -167,7 +167,7 @@ class TestGaussianCNNRegressor(TfGraphTestCase):
         for i in range(len(expected)):
             average_error += np.abs(expected[i] - prediction[i])
         average_error /= len(expected)
-        assert average_error <= 0.05
+        assert average_error <= 0.1
 
     @pytest.mark.parametrize('output_dim', [(1), (2), (3)])
     def test_log_likelihood_sym(self, output_dim):
