@@ -7,6 +7,7 @@ from tests.fixtures import TfGraphTestCase
 
 class TestMLP(TfGraphTestCase):
 
+    # pylint: disable=unsubscriptable-object
     def setup_method(self):
         super(TestMLP, self).setup_method()
         self.obs_input = np.array([[1, 2, 3, 4]])
@@ -129,22 +130,21 @@ class TestMLP(TfGraphTestCase):
             h2_b = tf.compat.v1.get_variable('mlp2/hidden_1/bias')
             out_w = tf.compat.v1.get_variable('mlp2/output/kernel')
             out_b = tf.compat.v1.get_variable('mlp2/output/bias')
-            beta_1 = tf.compat.v1.get_variable('mlp2/LayerNorm/beta')
-            gamma_1 = tf.compat.v1.get_variable('mlp2/LayerNorm/gamma')
-            beta_2 = tf.compat.v1.get_variable('mlp2/LayerNorm_1/beta')
-            gamma_2 = tf.compat.v1.get_variable('mlp2/LayerNorm_1/gamma')
+
+        with tf.compat.v1.variable_scope('MLP_1', reuse=True) as vs:
+            gamma_1, beta_1, gamma_2, beta_2 = vs.global_variables()
 
         # First layer
         y = tf.matmul(self._input, h1_w) + h1_b
         y = self.hidden_nonlinearity(y)
-        mean, variance = tf.nn.moments(y, [1], keep_dims=True)
+        mean, variance = tf.nn.moments(y, [1], keepdims=True)
         normalized_y = (y - mean) / tf.sqrt(variance + 1e-12)
         y_out = normalized_y * gamma_1 + beta_1
 
         # Second layer
         y = tf.matmul(y_out, h2_w) + h2_b
         y = self.hidden_nonlinearity(y)
-        mean, variance = tf.nn.moments(y, [1], keep_dims=True)
+        mean, variance = tf.nn.moments(y, [1], keepdims=True)
         normalized_y = (y - mean) / tf.sqrt(variance + 1e-12)
         y_out = normalized_y * gamma_2 + beta_2
 
@@ -155,4 +155,4 @@ class TestMLP(TfGraphTestCase):
         mlp_output = self.sess.run(self.mlp_f_w_n,
                                    feed_dict={self._input: self.obs_input})
 
-        np.testing.assert_array_almost_equal(out, mlp_output)
+        np.testing.assert_array_almost_equal(out, mlp_output, decimal=2)
