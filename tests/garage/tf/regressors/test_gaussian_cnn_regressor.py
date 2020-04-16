@@ -53,10 +53,10 @@ class TestGaussianCNNRegressor(TfGraphTestCase):
 
         prediction = gcr.predict(paths['observations'])
         average_error = 0.0
-        for i in range(len(expected)):
-            average_error += np.abs(expected[i] - prediction[i])
+        for i, exp in enumerate(expected):
+            average_error += np.abs(exp - prediction[i])
         average_error /= len(expected)
-        assert average_error <= 0.05
+        assert average_error <= 0.1
 
         x_mean = self.sess.run(gcr.model.networks['default'].x_mean)
         x_mean_expected = np.mean(observations, axis=0, keepdims=True)
@@ -97,8 +97,8 @@ class TestGaussianCNNRegressor(TfGraphTestCase):
 
         prediction = gcr.predict(paths['observations'])
         average_error = 0.0
-        for i in range(len(expected)):
-            average_error += np.abs(expected[i] - prediction[i])
+        for i, exp in enumerate(expected):
+            average_error += np.abs(exp - prediction[i])
         average_error /= len(expected)
         assert average_error <= 0.1
 
@@ -138,8 +138,8 @@ class TestGaussianCNNRegressor(TfGraphTestCase):
 
         prediction = gcr.predict(paths['observations'])
         average_error = 0.0
-        for i in range(len(expected)):
-            average_error += np.abs(expected[i] - prediction[i])
+        for i, exp in enumerate(expected):
+            average_error += np.abs(exp - prediction[i])
         average_error /= len(expected)
         assert average_error <= 0.1
 
@@ -164,8 +164,8 @@ class TestGaussianCNNRegressor(TfGraphTestCase):
 
         prediction = gcr.predict(paths['observations'])
         average_error = 0.0
-        for i in range(len(expected)):
-            average_error += np.abs(expected[i] - prediction[i])
+        for i, exp in enumerate(expected):
+            average_error += np.abs(exp - prediction[i])
         average_error /= len(expected)
         assert average_error <= 0.1
 

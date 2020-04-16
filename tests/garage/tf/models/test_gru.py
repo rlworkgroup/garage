@@ -29,23 +29,23 @@ class TestGRU(TfGraphTestCase):
 
     # yapf: disable
     @pytest.mark.parametrize('time_step, input_dim, output_dim, '
-                             'hidden_init, cell_init', [
-        (1, 1, 1, 0, 0),  # noqa: E122
-        (1, 1, 3, 0, 0),
-        (1, 3, 1, 0, 0),
-        (3, 1, 1, 0, 0),
-        (3, 3, 1, 0, 0),
-        (3, 3, 3, 0, 0),
-        (1, 1, 1, 0.5, 0.5),
-        (1, 1, 3, 0.5, 0.5),
-        (1, 3, 1, 0.5, 0.5),
-        (3, 1, 1, 0.5, 0.5),
-        (3, 3, 1, 0.5, 0.5),
-        (3, 3, 3, 0.5, 0.5),
+                             'hidden_init', [
+        (1, 1, 1, 0),  # noqa: E122
+        (1, 1, 3, 0),
+        (1, 3, 1, 0),
+        (3, 1, 1, 0),
+        (3, 3, 1, 0),
+        (3, 3, 3, 0),
+        (1, 1, 1, 0.5),
+        (1, 1, 3, 0.5),
+        (1, 3, 1, 0.5),
+        (3, 1, 1, 0.5),
+        (3, 3, 1, 0.5),
+        (3, 3, 3, 0.5),
     ])
     # yapf: enable
-    def test_output_shapes(self, time_step, input_dim, output_dim, hidden_init,
-                           cell_init):
+    def test_output_shapes(self, time_step, input_dim, output_dim,
+                           hidden_init):
         obs_inputs = np.full((self.batch_size, time_step, input_dim), 1.)
         obs_input = np.full((self.batch_size, input_dim), 1.)
 
@@ -92,23 +92,22 @@ class TestGRU(TfGraphTestCase):
 
     # yapf: disable
     @pytest.mark.parametrize('time_step, input_dim, output_dim, '
-                             'hidden_init, cell_init', [
-        (1, 1, 1, 0, 0),  # noqa: E122
-        (1, 1, 3, 0, 0),
-        (1, 3, 1, 0, 0),
-        (3, 1, 1, 0, 0),
-        (3, 3, 1, 0, 0),
-        (3, 3, 3, 0, 0),
-        (1, 1, 1, 0.5, 0.5),
-        (1, 1, 3, 0.5, 0.5),
-        (1, 3, 1, 0.5, 0.5),
-        (3, 1, 1, 0.5, 0.5),
-        (3, 3, 1, 0.5, 0.5),
-        (3, 3, 3, 0.5, 0.5),
+                             'hidden_init', [
+        (1, 1, 1, 0),  # noqa: E122
+        (1, 1, 3, 0),
+        (1, 3, 1, 0),
+        (3, 1, 1, 0),
+        (3, 3, 1, 0),
+        (3, 3, 3, 0),
+        (1, 1, 1, 0.5),
+        (1, 1, 3, 0.5),
+        (1, 3, 1, 0.5),
+        (3, 1, 1, 0.5),
+        (3, 3, 1, 0.5),
+        (3, 3, 3, 0.5),
     ])
     # yapf: enable
-    def test_output_value(self, time_step, input_dim, output_dim, hidden_init,
-                          cell_init):
+    def test_output_value(self, time_step, input_dim, output_dim, hidden_init):
         obs_inputs = np.full((self.batch_size, time_step, input_dim), 1.)
         obs_input = np.full((self.batch_size, input_dim), 1.)
 
@@ -307,9 +306,6 @@ class TestGRU(TfGraphTestCase):
                           self.step_hidden_var: hidden,
                       })  # noqa: E126
 
-        grads_full = tf.gradients(outputs_t, input_var)
-        self.sess.run(grads_full, feed_dict={input_var: obs_inputs})
-
         grads_step_o_i = tf.gradients(outputs_t, step_input_var)
         grads_step_o_h = tf.gradients(outputs_t, self.step_hidden_var)
         grads_step_h = tf.gradients(h_t, input_var)
@@ -332,23 +328,23 @@ class TestGRU(TfGraphTestCase):
 
     # yapf: disable
     @pytest.mark.parametrize('time_step, input_dim, output_dim, '
-                             'hidden_init, cell_init', [
-        (1, 1, 1, 0, 0),  # noqa: E122
-        (1, 1, 3, 0, 0),
-        (1, 3, 1, 0, 0),
-        (3, 1, 1, 0, 0),
-        (3, 3, 1, 0, 0),
-        (3, 3, 3, 0, 0),
-        (1, 1, 1, 0.5, 0.5),
-        (1, 1, 3, 0.5, 0.5),
-        (1, 3, 1, 0.5, 0.5),
-        (3, 1, 1, 0.5, 0.5),
-        (3, 3, 1, 0.5, 0.5),
-        (3, 3, 3, 0.5, 0.5),
+                             'hidden_init', [
+        (1, 1, 1, 0),  # noqa: E122
+        (1, 1, 3, 0),
+        (1, 3, 1, 0),
+        (3, 1, 1, 0),
+        (3, 3, 1, 0),
+        (3, 3, 3, 0),
+        (1, 1, 1, 0.5),
+        (1, 1, 3, 0.5),
+        (1, 3, 1, 0.5),
+        (3, 1, 1, 0.5),
+        (3, 3, 1, 0.5),
+        (3, 3, 3, 0.5),
     ])
     # yapf: enable
     def test_output_same_as_rnn(self, time_step, input_dim, output_dim,
-                                hidden_init, cell_init):
+                                hidden_init):
         obs_inputs = np.full((self.batch_size, time_step, input_dim), 1.)
         obs_input = np.full((self.batch_size, input_dim), 1.)
 

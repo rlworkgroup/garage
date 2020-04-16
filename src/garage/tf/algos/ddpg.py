@@ -170,10 +170,11 @@ class DDPG(OffPolicyRLAlgorithm):
             with tf.name_scope('action_loss'):
                 action_loss = -tf.reduce_mean(next_qval)
                 if self.policy_weight_decay > 0.:
-                    policy_reg = tf.keras.layers.ActivityRegularization(
-                        l2=self.policy_weight_decay,
-                        weights=self.policy.get_regularizable_vars())
-                    action_loss += policy_reg
+                    regularizer = tf.keras.regularizers.l2(
+                        self.policy_weight_decay)
+                    for var in self.policy.get_regularizable_vars():
+                        policy_reg = regularizer(var)
+                        action_loss += policy_reg
 
             with tf.name_scope('minimize_action_loss'):
                 policy_train_op = self.policy_optimizer(
@@ -189,10 +190,11 @@ class DDPG(OffPolicyRLAlgorithm):
                 qval_loss = tf.reduce_mean(
                     tf.compat.v1.squared_difference(input_y, qval))
                 if self.qf_weight_decay > 0.:
-                    qf_reg = tf.keras.layers.ActivityRegularization(
-                        l2=self.qf_weight_decay,
-                        weights=self.qf.get_regularizable_vars())
-                    qval_loss += qf_reg
+                    regularizer = tf.keras.regularizers.l2(
+                        self.qf_weight_decay)
+                    for var in self.qf.get_regularizable_vars():
+                        qf_reg = regularizer(var)
+                        qval_loss += qf_reg
 
             with tf.name_scope('minimize_qf_loss'):
                 qf_train_op = self.qf_optimizer(
