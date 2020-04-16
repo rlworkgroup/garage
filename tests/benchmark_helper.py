@@ -90,8 +90,14 @@ def plot_average_over_trials(csvs, ys, plt_file, env_id, x_label, y_label,
     plt.close()
 
 
-def iterate_experiments(func, tasks, seeds, use_tf, xcolumn, xlabel, ycolumn,
-                        ylabel):
+def iterate_experiments(funcname,
+                        tasks,
+                        seeds,
+                        use_tf=False,
+                        xcolumn='TotalEnvSteps',
+                        xlabel='Total Environment Steps',
+                        ycolumn='Evaluation/AverageReturn',
+                        ylabel='Average Return'):
     """Iterator to iterate experiments.
 
     Also it saves csv to JSON format preparing for automatic benchmarking.
@@ -99,8 +105,11 @@ def iterate_experiments(func, tasks, seeds, use_tf, xcolumn, xlabel, ycolumn,
     Args:
         tasks (list[dict]): List of running tasks.
         seeds (list[int]): List of seeds.
-        func (func): The experiment function.
-        use_tf (bool): Whether TF is used.
+        funcname (str): The experiment function name.
+        use_tf (bool): Whether TF is used. When True, a TF Graph context
+            is used for each experiment. The default is set to False.
+            However, if the function name ends with 'tf', it automatically
+            create a TF Graph context.
         xcolumn (str): Which column should be the JSON x axis.
         xlabel (str): Label name for x axis.
         ycolumn (str): Which column should be the JSON y axis.
@@ -117,13 +126,13 @@ def iterate_experiments(func, tasks, seeds, use_tf, xcolumn, xlabel, ycolumn,
         for seed in seeds:
             # This breaks algorithm and implementation name with '_'
             # For example: ppo_garage_tf -> ppo_garage-tf
-            i = func.__name__.find('_')
-            s = func.__name__[:i + 1] + func.__name__[i + 1:].replace('_', '-')
+            i = funcname.find('_')
+            s = funcname[:i + 1] + funcname[i + 1:].replace('_', '-')
             name = s + '_' + env_id + '_' + str(seed)
 
             log_dir = get_log_dir(name)
 
-            if use_tf:
+            if use_tf or name.endswith('tf'):
                 with tf.Graph().as_default():
                     yield env_id, seed, log_dir
             else:

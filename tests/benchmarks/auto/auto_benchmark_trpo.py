@@ -6,14 +6,9 @@ until it's done. So we introduced tests.wrappers.AutoStopEnv wrapper to set
 done=True when it reaches max_path_length. We also need to change the
 garage.tf.samplers.BatchSampler to smooth the reward curve.
 """
-import multiprocessing
 import random
 
-from baselines import logger as baselines_logger
 from baselines.bench import benchmarks
-from baselines.common import set_global_seeds
-from baselines.logger import configure
-from baselines.trpo_mpi import trpo_mpi
 import gym
 import pytest
 import tensorflow as tf
@@ -30,7 +25,6 @@ from garage.tf.policies import GaussianMLPPolicy
 from garage.torch.algos import TRPO as PyTorch_TRPO
 from garage.torch.policies import GaussianMLPPolicy as PyTorch_GMP
 from tests import benchmark_helper
-from tests.wrappers import AutoStopEnv
 
 hyper_parameters = {
     'hidden_sizes': [32, 32],
@@ -38,7 +32,7 @@ hyper_parameters = {
     'gae_lambda': 0.97,
     'discount': 0.99,
     'max_path_length': 100,
-    'n_epochs': 1,
+    'n_epochs': 999,
     'batch_size': 1024,
     'n_trials': 5
 }
@@ -94,74 +88,8 @@ def auto_benchmark_trpo_garage_tf():
                          batch_size=hyper_parameters['batch_size'])
 
     for env_id, seed, log_dir in benchmark_helper.iterate_experiments(
-            trpo_garage_tf,
-            tasks,
-            seeds,
-            use_tf=True,
-            xcolumn='TotalEnvSteps',
-            xlabel='Total Environment Steps',
-            ycolumn='Evaluation/AverageReturn',
-            ylabel='Average Return'):
+            trpo_garage_tf.__name__, tasks, seeds):
         trpo_garage_tf(dict(log_dir=log_dir), env_id=env_id, seed=seed)
-
-
-@pytest.mark.benchmark
-def auto_benchmark_trpo_baselines():
-    """Create TRPO baselines model and training.
-
-    Training over different environments and seeds.
-
-    """
-
-    def trpo_baselines(log_dir, env_id, seed):
-        """Create Baseline model and training.
-
-        Args:
-            log_dir (str): Experiment log directory.
-            env_id (str): Environment id of the task.
-            seed (int): Random positive integer for the trial.
-
-        """
-        # Set up TF Session
-        ncpu = max(multiprocessing.cpu_count() // 2, 1)
-        config = tf.ConfigProto(allow_soft_placement=True,
-                                intra_op_parallelism_threads=ncpu,
-                                inter_op_parallelism_threads=ncpu)
-        tf.compat.v1.Session(config=config).__enter__()
-
-        # Set up logger for baselines
-        configure(dir=log_dir,
-                  format_strs=['stdout', 'log', 'csv', 'tensorboard'])
-        baselines_logger.info('rank {}: seed={}, logdir={}'.format(
-            0, seed, baselines_logger.get_dir()))
-
-        set_global_seeds(seed)
-
-        env = AutoStopEnv(env_name=env_id, max_path_length=100)
-
-        trpo_mpi.learn(network='mlp',
-                       env=env,
-                       total_timesteps=hyper_parameters['batch_size'] *
-                       hyper_parameters['n_epochs'],
-                       timesteps_per_batch=hyper_parameters['batch_size'],
-                       gamma=hyper_parameters['discount'],
-                       lam=hyper_parameters['gae_lambda'],
-                       max_kl=hyper_parameters['max_kl'],
-                       cg_iters=10,
-                       cg_damping=0.1,
-                       vf_iters=5,
-                       vf_stepsize=1e-3)
-
-    for env_id, seed, log_dir in benchmark_helper.iterate_experiments(
-            trpo_baselines,
-            tasks,
-            seeds,
-            use_tf=True,
-            xcolumn='TimestepsSoFar',
-            xlabel='Total Environment Steps',
-            ycolumn='EpRewMean',
-            ylabel='Average Return'):
-        trpo_baselines(log_dir=log_dir, env_id=env_id, seed=seed)
 
 
 @pytest.mark.benchmark
@@ -211,12 +139,5 @@ def auto_benchmark_trpo_garage_pytorch():
                      batch_size=hyper_parameters['batch_size'])
 
     for env_id, seed, log_dir in benchmark_helper.iterate_experiments(
-            trpo_garage_pytorch,
-            tasks,
-            seeds,
-            use_tf=False,
-            xcolumn='TotalEnvSteps',
-            xlabel='Total Environment Steps',
-            ycolumn='Evaluation/AverageReturn',
-            ylabel='Average Return'):
+            trpo_garage_pytorch.__name__, tasks, seeds):
         trpo_garage_pytorch(dict(log_dir=log_dir), env_id=env_id, seed=seed)
