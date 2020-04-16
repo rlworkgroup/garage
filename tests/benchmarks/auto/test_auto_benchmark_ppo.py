@@ -119,7 +119,7 @@ def test_auto_benchmark_ppo_garage_tf():
 
 @pytest.mark.benchmark
 def test_auto_benchmark_ppo_baselines():
-    """Create baselines model and training.
+    """Create PPO baselines model and training.
 
     Training over different environments and seeds.
 
