@@ -91,10 +91,10 @@ def run_garage(env, seed, log_dir):
     :return:
     '''
     deterministic.set_seed(seed)
-    config = tf.ConfigProto(allow_soft_placement=True,
-                            intra_op_parallelism_threads=12,
-                            inter_op_parallelism_threads=12)
-    sess = tf.Session(config=config)
+    config = tf.compat.v1.ConfigProto(allow_soft_placement=True,
+                                      intra_op_parallelism_threads=12,
+                                      inter_op_parallelism_threads=12)
+    sess = tf.compat.v1.Session(config=config)
 
     with LocalTFRunner(snapshot_config, sess=sess, max_cpus=12) as runner:
         env = TfEnv(normalize(env))

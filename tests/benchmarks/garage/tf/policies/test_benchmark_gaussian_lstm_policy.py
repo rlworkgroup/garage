@@ -42,11 +42,11 @@ class TestBenchmarkGaussianLSTMPolicy:
                                exp_name=name)
 
     def run_task(self, snapshot_config, *_):
-        config = tf.ConfigProto(device_count={'GPU': 0},
-                                allow_soft_placement=True,
-                                intra_op_parallelism_threads=12,
-                                inter_op_parallelism_threads=12)
-        sess = tf.Session(config=config)
+        config = tf.compat.v1.ConfigProto(device_count={'GPU': 0},
+                                          allow_soft_placement=True,
+                                          intra_op_parallelism_threads=12,
+                                          inter_op_parallelism_threads=12)
+        sess = tf.compat.v1.Session(config=config)
         with LocalTFRunner(snapshot_config=snapshot_config,
                            sess=sess) as runner:
             env = gym.make(self._env)

@@ -68,8 +68,8 @@ def run_task(snapshot_config, *_):
             n_train_steps=40,
             discount=0.9,
             exploration_strategy=action_noise,
-            policy_optimizer=tf.train.AdamOptimizer,
-            qf_optimizer=tf.train.AdamOptimizer,
+            policy_optimizer=tf.compat.v1.train.AdamOptimizer,
+            qf_optimizer=tf.compat.v1.train.AdamOptimizer,
             buffer_batch_size=256,
         )
 

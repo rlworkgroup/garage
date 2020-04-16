@@ -170,8 +170,8 @@ def run_garage(env, seed, log_dir):
             n_train_steps=params['n_train_steps'],
             discount=params['discount'],
             exploration_strategy=action_noise,
-            policy_optimizer=tf.train.AdamOptimizer,
-            qf_optimizer=tf.train.AdamOptimizer,
+            policy_optimizer=tf.compat.v1.train.AdamOptimizer,
+            qf_optimizer=tf.compat.v1.train.AdamOptimizer,
             buffer_batch_size=256,
         )
 

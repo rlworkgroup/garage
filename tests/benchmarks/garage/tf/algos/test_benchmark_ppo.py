@@ -280,9 +280,9 @@ def run_baselines(env, seed, log_dir):
 
     """
     ncpu = max(multiprocessing.cpu_count() // 2, 1)
-    config = tf.ConfigProto(allow_soft_placement=True,
-                            intra_op_parallelism_threads=ncpu,
-                            inter_op_parallelism_threads=ncpu)
+    config = tf.compat.v1.ConfigProto(allow_soft_placement=True,
+                                      intra_op_parallelism_threads=ncpu,
+                                      inter_op_parallelism_threads=ncpu)
     tf.compat.v1.Session(config=config).__enter__()
 
     # Set up logger for baselines

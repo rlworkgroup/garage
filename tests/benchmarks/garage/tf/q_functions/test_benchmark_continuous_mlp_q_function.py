@@ -111,10 +111,10 @@ def run_garage(env, seed, log_dir):
 
     """
     deterministic.set_seed(seed)
-    config = tf.ConfigProto(allow_soft_placement=True,
-                            intra_op_parallelism_threads=12,
-                            inter_op_parallelism_threads=12)
-    sess = tf.Session(config=config)
+    config = tf.compat.v1.ConfigProto(allow_soft_placement=True,
+                                      intra_op_parallelism_threads=12,
+                                      inter_op_parallelism_threads=12)
+    sess = tf.compat.v1.Session(config=config)
     with LocalTFRunner(snapshot_config, sess=sess, max_cpus=12) as runner:
         env = TfEnv(normalize(env))
         # Set up params for ddpg
@@ -149,8 +149,8 @@ def run_garage(env, seed, log_dir):
                     discount=params['discount'],
                     min_buffer_size=int(1e4),
                     exploration_strategy=action_noise,
-                    policy_optimizer=tf.train.AdamOptimizer,
-                    qf_optimizer=tf.train.AdamOptimizer)
+                    policy_optimizer=tf.compat.v1.train.AdamOptimizer,
+                    qf_optimizer=tf.compat.v1.train.AdamOptimizer)
 
         # Set up logger since we are not using run_experiment
         tabular_log_file = osp.join(log_dir, 'progress.csv')
