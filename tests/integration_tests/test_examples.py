@@ -9,7 +9,8 @@ import pytest
 
 EXAMPLES_ROOT_DIR = pathlib.Path('examples/')
 NON_ALGO_EXAMPLES = [
-    EXAMPLES_ROOT_DIR / 'resume_training.py',
+    EXAMPLES_ROOT_DIR / 'torch/resume_training.py',
+    EXAMPLES_ROOT_DIR / 'tf/resume_training.py',
     EXAMPLES_ROOT_DIR / 'sim_policy.py',
     EXAMPLES_ROOT_DIR / 'step_env.py',
     EXAMPLES_ROOT_DIR / 'step_dm_control_env.py',

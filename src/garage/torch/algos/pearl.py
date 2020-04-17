@@ -165,7 +165,7 @@ class PEARL(MetaRLAlgorithm):
         self._update_post_train = update_post_train
         self._task_idx = None
 
-        self._just_resume = False
+        self._is_resuming = False
 
         worker_args = dict(deterministic=True, accum_context=True)
         self._evaluator = MetaEvaluator(test_task_sampler=test_env_sampler,
@@ -252,7 +252,7 @@ class PEARL(MetaRLAlgorithm):
             i: PathBuffer(self._replay_buffer_size)
             for i in range(self._num_train_tasks)
         }
-        self._just_resume = True
+        self._is_resuming = True
 
     def train(self, runner):
         """Obtain samples, train, and evaluate for each epoch.
@@ -267,12 +267,12 @@ class PEARL(MetaRLAlgorithm):
             epoch = runner.step_itr / self._num_steps_per_epoch
 
             # obtain initial set of samples from all train tasks
-            if epoch == 0 or self._just_resume:
+            if epoch == 0 or self._is_resuming:
                 for idx in range(self._num_train_tasks):
                     self._task_idx = idx
                     self._obtain_samples(runner, epoch,
                                          self._num_initial_steps, np.inf)
-                    self._just_resume = False
+                    self._is_resuming = False
 
             # obtain samples from random tasks
             for _ in range(self._num_tasks_sample):
