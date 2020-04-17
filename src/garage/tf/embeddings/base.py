@@ -1,8 +1,40 @@
 """Base class for embedding networks in TensorFlow."""
 import abc
 
+import tensorflow as tf
+
+from garage.misc.tensor_utils import flatten_tensors, unflatten_tensors
+
+
+class EmbeddingSpec:
+    """Specification of an embedding network.
+
+    Args:
+        input_space (akro.Space): The input space of the embedding.
+        latent_space (akro.Space): The latent space of the embedding.
+
+    """
+
+    # pylint: disable=too-few-public-methods
+
+    def __init__(self, input_space, latent_space):
+        self.input_space = input_space
+        self.latent_space = latent_space
+
 
 class Embedding(abc.ABC):
+    """An embedding.
+
+    An embedding is a mapping from a high-dimensional vector to a
+    low-dimensional one. In other words, it represents a concise representation
+    of a high-dimensional space.
+
+    Args:
+        name (str): The name of this embedding.
+        embedding_spec (EmbeddingSpec): The specification of this embedding.
+
+    """
+
     def __init__(self, name, embedding_spec):
         self._name = name
         self._embedding_spec = embedding_spec
@@ -12,31 +44,30 @@ class Embedding(abc.ABC):
 
     @abc.abstractmethod
     def get_latent(self, given):
-        """Get latent sampled from the embedding.
+        """Get latent given input.
 
         Args:
-            given (np.ndarray): Input from the environment.
+            given (np.ndarray): Input to be embedded.
 
         Returns:
-            (np.ndarray): Latent sampled from the policy.
+            (np.ndarray): The embedding of input.
 
         """
 
     @abc.abstractmethod
     def get_latents(self, givens):
-        """Get latents sampled from the embedding.
+        """Get latents given an array of inputs.
 
         Args:
-            givens (np.ndarray): Inputs from the environment.
+            givens (np.ndarray): An array of inputs to be embedded.
 
         Returns:
-            (np.ndarray): Latents sampled from the policy.
+            (np.ndarray): The embeddings of inputs.
 
         """
 
     def reset(self):
         """Reset the embedding."""
-        pass
 
     @property
     def vectorized(self):
@@ -48,22 +79,25 @@ class Embedding(abc.ABC):
                 multiple simultaneous states.
 
         """
-        return False
 
     @property
     def name(self):
+        """str: The name of the embedding."""
         return self._name
 
     @property
     def input_space(self):
+        """akro.Space: The input space of the embedding."""
         return self._embedding_spec.input_space
 
     @property
     def latent_space(self):
+        """akro.Space: The latent space of the embedding."""
         return self._embedding_spec.latent_space
 
     @property
     def embedding_spec(self):
+        """EmbeddingSpec: The specification of the embedding."""
         return self._embedding_spec
 
     @property
@@ -71,27 +105,18 @@ class Embedding(abc.ABC):
         """Whether the embedding uses recurrent network or not.
 
         Returns:
-            bool: Indicating if the policy is recurrent.
+            bool: Indicating if the embedding is recurrent.
 
         """
         return False
-
-    def log_diagnostics(self):
-        """Log extra information per iteration based on the collected paths.
-
-        Args:
-            paths (dict[numpy.ndarray]): Sample paths.
-
-        """
-        pass
 
     @property
     def state_info_keys(self):
         """State info keys.
 
         Returns:
-            List[str]: keys for the information related to the policy's state
-                when taking an action.
+            List[str]: keys for the information related to the embedding's
+                state when taking an action.
 
         """
         return [k for k, _ in self.state_info_specs]
@@ -102,14 +127,10 @@ class Embedding(abc.ABC):
 
         Returns:
             List[str]: keys and shapes for the information related to the
-                policy's state when taking an action.
+                embedding's state when taking an action.
 
         """
         return list()
-
-    def terminate(self):
-        """Clean up operation."""
-        pass
 
     def get_trainable_vars(self):
         """Get trainable variables.
@@ -139,9 +160,7 @@ class Embedding(abc.ABC):
                 variable scope.
 
         """
-        if self._cached_params is None:
-            self._cached_params = self.get_trainable_vars()
-        return self._cached_params
+        return self.get_trainable_vars()
 
     def get_param_shapes(self):
         """Get parameter shapes.
@@ -215,13 +234,20 @@ class Embedding(abc.ABC):
 
 
 class StochasticEmbedding(Embedding):
+    """An stochastic embedding.
+
+    An stochastic embedding maps an input to a distribution, but not a
+    deterministic vector.
+
+    """
+
     @property
     @abc.abstractmethod
     def distribution(self):
         """Distribution."""
-    
+
     @abc.abstractmethod
-    def dist_info_sym(self, in_var, state_info_vars):
+    def dist_info_sym(self, in_var, state_info_vars, name):
         """Symbolic graph of the distribution.
 
         Return the symbolic distribution information about the actions.
@@ -229,11 +255,11 @@ class StochasticEmbedding(Embedding):
         Args:
             in_var (tf.Tensor): symbolic variable for inputs
             state_info_vars (dict): a dictionary whose values should contain
-                information about the state of the policy at the time it
+                information about the state of the embedding at the time it
                 received the observation.
+            name (str): Name for symbolic graph.
 
         """
-        raise NotImplementedError
 
     def dist_info(self, an_input, state_infos):
         """Distribution info.
@@ -243,7 +269,7 @@ class StochasticEmbedding(Embedding):
         Args:
             an_input (tf.Tensor): input values
             state_infos (dict): a dictionary whose values should contain
-                information about the state of the policy at the time it
+                information about the state of the embedding at the time it
                 received the observation
 
         """

@@ -1,13 +1,23 @@
+"""Utilities for embedding."""
 import akro
 import numpy as np
 
 
-def concat_spaces(top, bottom):
-    assert isinstance(top, akro.Box)
-    assert isinstance(bottom, akro.Box)
+def concat_spaces(first, second):
+    """Concatenate two Box space.
 
-    top_lb, top_ub = top.bounds
-    bottom_lb, bottom_ub = bottom.bounds
-    return akro.Box(
-        np.concatenate([top_lb, bottom_lb]),
-        np.concatenate([top_ub, bottom_ub]))
+    Args:
+        first (akro.Box): The first space.
+        second (akro.Box): The second space.
+
+    Returns:
+        akro.Box: The concatenated space.
+
+    """
+    assert isinstance(first, akro.Box)
+    assert isinstance(second, akro.Box)
+
+    first_lb, first_ub = first.bounds
+    second_lb, second_ub = second.bounds
+    return akro.Box(np.concatenate([first_lb, second_lb]),
+                    np.concatenate([first_ub, second_ub]))

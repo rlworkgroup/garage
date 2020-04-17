@@ -3,7 +3,6 @@ import akro
 import numpy as np
 import tensorflow as tf
 
-from garage.experiment.deterministic import get_seed
 from garage.tf.embeddings import StochasticEmbedding
 from garage.tf.models import GaussianMLPModel
 
@@ -15,7 +14,7 @@ class GaussianMLPEmbedding(StochasticEmbedding):
     a gaussian distribution.
 
     Args:
-        embedding (garage.tf.embeddings.embedding_spec.EmbeddingSpec):
+        embedding_spec (garage.tf.embeddings.embedding_spec.EmbeddingSpec):
             Embedding specification.
         name (str): Model name, also the variable scope.
         hidden_sizes (list[int]): Output dimension of dense layer(s) for
@@ -69,7 +68,7 @@ class GaussianMLPEmbedding(StochasticEmbedding):
 
     def __init__(self,
                  embedding_spec,
-                 name="GaussianMLPEmbedding",
+                 name='GaussianMLPEmbedding',
                  hidden_sizes=(32, 32),
                  hidden_nonlinearity=tf.nn.tanh,
                  hidden_w_init=tf.glorot_uniform_initializer(),
@@ -118,8 +117,9 @@ class GaussianMLPEmbedding(StochasticEmbedding):
         self._initialize()
 
     def _initialize(self):
-        embedding_input = tf.compat.v1.placeholder(
-            tf.float32, shape=(None, self.input_dim))
+        embedding_input = tf.compat.v1.placeholder(tf.float32,
+                                                   shape=(None,
+                                                          self.input_dim))
 
         with tf.compat.v1.variable_scope(self.name) as vs:
             self._variable_scope = vs
@@ -161,7 +161,7 @@ class GaussianMLPEmbedding(StochasticEmbedding):
         return dict(mean=mean_var, log_std=log_std_var)
 
     def get_latent(self, given):
-        """Get single latent from this policy for the given input.
+        """Get single latent from this embedding for the given input.
 
         Args:
             given (numpy.ndarray): Input from environment.
@@ -186,11 +186,11 @@ class GaussianMLPEmbedding(StochasticEmbedding):
         log_std = self.latent_space.unflatten(log_std[0])
         return sample, dict(mean=mean, log_std=log_std)
 
-    def get_latents(self, inputs):
-        """Get multiple latents from this policy for the inputs.
+    def get_latents(self, givens):
+        """Get multiple latents from this embedding for the inputs.
 
         Args:
-            inputs (numpy.ndarray): Observations from environment.
+            givens (numpy.ndarray): Observations from environment.
 
         Returns:
             numpy.ndarray: Actions
@@ -203,7 +203,7 @@ class GaussianMLPEmbedding(StochasticEmbedding):
                 distribution.
 
         """
-        flat_inputs = self.input_space.flatten_n(inputs)
+        flat_inputs = self.input_space.flatten_n(givens)
         means, log_stds = self._f_dist(flat_inputs)
         rnd = np.random.normal(size=means.shape)
         samples = rnd * np.exp(log_stds) + means
@@ -212,38 +212,31 @@ class GaussianMLPEmbedding(StochasticEmbedding):
         log_stds = self.latent_space.unflatten_n(log_stds)
         return samples, dict(mean=means, log_std=log_stds)
 
-    def get_params(self):
-        """Get the params, which are the trainable variables.
-
-        Returns:
-            List[tf.Variable]: A list of trainable variables in the current
-                variable scope.
-
-        """
-        return self.get_trainable_vars()
-
     @property
     def distribution(self):
-        """Policy distribution.
+        """Embedding distribution.
 
         Returns:
-            garage.tf.distributions.DiagonalGaussian: Policy distribution.
+            garage.tf.distributions.DiagonalGaussian: embedding distribution.
 
         """
         return self.model.networks['default'].dist
 
     @property
     def input(self):
+        """tf.Tensor: Input to embedding network."""
         return self.model.networks['default'].input
 
     @property
     def latent_mean(self):
-        return self.model.networks['default'].mean    
+        """tf.Tensor: Predicted mean of a Gaussian distribution."""
+        return self.model.networks['default'].mean
 
     @property
     def latent_std_param(self):
+        """tf.Tensor: Predicted std of a Gaussian distribution."""
         return self.model.networks['default'].log_std
-    
+
     def __getstate__(self):
         """Object.__getstate__.
 
