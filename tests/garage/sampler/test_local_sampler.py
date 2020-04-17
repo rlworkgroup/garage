@@ -77,8 +77,9 @@ class TestSampler:
         sampler2.shutdown_worker()
 
 
+@pytest.mark.timeout(30)
 def test_update_envs_env_update():
-    max_path_length = 16
+    max_path_length = 4
     env = TfEnv(PointEnv())
     policy = FixedPolicy(env.spec,
                          scripted_actions=[
@@ -91,17 +92,21 @@ def test_update_envs_env_update():
                             max_path_length=max_path_length,
                             n_workers=n_workers)
     sampler = LocalSampler.from_worker_factory(workers, policy, env)
-    rollouts = sampler.obtain_samples(0,
-                                      161,
-                                      np.asarray(policy.get_param_values()),
-                                      env_update=tasks.sample(n_workers))
-    mean_rewards = []
-    goals = []
-    for rollout in rollouts.split():
-        mean_rewards.append(rollout.rewards.mean())
-        goals.append(rollout.env_infos['task'][0]['goal'])
-    assert np.var(mean_rewards) > 0
-    assert np.var(goals) > 0
+    while True:
+        rollouts = sampler.obtain_samples(0,
+                                          161,
+                                          np.asarray(
+                                              policy.get_param_values()),
+                                          env_update=tasks.sample(n_workers))
+        mean_rewards = []
+        goals = []
+        for rollout in rollouts.split():
+            mean_rewards.append(rollout.rewards.mean())
+            goals.append(rollout.env_infos['task'][0]['goal'])
+        if np.var(mean_rewards) > 0 and np.var(goals) > 0:
+            # We got samples from different workers with different goals, so it
+            # works.
+            break
     with pytest.raises(ValueError):
         sampler.obtain_samples(0,
                                10,
