@@ -13,7 +13,7 @@ from garage.tf.optimizers import FirstOrderOptimizer
 from garage.tf.policies import GaussianMLPPolicy
 
 
-class TestBenchmarkGaussianMLPPolicy:
+class BenchmarkGaussianMLPPolicy:
     '''Compare benchmarks between garage and baselines.'''
 
     def setup_method(self):
@@ -21,7 +21,7 @@ class TestBenchmarkGaussianMLPPolicy:
         self._seed = None
 
     @pytest.mark.huge
-    def test_benchmark_gaussian_mlp_policy(self):
+    def benchmark_gaussian_mlp_policy(self):
         bench_envs = [
             'HalfCheetah-v2', 'Reacher-v2', 'Walker2d-v2', 'Hopper-v2',
             'Swimmer-v2', 'InvertedPendulum-v2', 'InvertedDoublePendulum-v2'

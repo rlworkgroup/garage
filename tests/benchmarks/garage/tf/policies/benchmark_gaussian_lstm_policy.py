@@ -10,10 +10,10 @@ from garage.tf.baselines import GaussianMLPBaseline
 from garage.tf.envs import TfEnv
 from garage.tf.experiment import LocalTFRunner
 from garage.tf.optimizers import FirstOrderOptimizer
-from garage.tf.policies import GaussianMLPPolicy
+from garage.tf.policies import GaussianLSTMPolicy
 
 
-class TestBenchmarkGaussianMLPBaseline:
+class BenchmarkGaussianLSTMPolicy:
     '''Compare benchmarks between garage and baselines.'''
 
     def setup_method(self):
@@ -21,7 +21,7 @@ class TestBenchmarkGaussianMLPBaseline:
         self._seed = None
 
     @pytest.mark.huge
-    def test_benchmark_gaussian_mlp_baseline(self):
+    def benchmark_gaussian_lstm_policy(self):
         bench_envs = [
             'HalfCheetah-v2', 'Reacher-v2', 'Walker2d-v2', 'Hopper-v2',
             'Swimmer-v2', 'InvertedPendulum-v2', 'InvertedDoublePendulum-v2'
@@ -52,9 +52,9 @@ class TestBenchmarkGaussianMLPBaseline:
             env = gym.make(self._env)
             env = TfEnv(normalize(env))
             env.reset()
-            policy = GaussianMLPPolicy(
+            policy = GaussianLSTMPolicy(
                 env_spec=env.spec,
-                hidden_sizes=(32, 32),
+                hidden_dim=32,
                 hidden_nonlinearity=tf.nn.tanh,
                 output_nonlinearity=None,
             )

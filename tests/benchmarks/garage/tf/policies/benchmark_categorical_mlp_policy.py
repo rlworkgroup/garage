@@ -1,3 +1,9 @@
+'''
+This script creates a regression test over garage-PPO and baselines-PPO.
+Unlike garage, baselines doesn't set max_path_length. It keeps steps the action
+until it's done. So we introduced tests.wrappers.AutoStopEnv wrapper to set
+done=True when it reaches max_path_length.
+'''
 import datetime
 import os.path as osp
 import random
@@ -14,97 +20,92 @@ from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import PPO
 from garage.tf.envs import TfEnv
 from garage.tf.experiment import LocalTFRunner
-from garage.tf.policies import CategoricalLSTMPolicy
+from garage.tf.policies import CategoricalMLPPolicy
 from tests.fixtures import snapshot_config
 import tests.helpers as Rh
 
 
-class TestBenchmarkCategoricalLSTMPolicy:
-    '''Benchmark categorical lstm policy'''
+class BenchmarkCategoricalMLPPolicy:
+    '''Compare benchmarks between garage and baselines.'''
 
     @pytest.mark.huge
-    def test_benchmark_categorical_lstm_policy(self):
+    def benchmark_categorical_mlp_policy(self):
+        '''
+        Compare benchmarks between garage and baselines.
+        :return:
+        '''
         categorical_tasks = [
-            'LunarLander-v2', 'Assault-ramDeterministic-v4',
+            'LunarLander-v2', 'CartPole-v1', 'Assault-ramDeterministic-v4',
             'Breakout-ramDeterministic-v4',
             'ChopperCommand-ramDeterministic-v4',
             'Tutankham-ramDeterministic-v4'
         ]
         timestamp = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f')
-        benchmark_dir = './data/local/benchmarks/ppo_categ/%s/' % timestamp
+        benchmark_dir = './data/local/benchmarks/categorical_mlp_policy/{0}/'
+        benchmark_dir = benchmark_dir.format(timestamp)
         result_json = {}
         for task in categorical_tasks:
             env_id = task
             env = gym.make(env_id)
-            # baseline_env = AutoStopEnv(env_name=env_id, max_path_length=100)
-
-            seeds = random.sample(range(100), 3)
+            trials = 3
+            seeds = random.sample(range(100), trials)
 
             task_dir = osp.join(benchmark_dir, env_id)
             plt_file = osp.join(benchmark_dir,
                                 '{}_benchmark.png'.format(env_id))
-            mean_plt_file = osp.join(benchmark_dir,
-                                     '{}_benchmark_mean.png'.format(env_id))
-
-            garage_models_csvs = []
+            relplt_file = osp.join(benchmark_dir,
+                                   '{}_benchmark_mean.png'.format(env_id))
             garage_csvs = []
 
-            for trial in range(3):
+            for trial in range(trials):
                 seed = seeds[trial]
 
                 trial_dir = task_dir + '/trial_%d_seed_%d' % (trial + 1, seed)
                 garage_dir = trial_dir + '/garage'
 
                 with tf.Graph().as_default():
-                    # Run baselines algorithms
-                    # baseline_env.reset()
-                    # baselines_csv = run_baselines(baseline_env, seed,
-                    #                               baselines_dir)
-
                     # Run garage algorithms
                     env.reset()
                     garage_csv = run_garage(env, seed, garage_dir)
-                    env.reset()
-
                 garage_csvs.append(garage_csv)
 
             env.close()
 
-            Rh.plot(b_csvs=garage_models_csvs,
+            Rh.plot(b_csvs=garage_csvs,
                     g_csvs=garage_csvs,
                     g_x='Iteration',
                     g_y='Evaluation/AverageReturn',
-                    g_z='garage',
+                    g_z='Garage',
                     b_x='Iteration',
                     b_y='Evaluation/AverageReturn',
-                    b_z='garage_model',
-                    trials=3,
+                    b_z='Garage',
+                    trials=trials,
                     seeds=seeds,
                     plt_file=plt_file,
                     env_id=env_id,
                     x_label='Iteration',
                     y_label='Evaluation/AverageReturn')
 
-            Rh.relplot(b_csvs=garage_models_csvs,
+            Rh.relplot(b_csvs=garage_csvs,
                        g_csvs=garage_csvs,
                        g_x='Iteration',
                        g_y='Evaluation/AverageReturn',
-                       g_z='garage',
+                       g_z='Garage',
                        b_x='Iteration',
                        b_y='Evaluation/AverageReturn',
-                       b_z='garage_model',
-                       trials=3,
+                       b_z='Garage',
+                       trials=trials,
                        seeds=seeds,
-                       plt_file=mean_plt_file,
+                       plt_file=relplt_file,
                        env_id=env_id,
                        x_label='Iteration',
                        y_label='Evaluation/AverageReturn')
 
             result_json[env_id] = Rh.create_json(
-                b_csvs=garage_models_csvs,
+                b_csvs=garage_csvs,
                 g_csvs=garage_csvs,
                 seeds=seeds,
-                trails=3,
+                trails=trials,
                 g_x='Iteration',
                 g_y='Evaluation/AverageReturn',
                 b_x='Iteration',
@@ -118,7 +119,6 @@ class TestBenchmarkCategoricalLSTMPolicy:
 def run_garage(env, seed, log_dir):
     '''
     Create garage model and training.
-    Replace the ppo with the algorithm you want to run.
     :param env: Environment of the task.
     :param seed: Random seed for the trial.
     :param log_dir: Log dir path.
@@ -132,29 +132,27 @@ def run_garage(env, seed, log_dir):
     with LocalTFRunner(snapshot_config, sess=sess, max_cpus=12) as runner:
         env = TfEnv(normalize(env))
 
-        policy = CategoricalLSTMPolicy(
+        policy = CategoricalMLPPolicy(
             env_spec=env.spec,
-            hidden_dim=32,
             hidden_nonlinearity=tf.nn.tanh,
         )
 
         baseline = LinearFeatureBaseline(env_spec=env.spec)
 
-        algo = PPO(
-            env_spec=env.spec,
-            policy=policy,
-            baseline=baseline,
-            max_path_length=100,
-            discount=0.99,
-            gae_lambda=0.95,
-            lr_clip_range=0.2,
-            policy_ent_coeff=0.0,
-            optimizer_args=dict(
-                batch_size=32,
-                max_epochs=10,
-                tf_optimizer_args=dict(learning_rate=1e-3),
-            ),
-        )
+        algo = PPO(env_spec=env.spec,
+                   policy=policy,
+                   baseline=baseline,
+                   max_path_length=100,
+                   discount=0.99,
+                   gae_lambda=0.95,
+                   lr_clip_range=0.2,
+                   policy_ent_coeff=0.0,
+                   optimizer_args=dict(
+                       batch_size=32,
+                       max_epochs=10,
+                       tf_optimizer_args=dict(learning_rate=1e-3),
+                   ),
+                   name='CategoricalMLPPolicyBenchmark')
 
         # Set up logger since we are not using run_experiment
         tabular_log_file = osp.join(log_dir, 'progress.csv')
@@ -163,7 +161,7 @@ def run_garage(env, seed, log_dir):
         dowel_logger.add_output(dowel.TensorBoardOutput(log_dir))
 
         runner.setup(algo, env, sampler_args=dict(n_envs=12))
-        runner.train(n_epochs=488, batch_size=2048)
+        runner.train(n_epochs=5, batch_size=2048)
         dowel_logger.remove_all()
 
         return tabular_log_file

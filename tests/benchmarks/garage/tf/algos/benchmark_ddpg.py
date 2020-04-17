@@ -54,7 +54,7 @@ params = {
 
 
 @pytest.mark.huge
-def test_benchmark_ddpg():
+def benchmark_ddpg():
     """Compare benchmarks between garage and baselines."""
     # Load Mujoco1M tasks, you can check other benchmarks here
     # https://github.com/openai/baselines/blob/master/baselines/bench/benchmarks.py

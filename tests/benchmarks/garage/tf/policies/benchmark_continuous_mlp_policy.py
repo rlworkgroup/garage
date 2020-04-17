@@ -1,4 +1,3 @@
-"""Benchmark for continuous MLP Q function."""
 import datetime
 import os
 import os.path as osp
@@ -42,19 +41,16 @@ params = {
 num_of_trials = 5
 
 
-class TestBenchmarkContinuousMLPQFunction:
-    # pylint: disable=too-few-public-methods
-    """Benchmark ContinuousMLPQFunction."""
+class BenchmarkContinuousMLPPolicy:
+    '''Benchmark ContinuousMLPPolicy.'''
 
     @pytest.mark.huge
-    def test_benchmark_continuous_mlp_q_function(self):
-        # pylint: disable=no-self-use
-        """Test Continuous MLP QFunction Benchmarking."""
+    def benchmark_continuous_mlp_policy(self):
         mujoco1m = benchmarks.get_benchmark('Mujoco1M')
 
         timestamp = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f')
         benchmark_dir = osp.join(os.getcwd(), 'data', 'local', 'benchmarks',
-                                 'continuous_mlp_q_function', timestamp)
+                                 'continuous_mlp_policy', timestamp)
         for task in mujoco1m['tasks']:
             env_id = task['env_id']
             env = gym.make(env_id)
@@ -64,7 +60,7 @@ class TestBenchmarkContinuousMLPQFunction:
             task_dir = osp.join(benchmark_dir, env_id)
             plt_file = osp.join(
                 benchmark_dir,
-                '{}_benchmark_continuous_mlp_q_function.png'.format(env_id))
+                '{}_benchmark_continuous_mlp_policy.png'.format(env_id))
             garage_csvs = []
 
             for trial in range(num_of_trials):
@@ -97,19 +93,14 @@ class TestBenchmarkContinuousMLPQFunction:
 
 
 def run_garage(env, seed, log_dir):
-    """Create garage model and training.
-
+    '''
+    Create garage model and training.
     Replace the ddpg with the algorithm you want to run.
-
-    Args:
-        env (gym.Env): Environment of the task.
-        seed (int): Random seed for the trial.
-        log_dir (str): Log dir path.
-
-    Returns:
-        str: Log file path.
-
-    """
+    :param env: Environment of the task.
+    :param seed: Random seed for the trial.
+    :param log_dir: Log dir path.
+    :return:
+    '''
     deterministic.set_seed(seed)
     config = tf.compat.v1.ConfigProto(allow_soft_placement=True,
                                       intra_op_parallelism_threads=12,

@@ -43,7 +43,7 @@ hyper_parameters = {
 }
 
 
-class TestBenchmarkPPO:
+class BenchmarkPPO:
     """A regression test over PPO Algorithms.
     (garage-PyTorch-PPO, garage-TensorFlow-PPO, and baselines-PPO2)
 
@@ -59,7 +59,7 @@ class TestBenchmarkPPO:
     # pylint: disable=too-few-public-methods
 
     @pytest.mark.huge
-    def test_benchmark_ppo(self):
+    def benchmark_ppo(self):
         """Compare benchmarks between garage and baselines.
 
         Returns:

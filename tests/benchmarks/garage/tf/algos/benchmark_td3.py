@@ -71,11 +71,11 @@ params = {
 }
 
 
-class TestBenchmarkTD3:
+class BenchmarkTD3:
     """Benchmark Garage TD3 implementation with rlkit's implementation."""
 
     @pytest.mark.huge
-    def test_benchmark_td3(self):
+    def benchmark_td3(self):
         """
         Test garage TD3 benchmarks.
 

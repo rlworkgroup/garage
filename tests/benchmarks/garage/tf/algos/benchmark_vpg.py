@@ -37,7 +37,7 @@ hyper_parameters = {
 }
 
 
-class TestBenchmarkVPG:
+class BenchmarkVPG:
     """A regression test over VPG algorithms.
     (garage-PyTorch-VPG, garage-TensorFlow-VPG)
 
@@ -53,7 +53,7 @@ class TestBenchmarkVPG:
     # pylint: disable=too-few-public-methods
 
     @pytest.mark.huge
-    def test_benchmark_vpg(self):
+    def benchmark_vpg(self):
         """Compare benchmarks between garage and baselines.
 
         Returns:

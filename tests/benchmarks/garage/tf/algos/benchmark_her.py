@@ -66,7 +66,7 @@ BASELINES_PARAMS['rollout_batch_size'] = 1
 
 
 @pytest.mark.huge
-def test_benchmark_her():
+def benchmark_her():
     """Compare benchmarks between garage and baselines."""
 
     mujoco1m = benchmarks.get_benchmark('Fetch1M')

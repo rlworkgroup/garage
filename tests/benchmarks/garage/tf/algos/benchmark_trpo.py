@@ -50,11 +50,11 @@ hyper_parameters = {
 }
 
 
-class TestBenchmarkPPO:  # pylint: disable=too-few-public-methods
+class BenchmarkTRPO:  # pylint: disable=too-few-public-methods
     """Compare benchmarks between garage and baselines."""
 
     @pytest.mark.huge
-    def test_benchmark_trpo(self):  # pylint: disable=no-self-use
+    def benchmark_trpo(self):  # pylint: disable=no-self-use
         """Compare benchmarks between garage and baselines."""
         mujoco1m = benchmarks.get_benchmark('Mujoco1M')
 
