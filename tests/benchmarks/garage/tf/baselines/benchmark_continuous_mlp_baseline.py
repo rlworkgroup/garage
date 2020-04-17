@@ -63,7 +63,6 @@ num_proc = 4 * 2
 num_trials = 3
 
 
-@pytest.mark.huge
 def benchmark_ppo_continuous_mlp_baseline():
     """ Compare benchmarks between CMB and potentially other baselines."""
     mujoco1m = benchmarks.get_benchmark('Mujoco1M')

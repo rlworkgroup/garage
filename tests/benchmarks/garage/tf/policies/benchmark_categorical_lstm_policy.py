@@ -22,7 +22,6 @@ import tests.helpers as Rh
 class BenchmarkCategoricalLSTMPolicy:
     '''Benchmark categorical lstm policy'''
 
-    @pytest.mark.huge
     def benchmark_categorical_lstm_policy(self):
         categorical_tasks = [
             'LunarLander-v2', 'Assault-ramDeterministic-v4',

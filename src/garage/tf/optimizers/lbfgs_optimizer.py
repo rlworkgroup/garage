@@ -31,7 +31,7 @@ class LbfgsOptimizer:
                    target,
                    inputs,
                    extra_inputs=None,
-                   name=None,
+                   name='LbfgsOptimizer',
                    **kwargs):
         """Construct operation graph for the optimizer.
 
@@ -48,7 +48,7 @@ class LbfgsOptimizer:
         """
         self._target = target
         params = target.get_params()
-        with tf.name_scope('LbfgsOptimizer' if name is None else name):
+        with tf.name_scope(name):
 
             def get_opt_output():
                 """Helper function to construct graph.
@@ -97,7 +97,7 @@ class LbfgsOptimizer:
             extra_inputs = list()
         return self._opt_fun['f_loss'](*(list(inputs) + list(extra_inputs)))
 
-    def optimize(self, inputs, extra_inputs=None, name=None):
+    def optimize(self, inputs, extra_inputs=None, name='optimize'):
         """Perform optimization.
 
         Args:
@@ -113,7 +113,7 @@ class LbfgsOptimizer:
             raise Exception(
                 'Use update_opt() to setup the loss function first.')
 
-        with tf.name_scope('optimize' if name is None else name):
+        with tf.name_scope(name):
             f_opt = self._opt_fun['f_opt']
 
             if extra_inputs is None:

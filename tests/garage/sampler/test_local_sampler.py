@@ -100,6 +100,8 @@ def test_update_envs_env_update():
     for rollout in rollouts.split():
         mean_rewards.append(rollout.rewards.mean())
         goals.append(rollout.env_infos['task'][0]['goal'])
+    assert np.var(mean_rewards) >= 0
+    assert np.var(goals) >= 0
     assert len(mean_rewards) == 11
     assert len(goals) == 11
     with pytest.raises(ValueError):

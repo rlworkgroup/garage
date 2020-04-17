@@ -53,7 +53,6 @@ params = {
 }
 
 
-@pytest.mark.huge
 def benchmark_ddpg():
     """Compare benchmarks between garage and baselines."""
     # Load Mujoco1M tasks, you can check other benchmarks here

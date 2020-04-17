@@ -18,11 +18,11 @@ class RecurrentCategorical(Distribution):
     def dim(self):
         return self._dim
 
-    def kl_sym(self, old_dist_info_vars, new_dist_info_vars, name=None):
+    def kl_sym(self, old_dist_info_vars, new_dist_info_vars, name='kl_sym'):
         """
         Compute the symbolic KL divergence of two categorical distributions
         """
-        with tf.name_scope('kl_sym' if name is None else name):
+        with tf.name_scope(name):
             old_prob_var = old_dist_info_vars['prob']
             new_prob_var = new_dist_info_vars['prob']
             # Assume layout is N * T * A
@@ -45,8 +45,8 @@ class RecurrentCategorical(Distribution):
                              x_var,
                              old_dist_info_vars,
                              new_dist_info_vars,
-                             name=None):
-        with tf.name_scope('likelihood_ratio_sym' if name is None else name):
+                             name='likelihood_ratio_sym'):
+        with tf.name_scope(name):
             old_prob_var = old_dist_info_vars['prob']
             new_prob_var = new_dist_info_vars['prob']
             # Assume layout is N * T * A
@@ -61,13 +61,13 @@ class RecurrentCategorical(Distribution):
         probs = dist_info['prob']
         return -np.sum(probs * np.log(probs + TINY), axis=2)
 
-    def entropy_sym(self, dist_info_vars, name=None):
-        with tf.name_scope('entropy_sym' if name is None else name):
+    def entropy_sym(self, dist_info_vars, name='entropy_sym'):
+        with tf.name_scope(name):
             probs = dist_info_vars['prob']
             return -tf.reduce_sum(probs * tf.math.log(probs + TINY), 2)
 
-    def log_likelihood_sym(self, xs, dist_info_vars, name=None):
-        with tf.name_scope('log_likelihood_sym' if name is None else name):
+    def log_likelihood_sym(self, xs, dist_info_vars, name='log_likelihood_sym'):
+        with tf.name_scope(name):
             probs = dist_info_vars['prob']
             # Assume layout is N * T * A
             a_dim = tf.shape(probs)[2]

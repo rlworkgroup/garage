@@ -28,7 +28,6 @@ import tests.helpers as Rh
 class BenchmarkCategoricalMLPPolicy:
     '''Compare benchmarks between garage and baselines.'''
 
-    @pytest.mark.huge
     def benchmark_categorical_mlp_policy(self):
         '''
         Compare benchmarks between garage and baselines.

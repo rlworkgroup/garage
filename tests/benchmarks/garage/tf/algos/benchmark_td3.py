@@ -74,7 +74,6 @@ params = {
 class BenchmarkTD3:
     """Benchmark Garage TD3 implementation with rlkit's implementation."""
 
-    @pytest.mark.huge
     def benchmark_td3(self):
         """
         Test garage TD3 benchmarks.

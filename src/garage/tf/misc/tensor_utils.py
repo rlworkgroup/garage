@@ -52,8 +52,8 @@ def flatten_batch(t, name='flatten_batch'):
     return tf.reshape(t, [-1] + list(t.shape[2:]), name=name)
 
 
-def flatten_batch_dict(d, name=None):
-    with tf.name_scope('flatten_batch_dict' if name is None else name):
+def flatten_batch_dict(d, name='flatten_batch_dict'):
+    with tf.name_scope(name):
         return {k: flatten_batch(v) for k, v in d.items()}
 
 
@@ -66,8 +66,8 @@ def filter_valids(t, valid, name='filter_valids'):
                                 name=name)[1]
 
 
-def filter_valids_dict(d, valid, name=None):
-    with tf.name_scope('filter_valids_dict' if name is None else name):
+def filter_valids_dict(d, valid, name='filter_valids_dict'):
+    with tf.name_scope(name):
         return {k: filter_valids(v, valid) for k, v in d.items()}
 
 
@@ -207,8 +207,8 @@ def compute_advantages(discount,
                        max_len,
                        baselines,
                        rewards,
-                       name=None):
-    with tf.name_scope('compute_advantages' if name is None else name):
+                       name='compute_advantages'):
+    with tf.name_scope(name):
         # Calculate advantages
         #
         # Advantages are a discounted cumulative sum.
@@ -258,24 +258,24 @@ def compute_advantages(discount,
     return advantages
 
 
-def center_advs(advs, axes, eps, offset=0, scale=1, name=None):
+def center_advs(advs, axes, eps, offset=0, scale=1, name='center_adv'):
     """ Normalize the advs tensor """
-    with tf.name_scope('center_adv' if name is None else name):
+    with tf.name_scope(name):
         mean, var = tf.nn.moments(advs, axes=axes)
         advs = tf.nn.batch_normalization(advs, mean, var, offset, scale, eps)
     return advs
 
 
-def positive_advs(advs, eps, name=None):
+def positive_advs(advs, eps, name='positive_adv'):
     """ Make all the values in the advs tensor positive """
-    with tf.name_scope('positive_adv' if name is None else name):
+    with tf.name_scope(name):
         m = tf.reduce_min(advs)
         advs = (advs - m) + eps
     return advs
 
 
-def discounted_returns(discount, max_len, rewards, name=None):
-    with tf.name_scope('discounted_returns' if name is None else name):
+def discounted_returns(discount, max_len, rewards, name='discounted_returns'):
+    with tf.name_scope(name):
         gamma = tf.constant(float(discount),
                             dtype=tf.float32,
                             shape=[max_len, 1, 1])

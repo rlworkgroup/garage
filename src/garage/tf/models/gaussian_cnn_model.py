@@ -93,7 +93,6 @@ class GaussianCNNModel(Model):
 
     """
 
-    # pylint: disable=dangerous-default-value
     def __init__(self,
                  output_dim,
                  filter_dims,
@@ -114,9 +113,9 @@ class GaussianCNNModel(Model):
                  init_std=1.0,
                  min_std=1e-6,
                  max_std=None,
-                 std_filter_dims=[],
-                 std_num_filters=[],
-                 std_strides=[],
+                 std_filter_dims=(),
+                 std_num_filters=(),
+                 std_strides=(),
                  std_padding='SAME',
                  std_hidden_sizes=(32, 32),
                  std_hidden_nonlinearity=tf.nn.tanh,

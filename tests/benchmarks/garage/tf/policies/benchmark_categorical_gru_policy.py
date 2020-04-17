@@ -20,7 +20,6 @@ from tests.fixtures import snapshot_config
 import tests.helpers as Rh
 
 
-@pytest.mark.huge
 def benchmark_categorical_gru_policy():
     """Benchmark categorical gru policy."""
     categorical_tasks = [

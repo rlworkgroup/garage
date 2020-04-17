@@ -62,7 +62,7 @@ class PenaltyLbfgsOptimizer:
                    leq_constraint,
                    inputs,
                    constraint_name='constraint',
-                   name=None,
+                   name='PenaltyLbfgsOptimizer',
                    **kwargs):
         """Construct operation graph for the optimizer.
 
@@ -81,7 +81,7 @@ class PenaltyLbfgsOptimizer:
 
         """
         params = target.get_params()
-        with tf.name_scope('PenaltyLbfgsOptimizer' if name is None else name):
+        with tf.name_scope(name):
             constraint_term, constraint_value = leq_constraint
             penalty_var = tf.compat.v1.placeholder(tf.float32,
                                                    tuple(),
@@ -161,7 +161,7 @@ class PenaltyLbfgsOptimizer:
                 'Use update_opt() to setup the loss function first.')
         return self._opt_fun['f_constraint'](*inputs)
 
-    def optimize(self, inputs, name=None):
+    def optimize(self, inputs, name='optimize'):
         """Perform optimization.
 
         Args:
@@ -176,7 +176,7 @@ class PenaltyLbfgsOptimizer:
             raise Exception(
                 'Use update_opt() to setup the loss function first.')
 
-        with tf.name_scope('optimize' if name is None else name):
+        with tf.name_scope(name):
 
             inputs = tuple(inputs)
 

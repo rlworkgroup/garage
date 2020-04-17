@@ -58,7 +58,6 @@ class BenchmarkPPO:
     """
     # pylint: disable=too-few-public-methods
 
-    @pytest.mark.huge
     def benchmark_ppo(self):
         """Compare benchmarks between garage and baselines.
 

@@ -35,7 +35,6 @@ params = {
 class BenchmarkGaussianCNNBaseline:
     '''Benchmark GaussianCNNBaseline.'''
 
-    @pytest.mark.huge
     def benchmark_gaussian_cnn_baseline(self):
         timestamp = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f')
         benchmark_dir = './data/local/benchmarks/ppo/%s/' % timestamp

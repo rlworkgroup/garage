@@ -65,7 +65,6 @@ params = {
 BASELINES_PARAMS['rollout_batch_size'] = 1
 
 
-@pytest.mark.huge
 def benchmark_her():
     """Compare benchmarks between garage and baselines."""
 

@@ -52,7 +52,6 @@ class BenchmarkVPG:
     """
     # pylint: disable=too-few-public-methods
 
-    @pytest.mark.huge
     def benchmark_vpg(self):
         """Compare benchmarks between garage and baselines.
 

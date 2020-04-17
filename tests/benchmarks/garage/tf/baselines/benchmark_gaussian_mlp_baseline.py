@@ -20,7 +20,6 @@ class BenchmarkGaussianMLPBaseline:
         self._env = None
         self._seed = None
 
-    @pytest.mark.huge
     def benchmark_gaussian_mlp_baseline(self):
         bench_envs = [
             'HalfCheetah-v2', 'Reacher-v2', 'Walker2d-v2', 'Hopper-v2',

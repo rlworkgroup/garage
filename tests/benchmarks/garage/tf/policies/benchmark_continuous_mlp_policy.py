@@ -44,7 +44,6 @@ num_of_trials = 5
 class BenchmarkContinuousMLPPolicy:
     '''Benchmark ContinuousMLPPolicy.'''
 
-    @pytest.mark.huge
     def benchmark_continuous_mlp_policy(self):
         mujoco1m = benchmarks.get_benchmark('Mujoco1M')
 

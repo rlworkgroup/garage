@@ -35,7 +35,6 @@ params = {
 class BenchmarkCategoricalCNNPolicy:
     '''Compare benchmarks between garage and baselines.'''
 
-    @pytest.mark.huge
     def benchmark_categorical_cnn_policy(self):
         timestamp = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f')
         benchmark_dir = './data/local/benchmarks/ppo/%s/' % timestamp
