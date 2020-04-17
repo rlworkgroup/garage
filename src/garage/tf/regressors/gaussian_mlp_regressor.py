@@ -277,11 +277,29 @@ class GaussianMLPRegressor(StochasticRegressor):
         return self.model.networks[name].dist.log_likelihood_sym(
             y_var, dict(mean=means_var, log_std=log_stds_var))
 
-    def dist_info_sym(self, x_var, name=None):
+    @property
+    def recurrent(self):
+        """bool: If this module has a hidden state."""
+        return False
+
+    @property
+    def vectorized(self):
+        """bool: If this module supports vectorization input."""
+        return True
+
+    @property
+    def distribution(self):
+        """garage.tf.distributions.DiagonalGaussian: Distribution."""
+        return self.model.networks['default'].dist
+
+    def dist_info_sym(self, input_var, state_info_vars=None, name='default'):
         """Create a symbolic graph of the distribution parameters.
 
         Args:
-            x_var (tf.Tensor): tf.Tensor of the input data.
+            input_var (tf.Tensor): tf.Tensor of the input data.
+            state_info_vars (dict): a dictionary whose values should contain
+                information about the state of the policy at the time it
+                received the input.
             name (str): Name of the new graph.
 
         Return:
@@ -290,22 +308,12 @@ class GaussianMLPRegressor(StochasticRegressor):
 
         """
         with tf.compat.v1.variable_scope(self._variable_scope):
-            self.model.build(x_var, name=name)
+            self.model.build(input_var, name=name)
 
         means_var = self.model.networks[name].means
         log_stds_var = self.model.networks[name].log_stds
 
         return dict(mean=means_var, log_std=log_stds_var)
-
-    def get_params_internal(self):
-        """Get the params, which are the trainable variables.
-
-        Returns:
-            List[tf.Variable]: A list of trainable variables in the current
-            variable scope.
-
-        """
-        return self._variable_scope.trainable_variables()
 
     def __getstate__(self):
         """Object.__getstate__.

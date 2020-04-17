@@ -6,15 +6,15 @@ import numpy as np
 import pytest
 import tensorflow as tf
 
-from garage.tf.embeddings import EmbeddingSpec, GaussianMLPEmbedding
-from garage.tf.embeddings.utils import concat_spaces
+from garage import ModuleInOutSpec
+from garage.tf.embeddings import GaussianMLPEncoder
 from garage.tf.envs import TfEnv
 from tests.fixtures import TfGraphTestCase
 from tests.fixtures.envs.dummy import DummyBoxEnv
 from tests.fixtures.models import SimpleGaussianMLPModel
 
 
-class TestGaussianMLPEmbedding(TfGraphTestCase):
+class TestGaussianMLPEncoder(TfGraphTestCase):
 
     @pytest.mark.parametrize('obs_dim, embedding_dim', [
         ((1, ), (1, )),
@@ -29,17 +29,17 @@ class TestGaussianMLPEmbedding(TfGraphTestCase):
         mock_normal.return_value = 0.5
         env = TfEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=embedding_dim))
         with mock.patch(('garage.tf.embeddings.'
-                         'gaussian_mlp_embedding.GaussianMLPModel'),
+                         'gaussian_mlp_encoder.GaussianMLPModel'),
                         new=SimpleGaussianMLPModel):
-            embedding_spec = EmbeddingSpec(
+            embedding_spec = ModuleInOutSpec(
                 input_space=env.spec.observation_space,
-                latent_space=env.spec.action_space)
-            embedding = GaussianMLPEmbedding(embedding_spec)
+                output_space=env.spec.action_space)
+            embedding = GaussianMLPEncoder(embedding_spec)
 
         env.reset()
         obs, _, _, _ = env.step(1)
 
-        latent, prob = embedding.get_latent(obs)
+        latent, prob = embedding.forward(obs)
 
         expected_embedding = np.full(embedding_dim, 0.75)
         expected_mean = np.full(embedding_dim, 0.5)
@@ -49,14 +49,6 @@ class TestGaussianMLPEmbedding(TfGraphTestCase):
         assert np.array_equal(latent, expected_embedding)
         assert np.array_equal(prob['mean'], expected_mean)
         assert np.array_equal(prob['log_std'], expected_log_std)
-
-        latents, probs = embedding.get_latents([obs, obs, obs])
-        for latent, mean, log_std in zip(latents, probs['mean'],
-                                         probs['log_std']):
-            assert env.action_space.contains(latent)
-            assert np.array_equal(latent, expected_embedding)
-            assert np.array_equal(mean, expected_mean)
-            assert np.array_equal(log_std, expected_log_std)
 
     @pytest.mark.parametrize('obs_dim, embedding_dim', [
         ((1, ), (1, )),
@@ -69,12 +61,12 @@ class TestGaussianMLPEmbedding(TfGraphTestCase):
     def test_dist_info_sym(self, obs_dim, embedding_dim):
         env = TfEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=embedding_dim))
         with mock.patch(('garage.tf.embeddings.'
-                         'gaussian_mlp_embedding.GaussianMLPModel'),
+                         'gaussian_mlp_encoder.GaussianMLPModel'),
                         new=SimpleGaussianMLPModel):
-            embedding_spec = EmbeddingSpec(
+            embedding_spec = ModuleInOutSpec(
                 input_space=env.spec.observation_space,
-                latent_space=env.spec.action_space)
-            embedding = GaussianMLPEmbedding(embedding_spec)
+                output_space=env.spec.action_space)
+            embedding = GaussianMLPEncoder(embedding_spec)
 
         env.reset()
         obs, _, _, _ = env.step(1)
@@ -104,19 +96,19 @@ class TestGaussianMLPEmbedding(TfGraphTestCase):
     def test_is_pickleable(self, obs_dim, embedding_dim):
         env = TfEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=embedding_dim))
         with mock.patch(('garage.tf.embeddings.'
-                         'gaussian_mlp_embedding.GaussianMLPModel'),
+                         'gaussian_mlp_encoder.GaussianMLPModel'),
                         new=SimpleGaussianMLPModel):
-            embedding_spec = EmbeddingSpec(
+            embedding_spec = ModuleInOutSpec(
                 input_space=env.spec.observation_space,
-                latent_space=env.spec.action_space)
-            embedding = GaussianMLPEmbedding(embedding_spec)
+                output_space=env.spec.action_space)
+            embedding = GaussianMLPEncoder(embedding_spec)
 
         env.reset()
         obs, _, _, _ = env.step(1)
         obs_dim = env.spec.observation_space.flat_dim
 
-        with tf.compat.v1.variable_scope(
-                'GaussianMLPEmbedding/GaussianMLPModel', reuse=True):
+        with tf.compat.v1.variable_scope('GaussianMLPEncoder/GaussianMLPModel',
+                                         reuse=True):
             return_var = tf.compat.v1.get_variable('return_var')
         # assign it to all one
         return_var.load(tf.ones_like(return_var).eval())
@@ -132,23 +124,13 @@ class TestGaussianMLPEmbedding(TfGraphTestCase):
                 feed_dict={embedding_pickled.model.input: [obs.flatten()]})
             assert np.array_equal(output1, output2)
 
-    def test_utils(self):
-        first_space = akro.Box(low=np.array([-1, -1]), high=np.array([1, 1]))
-        second_space = akro.Box(low=np.array([-2, -2]), high=np.array([2, 2]))
-        concat_space = concat_spaces(first_space, second_space)
-        low, high = concat_space.bounds
-        np.testing.assert_equal(low, (-1, -1, -2, -2))
-        np.testing.assert_equal(high, (1, 1, 2, 2))
-
     def test_auxiliary(self):
         input_space = akro.Box(np.array([-1, -1]), np.array([1, 1]))
         latent_space = akro.Box(np.array([-2, -2, -2]), np.array([2, 2, 2]))
-        embedding_spec = EmbeddingSpec(input_space=input_space,
-                                       latent_space=latent_space)
-        embedding = GaussianMLPEmbedding(embedding_spec,
-                                         hidden_sizes=[32, 32, 32])
-
-        assert embedding.vectorized
+        embedding_spec = ModuleInOutSpec(input_space=input_space,
+                                         output_space=latent_space)
+        embedding = GaussianMLPEncoder(embedding_spec,
+                                       hidden_sizes=[32, 32, 32])
 
         # 9 Layers: (3 hidden + 1 output) * (1 weight + 1 bias) + 1 log_std
         assert len(embedding.get_params()) == 9
@@ -165,11 +147,8 @@ class TestGaussianMLPEmbedding(TfGraphTestCase):
 
         # To increase coverage in embeddings/base.py
         embedding.reset()
-        assert embedding.embedding_spec == embedding_spec
-        assert not embedding.recurrent
-
-        assert embedding.state_info_specs == []
-        assert embedding.state_info_keys == []
+        assert embedding.input_dim == embedding_spec.input_space.flat_dim
+        assert embedding.output_dim == embedding_spec.output_space.flat_dim
 
         var_shapes = [
             (2, 32),

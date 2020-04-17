@@ -1,21 +1,20 @@
-"""GaussianMLPEmbedding."""
-import akro
+"""GaussianMLPEncoder."""
 import numpy as np
 import tensorflow as tf
 
-from garage.tf.embeddings import StochasticEmbedding
-from garage.tf.models import GaussianMLPModel
+from garage.np.embeddings import StochasticEncoder
+from garage.tf.models import GaussianMLPModel, StochasticModule
 
 
-class GaussianMLPEmbedding(StochasticEmbedding):
-    """GaussianMLPEmbedding with GaussianMLPModel.
+class GaussianMLPEncoder(StochasticEncoder, StochasticModule):
+    """GaussianMLPEncoder with GaussianMLPModel.
 
     An embedding that contains a MLP to make prediction based on
     a gaussian distribution.
 
     Args:
-        embedding_spec (garage.tf.embeddings.embedding_spec.EmbeddingSpec):
-            Embedding specification.
+        embedding_spec (garage.ModuleInOutSpec):
+            Encoder specification.
         name (str): Model name, also the variable scope.
         hidden_sizes (list[int]): Output dimension of dense layer(s) for
             the MLP for mean. For example, (32, 32) means the MLP consists
@@ -68,7 +67,7 @@ class GaussianMLPEmbedding(StochasticEmbedding):
 
     def __init__(self,
                  embedding_spec,
-                 name='GaussianMLPEmbedding',
+                 name='GaussianMLPEncoder',
                  hidden_sizes=(32, 32),
                  hidden_nonlinearity=tf.nn.tanh,
                  hidden_w_init=tf.glorot_uniform_initializer(),
@@ -87,13 +86,13 @@ class GaussianMLPEmbedding(StochasticEmbedding):
                  std_output_nonlinearity=None,
                  std_parameterization='exp',
                  layer_normalization=False):
-        assert isinstance(embedding_spec.latent_space, akro.Box)
-        super().__init__(name, embedding_spec)
-        self.latent_dim = embedding_spec.latent_space.flat_dim
-        self.input_dim = embedding_spec.input_space.flat_dim
+        super().__init__(name)
+        self._embedding_spec = embedding_spec
+        self._latent_dim = embedding_spec.output_space.flat_dim
+        self._input_dim = embedding_spec.input_space.flat_dim
 
         self.model = GaussianMLPModel(
-            output_dim=self.latent_dim,
+            output_dim=self._latent_dim,
             hidden_sizes=hidden_sizes,
             hidden_nonlinearity=hidden_nonlinearity,
             hidden_w_init=hidden_w_init,
@@ -119,9 +118,9 @@ class GaussianMLPEmbedding(StochasticEmbedding):
     def _initialize(self):
         embedding_input = tf.compat.v1.placeholder(tf.float32,
                                                    shape=(None,
-                                                          self.input_dim))
+                                                          self._input_dim))
 
-        with tf.compat.v1.variable_scope(self.name) as vs:
+        with tf.compat.v1.variable_scope(self._name) as vs:
             self._variable_scope = vs
             self.model.build(embedding_input)
 
@@ -132,23 +131,13 @@ class GaussianMLPEmbedding(StochasticEmbedding):
             ],
             feed_list=[self.model.networks['default'].input])
 
-    @property
-    def vectorized(self):
-        """Vectorized or not.
-
-        Returns:
-            Bool: True if primitive supports vectorized operations.
-
-        """
-        return True
-
-    def dist_info_sym(self, in_var, state_info_vars=None, name='default'):
+    def dist_info_sym(self, input_var, state_info_vars=None, name='default'):
         """Build a symbolic graph of the distribution parameters.
 
         Args:
-            in_var (tf.Tensor): Tensor input for symbolic graph.
+            input_var (tf.Tensor): Tensor input for symbolic graph.
             state_info_vars (dict): Extra state information, e.g.
-                previous action.
+                previous embedding.
             name (str): Name for symbolic graph.
 
         Returns:
@@ -157,60 +146,55 @@ class GaussianMLPEmbedding(StochasticEmbedding):
 
         """
         with tf.compat.v1.variable_scope(self._variable_scope):
-            mean_var, log_std_var, _, _ = self.model.build(in_var, name=name)
+            mean_var, log_std_var, _, _ = self.model.build(input_var,
+                                                           name=name)
         return dict(mean=mean_var, log_std=log_std_var)
 
-    def get_latent(self, given):
-        """Get single latent from this embedding for the given input.
+    @property
+    def input_dim(self):
+        """int: Dimension of the encoder input."""
+        return self._embedding_spec.input_space.flat_dim
+
+    @property
+    def output_dim(self):
+        """int: Dimension of the encoder output (embedding)."""
+        return self._embedding_spec.output_space.flat_dim
+
+    @property
+    def recurrent(self):
+        """bool: If this module has a hidden state."""
+        return False
+
+    @property
+    def vectorized(self):
+        """bool: If this module supports vectorization input."""
+        return True
+
+    def forward(self, input_value):
+        """Get an sample of embedding for the given input.
 
         Args:
-            given (numpy.ndarray): Input from environment.
+            input_value (numpy.ndarray): Tensor to encode.
 
         Returns:
-            numpy.ndarray: Latent samples.
-            dict: Predicted action and agent information.
+            numpy.ndarray: An embedding sampled from embedding distribution.
+            dict: Embedding distribution information.
 
         Note:
-            It returns an action and a dict, with keys
+            It returns an embedding and a dict, with keys
             - mean (numpy.ndarray): Mean of the distribution.
             - log_std (numpy.ndarray): Log standard deviation of the
                 distribution.
 
         """
-        flat_input = self.input_space.flatten(given)
+        flat_input = self._embedding_spec.input_space.flatten(input_value)
         mean, log_std = self._f_dist([flat_input])
         rnd = np.random.normal(size=mean.shape)
         sample = rnd * np.exp(log_std) + mean
-        sample = self.latent_space.unflatten(sample[0])
-        mean = self.latent_space.unflatten(mean[0])
-        log_std = self.latent_space.unflatten(log_std[0])
+        sample = self._embedding_spec.output_space.unflatten(sample[0])
+        mean = self._embedding_spec.output_space.unflatten(mean[0])
+        log_std = self._embedding_spec.output_space.unflatten(log_std[0])
         return sample, dict(mean=mean, log_std=log_std)
-
-    def get_latents(self, givens):
-        """Get multiple latents from this embedding for the inputs.
-
-        Args:
-            givens (numpy.ndarray): Observations from environment.
-
-        Returns:
-            numpy.ndarray: Actions
-            dict: Predicted action and agent information.
-
-        Note:
-            It returns actions and a dict, with keys
-            - mean (numpy.ndarray): Means of the distribution.
-            - log_std (numpy.ndarray): Log standard deviations of the
-                distribution.
-
-        """
-        flat_inputs = self.input_space.flatten_n(givens)
-        means, log_stds = self._f_dist(flat_inputs)
-        rnd = np.random.normal(size=means.shape)
-        samples = rnd * np.exp(log_stds) + means
-        samples = self.latent_space.unflatten_n(samples)
-        means = self.latent_space.unflatten_n(means)
-        log_stds = self.latent_space.unflatten_n(log_stds)
-        return samples, dict(mean=means, log_std=log_stds)
 
     @property
     def distribution(self):
@@ -224,7 +208,7 @@ class GaussianMLPEmbedding(StochasticEmbedding):
 
     @property
     def input(self):
-        """tf.Tensor: Input to embedding network."""
+        """tf.Tensor: Input to encoder network."""
         return self.model.networks['default'].input
 
     @property

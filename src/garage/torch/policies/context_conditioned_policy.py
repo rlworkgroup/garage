@@ -26,7 +26,7 @@ class ContextConditionedPolicy(nn.Module):
 
     Args:
         latent_dim (int): Latent context variable dimension.
-        context_encoder (garage.torch.embeddings): Recurrent or
+        context_encoder (garage.torch.embeddings.ContextEncoder): Recurrent or
             permutation-invariant context encoder.
         policy (garage.torch.policies.Policy): Policy used to train the
             network.
@@ -79,7 +79,7 @@ class ContextConditionedPolicy(nn.Module):
         # reset the context collected so far
         self._context = None
         # reset any hidden state in the encoder network (relevant for RNN)
-        self._context_encoder.reset(num_tasks)
+        self._context_encoder.reset()
 
     def sample_from_belief(self):
         """Sample z using distributions from current means and variances."""
@@ -131,7 +131,7 @@ class ContextConditionedPolicy(nn.Module):
                 C is the combined size of observation, action, and reward.
 
         """
-        params = self._context_encoder(context)
+        params = self._context_encoder.forward(context)
         params = params.view(context.size(0), -1,
                              self._context_encoder.output_dim)
         # with probabilistic z, predict mean and variance of q(z | c)

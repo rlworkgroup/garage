@@ -527,7 +527,7 @@ class TimeStep(
                                agent_info)
 
 
-class InOutSpec:
+class ModuleInOutSpec:
     """Describes the input and output spaces of a primitive or module.
 
     Args:

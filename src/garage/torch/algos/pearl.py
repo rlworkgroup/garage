@@ -10,7 +10,7 @@ from dowel import logger
 import numpy as np
 import torch
 
-from garage import InOutSpec, TimeStep
+from garage import ModuleInOutSpec, TimeStep
 from garage.envs import EnvSpec
 from garage.experiment import MetaEvaluator
 from garage.np.algos.meta_rl_algorithm import MetaRLAlgorithm
@@ -548,6 +548,7 @@ class PEARL(MetaRLAlgorithm):
         Returns:
             garage.Policy: The policy used to obtain samples that are later
                 used for meta-RL adaptation.
+
         """
         return self._policy
 
@@ -579,6 +580,7 @@ class PEARL(MetaRLAlgorithm):
 
         Args:
             device (str): ID of GPU or CPU.
+
         """
         if device is None:
             device = tu.global_device()
@@ -619,7 +621,7 @@ class PEARL(MetaRLAlgorithm):
             module (str): Module to get environment specs for.
 
         Returns:
-            garage.envs.InOutSpec: Module environment specs with latent
+            garage.envs.ModuleInOutSpec: Module environment specs with latent
                 dimension.
 
         """
@@ -637,7 +639,7 @@ class PEARL(MetaRLAlgorithm):
                              shape=(out_dim, ),
                              dtype=np.float32)
         if module == 'encoder':
-            spec = InOutSpec(in_space, out_space)
+            spec = ModuleInOutSpec(in_space, out_space)
         elif module == 'vf':
             spec = EnvSpec(in_space, out_space)
 

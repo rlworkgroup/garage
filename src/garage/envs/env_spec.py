@@ -1,9 +1,9 @@
 """EnvSpec class."""
 
-from garage import InOutSpec
+from garage import ModuleInOutSpec
 
 
-class EnvSpec(InOutSpec):
+class EnvSpec(ModuleInOutSpec):
     """Describes the action and observation spaces of an environment.
 
     Args:

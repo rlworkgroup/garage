@@ -163,15 +163,15 @@ class ContinuousMLPRegressor(Regressor):
 
         return y_hat
 
-    def get_params_internal(self):
-        """Get the params, which are the trainable variables.
+    @property
+    def recurrent(self):
+        """bool: If this module has a hidden state."""
+        return False
 
-        Returns:
-            List[tf.Variable]: A list of trainable variables in the current
-            variable scope.
-
-        """
-        return self._variable_scope.trainable_variables()
+    @property
+    def vectorized(self):
+        """bool: If this module supports vectorization input."""
+        return True
 
     def __getstate__(self):
         """Object.__getstate__.
