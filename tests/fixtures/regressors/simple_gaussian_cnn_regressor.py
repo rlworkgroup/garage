@@ -27,6 +27,44 @@ class SimpleGaussianCNNRegressor(StochasticRegressor):
         self._ys = None
         self._initialize()
 
+    @property
+    def recurrent(self):
+        """bool: If this module has a hidden state."""
+        return False
+
+    @property
+    def vectorized(self):
+        """bool: If this module supports vectorization input."""
+        return True
+
+    @property
+    def distribution(self):
+        """garage.tf.distributions.DiagonalGaussian: Distribution."""
+        return self.model.networks['default'].dist
+
+    def dist_info_sym(self, input_var, state_info_vars=None, name='default'):
+        """Create a symbolic graph of the distribution parameters.
+
+        Args:
+            input_var (tf.Tensor): tf.Tensor of the input data.
+            state_info_vars (dict): a dictionary whose values should contain
+                information about the state of the policy at the time it
+                received the input.
+            name (str): Name of the new graph.
+
+        Return:
+            dict[tf.Tensor]: Outputs of the symbolic distribution parameter
+                graph.
+
+        """
+        with tf.compat.v1.variable_scope(self._variable_scope):
+            self.model.build(input_var, name=name)
+
+        means_var = self.model.networks[name].means
+        log_stds_var = self.model.networks[name].log_stds
+
+        return dict(mean=means_var, log_std=log_stds_var)
+
     def _initialize(self):
         """Initialize graph."""
         input_ph = tf.compat.v1.placeholder(tf.float32,
