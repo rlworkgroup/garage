@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 import tensorflow as tf
 
-from garage import ModuleInOutSpec
+from garage import InOutSpec
 from garage.tf.embeddings import GaussianMLPEncoder
 from garage.tf.envs import TfEnv
 from tests.fixtures import TfGraphTestCase
@@ -31,9 +31,8 @@ class TestGaussianMLPEncoder(TfGraphTestCase):
         with mock.patch(('garage.tf.embeddings.'
                          'gaussian_mlp_encoder.GaussianMLPModel'),
                         new=SimpleGaussianMLPModel):
-            embedding_spec = ModuleInOutSpec(
-                input_space=env.spec.observation_space,
-                output_space=env.spec.action_space)
+            embedding_spec = InOutSpec(input_space=env.spec.observation_space,
+                                       output_space=env.spec.action_space)
             embedding = GaussianMLPEncoder(embedding_spec)
 
         env.reset()
@@ -63,9 +62,8 @@ class TestGaussianMLPEncoder(TfGraphTestCase):
         with mock.patch(('garage.tf.embeddings.'
                          'gaussian_mlp_encoder.GaussianMLPModel'),
                         new=SimpleGaussianMLPModel):
-            embedding_spec = ModuleInOutSpec(
-                input_space=env.spec.observation_space,
-                output_space=env.spec.action_space)
+            embedding_spec = InOutSpec(input_space=env.spec.observation_space,
+                                       output_space=env.spec.action_space)
             embedding = GaussianMLPEncoder(embedding_spec)
 
         env.reset()
@@ -98,9 +96,8 @@ class TestGaussianMLPEncoder(TfGraphTestCase):
         with mock.patch(('garage.tf.embeddings.'
                          'gaussian_mlp_encoder.GaussianMLPModel'),
                         new=SimpleGaussianMLPModel):
-            embedding_spec = ModuleInOutSpec(
-                input_space=env.spec.observation_space,
-                output_space=env.spec.action_space)
+            embedding_spec = InOutSpec(input_space=env.spec.observation_space,
+                                       output_space=env.spec.action_space)
             embedding = GaussianMLPEncoder(embedding_spec)
 
         env.reset()
@@ -127,8 +124,8 @@ class TestGaussianMLPEncoder(TfGraphTestCase):
     def test_auxiliary(self):
         input_space = akro.Box(np.array([-1, -1]), np.array([1, 1]))
         latent_space = akro.Box(np.array([-2, -2, -2]), np.array([2, 2, 2]))
-        embedding_spec = ModuleInOutSpec(input_space=input_space,
-                                         output_space=latent_space)
+        embedding_spec = InOutSpec(input_space=input_space,
+                                   output_space=latent_space)
         embedding = GaussianMLPEncoder(embedding_spec,
                                        hidden_sizes=[32, 32, 32])
 

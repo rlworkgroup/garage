@@ -10,7 +10,7 @@ from dowel import logger
 import numpy as np
 import torch
 
-from garage import ModuleInOutSpec, TimeStep
+from garage import InOutSpec, TimeStep
 from garage.envs import EnvSpec
 from garage.experiment import MetaEvaluator
 from garage.np.algos.meta_rl_algorithm import MetaRLAlgorithm
@@ -621,7 +621,7 @@ class PEARL(MetaRLAlgorithm):
             module (str): Module to get environment specs for.
 
         Returns:
-            garage.envs.ModuleInOutSpec: Module environment specs with latent
+            garage.envs.InOutSpec: Module environment specs with latent
                 dimension.
 
         """
@@ -639,7 +639,7 @@ class PEARL(MetaRLAlgorithm):
                              shape=(out_dim, ),
                              dtype=np.float32)
         if module == 'encoder':
-            spec = ModuleInOutSpec(in_space, out_space)
+            spec = InOutSpec(in_space, out_space)
         elif module == 'vf':
             spec = EnvSpec(in_space, out_space)
 

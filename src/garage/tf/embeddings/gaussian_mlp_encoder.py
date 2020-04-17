@@ -13,7 +13,7 @@ class GaussianMLPEncoder(StochasticEncoder, StochasticModule):
     a gaussian distribution.
 
     Args:
-        embedding_spec (garage.ModuleInOutSpec):
+        embedding_spec (garage.InOutSpec):
             Encoder specification.
         name (str): Model name, also the variable scope.
         hidden_sizes (list[int]): Output dimension of dense layer(s) for
