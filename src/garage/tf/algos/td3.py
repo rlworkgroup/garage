@@ -80,7 +80,7 @@ class TD3(DDPG):
                  clip_return=np.inf,
                  discount=0.99,
                  max_action=None,
-                 name=None,
+                 name='TD3',
                  steps_per_epoch=20,
                  max_path_length=None,
                  n_train_steps=50,
