@@ -1,4 +1,6 @@
 """Worker factory used by Samplers to construct Workers."""
+import copy
+
 import psutil
 
 from garage.sampler.worker import DefaultWorker
@@ -86,7 +88,7 @@ class WorkerFactory:
             return [preprocess(obj) for obj in objs]
         else:
             obj = preprocess(objs)
-            return [obj for _ in range(self.n_workers)]
+            return [copy.deepcopy(obj) for _ in range(self.n_workers)]
 
     def __call__(self, worker_number):
         """Construct a worker given its number.
