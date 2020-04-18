@@ -6,8 +6,7 @@ from garage.tf.models import MLPModel
 
 
 class NormalizedInputMLPModel(MLPModel):
-    """
-    NormalizedInputMLPModel based on garage.tf.models.Model class.
+    """NormalizedInputMLPModel based on garage.tf.models.Model class.
 
     This class normalized the inputs and pass the normalized input to a
     MLP model, which can be used to perform linear regression to the outputs.
@@ -38,6 +37,7 @@ class NormalizedInputMLPModel(MLPModel):
             of output dense layer(s). The function should return a
             tf.Tensor.
         layer_normalization (bool): Bool for using layer normalization or not.
+
     """
 
     def __init__(self,
@@ -46,30 +46,46 @@ class NormalizedInputMLPModel(MLPModel):
                  name='NormalizedInputMLPModel',
                  hidden_sizes=(32, 32),
                  hidden_nonlinearity=tf.nn.relu,
-                 hidden_w_init=tf.glorot_uniform_initializer(),
+                 hidden_w_init=tf.initializers.glorot_uniform(),
                  hidden_b_init=tf.zeros_initializer(),
                  output_nonlinearity=None,
-                 output_w_init=tf.glorot_uniform_initializer(),
+                 output_w_init=tf.initializers.glorot_uniform(),
                  output_b_init=tf.zeros_initializer(),
                  layer_normalization=False):
-        super().__init__(
-            output_dim=output_dim,
-            name=name,
-            hidden_sizes=hidden_sizes,
-            hidden_nonlinearity=hidden_nonlinearity,
-            hidden_w_init=hidden_w_init,
-            hidden_b_init=hidden_b_init,
-            output_nonlinearity=output_nonlinearity,
-            output_w_init=output_w_init,
-            output_b_init=output_b_init,
-            layer_normalization=layer_normalization)
+        super().__init__(output_dim=output_dim,
+                         name=name,
+                         hidden_sizes=hidden_sizes,
+                         hidden_nonlinearity=hidden_nonlinearity,
+                         hidden_w_init=hidden_w_init,
+                         hidden_b_init=hidden_b_init,
+                         output_nonlinearity=output_nonlinearity,
+                         output_w_init=output_w_init,
+                         output_b_init=output_b_init,
+                         layer_normalization=layer_normalization)
         self._input_shape = input_shape
 
     def network_output_spec(self):
-        """Network output spec."""
+        """Network output spec.
+
+        Return:
+            list[str]: List of key(str) for the network outputs.
+
+        """
         return ['y_hat', 'x_mean', 'x_std']
 
     def _build(self, state_input, name=None):
+        """Build model given input placeholder(s).
+
+        Args:
+            state_input (tf.Tensor): Tensor input for state.
+            name (str): Inner model name, also the variable scope of the
+                inner model, if exist. One example is
+                garage.tf.models.Sequential.
+
+        Return:
+            tf.Tensor: Tensor output of the model.
+
+        """
         with tf.compat.v1.variable_scope('normalized_vars'):
             x_mean_var = tf.compat.v1.get_variable(
                 name='x_mean',

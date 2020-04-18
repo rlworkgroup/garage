@@ -48,7 +48,7 @@ tasks = benchmarks.get_benchmark('Mujoco1M')['tasks']
 
 
 @pytest.mark.benchmark
-def test_auto_benchmark_trpo_garage_tf():
+def auto_benchmark_trpo_garage_tf():
     """Create garage TensorFlow TRPO model and training.
 
     Training over different environments and seeds.
@@ -106,7 +106,7 @@ def test_auto_benchmark_trpo_garage_tf():
 
 
 @pytest.mark.benchmark
-def test_auto_benchmark_trpo_baselines():
+def auto_benchmark_trpo_baselines():
     """Create TRPO baselines model and training.
 
     Training over different environments and seeds.
@@ -165,7 +165,7 @@ def test_auto_benchmark_trpo_baselines():
 
 
 @pytest.mark.benchmark
-def test_auto_benchmark_trpo_garage_pytorch():
+def auto_benchmark_trpo_garage_pytorch():
     """Create garage PyTorch TRPO model and training.
 
     Training over different environments and seeds.

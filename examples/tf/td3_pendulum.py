@@ -71,8 +71,8 @@ def run_task(snapshot_config, *_):
                   buffer_batch_size=100,
                   min_buffer_size=1e4,
                   exploration_strategy=action_noise,
-                  policy_optimizer=tf.train.AdamOptimizer,
-                  qf_optimizer=tf.train.AdamOptimizer)
+                  policy_optimizer=tf.compat.v1.train.AdamOptimizer,
+                  qf_optimizer=tf.compat.v1.train.AdamOptimizer)
 
         runner.setup(td3, env)
         runner.train(n_epochs=500, batch_size=250)

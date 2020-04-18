@@ -64,6 +64,7 @@ class DiscreteCNNQFunction(QFunction):
             a tf.Tensor.
         dueling (bool): Bool for using dueling network or not.
         layer_normalization (bool): Bool for using layer normalization or not.
+
     """
 
     def __init__(self,
@@ -71,7 +72,7 @@ class DiscreteCNNQFunction(QFunction):
                  filter_dims,
                  num_filters,
                  strides,
-                 hidden_sizes=[256],
+                 hidden_sizes=(256, ),
                  name=None,
                  padding='SAME',
                  max_pooling=False,
@@ -79,10 +80,10 @@ class DiscreteCNNQFunction(QFunction):
                  pool_shapes=(2, 2),
                  cnn_hidden_nonlinearity=tf.nn.relu,
                  hidden_nonlinearity=tf.nn.relu,
-                 hidden_w_init=tf.glorot_uniform_initializer(),
+                 hidden_w_init=tf.initializers.glorot_uniform(),
                  hidden_b_init=tf.zeros_initializer(),
                  output_nonlinearity=None,
-                 output_w_init=tf.glorot_uniform_initializer(),
+                 output_w_init=tf.initializers.glorot_uniform(),
                  output_b_init=tf.zeros_initializer(),
                  dueling=False,
                  layer_normalization=False):
@@ -152,6 +153,7 @@ class DiscreteCNNQFunction(QFunction):
         self._initialize()
 
     def _initialize(self):
+        """Initialize QFunction."""
         obs_ph = tf.compat.v1.placeholder(tf.float32, (None, ) + self.obs_dim,
                                           name='obs')
         with tf.compat.v1.variable_scope(self.name) as vs:
@@ -160,14 +162,25 @@ class DiscreteCNNQFunction(QFunction):
 
     @property
     def q_vals(self):
-        """Q values."""
+        """Return the Q values, the output of the network.
+
+        Return:
+            list[tf.Tensor]: Q values.
+
+        """
         return self.model.networks['default'].outputs
 
     @property
     def input(self):
-        """Input tf.Tensor of the Q-function."""
+        """Get input.
+
+        Return:
+            tf.Tensor: QFunction Input.
+
+        """
         return self.model.networks['default'].input
 
+    # pylint: disable=arguments-differ
     def get_qval_sym(self, state_input, name):
         """Symbolic graph for q-network.
 
@@ -176,7 +189,8 @@ class DiscreteCNNQFunction(QFunction):
             name (str): Network variable scope.
 
         Return:
-            The tf.Tensor output of Discrete CNN QFunction.
+            tf.Tensor: The tf.Tensor output of Discrete CNN QFunction.
+
         """
         with tf.compat.v1.variable_scope(self._variable_scope):
             return self.model.build(state_input, name=name)
@@ -188,7 +202,11 @@ class DiscreteCNNQFunction(QFunction):
         not the parameters.
 
         Args:
-            name: Name of the newly created q-function.
+            name(str) : Name of the newly created q-function.
+
+        Returns:
+            garage.tf.q_functions.DiscreteCNNQFunction: Clone of this object
+
         """
         return self.__class__(name=name,
                               env_spec=self._env_spec,
@@ -210,6 +228,11 @@ class DiscreteCNNQFunction(QFunction):
                               layer_normalization=self._layer_normalization)
 
     def __setstate__(self, state):
-        """Object.__setstate__."""
+        """Object.__setstate__.
+
+        Args:
+            state (dict): Unpickled state.
+
+        """
         self.__dict__.update(state)
         self._initialize()

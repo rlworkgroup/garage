@@ -62,7 +62,7 @@ class TFWorkerWrapper(Worker):
     def shutdown(self):
         """Perform shutdown processes for TF."""
         self._inner_worker.shutdown()
-        if tf.get_default_session() and self._sess_entered:
+        if tf.compat.v1.get_default_session() and self._sess_entered:
             self._sess_entered = False
             self._sess.__exit__(None, None, None)
 

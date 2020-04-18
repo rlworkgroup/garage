@@ -44,6 +44,7 @@ class GRUModel(Model):
         hidden_state_init_trainable (bool): Bool for whether the initial
             hidden state is trainable.
         layer_normalization (bool): Bool for using layer normalization or not.
+
     """
 
     def __init__(self,
@@ -51,12 +52,12 @@ class GRUModel(Model):
                  hidden_dim,
                  name=None,
                  hidden_nonlinearity=tf.nn.tanh,
-                 hidden_w_init=tf.glorot_uniform_initializer(),
+                 hidden_w_init=tf.initializers.glorot_uniform(),
                  hidden_b_init=tf.zeros_initializer(),
                  recurrent_nonlinearity=tf.nn.sigmoid,
-                 recurrent_w_init=tf.glorot_uniform_initializer(),
+                 recurrent_w_init=tf.initializers.glorot_uniform(),
                  output_nonlinearity=None,
-                 output_w_init=tf.glorot_uniform_initializer(),
+                 output_w_init=tf.initializers.glorot_uniform(),
                  output_b_init=tf.zeros_initializer(),
                  hidden_state_init=tf.zeros_initializer(),
                  hidden_state_init_trainable=False,
@@ -78,6 +79,7 @@ class GRUModel(Model):
         self._initialize()
 
     def _initialize(self):
+        """Initialize model."""
         self._gru_cell = tf.keras.layers.GRUCell(
             units=self._hidden_dim,
             activation=self._hidden_nonlinearity,
@@ -94,15 +96,45 @@ class GRUModel(Model):
             name='output_layer')
 
     def network_input_spec(self):
-        """Network input spec."""
+        """Network input spec.
+
+        Return:
+            list[str]: List of key(str) for the network outputs.
+
+        """
         return ['full_input', 'step_input', 'step_hidden_input']
 
     def network_output_spec(self):
-        """Network output spec."""
+        """Network output spec.
+
+        Return:
+            list[str]: List of key(str) for the network outputs.
+
+        """
         return ['all_output', 'step_output', 'step_hidden', 'init_hidden']
 
+    # pylint: disable=arguments-differ
     def _build(self, all_input_var, step_input_var, step_hidden_var,
                name=None):
+        """Build model given input placeholder(s).
+
+        Args:
+            all_input_var (tf.Tensor): Place holder for entire time-series
+                inputs.
+            step_input_var (tf.Tensor): Place holder for step inputs.
+            step_hidden_var (tf.Tensor): Place holder for step hidden state.
+            name (str): Inner model name, also the variable scope of the
+                inner model, if exist. One example is
+                garage.tf.models.Sequential.
+
+        Return:
+            tf.Tensor: Entire time-series outputs.
+            tf.Tensor: Step output.
+            tf.Tensor: Step hidden state.
+            tf.Tensor: Initial hidden state.
+
+        """
+        del name
         return gru(
             name='gru',
             gru_cell=self._gru_cell,
@@ -114,13 +146,23 @@ class GRUModel(Model):
             output_nonlinearity_layer=self._output_nonlinearity_layer)
 
     def __getstate__(self):
-        """Object.__getstate__."""
+        """Object.__getstate__.
+
+        Returns:
+            dict: The state to be pickled for the instance.
+
+        """
         new_dict = super().__getstate__()
         del new_dict['_gru_cell']
         del new_dict['_output_nonlinearity_layer']
         return new_dict
 
     def __setstate__(self, state):
-        """Object.__setstate__."""
+        """Object.__setstate__.
+
+        Args:
+            state (dict): Unpickled state.
+
+        """
         super().__setstate__(state)
         self._initialize()

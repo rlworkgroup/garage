@@ -71,11 +71,10 @@ params = {
 }
 
 
-class TestBenchmarkTD3:
+class BenchmarkTD3:
     """Benchmark Garage TD3 implementation with rlkit's implementation."""
 
-    @pytest.mark.huge
-    def test_benchmark_td3(self):
+    def benchmark_td3(self):
         """
         Test garage TD3 benchmarks.
 
@@ -219,8 +218,8 @@ def run_garage(env, seed, log_dir):
                   min_buffer_size=params['min_buffer_size'],
                   buffer_batch_size=params['buffer_batch_size'],
                   exploration_strategy=exploration_noise,
-                  policy_optimizer=tf.train.AdamOptimizer,
-                  qf_optimizer=tf.train.AdamOptimizer)
+                  policy_optimizer=tf.compat.v1.train.AdamOptimizer,
+                  qf_optimizer=tf.compat.v1.train.AdamOptimizer)
 
         # Set up logger since we are not using run_experiment
         tabular_log_file = osp.join(log_dir, 'progress.csv')

@@ -8,6 +8,7 @@ from tests.fixtures import TfGraphTestCase
 
 class TestMLPConcat(TfGraphTestCase):
 
+    # pylint: disable=unsubscriptable-object
     def setup_method(self):
         super(TestMLPConcat, self).setup_method()
         self.obs_input = np.array([[1, 2, 3, 4]])
@@ -168,23 +169,22 @@ class TestMLPConcat(TfGraphTestCase):
             h2_b = tf.compat.v1.get_variable('mlp2/hidden_1/bias')
             out_w = tf.compat.v1.get_variable('mlp2/output/kernel')
             out_b = tf.compat.v1.get_variable('mlp2/output/bias')
-            beta_1 = tf.compat.v1.get_variable('mlp2/LayerNorm/beta')
-            gamma_1 = tf.compat.v1.get_variable('mlp2/LayerNorm/gamma')
-            beta_2 = tf.compat.v1.get_variable('mlp2/LayerNorm_1/beta')
-            gamma_2 = tf.compat.v1.get_variable('mlp2/LayerNorm_1/gamma')
+
+        with tf.compat.v1.variable_scope('MLP_Concat_1', reuse=True) as vs:
+            gamma_1, beta_1, gamma_2, beta_2 = vs.global_variables()
 
         # First layer
         y = tf.matmul(tf.concat([self._obs_input, self._act_input], 1),
                       h1_w) + h1_b
         y = self.hidden_nonlinearity(y)
-        mean, variance = tf.nn.moments(y, [1], keep_dims=True)
+        mean, variance = tf.nn.moments(y, [1], keepdims=True)
         normalized_y = (y - mean) / tf.sqrt(variance + 1e-12)
         y_out = normalized_y * gamma_1 + beta_1
 
         # Second layer
         y = tf.matmul(y_out, h2_w) + h2_b
         y = self.hidden_nonlinearity(y)
-        mean, variance = tf.nn.moments(y, [1], keep_dims=True)
+        mean, variance = tf.nn.moments(y, [1], keepdims=True)
         normalized_y = (y - mean) / tf.sqrt(variance + 1e-12)
         y_out = normalized_y * gamma_2 + beta_2
 
@@ -202,7 +202,7 @@ class TestMLPConcat(TfGraphTestCase):
                                        self._act_input: self.act_input
                                    })
 
-        np.testing.assert_array_almost_equal(out, mlp_output)
+        np.testing.assert_array_almost_equal(out, mlp_output, decimal=2)
 
     @pytest.mark.parametrize('concat_idx', [2, 1, 0, -1, -2])
     def test_concat_layer(self, concat_idx):
@@ -214,8 +214,8 @@ class TestMLPConcat(TfGraphTestCase):
                     concat_layer=concat_idx,
                     hidden_nonlinearity=self.hidden_nonlinearity,
                     name='mlp2')
-        obs_input_size = self._obs_input.shape[1].value
-        act_input_size = self._act_input.shape[1].value
+        obs_input_size = self._obs_input.shape[1]
+        act_input_size = self._act_input.shape[1]
 
         expected_units = [obs_input_size, 64, 32]
         expected_units[concat_idx] += act_input_size
@@ -226,9 +226,9 @@ class TestMLPConcat(TfGraphTestCase):
             h2_w = tf.compat.v1.get_variable('mlp2/hidden_1/kernel')
             out_w = tf.compat.v1.get_variable('mlp2/output/kernel')
 
-            actual_units.append(h1_w.shape[0].value)
-            actual_units.append(h2_w.shape[0].value)
-            actual_units.append(out_w.shape[0].value)
+            actual_units.append(h1_w.shape[0])
+            actual_units.append(h2_w.shape[0])
+            actual_units.append(out_w.shape[0])
 
         assert np.array_equal(expected_units, actual_units)
 
@@ -242,7 +242,7 @@ class TestMLPConcat(TfGraphTestCase):
                     hidden_nonlinearity=self.hidden_nonlinearity,
                     name='mlp_no_input2')
 
-        obs_input_size = self._obs_input.shape[1].value
+        obs_input_size = self._obs_input.shape[1]
 
         # concat_layer argument should be silently ignored.
         expected_units = [obs_input_size, 64, 32]
@@ -253,9 +253,9 @@ class TestMLPConcat(TfGraphTestCase):
             h2_w = tf.compat.v1.get_variable('mlp_no_input2/hidden_1/kernel')
             out_w = tf.compat.v1.get_variable('mlp_no_input2/output/kernel')
 
-            actual_units.append(h1_w.shape[0].value)
-            actual_units.append(h2_w.shape[0].value)
-            actual_units.append(out_w.shape[0].value)
+            actual_units.append(h1_w.shape[0])
+            actual_units.append(h2_w.shape[0])
+            actual_units.append(out_w.shape[0])
 
         assert np.array_equal(expected_units, actual_units)
 
@@ -270,8 +270,8 @@ class TestMLPConcat(TfGraphTestCase):
                     hidden_nonlinearity=self.hidden_nonlinearity,
                     name='mlp2')
 
-        obs_input_size = self._obs_input.shape[1].value
-        act_input_size = self._act_input.shape[1].value
+        obs_input_size = self._obs_input.shape[1]
+        act_input_size = self._act_input.shape[1]
 
         # concat_layer argument should be reset to point to input_var.
         expected_units = [obs_input_size]
@@ -280,6 +280,6 @@ class TestMLPConcat(TfGraphTestCase):
         actual_units = []
         with tf.compat.v1.variable_scope('mlp_concat_test', reuse=True):
             out_w = tf.compat.v1.get_variable('mlp2/output/kernel')
-            actual_units.append(out_w.shape[0].value)
+            actual_units.append(out_w.shape[0])
 
         assert np.array_equal(expected_units, actual_units)

@@ -68,9 +68,7 @@ class FirstOrderOptimizer:
                 have extra input, e.g. KL constraint.
 
         """
-        with tf.name_scope(
-                self._name,
-                values=[loss, target.get_params(), inputs, extra_inputs]):
+        with tf.name_scope(self._name):
 
             self._target = target
 

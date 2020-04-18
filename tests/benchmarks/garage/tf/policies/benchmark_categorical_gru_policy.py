@@ -20,8 +20,7 @@ from tests.fixtures import snapshot_config
 import tests.helpers as Rh
 
 
-@pytest.mark.huge
-def test_benchmark_categorical_gru_policy():
+def benchmark_categorical_gru_policy():
     """Benchmark categorical gru policy."""
     categorical_tasks = [
         'LunarLander-v2',

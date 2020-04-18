@@ -10,18 +10,17 @@ from garage.tf.baselines import GaussianMLPBaseline
 from garage.tf.envs import TfEnv
 from garage.tf.experiment import LocalTFRunner
 from garage.tf.optimizers import FirstOrderOptimizer
-from garage.tf.policies import GaussianMLPPolicy
+from garage.tf.policies import GaussianLSTMPolicy
 
 
-class TestBenchmarkGaussianMLPPolicy:
+class BenchmarkGaussianLSTMPolicy:
     '''Compare benchmarks between garage and baselines.'''
 
     def setup_method(self):
         self._env = None
         self._seed = None
 
-    @pytest.mark.huge
-    def test_benchmark_gaussian_mlp_policy(self):
+    def benchmark_gaussian_lstm_policy(self):
         bench_envs = [
             'HalfCheetah-v2', 'Reacher-v2', 'Walker2d-v2', 'Hopper-v2',
             'Swimmer-v2', 'InvertedPendulum-v2', 'InvertedDoublePendulum-v2'
@@ -42,19 +41,19 @@ class TestBenchmarkGaussianMLPPolicy:
                                exp_name=name)
 
     def run_task(self, snapshot_config, *_):
-        config = tf.ConfigProto(device_count={'GPU': 0},
-                                allow_soft_placement=True,
-                                intra_op_parallelism_threads=12,
-                                inter_op_parallelism_threads=12)
-        sess = tf.Session(config=config)
+        config = tf.compat.v1.ConfigProto(device_count={'GPU': 0},
+                                          allow_soft_placement=True,
+                                          intra_op_parallelism_threads=12,
+                                          inter_op_parallelism_threads=12)
+        sess = tf.compat.v1.Session(config=config)
         with LocalTFRunner(snapshot_config=snapshot_config,
                            sess=sess) as runner:
             env = gym.make(self._env)
             env = TfEnv(normalize(env))
             env.reset()
-            policy = GaussianMLPPolicy(
+            policy = GaussianLSTMPolicy(
                 env_spec=env.spec,
-                hidden_sizes=(32, 32),
+                hidden_dim=32,
                 hidden_nonlinearity=tf.nn.tanh,
                 output_nonlinearity=None,
             )

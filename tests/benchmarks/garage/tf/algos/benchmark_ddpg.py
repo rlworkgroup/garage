@@ -53,8 +53,7 @@ params = {
 }
 
 
-@pytest.mark.huge
-def test_benchmark_ddpg():
+def benchmark_ddpg():
     """Compare benchmarks between garage and baselines."""
     # Load Mujoco1M tasks, you can check other benchmarks here
     # https://github.com/openai/baselines/blob/master/baselines/bench/benchmarks.py
@@ -194,8 +193,8 @@ def run_garage(env, seed, log_dir):
                     discount=params['discount'],
                     min_buffer_size=int(1e4),
                     exploration_strategy=action_noise,
-                    policy_optimizer=tf.train.AdamOptimizer,
-                    qf_optimizer=tf.train.AdamOptimizer)
+                    policy_optimizer=tf.compat.v1.train.AdamOptimizer,
+                    qf_optimizer=tf.compat.v1.train.AdamOptimizer)
 
         # Set up logger since we are not using run_experiment
         tabular_log_file = osp.join(log_dir, 'progress.csv')

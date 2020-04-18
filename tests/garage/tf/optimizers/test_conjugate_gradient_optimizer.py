@@ -45,7 +45,7 @@ class TestConjugateGradientOptimizer(TfGraphTestCase):
         a = tf.constant(a_val)
         loss = a * (x**2)
         constraint = (loss, 0.0)
-        self.sess.run(tf.global_variables_initializer())
+        self.sess.run(tf.compat.v1.global_variables_initializer())
         opt = ConjugateGradientOptimizer()
         opt.update_opt(loss, policy, constraint, [a])
         opt.optimize([a_val])
@@ -72,7 +72,7 @@ class TestPearlmutterHvp(TfGraphTestCase):
         reg_coeff = 1e-5
         hvp = PearlmutterHvp()
 
-        self.sess.run(tf.global_variables_initializer())
+        self.sess.run(tf.compat.v1.global_variables_initializer())
         hvp.update_hvp(f, policy, (a, ), reg_coeff)
         hx = hvp.build_eval(np.array([a_val]))
         computed_hvp = hx(vector)
@@ -103,7 +103,7 @@ class TestPearlmutterHvp(TfGraphTestCase):
         reg_coeff = 1e-5
         hvp = PearlmutterHvp()
 
-        self.sess.run(tf.global_variables_initializer())
+        self.sess.run(tf.compat.v1.global_variables_initializer())
         self.sess.run(x.assign([x_val]))
         self.sess.run(y.assign([y_val]))
         hvp.update_hvp(f, policy, (a, b), reg_coeff)
@@ -140,7 +140,7 @@ class TestPearlmutterHvp(TfGraphTestCase):
         reg_coeff = 1e-5
         hvp = PearlmutterHvp()
 
-        self.sess.run(tf.global_variables_initializer())
+        self.sess.run(tf.compat.v1.global_variables_initializer())
         self.sess.run(x.assign([x_val]))
         self.sess.run(y.assign([y_val]))
         hvp.update_hvp(f, policy, (a, b), reg_coeff)
@@ -159,7 +159,7 @@ class TestPearlmutterHvp(TfGraphTestCase):
         reg_coeff = 1e-5
         hvp = PearlmutterHvp()
 
-        self.sess.run(tf.global_variables_initializer())
+        self.sess.run(tf.compat.v1.global_variables_initializer())
         hvp.update_hvp(f, policy, (a, ), reg_coeff)
         hx = hvp.build_eval(np.array([a_val]))
         before_pickle = hx(vector)
@@ -186,7 +186,7 @@ class TestFiniteDifferenceHvp(TfGraphTestCase):
         reg_coeff = 1e-5
         hvp = FiniteDifferenceHvp()
 
-        self.sess.run(tf.global_variables_initializer())
+        self.sess.run(tf.compat.v1.global_variables_initializer())
         hvp.update_hvp(f, policy, (a, ), reg_coeff)
         hx = hvp.build_eval(np.array([a_val]))
         computed_hvp = hx(vector)
@@ -218,7 +218,7 @@ class TestFiniteDifferenceHvp(TfGraphTestCase):
         reg_coeff = 1e-8
         hvp = FiniteDifferenceHvp(base_eps=1.0)
 
-        self.sess.run(tf.global_variables_initializer())
+        self.sess.run(tf.compat.v1.global_variables_initializer())
         self.sess.run(x.assign([x_val]))
         self.sess.run(y.assign([y_val]))
         hvp.update_hvp(f, policy, (a, b), reg_coeff)
@@ -255,7 +255,7 @@ class TestFiniteDifferenceHvp(TfGraphTestCase):
         reg_coeff = 1e-5
         hvp = FiniteDifferenceHvp(base_eps=1)
 
-        self.sess.run(tf.global_variables_initializer())
+        self.sess.run(tf.compat.v1.global_variables_initializer())
         self.sess.run(x.assign([x_val]))
         self.sess.run(y.assign([y_val]))
         hvp.update_hvp(f, policy, (a, b), reg_coeff)
@@ -274,7 +274,7 @@ class TestFiniteDifferenceHvp(TfGraphTestCase):
         reg_coeff = 1e-5
         hvp = FiniteDifferenceHvp()
 
-        self.sess.run(tf.global_variables_initializer())
+        self.sess.run(tf.compat.v1.global_variables_initializer())
         hvp.update_hvp(f, policy, (a, ), reg_coeff)
         hx = hvp.build_eval(np.array([a_val]))
         before_pickle = hx(vector)

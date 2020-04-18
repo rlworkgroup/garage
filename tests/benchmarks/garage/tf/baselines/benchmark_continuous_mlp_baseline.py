@@ -63,8 +63,7 @@ num_proc = 4 * 2
 num_trials = 3
 
 
-@pytest.mark.huge
-def test_benchmark_ppo_continuous_mlp_baseline():
+def benchmark_ppo_continuous_mlp_baseline():
     """ Compare benchmarks between CMB and potentially other baselines."""
     mujoco1m = benchmarks.get_benchmark('Mujoco1M')
 
@@ -106,10 +105,10 @@ def ppo_cmb(env, seed, log_dir):
 
     """
     deterministic.set_seed(seed)
-    config = tf.ConfigProto(allow_soft_placement=True,
-                            intra_op_parallelism_threads=num_proc,
-                            inter_op_parallelism_threads=num_proc)
-    sess = tf.Session(config=config)
+    config = tf.compat.v1.ConfigProto(allow_soft_placement=True,
+                                      intra_op_parallelism_threads=num_proc,
+                                      inter_op_parallelism_threads=num_proc)
+    sess = tf.compat.v1.Session(config=config)
     with LocalTFRunner(snapshot_config, sess=sess,
                        max_cpus=num_proc) as runner:
         env = TfEnv(normalize(env))

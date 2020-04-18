@@ -8,6 +8,7 @@ TINY = 1e-8
 
 
 class RecurrentCategorical(Distribution):
+
     def __init__(self, dim, name='RecurrentCategorical'):
         self._cat = Categorical(dim, name)
         self._dim = dim
@@ -17,19 +18,18 @@ class RecurrentCategorical(Distribution):
     def dim(self):
         return self._dim
 
-    def kl_sym(self, old_dist_info_vars, new_dist_info_vars, name=None):
+    def kl_sym(self, old_dist_info_vars, new_dist_info_vars, name='kl_sym'):
         """
         Compute the symbolic KL divergence of two categorical distributions
         """
-        with tf.name_scope(name, 'kl_sym',
-                           [old_dist_info_vars, new_dist_info_vars]):
+        with tf.name_scope(name):
             old_prob_var = old_dist_info_vars['prob']
             new_prob_var = new_dist_info_vars['prob']
             # Assume layout is N * T * A
-            return tf.reduce_sum(
-                old_prob_var * (tf.math.log(old_prob_var + TINY) -
-                                tf.math.log(new_prob_var + TINY)),
-                axis=2)
+            return tf.reduce_sum(old_prob_var *
+                                 (tf.math.log(old_prob_var + TINY) -
+                                  tf.math.log(new_prob_var + TINY)),
+                                 axis=2)
 
     def kl(self, old_dist_info, new_dist_info):
         """
@@ -37,17 +37,16 @@ class RecurrentCategorical(Distribution):
         """
         old_prob = old_dist_info['prob']
         new_prob = new_dist_info['prob']
-        return np.sum(
-            old_prob * (np.log(old_prob + TINY) - np.log(new_prob + TINY)),
-            axis=2)
+        return np.sum(old_prob *
+                      (np.log(old_prob + TINY) - np.log(new_prob + TINY)),
+                      axis=2)
 
     def likelihood_ratio_sym(self,
                              x_var,
                              old_dist_info_vars,
                              new_dist_info_vars,
-                             name=None):
-        with tf.name_scope(name, 'likelihood_ratio_sym',
-                           [x_var, old_dist_info_vars, new_dist_info_vars]):
+                             name='likelihood_ratio_sym'):
+        with tf.name_scope(name):
             old_prob_var = old_dist_info_vars['prob']
             new_prob_var = new_dist_info_vars['prob']
             # Assume layout is N * T * A
@@ -62,13 +61,13 @@ class RecurrentCategorical(Distribution):
         probs = dist_info['prob']
         return -np.sum(probs * np.log(probs + TINY), axis=2)
 
-    def entropy_sym(self, dist_info_vars, name=None):
-        with tf.name_scope(name, 'entropy_sym', [dist_info_vars]):
+    def entropy_sym(self, dist_info_vars, name='entropy_sym'):
+        with tf.name_scope(name):
             probs = dist_info_vars['prob']
             return -tf.reduce_sum(probs * tf.math.log(probs + TINY), 2)
 
-    def log_likelihood_sym(self, xs, dist_info_vars, name=None):
-        with tf.name_scope(name, 'log_likelihood_sym', [xs, dist_info_vars]):
+    def log_likelihood_sym(self, xs, dist_info_vars, name='log_likelihood_sym'):
+        with tf.name_scope(name):
             probs = dist_info_vars['prob']
             # Assume layout is N * T * A
             a_dim = tf.shape(probs)[2]

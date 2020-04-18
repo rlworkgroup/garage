@@ -50,11 +50,10 @@ hyper_parameters = {
 }
 
 
-class TestBenchmarkPPO:  # pylint: disable=too-few-public-methods
+class BenchmarkTRPO:  # pylint: disable=too-few-public-methods
     """Compare benchmarks between garage and baselines."""
 
-    @pytest.mark.huge
-    def test_benchmark_trpo(self):  # pylint: disable=no-self-use
+    def benchmark_trpo(self):  # pylint: disable=no-self-use
         """Compare benchmarks between garage and baselines."""
         mujoco1m = benchmarks.get_benchmark('Mujoco1M')
 
@@ -234,9 +233,9 @@ def run_baselines(env, seed, log_dir):
 
     """
     ncpu = max(multiprocessing.cpu_count() // 2, 1)
-    config = tf.ConfigProto(allow_soft_placement=True,
-                            intra_op_parallelism_threads=ncpu,
-                            inter_op_parallelism_threads=ncpu)
+    config = tf.compat.v1.ConfigProto(allow_soft_placement=True,
+                                      intra_op_parallelism_threads=ncpu,
+                                      inter_op_parallelism_threads=ncpu)
     tf.compat.v1.Session(config=config).__enter__()
 
     # Set up logger for baselines

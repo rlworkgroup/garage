@@ -36,7 +36,9 @@ class DiscreteMLPQFunction(QFunction):
         output_b_init (callable): Initializer function for the bias
             of output dense layer(s). The function should return a
             tf.Tensor.
+        dueling (bool): Use dueling model or not.
         layer_normalization (bool): Bool for using layer normalization.
+
     """
 
     def __init__(self,
@@ -44,10 +46,10 @@ class DiscreteMLPQFunction(QFunction):
                  name=None,
                  hidden_sizes=(32, 32),
                  hidden_nonlinearity=tf.nn.relu,
-                 hidden_w_init=tf.glorot_uniform_initializer(),
+                 hidden_w_init=tf.initializers.glorot_uniform(),
                  hidden_b_init=tf.zeros_initializer(),
                  output_nonlinearity=None,
-                 output_w_init=tf.glorot_uniform_initializer(),
+                 output_w_init=tf.initializers.glorot_uniform(),
                  output_b_init=tf.zeros_initializer(),
                  dueling=False,
                  layer_normalization=False):
@@ -92,6 +94,7 @@ class DiscreteMLPQFunction(QFunction):
         self._initialize()
 
     def _initialize(self):
+        """Initialize QFunction."""
         obs_ph = tf.compat.v1.placeholder(tf.float32, (None, ) + self.obs_dim,
                                           name='obs')
 
@@ -101,14 +104,25 @@ class DiscreteMLPQFunction(QFunction):
 
     @property
     def q_vals(self):
-        """Return the Q values, the output of the network."""
+        """Return the Q values, the output of the network.
+
+        Return:
+            list[tf.Tensor]: Q values.
+
+        """
         return self.model.networks['default'].outputs
 
     @property
     def input(self):
-        """Get input."""
+        """Get input.
+
+        Return:
+            tf.Tensor: QFunction Input.
+
+        """
         return self.model.networks['default'].input
 
+    # pylint: disable=arguments-differ
     def get_qval_sym(self, state_input, name):
         """Symbolic graph for q-network.
 
@@ -117,7 +131,8 @@ class DiscreteMLPQFunction(QFunction):
             name (str): Network variable scope.
 
         Return:
-            The tf.Tensor output of Discrete MLP QFunction.
+            tf.Tensor: The tf.Tensor output of Discrete MLP QFunction.
+
         """
         with tf.compat.v1.variable_scope(self._variable_scope):
             return self.model.build(state_input, name=name)
@@ -130,6 +145,10 @@ class DiscreteMLPQFunction(QFunction):
 
         Args:
             name (str): Name of the newly created q-function.
+
+        Returns:
+            garage.tf.q_functions.DiscreteMLPQFunction: Clone of this object
+
         """
         return self.__class__(name=name,
                               env_spec=self._env_spec,
@@ -144,6 +163,11 @@ class DiscreteMLPQFunction(QFunction):
                               layer_normalization=self._layer_normalization)
 
     def __setstate__(self, state):
-        """Object.__setstate__."""
+        """Object.__setstate__.
+
+        Args:
+            state (dict): Unpickled state.
+
+        """
         self.__dict__.update(state)
         self._initialize()

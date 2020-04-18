@@ -64,8 +64,8 @@ def tf_ddpg_pendulum(ctxt=None, seed=1):
                     discount=0.9,
                     min_buffer_size=int(1e4),
                     exploration_strategy=action_noise,
-                    policy_optimizer=tf.train.AdamOptimizer,
-                    qf_optimizer=tf.train.AdamOptimizer)
+                    policy_optimizer=tf.compat.v1.train.AdamOptimizer,
+                    qf_optimizer=tf.compat.v1.train.AdamOptimizer)
 
         runner.setup(algo=ddpg, env=env)
 

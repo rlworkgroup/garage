@@ -80,7 +80,7 @@ class TD3(DDPG):
                  clip_return=np.inf,
                  discount=0.99,
                  max_action=None,
-                 name=None,
+                 name='TD3',
                  steps_per_epoch=20,
                  max_path_length=None,
                  n_train_steps=50,
@@ -129,7 +129,7 @@ class TD3(DDPG):
 
     def init_opt(self):
         """Build the loss function and init the optimizer."""
-        with tf.name_scope(self.name, 'TD3'):
+        with tf.name_scope(self.name):
             # Create target policy (actor) and qf (critic) networks
             self.target_policy_f_prob_online = tensor_utils.compile_function(
                 inputs=[self.target_policy.model.networks['default'].input],
@@ -165,11 +165,13 @@ class TD3(DDPG):
 
             with tf.name_scope('inputs'):
                 obs_dim = self.env_spec.observation_space.flat_dim
-                y = tf.placeholder(tf.float32, shape=(None, 1), name='input_y')
-                obs = tf.placeholder(tf.float32,
-                                     shape=(None, obs_dim),
-                                     name='input_observation')
-                actions = tf.placeholder(
+                y = tf.compat.v1.placeholder(tf.float32,
+                                             shape=(None, 1),
+                                             name='input_y')
+                obs = tf.compat.v1.placeholder(tf.float32,
+                                               shape=(None, obs_dim),
+                                               name='input_observation')
+                actions = tf.compat.v1.placeholder(
                     tf.float32,
                     shape=(None, self.env_spec.action_space.flat_dim),
                     name='input_action')

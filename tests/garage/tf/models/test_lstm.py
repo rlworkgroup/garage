@@ -345,9 +345,6 @@ class TestLSTM(TfGraphTestCase):
                 self._step_cell_var: cell
             })
 
-        grads_full = tf.gradients(outputs_t, _input_var)
-        self.sess.run(grads_full, feed_dict={_input_var: obs_inputs})
-
         grads_step_o_i = tf.gradients(outputs_t, _step_input_var)
         grads_step_o_h = tf.gradients(outputs_t, self._step_hidden_var)
         grads_step_o_c = tf.gradients(outputs_t, self._step_cell_var)

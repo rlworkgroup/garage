@@ -10,7 +10,7 @@ def cnn(input_var,
         name,
         padding,
         hidden_nonlinearity=tf.nn.relu,
-        hidden_w_init=tf.glorot_uniform_initializer(),
+        hidden_w_init=tf.initializers.glorot_uniform(),
         hidden_b_init=tf.zeros_initializer()):
     """Convolutional neural network (CNN).
 
@@ -43,7 +43,7 @@ def cnn(input_var,
             tf.Tensor.
 
     Return:
-        The output tf.Tensor of the CNN.
+        tf.Tensor: The output tf.Tensor of the CNN.
 
     """
     with tf.compat.v1.variable_scope(name):
@@ -71,7 +71,7 @@ def cnn_with_max_pooling(input_var,
                          pool_strides,
                          padding,
                          hidden_nonlinearity=tf.nn.relu,
-                         hidden_w_init=tf.glorot_uniform_initializer(),
+                         hidden_w_init=tf.initializers.glorot_uniform(),
                          hidden_b_init=tf.zeros_initializer()):
     """Convolutional neural network (CNN) with max-pooling.
 
@@ -110,7 +110,7 @@ def cnn_with_max_pooling(input_var,
             tf.Tensor.
 
     Return:
-        The output tf.Tensor of the CNN.
+        tf.Tensor: The output tf.Tensor of the CNN.
 
     """
     pool_strides = [1, pool_strides[0], pool_strides[1], 1]
@@ -138,8 +138,36 @@ def cnn_with_max_pooling(input_var,
 
 def _conv(input_var, name, filter_size, num_filter, strides, hidden_w_init,
           hidden_b_init, padding):
+    """Helper function for performing convolution.
+
+    Args:
+        input_var (tf.Tensor): Input tf.Tensor to the CNN.
+        name (str): Variable scope of the convolution Op.
+        filter_size (tuple[int]): Dimension of the filters. For example,
+            (3, 5) means there are two convolutional layers. The filter for
+            first layer is of dimension (3 x 3) and the second one is of
+            dimension (5 x 5).
+        num_filter (tuple[int]): Number of filters. For example, (3, 32) means
+            there are two convolutional layers. The filter for the first layer
+            has 3 channels and the second one with 32 channels.
+        strides (tuple[int]): The stride of the sliding window. For example,
+            (1, 2) means there are two convolutional layers. The stride of the
+            filter for first layer is 1 and that of the second layer is 2.
+        hidden_w_init (callable): Initializer function for the weight
+            of intermediate dense layer(s). The function should return a
+            tf.Tensor.
+        hidden_b_init (callable): Initializer function for the bias
+            of intermediate dense layer(s). The function should return a
+            tf.Tensor.
+        padding (str): The type of padding algorithm to use,
+            either 'SAME' or 'VALID'.
+
+    Return:
+        tf.Tensor: The output of the convolution.
+
+    """
     # channel from input
-    input_shape = input_var.get_shape()[-1].value
+    input_shape = input_var.get_shape()[-1]
     # [filter_height, filter_width, in_channels, out_channels]
     w_shape = [filter_size, filter_size, input_shape, num_filter]
     b_shape = [1, 1, 1, num_filter]

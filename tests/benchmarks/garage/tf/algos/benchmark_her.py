@@ -65,8 +65,7 @@ params = {
 BASELINES_PARAMS['rollout_batch_size'] = 1
 
 
-@pytest.mark.huge
-def test_benchmark_her():
+def benchmark_her():
     """Compare benchmarks between garage and baselines."""
 
     mujoco1m = benchmarks.get_benchmark('Fetch1M')
@@ -170,8 +169,8 @@ def run_garage(env, seed, log_dir):
             n_train_steps=params['n_train_steps'],
             discount=params['discount'],
             exploration_strategy=action_noise,
-            policy_optimizer=tf.train.AdamOptimizer,
-            qf_optimizer=tf.train.AdamOptimizer,
+            policy_optimizer=tf.compat.v1.train.AdamOptimizer,
+            qf_optimizer=tf.compat.v1.train.AdamOptimizer,
             buffer_batch_size=256,
         )
 

@@ -24,19 +24,18 @@ def test_deterministic_pytorch():
 
 def test_deterministic_tensorflow():
     """Test deterministic behavior of Tensorflow"""
-    deterministic.set_seed(77)
-    rand_tensor = tf.random_uniform((5, 5), seed=3)
-    with tf.Session() as sess:
-        rand_tensor = sess.run(rand_tensor)
+    deterministic.set_seed(0)
+    with tf.compat.v1.Session() as sess:
+        rand_tensor = sess.run(tf.random.uniform((5, 5), seed=0))
     deterministic_tensor = np.array(
-        [[0.11519885, 0.41889858, 0.93573880, 0.64490880, 0.76444733],
-         [0.36086679, 0.46140290, 0.35727130, 0.46127295, 0.82892287],
-         [0.50611700, 0.060229897, 0.85028017, 0.37228084, 0.49440527],
-         [0.60247135, 0.27734910, 0.24438739, 0.58618486, 0.92419887],
-         [0.35655558, 0.32704484, 0.93260970, 0.40895236, 0.86852560]],
+        [[0.10086262, 0.9701668, 0.8487642, 0.04828131, 0.04852307],
+         [0.77747464, 0.844468, 0.41707492, 0.5099584, 0.6552025],
+         [0.9881507, 0.36698937, 0.37789786, 0.69118714, 0.99544394],
+         [0.4662125, 0.9912039, 0.6973165, 0.7741407, 0.8881662],
+         [0.03854167, 0.97539485, 0.23024535, 0.83840847, 0.79527795]],
         dtype=np.float32)
 
-    assert np.all(np.array_equal(rand_tensor, deterministic_tensor))
+    assert np.allclose(rand_tensor, deterministic_tensor)
 
 
 def test_deterministic_numpy():
