@@ -1,5 +1,8 @@
 """This script is a test that fails when PEARL performance is too low."""
+import pickle
+
 import pytest
+
 try:
     # pylint: disable=unused-import
     import mujoco_py  # noqa: F401
@@ -13,7 +16,7 @@ except Exception:  # pylint: disable=broad-except
         allow_module_level=True)
 from metaworld.benchmarks import ML1  # noqa: I100
 
-from garage.envs import GarageEnv, normalize
+from garage.envs import GarageEnv, normalize, PointEnv
 from garage.experiment import LocalRunner
 from garage.experiment.deterministic import set_seed
 from garage.experiment.task_sampler import SetTaskSampler
@@ -120,3 +123,37 @@ class TestPEARL:
 
         runner.train(n_epochs=params['num_epochs'],
                      batch_size=params['batch_size'])
+
+    def test_pickling(self):
+        """Test pickle and unpickle."""
+        net_size = 10
+        env_sampler = SetTaskSampler(PointEnv)
+        env = env_sampler.sample(5)
+
+        test_env_sampler = SetTaskSampler(PointEnv)
+
+        augmented_env = PEARL.augment_env_spec(env[0](), 5)
+        qf = ContinuousMLPQFunction(
+            env_spec=augmented_env,
+            hidden_sizes=[net_size, net_size, net_size])
+
+        vf_env = PEARL.get_env_spec(env[0](), 5, 'vf')
+        vf = ContinuousMLPQFunction(
+            env_spec=vf_env, hidden_sizes=[net_size, net_size, net_size])
+
+        inner_policy = TanhGaussianMLPPolicy(
+            env_spec=augmented_env,
+            hidden_sizes=[net_size, net_size, net_size])
+
+        pearl = PEARL(env=env,
+                      inner_policy=inner_policy,
+                      qf=qf,
+                      vf=vf,
+                      num_train_tasks=5,
+                      num_test_tasks=5,
+                      latent_dim=5,
+                      encoder_hidden_sizes=[10, 10],
+                      test_env_sampler=test_env_sampler)
+
+        pickled = pickle.dumps(pearl)
+        pickle.loads(pickled)
