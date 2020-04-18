@@ -199,3 +199,10 @@ class TestGaussianMLPRegressor(TfGraphTestCase):
             gmr_pickled = pickle.loads(h)
             x2 = gmr_pickled.model.networks['default'].x_mean.eval()
             assert np.array_equal(x1, x2)
+
+    def test_auxiliary(self):
+        gmr = GaussianMLPRegressor(input_shape=(1, ), output_dim=5)
+
+        assert not gmr.recurrent
+        assert gmr.vectorized
+        assert gmr.distribution.dim == 5
