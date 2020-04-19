@@ -604,8 +604,7 @@ class PEARL(MetaRLAlgorithm):
             device (str): ID of GPU or CPU.
 
         """
-        if device is None:
-            device = tu.global_device()
+        device = device or tu.global_device()
         for net in self.networks:
             net.to(device)
 
