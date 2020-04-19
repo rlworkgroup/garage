@@ -198,30 +198,31 @@ class GaussianLSTMPolicy2(StochasticPolicy2):
         """
         return True
 
-    def reset(self, dones=None):
+    def reset(self, do_resets=None):
         """Reset the policy.
 
         Note:
-            If `dones` is None, it will be by default np.array([True]), which
-            implies the policy will not be "vectorized", i.e. number of
+            If `do_resets` is None, it will be by default np.array([True]),
+            which implies the policy will not be "vectorized", i.e. number of
             paralle environments for training data sampling = 1.
 
         Args:
-            dones (numpy.ndarray): Bool that indicates terminal state(s).
+            do_resets (numpy.ndarray): Bool that indicates terminal state(s).
 
         """
-        if dones is None:
-            dones = np.array([True])
-        if self._prev_actions is None or len(dones) != len(self._prev_actions):
+        if do_resets is None:
+            do_resets = np.array([True])
+        if self._prev_actions is None or len(do_resets) != len(
+                self._prev_actions):
             self._prev_actions = np.zeros(
-                (len(dones), self.action_space.flat_dim))
-            self._prev_hiddens = np.zeros((len(dones), self._hidden_dim))
-            self._prev_cells = np.zeros((len(dones), self._hidden_dim))
+                (len(do_resets), self.action_space.flat_dim))
+            self._prev_hiddens = np.zeros((len(do_resets), self._hidden_dim))
+            self._prev_cells = np.zeros((len(do_resets), self._hidden_dim))
 
-        self._prev_actions[dones] = 0.
-        self._prev_hiddens[dones] = self.model.networks[
+        self._prev_actions[do_resets] = 0.
+        self._prev_hiddens[do_resets] = self.model.networks[
             'default'].init_hidden.eval()
-        self._prev_cells[dones] = self.model.networks[
+        self._prev_cells[do_resets] = self.model.networks[
             'default'].init_cell.eval()
 
     def get_action(self, observation):

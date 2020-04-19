@@ -67,6 +67,7 @@ class FirstOrderOptimizer:
                 have extra input, e.g. KL constraint.
 
         """
+        del kwargs
         with tf.name_scope(self._name):
             self._target = target
 

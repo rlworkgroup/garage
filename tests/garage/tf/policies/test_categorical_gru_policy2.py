@@ -61,7 +61,7 @@ class TestCategoricalGRUPolicy2(TfGraphTestCase):
                                        hidden_dim=hidden_dim,
                                        state_include_action=False)
         policy.build(obs_var)
-        policy.reset(dones=None)
+        policy.reset(do_resets=None)
         obs = env.reset()
 
         action, _ = policy.get_action(obs.flatten())
