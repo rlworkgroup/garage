@@ -31,7 +31,10 @@ class TestGaussianGRUPolicy(TfGraphTestCase):
         env = TfEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
         obs_var = tf.compat.v1.placeholder(
             tf.float32,
-            shape=[None, None, env.observation_space.flat_dim + action_dim],
+            shape=[
+                None, None,
+                env.observation_space.flat_dim + np.prod(action_dim)
+            ],
             name='obs')
         policy = GaussianGRUPolicy2(env_spec=env.spec,
                                     hidden_dim=hidden_dim,

@@ -19,7 +19,7 @@ class TestCategoricalMLPModel(TfGraphTestCase):
     def test_dist(self):
         model = CategoricalMLPModel(output_dim=1)
         dist = model.build(self.input_var)
-        assert isinstance(dist, tfp.distributions.Categorical)
+        assert isinstance(dist, tfp.distributions.OneHotCategorical)
 
     # yapf: disable
     @pytest.mark.parametrize('output_dim, hidden_sizes', [

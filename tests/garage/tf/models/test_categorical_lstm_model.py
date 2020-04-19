@@ -39,7 +39,7 @@ class TestCategoricalLSTMModel(TfGraphTestCase):
         model.build(self._input_var, self._step_input_var, step_hidden_var,
                     step_cell_var)
         assert isinstance(model.networks['default'].dist,
-                          tfp.distributions.Categorical)
+                          tfp.distributions.OneHotCategorical)
 
     def test_is_pickleable(self):
         model = CategoricalLSTMModel(output_dim=1, hidden_dim=1)

@@ -31,7 +31,10 @@ class TestGaussianLSTMPolicy(TfGraphTestCase):
         env = TfEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
         obs_var = tf.compat.v1.placeholder(
             tf.float32,
-            shape=[None, None, env.observation_space.flat_dim + action_dim],
+            shape=[
+                None, None,
+                env.observation_space.flat_dim + np.prod(action_dim)
+            ],
             name='obs')
         policy = GaussianLSTMPolicy2(env_spec=env.spec,
                                      hidden_dim=hidden_dim,
@@ -89,8 +92,6 @@ class TestGaussianLSTMPolicy(TfGraphTestCase):
         policy.build(obs_var)
         env.reset()
         obs = env.reset()
-        for x in tf.global_variables():
-            print(x)
         with tf.compat.v1.variable_scope(
                 'GaussianLSTMPolicy/GaussianLSTMModel', reuse=True):
             param = tf.compat.v1.get_variable(
