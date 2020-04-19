@@ -28,3 +28,4 @@ __all__ = [
     'GaussianLSTMModel', 'GaussianLSTMModel2', 'GaussianMLPModel',
     'GaussianMLPModel2', 'GRUModel', 'MLPDuelingModel', 'MLPMergeModel',
     'MLPModel', 'NormalizedInputMLPModel', 'Sequential', 'StochasticModule'
+]
