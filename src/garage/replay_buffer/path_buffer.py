@@ -190,3 +190,13 @@ class PathBuffer:
             first, second = seg_b, seg_a
         assert first.start <= second.start
         return first.stop >= second.start
+
+    @property
+    def n_transitions_stored(self):
+        """Return the size of the replay buffer.
+
+        Returns:
+            int: Size of the current replay buffer.
+
+        """
+        return int(self._transitions_stored)

@@ -34,6 +34,7 @@ def log_multitask_performance(itr, batch, discount, name_map=None):
         if 'task_name' in trajectory.env_infos:
             task_name = trajectory.env_infos['task_name'][0]
         elif 'task_id' in trajectory.env_infos:
+            name_map = {} if name_map is None else name_map
             task_id = trajectory.env_infos['task_id'][0]
             task_name = name_map.get(task_id, 'Task #{}'.format(task_id))
         traj_by_name[task_name].append(trajectory)

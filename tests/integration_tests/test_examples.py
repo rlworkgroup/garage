@@ -33,6 +33,9 @@ LONG_RUNNING_EXAMPLES = [
     EXAMPLES_ROOT_DIR / 'tf/rl2_ppo_ml10.py',
     EXAMPLES_ROOT_DIR / 'tf/rl2_ppo_ml10_meta_test.py',
     EXAMPLES_ROOT_DIR / 'tf/rl2_ppo_ml45.py',
+    EXAMPLES_ROOT_DIR / 'torch/mtsac_metaworld_MT10.py',
+    EXAMPLES_ROOT_DIR / 'torch/mtsac_metaworld_MT50.py',
+    EXAMPLES_ROOT_DIR / 'torch/mtsac_metaworld_ML1_pick_place.py'
 ]
 # yapf: enable
 

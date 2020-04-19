@@ -60,5 +60,5 @@ class TestPathBuffer:
             assert (new_sampled_path_obs == np.array([[2], [3]])).all()
 
         replay_buffer.clear()
-        assert replay_buffer._transitions_stored == 0
+        assert replay_buffer.n_transitions_stored == 0
         assert not replay_buffer._buffer
