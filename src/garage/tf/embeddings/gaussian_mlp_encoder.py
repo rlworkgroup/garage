@@ -2,7 +2,7 @@
 import numpy as np
 import tensorflow as tf
 
-from garage.np.embeddings import StochasticEncoder
+from garage.tf.embeddings import StochasticEncoder
 from garage.tf.models import GaussianMLPModel, StochasticModule
 
 
@@ -131,6 +131,22 @@ class GaussianMLPEncoder(StochasticEncoder, StochasticModule):
             ],
             feed_list=[self.model.networks['default'].input])
 
+    def dist_info(self, input_val, state_infos):
+        """Distribution info.
+
+        Get the information of embedding distribution given an input.
+
+        Args:
+            input_val (np.ndarray): input values
+            state_infos (dict): a dictionary whose values contain
+                information about the predicted embedding given an input.
+
+        Returns:
+            dict[numpy.ndarray]: Distribution parameters.
+
+        """
+        raise NotImplementedError
+
     def dist_info_sym(self, input_var, state_info_vars=None, name='default'):
         """Build a symbolic graph of the distribution parameters.
 
@@ -151,14 +167,19 @@ class GaussianMLPEncoder(StochasticEncoder, StochasticModule):
         return dict(mean=mean_var, log_std=log_std_var)
 
     @property
+    def spec(self):
+        """garage.InOutSpec: Specification of input and output."""
+        return self._embedding_spec
+
+    @property
     def input_dim(self):
         """int: Dimension of the encoder input."""
-        return self._embedding_spec.input_space.flat_dim
+        return self.spec.input_space.flat_dim
 
     @property
     def output_dim(self):
         """int: Dimension of the encoder output (embedding)."""
-        return self._embedding_spec.output_space.flat_dim
+        return self.spec.output_space.flat_dim
 
     @property
     def recurrent(self):

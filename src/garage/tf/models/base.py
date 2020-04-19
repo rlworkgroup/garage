@@ -646,13 +646,13 @@ class StochasticModule(Module):
 
         """
 
-    def dist_info(self, input_value, state_infos):
+    def dist_info(self, input_val, state_infos):
         """Distribution info.
 
         Return the distribution information given input.
 
         Args:
-            input_value (tf.Tensor): Input values.
+            input_val (tf.Tensor): Input values.
             state_infos (dict): a dictionary whose values should contain
                 information about the state of the policy at the time it
                 received the input.

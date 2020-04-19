@@ -1,4 +1,8 @@
 """An MLP network for encoding context of RL tasks."""
+import akro
+import numpy as np
+
+from garage import InOutSpec
 from garage.np.embeddings import Encoder
 from garage.torch.modules import MLPModule
 
@@ -36,6 +40,13 @@ class MLPEncoder(MLPModule, Encoder):
         layer_normalization (bool): Bool for using layer normalization or not.
 
     """
+
+    @property
+    def spec(self):
+        """garage.InOutSpec: Input and output space."""
+        input_space = akro.Box(-np.inf, np.inf, self._input_dim)
+        output_space = akro.Box(-np.inf, np.inf, self._output_dim)
+        return InOutSpec(input_space, output_space)
 
     @property
     def input_dim(self):
