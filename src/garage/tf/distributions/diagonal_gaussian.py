@@ -67,9 +67,6 @@ class DiagonalGaussian(Distribution):
             tf.Tensor: Symbolic KL divergence between the two distributions.
 
         """
-        with tf.name_scope(name, 'kl_sym',
-                           [old_dist_info_vars, new_dist_info_vars]):
-    def kl_sym(self, old_dist_info_vars, new_dist_info_vars, name='kl_sym'):
         with tf.name_scope(name):
             old_means = old_dist_info_vars['mean']
             old_log_stds = old_dist_info_vars['log_std']
@@ -113,7 +110,9 @@ class DiagonalGaussian(Distribution):
             logli_old = self.log_likelihood_sym(x_var, old_dist_info_vars)
             return tf.exp(logli_new - logli_old)
 
-    def log_likelihood_sym(self, x_var, dist_info_vars,
+    def log_likelihood_sym(self,
+                           x_var,
+                           dist_info_vars,
                            name='log_likelihood_sym'):
         """Symbolic log likelihood.
 
