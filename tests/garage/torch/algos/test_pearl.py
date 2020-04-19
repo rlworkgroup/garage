@@ -155,6 +155,9 @@ class TestPEARL:
                       encoder_hidden_sizes=[10, 10],
                       test_env_sampler=test_env_sampler)
 
+        # This line is just to improve coverage
+        pearl.to()
+
         pickled = pickle.dumps(pearl)
         unpickled = pickle.loads(pickled)
 
