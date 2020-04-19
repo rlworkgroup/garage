@@ -35,6 +35,16 @@ class SimpleMLPRegressor(Regressor):
             self._variable_scope = vs
             self.model.build(input_ph)
 
+    @property
+    def recurrent(self):
+        """bool: If this module has a hidden state."""
+        return False
+
+    @property
+    def vectorized(self):
+        """bool: If this module supports vectorization input."""
+        return True
+
     def fit(self, xs, ys):
         """Fit with input data xs and label ys.
 

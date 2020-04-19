@@ -1,10 +1,9 @@
 """An MLP network for encoding context of RL tasks."""
-
-from garage.torch.embeddings import ContextEncoder
+from garage.np.embeddings import Encoder
 from garage.torch.modules import MLPModule
 
 
-class MLPEncoder(ContextEncoder, MLPModule):
+class MLPEncoder(MLPModule, Encoder):
     """This MLP network encodes context of RL tasks.
 
     Context is stored in the terms of observation, action, and reward, and this
@@ -38,10 +37,28 @@ class MLPEncoder(ContextEncoder, MLPModule):
 
     """
 
-    def reset(self, num_tasks=1):
-        """Reset hidden state task size.
+    @property
+    def input_dim(self):
+        """int: Dimension of the encoder input."""
+        return self._input_dim
+
+    @property
+    def output_dim(self):
+        """int: Dimension of the encoder output (embedding)."""
+        return self._output_dim
+
+    def reset(self, do_resets=None):
+        """Reset the encoder.
+
+        This is effective only to recurrent encoder. do_resets is effective
+        only to vectoried encoder.
+
+        For a vectorized encoder, do_resets is an array of boolean indicating
+        which internal states to be reset. The length of do_resets should be
+        equal to the length of inputs.
 
         Args:
-            num_tasks (int): Size of tasks.
+            do_resets (numpy.ndarray): Bool array indicating which states
+                to be reset.
 
         """
