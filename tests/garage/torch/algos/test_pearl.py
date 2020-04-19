@@ -14,7 +14,7 @@ except Exception:  # pylint: disable=broad-except
         'Skipping tests, failed to import mujoco. Do you have a '
         'valid mujoco key installed?',
         allow_module_level=True)
-from metaworld.benchmarks import ML1  # noqa: I100
+from metaworld.benchmarks import ML1  # noqa: I100, I202
 
 from garage.envs import GarageEnv, normalize, PointEnv
 from garage.experiment import LocalRunner
@@ -156,4 +156,8 @@ class TestPEARL:
                       test_env_sampler=test_env_sampler)
 
         pickled = pickle.dumps(pearl)
-        pickle.loads(pickled)
+        unpickled = pickle.loads(pickled)
+
+        assert hasattr(unpickled, '_replay_buffers')
+        assert hasattr(unpickled, '_context_replay_buffers')
+        assert unpickled._is_resuming
