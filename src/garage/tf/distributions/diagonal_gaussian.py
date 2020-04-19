@@ -24,7 +24,7 @@ class DiagonalGaussian(Distribution):
         return self._dim
 
     def kl(self, old_dist_info, new_dist_info):
-        """KL Divergen between the old and the new distribution.
+        """KL Divergence between the old and the new distribution.
 
         Args:
             old_dist_info (dict): Parameters of the old distribution.
