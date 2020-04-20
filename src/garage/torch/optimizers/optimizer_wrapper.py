@@ -40,6 +40,7 @@ class OptimizerWrapper:
         Yields:
             list[torch.Tensor]: A list batch of inputs. Each batch has shape
                 :math:`(P, *)`.
+
         """
         batch_dataset = BatchDataset(inputs, self._minibatch_size)
 
@@ -57,5 +58,6 @@ class OptimizerWrapper:
         Arguments:
             **closure (callable, optional): A closure that reevaluates the
                 model and returns the loss.
+
         """
         self._optimizer.step(**closure)

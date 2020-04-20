@@ -60,6 +60,7 @@ EXTRAS['dev'] = [
     'flake8',
     'flake8-docstrings>=1.5.0',
     'flake8-import-order',
+    'metaworld @ https://{}@api.github.com/repos/rlworkgroup/metaworld/tarball/861ae8d8c4bef80a7ed86f47f47acaa494d4ab77'.format(GARAGE_GH_TOKEN),  # noqa: E501
     'pep8-naming==0.7.0',
     'pre-commit',
     'pycodestyle>=2.5.0',
@@ -73,18 +74,6 @@ EXTRAS['dev'] = [
     'sphinx',
     'sphinx_rtd_theme',
     'yapf==0.28.0',
-]  # yapf: disable
-
-# Benchmark dependencies (*not* included in 'all')
-EXTRAS['benchmarks'] = [
-    # Please keep alphabetized
-    'baselines @ https://{}@api.github.com/repos/openai/baselines/tarball/ea25b9e8b234e6ee1bca43083f8f3cf974143998'.format(GARAGE_GH_TOKEN),  # noqa: E501
-    'gtimer',
-    'matplotlib',
-    'metaworld @ https://{}@api.github.com/repos/rlworkgroup/metaworld/tarball/9a3ce2be718196447119e8f5445565d1c7f94770'.format(GARAGE_GH_TOKEN),  # noqa: E501
-    'pandas',
-    'rlkit @ https://{}@api.github.com/repos/vitchyr/rlkit/tarball/1d469a509b797ca04a39b8734c1816ca7d108fc8'.format(GARAGE_GH_TOKEN),  # noqa: E501
-    'seaborn',
 ]  # yapf: disable
 
 with open('README.md') as f:
