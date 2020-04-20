@@ -1,9 +1,9 @@
 """Deep Q-Learning Network algorithm."""
+import akro
 from dowel import tabular
 import numpy as np
 import tensorflow as tf
 
-from garage.misc.tensor_utils import normalize_pixel_batch
 from garage.np.algos.off_policy_rl_algorithm import OffPolicyRLAlgorithm
 from garage.tf.misc import tensor_utils
 
@@ -234,12 +234,13 @@ class DQN(OffPolicyRLAlgorithm):
         next_observations = transitions['next_observation']
         dones = transitions['terminal']
 
-        # normalize pixel to range [0, 1] since the samples stored in the
-        # replay buffer are of type uint8 and not normalized, for memory
-        # optimization
-        observations = normalize_pixel_batch(self.env_spec, observations)
-        next_observations = normalize_pixel_batch(self.env_spec,
-                                                  next_observations)
+        if isinstance(self.env_spec.observation_space, akro.Image):
+            if len(self.env_spec.observation_space.shape) < 3:
+                observations = self.env_spec.observation_space.unflatten_n(
+                    observations)
+                next_observations = self.env_spec.observation_space.\
+                    unflatten_n(next_observations)
+
         loss, _ = self._train_qf(observations, actions, rewards, dones,
                                  next_observations)
 

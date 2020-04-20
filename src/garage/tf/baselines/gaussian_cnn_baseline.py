@@ -1,7 +1,8 @@
 """Gaussian CNN Baseline."""
-
+import akro
 import numpy as np
 
+from garage.misc.tensor_utils import normalize_pixel_batch
 from garage.np.baselines import Baseline
 from garage.tf.regressors import GaussianCNNRegressor
 
@@ -27,6 +28,16 @@ class GaussianCNNBaseline(Baseline):
             regressor_args=None,
             name='GaussianCNNBaseline',
     ):
+        if not isinstance(env_spec.observation_space, akro.Box) or \
+                not len(env_spec.observation_space.shape) in (2, 3):
+            raise ValueError(
+                '{} can only process 2D, 3D akro.Image or'
+                ' akro.Box observations, but received an env_spec with '
+                'observation_space of type {} and shape {}'.format(
+                    type(self).__name__,
+                    type(env_spec.observation_space).__name__,
+                    env_spec.observation_space.shape))
+
         super().__init__(env_spec)
         if regressor_args is None:
             regressor_args = dict()
@@ -38,6 +49,7 @@ class GaussianCNNBaseline(Baseline):
             name=name,
             **regressor_args)
         self.name = name
+        self.env_spec = env_spec
 
     def fit(self, paths):
         """Fit regressor based on paths.
@@ -47,6 +59,9 @@ class GaussianCNNBaseline(Baseline):
 
         """
         observations = np.concatenate([p['observations'] for p in paths])
+        if isinstance(self.env_spec.observation_space, akro.Image):
+            observations = normalize_pixel_batch(observations)
+
         returns = np.concatenate([p['returns'] for p in paths])
         self._regressor.fit(observations, returns.reshape((-1, 1)))
 
@@ -60,7 +75,11 @@ class GaussianCNNBaseline(Baseline):
             numpy.ndarray: Predicted value.
 
         """
-        return self._regressor.predict(path['observations']).flatten()
+        observations = path['observations']
+        if isinstance(self.env_spec.observation_space, akro.Image):
+            observations = normalize_pixel_batch(observations)
+
+        return self._regressor.predict(observations).flatten()
 
     def get_param_values(self):
         """Get parameter values.

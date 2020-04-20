@@ -28,7 +28,7 @@ def run_task(snapshot_config, variant_data, *_):
 
     """
     with LocalTFRunner(snapshot_config=snapshot_config) as runner:
-        env = TfEnv(normalize(gym.make('MemorizeDigits-v0')))
+        env = TfEnv(normalize(gym.make('MemorizeDigits-v0')), is_image=True)
         policy = CategoricalCNNPolicy(env_spec=env.spec,
                                       conv_filters=(32, 64, 64),
                                       conv_filter_sizes=(5, 3, 2),

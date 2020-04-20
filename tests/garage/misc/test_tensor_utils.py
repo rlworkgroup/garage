@@ -11,7 +11,6 @@ from garage.misc.tensor_utils import pad_tensor
 from garage.misc.tensor_utils import stack_and_pad_tensor_dict_list
 from garage.misc.tensor_utils import stack_tensor_dict_list
 from garage.tf.envs import TfEnv
-from tests.fixtures.envs.dummy import DummyBoxEnv
 from tests.fixtures.envs.dummy import DummyDiscretePixelEnv
 
 
@@ -35,18 +34,12 @@ class TestTensorUtil:
         self.max_len = 10
         self.tensor = [1, 1, 1]
 
-    def test_normalize_pixel_patch(self):
-        env = TfEnv(DummyDiscretePixelEnv())
+    def test_normalize_pixel_batch(self):
+        env = TfEnv(DummyDiscretePixelEnv(), is_image=True)
         obs = env.reset()
-        obs_normalized = normalize_pixel_batch(env, obs)
+        obs_normalized = normalize_pixel_batch(obs)
         expected = [ob / 255.0 for ob in obs]
         assert np.allclose(obs_normalized, expected)
-
-    def test_normalize_pixel_patch_not_trigger(self):
-        env = TfEnv(DummyBoxEnv())
-        obs = env.reset()
-        obs_normalized = normalize_pixel_batch(env, obs)
-        assert np.array_equal(obs, obs_normalized)
 
     def test_concat_tensor_dict_list(self):
         results = concat_tensor_dict_list(self.data)

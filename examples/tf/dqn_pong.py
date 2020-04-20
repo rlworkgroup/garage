@@ -51,7 +51,7 @@ def run_task(snapshot_config, variant_data, *_):
         env = ClipReward(env)
         env = StackFrames(env, 4)
 
-        env = TfEnv(env)
+        env = TfEnv(env, is_image=True)
 
         replay_buffer = SimpleReplayBuffer(
             env_spec=env.spec,

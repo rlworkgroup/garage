@@ -6,9 +6,11 @@ import pytest
 import tensorflow as tf
 
 from garage.tf.envs import TfEnv
+from garage.tf.models import CNNModel
 from garage.tf.policies import CategoricalCNNPolicy
 from tests.fixtures import TfGraphTestCase
 from tests.fixtures.envs.dummy import DummyDiscreteEnv
+from tests.fixtures.envs.dummy import DummyDiscretePixelEnv
 from tests.fixtures.models import SimpleCNNModel
 from tests.fixtures.models import SimpleMLPModel
 
@@ -18,19 +20,11 @@ class TestCategoricalCNNPolicyWithModel(TfGraphTestCase):
     @pytest.mark.parametrize(
         'obs_dim, action_dim, filter_dims, filter_sizes, '
         'strides, padding, hidden_sizes', [
-            ((1, ), 1, (32, ), (3, ), (1, ), 'VALID', (4, )),
-            ((2, ), 2, (32, ), (3, ), (1, ), 'VALID', (4, )),
-            ((2, ), 2, (32, 64), (3, 3), (1, 1), 'VALID', (4, 4)),
-            ((2, ), 2, (32, 64), (3, 3), (2, 2), 'VALID', (4, 4)),
             ((1, 1), 1, (32, ), (3, ), (1, ), 'VALID', (4, )),
             ((2, 2), 2, (32, ), (3, ), (1, ), 'VALID', (4, )),
             ((2, 2), 2, (32, 64), (3, 3), (1, 1), 'VALID', (4, 4)),
-            ((2, 2), 2, (32, 64), (3, 3), (2, 2), 'VALID', (4, 4)),
-            ((1, ), 1, (32, ), (3, ), (1, ), 'SAME', (4, )),
-            ((2, ), 2, (32, ), (3, ), (1, ), 'SAME', (4, )),
-            ((2, ), 2, (32, 64), (3, 3), (1, 1), 'SAME', (4, 4)),
-            ((2, ), 2, (32, 64), (3, 3), (2, 2), 'SAME', (4, 4)),
-            ((1, 1), 1, (32, ), (3, ), (1, ), 'SAME', (4, )),
+            ((2, 2, 2), 2, (32, 64), (3, 3), (2, 2), 'VALID', (4, 4)),
+            ((1, 1, 1), 1, (32, ), (3, ), (1, ), 'SAME', (4, )),
             ((2, 2), 2, (32, ), (3, ), (1, ), 'SAME', (4, )),
             ((2, 2), 2, (32, 64), (3, 3), (1, 1), 'SAME', (4, 4)),
             ((2, 2), 2, (32, 64), (3, 3), (2, 2), 'SAME', (4, 4)),
@@ -72,19 +66,11 @@ class TestCategoricalCNNPolicyWithModel(TfGraphTestCase):
     @pytest.mark.parametrize(
         'obs_dim, action_dim, filter_dims, filter_sizes, '
         'strides, padding, hidden_sizes', [
-            ((1, ), 1, (32, ), (3, ), (1, ), 'VALID', (4, )),
-            ((2, ), 2, (32, ), (3, ), (1, ), 'VALID', (4, )),
-            ((2, ), 2, (32, 64), (3, 3), (1, 1), 'VALID', (4, 4)),
-            ((2, ), 2, (32, 64), (3, 3), (2, 2), 'VALID', (4, 4)),
             ((1, 1), 1, (32, ), (3, ), (1, ), 'VALID', (4, )),
             ((2, 2), 2, (32, ), (3, ), (1, ), 'VALID', (4, )),
-            ((2, 2), 2, (32, 64), (3, 3), (1, 1), 'VALID', (4, 4)),
-            ((2, 2), 2, (32, 64), (3, 3), (2, 2), 'VALID', (4, 4)),
-            ((1, ), 1, (32, ), (3, ), (1, ), 'SAME', (4, )),
-            ((2, ), 2, (32, ), (3, ), (1, ), 'SAME', (4, )),
-            ((2, ), 2, (32, 64), (3, 3), (1, 1), 'SAME', (4, 4)),
-            ((2, ), 2, (32, 64), (3, 3), (2, 2), 'SAME', (4, 4)),
-            ((1, 1), 1, (32, ), (3, ), (1, ), 'SAME', (4, )),
+            ((2, 2, 2), 2, (32, 64), (3, 3), (1, 1), 'VALID', (4, 4)),
+            ((2, 2, 2), 2, (32, 64), (3, 3), (2, 2), 'VALID', (4, 4)),
+            ((1, 1, 1), 1, (32, ), (3, ), (1, ), 'SAME', (4, )),
             ((2, 2), 2, (32, ), (3, ), (1, ), 'SAME', (4, )),
             ((2, 2), 2, (32, 64), (3, 3), (1, 1), 'SAME', (4, 4)),
             ((2, 2), 2, (32, 64), (3, 3), (2, 2), 'SAME', (4, 4)),
@@ -113,21 +99,116 @@ class TestCategoricalCNNPolicyWithModel(TfGraphTestCase):
         policy_probs = policy.dist_info([obs])
         assert np.array_equal(policy_probs['prob'][0], expected_prob)
 
+    @pytest.mark.parametrize('obs_dim, action_dim, filter_dims, filter_sizes, '
+                             'strides, padding, hidden_sizes',
+                             [((1, ), 1, (32, ), (3, ), (1, ), 'VALID', (4, )),
+                              ((2, 2, 2, 2), 2, (32, ), (3, ), (1, ), 'VALID',
+                               (4, )),
+                              ((3, 3, 3, 3, 3), 2, (32, 64), (3, 3),
+                               (1, 1), 'VALID', (4, 4))])
+    def test_invalid_obs_shape(self, obs_dim, action_dim, filter_dims,
+                               filter_sizes, strides, padding, hidden_sizes):
+        env = TfEnv(DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
+        with pytest.raises(ValueError):
+            CategoricalCNNPolicy(env_spec=env.spec,
+                                 conv_filters=filter_dims,
+                                 conv_filter_sizes=filter_sizes,
+                                 conv_strides=strides,
+                                 conv_pad=padding,
+                                 hidden_sizes=hidden_sizes)
+
+    def test_obs_is_image(self):
+        env = TfEnv(DummyDiscretePixelEnv(), is_image=True)
+        with mock.patch(('garage.tf.policies.'
+                         'categorical_cnn_policy.CNNModel._build'),
+                        autospec=True,
+                        side_effect=CNNModel._build) as build:
+            policy = CategoricalCNNPolicy(env_spec=env.spec,
+                                          conv_filters=(32, ),
+                                          conv_filter_sizes=(1, ),
+                                          conv_strides=(1, ),
+                                          conv_pad='VALID',
+                                          hidden_sizes=(3, ))
+            normalized_obs = build.call_args_list[0][0][1]
+
+            input_ph = tf.compat.v1.get_default_graph().get_tensor_by_name(
+                'Placeholder:0')
+
+            fake_obs = [np.full(env.spec.observation_space.shape, 255)]
+            assert (self.sess.run(normalized_obs,
+                                  feed_dict={input_ph: fake_obs}) == 1.).all()
+
+            obs_dim = env.spec.observation_space.shape
+            state_input = tf.compat.v1.placeholder(tf.float32,
+                                                   shape=(None, ) + obs_dim)
+
+            policy.dist_info_sym(state_input, name='another')
+            normalized_obs = build.call_args_list[1][0][1]
+
+            input_ph = tf.compat.v1.get_default_graph().get_tensor_by_name(
+                'Placeholder_1:0')
+
+            fake_obs = [np.full(env.spec.observation_space.shape, 255)]
+            assert (self.sess.run(normalized_obs,
+                                  feed_dict={state_input:
+                                             fake_obs}) == 1.).all()
+
+    def test_obs_not_image(self):
+        env = TfEnv(DummyDiscreteEnv(obs_dim=(1, 1), action_dim=1),
+                    is_image=False)
+        with mock.patch(('tests.fixtures.models.SimpleCNNModel._build'),
+                        autospec=True,
+                        side_effect=SimpleCNNModel._build) as build:
+            with mock.patch(('garage.tf.policies.'
+                             'categorical_cnn_policy.MLPModel'),
+                            new=SimpleMLPModel):
+                with mock.patch(('garage.tf.policies.'
+                                 'categorical_cnn_policy.CNNModel'),
+                                new=SimpleCNNModel):
+                    policy = CategoricalCNNPolicy(env_spec=env.spec,
+                                                  conv_filters=(32, ),
+                                                  conv_filter_sizes=(3, ),
+                                                  conv_strides=(1, ),
+                                                  conv_pad='VALID',
+                                                  hidden_sizes=(1, ))
+
+                    obs_dim = env.spec.observation_space.shape
+                    state_input = tf.compat.v1.placeholder(tf.float32,
+                                                           shape=(None, ) +
+                                                           obs_dim)
+                    normalized_obs = build.call_args_list[0][0][1]
+
+                    input_ph = tf.compat.v1.get_default_graph(
+                    ).get_tensor_by_name('Placeholder:0')
+                    fake_obs = [np.full(env.spec.observation_space.shape, 255)]
+
+                    assert (self.sess.run(normalized_obs,
+                                          feed_dict={input_ph:
+                                                     fake_obs}) == 255.).all()
+
+                    obs_dim = env.spec.observation_space.shape
+                    state_input = tf.compat.v1.placeholder(tf.float32,
+                                                           shape=(None, ) +
+                                                           obs_dim)
+
+                    policy.dist_info_sym(state_input, name='another')
+                    normalized_obs = build.call_args_list[1][0][1]
+
+                    input_ph = tf.compat.v1.get_default_graph(
+                    ).get_tensor_by_name('Placeholder_1:0')
+
+                    fake_obs = [np.full(env.spec.observation_space.shape, 255)]
+                    assert (self.sess.run(normalized_obs,
+                                          feed_dict={state_input:
+                                                     fake_obs}) == 255.).all()
+
     @pytest.mark.parametrize(
         'obs_dim, action_dim, filter_dims, filter_sizes, '
         'strides, padding, hidden_sizes', [
-            ((1, ), 1, (32, ), (3, ), (1, ), 'VALID', (4, )),
-            ((2, ), 2, (32, ), (3, ), (1, ), 'VALID', (4, )),
-            ((2, ), 2, (32, 64), (3, 3), (1, 1), 'VALID', (4, 4)),
-            ((2, ), 2, (32, 64), (3, 3), (2, 2), 'VALID', (4, 4)),
             ((1, 1), 1, (32, ), (3, ), (1, ), 'VALID', (4, )),
             ((2, 2), 2, (32, ), (3, ), (1, ), 'VALID', (4, )),
-            ((2, 2), 2, (32, 64), (3, 3), (1, 1), 'VALID', (4, 4)),
-            ((2, 2), 2, (32, 64), (3, 3), (2, 2), 'VALID', (4, 4)),
-            ((1, ), 1, (32, ), (3, ), (1, ), 'SAME', (4, )),
-            ((2, ), 2, (32, ), (3, ), (1, ), 'SAME', (4, )),
-            ((2, ), 2, (32, 64), (3, 3), (1, 1), 'SAME', (4, 4)),
-            ((2, ), 2, (32, 64), (3, 3), (2, 2), 'SAME', (4, 4)),
+            ((2, 2, 2), 2, (32, 64), (3, 3), (1, 1), 'VALID', (4, 4)),
+            ((2, 2, 2), 2, (32, 64), (3, 3), (2, 2), 'VALID', (4, 4)),
             ((1, 1), 1, (32, ), (3, ), (1, ), 'SAME', (4, )),
             ((2, 2), 2, (32, ), (3, ), (1, ), 'SAME', (4, )),
             ((2, 2), 2, (32, 64), (3, 3), (1, 1), 'SAME', (4, 4)),
@@ -163,8 +244,8 @@ class TestCategoricalCNNPolicyWithModel(TfGraphTestCase):
         assert np.array_equal(prob[0], expected_prob)
 
     @pytest.mark.parametrize('obs_dim, action_dim', [
-        ((1, ), 1),
-        ((2, ), 2),
+        ((1, 1, 1), 1),
+        ((2, 2, 2), 2),
         ((1, 1), 1),
         ((2, 2), 2),
     ])
