@@ -97,21 +97,21 @@ class CategoricalGRUModel(GRUModel):
 
         Args:
             state_input (tf.Tensor): Full observation input, with shape
-                :math: `(N, T, S^*)`.
+                :math:`(N, T, S^*)`.
             step_input (tf.Tensor): Step observation input, with shape
-                :math: `(N, S^*)`.
+                :math:`(N, S^*)`.
             step_hidden (tf.Tensor): Hidden state for step, with shape
-                :math: `(N, S^*)`.
+                :math:`(N, S^*)`.
             name (str): Inner model name, also the variable scope of the
                 inner model, if exist. One example is
                 garage.tf.models.Sequential.
 
         Returns:
             tfp.distributions.Categorical: Policy distribution.
-            tf.Tensor: Step output, with shape :math: `(N, S^*)`.
-            tf.Tensor: Step hidden state, with shape :math: `(N, S^*)`.
+            tf.Tensor: Step output, with shape :math:`(N, S^*)`.
+            tf.Tensor: Step hidden state, with shape :math:`(N, S^*)`.
             tf.Tensor: Initial hidden state , used to reset the hidden state
-                when policy resets. Shape: :math: `(S^*)`.
+                when policy resets. Shape: :math:`(S^*)`.
 
         """
         outputs, step_output, step_hidden, init_hidden = super()._build(

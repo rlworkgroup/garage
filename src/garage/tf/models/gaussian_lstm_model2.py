@@ -175,24 +175,24 @@ class GaussianLSTMModel2(Model):
 
         Args:
             state_input (tf.Tensor): Entire time-series observation input,
-                with shape :math: `(N, T, S^*)`.
+                with shape :math:`(N, T, S^*)`.
             step_input (tf.Tensor): Single timestep observation input,
-                with shape :math: `(N, S^*)`.
+                with shape :math:`(N, S^*)`.
             step_hidden (tf.Tensor): Hidden state for step, with shape
-                :math: `(N, S^*)`.
+                :math:`(N, S^*)`.
             step_cell (tf.Tensor): Cell state for step, with shape
-                :math: `(N, S^*)`.
+                :math:`(N, S^*)`.
             name (str): Inner model name, also the variable scope of the
                 inner model, if exist. One example is
                 garage.tf.models.Sequential.
 
         Returns:
-            tf.Tensor: Step means, with shape :math: `(N, S^*)`.
-            tf.Tensor: Step log std, with shape :math: `(N, S^*)`.
-            tf.Tensor: Step hidden state, with shape :math: `(N, S^*)`.
-            tf.Tensor: Step cell state, with shape :math: `(N, S^*)`.
-            tf.Tensor: Initial hidden state, with shape :math: `(S^*)`.
-            tf.Tensor: Initial cell state, with shape :math: `(S^*)`
+            tf.Tensor: Step means, with shape :math:`(N, S^*)`.
+            tf.Tensor: Step log std, with shape :math:`(N, S^*)`.
+            tf.Tensor: Step hidden state, with shape :math:`(N, S^*)`.
+            tf.Tensor: Step cell state, with shape :math:`(N, S^*)`.
+            tf.Tensor: Initial hidden state, with shape :math:`(S^*)`.
+            tf.Tensor: Initial cell state, with shape :math:`(S^*)`
             tfp.distributions.MultivariateNormalDiag: Policy distribution.
 
         """

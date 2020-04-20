@@ -113,4 +113,9 @@ class StochasticPolicy2(Policy):
     @property
     @abc.abstractmethod
     def distribution(self):
-        """Distribution to parameterize the policy."""
+        """Distribution to parameterize the policy.
+
+        Returns:
+            tfp.distributions.Distribution: Policy distribution.
+
+        """
