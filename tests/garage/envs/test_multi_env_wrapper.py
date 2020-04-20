@@ -129,6 +129,14 @@ class TestMultiEnvWrapper:
         obs = mt_env.step(1)[0]
         assert (obs[:2] == np.array([0., 1.])).all()
 
+    def test_active_task_name(self):
+        """Check if the task name of the active task corresponds to its """
+        envs = ['CartPole-v0', 'CartPole-v1']
+        mt_env = self._init_multi_env_wrapper(envs)
+        for _ in range(mt_env.num_tasks):
+            assert mt_env.active_task_name == str(mt_env.env.unwrapped)
+            mt_env.reset()
+
     def _init_multi_env_wrapper(self,
                                 env_names,
                                 sample_strategy=uniform_random_strategy):
@@ -143,3 +151,53 @@ class TestMultiEnvWrapper:
         """
         task_envs = [TfEnv(env_name=name) for name in env_names]
         return MultiEnvWrapper(task_envs, sample_strategy=sample_strategy)
+
+
+@pytest.mark.mujoco
+class TestMetaWorldMultiEnvWrapper:
+    """Tests for garage.envs.multi_env_wrapper using Metaworld Envs"""
+
+    def setup_class(self):
+        """Init Wrapper with MT10."""
+        # pylint: disable=import-outside-toplevel
+        from metaworld.benchmarks import MT10
+        tasks = MT10.get_train_tasks().all_task_names
+        envs = []
+        for task in tasks:
+            envs.append(MT10.from_task(task))
+        self.env = MultiEnvWrapper(envs,
+                                   sample_strategy=round_robin_strategy,
+                                   metaworld_mt=True)
+
+    def teardown_class(self):
+        """Close the MTMetaWorldWrapper."""
+        self.env.close()
+
+    def test_num_tasks(self):
+        """Assert num tasks returns 10, because MT10 is being tested."""
+        assert self.env.num_tasks == 10
+
+    def test_step(self):
+        """Test that env_infos includes extra infos and obs has onehot."""
+        self.env.reset()
+        action = self.env.spec.action_space.sample()
+        obs, _, _, info = self.env.step(action)
+        assert info['task_id'] == self.env.active_task_index
+        assert (self.env.active_task_one_hot == obs[9:]).all()
+
+    def test_reset(self):
+        """Test round robin switching of environments during call to reset."""
+        self.env.reset()
+        active_task_id = self.env.active_task_index
+        for _ in range(self.env.num_tasks):
+            self.env.reset()
+            action = self.env.spec.action_space.sample()
+            _, _, _, info = self.env.step(action)
+            assert not info['task_id'] == active_task_id
+            active_task_id = self.env.active_task_index
+
+    def test_active_task_name(self):
+        """Assert the task name of the active task corresponds to its metaworld name."""  # noqa: E501
+        for _ in range(self.env.num_tasks):
+            self.env.reset()
+            assert self.env.active_task_name == self.env.env.all_task_names[0]
