@@ -2,7 +2,7 @@
 """This is an example to train MAML-TRPO on ML1 Push environment."""
 # pylint: disable=no-value-for-parameter
 import click
-from metaworld.benchmarks import ML1
+import metaworld.benchmarks
 import torch
 
 from garage import wrap_experiment
@@ -11,9 +11,9 @@ from garage.envs.base import GarageEnv
 from garage.experiment import LocalRunner, MetaEvaluator
 from garage.experiment.deterministic import set_seed
 from garage.experiment.task_sampler import SetTaskSampler
-from garage.np.baselines import LinearFeatureBaseline
 from garage.torch.algos import MAMLTRPO
 from garage.torch.policies import GaussianMLPPolicy
+from garage.torch.value_functions import GaussianMLPValueFunction
 
 
 @click.command()
@@ -38,7 +38,8 @@ def maml_trpo(ctxt, seed, epochs, rollouts_per_task, meta_batch_size):
     """
     set_seed(seed)
     env = GarageEnv(
-        normalize(ML1.get_train_tasks('push-v1'), expected_action_scale=10.))
+        normalize(metaworld.benchmarks.ML1.get_train_tasks('push-v1'),
+                  expected_action_scale=10.))
 
     policy = GaussianMLPPolicy(
         env_spec=env.spec,
@@ -47,12 +48,15 @@ def maml_trpo(ctxt, seed, epochs, rollouts_per_task, meta_batch_size):
         output_nonlinearity=None,
     )
 
-    value_function = LinearFeatureBaseline(env_spec=env.spec)
+    value_function = GaussianMLPValueFunction(env_spec=env.spec,
+                                              hidden_sizes=[32, 32],
+                                              hidden_nonlinearity=torch.tanh,
+                                              output_nonlinearity=None)
 
     max_path_length = 100
 
     test_sampler = SetTaskSampler(lambda: GarageEnv(
-        normalize(ML1.get_test_tasks('push-v1'))))
+        normalize(metaworld.benchmarks.ML1.get_test_tasks('push-v1'))))
 
     meta_evaluator = MetaEvaluator(test_task_sampler=test_sampler,
                                    max_path_length=max_path_length)

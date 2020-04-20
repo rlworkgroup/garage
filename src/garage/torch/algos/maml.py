@@ -165,8 +165,8 @@ class MAML:
 
         obs = np.concatenate([path['observations'] for path in paths], axis=0)
         returns = np.concatenate([path['returns'] for path in paths])
-        obs = torch.from_numpy(obs)
-        returns = torch.from_numpy(returns)
+        obs = torch.Tensor(obs)
+        returns = torch.Tensor(returns)
 
         vf_loss = self._value_function.compute_loss(obs, returns)
         # pylint: disable=protected-access
