@@ -165,6 +165,8 @@ class PEARL(MetaRLAlgorithm):
         self._update_post_train = update_post_train
         self._task_idx = None
 
+        self._is_resuming = False
+
         worker_args = dict(deterministic=True, accum_context=True)
         self._evaluator = MetaEvaluator(test_task_sampler=test_env_sampler,
                                         max_path_length=max_path_length,
@@ -233,6 +235,25 @@ class PEARL(MetaRLAlgorithm):
         del data['_context_replay_buffers']
         return data
 
+    def __setstate__(self, state):
+        """Object.__setstate__.
+
+        Args:
+            state (dict): unpickled state.
+
+        """
+        self.__dict__.update(state)
+        self._replay_buffers = {
+            i: PathBuffer(self._replay_buffer_size)
+            for i in range(self._num_train_tasks)
+        }
+
+        self._context_replay_buffers = {
+            i: PathBuffer(self._replay_buffer_size)
+            for i in range(self._num_train_tasks)
+        }
+        self._is_resuming = True
+
     def train(self, runner):
         """Obtain samples, train, and evaluate for each epoch.
 
@@ -246,11 +267,12 @@ class PEARL(MetaRLAlgorithm):
             epoch = runner.step_itr / self._num_steps_per_epoch
 
             # obtain initial set of samples from all train tasks
-            if epoch == 0:
+            if epoch == 0 or self._is_resuming:
                 for idx in range(self._num_train_tasks):
                     self._task_idx = idx
                     self._obtain_samples(runner, epoch,
                                          self._num_initial_steps, np.inf)
+                    self._is_resuming = False
 
             # obtain samples from random tasks
             for _ in range(self._num_tasks_sample):
@@ -582,8 +604,7 @@ class PEARL(MetaRLAlgorithm):
             device (str): ID of GPU or CPU.
 
         """
-        if device is None:
-            device = tu.global_device()
+        device = device or tu.global_device()
         for net in self.networks:
             net.to(device)
 
