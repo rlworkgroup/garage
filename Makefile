@@ -26,14 +26,14 @@ ci-job-precommit: assert-docker docs
 	scripts/travisci/check_precommit.sh
 
 ci-job-normal: assert-docker
-	[ ! -f $(MJKEY_PATH) ] || mv $(MJKEY_PATH) $(MJKEY_PATH).bak
+	[ ! -f $(MJKEY_PATH) ] || mv $(MJKEY_PATH) $(MJKEY_PATH).bak && touch $(MJKEY_PATH)
 	pytest --cov=garage -v -m \
 	    'not nightly and not huge and not benchmark and not flaky and not large and not mujoco' --durations=0
 	coverage xml
 	bash <(curl -s https://codecov.io/bash)
 
 ci-job-large: assert-docker
-	[ ! -f $(MJKEY_PATH) ] || mv $(MJKEY_PATH) $(MJKEY_PATH).bak
+	[ ! -f $(MJKEY_PATH) ] || mv $(MJKEY_PATH) $(MJKEY_PATH).bak && touch $(MJKEY_PATH)
 	pytest --cov=garage -v -m 'large and not mujoco' --durations=0
 	coverage xml
 	bash <(curl -s https://codecov.io/bash)
