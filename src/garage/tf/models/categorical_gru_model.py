@@ -107,7 +107,7 @@ class CategoricalGRUModel(GRUModel):
                 garage.tf.models.Sequential.
 
         Returns:
-            tfp.distributions.Categorical: Policy distribution.
+            tfp.distributions.OneHotCategorical: Policy distribution.
             tf.Tensor: Step output, with shape :math:`(N, S^*)`.
             tf.Tensor: Step hidden state, with shape :math:`(N, S^*)`.
             tf.Tensor: Initial hidden state , used to reset the hidden state

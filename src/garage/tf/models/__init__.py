@@ -1,5 +1,6 @@
 """Network Models."""
 from garage.tf.models.base import Model, Module, StochasticModule
+from garage.tf.models.categorical_cnn_model import CategoricalCNNModel
 from garage.tf.models.categorical_gru_model import CategoricalGRUModel
 from garage.tf.models.categorical_lstm_model import CategoricalLSTMModel
 from garage.tf.models.categorical_mlp_model import CategoricalMLPModel
@@ -22,10 +23,11 @@ from garage.tf.models.normalized_input_mlp_model import (
 from garage.tf.models.sequential import Sequential
 
 __all__ = [
-    'CategoricalGRUModel', 'CategoricalLSTMModel', 'CategoricalMLPModel',
-    'CNNModel', 'CNNModelWithMaxPooling', 'LSTMModel', 'Model', 'Module',
-    'GaussianCNNModel', 'GaussianGRUModel', 'GaussianGRUModel2',
-    'GaussianLSTMModel', 'GaussianLSTMModel2', 'GaussianMLPModel',
-    'GaussianMLPModel2', 'GRUModel', 'MLPDuelingModel', 'MLPMergeModel',
-    'MLPModel', 'NormalizedInputMLPModel', 'Sequential', 'StochasticModule'
+    'CategoricalCNNModel', 'CategoricalGRUModel', 'CategoricalLSTMModel',
+    'CategoricalMLPModel', 'CNNModel', 'CNNModelWithMaxPooling', 'LSTMModel',
+    'Model', 'Module', 'GaussianCNNModel', 'GaussianGRUModel',
+    'GaussianGRUModel2', 'GaussianLSTMModel', 'GaussianLSTMModel2',
+    'GaussianMLPModel', 'GaussianMLPModel2', 'GRUModel', 'MLPDuelingModel',
+    'MLPMergeModel', 'MLPModel', 'NormalizedInputMLPModel', 'Sequential',
+    'StochasticModule'
 ]

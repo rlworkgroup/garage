@@ -68,7 +68,7 @@ class CategoricalMLPModel(MLPModel):
                 garage.tf.models.Sequential.
 
         Returns:
-            tfp.distributions.Categorical: Policy distribution.
+            tfp.distributions.OneHotCategorical: Policy distribution.
 
         """
         prob = super()._build(state_input, name=name)

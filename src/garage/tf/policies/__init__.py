@@ -3,6 +3,7 @@ from garage.tf.policies.base import Policy
 from garage.tf.policies.base import StochasticPolicy
 from garage.tf.policies.base import StochasticPolicy2
 from garage.tf.policies.categorical_cnn_policy import CategoricalCNNPolicy
+from garage.tf.policies.categorical_cnn_policy2 import CategoricalCNNPolicy2
 from garage.tf.policies.categorical_gru_policy import CategoricalGRUPolicy
 from garage.tf.policies.categorical_gru_policy2 import CategoricalGRUPolicy2
 from garage.tf.policies.categorical_lstm_policy import CategoricalLSTMPolicy
@@ -21,9 +22,9 @@ from garage.tf.policies.gaussian_mlp_policy2 import GaussianMLPPolicy2
 
 __all__ = [
     'Policy', 'StochasticPolicy', 'StochasticPolicy2', 'CategoricalCNNPolicy',
-    'CategoricalGRUPolicy', 'CategoricalGRUPolicy2', 'CategoricalLSTMPolicy',
-    'CategoricalLSTMPolicy2', 'CategoricalMLPPolicy', 'CategoricalMLPPolicy2',
-    'ContinuousMLPPolicy', 'DiscreteQfDerivedPolicy', 'GaussianGRUPolicy',
-    'GaussianGRUPolicy2', 'GaussianLSTMPolicy', 'GaussianLSTMPolicy2',
-    'GaussianMLPPolicy', 'GaussianMLPPolicy2'
+    'CategoricalCNNPolicy2', 'CategoricalGRUPolicy', 'CategoricalGRUPolicy2',
+    'CategoricalLSTMPolicy', 'CategoricalLSTMPolicy2', 'CategoricalMLPPolicy',
+    'CategoricalMLPPolicy2', 'ContinuousMLPPolicy', 'DiscreteQfDerivedPolicy',
+    'GaussianGRUPolicy', 'GaussianGRUPolicy2', 'GaussianLSTMPolicy',
+    'GaussianLSTMPolicy2', 'GaussianMLPPolicy', 'GaussianMLPPolicy2'
 ]

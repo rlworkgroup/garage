@@ -130,7 +130,7 @@ class CategoricalLSTMModel(LSTMModel):
                 garage.tf.models.Sequential.
 
         Returns:
-            tfp.distributions.Categorical: Policy distribution.
+            tfp.distributions.OneHotCategorical: Policy distribution.
             tf.Tensor: Step output, with shape :math:`(N, S^*)`
             tf.Tensor: Step hidden state, with shape :math:`(N, S^*)`
             tf.Tensor: Step cell state, with shape :math:`(N, S^*)`
