@@ -1,5 +1,5 @@
-"""A regression test over PPO Algorithms for automatic benchmarking.
-(garage-PyTorch-PPO, garage-TensorFlow-PPO, and baselines-PPO2)
+"""A regression test over VPG algorithms.
+(garage-PyTorch-VPG, garage-TensorFlow-VPG)
 """
 import random
 
@@ -13,21 +13,23 @@ from garage import wrap_experiment
 from garage.envs import normalize
 from garage.experiment import deterministic, LocalRunner
 from garage.np.baselines import LinearFeatureBaseline
-from garage.tf.algos import PPO as TF_PPO
-from garage.tf.baselines import GaussianMLPBaseline as TF_GMB
+from garage.tf.algos import VPG as TF_VPG
 from garage.tf.envs import TfEnv
 from garage.tf.experiment import LocalTFRunner
-from garage.tf.optimizers import FirstOrderOptimizer
 from garage.tf.policies import GaussianMLPPolicy as TF_GMP
-from garage.torch.algos import PPO as PyTorch_PPO
+from garage.torch.algos import VPG as PyTorch_VPG
 from garage.torch.policies import GaussianMLPPolicy as PyTorch_GMP
 from tests import benchmark_helper
 
 hyper_parameters = {
-    'n_epochs': 800,
-    'max_path_length': 128,
-    'batch_size': 1024,
-    'n_trials': 4,
+    'hidden_sizes': [64, 64],
+    'center_adv': True,
+    'learning_rate': 1e-2,
+    'discount': 0.99,
+    'n_epochs': 250,
+    'max_path_length': 100,
+    'batch_size': 2048,
+    'n_trials': 10
 }
 
 seeds = random.sample(range(100), hyper_parameters['n_trials'])
@@ -35,16 +37,16 @@ tasks = benchmarks.get_benchmark('Mujoco1M')['tasks']
 
 
 @pytest.mark.benchmark
-def auto_benchmark_ppo_garage_tf():
-    """Create garage TensorFlow PPO model and training.
+def auto_benchmark_vpg_garage_tf():
+    """Create garage TensorFlow VPG model and training.
 
     Training over different environments and seeds.
 
     """
 
     @wrap_experiment
-    def ppo_garage_tf(ctxt, env_id, seed):
-        """Create garage TensorFlow PPO model and training.
+    def vpg_garage_tf(ctxt, env_id, seed):
+        """Create garage TensorFlow VPG model and training.
 
         Args:
             ctxt (garage.experiment.ExperimentContext): The experiment
@@ -61,59 +63,43 @@ def auto_benchmark_ppo_garage_tf():
 
             policy = TF_GMP(
                 env_spec=env.spec,
-                hidden_sizes=(32, 32),
+                hidden_sizes=hyper_parameters['hidden_sizes'],
                 hidden_nonlinearity=tf.nn.tanh,
                 output_nonlinearity=None,
             )
 
-            baseline = TF_GMB(
-                env_spec=env.spec,
-                regressor_args=dict(
-                    hidden_sizes=(32, 32),
-                    use_trust_region=False,
-                    optimizer=FirstOrderOptimizer,
-                    optimizer_args=dict(
-                        batch_size=32,
-                        max_epochs=10,
-                        tf_optimizer_args=dict(learning_rate=3e-4),
-                    ),
-                ),
-            )
+            baseline = LinearFeatureBaseline(env_spec=env.spec)
 
-            algo = TF_PPO(env_spec=env.spec,
+            algo = TF_VPG(env_spec=env.spec,
                           policy=policy,
                           baseline=baseline,
                           max_path_length=hyper_parameters['max_path_length'],
-                          discount=0.99,
-                          gae_lambda=0.95,
-                          center_adv=True,
-                          lr_clip_range=0.2,
-                          optimizer_args=dict(
-                              batch_size=32,
-                              max_epochs=10,
-                              tf_optimizer_args=dict(learning_rate=3e-4),
-                              verbose=True))
+                          discount=hyper_parameters['discount'],
+                          center_adv=hyper_parameters['center_adv'],
+                          optimizer_args=dict(tf_optimizer_args=dict(
+                              learning_rate=hyper_parameters['learning_rate']),
+                                              verbose=True))
 
             runner.setup(algo, env)
             runner.train(n_epochs=hyper_parameters['n_epochs'],
                          batch_size=hyper_parameters['batch_size'])
 
     for env_id, seed, log_dir in benchmark_helper.iterate_experiments(
-            ppo_garage_tf.__name__, tasks, seeds):
-        ppo_garage_tf(dict(log_dir=log_dir), env_id=env_id, seed=seed)
+            vpg_garage_tf, tasks, seeds):
+        vpg_garage_tf(dict(log_dir=log_dir), env_id=env_id, seed=seed)
 
 
 @pytest.mark.benchmark
-def auto_benchmark_ppo_garage_pytorch():
-    """Create garage PyTorch PPO model and training.
+def auto_benchmark_vpg_garage_pytorch():
+    """Create garage PyTorch VPG model and training.
 
     Training over different environments and seeds.
 
     """
 
     @wrap_experiment
-    def ppo_garage_pytorch(ctxt, env_id, seed):
-        """Create garage PyTorch PPO model and training.
+    def vpg_garage_pytorch(ctxt, env_id, seed):
+        """Create garage PyTorch VPG model and training.
 
         Args:
             ctxt (garage.experiment.ExperimentContext): The experiment
@@ -130,29 +116,25 @@ def auto_benchmark_ppo_garage_pytorch():
         env = TfEnv(normalize(gym.make(env_id)))
 
         policy = PyTorch_GMP(env.spec,
-                             hidden_sizes=(32, 32),
+                             hidden_sizes=hyper_parameters['hidden_sizes'],
                              hidden_nonlinearity=torch.tanh,
                              output_nonlinearity=None)
 
-        value_functions = LinearFeatureBaseline(env_spec=env.spec)
+        value_function = LinearFeatureBaseline(env_spec=env.spec)
 
-        algo = PyTorch_PPO(env_spec=env.spec,
+        algo = PyTorch_VPG(env_spec=env.spec,
                            policy=policy,
-                           value_function=value_functions,
                            optimizer=torch.optim.Adam,
-                           policy_lr=3e-4,
+                           policy_lr=hyper_parameters['learning_rate'],
+                           value_function=value_function,
                            max_path_length=hyper_parameters['max_path_length'],
-                           discount=0.99,
-                           gae_lambda=0.95,
-                           center_adv=True,
-                           lr_clip_range=0.2,
-                           minibatch_size=128,
-                           max_optimization_epochs=10)
+                           discount=hyper_parameters['discount'],
+                           center_adv=hyper_parameters['center_adv'])
 
         runner.setup(algo, env)
         runner.train(n_epochs=hyper_parameters['n_epochs'],
                      batch_size=hyper_parameters['batch_size'])
 
     for env_id, seed, log_dir in benchmark_helper.iterate_experiments(
-            ppo_garage_pytorch.__name__, tasks, seeds):
-        ppo_garage_pytorch(dict(log_dir=log_dir), env_id=env_id, seed=seed)
+            vpg_garage_pytorch, tasks, seeds):
+        vpg_garage_pytorch(dict(log_dir=log_dir), env_id=env_id, seed=seed)
