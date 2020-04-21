@@ -132,11 +132,10 @@ def iterate_experiments(funcname,
 
             log_dir = get_log_dir(name)
 
-            if use_tf or name.endswith('tf'):
-                with tf.Graph().as_default():
-                    yield env_id, seed, log_dir
-            else:
-                yield env_id, seed, log_dir
+            if use_tf or funcname.endswith('tf'):
+                tf.compat.v1.reset_default_graph()
+
+            yield env_id, seed, log_dir
 
             csv_to_json(log_dir, xcolumn, xlabel, ycolumn, ylabel)
 
