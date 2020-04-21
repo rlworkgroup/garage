@@ -6,6 +6,8 @@ coverage:
         target: 90%
 
 codecov:
-    notify:
-        wait_for_ci: yes
-        after_n_builds: 3
+  ci:
+    - "travis-ci.com"
+  notify:
+    wait_for_ci: yes
+    after_n_builds: 3
