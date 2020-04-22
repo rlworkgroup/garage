@@ -113,7 +113,7 @@ class TestGaussianMLPTaskEmbeddingPolicy(TfGraphTestCase):
     @pytest.mark.parametrize('task_num', [1, 5])
     @pytest.mark.parametrize('latent_dim', [1, 5])
     @pytest.mark.parametrize('action_dim', [(2, ), (2, 2)])
-    def test_dist_info_sym(self, obs_dim, task_num, latent_dim, action_dim):
+    def test_dist_info(self, obs_dim, task_num, latent_dim, action_dim):
         env = TfEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
         with mock.patch(
                 'garage.tf.policies.'
@@ -132,6 +132,7 @@ class TestGaussianMLPTaskEmbeddingPolicy(TfGraphTestCase):
         obs, _, _, _ = env.step(1)
         task = np.zeros(task_num)
         task[0] = 1
+        aug_obs = np.concatenate([obs.flatten(), task])
         latent = np.random.random(latent_dim)
 
         obs_dim = env.spec.observation_space.flat_dim
@@ -139,7 +140,9 @@ class TestGaussianMLPTaskEmbeddingPolicy(TfGraphTestCase):
         task_ph = tf.compat.v1.placeholder(tf.float32, shape=(None, task_num))
         latent_ph = tf.compat.v1.placeholder(tf.float32,
                                              shape=(None, latent_dim))
+        aug_obs_ph = tf.compat.v1.concat([obs_ph, task_ph], axis=1)
 
+        dist0_sym = policy.dist_info_sym(aug_obs_ph, name='p0_sym')
         dist1_sym = policy.dist_info_sym_given_task(obs_ph,
                                                     task_ph,
                                                     name='p1_sym')
@@ -151,6 +154,8 @@ class TestGaussianMLPTaskEmbeddingPolicy(TfGraphTestCase):
         expected_mean = [np.full(np.prod(action_dim), 0.5)]
         expected_log_std = [np.full(np.prod(action_dim), np.log(0.5))]
 
+        prob0 = self.sess.run(dist0_sym,
+                              feed_dict={aug_obs_ph: [aug_obs.flatten()]})
         prob1 = self.sess.run(dist1_sym,
                               feed_dict={
                                   obs_ph: [obs.flatten()],
@@ -161,11 +166,16 @@ class TestGaussianMLPTaskEmbeddingPolicy(TfGraphTestCase):
                                   obs_ph: [obs.flatten()],
                                   latent_ph: [latent]
                               })
+        prob3 = policy.dist_info(aug_obs)
 
+        assert np.array_equal(prob0['mean'].flatten(), expected_mean[0])
+        assert np.array_equal(prob0['log_std'].flatten(), expected_log_std[0])
         assert np.array_equal(prob1['mean'], expected_mean)
         assert np.array_equal(prob1['log_std'], expected_log_std)
         assert np.array_equal(prob2['mean'], expected_mean)
         assert np.array_equal(prob2['log_std'], expected_log_std)
+        assert np.array_equal(prob3['mean'].flatten(), expected_mean[0])
+        assert np.array_equal(prob3['log_std'].flatten(), expected_log_std[0])
 
     def test_encoder_dist_info(self):
         obs_dim, action_dim, task_num, latent_dim = (2, ), (2, ), 5, 2

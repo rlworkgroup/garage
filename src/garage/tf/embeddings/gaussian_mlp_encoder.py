@@ -174,12 +174,12 @@ class GaussianMLPEncoder(StochasticEncoder, StochasticModule):
     @property
     def input_dim(self):
         """int: Dimension of the encoder input."""
-        return self.spec.input_space.flat_dim
+        return self._embedding_spec.input_space.flat_dim
 
     @property
     def output_dim(self):
         """int: Dimension of the encoder output (embedding)."""
-        return self.spec.output_space.flat_dim
+        return self._embedding_spec.output_space.flat_dim
 
     @property
     def recurrent(self):
