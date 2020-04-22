@@ -131,7 +131,7 @@ class GaussianMLPEncoder(StochasticEncoder, StochasticModule):
             ],
             feed_list=[self.model.networks['default'].input])
 
-    def dist_info(self, input_val, state_infos):
+    def dist_info(self, input_val, state_infos=None):
         """Distribution info.
 
         Get the information of embedding distribution given an input.
@@ -142,10 +142,17 @@ class GaussianMLPEncoder(StochasticEncoder, StochasticModule):
                 information about the predicted embedding given an input.
 
         Returns:
-            dict[numpy.ndarray]: Distribution parameters.
+            dict[numpy.ndarray]: Distribution parameters, with keys
+                - mean (numpy.ndarray): Mean of the distribution.
+                - log_std (numpy.ndarray): Log standard deviation of the
+                    distribution.
 
         """
-        raise NotImplementedError
+        flat_input = self._embedding_spec.input_space.flatten(input_val)
+        mean, log_std = self._f_dist([flat_input])
+        mean = self._embedding_spec.output_space.unflatten(mean[0])
+        log_std = self._embedding_spec.output_space.unflatten(log_std[0])
+        return dict(mean=mean, log_std=log_std)
 
     def dist_info_sym(self, input_var, state_info_vars=None, name='default'):
         """Build a symbolic graph of the distribution parameters.

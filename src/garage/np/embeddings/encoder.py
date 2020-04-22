@@ -60,7 +60,7 @@ class StochasticEncoder(Encoder):
     @property
     @abc.abstractmethod
     def distribution(self):
-        """scipy.stats.rv_generic: Embedding distribution."""
+        """object: Embedding distribution."""
 
     def dist_info(self, input_val, state_infos):
         """Distribution info.
