@@ -32,7 +32,7 @@ REQUIRED = [
     'setproctitle>=1.0',
     'tensorflow',
     'tensorflow-probability',
-    'torch>=1.0.0',
+    'torch>=1.0.0,<1.5.0',
     'torchvision>=0.2.1',
 ]
 
