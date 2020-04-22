@@ -30,5 +30,5 @@ __all__ = [
     'CategoricalMLPPolicy2', 'ContinuousMLPPolicy', 'DiscreteQfDerivedPolicy',
     'GaussianGRUPolicy', 'GaussianGRUPolicy2', 'GaussianLSTMPolicy',
     'GaussianLSTMPolicy2', 'GaussianMLPPolicy', 'GaussianMLPPolicy2',
-    'GaussianMLPTaskEmbeddingPolicy'
+    'GaussianMLPTaskEmbeddingPolicy', 'TaskEmbeddingPolicy'
 ]
