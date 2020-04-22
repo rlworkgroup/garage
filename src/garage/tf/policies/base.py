@@ -105,3 +105,17 @@ class Policy(Module):
 # pylint: disable=abstract-method
 class StochasticPolicy(Policy, StochasticModule):
     """Stochastic Policy."""
+
+
+class StochasticPolicy2(Policy):
+    """Stochastic Policy with tfp.distribution."""
+
+    @property
+    @abc.abstractmethod
+    def distribution(self):
+        """Distribution to parameterize the policy.
+
+        Returns:
+            tfp.distributions.Distribution: Policy distribution.
+
+        """

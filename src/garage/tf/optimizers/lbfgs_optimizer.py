@@ -25,7 +25,6 @@ class LbfgsOptimizer:
         self._target = None
         self._callback = callback
 
-    # pylint: disable=unused-argument
     def update_opt(self,
                    loss,
                    target,
@@ -46,6 +45,7 @@ class LbfgsOptimizer:
                 have extra input, e.g. KL constraint.
 
         """
+        del kwargs
         self._target = target
         params = target.get_params()
         with tf.name_scope(name):

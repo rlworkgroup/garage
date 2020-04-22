@@ -54,7 +54,6 @@ class FirstOrderOptimizer:
         self._train_op = None
         self._name = name
 
-    # pylint: disable=unused-argument
     def update_opt(self, loss, target, inputs, extra_inputs=None, **kwargs):
         """Construct operation graph for the optimizer.
 
@@ -68,8 +67,8 @@ class FirstOrderOptimizer:
                 have extra input, e.g. KL constraint.
 
         """
+        del kwargs
         with tf.name_scope(self._name):
-
             self._target = target
 
             self._train_op = self._tf_optimizer.minimize(

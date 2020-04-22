@@ -9,8 +9,8 @@ class TanhNormal(torch.distributions.Distribution):
 
     Algorithms like SAC and Pearl use this transformed distribution.
     It can be thought of as a distribution of X where
-        :math: `Y ~ \mathcal{N}(\mu, \sigma)`
-        :math: `X = tanh(Y)`
+        :math:`Y ~ \mathcal{N}(\mu, \sigma)`
+        :math:`X = tanh(Y)`
 
     Args:
         loc (torch.Tensor): The mean of this distribution.
