@@ -17,7 +17,7 @@ env:
 jobs:
   include:
     - stage: "Build"
-      if: type = cron AND branch = master
+      if: (type = cron OR type = api) AND branch = master
       name: "Build and cache docker container"
       before_script: skip
       install: skip
