@@ -542,20 +542,20 @@ class InOutSpec:
 
     @property
     def input_space(self):
-        """Get input space of the module.
-
-        Returns:
-            akro.Space: Input space of the module.
-
-        """
+        """akro.Space: Input space of the module."""
         return self._input_space
 
     @property
     def output_space(self):
-        """Get output space of the module.
+        """akro.Space: Output space of the module."""
+        return self._output_space
+
+    def transpose(self):
+        """Gets clone of this space, but with input and output reversed.
 
         Returns:
-            akro.Space: Output space of the module.
+            InOutSpec: A clone of this space, with the input and output
+                reversed.
 
         """
-        return self._output_space
+        return InOutSpec(self._output_space, self._input_space)

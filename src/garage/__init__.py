@@ -4,6 +4,8 @@ from garage._dtypes import TimeStep
 from garage._dtypes import TrajectoryBatch
 from garage._functions import log_multitask_performance
 from garage._functions import log_performance
+from garage._primitives import Primitive
+from garage._primitives import Policy  # noqa: I100
 from garage.experiment.experiment import wrap_experiment
 
 __all__ = [
@@ -13,4 +15,6 @@ __all__ = [
     'log_multitask_performance',
     'log_performance',
     'InOutSpec',
+    'Primitive',
+    'Policy',
 ]
