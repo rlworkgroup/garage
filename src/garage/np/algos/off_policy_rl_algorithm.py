@@ -85,6 +85,7 @@ class OffPolicyRLAlgorithm(RLAlgorithm):
 
         """
         last_return = None
+        runner.enable_logging = False
 
         for _ in runner.step_epochs():
             for cycle in range(self.steps_per_epoch):
@@ -94,6 +95,7 @@ class OffPolicyRLAlgorithm(RLAlgorithm):
                 last_return = self.train_once(runner.step_itr,
                                               runner.step_path)
                 if cycle == 0 and self._buffer_prefilled:
+                    runner.enable_logging = True
                     log_performance(runner.step_itr,
                                     self._obtain_evaluation_samples(
                                         runner.get_env_copy()),

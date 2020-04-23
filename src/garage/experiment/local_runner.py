@@ -148,6 +148,9 @@ class LocalRunner:
         self.step_itr = None
         self.step_path = None
 
+        # only used for off-policy algorithms
+        self.enable_logging = True
+
         self._n_workers = None
         self._worker_class = None
         self._worker_args = None
@@ -496,9 +499,11 @@ class LocalRunner:
                 self._stats.total_itr = self.step_itr
 
                 self.save(epoch)
-                self.log_diagnostics(self._train_args.pause_for_plot)
-                logger.dump_all(self.step_itr)
-                tabular.clear()
+
+                if self.enable_logging:
+                    self.log_diagnostics(self._train_args.pause_for_plot)
+                    logger.dump_all(self.step_itr)
+                    tabular.clear()
 
     def resume(self,
                n_epochs=None,
