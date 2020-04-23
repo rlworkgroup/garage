@@ -57,7 +57,7 @@ class TestGaussianMLPEncoder(TfGraphTestCase):
         ((1, 1), (2, 2)),
         ((2, 2), (2, 2)),
     ])
-    def test_dist_info_sym(self, obs_dim, embedding_dim):
+    def test_dist_info(self, obs_dim, embedding_dim):
         env = TfEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=embedding_dim))
         with mock.patch(('garage.tf.embeddings.'
                          'gaussian_mlp_encoder.GaussianMLPModel'),
@@ -78,10 +78,13 @@ class TestGaussianMLPEncoder(TfGraphTestCase):
         expected_mean = [np.full(np.prod(embedding_dim), 0.5)]
         expected_log_std = [np.full(np.prod(embedding_dim), np.log(0.5))]
 
-        prob = self.sess.run(dist1_sym, feed_dict={obs_ph: [obs.flatten()]})
+        prob0 = embedding.dist_info(obs.flatten())
+        prob1 = self.sess.run(dist1_sym, feed_dict={obs_ph: [obs.flatten()]})
 
-        assert np.array_equal(prob['mean'], expected_mean)
-        assert np.array_equal(prob['log_std'], expected_log_std)
+        assert np.array_equal(prob0['mean'].flatten(), expected_mean[0])
+        assert np.array_equal(prob0['log_std'].flatten(), expected_log_std[0])
+        assert np.array_equal(prob1['mean'], expected_mean)
+        assert np.array_equal(prob1['log_std'], expected_log_std)
 
     @pytest.mark.parametrize('obs_dim, embedding_dim', [
         ((1, ), (1, )),
