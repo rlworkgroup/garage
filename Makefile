@@ -27,24 +27,21 @@ ci-job-precommit: assert-docker docs
 
 ci-job-normal: assert-docker
 	[ ! -f $(MJKEY_PATH) ] || mv $(MJKEY_PATH) $(MJKEY_PATH).bak
-	pytest --cov=garage -v -m \
-	    'not nightly and not huge and not benchmark and not flaky and not large and not mujoco' --durations=0
-	coverage xml
+	pytest --cov=garage --cov-report=xml -m \
+	    'not nightly and not huge and not benchmark and not flaky and not large and not mujoco' --durations=20
 	bash <(curl -s https://codecov.io/bash)
 
 ci-job-large: assert-docker
 	[ ! -f $(MJKEY_PATH) ] || mv $(MJKEY_PATH) $(MJKEY_PATH).bak
-	pytest --cov=garage -v -m 'large and not mujoco' --durations=0
-	coverage xml
+	pytest --cov=garage --cov-report=xml -m 'large and not mujoco' --durations=20
 	bash <(curl -s https://codecov.io/bash)
 
 ci-job-mujoco: assert-docker
-	pytest --cov=garage -v -m 'mujoco and not flaky' --durations=0
-	coverage xml
+	pytest --cov=garage --cov-report=xml -m 'mujoco and not flaky' --durations=20
 	bash <(curl -s https://codecov.io/bash)
 
 ci-job-nightly: assert-docker
-	pytest -v -m nightly
+	pytest -m nightly
 
 ci-job-verify-envs: assert-docker ci-job-verify-envs-conda ci-job-verify-envs-pipenv
 
