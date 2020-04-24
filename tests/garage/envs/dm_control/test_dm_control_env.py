@@ -9,9 +9,9 @@ from garage.envs.dm_control import DmControlEnv
 from tests.helpers import step_env
 
 
-@pytest.mark.mujoco
 class TestDmControlEnv:
 
+    @pytest.mark.mujoco
     def test_can_step(self):
         domain_name, task_name = dm_control.suite.ALL_TASKS[0]
         env = DmControlEnv.from_suite(domain_name, task_name)
@@ -40,6 +40,7 @@ class TestDmControlEnv:
         step_env(env, render=False)
         env.close()
 
+    @pytest.mark.mujoco
     def test_pickleable(self):
         domain_name, task_name = dm_control.suite.ALL_TASKS[0]
         env = DmControlEnv.from_suite(domain_name, task_name)
@@ -62,6 +63,7 @@ class TestDmControlEnv:
         round_trip.close()
         env.close()
 
+    @pytest.mark.mujoco
     def test_does_not_modify_actions(self):
         domain_name, task_name = dm_control.suite.ALL_TASKS[0]
         env = DmControlEnv.from_suite(domain_name, task_name)
