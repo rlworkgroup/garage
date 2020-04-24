@@ -13,6 +13,7 @@ from garage.sampler.ray_sampler import RaySampler, SamplerWorker
 from garage.sampler.sampler import Sampler
 from garage.sampler.stateful_pool import singleton_pool
 from garage.sampler.vec_env_executor import VecEnvExecutor
+from garage.sampler.vec_worker import VecWorker
 from garage.sampler.worker import DefaultWorker, Worker
 from garage.sampler.worker_factory import WorkerFactory
 
@@ -27,6 +28,7 @@ __all__ = [
     'MultiprocessingSampler',
     'ParallelVecEnvExecutor',
     'VecEnvExecutor',
+    'VecWorker',
     'OffPolicyVectorizedSampler',
     'OnPolicyVectorizedSampler',
     'WorkerFactory',
