@@ -85,8 +85,7 @@ class WorkerFactory:
                     'Length of list doesn\'t match number of workers')
             return [preprocess(obj) for obj in objs]
         else:
-            obj = preprocess(objs)
-            return [obj for _ in range(self.n_workers)]
+            return [preprocess(objs) for _ in range(self.n_workers)]
 
     def __call__(self, worker_number):
         """Construct a worker given its number.
