@@ -6,6 +6,7 @@ import torch
 from garage.envs import GarageEnv
 from garage.experiment import deterministic
 from garage.experiment import LocalRunner
+from garage.sampler import LocalSampler
 from garage.torch.algos import VPG
 from garage.torch.policies import GaussianMLPPolicy
 from garage.torch.value_functions import GaussianMLPValueFunction
@@ -66,7 +67,7 @@ class TestVPG:
         self._params['use_softplus_entropy'] = True
 
         algo = VPG(**self._params)
-        self._runner.setup(algo, self._env)
+        self._runner.setup(algo, self._env, sampler_cls=LocalSampler)
         last_avg_ret = self._runner.train(n_epochs=10, batch_size=100)
         assert last_avg_ret > 0
 
@@ -78,7 +79,7 @@ class TestVPG:
         self._params['entropy_method'] = 'max'
 
         algo = VPG(**self._params)
-        self._runner.setup(algo, self._env)
+        self._runner.setup(algo, self._env, sampler_cls=LocalSampler)
         last_avg_ret = self._runner.train(n_epochs=10, batch_size=100)
         assert last_avg_ret > 0
 
@@ -88,7 +89,7 @@ class TestVPG:
         self._params['entropy_method'] = 'regularized'
 
         algo = VPG(**self._params)
-        self._runner.setup(algo, self._env)
+        self._runner.setup(algo, self._env, sampler_cls=LocalSampler)
         last_avg_ret = self._runner.train(n_epochs=10, batch_size=100)
         assert last_avg_ret > 0
 

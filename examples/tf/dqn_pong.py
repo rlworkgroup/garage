@@ -27,9 +27,9 @@ from garage.tf.q_functions import DiscreteCNNQFunction
 
 @click.command()
 @click.option('--buffer_size', type=int, default=int(5e4))
-@click.option('--max_path_length', type=int, default=None)
+@click.option('--max_path_length', type=int, default=500)
 @wrap_experiment
-def dqn_pong(ctxt=None, seed=1, buffer_size=int(5e4), max_path_length=None):
+def dqn_pong(ctxt=None, seed=1, buffer_size=int(5e4), max_path_length=500):
     """Train DQN on PongNoFrameskip-v4 environment.
 
     Args:

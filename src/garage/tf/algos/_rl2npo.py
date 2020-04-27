@@ -53,9 +53,6 @@ class RL2NPO(NPO):
             dense entropy to the reward for each time step. 'regularized' adds
             the mean entropy to the surrogate objective. See
             https://arxiv.org/abs/1805.00909 for more details.
-        flatten_input (bool): Whether to flatten input along the observation
-            dimension. If True, for example, an observation with shape (2, 4)
-            will be flattened to 8.
         fit_baseline (str): Either 'before' or 'after'. See above docstring for
             a more detail explanation. Currently it only supports 'before'.
         name (str): The name of the algorithm.

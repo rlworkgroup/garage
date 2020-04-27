@@ -43,7 +43,7 @@ class TestLocalRunner:
                    gae_lambda=0.97,
                    lr_clip_range=2e-1)
 
-        runner.setup(algo, self.env)
+        runner.setup(algo, self.env, sampler_cls=LocalSampler)
         runner.train(n_epochs=1, batch_size=100, plot=True)
 
         assert isinstance(
@@ -92,17 +92,6 @@ def test_setup_no_policy():
 def test_setup_no_max_path_length():
     runner = LocalRunner(snapshot_config)
     algo = CrashingAlgo()
-    algo.policy = None
+    algo.policy = ()
     with pytest.raises(ValueError, match='max_path_length'):
         runner.setup(algo, None, sampler_cls=LocalSampler)
-
-
-def test_setup_no_batch_size():
-    deterministic.set_seed(0)
-    runner = LocalRunner(snapshot_config)
-    algo = CrashingAlgo()
-    algo.max_path_length = 100
-    algo.policy = None
-    runner.setup(algo, None, sampler_cls=LocalSampler)
-    with pytest.raises(ValueError, match='batch_size'):
-        runner.train(n_epochs=5)

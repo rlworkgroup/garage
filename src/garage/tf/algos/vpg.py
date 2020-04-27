@@ -45,9 +45,6 @@ class VPG(NPO):
             dense entropy to the reward for each time step. 'regularized' adds
             the mean entropy to the surrogate objective. See
             https://arxiv.org/abs/1805.00909 for more details.
-        flatten_input (bool): Whether to flatten input along the observation
-            dimension. If True, for example, an observation with shape (2, 4)
-            will be flattened to 8.
         name (str): The name of the algorithm.
 
     """
@@ -72,7 +69,6 @@ class VPG(NPO):
                  use_neg_logli_entropy=False,
                  stop_entropy_gradient=False,
                  entropy_method='no_entropy',
-                 flatten_input=True,
                  name='VPG'):
         if optimizer is None:
             default_args = dict(

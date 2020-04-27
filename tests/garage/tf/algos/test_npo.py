@@ -8,6 +8,7 @@ import tensorflow as tf
 
 from garage.envs import GarageEnv, normalize
 from garage.experiment import LocalTFRunner
+from garage.sampler import LocalSampler
 from garage.tf.algos import NPO
 from garage.tf.baselines import GaussianMLPBaseline
 from garage.tf.policies import GaussianMLPPolicy
@@ -30,6 +31,7 @@ class TestNPO(TfGraphTestCase):
             regressor_args=dict(hidden_sizes=(32, 32)),
         )
 
+    @pytest.mark.flaky
     @pytest.mark.mujoco
     def test_npo_pendulum(self):
         """Test NPO with Pendulum environment."""
@@ -41,7 +43,7 @@ class TestNPO(TfGraphTestCase):
                        discount=0.99,
                        gae_lambda=0.98,
                        policy_ent_coeff=0.0)
-            runner.setup(algo, self.env)
+            runner.setup(algo, self.env, sampler_cls=LocalSampler)
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 20
 

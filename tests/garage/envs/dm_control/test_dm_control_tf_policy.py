@@ -5,6 +5,7 @@ from garage.envs import GarageEnv
 from garage.envs.dm_control import DmControlEnv
 from garage.experiment import LocalTFRunner
 from garage.np.baselines import LinearFeatureBaseline
+from garage.sampler import LocalSampler
 from garage.tf.algos import TRPO
 from garage.tf.policies import GaussianMLPPolicy
 from tests.fixtures import snapshot_config, TfGraphTestCase
@@ -35,7 +36,7 @@ class TestDmControlTfPolicy(TfGraphTestCase):
                 max_kl_step=0.01,
             )
 
-            runner.setup(algo, env)
+            runner.setup(algo, env, sampler_cls=LocalSampler)
             runner.train(n_epochs=1, batch_size=10)
 
             env.close()

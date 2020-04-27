@@ -1,3 +1,6 @@
+"""Test fixtures (currently used only with TensorFlow)."""
+# Pylint doesn't understand TF generators
+# pylint: disable=attribute-defined-outside-init,no-member
 import gc
 import os
 
@@ -15,12 +18,15 @@ snapshot_config = SnapshotConfig(snapshot_dir=path,
 
 
 class TfTestCase:
+    """Test case that needs a Tensorflow Session."""
 
     def setup_method(self):
+        """Setup the session."""
         self.sess = tf.compat.v1.Session()
         self.sess.__enter__()
 
     def teardown_method(self):
+        """Close the session."""
         self.sess.__exit__(None, None, None)
         self.sess.close()
         del self.sess
@@ -28,8 +34,10 @@ class TfTestCase:
 
 
 class TfGraphTestCase:
+    """Test case that needs a Tensorflow Session and default Graph."""
 
     def setup_method(self):
+        """Setup the Session and default Graph."""
         self.graph = tf.Graph()
         for c in self.graph.collections:
             self.graph.clear_collection(c)
@@ -42,11 +50,8 @@ class TfGraphTestCase:
         logger.add_output(NullOutput())
         deterministic.set_seed(1)
 
-        # initialize global singleton_pool for each test case
-        from garage.sampler import singleton_pool
-        singleton_pool.initialize(1)
-
     def teardown_method(self):
+        """Teardown the Session and default Graph."""
         logger.remove_all()
         self.sess.__exit__(None, None, None)
         self.sess_manager.__exit__(None, None, None)

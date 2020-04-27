@@ -11,6 +11,7 @@ from garage.experiment import deterministic
 from garage.experiment import LocalTFRunner
 from garage.experiment import snapshotter
 from garage.np.baselines import LinearFeatureBaseline
+from garage.sampler import LocalSampler
 from garage.tf.algos import TRPO
 from garage.tf.baselines import GaussianCNNBaseline
 from garage.tf.baselines import GaussianMLPBaseline
@@ -49,7 +50,7 @@ class TestTRPO(TfGraphTestCase):
                         discount=0.99,
                         gae_lambda=0.98,
                         policy_ent_coeff=0.0)
-            runner.setup(algo, self.env)
+            runner.setup(algo, self.env, sampler_cls=LocalSampler)
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 40
 
@@ -80,7 +81,7 @@ class TestTRPO(TfGraphTestCase):
                         gae_lambda=0.98,
                         policy_ent_coeff=0.0,
                         kl_constraint='soft')
-            runner.setup(algo, self.env)
+            runner.setup(algo, self.env, sampler_cls=LocalSampler)
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 45
 
@@ -103,7 +104,7 @@ class TestTRPO(TfGraphTestCase):
                             base_eps=1e-5)))
 
             snapshotter.snapshot_dir = './'
-            runner.setup(algo, env)
+            runner.setup(algo, env, sampler_cls=LocalSampler)
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 80
 
@@ -128,7 +129,7 @@ class TestTRPO(TfGraphTestCase):
                         optimizer_args=dict(hvp_approach=FiniteDifferenceHvp(
                             base_eps=1e-5)))
 
-            runner.setup(algo, env)
+            runner.setup(algo, env, sampler_cls=LocalSampler)
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > 80
 
@@ -167,10 +168,9 @@ class TestTRPOCNNCubeCrash(TfGraphTestCase):
                         discount=0.99,
                         gae_lambda=0.98,
                         max_kl_step=0.01,
-                        policy_ent_coeff=0.0,
-                        flatten_input=False)
+                        policy_ent_coeff=0.0)
 
-            runner.setup(algo, env)
+            runner.setup(algo, env, sampler_cls=LocalSampler)
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
             assert last_avg_ret > -1.5
 

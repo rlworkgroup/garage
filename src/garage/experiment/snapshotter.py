@@ -5,7 +5,6 @@ import os
 import pathlib
 
 import cloudpickle
-import joblib
 
 SnapshotConfig = collections.namedtuple(
     'SnapshotConfig', ['snapshot_dir', 'snapshot_mode', 'snapshot_gap'])
@@ -150,7 +149,7 @@ class Snapshotter:
             raise NotAFileError('File not existing: ', load_from_file)
 
         with open(load_from_file, 'rb') as file:
-            return joblib.load(file)
+            return cloudpickle.load(file)
 
 
 class NotAFileError(Exception):

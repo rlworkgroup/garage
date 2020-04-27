@@ -16,6 +16,7 @@ import torch
 from garage.envs import GarageEnv, normalize
 from garage.envs.mujoco import HalfCheetahDirEnv
 from garage.experiment import LocalRunner
+from garage.sampler import LocalSampler
 from garage.torch.algos import MAMLTRPO
 from garage.torch.policies import GaussianMLPPolicy
 from garage.torch.value_functions import GaussianMLPValueFunction
@@ -50,7 +51,7 @@ def test_maml_trpo_pendulum():
                     inner_lr=0.1,
                     num_grad_updates=1)
 
-    runner.setup(algo, env)
+    runner.setup(algo, env, sampler_cls=LocalSampler)
     last_avg_ret = runner.train(n_epochs=5,
                                 batch_size=rollouts_per_task * max_path_length)
 
@@ -86,5 +87,5 @@ def test_maml_trpo_dummy_named_env():
                     inner_lr=0.1,
                     num_grad_updates=1)
 
-    runner.setup(algo, env)
+    runner.setup(algo, env, sampler_cls=LocalSampler)
     runner.train(n_epochs=2, batch_size=rollouts_per_task * max_path_length)

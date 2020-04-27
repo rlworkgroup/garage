@@ -10,7 +10,7 @@ from garage import log_performance, TrajectoryBatch
 from garage import make_optimizer
 from garage.misc import tensor_utils as np_tensor_utils
 from garage.np.algos import RLAlgorithm
-from garage.sampler import OnPolicyVectorizedSampler
+from garage.sampler import RaySampler
 from garage.tf import paths_to_tensors
 from garage.tf.misc.tensor_utils import center_advs
 from garage.tf.misc.tensor_utils import compile_function
@@ -20,7 +20,6 @@ from garage.tf.misc.tensor_utils import flatten_inputs
 from garage.tf.misc.tensor_utils import graph_inputs
 from garage.tf.misc.tensor_utils import positive_advs
 from garage.tf.optimizers import LbfgsOptimizer
-from garage.tf.samplers import BatchSampler
 
 
 class NPO(RLAlgorithm):
@@ -67,9 +66,6 @@ class NPO(RLAlgorithm):
             dense entropy to the reward for each time step. 'regularized' adds
             the mean entropy to the surrogate objective. See
             https://arxiv.org/abs/1805.00909 for more details.
-        flatten_input (bool): Whether to flatten input along the observation
-            dimension. If True, for example, an observation with shape (2, 4)
-            will be flattened to 8.
         name (str): The name of the algorithm.
 
     Note:
@@ -106,7 +102,6 @@ class NPO(RLAlgorithm):
                  use_neg_logli_entropy=False,
                  stop_entropy_gradient=False,
                  entropy_method='no_entropy',
-                 flatten_input=True,
                  name='NPO'):
         self.policy = policy
         self.scope = scope
@@ -119,7 +114,6 @@ class NPO(RLAlgorithm):
         self._center_adv = center_adv
         self._positive_adv = positive_adv
         self._fixed_horizon = fixed_horizon
-        self._flatten_input = flatten_input
         self._name = name
         self._name_scope = tf.name_scope(self._name)
         self._old_policy = policy.clone('old_policy')
@@ -154,10 +148,7 @@ class NPO(RLAlgorithm):
         self._old_policy_network = None
 
         self._episode_reward_mean = collections.deque(maxlen=100)
-        if policy.vectorized:
-            self.sampler_cls = OnPolicyVectorizedSampler
-        else:
-            self.sampler_cls = BatchSampler
+        self.sampler_cls = RaySampler
 
         self.init_opt()
 
@@ -209,9 +200,7 @@ class NPO(RLAlgorithm):
         # -- Stage: Calculate baseline
         paths = [
             dict(
-                observations=self._env_spec.observation_space.flatten_n(
-                    path['observations'])
-                if self._flatten_input else path['observations'],
+                observations=path['observations'],
                 actions=(
                     self._env_spec.action_space.flatten_n(  # noqa: E126
                         path['actions'])),
@@ -310,14 +299,8 @@ class NPO(RLAlgorithm):
         action_space = self.policy.action_space
 
         with tf.name_scope('inputs'):
-            if self._flatten_input:
-                obs_var = tf.compat.v1.placeholder(
-                    tf.float32,
-                    shape=[None, None, observation_space.flat_dim],
-                    name='obs')
-            else:
-                obs_var = observation_space.to_tf_placeholder(name='obs',
-                                                              batch_dims=2)
+            obs_var = observation_space.to_tf_placeholder(name='obs',
+                                                          batch_dims=2)
             action_var = action_space.to_tf_placeholder(name='action',
                                                         batch_dims=2)
             reward_var = tf.compat.v1.placeholder(tf.float32,

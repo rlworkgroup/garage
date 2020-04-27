@@ -2,6 +2,7 @@
 from garage.envs import GarageEnv
 from garage.experiment import LocalTFRunner
 from garage.np.baselines import LinearFeatureBaseline
+from garage.sampler import LocalSampler
 from garage.tf.algos import VPG
 from garage.tf.policies import CategoricalMLPPolicy
 
@@ -38,7 +39,7 @@ def fixture_exp(snapshot_config, sess):
                    discount=0.99,
                    optimizer_args=dict(learning_rate=0.01, ))
 
-        runner.setup(algo, env)
+        runner.setup(algo, env, sampler_cls=LocalSampler)
         runner.train(n_epochs=5, batch_size=100)
 
         return policy.get_param_values()

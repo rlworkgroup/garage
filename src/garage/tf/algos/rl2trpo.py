@@ -54,9 +54,6 @@ class RL2TRPO(RL2):
             dense entropy to the reward for each time step. 'regularized' adds
             the mean entropy to the surrogate objective. See
             https://arxiv.org/abs/1805.00909 for more details.
-        flatten_input (bool): Whether to flatten input along the observation
-            dimension. If True, for example, an observation with shape (2, 4)
-            will be flattened to 8.
         meta_evaluator (garage.experiment.MetaEvaluator): Evaluator for meta-RL
             algorithms.
         n_epochs_per_eval (int): If meta_evaluator is passed, meta-evaluation
@@ -89,7 +86,6 @@ class RL2TRPO(RL2):
                  stop_entropy_gradient=False,
                  kl_constraint='hard',
                  entropy_method='no_entropy',
-                 flatten_input=True,
                  meta_evaluator=None,
                  n_epochs_per_eval=10,
                  name='TRPO'):
@@ -127,7 +123,6 @@ class RL2TRPO(RL2):
                          use_neg_logli_entropy=use_neg_logli_entropy,
                          stop_entropy_gradient=stop_entropy_gradient,
                          entropy_method=entropy_method,
-                         flatten_input=flatten_input,
                          meta_evaluator=meta_evaluator,
                          n_epochs_per_eval=n_epochs_per_eval,
                          name=name)

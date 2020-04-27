@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """This is an example to train a task with TRPO algorithm (PyTorch).
 
-Uses Ray sampler instead of OnPolicyVectorizedSampler.
+Uses Ray sampler instead of MultiprocessingSampler.
 Here it runs InvertedDoublePendulum-v2 environment with 100 iterations.
 """
 import numpy as np

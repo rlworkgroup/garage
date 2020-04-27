@@ -7,9 +7,8 @@ import tensorflow as tf
 from garage import _Default, make_optimizer
 from garage import log_performance
 from garage.np import obtain_evaluation_samples
-from garage.np import samples_to_tensors
 from garage.np.algos import RLAlgorithm
-from garage.sampler import OffPolicyVectorizedSampler
+from garage.sampler import LocalSampler
 from garage.tf.misc import tensor_utils
 
 
@@ -33,7 +32,6 @@ class DQN(RLAlgorithm):
         steps_per_epoch (int): Number of train_once calls per epoch.
         min_buffer_size (int): The minimum buffer size for replay buffer.
         buffer_batch_size (int): Batch size for replay buffer.
-        rollout_batch_size (int): Roll out batch size.
         n_train_steps (int): Training steps.
         max_path_length (int): Maximum path length. The episode will
             terminate when length of trajectory reaches max_path_length.
@@ -64,7 +62,6 @@ class DQN(RLAlgorithm):
                  steps_per_epoch=20,
                  min_buffer_size=int(1e4),
                  buffer_batch_size=64,
-                 rollout_batch_size=1,
                  n_train_steps=50,
                  max_path_length=None,
                  max_eval_path_length=None,
@@ -98,14 +95,12 @@ class DQN(RLAlgorithm):
         self.max_path_length = max_path_length
         self._max_eval_path_length = max_eval_path_length
 
-        # used by OffPolicyVectorizedSampler
         self.env_spec = env_spec
-        self.rollout_batch_size = rollout_batch_size
         self.replay_buffer = replay_buffer
         self.policy = policy
         self.exploration_policy = exploration_policy
 
-        self.sampler_cls = OffPolicyVectorizedSampler
+        self.sampler_cls = LocalSampler
 
         self.init_opt()
 
@@ -216,9 +211,7 @@ class DQN(RLAlgorithm):
 
         for _ in runner.step_epochs():
             for cycle in range(self._steps_per_epoch):
-                runner.step_path = runner.obtain_samples(runner.step_itr)
-                for path in runner.step_path:
-                    path['rewards'] *= self._reward_scale
+                runner.step_path = runner.obtain_trajectories(runner.step_itr)
                 last_return = self.train_once(runner.step_itr,
                                               runner.step_path)
                 if (cycle == 0 and self.replay_buffer.n_transitions_stored >=
@@ -232,21 +225,21 @@ class DQN(RLAlgorithm):
 
         return last_return
 
-    def train_once(self, itr, paths):
+    def train_once(self, itr, trajectories):
         """Perform one step of policy optimization given one batch of samples.
 
         Args:
             itr (int): Iteration number.
-            paths (list[dict]): A list of collected paths.
+            trajectories (TrajectoryBatch): Batch of trajectories.
 
         Returns:
             numpy.float64: Average return.
 
         """
-        paths = samples_to_tensors(paths)
         epoch = itr / self._steps_per_epoch
 
-        self.episode_rewards.extend(paths['undiscounted_returns'])
+        self.episode_rewards.extend(
+            [traj.rewards.sum() for traj in trajectories.split()])
         last_average_return = np.mean(self.episode_rewards)
         for _ in range(self._n_train_steps):
             if (self.replay_buffer.n_transitions_stored >=

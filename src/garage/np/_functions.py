@@ -15,20 +15,15 @@ def samples_to_tensors(paths):
     Returns:
         dict: Processed sample data, with keys
             * undiscounted_returns (list[float])
-            * success_history (list[float])
             * complete (list[bool])
 
     """
-    success_history = [
-        path['success_count'] / path['running_length'] for path in paths
-    ]
     undiscounted_returns = [path['undiscounted_return'] for path in paths]
 
     # check if the last path is complete
     complete = [path['dones'][-1] for path in paths]
 
     samples_data = dict(undiscounted_returns=undiscounted_returns,
-                        success_history=success_history,
                         complete=complete)
 
     return samples_data

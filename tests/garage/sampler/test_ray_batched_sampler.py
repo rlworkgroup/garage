@@ -10,30 +10,32 @@ from garage.envs import PointEnv
 from garage.envs.grid_world_env import GridWorldEnv
 from garage.experiment.task_sampler import SetTaskSampler
 from garage.np.policies import FixedPolicy, ScriptedPolicy
-from garage.sampler import OnPolicyVectorizedSampler, RaySampler, WorkerFactory
+from garage.sampler import LocalSampler, RaySampler, WorkerFactory
 from tests.fixtures.sampler import ray_local_session_fixture
 
 
-def test_ray_batch_sampler(ray_local_session_fixture):
+def test_obtain_samples(ray_local_session_fixture):
     del ray_local_session_fixture
     env = GarageEnv(GridWorldEnv(desc='4x4'))
     policy = ScriptedPolicy(
         scripted_actions=[2, 2, 1, 0, 3, 1, 1, 1, 2, 2, 1, 1, 1, 2, 2, 1])
     algo = Mock(env_spec=env.spec, policy=policy, max_path_length=16)
+
     assert ray.is_initialized()
-    workers = WorkerFactory(seed=100, max_path_length=algo.max_path_length)
-    sampler1 = RaySampler(workers, policy, env)
-    sampler1.start_worker()
-    sampler2 = OnPolicyVectorizedSampler(algo, env)
-    sampler2.start_worker()
+    workers = WorkerFactory(seed=100,
+                            max_path_length=algo.max_path_length,
+                            n_workers=8)
+    sampler1 = RaySampler.from_worker_factory(workers, policy, env)
+    sampler2 = LocalSampler.from_worker_factory(workers, policy, env)
     trajs1 = sampler1.obtain_samples(0, 1000,
                                      tuple(algo.policy.get_param_values()))
-    trajs2 = sampler2.obtain_samples(0, 1000)
-    # pylint: disable=superfluous-parens
+    trajs2 = sampler2.obtain_samples(0, 1000,
+                                     tuple(algo.policy.get_param_values()))
+
     assert trajs1.observations.shape[0] >= 1000
     assert trajs1.actions.shape[0] >= 1000
     assert (sum(trajs1.rewards[:trajs1.lengths[0]]) == sum(
-        trajs2[0]['rewards']) == 1)
+        trajs2.rewards[:trajs2.lengths[0]]) == 1)
 
     true_obs = np.array([0, 1, 2, 6, 10, 14])
     true_actions = np.array([2, 2, 1, 1, 1, 2])

@@ -8,6 +8,7 @@ import pytest
 from garage.envs import GarageEnv
 from garage.experiment import LocalTFRunner
 from garage.np.baselines import LinearFeatureBaseline
+from garage.sampler import LocalSampler
 from garage.tf.algos import REPS
 from garage.tf.policies import CategoricalMLPPolicy
 from tests.fixtures import snapshot_config, TfGraphTestCase
@@ -32,7 +33,7 @@ class TestREPS(TfGraphTestCase):
                         max_path_length=100,
                         discount=0.99)
 
-            runner.setup(algo, env)
+            runner.setup(algo, env, sampler_cls=LocalSampler)
 
             last_avg_ret = runner.train(n_epochs=10, batch_size=4000)
             assert last_avg_ret > 5
