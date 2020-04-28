@@ -28,10 +28,10 @@ def gru(name,
             hidden state is trainable.
 
     Return:
-        outputs (tf.Tensor): Entire time-series outputs.
-        output (tf.Tensor): Step output.
-        hidden (tf.Tensor): Step hidden state.
-        hidden_init_var (tf.Tensor): Initial hidden state.
+        tf.Tensor: Entire time-series outputs.
+        tf.Tensor: Step output.
+        tf.Tensor: Step hidden state.
+        tf.Tensor: Initial hidden state.
 
     """
     with tf.compat.v1.variable_scope(name):
@@ -49,13 +49,9 @@ def gru(name,
         hidden_init_var_b = tf.broadcast_to(
             hidden_init_var, shape=[tf.shape(all_input_var)[0], hidden_dim])
 
-        def step(hprev, x):
-            _, [h] = gru_cell(x, states=[hprev])
-            return h
+        rnn = tf.keras.layers.RNN(gru_cell, return_sequences=True)
 
-        shuffled_input = tf.transpose(all_input_var, (1, 0, 2))
-        hs = tf.scan(step, elems=shuffled_input, initializer=hidden_init_var_b)
-        hs = tf.transpose(hs, (1, 0, 2))
+        hs = rnn(all_input_var, initial_state=hidden_init_var_b)
         outputs = output_nonlinearity_layer(hs)
 
     return outputs, output, hidden, hidden_init_var
