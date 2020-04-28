@@ -1,4 +1,4 @@
-"""Place Pytest fixtures to be used across all tests here."""
+"""Pytest fixtures for intializing ray during ray related tests."""
 import pytest
 import ray
 

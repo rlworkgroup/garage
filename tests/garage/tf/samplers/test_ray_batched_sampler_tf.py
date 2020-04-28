@@ -14,6 +14,8 @@ from garage.envs.grid_world_env import GridWorldEnv
 from garage.np.policies import ScriptedPolicy
 from garage.sampler import RaySampler, WorkerFactory
 from garage.tf.envs import TfEnv
+# pylint: disable=unused-import
+from tests.fixtures.sampler import ray_local_session_fixture
 
 
 class TestRaySamplerTF():

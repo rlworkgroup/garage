@@ -1,4 +1,4 @@
-"""Tests for ray_batched_sampler"""
+"""Tests for ray_batched_sampler."""
 from unittest.mock import Mock
 
 import numpy as np
@@ -11,6 +11,7 @@ from garage.experiment.task_sampler import SetTaskSampler
 from garage.np.policies import FixedPolicy, ScriptedPolicy
 from garage.sampler import OnPolicyVectorizedSampler, RaySampler, WorkerFactory
 from garage.tf.envs import TfEnv
+from tests.fixtures.sampler import ray_local_session_fixture
 
 
 def test_ray_batch_sampler(ray_local_session_fixture):

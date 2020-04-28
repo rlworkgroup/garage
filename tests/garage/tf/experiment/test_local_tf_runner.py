@@ -11,6 +11,7 @@ from garage.tf.plotter import Plotter
 from garage.tf.policies import CategoricalMLPPolicy
 from garage.tf.samplers import BatchSampler
 from tests.fixtures import snapshot_config, TfGraphTestCase
+from tests.fixtures.sampler import ray_session_fixture
 
 
 class TestLocalRunner(TfGraphTestCase):
@@ -144,7 +145,7 @@ class TestLocalRunner(TfGraphTestCase):
         del ray_session_fixture
         assert ray.is_initialized()
         with LocalTFRunner(snapshot_config) as runner:
-            env = TfEnv(env_name='CartPole-v1')
+            env = TfEnv(env_name='CubeCrash-v0')
 
             policy = CategoricalMLPPolicy(name='policy',
                                           env_spec=env.spec,
