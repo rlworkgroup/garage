@@ -17,6 +17,7 @@ env:
 jobs:
   include:
     - stage: "Build"
+      if: NOT fork
       name: "Build and cache docker container"
       before_script: skip
       install: skip
