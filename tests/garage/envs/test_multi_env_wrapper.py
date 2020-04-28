@@ -167,7 +167,7 @@ class TestMetaWorldMultiEnvWrapper:
             envs.append(MT10.from_task(task))
         self.env = MultiEnvWrapper(envs,
                                    sample_strategy=round_robin_strategy,
-                                   metaworld_mt=True)
+                                   mode='vanilla')
 
     def teardown_class(self):
         """Close the MTMetaWorldWrapper."""
