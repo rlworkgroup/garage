@@ -1,0 +1,100 @@
+# NOTICE: To keep consistency across this docker file, scripts/setup_linux.sh
+# and scripts/setup_macos.sh, if there's any changes applied to this file,
+# specially regarding the installation of dependencies, apply those same
+# changes to the mentioned files.
+ARG PARENT_IMAGE=ubuntu:20.04
+FROM $PARENT_IMAGE
+
+# http://bugs.python.org/issue19846
+# > At the moment, setting "LANG=C" on a Linux system *fundamentally breaks Python 3*, and that's not OK.
+ENV LANG C.UTF-8
+
+# apt dependencies
+RUN \
+  apt-get -y -q update && \
+  # Prevents debconf from prompting for user input
+  # See https://github.com/phusion/baseimage-docker/issues/58
+  DEBIAN_FRONTEND=noninteractive apt-get install -y \
+    # Dockerfile deps
+    wget \
+    unzip \
+    git \
+    curl \
+    libglfw3 \
+    libglew-dev \
+    libosmesa6-dev \
+    patchelf \
+    # OpenAI baselines
+    libopenmpi-dev \
+    # virtualenv
+    python3 \
+    python3-pip \
+    python3-tk \
+    python3-virtualenv \
+    # OpenAI gym \
+    swig \
+    cmake && \
+  apt-get clean && \
+  rm -rf /var/lib/apt/lists/*
+
+# bazel (for dm_control, via dm-tree)
+RUN \
+  curl https://bazel.build/bazel-release.pub.gpg \
+    | apt-key add - && \
+  echo "deb [arch=amd64] https://storage.googleapis.com/bazel-apt stable jdk1.8" \
+    | tee /etc/apt/sources.list.d/bazel.list && \
+  apt-get -y -q update && \
+  # Prevents debconf from prompting for user input
+  # See https://github.com/phusion/baseimage-docker/issues/58
+  DEBIAN_FRONTEND=noninteractive apt-get install -y \
+    bazel && \
+  apt-get clean && \
+  rm -rf /var/lib/apt/lists/*
+
+# MuJoCo 2.0 (for dm_control)
+RUN mkdir -p /root/.mujoco && \
+  wget https://www.roboti.us/download/mujoco200_linux.zip -O mujoco.zip && \
+  unzip mujoco.zip -d $HOME/.mujoco && \
+  rm mujoco.zip && \
+  ln -s $HOME/.mujoco/mujoco200_linux $HOME/.mujoco/mujoco200
+  ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mujoco200/bin
+
+# Copy over just setup.py first, so the Docker cache doesn't expire until
+# dependencies change
+#
+# Files needed to run setup.py
+# - README.md
+# - VERSION
+# - scripts/garage
+# - src/garage/__init__.py
+# - setup.py
+COPY README.md /root/code/garage/README.md
+COPY VERSION /root/code/garage/VERSION
+COPY scripts/garage /root/code/garage/scripts/garage
+COPY src/garage/__init__.py /root/code/garage/src/garage/__init__.py
+COPY setup.py /root/code/garage/setup.py
+WORKDIR /root/code/garage
+
+# Create virtualenv
+ENV VIRTUAL_ENV=/root/venv
+RUN python3 -m virtualenv --python=/usr/bin/python3 $VIRTUAL_ENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+# Prevent pip from complaining about available upgrades
+RUN pip install --upgrade pip
+
+# We need a MuJoCo key to install mujoco_py
+# In this step only the presence of the file mjkey.txt is required, so we only
+# create an empty file
+RUN touch /root/.mujoco/mjkey.txt && \
+  pip install .[all] && \
+  pip install .[all,dev] && \
+  rm -r /root/.cache/pip && \
+  rm /root/.mujoco/mjkey.txt
+
+# Setup repo
+# Pre-build pre-commit env
+COPY .pre-commit-config.yaml /root/code/garage
+RUN git init && \
+  pre-commit install && \
+  pre-commit install-hooks

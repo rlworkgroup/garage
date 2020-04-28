@@ -5,7 +5,7 @@ services:
       cache_from:
         - rlworkgroup/garage-headless:latest
       context: ../
-      dockerfile: docker/Dockerfile.base.18.04
+      dockerfile: docker/Dockerfile.base.20.04
     image: rlworkgroup/garage-base
   garage-headless-no-files:
     build:
