@@ -72,4 +72,4 @@ class CategoricalMLPModel(MLPModel):
 
         """
         prob = super()._build(state_input, name=name)
-        return tfp.distributions.OneHotCategorical(prob)
+        return tfp.distributions.OneHotCategorical(probs=prob)

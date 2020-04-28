@@ -101,7 +101,7 @@ class CategoricalMLPPolicy2(StochasticPolicy2):
             self._dist = self.model.build(state_input, name=name)
 
             self._f_prob = tf.compat.v1.get_default_session().make_callable(
-                [tf.argmax(self._dist.sample(), -1), self._dist.logits],
+                [tf.argmax(self._dist.sample(), -1), self._dist.probs],
                 feed_list=[state_input])
 
     @property
