@@ -45,29 +45,39 @@ def uniform_random_strategy(num_tasks, _):
 
 
 class MultiEnvWrapper(gym.Wrapper):
-    """A wrapper class to handle multiple gym environments.
+    """A wrapper class to handle multiple environments.
+
+    This wrapper adds an integer 'task_id' to env_info every timestep.
 
     Args:
         envs (list(gym.Env)):
             A list of objects implementing gym.Env.
         sample_strategy (function(int, int)):
             Sample strategy to be used when sampling a new task.
-        metaworld_mt (bool): Set if the envs that are passed Metaworld
-            environments from Multitask Benchmark Environments. Primarily
-            disables wrapper from augmenting observations with task one-hot
-            ids.
+        mode (str): A string from 'vanilla`, 'add-onehot' and 'del-onehot'.
+            The type of observation to use.
+            - 'vanilla' provides the observation as it is.
+              Use case: metaworld environments with MT* algorithms,
+                        gym environments with Task Embedding.
+            - 'add-onehot' will append an one-hot task id to observation.
+              Use case: gym environments with MT* algorithms.
+            - 'del-onehot' assumes an one-hot task id is appended to
+              observation, and it excludes that.
+              Use case: metaworld environments with Task Embedding.
+
     """
 
     def __init__(self,
                  envs,
                  sample_strategy=uniform_random_strategy,
-                 metaworld_mt=False):
+                 mode='add-onehot'):
+        assert mode in ['vanilla', 'add-onehot', 'del-onehot']
 
         self._sample_strategy = sample_strategy
         self._num_tasks = len(envs)
         self._active_task_index = None
         self._observation_space = None
-        self._metaworld_mt = metaworld_mt
+        self._mode = mode
         for i, env in enumerate(envs):
             if not isinstance(env, GarageEnv):
                 envs[i] = GarageEnv(env)
@@ -114,11 +124,7 @@ class MultiEnvWrapper(gym.Wrapper):
             int: Index of active task.
 
         """
-        if self._metaworld_mt:
-            task_id = self.env.active_task
-        else:
-            task_id = self._active_task_index
-        return task_id
+        return self._active_task_index
 
     @property
     def observation_space(self):
@@ -128,12 +134,17 @@ class MultiEnvWrapper(gym.Wrapper):
             akro.Box: Observation space.
 
         """
-        if self._metaworld_mt:
+        if self._mode == 'vanilla':
             return self.env.observation_space
-        task_lb, task_ub = self.task_space.bounds
-        env_lb, env_ub = self._observation_space.bounds
-        return akro.Box(np.concatenate([task_lb, env_lb]),
-                        np.concatenate([task_ub, env_ub]))
+        elif self._mode == 'add-onehot':
+            task_lb, task_ub = self.task_space.bounds
+            env_lb, env_ub = self._observation_space.bounds
+            return akro.Box(np.concatenate([env_lb, task_lb]),
+                            np.concatenate([env_ub, task_ub]))
+        else:  # self._mode == 'del-onehot'
+            env_lb, env_ub = self._observation_space.bounds
+            num_tasks = self._num_tasks
+            return akro.Box(env_lb[:-num_tasks], env_ub[:-num_tasks])
 
     @observation_space.setter
     def observation_space(self, observation_space):
@@ -153,8 +164,6 @@ class MultiEnvWrapper(gym.Wrapper):
             numpy.ndarray: one-hot representation of active task
 
         """
-        if self._metaworld_mt:
-            return self.env.active_task_one_hot
         one_hot = np.zeros(self.task_space.shape)
         index = self.active_task_index or 0
         one_hot[index] = self.task_space.high[index]
@@ -174,9 +183,12 @@ class MultiEnvWrapper(gym.Wrapper):
             self._num_tasks, self._active_task_index)
         self.env = self._task_envs[self._active_task_index]
         obs = self.env.reset(**kwargs)
-        if not self._metaworld_mt:
-            obs = self._obs_with_one_hot(obs)
-        return obs
+        if self._mode == 'vanilla':
+            return obs
+        elif self._mode == 'add-onehot':
+            return np.concatenate([obs, self.active_task_one_hot])
+        else:  # self._mode == 'del-onehot'
+            return obs[:-self._num_tasks]
 
     def step(self, action):
         """gym.Env step for the active task env.
@@ -192,8 +204,10 @@ class MultiEnvWrapper(gym.Wrapper):
 
         """
         obs, reward, done, info = self.env.step(action)
-        if not self._metaworld_mt:
-            obs = self._obs_with_one_hot(obs)
+        if self._mode == 'add-onehot':
+            obs = np.concatenate([obs, self.active_task_one_hot])
+        elif self._mode == 'del-onehot':
+            obs = obs[:-self._num_tasks]
         info['task_id'] = self._active_task_index
         info['task_name'] = self.active_task_name
         return obs, reward, done, info
@@ -202,19 +216,6 @@ class MultiEnvWrapper(gym.Wrapper):
         """Close all task envs."""
         for env in self._task_envs:
             env.close()
-
-    def _obs_with_one_hot(self, obs):
-        """Concatenate active task one-hot representation with observation.
-
-        Args:
-            obs (numpy.ndarray): observation
-
-        Returns:
-            numpy.ndarray: active task one-hot + observation
-
-        """
-        oh_obs = np.concatenate([self.active_task_one_hot, obs])
-        return oh_obs
 
     @property
     def active_task_name(self):
@@ -227,6 +228,7 @@ class MultiEnvWrapper(gym.Wrapper):
                 environment's class name.
 
         """
-        if self._metaworld_mt:
+        if hasattr(self.env, 'all_task_names'):
             return self.env.all_task_names[0]
-        return str(self.env.unwrapped)
+        else:
+            return str(self.env.unwrapped)
