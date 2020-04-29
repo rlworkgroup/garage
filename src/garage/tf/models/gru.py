@@ -28,10 +28,10 @@ def gru(name,
             hidden state is trainable.
 
     Return:
-        tf.Tensor: Entire time-series outputs.
-        tf.Tensor: Step output.
-        tf.Tensor: Step hidden state.
-        tf.Tensor: Initial hidden state.
+        tf.Tensor: Entire time-series outputs, with shape :math:`(N, T, S^*)`.
+        tf.Tensor: Step output, with shape :math:`(N, S^*)`.
+        tf.Tensor: Step hidden state, with shape :math:`(N, S^*)`
+        tf.Tensor: Initial hidden state, with shape :math:`(H, )`
 
     """
     with tf.compat.v1.variable_scope(name):
