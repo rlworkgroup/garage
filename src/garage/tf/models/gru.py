@@ -10,15 +10,18 @@ def gru(name,
         output_nonlinearity_layer,
         hidden_state_init=tf.zeros_initializer(),
         hidden_state_init_trainable=False):
-    """Gated Recurrent Unit (GRU).
+    r"""Gated Recurrent Unit (GRU).
 
     Args:
         name (str): Name of the variable scope.
         gru_cell (tf.keras.layers.Layer): GRU cell used to generate
             outputs.
-        all_input_var (tf.Tensor): Place holder for entire time-series inputs.
-        step_input_var (tf.Tensor): Place holder for step inputs.
-        step_hidden_var (tf.Tensor): Place holder for step hidden state.
+        all_input_var (tf.Tensor): Place holder for entire time-series inputs,
+            with shape :math:`(N, T, S^*)`.
+        step_input_var (tf.Tensor): Place holder for step inputs, with shape
+            :math:`(N, S^*)`.
+        step_hidden_var (tf.Tensor): Place holder for step hidden state, with
+            shape :math:`(N, hidden_dim)`.
         output_nonlinearity_layer (callable): Activation function for output
             dense layer. It should return a tf.Tensor. Set it to None to
             maintain a linear activation.
@@ -30,8 +33,8 @@ def gru(name,
     Return:
         tf.Tensor: Entire time-series outputs, with shape :math:`(N, T, S^*)`.
         tf.Tensor: Step output, with shape :math:`(N, S^*)`.
-        tf.Tensor: Step hidden state, with shape :math:`(N, S^*)`
-        tf.Tensor: Initial hidden state, with shape :math:`(H, )`
+        tf.Tensor: Step hidden state, with shape :math:`(N, hidden_dim)`
+        tf.Tensor: Initial hidden state, with shape :math:`(hidden_dim, )`
 
     """
     with tf.compat.v1.variable_scope(name):
