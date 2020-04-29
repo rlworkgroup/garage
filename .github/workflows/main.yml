@@ -15,6 +15,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
+    - name: "Set up Python 3.6"
+      uses: action/setup-python@v1
+      with:
+        python-version: 3.6
     - uses: ammaraskar/sphinx-action@master
       with:
         docs-folder: "docs/"
