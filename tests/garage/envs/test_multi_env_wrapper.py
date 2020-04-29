@@ -12,6 +12,21 @@ from garage.tf.envs import TfEnv
 class TestMultiEnvWrapper:
     """Tests for garage.envs.multi_env_wrapper"""
 
+    def _init_multi_env_wrapper(self,
+                                env_names,
+                                sample_strategy=uniform_random_strategy):
+        """helper function to initialize multi_env_wrapper
+
+        Args:
+            env_names (list(str)): List of gym.Env names.
+            sample_strategy (func): A sampling strategy.
+
+        Returns:
+            garage.envs.multi_env_wrapper: Multi env wrapper.
+        """
+        task_envs = [TfEnv(env_name=name) for name in env_names]
+        return MultiEnvWrapper(task_envs, sample_strategy=sample_strategy)
+
     def test_tasks_from_same_env(self):
         """test init with multiple tasks from same env"""
         envs = ['CartPole-v0', 'CartPole-v0']
@@ -49,8 +64,10 @@ class TestMultiEnvWrapper:
         mt_env = self._init_multi_env_wrapper(envs)
         cartpole = TfEnv(env_name='CartPole-v0')
         cartpole_lb, cartpole_ub = cartpole.observation_space.bounds
-        obs_space = akro.Box(np.concatenate([np.zeros(2), cartpole_lb]),
-                             np.concatenate([np.ones(2), cartpole_ub]))
+        obs_space = akro.Box(np.concatenate([cartpole_lb,
+                                             np.zeros(2)]),
+                             np.concatenate([cartpole_ub,
+                                             np.ones(2)]))
         assert mt_env.observation_space.shape == obs_space.shape
         assert (
             mt_env.observation_space.bounds[0] == obs_space.bounds[0]).all()
@@ -120,14 +137,14 @@ class TestMultiEnvWrapper:
             envs, sample_strategy=round_robin_strategy)
 
         obs = mt_env.reset()
-        assert (obs[:2] == np.array([1., 0.])).all()
+        assert (obs[-2:] == np.array([1., 0.])).all()
         obs = mt_env.step(1)[0]
-        assert (obs[:2] == np.array([1., 0.])).all()
+        assert (obs[-2:] == np.array([1., 0.])).all()
 
         obs = mt_env.reset()
-        assert (obs[:2] == np.array([0., 1.])).all()
+        assert (obs[-2:] == np.array([0., 1.])).all()
         obs = mt_env.step(1)[0]
-        assert (obs[:2] == np.array([0., 1.])).all()
+        assert (obs[-2:] == np.array([0., 1.])).all()
 
     def test_active_task_name(self):
         """Check if the task name of the active task corresponds to its """
@@ -136,21 +153,6 @@ class TestMultiEnvWrapper:
         for _ in range(mt_env.num_tasks):
             assert mt_env.active_task_name == str(mt_env.env.unwrapped)
             mt_env.reset()
-
-    def _init_multi_env_wrapper(self,
-                                env_names,
-                                sample_strategy=uniform_random_strategy):
-        """helper function to initialize multi_env_wrapper
-
-        Args:
-            env_names (list(str)): List of gym.Env names.
-            sample_strategy (func): A sampling strategy.
-
-        Returns:
-            garage.envs.multi_env_wrapper: Multi env wrapper.
-        """
-        task_envs = [TfEnv(env_name=name) for name in env_names]
-        return MultiEnvWrapper(task_envs, sample_strategy=sample_strategy)
 
 
 @pytest.mark.mujoco
@@ -168,22 +170,35 @@ class TestMetaWorldMultiEnvWrapper:
         self.env = MultiEnvWrapper(envs,
                                    sample_strategy=round_robin_strategy,
                                    mode='vanilla')
+        self.env_no_onehot = MultiEnvWrapper(
+            envs, sample_strategy=round_robin_strategy, mode='del-onehot')
 
     def teardown_class(self):
         """Close the MTMetaWorldWrapper."""
         self.env.close()
+        self.env_no_onehot.close()
 
     def test_num_tasks(self):
         """Assert num tasks returns 10, because MT10 is being tested."""
         assert self.env.num_tasks == 10
+        assert self.env_no_onehot.num_tasks == 10
+
+    def test_observation_space(self):
+        assert self.env.observation_space.shape == (9 + self.env.num_tasks, )
+        assert self.env_no_onehot.observation_space.shape == (9, )
 
     def test_step(self):
         """Test that env_infos includes extra infos and obs has onehot."""
         self.env.reset()
-        action = self.env.spec.action_space.sample()
-        obs, _, _, info = self.env.step(action)
-        assert info['task_id'] == self.env.active_task_index
-        assert (self.env.active_task_one_hot == obs[9:]).all()
+        self.env_no_onehot.reset()
+        action0 = self.env.spec.action_space.sample()
+        action1 = self.env_no_onehot.spec.action_space.sample()
+        obs0, _, _, info0 = self.env.step(action0)
+        obs1, _, _, info1 = self.env_no_onehot.step(action1)
+        assert info0['task_id'] == self.env.active_task_index
+        assert info1['task_id'] == self.env.active_task_index
+        assert (self.env.active_task_one_hot == obs0[9:]).all()
+        assert obs0.shape[0] == obs1.shape[0] + self.env.num_tasks
 
     def test_reset(self):
         """Test round robin switching of environments during call to reset."""

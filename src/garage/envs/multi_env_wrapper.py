@@ -70,7 +70,7 @@ class MultiEnvWrapper(gym.Wrapper):
     def __init__(self,
                  envs,
                  sample_strategy=uniform_random_strategy,
-                 mode='vanilla'):
+                 mode='add-onehot'):
         assert mode in ['vanilla', 'add-onehot', 'del-onehot']
 
         self._sample_strategy = sample_strategy
@@ -91,6 +91,8 @@ class MultiEnvWrapper(gym.Wrapper):
             if env.action_space.shape != self.env.action_space.shape:
                 raise ValueError('Action space of all envs should be same.')
             self._task_envs.append(env)
+
+        self.env.spec.observation_space = self.observation_space
 
     @property
     def num_tasks(self):
@@ -207,6 +209,7 @@ class MultiEnvWrapper(gym.Wrapper):
         elif self._mode == 'del-onehot':
             obs = obs[:-self._num_tasks]
         info['task_id'] = self._active_task_index
+        info['task_name'] = self.active_task_name
         return obs, reward, done, info
 
     def close(self):
