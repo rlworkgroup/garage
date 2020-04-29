@@ -60,7 +60,7 @@ class CategoricalGRUModel(GRUModel):
                  hidden_b_init=tf.zeros_initializer(),
                  recurrent_nonlinearity=tf.nn.sigmoid,
                  recurrent_w_init=tf.initializers.glorot_uniform(),
-                 output_nonlinearity=None,
+                 output_nonlinearity=tf.nn.softmax,
                  output_w_init=tf.initializers.glorot_uniform(),
                  output_b_init=tf.zeros_initializer(),
                  hidden_state_init=tf.zeros_initializer(),
@@ -116,6 +116,5 @@ class CategoricalGRUModel(GRUModel):
         """
         outputs, step_output, step_hidden, init_hidden = super()._build(
             state_input, step_input, step_hidden, name=name)
-        outputs = outputs / tf.math.reduce_sum(outputs)
         dist = tfp.distributions.OneHotCategorical(probs=outputs)
         return dist, step_output, step_hidden, init_hidden

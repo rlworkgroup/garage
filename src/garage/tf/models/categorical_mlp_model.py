@@ -47,10 +47,10 @@ class CategoricalMLPModel(MLPModel):
                  output_dim,
                  name=None,
                  hidden_sizes=(32, 32),
-                 hidden_nonlinearity=tf.nn.relu,
+                 hidden_nonlinearity=tf.nn.tanh,
                  hidden_w_init=tf.initializers.glorot_uniform(),
                  hidden_b_init=tf.zeros_initializer(),
-                 output_nonlinearity=None,
+                 output_nonlinearity=tf.nn.softmax,
                  output_w_init=tf.initializers.glorot_uniform(),
                  output_b_init=tf.zeros_initializer(),
                  layer_normalization=False):
@@ -72,5 +72,4 @@ class CategoricalMLPModel(MLPModel):
 
         """
         prob = super()._build(state_input, name=name)
-        prob = prob / tf.math.reduce_sum(prob)
         return tfp.distributions.OneHotCategorical(probs=prob)

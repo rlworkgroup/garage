@@ -21,6 +21,17 @@ class TestCategoricalMLPModel(TfGraphTestCase):
         dist = model.build(self.input_var)
         assert isinstance(dist, tfp.distributions.OneHotCategorical)
 
+    @pytest.mark.parametrize('output_dim', [1, 2, 5, 10])
+    def test_output_normalized(self, output_dim):
+        model = CategoricalMLPModel(output_dim=output_dim)
+        obs_ph = tf.compat.v1.placeholder(tf.float32, shape=(None, output_dim))
+        obs = np.ones((1, output_dim))
+        dist = model.build(obs_ph)
+        probs = tf.compat.v1.get_default_session().run(tf.reduce_sum(
+            dist.probs),
+                                                       feed_dict={obs_ph: obs})
+        assert probs == 1.0
+
     # yapf: disable
     @pytest.mark.parametrize('output_dim, hidden_sizes', [
         (1, (1, )),

@@ -1,6 +1,7 @@
 import pickle
 
 import numpy as np
+import pytest
 import tensorflow as tf
 import tensorflow_probability as tfp
 
@@ -40,6 +41,23 @@ class TestCategoricalLSTMModel(TfGraphTestCase):
                     step_cell_var)
         assert isinstance(model.networks['default'].dist,
                           tfp.distributions.OneHotCategorical)
+
+    @pytest.mark.parametrize('output_dim', [1, 2, 5, 10])
+    def test_output_normalized(self, output_dim):
+        model = CategoricalLSTMModel(output_dim=output_dim, hidden_dim=4)
+        obs_ph = tf.compat.v1.placeholder(tf.float32,
+                                          shape=(None, None, output_dim))
+        step_obs_ph = tf.compat.v1.placeholder(tf.float32,
+                                               shape=(None, output_dim))
+        step_hidden_ph = tf.compat.v1.placeholder(tf.float32, shape=(None, 4))
+        step_cell_ph = tf.compat.v1.placeholder(tf.float32, shape=(None, 4))
+        obs = np.ones((1, 1, output_dim))
+        dist, _, _, _, _, _ = model.build(obs_ph, step_obs_ph, step_hidden_ph,
+                                          step_cell_ph)
+        probs = tf.compat.v1.get_default_session().run(tf.reduce_sum(
+            dist.probs),
+                                                       feed_dict={obs_ph: obs})
+        assert probs == 1.0
 
     def test_is_pickleable(self):
         model = CategoricalLSTMModel(output_dim=1, hidden_dim=1)
