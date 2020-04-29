@@ -72,7 +72,7 @@ class TestCategoricalCNNPolicyWithModel(TfGraphTestCase):
         cnn_bias.load(tf.ones_like(cnn_bias).eval())
         bias.load(tf.ones_like(bias).eval())
 
-        output1 = self.sess.run(policy.distribution.logits,
+        output1 = self.sess.run(policy.distribution.probs,
                                 feed_dict={policy.model.input: [obs]})
         p = pickle.dumps(policy)
 
@@ -83,7 +83,7 @@ class TestCategoricalCNNPolicyWithModel(TfGraphTestCase):
                                                env.observation_space.shape,
                                                name='obs')
             policy_pickled.build(obs_var)
-            output2 = sess.run(policy_pickled.distribution.logits,
+            output2 = sess.run(policy_pickled.distribution.probs,
                                feed_dict={policy_pickled.model.input: [obs]})
             assert np.array_equal(output1, output2)
 

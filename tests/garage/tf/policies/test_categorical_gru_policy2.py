@@ -86,7 +86,7 @@ class TestCategoricalGRUPolicy2(TfGraphTestCase):
             tf.ones_like(policy.model._gru_cell.weights[0]).eval())
 
         output1 = self.sess.run(
-            [policy.distribution.logits],
+            [policy.distribution.probs],
             feed_dict={policy.model.input: [[obs.flatten()], [obs.flatten()]]})
 
         p = pickle.dumps(policy)
@@ -100,7 +100,7 @@ class TestCategoricalGRUPolicy2(TfGraphTestCase):
             policy_pickled.build(obs_var)
             # yapf: disable
             output2 = sess.run(
-                [policy_pickled.distribution.logits],
+                [policy_pickled.distribution.probs],
                 feed_dict={
                     policy_pickled.model.input: [[obs.flatten()],
                                                  [obs.flatten()]]

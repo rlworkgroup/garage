@@ -23,7 +23,6 @@ class TestCategoricalMLPModel(TfGraphTestCase):
 
     # yapf: disable
     @pytest.mark.parametrize('output_dim, hidden_sizes', [
-        (1, (0, )),
         (1, (1, )),
         (1, (2, )),
         (2, (3, )),
@@ -45,7 +44,7 @@ class TestCategoricalMLPModel(TfGraphTestCase):
 
         bias.load(tf.ones_like(bias).eval())
 
-        output1 = self.sess.run(dist.logits,
+        output1 = self.sess.run(dist.probs,
                                 feed_dict={self.input_var: self.obs})
 
         h = pickle.dumps(model)
@@ -53,6 +52,6 @@ class TestCategoricalMLPModel(TfGraphTestCase):
             input_var = tf.compat.v1.placeholder(tf.float32, shape=(None, 5))
             model_pickled = pickle.loads(h)
             dist2 = model_pickled.build(input_var)
-            output2 = sess.run(dist2.logits, feed_dict={input_var: self.obs})
+            output2 = sess.run(dist2.probs, feed_dict={input_var: self.obs})
 
             assert np.array_equal(output1, output2)

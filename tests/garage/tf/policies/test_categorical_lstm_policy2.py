@@ -90,7 +90,7 @@ class TestCategoricalLSTMPolicy2(TfGraphTestCase):
             tf.ones_like(policy.model._lstm_cell.weights[0]).eval())
 
         output1 = self.sess.run(
-            [policy.distribution.logits],
+            [policy.distribution.probs],
             feed_dict={policy.model.input: [[obs.flatten()], [obs.flatten()]]})
 
         p = pickle.dumps(policy)
@@ -102,7 +102,7 @@ class TestCategoricalLSTMPolicy2(TfGraphTestCase):
                 shape=[None, None, env.observation_space.flat_dim],
                 name='obs')
             policy_pickled.build(obs_var)
-            output2 = sess.run([policy_pickled.distribution.logits],
+            output2 = sess.run([policy_pickled.distribution.probs],
                                feed_dict={
                                    policy_pickled.model.input:
                                    [[obs.flatten()], [obs.flatten()]]
