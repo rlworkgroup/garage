@@ -116,5 +116,6 @@ class CategoricalGRUModel(GRUModel):
         """
         outputs, step_output, step_hidden, init_hidden = super()._build(
             state_input, step_input, step_hidden, name=name)
+        outputs = outputs / tf.math.reduce_sum(outputs)
         dist = tfp.distributions.OneHotCategorical(probs=outputs)
         return dist, step_output, step_hidden, init_hidden

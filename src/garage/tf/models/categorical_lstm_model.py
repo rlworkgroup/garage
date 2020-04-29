@@ -146,6 +146,7 @@ class CategoricalLSTMModel(LSTMModel):
                                      step_hidden,
                                      step_cell,
                                      name=name)
+        outputs = outputs / tf.math.reduce_sum(outputs)
         dist = tfp.distributions.OneHotCategorical(probs=outputs)
         return (dist, step_output, step_hidden, step_cell, init_hidden,
                 init_cell)
