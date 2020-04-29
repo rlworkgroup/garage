@@ -1,0 +1,62 @@
+#!/usr/bin/env python3
+"""This is an example to train a task with VPG algorithm.
+
+Here it runs CartPole-v1 environment with 100 iterations.
+
+Results:
+    AverageReturn: 100
+    RiseTime: itr 13
+"""
+# pylint: disable=no-value-for-parameter
+import click
+
+from garage.experiment import wrap_experiment
+from garage.experiment.deterministic import set_seed
+from garage.np.baselines import LinearFeatureBaseline
+from garage.tf.algos import TRPO2
+from garage.tf.envs import TfEnv
+from garage.tf.experiment import LocalTFRunner
+from garage.tf.policies import CategoricalMLPPolicy2
+
+
+@click.command()
+@click.option('--seed', default=1)
+@click.option('--n_epochs', default=100)
+@click.option('--batch_size', default=4000)
+@click.option('--plot', default=False)
+@wrap_experiment
+def trpo_cartpole2(ctxt, seed, n_epochs, batch_size, plot):
+    """Train TRPO with a Categorical MLP policy on CartPole.
+
+    Args:
+        ctxt (garage.experiment.ExperimentContext): The experiment
+            configuration used by LocalRunner to create the snapshotter.
+        n_epochs (int): Number of epochs for training.
+        seed (int): Used to seed the random number generator to produce
+            determinism.
+        batch_size (int): Batch size used for training.
+        plot (bool): Whether to plot or not.
+
+    """
+    set_seed(seed)
+    with LocalTFRunner(snapshot_config=ctxt) as runner:
+        env = TfEnv(env_name='CartPole-v1')
+
+        policy = CategoricalMLPPolicy2(name='policy',
+                                       env_spec=env.spec,
+                                       hidden_sizes=(32, 32))
+
+        baseline = LinearFeatureBaseline(env_spec=env.spec)
+
+        algo = TRPO2(env_spec=env.spec,
+                     policy=policy,
+                     baseline=baseline,
+                     max_path_length=100,
+                     discount=0.99,
+                     max_kl_step=0.01)
+
+        runner.setup(algo, env)
+        runner.train(n_epochs=n_epochs, batch_size=batch_size, plot=plot)
+
+
+trpo_cartpole2()
