@@ -24,9 +24,9 @@ def lstm(name,
         step_input_var (tf.Tensor): Place holder for step inputs, with shape
             :math:`(N, S^*)`.
         step_hidden_var (tf.Tensor): Place holder for step hidden state, with
-            shape :math:`(N, hidden_dim)`.
+            shape :math:`(N, H)`.
         step_cell_var (tf.Tensor): Place holder for cell state, with shape
-            :math:`(N, hidden_dim)`.
+            :math:`(N, H)`.
         output_nonlinearity_layer (callable): Activation function for output
             dense layer. It should return a tf.Tensor. Set it to None to
             maintain a linear activation.
@@ -42,10 +42,10 @@ def lstm(name,
     Return:
         tf.Tensor: Entire time-seried outputs, with shape :math:`(N, T, S^*)`.
         tf.Tensor: Step output, with shape :math:`(N, S^*)`.
-        tf.Tensor: Step hidden state, with shape :math:`(N, hidden_dim)`.
-        tf.Tensor: Step cell state, with shape :math:`(N, hidden_dim)`.
-        tf.Tensor: Initial hidden state, with shape :math:`(hidden_dim, )`.
-        tf.Tensor: Initial cell state, with shape :math:`(hidden_dim, )`.
+        tf.Tensor: Step hidden state, with shape :math:`(N, H)`.
+        tf.Tensor: Step cell state, with shape :math:`(N, H)`.
+        tf.Tensor: Initial hidden state, with shape :math:`(H, )`.
+        tf.Tensor: Initial cell state, with shape :math:`(H, )`.
 
     """
     with tf.compat.v1.variable_scope(name):
