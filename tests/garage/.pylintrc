@@ -41,6 +41,7 @@ disable =
     protected-access,
     redefined-outer-name,
     too-few-public-methods,
+    unused-import,
 
 
 [REPORTS]
