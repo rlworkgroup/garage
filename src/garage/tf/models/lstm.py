@@ -13,16 +13,20 @@ def lstm(name,
          hidden_state_init_trainable=False,
          cell_state_init=tf.zeros_initializer(),
          cell_state_init_trainable=False):
-    """Long Short-Term Memory (LSTM).
+    r"""Long Short-Term Memory (LSTM).
 
     Args:
         name (str): Name of the variable scope.
         lstm_cell (tf.keras.layers.Layer): LSTM cell used to generate
             outputs.
-        all_input_var (tf.Tensor): Place holder for entire time-seried inputs.
-        step_input_var (tf.Tensor): Place holder for step inputs.
-        step_hidden_var (tf.Tensor): Place holder for step hidden state.
-        step_cell_var (tf.Tensor): Place holder for cell state.
+        all_input_var (tf.Tensor): Place holder for entire time-seried inputs,
+            with shape :math:`(N, T, S^*)`.
+        step_input_var (tf.Tensor): Place holder for step inputs, with shape
+            :math:`(N, S^*)`.
+        step_hidden_var (tf.Tensor): Place holder for step hidden state, with
+            shape :math:`(N, H)`.
+        step_cell_var (tf.Tensor): Place holder for cell state, with shape
+            :math:`(N, H)`.
         output_nonlinearity_layer (callable): Activation function for output
             dense layer. It should return a tf.Tensor. Set it to None to
             maintain a linear activation.
@@ -36,12 +40,12 @@ def lstm(name,
             cell state is trainable.
 
     Return:
-        outputs (tf.Tensor): Entire time-seried outputs.
-        output (tf.Tensor): Step output.
-        hidden (tf.Tensor): Step hidden state.
-        cell (tf.Tensor): Step cell state.
-        hidden_init_var (tf.Tensor): Initial hidden state.
-        cell_init_var (tf.Tensor): Initial cell state.
+        tf.Tensor: Entire time-seried outputs, with shape :math:`(N, T, S^*)`.
+        tf.Tensor: Step output, with shape :math:`(N, S^*)`.
+        tf.Tensor: Step hidden state, with shape :math:`(N, H)`.
+        tf.Tensor: Step cell state, with shape :math:`(N, H)`.
+        tf.Tensor: Initial hidden state, with shape :math:`(H, )`.
+        tf.Tensor: Initial cell state, with shape :math:`(H, )`.
 
     """
     with tf.compat.v1.variable_scope(name):
@@ -69,21 +73,10 @@ def lstm(name,
         cell_init_var_b = tf.broadcast_to(
             cell_init_var, shape=[tf.shape(all_input_var)[0], hidden_dim])
 
-        def step(hcprev, x):
-            hprev = hcprev[:, :hidden_dim]
-            cprev = hcprev[:, hidden_dim:]
-            h, c = lstm_cell(x, states=(hprev, cprev))[1]
-            return tf.concat(axis=1, values=[h, c])
+        rnn = tf.keras.layers.RNN(lstm_cell, return_sequences=True)
 
-        shuffled_input = tf.transpose(all_input_var, (1, 0, 2))
-        hcs = tf.scan(
-            step,
-            elems=shuffled_input,
-            initializer=tf.concat(axis=1,
-                                  values=[hidden_init_var_b, cell_init_var_b]),
-        )
-        hcs = tf.transpose(hcs, (1, 0, 2))
-        hs = hcs[:, :, :hidden_dim]
+        hs = rnn(all_input_var,
+                 initial_state=[hidden_init_var_b, cell_init_var_b])
         outputs = output_nonlinearity_layer(hs)
 
     return outputs, output, hidden, cell, hidden_init_var, cell_init_var

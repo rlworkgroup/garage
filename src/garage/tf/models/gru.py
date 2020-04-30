@@ -10,15 +10,18 @@ def gru(name,
         output_nonlinearity_layer,
         hidden_state_init=tf.zeros_initializer(),
         hidden_state_init_trainable=False):
-    """Gated Recurrent Unit (GRU).
+    r"""Gated Recurrent Unit (GRU).
 
     Args:
         name (str): Name of the variable scope.
         gru_cell (tf.keras.layers.Layer): GRU cell used to generate
             outputs.
-        all_input_var (tf.Tensor): Place holder for entire time-series inputs.
-        step_input_var (tf.Tensor): Place holder for step inputs.
-        step_hidden_var (tf.Tensor): Place holder for step hidden state.
+        all_input_var (tf.Tensor): Place holder for entire time-series inputs,
+            with shape :math:`(N, T, S^*)`.
+        step_input_var (tf.Tensor): Place holder for step inputs, with shape
+            :math:`(N, S^*)`.
+        step_hidden_var (tf.Tensor): Place holder for step hidden state, with
+            shape :math:`(N, H)`.
         output_nonlinearity_layer (callable): Activation function for output
             dense layer. It should return a tf.Tensor. Set it to None to
             maintain a linear activation.
@@ -28,10 +31,10 @@ def gru(name,
             hidden state is trainable.
 
     Return:
-        outputs (tf.Tensor): Entire time-series outputs.
-        output (tf.Tensor): Step output.
-        hidden (tf.Tensor): Step hidden state.
-        hidden_init_var (tf.Tensor): Initial hidden state.
+        tf.Tensor: Entire time-series outputs, with shape :math:`(N, T, S^*)`.
+        tf.Tensor: Step output, with shape :math:`(N, S^*)`.
+        tf.Tensor: Step hidden state, with shape :math:`(N, H)`
+        tf.Tensor: Initial hidden state, with shape :math:`(H, )`
 
     """
     with tf.compat.v1.variable_scope(name):
@@ -49,13 +52,9 @@ def gru(name,
         hidden_init_var_b = tf.broadcast_to(
             hidden_init_var, shape=[tf.shape(all_input_var)[0], hidden_dim])
 
-        def step(hprev, x):
-            _, [h] = gru_cell(x, states=[hprev])
-            return h
+        rnn = tf.keras.layers.RNN(gru_cell, return_sequences=True)
 
-        shuffled_input = tf.transpose(all_input_var, (1, 0, 2))
-        hs = tf.scan(step, elems=shuffled_input, initializer=hidden_init_var_b)
-        hs = tf.transpose(hs, (1, 0, 2))
+        hs = rnn(all_input_var, initial_state=hidden_init_var_b)
         outputs = output_nonlinearity_layer(hs)
 
     return outputs, output, hidden, hidden_init_var
