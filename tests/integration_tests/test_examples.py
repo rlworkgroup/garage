@@ -1,6 +1,4 @@
-"""This is an integration test to make sure scripts from examples/
-work when executing `./examples/**/*.py`.
-"""
+"""Integration tests to make sure scripts in examples work."""
 import os
 import pathlib
 import subprocess
@@ -24,7 +22,9 @@ LONG_RUNNING_EXAMPLES = [
     EXAMPLES_ROOT_DIR / 'torch/maml_ppo_half_cheetah_dir.py',
     EXAMPLES_ROOT_DIR / 'torch/maml_trpo_half_cheetah_dir.py',
     EXAMPLES_ROOT_DIR / 'torch/maml_vpg_half_cheetah_dir.py',
+    EXAMPLES_ROOT_DIR / 'torch/maml_trpo_ml1_push.py',
     EXAMPLES_ROOT_DIR / 'torch/maml_trpo_ml10.py',
+    EXAMPLES_ROOT_DIR / 'torch/maml_trpo_ml45.py',
     EXAMPLES_ROOT_DIR / 'torch/pearl_half_cheetah_vel.py',
     EXAMPLES_ROOT_DIR / 'torch/pearl_ml1_push.py',
     EXAMPLES_ROOT_DIR / 'torch/pearl_ml10.py',
@@ -38,7 +38,7 @@ LONG_RUNNING_EXAMPLES = [
 
 
 def enumerate_algo_examples():
-    """Return a list of paths for all algo examples
+    """Return a list of paths for all algo examples.
 
     Returns:
         List[str]: list of path strings
@@ -73,8 +73,10 @@ def test_algo_examples(filepath):
 @pytest.mark.no_cover
 @pytest.mark.timeout(180)
 def test_dqn_pong():
-    """Test tf/dqn_pong.py with reduced replay buffer size for reduced memory
-    consumption.
+    """Test tf/dqn_pong.py with reduced replay buffer size.
+
+    This is to reduced memory consumption.
+
     """
     env = os.environ.copy()
     env['GARAGE_EXAMPLE_TEST_N_EPOCHS'] = '1'
@@ -87,8 +89,10 @@ def test_dqn_pong():
 @pytest.mark.no_cover
 @pytest.mark.timeout(30)
 def test_ppo_memorize_digits():
-    """Test tf/ppo_memorize_digits.py with reduced batch size for reduced
-    memory consumption.
+    """Test tf/ppo_memorize_digits.py with reduced batch size.
+
+    This is to reduced memory consumption.
+
     """
     env = os.environ.copy()
     env['GARAGE_EXAMPLE_TEST_N_EPOCHS'] = '1'
@@ -102,8 +106,10 @@ def test_ppo_memorize_digits():
 @pytest.mark.no_cover
 @pytest.mark.timeout(40)
 def test_trpo_cubecrash():
-    """Test tf/trpo_cubecrash.py with reduced batch size for reduced memory
-    consumption.
+    """Test tf/trpo_cubecrash.py with reduced batch size.
+
+    This is to reduced memory consumption.
+
     """
     env = os.environ.copy()
     env['GARAGE_EXAMPLE_TEST_N_EPOCHS'] = '1'
@@ -136,7 +142,7 @@ def test_step_dm_control_env():
 @pytest.mark.no_cover
 @pytest.mark.timeout(20)
 def test_maml_halfcheetah():
-    """Test maml_trpo_half_cheetah_dir.py"""
+    """Test maml_trpo_half_cheetah_dir.py."""
     assert subprocess.run([
         EXAMPLES_ROOT_DIR / 'torch/maml_trpo_half_cheetah_dir.py', '--epochs',
         '1', '--rollouts_per_task', '1', '--meta_batch_size', '1'
@@ -148,7 +154,7 @@ def test_maml_halfcheetah():
 @pytest.mark.no_cover
 @pytest.mark.timeout(60)
 def test_pearl_half_cheetah_vel():
-    """Test pearl_half_cheetah_vel.py"""
+    """Test pearl_half_cheetah_vel.py."""
     assert subprocess.run([
         EXAMPLES_ROOT_DIR / 'torch/pearl_half_cheetah_vel.py', '--num_epochs',
         '1', '--num_train_tasks', '5', '--num_test_tasks', '1',
@@ -165,7 +171,7 @@ def test_pearl_half_cheetah_vel():
 @pytest.mark.no_cover
 @pytest.mark.timeout(60)
 def test_pearl_ml1_push():
-    """Test pearl_ml1_push.py"""
+    """Test pearl_ml1_push.py."""
     assert subprocess.run([
         EXAMPLES_ROOT_DIR / 'torch/pearl_ml1_push.py', '--num_epochs', '1',
         '--num_train_tasks', '5', '--num_test_tasks', '1',
@@ -181,7 +187,7 @@ def test_pearl_ml1_push():
 @pytest.mark.mujoco
 @pytest.mark.no_cover
 def test_pearl_ml10():
-    """Test pearl_ml10.py"""
+    """Test pearl_ml10.py."""
     assert subprocess.run([
         EXAMPLES_ROOT_DIR / 'torch/pearl_ml10.py', '--num_epochs', '1',
         '--num_train_tasks', '1', '--num_test_tasks', '1',
@@ -197,7 +203,7 @@ def test_pearl_ml10():
 @pytest.mark.mujoco
 @pytest.mark.no_cover
 def test_pearl_ml45():
-    """Test pearl_ml45.py"""
+    """Test pearl_ml45.py."""
     assert subprocess.run([
         EXAMPLES_ROOT_DIR / 'torch/pearl_ml45.py', '--num_epochs', '1',
         '--num_train_tasks', '1', '--num_test_tasks', '1',
@@ -214,7 +220,7 @@ def test_pearl_ml45():
 @pytest.mark.no_cover
 @pytest.mark.timeout(120)
 def test_maml_ml10():
-    """Test maml_trpo_ml10.py"""
+    """Test maml_trpo_ml10.py."""
     assert subprocess.run([
         EXAMPLES_ROOT_DIR / 'torch/maml_trpo_ml10.py', '--epochs', '1',
         '--rollouts_per_task', '1', '--meta_batch_size', '1'
@@ -226,7 +232,7 @@ def test_maml_ml10():
 @pytest.mark.no_cover
 @pytest.mark.timeout(30)
 def test_maml_trpo():
-    """Test maml_trpo_half_cheetah_dir.py"""
+    """Test maml_trpo_half_cheetah_dir.py."""
     assert subprocess.run([
         EXAMPLES_ROOT_DIR / 'torch/maml_trpo_half_cheetah_dir.py', '--epochs',
         '1', '--rollouts_per_task', '1', '--meta_batch_size', '1'
@@ -238,7 +244,7 @@ def test_maml_trpo():
 @pytest.mark.no_cover
 @pytest.mark.timeout(30)
 def test_maml_ppo():
-    """Test maml_ppo_half_cheetah_dir.py"""
+    """Test maml_ppo_half_cheetah_dir.py."""
     assert subprocess.run([
         EXAMPLES_ROOT_DIR / 'torch/maml_ppo_half_cheetah_dir.py', '--epochs',
         '1', '--rollouts_per_task', '1', '--meta_batch_size', '1'
@@ -250,7 +256,7 @@ def test_maml_ppo():
 @pytest.mark.no_cover
 @pytest.mark.timeout(30)
 def test_maml_vpg():
-    """Test maml_vpg_half_cheetah_dir.py"""
+    """Test maml_vpg_half_cheetah_dir.py."""
     assert subprocess.run([
         EXAMPLES_ROOT_DIR / 'torch/maml_vpg_half_cheetah_dir.py', '--epochs',
         '1', '--rollouts_per_task', '1', '--meta_batch_size', '1'
@@ -286,7 +292,7 @@ def test_rl2_ppo_ml1():
 @pytest.mark.no_cover
 @pytest.mark.timeout(200)
 def test_rl2_ml10():
-    """Test rl2_ppo_ml10.py"""
+    """Test rl2_ppo_ml10.py."""
     assert subprocess.run([
         EXAMPLES_ROOT_DIR / 'tf/rl2_ppo_ml10.py', '--n_epochs', '1',
         '--episode_per_task', '1', '--meta_batch_size', '10'
@@ -298,7 +304,7 @@ def test_rl2_ml10():
 @pytest.mark.no_cover
 @pytest.mark.timeout(200)
 def test_rl2_ml10_meta_test():
-    """Test rl2_ppo_ml10_meta_test.py"""
+    """Test rl2_ppo_ml10_meta_test.py."""
     assert subprocess.run([
         EXAMPLES_ROOT_DIR / 'tf/rl2_ppo_ml10_meta_test.py', '--n_epochs', '1',
         '--episode_per_task', '1', '--meta_batch_size', '10'
