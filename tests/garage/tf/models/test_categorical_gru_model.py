@@ -51,7 +51,7 @@ class TestCategoricalGRUModel(TfGraphTestCase):
         probs = tf.compat.v1.get_default_session().run(tf.reduce_sum(
             dist.probs),
                                                        feed_dict={obs_ph: obs})
-        assert probs == 1.0
+        assert np.isclose(probs, 1.0)
 
     def test_is_pickleable(self):
         model = CategoricalGRUModel(output_dim=1, hidden_dim=1)
