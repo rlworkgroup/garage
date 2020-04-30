@@ -19,7 +19,9 @@ class SimpleModel(Model):
     def network_output_spec(self):
         return ['state', 'action']
 
+    # pylint: disable=arguments-differ
     def _build(self, obs_input, name=None):
+        del name
         state = mlp(obs_input, self._output_dim, self._hidden_sizes, 'state')
         action = mlp(obs_input, self._output_dim, self._hidden_sizes, 'action')
         return state, action
@@ -33,7 +35,9 @@ class SimpleModel2(Model):
         self._output_dim = output_dim
         self._hidden_sizes = hidden_sizes
 
+    # pylint: disable=arguments-differ
     def _build(self, obs_input, name=None):
+        del name
         action = mlp(obs_input, self._output_dim, self._hidden_sizes, 'state')
         return action
 
@@ -50,7 +54,9 @@ class ComplicatedModel(Model):
     def network_output_spec(self):
         return ['action']
 
+    # pylint: disable=arguments-differ
     def _build(self, obs_input, name=None):
+        del name
         h1, _ = self._simple_model_1.build(obs_input)
         return self._simple_model_2.build(h1)
 
@@ -67,7 +73,9 @@ class ComplicatedModel2(Model):
     def network_output_spec(self):
         return ['action']
 
+    # pylint: disable=arguments-differ
     def _build(self, obs_input, name=None):
+        del name
         h1, _ = self._parent_model.build(obs_input)
         return self._output_model.build(h1)
 
@@ -304,3 +312,14 @@ class TestModel(TfGraphTestCase):
                 'SimpleModel/state/hidden_0/kernel:0']
             with pytest.warns(UserWarning):
                 model_pickled.build(state)
+
+    def test_model_set_parameters(self):
+        model1 = SimpleModel(output_dim=2, name='model1')
+        model2 = SimpleModel(output_dim=2, name='model2')
+        input_var = tf.compat.v1.placeholder(tf.float32, shape=(None, 5))
+        model1.build(input_var)
+        model2.build(input_var)
+        model1.parameters = model2.parameters
+        for m1, m2 in zip(model1.parameters.values(),
+                          model2.parameters.values()):
+            assert np.array_equal(m1, m2)
