@@ -73,5 +73,6 @@ class CategoricalMLPModel(MLPModel):
 
         """
         prob = super()._build(state_input, name=name)
-        prob = self._output_nonlinearity(prob)
+        if self._output_nonlinearity:
+            prob = self._output_nonlinearity(prob)
         return tfp.distributions.OneHotCategorical(probs=prob)

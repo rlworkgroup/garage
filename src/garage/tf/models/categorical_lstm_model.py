@@ -147,7 +147,8 @@ class CategoricalLSTMModel(LSTMModel):
                                      step_hidden,
                                      step_cell,
                                      name=name)
-        outputs = self._output_nonlinearity(outputs)
+        if self._output_nonlinearity:
+            outputs = self._output_nonlinearity(outputs)
         dist = tfp.distributions.OneHotCategorical(probs=outputs)
         return (dist, step_output, step_hidden, step_cell, init_hidden,
                 init_cell)

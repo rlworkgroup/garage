@@ -117,6 +117,7 @@ class CategoricalGRUModel(GRUModel):
         """
         outputs, step_output, step_hidden, init_hidden = super()._build(
             state_input, step_input, step_hidden, name=name)
-        outputs = self._output_nonlinearity(outputs)
+        if self._output_nonlinearity:
+            outputs = self._output_nonlinearity(outputs)
         dist = tfp.distributions.OneHotCategorical(probs=outputs)
         return dist, step_output, step_hidden, init_hidden
