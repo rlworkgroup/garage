@@ -17,9 +17,9 @@ from garage.envs import normalize
 from garage.envs.base import GarageEnv
 from garage.envs.mujoco import HalfCheetahDirEnv
 from garage.experiment import LocalRunner
-from garage.np.baselines import LinearFeatureBaseline
 from garage.torch.algos import MAMLTRPO
 from garage.torch.policies import GaussianMLPPolicy
+from garage.torch.value_functions import GaussianMLPValueFunction
 from tests.fixtures import snapshot_config
 from tests.fixtures.envs.dummy import DummyMultiTaskBoxEnv
 
@@ -34,7 +34,8 @@ def test_maml_trpo_pendulum():
         hidden_nonlinearity=torch.tanh,
         output_nonlinearity=None,
     )
-    value_function = LinearFeatureBaseline(env_spec=env.spec)
+    value_function = GaussianMLPValueFunction(env_spec=env.spec,
+                                              hidden_sizes=(32, 32))
 
     rollouts_per_task = 5
     max_path_length = 100
@@ -69,7 +70,8 @@ def test_maml_trpo_dummy_named_env():
         hidden_nonlinearity=torch.tanh,
         output_nonlinearity=None,
     )
-    value_function = LinearFeatureBaseline(env_spec=env.spec)
+    value_function = GaussianMLPValueFunction(env_spec=env.spec,
+                                              hidden_sizes=(32, 32))
 
     rollouts_per_task = 2
     max_path_length = 100

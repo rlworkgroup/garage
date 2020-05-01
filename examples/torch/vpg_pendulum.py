@@ -9,10 +9,10 @@ Results:
 import torch
 
 from garage.experiment import LocalRunner, run_experiment
-from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.envs import TfEnv
 from garage.torch.algos import VPG
 from garage.torch.policies import GaussianMLPPolicy
+from garage.torch.value_functions import GaussianMLPValueFunction
 
 
 def run_task(snapshot_config, *_):
@@ -34,7 +34,10 @@ def run_task(snapshot_config, *_):
                                hidden_nonlinearity=torch.tanh,
                                output_nonlinearity=None)
 
-    value_function = LinearFeatureBaseline(env_spec=env.spec)
+    value_function = GaussianMLPValueFunction(env_spec=env.spec,
+                                              hidden_sizes=(32, 32),
+                                              hidden_nonlinearity=torch.tanh,
+                                              output_nonlinearity=None)
 
     algo = VPG(env_spec=env.spec,
                policy=policy,

@@ -6,9 +6,9 @@ import torch
 from garage.envs.base import GarageEnv
 from garage.experiment import deterministic
 from garage.experiment import LocalRunner
-from garage.np.baselines import LinearFeatureBaseline
 from garage.torch.algos import VPG
 from garage.torch.policies import GaussianMLPPolicy
+from garage.torch.value_functions import GaussianMLPValueFunction
 from tests.fixtures import snapshot_config
 
 # yapf: disable
@@ -49,7 +49,8 @@ class TestVPG:
         self._params = {
             'env_spec': self._env.spec,
             'policy': self._policy,
-            'value_function': LinearFeatureBaseline(env_spec=self._env.spec),
+            'value_function':
+            GaussianMLPValueFunction(env_spec=self._env.spec),
             'max_path_length': 100,
             'discount': 0.99,
         }

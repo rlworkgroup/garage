@@ -11,9 +11,9 @@ from garage.envs.mujoco import HalfCheetahDirEnv
 from garage.experiment import LocalRunner, MetaEvaluator
 from garage.experiment.deterministic import set_seed
 from garage.experiment.task_sampler import SetTaskSampler
-from garage.np.baselines import LinearFeatureBaseline
 from garage.torch.algos import MAMLVPG
 from garage.torch.policies import GaussianMLPPolicy
+from garage.torch.value_functions import GaussianMLPValueFunction
 
 
 @click.command()
@@ -46,7 +46,10 @@ def maml_vpg(ctxt, seed, epochs, rollouts_per_task, meta_batch_size):
         output_nonlinearity=None,
     )
 
-    value_function = LinearFeatureBaseline(env_spec=env.spec)
+    value_function = GaussianMLPValueFunction(env_spec=env.spec,
+                                              hidden_sizes=(32, 32),
+                                              hidden_nonlinearity=torch.tanh,
+                                              output_nonlinearity=None)
 
     max_path_length = 100
 

@@ -18,10 +18,10 @@ import torch
 from garage.envs import normalize
 from garage.envs.base import GarageEnv
 from garage.envs.mujoco import HalfCheetahDirEnv
-from garage.np.baselines import LinearFeatureBaseline
 from garage.sampler import LocalSampler, WorkerFactory
 from garage.torch.algos import MAMLPPO
 from garage.torch.policies import GaussianMLPPolicy
+from garage.torch.value_functions import GaussianMLPValueFunction
 
 
 @pytest.mark.mujoco
@@ -38,7 +38,8 @@ class TestMAML:
             hidden_nonlinearity=torch.tanh,
             output_nonlinearity=None,
         )
-        self.value_function = LinearFeatureBaseline(env_spec=self.env.spec)
+        self.value_function = GaussianMLPValueFunction(env_spec=self.env.spec,
+                                                       hidden_sizes=(32, 32))
         self.algo = MAMLPPO(env=self.env,
                             policy=self.policy,
                             value_function=self.value_function,

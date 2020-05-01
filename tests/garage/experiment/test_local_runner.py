@@ -5,10 +5,10 @@ import torch
 from garage.envs import normalize
 from garage.envs.base import GarageEnv
 from garage.experiment import deterministic, LocalRunner
-from garage.np.baselines import LinearFeatureBaseline
 from garage.plotter import Plotter
 from garage.torch.algos import PPO
 from garage.torch.policies import GaussianMLPPolicy
+from garage.torch.value_functions import GaussianMLPValueFunction
 from tests.fixtures import snapshot_config
 
 
@@ -24,7 +24,7 @@ class TestLocalRunner:
             hidden_nonlinearity=torch.tanh,
             output_nonlinearity=None,
         )
-        self.value_function = LinearFeatureBaseline(env_spec=self.env.spec)
+        self.value_function = GaussianMLPValueFunction(env_spec=self.env.spec)
 
     def teardown_method(self):
         """Teardown method which is called after every test."""

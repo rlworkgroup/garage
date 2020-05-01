@@ -1,4 +1,5 @@
 """A regression test over PPO Algorithms for automatic benchmarking.
+
 (garage-PyTorch-PPO, garage-TensorFlow-PPO, and baselines-PPO2)
 """
 import random
@@ -12,7 +13,6 @@ import torch
 from garage import wrap_experiment
 from garage.envs import normalize
 from garage.experiment import deterministic, LocalRunner
-from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import PPO as TF_PPO
 from garage.tf.baselines import GaussianMLPBaseline as TF_GMB
 from garage.tf.envs import TfEnv
@@ -20,7 +20,9 @@ from garage.tf.experiment import LocalTFRunner
 from garage.tf.optimizers import FirstOrderOptimizer
 from garage.tf.policies import GaussianMLPPolicy as TF_GMP
 from garage.torch.algos import PPO as PyTorch_PPO
+from garage.torch.optimizers import OptimizerWrapper
 from garage.torch.policies import GaussianMLPPolicy as PyTorch_GMP
+from garage.torch.value_functions import GaussianMLPValueFunction
 from tests import benchmark_helper
 
 hyper_parameters = {
@@ -134,20 +136,32 @@ def auto_benchmark_ppo_garage_pytorch():
                              hidden_nonlinearity=torch.tanh,
                              output_nonlinearity=None)
 
-        value_functions = LinearFeatureBaseline(env_spec=env.spec)
+        value_function = GaussianMLPValueFunction(
+            env_spec=env.spec,
+            hidden_sizes=(32, 32),
+            hidden_nonlinearity=torch.tanh,
+            output_nonlinearity=None)
+
+        policy_optimizer = OptimizerWrapper(
+            (torch.optim.Adam, dict(lr=2.5e-4)),
+            policy,
+            max_optimization_epochs=10,
+            minibatch_size=64)
+        vf_optimizer = OptimizerWrapper((torch.optim.Adam, dict(lr=2.5e-4)),
+                                        value_function,
+                                        max_optimization_epochs=10,
+                                        minibatch_size=64)
 
         algo = PyTorch_PPO(env_spec=env.spec,
                            policy=policy,
-                           value_function=value_functions,
-                           optimizer=torch.optim.Adam,
-                           policy_lr=3e-4,
+                           value_function=value_function,
+                           policy_optimizer=policy_optimizer,
+                           vf_optimizer=vf_optimizer,
                            max_path_length=hyper_parameters['max_path_length'],
                            discount=0.99,
                            gae_lambda=0.95,
                            center_adv=True,
-                           lr_clip_range=0.2,
-                           minibatch_size=128,
-                           max_optimization_epochs=10)
+                           lr_clip_range=0.2)
 
         runner.setup(algo, env)
         runner.train(n_epochs=hyper_parameters['n_epochs'],
