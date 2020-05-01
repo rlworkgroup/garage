@@ -2,6 +2,7 @@
 import itertools
 import pickle
 import time
+import warnings
 
 from dowel import logger, tabular
 import numpy as np
@@ -34,6 +35,13 @@ class OnPolicyVectorizedSampler(BatchSampler):
 
         self._vec_env = None
         self._env_spec = self.env.spec
+
+        warnings.warn(
+            DeprecationWarning(
+                'OnPolicyVectoriizedSampler is deprecated, and will be '
+                'removed in the next release. Please use VecWorker and one of '
+                'the new samplers which implement garage.sampler.Sampler, '
+                'such as RaySampler.'))
 
     def start_worker(self):
         """Start workers."""

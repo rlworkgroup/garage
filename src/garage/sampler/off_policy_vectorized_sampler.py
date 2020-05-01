@@ -10,6 +10,7 @@ It diffs from OnPolicyVectorizedSampler in two parts:
 
 import itertools
 import pickle
+import warnings
 
 import numpy as np
 
@@ -44,6 +45,13 @@ class OffPolicyVectorizedSampler(BatchSampler):
         self._last_uncounted_discount = [0] * n_envs
         self._last_running_length = [0] * n_envs
         self._last_success_count = [0] * n_envs
+
+        warnings.warn(
+            DeprecationWarning(
+                'OffPolicyVectoriizedSampler is deprecated, and will be '
+                'removed in the next release. Please use VecWorker and one of '
+                'the new samplers which implement garage.sampler.Sampler, '
+                'such as RaySampler.'))
 
     def start_worker(self):
         """Initialize the sampler."""
