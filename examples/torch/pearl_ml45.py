@@ -20,8 +20,8 @@ import garage.torch.utils as tu
 
 @click.command()
 @click.option('--num_epochs', default=1000)
-@click.option('--num_train_tasks', default=50)
-@click.option('--num_test_tasks', default=10)
+@click.option('--num_train_tasks', default=45)
+@click.option('--num_test_tasks', default=5)
 @click.option('--encoder_hidden_size', default=200)
 @click.option('--net_size', default=300)
 @click.option('--num_steps_per_epoch', default=4000)
@@ -107,6 +107,7 @@ def torch_pearl_ml45(ctxt=None,
     env_sampler.grow_pool(num_train_tasks)
     env = env_sampler.sample(num_train_tasks)
     test_env_sampler = EnvPoolSampler(ML_test_envs)
+    test_env_sampler.grow_pool(num_test_tasks)
 
     runner = LocalRunner(ctxt)
 
