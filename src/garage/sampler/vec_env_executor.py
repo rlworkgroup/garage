@@ -1,4 +1,5 @@
 """Environment wrapper that runs multiple environments."""
+import warnings
 
 import numpy as np
 
@@ -20,6 +21,13 @@ class VecEnvExecutor:
         self._observation_space = envs[0].observation_space
         self.ts = np.zeros(len(self.envs), dtype='int')
         self.max_path_length = max_path_length
+
+        warnings.warn(
+            DeprecationWarning(
+                'VecEnvExecutor is deprecated, and will be removed in the '
+                'next release. Please use VecWorker and one of the new '
+                'samplers which implement garage.sampler.Sampler, such as '
+                'RaySampler'))
 
     def step(self, action_n):
         """Step all environments using the provided actions.

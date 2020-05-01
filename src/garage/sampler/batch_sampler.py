@@ -1,4 +1,5 @@
 """Class with batch-based sampling."""
+import warnings
 
 from garage.sampler import parallel_sampler
 from garage.sampler.base import BaseSampler
@@ -13,6 +14,14 @@ class BatchSampler(BaseSampler):
         env (gym.Env): The environment.
 
     """
+
+    def __init__(self, algo, env):
+        super().__init__(algo, env)
+        warnings.warn(
+            DeprecationWarning(
+                'BatchSampler is deprecated, and will be removed in the next '
+                'release. Please use one of the samplers which implements '
+                'garage.sampler.Sampler, such as LocalSampler.'))
 
     def start_worker(self):
         """Start workers."""

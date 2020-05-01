@@ -1,7 +1,8 @@
 """Environment wrapper that runs multiple environments in parallel."""
-
-import pickle as pickle
+# pylint: skip-file
+import pickle
 import uuid
+import warnings
 
 from dowel import logger
 import numpy as np
@@ -106,6 +107,13 @@ class ParallelVecEnvExecutor:
         self.scope = scope
         self.ts = np.zeros(n, dtype='int')
         self.max_path_length = max_path_length
+
+        warnings.warn(
+            DeprecationWarning(
+                'ParallelVecEnvExecutor is deprecated, and will be removed in '
+                'the next release. Please use VecWorker and one of the new '
+                'samplers which implement garage.sampler.Sampler, such as '
+                'RaySampler'))
 
     def step(self, action_n):
         """Step all environments using the provided actions."""
