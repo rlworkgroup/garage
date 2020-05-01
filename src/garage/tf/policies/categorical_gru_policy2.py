@@ -67,7 +67,7 @@ class CategoricalGRUPolicy2(StochasticPolicy2):
                  hidden_b_init=tf.zeros_initializer(),
                  recurrent_nonlinearity=tf.nn.sigmoid,
                  recurrent_w_init=tf.initializers.glorot_uniform(),
-                 output_nonlinearity=tf.nn.softmax,
+                 output_nonlinearity=None,
                  output_w_init=tf.initializers.glorot_uniform(),
                  output_b_init=tf.zeros_initializer(),
                  hidden_state_init=tf.zeros_initializer(),
