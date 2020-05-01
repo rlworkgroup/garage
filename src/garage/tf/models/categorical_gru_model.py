@@ -81,7 +81,7 @@ class CategoricalGRUModel(GRUModel):
             hidden_state_init=hidden_state_init,
             hidden_state_init_trainable=hidden_state_init_trainable,
             layer_normalization=layer_normalization)
-        self._output_nonlinearity = output_nonlinearity
+        self._output_normalization_fn = output_nonlinearity
 
     def network_output_spec(self):
         """Network output spec.
@@ -117,7 +117,7 @@ class CategoricalGRUModel(GRUModel):
         """
         outputs, step_output, step_hidden, init_hidden = super()._build(
             state_input, step_input, step_hidden, name=name)
-        if self._output_nonlinearity:
-            outputs = self._output_nonlinearity(outputs)
+        if self._output_normalization_fn:
+            outputs = self._output_normalization_fn(outputs)
         dist = tfp.distributions.OneHotCategorical(probs=outputs)
         return dist, step_output, step_hidden, init_hidden

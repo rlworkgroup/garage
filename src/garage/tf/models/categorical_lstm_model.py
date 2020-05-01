@@ -94,7 +94,7 @@ class CategoricalLSTMModel(LSTMModel):
             cell_state_init_trainable=cell_state_init_trainable,
             forget_bias=forget_bias,
             layer_normalization=layer_normalization)
-        self._output_nonlinearity = output_nonlinearity
+        self._output_normalization_fn = output_nonlinearity
 
     def network_output_spec(self):
         """Network output spec.
@@ -147,8 +147,8 @@ class CategoricalLSTMModel(LSTMModel):
                                      step_hidden,
                                      step_cell,
                                      name=name)
-        if self._output_nonlinearity:
-            outputs = self._output_nonlinearity(outputs)
+        if self._output_normalization_fn:
+            outputs = self._output_normalization_fn(outputs)
         dist = tfp.distributions.OneHotCategorical(probs=outputs)
         return (dist, step_output, step_hidden, step_cell, init_hidden,
                 init_cell)
