@@ -8,7 +8,6 @@ import gc
 import json
 import os
 import pathlib
-import pickle
 import sys
 import uuid
 
@@ -129,7 +128,7 @@ def run_experiment(argv):
     params_log_file = os.path.join(log_dir, args.params_log_file)
 
     if args.variant_data is not None:
-        variant_data = pickle.loads(base64.b64decode(args.variant_data))
+        variant_data = cloudpickle.loads(base64.b64decode(args.variant_data))
         variant_log_file = os.path.join(log_dir, args.variant_log_file)
         garage.experiment.experiment.dump_json(variant_log_file, variant_data)
     else:

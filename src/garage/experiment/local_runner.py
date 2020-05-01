@@ -1,9 +1,9 @@
 """Provides algorithms with access to most of garage's features."""
 import copy
 import os
-import pickle
 import time
 
+import cloudpickle
 from dowel import logger, tabular
 import psutil
 
@@ -557,7 +557,7 @@ class LocalRunner:
             garage.envs.GarageEnv: An environement instance.
 
         """
-        return pickle.loads(pickle.dumps(self._env))
+        return cloudpickle.loads(cloudpickle.dumps(self._env))
 
     @property
     def total_env_steps(self):

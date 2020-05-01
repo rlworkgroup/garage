@@ -1,7 +1,9 @@
 """Original parallel sampler pool backend."""
-import pickle
+# pylint: skip-file
+
 import signal
 
+import cloudpickle
 from dowel import logger
 import numpy as np
 
@@ -55,8 +57,8 @@ def _get_scoped_g(g, scope):
 
 def _worker_populate_task(g, env, policy, scope=None):
     g = _get_scoped_g(g, scope)
-    g.env = pickle.loads(env)
-    g.policy = pickle.loads(policy)
+    g.env = cloudpickle.loads(env)
+    g.policy = cloudpickle.loads(policy)
 
 
 def _worker_terminate_task(g, scope=None):
@@ -75,7 +77,7 @@ def populate_task(env, policy, scope=None):
     if singleton_pool.n_parallel > 1:
         singleton_pool.run_each(
             _worker_populate_task,
-            [(pickle.dumps(env), pickle.dumps(policy), scope)] *
+            [(cloudpickle.dumps(env), cloudpickle.dumps(policy), scope)] *
             singleton_pool.n_parallel)
     else:
         # avoid unnecessary copying

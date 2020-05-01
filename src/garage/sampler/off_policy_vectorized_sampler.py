@@ -9,9 +9,9 @@ It diffs from OnPolicyVectorizedSampler in two parts:
 """
 
 import itertools
-import pickle
 import warnings
 
+import cloudpickle
 import numpy as np
 
 from garage.experiment import deterministic
@@ -56,7 +56,10 @@ class OffPolicyVectorizedSampler(BatchSampler):
     def start_worker(self):
         """Initialize the sampler."""
         n_envs = self._n_envs
-        envs = [pickle.loads(pickle.dumps(self.env)) for _ in range(n_envs)]
+        envs = [
+            cloudpickle.loads(cloudpickle.dumps(self.env))
+            for _ in range(n_envs)
+        ]
 
         # Deterministically set environment seeds based on the global seed.
         seed0 = deterministic.get_seed()
