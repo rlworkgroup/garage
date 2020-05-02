@@ -21,9 +21,29 @@ class TestCategoricalMLPModel(TfGraphTestCase):
         dist = model.build(self.input_var)
         assert isinstance(dist, tfp.distributions.OneHotCategorical)
 
+    @pytest.mark.parametrize('output_dim', [1, 2, 5, 10])
+    def test_output_normalized(self, output_dim):
+        model = CategoricalMLPModel(output_dim=output_dim)
+        obs_ph = tf.compat.v1.placeholder(tf.float32, shape=(None, output_dim))
+        obs = np.ones((1, output_dim))
+        dist = model.build(obs_ph)
+        probs = tf.compat.v1.get_default_session().run(tf.reduce_sum(
+            dist.probs),
+                                                       feed_dict={obs_ph: obs})
+        assert np.isclose(probs, 1.0)
+
+    def test_output_nonlinearity(self):
+        model = CategoricalMLPModel(output_dim=1,
+                                    output_nonlinearity=lambda x: x / 2)
+        obs_ph = tf.compat.v1.placeholder(tf.float32, shape=(None, 1))
+        obs = np.ones((1, 1))
+        dist = model.build(obs_ph)
+        probs = tf.compat.v1.get_default_session().run(dist.probs,
+                                                       feed_dict={obs_ph: obs})
+        assert probs == [0.5]
+
     # yapf: disable
     @pytest.mark.parametrize('output_dim, hidden_sizes', [
-        (1, (0, )),
         (1, (1, )),
         (1, (2, )),
         (2, (3, )),
@@ -45,7 +65,7 @@ class TestCategoricalMLPModel(TfGraphTestCase):
 
         bias.load(tf.ones_like(bias).eval())
 
-        output1 = self.sess.run(dist.logits,
+        output1 = self.sess.run(dist.probs,
                                 feed_dict={self.input_var: self.obs})
 
         h = pickle.dumps(model)
@@ -53,6 +73,6 @@ class TestCategoricalMLPModel(TfGraphTestCase):
             input_var = tf.compat.v1.placeholder(tf.float32, shape=(None, 5))
             model_pickled = pickle.loads(h)
             dist2 = model_pickled.build(input_var)
-            output2 = sess.run(dist2.logits, feed_dict={input_var: self.obs})
+            output2 = sess.run(dist2.probs, feed_dict={input_var: self.obs})
 
             assert np.array_equal(output1, output2)

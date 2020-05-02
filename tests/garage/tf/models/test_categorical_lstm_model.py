@@ -1,6 +1,7 @@
 import pickle
 
 import numpy as np
+import pytest
 import tensorflow as tf
 import tensorflow_probability as tfp
 
@@ -41,6 +42,38 @@ class TestCategoricalLSTMModel(TfGraphTestCase):
         assert isinstance(model.networks['default'].dist,
                           tfp.distributions.OneHotCategorical)
 
+    def test_output_nonlinearity(self):
+        model = CategoricalLSTMModel(output_dim=1,
+                                     hidden_dim=4,
+                                     output_nonlinearity=lambda x: x / 2)
+        obs_ph = tf.compat.v1.placeholder(tf.float32, shape=(None, None, 1))
+        step_obs_ph = tf.compat.v1.placeholder(tf.float32, shape=(None, 1))
+        step_hidden_ph = tf.compat.v1.placeholder(tf.float32, shape=(None, 4))
+        step_cell_ph = tf.compat.v1.placeholder(tf.float32, shape=(None, 4))
+        obs = np.ones((1, 1, 1))
+        dist, _, _, _, _, _ = model.build(obs_ph, step_obs_ph, step_hidden_ph,
+                                          step_cell_ph)
+        probs = tf.compat.v1.get_default_session().run(dist.probs,
+                                                       feed_dict={obs_ph: obs})
+        assert probs == [0.5]
+
+    @pytest.mark.parametrize('output_dim', [1, 2, 5, 10])
+    def test_output_normalized(self, output_dim):
+        model = CategoricalLSTMModel(output_dim=output_dim, hidden_dim=4)
+        obs_ph = tf.compat.v1.placeholder(tf.float32,
+                                          shape=(None, None, output_dim))
+        step_obs_ph = tf.compat.v1.placeholder(tf.float32,
+                                               shape=(None, output_dim))
+        step_hidden_ph = tf.compat.v1.placeholder(tf.float32, shape=(None, 4))
+        step_cell_ph = tf.compat.v1.placeholder(tf.float32, shape=(None, 4))
+        obs = np.ones((1, 1, output_dim))
+        dist, _, _, _, _, _ = model.build(obs_ph, step_obs_ph, step_hidden_ph,
+                                          step_cell_ph)
+        probs = tf.compat.v1.get_default_session().run(tf.reduce_sum(
+            dist.probs),
+                                                       feed_dict={obs_ph: obs})
+        assert np.isclose(probs, 1.0)
+
     def test_is_pickleable(self):
         model = CategoricalLSTMModel(output_dim=1, hidden_dim=1)
         step_hidden_var = tf.compat.v1.placeholder(shape=(self.batch_size, 1),
@@ -62,7 +95,7 @@ class TestCategoricalLSTMModel(TfGraphTestCase):
         hidden = np.zeros((self.batch_size, 1))
         cell = np.zeros((self.batch_size, 1))
 
-        outputs1 = self.sess.run(model.networks['default'].dist.logits,
+        outputs1 = self.sess.run(model.networks['default'].dist.probs,
                                  feed_dict={self._input_var: self.obs_inputs})
         output1 = self.sess.run(
             [
@@ -97,7 +130,7 @@ class TestCategoricalLSTMModel(TfGraphTestCase):
 
             model_pickled.build(input_var, step_input_var, step_hidden_var,
                                 step_cell_var)
-            outputs2 = sess.run(model_pickled.networks['default'].dist.logits,
+            outputs2 = sess.run(model_pickled.networks['default'].dist.probs,
                                 feed_dict={input_var: self.obs_inputs})
             output2 = sess.run(
                 [

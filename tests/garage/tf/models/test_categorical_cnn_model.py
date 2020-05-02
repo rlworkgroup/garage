@@ -46,7 +46,6 @@ class TestCategoricalMLPModel(TfGraphTestCase):
     @pytest.mark.parametrize(
         'output_dim, filter_dims, num_filters, strides,'
         'padding, hidden_sizes', [
-            (1, (1, ), (1, ), (1, ), 'VALID', (0, )),
             (1, (1, ), (1, ), (1, ), 'SAME', (1, )),
             (1, (3, ), (3, ), (2, ), 'VALID', (2, )),
             (1, (3, ), (3, ), (2, ), 'SAME', (3, )),
@@ -75,7 +74,7 @@ class TestCategoricalMLPModel(TfGraphTestCase):
         bias.load(tf.ones_like(bias).eval())
         cnn_bias.load(tf.ones_like(cnn_bias).eval())
 
-        output1 = self.sess.run(dist.logits,
+        output1 = self.sess.run(dist.probs,
                                 feed_dict={self._input_ph: self._obs_input})
 
         h = pickle.dumps(model)
@@ -85,7 +84,7 @@ class TestCategoricalMLPModel(TfGraphTestCase):
                                                  self._input_shape)
             model_pickled = pickle.loads(h)
             dist2 = model_pickled.build(input_var)
-            output2 = sess.run(dist2.logits,
+            output2 = sess.run(dist2.probs,
                                feed_dict={input_var: self._obs_input})
 
             assert np.array_equal(output1, output2)
