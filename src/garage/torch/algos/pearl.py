@@ -592,7 +592,12 @@ class PEARL(MetaRLAlgorithm):
                 exploration_trajectories.
 
         """
-        context = self._sample_context(self._task_idx)
+        total_steps = sum(exploration_trajectories.lengths)
+        o = exploration_trajectories.observations
+        a = exploration_trajectories.actions
+        r = exploration_trajectories.rewards.reshape(total_steps, 1)
+        ctxt = np.hstack((o, a, r)).reshape(1, total_steps, -1)
+        context = torch.as_tensor(ctxt, device=tu.global_device()).float()
         self._policy.infer_posterior(context)
 
         return self._policy
