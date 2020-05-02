@@ -32,6 +32,16 @@ class TestCategoricalMLPModel(TfGraphTestCase):
                                                        feed_dict={obs_ph: obs})
         assert np.isclose(probs, 1.0)
 
+    def test_output_nonlinearity(self):
+        model = CategoricalMLPModel(output_dim=1,
+                                    output_nonlinearity=lambda x: x / 2)
+        obs_ph = tf.compat.v1.placeholder(tf.float32, shape=(None, 1))
+        obs = np.ones((1, 1))
+        dist = model.build(obs_ph)
+        probs = tf.compat.v1.get_default_session().run(dist.probs,
+                                                       feed_dict={obs_ph: obs})
+        assert probs == [0.5]
+
     # yapf: disable
     @pytest.mark.parametrize('output_dim, hidden_sizes', [
         (1, (1, )),
