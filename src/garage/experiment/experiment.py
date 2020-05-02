@@ -63,6 +63,11 @@ def run_experiment(method_call=None,
 
     """
     # pylint: disable=missing-raises-doc,global-statement,too-many-branches
+    warnings.warn(
+        DeprecationWarning(
+            'run_experiment is deprecated, and will be removed in the next '
+            'release. Please use wrap_experiment instead.'))
+
     if method_call is None and batch_tasks is None:
         raise Exception(
             'Must provide at least either method_call or batch_tasks')
