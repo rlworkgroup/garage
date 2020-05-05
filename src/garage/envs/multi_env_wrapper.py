@@ -64,13 +64,17 @@ class MultiEnvWrapper(gym.Wrapper):
             - 'del-onehot' assumes an one-hot task id is appended to
               observation, and it excludes that.
               Use case: metaworld environments with Task Embedding.
+        env_names (list(str)): The names of the environments corresponding to
+            envs. The index of an env_name must correspond to the index of the
+            corresponding env in envs. An env_name in env_names must be unique.
 
     """
 
     def __init__(self,
                  envs,
                  sample_strategy=uniform_random_strategy,
-                 mode='add-onehot'):
+                 mode='add-onehot',
+                 env_names=None):
         assert mode in ['vanilla', 'add-onehot', 'del-onehot']
 
         self._sample_strategy = sample_strategy
@@ -82,6 +86,12 @@ class MultiEnvWrapper(gym.Wrapper):
             if not isinstance(env, GarageEnv):
                 envs[i] = GarageEnv(env)
         super().__init__(envs[0])
+        if env_names is not None:
+            assert isinstance(env_names, list), 'env_names must be a list'
+            msg = ('env_names are not unique or there is not an env_name',
+                   'corresponding to each env in envs')
+            assert len(set(env_names)) == len(envs), msg
+        self._env_names = env_names
         self._task_envs = []
         for env in envs:
             if (env.observation_space.shape !=
@@ -91,8 +101,19 @@ class MultiEnvWrapper(gym.Wrapper):
             if env.action_space.shape != self.env.action_space.shape:
                 raise ValueError('Action space of all envs should be same.')
             self._task_envs.append(env)
-
         self.env.spec.observation_space = self.observation_space
+        self._spec = self.env.spec
+
+    @property
+    def spec(self):
+        """Describes the action and observation spaces of the wrapped envs.
+
+        Returns:
+            garage.envs.EnvSpec: the action and observation spaces of the
+                wrapped environments.
+
+        """
+        return self._spec
 
     @property
     def num_tasks(self):
@@ -124,6 +145,11 @@ class MultiEnvWrapper(gym.Wrapper):
             int: Index of active task.
 
         """
+        if hasattr(self.env, 'active_task_index'):
+            return self.env.active_task_index
+        else:
+            return self._active_task_index
+
         return self._active_task_index
 
     @property
@@ -156,8 +182,7 @@ class MultiEnvWrapper(gym.Wrapper):
         """
         self._observation_space = observation_space
 
-    @property
-    def active_task_one_hot(self):
+    def _active_task_one_hot(self):
         """One-hot representation of active task.
 
         Returns:
@@ -186,7 +211,7 @@ class MultiEnvWrapper(gym.Wrapper):
         if self._mode == 'vanilla':
             return obs
         elif self._mode == 'add-onehot':
-            return np.concatenate([obs, self.active_task_one_hot])
+            return np.concatenate([obs, self._active_task_one_hot()])
         else:  # self._mode == 'del-onehot'
             return obs[:-self._num_tasks]
 
@@ -205,30 +230,16 @@ class MultiEnvWrapper(gym.Wrapper):
         """
         obs, reward, done, info = self.env.step(action)
         if self._mode == 'add-onehot':
-            obs = np.concatenate([obs, self.active_task_one_hot])
+            obs = np.concatenate([obs, self._active_task_one_hot()])
         elif self._mode == 'del-onehot':
             obs = obs[:-self._num_tasks]
-        info['task_id'] = self._active_task_index
-        info['task_name'] = self.active_task_name
+        if 'task_id' not in info:
+            info['task_id'] = self._active_task_index
+        if self._env_names is not None:
+            info['task_name'] = self._env_names[self._active_task_index]
         return obs, reward, done, info
 
     def close(self):
         """Close all task envs."""
         for env in self._task_envs:
             env.close()
-
-    @property
-    def active_task_name(self):
-        """Return the name of the active task.
-
-        Returns:
-            str: The name of the task. If wrapping metaworld benchmark,
-                environments, this will be the name of the environment,
-                given by metaworld. Otherwise, the name is the unwrapped
-                environment's class name.
-
-        """
-        if hasattr(self.env, 'all_task_names'):
-            return self.env.all_task_names[0]
-        else:
-            return str(self.env.unwrapped)

@@ -10,7 +10,7 @@ from garage import wrap_experiment
 from garage.envs import normalize
 from garage.envs.base import GarageEnv
 from garage.experiment import deterministic, LocalRunner
-from garage.replay_buffer import SimpleReplayBuffer
+from garage.replay_buffer import PathBuffer
 from garage.sampler import LocalSampler
 from garage.torch.algos import SAC
 from garage.torch.policies import TanhGaussianMLPPolicy
@@ -50,9 +50,7 @@ def torch_sac_half_cheetah(ctxt=None, seed=1):
                                  hidden_sizes=[256, 256],
                                  hidden_nonlinearity=F.relu)
 
-    replay_buffer = SimpleReplayBuffer(env_spec=env.spec,
-                                       size_in_transitions=int(1e6),
-                                       time_horizon=1)
+    replay_buffer = PathBuffer(capacity_in_transitions=int(1e6))
 
     sac = SAC(env_spec=env.spec,
               policy=policy,
@@ -60,7 +58,6 @@ def torch_sac_half_cheetah(ctxt=None, seed=1):
               qf2=qf2,
               gradient_steps_per_itr=1000,
               max_path_length=500,
-              use_automatic_entropy_tuning=True,
               replay_buffer=replay_buffer,
               min_buffer_size=1e4,
               target_update_tau=5e-3,
@@ -79,4 +76,4 @@ def torch_sac_half_cheetah(ctxt=None, seed=1):
 
 
 s = np.random.randint(0, 1000)
-torch_sac_half_cheetah(seed=s)
+torch_sac_half_cheetah(seed=521)

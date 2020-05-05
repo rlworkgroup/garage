@@ -56,7 +56,7 @@ class TestMultiEnvWrapper:
         envs = ['CartPole-v0', 'CartPole-v1']
         mt_env = self._init_multi_env_wrapper(
             envs, sample_strategy=round_robin_strategy)
-        assert mt_env.active_task_index is None
+        assert mt_env._active_task_index is None
 
     def test_one_hot_observation_space(self):
         """test one hot representation of observation space"""
@@ -146,14 +146,6 @@ class TestMultiEnvWrapper:
         obs = mt_env.step(1)[0]
         assert (obs[-2:] == np.array([0., 1.])).all()
 
-    def test_active_task_name(self):
-        """Check if the task name of the active task corresponds to its """
-        envs = ['CartPole-v0', 'CartPole-v1']
-        mt_env = self._init_multi_env_wrapper(envs)
-        for _ in range(mt_env.num_tasks):
-            assert mt_env.active_task_name == str(mt_env.env.unwrapped)
-            mt_env.reset()
-
 
 @pytest.mark.mujoco
 class TestMetaWorldMultiEnvWrapper:
@@ -167,9 +159,11 @@ class TestMetaWorldMultiEnvWrapper:
         envs = []
         for task in tasks:
             envs.append(MT10.from_task(task))
+        self.task_names = tasks
         self.env = MultiEnvWrapper(envs,
                                    sample_strategy=round_robin_strategy,
-                                   mode='vanilla')
+                                   mode='vanilla',
+                                   env_names=tasks)
         self.env_no_onehot = MultiEnvWrapper(
             envs, sample_strategy=round_robin_strategy, mode='del-onehot')
 
@@ -197,7 +191,7 @@ class TestMetaWorldMultiEnvWrapper:
         obs1, _, _, info1 = self.env_no_onehot.step(action1)
         assert info0['task_id'] == self.env.active_task_index
         assert info1['task_id'] == self.env.active_task_index
-        assert (self.env.active_task_one_hot == obs0[9:]).all()
+        assert (self.env._active_task_one_hot() == obs0[9:]).all()
         assert obs0.shape[0] == obs1.shape[0] + self.env.num_tasks
 
     def test_reset(self):
@@ -211,8 +205,12 @@ class TestMetaWorldMultiEnvWrapper:
             assert not info['task_id'] == active_task_id
             active_task_id = self.env.active_task_index
 
-    def test_active_task_name(self):
-        """Assert the task name of the active task corresponds to its metaworld name."""  # noqa: E501
-        for _ in range(self.env.num_tasks):
+    def test_env_names(self):
+        """Test that env_names that are passed via the env_names param are added to env_infos."""  # noqa: E501
+        self.env.reset()
+        self.env._active_task_index = 0
+        for i in range(self.env.num_tasks):
+            action = self.env.spec.action_space.sample()
+            _, _, _, info = self.env.step(action)
+            assert info['task_name'] == self.task_names[i]
             self.env.reset()
-            assert self.env.active_task_name == self.env.env.all_task_names[0]
