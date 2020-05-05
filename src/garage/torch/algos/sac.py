@@ -43,7 +43,11 @@ class SAC(OffPolicyRLAlgorithm):
             environment that the agent is being trained in. Usually accessable
             by calling env.spec.
         max_path_length (int): Max path length of the algorithm.
+        max_eval_path_length (int or None): Maximum length of paths used for
+            off-policy evaluation. If None, defaults to `max_path_length`.
         gradient_steps_per_itr (int): Number of optimization steps that should
+        max_path_length(int): Max path length of the environment.
+        gradient_steps_per_itr(int): Number of optimization steps that should
             occur before the training step is over and a new batch of
             transitions is collected by the sampler.
         fixed_alpha (float): The entropy/temperature to be used if temperature
@@ -81,12 +85,14 @@ class SAC(OffPolicyRLAlgorithm):
 
     def __init__(
             self,
+            env_spec,
             policy,
             qf1,
             qf2,
             replay_buffer,
-            env_spec,
+            *,  # Everything after this is numbers.
             max_path_length,
+            max_eval_path_length=None,
             gradient_steps_per_itr,
             fixed_alpha=None,
             target_entropy=None,
@@ -122,6 +128,7 @@ class SAC(OffPolicyRLAlgorithm):
                          qf=qf1,
                          n_train_steps=self._gradient_steps,
                          max_path_length=max_path_length,
+                         max_eval_path_length=max_eval_path_length,
                          buffer_batch_size=buffer_batch_size,
                          min_buffer_size=min_buffer_size,
                          replay_buffer=replay_buffer,

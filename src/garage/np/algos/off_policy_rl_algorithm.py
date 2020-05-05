@@ -24,6 +24,8 @@ class OffPolicyRLAlgorithm(RLAlgorithm):
         steps_per_epoch (int): Number of train_once calls per epoch.
         max_path_length (int): Maximum path length. The episode will
             terminate when length of trajectory reaches max_path_length.
+        max_eval_path_length (int or None): Maximum length of paths used for
+            off-policy evaluation. If None, defaults to `max_path_length`.
         n_train_steps (int): Training steps.
         buffer_batch_size (int): Batch size for replay buffer.
         min_buffer_size (int): The minimum buffer size for replay buffer.
@@ -36,22 +38,25 @@ class OffPolicyRLAlgorithm(RLAlgorithm):
 
     """
 
-    def __init__(self,
-                 env_spec,
-                 policy,
-                 qf,
-                 replay_buffer,
-                 use_target=False,
-                 discount=0.99,
-                 steps_per_epoch=20,
-                 max_path_length=None,
-                 n_train_steps=50,
-                 buffer_batch_size=64,
-                 min_buffer_size=int(1e4),
-                 rollout_batch_size=1,
-                 reward_scale=1.,
-                 smooth_return=True,
-                 exploration_strategy=None):
+    def __init__(
+            self,
+            env_spec,
+            policy,
+            qf,
+            replay_buffer,
+            *,  # Everything after this is numbers.
+            use_target=False,
+            discount=0.99,
+            steps_per_epoch=20,
+            max_path_length=None,
+            max_eval_path_length=None,
+            n_train_steps=50,
+            buffer_batch_size=64,
+            min_buffer_size=int(1e4),
+            rollout_batch_size=1,
+            reward_scale=1.,
+            smooth_return=True,
+            exploration_strategy=None):
         self.env_spec = env_spec
         self.policy = policy
         self.qf = qf
@@ -66,6 +71,7 @@ class OffPolicyRLAlgorithm(RLAlgorithm):
         self.reward_scale = reward_scale
         self.smooth_return = smooth_return
         self.max_path_length = max_path_length
+        self.max_eval_path_length = max_eval_path_length
         self.es = exploration_strategy
 
         self.sampler_cls = OffPolicyVectorizedSampler
@@ -190,7 +196,9 @@ class OffPolicyRLAlgorithm(RLAlgorithm):
 
         """
         paths = []
-        max_path_length = self.max_path_length
+        max_path_length = self.max_eval_path_length
+        if max_path_length is None:
+            max_path_length = self.max_path_length
         # Use a finite length rollout for evaluation.
         if max_path_length is None or np.isinf(max_path_length):
             max_path_length = 1000
