@@ -228,7 +228,7 @@ def test_pearl_ml45():
 
 @pytest.mark.nightly
 @pytest.mark.no_cover
-@pytest.mark.timeout(120)
+@pytest.mark.timeout(200)
 def test_maml_ml10():
     """Test maml_trpo_ml10.py."""
     assert subprocess.run([
