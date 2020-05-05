@@ -12,7 +12,14 @@ class HalfCheetahEnvMetaBase(HalfCheetahEnv_):
     Which was in turn adapted from
     https://github.com/cbfinn/maml_rl/blob/9c8e2ebd741cb0c7b8bf2d040c4caeeb8e06cc95/rllab/envs/mujoco/half_cheetah_env_rand.py
 
+    Args:
+        task (dict): Subclass specific task information.
+
     """
+
+    def __init__(self, task):
+        self._task = task
+        super().__init__()
 
     def _get_obs(self):
         """Get a low-dimensional observation of the state.
@@ -39,3 +46,21 @@ class HalfCheetahEnvMetaBase(HalfCheetahEnv_):
         # now.
         # pylint: disable=protected-access
         self.viewer._hide_overlay = True
+
+    def __getstate__(self):
+        """See `Object.__getstate__.
+
+        Returns:
+            dict: The instance’s dictionary to be pickled.
+
+        """
+        return dict(task=self._task)
+
+    def __setstate__(self, state):
+        """See `Object.__setstate__.
+
+        Args:
+            state (dict): Unpickled state of this object.
+
+        """
+        self.__init__(task=state['task'])
