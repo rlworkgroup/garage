@@ -30,9 +30,7 @@ class HalfCheetahDirEnv(HalfCheetahEnvMetaBase):
     """
 
     def __init__(self, task=None):
-        task = task or {'direction': 1.}
-        self._goal_dir = task['direction']
-        super().__init__()
+        super().__init__(task or {'direction': 1.})
 
     def step(self, action):
         """Take one step in the environment.
@@ -62,7 +60,7 @@ class HalfCheetahDirEnv(HalfCheetahEnvMetaBase):
         xposafter = self.sim.data.qpos[0]
 
         forward_vel = (xposafter - xposbefore) / self.dt
-        forward_reward = self._goal_dir * forward_vel
+        forward_reward = self._task['direction'] * forward_vel
         ctrl_cost = 0.5 * 1e-1 * np.sum(np.square(action))
 
         observation = self._get_obs()
@@ -70,7 +68,7 @@ class HalfCheetahDirEnv(HalfCheetahEnvMetaBase):
         done = False
         infos = dict(reward_forward=forward_reward,
                      reward_ctrl=-ctrl_cost,
-                     task_dir=self._goal_dir)
+                     task_dir=self._task['direction'])
         return observation, reward, done, infos
 
     def sample_tasks(self, num_tasks):
@@ -98,4 +96,4 @@ class HalfCheetahDirEnv(HalfCheetahEnvMetaBase):
                 key, "direction", mapping to -1 or 1).
 
         """
-        self._goal_dir = task['direction']
+        self._task = task

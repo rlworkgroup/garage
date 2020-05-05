@@ -30,9 +30,7 @@ class HalfCheetahVelEnv(HalfCheetahEnvMetaBase):
     """
 
     def __init__(self, task=None):
-        task = task or {'velocity': 0.}
-        self._goal_vel = task['velocity']
-        super().__init__()
+        super().__init__(task or {'velocity': 0.})
 
     def step(self, action):
         """Take one step in the environment.
@@ -62,7 +60,7 @@ class HalfCheetahVelEnv(HalfCheetahEnvMetaBase):
         xposafter = self.sim.data.qpos[0]
 
         forward_vel = (xposafter - xposbefore) / self.dt
-        forward_reward = -1.0 * abs(forward_vel - self._goal_vel)
+        forward_reward = -1.0 * abs(forward_vel - self._task['velocity'])
         ctrl_cost = 0.5 * 1e-1 * np.sum(np.square(action))
 
         observation = self._get_obs()
@@ -70,7 +68,7 @@ class HalfCheetahVelEnv(HalfCheetahEnvMetaBase):
         done = False
         infos = dict(reward_forward=forward_reward,
                      reward_ctrl=-ctrl_cost,
-                     task_vel=self._goal_vel)
+                     task_vel=self._task['velocity'])
         return observation, reward, done, infos
 
     def sample_tasks(self, num_tasks):
@@ -97,4 +95,4 @@ class HalfCheetahVelEnv(HalfCheetahEnvMetaBase):
                 key, "velocity", usually between 0 and 2).
 
         """
-        self._goal_vel = task['velocity']
+        self._task = task

@@ -1,3 +1,5 @@
+import pickle
+
 import pytest
 try:
     # pylint: disable=unused-import
@@ -16,13 +18,20 @@ from garage.envs.mujoco.half_cheetah_vel_env import HalfCheetahVelEnv
 
 
 @pytest.mark.mujoco
-class TestMetaHalfCheetahEnvs:
+@pytest.mark.parametrize('env_type', [HalfCheetahVelEnv, HalfCheetahDirEnv])
+def test_can_sim(env_type):
+    env = env_type()
+    task = env.sample_tasks(1)[0]
+    env.set_task(task)
+    for _ in range(3):
+        env.step(env.action_space.sample())
 
-    @pytest.mark.parametrize('env_type',
-                             [HalfCheetahVelEnv, HalfCheetahDirEnv])
-    def test_can_sim(self, env_type):
-        env = env_type()
-        task = env.sample_tasks(1)[0]
-        env.set_task(task)
-        for _ in range(3):
-            env.step(env.action_space.sample())
+
+@pytest.mark.mujoco
+@pytest.mark.parametrize('env_type', [HalfCheetahVelEnv, HalfCheetahDirEnv])
+def test_pickling_keeps_goal(env_type):
+    env = env_type()
+    task = env.sample_tasks(1)[0]
+    env.set_task(task)
+    env_clone = pickle.loads(pickle.dumps(env))
+    assert env._task == env_clone._task
