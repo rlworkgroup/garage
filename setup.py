@@ -80,7 +80,7 @@ EXTRAS['dev'] = [
     'recommonmark',
     'rlkit @ https://{}@api.github.com/repos/vitchyr/rlkit/tarball/1d469a509b797ca04a39b8734c1816ca7d108fc8'.format(GARAGE_GH_TOKEN),  # noqa: E501
     'seaborn',
-    'sphinx==2.4.4',
+    'sphinx',
     'sphinx_rtd_theme',
     'yapf==0.28.0',
 ]  # yapf: disable
