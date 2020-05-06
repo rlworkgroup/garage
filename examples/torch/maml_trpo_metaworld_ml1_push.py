@@ -2,7 +2,7 @@
 """This is an example to train MAML-TRPO on ML1 Push environment."""
 # pylint: disable=no-value-for-parameter
 import click
-import metaworld.benchmarks
+import metaworld.benchmarks as mwb
 import torch
 
 from garage import wrap_experiment
@@ -22,7 +22,8 @@ from garage.torch.value_functions import GaussianMLPValueFunction
 @click.option('--rollouts_per_task', default=10)
 @click.option('--meta_batch_size', default=20)
 @wrap_experiment(snapshot_mode='all')
-def maml_trpo(ctxt, seed, epochs, rollouts_per_task, meta_batch_size):
+def maml_trpo_metaworld_ml1_push(ctxt, seed, epochs, rollouts_per_task,
+                                 meta_batch_size):
     """Set up environment and algorithm and run the task.
 
     Args:
@@ -38,7 +39,7 @@ def maml_trpo(ctxt, seed, epochs, rollouts_per_task, meta_batch_size):
     """
     set_seed(seed)
     env = GarageEnv(
-        normalize(metaworld.benchmarks.ML1.get_train_tasks('push-v1'),
+        normalize(mwb.ML1.get_train_tasks('push-v1'),
                   expected_action_scale=10.))
 
     policy = GaussianMLPPolicy(
@@ -56,7 +57,7 @@ def maml_trpo(ctxt, seed, epochs, rollouts_per_task, meta_batch_size):
     max_path_length = 100
 
     test_sampler = SetTaskSampler(lambda: GarageEnv(
-        normalize(metaworld.benchmarks.ML1.get_test_tasks('push-v1'))))
+        normalize(mwb.ML1.get_test_tasks('push-v1'))))
 
     meta_evaluator = MetaEvaluator(test_task_sampler=test_sampler,
                                    max_path_length=max_path_length)
@@ -78,4 +79,4 @@ def maml_trpo(ctxt, seed, epochs, rollouts_per_task, meta_batch_size):
                  batch_size=rollouts_per_task * max_path_length)
 
 
-maml_trpo()
+maml_trpo_metaworld_ml1_push()

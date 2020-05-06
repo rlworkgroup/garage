@@ -9,7 +9,7 @@ https://arxiv.org/pdf/1910.10897.pdf
 import pickle
 
 import click
-from metaworld.benchmarks import ML1
+import metaworld.benchmarks as mwb
 import numpy as np
 from torch import nn
 from torch.nn import functional as F
@@ -30,7 +30,7 @@ import garage.torch.utils as tu
 @click.option('--seed', 'seed', type=int, default=1)
 @click.option('--gpu', '_gpu', type=int, default=None)
 @wrap_experiment(snapshot_mode='none')
-def ML1_pick_place_mtsac_reward(ctxt=None, seed=1, _gpu=None):
+def mtsac_metaworld_ml1_pick_place(ctxt=None, seed=1, _gpu=None):
     """Train MTSAC with the ML1 pick-place-v1 environment.
 
     Args:
@@ -48,7 +48,7 @@ def ML1_pick_place_mtsac_reward(ctxt=None, seed=1, _gpu=None):
     env_names = []
     for i in range(50):
         train_env = GarageEnv(
-            normalize(ML1.get_train_tasks('pick-place-v1'),
+            normalize(mwb.ML1.get_train_tasks('pick-place-v1'),
                       normalize_reward=True))
         test_env = pickle.loads(pickle.dumps(train_env))
         env_names.append('pick_place_{}'.format(i))
@@ -105,4 +105,4 @@ def ML1_pick_place_mtsac_reward(ctxt=None, seed=1, _gpu=None):
     runner.train(n_epochs=epochs, batch_size=batch_size)
 
 
-ML1_pick_place_mtsac_reward()
+mtsac_metaworld_ml1_pick_place()

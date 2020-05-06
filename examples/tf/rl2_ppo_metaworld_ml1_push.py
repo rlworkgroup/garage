@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Example script to run RL2 in ML10."""
+"""Example script to run RL2 in ML1."""
 # pylint: disable=no-value-for-parameter
 import click
-from metaworld.benchmarks import ML10
+import metaworld.benchmarks as mwb
 
 from garage import wrap_experiment
 from garage.experiment import task_sampler
@@ -23,9 +23,9 @@ from garage.tf.policies import GaussianGRUPolicy
 @click.option('--n_epochs', default=10)
 @click.option('--episode_per_task', default=10)
 @wrap_experiment
-def rl2_ppo_ml10(ctxt, seed, max_path_length, meta_batch_size, n_epochs,
-                 episode_per_task):
-    """Train PPO with ML10 environment.
+def rl2_ppo_metaworld_ml1_push(ctxt, seed, max_path_length, meta_batch_size,
+                               n_epochs, episode_per_task):
+    """Train PPO with ML1 environment.
 
     Args:
         ctxt (garage.experiment.ExperimentContext): The experiment
@@ -40,14 +40,10 @@ def rl2_ppo_ml10(ctxt, seed, max_path_length, meta_batch_size, n_epochs,
     """
     set_seed(seed)
     with LocalTFRunner(snapshot_config=ctxt) as runner:
-        ML_train_envs = [
-            RL2Env(ML10.from_task(task_name))
-            for task_name in ML10.get_train_tasks().all_task_names
-        ]
-        tasks = task_sampler.EnvPoolSampler(ML_train_envs)
-        tasks.grow_pool(meta_batch_size)
+        tasks = task_sampler.SetTaskSampler(lambda: RL2Env(
+            env=mwb.ML1.get_train_tasks('push-v1')))
 
-        env_spec = ML_train_envs[0].spec
+        env_spec = RL2Env(env=mwb.ML1.get_train_tasks('push-v1')).spec
         policy = GaussianGRUPolicy(name='policy',
                                    hidden_dim=64,
                                    env_spec=env_spec,
@@ -86,4 +82,4 @@ def rl2_ppo_ml10(ctxt, seed, max_path_length, meta_batch_size, n_epochs,
                      meta_batch_size)
 
 
-rl2_ppo_ml10()
+rl2_ppo_metaworld_ml1_push()

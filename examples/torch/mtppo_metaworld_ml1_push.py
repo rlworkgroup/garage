@@ -2,7 +2,7 @@
 """This is an example to train PPO on ML1 Push environment."""
 # pylint: disable=no-value-for-parameter
 import click
-import metaworld.benchmarks
+import metaworld.benchmarks as mwb
 import torch
 
 from garage import wrap_experiment
@@ -19,7 +19,7 @@ from garage.torch.value_functions import GaussianMLPValueFunction
 @click.option('--epochs', default=500)
 @click.option('--batch_size', default=1024)
 @wrap_experiment(snapshot_mode='all')
-def torch_ppo_ml1_push(ctxt, seed, epochs, batch_size):
+def mtppo_metaworld_ml1_push(ctxt, seed, epochs, batch_size):
     """Set up environment and algorithm and run the task.
 
     Args:
@@ -32,8 +32,7 @@ def torch_ppo_ml1_push(ctxt, seed, epochs, batch_size):
 
     """
     set_seed(seed)
-    env = GarageEnv(
-        normalize(metaworld.benchmarks.ML1.get_train_tasks('push-v1')))
+    env = GarageEnv(normalize(mwb.ML1.get_train_tasks('push-v1')))
 
     policy = GaussianMLPPolicy(
         env_spec=env.spec,
@@ -59,4 +58,4 @@ def torch_ppo_ml1_push(ctxt, seed, epochs, batch_size):
     runner.train(n_epochs=epochs, batch_size=batch_size)
 
 
-torch_ppo_ml1_push()
+mtppo_metaworld_ml1_push()

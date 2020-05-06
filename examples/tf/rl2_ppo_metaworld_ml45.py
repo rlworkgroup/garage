@@ -2,7 +2,7 @@
 """Example script to run RL2 in ML45."""
 # pylint: disable=no-value-for-parameter, wrong-import-order
 import click
-from metaworld.benchmarks import ML45
+import metaworld.benchmarks as mwb
 
 from garage import wrap_experiment
 from garage.experiment import task_sampler
@@ -23,8 +23,8 @@ from garage.tf.policies import GaussianGRUPolicy
 @click.option('--n_epochs', default=10)
 @click.option('--episode_per_task', default=10)
 @wrap_experiment
-def rl2_ppo_ml45(ctxt, seed, max_path_length, meta_batch_size, n_epochs,
-                 episode_per_task):
+def rl2_ppo_metaworld_ml45(ctxt, seed, max_path_length, meta_batch_size,
+                           n_epochs, episode_per_task):
     """Train PPO with ML45 environment.
 
     Args:
@@ -40,15 +40,15 @@ def rl2_ppo_ml45(ctxt, seed, max_path_length, meta_batch_size, n_epochs,
     """
     set_seed(seed)
     with LocalTFRunner(snapshot_config=ctxt) as runner:
-        ml45_train_tasks = ML45.get_train_tasks()
-        ML_train_envs = [
-            RL2Env(ML45.from_task(task_name))
+        ml45_train_tasks = mwb.ML45.get_train_tasks()
+        ml45_train_envs = [
+            RL2Env(mwb.ML45.from_task(task_name))
             for task_name in ml45_train_tasks.all_task_names
         ]
-        tasks = task_sampler.EnvPoolSampler(ML_train_envs)
+        tasks = task_sampler.EnvPoolSampler(ml45_train_envs)
         tasks.grow_pool(meta_batch_size)
 
-        env_spec = ML_train_envs[0].spec
+        env_spec = ml45_train_envs[0].spec
 
         policy = GaussianGRUPolicy(name='policy',
                                    hidden_dim=64,
@@ -88,4 +88,4 @@ def rl2_ppo_ml45(ctxt, seed, max_path_length, meta_batch_size, n_epochs,
                      meta_batch_size)
 
 
-rl2_ppo_ml45()
+rl2_ppo_metaworld_ml45()

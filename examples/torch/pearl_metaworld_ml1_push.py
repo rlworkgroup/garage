@@ -1,27 +1,26 @@
 #!/usr/bin/env python3
-"""PEARL ML10 example."""
-
+"""PEARL ML1 example."""
 import click
-from metaworld.benchmarks import ML10
+import metaworld.benchmarks as mwb
 
 from garage.envs import GarageEnv, normalize
 from garage.experiment import LocalRunner, wrap_experiment
 from garage.experiment.deterministic import set_seed
-from garage.experiment.task_sampler import EnvPoolSampler
+from garage.experiment.task_sampler import SetTaskSampler
 from garage.sampler import LocalSampler
 from garage.torch.algos import PEARL
 from garage.torch.algos.pearl import PEARLWorker
 from garage.torch.embeddings import MLPEncoder
-from garage.torch.policies import (ContextConditionedPolicy,
-                                   TanhGaussianMLPPolicy)
+from garage.torch.policies import ContextConditionedPolicy
+from garage.torch.policies import TanhGaussianMLPPolicy
 from garage.torch.q_functions import ContinuousMLPQFunction
 import garage.torch.utils as tu
 
 
 @click.command()
 @click.option('--num_epochs', default=1000)
-@click.option('--num_train_tasks', default=10)
-@click.option('--num_test_tasks', default=5)
+@click.option('--num_train_tasks', default=50)
+@click.option('--num_test_tasks', default=10)
 @click.option('--encoder_hidden_size', default=200)
 @click.option('--net_size', default=300)
 @click.option('--num_steps_per_epoch', default=4000)
@@ -33,27 +32,27 @@ import garage.torch.utils as tu
 @click.option('--embedding_mini_batch_size', default=64)
 @click.option('--max_path_length', default=150)
 @wrap_experiment
-def torch_pearl_ml10(ctxt=None,
-                     seed=1,
-                     num_epochs=1000,
-                     num_train_tasks=10,
-                     num_test_tasks=5,
-                     latent_size=7,
-                     encoder_hidden_size=200,
-                     net_size=300,
-                     meta_batch_size=16,
-                     num_steps_per_epoch=4000,
-                     num_initial_steps=4000,
-                     num_tasks_sample=15,
-                     num_steps_prior=750,
-                     num_extra_rl_steps_posterior=750,
-                     batch_size=256,
-                     embedding_batch_size=64,
-                     embedding_mini_batch_size=64,
-                     max_path_length=150,
-                     reward_scale=10.,
-                     use_gpu=False):
-    """Train PEARL with ML10 environments.
+def pearl_metaworld_ml1_push(ctxt=None,
+                             seed=1,
+                             num_epochs=1000,
+                             num_train_tasks=50,
+                             num_test_tasks=10,
+                             latent_size=7,
+                             encoder_hidden_size=200,
+                             net_size=300,
+                             meta_batch_size=16,
+                             num_steps_per_epoch=4000,
+                             num_initial_steps=4000,
+                             num_tasks_sample=15,
+                             num_steps_prior=750,
+                             num_extra_rl_steps_posterior=750,
+                             batch_size=256,
+                             embedding_batch_size=64,
+                             embedding_mini_batch_size=64,
+                             max_path_length=150,
+                             reward_scale=10.,
+                             use_gpu=False):
+    """Train PEARL with ML1 environments.
 
     Args:
         ctxt (garage.experiment.ExperimentContext): The experiment
@@ -93,21 +92,12 @@ def torch_pearl_ml10(ctxt=None,
     encoder_hidden_sizes = (encoder_hidden_size, encoder_hidden_size,
                             encoder_hidden_size)
     # create multi-task environment and sample tasks
-    ML_train_envs = [
-        GarageEnv(normalize(ML10.from_task(task_name)))
-        for task_name in ML10.get_train_tasks().all_task_names
-    ]
-
-    ML_test_envs = [
-        GarageEnv(normalize(ML10.from_task(task_name)))
-        for task_name in ML10.get_test_tasks().all_task_names
-    ]
-
-    env_sampler = EnvPoolSampler(ML_train_envs)
-    env_sampler.grow_pool(num_train_tasks)
+    env_sampler = SetTaskSampler(lambda: GarageEnv(
+        normalize(mwb.ML1.get_train_tasks('push-v1'))))
     env = env_sampler.sample(num_train_tasks)
-    test_env_sampler = EnvPoolSampler(ML_test_envs)
-    test_env_sampler.grow_pool(num_test_tasks)
+
+    test_env_sampler = SetTaskSampler(lambda: GarageEnv(
+        normalize(mwb.ML1.get_test_tasks('push-v1'))))
 
     runner = LocalRunner(ctxt)
 
@@ -162,4 +152,4 @@ def torch_pearl_ml10(ctxt=None,
     runner.train(n_epochs=num_epochs, batch_size=batch_size)
 
 
-torch_pearl_ml10()
+pearl_metaworld_ml1_push()
