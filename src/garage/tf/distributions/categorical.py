@@ -1,7 +1,9 @@
+# flake8: noqa
+# pylint: skip-file
 import numpy as np
 import tensorflow as tf
 
-from garage.tf.distributions.base import Distribution
+from garage.tf.distributions.distribution import Distribution
 from garage.tf.misc.tensor_utils import compile_function
 
 TINY = 1e-8
@@ -93,7 +95,10 @@ class Categorical(Distribution):
         probs = info['prob']
         return -np.sum(probs * np.log(probs + TINY), axis=-1)
 
-    def log_likelihood_sym(self, x_var, dist_info_vars, name='log_likelihood_sym'):
+    def log_likelihood_sym(self,
+                           x_var,
+                           dist_info_vars,
+                           name='log_likelihood_sym'):
         with tf.name_scope(name):
             probs = dist_info_vars['prob']
             ndims = probs.get_shape().ndims

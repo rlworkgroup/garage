@@ -22,7 +22,7 @@ class DDPG(OffPolicyRLAlgorithm):
 
     Args:
         env_spec (EnvSpec): Environment specification.
-        policy (garage.torch.policies.base.Policy): Policy.
+        policy (garage.torch.policies.Policy): Policy.
         qf (object): Q-value network.
         replay_buffer (garage.replay_buffer.ReplayBuffer): Replay buffer.
         steps_per_epoch (int): Number of train_once calls per epoch.

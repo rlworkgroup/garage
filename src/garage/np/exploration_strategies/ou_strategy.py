@@ -7,7 +7,8 @@ transitions. And OU process is relatively smooth in time.
 """
 import numpy as np
 
-from garage.np.exploration_strategies.base import ExplorationStrategy
+from garage.np.exploration_strategies.exploration_strategy import (
+    ExplorationStrategy)
 
 
 class OUStrategy(ExplorationStrategy):

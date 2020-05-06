@@ -4,7 +4,7 @@ import numpy as np
 import tensorflow as tf
 
 from garage.tf.models import GaussianMLPModel
-from garage.tf.policies.base import StochasticPolicy
+from garage.tf.policies.policy import StochasticPolicy
 
 
 class GaussianMLPPolicy(StochasticPolicy):

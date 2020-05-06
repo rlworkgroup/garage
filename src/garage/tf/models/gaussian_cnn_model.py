@@ -3,9 +3,9 @@ import numpy as np
 import tensorflow as tf
 
 from garage.tf.distributions import DiagonalGaussian
-from garage.tf.models.base import Model
 from garage.tf.models.cnn import cnn
 from garage.tf.models.mlp import mlp
+from garage.tf.models.model import Model
 from garage.tf.models.parameter import parameter
 
 

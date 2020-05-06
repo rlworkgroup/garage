@@ -3,8 +3,8 @@ import numpy as np
 import tensorflow as tf
 
 from garage.tf.distributions import DiagonalGaussian
-from garage.tf.models import Model
 from garage.tf.models.gru import gru
+from garage.tf.models.model import Model
 from garage.tf.models.parameter import recurrent_parameter
 
 

@@ -3,7 +3,7 @@ import pickle
 import gym
 import pytest
 
-from garage.tf.envs.base import TfEnv
+from garage.tf.envs import TfEnv
 from tests.helpers import step_env_with_gym_quirks
 
 

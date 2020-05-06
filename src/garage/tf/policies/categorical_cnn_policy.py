@@ -6,7 +6,7 @@ from garage.tf.distributions import Categorical
 from garage.tf.models import CNNModel
 from garage.tf.models import MLPModel
 from garage.tf.models import Sequential
-from garage.tf.policies import StochasticPolicy
+from garage.tf.policies.policy import StochasticPolicy
 
 
 class CategoricalCNNPolicy(StochasticPolicy):
@@ -55,6 +55,7 @@ class CategoricalCNNPolicy(StochasticPolicy):
             of output dense layer(s). The function should return a
             tf.Tensor.
         layer_normalization (bool): Bool for using layer normalization or not.
+
     """
 
     def __init__(self,
@@ -136,6 +137,7 @@ class CategoricalCNNPolicy(StochasticPolicy):
 
         Returns:
             bool: True if primitive supports vectorized operations.
+
         """
         return True
 

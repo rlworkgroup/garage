@@ -7,7 +7,7 @@ import numpy as np
 
 from garage import log_performance, TrajectoryBatch
 from garage.misc import tensor_utils
-from garage.np.algos.base import RLAlgorithm
+from garage.np.algos.rl_algorithm import RLAlgorithm
 from garage.sampler import OnPolicyVectorizedSampler
 from garage.tf.samplers import BatchSampler
 
@@ -24,7 +24,7 @@ class BatchPolopt(RLAlgorithm):
 
     Args:
         env_spec (garage.envs.EnvSpec): Environment specification.
-        policy (garage.tf.policies.base.Policy): Policy.
+        policy (garage.tf.policies.Policy): Policy.
         baseline (garage.tf.baselines.Baseline): The baseline.
         discount (float): Discount.
         max_path_length (int): Maximum length of a single rollout.

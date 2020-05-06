@@ -6,8 +6,8 @@ import gym
 import numpy as np
 
 from garage import TrajectoryBatch
+from garage.sampler.default_worker import DefaultWorker
 from garage.sampler.env_update import EnvUpdate
-from garage.sampler.worker import DefaultWorker
 
 
 class VecWorker(DefaultWorker):

@@ -6,7 +6,7 @@ import akro
 import numpy as np
 import tensorflow as tf
 
-from garage.tf.policies import Policy
+from garage.tf.policies.policy import Policy
 
 
 class DiscreteQfDerivedPolicy(Policy):

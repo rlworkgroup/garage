@@ -21,6 +21,7 @@ class ReplayBuffer(metaclass=abc.ABCMeta):
         env_spec (garage.envs.EnvSpec): Environment specification.
         size_in_transitions (int): total size of transitions in the buffer
         time_horizon (int): time horizon of rollout.
+
     """
 
     def __init__(self, env_spec, size_in_transitions, time_horizon):

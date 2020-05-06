@@ -3,7 +3,7 @@ import akro
 import tensorflow as tf
 
 from garage.tf.models import CNNMLPMergeModel
-from garage.tf.q_functions import QFunction
+from garage.tf.q_functions.q_function import QFunction
 
 
 class ContinuousCNNQFunction(QFunction):
@@ -66,6 +66,7 @@ class ContinuousCNNQFunction(QFunction):
             of output dense layer(s) in the MLP. The function should return
             a tf.Tensor.
         layer_normalization (bool): Bool for using layer normalization or not.
+
     """
 
     def __init__(self,
@@ -221,6 +222,7 @@ class ContinuousCNNQFunction(QFunction):
 
         Return:
             ContinuousCNNQFunction: Cloned Q function.
+
         """
         return self.__class__(name=name,
                               env_spec=self._env_spec,

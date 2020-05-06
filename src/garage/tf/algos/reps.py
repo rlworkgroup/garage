@@ -29,7 +29,7 @@ class REPS(BatchPolopt):  # noqa: D416
 
     Args:
         env_spec (garage.envs.EnvSpec): Environment specification.
-        policy (garage.tf.policies.base.Policy): Policy.
+        policy (garage.tf.policies.StochasticPolicy): Policy.
         baseline (garage.tf.baselines.Baseline): The baseline.
         scope (str): Scope for identifying the algorithm.
             Must be specified if running multiple algorithms
@@ -497,7 +497,6 @@ class REPS(BatchPolopt):  # noqa: D416
             for k in self.policy.distribution.dist_info_keys
         ]
 
-        # pylint: disable=unexpected-keyword-arg
         dual_opt_input_values = self._dual_opt_inputs._replace(
             reward_var=samples_data['rewards'],
             valid_var=samples_data['valids'],
@@ -530,7 +529,7 @@ class REPS(BatchPolopt):  # noqa: D416
             for k in self.policy.distribution.dist_info_keys
         ]
 
-        # pylint: disable=locally-disabled, unexpected-keyword-arg
+        # pylint: disable=unexpected-keyword-arg
         policy_opt_input_values = self._policy_opt_inputs._replace(
             obs_var=samples_data['observations'],
             action_var=samples_data['actions'],

@@ -4,8 +4,8 @@ A model composed only of a long-short term memory (LSTM).
 """
 import tensorflow as tf
 
-from garage.tf.models.base import Model
 from garage.tf.models.lstm import lstm
+from garage.tf.models.model import Model
 
 
 class LSTMModel(Model):

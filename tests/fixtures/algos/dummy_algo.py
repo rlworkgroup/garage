@@ -7,8 +7,9 @@ class DummyAlgo(BatchPolopt):
 
     Args:
         env_spec (garage.envs.EnvSpec): Environment specification.
-        policy (garage.tf.policies.base.Policy): Policy.
-        baseline (garage.tf.baselines.Baseline): The baseline.
+        policy (garage.np.policies.Policy): Policy.
+        baseline (garage.np.baselines.Baseline): The baseline.
+
     """
 
     def __init__(self, env_spec, policy, baseline):

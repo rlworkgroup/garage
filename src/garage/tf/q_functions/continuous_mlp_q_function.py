@@ -2,7 +2,7 @@
 import tensorflow as tf
 
 from garage.tf.models import MLPMergeModel
-from garage.tf.q_functions import QFunction
+from garage.tf.q_functions.q_function import QFunction
 
 
 class ContinuousMLPQFunction(QFunction):

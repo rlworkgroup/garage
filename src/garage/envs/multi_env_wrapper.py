@@ -10,7 +10,7 @@ import akro
 import gym
 import numpy as np
 
-from garage.envs import GarageEnv
+from garage.envs.garage_env import GarageEnv
 
 
 def round_robin_strategy(num_tasks, last_task=None):

@@ -3,7 +3,7 @@ import torch
 from torch import nn
 
 from garage.torch.modules import GaussianMLPModule
-from garage.torch.value_functions.base import ValueFunction
+from garage.torch.value_functions.value_function import ValueFunction
 
 
 class GaussianMLPValueFunction(ValueFunction):
@@ -40,6 +40,7 @@ class GaussianMLPValueFunction(ValueFunction):
             (plain value - not log or exponentiated).
         layer_normalization (bool): Bool for using layer normalization or not.
         name (str): The name of the value function.
+
     """
 
     def __init__(self,

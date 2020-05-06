@@ -1,7 +1,9 @@
+# flake8: noqa
+# pylint: skip-file
 import numpy as np
 import tensorflow as tf
 
-from garage.tf.distributions.base import Distribution
+from garage.tf.distributions.distribution import Distribution
 
 TINY = 1e-8
 
@@ -54,7 +56,10 @@ class Bernoulli(Distribution):
                                   (1 - old_p + TINY),
                                   axis=ndims - 1)
 
-    def log_likelihood_sym(self, x_var, dist_info_vars, name='log_likelihood_sym'):
+    def log_likelihood_sym(self,
+                           x_var,
+                           dist_info_vars,
+                           name='log_likelihood_sym'):
         with tf.name_scope(name):
             p = dist_info_vars['p']
             ndims = p.get_shape().ndims

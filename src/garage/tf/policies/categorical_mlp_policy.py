@@ -4,7 +4,7 @@ import tensorflow as tf
 
 from garage.tf.distributions import Categorical
 from garage.tf.models import MLPModel
-from garage.tf.policies import StochasticPolicy
+from garage.tf.policies.policy import StochasticPolicy
 
 
 class CategoricalMLPPolicy(StochasticPolicy):

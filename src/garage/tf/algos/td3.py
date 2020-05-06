@@ -22,7 +22,7 @@ class TD3(DDPG):
 
     Args:
         env_spec (garage.envs.EnvSpec): Environment.
-        policy (garage.tf.policies.base.Policy): Policy.
+        policy (garage.tf.policies.Policy): Policy.
         qf (garage.tf.q_functions.QFunction): Q-function.
         qf2 (garage.tf.q_functions.QFunction): Q function to use
         replay_buffer (garage.replay_buffer.ReplayBuffer): Replay buffer.

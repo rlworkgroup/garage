@@ -1,6 +1,5 @@
 """Wrapper class that converts gym.Env into GarageEnv."""
 
-import collections
 import copy
 
 import akro
@@ -94,7 +93,7 @@ class GarageEnv(gym.Wrapper):
         This method can be removed once OpenAI solves the issue.
         """
         # We need to do some strange things here to fix-up flaws in gym
-        # pylint: disable=protected-access, import-outside-toplevel
+        # pylint: disable=import-outside-toplevel
         if self.env.spec:
             if any(package in getattr(self.env.spec, 'entry_point', '')
                    for package in KNOWN_GYM_NOT_CLOSE_MJ_VIEWER):
@@ -198,27 +197,3 @@ class GarageEnv(gym.Wrapper):
 
         """
         self.__init__(state['_env'], state['_env_name'])
-
-
-def Step(observation, reward, done, **kwargs):  # noqa: N802
-    """Create a namedtuple from the results of environment.step(action).
-
-    Provides the option to put extra diagnostic info in the kwargs (if it
-    exists) without demanding an explicit positional argument.
-
-    Args:
-        observation (object): Agent's observation of the current environment
-        reward (float) : Amount of reward returned after previous action
-        done (bool): Whether the episode has ended, in which case further
-            step() calls will return undefined results
-        kwargs: Keyword args
-
-    Returns:
-        collections.namedtuple: A named tuple of the arguments.
-
-    """
-    return _Step(observation, reward, done, kwargs)
-
-
-_Step = collections.namedtuple('Step',
-                               ['observation', 'reward', 'done', 'info'])

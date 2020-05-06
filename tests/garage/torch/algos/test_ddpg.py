@@ -4,8 +4,8 @@ import pytest
 import torch
 from torch.nn import functional as F  # NOQA
 
+from garage.envs import GarageEnv
 from garage.envs import normalize
-from garage.envs.base import GarageEnv
 from garage.experiment import deterministic, LocalRunner
 from garage.np.exploration_strategies import OUStrategy
 from garage.replay_buffer import SimpleReplayBuffer

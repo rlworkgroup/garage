@@ -69,13 +69,11 @@ the base environment and add some imports:
 .. code-block:: python
 
     import akro
+    import gym
     import numpy as np
 
-    from garage.envs.base import Env
-    from garage.envs.base import Step
 
-
-    class PointEnv(Env):
+    class PointEnv(gym.Env):
 
         # ...
 
@@ -111,7 +109,7 @@ same as its state.
 
 .. code-block:: python
 
-    class PointEnv(Env):
+    class PointEnv(gym.Env):
 
         # ...
 
@@ -140,14 +138,14 @@ The procedure that interfaces with the environment is responsible for calling
             reward = - (x**2 + y**2) ** 0.5
             done = abs(x) < 0.01 and abs(y) < 0.01
             next_observation = np.copy(self._state)
-            return Step(observation=next_observation, reward=reward, done=done)
+            return next_observation, reward, done, None
 
 Finally, we can implement some plotting to visualize what the MDP is doing. For
 simplicity, let's just print the current state of the MDP on the terminal:
 
 .. code-block:: python
 
-    class PointEnv(Env):
+    class PointEnv(gym.Env):
 
         # ...
 

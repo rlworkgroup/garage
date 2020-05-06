@@ -7,7 +7,7 @@ continuous action.
 import tensorflow as tf
 
 from garage.tf.models import MLPModel
-from garage.tf.policies import Policy
+from garage.tf.policies.policy import Policy
 
 
 class ContinuousMLPPolicy(Policy):

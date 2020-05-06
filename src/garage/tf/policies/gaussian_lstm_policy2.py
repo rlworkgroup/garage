@@ -8,7 +8,7 @@ import numpy as np
 import tensorflow as tf
 
 from garage.tf.models import GaussianLSTMModel2
-from garage.tf.policies.base import StochasticPolicy2
+from garage.tf.policies.policy import StochasticPolicy2
 
 
 class GaussianLSTMPolicy2(StochasticPolicy2):

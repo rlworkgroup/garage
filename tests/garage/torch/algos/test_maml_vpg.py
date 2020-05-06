@@ -13,8 +13,8 @@ except Exception:  # pylint: disable=broad-except
         allow_module_level=True)
 import torch
 
+from garage.envs import GarageEnv
 from garage.envs import normalize
-from garage.envs.base import GarageEnv
 from garage.envs.mujoco import HalfCheetahDirEnv
 from garage.experiment import deterministic, LocalRunner, MetaEvaluator
 from garage.experiment.task_sampler import SetTaskSampler

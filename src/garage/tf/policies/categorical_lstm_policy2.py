@@ -8,7 +8,7 @@ import numpy as np
 import tensorflow as tf
 
 from garage.tf.models import CategoricalLSTMModel
-from garage.tf.policies import StochasticPolicy2
+from garage.tf.policies.policy import StochasticPolicy2
 
 
 class CategoricalLSTMPolicy2(StochasticPolicy2):

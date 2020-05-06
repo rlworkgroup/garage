@@ -1,4 +1,5 @@
-from garage.tf.distributions.base import Distribution
+# flake8: noqa
+from garage.tf.distributions.distribution import Distribution
 from garage.tf.distributions.bernoulli import Bernoulli
 from garage.tf.distributions.categorical import Categorical
 from garage.tf.distributions.diagonal_gaussian import DiagonalGaussian

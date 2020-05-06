@@ -1,8 +1,10 @@
+# flake8: noqa
+# pylint: skip-file
 import numpy as np
 import tensorflow as tf
 
-from garage.tf.distributions.base import Distribution
 from garage.tf.distributions.categorical import Categorical
+from garage.tf.distributions.distribution import Distribution
 
 TINY = 1e-8
 
@@ -66,7 +68,8 @@ class RecurrentCategorical(Distribution):
             probs = dist_info_vars['prob']
             return -tf.reduce_sum(probs * tf.math.log(probs + TINY), 2)
 
-    def log_likelihood_sym(self, xs, dist_info_vars, name='log_likelihood_sym'):
+    def log_likelihood_sym(self, xs, dist_info_vars,
+                           name='log_likelihood_sym'):
         with tf.name_scope(name):
             probs = dist_info_vars['prob']
             # Assume layout is N * T * A

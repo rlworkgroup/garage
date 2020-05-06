@@ -6,7 +6,7 @@ import inspect
 
 import numpy as np
 
-from garage.replay_buffer.base import ReplayBuffer
+from garage.replay_buffer.replay_buffer import ReplayBuffer
 
 
 def make_her_sample(replay_k, reward_fun):
@@ -153,7 +153,6 @@ class HerReplayBuffer(ReplayBuffer):
         del new_dict['_sample_transitions']
         return new_dict
 
-    # pylint: disable=attribute-defined-outside-init
     def __setstate__(self, state):
         """Object.__setstate__.
 

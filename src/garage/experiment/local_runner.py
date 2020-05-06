@@ -10,9 +10,9 @@ import psutil
 from garage.experiment.deterministic import get_seed, set_seed
 from garage.experiment.snapshotter import Snapshotter
 from garage.sampler import parallel_sampler
-from garage.sampler.base import BaseSampler
+from garage.sampler.sampler_deprecated import BaseSampler
 # This is avoiding a circular import
-from garage.sampler.worker import DefaultWorker
+from garage.sampler.default_worker import DefaultWorker  # noqa: I100
 from garage.sampler.worker_factory import WorkerFactory
 
 

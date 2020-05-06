@@ -5,7 +5,7 @@ from torch import nn
 
 from garage.torch.distributions import TanhNormal
 from garage.torch.modules import GaussianMLPTwoHeadedModule
-from garage.torch.policies import Policy
+from garage.torch.policies.policy import Policy
 import garage.torch.utils as tu
 
 

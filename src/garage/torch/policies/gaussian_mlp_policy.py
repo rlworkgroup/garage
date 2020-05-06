@@ -3,7 +3,7 @@ import torch
 from torch import nn
 
 from garage.torch.modules import GaussianMLPModule
-from garage.torch.policies import Policy
+from garage.torch.policies.policy import Policy
 import garage.torch.utils as tu
 
 

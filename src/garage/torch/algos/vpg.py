@@ -21,7 +21,7 @@ class VPG(BatchPolopt):
 
     Args:
         env_spec (garage.envs.EnvSpec): Environment specification.
-        policy (garage.torch.policies.base.Policy): Policy.
+        policy (garage.torch.policies.Policy): Policy.
         value_function (garage.torch.value_functions.ValueFunction): The value
             function.
         policy_optimizer (garage.torch.optimizer.OptimizerWrapper): Optimizer

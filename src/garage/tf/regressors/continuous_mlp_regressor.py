@@ -6,7 +6,7 @@ import tensorflow as tf
 from garage.tf.misc import tensor_utils
 from garage.tf.models import NormalizedInputMLPModel
 from garage.tf.optimizers import LbfgsOptimizer
-from garage.tf.regressors import Regressor
+from garage.tf.regressors.regressor import Regressor
 
 
 class ContinuousMLPRegressor(Regressor):

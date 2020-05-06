@@ -6,7 +6,7 @@ It accepts an observation of the environment and predicts an action.
 import torch
 
 from garage.torch.modules import MLPModule
-from garage.torch.policies import Policy
+from garage.torch.policies.policy import Policy
 
 
 class DeterministicMLPPolicy(Policy, MLPModule):

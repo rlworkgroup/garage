@@ -4,11 +4,11 @@ import gym
 import numpy as np
 import torch
 from torch import nn
-from torch.nn import functional as F  # NOQA
+from torch.nn import functional as F
 
 from garage import wrap_experiment
+from garage.envs import GarageEnv
 from garage.envs import normalize
-from garage.envs.base import GarageEnv
 from garage.experiment import deterministic, LocalRunner
 from garage.replay_buffer import PathBuffer
 from garage.sampler import LocalSampler

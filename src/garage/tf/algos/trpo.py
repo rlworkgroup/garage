@@ -11,7 +11,7 @@ class TRPO(NPO):
 
     Args:
         env_spec (garage.envs.EnvSpec): Environment specification.
-        policy (garage.tf.policies.base.Policy): Policy.
+        policy (garage.tf.policies.StochasticPolicy): Policy.
         baseline (garage.tf.baselines.Baseline): The baseline.
         scope (str): Scope for identifying the algorithm.
             Must be specified if running multiple algorithms

@@ -1,5 +1,5 @@
 """Policy that performs a fixed sequence of actions."""
-from garage.np.policies.base import Policy
+from garage.np.policies.policy import Policy
 
 
 class FixedPolicy(Policy):

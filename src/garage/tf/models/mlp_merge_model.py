@@ -8,8 +8,8 @@ from the input layer to the last hidden layer.
 """
 import tensorflow as tf
 
-from garage.tf.models.base import Model
 from garage.tf.models.mlp import mlp
+from garage.tf.models.model import Model
 
 
 class MLPMergeModel(Model):

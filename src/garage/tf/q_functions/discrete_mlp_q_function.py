@@ -3,7 +3,7 @@ import tensorflow as tf
 
 from garage.tf.models import MLPDuelingModel
 from garage.tf.models import MLPModel
-from garage.tf.q_functions import QFunction
+from garage.tf.q_functions.q_function import QFunction
 
 
 class DiscreteMLPQFunction(QFunction):

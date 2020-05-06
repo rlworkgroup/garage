@@ -1,5 +1,5 @@
 """Dummy distribution for testing purpose."""
-from garage.tf.distributions.base import Distribution
+from garage.tf.distributions import Distribution
 
 
 class DummyDistribution(Distribution):
@@ -21,6 +21,7 @@ class DummyDistribution(Distribution):
         Args:
             old_dist_info_vars (dict): Old distribution tensors.
             new_dist_info_vars (dict): New distribution tensors.
+
         """
 
     def kl(self, old_dist_info, new_dist_info):
@@ -29,6 +30,7 @@ class DummyDistribution(Distribution):
         Args:
             old_dist_info (dict): Old distribution parameters.
             new_dist_info (dict): New distribution parameters.
+
         """
 
     def likelihood_ratio_sym(self, x_var, old_dist_info_vars,
@@ -39,6 +41,7 @@ class DummyDistribution(Distribution):
             x_var (tf.Tensor): Input placeholder.
             old_dist_info_vars (dict): Old distribution tensors.
             new_dist_info_vars (dict): New distribution tensors.
+
         """
 
     def entropy(self, dist_info):

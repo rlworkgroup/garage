@@ -3,7 +3,7 @@ import cma
 from dowel import logger, tabular
 import numpy as np
 
-from garage.np.algos import BatchPolopt
+from garage.np.algos.batch_polopt import BatchPolopt
 
 
 class CMAES(BatchPolopt):
