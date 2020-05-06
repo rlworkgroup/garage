@@ -22,7 +22,7 @@ LONG_RUNNING_EXAMPLES = [
     EXAMPLES_ROOT_DIR / 'torch/maml_ppo_half_cheetah_dir.py',
     EXAMPLES_ROOT_DIR / 'torch/maml_trpo_half_cheetah_dir.py',
     EXAMPLES_ROOT_DIR / 'torch/maml_vpg_half_cheetah_dir.py',
-    EXAMPLES_ROOT_DIR / 'torch/maml_trpo_ml1_push.py',
+    EXAMPLES_ROOT_DIR / 'torch/maml_trpo_metaworld_ml1_push.py',
     EXAMPLES_ROOT_DIR / 'torch/maml_trpo_ml10.py',
     EXAMPLES_ROOT_DIR / 'torch/maml_trpo_ml45.py',
     EXAMPLES_ROOT_DIR / 'torch/pearl_half_cheetah_vel.py',
@@ -35,7 +35,13 @@ LONG_RUNNING_EXAMPLES = [
     EXAMPLES_ROOT_DIR / 'tf/rl2_ppo_ml45.py',
     EXAMPLES_ROOT_DIR / 'torch/mtsac_metaworld_MT10.py',
     EXAMPLES_ROOT_DIR / 'torch/mtsac_metaworld_MT50.py',
-    EXAMPLES_ROOT_DIR / 'torch/mtsac_metaworld_ML1_pick_place.py'
+    EXAMPLES_ROOT_DIR / 'torch/mtsac_metaworld_ML1_pick_place.py',
+    EXAMPLES_ROOT_DIR / 'torch/mtppo_metaworld_ml1_push.py',
+    EXAMPLES_ROOT_DIR / 'torch/mtppo_metaworld_mt10.py',
+    EXAMPLES_ROOT_DIR / 'torch/mtppo_metaworld_mt50.py',
+    EXAMPLES_ROOT_DIR / 'torch/mttrpo_metaworld_ml1_push.py',
+    EXAMPLES_ROOT_DIR / 'torch/mttrpo_metaworld_mt10.py',
+    EXAMPLES_ROOT_DIR / 'torch/mttrpo_metaworld_mt50.py',
 ]
 # yapf: enable
 
@@ -203,6 +209,7 @@ def test_pearl_ml10():
                           check=False).returncode == 0
 
 
+@pytest.mark.skip('Temporarily skipped because of out-of-memory error')
 @pytest.mark.mujoco
 @pytest.mark.no_cover
 def test_pearl_ml45():
@@ -313,3 +320,83 @@ def test_rl2_ml10_meta_test():
         '--episode_per_task', '1', '--meta_batch_size', '10'
     ],
                           check=False).returncode == 0
+
+
+@pytest.mark.mujoco
+@pytest.mark.no_cover
+@pytest.mark.timeout(60)
+def test_ppo_ml1_push():
+    """Test ppo_metaworld_ml1_push.py."""
+    # yapf: disable
+    assert subprocess.run([
+        EXAMPLES_ROOT_DIR / 'torch/mtppo_metaworld_ml1_push.py',
+        '--epochs', '1', '--batch_size', '1'
+    ], check=False).returncode == 0
+    # yapf: enable
+
+
+@pytest.mark.mujoco
+@pytest.mark.no_cover
+@pytest.mark.timeout(60)
+def test_ppo_mt10():
+    """Test ppo_metaworld_mt10.py."""
+    # yapf: disable
+    assert subprocess.run([
+        EXAMPLES_ROOT_DIR / 'torch/mtppo_metaworld_mt10.py', '--epochs', '1',
+        '--batch_size', '1', '--n_worker', '1'
+    ], check=False).returncode == 0
+    # yapf: enable
+
+
+@pytest.mark.skip('Temporarily skipped because it takes too long time')
+@pytest.mark.mujoco
+@pytest.mark.no_cover
+@pytest.mark.timeout(300)
+def test_ppo_mt50():
+    """Test ppo_metaworld_mt50.py."""
+    # yapf: disable
+    assert subprocess.run([
+        EXAMPLES_ROOT_DIR / 'torch/mtppo_metaworld_mt50.py', '--epochs', '1',
+        '--batch_size', '1', '--n_worker', '1'
+    ], check=False).returncode == 0
+    # yapf: enable
+
+
+@pytest.mark.mujoco
+@pytest.mark.no_cover
+@pytest.mark.timeout(60)
+def test_trpo_ml1_push():
+    """Test trpo_metaworld_ml1_push.py."""
+    # yapf: disable
+    assert subprocess.run([
+        EXAMPLES_ROOT_DIR / 'torch/mttrpo_metaworld_ml1_push.py',
+        '--epochs', '1', '--batch_size', '1'
+    ], check=False).returncode == 0
+    # yapf: enable
+
+
+@pytest.mark.mujoco
+@pytest.mark.no_cover
+@pytest.mark.timeout(60)
+def test_trpo_mt10():
+    """Test trpo_metaworld_mt10.py."""
+    # yapf: disable
+    assert subprocess.run([
+        EXAMPLES_ROOT_DIR / 'torch/mttrpo_metaworld_mt10.py', '--epochs', '1',
+        '--batch_size', '1', '--n_worker', '1'
+    ], check=False).returncode == 0
+    # yapf: enable
+
+
+@pytest.mark.skip('Temporarily skipped because it takes too long time')
+@pytest.mark.mujoco
+@pytest.mark.no_cover
+@pytest.mark.timeout(300)
+def test_trpo_mt50():
+    """Test trpo_metaworld_mt50.py."""
+    # yapf: disable
+    assert subprocess.run([
+        EXAMPLES_ROOT_DIR / 'torch/mttrpo_metaworld_mt50.py', '--epochs', '1',
+        '--batch_size', '1', '--n_worker', '1'
+    ], check=False).returncode == 0
+    # yapf: enable
