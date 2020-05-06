@@ -1,9 +1,10 @@
 """Environment wrapper that runs multiple environments in parallel."""
 # pylint: skip-file
-import pickle
+
 import uuid
 import warnings
 
+import cloudpickle
 from dowel import logger
 import numpy as np
 
@@ -17,8 +18,9 @@ def worker_init_envs(g, alloc, scope, env):
     if not hasattr(g, 'parallel_vec_envs'):
         g.parallel_vec_envs = dict()
         g.parallel_vec_env_template = dict()
-    g.parallel_vec_envs[scope] = [(idx, pickle.loads(pickle.dumps(env)))
-                                  for idx in alloc]
+    g.parallel_vec_envs[scope] = [
+        (idx, cloudpickle.loads(cloudpickle.dumps(env))) for idx in alloc
+    ]
     g.parallel_vec_env_template[scope] = env
 
 

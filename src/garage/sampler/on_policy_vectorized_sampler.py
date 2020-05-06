@@ -1,9 +1,9 @@
 """BatchSampler which uses VecEnvExecutor to run multiple environments."""
 import itertools
-import pickle
 import time
 import warnings
 
+import cloudpickle
 from dowel import logger, tabular
 import numpy as np
 
@@ -46,7 +46,10 @@ class OnPolicyVectorizedSampler(BatchSampler):
     def start_worker(self):
         """Start workers."""
         n_envs = self._n_envs
-        envs = [pickle.loads(pickle.dumps(self.env)) for _ in range(n_envs)]
+        envs = [
+            cloudpickle.loads(cloudpickle.dumps(self.env))
+            for _ in range(n_envs)
+        ]
 
         # Deterministically set environment seeds based on the global seed.
         seed0 = deterministic.get_seed()
