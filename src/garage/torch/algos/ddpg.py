@@ -29,6 +29,8 @@ class DDPG(OffPolicyRLAlgorithm):
         n_train_steps (int): Training steps.
         max_path_length (int): Maximum path length. The episode will
             terminate when length of trajectory reaches max_path_length.
+        max_eval_path_length (int or None): Maximum length of paths used for
+            off-policy evaluation. If None, defaults to `max_path_length`.
         buffer_batch_size (int): Batch size of replay buffer.
         min_buffer_size (int): The minimum buffer size for replay buffer.
         rollout_batch_size (int): Roll out batch size.
@@ -62,31 +64,34 @@ class DDPG(OffPolicyRLAlgorithm):
 
     """
 
-    def __init__(self,
-                 env_spec,
-                 policy,
-                 qf,
-                 replay_buffer,
-                 steps_per_epoch=20,
-                 n_train_steps=50,
-                 max_path_length=None,
-                 buffer_batch_size=64,
-                 min_buffer_size=int(1e4),
-                 rollout_batch_size=1,
-                 exploration_strategy=None,
-                 target_update_tau=0.01,
-                 discount=0.99,
-                 policy_weight_decay=0,
-                 qf_weight_decay=0,
-                 policy_optimizer=torch.optim.Adam,
-                 qf_optimizer=torch.optim.Adam,
-                 policy_lr=_Default(1e-4),
-                 qf_lr=_Default(1e-3),
-                 clip_pos_returns=False,
-                 clip_return=np.inf,
-                 max_action=None,
-                 reward_scale=1.,
-                 smooth_return=True):
+    def __init__(
+            self,
+            env_spec,
+            policy,
+            qf,
+            replay_buffer,
+            *,  # Everything after this is numbers.
+            steps_per_epoch=20,
+            n_train_steps=50,
+            max_path_length=None,
+            max_eval_path_length=None,
+            buffer_batch_size=64,
+            min_buffer_size=int(1e4),
+            rollout_batch_size=1,
+            exploration_strategy=None,
+            target_update_tau=0.01,
+            discount=0.99,
+            policy_weight_decay=0,
+            qf_weight_decay=0,
+            policy_optimizer=torch.optim.Adam,
+            qf_optimizer=torch.optim.Adam,
+            policy_lr=_Default(1e-4),
+            qf_lr=_Default(1e-3),
+            clip_pos_returns=False,
+            clip_return=np.inf,
+            max_action=None,
+            reward_scale=1.,
+            smooth_return=True):
         action_bound = env_spec.action_space.high
         self._tau = target_update_tau
         self._policy_weight_decay = policy_weight_decay
@@ -108,6 +113,7 @@ class DDPG(OffPolicyRLAlgorithm):
                          n_train_steps=n_train_steps,
                          steps_per_epoch=steps_per_epoch,
                          max_path_length=max_path_length,
+                         max_eval_path_length=max_eval_path_length,
                          buffer_batch_size=buffer_batch_size,
                          min_buffer_size=min_buffer_size,
                          rollout_batch_size=rollout_batch_size,

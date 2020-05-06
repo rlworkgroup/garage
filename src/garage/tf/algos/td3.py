@@ -46,6 +46,8 @@ class TD3(DDPG):
         name (str): Name of the algorithm shown in computation graph.
         steps_per_epoch (int): Number of batches of samples in each epoch.
         max_path_length (int): Maximum length of a path.
+        max_eval_path_length (int or None): Maximum length of paths used for
+            off-policy evaluation. If None, defaults to `max_path_length`.
         n_train_steps (int): Number of optimizations in each epoch cycle.
         buffer_batch_size (int): Size of replay buffer.
         min_buffer_size (int):
@@ -63,36 +65,39 @@ class TD3(DDPG):
 
     """
 
-    def __init__(self,
-                 env_spec,
-                 policy,
-                 qf,
-                 qf2,
-                 replay_buffer,
-                 target_update_tau=0.01,
-                 policy_lr=1e-4,
-                 qf_lr=1e-3,
-                 policy_weight_decay=0,
-                 qf_weight_decay=0,
-                 policy_optimizer=tf.compat.v1.train.AdamOptimizer,
-                 qf_optimizer=tf.compat.v1.train.AdamOptimizer,
-                 clip_pos_returns=False,
-                 clip_return=np.inf,
-                 discount=0.99,
-                 max_action=None,
-                 name='TD3',
-                 steps_per_epoch=20,
-                 max_path_length=None,
-                 n_train_steps=50,
-                 buffer_batch_size=64,
-                 min_buffer_size=1e4,
-                 rollout_batch_size=1,
-                 reward_scale=1.,
-                 action_noise_sigma=0.2,
-                 actor_update_period=2,
-                 action_noise_clip=0.5,
-                 smooth_return=True,
-                 exploration_strategy=None):
+    def __init__(
+            self,
+            env_spec,
+            policy,
+            qf,
+            qf2,
+            replay_buffer,
+            *,  # Everything after this is numbers.
+            target_update_tau=0.01,
+            policy_lr=1e-4,
+            qf_lr=1e-3,
+            policy_weight_decay=0,
+            qf_weight_decay=0,
+            policy_optimizer=tf.compat.v1.train.AdamOptimizer,
+            qf_optimizer=tf.compat.v1.train.AdamOptimizer,
+            clip_pos_returns=False,
+            clip_return=np.inf,
+            discount=0.99,
+            max_action=None,
+            name='TD3',
+            steps_per_epoch=20,
+            max_path_length=None,
+            max_eval_path_length=None,
+            n_train_steps=50,
+            buffer_batch_size=64,
+            min_buffer_size=1e4,
+            rollout_batch_size=1,
+            reward_scale=1.,
+            action_noise_sigma=0.2,
+            actor_update_period=2,
+            action_noise_clip=0.5,
+            smooth_return=True,
+            exploration_strategy=None):
         self.qf2 = qf2
         self._action_noise_sigma = action_noise_sigma
         self._action_noise_clip = action_noise_clip
@@ -119,6 +124,7 @@ class TD3(DDPG):
                                   name=name,
                                   steps_per_epoch=steps_per_epoch,
                                   max_path_length=max_path_length,
+                                  max_eval_path_length=max_eval_path_length,
                                   n_train_steps=n_train_steps,
                                   buffer_batch_size=buffer_batch_size,
                                   min_buffer_size=min_buffer_size,
