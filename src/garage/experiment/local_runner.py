@@ -139,7 +139,6 @@ class LocalRunner:
 
         self._algo = None
         self._env = None
-        self._policy = None
         self._sampler = None
         self._plotter = None
 
@@ -178,12 +177,25 @@ class LocalRunner:
             worker_args (dict or None): Additional arguments that should be
                 passed to the sampler.
 
+        Raises:
+            ValueError: If `max_path_length` isn't passed and the algorithm
+                doesn't contain a `max_path_length` field, or if the algorithm
+                doesn't have a policy field.
+
         Returns:
             sampler_cls: An instance of the sampler class.
 
         """
+        if not hasattr(self._algo, 'policy'):
+            raise ValueError('If the runner is used to construct a sampler, '
+                             'the algorithm must have a `policy` field.')
         if max_path_length is None:
-            max_path_length = self._algo.max_path_length
+            if hasattr(self._algo, 'max_path_length'):
+                max_path_length = self._algo.max_path_length
+            else:
+                raise ValueError('If `sampler_cls` is specified in '
+                                 'runner.setup, the algorithm must have '
+                                 'a `max_path_length` field.')
         if seed is None:
             seed = get_seed()
         if sampler_args is None:
@@ -229,25 +241,31 @@ class LocalRunner:
             worker_args (dict or None): Additional arguments that should be
                 passed to the worker.
 
+        Raises:
+            ValueError: If sampler_cls is passed and the algorithm doesn't
+                contain a `max_path_length` field.
+
         """
         self._algo = algo
         self._env = env
-        self._policy = self._algo.policy
         self._n_workers = n_workers
         self._worker_class = worker_class
         if sampler_args is None:
             sampler_args = {}
         if sampler_cls is None:
-            sampler_cls = algo.sampler_cls
+            sampler_cls = getattr(algo, 'sampler_cls', None)
         if worker_args is None:
             worker_args = {}
 
         self._worker_args = worker_args
-        self._sampler = self.make_sampler(sampler_cls,
-                                          sampler_args=sampler_args,
-                                          n_workers=n_workers,
-                                          worker_class=worker_class,
-                                          worker_args=worker_args)
+        if sampler_cls is None:
+            self._sampler = None
+        else:
+            self._sampler = self.make_sampler(sampler_cls,
+                                              sampler_args=sampler_args,
+                                              n_workers=n_workers,
+                                              worker_class=worker_class,
+                                              worker_args=worker_args)
 
         self._has_setup = True
 
@@ -257,16 +275,18 @@ class LocalRunner:
 
     def _start_worker(self):
         """Start Plotter and Sampler workers."""
-        self._sampler.start_worker()
+        if isinstance(self._sampler, BaseSampler):
+            self._sampler.start_worker()
         if self._plot:
             # pylint: disable=import-outside-toplevel
             from garage.plotter import Plotter
             self._plotter = Plotter()
-            self._plotter.init_plot(self.get_env_copy(), self._policy)
+            self._plotter.init_plot(self.get_env_copy(), self._algo.policy)
 
     def _shutdown_worker(self):
         """Shutdown Plotter and Sampler workers."""
-        self._sampler.shutdown_worker()
+        if self._sampler is not None:
+            self._sampler.shutdown_worker()
         if self._plot:
             self._plotter.close()
 
@@ -290,10 +310,22 @@ class LocalRunner:
                 it must have length exactly `factory.n_workers`, and will be
                 spread across the workers.
 
+        Raises:
+            ValueError: Raised if the runner was initialized without a sampler,
+                        or batch_size wasn't provided here or to train.
+
         Returns:
             list[dict]: One batch of samples.
 
         """
+        if self._sampler is None:
+            raise ValueError('Runner was not initialized with `sampler_cls`. '
+                             'Either provide `sampler_cls` to runner.setup, '
+                             ' or set `algo.sampler_cls`.')
+        if batch_size is None and self._train_args.batch_size is None:
+            raise ValueError('Runner was not initialized with `batch_size`. '
+                             'Either provide `batch_size` to runner.train, '
+                             ' or pass `batch_size` to runner.obtain_samples.')
         paths = None
         if isinstance(self._sampler, BaseSampler):
             paths = self._sampler.obtain_samples(
@@ -410,13 +442,14 @@ class LocalRunner:
         logger.log(tabular)
 
         if self._plot:
-            self._plotter.update_plot(self._policy, self._algo.max_path_length)
+            self._plotter.update_plot(self._algo.policy,
+                                      self._algo.max_path_length)
             if pause_for_plot:
                 input('Plotting evaluation run: Press Enter to " "continue...')
 
     def train(self,
               n_epochs,
-              batch_size,
+              batch_size=None,
               plot=False,
               store_paths=False,
               pause_for_plot=False):
@@ -424,7 +457,7 @@ class LocalRunner:
 
         Args:
             n_epochs (int): Number of epochs.
-            batch_size (int): Number of environment steps in one batch.
+            batch_size (int or None): Number of environment steps in one batch.
             plot (bool): Visualize policy by doing rollout after each epoch.
             store_paths (bool): Save paths in snapshot.
             pause_for_plot (bool): Pause for plot.

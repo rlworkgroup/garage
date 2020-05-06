@@ -30,7 +30,7 @@ class TestResume(TfGraphTestCase):
         with LocalTFRunner(self.snapshot_config, sess) as runner:
             args = runner.restore(self.temp_dir.name)
             assert np.equal(
-                runner._policy.get_param_values(),
+                runner._algo.policy.get_param_values(),
                 self.policy_params).all(), 'Policy parameters should persist'
             assert args.n_epochs == 5, (
                 'Snapshot should save training parameters')
