@@ -175,6 +175,6 @@ class TestTRPOCNNCubeCrash(TfGraphTestCase):
 
             runner.setup(algo, env)
             last_avg_ret = runner.train(n_epochs=10, batch_size=2048)
-            assert last_avg_ret > -0.9
+            assert last_avg_ret > -1.5
 
             env.close()
