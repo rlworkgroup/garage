@@ -4,7 +4,7 @@
 https://arxiv.org/pdf/1910.10897.pdf
 """
 import click
-from metaworld.benchmarks import MT10
+import metaworld.benchmarks as mwb
 import numpy as np
 from torch import nn
 from torch.nn import functional as F
@@ -25,7 +25,7 @@ import garage.torch.utils as tu
 @click.option('--seed', 'seed', type=int, default=1)
 @click.option('--gpu', '_gpu', type=int, default=None)
 @wrap_experiment(snapshot_mode='none')
-def mt10_mtsac_normalize_reward(ctxt=None, seed=1, _gpu=None):
+def mtsac_metaworld_mt10(ctxt=None, seed=1, _gpu=None):
     """Train MTSAC with MT10 environment.
 
     Args:
@@ -38,13 +38,13 @@ def mt10_mtsac_normalize_reward(ctxt=None, seed=1, _gpu=None):
     """
     deterministic.set_seed(seed)
     runner = LocalRunner(ctxt)
-    task_names = MT10.get_train_tasks().all_task_names
+    task_names = mwb.MT10.get_train_tasks().all_task_names
     train_envs = []
     test_envs = []
     for task_name in task_names:
-        train_env = normalize(GarageEnv(MT10.from_task(task_name)),
+        train_env = normalize(GarageEnv(mwb.MT10.from_task(task_name)),
                               normalize_reward=True)
-        test_env = normalize(GarageEnv(MT10.from_task(task_name)))
+        test_env = normalize(GarageEnv(mwb.MT10.from_task(task_name)))
         train_envs.append(train_env)
         test_envs.append(test_env)
     mt10_train_envs = MultiEnvWrapper(train_envs,
@@ -99,4 +99,4 @@ def mt10_mtsac_normalize_reward(ctxt=None, seed=1, _gpu=None):
     runner.train(n_epochs=epochs, batch_size=batch_size)
 
 
-mt10_mtsac_normalize_reward()
+mtsac_metaworld_mt10()

@@ -15,7 +15,7 @@ from garage.torch.value_functions import GaussianMLPValueFunction
 
 
 @wrap_experiment
-def torch_ppo_pendulum(ctxt=None, seed=1):
+def ppo_pendulum(ctxt=None, seed=1):
     """Train PPO with InvertedDoublePendulum-v2 environment.
 
     Args:
@@ -51,4 +51,4 @@ def torch_ppo_pendulum(ctxt=None, seed=1):
     runner.train(n_epochs=100, batch_size=10000)
 
 
-torch_ppo_pendulum(seed=1)
+ppo_pendulum(seed=1)

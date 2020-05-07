@@ -11,8 +11,8 @@ from garage.sampler import LocalSampler
 from garage.torch.algos import PEARL
 from garage.torch.algos.pearl import PEARLWorker
 from garage.torch.embeddings import MLPEncoder
-from garage.torch.policies import (ContextConditionedPolicy,
-                                   TanhGaussianMLPPolicy)
+from garage.torch.policies import ContextConditionedPolicy
+from garage.torch.policies import TanhGaussianMLPPolicy
 from garage.torch.q_functions import ContinuousMLPQFunction
 import garage.torch.utils as tu
 
@@ -32,26 +32,26 @@ import garage.torch.utils as tu
 @click.option('--embedding_mini_batch_size', default=100)
 @click.option('--max_path_length', default=200)
 @wrap_experiment
-def torch_pearl_half_cheetah_vel(ctxt=None,
-                                 seed=1,
-                                 num_epochs=500,
-                                 num_train_tasks=100,
-                                 num_test_tasks=30,
-                                 latent_size=5,
-                                 encoder_hidden_size=200,
-                                 net_size=300,
-                                 meta_batch_size=16,
-                                 num_steps_per_epoch=2000,
-                                 num_initial_steps=2000,
-                                 num_tasks_sample=5,
-                                 num_steps_prior=400,
-                                 num_extra_rl_steps_posterior=600,
-                                 batch_size=256,
-                                 embedding_batch_size=100,
-                                 embedding_mini_batch_size=100,
-                                 max_path_length=200,
-                                 reward_scale=5.,
-                                 use_gpu=False):
+def pearl_half_cheetah_vel(ctxt=None,
+                           seed=1,
+                           num_epochs=500,
+                           num_train_tasks=100,
+                           num_test_tasks=30,
+                           latent_size=5,
+                           encoder_hidden_size=200,
+                           net_size=300,
+                           meta_batch_size=16,
+                           num_steps_per_epoch=2000,
+                           num_initial_steps=2000,
+                           num_tasks_sample=5,
+                           num_steps_prior=400,
+                           num_extra_rl_steps_posterior=600,
+                           batch_size=256,
+                           embedding_batch_size=100,
+                           embedding_mini_batch_size=100,
+                           max_path_length=200,
+                           reward_scale=5.,
+                           use_gpu=False):
     """Train PEARL with HalfCheetahVel environment.
 
     Args:
@@ -151,4 +151,4 @@ def torch_pearl_half_cheetah_vel(ctxt=None,
     runner.train(n_epochs=num_epochs, batch_size=batch_size)
 
 
-torch_pearl_half_cheetah_vel()
+pearl_half_cheetah_vel()

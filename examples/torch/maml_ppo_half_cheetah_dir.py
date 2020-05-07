@@ -22,7 +22,8 @@ from garage.torch.value_functions import GaussianMLPValueFunction
 @click.option('--rollouts_per_task', default=40)
 @click.option('--meta_batch_size', default=20)
 @wrap_experiment(snapshot_mode='all')
-def maml_ppo(ctxt, seed, epochs, rollouts_per_task, meta_batch_size):
+def maml_ppo_half_cheetah_dir(ctxt, seed, epochs, rollouts_per_task,
+                              meta_batch_size):
     """Set up environment and algorithm and run the task.
 
     Args:
@@ -78,4 +79,4 @@ def maml_ppo(ctxt, seed, epochs, rollouts_per_task, meta_batch_size):
                  batch_size=rollouts_per_task * max_path_length)
 
 
-maml_ppo()
+maml_ppo_half_cheetah_dir()

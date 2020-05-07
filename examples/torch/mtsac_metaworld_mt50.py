@@ -4,7 +4,7 @@
 https://arxiv.org/pdf/1910.10897.pdf
 """
 import click
-from metaworld.benchmarks import MT50
+import metaworld.benchmarks as mwb
 import numpy as np
 from torch import nn
 from torch.nn import functional as F
@@ -26,7 +26,7 @@ import garage.torch.utils as tu
 @click.option('--use_gpu', 'use_gpu', type=bool, default=False)
 @click.option('--gpu', '_gpu', type=int, default=0)
 @wrap_experiment(snapshot_mode='none')
-def mt50_mtsac_normalize_reward(ctxt=None, seed=1, use_gpu=False, _gpu=0):
+def mtsac_metaworld_mt50(ctxt=None, seed=1, use_gpu=False, _gpu=0):
     """Train MTSAC with MT50 environment.
 
     Args:
@@ -40,13 +40,13 @@ def mt50_mtsac_normalize_reward(ctxt=None, seed=1, use_gpu=False, _gpu=0):
     """
     deterministic.set_seed(seed)
     runner = LocalRunner(ctxt)
-    task_names = MT50.get_train_tasks().all_task_names
+    task_names = mwb.MT50.get_train_tasks().all_task_names
     train_envs = []
     test_envs = []
     for task_name in task_names:
-        train_env = normalize(GarageEnv(MT50.from_task(task_name)),
+        train_env = normalize(GarageEnv(mwb.MT50.from_task(task_name)),
                               normalize_reward=True)
-        test_env = normalize(GarageEnv(MT50.from_task(task_name)))
+        test_env = normalize(GarageEnv(mwb.MT50.from_task(task_name)))
         train_envs.append(train_env)
         test_envs.append(test_env)
     mt50_train_envs = MultiEnvWrapper(train_envs,
@@ -100,4 +100,4 @@ def mt50_mtsac_normalize_reward(ctxt=None, seed=1, use_gpu=False, _gpu=0):
     runner.train(n_epochs=epochs, batch_size=batch_size)
 
 
-mt50_mtsac_normalize_reward()
+mtsac_metaworld_mt50()

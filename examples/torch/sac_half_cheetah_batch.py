@@ -19,7 +19,7 @@ import garage.torch.utils as tu
 
 
 @wrap_experiment(snapshot_mode='none')
-def torch_sac_half_cheetah(ctxt=None, seed=1):
+def sac_half_cheetah_batch(ctxt=None, seed=1):
     """Set up environment and algorithm and run the task.
 
     Args:
@@ -76,4 +76,4 @@ def torch_sac_half_cheetah(ctxt=None, seed=1):
 
 
 s = np.random.randint(0, 1000)
-torch_sac_half_cheetah(seed=521)
+sac_half_cheetah_batch(seed=521)

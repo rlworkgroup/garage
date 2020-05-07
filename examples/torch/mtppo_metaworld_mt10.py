@@ -2,7 +2,7 @@
 """This is an example to train PPO on MT10 environment."""
 # pylint: disable=no-value-for-parameter
 import click
-import metaworld.benchmarks
+import metaworld.benchmarks as mwb
 import psutil
 import torch
 
@@ -22,7 +22,7 @@ from garage.torch.value_functions import GaussianMLPValueFunction
 @click.option('--batch_size', default=1024)
 @click.option('--n_worker', default=psutil.cpu_count(logical=False))
 @wrap_experiment(snapshot_mode='all')
-def torch_ppo_mt10(ctxt, seed, epochs, batch_size, n_worker):
+def mtppo_metaworld_mt10(ctxt, seed, epochs, batch_size, n_worker):
     """Set up environment and algorithm and run the task.
 
     Args:
@@ -36,11 +36,10 @@ def torch_ppo_mt10(ctxt, seed, epochs, batch_size, n_worker):
 
     """
     set_seed(seed)
-    tasks = metaworld.benchmarks.MT10.get_train_tasks().all_task_names
+    tasks = mwb.MT10.get_train_tasks().all_task_names
     envs = []
     for task in tasks:
-        envs.append(
-            normalize(GarageEnv(metaworld.benchmarks.MT50.from_task(task))))
+        envs.append(normalize(GarageEnv(mwb.MT10.from_task(task))))
     env = MultiEnvWrapper(envs,
                           sample_strategy=round_robin_strategy,
                           mode='vanilla')
@@ -71,4 +70,4 @@ def torch_ppo_mt10(ctxt, seed, epochs, batch_size, n_worker):
     runner.train(n_epochs=epochs, batch_size=batch_size)
 
 
-torch_ppo_mt10()
+mtppo_metaworld_mt10()

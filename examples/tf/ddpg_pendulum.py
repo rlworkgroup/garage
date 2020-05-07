@@ -23,7 +23,7 @@ from garage.tf.q_functions import ContinuousMLPQFunction
 
 
 @wrap_experiment
-def tf_ddpg_pendulum(ctxt=None, seed=1):
+def ddpg_pendulum(ctxt=None, seed=1):
     """Train DDPG with InvertedDoublePendulum-v2 environment.
 
     Args:
@@ -72,4 +72,4 @@ def tf_ddpg_pendulum(ctxt=None, seed=1):
         runner.train(n_epochs=500, batch_size=100)
 
 
-tf_ddpg_pendulum(seed=1)
+ddpg_pendulum(seed=1)

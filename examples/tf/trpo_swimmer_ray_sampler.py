@@ -19,7 +19,7 @@ from garage.tf.policies import GaussianMLPPolicy
 
 
 @wrap_experiment
-def tf_trpo_swimmer(ctxt=None, seed=1):
+def trpo_swimmer_ray_sampler(ctxt=None, seed=1):
     """tf_trpo_swimmer.
 
     Args:
@@ -59,4 +59,4 @@ def tf_trpo_swimmer(ctxt=None, seed=1):
         runner.train(n_epochs=40, batch_size=4000)
 
 
-tf_trpo_swimmer(seed=100)
+trpo_swimmer_ray_sampler(seed=100)

@@ -23,7 +23,7 @@ from garage.tf.policies import GaussianMLPPolicy
 
 
 @wrap_experiment
-def tf_ppo_pendulum(ctxt=None, seed=1):
+def ppo_pendulum(ctxt=None, seed=1):
     """Train PPO with InvertedDoublePendulum-v2 environment.
 
     Args:
@@ -78,4 +78,4 @@ def tf_ppo_pendulum(ctxt=None, seed=1):
         runner.train(n_epochs=120, batch_size=2048, plot=False)
 
 
-tf_ppo_pendulum(seed=1)
+ppo_pendulum(seed=1)
