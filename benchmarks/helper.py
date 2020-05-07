@@ -37,7 +37,6 @@ import pathlib
 import random
 import shutil
 
-from baselines.bench import benchmarks
 import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
@@ -98,9 +97,8 @@ def benchmark(exec_func=None, *, plot=True, auto=False):
 
 
 def iterate_experiments(func,
-                        env_ids=None,
+                        env_ids,
                         seeds=None,
-                        use_tf=False,
                         xcolumn='TotalEnvSteps',
                         xlabel='Total Environment Steps',
                         ycolumn='Evaluation/AverageReturn',
@@ -111,10 +109,6 @@ def iterate_experiments(func,
         env_ids (list[str]): List of environment ids.
         seeds (list[int]): List of seeds.
         func (func): The experiment function.
-        use_tf (bool): Whether TF is used. When True, a TF Graph context
-            is used for each experiment. The default is set to False.
-            However, if the function name ends with 'tf', it automatically
-            create a TF Graph context.
         xcolumn (str): Which column should be the JSON x axis.
         xlabel (str): Label name for x axis.
         ycolumn (str): Which column should be the JSON y axis.
@@ -122,9 +116,7 @@ def iterate_experiments(func,
 
     """
     func_name = func.__name__.replace('_', '-')
-    if env_ids is None:
-        tasks = benchmarks.get_benchmark('Mujoco1M')['tasks']
-        env_ids = [task['env_id'] for task in tasks]
+
     if seeds is None:
         seeds = random.sample(range(100), 4)
 
@@ -138,8 +130,7 @@ def iterate_experiments(func,
             exp_name = func_name + '_' + env_id + '_' + str(seed)
             sub_log_dir = os.path.join(_log_dir, exp_name)
 
-            if use_tf or func_name.endswith('tf'):
-                tf.compat.v1.reset_default_graph()
+            tf.compat.v1.reset_default_graph()
 
             func(dict(log_dir=sub_log_dir), env_id=env_id, seed=seed)
 
