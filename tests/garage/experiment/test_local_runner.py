@@ -99,6 +99,7 @@ def test_setup_no_max_path_length():
 
 
 def test_setup_no_batch_size():
+    deterministic.set_seed(0)
     runner = LocalRunner(snapshot_config)
     algo = CrashingAlgo()
     algo.max_path_length = 100
