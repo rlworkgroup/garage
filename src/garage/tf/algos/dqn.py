@@ -22,8 +22,8 @@ class DQN(OffPolicyRLAlgorithm):
         policy (garage.tf.policies.Policy): Policy.
         qf (object): The q value network.
         replay_buffer (garage.replay_buffer.ReplayBuffer): Replay buffer.
-        exploration_strategy
-            (garage.np.exploration_strategies.ExplorationStrategy):
+        exploration_policy
+            (garage.np.exploration_policies.ExplorationPolicy):
             Exploration strategy.
         steps_per_epoch (int): Number of train_once calls per epoch.
         min_buffer_size (int): The minimum buffer size for replay buffer.
@@ -53,7 +53,7 @@ class DQN(OffPolicyRLAlgorithm):
                  policy,
                  qf,
                  replay_buffer,
-                 exploration_strategy=None,
+                 exploration_policy=None,
                  steps_per_epoch=20,
                  min_buffer_size=int(1e4),
                  buffer_batch_size=64,
@@ -82,7 +82,7 @@ class DQN(OffPolicyRLAlgorithm):
         super(DQN, self).__init__(env_spec=env_spec,
                                   policy=policy,
                                   qf=qf,
-                                  exploration_strategy=exploration_strategy,
+                                  exploration_policy=exploration_policy,
                                   min_buffer_size=min_buffer_size,
                                   n_train_steps=n_train_steps,
                                   steps_per_epoch=steps_per_epoch,
@@ -125,7 +125,10 @@ class DQN(OffPolicyRLAlgorithm):
 
             with tf.name_scope('td_error'):
                 # Q-value of the selected action
-                action = tf.one_hot(action_t_ph, action_dim)
+                action = tf.one_hot(action_t_ph,
+                                    action_dim,
+                                    on_value=1.,
+                                    off_value=0.)
                 q_selected = tf.reduce_sum(
                     self.qf.q_vals * action,  # yapf: disable
                     axis=1)
@@ -138,7 +141,10 @@ class DQN(OffPolicyRLAlgorithm):
                         target_qval_with_online_q, 1)
                     future_best_q_val = tf.reduce_sum(
                         self.target_qf.q_vals *
-                        tf.one_hot(future_best_q_val_action, action_dim),
+                        tf.one_hot(future_best_q_val_action,
+                                   action_dim,
+                                   on_value=1.,
+                                   off_value=0.),
                         axis=1)
                 else:
                     # r + max_a(Q'(s', _)) - Q(s, a)

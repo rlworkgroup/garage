@@ -13,7 +13,7 @@ import tensorflow as tf
 
 from garage import wrap_experiment
 from garage.experiment.deterministic import set_seed
-from garage.np.exploration_strategies.gaussian_strategy import GaussianStrategy
+from garage.np.exploration_policies import AddGaussianNoise
 from garage.replay_buffer import SimpleReplayBuffer
 from garage.tf.algos import TD3
 from garage.tf.envs import TfEnv
@@ -37,12 +37,15 @@ def td3_pendulum(ctxt=None, seed=1):
     with LocalTFRunner(ctxt) as runner:
         env = TfEnv(gym.make('InvertedDoublePendulum-v2'))
 
-        action_noise = GaussianStrategy(env.spec, max_sigma=0.1, min_sigma=0.1)
-
         policy = ContinuousMLPPolicy(env_spec=env.spec,
                                      hidden_sizes=[400, 300],
                                      hidden_nonlinearity=tf.nn.relu,
                                      output_nonlinearity=tf.nn.tanh)
+
+        exploration_policy = AddGaussianNoise(env.spec,
+                                              policy,
+                                              max_sigma=0.1,
+                                              min_sigma=0.1)
 
         qf = ContinuousMLPQFunction(name='ContinuousMLPQFunction',
                                     env_spec=env.spec,
@@ -74,7 +77,7 @@ def td3_pendulum(ctxt=None, seed=1):
                   discount=0.99,
                   buffer_batch_size=100,
                   min_buffer_size=1e4,
-                  exploration_strategy=action_noise,
+                  exploration_policy=exploration_policy,
                   policy_optimizer=tf.compat.v1.train.AdamOptimizer,
                   qf_optimizer=tf.compat.v1.train.AdamOptimizer)
 

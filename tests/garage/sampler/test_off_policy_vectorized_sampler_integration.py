@@ -4,7 +4,7 @@ import pytest
 import tensorflow as tf
 
 from garage.envs import normalize
-from garage.np.exploration_strategies import OUStrategy
+from garage.np.exploration_policies import AddOrnsteinUhlenbeckNoise
 from garage.replay_buffer import SimpleReplayBuffer
 from garage.sampler import OffPolicyVectorizedSampler
 from garage.tf.algos import DDPG
@@ -26,11 +26,13 @@ class TestOffPolicyVectorizedSampler(TfGraphTestCase):
             # This tests if off-policy sampler respect batch_size
             # when no_reset is set to True
             env = TfEnv(normalize(gym.make('InvertedDoublePendulum-v2')))
-            action_noise = OUStrategy(env.spec, sigma=0.2)
             policy = ContinuousMLPPolicy(env_spec=env.spec,
                                          hidden_sizes=[64, 64],
                                          hidden_nonlinearity=tf.nn.relu,
                                          output_nonlinearity=tf.nn.tanh)
+            exploration_policy = AddOrnsteinUhlenbeckNoise(env.spec,
+                                                           policy,
+                                                           sigma=0.2)
             qf = ContinuousMLPQFunction(env_spec=env.spec,
                                         hidden_sizes=[64, 64],
                                         hidden_nonlinearity=tf.nn.relu)
@@ -48,7 +50,7 @@ class TestOffPolicyVectorizedSampler(TfGraphTestCase):
                 n_train_steps=50,
                 discount=0.9,
                 min_buffer_size=int(1e4),
-                exploration_strategy=action_noise,
+                exploration_policy=exploration_policy,
             )
 
             sampler = OffPolicyVectorizedSampler(algo, env, 1, no_reset=True)
@@ -85,21 +87,3 @@ class TestOffPolicyVectorizedSampler(TfGraphTestCase):
             assert (
                 (not done and case1) or (done and case2)
             ), 'Undiscounted_return should be the sum of rewards of full path'
-
-    def test_algo_with_goal_without_es(self):
-        # This tests if sampler works properly when algorithm
-        # includes goal but is without exploration policy
-        env = DummyDictEnv()
-        policy = DummyPolicy(env)
-        replay_buffer = SimpleReplayBuffer(env_spec=env,
-                                           size_in_transitions=int(1e6),
-                                           time_horizon=100)
-        algo = DummyOffPolicyAlgo(env_spec=env,
-                                  qf=None,
-                                  replay_buffer=replay_buffer,
-                                  policy=policy,
-                                  exploration_strategy=None)
-
-        sampler = OffPolicyVectorizedSampler(algo, env, 1, no_reset=True)
-        sampler.start_worker()
-        sampler.obtain_samples(0, 30)

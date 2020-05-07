@@ -35,7 +35,7 @@ class DDPG(OffPolicyRLAlgorithm):
         buffer_batch_size (int): Batch size of replay buffer.
         min_buffer_size (int): The minimum buffer size for replay buffer.
         rollout_batch_size (int): Roll out batch size.
-        exploration_strategy (garage.np.exploration_strategies.ExplorationStrategy): # noqa: E501
+        exploration_policy (garage.np.exploration_policies.ExplorationPolicy): # noqa: E501
                 Exploration strategy.
         target_update_tau (float): Interpolation parameter for doing the
             soft target update.
@@ -73,7 +73,7 @@ class DDPG(OffPolicyRLAlgorithm):
             buffer_batch_size=64,
             min_buffer_size=int(1e4),
             rollout_batch_size=1,
-            exploration_strategy=None,
+            exploration_policy=None,
             target_update_tau=0.01,
             policy_lr=1e-4,
             qf_lr=1e-3,
@@ -121,7 +121,7 @@ class DDPG(OffPolicyRLAlgorithm):
                                    buffer_batch_size=buffer_batch_size,
                                    min_buffer_size=min_buffer_size,
                                    rollout_batch_size=rollout_batch_size,
-                                   exploration_strategy=exploration_strategy,
+                                   exploration_policy=exploration_policy,
                                    replay_buffer=replay_buffer,
                                    use_target=True,
                                    discount=discount,

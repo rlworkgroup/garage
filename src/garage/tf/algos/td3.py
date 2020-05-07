@@ -54,13 +54,13 @@ class TD3(DDPG):
             Number of samples in replay buffer before first optimization.
         rollout_batch_size (int): Roll out batch size.
         reward_scale (float): Scale to reward.
-        action_noise_sigma (float): Action noise sigma.
-        action_noise_clip (float): Action noise clip.
+        exploration_policy_sigma (float): Action noise sigma.
+        exploration_policy_clip (float): Action noise clip.
         actor_update_period (int): Action update period.
         smooth_return (bool):
             If True, do statistics on all samples collection.
             Otherwise do statistics on one batch.
-        exploration_strategy (garage.np.exploration_strategies.ExplorationStrategy): # noqa: E501
+        exploration_policy (garage.np.exploration_policies.ExplorationPolicy): # noqa: E501
             Exploration strategy.
 
     """
@@ -93,14 +93,14 @@ class TD3(DDPG):
             min_buffer_size=1e4,
             rollout_batch_size=1,
             reward_scale=1.,
-            action_noise_sigma=0.2,
+            exploration_policy_sigma=0.2,
             actor_update_period=2,
-            action_noise_clip=0.5,
+            exploration_policy_clip=0.5,
             smooth_return=True,
-            exploration_strategy=None):
+            exploration_policy=None):
         self.qf2 = qf2
-        self._action_noise_sigma = action_noise_sigma
-        self._action_noise_clip = action_noise_clip
+        self._exploration_policy_sigma = exploration_policy_sigma
+        self._exploration_policy_clip = exploration_policy_clip
         self._actor_update_period = actor_update_period
         self._action_loss = None
 
@@ -131,7 +131,7 @@ class TD3(DDPG):
                                   rollout_batch_size=rollout_batch_size,
                                   reward_scale=reward_scale,
                                   smooth_return=smooth_return,
-                                  exploration_strategy=exploration_strategy)
+                                  exploration_policy=exploration_policy)
 
     def init_opt(self):
         """Build the loss function and init the optimizer."""
@@ -286,10 +286,10 @@ class TD3(DDPG):
 
         target_actions = self.target_policy_f_prob_online(next_inputs)
 
-        noise = np.random.normal(0.0, self._action_noise_sigma,
+        noise = np.random.normal(0.0, self._exploration_policy_sigma,
                                  target_actions.shape)
-        noise = np.clip(noise, -self._action_noise_clip,
-                        self._action_noise_clip)
+        noise = np.clip(noise, -self._exploration_policy_clip,
+                        self._exploration_policy_clip)
         target_actions += noise
 
         target_qvals = self.target_qf_f_prob_online(next_inputs,

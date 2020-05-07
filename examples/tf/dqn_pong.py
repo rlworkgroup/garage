@@ -16,7 +16,7 @@ from garage.envs.wrappers.noop import Noop
 from garage.envs.wrappers.resize import Resize
 from garage.envs.wrappers.stack_frames import StackFrames
 from garage.experiment.deterministic import set_seed
-from garage.np.exploration_strategies import EpsilonGreedyStrategy
+from garage.np.exploration_policies import EpsilonGreedyPolicy
 from garage.replay_buffer import SimpleReplayBuffer
 from garage.tf.algos import DQN
 from garage.tf.envs import TfEnv
@@ -70,17 +70,17 @@ def dqn_pong(ctxt=None, seed=1, buffer_size=int(5e4)):
                                   dueling=False)
 
         policy = DiscreteQfDerivedPolicy(env_spec=env.spec, qf=qf)
-        epilson_greedy_strategy = EpsilonGreedyStrategy(
-            env_spec=env.spec,
-            total_timesteps=num_timesteps,
-            max_epsilon=1.0,
-            min_epsilon=0.02,
-            decay_ratio=0.1)
+        exploration_policy = EpsilonGreedyPolicy(env_spec=env.spec,
+                                                 policy=policy,
+                                                 total_timesteps=num_timesteps,
+                                                 max_epsilon=1.0,
+                                                 min_epsilon=0.02,
+                                                 decay_ratio=0.1)
 
         algo = DQN(env_spec=env.spec,
                    policy=policy,
                    qf=qf,
-                   exploration_strategy=epilson_greedy_strategy,
+                   exploration_policy=exploration_policy,
                    replay_buffer=replay_buffer,
                    qf_lr=1e-4,
                    discount=0.99,

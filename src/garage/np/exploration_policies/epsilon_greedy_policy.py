@@ -4,11 +4,10 @@ Random exploration according to the value of epsilon.
 """
 import numpy as np
 
-from garage.np.exploration_strategies.exploration_strategy import (
-    ExplorationStrategy)
+from garage.np.exploration_policies.exploration_policy import ExplorationPolicy
 
 
-class EpsilonGreedyStrategy(ExplorationStrategy):
+class EpsilonGreedyPolicy(ExplorationPolicy):
     """ϵ-greedy exploration strategy.
 
     Select action based on the value of ϵ. ϵ will decrease from
@@ -20,6 +19,7 @@ class EpsilonGreedyStrategy(ExplorationStrategy):
 
     Args:
         env_spec (garage.envs.env_spec.EnvSpec): Environment specification.
+        policy (garage.Policy): Policy to wrap.
         total_timesteps (int): Total steps in the training, equivalent to
             max_path_length * n_epochs.
         max_epsilon (float): The maximum(starting) value of epsilon.
@@ -30,10 +30,13 @@ class EpsilonGreedyStrategy(ExplorationStrategy):
 
     def __init__(self,
                  env_spec,
+                 policy,
+                 *,
                  total_timesteps,
                  max_epsilon=1.0,
                  min_epsilon=0.02,
                  decay_ratio=0.1):
+        super().__init__(policy)
         self._env_spec = env_spec
         self._max_epsilon = max_epsilon
         self._min_epsilon = min_epsilon
@@ -43,42 +46,36 @@ class EpsilonGreedyStrategy(ExplorationStrategy):
         self._decrement = (self._max_epsilon -
                            self._min_epsilon) / self._decay_period
 
-    def get_action(self, t, observation, policy, **kwargs):
+    def get_action(self, observation):
         """Get action from this policy for the input observation.
 
         Args:
-            t (int): Iteration.
             observation (numpy.ndarray): Observation from the environment.
-            policy (garage.np.policies.Policy): Policy network to
-                predict action based on the observation.
-            kwargs (dict): Unused here.
 
         Returns:
-            opt_action: optimal action from this policy.
+            np.ndarray: An action with noise.
+            dict: Arbitrary policy state information (agent_info).
 
         """
-        opt_action, _ = policy.get_action(observation)
+        opt_action, _ = self.policy.get_action(observation)
         self._decay()
         if np.random.random() < self._epsilon:
             opt_action = self._action_space.sample()
 
         return opt_action, dict()
 
-    def get_actions(self, t, observations, policy, **kwargs):
+    def get_actions(self, observations):
         """Get actions from this policy for the input observations.
 
         Args:
-            t (int): Iteration.
             observations (numpy.ndarray): Observation from the environment.
-            policy (garage.np.policies.Policy): Policy network to
-                predict action based on the observation.
-            kwargs (dict): Unused here.
 
         Returns:
-            opt_action: optimal actions from this policy.
+            np.ndarray: Actions with noise.
+            List[dict]: Arbitrary policy state information (agent_info).
 
         """
-        opt_actions, _ = policy.get_actions(observations)
+        opt_actions, _ = self.policy.get_actions(observations)
         for itr, _ in enumerate(opt_actions):
             self._decay()
             if np.random.random() < self._epsilon:
