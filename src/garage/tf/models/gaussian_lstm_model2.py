@@ -7,8 +7,8 @@ import numpy as np
 import tensorflow as tf
 import tensorflow_probability as tfp
 
-from garage.tf.models import Model
 from garage.tf.models.lstm import lstm
+from garage.tf.models.model import Model
 from garage.tf.models.parameter import recurrent_parameter
 
 

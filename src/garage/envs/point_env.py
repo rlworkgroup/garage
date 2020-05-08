@@ -2,7 +2,7 @@
 import gym
 import numpy as np
 
-from garage.envs.base import Step
+from garage.envs.step import Step
 
 
 class PointEnv(gym.Env):

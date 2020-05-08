@@ -7,10 +7,10 @@ Here it creates a gym environment InvertedDoublePendulum. And uses a DDPG with
 """
 import gym
 import torch
-from torch.nn import functional as F  # NOQA
+from torch.nn import functional as F
 
+from garage.envs import GarageEnv
 from garage.envs import normalize
-from garage.envs.base import GarageEnv
 from garage.experiment import LocalRunner, run_experiment
 from garage.np.exploration_strategies import OUStrategy
 from garage.replay_buffer import SimpleReplayBuffer

@@ -6,7 +6,7 @@ import random
 
 from numpy import var
 
-from garage.sampler import BatchSampler
+from garage.sampler.batch_sampler import BatchSampler
 from garage.sampler.utils import truncate_paths
 
 

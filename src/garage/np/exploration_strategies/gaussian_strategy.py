@@ -2,7 +2,8 @@
 import gym
 import numpy as np
 
-from garage.np.exploration_strategies.base import ExplorationStrategy
+from garage.np.exploration_strategies.exploration_strategy import (
+    ExplorationStrategy)
 
 
 class GaussianStrategy(ExplorationStrategy):
@@ -21,13 +22,12 @@ class GaussianStrategy(ExplorationStrategy):
         self._action_space = env_spec.action_space
 
     def get_action(self, iteration, observation, policy, **kwargs):
-        """
-        Get action from this policy for the input observation.
+        """Get action from this policy for the input observation.
 
         Args:
-            iteration(int): Iteration.
-            observation(numpy.ndarray): Observation from the environment.
-            policy(garage.tf.policies.base.Policy):
+            iteration (int): Iteration.
+            observation (numpy.ndarray): Observation from the environment.
+            policy (garage.np.policies.Policy):
                 Policy network to predict action based on the observation.
 
         Returns:
@@ -43,18 +43,17 @@ class GaussianStrategy(ExplorationStrategy):
                        self._action_space.high), agent_info
 
     def get_actions(self, iteration, observations, policy, **kwargs):
-        """
-        Get actions from this policy for the input observation.
+        """Get actions from this policy for the input observation.
 
         Args:
-            iteration(int): Iteration.
-            observatioan(list): Observationa from the environment.
-            policy(garage.tf.policies.base.Policy):
+            iteration (int): Iteration.
+            observations (list): Observation from the environment.
+            policy (garage.np.policies.Policy):
                 Policy network to predict action based on the observation.
 
         Returns:
-            opt_actions(numpy.ndarray): optimal actions from this policy.
-            agent_infos(dict): Agent information.
+            opt_actions (numpy.ndarray): optimal actions from this policy.
+            agent_infos (dict): Agent information.
 
         """
         actions, agent_infos = policy.get_actions(observations)

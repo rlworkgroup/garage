@@ -19,7 +19,7 @@ class DQN(OffPolicyRLAlgorithm):
 
     Args:
         env_spec (garage.envs.env_spec.EnvSpec): Environment specification.
-        policy (garage.tf.policies.base.Policy): Policy.
+        policy (garage.tf.policies.Policy): Policy.
         qf (object): The q value network.
         replay_buffer (garage.replay_buffer.ReplayBuffer): Replay buffer.
         exploration_strategy

@@ -1,8 +1,8 @@
 """CNN Model."""
 import tensorflow as tf
 
-from garage.tf.models.base import Model
 from garage.tf.models.cnn import cnn_with_max_pooling
+from garage.tf.models.model import Model
 
 
 class CNNModelWithMaxPooling(Model):

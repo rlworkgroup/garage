@@ -1,6 +1,6 @@
 import numpy as np
 
-from garage.np.baselines.base import Baseline
+from garage.np.baselines.baseline import Baseline
 
 
 class ZeroBaseline(Baseline):

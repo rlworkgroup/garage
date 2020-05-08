@@ -3,7 +3,7 @@
 import tensorflow as tf
 
 from garage.sampler import parallel_sampler
-from garage.sampler.base import BaseSampler
+from garage.sampler.sampler_deprecated import BaseSampler
 from garage.sampler.stateful_pool import singleton_pool
 from garage.sampler.utils import truncate_paths
 
@@ -57,7 +57,6 @@ class BatchSampler(BaseSampler):
         """Terminate workers if necessary."""
         parallel_sampler.terminate_task(scope=self.algo.scope)
 
-    # pylint: disable=arguments-differ
     def obtain_samples(self, itr, batch_size=None, whole_paths=True):
         """Collect samples for the given iteration number.
 

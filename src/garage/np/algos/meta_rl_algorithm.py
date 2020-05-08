@@ -1,7 +1,7 @@
 """Interface of Meta-RL ALgorithms."""
 import abc
 
-from garage.np.algos import RLAlgorithm
+from garage.np.algos.rl_algorithm import RLAlgorithm
 
 
 class MetaRLAlgorithm(RLAlgorithm, abc.ABC):

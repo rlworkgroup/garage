@@ -4,8 +4,8 @@ A model composed only of a Gated Recurrent Unit (GRU).
 """
 import tensorflow as tf
 
-from garage.tf.models.base import Model
 from garage.tf.models.gru import gru
+from garage.tf.models.model import Model
 
 
 class GRUModel(Model):

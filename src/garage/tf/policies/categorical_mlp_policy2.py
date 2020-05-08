@@ -7,7 +7,7 @@ import akro
 import tensorflow as tf
 
 from garage.tf.models import CategoricalMLPModel
-from garage.tf.policies.base import StochasticPolicy2
+from garage.tf.policies.policy import StochasticPolicy2
 
 
 class CategoricalMLPPolicy2(StochasticPolicy2):

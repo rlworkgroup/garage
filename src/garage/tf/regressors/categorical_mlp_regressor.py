@@ -7,7 +7,7 @@ from garage.tf.distributions import Categorical
 from garage.tf.misc import tensor_utils
 from garage.tf.models import NormalizedInputMLPModel
 from garage.tf.optimizers import ConjugateGradientOptimizer, LbfgsOptimizer
-from garage.tf.regressors import StochasticRegressor
+from garage.tf.regressors.regressor import StochasticRegressor
 
 
 class CategoricalMLPRegressor(StochasticRegressor):
@@ -236,6 +236,7 @@ class CategoricalMLPRegressor(StochasticRegressor):
                 parameters.
 
         """
+        del state_info_vars
         with tf.compat.v1.variable_scope(self._variable_scope):
             prob, _, _ = self.model.build(input_var, name=name)
 

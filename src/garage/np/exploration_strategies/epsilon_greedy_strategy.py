@@ -4,7 +4,8 @@ Random exploration according to the value of epsilon.
 """
 import numpy as np
 
-from garage.np.exploration_strategies.base import ExplorationStrategy
+from garage.np.exploration_strategies.exploration_strategy import (
+    ExplorationStrategy)
 
 
 class EpsilonGreedyStrategy(ExplorationStrategy):
@@ -48,7 +49,7 @@ class EpsilonGreedyStrategy(ExplorationStrategy):
         Args:
             t (int): Iteration.
             observation (numpy.ndarray): Observation from the environment.
-            policy (garage.tf.policies.base.Policy): Policy network to
+            policy (garage.np.policies.Policy): Policy network to
                 predict action based on the observation.
             kwargs (dict): Unused here.
 
@@ -69,7 +70,7 @@ class EpsilonGreedyStrategy(ExplorationStrategy):
         Args:
             t (int): Iteration.
             observations (numpy.ndarray): Observation from the environment.
-            policy (garage.tf.policies.base.Policy): Policy network to
+            policy (garage.np.policies.Policy): Policy network to
                 predict action based on the observation.
             kwargs (dict): Unused here.
 

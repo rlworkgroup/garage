@@ -1,20 +1,19 @@
-"""
-Sequential Model.
+"""Sequential Model.
 
 A model composed of one or more models which are connected sequential,
 according to the insertion order.
 """
-from garage.tf.models.base import Model
+from garage.tf.models.model import Model
 
 
 class Sequential(Model):
-    """
-    Sequential Model.
+    """Sequential Model.
 
     Args:
         name (str): Model name, also the variable scope.
         models (list[garage.tf.models.Model]): The models to be connected
             in sequential order.
+
     """
 
     def __init__(self, *models, name=None):

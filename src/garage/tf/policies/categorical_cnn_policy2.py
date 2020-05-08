@@ -8,7 +8,7 @@ import akro
 import tensorflow as tf
 
 from garage.tf.models import CategoricalCNNModel
-from garage.tf.policies import StochasticPolicy2
+from garage.tf.policies.policy import StochasticPolicy2
 
 
 class CategoricalCNNPolicy2(StochasticPolicy2):

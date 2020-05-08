@@ -4,7 +4,7 @@ import numpy as np
 import tensorflow as tf
 
 from garage.tf.models import GaussianGRUModel
-from garage.tf.policies import StochasticPolicy
+from garage.tf.policies.policy import StochasticPolicy
 
 
 class GaussianGRUPolicy(StochasticPolicy):

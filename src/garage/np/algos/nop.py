@@ -1,5 +1,5 @@
 """NOP (no optimization performed) policy search algorithm."""
-from garage.np.algos.base import RLAlgorithm
+from garage.np.algos.rl_algorithm import RLAlgorithm
 
 
 class NOP(RLAlgorithm):

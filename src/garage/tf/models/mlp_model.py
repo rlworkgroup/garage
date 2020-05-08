@@ -5,8 +5,8 @@ real-valued inputs to real-valued outputs.
 """
 import tensorflow as tf
 
-from garage.tf.models.base import Model
 from garage.tf.models.mlp import mlp
+from garage.tf.models.model import Model
 
 
 class MLPModel(Model):

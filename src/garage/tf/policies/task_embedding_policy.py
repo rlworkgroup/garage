@@ -3,7 +3,7 @@ import abc
 
 import akro
 
-from garage.tf.policies import StochasticPolicy
+from garage.tf.policies.policy import StochasticPolicy
 
 
 class TaskEmbeddingPolicy(StochasticPolicy):

@@ -17,6 +17,7 @@ class TfEnv(GarageEnv):
         is_image (bool): True if observations contain pixel values,
             false otherwise. Setting this to true converts a gym.Spaces.Box
             obs space to an akro.Image and normalizes pixel values.
+
     """
 
     def __init__(self, env=None, env_name='', is_image=False):
@@ -31,5 +32,6 @@ class TfEnv(GarageEnv):
 
         Returns:
             int: Max episode steps.
+
         """
         return self.env.spec.max_episode_steps

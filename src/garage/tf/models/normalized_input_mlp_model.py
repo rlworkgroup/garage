@@ -2,7 +2,7 @@
 import numpy as np
 import tensorflow as tf
 
-from garage.tf.models import MLPModel
+from garage.tf.models.mlp_model import MLPModel
 
 
 class NormalizedInputMLPModel(MLPModel):

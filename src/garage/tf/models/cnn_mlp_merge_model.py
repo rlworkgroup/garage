@@ -1,10 +1,10 @@
 """CNN and MLP Merge Model."""
 import tensorflow as tf
 
-from garage.tf.models.base import Model
 from garage.tf.models.cnn_model import CNNModel
 from garage.tf.models.cnn_model_max_pooling import CNNModelWithMaxPooling
 from garage.tf.models.mlp_merge_model import MLPMergeModel
+from garage.tf.models.model import Model
 
 
 class CNNMLPMergeModel(Model):
@@ -73,6 +73,7 @@ class CNNMLPMergeModel(Model):
             of output dense layer(s) in the MLP. The function should return
             a tf.Tensor.
         layer_normalization (bool): Bool for using layer normalization or not.
+
     """
 
     def __init__(self,
@@ -137,6 +138,7 @@ class CNNMLPMergeModel(Model):
 
         Return:
             list[str]: List of key(str) for the network inputs.
+
         """
         return ['state', 'action']
 
@@ -158,6 +160,7 @@ class CNNMLPMergeModel(Model):
 
         Returns:
             tf.Tensor: Output of the model of shape (N, output_dim).
+
         """
         cnn_out = self.cnn_model.build(state, name=name)
         mlp_out = self.mlp_merge_model.build(cnn_out, action, name=name)

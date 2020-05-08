@@ -1,5 +1,5 @@
 """Uniform control policy."""
-from garage.tf.policies import Policy
+from garage.tf.policies.policy import Policy
 
 
 class UniformControlPolicy(Policy):

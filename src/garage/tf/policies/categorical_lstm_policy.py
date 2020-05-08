@@ -5,7 +5,7 @@ import tensorflow as tf
 
 from garage.tf.distributions import RecurrentCategorical
 from garage.tf.models import LSTMModel
-from garage.tf.policies import StochasticPolicy
+from garage.tf.policies.policy import StochasticPolicy
 
 
 class CategoricalLSTMPolicy(StochasticPolicy):

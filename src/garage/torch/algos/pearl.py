@@ -13,9 +13,9 @@ import torch
 from garage import InOutSpec, TimeStep
 from garage.envs import EnvSpec
 from garage.experiment import MetaEvaluator
-from garage.np.algos.meta_rl_algorithm import MetaRLAlgorithm
-from garage.replay_buffer.path_buffer import PathBuffer
-from garage.sampler.worker import DefaultWorker
+from garage.np.algos import MetaRLAlgorithm
+from garage.replay_buffer import PathBuffer
+from garage.sampler import DefaultWorker
 from garage.torch.embeddings import MLPEncoder
 from garage.torch.policies import ContextConditionedPolicy
 import garage.torch.utils as tu

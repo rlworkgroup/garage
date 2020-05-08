@@ -1,7 +1,4 @@
 """Policies for TensorFlow-based algorithms."""
-from garage.tf.policies.base import Policy
-from garage.tf.policies.base import StochasticPolicy
-from garage.tf.policies.base import StochasticPolicy2
 from garage.tf.policies.categorical_cnn_policy import CategoricalCNNPolicy
 from garage.tf.policies.categorical_cnn_policy2 import CategoricalCNNPolicy2
 from garage.tf.policies.categorical_gru_policy import CategoricalGRUPolicy
@@ -21,6 +18,8 @@ from garage.tf.policies.gaussian_mlp_policy import GaussianMLPPolicy
 from garage.tf.policies.gaussian_mlp_policy2 import GaussianMLPPolicy2
 from garage.tf.policies.gaussian_mlp_task_embedding_policy import (
     GaussianMLPTaskEmbeddingPolicy)
+from garage.tf.policies.policy import Policy, StochasticPolicy
+from garage.tf.policies.policy import StochasticPolicy2
 from garage.tf.policies.task_embedding_policy import TaskEmbeddingPolicy
 
 __all__ = [

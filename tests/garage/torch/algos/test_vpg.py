@@ -3,7 +3,7 @@ import gym
 import pytest
 import torch
 
-from garage.envs.base import GarageEnv
+from garage.envs import GarageEnv
 from garage.experiment import deterministic
 from garage.experiment import LocalRunner
 from garage.torch.algos import VPG

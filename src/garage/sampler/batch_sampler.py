@@ -2,7 +2,7 @@
 import warnings
 
 from garage.sampler import parallel_sampler
-from garage.sampler.base import BaseSampler
+from garage.sampler.sampler_deprecated import BaseSampler
 from garage.sampler.utils import truncate_paths
 
 

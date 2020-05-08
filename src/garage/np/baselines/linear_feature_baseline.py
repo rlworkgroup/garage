@@ -1,7 +1,7 @@
 """A linear value function (baseline) based on features."""
 import numpy as np
 
-from garage.np.baselines.base import Baseline
+from garage.np.baselines.baseline import Baseline
 
 
 class LinearFeatureBaseline(Baseline):
@@ -78,7 +78,6 @@ class LinearFeatureBaseline(Baseline):
                 break
             reg_coeff *= 10
 
-    # pylint: disable=no-member
     def predict(self, path):
         """Predict value based on paths.
 

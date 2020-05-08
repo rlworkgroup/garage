@@ -1,7 +1,7 @@
 """Worker factory used by Samplers to construct Workers."""
 import psutil
 
-from garage.sampler.worker import DefaultWorker
+from garage.sampler.default_worker import DefaultWorker
 
 
 def identity_function(value):

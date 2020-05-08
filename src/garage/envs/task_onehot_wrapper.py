@@ -7,7 +7,7 @@ import akro
 import gym
 import numpy as np
 
-from garage.envs import EnvSpec
+from garage.envs.env_spec import EnvSpec
 
 
 class TaskOnehotWrapper(gym.Wrapper):

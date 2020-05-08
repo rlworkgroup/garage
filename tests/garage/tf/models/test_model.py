@@ -4,8 +4,8 @@ import numpy as np
 import pytest
 import tensorflow as tf
 
-from garage.tf.models.base import Model
 from garage.tf.models.mlp import mlp
+from garage.tf.models.model import Model
 from tests.fixtures import TfGraphTestCase
 
 

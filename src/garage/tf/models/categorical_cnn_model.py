@@ -6,9 +6,9 @@ followed a multilayer perceptron (MLP).
 """
 import tensorflow as tf
 
-from garage.tf.models import Model
 from garage.tf.models.categorical_mlp_model import CategoricalMLPModel
 from garage.tf.models.cnn_model import CNNModel
+from garage.tf.models.model import Model
 from garage.tf.models.sequential import Sequential
 
 

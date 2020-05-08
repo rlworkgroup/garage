@@ -3,8 +3,8 @@ import gym
 import pytest
 import torch
 
+from garage.envs import GarageEnv
 from garage.envs import normalize
-from garage.envs.base import GarageEnv
 from garage.experiment import deterministic, LocalRunner
 from garage.torch.algos import TRPO
 from garage.torch.policies import GaussianMLPPolicy

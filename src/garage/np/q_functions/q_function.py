@@ -2,4 +2,5 @@
 
 
 class QFunction:
+    """Q-Function interface."""
     pass

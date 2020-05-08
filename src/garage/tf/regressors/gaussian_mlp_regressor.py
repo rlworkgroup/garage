@@ -5,9 +5,9 @@ import tensorflow as tf
 
 from garage.tf.misc import tensor_utils
 from garage.tf.optimizers import LbfgsOptimizer, PenaltyLbfgsOptimizer
-from garage.tf.regressors import StochasticRegressor
 from garage.tf.regressors.gaussian_mlp_regressor_model import (
     GaussianMLPRegressorModel)
+from garage.tf.regressors.regressor import StochasticRegressor
 
 
 class GaussianMLPRegressor(StochasticRegressor):

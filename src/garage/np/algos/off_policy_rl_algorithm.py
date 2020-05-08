@@ -4,7 +4,7 @@ import abc
 import numpy as np
 
 from garage import log_performance, TrajectoryBatch
-from garage.np.algos import RLAlgorithm
+from garage.np.algos.rl_algorithm import RLAlgorithm
 from garage.sampler import OffPolicyVectorizedSampler
 from garage.sampler.utils import rollout
 
@@ -16,7 +16,7 @@ class OffPolicyRLAlgorithm(RLAlgorithm):
 
     Args:
         env_spec (EnvSpec): Environment specification.
-        policy (garage.tf.policies.base.Policy): Policy.
+        policy (garage.np.policies.Policy): Policy.
         qf (object): The q value network.
         replay_buffer (garage.replay_buffer.ReplayBuffer): Replay buffer.
         use_target (bool): Whether to use target.
@@ -152,7 +152,6 @@ class OffPolicyRLAlgorithm(RLAlgorithm):
         return samples_data
 
     def init_opt(self):
-        # pylint: disable=no-self-use
         """Initialize the optimization procedure.
 
         If using tensorflow, this may include declaring all the variables

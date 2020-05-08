@@ -7,7 +7,7 @@ from garage.tf.models import CNNModelWithMaxPooling
 from garage.tf.models import MLPDuelingModel
 from garage.tf.models import MLPModel
 from garage.tf.models import Sequential
-from garage.tf.q_functions import QFunction
+from garage.tf.q_functions.q_function import QFunction
 
 
 class DiscreteCNNQFunction(QFunction):

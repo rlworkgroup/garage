@@ -23,6 +23,7 @@ class QFunction(abc.ABC):
             input_phs (list[tf.Tensor]): Recommended to be positional
                 arguments, e.g. def get_qval_sym(self, state_input,
                 action_input).
+
         """
 
     def clone(self, name):
@@ -33,6 +34,7 @@ class QFunction(abc.ABC):
 
         Args:
             name (str): Name of the newly created q-function.
+
         """
 
     def get_trainable_vars(self):

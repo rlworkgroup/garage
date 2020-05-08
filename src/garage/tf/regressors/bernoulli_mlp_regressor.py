@@ -7,7 +7,7 @@ from garage.tf.distributions import Bernoulli
 from garage.tf.misc import tensor_utils
 from garage.tf.models import NormalizedInputMLPModel
 from garage.tf.optimizers import ConjugateGradientOptimizer, LbfgsOptimizer
-from garage.tf.regressors import StochasticRegressor
+from garage.tf.regressors.regressor import StochasticRegressor
 
 
 class BernoulliMLPRegressor(StochasticRegressor):

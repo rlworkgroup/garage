@@ -12,7 +12,7 @@ class MAMLTRPO(MAML):
 
     Args:
         env (garage.envs.GarageEnv): A multi-task environment.
-        policy (garage.torch.policies.base.Policy): Policy.
+        policy (garage.torch.policies.Policy): Policy.
         value_function (garage.np.baselines.Baseline): The value function.
         inner_lr (float): Adaptation learning rate.
         outer_lr (float): Meta policy learning rate.
