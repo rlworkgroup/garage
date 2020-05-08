@@ -17,4 +17,9 @@ REQUIRED = [
 setup(name='garage_benchmarks',
       packages=find_packages(where='src'),
       package_dir={'': 'src'},
-      install_requires=REQUIRED)
+      install_requires=REQUIRED,
+      include_package_data=True,
+      entry_points='''
+              [console_scripts]
+              garage_benchmark=garage_benchmarks.run_benchmarks:cli
+          ''')
