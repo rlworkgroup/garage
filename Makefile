@@ -13,7 +13,7 @@ DATA_PATH ?= $(shell pwd)/data
 MJKEY_PATH ?= ~/.mujoco/mjkey.txt
 
 test:  ## Run the CI test suite
-test: RUN_CMD = nice -n 11 pytest -v -m 'not huge and not benchmark and not flaky' --durations=0
+test: RUN_CMD = nice -n 11 pytest -v -m 'not huge and not flaky' --durations=0
 test: RUN_ARGS = --memory 7500m --memory-swap 7500m
 test: run-headless
 	@echo "Running test suite..."
@@ -28,7 +28,7 @@ ci-job-precommit: assert-docker docs
 ci-job-normal: assert-docker
 	[ ! -f $(MJKEY_PATH) ] || mv $(MJKEY_PATH) $(MJKEY_PATH).bak
 	pytest --cov=garage --cov-report=xml -m \
-	    'not nightly and not huge and not benchmark and not flaky and not large and not mujoco' --durations=20
+	    'not nightly and not huge and not flaky and not large and not mujoco' --durations=20
 	bash <(curl -s https://codecov.io/bash)
 
 ci-job-large: assert-docker
