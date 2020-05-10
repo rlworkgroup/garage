@@ -35,8 +35,8 @@ import json
 import os
 import pathlib
 import random
-import shutil
 
+from google.cloud import storage
 import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
@@ -44,6 +44,8 @@ import tensorflow as tf
 _plot = None
 _log_dir = None
 _auto = False
+
+_bucket = storage.Client().bucket('resl-garage-benchmarks')
 
 
 def benchmark(exec_func=None, *, plot=True, auto=False):
@@ -72,8 +74,12 @@ def benchmark(exec_func=None, *, plot=True, auto=False):
         plt.close('all')
 
         _log_dir = _get_log_dir(exec_func.__name__)
+
         if os.path.exists(_log_dir):
-            shutil.rmtree(_log_dir)
+            count = 1
+            while os.path.exists(_log_dir + '_' + str(count)):
+                count += 1
+            _log_dir = _log_dir + '_' + str(count)
 
         if auto:
             _auto = auto
@@ -92,6 +98,9 @@ def benchmark(exec_func=None, *, plot=True, auto=False):
                 plt.ylabel(_plot[env_id]['ylabel'])
                 plt.title(env_id)
                 plt.savefig(plot_dir + '/' + env_id)
+
+        if auto:
+            _upload_to_gcp_storage(_log_dir)
 
     return wrapper_func
 
@@ -211,3 +220,24 @@ def _export_to_json(json_name, xs, xlabel, ys, ylabel, ys_std):
                  y_max=(ys + ys_std).tolist(),
                  xlabel=xlabel,
                  ylabel=ylabel), json_file)
+
+
+def _upload_to_gcp_storage(exec_dir):
+    """Upload all files to GCP storage under exec_dir folder.
+
+    Args:
+        exec_dir (str): The execution directory.
+
+    """
+    exec_name = os.path.basename(exec_dir)
+
+    for folder_name in os.listdir(exec_dir):
+        folder_path = os.path.join(exec_dir, folder_name)
+        if not os.path.isfile(folder_path):
+            remote_folder = os.path.join(exec_name, folder_name)
+
+            for file_name in os.listdir(folder_path):
+                file_path = os.path.join(folder_path, file_name)
+                if os.path.isfile(file_path):
+                    blob = _bucket.blob(os.path.join(remote_folder, file_name))
+                    blob.upload_from_filename(file_path)
