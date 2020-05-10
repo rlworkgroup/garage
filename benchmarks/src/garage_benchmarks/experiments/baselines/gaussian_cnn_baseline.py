@@ -23,8 +23,8 @@ params = {
 
 
 @wrap_experiment
-def gaussian_cnn_baseline_tf(ctxt, env_id, seed):
-    """Create Gaussian CNN Baseline on PPO.
+def gaussian_cnn_baseline(ctxt, env_id, seed):
+    """Create Gaussian CNN Baseline on TF-PPO.
 
     Args:
         ctxt (garage.experiment.ExperimentContext): The experiment

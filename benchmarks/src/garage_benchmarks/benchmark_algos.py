@@ -1,6 +1,4 @@
 """Benchmarking for algorithms."""
-from baselines.bench import benchmarks
-from garage_benchmarks import benchmark, iterate_experiments
 from garage_benchmarks.experiments.algos import ddpg_garage_tf
 from garage_benchmarks.experiments.algos import her_garage_tf
 from garage_benchmarks.experiments.algos import ppo_garage_pytorch
@@ -10,7 +8,8 @@ from garage_benchmarks.experiments.algos import trpo_garage_pytorch
 from garage_benchmarks.experiments.algos import trpo_garage_tf
 from garage_benchmarks.experiments.algos import vpg_garage_pytorch
 from garage_benchmarks.experiments.algos import vpg_garage_tf
-from garage_benchmarks.parameters import MuJoCo1M_ENV_SET
+from garage_benchmarks.helper import benchmark, iterate_experiments
+from garage_benchmarks.parameters import Fetch1M_ENV_SET, MuJoCo1M_ENV_SET
 
 
 @benchmark
@@ -22,11 +21,7 @@ def ddpg_benchmarks():
 @benchmark
 def her_benchmarks():
     """Run experiments for HER benchmarking."""
-    her_end_ids = [
-        task['env_id'] for task in benchmarks.get_benchmark('Fetch1M')['tasks']
-    ]
-
-    iterate_experiments(her_garage_tf, her_end_ids)
+    iterate_experiments(her_garage_tf, Fetch1M_ENV_SET)
 
 
 @benchmark
