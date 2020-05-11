@@ -1,11 +1,11 @@
 """Benchmarking for baselines."""
 import random
 
-from benchmarks import benchmark, iterate_experiments
-from benchmarks.experiments.baselines import continuous_mlp_baseline_tf
-from benchmarks.experiments.baselines import gaussian_cnn_baseline_tf
-from benchmarks.experiments.baselines import gaussian_mlp_baseline_tf
-from benchmarks.parameters import MuJoCo1M_ENV_SET, PIXEL_ENV_SET
+from garage_benchmarks import benchmark, iterate_experiments
+from garage_benchmarks.experiments.baselines import continuous_mlp_baseline_tf
+from garage_benchmarks.experiments.baselines import gaussian_cnn_baseline_tf
+from garage_benchmarks.experiments.baselines import gaussian_mlp_baseline_tf
+from garage_benchmarks.parameters import MuJoCo1M_ENV_SET, PIXEL_ENV_SET
 
 _seeds = random.sample(range(100), 3)
 
