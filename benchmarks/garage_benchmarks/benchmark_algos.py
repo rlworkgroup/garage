@@ -1,16 +1,16 @@
 """Benchmarking for algorithms."""
 from baselines.bench import benchmarks
-from benchmarks import benchmark, iterate_experiments
-from benchmarks.experiments.algos import ddpg_garage_tf
-from benchmarks.experiments.algos import her_garage_tf
-from benchmarks.experiments.algos import ppo_garage_pytorch
-from benchmarks.experiments.algos import ppo_garage_tf
-from benchmarks.experiments.algos import td3_garage_tf
-from benchmarks.experiments.algos import trpo_garage_pytorch
-from benchmarks.experiments.algos import trpo_garage_tf
-from benchmarks.experiments.algos import vpg_garage_pytorch
-from benchmarks.experiments.algos import vpg_garage_tf
-from benchmarks.parameters import MuJoCo1M_ENV_SET
+from garage_benchmarks import benchmark, iterate_experiments
+from garage_benchmarks.experiments.algos import ddpg_garage_tf
+from garage_benchmarks.experiments.algos import her_garage_tf
+from garage_benchmarks.experiments.algos import ppo_garage_pytorch
+from garage_benchmarks.experiments.algos import ppo_garage_tf
+from garage_benchmarks.experiments.algos import td3_garage_tf
+from garage_benchmarks.experiments.algos import trpo_garage_pytorch
+from garage_benchmarks.experiments.algos import trpo_garage_tf
+from garage_benchmarks.experiments.algos import vpg_garage_pytorch
+from garage_benchmarks.experiments.algos import vpg_garage_tf
+from garage_benchmarks.parameters import MuJoCo1M_ENV_SET
 
 
 @benchmark
