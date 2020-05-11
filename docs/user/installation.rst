@@ -5,38 +5,19 @@
 Installation
 ============
 
-Express Install
-===============
-
-Install System Dependencies
----------------------------
-
-The fastest way to set up dependencies for garage is via running the setup script.
-
-Clone our repository (https://github.com/rlworkgroup/garage) and navigate to its directory.
-
-A MuJoCo key is required for installation. You can get one here: https://www.roboti.us/license.html
-
-Make sure you run these scripts from the root directory of the repo, not from the scripts directory.
-
-- On Linux, run the following:
-
-.. code-block:: bash
-
-    ./scripts/setup_linux.sh --mjkey path-to-your-mjkey.txt --modify-bashrc
-
-- On macOS, run the following:
-
-.. code-block:: bash
-
-    ./scripts/setup_macos.sh --mjkey path-to-your-mjkey.txt --modify-bashrc
-
 Install Garage in a Python Environment
 --------------------------------------
 
-The script sets up pre-requisites for each platform, but does not install the Python package. We recommend you build your project using a Python environment manager which supports dependency resolution, such as `pipenv <https://docs.pipenv.org/en/latest/>`_, `conda <https://docs.conda.io/en/latest/>`_, or `poetry <https://poetry.eustace.io/>`_. We test against `pipenv` and `conda`.
+Garage is a Python package which can be installed in most Python 3.5+ environments using standard commands, i.e.
 
-garage is also tested using `virtualenv <https://virtualenv.pypa.io/en/latest/>`_, but we recommend against building your project using `virtualenv`, because it has difficulty resolving dependency conflicts which may arise between garage and other packages in your project. You are of course free to install garage as a system-wide Python package using `pip`, but we don't recommend this for the same reasons we recommend against using `virtualenv`.
+.. code-block:: bash
+
+    pip install garage
+
+
+We recommend you build your project using a Python environment manager which supports dependency resolution, such as `pipenv <https://docs.pipenv.org/en/latest/>`_, `conda <https://docs.conda.io/en/latest/>`_, or `poetry <https://poetry.eustace.io/>`_. We test against pipenv and conda.
+
+Garage is also tested using `virtualenv <https://virtualenv.pypa.io/en/latest/>`_. However, virtualenv has difficulty resolving dependency conflicts which may arise between garage and other packages in your project, so additional care is needed when using it. You are of course free to install garage as a system-wide Python package using pip, but we don't recommend doing so.
 
 NOTE: garage only supports Python 3.5+, so make sure you Python environment is using this or a later version.
 
@@ -76,10 +57,49 @@ Alternatively, you can add garage in the pip section of your `environment.yml`
     pip install garage
 
 
-Extra Steps for Developers
---------------------------
+Install Environment Dependencies (Optional)
+-------------------------------------------
 
-If you plan on developing the garage repository, as opposed to simply using it as a library, you will probably prefer to install your copy of the garage repository as an editable library instead. After installing the pre-requisites using the instructions in `Install System Dependencies`_, you should install garage in your environment as below.
+Generally speaking, system dependencies of garage are minimal, and likely already installed.
+However, many of the environments garage is used with have additional
+dependencies, and we provide "setup scripts" for installing those dependencies
+and working around known problems on common platforms.
+
+If you can already use the environments you need, you can skip this section.
+
+A MuJoCo key is required to run these install scripts. You can get one here: https://www.roboti.us/license.html
+
+In order to use those scripts, please do the following:
+
+Clone our repository (https://github.com/rlworkgroup/garage) and navigate to its directory.
+
+Then, from the root directory of the repo, run the script.
+
+- On Linux:
+
+.. code-block:: bash
+
+    ./scripts/setup_linux.sh --mjkey path-to-your-mjkey.txt
+
+- On macOS:
+
+.. code-block:: bash
+
+    ./scripts/setup_macos.sh --mjkey path-to-your-mjkey.txt
+
+If all of the system dependencies were installed correctly, then the exact
+version of common RL environments that work with garage can be installed via
+pip:
+
+.. code-block:: bash
+
+    pip install garage[mujoco,dm_control]
+
+Extra Steps for Garage Developers
+---------------------------------
+
+If you plan on developing the garage repository, as opposed to simply using it as a library, you will probably prefer to install your copy of the garage repository as an editable library instead. After installing the pre-requisites using the instructions in `Install Environment Dependencies (Optional)`_, you should install garage in your environment as below.
+If you would like to contribute changes back to garage, please also read :code:`CONTRIBUTING.md`.
 
 - pipenv
 
@@ -95,6 +115,7 @@ If you plan on developing the garage repository, as opposed to simply using it a
 .. code-block:: bash
 
     conda activate myenv
+    pip uninstall garage  # To ensure no existing install gets in the way.
     cd path/to/garage/repo
     pip install -e .[all,dev]
 
@@ -104,20 +125,6 @@ If you plan on developing the garage repository, as opposed to simply using it a
 .. code-block:: bash
 
     source myenv/bin/activate
+    pip uninstall garage  # To ensure no existing install gets in the way.
     cd path/to/garage/repo
     pip install -e .[all,dev]
-
-
-GPU Support
-===========
-
-To enable GPU support, install the `garage[gpu]` extra package into your Python environment.
-
-Before you run garage, you need to specify the directory for the CUDA library in environment variable :code:`LD_LIBRARY_PATH`. You may need to replace the directory conforming to your CUDA version accordingly. We recommend you add this to your shell profile (e.g. `~/.bashrc`) for convenience.
-
-.. code-block:: bash
-
-    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda-9.0/lib64
-
-
-You should now be able to use your GPU with TensorFlow and PyTorch.

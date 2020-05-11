@@ -21,8 +21,7 @@ The garage user guide explains how to install garage, how to run experiments, an
    user/installation
    user/experiments
    user/implement_env
-   user/implement_algo_basic
-   user/implement_algo_advanced
+   user/implement_algo
 
 
 Citing garage

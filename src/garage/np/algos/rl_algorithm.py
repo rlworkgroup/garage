@@ -6,9 +6,8 @@ class RLAlgorithm(abc.ABC):
     """Base class for all the algorithms.
 
     Note:
-        If sampler_cls isn't specified to the LocalRunner,
-        self.sampler_cls is required to provide default sampler
-        for algorithm.
+        If the field sampler_cls exists, it will be by LocalRunner.setup to
+        initialize a sampler.
 
     """
 
@@ -22,8 +21,5 @@ class RLAlgorithm(abc.ABC):
             runner (LocalRunner): LocalRunner is passed to give algorithm
                 the access to runner.step_epochs(), which provides services
                 such as snapshotting and sampler control.
-
-        Returns:
-            The average return in last epoch cycle or None.
 
         """
