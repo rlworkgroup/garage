@@ -1,6 +1,6 @@
 from dm_control import suite
 from dm_control.rl.control import flatten_observation
-from dm_control.rl.environment import StepType
+from dm_env import StepType
 import gym
 import numpy as np
 
