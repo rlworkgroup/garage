@@ -6,10 +6,6 @@ import tensorflow as tf
 
 from garage.tf.algos.batch_polopt import BatchPolopt
 from garage.tf.misc import tensor_utils
-from garage.tf.misc.tensor_utils import filter_valids
-from garage.tf.misc.tensor_utils import filter_valids_dict
-from garage.tf.misc.tensor_utils import flatten_batch
-from garage.tf.misc.tensor_utils import flatten_batch_dict
 from garage.tf.misc.tensor_utils import flatten_inputs
 from garage.tf.misc.tensor_utils import graph_inputs
 from garage.tf.optimizers import LbfgsOptimizer
@@ -80,6 +76,7 @@ class REPS(BatchPolopt):  # noqa: D416
 
         self._name = name
         self._name_scope = tf.name_scope(self._name)
+        self._old_policy = policy.clone('old_policy')
 
         self._feat_diff = None
         self._param_eta = None
@@ -88,13 +85,12 @@ class REPS(BatchPolopt):  # noqa: D416
         self._f_dual_grad = None
         self._f_policy_kl = None
 
-        with self._name_scope:
-            self._optimizer = optimizer(**optimizer_args)
-            self._dual_optimizer = dual_optimizer
-            self._dual_optimizer_args = dual_optimizer_args
-            self._epsilon = float(epsilon)
-            self._l2_reg_dual = float(l2_reg_dual)
-            self._l2_reg_loss = float(l2_reg_loss)
+        self._optimizer = optimizer(**optimizer_args)
+        self._dual_optimizer = dual_optimizer
+        self._dual_optimizer_args = dual_optimizer_args
+        self._epsilon = float(epsilon)
+        self._l2_reg_dual = float(l2_reg_dual)
+        self._l2_reg_loss = float(l2_reg_loss)
 
         super(REPS, self).__init__(env_spec=env_spec,
                                    policy=policy,
@@ -235,6 +231,7 @@ class REPS(BatchPolopt):  # noqa: D416
         tabular.record('{}/KLBefore'.format(self.policy.name),
                        policy_kl_before)
         tabular.record('{}/KL'.format(self.policy.name), policy_kl)
+        self._old_policy.model.parameters = self.policy.model.parameters
 
     def _build_inputs(self):
         """Build input variables.
@@ -246,7 +243,6 @@ class REPS(BatchPolopt):  # noqa: D416
         """
         observation_space = self.policy.observation_space
         action_space = self.policy.action_space
-        policy_dist = self.policy.distribution
 
         with tf.name_scope('inputs'):
             obs_var = observation_space.to_tf_placeholder(
@@ -287,67 +283,9 @@ class REPS(BatchPolopt):  # noqa: D416
                 for k in self.policy.state_info_keys
             ]   # yapf: disable
 
-            policy_old_dist_info_vars = {
-                k: tf.compat.v1.placeholder(tf.float32,
-                                            shape=[None] * 2 + list(shape),
-                                            name='policy_old_%s' % k)
-                for k, shape in policy_dist.dist_info_specs
-            }
-            policy_old_dist_info_vars_list = [
-                policy_old_dist_info_vars[k]
-                for k in policy_dist.dist_info_keys
-            ]
+        self.policy.build(obs_var)
+        self._old_policy.build(obs_var)
 
-            with tf.name_scope('flat'):
-                obs_flat = flatten_batch(obs_var, name='obs_flat')
-                action_flat = flatten_batch(action_var, name='action_flat')
-                reward_flat = flatten_batch(reward_var, name='reward_flat')
-                valid_flat = flatten_batch(valid_var, name='valid_flat')
-                feat_diff_flat = flatten_batch(
-                    feat_diff,
-                    name='feat_diff_flat')  # yapf: disable
-                policy_state_info_vars_flat = flatten_batch_dict(
-                    policy_state_info_vars,
-                    name='policy_state_info_vars_flat')  # yapf: disable
-                policy_old_dist_info_vars_flat = flatten_batch_dict(
-                    policy_old_dist_info_vars,
-                    name='policy_old_dist_info_vars_flat')
-
-            with tf.name_scope('valid'):
-                reward_valid = filter_valids(
-                    reward_flat,
-                    valid_flat,
-                    name='reward_valid')   # yapf: disable
-                action_valid = filter_valids(
-                    action_flat,
-                    valid_flat,
-                    name='action_valid')    # yapf: disable
-                policy_state_info_vars_valid = filter_valids_dict(
-                    policy_state_info_vars_flat,
-                    valid_flat,
-                    name='policy_state_info_vars_valid')
-                policy_old_dist_info_vars_valid = filter_valids_dict(
-                    policy_old_dist_info_vars_flat,
-                    valid_flat,
-                    name='policy_old_dist_info_vars_valid')
-
-        pol_flat = graph_inputs(
-            'PolicyLossInputsFlat',
-            obs_var=obs_flat,
-            action_var=action_flat,
-            reward_var=reward_flat,
-            valid_var=valid_flat,
-            feat_diff=feat_diff_flat,
-            policy_state_info_vars=policy_state_info_vars_flat,
-            policy_old_dist_info_vars=policy_old_dist_info_vars_flat,
-        )
-        pol_valid = graph_inputs(
-            'PolicyLossInputsValid',
-            reward_var=reward_valid,
-            action_var=action_valid,
-            policy_state_info_vars=policy_state_info_vars_valid,
-            policy_old_dist_info_vars=policy_old_dist_info_vars_valid,
-        )
         policy_loss_inputs = graph_inputs(
             'PolicyLossInputs',
             obs_var=obs_var,
@@ -358,9 +296,6 @@ class REPS(BatchPolopt):  # noqa: D416
             param_eta=param_eta,
             param_v=param_v,
             policy_state_info_vars=policy_state_info_vars,
-            policy_old_dist_info_vars=policy_old_dist_info_vars,
-            flat=pol_flat,
-            valid=pol_valid,
         )
         policy_opt_inputs = graph_inputs(
             'PolicyOptInputs',
@@ -372,7 +307,6 @@ class REPS(BatchPolopt):  # noqa: D416
             param_eta=param_eta,
             param_v=param_v,
             policy_state_info_vars_list=policy_state_info_vars_list,
-            policy_old_dist_info_vars_list=policy_old_dist_info_vars_list,
         )
         dual_opt_inputs = graph_inputs(
             'DualOptInputs',
@@ -382,7 +316,6 @@ class REPS(BatchPolopt):  # noqa: D416
             param_eta=param_eta,
             param_v=param_v,
             policy_state_info_vars_list=policy_state_info_vars_list,
-            policy_old_dist_info_vars_list=policy_old_dist_info_vars_list,
         )
 
         return policy_loss_inputs, policy_opt_inputs, dual_opt_inputs
@@ -402,33 +335,20 @@ class REPS(BatchPolopt):  # noqa: D416
 
         """
         pol_dist = self.policy.distribution
-        is_recurrent = self.policy.recurrent
 
         # Initialize dual params
         self._param_eta = 15.
         self._param_v = np.random.rand(
             self.env_spec.observation_space.flat_dim * 2 + 4)
 
-        if is_recurrent:
-            raise NotImplementedError
-
-        policy_dist_info_flat = self.policy.dist_info_sym(
-            i.flat.obs_var,
-            i.flat.policy_state_info_vars,
-            name='policy_dist_info_flat')
-
-        policy_dist_info_valid = filter_valids_dict(
-            policy_dist_info_flat,
-            i.flat.valid_var,
-            name='policy_dist_info_valid')
-
         with tf.name_scope('bellman_error'):
-            delta_v = i.valid.reward_var + tf.tensordot(
-                i.feat_diff, i.param_v, 1)
+            delta_v = tf.boolean_mask(i.reward_var,
+                                      i.valid_var) + tf.tensordot(
+                                          i.feat_diff, i.param_v, 1)
 
         with tf.name_scope('policy_loss'):
-            ll = pol_dist.log_likelihood_sym(i.valid.action_var,
-                                             policy_dist_info_valid)
+            ll = pol_dist.log_prob(i.action_var)
+            ll = tf.boolean_mask(ll, i.valid_var)
             loss = -tf.reduce_mean(
                 ll * tf.exp(delta_v / i.param_eta -
                             tf.reduce_max(delta_v / i.param_eta)))
@@ -439,10 +359,8 @@ class REPS(BatchPolopt):  # noqa: D416
                  for param in reg_params]) / len(reg_params)
 
         with tf.name_scope('kl'):
-            kl = pol_dist.kl_sym(
-                i.valid.policy_old_dist_info_vars,
-                policy_dist_info_valid,
-            )
+            kl = self._old_policy.distribution.kl_divergence(
+                self.policy.distribution)
             pol_mean_kl = tf.reduce_mean(kl)
 
         with tf.name_scope('dual'):
@@ -492,10 +410,6 @@ class REPS(BatchPolopt):  # noqa: D416
             samples_data['agent_infos'][k]
             for k in self.policy.state_info_keys
         ]   # yapf: disable
-        policy_old_dist_info_list = [
-            samples_data['agent_infos'][k]
-            for k in self.policy.distribution.dist_info_keys
-        ]
 
         dual_opt_input_values = self._dual_opt_inputs._replace(
             reward_var=samples_data['rewards'],
@@ -504,7 +418,6 @@ class REPS(BatchPolopt):  # noqa: D416
             param_eta=self._param_eta,
             param_v=self._param_v,
             policy_state_info_vars_list=policy_state_info_list,
-            policy_old_dist_info_vars_list=policy_old_dist_info_list,
         )
 
         return flatten_inputs(dual_opt_input_values)
@@ -524,10 +437,6 @@ class REPS(BatchPolopt):  # noqa: D416
             samples_data['agent_infos'][k]
             for k in self.policy.state_info_keys
         ]   # yapf: disable
-        policy_old_dist_info_list = [
-            samples_data['agent_infos'][k]
-            for k in self.policy.distribution.dist_info_keys
-        ]
 
         # pylint: disable=unexpected-keyword-arg
         policy_opt_input_values = self._policy_opt_inputs._replace(
@@ -539,7 +448,6 @@ class REPS(BatchPolopt):  # noqa: D416
             param_eta=self._param_eta,
             param_v=self._param_v,
             policy_state_info_vars_list=policy_state_info_list,
-            policy_old_dist_info_vars_list=policy_old_dist_info_list,
         )
 
         return flatten_inputs(policy_opt_input_values)

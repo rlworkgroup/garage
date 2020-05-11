@@ -128,6 +128,33 @@ class MockAlgo:
             exploration_trajectories.lengths) == self.n_exploration_traj)
 
 
+class MockTFAlgo(MockAlgo):
+
+    sampler_cls = LocalSampler
+
+    def __init__(self, env, policy, max_path_length, n_exploration_traj,
+                 meta_eval):
+        super().__init__(env, policy, max_path_length, n_exploration_traj,
+                         meta_eval)
+        self._build()
+
+    def _build(self):
+        input_var = tf.compat.v1.placeholder(
+            tf.float32,
+            shape=(None, None, self.env.observation_space.flat_dim))
+        self.policy.build(input_var)
+
+    def __setstate__(self, state):
+        """Parameters to restore from snapshot.
+
+        Args:
+            state (dict): Parameters to restore from.
+
+        """
+        self.__dict__ = state
+        self._build()
+
+
 def test_pickle_meta_evaluator():
     set_seed(100)
     tasks = SetTaskSampler(lambda: GarageEnv(PointEnv()))
@@ -171,7 +198,7 @@ def test_meta_evaluator_with_tf():
                                       n_test_tasks=10,
                                       n_exploration_traj=n_traj)
             policy = GaussianMLPPolicy(env.spec)
-            algo = MockAlgo(env, policy, max_path_length, n_traj, meta_eval)
+            algo = MockTFAlgo(env, policy, max_path_length, n_traj, meta_eval)
             runner.setup(algo, env)
             log_file = tempfile.NamedTemporaryFile()
             csv_output = CsvOutput(log_file.name)

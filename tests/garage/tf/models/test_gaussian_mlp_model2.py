@@ -13,8 +13,9 @@ class TestGaussianMLPModel2(TfGraphTestCase):
 
     def setup_method(self):
         super().setup_method()
-        self.input_var = tf.compat.v1.placeholder(tf.float32, shape=(None, 5))
-        self.obs = np.ones((1, 5))
+        self.input_var = tf.compat.v1.placeholder(tf.float32,
+                                                  shape=(None, None, 5))
+        self.obs = np.ones((1, 1, 5))
 
     def test_dist(self):
         model = GaussianMLPModel2(output_dim=1)
@@ -38,8 +39,9 @@ class TestGaussianMLPModel2(TfGraphTestCase):
             [dist.loc, tf.math.log(dist.stddev())],
             feed_dict={self.input_var: self.obs})
 
-        expected_mean = np.full([1, output_dim], 5 * np.prod(hidden_sizes))
-        expected_log_std = np.full([1, output_dim], 5 * np.prod(hidden_sizes))
+        expected_mean = np.full([1, 1, output_dim], 5 * np.prod(hidden_sizes))
+        expected_log_std = np.full([1, 1, output_dim],
+                                   5 * np.prod(hidden_sizes))
         assert np.array_equal(mean, expected_mean)
         assert np.array_equal(log_std, expected_log_std)
 
@@ -79,8 +81,8 @@ class TestGaussianMLPModel2(TfGraphTestCase):
             [dist.loc, tf.math.log(dist.stddev())],
             feed_dict={self.input_var: self.obs})
 
-        expected_mean = np.full([1, output_dim], 5 * np.prod(hidden_sizes))
-        expected_log_std = np.full([1, output_dim], np.log(2.))
+        expected_mean = np.full([1, 1, output_dim], 5 * np.prod(hidden_sizes))
+        expected_log_std = np.full([1, 1, output_dim], np.log(2.))
         assert np.array_equal(mean, expected_mean)
         assert np.allclose(log_std, expected_log_std)
 
@@ -127,8 +129,8 @@ class TestGaussianMLPModel2(TfGraphTestCase):
             [dist.loc, tf.math.log(dist.stddev())],
             feed_dict={self.input_var: self.obs})
 
-        expected_mean = np.full([1, output_dim], 5 * np.prod(hidden_sizes))
-        expected_log_std = np.full([1, output_dim],
+        expected_mean = np.full([1, 1, output_dim], 5 * np.prod(hidden_sizes))
+        expected_log_std = np.full([1, 1, output_dim],
                                    5 * np.prod(std_hidden_sizes))
         assert np.array_equal(mean, expected_mean)
         assert np.array_equal(log_std, expected_log_std)
@@ -164,7 +166,7 @@ class TestGaussianMLPModel2(TfGraphTestCase):
                              [(1, (0, )), (1, (1, )), (1, (2, )), (2, (3, )),
                               (2, (1, 1)), (3, (2, 2))])
     def test_std_share_network_is_pickleable(self, output_dim, hidden_sizes):
-        input_var = tf.compat.v1.placeholder(tf.float32, shape=(None, 5))
+        input_var = tf.compat.v1.placeholder(tf.float32, shape=(None, None, 5))
         model = GaussianMLPModel2(output_dim=output_dim,
                                   hidden_sizes=hidden_sizes,
                                   std_share_network=True,
@@ -186,7 +188,8 @@ class TestGaussianMLPModel2(TfGraphTestCase):
 
         h = pickle.dumps(model)
         with tf.compat.v1.Session(graph=tf.Graph()) as sess:
-            input_var = tf.compat.v1.placeholder(tf.float32, shape=(None, 5))
+            input_var = tf.compat.v1.placeholder(tf.float32,
+                                                 shape=(None, None, 5))
             model_pickled = pickle.loads(h)
             dist2 = model_pickled.build(input_var)
             output2 = sess.run(
@@ -200,7 +203,7 @@ class TestGaussianMLPModel2(TfGraphTestCase):
                               (2, (1, 1)), (3, (2, 2))])
     def test_without_std_share_network_is_pickleable(self, output_dim,
                                                      hidden_sizes):
-        input_var = tf.compat.v1.placeholder(tf.float32, shape=(None, 5))
+        input_var = tf.compat.v1.placeholder(tf.float32, shape=(None, None, 5))
         model = GaussianMLPModel2(output_dim=output_dim,
                                   hidden_sizes=hidden_sizes,
                                   std_share_network=False,
@@ -223,7 +226,8 @@ class TestGaussianMLPModel2(TfGraphTestCase):
 
         h = pickle.dumps(model)
         with tf.compat.v1.Session(graph=tf.Graph()) as sess:
-            input_var = tf.compat.v1.placeholder(tf.float32, shape=(None, 5))
+            input_var = tf.compat.v1.placeholder(tf.float32,
+                                                 shape=(None, None, 5))
             model_pickled = pickle.loads(h)
             dist2 = model_pickled.build(input_var)
             output2 = sess.run(
@@ -237,7 +241,7 @@ class TestGaussianMLPModel2(TfGraphTestCase):
                               (2, (1, 1), (1, 1)), (3, (2, 2), (2, 2))])
     def test_adaptive_std_is_pickleable(self, output_dim, hidden_sizes,
                                         std_hidden_sizes):
-        input_var = tf.compat.v1.placeholder(tf.float32, shape=(None, 5))
+        input_var = tf.compat.v1.placeholder(tf.float32, shape=(None, None, 5))
         model = GaussianMLPModel2(output_dim=output_dim,
                                   hidden_sizes=hidden_sizes,
                                   std_hidden_sizes=std_hidden_sizes,
@@ -263,7 +267,8 @@ class TestGaussianMLPModel2(TfGraphTestCase):
             [dist.loc, tf.math.log(dist.stddev())],
             feed_dict={input_var: self.obs})
         with tf.compat.v1.Session(graph=tf.Graph()) as sess:
-            input_var = tf.compat.v1.placeholder(tf.float32, shape=(None, 5))
+            input_var = tf.compat.v1.placeholder(tf.float32,
+                                                 shape=(None, None, 5))
             model_pickled = pickle.loads(h)
             dist2 = model_pickled.build(input_var)
             output2 = sess.run(
@@ -271,6 +276,7 @@ class TestGaussianMLPModel2(TfGraphTestCase):
                 feed_dict={input_var: self.obs})
             assert np.array_equal(output1, output2)
 
+    # pylint: disable=assignment-from-no-return
     @pytest.mark.parametrize('output_dim, hidden_sizes',
                              [(1, (0, )), (1, (1, )), (1, (2, )), (2, (3, )),
                               (2, (1, 1)), (3, (2, 2))])
@@ -290,8 +296,8 @@ class TestGaussianMLPModel2(TfGraphTestCase):
             [dist.loc, tf.math.log(dist.stddev())],
             feed_dict={self.input_var: self.obs})
 
-        expected_mean = np.full([1, output_dim], 5 * np.prod(hidden_sizes))
-        expected_std_param = np.full([1, output_dim], np.log(np.exp(2) - 1))
+        expected_mean = np.full([1, 1, output_dim], 5 * np.prod(hidden_sizes))
+        expected_std_param = np.full([1, 1, output_dim], np.log(np.exp(2) - 1))
         expected_log_std = np.log(np.log(1. + np.exp(expected_std_param)))
         assert np.array_equal(mean, expected_mean)
         assert np.allclose(log_std, expected_log_std)
@@ -311,7 +317,7 @@ class TestGaussianMLPModel2(TfGraphTestCase):
         log_std = self.sess.run(tf.math.log(dist.stddev()),
                                 feed_dict={self.input_var: self.obs})
 
-        expected_log_std = np.full([1, output_dim], np.log(10))
+        expected_log_std = np.full([1, 1, output_dim], np.log(10))
         assert np.allclose(log_std, expected_log_std)
 
     @pytest.mark.parametrize('output_dim, hidden_sizes',
@@ -329,7 +335,7 @@ class TestGaussianMLPModel2(TfGraphTestCase):
         log_std = self.sess.run(tf.math.log(dist.stddev()),
                                 feed_dict={self.input_var: self.obs})
 
-        expected_log_std = np.full([1, output_dim], np.log(1))
+        expected_log_std = np.full([1, 1, output_dim], np.log(1))
         assert np.allclose(log_std, expected_log_std)
 
     @pytest.mark.parametrize('output_dim, hidden_sizes',
@@ -347,7 +353,7 @@ class TestGaussianMLPModel2(TfGraphTestCase):
         log_std = self.sess.run(tf.math.log(dist.stddev()),
                                 feed_dict={self.input_var: self.obs})
 
-        expected_log_std = np.full([1, output_dim], np.log(10))
+        expected_log_std = np.full([1, 1, output_dim], np.log(10))
 
         assert np.allclose(log_std, expected_log_std)
 
@@ -366,7 +372,7 @@ class TestGaussianMLPModel2(TfGraphTestCase):
         log_std = self.sess.run(tf.math.log(dist.stddev()),
                                 feed_dict={self.input_var: self.obs})
 
-        expected_log_std = np.full([1, output_dim], np.log(1))
+        expected_log_std = np.full([1, 1, output_dim], np.log(1))
 
         # This test fails just outside of the default absolute tolerance.
         assert np.allclose(log_std, expected_log_std, atol=1e-7)

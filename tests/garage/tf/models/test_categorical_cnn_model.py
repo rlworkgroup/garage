@@ -16,11 +16,12 @@ class TestCategoricalMLPModel(TfGraphTestCase):
         batch_size = 5
         input_width = 10
         input_height = 10
-        self._obs_input = np.ones((batch_size, input_width, input_height, 3))
+        self._obs_input = np.ones(
+            (batch_size, 1, input_width, input_height, 3))
         self._input_shape = (input_width, input_height, 3
                              )  # height, width, channel
         self._input_ph = tf.compat.v1.placeholder(tf.float32,
-                                                  shape=(None, ) +
+                                                  shape=(None, None) +
                                                   self._input_shape,
                                                   name='input')
 
@@ -66,8 +67,7 @@ class TestCategoricalMLPModel(TfGraphTestCase):
                                     output_w_init=tf.ones_initializer())
         dist = model.build(self._input_ph)
         # assign bias to all one
-        with tf.compat.v1.variable_scope('CategoricalCNNModel/Sequential',
-                                         reuse=True):
+        with tf.compat.v1.variable_scope('CategoricalCNNModel', reuse=True):
             cnn_bias = tf.compat.v1.get_variable('CNNModel/cnn/h0/bias')
             bias = tf.compat.v1.get_variable('MLPModel/mlp/hidden_0/bias')
 
@@ -80,7 +80,7 @@ class TestCategoricalMLPModel(TfGraphTestCase):
         h = pickle.dumps(model)
         with tf.compat.v1.Session(graph=tf.Graph()) as sess:
             input_var = tf.compat.v1.placeholder(tf.float32,
-                                                 shape=(None, ) +
+                                                 shape=(None, None) +
                                                  self._input_shape)
             model_pickled = pickle.loads(h)
             dist2 = model_pickled.build(input_var)

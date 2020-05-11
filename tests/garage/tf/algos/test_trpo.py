@@ -148,10 +148,10 @@ class TestTRPOCNNCubeCrash(TfGraphTestCase):
             env = TfEnv(normalize(gym.make('CubeCrash-v0')))
 
             policy = CategoricalCNNPolicy(env_spec=env.spec,
-                                          conv_filters=(32, 64),
-                                          conv_filter_sizes=(8, 4),
-                                          conv_strides=(4, 2),
-                                          conv_pad='VALID',
+                                          num_filters=(32, 64),
+                                          filter_dims=(8, 4),
+                                          strides=(4, 2),
+                                          padding='VALID',
                                           hidden_sizes=(32, 32))
 
             baseline = GaussianCNNBaseline(env_spec=env.spec,

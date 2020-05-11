@@ -137,9 +137,6 @@ class BatchPolopt(RLAlgorithm):
         valids = [np.ones_like(path['returns']) for path in paths]
         valids = tensor_utils.pad_tensor_n(valids, max_path_length)
 
-        ent = np.sum(self.policy.distribution.entropy(agent_infos) *
-                     valids) / np.sum(valids)
-
         undiscounted_returns = log_performance(
             itr,
             TrajectoryBatch.from_trajectory_list(self.env_spec, paths),
@@ -147,8 +144,6 @@ class BatchPolopt(RLAlgorithm):
 
         self.episode_reward_mean.extend(undiscounted_returns)
 
-        tabular.record('Entropy', ent)
-        tabular.record('Perplexity', np.exp(ent))
         tabular.record('Extras/EpisodeRewardMean',
                        np.mean(self.episode_reward_mean))
 

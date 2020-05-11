@@ -1,17 +1,21 @@
-"""CategoricalMLPPolicy."""
+"""Categorical MLP Policy.
+
+A policy represented by a Categorical distribution
+which is parameterized by a multilayer perceptron (MLP).
+"""
 import akro
+import numpy as np
 import tensorflow as tf
 
-from garage.tf.distributions import Categorical
-from garage.tf.models import MLPModel
-from garage.tf.policies.policy import StochasticPolicy
+from garage.tf.models import CategoricalMLPModel
+from garage.tf.policies.policy import StochasticPolicy2
 
 
-class CategoricalMLPPolicy(StochasticPolicy):
-    """Estimate action distribution with Categorical parameterized by a MLP.
+class CategoricalMLPPolicy(StochasticPolicy2):
+    """Categorical MLP Policy.
 
-    A policy that contains a MLP to make prediction based on
-    a categorical distribution.
+    A policy represented by a Categorical distribution
+    which is parameterized by a multilayer perceptron (MLP).
 
     It only works with akro.Discrete action space.
 
@@ -50,16 +54,17 @@ class CategoricalMLPPolicy(StochasticPolicy):
                  hidden_nonlinearity=tf.nn.tanh,
                  hidden_w_init=tf.initializers.glorot_uniform(),
                  hidden_b_init=tf.zeros_initializer(),
-                 output_nonlinearity=tf.nn.softmax,
+                 output_nonlinearity=None,
                  output_w_init=tf.initializers.glorot_uniform(),
                  output_b_init=tf.zeros_initializer(),
                  layer_normalization=False):
-        assert isinstance(env_spec.action_space, akro.Discrete), (
-            'CategoricalMLPPolicy only works with akro.Discrete action '
-            'space.')
+        if not isinstance(env_spec.action_space, akro.Discrete):
+            raise ValueError('CategoricalMLPPolicy only works'
+                             'with akro.Discrete action space.')
         super().__init__(name, env_spec)
-        self._obs_dim = env_spec.observation_space.flat_dim
-        self._action_dim = env_spec.action_space.n
+        self.obs_dim = env_spec.observation_space.flat_dim
+        self.action_dim = env_spec.action_space.n
+
         self._hidden_sizes = hidden_sizes
         self._hidden_nonlinearity = hidden_nonlinearity
         self._hidden_w_init = hidden_w_init
@@ -69,112 +74,89 @@ class CategoricalMLPPolicy(StochasticPolicy):
         self._output_b_init = output_b_init
         self._layer_normalization = layer_normalization
 
-        self.model = MLPModel(output_dim=self._action_dim,
-                              hidden_sizes=hidden_sizes,
-                              hidden_nonlinearity=hidden_nonlinearity,
-                              hidden_w_init=hidden_w_init,
-                              hidden_b_init=hidden_b_init,
-                              output_nonlinearity=output_nonlinearity,
-                              output_w_init=output_w_init,
-                              output_b_init=output_b_init,
-                              layer_normalization=layer_normalization,
-                              name='MLPModel')
+        self._f_prob = None
+        self._dist = None
 
-        self._initialize()
+        self.model = CategoricalMLPModel(
+            output_dim=self.action_dim,
+            hidden_sizes=hidden_sizes,
+            hidden_nonlinearity=hidden_nonlinearity,
+            hidden_w_init=hidden_w_init,
+            hidden_b_init=hidden_b_init,
+            output_nonlinearity=output_nonlinearity,
+            output_w_init=output_w_init,
+            output_b_init=output_b_init,
+            layer_normalization=layer_normalization,
+            name='CategoricalMLPModel')
 
-    def _initialize(self):
-        state_input = tf.compat.v1.placeholder(tf.float32,
-                                               shape=(None, self._obs_dim))
+    def build(self, state_input, name=None):
+        """Build model.
 
+        Args:
+          state_input (tf.Tensor) : State input.
+          name (str): Name of the model, which is also the name scope.
+
+        """
         with tf.compat.v1.variable_scope(self.name) as vs:
             self._variable_scope = vs
-            self.model.build(state_input)
+            self._dist = self.model.build(state_input, name=name)
+            self._f_prob = tf.compat.v1.get_default_session().make_callable(
+                [tf.argmax(self._dist.sample(), -1), self._dist.probs],
+                feed_list=[state_input])
 
-        self._f_prob = tf.compat.v1.get_default_session().make_callable(
-            self.model.networks['default'].outputs,
-            feed_list=[self.model.networks['default'].input])
+    @property
+    def distribution(self):
+        """Policy distribution.
+
+        Returns:
+            tfp.Distribution.OneHotCategorical: Policy distribution.
+
+        """
+        return self._dist
 
     @property
     def vectorized(self):
         """Vectorized or not.
 
         Returns:
-            bool: True if primitive supports vectorized operations.
+            Bool: True if primitive supports vectorized operations.
 
         """
         return True
 
-    def dist_info_sym(self, obs_var, state_info_vars=None, name=None):
-        """Build a symbolic graph of the distribution parameters.
-
-        Args:
-            obs_var (tf.Tensor): Tensor input for symbolic graph.
-            state_info_vars (dict[tf.Tensor]): Extra state information, e.g.
-                previous action.
-            name (str): Name for symbolic graph.
-
-        Returns:
-            dict[tf.Tensor]: Outputs of the symbolic graph of distribution
-                parameters.
-
-        """
-        with tf.compat.v1.variable_scope(self._variable_scope):
-            prob = self.model.build(obs_var, name=name)
-        return dict(prob=prob)
-
-    def dist_info(self, obs, state_infos=None):
-        """Build a symbolic graph of the distribution parameters.
-
-        Args:
-            obs (np.ndarray): Input for symbolic graph.
-            state_infos (dict[np.ndarray]): Extra state information, e.g.
-                previous action.
-
-        Returns:
-            dict[np.ndarray]: Outputs of the symbolic graph of distribution
-                parameters.
-
-        """
-        prob = self._f_prob(obs)
-        return dict(prob=prob)
-
     def get_action(self, observation):
-        """Get single action from this policy for the input observation.
+        """Return a single action.
 
         Args:
-            observation (numpy.ndarray): Observation from environment.
+            observation (numpy.ndarray): Observations.
 
         Returns:
-            numpy.ndarray: Predicted action.
-            dict[str: np.ndarray]: Action distribution.
+            int: Action given input observation.
+            dict(numpy.ndarray): Distribution parameters.
 
         """
-        flat_obs = self.observation_space.flatten(observation)
-        prob = self._f_prob([flat_obs])[0]
-        action = self.action_space.weighted_sample(prob)
-        return action, dict(prob=prob)
+        sample, prob = self._f_prob(np.expand_dims([observation], 1))
+        return np.squeeze(sample[0]), dict(prob=np.squeeze(prob, axis=1)[0])
 
     def get_actions(self, observations):
-        """Get multiple actions from this policy for the input observations.
+        """Return multiple actions.
 
         Args:
-            observations (numpy.ndarray): Observations from environment.
+            observations (numpy.ndarray): Observations.
 
         Returns:
-            numpy.ndarray: Predicted actions.
-            dict[str: np.ndarray]: Action distributions.
+            list[int]: Actions given input observations.
+            dict(numpy.ndarray): Distribution parameters.
 
         """
-        flat_obs = self.observation_space.flatten_n(observations)
-        probs = self._f_prob(flat_obs)
-        actions = list(map(self.action_space.weighted_sample, probs))
-        return actions, dict(prob=probs)
+        samples, probs = self._f_prob(np.expand_dims(observations, 1))
+        return np.squeeze(samples), dict(prob=np.squeeze(probs, axis=1))
 
     def get_regularizable_vars(self):
         """Get regularizable weight variables under the Policy scope.
 
         Returns:
-            list(tf.Variable): List of regularizable variables.
+            list[tf.Tensor]: Trainable variables.
 
         """
         trainable = self.get_trainable_vars()
@@ -183,27 +165,19 @@ class CategoricalMLPPolicy(StochasticPolicy):
             if 'hidden' in var.name and 'kernel' in var.name
         ]
 
-    @property
-    def distribution(self):
-        """Policy distribution.
-
-        Returns:
-            garage.tf.distributions.Categorical: Policy distribution.
-
-        """
-        return Categorical(self._action_dim)
-
     def clone(self, name):
         """Return a clone of the policy.
 
-        It only copies the configuration of the Q-function,
+        It only copies the configuration of the primitive,
         not the parameters.
 
         Args:
-            name (str): Name of the newly created policy.
+            name (str): Name of the newly created policy. It has to be
+                different from source policy if cloned under the same
+                computational graph.
 
         Returns:
-            garage.tf.policies.CategoricalMLPPolicy: Clone of this object
+            garage.tf.policies.Policy: Newly cloned policy.
 
         """
         return self.__class__(name=name,
@@ -221,19 +195,10 @@ class CategoricalMLPPolicy(StochasticPolicy):
         """Object.__getstate__.
 
         Returns:
-            dict: the state to be pickled for the instance.
+            dict: State dictionary.
 
         """
         new_dict = super().__getstate__()
         del new_dict['_f_prob']
+        del new_dict['_dist']
         return new_dict
-
-    def __setstate__(self, state):
-        """Object.__setstate__.
-
-        Args:
-            state (dict): Unpickled state.
-
-        """
-        super().__setstate__(state)
-        self._initialize()

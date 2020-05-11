@@ -6,7 +6,7 @@ import abc
 import collections
 
 import akro
-from dowel import logger, tabular
+from dowel import logger
 import gym
 import numpy as np
 
@@ -455,12 +455,6 @@ class RL2(MetaRLAlgorithm, abc.ABC):
 
         agent_infos = concatenated_paths_stacked['agent_infos']
         valids = concatenated_paths_stacked['valids']
-
-        ent = np.sum(self._policy.distribution.entropy(agent_infos) *
-                     valids) / np.sum(valids)
-
-        tabular.record('Entropy', ent)
-        tabular.record('Perplexity', np.exp(ent))
 
         return concatenated_paths_stacked
 

@@ -30,11 +30,6 @@ class Module(abc.ABC):
     def vectorized(self):
         """bool: If this module supports vectorization input."""
 
-    @property
-    @abc.abstractmethod
-    def recurrent(self):
-        """bool: If this module has a hidden state."""
-
     def reset(self, do_resets=None):
         """Reset the module.
 

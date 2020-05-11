@@ -83,16 +83,6 @@ class Policy(Module):
         """
         return self._env_spec
 
-    @property
-    def recurrent(self):
-        """Whether the policy uses recurrent network or not.
-
-        Returns:
-            bool: Indicating if the policy is recurrent.
-
-        """
-        return False
-
     def log_diagnostics(self, paths):
         """Log extra information per iteration based on the collected paths.
 

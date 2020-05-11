@@ -227,6 +227,7 @@ class GaussianMLPModel2(Model):
                             self._init_std_param),
                         trainable=self._learn_std,
                         name='log_std_network')
+                    log_std_network = tf.expand_dims(log_std_network, 1)
 
         mean_var = mean_network
         std_param = log_std_network

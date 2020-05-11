@@ -64,8 +64,8 @@ class TestDiscreteCNNQFunction(TfGraphTestCase):
 
     def test_obs_is_image(self):
         image_env = TfEnv(DummyDiscretePixelEnv(), is_image=True)
-        with mock.patch(('garage.tf.policies.'
-                         'categorical_cnn_policy.CNNModel._build'),
+        with mock.patch(('garage.tf.models.'
+                         'categorical_cnn_model.CNNModel._build'),
                         autospec=True,
                         side_effect=CNNModel._build) as build:
 
@@ -99,8 +99,8 @@ class TestDiscreteCNNQFunction(TfGraphTestCase):
 
     def test_obs_not_image(self):
         env = self.env
-        with mock.patch(('garage.tf.policies.'
-                         'categorical_cnn_policy.CNNModel._build'),
+        with mock.patch(('garage.tf.models.'
+                         'categorical_cnn_model.CNNModel._build'),
                         autospec=True,
                         side_effect=CNNModel._build) as build:
 
