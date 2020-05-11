@@ -3,9 +3,10 @@
 import gym
 import tensorflow as tf
 
+from garage import wrap_experiment
 from garage.envs import normalize
 from garage.envs.multi_env_wrapper import MultiEnvWrapper
-from garage.experiment import run_experiment
+from garage.experiment.deterministic import set_seed
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import PPO
 from garage.tf.envs import TfEnv
@@ -13,17 +14,19 @@ from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import CategoricalMLPPolicy
 
 
-def run_task(snapshot_config, *_):
-    """Run task.
+@wrap_experiment
+def multi_env_ppo(ctxt=None, seed=1):
+    """Train PPO on two Atari environments simultaneously.
 
     Args:
-        snapshot_config (garage.experiment.SnapshotConfig): The snapshot
+        ctxt (garage.experiment.ExperimentContext): The experiment
             configuration used by LocalRunner to create the snapshotter.
-
-        _ (object): Ignored by this function.
+        seed (int): Used to seed the random number generator to produce
+            determinism.
 
     """
-    with LocalTFRunner(snapshot_config=snapshot_config) as runner:
+    set_seed(seed)
+    with LocalTFRunner(ctxt) as runner:
         env1 = TfEnv(normalize(gym.make('Adventure-ram-v4')))
         env2 = TfEnv(normalize(gym.make('Alien-ram-v4')))
         env = MultiEnvWrapper([env1, env2])
@@ -53,4 +56,4 @@ def run_task(snapshot_config, *_):
         runner.train(n_epochs=120, batch_size=2048, plot=False)
 
 
-run_experiment(run_task, snapshot_mode='last', seed=1)
+multi_env_ppo()

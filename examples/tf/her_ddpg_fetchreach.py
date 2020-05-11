@@ -10,7 +10,8 @@ Results (may vary by seed):
 import gym
 import tensorflow as tf
 
-from garage.experiment import run_experiment
+from garage import wrap_experiment
+from garage.experiment.deterministic import set_seed
 from garage.np.exploration_strategies import OUStrategy
 from garage.replay_buffer import HerReplayBuffer
 from garage.tf.algos import DDPG
@@ -20,16 +21,19 @@ from garage.tf.policies import ContinuousMLPPolicy
 from garage.tf.q_functions import ContinuousMLPQFunction
 
 
-def run_task(snapshot_config, *_):
-    """Run task.
+@wrap_experiment(snapshot_mode='last')
+def her_ddpg_fetchreach(ctxt=None, seed=1):
+    """Train DDPG + HER on the goal-conditioned FetchReach env.
 
     Args:
-        snapshot_config (garage.experiment.SnapshotConfig): The snapshot
+        ctxt (garage.experiment.ExperimentContext): The experiment
             configuration used by LocalRunner to create the snapshotter.
-        *_ (object): Ignored by this function.
+        seed (int): Used to seed the random number generator to produce
+            determinism.
 
     """
-    with LocalTFRunner(snapshot_config=snapshot_config) as runner:
+    set_seed(seed)
+    with LocalTFRunner(snapshot_config=ctxt) as runner:
         env = TfEnv(gym.make('FetchReach-v1'))
 
         action_noise = OUStrategy(env.spec, sigma=0.2)
@@ -78,4 +82,4 @@ def run_task(snapshot_config, *_):
         runner.train(n_epochs=50, batch_size=100)
 
 
-run_experiment(run_task, snapshot_mode='last', seed=1)
+her_ddpg_fetchreach()

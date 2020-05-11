@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-This is an example to train a task with VPG algorithm.
+"""This is an example to train a task with TRPO algorithm.
 
 Here it runs CartPole-v1 environment with 100 iterations.
 
@@ -8,7 +7,8 @@ Results:
     AverageReturn: 100
     RiseTime: itr 13
 """
-from garage.experiment import run_experiment
+from garage import wrap_experiment
+from garage.experiment.deterministic import set_seed
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import TRPO
 from garage.tf.envs import TfEnv
@@ -16,9 +16,19 @@ from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import CategoricalMLPPolicy
 
 
-def run_task(snapshot_config, *_):
-    """Run task."""
-    with LocalTFRunner(snapshot_config=snapshot_config) as runner:
+@wrap_experiment
+def trpo_cartpole(ctxt=None, seed=1):
+    """Train TRPO with CartPole-v1 environment.
+
+    Args:
+        ctxt (garage.experiment.ExperimentContext): The experiment
+            configuration used by LocalRunner to create the snapshotter.
+        seed (int): Used to seed the random number generator to produce
+            determinism.
+
+    """
+    set_seed(seed)
+    with LocalTFRunner(ctxt) as runner:
         env = TfEnv(env_name='CartPole-v1')
 
         policy = CategoricalMLPPolicy(name='policy',
@@ -38,8 +48,4 @@ def run_task(snapshot_config, *_):
         runner.train(n_epochs=100, batch_size=4000)
 
 
-run_experiment(
-    run_task,
-    snapshot_mode='last',
-    seed=1,
-)
+trpo_cartpole()

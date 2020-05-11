@@ -1,14 +1,9 @@
 #!/usr/bin/env python3
-"""
-This is an example to train a task with VPG algorithm.
+"""This is an example to train a task with parallel sampling."""
+import click
 
-Here it runs CartPole-v1 environment with 100 iterations.
-
-Results:
-    AverageReturn: 100
-    RiseTime: itr 13
-"""
-from garage.experiment import run_experiment
+from garage import wrap_experiment
+from garage.experiment.deterministic import set_seed
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import TRPO
 from garage.tf.envs import TfEnv
@@ -16,15 +11,29 @@ from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import CategoricalMLPPolicy
 from garage.tf.samplers import BatchSampler
 
-batch_size = 4000
-max_path_length = 500
-n_envs = batch_size // max_path_length
 
+@click.command()
+@click.option('--batch_size', type=int, default=4000)
+@click.option('--max_path_length', type=int, default=500)
+@wrap_experiment
+def trpo_cartpole_batch_sampler(ctxt=None,
+                                seed=1,
+                                batch_size=4000,
+                                max_path_length=500):
+    """Train TRPO with CartPole-v1 environment.
 
-def run_task(snapshot_config, *_):
-    """Run task."""
-    with LocalTFRunner(snapshot_config=snapshot_config,
-                       max_cpus=n_envs) as runner:
+    Args:
+        ctxt (garage.experiment.ExperimentContext): The experiment
+            configuration used by LocalRunner to create the snapshotter.
+        seed (int): Used to seed the random number generator to produce
+            determinism.
+        batch_size (int): Number of timesteps to use in each training step.
+        max_path_length (int): Number of timesteps to truncate paths to.
+
+    """
+    set_seed(seed)
+    n_envs = batch_size // max_path_length
+    with LocalTFRunner(ctxt, max_cpus=n_envs) as runner:
         env = TfEnv(env_name='CartPole-v1')
 
         policy = CategoricalMLPPolicy(name='policy',
@@ -48,4 +57,4 @@ def run_task(snapshot_config, *_):
         runner.train(n_epochs=100, batch_size=4000, plot=False)
 
 
-run_experiment(run_task, snapshot_mode='last', seed=1)
+trpo_cartpole_batch_sampler()

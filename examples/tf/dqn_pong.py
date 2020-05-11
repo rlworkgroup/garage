@@ -6,6 +6,7 @@ Here it creates a gym environment Pong, and trains a DQN with 1M steps.
 import click
 import gym
 
+from garage import wrap_experiment
 from garage.envs.wrappers.clip_reward import ClipReward
 from garage.envs.wrappers.episodic_life import EpisodicLife
 from garage.envs.wrappers.fire_reset import FireReset
@@ -14,7 +15,7 @@ from garage.envs.wrappers.max_and_skip import MaxAndSkip
 from garage.envs.wrappers.noop import Noop
 from garage.envs.wrappers.resize import Resize
 from garage.envs.wrappers.stack_frames import StackFrames
-from garage.experiment import run_experiment
+from garage.experiment.deterministic import set_seed
 from garage.np.exploration_strategies import EpsilonGreedyStrategy
 from garage.replay_buffer import SimpleReplayBuffer
 from garage.tf.algos import DQN
@@ -24,17 +25,22 @@ from garage.tf.policies import DiscreteQfDerivedPolicy
 from garage.tf.q_functions import DiscreteCNNQFunction
 
 
-def run_task(snapshot_config, variant_data, *_):
-    """Run task.
+@click.command()
+@click.option('--buffer_size', type=int, default=int(5e4))
+@wrap_experiment
+def dqn_pong(ctxt=None, seed=1, buffer_size=int(5e4)):
+    """Train DQN on PongNoFrameskip-v4 environment.
 
     Args:
-        snapshot_config (garage.experiment.SnapshotConfig): The snapshot
+        ctxt (garage.experiment.ExperimentContext): The experiment
             configuration used by LocalRunner to create the snapshotter.
-        variant_data (dict): Custom arguments for the task.
-        *_ (object): Ignored by this function.
+        seed (int): Used to seed the random number generator to produce
+            determinism.
+        buffer_size (int): Number of timesteps to store in replay buffer.
 
     """
-    with LocalTFRunner(snapshot_config=snapshot_config) as runner:
+    set_seed(seed)
+    with LocalTFRunner(ctxt) as runner:
         n_epochs = 100
         steps_per_epoch = 20
         sampler_batch_size = 500
@@ -53,10 +59,9 @@ def run_task(snapshot_config, variant_data, *_):
 
         env = TfEnv(env, is_image=True)
 
-        replay_buffer = SimpleReplayBuffer(
-            env_spec=env.spec,
-            size_in_transitions=variant_data['buffer_size'],
-            time_horizon=1)
+        replay_buffer = SimpleReplayBuffer(env_spec=env.spec,
+                                           size_in_transitions=buffer_size,
+                                           time_horizon=1)
 
         qf = DiscreteCNNQFunction(env_spec=env.spec,
                                   filter_dims=(8, 4, 3),
@@ -90,26 +95,4 @@ def run_task(snapshot_config, variant_data, *_):
         runner.train(n_epochs=n_epochs, batch_size=sampler_batch_size)
 
 
-@click.command()
-@click.option('--buffer_size', type=int, default=int(5e4))
-def _args(buffer_size):
-    """A click command to parse arguments for automated testing purposes.
-
-    Args:
-        buffer_size (int): Size of replay buffer.
-
-    Returns:
-        int: The input argument as-is.
-
-    """
-    return buffer_size
-
-
-replay_buffer_size = _args.main(standalone_mode=False)
-run_experiment(
-    run_task,
-    snapshot_mode='last',
-    seed=1,
-    plot=False,
-    variant={'buffer_size': replay_buffer_size},
-)
+dqn_pong()

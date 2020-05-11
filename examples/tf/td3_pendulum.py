@@ -11,7 +11,8 @@ Results:
 import gym
 import tensorflow as tf
 
-from garage.experiment import run_experiment
+from garage import wrap_experiment
+from garage.experiment.deterministic import set_seed
 from garage.np.exploration_strategies.gaussian_strategy import GaussianStrategy
 from garage.replay_buffer import SimpleReplayBuffer
 from garage.tf.algos import TD3
@@ -21,16 +22,19 @@ from garage.tf.policies import ContinuousMLPPolicy
 from garage.tf.q_functions import ContinuousMLPQFunction
 
 
-def run_task(snapshot_config, *_):
+@wrap_experiment(snapshot_mode='last')
+def td3_pendulum(ctxt=None, seed=1):
     """Wrap TD3 training task in the run_task function.
 
     Args:
-        snapshot_config (garage.experiment.SnapshotConfig): Configuration
-            values for snapshotting.
-        *_ (object): Hyperparameters (unused).
+        ctxt (garage.experiment.ExperimentContext): The experiment
+            configuration used by LocalRunner to create the snapshotter.
+        seed (int): Used to seed the random number generator to produce
+            determinism.
 
     """
-    with LocalTFRunner(snapshot_config) as runner:
+    set_seed(seed)
+    with LocalTFRunner(ctxt) as runner:
         env = TfEnv(gym.make('InvertedDoublePendulum-v2'))
 
         action_noise = GaussianStrategy(env.spec, max_sigma=0.1, min_sigma=0.1)
@@ -78,8 +82,4 @@ def run_task(snapshot_config, *_):
         runner.train(n_epochs=500, batch_size=250)
 
 
-run_experiment(
-    run_task,
-    snapshot_mode='last',
-    seed=1,
-)
+td3_pendulum(seed=1)

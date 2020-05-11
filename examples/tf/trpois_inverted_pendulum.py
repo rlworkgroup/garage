@@ -5,8 +5,9 @@ Iterations alternate between live and importance sampled iterations.
 """
 import gym
 
+from garage import wrap_experiment
 from garage.envs import normalize
-from garage.experiment import run_experiment
+from garage.experiment.deterministic import set_seed
 from garage.np.baselines import LinearFeatureBaseline
 from garage.sampler import ISSampler
 from garage.tf.algos import TRPO
@@ -15,16 +16,19 @@ from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import GaussianMLPPolicy
 
 
-def run_task(snapshot_config, *_):
-    """Run the job.
+@wrap_experiment
+def trpois_inverted_pendulum(ctxt=None, seed=1):
+    """Train TRPO on InvertedPendulum-v2 with importance sampling.
 
     Args:
-        snapshot_config (garage.experiment.SnapshotConfig): Configuration
-            values for snapshotting.
-        *_ (object): Hyperparameters (unused).
+        ctxt (garage.experiment.ExperimentContext): The experiment
+            configuration used by LocalRunner to create the snapshotter.
+        seed (int): Used to seed the random number generator to produce
+            determinism.
 
     """
-    with LocalTFRunner(snapshot_config=snapshot_config) as runner:
+    set_seed(seed)
+    with LocalTFRunner(ctxt) as runner:
         env = TfEnv(normalize(gym.make('InvertedPendulum-v2')))
 
         policy = GaussianMLPPolicy(env_spec=env.spec, hidden_sizes=(32, 32))
@@ -45,8 +49,4 @@ def run_task(snapshot_config, *_):
         runner.train(n_epochs=200, batch_size=4000)
 
 
-run_experiment(
-    run_task,
-    snapshot_mode='last',
-    seed=1,
-)
+trpois_inverted_pendulum()

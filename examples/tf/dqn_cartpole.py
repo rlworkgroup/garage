@@ -5,7 +5,8 @@ Here it creates a gym environment CartPole, and trains a DQN with 50k steps.
 """
 import gym
 
-from garage.experiment import run_experiment
+from garage import wrap_experiment
+from garage.experiment.deterministic import set_seed
 from garage.np.exploration_strategies import EpsilonGreedyStrategy
 from garage.replay_buffer import SimpleReplayBuffer
 from garage.tf.algos import DQN
@@ -15,16 +16,19 @@ from garage.tf.policies import DiscreteQfDerivedPolicy
 from garage.tf.q_functions import DiscreteMLPQFunction
 
 
-def run_task(snapshot_config, *_):
-    """Run task.
+@wrap_experiment
+def dqn_cartpole(ctxt=None, seed=1):
+    """Train TRPO with CubeCrash-v0 environment.
 
     Args:
-        snapshot_config (garage.experiment.SnapshotConfig): The snapshot
+        ctxt (garage.experiment.ExperimentContext): The experiment
             configuration used by LocalRunner to create the snapshotter.
-        *_ (object): Ignored by this function.
+        seed (int): Used to seed the random number generator to produce
+            determinism.
 
     """
-    with LocalTFRunner(snapshot_config=snapshot_config) as runner:
+    set_seed(seed)
+    with LocalTFRunner(ctxt) as runner:
         n_epochs = 10
         steps_per_epoch = 10
         sampler_batch_size = 500
@@ -59,4 +63,4 @@ def run_task(snapshot_config, *_):
         runner.train(n_epochs=n_epochs, batch_size=sampler_batch_size)
 
 
-run_experiment(run_task, snapshot_mode='last', seed=1)
+dqn_cartpole()

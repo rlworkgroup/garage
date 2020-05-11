@@ -2,7 +2,8 @@
 """An example to train a task with TRPO algorithm."""
 import gym
 
-from garage.experiment import run_experiment
+from garage import wrap_experiment
+from garage.experiment.deterministic import set_seed
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import TRPO
 from garage.tf.envs import TfEnv
@@ -10,9 +11,19 @@ from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import CategoricalMLPPolicy
 
 
-def run_task(snapshot_config, *_):
-    """Run task."""
-    with LocalTFRunner(snapshot_config=snapshot_config) as runner:
+@wrap_experiment
+def trpo_gym_tf_cartpole(ctxt=None, seed=1):
+    """Train TRPO with CartPole-v0 environment.
+
+    Args:
+        ctxt (garage.experiment.ExperimentContext): The experiment
+            configuration used by LocalRunner to create the snapshotter.
+        seed (int): Used to seed the random number generator to produce
+            determinism.
+
+    """
+    set_seed(seed)
+    with LocalTFRunner(snapshot_config=ctxt) as runner:
         env = TfEnv(gym.make('CartPole-v0'))
 
         policy = CategoricalMLPPolicy(name='policy',
@@ -34,8 +45,4 @@ def run_task(snapshot_config, *_):
         runner.train(n_epochs=120, batch_size=4000)
 
 
-run_experiment(
-    run_task,
-    snapshot_mode='last',
-    seed=1,
-)
+trpo_gym_tf_cartpole()

@@ -2,7 +2,8 @@
 """An example to train a task with TRPO algorithm."""
 import gym
 
-from garage.experiment import run_experiment
+from garage import wrap_experiment
+from garage.experiment.deterministic import set_seed
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import TRPO
 from garage.tf.envs import TfEnv
@@ -10,9 +11,20 @@ from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import GaussianMLPPolicy
 
 
-def run_task(snapshot_config, *_):
-    """Run task."""
-    with LocalTFRunner(snapshot_config=snapshot_config) as runner:
+@wrap_experiment
+def trpo_swimmer(ctxt=None, seed=1, batch_size=4000):
+    """Train TRPO with Swimmer-v2 environment.
+
+    Args:
+        ctxt (garage.experiment.ExperimentContext): The experiment
+            configuration used by LocalRunner to create the snapshotter.
+        seed (int): Used to seed the random number generator to produce
+            determinism.
+        batch_size (int): Number of timesteps to use in each training step.
+
+    """
+    set_seed(seed)
+    with LocalTFRunner(ctxt) as runner:
         env = TfEnv(gym.make('Swimmer-v2'))
 
         policy = GaussianMLPPolicy(env_spec=env.spec, hidden_sizes=(32, 32))
@@ -27,11 +39,7 @@ def run_task(snapshot_config, *_):
                     max_kl_step=0.01)
 
         runner.setup(algo, env)
-        runner.train(n_epochs=40, batch_size=4000)
+        runner.train(n_epochs=40, batch_size=batch_size)
 
 
-run_experiment(
-    run_task,
-    snapshot_mode='last',
-    seed=1,
-)
+trpo_swimmer()

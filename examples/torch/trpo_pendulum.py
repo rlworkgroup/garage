@@ -5,26 +5,30 @@ Here it runs InvertedDoublePendulum-v2 environment with 100 iterations.
 """
 import torch
 
-from garage.experiment import LocalRunner, run_experiment
+from garage import wrap_experiment
+from garage.experiment import LocalRunner
+from garage.experiment.deterministic import set_seed
 from garage.tf.envs import TfEnv
 from garage.torch.algos import TRPO
 from garage.torch.policies import GaussianMLPPolicy
 from garage.torch.value_functions import GaussianMLPValueFunction
 
 
-def run_task(snapshot_config, *_):
-    """Set up environment and algorithm and run the task.
+@wrap_experiment
+def trpo_pendulum(ctxt=None, seed=1):
+    """Train TRPO with InvertedDoublePendulum-v2 environment.
 
     Args:
-        snapshot_config (garage.experiment.SnapshotConfig): The snapshot
+        ctxt (garage.experiment.ExperimentContext): The experiment
             configuration used by LocalRunner to create the snapshotter.
-            If None, it will create one with default settings.
-        _ : Unused parameters
+        seed (int): Used to seed the random number generator to produce
+            determinism.
 
     """
+    set_seed(seed)
     env = TfEnv(env_name='InvertedDoublePendulum-v2')
 
-    runner = LocalRunner(snapshot_config)
+    runner = LocalRunner(ctxt)
 
     policy = GaussianMLPPolicy(env.spec,
                                hidden_sizes=[32, 32],
@@ -47,8 +51,4 @@ def run_task(snapshot_config, *_):
     runner.train(n_epochs=100, batch_size=1024)
 
 
-run_experiment(
-    run_task,
-    snapshot_mode='last',
-    seed=1,
-)
+trpo_pendulum(seed=1)
