@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-This is an example to train a task with REPS algorithm.
+"""This is an example to train a task with REPS algorithm.
 
 Here it runs gym CartPole env with 100 iterations.
 
@@ -12,7 +11,8 @@ Results:
 
 import gym
 
-from garage.experiment import run_experiment
+from garage import wrap_experiment
+from garage.experiment.deterministic import set_seed
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import REPS
 from garage.tf.envs import TfEnv
@@ -20,9 +20,19 @@ from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import CategoricalMLPPolicy
 
 
-def run_task(snapshot_config, *_):
-    """Run task."""
-    with LocalTFRunner(snapshot_config=snapshot_config) as runner:
+@wrap_experiment
+def reps_gym_cartpole(ctxt=None, seed=1):
+    """Train REPS with CartPole-v0 environment.
+
+    Args:
+        ctxt (garage.experiment.ExperimentContext): The experiment
+            configuration used by LocalRunner to create the snapshotter.
+        seed (int): Used to seed the random number generator to produce
+            determinism.
+
+    """
+    set_seed(seed)
+    with LocalTFRunner(snapshot_config=ctxt) as runner:
         env = TfEnv(gym.make('CartPole-v0'))
 
         policy = CategoricalMLPPolicy(env_spec=env.spec, hidden_sizes=[32, 32])
@@ -39,8 +49,4 @@ def run_task(snapshot_config, *_):
         runner.train(n_epochs=100, batch_size=4000, plot=False)
 
 
-run_experiment(
-    run_task,
-    snapshot_mode='last',
-    seed=1,
-)
+reps_gym_cartpole()

@@ -8,7 +8,8 @@ Results:
     RiseTime: epoch 38 (itr 760),
               but regression is observed in the course of training.
 """
-from garage.experiment import run_experiment
+from garage import wrap_experiment
+from garage.experiment.deterministic import set_seed
 from garage.np.algos import CMAES
 from garage.np.baselines import LinearFeatureBaseline
 from garage.sampler import OnPolicyVectorizedSampler
@@ -17,16 +18,19 @@ from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import CategoricalMLPPolicy
 
 
-def run_task(snapshot_config, *_):
+@wrap_experiment
+def cma_es_cartpole(ctxt=None, seed=1):
     """Train CMA_ES with Cartpole-v1 environment.
 
     Args:
-        snapshot_config (garage.experiment.SnapshotConfig): The snapshot
+        ctxt (garage.experiment.ExperimentContext): The experiment
             configuration used by LocalRunner to create the snapshotter.
-        *_ (object): Ignored by this function.
+        seed (int): Used to seed the random number generator to produce
+            determinism.
 
     """
-    with LocalTFRunner(snapshot_config=snapshot_config) as runner:
+    set_seed(seed)
+    with LocalTFRunner(ctxt) as runner:
         env = TfEnv(env_name='CartPole-v1')
 
         policy = CategoricalMLPPolicy(name='policy',
@@ -47,8 +51,4 @@ def run_task(snapshot_config, *_):
         runner.train(n_epochs=100, batch_size=1000)
 
 
-run_experiment(
-    run_task,
-    snapshot_mode='last',
-    seed=1,
-)
+cma_es_cartpole()

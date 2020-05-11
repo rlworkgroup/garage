@@ -6,8 +6,9 @@ Here it runs MemorizeDigits-v0 environment with 1000 iterations.
 import click
 import gym
 
+from garage import wrap_experiment
 from garage.envs import normalize
-from garage.experiment import run_experiment
+from garage.experiment.deterministic import set_seed
 from garage.tf.algos import PPO
 from garage.tf.baselines import GaussianCNNBaseline
 from garage.tf.envs import TfEnv
@@ -15,19 +16,22 @@ from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import CategoricalCNNPolicy
 
 
-def run_task(snapshot_config, variant_data, *_):
-    """Run task.
+@click.command()
+@click.option('--batch_size', type=int, default=4000)
+@wrap_experiment
+def ppo_memorize_digits(ctxt=None, seed=1, batch_size=4000):
+    """Train PPO on MemorizeDigits-v0 environment.
 
     Args:
-        snapshot_config (garage.experiment.SnapshotConfig): The snapshot
+        ctxt (garage.experiment.ExperimentContext): The experiment
             configuration used by LocalRunner to create the snapshotter.
-
-        variant_data (dict): Custom arguments for the task.
-
-        *_ (object): Ignored by this function.
+        seed (int): Used to seed the random number generator to produce
+            determinism.
+        batch_size (int): Number of timesteps to use in each training step.
 
     """
-    with LocalTFRunner(snapshot_config=snapshot_config) as runner:
+    set_seed(seed)
+    with LocalTFRunner(ctxt) as runner:
         env = TfEnv(normalize(gym.make('MemorizeDigits-v0')), is_image=True)
         policy = CategoricalCNNPolicy(env_spec=env.spec,
                                       conv_filters=(32, 64, 64),
@@ -54,28 +58,7 @@ def run_task(snapshot_config, variant_data, *_):
                    flatten_input=False)
 
         runner.setup(algo, env)
-        runner.train(n_epochs=1000, batch_size=variant_data['batch_size'])
+        runner.train(n_epochs=1000, batch_size=batch_size)
 
 
-@click.command()
-@click.option('--batch_size', '_batch_size', type=int, default=2048)
-def _args(_batch_size):
-    """A click command to parse arguments for automated testing purposes.
-
-    Args:
-        _batch_size (int): Number of environment steps in one batch.
-
-    Returns:
-        int: The input argument as-is.
-
-    """
-    return _batch_size
-
-
-batch_size = _args.main(standalone_mode=False)
-run_experiment(
-    run_task,
-    snapshot_mode='last',
-    seed=1,
-    variant={'batch_size': batch_size},
-)
+ppo_memorize_digits()

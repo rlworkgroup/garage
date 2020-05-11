@@ -9,9 +9,11 @@ import gym
 import torch
 from torch.nn import functional as F
 
+from garage import wrap_experiment
 from garage.envs import GarageEnv
 from garage.envs import normalize
-from garage.experiment import LocalRunner, run_experiment
+from garage.experiment import LocalRunner
+from garage.experiment.deterministic import set_seed
 from garage.np.exploration_strategies import OUStrategy
 from garage.replay_buffer import SimpleReplayBuffer
 from garage.torch.algos import DDPG
@@ -19,17 +21,20 @@ from garage.torch.policies import DeterministicMLPPolicy
 from garage.torch.q_functions import ContinuousMLPQFunction
 
 
-def run_task(snapshot_config, *_):
-    """Set up environment and algorithm and run the task.
+@wrap_experiment(snapshot_mode='last')
+def ddpg_pendulum(ctxt=None, seed=1, lr=1e-4):
+    """Train DDPG with InvertedDoublePendulum-v2 environment.
 
     Args:
-        snapshot_config (garage.experiment.SnapshotConfig): The snapshot
+        ctxt (garage.experiment.ExperimentContext): The experiment
             configuration used by LocalRunner to create the snapshotter.
-            If None, it will create one with default settings.
-        _ : Unused parameters
+        seed (int): Used to seed the random number generator to produce
+            determinism.
+        lr (float): Learning rate for policy optimization.
 
     """
-    runner = LocalRunner(snapshot_config)
+    set_seed(seed)
+    runner = LocalRunner(ctxt)
     env = GarageEnv(normalize(gym.make('InvertedDoublePendulum-v2')))
 
     action_noise = OUStrategy(env.spec, sigma=0.2)
@@ -47,7 +52,7 @@ def run_task(snapshot_config, *_):
                                        size_in_transitions=int(1e6),
                                        time_horizon=100)
 
-    policy_optimizer = (torch.optim.Adagrad, {'lr': 1e-4, 'lr_decay': 0.99})
+    policy_optimizer = (torch.optim.Adagrad, {'lr': lr, 'lr_decay': 0.99})
 
     ddpg = DDPG(env_spec=env.spec,
                 policy=policy,
@@ -67,8 +72,4 @@ def run_task(snapshot_config, *_):
     runner.train(n_epochs=500, batch_size=100)
 
 
-run_experiment(
-    run_task,
-    snapshot_mode='last',
-    seed=1,
-)
+ddpg_pendulum()

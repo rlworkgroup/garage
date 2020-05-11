@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """This is an example to train multiple tasks with TRPO algorithm."""
+from garage import wrap_experiment
 from garage.envs import normalize
 from garage.envs import PointEnv
 from garage.envs.multi_env_wrapper import MultiEnvWrapper
-from garage.experiment import run_experiment
+from garage.experiment.deterministic import set_seed
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import TRPO
 from garage.tf.envs import TfEnv
@@ -11,17 +12,19 @@ from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import GaussianMLPPolicy
 
 
-def run_task(snapshot_config, *_):
-    """Run task.
+@wrap_experiment
+def multi_env_trpo(ctxt=None, seed=1):
+    """Train TRPO on two different PointEnv instances.
 
     Args:
-        snapshot_config (garage.experiment.SnapshotConfig): The snapshot
+        ctxt (garage.experiment.ExperimentContext): The experiment
             configuration used by LocalRunner to create the snapshotter.
-
-        _ (object): Ignored by this function.
+        seed (int): Used to seed the random number generator to produce
+            determinism.
 
     """
-    with LocalTFRunner(snapshot_config=snapshot_config) as runner:
+    set_seed(seed)
+    with LocalTFRunner(ctxt) as runner:
         env1 = TfEnv(normalize(PointEnv(goal=(-1., 0.))))
         env2 = TfEnv(normalize(PointEnv(goal=(1., 0.))))
         env = MultiEnvWrapper([env1, env2])
@@ -43,4 +46,4 @@ def run_task(snapshot_config, *_):
         runner.train(n_epochs=40, batch_size=2048, plot=False)
 
 
-run_experiment(run_task, snapshot_mode='last', seed=1)
+multi_env_trpo()
