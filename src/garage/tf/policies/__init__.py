@@ -12,11 +12,10 @@ from garage.tf.policies.gaussian_mlp_policy import GaussianMLPPolicy
 from garage.tf.policies.gaussian_mlp_task_embedding_policy import (
     GaussianMLPTaskEmbeddingPolicy)
 from garage.tf.policies.policy import Policy, StochasticPolicy
-from garage.tf.policies.policy import StochasticPolicy2
 from garage.tf.policies.task_embedding_policy import TaskEmbeddingPolicy
 
 __all__ = [
-    'Policy', 'StochasticPolicy', 'StochasticPolicy2', 'CategoricalCNNPolicy',
+    'Policy', 'StochasticPolicy', 'CategoricalCNNPolicy',
     'CategoricalGRUPolicy', 'CategoricalLSTMPolicy', 'CategoricalMLPPolicy',
     'ContinuousMLPPolicy', 'DiscreteQfDerivedPolicy', 'GaussianGRUPolicy',
     'GaussianLSTMPolicy', 'GaussianMLPPolicy',

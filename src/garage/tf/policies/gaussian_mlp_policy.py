@@ -3,15 +3,16 @@
 A policy represented by a Gaussian distribution
 which is parameterized by a multilayer perceptron (MLP).
 """
+# pylint: disable=wrong-import-order
 import akro
 import numpy as np
 import tensorflow as tf
 
-from garage.tf.models import GaussianMLPModel2
-from garage.tf.policies.policy import StochasticPolicy2
+from garage.tf.models import GaussianMLPModel
+from garage.tf.policies.policy import StochasticPolicy
 
 
-class GaussianMLPPolicy(StochasticPolicy2):
+class GaussianMLPPolicy(StochasticPolicy):
     """Gaussian MLP Policy.
 
     A policy represented by a Gaussian distribution
@@ -119,7 +120,7 @@ class GaussianMLPPolicy(StochasticPolicy2):
         self._f_dist = None
         self._dist = None
 
-        self.model = GaussianMLPModel2(
+        self.model = GaussianMLPModel(
             output_dim=self.action_dim,
             hidden_sizes=hidden_sizes,
             hidden_nonlinearity=hidden_nonlinearity,

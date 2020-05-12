@@ -1,15 +1,22 @@
-"""GaussianGRUModel."""
+"""Gaussian GRU Model.
+
+A model represented by a Gaussian distribution
+which is parameterized by a Gated Recurrent Unit (GRU).
+"""
 import numpy as np
 import tensorflow as tf
+import tensorflow_probability as tfp
 
-from garage.tf.distributions import DiagonalGaussian
 from garage.tf.models.gru import gru
 from garage.tf.models.model import Model
 from garage.tf.models.parameter import recurrent_parameter
 
 
 class GaussianGRUModel(Model):
-    """GaussianGRUModel.
+    """Gaussian GRU Model.
+
+    A model represented by a Gaussian distribution
+    which is parameterized by a Gated Recurrent Unit (GRU).
 
     Args:
         output_dim (int): Output dimension of the model.
@@ -54,7 +61,7 @@ class GaussianGRUModel(Model):
     def __init__(self,
                  output_dim,
                  hidden_dim=32,
-                 name=None,
+                 name='GaussianGRUModel',
                  hidden_nonlinearity=tf.nn.tanh,
                  hidden_w_init=tf.initializers.glorot_uniform(),
                  hidden_b_init=tf.zeros_initializer(),
@@ -85,11 +92,11 @@ class GaussianGRUModel(Model):
         self._layer_normalization = layer_normalization
         self._learn_std = learn_std
         self._std_share_network = std_share_network
+        # pylint: disable=assignment-from-no-return
         self._init_std_param = np.log(init_std)
         self._initialize()
 
     def _initialize(self):
-        """Initialize model."""
         action_dim = self._output_dim
         self._mean_std_gru_cell = tf.keras.layers.GRUCell(
             units=self._hidden_dim,
@@ -123,8 +130,8 @@ class GaussianGRUModel(Model):
     def network_input_spec(self):
         """Network input spec.
 
-        Return:
-            list[str]: List of key(str) for the network outputs.
+        Returns:
+            list[str]: Name of the model inputs, in order.
 
         """
         return ['full_input', 'step_input', 'step_hidden_input']
@@ -132,36 +139,35 @@ class GaussianGRUModel(Model):
     def network_output_spec(self):
         """Network output spec.
 
-        Return:
-            list[str]: List of key(str) for the network outputs.
+        Returns:
+            list[str]: Name of the model outputs, in order.
 
         """
         return [
-            'mean', 'step_mean', 'log_std', 'step_log_std', 'step_hidden',
-            'init_hidden', 'dist'
+            'dist', 'step_mean', 'step_log_std', 'step_hidden', 'init_hidden'
         ]
 
     # pylint: disable=arguments-differ
-    def _build(self, state_input, step_input, hidden_input, name=None):
-        """Build model given input placeholder(s).
+    def _build(self, state_input, step_input, step_hidden, name=None):
+        """Build model.
 
         Args:
-            state_input (tf.Tensor): Place holder for entire time-series
-                inputs.
-            step_input (tf.Tensor): Place holder for step inputs.
-            hidden_input (tf.Tensor): Place holder for step hidden state.
+            state_input (tf.Tensor): Entire time-series observation input,
+                with shape :math:`(N, T, S^*)`.
+            step_input (tf.Tensor): Single timestep observation input,
+                with shape :math:`(N, S^*)`.
+            step_hidden (tf.Tensor): Hidden state for step, with shape
+                :math:`(N, S^*)`.
             name (str): Inner model name, also the variable scope of the
                 inner model, if exist. One example is
                 garage.tf.models.Sequential.
 
-        Return:
-            tf.Tensor: Entire time-series means.
-            tf.Tensor: Step mean.
-            tf.Tensor: Entire time-series std_log.
-            tf.Tensor: Step std_log.
-            tf.Tensor: Step hidden state.
-            tf.Tensor: Initial hidden state.
-            garage.tf.distributions.DiagonalGaussian: Policy distribution.
+        Returns:
+            tfp.distributions.MultivariateNormalDiag: Policy distribution.
+            tf.Tensor: Step means, with shape :math:`(N, S^*)`.
+            tf.Tensor: Step log std, with shape :math:`(N, S^*)`.
+            tf.Tensor: Step hidden state, with shape :math:`(N, S^*)`.
+            tf.Tensor: Initial hidden state, with shape :math:`(S^*)`.
 
         """
         del name
@@ -175,7 +181,7 @@ class GaussianGRUModel(Model):
                     gru_cell=self._mean_std_gru_cell,
                     all_input_var=state_input,
                     step_input_var=step_input,
-                    step_hidden_var=hidden_input,
+                    step_hidden_var=step_hidden,
                     hidden_state_init=self._hidden_state_init,
                     hidden_state_init_trainable=self.
                     _hidden_state_init_trainable,
@@ -196,7 +202,7 @@ class GaussianGRUModel(Model):
                     gru_cell=self._mean_gru_cell,
                     all_input_var=state_input,
                     step_input_var=step_input,
-                    step_hidden_var=hidden_input,
+                    step_hidden_var=step_hidden,
                     hidden_state_init=self._hidden_state_init,
                     hidden_state_init_trainable=self.
                     _hidden_state_init_trainable,
@@ -210,16 +216,17 @@ class GaussianGRUModel(Model):
                     trainable=self._learn_std,
                     name='log_std_param')
 
-        dist = DiagonalGaussian(self._output_dim)
+        dist = tfp.distributions.MultivariateNormalDiag(
+            loc=mean_var, scale_diag=tf.exp(log_std_var))
 
-        return (mean_var, step_mean_var, log_std_var, step_log_std_var,
-                step_hidden, hidden_init_var, dist)
+        return (dist, step_mean_var, step_log_std_var, step_hidden,
+                hidden_init_var)
 
     def __getstate__(self):
         """Object.__getstate__.
 
         Returns:
-            dict: The state to be pickled for the instance.
+            dict: the state to be pickled for the instance.
 
         """
         new_dict = super().__getstate__()
@@ -233,7 +240,7 @@ class GaussianGRUModel(Model):
         """Object.__setstate__.
 
         Args:
-            state (dict): Unpickled state.
+            state (dict): unpickled state.
 
         """
         super().__setstate__(state)

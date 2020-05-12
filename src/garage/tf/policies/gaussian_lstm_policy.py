@@ -3,15 +3,16 @@
 A policy represented by a Gaussian distribution
 which is parameterized by a Long short-term memory (LSTM).
 """
+# pylint: disable=wrong-import-order
 import akro
 import numpy as np
 import tensorflow as tf
 
-from garage.tf.models import GaussianLSTMModel2
-from garage.tf.policies.policy import StochasticPolicy2
+from garage.tf.models import GaussianLSTMModel
+from garage.tf.policies.policy import StochasticPolicy
 
 
-class GaussianLSTMPolicy(StochasticPolicy2):
+class GaussianLSTMPolicy(StochasticPolicy):
     """Gaussian LSTM Policy.
 
     A policy represented by a Gaussian distribution
@@ -124,7 +125,7 @@ class GaussianLSTMPolicy(StochasticPolicy2):
         else:
             self._input_dim = self._obs_dim
 
-        self.model = GaussianLSTMModel2(
+        self.model = GaussianLSTMModel(
             output_dim=self._action_dim,
             hidden_dim=hidden_dim,
             name='GaussianLSTMModel',

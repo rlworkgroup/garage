@@ -90,6 +90,8 @@ class GaussianMLPEncoder(StochasticEncoder, StochasticModule):
         self._embedding_spec = embedding_spec
         self._latent_dim = embedding_spec.output_space.flat_dim
         self._input_dim = embedding_spec.input_space.flat_dim
+        self._dist = None
+        self._f_dist = None
 
         self.model = GaussianMLPModel(
             output_dim=self._latent_dim,
@@ -113,65 +115,21 @@ class GaussianMLPEncoder(StochasticEncoder, StochasticModule):
             layer_normalization=layer_normalization,
             name='GaussianMLPModel')
 
-        self._initialize()
+    def build(self, embedding_input, name=None):
+        """Build encoder.
 
-    def _initialize(self):
-        embedding_input = tf.compat.v1.placeholder(tf.float32,
-                                                   shape=(None,
-                                                          self._input_dim))
+        Args:
+          embedding_input (tf.Tensor) : Embedding input.
+          name (str): Name of the model, which is also the name scope.
 
+        """
         with tf.compat.v1.variable_scope(self._name) as vs:
             self._variable_scope = vs
-            self.model.build(embedding_input)
-
-        self._f_dist = tf.compat.v1.get_default_session().make_callable(
-            [
-                self.model.networks['default'].mean,
-                self.model.networks['default'].log_std
-            ],
-            feed_list=[self.model.networks['default'].input])
-
-    def dist_info(self, input_val, state_infos=None):
-        """Distribution info.
-
-        Get the information of embedding distribution given an input.
-
-        Args:
-            input_val (np.ndarray): input values
-            state_infos (dict): a dictionary whose values contain
-                information about the predicted embedding given an input.
-
-        Returns:
-            dict[numpy.ndarray]: Distribution parameters, with keys
-                - mean (numpy.ndarray): Mean of the distribution.
-                - log_std (numpy.ndarray): Log standard deviation of the
-                    distribution.
-
-        """
-        flat_input = self._embedding_spec.input_space.flatten(input_val)
-        mean, log_std = self._f_dist([flat_input])
-        mean = self._embedding_spec.output_space.unflatten(mean[0])
-        log_std = self._embedding_spec.output_space.unflatten(log_std[0])
-        return dict(mean=mean, log_std=log_std)
-
-    def dist_info_sym(self, input_var, state_info_vars=None, name='default'):
-        """Build a symbolic graph of the distribution parameters.
-
-        Args:
-            input_var (tf.Tensor): Tensor input for symbolic graph.
-            state_info_vars (dict): Extra state information, e.g.
-                previous embedding.
-            name (str): Name for symbolic graph.
-
-        Returns:
-            dict[tf.Tensor]: Outputs of the symbolic graph of distribution
-                parameters.
-
-        """
-        with tf.compat.v1.variable_scope(self._variable_scope):
-            mean_var, log_std_var, _, _ = self.model.build(input_var,
-                                                           name=name)
-        return dict(mean=mean_var, log_std=log_std_var)
+            self._dist = self.model.build(embedding_input, name=name)
+            self._f_dist = tf.compat.v1.get_default_session().make_callable(
+                [self._dist.sample(), self._dist.loc,
+                 self._dist.stddev()],
+                feed_list=[embedding_input])
 
     @property
     def spec(self):
@@ -187,11 +145,6 @@ class GaussianMLPEncoder(StochasticEncoder, StochasticModule):
     def output_dim(self):
         """int: Dimension of the encoder output (embedding)."""
         return self._embedding_spec.output_space.flat_dim
-
-    @property
-    def recurrent(self):
-        """bool: If this module has a hidden state."""
-        return False
 
     @property
     def vectorized(self):
@@ -216,23 +169,24 @@ class GaussianMLPEncoder(StochasticEncoder, StochasticModule):
 
         """
         flat_input = self._embedding_spec.input_space.flatten(input_value)
-        mean, log_std = self._f_dist([flat_input])
-        rnd = np.random.normal(size=mean.shape)
-        sample = rnd * np.exp(log_std) + mean
-        sample = self._embedding_spec.output_space.unflatten(sample[0])
-        mean = self._embedding_spec.output_space.unflatten(mean[0])
-        log_std = self._embedding_spec.output_space.unflatten(log_std[0])
+        sample, mean, log_std = self._f_dist(np.expand_dims([flat_input], 1))
+        sample = self._embedding_spec.output_space.unflatten(
+            np.squeeze(sample, 1)[0])
+        mean = self._embedding_spec.output_space.unflatten(
+            np.squeeze(mean, 1)[0])
+        log_std = self._embedding_spec.output_space.unflatten(
+            np.squeeze(log_std, 1)[0])
         return sample, dict(mean=mean, log_std=log_std)
 
     @property
     def distribution(self):
-        """Embedding distribution.
+        """Encoder distribution.
 
         Returns:
-            garage.tf.distributions.DiagonalGaussian: embedding distribution.
+            tfp.Distribution.MultivariateNormalDiag: Encoder distribution.
 
         """
-        return self.model.networks['default'].dist
+        return self._dist
 
     @property
     def input(self):
@@ -242,12 +196,12 @@ class GaussianMLPEncoder(StochasticEncoder, StochasticModule):
     @property
     def latent_mean(self):
         """tf.Tensor: Predicted mean of a Gaussian distribution."""
-        return self.model.networks['default'].mean
+        return self._dist.loc
 
     @property
     def latent_std_param(self):
         """tf.Tensor: Predicted std of a Gaussian distribution."""
-        return self.model.networks['default'].log_std
+        return self._dist.stddev()
 
     def __getstate__(self):
         """Object.__getstate__.
@@ -258,14 +212,5 @@ class GaussianMLPEncoder(StochasticEncoder, StochasticModule):
         """
         new_dict = super().__getstate__()
         del new_dict['_f_dist']
+        del new_dict['_dist']
         return new_dict
-
-    def __setstate__(self, state):
-        """Object.__setstate__.
-
-        Args:
-            state (dict): Unpickled state.
-
-        """
-        super().__setstate__(state)
-        self._initialize()

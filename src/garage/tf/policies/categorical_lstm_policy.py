@@ -3,15 +3,16 @@
 A policy represented by a Categorical distribution
 which is parameterized by a Long short-term memory (LSTM).
 """
+# pylint: disable=wrong-import-order
 import akro
 import numpy as np
 import tensorflow as tf
 
 from garage.tf.models import CategoricalLSTMModel
-from garage.tf.policies.policy import StochasticPolicy2
+from garage.tf.policies.policy import StochasticPolicy
 
 
-class CategoricalLSTMPolicy(StochasticPolicy2):
+class CategoricalLSTMPolicy(StochasticPolicy):
     """Categorical LSTM Policy.
 
     A policy represented by a Categorical distribution

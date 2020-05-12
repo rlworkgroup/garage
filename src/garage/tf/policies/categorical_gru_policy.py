@@ -3,15 +3,16 @@
 A policy represented by a Categorical distribution
 which is parameterized by a Gated Recurrent Unit (GRU).
 """
+# pylint: disable=wrong-import-order
 import akro
 import numpy as np
 import tensorflow as tf
 
 from garage.tf.models import CategoricalGRUModel
-from garage.tf.policies.policy import StochasticPolicy2
+from garage.tf.policies.policy import StochasticPolicy
 
 
-class CategoricalGRUPolicy(StochasticPolicy2):
+class CategoricalGRUPolicy(StochasticPolicy):
     """Categorical GRU Policy.
 
     A policy represented by a Categorical distribution
