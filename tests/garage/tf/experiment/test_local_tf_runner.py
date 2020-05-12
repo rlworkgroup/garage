@@ -145,7 +145,7 @@ class TestLocalRunner(TfGraphTestCase):
         del ray_session_fixture
         assert ray.is_initialized()
         with LocalTFRunner(snapshot_config) as runner:
-            env = TfEnv(env_name='CubeCrash-v0')
+            env = TfEnv(env_name='CartPole-v1')
 
             policy = CategoricalMLPPolicy(name='policy',
                                           env_spec=env.spec,

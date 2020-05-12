@@ -2,12 +2,11 @@
 import numpy as np
 import tensorflow as tf
 
-from garage.tf.models import GaussianMLPModel
+from garage.tf.models import GaussianMLPModel2
 
 
-class GaussianMLPRegressorModel(GaussianMLPModel):
-    """
-    GaussianMLPRegressor based on garage.tf.models.Model class.
+class GaussianMLPRegressorModel(GaussianMLPModel2):
+    """GaussianMLPRegressor based on garage.tf.models.Model class.
 
     This class can be used to perform regression by fitting a Gaussian
     distribution to the outputs.
