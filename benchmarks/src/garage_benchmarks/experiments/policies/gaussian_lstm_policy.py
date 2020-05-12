@@ -1,4 +1,4 @@
-"""Benchmarking experiment of the GaussianMLPBaseline."""
+"""Benchmarking experiment of the GaussianLSTMPolicy."""
 import gym
 import tensorflow as tf
 
@@ -10,12 +10,12 @@ from garage.tf.baselines import GaussianMLPBaseline
 from garage.tf.envs import TfEnv
 from garage.tf.experiment import LocalTFRunner
 from garage.tf.optimizers import FirstOrderOptimizer
-from garage.tf.policies import GaussianMLPPolicy
+from garage.tf.policies import GaussianLSTMPolicy
 
 
 @wrap_experiment
-def gaussian_mlp_baseline_tf(ctxt, env_id, seed):
-    """Create Gaussian MLP Baseline on PPO.
+def gaussian_lstm_policy(ctxt, env_id, seed):
+    """Create Gaussian LSTM Policy on TF-PPO.
 
     Args:
         ctxt (garage.experiment.ExperimentContext): The experiment
@@ -30,9 +30,9 @@ def gaussian_mlp_baseline_tf(ctxt, env_id, seed):
     with LocalTFRunner(ctxt) as runner:
         env = TfEnv(normalize(gym.make(env_id)))
 
-        policy = GaussianMLPPolicy(
+        policy = GaussianLSTMPolicy(
             env_spec=env.spec,
-            hidden_sizes=(32, 32),
+            hidden_dim=32,
             hidden_nonlinearity=tf.nn.tanh,
             output_nonlinearity=None,
         )
@@ -66,5 +66,6 @@ def gaussian_mlp_baseline_tf(ctxt, env_id, seed):
                 tf_optimizer_args=dict(learning_rate=1e-3),
             ),
         )
+
         runner.setup(algo, env, sampler_args=dict(n_envs=12))
         runner.train(n_epochs=5, batch_size=2048)

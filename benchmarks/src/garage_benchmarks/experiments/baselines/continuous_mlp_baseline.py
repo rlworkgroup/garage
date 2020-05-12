@@ -29,8 +29,8 @@ hyper_params = {
 
 
 @wrap_experiment
-def continuous_mlp_baseline_tf(ctxt, env_id, seed):
-    """Create Continuous MLP Baseline on PPO.
+def continuous_mlp_baseline(ctxt, env_id, seed):
+    """Create Continuous MLP Baseline on TF-PPO.
 
     Args:
         ctxt (garage.experiment.ExperimentContext): The experiment
