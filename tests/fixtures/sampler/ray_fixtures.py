@@ -11,6 +11,7 @@ def ray_local_session_fixture():
         None: Yield is for purposes of pytest module style.
             All statements before the yield are apart of module setup, and all
             statements after the yield are apart of module teardown.
+
     """
     if not ray.is_initialized():
         ray.init(local_mode=True,
@@ -30,6 +31,7 @@ def ray_session_fixture():
         None: Yield is for purposes of pytest module style.
             All statements before the yield are apart of module setup, and all
             statements after the yield are apart of module teardown.
+
     """
     if not ray.is_initialized():
         ray.init(memory=52428800,
