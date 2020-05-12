@@ -706,14 +706,20 @@ def make_launcher_archive(*, git_root_path, log_dir):
         log_dir (str): Absolute path to the log directory.
 
     """
-    files_to_archive = subprocess.check_output(
+    git_files = subprocess.check_output(
         ('git', 'ls-files', '--others', '--exclude-standard', '--cached',
          '-z'),
         cwd=git_root_path).strip()
-    repo_size = sum([
-        os.stat(os.path.join(git_root_path, f)).st_size
-        for f in files_to_archive.split(b'\0')
-    ])
+    repo_size = 0
+    files_to_archive = []
+    for f in git_files.split(b'\0'):
+        try:
+            file_size = os.stat(os.path.join(git_root_path, f)).st_size
+            repo_size += file_size
+            if file_size < EIGHT_MEBIBYTES:
+                files_to_archive.append(f)
+        except FileNotFoundError:
+            pass
     if repo_size >= EIGHT_MEBIBYTES:
         warnings.warn('Archiving a launch repo larger than 8MiB. This may be '
                       'slow. Set archive_launch_repo=False in wrap_experiment '
@@ -721,7 +727,7 @@ def make_launcher_archive(*, git_root_path, log_dir):
     archive_path = os.path.join(log_dir, 'launch_archive.tar.xz')
     subprocess.run(('tar', '--null', '--files-from', '-', '--auto-compress',
                     '--create', '--file', archive_path),
-                   input=files_to_archive,
+                   input=b'\0'.join(files_to_archive),
                    cwd=git_root_path,
                    check=True)
 

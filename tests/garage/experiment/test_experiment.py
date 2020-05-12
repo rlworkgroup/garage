@@ -115,10 +115,11 @@ def _run_launcher(launcher_path, prefix):
                 print(ctxt.snapshot_dir)
 
             test_exp()""".format(prefix)))
-    snapshot_dir = (subprocess.check_output(
-        (sys.executable,
-         str(launcher_path))).decode('utf-8').strip().split('\n'))[-1]
-    return snapshot_dir
+    output = (subprocess.check_output(
+        (sys.executable, str(launcher_path)),
+        stderr=subprocess.STDOUT)).decode('utf-8').strip().split('\n')
+    snapshot_dir = output[-1]
+    return snapshot_dir, output
 
 
 def test_wrap_experiment_builds_git_archive():
@@ -144,7 +145,7 @@ def test_wrap_experiment_builds_git_archive():
         subdir.mkdir()
         launcher_path = pathlib.Path(launcher_dir) / 'subdir' / 'run_exp.py'
 
-        snapshot_dir = _run_launcher(launcher_path, prefix)
+        snapshot_dir, _ = _run_launcher(launcher_path, prefix)
 
         archive_path = os.path.join(snapshot_dir, 'launch_archive.tar.xz')
         assert expected_path.samefile(archive_path)
@@ -157,6 +158,86 @@ def test_wrap_experiment_builds_git_archive():
         assert 'test.txt' in contents.strip()
 
 
+def test_wrap_experiment_builds_git_archive_deleted_files():
+    prefix = 'wrap_exp_test_builds_git_archive_deleted_files'
+    exp_path = pathlib.Path(os.getcwd(), 'data/local', prefix)
+    _hard_rmtree(exp_path)
+    expected_path = exp_path / 'test_exp' / 'launch_archive.tar.xz'
+
+    # Because __main__ actually points to pytest right now, we need to run the
+    # "real" test in a subprocess.
+    with tempfile.TemporaryDirectory() as launcher_dir:
+        launch_dir = pathlib.Path(launcher_dir)
+        subprocess.check_call(('git', 'init'), cwd=launcher_dir)
+        # Make a test file, since git ls-files needs at least one commit.
+        to_delete = launch_dir / 'to_delete.txt'
+        to_delete.touch()
+        subprocess.check_call(('git', 'add', str(to_delete)), cwd=launcher_dir)
+        subprocess.check_call(
+            ('git', '-c', 'user.name=Test User', '-c',
+             'user.email=test@example.com', 'commit', '-m', 'Initial commit'),
+            cwd=launcher_dir)
+        to_delete.unlink()
+        subdir = launch_dir / 'subdir'
+        subdir.mkdir()
+        launcher_path = pathlib.Path(launcher_dir) / 'subdir' / 'run_exp.py'
+
+        snapshot_dir, _ = _run_launcher(launcher_path, prefix)
+
+        archive_path = os.path.join(snapshot_dir, 'launch_archive.tar.xz')
+        assert expected_path.samefile(archive_path)
+        assert expected_path.exists()
+        archive_size = expected_path.stat().st_size
+        assert archive_size > 250
+        contents = subprocess.check_output(
+            ('tar', '--list', '--file', archive_path)).decode('utf-8')
+        assert 'subdir/run_exp.py' in contents.strip()
+        assert 'test.txt' not in contents.strip()
+
+
+def test_wrap_experiment_builds_git_archive_large_file():
+    prefix = 'wrap_exp_test_builds_git_archive_large_files'
+    exp_path = pathlib.Path(os.getcwd(), 'data/local', prefix)
+    _hard_rmtree(exp_path)
+    expected_path = exp_path / 'test_exp' / 'launch_archive.tar.xz'
+
+    # Because __main__ actually points to pytest right now, we need to run the
+    # "real" test in a subprocess.
+    with tempfile.TemporaryDirectory() as launcher_dir:
+        launch_dir = pathlib.Path(launcher_dir)
+        subprocess.check_call(('git', 'init'), cwd=launcher_dir)
+        # Make a test file, since git ls-files needs at least one commit.
+        test_txt = launch_dir / 'test.txt'
+        test_txt.touch()
+        subprocess.check_call(('git', 'add', str(test_txt)), cwd=launcher_dir)
+        subprocess.check_call(
+            ('git', '-c', 'user.name=Test User', '-c',
+             'user.email=test@example.com', 'commit', '-m', 'Initial commit'),
+            cwd=launcher_dir)
+        subdir = launch_dir / 'subdir'
+        subdir.mkdir()
+        launcher_path = pathlib.Path(launcher_dir) / 'subdir' / 'run_exp.py'
+
+        large_file = launch_dir / 'large.obj'
+        with open(large_file, 'wb') as f:
+            f.write(b'0' * int(1e7))
+
+        snapshot_dir, output = _run_launcher(launcher_path, prefix)
+
+        assert any(['archive_launch_repo' in line for line in output])
+
+        archive_path = os.path.join(snapshot_dir, 'launch_archive.tar.xz')
+        assert expected_path.samefile(archive_path)
+        assert expected_path.exists()
+        archive_size = expected_path.stat().st_size
+        assert archive_size > 250
+        contents = subprocess.check_output(
+            ('tar', '--list', '--file', archive_path)).decode('utf-8')
+        assert 'subdir/run_exp.py' in contents.strip()
+        assert 'test.txt' in contents.strip()
+        assert 'large.obj' not in contents.strip()
+
+
 def test_wrap_experiment_launcher_outside_git():
     prefix = 'wrap_exp_test_launcher_outside_git'
     exp_path = pathlib.Path(os.getcwd(), 'data/local', prefix)
@@ -167,7 +248,7 @@ def test_wrap_experiment_launcher_outside_git():
     # ourselves a launcher script outside of any git repo.
     with tempfile.TemporaryDirectory() as launcher_dir:
         launcher_path = pathlib.Path(launcher_dir) / 'run_exp.py'
-        snapshot_dir = _run_launcher(launcher_path, prefix)
+        snapshot_dir, _ = _run_launcher(launcher_path, prefix)
         assert os.path.samefile(str(expected_path), str(snapshot_dir))
 
 
