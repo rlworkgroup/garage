@@ -6,6 +6,7 @@ import signal
 import cloudpickle
 from dowel import logger
 import numpy as np
+import tensorflow as tf
 
 from garage.experiment import deterministic
 from garage.sampler.stateful_pool import SharedGlobal
@@ -112,6 +113,10 @@ def set_seed(seed):
 
 def _worker_set_policy_params(g, params, scope=None):
     g = _get_scoped_g(g, scope)
+    if 'default' not in g.policy.model.networks:
+        obs_ph = tf.compat.v1.placeholder(tf.float32,
+                                          shape=(None, None, g.policy.obs_dim))
+        g.policy.build(obs_ph)
     g.policy.set_param_values(params)
 
 

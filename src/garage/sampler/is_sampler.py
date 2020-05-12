@@ -3,7 +3,10 @@ import copy
 from math import exp
 from math import log
 import random
+import tensorflow as tf
+import tensorflow_probability as tfp
 
+import numpy as np
 from numpy import var
 
 from garage.sampler.batch_sampler import BatchSampler
@@ -206,14 +209,24 @@ class ISSampler(BatchSampler):
             _, agent_infos = policy.get_actions(path['observations'])
             hist_agent_infos = path['agent_infos']
             if hist_variance_penalty > 0:
-                hist_agent_infos['log_std'] += log(1.0 + hist_variance_penalty)
+                dist2 = tfp.distributions.MultivariateNormalDiag(
+                    loc=dist2.loc,
+                    scale_diag=dist2.scale._diag +
+                    log(1.0 + hist_variance_penalty))
             path['agent_infos'] = agent_infos
 
             # compute importance sampling weight
-            loglike_p = dist1.log_likelihood(path['actions'], agent_infos)
-            loglike_hp = dist2.log_likelihood(path['actions'],
-                                              hist_agent_infos)
-            is_ratio = exp(sum(loglike_p) - sum(loglike_hp))
+            loglike_p = tf.compat.v1.get_default_session().run(
+                dist1.log_prob(path['actions']),
+                feed_dict={
+                    policy.model.input: np.expand_dims(path['observations'], 1)
+                })
+            loglike_hp = tf.compat.v1.get_default_session().run(
+                dist2.log_prob(path['actions']),
+                feed_dict={
+                    policy.model.input: np.expand_dims(path['observations'], 1)
+                })
+            is_ratio = exp(np.sum(loglike_p) - np.sum(loglike_hp))
 
             # thresholding knobs
             if max_is_ratio > 0:

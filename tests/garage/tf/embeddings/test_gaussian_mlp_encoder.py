@@ -113,7 +113,7 @@ class TestGaussianMLPEncoder(TfGraphTestCase):
             None, None, latent_space.shape[0]
         ])
         assert (embedding.latent_std_param.shape.as_list() == [
-            None, 1, latent_space.shape[0]
+            None, None, latent_space.shape[0]
         ])
 
         # To increase coverage in embeddings/base.py
