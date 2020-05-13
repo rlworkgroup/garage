@@ -62,13 +62,3 @@ class DummyRecurrentPolicy(Policy):
 
         """
         return DummyDistribution()
-
-    @property
-    def recurrent(self):
-        """Whether the policy uses recurrent network or not.
-
-        Returns:
-            bool: Indicating if the policy is recurrent.
-
-        """
-        return True

@@ -35,7 +35,6 @@ def cem_cartpole(ctxt=None, seed=1):
         policy = CategoricalMLPPolicy(name='policy',
                                       env_spec=env.spec,
                                       hidden_sizes=(32, 32))
-
         baseline = LinearFeatureBaseline(env_spec=env.spec)
 
         n_samples = 20

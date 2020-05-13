@@ -1,15 +1,22 @@
-"""GaussianMLPModel."""
+"""Gaussian MLP Model.
+
+A model represented by a Gaussian distribution
+which is parameterized by a multilayer perceptron (MLP).
+"""
 import numpy as np
 import tensorflow as tf
+import tensorflow_probability as tfp
 
-from garage.tf.distributions import DiagonalGaussian
 from garage.tf.models.mlp import mlp
 from garage.tf.models.model import Model
 from garage.tf.models.parameter import parameter
 
 
 class GaussianMLPModel(Model):
-    """GaussianMLPModel.
+    """Gaussian MLP Model.
+
+    A model represented by a Gaussian distribution
+    which is parameterized by a multilayer perceptron (MLP).
 
     Args:
         output_dim (int): Output dimension of the model.
@@ -51,9 +58,11 @@ class GaussianMLPModel(Model):
         std_hidden_nonlinearity (callable): Nonlinearity for each hidden layer
             in the std network.
         std_hidden_w_init (callable): Initializer function for the weight
-            of intermediate dense layer(s) in the std network.
+            of intermediate dense layer(s) in the std network. The function
+            should return a tf.Tensor.
         std_hidden_b_init (callable): Initializer function for the bias
-            of intermediate dense layer(s) in the std network.
+            of intermediate dense layer(s) in the std network. The function
+            should return a tf.Tensor.
         std_output_nonlinearity (callable): Activation function for output
             dense layer in the std network. It should return a tf.Tensor. Set
             it to None to maintain a linear activation.
@@ -120,6 +129,7 @@ class GaussianMLPModel(Model):
         self._init_std_param = None
         self._min_std_param = None
         self._max_std_param = None
+        # pylint: disable=assignment-from-no-return
         if self._std_parameterization == 'exp':
             self._init_std_param = np.log(init_std)
             if min_std is not None:
@@ -133,32 +143,22 @@ class GaussianMLPModel(Model):
             if max_std is not None:
                 self._max_std_param = np.log(np.exp(max_std) - 1)
         else:
-            raise NotImplementedError
-
-    def network_output_spec(self):
-        """Network output spec.
-
-        Return:
-            list[str]: List of key(str) for the network outputs.
-
-        """
-        return ['mean', 'log_std', 'std_param', 'dist']
+            raise ValueError("std parameterization should be or 'exp' or "
+                             "'softplus' but got {}".format(
+                                 self._std_parameterization))
 
     # pylint: disable=arguments-differ
     def _build(self, state_input, name=None):
-        """Build model given input placeholder(s).
+        """Build model.
 
         Args:
-            state_input (tf.Tensor): Place holder for state input.
+            state_input (tf.Tensor): Entire time-series observation input.
             name (str): Inner model name, also the variable scope of the
                 inner model, if exist. One example is
                 garage.tf.models.Sequential.
 
-        Return:
-            tf.Tensor: Mean.
-            tf.Tensor: Parameterized log_std.
-            tf.Tensor: log_std.
-            garage.tf.distributions.DiagonalGaussian: Policy distribution.
+        Returns:
+            tfp.distributions.MultivariateNormalDiag: Distribution.
 
         """
         del name
@@ -228,6 +228,7 @@ class GaussianMLPModel(Model):
                             self._init_std_param),
                         trainable=self._learn_std,
                         name='log_std_network')
+                    log_std_network = tf.expand_dims(log_std_network, 1)
 
         mean_var = mean_network
         std_param = log_std_network
@@ -245,6 +246,5 @@ class GaussianMLPModel(Model):
             else:  # we know it must be softplus here
                 log_std_var = tf.math.log(tf.math.log(1. + tf.exp(std_param)))
 
-        dist = DiagonalGaussian(self._output_dim)
-
-        return mean_var, log_std_var, std_param, dist
+        return tfp.distributions.MultivariateNormalDiag(
+            loc=mean_var, scale_diag=tf.exp(log_std_var))

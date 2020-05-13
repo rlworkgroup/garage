@@ -34,10 +34,10 @@ def trpo_cubecrash(ctxt=None, seed=1, batch_size=4000):
     with LocalTFRunner(ctxt) as runner:
         env = TfEnv(normalize(gym.make('CubeCrash-v0')))
         policy = CategoricalCNNPolicy(env_spec=env.spec,
-                                      conv_filters=(32, 64),
-                                      conv_filter_sizes=(8, 4),
-                                      conv_strides=(4, 2),
-                                      conv_pad='VALID',
+                                      num_filters=(32, 64),
+                                      filter_dims=(8, 4),
+                                      strides=(4, 2),
+                                      padding='VALID',
                                       hidden_sizes=(32, 32))
 
         baseline = GaussianCNNBaseline(env_spec=env.spec,
@@ -54,7 +54,9 @@ def trpo_cubecrash(ctxt=None, seed=1, batch_size=4000):
                     baseline=baseline,
                     max_path_length=100,
                     discount=0.99,
-                    max_kl_step=0.01,
+                    gae_lambda=0.95,
+                    lr_clip_range=0.2,
+                    policy_ent_coeff=0.0,
                     flatten_input=False)
 
         runner.setup(algo, env)

@@ -47,6 +47,12 @@ class CMAES(BatchPolopt):
         self._all_params = None
         self._cur_params = None
         self._all_returns = None
+        self._initialize()
+
+    def _initialize(self):
+        input_var = self.env_spec.observation_space.to_tf_placeholder(
+            name='obs', batch_dims=2)
+        self.policy.build(input_var)
 
     def _sample_params(self):
         """Return sample parameters.
@@ -116,3 +122,13 @@ class CMAES(BatchPolopt):
 
         logger.log(tabular)
         return rtn
+
+    def __setstate__(self, state):
+        """Parameters to restore from snapshot.
+
+        Args:
+            state (dict): Parameters to restore from.
+
+        """
+        self.__dict__ = state
+        self._initialize()

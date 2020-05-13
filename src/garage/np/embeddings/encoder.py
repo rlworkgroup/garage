@@ -61,15 +61,3 @@ class StochasticEncoder(Encoder):
     @abc.abstractmethod
     def distribution(self):
         """object: Embedding distribution."""
-
-    def dist_info(self, input_val, state_infos):
-        """Distribution info.
-
-        Get the information of embedding distribution given an input.
-
-        Args:
-            input_val (np.ndarray): input values
-            state_infos (dict): a dictionary whose values contain
-                information about the predicted embedding given an input.
-
-        """

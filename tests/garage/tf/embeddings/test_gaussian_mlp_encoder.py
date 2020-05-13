@@ -1,6 +1,7 @@
 import pickle
 from unittest import mock
 
+# pylint: disable=wrong-import-order
 import akro
 import numpy as np
 import pytest
@@ -24,67 +25,21 @@ class TestGaussianMLPEncoder(TfGraphTestCase):
         ((1, 1), (2, 2)),
         ((2, 2), (2, 2)),
     ])
-    @mock.patch('numpy.random.normal')
-    def test_get_embedding(self, mock_normal, obs_dim, embedding_dim):
-        mock_normal.return_value = 0.5
+    def test_get_embedding(self, obs_dim, embedding_dim):
         env = TfEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=embedding_dim))
-        with mock.patch(('garage.tf.embeddings.'
-                         'gaussian_mlp_encoder.GaussianMLPModel'),
-                        new=SimpleGaussianMLPModel):
-            embedding_spec = InOutSpec(input_space=env.spec.observation_space,
-                                       output_space=env.spec.action_space)
-            embedding = GaussianMLPEncoder(embedding_spec)
+        embedding_spec = InOutSpec(input_space=env.spec.observation_space,
+                                   output_space=env.spec.action_space)
+        embedding = GaussianMLPEncoder(embedding_spec)
+        task_input = tf.compat.v1.placeholder(tf.float32,
+                                              shape=(None, None,
+                                                     embedding.input_dim))
+        embedding.build(task_input)
 
         env.reset()
         obs, _, _, _ = env.step(1)
 
-        latent, prob = embedding.forward(obs)
-
-        expected_embedding = np.full(embedding_dim, 0.75)
-        expected_mean = np.full(embedding_dim, 0.5)
-        expected_log_std = np.full(embedding_dim, np.log(0.5))
-
+        latent, _ = embedding.forward(obs)
         assert env.action_space.contains(latent)
-        assert np.array_equal(latent, expected_embedding)
-        assert np.array_equal(prob['mean'], expected_mean)
-        assert np.array_equal(prob['log_std'], expected_log_std)
-
-    @pytest.mark.parametrize('obs_dim, embedding_dim', [
-        ((1, ), (1, )),
-        ((1, ), (2, )),
-        ((2, ), (2, )),
-        ((1, 1), (1, 1)),
-        ((1, 1), (2, 2)),
-        ((2, 2), (2, 2)),
-    ])
-    def test_dist_info(self, obs_dim, embedding_dim):
-        env = TfEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=embedding_dim))
-        with mock.patch(('garage.tf.embeddings.'
-                         'gaussian_mlp_encoder.GaussianMLPModel'),
-                        new=SimpleGaussianMLPModel):
-            embedding_spec = InOutSpec(input_space=env.spec.observation_space,
-                                       output_space=env.spec.action_space)
-            embedding = GaussianMLPEncoder(embedding_spec)
-
-        env.reset()
-        obs, _, _, _ = env.step(1)
-
-        obs_dim = env.spec.observation_space.flat_dim
-        obs_ph = tf.compat.v1.placeholder(tf.float32, shape=(None, obs_dim))
-
-        dist1_sym = embedding.dist_info_sym(obs_ph, name='p1_sym')
-
-        # flatten output
-        expected_mean = [np.full(np.prod(embedding_dim), 0.5)]
-        expected_log_std = [np.full(np.prod(embedding_dim), np.log(0.5))]
-
-        prob0 = embedding.dist_info(obs.flatten())
-        prob1 = self.sess.run(dist1_sym, feed_dict={obs_ph: [obs.flatten()]})
-
-        assert np.array_equal(prob0['mean'].flatten(), expected_mean[0])
-        assert np.array_equal(prob0['log_std'].flatten(), expected_log_std[0])
-        assert np.array_equal(prob1['mean'], expected_mean)
-        assert np.array_equal(prob1['log_std'], expected_log_std)
 
     @pytest.mark.parametrize('obs_dim, embedding_dim', [
         ((1, ), (1, )),
@@ -96,12 +51,13 @@ class TestGaussianMLPEncoder(TfGraphTestCase):
     ])
     def test_is_pickleable(self, obs_dim, embedding_dim):
         env = TfEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=embedding_dim))
-        with mock.patch(('garage.tf.embeddings.'
-                         'gaussian_mlp_encoder.GaussianMLPModel'),
-                        new=SimpleGaussianMLPModel):
-            embedding_spec = InOutSpec(input_space=env.spec.observation_space,
-                                       output_space=env.spec.action_space)
-            embedding = GaussianMLPEncoder(embedding_spec)
+        embedding_spec = InOutSpec(input_space=env.spec.observation_space,
+                                   output_space=env.spec.action_space)
+        embedding = GaussianMLPEncoder(embedding_spec)
+        task_input = tf.compat.v1.placeholder(tf.float32,
+                                              shape=(None, None,
+                                                     embedding.input_dim))
+        embedding.build(task_input)
 
         env.reset()
         obs, _, _, _ = env.step(1)
@@ -109,19 +65,28 @@ class TestGaussianMLPEncoder(TfGraphTestCase):
 
         with tf.compat.v1.variable_scope('GaussianMLPEncoder/GaussianMLPModel',
                                          reuse=True):
-            return_var = tf.compat.v1.get_variable('return_var')
+            bias = tf.compat.v1.get_variable(
+                'dist_params/mean_network/hidden_0/bias')
         # assign it to all one
-        return_var.load(tf.ones_like(return_var).eval())
+        bias.load(tf.ones_like(bias).eval())
         output1 = self.sess.run(
-            embedding.model.outputs[:-1],
-            feed_dict={embedding.model.input: [obs.flatten()]})
+            [embedding.distribution.loc,
+             embedding.distribution.stddev()],
+            feed_dict={embedding.model.input: [[obs.flatten()]]})
 
         p = pickle.dumps(embedding)
         with tf.compat.v1.Session(graph=tf.Graph()) as sess:
             embedding_pickled = pickle.loads(p)
+            task_input = tf.compat.v1.placeholder(
+                tf.float32, shape=(None, None, embedding_pickled.input_dim))
+            embedding_pickled.build(task_input)
+
             output2 = sess.run(
-                embedding_pickled.model.outputs[:-1],
-                feed_dict={embedding_pickled.model.input: [obs.flatten()]})
+                [
+                    embedding_pickled.distribution.loc,
+                    embedding_pickled.distribution.stddev()
+                ],
+                feed_dict={embedding_pickled.model.input: [[obs.flatten()]]})
             assert np.array_equal(output1, output2)
 
     def test_auxiliary(self):
@@ -131,18 +96,24 @@ class TestGaussianMLPEncoder(TfGraphTestCase):
                                    output_space=latent_space)
         embedding = GaussianMLPEncoder(embedding_spec,
                                        hidden_sizes=[32, 32, 32])
-
+        task_input = tf.compat.v1.placeholder(tf.float32,
+                                              shape=(None, None,
+                                                     embedding.input_dim))
+        embedding.build(task_input)
         # 9 Layers: (3 hidden + 1 output) * (1 weight + 1 bias) + 1 log_std
         assert len(embedding.get_params()) == 9
         assert len(embedding.get_global_vars()) == 9
 
-        assert embedding.distribution.dim == latent_space.shape[0]
-        assert embedding.input.shape.as_list() == [None, input_space.shape[0]]
+        assert embedding.distribution.loc.get_shape().as_list(
+        )[-1] == latent_space.shape[0]
+        assert embedding.input.shape.as_list() == [
+            None, None, input_space.shape[0]
+        ]
         assert (embedding.latent_mean.shape.as_list() == [
-            None, latent_space.shape[0]
+            None, None, latent_space.shape[0]
         ])
         assert (embedding.latent_std_param.shape.as_list() == [
-            None, latent_space.shape[0]
+            None, None, latent_space.shape[0]
         ])
 
         # To increase coverage in embeddings/base.py

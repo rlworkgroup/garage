@@ -1,22 +1,15 @@
-"""Gaussian MLP Model.
-
-A model represented by a Gaussian distribution
-which is parameterized by a multilayer perceptron (MLP).
-"""
+"""GaussianMLPModel."""
 import numpy as np
 import tensorflow as tf
-import tensorflow_probability as tfp
 
+from garage.tf.distributions import DiagonalGaussian
 from garage.tf.models.mlp import mlp
 from garage.tf.models.model import Model
 from garage.tf.models.parameter import parameter
 
 
 class GaussianMLPModel2(Model):
-    """Gaussian MLP Model.
-
-    A model represented by a Gaussian distribution
-    which is parameterized by a multilayer perceptron (MLP).
+    """GaussianMLPModel.
 
     Args:
         output_dim (int): Output dimension of the model.
@@ -58,11 +51,9 @@ class GaussianMLPModel2(Model):
         std_hidden_nonlinearity (callable): Nonlinearity for each hidden layer
             in the std network.
         std_hidden_w_init (callable): Initializer function for the weight
-            of intermediate dense layer(s) in the std network. The function
-            should return a tf.Tensor.
+            of intermediate dense layer(s) in the std network.
         std_hidden_b_init (callable): Initializer function for the bias
-            of intermediate dense layer(s) in the std network. The function
-            should return a tf.Tensor.
+            of intermediate dense layer(s) in the std network.
         std_output_nonlinearity (callable): Activation function for output
             dense layer in the std network. It should return a tf.Tensor. Set
             it to None to maintain a linear activation.
@@ -142,22 +133,32 @@ class GaussianMLPModel2(Model):
             if max_std is not None:
                 self._max_std_param = np.log(np.exp(max_std) - 1)
         else:
-            raise ValueError("std parameterization should be or 'exp' or "
-                             "'softplus' but got {}".format(
-                                 self._std_parameterization))
+            raise NotImplementedError
+
+    def network_output_spec(self):
+        """Network output spec.
+
+        Return:
+            list[str]: List of key(str) for the network outputs.
+
+        """
+        return ['mean', 'log_std', 'std_param', 'dist']
 
     # pylint: disable=arguments-differ
     def _build(self, state_input, name=None):
-        """Build model.
+        """Build model given input placeholder(s).
 
         Args:
-            state_input (tf.Tensor): Entire time-series observation input.
+            state_input (tf.Tensor): Place holder for state input.
             name (str): Inner model name, also the variable scope of the
                 inner model, if exist. One example is
                 garage.tf.models.Sequential.
 
-        Returns:
-            tfp.distributions.MultivariateNormalDiag: Distribution.
+        Return:
+            tf.Tensor: Mean.
+            tf.Tensor: Parameterized log_std.
+            tf.Tensor: log_std.
+            garage.tf.distributions.DiagonalGaussian: Policy distribution.
 
         """
         del name
@@ -244,5 +245,6 @@ class GaussianMLPModel2(Model):
             else:  # we know it must be softplus here
                 log_std_var = tf.math.log(tf.math.log(1. + tf.exp(std_param)))
 
-        return tfp.distributions.MultivariateNormalDiag(
-            loc=mean_var, scale_diag=tf.exp(log_std_var))
+        dist = DiagonalGaussian(self._output_dim)
+
+        return mean_var, log_std_var, std_param, dist

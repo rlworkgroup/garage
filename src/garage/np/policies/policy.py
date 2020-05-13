@@ -47,16 +47,6 @@ class Policy(abc.ABC):
         """akro.Space: The action space for the environment."""
         return self._env_spec.action_space
 
-    @property
-    def recurrent(self):
-        """Indicate whether the policy is recurrent.
-
-        Returns:
-            bool: True if policy is recurrent, False otherwise.
-
-        """
-        return False
-
     def log_diagnostics(self, paths):
         """Log extra information per iteration based on the collected paths.
 

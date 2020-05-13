@@ -64,8 +64,8 @@ class TestDiscreteCNNQFunction(TfGraphTestCase):
 
     def test_obs_is_image(self):
         image_env = TfEnv(DummyDiscretePixelEnv(), is_image=True)
-        with mock.patch(('garage.tf.policies.'
-                         'categorical_cnn_policy.CNNModel._build'),
+        with mock.patch(('garage.tf.models.'
+                         'categorical_cnn_model.CNNModel._build'),
                         autospec=True,
                         side_effect=CNNModel._build) as build:
 
@@ -99,8 +99,8 @@ class TestDiscreteCNNQFunction(TfGraphTestCase):
 
     def test_obs_not_image(self):
         env = self.env
-        with mock.patch(('garage.tf.policies.'
-                         'categorical_cnn_policy.CNNModel._build'),
+        with mock.patch(('garage.tf.models.'
+                         'categorical_cnn_model.CNNModel._build'),
                         autospec=True,
                         side_effect=CNNModel._build) as build:
 
@@ -167,10 +167,10 @@ class TestDiscreteCNNQFunction(TfGraphTestCase):
     @pytest.mark.parametrize('filter_dims, num_filters, strides, '
                              'pool_strides, pool_shapes', [
         ((3, ), (5, ), (1, ), (1, 1), (1, 1)),  # noqa: E122
-        ((3, ), (5, ), (2, ), (2, 2), (2, 2)),
-        ((3, 3), (5, 5), (1, 1), (1, 1), (1, 1)),
-        ((3, 3), (5, 5), (1, 1), (2, 2), (2, 2))
-    ])
+        ((3, ), (5, ), (2, ), (2, 2), (2, 2)),  # noqa: E122
+        ((3, 3), (5, 5), (1, 1), (1, 1), (1, 1)),  # noqa: E122
+        ((3, 3), (5, 5), (1, 1), (2, 2), (2, 2))  # noqa: E122
+    ])  # noqa: E122
     # yapf: enable
     def test_get_action_max_pooling(self, filter_dims, num_filters, strides,
                                     pool_strides, pool_shapes):

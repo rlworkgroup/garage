@@ -83,16 +83,6 @@ class Policy(Module):
         """
         return self._env_spec
 
-    @property
-    def recurrent(self):
-        """Whether the policy uses recurrent network or not.
-
-        Returns:
-            bool: Indicating if the policy is recurrent.
-
-        """
-        return False
-
     def log_diagnostics(self, paths):
         """Log extra information per iteration based on the collected paths.
 
@@ -105,17 +95,3 @@ class Policy(Module):
 # pylint: disable=abstract-method
 class StochasticPolicy(Policy, StochasticModule):
     """Stochastic Policy."""
-
-
-class StochasticPolicy2(Policy):
-    """Stochastic Policy with tfp.distribution."""
-
-    @property
-    @abc.abstractmethod
-    def distribution(self):
-        """Distribution to parameterize the policy.
-
-        Returns:
-            tfp.distributions.Distribution: Policy distribution.
-
-        """

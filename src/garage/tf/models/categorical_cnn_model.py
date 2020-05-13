@@ -9,7 +9,6 @@ import tensorflow as tf
 from garage.tf.models.categorical_mlp_model import CategoricalMLPModel
 from garage.tf.models.cnn_model import CNNModel
 from garage.tf.models.model import Model
-from garage.tf.models.sequential import Sequential
 
 
 class CategoricalCNNModel(Model):
@@ -75,23 +74,23 @@ class CategoricalCNNModel(Model):
                  output_b_init=tf.zeros_initializer(),
                  layer_normalization=False):
         super().__init__(name)
-        self._model = Sequential(
-            CNNModel(filter_dims=filter_dims,
-                     num_filters=num_filters,
-                     strides=strides,
-                     padding=padding,
-                     hidden_nonlinearity=hidden_nonlinearity,
-                     name='CNNModel'),
-            CategoricalMLPModel(output_dim=output_dim,
-                                hidden_sizes=hidden_sizes,
-                                hidden_nonlinearity=hidden_nonlinearity,
-                                hidden_w_init=hidden_w_init,
-                                hidden_b_init=hidden_b_init,
-                                output_nonlinearity=output_nonlinearity,
-                                output_w_init=output_w_init,
-                                output_b_init=output_b_init,
-                                layer_normalization=layer_normalization,
-                                name='MLPModel'))
+        self._cnn_model = CNNModel(filter_dims=filter_dims,
+                                   num_filters=num_filters,
+                                   strides=strides,
+                                   padding=padding,
+                                   hidden_nonlinearity=hidden_nonlinearity,
+                                   name='CNNModel')
+        self._mlp_model = CategoricalMLPModel(
+            output_dim=output_dim,
+            hidden_sizes=hidden_sizes,
+            hidden_nonlinearity=hidden_nonlinearity,
+            hidden_w_init=hidden_w_init,
+            hidden_b_init=hidden_b_init,
+            output_nonlinearity=output_nonlinearity,
+            output_w_init=output_w_init,
+            output_b_init=output_b_init,
+            layer_normalization=layer_normalization,
+            name='MLPModel')
 
     # pylint: disable=arguments-differ
     def _build(self, state_input, name=None):
@@ -107,4 +106,11 @@ class CategoricalCNNModel(Model):
             tfp.distributions.OneHotCategorical: Policy distribution.
 
         """
-        return self._model.build(state_input, name=name)
+        time_dim = tf.shape(state_input)[1]
+        dim = state_input.get_shape()[2:].as_list()
+        state_input = tf.reshape(state_input, [-1, *dim])
+        cnn_output = self._cnn_model.build(state_input, name=name)
+        dim = cnn_output.get_shape()[-1]
+        cnn_output = tf.reshape(cnn_output, [-1, time_dim, dim])
+        mlp_output = self._mlp_model.build(cnn_output, name=name)
+        return mlp_output

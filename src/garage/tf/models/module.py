@@ -30,11 +30,6 @@ class Module(abc.ABC):
     def vectorized(self):
         """bool: If this module supports vectorization input."""
 
-    @property
-    @abc.abstractmethod
-    def recurrent(self):
-        """bool: If this module has a hidden state."""
-
     def reset(self, do_resets=None):
         """Reset the module.
 
@@ -186,34 +181,3 @@ class StochasticModule(Module):
     @abc.abstractmethod
     def distribution(self):
         """Distribution."""
-
-    @abc.abstractmethod
-    def dist_info_sym(self,
-                      input_var,
-                      state_info_vars=None,
-                      name='dist_info_sym'):
-        """Symbolic graph of the distribution.
-
-        Return the symbolic distribution information given input.
-
-        Args:
-            input_var (tf.Tensor): symbolic variable for input.
-            state_info_vars (dict): a dictionary whose values should contain
-                information about the state of the policy at the time it
-                received the input.
-            name (str): Name of the symbolic graph.
-
-        """
-
-    def dist_info(self, input_val, state_infos):
-        """Distribution info.
-
-        Return the distribution information given input.
-
-        Args:
-            input_val (tf.Tensor): Input values.
-            state_infos (dict): a dictionary whose values should contain
-                information about the state of the policy at the time it
-                received the input.
-
-        """

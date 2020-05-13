@@ -34,10 +34,10 @@ def ppo_memorize_digits(ctxt=None, seed=1, batch_size=4000):
     with LocalTFRunner(ctxt) as runner:
         env = TfEnv(normalize(gym.make('MemorizeDigits-v0')), is_image=True)
         policy = CategoricalCNNPolicy(env_spec=env.spec,
-                                      conv_filters=(32, 64, 64),
-                                      conv_filter_sizes=(5, 3, 2),
-                                      conv_strides=(4, 2, 1),
-                                      conv_pad='VALID',
+                                      num_filters=(32, 64, 64),
+                                      filter_dims=(5, 3, 2),
+                                      strides=(4, 2, 1),
+                                      padding='VALID',
                                       hidden_sizes=(256, ))
 
         baseline = GaussianCNNBaseline(env_spec=env.spec,
@@ -54,7 +54,14 @@ def ppo_memorize_digits(ctxt=None, seed=1, batch_size=4000):
                    baseline=baseline,
                    max_path_length=100,
                    discount=0.99,
-                   max_kl_step=0.01,
+                   gae_lambda=0.95,
+                   lr_clip_range=0.2,
+                   policy_ent_coeff=0.0,
+                   optimizer_args=dict(
+                       batch_size=32,
+                       max_epochs=10,
+                       tf_optimizer_args=dict(learning_rate=1e-3),
+                   ),
                    flatten_input=False)
 
         runner.setup(algo, env)

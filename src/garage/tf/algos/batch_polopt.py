@@ -240,13 +240,8 @@ class BatchPolopt(RLAlgorithm):
 
         lengths = np.asarray([v.sum() for v in valids])
 
-        ent = np.sum(self.policy.distribution.entropy(agent_infos) *
-                     valids) / np.sum(valids)
-
         self.episode_reward_mean.extend(undiscounted_returns)
 
-        tabular.record('Entropy', ent)
-        tabular.record('Perplexity', np.exp(ent))
         tabular.record('Extras/EpisodeRewardMean',
                        np.mean(self.episode_reward_mean))
 

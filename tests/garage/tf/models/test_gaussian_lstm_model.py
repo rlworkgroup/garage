@@ -4,6 +4,7 @@ from unittest import mock
 import numpy as np
 import pytest
 import tensorflow as tf
+import tensorflow_probability as tfp
 
 from garage.tf.models import GaussianLSTMModel
 from tests.fixtures import TfGraphTestCase
@@ -29,6 +30,19 @@ class TestGaussianLSTMModel(TfGraphTestCase):
                                                   name='input')
         self.step_input_var = tf.compat.v1.placeholder(
             tf.float32, shape=(None, self.feature_shape), name='step_input')
+
+    def test_dist(self):
+        model = GaussianLSTMModel(output_dim=1, hidden_dim=1)
+        step_hidden_var = tf.compat.v1.placeholder(shape=(self.batch_size, 1),
+                                                   name='step_hidden',
+                                                   dtype=tf.float32)
+        step_cell_var = tf.compat.v1.placeholder(shape=(self.batch_size, 1),
+                                                 name='step_cell',
+                                                 dtype=tf.float32)
+        model.build(self.input_var, self.step_input_var, step_hidden_var,
+                    step_cell_var)
+        assert isinstance(model.networks['default'].dist,
+                          tfp.distributions.MultivariateNormalDiag)
 
     # yapf: disable
     @pytest.mark.parametrize('output_dim, hidden_dim', [
@@ -57,21 +71,18 @@ class TestGaussianLSTMModel(TfGraphTestCase):
                                                         hidden_dim),
                                                  name='step_cell',
                                                  dtype=tf.float32)
-        (mean_var, step_mean_var, log_std_var, step_log_std_var, step_hidden,
-         step_cell, hidden_init_var, cell_init_var,
-         dist) = model.build(self.input_var, self.step_input_var,
-                             step_hidden_var, step_cell_var)
+        (_, step_mean_var, step_log_std_var, step_hidden, step_cell,
+         hidden_init_var, cell_init_var) = model.build(self.input_var,
+                                                       self.step_input_var,
+                                                       step_hidden_var,
+                                                       step_cell_var)
 
         hidden1 = hidden2 = np.full((self.batch_size, hidden_dim),
                                     hidden_init_var.eval())
         cell1 = cell2 = np.full((self.batch_size, hidden_dim),
                                 cell_init_var.eval())
 
-        mean, log_std = self.sess.run(
-            [mean_var, log_std_var],
-            feed_dict={self.input_var: self.obs_inputs})
-
-        for i in range(self.time_step):
+        for _ in range(self.time_step):
             mean1, log_std1, hidden1, cell1 = self.sess.run(
                 [step_mean_var, step_log_std_var, step_hidden, step_cell],
                 feed_dict={
@@ -122,10 +133,8 @@ class TestGaussianLSTMModel(TfGraphTestCase):
                                                         hidden_dim),
                                                  name='step_cell',
                                                  dtype=tf.float32)
-        (mean_var, step_mean_var, log_std_var, step_log_std_var, step_hidden,
-         step_cell, hidden_init_var, cell_init_var,
-         dist) = model.build(self.input_var, self.step_input_var,
-                             step_hidden_var, step_cell_var)
+        model.build(self.input_var, self.step_input_var, step_hidden_var,
+                    step_cell_var)
 
         # output layer is a tf.keras.layers.Dense object,
         # which cannot be access by tf.compat.v1.variable_scope.
@@ -166,21 +175,18 @@ class TestGaussianLSTMModel(TfGraphTestCase):
                                                         hidden_dim),
                                                  name='step_cell',
                                                  dtype=tf.float32)
-        (mean_var, step_mean_var, log_std_var, step_log_std_var, step_hidden,
-         step_cell, hidden_init_var, cell_init_var,
-         dist) = model.build(self.input_var, self.step_input_var,
-                             step_hidden_var, step_cell_var)
+        (_, step_mean_var, step_log_std_var, step_hidden, step_cell,
+         hidden_init_var, cell_init_var) = model.build(self.input_var,
+                                                       self.step_input_var,
+                                                       step_hidden_var,
+                                                       step_cell_var)
 
         hidden1 = hidden2 = np.full((self.batch_size, hidden_dim),
                                     hidden_init_var.eval())
         cell1 = cell2 = np.full((self.batch_size, hidden_dim),
                                 cell_init_var.eval())
 
-        mean, log_std = self.sess.run(
-            [mean_var, log_std_var],
-            feed_dict={self.input_var: self.obs_inputs})
-
-        for i in range(self.time_step):
+        for _ in range(self.time_step):
             mean1, log_std1, hidden1, cell1 = self.sess.run(
                 [step_mean_var, step_log_std_var, step_hidden, step_cell],
                 feed_dict={
@@ -233,10 +239,8 @@ class TestGaussianLSTMModel(TfGraphTestCase):
                                                         hidden_dim),
                                                  name='step_cell',
                                                  dtype=tf.float32)
-        (mean_var, step_mean_var, log_std_var, step_log_std_var, step_hidden,
-         step_cell, hidden_init_var, cell_init_var,
-         dist) = model.build(self.input_var, self.step_input_var,
-                             step_hidden_var, step_cell_var)
+        model.build(self.input_var, self.step_input_var, step_hidden_var,
+                    step_cell_var)
 
         # output layer is a tf.keras.layers.Dense object,
         # which cannot be access by tf.compat.v1.variable_scope.
@@ -279,9 +283,9 @@ class TestGaussianLSTMModel(TfGraphTestCase):
                                                         hidden_dim),
                                                  name='step_cell',
                                                  dtype=tf.float32)
-        (mean_var, step_mean_var, log_std_var, step_log_std_var, step_hidden,
-         step_cell, _, _, _) = model.build(self.input_var, self.step_input_var,
-                                           step_hidden_var, step_cell_var)
+        (dist, step_mean_var, step_log_std_var, step_hidden, step_cell, _,
+         _) = model.build(self.input_var, self.step_input_var, step_hidden_var,
+                          step_cell_var)
 
         # output layer is a tf.keras.layers.Dense object,
         # which cannot be access by tf.compat.v1.variable_scope.
@@ -293,7 +297,7 @@ class TestGaussianLSTMModel(TfGraphTestCase):
         hidden = np.zeros((self.batch_size, hidden_dim))
         cell = np.zeros((self.batch_size, hidden_dim))
 
-        outputs1 = self.sess.run([mean_var, log_std_var],
+        outputs1 = self.sess.run([dist.loc, dist.scale.diag],
                                  feed_dict={self.input_var: self.obs_inputs})
         output1 = self.sess.run(
             [step_mean_var, step_log_std_var, step_hidden, step_cell],
@@ -324,12 +328,12 @@ class TestGaussianLSTMModel(TfGraphTestCase):
                                                      name='initial_cell',
                                                      dtype=tf.float32)
 
-            (mean_var2, step_mean_var2, log_std_var2, step_log_std_var2,
-             step_hidden2, step_cell2, _, _,
-             _) = model_pickled.build(input_var, step_input_var,
-                                      step_hidden_var, step_cell_var)
+            (dist2, step_mean_var2, step_log_std_var2, step_hidden2,
+             step_cell2, _, _) = model_pickled.build(input_var, step_input_var,
+                                                     step_hidden_var,
+                                                     step_cell_var)
 
-            outputs2 = sess.run([mean_var2, log_std_var2],
+            outputs2 = sess.run([dist2.loc, dist2.scale.diag],
                                 feed_dict={input_var: self.obs_inputs})
             output2 = sess.run(
                 [step_mean_var2, step_log_std_var2, step_hidden2, step_cell2],
@@ -368,9 +372,9 @@ class TestGaussianLSTMModel(TfGraphTestCase):
                                                         hidden_dim),
                                                  name='step_cell',
                                                  dtype=tf.float32)
-        (mean_var, step_mean_var, log_std_var, step_log_std_var, step_hidden,
-         step_cell, _, _, _) = model.build(self.input_var, self.step_input_var,
-                                           step_hidden_var, step_cell_var)
+        (dist, step_mean_var, step_log_std_var, step_hidden, step_cell, _,
+         _) = model.build(self.input_var, self.step_input_var, step_hidden_var,
+                          step_cell_var)
 
         # output layer is a tf.keras.layers.Dense object,
         # which cannot be access by tf.compat.v1.variable_scope.
@@ -382,7 +386,7 @@ class TestGaussianLSTMModel(TfGraphTestCase):
         hidden = np.zeros((self.batch_size, hidden_dim))
         cell = np.zeros((self.batch_size, hidden_dim))
 
-        outputs1 = self.sess.run([mean_var, log_std_var],
+        outputs1 = self.sess.run([dist.loc, dist.scale.diag],
                                  feed_dict={self.input_var: self.obs_inputs})
         output1 = self.sess.run(
             [step_mean_var, step_log_std_var, step_hidden, step_cell],
@@ -413,12 +417,12 @@ class TestGaussianLSTMModel(TfGraphTestCase):
                                                      name='initial_cell',
                                                      dtype=tf.float32)
 
-            (mean_var2, step_mean_var2, log_std_var2, step_log_std_var2,
-             step_hidden2, step_cell2, _, _,
-             _) = model_pickled.build(input_var, step_input_var,
-                                      step_hidden_var, step_cell_var)
+            (dist2, step_mean_var2, step_log_std_var2, step_hidden2,
+             step_cell2, _, _) = model_pickled.build(input_var, step_input_var,
+                                                     step_hidden_var,
+                                                     step_cell_var)
 
-            outputs2 = sess.run([mean_var2, log_std_var2],
+            outputs2 = sess.run([dist2.loc, dist2.scale.diag],
                                 feed_dict={input_var: self.obs_inputs})
             output2 = sess.run(
                 [step_mean_var2, step_log_std_var2, step_hidden2, step_cell2],

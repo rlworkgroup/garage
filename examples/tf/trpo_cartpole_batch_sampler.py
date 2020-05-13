@@ -14,12 +14,12 @@ from garage.tf.samplers import BatchSampler
 
 @click.command()
 @click.option('--batch_size', type=int, default=4000)
-@click.option('--max_path_length', type=int, default=500)
+@click.option('--max_path_length', type=int, default=100)
 @wrap_experiment
 def trpo_cartpole_batch_sampler(ctxt=None,
                                 seed=1,
                                 batch_size=4000,
-                                max_path_length=500):
+                                max_path_length=100):
     """Train TRPO with CartPole-v1 environment.
 
     Args:
