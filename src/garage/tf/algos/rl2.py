@@ -453,9 +453,6 @@ class RL2(MetaRLAlgorithm, abc.ABC):
         concatenated_paths_stacked['average_return'] = np.mean(
             undiscounted_returns)
 
-        agent_infos = concatenated_paths_stacked['agent_infos']
-        valids = concatenated_paths_stacked['valids']
-
         return concatenated_paths_stacked
 
     def _concatenate_paths(self, paths):

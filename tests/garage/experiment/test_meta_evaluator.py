@@ -205,8 +205,8 @@ def test_meta_evaluator_with_tf():
             logger.add_output(csv_output)
             meta_eval.evaluate(algo)
             algo_pickle = cloudpickle.dumps(algo)
-        with tf.Graph().as_default():
-            with LocalTFRunner(ctxt) as runner:
-                algo2 = cloudpickle.loads(algo_pickle)
-                runner.setup(algo2, env)
-                runner.train(10, 0)
+        tf.compat.v1.reset_default_graph()
+        with LocalTFRunner(ctxt) as runner:
+            algo2 = cloudpickle.loads(algo_pickle)
+            runner.setup(algo2, env)
+            runner.train(10, 0)

@@ -244,8 +244,8 @@ class NPO(BatchPolopt):
         for k in self.policy.state_info_keys:
             extra_state_var = policy_state_info_vars[k]
             extra_state_var = tf.cast(extra_state_var, tf.float32)
-            augmented_obs_var = tf.concat(
-                axis=-1, values=[augmented_obs_var, extra_state_var])
+            augmented_obs_var = tf.concat([augmented_obs_var, extra_state_var],
+                                          -1)
 
         self.policy.build(augmented_obs_var)
         self._old_policy.build(augmented_obs_var)

@@ -3,11 +3,11 @@ import copy
 from math import exp
 from math import log
 import random
-import tensorflow as tf
-import tensorflow_probability as tfp
 
 import numpy as np
 from numpy import var
+import tensorflow as tf
+import tensorflow_probability as tfp
 
 from garage.sampler.batch_sampler import BatchSampler
 from garage.sampler.utils import truncate_paths
@@ -207,8 +207,8 @@ class ISSampler(BatchSampler):
         dist2 = hist_policy_distribution
         for path in samples:
             _, agent_infos = policy.get_actions(path['observations'])
-            hist_agent_infos = path['agent_infos']
             if hist_variance_penalty > 0:
+                # pylint: disable=protected-access
                 dist2 = tfp.distributions.MultivariateNormalDiag(
                     loc=dist2.loc,
                     scale_diag=dist2.scale._diag +

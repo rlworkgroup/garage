@@ -167,10 +167,10 @@ class TestDiscreteCNNQFunction(TfGraphTestCase):
     @pytest.mark.parametrize('filter_dims, num_filters, strides, '
                              'pool_strides, pool_shapes', [
         ((3, ), (5, ), (1, ), (1, 1), (1, 1)),  # noqa: E122
-        ((3, ), (5, ), (2, ), (2, 2), (2, 2)),
-        ((3, 3), (5, 5), (1, 1), (1, 1), (1, 1)),
-        ((3, 3), (5, 5), (1, 1), (2, 2), (2, 2))
-    ])
+        ((3, ), (5, ), (2, ), (2, 2), (2, 2)),  # noqa: E122
+        ((3, 3), (5, 5), (1, 1), (1, 1), (1, 1)),  # noqa: E122
+        ((3, 3), (5, 5), (1, 1), (2, 2), (2, 2))  # noqa: E122
+    ])  # noqa: E122
     # yapf: enable
     def test_get_action_max_pooling(self, filter_dims, num_filters, strides,
                                     pool_strides, pool_shapes):

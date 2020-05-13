@@ -134,13 +134,12 @@ class GaussianMLPTaskEmbeddingPolicy(TaskEmbeddingPolicy):
             self._variable_scope = vs
 
             with tf.compat.v1.variable_scope('concat_obs_latent'):
-                obs_latent_input = tf.concat([obs_input, latent_input],
-                                             axis=-1)
+                obs_latent_input = tf.concat([obs_input, latent_input], -1)
             self._dist = self.model.build(obs_latent_input,
                                           name='given_latent')
 
             with tf.compat.v1.variable_scope('concat_obs_latent_var'):
-                embed_state_input = tf.concat([obs_input, latent_var], axis=-1)
+                embed_state_input = tf.concat([obs_input, latent_var], -1)
 
             dist_given_task = self.model.build(embed_state_input,
                                                name='given_task')

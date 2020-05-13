@@ -411,6 +411,7 @@ class REPS(BatchPolopt):  # noqa: D416
             for k in self.policy.state_info_keys
         ]   # yapf: disable
 
+        # pylint: disable=unexpected-keyword-arg
         dual_opt_input_values = self._dual_opt_inputs._replace(
             reward_var=samples_data['rewards'],
             valid_var=samples_data['valids'],

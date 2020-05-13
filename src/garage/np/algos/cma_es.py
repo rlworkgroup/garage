@@ -124,5 +124,11 @@ class CMAES(BatchPolopt):
         return rtn
 
     def __setstate__(self, state):
+        """Parameters to restore from snapshot.
+
+        Args:
+            state (dict): Parameters to restore from.
+
+        """
         self.__dict__ = state
         self._initialize()
