@@ -60,7 +60,7 @@ def enumerate_algo_examples():
 
 @pytest.mark.mujoco
 @pytest.mark.no_cover
-@pytest.mark.timeout(70)
+# @pytest.mark.timeout(70)
 @pytest.mark.parametrize('filepath', enumerate_algo_examples())
 def test_algo_examples(filepath):
     """Test algo examples.
