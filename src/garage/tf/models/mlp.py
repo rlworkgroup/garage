@@ -76,12 +76,12 @@ def mlp(input_var,
             if _merge_inputs and idx == _concat_layer:
                 l_hid = tf.keras.layers.concatenate([l_hid, input_var2])
 
-            l_hid = tf.compat.v1.layers.dense(inputs=l_hid,
-                                              units=hidden_size,
-                                              activation=hidden_nonlinearity,
-                                              kernel_initializer=hidden_w_init,
-                                              bias_initializer=hidden_b_init,
-                                              name='hidden_{}'.format(idx))
+            l_hid = tf.keras.layers.Dense(units=hidden_size,
+                                          activation=hidden_nonlinearity,
+                                          kernel_initializer=hidden_w_init,
+                                          bias_initializer=hidden_b_init,
+                                          name='hidden_{}'.format(idx))(l_hid)
+
             if layer_normalization:
                 l_hid = tf.keras.layers.LayerNormalization()(l_hid)
 
