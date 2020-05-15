@@ -3,7 +3,7 @@ import akro
 import tensorflow as tf
 
 from garage.tf.models import CNNMLPMergeModel
-from garage.tf.q_functions.q_function import QFunction
+from garage.tf.q_functions import QFunction
 
 
 class ContinuousCNNQFunction(QFunction):
@@ -66,7 +66,6 @@ class ContinuousCNNQFunction(QFunction):
             of output dense layer(s) in the MLP. The function should return
             a tf.Tensor.
         layer_normalization (bool): Bool for using layer normalization or not.
-
     """
 
     def __init__(self,
@@ -145,21 +144,29 @@ class ContinuousCNNQFunction(QFunction):
         self._initialize()
 
     def _initialize(self):
-        obs_ph = tf.compat.v1.placeholder(tf.float32, (None, ) + self._obs_dim,
-                                          name='state')
+
         action_ph = tf.compat.v1.placeholder(tf.float32,
                                              (None, ) + self._action_dim,
                                              name='action')
         if isinstance(self._env_spec.observation_space, akro.Image):
-            obs_ph = obs_ph / 255.0
-
+            obs_ph = tf.compat.v1.placeholder(tf.uint8,
+                                              (None, ) + self._obs_dim,
+                                              name='state')
+            augmented_obs_ph = tf.cast(obs_ph, tf.float32) / 255.0
+        else:
+            obs_ph = tf.compat.v1.placeholder(tf.float32,
+                                              (None, ) + self._obs_dim,
+                                              name='state')
+            augmented_obs_ph = obs_ph
         with tf.compat.v1.variable_scope(self.name) as vs:
             self._variable_scope = vs
-            self.model.build(obs_ph, action_ph)
-
+            self.model.build(augmented_obs_ph, action_ph)
         self._f_qval = tf.compat.v1.get_default_session().make_callable(
             self.model.networks['default'].outputs,
             feed_list=[obs_ph, action_ph])
+
+        self._obs_input = obs_ph
+        self._act_input = action_ph
 
     @property
     def inputs(self):
@@ -169,7 +176,7 @@ class ContinuousCNNQFunction(QFunction):
         tensor with shape :math:`(N, O*)`, and the second is the action tensor
         with shape :math:`(N, A*)`.
         """
-        return self.model.networks['default'].inputs
+        return self._obs_input, self._act_input
 
     def get_qval(self, observation, action):
         """Q Value of the network.
@@ -184,11 +191,10 @@ class ContinuousCNNQFunction(QFunction):
                 corresponding to each (obs, act) pair.
 
         """
-        if isinstance(self._env_spec.observation_space, akro.Image):
-            if len(observation.shape) <= 3:
-                observation = self._env_spec.observation_space.unflatten(
-                    observation)
-            observation = observation / 255.0
+        if len(observation[0].shape) < len(self._obs_dim):
+            observation = self._env_spec.observation_space.unflatten_n(
+                observation)
+
         return self._f_qval(observation, action)
 
     # pylint: disable=arguments-differ
@@ -207,9 +213,13 @@ class ContinuousCNNQFunction(QFunction):
 
         """
         with tf.compat.v1.variable_scope(self._variable_scope):
+            augmented_state_input = state_input
             if isinstance(self._env_spec.observation_space, akro.Image):
-                state_input /= 255.0
-            return self.model.build(state_input, action_input, name=name)
+                augmented_state_input = tf.cast(state_input,
+                                                tf.float32) / 255.0
+            return self.model.build(augmented_state_input,
+                                    action_input,
+                                    name=name)
 
     def clone(self, name):
         """Return a clone of the Q-function.
@@ -222,26 +232,27 @@ class ContinuousCNNQFunction(QFunction):
 
         Return:
             ContinuousCNNQFunction: Cloned Q function.
-
         """
-        return self.__class__(name=name,
-                              env_spec=self._env_spec,
-                              filter_dims=self._filter_dims,
-                              num_filters=self._num_filters,
-                              strides=self._strides,
-                              hidden_sizes=self._hidden_sizes,
-                              action_merge_layer=self._action_merge_layer,
-                              padding=self._padding,
-                              max_pooling=self._max_pooling,
-                              pool_shapes=self._pool_shapes,
-                              pool_strides=self._pool_strides,
-                              hidden_nonlinearity=self._hidden_nonlinearity,
-                              hidden_w_init=self._hidden_w_init,
-                              hidden_b_init=self._hidden_b_init,
-                              output_nonlinearity=self._output_nonlinearity,
-                              output_w_init=self._output_w_init,
-                              output_b_init=self._output_b_init,
-                              layer_normalization=self._layer_normalization)
+        return self.__class__(
+            name=name,
+            env_spec=self._env_spec,
+            filter_dims=self._filter_dims,
+            num_filters=self._num_filters,
+            strides=self._strides,
+            hidden_sizes=self._hidden_sizes,
+            action_merge_layer=self._action_merge_layer,
+            padding=self._padding,
+            max_pooling=self._max_pooling,
+            pool_shapes=self._pool_shapes,
+            pool_strides=self._pool_strides,
+            cnn_hidden_nonlinearity=self._cnn_hidden_nonlinearity,
+            hidden_nonlinearity=self._hidden_nonlinearity,
+            hidden_w_init=self._hidden_w_init,
+            hidden_b_init=self._hidden_b_init,
+            output_nonlinearity=self._output_nonlinearity,
+            output_w_init=self._output_w_init,
+            output_b_init=self._output_b_init,
+            layer_normalization=self._layer_normalization)
 
     def __getstate__(self):
         """Object.__getstate__.
@@ -252,6 +263,8 @@ class ContinuousCNNQFunction(QFunction):
         """
         new_dict = self.__dict__.copy()
         del new_dict['_f_qval']
+        del new_dict['_obs_input']
+        del new_dict['_act_input']
         return new_dict
 
     def __setstate__(self, state):
