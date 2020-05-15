@@ -3,8 +3,7 @@
 load-plugins = pylint.extensions.docparams, pylint.extensions.docstyle
 
 # Unit tests have a special configuration which is checked separately
-ignore = tests/garage
-ignore-patterns=benchmarks/**/*.py
+ignore = tests/garage, benchmarks
 
 # Go as fast as you can
 jobs = 0
