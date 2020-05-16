@@ -165,13 +165,22 @@ class DiscreteCNNQFunction(QFunction):
 
     def _initialize(self):
         """Initialize QFunction."""
-        obs_ph = tf.compat.v1.placeholder(tf.float32, (None, ) + self.obs_dim,
-                                          name='obs')
         if isinstance(self._env_spec.observation_space, akro.Image):
-            obs_ph = tf.cast(obs_ph, tf.float32) / 255.0
+            obs_ph = tf.compat.v1.placeholder(tf.uint8,
+                                              (None, ) + self.obs_dim,
+                                              name='obs')
+            augmented_obs_ph = tf.cast(obs_ph, tf.float32) / 255.0
+        else:
+            obs_ph = tf.compat.v1.placeholder(tf.float32,
+                                              (None, ) + self.obs_dim,
+                                              name='obs')
+            augmented_obs_ph = obs_ph
+
         with tf.compat.v1.variable_scope(self.name) as vs:
             self._variable_scope = vs
-            self.model.build(obs_ph)
+            self.model.build(augmented_obs_ph)
+
+        self._obs_input = obs_ph
 
     @property
     def q_vals(self):
@@ -191,7 +200,7 @@ class DiscreteCNNQFunction(QFunction):
             tf.Tensor: QFunction Input.
 
         """
-        return self.model.networks['default'].input
+        return self._obs_input
 
     # pylint: disable=arguments-differ
     def get_qval_sym(self, state_input, name):
@@ -206,9 +215,11 @@ class DiscreteCNNQFunction(QFunction):
 
         """
         with tf.compat.v1.variable_scope(self._variable_scope):
+            augmented_state_input = state_input
             if isinstance(self._env_spec.observation_space, akro.Image):
-                state_input = tf.cast(state_input, tf.float32) / 255.0
-            return self.model.build(state_input, name=name)
+                augmented_state_input = tf.cast(state_input,
+                                                tf.float32) / 255.0
+            return self.model.build(augmented_state_input, name=name)
 
     def clone(self, name):
         """Return a clone of the Q-function.
@@ -251,3 +262,14 @@ class DiscreteCNNQFunction(QFunction):
         """
         self.__dict__.update(state)
         self._initialize()
+
+    def __getstate__(self):
+        """Object.__getstate__.
+
+        Returns:
+            dict: The state.
+
+        """
+        new_dict = self.__dict__.copy()
+        del new_dict['_obs_input']
+        return new_dict

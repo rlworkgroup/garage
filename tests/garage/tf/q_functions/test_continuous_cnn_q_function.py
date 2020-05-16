@@ -56,6 +56,19 @@ class TestContinuousCNNQFunction(TfGraphTestCase):
         for output in outputs:
             assert np.array_equal(output, expected_output)
 
+        # make sure observations are unflattened
+
+        obs = env.observation_space.flatten(obs)
+        qf._f_qval = mock.MagicMock()
+
+        qf.get_qval([obs], [act])
+        unflattened_obs = qf._f_qval.call_args_list[0][0][0]
+        assert unflattened_obs.shape[1:] == env.spec.observation_space.shape
+
+        qf.get_qval([obs, obs], [act, act])
+        unflattened_obs = qf._f_qval.call_args_list[1][0][0]
+        assert unflattened_obs.shape[1:] == env.spec.observation_space.shape
+
     # yapf: disable
     @pytest.mark.parametrize('filter_dims, num_filters, strides, '
                              'pool_strides, pool_shapes', [
@@ -138,37 +151,17 @@ class TestContinuousCNNQFunction(TfGraphTestCase):
                                                 num_filters=(5, ),
                                                 strides=(1, ))
 
-                    # make sure image obses are normalized in get_qval()
-
-                    qf._f_qval = mock.MagicMock()
-                    fake_obs = np.full(image_env.spec.observation_space.shape,
-                                       255)
-                    fake_act = np.full(image_env.spec.action_space.shape, 1)
-
-                    qf.get_qval(fake_obs, fake_act)
-                    normalized_obs = qf._f_qval.call_args_list[0][0][0]
-                    assert (normalized_obs == 1.).all()
-
-                    # make sure image obses are unflattened if necessary
-
-                    flattened_obs = image_env.spec.observation_space.flatten(
-                        fake_obs)
-                    qf.get_qval(flattened_obs, fake_act)
-                    normalized_obs = qf._f_qval.call_args_list[1][0][0]
-                    assert (normalized_obs.shape ==
-                            image_env.observation_space.shape
-                            and (normalized_obs == 1.).all())
+                    fake_obs = [
+                        np.full(image_env.spec.observation_space.shape, 255)
+                    ]
 
                     # make sure image obses are normalized in _initialize()
-
+                    # and get_qval
                     normalized_obs = build.call_args_list[0][0][1]
+                    assert normalized_obs != qf.inputs[0]
 
-                    input_ph = tf.compat.v1.get_default_graph(
-                    ).get_tensor_by_name('state:0')
-
-                    fake_obs = [fake_obs]
                     assert (self.sess.run(normalized_obs,
-                                          feed_dict={input_ph:
+                                          feed_dict={qf.inputs[0]:
                                                      fake_obs}) == 1.).all()
 
                     # make sure image obses are normalized in get_qval_sim()
@@ -186,14 +179,8 @@ class TestContinuousCNNQFunction(TfGraphTestCase):
                     qf.get_qval_sym(state_input, action_input, name='another')
                     normalized_obs = build.call_args_list[1][0][1]
 
-                    input_ph = tf.compat.v1.get_default_graph(
-                    ).get_tensor_by_name('Placeholder:0')
-
-                    fake_obs = [
-                        np.full(image_env.spec.observation_space.shape, 255)
-                    ]
                     assert (self.sess.run(normalized_obs,
-                                          feed_dict={input_ph:
+                                          feed_dict={state_input:
                                                      fake_obs}) == 1.).all()
 
     def test_obs_not_image(self):
@@ -215,27 +202,17 @@ class TestContinuousCNNQFunction(TfGraphTestCase):
                                                 strides=(1, ))
 
                     # ensure non-image obses are not normalized
-                    # in get_qval()
-
-                    qf._f_qval = mock.MagicMock()
-                    fake_obs = np.full(env.spec.observation_space.shape, 255)
-                    fake_act = np.full(env.spec.action_space.shape, 1)
-
-                    qf.get_qval(fake_obs, fake_act)
-                    normalized_obs = qf._f_qval.call_args_list[0][0][0]
-                    assert (normalized_obs == 255.).all()
-
-                    # ensure non-image obses are not normalized
-                    # in _initialize()
+                    # in _initialize() and get_qval()
 
                     normalized_obs = build.call_args_list[0][0][1]
+                    assert normalized_obs == qf.inputs[0]
 
-                    input_ph = tf.compat.v1.get_default_graph(
-                    ).get_tensor_by_name('state:0')
+                    fake_obs = [
+                        np.full(env.spec.observation_space.shape, 255.)
+                    ]
 
-                    fake_obs = [np.full(env.spec.observation_space.shape, 255)]
                     assert (self.sess.run(normalized_obs,
-                                          feed_dict={input_ph:
+                                          feed_dict={qf.inputs[0]:
                                                      fake_obs}) == 255.).all()
 
                     # ensure non-image obses are not normalized
@@ -254,12 +231,8 @@ class TestContinuousCNNQFunction(TfGraphTestCase):
                     qf.get_qval_sym(state_input, action_input, name='another')
                     normalized_obs = build.call_args_list[1][0][1]
 
-                    input_ph = tf.compat.v1.get_default_graph(
-                    ).get_tensor_by_name('Placeholder:0')
-
-                    fake_obs = [np.full(env.spec.observation_space.shape, 255)]
                     assert (self.sess.run(normalized_obs,
-                                          feed_dict={input_ph:
+                                          feed_dict={state_input:
                                                      fake_obs}) == 255.).all()
 
     # yapf: disable

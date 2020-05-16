@@ -76,26 +76,24 @@ class TestDiscreteCNNQFunction(TfGraphTestCase):
                                       dueling=False)
             normalized_obs = build.call_args_list[0][0][1]
 
-            input_ph = tf.compat.v1.get_default_graph().get_tensor_by_name(
-                'obs:0')
+            input_ph = qf.input
+            assert input_ph != normalized_obs
 
             fake_obs = [np.full(image_env.spec.observation_space.shape, 255)]
             assert (self.sess.run(normalized_obs,
                                   feed_dict={input_ph: fake_obs}) == 1.).all()
 
             obs_dim = image_env.spec.observation_space.shape
-            state_input = tf.compat.v1.placeholder(tf.float32,
+            state_input = tf.compat.v1.placeholder(tf.uint8,
                                                    shape=(None, ) + obs_dim)
 
             qf.get_qval_sym(state_input, name='another')
             normalized_obs = build.call_args_list[1][0][1]
 
-            input_ph = tf.compat.v1.get_default_graph().get_tensor_by_name(
-                'Placeholder:0')
-
             fake_obs = [np.full(image_env.spec.observation_space.shape, 255)]
             assert (self.sess.run(normalized_obs,
-                                  feed_dict={input_ph: fake_obs}) == 1.).all()
+                                  feed_dict={state_input:
+                                             fake_obs}) == 1.).all()
 
     def test_obs_not_image(self):
         env = self.env
@@ -111,8 +109,8 @@ class TestDiscreteCNNQFunction(TfGraphTestCase):
                                       dueling=False)
             normalized_obs = build.call_args_list[0][0][1]
 
-            input_ph = tf.compat.v1.get_default_graph().get_tensor_by_name(
-                'obs:0')
+            input_ph = qf.input
+            assert input_ph == normalized_obs
 
             fake_obs = [np.full(env.spec.observation_space.shape, 255)]
             assert (self.sess.run(normalized_obs,
@@ -126,12 +124,9 @@ class TestDiscreteCNNQFunction(TfGraphTestCase):
             qf.get_qval_sym(state_input, name='another')
             normalized_obs = build.call_args_list[1][0][1]
 
-            input_ph = tf.compat.v1.get_default_graph().get_tensor_by_name(
-                'Placeholder:0')
-
             fake_obs = [np.full(env.spec.observation_space.shape, 255)]
             assert (self.sess.run(normalized_obs,
-                                  feed_dict={input_ph:
+                                  feed_dict={state_input:
                                              fake_obs}) == 255).all()
 
     # yapf: disable
