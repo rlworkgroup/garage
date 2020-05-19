@@ -9,7 +9,7 @@ import numpy as np
 import pytest
 import tensorflow as tf
 
-from garage.np.exploration_strategies import EpsilonGreedyStrategy
+from garage.np.exploration_policies import EpsilonGreedyPolicy
 from garage.replay_buffer import SimpleReplayBuffer
 from garage.tf.algos import DQN
 from garage.tf.envs import TfEnv
@@ -35,8 +35,9 @@ class TestDQN(TfGraphTestCase):
                                                time_horizon=1)
             qf = DiscreteMLPQFunction(env_spec=env.spec, hidden_sizes=(64, 64))
             policy = DiscreteQfDerivedPolicy(env_spec=env.spec, qf=qf)
-            epilson_greedy_strategy = EpsilonGreedyStrategy(
+            epilson_greedy_policy = EpsilonGreedyPolicy(
                 env_spec=env.spec,
+                policy=policy,
                 total_timesteps=num_timesteps,
                 max_epsilon=1.0,
                 min_epsilon=0.02,
@@ -44,7 +45,7 @@ class TestDQN(TfGraphTestCase):
             algo = DQN(env_spec=env.spec,
                        policy=policy,
                        qf=qf,
-                       exploration_strategy=epilson_greedy_strategy,
+                       exploration_policy=epilson_greedy_policy,
                        replay_buffer=replay_buffer,
                        qf_lr=1e-4,
                        discount=1.0,
@@ -76,8 +77,9 @@ class TestDQN(TfGraphTestCase):
                                                time_horizon=1)
             qf = DiscreteMLPQFunction(env_spec=env.spec, hidden_sizes=(64, 64))
             policy = DiscreteQfDerivedPolicy(env_spec=env.spec, qf=qf)
-            epilson_greedy_strategy = EpsilonGreedyStrategy(
+            epilson_greedy_policy = EpsilonGreedyPolicy(
                 env_spec=env.spec,
+                policy=policy,
                 total_timesteps=num_timesteps,
                 max_epsilon=1.0,
                 min_epsilon=0.02,
@@ -85,7 +87,7 @@ class TestDQN(TfGraphTestCase):
             algo = DQN(env_spec=env.spec,
                        policy=policy,
                        qf=qf,
-                       exploration_strategy=epilson_greedy_strategy,
+                       exploration_policy=epilson_greedy_policy,
                        replay_buffer=replay_buffer,
                        qf_lr=1e-4,
                        discount=1.0,
@@ -117,8 +119,9 @@ class TestDQN(TfGraphTestCase):
                                                time_horizon=1)
             qf = DiscreteMLPQFunction(env_spec=env.spec, hidden_sizes=(64, 64))
             policy = DiscreteQfDerivedPolicy(env_spec=env.spec, qf=qf)
-            epilson_greedy_strategy = EpsilonGreedyStrategy(
+            epilson_greedy_policy = EpsilonGreedyPolicy(
                 env_spec=env.spec,
+                policy=policy,
                 total_timesteps=num_timesteps,
                 max_epsilon=1.0,
                 min_epsilon=0.02,
@@ -126,7 +129,7 @@ class TestDQN(TfGraphTestCase):
             algo = DQN(env_spec=env.spec,
                        policy=policy,
                        qf=qf,
-                       exploration_strategy=epilson_greedy_strategy,
+                       exploration_policy=epilson_greedy_policy,
                        replay_buffer=replay_buffer,
                        qf_lr=1e-4,
                        discount=1.0,
@@ -158,8 +161,9 @@ class TestDQN(TfGraphTestCase):
                                                time_horizon=1)
             qf = DiscreteMLPQFunction(env_spec=env.spec, hidden_sizes=(64, 64))
             policy = DiscreteQfDerivedPolicy(env_spec=env.spec, qf=qf)
-            epilson_greedy_strategy = EpsilonGreedyStrategy(
+            epilson_greedy_policy = EpsilonGreedyPolicy(
                 env_spec=env.spec,
+                policy=policy,
                 total_timesteps=num_timesteps,
                 max_epsilon=1.0,
                 min_epsilon=0.02,
@@ -167,7 +171,7 @@ class TestDQN(TfGraphTestCase):
             algo = DQN(env_spec=env.spec,
                        policy=policy,
                        qf=qf,
-                       exploration_strategy=epilson_greedy_strategy,
+                       exploration_policy=epilson_greedy_policy,
                        replay_buffer=replay_buffer,
                        qf_lr=1e-4,
                        discount=1.0,

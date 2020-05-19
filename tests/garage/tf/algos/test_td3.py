@@ -4,7 +4,7 @@ import gym
 import pytest
 import tensorflow as tf
 
-from garage.np.exploration_strategies.gaussian_strategy import GaussianStrategy
+from garage.np.exploration_policies import AddGaussianNoise
 from garage.replay_buffer import SimpleReplayBuffer
 from garage.tf.algos import TD3
 from garage.tf.envs import TfEnv
@@ -23,14 +23,15 @@ class TestTD3(TfGraphTestCase):
         with LocalTFRunner(snapshot_config) as runner:
             env = TfEnv(gym.make('InvertedDoublePendulum-v2'))
 
-            action_noise = GaussianStrategy(env.spec,
-                                            max_sigma=0.1,
-                                            min_sigma=0.1)
-
             policy = ContinuousMLPPolicy(env_spec=env.spec,
                                          hidden_sizes=[400, 300],
                                          hidden_nonlinearity=tf.nn.relu,
                                          output_nonlinearity=tf.nn.tanh)
+
+            exploration_policy = AddGaussianNoise(env.spec,
+                                                  policy,
+                                                  max_sigma=0.1,
+                                                  min_sigma=0.1)
 
             qf = ContinuousMLPQFunction(name='ContinuousMLPQFunction',
                                         env_spec=env.spec,
@@ -64,7 +65,7 @@ class TestTD3(TfGraphTestCase):
                        buffer_batch_size=100,
                        policy_weight_decay=0.001,
                        qf_weight_decay=0.001,
-                       exploration_strategy=action_noise,
+                       exploration_policy=exploration_policy,
                        policy_optimizer=tf.compat.v1.train.AdamOptimizer,
                        qf_optimizer=tf.compat.v1.train.AdamOptimizer)
 

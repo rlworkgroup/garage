@@ -5,7 +5,7 @@ import tensorflow as tf
 from garage import wrap_experiment
 from garage.envs import normalize
 from garage.experiment import deterministic
-from garage.np.exploration_strategies.gaussian_strategy import GaussianStrategy
+from garage.np.exploration_policies import AddGaussianNoise
 from garage.replay_buffer import SimpleReplayBuffer
 from garage.tf.algos import TD3
 from garage.tf.envs import TfEnv
@@ -49,16 +49,17 @@ def td3_garage_tf(ctxt, env_id, seed):
     with LocalTFRunner(ctxt) as runner:
         env = TfEnv(normalize(gym.make(env_id)))
 
-        exploration_noise = GaussianStrategy(
-            env.spec,
-            max_sigma=hyper_parameters['sigma'],
-            min_sigma=hyper_parameters['sigma'])
-
         policy = ContinuousMLPPolicy(
             env_spec=env.spec,
             hidden_sizes=hyper_parameters['policy_hidden_sizes'],
             hidden_nonlinearity=tf.nn.relu,
             output_nonlinearity=tf.nn.tanh)
+
+        exploration_policy = AddGaussianNoise(
+            env.spec,
+            policy,
+            max_sigma=hyper_parameters['sigma'],
+            min_sigma=hyper_parameters['sigma'])
 
         qf = ContinuousMLPQFunction(
             name='ContinuousMLPQFunction',
@@ -93,7 +94,7 @@ def td3_garage_tf(ctxt, env_id, seed):
                   smooth_return=hyper_parameters['smooth_return'],
                   min_buffer_size=hyper_parameters['min_buffer_size'],
                   buffer_batch_size=hyper_parameters['buffer_batch_size'],
-                  exploration_strategy=exploration_noise,
+                  exploration_policy=exploration_policy,
                   policy_optimizer=tf.compat.v1.train.AdamOptimizer,
                   qf_optimizer=tf.compat.v1.train.AdamOptimizer)
 

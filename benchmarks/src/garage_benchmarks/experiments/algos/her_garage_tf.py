@@ -5,7 +5,7 @@ import tensorflow as tf
 from garage import wrap_experiment
 from garage.envs import normalize
 from garage.experiment import deterministic
-from garage.np.exploration_strategies import OUStrategy
+from garage.np.exploration_policies import AddOrnsteinUhlenbeckNoise
 from garage.replay_buffer import HerReplayBuffer
 from garage.tf.algos import DDPG
 from garage.tf.envs import TfEnv
@@ -46,14 +46,15 @@ def her_garage_tf(ctxt, env_id, seed):
     with LocalTFRunner(ctxt) as runner:
         env = TfEnv(normalize(gym.make(env_id)))
 
-        action_noise = OUStrategy(env.spec, sigma=hyper_parameters['sigma'])
-
         policy = ContinuousMLPPolicy(
             env_spec=env.spec,
             hidden_sizes=hyper_parameters['policy_hidden_sizes'],
             hidden_nonlinearity=tf.nn.relu,
             output_nonlinearity=tf.nn.tanh,
         )
+
+        exploration_policy = AddOrnsteinUhlenbeckNoise(
+            env_spec=env.spec, policy=policy, sigma=hyper_parameters['sigma'])
 
         qf = ContinuousMLPQFunction(
             env_spec=env.spec,
@@ -80,7 +81,7 @@ def her_garage_tf(ctxt, env_id, seed):
             target_update_tau=hyper_parameters['tau'],
             n_train_steps=hyper_parameters['n_train_steps'],
             discount=hyper_parameters['discount'],
-            exploration_strategy=action_noise,
+            exploration_policy=exploration_policy,
             policy_optimizer=tf.compat.v1.train.AdamOptimizer,
             qf_optimizer=tf.compat.v1.train.AdamOptimizer,
             buffer_batch_size=256,

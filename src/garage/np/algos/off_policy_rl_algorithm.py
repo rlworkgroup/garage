@@ -32,8 +32,8 @@ class OffPolicyRLAlgorithm(RLAlgorithm):
         rollout_batch_size (int): Roll out batch size.
         reward_scale (float): Reward scale.
         smooth_return (bool): Whether to smooth the return.
-        exploration_strategy
-            (garage.np.exploration_strategies.ExplorationStrategy):
+        exploration_policy
+            (garage.np.exploration_policies.ExplorationPolicy):
             Exploration strategy.
 
     """
@@ -56,7 +56,7 @@ class OffPolicyRLAlgorithm(RLAlgorithm):
             rollout_batch_size=1,
             reward_scale=1.,
             smooth_return=True,
-            exploration_strategy=None):
+            exploration_policy=None):
         self.env_spec = env_spec
         self.policy = policy
         self.qf = qf
@@ -72,7 +72,7 @@ class OffPolicyRLAlgorithm(RLAlgorithm):
         self.smooth_return = smooth_return
         self.max_path_length = max_path_length
         self.max_eval_path_length = max_eval_path_length
-        self.es = exploration_strategy
+        self.exploration_policy = exploration_policy
 
         self.sampler_cls = OffPolicyVectorizedSampler
 

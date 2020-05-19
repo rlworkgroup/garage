@@ -84,6 +84,10 @@ class OffPolicyVectorizedSampler(BatchSampler):
             whole_paths(bool): Not effective. Only keep here to comply
                 with base class.
 
+        Raises:
+            ValueError: If the algorithm doesn't have an exploration_policy
+                field.
+
         Returns:
             list: A list of paths.
 
@@ -99,21 +103,16 @@ class OffPolicyVectorizedSampler(BatchSampler):
         running_paths = [None] * self._vec_env.num_envs
         n_samples = 0
 
-        policy = self.algo.policy
-        if self.algo.es:
-            self.algo.es.reset()
-
+        policy = self.algo.exploration_policy
+        if policy is None:
+            raise ValueError('OffPolicyVectoriizedSampler should only be used '
+                             'with an exploration_policy.')
         while n_samples < batch_size:
             policy.reset(completes)
             obs_space = self.algo.env_spec.observation_space
             input_obses = obs_space.flatten_n(obses)
 
-            if self.algo.es:
-                actions, agent_infos = self.algo.es.get_actions(
-                    itr, input_obses, self.algo.policy)
-            else:
-                actions, agent_infos = self.algo.policy.get_actions(
-                    input_obses)
+            actions, agent_infos = policy.get_actions(input_obses)
 
             next_obses, rewards, dones, env_infos = \
                 self._vec_env.step(actions)
@@ -181,8 +180,5 @@ class OffPolicyVectorizedSampler(BatchSampler):
                         self._last_running_length[idx] = 0
                         self._last_success_count[idx] = 0
                         self._last_uncounted_discount[idx] = 0
-
-                    if self.algo.es:
-                        self.algo.es.reset()
             obses = next_obses
         return paths

@@ -7,11 +7,10 @@ transitions. And OU process is relatively smooth in time.
 """
 import numpy as np
 
-from garage.np.exploration_strategies.exploration_strategy import (
-    ExplorationStrategy)
+from garage.np.exploration_policies.exploration_policy import ExplorationPolicy
 
 
-class OUStrategy(ExplorationStrategy):
+class AddOrnsteinUhlenbeckNoise(ExplorationPolicy):
     r"""An exploration strategy based on the Ornstein-Uhlenbeck process.
 
     The process is governed by the following stochastic differential equation.
@@ -20,7 +19,8 @@ class OUStrategy(ExplorationStrategy):
        dx_t = -\theta(\mu - x_t)dt + \sigma \sqrt{dt} \mathcal{N}(\mathbb{0}, \mathbb{1})  # noqa: E501
 
     Args:
-        env_spec (EnvSpec): Environment for OUStrategy to explore.
+        env_spec (EnvSpec): Environment to explore.
+        policy (garage.Policy): Policy to wrap.
         mu (float): :math:`\mu` parameter of this OU process. This is the drift
             component.
         sigma (float): :math:`\sigma > 0` parameter of this OU process. This is
@@ -34,8 +34,16 @@ class OUStrategy(ExplorationStrategy):
 
     """
 
-    def __init__(self, env_spec, mu=0, sigma=0.3, theta=0.15, dt=1e-2,
+    def __init__(self,
+                 env_spec,
+                 policy,
+                 *,
+                 mu=0,
+                 sigma=0.3,
+                 theta=0.15,
+                 dt=1e-2,
                  x0=None):
+        super().__init__(policy)
         self._env_spec = env_spec
         self._action_space = env_spec.action_space
         self._action_dim = self._action_space.flat_dim
@@ -60,50 +68,45 @@ class OUStrategy(ExplorationStrategy):
         self._state = x + dx
         return self._state
 
-    def reset(self):
-        """Reset the state of the exploration."""
-        self._state = self._x0
+    def reset(self, dones=None):
+        """Reset the state of the exploration.
 
-    def get_action(self, t, observation, policy, **kwargs):
+        Args:
+            dones (List[bool] or numpy.ndarray or None): Which vectorization
+                states to reset.
+
+        """
+        self._state = self._x0
+        super().reset(dones)
+
+    def get_action(self, observation):
         """Return an action with noise.
 
         Args:
-            t (int): Current sampling iteration.
             observation (np.ndarray): Observation from the environment.
-            policy (garage.Policy): Policy which predicts action based on the
-                observation.
-            **kwargs (dict): Unused.
 
         Returns:
-            np.ndarray: An action with noise explored by OUStrategy.
+            np.ndarray: An action with noise.
             dict: Arbitrary policy state information (agent_info).
 
         """
-        del t
-        del kwargs
-        action, agent_infos = policy.get_action(observation)
+        action, agent_infos = self.policy.get_action(observation)
         ou_state = self._simulate()
         return np.clip(action + ou_state, self._action_space.low,
                        self._action_space.high), agent_infos
 
-    def get_actions(self, t, observations, policy, **kwargs):
+    def get_actions(self, observations):
         """Return actions with noise.
 
         Args:
-            t (int): Current sampling iteration.
             observations (np.ndarray): Observation from the environment.
-            policy (garage.Policy): Policy which predicts action based on the
-                observation.
-            **kwargs (dict): Unused.
 
         Returns:
-            np.ndarray: Actions with noise explored by OUStrategy.
+            np.ndarray: Actions with noise.
             List[dict]: Arbitrary policy state information (agent_info).
 
         """
-        del t
-        del kwargs
-        actions, agent_infos = policy.get_actions(observations)
+        actions, agent_infos = self.policy.get_actions(observations)
         ou_state = self._simulate()
         return np.clip(actions + ou_state, self._action_space.low,
                        self._action_space.high), agent_infos

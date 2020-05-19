@@ -5,7 +5,7 @@ import tensorflow as tf
 from garage import wrap_experiment
 from garage.envs import normalize
 from garage.experiment import deterministic
-from garage.np.exploration_strategies import OUStrategy
+from garage.np.exploration_strategies import AddOrnsteinUhlenbeckNoise
 from garage.replay_buffer import SimpleReplayBuffer
 from garage.tf.algos import DDPG
 from garage.tf.envs import TfEnv
@@ -46,14 +46,15 @@ def continuous_mlp_q_function(ctxt, env_id, seed):
     with LocalTFRunner(ctxt, max_cpus=12) as runner:
         env = TfEnv(normalize(gym.make(env_id)))
 
-        action_noise = OUStrategy(env.spec, sigma=hyper_params['sigma'])
-
         policy = ContinuousMLPPolicy(
             env_spec=env.spec,
             name='ContinuousMLPPolicy',
             hidden_sizes=hyper_params['policy_hidden_sizes'],
             hidden_nonlinearity=tf.nn.relu,
             output_nonlinearity=tf.nn.tanh)
+
+        exploration_policy = AddOrnsteinUhlenbeckNoise(
+            env.spec, policy, sigma=hyper_params['sigma'])
 
         qf = ContinuousMLPQFunction(
             env_spec=env.spec,
@@ -77,7 +78,7 @@ def continuous_mlp_q_function(ctxt, env_id, seed):
                     n_train_steps=hyper_params['n_train_steps'],
                     discount=hyper_params['discount'],
                     min_buffer_size=int(1e4),
-                    exploration_strategy=action_noise,
+                    exploration_policy=exploration_policy,
                     policy_optimizer=tf.compat.v1.train.AdamOptimizer,
                     qf_optimizer=tf.compat.v1.train.AdamOptimizer)
 

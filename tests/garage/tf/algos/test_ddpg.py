@@ -6,7 +6,7 @@ import pytest
 import tensorflow as tf
 
 from garage.envs import normalize
-from garage.np.exploration_strategies import OUStrategy
+from garage.np.exploration_policies import AddOrnsteinUhlenbeckNoise
 from garage.replay_buffer import SimpleReplayBuffer
 from garage.tf.algos import DDPG
 from garage.tf.envs import TfEnv
@@ -24,11 +24,13 @@ class TestDDPG(TfGraphTestCase):
         """Test DDPG with Pendulum environment."""
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
             env = TfEnv(gym.make('InvertedDoublePendulum-v2'))
-            action_noise = OUStrategy(env.spec, sigma=0.2)
             policy = ContinuousMLPPolicy(env_spec=env.spec,
                                          hidden_sizes=[64, 64],
                                          hidden_nonlinearity=tf.nn.relu,
                                          output_nonlinearity=tf.nn.tanh)
+            exploration_policy = AddOrnsteinUhlenbeckNoise(env.spec,
+                                                           policy,
+                                                           sigma=0.2)
             qf = ContinuousMLPQFunction(env_spec=env.spec,
                                         hidden_sizes=[64, 64],
                                         hidden_nonlinearity=tf.nn.relu)
@@ -47,7 +49,7 @@ class TestDDPG(TfGraphTestCase):
                 n_train_steps=50,
                 discount=0.9,
                 min_buffer_size=int(5e3),
-                exploration_strategy=action_noise,
+                exploration_policy=exploration_policy,
             )
             runner.setup(algo, env)
             last_avg_ret = runner.train(n_epochs=10, batch_size=100)
@@ -63,11 +65,13 @@ class TestDDPG(TfGraphTestCase):
         """
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
             env = TfEnv(normalize(gym.make('InvertedPendulum-v2')))
-            action_noise = OUStrategy(env.spec, sigma=0.2)
             policy = ContinuousMLPPolicy(env_spec=env.spec,
                                          hidden_sizes=[64, 64],
                                          hidden_nonlinearity=tf.nn.relu,
                                          output_nonlinearity=tf.nn.tanh)
+            exploration_policy = AddOrnsteinUhlenbeckNoise(env.spec,
+                                                           policy,
+                                                           sigma=0.2)
             qf = ContinuousMLPQFunction(env_spec=env.spec,
                                         hidden_sizes=[64, 64],
                                         hidden_nonlinearity=tf.nn.relu)
@@ -86,7 +90,7 @@ class TestDDPG(TfGraphTestCase):
                 n_train_steps=50,
                 discount=0.9,
                 min_buffer_size=int(5e3),
-                exploration_strategy=action_noise,
+                exploration_policy=exploration_policy,
             )
             runner.setup(algo, env)
             last_avg_ret = runner.train(n_epochs=10, batch_size=100)
@@ -102,11 +106,13 @@ class TestDDPG(TfGraphTestCase):
         """
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
             env = TfEnv(normalize(gym.make('InvertedPendulum-v2')))
-            action_noise = OUStrategy(env.spec, sigma=0.2)
             policy = ContinuousMLPPolicy(env_spec=env.spec,
                                          hidden_sizes=[64, 64],
                                          hidden_nonlinearity=tf.nn.relu,
                                          output_nonlinearity=tf.nn.tanh)
+            exploration_policy = AddOrnsteinUhlenbeckNoise(env.spec,
+                                                           policy,
+                                                           sigma=0.2)
             qf = ContinuousMLPQFunction(env_spec=env.spec,
                                         hidden_sizes=[64, 64],
                                         hidden_nonlinearity=tf.nn.relu)
@@ -127,7 +133,7 @@ class TestDDPG(TfGraphTestCase):
                 policy_weight_decay=0.01,
                 qf_weight_decay=0.01,
                 min_buffer_size=int(5e3),
-                exploration_strategy=action_noise,
+                exploration_policy=exploration_policy,
             )
             runner.setup(algo, env)
             last_avg_ret = runner.train(n_epochs=10, batch_size=100)
