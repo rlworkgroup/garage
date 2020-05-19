@@ -4,55 +4,16 @@
 Implementing New Environments
 =============================
 
-In this section, we will walk through an example of implementing a point robot
-environment using our framework.
+Garage uses an environment API based on the very popular OpenAI Gym interface. The main difference is that garage uses :code:`akro` to describe input and output spaces, which are an extension of the :code:`gym.Space` API.
 
-Each environment should implement at least the following methods / properties defined
-in the file :code:`garage/envs/base.py`:
+If you have an OpenAI Gym compatible environment, you can wrap it in :code:`garage.envs.GarageEnv` to use it with garage.
 
-.. code-block:: python
+Garage also has a wrapper which supports Deepmind's :code:`dm_control` API, :code:`garage.envs.dm_control.DmControlEnv`.
 
-    class Env:
-        def step(self, action):
-            """
-            Run one timestep of the environment's dynamics. When end of episode
-            is reached, reset() should be called to reset the environment's internal state.
-            Input
-            -----
-            action : an action provided by the environment
-            Outputs
-            -------
-            (observation, reward, done, info)
-            observation : agent's observation of the current environment
-            reward [Float] : amount of reward due to the previous action
-            done : a boolean, indicating whether the episode has ended
-            info : a dictionary containing other diagnostic information from the previous action
-            """
-            raise NotImplementedError
 
-        def reset(self):
-            """
-            Resets the state of the environment, returning an initial observation.
-            Outputs
-            -------
-            observation : the initial observation of the space. (Initial reward is assumed to be 0.)
-            """
-            raise NotImplementedError
-
-        @property
-        def action_space(self):
-            """
-            Returns a Space object
-            """
-            raise NotImplementedError
-
-        @property
-        def observation_space(self):
-            """
-            Returns a Space object
-            """
-            raise NotImplementedError
-
+In the rest of this section, we will walk through an example of implementing a
+point robot environment using our framework. A more complete version of this
+environment is available as :code:`garage.envs.PointEnv`.
 
 We will implement a simple environment with 2D observations and 2D actions. The goal is
 to control a point robot in 2D to move it to the origin. We receive position of
@@ -62,8 +23,7 @@ its velocity :math:`(\dot x, \dot y) \in \mathbb{R}^2` constrained so that
 to move to the origin by defining its reward as the negative distance to the
 origin: :math:`r(x, y) = - \sqrt{x^2 + y^2}`.
 
-We start by creating a new file for the environment. We assume that it is placed under
-:code:`examples/point_env.py`. First, let's declare a class inheriting from
+We start by creating a new file for the environment, then we declare a class inheriting from
 the base environment and add some imports:
 
 .. code-block:: python
@@ -163,31 +123,46 @@ It simulates an episode of the environment with random actions, sampled from a
 uniform distribution within the defined action bounds.
 
 You could also train a neural network policy to solve the task, which is probably
-an overkill. To do so, create a new script with the following content (we will use
+overkill. To do so, create a new script with the following content (we will use
 stub mode):
 
 
 .. code-block:: python
 
-
+    from garage import wrap_experiment
     from garage.envs import PointEnv
     from garage.envs import normalize
+    from garage.experiment.deterministic import set_seed
     from garage.np.baselines import LinearFeatureBaseline
-    from garage.tf.algos.trpo import TRPO
-    from garage.tf.policies.gaussian_mlp_policy import GaussianMLPPolicy
+    from garage.tf.algos import TRPO
+    from garage.tf.experiment import LocalTFRunner
+    from garage.tf.policies import CategoricalMLPPolicy
 
 
-    env = normalize(PointEnv())
-    policy = GaussianMLPPolicy(
-        env_spec=env.spec,
-    )
-    baseline = LinearFeatureBaseline(env_spec=env.spec)
-    algo = TRPO(
-        env=env,
-        policy=policy,
-        baseline=baseline,
-    )
-    algo.train()
+    @wrap_experiment
+    def trpo_point(ctxt=None, seed=1):
+        set_seed(seed)
+        with LocalTFRunner(ctxt) as runner:
+            env = normalize(PointEnv())
+
+            policy = CategoricalMLPPolicy(name='policy',
+                                          env_spec=env.spec,
+                                          hidden_sizes=(32, 32))
+
+            baseline = LinearFeatureBaseline(env_spec=env.spec)
+
+            algo = TRPO(env_spec=env.spec,
+                        policy=policy,
+                        baseline=baseline,
+                        max_path_length=100,
+                        discount=0.99,
+                        max_kl_step=0.01)
+
+            runner.setup(algo, env)
+            runner.train(n_epochs=100, batch_size=4000)
+
+
+    trpo_point()
 
 Assume that the file is :code:`examples/tf/trpo_point.py`. You can then run the script:
 
