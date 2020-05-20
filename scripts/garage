@@ -3,13 +3,25 @@
 # pylint: disable=no-name-in-module
 import click
 
-from garage.experiment import run_experiment
+from garage.experiment import wrap_experiment
 from garage.tf.experiment import LocalTFRunner
 
 
 @click.group()
 def cli():  # noqa: D103
     """The main command group."""
+
+
+# pylint: disable=bad-docstring-quotes
+@wrap_experiment
+def resume_experiment(ctxt, from_dir=None, from_epoch=None):
+    """Experiment definition of a resumed experiment."""
+    # pylint: disable=missing-param-doc, missing-type-doc
+    assert from_dir
+    assert from_epoch
+    with LocalTFRunner(ctxt) as runner:
+        runner.restore(from_dir=from_dir, from_epoch=from_epoch)
+        runner.resume()
 
 
 @cli.command()
@@ -19,28 +31,35 @@ def cli():  # noqa: D103
     default=None,
     help='Log path for resumed experiment. If not specified, will be the same '
     'as from_dir.')
-# pylint: disable=bad-docstring-quotes
+@click.option(
+    '--snapshot_mode',
+    default='last',
+    help='Policy for which snapshots to keep (or make at all). Can be either '
+    '"all" (all iterations will be saved), "last" (only the last iteration '
+    'will be saved), "gap" (every snapshot_gap iterations are saved), or '
+    '"none" (do not save snapshots).')
+@click.option(
+    '--snapshot_gap',
+    default=1,
+    help='Gap between snapshot iterations. Waits this number of iterations '
+    'before taking another snapshot.')
 @click.option('--from_epoch',
               default='last',
               help='When there are multiple snapshots, '
               'specify the index of epoch to restore from. '
               'Can be "first", "last" or a number. '
               'Not applicable when snapshot_mode="last"')
-def resume(from_dir, from_epoch, log_dir):
+# pylint: disable=bad-docstring-quotes
+def resume(from_dir, from_epoch, log_dir, snapshot_gap, snapshot_mode):
     # pylint: disable=missing-param-doc, missing-type-doc
     """Resume from experiment saved in FROM_DIR."""
     if log_dir is None:
         log_dir = from_dir
-
-    def run_task(_snapshot_config, _variant_data, _from_dir, _from_epoch):
-        with LocalTFRunner(snapshot_config=_snapshot_config) as runner:
-            runner.restore(from_dir=_from_dir, from_epoch=_from_epoch)
-            runner.resume()
-
-    run_experiment(run_task,
-                   log_dir=log_dir,
-                   resume_from_dir=from_dir,
-                   resume_from_epoch=from_epoch)
+    resume_experiment(dict(log_dir=log_dir,
+                           snapshot_mode=snapshot_mode,
+                           snapshot_gap=snapshot_gap),
+                      from_dir=from_dir,
+                      from_epoch=from_epoch)
 
 
 if __name__ == '__main__':
