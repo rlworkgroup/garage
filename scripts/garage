@@ -2,9 +2,10 @@
 """Script for resuming training from command line."""
 # pylint: disable=no-name-in-module
 import click
+import torch
 
-from garage.experiment import wrap_experiment
-from garage.tf.experiment import LocalTFRunner
+from garage.experiment import wrap_experiment, LocalRunner
+import garage.torch.utils as tu
 
 
 @click.group()
@@ -14,14 +15,16 @@ def cli():  # noqa: D103
 
 # pylint: disable=bad-docstring-quotes
 @wrap_experiment
-def resume_experiment(ctxt, from_dir=None, from_epoch=None):
+def resume_experiment(ctxt, from_dir=None, from_epoch=None, gpu=None):
     """Experiment definition of a resumed experiment."""
     # pylint: disable=missing-param-doc, missing-type-doc
     assert from_dir
     assert from_epoch
-    with LocalTFRunner(ctxt) as runner:
-        runner.restore(from_dir=from_dir, from_epoch=from_epoch)
-        runner.resume()
+    if gpu is not None:
+        tu.set_gpu_mode(True, gpu)
+    runner = LocalRunner(ctxt)
+    runner.restore(from_dir=from_dir, from_epoch=from_epoch)
+    runner.resume()
 
 
 @cli.command()
@@ -39,6 +42,10 @@ def resume_experiment(ctxt, from_dir=None, from_epoch=None):
     'will be saved), "gap" (every snapshot_gap iterations are saved), or '
     '"none" (do not save snapshots).')
 @click.option(
+    '--gpu',
+    default=None,
+    help='GPU to use (or None, by default).')
+@click.option(
     '--snapshot_gap',
     default=1,
     help='Gap between snapshot iterations. Waits this number of iterations '
@@ -49,8 +56,7 @@ def resume_experiment(ctxt, from_dir=None, from_epoch=None):
               'specify the index of epoch to restore from. '
               'Can be "first", "last" or a number. '
               'Not applicable when snapshot_mode="last"')
-# pylint: disable=bad-docstring-quotes
-def resume(from_dir, from_epoch, log_dir, snapshot_gap, snapshot_mode):
+def resume(from_dir, from_epoch, log_dir, snapshot_gap, snapshot_mode, gpu):
     # pylint: disable=missing-param-doc, missing-type-doc
     """Resume from experiment saved in FROM_DIR."""
     if log_dir is None:
@@ -59,7 +65,8 @@ def resume(from_dir, from_epoch, log_dir, snapshot_gap, snapshot_mode):
                            snapshot_mode=snapshot_mode,
                            snapshot_gap=snapshot_gap),
                       from_dir=from_dir,
-                      from_epoch=from_epoch)
+                      from_epoch=from_epoch,
+                      gpu=gpu)
 
 
 if __name__ == '__main__':
