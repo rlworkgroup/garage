@@ -7,6 +7,7 @@ import numpy as np
 import torch
 
 from garage.np.algos.off_policy_rl_algorithm import OffPolicyRLAlgorithm
+from garage.replay_buffer import PathBuffer
 from garage.torch.algos import _Default, make_optimizer
 import garage.torch.utils as tu
 
@@ -155,10 +156,32 @@ class DDPG(OffPolicyRLAlgorithm):
                                            paths['complete']) if complete
         ])
 
-        last_average_return = np.mean(self._episode_rewards)
+        # Avoid calculating the mean of an empty list in cases where
+        # all paths were non-terminal.
+
+        last_average_return = np.NaN
+        avg_success_rate = 0
+
+        if self._episode_rewards:
+            last_average_return = np.mean(self._episode_rewards)
+
+        if self._success_history:
+            if itr % self.steps_per_epoch == 0 and self._buffer_prefilled:
+                avg_success_rate = np.mean(self._success_history)
+
         for _ in range(self.n_train_steps):
             if self._buffer_prefilled:
-                samples = self.replay_buffer.sample(self.buffer_batch_size)
+
+                # pylint: disable=fixme
+                # TODO: remove this check once HER uses PathBuffer.
+                # See garage issue #1338.
+                # pylint: enable=fixme
+
+                if isinstance(self.replay_buffer, PathBuffer):
+                    samples = self.replay_buffer.sample_transitions(
+                        self.buffer_batch_size)
+                else:
+                    samples = self.replay_buffer.sample(self.buffer_batch_size)
                 qf_loss, y, q, policy_loss = tu.torch_to_np(
                     self.optimize_policy(itr, samples))
 
@@ -184,8 +207,7 @@ class DDPG(OffPolicyRLAlgorithm):
                 tabular.record('QFunction/MaxY', np.max(self._epoch_ys))
                 tabular.record('QFunction/AverageAbsY',
                                np.mean(np.abs(self._epoch_ys)))
-                tabular.record('AverageSuccessRate',
-                               np.mean(self._success_history))
+                tabular.record('AverageSuccessRate', avg_success_rate)
 
             if not self.smooth_return:
                 self._episode_rewards = []
@@ -213,14 +235,24 @@ class DDPG(OffPolicyRLAlgorithm):
 
         """
         transitions = tu.dict_np_to_torch(samples_data)
-        observations = transitions['observation']
-        rewards = transitions['reward']
-        actions = transitions['action']
-        next_observations = transitions['next_observation']
-        terminals = transitions['terminal']
 
-        rewards = rewards.reshape(-1, 1)
-        terminals = terminals.reshape(-1, 1)
+        # pylint: disable=fixme
+        # TODO: remove this check once HER uses PathBuffer.
+        # See garage issue #1338.
+        # pylint: enable=fixme
+
+        if isinstance(self.replay_buffer, PathBuffer):
+            observations = transitions['observations']
+            rewards = transitions['rewards']
+            actions = transitions['actions']
+            next_observations = transitions['next_observations']
+            terminals = transitions['terminals']
+        else:
+            observations = transitions['observation']
+            rewards = transitions['reward'].reshape(-1, 1)
+            actions = transitions['action']
+            next_observations = transitions['next_observation']
+            terminals = transitions['terminal'].reshape(-1, 1)
 
         next_inputs = next_observations
         inputs = observations

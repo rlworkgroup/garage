@@ -14,7 +14,7 @@ import tensorflow as tf
 from garage import wrap_experiment
 from garage.experiment.deterministic import set_seed
 from garage.np.exploration_policies import AddGaussianNoise
-from garage.replay_buffer import SimpleReplayBuffer
+from garage.replay_buffer import PathBuffer
 from garage.tf.algos import TD3
 from garage.tf.envs import TfEnv
 from garage.tf.experiment import LocalTFRunner
@@ -59,9 +59,7 @@ def td3_pendulum(ctxt=None, seed=1):
                                      action_merge_layer=0,
                                      hidden_nonlinearity=tf.nn.relu)
 
-        replay_buffer = SimpleReplayBuffer(env_spec=env.spec,
-                                           size_in_transitions=int(1e6),
-                                           time_horizon=250)
+        replay_buffer = PathBuffer(capacity_in_transitions=int(1e6))
 
         td3 = TD3(env_spec=env.spec,
                   policy=policy,

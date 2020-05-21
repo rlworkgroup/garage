@@ -7,7 +7,7 @@ import tensorflow as tf
 
 from garage.envs import normalize
 from garage.np.exploration_policies import AddOrnsteinUhlenbeckNoise
-from garage.replay_buffer import SimpleReplayBuffer
+from garage.replay_buffer import PathBuffer
 from garage.tf.algos import DDPG
 from garage.tf.envs import TfEnv
 from garage.tf.experiment import LocalTFRunner
@@ -34,9 +34,7 @@ class TestDDPG(TfGraphTestCase):
             qf = ContinuousMLPQFunction(env_spec=env.spec,
                                         hidden_sizes=[64, 64],
                                         hidden_nonlinearity=tf.nn.relu)
-            replay_buffer = SimpleReplayBuffer(env_spec=env.spec,
-                                               size_in_transitions=int(1e5),
-                                               time_horizon=100)
+            replay_buffer = PathBuffer(capacity_in_transitions=int(1e5))
             algo = DDPG(
                 env_spec=env.spec,
                 policy=policy,
@@ -75,9 +73,8 @@ class TestDDPG(TfGraphTestCase):
             qf = ContinuousMLPQFunction(env_spec=env.spec,
                                         hidden_sizes=[64, 64],
                                         hidden_nonlinearity=tf.nn.relu)
-            replay_buffer = SimpleReplayBuffer(env_spec=env.spec,
-                                               size_in_transitions=int(1e6),
-                                               time_horizon=100)
+            replay_buffer = PathBuffer(capacity_in_transitions=int(1e6))
+
             algo = DDPG(
                 env_spec=env.spec,
                 policy=policy,
@@ -116,9 +113,7 @@ class TestDDPG(TfGraphTestCase):
             qf = ContinuousMLPQFunction(env_spec=env.spec,
                                         hidden_sizes=[64, 64],
                                         hidden_nonlinearity=tf.nn.relu)
-            replay_buffer = SimpleReplayBuffer(env_spec=env.spec,
-                                               size_in_transitions=int(1e6),
-                                               time_horizon=100)
+            replay_buffer = PathBuffer(capacity_in_transitions=int(1e6))
             algo = DDPG(
                 env_spec=env.spec,
                 policy=policy,
