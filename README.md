@@ -53,7 +53,9 @@ The table below summarizes the algorithms available in garage.
 | MTTRPO                 | PyTorch, TensorFlow |
 
 ## Supported Tools and Frameworks
-garage supports Python 3.5+.
+garage supports Python 3.5+
+
+The package is tested on Ubuntu 18.04. It is also known to run on recent versions of macOS, using Homebrew to install some dependencies. Windows users can install garage via WSL, or by making use of the Docker containers.
 
 We currently support [PyTorch](https://pytorch.org/) and [TensorFlow](https://www.tensorflow.org/) for implementing the neural network portions of RL algorithms, and additions of new framework support are always welcome. PyTorch modules can be found in the package [`garage.torch`](https://github.com/rlworkgroup/garage/tree/master/src/garage/torch) and TensorFlow modules can be found in the package [`garage.tf`](https://github.com/rlworkgroup/garage/tree/master/src/garage/tf). Algorithms which do not require neural networks are found in the package [`garage.np`](https://github.com/rlworkgroup/garage/tree/master/src/garage/np).
 
