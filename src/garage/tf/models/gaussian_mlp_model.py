@@ -109,6 +109,7 @@ class GaussianMLPModel(Model):
         self._adaptive_std = adaptive_std
         self._std_share_network = std_share_network
         self._std_hidden_sizes = std_hidden_sizes
+        self._init_std = init_std
         self._min_std = min_std
         self._max_std = max_std
         self._std_hidden_nonlinearity = std_hidden_nonlinearity
@@ -124,7 +125,6 @@ class GaussianMLPModel(Model):
         self._output_w_init = output_w_init
         self._output_b_init = output_b_init
         self._layer_normalization = layer_normalization
-
         # Tranform std arguments to parameterized space
         self._init_std_param = None
         self._min_std_param = None
@@ -147,6 +147,15 @@ class GaussianMLPModel(Model):
                              "'softplus' but got {}".format(
                                  self._std_parameterization))
 
+    def network_output_spec(self):
+        """Network output spec.
+
+        Return:
+            list[str]: List of key(str) for the network outputs.
+
+        """
+        return ['dist', 'mean', 'log_std']
+
     # pylint: disable=arguments-differ
     def _build(self, state_input, name=None):
         """Build model.
@@ -159,6 +168,8 @@ class GaussianMLPModel(Model):
 
         Returns:
             tfp.distributions.MultivariateNormalDiag: Distribution.
+            tf.tensor: Mean.
+            tf.Tensor: Log of standard deviation.
 
         """
         del name
@@ -247,4 +258,5 @@ class GaussianMLPModel(Model):
                 log_std_var = tf.math.log(tf.math.log(1. + tf.exp(std_param)))
 
         return tfp.distributions.MultivariateNormalDiag(
-            loc=mean_var, scale_diag=tf.exp(log_std_var))
+            loc=mean_var,
+            scale_diag=tf.exp(log_std_var)), mean_var, log_std_var
