@@ -5,7 +5,7 @@ import tensorflow as tf
 from garage import wrap_experiment
 from garage.envs import normalize
 from garage.experiment import deterministic
-from garage.np.exploration_strategies import AddOrnsteinUhlenbeckNoise
+from garage.np.exploraton_policies import AddOrnsteinUhlenbeckNoise
 from garage.replay_buffer import SimpleReplayBuffer
 from garage.tf.algos import DDPG
 from garage.tf.envs import TfEnv
