@@ -74,8 +74,11 @@ RUN mkdir -p /root/.mujoco && \
   ln -s $HOME/.mujoco/mujoco200_linux $HOME/.mujoco/mujoco200
   ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mujoco200/bin
 
-
-RUN python3.5 -m ensurepip && python3.5 -m pip install --upgrade pip
+# Install pip on system since python3.5-dev package doesn't install it by default.
+# This is different from a similar command around line 104 since that upgrades
+# the pip module inside virtual env
+RUN python3.5 -m ensurepip && \
+  python3.5 -m pip install --upgrade pip
 
 # Copy over just setup.py first, so the Docker cache doesn't expire until
 # dependencies change
@@ -98,7 +101,7 @@ ENV VIRTUAL_ENV=/root/venv
 RUN python3.5 -m venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
-# Prevent pip from complaining about available upgrades
+# Prevent pip from complaining about available upgrades inside virtual env
 RUN pip install --upgrade pip
 
 # We need a MuJoCo key to install mujoco_py

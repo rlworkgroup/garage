@@ -1,5 +1,8 @@
 """helper functions for tests and benchmarks."""
+import bisect
+import itertools
 import pickle
+import random
 
 import numpy as np
 import pytest
@@ -250,3 +253,34 @@ def max_pooling(_input, pool_shape, pool_stride):
                                pool_shape, k])
 
     return results
+
+
+# Taken from random.choices in Python 3.6 source since it's not available in
+# python 3.5
+# https://github.com/python/cpython/blob/3.6/Lib/random.py
+# https://docs.python.org/3/library/random.html#random.choices
+def choices(population, weights=None, *, cum_weights=None, k=1):
+    """Return a k sized list of population elements chosen with replacement.
+
+    If the relative weights or cumulative weights are not specified,
+    the selections are made with equal probability.
+    """
+    if cum_weights is None:
+        if weights is None:
+            _int = int
+            total = len(population)
+            return [
+                population[_int(random.random() * total)] for i in range(k)
+            ]
+        cum_weights = list(itertools.accumulate(weights))
+    elif weights is not None:
+        raise TypeError('Cannot specify both weights and cumulative weights')
+    if len(cum_weights) != len(population):
+        raise ValueError('The number of weights does not match the population')
+    total = cum_weights[-1]
+    hi = len(cum_weights) - 1
+    return [
+        population[bisect.bisect(cum_weights,
+                                 random.random() * total, 0, hi)]
+        for i in range(k)
+    ]
