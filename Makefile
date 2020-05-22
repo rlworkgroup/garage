@@ -13,7 +13,7 @@ DATA_PATH ?= $(shell pwd)/data
 MJKEY_PATH ?= ~/.mujoco/mjkey.txt
 
 test:  ## Run the CI test suite
-test: RUN_CMD = nice -n 11 pytest -v -m 'not huge and not flaky' --durations=0
+test: RUN_CMD = nice -n 11 pytest -v -n auto -m 'not huge and not flaky' --durations=0
 test: RUN_ARGS = --memory 7500m --memory-swap 7500m
 test: run-headless
 	@echo "Running test suite..."
