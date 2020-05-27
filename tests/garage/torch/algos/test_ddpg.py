@@ -18,7 +18,7 @@ from tests.fixtures import snapshot_config
 class TestDDPG:
     """Test class for DDPG."""
 
-    @pytest.mark.mujoco
+    @pytest.mark.mujoco_long
     def test_ddpg_double_pendulum(self):
         """Test DDPG with Pendulum environment."""
         deterministic.set_seed(0)
@@ -58,7 +58,7 @@ class TestDDPG:
 
         env.close()
 
-    @pytest.mark.mujoco
+    @pytest.mark.mujoco_long
     def test_ddpg_pendulum(self):
         """Test DDPG with Pendulum environment.
 
