@@ -92,7 +92,9 @@ setup(
     packages=find_packages(where='src'),
     package_dir={'': 'src'},
     scripts=['scripts/garage'],
-    python_requires='>=3.5',
+    # Python 3.8 support disabled for now
+    # See https://github.com/rlworkgroup/garage/issues/1442
+    python_requires='>=3.5,<3.8',
     install_requires=REQUIRED,
     extras_require=EXTRAS,
     license='MIT',
