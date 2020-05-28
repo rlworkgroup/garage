@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 import tensorflow as tf
 
-from garage.tf.envs import TfEnv
+from garage.envs import GarageEnv
 from garage.tf.models import CNNModel
 from garage.tf.q_functions import DiscreteCNNQFunction
 from tests.fixtures import TfGraphTestCase
@@ -20,7 +20,7 @@ class TestDiscreteCNNQFunction(TfGraphTestCase):
 
     def setup_method(self):
         super().setup_method()
-        self.env = TfEnv(DummyDiscretePixelEnv())
+        self.env = GarageEnv(DummyDiscretePixelEnv())
         self.obs = self.env.reset()
 
     # yapf: disable
@@ -54,7 +54,7 @@ class TestDiscreteCNNQFunction(TfGraphTestCase):
 
     @pytest.mark.parametrize('obs_dim', [[1], [2], [1, 1, 1, 1], [2, 2, 2, 2]])
     def test_invalid_obs_shape(self, obs_dim):
-        boxEnv = TfEnv(DummyDiscreteEnv(obs_dim=obs_dim))
+        boxEnv = GarageEnv(DummyDiscreteEnv(obs_dim=obs_dim))
         with pytest.raises(ValueError):
             DiscreteCNNQFunction(env_spec=boxEnv.spec,
                                  filter_dims=(3, ),
@@ -63,7 +63,7 @@ class TestDiscreteCNNQFunction(TfGraphTestCase):
                                  dueling=False)
 
     def test_obs_is_image(self):
-        image_env = TfEnv(DummyDiscretePixelEnv(), is_image=True)
+        image_env = GarageEnv(DummyDiscretePixelEnv(), is_image=True)
         with mock.patch(('garage.tf.models.'
                          'categorical_cnn_model.CNNModel._build'),
                         autospec=True,

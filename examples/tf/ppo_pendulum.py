@@ -13,11 +13,10 @@ import gym
 import tensorflow as tf
 
 from garage import wrap_experiment
-from garage.envs import normalize
+from garage.envs import GarageEnv, normalize
 from garage.experiment.deterministic import set_seed
 from garage.tf.algos import PPO
 from garage.tf.baselines import GaussianMLPBaseline
-from garage.tf.envs import TfEnv
 from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import GaussianMLPPolicy
 
@@ -35,7 +34,7 @@ def ppo_pendulum(ctxt=None, seed=1):
     """
     set_seed(seed)
     with LocalTFRunner(snapshot_config=ctxt) as runner:
-        env = TfEnv(normalize(gym.make('InvertedDoublePendulum-v2')))
+        env = GarageEnv(normalize(gym.make('InvertedDoublePendulum-v2')))
 
         policy = GaussianMLPPolicy(
             env_spec=env.spec,

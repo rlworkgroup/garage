@@ -1,10 +1,9 @@
 import gym
 import pytest
 
-from garage.envs import normalize
+from garage.envs import GarageEnv, normalize
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import TRPO
-from garage.tf.envs import TfEnv
 from garage.tf.experiment import LocalTFRunner
 from garage.tf.optimizers import ConjugateGradientOptimizer
 from garage.tf.optimizers import FiniteDifferenceHvp
@@ -21,7 +20,7 @@ class TestGaussianPolicies(TfGraphTestCase):
     @pytest.mark.parametrize('policy_cls', policies)
     def test_gaussian_policies(self, policy_cls):
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
-            env = TfEnv(normalize(gym.make('Pendulum-v0')))
+            env = GarageEnv(normalize(gym.make('Pendulum-v0')))
 
             policy = policy_cls(name='policy', env_spec=env.spec)
 

@@ -2,11 +2,11 @@ import pprint
 
 import pytest
 
-from garage.envs.grid_world_env import GridWorldEnv
+from garage.envs import GarageEnv
+from garage.envs import GridWorldEnv
 from garage.experiment.task_sampler import EnvPoolSampler
 from garage.np.policies import ScriptedPolicy
 from garage.sampler import LocalSampler, VecWorker, WorkerFactory
-from garage.tf.envs import TfEnv
 
 SEED = 100
 N_TRAJ = 5
@@ -15,7 +15,7 @@ MAX_PATH_LENGTH = 9
 
 @pytest.fixture
 def env():
-    return TfEnv(GridWorldEnv(desc='4x4'))
+    return GarageEnv(GridWorldEnv(desc='4x4'))
 
 
 @pytest.fixture
@@ -33,7 +33,7 @@ def envs():
         ['SFFF', 'FFFF', 'FFFF', 'FFFF'],
         ['SHFF', 'HHFF', 'FFFF', 'FFFF'],
     ]
-    return [TfEnv(GridWorldEnv(desc=desc)) for desc in descs]
+    return [GarageEnv(GridWorldEnv(desc=desc)) for desc in descs]
 
 
 @pytest.fixture
@@ -45,7 +45,7 @@ def other_envs():
         ['FFFF', 'FFFF', 'FSFF', 'FFFF'],
         ['HHFF', 'HHHF', 'HSHF', 'HHHF'],
     ]
-    return [TfEnv(GridWorldEnv(desc=desc)) for desc in descs]
+    return [GarageEnv(GridWorldEnv(desc=desc)) for desc in descs]
 
 
 def assert_trajs_eq(ground_truth_traj, test_traj):

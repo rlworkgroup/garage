@@ -12,11 +12,11 @@ import gym
 import tensorflow as tf
 
 from garage import wrap_experiment
+from garage.envs import GarageEnv
 from garage.experiment.deterministic import set_seed
 from garage.np.exploration_policies import AddOrnsteinUhlenbeckNoise
 from garage.replay_buffer import PathBuffer
 from garage.tf.algos import DDPG
-from garage.tf.envs import TfEnv
 from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import ContinuousMLPPolicy
 from garage.tf.q_functions import ContinuousMLPQFunction
@@ -35,7 +35,7 @@ def ddpg_pendulum(ctxt=None, seed=1):
     """
     set_seed(seed)
     with LocalTFRunner(snapshot_config=ctxt) as runner:
-        env = TfEnv(gym.make('InvertedDoublePendulum-v2'))
+        env = GarageEnv(gym.make('InvertedDoublePendulum-v2'))
 
         policy = ContinuousMLPPolicy(env_spec=env.spec,
                                      hidden_sizes=[64, 64],

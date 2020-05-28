@@ -12,11 +12,11 @@ Results:
 # pylint: disable=no-value-for-parameter
 import click
 
+from garage.envs import GarageEnv
 from garage.experiment import wrap_experiment
 from garage.experiment.deterministic import set_seed
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import TRPO
-from garage.tf.envs import TfEnv
 from garage.tf.experiment import LocalTFRunner
 from garage.tf.optimizers import ConjugateGradientOptimizer
 from garage.tf.optimizers import FiniteDifferenceHvp
@@ -44,7 +44,7 @@ def trpo_cartpole_recurrent(ctxt, seed, n_epochs, batch_size, plot):
     """
     set_seed(seed)
     with LocalTFRunner(snapshot_config=ctxt) as runner:
-        env = TfEnv(env_name='CartPole-v1')
+        env = GarageEnv(env_name='CartPole-v1')
 
         policy = CategoricalLSTMPolicy(name='policy', env_spec=env.spec)
 

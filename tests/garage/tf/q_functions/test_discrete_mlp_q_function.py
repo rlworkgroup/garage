@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 import tensorflow as tf
 
-from garage.tf.envs import TfEnv
+from garage.envs import GarageEnv
 from garage.tf.q_functions.discrete_mlp_q_function import DiscreteMLPQFunction
 from tests.fixtures import TfGraphTestCase
 from tests.fixtures.envs.dummy import DummyDiscreteEnv
@@ -13,6 +13,7 @@ from tests.fixtures.models import SimpleMLPModel
 
 
 class TestDiscreteMLPQFunction(TfGraphTestCase):
+
     @pytest.mark.parametrize('obs_dim, action_dim', [
         ((1, ), 1),
         ((2, ), 2),
@@ -20,7 +21,8 @@ class TestDiscreteMLPQFunction(TfGraphTestCase):
         ((2, 2), 2),
     ])
     def test_get_action(self, obs_dim, action_dim):
-        env = TfEnv(DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
+        env = GarageEnv(
+            DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
         with mock.patch(('garage.tf.q_functions.'
                          'discrete_mlp_q_function.MLPModel'),
                         new=SimpleMLPModel):
@@ -33,8 +35,8 @@ class TestDiscreteMLPQFunction(TfGraphTestCase):
         outputs = self.sess.run(qf.q_vals, feed_dict={qf.input: [obs]})
         assert np.array_equal(outputs[0], expected_output)
 
-        outputs = self.sess.run(
-            qf.q_vals, feed_dict={qf.input: [obs, obs, obs]})
+        outputs = self.sess.run(qf.q_vals,
+                                feed_dict={qf.input: [obs, obs, obs]})
         for output in outputs:
             assert np.array_equal(output, expected_output)
 
@@ -45,7 +47,8 @@ class TestDiscreteMLPQFunction(TfGraphTestCase):
         ((2, 2), 2),
     ])
     def test_output_shape(self, obs_dim, action_dim):
-        env = TfEnv(DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
+        env = GarageEnv(
+            DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
         with mock.patch(('garage.tf.q_functions.'
                          'discrete_mlp_q_function.MLPModel'),
                         new=SimpleMLPModel):
@@ -63,7 +66,8 @@ class TestDiscreteMLPQFunction(TfGraphTestCase):
         ((2, 2), 2),
     ])
     def test_output_shape_dueling(self, obs_dim, action_dim):
-        env = TfEnv(DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
+        env = GarageEnv(
+            DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
         with mock.patch(('garage.tf.q_functions.'
                          'discrete_mlp_q_function.MLPDuelingModel'),
                         new=SimpleMLPModel):
@@ -81,7 +85,8 @@ class TestDiscreteMLPQFunction(TfGraphTestCase):
         ((2, 2), 2),
     ])
     def test_get_qval_sym(self, obs_dim, action_dim):
-        env = TfEnv(DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
+        env = GarageEnv(
+            DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
         with mock.patch(('garage.tf.q_functions.'
                          'discrete_mlp_q_function.MLPModel'),
                         new=SimpleMLPModel):
@@ -91,8 +96,8 @@ class TestDiscreteMLPQFunction(TfGraphTestCase):
 
         output1 = self.sess.run(qf.q_vals, feed_dict={qf.input: [obs]})
 
-        input_var = tf.compat.v1.placeholder(
-            tf.float32, shape=(None, ) + obs_dim)
+        input_var = tf.compat.v1.placeholder(tf.float32,
+                                             shape=(None, ) + obs_dim)
         q_vals = qf.get_qval_sym(input_var, 'another')
         output2 = self.sess.run(q_vals, feed_dict={input_var: [obs]})
 
@@ -108,7 +113,8 @@ class TestDiscreteMLPQFunction(TfGraphTestCase):
         ((2, 2), 2),
     ])
     def test_is_pickleable(self, obs_dim, action_dim):
-        env = TfEnv(DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
+        env = GarageEnv(
+            DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
         with mock.patch(('garage.tf.q_functions.'
                          'discrete_mlp_q_function.MLPModel'),
                         new=SimpleMLPModel):
@@ -116,8 +122,8 @@ class TestDiscreteMLPQFunction(TfGraphTestCase):
         env.reset()
         obs, _, _, _ = env.step(1)
 
-        with tf.compat.v1.variable_scope(
-                'DiscreteMLPQFunction/SimpleMLPModel', reuse=True):
+        with tf.compat.v1.variable_scope('DiscreteMLPQFunction/SimpleMLPModel',
+                                         reuse=True):
             return_var = tf.compat.v1.get_variable('return_var')
         # assign it to all one
         return_var.load(tf.ones_like(return_var).eval())
@@ -127,8 +133,8 @@ class TestDiscreteMLPQFunction(TfGraphTestCase):
         h_data = pickle.dumps(qf)
         with tf.compat.v1.Session(graph=tf.Graph()) as sess:
             qf_pickled = pickle.loads(h_data)
-            output2 = sess.run(
-                qf_pickled.q_vals, feed_dict={qf_pickled.input: [obs]})
+            output2 = sess.run(qf_pickled.q_vals,
+                               feed_dict={qf_pickled.input: [obs]})
 
         assert np.array_equal(output1, output2)
 
@@ -139,11 +145,12 @@ class TestDiscreteMLPQFunction(TfGraphTestCase):
         ((2, 2), 2, (32, 32)),
     ])
     def test_clone(self, obs_dim, action_dim, hidden_sizes):
-        env = TfEnv(DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
+        env = GarageEnv(
+            DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
         with mock.patch(('garage.tf.q_functions.'
                          'discrete_mlp_q_function.MLPModel'),
                         new=SimpleMLPModel):
-            qf = DiscreteMLPQFunction(
-                env_spec=env.spec, hidden_sizes=hidden_sizes)
+            qf = DiscreteMLPQFunction(env_spec=env.spec,
+                                      hidden_sizes=hidden_sizes)
         qf_clone = qf.clone('another_qf')
         assert qf_clone._hidden_sizes == qf._hidden_sizes

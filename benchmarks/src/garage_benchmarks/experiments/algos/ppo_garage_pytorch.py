@@ -3,9 +3,8 @@ import gym
 import torch
 
 from garage import wrap_experiment
-from garage.envs import normalize
+from garage.envs import GarageEnv, normalize
 from garage.experiment import deterministic, LocalRunner
-from garage.tf.envs import TfEnv
 from garage.torch.algos import PPO as PyTorch_PPO
 from garage.torch.optimizers import OptimizerWrapper
 from garage.torch.policies import GaussianMLPPolicy as PyTorch_GMP
@@ -34,7 +33,7 @@ def ppo_garage_pytorch(ctxt, env_id, seed):
 
     runner = LocalRunner(ctxt)
 
-    env = TfEnv(normalize(gym.make(env_id)))
+    env = GarageEnv(normalize(gym.make(env_id)))
 
     policy = PyTorch_GMP(env.spec,
                          hidden_sizes=(32, 32),

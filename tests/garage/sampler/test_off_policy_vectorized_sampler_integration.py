@@ -3,12 +3,11 @@ import numpy as np
 import pytest
 import tensorflow as tf
 
-from garage.envs import normalize
+from garage.envs import GarageEnv, normalize
 from garage.np.exploration_policies import AddOrnsteinUhlenbeckNoise
 from garage.replay_buffer import PathBuffer
 from garage.sampler import OffPolicyVectorizedSampler
 from garage.tf.algos import DDPG
-from garage.tf.envs import TfEnv
 from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import ContinuousMLPPolicy
 from garage.tf.q_functions import ContinuousMLPQFunction
@@ -25,7 +24,7 @@ class TestOffPolicyVectorizedSampler(TfGraphTestCase):
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
             # This tests if off-policy sampler respect batch_size
             # when no_reset is set to True
-            env = TfEnv(normalize(gym.make('InvertedDoublePendulum-v2')))
+            env = GarageEnv(normalize(gym.make('InvertedDoublePendulum-v2')))
             policy = ContinuousMLPPolicy(env_spec=env.spec,
                                          hidden_sizes=[64, 64],
                                          hidden_nonlinearity=tf.nn.relu,

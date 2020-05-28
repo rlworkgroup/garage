@@ -1,17 +1,16 @@
 import gym
 
-from garage.envs import normalize
-from garage.tf.envs import TfEnv
+from garage.envs import GarageEnv, normalize
 
 
 class TestNormalizedGym:
+
     def setup_method(self):
-        self.env = TfEnv(
-            normalize(
-                gym.make('Pendulum-v0'),
-                normalize_reward=True,
-                normalize_obs=True,
-                flatten_obs=True))
+        self.env = GarageEnv(
+            normalize(gym.make('Pendulum-v0'),
+                      normalize_reward=True,
+                      normalize_obs=True,
+                      flatten_obs=True))
 
     def teardown_method(self):
         self.env.close()

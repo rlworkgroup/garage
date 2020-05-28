@@ -5,8 +5,8 @@ import numpy as np
 import torch.nn as nn
 from torch.nn import functional as F  # NOQA
 
-from garage.envs.env_spec import EnvSpec
-from garage.tf.envs import TfEnv
+from garage.envs import EnvSpec
+from garage.envs import GarageEnv
 from garage.torch.algos.pearl import PEARLWorker
 from garage.torch.embeddings import MLPEncoder
 from garage.torch.policies import ContextConditionedPolicy
@@ -16,7 +16,7 @@ from tests.fixtures.envs.dummy import DummyBoxEnv
 
 def test_methods():
     """Test PEARLWorker methods."""
-    env_spec = TfEnv(DummyBoxEnv())
+    env_spec = GarageEnv(DummyBoxEnv())
     latent_dim = 5
     latent_space = akro.Box(low=-1,
                             high=1,

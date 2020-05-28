@@ -6,12 +6,11 @@ Iterations alternate between live and importance sampled iterations.
 import gym
 
 from garage import wrap_experiment
-from garage.envs import normalize
+from garage.envs import GarageEnv, normalize
 from garage.experiment.deterministic import set_seed
 from garage.np.baselines import LinearFeatureBaseline
 from garage.sampler import ISSampler
 from garage.tf.algos import VPG
-from garage.tf.envs import TfEnv
 from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import GaussianMLPPolicy
 
@@ -29,7 +28,7 @@ def vpgis_inverted_pendulum(ctxt=None, seed=1):
     """
     set_seed(seed)
     with LocalTFRunner(ctxt) as runner:
-        env = TfEnv(normalize(gym.make('InvertedPendulum-v2')))
+        env = GarageEnv(normalize(gym.make('InvertedPendulum-v2')))
 
         policy = GaussianMLPPolicy(env_spec=env.spec, hidden_sizes=(32, 32))
 

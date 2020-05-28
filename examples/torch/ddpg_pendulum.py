@@ -10,8 +10,7 @@ import torch
 from torch.nn import functional as F
 
 from garage import wrap_experiment
-from garage.envs import GarageEnv
-from garage.envs import normalize
+from garage.envs import GarageEnv, normalize
 from garage.experiment import LocalRunner
 from garage.experiment.deterministic import set_seed
 from garage.np.exploration_policies import AddOrnsteinUhlenbeckNoise

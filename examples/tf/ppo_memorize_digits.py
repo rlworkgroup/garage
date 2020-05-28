@@ -7,11 +7,10 @@ import click
 import gym
 
 from garage import wrap_experiment
-from garage.envs import normalize
+from garage.envs import GarageEnv, normalize
 from garage.experiment.deterministic import set_seed
 from garage.tf.algos import PPO
 from garage.tf.baselines import GaussianCNNBaseline
-from garage.tf.envs import TfEnv
 from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import CategoricalCNNPolicy
 
@@ -32,7 +31,8 @@ def ppo_memorize_digits(ctxt=None, seed=1, batch_size=4000):
     """
     set_seed(seed)
     with LocalTFRunner(ctxt) as runner:
-        env = TfEnv(normalize(gym.make('MemorizeDigits-v0')), is_image=True)
+        env = GarageEnv(normalize(gym.make('MemorizeDigits-v0')),
+                        is_image=True)
         policy = CategoricalCNNPolicy(env_spec=env.spec,
                                       num_filters=(32, 64, 64),
                                       filter_dims=(5, 3, 2),

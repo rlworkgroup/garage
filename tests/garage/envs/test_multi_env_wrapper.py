@@ -3,10 +3,10 @@ import akro
 import numpy as np
 import pytest
 
+from garage.envs import GarageEnv
 from garage.envs.multi_env_wrapper import (MultiEnvWrapper,
                                            round_robin_strategy,
                                            uniform_random_strategy)
-from garage.tf.envs import TfEnv
 
 
 class TestMultiEnvWrapper:
@@ -24,7 +24,7 @@ class TestMultiEnvWrapper:
         Returns:
             garage.envs.multi_env_wrapper: Multi env wrapper.
         """
-        task_envs = [TfEnv(env_name=name) for name in env_names]
+        task_envs = [GarageEnv(env_name=name) for name in env_names]
         return MultiEnvWrapper(task_envs, sample_strategy=sample_strategy)
 
     def test_tasks_from_same_env(self):
@@ -62,7 +62,7 @@ class TestMultiEnvWrapper:
         """test one hot representation of observation space"""
         envs = ['CartPole-v0', 'CartPole-v1']
         mt_env = self._init_multi_env_wrapper(envs)
-        cartpole = TfEnv(env_name='CartPole-v0')
+        cartpole = GarageEnv(env_name='CartPole-v0')
         cartpole_lb, cartpole_ub = cartpole.observation_space.bounds
         obs_space = akro.Box(np.concatenate([cartpole_lb,
                                              np.zeros(2)]),
@@ -78,7 +78,7 @@ class TestMultiEnvWrapper:
         """test action space"""
         envs = ['CartPole-v0', 'CartPole-v1']
         mt_env = self._init_multi_env_wrapper(envs)
-        task1 = TfEnv(env_name='CartPole-v0')
+        task1 = GarageEnv(env_name='CartPole-v0')
         assert mt_env.action_space.shape == task1.action_space.shape
 
     def test_round_robin_sample_strategy(self):

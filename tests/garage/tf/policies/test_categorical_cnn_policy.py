@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 import tensorflow as tf
 
-from garage.tf.envs import TfEnv
+from garage.envs import GarageEnv
 from garage.tf.policies import CategoricalCNNPolicy
 from tests.fixtures import TfGraphTestCase
 from tests.fixtures.envs.dummy import DummyDiscretePixelEnv
@@ -21,7 +21,7 @@ class TestCategoricalCNNPolicyWithModel(TfGraphTestCase):
                              ])
     def test_get_action(self, filter_dims, num_filters, strides, padding,
                         hidden_sizes):
-        env = TfEnv(DummyDiscretePixelEnv())
+        env = GarageEnv(DummyDiscretePixelEnv())
         policy = CategoricalCNNPolicy(env_spec=env.spec,
                                       filter_dims=filter_dims,
                                       num_filters=num_filters,
@@ -45,7 +45,7 @@ class TestCategoricalCNNPolicyWithModel(TfGraphTestCase):
             assert env.action_space.contains(action)
 
     def test_is_pickleable(self):
-        env = TfEnv(DummyDiscretePixelEnv())
+        env = GarageEnv(DummyDiscretePixelEnv())
         policy = CategoricalCNNPolicy(env_spec=env.spec,
                                       filter_dims=(32, ),
                                       num_filters=(3, ),
@@ -91,7 +91,7 @@ class TestCategoricalCNNPolicyWithModel(TfGraphTestCase):
                              ])
     def test_clone(self, filter_dims, num_filters, strides, padding,
                    hidden_sizes):
-        env = TfEnv(DummyDiscretePixelEnv())
+        env = GarageEnv(DummyDiscretePixelEnv())
         policy = CategoricalCNNPolicy(env_spec=env.spec,
                                       filter_dims=filter_dims,
                                       num_filters=num_filters,

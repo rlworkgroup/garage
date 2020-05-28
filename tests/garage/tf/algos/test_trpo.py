@@ -6,14 +6,13 @@ import gym
 import pytest
 import tensorflow as tf
 
-from garage.envs import normalize
+from garage.envs import GarageEnv, normalize
 from garage.experiment import deterministic
 from garage.experiment import snapshotter
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import TRPO
 from garage.tf.baselines import GaussianCNNBaseline
 from garage.tf.baselines import GaussianMLPBaseline
-from garage.tf.envs import TfEnv
 from garage.tf.experiment import LocalTFRunner
 from garage.tf.optimizers import FiniteDifferenceHvp
 from garage.tf.policies import CategoricalCNNPolicy
@@ -27,7 +26,7 @@ class TestTRPO(TfGraphTestCase):
 
     def setup_method(self):
         super().setup_method()
-        self.env = TfEnv(normalize(gym.make('InvertedDoublePendulum-v2')))
+        self.env = GarageEnv(normalize(gym.make('InvertedDoublePendulum-v2')))
         self.policy = GaussianMLPPolicy(
             env_spec=self.env.spec,
             hidden_sizes=(64, 64),
@@ -88,7 +87,7 @@ class TestTRPO(TfGraphTestCase):
     @pytest.mark.mujoco_long
     def test_trpo_lstm_cartpole(self):
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
-            env = TfEnv(normalize(gym.make('CartPole-v1')))
+            env = GarageEnv(normalize(gym.make('CartPole-v1')))
 
             policy = CategoricalLSTMPolicy(name='policy', env_spec=env.spec)
 
@@ -114,7 +113,7 @@ class TestTRPO(TfGraphTestCase):
     def test_trpo_gru_cartpole(self):
         deterministic.set_seed(2)
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
-            env = TfEnv(normalize(gym.make('CartPole-v1')))
+            env = GarageEnv(normalize(gym.make('CartPole-v1')))
 
             policy = CategoricalGRUPolicy(name='policy', env_spec=env.spec)
 
@@ -145,7 +144,7 @@ class TestTRPOCNNCubeCrash(TfGraphTestCase):
     @pytest.mark.large
     def test_trpo_cnn_cubecrash(self):
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
-            env = TfEnv(normalize(gym.make('CubeCrash-v0')))
+            env = GarageEnv(normalize(gym.make('CubeCrash-v0')))
 
             policy = CategoricalCNNPolicy(env_spec=env.spec,
                                           num_filters=(32, 64),

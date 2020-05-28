@@ -3,11 +3,10 @@ import gym
 import tensorflow as tf
 
 from garage import wrap_experiment
-from garage.envs import normalize
+from garage.envs import GarageEnv, normalize
 from garage.experiment import deterministic
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import VPG as TF_VPG
-from garage.tf.envs import TfEnv
 from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import GaussianMLPPolicy as TF_GMP
 
@@ -37,7 +36,7 @@ def vpg_garage_tf(ctxt, env_id, seed):
     deterministic.set_seed(seed)
 
     with LocalTFRunner(ctxt) as runner:
-        env = TfEnv(normalize(gym.make(env_id)))
+        env = GarageEnv(normalize(gym.make(env_id)))
 
         policy = TF_GMP(
             env_spec=env.spec,

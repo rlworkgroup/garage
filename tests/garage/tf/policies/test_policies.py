@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-from garage.tf.envs import TfEnv
+from garage.envs import GarageEnv
 from garage.tf.policies import CategoricalGRUPolicy
 from garage.tf.policies import CategoricalLSTMPolicy
 from garage.tf.policies import CategoricalMLPPolicy
@@ -16,7 +16,7 @@ class TestDiscretePolicies(TfGraphTestCase):
 
     def setup_method(self):
         super().setup_method()
-        self.env = TfEnv(DummyDiscreteEnv())
+        self.env = GarageEnv(DummyDiscreteEnv())
         self.obs_var = tf.compat.v1.placeholder(
             tf.float32,
             shape=[None, None, self.env.observation_space.flat_dim],
@@ -60,7 +60,7 @@ class TestContinuousPolicies(TfGraphTestCase):
 
     def setup_method(self):
         super().setup_method()
-        self.env = TfEnv(DummyBoxEnv())
+        self.env = GarageEnv(DummyBoxEnv())
         self.obs_var = tf.compat.v1.placeholder(
             tf.float32,
             shape=[None, None, self.env.observation_space.flat_dim],

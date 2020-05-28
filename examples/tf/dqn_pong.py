@@ -7,6 +7,7 @@ import click
 import gym
 
 from garage import wrap_experiment
+from garage.envs import GarageEnv
 from garage.envs.wrappers.clip_reward import ClipReward
 from garage.envs.wrappers.episodic_life import EpisodicLife
 from garage.envs.wrappers.fire_reset import FireReset
@@ -19,7 +20,6 @@ from garage.experiment.deterministic import set_seed
 from garage.np.exploration_policies import EpsilonGreedyPolicy
 from garage.replay_buffer import PathBuffer
 from garage.tf.algos import DQN
-from garage.tf.envs import TfEnv
 from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import DiscreteQfDerivedPolicy
 from garage.tf.q_functions import DiscreteCNNQFunction
@@ -61,7 +61,7 @@ def dqn_pong(ctxt=None, seed=1, buffer_size=int(5e4), max_path_length=None):
         env = ClipReward(env)
         env = StackFrames(env, 4)
 
-        env = TfEnv(env, is_image=True)
+        env = GarageEnv(env, is_image=True)
 
         replay_buffer = PathBuffer(capacity_in_transitions=buffer_size)
 

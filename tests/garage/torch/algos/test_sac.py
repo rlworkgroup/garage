@@ -7,8 +7,7 @@ import pytest
 import torch
 from torch.nn import functional as F
 
-from garage.envs import GarageEnv
-from garage.envs import normalize
+from garage.envs import GarageEnv, normalize
 from garage.experiment import deterministic, LocalRunner
 from garage.replay_buffer import PathBuffer
 from garage.sampler import LocalSampler

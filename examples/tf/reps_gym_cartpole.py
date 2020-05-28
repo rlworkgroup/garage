@@ -12,10 +12,10 @@ Results:
 import gym
 
 from garage import wrap_experiment
+from garage.envs import GarageEnv
 from garage.experiment.deterministic import set_seed
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import REPS
-from garage.tf.envs import TfEnv
 from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import CategoricalMLPPolicy
 
@@ -33,7 +33,7 @@ def reps_gym_cartpole(ctxt=None, seed=1):
     """
     set_seed(seed)
     with LocalTFRunner(snapshot_config=ctxt) as runner:
-        env = TfEnv(gym.make('CartPole-v0'))
+        env = GarageEnv(gym.make('CartPole-v0'))
 
         policy = CategoricalMLPPolicy(env_spec=env.spec, hidden_sizes=[32, 32])
 

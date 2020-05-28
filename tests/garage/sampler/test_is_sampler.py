@@ -3,11 +3,10 @@ import unittest.mock
 import gym
 import pytest
 
-from garage.envs import normalize
+from garage.envs import GarageEnv, normalize
 from garage.np.baselines import LinearFeatureBaseline
 from garage.sampler import ISSampler
 from garage.tf.algos import TRPO
-from garage.tf.envs import TfEnv
 from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import GaussianMLPPolicy
 from tests.fixtures import snapshot_config, TfGraphTestCase
@@ -18,7 +17,7 @@ class TestISSampler(TfGraphTestCase):
     @pytest.mark.mujoco
     def test_is_sampler(self):
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
-            env = TfEnv(normalize(gym.make('InvertedPendulum-v2')))
+            env = GarageEnv(normalize(gym.make('InvertedPendulum-v2')))
             policy = GaussianMLPPolicy(env_spec=env.spec,
                                        hidden_sizes=(32, 32))
             baseline = LinearFeatureBaseline(env_spec=env.spec)

@@ -2,7 +2,7 @@ import pickle
 
 import tensorflow as tf
 
-from garage.tf.envs import TfEnv
+from garage.envs import GarageEnv
 from garage.tf.policies import DiscreteQfDerivedPolicy
 from tests.fixtures import TfGraphTestCase
 from tests.fixtures.envs.dummy import DummyDiscreteEnv
@@ -13,7 +13,7 @@ class TestQfDerivedPolicy(TfGraphTestCase):
 
     def setup_method(self):
         super().setup_method()
-        self.env = TfEnv(DummyDiscreteEnv())
+        self.env = GarageEnv(DummyDiscreteEnv())
         self.qf = SimpleQFunction(self.env.spec)
         self.policy = DiscreteQfDerivedPolicy(env_spec=self.env.spec,
                                               qf=self.qf)

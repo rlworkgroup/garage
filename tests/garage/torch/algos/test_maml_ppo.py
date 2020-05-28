@@ -13,8 +13,7 @@ except Exception:  # pylint: disable=broad-except
         allow_module_level=True)
 import torch
 
-from garage.envs import GarageEnv
-from garage.envs import normalize
+from garage.envs import GarageEnv, normalize
 from garage.envs.mujoco import HalfCheetahDirEnv
 from garage.experiment import deterministic, LocalRunner
 from garage.torch.algos import MAMLPPO

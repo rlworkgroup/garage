@@ -3,14 +3,14 @@ import pickle
 import gym
 import pytest
 
-from garage.tf.envs import TfEnv
+from garage.envs import GarageEnv
 from tests.helpers import step_env_with_gym_quirks
 
 
-class TestTfEnv:
+class TestGarageEnv:
 
     def test_is_pickleable(self):
-        env = TfEnv(env_name='CartPole-v1')
+        env = GarageEnv(env_name='CartPole-v1')
         round_trip = pickle.loads(pickle.dumps(env))
         assert round_trip.env.spec == env.env.spec
 
@@ -20,7 +20,7 @@ class TestTfEnv:
         if spec._env_name.startswith('Defender'):
             pytest.skip(
                 'Defender-* envs bundled in atari-py 0.2.x don\'t load')
-        env = TfEnv(spec.make())
+        env = GarageEnv(spec.make())
         step_env_with_gym_quirks(env, spec)
 
     @pytest.mark.nightly
@@ -29,7 +29,7 @@ class TestTfEnv:
         if spec._env_name.startswith('Defender'):
             pytest.skip(
                 'Defender-* envs bundled in atari-py 0.2.x don\'t load')
-        env = TfEnv(env_name=spec.id)
+        env = GarageEnv(env_name=spec.id)
         step_env_with_gym_quirks(env,
                                  spec,
                                  n=1,

@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 import tensorflow as tf
 
-from garage.tf.envs import TfEnv
+from garage.envs import GarageEnv
 from garage.tf.q_functions import ContinuousMLPQFunction
 from tests.fixtures import TfGraphTestCase
 from tests.fixtures.envs.dummy import DummyBoxEnv, DummyDictEnv
@@ -21,7 +21,7 @@ class TestContinuousMLPQFunction(TfGraphTestCase):
         ((2, 2), (2, )),
     ])
     def test_q_vals(self, obs_dim, action_dim):
-        env = TfEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
+        env = GarageEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
         with mock.patch(('garage.tf.q_functions.'
                          'continuous_mlp_q_function.MLPMergeModel'),
                         new=SimpleMLPMergeModel):
@@ -42,7 +42,7 @@ class TestContinuousMLPQFunction(TfGraphTestCase):
             assert np.array_equal(output, expected_output)
 
     def test_q_vals_goal_conditioned(self):
-        env = TfEnv(DummyDictEnv())
+        env = GarageEnv(DummyDictEnv())
         with mock.patch(('garage.tf.q_functions.'
                          'continuous_mlp_q_function.MLPMergeModel'),
                         new=SimpleMLPMergeModel):
@@ -70,7 +70,7 @@ class TestContinuousMLPQFunction(TfGraphTestCase):
         ((2, 2), (2, )),
     ])
     def test_output_shape(self, obs_dim, action_dim):
-        env = TfEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
+        env = GarageEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
         with mock.patch(('garage.tf.q_functions.'
                          'continuous_mlp_q_function.MLPMergeModel'),
                         new=SimpleMLPMergeModel):
@@ -91,7 +91,7 @@ class TestContinuousMLPQFunction(TfGraphTestCase):
         ((2, 2), (2, )),
     ])
     def test_get_qval_sym(self, obs_dim, action_dim):
-        env = TfEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
+        env = GarageEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
         with mock.patch(('garage.tf.q_functions.'
                          'continuous_mlp_q_function.MLPMergeModel'),
                         new=SimpleMLPMergeModel):
@@ -126,7 +126,7 @@ class TestContinuousMLPQFunction(TfGraphTestCase):
         ((2, 2), (2, )),
     ])
     def test_is_pickleable(self, obs_dim, action_dim):
-        env = TfEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
+        env = GarageEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
         with mock.patch(('garage.tf.q_functions.'
                          'continuous_mlp_q_function.MLPMergeModel'),
                         new=SimpleMLPMergeModel):
@@ -158,7 +158,7 @@ class TestContinuousMLPQFunction(TfGraphTestCase):
         ((2, 2), (2, ), (32, 32)),
     ])
     def test_clone(self, obs_dim, action_dim, hidden_sizes):
-        env = TfEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
+        env = GarageEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
         with mock.patch(('garage.tf.q_functions.'
                          'continuous_mlp_q_function.MLPMergeModel'),
                         new=SimpleMLPMergeModel):

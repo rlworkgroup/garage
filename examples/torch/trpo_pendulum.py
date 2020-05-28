@@ -6,9 +6,9 @@ Here it runs InvertedDoublePendulum-v2 environment with 100 iterations.
 import torch
 
 from garage import wrap_experiment
+from garage.envs import GarageEnv
 from garage.experiment import LocalRunner
 from garage.experiment.deterministic import set_seed
-from garage.tf.envs import TfEnv
 from garage.torch.algos import TRPO
 from garage.torch.policies import GaussianMLPPolicy
 from garage.torch.value_functions import GaussianMLPValueFunction
@@ -26,7 +26,7 @@ def trpo_pendulum(ctxt=None, seed=1):
 
     """
     set_seed(seed)
-    env = TfEnv(env_name='InvertedDoublePendulum-v2')
+    env = GarageEnv(env_name='InvertedDoublePendulum-v2')
 
     runner = LocalRunner(ctxt)
 

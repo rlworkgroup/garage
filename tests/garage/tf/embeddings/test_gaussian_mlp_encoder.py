@@ -8,8 +8,8 @@ import pytest
 import tensorflow as tf
 
 from garage import InOutSpec
+from garage.envs import GarageEnv
 from garage.tf.embeddings import GaussianMLPEncoder
-from garage.tf.envs import TfEnv
 from tests.fixtures import TfGraphTestCase
 from tests.fixtures.envs.dummy import DummyBoxEnv
 from tests.fixtures.models import SimpleGaussianMLPModel
@@ -26,7 +26,7 @@ class TestGaussianMLPEncoder(TfGraphTestCase):
         ((2, 2), (2, 2)),
     ])
     def test_get_embedding(self, obs_dim, embedding_dim):
-        env = TfEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=embedding_dim))
+        env = GarageEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=embedding_dim))
         embedding_spec = InOutSpec(input_space=env.spec.observation_space,
                                    output_space=env.spec.action_space)
         embedding = GaussianMLPEncoder(embedding_spec)
@@ -50,7 +50,7 @@ class TestGaussianMLPEncoder(TfGraphTestCase):
         ((2, 2), (2, 2)),
     ])
     def test_is_pickleable(self, obs_dim, embedding_dim):
-        env = TfEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=embedding_dim))
+        env = GarageEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=embedding_dim))
         embedding_spec = InOutSpec(input_space=env.spec.observation_space,
                                    output_space=env.spec.action_space)
         embedding = GaussianMLPEncoder(embedding_spec)
