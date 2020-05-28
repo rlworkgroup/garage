@@ -285,6 +285,7 @@ class REPS(BatchPolopt):  # noqa: D416
 
         self.policy.build(obs_var)
         self._old_policy.build(obs_var)
+        self._old_policy.model.parameters = self.policy.model.parameters
 
         policy_loss_inputs = graph_inputs(
             'PolicyLossInputs',
