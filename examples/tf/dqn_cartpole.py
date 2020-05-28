@@ -8,7 +8,7 @@ import gym
 from garage import wrap_experiment
 from garage.experiment.deterministic import set_seed
 from garage.np.exploration_policies import EpsilonGreedyPolicy
-from garage.replay_buffer import SimpleReplayBuffer
+from garage.replay_buffer import PathBuffer
 from garage.tf.algos import DQN
 from garage.tf.envs import TfEnv
 from garage.tf.experiment import LocalTFRunner
@@ -34,9 +34,8 @@ def dqn_cartpole(ctxt=None, seed=1):
         sampler_batch_size = 500
         num_timesteps = n_epochs * steps_per_epoch * sampler_batch_size
         env = TfEnv(gym.make('CartPole-v0'))
-        replay_buffer = SimpleReplayBuffer(env_spec=env.spec,
-                                           size_in_transitions=int(1e4),
-                                           time_horizon=1)
+
+        replay_buffer = PathBuffer(capacity_in_transitions=int(1e4))
         qf = DiscreteMLPQFunction(env_spec=env.spec, hidden_sizes=(64, 64))
         policy = DiscreteQfDerivedPolicy(env_spec=env.spec, qf=qf)
         exploration_policy = EpsilonGreedyPolicy(env_spec=env.spec,

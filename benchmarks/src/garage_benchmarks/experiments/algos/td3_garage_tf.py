@@ -6,7 +6,7 @@ from garage import wrap_experiment
 from garage.envs import normalize
 from garage.experiment import deterministic
 from garage.np.exploration_policies import AddGaussianNoise
-from garage.replay_buffer import SimpleReplayBuffer
+from garage.replay_buffer import PathBuffer
 from garage.tf.algos import TD3
 from garage.tf.envs import TfEnv
 from garage.tf.experiment import LocalTFRunner
@@ -75,10 +75,8 @@ def td3_garage_tf(ctxt, env_id, seed):
             action_merge_layer=0,
             hidden_nonlinearity=tf.nn.relu)
 
-        replay_buffer = SimpleReplayBuffer(
-            env_spec=env.spec,
-            size_in_transitions=hyper_parameters['replay_buffer_size'],
-            time_horizon=hyper_parameters['n_rollout_steps'])
+        replay_buffer = PathBuffer(
+            capacity_in_transitions=hyper_parameters['replay_buffer_size'])
 
         td3 = TD3(env.spec,
                   policy=policy,

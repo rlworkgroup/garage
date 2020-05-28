@@ -8,7 +8,7 @@ from garage.envs import GarageEnv
 from garage.envs import normalize
 from garage.experiment import deterministic, LocalRunner
 from garage.np.exploration_policies import AddOrnsteinUhlenbeckNoise
-from garage.replay_buffer import SimpleReplayBuffer
+from garage.replay_buffer import PathBuffer
 from garage.torch.algos import DDPG
 from garage.torch.policies import DeterministicMLPPolicy
 from garage.torch.q_functions import ContinuousMLPQFunction
@@ -37,9 +37,7 @@ class TestDDPG:
                                     hidden_sizes=[64, 64],
                                     hidden_nonlinearity=F.relu)
 
-        replay_buffer = SimpleReplayBuffer(env_spec=env.spec,
-                                           size_in_transitions=int(1e6),
-                                           time_horizon=100)
+        replay_buffer = PathBuffer(capacity_in_transitions=int(1e6))
 
         algo = DDPG(env_spec=env.spec,
                     policy=policy,
@@ -81,9 +79,7 @@ class TestDDPG:
                                     hidden_sizes=[64, 64],
                                     hidden_nonlinearity=F.relu)
 
-        replay_buffer = SimpleReplayBuffer(env_spec=env.spec,
-                                           size_in_transitions=int(1e6),
-                                           time_horizon=100)
+        replay_buffer = PathBuffer(capacity_in_transitions=int(1e6))
 
         algo = DDPG(env_spec=env.spec,
                     policy=policy,

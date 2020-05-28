@@ -232,16 +232,19 @@ class DQN(OffPolicyRLAlgorithm):
         del itr
         del samples_data
 
-        transitions = self.replay_buffer.sample(self.buffer_batch_size)
+        transitions = self.replay_buffer.sample_transitions(
+            self.buffer_batch_size)
 
-        observations = transitions['observation']
-        rewards = transitions['reward']
-        actions = transitions['action']
-        next_observations = transitions['next_observation']
-        dones = transitions['terminal']
+        observations = transitions['observations']
+        rewards = transitions['rewards']
+        actions = self.env_spec.action_space.unflatten_n(
+            transitions['actions'])
+        next_observations = transitions['next_observations']
+        dones = transitions['terminals']
 
         if isinstance(self.env_spec.observation_space, akro.Image):
-            if len(self.env_spec.observation_space.shape) < 3:
+            if len(observations.shape[1:]) < len(
+                    self.env_spec.observation_space.shape):
                 observations = self.env_spec.observation_space.unflatten_n(
                     observations)
                 next_observations = self.env_spec.observation_space.\

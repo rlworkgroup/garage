@@ -8,6 +8,7 @@ minimum value of two critics instead of one to limit overestimation.
 import numpy as np
 import tensorflow as tf
 
+from garage.replay_buffer import PathBuffer
 from garage.tf.algos import DDPG
 from garage.tf.misc import tensor_utils
 
@@ -271,15 +272,28 @@ class TD3(DDPG):
             qval(float): Q value predicted by the q network.
 
         """
-        transitions = self.replay_buffer.sample(self.buffer_batch_size)
-        observations = transitions['observation']
-        rewards = transitions['reward']
-        actions = transitions['action']
-        next_observations = transitions['next_observation']
-        terminals = transitions['terminal']
+        # pylint: disable=fixme
+        # TODO: remove this check once HER uses PathBuffer.
+        # See garage issue #1338.
+        # pylint: enable=fixme
 
-        rewards = rewards.reshape(-1, 1)
-        terminals = terminals.reshape(-1, 1)
+        if isinstance(self.replay_buffer, PathBuffer):
+            transitions = self.replay_buffer.sample_transitions(
+                self.buffer_batch_size)
+
+            observations = transitions['observations']
+            rewards = transitions['rewards']
+            actions = transitions['actions']
+            next_observations = transitions['next_observations']
+            terminals = transitions['terminals']
+        else:
+            transitions = self.replay_buffer.sample(self.buffer_batch_size)
+
+            observations = transitions['observation']
+            rewards = transitions['reward'].reshape(-1, 1)
+            actions = transitions['action']
+            next_observations = transitions['next_observation']
+            terminals = transitions['terminal'].reshape(-1, 1)
 
         next_inputs = next_observations
         inputs = observations

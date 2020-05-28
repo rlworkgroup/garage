@@ -17,7 +17,7 @@ from garage.envs.wrappers.resize import Resize
 from garage.envs.wrappers.stack_frames import StackFrames
 from garage.experiment.deterministic import set_seed
 from garage.np.exploration_policies import EpsilonGreedyPolicy
-from garage.replay_buffer import SimpleReplayBuffer
+from garage.replay_buffer import PathBuffer
 from garage.tf.algos import DQN
 from garage.tf.envs import TfEnv
 from garage.tf.experiment import LocalTFRunner
@@ -27,8 +27,9 @@ from garage.tf.q_functions import DiscreteCNNQFunction
 
 @click.command()
 @click.option('--buffer_size', type=int, default=int(5e4))
+@click.option('--max_path_length', type=int, default=None)
 @wrap_experiment
-def dqn_pong(ctxt=None, seed=1, buffer_size=int(5e4)):
+def dqn_pong(ctxt=None, seed=1, buffer_size=int(5e4), max_path_length=None):
     """Train DQN on PongNoFrameskip-v4 environment.
 
     Args:
@@ -37,6 +38,9 @@ def dqn_pong(ctxt=None, seed=1, buffer_size=int(5e4)):
         seed (int): Used to seed the random number generator to produce
             determinism.
         buffer_size (int): Number of timesteps to store in replay buffer.
+        max_path_length (int): Maximum length of a path after which a path is
+            considered complete. This is used during testing to minimize the
+            memory required to store a single path.
 
     """
     set_seed(seed)
@@ -59,9 +63,7 @@ def dqn_pong(ctxt=None, seed=1, buffer_size=int(5e4)):
 
         env = TfEnv(env, is_image=True)
 
-        replay_buffer = SimpleReplayBuffer(env_spec=env.spec,
-                                           size_in_transitions=buffer_size,
-                                           time_horizon=1)
+        replay_buffer = PathBuffer(capacity_in_transitions=buffer_size)
 
         qf = DiscreteCNNQFunction(env_spec=env.spec,
                                   filter_dims=(8, 4, 3),
@@ -85,6 +87,7 @@ def dqn_pong(ctxt=None, seed=1, buffer_size=int(5e4)):
                    qf_lr=1e-4,
                    discount=0.99,
                    min_buffer_size=int(1e4),
+                   max_path_length=max_path_length,
                    double_q=False,
                    n_train_steps=500,
                    steps_per_epoch=steps_per_epoch,

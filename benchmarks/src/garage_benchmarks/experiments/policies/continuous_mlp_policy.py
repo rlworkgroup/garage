@@ -5,8 +5,8 @@ import tensorflow as tf
 from garage import wrap_experiment
 from garage.envs import normalize
 from garage.experiment import deterministic
-from garage.np.exploraton_policies import AddOrnsteinUhlenbeckNoise
-from garage.replay_buffer import SimpleReplayBuffer
+from garage.np.exploration_policies import AddOrnsteinUhlenbeckNoise
+from garage.replay_buffer import PathBuffer
 from garage.tf.algos import DDPG
 from garage.tf.envs import TfEnv
 from garage.tf.experiment import LocalTFRunner
@@ -62,10 +62,8 @@ def continuous_mlp_policy(ctxt, env_id, seed):
             hidden_nonlinearity=tf.nn.relu,
             name='ContinuousMLPQFunction')
 
-        replay_buffer = SimpleReplayBuffer(
-            env_spec=env.spec,
-            size_in_transitions=hyper_params['replay_buffer_size'],
-            time_horizon=hyper_params['n_rollout_steps'])
+        replay_buffer = PathBuffer(
+            capacity_in_transitions=hyper_params['replay_buffer_size'])
 
         ddpg = DDPG(env_spec=env.spec,
                     policy=policy,

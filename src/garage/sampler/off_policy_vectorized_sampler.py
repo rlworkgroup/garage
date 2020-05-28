@@ -16,6 +16,7 @@ import numpy as np
 
 from garage.experiment import deterministic
 from garage.misc import tensor_utils
+from garage.replay_buffer import PathBuffer
 from garage.sampler.batch_sampler import BatchSampler
 from garage.sampler.vec_env_executor import VecEnvExecutor
 
@@ -127,19 +128,26 @@ class OffPolicyVectorizedSampler(BatchSampler):
             if env_infos is None:
                 env_infos = [dict() for _ in range(self._vec_env.num_envs)]
 
-            self.algo.replay_buffer.add_transitions(
-                observation=obses,
-                action=actions,
-                reward=rewards,
-                terminal=dones,
-                next_observation=next_obses,
-            )
+            # Generally, off policy algorithms should use PathBuffer. This is
+            # here to ensure support for HER-DDPG and the HERReplayBuffer.
+            if not isinstance(self.algo.replay_buffer, PathBuffer):
+                self.algo.replay_buffer.add_transitions(
+                    observation=obses,
+                    action=actions,
+                    reward=rewards,
+                    terminal=dones,
+                    next_observation=next_obses,
+                )
 
-            for idx, reward, env_info, done in zip(itertools.count(), rewards,
-                                                   env_infos, dones):
+            for idx, reward, env_info, done, obs, next_obs, action in zip(
+                    itertools.count(), rewards, env_infos, dones, obses,
+                    next_obses, actions):
                 if running_paths[idx] is None:
                     running_paths[idx] = dict(
                         rewards=[],
+                        observations=[],
+                        next_observations=[],
+                        actions=[],
                         env_infos=[],
                         dones=[],
                         undiscounted_return=self._last_uncounted_discount[idx],
@@ -150,6 +158,9 @@ class OffPolicyVectorizedSampler(BatchSampler):
                         success_count=self._last_success_count[idx])
 
                 running_paths[idx]['rewards'].append(reward)
+                running_paths[idx]['observations'].append(obs)
+                running_paths[idx]['next_observations'].append(next_obs)
+                running_paths[idx]['actions'].append(action)
                 running_paths[idx]['env_infos'].append(env_info)
                 running_paths[idx]['dones'].append(done)
                 running_paths[idx]['running_length'] += 1
@@ -174,6 +185,29 @@ class OffPolicyVectorizedSampler(BatchSampler):
                             undiscounted_return=running_paths[idx]
                             ['undiscounted_return'],
                             success_count=running_paths[idx]['success_count']))
+
+                    if isinstance(self.algo.replay_buffer, PathBuffer):
+                        obs_space = self._env_spec.observation_space
+
+                        flattened_obses = obs_space.flatten_n(
+                            np.asarray(running_paths[idx]['observations']))
+                        flattened_next_obses = obs_space.flatten_n(
+                            np.asarray(
+                                running_paths[idx]['next_observations']))
+                        flattened_rewards = np.asarray(
+                            running_paths[idx]['rewards']).reshape(-1, 1)
+                        flattened_terminals = np.asarray(
+                            running_paths[idx]['dones']).reshape(-1, 1)
+                        flattened_actions = self._env_spec.action_space. \
+                            flatten_n(np.asarray(
+                                        running_paths[idx]['actions']))
+
+                        self.algo.replay_buffer.add_path(
+                            dict(rewards=flattened_rewards,
+                                 terminals=flattened_terminals,
+                                 observations=flattened_obses,
+                                 next_observations=flattened_next_obses,
+                                 actions=flattened_actions))
                     running_paths[idx] = None
 
                     if done:

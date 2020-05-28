@@ -14,7 +14,7 @@ import tensorflow as tf
 from garage import wrap_experiment
 from garage.experiment.deterministic import set_seed
 from garage.np.exploration_policies import AddOrnsteinUhlenbeckNoise
-from garage.replay_buffer import SimpleReplayBuffer
+from garage.replay_buffer import PathBuffer
 from garage.tf.algos import DDPG
 from garage.tf.envs import TfEnv
 from garage.tf.experiment import LocalTFRunner
@@ -50,9 +50,7 @@ def ddpg_pendulum(ctxt=None, seed=1):
                                     hidden_sizes=[64, 64],
                                     hidden_nonlinearity=tf.nn.relu)
 
-        replay_buffer = SimpleReplayBuffer(env_spec=env.spec,
-                                           size_in_transitions=int(1e6),
-                                           time_horizon=100)
+        replay_buffer = PathBuffer(capacity_in_transitions=int(1e6))
 
         ddpg = DDPG(env_spec=env.spec,
                     policy=policy,

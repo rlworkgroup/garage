@@ -89,10 +89,12 @@ def test_dqn_pong():
     """
     env = os.environ.copy()
     env['GARAGE_EXAMPLE_TEST_N_EPOCHS'] = '1'
-    assert subprocess.run(
-        [str(EXAMPLES_ROOT_DIR / 'tf/dqn_pong.py'), '--buffer_size', '5'],
-        check=False,
-        env=env).returncode == 0
+    assert subprocess.run([
+        str(EXAMPLES_ROOT_DIR / 'tf/dqn_pong.py'), '--buffer_size', '5',
+        '--max_path_length', '5'
+    ],
+                          check=False,
+                          env=env).returncode == 0
 
 
 @pytest.mark.no_cover

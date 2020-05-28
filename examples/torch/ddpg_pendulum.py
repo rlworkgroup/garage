@@ -15,7 +15,7 @@ from garage.envs import normalize
 from garage.experiment import LocalRunner
 from garage.experiment.deterministic import set_seed
 from garage.np.exploration_policies import AddOrnsteinUhlenbeckNoise
-from garage.replay_buffer import SimpleReplayBuffer
+from garage.replay_buffer import PathBuffer
 from garage.torch.algos import DDPG
 from garage.torch.policies import DeterministicMLPPolicy
 from garage.torch.q_functions import ContinuousMLPQFunction
@@ -48,9 +48,7 @@ def ddpg_pendulum(ctxt=None, seed=1, lr=1e-4):
                                 hidden_sizes=[64, 64],
                                 hidden_nonlinearity=F.relu)
 
-    replay_buffer = SimpleReplayBuffer(env_spec=env.spec,
-                                       size_in_transitions=int(1e6),
-                                       time_horizon=100)
+    replay_buffer = PathBuffer(capacity_in_transitions=int(1e6))
 
     policy_optimizer = (torch.optim.Adagrad, {'lr': lr, 'lr_decay': 0.99})
 

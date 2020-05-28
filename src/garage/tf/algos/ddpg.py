@@ -6,6 +6,7 @@ import numpy as np
 import tensorflow as tf
 
 from garage.np.algos.off_policy_rl_algorithm import OffPolicyRLAlgorithm
+from garage.replay_buffer import PathBuffer
 from garage.tf.misc import tensor_utils
 
 
@@ -266,7 +267,19 @@ class DDPG(OffPolicyRLAlgorithm):
                                            paths['complete']) if complete
         ])
 
-        last_average_return = np.mean(self.episode_rewards)
+        # Avoid calculating the mean of an empty list in cases where
+        # all paths were non-terminal.
+
+        last_average_return = np.NaN
+        avg_success_rate = 0
+
+        if self.episode_rewards:
+            last_average_return = np.mean(self.episode_rewards)
+
+        if self.success_history:
+            if itr % self.steps_per_epoch == 0 and self._buffer_prefilled:
+                avg_success_rate = np.mean(self.success_history)
+
         self.log_diagnostics(paths)
         for _ in range(self.n_train_steps):
             if self._buffer_prefilled:
@@ -295,8 +308,7 @@ class DDPG(OffPolicyRLAlgorithm):
                 tabular.record('QFunction/MaxY', np.max(self.epoch_ys))
                 tabular.record('QFunction/AverageAbsY',
                                np.mean(np.abs(self.epoch_ys)))
-                tabular.record('AverageSuccessRate',
-                               np.mean(self.success_history))
+                tabular.record('AverageSuccessRate', avg_success_rate)
 
             if not self.smooth_return:
                 self.episode_rewards = []
@@ -322,15 +334,28 @@ class DDPG(OffPolicyRLAlgorithm):
             float: Q value predicted by the q network.
 
         """
-        transitions = self.replay_buffer.sample(self.buffer_batch_size)
-        observations = transitions['observation']
-        rewards = transitions['reward']
-        actions = transitions['action']
-        next_observations = transitions['next_observation']
-        terminals = transitions['terminal']
+        # pylint: disable=fixme
+        # TODO: remove this check once HER uses PathBuffer.
+        # See garage issue #1338.
+        # pylint: enable=fixme
 
-        rewards = rewards.reshape(-1, 1)
-        terminals = terminals.reshape(-1, 1)
+        if isinstance(self.replay_buffer, PathBuffer):
+            transitions = self.replay_buffer.sample_transitions(
+                self.buffer_batch_size)
+
+            observations = transitions['observations']
+            rewards = transitions['rewards']
+            actions = transitions['actions']
+            next_observations = transitions['next_observations']
+            terminals = transitions['terminals']
+        else:
+            transitions = self.replay_buffer.sample(self.buffer_batch_size)
+
+            observations = transitions['observation']
+            rewards = transitions['reward'].reshape(-1, 1)
+            actions = transitions['action']
+            next_observations = transitions['next_observation']
+            terminals = transitions['terminal'].reshape(-1, 1)
 
         next_inputs = next_observations
         inputs = observations

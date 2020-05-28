@@ -6,7 +6,7 @@ from garage import wrap_experiment
 from garage.envs import normalize
 from garage.experiment import deterministic
 from garage.np.exploration_policies import AddOrnsteinUhlenbeckNoise
-from garage.replay_buffer import SimpleReplayBuffer
+from garage.replay_buffer import PathBuffer
 from garage.tf.algos import DDPG
 from garage.tf.envs import TfEnv
 from garage.tf.experiment import LocalTFRunner
@@ -60,10 +60,8 @@ def ddpg_garage_tf(ctxt, env_id, seed):
             hidden_sizes=hyper_parameters['qf_hidden_sizes'],
             hidden_nonlinearity=tf.nn.relu)
 
-        replay_buffer = SimpleReplayBuffer(
-            env_spec=env.spec,
-            size_in_transitions=hyper_parameters['replay_buffer_size'],
-            time_horizon=hyper_parameters['n_rollout_steps'])
+        replay_buffer = PathBuffer(
+            capacity_in_transitions=hyper_parameters['replay_buffer_size'])
 
         algo = DDPG(env_spec=env.spec,
                     policy=policy,
