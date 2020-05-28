@@ -19,7 +19,7 @@ from tests.fixtures import snapshot_config, TfGraphTestCase
 class TestDDPG(TfGraphTestCase):
     """Tests for DDPG algorithm."""
 
-    @pytest.mark.mujoco
+    @pytest.mark.mujoco_long
     def test_ddpg_double_pendulum(self):
         """Test DDPG with Pendulum environment."""
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
@@ -57,7 +57,7 @@ class TestDDPG(TfGraphTestCase):
 
             env.close()
 
-    @pytest.mark.mujoco
+    @pytest.mark.mujoco_long
     def test_ddpg_pendulum(self):
         """Test DDPG with Pendulum environment.
 
@@ -98,7 +98,7 @@ class TestDDPG(TfGraphTestCase):
 
             env.close()
 
-    @pytest.mark.mujoco
+    @pytest.mark.mujoco_long
     def test_ddpg_pendulum_with_decayed_weights(self):
         """Test DDPG with Pendulum environment and decayed weights.
 

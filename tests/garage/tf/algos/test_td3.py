@@ -17,7 +17,7 @@ from tests.fixtures import snapshot_config, TfGraphTestCase
 class TestTD3(TfGraphTestCase):
     """Tests for TD3 algo."""
 
-    @pytest.mark.mujoco
+    @pytest.mark.mujoco_long
     def test_td3_pendulum(self):
         """Test TD3 with Pendulum environment."""
         with LocalTFRunner(snapshot_config) as runner:

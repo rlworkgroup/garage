@@ -41,6 +41,10 @@ jobs:
       name: "MuJoCo-based tests"
       env:
         - JOB_RUN_CMD="make ci-job-mujoco"
+    - if: type != pull_request OR head_repo = "rlworkgroup/garage"
+      name: "MuJoCo-based long running tests"
+      env:
+        - JOB_RUN_CMD="make ci-job-mujoco-long"
     - name: "Verify conda and pipenv installations"
       env: JOB_RUN_CMD="make ci-job-verify-envs"
     - if: type = cron
