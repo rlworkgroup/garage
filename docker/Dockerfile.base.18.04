@@ -9,8 +9,19 @@ FROM $PARENT_IMAGE
 # > At the moment, setting "LANG=C" on a Linux system *fundamentally breaks Python 3*, and that's not OK.
 ENV LANG C.UTF-8
 
+# Add PPA for old Python 3.5
+RUN \
+  apt-get -y -q update && \
+  # Prevents debconf from prompting for user input
+  # See https://github.com/phusion/baseimage-docker/issues/58
+  DEBIAN_FRONTEND=noninteractive apt-get install -y \
+    # Dockerfile deps
+    software-properties-common && \
+  add-apt-repository ppa:deadsnakes/ppa
+
 # apt dependencies
 RUN \
+  add-apt-repository ppa:deadsnakes/ppa && \
   apt-get -y -q update && \
   # Prevents debconf from prompting for user input
   # See https://github.com/phusion/baseimage-docker/issues/58
@@ -33,10 +44,10 @@ RUN \
     # OpenAI baselines
     libopenmpi-dev \
     # virtualenv
-    python3 \
-    python3-pip \
-    python3-tk \
-    python3-virtualenv && \
+    python3.5 \
+    python3.5-dev \
+    python3.5-tk \
+    python3.5-venv && \
   apt-get clean && \
   rm -rf /var/lib/apt/lists/*
 
@@ -63,6 +74,12 @@ RUN mkdir -p /root/.mujoco && \
   ln -s $HOME/.mujoco/mujoco200_linux $HOME/.mujoco/mujoco200
   ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mujoco200/bin
 
+# Install pip on system since python3.5-dev package doesn't install it by default.
+# This is different from a similar command around line 104 since that upgrades
+# the pip module inside virtual env
+RUN python3.5 -m ensurepip && \
+  python3.5 -m pip install --upgrade pip
+
 # Copy over just setup.py first, so the Docker cache doesn't expire until
 # dependencies change
 #
@@ -81,10 +98,10 @@ WORKDIR /root/code/garage
 
 # Create virtualenv
 ENV VIRTUAL_ENV=/root/venv
-RUN python3 -m virtualenv --python=/usr/bin/python3 $VIRTUAL_ENV
+RUN python3.5 -m venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
-# Prevent pip from complaining about available upgrades
+# Prevent pip from complaining about available upgrades inside virtual env
 RUN pip install --upgrade pip
 
 # We need a MuJoCo key to install mujoco_py

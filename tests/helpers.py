@@ -1,5 +1,8 @@
 """helper functions for tests and benchmarks."""
+import bisect
+import itertools
 import pickle
+import random
 
 import numpy as np
 import pytest
@@ -91,8 +94,7 @@ def recurrent_step_lstm(input_val,
                         nonlinearity,
                         gate_nonlinearity,
                         forget_bias=1.0):
-    """
-    A LSTM unit implements the following update mechanism:
+    """A LSTM unit implements the following update mechanism:
 
     Incoming gate:    i(t) = f_i(x(t) @ W_xi + h(t-1) @ W_hi +
                                  w_ci * c(t-1) + b_i)
@@ -167,8 +169,7 @@ def recurrent_step_gru(input_val,
                        nonlinearity,
                        gate_nonlinearity,
                        forget_bias=1.0):
-    """
-    A GRU unit implements the following update mechanism:
+    """A GRU unit implements the following update mechanism:
 
     Reset gate:        r(t) = f_r(x(t) @ W_xr + h(t-1) @ W_hr + b_r)
     Update gate:       u(t) = f_u(x(t) @ W_xu + h(t-1) @ W_hu + b_u)
@@ -225,7 +226,7 @@ def recurrent_step_gru(input_val,
 
 def _construct_image_vector(_input, batch, w, h, filter_width, filter_height,
                             in_shape):
-    """sw is sliding window"""
+    """sw is sliding window."""
     sw = np.empty((filter_width, filter_height, in_shape))
     for dw in range(filter_width):
         for dh in range(filter_height):
@@ -250,3 +251,34 @@ def max_pooling(_input, pool_shape, pool_stride):
                                pool_shape, k])
 
     return results
+
+
+# Taken from random.choices in Python 3.6 source since it's not available in
+# python 3.5
+# https://github.com/python/cpython/blob/3.6/Lib/random.py
+# https://docs.python.org/3/library/random.html#random.choices
+def choices(population, weights=None, *, cum_weights=None, k=1):
+    """Return a k sized list of population elements chosen with replacement.
+
+    If the relative weights or cumulative weights are not specified,
+    the selections are made with equal probability.
+    """
+    if cum_weights is None:
+        if weights is None:
+            _int = int
+            total = len(population)
+            return [
+                population[_int(random.random() * total)] for i in range(k)
+            ]
+        cum_weights = list(itertools.accumulate(weights))
+    elif weights is not None:
+        raise TypeError('Cannot specify both weights and cumulative weights')
+    if len(cum_weights) != len(population):
+        raise ValueError('The number of weights does not match the population')
+    total = cum_weights[-1]
+    hi = len(cum_weights) - 1
+    return [
+        population[bisect.bisect(cum_weights,
+                                 random.random() * total, 0, hi)]
+        for i in range(k)
+    ]

@@ -219,7 +219,7 @@ def test_wrap_experiment_builds_git_archive_large_file():
         launcher_path = pathlib.Path(launcher_dir) / 'subdir' / 'run_exp.py'
 
         large_file = launch_dir / 'large.obj'
-        with open(large_file, 'wb') as f:
+        with large_file.open(mode='wb') as f:
             f.write(b'0' * int(1e7))
 
         snapshot_dir, output = _run_launcher(launcher_path, prefix)

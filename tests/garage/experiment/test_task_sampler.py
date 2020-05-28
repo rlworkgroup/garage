@@ -61,7 +61,7 @@ def test_construct_envs_sampler_ml10():
     env = envs[0]
     env.close = unittest.mock.MagicMock(name='env.close')
     updates[-1](env)
-    env.close.assert_called()
+    env.close.assert_called_with()
 
 
 @pytest.mark.mujoco
