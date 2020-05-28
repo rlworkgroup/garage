@@ -46,6 +46,7 @@ class TestRL2PPO(TfGraphTestCase):
                                         state_include_action=False)
         self.baseline = LinearFeatureBaseline(env_spec=self.env_spec)
 
+    @pytest.mark.timeout(100)
     def test_rl2_ppo_pendulum(self):
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
             algo = RL2PPO(rl2_max_path_length=self.max_path_length,
