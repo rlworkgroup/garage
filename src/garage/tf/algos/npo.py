@@ -249,6 +249,7 @@ class NPO(BatchPolopt):
 
         self.policy.build(augmented_obs_var)
         self._old_policy.build(augmented_obs_var)
+        self._old_policy.model.parameters = self.policy.model.parameters
 
         policy_loss_inputs = graph_inputs(
             'PolicyLossInputs',
