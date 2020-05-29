@@ -93,7 +93,7 @@ pip:
 
 .. code-block:: bash
 
-    pip install garage[mujoco,dm_control]
+    pip install 'garage[mujoco,dm_control]'
 
 Extra Steps for Garage Developers
 ---------------------------------
@@ -107,7 +107,7 @@ If you would like to contribute changes back to garage, please also read :code:`
 
     cd path/to/garage/repo
     pipenv --three
-    pipenv install --pre -e .[all,dev]
+    pipenv install --pre -e '.[all,dev]'
 
 
 - conda
@@ -117,7 +117,7 @@ If you would like to contribute changes back to garage, please also read :code:`
     conda activate myenv
     pip uninstall garage  # To ensure no existing install gets in the way.
     cd path/to/garage/repo
-    pip install -e .[all,dev]
+    pip install -e '.[all,dev]'
 
 
 - virtualenv
@@ -127,4 +127,4 @@ If you would like to contribute changes back to garage, please also read :code:`
     source myenv/bin/activate
     pip uninstall garage  # To ensure no existing install gets in the way.
     cd path/to/garage/repo
-    pip install -e .[all,dev]
+    pip install -e '.[all,dev]'
