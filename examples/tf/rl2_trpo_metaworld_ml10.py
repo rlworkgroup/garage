@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Example script to run RL2 in ML45."""
-# pylint: disable=no-value-for-parameter, wrong-import-order
+"""Example script to run RL2 in ML10."""
+# pylint: disable=no-value-for-parameter
 import click
 import metaworld.benchmarks as mwb
 
@@ -10,23 +10,25 @@ from garage.experiment.deterministic import set_seed
 from garage.experiment.meta_evaluator import MetaEvaluator
 from garage.np.baselines import LinearFeatureBaseline
 from garage.sampler import LocalSampler, RaySampler
-from garage.tf.algos import RL2PPO
+from garage.tf.algos import RL2TRPO
 from garage.tf.algos.rl2 import RL2Env
 from garage.tf.algos.rl2 import RL2Worker
 from garage.tf.experiment import LocalTFRunner
+from garage.tf.optimizers import ConjugateGradientOptimizer
+from garage.tf.optimizers import FiniteDifferenceHvp
 from garage.tf.policies import GaussianGRUPolicy
 
 
 @click.command()
 @click.option('--seed', default=1)
 @click.option('--max_path_length', default=150)
-@click.option('--meta_batch_size', default=50)
+@click.option('--meta_batch_size', default=40)
 @click.option('--n_epochs', default=1500)
 @click.option('--episode_per_task', default=10)
 @wrap_experiment
-def rl2_ppo_metaworld_ml45(ctxt, seed, max_path_length, meta_batch_size,
+def rl2_trpo_metaworld_ml10(ctxt, seed, max_path_length, meta_batch_size,
                            n_epochs, episode_per_task):
-    """Train PPO with ML45 environment.
+    """Train PPO with ML10 environment.
 
     Args:
         ctxt (garage.experiment.ExperimentContext): The experiment
@@ -41,29 +43,26 @@ def rl2_ppo_metaworld_ml45(ctxt, seed, max_path_length, meta_batch_size,
     """
     set_seed(seed)
     with LocalTFRunner(snapshot_config=ctxt) as runner:
-        ml45_train_tasks = mwb.ML45.get_train_tasks()
-        ml45_train_envs = [
-            RL2Env(mwb.ML45.from_task(task_name))
-            for task_name in ml45_train_tasks.all_task_names
+        ml10_train_envs = [
+            RL2Env(mwb.ML10.from_task(task_name))
+            for task_name in mwb.ML10.get_train_tasks().all_task_names
         ]
-        tasks = task_sampler.EnvPoolSampler(ml45_train_envs)
+        tasks = task_sampler.EnvPoolSampler(ml10_train_envs)
         tasks.grow_pool(meta_batch_size)
 
-        env_spec = ml45_train_envs[0].spec
+        ml10_test_envs = [
+            RL2Env(mwb.ML10.from_task(task_name))
+            for task_name in mwb.ML10.get_test_tasks().all_task_names
+        ]
+        test_tasks = task_sampler.EnvPoolSampler(ml10_test_envs)
 
+        env_spec = ml10_train_envs[0].spec
         policy = GaussianGRUPolicy(name='policy',
-                                   hidden_dim=[300, 300, 300],
+                                   hidden_dim=[200, 200],
                                    env_spec=env_spec,
                                    state_include_action=False)
 
         baseline = LinearFeatureBaseline(env_spec=env_spec)
-
-        ml45_test_tasks = mwb.ML45.get_test_tasks()
-        ml45_test_envs = [
-            RL2Env(mwb.ML45.from_task(task_name))
-            for task_name in ml45_test_tasks.all_task_names
-        ]
-        test_tasks = task_sampler.EnvPoolSampler(ml45_test_envs)
 
         meta_evaluator = MetaEvaluator(test_task_sampler=test_tasks,
                                        n_exploration_traj=10,
@@ -71,26 +70,21 @@ def rl2_ppo_metaworld_ml45(ctxt, seed, max_path_length, meta_batch_size,
                                        max_path_length=max_path_length,
                                        n_test_tasks=5)
 
-        algo = RL2PPO(rl2_max_path_length=max_path_length,
-                      meta_batch_size=meta_batch_size,
-                      task_sampler=tasks,
-                      env_spec=env_spec,
-                      policy=policy,
-                      baseline=baseline,
-                      discount=0.99,
-                      gae_lambda=0.95,
-                      lr_clip_range=0.2,
-                      optimizer_args=dict(
-                          batch_size=32,
-                          max_epochs=10,
-                      ),
-                      stop_entropy_gradient=True,
-                      entropy_method='max',
-                      policy_ent_coeff=0.02,
-                      center_adv=False,
-                      max_path_length=max_path_length * episode_per_task,
-                      meta_evaluator=meta_evaluator,
-                      n_epochs_per_eval=10)
+        algo = RL2TRPO(rl2_max_path_length=max_path_length,
+                       meta_batch_size=meta_batch_size,
+                       task_sampler=tasks,
+                       env_spec=env_spec,
+                       policy=policy,
+                       baseline=baseline,
+                       max_path_length=max_path_length * episode_per_task,
+                       discount=0.99,
+                       max_kl_step=0.01,
+                       lr_clip_range=0.2,
+                       optimizer=ConjugateGradientOptimizer,
+                       optimizer_args=dict(hvp_approach=FiniteDifferenceHvp(
+                           base_eps=1e-5)),
+                       meta_evaluator=meta_evaluator,
+                       n_epochs_per_eval=10)
 
         runner.setup(algo,
                      tasks.sample(meta_batch_size),
@@ -104,4 +98,4 @@ def rl2_ppo_metaworld_ml45(ctxt, seed, max_path_length, meta_batch_size,
                      meta_batch_size)
 
 
-rl2_ppo_metaworld_ml45()
+rl2_trpo_metaworld_ml10()

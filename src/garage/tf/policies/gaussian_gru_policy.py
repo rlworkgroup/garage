@@ -134,6 +134,10 @@ class GaussianGRUPolicy(StochasticPolicy):
         self._prev_actions = None
         self._prev_hiddens = None
 
+    @property
+    def obs_dim(self):
+        return self._input_dim
+    
     def build(self, state_input, name=None):
         """Build model.
 
@@ -149,7 +153,7 @@ class GaussianGRUPolicy(StochasticPolicy):
                                                       name='step_input',
                                                       dtype=tf.float32)
             step_hidden_var = tf.compat.v1.placeholder(
-                shape=(None, self._hidden_dim),
+                shape=(None, self._hidden_dim[0]),
                 name='step_hidden_input',
                 dtype=tf.float32)
             self.model.build(state_input,
@@ -194,7 +198,7 @@ class GaussianGRUPolicy(StochasticPolicy):
                 self._prev_actions):
             self._prev_actions = np.zeros(
                 (len(do_resets), self.action_space.flat_dim))
-            self._prev_hiddens = np.zeros((len(do_resets), self._hidden_dim))
+            self._prev_hiddens = np.zeros((len(do_resets), self._hidden_dim[0]))
 
         self._prev_actions[do_resets] = 0.
         self._prev_hiddens[do_resets] = self.model.networks[

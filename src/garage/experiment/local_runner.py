@@ -333,8 +333,8 @@ class LocalRunner:
         else:
             if agent_update is None:
                 agent_update = self._algo.policy.get_param_values()
-            paths = self._sampler.obtain_samples(
-                itr, (batch_size or self._train_args.batch_size),
+            paths = self._sampler.obtain_exact_trajectories(
+                n_traj_per_worker=1,
                 agent_update=agent_update,
                 env_update=env_update)
             paths = paths.to_trajectory_list()
