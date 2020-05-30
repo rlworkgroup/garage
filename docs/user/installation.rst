@@ -12,7 +12,7 @@ Garage is a Python package which can be installed in most Python 3.5+ environmen
 
 .. code-block:: bash
 
-    pip install garage
+    pip install --user garage
 
 
 We recommend you build your project using a Python environment manager which supports dependency resolution, such as `pipenv <https://docs.pipenv.org/en/latest/>`_, `conda <https://docs.conda.io/en/latest/>`_, or `poetry <https://poetry.eustace.io/>`_. We test against pipenv and conda.
