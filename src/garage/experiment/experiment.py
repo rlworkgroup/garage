@@ -725,8 +725,8 @@ def make_launcher_archive(*, git_root_path, log_dir):
                       'slow. Set archive_launch_repo=False in wrap_experiment '
                       'to disable this behavior.')
     archive_path = os.path.join(log_dir, 'launch_archive.tar.xz')
-    subprocess.run(('tar', '--null', '--files-from', '-', '--auto-compress',
-                    '--create', '--file', archive_path),
+    subprocess.run(('tar', '--null', '--files-from', '-', '--xz', '--create',
+                    '--file', archive_path),
                    input=b'\0'.join(files_to_archive),
                    cwd=git_root_path,
                    check=True)
