@@ -23,7 +23,7 @@ See the [latest documentation](https://garage.readthedocs.org/en/latest/) for ge
 
 ## Installation
 ```
-pip install garage
+pip install --user garage
 ```
 
 ## Algorithms
