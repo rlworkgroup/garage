@@ -33,7 +33,7 @@ REQUIRED = [
     'scikit-image',
     'scipy',
     'tensorflow' + TF_VERSION,
-    'tensorflow-probability',
+    'tensorflow-probability<0.9.0,>=0.8.0',
     'torchvision==0.4.1'
 ]
 
