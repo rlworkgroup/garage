@@ -3,6 +3,7 @@ import copy
 
 from garage import TrajectoryBatch
 from garage.sampler.sampler import Sampler
+from garage.sampler.env_update import ExistingEnvUpdate
 
 
 class LocalSampler(Sampler):
@@ -32,8 +33,12 @@ class LocalSampler(Sampler):
         # pylint: disable=super-init-not-called
         self._factory = worker_factory
         self._agents = worker_factory.prepare_worker_messages(agents)
+        if isinstance(envs, list) and isinstance(envs[0], ExistingEnvUpdate):
+            preprocess = lambda x: x
+        else:
+            preprocess = copy.deepcopy
         self._envs = worker_factory.prepare_worker_messages(
-            envs, preprocess=copy.deepcopy)
+            envs, preprocess=preprocess)
         self._workers = [
             worker_factory(i) for i in range(worker_factory.n_workers)
         ]
