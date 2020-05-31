@@ -201,7 +201,7 @@ class MAML:
 
             for j in range(self._num_grad_updates + 1):
                 paths = runner.obtain_samples(runner.step_itr)
-                batch_samples = self._process_samples(runner.step_itr, paths)
+                batch_samples = self._process_samples(paths)
                 all_samples[i].append(batch_samples)
 
                 # The last iteration does only sampling but no adapting
@@ -369,11 +369,10 @@ class MAML:
         # pylint: disable=protected-access
         return self._inner_algo._old_policy
 
-    def _process_samples(self, itr, paths):
+    def _process_samples(self, paths):
         """Process sample data based on the collected paths.
 
         Args:
-            itr (int): Iteration number.
             paths (list[dict]): A list of collected paths.
 
         Returns:
@@ -386,7 +385,7 @@ class MAML:
 
         self._train_value_function(paths)
         obs, actions, rewards, _, valids, baselines \
-            = self._inner_algo.process_samples(itr, paths)
+            = self._inner_algo.process_samples(paths)
         return MAMLTrajectoryBatch(paths, obs, actions, rewards, valids,
                                    baselines)
 
@@ -473,7 +472,7 @@ class MAML:
         self._inner_optimizer.module = exploration_policy
 
         paths = exploration_trajectories.to_trajectory_list()
-        batch_samples = self._process_samples(0, paths)
+        batch_samples = self._process_samples(paths)
 
         self._adapt(batch_samples, set_grad=False)
 

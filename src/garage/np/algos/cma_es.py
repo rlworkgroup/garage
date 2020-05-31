@@ -1,12 +1,17 @@
 """Covariance Matrix Adaptation Evolution Strategy."""
+import collections
+
 import cma
 from dowel import logger, tabular
 import numpy as np
 
-from garage.np.algos.batch_polopt import BatchPolopt
+from garage import log_performance, TrajectoryBatch
+from garage.np import _functions
+from garage.np.algos.rl_algorithm import RLAlgorithm
+from garage.tf.samplers import BatchSampler
 
 
-class CMAES(BatchPolopt):
+class CMAES(RLAlgorithm):
     """Covariance Matrix Adaptation Evolution Strategy.
 
     Note:
@@ -34,14 +39,16 @@ class CMAES(BatchPolopt):
                  discount=0.99,
                  max_path_length=500,
                  sigma0=1.):
-        super().__init__(env_spec=env_spec,
-                         policy=policy,
-                         baseline=baseline,
-                         discount=discount,
-                         max_path_length=max_path_length,
-                         n_samples=n_samples)
+        self.policy = policy
+        self.max_path_length = max_path_length
+        self.sampler_cls = BatchSampler
 
-        self.sigma0 = sigma0
+        self._env_spec = env_spec
+        self._discount = discount
+        self._sigma0 = sigma0
+        self._n_samples = n_samples
+        self._baseline = baseline
+        self._episode_reward_mean = collections.deque(maxlen=100)
 
         self._es = None
         self._all_params = None
@@ -50,7 +57,7 @@ class CMAES(BatchPolopt):
         self._initialize()
 
     def _initialize(self):
-        input_var = self.env_spec.observation_space.to_tf_placeholder(
+        input_var = self._env_spec.observation_space.to_tf_placeholder(
             name='obs', batch_dims=2)
         self.policy.build(input_var)
 
@@ -76,14 +83,24 @@ class CMAES(BatchPolopt):
 
         """
         init_mean = self.policy.get_param_values()
-        self._es = cma.CMAEvolutionStrategy(init_mean, self.sigma0,
-                                            {'popsize': self.n_samples})
+        self._es = cma.CMAEvolutionStrategy(init_mean, self._sigma0,
+                                            {'popsize': self._n_samples})
         self._all_params = self._sample_params()
         self._cur_params = self._all_params[0]
         self.policy.set_param_values(self._cur_params)
         self._all_returns = []
 
-        return super().train(runner)
+        # start actual training
+        last_return = None
+
+        for _ in runner.step_epochs():
+            for _ in range(self._n_samples):
+                runner.step_path = runner.obtain_samples(runner.step_itr)
+                last_return = self.train_once(runner.step_itr,
+                                              runner.step_path)
+                runner.step_itr += 1
+
+        return last_return
 
     def train_once(self, itr, paths):
         """Perform one step of policy optimization given one batch of samples.
@@ -96,18 +113,39 @@ class CMAES(BatchPolopt):
             float: The average return in last epoch cycle.
 
         """
-        paths = self.process_samples(itr, paths)
+        # -- Stage: Calculate baseline
+        if hasattr(self._baseline, 'predict_n'):
+            baseline_predictions = self._baseline.predict_n(paths)
+        else:
+            baseline_predictions = [
+                self._baseline.predict(path) for path in paths
+            ]
 
-        epoch = itr // self.n_samples
-        i_sample = itr - epoch * self.n_samples
+        # -- Stage: Pre-process samples based on collected paths
+        samples_data = _functions.paths_to_tensors(paths, self.max_path_length,
+                                                   baseline_predictions,
+                                                   self._discount)
+
+        # -- Stage: Run and calculate performance of the algorithm
+        undiscounted_returns = log_performance(
+            itr,
+            TrajectoryBatch.from_trajectory_list(self._env_spec, paths),
+            discount=self._discount)
+        self._episode_reward_mean.extend(undiscounted_returns)
+        tabular.record('Extras/EpisodeRewardMean',
+                       np.mean(self._episode_reward_mean))
+        samples_data['average_return'] = np.mean(undiscounted_returns)
+
+        epoch = itr // self._n_samples
+        i_sample = itr - epoch * self._n_samples
 
         tabular.record('Epoch', epoch)
         tabular.record('# Sample', i_sample)
 
-        rtn = paths['average_return']
-        self._all_returns.append(paths['average_return'])
+        rtn = samples_data['average_return']
+        self._all_returns.append(samples_data['average_return'])
 
-        if (itr + 1) % self.n_samples == 0:
+        if (itr + 1) % self._n_samples == 0:
             avg_rtns = np.array(self._all_returns)
             self._es.tell(self._all_params, -avg_rtns)
             self.policy.set_param_values(self._es.best.get()[0])
@@ -117,7 +155,7 @@ class CMAES(BatchPolopt):
             self._all_returns.clear()
             self._all_params = self._sample_params()
 
-        self._cur_params = self._all_params[(i_sample + 1) % self.n_samples]
+        self._cur_params = self._all_params[(i_sample + 1) % self._n_samples]
         self.policy.set_param_values(self._cur_params)
 
         logger.log(tabular)
