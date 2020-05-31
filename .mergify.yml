@@ -8,7 +8,6 @@ pull_request_rules:
       - "#changes-requested-reviews-by=0"
       - status-success=Travis CI - Pull Request
       - status-success=codecov/patch
-      - status-success=codecov/project
       - label=ready-to-merge
     actions:
       merge:
@@ -25,7 +24,6 @@ pull_request_rules:
       - "#changes-requested-reviews-by=0"
       - status-success=Travis CI - Pull Request
       - status-success=codecov/patch
-      - status-success=codecov/project
       - label=ready-to-merge
     actions:
       merge:
