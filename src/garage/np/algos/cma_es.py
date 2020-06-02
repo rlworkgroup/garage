@@ -6,7 +6,7 @@ from dowel import logger, tabular
 import numpy as np
 
 from garage import log_performance, TrajectoryBatch
-from garage.np import _functions
+from garage.np import paths_to_tensors
 from garage.np.algos.rl_algorithm import RLAlgorithm
 from garage.tf.samplers import BatchSampler
 
@@ -122,9 +122,8 @@ class CMAES(RLAlgorithm):
             ]
 
         # -- Stage: Pre-process samples based on collected paths
-        samples_data = _functions.paths_to_tensors(paths, self.max_path_length,
-                                                   baseline_predictions,
-                                                   self._discount)
+        samples_data = paths_to_tensors(paths, self.max_path_length,
+                                        baseline_predictions, self._discount)
 
         # -- Stage: Run and calculate performance of the algorithm
         undiscounted_returns = log_performance(

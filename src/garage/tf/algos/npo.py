@@ -10,7 +10,7 @@ from garage import log_performance, TrajectoryBatch
 from garage.misc import tensor_utils as np_tensor_utils
 from garage.np.algos import RLAlgorithm
 from garage.sampler import OnPolicyVectorizedSampler
-from garage.tf import _functions
+from garage.tf import paths_to_tensors
 from garage.tf.misc.tensor_utils import center_advs
 from garage.tf.misc.tensor_utils import compile_function
 from garage.tf.misc.tensor_utils import compute_advantages
@@ -225,10 +225,9 @@ class NPO(RLAlgorithm):
             ]
 
         # -- Stage: Pre-process samples based on collected paths
-        samples_data = _functions.paths_to_tensors(paths, self.max_path_length,
-                                                   baseline_predictions,
-                                                   self._discount,
-                                                   self._gae_lambda)
+        samples_data = paths_to_tensors(paths, self.max_path_length,
+                                        baseline_predictions, self._discount,
+                                        self._gae_lambda)
 
         # -- Stage: Run and calculate performance of the algorithm
         undiscounted_returns = log_performance(
@@ -264,7 +263,7 @@ class NPO(RLAlgorithm):
         Args:
             itr (int): Iteration number.
             samples_data (dict): Processed sample data.
-                See _functions.paths_to_tensors() for details.
+                See garage.tf.paths_to_tensors() for details.
 
         """
         policy_opt_input_values = self._policy_opt_input_values(samples_data)
@@ -506,7 +505,7 @@ class NPO(RLAlgorithm):
 
         Args:
             samples_data (dict): Processed sample data.
-                See _functions.paths_to_tensors() for details.
+                See garage.tf.paths_to_tensors() for details.
 
         """
         policy_opt_input_values = self._policy_opt_input_values(samples_data)
@@ -542,7 +541,7 @@ class NPO(RLAlgorithm):
 
         Args:
             samples_data (dict): Processed sample data.
-                See _functions.paths_to_tensors() for details.
+                See garage.tf.paths_to_tensors() for details.
 
         Returns:
             list(np.ndarray): Flatten policy optimization input values.

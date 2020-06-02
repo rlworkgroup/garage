@@ -9,7 +9,7 @@ import tensorflow as tf
 from garage import log_performance, TrajectoryBatch
 from garage.np.algos import RLAlgorithm
 from garage.sampler import OnPolicyVectorizedSampler
-from garage.tf import _functions
+from garage.tf import paths_to_tensors
 from garage.tf.misc import tensor_utils
 from garage.tf.misc.tensor_utils import flatten_inputs
 from garage.tf.misc.tensor_utils import graph_inputs
@@ -185,10 +185,9 @@ class REPS(RLAlgorithm):  # noqa: D416
             ]
 
         # -- Stage: Pre-process samples based on collected paths
-        samples_data = _functions.paths_to_tensors(paths, self.max_path_length,
-                                                   baseline_predictions,
-                                                   self._discount,
-                                                   self._gae_lambda)
+        samples_data = paths_to_tensors(paths, self.max_path_length,
+                                        baseline_predictions, self._discount,
+                                        self._gae_lambda)
 
         # -- Stage: Run and calculate performance of the algorithm
         undiscounted_returns = log_performance(
@@ -251,7 +250,7 @@ class REPS(RLAlgorithm):  # noqa: D416
         Args:
             itr (int): Iteration number.
             samples_data (dict): Processed sample data.
-                See process_samples() for details.
+                See garage.tf.paths_to_tensors() for details.
 
         """
         # Initial BFGS parameter values.
@@ -505,7 +504,7 @@ class REPS(RLAlgorithm):  # noqa: D416
 
         Args:
             samples_data (dict): Processed sample data.
-                See process_samples() for details.
+                See garage.tf.paths_to_tensors() for details.
 
         Returns:
             list(np.ndarray): Flatten dual function optimization input values.
@@ -533,7 +532,7 @@ class REPS(RLAlgorithm):  # noqa: D416
 
         Args:
             samples_data (dict): Processed sample data.
-                See process_samples() for details.
+                See garage.tf.paths_to_tensors() for details.
 
         Returns:
             list(np.ndarray): Flatten policy optimization input values.
@@ -563,7 +562,7 @@ class REPS(RLAlgorithm):  # noqa: D416
 
         Args:
             samples_data (dict): Processed sample data.
-                See process_samples() for details.
+                See garage.tf.paths_to_tensors() for details.
 
         Returns:
             numpy.ndarray: Features for training.

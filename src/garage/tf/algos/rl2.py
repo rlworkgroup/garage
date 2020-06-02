@@ -292,11 +292,11 @@ class RL2(MetaRLAlgorithm, abc.ABC):
                  meta_evaluator, n_epochs_per_eval, **inner_algo_args):
         self._inner_algo = RL2NPO(**inner_algo_args)
         self._rl2_max_path_length = rl2_max_path_length
-        self._env_spec = self._inner_algo.env_spec
+        self.env_spec = self._inner_algo._env_spec
         self._n_epochs_per_eval = n_epochs_per_eval
-        self._flatten_input = self._inner_algo.flatten_input
+        self._flatten_input = self._inner_algo._flatten_input
         self._policy = self._inner_algo.policy
-        self._discount = self._inner_algo.discount
+        self._discount = self._inner_algo._discount
         self._meta_batch_size = meta_batch_size
         self._task_sampler = task_sampler
         self._meta_evaluator = meta_evaluator
@@ -445,8 +445,8 @@ class RL2(MetaRLAlgorithm, abc.ABC):
 
         undiscounted_returns = log_multitask_performance(
             itr,
-            TrajectoryBatch.from_trajectory_list(self._env_spec, paths),
-            self._inner_algo.discount,
+            TrajectoryBatch.from_trajectory_list(self.env_spec, paths),
+            self._inner_algo._discount,
             name_map=name_map)
 
         concatenated_paths_stacked['paths'] = concatenated_paths
@@ -476,14 +476,14 @@ class RL2(MetaRLAlgorithm, abc.ABC):
         """
         if self._flatten_input:
             observations = np.concatenate([
-                self._env_spec.observation_space.flatten_n(
-                    path['observations']) for path in paths
+                self.env_spec.observation_space.flatten_n(path['observations'])
+                for path in paths
             ])
         else:
             observations = np.concatenate(
                 [path['observations'] for path in paths])
         actions = np.concatenate([
-            self._env_spec.action_space.flatten_n(path['actions'])
+            self.env_spec.action_space.flatten_n(path['actions'])
             for path in paths
         ])
         valids = np.concatenate(
