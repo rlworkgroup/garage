@@ -4,11 +4,11 @@ import itertools
 import multiprocessing as mp
 import queue
 
+import click
 import cloudpickle
 import setproctitle
 
 from garage import TrajectoryBatch
-from garage.misc.prog_bar_counter import ProgBarCounter
 from garage.sampler.sampler import Sampler
 
 
@@ -143,7 +143,6 @@ class MultiprocessingSampler(Sampler):
 
         """
         del itr
-        pbar = ProgBarCounter(num_samples)
         batches = []
         completed_samples = 0
         self._agent_version += 1
@@ -152,36 +151,37 @@ class MultiprocessingSampler(Sampler):
             agent_update, cloudpickle.dumps)
         env_ups = self._factory.prepare_worker_messages(env_update)
 
-        while completed_samples < num_samples:
-            self._push_updates(updated_workers, agent_ups, env_ups)
-            for _ in range(self._factory.n_workers):
-                try:
-                    tag, contents = self._to_sampler.get_nowait()
-                    if tag == 'trajectory':
-                        batch, version, worker_n = contents
-                        del worker_n
-                        if version == self._agent_version:
-                            batches.append(batch)
-                            num_returned_samples = batch.lengths.sum()
-                            completed_samples += num_returned_samples
-                            pbar.inc(num_returned_samples)
+        with click.progressbar(length=num_samples, label='Sampling') as pbar:
+            while completed_samples < num_samples:
+                self._push_updates(updated_workers, agent_ups, env_ups)
+                for _ in range(self._factory.n_workers):
+                    try:
+                        tag, contents = self._to_sampler.get_nowait()
+                        if tag == 'trajectory':
+                            batch, version, worker_n = contents
+                            del worker_n
+                            if version == self._agent_version:
+                                batches.append(batch)
+                                num_returned_samples = batch.lengths.sum()
+                                completed_samples += num_returned_samples
+                                pbar.update(num_returned_samples)
+                            else:
+                                # Receiving paths from previous iterations is
+                                # normal.  Potentially, we could gather them
+                                # here, if an off-policy method wants them.
+                                pass
                         else:
-                            # Receiving paths from previous iterations is
-                            # normal.  Potentially, we could gather them here,
-                            # if an off-policy method wants them.
-                            pass
-                    else:
-                        raise AssertionError(
-                            'Unknown tag {} with contents {}'.format(
-                                tag, contents))
-                except queue.Empty:
+                            raise AssertionError(
+                                'Unknown tag {} with contents {}'.format(
+                                    tag, contents))
+                    except queue.Empty:
+                        pass
+            for q in self._to_worker:
+                try:
+                    q.put_nowait(('stop', ()))
+                except queue.Full:
                     pass
-        for q in self._to_worker:
-            try:
-                q.put_nowait(('stop', ()))
-            except queue.Full:
-                pass
-        pbar.stop()
+
         return TrajectoryBatch.concatenate(*batches)
 
     def obtain_exact_trajectories(self,
@@ -211,7 +211,6 @@ class MultiprocessingSampler(Sampler):
             AssertionError: On internal errors.
 
         """
-        pbar = ProgBarCounter(self._factory.n_workers)
         self._agent_version += 1
         updated_workers = set()
         agent_ups = self._factory.prepare_worker_messages(
@@ -219,32 +218,39 @@ class MultiprocessingSampler(Sampler):
         env_ups = self._factory.prepare_worker_messages(env_update)
         trajectories = defaultdict(list)
 
-        while any(
-                len(trajectories[i]) < n_traj_per_worker
-                for i in range(self._factory.n_workers)):
-            self._push_updates(updated_workers, agent_ups, env_ups)
-            tag, contents = self._to_sampler.get()
-            if tag == 'trajectory':
-                batch, version, worker_n = contents
-                if version == self._agent_version:
-                    if len(trajectories[worker_n]) < n_traj_per_worker:
-                        trajectories[worker_n].append(batch)
-                    if len(trajectories[worker_n]) == n_traj_per_worker:
-                        pbar.inc(1)
-                        try:
-                            self._to_worker[worker_n].put_nowait(('stop', ()))
-                        except queue.Full:
-                            pass
-            else:
-                raise AssertionError('Unknown tag {} with contents {}'.format(
-                    tag, contents))
+        with click.progressbar(length=self._factory.n_workers,
+                               label='Sampling') as pbar:
+            while any(
+                    len(trajectories[i]) < n_traj_per_worker
+                    for i in range(self._factory.n_workers)):
+                self._push_updates(updated_workers, agent_ups, env_ups)
+                tag, contents = self._to_sampler.get()
 
-        for q in self._to_worker:
-            try:
-                q.put_nowait(('stop', ()))
-            except queue.Full:
-                pass
-        pbar.stop()
+                if tag == 'trajectory':
+                    batch, version, worker_n = contents
+
+                    if version == self._agent_version:
+                        if len(trajectories[worker_n]) < n_traj_per_worker:
+                            trajectories[worker_n].append(batch)
+
+                        if len(trajectories[worker_n]) == n_traj_per_worker:
+                            pbar.update(1)
+                            try:
+                                self._to_worker[worker_n].put_nowait(
+                                    ('stop', ()))
+                            except queue.Full:
+                                pass
+                else:
+                    raise AssertionError(
+                        'Unknown tag {} with contents {}'.format(
+                            tag, contents))
+
+            for q in self._to_worker:
+                try:
+                    q.put_nowait(('stop', ()))
+                except queue.Full:
+                    pass
+
         ordered_trajectories = list(
             itertools.chain(
                 *[trajectories[i] for i in range(self._factory.n_workers)]))

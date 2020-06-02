@@ -1,8 +1,8 @@
 """First order optimizer."""
 import time
 
+import click
 from dowel import logger
-import pyprind
 import tensorflow as tf
 
 from garage.np.optimizers import BatchDataset
@@ -142,17 +142,14 @@ class FirstOrderOptimizer:
         for epoch in range(self._max_epochs):
             if self._verbose:
                 logger.log('Epoch {}'.format(epoch))
-                progbar = pyprind.ProgBar(len(inputs[0]))
 
-            for batch in dataset.iterate(update=True):
-                sess.run(self._train_op,
-                         dict(list(zip(self._input_vars, batch))))
-                if self._verbose:
-                    progbar.update(len(batch[0]))
+            with click.progressbar(length=len(inputs[0]),
+                                   label='Optimizing minibatches') as pbar:
+                for batch in dataset.iterate(update=True):
+                    sess.run(self._train_op,
+                             dict(list(zip(self._input_vars, batch))))
 
-            if self._verbose:
-                if progbar.active:
-                    progbar.stop()
+                    pbar.update(len(batch[0]))
 
             new_loss = f_loss(*(tuple(inputs) + extra_inputs))
 
