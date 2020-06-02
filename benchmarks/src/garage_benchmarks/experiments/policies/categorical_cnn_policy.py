@@ -68,7 +68,7 @@ def categorical_cnn_policy(ctxt, env_id, seed):
             optimizer_args=dict(
                 batch_size=32,
                 max_epochs=10,
-                tf_optimizer_args=dict(learning_rate=1e-3),
+                learning_rate=1e-3,
             ),
             flatten_input=False,
         )

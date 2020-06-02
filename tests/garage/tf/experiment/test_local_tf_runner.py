@@ -47,8 +47,7 @@ class TestLocalRunner(TfGraphTestCase):
                        baseline=baseline,
                        max_path_length=100,
                        discount=0.99,
-                       optimizer_args=dict(
-                           tf_optimizer_args=dict(learning_rate=0.01, )))
+                       optimizer_args=dict(learning_rate=0.01, ))
 
             runner.setup(algo, env)
             runner.train(n_epochs=1, batch_size=100)
@@ -75,8 +74,7 @@ class TestLocalRunner(TfGraphTestCase):
                        baseline=baseline,
                        max_path_length=100,
                        discount=0.99,
-                       optimizer_args=dict(
-                           tf_optimizer_args=dict(learning_rate=0.01, )))
+                       optimizer_args=dict(learning_rate=0.01, ))
 
             runner.setup(algo, env)
             runner.train(n_epochs=1, batch_size=100, plot=True)
@@ -109,8 +107,7 @@ class TestLocalRunner(TfGraphTestCase):
                        baseline=baseline,
                        max_path_length=100,
                        discount=0.99,
-                       optimizer_args=dict(
-                           tf_optimizer_args=dict(learning_rate=0.01, )))
+                       optimizer_args=dict(learning_rate=0.01, ))
 
             runner.setup(algo,
                          env,
@@ -134,8 +131,7 @@ class TestLocalRunner(TfGraphTestCase):
                        baseline=baseline,
                        max_path_length=100,
                        discount=0.99,
-                       optimizer_args=dict(
-                           tf_optimizer_args=dict(learning_rate=0.01, )))
+                       optimizer_args=dict(learning_rate=0.01, ))
 
             runner.setup(algo, env, sampler_cls=LocalSampler)
             assert isinstance(runner._sampler, LocalSampler)
@@ -158,8 +154,7 @@ class TestLocalRunner(TfGraphTestCase):
                        baseline=baseline,
                        max_path_length=100,
                        discount=0.99,
-                       optimizer_args=dict(
-                           tf_optimizer_args=dict(learning_rate=0.01, )))
+                       optimizer_args=dict(learning_rate=0.01, ))
 
             runner.setup(algo, env, sampler_cls=RaySampler)
             assert isinstance(runner._sampler, RaySampler)

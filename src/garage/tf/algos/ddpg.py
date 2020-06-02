@@ -5,9 +5,9 @@ from dowel import logger, tabular
 import numpy as np
 import tensorflow as tf
 
+from garage import _Default, make_optimizer
 from garage.np.algos.off_policy_rl_algorithm import OffPolicyRLAlgorithm
 from garage.replay_buffer import PathBuffer
-from garage.tf.algos import _Default, make_optimizer
 from garage.tf.misc import tensor_utils
 
 

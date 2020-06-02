@@ -1,10 +1,9 @@
 """A regressor based on MLP with Normalized Inputs."""
-# pylint: disable=no-value-for-parameter
 from dowel import tabular
 import numpy as np
 import tensorflow as tf
 
-from garage.tf.algos import make_optimizer
+from garage import make_optimizer
 from garage.tf.distributions import Categorical
 from garage.tf.misc import tensor_utils
 from garage.tf.models import NormalizedInputMLPModel
@@ -150,6 +149,7 @@ class CategoricalMLPRegressor(StochasticRegressor):
             loss = -tf.reduce_mean(
                 self._dist.log_likelihood_sym(ys_var, info_vars))
 
+            # pylint: disable=no-value-for-parameter
             predicted = tf.one_hot(tf.argmax(y_hat, axis=1),
                                    depth=self._output_dim)
 

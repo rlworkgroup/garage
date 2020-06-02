@@ -27,8 +27,7 @@ class TestVPG(TfGraphTestCase):
                        baseline=baseline,
                        max_path_length=100,
                        discount=0.99,
-                       optimizer_args=dict(
-                           tf_optimizer_args=dict(learning_rate=0.01, )))
+                       optimizer_args=dict(learning_rate=0.01, ))
 
             runner.setup(algo, env)
 

@@ -6,6 +6,7 @@ import numpy as np
 import scipy.optimize
 import tensorflow as tf
 
+from garage import _Default, make_optimizer
 from garage import log_performance, TrajectoryBatch
 from garage.np.algos import RLAlgorithm
 from garage.sampler import OnPolicyVectorizedSampler

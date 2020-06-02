@@ -3,7 +3,7 @@ from dowel import tabular
 import numpy as np
 import tensorflow as tf
 
-from garage.tf.algos import make_optimizer
+from garage import make_optimizer
 from garage.tf.misc import tensor_utils
 from garage.tf.models import NormalizedInputMLPModel
 from garage.tf.optimizers import LbfgsOptimizer

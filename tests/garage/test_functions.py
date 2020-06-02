@@ -8,9 +8,13 @@ import dowel
 from dowel import logger, tabular
 import numpy as np
 import pytest
+import tensorflow as tf
+import torch
 
+from garage import _Default, make_optimizer
 from garage import log_multitask_performance, log_performance, TrajectoryBatch
 from garage.envs import EnvSpec
+from tests.fixtures import TfGraphTestCase
 
 
 @pytest.mark.serial
@@ -160,3 +164,69 @@ def test_log_multitask_performance_task_id():
     assert math.isclose(res['env3/SuccessRate'], 1.0)
     assert math.isnan(res['env4/SuccessRate'])
     assert math.isnan(res['env4/AverageReturn'])
+
+
+class TestOptimizerInterface(TfGraphTestCase):
+    """Test class for tf & pytorch make_optimizer functions."""
+
+    def test_tf_make_optimizer_with_type(self):
+        """Test make_optimizer function with type as first argument."""
+        optimizer_type = tf.compat.v1.train.AdamOptimizer
+        lr = 0.123
+        optimizer = make_optimizer(optimizer_type,
+                                   learning_rate=lr,
+                                   name='testOptimizer')
+        assert isinstance(optimizer, optimizer_type)
+        self.sess.run(tf.compat.v1.global_variables_initializer())
+        assert optimizer._name == 'testOptimizer'
+        assert np.allclose(
+            optimizer._lr, lr
+        )  # Adam holds the value of learning rate in private variable self._lr
+
+    def test_tf_make_optimizer_with_tuple(self):
+        """Test make_optimizer function with tuple as first argument."""
+        lr = 0.123
+        optimizer_type = (tf.compat.v1.train.AdamOptimizer, {
+            'learning_rate': lr
+        })
+        optimizer = make_optimizer(optimizer_type)
+        # pylint: disable=isinstance-second-argument-not-valid-type
+        assert isinstance(optimizer, optimizer_type)
+        self.sess.run(tf.compat.v1.global_variables_initializer())
+        assert np.allclose(
+            optimizer._lr, lr
+        )  # Adam holds the value of learning rate in private variable self._lr
+
+    def test_tf_make_optimizer_raise_value_error(self):
+        """Test make_optimizer raises value error."""
+        lr = 0.123
+        optimizer_type = (tf.compat.v1.train.AdamOptimizer, {
+            'learning_rate': lr
+        })
+        with pytest.raises(ValueError):
+            _ = make_optimizer(optimizer_type, learning_rate=lr)
+
+    def test_torch_make_optimizer_with_type(self):
+        """Test make_optimizer function with type as first argument."""
+        optimizer_type = torch.optim.Adam
+        module = torch.nn.Linear(2, 1)
+        lr = 0.123
+        optimizer = make_optimizer(optimizer_type, module=module, lr=lr)
+        assert isinstance(optimizer, optimizer_type)
+        assert optimizer.defaults['lr'] == lr
+
+    def test_torch_make_optimizer_with_tuple(self):
+        """Test make_optimizer function with tuple as first argument."""
+        optimizer_type = (torch.optim.Adam, {'lr': 0.1})
+        module = torch.nn.Linear(2, 1)
+        optimizer = make_optimizer(optimizer_type, module=module)
+        # pylint: disable=isinstance-second-argument-not-valid-type
+        assert isinstance(optimizer, optimizer_type)
+        assert optimizer.defaults['lr'] == optimizer_type[1]['lr']
+
+    def test_torch_make_optimizer_raise_value_error(self):
+        """Test make_optimizer raises value error."""
+        optimizer_type = (torch.optim.Adam, {'lr': 0.1})
+        module = torch.nn.Linear(2, 1)
+        with pytest.raises(ValueError):
+            _ = make_optimizer(optimizer_type, module=module, lr=0.123)

@@ -4,8 +4,8 @@ from dowel import tabular
 import numpy as np
 import tensorflow as tf
 
+from garage import _Default, make_optimizer
 from garage.np.algos.off_policy_rl_algorithm import OffPolicyRLAlgorithm
-from garage.tf.algos import _Default, make_optimizer
 from garage.tf.misc import tensor_utils
 
 
@@ -70,7 +70,6 @@ class DQN(OffPolicyRLAlgorithm):
                  reward_scale=1.,
                  smooth_return=True,
                  name='DQN'):
-        # self.qf_lr = qf_lr
         self._qf_optimizer = make_optimizer(qf_optimizer, learning_rate=qf_lr)
         self._name = name
         self._target_network_update_freq = target_network_update_freq

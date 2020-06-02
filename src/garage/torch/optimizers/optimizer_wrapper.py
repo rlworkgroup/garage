@@ -1,6 +1,6 @@
 """A PyTorch optimizer wrapper that compute loss and optimize module."""
+from garage import make_optimizer
 from garage.np.optimizers import BatchDataset
-from garage.torch.algos import make_optimizer
 
 
 class OptimizerWrapper:
@@ -24,7 +24,7 @@ class OptimizerWrapper:
                  module,
                  max_optimization_epochs=1,
                  minibatch_size=None):
-        self._optimizer = make_optimizer(optimizer, module)
+        self._optimizer = make_optimizer(optimizer, module=module)
         self._max_optimization_epochs = max_optimization_epochs
         self._minibatch_size = minibatch_size
 

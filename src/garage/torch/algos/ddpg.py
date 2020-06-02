@@ -6,9 +6,9 @@ from dowel import logger, tabular
 import numpy as np
 import torch
 
+from garage import _Default, make_optimizer
 from garage.np.algos.off_policy_rl_algorithm import OffPolicyRLAlgorithm
 from garage.replay_buffer import PathBuffer
-from garage.torch.algos import _Default, make_optimizer
 import garage.torch.utils as tu
 
 
@@ -128,9 +128,11 @@ class DDPG(OffPolicyRLAlgorithm):
         self._target_policy = copy.deepcopy(self.policy)
         self._target_qf = copy.deepcopy(self.qf)
         self._policy_optimizer = make_optimizer(policy_optimizer,
-                                                self.policy,
+                                                module=self.policy,
                                                 lr=policy_lr)
-        self._qf_optimizer = make_optimizer(qf_optimizer, self.qf, lr=qf_lr)
+        self._qf_optimizer = make_optimizer(qf_optimizer,
+                                            module=self.qf,
+                                            lr=qf_lr)
 
     def train_once(self, itr, paths):
         """Perform one iteration of training.
