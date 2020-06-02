@@ -1,8 +1,10 @@
 """A regressor based on MLP with Normalized Inputs."""
+# pylint: disable=no-value-for-parameter
 from dowel import tabular
 import numpy as np
 import tensorflow as tf
 
+from garage.tf.algos import make_optimizer
 from garage.tf.distributions import Categorical
 from garage.tf.misc import tensor_utils
 from garage.tf.models import NormalizedInputMLPModel
@@ -92,17 +94,17 @@ class CategoricalMLPRegressor(StochasticRegressor):
                 tr_optimizer_args = dict()
 
             if optimizer is None:
-                optimizer = LbfgsOptimizer(**optimizer_args)
+                self._optimizer = make_optimizer(LbfgsOptimizer,
+                                                 **optimizer_args)
             else:
-                optimizer = optimizer(**optimizer_args)
+                self._optimizer = make_optimizer(optimizer, **optimizer_args)
 
             if tr_optimizer is None:
-                tr_optimizer = ConjugateGradientOptimizer(**tr_optimizer_args)
+                self._tr_optimizer = make_optimizer(ConjugateGradientOptimizer,
+                                                    **tr_optimizer_args)
             else:
-                tr_optimizer = tr_optimizer(**tr_optimizer_args)
-
-            self._optimizer = optimizer
-            self._tr_optimizer = tr_optimizer
+                self._tr_optimizer = make_optimizer(tr_optimizer,
+                                                    **tr_optimizer_args)
             self._first_optimized = False
 
         self.model = NormalizedInputMLPModel(

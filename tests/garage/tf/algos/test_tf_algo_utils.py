@@ -8,7 +8,7 @@ import garage.tf.algos._utils as tf_algo_utils
 from tests.fixtures import TfGraphTestCase
 
 
-class TestTensorUtil(TfGraphTestCase):
+class TestAlgoUtil(TfGraphTestCase):
     """Test class for tf algo utility functions."""
 
     def test_make_optimizer_with_type(self):
@@ -21,4 +21,6 @@ class TestTensorUtil(TfGraphTestCase):
         assert isinstance(optimizer, optimizer_type)
         self.sess.run(tf.compat.v1.global_variables_initializer())
         assert optimizer._name == 'testOptimizer'
-        assert np.allclose(optimizer._lr, lr)
+        assert np.allclose(
+            optimizer._lr, lr
+        )  # Adam holds the value of learning rate in private variable self._lr
