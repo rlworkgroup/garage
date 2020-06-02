@@ -163,31 +163,19 @@ class REPS(RLAlgorithm):  # noqa: D416
 
         """
         # -- Stage: Calculate baseline
-        if self._flatten_input:
-            paths = [
-                dict(
-                    observations=(self._env_spec.observation_space.flatten_n(
-                        path['observations'])),
-                    actions=(
-                        self._env_spec.action_space.flatten_n(  # noqa: E126
-                            path['actions'])),
-                    rewards=path['rewards'],
-                    env_infos=path['env_infos'],
-                    agent_infos=path['agent_infos'],
-                    dones=path['dones']) for path in paths
-            ]
-        else:
-            paths = [
-                dict(
-                    observations=path['observations'],
-                    actions=(
-                        self._env_spec.action_space.flatten_n(  # noqa: E126
-                            path['actions'])),
-                    rewards=path['rewards'],
-                    env_infos=path['env_infos'],
-                    agent_infos=path['agent_infos'],
-                    dones=path['dones']) for path in paths
-            ]
+        paths = [
+            dict(
+                observations=self._env_spec.observation_space.flatten_n(
+                    path['observations'])
+                if self._flatten_input else path['observations'],
+                actions=(
+                    self._env_spec.action_space.flatten_n(  # noqa: E126
+                        path['actions'])),
+                rewards=path['rewards'],
+                env_infos=path['env_infos'],
+                agent_infos=path['agent_infos'],
+                dones=path['dones']) for path in paths
+        ]
 
         if hasattr(self._baseline, 'predict_n'):
             baseline_predictions = self._baseline.predict_n(paths)
