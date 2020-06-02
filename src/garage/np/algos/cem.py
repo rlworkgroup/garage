@@ -1,11 +1,16 @@
 """Cross Entropy Method."""
+import collections
+
 from dowel import logger, tabular
 import numpy as np
 
-from garage.np.algos.batch_polopt import BatchPolopt
+from garage import log_performance, TrajectoryBatch
+from garage.np import _functions
+from garage.np.algos.rl_algorithm import RLAlgorithm
+from garage.tf.samplers import BatchSampler
 
 
-class CEM(BatchPolopt):
+class CEM(RLAlgorithm):
     """Cross Entropy Method.
 
     CEM works by iteratively optimizing a gaussian distribution of policy.
@@ -43,27 +48,31 @@ class CEM(BatchPolopt):
                  best_frac=0.05,
                  extra_std=1.,
                  extra_decay_time=100):
-        super().__init__(env_spec, policy, baseline, discount, max_path_length,
-                         n_samples)
+        self.policy = policy
+        self.max_path_length = max_path_length
+        self.sampler_cls = BatchSampler
 
-        self.n_samples = n_samples
-        self.best_frac = best_frac
-        self.init_std = init_std
-        self.best_frac = best_frac
-        self.extra_std = extra_std
-        self.extra_decay_time = extra_decay_time
+        self._best_frac = best_frac
+        self._baseline = baseline
+        self._init_std = init_std
+        self._extra_std = extra_std
+        self._extra_decay_time = extra_decay_time
+        self._episode_reward_mean = collections.deque(maxlen=100)
+        self._env_spec = env_spec
+        self._discount = discount
+        self._n_samples = n_samples
 
-        self.cur_std = None
-        self.cur_mean = None
-        self.cur_params = None
-        self.all_returns = None
-        self.all_params = None
-        self.n_best = None
-        self.n_params = None
+        self._cur_std = None
+        self._cur_mean = None
+        self._cur_params = None
+        self._all_returns = None
+        self._all_params = None
+        self._n_best = None
+        self._n_params = None
         self._initialize()
 
     def _initialize(self):
-        input_var = self.env_spec.observation_space.to_tf_placeholder(
+        input_var = self._env_spec.observation_space.to_tf_placeholder(
             name='obs', batch_dims=2)
         self.policy.build(input_var)
 
@@ -77,12 +86,12 @@ class CEM(BatchPolopt):
             np.ndarray: A numpy array of parameter values.
 
         """
-        extra_var_mult = max(1.0 - epoch / self.extra_decay_time, 0)
+        extra_var_mult = max(1.0 - epoch / self._extra_decay_time, 0)
         sample_std = np.sqrt(
-            np.square(self.cur_std) +
-            np.square(self.extra_std) * extra_var_mult)
+            np.square(self._cur_std) +
+            np.square(self._extra_std) * extra_var_mult)
         return np.random.standard_normal(
-            self.n_params) * sample_std + self.cur_mean
+            self._n_params) * sample_std + self._cur_mean
 
     def train(self, runner):
         """Initialize variables and start training.
@@ -97,19 +106,29 @@ class CEM(BatchPolopt):
 
         """
         # epoch-wise
-        self.cur_std = self.init_std
-        self.cur_mean = self.policy.get_param_values()
+        self._cur_std = self._init_std
+        self._cur_mean = self.policy.get_param_values()
         # epoch-cycle-wise
-        self.cur_params = self.cur_mean
-        self.all_returns = []
-        self.all_params = [self.cur_mean.copy()]
+        self._cur_params = self._cur_mean
+        self._all_returns = []
+        self._all_params = [self._cur_mean.copy()]
         # constant
-        self.n_best = int(self.n_samples * self.best_frac)
-        assert self.n_best >= 1, (
+        self._n_best = int(self._n_samples * self._best_frac)
+        assert self._n_best >= 1, (
             'n_samples is too low. Make sure that n_samples * best_frac >= 1')
-        self.n_params = len(self.cur_mean)
+        self._n_params = len(self._cur_mean)
 
-        return super().train(runner)
+        # start actual training
+        last_return = None
+
+        for _ in runner.step_epochs():
+            for _ in range(self._n_samples):
+                runner.step_path = runner.obtain_samples(runner.step_itr)
+                last_return = self.train_once(runner.step_itr,
+                                              runner.step_path)
+                runner.step_itr += 1
+
+        return last_return
 
     def train_once(self, itr, paths):
         """Perform one step of policy optimization given one batch of samples.
@@ -122,36 +141,57 @@ class CEM(BatchPolopt):
             float: The average return of epoch cycle.
 
         """
-        paths = self.process_samples(itr, paths)
+        # -- Stage: Calculate baseline
+        if hasattr(self._baseline, 'predict_n'):
+            baseline_predictions = self._baseline.predict_n(paths)
+        else:
+            baseline_predictions = [
+                self._baseline.predict(path) for path in paths
+            ]
 
-        epoch = itr // self.n_samples
-        i_sample = itr - epoch * self.n_samples
+        # -- Stage: Pre-process samples based on collected paths
+        samples_data = _functions.paths_to_tensors(paths, self.max_path_length,
+                                                   baseline_predictions,
+                                                   self._discount)
+
+        # -- Stage: Run and calculate performance of the algorithm
+        undiscounted_returns = log_performance(
+            itr,
+            TrajectoryBatch.from_trajectory_list(self._env_spec, paths),
+            discount=self._discount)
+        self._episode_reward_mean.extend(undiscounted_returns)
+        tabular.record('Extras/EpisodeRewardMean',
+                       np.mean(self._episode_reward_mean))
+        samples_data['average_return'] = np.mean(undiscounted_returns)
+
+        epoch = itr // self._n_samples
+        i_sample = itr - epoch * self._n_samples
         tabular.record('Epoch', epoch)
         tabular.record('# Sample', i_sample)
-        # -- Stage: Process path
-        rtn = paths['average_return']
-        self.all_returns.append(paths['average_return'])
+        # -- Stage: Process samples_data
+        rtn = samples_data['average_return']
+        self._all_returns.append(samples_data['average_return'])
 
         # -- Stage: Update policy distribution.
-        if (itr + 1) % self.n_samples == 0:
-            avg_rtns = np.array(self.all_returns)
-            best_inds = np.argsort(-avg_rtns)[:self.n_best]
-            best_params = np.array(self.all_params)[best_inds]
+        if (itr + 1) % self._n_samples == 0:
+            avg_rtns = np.array(self._all_returns)
+            best_inds = np.argsort(-avg_rtns)[:self._n_best]
+            best_params = np.array(self._all_params)[best_inds]
 
             # MLE of normal distribution
-            self.cur_mean = best_params.mean(axis=0)
-            self.cur_std = best_params.std(axis=0)
-            self.policy.set_param_values(self.cur_mean)
+            self._cur_mean = best_params.mean(axis=0)
+            self._cur_std = best_params.std(axis=0)
+            self.policy.set_param_values(self._cur_mean)
 
             # Clear for next epoch
-            rtn = max(self.all_returns)
-            self.all_returns.clear()
-            self.all_params.clear()
+            rtn = max(self._all_returns)
+            self._all_returns.clear()
+            self._all_params.clear()
 
         # -- Stage: Generate a new policy for next path sampling
-        self.cur_params = self._sample_params(itr)
-        self.all_params.append(self.cur_params.copy())
-        self.policy.set_param_values(self.cur_params)
+        self._cur_params = self._sample_params(itr)
+        self._all_params.append(self._cur_params.copy())
+        self.policy.set_param_values(self._cur_params)
 
         logger.log(tabular)
         return rtn

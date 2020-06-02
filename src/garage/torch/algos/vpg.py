@@ -9,12 +9,13 @@ import torch.nn.functional as F
 
 from garage import log_performance, TrajectoryBatch
 from garage.misc import tensor_utils as tu
-from garage.np.algos import BatchPolopt
+from garage.np.algos.rl_algorithm import RLAlgorithm
+from garage.sampler import OnPolicyVectorizedSampler
 from garage.torch.algos import (compute_advantages, filter_valids, pad_to_last)
 from garage.torch.optimizers import OptimizerWrapper
 
 
-class VPG(BatchPolopt):
+class VPG(RLAlgorithm):
     """Vanilla Policy Gradient (REINFORCE).
 
     VPG, also known as Reinforce, trains stochastic policy in an on-policy way.
@@ -71,6 +72,10 @@ class VPG(BatchPolopt):
             stop_entropy_gradient=False,
             entropy_method='no_entropy',
     ):
+        self.discount = discount
+        self.policy = policy
+        self.max_path_length = max_path_length
+
         self._value_function = value_function
         self._gae_lambda = gae_lambda
         self._center_adv = center_adv
@@ -79,6 +84,8 @@ class VPG(BatchPolopt):
         self._use_softplus_entropy = use_softplus_entropy
         self._stop_entropy_gradient = stop_entropy_gradient
         self._entropy_method = entropy_method
+        self._n_samples = num_train_per_epoch
+        self._env_spec = env_spec
 
         self._maximum_entropy = (entropy_method == 'max')
         self._entropy_regularzied = (entropy_method == 'regularized')
@@ -86,6 +93,7 @@ class VPG(BatchPolopt):
                                           stop_entropy_gradient,
                                           policy_ent_coeff)
         self._episode_reward_mean = collections.deque(maxlen=100)
+        self.sampler_cls = OnPolicyVectorizedSampler
 
         if policy_optimizer:
             self._policy_optimizer = policy_optimizer
@@ -96,13 +104,6 @@ class VPG(BatchPolopt):
         else:
             self._vf_optimizer = OptimizerWrapper(torch.optim.Adam,
                                                   value_function)
-
-        super().__init__(env_spec=env_spec,
-                         policy=policy,
-                         baseline=value_function,
-                         discount=discount,
-                         max_path_length=max_path_length,
-                         n_samples=num_train_per_epoch)
 
         self._old_policy = copy.deepcopy(self.policy)
 
@@ -136,7 +137,7 @@ class VPG(BatchPolopt):
 
         """
         obs, actions, rewards, returns, valids, baselines = \
-            self.process_samples(itr, paths)
+            self.process_samples(paths)
 
         if self._maximum_entropy:
             policy_entropies = self._compute_policy_entropy(obs)
@@ -185,9 +186,31 @@ class VPG(BatchPolopt):
 
         undiscounted_returns = log_performance(
             itr,
-            TrajectoryBatch.from_trajectory_list(self.env_spec, paths),
+            TrajectoryBatch.from_trajectory_list(self._env_spec, paths),
             discount=self.discount)
         return np.mean(undiscounted_returns)
+
+    def train(self, runner):
+        """Obtain samplers and start actual training for each epoch.
+
+        Args:
+            runner (LocalRunner): LocalRunner is passed to give algorithm
+                the access to runner.step_epochs(), which provides services
+                such as snapshotting and sampler control.
+
+        Returns:
+            float: The average return in last epoch cycle.
+        """
+        last_return = None
+
+        for _ in runner.step_epochs():
+            for _ in range(self._n_samples):
+                runner.step_path = runner.obtain_samples(runner.step_itr)
+                last_return = self.train_once(runner.step_itr,
+                                              runner.step_path)
+                runner.step_itr += 1
+
+        return last_return
 
     def _train(self, obs, actions, rewards, returns, advs):
         r"""Train the policy and value function with minibatch.
@@ -416,13 +439,12 @@ class VPG(BatchPolopt):
 
         return log_likelihoods * advantages
 
-    def process_samples(self, itr, paths):
+    def process_samples(self, paths):
         r"""Process sample data based on the collected paths.
 
         Notes: P is the maximum path length (self.max_path_length)
 
         Args:
-            itr (int): Iteration number.
             paths (list[dict]): A list of collected paths
 
         Returns:

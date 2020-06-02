@@ -20,8 +20,13 @@ class DummyAlgo(BatchPolopt):
                          max_path_length=1,
                          n_samples=10)
 
-    def train_once(self, itr, paths):
-        pass
-
     def train(self, runner):
-        pass
+        """Obtain samplers and start actual training for each epoch.
+
+        See garage.np.algos.RLAlgorithm train().
+
+        Args:
+            runner (LocalRunner): LocalRunner is passed to give algorithm
+                the access to runner.step_epochs(), which provides services
+                such as snapshotting and sampler control.
+        """
