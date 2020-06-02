@@ -1,15 +1,15 @@
 """
-This script creates a test that tests functions in garage.tf.misc.tensor_utils.
+Test tf utility functions mainly in garage.tf.misc.tensor_utils
 """
 import numpy as np
 import tensorflow as tf
 
-from garage.tf.misc.tensor_utils import compute_advantages
-from garage.tf.misc.tensor_utils import get_target_ops
+from garage.tf.misc.tensor_utils import compute_advantages, get_target_ops
 from tests.fixtures import TfGraphTestCase
 
 
 class TestTensorUtil(TfGraphTestCase):
+    """Test class for tf utility functions."""
 
     def test_compute_advantages(self):
         """Tests compute_advantages function in utils."""

@@ -51,7 +51,7 @@ def ppo_garage_tf(ctxt, env_id, seed):
                 optimizer_args=dict(
                     batch_size=32,
                     max_epochs=10,
-                    tf_optimizer_args=dict(learning_rate=3e-4),
+                    optimizer_args=dict(learning_rate=3e-4),
                 ),
             ),
         )
@@ -67,7 +67,7 @@ def ppo_garage_tf(ctxt, env_id, seed):
                       optimizer_args=dict(
                           batch_size=32,
                           max_epochs=10,
-                          tf_optimizer_args=dict(learning_rate=3e-4),
+                          optimizer_args=dict(learning_rate=3e-4),
                           verbose=True))
 
         runner.setup(algo, env)

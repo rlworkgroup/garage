@@ -11,6 +11,7 @@ from garage.misc import tensor_utils as np_tensor_utils
 from garage.np.algos import RLAlgorithm
 from garage.sampler import OnPolicyVectorizedSampler
 from garage.tf import paths_to_tensors
+from garage.tf.algos import make_optimizer
 from garage.tf.misc.tensor_utils import center_advs
 from garage.tf.misc.tensor_utils import compile_function
 from garage.tf.misc.tensor_utils import compute_advantages
@@ -139,7 +140,7 @@ class NPO(RLAlgorithm):
         if pg_loss not in ['vanilla', 'surrogate', 'surrogate_clip']:
             raise ValueError('Invalid pg_loss')
 
-        self._optimizer = optimizer(**optimizer_args)
+        self._optimizer = make_optimizer(optimizer, **optimizer_args)
         self._lr_clip_range = float(lr_clip_range)
         self._max_kl_step = float(max_kl_step)
         self._policy_ent_coeff = float(policy_ent_coeff)

@@ -6,6 +6,7 @@ from dowel import logger
 import tensorflow as tf
 
 from garage.np.optimizers import BatchDataset
+from garage.tf.algos import _Default, make_optimizer
 from garage.tf.misc import tensor_utils
 from garage.tf.optimizers.utils import LazyDict
 
@@ -17,8 +18,8 @@ class FirstOrderOptimizer:
     ADAM etc.
 
     Args:
-        tf_optimizer_cls (tf.Optimizer): Optimizer to be used.
-        tf_optimizer_args (dict): Optimizer arguments.
+        optimizer (tf.Optimizer): Optimizer to be used.
+        optimizer_args (dict): Optimizer arguments.
         max_epochs (int): Maximum number of epochs for update.
         tolerance (float): Tolerance for difference in loss during update.
         batch_size (int): Batch size for optimization.
@@ -30,8 +31,8 @@ class FirstOrderOptimizer:
     """
 
     def __init__(self,
-                 tf_optimizer_cls=None,
-                 tf_optimizer_args=None,
+                 optimizer=None,
+                 optimizer_args=None,
                  max_epochs=1000,
                  tolerance=1e-6,
                  batch_size=32,
@@ -41,11 +42,11 @@ class FirstOrderOptimizer:
         self._opt_fun = None
         self._target = None
         self._callback = callback
-        if tf_optimizer_cls is None:
-            tf_optimizer_cls = tf.compat.v1.train.AdamOptimizer
-        if tf_optimizer_args is None:
-            tf_optimizer_args = dict(learning_rate=1e-3)
-        self._tf_optimizer = tf_optimizer_cls(**tf_optimizer_args)
+        if optimizer is None:
+            optimizer = tf.compat.v1.train.AdamOptimizer
+        if optimizer_args is None:
+            optimizer_args = dict(learning_rate=_Default(1e-3))
+        self._tf_optimizer = make_optimizer(optimizer, **optimizer_args)
         self._max_epochs = max_epochs
         self._tolerance = tolerance
         self._batch_size = batch_size

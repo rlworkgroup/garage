@@ -10,6 +10,7 @@ from garage import log_performance, TrajectoryBatch
 from garage.np.algos import RLAlgorithm
 from garage.sampler import OnPolicyVectorizedSampler
 from garage.tf import paths_to_tensors
+from garage.tf.algos import _Default, make_optimizer
 from garage.tf.misc import tensor_utils
 from garage.tf.misc.tensor_utils import flatten_inputs
 from garage.tf.misc.tensor_utils import graph_inputs
@@ -51,7 +52,8 @@ class REPS(RLAlgorithm):  # noqa: D416
         epsilon (float): Dual func parameter.
         l2_reg_dual (float): Coefficient for dual func l2 regularization.
         l2_reg_loss (float): Coefficient for policy loss l2 regularization.
-        optimizer (object): Function optimizer.
+        optimizer (object): The optimizer of the algorithm. Should be the
+            optimizers in garage.tf.optimizers.
         optimizer_args (dict): Arguments of the optimizer.
         dual_optimizer (object): Dual func optimizer.
         dual_optimizer_args (dict): Arguments of the dual optimizer.
@@ -77,7 +79,7 @@ class REPS(RLAlgorithm):  # noqa: D416
                  dual_optimizer=scipy.optimize.fmin_l_bfgs_b,
                  dual_optimizer_args=None,
                  name='REPS'):
-        optimizer_args = optimizer_args or dict(max_opt_itr=50)
+        optimizer_args = optimizer_args or dict(max_opt_itr=_Default(50))
         dual_optimizer_args = dual_optimizer_args or dict(maxiter=50)
 
         self.policy = policy
@@ -103,7 +105,7 @@ class REPS(RLAlgorithm):  # noqa: D416
         self._f_dual_grad = None
         self._f_policy_kl = None
 
-        self._optimizer = optimizer(**optimizer_args)
+        self._optimizer = make_optimizer(optimizer, **optimizer_args)
         self._dual_optimizer = dual_optimizer
         self._dual_optimizer_args = dual_optimizer_args
         self._epsilon = float(epsilon)

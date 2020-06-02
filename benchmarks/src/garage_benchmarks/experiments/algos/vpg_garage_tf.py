@@ -53,7 +53,7 @@ def vpg_garage_tf(ctxt, env_id, seed):
                       max_path_length=hyper_parameters['max_path_length'],
                       discount=hyper_parameters['discount'],
                       center_adv=hyper_parameters['center_adv'],
-                      optimizer_args=dict(tf_optimizer_args=dict(
+                      optimizer_args=dict(optimizer_args=dict(
                           learning_rate=hyper_parameters['learning_rate']),
                                           verbose=True))
 

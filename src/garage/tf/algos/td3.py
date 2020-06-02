@@ -10,6 +10,7 @@ from dowel import logger, tabular
 import numpy as np
 import tensorflow as tf
 
+from garage import _Default, make_optimizer
 from garage.np.algos.off_policy_rl_algorithm import OffPolicyRLAlgorithm
 from garage.replay_buffer import PathBuffer
 from garage.tf.misc import tensor_utils
@@ -77,12 +78,12 @@ class TD3(OffPolicyRLAlgorithm):
             replay_buffer,
             *,  # Everything after this is numbers.
             target_update_tau=0.01,
-            policy_lr=1e-4,
-            qf_lr=1e-3,
             policy_weight_decay=0,
             qf_weight_decay=0,
             policy_optimizer=tf.compat.v1.train.AdamOptimizer,
             qf_optimizer=tf.compat.v1.train.AdamOptimizer,
+            policy_lr=_Default(1e-4),
+            qf_lr=_Default(1e-3),
             clip_pos_returns=False,
             clip_return=np.inf,
             discount=0.99,
@@ -131,6 +132,12 @@ class TD3(OffPolicyRLAlgorithm):
         self._action_loss = None
 
         self.target_qf2 = qf2.clone('target_qf2')
+        self._policy_optimizer = make_optimizer(policy_optimizer,
+                                                learning_rate=policy_lr,
+                                                name='PolicyOptimizer')
+        self._qf_optimizer = make_optimizer(qf_optimizer,
+                                            learning_rate=qf_lr,
+                                            name='QFunctionOptimizer')
 
         super(TD3, self).__init__(env_spec=env_spec,
                                   policy=policy,
@@ -150,15 +157,15 @@ class TD3(OffPolicyRLAlgorithm):
 
     def init_opt(self):
         """Build the loss function and init the optimizer."""
-        with tf.name_scope(self.name):
+        with tf.name_scope(self._name):
             # Create target policy (actor) and qf (critic) networks
             self.target_policy_f_prob_online = tensor_utils.compile_function(
-                inputs=[self.target_policy.model.networks['default'].input],
-                outputs=self.target_policy.model.networks['default'].outputs)
+                inputs=[self._target_policy.model.networks['default'].input],
+                outputs=self._target_policy.model.networks['default'].outputs)
 
             self.target_qf_f_prob_online = tensor_utils.compile_function(
-                inputs=self.target_qf.model.networks['default'].inputs,
-                outputs=self.target_qf.model.networks['default'].outputs)
+                inputs=self._target_qf.model.networks['default'].inputs,
+                outputs=self._target_qf.model.networks['default'].outputs)
 
             self.target_qf2_f_prob_online = tensor_utils.compile_function(
                 inputs=self.target_qf2.model.networks['default'].inputs,
@@ -168,13 +175,13 @@ class TD3(OffPolicyRLAlgorithm):
             with tf.name_scope('setup_target'):
                 policy_init_op, policy_update_op = tensor_utils.get_target_ops(
                     self.policy.get_global_vars(),
-                    self.target_policy.get_global_vars(), self.tau)
+                    self._target_policy.get_global_vars(), self._tau)
                 qf_init_ops, qf_update_ops = tensor_utils.get_target_ops(
                     self.qf.get_global_vars(),
-                    self.target_qf.get_global_vars(), self.tau)
+                    self._target_qf.get_global_vars(), self._tau)
                 qf2_init_ops, qf2_update_ops = tensor_utils.get_target_ops(
                     self.qf2.get_global_vars(),
-                    self.target_qf2.get_global_vars(), self.tau)
+                    self.target_qf2.get_global_vars(), self._tau)
                 target_init_op = policy_init_op + qf_init_ops + qf2_init_ops
                 target_update_op = (policy_update_op + qf_update_ops +
                                     qf2_update_ops)
@@ -206,9 +213,8 @@ class TD3(OffPolicyRLAlgorithm):
                 action_loss = -tf.reduce_mean(next_qval)
 
             with tf.name_scope('minimize_action_loss'):
-                policy_train_op = self.policy_optimizer(
-                    self.policy_lr, name='PolicyOptimizer').minimize(
-                        action_loss, var_list=self.policy.get_trainable_vars())
+                policy_train_op = self._policy_optimizer.minimize(
+                    action_loss, var_list=self.policy.get_trainable_vars())
 
             f_train_policy = tensor_utils.compile_function(
                 inputs=[obs], outputs=[policy_train_op, action_loss])
@@ -224,12 +230,10 @@ class TD3(OffPolicyRLAlgorithm):
                     tf.math.squared_difference(y, q2val))
 
             with tf.name_scope('minimize_qf_loss'):
-                qf_train_op = self.qf_optimizer(
-                    self.qf_lr, name='QFunctionOptimizer').minimize(
-                        qval1_loss, var_list=self.qf.get_trainable_vars())
-                qf2_train_op = self.qf_optimizer(
-                    self.qf_lr, name='QFunctionOptimizer').minimize(
-                        qval2_loss, var_list=self.qf2.get_trainable_vars())
+                qf_train_op = self._qf_optimizer.minimize(
+                    qval1_loss, var_list=self.qf.get_trainable_vars())
+                qf2_train_op = self._qf_optimizer.minimize(
+                    qval2_loss, var_list=self.qf2.get_trainable_vars())
 
             f_train_qf = tensor_utils.compile_function(
                 inputs=[y, obs, actions],

@@ -1,4 +1,6 @@
 """Tensorflow implementation of reinforcement learning algorithms."""
+from garage.tf.algos._utils import _Default  # noqa: F401
+from garage.tf.algos._utils import make_optimizer  # noqa: F401
 from garage.tf.algos.ddpg import DDPG
 from garage.tf.algos.dqn import DQN
 from garage.tf.algos.erwr import ERWR
