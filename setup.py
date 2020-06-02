@@ -12,7 +12,7 @@ REQUIRED = [
     # Please keep alphabetized
     'akro',
     'cached_property',
-    'click',
+    'click>=2.0',
     'cloudpickle',
     'cma==2.7.0',
     'dowel==0.0.3',
@@ -24,7 +24,6 @@ REQUIRED = [
     # gym environments
     # See: https://github.com/openai/gym/issues/1588
     'pyglet<1.4.0,>=1.3.0',
-    'pyprind',
     'python-dateutil',
     'ray',
     'scikit-image',

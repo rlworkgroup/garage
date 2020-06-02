@@ -1,12 +1,13 @@
+# flake8: noqa
+# pylint: skip-file
 import inspect
 import multiprocessing as mp
 import sys
 import time
 import traceback
 
+import click
 from joblib.pool import MemmappingPool
-
-from garage.misc.prog_bar_counter import ProgBarCounter
 
 
 class SharedGlobal:
@@ -14,6 +15,7 @@ class SharedGlobal:
 
 
 class StatefulPool:
+
     def __init__(self):
         self.n_parallel = 1
         self.pool = None
@@ -66,8 +68,9 @@ class StatefulPool:
             args_list = [tuple()] * self.n_parallel
         assert len(args_list) == self.n_parallel
         if self.n_parallel > 1:
-            results = self.pool.map_async(
-                _worker_run_each, [(runner, args) for args in args_list])
+            results = self.pool.map_async(_worker_run_each,
+                                          [(runner, args)
+                                           for args in args_list])
             for i in range(self.n_parallel):
                 self.worker_queue.get()
             for i in range(self.n_parallel):
@@ -98,8 +101,9 @@ class StatefulPool:
             'garage.sampler.stateful_pool.SharedGlobal')
 
         if self.n_parallel > 1:
-            for x in self.pool.imap_unordered(
-                    _worker_run_map, [(runner, args) for args in args_list]):
+            for x in self.pool.imap_unordered(_worker_run_map,
+                                              [(runner, args)
+                                               for args in args_list]):
                 yield x
         else:
             for args in args_list:
@@ -139,40 +143,40 @@ class StatefulPool:
 
         if args is None:
             args = tuple()
-        if self.pool:
-            counter = self.manager.Value('i', 0)
-            lock = self.manager.RLock()
-            results = self.pool.map_async(_worker_run_collect, [
-                (collect_once, counter, lock, threshold, args)
-            ] * self.n_parallel)
-            if show_prog_bar:
-                pbar = ProgBarCounter(threshold)
-            last_value = 0
-            while True:
-                time.sleep(0.1)
-                with lock:
-                    if counter.value >= threshold:
-                        if show_prog_bar:
-                            pbar.stop()
-                        break
-                    if show_prog_bar:
-                        pbar.inc(counter.value - last_value)
-                    last_value = counter.value
-            return sum(results.get(), [])
-        else:
-            count = 0
-            results = []
-            if show_prog_bar:
-                pbar = ProgBarCounter(threshold)
-            while count < threshold:
-                result, inc = collect_once(self.G, *args)
-                results.append(result)
-                count += inc
-                if show_prog_bar:
-                    pbar.inc(inc)
-            if show_prog_bar:
-                pbar.stop()
-            return results
+
+        with click.progressbar(length=threshold, label='Sampling') as pbar:
+            if self.pool:
+                counter = self.manager.Value('i', 0)
+                lock = self.manager.RLock()
+                results = self.pool.map_async(
+                    _worker_run_collect,
+                    [(collect_once, counter, lock, threshold, args)] *
+                    self.n_parallel)
+
+                last_value = 0
+                while True:
+                    time.sleep(0.1)
+
+                    with lock:
+                        pbar.update(counter.value - last_value)
+                        if counter.value >= threshold:
+                            break
+
+                        last_value = counter.value
+
+                return sum(results.get(), [])
+            else:
+                count = 0
+                results = []
+
+                while count < threshold:
+                    result, inc = collect_once(self.G, *args)
+                    results.append(result)
+                    count += inc
+                    pbar.update(inc)
+
+                return results
+
         return []
 
 
