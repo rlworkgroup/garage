@@ -1,18 +1,24 @@
 """Relative Entropy Policy Search implementation in Tensorflow."""
+import collections
+
 from dowel import logger, tabular
 import numpy as np
 import scipy.optimize
 import tensorflow as tf
 
-from garage.tf.algos.batch_polopt import BatchPolopt
+from garage import log_performance, TrajectoryBatch
+from garage.np.algos import RLAlgorithm
+from garage.sampler import OnPolicyVectorizedSampler
+from garage.tf import _functions
 from garage.tf.misc import tensor_utils
 from garage.tf.misc.tensor_utils import flatten_inputs
 from garage.tf.misc.tensor_utils import graph_inputs
 from garage.tf.optimizers import LbfgsOptimizer
+from garage.tf.samplers import BatchSampler
 
 
 # pylint: disable=differing-param-doc, differing-type-doc
-class REPS(BatchPolopt):  # noqa: D416
+class REPS(RLAlgorithm):  # noqa: D416
     """Relative Entropy Policy Search.
 
     References
@@ -74,6 +80,18 @@ class REPS(BatchPolopt):  # noqa: D416
         optimizer_args = optimizer_args or dict(max_opt_itr=50)
         dual_optimizer_args = dual_optimizer_args or dict(maxiter=50)
 
+        self.policy = policy
+        self.max_path_length = max_path_length
+
+        self._env_spec = env_spec
+        self._baseline = baseline
+        self._discount = discount
+        self._gae_lambda = gae_lambda
+        self._center_adv = center_adv
+        self._positive_adv = positive_adv
+        self._fixed_horizon = fixed_horizon
+        self._flatten_input = True
+
         self._name = name
         self._name_scope = tf.name_scope(self._name)
         self._old_policy = policy.clone('old_policy')
@@ -92,15 +110,13 @@ class REPS(BatchPolopt):  # noqa: D416
         self._l2_reg_dual = float(l2_reg_dual)
         self._l2_reg_loss = float(l2_reg_loss)
 
-        super(REPS, self).__init__(env_spec=env_spec,
-                                   policy=policy,
-                                   baseline=baseline,
-                                   max_path_length=max_path_length,
-                                   discount=discount,
-                                   gae_lambda=gae_lambda,
-                                   center_adv=center_adv,
-                                   positive_adv=positive_adv,
-                                   fixed_horizon=fixed_horizon)
+        self._episode_reward_mean = collections.deque(maxlen=100)
+        if policy.vectorized:
+            self.sampler_cls = OnPolicyVectorizedSampler
+        else:
+            self.sampler_cls = BatchSampler
+
+        self.init_opt()
 
     def init_opt(self):
         """Initialize the optimization procedure."""
@@ -113,6 +129,105 @@ class REPS(BatchPolopt):  # noqa: D416
                                    target=self.policy,
                                    inputs=flatten_inputs(
                                        self._policy_opt_inputs))
+
+    def train(self, runner):
+        """Obtain samplers and start actual training for each epoch.
+
+        Args:
+            runner (LocalRunner): LocalRunner is passed to give algorithm
+                the access to runner.step_epochs(), which provides services
+                such as snapshotting and sampler control.
+
+        Returns:
+            float: The average return in last epoch cycle.
+
+        """
+        last_return = None
+
+        for _ in runner.step_epochs():
+            runner.step_path = runner.obtain_samples(runner.step_itr)
+            last_return = self.train_once(runner.step_itr, runner.step_path)
+            runner.step_itr += 1
+
+        return last_return
+
+    def train_once(self, itr, paths):
+        """Perform one step of policy optimization given one batch of samples.
+
+        Args:
+            itr (int): Iteration number.
+            paths (list[dict]): A list of collected paths.
+
+        Returns:
+            numpy.float64: Average return.
+
+        """
+        # -- Stage: Calculate baseline
+        if self._flatten_input:
+            paths = [
+                dict(
+                    observations=(self._env_spec.observation_space.flatten_n(
+                        path['observations'])),
+                    actions=(
+                        self._env_spec.action_space.flatten_n(  # noqa: E126
+                            path['actions'])),
+                    rewards=path['rewards'],
+                    env_infos=path['env_infos'],
+                    agent_infos=path['agent_infos'],
+                    dones=path['dones']) for path in paths
+            ]
+        else:
+            paths = [
+                dict(
+                    observations=path['observations'],
+                    actions=(
+                        self._env_spec.action_space.flatten_n(  # noqa: E126
+                            path['actions'])),
+                    rewards=path['rewards'],
+                    env_infos=path['env_infos'],
+                    agent_infos=path['agent_infos'],
+                    dones=path['dones']) for path in paths
+            ]
+
+        if hasattr(self._baseline, 'predict_n'):
+            baseline_predictions = self._baseline.predict_n(paths)
+        else:
+            baseline_predictions = [
+                self._baseline.predict(path) for path in paths
+            ]
+
+        # -- Stage: Pre-process samples based on collected paths
+        samples_data = _functions.paths_to_tensors(paths, self.max_path_length,
+                                                   baseline_predictions,
+                                                   self._discount,
+                                                   self._gae_lambda)
+
+        # -- Stage: Run and calculate performance of the algorithm
+        undiscounted_returns = log_performance(
+            itr,
+            TrajectoryBatch.from_trajectory_list(self._env_spec, paths),
+            discount=self._discount)
+        self._episode_reward_mean.extend(undiscounted_returns)
+        tabular.record('Extras/EpisodeRewardMean',
+                       np.mean(self._episode_reward_mean))
+
+        samples_data['average_return'] = np.mean(undiscounted_returns)
+
+        self.log_diagnostics(samples_data)
+        logger.log('Optimizing policy...')
+        self.optimize_policy(itr, samples_data)
+        return samples_data['average_return']
+
+    def log_diagnostics(self, paths):
+        """Log diagnostic information.
+
+        Args:
+            paths (list[dict]): A list of collected paths.
+
+        """
+        logger.log('Logging diagnostics...')
+        self.policy.log_diagnostics(paths)
+        self._baseline.log_diagnostics(paths)
 
     def __getstate__(self):
         """Parameters to save in snapshot.
@@ -141,6 +256,7 @@ class REPS(BatchPolopt):  # noqa: D416
         self._name_scope = tf.name_scope(self._name)
         self.init_opt()
 
+    # pylint: disable=unused-argument
     def optimize_policy(self, itr, samples_data):
         """Optimize the policy using the samples.
 
@@ -247,41 +363,41 @@ class REPS(BatchPolopt):  # noqa: D416
         with tf.name_scope('inputs'):
             obs_var = observation_space.to_tf_placeholder(
                 name='obs',
-                batch_dims=2)   # yapf: disable
+                batch_dims=2)  # yapf: disable
             action_var = action_space.to_tf_placeholder(
                 name='action',
-                batch_dims=2)   # yapf: disable
+                batch_dims=2)  # yapf: disable
             reward_var = tensor_utils.new_tensor(
                 name='reward',
                 ndim=2,
-                dtype=tf.float32)   # yapf: disable
+                dtype=tf.float32)  # yapf: disable
             valid_var = tensor_utils.new_tensor(
                 name='valid',
                 ndim=2,
-                dtype=tf.float32)   # yapf: disable
+                dtype=tf.float32)  # yapf: disable
             feat_diff = tensor_utils.new_tensor(
                 name='feat_diff',
                 ndim=2,
-                dtype=tf.float32)   # yapf: disable
+                dtype=tf.float32)  # yapf: disable
             param_v = tensor_utils.new_tensor(
                 name='param_v',
                 ndim=1,
-                dtype=tf.float32)   # yapf: disable
+                dtype=tf.float32)  # yapf: disable
             param_eta = tensor_utils.new_tensor(
                 name='param_eta',
                 ndim=0,
-                dtype=tf.float32)   # yapf: disable
+                dtype=tf.float32)  # yapf: disable
             policy_state_info_vars = {
                 k: tf.compat.v1.placeholder(
                     tf.float32,
                     shape=[None] * 2 + list(shape),
                     name=k)
                 for k, shape in self.policy.state_info_specs
-            }   # yapf: disable
+            }  # yapf: disable
             policy_state_info_vars_list = [
                 policy_state_info_vars[k]
                 for k in self.policy.state_info_keys
-            ]   # yapf: disable
+            ]  # yapf: disable
 
         self.policy.build(obs_var)
         self._old_policy.build(obs_var)
@@ -340,7 +456,7 @@ class REPS(BatchPolopt):  # noqa: D416
         # Initialize dual params
         self._param_eta = 15.
         self._param_v = np.random.rand(
-            self.env_spec.observation_space.flat_dim * 2 + 4)
+            self._env_spec.observation_space.flat_dim * 2 + 4)
 
         with tf.name_scope('bellman_error'):
             delta_v = tf.boolean_mask(i.reward_var,
@@ -410,7 +526,7 @@ class REPS(BatchPolopt):  # noqa: D416
         policy_state_info_list = [
             samples_data['agent_infos'][k]
             for k in self.policy.state_info_keys
-        ]   # yapf: disable
+        ]  # yapf: disable
 
         # pylint: disable=unexpected-keyword-arg
         dual_opt_input_values = self._dual_opt_inputs._replace(
@@ -438,7 +554,7 @@ class REPS(BatchPolopt):  # noqa: D416
         policy_state_info_list = [
             samples_data['agent_infos'][k]
             for k in self.policy.state_info_keys
-        ]   # yapf: disable
+        ]  # yapf: disable
 
         # pylint: disable=unexpected-keyword-arg
         policy_opt_input_values = self._policy_opt_inputs._replace(
@@ -469,8 +585,8 @@ class REPS(BatchPolopt):  # noqa: D416
         feat_diff = []
         for path in paths:
             o = np.clip(path['observations'],
-                        self.env_spec.observation_space.low,
-                        self.env_spec.observation_space.high)
+                        self._env_spec.observation_space.low,
+                        self._env_spec.observation_space.high)
             lr = len(path['rewards'])
             al = np.arange(lr).reshape(-1, 1) / self.max_path_length
             feats = np.concatenate(

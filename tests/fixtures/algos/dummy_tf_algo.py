@@ -1,8 +1,8 @@
 """Dummy algorithm."""
-from garage.tf.algos import BatchPolopt
+from garage.np.algos import RLAlgorithm
 
 
-class DummyTFAlgo(BatchPolopt):
+class DummyTFAlgo(RLAlgorithm):
     """Dummy algorithm."""
 
     def init_opt(self):

@@ -1,11 +1,16 @@
 """Natural Policy Gradient Optimization."""
 # pylint: disable=wrong-import-order
+import collections
+
 from dowel import logger, tabular
 import numpy as np
 import tensorflow as tf
 
+from garage import log_performance, TrajectoryBatch
 from garage.misc import tensor_utils as np_tensor_utils
-from garage.tf.algos.batch_polopt import BatchPolopt
+from garage.np.algos import RLAlgorithm
+from garage.sampler import OnPolicyVectorizedSampler
+from garage.tf import _functions
 from garage.tf.misc.tensor_utils import center_advs
 from garage.tf.misc.tensor_utils import compile_function
 from garage.tf.misc.tensor_utils import compute_advantages
@@ -14,9 +19,10 @@ from garage.tf.misc.tensor_utils import flatten_inputs
 from garage.tf.misc.tensor_utils import graph_inputs
 from garage.tf.misc.tensor_utils import positive_advs
 from garage.tf.optimizers import LbfgsOptimizer
+from garage.tf.samplers import BatchSampler
 
 
-class NPO(BatchPolopt):
+class NPO(RLAlgorithm):
     """Natural Policy Gradient Optimization.
 
     Args:
@@ -101,6 +107,18 @@ class NPO(BatchPolopt):
                  entropy_method='no_entropy',
                  flatten_input=True,
                  name='NPO'):
+        self.policy = policy
+        self.scope = scope
+        self.max_path_length = max_path_length
+
+        self._env_spec = env_spec
+        self._baseline = baseline
+        self._discount = discount
+        self._gae_lambda = gae_lambda
+        self._center_adv = center_adv
+        self._positive_adv = positive_adv
+        self._fixed_horizon = fixed_horizon
+        self._flatten_input = flatten_input
         self._name = name
         self._name_scope = tf.name_scope(self._name)
         self._old_policy = policy.clone('old_policy')
@@ -131,17 +149,13 @@ class NPO(BatchPolopt):
         self._f_policy_kl = None
         self._f_policy_entropy = None
 
-        super().__init__(env_spec=env_spec,
-                         policy=policy,
-                         baseline=baseline,
-                         scope=scope,
-                         max_path_length=max_path_length,
-                         discount=discount,
-                         gae_lambda=gae_lambda,
-                         center_adv=center_adv,
-                         positive_adv=positive_adv,
-                         fixed_horizon=fixed_horizon,
-                         flatten_input=flatten_input)
+        self._episode_reward_mean = collections.deque(maxlen=100)
+        if policy.vectorized:
+            self.sampler_cls = OnPolicyVectorizedSampler
+        else:
+            self.sampler_cls = BatchSampler
+
+        self.init_opt()
 
     def init_opt(self):
         """Initialize optimizater."""
@@ -156,13 +170,101 @@ class NPO(BatchPolopt):
                                        self._policy_opt_inputs),
                                    constraint_name='mean_kl')
 
+    def train(self, runner):
+        """Obtain samplers and start actual training for each epoch.
+
+        Args:
+            runner (LocalRunner): LocalRunner is passed to give algorithm
+                the access to runner.step_epochs(), which provides services
+                such as snapshotting and sampler control.
+
+        Returns:
+            float: The average return in last epoch cycle.
+
+        """
+        last_return = None
+
+        for _ in runner.step_epochs():
+            runner.step_path = runner.obtain_samples(runner.step_itr)
+            last_return = self.train_once(runner.step_itr, runner.step_path)
+            runner.step_itr += 1
+
+        return last_return
+
+    def train_once(self, itr, paths):
+        """Perform one step of policy optimization given one batch of samples.
+
+        Args:
+            itr (int): Iteration number.
+            paths (list[dict]): A list of collected paths.
+
+        Returns:
+            numpy.float64: Average return.
+
+        """
+        # -- Stage: Calculate baseline
+        paths = [
+            dict(
+                observations=self._env_spec.observation_space.flatten_n(
+                    path['observations'])
+                if self._flatten_input else path['observations'],
+                actions=(
+                    self._env_spec.action_space.flatten_n(  # noqa: E126
+                        path['actions'])),
+                rewards=path['rewards'],
+                env_infos=path['env_infos'],
+                agent_infos=path['agent_infos'],
+                dones=path['dones']) for path in paths
+        ]
+
+        if hasattr(self._baseline, 'predict_n'):
+            baseline_predictions = self._baseline.predict_n(paths)
+        else:
+            baseline_predictions = [
+                self._baseline.predict(path) for path in paths
+            ]
+
+        # -- Stage: Pre-process samples based on collected paths
+        samples_data = _functions.paths_to_tensors(paths, self.max_path_length,
+                                                   baseline_predictions,
+                                                   self._discount,
+                                                   self._gae_lambda)
+
+        # -- Stage: Run and calculate performance of the algorithm
+        undiscounted_returns = log_performance(
+            itr,
+            TrajectoryBatch.from_trajectory_list(self._env_spec, paths),
+            discount=self._discount)
+        self._episode_reward_mean.extend(undiscounted_returns)
+        tabular.record('Extras/EpisodeRewardMean',
+                       np.mean(self._episode_reward_mean))
+
+        samples_data['average_return'] = np.mean(undiscounted_returns)
+
+        self.log_diagnostics(samples_data)
+        logger.log('Optimizing policy...')
+        self.optimize_policy(itr, samples_data)
+        return samples_data['average_return']
+
+    def log_diagnostics(self, paths):
+        """Log diagnostic information.
+
+        Args:
+            paths (list[dict]): A list of collected paths.
+
+        """
+        logger.log('Logging diagnostics...')
+        self.policy.log_diagnostics(paths)
+        self._baseline.log_diagnostics(paths)
+
+    # pylint: disable=unused-argument
     def optimize_policy(self, itr, samples_data):
         """Optimize policy.
 
         Args:
             itr (int): Iteration number.
             samples_data (dict): Processed sample data.
-                See process_samples() for details.
+                See _functions.paths_to_tensors() for details.
 
         """
         policy_opt_input_values = self._policy_opt_input_values(samples_data)
@@ -193,7 +295,7 @@ class NPO(BatchPolopt):
                                                    samples_data['returns'],
                                                    samples_data['valids'])
 
-        tabular.record('{}/ExplainedVariance'.format(self.baseline.name), ev)
+        tabular.record('{}/ExplainedVariance'.format(self._baseline.name), ev)
         self._old_policy.model.parameters = self.policy.model.parameters
 
     def _build_inputs(self):
@@ -208,7 +310,7 @@ class NPO(BatchPolopt):
         action_space = self.policy.action_space
 
         with tf.name_scope('inputs'):
-            if self.flatten_input:
+            if self._flatten_input:
                 obs_var = tf.compat.v1.placeholder(
                     tf.float32,
                     shape=[None, None, observation_space.flat_dim],
@@ -292,8 +394,8 @@ class NPO(BatchPolopt):
                                           policy_entropy)
 
         with tf.name_scope('policy_loss'):
-            adv = compute_advantages(self.discount,
-                                     self.gae_lambda,
+            adv = compute_advantages(self._discount,
+                                     self._gae_lambda,
                                      self.max_path_length,
                                      i.baseline_var,
                                      rewards,
@@ -302,10 +404,10 @@ class NPO(BatchPolopt):
             adv = tf.reshape(adv, [-1, self.max_path_length])
             # Optionally normalize advantages
             eps = tf.constant(1e-8, dtype=tf.float32)
-            if self.center_adv:
+            if self._center_adv:
                 adv = center_advs(adv, axes=[0], eps=eps)
 
-            if self.positive_adv:
+            if self._positive_adv:
                 adv = positive_advs(adv, eps)
 
             with tf.name_scope('kl'):
@@ -358,7 +460,7 @@ class NPO(BatchPolopt):
             self._f_rewards = tf.compat.v1.get_default_session().make_callable(
                 rewards, feed_list=flatten_inputs(self._policy_opt_inputs))
 
-            returns = discounted_returns(self.discount, self.max_path_length,
+            returns = discounted_returns(self._discount, self.max_path_length,
                                          rewards)
             self._f_returns = tf.compat.v1.get_default_session().make_callable(
                 returns, feed_list=flatten_inputs(self._policy_opt_inputs))
@@ -404,7 +506,7 @@ class NPO(BatchPolopt):
 
         Args:
             samples_data (dict): Processed sample data.
-                See process_samples() for details.
+                See _functions.paths_to_tensors() for details.
 
         """
         policy_opt_input_values = self._policy_opt_input_values(samples_data)
@@ -433,14 +535,14 @@ class NPO(BatchPolopt):
 
         # Fit baseline
         logger.log('Fitting baseline...')
-        self.baseline.fit(paths)
+        self._baseline.fit(paths)
 
     def _policy_opt_input_values(self, samples_data):
         """Map rollout samples to the policy optimizer inputs.
 
         Args:
             samples_data (dict): Processed sample data.
-                See process_samples() for details.
+                See _functions.paths_to_tensors() for details.
 
         Returns:
             list(np.ndarray): Flatten policy optimization input values.
