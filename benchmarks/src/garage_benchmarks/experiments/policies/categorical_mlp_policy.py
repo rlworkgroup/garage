@@ -3,11 +3,10 @@ import gym
 import tensorflow as tf
 
 from garage import wrap_experiment
-from garage.envs import normalize
+from garage.envs import GarageEnv, normalize
 from garage.experiment import deterministic
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import PPO
-from garage.tf.envs import TfEnv
 from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import CategoricalMLPPolicy
 
@@ -27,7 +26,7 @@ def categorical_mlp_policy(ctxt, env_id, seed):
     deterministic.set_seed(seed)
 
     with LocalTFRunner(ctxt, max_cpus=12) as runner:
-        env = TfEnv(normalize(gym.make(env_id)))
+        env = GarageEnv(normalize(gym.make(env_id)))
 
         policy = CategoricalMLPPolicy(
             env_spec=env.spec,

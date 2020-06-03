@@ -3,12 +3,11 @@ import gym
 import tensorflow as tf
 
 from garage import wrap_experiment
-from garage.envs import normalize
+from garage.envs import GarageEnv, normalize
 from garage.experiment import deterministic
 from garage.np.exploration_policies import AddOrnsteinUhlenbeckNoise
 from garage.replay_buffer import PathBuffer
 from garage.tf.algos import DDPG
-from garage.tf.envs import TfEnv
 from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import ContinuousMLPPolicy
 from garage.tf.q_functions import ContinuousMLPQFunction
@@ -44,7 +43,7 @@ def ddpg_garage_tf(ctxt, env_id, seed):
     deterministic.set_seed(seed)
 
     with LocalTFRunner(ctxt) as runner:
-        env = TfEnv(normalize(gym.make(env_id)))
+        env = GarageEnv(normalize(gym.make(env_id)))
 
         policy = ContinuousMLPPolicy(
             env_spec=env.spec,

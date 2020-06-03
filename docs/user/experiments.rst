@@ -32,10 +32,10 @@ simple one, :code:`examples/tf/trpo_cartpole.py`, is also pasted below:
 .. code-block:: python
 
   from garage import wrap_experiment
+  from garage.envs import GarageEnv
   from garage.experiment.deterministic import set_seed
   from garage.np.baselines import LinearFeatureBaseline
   from garage.tf.algos import TRPO
-  from garage.tf.envs import TfEnv
   from garage.tf.experiment import LocalTFRunner
   from garage.tf.policies import CategoricalMLPPolicy
 
@@ -53,7 +53,7 @@ simple one, :code:`examples/tf/trpo_cartpole.py`, is also pasted below:
       """
       set_seed(seed)
       with LocalTFRunner(ctxt) as runner:
-          env = TfEnv(env_name='CartPole-v1')
+          env = GarageEnv(env_name='CartPole-v1')
 
           policy = CategoricalMLPPolicy(name='policy',
                                         env_spec=env.spec,

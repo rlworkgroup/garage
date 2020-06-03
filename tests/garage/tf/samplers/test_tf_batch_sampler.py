@@ -1,8 +1,8 @@
 import pytest
 
+from garage.envs import GarageEnv
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import VPG
-from garage.tf.envs import TfEnv
 from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import CategoricalMLPPolicy
 from garage.tf.samplers import BatchSampler
@@ -19,7 +19,7 @@ class TestTFSampler:
     def test_tf_batch_sampler(self):
         max_cpus = 8
         with LocalTFRunner(snapshot_config, max_cpus=max_cpus) as runner:
-            env = TfEnv(env_name='CartPole-v1')
+            env = GarageEnv(env_name='CartPole-v1')
 
             policy = CategoricalMLPPolicy(name='policy',
                                           env_spec=env.spec,

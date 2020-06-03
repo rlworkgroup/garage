@@ -6,10 +6,9 @@ import gym
 import pytest
 import tensorflow as tf
 
-from garage.envs import normalize
+from garage.envs import GarageEnv, normalize
 from garage.tf.algos import NPO
 from garage.tf.baselines import GaussianMLPBaseline
-from garage.tf.envs import TfEnv
 from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import GaussianMLPPolicy
 from tests.fixtures import snapshot_config, TfGraphTestCase
@@ -19,7 +18,7 @@ class TestNPO(TfGraphTestCase):
 
     def setup_method(self):
         super().setup_method()
-        self.env = TfEnv(normalize(gym.make('InvertedDoublePendulum-v2')))
+        self.env = GarageEnv(normalize(gym.make('InvertedDoublePendulum-v2')))
         self.policy = GaussianMLPPolicy(
             env_spec=self.env.spec,
             hidden_sizes=(64, 64),

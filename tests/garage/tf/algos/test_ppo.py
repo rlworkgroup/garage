@@ -6,12 +6,11 @@ import gym
 import pytest
 import tensorflow as tf
 
-from garage.envs import normalize
+from garage.envs import GarageEnv, normalize
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import PPO
 from garage.tf.baselines import ContinuousMLPBaseline
 from garage.tf.baselines import GaussianMLPBaseline
-from garage.tf.envs import TfEnv
 from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import CategoricalMLPPolicy
 from garage.tf.policies import GaussianGRUPolicy
@@ -25,7 +24,7 @@ class TestPPO(TfGraphTestCase):
 
     def setup_method(self):
         super().setup_method()
-        self.env = TfEnv(normalize(gym.make('InvertedDoublePendulum-v2')))
+        self.env = GarageEnv(normalize(gym.make('InvertedDoublePendulum-v2')))
         self.policy = GaussianMLPPolicy(
             env_spec=self.env.spec,
             hidden_sizes=(64, 64),
@@ -143,7 +142,7 @@ class TestPPO(TfGraphTestCase):
     def test_ppo_pendulum_flatten_input(self):
         """Test PPO with CartPole to test observation flattening."""
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
-            env = TfEnv(
+            env = GarageEnv(
                 normalize(ReshapeObservation(gym.make('CartPole-v1'), (2, 2))))
             policy = CategoricalMLPPolicy(
                 env_spec=env.spec,
@@ -178,7 +177,7 @@ class TestPPOContinuousBaseline(TfGraphTestCase):
     def test_ppo_pendulum_continuous_baseline(self):
         """Test PPO with Pendulum environment."""
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
-            env = TfEnv(normalize(gym.make('InvertedDoublePendulum-v2')))
+            env = GarageEnv(normalize(gym.make('InvertedDoublePendulum-v2')))
             policy = GaussianMLPPolicy(
                 env_spec=env.spec,
                 hidden_sizes=(64, 64),
@@ -216,7 +215,7 @@ class TestPPOContinuousBaseline(TfGraphTestCase):
     def test_ppo_pendulum_recurrent_continuous_baseline(self):
         """Test PPO with Pendulum environment and recurrent policy."""
         with LocalTFRunner(snapshot_config) as runner:
-            env = TfEnv(normalize(gym.make('InvertedDoublePendulum-v2')))
+            env = GarageEnv(normalize(gym.make('InvertedDoublePendulum-v2')))
             policy = GaussianLSTMPolicy(env_spec=env.spec, )
             baseline = ContinuousMLPBaseline(
                 env_spec=env.spec,
@@ -252,7 +251,7 @@ class TestPPOPendulumLSTM(TfGraphTestCase):
     def test_ppo_pendulum_lstm(self):
         """Test PPO with Pendulum environment and recurrent policy."""
         with LocalTFRunner(snapshot_config) as runner:
-            env = TfEnv(normalize(gym.make('InvertedDoublePendulum-v2')))
+            env = GarageEnv(normalize(gym.make('InvertedDoublePendulum-v2')))
             lstm_policy = GaussianLSTMPolicy(env_spec=env.spec)
             baseline = GaussianMLPBaseline(
                 env_spec=env.spec,
@@ -286,7 +285,7 @@ class TestPPOPendulumGRU(TfGraphTestCase):
     def test_ppo_pendulum_gru(self):
         """Test PPO with Pendulum environment and recurrent policy."""
         with LocalTFRunner(snapshot_config) as runner:
-            env = TfEnv(normalize(gym.make('InvertedDoublePendulum-v2')))
+            env = GarageEnv(normalize(gym.make('InvertedDoublePendulum-v2')))
             gru_policy = GaussianGRUPolicy(env_spec=env.spec)
             baseline = GaussianMLPBaseline(
                 env_spec=env.spec,

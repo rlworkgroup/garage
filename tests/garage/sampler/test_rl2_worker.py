@@ -1,5 +1,5 @@
+from garage.envs import GarageEnv
 from garage.tf.algos.rl2 import RL2Worker
-from garage.tf.envs import TfEnv
 from tests.fixtures import TfGraphTestCase
 from tests.fixtures.envs.dummy import DummyBoxEnv
 from tests.fixtures.policies import DummyPolicy
@@ -8,7 +8,7 @@ from tests.fixtures.policies import DummyPolicy
 class TestRL2Worker(TfGraphTestCase):
 
     def test_rl2_worker(self):
-        env = TfEnv(DummyBoxEnv(obs_dim=(1, )))
+        env = GarageEnv(DummyBoxEnv(obs_dim=(1, )))
         policy = DummyPolicy(env_spec=env.spec)
         worker = RL2Worker(seed=1,
                            max_path_length=100,

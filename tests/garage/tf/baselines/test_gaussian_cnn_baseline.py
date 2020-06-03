@@ -5,9 +5,9 @@ import numpy as np
 import pytest
 import tensorflow as tf
 
+from garage.envs import GarageEnv
 from garage.misc.tensor_utils import normalize_pixel_batch
 from garage.tf.baselines import GaussianCNNBaseline
-from garage.tf.envs import TfEnv
 from tests.fixtures import TfGraphTestCase
 from tests.fixtures.envs.dummy import DummyBoxEnv
 from tests.fixtures.envs.dummy import DummyDiscretePixelEnv
@@ -18,7 +18,7 @@ class TestGaussianCNNBaseline(TfGraphTestCase):
 
     @pytest.mark.parametrize('obs_dim', [[1, 1, 1], [2, 2, 2], [1, 1], [2, 2]])
     def test_fit(self, obs_dim):
-        box_env = TfEnv(DummyBoxEnv(obs_dim=obs_dim))
+        box_env = GarageEnv(DummyBoxEnv(obs_dim=obs_dim))
         with mock.patch(('garage.tf.baselines.'
                          'gaussian_cnn_baseline.'
                          'GaussianCNNRegressor'),
@@ -39,12 +39,12 @@ class TestGaussianCNNBaseline(TfGraphTestCase):
 
     @pytest.mark.parametrize('obs_dim', [[1], [2], [1, 1, 1, 1], [2, 2, 2, 2]])
     def test_invalid_obs_shape(self, obs_dim):
-        box_env = TfEnv(DummyBoxEnv(obs_dim=obs_dim))
+        box_env = GarageEnv(DummyBoxEnv(obs_dim=obs_dim))
         with pytest.raises(ValueError):
             GaussianCNNBaseline(env_spec=box_env.spec)
 
     def test_obs_is_image(self):
-        env = TfEnv(DummyDiscretePixelEnv(), is_image=True)
+        env = GarageEnv(DummyDiscretePixelEnv(), is_image=True)
         with mock.patch(('garage.tf.baselines.'
                          'gaussian_cnn_baseline.'
                          'GaussianCNNRegressor'),
@@ -83,7 +83,7 @@ class TestGaussianCNNBaseline(TfGraphTestCase):
                 assert npb.call_args_list[1][0][0] == observations
 
     def test_obs_not_image(self):
-        env = TfEnv(DummyDiscretePixelEnv(), is_image=False)
+        env = GarageEnv(DummyDiscretePixelEnv(), is_image=False)
         with mock.patch(('garage.tf.baselines.'
                          'gaussian_cnn_baseline.'
                          'GaussianCNNRegressor'),
@@ -115,7 +115,7 @@ class TestGaussianCNNBaseline(TfGraphTestCase):
 
     @pytest.mark.parametrize('obs_dim', [[1, 1, 1], [2, 2, 2], [1, 1], [2, 2]])
     def test_param_values(self, obs_dim):
-        box_env = TfEnv(DummyBoxEnv(obs_dim=obs_dim))
+        box_env = GarageEnv(DummyBoxEnv(obs_dim=obs_dim))
         with mock.patch(('garage.tf.baselines.'
                          'gaussian_cnn_baseline.'
                          'GaussianCNNRegressor'),
@@ -139,7 +139,7 @@ class TestGaussianCNNBaseline(TfGraphTestCase):
 
     @pytest.mark.parametrize('obs_dim', [[1, 1, 1], [2, 2, 2], [1, 1], [2, 2]])
     def test_get_params_internal(self, obs_dim):
-        box_env = TfEnv(DummyBoxEnv(obs_dim=obs_dim))
+        box_env = GarageEnv(DummyBoxEnv(obs_dim=obs_dim))
         with mock.patch(('garage.tf.baselines.'
                          'gaussian_cnn_baseline.'
                          'GaussianCNNRegressor'),
@@ -152,7 +152,7 @@ class TestGaussianCNNBaseline(TfGraphTestCase):
         assert np.array_equal(params_interal, trainable_params)
 
     def test_is_pickleable(self):
-        box_env = TfEnv(DummyBoxEnv(obs_dim=(1, 1)))
+        box_env = GarageEnv(DummyBoxEnv(obs_dim=(1, 1)))
         with mock.patch(('garage.tf.baselines.'
                          'gaussian_cnn_baseline.'
                          'GaussianCNNRegressor'),

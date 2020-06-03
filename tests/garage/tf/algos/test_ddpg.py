@@ -5,11 +5,10 @@ import gym
 import pytest
 import tensorflow as tf
 
-from garage.envs import normalize
+from garage.envs import GarageEnv, normalize
 from garage.np.exploration_policies import AddOrnsteinUhlenbeckNoise
 from garage.replay_buffer import PathBuffer
 from garage.tf.algos import DDPG
-from garage.tf.envs import TfEnv
 from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import ContinuousMLPPolicy
 from garage.tf.q_functions import ContinuousMLPQFunction
@@ -23,7 +22,7 @@ class TestDDPG(TfGraphTestCase):
     def test_ddpg_double_pendulum(self):
         """Test DDPG with Pendulum environment."""
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
-            env = TfEnv(gym.make('InvertedDoublePendulum-v2'))
+            env = GarageEnv(gym.make('InvertedDoublePendulum-v2'))
             policy = ContinuousMLPPolicy(env_spec=env.spec,
                                          hidden_sizes=[64, 64],
                                          hidden_nonlinearity=tf.nn.relu,
@@ -62,7 +61,7 @@ class TestDDPG(TfGraphTestCase):
         This environment has a [-3, 3] action_space bound.
         """
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
-            env = TfEnv(normalize(gym.make('InvertedPendulum-v2')))
+            env = GarageEnv(normalize(gym.make('InvertedPendulum-v2')))
             policy = ContinuousMLPPolicy(env_spec=env.spec,
                                          hidden_sizes=[64, 64],
                                          hidden_nonlinearity=tf.nn.relu,
@@ -102,7 +101,7 @@ class TestDDPG(TfGraphTestCase):
         This environment has a [-3, 3] action_space bound.
         """
         with LocalTFRunner(snapshot_config, sess=self.sess) as runner:
-            env = TfEnv(normalize(gym.make('InvertedPendulum-v2')))
+            env = GarageEnv(normalize(gym.make('InvertedPendulum-v2')))
             policy = ContinuousMLPPolicy(env_spec=env.spec,
                                          hidden_sizes=[64, 64],
                                          hidden_nonlinearity=tf.nn.relu,

@@ -6,7 +6,7 @@ import pytest
 import torch
 from torch import nn
 
-from garage.tf.envs import TfEnv
+from garage.envs import GarageEnv
 from garage.torch.policies import TanhGaussianMLPPolicy
 from tests.fixtures.envs.dummy import DummyBoxEnv
 
@@ -19,7 +19,7 @@ class TestTanhGaussianMLPPolicy:
     # yapf: enable
     def test_get_action(self, hidden_sizes):
         """Test Tanh Gaussian Policy get action function."""
-        env_spec = TfEnv(DummyBoxEnv())
+        env_spec = GarageEnv(DummyBoxEnv())
         obs_dim = env_spec.observation_space.flat_dim
         act_dim = env_spec.action_space.flat_dim
         obs = torch.ones(obs_dim, dtype=torch.float32).unsqueeze(0)
@@ -43,7 +43,7 @@ class TestTanhGaussianMLPPolicy:
     # yapf: enable
     def test_get_action_np(self, hidden_sizes):
         """Test Policy get action function with numpy inputs."""
-        env_spec = TfEnv(DummyBoxEnv())
+        env_spec = GarageEnv(DummyBoxEnv())
         obs_dim = env_spec.observation_space.flat_dim
         act_dim = env_spec.action_space.flat_dim
         obs = np.ones((obs_dim, ), dtype=np.float32)
@@ -72,7 +72,7 @@ class TestTanhGaussianMLPPolicy:
     # yapf: enable
     def test_get_actions(self, batch_size, hidden_sizes):
         """Test Tanh Gaussian Policy get actions function."""
-        env_spec = TfEnv(DummyBoxEnv())
+        env_spec = GarageEnv(DummyBoxEnv())
         obs_dim = env_spec.observation_space.flat_dim
         act_dim = env_spec.action_space.flat_dim
         obs = torch.ones([batch_size, obs_dim], dtype=torch.float32)
@@ -102,7 +102,7 @@ class TestTanhGaussianMLPPolicy:
     # yapf: enable
     def test_get_actions_np(self, batch_size, hidden_sizes):
         """Test get actions with np.ndarray inputs."""
-        env_spec = TfEnv(DummyBoxEnv())
+        env_spec = GarageEnv(DummyBoxEnv())
         obs_dim = env_spec.observation_space.flat_dim
         act_dim = env_spec.action_space.flat_dim
         obs = np.ones((batch_size, obs_dim), dtype=np.float32)
@@ -132,7 +132,7 @@ class TestTanhGaussianMLPPolicy:
     # yapf: enable
     def test_is_pickleable(self, batch_size, hidden_sizes):
         """Test if policy is unchanged after pickling."""
-        env_spec = TfEnv(DummyBoxEnv())
+        env_spec = GarageEnv(DummyBoxEnv())
         obs_dim = env_spec.observation_space.flat_dim
         obs = torch.ones([batch_size, obs_dim], dtype=torch.float32)
         init_std = 2.
@@ -157,7 +157,7 @@ class TestTanhGaussianMLPPolicy:
 
     def test_is_vectorized(self):
         """Test Tanh Gaussian Policy is vectorized."""
-        env_spec = TfEnv(DummyBoxEnv())
+        env_spec = GarageEnv(DummyBoxEnv())
         init_std = 2.
 
         policy = TanhGaussianMLPPolicy(env_spec=env_spec,
@@ -171,7 +171,7 @@ class TestTanhGaussianMLPPolicy:
 
     def test_to(self):
         """Test Tanh Gaussian Policy can be moved to cpu."""
-        env_spec = TfEnv(DummyBoxEnv())
+        env_spec = GarageEnv(DummyBoxEnv())
         init_std = 2.
 
         policy = TanhGaussianMLPPolicy(env_spec=env_spec,
@@ -190,7 +190,7 @@ class TestTanhGaussianMLPPolicy:
 
     def test_entropy(self):
         """Test get_entropy method of the policy."""
-        env_spec = TfEnv(DummyBoxEnv())
+        env_spec = GarageEnv(DummyBoxEnv())
         init_std = 1.
         obs = torch.Tensor([0, 0, 0, 0]).float()
         policy = TanhGaussianMLPPolicy(env_spec=env_spec,
@@ -205,7 +205,7 @@ class TestTanhGaussianMLPPolicy:
 
     def test_log_prob(self):
         """Test log_prob method of the policy."""
-        env_spec = TfEnv(DummyBoxEnv())
+        env_spec = GarageEnv(DummyBoxEnv())
         init_std = 1.
         obs = torch.Tensor([0, 0, 0, 0]).float()
         action = torch.Tensor([0, 0]).float()

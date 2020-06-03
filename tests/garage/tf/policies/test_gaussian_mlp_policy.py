@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 import tensorflow as tf
 
-from garage.tf.envs import TfEnv
+from garage.envs import GarageEnv
 from garage.tf.policies import GaussianMLPPolicy
 from tests.fixtures import TfGraphTestCase
 from tests.fixtures.envs.dummy import DummyBoxEnv
@@ -14,7 +14,7 @@ from tests.fixtures.envs.dummy import DummyDiscreteEnv
 class TestGaussianMLPPolicy(TfGraphTestCase):
 
     def test_invalid_env(self):
-        env = TfEnv(DummyDiscreteEnv())
+        env = GarageEnv(DummyDiscreteEnv())
         with pytest.raises(ValueError):
             GaussianMLPPolicy(env_spec=env.spec)
 
@@ -27,7 +27,7 @@ class TestGaussianMLPPolicy(TfGraphTestCase):
         ((2, 2), (2, 2)),
     ])
     def test_get_action(self, obs_dim, action_dim):
-        env = TfEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
+        env = GarageEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
         obs_var = tf.compat.v1.placeholder(
             tf.float32,
             shape=[None, None, env.observation_space.flat_dim],
@@ -55,7 +55,7 @@ class TestGaussianMLPPolicy(TfGraphTestCase):
         ((2, 2), (2, 2)),
     ])
     def test_is_pickleable(self, obs_dim, action_dim):
-        env = TfEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
+        env = GarageEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
         obs_var = tf.compat.v1.placeholder(
             tf.float32,
             shape=[None, None, env.observation_space.flat_dim],
@@ -93,7 +93,7 @@ class TestGaussianMLPPolicy(TfGraphTestCase):
             assert np.array_equal(output1, output2)
 
     def test_clone(self):
-        env = TfEnv(DummyBoxEnv(obs_dim=(10, ), action_dim=(4, )))
+        env = GarageEnv(DummyBoxEnv(obs_dim=(10, ), action_dim=(4, )))
         policy = GaussianMLPPolicy(env_spec=env.spec)
         policy_clone = policy.clone('GaussnaMLPPolicyClone')
         assert policy.env_spec == policy_clone.env_spec

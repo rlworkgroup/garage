@@ -10,10 +10,9 @@ from unittest.mock import Mock
 
 import ray
 
-from garage.envs.grid_world_env import GridWorldEnv
+from garage.envs import GarageEnv, GridWorldEnv
 from garage.np.policies import ScriptedPolicy
 from garage.sampler import RaySampler, WorkerFactory
-from garage.tf.envs import TfEnv
 # pylint: disable=unused-import
 from tests.fixtures.sampler import ray_local_session_fixture
 
@@ -41,7 +40,7 @@ class TestRaySamplerTF():
     """
 
     def setup_method(self):
-        self.env = TfEnv(GridWorldEnv(desc='4x4'))
+        self.env = GarageEnv(GridWorldEnv(desc='4x4'))
         self.policy = ScriptedPolicy(
             scripted_actions=[2, 2, 1, 0, 3, 1, 1, 1, 2, 2, 1, 1, 1, 2, 2, 1])
         self.algo = Mock(env_spec=self.env.spec,

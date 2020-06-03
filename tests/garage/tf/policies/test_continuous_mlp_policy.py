@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 import tensorflow as tf
 
-from garage.tf.envs import TfEnv
+from garage.envs import GarageEnv
 from garage.tf.policies import ContinuousMLPPolicy
 from tests.fixtures import TfGraphTestCase
 from tests.fixtures.envs.dummy import DummyBoxEnv
@@ -26,7 +26,7 @@ class TestContinuousMLPPolicy(TfGraphTestCase):
     ])
     def test_get_action(self, obs_dim, action_dim):
         """Test get_action method"""
-        env = TfEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
+        env = GarageEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
         with mock.patch(('garage.tf.policies.'
                          'continuous_mlp_policy.MLPModel'),
                         new=SimpleMLPModel):
@@ -59,7 +59,7 @@ class TestContinuousMLPPolicy(TfGraphTestCase):
     ])
     def test_get_action_sym(self, obs_dim, action_dim):
         """Test get_action_sym method"""
-        env = TfEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
+        env = GarageEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
         with mock.patch(('garage.tf.policies.'
                          'continuous_mlp_policy.MLPModel'),
                         new=SimpleMLPModel):
@@ -92,7 +92,7 @@ class TestContinuousMLPPolicy(TfGraphTestCase):
     ])
     def test_is_pickleable(self, obs_dim, action_dim):
         """Test if ContinuousMLPPolicy is pickleable"""
-        env = TfEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
+        env = GarageEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
         with mock.patch(('garage.tf.policies.'
                          'continuous_mlp_policy.MLPModel'),
                         new=SimpleMLPModel):
@@ -123,7 +123,7 @@ class TestContinuousMLPPolicy(TfGraphTestCase):
     ])
     def test_get_regularizable_vars(self, obs_dim, action_dim):
         """Test get_regularizable_vars method"""
-        env = TfEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
+        env = GarageEnv(DummyBoxEnv(obs_dim=obs_dim, action_dim=action_dim))
         policy = ContinuousMLPPolicy(env_spec=env.spec)
         reg_vars = policy.get_regularizable_vars()
         assert len(reg_vars) == 2

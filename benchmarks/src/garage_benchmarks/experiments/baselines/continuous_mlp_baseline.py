@@ -3,11 +3,10 @@ import gym
 import tensorflow as tf
 
 from garage import wrap_experiment
-from garage.envs import normalize
+from garage.envs import GarageEnv, normalize
 from garage.experiment import deterministic
 from garage.tf.algos import PPO
 from garage.tf.baselines import ContinuousMLPBaseline
-from garage.tf.envs import TfEnv
 from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import GaussianLSTMPolicy
 
@@ -43,7 +42,7 @@ def continuous_mlp_baseline(ctxt, env_id, seed):
     deterministic.set_seed(seed)
 
     with LocalTFRunner(ctxt, max_cpus=hyper_params['num_proc']) as runner:
-        env = TfEnv(normalize(gym.make(env_id)))
+        env = GarageEnv(normalize(gym.make(env_id)))
 
         policy = GaussianLSTMPolicy(
             env_spec=env.spec,

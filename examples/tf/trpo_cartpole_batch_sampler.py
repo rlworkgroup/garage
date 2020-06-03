@@ -3,10 +3,10 @@
 import click
 
 from garage import wrap_experiment
+from garage.envs import GarageEnv
 from garage.experiment.deterministic import set_seed
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import TRPO
-from garage.tf.envs import TfEnv
 from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import CategoricalMLPPolicy
 from garage.tf.samplers import BatchSampler
@@ -34,7 +34,7 @@ def trpo_cartpole_batch_sampler(ctxt=None,
     set_seed(seed)
     n_envs = batch_size // max_path_length
     with LocalTFRunner(ctxt, max_cpus=n_envs) as runner:
-        env = TfEnv(env_name='CartPole-v1')
+        env = GarageEnv(env_name='CartPole-v1')
 
         policy = CategoricalMLPPolicy(name='policy',
                                       env_spec=env.spec,

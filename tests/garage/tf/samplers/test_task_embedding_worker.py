@@ -2,8 +2,8 @@ from unittest.mock import Mock
 
 import numpy as np
 
+from garage.envs import GarageEnv
 from garage.tf.algos.te import TaskEmbeddingWorker
-from garage.tf.envs import TfEnv
 from tests.fixtures import TfGraphTestCase
 from tests.fixtures.envs.dummy import DummyBoxEnv
 
@@ -11,7 +11,7 @@ from tests.fixtures.envs.dummy import DummyBoxEnv
 class TestTaskEmbeddingWorker(TfGraphTestCase):
 
     def test_task_embedding_worker(self):
-        env = TfEnv(DummyBoxEnv(obs_dim=(1, )))
+        env = GarageEnv(DummyBoxEnv(obs_dim=(1, )))
         env.active_task_one_hot = np.array([1., 0., 0., 0.])
 
         a = np.random.random(env.action_space.shape)

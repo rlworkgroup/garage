@@ -4,9 +4,9 @@ garage.tf.baselines failed to initialize.
 """
 import tensorflow as tf
 
+from garage.envs import GarageEnv
 from garage.tf.baselines import ContinuousMLPBaseline
 from garage.tf.baselines import GaussianMLPBaseline
-from garage.tf.envs import TfEnv
 from tests.fixtures import TfGraphTestCase
 from tests.fixtures.envs.dummy import DummyBoxEnv
 
@@ -15,7 +15,7 @@ class TestTfBaselines(TfGraphTestCase):
 
     def test_baseline(self):
         """Test the baseline initialization."""
-        box_env = TfEnv(DummyBoxEnv())
+        box_env = GarageEnv(DummyBoxEnv())
         deterministic_mlp_baseline = ContinuousMLPBaseline(env_spec=box_env)
         gaussian_mlp_baseline = GaussianMLPBaseline(env_spec=box_env)
 

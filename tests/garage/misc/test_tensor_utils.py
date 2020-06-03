@@ -4,13 +4,13 @@ This script creates a test that tests functions in garage.misc.tensor_utils.
 
 import numpy as np
 
+from garage.envs import GarageEnv
 from garage.misc.tensor_utils import concat_tensor_dict_list
 from garage.misc.tensor_utils import explained_variance_1d
 from garage.misc.tensor_utils import normalize_pixel_batch
 from garage.misc.tensor_utils import pad_tensor
 from garage.misc.tensor_utils import stack_and_pad_tensor_dict_list
 from garage.misc.tensor_utils import stack_tensor_dict_list
-from garage.tf.envs import TfEnv
 from tests.fixtures.envs.dummy import DummyDiscretePixelEnv
 
 
@@ -35,7 +35,7 @@ class TestTensorUtil:
         self.tensor = [1, 1, 1]
 
     def test_normalize_pixel_batch(self):
-        env = TfEnv(DummyDiscretePixelEnv(), is_image=True)
+        env = GarageEnv(DummyDiscretePixelEnv(), is_image=True)
         obs = env.reset()
         obs_normalized = normalize_pixel_batch(obs)
         expected = [ob / 255.0 for ob in obs]

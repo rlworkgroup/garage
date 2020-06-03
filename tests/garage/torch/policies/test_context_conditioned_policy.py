@@ -7,8 +7,8 @@ import torch.nn as nn
 from torch.nn import functional as F  # NOQA
 
 from garage import TimeStep
-from garage.envs.env_spec import EnvSpec
-from garage.tf.envs import TfEnv
+from garage.envs import EnvSpec
+from garage.envs import GarageEnv
 from garage.torch.embeddings import MLPEncoder
 from garage.torch.policies import ContextConditionedPolicy
 from garage.torch.policies import TanhGaussianMLPPolicy
@@ -21,7 +21,7 @@ class TestContextConditionedPolicy:
     def setup_method(self):
         """Setup for all test methods."""
         self.latent_dim = 5
-        self.env_spec = TfEnv(DummyBoxEnv())
+        self.env_spec = GarageEnv(DummyBoxEnv())
         latent_space = akro.Box(low=-1,
                                 high=1,
                                 shape=(self.latent_dim, ),

@@ -2,10 +2,10 @@ import pytest
 import ray
 import tensorflow as tf
 
+from garage.envs import GarageEnv
 from garage.np.baselines import LinearFeatureBaseline
 from garage.sampler import LocalSampler, RaySampler, singleton_pool
 from garage.tf.algos import VPG
-from garage.tf.envs import TfEnv
 from garage.tf.experiment import LocalTFRunner
 from garage.tf.plotter import Plotter
 from garage.tf.policies import CategoricalMLPPolicy
@@ -34,7 +34,7 @@ class TestLocalRunner(TfGraphTestCase):
 
     def test_train(self):
         with LocalTFRunner(snapshot_config) as runner:
-            env = TfEnv(env_name='CartPole-v1')
+            env = GarageEnv(env_name='CartPole-v1')
 
             policy = CategoricalMLPPolicy(name='policy',
                                           env_spec=env.spec,
@@ -62,7 +62,7 @@ class TestLocalRunner(TfGraphTestCase):
 
     def test_set_plot(self):
         with LocalTFRunner(snapshot_config) as runner:
-            env = TfEnv(env_name='CartPole-v1')
+            env = GarageEnv(env_name='CartPole-v1')
 
             policy = CategoricalMLPPolicy(name='policy',
                                           env_spec=env.spec,
@@ -96,7 +96,7 @@ class TestLocalRunner(TfGraphTestCase):
 
     def test_make_sampler_batch_sampler(self):
         with LocalTFRunner(snapshot_config) as runner:
-            env = TfEnv(env_name='CartPole-v1')
+            env = GarageEnv(env_name='CartPole-v1')
 
             policy = CategoricalMLPPolicy(name='policy',
                                           env_spec=env.spec,
@@ -121,7 +121,7 @@ class TestLocalRunner(TfGraphTestCase):
 
     def test_make_sampler_local_sampler(self):
         with LocalTFRunner(snapshot_config) as runner:
-            env = TfEnv(env_name='CartPole-v1')
+            env = GarageEnv(env_name='CartPole-v1')
 
             policy = CategoricalMLPPolicy(name='policy',
                                           env_spec=env.spec,
@@ -145,7 +145,7 @@ class TestLocalRunner(TfGraphTestCase):
         del ray_session_fixture
         assert ray.is_initialized()
         with LocalTFRunner(snapshot_config) as runner:
-            env = TfEnv(env_name='CartPole-v1')
+            env = GarageEnv(env_name='CartPole-v1')
 
             policy = CategoricalMLPPolicy(name='policy',
                                           env_spec=env.spec,
