@@ -12,11 +12,11 @@ import tensorflow as tf
 
 from garage import wrap_experiment
 from garage.envs import GarageEnv
+from garage.experiment import LocalTFRunner
 from garage.experiment.deterministic import set_seed
 from garage.np.exploration_policies import AddOrnsteinUhlenbeckNoise
 from garage.replay_buffer import HerReplayBuffer
 from garage.tf.algos import DDPG
-from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import ContinuousMLPPolicy
 from garage.tf.q_functions import ContinuousMLPQFunction
 

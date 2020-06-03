@@ -4,9 +4,9 @@ import gym
 from garage import wrap_experiment
 from garage.envs import GarageEnv, normalize
 from garage.experiment import deterministic
+from garage.experiment import LocalTFRunner
 from garage.tf.algos import PPO
 from garage.tf.baselines import GaussianCNNBaseline
-from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import CategoricalCNNPolicy
 
 params = {

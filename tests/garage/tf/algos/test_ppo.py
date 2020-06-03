@@ -7,11 +7,11 @@ import pytest
 import tensorflow as tf
 
 from garage.envs import GarageEnv, normalize
+from garage.experiment import LocalTFRunner
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import PPO
 from garage.tf.baselines import ContinuousMLPBaseline
 from garage.tf.baselines import GaussianMLPBaseline
-from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import CategoricalMLPPolicy
 from garage.tf.policies import GaussianGRUPolicy
 from garage.tf.policies import GaussianLSTMPolicy

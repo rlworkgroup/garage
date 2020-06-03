@@ -3,8 +3,7 @@ import tempfile
 import numpy as np
 import tensorflow as tf
 
-from garage.experiment import SnapshotConfig
-from garage.tf.experiment import LocalTFRunner
+from garage.experiment import LocalTFRunner, SnapshotConfig
 from tests.fixtures import TfGraphTestCase
 from tests.fixtures.experiment import fixture_exp
 

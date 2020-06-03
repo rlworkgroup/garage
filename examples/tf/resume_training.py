@@ -4,7 +4,7 @@
 import click
 
 from garage import wrap_experiment
-from garage.tf.experiment import LocalTFRunner
+from garage.experiment import LocalTFRunner
 
 
 @click.command()

@@ -12,12 +12,12 @@ Results:
 # pylint: disable=no-value-for-parameter
 import click
 
+from garage import wrap_experiment
 from garage.envs import GarageEnv
-from garage.experiment import wrap_experiment
+from garage.experiment import LocalTFRunner
 from garage.experiment.deterministic import set_seed
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import TRPO
-from garage.tf.experiment import LocalTFRunner
 from garage.tf.optimizers import ConjugateGradientOptimizer
 from garage.tf.optimizers import FiniteDifferenceHvp
 from garage.tf.policies import CategoricalLSTMPolicy

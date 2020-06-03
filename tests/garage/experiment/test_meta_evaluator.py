@@ -8,13 +8,12 @@ import pytest
 import tensorflow as tf
 
 from garage.envs import GarageEnv, PointEnv
-from garage.experiment import MetaEvaluator, SnapshotConfig
+from garage.experiment import LocalTFRunner, MetaEvaluator, SnapshotConfig
 from garage.experiment.deterministic import set_seed
 from garage.experiment.local_runner import LocalRunner
 from garage.experiment.task_sampler import SetTaskSampler
 from garage.np.algos import MetaRLAlgorithm
 from garage.sampler import LocalSampler
-from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import GaussianMLPPolicy
 
 

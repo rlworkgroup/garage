@@ -18,6 +18,7 @@ except Exception:  # pylint: disable=broad-except
 
 from garage.envs import normalize
 from garage.envs.mujoco import HalfCheetahDirEnv
+from garage.experiment import LocalTFRunner
 from garage.experiment import task_sampler
 from garage.experiment.meta_evaluator import MetaEvaluator
 from garage.np.baselines import LinearFeatureBaseline
@@ -25,7 +26,6 @@ from garage.sampler import LocalSampler
 from garage.tf.algos import RL2PPO
 from garage.tf.algos.rl2 import RL2Env
 from garage.tf.algos.rl2 import RL2Worker
-from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import GaussianGRUPolicy
 from tests.fixtures import snapshot_config, TfGraphTestCase
 

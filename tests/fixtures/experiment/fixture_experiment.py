@@ -1,8 +1,8 @@
 """A dummy experiment fixture."""
 from garage.envs import GarageEnv
+from garage.experiment import LocalTFRunner
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import VPG
-from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import CategoricalMLPPolicy
 
 
