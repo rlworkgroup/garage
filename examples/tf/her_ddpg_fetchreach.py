@@ -55,11 +55,10 @@ def her_ddpg_fetchreach(ctxt=None, seed=1):
             hidden_nonlinearity=tf.nn.relu,
         )
 
-        replay_buffer = HerReplayBuffer(env_spec=env.spec,
-                                        size_in_transitions=int(1e6),
-                                        time_horizon=100,
-                                        replay_k=0.4,
-                                        reward_fun=env.compute_reward)
+        replay_buffer = HerReplayBuffer(capacity_in_transitions=int(1e6),
+                                        replay_k=4,
+                                        reward_fun=env.compute_reward,
+                                        env_spec=env.spec)
 
         ddpg = DDPG(
             env_spec=env.spec,

@@ -16,6 +16,7 @@ import numpy as np
 
 from garage.experiment import deterministic
 from garage.misc import tensor_utils
+from garage.replay_buffer import HerReplayBuffer
 from garage.replay_buffer import PathBuffer
 from garage.sampler.batch_sampler import BatchSampler
 from garage.sampler.vec_env_executor import VecEnvExecutor
@@ -186,28 +187,30 @@ class OffPolicyVectorizedSampler(BatchSampler):
                             ['undiscounted_return'],
                             success_count=running_paths[idx]['success_count']))
 
-                    if isinstance(self.algo.replay_buffer, PathBuffer):
-                        obs_space = self._env_spec.observation_space
+                    path_dict = {}
 
-                        flattened_obses = obs_space.flatten_n(
+                    if isinstance(self.algo.replay_buffer, HerReplayBuffer):
+                        # avoid flattening dict observations
+                        path_dict['observations'] = running_paths[idx][
+                            'observations']
+                        path_dict['next_observations'] = running_paths[idx][
+                            'next_observations']
+                    else:
+                        path_dict['observations'] = obs_space.flatten_n(
                             np.asarray(running_paths[idx]['observations']))
-                        flattened_next_obses = obs_space.flatten_n(
+                        path_dict['next_observations'] = obs_space.flatten_n(
                             np.asarray(
                                 running_paths[idx]['next_observations']))
-                        flattened_rewards = np.asarray(
-                            running_paths[idx]['rewards']).reshape(-1, 1)
-                        flattened_terminals = np.asarray(
-                            running_paths[idx]['dones']).reshape(-1, 1)
-                        flattened_actions = self._env_spec.action_space. \
-                            flatten_n(np.asarray(
-                                        running_paths[idx]['actions']))
 
-                        self.algo.replay_buffer.add_path(
-                            dict(rewards=flattened_rewards,
-                                 terminals=flattened_terminals,
-                                 observations=flattened_obses,
-                                 next_observations=flattened_next_obses,
-                                 actions=flattened_actions))
+                    path_dict['rewards'] = np.asarray(
+                        running_paths[idx]['rewards']).reshape(-1, 1)
+                    path_dict['terminals'] = np.asarray(
+                        running_paths[idx]['dones']).reshape(-1, 1)
+                    path_dict['actions'] = self._env_spec.action_space. \
+                        flatten_n(np.asarray(
+                                    running_paths[idx]['actions']))
+
+                    self.algo.replay_buffer.add_path(path_dict)
                     running_paths[idx] = None
 
                     if done:
