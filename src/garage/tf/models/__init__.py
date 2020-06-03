@@ -10,7 +10,6 @@ from garage.tf.models.gaussian_cnn_model import GaussianCNNModel
 from garage.tf.models.gaussian_gru_model import GaussianGRUModel
 from garage.tf.models.gaussian_lstm_model import GaussianLSTMModel
 from garage.tf.models.gaussian_mlp_model import GaussianMLPModel
-from garage.tf.models.gaussian_mlp_model2 import GaussianMLPModel2
 from garage.tf.models.gru_model import GRUModel
 from garage.tf.models.lstm_model import LSTMModel
 from garage.tf.models.mlp_dueling_model import MLPDuelingModel
@@ -27,7 +26,6 @@ __all__ = [
     'CategoricalLSTMModel', 'CategoricalMLPModel', 'CNNMLPMergeModel',
     'CNNModel', 'CNNModelWithMaxPooling', 'LSTMModel', 'Model', 'Module',
     'GaussianCNNModel', 'GaussianGRUModel', 'GaussianLSTMModel',
-    'GaussianMLPModel', 'GaussianMLPModel2', 'GRUModel', 'MLPDuelingModel',
-    'MLPMergeModel', 'MLPModel', 'NormalizedInputMLPModel', 'Sequential',
-    'StochasticModule'
+    'GaussianMLPModel', 'GRUModel', 'MLPDuelingModel', 'MLPMergeModel',
+    'MLPModel', 'NormalizedInputMLPModel', 'Sequential', 'StochasticModule'
 ]

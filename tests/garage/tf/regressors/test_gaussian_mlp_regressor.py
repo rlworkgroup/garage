@@ -138,37 +138,6 @@ class TestGaussianMLPRegressor(TfGraphTestCase):
         expected = [[0], [-1], [-0.707], [0], [0.707], [1], [0]]
         assert np.allclose(prediction, expected, rtol=0, atol=0.1)
 
-    @pytest.mark.parametrize('output_dim, input_shape',
-                             [(1, (1, )), (1, (2, )), (2, (3, )), (2, (1, 1)),
-                              (3, (2, 2))])
-    def test_log_likelihood_sym(self, output_dim, input_shape):
-        gmr = GaussianMLPRegressor(input_shape=input_shape,
-                                   output_dim=output_dim,
-                                   optimizer=PenaltyLbfgsOptimizer,
-                                   optimizer_args=dict())
-
-        new_input_var = tf.compat.v1.placeholder(tf.float32,
-                                                 shape=(None, ) + input_shape)
-        new_ys_var = tf.compat.v1.placeholder(dtype=tf.float32,
-                                              name='ys',
-                                              shape=(None, output_dim))
-
-        data = np.random.random(size=input_shape)
-        label = np.ones(output_dim)
-
-        outputs = gmr.log_likelihood_sym(new_input_var,
-                                         new_ys_var,
-                                         name='ll_sym')
-        ll_from_sym = self.sess.run(outputs,
-                                    feed_dict={
-                                        new_input_var: [data],
-                                        new_ys_var: [label]
-                                    })
-        mean, log_std = gmr._f_pdists([data])
-        ll = gmr.model.networks['default'].dist.log_likelihood(
-            [label], dict(mean=mean, log_std=log_std))
-        assert np.allclose(ll, ll_from_sym, rtol=0, atol=1e-5)
-
     def test_is_pickleable(self):
         gmr = GaussianMLPRegressor(input_shape=(1, ), output_dim=1)
 
@@ -203,6 +172,5 @@ class TestGaussianMLPRegressor(TfGraphTestCase):
     def test_auxiliary(self):
         gmr = GaussianMLPRegressor(input_shape=(1, ), output_dim=5)
 
-        assert not gmr.recurrent
         assert gmr.vectorized
-        assert gmr.distribution.dim == 5
+        assert gmr.distribution.event_shape.as_list() == [5]
