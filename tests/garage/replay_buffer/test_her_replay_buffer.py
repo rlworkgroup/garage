@@ -13,31 +13,31 @@ class TestHerReplayBuffer:
         self.env = DummyDictEnv()
         self.obs = self.env.reset()
         self._replay_k = 4
-        self.replay_buffer = HerReplayBuffer(
-            env_spec=self.env.spec,
-            capacity_in_transitions=10,
-            replay_k=self._replay_k,
-            reward_fun=self.env.compute_reward)
+        self.replay_buffer = HerReplayBuffer(env_spec=self.env.spec,
+                                             capacity_in_transitions=10,
+                                             replay_k=self._replay_k,
+                                             reward_fn=self.env.compute_reward)
 
     def test_replay_k(self):
-        self.replay_buffer = HerReplayBuffer(
-            env_spec=self.env.spec,
-            capacity_in_transitions=10,
-            replay_k=0,
-            reward_fun=self.env.compute_reward)
+        self.replay_buffer = HerReplayBuffer(env_spec=self.env.spec,
+                                             capacity_in_transitions=10,
+                                             replay_k=0,
+                                             reward_fn=self.env.compute_reward)
 
         with pytest.raises(ValueError):
             self.replay_buffer = HerReplayBuffer(
                 env_spec=self.env.spec,
                 capacity_in_transitions=10,
                 replay_k=0.2,
-                reward_fun=self.env.compute_reward)
+                reward_fn=self.env.compute_reward)
 
     def _add_one_path(self):
         path = dict(
             observations=np.asarray([self.obs, self.obs]),
-            actions=np.asarray([[self.env.action_space.sample()],
-                                [self.env.action_space.sample()]]),
+            actions=np.asarray([
+                self.env.action_space.sample(),
+                self.env.action_space.sample()
+            ]),
             rewards=np.asarray([[1], [1]]),
             terminals=np.asarray([[False], [False]]),
             next_observations=np.asarray([self.obs, self.obs]),
@@ -56,27 +56,20 @@ class TestHerReplayBuffer:
             [self._replay_k + 1 for _ in range(path_len - 1)]) + 1
         assert (self.replay_buffer.n_transitions_stored ==
                 total_expected_transitions)
-        assert len(self.replay_buffer._path_segments) == 1
-
+        assert (len(
+            self.replay_buffer._path_segments) == total_expected_transitions -
+                1)
         # check that buffer has the correct keys
         assert {
-            'observations', 'achieved_goals', 'desired_goals',
-            'next_observations', 'next_achieved_goals', 'next_desired_goals'
+            'observations', 'next_observations', 'actions', 'rewards',
+            'terminals'
         } <= set(self.replay_buffer._buffer)
 
-    def test_sample_transitions(self):
-        self._add_one_path()
-
-        transitions = self.replay_buffer.sample_transitions(3)
-
-        # make sure sample observations are flattened
-        for obs_type in ['observations', 'next_observations']:
-            for obs in transitions[obs_type]:
-                flat_obs = self.env.observation_space.flatten(self.obs)
-                assert len(obs) == len(flat_obs)
-
-        # check that transitions have the right keys
-        assert {'rewards', 'terminals', 'actions'} <= set(transitions)
+        # check that dict obses are flattened
+        obs = self.replay_buffer._buffer['observations'][0]
+        next_obs = self.replay_buffer._buffer['next_observations'][0]
+        assert obs.shape == self.env.spec.observation_space.flat_dim
+        assert next_obs.shape == self.env.spec.observation_space.flat_dim
 
     def test_pickleable(self):
         self._add_one_path()

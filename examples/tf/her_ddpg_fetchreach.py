@@ -57,7 +57,7 @@ def her_ddpg_fetchreach(ctxt=None, seed=1):
 
         replay_buffer = HerReplayBuffer(capacity_in_transitions=int(1e6),
                                         replay_k=4,
-                                        reward_fun=env.compute_reward,
+                                        reward_fn=env.compute_reward,
                                         env_spec=env.spec)
 
         ddpg = DDPG(

@@ -338,9 +338,9 @@ class DDPG(OffPolicyRLAlgorithm):
             self.buffer_batch_size)
 
         observations = transitions['observations']
+        next_observations = transitions['next_observations']
         rewards = transitions['rewards'].reshape(-1, 1)
         actions = transitions['actions']
-        next_observations = transitions['next_observations']
         terminals = transitions['terminals'].reshape(-1, 1)
 
         next_inputs = next_observations

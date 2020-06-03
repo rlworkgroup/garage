@@ -16,8 +16,6 @@ import numpy as np
 
 from garage.experiment import deterministic
 from garage.misc import tensor_utils
-from garage.replay_buffer import HerReplayBuffer
-from garage.replay_buffer import PathBuffer
 from garage.sampler.batch_sampler import BatchSampler
 from garage.sampler.vec_env_executor import VecEnvExecutor
 
@@ -129,17 +127,6 @@ class OffPolicyVectorizedSampler(BatchSampler):
             if env_infos is None:
                 env_infos = [dict() for _ in range(self._vec_env.num_envs)]
 
-            # Generally, off policy algorithms should use PathBuffer. This is
-            # here to ensure support for HER-DDPG and the HERReplayBuffer.
-            if not isinstance(self.algo.replay_buffer, PathBuffer):
-                self.algo.replay_buffer.add_transitions(
-                    observation=obses,
-                    action=actions,
-                    reward=rewards,
-                    terminal=dones,
-                    next_observation=next_obses,
-                )
-
             for idx, reward, env_info, done, obs, next_obs, action in zip(
                     itertools.count(), rewards, env_infos, dones, obses,
                     next_obses, actions):
@@ -187,28 +174,19 @@ class OffPolicyVectorizedSampler(BatchSampler):
                             ['undiscounted_return'],
                             success_count=running_paths[idx]['success_count']))
 
+                    act_space = self._env_spec.action_space
                     path_dict = {}
 
-                    if isinstance(self.algo.replay_buffer, HerReplayBuffer):
-                        # avoid flattening dict observations
-                        path_dict['observations'] = running_paths[idx][
-                            'observations']
-                        path_dict['next_observations'] = running_paths[idx][
-                            'next_observations']
-                    else:
-                        path_dict['observations'] = obs_space.flatten_n(
-                            np.asarray(running_paths[idx]['observations']))
-                        path_dict['next_observations'] = obs_space.flatten_n(
-                            np.asarray(
-                                running_paths[idx]['next_observations']))
-
+                    path_dict['observations'] = obs_space.flatten_n(
+                        running_paths[idx]['observations'])
+                    path_dict['next_observations'] = obs_space.flatten_n(
+                        running_paths[idx]['next_observations'])
                     path_dict['rewards'] = np.asarray(
                         running_paths[idx]['rewards']).reshape(-1, 1)
                     path_dict['terminals'] = np.asarray(
                         running_paths[idx]['dones']).reshape(-1, 1)
-                    path_dict['actions'] = self._env_spec.action_space. \
-                        flatten_n(np.asarray(
-                                    running_paths[idx]['actions']))
+                    path_dict['actions'] = act_space.flatten_n(
+                        running_paths[idx]['actions'])
 
                     self.algo.replay_buffer.add_path(path_dict)
                     running_paths[idx] = None
