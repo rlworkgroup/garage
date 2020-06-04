@@ -120,13 +120,13 @@ class TestCNNModel(TfGraphTestCase):
         assert np.array_equal(output, expected_output)
 
     # yapf: disable
-    @pytest.mark.parametrize('filters, in_channels, strides', [
-        ((((1, 1), 32),), (3, ), (1, )),  # noqa: E122
-        ((((3, 3), 32),), (3, ), (1, )),
-        ((((3, 3), 32),), (3, ), (2, )),
-        ((((1, 1), 32), ((1, 1), 64)), (3, 32), (1, 1)),
-        ((((3, 3), 32), ((3, 3), 64)), (3, 32), (1, 1)),
-        ((((3, 3), 32), ((3, 3), 64)), (3, 32), (2, 2)),
+    @pytest.mark.parametrize('filters, strides', [
+        ((((1, 1), 32),), (1, )),  # noqa: E122
+        ((((3, 3), 32),), (1, )),
+        ((((3, 3), 32),), (2, )),
+        ((((1, 1), 32), ((1, 1), 64)), (1, 1)),
+        ((((3, 3), 32), ((3, 3), 64)), (1, 1)),
+        ((((3, 3), 32), ((3, 3), 64)), (2, 2)),
     ])
     # yapf: enable
     def test_is_pickleable(self, filters, strides):
