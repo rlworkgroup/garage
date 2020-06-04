@@ -340,7 +340,7 @@ class RL2(MetaRLAlgorithm, abc.ABC):
         """
         paths = self._process_samples(itr, paths)
         logger.log('Optimizing policy...')
-        self._inner_algo.optimize_policy(itr, paths)
+        self._inner_algo.optimize_policy(paths)
         return paths['average_return']
 
     def get_exploration_policy(self):

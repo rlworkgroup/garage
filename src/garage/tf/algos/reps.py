@@ -202,7 +202,7 @@ class REPS(RLAlgorithm):  # noqa: D416
 
         self.log_diagnostics(samples_data)
         logger.log('Optimizing policy...')
-        self.optimize_policy(itr, samples_data)
+        self.optimize_policy(samples_data)
         return samples_data['average_return']
 
     def log_diagnostics(self, paths):
@@ -243,12 +243,10 @@ class REPS(RLAlgorithm):  # noqa: D416
         self._name_scope = tf.name_scope(self._name)
         self.init_opt()
 
-    # pylint: disable=unused-argument
-    def optimize_policy(self, itr, samples_data):
+    def optimize_policy(self, samples_data):
         """Optimize the policy using the samples.
 
         Args:
-            itr (int): Iteration number.
             samples_data (dict): Processed sample data.
                 See garage.tf.paths_to_tensors() for details.
 

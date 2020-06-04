@@ -36,8 +36,8 @@ class DDPG(OffPolicyRLAlgorithm):
         buffer_batch_size (int): Batch size of replay buffer.
         min_buffer_size (int): The minimum buffer size for replay buffer.
         rollout_batch_size (int): Roll out batch size.
-        exploration_policy (garage.np.exploration_policies.ExplorationPolicy): # noqa: E501
-                Exploration strategy.
+        exploration_policy (garage.np.exploration_policies.ExplorationPolicy):
+            Exploration strategy.
         target_update_tau (float): Interpolation parameter for doing the
             soft target update.
         policy_lr (float): Learning rate for training policy network.
@@ -283,8 +283,7 @@ class DDPG(OffPolicyRLAlgorithm):
         self.log_diagnostics(paths)
         for _ in range(self.n_train_steps):
             if self._buffer_prefilled:
-                qf_loss, y_s, qval, policy_loss = self.optimize_policy(
-                    itr, paths)
+                qf_loss, y_s, qval, policy_loss = self.optimize_policy()
 
                 self.episode_policy_losses.append(policy_loss)
                 self.episode_qf_losses.append(qf_loss)
@@ -320,12 +319,8 @@ class DDPG(OffPolicyRLAlgorithm):
             self.success_history.clear()
         return last_average_return
 
-    def optimize_policy(self, itr, samples_data):
+    def optimize_policy(self):
         """Perform algorithm optimizing.
-
-        Args:
-            itr (int): Iterations.
-            samples_data (list): Processed batch data.
 
         Returns:
             float: Loss of action predicted by the policy network

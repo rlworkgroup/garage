@@ -200,7 +200,7 @@ class DQN(OffPolicyRLAlgorithm):
         last_average_return = np.mean(self.episode_rewards)
         for _ in range(self.n_train_steps):
             if self._buffer_prefilled:
-                qf_loss = self.optimize_policy(epoch, None)
+                qf_loss = self.optimize_policy(None)
                 self.episode_qf_losses.append(qf_loss)
 
         if self._buffer_prefilled:
@@ -218,18 +218,16 @@ class DQN(OffPolicyRLAlgorithm):
                                mean100ep_qf_loss)
         return last_average_return
 
-    def optimize_policy(self, itr, samples_data):
+    def optimize_policy(self, samples_data):
         """Optimize network using experiences from replay buffer.
 
         Args:
-            itr (int): Iterations.
             samples_data (list): Processed batch data.
 
         Returns:
             numpy.float64: Loss of policy.
 
         """
-        del itr
         del samples_data
 
         transitions = self.replay_buffer.sample_transitions(
