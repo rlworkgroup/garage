@@ -10,8 +10,7 @@ from garage.tf.baselines import GaussianCNNBaseline
 from garage.tf.policies import CategoricalCNNPolicy
 
 hyper_params = {
-    'conv_filters': (32, 64, 64),
-    'conv_filter_sizes': (5, 3, 2),
+    'conv_filters': (((5, 5), 32), ((3, 3), 64), ((2, 2), 64)),
     'conv_strides': (4, 2, 1),
     'conv_pad': 'VALID',
     'hidden_sizes': (256, ),
@@ -41,7 +40,6 @@ def categorical_cnn_policy(ctxt, env_id, seed):
         policy = CategoricalCNNPolicy(
             env_spec=env.spec,
             conv_filters=hyper_params['conv_filters'],
-            conv_filter_sizes=hyper_params['conv_filter_sizes'],
             conv_strides=hyper_params['conv_strides'],
             conv_pad=hyper_params['conv_pad'],
             hidden_sizes=hyper_params['hidden_sizes'])
@@ -49,8 +47,7 @@ def categorical_cnn_policy(ctxt, env_id, seed):
         baseline = GaussianCNNBaseline(
             env_spec=env.spec,
             regressor_args=dict(
-                num_filters=hyper_params['conv_filters'],
-                filter_dims=hyper_params['conv_filter_sizes'],
+                filters=hyper_params['conv_filters'],
                 strides=hyper_params['conv_strides'],
                 padding=hyper_params['conv_pad'],
                 hidden_sizes=hyper_params['hidden_sizes'],

@@ -36,20 +36,17 @@ class TestCNNMLPMergeModel(TfGraphTestCase):
         self.hidden_nonlinearity = tf.nn.relu
 
     # yapf: disable
-    @pytest.mark.parametrize('filter_sizes, in_channels, out_channels, '
-                             'strides, hidden_sizes', [
-        ((1,), (3,), (32,), (1,), (1, )),  # noqa: E122
-        ((3,), (3,), (32,), (1,), (2, )),
-        ((3,), (3,), (32,), (2,), (3, )),
-        ((1, 1), (3, 32), (32, 64), (1, 1), (1, )),
-        ((3, 3), (3, 32), (32, 64), (1, 1), (2, )),
-        ((3, 3), (3, 32), (32, 64), (2, 2), (3, )),
+    @pytest.mark.parametrize('filters, in_channels, strides, hidden_sizes', [
+        ((((1, 1), 32), ), (3, ), (1, ), (1, )),  # noqa: E122
+        ((((3, 3), 32), ), (3, ), (1, ), (2, )),
+        ((((3, 3), 32), ), (3, ), (2, ), (3, )),
+        ((((1, 1), 32), ((1, 1), 64)), (3, 32), (1, 1), (1, )),
+        ((((3, 3), 32), ((3, 3), 64)), (3, 32), (1, 1), (2, )),
+        ((((3, 3), 32), ((3, 3), 64)), (3, 32), (2, 2), (3, )),
     ])
     # yapf: enable
-    def test_output_value(self, filter_sizes, in_channels, out_channels,
-                          strides, hidden_sizes):
-        model = CNNMLPMergeModel(filter_dims=filter_sizes,
-                                 num_filters=out_channels,
+    def test_output_value(self, filters, in_channels, strides, hidden_sizes):
+        model = CNNMLPMergeModel(filters=filters,
                                  strides=strides,
                                  hidden_sizes=hidden_sizes,
                                  action_merge_layer=1,
@@ -62,13 +59,15 @@ class TestCNNMLPMergeModel(TfGraphTestCase):
         filter_sum = 1
 
         # filter value after 3 layers of conv
-        for filter_size, in_channel in zip(filter_sizes, in_channels):
-            filter_sum *= filter_size * filter_size * in_channel
+        for filter_iter, in_channel in zip(filters, in_channels):
+            filter_sum *= filter_iter[0][0] * filter_iter[0][1] * in_channel
 
-        current_size = self.input_width
-        for filter_size, stride in zip(filter_sizes, strides):
-            current_size = int((current_size - filter_size) / stride) + 1
-        flatten_shape = current_size * current_size * out_channels[-1]
+        height_size = self.input_height
+        width_size = self.input_width
+        for filter_iter, stride in zip(filters, strides):
+            height_size = int((height_size - filter_iter[0][0]) / stride) + 1
+            width_size = int((width_size - filter_iter[0][1]) / stride) + 1
+        flatten_shape = height_size * width_size * filters[-1][-1]
 
         # flatten
         cnn_output = np.full((self.batch_size, flatten_shape),
@@ -106,24 +105,21 @@ class TestCNNMLPMergeModel(TfGraphTestCase):
         np.testing.assert_array_equal(out, mlp_output)
 
     @pytest.mark.parametrize(
-        'filter_sizes, in_channels, out_channels, '
-        'strides, pool_strides, pool_shapes',
+        'filters, in_channels, strides, pool_strides, pool_shapes',
         [
-            ((1, ), (3, ), (32, ), (1, ), (1, 1), (1, 1)),  # noqa: E122
-            ((3, ), (3, ), (32, ), (1, ), (2, 2), (1, 1)),
-            ((3, ), (3, ), (32, ), (1, ), (1, 1), (2, 2)),
-            ((3, ), (3, ), (32, ), (1, ), (2, 2), (2, 2)),
-            ((3, ), (3, ), (32, ), (2, ), (1, 1), (2, 2)),
-            ((3, ), (3, ), (32, ), (2, ), (2, 2), (2, 2)),
-            ((1, 1), (3, 32), (32, 64), (1, 1), (1, 1), (1, 1)),
-            ((3, 3), (3, 32), (32, 64), (1, 1), (1, 1), (1, 1)),
-            ((3, 3), (3, 32), (32, 64), (2, 2), (1, 1), (1, 1)),
+            ((((1, 1), 32), ), (3, ), (1, ), (1, 1), (1, 1)),  # noqa: E122
+            ((((3, 3), 32), ), (3, ), (1, ), (2, 2), (1, 1)),
+            ((((3, 3), 32), ), (3, ), (1, ), (1, 1), (2, 2)),
+            ((((3, 3), 32), ), (3, ), (1, ), (2, 2), (2, 2)),
+            ((((3, 3), 32), ), (3, ), (2, ), (1, 1), (2, 2)),
+            ((((3, 3), 32), ), (3, ), (2, ), (2, 2), (2, 2)),
+            ((((1, 1), 32), ((1, 1), 64)), (3, 32), (1, 1), (1, 1), (1, 1)),
+            ((((3, 3), 32), ((3, 3), 64)), (3, 32), (1, 1), (1, 1), (1, 1)),
+            ((((3, 3), 32), ((3, 3), 64)), (3, 32), (2, 2), (1, 1), (1, 1)),
         ])
-    def test_output_value_max_pooling(self, filter_sizes, in_channels,
-                                      out_channels, strides, pool_strides,
-                                      pool_shapes):
-        model = CNNMLPMergeModel(filter_dims=filter_sizes,
-                                 num_filters=out_channels,
+    def test_output_value_max_pooling(self, filters, in_channels, strides,
+                                      pool_strides, pool_shapes):
+        model = CNNMLPMergeModel(filters=filters,
                                  strides=strides,
                                  name='cnn_mlp_merge_model2',
                                  padding='VALID',
@@ -138,16 +134,20 @@ class TestCNNMLPMergeModel(TfGraphTestCase):
 
         filter_sum = 1
         # filter value after 3 layers of conv
-        for filter_size, in_channel in zip(filter_sizes, in_channels):
-            filter_sum *= filter_size * filter_size * in_channel
+        for filter_iter, in_channel in zip(filters, in_channels):
+            filter_sum *= filter_iter[0][0] * filter_iter[0][1] * in_channel
 
-        current_size = self.input_width
-        for filter_size, stride in zip(filter_sizes, strides):
-            current_size = int((current_size - filter_size) / stride) + 1
-            current_size = int(
-                (current_size - pool_shapes[0]) / pool_strides[0]) + 1
+        height_size = self.input_height
+        width_size = self.input_width
+        for filter_iter, stride in zip(filters, strides):
+            height_size = int((height_size - filter_iter[0][0]) / stride) + 1
+            height_size = int(
+                (height_size - pool_shapes[0]) / pool_strides[0]) + 1
+            width_size = int((width_size - filter_iter[0][1]) / stride) + 1
+            width_size = int(
+                (width_size - pool_shapes[1]) / pool_strides[1]) + 1
 
-        flatten_shape = current_size * current_size * out_channels[-1]
+        flatten_shape = height_size * width_size * filters[-1][-1]
 
         # flatten
         cnn_output = np.full((self.batch_size, flatten_shape),
@@ -186,18 +186,17 @@ class TestCNNMLPMergeModel(TfGraphTestCase):
         np.testing.assert_array_equal(out, mlp_output)
 
     # yapf: disable
-    @pytest.mark.parametrize('filter_sizes, out_channels, strides', [
-        ((1, ), (32, ), (1, )),  # noqa: E122
-        ((3, ), (32, ), (1, )),
-        ((3, ), (32, ), (2, )),
-        ((1, 1), (32, 64), (1, 1)),
-        ((3, 3), (32, 64), (1, 1)),
-        ((3, 3), (32, 64), (2, 2)),
+    @pytest.mark.parametrize('filters, strides', [
+        ((((1, 1), 32), ), (1, )),  # noqa: E122
+        ((((3, 3), 32), ), (1, )),
+        ((((3, 3), 32), ), (2, )),
+        ((((1, 1), 32), ((1, 1), 64)), (1, 1)),
+        ((((3, 3), 32), ((3, 3), 64)), (1, 1)),
+        ((((3, 3), 32), ((3, 3), 64)), (2, 2)),
     ])
     # yapf: enable
-    def test_is_pickleable(self, filter_sizes, out_channels, strides):
-        model = CNNMLPMergeModel(filter_dims=filter_sizes,
-                                 num_filters=out_channels,
+    def test_is_pickleable(self, filters, strides):
+        model = CNNMLPMergeModel(filters=filters,
                                  strides=strides,
                                  name='cnn_mlp_merge_model',
                                  padding='VALID',

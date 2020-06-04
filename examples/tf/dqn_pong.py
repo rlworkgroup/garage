@@ -66,8 +66,8 @@ def dqn_pong(ctxt=None, seed=1, buffer_size=int(5e4), max_path_length=None):
         replay_buffer = PathBuffer(capacity_in_transitions=buffer_size)
 
         qf = DiscreteCNNQFunction(env_spec=env.spec,
-                                  filter_dims=(8, 4, 3),
-                                  num_filters=(32, 64, 64),
+                                  filters=(((8, 8), 32), ((4, 4), 64), ((3, 3),
+                                                                        64)),
                                   strides=(4, 2, 1),
                                   dueling=False)
 

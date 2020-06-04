@@ -25,19 +25,22 @@ class TestCNN(TfGraphTestCase):
                                                   name='input')
         self.hidden_nonlinearity = tf.nn.relu
 
-    @pytest.mark.parametrize('filter_sizes, out_channels, strides', [
-        ((1, ), (32, ), (1, )),
-        ((3, ), (32, ), (1, )),
-        ((3, ), (32, ), (2, )),
-        ((1, 1), (32, 64), (1, 1)),
-        ((3, 3), (32, 64), (1, 1)),
-        ((3, 3), (32, 64), (2, 2)),
+    @pytest.mark.parametrize('filters, strides', [
+        ((((1, 1), 32), ), (1, )),
+        ((((3, 3), 32), ), (1, )),
+        ((((2, 3), 32), ), (1, )),
+        ((((3, 3), 32), ), (2, )),
+        ((((2, 3), 32), ), (2, )),
+        ((((1, 1), 32), ((1, 1), 64)), (1, 1)),
+        ((((3, 3), 32), ((3, 3), 64)), (1, 1)),
+        ((((2, 3), 32), ((3, 3), 64)), (1, 1)),
+        ((((3, 3), 32), ((3, 3), 64)), (2, 2)),
+        ((((2, 3), 32), ((3, 3), 64)), (2, 2)),
     ])
-    def test_output_shape_same(self, filter_sizes, out_channels, strides):
+    def test_output_shape_same(self, filters, strides):
         with tf.compat.v1.variable_scope('CNN'):
             self.cnn = cnn(input_var=self._input_ph,
-                           filter_dims=filter_sizes,
-                           num_filters=out_channels,
+                           filters=filters,
                            strides=strides,
                            name='cnn',
                            padding='SAME',
@@ -49,27 +52,30 @@ class TestCNN(TfGraphTestCase):
         result = self.sess.run(self.cnn,
                                feed_dict={self._input_ph: self.obs_input})
 
-        current_size = self.input_width
-        for filter_size, stride in zip(filter_sizes, strides):
-            padded = int(filter_size / 2) * 2
-            current_size = int(
-                (current_size - filter_size + padded) / stride) + 1
-        flatten_shape = current_size * current_size * out_channels[-1]
+        height_size = self.input_height
+        width_size = self.input_width
+        for stride in strides:
+            height_size = int((height_size + stride - 1) / stride)
+            width_size = int((width_size + stride - 1) / stride)
+        flatten_shape = width_size * height_size * filters[-1][-1]
         assert result.shape == (5, flatten_shape)
 
-    @pytest.mark.parametrize('filter_sizes, out_channels, strides', [
-        ((1, ), (32, ), (1, )),
-        ((3, ), (32, ), (1, )),
-        ((3, ), (32, ), (2, )),
-        ((1, 1), (32, 64), (1, 1)),
-        ((3, 3), (32, 64), (1, 1)),
-        ((3, 3), (32, 64), (2, 2)),
+    @pytest.mark.parametrize('filters, strides', [
+        ((((1, 1), 32), ), (1, )),
+        ((((3, 3), 32), ), (1, )),
+        ((((2, 3), 32), ), (1, )),
+        ((((3, 3), 32), ), (2, )),
+        ((((2, 3), 32), ), (2, )),
+        ((((1, 1), 32), ((1, 1), 64)), (1, 1)),
+        ((((3, 3), 32), ((3, 3), 64)), (1, 1)),
+        ((((2, 3), 32), ((3, 3), 64)), (1, 1)),
+        ((((3, 3), 32), ((3, 3), 64)), (2, 2)),
+        ((((2, 3), 32), ((3, 3), 64)), (2, 2)),
     ])
-    def test_output_shape_valid(self, filter_sizes, out_channels, strides):
+    def test_output_shape_valid(self, filters, strides):
         with tf.compat.v1.variable_scope('CNN'):
             self.cnn = cnn(input_var=self._input_ph,
-                           filter_dims=filter_sizes,
-                           num_filters=out_channels,
+                           filters=filters,
                            strides=strides,
                            name='cnn',
                            padding='VALID',
@@ -81,24 +87,29 @@ class TestCNN(TfGraphTestCase):
         result = self.sess.run(self.cnn,
                                feed_dict={self._input_ph: self.obs_input})
 
-        current_size = self.input_width
-        for filter_size, stride in zip(filter_sizes, strides):
-            current_size = int((current_size - filter_size) / stride) + 1
-        flatten_shape = current_size * current_size * out_channels[-1]
+        height_size = self.input_height
+        width_size = self.input_width
+        for filter_iter, stride in zip(filters, strides):
+            height_size = int((height_size - filter_iter[0][0]) / stride) + 1
+            width_size = int((width_size - filter_iter[0][1]) / stride) + 1
+        flatten_shape = height_size * width_size * filters[-1][-1]
         assert result.shape == (self.batch_size, flatten_shape)
 
-    @pytest.mark.parametrize(
-        'filter_sizes, in_channels, out_channels, strides',
-        [((1, ), (3, ), (32, ), (1, )), ((3, ), (3, ), (32, ), (1, )),
-         ((3, ), (3, ), (32, ), (2, )), ((1, 1), (3, 32), (32, 64), (1, 1)),
-         ((3, 3), (3, 32), (32, 64), (1, 1)),
-         ((3, 3), (3, 32), (32, 64), (2, 2))])
-    def test_output_with_identity_filter(self, filter_sizes, in_channels,
-                                         out_channels, strides):
+    @pytest.mark.parametrize('filters, in_channels, strides',
+                             [((((1, 1), 32), ), (3, ), (1, )),
+                              ((((3, 3), 32), ), (3, ), (1, )),
+                              ((((2, 3), 32), ), (3, ), (1, )),
+                              ((((3, 3), 32), ), (3, ), (2, )),
+                              ((((2, 3), 32), ), (3, ), (2, )),
+                              ((((1, 1), 32), ((1, 1), 64)), (3, 32), (1, 1)),
+                              ((((3, 3), 32), ((3, 3), 64)), (3, 32), (1, 1)),
+                              ((((2, 3), 32), ((3, 3), 64)), (3, 32), (1, 1)),
+                              ((((3, 3), 32), ((3, 3), 64)), (3, 32), (2, 2)),
+                              ((((2, 3), 32), ((3, 3), 64)), (3, 32), (2, 2))])
+    def test_output_with_identity_filter(self, filters, in_channels, strides):
         with tf.compat.v1.variable_scope('CNN'):
             self.cnn = cnn(input_var=self._input_ph,
-                           filter_dims=filter_sizes,
-                           num_filters=out_channels,
+                           filters=filters,
                            strides=strides,
                            name='cnn1',
                            padding='VALID',
@@ -112,13 +123,15 @@ class TestCNN(TfGraphTestCase):
 
         filter_sum = 1
         # filter value after 3 layers of conv
-        for filter_size, in_channel in zip(filter_sizes, in_channels):
-            filter_sum *= filter_size * filter_size * in_channel
+        for filter_iter, in_channel in zip(filters, in_channels):
+            filter_sum *= filter_iter[0][0] * filter_iter[0][1] * in_channel
 
-        current_size = self.input_width
-        for filter_size, stride in zip(filter_sizes, strides):
-            current_size = int((current_size - filter_size) / stride) + 1
-        flatten_shape = current_size * current_size * out_channels[-1]
+        height_size = self.input_height
+        width_size = self.input_width
+        for filter_iter, stride in zip(filters, strides):
+            height_size = int((height_size - filter_iter[0][0]) / stride) + 1
+            width_size = int((width_size - filter_iter[0][1]) / stride) + 1
+        flatten_shape = height_size * width_size * filters[-1][-1]
 
         # flatten
         h_out = np.full((self.batch_size, flatten_shape),
@@ -126,19 +139,22 @@ class TestCNN(TfGraphTestCase):
                         dtype=np.float32)
         np.testing.assert_array_equal(h_out, result)
 
-    @pytest.mark.parametrize(
-        'filter_sizes, in_channels, out_channels, strides',
-        [((1, ), (3, ), (32, ), (1, )), ((3, ), (3, ), (32, ), (1, )),
-         ((3, ), (3, ), (32, ), (2, )), ((1, 1), (3, 32), (32, 64), (1, 1)),
-         ((3, 3), (3, 32), (32, 64), (1, 1)),
-         ((3, 3), (3, 32), (32, 64), (2, 2))])
-    def test_output_with_random_filter(self, filter_sizes, in_channels,
-                                       out_channels, strides):
+    @pytest.mark.parametrize('filters, in_channels, strides',
+                             [((((1, 1), 32), ), (3, ), (1, )),
+                              ((((3, 3), 32), ), (3, ), (1, )),
+                              ((((2, 3), 32), ), (3, ), (1, )),
+                              ((((3, 3), 32), ), (3, ), (2, )),
+                              ((((2, 3), 32), ), (3, ), (2, )),
+                              ((((1, 1), 32), ((1, 1), 64)), (3, 32), (1, 1)),
+                              ((((3, 3), 32), ((3, 3), 64)), (3, 32), (1, 1)),
+                              ((((2, 3), 32), ((3, 3), 64)), (3, 32), (1, 1)),
+                              ((((3, 3), 32), ((3, 3), 64)), (3, 32), (2, 2)),
+                              ((((2, 3), 32), ((3, 3), 64)), (3, 32), (2, 2))])
+    def test_output_with_random_filter(self, filters, in_channels, strides):
         # Build a cnn with random filter weights
         with tf.compat.v1.variable_scope('CNN'):
             self.cnn2 = cnn(input_var=self._input_ph,
-                            filter_dims=filter_sizes,
-                            num_filters=out_channels,
+                            filters=filters,
                             strides=strides,
                             name='cnn1',
                             padding='VALID',
@@ -149,7 +165,7 @@ class TestCNN(TfGraphTestCase):
         result = self.sess.run(self.cnn2,
                                feed_dict={self._input_ph: self.obs_input})
 
-        two_layer = len(filter_sizes) == 2
+        two_layer = len(filters) == 2
         # get weight values
         with tf.compat.v1.variable_scope('CNN', reuse=True):
             h0_w = tf.compat.v1.get_variable('cnn1/h0/weight').eval()
@@ -165,7 +181,7 @@ class TestCNN(TfGraphTestCase):
                              filter_weights=filter_weights,
                              filter_bias=filter_bias,
                              strides=strides,
-                             filter_sizes=filter_sizes,
+                             filters=filters,
                              in_channels=in_channels,
                              hidden_nonlinearity=self.hidden_nonlinearity)
 
@@ -175,24 +191,24 @@ class TestCNN(TfGraphTestCase):
 
     # yapf: disable
     @pytest.mark.parametrize(
-        'filter_sizes, in_channels, out_channels, '
-        'strides, pool_shape, pool_stride', [
-            ((1, ), (3, ), (32, ), (1, ), 1, 1),
-            ((3, ), (3, ), (32, ), (1, ), 1, 1),
-            ((3, ), (3, ), (32, ), (2, ), 2, 2),
-            ((1, 1), (3, 32), (32, 64), (1, 1), 1, 1),
-            ((3, 3), (3, 32), (32, 64), (1, 1), 1, 1)
+        'filters, in_channels, strides, pool_shape, pool_stride', [
+            ((((1, 1), 32), ), (3, ), (1, ), 1, 1),
+            ((((3, 3), 32), ), (3, ), (1, ), 1, 1),
+            ((((2, 3), 32), ), (3, ), (1, ), 1, 1),
+            ((((3, 3), 32), ), (3, ), (2, ), 2, 2),
+            ((((2, 3), 32), ), (3, ), (2, ), 2, 2),
+            ((((1, 1), 32), ((1, 1), 64)), (3, 32), (1, 1), 1, 1),
+            ((((3, 3), 32), ((3, 3), 64)), (3, 32), (1, 1), 1, 1),
+            ((((2, 3), 32), ((3, 3), 64)), (3, 32), (1, 1), 1, 1)
         ])
     # yapf: enable
-    def test_output_with_max_pooling(self, filter_sizes, in_channels,
-                                     out_channels, strides, pool_shape,
-                                     pool_stride):
+    def test_output_with_max_pooling(self, filters, in_channels, strides,
+                                     pool_shape, pool_stride):
         # Build a cnn with random filter weights
         with tf.compat.v1.variable_scope('CNN'):
             self.cnn2 = cnn_with_max_pooling(
                 input_var=self._input_ph,
-                filter_dims=filter_sizes,
-                num_filters=out_channels,
+                filters=filters,
                 strides=strides,
                 name='cnn1',
                 pool_shapes=(pool_shape, pool_shape),
@@ -206,7 +222,7 @@ class TestCNN(TfGraphTestCase):
         result = self.sess.run(self.cnn2,
                                feed_dict={self._input_ph: self.obs_input})
 
-        two_layer = len(filter_sizes) == 2
+        two_layer = len(filters) == 2
         # get weight values
         with tf.compat.v1.variable_scope('CNN', reuse=True):
             h0_w = tf.compat.v1.get_variable('cnn1/h0/weight').eval()
@@ -222,13 +238,13 @@ class TestCNN(TfGraphTestCase):
 
         # convolution according to TensorFlow's approach
         # and perform max pooling on each layer
-        for filter_size, filter_weight, _filter_bias, in_channel in zip(
-                filter_sizes, filter_weights, filter_bias, in_channels):
+        for filter_iter, filter_weight, _filter_bias, in_channel in zip(
+                filters, filter_weights, filter_bias, in_channels):
             input_val = convolve(_input=input_val,
                                  filter_weights=(filter_weight, ),
                                  filter_bias=(_filter_bias, ),
                                  strides=strides,
-                                 filter_sizes=(filter_size, ),
+                                 filters=(filter_iter, ),
                                  in_channels=(in_channel, ),
                                  hidden_nonlinearity=self.hidden_nonlinearity)
 
@@ -245,8 +261,7 @@ class TestCNN(TfGraphTestCase):
         with pytest.raises(ValueError):
             with tf.compat.v1.variable_scope('CNN'):
                 self.cnn = cnn(input_var=self._input_ph,
-                               filter_dims=(3, ),
-                               num_filters=(32, ),
+                               filters=(((3, 3), 32), ),
                                strides=(1, ),
                                name='cnn',
                                padding='UNKNOWN')
@@ -255,8 +270,7 @@ class TestCNN(TfGraphTestCase):
         with pytest.raises(ValueError):
             with tf.compat.v1.variable_scope('CNN'):
                 self.cnn = cnn_with_max_pooling(input_var=self._input_ph,
-                                                filter_dims=(3, ),
-                                                num_filters=(32, ),
+                                                filters=(((3, 3), 32), ),
                                                 strides=(1, ),
                                                 name='cnn',
                                                 pool_shapes=(1, 1),

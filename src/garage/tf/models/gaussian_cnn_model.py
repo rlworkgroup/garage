@@ -13,13 +13,11 @@ class GaussianCNNModel(Model):
     """GaussianCNNModel.
 
     Args:
-        filter_dims(tuple[int]): Dimension of the filters. For example,
-            (3, 5) means there are two convolutional layers. The filter
-            for first layer is of dimension (3 x 3) and the second one is of
-            dimension (5 x 5).
-        num_filters(tuple[int]): Number of filters. For example, (3, 32) means
-            there are two convolutional layers. The filter for the first layer
-            has 3 channels and the second one with 32 channels.
+        filters (tuple(tuple(tuple(int), int))): Dimension and number of
+            filters. For example, (((3, 5), 3), ((3, 3), 32)) means there are
+            two convolutional layers. The filter for the first layer have 3
+            channels and its shape is (3 x 5), while the filter for the second
+            layer have 32 channels and its shape is (3 x 3).
         strides(tuple[int]): The stride of the sliding window. For example,
             (1, 2) means there are two convolutional layers. The stride of the
             filter for first layer is 1 and that of the second layer is 2.
@@ -54,13 +52,11 @@ class GaussianCNNModel(Model):
             parameter.
         std_share_network (bool): Boolean for whether mean and std share
             the same network.
-        std_filter_dims(tuple[int]): Dimension of the filters. For example,
-            (3, 5) means there are two convolutional layers. The filter
-            for first layer is of dimension (3 x 3) and the second one is of
-            dimension (5 x 5).
-        std_num_filters(tuple[int]): Number of filters. For example, (3, 32)
-            means there are two convolutional layers. The filter for the first
-            layer has 3 channels and the second one with 32 channels.
+        std_filters (tuple(tuple(tuple(int), int))): Dimension and number of
+            filters. For example, (((3, 5), 3), ((3, 3), 32)) means there are
+            two convolutional layers. The filter for the first layer have 3
+            channels and its shape is (3 x 5), while the filter for the second
+            layer have 32 channels and its shape is (3 x 3).
         std_strides(tuple[int]): The stride of the sliding window. For example,
             (1, 2) means there are two convolutional layers. The stride of the
             filter for first layer is 1 and that of the second layer is 2.
@@ -95,8 +91,7 @@ class GaussianCNNModel(Model):
 
     def __init__(self,
                  output_dim,
-                 filter_dims,
-                 num_filters,
+                 filters,
                  strides,
                  padding,
                  hidden_sizes,
@@ -113,8 +108,7 @@ class GaussianCNNModel(Model):
                  init_std=1.0,
                  min_std=1e-6,
                  max_std=None,
-                 std_filter_dims=(),
-                 std_num_filters=(),
+                 std_filters=(),
                  std_strides=(),
                  std_padding='SAME',
                  std_hidden_sizes=(32, 32),
@@ -128,8 +122,7 @@ class GaussianCNNModel(Model):
         # Network parameters
         super().__init__(name)
         self._output_dim = output_dim
-        self._num_filters = num_filters
-        self._filter_dims = filter_dims
+        self._filters = filters
         self._strides = strides
         self._padding = padding
         self._hidden_sizes = hidden_sizes
@@ -145,8 +138,7 @@ class GaussianCNNModel(Model):
         self._init_std = init_std
         self._min_std = min_std
         self._max_std = max_std
-        self._std_num_filters = std_num_filters
-        self._std_filter_dims = std_filter_dims
+        self._std_filters = std_filters
         self._std_strides = std_strides
         self._std_padding = std_padding
         self._std_hidden_sizes = std_hidden_sizes
@@ -217,11 +209,10 @@ class GaussianCNNModel(Model):
 
                 mean_std_conv = cnn(
                     input_var=state_input,
-                    filter_dims=self._filter_dims,
+                    filters=self._filters,
                     hidden_nonlinearity=self._hidden_nonlinearity,
                     hidden_w_init=self._hidden_w_init,
                     hidden_b_init=self._hidden_b_init,
-                    num_filters=self._num_filters,
                     strides=self._strides,
                     padding=self._padding,
                     name='mean_std_cnn')
@@ -246,11 +237,10 @@ class GaussianCNNModel(Model):
                 # separate MLPs for mean and std networks
                 # mean network
                 mean_conv = cnn(input_var=state_input,
-                                filter_dims=self._filter_dims,
+                                filters=self._filters,
                                 hidden_nonlinearity=self._hidden_nonlinearity,
                                 hidden_w_init=self._hidden_w_init,
                                 hidden_b_init=self._hidden_b_init,
-                                num_filters=self._num_filters,
                                 strides=self._strides,
                                 padding=self._padding,
                                 name='mean_cnn')
@@ -272,11 +262,10 @@ class GaussianCNNModel(Model):
                 if self._adaptive_std:
                     log_std_conv = cnn(
                         input_var=state_input,
-                        filter_dims=self._std_filter_dims,
+                        filters=self._std_filters,
                         hidden_nonlinearity=self._std_hidden_nonlinearity,
                         hidden_w_init=self._std_hidden_w_init,
                         hidden_b_init=self._std_hidden_b_init,
-                        num_filters=self._std_num_filters,
                         strides=self._std_strides,
                         padding=self._std_padding,
                         name='log_std_cnn')

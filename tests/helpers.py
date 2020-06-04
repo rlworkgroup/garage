@@ -10,6 +10,9 @@ import pytest
 from tests.quirks import KNOWN_GYM_RENDER_NOT_IMPLEMENTED
 
 
+# pylint: disable=missing-param-doc, missing-type-doc
+# pylint: disable=missing-return-doc, missing-return-type-doc
+# pylint: disable=unused-argument, missing-raises-doc
 def step_env(env, n=10, render=True):
     """Step env helper."""
     env.reset()
@@ -50,7 +53,7 @@ def step_env_with_gym_quirks(env, spec, n=10, render=True,
         assert round_trip.env.spec == env.env.spec
 
 
-def convolve(_input, filter_weights, filter_bias, strides, filter_sizes,
+def convolve(_input, filter_weights, filter_bias, strides, filters,
              in_channels, hidden_nonlinearity):
     """Convolve."""
     # in_width = self.input_width
@@ -60,11 +63,13 @@ def convolve(_input, filter_weights, filter_bias, strides, filter_sizes,
     in_width = _input.shape[1]
     in_height = _input.shape[2]
 
-    for filter_size, in_shape, filter_weight, _filter_bias, stride in zip(
-            filter_sizes, in_channels, filter_weights, filter_bias, strides):
-        out_width = int((in_width - filter_size) / stride) + 1
-        out_height = int((in_height - filter_size) / stride) + 1
-        flatten_filter_size = filter_size * filter_size * in_shape
+    for filter_iter, in_shape, filter_weight, _filter_bias, stride in zip(
+            filters, in_channels, filter_weights, filter_bias, strides):
+        filter_width = filter_iter[0][1]
+        filter_height = filter_iter[0][0]
+        out_width = int((in_width - filter_width) / stride) + 1
+        out_height = int((in_height - filter_height) / stride) + 1
+        flatten_filter_size = filter_width * filter_height * in_shape
         reshape_filter = filter_weight.reshape(flatten_filter_size, -1)
         image_vector = np.empty(
             (batch_size, out_width, out_height, flatten_filter_size))
@@ -72,7 +77,7 @@ def convolve(_input, filter_weights, filter_bias, strides, filter_sizes,
             for w in range(out_width):
                 for h in range(out_height):
                     image_vector[batch][w][h] = _construct_image_vector(
-                        _input, batch, w, h, filter_size, filter_size,
+                        _input, batch, w, h, filter_width, filter_height,
                         in_shape)
 
         _input = np.dot(image_vector, reshape_filter) + _filter_bias
@@ -94,7 +99,7 @@ def recurrent_step_lstm(input_val,
                         nonlinearity,
                         gate_nonlinearity,
                         forget_bias=1.0):
-    """A LSTM unit implements the following update mechanism:
+    """A LSTM unit implements the following update mechanism.
 
     Incoming gate:    i(t) = f_i(x(t) @ W_xi + h(t-1) @ W_hi +
                                  w_ci * c(t-1) + b_i)
@@ -169,7 +174,7 @@ def recurrent_step_gru(input_val,
                        nonlinearity,
                        gate_nonlinearity,
                        forget_bias=1.0):
-    """A GRU unit implements the following update mechanism:
+    """A GRU unit implements the following update mechanism.
 
     Reset gate:        r(t) = f_r(x(t) @ W_xr + h(t-1) @ W_hr + b_r)
     Update gate:       u(t) = f_u(x(t) @ W_xu + h(t-1) @ W_hu + b_u)
@@ -226,7 +231,7 @@ def recurrent_step_gru(input_val,
 
 def _construct_image_vector(_input, batch, w, h, filter_width, filter_height,
                             in_shape):
-    """sw is sliding window."""
+    """The sw is sliding window."""
     sw = np.empty((filter_width, filter_height, in_shape))
     for dw in range(filter_width):
         for dh in range(filter_height):
@@ -235,19 +240,26 @@ def _construct_image_vector(_input, batch, w, h, filter_width, filter_height,
     return sw.flatten()
 
 
-def max_pooling(_input, pool_shape, pool_stride):
+def max_pooling(_input, pool_shape, pool_stride, padding='VALID'):
     """Max pooling."""
     batch_size = _input.shape[0]
+    if padding == 'VALID':
+        height_size = int((_input.shape[1] - pool_shape) / pool_stride) + 1
+        width_size = int((_input.shape[2] - pool_shape) / pool_stride) + 1
+    else:
+        height_size = int((_input.shape[1] + pool_stride - 1) / pool_stride)
+        width_size = int((_input.shape[2] + pool_stride - 1) / pool_stride)
 
     # max pooling
-    results = np.empty((batch_size, int(_input.shape[1] / pool_shape),
-                        int(_input.shape[2] / pool_shape), _input.shape[3]))
+    results = np.empty((batch_size, height_size, width_size, _input.shape[3]))
     for b in range(batch_size):
-        for i, row in enumerate(range(0, _input.shape[1], pool_stride)):
-            for j, col in enumerate(range(0, _input.shape[2], pool_stride)):
+        for i in range(0, results.shape[1]):
+            for j in range(0, results.shape[2]):
                 for k in range(_input.shape[3]):
+                    row = i * pool_shape
+                    col = j * pool_shape
                     results[b][i][j][k] = np.max(
-                        _input[b, col:col + pool_shape, row:row +  # noqa: W504
+                        _input[b, row:row + pool_shape, col:col +  # noqa: W504
                                pool_shape, k])
 
     return results

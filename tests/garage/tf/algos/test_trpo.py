@@ -147,20 +147,18 @@ class TestTRPOCNNCubeCrash(TfGraphTestCase):
             env = GarageEnv(normalize(gym.make('CubeCrash-v0')))
 
             policy = CategoricalCNNPolicy(env_spec=env.spec,
-                                          num_filters=(32, 64),
-                                          filter_dims=(8, 4),
+                                          filters=(((8, 8), 32), ((4, 4), 64)),
                                           strides=(4, 2),
                                           padding='VALID',
                                           hidden_sizes=(32, 32))
 
-            baseline = GaussianCNNBaseline(env_spec=env.spec,
-                                           regressor_args=dict(
-                                               num_filters=(32, 64),
-                                               filter_dims=(8, 4),
-                                               strides=(4, 2),
-                                               padding='VALID',
-                                               hidden_sizes=(32, 32),
-                                               use_trust_region=True))
+            baseline = GaussianCNNBaseline(
+                env_spec=env.spec,
+                regressor_args=dict(filters=(((8, 8), 32), ((4, 4), 64)),
+                                    strides=(4, 2),
+                                    padding='VALID',
+                                    hidden_sizes=(32, 32),
+                                    use_trust_region=True))
 
             algo = TRPO(env_spec=env.spec,
                         policy=policy,

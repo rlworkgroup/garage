@@ -5,21 +5,21 @@ import tensorflow as tf
 from garage.tf.models import GaussianCNNModel
 
 
+# pylint: disable=missing-param-doc, missing-type-doc
+# pylint: disable=missing-return-doc, missing-return-type-doc
+# pylint: disable=differing-param-doc, differing-type-doc
 class GaussianCNNRegressorModel(GaussianCNNModel):
-    """
-    GaussianCNNRegressor based on garage.tf.models.Model class.
+    """GaussianCNNRegressor based on garage.tf.models.Model class.
 
     This class can be used to perform regression by fitting a Gaussian
     distribution to the outputs.
 
     Args:
-        filter_dims(tuple[int]): Dimension of the filters. For example,
-            (3, 5) means there are two convolutional layers. The filter
-            for first layer is of dimension (3 x 3) and the second one is of
-            dimension (5 x 5).
-        num_filters(tuple[int]): Number of filters. For example, (3, 32) means
-            there are two convolutional layers. The filter for the first layer
-            has 3 channels and the second one with 32 channels.
+        filters (tuple(tuple(tuple(int), int))): Dimension and number of
+            filters. For example, (((3, 5), 3), ((3, 3), 32)) means there are
+            two convolutional layers. The filter for the first layer have 3
+            channels and its shape is (3 x 5), while the filter for the second
+            layer have 32 channels and its shape is (3 x 3).
         strides(tuple[int]): The stride of the sliding window. For example,
             (1, 2) means there are two convolutional layers. The stride of the
             filter for first layer is 1 and that of the second layer is 2.
@@ -54,13 +54,11 @@ class GaussianCNNRegressorModel(GaussianCNNModel):
             parameter.
         std_share_network (bool): Boolean for whether mean and std share
             the same network.
-        std_filter_dims(tuple[int]): Dimension of the filters. For example,
-            (3, 5) means there are two convolutional layers. The filter
-            for first layer is of dimension (3 x 3) and the second one is of
-            dimension (5 x 5).
-        std_num_filters(tuple[int]): Number of filters. For example, (3, 32)
-            means there are two convolutional layers. The filter for the first
-            layer has 3 channels and the second one with 32 channels.
+        std_filters (tuple(tuple(tuple(int), int))): Dimension and number of
+            filters. For example, (((3, 5), 3), ((3, 3), 32)) means there are
+            two convolutional layers. The filter for the first layer have 3
+            channels and its shape is (3 x 5), while the filter for the second
+            layer have 32 channels and its shape is (3 x 3).
         std_strides(tuple[int]): The stride of the sliding window. For example,
             (1, 2) means there are two convolutional layers. The stride of the
             filter for first layer is 1 and that of the second layer is 2.

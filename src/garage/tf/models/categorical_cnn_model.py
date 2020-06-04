@@ -20,13 +20,11 @@ class CategoricalCNNModel(Model):
 
     Args:
         output_dim (int): Dimension of the network output.
-        filter_dims (tuple[int]): Dimension of the filters. For example,
-            (3, 5) means there are two convolutional layers. The filter
-            for first layer is of dimension (3 x 3) and the second one is of
-            dimension (5 x 5).
-        num_filters (tuple[int]): Number of filters. For example, (3, 32) means
-            there are two convolutional layers. The filter for the first layer
-            has 3 channels and the second one with 32 channels.
+        filters (tuple(tuple(tuple(int), int))): Dimension and number of
+            filters. For example, (((3, 5), 3), ((3, 3), 32)) means there are
+            two convolutional layers. The filter for the first layer have 3
+            channels and its shape is (3 x 5), while the filter for the second
+            layer have 32 channels and its shape is (3 x 3).
         strides (tuple[int]): The stride of the sliding window. For example,
             (1, 2) means there are two convolutional layers. The stride of the
             filter for first layer is 1 and that of the second layer is 2.
@@ -60,8 +58,7 @@ class CategoricalCNNModel(Model):
 
     def __init__(self,
                  output_dim,
-                 filter_dims,
-                 num_filters,
+                 filters,
                  strides,
                  padding,
                  name=None,
@@ -74,8 +71,7 @@ class CategoricalCNNModel(Model):
                  output_b_init=tf.zeros_initializer(),
                  layer_normalization=False):
         super().__init__(name)
-        self._cnn_model = CNNModel(filter_dims=filter_dims,
-                                   num_filters=num_filters,
+        self._cnn_model = CNNModel(filters=filters,
                                    strides=strides,
                                    padding=padding,
                                    hidden_nonlinearity=hidden_nonlinearity,
