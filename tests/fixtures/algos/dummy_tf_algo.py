@@ -1,8 +1,8 @@
 """Dummy algorithm."""
-from garage.tf.algos import BatchPolopt
+from garage.np.algos import RLAlgorithm
 
 
-class DummyTFAlgo(BatchPolopt):
+class DummyTFAlgo(RLAlgorithm):
     """Dummy algorithm."""
 
     def init_opt(self):
@@ -19,6 +19,6 @@ class DummyTFAlgo(BatchPolopt):
         Args:
             itr (int): Iteration number.
             samples_data (dict): Processed sample data.
-                See process_samples() for details.
+                See garage.tf.paths_to_tensors() for details.
 
         """

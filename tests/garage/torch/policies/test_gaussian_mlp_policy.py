@@ -44,8 +44,7 @@ class TestGaussianMLPPolicies:
         assert dist.variance.equal(torch.full((act_dim, ), expected_variance))
         assert action.shape == (act_dim, )
 
-
-# yapf: disable
+    # yapf: disable
     @pytest.mark.parametrize('hidden_sizes', [
         (1, ), (2, ), (3, ), (1, 4), (3, 5)])
     # yapf: enable

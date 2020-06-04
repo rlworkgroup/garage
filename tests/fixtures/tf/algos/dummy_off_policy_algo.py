@@ -33,6 +33,6 @@ class DummyOffPolicyAlgo(OffPolicyRLAlgorithm):
         Args:
             itr (int): Iteration number.
             samples_data (dict): Processed sample data.
-                See process_samples() for details.
+                See garage.tf.paths_to_tensors() for details.
 
         """

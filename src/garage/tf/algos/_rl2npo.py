@@ -68,7 +68,7 @@ class RL2NPO(NPO):
         Args:
             itr (int): Iteration number.
             samples_data (dict): Processed sample data.
-                See process_samples() for details.
+                See garage.tf.paths_to_tensors() for details.
 
         """
         self._fit_baseline_with_data(samples_data)
@@ -99,7 +99,7 @@ class RL2NPO(NPO):
         ev = np_tensor_utils.explained_variance_1d(samples_data['baselines'],
                                                    samples_data['returns'],
                                                    samples_data['valids'])
-        tabular.record('{}/ExplainedVariance'.format(self.baseline.name), ev)
+        tabular.record('{}/ExplainedVariance'.format(self._baseline.name), ev)
         self._old_policy.model.parameters = self.policy.model.parameters
 
     def _get_baseline_prediction(self, samples_data):
@@ -107,7 +107,7 @@ class RL2NPO(NPO):
 
         Args:
             samples_data (dict): Processed sample data.
-                See process_samples() for details.
+                See garage.tf.paths_to_tensors() for details.
 
         Returns:
             np.ndarray: Baseline prediction, with shape
@@ -115,5 +115,5 @@ class RL2NPO(NPO):
 
         """
         paths = samples_data['paths']
-        baselines = [self.baseline.predict(path) for path in paths]
+        baselines = [self._baseline.predict(path) for path in paths]
         return np_tensor_utils.pad_tensor_n(baselines, self.max_path_length)
