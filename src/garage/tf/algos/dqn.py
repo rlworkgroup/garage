@@ -70,7 +70,8 @@ class DQN(OffPolicyRLAlgorithm):
                  reward_scale=1.,
                  smooth_return=True,
                  name='DQN'):
-        self._qf_optimizer = make_optimizer(qf_optimizer, learning_rate=qf_lr)
+        self._qf_optimizer = qf_optimizer
+        self._qf_lr = qf_lr
         self._name = name
         self._target_network_update_freq = target_network_update_freq
         self._grad_norm_clipping = grad_norm_clipping
@@ -162,17 +163,18 @@ class DQN(OffPolicyRLAlgorithm):
                 loss = tf.reduce_mean(loss)
 
             with tf.name_scope('optimize_ops'):
+                qf_optimizer = make_optimizer(self._qf_optimizer,
+                                              learning_rate=self._qf_lr)
                 if self._grad_norm_clipping is not None:
-                    gradients = self._qf_optimizer.compute_gradients(
+                    gradients = qf_optimizer.compute_gradients(
                         loss, var_list=self.qf.get_trainable_vars())
                     for i, (grad, var) in enumerate(gradients):
                         if grad is not None:
                             gradients[i] = (tf.clip_by_norm(
                                 grad, self._grad_norm_clipping), var)
-                        optimize_loss = self._qf_optimizer.apply_gradients(
-                            gradients)
+                        optimize_loss = qf_optimizer.apply_gradients(gradients)
                 else:
-                    optimize_loss = self._qf_optimizer.minimize(
+                    optimize_loss = qf_optimizer.minimize(
                         loss, var_list=self.qf.get_trainable_vars())
 
             self._train_qf = tensor_utils.compile_function(

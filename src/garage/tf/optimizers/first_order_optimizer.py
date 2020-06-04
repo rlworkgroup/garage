@@ -19,7 +19,7 @@ class FirstOrderOptimizer:
 
     Args:
         optimizer (tf.Optimizer): Optimizer to be used.
-        learning_rates (dict): learning rate arguments.
+        learning_rate (dict): learning rate arguments.
             learning rates are our main interest parameters to tune optimizers.
         max_epochs (int): Maximum number of epochs for update.
         tolerance (float): Tolerance for difference in loss during update.
@@ -33,7 +33,7 @@ class FirstOrderOptimizer:
 
     def __init__(self,
                  optimizer=None,
-                 learning_rates=None,
+                 learning_rate=None,
                  max_epochs=1000,
                  tolerance=1e-6,
                  batch_size=32,
@@ -43,9 +43,14 @@ class FirstOrderOptimizer:
         self._opt_fun = None
         self._target = None
         self._callback = callback
-        optimizer = optimizer or tf.compat.v1.train.AdamOptimizer
-        learning_rates = learning_rates or dict(learning_rate=_Default(1e-3))
-        self._tf_optimizer = make_optimizer(optimizer, **learning_rates)
+        if optimizer is None:
+            optimizer = tf.compat.v1.train.AdamOptimizer
+        learning_rate = learning_rate or dict(learning_rate=_Default(1e-3))
+        if not isinstance(learning_rate, dict):
+            learning_rate = dict(learning_rate=learning_rate)
+
+        self._tf_optimizer = optimizer
+        self._learning_rate = learning_rate
         self._max_epochs = max_epochs
         self._tolerance = tolerance
         self._batch_size = batch_size
@@ -70,8 +75,9 @@ class FirstOrderOptimizer:
         del kwargs
         with tf.name_scope(self._name):
             self._target = target
-
-            self._train_op = self._tf_optimizer.minimize(
+            tf_optimizer = make_optimizer(self._tf_optimizer,
+                                          **self._learning_rate)
+            self._train_op = tf_optimizer.minimize(
                 loss, var_list=target.get_params())
 
             if extra_inputs is None:

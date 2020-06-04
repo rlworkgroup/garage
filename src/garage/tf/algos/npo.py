@@ -6,13 +6,12 @@ from dowel import logger, tabular
 import numpy as np
 import tensorflow as tf
 
-from garage import make_optimizer
 from garage import log_performance, TrajectoryBatch
+from garage import make_optimizer
 from garage.misc import tensor_utils as np_tensor_utils
 from garage.np.algos import RLAlgorithm
 from garage.sampler import OnPolicyVectorizedSampler
 from garage.tf import paths_to_tensors
-from garage.tf.algos import make_optimizer
 from garage.tf.misc.tensor_utils import center_advs
 from garage.tf.misc.tensor_utils import compile_function
 from garage.tf.misc.tensor_utils import compute_advantages

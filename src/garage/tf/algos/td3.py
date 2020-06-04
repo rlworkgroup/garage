@@ -132,12 +132,16 @@ class TD3(OffPolicyRLAlgorithm):
         self._action_loss = None
 
         self.target_qf2 = qf2.clone('target_qf2')
-        self._policy_optimizer = make_optimizer(policy_optimizer,
-                                                learning_rate=policy_lr,
-                                                name='PolicyOptimizer')
-        self._qf_optimizer = make_optimizer(qf_optimizer,
-                                            learning_rate=qf_lr,
-                                            name='QFunctionOptimizer')
+        self._policy_optimizer = policy_optimizer
+        self._qf_optimizer = qf_optimizer
+        self._policy_lr = policy_lr
+        self._qf_lr = qf_lr
+        # self._policy_optimizer = make_optimizer(policy_optimizer,
+        #                                         learning_rate=policy_lr,
+        #                                         name='PolicyOptimizer')
+        # self._qf_optimizer = make_optimizer(qf_optimizer,
+        #                                     learning_rate=qf_lr,
+        #                                     name='QFunctionOptimizer')
 
         super(TD3, self).__init__(env_spec=env_spec,
                                   policy=policy,
@@ -213,7 +217,11 @@ class TD3(OffPolicyRLAlgorithm):
                 action_loss = -tf.reduce_mean(next_qval)
 
             with tf.name_scope('minimize_action_loss'):
-                policy_train_op = self._policy_optimizer.minimize(
+                policy_optimizer = make_optimizer(
+                    self._policy_optimizer,
+                    learning_rate=self._policy_lr,
+                    name='PolicyOptimizer')
+                policy_train_op = policy_optimizer.minimize(
                     action_loss, var_list=self.policy.get_trainable_vars())
 
             f_train_policy = tensor_utils.compile_function(
@@ -230,9 +238,12 @@ class TD3(OffPolicyRLAlgorithm):
                     tf.math.squared_difference(y, q2val))
 
             with tf.name_scope('minimize_qf_loss'):
-                qf_train_op = self._qf_optimizer.minimize(
+                qf_optimizer = make_optimizer(self._qf_optimizer,
+                                              learning_rate=self._qf_lr,
+                                              name='QFunctionOptimizer')
+                qf_train_op = qf_optimizer.minimize(
                     qval1_loss, var_list=self.qf.get_trainable_vars())
-                qf2_train_op = self._qf_optimizer.minimize(
+                qf2_train_op = qf_optimizer.minimize(
                     qval2_loss, var_list=self.qf2.get_trainable_vars())
 
             f_train_qf = tensor_utils.compile_function(

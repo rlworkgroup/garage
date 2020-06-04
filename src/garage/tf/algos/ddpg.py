@@ -108,12 +108,10 @@ class DDPG(OffPolicyRLAlgorithm):
 
         self._target_policy = policy.clone('target_policy')
         self._target_qf = qf.clone('target_qf')
-        self._policy_optimizer = make_optimizer(policy_optimizer,
-                                                learning_rate=policy_lr,
-                                                name='PolicyOptimizer')
-        self._qf_optimizer = make_optimizer(qf_optimizer,
-                                            learning_rate=qf_lr,
-                                            name='QFunctionOptimizer')
+        self._policy_optimizer = policy_optimizer
+        self._qf_optimizer = qf_optimizer
+        self._policy_lr = policy_lr
+        self._qf_lr = qf_lr
 
         super(DDPG, self).__init__(env_spec=env_spec,
                                    policy=policy,
@@ -187,7 +185,11 @@ class DDPG(OffPolicyRLAlgorithm):
                         action_loss += policy_reg
 
             with tf.name_scope('minimize_action_loss'):
-                policy_train_op = self._policy_optimizer.minimize(
+                policy_optimizer = make_optimizer(
+                    self._policy_optimizer,
+                    learning_rate=self._policy_lr,
+                    name='PolicyOptimizer')
+                policy_train_op = policy_optimizer.minimize(
                     action_loss, var_list=self.policy.get_trainable_vars())
 
             f_train_policy = tensor_utils.compile_function(
@@ -206,7 +208,10 @@ class DDPG(OffPolicyRLAlgorithm):
                         qval_loss += qf_reg
 
             with tf.name_scope('minimize_qf_loss'):
-                qf_train_op = self._qf_optimizer.minimize(
+                qf_optimizer = make_optimizer(self._qf_optimizer,
+                                              learning_rate=self._qf_lr,
+                                              name='QFunctionOptimizer')
+                qf_train_op = qf_optimizer.minimize(
                     qval_loss, var_list=self.qf.get_trainable_vars())
 
             f_train_qf = tensor_utils.compile_function(

@@ -62,7 +62,7 @@ def gaussian_gru_policy(ctxt, env_id, seed):
             optimizer_args=dict(
                 batch_size=32,
                 max_epochs=10,
-                learning_rates=dict(learning_rate=1e-3),
+                learning_rate=1e-3,
             ),
         )
 

@@ -11,7 +11,6 @@ from garage import log_performance, TrajectoryBatch
 from garage.np.algos import RLAlgorithm
 from garage.sampler import OnPolicyVectorizedSampler
 from garage.tf import paths_to_tensors
-from garage.tf.algos import _Default, make_optimizer
 from garage.tf.misc import tensor_utils
 from garage.tf.misc.tensor_utils import flatten_inputs
 from garage.tf.misc.tensor_utils import graph_inputs

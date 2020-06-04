@@ -83,10 +83,8 @@ class BernoulliMLPRegressor(StochasticRegressor):
 
         with tf.compat.v1.variable_scope(self._name, reuse=False) as vs:
             self._variable_scope = vs
-            if optimizer_args is None:
-                optimizer_args = dict()
-            if tr_optimizer_args is None:
-                tr_optimizer_args = dict()
+            optimizer_args = optimizer_args or dict()
+            tr_optimizer_args = tr_optimizer_args or dict()
 
             if optimizer is None:
                 self._optimizer = make_optimizer(LbfgsOptimizer,

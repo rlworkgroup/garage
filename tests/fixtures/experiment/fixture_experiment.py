@@ -10,7 +10,6 @@ from garage.tf.policies import CategoricalMLPPolicy
 def fixture_exp(snapshot_config, sess):
     """Dummy fixture experiment function.
 
-
     Args:
         snapshot_config (garage.experiment.SnapshotConfig): The snapshot
             configuration used by LocalRunner to create the snapshotter.
