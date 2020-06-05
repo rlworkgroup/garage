@@ -20,9 +20,9 @@ class TestContinuousCNNQFunction(TfGraphTestCase):
 
     # yapf: disable
     @pytest.mark.parametrize('filters, strides', [
-        ((((3, 3), 5), ), (1, )),
-        ((((3, 3), 5), ), (2, )),
-        ((((3, 3), 5), ((3, 3), 5)), (1, 1))
+        (((5, (3, 3)), ), (1, )),
+        (((5, (3, 3)), ), (2, )),
+        (((5, (3, 3)), (5, (3, 3))), (1, 1))
     ])
     # yapf: enable
     def test_get_qval(self, filters, strides):
@@ -70,10 +70,10 @@ class TestContinuousCNNQFunction(TfGraphTestCase):
 
     # yapf: disable
     @pytest.mark.parametrize('filters, strides, pool_strides, pool_shapes', [
-        ((((3, 3), 5), ), (1, ), (1, 1), (1, 1)),
-        ((((3, 3), 5), ), (2, ), (2, 2), (2, 2)),
-        ((((3, 3), 5), ((3, 3), 5)), (1, 1), (1, 1), (1, 1)),
-        ((((3, 3), 5), ((3, 3), 5)), (1, 1), (2, 2), (2, 2))
+        (((5, (3, 3)), ), (1, ), (1, 1), (1, 1)),
+        (((5, (3, 3)), ), (2, ), (2, 2), (2, 2)),
+        (((5, (3, 3)), (5, (3, 3))), (1, 1), (1, 1), (1, 1)),
+        (((5, (3, 3)), (5, (3, 3))), (1, 1), (2, 2), (2, 2))
     ])
     # yapf: enable
     def test_get_qval_max_pooling(self, filters, strides, pool_strides,
@@ -120,14 +120,14 @@ class TestContinuousCNNQFunction(TfGraphTestCase):
         with pytest.raises(ValueError):
             env = GarageEnv(DummyDiscreteEnv(obs_dim=obs_dim))
             ContinuousCNNQFunction(env_spec=env.spec,
-                                   filters=(((3, 3), 5), ),
+                                   filters=((5, (3, 3)), ),
                                    strides=(1, ))
 
     def test_not_box(self):
         with pytest.raises(ValueError):
             dict_env = GarageEnv(DummyDictEnv())
             ContinuousCNNQFunction(env_spec=dict_env.spec,
-                                   filters=(((3, 3), 5), ),
+                                   filters=((5, (3, 3)), ),
                                    strides=(1, ))
 
     def test_obs_is_image(self):
@@ -143,7 +143,7 @@ class TestContinuousCNNQFunction(TfGraphTestCase):
                                 new=SimpleMLPMergeModel):
 
                     qf = ContinuousCNNQFunction(env_spec=image_env.spec,
-                                                filters=(((3, 3), 5), ),
+                                                filters=((5, (3, 3)), ),
                                                 strides=(1, ))
 
                     fake_obs = [
@@ -192,7 +192,7 @@ class TestContinuousCNNQFunction(TfGraphTestCase):
                                 new=SimpleMLPMergeModel):
 
                     qf = ContinuousCNNQFunction(env_spec=env.spec,
-                                                filters=(((3, 3), 5), ),
+                                                filters=((5, (3, 3)), ),
                                                 strides=(1, ))
 
                     # ensure non-image obses are not normalized
@@ -231,9 +231,9 @@ class TestContinuousCNNQFunction(TfGraphTestCase):
 
     # yapf: disable
     @pytest.mark.parametrize('filters, strides', [
-        ((((3, 3), 5), ), (1, )),
-        ((((3, 3), 5), ), (2, )),
-        ((((3, 3), 5), ((3, 3), 5)), (1, 1))
+        (((5, (3, 3)), ), (1, )),
+        (((5, (3, 3)), ), (2, )),
+        (((5, (3, 3)), (5, (3, 3))), (1, 1))
     ])
     # yapf: enable
     def test_get_qval_sym(self, filters, strides):
@@ -275,9 +275,9 @@ class TestContinuousCNNQFunction(TfGraphTestCase):
 
     # yapf: disable
     @pytest.mark.parametrize('filters, strides', [
-        ((((3, 3), 5), ), (1, )),
-        ((((3, 3), 5), ), (2, )),
-        ((((3, 3), 5), ((3, 3), 5)), (1, 1))
+        (((5, (3, 3)), ), (1, )),
+        (((5, (3, 3)), ), (2, )),
+        (((5, (3, 3)), (5, (3, 3))), (1, 1))
     ])
     # yapf: enable
     def test_is_pickleable(self, filters, strides):
@@ -320,9 +320,9 @@ class TestContinuousCNNQFunction(TfGraphTestCase):
 
     # yapf: disable
     @pytest.mark.parametrize('filters, strides', [
-        ((((3, 3), 5), ), (1, )),
-        ((((3, 3), 5), ), (2, )),
-        ((((3, 3), 5), ((3, 3), 5)), (1, 1))
+        (((5, (3, 3)), ), (1, )),
+        (((5, (3, 3)), ), (2, )),
+        (((5, (3, 3)), (5, (3, 3))), (1, 1))
     ])
     # yapf: enable
     def test_clone(self, filters, strides):

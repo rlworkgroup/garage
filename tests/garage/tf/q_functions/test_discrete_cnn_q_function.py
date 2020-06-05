@@ -25,9 +25,9 @@ class TestDiscreteCNNQFunction(TfGraphTestCase):
 
     # yapf: disable
     @pytest.mark.parametrize('filters, strides', [
-        ((((3, 3), 5), ), (1, )),
-        ((((3, 3), 5), ), (2, )),
-        ((((3, 3), 5), ((3, 3), 5)), (1, 1)),
+        (((5, (3, 3)), ), (1, )),
+        (((5, (3, 3)), ), (2, )),
+        (((5, (3, 3)), (5, (3, 3))), (1, 1)),
     ])
     # yapf: enable
     def test_get_action(self, filters, strides):
@@ -56,7 +56,7 @@ class TestDiscreteCNNQFunction(TfGraphTestCase):
         boxEnv = GarageEnv(DummyDiscreteEnv(obs_dim=obs_dim))
         with pytest.raises(ValueError):
             DiscreteCNNQFunction(env_spec=boxEnv.spec,
-                                 filters=(((3, 3), 5), ),
+                                 filters=((5, (3, 3)), ),
                                  strides=(2, ),
                                  dueling=False)
 
@@ -68,7 +68,7 @@ class TestDiscreteCNNQFunction(TfGraphTestCase):
                         side_effect=CNNModel._build) as build:
 
             qf = DiscreteCNNQFunction(env_spec=image_env.spec,
-                                      filters=(((3, 3), 5), ),
+                                      filters=((5, (3, 3)), ),
                                       strides=(2, ),
                                       dueling=False)
             normalized_obs = build.call_args_list[0][0][1]
@@ -100,7 +100,7 @@ class TestDiscreteCNNQFunction(TfGraphTestCase):
                         side_effect=CNNModel._build) as build:
 
             qf = DiscreteCNNQFunction(env_spec=env.spec,
-                                      filters=(((3, 3), 5), ),
+                                      filters=((5, (3, 3)), ),
                                       strides=(2, ),
                                       dueling=False)
             normalized_obs = build.call_args_list[0][0][1]
@@ -127,9 +127,9 @@ class TestDiscreteCNNQFunction(TfGraphTestCase):
 
     # yapf: disable
     @pytest.mark.parametrize('filters, strides', [
-        ((((3, 3), 5), ), (1, )),
-        ((((3, 3), 5), ), (2, )),
-        ((((3, 3), 5), ((3, 3), 5)), (1, 1)),
+        (((5, (3, 3)), ), (1, )),
+        (((5, (3, 3)), ), (2, )),
+        (((5, (3, 3)), (5, (3, 3))), (1, 1)),
     ])
     # yapf: enable
     def test_get_action_dueling(self, filters, strides):
@@ -155,10 +155,10 @@ class TestDiscreteCNNQFunction(TfGraphTestCase):
 
     # yapf: disable
     @pytest.mark.parametrize('filters, strides, pool_strides, pool_shapes', [
-        ((((3, 3), 5), ), (1, ), (1, 1), (1, 1)),  # noqa: E122
-        ((((3, 3), 5), ), (2, ), (2, 2), (2, 2)),  # noqa: E122
-        ((((3, 3), 5), ((3, 3), 5)), (1, 1), (1, 1), (1, 1)),  # noqa: E122
-        ((((3, 3), 5), ((3, 3), 5)), (1, 1), (2, 2), (2, 2))  # noqa: E122
+        (((5, (3, 3)), ), (1, ), (1, 1), (1, 1)),  # noqa: E122
+        (((5, (3, 3)), ), (2, ), (2, 2), (2, 2)),  # noqa: E122
+        (((5, (3, 3)), (5, (3, 3))), (1, 1), (1, 1), (1, 1)),  # noqa: E122
+        (((5, (3, 3)), (5, (3, 3))), (1, 1), (2, 2), (2, 2))  # noqa: E122
     ])  # noqa: E122
     # yapf: enable
     def test_get_action_max_pooling(self, filters, strides, pool_strides,
@@ -188,9 +188,9 @@ class TestDiscreteCNNQFunction(TfGraphTestCase):
 
     # yapf: disable
     @pytest.mark.parametrize('filters, strides', [
-        ((((3, 3), 5), ), (1, )),
-        ((((3, 3), 5), ), (2, )),
-        ((((3, 3), 5), ((3, 3), 5)), (1, 1)),
+        (((5, (3, 3)), ), (1, )),
+        (((5, (3, 3)), ), (2, )),
+        (((5, (3, 3)), (5, (3, 3))), (1, 1)),
     ])
     # yapf: enable
     def test_get_qval_sym(self, filters, strides):
@@ -221,9 +221,9 @@ class TestDiscreteCNNQFunction(TfGraphTestCase):
 
     # yapf: disable
     @pytest.mark.parametrize('filters, strides', [
-        ((((3, 3), 5), ), (1, )),
-        ((((3, 3), 5), ), (2, )),
-        ((((3, 3), 5), ((3, 3), 5)), (1, 1)),
+        (((5, (3, 3)), ), (1, )),
+        (((5, (3, 3)), ), (2, )),
+        (((5, (3, 3)), (5, (3, 3))), (1, 1)),
     ])
     # yapf: enable
     def test_is_pickleable(self, filters, strides):
@@ -255,9 +255,9 @@ class TestDiscreteCNNQFunction(TfGraphTestCase):
 
     # yapf: disable
     @pytest.mark.parametrize('filters, strides', [
-        ((((3, 3), 5), ), (1, )),
-        ((((3, 3), 5), ), (2, )),
-        ((((3, 3), 5), ((3, 3), 5)), (1, 1)),
+        (((5, (3, 3)), ), (1, )),
+        (((5, (3, 3)), ), (2, )),
+        (((5, (3, 3)), (5, (3, 3))), (1, 1)),
     ])
     # yapf: enable
     def test_clone(self, filters, strides):

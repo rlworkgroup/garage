@@ -26,12 +26,12 @@ class TestGaussianCNNModel(TfGraphTestCase):
     @mock.patch('tensorflow.random.normal')
     @pytest.mark.parametrize('filters, in_channels, strides, output_dim, '
                              'hidden_sizes',
-                             [((((1, 1), 3), ), (3, ), (1, ), 1, (1, )),
-                              ((((3, 3), 3), ), (3, ), (1, ), 2, (2, )),
-                              ((((3, 3), 3), ), (3, ), (2, ), 1, (1, 1)),
-                              ((((1, 1), 3), ((1, 1), 3)), (3, 3), (1, 1), 2,
+                             [(((3, (1, 1)), ), (3, ), (1, ), 1, (1, )),
+                              (((3, (3, 3)), ), (3, ), (1, ), 2, (2, )),
+                              (((3, (3, 3)), ), (3, ), (2, ), 1, (1, 1)),
+                              (((3, (1, 1)), (3, (1, 1))), (3, 3), (1, 1), 2,
                                (2, 2)),
-                              ((((3, 3), 3), ((3, 3), 3)), (3, 3), (2, 2), 2,
+                              (((3, (3, 3)), (3, (3, 3))), (3, 3), (2, 2), 2,
                                (2, 2))])
     def test_std_share_network_output_values(self, mock_normal, filters,
                                              in_channels, strides, output_dim,
@@ -55,8 +55,8 @@ class TestGaussianCNNModel(TfGraphTestCase):
         filter_sum = 1
 
         for filter_iter, in_channel in zip(filters, in_channels):
-            filter_height = filter_iter[0][0]
-            filter_width = filter_iter[0][1]
+            filter_height = filter_iter[1][0]
+            filter_width = filter_iter[1][1]
             filter_sum *= 0.01 * filter_height * filter_width * in_channel
 
         for _ in hidden_sizes:
@@ -65,9 +65,9 @@ class TestGaussianCNNModel(TfGraphTestCase):
         height_size = self.input_height
         width_size = self.input_width
         for filter_iter, stride in zip(filters, strides):
-            height_size = int((height_size - filter_iter[0][0]) / stride) + 1
-            width_size = int((width_size - filter_iter[0][1]) / stride) + 1
-        flatten_shape = height_size * width_size * filters[-1][-1]
+            height_size = int((height_size - filter_iter[1][0]) / stride) + 1
+            width_size = int((width_size - filter_iter[1][1]) / stride) + 1
+        flatten_shape = height_size * width_size * filters[-1][0]
 
         network_output = filter_sum * flatten_shape * np.prod(hidden_sizes)
         expected_mean = np.full((self.batch_size, output_dim),
@@ -93,7 +93,7 @@ class TestGaussianCNNModel(TfGraphTestCase):
                               (2, (1, 1)), (3, (2, 2))])
     def test_std_share_network_shapes(self, output_dim, hidden_sizes):
         # should be 2 * output_dim
-        model = GaussianCNNModel(filters=(((3, 3), 3), ((3, 3), 6)),
+        model = GaussianCNNModel(filters=((3, (3, 3)), (6, (3, 3))),
                                  strides=[1, 1],
                                  padding='SAME',
                                  hidden_sizes=hidden_sizes,
@@ -111,12 +111,12 @@ class TestGaussianCNNModel(TfGraphTestCase):
     @mock.patch('tensorflow.random.normal')
     @pytest.mark.parametrize('filters, in_channels, strides, output_dim, '
                              'hidden_sizes',
-                             [((((1, 1), 3), ), (3, ), (1, ), 1, (1, )),
-                              ((((3, 3), 3), ), (3, ), (1, ), 2, (2, )),
-                              ((((3, 3), 3), ), (3, ), (2, ), 1, (1, 1)),
-                              ((((1, 1), 3), ((1, 1), 3)), (3, 3), (1, 1), 2,
+                             [(((3, (1, 1)), ), (3, ), (1, ), 1, (1, )),
+                              (((3, (3, 3)), ), (3, ), (1, ), 2, (2, )),
+                              (((3, (3, 3)), ), (3, ), (2, ), 1, (1, 1)),
+                              (((3, (1, 1)), (3, (1, 1))), (3, 3), (1, 1), 2,
                                (2, 2)),
-                              ((((3, 3), 3), ((3, 3), 3)), (3, 3), (2, 2), 2,
+                              (((3, (3, 3)), (3, (3, 3))), (3, 3), (2, 2), 2,
                                (2, 2))])
     def test_without_std_share_network_output_values(self, mock_normal,
                                                      filters, in_channels,
@@ -143,8 +143,8 @@ class TestGaussianCNNModel(TfGraphTestCase):
         filter_sum = 1
 
         for filter_iter, in_channel in zip(filters, in_channels):
-            filter_height = filter_iter[0][0]
-            filter_width = filter_iter[0][1]
+            filter_height = filter_iter[1][0]
+            filter_width = filter_iter[1][1]
             filter_sum *= 0.01 * filter_height * filter_width * in_channel
 
         for _ in hidden_sizes:
@@ -153,9 +153,9 @@ class TestGaussianCNNModel(TfGraphTestCase):
         height_size = self.input_height
         width_size = self.input_width
         for filter_iter, stride in zip(filters, strides):
-            height_size = int((height_size - filter_iter[0][0]) / stride) + 1
-            width_size = int((width_size - filter_iter[0][1]) / stride) + 1
-        flatten_shape = height_size * width_size * filters[-1][-1]
+            height_size = int((height_size - filter_iter[1][0]) / stride) + 1
+            width_size = int((width_size - filter_iter[1][1]) / stride) + 1
+        flatten_shape = height_size * width_size * filters[-1][0]
 
         network_output = filter_sum * flatten_shape * np.prod(hidden_sizes)
         expected_mean = np.full((self.batch_size, output_dim),
@@ -180,7 +180,7 @@ class TestGaussianCNNModel(TfGraphTestCase):
                              [(1, (0, )), (1, (1, )), (1, (2, )), (2, (3, )),
                               (2, (1, 1)), (3, (2, 2))])
     def test_without_std_share_network_shapes(self, output_dim, hidden_sizes):
-        model = GaussianCNNModel(filters=(((3, 3), 3), ((3, 3), 6)),
+        model = GaussianCNNModel(filters=((3, (3, 3)), (6, (3, 3))),
                                  strides=[1, 1],
                                  padding='SAME',
                                  hidden_sizes=hidden_sizes,
@@ -202,12 +202,12 @@ class TestGaussianCNNModel(TfGraphTestCase):
     @mock.patch('tensorflow.random.normal')
     @pytest.mark.parametrize('filters, in_channels, strides, output_dim, '
                              'hidden_sizes',
-                             [((((1, 1), 3), ), (3, ), (1, ), 1, (1, )),
-                              ((((3, 3), 3), ), (3, ), (1, ), 2, (2, )),
-                              ((((3, 3), 3), ), (3, ), (2, ), 1, (1, 1)),
-                              ((((1, 1), 3), ((1, 1), 3)), (3, 3), (1, 1), 2,
+                             [(((3, (1, 1)), ), (3, ), (1, ), 1, (1, )),
+                              (((3, (3, 3)), ), (3, ), (1, ), 2, (2, )),
+                              (((3, (3, 3)), ), (3, ), (2, ), 1, (1, 1)),
+                              (((3, (1, 1)), (3, (1, 1))), (3, 3), (1, 1), 2,
                                (2, 2)),
-                              ((((3, 3), 3), ((3, 3), 3)), (3, 3), (2, 2), 2,
+                              (((3, (3, 3)), (3, (3, 3))), (3, 3), (2, 2), 2,
                                (2, 2))])
     def test_adaptive_std_network_output_values(self, mock_normal, filters,
                                                 in_channels, strides,
@@ -239,8 +239,8 @@ class TestGaussianCNNModel(TfGraphTestCase):
         filter_sum = 1
 
         for filter_iter, in_channel in zip(filters, in_channels):
-            filter_height = filter_iter[0][0]
-            filter_width = filter_iter[0][1]
+            filter_height = filter_iter[1][0]
+            filter_width = filter_iter[1][1]
             filter_sum *= 0.01 * filter_height * filter_width * in_channel
 
         for _ in hidden_sizes:
@@ -249,9 +249,9 @@ class TestGaussianCNNModel(TfGraphTestCase):
         height_size = self.input_height
         width_size = self.input_width
         for filter_iter, stride in zip(filters, strides):
-            height_size = int((height_size - filter_iter[0][0]) / stride) + 1
-            width_size = int((width_size - filter_iter[0][1]) / stride) + 1
-        flatten_shape = height_size * width_size * filters[-1][-1]
+            height_size = int((height_size - filter_iter[1][0]) / stride) + 1
+            width_size = int((width_size - filter_iter[1][1]) / stride) + 1
+        flatten_shape = height_size * width_size * filters[-1][0]
 
         network_output = filter_sum * flatten_shape * np.prod(hidden_sizes)
         expected_mean = np.full((self.batch_size, output_dim),
@@ -279,7 +279,7 @@ class TestGaussianCNNModel(TfGraphTestCase):
     def test_adaptive_std_output_shape(self, output_dim, hidden_sizes,
                                        std_hidden_sizes):
         model = GaussianCNNModel(
-            filters=(((3, 3), 3), ((3, 3), 6)),
+            filters=((3, (3, 3)), (6, (3, 3))),
             strides=[1, 1],
             padding='SAME',
             output_dim=output_dim,
@@ -288,7 +288,7 @@ class TestGaussianCNNModel(TfGraphTestCase):
             adaptive_std=True,
             hidden_nonlinearity=None,
             std_hidden_nonlinearity=None,
-            std_filters=(((3, 3), 3), ((3, 3), 6)),
+            std_filters=((3, (3, 3)), (6, (3, 3))),
             std_strides=[1, 1],
             std_padding='SAME',
             std_hidden_sizes=std_hidden_sizes,
@@ -322,7 +322,7 @@ class TestGaussianCNNModel(TfGraphTestCase):
         mock_normal.return_value = 0.5
         input_var = tf.compat.v1.placeholder(tf.float32,
                                              shape=(None, 10, 10, 3))
-        model = GaussianCNNModel(filters=(((3, 3), 3), ((3, 3), 6)),
+        model = GaussianCNNModel(filters=((3, (3, 3)), (6, (3, 3))),
                                  strides=[1, 1],
                                  padding='SAME',
                                  hidden_sizes=hidden_sizes,
@@ -358,7 +358,7 @@ class TestGaussianCNNModel(TfGraphTestCase):
         mock_normal.return_value = 0.5
         input_var = tf.compat.v1.placeholder(tf.float32,
                                              shape=(None, 10, 10, 3))
-        model = GaussianCNNModel(filters=(((3, 3), 3), ((3, 3), 6)),
+        model = GaussianCNNModel(filters=((3, (3, 3)), (6, (3, 3))),
                                  strides=[1, 1],
                                  padding='SAME',
                                  hidden_sizes=hidden_sizes,
@@ -395,7 +395,7 @@ class TestGaussianCNNModel(TfGraphTestCase):
         mock_normal.return_value = 0.5
         input_var = tf.compat.v1.placeholder(tf.float32,
                                              shape=(None, 10, 10, 3))
-        model = GaussianCNNModel(filters=(((3, 3), 3), ((3, 3), 6)),
+        model = GaussianCNNModel(filters=((3, (3, 3)), (6, (3, 3))),
                                  strides=[1, 1],
                                  padding='SAME',
                                  output_dim=output_dim,
@@ -404,7 +404,7 @@ class TestGaussianCNNModel(TfGraphTestCase):
                                  adaptive_std=True,
                                  hidden_nonlinearity=None,
                                  std_hidden_nonlinearity=None,
-                                 std_filters=(((3, 3), 3), ((3, 3), 6)),
+                                 std_filters=((3, (3, 3)), (6, (3, 3))),
                                  std_strides=[1, 1],
                                  std_padding='SAME',
                                  std_hidden_sizes=std_hidden_sizes,
@@ -438,7 +438,7 @@ class TestGaussianCNNModel(TfGraphTestCase):
     def test_softplus_output_values(self, mock_normal, output_dim,
                                     hidden_sizes):
         mock_normal.return_value = 0.5
-        filters = (((3, 3), 3), ((3, 3), 6))
+        filters = ((3, (3, 3)), (6, (3, 3)))
         in_channels = [3, 3]
         strides = [1, 1]
 
@@ -461,8 +461,8 @@ class TestGaussianCNNModel(TfGraphTestCase):
 
         filter_sum = 1
         for filter_iter, in_channel in zip(filters, in_channels):
-            filter_height = filter_iter[0][0]
-            filter_width = filter_iter[0][1]
+            filter_height = filter_iter[1][0]
+            filter_width = filter_iter[1][1]
             filter_sum *= 0.01 * filter_height * filter_width * in_channel
 
         for _ in hidden_sizes:
@@ -471,9 +471,9 @@ class TestGaussianCNNModel(TfGraphTestCase):
         height_size = self.input_height
         width_size = self.input_width
         for filter_iter, stride in zip(filters, strides):
-            height_size = int((height_size - filter_iter[0][0]) / stride) + 1
-            width_size = int((width_size - filter_iter[0][1]) / stride) + 1
-        flatten_shape = height_size * width_size * filters[-1][-1]
+            height_size = int((height_size - filter_iter[1][0]) / stride) + 1
+            width_size = int((width_size - filter_iter[1][1]) / stride) + 1
+        flatten_shape = height_size * width_size * filters[-1][0]
 
         network_output = filter_sum * flatten_shape * np.prod(hidden_sizes)
         expected_mean = np.full((self.batch_size, output_dim),
@@ -495,7 +495,7 @@ class TestGaussianCNNModel(TfGraphTestCase):
                              [(1, (0, )), (1, (1, )), (1, (2, )), (2, (3, )),
                               (2, (1, 1)), (3, (2, 2))])
     def test_exp_min_std(self, output_dim, hidden_sizes):
-        filters = (((3, 3), 3), ((3, 3), 6))
+        filters = ((3, (3, 3)), (6, (3, 3)))
         strides = [1, 1]
 
         model = GaussianCNNModel(filters=filters,
@@ -524,7 +524,7 @@ class TestGaussianCNNModel(TfGraphTestCase):
                              [(1, (0, )), (1, (1, )), (1, (2, )), (2, (3, )),
                               (2, (1, 1)), (3, (2, 2))])
     def test_exp_max_std(self, output_dim, hidden_sizes):
-        filters = (((3, 3), 3), ((3, 3), 6))
+        filters = ((3, (3, 3)), (6, (3, 3)))
         strides = [1, 1]
 
         model = GaussianCNNModel(filters=filters,
@@ -553,7 +553,7 @@ class TestGaussianCNNModel(TfGraphTestCase):
                              [(1, (0, )), (1, (1, )), (1, (2, )), (2, (3, )),
                               (2, (1, 1)), (3, (2, 2))])
     def test_softplus_min_std(self, output_dim, hidden_sizes):
-        filters = (((3, 3), 3), ((3, 3), 6))
+        filters = ((3, (3, 3)), (6, (3, 3)))
         strides = [1, 1]
 
         model = GaussianCNNModel(filters=filters,
@@ -583,7 +583,7 @@ class TestGaussianCNNModel(TfGraphTestCase):
                              [(1, (0, )), (1, (1, )), (1, (2, )), (2, (3, )),
                               (2, (1, 1)), (3, (2, 2))])
     def test_softplus_max_std(self, output_dim, hidden_sizes):
-        filters = (((3, 3), 3), ((3, 3), 6))
+        filters = ((3, (3, 3)), (6, (3, 3)))
         strides = [1, 1]
 
         model = GaussianCNNModel(filters=filters,

@@ -12,7 +12,6 @@ from tests.quirks import KNOWN_GYM_RENDER_NOT_IMPLEMENTED
 
 # pylint: disable=missing-param-doc, missing-type-doc
 # pylint: disable=missing-return-doc, missing-return-type-doc
-# pylint: disable=unused-argument, missing-raises-doc
 def step_env(env, n=10, render=True):
     """Step env helper."""
     env.reset()
@@ -56,17 +55,14 @@ def step_env_with_gym_quirks(env, spec, n=10, render=True,
 def convolve(_input, filter_weights, filter_bias, strides, filters,
              in_channels, hidden_nonlinearity):
     """Convolve."""
-    # in_width = self.input_width
-    # in_height = self.input_height
-
     batch_size = _input.shape[0]
     in_width = _input.shape[1]
     in_height = _input.shape[2]
 
     for filter_iter, in_shape, filter_weight, _filter_bias, stride in zip(
             filters, in_channels, filter_weights, filter_bias, strides):
-        filter_width = filter_iter[0][1]
-        filter_height = filter_iter[0][0]
+        filter_width = filter_iter[1][1]
+        filter_height = filter_iter[1][0]
         out_width = int((in_width - filter_width) / stride) + 1
         out_height = int((in_height - filter_height) / stride) + 1
         flatten_filter_size = filter_width * filter_height * in_shape
@@ -188,6 +184,7 @@ def recurrent_step_gru(input_val,
     def f(x):
         return x
 
+    del forget_bias
     if nonlinearity is None:
         nonlinearity = f
     if gate_nonlinearity is None:
@@ -265,6 +262,7 @@ def max_pooling(_input, pool_shape, pool_stride, padding='VALID'):
     return results
 
 
+# pylint: disable=missing-raises-doc
 # Taken from random.choices in Python 3.6 source since it's not available in
 # python 3.5
 # https://github.com/python/cpython/blob/3.6/Lib/random.py

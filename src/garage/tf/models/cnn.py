@@ -18,8 +18,8 @@ def cnn(input_var,
 
     Args:
         input_var (tf.Tensor): Input tf.Tensor to the CNN.
-        filters (tuple(tuple(tuple(int), int))): Dimension and number of
-            filters. For example, (((3, 5), 3), ((3, 3), 32)) means there are
+        filters (tuple(int, tuple(tuple(int)))): Number and dimension of
+            filters. For example, ((3, (3, 5)), (32, (3, 3))) means there are
             two convolutional layers. The filter for the first layer have 3
             channels and its shape is (3 x 5), while the filter for the second
             layer have 32 channels and its shape is (3 x 3).
@@ -47,7 +47,7 @@ def cnn(input_var,
         h = input_var
         for index, (filter_iter, stride) in enumerate(zip(filters, strides)):
             _stride = [1, stride, stride, 1]
-            h = _conv(h, 'h{}'.format(index), filter_iter[0], filter_iter[1],
+            h = _conv(h, 'h{}'.format(index), filter_iter[1], filter_iter[0],
                       _stride, hidden_w_init, hidden_b_init, padding)
             if hidden_nonlinearity is not None:
                 h = hidden_nonlinearity(h)
@@ -74,8 +74,8 @@ def cnn_with_max_pooling(input_var,
 
     Args:
         input_var (tf.Tensor): Input tf.Tensor to the CNN.
-        filters (tuple(tuple(tuple(int), int))): Dimension and number of
-            filters. For example, (((3, 5), 3), ((3, 3), 32)) means there are
+        filters (tuple(int, tuple(tuple(int)))): Number and dimension of
+            filters. For example, ((3, (3, 5)), (32, (3, 3))) means there are
             two convolutional layers. The filter for the first layer have 3
             channels and its shape is (3 x 5), while the filter for the second
             layer have 32 channels and its shape is (3 x 3).
@@ -112,7 +112,7 @@ def cnn_with_max_pooling(input_var,
         h = input_var
         for index, (filter_iter, stride) in enumerate(zip(filters, strides)):
             _stride = [1, stride, stride, 1]
-            h = _conv(h, 'h{}'.format(index), filter_iter[0], filter_iter[1],
+            h = _conv(h, 'h{}'.format(index), filter_iter[1], filter_iter[0],
                       _stride, hidden_w_init, hidden_b_init, padding)
             if hidden_nonlinearity is not None:
                 h = hidden_nonlinearity(h)

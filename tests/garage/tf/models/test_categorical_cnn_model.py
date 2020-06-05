@@ -27,7 +27,7 @@ class TestCategoricalMLPModel(TfGraphTestCase):
 
     def test_dist(self):
         model = CategoricalCNNModel(output_dim=1,
-                                    filters=(((3, 3), 5), ),
+                                    filters=((5, (3, 3)), ),
                                     strides=(1, ),
                                     padding='VALID')
         dist = model.build(self._input_ph)
@@ -35,7 +35,7 @@ class TestCategoricalMLPModel(TfGraphTestCase):
 
     def test_instantiate_with_different_name(self):
         model = CategoricalCNNModel(output_dim=1,
-                                    filters=(((3, 3), 5), ),
+                                    filters=((5, (3, 3)), ),
                                     strides=(1, ),
                                     padding='VALID')
         model.build(self._input_ph)
@@ -44,11 +44,11 @@ class TestCategoricalMLPModel(TfGraphTestCase):
     # yapf: disable
     @pytest.mark.parametrize(
         'output_dim, filters, strides, padding, hidden_sizes', [
-            (1, (((1, 1), 1), ), (1, ), 'SAME', (1, )),
-            (1, (((3, 3), 3), ), (2, ), 'VALID', (2, )),
-            (1, (((3, 3), 3), ), (2, ), 'SAME', (3, )),
-            (2, (((3, 3), 3), ((3, 3), 32)), (2, 2), 'VALID', (1, 1)),
-            (3, (((3, 3), 3), ((3, 3), 32)), (2, 2), 'SAME', (2, 2)),
+            (1, ((1, (1, 1)), ), (1, ), 'SAME', (1, )),
+            (1, ((3, (3, 3)), ), (2, ), 'VALID', (2, )),
+            (1, ((3, (3, 3)), ), (2, ), 'SAME', (3, )),
+            (2, ((3, (3, 3)), (32, (3, 3))), (2, 2), 'VALID', (1, 1)),
+            (3, ((3, (3, 3)), (32, (3, 3))), (2, 2), 'SAME', (2, 2)),
         ])
     # yapf: enable
     def test_is_pickleable(self, output_dim, filters, strides, padding,

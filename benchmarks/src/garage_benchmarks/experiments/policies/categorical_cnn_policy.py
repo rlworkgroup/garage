@@ -10,7 +10,7 @@ from garage.tf.baselines import GaussianCNNBaseline
 from garage.tf.policies import CategoricalCNNPolicy
 
 hyper_params = {
-    'conv_filters': (((5, 5), 32), ((3, 3), 64), ((2, 2), 64)),
+    'conv_filters': ((32, (5, 5)), (64, (3, 3)), (64, (2, 2))),
     'conv_strides': (4, 2, 1),
     'conv_pad': 'VALID',
     'hidden_sizes': (256, ),

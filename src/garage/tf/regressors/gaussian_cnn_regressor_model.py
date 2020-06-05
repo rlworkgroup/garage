@@ -5,9 +5,8 @@ import tensorflow as tf
 from garage.tf.models import GaussianCNNModel
 
 
-# pylint: disable=missing-param-doc, missing-type-doc
-# pylint: disable=missing-return-doc, missing-return-type-doc
 # pylint: disable=differing-param-doc, differing-type-doc
+# pylint: disable=missing-param-doc, missing-type-doc
 class GaussianCNNRegressorModel(GaussianCNNModel):
     """GaussianCNNRegressor based on garage.tf.models.Model class.
 
@@ -15,8 +14,10 @@ class GaussianCNNRegressorModel(GaussianCNNModel):
     distribution to the outputs.
 
     Args:
-        filters (tuple(tuple(tuple(int), int))): Dimension and number of
-            filters. For example, (((3, 5), 3), ((3, 3), 32)) means there are
+        input_shape(tuple[int]): Input shape of the model (without the batch
+            dimension).
+        filters (tuple(int, tuple(tuple(int)))): Number and dimension of
+            filters. For example, ((3, (3, 5)), (32, (3, 3))) means there are
             two convolutional layers. The filter for the first layer have 3
             channels and its shape is (3 x 5), while the filter for the second
             layer have 32 channels and its shape is (3 x 3).
@@ -54,8 +55,8 @@ class GaussianCNNRegressorModel(GaussianCNNModel):
             parameter.
         std_share_network (bool): Boolean for whether mean and std share
             the same network.
-        std_filters (tuple(tuple(tuple(int), int))): Dimension and number of
-            filters. For example, (((3, 5), 3), ((3, 3), 32)) means there are
+        std_filters (tuple(int, tuple(tuple(int)))): Number and dimension of
+            filters. For example, ((3, (3, 5)), (32, (3, 3))) means there are
             two convolutional layers. The filter for the first layer have 3
             channels and its shape is (3 x 5), while the filter for the second
             layer have 32 channels and its shape is (3 x 3).
@@ -95,13 +96,34 @@ class GaussianCNNRegressorModel(GaussianCNNModel):
         self._input_shape = input_shape
 
     def network_output_spec(self):
-        """Network output spec."""
+        """Network output spec.
+
+        Return:
+            list[str]: List of key(str) for the network outputs.
+
+        """
         return [
             'sample', 'means', 'log_stds', 'std_param', 'normalized_means',
             'normalized_log_stds', 'x_mean', 'x_std', 'y_mean', 'y_std', 'dist'
         ]
 
     def _build(self, state_input, name=None):
+        """Build model given input placeholder(s).
+
+        Args:
+            state_input (tf.Tensor): Place holder for state input.
+            name (str): Inner model name, also the variable scope of the
+                inner model, if exist. One example is
+                garage.tf.models.Sequential.
+
+        Return:
+            tf.Tensor: Sampled action.
+            tf.Tensor: Mean.
+            tf.Tensor: Parameterized log_std.
+            tf.Tensor: log_std.
+            garage.tf.distributions.DiagonalGaussian: Policy distribution.
+
+        """
         with tf.compat.v1.variable_scope('normalized_vars'):
             x_mean_var = tf.compat.v1.get_variable(
                 name='x_mean',

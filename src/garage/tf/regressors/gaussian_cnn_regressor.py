@@ -18,8 +18,8 @@ class GaussianCNNRegressor(StochasticRegressor):
         input_shape(tuple[int]): Input shape of the model (without the batch
             dimension).
         output_dim (int): Output dimension of the model.
-        filters (tuple(tuple(tuple(int), int))): Dimension and number of
-            filters. For example, (((3, 5), 3), ((3, 3), 32)) means there are
+        filters (tuple(int, tuple(tuple(int)))): Number and dimension of
+            filters. For example, ((3, (3, 5)), (32, (3, 3))) means there are
             two convolutional layers. The filter for the first layer have 3
             channels and its shape is (3 x 5), while the filter for the second
             layer have 32 channels and its shape is (3 x 3).
@@ -63,8 +63,8 @@ class GaussianCNNRegressor(StochasticRegressor):
             deviation models share a CNN network. If True, each is a head from
             a single body network. Otherwise, the parameters are estimated
             using the outputs of two indepedent networks.
-        std_filters (tuple(tuple(tuple(int), int))): Dimension and number of
-            filters. For example, (((3, 5), 3), ((3, 3), 32)) means there are
+        std_filters (tuple(int, tuple(tuple(int)))): Number and dimension of
+            filters. For example, ((3, (3, 5)), (32, (3, 3))) means there are
             two convolutional layers. The filter for the first layer have 3
             channels and its shape is (3 x 5), while the filter for the second
             layer have 32 channels and its shape is (3 x 3).
@@ -323,7 +323,6 @@ class GaussianCNNRegressor(StochasticRegressor):
         return self.model.networks[name].dist.log_likelihood_sym(
             y_var, dict(mean=means_var, log_std=log_stds_var))
 
-    # pylint: disable=unused-argument
     def dist_info_sym(self, input_var, state_info_vars=None, name=None):
         """Create a symbolic graph of the distribution parameters.
 
@@ -339,6 +338,7 @@ class GaussianCNNRegressor(StochasticRegressor):
                 graph.
 
         """
+        del state_info_vars
         with tf.compat.v1.variable_scope(self._variable_scope):
             self.model.build(input_var, name=name)
 

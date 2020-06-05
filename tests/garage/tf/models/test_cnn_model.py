@@ -25,12 +25,12 @@ class TestCNNModel(TfGraphTestCase):
 
     # yapf: disable
     @pytest.mark.parametrize('filters, in_channels, strides', [
-        ((((1, 1), 32),), (3, ), (1, )),  # noqa: E122
-        ((((3, 3), 32),), (3, ), (1, )),
-        ((((3, 3), 32),), (3, ), (2, )),
-        ((((1, 1), 32), ((1, 1), 64)), (3, 32), (1, 1)),
-        ((((3, 3), 32), ((3, 3), 64)), (3, 32), (1, 1)),
-        ((((3, 3), 32), ((3, 3), 64)), (3, 32), (2, 2)),
+        (((32, (1, 1)),), (3, ), (1, )),  # noqa: E122
+        (((32, (3, 3)),), (3, ), (1, )),
+        (((32, (3, 3)),), (3, ), (2, )),
+        (((32, (1, 1)), (64, (1, 1))), (3, 32), (1, 1)),
+        (((32, (3, 3)), (64, (3, 3))), (3, 32), (1, 1)),
+        (((32, (3, 3)), (64, (3, 3))), (3, 32), (2, 2)),
     ])
     # yapf: enable
     def test_output_value(self, filters, in_channels, strides):
@@ -48,14 +48,14 @@ class TestCNNModel(TfGraphTestCase):
         filter_sum = 1
         # filter value after 3 layers of conv
         for filter_iter, in_channel in zip(filters, in_channels):
-            filter_sum *= filter_iter[0][0] * filter_iter[0][1] * in_channel
+            filter_sum *= filter_iter[1][0] * filter_iter[1][1] * in_channel
 
         height_size = self.input_height
         width_size = self.input_width
         for filter_iter, stride in zip(filters, strides):
-            height_size = int((height_size - filter_iter[0][0]) / stride) + 1
-            width_size = int((width_size - filter_iter[0][1]) / stride) + 1
-        flatten_shape = height_size * width_size * filters[-1][-1]
+            height_size = int((height_size - filter_iter[1][0]) / stride) + 1
+            width_size = int((width_size - filter_iter[1][1]) / stride) + 1
+        flatten_shape = height_size * width_size * filters[-1][0]
 
         # flatten
         expected_output = np.full((self.batch_size, flatten_shape),
@@ -68,15 +68,15 @@ class TestCNNModel(TfGraphTestCase):
     @pytest.mark.parametrize(
         'filters, in_channels, strides, pool_strides, pool_shapes',
         [
-            ((((1, 1), 32), ), (3, ), (1, ), (1, 1), (1, 1)),  # noqa: E122
-            ((((3, 3), 32), ), (3, ), (1, ), (2, 2), (1, 1)),
-            ((((3, 3), 32), ), (3, ), (1, ), (1, 1), (2, 2)),
-            ((((3, 3), 32), ), (3, ), (1, ), (2, 2), (2, 2)),
-            ((((3, 3), 32), ), (3, ), (2, ), (1, 1), (2, 2)),
-            ((((3, 3), 32), ), (3, ), (2, ), (2, 2), (2, 2)),
-            ((((1, 1), 32), ((1, 1), 64)), (3, 32), (1, 1), (1, 1), (1, 1)),
-            ((((3, 3), 32), ((3, 3), 64)), (3, 32), (1, 1), (1, 1), (1, 1)),
-            ((((3, 3), 32), ((3, 3), 64)), (3, 32), (2, 2), (1, 1), (1, 1)),
+            (((32, (1, 1)), ), (3, ), (1, ), (1, 1), (1, 1)),  # noqa: E122
+            (((32, (3, 3)), ), (3, ), (1, ), (2, 2), (1, 1)),
+            (((32, (3, 3)), ), (3, ), (1, ), (1, 1), (2, 2)),
+            (((32, (3, 3)), ), (3, ), (1, ), (2, 2), (2, 2)),
+            (((32, (3, 3)), ), (3, ), (2, ), (1, 1), (2, 2)),
+            (((32, (3, 3)), ), (3, ), (2, ), (2, 2), (2, 2)),
+            (((32, (1, 1)), (64, (1, 1))), (3, 32), (1, 1), (1, 1), (1, 1)),
+            (((32, (3, 3)), (64, (3, 3))), (3, 32), (1, 1), (1, 1), (1, 1)),
+            (((32, (3, 3)), (64, (3, 3))), (3, 32), (2, 2), (1, 1), (1, 1)),
         ])
     # yapf: enable
     def test_output_value_max_pooling(self, filters, in_channels, strides,
@@ -98,19 +98,19 @@ class TestCNNModel(TfGraphTestCase):
         filter_sum = 1
         # filter value after 3 layers of conv
         for filter_iter, in_channel in zip(filters, in_channels):
-            filter_sum *= filter_iter[0][0] * filter_iter[0][1] * in_channel
+            filter_sum *= filter_iter[1][0] * filter_iter[1][1] * in_channel
 
         height_size = self.input_height
         width_size = self.input_width
         for filter_iter, stride in zip(filters, strides):
-            height_size = int((height_size - filter_iter[0][0]) / stride) + 1
+            height_size = int((height_size - filter_iter[1][0]) / stride) + 1
             height_size = int(
                 (height_size - pool_shapes[0]) / pool_strides[0]) + 1
-            width_size = int((width_size - filter_iter[0][1]) / stride) + 1
+            width_size = int((width_size - filter_iter[1][1]) / stride) + 1
             width_size = int(
                 (width_size - pool_shapes[1]) / pool_strides[1]) + 1
 
-        flatten_shape = height_size * width_size * filters[-1][-1]
+        flatten_shape = height_size * width_size * filters[-1][0]
 
         # flatten
         expected_output = np.full((self.batch_size, flatten_shape),
@@ -121,12 +121,12 @@ class TestCNNModel(TfGraphTestCase):
 
     # yapf: disable
     @pytest.mark.parametrize('filters, strides', [
-        ((((1, 1), 32),), (1, )),  # noqa: E122
-        ((((3, 3), 32),), (1, )),
-        ((((3, 3), 32),), (2, )),
-        ((((1, 1), 32), ((1, 1), 64)), (1, 1)),
-        ((((3, 3), 32), ((3, 3), 64)), (1, 1)),
-        ((((3, 3), 32), ((3, 3), 64)), (2, 2)),
+        (((32, (1, 1)),), (1, )),  # noqa: E122
+        (((32, (3, 3)),), (1, )),
+        (((32, (3, 3)),), (2, )),
+        (((32, (1, 1)), (64, (1, 1))), (1, 1)),
+        (((32, (3, 3)), (64, (3, 3))), (1, 1)),
+        (((32, (3, 3)), (64, (3, 3))), (2, 2)),
     ])
     # yapf: enable
     def test_is_pickleable(self, filters, strides):
