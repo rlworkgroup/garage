@@ -224,7 +224,7 @@ class SAC(OffPolicyRLAlgorithm):
             samples = self.replay_buffer.sample_transitions(
                 self.buffer_batch_size)
             samples = tu.dict_np_to_torch(samples)
-            policy_loss, qf1_loss, qf2_loss = self.optimize_policy(0, samples)
+            policy_loss, qf1_loss, qf2_loss = self.optimize_policy(samples)
             self._update_targets()
 
         return policy_loss, qf1_loss, qf2_loss
@@ -382,11 +382,10 @@ class SAC(OffPolicyRLAlgorithm):
                 t_param.data.copy_(t_param.data * (1.0 - self._tau) +
                                    param.data * self._tau)
 
-    def optimize_policy(self, itr, samples_data):
+    def optimize_policy(self, samples_data):
         """Optimize the policy q_functions, and temperature coefficient.
 
         Args:
-            itr (int): Iterations.
             samples_data (dict): Transitions(S,A,R,S') that are sampled from
                 the replay buffer. It should have the keys 'observation',
                 'action', 'reward', 'terminal', and 'next_observations'.

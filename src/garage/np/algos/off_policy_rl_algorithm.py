@@ -160,17 +160,6 @@ class OffPolicyRLAlgorithm(RLAlgorithm):
         """
 
     @abc.abstractmethod
-    def optimize_policy(self, itr, samples_data):
-        """Optimize policy network.
-
-        Args:
-            itr (int): Iterations.
-            samples_data (list): Processed batch data.
-
-        """
-        raise NotImplementedError
-
-    @abc.abstractmethod
     def train_once(self, itr, paths):
         """Perform one step of policy optimization given one batch of samples.
 

@@ -13,11 +13,10 @@ class DummyTFAlgo(RLAlgorithm):
 
         """
 
-    def optimize_policy(self, itr, samples_data):
+    def optimize_policy(self, samples_data):
         """Optimize the policy using the samples.
 
         Args:
-            itr (int): Iteration number.
             samples_data (dict): Processed sample data.
                 See garage.tf.paths_to_tensors() for details.
 

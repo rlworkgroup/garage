@@ -242,7 +242,7 @@ class NPO(RLAlgorithm):
 
         self.log_diagnostics(samples_data)
         logger.log('Optimizing policy...')
-        self.optimize_policy(itr, samples_data)
+        self.optimize_policy(samples_data)
         return samples_data['average_return']
 
     def log_diagnostics(self, paths):
@@ -256,12 +256,10 @@ class NPO(RLAlgorithm):
         self.policy.log_diagnostics(paths)
         self._baseline.log_diagnostics(paths)
 
-    # pylint: disable=unused-argument
-    def optimize_policy(self, itr, samples_data):
+    def optimize_policy(self, samples_data):
         """Optimize policy.
 
         Args:
-            itr (int): Iteration number.
             samples_data (dict): Processed sample data.
                 See garage.tf.paths_to_tensors() for details.
 

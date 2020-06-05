@@ -183,7 +183,7 @@ class DDPG(OffPolicyRLAlgorithm):
                 else:
                     samples = self.replay_buffer.sample(self.buffer_batch_size)
                 qf_loss, y, q, policy_loss = tu.torch_to_np(
-                    self.optimize_policy(itr, samples))
+                    self.optimize_policy(samples))
 
                 self._episode_policy_losses.append(policy_loss)
                 self._episode_qf_losses.append(qf_loss)
@@ -220,11 +220,10 @@ class DDPG(OffPolicyRLAlgorithm):
 
         return last_average_return
 
-    def optimize_policy(self, itr, samples_data):
+    def optimize_policy(self, samples_data):
         """Perform algorithm optimizing.
 
         Args:
-            itr (int): Iteration number.
             samples_data (dict): Processed batch data.
 
         Returns:

@@ -4,16 +4,18 @@ TD3, or Twin Delayed Deep Deterministic Policy Gradient, uses actor-critic
 method to optimize the policy and reward prediction. Notably, it uses the
 minimum value of two critics instead of one to limit overestimation.
 """
+from collections import deque
 
+from dowel import logger, tabular
 import numpy as np
 import tensorflow as tf
 
+from garage.np.algos.off_policy_rl_algorithm import OffPolicyRLAlgorithm
 from garage.replay_buffer import PathBuffer
-from garage.tf.algos import DDPG
 from garage.tf.misc import tensor_utils
 
 
-class TD3(DDPG):
+class TD3(OffPolicyRLAlgorithm):
     """Implementation of TD3.
 
     Based on https://arxiv.org/pdf/1802.09477.pdf.
@@ -61,7 +63,7 @@ class TD3(DDPG):
         smooth_return (bool):
             If True, do statistics on all samples collection.
             Otherwise do statistics on one batch.
-        exploration_policy (garage.np.exploration_policies.ExplorationPolicy): # noqa: E501
+        exploration_policy (garage.np.exploration_policies.ExplorationPolicy):
             Exploration strategy.
 
     """
@@ -99,6 +101,29 @@ class TD3(DDPG):
             exploration_policy_clip=0.5,
             smooth_return=True,
             exploration_policy=None):
+        action_bound = env_spec.action_space.high
+        self.max_action = action_bound if max_action is None else max_action
+        self.tau = target_update_tau
+        self.policy_lr = policy_lr
+        self.qf_lr = qf_lr
+        self.policy_weight_decay = policy_weight_decay
+        self.qf_weight_decay = qf_weight_decay
+        self.policy_optimizer = policy_optimizer
+        self.qf_optimizer = qf_optimizer
+        self.name = name
+        self.clip_pos_returns = clip_pos_returns
+        self.clip_return = clip_return
+        self.success_history = deque(maxlen=100)
+
+        self.episode_rewards = []
+        self.episode_policy_losses = []
+        self.episode_qf_losses = []
+        self.epoch_ys = []
+        self.epoch_qs = []
+
+        self.target_policy = policy.clone('target_policy')
+        self.target_qf = qf.clone('target_qf')
+
         self.qf2 = qf2
         self._exploration_policy_sigma = exploration_policy_sigma
         self._exploration_policy_clip = exploration_policy_clip
@@ -111,18 +136,7 @@ class TD3(DDPG):
                                   policy=policy,
                                   qf=qf,
                                   replay_buffer=replay_buffer,
-                                  target_update_tau=target_update_tau,
-                                  policy_lr=policy_lr,
-                                  qf_lr=qf_lr,
-                                  policy_weight_decay=policy_weight_decay,
-                                  qf_weight_decay=qf_weight_decay,
-                                  policy_optimizer=policy_optimizer,
-                                  qf_optimizer=qf_optimizer,
-                                  clip_pos_returns=clip_pos_returns,
-                                  clip_return=clip_return,
                                   discount=discount,
-                                  max_action=max_action,
-                                  name=name,
                                   steps_per_epoch=steps_per_epoch,
                                   max_path_length=max_path_length,
                                   max_eval_path_length=max_eval_path_length,
@@ -255,15 +269,90 @@ class TD3(DDPG):
             state (dict): Current state.
 
         """
-        super().__setstate__(state)
+        self.__dict__.update(state)
         self.init_opt()
 
-    def optimize_policy(self, itr, samples_data):
+    def train_once(self, itr, paths):
+        """Perform one step of policy optimization given one batch of samples.
+
+        Args:
+            itr (int): Iteration number.
+            paths (list[dict]): A list of collected paths.
+
+        Returns:
+            np.float64: Average return.
+
+        """
+        paths = self.process_samples(itr, paths)
+
+        epoch = itr / self.steps_per_epoch
+
+        self.episode_rewards.extend([
+            path for path, complete in zip(paths['undiscounted_returns'],
+                                           paths['complete']) if complete
+        ])
+        self.success_history.extend([
+            path for path, complete in zip(paths['success_history'],
+                                           paths['complete']) if complete
+        ])
+
+        # Avoid calculating the mean of an empty list in cases where
+        # all paths were non-terminal.
+
+        last_average_return = np.NaN
+        avg_success_rate = 0
+
+        if self.episode_rewards:
+            last_average_return = np.mean(self.episode_rewards)
+
+        if self.success_history:
+            if itr % self.steps_per_epoch == 0 and self._buffer_prefilled:
+                avg_success_rate = np.mean(self.success_history)
+
+        self.log_diagnostics(paths)
+        for _ in range(self.n_train_steps):
+            if self._buffer_prefilled:
+                qf_loss, y_s, qval, policy_loss = self.optimize_policy(itr)
+
+                self.episode_policy_losses.append(policy_loss)
+                self.episode_qf_losses.append(qf_loss)
+                self.epoch_ys.append(y_s)
+                self.epoch_qs.append(qval)
+
+        if itr % self.steps_per_epoch == 0:
+            logger.log('Training finished')
+
+            if self._buffer_prefilled:
+                tabular.record('Epoch', epoch)
+                tabular.record('Policy/AveragePolicyLoss',
+                               np.mean(self.episode_policy_losses))
+                tabular.record('QFunction/AverageQFunctionLoss',
+                               np.mean(self.episode_qf_losses))
+                tabular.record('QFunction/AverageQ', np.mean(self.epoch_qs))
+                tabular.record('QFunction/MaxQ', np.max(self.epoch_qs))
+                tabular.record('QFunction/AverageAbsQ',
+                               np.mean(np.abs(self.epoch_qs)))
+                tabular.record('QFunction/AverageY', np.mean(self.epoch_ys))
+                tabular.record('QFunction/MaxY', np.max(self.epoch_ys))
+                tabular.record('QFunction/AverageAbsY',
+                               np.mean(np.abs(self.epoch_ys)))
+                tabular.record('AverageSuccessRate', avg_success_rate)
+
+            if not self.smooth_return:
+                self.episode_rewards = []
+                self.episode_policy_losses = []
+                self.episode_qf_losses = []
+                self.epoch_ys = []
+                self.epoch_qs = []
+
+            self.success_history.clear()
+        return last_average_return
+
+    def optimize_policy(self, itr):
         """Perform algorithm optimizing.
 
         Args:
             itr(int): Iterations.
-            samples_data(list): Processed batch data.
 
         Returns:
             action_loss(float): Loss of action predicted by the policy network.

@@ -8,11 +8,10 @@ class NOP(RLAlgorithm):
     def init_opt(self):
         """Initialize the optimization procedure."""
 
-    def optimize_policy(self, itr, paths):
+    def optimize_policy(self, paths):
         """Optimize the policy using the samples.
 
         Args:
-            itr (int): Iteration number.
             paths (list[dict]): A list of collected paths.
 
         """

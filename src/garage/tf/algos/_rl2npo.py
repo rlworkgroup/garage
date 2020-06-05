@@ -62,11 +62,10 @@ class RL2NPO(NPO):
 
     """
 
-    def optimize_policy(self, itr, samples_data):
+    def optimize_policy(self, samples_data):
         """Optimize policy.
 
         Args:
-            itr (int): Iteration number.
             samples_data (dict): Processed sample data.
                 See garage.tf.paths_to_tensors() for details.
 
