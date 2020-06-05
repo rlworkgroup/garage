@@ -30,10 +30,6 @@ class TestGaussianMLPEncoder(TfGraphTestCase):
         embedding_spec = InOutSpec(input_space=env.spec.observation_space,
                                    output_space=env.spec.action_space)
         embedding = GaussianMLPEncoder(embedding_spec)
-        task_input = tf.compat.v1.placeholder(tf.float32,
-                                              shape=(None, None,
-                                                     embedding.input_dim))
-        embedding.build(task_input)
 
         env.reset()
         obs, _, _, _ = env.step(1)
@@ -54,10 +50,6 @@ class TestGaussianMLPEncoder(TfGraphTestCase):
         embedding_spec = InOutSpec(input_space=env.spec.observation_space,
                                    output_space=env.spec.action_space)
         embedding = GaussianMLPEncoder(embedding_spec)
-        task_input = tf.compat.v1.placeholder(tf.float32,
-                                              shape=(None, None,
-                                                     embedding.input_dim))
-        embedding.build(task_input)
 
         env.reset()
         obs, _, _, _ = env.step(1)
@@ -77,9 +69,6 @@ class TestGaussianMLPEncoder(TfGraphTestCase):
         p = pickle.dumps(embedding)
         with tf.compat.v1.Session(graph=tf.Graph()) as sess:
             embedding_pickled = pickle.loads(p)
-            task_input = tf.compat.v1.placeholder(
-                tf.float32, shape=(None, None, embedding_pickled.input_dim))
-            embedding_pickled.build(task_input)
 
             output2 = sess.run(
                 [
@@ -96,10 +85,6 @@ class TestGaussianMLPEncoder(TfGraphTestCase):
                                    output_space=latent_space)
         embedding = GaussianMLPEncoder(embedding_spec,
                                        hidden_sizes=[32, 32, 32])
-        task_input = tf.compat.v1.placeholder(tf.float32,
-                                              shape=(None, None,
-                                                     embedding.input_dim))
-        embedding.build(task_input)
         # 9 Layers: (3 hidden + 1 output) * (1 weight + 1 bias) + 1 log_std
         assert len(embedding.get_params()) == 9
         assert len(embedding.get_global_vars()) == 9
@@ -113,7 +98,7 @@ class TestGaussianMLPEncoder(TfGraphTestCase):
             None, None, latent_space.shape[0]
         ])
         assert (embedding.latent_std_param.shape.as_list() == [
-            None, None, latent_space.shape[0]
+            None, 1, latent_space.shape[0]
         ])
 
         # To increase coverage in embeddings/base.py

@@ -140,16 +140,16 @@ class CategoricalLSTMPolicy(StochasticPolicy):
         self._prev_hiddens = None
         self._prev_cells = None
 
-    def build(self, state_input, name=None):
-        """Build model.
+        self._initialize()
 
-        Args:
-          state_input (tf.Tensor) : State input.
-          name (str): Name of the model, which is also the name scope.
-
-        """
+    def _initialize(self):
+        """Initialize policy."""
         with tf.compat.v1.variable_scope(self.name) as vs:
             self._variable_scope = vs
+            state_input = tf.compat.v1.placeholder(shape=(None, None,
+                                                          self._input_dim),
+                                                   name='state_input',
+                                                   dtype=tf.float32)
             step_input_var = tf.compat.v1.placeholder(shape=(None,
                                                              self._input_dim),
                                                       name='step_input',
@@ -162,12 +162,8 @@ class CategoricalLSTMPolicy(StochasticPolicy):
                                                             self._hidden_dim),
                                                      name='step_cell_input',
                                                      dtype=tf.float32)
-
-            self.model.build(state_input,
-                             step_input_var,
-                             step_hidden_var,
-                             step_cell_var,
-                             name=name)
+            self.model.build(state_input, step_input_var, step_hidden_var,
+                             step_cell_var)
 
         self._f_step_prob = tf.compat.v1.get_default_session().make_callable(
             [
@@ -176,6 +172,37 @@ class CategoricalLSTMPolicy(StochasticPolicy):
                 self.model.networks['default'].step_cell
             ],
             feed_list=[step_input_var, step_hidden_var, step_cell_var])
+
+    def build(self, state_input, name=None):
+        """Build policy.
+
+        Args:
+            state_input (tf.Tensor) : State input.
+            name (str): Name of the policy, which is also the name scope.
+
+        Returns:
+            tfp.distributions.OneHotCategorical: Policy distribution.
+            tf.Tensor: Step output, with shape :math:`(N, S^*)`
+            tf.Tensor: Step hidden state, with shape :math:`(N, S^*)`
+            tf.Tensor: Step cell state, with shape :math:`(N, S^*)`
+            tf.Tensor: Initial hidden state, used to reset the hidden state
+                when policy resets. Shape: :math:`(S^*)`
+            tf.Tensor: Initial cell state, used to reset the cell state
+                when policy resets. Shape: :math:`(S^*)`
+
+        """
+        with tf.compat.v1.variable_scope(self._variable_scope):
+            _, step_input, step_hidden, step_cell = self.model.inputs
+            return self.model.build(state_input,
+                                    step_input,
+                                    step_hidden,
+                                    step_cell,
+                                    name=name)
+
+    @property
+    def input_dim(self):
+        """int: Dimension of the policy input."""
+        return self._input_dim
 
     @property
     def vectorized(self):
@@ -329,3 +356,13 @@ class CategoricalLSTMPolicy(StochasticPolicy):
         new_dict = super().__getstate__()
         del new_dict['_f_step_prob']
         return new_dict
+
+    def __setstate__(self, state):
+        """Object.__setstate__.
+
+        Args:
+            state (dict): Unpickled state.
+
+        """
+        super().__setstate__(state)
+        self._initialize()

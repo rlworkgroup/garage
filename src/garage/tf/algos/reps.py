@@ -97,6 +97,7 @@ class REPS(RLAlgorithm):  # noqa: D416
         self._name = name
         self._name_scope = tf.name_scope(self._name)
         self._old_policy = policy.clone('old_policy')
+        self._old_policy.model.parameters = self.policy.model.parameters
 
         self._feat_diff = None
         self._param_eta = None
@@ -385,10 +386,6 @@ class REPS(RLAlgorithm):  # noqa: D416
                 policy_state_info_vars[k]
                 for k in self.policy.state_info_keys
             ]  # yapf: disable
-
-        self.policy.build(obs_var)
-        self._old_policy.build(obs_var)
-        self._old_policy.model.parameters = self.policy.model.parameters
 
         policy_loss_inputs = graph_inputs(
             'PolicyLossInputs',

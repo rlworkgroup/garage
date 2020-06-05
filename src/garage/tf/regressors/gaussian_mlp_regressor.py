@@ -141,10 +141,10 @@ class GaussianMLPRegressor(StochasticRegressor):
                                              shape=(None, ) +
                                              self._input_shape)
         self._old_model.build(input_var)
-        self._old_model.parameters = self.model.parameters
 
         with tf.compat.v1.variable_scope(self._variable_scope):
             self.model.build(input_var)
+            self._old_model.parameters = self.model.parameters
 
             ys_var = tf.compat.v1.placeholder(dtype=tf.float32,
                                               name='ys',

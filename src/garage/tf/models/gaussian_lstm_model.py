@@ -188,13 +188,13 @@ class GaussianLSTMModel(Model):
                 garage.tf.models.Sequential.
 
         Returns:
+            tfp.distributions.MultivariateNormalDiag: Policy distribution.
             tf.Tensor: Step means, with shape :math:`(N, S^*)`.
             tf.Tensor: Step log std, with shape :math:`(N, S^*)`.
             tf.Tensor: Step hidden state, with shape :math:`(N, S^*)`.
             tf.Tensor: Step cell state, with shape :math:`(N, S^*)`.
             tf.Tensor: Initial hidden state, with shape :math:`(S^*)`.
             tf.Tensor: Initial cell state, with shape :math:`(S^*)`
-            tfp.distributions.MultivariateNormalDiag: Policy distribution.
 
         """
         del name

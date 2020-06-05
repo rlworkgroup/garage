@@ -115,14 +115,12 @@ class GaussianMLPEncoder(StochasticEncoder, StochasticModule):
             layer_normalization=layer_normalization,
             name='GaussianMLPModel')
 
-    def build(self, embedding_input, name=None):
-        """Build encoder.
+        self._initialize()
 
-        Args:
-          embedding_input (tf.Tensor) : Embedding input.
-          name (str): Name of the model, which is also the name scope.
-
-        """
+    def _initialize(self):
+        """Initialize encoder."""
+        embedding_input = tf.placeholder(tf.float32,
+                                         shape=(None, None, self._input_dim))
         with tf.compat.v1.variable_scope(self._name) as vs:
             self._variable_scope = vs
             self._dist, mean_var, log_std_var = self.model.build(
@@ -130,6 +128,22 @@ class GaussianMLPEncoder(StochasticEncoder, StochasticModule):
             self._f_dist = tf.compat.v1.get_default_session().make_callable(
                 [self._dist.sample(), mean_var, log_std_var],
                 feed_list=[embedding_input])
+
+    def build(self, embedding_input, name=None):
+        """Build encoder.
+
+        Args:
+            embedding_input (tf.Tensor) : Embedding input.
+            name (str): Name of the model, which is also the name scope.
+
+        Returns:
+            tfp.distributions.MultivariateNormalDiag: Distribution.
+            tf.tensor: Mean.
+            tf.Tensor: Log of standard deviation.
+
+        """
+        with tf.compat.v1.variable_scope(self._variable_scope):
+            return self.model.build(embedding_input, name=name)
 
     @property
     def spec(self):
@@ -214,3 +228,13 @@ class GaussianMLPEncoder(StochasticEncoder, StochasticModule):
         del new_dict['_f_dist']
         del new_dict['_dist']
         return new_dict
+
+    def __setstate__(self, state):
+        """Parameters to restore from snapshot.
+
+        Args:
+            state (dict): Parameters to restore from.
+
+        """
+        super().__setstate__(state)
+        self._initialize()

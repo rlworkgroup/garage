@@ -123,6 +123,7 @@ class NPO(RLAlgorithm):
         self._name = name
         self._name_scope = tf.name_scope(self._name)
         self._old_policy = policy.clone('old_policy')
+        self._old_policy.model.parameters = policy.model.parameters
         self._use_softplus_entropy = use_softplus_entropy
         self._use_neg_logli_entropy = use_neg_logli_entropy
         self._stop_entropy_gradient = stop_entropy_gradient
@@ -337,19 +338,6 @@ class NPO(RLAlgorithm):
             policy_state_info_vars_list = [
                 policy_state_info_vars[k] for k in self.policy.state_info_keys
             ]
-
-        # concat the action input with obs_var to become the final
-        # state input
-        augmented_obs_var = obs_var
-        for k in self.policy.state_info_keys:
-            extra_state_var = policy_state_info_vars[k]
-            extra_state_var = tf.cast(extra_state_var, tf.float32)
-            augmented_obs_var = tf.concat([augmented_obs_var, extra_state_var],
-                                          -1)
-
-        self.policy.build(augmented_obs_var)
-        self._old_policy.build(augmented_obs_var)
-        self._old_policy.model.parameters = self.policy.model.parameters
 
         policy_loss_inputs = graph_inputs(
             'PolicyLossInputs',
