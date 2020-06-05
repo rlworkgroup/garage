@@ -6,11 +6,16 @@ import random
 
 import numpy as np
 from numpy import var
-import tensorflow as tf
-import tensorflow_probability as tfp
 
 from garage.sampler.batch_sampler import BatchSampler
 from garage.sampler.utils import truncate_paths
+
+tf = False
+try:
+    import tensorflow as tf
+    import tensorflow_probability as tfp
+except ImportError:
+    pass
 
 
 class ISSampler(BatchSampler):
@@ -246,3 +251,17 @@ class ISSampler(BatchSampler):
                 return []
 
         return samples
+
+
+class __FakeISSampler:
+    # noqa: E501; pylint: disable=missing-param-doc,too-few-public-methods,no-method-argument
+    """Raises an ImportError for environments without TensorFlow."""
+
+    def __init__(*args, **kwargs):
+        raise ImportError(
+            'ISSampler requires TensorFlow. To use it, please install '
+            'TensorFlow.')
+
+
+if not tf:
+    ISSampler = __FakeISSampler  # noqa: F811

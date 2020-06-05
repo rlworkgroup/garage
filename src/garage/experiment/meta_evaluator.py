@@ -4,9 +4,9 @@ from dowel import logger, tabular
 
 from garage import log_multitask_performance, TrajectoryBatch
 from garage.experiment.deterministic import get_seed
+from garage.sampler import DefaultWorker
 from garage.sampler import LocalSampler
-from garage.sampler.default_worker import DefaultWorker
-from garage.sampler.worker_factory import WorkerFactory
+from garage.sampler import WorkerFactory
 
 
 class MetaEvaluator:

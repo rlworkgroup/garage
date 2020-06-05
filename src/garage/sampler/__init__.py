@@ -19,7 +19,7 @@ from garage.sampler.worker import Worker
 from garage.sampler.worker_factory import WorkerFactory
 
 __all__ = [
-    'BatchSampler', 'Sampler', 'ISSampler', 'singleton_pool', 'LocalSampler',
+    'BatchSampler', 'ISSampler', 'Sampler', 'singleton_pool', 'LocalSampler',
     'RaySampler', 'MultiprocessingSampler', 'ParallelVecEnvExecutor',
     'VecEnvExecutor', 'VecWorker', 'OffPolicyVectorizedSampler',
     'OnPolicyVectorizedSampler', 'WorkerFactory', 'Worker', 'DefaultWorker'
