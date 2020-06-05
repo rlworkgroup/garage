@@ -47,7 +47,7 @@ ci-job-mujoco-long: assert-docker
 ci-job-nightly: assert-docker
 	pytest -m nightly
 
-ci-job-verify-envs: assert-docker ci-job-verify-envs-conda # ci-job-verify-envs-pipenv
+ci-job-verify-envs: assert-docker ci-job-verify-envs-pipenv ci-job-verify-envs-conda
 
 ci-job-verify-envs-conda: assert-docker
 ci-job-verify-envs-conda: CONDA_ROOT := $$HOME/miniconda
@@ -80,11 +80,12 @@ ci-job-verify-envs-conda:
 ci-job-verify-envs-pipenv: assert-docker
 ci-job-verify-envs-pipenv: export PATH=$(shell echo $$PATH | awk -v RS=: -v ORS=: '/venv/ {next} {print}')
 ci-job-verify-envs-pipenv: export VIRTUAL_ENV=
+ci-job-verify-envs-pipenv: export PIPENV_MAX_RETRIES=2 # number of retries for network requests. Default is 0
 ci-job-verify-envs-pipenv:
 	touch $(MJKEY_PATH)
-	pip install --upgrade pip pipenv setuptools
+	pip install --upgrade pip setuptools
+	pip install pipenv
 	pipenv --python=3.5
-	pipenv install dist/garage.tar.gz[all]
 	pipenv install dist/garage.tar.gz[all,dev]
 	pipenv graph
 	# pylint will verify all imports work
