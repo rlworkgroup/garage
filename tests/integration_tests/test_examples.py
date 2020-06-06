@@ -435,7 +435,7 @@ def test_te_ppo_metaworld_mt50():
     """Test te_ppo_point.py."""
     # yapf: disable
     assert subprocess.run([
-        EXAMPLES_ROOT_DIR / 'tf/te_ppo_metaworld_mt50.py',
+        str(EXAMPLES_ROOT_DIR / 'tf/te_ppo_metaworld_mt50.py'),
         '--n_epochs', '1', '--batch_size_per_task', '1'
     ], check=False).returncode == 0
     # yapf: enable
