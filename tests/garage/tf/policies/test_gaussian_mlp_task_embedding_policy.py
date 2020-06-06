@@ -88,6 +88,10 @@ class TestGaussianMLPTaskEmbeddingPolicy(TfGraphTestCase):
         encoder = GaussianMLPEncoder(embedding_spec)
         policy = GaussianMLPTaskEmbeddingPolicy(env_spec=env.spec,
                                                 encoder=encoder)
+        obs_input = tf.compat.v1.placeholder(tf.float32, shape=(None, None, 2))
+        task_input = tf.compat.v1.placeholder(tf.float32,
+                                              shape=(None, None, 2))
+        policy.build(obs_input, task_input)
 
         assert policy.distribution.loc.get_shape().as_list(
         )[-1] == env.action_space.flat_dim

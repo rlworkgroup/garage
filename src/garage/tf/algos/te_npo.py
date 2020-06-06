@@ -1175,7 +1175,6 @@ class TENPO(RLAlgorithm):
                 Setting it to zero would mean no entropy regularization.
 
         Raises:
-            ValueError: If center_adv is True when entropy_method is max.
             ValueError: If stop_gradient is False when entropy_method is max.
             ValueError: If policy_ent_coeff is non-zero when there is
                 no entropy method.
@@ -1183,7 +1182,7 @@ class TENPO(RLAlgorithm):
                 'no_entropy'.
 
         """
-        del use_neg_logli_entropy
+        del use_neg_logli_entropy, center_adv
 
         if entropy_method == 'max':
             if not stop_entropy_gradient:

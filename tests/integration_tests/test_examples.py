@@ -43,7 +43,9 @@ LONG_RUNNING_EXAMPLES = [
     EXAMPLES_ROOT_DIR / 'torch/mttrpo_metaworld_mt10.py',
     EXAMPLES_ROOT_DIR / 'torch/mttrpo_metaworld_mt50.py',
     EXAMPLES_ROOT_DIR / 'tf/te_ppo_point.py',
-    EXAMPLES_ROOT_DIR / 'tf/te_trpo_point.py'
+    EXAMPLES_ROOT_DIR / 'tf/te_ppo_metaworld_ml1_push.py',
+    EXAMPLES_ROOT_DIR / 'tf/te_ppo_metaworld_mt10.py',
+    EXAMPLES_ROOT_DIR / 'tf/te_ppo_metaworld_mt50.py',
 ]
 # yapf: enable
 
@@ -401,12 +403,36 @@ def test_te_ppo_point():
 
 
 @pytest.mark.no_cover
-@pytest.mark.timeout(60)
-def test_te_trpo_point():
-    """Test te_trpo_point.py."""
+@pytest.mark.timeout(100)
+def test_te_ppo_metaworld_ml1_push():
+    """Test te_ppo_point.py."""
     # yapf: disable
     assert subprocess.run([
-        EXAMPLES_ROOT_DIR / 'tf/te_trpo_point.py', '--n_epochs', '1',
-        '--batch_size_per_task', '10'
+        EXAMPLES_ROOT_DIR / 'tf/te_ppo_metaworld_ml1_push.py',
+        '--n_epochs', '1', '--batch_size_per_task', '1'
+    ], check=False).returncode == 0
+    # yapf: enable
+
+
+@pytest.mark.no_cover
+@pytest.mark.timeout(300)
+def test_te_ppo_metaworld_mt10():
+    """Test te_ppo_point.py."""
+    # yapf: disable
+    assert subprocess.run([
+        EXAMPLES_ROOT_DIR / 'tf/te_ppo_metaworld_mt10.py',
+        '--n_epochs', '1', '--batch_size_per_task', '1'
+    ], check=False).returncode == 0
+    # yapf: enable
+
+
+@pytest.mark.no_cover
+@pytest.mark.timeout(300)
+def test_te_ppo_metaworld_mt50():
+    """Test te_ppo_point.py."""
+    # yapf: disable
+    assert subprocess.run([
+        EXAMPLES_ROOT_DIR / 'tf/te_ppo_metaworld_mt50.py',
+        '--n_epochs', '1', '--batch_size_per_task', '1'
     ], check=False).returncode == 0
     # yapf: enable
