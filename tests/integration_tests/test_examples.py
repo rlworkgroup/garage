@@ -1,6 +1,4 @@
-"""This is an integration test to make sure scripts from examples/
-work when executing `./examples/**/*.py`.
-"""
+"""Integration tests to make sure scripts in examples work."""
 import os
 import pathlib
 import subprocess
@@ -23,7 +21,7 @@ LONG_RUNNING_EXAMPLES = [
 
 
 def enumerate_algo_examples():
-    """Return a list of paths for all algo examples
+    """Return a list of paths for all algo examples.
 
     Returns:
         List[str]: list of path strings
@@ -57,8 +55,10 @@ def test_algo_examples(filepath):
 @pytest.mark.no_cover
 @pytest.mark.timeout(180)
 def test_dqn_pong():
-    """Test tf/dqn_pong.py with reduced replay buffer size for reduced memory
-    consumption.
+    """Test tf/dqn_pong.py with reduced replay buffer size.
+
+    This is to reduced memory consumption.
+
     """
     env = os.environ.copy()
     env['GARAGE_EXAMPLE_TEST_N_EPOCHS'] = '1'
@@ -71,8 +71,10 @@ def test_dqn_pong():
 @pytest.mark.no_cover
 @pytest.mark.timeout(30)
 def test_ppo_memorize_digits():
-    """Test tf/ppo_memorize_digits.py with reduced batch size for reduced
-    memory consumption.
+    """Test tf/ppo_memorize_digits.py with reduced batch size.
+
+    This is to reduced memory consumption.
+
     """
     env = os.environ.copy()
     env['GARAGE_EXAMPLE_TEST_N_EPOCHS'] = '1'
@@ -86,8 +88,10 @@ def test_ppo_memorize_digits():
 @pytest.mark.no_cover
 @pytest.mark.timeout(40)
 def test_trpo_cubecrash():
-    """Test tf/trpo_cubecrash.py with reduced batch size for reduced memory
-    consumption.
+    """Test tf/trpo_cubecrash.py with reduced batch size.
+
+    This is to reduced memory consumption.
+
     """
     env = os.environ.copy()
     env['GARAGE_EXAMPLE_TEST_N_EPOCHS'] = '1'
@@ -102,7 +106,7 @@ def test_trpo_cubecrash():
 def test_step_env():
     """Test step_env.py."""
     assert subprocess.run(
-        [EXAMPLES_ROOT_DIR / 'step_env.py', '--n_steps', '1'],
+        [str(EXAMPLES_ROOT_DIR / 'step_env.py'), '--n_steps', '1'],
         check=False).returncode == 0
 
 
@@ -111,5 +115,5 @@ def test_step_env():
 def test_step_dm_control_env():
     """Test step_dm_control_env.py."""
     assert subprocess.run(
-        [EXAMPLES_ROOT_DIR / 'step_dm_control_env.py', '--n_steps', '1'],
+        [str(EXAMPLES_ROOT_DIR / 'step_dm_control_env.py'), '--n_steps', '1'],
         check=False).returncode == 0

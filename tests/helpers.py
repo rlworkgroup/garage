@@ -97,8 +97,7 @@ def recurrent_step_lstm(input_val,
                         nonlinearity,
                         gate_nonlinearity,
                         forget_bias=1.0):
-    """
-    A LSTM unit implements the following update mechanism:
+    """A LSTM unit implements the following update mechanism:
 
     Incoming gate:    i(t) = f_i(x(t) @ W_xi + h(t-1) @ W_hi +
                                  w_ci * c(t-1) + b_i)
@@ -173,8 +172,7 @@ def recurrent_step_gru(input_val,
                        nonlinearity,
                        gate_nonlinearity,
                        forget_bias=1.0):
-    """
-    A GRU unit implements the following update mechanism:
+    """A GRU unit implements the following update mechanism:
 
     Reset gate:        r(t) = f_r(x(t) @ W_xr + h(t-1) @ W_hr + b_r)
     Update gate:       u(t) = f_u(x(t) @ W_xu + h(t-1) @ W_hu + b_u)
@@ -231,7 +229,7 @@ def recurrent_step_gru(input_val,
 
 def _construct_image_vector(_input, batch, w, h, filter_width, filter_height,
                             in_shape):
-    """sw is sliding window"""
+    """sw is sliding window."""
     sw = np.empty((filter_width, filter_height, in_shape))
     for dw in range(filter_width):
         for dh in range(filter_height):
