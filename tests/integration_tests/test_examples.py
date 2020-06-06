@@ -403,6 +403,7 @@ def test_te_ppo_point():
 
 
 @pytest.mark.no_cover
+@pytest.mark.mujoco
 @pytest.mark.timeout(100)
 def test_te_ppo_metaworld_ml1_push():
     """Test te_ppo_point.py."""
@@ -415,6 +416,7 @@ def test_te_ppo_metaworld_ml1_push():
 
 
 @pytest.mark.no_cover
+@pytest.mark.mujoco
 @pytest.mark.timeout(300)
 def test_te_ppo_metaworld_mt10():
     """Test te_ppo_point.py."""
@@ -427,6 +429,7 @@ def test_te_ppo_metaworld_mt10():
 
 
 @pytest.mark.no_cover
+@pytest.mark.mujoco
 @pytest.mark.timeout(300)
 def test_te_ppo_metaworld_mt50():
     """Test te_ppo_point.py."""
