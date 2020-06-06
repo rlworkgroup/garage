@@ -29,7 +29,7 @@ class MAML:
             Type of optimizer.
             This can be an optimizer type such as `torch.optim.Adam` or a tuple
             of type and dictionary, where dictionary contains arguments to
-            initialize the optimizer e.g. `(torch.optim.Adam, {'lr' = 1e-3})`.
+            initialize the optimizer e.g. `(torch.optim.Adam, {'lr' : 1e-3})`.
         meta_batch_size (int): Number of tasks sampled per batch.
         inner_lr (float): Adaptation learning rate.
         outer_lr (float): Meta policy learning rate.

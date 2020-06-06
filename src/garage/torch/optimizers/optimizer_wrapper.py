@@ -11,7 +11,7 @@ class OptimizerWrapper:
             for policy. This can be an optimizer type such as
             `torch.optim.Adam` or a tuple of type and dictionary, where
             dictionary contains arguments to initialize the optimizer.
-            e.g. `(torch.optim.Adam, {'lr' = 1e-3})`
+            e.g. `(torch.optim.Adam, {'lr' : 1e-3})`
             Sample strategy to be used when sampling a new task.
         module (torch.nn.Module): Module to be optimized.
         max_optimization_epochs (int): Maximum number of epochs for update.

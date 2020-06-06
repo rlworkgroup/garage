@@ -27,7 +27,7 @@ def make_optimizer(optimizer_type, module=None, **kwargs):
         optimizer_type (Union[type, tuple[type, dict]]): Type of optimizer.
             This can be an optimizer type such as 'torch.optim.Adam' or a
             tuple of type and dictionary, where dictionary contains arguments
-            to initialize the optimizer e.g. (torch.optim.Adam, {'lr' = 1e-3})
+            to initialize the optimizer e.g. (torch.optim.Adam, {'lr' : 1e-3})
         module (optional): If the optimizer type is a `torch.optimizer`.
             The `torch.nn.Module` module whose parameters needs to be optimized
             must be specify.

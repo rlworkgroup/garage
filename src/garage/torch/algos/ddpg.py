@@ -48,12 +48,12 @@ class DDPG(OffPolicyRLAlgorithm):
             for training policy network. This can be an optimizer type such as
             `torch.optim.Adam` or a tuple of type and dictionary, where
             dictionary contains arguments to initialize the optimizer
-            e.g. `(torch.optim.Adam, {'lr' = 1e-3})`.
+            e.g. `(torch.optim.Adam, {'lr' : 1e-3})`.
         qf_optimizer (Union[type, tuple[type, dict]]): Type of optimizer
             for training Q-value network. This can be an optimizer type such
             as `torch.optim.Adam` or a tuple of type and dictionary, where
             dictionary contains arguments to initialize the optimizer
-            e.g. `(torch.optim.Adam, {'lr' = 1e-3})`.
+            e.g. `(torch.optim.Adam, {'lr' : 1e-3})`.
         policy_lr (float): Learning rate for policy network parameters.
         qf_lr (float): Learning rate for Q-value network parameters.
         clip_pos_returns (bool): Whether or not clip positive returns.
