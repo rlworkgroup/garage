@@ -606,6 +606,8 @@ class TENPO(RLAlgorithm):
         extra_obs_var = [
             tf.cast(v, tf.float32) for v in policy_state_info_vars_list
         ]
+        # pylint false alarm
+        # pylint: disable=unexpected-keyword-arg, no-value-for-parameter
         augmented_obs_var = tf.concat([obs_var] + extra_obs_var, axis=-1)
         extra_traj_var = [
             tf.cast(v, tf.float32) for v in infer_state_info_vars_list
@@ -789,6 +791,8 @@ class TENPO(RLAlgorithm):
             # 1. Encoder distribution total entropy
             with tf.name_scope('encoder_entropy'):
                 task_dim = self.policy.task_space.flat_dim
+                # pylint false alarm
+                # pylint: disable=no-value-for-parameter
                 all_task_one_hots = tf.one_hot(np.arange(task_dim),
                                                task_dim,
                                                name='all_task_one_hots')
@@ -905,6 +909,8 @@ class TENPO(RLAlgorithm):
             traj_gammas = tf.constant(float(self._discount),
                                       dtype=tf.float32,
                                       shape=[self.max_path_length])
+            # pylint false alarm
+            # pylint: disable=no-value-for-parameter
             traj_discounts = tf.compat.v1.cumprod(traj_gammas,
                                                   exclusive=True,
                                                   name='traj_discounts')

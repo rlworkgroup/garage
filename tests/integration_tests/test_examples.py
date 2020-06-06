@@ -396,7 +396,7 @@ def test_te_ppo_point():
     """Test te_ppo_point.py."""
     # yapf: disable
     assert subprocess.run([
-        EXAMPLES_ROOT_DIR / 'tf/te_ppo_point.py', '--n_epochs', '1',
+        str(EXAMPLES_ROOT_DIR / 'tf/te_ppo_point.py'), '--n_epochs', '1',
         '--batch_size_per_task', '10'
     ], check=False).returncode == 0
     # yapf: enable
@@ -408,7 +408,7 @@ def test_te_ppo_metaworld_ml1_push():
     """Test te_ppo_point.py."""
     # yapf: disable
     assert subprocess.run([
-        EXAMPLES_ROOT_DIR / 'tf/te_ppo_metaworld_ml1_push.py',
+        str(EXAMPLES_ROOT_DIR / 'tf/te_ppo_metaworld_ml1_push.py'),
         '--n_epochs', '1', '--batch_size_per_task', '1'
     ], check=False).returncode == 0
     # yapf: enable
@@ -420,7 +420,7 @@ def test_te_ppo_metaworld_mt10():
     """Test te_ppo_point.py."""
     # yapf: disable
     assert subprocess.run([
-        EXAMPLES_ROOT_DIR / 'tf/te_ppo_metaworld_mt10.py',
+        str(EXAMPLES_ROOT_DIR / 'tf/te_ppo_metaworld_mt10.py'),
         '--n_epochs', '1', '--batch_size_per_task', '1'
     ], check=False).returncode == 0
     # yapf: enable
