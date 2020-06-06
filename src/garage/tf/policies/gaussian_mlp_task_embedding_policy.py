@@ -429,8 +429,6 @@ class GaussianMLPTaskEmbeddingPolicy(TaskEmbeddingPolicy):
             std_parameterization=self._std_parameterization,
             layer_normalization=self._layer_normalization)
 
-        # new_policy.model.parameters = self.model.parameters
-
         return new_policy
 
     def __getstate__(self):

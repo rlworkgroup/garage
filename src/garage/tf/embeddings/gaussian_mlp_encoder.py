@@ -300,8 +300,6 @@ class GaussianMLPEncoder(StochasticEncoder, StochasticModule):
             std_parameterization=self._std_parameterization,
             layer_normalization=self._layer_normalization)
 
-        # new_encoder.model.parameters = self.model.parameters
-
         return new_encoder
 
     def __getstate__(self):
