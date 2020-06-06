@@ -3,6 +3,7 @@ from dowel import tabular
 import numpy as np
 import tensorflow as tf
 
+from garage import make_optimizer
 from garage.tf.distributions import Bernoulli
 from garage.tf.misc import tensor_utils
 from garage.tf.models import NormalizedInputMLPModel
@@ -82,23 +83,21 @@ class BernoulliMLPRegressor(StochasticRegressor):
 
         with tf.compat.v1.variable_scope(self._name, reuse=False) as vs:
             self._variable_scope = vs
-            if optimizer_args is None:
-                optimizer_args = dict()
-            if tr_optimizer_args is None:
-                tr_optimizer_args = dict()
+            optimizer_args = optimizer_args or dict()
+            tr_optimizer_args = tr_optimizer_args or dict()
 
             if optimizer is None:
-                optimizer = LbfgsOptimizer(**optimizer_args)
+                self._optimizer = make_optimizer(LbfgsOptimizer,
+                                                 **optimizer_args)
             else:
-                optimizer = optimizer(**optimizer_args)
+                self._optimizer = make_optimizer(optimizer, **optimizer_args)
 
             if tr_optimizer is None:
-                tr_optimizer = ConjugateGradientOptimizer(**tr_optimizer_args)
+                self._tr_optimizer = make_optimizer(ConjugateGradientOptimizer,
+                                                    **tr_optimizer_args)
             else:
-                tr_optimizer = tr_optimizer(**tr_optimizer_args)
-
-            self._optimizer = optimizer
-            self._tr_optimizer = tr_optimizer
+                self._tr_optimizer = make_optimizer(tr_optimizer,
+                                                    **tr_optimizer_args)
             self._first_optimized = False
 
         self.model = NormalizedInputMLPModel(
@@ -249,6 +248,7 @@ class BernoulliMLPRegressor(StochasticRegressor):
 
         return self._dist.log_likelihood_sym(y_var, dict(p=prob))
 
+    # pylint: disable=unused-argument
     def dist_info_sym(self, input_var, state_info_vars=None, name=None):
         """Build a symbolic graph of the distribution parameters.
 

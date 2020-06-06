@@ -6,6 +6,7 @@ from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import CategoricalMLPPolicy
 
 
+# pylint: disable=missing-return-type-doc
 def fixture_exp(snapshot_config, sess):
     """Dummy fixture experiment function.
 
@@ -30,13 +31,12 @@ def fixture_exp(snapshot_config, sess):
 
         baseline = LinearFeatureBaseline(env_spec=env.spec)
 
-        algo = VPG(
-            env_spec=env.spec,
-            policy=policy,
-            baseline=baseline,
-            max_path_length=100,
-            discount=0.99,
-            optimizer_args=dict(tf_optimizer_args=dict(learning_rate=0.01, )))
+        algo = VPG(env_spec=env.spec,
+                   policy=policy,
+                   baseline=baseline,
+                   max_path_length=100,
+                   discount=0.99,
+                   optimizer_args=dict(learning_rate=0.01, ))
 
         runner.setup(algo, env)
         runner.train(n_epochs=5, batch_size=100)

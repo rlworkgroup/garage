@@ -1,7 +1,8 @@
 """Model-Agnostic Meta-Learning (MAML) algorithm applied to PPO."""
 import torch
 
-from garage.torch.algos import _Default, PPO
+from garage import _Default
+from garage.torch.algos import PPO
 from garage.torch.algos.maml import MAML
 from garage.torch.optimizers import OptimizerWrapper
 

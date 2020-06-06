@@ -5,6 +5,7 @@ from dowel import logger, tabular
 import numpy as np
 import tensorflow as tf
 
+from garage import _Default, make_optimizer
 from garage.np.algos.off_policy_rl_algorithm import OffPolicyRLAlgorithm
 from garage.replay_buffer import PathBuffer
 from garage.tf.misc import tensor_utils
@@ -76,13 +77,13 @@ class DDPG(OffPolicyRLAlgorithm):
             rollout_batch_size=1,
             exploration_policy=None,
             target_update_tau=0.01,
-            policy_lr=1e-4,
-            qf_lr=1e-3,
             discount=0.99,
             policy_weight_decay=0,
             qf_weight_decay=0,
             policy_optimizer=tf.compat.v1.train.AdamOptimizer,
             qf_optimizer=tf.compat.v1.train.AdamOptimizer,
+            policy_lr=_Default(1e-4),
+            qf_lr=_Default(1e-3),
             clip_pos_returns=False,
             clip_return=np.inf,
             max_action=None,
@@ -90,27 +91,27 @@ class DDPG(OffPolicyRLAlgorithm):
             smooth_return=True,
             name='DDPG'):
         action_bound = env_spec.action_space.high
-        self.max_action = action_bound if max_action is None else max_action
-        self.tau = target_update_tau
-        self.policy_lr = policy_lr
-        self.qf_lr = qf_lr
-        self.policy_weight_decay = policy_weight_decay
-        self.qf_weight_decay = qf_weight_decay
-        self.policy_optimizer = policy_optimizer
-        self.qf_optimizer = qf_optimizer
-        self.name = name
-        self.clip_pos_returns = clip_pos_returns
-        self.clip_return = clip_return
-        self.success_history = deque(maxlen=100)
+        self._max_action = action_bound if max_action is None else max_action
+        self._tau = target_update_tau
+        self._policy_weight_decay = policy_weight_decay
+        self._qf_weight_decay = qf_weight_decay
+        self._name = name
+        self._clip_pos_returns = clip_pos_returns
+        self._clip_return = clip_return
+        self._success_history = deque(maxlen=100)
 
-        self.episode_rewards = []
-        self.episode_policy_losses = []
-        self.episode_qf_losses = []
-        self.epoch_ys = []
-        self.epoch_qs = []
+        self._episode_rewards = []
+        self._episode_policy_losses = []
+        self._episode_qf_losses = []
+        self._epoch_ys = []
+        self._epoch_qs = []
 
-        self.target_policy = policy.clone('target_policy')
-        self.target_qf = qf.clone('target_qf')
+        self._target_policy = policy.clone('target_policy')
+        self._target_qf = qf.clone('target_qf')
+        self._policy_optimizer = policy_optimizer
+        self._qf_optimizer = qf_optimizer
+        self._policy_lr = policy_lr
+        self._qf_lr = qf_lr
 
         super(DDPG, self).__init__(env_spec=env_spec,
                                    policy=policy,
@@ -131,24 +132,24 @@ class DDPG(OffPolicyRLAlgorithm):
 
     def init_opt(self):
         """Build the loss function and init the optimizer."""
-        with tf.name_scope(self.name):
+        with tf.name_scope(self._name):
             # Create target policy and qf network
             self.target_policy_f_prob_online = tensor_utils.compile_function(
-                inputs=[self.target_policy.model.networks['default'].input],
-                outputs=self.target_policy.model.networks['default'].outputs)
+                inputs=[self._target_policy.model.networks['default'].input],
+                outputs=self._target_policy.model.networks['default'].outputs)
             self.target_qf_f_prob_online = tensor_utils.compile_function(
-                inputs=self.target_qf.model.networks['default'].inputs,
-                outputs=self.target_qf.model.networks['default'].outputs)
+                inputs=self._target_qf.model.networks['default'].inputs,
+                outputs=self._target_qf.model.networks['default'].outputs)
 
             # Set up target init and update function
             with tf.name_scope('setup_target'):
                 ops = tensor_utils.get_target_ops(
                     self.policy.get_global_vars(),
-                    self.target_policy.get_global_vars(), self.tau)
+                    self._target_policy.get_global_vars(), self._tau)
                 policy_init_ops, policy_update_ops = ops
                 qf_init_ops, qf_update_ops = tensor_utils.get_target_ops(
                     self.qf.get_global_vars(),
-                    self.target_qf.get_global_vars(), self.tau)
+                    self._target_qf.get_global_vars(), self._tau)
                 target_init_op = policy_init_ops + qf_init_ops
                 target_update_op = policy_update_ops + qf_update_ops
 
@@ -176,17 +177,20 @@ class DDPG(OffPolicyRLAlgorithm):
                                              name='policy_action_qval')
             with tf.name_scope('action_loss'):
                 action_loss = -tf.reduce_mean(next_qval)
-                if self.policy_weight_decay > 0.:
+                if self._policy_weight_decay > 0.:
                     regularizer = tf.keras.regularizers.l2(
-                        self.policy_weight_decay)
+                        self._policy_weight_decay)
                     for var in self.policy.get_regularizable_vars():
                         policy_reg = regularizer(var)
                         action_loss += policy_reg
 
             with tf.name_scope('minimize_action_loss'):
-                policy_train_op = self.policy_optimizer(
-                    self.policy_lr, name='PolicyOptimizer').minimize(
-                        action_loss, var_list=self.policy.get_trainable_vars())
+                policy_optimizer = make_optimizer(
+                    self._policy_optimizer,
+                    learning_rate=self._policy_lr,
+                    name='PolicyOptimizer')
+                policy_train_op = policy_optimizer.minimize(
+                    action_loss, var_list=self.policy.get_trainable_vars())
 
             f_train_policy = tensor_utils.compile_function(
                 inputs=[obs], outputs=[policy_train_op, action_loss])
@@ -196,17 +200,19 @@ class DDPG(OffPolicyRLAlgorithm):
             with tf.name_scope('qval_loss'):
                 qval_loss = tf.reduce_mean(
                     tf.compat.v1.squared_difference(input_y, qval))
-                if self.qf_weight_decay > 0.:
+                if self._qf_weight_decay > 0.:
                     regularizer = tf.keras.regularizers.l2(
-                        self.qf_weight_decay)
+                        self._qf_weight_decay)
                     for var in self.qf.get_regularizable_vars():
                         qf_reg = regularizer(var)
                         qval_loss += qf_reg
 
             with tf.name_scope('minimize_qf_loss'):
-                qf_train_op = self.qf_optimizer(
-                    self.qf_lr, name='QFunctionOptimizer').minimize(
-                        qval_loss, var_list=self.qf.get_trainable_vars())
+                qf_optimizer = make_optimizer(self._qf_optimizer,
+                                              learning_rate=self._qf_lr,
+                                              name='QFunctionOptimizer')
+                qf_train_op = qf_optimizer.minimize(
+                    qval_loss, var_list=self.qf.get_trainable_vars())
 
             f_train_qf = tensor_utils.compile_function(
                 inputs=[input_y, obs, actions],
@@ -258,11 +264,11 @@ class DDPG(OffPolicyRLAlgorithm):
 
         epoch = itr / self.steps_per_epoch
 
-        self.episode_rewards.extend([
+        self._episode_rewards.extend([
             path for path, complete in zip(paths['undiscounted_returns'],
                                            paths['complete']) if complete
         ])
-        self.success_history.extend([
+        self._success_history.extend([
             path for path, complete in zip(paths['success_history'],
                                            paths['complete']) if complete
         ])
@@ -273,22 +279,22 @@ class DDPG(OffPolicyRLAlgorithm):
         last_average_return = np.NaN
         avg_success_rate = 0
 
-        if self.episode_rewards:
-            last_average_return = np.mean(self.episode_rewards)
+        if self._episode_rewards:
+            last_average_return = np.mean(self._episode_rewards)
 
-        if self.success_history:
+        if self._success_history:
             if itr % self.steps_per_epoch == 0 and self._buffer_prefilled:
-                avg_success_rate = np.mean(self.success_history)
+                avg_success_rate = np.mean(self._success_history)
 
         self.log_diagnostics(paths)
         for _ in range(self.n_train_steps):
             if self._buffer_prefilled:
                 qf_loss, y_s, qval, policy_loss = self.optimize_policy()
 
-                self.episode_policy_losses.append(policy_loss)
-                self.episode_qf_losses.append(qf_loss)
-                self.epoch_ys.append(y_s)
-                self.epoch_qs.append(qval)
+                self._episode_policy_losses.append(policy_loss)
+                self._episode_qf_losses.append(qf_loss)
+                self._epoch_ys.append(y_s)
+                self._epoch_qs.append(qval)
 
         if itr % self.steps_per_epoch == 0:
             logger.log('Training finished')
@@ -296,27 +302,27 @@ class DDPG(OffPolicyRLAlgorithm):
             if self._buffer_prefilled:
                 tabular.record('Epoch', epoch)
                 tabular.record('Policy/AveragePolicyLoss',
-                               np.mean(self.episode_policy_losses))
+                               np.mean(self._episode_policy_losses))
                 tabular.record('QFunction/AverageQFunctionLoss',
-                               np.mean(self.episode_qf_losses))
-                tabular.record('QFunction/AverageQ', np.mean(self.epoch_qs))
-                tabular.record('QFunction/MaxQ', np.max(self.epoch_qs))
+                               np.mean(self._episode_qf_losses))
+                tabular.record('QFunction/AverageQ', np.mean(self._epoch_qs))
+                tabular.record('QFunction/MaxQ', np.max(self._epoch_qs))
                 tabular.record('QFunction/AverageAbsQ',
-                               np.mean(np.abs(self.epoch_qs)))
-                tabular.record('QFunction/AverageY', np.mean(self.epoch_ys))
-                tabular.record('QFunction/MaxY', np.max(self.epoch_ys))
+                               np.mean(np.abs(self._epoch_qs)))
+                tabular.record('QFunction/AverageY', np.mean(self._epoch_ys))
+                tabular.record('QFunction/MaxY', np.max(self._epoch_ys))
                 tabular.record('QFunction/AverageAbsY',
-                               np.mean(np.abs(self.epoch_ys)))
+                               np.mean(np.abs(self._epoch_ys)))
                 tabular.record('AverageSuccessRate', avg_success_rate)
 
             if not self.smooth_return:
-                self.episode_rewards = []
-                self.episode_policy_losses = []
-                self.episode_qf_losses = []
-                self.epoch_ys = []
-                self.epoch_qs = []
+                self._episode_rewards = []
+                self._episode_policy_losses = []
+                self._episode_qf_losses = []
+                self._epoch_ys = []
+                self._epoch_qs = []
 
-            self.success_history.clear()
+            self._success_history.clear()
         return last_average_return
 
     def optimize_policy(self):
@@ -359,8 +365,8 @@ class DDPG(OffPolicyRLAlgorithm):
         target_qvals = self.target_qf_f_prob_online(next_inputs,
                                                     target_actions)
 
-        clip_range = (-self.clip_return,
-                      0. if self.clip_pos_returns else self.clip_return)
+        clip_range = (-self._clip_return,
+                      0. if self._clip_pos_returns else self._clip_return)
         ys = np.clip(
             rewards + (1.0 - terminals) * self.discount * target_qvals,
             clip_range[0], clip_range[1])

@@ -3,6 +3,7 @@ from dowel import tabular
 import numpy as np
 import tensorflow as tf
 
+from garage import make_optimizer
 from garage.tf.misc import tensor_utils
 from garage.tf.optimizers import LbfgsOptimizer, PenaltyLbfgsOptimizer
 from garage.tf.regressors.gaussian_cnn_regressor_model import (
@@ -146,12 +147,13 @@ class GaussianCNNRegressor(StochasticRegressor):
                 optimizer_args = dict()
             if optimizer is None:
                 if use_trust_region:
-                    optimizer = PenaltyLbfgsOptimizer(**optimizer_args)
+                    self._optimizer = make_optimizer(PenaltyLbfgsOptimizer,
+                                                     **optimizer_args)
                 else:
-                    optimizer = LbfgsOptimizer(**optimizer_args)
+                    self._optimizer = make_optimizer(LbfgsOptimizer,
+                                                     **optimizer_args)
             else:
-                optimizer = optimizer(**optimizer_args)
-            self._optimizer = optimizer
+                self._optimizer = make_optimizer(optimizer, **optimizer_args)
 
         self.model = GaussianCNNRegressorModel(
             input_shape=input_shape,
@@ -329,6 +331,7 @@ class GaussianCNNRegressor(StochasticRegressor):
         return self.model.networks[name].dist.log_likelihood_sym(
             y_var, dict(mean=means_var, log_std=log_stds_var))
 
+    # pylint: disable=unused-argument
     def dist_info_sym(self, input_var, state_info_vars=None, name=None):
         """Create a symbolic graph of the distribution parameters.
 

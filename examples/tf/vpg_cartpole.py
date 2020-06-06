@@ -37,13 +37,12 @@ def vpg_cartpole(ctxt=None, seed=1):
 
         baseline = LinearFeatureBaseline(env_spec=env.spec)
 
-        algo = VPG(
-            env_spec=env.spec,
-            policy=policy,
-            baseline=baseline,
-            max_path_length=100,
-            discount=0.99,
-            optimizer_args=dict(tf_optimizer_args=dict(learning_rate=0.01, )))
+        algo = VPG(env_spec=env.spec,
+                   policy=policy,
+                   baseline=baseline,
+                   max_path_length=100,
+                   discount=0.99,
+                   optimizer_args=dict(learning_rate=0.01, ))
 
         runner.setup(algo, env)
         runner.train(n_epochs=100, batch_size=10000)

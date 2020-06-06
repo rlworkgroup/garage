@@ -1,6 +1,6 @@
 """A PyTorch optimizer wrapper that compute loss and optimize module."""
+from garage import make_optimizer
 from garage.np.optimizers import BatchDataset
-from garage.torch.algos import make_optimizer
 
 
 class OptimizerWrapper:
@@ -11,7 +11,7 @@ class OptimizerWrapper:
             for policy. This can be an optimizer type such as
             `torch.optim.Adam` or a tuple of type and dictionary, where
             dictionary contains arguments to initialize the optimizer.
-            e.g. `(torch.optim.Adam, {'lr' = 1e-3})`
+            e.g. `(torch.optim.Adam, {'lr' : 1e-3})`
             Sample strategy to be used when sampling a new task.
         module (torch.nn.Module): Module to be optimized.
         max_optimization_epochs (int): Maximum number of epochs for update.
@@ -24,7 +24,7 @@ class OptimizerWrapper:
                  module,
                  max_optimization_epochs=1,
                  minibatch_size=None):
-        self._optimizer = make_optimizer(optimizer, module)
+        self._optimizer = make_optimizer(optimizer, module=module)
         self._max_optimization_epochs = max_optimization_epochs
         self._minibatch_size = minibatch_size
 

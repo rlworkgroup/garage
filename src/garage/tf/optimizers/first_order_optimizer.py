@@ -5,6 +5,7 @@ import click
 from dowel import logger
 import tensorflow as tf
 
+from garage import _Default, make_optimizer
 from garage.np.optimizers import BatchDataset
 from garage.tf.misc import tensor_utils
 from garage.tf.optimizers.utils import LazyDict
@@ -17,8 +18,9 @@ class FirstOrderOptimizer:
     ADAM etc.
 
     Args:
-        tf_optimizer_cls (tf.Optimizer): Optimizer to be used.
-        tf_optimizer_args (dict): Optimizer arguments.
+        optimizer (tf.Optimizer): Optimizer to be used.
+        learning_rate (dict): learning rate arguments.
+            learning rates are our main interest parameters to tune optimizers.
         max_epochs (int): Maximum number of epochs for update.
         tolerance (float): Tolerance for difference in loss during update.
         batch_size (int): Batch size for optimization.
@@ -30,8 +32,8 @@ class FirstOrderOptimizer:
     """
 
     def __init__(self,
-                 tf_optimizer_cls=None,
-                 tf_optimizer_args=None,
+                 optimizer=None,
+                 learning_rate=None,
                  max_epochs=1000,
                  tolerance=1e-6,
                  batch_size=32,
@@ -41,11 +43,14 @@ class FirstOrderOptimizer:
         self._opt_fun = None
         self._target = None
         self._callback = callback
-        if tf_optimizer_cls is None:
-            tf_optimizer_cls = tf.compat.v1.train.AdamOptimizer
-        if tf_optimizer_args is None:
-            tf_optimizer_args = dict(learning_rate=1e-3)
-        self._tf_optimizer = tf_optimizer_cls(**tf_optimizer_args)
+        if optimizer is None:
+            optimizer = tf.compat.v1.train.AdamOptimizer
+        learning_rate = learning_rate or dict(learning_rate=_Default(1e-3))
+        if not isinstance(learning_rate, dict):
+            learning_rate = dict(learning_rate=learning_rate)
+
+        self._tf_optimizer = optimizer
+        self._learning_rate = learning_rate
         self._max_epochs = max_epochs
         self._tolerance = tolerance
         self._batch_size = batch_size
@@ -70,8 +75,9 @@ class FirstOrderOptimizer:
         del kwargs
         with tf.name_scope(self._name):
             self._target = target
-
-            self._train_op = self._tf_optimizer.minimize(
+            tf_optimizer = make_optimizer(self._tf_optimizer,
+                                          **self._learning_rate)
+            self._train_op = tf_optimizer.minimize(
                 loss, var_list=target.get_params())
 
             if extra_inputs is None:

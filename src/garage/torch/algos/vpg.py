@@ -11,7 +11,7 @@ from garage import log_performance, TrajectoryBatch
 from garage.misc import tensor_utils as tu
 from garage.np.algos.rl_algorithm import RLAlgorithm
 from garage.sampler import OnPolicyVectorizedSampler
-from garage.torch.algos import (compute_advantages, filter_valids, pad_to_last)
+from garage.torch import (compute_advantages, filter_valids, pad_to_last)
 from garage.torch.optimizers import OptimizerWrapper
 
 

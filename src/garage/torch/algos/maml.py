@@ -6,12 +6,12 @@ from dowel import tabular
 import numpy as np
 import torch
 
+from garage import _Default, make_optimizer
 from garage import log_multitask_performance
 from garage import TrajectoryBatch
 from garage.misc import tensor_utils
 from garage.sampler import OnPolicyVectorizedSampler
 from garage.tf.samplers import BatchSampler
-from garage.torch.algos import _Default, make_optimizer
 from garage.torch.optimizers import ConjugateGradientOptimizer
 from garage.torch.optimizers import DifferentiableSGD
 import garage.torch.utils as tu
@@ -29,7 +29,7 @@ class MAML:
             Type of optimizer.
             This can be an optimizer type such as `torch.optim.Adam` or a tuple
             of type and dictionary, where dictionary contains arguments to
-            initialize the optimizer e.g. `(torch.optim.Adam, {'lr' = 1e-3})`.
+            initialize the optimizer e.g. `(torch.optim.Adam, {'lr' : 1e-3})`.
         meta_batch_size (int): Number of tasks sampled per batch.
         inner_lr (float): Adaptation learning rate.
         outer_lr (float): Meta policy learning rate.
@@ -68,7 +68,7 @@ class MAML:
         self._inner_algo = inner_algo
         self._inner_optimizer = DifferentiableSGD(self._policy, lr=inner_lr)
         self._meta_optimizer = make_optimizer(meta_optimizer,
-                                              policy,
+                                              module=policy,
                                               lr=_Default(outer_lr),
                                               eps=_Default(1e-5))
         self._evaluate_every_n_epochs = evaluate_every_n_epochs

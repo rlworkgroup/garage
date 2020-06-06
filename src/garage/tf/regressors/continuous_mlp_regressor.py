@@ -3,6 +3,7 @@ from dowel import tabular
 import numpy as np
 import tensorflow as tf
 
+from garage import make_optimizer
 from garage.tf.misc import tensor_utils
 from garage.tf.models import NormalizedInputMLPModel
 from garage.tf.optimizers import LbfgsOptimizer
@@ -67,10 +68,10 @@ class ContinuousMLPRegressor(Regressor):
             if optimizer_args is None:
                 optimizer_args = dict()
             if optimizer is None:
-                optimizer = LbfgsOptimizer(**optimizer_args)
+                self._optimizer = make_optimizer(LbfgsOptimizer,
+                                                 **optimizer_args)
             else:
-                optimizer = optimizer(**optimizer_args)
-            self._optimizer = optimizer
+                self._optimizer = make_optimizer(optimizer, **optimizer_args)
 
         self.model = NormalizedInputMLPModel(
             input_shape=input_shape,
