@@ -428,6 +428,7 @@ def test_te_ppo_metaworld_mt10():
     # yapf: enable
 
 
+@pytest.mark.skip('Temporarily skipped because it takes too long time')
 @pytest.mark.no_cover
 @pytest.mark.mujoco
 @pytest.mark.timeout(300)
