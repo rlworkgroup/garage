@@ -70,6 +70,7 @@ def test_mtsac_get_log_alpha(monkeypatch):
 
 
 @pytest.mark.mujoco
+@pytest.mark.flaky
 def test_mtsac_inverted_double_pendulum():
     """Performance regression test of MTSAC on 2 InvDoublePendulum envs."""
     env_names = ['InvertedDoublePendulum-v2', 'InvertedDoublePendulum-v2']
