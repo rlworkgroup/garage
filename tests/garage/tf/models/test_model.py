@@ -1,3 +1,4 @@
+import collections
 import pickle
 
 import numpy as np
@@ -320,6 +321,9 @@ class TestModel(TfGraphTestCase):
         model1.build(input_var)
         model2.build(input_var)
         model1.parameters = model2.parameters
-        for m1, m2 in zip(model1.parameters.values(),
-                          model2.parameters.values()):
+        for m1, m2 in zip(
+                collections.OrderedDict(sorted(
+                    model1.parameters.items())).values(),
+                collections.OrderedDict(sorted(
+                    model2.parameters.items())).values()):
             assert np.array_equal(m1, m2)

@@ -67,9 +67,11 @@ ci-verify-conda:
 # path, so we can test with pipenv directly
 ci-verify-pipenv: export PATH=$(shell echo $$PATH | awk -v RS=: -v ORS=: '/venv/ {next} {print}')
 ci-verify-pipenv: export VIRTUAL_ENV=
+ci-verify-pipenv: export PIPENV_MAX_RETRIES=2 # number of retries for network requests. Default is 0
 ci-verify-pipenv:
-	pip3 install --upgrade pipenv setuptools
-	pipenv --three
+	pip install --upgrade pip setuptools
+	pip install pipenv
+	pipenv --python=3.5
 	pipenv install dist/garage.tar.gz[all,dev]
 	pipenv graph
 	# pylint will verify all imports work
