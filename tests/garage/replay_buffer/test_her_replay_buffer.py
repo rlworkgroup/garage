@@ -3,7 +3,7 @@ import pickle
 import numpy as np
 import pytest
 
-from garage.replay_buffer import HerReplayBuffer
+from garage.replay_buffer import HERReplayBuffer
 from tests.fixtures.envs.dummy import DummyDictEnv
 
 
@@ -13,19 +13,19 @@ class TestHerReplayBuffer:
         self.env = DummyDictEnv()
         self.obs = self.env.reset()
         self._replay_k = 4
-        self.replay_buffer = HerReplayBuffer(env_spec=self.env.spec,
+        self.replay_buffer = HERReplayBuffer(env_spec=self.env.spec,
                                              capacity_in_transitions=10,
                                              replay_k=self._replay_k,
                                              reward_fn=self.env.compute_reward)
 
     def test_replay_k(self):
-        self.replay_buffer = HerReplayBuffer(env_spec=self.env.spec,
+        self.replay_buffer = HERReplayBuffer(env_spec=self.env.spec,
                                              capacity_in_transitions=10,
                                              replay_k=0,
                                              reward_fn=self.env.compute_reward)
 
         with pytest.raises(ValueError):
-            self.replay_buffer = HerReplayBuffer(
+            self.replay_buffer = HERReplayBuffer(
                 env_spec=self.env.spec,
                 capacity_in_transitions=10,
                 replay_k=0.2,

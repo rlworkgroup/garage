@@ -9,7 +9,7 @@ import numpy as np
 from garage.replay_buffer.path_buffer import PathBuffer
 
 
-class HerReplayBuffer(PathBuffer):
+class HERReplayBuffer(PathBuffer):
     """Replay buffer for HER (Hindsight Experience Replay).
 
     It constructs hindsight examples using future strategy.
