@@ -119,8 +119,9 @@ class GaussianMLPEncoder(StochasticEncoder, StochasticModule):
 
     def _initialize(self):
         """Initialize encoder."""
-        embedding_input = tf.placeholder(tf.float32,
-                                         shape=(None, None, self._input_dim))
+        embedding_input = tf.compat.v1.placeholder(tf.float32,
+                                                   shape=(None, None,
+                                                          self._input_dim))
         with tf.compat.v1.variable_scope(self._name) as vs:
             self._variable_scope = vs
             self._dist, mean_var, log_std_var = self.model.build(

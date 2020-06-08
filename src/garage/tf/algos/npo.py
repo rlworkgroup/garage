@@ -538,6 +538,7 @@ class NPO(RLAlgorithm):
             samples_data['agent_infos'][k] for k in self.policy.state_info_keys
         ]
 
+        # pylint: disable=unexpected-keyword-arg
         policy_opt_input_values = self._policy_opt_inputs._replace(
             obs_var=samples_data['observations'],
             action_var=samples_data['actions'],

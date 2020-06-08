@@ -12,12 +12,6 @@ from garage.sampler.stateful_pool import SharedGlobal
 from garage.sampler.stateful_pool import singleton_pool
 from garage.sampler.utils import rollout
 
-tf = False
-try:
-    import tensorflow as tf
-except ImportError:
-    pass
-
 
 def _worker_init(g, id):
     if singleton_pool.n_parallel > 1:
