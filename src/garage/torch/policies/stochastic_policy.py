@@ -6,7 +6,6 @@ import torch
 from garage.torch import global_device
 from garage.torch.policies.policy import Policy
 
-
 class StochasticPolicy(Policy, abc.ABC):
     """Abstract base class for torch stochastic policies."""
 
@@ -30,10 +29,17 @@ class StochasticPolicy(Policy, abc.ABC):
         with torch.no_grad():
             if not isinstance(observation, torch.Tensor):
                 observation = torch.as_tensor(observation).float().to(
+<<<<<<< HEAD
                     global_device())
             observation = observation.unsqueeze(0)
             dist, info = self.forward(observation)
             return dist.sample().squeeze(0).cpu().numpy(), {
+=======
+                    tu.global_device())
+            observation = torch.Tensor(observation).unsqueeze(0)
+            dist, info = self.forward(observation)
+            return dist, {
+>>>>>>> 00f15f0a... Refactor torch policies
                 k: v.squeeze(0).detach().cpu().numpy()
                 for (k, v) in info.items()
             }
@@ -58,9 +64,15 @@ class StochasticPolicy(Policy, abc.ABC):
         with torch.no_grad():
             if not isinstance(observations, torch.Tensor):
                 observations = torch.as_tensor(observations).float().to(
+<<<<<<< HEAD
                     global_device())
             dist, info = self.forward(observations)
             return dist.sample().cpu().numpy(), {
+=======
+                    tu.global_device())
+            dist, info = self.forward(observations)
+            return dist, {
+>>>>>>> 00f15f0a... Refactor torch policies
                 k: v.detach().cpu().numpy()
                 for (k, v) in info.items()
             }
