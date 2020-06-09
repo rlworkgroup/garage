@@ -200,6 +200,7 @@ class VPG(RLAlgorithm):
 
         Returns:
             float: The average return in last epoch cycle.
+
         """
         last_return = None
 
@@ -381,9 +382,9 @@ class VPG(RLAlgorithm):
 
         """
         with torch.no_grad():
-            old_dist = self._old_policy(obs)
+            old_dist = self._old_policy(obs)[0]
 
-        new_dist = self.policy(obs)
+        new_dist = self.policy(obs)[0]
 
         kl_constraint = torch.distributions.kl.kl_divergence(
             old_dist, new_dist)
@@ -406,9 +407,9 @@ class VPG(RLAlgorithm):
         """
         if self._stop_entropy_gradient:
             with torch.no_grad():
-                policy_entropy = self.policy.entropy(obs)
+                policy_entropy = self.policy(obs)[0].entropy()
         else:
-            policy_entropy = self.policy.entropy(obs)
+            policy_entropy = self.policy(obs)[0].entropy()
 
         # This prevents entropy from becoming negative for small policy std
         if self._use_softplus_entropy:
@@ -435,7 +436,7 @@ class VPG(RLAlgorithm):
 
         """
         del rewards
-        log_likelihoods = self.policy.log_likelihood(obs, actions)
+        log_likelihoods = self.policy(obs)[0].log_prob(actions)
 
         return log_likelihoods * advantages
 

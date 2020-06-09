@@ -155,20 +155,6 @@ class TestTanhGaussianMLPPolicy:
                            rtol=1e-3)
         assert output1_action.shape == output2_action.shape
 
-    def test_is_vectorized(self):
-        """Test Tanh Gaussian Policy is vectorized."""
-        env_spec = GarageEnv(DummyBoxEnv())
-        init_std = 2.
-
-        policy = TanhGaussianMLPPolicy(env_spec=env_spec,
-                                       hidden_sizes=(1, ),
-                                       init_std=init_std,
-                                       hidden_nonlinearity=None,
-                                       std_parameterization='exp',
-                                       hidden_w_init=nn.init.ones_,
-                                       output_w_init=nn.init.ones_)
-        assert policy.vectorized
-
     def test_to(self):
         """Test Tanh Gaussian Policy can be moved to cpu."""
         env_spec = GarageEnv(DummyBoxEnv())
@@ -187,35 +173,3 @@ class TestTanhGaussianMLPPolicy:
         else:
             policy.to(None)
             assert str(next(policy.parameters()).device) == 'cpu'
-
-    def test_entropy(self):
-        """Test get_entropy method of the policy."""
-        env_spec = GarageEnv(DummyBoxEnv())
-        init_std = 1.
-        obs = torch.Tensor([0, 0, 0, 0]).float()
-        policy = TanhGaussianMLPPolicy(env_spec=env_spec,
-                                       hidden_sizes=(1, ),
-                                       init_std=init_std,
-                                       hidden_nonlinearity=None,
-                                       std_parameterization='exp',
-                                       hidden_w_init=nn.init.ones_,
-                                       output_w_init=nn.init.ones_)
-        dist = policy(obs)
-        assert torch.allclose(dist.entropy(), policy.entropy(obs))
-
-    def test_log_prob(self):
-        """Test log_prob method of the policy."""
-        env_spec = GarageEnv(DummyBoxEnv())
-        init_std = 1.
-        obs = torch.Tensor([0, 0, 0, 0]).float()
-        action = torch.Tensor([0, 0]).float()
-        policy = TanhGaussianMLPPolicy(env_spec=env_spec,
-                                       hidden_sizes=(1, ),
-                                       init_std=init_std,
-                                       hidden_nonlinearity=None,
-                                       std_parameterization='exp',
-                                       hidden_w_init=nn.init.ones_,
-                                       output_w_init=nn.init.ones_)
-        dist = policy(obs)
-        assert torch.allclose(dist.log_prob(action),
-                              policy.log_likelihood(obs, action))
