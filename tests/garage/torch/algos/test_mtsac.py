@@ -9,7 +9,7 @@ from garage.envs.multi_env_wrapper import round_robin_strategy
 from garage.experiment import deterministic, LocalRunner
 from garage.replay_buffer import PathBuffer
 from garage.sampler import LocalSampler
-import garage.torch._functions as tu
+from garage.torch import global_device, set_gpu_mode
 from garage.torch.algos import MTSAC
 from garage.torch.policies import TanhGaussianMLPPolicy
 from garage.torch.q_functions import ContinuousMLPQFunction
@@ -164,9 +164,9 @@ def test_to():
                   discount=0.99,
                   buffer_batch_size=buffer_batch_size)
 
-    tu.set_gpu_mode(torch.cuda.is_available())
+    set_gpu_mode(torch.cuda.is_available())
     mtsac.to()
-    device = tu.global_device()
+    device = global_device()
     for param in mtsac._qf1.parameters():
         assert param.device == device
     for param in mtsac._qf2.parameters():
@@ -223,9 +223,9 @@ def test_fixed_alpha():
                   buffer_batch_size=buffer_batch_size,
                   fixed_alpha=np.exp(0.5))
     if torch.cuda.is_available():
-        tu.set_gpu_mode(True)
+        set_gpu_mode(True)
     else:
-        tu.set_gpu_mode(False)
+        set_gpu_mode(False)
     mtsac.to()
     assert torch.allclose(torch.Tensor([0.5] * num_tasks),
                           mtsac._log_alpha.to('cpu'))

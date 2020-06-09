@@ -15,7 +15,7 @@ from garage.envs.multi_env_wrapper import round_robin_strategy
 from garage.experiment import deterministic, LocalRunner
 from garage.replay_buffer import PathBuffer
 from garage.sampler import LocalSampler
-import garage.torch._functions as tu
+from garage.torch import set_gpu_mode
 from garage.torch.algos import MTSAC
 from garage.torch.policies import TanhGaussianMLPPolicy
 from garage.torch.q_functions import ContinuousMLPQFunction
@@ -94,7 +94,7 @@ def mtsac_metaworld_mt50(ctxt=None, seed=1, use_gpu=False, _gpu=0):
                   target_update_tau=5e-3,
                   discount=0.99,
                   buffer_batch_size=6400)
-    tu.set_gpu_mode(use_gpu, _gpu)
+    set_gpu_mode(use_gpu, _gpu)
     mtsac.to()
     runner.setup(algo=mtsac, env=mt50_train_envs, sampler_cls=LocalSampler)
     runner.train(n_epochs=epochs, batch_size=batch_size)

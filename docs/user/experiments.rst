@@ -215,14 +215,14 @@ In order to enable the GPU for PyTorch, add the following code snippets to the e
 .. code-block:: python
 
   import torch
-  import garage.torch._functions as tu
+  from garage.torch import set_gpu_mode
 
   ...
 
     if torch.cuda.is_available():
-        tu.set_gpu_mode(True)
+        set_gpu_mode(True)
     else:
-        tu.set_gpu_mode(False)
+        set_gpu_mode(False)
     algo.to()
 
 See :code:`examples/torch/sac_half_cheetah_batch.py` for a more detailed example.
