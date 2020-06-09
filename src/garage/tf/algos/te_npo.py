@@ -1,11 +1,12 @@
 """Natural Policy Optimization with Task Embeddings."""
 # pylint: disable=too-many-lines
+import akro
 from dowel import Histogram, logger, tabular
 import numpy as np
 import scipy.stats
 import tensorflow as tf
 
-from garage import log_performance, TrajectoryBatch
+from garage import InOutSpec, log_performance, TrajectoryBatch
 from garage.misc import tensor_utils as np_tensor_utils
 from garage.np.algos import RLAlgorithm
 from garage.sampler import LocalSampler
@@ -406,7 +407,7 @@ class TENPO(RLAlgorithm):
             obs_flat = self._env_spec.observation_space.flatten_n(obs)
             steps = obs_flat
             window = self._inference.spec.input_space.shape[0]
-            traj = np_tensor_utils.sliding_window(steps, window, 1, smear=True)
+            traj = np_tensor_utils.sliding_window(steps, window, smear=True)
             traj_flat = self._inference.spec.input_space.flatten_n(traj)
             path['trajectories'] = traj_flat
 
@@ -1160,6 +1161,63 @@ class TENPO(RLAlgorithm):
         tabular.record('Inference/dLoss', infer_loss_before - infer_loss_after)
 
         return infer_loss_after
+
+    @classmethod
+    def _get_latent_space(cls, latent_dim):
+        """Get latent space given latent length.
+
+        Args:
+            latent_dim (int): Length of latent.
+
+        Returns:
+            akro.Space: Space of latent.
+
+        """
+        latent_lb = np.zeros(latent_dim, )
+        latent_up = np.ones(latent_dim, )
+        return akro.Box(latent_lb, latent_up)
+
+    @classmethod
+    def get_encoder_spec(cls, task_space, latent_dim):
+        """Get the embedding spec of the encoder.
+
+        Args:
+            task_space (akro.Space): Task spec.
+            latent_dim (int): Latent dimension.
+
+        Returns:
+            garage.InOutSpec: Encoder spec.
+
+        """
+        latent_space = cls._get_latent_space(latent_dim)
+        return InOutSpec(task_space, latent_space)
+
+    @classmethod
+    def get_infer_spec(cls, env_spec, latent_dim, inference_window_size):
+        """Get the embedding spec of the inference.
+
+        Every `inference_window_size` timesteps in the trajectory will be used
+        as the inference network input.
+
+        Args:
+            env_spec (garage.envs.EnvSpec): Environment spec.
+            latent_dim (int): Latent dimension.
+            inference_window_size (int): Length of inference window.
+
+        Returns:
+            garage.InOutSpec: Inference spec.
+
+        """
+        latent_space = cls._get_latent_space(latent_dim)
+
+        obs_lb, obs_ub = env_spec.observation_space.bounds
+        obs_lb_flat = env_spec.observation_space.flatten(obs_lb)
+        obs_ub_flat = env_spec.observation_space.flatten(obs_ub)
+        traj_lb = np.stack([obs_lb_flat] * inference_window_size)
+        traj_ub = np.stack([obs_ub_flat] * inference_window_size)
+        traj_space = akro.Box(traj_lb, traj_ub)
+
+        return InOutSpec(traj_space, latent_space)
 
     def _check_entropy_configuration(self, entropy_method, center_adv,
                                      stop_entropy_gradient,

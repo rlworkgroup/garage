@@ -337,7 +337,7 @@ def rrse(actual, predicted):
         np.sum(np.square(actual - np.mean(actual))))
 
 
-def sliding_window(t, window, step_size, smear=False):
+def sliding_window(t, window, smear=False):
     """Create a sliding window over a tensor.
 
     Args:
@@ -345,7 +345,6 @@ def sliding_window(t, window, step_size, smear=False):
             with shape :math:`(N, D)`, where N is the length of a trajectory,
             D is the dimension of each step in trajectory.
         window (int): Window size, mush be less than N.
-        step_size (int): Distance between two neighboring windows.
         smear (bool): If true, copy the last window so that N windows are
             generated.
 
@@ -364,15 +363,12 @@ def sliding_window(t, window, step_size, smear=False):
     if window == t.shape[0]:
         return np.stack([t] * window)
 
-    if step_size != 1:
-        raise NotImplementedError
-
     # The stride trick works only on the last dimension of an ndarray, so we
     # operate on the transpose, which reverses the dimensions of t.
     t_T = t.T
 
-    shape = t_T.shape[:-1] + (t_T.shape[-1] - window + 1 - step_size, window)
-    strides = t_T.strides + (t_T.strides[-1] * step_size, )
+    shape = t_T.shape[:-1] + (t_T.shape[-1] - window, window)
+    strides = t_T.strides + (t_T.strides[-1], )
     t_T_win = np.lib.stride_tricks.as_strided(t_T,
                                               shape=shape,
                                               strides=strides)

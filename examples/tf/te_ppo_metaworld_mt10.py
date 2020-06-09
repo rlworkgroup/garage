@@ -1,13 +1,11 @@
 #!/usr/bin/env python3
 """This is an example to train Task Embedding PPO with PointEnv."""
 # pylint: disable=no-value-for-parameter
-import akro
 import click
 from metaworld.benchmarks import MT10
-import numpy as np
 import tensorflow as tf
 
-from garage import InOutSpec, wrap_experiment
+from garage import wrap_experiment
 from garage.envs import GarageEnv, normalize
 from garage.envs.multi_env_wrapper import MultiEnvWrapper
 from garage.envs.multi_env_wrapper import round_robin_strategy
@@ -61,31 +59,8 @@ def te_ppo_mt10(ctxt, seed, n_epochs, batch_size_per_task):
 
     with LocalTFRunner(snapshot_config=ctxt) as runner:
 
-        latent_lb = np.zeros(latent_length, )
-        latent_ub = np.ones(latent_length, )
-        latent_space = akro.Box(latent_lb, latent_ub)
-
-        # trajectory space is (TRAJ_ENC_WINDOW, act_obs) where act_obs is a
-        # stacked vector of flattened actions and observations
-        obs_lb, obs_ub = env.observation_space.bounds
-        obs_lb_flat = env.observation_space.flatten(obs_lb)
-        obs_ub_flat = env.observation_space.flatten(obs_ub)
-        traj_lb = np.stack([obs_lb_flat] * inference_window)
-        traj_ub = np.stack([obs_ub_flat] * inference_window)
-        traj_space = akro.Box(traj_lb, traj_ub)
-
-        task_embed_spec = InOutSpec(env.task_space, latent_space)
-        traj_embed_spec = InOutSpec(traj_space, latent_space)
-
-        inference = GaussianMLPEncoder(
-            name='inference',
-            embedding_spec=traj_embed_spec,
-            hidden_sizes=[20, 10],
-            std_share_network=True,
-            init_std=2.0,
-            output_nonlinearity=tf.nn.tanh,
-            min_std=embedding_min_std,
-        )
+        task_embed_spec = TEPPO.get_encoder_spec(env.task_space,
+                                                 latent_dim=latent_length)
 
         task_encoder = GaussianMLPEncoder(
             name='embedding',
@@ -94,6 +69,21 @@ def te_ppo_mt10(ctxt, seed, n_epochs, batch_size_per_task):
             std_share_network=True,
             init_std=embedding_init_std,
             max_std=embedding_max_std,
+            output_nonlinearity=tf.nn.tanh,
+            min_std=embedding_min_std,
+        )
+
+        traj_embed_spec = TEPPO.get_infer_spec(
+            env.spec,
+            latent_dim=latent_length,
+            inference_window_size=inference_window)
+
+        inference = GaussianMLPEncoder(
+            name='inference',
+            embedding_spec=traj_embed_spec,
+            hidden_sizes=[20, 10],
+            std_share_network=True,
+            init_std=2.0,
             output_nonlinearity=tf.nn.tanh,
             min_std=embedding_min_std,
         )
