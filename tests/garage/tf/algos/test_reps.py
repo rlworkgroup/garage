@@ -6,9 +6,9 @@ import gym
 import pytest
 
 from garage.envs import GarageEnv
+from garage.experiment import LocalTFRunner
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import REPS
-from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import CategoricalMLPPolicy
 from tests.fixtures import snapshot_config, TfGraphTestCase
 

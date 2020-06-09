@@ -1,7 +1,7 @@
 import tensorflow as tf
 
+from garage.experiment import LocalTFRunner
 from garage.sampler import DefaultWorker
-from garage.tf.experiment import LocalTFRunner
 from garage.tf.samplers import TFWorkerWrapper
 from tests.fixtures import snapshot_config
 from tests.fixtures.envs.dummy import DummyBoxEnv

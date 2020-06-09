@@ -5,9 +5,9 @@ import tensorflow as tf
 from garage import wrap_experiment
 from garage.envs import GarageEnv, normalize
 from garage.experiment import deterministic
+from garage.experiment import LocalTFRunner
 from garage.tf.algos import PPO as TF_PPO
 from garage.tf.baselines import GaussianMLPBaseline as TF_GMB
-from garage.tf.experiment import LocalTFRunner
 from garage.tf.optimizers import FirstOrderOptimizer
 from garage.tf.policies import GaussianMLPPolicy as TF_GMP
 

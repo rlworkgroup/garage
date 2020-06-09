@@ -3,8 +3,9 @@
 import click
 import metaworld.benchmarks as mwb
 
+from garage import wrap_experiment
 from garage.envs import GarageEnv, normalize
-from garage.experiment import LocalRunner, wrap_experiment
+from garage.experiment import LocalRunner
 from garage.experiment.deterministic import set_seed
 from garage.experiment.task_sampler import SetTaskSampler
 from garage.sampler import LocalSampler

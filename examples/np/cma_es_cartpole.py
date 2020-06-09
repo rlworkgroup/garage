@@ -10,11 +10,11 @@ Results:
 """
 from garage import wrap_experiment
 from garage.envs import GarageEnv
+from garage.experiment import LocalTFRunner
 from garage.experiment.deterministic import set_seed
 from garage.np.algos import CMAES
 from garage.np.baselines import LinearFeatureBaseline
 from garage.sampler import OnPolicyVectorizedSampler
-from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import CategoricalMLPPolicy
 
 

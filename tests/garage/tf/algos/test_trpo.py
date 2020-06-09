@@ -8,12 +8,12 @@ import tensorflow as tf
 
 from garage.envs import GarageEnv, normalize
 from garage.experiment import deterministic
+from garage.experiment import LocalTFRunner
 from garage.experiment import snapshotter
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import TRPO
 from garage.tf.baselines import GaussianCNNBaseline
 from garage.tf.baselines import GaussianMLPBaseline
-from garage.tf.experiment import LocalTFRunner
 from garage.tf.optimizers import FiniteDifferenceHvp
 from garage.tf.policies import CategoricalCNNPolicy
 from garage.tf.policies import CategoricalGRUPolicy

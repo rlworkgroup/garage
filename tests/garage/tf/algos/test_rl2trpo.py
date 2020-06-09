@@ -17,13 +17,13 @@ except Exception:  # pylint: disable=broad-except
 
 from garage.envs import normalize
 from garage.envs.mujoco import HalfCheetahDirEnv
+from garage.experiment import LocalTFRunner
 from garage.experiment import task_sampler
 from garage.np.baselines import LinearFeatureBaseline
 from garage.sampler import LocalSampler
 from garage.tf.algos import RL2TRPO
 from garage.tf.algos.rl2 import RL2Env
 from garage.tf.algos.rl2 import RL2Worker
-from garage.tf.experiment import LocalTFRunner
 from garage.tf.optimizers import ConjugateGradientOptimizer
 from garage.tf.optimizers import FiniteDifferenceHvp
 from garage.tf.optimizers import PenaltyLbfgsOptimizer

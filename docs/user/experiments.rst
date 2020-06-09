@@ -33,10 +33,10 @@ simple one, :code:`examples/tf/trpo_cartpole.py`, is also pasted below:
 
   from garage import wrap_experiment
   from garage.envs import GarageEnv
+  from garage.experiment import LocalTFRunner
   from garage.experiment.deterministic import set_seed
   from garage.np.baselines import LinearFeatureBaseline
   from garage.tf.algos import TRPO
-  from garage.tf.experiment import LocalTFRunner
   from garage.tf.policies import CategoricalMLPPolicy
 
 

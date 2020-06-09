@@ -2,9 +2,9 @@ import gym
 import pytest
 
 from garage.envs import GarageEnv, normalize
+from garage.experiment import LocalTFRunner
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import TNPG
-from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import GaussianMLPPolicy
 from tests.fixtures import snapshot_config, TfGraphTestCase
 

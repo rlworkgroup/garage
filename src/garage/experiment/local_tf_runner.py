@@ -5,11 +5,17 @@ pipelines data between sampler and algorithm during training.
 """
 from dowel import logger
 import psutil
-import tensorflow as tf
 
 from garage.experiment import LocalRunner
 from garage.sampler import DefaultWorker
-from garage.tf.samplers import TFWorkerClassWrapper
+
+tf = False
+TFWorkerClassWrapper = False
+try:
+    import tensorflow as tf
+    from garage.tf.samplers import TFWorkerClassWrapper  # noqa: E501; pylint: disable=ungrouped-imports
+except ImportError:
+    pass
 
 
 class LocalTFRunner(LocalRunner):
@@ -198,3 +204,17 @@ class LocalTFRunner(LocalRunner):
                     v for v in tf.compat.v1.global_variables()
                     if v.name.split(':')[0] in uninited_set
                 ]))
+
+
+class __FakeLocalTFRunner:
+    # noqa: E501; pylint: disable=missing-param-doc,too-few-public-methods,no-method-argument
+    """Raises an ImportError for environments without TensorFlow."""
+
+    def __init__(*args, **kwargs):
+        raise ImportError(
+            'LocalTFRunner requires TensorFlow. To use it, please install '
+            'TensorFlow.')
+
+
+if not tf:
+    LocalTFRunner = __FakeLocalTFRunner  # noqa: F811

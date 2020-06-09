@@ -3,10 +3,10 @@ import ray
 import tensorflow as tf
 
 from garage.envs import GarageEnv
+from garage.experiment import LocalTFRunner
 from garage.np.baselines import LinearFeatureBaseline
 from garage.sampler import LocalSampler, RaySampler, singleton_pool
 from garage.tf.algos import VPG
-from garage.tf.experiment import LocalTFRunner
 from garage.tf.plotter import Plotter
 from garage.tf.policies import CategoricalMLPPolicy
 from garage.tf.samplers import BatchSampler

@@ -7,9 +7,9 @@ import pytest
 import tensorflow as tf
 
 from garage.envs import GarageEnv, normalize
+from garage.experiment import LocalTFRunner
 from garage.tf.algos import NPO
 from garage.tf.baselines import GaussianMLPBaseline
-from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import GaussianMLPPolicy
 from tests.fixtures import snapshot_config, TfGraphTestCase
 

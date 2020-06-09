@@ -1,5 +1,4 @@
 """Tools for running experiments with Garage."""
-# flake8: noqa
 import base64
 import collections
 import datetime
@@ -17,10 +16,11 @@ import subprocess
 import warnings
 
 import cloudpickle
+import dateutil.tz
 import dowel
 from dowel import logger
-import dateutil.tz
-import __main__ as main
+
+import __main__ as main  # noqa: I100
 
 exp_count = 0
 now = datetime.datetime.now(dateutil.tz.tzlocal())
@@ -41,8 +41,8 @@ def run_experiment(method_call=None,
                    force_cpu=False,
                    pre_commands=None,
                    **kwargs):
-    """Serialize the method call and run the experiment using the
-    specified mode.
+    # pylint: disable=missing-raises-doc,too-many-branches,global-statement
+    """Serialize the method call and run the experiment using specified mode.
 
     Args:
         method_call (callable): A method call.
@@ -62,7 +62,6 @@ def run_experiment(method_call=None,
         kwargs (dict): Additional parameters.
 
     """
-    # pylint: disable=missing-raises-doc,global-statement,too-many-branches
     warnings.warn(
         DeprecationWarning(
             'run_experiment is deprecated, and will be removed in the next '
@@ -186,10 +185,11 @@ def _to_param_val(v):
         return _shellquote(str(v))
 
 
-def to_local_command(params,
-                     python_command='python',
-                     script='garage.experiment.experiment_wrapper'):
-    # pylint: disable=eval-used,missing-return-doc,missing-return-type-doc,missing-function-docstring
+def to_local_command(
+        params,
+        python_command='python',
+        script='garage.experiment.experiment_wrapper'):  # noqa: D103,E501
+    # noqa:E501 ; pylint: disable=eval-used,missing-return-doc,missing-return-type-doc,missing-function-docstring
     command = python_command + ' -m ' + script
 
     garage_env = eval(os.environ.get('GARAGE_ENV', '{}'))
@@ -630,7 +630,7 @@ def wrap_experiment(function=None,
 
 
 def dump_json(filename, data):
-    """Dump a dictionary to a file in JSON format.]
+    """Dump a dictionary to a file in JSON format.
 
     Args:
         filename(str): Filename for the file.
@@ -745,7 +745,6 @@ class LogEncoder(json.JSONEncoder):
             str: Object encoded in JSON.
 
         """
-
         # Why is this method hidden? What does that mean?
         # pylint: disable=method-hidden
 

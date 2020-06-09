@@ -5,10 +5,10 @@ import tensorflow as tf
 from garage import wrap_experiment
 from garage.envs import GarageEnv, normalize
 from garage.experiment import deterministic
+from garage.experiment import LocalTFRunner
 from garage.np.exploration_policies import AddOrnsteinUhlenbeckNoise
 from garage.replay_buffer import PathBuffer
 from garage.tf.algos import DDPG
-from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import ContinuousMLPPolicy
 from garage.tf.q_functions import ContinuousMLPQFunction
 

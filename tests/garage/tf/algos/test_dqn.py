@@ -10,10 +10,10 @@ import pytest
 import tensorflow as tf
 
 from garage.envs import GarageEnv
+from garage.experiment import LocalTFRunner
 from garage.np.exploration_policies import EpsilonGreedyPolicy
 from garage.replay_buffer import PathBuffer
 from garage.tf.algos import DQN
-from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import DiscreteQfDerivedPolicy
 from garage.tf.q_functions import DiscreteMLPQFunction
 from tests.fixtures import snapshot_config, TfGraphTestCase
