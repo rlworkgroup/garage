@@ -5,8 +5,6 @@ import tensorflow as tf
 from garage.tf.models import GaussianCNNModel
 
 
-# pylint: disable=differing-param-doc, differing-type-doc
-# pylint: disable=missing-param-doc, missing-type-doc
 class GaussianCNNRegressorModel(GaussianCNNModel):
     """GaussianCNNRegressor based on garage.tf.models.Model class.
 
@@ -72,14 +70,18 @@ class GaussianCNNRegressorModel(GaussianCNNModel):
             to avoid numerical issues.
         max_std (float): If not None, the std is at most the value of max_std,
             to avoid numerical issues.
-        std_hidden_nonlinearity: Nonlinearity for each hidden layer in
-            the std network.
+        std_hidden_nonlinearity (callable): Nonlinearity for each hidden layer
+            in the std network.
+        std_hidden_w_init (callable): Initializer function for the weight
+            of intermediate dense layer(s) in the std network.
+        std_hidden_b_init (callable): Initializer function for the bias
+            of intermediate dense layer(s) in the std network.
         std_output_nonlinearity (callable): Activation function for output
             dense layer in the std network. It should return a tf.Tensor. Set
             it to None to maintain a linear activation.
         std_output_w_init (callable): Initializer function for the weight
             of output dense layer(s) in the std network.
-        std_parametrization (str): How the std should be parametrized. There
+        std_parameterization (str): How the std should be parametrized. There
             are two options:
             - exp: the logarithm of the std will be stored, and applied a
                exponential transformation
@@ -90,9 +92,62 @@ class GaussianCNNRegressorModel(GaussianCNNModel):
     def __init__(self,
                  input_shape,
                  output_dim,
+                 filters,
+                 strides,
+                 padding,
+                 hidden_sizes,
                  name='GaussianCNNRegressorModel',
-                 **kwargs):
-        super().__init__(output_dim=output_dim, name=name, **kwargs)
+                 hidden_nonlinearity=tf.nn.tanh,
+                 hidden_w_init=tf.initializers.glorot_uniform(),
+                 hidden_b_init=tf.zeros_initializer(),
+                 output_nonlinearity=None,
+                 output_w_init=tf.initializers.glorot_uniform(),
+                 output_b_init=tf.zeros_initializer(),
+                 learn_std=True,
+                 adaptive_std=False,
+                 std_share_network=False,
+                 init_std=1.0,
+                 min_std=1e-6,
+                 max_std=None,
+                 std_filters=(),
+                 std_strides=(),
+                 std_padding='SAME',
+                 std_hidden_sizes=(32, 32),
+                 std_hidden_nonlinearity=tf.nn.tanh,
+                 std_hidden_w_init=tf.initializers.glorot_uniform(),
+                 std_hidden_b_init=tf.zeros_initializer(),
+                 std_output_nonlinearity=None,
+                 std_output_w_init=tf.initializers.glorot_uniform(),
+                 std_parameterization='exp',
+                 layer_normalization=False):
+        super().__init__(output_dim=output_dim,
+                         filters=filters,
+                         strides=strides,
+                         padding=padding,
+                         hidden_sizes=hidden_sizes,
+                         hidden_nonlinearity=hidden_nonlinearity,
+                         hidden_w_init=hidden_w_init,
+                         hidden_b_init=hidden_b_init,
+                         output_nonlinearity=output_nonlinearity,
+                         output_w_init=output_w_init,
+                         output_b_init=output_b_init,
+                         learn_std=learn_std,
+                         adaptive_std=adaptive_std,
+                         std_share_network=std_share_network,
+                         init_std=init_std,
+                         min_std=min_std,
+                         max_std=max_std,
+                         std_filters=std_filters,
+                         std_strides=std_strides,
+                         std_padding=std_padding,
+                         std_hidden_sizes=std_hidden_sizes,
+                         std_hidden_nonlinearity=std_hidden_nonlinearity,
+                         std_hidden_w_init=std_hidden_w_init,
+                         std_hidden_b_init=std_hidden_b_init,
+                         std_output_nonlinearity=std_output_nonlinearity,
+                         std_output_w_init=std_output_w_init,
+                         std_parameterization=std_parameterization,
+                         layer_normalization=layer_normalization)
         self._input_shape = input_shape
 
     def network_output_spec(self):

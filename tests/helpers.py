@@ -10,10 +10,15 @@ import pytest
 from tests.quirks import KNOWN_GYM_RENDER_NOT_IMPLEMENTED
 
 
-# pylint: disable=missing-param-doc, missing-type-doc
-# pylint: disable=missing-return-doc, missing-return-type-doc
 def step_env(env, n=10, render=True):
-    """Step env helper."""
+    """Step env helper.
+
+    Args:
+        env (GarageEnv): Input environment.
+        n (int): Steps.
+        render (bool): Whether render the environment.
+
+    """
     env.reset()
     for _ in range(n):
         _, _, done, _ = env.step(env.action_space.sample())
@@ -25,7 +30,16 @@ def step_env(env, n=10, render=True):
 
 def step_env_with_gym_quirks(env, spec, n=10, render=True,
                              serialize_env=False):
-    """Step env gym helper."""
+    """Step env gym helper.
+
+    Args:
+        env (GarageEnv): Input environment.
+        spec (EnvSpec): The environment specification.
+        n (int): Steps.
+        render (bool): Whether to render the environment.
+        serialize_env (bool): Whether to serialize the environment.
+
+    """
     if serialize_env:
         # Roundtrip serialization
         round_trip = pickle.loads(pickle.dumps(env))
@@ -54,7 +68,29 @@ def step_env_with_gym_quirks(env, spec, n=10, render=True,
 
 def convolve(_input, filter_weights, filter_bias, strides, filters,
              in_channels, hidden_nonlinearity):
-    """Convolve."""
+    """Helper function for performing convolution.
+
+    Args:
+        _input (tf.Tensor): Input tf.Tensor to the CNN.
+        filter_weights (tuple(tf.Tensor)): The weights of the filters.
+        filter_bias (tuple(tf.Tensor)): The bias of the filters.
+        strides (tuple[int]): The stride of the sliding window. For example,
+            (1, 2) means there are two convolutional layers. The stride of the
+            filter for first layer is 1 and that of the second layer is 2.
+        filters (tuple(int, tuple(tuple(int)))): Number and dimension of
+            filters. For example, ((3, (3, 5)), (32, (3, 3))) means there are
+            two convolutional layers. The filter for the first layer have 3
+            channels and its shape is (3 x 5), while the filter for the second
+            layer have 32 channels and its shape is (3 x 3).
+        in_channels (tuple[int]): The number of input channels.
+        hidden_nonlinearity (callable): Activation function for intermediate
+            dense layer(s). It should return a tf.Tensor. Set it to
+            None to maintain a linear activation.
+
+    Return:
+        tf.Tensor: The output of the convolution.
+
+    """
     batch_size = _input.shape[0]
     in_width = _input.shape[1]
     in_height = _input.shape[2]
@@ -95,22 +131,61 @@ def recurrent_step_lstm(input_val,
                         nonlinearity,
                         gate_nonlinearity,
                         forget_bias=1.0):
-    """A LSTM unit implements the following update mechanism.
+    """Helper function for performing feedforward of a lstm cell.
 
-    Incoming gate:    i(t) = f_i(x(t) @ W_xi + h(t-1) @ W_hi +
+    Args:
+        input_val (tf.Tensor): Input placeholder.
+        num_units (int): Hidden dimension for LSTM cell.
+        step_hidden (tf.Tensor): Place holder for step hidden state.
+        step_cell (tf.Tensor): Place holder for step cell state.
+        nonlinearity (callable): Activation function for intermediate
+            dense layer(s). It should return a tf.Tensor. Set it to
+            None to maintain a linear activation.
+        w_x_init (callable): Initializer function for the weight
+            of intermediate dense layer(s). The function should return a
+            tf.Tensor.
+        b_init (callable): Initializer function for the bias
+            of intermediate dense layer(s). The function should return a
+            tf.Tensor.
+        gate_nonlinearity (callable): Activation function for recurrent
+            layers. It should return a tf.Tensor. Set it to None to
+            maintain a linear activation.
+        w_h_init (callable): Initializer function for the weight
+            of recurrent layer(s). The function should return a
+            tf.Tensor.
+        forget_bias (float): Bias to be added to the forget gate at
+            initialization. It's used to reduce the scale of forgetting at the
+            beginning of the training.
+
+    Returns:
+        tf.Tensor: Final hidden state after feedforward.
+        tf.Tensor: Final cell state after feedforward.
+
+    Note:
+        Incoming gate:    i(t) = f_i(x(t) @ W_xi + h(t-1) @ W_hi +
                                  w_ci * c(t-1) + b_i)
-    Forget gate:      f(t) = f_f(x(t) @ W_xf + h(t-1) @ W_hf +
+        Forget gate:      f(t) = f_f(x(t) @ W_xf + h(t-1) @ W_hf +
                                  w_cf * c(t-1) + b_f)
-    Cell gate:        c(t) = f(t) * c(t - 1) + i(t) * f_c(x(t) @ W_xc +
-                             h(t-1) @ W_hc + b_c)
-    Out gate:         o(t) = f_o(x(t) @ W_xo + h(t-1) W_ho + w_co * c(t) + b_o)
-    New hidden state: h(t) = o(t) * f_h(c(t))
+        Cell gate:        c(t) = f(t) * c(t - 1) + i(t) * f_c(x(t) @ W_xc +
+                                 h(t-1) @ W_hc + b_c)
+        Out gate:         o(t) = f_o(x(t) @ W_xo + h(t-1) W_ho +
+                                 w_co * c(t) + b_o)
+        New hidden state: h(t) = o(t) * f_h(c(t))
+        Incoming, forget, cell, and out vectors must have the same
+        dimension as the hidden state.
 
-    Note that the incoming, forget, cell, and out vectors must have the same
-    dimension as the hidden state.
     """
 
     def f(x):
+        """Linear function.
+
+        Args:
+            x (float): Input variable.
+
+        Returns:
+            float: Ouput variable.
+
+        """
         return x
 
     if nonlinearity is None:
@@ -170,18 +245,55 @@ def recurrent_step_gru(input_val,
                        nonlinearity,
                        gate_nonlinearity,
                        forget_bias=1.0):
-    """A GRU unit implements the following update mechanism.
+    """Helper function for performing feedforward of a GRU cell.
 
-    Reset gate:        r(t) = f_r(x(t) @ W_xr + h(t-1) @ W_hr + b_r)
-    Update gate:       u(t) = f_u(x(t) @ W_xu + h(t-1) @ W_hu + b_u)
-    Cell gate:         c(t) = f_c(x(t) @ W_xc + r(t) * (h(t-1) @ W_hc) + b_c)
-    New hidden state:  h(t) = u_t * h(t-1) + (1 - u(t)) * c(t)
+    Args:
+        input_val (tf.Tensor): Input placeholder.
+        num_units (int): Hidden dimension for GRU cell.
+        step_hidden (tf.Tensor): Place holder for step hidden state.
+        nonlinearity (callable): Activation function for intermediate
+            dense layer(s). It should return a tf.Tensor. Set it to
+            None to maintain a linear activation.
+        w_x_init (callable): Initializer function for the weight
+            of intermediate dense layer(s). The function should return a
+            tf.Tensor.
+        b_init (callable): Initializer function for the bias
+            of intermediate dense layer(s). The function should return a
+            tf.Tensor.
+        gate_nonlinearity (callable): Activation function for recurrent
+            layers. It should return a tf.Tensor. Set it to None to
+            maintain a linear activation.
+        w_h_init (callable): Initializer function for the weight
+            of recurrent layer(s). The function should return a
+            tf.Tensor.
+        forget_bias (float): Bias to be added to the forget gate at
+            initialization. It's used to reduce the scale of forgetting at the
+            beginning of the training.
 
-    Note that the reset, update, and cell vectors must have the same dimension
-    as the hidden state.
+    Returns:
+        tf.Tensor: Final hidden state after feedforward.
+
+    Note:
+        Reset gate:        r(t) = f_r(x(t) @ W_xr + h(t-1) @ W_hr + b_r)
+        Update gate:       u(t) = f_u(x(t) @ W_xu + h(t-1) @ W_hu + b_u)
+        Cell gate:         c(t) = f_c(x(t) @ W_xc + r(t) *
+                                  (h(t-1) @ W_hc) + b_c)
+        New hidden state:  h(t) = u_t * h(t-1) + (1 - u(t)) * c(t)
+        The reset, update, and cell vectors must have the same dimension
+        as the hidden state.
+
     """
 
     def f(x):
+        """Linear function.
+
+        Args:
+            x (float): Input variable.
+
+        Returns:
+            float: Ouput variable.
+
+        """
         return x
 
     del forget_bias
@@ -228,7 +340,21 @@ def recurrent_step_gru(input_val,
 
 def _construct_image_vector(_input, batch, w, h, filter_width, filter_height,
                             in_shape):
-    """The sw is sliding window."""
+    """Get sliding window of input image.
+
+    Args:
+        _input (tf.Tensor): Input tf.Tensor to the CNN.
+        batch (int): Batch index.
+        w (int): Width index.
+        h (int): Height index.
+        filter_width (int): Width of the filter.
+        filter_height (int): Height of the filter.
+        in_shape (int): The number of input channels.
+
+    Return:
+        np.array: The output of the sliding window.
+
+    """
     sw = np.empty((filter_width, filter_height, in_shape))
     for dw in range(filter_width):
         for dh in range(filter_height):
@@ -238,7 +364,19 @@ def _construct_image_vector(_input, batch, w, h, filter_width, filter_height,
 
 
 def max_pooling(_input, pool_shape, pool_stride, padding='VALID'):
-    """Max pooling."""
+    """Helper function for performing max pooling.
+
+    Args:
+        _input (tf.Tensor): Input tf.Tensor to the CNN.
+        pool_shape (int): Dimension of the pooling layer.
+        pool_stride (int): The stride of the pooling layer.
+        padding (str): The type of padding algorithm to use, either 'SAME'
+            or 'VALID'.
+
+    Return:
+        tf.Tensor: The output tf.Tensor after max pooling.
+
+    """
     batch_size = _input.shape[0]
     if padding == 'VALID':
         height_size = int((_input.shape[1] - pool_shape) / pool_stride) + 1
@@ -262,7 +400,6 @@ def max_pooling(_input, pool_shape, pool_stride, padding='VALID'):
     return results
 
 
-# pylint: disable=missing-raises-doc
 # Taken from random.choices in Python 3.6 source since it's not available in
 # python 3.5
 # https://github.com/python/cpython/blob/3.6/Lib/random.py
@@ -270,8 +407,23 @@ def max_pooling(_input, pool_shape, pool_stride, padding='VALID'):
 def choices(population, weights=None, *, cum_weights=None, k=1):
     """Return a k sized list of population elements chosen with replacement.
 
-    If the relative weights or cumulative weights are not specified,
-    the selections are made with equal probability.
+    Args:
+        population (list[object]): List of object to be chosen from.
+        weights (list[float]): List of weight for the elements.
+        cum_weights (list[float]): List of cumulative weight for the elements.
+        k (int): Number of element to be returned.
+
+    Returns:
+        list[object]: List of objects chosen from the given population.
+
+    Raises:
+        TypeError: Cannot specify both weights and cumulative weights.
+        ValueError: The number of weights does not match the population
+
+    Note:
+        If the relative weights or cumulative weights are not specified,
+        the selections are made with equal probability.
+
     """
     if cum_weights is None:
         if weights is None:
