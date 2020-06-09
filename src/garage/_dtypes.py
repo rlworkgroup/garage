@@ -559,3 +559,214 @@ class InOutSpec:
 
         """
         return self._output_space
+
+
+class SampleBatch(
+        collections.namedtuple('SampleBatch', [
+            'observations', 'actions', 'rewards', 'next_observations',
+            'terminals', 'batch_size'
+        ])):
+    # pylint: disable=missing-param-doc, missing-type-doc
+    """A tuple representing a batch of samples.
+
+    Attributes:
+        observations (numpy.ndarray): Non-flattened array of observations.
+            Typically has shape (batch_size, S^*) (the unflattened state space
+            of the current environment).
+        actions (numpy.ndarray): Non-flattened array of actions. Should
+            have shape (batch_size, S^*) (the unflattened action space of the
+            current environment).
+        rewards (numpy.ndarray): Array of rewards of shape (batch_size,) (1D
+            array of length batch_size).
+        next_observation (numpy.ndarray): Non-flattened array of next
+            observations. Has shape (batch_size, S^*). next_observations[i] was
+            observed by the agent after taking actions[i].
+        terminals (numpy.ndarray): A boolean numpy array of shape
+            shape (batch_size,) containing the termination signals for all
+            transitions in this batch.
+        batch_size (int): The size of the batch
+
+    Raises:
+        ValueError: If any of the above attributes do not conform to their
+            prescribed types and shapes.
+    """
+    __slots__ = ()
+
+    def __new__(cls, observations, actions, rewards, next_observations,
+                terminals, batch_size):  # noqa: D102
+        # pylint: disable=missing-return-doc, missing-return-type-doc
+        # batch_size
+        if not isinstance(batch_size, int):
+            raise ValueError('Batch_size must be an integer, but got dtype {} '
+                             'instead.'.format(type(batch_size)))
+
+        # observations
+        if observations.shape[0] != batch_size:
+            raise ValueError(
+                'Expected batch dimension of observations to be length {}, '
+                'but got length {} instead.'.format(batch_size,
+                                                    observations.shape[0]))
+
+        # actions
+        if actions.shape[0] != batch_size:
+            raise ValueError(
+                'Expected batch dimension of actions to be length {}, but got '
+                'length {} instead.'.format(batch_size, actions.shape[0]))
+
+        # rewards
+        if rewards.shape[0] != batch_size:
+            raise ValueError(
+                'Expected batch dimension of rewards to be length {}, but got '
+                'length {} instead.'.format(batch_size, rewards.shape[0]))
+
+        # next_observations
+        if next_observations.shape[0] != batch_size:
+            raise ValueError(
+                'Expected batch dimension of next_observations to be length {'
+                '}, but got length {} instead.'.format(
+                    batch_size, next_observations.shape[0]))
+
+        # terminals
+        if terminals.shape[0] != batch_size:
+            raise ValueError(
+                'Expected batch dimension of terminals to be length {'
+                '}, but got length {} instead.'.format(batch_size,
+                                                       terminals.shape[0]))
+
+        if terminals.dtype != np.bool:
+            raise ValueError(
+                'terminals tensor must be dtype np.bool, but got tensor '
+                'of dtype {} instead.'.format(terminals.dtype))
+
+        return super().__new__(SampleBatch, observations, actions, rewards,
+                               next_observations, terminals, batch_size)
+
+    @classmethod
+    def concatenate(cls, *batches):
+        """Create a SampleBatch by concatenating SampleBatches.
+
+        Args:
+            batches (list[SampleBatch]): Batches to concatenate.
+
+        Returns:
+            SampleBatch: The concatenation of the batches.
+
+        Raises:
+            ValueError: If no SampleBatches are provided.
+
+        """
+        if len(batches) < 1:
+            raise ValueError('Please provide at least one SampleBatch to '
+                             'concatenate')
+        return cls(
+            np.concatenate([batch.observations for batch in batches]),
+            np.concatenate([batch.actions for batch in batches]),
+            np.concatenate([batch.rewards for batch in batches]),
+            np.concatenate([batch.next_observations for batch in batches]),
+            np.concatenate([batch.terminals for batch in batches]),
+            sum([batch.batch_size for batch in batches]))
+
+    def split(self):
+        """Split a SampleBatch into a list of SampleBatches.
+
+        The opposite of concatenate.
+
+        Returns:
+            list[SampleBatch]: A list of SampleBatches, with one
+                sample per batch.
+
+        """
+        samples = []
+        for i in range(self.batch_size):
+            sample = SampleBatch(
+                observations=np.asarray([self.observations[i]]),
+                next_observations=np.asarray([self.next_observations[i]]),
+                actions=np.asarray([self.actions[i]]),
+                rewards=np.asarray([self.rewards[i]]),
+                terminals=np.asarray([self.terminals[i]]),
+                batch_size=1)
+            samples.append(sample)
+        return samples
+
+    def to_sample_list(self):
+        """Convert the batch into a list of dictionaries.
+
+        Returns:
+            list[dict[str, np.ndarray or dict[str, np.ndarray]]]: Keys:
+                * observations (numpy.ndarray): Non-flattened array of
+                observations.
+                    Typically has shape (batch_size, S^*) (the unflattened
+                    state space of the current environment).
+                * actions (numpy.ndarray): Non-flattened array of actions.
+                    Should have shape (batch_size, S^*) (the unflattened action
+                    space of the current environment).
+                * rewards (numpy.ndarray): Array of rewards of shape (
+                    batch_size,) (1D array of length batch_size).
+                * next_observation (numpy.ndarray): Non-flattened array of next
+                    observations. Has shape (batch_size, S^*).
+                    next_observations[i] was observed by the agent after
+                    taking actions[i].
+                * terminals (numpy.ndarray): A boolean numpy array of shape
+                    shape (batch_size,) containing the termination signals
+                    for all transitions in this batch.
+
+        """
+        samples = []
+        for i in range(self.batch_size):
+            samples.append({
+                'observations':
+                np.asarray([self.observations[i]]),
+                'next_observations':
+                np.asarray([self.next_observations[i]]),
+                'actions':
+                np.asarray([self.actions[i]]),
+                'rewards':
+                np.asarray([self.rewards[i]]),
+                'terminals':
+                np.asarray([self.terminals[i]]),
+            })
+        return samples
+
+    @classmethod
+    def from_sample_list(cls, samples):
+        """Create a SampleBatch from a list of samples.
+
+        Args:
+            samples (list[dict[str, np.ndarray or dict[str, np.ndarray]]]):
+                keys:
+                * observations (numpy.ndarray): Non-flattened array of
+                    observations.
+                    Typically has shape (batch_size, S^*) (the unflattened
+                    state space of the current environment).
+                * actions (numpy.ndarray): Non-flattened array of actions.
+                    Should have shape (batch_size, S^*) (the unflattened action
+                    space of the current environment).
+                * rewards (numpy.ndarray): Array of rewards of shape (
+                    batch_size,) (1D array of length batch_size).
+                * next_observation (numpy.ndarray): Non-flattened array of next
+                    observations. Has shape (batch_size, S^*).
+                    next_observations[i] was observed by the agent after
+                    taking actions[i].
+                * terminals (numpy.ndarray): A boolean numpy array of shape
+                    shape (batch_size,) containing the termination signals
+                    for all transitions in this batch.
+
+        Returns:
+            SampleBatch: The concatenation of samples.
+
+        Raises:
+            ValueError: If no dicts are provided.
+        """
+        if len(samples) < 1:
+            raise ValueError('Please provide at least one sample')
+
+        sample_batches = [
+            SampleBatch(observations=sample['observations'],
+                        next_observations=sample['next_observations'],
+                        actions=sample['actions'],
+                        rewards=sample['rewards'],
+                        terminals=sample['terminals'],
+                        batch_size=sample['batch_size']) for sample in samples
+        ]
+
+        return SampleBatch.concatenate(*sample_batches)

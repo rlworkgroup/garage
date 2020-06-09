@@ -3,9 +3,11 @@ import gym.spaces
 import numpy as np
 import pytest
 
+from garage import SampleBatch
 from garage import TimeStep
 from garage import TrajectoryBatch
 from garage.envs import EnvSpec
+from tests.fixtures.envs.dummy import DummyDiscreteEnv
 
 
 @pytest.fixture
@@ -364,3 +366,200 @@ def test_env_info_dtype_mismatch_time_step(sample_data):
         sample_data['env_info'] = []
         s = TimeStep(**sample_data)
         del s
+
+
+@pytest.fixture
+def batch_data():
+    # spaces
+    env = DummyDiscreteEnv()
+    obs = env.reset()
+
+    # generate data
+    observations = np.array(obs)
+    actions = np.array([[env.action_space.sample()]])
+    batch_size = observations.shape[0]
+    rewards = np.arange(batch_size)
+    terminals = np.zeros(batch_size, dtype=np.bool)
+
+    return {
+        'observations': observations,
+        'actions': actions,
+        'next_observations': observations,
+        'rewards': rewards,
+        'terminals': terminals,
+        'batch_size': batch_size
+    }
+
+
+def test_new_batch(batch_data):
+    s = SampleBatch(**batch_data)
+    assert s.observations is batch_data['observations']
+    assert s.next_observations is batch_data['next_observations']
+    assert s.actions is batch_data['actions']
+    assert s.rewards is batch_data['rewards']
+    assert s.terminals is batch_data['terminals']
+
+
+def test_batch_size_dtype_mismatch_batch(batch_data):
+    with pytest.raises(ValueError, match='Batch_size must be'):
+        batch_data['batch_size'] = float(batch_data['batch_size'])
+        s = SampleBatch(**batch_data)
+        del s
+
+
+def test_observations_batch_mismatch_batch(batch_data):
+    with pytest.raises(ValueError, match='batch dimension of observations'):
+        batch_data['observations'] = batch_data['observations'][:-1]
+        s = SampleBatch(**batch_data)
+        del s
+
+
+def test_actions_batch_mismatch_batch(batch_data):
+    with pytest.raises(ValueError, match='batch dimension of actions'):
+        batch_data['actions'] = batch_data['actions'][:-1]
+        s = SampleBatch(**batch_data)
+        del s
+
+
+def test_rewards_batch_mismatch_batch(batch_data):
+    with pytest.raises(ValueError, match='batch dimension of rewards'):
+        batch_data['rewards'] = batch_data['rewards'][:-1]
+        s = SampleBatch(**batch_data)
+        del s
+
+
+def test_next_observations_batch_mismatch_batch(batch_data):
+    with pytest.raises(ValueError,
+                       match='batch dimension of '
+                       'next_observations'):
+        batch_data['next_observations'] = batch_data['next_observations'][:-1]
+        s = SampleBatch(**batch_data)
+        del s
+
+
+def test_terminals_batch_mismatch_batch(batch_data):
+    with pytest.raises(ValueError, match='batch dimension of terminals'):
+        batch_data['terminals'] = batch_data['terminals'][:-1]
+        s = SampleBatch(**batch_data)
+        del s
+
+
+def test_terminals_dtype_mismatch_batch(batch_data):
+    with pytest.raises(ValueError, match='terminals tensor must be dtype'):
+        batch_data['terminals'] = batch_data['terminals'].astype(np.float32)
+        s = SampleBatch(**batch_data)
+        del s
+
+
+def test_concatenate_batch(batch_data):
+    single_batch = SampleBatch(**batch_data)
+    batches = [single_batch, single_batch]
+    s = SampleBatch.concatenate(*batches)
+
+    new_obs = np.concatenate(
+        [batch_data['observations'], batch_data['observations']])
+    new_next_obs = np.concatenate(
+        [batch_data['next_observations'], batch_data['next_observations']])
+    new_actions = np.concatenate(
+        [batch_data['actions'], batch_data['actions']])
+    new_rewards = np.concatenate(
+        [batch_data['rewards'], batch_data['rewards']])
+    new_terminals = np.concatenate(
+        [batch_data['terminals'], batch_data['terminals']])
+
+    assert np.array_equal(s.observations, new_obs)
+    assert np.array_equal(s.next_observations, new_next_obs)
+    assert np.array_equal(s.actions, new_actions)
+    assert np.array_equal(s.rewards, new_rewards)
+    assert np.array_equal(s.terminals, new_terminals)
+    assert s.batch_size is batch_data['batch_size'] * 2
+
+
+def test_concatenate_empty_batch():
+    with pytest.raises(ValueError):
+        batches = []
+        s = SampleBatch.concatenate(*batches)
+        del s
+
+
+def test_split_batch(batch_data):
+    new_obs = np.concatenate(
+        [batch_data['observations'], batch_data['observations']])
+    new_next_obs = np.concatenate(
+        [batch_data['next_observations'], batch_data['next_observations']])
+    new_actions = np.concatenate(
+        [batch_data['actions'], batch_data['actions']])
+    new_rewards = np.concatenate(
+        [batch_data['rewards'], batch_data['rewards']])
+    new_terminals = np.concatenate(
+        [batch_data['terminals'], batch_data['terminals']])
+    s = SampleBatch(observations=new_obs,
+                    actions=new_actions,
+                    rewards=new_rewards,
+                    next_observations=new_next_obs,
+                    terminals=new_terminals,
+                    batch_size=2)
+    batches = s.split()
+
+    assert len(batches) == 2
+    for batch in batches:
+        assert np.array_equal(batch.observations, batch_data['observations'])
+        assert np.array_equal(batch.next_observations,
+                              batch_data['next_observations'])
+        assert np.array_equal(batch.actions, batch_data['actions'])
+        assert np.array_equal(batch.rewards, batch_data['rewards'])
+        assert np.array_equal(batch.terminals, batch_data['terminals'])
+        assert batch.batch_size == 1
+
+
+def test_to_sample_list_batch(batch_data):
+    new_obs = np.concatenate(
+        [batch_data['observations'], batch_data['observations']])
+    new_next_obs = np.concatenate(
+        [batch_data['next_observations'], batch_data['next_observations']])
+    new_actions = np.concatenate(
+        [batch_data['actions'], batch_data['actions']])
+    new_rewards = np.concatenate(
+        [batch_data['rewards'], batch_data['rewards']])
+    new_terminals = np.concatenate(
+        [batch_data['terminals'], batch_data['terminals']])
+    s = SampleBatch(observations=new_obs,
+                    actions=new_actions,
+                    rewards=new_rewards,
+                    next_observations=new_next_obs,
+                    terminals=new_terminals,
+                    batch_size=2)
+    batches = s.to_sample_list()
+
+    assert len(batches) == 2
+    for batch in batches:
+        assert np.array_equal(batch['observations'],
+                              batch_data['observations'])
+        assert np.array_equal(batch['next_observations'],
+                              batch_data['next_observations'])
+        assert np.array_equal(batch['actions'], batch_data['actions'])
+        assert np.array_equal(batch['rewards'], batch_data['rewards'])
+        assert np.array_equal(batch['terminals'], batch_data['terminals'])
+
+
+def test_from_batch_list_batch(batch_data):
+    batches = [batch_data, batch_data]
+    s = SampleBatch.from_sample_list(batches)
+
+    new_obs = np.concatenate(
+        [batch_data['observations'], batch_data['observations']])
+    new_next_obs = np.concatenate(
+        [batch_data['next_observations'], batch_data['next_observations']])
+    new_actions = np.concatenate(
+        [batch_data['actions'], batch_data['actions']])
+    new_rewards = np.concatenate(
+        [batch_data['rewards'], batch_data['rewards']])
+    new_terminals = np.concatenate(
+        [batch_data['terminals'], batch_data['terminals']])
+
+    assert np.array_equal(s.observations, new_obs)
+    assert np.array_equal(s.next_observations, new_next_obs)
+    assert np.array_equal(s.actions, new_actions)
+    assert np.array_equal(s.rewards, new_rewards)
+    assert np.array_equal(s.terminals, new_terminals)
+    assert s.batch_size is batch_data['batch_size'] * 2
