@@ -1,7 +1,4 @@
 """PyTorch-backed modules and algorithms."""
-from garage.torch._functions import _DEVICE
-from garage.torch._functions import _GPU_ID
-from garage.torch._functions import _USE_GPU
 from garage.torch._functions import compute_advantages
 from garage.torch._functions import dict_np_to_torch
 from garage.torch._functions import filter_valids
@@ -14,8 +11,7 @@ from garage.torch._functions import torch_to_np
 from garage.torch._functions import update_module_params
 
 __all__ = [
-    '_DEVICE', '_GPU_ID', '_USE_GPU', 'compute_advantages', 'dict_np_to_torch',
-    'filter_valids', 'flatten_batch', 'global_device', 'pad_to_last',
-    'product_of_gaussians', 'set_gpu_mode', 'torch_to_np',
-    'update_module_params'
+    'compute_advantages', 'dict_np_to_torch', 'filter_valids', 'flatten_batch',
+    'global_device', 'pad_to_last', 'product_of_gaussians', 'set_gpu_mode',
+    'torch_to_np', 'update_module_params'
 ]

@@ -3,9 +3,9 @@
 import numpy as np
 import torch
 
-from garage.torch import _GPU_ID, _USE_GPU
 from garage.torch import dict_np_to_torch, global_device
 from garage.torch import product_of_gaussians, set_gpu_mode, torch_to_np
+import garage.torch._functions as tu
 
 
 def test_utils_set_gpu_mode():
@@ -13,12 +13,12 @@ def test_utils_set_gpu_mode():
     if torch.cuda.is_available():
         set_gpu_mode(mode=True)
         assert global_device() == torch.device('cuda:0')
-        assert _USE_GPU
+        assert tu._USE_GPU
     else:
         set_gpu_mode(mode=False)
         assert global_device() == torch.device('cpu')
-        assert not _USE_GPU
-    assert not _GPU_ID
+        assert not tu._USE_GPU
+    assert not tu._GPU_ID
 
 
 def test_torch_to_np():
