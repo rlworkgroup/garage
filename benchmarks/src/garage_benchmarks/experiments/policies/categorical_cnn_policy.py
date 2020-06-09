@@ -10,14 +10,18 @@ from garage.tf.baselines import GaussianCNNBaseline
 from garage.tf.policies import CategoricalCNNPolicy
 
 hyper_params = {
-    'conv_filters': ((32, (5, 5)), (64, (3, 3)), (64, (2, 2))),
+    'conv_filters': (
+                        (32, (5, 5)),
+                        (64, (3, 3)),
+                        (64, (2, 2)),
+                    ),
     'conv_strides': (4, 2, 1),
     'conv_pad': 'VALID',
     'hidden_sizes': (256, ),
     'n_epochs': 3,
     'batch_size': 2048,
     'use_trust_region': True
-}
+}  # yapf: disable
 
 
 @wrap_experiment

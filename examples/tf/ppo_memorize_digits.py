@@ -34,20 +34,26 @@ def ppo_memorize_digits(ctxt=None, seed=1, batch_size=4000):
         env = GarageEnv(normalize(gym.make('MemorizeDigits-v0')),
                         is_image=True)
         policy = CategoricalCNNPolicy(env_spec=env.spec,
-                                      filters=((32, (5, 5)), (64, (3, 3)),
-                                               (64, (2, 2))),
+                                      filters=(
+                                                  (32, (5, 5)),
+                                                  (64, (3, 3)),
+                                                  (64, (2, 2)),
+                                              ),
                                       strides=(4, 2, 1),
                                       padding='VALID',
-                                      hidden_sizes=(256, ))
+                                      hidden_sizes=(256, ))  # yapf: disable
 
         baseline = GaussianCNNBaseline(
             env_spec=env.spec,
-            regressor_args=dict(filters=((32, (5, 5)), (64, (3, 3)), (64,
-                                                                      (2, 2))),
+            regressor_args=dict(filters=(
+                                            (32, (5, 5)),
+                                            (64, (3, 3)),
+                                            (64, (2, 2)),
+                                        ),
                                 strides=(4, 2, 1),
                                 padding='VALID',
                                 hidden_sizes=(256, ),
-                                use_trust_region=True))
+                                use_trust_region=True))  # yapf: disable
 
         algo = PPO(env_spec=env.spec,
                    policy=policy,

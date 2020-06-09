@@ -77,9 +77,9 @@ def convolve(_input, filter_weights, filter_bias, strides, filters,
         strides (tuple[int]): The stride of the sliding window. For example,
             (1, 2) means there are two convolutional layers. The stride of the
             filter for first layer is 1 and that of the second layer is 2.
-        filters (tuple(int, tuple(tuple(int)))): Number and dimension of
-            filters. For example, ((3, (3, 5)), (32, (3, 3))) means there are
-            two convolutional layers. The filter for the first layer have 3
+        filters (Tuple[Tuple[int, Tuple[int, int]], ...]): Number and dimension
+            of filters. For example, ((3, (3, 5)), (32, (3, 3))) means there
+            are two convolutional layers. The filter for the first layer have 3
             channels and its shape is (3 x 5), while the filter for the second
             layer have 32 channels and its shape is (3 x 3).
         in_channels (tuple[int]): The number of input channels.
