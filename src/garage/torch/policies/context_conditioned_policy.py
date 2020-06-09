@@ -10,7 +10,7 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 
-import garage.torch.utils as tu
+from garage.torch import global_device, product_of_gaussians
 
 
 # pylint: disable=attribute-defined-outside-init
@@ -65,13 +65,11 @@ class ContextConditionedPolicy(nn.Module):
 
         """
         # reset distribution over z to the prior
-        mu = torch.zeros(num_tasks, self._latent_dim).to(tu.global_device())
+        mu = torch.zeros(num_tasks, self._latent_dim).to(global_device())
         if self._use_information_bottleneck:
-            var = torch.ones(num_tasks,
-                             self._latent_dim).to(tu.global_device())
+            var = torch.ones(num_tasks, self._latent_dim).to(global_device())
         else:
-            var = torch.zeros(num_tasks,
-                              self._latent_dim).to(tu.global_device())
+            var = torch.zeros(num_tasks, self._latent_dim).to(global_device())
         self.z_means = mu
         self.z_vars = var
         # sample a new z from the prior
@@ -102,13 +100,13 @@ class ContextConditionedPolicy(nn.Module):
 
         """
         o = torch.as_tensor(timestep.observation[None, None, ...],
-                            device=tu.global_device()).float()
+                            device=global_device()).float()
         a = torch.as_tensor(timestep.action[None, None, ...],
-                            device=tu.global_device()).float()
+                            device=global_device()).float()
         r = torch.as_tensor(np.array([timestep.reward])[None, None, ...],
-                            device=tu.global_device()).float()
+                            device=global_device()).float()
         no = torch.as_tensor(timestep.next_observation[None, None, ...],
-                             device=tu.global_device()).float()
+                             device=global_device()).float()
 
         if self._use_next_obs:
             data = torch.cat([o, a, r, no], dim=2)
@@ -139,7 +137,7 @@ class ContextConditionedPolicy(nn.Module):
             mu = params[..., :self._latent_dim]
             sigma_squared = F.softplus(params[..., self._latent_dim:])
             z_params = [
-                tu.product_of_gaussians(m, s)
+                product_of_gaussians(m, s)
                 for m, s in zip(torch.unbind(mu), torch.unbind(sigma_squared))
             ]
             self.z_means = torch.stack([p[0] for p in z_params])
@@ -212,7 +210,7 @@ class ContextConditionedPolicy(nn.Module):
 
         """
         z = self.z
-        obs = torch.as_tensor(obs[None], device=tu.global_device()).float()
+        obs = torch.as_tensor(obs[None], device=global_device()).float()
         obs_in = torch.cat([obs, z], dim=1)
         action, info = self._policy.get_action(obs_in)
         action = np.squeeze(action, axis=0)
@@ -227,8 +225,8 @@ class ContextConditionedPolicy(nn.Module):
 
         """
         prior = torch.distributions.Normal(
-            torch.zeros(self._latent_dim).to(tu.global_device()),
-            torch.ones(self._latent_dim).to(tu.global_device()))
+            torch.zeros(self._latent_dim).to(global_device()),
+            torch.ones(self._latent_dim).to(global_device()))
         posteriors = [
             torch.distributions.Normal(mu, torch.sqrt(var)) for mu, var in zip(
                 torch.unbind(self.z_means), torch.unbind(self.z_vars))

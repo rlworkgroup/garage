@@ -3,10 +3,10 @@ import numpy as np
 import torch
 from torch import nn
 
+from garage.torch import global_device
 from garage.torch.distributions import TanhNormal
 from garage.torch.modules import GaussianMLPTwoHeadedModule
 from garage.torch.policies.policy import Policy
-import garage.torch.utils as tu
 
 
 class TanhGaussianMLPPolicy(Policy, GaussianMLPTwoHeadedModule):
@@ -110,7 +110,7 @@ class TanhGaussianMLPPolicy(Policy, GaussianMLPTwoHeadedModule):
         with torch.no_grad():
             if not isinstance(observation, torch.Tensor):
                 observation = torch.from_numpy(observation).float().to(
-                    tu.global_device())
+                    global_device())
             observation = observation.unsqueeze(0)
             dist = self.forward(observation)
             ret_mean = dist.mean.squeeze(0).cpu().numpy()
@@ -138,7 +138,7 @@ class TanhGaussianMLPPolicy(Policy, GaussianMLPTwoHeadedModule):
         with torch.no_grad():
             if not isinstance(observations, torch.Tensor):
                 observations = torch.from_numpy(observations).float().to(
-                    tu.global_device())
+                    global_device())
             dist = self.forward(observations)
             ret_mean = dist.mean.cpu().numpy()
             ret_log_std = (dist.variance.sqrt()).log().cpu().numpy()

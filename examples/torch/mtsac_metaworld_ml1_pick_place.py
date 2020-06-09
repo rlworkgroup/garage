@@ -20,10 +20,10 @@ from garage.envs.multi_env_wrapper import round_robin_strategy
 from garage.experiment import deterministic, LocalRunner
 from garage.replay_buffer import PathBuffer
 from garage.sampler import LocalSampler
+import garage.torch._functions as tu
 from garage.torch.algos import MTSAC
 from garage.torch.policies import TanhGaussianMLPPolicy
 from garage.torch.q_functions import ContinuousMLPQFunction
-import garage.torch.utils as tu
 
 
 @click.command()

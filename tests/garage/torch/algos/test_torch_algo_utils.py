@@ -4,7 +4,7 @@ import pytest
 import torch
 import torch.nn.functional as F
 
-import garage.torch._utils as torch_algo_utils
+import garage.torch._functions as torch_algo_utils
 from tests.fixtures import TfGraphTestCase
 
 

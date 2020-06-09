@@ -9,13 +9,13 @@ from garage.experiment import LocalRunner, wrap_experiment
 from garage.experiment.deterministic import set_seed
 from garage.experiment.task_sampler import EnvPoolSampler
 from garage.sampler import LocalSampler
+import garage.torch._functions as tu
 from garage.torch.algos import PEARL
 from garage.torch.algos.pearl import PEARLWorker
 from garage.torch.embeddings import MLPEncoder
 from garage.torch.policies import ContextConditionedPolicy
 from garage.torch.policies import TanhGaussianMLPPolicy
 from garage.torch.q_functions import ContinuousMLPQFunction
-import garage.torch.utils as tu
 
 
 @click.command()

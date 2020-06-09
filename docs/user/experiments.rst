@@ -215,7 +215,7 @@ In order to enable the GPU for PyTorch, add the following code snippets to the e
 .. code-block:: python
 
   import torch
-  import garage.torch.utils as tu
+  import garage.torch._functions as tu
 
   ...
 

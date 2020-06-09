@@ -16,9 +16,9 @@ from garage.experiment import MetaEvaluator
 from garage.np.algos import MetaRLAlgorithm
 from garage.replay_buffer import PathBuffer
 from garage.sampler import DefaultWorker
+from garage.torch import global_device
 from garage.torch.embeddings import MLPEncoder
 from garage.torch.policies import ContextConditionedPolicy
-import garage.torch.utils as tu
 
 
 class PEARL(MetaRLAlgorithm):
@@ -481,11 +481,11 @@ class PEARL(MetaRLAlgorithm):
                 no = np.vstack((no, batch['next_observations'][np.newaxis]))
                 d = np.vstack((d, batch['dones'][np.newaxis]))
 
-        o = torch.as_tensor(o, device=tu.global_device()).float()
-        a = torch.as_tensor(a, device=tu.global_device()).float()
-        r = torch.as_tensor(r, device=tu.global_device()).float()
-        no = torch.as_tensor(no, device=tu.global_device()).float()
-        d = torch.as_tensor(d, device=tu.global_device()).float()
+        o = torch.as_tensor(o, device=global_device()).float()
+        a = torch.as_tensor(a, device=global_device()).float()
+        r = torch.as_tensor(r, device=global_device()).float()
+        no = torch.as_tensor(no, device=global_device()).float()
+        d = torch.as_tensor(d, device=global_device()).float()
 
         return o, a, r, no, d
 
@@ -525,7 +525,7 @@ class PEARL(MetaRLAlgorithm):
                 final_context = np.vstack((final_context, context[np.newaxis]))
 
         final_context = torch.as_tensor(final_context,
-                                        device=tu.global_device()).float()
+                                        device=global_device()).float()
         if len(indices) == 1:
             final_context = final_context.unsqueeze(0)
 
@@ -597,7 +597,7 @@ class PEARL(MetaRLAlgorithm):
         a = exploration_trajectories.actions
         r = exploration_trajectories.rewards.reshape(total_steps, 1)
         ctxt = np.hstack((o, a, r)).reshape(1, total_steps, -1)
-        context = torch.as_tensor(ctxt, device=tu.global_device()).float()
+        context = torch.as_tensor(ctxt, device=global_device()).float()
         self._policy.infer_posterior(context)
 
         return self._policy
@@ -609,7 +609,7 @@ class PEARL(MetaRLAlgorithm):
             device (str): ID of GPU or CPU.
 
         """
-        device = device or tu.global_device()
+        device = device or global_device()
         for net in self.networks:
             net.to(device)
 

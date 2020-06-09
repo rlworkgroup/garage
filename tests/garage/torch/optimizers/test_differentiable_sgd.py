@@ -1,8 +1,8 @@
 """Tests for DifferentialSGD optimizer."""
 import torch
 
+import garage.torch._functions as tu
 from garage.torch.optimizers import DifferentiableSGD
-import garage.torch.utils as tu
 
 
 def test_differentiable_sgd():

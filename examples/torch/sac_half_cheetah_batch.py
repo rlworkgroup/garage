@@ -11,10 +11,10 @@ from garage.envs import GarageEnv, normalize
 from garage.experiment import deterministic, LocalRunner
 from garage.replay_buffer import PathBuffer
 from garage.sampler import LocalSampler
+import garage.torch._functions as tu
 from garage.torch.algos import SAC
 from garage.torch.policies import TanhGaussianMLPPolicy
 from garage.torch.q_functions import ContinuousMLPQFunction
-import garage.torch.utils as tu
 
 
 @wrap_experiment(snapshot_mode='none')

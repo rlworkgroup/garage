@@ -1,9 +1,9 @@
-"""Module to test garage.torch.utils."""
+"""Module to test garage.torch._functions."""
 
 import numpy as np
 import torch
 
-import garage.torch.utils as tu
+import garage.torch._functions as tu
 
 
 def test_utils_set_gpu_mode():
