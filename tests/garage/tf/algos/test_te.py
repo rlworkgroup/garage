@@ -6,12 +6,12 @@ import tensorflow as tf
 from garage import InOutSpec
 from garage.envs import GarageEnv, MultiEnvWrapper, PointEnv
 from garage.envs.multi_env_wrapper import round_robin_strategy
+from garage.experiment import LocalTFRunner
 from garage.np.baselines import LinearMultiFeatureBaseline
 from garage.sampler import LocalSampler
 from garage.tf.algos import TEPPO
 from garage.tf.algos.te import TaskEmbeddingWorker
 from garage.tf.embeddings import GaussianMLPEncoder
-from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import GaussianMLPTaskEmbeddingPolicy
 from tests.fixtures import snapshot_config, TfGraphTestCase
 
