@@ -12,9 +12,9 @@ from garage import TrajectoryBatch
 from garage.misc import tensor_utils
 from garage.sampler import OnPolicyVectorizedSampler
 from garage.tf.samplers import BatchSampler
+from garage.torch import update_module_params
 from garage.torch.optimizers import ConjugateGradientOptimizer
 from garage.torch.optimizers import DifferentiableSGD
-import garage.torch.utils as tu
 
 
 class MAML:
@@ -145,7 +145,7 @@ class MAML:
         if self._meta_evaluator and itr % self._evaluate_every_n_epochs == 0:
             self._meta_evaluator.evaluate(self)
 
-        tu.update_module_params(self._old_policy, old_theta)
+        update_module_params(self._old_policy, old_theta)
 
         return average_return
 
@@ -213,7 +213,7 @@ class MAML:
 
             all_params.append(dict(self._policy.named_parameters()))
             # Restore to pre-updated policy
-            tu.update_module_params(self._policy, theta)
+            update_module_params(self._policy, theta)
 
         return all_samples, all_params
 
@@ -274,15 +274,15 @@ class MAML:
                 require_grad = i < self._num_grad_updates - 1 or set_grad
                 self._adapt(task_samples[i], set_grad=require_grad)
 
-            tu.update_module_params(self._old_policy, task_params)
+            update_module_params(self._old_policy, task_params)
             with torch.set_grad_enabled(set_grad):
                 # pylint: disable=protected-access
                 last_update = task_samples[-1]
                 loss = self._inner_algo._compute_loss(*last_update[1:])
             losses.append(loss)
 
-            tu.update_module_params(self._policy, theta)
-            tu.update_module_params(self._old_policy, old_theta)
+            update_module_params(self._policy, theta)
+            update_module_params(self._old_policy, old_theta)
 
         return torch.stack(losses).mean()
 
@@ -314,15 +314,15 @@ class MAML:
                 require_grad = i < self._num_grad_updates - 1 or set_grad
                 self._adapt(task_samples[i], set_grad=require_grad)
 
-            tu.update_module_params(self._old_policy, task_params)
+            update_module_params(self._old_policy, task_params)
             with torch.set_grad_enabled(set_grad):
                 # pylint: disable=protected-access
                 kl = self._inner_algo._compute_kl_constraint(
                     task_samples[-1].observations)
             kls.append(kl)
 
-            tu.update_module_params(self._policy, theta)
-            tu.update_module_params(self._old_policy, old_theta)
+            update_module_params(self._policy, theta)
+            update_module_params(self._old_policy, old_theta)
 
         return torch.stack(kls).mean()
 

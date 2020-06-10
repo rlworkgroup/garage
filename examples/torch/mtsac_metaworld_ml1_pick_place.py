@@ -20,10 +20,10 @@ from garage.envs.multi_env_wrapper import round_robin_strategy
 from garage.experiment import deterministic, LocalRunner
 from garage.replay_buffer import PathBuffer
 from garage.sampler import LocalSampler
+from garage.torch import set_gpu_mode
 from garage.torch.algos import MTSAC
 from garage.torch.policies import TanhGaussianMLPPolicy
 from garage.torch.q_functions import ContinuousMLPQFunction
-import garage.torch.utils as tu
 
 
 @click.command()
@@ -99,7 +99,7 @@ def mtsac_metaworld_ml1_pick_place(ctxt=None, seed=1, _gpu=None):
                   discount=0.99,
                   buffer_batch_size=1280)
     if _gpu is not None:
-        tu.set_gpu_mode(True, _gpu)
+        set_gpu_mode(True, _gpu)
     mtsac.to()
     runner.setup(algo=mtsac, env=ml1_train_envs, sampler_cls=LocalSampler)
     runner.train(n_epochs=epochs, batch_size=batch_size)
