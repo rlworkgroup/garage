@@ -19,13 +19,11 @@ class DiscreteCNNQFunction(QFunction):
 
     Args:
         env_spec (garage.envs.env_spec.EnvSpec): Environment specification.
-        filter_dims (tuple[int]): Dimension of the filters. For example,
-            (3, 5) means there are two convolutional layers. The filter for
-            first layer is of dimension (3 x 3) and the second one is of
-            dimension (5 x 5).
-        num_filters (tuple[int]): Number of filters. For example, (3, 32) means
-            there are two convolutional layers. The filter for the first layer
-            has 3 channels and the second one with 32 channels.
+        filters (Tuple[Tuple[int, Tuple[int, int]], ...]): Number and dimension
+            of filters. For example, ((3, (3, 5)), (32, (3, 3))) means there
+            are two convolutional layers. The filter for the first layer have 3
+            channels and its shape is (3 x 5), while the filter for the second
+            layer have 32 channels and its shape is (3 x 3).
         strides (tuple[int]): The stride of the sliding window. For example,
             (1, 2) means there are two convolutional layers. The stride of the
             filter for first layer is 1 and that of the second layer is 2.
@@ -70,8 +68,7 @@ class DiscreteCNNQFunction(QFunction):
 
     def __init__(self,
                  env_spec,
-                 filter_dims,
-                 num_filters,
+                 filters,
                  strides,
                  hidden_sizes=(256, ),
                  name=None,
@@ -101,8 +98,7 @@ class DiscreteCNNQFunction(QFunction):
         super().__init__(name)
         self._env_spec = env_spec
         self._action_dim = env_spec.action_space.n
-        self._filter_dims = filter_dims
-        self._num_filters = num_filters
+        self._filters = filters
         self._strides = strides
         self._hidden_sizes = hidden_sizes
         self._padding = padding
@@ -123,15 +119,13 @@ class DiscreteCNNQFunction(QFunction):
         action_dim = self._env_spec.action_space.flat_dim
 
         if not max_pooling:
-            cnn_model = CNNModel(filter_dims=filter_dims,
-                                 num_filters=num_filters,
+            cnn_model = CNNModel(filters=filters,
                                  strides=strides,
                                  padding=padding,
                                  hidden_nonlinearity=cnn_hidden_nonlinearity)
         else:
             cnn_model = CNNModelWithMaxPooling(
-                filter_dims=filter_dims,
-                num_filters=num_filters,
+                filters=filters,
                 strides=strides,
                 padding=padding,
                 pool_strides=pool_strides,
@@ -236,8 +230,7 @@ class DiscreteCNNQFunction(QFunction):
         """
         return self.__class__(name=name,
                               env_spec=self._env_spec,
-                              filter_dims=self._filter_dims,
-                              num_filters=self._num_filters,
+                              filters=self._filters,
                               strides=self._strides,
                               hidden_sizes=self._hidden_sizes,
                               padding=self._padding,

@@ -18,13 +18,11 @@ class GaussianCNNRegressor(StochasticRegressor):
         input_shape(tuple[int]): Input shape of the model (without the batch
             dimension).
         output_dim (int): Output dimension of the model.
-        filter_dims(tuple[int]): Dimension of the filters. For example,
-            (3, 5) means there are two convolutional layers. The filter
-            for first layer is of dimension (3 x 3) and the second one is of
-            dimension (5 x 5).
-        num_filters(tuple[int]): Number of filters. For example, (3, 32) means
-            there are two convolutional layers. The filter for the first layer
-            has 3 channels and the second one with 32 channels.
+        filters (Tuple[Tuple[int, Tuple[int, int]], ...]): Number and dimension
+            of filters. For example, ((3, (3, 5)), (32, (3, 3))) means there
+            are two convolutional layers. The filter for the first layer have 3
+            channels and its shape is (3 x 5), while the filter for the second
+            layer have 32 channels and its shape is (3 x 3).
         strides(tuple[int]): The stride of the sliding window. For example,
             (1, 2) means there are two convolutional layers. The stride of the
             filter for first layer is 1 and that of the second layer is 2.
@@ -65,13 +63,11 @@ class GaussianCNNRegressor(StochasticRegressor):
             deviation models share a CNN network. If True, each is a head from
             a single body network. Otherwise, the parameters are estimated
             using the outputs of two indepedent networks.
-        std_filter_dims(tuple[int]): Dimension of the filters. For example,
-            (3, 5) means there are two convolutional layers. The filter
-            for first layer is of dimension (3 x 3) and the second one is of
-            dimension (5 x 5).
-        std_num_filters(tuple[int]): Number of filters. For example, (3, 32)
+        std_filters (Tuple[Tuple[int, Tuple[int, int]], ...]): Number and
+            dimension of filters. For example, ((3, (3, 5)), (32, (3, 3)))
             means there are two convolutional layers. The filter for the first
-            layer has 3 channels and the second one with 32 channels.
+            layer have 3 channels and its shape is (3 x 5), while the filter
+            for the second layer have 32 channels and its shape is (3 x 3).
         std_strides(tuple[int]): The stride of the sliding window. For example,
             (1, 2) means there are two convolutional layers. The stride of the
             filter for first layer is 1 and that of the second layer is 2.
@@ -102,8 +98,7 @@ class GaussianCNNRegressor(StochasticRegressor):
     def __init__(self,
                  input_shape,
                  output_dim,
-                 filter_dims,
-                 num_filters,
+                 filters,
                  strides,
                  padding,
                  hidden_sizes,
@@ -118,8 +113,7 @@ class GaussianCNNRegressor(StochasticRegressor):
                  init_std=1.0,
                  adaptive_std=False,
                  std_share_network=False,
-                 std_filter_dims=(),
-                 std_num_filters=(),
+                 std_filters=(),
                  std_strides=(),
                  std_padding='SAME',
                  std_hidden_sizes=(),
@@ -158,8 +152,7 @@ class GaussianCNNRegressor(StochasticRegressor):
         self.model = GaussianCNNRegressorModel(
             input_shape=input_shape,
             output_dim=output_dim,
-            num_filters=num_filters,
-            filter_dims=filter_dims,
+            filters=filters,
             strides=strides,
             padding=padding,
             hidden_sizes=hidden_sizes,
@@ -175,8 +168,7 @@ class GaussianCNNRegressor(StochasticRegressor):
             init_std=init_std,
             min_std=None,
             max_std=None,
-            std_num_filters=std_num_filters,
-            std_filter_dims=std_filter_dims,
+            std_filters=std_filters,
             std_strides=std_strides,
             std_padding=std_padding,
             std_hidden_sizes=std_hidden_sizes,
@@ -331,7 +323,6 @@ class GaussianCNNRegressor(StochasticRegressor):
         return self.model.networks[name].dist.log_likelihood_sym(
             y_var, dict(mean=means_var, log_std=log_stds_var))
 
-    # pylint: disable=unused-argument
     def dist_info_sym(self, input_var, state_info_vars=None, name=None):
         """Create a symbolic graph of the distribution parameters.
 
@@ -347,6 +338,7 @@ class GaussianCNNRegressor(StochasticRegressor):
                 graph.
 
         """
+        del state_info_vars
         with tf.compat.v1.variable_scope(self._variable_scope):
             self.model.build(input_var, name=name)
 

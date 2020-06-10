@@ -34,8 +34,7 @@ class TestGaussianCNNRegressor(TfGraphTestCase):
     @pytest.mark.large
     def test_fit_normalized(self):
         gcr = GaussianCNNRegressor(input_shape=(10, 10, 3),
-                                   num_filters=(3, 6),
-                                   filter_dims=(3, 3),
+                                   filters=((3, (3, 3)), (6, (3, 3))),
                                    strides=(1, 1),
                                    padding='SAME',
                                    hidden_sizes=(32, ),
@@ -77,8 +76,7 @@ class TestGaussianCNNRegressor(TfGraphTestCase):
     @pytest.mark.large
     def test_fit_unnormalized(self):
         gcr = GaussianCNNRegressor(input_shape=(10, 10, 3),
-                                   num_filters=(3, 6),
-                                   filter_dims=(3, 3),
+                                   filters=((3, (3, 3)), (6, (3, 3))),
                                    strides=(1, 1),
                                    padding='SAME',
                                    hidden_sizes=(32, ),
@@ -120,8 +118,7 @@ class TestGaussianCNNRegressor(TfGraphTestCase):
     @pytest.mark.large
     def test_fit_smaller_subsample_factor(self):
         gcr = GaussianCNNRegressor(input_shape=(10, 10, 3),
-                                   num_filters=(3, 6),
-                                   filter_dims=(3, 3),
+                                   filters=((3, (3, 3)), (6, (3, 3))),
                                    strides=(1, 1),
                                    padding='SAME',
                                    hidden_sizes=(32, ),
@@ -146,8 +143,7 @@ class TestGaussianCNNRegressor(TfGraphTestCase):
     @pytest.mark.large
     def test_fit_without_trusted_region(self):
         gcr = GaussianCNNRegressor(input_shape=(10, 10, 3),
-                                   num_filters=(3, 6),
-                                   filter_dims=(3, 3),
+                                   filters=((3, (3, 3)), (6, (3, 3))),
                                    strides=(1, 1),
                                    padding='SAME',
                                    hidden_sizes=(32, ),
@@ -173,8 +169,7 @@ class TestGaussianCNNRegressor(TfGraphTestCase):
     def test_log_likelihood_sym(self, output_dim):
         input_shape = (28, 28, 3)
         gcr = GaussianCNNRegressor(input_shape=input_shape,
-                                   num_filters=(3, 6),
-                                   filter_dims=(3, 3),
+                                   filters=((3, (3, 3)), (6, (3, 3))),
                                    strides=(1, 1),
                                    padding='SAME',
                                    hidden_sizes=(32, ),
@@ -210,8 +205,7 @@ class TestGaussianCNNRegressor(TfGraphTestCase):
     def test_optimizer_args(self, mock_lbfgs):
         lbfgs_args = dict(max_opt_itr=25)
         gcr = GaussianCNNRegressor(input_shape=(10, 10, 3),
-                                   num_filters=(3, 6),
-                                   filter_dims=(3, 3),
+                                   filters=((3, (3, 3)), (6, (3, 3))),
                                    strides=(1, 1),
                                    padding='SAME',
                                    hidden_sizes=(32, ),
@@ -227,8 +221,7 @@ class TestGaussianCNNRegressor(TfGraphTestCase):
     def test_is_pickleable(self):
         input_shape = (28, 28, 3)
         gcr = GaussianCNNRegressor(input_shape=input_shape,
-                                   num_filters=(3, 6),
-                                   filter_dims=(3, 3),
+                                   filters=((3, (3, 3)), (6, (3, 3))),
                                    strides=(1, 1),
                                    padding='SAME',
                                    hidden_sizes=(32, ),
@@ -253,8 +246,7 @@ class TestGaussianCNNRegressor(TfGraphTestCase):
     def test_is_pickleable2(self):
         input_shape = (28, 28, 3)
         gcr = GaussianCNNRegressor(input_shape=input_shape,
-                                   num_filters=(3, 6),
-                                   filter_dims=(3, 3),
+                                   filters=((3, (3, 3)), (6, (3, 3))),
                                    strides=(1, 1),
                                    padding='SAME',
                                    hidden_sizes=(32, ),

@@ -13,18 +13,15 @@ from tests.fixtures.envs.dummy import DummyDiscretePixelEnv
 
 class TestCategoricalCNNPolicyWithModel(TfGraphTestCase):
 
-    @pytest.mark.parametrize('filter_dims, num_filters, '
-                             'strides, padding, hidden_sizes', [
-                                 ((3, ), (3, ), (1, ), 'VALID', (4, )),
-                                 ((3, 3), (3, 3), (1, 1), 'VALID', (4, 4)),
-                                 ((3, 3), (3, 3), (2, 2), 'SAME', (4, 4)),
-                             ])
-    def test_get_action(self, filter_dims, num_filters, strides, padding,
-                        hidden_sizes):
+    @pytest.mark.parametrize('filters, strides, padding, hidden_sizes', [
+        (((3, (3, 3)), ), (1, ), 'VALID', (4, )),
+        (((3, (3, 3)), (3, (3, 3))), (1, 1), 'VALID', (4, 4)),
+        (((3, (3, 3)), (3, (3, 3))), (2, 2), 'SAME', (4, 4)),
+    ])
+    def test_get_action(self, filters, strides, padding, hidden_sizes):
         env = GarageEnv(DummyDiscretePixelEnv())
         policy = CategoricalCNNPolicy(env_spec=env.spec,
-                                      filter_dims=filter_dims,
-                                      num_filters=num_filters,
+                                      filters=filters,
                                       strides=strides,
                                       padding=padding,
                                       hidden_sizes=hidden_sizes)
@@ -47,8 +44,7 @@ class TestCategoricalCNNPolicyWithModel(TfGraphTestCase):
     def test_is_pickleable(self):
         env = GarageEnv(DummyDiscretePixelEnv())
         policy = CategoricalCNNPolicy(env_spec=env.spec,
-                                      filter_dims=(32, ),
-                                      num_filters=(3, ),
+                                      filters=((3, (32, 32)), ),
                                       strides=(1, ),
                                       padding='SAME',
                                       hidden_sizes=(4, ))
@@ -84,17 +80,14 @@ class TestCategoricalCNNPolicyWithModel(TfGraphTestCase):
                                feed_dict={policy_pickled.model.input: [[obs]]})
             assert np.array_equal(output1, output2)
 
-    @pytest.mark.parametrize('filter_dims, num_filters, '
-                             'strides, padding, hidden_sizes', [
-                                 ((32, ), (3, ), (1, ), 'VALID', (4, )),
-                                 ((32, 64), (3, 3), (2, 2), 'SAME', (4, 4)),
-                             ])
-    def test_clone(self, filter_dims, num_filters, strides, padding,
-                   hidden_sizes):
+    @pytest.mark.parametrize('filters, strides, padding, hidden_sizes', [
+        (((3, (32, 32)), ), (1, ), 'VALID', (4, )),
+        (((3, (32, 32)), (3, (64, 64))), (2, 2), 'SAME', (4, 4)),
+    ])
+    def test_clone(self, filters, strides, padding, hidden_sizes):
         env = GarageEnv(DummyDiscretePixelEnv())
         policy = CategoricalCNNPolicy(env_spec=env.spec,
-                                      filter_dims=filter_dims,
-                                      num_filters=num_filters,
+                                      filters=filters,
                                       strides=strides,
                                       padding=padding,
                                       hidden_sizes=hidden_sizes)

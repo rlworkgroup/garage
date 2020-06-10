@@ -66,10 +66,13 @@ def dqn_pong(ctxt=None, seed=1, buffer_size=int(5e4), max_path_length=None):
         replay_buffer = PathBuffer(capacity_in_transitions=buffer_size)
 
         qf = DiscreteCNNQFunction(env_spec=env.spec,
-                                  filter_dims=(8, 4, 3),
-                                  num_filters=(32, 64, 64),
+                                  filters=(
+                                              (32, (8, 8)),
+                                              (64, (4, 4)),
+                                              (64, (3, 3)),
+                                          ),
                                   strides=(4, 2, 1),
-                                  dueling=False)
+                                  dueling=False)  # yapf: disable
 
         policy = DiscreteQfDerivedPolicy(env_spec=env.spec, qf=qf)
         exploration_policy = EpsilonGreedyPolicy(env_spec=env.spec,

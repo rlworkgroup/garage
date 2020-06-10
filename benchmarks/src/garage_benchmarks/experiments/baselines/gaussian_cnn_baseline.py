@@ -10,15 +10,18 @@ from garage.tf.baselines import GaussianCNNBaseline
 from garage.tf.policies import CategoricalCNNPolicy
 
 params = {
-    'conv_filters': (32, 64, 64),
-    'conv_filter_sizes': (5, 3, 2),
+    'conv_filters': (
+                        (32, (5, 5)),
+                        (64, (3, 3)),
+                        (64, (2, 2)),
+                    ),
     'conv_strides': (4, 2, 1),
     'conv_pad': 'VALID',
     'hidden_sizes': (256, ),
     'n_epochs': 1000,
     'batch_size': 2048,
     'use_trust_region': True
-}
+}  # yapf: disable
 
 
 @wrap_experiment
@@ -38,18 +41,15 @@ def gaussian_cnn_baseline(ctxt, env_id, seed):
     with LocalTFRunner(ctxt, max_cpus=12) as runner:
         env = GarageEnv(normalize(gym.make(env_id)))
 
-        policy = CategoricalCNNPolicy(
-            env_spec=env.spec,
-            conv_filters=params['conv_filters'],
-            conv_filter_sizes=params['conv_filter_sizes'],
-            conv_strides=params['conv_strides'],
-            conv_pad=params['conv_pad'],
-            hidden_sizes=params['hidden_sizes'])
+        policy = CategoricalCNNPolicy(env_spec=env.spec,
+                                      conv_filters=params['conv_filters'],
+                                      conv_strides=params['conv_strides'],
+                                      conv_pad=params['conv_pad'],
+                                      hidden_sizes=params['hidden_sizes'])
 
         baseline = GaussianCNNBaseline(
             env_spec=env.spec,
-            regressor_args=dict(num_filters=params['conv_filters'],
-                                filter_dims=params['conv_filter_sizes'],
+            regressor_args=dict(filters=params['conv_filters'],
                                 strides=params['conv_strides'],
                                 padding=params['conv_pad'],
                                 hidden_sizes=params['hidden_sizes'],

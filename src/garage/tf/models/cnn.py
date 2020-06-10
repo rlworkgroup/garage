@@ -4,8 +4,7 @@ import tensorflow as tf
 
 
 def cnn(input_var,
-        filter_dims,
-        num_filters,
+        filters,
         strides,
         name,
         padding,
@@ -19,13 +18,11 @@ def cnn(input_var,
 
     Args:
         input_var (tf.Tensor): Input tf.Tensor to the CNN.
-        filter_dims (tuple[int]): Dimension of the filters. For example,
-            (3, 5) means there are two convolutional layers. The filter for
-            first layer is of dimension (3 x 3) and the second one is of
-            dimension (5 x 5).
-        num_filters (tuple[int]): Number of filters. For example, (3, 32) means
-            there are two convolutional layers. The filter for the first layer
-            has 3 channels and the second one with 32 channels.
+        filters (Tuple[Tuple[int, Tuple[int, int]], ...]): Number and dimension
+            of filters. For example, ((3, (3, 5)), (32, (3, 3))) means there
+            are two convolutional layers. The filter for the first layer have 3
+            channels and its shape is (3 x 5), while the filter for the second
+            layer have 32 channels and its shape is (3 x 3).
         strides (tuple[int]): The stride of the sliding window. For example,
             (1, 2) means there are two convolutional layers. The stride of the
             filter for first layer is 1 and that of the second layer is 2.
@@ -48,12 +45,10 @@ def cnn(input_var,
     """
     with tf.compat.v1.variable_scope(name):
         h = input_var
-        for index, (filter_dim, num_filter,
-                    stride) in enumerate(zip(filter_dims, num_filters,
-                                             strides)):
+        for index, (filter_iter, stride) in enumerate(zip(filters, strides)):
             _stride = [1, stride, stride, 1]
-            h = _conv(h, 'h{}'.format(index), filter_dim, num_filter, _stride,
-                      hidden_w_init, hidden_b_init, padding)
+            h = _conv(h, 'h{}'.format(index), filter_iter[1], filter_iter[0],
+                      _stride, hidden_w_init, hidden_b_init, padding)
             if hidden_nonlinearity is not None:
                 h = hidden_nonlinearity(h)
 
@@ -63,8 +58,7 @@ def cnn(input_var,
 
 
 def cnn_with_max_pooling(input_var,
-                         filter_dims,
-                         num_filters,
+                         filters,
                          strides,
                          name,
                          pool_shapes,
@@ -80,13 +74,11 @@ def cnn_with_max_pooling(input_var,
 
     Args:
         input_var (tf.Tensor): Input tf.Tensor to the CNN.
-        filter_dims (tuple[int]): Dimension of the filters. For example,
-            (3, 5) means there are two convolutional layers. The filter for
-            first layer is of dimension (3 x 3) and the second one is of
-            dimension (5 x 5).
-        num_filters (tuple[int]): Number of filters. For example, (3, 32) means
-            there are two convolutional layers. The filter for the first layer
-            has 3 channels and the second one with 32 channels.
+        filters (Tuple[Tuple[int, Tuple[int, int]], ...]): Number and dimension
+            of filters. For example, ((3, (3, 5)), (32, (3, 3))) means there
+            are two convolutional layers. The filter for the first layer have 3
+            channels and its shape is (3 x 5), while the filter for the second
+            layer have 32 channels and its shape is (3 x 3).
         strides (tuple[int]): The stride of the sliding window. For example,
             (1, 2) means there are two convolutional layers. The stride of the
             filter for first layer is 1 and that of the second layer is 2.
@@ -118,12 +110,10 @@ def cnn_with_max_pooling(input_var,
 
     with tf.compat.v1.variable_scope(name):
         h = input_var
-        for index, (filter_dim, num_filter,
-                    stride) in enumerate(zip(filter_dims, num_filters,
-                                             strides)):
+        for index, (filter_iter, stride) in enumerate(zip(filters, strides)):
             _stride = [1, stride, stride, 1]
-            h = _conv(h, 'h{}'.format(index), filter_dim, num_filter, _stride,
-                      hidden_w_init, hidden_b_init, padding)
+            h = _conv(h, 'h{}'.format(index), filter_iter[1], filter_iter[0],
+                      _stride, hidden_w_init, hidden_b_init, padding)
             if hidden_nonlinearity is not None:
                 h = hidden_nonlinearity(h)
             h = tf.nn.max_pool2d(h,
@@ -143,11 +133,9 @@ def _conv(input_var, name, filter_size, num_filter, strides, hidden_w_init,
     Args:
         input_var (tf.Tensor): Input tf.Tensor to the CNN.
         name (str): Variable scope of the convolution Op.
-        filter_size (tuple[int]): Dimension of the filters. For example,
-            (3, 5) means there are two convolutional layers. The filter for
-            first layer is of dimension (3 x 3) and the second one is of
-            dimension (5 x 5).
-        num_filter (tuple[int]): Number of filters. For example, (3, 32) means
+        filter_size (tuple[int]): Dimension of the filter. For example,
+            (3, 5) means the dimension of the filter is (3 x 5).
+        num_filter (int): Number of filters. For example, (3, 32) means
             there are two convolutional layers. The filter for the first layer
             has 3 channels and the second one with 32 channels.
         strides (tuple[int]): The stride of the sliding window. For example,
@@ -169,7 +157,7 @@ def _conv(input_var, name, filter_size, num_filter, strides, hidden_w_init,
     # channel from input
     input_shape = input_var.get_shape()[-1]
     # [filter_height, filter_width, in_channels, out_channels]
-    w_shape = [filter_size, filter_size, input_shape, num_filter]
+    w_shape = [filter_size[0], filter_size[1], input_shape, num_filter]
     b_shape = [1, 1, 1, num_filter]
 
     with tf.compat.v1.variable_scope(name):

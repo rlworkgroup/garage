@@ -6,20 +6,19 @@ from garage.tf.models import GaussianCNNModel
 
 
 class GaussianCNNRegressorModel(GaussianCNNModel):
-    """
-    GaussianCNNRegressor based on garage.tf.models.Model class.
+    """GaussianCNNRegressor based on garage.tf.models.Model class.
 
     This class can be used to perform regression by fitting a Gaussian
     distribution to the outputs.
 
     Args:
-        filter_dims(tuple[int]): Dimension of the filters. For example,
-            (3, 5) means there are two convolutional layers. The filter
-            for first layer is of dimension (3 x 3) and the second one is of
-            dimension (5 x 5).
-        num_filters(tuple[int]): Number of filters. For example, (3, 32) means
-            there are two convolutional layers. The filter for the first layer
-            has 3 channels and the second one with 32 channels.
+        input_shape(tuple[int]): Input shape of the model (without the batch
+            dimension).
+        filters (Tuple[Tuple[int, Tuple[int, int]], ...]): Number and dimension
+            of filters. For example, ((3, (3, 5)), (32, (3, 3))) means there
+            are two convolutional layers. The filter for the first layer have 3
+            channels and its shape is (3 x 5), while the filter for the second
+            layer have 32 channels and its shape is (3 x 3).
         strides(tuple[int]): The stride of the sliding window. For example,
             (1, 2) means there are two convolutional layers. The stride of the
             filter for first layer is 1 and that of the second layer is 2.
@@ -54,13 +53,11 @@ class GaussianCNNRegressorModel(GaussianCNNModel):
             parameter.
         std_share_network (bool): Boolean for whether mean and std share
             the same network.
-        std_filter_dims(tuple[int]): Dimension of the filters. For example,
-            (3, 5) means there are two convolutional layers. The filter
-            for first layer is of dimension (3 x 3) and the second one is of
-            dimension (5 x 5).
-        std_num_filters(tuple[int]): Number of filters. For example, (3, 32)
+        std_filters (Tuple[Tuple[int, Tuple[int, int]], ...]): Number and
+            dimension of filters. For example, ((3, (3, 5)), (32, (3, 3)))
             means there are two convolutional layers. The filter for the first
-            layer has 3 channels and the second one with 32 channels.
+            layer have 3 channels and its shape is (3 x 5), while the filter
+            for the second layer have 32 channels and its shape is (3 x 3).
         std_strides(tuple[int]): The stride of the sliding window. For example,
             (1, 2) means there are two convolutional layers. The stride of the
             filter for first layer is 1 and that of the second layer is 2.
@@ -73,14 +70,18 @@ class GaussianCNNRegressorModel(GaussianCNNModel):
             to avoid numerical issues.
         max_std (float): If not None, the std is at most the value of max_std,
             to avoid numerical issues.
-        std_hidden_nonlinearity: Nonlinearity for each hidden layer in
-            the std network.
+        std_hidden_nonlinearity (callable): Nonlinearity for each hidden layer
+            in the std network.
+        std_hidden_w_init (callable): Initializer function for the weight
+            of intermediate dense layer(s) in the std network.
+        std_hidden_b_init (callable): Initializer function for the bias
+            of intermediate dense layer(s) in the std network.
         std_output_nonlinearity (callable): Activation function for output
             dense layer in the std network. It should return a tf.Tensor. Set
             it to None to maintain a linear activation.
         std_output_w_init (callable): Initializer function for the weight
             of output dense layer(s) in the std network.
-        std_parametrization (str): How the std should be parametrized. There
+        std_parameterization (str): How the std should be parametrized. There
             are two options:
             - exp: the logarithm of the std will be stored, and applied a
                exponential transformation
@@ -91,19 +92,93 @@ class GaussianCNNRegressorModel(GaussianCNNModel):
     def __init__(self,
                  input_shape,
                  output_dim,
+                 filters,
+                 strides,
+                 padding,
+                 hidden_sizes,
                  name='GaussianCNNRegressorModel',
-                 **kwargs):
-        super().__init__(output_dim=output_dim, name=name, **kwargs)
+                 hidden_nonlinearity=tf.nn.tanh,
+                 hidden_w_init=tf.initializers.glorot_uniform(),
+                 hidden_b_init=tf.zeros_initializer(),
+                 output_nonlinearity=None,
+                 output_w_init=tf.initializers.glorot_uniform(),
+                 output_b_init=tf.zeros_initializer(),
+                 learn_std=True,
+                 adaptive_std=False,
+                 std_share_network=False,
+                 init_std=1.0,
+                 min_std=1e-6,
+                 max_std=None,
+                 std_filters=(),
+                 std_strides=(),
+                 std_padding='SAME',
+                 std_hidden_sizes=(32, 32),
+                 std_hidden_nonlinearity=tf.nn.tanh,
+                 std_hidden_w_init=tf.initializers.glorot_uniform(),
+                 std_hidden_b_init=tf.zeros_initializer(),
+                 std_output_nonlinearity=None,
+                 std_output_w_init=tf.initializers.glorot_uniform(),
+                 std_parameterization='exp',
+                 layer_normalization=False):
+        super().__init__(output_dim=output_dim,
+                         filters=filters,
+                         strides=strides,
+                         padding=padding,
+                         hidden_sizes=hidden_sizes,
+                         hidden_nonlinearity=hidden_nonlinearity,
+                         hidden_w_init=hidden_w_init,
+                         hidden_b_init=hidden_b_init,
+                         output_nonlinearity=output_nonlinearity,
+                         output_w_init=output_w_init,
+                         output_b_init=output_b_init,
+                         learn_std=learn_std,
+                         adaptive_std=adaptive_std,
+                         std_share_network=std_share_network,
+                         init_std=init_std,
+                         min_std=min_std,
+                         max_std=max_std,
+                         std_filters=std_filters,
+                         std_strides=std_strides,
+                         std_padding=std_padding,
+                         std_hidden_sizes=std_hidden_sizes,
+                         std_hidden_nonlinearity=std_hidden_nonlinearity,
+                         std_hidden_w_init=std_hidden_w_init,
+                         std_hidden_b_init=std_hidden_b_init,
+                         std_output_nonlinearity=std_output_nonlinearity,
+                         std_output_w_init=std_output_w_init,
+                         std_parameterization=std_parameterization,
+                         layer_normalization=layer_normalization)
         self._input_shape = input_shape
 
     def network_output_spec(self):
-        """Network output spec."""
+        """Network output spec.
+
+        Return:
+            list[str]: List of key(str) for the network outputs.
+
+        """
         return [
             'sample', 'means', 'log_stds', 'std_param', 'normalized_means',
             'normalized_log_stds', 'x_mean', 'x_std', 'y_mean', 'y_std', 'dist'
         ]
 
     def _build(self, state_input, name=None):
+        """Build model given input placeholder(s).
+
+        Args:
+            state_input (tf.Tensor): Place holder for state input.
+            name (str): Inner model name, also the variable scope of the
+                inner model, if exist. One example is
+                garage.tf.models.Sequential.
+
+        Return:
+            tf.Tensor: Sampled action.
+            tf.Tensor: Mean.
+            tf.Tensor: Parameterized log_std.
+            tf.Tensor: log_std.
+            garage.tf.distributions.DiagonalGaussian: Policy distribution.
+
+        """
         with tf.compat.v1.variable_scope('normalized_vars'):
             x_mean_var = tf.compat.v1.get_variable(
                 name='x_mean',

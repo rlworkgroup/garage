@@ -23,13 +23,11 @@ class CategoricalCNNPolicy(StochasticPolicy):
 
     Args:
         env_spec (garage.envs.env_spec.EnvSpec): Environment specification.
-        filter_dims (tuple[int]): Dimension of the filters. For example,
-            (3, 5) means there are two convolutional layers. The filter for
-            first layer is of dimension (3 x 3) and the second one is of
-            dimension (5 x 5).
-        num_filters (tuple[int]): Number of filters. For example, (3, 32) means
-            there are two convolutional layers. The filter for the first layer
-            has 3 channels and the second one with 32 channels.
+        filters (Tuple[Tuple[int, Tuple[int, int]], ...]): Number and dimension
+            of filters. For example, ((3, (3, 5)), (32, (3, 3))) means there
+            are two convolutional layers. The filter for the first layer have 3
+            channels and its shape is (3 x 5), while the filter for the second
+            layer have 32 channels and its shape is (3 x 3).
         strides (tuple[int]): The stride of the sliding window. For
             example, (1, 2) means there are two convolutional layers. The
             stride of the filter for first layer is 1 and that of the second
@@ -64,8 +62,7 @@ class CategoricalCNNPolicy(StochasticPolicy):
 
     def __init__(self,
                  env_spec,
-                 filter_dims,
-                 num_filters,
+                 filters,
                  strides,
                  padding,
                  name='CategoricalCNNPolicy',
@@ -83,8 +80,7 @@ class CategoricalCNNPolicy(StochasticPolicy):
         super().__init__(name, env_spec)
         self._obs_dim = env_spec.observation_space.shape
         self._action_dim = env_spec.action_space.n
-        self._filter_dims = filter_dims
-        self._num_filters = num_filters
+        self._filters = filters
         self._strides = strides
         self._padding = padding
         self._hidden_sizes = hidden_sizes
@@ -101,8 +97,7 @@ class CategoricalCNNPolicy(StochasticPolicy):
 
         self.model = CategoricalCNNModel(
             output_dim=self._action_dim,
-            filter_dims=filter_dims,
-            num_filters=num_filters,
+            filters=filters,
             strides=strides,
             padding=padding,
             hidden_sizes=hidden_sizes,
@@ -199,8 +194,7 @@ class CategoricalCNNPolicy(StochasticPolicy):
         """
         return self.__class__(name=name,
                               env_spec=self._env_spec,
-                              filter_dims=self._filter_dims,
-                              num_filters=self._num_filters,
+                              filters=self._filters,
                               strides=self._strides,
                               padding=self._padding,
                               hidden_sizes=self._hidden_sizes,

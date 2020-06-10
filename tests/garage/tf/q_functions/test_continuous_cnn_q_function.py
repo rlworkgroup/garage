@@ -19,13 +19,13 @@ from tests.fixtures.models import SimpleMLPMergeModel
 class TestContinuousCNNQFunction(TfGraphTestCase):
 
     # yapf: disable
-    @pytest.mark.parametrize('filter_dims, num_filters, strides', [
-        ((3, ), (5, ), (1, )),
-        ((3, ), (5, ), (2, )),
-        ((3, 3), (5, 5), (1, 1)),
+    @pytest.mark.parametrize('filters, strides', [
+        (((5, (3, 3)), ), (1, )),
+        (((5, (3, 3)), ), (2, )),
+        (((5, (3, 3)), (5, (3, 3))), (1, 1))
     ])
     # yapf: enable
-    def test_get_qval(self, filter_dims, num_filters, strides):
+    def test_get_qval(self, filters, strides):
         env = GarageEnv(DummyDiscretePixelEnv())
         obs = env.reset()
 
@@ -36,8 +36,7 @@ class TestContinuousCNNQFunction(TfGraphTestCase):
                              'cnn_mlp_merge_model.MLPMergeModel'),
                             new=SimpleMLPMergeModel):
                 qf = ContinuousCNNQFunction(env_spec=env.spec,
-                                            filter_dims=filter_dims,
-                                            num_filters=num_filters,
+                                            filters=filters,
                                             strides=strides)
 
         action_dim = env.action_space.shape
@@ -70,15 +69,15 @@ class TestContinuousCNNQFunction(TfGraphTestCase):
         assert unflattened_obs.shape[1:] == env.spec.observation_space.shape
 
     # yapf: disable
-    @pytest.mark.parametrize('filter_dims, num_filters, strides, '
-                             'pool_strides, pool_shapes', [
-                                ((3, ), (5, ), (1, ), (1, 1), (1, 1)),
-                                ((3, ), (5, ), (2, ), (2, 2), (2, 2)),
-                                ((3, 3), (5, 5), (1, 1), (1, 1), (1, 1)),
-                                ((3, 3), (5, 5), (1, 1), (2, 2), (2, 2))])
+    @pytest.mark.parametrize('filters, strides, pool_strides, pool_shapes', [
+        (((5, (3, 3)), ), (1, ), (1, 1), (1, 1)),
+        (((5, (3, 3)), ), (2, ), (2, 2), (2, 2)),
+        (((5, (3, 3)), (5, (3, 3))), (1, 1), (1, 1), (1, 1)),
+        (((5, (3, 3)), (5, (3, 3))), (1, 1), (2, 2), (2, 2))
+    ])
     # yapf: enable
-    def test_get_qval_max_pooling(self, filter_dims, num_filters, strides,
-                                  pool_strides, pool_shapes):
+    def test_get_qval_max_pooling(self, filters, strides, pool_strides,
+                                  pool_shapes):
         env = GarageEnv(DummyDiscretePixelEnv())
         obs = env.reset()
 
@@ -89,8 +88,7 @@ class TestContinuousCNNQFunction(TfGraphTestCase):
                              'cnn_mlp_merge_model.MLPMergeModel'),
                             new=SimpleMLPMergeModel):
                 qf = ContinuousCNNQFunction(env_spec=env.spec,
-                                            filter_dims=filter_dims,
-                                            num_filters=num_filters,
+                                            filters=filters,
                                             strides=strides,
                                             max_pooling=True,
                                             pool_strides=pool_strides,
@@ -122,16 +120,14 @@ class TestContinuousCNNQFunction(TfGraphTestCase):
         with pytest.raises(ValueError):
             env = GarageEnv(DummyDiscreteEnv(obs_dim=obs_dim))
             ContinuousCNNQFunction(env_spec=env.spec,
-                                   filter_dims=(3, ),
-                                   num_filters=(5, ),
+                                   filters=((5, (3, 3)), ),
                                    strides=(1, ))
 
     def test_not_box(self):
         with pytest.raises(ValueError):
             dict_env = GarageEnv(DummyDictEnv())
             ContinuousCNNQFunction(env_spec=dict_env.spec,
-                                   filter_dims=(3, ),
-                                   num_filters=(5, ),
+                                   filters=((5, (3, 3)), ),
                                    strides=(1, ))
 
     def test_obs_is_image(self):
@@ -147,8 +143,7 @@ class TestContinuousCNNQFunction(TfGraphTestCase):
                                 new=SimpleMLPMergeModel):
 
                     qf = ContinuousCNNQFunction(env_spec=image_env.spec,
-                                                filter_dims=(3, ),
-                                                num_filters=(5, ),
+                                                filters=((5, (3, 3)), ),
                                                 strides=(1, ))
 
                     fake_obs = [
@@ -197,8 +192,7 @@ class TestContinuousCNNQFunction(TfGraphTestCase):
                                 new=SimpleMLPMergeModel):
 
                     qf = ContinuousCNNQFunction(env_spec=env.spec,
-                                                filter_dims=(3, ),
-                                                num_filters=(5, ),
+                                                filters=((5, (3, 3)), ),
                                                 strides=(1, ))
 
                     # ensure non-image obses are not normalized
@@ -236,12 +230,13 @@ class TestContinuousCNNQFunction(TfGraphTestCase):
                                                      fake_obs}) == 255.).all()
 
     # yapf: disable
-    @pytest.mark.parametrize('filter_dims, num_filters, strides',
-                             [((3, ), (5, ), (1, )),
-                              ((3, ), (5, ), (2, )),
-                              ((3, 3), (5, 5), (1, 1))])
+    @pytest.mark.parametrize('filters, strides', [
+        (((5, (3, 3)), ), (1, )),
+        (((5, (3, 3)), ), (2, )),
+        (((5, (3, 3)), (5, (3, 3))), (1, 1))
+    ])
     # yapf: enable
-    def test_get_qval_sym(self, filter_dims, num_filters, strides):
+    def test_get_qval_sym(self, filters, strides):
         env = GarageEnv(DummyDiscretePixelEnv())
         obs = env.reset()
 
@@ -252,8 +247,7 @@ class TestContinuousCNNQFunction(TfGraphTestCase):
                              'cnn_mlp_merge_model.MLPMergeModel'),
                             new=SimpleMLPMergeModel):
                 qf = ContinuousCNNQFunction(env_spec=env.spec,
-                                            filter_dims=filter_dims,
-                                            num_filters=num_filters,
+                                            filters=filters,
                                             strides=strides)
         action_dim = env.action_space.shape
 
@@ -280,13 +274,13 @@ class TestContinuousCNNQFunction(TfGraphTestCase):
         assert np.array_equal(output2[0], expected_output)
 
     # yapf: disable
-    @pytest.mark.parametrize('filter_dims, num_filters, strides', [
-        ((3, ), (5, ), (1, )),
-        ((3, ), (5, ), (2, )),
-        ((3, 3), (5, 5), (1, 1)),
+    @pytest.mark.parametrize('filters, strides', [
+        (((5, (3, 3)), ), (1, )),
+        (((5, (3, 3)), ), (2, )),
+        (((5, (3, 3)), (5, (3, 3))), (1, 1))
     ])
     # yapf: enable
-    def test_is_pickleable(self, filter_dims, num_filters, strides):
+    def test_is_pickleable(self, filters, strides):
 
         env = GarageEnv(DummyDiscretePixelEnv())
         obs = env.reset()
@@ -298,8 +292,7 @@ class TestContinuousCNNQFunction(TfGraphTestCase):
                              'cnn_mlp_merge_model.MLPMergeModel'),
                             new=SimpleMLPMergeModel):
                 qf = ContinuousCNNQFunction(env_spec=env.spec,
-                                            filter_dims=filter_dims,
-                                            num_filters=num_filters,
+                                            filters=filters,
                                             strides=strides)
 
         action_dim = env.action_space.shape
@@ -326,13 +319,13 @@ class TestContinuousCNNQFunction(TfGraphTestCase):
         assert np.array_equal(output1, output2)
 
     # yapf: disable
-    @pytest.mark.parametrize('filter_dims, num_filters, strides', [
-        ((3, ), (5, ), (1, )),
-        ((3, ), (5, ), (2, )),
-        ((3, 3), (5, 5), (1, 1))
+    @pytest.mark.parametrize('filters, strides', [
+        (((5, (3, 3)), ), (1, )),
+        (((5, (3, 3)), ), (2, )),
+        (((5, (3, 3)), (5, (3, 3))), (1, 1))
     ])
     # yapf: enable
-    def test_clone(self, filter_dims, num_filters, strides):
+    def test_clone(self, filters, strides):
         env = GarageEnv(DummyDiscretePixelEnv())
 
         with mock.patch(('garage.tf.models.'
@@ -342,14 +335,12 @@ class TestContinuousCNNQFunction(TfGraphTestCase):
                              'cnn_mlp_merge_model.MLPMergeModel'),
                             new=SimpleMLPMergeModel):
                 qf = ContinuousCNNQFunction(env_spec=env.spec,
-                                            filter_dims=filter_dims,
-                                            num_filters=num_filters,
+                                            filters=filters,
                                             strides=strides)
 
                 qf_clone = qf.clone('another_qf')
 
         # pylint: disable=protected-access
-        assert qf_clone._filter_dims == qf._filter_dims
-        assert qf_clone._num_filters == qf._num_filters
+        assert qf_clone._filters == qf._filters
         assert qf_clone._strides == qf._strides
         # pylint: enable=protected-access
