@@ -36,8 +36,6 @@ RUN \
     xorg-dev \
     # mujoco_py
     # See https://github.com/openai/mujoco-py/blob/master/Dockerfile
-    # 18.04 repo is old, install glfw from source instead
-    # libglfw3 \
     libglew-dev \
     libosmesa6-dev \
     patchelf \
@@ -51,9 +49,6 @@ RUN \
   apt-get clean && \
   rm -rf /var/lib/apt/lists/*
 
-# Build GLFW because the Ubuntu 18.04 version is too old
-# See https://github.com/glfw/glfw/issues/1004
-RUN apt-get purge -y -v libglfw*
 RUN wget https://github.com/glfw/glfw/releases/download/3.3/glfw-3.3.zip && \
   unzip glfw-3.3.zip && \
   rm glfw-3.3.zip && \
@@ -72,7 +67,7 @@ RUN mkdir -p /root/.mujoco && \
   unzip mujoco.zip -d $HOME/.mujoco && \
   rm mujoco.zip && \
   ln -s $HOME/.mujoco/mujoco200_linux $HOME/.mujoco/mujoco200
-  ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mujoco200/bin
+ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mujoco200/bin
 
 # Install pip on system since python3.5-dev package doesn't install it by default.
 # This is different from a similar command around line 104 since that upgrades

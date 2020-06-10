@@ -10,13 +10,33 @@ SHELL := /bin/bash
 DATA_PATH ?= $(shell pwd)/data
 # Set the environment variable MJKEY with the contents of the file specified by
 # MJKEY_PATH.
-MJKEY_PATH ?= ~/.mujoco/mjkey.txt
+MJKEY_PATH ?= ${HOME}/.mujoco/mjkey.txt
 
-test:  ## Run the CI test suite
-test: RUN_CMD = nice -n 11 pytest -v -n auto -m 'not huge and not flaky' --durations=0
+
+build-test: TAG ?= rlworkgroup/garage-test
+build-test: docker/Dockerfile
+	docker build \
+		-f docker/Dockerfile \
+		--cache-from rlworkgroup/garage-test:latest \
+		--cache-from rlworkgroup/garage-headless:latest \
+		--target garage-test-18.04 \
+		-t ${TAG} \
+		${BUILD_ARGS} \
+		.
+
+test:  ## Run the garage-test-18.04 docker target
 test: RUN_ARGS = --memory 7500m --memory-swap 7500m
-test: run-headless
+test: TAG ?= rlworkgroup/garage-test
+test: CONTAINER_NAME ?= ''
+test: build-test
 	@echo "Running test suite..."
+	docker run \
+		-it \
+		--rm \
+		-e MJKEY="$$(cat $(MJKEY_PATH))" \
+		--name ${CONTAINER_NAME} \
+		${RUN_ARGS} \
+		${TAG}
 
 docs:  ## Build HTML documentation
 docs:
@@ -69,8 +89,7 @@ ci-job-verify-envs-conda:
 	# Useful for debugging any issues with conda
 	$(CONDA) info -a
 	$(CONDA) create -n garage-ci python=3.5 pip -y
-	$(GARAGE_BIN)/pip install --upgrade pip
-	$(GARAGE_BIN)/pip install dist/garage.tar.gz[all]
+	$(GARAGE_BIN)/pip install --upgrade pip setuptools
 	$(GARAGE_BIN)/pip install dist/garage.tar.gz[all,dev]
 	# pylint will verify all imports work
 	$(GARAGE_BIN)/pylint --disable=all --enable=import-error garage
@@ -78,9 +97,9 @@ ci-job-verify-envs-conda:
 # The following two lines remove the Dockerfile's built-in virtualenv from the
 # path, so we can test with pipenv directly
 ci-job-verify-envs-pipenv: assert-docker
-ci-job-verify-envs-pipenv: export PATH=$(shell echo $$PATH | awk -v RS=: -v ORS=: '/venv/ {next} {print}')
+ci-job-verify-envs-pipenv: export PATH=$(shell echo $$PATH_NO_VENV)
 ci-job-verify-envs-pipenv: export VIRTUAL_ENV=
-ci-job-verify-envs-pipenv: export PIPENV_MAX_RETRIES=2 # number of retries for network requests. Default is 0
+ci-job-verify-envs-pipenv: export PIPENV_MAX_RETRIES=2  # number of retries for network requests. Default is 0
 ci-job-verify-envs-pipenv:
 	touch $(MJKEY_PATH)
 	pip install --upgrade pip setuptools
@@ -98,28 +117,37 @@ ci-deploy-docker: assert-travis
 	docker push rlworkgroup/garage-ci
 
 build-ci: TAG ?= rlworkgroup/garage-ci:latest
-build-ci: docker/docker-compose-ci.yml
-	TAG=${TAG} \
-	docker-compose \
-		-f docker/docker-compose-ci.yml \
-		build \
-		${BUILD_ARGS}
+build-ci: docker/Dockerfile
+	docker build \
+		--cache-from rlworkgroup/garage-ci:latest \
+		-f docker/Dockerfile \
+		--target garage-dev-18.04 \
+		-t ${TAG} \
+		${BUILD_ARGS} .
 
 build-headless: TAG ?= rlworkgroup/garage-headless:latest
-build-headless: docker/docker-compose-headless.yml
-	TAG=${TAG} \
-	docker-compose \
-		-f docker/docker-compose-headless.yml \
-		build \
-		${BUILD_ARGS}
+build-headless: docker/Dockerfile
+	docker build \
+		-f docker/Dockerfile \
+		--cache-from rlworkgroup/garage-headless:latest \
+		--target garage-dev-18.04 \
+		--build-arg user="$(USER)" \
+		--build-arg uid="$(shell id -u)" \
+		-t ${TAG} \
+		${BUILD_ARGS} .
 
 build-nvidia: TAG ?= rlworkgroup/garage-nvidia:latest
-build-nvidia: docker/docker-compose-nvidia.yml
-	TAG=${TAG} \
-	docker-compose \
-		-f docker/docker-compose-nvidia.yml \
-		build \
-		${BUILD_ARGS}
+build-nvidia: PARENT_IMAGE ?= nvidia/cuda:10.2-runtime-ubuntu18.04
+build-nvidia: docker/Dockerfile
+	docker build \
+		-f docker/Dockerfile \
+		--cache-from rlworkgroup/garage-nvidia:latest \
+		--target garage-nvidia-18.04 \
+		-t ${TAG} \
+		--build-arg user="$(USER)" \
+		--build-arg uid="$(shell id -u)" \
+		--build-arg PARENT_IMAGE=${PARENT_IMAGE} \
+		${BUILD_ARGS} .
 
 run-ci: ## Run the CI Docker container (only used in TravisCI)
 run-ci: TAG ?= rlworkgroup/garage-ci
@@ -137,19 +165,22 @@ run-ci:
 		${TAG} ${RUN_CMD}
 
 run-headless: ## Run the Docker container for headless machines
-run-headless: CONTAINER_NAME ?= garage-headless
+run-headless: CONTAINER_NAME ?= ''
+run-headless: user ?= $$USER
 run-headless: build-headless
 	docker run \
 		-it \
 		--rm \
-		-v $(DATA_PATH)/$(CONTAINER_NAME):/root/code/garage/data \
+		-v $(DATA_PATH)/$(CONTAINER_NAME):/home/$(user)/code/garage/data \
 		-e MJKEY="$$(cat $(MJKEY_PATH))" \
 		--name $(CONTAINER_NAME) \
 		${RUN_ARGS} \
 		rlworkgroup/garage-headless ${RUN_CMD}
 
 run-nvidia: ## Run the Docker container for machines with NVIDIA GPUs
-run-nvidia: CONTAINER_NAME ?= garage-nvidia
+run-nvidia: ## Requires https://github.com/NVIDIA/nvidia-container-runtime and CUDA 10.2
+run-headless: CONTAINER_NAME ?= ''
+run-nvidia: user ?= $$USER
 run-nvidia: build-nvidia
 	xhost +local:docker
 	docker run \
@@ -157,11 +188,11 @@ run-nvidia: build-nvidia
 		--rm \
 		--runtime=nvidia \
 		-v /tmp/.X11-unix:/tmp/.X11-unix \
-		-v $(DATA_PATH)/$(CONTAINER_NAME):/root/code/garage/data \
+		-v $(DATA_PATH)/$(CONTAINER_NAME):/home/$(user)/code/garage/data \
 		-e DISPLAY=$(DISPLAY) \
 		-e QT_X11_NO_MITSHM=1 \
 		-e MJKEY="$$(cat $(MJKEY_PATH))" \
-		--name $(CONTAINER_NAME) \
+		--name $(CONTAINER_NAME)
 		${RUN_ARGS} \
 		rlworkgroup/garage-nvidia ${RUN_CMD}
 

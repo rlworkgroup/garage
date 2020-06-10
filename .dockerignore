@@ -1,2 +1,6 @@
 data
 Pipfile*
+.pytest_cache
+.idea
+**/dist
+__pycache__
