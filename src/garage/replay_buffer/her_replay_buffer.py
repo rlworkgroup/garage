@@ -2,145 +2,121 @@
 
 See: https://arxiv.org/abs/1707.01495.
 """
-import inspect
+import copy
 
 import numpy as np
 
-from garage.replay_buffer.replay_buffer import ReplayBuffer
+from garage.replay_buffer.path_buffer import PathBuffer
 
 
-def make_her_sample(replay_k, reward_fun):
-    """Generate a transition sampler for HER ReplayBuffer.
-
-    Args:
-        replay_k (float): Ratio between HER replays and regular replays
-        reward_fun (callable): Function to re-compute the reward with
-            substituted goals
-
-    Returns:
-        callable: A function that returns sample transitions for HER.
-
-    """
-    future_p = 1 - (1. / (1 + replay_k))
-
-    def _her_sample_transitions(episode_batch, sample_batch_size):
-        """Generate a dictionary of transitions.
-
-        Args:
-            episode_batch (dict): Original transitions which
-                transitions[key] has shape :math:`(N, T, S^*)`.
-            sample_batch_size (int): Batch size per sample.
-
-        Returns:
-            dict[numpy.ndarray]: Transitions.
-
-        """
-        # Select which episodes to use
-        time_horizon = episode_batch['action'].shape[1]
-        rollout_batch_size = episode_batch['action'].shape[0]
-        episode_idxs = np.random.randint(rollout_batch_size,
-                                         size=sample_batch_size)
-        # Select time steps to use
-        t_samples = np.random.randint(time_horizon, size=sample_batch_size)
-        transitions = {
-            key: episode_batch[key][episode_idxs, t_samples]
-            for key in episode_batch.keys()
-        }
-
-        her_idxs = np.where(
-            np.random.uniform(size=sample_batch_size) < future_p)
-        future_offset = np.random.uniform(
-            size=sample_batch_size) * (time_horizon - t_samples)
-        future_offset = future_offset.astype(int)
-        future_t = (t_samples + future_offset)[her_idxs]
-
-        future_ag = episode_batch['achieved_goal'][episode_idxs[her_idxs],
-                                                   future_t]
-        transitions['goal'][her_idxs] = future_ag
-
-        achieved_goals = episode_batch['achieved_goal'][episode_idxs[her_idxs],
-                                                        t_samples[her_idxs]]
-        transitions['achieved_goal'][her_idxs] = achieved_goals
-
-        # Re-compute reward since we may have substituted the goal.
-        reward_params_keys = inspect.signature(reward_fun).parameters.keys()
-        reward_params = {
-            rk: transitions[k]
-            for k, rk in zip(['next_achieved_goal', 'goal'],
-                             list(reward_params_keys)[:-1])
-        }
-        reward_params['info'] = {}
-        transitions['reward'] = reward_fun(**reward_params)
-
-        transitions = {
-            k: transitions[k].reshape(sample_batch_size,
-                                      *transitions[k].shape[1:])
-            for k in transitions.keys()
-        }
-
-        goals = transitions['goal']
-        next_inputs = np.concatenate((transitions['next_observation'], goals,
-                                      transitions['achieved_goal']),
-                                     axis=-1)
-        inputs = np.concatenate(
-            (transitions['observation'], goals, transitions['achieved_goal']),
-            axis=-1)
-        transitions['observation'] = inputs
-        transitions['next_observation'] = next_inputs
-
-        assert transitions['action'].shape[0] == sample_batch_size
-        return transitions
-
-    return _her_sample_transitions
-
-
-class HerReplayBuffer(ReplayBuffer):
+class HERReplayBuffer(PathBuffer):
     """Replay buffer for HER (Hindsight Experience Replay).
 
     It constructs hindsight examples using future strategy.
 
     Args:
-        replay_k (float): Ratio between HER replays and regular replays
-        reward_fun (callable): Function to re-compute the reward with
-            substituted goals
+        replay_k (int): Number of HER transitions to add for each regular
+            Transition. Setting this to 0 means that no HER replays will
+            be added.
+        reward_fn (callable): Function to re-compute the reward with
+            substituted goals.
+        capacity_in_transitions (int): total size of transitions in the buffer.
         env_spec (garage.envs.EnvSpec): Environment specification.
-        size_in_transitions (int): total size of transitions in the buffer
-        time_horizon (int): time horizon of rollout.
-
     """
 
-    def __init__(self, replay_k, reward_fun, env_spec, size_in_transitions,
-                 time_horizon):
-        self._env_spec = env_spec
-        self._sample_transitions = make_her_sample(replay_k, reward_fun)
+    def __init__(self, replay_k, reward_fn, capacity_in_transitions, env_spec):
         self._replay_k = replay_k
-        self._reward_fun = reward_fun
-        super().__init__(env_spec, size_in_transitions, time_horizon)
+        self._reward_fn = reward_fn
+        self._env_spec = env_spec
 
-    def sample(self, batch_size):
-        """Sample a transition of batch_size.
+        if not float(replay_k).is_integer() or replay_k < 0:
+            raise ValueError('replay_k must be an integer and >= 0.')
+        super().__init__(capacity_in_transitions)
+
+    def _sample_her_goals(self, path, transition_idx):
+        """Samples HER goals from the given path.
+
+        Goals are randomly sampled starting from the index after
+        transition_idx in the given path.
 
         Args:
-            batch_size (int): Batch size to sample.
+            path (dict[str, np.ndarray]): A dict containing the transition
+                keys, where each key contains an ndarray of shape
+                :math:`(T, S^*)`.
+            transition_idx (int): index of the current transition. Only
+                transitions after the current transitions will be randomly
+                sampled for HER goals.
 
-        Return:
-            dict[numpy.ndarray]: Transitions which transitions[key] has the
-                shape of :math:`(N, S^*)`. Keys include [`observation`,
-                `action`, `goal`, `achieved_goal`, `terminal`,
-                `next_observation`, `next_achieved_goal` and `reward`].
+        Returns:
+            np.ndarray: A numpy array of HER goals with shape
+                (replay_k, goal_dim).
 
         """
-        buffer = {}
-        for key in self._buffer:
-            buffer[key] = self._buffer[key][:self._current_size]
+        goal_indexes = np.random.randint(transition_idx + 1,
+                                         len(path['observations']),
+                                         size=self._replay_k)
+        return [
+            goal['achieved_goal']
+            for goal in np.asarray(path['observations'])[goal_indexes]
+        ]
 
-        transitions = self._sample_transitions(buffer, batch_size)
+    def _flatten_dicts(self, path):
+        for key in ['observations', 'next_observations']:
+            if not isinstance(path[key], dict):
+                path[key] = self._env_spec.observation_space.flatten_n(
+                    path[key])
+            else:
+                path[key] = self._env_spec.observation_space.flatten(path[key])
 
-        for key in (['reward', 'next_observation', 'next_achieved_goal'] +
-                    list(self._buffer.keys())):
-            assert key in transitions, 'key %s missing from transitions' % key
+    def add_path(self, path):
+        """Adds a path to the replay buffer.
 
-        return transitions
+        For each transition in the given path except the last one,
+        replay_k HER transitions will added to the buffer in addition
+        to the one in the path. The last transition is added without
+        sampling additional HER goals.
+
+        Args:
+            path(dict[str, np.ndarray]): Each key in the dict must map
+                to a np.ndarray of shape :math:`(T, S^*)`.
+
+        """
+        obs_space = self._env_spec.observation_space
+        if not isinstance(path['observations'][0], dict):
+            # unflatten dicts if they've been flattened
+            path['observations'] = obs_space.unflatten_n(path['observations'])
+            path['next_observations'] = (obs_space.unflatten_n(
+                path['next_observations']))
+
+        # create HER transitions and add them to the buffer
+        for idx in range(path['actions'].shape[0] - 1):
+            transition = {key: sample[idx] for key, sample in path.items()}
+            her_goals = self._sample_her_goals(path, idx)
+
+            # create replay_k transitions using the HER goals
+            for goal in her_goals:
+
+                t_new = copy.deepcopy(transition)
+                a_g = t_new['next_observations']['achieved_goal']
+
+                t_new['rewards'] = np.array(self._reward_fn(a_g, goal, None))
+                t_new['observations']['desired_goal'] = goal
+                t_new['next_observations']['desired_goal'] = copy.deepcopy(
+                    goal)
+                t_new['terminals'] = np.array(False)
+
+                # flatten the observation dicts now that we're done with them
+                self._flatten_dicts(t_new)
+
+                for key in t_new.keys():
+                    t_new[key] = t_new[key].reshape(1, -1)
+
+                # Since we're using a PathBuffer, add each new transition
+                # as its own path.
+                super().add_path(t_new)
+
+        self._flatten_dicts(path)
+        super().add_path(path)
 
     def __getstate__(self):
         """Object.__getstate__.
@@ -150,7 +126,6 @@ class HerReplayBuffer(ReplayBuffer):
 
         """
         new_dict = self.__dict__.copy()
-        del new_dict['_sample_transitions']
         return new_dict
 
     def __setstate__(self, state):
@@ -161,39 +136,3 @@ class HerReplayBuffer(ReplayBuffer):
 
         """
         self.__dict__ = state
-        replay_k = state['_replay_k']
-        reward_fun = state['_reward_fun']
-        self._sample_transitions = make_her_sample(replay_k, reward_fun)
-
-    def add_transitions(self, **kwargs):
-        """Add multiple transitions into the replay buffer.
-
-        A transition contains one or multiple entries, e.g.
-        observation, action, reward, terminal and next_observation.
-        The same entry of all the transitions are stacked, e.g.
-        {'observation': [obs1, obs2, obs3]} where obs1 is one
-        numpy.ndarray observation from the environment.
-
-        Args:
-            kwargs (dict(str, [numpy.ndarray])): Dictionary that holds
-                the transitions.
-
-        """
-        obses = kwargs['observation']
-        obs = [obs['observation'] for obs in obses]
-        d_g = [obs['desired_goal'] for obs in obses]
-        a_g = [obs['achieved_goal'] for obs in obses]
-        next_obses = kwargs['next_observation']
-        super().add_transitions(
-            observation=obs,
-            action=kwargs['action'],
-            goal=d_g,
-            achieved_goal=a_g,
-            terminal=kwargs['terminal'],
-            next_observation=[
-                next_obs['observation'] for next_obs in next_obses
-            ],
-            next_achieved_goal=[
-                next_obs['achieved_goal'] for next_obs in next_obses
-            ],
-        )

@@ -7,7 +7,6 @@ import tensorflow as tf
 
 from garage import _Default, make_optimizer
 from garage.np.algos.off_policy_rl_algorithm import OffPolicyRLAlgorithm
-from garage.replay_buffer import PathBuffer
 from garage.tf.misc import tensor_utils
 
 
@@ -335,28 +334,14 @@ class DDPG(OffPolicyRLAlgorithm):
             float: Q value predicted by the q network.
 
         """
-        # pylint: disable=fixme
-        # TODO: remove this check once HER uses PathBuffer.
-        # See garage issue #1338.
-        # pylint: enable=fixme
+        transitions = self.replay_buffer.sample_transitions(
+            self.buffer_batch_size)
 
-        if isinstance(self.replay_buffer, PathBuffer):
-            transitions = self.replay_buffer.sample_transitions(
-                self.buffer_batch_size)
-
-            observations = transitions['observations']
-            rewards = transitions['rewards']
-            actions = transitions['actions']
-            next_observations = transitions['next_observations']
-            terminals = transitions['terminals']
-        else:
-            transitions = self.replay_buffer.sample(self.buffer_batch_size)
-
-            observations = transitions['observation']
-            rewards = transitions['reward'].reshape(-1, 1)
-            actions = transitions['action']
-            next_observations = transitions['next_observation']
-            terminals = transitions['terminal'].reshape(-1, 1)
+        observations = transitions['observations']
+        next_observations = transitions['next_observations']
+        rewards = transitions['rewards'].reshape(-1, 1)
+        actions = transitions['actions']
+        terminals = transitions['terminals'].reshape(-1, 1)
 
         next_inputs = next_observations
         inputs = observations

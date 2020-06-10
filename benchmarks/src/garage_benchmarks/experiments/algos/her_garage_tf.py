@@ -7,7 +7,7 @@ from garage.envs import GarageEnv, normalize
 from garage.experiment import deterministic
 from garage.experiment import LocalTFRunner
 from garage.np.exploration_policies import AddOrnsteinUhlenbeckNoise
-from garage.replay_buffer import HerReplayBuffer
+from garage.replay_buffer import HERReplayBuffer
 from garage.tf.algos import DDPG
 from garage.tf.policies import ContinuousMLPPolicy
 from garage.tf.q_functions import ContinuousMLPQFunction
@@ -61,12 +61,11 @@ def her_garage_tf(ctxt, env_id, seed):
             hidden_nonlinearity=tf.nn.relu,
         )
 
-        replay_buffer = HerReplayBuffer(
+        replay_buffer = HERReplayBuffer(
             env_spec=env.spec,
-            size_in_transitions=hyper_parameters['replay_buffer_size'],
-            time_horizon=hyper_parameters['n_rollout_steps'],
-            replay_k=0.4,
-            reward_fun=env.compute_reward,
+            capacity_in_transitions=hyper_parameters['replay_buffer_size'],
+            replay_k=4,
+            reward_fn=env.compute_reward,
         )
 
         algo = DDPG(

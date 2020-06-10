@@ -189,7 +189,7 @@ class PathBuffer:
         if seg_b.start < seg_a.start:
             first, second = seg_b, seg_a
         assert first.start <= second.start
-        return first.stop >= second.start
+        return first.stop > second.start
 
     @property
     def n_transitions_stored(self):

@@ -8,7 +8,6 @@ import torch
 
 from garage import _Default, make_optimizer
 from garage.np.algos.off_policy_rl_algorithm import OffPolicyRLAlgorithm
-from garage.replay_buffer import PathBuffer
 import garage.torch.utils as tu
 
 
@@ -173,17 +172,8 @@ class DDPG(OffPolicyRLAlgorithm):
 
         for _ in range(self.n_train_steps):
             if self._buffer_prefilled:
-
-                # pylint: disable=fixme
-                # TODO: remove this check once HER uses PathBuffer.
-                # See garage issue #1338.
-                # pylint: enable=fixme
-
-                if isinstance(self.replay_buffer, PathBuffer):
-                    samples = self.replay_buffer.sample_transitions(
-                        self.buffer_batch_size)
-                else:
-                    samples = self.replay_buffer.sample(self.buffer_batch_size)
+                samples = self.replay_buffer.sample_transitions(
+                    self.buffer_batch_size)
                 qf_loss, y, q, policy_loss = tu.torch_to_np(
                     self.optimize_policy(samples))
 
@@ -237,23 +227,11 @@ class DDPG(OffPolicyRLAlgorithm):
         """
         transitions = tu.dict_np_to_torch(samples_data)
 
-        # pylint: disable=fixme
-        # TODO: remove this check once HER uses PathBuffer.
-        # See garage issue #1338.
-        # pylint: enable=fixme
-
-        if isinstance(self.replay_buffer, PathBuffer):
-            observations = transitions['observations']
-            rewards = transitions['rewards']
-            actions = transitions['actions']
-            next_observations = transitions['next_observations']
-            terminals = transitions['terminals']
-        else:
-            observations = transitions['observation']
-            rewards = transitions['reward'].reshape(-1, 1)
-            actions = transitions['action']
-            next_observations = transitions['next_observation']
-            terminals = transitions['terminal'].reshape(-1, 1)
+        observations = transitions['observations']
+        rewards = transitions['rewards'].reshape(-1, 1)
+        actions = transitions['actions']
+        next_observations = transitions['next_observations']
+        terminals = transitions['terminals'].reshape(-1, 1)
 
         next_inputs = next_observations
         inputs = observations

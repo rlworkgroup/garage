@@ -15,7 +15,7 @@ from garage.envs import GarageEnv
 from garage.experiment import LocalTFRunner
 from garage.experiment.deterministic import set_seed
 from garage.np.exploration_policies import AddOrnsteinUhlenbeckNoise
-from garage.replay_buffer import HerReplayBuffer
+from garage.replay_buffer import HERReplayBuffer
 from garage.tf.algos import DDPG
 from garage.tf.policies import ContinuousMLPPolicy
 from garage.tf.q_functions import ContinuousMLPQFunction
@@ -55,11 +55,10 @@ def her_ddpg_fetchreach(ctxt=None, seed=1):
             hidden_nonlinearity=tf.nn.relu,
         )
 
-        replay_buffer = HerReplayBuffer(env_spec=env.spec,
-                                        size_in_transitions=int(1e6),
-                                        time_horizon=100,
-                                        replay_k=0.4,
-                                        reward_fun=env.compute_reward)
+        replay_buffer = HERReplayBuffer(capacity_in_transitions=int(1e6),
+                                        replay_k=4,
+                                        reward_fn=env.compute_reward,
+                                        env_spec=env.spec)
 
         ddpg = DDPG(
             env_spec=env.spec,
