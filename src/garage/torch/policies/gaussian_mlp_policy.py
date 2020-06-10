@@ -2,9 +2,9 @@
 import torch
 from torch import nn
 
+from garage.torch import global_device
 from garage.torch.modules import GaussianMLPModule
 from garage.torch.policies.policy import Policy
-import garage.torch.utils as tu
 
 
 class GaussianMLPPolicy(Policy, GaussianMLPModule):
@@ -108,7 +108,7 @@ class GaussianMLPPolicy(Policy, GaussianMLPModule):
         with torch.no_grad():
             if not isinstance(observation, torch.Tensor):
                 observation = torch.as_tensor(observation).float().to(
-                    tu.global_device())
+                    global_device())
             observation = torch.Tensor(observation).unsqueeze(0)
             dist = self.forward(observation)
             return (dist.rsample().squeeze(0).numpy(),
@@ -135,7 +135,7 @@ class GaussianMLPPolicy(Policy, GaussianMLPModule):
         with torch.no_grad():
             if not isinstance(observations, torch.Tensor):
                 observations = torch.as_tensor(observations).float().to(
-                    tu.global_device())
+                    global_device())
             dist = self.forward(torch.Tensor(observations))
             return (dist.rsample().numpy(),
                     dict(mean=dist.mean.numpy(),

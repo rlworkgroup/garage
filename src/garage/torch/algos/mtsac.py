@@ -3,8 +3,8 @@ import numpy as np
 import torch
 
 from garage import log_multitask_performance, TrajectoryBatch
+from garage.torch import global_device
 from garage.torch.algos import SAC
-import garage.torch.utils as tu
 
 
 class MTSAC(SAC):
@@ -199,7 +199,7 @@ class MTSAC(SAC):
         """
         super().to(device)
         if device is None:
-            device = tu.global_device()
+            device = global_device()
         if not self._use_automatic_entropy_tuning:
             self._log_alpha = torch.Tensor([self._fixed_alpha] *
                                            self._num_tasks).log().to(device)

@@ -9,13 +9,13 @@ from garage.experiment import LocalRunner
 from garage.experiment.deterministic import set_seed
 from garage.experiment.task_sampler import SetTaskSampler
 from garage.sampler import LocalSampler
+from garage.torch import set_gpu_mode
 from garage.torch.algos import PEARL
 from garage.torch.algos.pearl import PEARLWorker
 from garage.torch.embeddings import MLPEncoder
 from garage.torch.policies import ContextConditionedPolicy
 from garage.torch.policies import TanhGaussianMLPPolicy
 from garage.torch.q_functions import ContinuousMLPQFunction
-import garage.torch.utils as tu
 
 
 @click.command()
@@ -139,7 +139,7 @@ def pearl_metaworld_ml1_push(ctxt=None,
         reward_scale=reward_scale,
     )
 
-    tu.set_gpu_mode(use_gpu, gpu_id=0)
+    set_gpu_mode(use_gpu, gpu_id=0)
     if use_gpu:
         pearl.to()
 

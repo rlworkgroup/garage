@@ -11,10 +11,10 @@ from garage.envs import GarageEnv, normalize
 from garage.experiment import deterministic, LocalRunner
 from garage.replay_buffer import PathBuffer
 from garage.sampler import LocalSampler
+from garage.torch import set_gpu_mode
 from garage.torch.algos import SAC
 from garage.torch.policies import TanhGaussianMLPPolicy
 from garage.torch.q_functions import ContinuousMLPQFunction
-import garage.torch.utils as tu
 
 
 @wrap_experiment(snapshot_mode='none')
@@ -66,9 +66,9 @@ def sac_half_cheetah_batch(ctxt=None, seed=1):
               steps_per_epoch=1)
 
     if torch.cuda.is_available():
-        tu.set_gpu_mode(True)
+        set_gpu_mode(True)
     else:
-        tu.set_gpu_mode(False)
+        set_gpu_mode(False)
     sac.to()
     runner.setup(algo=sac, env=env, sampler_cls=LocalSampler)
     runner.train(n_epochs=1000, batch_size=1000)

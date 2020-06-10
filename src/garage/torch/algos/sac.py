@@ -9,7 +9,7 @@ import torch.nn.functional as F
 
 from garage import log_performance
 from garage.np.algos.off_policy_rl_algorithm import OffPolicyRLAlgorithm
-import garage.torch.utils as tu
+from garage.torch import dict_np_to_torch, global_device
 
 
 class SAC(OffPolicyRLAlgorithm):
@@ -223,7 +223,7 @@ class SAC(OffPolicyRLAlgorithm):
         if self._buffer_prefilled:
             samples = self.replay_buffer.sample_transitions(
                 self.buffer_batch_size)
-            samples = tu.dict_np_to_torch(samples)
+            samples = dict_np_to_torch(samples)
             policy_loss, qf1_loss, qf2_loss = self.optimize_policy(samples)
             self._update_targets()
 
@@ -500,7 +500,7 @@ class SAC(OffPolicyRLAlgorithm):
 
         """
         if device is None:
-            device = tu.global_device()
+            device = global_device()
         for net in self.networks:
             net.to(device)
         if not self._use_automatic_entropy_tuning:
