@@ -69,18 +69,18 @@ def te_ppo_pointenv(ctxt, seed, n_epochs, batch_size_per_task):
     set_seed(seed)
 
     tasks = TASKS
-    latent_length = 2
+    latent_length = 4
     inference_window = 6
     batch_size = batch_size_per_task * len(TASKS)
-    policy_ent_coeff = 2e-2
-    encoder_ent_coeff = 2.e-4
+    policy_ent_coeff = 1e-3
+    encoder_ent_coeff = 1e-3
     inference_ce_coeff = 5e-2
     max_path_length = 100
-    embedding_init_std = 0.01
-    embedding_max_std = 0.02
+    embedding_init_std = 0.1
+    embedding_max_std = 0.3
     embedding_min_std = 1e-6
     policy_init_std = 1.0
-    policy_max_std = None
+    policy_max_std = 2.0
     policy_min_std = None
 
     task_names = sorted(tasks.keys())
@@ -105,6 +105,7 @@ def te_ppo_pointenv(ctxt, seed, n_epochs, batch_size_per_task):
             init_std=embedding_init_std,
             max_std=embedding_max_std,
             output_nonlinearity=tf.nn.tanh,
+            std_output_nonlinearity=tf.nn.tanh,
             min_std=embedding_min_std,
         )
 
@@ -116,10 +117,11 @@ def te_ppo_pointenv(ctxt, seed, n_epochs, batch_size_per_task):
         inference = GaussianMLPEncoder(
             name='inference',
             embedding_spec=traj_embed_spec,
-            hidden_sizes=[20, 10],
+            hidden_sizes=[20, 20],
             std_share_network=True,
-            init_std=2.0,
+            init_std=0.1,
             output_nonlinearity=tf.nn.tanh,
+            std_output_nonlinearity=tf.nn.tanh,
             min_std=embedding_min_std,
         )
 
@@ -147,7 +149,6 @@ def te_ppo_pointenv(ctxt, seed, n_epochs, batch_size_per_task):
                      policy_ent_coeff=policy_ent_coeff,
                      encoder_ent_coeff=encoder_ent_coeff,
                      inference_ce_coeff=inference_ce_coeff,
-                     entropy_method='max',
                      use_softplus_entropy=True,
                      optimizer_args=dict(
                          batch_size=32,
@@ -157,9 +158,9 @@ def te_ppo_pointenv(ctxt, seed, n_epochs, batch_size_per_task):
                      inference_optimizer_args=dict(
                          batch_size=32,
                          max_epochs=10,
+                         learning_rate=1e-3,
                      ),
                      center_adv=True,
-                     stop_entropy_gradient=True,
                      stop_ce_gradient=True)
 
         runner.setup(algo,

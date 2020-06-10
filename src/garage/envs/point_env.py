@@ -46,7 +46,7 @@ class PointEnv(gym.Env):
         """gym.spaces.Box: The observation space."""
         return gym.spaces.Box(low=-np.inf,
                               high=np.inf,
-                              shape=(2, ),
+                              shape=(3, ),
                               dtype=np.float32)
 
     @property
@@ -65,7 +65,8 @@ class PointEnv(gym.Env):
 
         """
         self._point = np.zeros_like(self._goal)
-        return np.copy(self._point)
+        dist = np.linalg.norm(self._point - self._goal)
+        return np.concatenate([self._point, (dist,)])
 
     def step(self, action):
         """Step the environment state.
@@ -98,7 +99,9 @@ class PointEnv(gym.Env):
         # sometimes we don't want to terminate
         done = succ and not self._never_done
 
-        return Step(np.copy(self._point),
+        obs = np.concatenate([self._point, (dist,)])
+
+        return Step(obs,
                     reward,
                     done,
                     task=self._task,

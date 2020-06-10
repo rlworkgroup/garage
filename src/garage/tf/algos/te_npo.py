@@ -68,15 +68,7 @@ class TENPO(RLAlgorithm):
         use_softplus_entropy (bool): Whether to estimate the softmax
             distribution of the entropy to prevent the entropy from being
             negative.
-        use_neg_logli_entropy (bool): Whether to estimate the entropy as the
-            negative log likelihood of the action.
-        stop_entropy_gradient (bool): Whether to stop the entropy gradient.
         stop_ce_gradient (bool): Whether to stop the cross entropy gradient.
-        entropy_method (str): A string from: 'max', 'regularized',
-            'no_entropy'. The type of entropy method to use. 'max' adds the
-            dense entropy to the reward for each time step. 'regularized' adds
-            the mean entropy to the surrogate objective. See
-            https://arxiv.org/abs/1805.00909 for more details.
         flatten_input (bool): Whether to flatten input along the observation
             dimension. If True, for example, an observation with shape (2, 4)
             will be flattened to 8.
@@ -90,17 +82,6 @@ class TENPO(RLAlgorithm):
             task embeddings inferred from task one-hot and trajectory. This is
             effectively the coefficient of log-prob of inference.
         name (str): The name of the algorithm.
-
-    Note:
-        sane defaults for entropy configuration:
-            - entropy_method='max', center_adv=False, stop_gradient=True
-              (center_adv normalizes the advantages tensor, which will
-              significantly alleviate the effect of entropy. It is also
-              recommended to turn off entropy gradient so that the agent
-              will focus on high-entropy actions instead of increasing the
-              variance of the distribution.)
-            - entropy_method='regularized', stop_gradient=False,
-              use_neg_logli_entropy=False
 
     """
 
@@ -123,10 +104,7 @@ class TENPO(RLAlgorithm):
                  policy_ent_coeff=0.0,
                  encoder_ent_coeff=0.0,
                  use_softplus_entropy=False,
-                 use_neg_logli_entropy=False,
-                 stop_entropy_gradient=False,
                  stop_ce_gradient=False,
-                 entropy_method='no_entropy',
                  flatten_input=True,
                  inference=None,
                  inference_optimizer=None,
@@ -152,8 +130,6 @@ class TENPO(RLAlgorithm):
         self._name_scope = tf.name_scope(self._name)
         self._old_policy = policy.clone('old_policy')
         self._use_softplus_entropy = use_softplus_entropy
-        self._use_neg_logli_entropy = use_neg_logli_entropy
-        self._stop_entropy_gradient = stop_entropy_gradient
         self._stop_ce_gradient = stop_ce_gradient
         self._pg_loss = pg_loss
 
@@ -161,11 +137,6 @@ class TENPO(RLAlgorithm):
             optimizer, optimizer_args)
         inference_opt, inference_opt_args = self._build_inference_optimizer(
             inference_optimizer, inference_optimizer_args)
-
-        self._check_entropy_configuration(entropy_method, center_adv,
-                                          stop_entropy_gradient,
-                                          use_neg_logli_entropy,
-                                          policy_ent_coeff)
 
         if pg_loss not in ['vanilla', 'surrogate', 'surrogate_clip']:
             raise ValueError('Invalid pg_loss')
@@ -621,6 +592,7 @@ class TENPO(RLAlgorithm):
             augmented_obs_var=augmented_obs_var,
             augmented_traj_var=augmented_traj_var,
             task_var=task_var,
+            latent_var=latent_var,
             action_var=action_var,
             reward_var=reward_var,
             baseline_var=baseline_var,
@@ -685,11 +657,10 @@ class TENPO(RLAlgorithm):
         rewards = i.reward_var
 
         # Augment the path rewards with entropy terms
-        if self._maximum_entropy:
-            with tf.name_scope('augmented_rewards'):
-                rewards = (i.reward_var -
-                           (self.inference_ce_coeff * inference_ce) +
-                           (self._policy_ent_coeff * policy_entropy))
+        with tf.name_scope('augmented_rewards'):
+            rewards = (i.reward_var -
+                       (self.inference_ce_coeff * inference_ce) +
+                       (self._policy_ent_coeff * policy_entropy))
 
         with tf.name_scope('policy_loss'):
             with tf.name_scope('advantages'):
@@ -747,9 +718,6 @@ class TENPO(RLAlgorithm):
                     surr_clip = lr_clip * adv
                     obj = tf.minimum(surrogate, surr_clip, name='surr_obj')
 
-                if self._entropy_regularzied:
-                    obj += self._policy_ent_coeff * policy_entropy
-
                 obj = tf.boolean_mask(obj, i.valid_var)
                 # Maximize E[surrogate objective] by minimizing
                 # -E_t[surrogate objective]
@@ -794,14 +762,17 @@ class TENPO(RLAlgorithm):
                 task_dim = self.policy.task_space.flat_dim
                 # pylint false alarm
                 # pylint: disable=no-value-for-parameter
-                all_task_one_hots = tf.one_hot(np.arange(task_dim),
-                                               task_dim,
-                                               name='all_task_one_hots')
-                encoder_dist_all_task, _, _ = self.policy.encoder.model.build(
-                    all_task_one_hots, name='encoder_all_task')
+                # all_task_one_hots = tf.one_hot(np.arange(task_dim),
+                #                                task_dim,
+                #                                name='all_task_one_hots')
+                # encoder_dist_all_task, _, _ = self.policy.encoder.model.build(
+                #     all_task_one_hots, name='encoder_all_task')
 
-                encoder_all_task_entropies = encoder_dist_all_task.entropy(
-                    name='encoder_all_task_entropies')
+                # encoder_all_task_entropies = encoder_dist_all_task.entropy(
+                #     name='encoder_all_task_entropies')
+
+                encoder_dist, _, _ = self.policy.encoder.model.build(i.task_var)
+                encoder_all_task_entropies = -encoder_dist.log_prob(i.latent_var)
 
                 if self._use_softplus_entropy:
                     encoder_entropy = tf.nn.softplus(
@@ -809,6 +780,7 @@ class TENPO(RLAlgorithm):
 
                 encoder_entropy = tf.reduce_mean(encoder_entropy,
                                                  name='encoder_entropy')
+                encoder_entropy = tf.stop_gradient(encoder_entropy)
 
             # 2. Infernece distribution cross-entropy (log-likelihood)
             with tf.name_scope('inference_ce'):
@@ -828,19 +800,15 @@ class TENPO(RLAlgorithm):
 
             # 3. Policy path entropies
             with tf.name_scope('policy_entropy'):
-                if self._use_neg_logli_entropy:
-                    policy_entropy = -pol_dist.log_prob(
-                        i.action_var, name='policy_log_likeli')
-                else:
-                    policy_entropy = pol_dist.entropy()
+                policy_entropy = -pol_dist.log_prob(
+                    i.action_var, name='policy_log_likeli')
 
                 # This prevents entropy from becoming negative
                 # for small policy std
                 if self._use_softplus_entropy:
                     policy_entropy = tf.nn.softplus(policy_entropy)
 
-                if self._stop_entropy_gradient:
-                    policy_entropy = tf.stop_gradient(policy_entropy)
+                policy_entropy = tf.stop_gradient(policy_entropy)
 
         # Diagnostic functions
         self._f_task_entropies = compile_function(flatten_inputs(
@@ -1218,53 +1186,6 @@ class TENPO(RLAlgorithm):
         traj_space = akro.Box(traj_lb, traj_ub)
 
         return InOutSpec(traj_space, latent_space)
-
-    def _check_entropy_configuration(self, entropy_method, center_adv,
-                                     stop_entropy_gradient,
-                                     use_neg_logli_entropy, policy_ent_coeff):
-        """Check entropy configuration.
-
-        Args:
-            entropy_method (str): A string from: 'max', 'regularized',
-                'no_entropy'. The type of entropy method to use. 'max' adds the
-                dense entropy to the reward for each time step. 'regularized'
-                adds the mean entropy to the surrogate objective. See
-                https://arxiv.org/abs/1805.00909 for more details.
-            center_adv (bool): Whether to rescale the advantages
-                so that they have mean 0 and standard deviation 1.
-            stop_entropy_gradient (bool): Whether to stop the entropy gradient.
-            use_neg_logli_entropy (bool): Whether to estimate the entropy as
-                the negative log likelihood of the action.
-            policy_ent_coeff (float): The coefficient of the policy entropy.
-                Setting it to zero would mean no entropy regularization.
-
-        Raises:
-            ValueError: If stop_gradient is False when entropy_method is max.
-            ValueError: If policy_ent_coeff is non-zero when there is
-                no entropy method.
-            ValueError: If entropy_method is not one of 'max', 'regularized',
-                'no_entropy'.
-
-        """
-        del use_neg_logli_entropy, center_adv
-
-        if entropy_method == 'max':
-            if not stop_entropy_gradient:
-                raise ValueError('stop_gradient should be True when '
-                                 'entropy_method is max')
-            self._maximum_entropy = True
-            self._entropy_regularzied = False
-        elif entropy_method == 'regularized':
-            self._maximum_entropy = False
-            self._entropy_regularzied = True
-        elif entropy_method == 'no_entropy':
-            if policy_ent_coeff != 0.0:
-                raise ValueError('policy_ent_coeff should be zero '
-                                 'when there is no entropy method')
-            self._maximum_entropy = False
-            self._entropy_regularzied = False
-        else:
-            raise ValueError('Invalid entropy_method')
 
     def __getstate__(self):
         """Parameters to save in snapshot.
