@@ -411,7 +411,7 @@ class TENPO(RLAlgorithm):
             traj_flat = self._inference.spec.input_space.flatten_n(traj)
             path['trajectories'] = traj_flat
 
-            _, traj_info = self._inference.forward_n(traj_flat)
+            _, traj_info = self._inference.get_latents(traj_flat)
             path['trajectory_infos'] = traj_info
 
         # make all paths the same length
@@ -1087,7 +1087,7 @@ class TENPO(RLAlgorithm):
         """Visualize encoder distribution."""
         num_tasks = self.policy.task_space.flat_dim
         all_tasks = np.eye(num_tasks, num_tasks)
-        _, latent_infos = self.policy.encoder.forward_n(all_tasks)
+        _, latent_infos = self.policy.encoder.get_latents(all_tasks)
 
         for task in range(num_tasks):
             for i in range(self.policy.latent_space.flat_dim):

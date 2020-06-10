@@ -9,13 +9,13 @@ from garage import wrap_experiment
 from garage.envs import GarageEnv, normalize
 from garage.envs.multi_env_wrapper import MultiEnvWrapper
 from garage.envs.multi_env_wrapper import round_robin_strategy
+from garage.experiment import LocalTFRunner
 from garage.experiment.deterministic import set_seed
 from garage.np.baselines import LinearMultiFeatureBaseline
 from garage.sampler import LocalSampler
 from garage.tf.algos import TEPPO
 from garage.tf.algos.te import TaskEmbeddingWorker
 from garage.tf.embeddings import GaussianMLPEncoder
-from garage.tf.experiment import LocalTFRunner
 from garage.tf.policies import GaussianMLPTaskEmbeddingPolicy
 
 

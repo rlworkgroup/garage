@@ -187,7 +187,7 @@ class GaussianMLPEncoder(StochasticEncoder, StochasticModule):
         """bool: If this module supports vectorization input."""
         return True
 
-    def forward(self, input_value):
+    def get_latent(self, input_value):
         """Get a sample of embedding for the given input.
 
         Args:
@@ -214,7 +214,7 @@ class GaussianMLPEncoder(StochasticEncoder, StochasticModule):
             np.squeeze(log_std, 1)[0])
         return sample, dict(mean=mean, log_std=log_std)
 
-    def forward_n(self, input_values):
+    def get_latents(self, input_values):
         """Get samples of embedding for the given inputs.
 
         Args:

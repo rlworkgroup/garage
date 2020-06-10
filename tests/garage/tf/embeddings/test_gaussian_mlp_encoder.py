@@ -38,8 +38,8 @@ class TestGaussianMLPEncoder(TfGraphTestCase):
         env.reset()
         obs, _, _, _ = env.step(1)
 
-        latent, _ = embedding.forward(obs)
-        latents, _ = embedding.forward_n([obs] * 5)
+        latent, _ = embedding.get_latent(obs)
+        latents, _ = embedding.get_latents([obs] * 5)
         assert env.action_space.contains(latent)
         for latent in latents:
             assert env.action_space.contains(latent)

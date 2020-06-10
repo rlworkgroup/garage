@@ -8,7 +8,25 @@ from garage.tf.models import Module, StochasticModule
 class Encoder(BaseEncoder, Module):
     """Base class for encoders in TensorFlow."""
 
-    def forward_n(self, input_values):
+    def get_latent(self, input_value):
+        """Get a sample of embedding for the given input.
+
+        Args:
+            input_value (numpy.ndarray): Tensor to encode.
+
+        Returns:
+            numpy.ndarray: An embedding sampled from embedding distribution.
+            dict: Embedding distribution information.
+
+        Note:
+            It returns an embedding and a dict, with keys
+            - mean (numpy.ndarray): Mean of the distribution.
+            - log_std (numpy.ndarray): Log standard deviation of the
+                distribution.
+
+        """
+
+    def get_latents(self, input_values):
         """Get samples of embedding for the given inputs.
 
         Args:
