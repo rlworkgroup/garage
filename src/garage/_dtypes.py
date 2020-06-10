@@ -22,6 +22,8 @@ class TrajectoryBatch(
     # pylint: disable=missing-return-doc, missing-return-type-doc, missing-param-doc, missing-type-doc  # noqa: E501
     r"""A tuple representing a batch of whole trajectories.
 
+    Data type for on-policy algorithms.
+
     A :class:`TrajectoryBatch` represents a batch of whole trajectories
     produced when one or more agents interacts with one or more environments.
 
@@ -310,7 +312,7 @@ class TrajectoryBatch(
                     current environment).
                 * rewards (np.ndarray): Array of rewards of shape (T,) (1D
                     array of length timesteps).
-                * dones (np.ndarray): Array of rewards of shape (T,) (1D array
+                * dones (np.ndarray): Array of dones of shape (T,) (1D array
                     of length timesteps).
                 * agent_infos (dict[str, np.ndarray]): Dictionary of stacked,
                     non-flattened `agent_info` arrays.
@@ -561,15 +563,25 @@ class InOutSpec:
         return self._output_space
 
 
-class SampleBatch(
-        collections.namedtuple('SampleBatch', [
-            'observations', 'actions', 'rewards', 'next_observations',
-            'terminals', 'batch_size'
+class TimeStepBatch(
+        collections.namedtuple('TimeStepBatch', [
+            'env_spec',
+            'observations',
+            'actions',
+            'rewards',
+            'next_observations',
+            'terminals',
+            'env_infos',
+            'agent_infos',
         ])):
     # pylint: disable=missing-param-doc, missing-type-doc
-    """A tuple representing a batch of samples.
+    """A tuple representing a batch of TimeSteps.
+
+    Data type for off-policy algorithms, imitation learning and batch-RL.
 
     Attributes:
+        env_spec (garage.envs.EnvSpec): Specification for the environment from
+            which this data was sampled.
         observations (numpy.ndarray): Non-flattened array of observations.
             Typically has shape (batch_size, S^*) (the unflattened state space
             of the current environment).
@@ -584,7 +596,10 @@ class SampleBatch(
         terminals (numpy.ndarray): A boolean numpy array of shape
             shape (batch_size,) containing the termination signals for all
             transitions in this batch.
-        batch_size (int): The size of the batch
+        env_infos (dict): A dict arbitrary environment state
+            information.
+        agent_infos (dict): A dict of arbitrary agent state information. For
+            example, this may contain the hidden states from an RNN policy.
 
     Raises:
         ValueError: If any of the above attributes do not conform to their
@@ -592,147 +607,273 @@ class SampleBatch(
     """
     __slots__ = ()
 
-    def __new__(cls, observations, actions, rewards, next_observations,
-                terminals, batch_size):  # noqa: D102
-        # pylint: disable=missing-return-doc, missing-return-type-doc
-        # batch_size
-        if not isinstance(batch_size, int):
-            raise ValueError('Batch_size must be an integer, but got dtype {} '
-                             'instead.'.format(type(batch_size)))
+    def __new__(cls, env_spec, observations, actions, rewards,
+                next_observations, terminals, env_infos,
+                agent_infos):  # noqa: D102
+        # pylint: disable=missing-return-doc, missing-return-type-doc,
+        # pylint: disable=too-many-branches
 
-        # observations
-        if observations.shape[0] != batch_size:
+        inferred_batch_size = len(terminals)
+        if inferred_batch_size < 1:
+            raise ValueError(
+                'Expected batch dimension of terminals to be greater than 1, '
+                'but got length {} instead.'.format(inferred_batch_size))
+
+        first_observation = observations[0]
+        first_action = actions[0]
+
+        # observation
+        if not env_spec.observation_space.contains(first_observation):
+            if isinstance(env_spec.observation_space,
+                          (akro.Box, akro.Discrete, akro.Dict)):
+                if env_spec.observation_space.flat_dim != np.prod(
+                        first_observation.shape):
+                    raise ValueError('observations should have the same '
+                                     'dimensionality as the observation_space '
+                                     '({}), but got data with shape {} '
+                                     'instead'.format(
+                                         env_spec.observation_space.flat_dim,
+                                         first_observation.shape))
+            else:
+                raise ValueError(
+                    'observations must conform to observation_space {}, '
+                    'but got data with shape {} instead.'.format(
+                        env_spec.observation_space, first_observation.shape))
+        if observations.shape[0] != inferred_batch_size:
             raise ValueError(
                 'Expected batch dimension of observations to be length {}, '
-                'but got length {} instead.'.format(batch_size,
+                'but got length {} instead.'.format(inferred_batch_size,
                                                     observations.shape[0]))
 
-        # actions
-        if actions.shape[0] != batch_size:
-            raise ValueError(
-                'Expected batch dimension of actions to be length {}, but got '
-                'length {} instead.'.format(batch_size, actions.shape[0]))
-
-        # rewards
-        if rewards.shape[0] != batch_size:
-            raise ValueError(
-                'Expected batch dimension of rewards to be length {}, but got '
-                'length {} instead.'.format(batch_size, rewards.shape[0]))
-
-        # next_observations
-        if next_observations.shape[0] != batch_size:
+        # next_observation
+        if not env_spec.observation_space.contains(next_observations[0]):
+            if isinstance(env_spec.observation_space,
+                          (akro.Box, akro.Discrete, akro.Dict)):
+                if env_spec.observation_space.flat_dim != np.prod(
+                        next_observations[0].shape):
+                    raise ValueError('next_observations should have the same '
+                                     'dimensionality as the observation_space '
+                                     '({}), but got data with shape {} '
+                                     'instead'.format(
+                                         env_spec.observation_space.flat_dim,
+                                         next_observations[0].shape))
+            else:
+                raise ValueError(
+                    'next_observations must conform to observation_space {}, '
+                    'but got data with shape {} instead.'.format(
+                        env_spec.observation_space,
+                        next_observations[0].shape[0]))
+        if next_observations.shape[0] != inferred_batch_size:
             raise ValueError(
                 'Expected batch dimension of next_observations to be length {'
                 '}, but got length {} instead.'.format(
-                    batch_size, next_observations.shape[0]))
+                    inferred_batch_size, next_observations[0].shape[0]))
+
+        # action
+        if not env_spec.action_space.contains(first_action):
+            if isinstance(env_spec.action_space,
+                          (akro.Box, akro.Discrete, akro.Dict)):
+                if env_spec.action_space.flat_dim != np.prod(
+                        first_action.shape):
+                    raise ValueError('actions should have the same '
+                                     'dimensionality as the action_space '
+                                     '({}), but got data with shape {} '
+                                     'instead'.format(
+                                         env_spec.action_space.flat_dim,
+                                         first_action.shape))
+            else:
+                raise ValueError('actions must conform to action_space {}, '
+                                 'but got data with shape {} instead.'.format(
+                                     env_spec.action_space,
+                                     first_action.shape))
+        if actions.shape[0] != inferred_batch_size:
+            raise ValueError(
+                'Expected batch dimension of actions to be length {}, but got '
+                'length {} instead.'.format(inferred_batch_size,
+                                            actions.shape[0]))
+
+        # rewards
+        if rewards.shape[0] != inferred_batch_size:
+            raise ValueError(
+                'Expected batch dimension of rewards to be length {}, but got '
+                'length {} instead.'.format(inferred_batch_size,
+                                            rewards.shape[0]))
 
         # terminals
-        if terminals.shape[0] != batch_size:
-            raise ValueError(
-                'Expected batch dimension of terminals to be length {'
-                '}, but got length {} instead.'.format(batch_size,
-                                                       terminals.shape[0]))
-
         if terminals.dtype != np.bool:
             raise ValueError(
                 'terminals tensor must be dtype np.bool, but got tensor '
                 'of dtype {} instead.'.format(terminals.dtype))
 
-        return super().__new__(SampleBatch, observations, actions, rewards,
-                               next_observations, terminals, batch_size)
+        # env_infos
+        for key, val in env_infos.items():
+            if not isinstance(val, (dict, np.ndarray)):
+                raise ValueError(
+                    'Each entry in env_infos must be a numpy array or '
+                    'dictionary, but got key {} with value type {} '
+                    'instead.'.format(key, type(val)))
+
+            if (isinstance(val, np.ndarray)
+                    and val.shape[0] != inferred_batch_size):
+                raise ValueError(
+                    'Each entry in env_infos must have a batch dimension '
+                    'of '
+                    'length {}, but got key {} with batch size {} instead.'.
+                    format(inferred_batch_size, key, val.shape[0]))
+
+        # agent_infos
+        for key, val in agent_infos.items():
+            if not isinstance(val, (dict, np.ndarray)):
+                raise ValueError(
+                    'Each entry in agent_infos must be a numpy array or '
+                    'dictionary, but got key {} with value type {} instead.'
+                    'instead'.format(key, type(val)))
+
+            if (isinstance(val, np.ndarray)
+                    and val.shape[0] != inferred_batch_size):
+                raise ValueError(
+                    'Each entry in agent_infos must have a batch '
+                    'dimension of '
+                    'length {}, but got key {} with batch size {} instead.'.
+                    format(inferred_batch_size, key, val.shape[0]))
+
+        return super().__new__(TimeStepBatch, env_spec, observations, actions,
+                               rewards, next_observations, terminals,
+                               env_infos, agent_infos)
 
     @classmethod
     def concatenate(cls, *batches):
-        """Create a SampleBatch by concatenating SampleBatches.
+        """Create a TimeStepBatch by concatenating TimeStepBatches.
 
         Args:
-            batches (list[SampleBatch]): Batches to concatenate.
+            batches (list[TimeStepBatch]): Batches to concatenate.
 
         Returns:
-            SampleBatch: The concatenation of the batches.
+            TimeStepBatch: The concatenation of the batches.
 
         Raises:
-            ValueError: If no SampleBatches are provided.
+            ValueError: If no TimeStepBatches are provided.
 
         """
         if len(batches) < 1:
-            raise ValueError('Please provide at least one SampleBatch to '
+            raise ValueError('Please provide at least one TimeStepBatch to '
                              'concatenate')
+
+        env_infos = {
+            k: np.concatenate([b.env_infos[k] for b in batches])
+            for k in batches[0].env_infos.keys()
+        }
+        agent_infos = {
+            k: np.concatenate([b.agent_infos[k] for b in batches])
+            for k in batches[0].agent_infos.keys()
+        }
         return cls(
+            batches[0].env_spec,
             np.concatenate([batch.observations for batch in batches]),
             np.concatenate([batch.actions for batch in batches]),
             np.concatenate([batch.rewards for batch in batches]),
             np.concatenate([batch.next_observations for batch in batches]),
-            np.concatenate([batch.terminals for batch in batches]),
-            sum([batch.batch_size for batch in batches]))
+            np.concatenate([batch.terminals for batch in batches]), env_infos,
+            agent_infos)
 
     def split(self):
-        """Split a SampleBatch into a list of SampleBatches.
+        """Split a TimeStepBatch into a list of TimeStepBatches.
 
         The opposite of concatenate.
 
         Returns:
-            list[SampleBatch]: A list of SampleBatches, with one
-                sample per batch.
+            list[TimeStepBatch]: A list of TimeStepBatches, with one
+                TimeStep per TimeStepBatch.
 
         """
-        samples = []
-        for i in range(self.batch_size):
-            sample = SampleBatch(
+        time_steps = []
+
+        for i in range(len(self.terminals)):
+            time_step = TimeStepBatch(
+                env_spec=self.env_spec,
                 observations=np.asarray([self.observations[i]]),
-                next_observations=np.asarray([self.next_observations[i]]),
                 actions=np.asarray([self.actions[i]]),
                 rewards=np.asarray([self.rewards[i]]),
+                next_observations=np.asarray([self.next_observations[i]]),
                 terminals=np.asarray([self.terminals[i]]),
-                batch_size=1)
-            samples.append(sample)
-        return samples
+                env_infos={
+                    k: np.asarray([v[i]])
+                    for (k, v) in self.env_infos.items()
+                },
+                agent_infos={
+                    k: np.asarray([v[i]])
+                    for (k, v) in self.agent_infos.items()
+                },
+            )
+            time_steps.append(time_step)
+        return time_steps
 
-    def to_sample_list(self):
+    def to_time_step_list(self):
         """Convert the batch into a list of dictionaries.
+
+        This breaks the TimeStepBatch object into a list of single
+        time step sample dictionaries. len(terminals) (or the number of
+        discrete time step) dictionaries are returned
+
 
         Returns:
             list[dict[str, np.ndarray or dict[str, np.ndarray]]]: Keys:
-                * observations (numpy.ndarray): Non-flattened array of
-                observations.
+                observations (numpy.ndarray): Non-flattened array of
+                    observations.
                     Typically has shape (batch_size, S^*) (the unflattened
-                    state space of the current environment).
-                * actions (numpy.ndarray): Non-flattened array of actions.
-                    Should have shape (batch_size, S^*) (the unflattened action
-                    space of the current environment).
-                * rewards (numpy.ndarray): Array of rewards of shape (
+                    state space
+                    of the current environment).
+                actions (numpy.ndarray): Non-flattened array of actions. Should
+                    have shape (batch_size, S^*) (the unflattened action
+                    space of the
+                    current environment).
+                rewards (numpy.ndarray): Array of rewards of shape (
                     batch_size,) (1D array of length batch_size).
-                * next_observation (numpy.ndarray): Non-flattened array of next
+                next_observation (numpy.ndarray): Non-flattened array of next
                     observations. Has shape (batch_size, S^*).
-                    next_observations[i] was observed by the agent after
-                    taking actions[i].
-                * terminals (numpy.ndarray): A boolean numpy array of shape
+                    next_observations[i] was
+                    observed by the agent after taking actions[i].
+                terminals (numpy.ndarray): A boolean numpy array of shape
                     shape (batch_size,) containing the termination signals
-                    for all transitions in this batch.
+                    for all
+                    transitions in this batch.
+                env_infos (dict): A dict arbitrary environment state
+                    information.
+                agent_infos (dict): A dict of arbitrary agent state
+                    information. For example, this may contain the
+                    hidden states from an RNN policy.
 
         """
         samples = []
-        for i in range(self.batch_size):
+        for i in range(len(self.terminals)):
             samples.append({
                 'observations':
                 np.asarray([self.observations[i]]),
-                'next_observations':
-                np.asarray([self.next_observations[i]]),
                 'actions':
                 np.asarray([self.actions[i]]),
                 'rewards':
                 np.asarray([self.rewards[i]]),
+                'next_observations':
+                np.asarray([self.next_observations[i]]),
                 'terminals':
                 np.asarray([self.terminals[i]]),
+                'env_infos':
+                {k: np.asarray([v[i]])
+                 for (k, v) in self.env_infos.items()},
+                'agent_infos':
+                {k: np.asarray([v[i]])
+                 for (k, v) in self.agent_infos.items()},
             })
         return samples
 
     @classmethod
-    def from_sample_list(cls, samples):
-        """Create a SampleBatch from a list of samples.
+    def from_time_step_list(cls, env_spec, ts_samples):
+        """Create a TimeStepBatch from a list of time step dictionaries.
 
         Args:
-            samples (list[dict[str, np.ndarray or dict[str, np.ndarray]]]):
+            env_spec (garage.envs.EnvSpec): Specification for the environment
+                from which this data was sampled.
+            ts_samples (list[dict[str, np.ndarray or dict[str, np.ndarray]]]):
                 keys:
                 * observations (numpy.ndarray): Non-flattened array of
                     observations.
@@ -750,23 +891,31 @@ class SampleBatch(
                 * terminals (numpy.ndarray): A boolean numpy array of shape
                     shape (batch_size,) containing the termination signals
                     for all transitions in this batch.
+                * env_infos (dict): A dict arbitrary environment state
+                    information.
+                * agent_infos (dict): A dict of arbitrary agent
+                    state information. For example, this may contain the
+                    hidden states from an RNN policy.
 
         Returns:
-            SampleBatch: The concatenation of samples.
+            TimeStepBatch: The concatenation of samples.
 
         Raises:
             ValueError: If no dicts are provided.
         """
-        if len(samples) < 1:
-            raise ValueError('Please provide at least one sample')
+        if len(ts_samples) < 1:
+            raise ValueError('Please provide at least one dict')
 
-        sample_batches = [
-            SampleBatch(observations=sample['observations'],
-                        next_observations=sample['next_observations'],
-                        actions=sample['actions'],
-                        rewards=sample['rewards'],
-                        terminals=sample['terminals'],
-                        batch_size=sample['batch_size']) for sample in samples
+        ts_batches = [
+            TimeStepBatch(env_spec=env_spec,
+                          observations=sample['observations'],
+                          actions=sample['actions'],
+                          rewards=sample['rewards'],
+                          next_observations=sample['next_observations'],
+                          terminals=sample['terminals'],
+                          env_infos=sample['env_infos'],
+                          agent_infos=sample['agent_infos'])
+            for sample in ts_samples
         ]
 
-        return SampleBatch.concatenate(*sample_batches)
+        return TimeStepBatch.concatenate(*ts_batches)

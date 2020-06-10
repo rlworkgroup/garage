@@ -3,11 +3,10 @@ import gym.spaces
 import numpy as np
 import pytest
 
-from garage import SampleBatch
 from garage import TimeStep
+from garage import TimeStepBatch
 from garage import TrajectoryBatch
 from garage.envs import EnvSpec
-from tests.fixtures.envs.dummy import DummyDiscreteEnv
 
 
 @pytest.fixture
@@ -371,60 +370,100 @@ def test_env_info_dtype_mismatch_time_step(sample_data):
 @pytest.fixture
 def batch_data():
     # spaces
-    env = DummyDiscreteEnv()
-    obs = env.reset()
+    obs_space = gym.spaces.Box(low=1,
+                               high=np.inf,
+                               shape=(4, 3, 2),
+                               dtype=np.float32)
+    act_space = gym.spaces.MultiDiscrete([2, 5])
+    env_spec = EnvSpec(obs_space, act_space)
 
     # generate data
-    observations = np.array(obs)
-    actions = np.array([[env.action_space.sample()]])
-    batch_size = observations.shape[0]
-    rewards = np.arange(batch_size)
-    terminals = np.zeros(batch_size, dtype=np.bool)
+    batch_size = 2
+    obs = np.stack([obs_space.low] * batch_size)
+    next_obs = np.stack([obs_space.low] * batch_size)
+    act = np.stack([[1, 3]] * batch_size)
+    rew = np.arange(batch_size)
+    terms = np.zeros(batch_size, dtype=np.bool)
+    terms[np.cumsum(batch_size) - 1] = True  # set terminal bits
+
+    # env_infos
+    env_infos = dict()
+    env_infos['goal'] = np.stack([[1, 1]] * batch_size)
+    env_infos['foo'] = np.arange(batch_size)
+
+    # agent_infos
+    agent_infos = dict()
+    agent_infos['prev_action'] = act
+    agent_infos['hidden'] = np.arange(batch_size)
 
     return {
-        'observations': observations,
-        'actions': actions,
-        'next_observations': observations,
-        'rewards': rewards,
-        'terminals': terminals,
-        'batch_size': batch_size
+        'env_spec': env_spec,
+        'observations': obs,
+        'next_observations': next_obs,
+        'actions': act,
+        'rewards': rew,
+        'terminals': terms,
+        'env_infos': env_infos,
+        'agent_infos': agent_infos,
     }
 
 
-def test_new_batch(batch_data):
-    s = SampleBatch(**batch_data)
+def test_new_ts_batch(batch_data):
+    s = TimeStepBatch(**batch_data)
+    assert s.env_spec is batch_data['env_spec']
     assert s.observations is batch_data['observations']
     assert s.next_observations is batch_data['next_observations']
     assert s.actions is batch_data['actions']
     assert s.rewards is batch_data['rewards']
     assert s.terminals is batch_data['terminals']
+    assert s.env_infos is batch_data['env_infos']
+    assert s.agent_infos is batch_data['agent_infos']
 
 
-def test_batch_size_dtype_mismatch_batch(batch_data):
-    with pytest.raises(ValueError, match='Batch_size must be'):
-        batch_data['batch_size'] = float(batch_data['batch_size'])
-        s = SampleBatch(**batch_data)
+def test_observations_env_spec_mismatch_batch(batch_data):
+    with pytest.raises(ValueError, match='observations must conform'):
+        batch_data['observations'] = batch_data['observations'][:, :, :, :1]
+        s = TimeStepBatch(**batch_data)
+        del s
+
+    obs_space = akro.Box(low=1, high=10, shape=(4, 5, 2), dtype=np.float32)
+    act_space = gym.spaces.MultiDiscrete([2, 5])
+    env_spec = EnvSpec(obs_space, act_space)
+    batch_data['env_spec'] = env_spec
+
+    with pytest.raises(
+            ValueError,
+            match='observations should have the same dimensionality'):
+        batch_data['observations'] = batch_data['observations'][:, :, :, :1]
+        s = TimeStepBatch(**batch_data)
         del s
 
 
 def test_observations_batch_mismatch_batch(batch_data):
     with pytest.raises(ValueError, match='batch dimension of observations'):
         batch_data['observations'] = batch_data['observations'][:-1]
-        s = SampleBatch(**batch_data)
+        s = TimeStepBatch(**batch_data)
         del s
 
 
-def test_actions_batch_mismatch_batch(batch_data):
-    with pytest.raises(ValueError, match='batch dimension of actions'):
-        batch_data['actions'] = batch_data['actions'][:-1]
-        s = SampleBatch(**batch_data)
+def test_next_observations_env_spec_mismatch_batch(batch_data):
+    with pytest.raises(ValueError, match='next_observations must conform'):
+        batch_data['next_observations'] = batch_data[
+            'next_observations'][:, :, :, :1]
+        s = TimeStepBatch(**batch_data)
         del s
 
+    obs_space = akro.Box(low=1, high=10, shape=(4, 3, 2), dtype=np.float32)
+    act_space = gym.spaces.MultiDiscrete([2, 5])
+    env_spec = EnvSpec(obs_space, act_space)
+    batch_data['env_spec'] = env_spec
 
-def test_rewards_batch_mismatch_batch(batch_data):
-    with pytest.raises(ValueError, match='batch dimension of rewards'):
-        batch_data['rewards'] = batch_data['rewards'][:-1]
-        s = SampleBatch(**batch_data)
+    with pytest.raises(
+            ValueError,
+            match='next_observations should have the same dimensionality'):
+        batch_data['next_observations'] = batch_data[
+            'next_observations'][:, :, :, :1]
+        s = TimeStepBatch(**batch_data)
         del s
 
 
@@ -433,28 +472,93 @@ def test_next_observations_batch_mismatch_batch(batch_data):
                        match='batch dimension of '
                        'next_observations'):
         batch_data['next_observations'] = batch_data['next_observations'][:-1]
-        s = SampleBatch(**batch_data)
+        s = TimeStepBatch(**batch_data)
         del s
 
 
-def test_terminals_batch_mismatch_batch(batch_data):
+def test_actions_batch_mismatch_batch(batch_data):
+    with pytest.raises(ValueError, match='batch dimension of actions'):
+        batch_data['actions'] = batch_data['actions'][:-1]
+        s = TimeStepBatch(**batch_data)
+        del s
+
+
+def test_rewards_batch_mismatch_batch(batch_data):
+    with pytest.raises(ValueError, match='batch dimension of rewards'):
+        batch_data['rewards'] = batch_data['rewards'][:-1]
+        s = TimeStepBatch(**batch_data)
+        del s
+
+
+def test_act_env_spec_mismatch_batch(batch_data):
+    with pytest.raises(ValueError, match='actions must conform'):
+        batch_data['actions'] = batch_data['actions'][:, 0]
+        s = TimeStepBatch(**batch_data)
+        del s
+
+
+def test_act_box_env_spec_mismatch_batch(batch_data):
+    with pytest.raises(ValueError, match='actions should have'):
+        batch_data['env_spec'].action_space = akro.Box(low=1,
+                                                       high=np.inf,
+                                                       shape=(4, 3, 2),
+                                                       dtype=np.float32)
+        s = TimeStepBatch(**batch_data)
+        del s
+
+
+def test_empty_terminals__batch(batch_data):
     with pytest.raises(ValueError, match='batch dimension of terminals'):
-        batch_data['terminals'] = batch_data['terminals'][:-1]
-        s = SampleBatch(**batch_data)
+        batch_data['terminals'] = []
+        s = TimeStepBatch(**batch_data)
         del s
 
 
 def test_terminals_dtype_mismatch_batch(batch_data):
     with pytest.raises(ValueError, match='terminals tensor must be dtype'):
         batch_data['terminals'] = batch_data['terminals'].astype(np.float32)
-        s = SampleBatch(**batch_data)
+        s = TimeStepBatch(**batch_data)
+        del s
+
+
+def test_env_infos_not_ndarray_batch(batch_data):
+    with pytest.raises(ValueError,
+                       match='entry in env_infos must be a numpy array'):
+        batch_data['env_infos']['bar'] = []
+        s = TimeStepBatch(**batch_data)
+        del s
+
+
+def test_env_infos_batch_mismatch_batch(batch_data):
+    with pytest.raises(ValueError,
+                       match='entry in env_infos must have a batch dimension'):
+        batch_data['env_infos']['goal'] = batch_data['env_infos']['goal'][:-1]
+        s = TimeStepBatch(**batch_data)
+        del s
+
+
+def test_agent_infos_not_ndarray_batch(batch_data):
+    with pytest.raises(ValueError,
+                       match='entry in agent_infos must be a numpy array'):
+        batch_data['agent_infos']['bar'] = list()
+        s = TimeStepBatch(**batch_data)
+        del s
+
+
+def test_agent_infos_batch_mismatch_batch(batch_data):
+    with pytest.raises(
+            ValueError,
+            match='entry in agent_infos must have a batch dimension'):
+        batch_data['agent_infos']['hidden'] = batch_data['agent_infos'][
+            'hidden'][:-1]
+        s = TimeStepBatch(**batch_data)
         del s
 
 
 def test_concatenate_batch(batch_data):
-    single_batch = SampleBatch(**batch_data)
+    single_batch = TimeStepBatch(**batch_data)
     batches = [single_batch, single_batch]
-    s = SampleBatch.concatenate(*batches)
+    s = TimeStepBatch.concatenate(*batches)
 
     new_obs = np.concatenate(
         [batch_data['observations'], batch_data['observations']])
@@ -466,85 +570,111 @@ def test_concatenate_batch(batch_data):
         [batch_data['rewards'], batch_data['rewards']])
     new_terminals = np.concatenate(
         [batch_data['terminals'], batch_data['terminals']])
+    new_env_infos = {
+        k: np.concatenate([b.env_infos[k] for b in batches])
+        for k in batches[0].env_infos.keys()
+    }
+    new_agent_infos = {
+        k: np.concatenate([b.agent_infos[k] for b in batches])
+        for k in batches[0].agent_infos.keys()
+    }
 
+    assert s.env_spec == batch_data['env_spec']
     assert np.array_equal(s.observations, new_obs)
     assert np.array_equal(s.next_observations, new_next_obs)
     assert np.array_equal(s.actions, new_actions)
     assert np.array_equal(s.rewards, new_rewards)
     assert np.array_equal(s.terminals, new_terminals)
-    assert s.batch_size is batch_data['batch_size'] * 2
+    for key in new_env_infos:
+        assert key in s.env_infos
+        assert np.array_equal(new_env_infos[key], s.env_infos[key])
+    for key in new_agent_infos:
+        assert key in s.agent_infos
+        assert np.array_equal(new_agent_infos[key], s.agent_infos[key])
 
 
 def test_concatenate_empty_batch():
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match='at least one'):
         batches = []
-        s = SampleBatch.concatenate(*batches)
+        s = TimeStepBatch.concatenate(*batches)
         del s
 
 
 def test_split_batch(batch_data):
-    new_obs = np.concatenate(
-        [batch_data['observations'], batch_data['observations']])
-    new_next_obs = np.concatenate(
-        [batch_data['next_observations'], batch_data['next_observations']])
-    new_actions = np.concatenate(
-        [batch_data['actions'], batch_data['actions']])
-    new_rewards = np.concatenate(
-        [batch_data['rewards'], batch_data['rewards']])
-    new_terminals = np.concatenate(
-        [batch_data['terminals'], batch_data['terminals']])
-    s = SampleBatch(observations=new_obs,
-                    actions=new_actions,
-                    rewards=new_rewards,
-                    next_observations=new_next_obs,
-                    terminals=new_terminals,
-                    batch_size=2)
+    s = TimeStepBatch(
+        env_spec=batch_data['env_spec'],
+        observations=batch_data['observations'],
+        actions=batch_data['actions'],
+        rewards=batch_data['rewards'],
+        next_observations=batch_data['next_observations'],
+        terminals=batch_data['terminals'],
+        env_infos=batch_data['env_infos'],
+        agent_infos=batch_data['agent_infos'],
+    )
     batches = s.split()
 
-    assert len(batches) == 2
-    for batch in batches:
-        assert np.array_equal(batch.observations, batch_data['observations'])
+    assert len(batches) == 2  # original batch_data is a batch of 2
+    for i, batch in enumerate(batches):
+        assert batch.env_spec == batch_data['env_spec']
+        assert np.array_equal(batch.observations,
+                              [batch_data['observations'][i]])
         assert np.array_equal(batch.next_observations,
-                              batch_data['next_observations'])
-        assert np.array_equal(batch.actions, batch_data['actions'])
-        assert np.array_equal(batch.rewards, batch_data['rewards'])
-        assert np.array_equal(batch.terminals, batch_data['terminals'])
-        assert batch.batch_size == 1
+                              [batch_data['next_observations'][i]])
+        assert np.array_equal(batch.actions, [batch_data['actions'][i]])
+        assert np.array_equal(batch.rewards, [batch_data['rewards'][i]])
+        assert np.array_equal(batch.terminals, [batch_data['terminals'][i]])
+        for key in batch.env_infos:
+            assert key in batch_data['env_infos']
+            assert np.array_equal(batch.env_infos[key],
+                                  [batch_data['env_infos'][key][i]])
+        for key in batch.agent_infos:
+            assert key in batch_data['agent_infos']
+            assert (np.array_equal(batch.agent_infos[key],
+                                   [batch_data['agent_infos'][key][i]]))
 
 
-def test_to_sample_list_batch(batch_data):
-    new_obs = np.concatenate(
-        [batch_data['observations'], batch_data['observations']])
-    new_next_obs = np.concatenate(
-        [batch_data['next_observations'], batch_data['next_observations']])
-    new_actions = np.concatenate(
-        [batch_data['actions'], batch_data['actions']])
-    new_rewards = np.concatenate(
-        [batch_data['rewards'], batch_data['rewards']])
-    new_terminals = np.concatenate(
-        [batch_data['terminals'], batch_data['terminals']])
-    s = SampleBatch(observations=new_obs,
-                    actions=new_actions,
-                    rewards=new_rewards,
-                    next_observations=new_next_obs,
-                    terminals=new_terminals,
-                    batch_size=2)
-    batches = s.to_sample_list()
+def test_to_time_step_list_batch(batch_data):
+    s = TimeStepBatch(
+        env_spec=batch_data['env_spec'],
+        observations=batch_data['observations'],
+        actions=batch_data['actions'],
+        rewards=batch_data['rewards'],
+        next_observations=batch_data['next_observations'],
+        terminals=batch_data['terminals'],
+        env_infos=batch_data['env_infos'],
+        agent_infos=batch_data['agent_infos'],
+    )
+    batches = s.to_time_step_list()
 
-    assert len(batches) == 2
-    for batch in batches:
+    assert len(batches) == 2  # original batch_data is a batch of 2
+    for i, batch in enumerate(batches):
         assert np.array_equal(batch['observations'],
-                              batch_data['observations'])
+                              [batch_data['observations'][i]])
         assert np.array_equal(batch['next_observations'],
-                              batch_data['next_observations'])
-        assert np.array_equal(batch['actions'], batch_data['actions'])
-        assert np.array_equal(batch['rewards'], batch_data['rewards'])
-        assert np.array_equal(batch['terminals'], batch_data['terminals'])
+                              [batch_data['next_observations'][i]])
+        assert np.array_equal(batch['actions'], [batch_data['actions'][i]])
+        assert np.array_equal(batch['rewards'], [batch_data['rewards'][i]])
+        assert np.array_equal(batch['terminals'], [batch_data['terminals'][i]])
+        for key in batch['env_infos']:
+            assert key in batch_data['env_infos']
+            assert np.array_equal(batch['env_infos'][key],
+                                  [batch_data['env_infos'][key][i]])
+        for key in batch['agent_infos']:
+            assert key in batch_data['agent_infos']
+            assert np.array_equal(batch['agent_infos'][key],
+                                  [batch_data['agent_infos'][key][i]])
 
 
-def test_from_batch_list_batch(batch_data):
+def test_from_empty_time_step_list_batch(batch_data):
+    with pytest.raises(ValueError, match='at least one dict'):
+        batches = []
+        s = TimeStepBatch.from_time_step_list(batch_data['env_spec'], batches)
+        del s
+
+
+def test_from_time_step_list_batch(batch_data):
     batches = [batch_data, batch_data]
-    s = SampleBatch.from_sample_list(batches)
+    s = TimeStepBatch.from_time_step_list(batch_data['env_spec'], batches)
 
     new_obs = np.concatenate(
         [batch_data['observations'], batch_data['observations']])
@@ -556,10 +686,24 @@ def test_from_batch_list_batch(batch_data):
         [batch_data['rewards'], batch_data['rewards']])
     new_terminals = np.concatenate(
         [batch_data['terminals'], batch_data['terminals']])
+    new_env_infos = {
+        k: np.concatenate([b['env_infos'][k] for b in batches])
+        for k in batches[0]['env_infos'].keys()
+    }
+    new_agent_infos = {
+        k: np.concatenate([b['agent_infos'][k] for b in batches])
+        for k in batches[0]['agent_infos'].keys()
+    }
 
+    assert s.env_spec == batch_data['env_spec']
     assert np.array_equal(s.observations, new_obs)
     assert np.array_equal(s.next_observations, new_next_obs)
     assert np.array_equal(s.actions, new_actions)
     assert np.array_equal(s.rewards, new_rewards)
     assert np.array_equal(s.terminals, new_terminals)
-    assert s.batch_size is batch_data['batch_size'] * 2
+    for key in new_env_infos:
+        assert key in s.env_infos
+        assert np.array_equal(new_env_infos[key], s.env_infos[key])
+    for key in new_agent_infos:
+        assert key in s.agent_infos
+        assert np.array_equal(new_agent_infos[key], s.agent_infos[key])
