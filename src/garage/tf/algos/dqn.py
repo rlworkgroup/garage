@@ -5,11 +5,15 @@ import numpy as np
 import tensorflow as tf
 
 from garage import _Default, make_optimizer
-from garage.np.algos.off_policy_rl_algorithm import OffPolicyRLAlgorithm
+from garage import log_performance
+from garage.np import obtain_evaluation_samples
+from garage.np import samples_to_tensors
+from garage.np.algos import RLAlgorithm
+from garage.sampler import OffPolicyVectorizedSampler
 from garage.tf.misc import tensor_utils
 
 
-class DQN(OffPolicyRLAlgorithm):
+class DQN(RLAlgorithm):
     """DQN from https://arxiv.org/pdf/1312.5602.pdf.
 
     Known as Deep Q-Network, it estimates the Q-value function by deep neural
@@ -33,6 +37,8 @@ class DQN(OffPolicyRLAlgorithm):
         n_train_steps (int): Training steps.
         max_path_length (int): Maximum path length. The episode will
             terminate when length of trajectory reaches max_path_length.
+        max_eval_path_length (int or None): Maximum length of paths used for
+            off-policy evaluation. If None, defaults to `max_path_length`.
         qf_lr (float): Learning rate for Q-Function.
         qf_optimizer (tf.Optimizer): Optimizer for Q-Function.
         discount (float): Discount factor for rewards.
@@ -61,6 +67,7 @@ class DQN(OffPolicyRLAlgorithm):
                  rollout_batch_size=1,
                  n_train_steps=50,
                  max_path_length=None,
+                 max_eval_path_length=None,
                  qf_lr=_Default(0.001),
                  qf_optimizer=tf.compat.v1.train.AdamOptimizer,
                  discount=1.0,
@@ -80,20 +87,27 @@ class DQN(OffPolicyRLAlgorithm):
         # clone a target q-function
         self._target_qf = qf.clone('target_qf')
 
-        super(DQN, self).__init__(env_spec=env_spec,
-                                  policy=policy,
-                                  qf=qf,
-                                  exploration_policy=exploration_policy,
-                                  min_buffer_size=min_buffer_size,
-                                  n_train_steps=n_train_steps,
-                                  steps_per_epoch=steps_per_epoch,
-                                  buffer_batch_size=buffer_batch_size,
-                                  rollout_batch_size=rollout_batch_size,
-                                  replay_buffer=replay_buffer,
-                                  max_path_length=max_path_length,
-                                  discount=discount,
-                                  reward_scale=reward_scale,
-                                  smooth_return=smooth_return)
+        self._min_buffer_size = min_buffer_size
+        self._qf = qf
+        self._steps_per_epoch = steps_per_epoch
+        self._n_train_steps = n_train_steps
+        self._buffer_batch_size = buffer_batch_size
+        self._discount = discount
+        self._reward_scale = reward_scale
+        self._smooth_return = smooth_return
+        self.max_path_length = max_path_length
+        self._max_eval_path_length = max_eval_path_length
+
+        # used by OffPolicyVectorizedSampler
+        self.env_spec = env_spec
+        self.rollout_batch_size = rollout_batch_size
+        self.replay_buffer = replay_buffer
+        self.policy = policy
+        self.exploration_policy = exploration_policy
+
+        self.sampler_cls = OffPolicyVectorizedSampler
+
+        self.init_opt()
 
     def init_opt(self):
         """Initialize the networks and Ops.
@@ -118,7 +132,7 @@ class DQN(OffPolicyRLAlgorithm):
 
             with tf.name_scope('update_ops'):
                 target_update_op = tensor_utils.get_target_ops(
-                    self.qf.get_global_vars(),
+                    self._qf.get_global_vars(),
                     self._target_qf.get_global_vars())
 
             self._qf_update_ops = tensor_utils.compile_function(
@@ -131,13 +145,13 @@ class DQN(OffPolicyRLAlgorithm):
                                     on_value=1.,
                                     off_value=0.)
                 q_selected = tf.reduce_sum(
-                    self.qf.q_vals * action,  # yapf: disable
+                    self._qf.q_vals * action,  # yapf: disable
                     axis=1)
 
                 # r + Q'(s', argmax_a(Q(s', _)) - Q(s, a)
                 if self._double_q:
-                    target_qval_with_online_q = self.qf.get_qval_sym(
-                        self._target_qf.input, self.qf.name)
+                    target_qval_with_online_q = self._qf.get_qval_sym(
+                        self._target_qf.input, self._qf.name)
                     future_best_q_val_action = tf.argmax(
                         target_qval_with_online_q, 1)
                     future_best_q_val = tf.reduce_sum(
@@ -155,7 +169,8 @@ class DQN(OffPolicyRLAlgorithm):
                 q_best_masked = (1.0 - done_t_ph) * future_best_q_val
                 # if done, it's just reward
                 # else reward + discount * future_best_q_val
-                target_q_values = (reward_t_ph + self.discount * q_best_masked)
+                target_q_values = (reward_t_ph +
+                                   self._discount * q_best_masked)
 
                 # td_error = q_selected - tf.stop_gradient(target_q_values)
                 loss = tf.compat.v1.losses.huber_loss(
@@ -167,7 +182,7 @@ class DQN(OffPolicyRLAlgorithm):
                                               learning_rate=self._qf_lr)
                 if self._grad_norm_clipping is not None:
                     gradients = qf_optimizer.compute_gradients(
-                        loss, var_list=self.qf.get_trainable_vars())
+                        loss, var_list=self._qf.get_trainable_vars())
                     for i, (grad, var) in enumerate(gradients):
                         if grad is not None:
                             gradients[i] = (tf.clip_by_norm(
@@ -175,14 +190,47 @@ class DQN(OffPolicyRLAlgorithm):
                         optimize_loss = qf_optimizer.apply_gradients(gradients)
                 else:
                     optimize_loss = qf_optimizer.minimize(
-                        loss, var_list=self.qf.get_trainable_vars())
+                        loss, var_list=self._qf.get_trainable_vars())
 
             self._train_qf = tensor_utils.compile_function(
                 inputs=[
-                    self.qf.input, action_t_ph, reward_t_ph, done_t_ph,
+                    self._qf.input, action_t_ph, reward_t_ph, done_t_ph,
                     self._target_qf.input
                 ],
                 outputs=[loss, optimize_loss])
+
+    def train(self, runner):
+        """Obtain samplers and start actual training for each epoch.
+
+        Args:
+            runner (LocalRunner): LocalRunner is passed to give algorithm
+                the access to runner.step_epochs(), which provides services
+                such as snapshotting and sampler control.
+
+        Returns:
+            float: The average return in last epoch cycle.
+
+        """
+        last_return = None
+        runner.enable_logging = False
+
+        for _ in runner.step_epochs():
+            for cycle in range(self._steps_per_epoch):
+                runner.step_path = runner.obtain_samples(runner.step_itr)
+                for path in runner.step_path:
+                    path['rewards'] *= self._reward_scale
+                last_return = self.train_once(runner.step_itr,
+                                              runner.step_path)
+                if (cycle == 0 and self.replay_buffer.n_transitions_stored >=
+                        self._min_buffer_size):
+                    runner.enable_logging = True
+                    log_performance(runner.step_itr,
+                                    obtain_evaluation_samples(
+                                        self.policy, runner.get_env_copy()),
+                                    discount=self._discount)
+                runner.step_itr += 1
+
+        return last_return
 
     def train_once(self, itr, paths):
         """Perform one step of policy optimization given one batch of samples.
@@ -195,28 +243,30 @@ class DQN(OffPolicyRLAlgorithm):
             numpy.float64: Average return.
 
         """
-        paths = self.process_samples(itr, paths)
-        epoch = itr / self.steps_per_epoch
+        paths = samples_to_tensors(paths)
+        epoch = itr / self._steps_per_epoch
 
         self.episode_rewards.extend(paths['undiscounted_returns'])
         last_average_return = np.mean(self.episode_rewards)
-        for _ in range(self.n_train_steps):
-            if self._buffer_prefilled:
+        for _ in range(self._n_train_steps):
+            if (self.replay_buffer.n_transitions_stored >=
+                    self._min_buffer_size):
                 qf_loss = self.optimize_policy(None)
                 self.episode_qf_losses.append(qf_loss)
 
-        if self._buffer_prefilled:
+        if self.replay_buffer.n_transitions_stored >= self._min_buffer_size:
             if itr % self._target_network_update_freq == 0:
                 self._qf_update_ops()
 
-        if itr % self.steps_per_epoch == 0:
-            if self._buffer_prefilled:
+        if itr % self._steps_per_epoch == 0:
+            if (self.replay_buffer.n_transitions_stored >=
+                    self._min_buffer_size):
                 mean100ep_rewards = round(np.mean(self.episode_rewards[-100:]),
                                           1)
                 mean100ep_qf_loss = np.mean(self.episode_qf_losses[-100:])
                 tabular.record('Epoch', epoch)
                 tabular.record('Episode100RewardMean', mean100ep_rewards)
-                tabular.record('{}/Episode100LossMean'.format(self.qf.name),
+                tabular.record('{}/Episode100LossMean'.format(self._qf.name),
                                mean100ep_qf_loss)
         return last_average_return
 
@@ -233,7 +283,7 @@ class DQN(OffPolicyRLAlgorithm):
         del samples_data
 
         transitions = self.replay_buffer.sample_transitions(
-            self.buffer_batch_size)
+            self._buffer_batch_size)
 
         observations = transitions['observations']
         rewards = transitions['rewards']

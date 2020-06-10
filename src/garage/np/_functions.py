@@ -1,7 +1,67 @@
 """Utility functions for NumPy-based Reinforcement learning algorithms."""
 import numpy as np
 
+from garage._dtypes import TrajectoryBatch
 from garage.misc import tensor_utils
+from garage.sampler.utils import rollout
+
+
+def samples_to_tensors(paths):
+    """Return processed sample data based on the collected paths.
+
+    Args:
+        paths (list[dict]): A list of collected paths.
+
+    Returns:
+        dict: Processed sample data, with keys
+            * undiscounted_returns (list[float])
+            * success_history (list[float])
+            * complete (list[bool])
+
+    """
+    success_history = [
+        path['success_count'] / path['running_length'] for path in paths
+    ]
+    undiscounted_returns = [path['undiscounted_return'] for path in paths]
+
+    # check if the last path is complete
+    complete = [path['dones'][-1] for path in paths]
+
+    samples_data = dict(undiscounted_returns=undiscounted_returns,
+                        success_history=success_history,
+                        complete=complete)
+
+    return samples_data
+
+
+def obtain_evaluation_samples(policy, env, max_path_length=1000,
+                              num_trajs=100):
+    """Sample the policy for num_trajs trajectories and return average values.
+
+    Args:
+        policy (garage.Policy): Policy to use as the actor when
+            gathering samples.
+        env (garage.envs.GarageEnv): The environement used to obtain
+            trajectories.
+        max_path_length (int): Maximum path length. The episode will
+            terminate when length of trajectory reaches max_path_length.
+        num_trajs (int): Number of trajectories.
+
+    Returns:
+        TrajectoryBatch: Evaluation trajectories, representing the best
+            current performance of the algorithm.
+
+    """
+    paths = []
+    # Use a finite length rollout for evaluation.
+
+    for _ in range(num_trajs):
+        path = rollout(env,
+                       policy,
+                       max_path_length=max_path_length,
+                       deterministic=True)
+        paths.append(path)
+    return TrajectoryBatch.from_trajectory_list(env.spec, paths)
 
 
 def paths_to_tensors(paths, max_path_length, baseline_predictions, discount):

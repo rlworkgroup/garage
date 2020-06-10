@@ -66,7 +66,7 @@ def test_mtsac_get_log_alpha(monkeypatch):
         obs = torch.Tensor([env.reset()] * buffer_batch_size)
         log_alpha = mtsac._get_log_alpha(dict(observation=obs))
         assert (log_alpha == torch.Tensor([i + 1, i + 1])).all().item()
-        assert log_alpha.size() == torch.Size([mtsac.buffer_batch_size])
+        assert log_alpha.size() == torch.Size([mtsac._buffer_batch_size])
 
 
 @pytest.mark.mujoco
@@ -173,7 +173,7 @@ def test_to():
         assert param.device == device
     for param in mtsac._qf2.parameters():
         assert param.device == device
-    for param in mtsac._policy.parameters():
+    for param in mtsac.policy.parameters():
         assert param.device == device
     assert mtsac._log_alpha.device == device
 

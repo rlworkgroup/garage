@@ -7,11 +7,15 @@ import numpy as np
 import torch
 
 from garage import _Default, make_optimizer
-from garage.np.algos.off_policy_rl_algorithm import OffPolicyRLAlgorithm
+from garage import log_performance
+from garage.np import obtain_evaluation_samples
+from garage.np import samples_to_tensors
+from garage.np.algos import RLAlgorithm
+from garage.sampler import OffPolicyVectorizedSampler
 from garage.torch import dict_np_to_torch, torch_to_np
 
 
-class DDPG(OffPolicyRLAlgorithm):
+class DDPG(RLAlgorithm):
     """A DDPG model implemented with PyTorch.
 
     DDPG, also known as Deep Deterministic Policy Gradient, uses actor-critic
@@ -100,6 +104,7 @@ class DDPG(OffPolicyRLAlgorithm):
         self._clip_return = clip_return
         self._max_action = action_bound if max_action is None else max_action
 
+        self._steps_per_epoch = steps_per_epoch
         self._success_history = deque(maxlen=100)
         self._episode_rewards = []
         self._episode_policy_losses = []
@@ -107,31 +112,71 @@ class DDPG(OffPolicyRLAlgorithm):
         self._epoch_ys = []
         self._epoch_qs = []
 
-        super().__init__(env_spec=env_spec,
-                         policy=policy,
-                         qf=qf,
-                         n_train_steps=n_train_steps,
-                         steps_per_epoch=steps_per_epoch,
-                         max_path_length=max_path_length,
-                         max_eval_path_length=max_eval_path_length,
-                         buffer_batch_size=buffer_batch_size,
-                         min_buffer_size=min_buffer_size,
-                         rollout_batch_size=rollout_batch_size,
-                         exploration_policy=exploration_policy,
-                         replay_buffer=replay_buffer,
-                         use_target=True,
-                         discount=discount,
-                         reward_scale=reward_scale,
-                         smooth_return=smooth_return)
+        self._policy = policy
+        self._qf = qf
+        self._n_train_steps = n_train_steps
+
+        self._min_buffer_size = min_buffer_size
+        self._qf = qf
+        self._steps_per_epoch = steps_per_epoch
+        self._n_train_steps = n_train_steps
+        self._buffer_batch_size = buffer_batch_size
+        self._discount = discount
+        self._reward_scale = reward_scale
+        self._smooth_return = smooth_return
+        self.max_path_length = max_path_length
+        self._max_eval_path_length = max_eval_path_length
+
+        # used by OffPolicyVectorizedSampler
+        self.env_spec = env_spec
+        self.rollout_batch_size = rollout_batch_size
+        self.replay_buffer = replay_buffer
+        self.policy = policy
+        self.exploration_policy = exploration_policy
 
         self._target_policy = copy.deepcopy(self.policy)
-        self._target_qf = copy.deepcopy(self.qf)
+        self._target_qf = copy.deepcopy(self._qf)
         self._policy_optimizer = make_optimizer(policy_optimizer,
                                                 module=self.policy,
                                                 lr=policy_lr)
         self._qf_optimizer = make_optimizer(qf_optimizer,
-                                            module=self.qf,
+                                            module=self._qf,
                                             lr=qf_lr)
+
+        self.sampler_cls = OffPolicyVectorizedSampler
+
+    def train(self, runner):
+        """Obtain samplers and start actual training for each epoch.
+
+        Args:
+            runner (LocalRunner): LocalRunner is passed to give algorithm
+                the access to runner.step_epochs(), which provides services
+                such as snapshotting and sampler control.
+
+        Returns:
+            float: The average return in last epoch cycle.
+
+        """
+        last_return = None
+        runner.enable_logging = False
+
+        for _ in runner.step_epochs():
+            for cycle in range(self._steps_per_epoch):
+                runner.step_path = runner.obtain_samples(runner.step_itr)
+                for path in runner.step_path:
+                    path['rewards'] *= self._reward_scale
+                last_return = self.train_once(runner.step_itr,
+                                              runner.step_path)
+                if (cycle == 0 and self.replay_buffer.n_transitions_stored >=
+                        self._min_buffer_size):
+                    runner.enable_logging = True
+                    log_performance(runner.step_itr,
+                                    obtain_evaluation_samples(
+                                        self.policy, runner.get_env_copy()),
+                                    discount=self._discount)
+                runner.step_itr += 1
+
+        return last_return
 
     def train_once(self, itr, paths):
         """Perform one iteration of training.
@@ -144,9 +189,9 @@ class DDPG(OffPolicyRLAlgorithm):
             float: Average return.
 
         """
-        paths = self.process_samples(itr, paths)
+        paths = samples_to_tensors(paths)
 
-        epoch = itr / self.steps_per_epoch
+        epoch = itr / self._steps_per_epoch
 
         self._episode_rewards.extend([
             path for path, complete in zip(paths['undiscounted_returns'],
@@ -167,13 +212,16 @@ class DDPG(OffPolicyRLAlgorithm):
             last_average_return = np.mean(self._episode_rewards)
 
         if self._success_history:
-            if itr % self.steps_per_epoch == 0 and self._buffer_prefilled:
+            if (itr % self._steps_per_epoch == 0
+                    and (self.replay_buffer.n_transitions_stored >=
+                         self._min_buffer_size)):
                 avg_success_rate = np.mean(self._success_history)
 
-        for _ in range(self.n_train_steps):
-            if self._buffer_prefilled:
+        for _ in range(self._n_train_steps):
+            if (self.replay_buffer.n_transitions_stored >=
+                    self._min_buffer_size):
                 samples = self.replay_buffer.sample_transitions(
-                    self.buffer_batch_size)
+                    self._buffer_batch_size)
                 qf_loss, y, q, policy_loss = torch_to_np(
                     self.optimize_policy(samples))
 
@@ -182,10 +230,11 @@ class DDPG(OffPolicyRLAlgorithm):
                 self._epoch_ys.append(y)
                 self._epoch_qs.append(q)
 
-        if itr % self.steps_per_epoch == 0:
+        if itr % self._steps_per_epoch == 0:
             logger.log('Training finished')
 
-            if self._buffer_prefilled:
+            if (self.replay_buffer.n_transitions_stored >=
+                    self._min_buffer_size):
                 tabular.record('Epoch', epoch)
                 tabular.record('Policy/AveragePolicyLoss',
                                np.mean(self._episode_policy_losses))
@@ -201,7 +250,7 @@ class DDPG(OffPolicyRLAlgorithm):
                                np.mean(np.abs(self._epoch_ys)))
                 tabular.record('AverageSuccessRate', avg_success_rate)
 
-            if not self.smooth_return:
+            if not self._smooth_return:
                 self._episode_rewards = []
                 self._episode_policy_losses = []
                 self._episode_qf_losses = []
@@ -242,11 +291,11 @@ class DDPG(OffPolicyRLAlgorithm):
         clip_range = (-self._clip_return,
                       0. if self._clip_pos_returns else self._clip_return)
 
-        y_target = rewards + (1.0 - terminals) * self.discount * target_qvals
+        y_target = rewards + (1.0 - terminals) * self._discount * target_qvals
         y_target = torch.clamp(y_target, clip_range[0], clip_range[1])
 
         # optimize critic
-        qval = self.qf(inputs, actions)
+        qval = self._qf(inputs, actions)
         qf_loss = torch.nn.MSELoss()
         qval_loss = qf_loss(qval, y_target)
         self._qf_optimizer.zero_grad()
@@ -255,7 +304,7 @@ class DDPG(OffPolicyRLAlgorithm):
 
         # optimize actor
         actions = self.policy(inputs)
-        action_loss = -1 * self.qf(inputs, actions).mean()
+        action_loss = -1 * self._qf(inputs, actions).mean()
         self._policy_optimizer.zero_grad()
         action_loss.backward()
         self._policy_optimizer.step()
@@ -268,7 +317,7 @@ class DDPG(OffPolicyRLAlgorithm):
     def update_target(self):
         """Update parameters in the target policy and Q-value network."""
         for t_param, param in zip(self._target_qf.parameters(),
-                                  self.qf.parameters()):
+                                  self._qf.parameters()):
             t_param.data.copy_(t_param.data * (1.0 - self._tau) +
                                param.data * self._tau)
 

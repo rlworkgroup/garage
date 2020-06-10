@@ -3,6 +3,7 @@ import numpy as np
 import torch
 
 from garage import log_multitask_performance, TrajectoryBatch
+from garage.np import obtain_evaluation_samples
 from garage.torch import global_device
 from garage.torch.algos import SAC
 
@@ -182,12 +183,13 @@ class MTSAC(SAC):
         eval_trajs = []
         for _ in range(self._num_tasks):
             eval_trajs.append(
-                self._obtain_evaluation_samples(
+                obtain_evaluation_samples(
+                    self.policy,
                     self._eval_env,
                     num_trajs=self._num_evaluation_trajectories))
         eval_trajs = TrajectoryBatch.concatenate(*eval_trajs)
         last_return = log_multitask_performance(epoch, eval_trajs,
-                                                self.discount)
+                                                self._discount)
         return last_return
 
     def to(self, device=None):
