@@ -43,6 +43,7 @@ class Plotter:
         ) if graph is None else graph
         with self.sess.as_default(), self.graph.as_default():
             self.policy = policy.clone('plotter_policy')
+            self.policy.build(policy.model.input)
         self.rollout = rollout
         self.worker_thread = Thread(target=self._start_worker, daemon=True)
         self.queue = Queue()
