@@ -654,8 +654,6 @@ class TENPO(RLAlgorithm):
         encoder_entropy, inference_ce, policy_entropy = (
             self._build_entropy_terms(i))
 
-        rewards = i.reward_var
-
         # Augment the path rewards with entropy terms
         with tf.name_scope('augmented_rewards'):
             rewards = (i.reward_var -
@@ -685,10 +683,7 @@ class TENPO(RLAlgorithm):
                 kl = old_pol_dist.kl_divergence(pol_dist)
                 pol_mean_kl = tf.reduce_mean(kl)
 
-            # Calculate vanilla loss
-            with tf.name_scope('vanilla_loss'):
-                ll = pol_dist.log_prob(i.action_var, name='log_likelihood')
-                vanilla = ll * adv
+            ll = pol_dist.log_prob(i.action_var, name='log_likelihood')
 
             # Calculate surrogate loss
             with tf.name_scope('surr_loss'):
@@ -704,20 +699,12 @@ class TENPO(RLAlgorithm):
 
             # Finalize objective function
             with tf.name_scope('loss'):
-                if self._pg_loss == 'vanilla':
-                    # VPG uses the vanilla objective
-                    obj = tf.identity(vanilla, name='vanilla_obj')
-                elif self._pg_loss == 'surrogate':
-                    # TRPO uses the standard surrogate objective
-                    obj = tf.identity(surrogate, name='surr_obj')
-                elif self._pg_loss == 'surrogate_clip':
-                    lr_clip = tf.clip_by_value(lr,
-                                               1 - self._lr_clip_range,
-                                               1 + self._lr_clip_range,
-                                               name='lr_clip')
-                    surr_clip = lr_clip * adv
-                    obj = tf.minimum(surrogate, surr_clip, name='surr_obj')
-
+                lr_clip = tf.clip_by_value(lr,
+                                           1 - self._lr_clip_range,
+                                           1 + self._lr_clip_range,
+                                           name='lr_clip')
+                surr_clip = lr_clip * adv
+                obj = tf.minimum(surrogate, surr_clip, name='surr_obj')
                 obj = tf.boolean_mask(obj, i.valid_var)
                 # Maximize E[surrogate objective] by minimizing
                 # -E_t[surrogate objective]
@@ -759,20 +746,10 @@ class TENPO(RLAlgorithm):
         with tf.name_scope('entropy_terms'):
             # 1. Encoder distribution total entropy
             with tf.name_scope('encoder_entropy'):
-                task_dim = self.policy.task_space.flat_dim
-                # pylint false alarm
-                # pylint: disable=no-value-for-parameter
-                # all_task_one_hots = tf.one_hot(np.arange(task_dim),
-                #                                task_dim,
-                #                                name='all_task_one_hots')
-                # encoder_dist_all_task, _, _ = self.policy.encoder.model.build(
-                #     all_task_one_hots, name='encoder_all_task')
-
-                # encoder_all_task_entropies = encoder_dist_all_task.entropy(
-                #     name='encoder_all_task_entropies')
-
-                encoder_dist, _, _ = self.policy.encoder.model.build(i.task_var)
-                encoder_all_task_entropies = -encoder_dist.log_prob(i.latent_var)
+                encoder_dist, _, _ = self.policy.encoder.model.build(
+                    i.task_var)
+                encoder_all_task_entropies = -encoder_dist.log_prob(
+                    i.latent_var)
 
                 if self._use_softplus_entropy:
                     encoder_entropy = tf.nn.softplus(
@@ -800,8 +777,8 @@ class TENPO(RLAlgorithm):
 
             # 3. Policy path entropies
             with tf.name_scope('policy_entropy'):
-                policy_entropy = -pol_dist.log_prob(
-                    i.action_var, name='policy_log_likeli')
+                policy_entropy = -pol_dist.log_prob(i.action_var,
+                                                    name='policy_log_likeli')
 
                 # This prevents entropy from becoming negative
                 # for small policy std
