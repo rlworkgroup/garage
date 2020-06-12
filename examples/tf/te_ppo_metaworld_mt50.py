@@ -112,7 +112,6 @@ def te_ppo_mt50(ctxt, seed, n_epochs, batch_size_per_task):
                      policy_ent_coeff=policy_ent_coeff,
                      encoder_ent_coeff=encoder_ent_coeff,
                      inference_ce_coeff=inference_ce_coeff,
-                     entropy_method='max',
                      use_softplus_entropy=True,
                      optimizer_args=dict(
                          batch_size=32,
@@ -124,7 +123,6 @@ def te_ppo_mt50(ctxt, seed, n_epochs, batch_size_per_task):
                          max_epochs=10,
                      ),
                      center_adv=True,
-                     stop_entropy_gradient=True,
                      stop_ce_gradient=True)
 
         runner.setup(algo,
