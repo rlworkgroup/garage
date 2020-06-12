@@ -9,7 +9,7 @@ from garage.torch.modules import MLPModule
 from garage.torch.policies.policy import Policy
 
 
-class DeterministicMLPPolicy(Policy, MLPModule):
+class DeterministicMLPPolicy(Policy):
     """Implements a deterministic policy network.
 
     The policy network selects action based on the state of the environment.
@@ -25,15 +25,27 @@ class DeterministicMLPPolicy(Policy, MLPModule):
             kwargs : Additional keyword arguments passed to the MLPModule.
 
         """
+        super().__init__(env_spec, name)
+
         self._obs_dim = env_spec.observation_space.flat_dim
         self._action_dim = env_spec.action_space.flat_dim
+        self._module = MLPModule(input_dim=self._obs_dim,
+                                 output_dim=self._action_dim,
+                                 **kwargs)
 
-        Policy.__init__(self, env_spec, name)
+    # pylint: disable=arguments-differ
+    def forward(self, observations):
+        """Compute actions from the observations.
 
-        MLPModule.__init__(self,
-                           input_dim=self._obs_dim,
-                           output_dim=self._action_dim,
-                           **kwargs)
+        Args:
+            observations (torch.Tensor): Batch of observations on default
+                torch device.
+
+        Returns:
+            torch.Tensor: Batch of actions.
+
+        """
+        return self._module(observations)
 
     def get_action(self, observation):
         """Get a single action given an observation.
@@ -51,7 +63,7 @@ class DeterministicMLPPolicy(Policy, MLPModule):
 
         """
         with torch.no_grad():
-            x = self.forward(torch.Tensor(observation).unsqueeze(0))
+            x = self(torch.Tensor(observation).unsqueeze(0))
             return x.squeeze(0).numpy(), dict()
 
     def get_actions(self, observations):
@@ -70,13 +82,5 @@ class DeterministicMLPPolicy(Policy, MLPModule):
 
         """
         with torch.no_grad():
-            x = self.forward(torch.Tensor(observations))
+            x = self(torch.Tensor(observations))
             return x.numpy(), dict()
-
-    def reset(self, dones=None):
-        """Reset the environment.
-
-        Args:
-            dones (numpy.ndarray): Reset values
-
-        """

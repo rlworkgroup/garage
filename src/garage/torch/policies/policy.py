@@ -4,7 +4,7 @@ import abc
 import torch
 
 
-class Policy(abc.ABC, torch.nn.Module):
+class Policy(torch.nn.Module, abc.ABC):
     """Policy base class.
 
     Args:
@@ -14,8 +14,7 @@ class Policy(abc.ABC, torch.nn.Module):
     """
 
     def __init__(self, env_spec, name):
-        # pylint: disable=super-init-not-called
-        # See issue #1141
+        super().__init__()
         self._env_spec = env_spec
         self._name = name
 
@@ -73,26 +72,6 @@ class Policy(abc.ABC, torch.nn.Module):
         """
         return self._env_spec.action_space
 
-    @property
-    def vectorized(self):
-        """Vectorized or not.
-
-        Returns:
-            bool: flag for vectorized
-
-        """
-        return False
-
-    @property
-    def name(self):
-        """Name of policy.
-
-        Returns:
-            str: Name of policy
-
-        """
-        return self._name
-
     def get_param_values(self):
         """Get the parameters to the policy.
 
@@ -114,3 +93,21 @@ class Policy(abc.ABC, torch.nn.Module):
 
         """
         self.load_state_dict(state_dict)
+
+    def reset(self, dones=None):
+        """Reset the environment.
+
+        Args:
+            dones (numpy.ndarray): Reset values
+
+        """
+
+    @property
+    def name(self):
+        """Name of policy.
+
+        Returns:
+            str: Name of policy
+
+        """
+        return self._name

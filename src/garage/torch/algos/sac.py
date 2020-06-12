@@ -355,7 +355,7 @@ class SAC(OffPolicyRLAlgorithm):
         q1_pred = self._qf1(obs, actions)
         q2_pred = self._qf2(obs, actions)
 
-        new_next_actions_dist = self._policy(next_obs)
+        new_next_actions_dist = self._policy(next_obs)[0]
         new_next_actions_pre_tanh, new_next_actions = (
             new_next_actions_dist.rsample_with_pre_tanh_value())
         new_log_pi = new_next_actions_dist.log_prob(
@@ -416,7 +416,7 @@ class SAC(OffPolicyRLAlgorithm):
         qf2_loss.backward()
         self._qf2_optimizer.step()
 
-        action_dists = self._policy(obs)
+        action_dists = self._policy(obs)[0]
         new_actions_pre_tanh, new_actions = (
             action_dists.rsample_with_pre_tanh_value())
         log_pi_new_actions = action_dists.log_prob(

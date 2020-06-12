@@ -106,9 +106,9 @@ class TRPO(VPG):
 
         """
         with torch.no_grad():
-            old_ll = self._old_policy.log_likelihood(obs, actions)
+            old_ll = self._old_policy(obs)[0].log_prob(actions)
 
-        new_ll = self.policy.log_likelihood(obs, actions)
+        new_ll = self.policy(obs)[0].log_prob(actions)
         likelihood_ratio = (new_ll - old_ll).exp()
 
         # Calculate surrogate

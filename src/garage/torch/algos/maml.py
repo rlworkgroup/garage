@@ -11,7 +11,6 @@ from garage import log_multitask_performance
 from garage import TrajectoryBatch
 from garage.misc import tensor_utils
 from garage.sampler import OnPolicyVectorizedSampler
-from garage.tf.samplers import BatchSampler
 from garage.torch import update_module_params
 from garage.torch.optimizers import ConjugateGradientOptimizer
 from garage.torch.optimizers import DifferentiableSGD
@@ -51,10 +50,7 @@ class MAML:
                  num_grad_updates=1,
                  meta_evaluator=None,
                  evaluate_every_n_epochs=1):
-        if policy.vectorized:
-            self.sampler_cls = OnPolicyVectorizedSampler
-        else:
-            self.sampler_cls = BatchSampler
+        self.sampler_cls = OnPolicyVectorizedSampler
 
         self.max_path_length = inner_algo.max_path_length
 

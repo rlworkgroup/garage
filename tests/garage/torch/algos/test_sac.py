@@ -46,7 +46,7 @@ class DummyActorPolicy:
     def __call__(self, observation):
         """Dummy forward operation. Returns a dummy distribution."""
         action = torch.Tensor([self._action])
-        return _MockDistribution(action)
+        return _MockDistribution(action), {}
 
     def action(self, unused_observation):
         """Dummy action function. Always returns 1."""
@@ -135,7 +135,7 @@ def testActorLoss():
               gradient_steps_per_itr=1)
 
     observations = torch.Tensor([[1., 2.], [3., 4.]])
-    action_dists = policy(observations)
+    action_dists = policy(observations)[0]
     actions = torch.Tensor(action_dists.rsample_with_pre_tanh_value())
     samples_data = dict(observation=observations)
     log_pi = action_dists.log_prob(actions)
@@ -161,7 +161,7 @@ def testTemperatureLoss():
               max_path_length=10,
               gradient_steps_per_itr=1)
     observations = torch.Tensor([[1., 2.], [3., 4.]])
-    action_dists = policy(observations)
+    action_dists = policy(observations)[0]
     actions = action_dists.rsample_with_pre_tanh_value()
     log_pi = action_dists.log_prob(actions)
     samples_data = dict(observation=observations, action=actions)
@@ -265,5 +265,5 @@ def test_fixed_alpha():
     runner.setup(sac, env, sampler_cls=LocalSampler)
     sac.to()
     runner.train(n_epochs=1, batch_size=100, plot=False)
-    assert torch.allclose(torch.Tensor([0.5]), sac._log_alpha)
+    assert torch.allclose(torch.Tensor([0.5]), sac._log_alpha.cpu())
     assert not sac._use_automatic_entropy_tuning

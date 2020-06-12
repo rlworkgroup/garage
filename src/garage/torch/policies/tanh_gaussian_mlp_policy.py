@@ -1,15 +1,13 @@
 """TanhGaussianMLPPolicy."""
 import numpy as np
-import torch
 from torch import nn
 
-from garage.torch import global_device
 from garage.torch.distributions import TanhNormal
 from garage.torch.modules import GaussianMLPTwoHeadedModule
-from garage.torch.policies.policy import Policy
+from garage.torch.policies.stochastic_policy import StochasticPolicy
 
 
-class TanhGaussianMLPPolicy(Policy, GaussianMLPTwoHeadedModule):
+class TanhGaussianMLPPolicy(StochasticPolicy):
     """Multiheaded MLP whose outputs are fed into a TanhNormal distribution.
 
     A policy that contains a MLP to make prediction based on a gaussian
@@ -67,13 +65,12 @@ class TanhGaussianMLPPolicy(Policy, GaussianMLPTwoHeadedModule):
                  max_std=np.exp(2.),
                  std_parameterization='exp',
                  layer_normalization=False):
+        super().__init__(env_spec, name='TanhGaussianPolicy')
 
         self._obs_dim = env_spec.observation_space.flat_dim
         self._action_dim = env_spec.action_space.flat_dim
 
-        Policy.__init__(self, env_spec, name='TanhGaussianPolicy')
-        GaussianMLPTwoHeadedModule.__init__(
-            self,
+        self._module = GaussianMLPTwoHeadedModule(
             input_dim=self._obs_dim,
             output_dim=self._action_dim,
             hidden_sizes=hidden_sizes,
@@ -90,107 +87,19 @@ class TanhGaussianMLPPolicy(Policy, GaussianMLPTwoHeadedModule):
             layer_normalization=layer_normalization,
             normal_distribution_cls=TanhNormal)
 
-    def get_action(self, observation):
-        r"""Get a single action given an observation.
+    def forward(self, observations):
+        """Compute the action distributions from the observations.
 
         Args:
-            observation (np.ndarray): Observation from the environment.
-                Shape is :math:`env_spec.observation_space`.
+            observations (torch.Tensor): Batch of observations on default
+                torch device.
 
         Returns:
-            tuple:
-                * np.ndarray: Predicted action. Shape is
-                    :math:`env_spec.action_space`.
-                * dict:
-                    * np.ndarray[float]: Mean of the distribution.
-                    * np.ndarray[float]: Standard deviation of logarithmic
-                        values of the distribution.
+            torch.distributions.Distribution: Batch distribution of actions.
+            dict[str, torch.Tensor]: Additional agent_info, as torch Tensors
 
         """
-        with torch.no_grad():
-            if not isinstance(observation, torch.Tensor):
-                observation = torch.from_numpy(observation).float().to(
-                    global_device())
-            observation = observation.unsqueeze(0)
-            dist = self.forward(observation)
-            ret_mean = dist.mean.squeeze(0).cpu().numpy()
-            ret_log_std = (dist.variance.sqrt()).log().squeeze(0).cpu().numpy()
-            return (dist.rsample().squeeze(0).cpu().numpy(),
-                    dict(mean=ret_mean, log_std=ret_log_std))
-
-    def get_actions(self, observations):
-        r"""Get actions given observations.
-
-        Args:
-            observations (np.ndarray): Observations from the environment.
-                Shape is :math:`batch_dim \bullet env_spec.observation_space`.
-
-        Returns:
-            tuple:
-                * np.ndarray: Predicted actions. Shape is
-                    :math:`batch_dim \bullet env_spec.action_space`.
-                * dict:
-                    * np.ndarray[float]: Mean of the distribution.
-                    * np.ndarray[float]: Standard deviation of logarithmic
-                        values of the distribution.
-
-        """
-        with torch.no_grad():
-            if not isinstance(observations, torch.Tensor):
-                observations = torch.from_numpy(observations).float().to(
-                    global_device())
-            dist = self.forward(observations)
-            ret_mean = dist.mean.cpu().numpy()
-            ret_log_std = (dist.variance.sqrt()).log().cpu().numpy()
-            return (dist.rsample().cpu().numpy(),
-                    dict(mean=ret_mean, log_std=ret_log_std))
-
-    def log_likelihood(self, observation, action):
-        r"""Compute log likelihood given observations and action.
-
-        Args:
-            observation (torch.Tensor): Observation from the environment.
-                Shape is :math:`env_spec.observation_space`.
-            action (torch.Tensor): Predicted action. Shape is
-                :math:`env_spec.action_space`.
-
-        Returns:
-            torch.Tensor: Calculated log likelihood value of the action given
-                observation. Shape is :math:`1`.
-
-        """
-        dist = self.forward(observation)
-        return dist.log_prob(action)
-
-    def entropy(self, observation):
-        r"""Get entropy given observations.
-
-        Args:
-            observation (torch.Tensor): Observation from the environment.
-                Shape is :math:`env_spec.observation_space`.
-
-        Returns:
-            torch.Tensor: Calculated entropy values given observation.
-                Shape is :math:`1`.
-
-        """
-        dist = self.forward(observation)
-        return dist.entropy()
-
-    def reset(self, dones=None):
-        """Reset the environment.
-
-        Args:
-            dones (numpy.ndarray): Reset values
-
-        """
-
-    @property
-    def vectorized(self):
-        """Vectorized or not.
-
-        Returns:
-            bool: flag for vectorized
-
-        """
-        return True
+        dist = self._module(observations)
+        ret_mean = dist.mean.cpu()
+        ret_log_std = (dist.variance.sqrt()).log().cpu()
+        return dist, dict(mean=ret_mean, log_std=ret_log_std)
