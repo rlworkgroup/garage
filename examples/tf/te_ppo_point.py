@@ -69,7 +69,7 @@ def te_ppo_pointenv(ctxt, seed, n_epochs, batch_size_per_task):
     set_seed(seed)
 
     tasks = TASKS
-    latent_length = 4
+    latent_length = 2
     inference_window = 6
     batch_size = batch_size_per_task * len(TASKS)
     policy_ent_coeff = 1e-3
@@ -77,7 +77,7 @@ def te_ppo_pointenv(ctxt, seed, n_epochs, batch_size_per_task):
     inference_ce_coeff = 5e-2
     max_path_length = 100
     embedding_init_std = 0.1
-    embedding_max_std = 0.3
+    embedding_max_std = 0.2
     embedding_min_std = 1e-6
     policy_init_std = 1.0
     policy_max_std = 2.0

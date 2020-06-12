@@ -689,8 +689,9 @@ class TENPO(RLAlgorithm):
             with tf.name_scope('surr_loss'):
                 old_ll = old_pol_dist.log_prob(i.action_var)
                 old_ll = tf.stop_gradient(old_ll)
-                # Possibly overflow when ll-old_ll is large (e.g. >80)
-                lr = tf.exp(ll - old_ll)
+                # Clip early to avoid overflow
+                lr = tf.exp(
+                    tf.minimum(ll - old_ll, np.log(1 + self._lr_clip_range)))
 
                 surrogate = lr * adv
 
