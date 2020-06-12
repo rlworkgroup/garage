@@ -46,8 +46,8 @@ def te_ppo_ml1_push(ctxt, seed, n_epochs, batch_size_per_task):
     encoder_ent_coeff = 2.e-4
     inference_ce_coeff = 5e-2
     max_path_length = 100
-    embedding_init_std = 0.01
-    embedding_max_std = 0.02
+    embedding_init_std = 0.1
+    embedding_max_std = 0.2
     embedding_min_std = 1e-6
     policy_init_std = 1.0
     policy_max_std = None
