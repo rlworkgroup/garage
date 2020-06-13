@@ -5,30 +5,6 @@ import abc
 class Encoder(abc.ABC):
     """Base class of context encoders for training meta-RL algorithms."""
 
-    @abc.abstractmethod
-    def get_latent(self, input_value):
-        """Encode an input value.
-
-        Args:
-            input_value (numpy.ndarray): Input value of (input_dim, ) shape.
-
-        Returns:
-            numpy.ndarray: Encoded embedding.
-
-        """
-
-    @abc.abstractmethod
-    def get_latents(self, input_values):
-        """Encode a batch of input values.
-
-        Args:
-            input_values (numpy.ndarray): Input values of (N, input_dim) shape.
-
-        Returns:
-            numpy.ndarray: Encoded embeddings.
-
-        """
-
     @property
     @abc.abstractmethod
     def spec(self):

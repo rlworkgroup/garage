@@ -397,7 +397,7 @@ def test_te_ppo_point():
     # yapf: disable
     assert subprocess.run([
         str(EXAMPLES_ROOT_DIR / 'tf/te_ppo_point.py'), '--n_epochs', '1',
-        '--batch_size_per_task', '10'
+        '--batch_size_per_task', '100'
     ], check=False).returncode == 0
     # yapf: enable
 
@@ -410,7 +410,7 @@ def test_te_ppo_metaworld_ml1_push():
     # yapf: disable
     assert subprocess.run([
         str(EXAMPLES_ROOT_DIR / 'tf/te_ppo_metaworld_ml1_push.py'),
-        '--n_epochs', '1', '--batch_size_per_task', '1'
+        '--n_epochs', '1', '--batch_size_per_task', '100'
     ], check=False).returncode == 0
     # yapf: enable
 
@@ -423,7 +423,7 @@ def test_te_ppo_metaworld_mt10():
     # yapf: disable
     assert subprocess.run([
         str(EXAMPLES_ROOT_DIR / 'tf/te_ppo_metaworld_mt10.py'),
-        '--n_epochs', '1', '--batch_size_per_task', '1'
+        '--n_epochs', '1', '--batch_size_per_task', '100'
     ], check=False).returncode == 0
     # yapf: enable
 
@@ -437,6 +437,6 @@ def test_te_ppo_metaworld_mt50():
     # yapf: disable
     assert subprocess.run([
         str(EXAMPLES_ROOT_DIR / 'tf/te_ppo_metaworld_mt50.py'),
-        '--n_epochs', '1', '--batch_size_per_task', '1'
+        '--n_epochs', '1', '--batch_size_per_task', '100'
     ], check=False).returncode == 0
     # yapf: enable

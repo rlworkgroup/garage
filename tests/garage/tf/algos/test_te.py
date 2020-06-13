@@ -151,8 +151,6 @@ class TestTE(TfGraphTestCase):
                          policy_ent_coeff=self.policy_ent_coeff,
                          encoder_ent_coeff=self.encoder_ent_coeff,
                          inference_ce_coeff=self.inference_ce_coeff,
-                         entropy_method='max',
-                         stop_entropy_gradient=True,
                          use_softplus_entropy=True,
                          optimizer_args=dict(
                              batch_size=32,

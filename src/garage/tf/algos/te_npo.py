@@ -52,8 +52,6 @@ class TENPO(RLAlgorithm):
             conjunction with center_adv the advantages will be
             standardized before shifting.
         fixed_horizon (bool): Whether to fix horizon.
-        pg_loss (str): A string from: 'vanilla', 'surrogate',
-            'surrogate_clip'. The type of loss functions to use.
         lr_clip_range (float): The limit on the likelihood ratio between
             policies, as in PPO.
         max_kl_step (float): The maximum KL divergence between old and new
@@ -96,7 +94,6 @@ class TENPO(RLAlgorithm):
                  center_adv=True,
                  positive_adv=False,
                  fixed_horizon=False,
-                 pg_loss='surrogate',
                  lr_clip_range=0.01,
                  max_kl_step=0.01,
                  optimizer=None,
@@ -131,15 +128,11 @@ class TENPO(RLAlgorithm):
         self._old_policy = policy.clone('old_policy')
         self._use_softplus_entropy = use_softplus_entropy
         self._stop_ce_gradient = stop_ce_gradient
-        self._pg_loss = pg_loss
 
         optimizer, optimizer_args = self._build_optimizer(
             optimizer, optimizer_args)
         inference_opt, inference_opt_args = self._build_inference_optimizer(
             inference_optimizer, inference_optimizer_args)
-
-        if pg_loss not in ['vanilla', 'surrogate', 'surrogate_clip']:
-            raise ValueError('Invalid pg_loss')
 
         with self._name_scope:
             self._optimizer = optimizer(**optimizer_args)
@@ -1038,7 +1031,7 @@ class TENPO(RLAlgorithm):
         for task in range(num_tasks):
             for i in range(self.policy.latent_space.flat_dim):
                 # pylint: disable=protected-access
-                stds = latent_infos['log_std'][task, i]
+                stds = np.exp(latent_infos['log_std'][task, i])
 
                 norm = scipy.stats.norm(loc=latent_infos['mean'][task, i],
                                         scale=stds)

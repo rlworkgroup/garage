@@ -28,8 +28,6 @@ class TEPPO(TENPO):
             conjunction with center_adv the advantages will be
             standardized before shifting.
         fixed_horizon (bool): Whether to fix horizon.
-        pg_loss (str): A string from: 'vanilla', 'surrogate',
-            'surrogate_clip'. The type of loss functions to use.
         lr_clip_range (float): The limit on the likelihood ratio between
             policies, as in PPO.
         max_kl_step (float): The maximum KL divergence between old and new
@@ -101,7 +99,6 @@ class TEPPO(TENPO):
                          center_adv=center_adv,
                          positive_adv=positive_adv,
                          fixed_horizon=fixed_horizon,
-                         pg_loss='surrogate_clip',
                          lr_clip_range=lr_clip_range,
                          max_kl_step=max_kl_step,
                          optimizer=optimizer,
