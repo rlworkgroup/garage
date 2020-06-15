@@ -88,6 +88,15 @@ class CategoricalCNNModel(Model):
             layer_normalization=layer_normalization,
             name='MLPModel')
 
+    def network_output_spec(self):
+        """Network output spec.
+
+        Returns:
+            list[str]: Name of the model outputs, in order.
+
+        """
+        return self._mlp_model.network_output_spec
+
     # pylint: disable=arguments-differ
     def _build(self, state_input, name=None):
         """Build model.

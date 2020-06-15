@@ -387,6 +387,9 @@ class REPS(RLAlgorithm):  # noqa: D416
                 for k in self.policy.state_info_keys
             ]  # yapf: disable
 
+        self.policy.build(obs_var, name='policy')
+        self._old_policy.build(obs_var, name='policy')
+
         policy_loss_inputs = graph_inputs(
             'PolicyLossInputs',
             obs_var=obs_var,
@@ -435,7 +438,8 @@ class REPS(RLAlgorithm):  # noqa: D416
             NotImplementedError: If is_recurrent is True.
 
         """
-        pol_dist = self.policy.distribution
+        pol_dist = self.policy.model.networks['policy'].dist
+        old_pol_dist = self._old_policy.model.networks['policy'].dist
 
         # Initialize dual params
         self._param_eta = 15.
@@ -460,8 +464,7 @@ class REPS(RLAlgorithm):  # noqa: D416
                  for param in reg_params]) / len(reg_params)
 
         with tf.name_scope('kl'):
-            kl = self._old_policy.distribution.kl_divergence(
-                self.policy.distribution)
+            kl = old_pol_dist.kl_divergence(pol_dist)
             pol_mean_kl = tf.reduce_mean(kl)
 
         with tf.name_scope('dual'):

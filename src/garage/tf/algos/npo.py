@@ -339,6 +339,16 @@ class NPO(RLAlgorithm):
                 policy_state_info_vars[k] for k in self.policy.state_info_keys
             ]
 
+        augmented_obs_var = obs_var
+        for k in self.policy.state_info_keys:
+            extra_state_var = policy_state_info_vars[k]
+            extra_state_var = tf.cast(extra_state_var, tf.float32)
+            augmented_obs_var = tf.concat([augmented_obs_var, extra_state_var],
+                                          -1)
+
+        self.policy.build(augmented_obs_var, name='policy')
+        self._old_policy.build(augmented_obs_var, name='policy')
+
         policy_loss_inputs = graph_inputs(
             'PolicyLossInputs',
             action_var=action_var,
@@ -396,21 +406,21 @@ class NPO(RLAlgorithm):
             if self._positive_adv:
                 adv = positive_advs(adv, eps)
 
+            old_policy_dist = self._old_policy.model.networks['policy'].dist
+            policy_dist = self.policy.model.networks['policy'].dist
+
             with tf.name_scope('kl'):
-                kl = self._old_policy.distribution.kl_divergence(
-                    self.policy.distribution)
+                kl = old_policy_dist.kl_divergence(policy_dist)
                 pol_mean_kl = tf.reduce_mean(kl)
 
             # Calculate vanilla loss
             with tf.name_scope('vanilla_loss'):
-                ll = self.policy.distribution.log_prob(i.action_var,
-                                                       name='log_likelihood')
+                ll = policy_dist.log_prob(i.action_var, name='log_likelihood')
                 vanilla = ll * adv
 
             # Calculate surrogate loss
             with tf.name_scope('surrogate_loss'):
-                lr = tf.exp(
-                    ll - self._old_policy.distribution.log_prob(i.action_var))
+                lr = tf.exp(ll - old_policy_dist.log_prob(i.action_var))
                 surrogate = lr * adv
 
             # Finalize objective function
@@ -463,7 +473,7 @@ class NPO(RLAlgorithm):
             tf.Tensor: Policy entropy.
 
         """
-        pol_dist = self.policy.distribution
+        pol_dist = self.policy.model.networks['policy'].dist
 
         with tf.name_scope('policy_entropy'):
             if self._use_neg_logli_entropy:

@@ -257,6 +257,17 @@ class Model(BaseModel):
                 'network_output_spec must have same length as outputs!')
             out_spec.extend(custom_out_spec)
             out_args.extend(network.outputs)
+        elif len(custom_out_spec) > 0:
+            if not isinstance(network.outputs, tuple):
+                assert len(custom_out_spec) == 1, (
+                    'network_input_spec must have same length as outputs!')
+                out_spec.extend(custom_out_spec)
+                out_args.extend([network.outputs])
+            else:
+                assert len(custom_out_spec) == len(network.outputs), (
+                    'network_input_spec must have same length as outputs!')
+                out_spec.extend(custom_out_spec)
+                out_args.extend(network.outputs)
 
         c = namedtuple(network_name, [*in_spec, *out_spec])
         all_args = in_args + out_args
