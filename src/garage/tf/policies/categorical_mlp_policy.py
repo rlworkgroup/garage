@@ -12,7 +12,7 @@ from garage.tf.models import CategoricalMLPModel
 from garage.tf.policies.policy import StochasticPolicy
 
 
-class CategoricalMLPPolicy(StochasticPolicy):
+class CategoricalMLPPolicy(CategoricalMLPModel, StochasticPolicy):
     """Categorical MLP Policy.
 
     A policy represented by a Categorical distribution
@@ -62,7 +62,7 @@ class CategoricalMLPPolicy(StochasticPolicy):
         if not isinstance(env_spec.action_space, akro.Discrete):
             raise ValueError('CategoricalMLPPolicy only works'
                              'with akro.Discrete action space.')
-        super().__init__(name, env_spec)
+        self._env_spec = env_spec
         self._obs_dim = env_spec.observation_space.flat_dim
         self._action_dim = env_spec.action_space.n
 
@@ -78,32 +78,30 @@ class CategoricalMLPPolicy(StochasticPolicy):
         self._f_prob = None
         self._dist = None
 
-        self.model = CategoricalMLPModel(
-            output_dim=self._action_dim,
-            hidden_sizes=hidden_sizes,
-            hidden_nonlinearity=hidden_nonlinearity,
-            hidden_w_init=hidden_w_init,
-            hidden_b_init=hidden_b_init,
-            output_nonlinearity=output_nonlinearity,
-            output_w_init=output_w_init,
-            output_b_init=output_b_init,
-            layer_normalization=layer_normalization,
-            name='CategoricalMLPModel')
+        super().__init__(output_dim=self._action_dim,
+                         hidden_sizes=hidden_sizes,
+                         hidden_nonlinearity=hidden_nonlinearity,
+                         hidden_w_init=hidden_w_init,
+                         hidden_b_init=hidden_b_init,
+                         output_nonlinearity=output_nonlinearity,
+                         output_w_init=output_w_init,
+                         output_b_init=output_b_init,
+                         layer_normalization=layer_normalization,
+                         name=name)
 
         self._initialize()
 
     def _initialize(self):
         """Initialize policy."""
-        with tf.compat.v1.variable_scope(self.name) as vs:
-            self._variable_scope = vs
-            state_input = tf.compat.v1.placeholder(tf.float32,
-                                                   shape=(None, None,
-                                                          self._obs_dim))
-            self._dist = self.model.build(state_input).dist
-            self._f_prob = tf.compat.v1.get_default_session().make_callable(
-                [tf.argmax(self._dist.sample(), -1), self._dist.probs],
-                feed_list=[state_input])
+        state_input = tf.compat.v1.placeholder(tf.float32,
+                                               shape=(None, None,
+                                                      self._obs_dim))
+        self._dist = self._build_network(state_input).dist
+        self._f_prob = tf.compat.v1.get_default_session().make_callable(
+            [tf.argmax(self._dist.sample(), -1), self._dist.probs],
+            feed_list=[state_input])
 
+    # pylint: disable=arguments-differ
     def build(self, state_input, name=None):
         """Build policy.
 
@@ -116,7 +114,7 @@ class CategoricalMLPPolicy(StochasticPolicy):
 
         """
         with tf.compat.v1.variable_scope(self._variable_scope):
-            return self.model.build(state_input, name=name)
+            return self._build_network(state_input, name=name)
 
     @property
     def input_dim(self):
@@ -186,6 +184,16 @@ class CategoricalMLPPolicy(StochasticPolicy):
             var for var in trainable
             if 'hidden' in var.name and 'kernel' in var.name
         ]
+
+    @property
+    def env_spec(self):
+        """Policy environment specification.
+
+        Returns:
+            garage.EnvSpec: Environment specification.
+
+        """
+        return self._env_spec
 
     def clone(self, name):
         """Return a clone of the policy.

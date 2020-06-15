@@ -68,7 +68,7 @@ class CategoricalMLPModel(MLPModel):
         """
         return ['dist']
 
-    def _build(self, state_input, name=None):
+    def _build_model(self, state_input, name=None):
         """Build model.
 
         Args:
@@ -81,7 +81,7 @@ class CategoricalMLPModel(MLPModel):
             tfp.distributions.OneHotCategorical: Policy distribution.
 
         """
-        prob = super()._build(state_input, name=name)
+        prob = super()._build_model(state_input, name=name)
         if self._output_normalization_fn:
             prob = self._output_normalization_fn(prob)
         return tfp.distributions.OneHotCategorical(probs=prob)

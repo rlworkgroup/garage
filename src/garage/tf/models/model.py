@@ -5,6 +5,8 @@ import warnings
 
 import tensorflow as tf
 
+from garage.tf.models.module import Module
+
 
 class BaseModel(abc.ABC):
     """Interface-only abstract class for models.
@@ -130,7 +132,7 @@ class Network:
         return self._outputs
 
 
-class Model(BaseModel):
+class Model(BaseModel, Module):
     r"""Model class for TensorFlow.
 
     A TfModel only contains the structure/configuration of the underlying
@@ -180,14 +182,14 @@ class Model(BaseModel):
     """
 
     def __init__(self, name):
-        super().__init__()
-        self._name = name or type(self).__name__  # name default to class
+        super().__init__(name or type(self).__name__)
+        # self._name = name or type(self).__name__  # name default to class
         self._networks = {}
         self._default_parameters = None
         self._variable_scope = None
 
     # pylint: disable=protected-access, assignment-from-no-return
-    def build(self, *inputs, name=None):
+    def _build_network(self, *inputs, name=None):
         """Build a Network with the given input(s).
 
         ***
@@ -223,7 +225,7 @@ class Model(BaseModel):
                 with tf.name_scope(name=network_name):
                     network = Network()
                     network._inputs = inputs
-                    network._outputs = self._build(*inputs, name)
+                    network._outputs = self._build_model(*inputs, name)
                 variables = self._get_variables().values()
                 tf.compat.v1.get_default_session().run(
                     tf.compat.v1.variables_initializer(variables))
@@ -239,7 +241,7 @@ class Model(BaseModel):
                 with tf.name_scope(name=network_name):
                     network = Network()
                     network._inputs = inputs
-                    network._outputs = self._build(*inputs, name)
+                    network._outputs = self._build_model(*inputs, name)
         custom_in_spec = self.network_input_spec()
         custom_out_spec = self.network_output_spec()
         in_spec = ['input', 'inputs']
@@ -275,10 +277,10 @@ class Model(BaseModel):
 
         return out_network
 
-    def _build(self, *inputs, name=None):
-        """Output of the model given input placeholder(s).
+    def _build_model(self, *inputs, name=None):
+        """Build this model given input placeholder(s).
 
-        User should implement _build() inside their subclassed model,
+        User should implement _build_model() inside their subclassed model,
         and construct the computation graphs in this function.
 
         Args:

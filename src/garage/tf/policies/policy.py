@@ -2,21 +2,10 @@
 import abc
 
 from garage.np.policies import Policy as BasePolicy
-from garage.tf.models import Module, StochasticModule
 
 
-class Policy(Module, BasePolicy):
-    """Base class for policies in TensorFlow.
-
-    Args:
-        name (str): Policy name, also the variable scope.
-        env_spec (garage.envs.env_spec.EnvSpec): Environment specification.
-
-    """
-
-    def __init__(self, name, env_spec):
-        super().__init__(name)
-        self._env_spec = env_spec
+class Policy(BasePolicy):
+    """Base class for policies in TensorFlow."""
 
     @abc.abstractmethod
     def get_action(self, observation):
@@ -45,16 +34,6 @@ class Policy(Module, BasePolicy):
         """
 
     @property
-    def env_spec(self):
-        """Policy environment specification.
-
-        Returns:
-            garage.EnvSpec: Environment specification.
-
-        """
-        return self._env_spec
-
-    @property
     def state_info_specs(self):
         """State info specification.
 
@@ -78,5 +57,10 @@ class Policy(Module, BasePolicy):
 
 
 # pylint: disable=abstract-method
-class StochasticPolicy(Policy, StochasticModule):
+class StochasticPolicy(Policy):
     """Stochastic Policy."""
+
+    @property
+    @abc.abstractmethod
+    def distribution(self):
+        """Distribution."""
