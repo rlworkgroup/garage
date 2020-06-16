@@ -154,8 +154,10 @@ class GaussianMLPPolicy(StochasticPolicy):
             self._variable_scope = vs
             self._dist, _, _ = self.model.build(state_input, name=name)
             self._f_dist = tf.compat.v1.get_default_session().make_callable(
-                [self._dist.sample(), self._dist.loc,
-                 self._dist.stddev()],
+                [
+                    self._dist.sample(), self._dist.loc,
+                    tf.math.log(self._dist.stddev())
+                ],
                 feed_list=[state_input])
 
     @property

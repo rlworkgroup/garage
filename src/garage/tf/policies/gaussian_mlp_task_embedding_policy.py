@@ -145,15 +145,16 @@ class GaussianMLPTaskEmbeddingPolicy(TaskEmbeddingPolicy):
                                                      name='given_task')
 
         self._f_dist_obs_latent = tf.compat.v1.get_default_session(
-        ).make_callable(
-            [self._dist.sample(), self._dist.loc,
-             self._dist.stddev()],
-            feed_list=[obs_input, latent_input])
+        ).make_callable([
+            self._dist.sample(), self._dist.loc,
+            tf.math.log(self._dist.stddev())
+        ],
+                        feed_list=[obs_input, latent_input])
 
         self._f_dist_obs_task = tf.compat.v1.get_default_session(
         ).make_callable([
             dist_given_task.sample(), dist_given_task.loc,
-            dist_given_task.stddev()
+            tf.math.log(dist_given_task.stddev())
         ],
                         feed_list=[obs_input, task_input])
 
