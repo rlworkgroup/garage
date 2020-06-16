@@ -45,6 +45,8 @@ jobs:
       run: echo ${{ secrets.GITHUB_TOKEN }} | docker login docker.pkg.github.com -u $GITHUB_ACTOR --password-stdin
     - name: Pull from cache (GitHub Package Registry)
       run: docker pull "docker.pkg.github.com/${GITHUB_REPOSITORY}/${DOCKER_TAG}"
+    - name: Rename docker image
+      run: docker tag docker.pkg.github.com/${GITHUB_REPOSITORY}/${DOCKER_TAG} ${DOCKER_TAG}
     - name: Check pre-commit
       run: |
         docker run \
