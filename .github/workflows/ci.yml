@@ -25,7 +25,8 @@ jobs:
     - name: Build Docker container
       run: |
         docker build . \
-          -f docker/Dockerfile.ci \
+          -f docker/Dockerfile \
+          --target garage-dev-18.04 \
           -t "${DOCKER_TAG}" \
           --build-arg GARAGE_GH_TOKEN \
           --cache-from="docker.pkg.github.com/${GITHUB_REPOSITORY}/${DOCKER_TAG}"
