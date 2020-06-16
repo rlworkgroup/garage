@@ -27,8 +27,6 @@ RUN \
     xorg-dev \
     # mujoco_py
     # See https://github.com/openai/mujoco-py/blob/master/Dockerfile
-    # 16.04 repo is too old, install glfw from source instead
-    # libglfw3 \
     libglew-dev \
     libosmesa6-dev \
     patchelf \
@@ -51,9 +49,6 @@ RUN \
   apt-get clean && \
   rm -rf /var/lib/apt/lists/*
 
-# Build GLFW because the Ubuntu 16.04 version is too old
-# See https://github.com/glfw/glfw/issues/1004
-RUN apt-get purge -y -v libglfw*
 RUN git clone https://github.com/glfw/glfw.git && \
   cd glfw && \
   git checkout 0be4f3f75aebd9d24583ee86590a38e741db0904 && \
@@ -71,7 +66,7 @@ RUN mkdir -p /root/.mujoco && \
   unzip mujoco.zip -d $HOME/.mujoco && \
   rm mujoco.zip && \
   ln -s $HOME/.mujoco/mujoco200_linux $HOME/.mujoco/mujoco200
-  ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mujoco200/bin
+ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mujoco200/bin
 
 # Copy over just setup.py first, so the Docker cache doesn't expire until
 # dependencies change

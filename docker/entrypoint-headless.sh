@@ -6,7 +6,7 @@ set -e
 if [ -z "${MJKEY}" ]; then
   :
 else
-  echo "${MJKEY}" > /root/.mujoco/mjkey.txt
+  echo "${MJKEY}" > ${HOME}/.mujoco/mjkey.txt
 fi
 
 # Setup dummy X server display
@@ -31,15 +31,5 @@ if ! [ -e "$file" ]; then
   echo "Timed out waiting for X to start: $file was not created"
   exit 1
 fi
-
-# Fixes Segmentation Fault
-# See: https://github.com/openai/mujoco-py/pull/145#issuecomment-356938564
-export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libGLEW.so
-
-# Set MuJoCo rendering mode (for dm_control)
-export MUJOCO_GL="glfw"
-
-export TF_CPP_MIN_LOG_LEVEL=3      # shut TensorFlow up
-export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${HOME}/.mujoco/mujoco200/bin"
 
 exec "$@"
