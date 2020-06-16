@@ -1,5 +1,7 @@
 """PyTorch Modules."""
 # yapf: disable
+from garage.torch.modules.categorical_cnn_module import CategoricalCNNModule
+from garage.torch.modules.cnn_module import CNNBaseModule
 from garage.torch.modules.gaussian_mlp_module import (
     GaussianMLPIndependentStdModule)  # noqa: E501
 from garage.torch.modules.gaussian_mlp_module import (
@@ -11,6 +13,8 @@ from garage.torch.modules.multi_headed_mlp_module import MultiHeadedMLPModule
 # yapf: enable
 
 __all__ = [
+    'CategoricalCNNModule',
+    'CNNBaseModule',
     'MLPModule',
     'MultiHeadedMLPModule',
     'GaussianMLPModule',
