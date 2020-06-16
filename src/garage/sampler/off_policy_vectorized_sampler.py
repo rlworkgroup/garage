@@ -114,9 +114,8 @@ class OffPolicyVectorizedSampler(BatchSampler):
 
             actions, agent_infos = policy.get_actions(input_obses)
 
-            next_obses, rewards, dones, env_infos = \
+            next_obses, rewards, dones, env_infos, completes = \
                 self._vec_env.step(actions)
-            completes = env_infos['vec_env_executor.complete']
             self._last_obses = next_obses
             agent_infos = tensor_utils.split_tensor_dict_list(agent_infos)
             env_infos = tensor_utils.split_tensor_dict_list(env_infos)
@@ -127,9 +126,9 @@ class OffPolicyVectorizedSampler(BatchSampler):
             if env_infos is None:
                 env_infos = [dict() for _ in range(self._vec_env.num_envs)]
 
-            for idx, reward, env_info, done, obs, next_obs, action in zip(
-                    itertools.count(), rewards, env_infos, dones, obses,
-                    next_obses, actions):
+            for (idx, reward, env_info, done, complete, obs, next_obs,
+                 action) in zip(itertools.count(), rewards, env_infos, dones,
+                                completes, obses, next_obses, actions):
                 if running_paths[idx] is None:
                     running_paths[idx] = dict(
                         rewards=[],
@@ -161,7 +160,7 @@ class OffPolicyVectorizedSampler(BatchSampler):
                     'is_success') or 0
                 self._last_running_length[idx] += 1
 
-                if done or n_samples >= batch_size:
+                if complete or n_samples >= batch_size:
                     paths.append(
                         dict(
                             rewards=np.asarray(running_paths[idx]['rewards']),
