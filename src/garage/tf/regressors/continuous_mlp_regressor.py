@@ -160,7 +160,7 @@ class ContinuousMLPRegressor(Regressor):
 
         """
         with tf.compat.v1.variable_scope(self._variable_scope):
-            y_hat, _, _ = self.model.build(xs, name=name)
+            y_hat, _, _ = self.model.build(xs, name=name).outputs
 
         return y_hat
 

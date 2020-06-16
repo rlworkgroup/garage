@@ -20,29 +20,41 @@ class Sequential(Model):
         super().__init__(name)
         self._models = models
 
+    # pylint: disable=arguments-differ
     def _build(self, input_var, name=None):
+        """Build model given input placeholder(s).
+
+        Args:
+            input_var (tf.Tensor): Tensor input.
+            name (str): Inner model name, also the variable scope of the
+                inner model.
+
+        Return:
+            tf.Tensor: Tensor output of the model.
+
+        """
         out = input_var
         for model in self._models:
-            out = model.build(out, name=name)
+            out = model.build(out, name=name).outputs
 
         return out
 
     @property
     def input(self):
-        """tf.Tensor input of the model by default."""
+        """tf.Tensor: input of the model by default."""
         return self._models[0].networks['default'].input
 
     @property
     def output(self):
-        """tf.Tensor output of the model by default."""
+        """tf.Tensor: output of the model by default."""
         return self._models[-1].networks['default'].output
 
     @property
     def inputs(self):
-        """tf.Tensor inputs of the model by default."""
+        """tf.Tensor: inputs of the model by default."""
         return self._models[0].networks['default'].inputs
 
     @property
     def outputs(self):
-        """tf.Tensor outputs of the model by default."""
+        """tf.Tensor: outputs of the model by default."""
         return self._models[-1].networks['default'].outputs

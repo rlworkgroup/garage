@@ -18,7 +18,7 @@ class TestCategoricalMLPModel(TfGraphTestCase):
 
     def test_dist(self):
         model = CategoricalMLPModel(output_dim=1)
-        dist = model.build(self.input_var)
+        dist = model.build(self.input_var).dist
         assert isinstance(dist, tfp.distributions.OneHotCategorical)
 
     @pytest.mark.parametrize('output_dim', [1, 2, 5, 10])
@@ -26,7 +26,7 @@ class TestCategoricalMLPModel(TfGraphTestCase):
         model = CategoricalMLPModel(output_dim=output_dim)
         obs_ph = tf.compat.v1.placeholder(tf.float32, shape=(None, output_dim))
         obs = np.ones((1, output_dim))
-        dist = model.build(obs_ph)
+        dist = model.build(obs_ph).dist
         probs = tf.compat.v1.get_default_session().run(tf.reduce_sum(
             dist.probs),
                                                        feed_dict={obs_ph: obs})
@@ -37,7 +37,7 @@ class TestCategoricalMLPModel(TfGraphTestCase):
                                     output_nonlinearity=lambda x: x / 2)
         obs_ph = tf.compat.v1.placeholder(tf.float32, shape=(None, 1))
         obs = np.ones((1, 1))
-        dist = model.build(obs_ph)
+        dist = model.build(obs_ph).dist
         probs = tf.compat.v1.get_default_session().run(dist.probs,
                                                        feed_dict={obs_ph: obs})
         assert probs == [0.5]
@@ -57,7 +57,7 @@ class TestCategoricalMLPModel(TfGraphTestCase):
                                     hidden_nonlinearity=None,
                                     hidden_w_init=tf.ones_initializer(),
                                     output_w_init=tf.ones_initializer())
-        dist = model.build(self.input_var)
+        dist = model.build(self.input_var).dist
         # assign bias to all one
         with tf.compat.v1.variable_scope('CategoricalMLPModel/mlp',
                                          reuse=True):
@@ -72,7 +72,7 @@ class TestCategoricalMLPModel(TfGraphTestCase):
         with tf.compat.v1.Session(graph=tf.Graph()) as sess:
             input_var = tf.compat.v1.placeholder(tf.float32, shape=(None, 5))
             model_pickled = pickle.loads(h)
-            dist2 = model_pickled.build(input_var)
+            dist2 = model_pickled.build(input_var).dist
             output2 = sess.run(dist2.probs, feed_dict={input_var: self.obs})
 
             assert np.array_equal(output1, output2)

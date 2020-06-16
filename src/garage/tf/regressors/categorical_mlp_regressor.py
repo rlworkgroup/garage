@@ -240,7 +240,7 @@ class CategoricalMLPRegressor(StochasticRegressor):
         """
         del state_info_vars
         with tf.compat.v1.variable_scope(self._variable_scope):
-            prob, _, _ = self.model.build(input_var, name=name)
+            prob, _, _ = self.model.build(input_var, name=name).outputs
 
         return dict(prob=prob)
 
@@ -257,7 +257,7 @@ class CategoricalMLPRegressor(StochasticRegressor):
 
         """
         with tf.compat.v1.variable_scope(self._variable_scope):
-            prob, _, _ = self.model.build(x_var, name=name)
+            prob, _, _ = self.model.build(x_var, name=name).outputs
 
         return self._dist.log_likelihood_sym(y_var, dict(prob=prob))
 

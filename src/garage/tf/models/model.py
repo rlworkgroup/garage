@@ -271,9 +271,10 @@ class Model(BaseModel):
 
         c = namedtuple(network_name, [*in_spec, *out_spec])
         all_args = in_args + out_args
-        self._networks[network_name] = c(*all_args)
+        out_network = c(*all_args)
+        self._networks[network_name] = out_network
 
-        return network.outputs
+        return out_network
 
     def _build(self, *inputs, name=None):
         """Output of the model given input placeholder(s).

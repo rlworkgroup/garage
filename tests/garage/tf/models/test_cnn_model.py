@@ -18,6 +18,7 @@ class TestCNNModel(TfGraphTestCase):
         self.input_height = 10
         self.obs_input = np.ones(
             (self.batch_size, self.input_width, self.input_height, 3))
+        # pylint: disable=unsubscriptable-object
         input_shape = self.obs_input.shape[1:]  # height, width, channel
         self._input_ph = tf.compat.v1.placeholder(tf.float32,
                                                   shape=(None, ) + input_shape,
@@ -41,7 +42,7 @@ class TestCNNModel(TfGraphTestCase):
                          hidden_w_init=tf.constant_initializer(1),
                          hidden_nonlinearity=None)
 
-        outputs = model.build(self._input_ph)
+        outputs = model.build(self._input_ph).outputs
         output = self.sess.run(outputs,
                                feed_dict={self._input_ph: self.obs_input})
 
@@ -91,7 +92,7 @@ class TestCNNModel(TfGraphTestCase):
             hidden_w_init=tf.constant_initializer(1),
             hidden_nonlinearity=None)
 
-        outputs = model.build(self._input_ph)
+        outputs = model.build(self._input_ph).outputs
         output = self.sess.run(outputs,
                                feed_dict={self._input_ph: self.obs_input})
 
@@ -136,7 +137,7 @@ class TestCNNModel(TfGraphTestCase):
                          padding='VALID',
                          hidden_w_init=tf.constant_initializer(1),
                          hidden_nonlinearity=None)
-        outputs = model.build(self._input_ph)
+        outputs = model.build(self._input_ph).outputs
         with tf.compat.v1.variable_scope('cnn_model/cnn/h0', reuse=True):
             bias = tf.compat.v1.get_variable('bias')
         bias.load(tf.ones_like(bias).eval())
@@ -146,11 +147,12 @@ class TestCNNModel(TfGraphTestCase):
         h = pickle.dumps(model)
         with tf.compat.v1.Session(graph=tf.Graph()) as sess:
             model_pickled = pickle.loads(h)
+            # pylint: disable=unsubscriptable-object
             input_shape = self.obs_input.shape[1:]  # height, width, channel
             input_ph = tf.compat.v1.placeholder(tf.float32,
                                                 shape=(None, ) + input_shape,
                                                 name='input')
-            outputs = model_pickled.build(input_ph)
+            outputs = model_pickled.build(input_ph).outputs
             output2 = sess.run(outputs, feed_dict={input_ph: self.obs_input})
 
             assert np.array_equal(output1, output2)

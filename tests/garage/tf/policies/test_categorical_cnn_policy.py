@@ -36,18 +36,15 @@ class TestCategoricalCNNPolicyWithModel(TfGraphTestCase):
         for action in actions:
             assert env.action_space.contains(action)
 
-    @pytest.mark.parametrize('filter_dims, num_filters, '
-                             'strides, padding, hidden_sizes', [
-                                 ((3, ), (3, ), (1, ), 'VALID', (4, )),
-                                 ((3, 3), (3, 3), (1, 1), 'VALID', (4, 4)),
-                                 ((3, 3), (3, 3), (2, 2), 'SAME', (4, 4)),
-                             ])
-    def test_build(self, filter_dims, num_filters, strides, padding,
-                   hidden_sizes):
+    @pytest.mark.parametrize('filters, strides, padding, hidden_sizes', [
+        (((3, (3, 3)), ), (1, ), 'VALID', (4, )),
+        (((3, (3, 3)), (3, (3, 3))), (1, 1), 'VALID', (4, 4)),
+        (((3, (3, 3)), (3, (3, 3))), (2, 2), 'SAME', (4, 4)),
+    ])
+    def test_build(self, filters, strides, padding, hidden_sizes):
         env = GarageEnv(DummyDiscretePixelEnv())
         policy = CategoricalCNNPolicy(env_spec=env.spec,
-                                      filter_dims=filter_dims,
-                                      num_filters=num_filters,
+                                      filters=filters,
                                       strides=strides,
                                       padding=padding,
                                       hidden_sizes=hidden_sizes)
@@ -57,7 +54,7 @@ class TestCategoricalCNNPolicyWithModel(TfGraphTestCase):
         state_input = tf.compat.v1.placeholder(tf.float32,
                                                shape=(None, None) +
                                                policy.input_dim)
-        dist_sym = policy.build(state_input, name='dist_sym')
+        dist_sym = policy.build(state_input, name='dist_sym').dist
         output1 = self.sess.run([policy.distribution.probs],
                                 feed_dict={policy.model.input: [[obs]]})
         output2 = self.sess.run([dist_sym.probs],

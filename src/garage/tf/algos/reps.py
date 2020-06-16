@@ -105,6 +105,8 @@ class REPS(RLAlgorithm):  # noqa: D416
         self._f_dual = None
         self._f_dual_grad = None
         self._f_policy_kl = None
+        self._policy_network = None
+        self._old_policy_network = None
 
         self._optimizer = make_optimizer(optimizer, **optimizer_args)
         self._dual_optimizer = dual_optimizer
@@ -233,6 +235,8 @@ class REPS(RLAlgorithm):  # noqa: D416
         del data['_f_dual']
         del data['_f_dual_grad']
         del data['_f_policy_kl']
+        del data['_policy_network']
+        del data['_old_policy_network']
         return data
 
     def __setstate__(self, state):
@@ -387,8 +391,9 @@ class REPS(RLAlgorithm):  # noqa: D416
                 for k in self.policy.state_info_keys
             ]  # yapf: disable
 
-        self.policy.build(obs_var, name='policy')
-        self._old_policy.build(obs_var, name='policy')
+        self._policy_network = self.policy.build(obs_var, name='policy')
+        self._old_policy_network = self._old_policy.build(obs_var,
+                                                          name='policy')
 
         policy_loss_inputs = graph_inputs(
             'PolicyLossInputs',
@@ -438,8 +443,8 @@ class REPS(RLAlgorithm):  # noqa: D416
             NotImplementedError: If is_recurrent is True.
 
         """
-        pol_dist = self.policy.model.networks['policy'].dist
-        old_pol_dist = self._old_policy.model.networks['policy'].dist
+        pol_dist = self._policy_network.dist
+        old_pol_dist = self._old_policy_network.dist
 
         # Initialize dual params
         self._param_eta = 15.

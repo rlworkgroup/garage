@@ -139,7 +139,8 @@ class ContinuousMLPQFunction(QFunction):
 
         """
         with tf.compat.v1.variable_scope(self._variable_scope):
-            return self.model.build(state_input, action_input, name=name)
+            return self.model.build(state_input, action_input,
+                                    name=name).outputs
 
     def clone(self, name):
         """Return a clone of the Q-function.

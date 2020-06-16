@@ -123,7 +123,7 @@ class CategoricalCNNPolicy(StochasticPolicy):
                 augmented_state_input /= 255.0
             else:
                 augmented_state_input = state_input
-            self._dist = self.model.build(augmented_state_input)
+            self._dist = self.model.build(augmented_state_input).dist
             self._f_prob = tf.compat.v1.get_default_session().make_callable(
                 [tf.argmax(self._dist.sample(), -1), self._dist.probs],
                 feed_list=[state_input])

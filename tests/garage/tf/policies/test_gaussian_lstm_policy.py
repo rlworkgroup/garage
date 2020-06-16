@@ -86,7 +86,7 @@ class TestGaussianLSTMPolicy(TfGraphTestCase):
         state_input = tf.compat.v1.placeholder(tf.float32,
                                                shape=(None, None,
                                                       policy.input_dim))
-        dist_sym, _, _, _, _, _, _ = policy.build(state_input, name='dist_sym')
+        dist_sym = policy.build(state_input, name='dist_sym').dist
 
         concat_obs = np.concatenate([obs.flatten(), np.zeros(action_dim)])
         output1 = self.sess.run(
@@ -117,7 +117,7 @@ class TestGaussianLSTMPolicy(TfGraphTestCase):
         state_input = tf.compat.v1.placeholder(tf.float32,
                                                shape=(None, None,
                                                       policy.input_dim))
-        dist_sym, _, _, _, _, _, _ = policy.build(state_input, name='dist_sym')
+        dist_sym = policy.build(state_input, name='dist_sym').dist
 
         output1 = self.sess.run(
             [policy.distribution.loc],

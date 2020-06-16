@@ -90,7 +90,7 @@ class GaussianMLPEncoder(StochasticEncoder, StochasticModule):
         self._embedding_spec = embedding_spec
         self._latent_dim = embedding_spec.output_space.flat_dim
         self._input_dim = embedding_spec.input_space.flat_dim
-        self._dist = None
+        self._network = None
         self._f_dist = None
 
         self.model = GaussianMLPModel(
@@ -124,10 +124,12 @@ class GaussianMLPEncoder(StochasticEncoder, StochasticModule):
                                                           self._input_dim))
         with tf.compat.v1.variable_scope(self._name) as vs:
             self._variable_scope = vs
-            self._dist, mean_var, log_std_var = self.model.build(
-                embedding_input, name=name)
+            self._network = self.model.build(embedding_input)
             self._f_dist = tf.compat.v1.get_default_session().make_callable(
-                [self._dist.sample(), mean_var, log_std_var],
+                [
+                    self._network.dist.sample(), self._network.mean,
+                    self._network.log_std
+                ],
                 feed_list=[embedding_input])
 
     def build(self, embedding_input, name=None):
@@ -201,22 +203,22 @@ class GaussianMLPEncoder(StochasticEncoder, StochasticModule):
             tfp.Distribution.MultivariateNormalDiag: Encoder distribution.
 
         """
-        return self._dist
+        return self._network.dist
 
     @property
     def input(self):
         """tf.Tensor: Input to encoder network."""
-        return self.model.networks['default'].input
+        return self._network.input
 
     @property
     def latent_mean(self):
         """tf.Tensor: Predicted mean of a Gaussian distribution."""
-        return self._dist.loc
+        return self._network.mean
 
     @property
     def latent_std_param(self):
         """tf.Tensor: Predicted std of a Gaussian distribution."""
-        return self._dist.stddev()
+        return self._network.log_std
 
     def __getstate__(self):
         """Object.__getstate__.
@@ -227,7 +229,7 @@ class GaussianMLPEncoder(StochasticEncoder, StochasticModule):
         """
         new_dict = super().__getstate__()
         del new_dict['_f_dist']
-        del new_dict['_dist']
+        del new_dict['_network']
         return new_dict
 
     def __setstate__(self, state):

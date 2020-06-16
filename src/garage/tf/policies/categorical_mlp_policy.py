@@ -99,7 +99,7 @@ class CategoricalMLPPolicy(StochasticPolicy):
             state_input = tf.compat.v1.placeholder(tf.float32,
                                                    shape=(None, None,
                                                           self._obs_dim))
-            self._dist = self.model.build(state_input)
+            self._dist = self.model.build(state_input).dist
             self._f_prob = tf.compat.v1.get_default_session().make_callable(
                 [tf.argmax(self._dist.sample(), -1), self._dist.probs],
                 feed_list=[state_input])

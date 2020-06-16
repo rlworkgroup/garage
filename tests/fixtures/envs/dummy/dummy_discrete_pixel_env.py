@@ -1,3 +1,4 @@
+"""A dummy discrete pixel env."""
 from unittest import mock
 
 import gym
@@ -7,8 +8,7 @@ from tests.fixtures.envs.dummy import DummyEnv
 
 
 class DummyDiscretePixelEnv(DummyEnv):
-    """
-    A dummy discrete pixel environment.
+    """A dummy discrete pixel environment.
 
     It follows Atari game convention, where actions are 'NOOP', 'FIRE', ...
     It also contains self.unwrapped.ale.lives, get_action_meanings for testing.
@@ -25,54 +25,96 @@ class DummyDiscretePixelEnv(DummyEnv):
     -Done will be True if
         -all 5 lives are exhausted
         -env.step(2), followed by env.step(1)
+
+    Args:
+        random (bool): Whether observations are generated randomly.
+
     """
 
     def __init__(self, random=True):
-        super().__init__(random, obs_dim=(10, 10, 3), action_dim=5)
+        super().__init__(random, obs_dim=(100, 100, 3), action_dim=5)
         self.unwrapped.get_action_meanings = self._get_action_meanings
         self.unwrapped.ale = mock.Mock()
         self.unwrapped.ale.lives = self.get_lives
-        self._observation_space = gym.spaces.Box(
-            low=0, high=255, shape=self._obs_dim, dtype=np.uint8)
+        self._observation_space = gym.spaces.Box(low=0,
+                                                 high=255,
+                                                 shape=self._obs_dim,
+                                                 dtype=np.uint8)
         self.step_called = 0
+        self._lives = None
         self._prev_action = None
 
     @property
     def observation_space(self):
-        """Return an observation space."""
+        """akro.Box: Observation space of this environment."""
         return self._observation_space
 
     @observation_space.setter
     def observation_space(self, observation_space):
+        """Observation space setter.
+
+        Args:
+            observation_space (akro.Box): Observation space to be set.
+
+        """
         self._observation_space = observation_space
 
     @property
     def action_space(self):
-        """Return an action space."""
+        """akro.Discrete: an action space."""
         return gym.spaces.Discrete(self._action_dim)
 
+    # pylint: disable=no-self-use
     def _get_action_meanings(self):
+        """Action meanings.
+
+        Returns:
+            list[str]: Meaning of action, indices are aligned with actions.
+
+        """
         return ['NOOP', 'FIRE', 'SLEEP', 'EAT', 'PLAY']
 
     def get_lives(self):
-        """Get number of lives."""
+        """Get number of lives.
+
+        Returns:
+            int: Number of lives remaining.
+
+        """
         return self._lives
 
     def reset(self):
-        """Reset the environment."""
+        """Reset the environment.
+
+        Returns:
+            np.ndarray: Environment state.
+
+        """
         self.state = np.ones(self._obs_dim, dtype=np.uint8)
         self._lives = 5
         self.step_called = 0
         return self.state
 
     def step(self, action):
-        """
-        Step the environment.
+        """Step the environment.
 
         Before gym fixed overflow issue for sample() in
         np.uint8 environment, we will handle the sampling here.
         We need high=256 since np.random.uniform sample from [low, high)
         (includes low, but excludes high).
+
+        Args:
+            action (int): Action.
+
+        Returns:
+            np.ndarray: observation.
+            float: reward.
+            bool: terminal signal.
+            dict: extra environment info.
+
+        Raises:
+            RuntimeError: step when empty lives left.
+
         """
         done = False
         if self.state is not None:
@@ -83,18 +125,20 @@ class DummyDiscretePixelEnv(DummyEnv):
                 obs = np.full(self._obs_dim, 2, dtype=np.uint8)
             else:
                 if self.random:
-                    obs = np.random.uniform(
-                        low=0, high=256, size=self._obs_dim).astype(np.uint8)
+                    obs = np.random.uniform(low=0,
+                                            high=256,
+                                            size=self._obs_dim).astype(
+                                                np.uint8)
                 else:
                     obs = self.state + action
             if self._lives == 0:
-                raise RuntimeError("DummyEnv: Cannot step when lives = 0!")
+                raise RuntimeError('DummyEnv: Cannot step when lives = 0!')
             self._lives -= 1
             if self._lives == 0:
                 done = True
         else:
             raise RuntimeError(
-                "DummyEnv: reset() must be called before step()!")
+                'DummyEnv: reset() must be called before step()!')
         self.step_called += 1
         self._prev_action = action
 

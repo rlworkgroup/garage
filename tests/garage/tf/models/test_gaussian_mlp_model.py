@@ -19,7 +19,7 @@ class TestGaussianMLPModel(TfGraphTestCase):
 
     def test_dist(self):
         model = GaussianMLPModel(output_dim=1)
-        dist, _, _ = model.build(self.input_var)
+        dist = model.build(self.input_var).dist
         assert isinstance(dist, tfp.distributions.MultivariateNormalDiag)
 
     @pytest.mark.parametrize('output_dim, hidden_sizes',
@@ -33,7 +33,7 @@ class TestGaussianMLPModel(TfGraphTestCase):
                                  std_parameterization='exp',
                                  hidden_w_init=tf.ones_initializer(),
                                  output_w_init=tf.ones_initializer())
-        dist, _, _ = model.build(self.input_var)
+        dist = model.build(self.input_var).dist
 
         mean, log_std = self.sess.run(
             [dist.loc, tf.math.log(dist.stddev())],
@@ -75,7 +75,7 @@ class TestGaussianMLPModel(TfGraphTestCase):
                                  hidden_nonlinearity=None,
                                  hidden_w_init=tf.ones_initializer(),
                                  output_w_init=tf.ones_initializer())
-        dist, _, _ = model.build(self.input_var)
+        dist = model.build(self.input_var).dist
 
         mean, log_std = self.sess.run(
             [dist.loc, tf.math.log(dist.stddev())],
@@ -123,7 +123,7 @@ class TestGaussianMLPModel(TfGraphTestCase):
                                  std_hidden_nonlinearity=None,
                                  std_hidden_w_init=tf.ones_initializer(),
                                  std_output_w_init=tf.ones_initializer())
-        dist, _, _ = model.build(self.input_var)
+        dist = model.build(self.input_var).dist
 
         mean, log_std = self.sess.run(
             [dist.loc, tf.math.log(dist.stddev())],
@@ -166,14 +166,13 @@ class TestGaussianMLPModel(TfGraphTestCase):
                              [(1, (0, )), (1, (1, )), (1, (2, )), (2, (3, )),
                               (2, (1, 1)), (3, (2, 2))])
     def test_std_share_network_is_pickleable(self, output_dim, hidden_sizes):
-        input_var = tf.compat.v1.placeholder(tf.float32, shape=(None, None, 5))
         model = GaussianMLPModel(output_dim=output_dim,
                                  hidden_sizes=hidden_sizes,
                                  std_share_network=True,
                                  hidden_nonlinearity=None,
                                  hidden_w_init=tf.ones_initializer(),
                                  output_w_init=tf.ones_initializer())
-        dist, _, _ = model.build(input_var)
+        dist = model.build(self.input_var).dist
 
         # get output bias
         with tf.compat.v1.variable_scope('GaussianMLPModel', reuse=True):
@@ -184,14 +183,14 @@ class TestGaussianMLPModel(TfGraphTestCase):
 
         output1 = self.sess.run(
             [dist.loc, tf.math.log(dist.stddev())],
-            feed_dict={input_var: self.obs})
+            feed_dict={self.input_var: self.obs})
 
         h = pickle.dumps(model)
         with tf.compat.v1.Session(graph=tf.Graph()) as sess:
             input_var = tf.compat.v1.placeholder(tf.float32,
                                                  shape=(None, None, 5))
             model_pickled = pickle.loads(h)
-            dist2, _, _ = model_pickled.build(input_var)
+            dist2 = model_pickled.build(input_var).dist
             output2 = sess.run(
                 [dist2.loc, tf.math.log(dist2.stddev())],
                 feed_dict={input_var: self.obs})
@@ -203,7 +202,6 @@ class TestGaussianMLPModel(TfGraphTestCase):
                               (2, (1, 1)), (3, (2, 2))])
     def test_without_std_share_network_is_pickleable(self, output_dim,
                                                      hidden_sizes):
-        input_var = tf.compat.v1.placeholder(tf.float32, shape=(None, None, 5))
         model = GaussianMLPModel(output_dim=output_dim,
                                  hidden_sizes=hidden_sizes,
                                  std_share_network=False,
@@ -211,7 +209,7 @@ class TestGaussianMLPModel(TfGraphTestCase):
                                  hidden_nonlinearity=None,
                                  hidden_w_init=tf.ones_initializer(),
                                  output_w_init=tf.ones_initializer())
-        dist, _, _ = model.build(input_var)
+        dist = model.build(self.input_var).dist
 
         # get output bias
         with tf.compat.v1.variable_scope('GaussianMLPModel', reuse=True):
@@ -222,14 +220,14 @@ class TestGaussianMLPModel(TfGraphTestCase):
 
         output1 = self.sess.run(
             [dist.loc, tf.math.log(dist.stddev())],
-            feed_dict={input_var: self.obs})
+            feed_dict={self.input_var: self.obs})
 
         h = pickle.dumps(model)
         with tf.compat.v1.Session(graph=tf.Graph()) as sess:
             input_var = tf.compat.v1.placeholder(tf.float32,
                                                  shape=(None, None, 5))
             model_pickled = pickle.loads(h)
-            dist2, _, _ = model_pickled.build(input_var)
+            dist2 = model_pickled.build(input_var).dist
             output2 = sess.run(
                 [dist2.loc, tf.math.log(dist2.stddev())],
                 feed_dict={input_var: self.obs})
@@ -241,7 +239,6 @@ class TestGaussianMLPModel(TfGraphTestCase):
                               (2, (1, 1), (1, 1)), (3, (2, 2), (2, 2))])
     def test_adaptive_std_is_pickleable(self, output_dim, hidden_sizes,
                                         std_hidden_sizes):
-        input_var = tf.compat.v1.placeholder(tf.float32, shape=(None, None, 5))
         model = GaussianMLPModel(output_dim=output_dim,
                                  hidden_sizes=hidden_sizes,
                                  std_hidden_sizes=std_hidden_sizes,
@@ -253,7 +250,7 @@ class TestGaussianMLPModel(TfGraphTestCase):
                                  std_hidden_nonlinearity=None,
                                  std_hidden_w_init=tf.ones_initializer(),
                                  std_output_w_init=tf.ones_initializer())
-        dist, _, _ = model.build(input_var)
+        dist = model.build(self.input_var).dist
 
         # get output bias
         with tf.compat.v1.variable_scope('GaussianMLPModel', reuse=True):
@@ -265,12 +262,12 @@ class TestGaussianMLPModel(TfGraphTestCase):
         h = pickle.dumps(model)
         output1 = self.sess.run(
             [dist.loc, tf.math.log(dist.stddev())],
-            feed_dict={input_var: self.obs})
+            feed_dict={self.input_var: self.obs})
         with tf.compat.v1.Session(graph=tf.Graph()) as sess:
             input_var = tf.compat.v1.placeholder(tf.float32,
                                                  shape=(None, None, 5))
             model_pickled = pickle.loads(h)
-            dist2, _, _ = model_pickled.build(input_var)
+            dist2 = model_pickled.build(input_var).dist
             output2 = sess.run(
                 [dist2.loc, tf.math.log(dist2.stddev())],
                 feed_dict={input_var: self.obs})
@@ -290,7 +287,7 @@ class TestGaussianMLPModel(TfGraphTestCase):
                                  std_parameterization='softplus',
                                  hidden_w_init=tf.ones_initializer(),
                                  output_w_init=tf.ones_initializer())
-        dist, _, _ = model.build(self.input_var)
+        dist = model.build(self.input_var).dist
 
         mean, log_std = self.sess.run(
             [dist.loc, tf.math.log(dist.stddev())],
@@ -312,7 +309,7 @@ class TestGaussianMLPModel(TfGraphTestCase):
                                  init_std=1,
                                  min_std=10,
                                  std_parameterization='exp')
-        dist, _, _ = model.build(self.input_var)
+        dist = model.build(self.input_var).dist
 
         log_std = self.sess.run(tf.math.log(dist.stddev()),
                                 feed_dict={self.input_var: self.obs})
@@ -330,7 +327,7 @@ class TestGaussianMLPModel(TfGraphTestCase):
                                  init_std=10,
                                  max_std=1,
                                  std_parameterization='exp')
-        dist, _, _ = model.build(self.input_var)
+        dist = model.build(self.input_var).dist
 
         log_std = self.sess.run(tf.math.log(dist.stddev()),
                                 feed_dict={self.input_var: self.obs})
@@ -348,7 +345,7 @@ class TestGaussianMLPModel(TfGraphTestCase):
                                  init_std=1,
                                  min_std=10,
                                  std_parameterization='softplus')
-        dist, _, _ = model.build(self.input_var)
+        dist = model.build(self.input_var).dist
 
         log_std = self.sess.run(tf.math.log(dist.stddev()),
                                 feed_dict={self.input_var: self.obs})
@@ -367,7 +364,7 @@ class TestGaussianMLPModel(TfGraphTestCase):
                                  init_std=10,
                                  max_std=1,
                                  std_parameterization='softplus')
-        dist, _, _ = model.build(self.input_var)
+        dist = model.build(self.input_var).dist
 
         log_std = self.sess.run(tf.math.log(dist.stddev()),
                                 feed_dict={self.input_var: self.obs})

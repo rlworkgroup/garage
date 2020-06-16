@@ -151,10 +151,9 @@ class GaussianMLPPolicy(StochasticPolicy):
             state_input = tf.compat.v1.placeholder(tf.float32,
                                                    shape=(None, None,
                                                           self._obs_dim))
-            self._dist, mean_var, log_std_var = self.model.build(state_input)
+            self._dist, mean, log_std = self.model.build(state_input).outputs
             self._f_dist = tf.compat.v1.get_default_session().make_callable(
-                [self._dist.sample(), mean_var, log_std_var],
-                feed_list=[state_input])
+                [self._dist.sample(), mean, log_std], feed_list=[state_input])
 
     @property
     def input_dim(self):

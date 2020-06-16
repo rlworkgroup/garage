@@ -150,6 +150,8 @@ class NPO(RLAlgorithm):
         self._f_returns = None
         self._f_policy_kl = None
         self._f_policy_entropy = None
+        self._policy_network = None
+        self._old_policy_network = None
 
         self._episode_reward_mean = collections.deque(maxlen=100)
         if policy.vectorized:
@@ -346,8 +348,10 @@ class NPO(RLAlgorithm):
             augmented_obs_var = tf.concat([augmented_obs_var, extra_state_var],
                                           -1)
 
-        self.policy.build(augmented_obs_var, name='policy')
-        self._old_policy.build(augmented_obs_var, name='policy')
+        self._policy_network = self.policy.build(augmented_obs_var,
+                                                 name='policy')
+        self._old_policy_network = self._old_policy.build(augmented_obs_var,
+                                                          name='policy')
 
         policy_loss_inputs = graph_inputs(
             'PolicyLossInputs',
@@ -406,8 +410,8 @@ class NPO(RLAlgorithm):
             if self._positive_adv:
                 adv = positive_advs(adv, eps)
 
-            old_policy_dist = self._old_policy.model.networks['policy'].dist
-            policy_dist = self.policy.model.networks['policy'].dist
+            old_policy_dist = self._old_policy_network.dist
+            policy_dist = self._policy_network.dist
 
             with tf.name_scope('kl'):
                 kl = old_policy_dist.kl_divergence(policy_dist)
@@ -473,7 +477,7 @@ class NPO(RLAlgorithm):
             tf.Tensor: Policy entropy.
 
         """
-        pol_dist = self.policy.model.networks['policy'].dist
+        pol_dist = self._policy_network.dist
 
         with tf.name_scope('policy_entropy'):
             if self._use_neg_logli_entropy:
@@ -625,6 +629,8 @@ class NPO(RLAlgorithm):
         del data['_f_policy_kl']
         del data['_f_rewards']
         del data['_f_returns']
+        del data['_policy_network']
+        del data['_old_policy_network']
         return data
 
     def __setstate__(self, state):

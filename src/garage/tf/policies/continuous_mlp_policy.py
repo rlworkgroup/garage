@@ -86,11 +86,10 @@ class ContinuousMLPPolicy(Policy):
 
         with tf.compat.v1.variable_scope(self.name) as vs:
             self._variable_scope = vs
-            self.model.build(state_input)
+            outputs = self.model.build(state_input).outputs
 
         self._f_prob = tf.compat.v1.get_default_session().make_callable(
-            self.model.networks['default'].outputs,
-            feed_list=[self.model.networks['default'].input])
+            outputs, feed_list=[state_input])
 
     @property
     def input_dim(self):
