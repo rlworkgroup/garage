@@ -8,11 +8,13 @@ import torch
 import torch.nn.functional as F
 
 from garage import log_performance
-from garage.np.algos.off_policy_rl_algorithm import OffPolicyRLAlgorithm
+from garage.np import obtain_evaluation_samples
+from garage.np.algos import RLAlgorithm
+from garage.sampler import OffPolicyVectorizedSampler
 from garage.torch import dict_np_to_torch, global_device
 
 
-class SAC(OffPolicyRLAlgorithm):
+class SAC(RLAlgorithm):
     """A SAC Model in Torch.
 
     Based on Soft Actor-Critic and Applications:
@@ -109,7 +111,6 @@ class SAC(OffPolicyRLAlgorithm):
             num_evaluation_trajectories=10,
             eval_env=None):
 
-        self._policy = policy
         self._qf1 = qf1
         self._qf2 = qf2
         self.replay_buffer = replay_buffer
@@ -122,23 +123,27 @@ class SAC(OffPolicyRLAlgorithm):
         self._num_evaluation_trajectories = num_evaluation_trajectories
         self._eval_env = eval_env
 
-        super().__init__(env_spec=env_spec,
-                         policy=policy,
-                         qf=qf1,
-                         n_train_steps=self._gradient_steps,
-                         max_path_length=max_path_length,
-                         max_eval_path_length=max_eval_path_length,
-                         buffer_batch_size=buffer_batch_size,
-                         min_buffer_size=min_buffer_size,
-                         replay_buffer=replay_buffer,
-                         use_target=True,
-                         discount=discount,
-                         steps_per_epoch=steps_per_epoch)
-        self.reward_scale = reward_scale
+        self._min_buffer_size = min_buffer_size
+        self._steps_per_epoch = steps_per_epoch
+        self._buffer_batch_size = buffer_batch_size
+        self._discount = discount
+        self._reward_scale = reward_scale
+        self.max_path_length = max_path_length
+        self._max_eval_path_length = max_eval_path_length
+
+        # used by OffPolicyVectorizedSampler
+        self.policy = policy
+        self.env_spec = env_spec
+        self.replay_buffer = replay_buffer
+        self.exploration_policy = None
+
+        self.sampler_cls = OffPolicyVectorizedSampler
+
+        self._reward_scale = reward_scale
         # use 2 target q networks
         self._target_qf1 = copy.deepcopy(self._qf1)
         self._target_qf2 = copy.deepcopy(self._qf2)
-        self._policy_optimizer = self._optimizer(self._policy.parameters(),
+        self._policy_optimizer = self._optimizer(self.policy.parameters(),
                                                  lr=self._policy_lr)
         self._qf1_optimizer = self._optimizer(self._qf1.parameters(),
                                               lr=self._qf_lr)
@@ -177,9 +182,10 @@ class SAC(OffPolicyRLAlgorithm):
             self._eval_env = runner.get_env_copy()
         last_return = None
         for _ in runner.step_epochs():
-            for _ in range(self.steps_per_epoch):
-                if not self._buffer_prefilled:
-                    batch_size = int(self.min_buffer_size)
+            for _ in range(self._steps_per_epoch):
+                if not (self.replay_buffer.n_transitions_stored >=
+                        self._min_buffer_size):
+                    batch_size = int(self._min_buffer_size)
                 else:
                     batch_size = None
                 runner.step_path = runner.obtain_samples(
@@ -220,9 +226,9 @@ class SAC(OffPolicyRLAlgorithm):
         """
         del itr
         del paths
-        if self._buffer_prefilled:
+        if self.replay_buffer.n_transitions_stored >= self._min_buffer_size:
             samples = self.replay_buffer.sample_transitions(
-                self.buffer_batch_size)
+                self._buffer_batch_size)
             samples = dict_np_to_torch(samples)
             policy_loss, qf1_loss, qf2_loss = self.optimize_policy(samples)
             self._update_targets()
@@ -355,7 +361,7 @@ class SAC(OffPolicyRLAlgorithm):
         q1_pred = self._qf1(obs, actions)
         q2_pred = self._qf2(obs, actions)
 
-        new_next_actions_dist = self._policy(next_obs)[0]
+        new_next_actions_dist = self.policy(next_obs)[0]
         new_next_actions_pre_tanh, new_next_actions = (
             new_next_actions_dist.rsample_with_pre_tanh_value())
         new_log_pi = new_next_actions_dist.log_prob(
@@ -366,8 +372,8 @@ class SAC(OffPolicyRLAlgorithm):
             self._target_qf2(
                 next_obs, new_next_actions)).flatten() - (alpha * new_log_pi)
         with torch.no_grad():
-            q_target = rewards * self.reward_scale + (
-                1. - terminals) * self.discount * target_q_values
+            q_target = rewards * self._reward_scale + (
+                1. - terminals) * self._discount * target_q_values
         qf1_loss = F.mse_loss(q1_pred.flatten(), q_target)
         qf2_loss = F.mse_loss(q2_pred.flatten(), q_target)
 
@@ -416,7 +422,7 @@ class SAC(OffPolicyRLAlgorithm):
         qf2_loss.backward()
         self._qf2_optimizer.step()
 
-        action_dists = self._policy(obs)[0]
+        action_dists = self.policy(obs)[0]
         new_actions_pre_tanh, new_actions = (
             action_dists.rsample_with_pre_tanh_value())
         log_pi_new_actions = action_dists.log_prob(
@@ -452,11 +458,13 @@ class SAC(OffPolicyRLAlgorithm):
                 trajectories
 
         """
-        eval_trajectories = self._obtain_evaluation_samples(
-            self._eval_env, num_trajs=self._num_evaluation_trajectories)
+        eval_trajectories = obtain_evaluation_samples(
+            self.policy,
+            self._eval_env,
+            num_trajs=self._num_evaluation_trajectories)
         last_return = log_performance(epoch,
                                       eval_trajectories,
-                                      discount=self.discount)
+                                      discount=self._discount)
         return last_return
 
     def _log_statistics(self, policy_loss, qf1_loss, qf2_loss):
@@ -488,7 +496,7 @@ class SAC(OffPolicyRLAlgorithm):
 
         """
         return [
-            self._policy, self._qf1, self._qf2, self._target_qf1,
+            self.policy, self._qf1, self._qf2, self._target_qf1,
             self._target_qf2
         ]
 

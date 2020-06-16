@@ -1,8 +1,8 @@
 """A dummy off-policy algorithm."""
-from garage.np.algos import OffPolicyRLAlgorithm
+from garage.np.algos import RLAlgorithm
 
 
-class DummyOffPolicyAlgo(OffPolicyRLAlgorithm):
+class DummyOffPolicyAlgo(RLAlgorithm):
     """A dummy off-policy algorithm."""
 
     def init_opt(self):

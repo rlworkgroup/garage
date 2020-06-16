@@ -11,11 +11,15 @@ import numpy as np
 import tensorflow as tf
 
 from garage import _Default, make_optimizer
-from garage.np.algos.off_policy_rl_algorithm import OffPolicyRLAlgorithm
+from garage import log_performance
+from garage.np import obtain_evaluation_samples
+from garage.np import samples_to_tensors
+from garage.np.algos import RLAlgorithm
+from garage.sampler import OffPolicyVectorizedSampler
 from garage.tf.misc import tensor_utils
 
 
-class TD3(OffPolicyRLAlgorithm):
+class TD3(RLAlgorithm):
     """Implementation of TD3.
 
     Based on https://arxiv.org/pdf/1802.09477.pdf.
@@ -121,6 +125,8 @@ class TD3(OffPolicyRLAlgorithm):
         self._target_qf = qf.clone('target_qf')
 
         self.qf2 = qf2
+        self.qf = qf
+
         self._exploration_policy_sigma = exploration_policy_sigma
         self._exploration_policy_clip = exploration_policy_clip
         self._actor_update_period = actor_update_period
@@ -132,21 +138,30 @@ class TD3(OffPolicyRLAlgorithm):
         self._policy_lr = policy_lr
         self._qf_lr = qf_lr
 
-        super(TD3, self).__init__(env_spec=env_spec,
-                                  policy=policy,
-                                  qf=qf,
-                                  replay_buffer=replay_buffer,
-                                  discount=discount,
-                                  steps_per_epoch=steps_per_epoch,
-                                  max_path_length=max_path_length,
-                                  max_eval_path_length=max_eval_path_length,
-                                  n_train_steps=n_train_steps,
-                                  buffer_batch_size=buffer_batch_size,
-                                  min_buffer_size=min_buffer_size,
-                                  rollout_batch_size=rollout_batch_size,
-                                  reward_scale=reward_scale,
-                                  smooth_return=smooth_return,
-                                  exploration_policy=exploration_policy)
+        self._policy = policy
+        self._n_train_steps = n_train_steps
+
+        self._min_buffer_size = min_buffer_size
+        self._qf = qf
+        self._steps_per_epoch = steps_per_epoch
+        self._n_train_steps = n_train_steps
+        self._buffer_batch_size = buffer_batch_size
+        self._discount = discount
+        self._reward_scale = reward_scale
+        self._smooth_return = smooth_return
+        self.max_path_length = max_path_length
+        self._max_eval_path_length = max_eval_path_length
+
+        # used by OffPolicyVectorizedSampler
+        self.env_spec = env_spec
+        self.rollout_batch_size = rollout_batch_size
+        self.replay_buffer = replay_buffer
+        self.policy = policy
+        self.exploration_policy = exploration_policy
+
+        self.sampler_cls = OffPolicyVectorizedSampler
+
+        self.init_opt()
 
     def init_opt(self):
         """Build the loss function and init the optimizer."""
@@ -276,6 +291,39 @@ class TD3(OffPolicyRLAlgorithm):
         self.__dict__.update(state)
         self.init_opt()
 
+    def train(self, runner):
+        """Obtain samplers and start actual training for each epoch.
+
+        Args:
+            runner (LocalRunner): LocalRunner is passed to give algorithm
+                the access to runner.step_epochs(), which provides services
+                such as snapshotting and sampler control.
+
+        Returns:
+            float: The average return in last epoch cycle.
+
+        """
+        last_return = None
+        runner.enable_logging = False
+
+        for _ in runner.step_epochs():
+            for cycle in range(self._steps_per_epoch):
+                runner.step_path = runner.obtain_samples(runner.step_itr)
+                for path in runner.step_path:
+                    path['rewards'] *= self._reward_scale
+                last_return = self.train_once(runner.step_itr,
+                                              runner.step_path)
+                if (cycle == 0 and self.replay_buffer.n_transitions_stored >=
+                        self._min_buffer_size):
+                    runner.enable_logging = True
+                    log_performance(runner.step_itr,
+                                    obtain_evaluation_samples(
+                                        self.policy, runner.get_env_copy()),
+                                    discount=self._discount)
+                runner.step_itr += 1
+
+        return last_return
+
     def train_once(self, itr, paths):
         """Perform one step of policy optimization given one batch of samples.
 
@@ -287,9 +335,9 @@ class TD3(OffPolicyRLAlgorithm):
             np.float64: Average return.
 
         """
-        paths = self.process_samples(itr, paths)
+        paths = samples_to_tensors(paths)
 
-        epoch = itr / self.steps_per_epoch
+        epoch = itr / self._steps_per_epoch
 
         self._episode_rewards.extend([
             path for path, complete in zip(paths['undiscounted_returns'],
@@ -310,12 +358,17 @@ class TD3(OffPolicyRLAlgorithm):
             last_average_return = np.mean(self._episode_rewards)
 
         if self._success_history:
-            if itr % self.steps_per_epoch == 0 and self._buffer_prefilled:
+            if (itr % self._steps_per_epoch == 0
+                    and self.replay_buffer.n_transitions_stored >=
+                    self._min_buffer_size):
                 avg_success_rate = np.mean(self._success_history)
 
-        self.log_diagnostics(paths)
-        for _ in range(self.n_train_steps):
-            if self._buffer_prefilled:
+        self.policy.log_diagnostics(paths)
+        self._qf.log_diagnostics(paths)
+
+        for _ in range(self._n_train_steps):
+            if (self.replay_buffer.n_transitions_stored >=
+                    self._min_buffer_size):
                 qf_loss, y_s, qval, policy_loss = self.optimize_policy(itr)
 
                 self._episode_policy_losses.append(policy_loss)
@@ -323,10 +376,11 @@ class TD3(OffPolicyRLAlgorithm):
                 self._epoch_ys.append(y_s)
                 self._epoch_qs.append(qval)
 
-        if itr % self.steps_per_epoch == 0:
+        if itr % self._steps_per_epoch == 0:
             logger.log('Training finished')
 
-            if self._buffer_prefilled:
+            if (self.replay_buffer.n_transitions_stored >=
+                    self._min_buffer_size):
                 tabular.record('Epoch', epoch)
                 tabular.record('Policy/AveragePolicyLoss',
                                np.mean(self._episode_policy_losses))
@@ -342,7 +396,7 @@ class TD3(OffPolicyRLAlgorithm):
                                np.mean(np.abs(self._epoch_ys)))
                 tabular.record('AverageSuccessRate', avg_success_rate)
 
-            if not self.smooth_return:
+            if not self._smooth_return:
                 self._episode_rewards = []
                 self._episode_policy_losses = []
                 self._episode_qf_losses = []
@@ -366,7 +420,7 @@ class TD3(OffPolicyRLAlgorithm):
 
         """
         transitions = self.replay_buffer.sample_transitions(
-            self.buffer_batch_size)
+            self._buffer_batch_size)
 
         observations = transitions['observations']
         rewards = transitions['rewards']
@@ -390,7 +444,7 @@ class TD3(OffPolicyRLAlgorithm):
         target_q2vals = self.target_qf2_f_prob_online(next_inputs,
                                                       target_actions)
         target_qvals = np.minimum(target_qvals, target_q2vals)
-        ys = (rewards + (1.0 - terminals) * self.discount * target_qvals)
+        ys = (rewards + (1.0 - terminals) * self._discount * target_qvals)
 
         _, qval_loss, qval = self.f_train_qf(ys, inputs, actions)
         _, q2val_loss, q2val = self.f_train_qf2(ys, inputs, actions)
