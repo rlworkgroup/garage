@@ -1,4 +1,5 @@
 """Environment wrapper that runs multiple environments."""
+import copy
 import warnings
 
 import numpy as np
@@ -45,6 +46,10 @@ class VecEnvExecutor:
                 * rewards (np.ndarray)
                 * dones (np.ndarray): The done signal from the environment.
                 * env_infos (dict[str, np.ndarray])
+                * completes (np.ndarray): whether or not the path is complete.
+                    A path is complete at some time-step N if the done signal
+                    has been received at that or before N, or if
+                    max_path_length N >= max_path_length.
 
         """
         all_results = [env.step(a) for (a, env) in zip(action_n, self.envs)]
@@ -53,7 +58,7 @@ class VecEnvExecutor:
         dones = np.asarray(dones)
         rewards = np.asarray(rewards)
         self.ts += 1
-        completes = np.asarray(dones)
+        completes = copy.deepcopy(dones)
         if self.max_path_length is not None:
             completes[self.ts >= self.max_path_length] = True
         for (i, complete) in enumerate(completes):
@@ -62,7 +67,7 @@ class VecEnvExecutor:
                 self.ts[i] = 0
             env_infos[i]['vec_env_executor.complete'] = completes
         return (obs, rewards, dones,
-                tensor_utils.stack_tensor_dict_list(env_infos))
+                tensor_utils.stack_tensor_dict_list(env_infos), completes)
 
     def reset(self):
         """Reset all environments.

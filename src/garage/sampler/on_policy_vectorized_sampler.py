@@ -105,7 +105,7 @@ class OnPolicyVectorizedSampler(BatchSampler):
         paths = []
         n_samples = 0
         obses = self._vec_env.reset()
-        dones = np.asarray([True] * self._vec_env.num_envs)
+        completes = np.asarray([True] * self._vec_env.num_envs)
         running_paths = [None] * self._vec_env.num_envs
 
         policy_time = 0
@@ -117,13 +117,13 @@ class OnPolicyVectorizedSampler(BatchSampler):
         with click.progressbar(length=batch_size, label='Sampling') as pbar:
             while n_samples < batch_size:
                 t = time.time()
-                policy.reset(dones)
+                policy.reset(completes)
 
                 actions, agent_infos = policy.get_actions(obses)
 
                 policy_time += time.time() - t
                 t = time.time()
-                next_obses, rewards, dones, env_infos = \
+                next_obses, rewards, dones, env_infos, completes = \
                     self._vec_env.step(actions)
                 env_time += time.time() - t
                 t = time.time()
@@ -136,9 +136,9 @@ class OnPolicyVectorizedSampler(BatchSampler):
                     agent_infos = [
                         dict() for _ in range(self._vec_env.num_envs)
                     ]
-                for idx, observation, action, reward, env_info, agent_info, done in zip(  # noqa: E501
+                for idx, observation, action, reward, env_info, agent_info, done, complete in zip(  # noqa: E501
                         itertools.count(), obses, actions, rewards, env_infos,
-                        agent_infos, dones):
+                        agent_infos, dones, completes):
                     if running_paths[idx] is None:
                         running_paths[idx] = dict(observations=[],
                                                   actions=[],
@@ -152,7 +152,7 @@ class OnPolicyVectorizedSampler(BatchSampler):
                     running_paths[idx]['env_infos'].append(env_info)
                     running_paths[idx]['agent_infos'].append(agent_info)
                     running_paths[idx]['dones'].append(done)
-                    if done:
+                    if complete:
                         obs = np.asarray(running_paths[idx]['observations'])
                         actions = np.asarray(running_paths[idx]['actions'])
                         paths.append(
