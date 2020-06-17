@@ -135,27 +135,21 @@ class GaussianMLPTaskEmbeddingPolicy(TaskEmbeddingPolicy):
 
             with tf.compat.v1.variable_scope('concat_obs_latent'):
                 obs_latent_input = tf.concat([obs_input, latent_input], -1)
-            self._dist, _, _ = self.model.build(obs_latent_input,
-                                                name='given_latent')
+            self._dist, mean_var, log_std_var = self.model.build(
+                obs_latent_input, name='given_latent')
 
             with tf.compat.v1.variable_scope('concat_obs_latent_var'):
                 embed_state_input = tf.concat([obs_input, latent_var], -1)
 
-            dist_given_task, _, _ = self.model.build(embed_state_input,
-                                                     name='given_task')
+            dist_given_task, mean_g_t, log_std_g_t = self.model.build(
+                embed_state_input, name='given_task')
 
         self._f_dist_obs_latent = tf.compat.v1.get_default_session(
-        ).make_callable([
-            self._dist.sample(), self._dist.loc,
-            tf.math.log(self._dist.stddev())
-        ],
+        ).make_callable([self._dist.sample(), mean_var, log_std_var],
                         feed_list=[obs_input, latent_input])
 
         self._f_dist_obs_task = tf.compat.v1.get_default_session(
-        ).make_callable([
-            dist_given_task.sample(), dist_given_task.loc,
-            tf.math.log(dist_given_task.stddev())
-        ],
+        ).make_callable([dist_given_task.sample(), mean_g_t, log_std_g_t],
                         feed_list=[obs_input, task_input])
 
     @property
