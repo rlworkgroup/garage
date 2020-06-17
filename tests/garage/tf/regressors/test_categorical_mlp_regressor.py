@@ -143,58 +143,6 @@ class TestCategoricalMLPRegressor(TfGraphTestCase):
         assert np.allclose(x_mean, x_mean_expected)
         assert np.allclose(x_std, x_std_expected)
 
-    @pytest.mark.parametrize('output_dim, input_shape',
-                             [(1, (1, )), (1, (2, )), (2, (3, )), (2, (1, 1)),
-                              (3, (2, 2))])
-    def test_dist_info_sym(self, output_dim, input_shape):
-        cmr = CategoricalMLPRegressor(input_shape=input_shape,
-                                      output_dim=output_dim)
-
-        new_xs_var = tf.compat.v1.placeholder(tf.float32,
-                                              shape=(None, ) + input_shape)
-
-        data = np.random.random(size=input_shape)
-        label = np.random.randint(0, output_dim)
-        one_hot_label = np.zeros(output_dim)
-        one_hot_label[label] = 1
-
-        outputs = cmr.dist_info_sym(new_xs_var, name='dist_info_sym')
-        prob = self.sess.run(outputs, feed_dict={new_xs_var: [data]})
-
-        expected_prob = cmr._f_prob(np.asarray([data]))
-
-        assert np.allclose(prob['prob'], expected_prob, rtol=0, atol=1e-5)
-
-    @pytest.mark.parametrize('output_dim, input_shape',
-                             [(1, (1, )), (1, (2, )), (2, (3, )), (2, (1, 1)),
-                              (3, (2, 2))])
-    def test_log_likelihood_sym(self, output_dim, input_shape):
-        cmr = CategoricalMLPRegressor(input_shape=input_shape,
-                                      output_dim=output_dim)
-
-        new_xs_var = tf.compat.v1.placeholder(tf.float32,
-                                              shape=(None, ) + input_shape)
-        new_ys_var = tf.compat.v1.placeholder(dtype=tf.float32,
-                                              name='ys',
-                                              shape=(None, output_dim))
-
-        data = np.random.random(size=input_shape)
-        label = np.random.randint(0, output_dim)
-        one_hot_label = np.zeros(output_dim)
-        one_hot_label[label] = 1
-
-        ll = cmr.predict_log_likelihood([data], [one_hot_label])
-
-        outputs = cmr.log_likelihood_sym(new_xs_var, new_ys_var, name='ll_sym')
-
-        ll_from_sym = self.sess.run(outputs,
-                                    feed_dict={
-                                        new_xs_var: [data],
-                                        new_ys_var: [one_hot_label]
-                                    })
-
-        assert np.allclose(ll, ll_from_sym, rtol=0, atol=1e-5)
-
     @mock.patch('tests.garage.tf.regressors.'
                 'test_categorical_mlp_regressor.'
                 'LbfgsOptimizer')
@@ -222,7 +170,8 @@ class TestCategoricalMLPRegressor(TfGraphTestCase):
         cmr = CategoricalMLPRegressor(input_shape=(1, ), output_dim=2)
 
         with tf.compat.v1.variable_scope(
-                'CategoricalMLPRegressor/NormalizedInputMLPModel', reuse=True):
+                'CategoricalMLPRegressor/CategoricalMLPRegressorModel',
+                reuse=True):
             bias = tf.compat.v1.get_variable('mlp/hidden_0/bias')
         bias.load(tf.ones_like(bias).eval())
 
@@ -238,7 +187,8 @@ class TestCategoricalMLPRegressor(TfGraphTestCase):
         cmr = CategoricalMLPRegressor(input_shape=(1, ), output_dim=2)
 
         with tf.compat.v1.variable_scope(
-                'CategoricalMLPRegressor/NormalizedInputMLPModel', reuse=True):
+                'CategoricalMLPRegressor/CategoricalMLPRegressorModel',
+                reuse=True):
             x_mean = tf.compat.v1.get_variable('normalized_vars/x_mean')
         x_mean.load(tf.ones_like(x_mean).eval())
         x1 = cmr.model._networks['default'].x_mean.eval()
