@@ -10,7 +10,7 @@ class CNNBaseModule(nn.Module):
     """Convolutional neural network (CNN) module in pytorch.
 
     Note:
-        Based on 'NCHW' data format: [batch, channel, height, width].
+        Based on 'NCHW' data format: [batch_size, channel, height, width].
 
     A PyTorch module composed only of a CNN with
     multiple parallel output layers which maps real-valued inputs to
@@ -55,10 +55,10 @@ class CNNBaseModule(nn.Module):
             Activation function for output dense layer. It should return a
             torch.Tensor. Set it to None to maintain a linear activation.
             Size of the parameter should be 1 or equal to n_head
-        output_w_inits (callable): Initializer function for
+        output_w_init (callable): Initializer function for
             the weight of output dense layer(s). The function should return a
             torch.Tensor. Size of the parameter should be 1 or equal to n_head
-        output_b_inits (callable): Initializer function for
+        output_b_init (callable): Initializer function for
             the bias of output dense layer(s). The function should return a
             torch.Tensor. Size of the parameter should be 1 or equal to n_head
         layer_normalization (bool): Bool for using layer normalization or not.
@@ -75,14 +75,16 @@ class CNNBaseModule(nn.Module):
             hidden_nonlinearity=nn.ReLU,
             hidden_w_init=nn.init.xavier_uniform_,
             hidden_b_init=nn.init.zeros_,
-            paddings=0,
+            paddings=[
+                0,
+            ],
             padding_mode='zeros',
             max_pool=False,
             pool_shapes=None,
             pool_strides=1,
             output_nonlinearity=None,
-            output_w_inits=nn.init.xavier_uniform_,
-            output_b_inits=nn.init.zeros_,
+            output_w_init=nn.init.xavier_uniform_,
+            output_b_init=nn.init.zeros_,
             layer_normalization=False,
     ):
         super().__init__()
@@ -127,8 +129,8 @@ class CNNBaseModule(nn.Module):
         self._output_layers = nn.ModuleList()
         output_layer = nn.Sequential()
         linear_layer = nn.Linear(prev_size, output_dim)
-        output_w_inits(linear_layer.weight)
-        output_b_inits(linear_layer.bias)
+        output_w_init(linear_layer.weight)
+        output_b_init(linear_layer.bias)
         output_layer.add_module('linear', linear_layer)
         if output_nonlinearity:
             output_layer.add_module('non_linearity',
@@ -186,8 +188,14 @@ def _conv(in_channels,
         torch.Tensor: The output of the 2D convolution.
 
     """
-    return nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding,
-                     padding_mode, dilation, bias)
+    return nn.Conv2d(in_channels=in_channels,
+                     out_channels=out_channels,
+                     kernel_size=kernel_size,
+                     stride=stride,
+                     padding=padding,
+                     padding_mode=padding_mode,
+                     dilation=dilation,
+                     bias=bias)
 
 
 class _Flatten(nn.Module):
@@ -202,9 +210,9 @@ class _Flatten(nn.Module):
             View of that data (analogous to numpy.reshape)
 
         """
-        # x.size() read in N, C, H, W
-        # "flatten" the C * H * W values into a single vector per image
-        return x.view(x.size(0), -1)
+        # x.shape read in [N, C, H, W]
+        # "flatten" the C * H * W values into a single vector per data, such that the shape becomes: [batch_size, C x H x W]
+        return x.view(x.shape[0], -1)
 
 
 class _NonLinearity(nn.Module):

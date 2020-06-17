@@ -8,7 +8,8 @@ import torch
 from torch import nn
 from torch.distributions import Categorical
 
-from garage.torch.modules import CNNBaseModule, MLPModule
+from garage.torch.modules.cnn_module import CNNBaseModule
+from garage.torch.modules.mlp_module import MLPModule
 
 
 class CategoricalCNNModule(nn.Module):
