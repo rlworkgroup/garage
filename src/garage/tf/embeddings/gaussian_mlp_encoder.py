@@ -125,10 +125,10 @@ class GaussianMLPEncoder(StochasticEncoder, StochasticModule):
         """
         with tf.compat.v1.variable_scope(self._name) as vs:
             self._variable_scope = vs
-            self._dist, _, _ = self.model.build(embedding_input, name=name)
+            self._dist, mean_var, log_std_var = self.model.build(
+                embedding_input, name=name)
             self._f_dist = tf.compat.v1.get_default_session().make_callable(
-                [self._dist.sample(), self._dist.loc,
-                 self._dist.stddev()],
+                [self._dist.sample(), mean_var, log_std_var],
                 feed_list=[embedding_input])
 
     @property
