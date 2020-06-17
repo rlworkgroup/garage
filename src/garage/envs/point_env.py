@@ -66,7 +66,7 @@ class PointEnv(gym.Env):
         """
         self._point = np.zeros_like(self._goal)
         dist = np.linalg.norm(self._point - self._goal)
-        return np.concatenate([self._point, (dist,)])
+        return np.concatenate([self._point, (dist, )])
 
     def step(self, action):
         """Step the environment state.
@@ -99,13 +99,9 @@ class PointEnv(gym.Env):
         # sometimes we don't want to terminate
         done = succ and not self._never_done
 
-        obs = np.concatenate([self._point, (dist,)])
+        obs = np.concatenate([self._point, (dist, )])
 
-        return Step(obs,
-                    reward,
-                    done,
-                    task=self._task,
-                    success=succ)
+        return Step(obs, reward, done, task=self._task, success=succ)
 
     def render(self, mode='human'):
         """Draw the environment.
