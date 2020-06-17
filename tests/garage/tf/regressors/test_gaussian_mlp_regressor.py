@@ -33,17 +33,17 @@ class TestGaussianMLPRegressor(TfGraphTestCase):
         expected = [[0], [-1], [-0.707], [0], [0.707], [1], [0]]
         assert np.allclose(prediction, expected, rtol=0, atol=0.1)
 
-        x_mean = self.sess.run(gmr.model.networks['default'].x_mean)
+        x_mean = self.sess.run(gmr.model._networks['default'].x_mean)
         x_mean_expected = np.mean(observations, axis=0, keepdims=True)
-        x_std = self.sess.run(gmr.model.networks['default'].x_std)
+        x_std = self.sess.run(gmr.model._networks['default'].x_std)
         x_std_expected = np.std(observations, axis=0, keepdims=True)
 
         assert np.allclose(x_mean, x_mean_expected)
         assert np.allclose(x_std, x_std_expected)
 
-        y_mean = self.sess.run(gmr.model.networks['default'].y_mean)
+        y_mean = self.sess.run(gmr.model._networks['default'].y_mean)
         y_mean_expected = np.mean(returns, axis=0, keepdims=True)
-        y_std = self.sess.run(gmr.model.networks['default'].y_std)
+        y_std = self.sess.run(gmr.model._networks['default'].y_std)
         y_std_expected = np.std(returns, axis=0, keepdims=True)
 
         assert np.allclose(y_mean, y_mean_expected)
@@ -75,16 +75,16 @@ class TestGaussianMLPRegressor(TfGraphTestCase):
         expected = [[0], [-1], [-0.707], [0], [0.707], [1], [0]]
         assert np.allclose(prediction, expected, rtol=0, atol=0.1)
 
-        x_mean = self.sess.run(gmr.model.networks['default'].x_mean)
+        x_mean = self.sess.run(gmr.model._networks['default'].x_mean)
         x_mean_expected = np.zeros_like(x_mean)
-        x_std = self.sess.run(gmr.model.networks['default'].x_std)
+        x_std = self.sess.run(gmr.model._networks['default'].x_std)
         x_std_expected = np.ones_like(x_std)
         assert np.array_equal(x_mean, x_mean_expected)
         assert np.array_equal(x_std, x_std_expected)
 
-        y_mean = self.sess.run(gmr.model.networks['default'].y_mean)
+        y_mean = self.sess.run(gmr.model._networks['default'].y_mean)
         y_mean_expected = np.zeros_like(y_mean)
-        y_std = self.sess.run(gmr.model.networks['default'].y_std)
+        y_std = self.sess.run(gmr.model._networks['default'].y_std)
         y_std_expected = np.ones_like(y_std)
 
         assert np.allclose(y_mean, y_mean_expected)
@@ -162,11 +162,11 @@ class TestGaussianMLPRegressor(TfGraphTestCase):
                 'GaussianMLPRegressor/GaussianMLPRegressorModel', reuse=True):
             x_mean = tf.compat.v1.get_variable('normalized_vars/x_mean')
         x_mean.load(tf.ones_like(x_mean).eval())
-        x1 = gmr.model.networks['default'].x_mean.eval()
+        x1 = gmr.model._networks['default'].x_mean.eval()
         h = pickle.dumps(gmr)
         with tf.compat.v1.Session(graph=tf.Graph()):
             gmr_pickled = pickle.loads(h)
-            x2 = gmr_pickled.model.networks['default'].x_mean.eval()
+            x2 = gmr_pickled.model._networks['default'].x_mean.eval()
             assert np.array_equal(x1, x2)
 
     def test_auxiliary(self):

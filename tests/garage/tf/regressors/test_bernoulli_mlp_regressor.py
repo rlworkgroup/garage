@@ -88,9 +88,9 @@ class TestBernoulliMLPRegressor(TfGraphTestCase):
         prediction = np.cast['int'](bmr.predict(paths['observations']))
         assert np.allclose(prediction, expected, rtol=0, atol=0.1)
 
-        x_mean = self.sess.run(bmr.model.networks['default'].x_mean)
+        x_mean = self.sess.run(bmr.model._networks['default'].x_mean)
         x_mean_expected = np.mean(observations, axis=0, keepdims=True)
-        x_std = self.sess.run(bmr.model.networks['default'].x_std)
+        x_std = self.sess.run(bmr.model._networks['default'].x_std)
         x_std_expected = np.std(observations, axis=0, keepdims=True)
 
         assert np.allclose(x_mean, x_mean_expected)
@@ -119,9 +119,9 @@ class TestBernoulliMLPRegressor(TfGraphTestCase):
 
         assert np.allclose(prediction, expected, rtol=0, atol=0.1)
 
-        x_mean = self.sess.run(bmr.model.networks['default'].x_mean)
+        x_mean = self.sess.run(bmr.model._networks['default'].x_mean)
         x_mean_expected = np.zeros_like(x_mean)
-        x_std = self.sess.run(bmr.model.networks['default'].x_std)
+        x_std = self.sess.run(bmr.model._networks['default'].x_std)
         x_std_expected = np.ones_like(x_std)
 
         assert np.allclose(x_mean, x_mean_expected)
@@ -149,9 +149,9 @@ class TestBernoulliMLPRegressor(TfGraphTestCase):
 
         assert np.allclose(prediction, expected, rtol=0, atol=0.1)
 
-        x_mean = self.sess.run(bmr.model.networks['default'].x_mean)
+        x_mean = self.sess.run(bmr.model._networks['default'].x_mean)
         x_mean_expected = np.mean(observations, axis=0, keepdims=True)
-        x_std = self.sess.run(bmr.model.networks['default'].x_std)
+        x_std = self.sess.run(bmr.model._networks['default'].x_std)
         x_std_expected = np.std(observations, axis=0, keepdims=True)
 
         assert np.allclose(x_mean, x_mean_expected)
@@ -274,9 +274,9 @@ class TestBernoulliMLPRegressor(TfGraphTestCase):
                 'BernoulliMLPRegressor/NormalizedInputMLPModel', reuse=True):
             x_mean = tf.compat.v1.get_variable('normalized_vars/x_mean')
         x_mean.load(tf.ones_like(x_mean).eval())
-        x1 = bmr.model.networks['default'].x_mean.eval()
+        x1 = bmr.model._networks['default'].x_mean.eval()
         h = pickle.dumps(bmr)
         with tf.compat.v1.Session(graph=tf.Graph()):
             bmr_pickled = pickle.loads(h)
-            x2 = bmr_pickled.model.networks['default'].x_mean.eval()
+            x2 = bmr_pickled.model._networks['default'].x_mean.eval()
             assert np.array_equal(x1, x2)

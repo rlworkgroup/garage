@@ -39,10 +39,9 @@ class TestGaussianLSTMModel(TfGraphTestCase):
         step_cell_var = tf.compat.v1.placeholder(shape=(self.batch_size, 1),
                                                  name='step_cell',
                                                  dtype=tf.float32)
-        model.build(self.input_var, self.step_input_var, step_hidden_var,
-                    step_cell_var)
-        assert isinstance(model.networks['default'].dist,
-                          tfp.distributions.MultivariateNormalDiag)
+        dist = model.build(self.input_var, self.step_input_var,
+                           step_hidden_var, step_cell_var).dist
+        assert isinstance(dist, tfp.distributions.MultivariateNormalDiag)
 
     # yapf: disable
     @pytest.mark.parametrize('output_dim, hidden_dim', [

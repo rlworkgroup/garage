@@ -91,6 +91,8 @@ class DiscreteMLPQFunction(QFunction):
                 output_b_init=output_b_init,
                 layer_normalization=layer_normalization)
 
+        self._network = None
+
         self._initialize()
 
     def _initialize(self):
@@ -100,7 +102,7 @@ class DiscreteMLPQFunction(QFunction):
 
         with tf.compat.v1.variable_scope(self.name) as vs:
             self._variable_scope = vs
-            self.model.build(obs_ph)
+            self._network = self.model.build(obs_ph)
 
     @property
     def q_vals(self):
@@ -110,7 +112,7 @@ class DiscreteMLPQFunction(QFunction):
             list[tf.Tensor]: Q values.
 
         """
-        return self.model.networks['default'].outputs
+        return self._network.outputs
 
     @property
     def input(self):
@@ -120,7 +122,7 @@ class DiscreteMLPQFunction(QFunction):
             tf.Tensor: QFunction Input.
 
         """
-        return self.model.networks['default'].input
+        return self._network.input
 
     # pylint: disable=arguments-differ
     def get_qval_sym(self, state_input, name):
@@ -161,6 +163,17 @@ class DiscreteMLPQFunction(QFunction):
                               output_b_init=self._output_b_init,
                               dueling=self._dueling,
                               layer_normalization=self._layer_normalization)
+
+    def __getstate__(self):
+        """Object.__getstate__.
+
+        Returns:
+            dict: The state.
+
+        """
+        new_dict = self.__dict__.copy()
+        del new_dict['_network']
+        return new_dict
 
     def __setstate__(self, state):
         """Object.__setstate__.

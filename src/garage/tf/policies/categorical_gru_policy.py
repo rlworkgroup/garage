@@ -122,6 +122,8 @@ class CategoricalGRUPolicy(StochasticPolicy):
 
         self._prev_actions = None
         self._prev_hiddens = None
+        self._dist = None
+        self._init_hidden = None
 
         self._initialize()
 
@@ -141,13 +143,12 @@ class CategoricalGRUPolicy(StochasticPolicy):
                 shape=(None, self._hidden_dim),
                 name='step_hidden_input',
                 dtype=tf.float32)
-            self.model.build(state_input, step_input_var, step_hidden_var)
+            (self._dist, step_out, step_hidden,
+             self._init_hidden) = self.model.build(state_input, step_input_var,
+                                                   step_hidden_var).outputs
 
         self._f_step_prob = tf.compat.v1.get_default_session().make_callable(
-            [
-                self.model.networks['default'].step_output,
-                self.model.networks['default'].step_hidden
-            ],
+            [step_out, step_hidden],
             feed_list=[step_input_var, step_hidden_var])
 
     def build(self, state_input, name=None):
@@ -209,8 +210,7 @@ class CategoricalGRUPolicy(StochasticPolicy):
             self._prev_hiddens = np.zeros((len(do_resets), self._hidden_dim))
 
         self._prev_actions[do_resets] = 0.
-        self._prev_hiddens[do_resets] = self.model.networks[
-            'default'].init_hidden.eval()
+        self._prev_hiddens[do_resets] = self._init_hidden.eval()
 
     def get_action(self, observation):
         """Return a single action.
@@ -261,7 +261,7 @@ class CategoricalGRUPolicy(StochasticPolicy):
             tfp.Distribution.OneHotCategorical: Policy distribution.
 
         """
-        return self.model.networks['default'].dist
+        return self._dist
 
     @property
     def state_info_specs(self):
@@ -319,6 +319,8 @@ class CategoricalGRUPolicy(StochasticPolicy):
         """
         new_dict = super().__getstate__()
         del new_dict['_f_step_prob']
+        del new_dict['_dist']
+        del new_dict['_init_hidden']
         return new_dict
 
     def __setstate__(self, state):

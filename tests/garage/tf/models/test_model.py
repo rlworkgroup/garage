@@ -89,8 +89,8 @@ class TestModel(TfGraphTestCase):
         outputs = model.build(input_var).outputs
         data = np.ones((3, 5))
         out, model_out = self.sess.run(
-            [outputs, model.networks['default'].outputs],
-            feed_dict={model.networks['default'].input: data})
+            [outputs, model._networks['default'].outputs],
+            feed_dict={model._networks['default'].input: data})
         assert np.array_equal(out, model_out)
         assert model.name == type(model).__name__
 
@@ -100,8 +100,8 @@ class TestModel(TfGraphTestCase):
         outputs = model.build(input_var, name='network_2').outputs
         data = np.ones((3, 5))
         result, result2 = self.sess.run(
-            [outputs, model.networks['network_2'].outputs],
-            feed_dict={model.networks['network_2'].input: data})
+            [outputs, model._networks['network_2'].outputs],
+            feed_dict={model._networks['network_2'].input: data})
         assert np.array_equal(result, result2)
         assert model.name == 'MySimpleModel'
 
@@ -154,8 +154,8 @@ class TestModel(TfGraphTestCase):
         outputs = model.build(input_var).outputs
         data = np.ones((3, 5))
         out, model_out = self.sess.run(
-            [outputs, model.networks['default'].outputs],
-            feed_dict={model.networks['default'].input: data})
+            [outputs, model._networks['default'].outputs],
+            feed_dict={model._networks['default'].input: data})
 
         assert np.array_equal(out, model_out)
 
@@ -166,8 +166,8 @@ class TestModel(TfGraphTestCase):
         outputs = model.build(input_var).outputs
         data = np.ones((3, 5))
         out, model_out = self.sess.run(
-            [outputs, model.networks['default'].outputs],
-            feed_dict={model.networks['default'].input: data})
+            [outputs, model._networks['default'].outputs],
+            feed_dict={model._networks['default'].input: data})
 
         assert np.array_equal(out, model_out)
 
@@ -185,8 +185,8 @@ class TestModel(TfGraphTestCase):
             bias.load(tf.ones_like(bias).eval())
 
             results = sess.run(
-                model.networks['default'].outputs,
-                feed_dict={model.networks['default'].input: data})
+                model._networks['default'].outputs,
+                feed_dict={model._networks['default'].input: data})
             model_data = pickle.dumps(model)
 
         with tf.compat.v1.Session(graph=tf.Graph()) as sess:
@@ -221,7 +221,7 @@ class TestModel(TfGraphTestCase):
             bias.load(tf.ones_like(bias).eval())
 
             results = sess.run(
-                outputs, feed_dict={model.networks['default'].input: data})
+                outputs, feed_dict={model._networks['default'].input: data})
             model_data = pickle.dumps(model)
 
         with tf.compat.v1.Session(graph=tf.Graph()) as sess:
@@ -229,7 +229,7 @@ class TestModel(TfGraphTestCase):
             model_pickled = pickle.loads(model_data)
             model_pickled.build(input_var)
 
-            results2 = sess.run(model_pickled.networks['default'].outputs,
+            results2 = sess.run(model_pickled._networks['default'].outputs,
                                 feed_dict={input_var: data})
 
         assert np.array_equal(results, results2)
@@ -251,7 +251,7 @@ class TestModel(TfGraphTestCase):
             bias.load(tf.ones_like(bias).eval())
 
             results = sess.run(
-                outputs, feed_dict={model.networks['default'].input: data})
+                outputs, feed_dict={model._networks['default'].input: data})
             model_data = pickle.dumps(model)
 
         with tf.compat.v1.Session(graph=tf.Graph()) as sess:
@@ -259,7 +259,7 @@ class TestModel(TfGraphTestCase):
             model_pickled = pickle.loads(model_data)
             model_pickled.build(input_var)
 
-            results2 = sess.run(model_pickled.networks['default'].outputs,
+            results2 = sess.run(model_pickled._networks['default'].outputs,
                                 feed_dict={input_var: data})
 
         assert np.array_equal(results, results2)

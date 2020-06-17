@@ -32,9 +32,9 @@ class TestContinuousMLPRegressor(TfGraphTestCase):
         expected = [[0], [-1], [-0.707], [0], [0.707], [1], [0]]
         assert np.allclose(prediction, expected, rtol=0, atol=0.1)
 
-        x_mean = self.sess.run(cmr.model.networks['default'].x_mean)
+        x_mean = self.sess.run(cmr.model._networks['default'].x_mean)
         x_mean_expected = np.mean(observations, axis=0, keepdims=True)
-        x_std = self.sess.run(cmr.model.networks['default'].x_std)
+        x_std = self.sess.run(cmr.model._networks['default'].x_std)
         x_std_expected = np.std(observations, axis=0, keepdims=True)
 
         assert np.allclose(x_mean, x_mean_expected)
@@ -62,9 +62,9 @@ class TestContinuousMLPRegressor(TfGraphTestCase):
         expected = [[0], [-1], [-0.707], [0], [0.707], [1], [0]]
         assert np.allclose(prediction, expected, rtol=0, atol=0.1)
 
-        x_mean = self.sess.run(cmr.model.networks['default'].x_mean)
+        x_mean = self.sess.run(cmr.model._networks['default'].x_mean)
         x_mean_expected = np.zeros_like(x_mean)
-        x_std = self.sess.run(cmr.model.networks['default'].x_std)
+        x_std = self.sess.run(cmr.model._networks['default'].x_std)
         x_std_expected = np.ones_like(x_std)
         assert np.array_equal(x_mean, x_mean_expected)
         assert np.array_equal(x_std, x_std_expected)

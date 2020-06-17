@@ -71,9 +71,9 @@ class TestCategoricalGRUModel(TfGraphTestCase):
         step_hidden_var = tf.compat.v1.placeholder(shape=(self.batch_size, 1),
                                                    name='step_hidden',
                                                    dtype=tf.float32)
-        dist = model.build(self.input_var, self.step_input_var,
-                           step_hidden_var).dist
-
+        network = model.build(self.input_var, self.step_input_var,
+                              step_hidden_var)
+        dist = network.dist
         # assign bias to all one
         with tf.compat.v1.variable_scope('CategoricalGRUModel/gru',
                                          reuse=True):
@@ -86,10 +86,7 @@ class TestCategoricalGRUModel(TfGraphTestCase):
         outputs1 = self.sess.run(dist.probs,
                                  feed_dict={self.input_var: self.obs_inputs})
         output1 = self.sess.run(
-            [
-                model.networks['default'].step_output,
-                model.networks['default'].step_hidden
-            ],
+            [network.step_output, network.step_hidden],
             # yapf: disable
             feed_dict={
                 self.step_input_var: self.obs_input,
@@ -112,15 +109,13 @@ class TestCategoricalGRUModel(TfGraphTestCase):
                                                        name='initial_hidden',
                                                        dtype=tf.float32)
 
-            dist2 = model_pickled.build(input_var, step_input_var,
-                                        step_hidden_var).dist
+            network2 = model_pickled.build(input_var, step_input_var,
+                                           step_hidden_var)
+            dist2 = network2.dist
             outputs2 = sess.run(dist2.probs,
                                 feed_dict={input_var: self.obs_inputs})
             output2 = sess.run(
-                [
-                    model_pickled.networks['default'].step_output,
-                    model_pickled.networks['default'].step_hidden
-                ],
+                [network2.step_output, network2.step_hidden],
                 # yapf: disable
                 feed_dict={
                     step_input_var: self.obs_input,

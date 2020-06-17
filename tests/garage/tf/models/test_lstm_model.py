@@ -64,8 +64,8 @@ class TestLSTMModel(TfGraphTestCase):
         step_cell_var = tf.compat.v1.placeholder(shape=(self.batch_size, 1),
                                                  name='step_cell',
                                                  dtype=tf.float32)
-        model.build(self._input_var, self._step_input_var, step_hidden_var,
-                    step_cell_var)
+        network = model.build(self._input_var, self._step_input_var,
+                              step_hidden_var, step_cell_var)
 
         # assign bias to all one
         with tf.compat.v1.variable_scope('LSTMModel/lstm', reuse=True):
@@ -76,14 +76,10 @@ class TestLSTMModel(TfGraphTestCase):
         hidden = np.zeros((self.batch_size, 1))
         cell = np.zeros((self.batch_size, 1))
 
-        outputs1 = self.sess.run(model.networks['default'].all_output,
+        outputs1 = self.sess.run(network.all_output,
                                  feed_dict={self._input_var: self.obs_inputs})
         output1 = self.sess.run(
-            [
-                model.networks['default'].step_output,
-                model.networks['default'].step_hidden,
-                model.networks['default'].step_cell
-            ],
+            [network.step_output, network.step_hidden, network.step_cell],
             feed_dict={
                 self._step_input_var: self.obs_input,
                 step_hidden_var: hidden,
@@ -109,15 +105,14 @@ class TestLSTMModel(TfGraphTestCase):
                                                      name='initial_cell',
                                                      dtype=tf.float32)
 
-            model_pickled.build(input_var, step_input_var, step_hidden_var,
-                                step_cell_var)
-            outputs2 = sess.run(model_pickled.networks['default'].all_output,
+            network2 = model_pickled.build(input_var, step_input_var,
+                                           step_hidden_var, step_cell_var)
+            outputs2 = sess.run(network2.all_output,
                                 feed_dict={input_var: self.obs_inputs})
             output2 = sess.run(
                 [
-                    model_pickled.networks['default'].step_output,
-                    model_pickled.networks['default'].step_hidden,
-                    model_pickled.networks['default'].step_cell
+                    network2.step_output, network2.step_hidden,
+                    network2.step_cell
                 ],
                 feed_dict={
                     step_input_var: self.obs_input,
