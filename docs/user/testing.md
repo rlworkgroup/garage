@@ -92,7 +92,7 @@ However, in most of the cases, we simply don't have the time to test everything,
 
 ### Specifying tests / selecting tests
 
-Pytest supports several eays to run and select tests.
+Pytest supports several ways to run and select tests.
 
 #### Run tests in a directory
 
@@ -119,6 +119,29 @@ Run tests by keyword expressions. This is useful for running particular test fun
 ```bash
 #!/bin/bash
 $ pytest -k test_ppo_pendulum_continuous_baseline
+
+```
+
+## Useful garage methods
+
+Garage uses two helper functions `setup_method` and `teardown_method` to set up and close down test environment properly. For details, check [this].(https://docs.pytest.org/en/2.8.7/xunit_setup.html)
+
+### Set-up and tear-down methods
+
+`setup_method` is called before every tests to set up the test environment. It setups any state tied to the execution of the given method in a class.  `setup_method` is invoked for every test method of a class.
+
+`teardown_method` is called after every tests to teardown any state that was previously setup with a `setup_method`.
+
+```Python
+class Testxxx:
+
+    def setup_method(self):
+        """Setup method which is called before every test."""
+        ...
+
+    def teardown_method(self):
+        """Teardown method which is called after every test."""
+        ...
 
 ```
 
