@@ -76,6 +76,10 @@ target/
 # Jupyter Notebook
 .ipynb_checkpoints
 
+# Jupyter Notebook examples
+gym-results/
+mujoco_fake_key
+
 # IPython
 profile_default/
 ipython_config.py
