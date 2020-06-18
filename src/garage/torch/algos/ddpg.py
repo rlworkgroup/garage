@@ -135,6 +135,7 @@ class DDPG(RLAlgorithm):
         self._qf_optimizer = make_optimizer(qf_optimizer,
                                             module=self._qf,
                                             lr=qf_lr)
+        self._eval_env = None
         self.sampler_cls = LocalSampler
 
     def train(self, runner):
@@ -149,6 +150,8 @@ class DDPG(RLAlgorithm):
             float: The average return in last epoch cycle.
 
         """
+        if not self._eval_env:
+            self._eval_env = runner.get_env_copy()
         last_return = None
         runner.enable_logging = False
 
@@ -162,7 +165,7 @@ class DDPG(RLAlgorithm):
                     runner.enable_logging = True
                     log_performance(runner.step_itr,
                                     obtain_evaluation_samples(
-                                        self.policy, runner.get_env_copy()),
+                                        self.policy, self._eval_env),
                                     discount=self._discount)
                 runner.step_itr += 1
 
