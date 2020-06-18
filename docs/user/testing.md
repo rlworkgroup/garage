@@ -6,13 +6,29 @@ In garage, we use [pytest](https://docs.pytest.org/en/stable/getting-started.htm
 
 ## Test modules
 
-All test files are stored under `garage/tests` in the garage respository.
+All test files are stored under `tests/` in the garage respository.
 
-Test modules are organized in the same way as the garage main repository. Ideally, all main modules and files under `garage/src/garage` should be covered with test cases.
+Test modules are organized in the same way as the garage main repository. Ideally, all main modules and files under `src/garage/` should be covered with test cases.
+
+Test modules of garage are structured in the following ways:
+
+- `tests/` contains all tests and supporting code
+- `tests/garage` contains unit tests
+- `tests/integration_tests` contains integration tests
+- modules in `tests/` and `tests/fixtures` contain helper codes and fixtures which make writing good tests easier.
+
+```bash
+├── tests
+│   ├── fixtures
+│   ├── garage
+│   └── integration_tests
+├── helpers.py
+└── (helper_files.py)
+```
 
 ## Prerequisites
 
-To begin testing, we suggest using the same Python manager environment i.e. `virtualenv`, `conda` as we develop on garage repository so that all packages and depencies required for testing are installed in the virutal environment.
+To begin testing, we suggest using the same Python manager environment i.e. `virtualenv`, `conda` as we develop on garage repository so that all packages and dependencies required for testing are installed in the virutal environment.
 
 Let's begin by activating the virtual environment:
 
@@ -29,7 +45,6 @@ Next, we need to install pytest. Generally, pytest should have already been inst
 To get started, run pytest as follows:
 
 ```bash
-#!/bin/bash
 $ pytest
 ```
 
@@ -39,19 +54,16 @@ If you haven't done so, please go ahead and check out our installation guide fir
 
 We will start with a simple test. To be consistent with pytest requirement and garage modules, we name our test `.py` file with pre-fix `test_`.
 
-Let's write a simple test case for the vpg algorithm `garage/src/garage/tf/algos/vpg.py`.
+Let's write a simple test case for the vpg algorithm `src/garage/tf/algos/vpg.py`.
 
-We begin by creating a file called `test_vpg.py` and put it under the tree `garage/tests/garage/tf/algos/`.
+We begin by creating a file called `test_vpg.py` and put it under the tree `tests/garage/tf/algos/`.
 
 We want to test VPG in the cart pole environment. Hence, we create a unitest named `test_vpg_cartpole`. Inside the function, we define the environemnt, the policy and the baselien and feed them to the VPG algorithm and run the experiment. Finally, we make sure the return value is identical to our expectation by using `assert`.
 
-Sometimes, we modele multiple tests into a class for modular and scalable structure. There is no need to subclass or anything, but make sure the prefix of the class starts with `Test`, otherwise the class will be skipped.
+In new xunit-style tests, multiple tests are modeled into a class for modular and scalable structure. There is no need to subclass or anything, but make sure the prefix of the class starts with `Test`, otherwise the class will be skipped. Note that it's not encouraged to use this style, especially when a test doesn't require `setup_method` and `teardown_method`.
 
 ```python
 # test_vpg.py
-
-import pytest
-... # import other dependencies
 
 class TestVPG(...):
     def test_vpg_cartpole(self):
@@ -84,7 +96,6 @@ class TestVPG(...):
 In general, we can start running tests simply by:
 
 ```bash
-#!/bin/bash
 $ pytest
 ```
 
@@ -99,7 +110,6 @@ Pytest supports several ways to run and select tests.
 Run a test on particular module(s) by specifying a directory path.
 
 ```bash
-#!/bin/bash
 $ pytest tests/garage/tf/algo/
 ```
 
@@ -108,7 +118,6 @@ $ pytest tests/garage/tf/algo/
 Run a test on a particular module by specifying a file path.
 
 ```bash
-#!/bin/bash
 $ pytest tests/garage/tf/algo/test_ppo.py
 ```
 
@@ -117,14 +126,13 @@ $ pytest tests/garage/tf/algo/test_ppo.py
 Run tests by keyword expressions. This is useful for running particular test function(s).
 
 ```bash
-#!/bin/bash
 $ pytest -k test_ppo_pendulum_continuous_baseline
 
 ```
 
 ## Useful garage methods
 
-Garage uses two helper functions `setup_method` and `teardown_method` to set up and close down test environment properly. For details, check [this].(https://docs.pytest.org/en/2.8.7/xunit_setup.html)
+Garage uses two helper functions `setup_method` and `teardown_method` to set up and close down test environment properly. For details, check [this](https://docs.pytest.org/en/2.8.7/xunit_setup.html).
 
 ### Set-up and tear-down methods
 
@@ -133,7 +141,7 @@ Garage uses two helper functions `setup_method` and `teardown_method` to set up 
 `teardown_method` is called after every tests to teardown any state that was previously setup with a `setup_method`.
 
 ```Python
-class Testxxx:
+class TestSampleClass:
 
     def setup_method(self):
         """Setup method which is called before every test."""
