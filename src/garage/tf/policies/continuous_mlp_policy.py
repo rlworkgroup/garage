@@ -108,7 +108,7 @@ class ContinuousMLPPolicy(Policy):
 
         """
         with tf.compat.v1.variable_scope(self._variable_scope):
-            return self.model.build(obs_var, name=name)
+            return self.model.build(obs_var, name=name).outputs
 
     def get_action(self, observation):
         """Get single action from this policy for the input observation.

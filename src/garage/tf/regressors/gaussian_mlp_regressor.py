@@ -260,6 +260,8 @@ class GaussianMLPRegressor(StochasticRegressor):
         """
         new_dict = super().__getstate__()
         del new_dict['_f_predict']
+        del new_dict['_network']
+        del new_dict['_old_network']
         return new_dict
 
     def __setstate__(self, state):

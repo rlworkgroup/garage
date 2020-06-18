@@ -135,7 +135,7 @@ class ContinuousMLPQFunction(QFunction):
             name (str): Network variable scope.
 
         Return:
-            tf.Tensor: The output of Discrete MLP QFunction.
+            tf.Tensor: The output of Continuous MLP QFunction.
 
         """
         with tf.compat.v1.variable_scope(self._variable_scope):

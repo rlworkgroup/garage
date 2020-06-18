@@ -75,3 +75,14 @@ class Sequential(Model):
         del new_dict['_first_network']
         del new_dict['_last_network']
         return new_dict
+
+    def __setstate__(self, state):
+        """Object.__setstate__.
+
+        Args:
+            state (dict): Unpickled state.
+
+        """
+        super().__setstate__(state)
+        self._first_network = None
+        self._last_network = None
