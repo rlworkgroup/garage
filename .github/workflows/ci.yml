@@ -2,7 +2,7 @@ name: Garage CI
 
 env:
   GARAGE_GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  TRAVIS_COMMIT_RANGE: ${{ github.base_ref }}...${{ github.head_ref }}
+  TRAVIS_COMMIT_RANGE: origin/${{ github.base_ref }}...origin/${{ github.head_ref }}
   DOCKER_TAG: garage-ci-${{ github.run_id }}
 
 on:
@@ -17,6 +17,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
     - name: Login to GitHub Package Registry
       run: echo ${{ secrets.GITHUB_TOKEN }} | docker login docker.pkg.github.com -u $GITHUB_ACTOR --password-stdin
     # Not enough disk space to pull and build :-/
@@ -42,6 +44,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
     - name: Login to GitHub Package Registry
       run: echo ${{ secrets.GITHUB_TOKEN }} | docker login docker.pkg.github.com -u $GITHUB_ACTOR --password-stdin
     - name: Pull from cache (GitHub Package Registry)
