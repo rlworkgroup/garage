@@ -707,3 +707,13 @@ def test_from_time_step_list_batch(batch_data):
     for key in new_agent_infos:
         assert key in s.agent_infos
         assert np.array_equal(new_agent_infos[key], s.agent_infos[key])
+
+
+def test_time_step_batch_from_trajectory_batch(traj_data):
+    traj = TrajectoryBatch(**traj_data)
+    timestep_batch = TimeStepBatch.from_trajectory_batch(traj)
+    assert (timestep_batch.observations == traj.observations).all()
+    assert (timestep_batch.next_observations[:traj.lengths[0] - 1] ==
+            traj.observations[1:traj.lengths[0]]).all()
+    assert (timestep_batch.next_observations[traj.lengths[0]] ==
+            traj.last_observations[0]).all()

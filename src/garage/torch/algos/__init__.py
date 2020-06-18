@@ -1,4 +1,5 @@
 """PyTorch algorithms."""
+from garage.torch.algos.bc import BC
 from garage.torch.algos.ddpg import DDPG
 # VPG has to been import first because it is depended by PPO and TRPO.
 from garage.torch.algos.vpg import VPG
@@ -12,6 +13,6 @@ from garage.torch.algos.sac import SAC
 from garage.torch.algos.mtsac import MTSAC  # noqa: I100
 
 __all__ = [
-    'DDPG', 'VPG', 'PPO', 'TRPO', 'MAMLPPO', 'MAMLTRPO', 'MAMLVPG', 'MTSAC',
-    'PEARL', 'SAC'
+    'BC', 'DDPG', 'VPG', 'PPO', 'TRPO', 'MAMLPPO', 'MAMLTRPO', 'MAMLVPG',
+    'MTSAC', 'PEARL', 'SAC'
 ]

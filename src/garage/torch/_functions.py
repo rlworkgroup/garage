@@ -125,6 +125,19 @@ def filter_valids(tensor, valids):
     return [tensor[i][:valid] for i, valid in enumerate(valids)]
 
 
+def np_to_torch(array):
+    """Numpy arrays to PyTorch tensors.
+
+    Args:
+        array (np.ndarray): Data in numpy array.
+
+    Returns:
+        torch.Tensor: float tensor on the global device.
+
+    """
+    return torch.from_numpy(array).float().to(global_device())
+
+
 def dict_np_to_torch(array_dict):
     """Convert a dict whose values are numpy arrays to PyTorch tensors.
 
@@ -138,7 +151,7 @@ def dict_np_to_torch(array_dict):
 
     """
     for key, value in array_dict.items():
-        array_dict[key] = torch.from_numpy(value).float().to(global_device())
+        array_dict[key] = np_to_torch(value)
     return array_dict
 
 
@@ -254,6 +267,7 @@ def product_of_gaussians(mus, sigmas_squared):
     Returns:
         torch.Tensor: Mu of product of gaussians, with shape :math:`(N, 1)`.
         torch.Tensor: Sigma of product of gaussians, with shape :math:`(N, 1)`.
+
     """
     sigmas_squared = torch.clamp(sigmas_squared, min=1e-7)
     sigma_squared = 1. / torch.sum(torch.reciprocal(sigmas_squared), dim=0)

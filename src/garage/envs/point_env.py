@@ -40,22 +40,24 @@ class PointEnv(gym.Env):
 
         self._point = np.zeros_like(self._goal)
         self._task = {'goal': self._goal}
+        self._observation_space = gym.spaces.Box(low=-np.inf,
+                                                 high=np.inf,
+                                                 shape=(3, ),
+                                                 dtype=np.float32)
+        self._action_space = gym.spaces.Box(low=-0.1,
+                                            high=0.1,
+                                            shape=(2, ),
+                                            dtype=np.float32)
 
     @property
     def observation_space(self):
         """gym.spaces.Box: The observation space."""
-        return gym.spaces.Box(low=-np.inf,
-                              high=np.inf,
-                              shape=(3, ),
-                              dtype=np.float32)
+        return self._observation_space
 
     @property
     def action_space(self):
         """gym.spaces.Box: The action space."""
-        return gym.spaces.Box(low=-0.1,
-                              high=0.1,
-                              shape=(2, ),
-                              dtype=np.float32)
+        return self._action_space
 
     def reset(self):
         """Reset the environment.
