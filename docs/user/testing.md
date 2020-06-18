@@ -4,7 +4,7 @@ In this section, we will talk about how to test different modules and algorithms
 
 In garage, we use [pytest](https://docs.pytest.org/en/stable/getting-started.html) to carry out tests.
 
-## Test modules
+## Test Modules
 
 All test files are stored under `tests/` in the garage respository.
 
@@ -18,10 +18,10 @@ Test modules of garage are structured in the following ways:
 - modules in `tests/` and `tests/fixtures` contain helper codes and fixtures which make writing good tests easier.
 
 ```bash
-├── tests
-│   ├── fixtures
-│   ├── garage
-│   └── integration_tests
+tests
+├── fixtures
+├── garage
+├── integration_tests
 ├── helpers.py
 └── (helper_files.py)
 ```
@@ -40,7 +40,14 @@ $ conda activate myenv
 $ source myenv/bin/activate
 ```
 
-Next, we need to install pytest. Generally, pytest should have already been installed upon garage installation.
+Next, we need to install pytest. Generally, pytest should have already been installed upon garage's `dev` installation. To install the garage environment for testing, you will need to install the `garage[all,dev]` for dependencies such as pytest, mujoco and so on.
+
+Also, you may want to check out our installation guide first before diving into tests. It is also recommened to check out official [pytest](https://docs.pytest.org/en/stable/getting-started.html) documentation.
+
+```bash
+$ cd path/to/garage/
+$ pip install -e '.[all,dev]'
+```
 
 To get started, run pytest as follows:
 
@@ -48,9 +55,9 @@ To get started, run pytest as follows:
 $ pytest
 ```
 
-If you haven't done so, please go ahead and check out our installation guide first. It is also recommened to check out official [pytest](https://docs.pytest.org/en/stable/getting-started.html) documentation.
-
 ## Basic Pytest Usage
+
+Congrats! Now you're ready for testing garage!
 
 We will start with a simple test. To be consistent with pytest requirement and garage modules, we name our test `.py` file with pre-fix `test_`.
 
@@ -91,7 +98,7 @@ class TestVPG(...):
             env.close()
 ```
 
-## Run tests
+## Run Tests
 
 In general, we can start running tests simply by:
 
@@ -101,7 +108,7 @@ $ pytest
 
 However, in most of the cases, we simply don't have the time to test everything, plus Travis CI will take care of the  majority of tests upon the deployment workflow. We can use the following ways to carry out specific tests to make life easier.
 
-### Specifying tests / selecting tests
+### Specifying Tests / Selecting Tests
 
 Pytest supports several ways to run and select tests.
 
@@ -130,15 +137,17 @@ $ pytest -k test_ppo_pendulum_continuous_baseline
 
 ```
 
-## Useful garage methods
+## Useful Pytest Methods
 
-Garage uses two helper functions `setup_method` and `teardown_method` to set up and close down test environment properly. For details, check [this](https://docs.pytest.org/en/2.8.7/xunit_setup.html).
+Below are the pytest methods and functions that we found helpful for testing garage.
 
-### Set-up and tear-down methods
+### Setup and teardown methods
 
 `setup_method` is called before every tests to set up the test environment. It setups any state tied to the execution of the given method in a class.  `setup_method` is invoked for every test method of a class.
 
 `teardown_method` is called after every tests to teardown any state that was previously setup with a `setup_method`.
+
+For details on `setup_method` and `teardown_method`, check [this](https://docs.pytest.org/en/2.8.7/xunit_setup.html).
 
 ```Python
 class TestSampleClass:
@@ -153,9 +162,7 @@ class TestSampleClass:
 
 ```
 
-## Useful pytest commands
-
-### Parametrized Test Functions
+### Parametrized test functions
 
 Parametrized test function is a  delightful solution to save us from tedious testing in same scenarios with different parameters. We can simply specify the name of the arguments that will be pass to the test function and a list of arguments corresponding to the names.
 
