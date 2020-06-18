@@ -71,8 +71,7 @@ class TestContinuousMLPPolicy(TfGraphTestCase):
         obs_dim = env.spec.observation_space.flat_dim
         state_input = tf.compat.v1.placeholder(tf.float32,
                                                shape=(None, obs_dim))
-        action_sym = policy.get_action_sym(state_input,
-                                           name='action_sym').outputs
+        action_sym = policy.get_action_sym(state_input, name='action_sym')
 
         expected_action = np.full(action_dim, 0.5)
 
