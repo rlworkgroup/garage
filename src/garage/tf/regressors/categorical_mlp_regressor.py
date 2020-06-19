@@ -118,6 +118,8 @@ class CategoricalMLPRegressor(StochasticRegressor):
             output_b_init=output_b_init,
             layer_normalization=layer_normalization)
 
+        self._network = None
+
         self._initialize()
 
     def _initialize(self):
@@ -126,7 +128,7 @@ class CategoricalMLPRegressor(StochasticRegressor):
                                              self._input_shape)
 
         with tf.compat.v1.variable_scope(self._variable_scope):
-            self.model.build(input_var)
+            self._network = self.model.build(input_var)
 
             ys_var = tf.compat.v1.placeholder(dtype=tf.float32,
                                               name='ys',
@@ -137,7 +139,7 @@ class CategoricalMLPRegressor(StochasticRegressor):
                                                     shape=(None,
                                                            self._output_dim))
 
-            y_hat = self.model.networks['default'].y_hat
+            y_hat = self._network.y_hat
 
             old_info_vars = dict(prob=old_prob_var)
             info_vars = dict(prob=y_hat)
@@ -176,10 +178,8 @@ class CategoricalMLPRegressor(StochasticRegressor):
         """
         if self._normalize_inputs:
             # recompute normalizing constants for inputs
-            self.model.networks['default'].x_mean.load(
-                np.mean(xs, axis=0, keepdims=True))
-            self.model.networks['default'].x_std.load(
-                np.std(xs, axis=0, keepdims=True))
+            self._network.x_mean.load(np.mean(xs, axis=0, keepdims=True))
+            self._network.x_std.load(np.std(xs, axis=0, keepdims=True))
 
         if self._use_trust_region:
             # To use trust region constraint and optimizer
@@ -240,7 +240,7 @@ class CategoricalMLPRegressor(StochasticRegressor):
         """
         del state_info_vars
         with tf.compat.v1.variable_scope(self._variable_scope):
-            prob, _, _ = self.model.build(input_var, name=name)
+            prob, _, _ = self.model.build(input_var, name=name).outputs
 
         return dict(prob=prob)
 
@@ -257,7 +257,7 @@ class CategoricalMLPRegressor(StochasticRegressor):
 
         """
         with tf.compat.v1.variable_scope(self._variable_scope):
-            prob, _, _ = self.model.build(x_var, name=name)
+            prob, _, _ = self.model.build(x_var, name=name).outputs
 
         return self._dist.log_likelihood_sym(y_var, dict(prob=prob))
 
@@ -274,7 +274,7 @@ class CategoricalMLPRegressor(StochasticRegressor):
     @property
     def distribution(self):
         """garage.tf.distributions.DiagonalGaussian: Distribution."""
-        return self.model.networks['default'].dist
+        return self._dist
 
     def __getstate__(self):
         """Object.__getstate__.
@@ -287,6 +287,7 @@ class CategoricalMLPRegressor(StochasticRegressor):
         del new_dict['_f_predict']
         del new_dict['_f_prob']
         del new_dict['_dist']
+        del new_dict['_network']
         return new_dict
 
     def __setstate__(self, state):

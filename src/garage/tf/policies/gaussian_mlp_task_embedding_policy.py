@@ -117,17 +117,14 @@ class GaussianMLPTaskEmbeddingPolicy(TaskEmbeddingPolicy):
         self._initialize()
 
     def _initialize(self):
+        """Initialize policy."""
         obs_input = tf.compat.v1.placeholder(tf.float32,
                                              shape=(None, None, self._obs_dim))
-        task_input = tf.compat.v1.placeholder(tf.float32,
-                                              shape=(None, None,
-                                                     self._encoder.input_dim))
         latent_input = tf.compat.v1.placeholder(
             tf.float32, shape=(None, None, self._encoder.output_dim))
 
         # Encoder should be outside policy scope
         with tf.compat.v1.variable_scope('concat_obs_task'):
-            self._encoder.build(task_input, name='dist_info_sym')
             latent_var = self._encoder.distribution.sample()
 
         with tf.compat.v1.variable_scope(self.name) as vs:
@@ -136,13 +133,13 @@ class GaussianMLPTaskEmbeddingPolicy(TaskEmbeddingPolicy):
             with tf.compat.v1.variable_scope('concat_obs_latent'):
                 obs_latent_input = tf.concat([obs_input, latent_input], -1)
             self._dist, mean_var, log_std_var = self.model.build(
-                obs_latent_input, name='given_latent')
+                obs_latent_input, name='given_latent').outputs
 
             with tf.compat.v1.variable_scope('concat_obs_latent_var'):
                 embed_state_input = tf.concat([obs_input, latent_var], -1)
 
             dist_given_task, mean_g_t, log_std_g_t = self.model.build(
-                embed_state_input, name='given_task')
+                embed_state_input, name='given_task').outputs
 
         self._f_dist_obs_latent = tf.compat.v1.get_default_session(
         ).make_callable([self._dist.sample(), mean_var, log_std_var],
@@ -150,7 +147,7 @@ class GaussianMLPTaskEmbeddingPolicy(TaskEmbeddingPolicy):
 
         self._f_dist_obs_task = tf.compat.v1.get_default_session(
         ).make_callable([dist_given_task.sample(), mean_g_t, log_std_g_t],
-                        feed_list=[obs_input, task_input])
+                        feed_list=[obs_input, self._encoder.input])
 
     @property
     def distribution(self):

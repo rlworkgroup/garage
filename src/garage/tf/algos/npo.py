@@ -123,6 +123,7 @@ class NPO(RLAlgorithm):
         self._name = name
         self._name_scope = tf.name_scope(self._name)
         self._old_policy = policy.clone('old_policy')
+        self._old_policy.model.parameters = policy.model.parameters
         self._use_softplus_entropy = use_softplus_entropy
         self._use_neg_logli_entropy = use_neg_logli_entropy
         self._stop_entropy_gradient = stop_entropy_gradient
@@ -149,6 +150,8 @@ class NPO(RLAlgorithm):
         self._f_returns = None
         self._f_policy_kl = None
         self._f_policy_entropy = None
+        self._policy_network = None
+        self._old_policy_network = None
 
         self._episode_reward_mean = collections.deque(maxlen=100)
         if policy.vectorized:
@@ -338,8 +341,6 @@ class NPO(RLAlgorithm):
                 policy_state_info_vars[k] for k in self.policy.state_info_keys
             ]
 
-        # concat the action input with obs_var to become the final
-        # state input
         augmented_obs_var = obs_var
         for k in self.policy.state_info_keys:
             extra_state_var = policy_state_info_vars[k]
@@ -347,9 +348,10 @@ class NPO(RLAlgorithm):
             augmented_obs_var = tf.concat([augmented_obs_var, extra_state_var],
                                           -1)
 
-        self.policy.build(augmented_obs_var)
-        self._old_policy.build(augmented_obs_var)
-        self._old_policy.model.parameters = self.policy.model.parameters
+        self._policy_network = self.policy.build(augmented_obs_var,
+                                                 name='policy')
+        self._old_policy_network = self._old_policy.build(augmented_obs_var,
+                                                          name='policy')
 
         policy_loss_inputs = graph_inputs(
             'PolicyLossInputs',
@@ -408,21 +410,21 @@ class NPO(RLAlgorithm):
             if self._positive_adv:
                 adv = positive_advs(adv, eps)
 
+            old_policy_dist = self._old_policy_network.dist
+            policy_dist = self._policy_network.dist
+
             with tf.name_scope('kl'):
-                kl = self._old_policy.distribution.kl_divergence(
-                    self.policy.distribution)
+                kl = old_policy_dist.kl_divergence(policy_dist)
                 pol_mean_kl = tf.reduce_mean(kl)
 
             # Calculate vanilla loss
             with tf.name_scope('vanilla_loss'):
-                ll = self.policy.distribution.log_prob(i.action_var,
-                                                       name='log_likelihood')
+                ll = policy_dist.log_prob(i.action_var, name='log_likelihood')
                 vanilla = ll * adv
 
             # Calculate surrogate loss
             with tf.name_scope('surrogate_loss'):
-                lr = tf.exp(
-                    ll - self._old_policy.distribution.log_prob(i.action_var))
+                lr = tf.exp(ll - old_policy_dist.log_prob(i.action_var))
                 surrogate = lr * adv
 
             # Finalize objective function
@@ -475,7 +477,7 @@ class NPO(RLAlgorithm):
             tf.Tensor: Policy entropy.
 
         """
-        pol_dist = self.policy.distribution
+        pol_dist = self._policy_network.dist
 
         with tf.name_scope('policy_entropy'):
             if self._use_neg_logli_entropy:
@@ -550,6 +552,7 @@ class NPO(RLAlgorithm):
             samples_data['agent_infos'][k] for k in self.policy.state_info_keys
         ]
 
+        # pylint: disable=unexpected-keyword-arg
         policy_opt_input_values = self._policy_opt_inputs._replace(
             obs_var=samples_data['observations'],
             action_var=samples_data['actions'],
@@ -626,6 +629,8 @@ class NPO(RLAlgorithm):
         del data['_f_policy_kl']
         del data['_f_rewards']
         del data['_f_returns']
+        del data['_policy_network']
+        del data['_old_policy_network']
         return data
 
     def __setstate__(self, state):

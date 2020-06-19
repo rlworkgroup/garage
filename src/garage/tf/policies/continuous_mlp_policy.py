@@ -65,7 +65,7 @@ class ContinuousMLPPolicy(Policy):
         self._output_w_init = output_w_init
         self._output_b_init = output_b_init
         self._layer_normalization = layer_normalization
-        self.obs_dim = env_spec.observation_space.flat_dim
+        self._obs_dim = env_spec.observation_space.flat_dim
 
         self.model = MLPModel(output_dim=action_dim,
                               name='MLPModel',
@@ -82,15 +82,19 @@ class ContinuousMLPPolicy(Policy):
 
     def _initialize(self):
         state_input = tf.compat.v1.placeholder(tf.float32,
-                                               shape=(None, self.obs_dim))
+                                               shape=(None, self._obs_dim))
 
         with tf.compat.v1.variable_scope(self.name) as vs:
             self._variable_scope = vs
-            self.model.build(state_input)
+            outputs = self.model.build(state_input).outputs
 
         self._f_prob = tf.compat.v1.get_default_session().make_callable(
-            self.model.networks['default'].outputs,
-            feed_list=[self.model.networks['default'].input])
+            outputs, feed_list=[state_input])
+
+    @property
+    def input_dim(self):
+        """int: Dimension of the policy input."""
+        return self._obs_dim
 
     def get_action_sym(self, obs_var, name=None):
         """Symbolic graph of the action.
@@ -104,7 +108,7 @@ class ContinuousMLPPolicy(Policy):
 
         """
         with tf.compat.v1.variable_scope(self._variable_scope):
-            return self.model.build(obs_var, name=name)
+            return self.model.build(obs_var, name=name).outputs
 
     def get_action(self, observation):
         """Get single action from this policy for the input observation.

@@ -24,6 +24,8 @@ class SimpleGaussianCNNRegressor(StochasticRegressor):
         self.model = SimpleGaussianCNNModel(output_dim=self._output_dim)
 
         self._ys = None
+        self._network = None
+
         self._initialize()
 
     @property
@@ -39,7 +41,7 @@ class SimpleGaussianCNNRegressor(StochasticRegressor):
     @property
     def distribution(self):
         """garage.tf.distributions.DiagonalGaussian: Distribution."""
-        return self.model.networks['default'].dist
+        return self._network.dist
 
     def dist_info_sym(self, input_var, state_info_vars=None, name='default'):
         """Create a symbolic graph of the distribution parameters.
@@ -56,11 +58,12 @@ class SimpleGaussianCNNRegressor(StochasticRegressor):
                 graph.
 
         """
+        del state_info_vars
         with tf.compat.v1.variable_scope(self._variable_scope):
-            self.model.build(input_var, name=name)
+            network = self.model.build(input_var, name=name)
 
-        means_var = self.model.networks[name].means
-        log_stds_var = self.model.networks[name].log_stds
+        means_var = network.means
+        log_stds_var = network.log_stds
 
         return dict(mean=means_var, log_std=log_stds_var)
 
@@ -70,7 +73,7 @@ class SimpleGaussianCNNRegressor(StochasticRegressor):
                                             shape=(None, ) + self._input_shape)
         with tf.compat.v1.variable_scope(self._name) as vs:
             self._variable_scope = vs
-            self.model.build(input_ph)
+            self._network = self.model.build(input_ph)
 
     def fit(self, xs, ys):
         """Fit with input data xs and label ys.
@@ -94,8 +97,7 @@ class SimpleGaussianCNNRegressor(StochasticRegressor):
         """
         if self._ys is None:
             mean = tf.compat.v1.get_default_session().run(
-                self.model.networks['default'].mean,
-                feed_dict={self.model.networks['default'].input: xs})
+                self._network.mean, feed_dict={self._network.input: xs})
             self._ys = np.full((len(xs), 1), mean)
 
         return self._ys
@@ -109,6 +111,17 @@ class SimpleGaussianCNNRegressor(StochasticRegressor):
 
         """
         return self._variable_scope.trainable_variables()
+
+    def __getstate__(self):
+        """Object.__getstate__.
+
+        Returns:
+            dict: the state to be pickled for the instance.
+
+        """
+        new_dict = super().__getstate__()
+        del new_dict['_network']
+        return new_dict
 
     def __setstate__(self, state):
         """Object.__setstate__.

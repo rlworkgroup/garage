@@ -109,25 +109,48 @@ class CategoricalCNNPolicy(StochasticPolicy):
             output_b_init=output_b_init,
             layer_normalization=layer_normalization)
 
-    def build(self, state_input, name=None):
-        """Build model.
+        self._initialize()
 
-        Args:
-          state_input (tf.Tensor) : State input.
-          name (str): Name of the model, which is also the name scope.
-
-        """
+    def _initialize(self):
+        """Initialize policy."""
         with tf.compat.v1.variable_scope(self.name) as vs:
             self._variable_scope = vs
+            state_input = tf.compat.v1.placeholder(tf.float32,
+                                                   shape=(None, None) +
+                                                   self._obs_dim)
             if isinstance(self.env_spec.observation_space, akro.Image):
                 augmented_state_input = tf.cast(state_input, tf.float32)
                 augmented_state_input /= 255.0
             else:
                 augmented_state_input = state_input
-            self._dist = self.model.build(augmented_state_input, name=name)
+            self._dist = self.model.build(augmented_state_input).dist
             self._f_prob = tf.compat.v1.get_default_session().make_callable(
                 [tf.argmax(self._dist.sample(), -1), self._dist.probs],
                 feed_list=[state_input])
+
+    def build(self, state_input, name=None):
+        """Build policy.
+
+        Args:
+            state_input (tf.Tensor) : State input.
+            name (str): Name of the policy, which is also the name scope.
+
+        Returns:
+            tfp.distributions.OneHotCategorical: Policy distribution.
+
+        """
+        with tf.compat.v1.variable_scope(self._variable_scope):
+            if isinstance(self.env_spec.observation_space, akro.Image):
+                augmented_state_input = tf.cast(state_input, tf.float32)
+                augmented_state_input /= 255.0
+            else:
+                augmented_state_input = state_input
+            return self.model.build(augmented_state_input, name=name)
+
+    @property
+    def input_dim(self):
+        """int: Dimension of the policy input."""
+        return self._obs_dim
 
     @property
     def distribution(self):
@@ -217,3 +240,13 @@ class CategoricalCNNPolicy(StochasticPolicy):
         del new_dict['_f_prob']
         del new_dict['_dist']
         return new_dict
+
+    def __setstate__(self, state):
+        """Object.__setstate__.
+
+        Args:
+            state (dict): Unpickled state.
+
+        """
+        super().__setstate__(state)
+        self._initialize()

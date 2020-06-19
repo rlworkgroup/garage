@@ -1,5 +1,4 @@
 """Default TensorFlow sampler Worker."""
-import numpy as np
 import tensorflow as tf
 
 from garage.sampler import Worker
@@ -115,15 +114,6 @@ class TFWorkerWrapper(Worker):
                 argument depends on the `Worker` implementation.
 
         """
-        # flake8: noqa
-        if not isinstance(
-                agent_update,
-            (dict, tuple, np.ndarray)) and (agent_update is not None) and (
-                'default' not in agent_update.model.networks):
-            obs_ph = tf.compat.v1.placeholder(tf.float32,
-                                              shape=(None, None,
-                                                     agent_update.obs_dim))
-            agent_update.build(obs_ph)
         self._inner_worker.update_agent(agent_update)
 
     def update_env(self, env_update):

@@ -138,8 +138,7 @@ class Model(BaseModel):
     A TfModel contains zero or more Network.
 
     When a Network is created, it reuses the parameter from the
-    model and can be accessed by calling model.networks['network_name'],
-    If a Network is built without given a name, the name "default" will
+    model. If a Network is built without given a name, the name "default" will
     be used.
 
     ***
@@ -168,8 +167,8 @@ class Model(BaseModel):
     =================================================
             |                            |
             |                            |
-    (model.networks['default'].outputs)  |
-                        model.networks['Network2'].outputs
+    (outputs from 'default' networks)    |
+                        outputs from ['Network2'] network
 
 
     Examples are also available in tests/garage/tf/models/test_model.
@@ -257,12 +256,24 @@ class Model(BaseModel):
                 'network_output_spec must have same length as outputs!')
             out_spec.extend(custom_out_spec)
             out_args.extend(network.outputs)
+        elif len(custom_out_spec) > 0:
+            if not isinstance(network.outputs, tuple):
+                assert len(custom_out_spec) == 1, (
+                    'network_input_spec must have same length as outputs!')
+                out_spec.extend(custom_out_spec)
+                out_args.extend([network.outputs])
+            else:
+                assert len(custom_out_spec) == len(network.outputs), (
+                    'network_input_spec must have same length as outputs!')
+                out_spec.extend(custom_out_spec)
+                out_args.extend(network.outputs)
 
         c = namedtuple(network_name, [*in_spec, *out_spec])
         all_args = in_args + out_args
-        self._networks[network_name] = c(*all_args)
+        out_network = c(*all_args)
+        self._networks[network_name] = out_network
 
-        return network.outputs
+        return out_network
 
     def _build(self, *inputs, name=None):
         """Output of the model given input placeholder(s).
@@ -302,16 +313,6 @@ class Model(BaseModel):
 
         """
         return []
-
-    @property
-    def networks(self):
-        """Networks of the model.
-
-        Returns:
-            dict[str: Network]: Networks.
-
-        """
-        return self._networks
 
     @property
     def parameters(self):
@@ -372,7 +373,7 @@ class Model(BaseModel):
             tf.Tensor: Default input of the model.
 
         """
-        return self.networks['default'].input
+        return self._networks['default'].input
 
     @property
     def output(self):
@@ -386,7 +387,7 @@ class Model(BaseModel):
             tf.Tensor: Default output of the model.
 
         """
-        return self.networks['default'].output
+        return self._networks['default'].output
 
     @property
     def inputs(self):
@@ -400,7 +401,7 @@ class Model(BaseModel):
             list[tf.Tensor]: Default inputs of the model.
 
         """
-        return self.networks['default'].inputs
+        return self._networks['default'].inputs
 
     @property
     def outputs(self):
@@ -414,7 +415,7 @@ class Model(BaseModel):
             list[tf.Tensor]: Default outputs of the model.
 
         """
-        return self.networks['default'].outputs
+        return self._networks['default'].outputs
 
     def _get_variables(self):
         """Get variables of this model.

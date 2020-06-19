@@ -27,13 +27,7 @@ class TestCategoricalMLPPolicy(TfGraphTestCase):
     def test_get_action(self, obs_dim, action_dim):
         env = GarageEnv(
             DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
-        obs_var = tf.compat.v1.placeholder(
-            tf.float32,
-            shape=[None, None, env.observation_space.flat_dim],
-            name='obs')
         policy = CategoricalMLPPolicy(env_spec=env.spec)
-
-        policy.build(obs_var)
         obs = env.reset()
 
         action, _ = policy.get_action(obs.flatten())
@@ -51,16 +45,33 @@ class TestCategoricalMLPPolicy(TfGraphTestCase):
         ((1, 1), 1),
         ((2, 2), 2),
     ])
+    def test_build(self, obs_dim, action_dim):
+        env = GarageEnv(
+            DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
+        policy = CategoricalMLPPolicy(env_spec=env.spec)
+        obs = env.reset()
+
+        state_input = tf.compat.v1.placeholder(tf.float32,
+                                               shape=(None, None,
+                                                      policy.input_dim))
+        dist_sym = policy.build(state_input, name='dist_sym').dist
+        output1 = self.sess.run(
+            [policy.distribution.probs],
+            feed_dict={policy.model.input: [[obs.flatten()]]})
+        output2 = self.sess.run([dist_sym.probs],
+                                feed_dict={state_input: [[obs.flatten()]]})
+        assert np.array_equal(output1, output2)
+
+    @pytest.mark.parametrize('obs_dim, action_dim', [
+        ((1, ), 1),
+        ((2, ), 2),
+        ((1, 1), 1),
+        ((2, 2), 2),
+    ])
     def test_is_pickleable(self, obs_dim, action_dim):
         env = GarageEnv(
             DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
-        obs_var = tf.compat.v1.placeholder(
-            tf.float32,
-            shape=[None, None, env.observation_space.flat_dim],
-            name='obs')
         policy = CategoricalMLPPolicy(env_spec=env.spec)
-
-        policy.build(obs_var)
         obs = env.reset()
 
         with tf.compat.v1.variable_scope(
@@ -76,11 +87,6 @@ class TestCategoricalMLPPolicy(TfGraphTestCase):
 
         with tf.compat.v1.Session(graph=tf.Graph()) as sess:
             policy_pickled = pickle.loads(p)
-            obs_var = tf.compat.v1.placeholder(
-                tf.float32,
-                shape=[None, None, env.observation_space.flat_dim],
-                name='obs')
-            policy_pickled.build(obs_var)
             output2 = sess.run(
                 [policy_pickled.distribution.probs],
                 feed_dict={policy_pickled.model.input: [[obs.flatten()]]})
@@ -95,12 +101,7 @@ class TestCategoricalMLPPolicy(TfGraphTestCase):
     def test_get_regularizable_vars(self, obs_dim, action_dim):
         env = GarageEnv(
             DummyDiscreteEnv(obs_dim=obs_dim, action_dim=action_dim))
-        obs_var = tf.compat.v1.placeholder(
-            tf.float32,
-            shape=[None, None, env.observation_space.flat_dim],
-            name='obs')
         policy = CategoricalMLPPolicy(env_spec=env.spec)
-        policy.build(obs_var)
         reg_vars = policy.get_regularizable_vars()
         assert len(reg_vars) == 2
         for var in reg_vars:

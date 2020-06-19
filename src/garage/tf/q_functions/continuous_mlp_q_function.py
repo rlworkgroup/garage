@@ -83,6 +83,7 @@ class ContinuousMLPQFunction(QFunction):
                                    output_w_init=output_w_init,
                                    output_b_init=output_b_init,
                                    layer_normalization=layer_normalization)
+        self._network = None
 
         self._initialize()
 
@@ -95,11 +96,10 @@ class ContinuousMLPQFunction(QFunction):
 
         with tf.compat.v1.variable_scope(self.name) as vs:
             self._variable_scope = vs
-            self.model.build(obs_ph, action_ph)
+            self._network = self.model.build(obs_ph, action_ph)
 
         self._f_qval = tf.compat.v1.get_default_session().make_callable(
-            self.model.networks['default'].outputs,
-            feed_list=[obs_ph, action_ph])
+            self._network.outputs, feed_list=[obs_ph, action_ph])
 
     def get_qval(self, observation, action):
         """Q Value of the network.
@@ -122,7 +122,7 @@ class ContinuousMLPQFunction(QFunction):
             tf.Tensor: The input tensors of the model.
 
         """
-        return self.model.networks['default'].inputs
+        return self._network.inputs
 
     # pylint: disable=arguments-differ
     def get_qval_sym(self, state_input, action_input, name):
@@ -135,11 +135,12 @@ class ContinuousMLPQFunction(QFunction):
             name (str): Network variable scope.
 
         Return:
-            tf.Tensor: The output of Discrete MLP QFunction.
+            tf.Tensor: The output of Continuous MLP QFunction.
 
         """
         with tf.compat.v1.variable_scope(self._variable_scope):
-            return self.model.build(state_input, action_input, name=name)
+            return self.model.build(state_input, action_input,
+                                    name=name).outputs
 
     def clone(self, name):
         """Return a clone of the Q-function.
@@ -175,6 +176,7 @@ class ContinuousMLPQFunction(QFunction):
         """
         new_dict = self.__dict__.copy()
         del new_dict['_f_qval']
+        del new_dict['_network']
         return new_dict
 
     def __setstate__(self, state):

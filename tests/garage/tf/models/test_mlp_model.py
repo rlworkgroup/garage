@@ -11,6 +11,7 @@ from tests.fixtures import TfGraphTestCase
 
 
 class TestMLPModel(TfGraphTestCase):
+
     def setup_method(self):
         super().setup_method()
         self.input_var = tf.compat.v1.placeholder(tf.float32, shape=(None, 5))
@@ -27,13 +28,12 @@ class TestMLPModel(TfGraphTestCase):
     ])
     # yapf: enable
     def test_output_values(self, output_dim, hidden_sizes):
-        model = MLPModel(
-            output_dim=output_dim,
-            hidden_sizes=hidden_sizes,
-            hidden_nonlinearity=None,
-            hidden_w_init=tf.ones_initializer(),
-            output_w_init=tf.ones_initializer())
-        outputs = model.build(self.input_var)
+        model = MLPModel(output_dim=output_dim,
+                         hidden_sizes=hidden_sizes,
+                         hidden_nonlinearity=None,
+                         hidden_w_init=tf.ones_initializer(),
+                         output_w_init=tf.ones_initializer())
+        outputs = model.build(self.input_var).outputs
         output = self.sess.run(outputs, feed_dict={self.input_var: self.obs})
 
         expected_output = np.full([1, output_dim], 5 * np.prod(hidden_sizes))
@@ -51,13 +51,12 @@ class TestMLPModel(TfGraphTestCase):
     ])
     # yapf: enable
     def test_output_values_dueling(self, output_dim, hidden_sizes):
-        model = MLPDuelingModel(
-            output_dim=output_dim,
-            hidden_sizes=hidden_sizes,
-            hidden_nonlinearity=None,
-            hidden_w_init=tf.ones_initializer(),
-            output_w_init=tf.ones_initializer())
-        outputs = model.build(self.input_var)
+        model = MLPDuelingModel(output_dim=output_dim,
+                                hidden_sizes=hidden_sizes,
+                                hidden_nonlinearity=None,
+                                hidden_w_init=tf.ones_initializer(),
+                                output_w_init=tf.ones_initializer())
+        outputs = model.build(self.input_var).outputs
         output = self.sess.run(outputs, feed_dict={self.input_var: self.obs})
 
         expected_output = np.full([1, output_dim], 5 * np.prod(hidden_sizes))
@@ -75,23 +74,22 @@ class TestMLPModel(TfGraphTestCase):
     ])
     # yapf: enable
     def test_output_values_merging(self, output_dim, hidden_sizes):
-        model = MLPMergeModel(
-            output_dim=output_dim,
-            hidden_sizes=hidden_sizes,
-            concat_layer=0,
-            hidden_nonlinearity=None,
-            hidden_w_init=tf.ones_initializer(),
-            output_w_init=tf.ones_initializer())
+        model = MLPMergeModel(output_dim=output_dim,
+                              hidden_sizes=hidden_sizes,
+                              concat_layer=0,
+                              hidden_nonlinearity=None,
+                              hidden_w_init=tf.ones_initializer(),
+                              output_w_init=tf.ones_initializer())
 
         input_var2 = tf.compat.v1.placeholder(tf.float32, shape=(None, 5))
         obs2 = np.ones((1, 5))
 
-        outputs = model.build(self.input_var, input_var2)
-        output = self.sess.run(
-            outputs, feed_dict={
-                self.input_var: self.obs,
-                input_var2: obs2
-            })
+        outputs = model.build(self.input_var, input_var2).outputs
+        output = self.sess.run(outputs,
+                               feed_dict={
+                                   self.input_var: self.obs,
+                                   input_var2: obs2
+                               })
 
         expected_output = np.full([1, output_dim], 10 * np.prod(hidden_sizes))
         assert np.array_equal(output, expected_output)
@@ -107,13 +105,12 @@ class TestMLPModel(TfGraphTestCase):
     ])
     # yapf: enable
     def test_is_pickleable(self, output_dim, hidden_sizes):
-        model = MLPModel(
-            output_dim=output_dim,
-            hidden_sizes=hidden_sizes,
-            hidden_nonlinearity=None,
-            hidden_w_init=tf.ones_initializer(),
-            output_w_init=tf.ones_initializer())
-        outputs = model.build(self.input_var)
+        model = MLPModel(output_dim=output_dim,
+                         hidden_sizes=hidden_sizes,
+                         hidden_nonlinearity=None,
+                         hidden_w_init=tf.ones_initializer(),
+                         output_w_init=tf.ones_initializer())
+        outputs = model.build(self.input_var).outputs
 
         # assign bias to all one
         with tf.compat.v1.variable_scope('MLPModel/mlp', reuse=True):
@@ -127,7 +124,7 @@ class TestMLPModel(TfGraphTestCase):
         with tf.compat.v1.Session(graph=tf.Graph()) as sess:
             input_var = tf.compat.v1.placeholder(tf.float32, shape=(None, 5))
             model_pickled = pickle.loads(h)
-            outputs = model_pickled.build(input_var)
+            outputs = model_pickled.build(input_var).outputs
             output2 = sess.run(outputs, feed_dict={input_var: self.obs})
 
             assert np.array_equal(output1, output2)

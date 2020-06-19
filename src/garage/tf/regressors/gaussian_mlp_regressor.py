@@ -134,36 +134,36 @@ class GaussianMLPRegressor(StochasticRegressor):
 
         # model for old distribution, used when trusted region is on
         self._old_model = self.model.clone(name='model_for_old_dist')
+        self._network = None
+        self._old_network = None
+
         self._initialize()
 
     def _initialize(self):
         input_var = tf.compat.v1.placeholder(tf.float32,
                                              shape=(None, ) +
                                              self._input_shape)
-        self._old_model.build(input_var)
-        self._old_model.parameters = self.model.parameters
+        self._old_network = self._old_model.build(input_var)
 
         with tf.compat.v1.variable_scope(self._variable_scope):
-            self.model.build(input_var)
+            self._network = self.model.build(input_var)
+            self._old_model.parameters = self.model.parameters
 
             ys_var = tf.compat.v1.placeholder(dtype=tf.float32,
                                               name='ys',
                                               shape=(None, self._output_dim))
 
-            y_mean_var = self.model.networks['default'].y_mean
-            y_std_var = self.model.networks['default'].y_std
-            means_var = self.model.networks['default'].mean
+            y_mean_var = self._network.y_mean
+            y_std_var = self._network.y_std
+            means_var = self._network.mean
 
-            normalized_means_var = self.model.networks[
-                'default'].normalized_mean
-            normalized_log_stds_var = self.model.networks[
-                'default'].normalized_log_std
+            normalized_means_var = self._network.normalized_mean
+            normalized_log_stds_var = self._network.normalized_log_std
 
             normalized_ys_var = (ys_var - y_mean_var) / y_std_var
 
-            old_normalized_dist = self._old_model.networks[
-                'default'].normalized_dist
-            normalized_dist = self.model.networks['default'].normalized_dist
+            old_normalized_dist = self._old_network.normalized_dist
+            normalized_dist = self._network.normalized_dist
 
             mean_kl = tf.reduce_mean(
                 old_normalized_dist.kl_divergence(normalized_dist))
@@ -205,23 +205,17 @@ class GaussianMLPRegressor(StochasticRegressor):
 
         if self._normalize_inputs:
             # recompute normalizing constants for inputs
-            self.model.networks['default'].x_mean.load(
-                np.mean(xs, axis=0, keepdims=True))
-            self.model.networks['default'].x_std.load(
-                np.std(xs, axis=0, keepdims=True) + 1e-8)
-            self._old_model.networks['default'].x_mean.load(
-                np.mean(xs, axis=0, keepdims=True))
-            self._old_model.networks['default'].x_std.load(
+            self._network.x_mean.load(np.mean(xs, axis=0, keepdims=True))
+            self._network.x_std.load(np.std(xs, axis=0, keepdims=True) + 1e-8)
+            self._old_network.x_mean.load(np.mean(xs, axis=0, keepdims=True))
+            self._old_network.x_std.load(
                 np.std(xs, axis=0, keepdims=True) + 1e-8)
         if self._normalize_outputs:
             # recompute normalizing constants for outputs
-            self.model.networks['default'].y_mean.load(
-                np.mean(ys, axis=0, keepdims=True))
-            self.model.networks['default'].y_std.load(
-                np.std(ys, axis=0, keepdims=True) + 1e-8)
-            self._old_model.networks['default'].y_mean.load(
-                np.mean(ys, axis=0, keepdims=True))
-            self._old_model.networks['default'].y_std.load(
+            self._network.y_mean.load(np.mean(ys, axis=0, keepdims=True))
+            self._network.y_std.load(np.std(ys, axis=0, keepdims=True) + 1e-8)
+            self._old_network.y_mean.load(np.mean(ys, axis=0, keepdims=True))
+            self._old_network.y_std.load(
                 np.std(ys, axis=0, keepdims=True) + 1e-8)
         inputs = [xs, ys]
         loss_before = self._optimizer.loss(inputs)
@@ -255,7 +249,7 @@ class GaussianMLPRegressor(StochasticRegressor):
     @property
     def distribution(self):
         """garage.tf.distributions.DiagonalGaussian: Distribution."""
-        return self.model.networks['default'].dist
+        return self._network.dist
 
     def __getstate__(self):
         """Object.__getstate__.
@@ -266,6 +260,8 @@ class GaussianMLPRegressor(StochasticRegressor):
         """
         new_dict = super().__getstate__()
         del new_dict['_f_predict']
+        del new_dict['_network']
+        del new_dict['_old_network']
         return new_dict
 
     def __setstate__(self, state):

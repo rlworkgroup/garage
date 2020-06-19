@@ -84,6 +84,8 @@ class ContinuousMLPRegressor(Regressor):
             output_w_init=output_w_init,
             output_b_init=output_b_init)
 
+        self._network = None
+
         self._initialize()
 
     def _initialize(self):
@@ -93,12 +95,12 @@ class ContinuousMLPRegressor(Regressor):
 
         with tf.compat.v1.variable_scope(self._name) as vs:
             self._variable_scope = vs
-            self.model.build(input_var)
+            self._network = self.model.build(input_var)
             ys_var = tf.compat.v1.placeholder(dtype=tf.float32,
                                               name='ys',
                                               shape=(None, self._output_dim))
 
-            y_hat = self.model.networks['default'].y_hat
+            y_hat = self._network.y_hat
             loss = tf.reduce_mean(tf.square(y_hat - ys_var))
 
             self._f_predict = tensor_utils.compile_function([input_var], y_hat)
@@ -123,10 +125,8 @@ class ContinuousMLPRegressor(Regressor):
         """
         if self._normalize_inputs:
             # recompute normalizing constants for inputs
-            self.model.networks['default'].x_mean.load(
-                np.mean(xs, axis=0, keepdims=True))
-            self.model.networks['default'].x_std.load(
-                np.std(xs, axis=0, keepdims=True) + 1e-8)
+            self._network.x_mean.load(np.mean(xs, axis=0, keepdims=True))
+            self._network.x_std.load(np.std(xs, axis=0, keepdims=True) + 1e-8)
 
         inputs = [xs, ys]
         loss_before = self._optimizer.loss(inputs)
@@ -160,7 +160,7 @@ class ContinuousMLPRegressor(Regressor):
 
         """
         with tf.compat.v1.variable_scope(self._variable_scope):
-            y_hat, _, _ = self.model.build(xs, name=name)
+            y_hat, _, _ = self.model.build(xs, name=name).outputs
 
         return y_hat
 
@@ -183,6 +183,7 @@ class ContinuousMLPRegressor(Regressor):
         """
         new_dict = super().__getstate__()
         del new_dict['_f_predict']
+        del new_dict['_network']
         return new_dict
 
     def __setstate__(self, state):

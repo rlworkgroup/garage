@@ -58,8 +58,8 @@ class ComplicatedModel(Model):
     # pylint: disable=arguments-differ
     def _build(self, obs_input, name=None):
         del name
-        h1, _ = self._simple_model_1.build(obs_input)
-        return self._simple_model_2.build(h1)
+        h1, _ = self._simple_model_1.build(obs_input).outputs
+        return self._simple_model_2.build(h1).outputs
 
 
 # This model takes another model as constructor argument
@@ -77,8 +77,8 @@ class ComplicatedModel2(Model):
     # pylint: disable=arguments-differ
     def _build(self, obs_input, name=None):
         del name
-        h1, _ = self._parent_model.build(obs_input)
-        return self._output_model.build(h1)
+        h1, _ = self._parent_model.build(obs_input).outputs
+        return self._output_model.build(h1).outputs
 
 
 class TestModel(TfGraphTestCase):
@@ -86,22 +86,22 @@ class TestModel(TfGraphTestCase):
     def test_model_creation(self):
         input_var = tf.compat.v1.placeholder(tf.float32, shape=(None, 5))
         model = SimpleModel(output_dim=2)
-        outputs = model.build(input_var)
+        outputs = model.build(input_var).outputs
         data = np.ones((3, 5))
         out, model_out = self.sess.run(
-            [outputs, model.networks['default'].outputs],
-            feed_dict={model.networks['default'].input: data})
+            [outputs, model._networks['default'].outputs],
+            feed_dict={model._networks['default'].input: data})
         assert np.array_equal(out, model_out)
         assert model.name == type(model).__name__
 
     def test_model_creation_with_custom_name(self):
         input_var = tf.compat.v1.placeholder(tf.float32, shape=(None, 5))
         model = SimpleModel(output_dim=2, name='MySimpleModel')
-        outputs = model.build(input_var, name='network_2')
+        outputs = model.build(input_var, name='network_2').outputs
         data = np.ones((3, 5))
         result, result2 = self.sess.run(
-            [outputs, model.networks['network_2'].outputs],
-            feed_dict={model.networks['network_2'].input: data})
+            [outputs, model._networks['network_2'].outputs],
+            feed_dict={model._networks['network_2'].input: data})
         assert np.array_equal(result, result2)
         assert model.name == 'MySimpleModel'
 
@@ -123,8 +123,8 @@ class TestModel(TfGraphTestCase):
         another_input_var = tf.compat.v1.placeholder(tf.float32,
                                                      shape=(None, 5))
         model = SimpleModel(output_dim=2)
-        outputs_1 = model.build(input_var)
-        outputs_2 = model.build(another_input_var, name='network_2')
+        outputs_1 = model.build(input_var).outputs
+        outputs_2 = model.build(another_input_var, name='network_2').outputs
         data = np.ones((3, 5))
         results_1, results_2 = self.sess.run([outputs_1, outputs_2],
                                              feed_dict={
@@ -138,8 +138,8 @@ class TestModel(TfGraphTestCase):
         another_input_var = tf.compat.v1.placeholder(tf.float32,
                                                      shape=(None, 5))
         model = SimpleModel(output_dim=2)
-        outputs_1 = model.build(input_var, name='network_1')
-        outputs_2 = model.build(another_input_var)
+        outputs_1 = model.build(input_var, name='network_1').outputs
+        outputs_2 = model.build(another_input_var).outputs
         data = np.ones((3, 5))
         results_1, results_2 = self.sess.run([outputs_1, outputs_2],
                                              feed_dict={
@@ -151,11 +151,11 @@ class TestModel(TfGraphTestCase):
     def test_model_in_model(self):
         input_var = tf.compat.v1.placeholder(tf.float32, shape=(None, 5))
         model = ComplicatedModel(output_dim=2)
-        outputs = model.build(input_var)
+        outputs = model.build(input_var).outputs
         data = np.ones((3, 5))
         out, model_out = self.sess.run(
-            [outputs, model.networks['default'].outputs],
-            feed_dict={model.networks['default'].input: data})
+            [outputs, model._networks['default'].outputs],
+            feed_dict={model._networks['default'].input: data})
 
         assert np.array_equal(out, model_out)
 
@@ -163,11 +163,11 @@ class TestModel(TfGraphTestCase):
         input_var = tf.compat.v1.placeholder(tf.float32, shape=(None, 5))
         parent_model = SimpleModel(output_dim=4)
         model = ComplicatedModel2(parent_model=parent_model, output_dim=2)
-        outputs = model.build(input_var)
+        outputs = model.build(input_var).outputs
         data = np.ones((3, 5))
         out, model_out = self.sess.run(
-            [outputs, model.networks['default'].outputs],
-            feed_dict={model.networks['default'].input: data})
+            [outputs, model._networks['default'].outputs],
+            feed_dict={model._networks['default'].input: data})
 
         assert np.array_equal(out, model_out)
 
@@ -185,14 +185,14 @@ class TestModel(TfGraphTestCase):
             bias.load(tf.ones_like(bias).eval())
 
             results = sess.run(
-                model.networks['default'].outputs,
-                feed_dict={model.networks['default'].input: data})
+                model._networks['default'].outputs,
+                feed_dict={model._networks['default'].input: data})
             model_data = pickle.dumps(model)
 
         with tf.compat.v1.Session(graph=tf.Graph()) as sess:
             input_var = tf.compat.v1.placeholder(tf.float32, shape=(None, 5))
             model_pickled = pickle.loads(model_data)
-            outputs = model_pickled.build(input_var)
+            outputs = model_pickled.build(input_var).outputs
 
             results2 = sess.run(outputs, feed_dict={input_var: data})
 
@@ -212,7 +212,7 @@ class TestModel(TfGraphTestCase):
 
         with tf.compat.v1.Session(graph=tf.Graph()) as sess:
             input_var = tf.compat.v1.placeholder(tf.float32, shape=(None, 5))
-            outputs = model.build(input_var)
+            outputs = model.build(input_var).outputs
 
             # assign bias to all one
             with tf.compat.v1.variable_scope(
@@ -221,7 +221,7 @@ class TestModel(TfGraphTestCase):
             bias.load(tf.ones_like(bias).eval())
 
             results = sess.run(
-                outputs, feed_dict={model.networks['default'].input: data})
+                outputs, feed_dict={model._networks['default'].input: data})
             model_data = pickle.dumps(model)
 
         with tf.compat.v1.Session(graph=tf.Graph()) as sess:
@@ -229,7 +229,7 @@ class TestModel(TfGraphTestCase):
             model_pickled = pickle.loads(model_data)
             model_pickled.build(input_var)
 
-            results2 = sess.run(model_pickled.networks['default'].outputs,
+            results2 = sess.run(model_pickled._networks['default'].outputs,
                                 feed_dict={input_var: data})
 
         assert np.array_equal(results, results2)
@@ -242,7 +242,7 @@ class TestModel(TfGraphTestCase):
 
         with tf.compat.v1.Session(graph=tf.Graph()) as sess:
             input_var = tf.compat.v1.placeholder(tf.float32, shape=(None, 5))
-            outputs = model.build(input_var)
+            outputs = model.build(input_var).outputs
 
             # assign bias to all one
             with tf.compat.v1.variable_scope(
@@ -251,7 +251,7 @@ class TestModel(TfGraphTestCase):
             bias.load(tf.ones_like(bias).eval())
 
             results = sess.run(
-                outputs, feed_dict={model.networks['default'].input: data})
+                outputs, feed_dict={model._networks['default'].input: data})
             model_data = pickle.dumps(model)
 
         with tf.compat.v1.Session(graph=tf.Graph()) as sess:
@@ -259,7 +259,7 @@ class TestModel(TfGraphTestCase):
             model_pickled = pickle.loads(model_data)
             model_pickled.build(input_var)
 
-            results2 = sess.run(model_pickled.networks['default'].outputs,
+            results2 = sess.run(model_pickled._networks['default'].outputs,
                                 feed_dict={input_var: data})
 
         assert np.array_equal(results, results2)

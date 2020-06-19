@@ -59,6 +59,15 @@ class CategoricalMLPModel(MLPModel):
                          output_w_init, output_b_init, layer_normalization)
         self._output_normalization_fn = output_nonlinearity
 
+    def network_output_spec(self):
+        """Network output spec.
+
+        Returns:
+            list[str]: Name of the model outputs, in order.
+
+        """
+        return ['dist']
+
     def _build(self, state_input, name=None):
         """Build model.
 

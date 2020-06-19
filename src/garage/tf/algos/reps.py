@@ -97,6 +97,7 @@ class REPS(RLAlgorithm):  # noqa: D416
         self._name = name
         self._name_scope = tf.name_scope(self._name)
         self._old_policy = policy.clone('old_policy')
+        self._old_policy.model.parameters = self.policy.model.parameters
 
         self._feat_diff = None
         self._param_eta = None
@@ -104,6 +105,8 @@ class REPS(RLAlgorithm):  # noqa: D416
         self._f_dual = None
         self._f_dual_grad = None
         self._f_policy_kl = None
+        self._policy_network = None
+        self._old_policy_network = None
 
         self._optimizer = make_optimizer(optimizer, **optimizer_args)
         self._dual_optimizer = dual_optimizer
@@ -232,6 +235,8 @@ class REPS(RLAlgorithm):  # noqa: D416
         del data['_f_dual']
         del data['_f_dual_grad']
         del data['_f_policy_kl']
+        del data['_policy_network']
+        del data['_old_policy_network']
         return data
 
     def __setstate__(self, state):
@@ -386,9 +391,9 @@ class REPS(RLAlgorithm):  # noqa: D416
                 for k in self.policy.state_info_keys
             ]  # yapf: disable
 
-        self.policy.build(obs_var)
-        self._old_policy.build(obs_var)
-        self._old_policy.model.parameters = self.policy.model.parameters
+        self._policy_network = self.policy.build(obs_var, name='policy')
+        self._old_policy_network = self._old_policy.build(obs_var,
+                                                          name='policy')
 
         policy_loss_inputs = graph_inputs(
             'PolicyLossInputs',
@@ -438,7 +443,8 @@ class REPS(RLAlgorithm):  # noqa: D416
             NotImplementedError: If is_recurrent is True.
 
         """
-        pol_dist = self.policy.distribution
+        pol_dist = self._policy_network.dist
+        old_pol_dist = self._old_policy_network.dist
 
         # Initialize dual params
         self._param_eta = 15.
@@ -463,8 +469,7 @@ class REPS(RLAlgorithm):  # noqa: D416
                  for param in reg_params]) / len(reg_params)
 
         with tf.name_scope('kl'):
-            kl = self._old_policy.distribution.kl_divergence(
-                self.policy.distribution)
+            kl = old_pol_dist.kl_divergence(pol_dist)
             pol_mean_kl = tf.reduce_mean(kl)
 
         with tf.name_scope('dual'):

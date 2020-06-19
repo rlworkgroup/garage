@@ -154,6 +154,7 @@ class DiscreteCNNQFunction(QFunction):
                 layer_normalization=layer_normalization)
 
         self.model = Sequential(cnn_model, output_model)
+        self._network = None
 
         self._initialize()
 
@@ -172,7 +173,7 @@ class DiscreteCNNQFunction(QFunction):
 
         with tf.compat.v1.variable_scope(self.name) as vs:
             self._variable_scope = vs
-            self.model.build(augmented_obs_ph)
+            self._network = self.model.build(augmented_obs_ph)
 
         self._obs_input = obs_ph
 
@@ -184,7 +185,7 @@ class DiscreteCNNQFunction(QFunction):
             list[tf.Tensor]: Q values.
 
         """
-        return self.model.networks['default'].outputs
+        return self._network.outputs
 
     @property
     def input(self):
@@ -213,7 +214,7 @@ class DiscreteCNNQFunction(QFunction):
             if isinstance(self._env_spec.observation_space, akro.Image):
                 augmented_state_input = tf.cast(state_input,
                                                 tf.float32) / 255.0
-            return self.model.build(augmented_state_input, name=name)
+            return self.model.build(augmented_state_input, name=name).outputs
 
     def clone(self, name):
         """Return a clone of the Q-function.
@@ -265,4 +266,5 @@ class DiscreteCNNQFunction(QFunction):
         """
         new_dict = self.__dict__.copy()
         del new_dict['_obs_input']
+        del new_dict['_network']
         return new_dict

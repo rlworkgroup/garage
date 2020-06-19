@@ -176,6 +176,8 @@ class GaussianCNNRegressor(StochasticRegressor):
             std_output_nonlinearity=std_output_nonlinearity,
             std_parameterization='exp',
             layer_normalization=layer_normalization)
+        self._network = None
+
         self._initialize()
 
     def _initialize(self):
@@ -184,7 +186,7 @@ class GaussianCNNRegressor(StochasticRegressor):
                                              self._input_shape)
 
         with tf.compat.v1.variable_scope(self._variable_scope):
-            self.model.build(input_var)
+            self._network = self.model.build(input_var)
             ys_var = tf.compat.v1.placeholder(dtype=tf.float32,
                                               name='ys',
                                               shape=(None, self._output_dim))
@@ -197,14 +199,12 @@ class GaussianCNNRegressor(StochasticRegressor):
                 name='old_log_stds',
                 shape=(None, self._output_dim))
 
-            y_mean_var = self.model.networks['default'].y_mean
-            y_std_var = self.model.networks['default'].y_std
-            means_var = self.model.networks['default'].means
-            log_stds_var = self.model.networks['default'].log_stds
-            normalized_means_var = self.model.networks[
-                'default'].normalized_means
-            normalized_log_stds_var = self.model.networks[
-                'default'].normalized_log_stds
+            y_mean_var = self._network.y_mean
+            y_std_var = self._network.y_std
+            means_var = self._network.means
+            log_stds_var = self._network.log_stds
+            normalized_means_var = self._network.normalized_means
+            normalized_log_stds_var = self._network.normalized_log_stds
 
             normalized_ys_var = (ys_var - y_mean_var) / y_std_var
 
@@ -216,14 +216,14 @@ class GaussianCNNRegressor(StochasticRegressor):
                                              log_std=normalized_log_stds_var)
 
             mean_kl = tf.reduce_mean(
-                self.model.networks['default'].dist.kl_sym(
+                self._network.dist.kl_sym(
                     dict(mean=normalized_old_means_var,
                          log_std=normalized_old_log_stds_var),
                     normalized_dist_info_vars,
                 ))
 
             loss = -tf.reduce_mean(
-                self.model.networks['default'].dist.log_likelihood_sym(
+                self._network.dist.log_likelihood_sym(
                     normalized_ys_var, normalized_dist_info_vars))
 
             self._f_predict = tensor_utils.compile_function([input_var],
@@ -267,16 +267,12 @@ class GaussianCNNRegressor(StochasticRegressor):
 
         if self._normalize_inputs:
             # recompute normalizing constants for inputs
-            self.model.networks['default'].x_mean.load(
-                np.mean(xs, axis=0, keepdims=True))
-            self.model.networks['default'].x_std.load(
-                np.std(xs, axis=0, keepdims=True) + 1e-8)
+            self._network.x_mean.load(np.mean(xs, axis=0, keepdims=True))
+            self._network.x_std.load(np.std(xs, axis=0, keepdims=True) + 1e-8)
         if self._normalize_outputs:
             # recompute normalizing constants for outputs
-            self.model.networks['default'].y_mean.load(
-                np.mean(ys, axis=0, keepdims=True))
-            self.model.networks['default'].y_std.load(
-                np.std(ys, axis=0, keepdims=True) + 1e-8)
+            self._network.y_mean.load(np.mean(ys, axis=0, keepdims=True))
+            self._network.y_std.load(np.std(ys, axis=0, keepdims=True) + 1e-8)
         if self._use_trust_region:
             old_means, old_log_stds = self._f_pdists(xs)
             inputs = [xs, ys, old_means, old_log_stds]
@@ -320,7 +316,7 @@ class GaussianCNNRegressor(StochasticRegressor):
         means_var = params['mean']
         log_stds_var = params['log_std']
 
-        return self.model.networks[name].dist.log_likelihood_sym(
+        return self._network.dist.log_likelihood_sym(
             y_var, dict(mean=means_var, log_std=log_stds_var))
 
     def dist_info_sym(self, input_var, state_info_vars=None, name=None):
@@ -340,10 +336,10 @@ class GaussianCNNRegressor(StochasticRegressor):
         """
         del state_info_vars
         with tf.compat.v1.variable_scope(self._variable_scope):
-            self.model.build(input_var, name=name)
+            network = self.model.build(input_var, name=name)
 
-        means_var = self.model.networks[name].means
-        log_stds_var = self.model.networks[name].log_stds
+        means_var = network.means
+        log_stds_var = network.log_stds
 
         return dict(mean=means_var, log_std=log_stds_var)
 
@@ -360,7 +356,7 @@ class GaussianCNNRegressor(StochasticRegressor):
     @property
     def distribution(self):
         """garage.tf.distributions.DiagonalGaussian: Distribution."""
-        return self.model.networks['default'].dist
+        return self._network.dist
 
     def __getstate__(self):
         """Object.__getstate__.
@@ -372,6 +368,7 @@ class GaussianCNNRegressor(StochasticRegressor):
         new_dict = super().__getstate__()
         del new_dict['_f_predict']
         del new_dict['_f_pdists']
+        del new_dict['_network']
         return new_dict
 
     def __setstate__(self, state):

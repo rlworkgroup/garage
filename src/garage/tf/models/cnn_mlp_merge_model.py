@@ -157,6 +157,7 @@ class CNNMLPMergeModel(Model):
             tf.Tensor: Output of the model of shape (N, output_dim).
 
         """
-        cnn_out = self.cnn_model.build(state, name=name)
-        mlp_out = self.mlp_merge_model.build(cnn_out, action, name=name)
+        cnn_out = self.cnn_model.build(state, name=name).outputs
+        mlp_out = self.mlp_merge_model.build(cnn_out, action,
+                                             name=name).outputs
         return mlp_out

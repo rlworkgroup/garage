@@ -150,17 +150,20 @@ class GaussianLSTMPolicy(StochasticPolicy):
         self._prev_actions = None
         self._prev_hiddens = None
         self._prev_cells = None
+        self._dist = None
+        self._init_hidden = None
+        self._init_cell = None
 
-    def build(self, state_input, name=None):
-        """Build model.
+        self._initialize()
 
-        Args:
-          state_input (tf.Tensor): State input.
-          name (str): Name of the model, which is also the name scope.
-
-        """
+    def _initialize(self):
+        """Initialize policy."""
         with tf.compat.v1.variable_scope(self.name) as vs:
             self._variable_scope = vs
+            state_input = tf.compat.v1.placeholder(shape=(None, None,
+                                                          self._input_dim),
+                                                   name='state_input',
+                                                   dtype=tf.float32)
             step_input_var = tf.compat.v1.placeholder(shape=(None,
                                                              self._input_dim),
                                                       name='step_input',
@@ -173,21 +176,46 @@ class GaussianLSTMPolicy(StochasticPolicy):
                                                             self._hidden_dim),
                                                      name='step_cell_input',
                                                      dtype=tf.float32)
-            self.model.build(state_input,
-                             step_input_var,
-                             step_hidden_var,
-                             step_cell_var,
-                             name=name)
+            (self._dist, step_mean, step_log_std, step_hidden, step_cell,
+             self._init_hidden,
+             self._init_cell) = self.model.build(state_input, step_input_var,
+                                                 step_hidden_var,
+                                                 step_cell_var).outputs
 
         self._f_step_mean_std = tf.compat.v1.get_default_session(
         ).make_callable(
-            [
-                self.model.networks['default'].step_mean,
-                self.model.networks['default'].step_log_std,
-                self.model.networks['default'].step_hidden,
-                self.model.networks['default'].step_cell
-            ],
+            [step_mean, step_log_std, step_hidden, step_cell],
             feed_list=[step_input_var, step_hidden_var, step_cell_var])
+
+    def build(self, state_input, name=None):
+        """Build policy.
+
+        Args:
+            state_input (tf.Tensor) : State input.
+            name (str): Name of the policy, which is also the name scope.
+
+        Returns:
+            tfp.distributions.MultivariateNormalDiag: Policy distribution.
+            tf.Tensor: Step means, with shape :math:`(N, S^*)`.
+            tf.Tensor: Step log std, with shape :math:`(N, S^*)`.
+            tf.Tensor: Step hidden state, with shape :math:`(N, S^*)`.
+            tf.Tensor: Step cell state, with shape :math:`(N, S^*)`.
+            tf.Tensor: Initial hidden state, with shape :math:`(S^*)`.
+            tf.Tensor: Initial cell state, with shape :math:`(S^*)`
+
+        """
+        with tf.compat.v1.variable_scope(self._variable_scope):
+            _, step_input, step_hidden, step_cell = self.model.inputs
+            return self.model.build(state_input,
+                                    step_input,
+                                    step_hidden,
+                                    step_cell,
+                                    name=name)
+
+    @property
+    def input_dim(self):
+        """int: Dimension of the policy input."""
+        return self._input_dim
 
     @property
     def vectorized(self):
@@ -221,10 +249,8 @@ class GaussianLSTMPolicy(StochasticPolicy):
             self._prev_cells = np.zeros((len(do_resets), self._hidden_dim))
 
         self._prev_actions[do_resets] = 0.
-        self._prev_hiddens[do_resets] = self.model.networks[
-            'default'].init_hidden.eval()
-        self._prev_cells[do_resets] = self.model.networks[
-            'default'].init_cell.eval()
+        self._prev_hiddens[do_resets] = self._init_hidden.eval()
+        self._prev_cells[do_resets] = self._init_cell.eval()
 
     def get_action(self, observation):
         """Get single action from this policy for the input observation.
@@ -295,7 +321,7 @@ class GaussianLSTMPolicy(StochasticPolicy):
             tfp.Distribution.MultivariateNormalDiag: Policy distribution.
 
         """
-        return self.model.networks['default'].dist
+        return self._dist
 
     @property
     def state_info_specs(self):
@@ -360,4 +386,17 @@ class GaussianLSTMPolicy(StochasticPolicy):
         """
         new_dict = super().__getstate__()
         del new_dict['_f_step_mean_std']
+        del new_dict['_dist']
+        del new_dict['_init_hidden']
+        del new_dict['_init_cell']
         return new_dict
+
+    def __setstate__(self, state):
+        """Object.__setstate__.
+
+        Args:
+            state (dict): Unpickled state.
+
+        """
+        super().__setstate__(state)
+        self._initialize()

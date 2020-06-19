@@ -63,8 +63,8 @@ class CategoricalMLPPolicy(StochasticPolicy):
             raise ValueError('CategoricalMLPPolicy only works'
                              'with akro.Discrete action space.')
         super().__init__(name, env_spec)
-        self.obs_dim = env_spec.observation_space.flat_dim
-        self.action_dim = env_spec.action_space.n
+        self._obs_dim = env_spec.observation_space.flat_dim
+        self._action_dim = env_spec.action_space.n
 
         self._hidden_sizes = hidden_sizes
         self._hidden_nonlinearity = hidden_nonlinearity
@@ -79,7 +79,7 @@ class CategoricalMLPPolicy(StochasticPolicy):
         self._dist = None
 
         self.model = CategoricalMLPModel(
-            output_dim=self.action_dim,
+            output_dim=self._action_dim,
             hidden_sizes=hidden_sizes,
             hidden_nonlinearity=hidden_nonlinearity,
             hidden_w_init=hidden_w_init,
@@ -90,20 +90,38 @@ class CategoricalMLPPolicy(StochasticPolicy):
             layer_normalization=layer_normalization,
             name='CategoricalMLPModel')
 
-    def build(self, state_input, name=None):
-        """Build model.
+        self._initialize()
 
-        Args:
-          state_input (tf.Tensor) : State input.
-          name (str): Name of the model, which is also the name scope.
-
-        """
+    def _initialize(self):
+        """Initialize policy."""
         with tf.compat.v1.variable_scope(self.name) as vs:
             self._variable_scope = vs
-            self._dist = self.model.build(state_input, name=name)
+            state_input = tf.compat.v1.placeholder(tf.float32,
+                                                   shape=(None, None,
+                                                          self._obs_dim))
+            self._dist = self.model.build(state_input).dist
             self._f_prob = tf.compat.v1.get_default_session().make_callable(
                 [tf.argmax(self._dist.sample(), -1), self._dist.probs],
                 feed_list=[state_input])
+
+    def build(self, state_input, name=None):
+        """Build policy.
+
+        Args:
+            state_input (tf.Tensor) : State input.
+            name (str): Name of the policy, which is also the name scope.
+
+        Returns:
+            tfp.distributions.OneHotCategorical: Policy distribution.
+
+        """
+        with tf.compat.v1.variable_scope(self._variable_scope):
+            return self.model.build(state_input, name=name)
+
+    @property
+    def input_dim(self):
+        """int: Dimension of the policy input."""
+        return self._obs_dim
 
     @property
     def distribution(self):
@@ -206,3 +224,13 @@ class CategoricalMLPPolicy(StochasticPolicy):
         del new_dict['_f_prob']
         del new_dict['_dist']
         return new_dict
+
+    def __setstate__(self, state):
+        """Object.__setstate__.
+
+        Args:
+            state (dict): Unpickled state.
+
+        """
+        super().__setstate__(state)
+        self._initialize()

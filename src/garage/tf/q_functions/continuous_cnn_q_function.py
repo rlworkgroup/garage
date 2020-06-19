@@ -64,6 +64,7 @@ class ContinuousCNNQFunction(QFunction):
             of output dense layer(s) in the MLP. The function should return
             a tf.Tensor.
         layer_normalization (bool): Bool for using layer normalization or not.
+
     """
 
     def __init__(self,
@@ -155,10 +156,9 @@ class ContinuousCNNQFunction(QFunction):
             augmented_obs_ph = obs_ph
         with tf.compat.v1.variable_scope(self.name) as vs:
             self._variable_scope = vs
-            self.model.build(augmented_obs_ph, action_ph)
+            outputs = self.model.build(augmented_obs_ph, action_ph).outputs
         self._f_qval = tf.compat.v1.get_default_session().make_callable(
-            self.model.networks['default'].outputs,
-            feed_list=[obs_ph, action_ph])
+            outputs, feed_list=[obs_ph, action_ph])
 
         self._obs_input = obs_ph
         self._act_input = action_ph
@@ -214,7 +214,7 @@ class ContinuousCNNQFunction(QFunction):
                                                 tf.float32) / 255.0
             return self.model.build(augmented_state_input,
                                     action_input,
-                                    name=name)
+                                    name=name).outputs
 
     def clone(self, name):
         """Return a clone of the Q-function.
@@ -227,6 +227,7 @@ class ContinuousCNNQFunction(QFunction):
 
         Return:
             ContinuousCNNQFunction: Cloned Q function.
+
         """
         return self.__class__(
             name=name,

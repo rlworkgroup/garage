@@ -57,17 +57,17 @@ class TestGaussianCNNRegressor(TfGraphTestCase):
         average_error /= len(expected)
         assert average_error <= 0.1
 
-        x_mean = self.sess.run(gcr.model.networks['default'].x_mean)
+        x_mean = self.sess.run(gcr.model._networks['default'].x_mean)
         x_mean_expected = np.mean(observations, axis=0, keepdims=True)
-        x_std = self.sess.run(gcr.model.networks['default'].x_std)
+        x_std = self.sess.run(gcr.model._networks['default'].x_std)
         x_std_expected = np.std(observations, axis=0, keepdims=True)
 
         assert np.allclose(x_mean, x_mean_expected)
         assert np.allclose(x_std, x_std_expected)
 
-        y_mean = self.sess.run(gcr.model.networks['default'].y_mean)
+        y_mean = self.sess.run(gcr.model._networks['default'].y_mean)
         y_mean_expected = np.mean(returns, axis=0, keepdims=True)
-        y_std = self.sess.run(gcr.model.networks['default'].y_std)
+        y_std = self.sess.run(gcr.model._networks['default'].y_std)
         y_std_expected = np.std(returns, axis=0, keepdims=True)
 
         assert np.allclose(y_mean, y_mean_expected)
@@ -100,16 +100,16 @@ class TestGaussianCNNRegressor(TfGraphTestCase):
         average_error /= len(expected)
         assert average_error <= 0.1
 
-        x_mean = self.sess.run(gcr.model.networks['default'].x_mean)
+        x_mean = self.sess.run(gcr.model._networks['default'].x_mean)
         x_mean_expected = np.zeros_like(x_mean)
-        x_std = self.sess.run(gcr.model.networks['default'].x_std)
+        x_std = self.sess.run(gcr.model._networks['default'].x_std)
         x_std_expected = np.ones_like(x_std)
         assert np.array_equal(x_mean, x_mean_expected)
         assert np.array_equal(x_std, x_std_expected)
 
-        y_mean = self.sess.run(gcr.model.networks['default'].y_mean)
+        y_mean = self.sess.run(gcr.model._networks['default'].y_mean)
         y_mean_expected = np.zeros_like(y_mean)
-        y_std = self.sess.run(gcr.model.networks['default'].y_std)
+        y_std = self.sess.run(gcr.model._networks['default'].y_std)
         y_std_expected = np.ones_like(y_std)
 
         assert np.allclose(y_mean, y_mean_expected)
@@ -195,7 +195,7 @@ class TestGaussianCNNRegressor(TfGraphTestCase):
                                         new_ys_var: [label]
                                     })
         mean, log_std = gcr._f_pdists([data])
-        ll = gcr.model.networks['default'].dist.log_likelihood(
+        ll = gcr.model._networks['default'].dist.log_likelihood(
             [label], dict(mean=mean, log_std=log_std))
         assert np.allclose(ll, ll_from_sym, rtol=0, atol=1e-5)
 
@@ -258,9 +258,9 @@ class TestGaussianCNNRegressor(TfGraphTestCase):
                 'GaussianCNNRegressor/GaussianCNNRegressorModel', reuse=True):
             x_mean = tf.compat.v1.get_variable('normalized_vars/x_mean')
         x_mean.load(tf.ones_like(x_mean).eval())
-        x1 = gcr.model.networks['default'].x_mean.eval()
+        x1 = gcr.model._networks['default'].x_mean.eval()
         h = pickle.dumps(gcr)
         with tf.compat.v1.Session(graph=tf.Graph()):
             gcr_pickled = pickle.loads(h)
-            x2 = gcr_pickled.model.networks['default'].x_mean.eval()
+            x2 = gcr_pickled.model._networks['default'].x_mean.eval()
             assert np.array_equal(x1, x2)

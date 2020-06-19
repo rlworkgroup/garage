@@ -12,12 +12,6 @@ from garage.sampler.stateful_pool import SharedGlobal
 from garage.sampler.stateful_pool import singleton_pool
 from garage.sampler.utils import rollout
 
-tf = False
-try:
-    import tensorflow as tf
-except ImportError:
-    pass
-
 
 def _worker_init(g, id):
     if singleton_pool.n_parallel > 1:
@@ -118,10 +112,6 @@ def set_seed(seed):
 
 def _worker_set_policy_params(g, params, scope=None):
     g = _get_scoped_g(g, scope)
-    if tf and 'default' not in g.policy.model.networks:
-        obs_ph = tf.compat.v1.placeholder(tf.float32,
-                                          shape=(None, None, g.policy.obs_dim))
-        g.policy.build(obs_ph)
     g.policy.set_param_values(params)
 
 

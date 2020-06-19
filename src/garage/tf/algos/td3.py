@@ -167,17 +167,36 @@ class TD3(RLAlgorithm):
         """Build the loss function and init the optimizer."""
         with tf.name_scope(self._name):
             # Create target policy (actor) and qf (critic) networks
+            with tf.name_scope('inputs'):
+                obs_dim = self.env_spec.observation_space.flat_dim
+                y = tf.compat.v1.placeholder(tf.float32,
+                                             shape=(None, 1),
+                                             name='input_y')
+                obs = tf.compat.v1.placeholder(tf.float32,
+                                               shape=(None, obs_dim),
+                                               name='input_observation')
+                actions = tf.compat.v1.placeholder(
+                    tf.float32,
+                    shape=(None, self.env_spec.action_space.flat_dim),
+                    name='input_action')
+
+            policy_network_outputs = self._target_policy.get_action_sym(
+                obs, name='policy')
+            target_qf_outputs = self._target_qf.get_qval_sym(obs,
+                                                             actions,
+                                                             name='qf')
+            target_qf2_outputs = self._target_qf2.get_qval_sym(obs,
+                                                               actions,
+                                                               name='qf')
+
             self.target_policy_f_prob_online = tensor_utils.compile_function(
-                inputs=[self._target_policy.model.networks['default'].input],
-                outputs=self._target_policy.model.networks['default'].outputs)
+                inputs=[obs], outputs=policy_network_outputs)
 
             self.target_qf_f_prob_online = tensor_utils.compile_function(
-                inputs=self._target_qf.model.networks['default'].inputs,
-                outputs=self._target_qf.model.networks['default'].outputs)
+                inputs=[obs, actions], outputs=target_qf_outputs)
 
             self.target_qf2_f_prob_online = tensor_utils.compile_function(
-                inputs=self._target_qf2.model.networks['default'].inputs,
-                outputs=self._target_qf2.model.networks['default'].outputs)
+                inputs=[obs, actions], outputs=target_qf2_outputs)
 
             # Set up target init and update functions
             with tf.name_scope('setup_target'):
@@ -198,19 +217,6 @@ class TD3(RLAlgorithm):
                 inputs=[], outputs=target_init_op)
             f_update_target = tensor_utils.compile_function(
                 inputs=[], outputs=target_update_op)
-
-            with tf.name_scope('inputs'):
-                obs_dim = self.env_spec.observation_space.flat_dim
-                y = tf.compat.v1.placeholder(tf.float32,
-                                             shape=(None, 1),
-                                             name='input_y')
-                obs = tf.compat.v1.placeholder(tf.float32,
-                                               shape=(None, obs_dim),
-                                               name='input_observation')
-                actions = tf.compat.v1.placeholder(
-                    tf.float32,
-                    shape=(None, self.env_spec.action_space.flat_dim),
-                    name='input_action')
 
             # Set up policy training function
             next_action = self.policy.get_action_sym(obs, name='policy_action')

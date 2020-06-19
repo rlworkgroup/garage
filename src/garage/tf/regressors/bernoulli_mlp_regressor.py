@@ -113,6 +113,7 @@ class BernoulliMLPRegressor(StochasticRegressor):
             layer_normalization=layer_normalization)
 
         self._dist = Bernoulli(output_dim)
+        self._network = None
 
         self._initialize()
 
@@ -122,7 +123,7 @@ class BernoulliMLPRegressor(StochasticRegressor):
                                              self._input_shape)
 
         with tf.compat.v1.variable_scope(self._variable_scope):
-            self.model.build(input_var)
+            self._network = self.model.build(input_var)
 
             ys_var = tf.compat.v1.placeholder(dtype=tf.float32,
                                               name='ys',
@@ -133,7 +134,7 @@ class BernoulliMLPRegressor(StochasticRegressor):
                                                     shape=(None,
                                                            self._output_dim))
 
-            y_hat = self.model.networks['default'].y_hat
+            y_hat = self._network.y_hat
 
             old_info_vars = dict(p=old_prob_var)
             info_vars = dict(p=y_hat)
@@ -169,10 +170,8 @@ class BernoulliMLPRegressor(StochasticRegressor):
         """
         if self._normalize_inputs:
             # recompute normalizing constants for inputs
-            self.model.networks['default'].x_mean.load(
-                np.mean(xs, axis=0, keepdims=True))
-            self.model.networks['default'].x_std.load(
-                np.std(xs, axis=0, keepdims=True) + 1e-8)
+            self._network.x_mean.load(np.mean(xs, axis=0, keepdims=True))
+            self._network.x_std.load(np.std(xs, axis=0, keepdims=True) + 1e-8)
 
         if self._use_trust_region and self._first_optimized:
             # To use trust region constraint and optimizer
@@ -244,7 +243,7 @@ class BernoulliMLPRegressor(StochasticRegressor):
 
         """
         with tf.compat.v1.variable_scope(self._variable_scope):
-            prob, _, _ = self.model.build(x_var, name=name)
+            prob, _, _ = self.model.build(x_var, name=name).outputs
 
         return self._dist.log_likelihood_sym(y_var, dict(p=prob))
 
@@ -265,7 +264,7 @@ class BernoulliMLPRegressor(StochasticRegressor):
 
         """
         with tf.compat.v1.variable_scope(self._variable_scope):
-            prob, _, _ = self.model.build(input_var, name=name)
+            prob, _, _ = self.model.build(input_var, name=name).outputs
 
         return dict(prob=prob)
 
@@ -282,7 +281,7 @@ class BernoulliMLPRegressor(StochasticRegressor):
     @property
     def distribution(self):
         """garage.tf.distributions.DiagonalGaussian: Distribution."""
-        return self.model.networks['default'].dist
+        return self._dist
 
     def __getstate__(self):
         """Object.__getstate__.
@@ -294,6 +293,7 @@ class BernoulliMLPRegressor(StochasticRegressor):
         new_dict = super().__getstate__()
         del new_dict['_f_predict']
         del new_dict['_f_prob']
+        del new_dict['_network']
         return new_dict
 
     def __setstate__(self, state):
