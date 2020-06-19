@@ -6,7 +6,8 @@ import gym
 import pytest
 import tensorflow as tf
 
-from garage.envs import GarageEnv, normalize
+from garage.envs import GarageEnv
+from garage.envs import normalize
 from garage.experiment import LocalTFRunner
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import PPO
@@ -16,7 +17,8 @@ from garage.tf.policies import CategoricalMLPPolicy
 from garage.tf.policies import GaussianGRUPolicy
 from garage.tf.policies import GaussianLSTMPolicy
 from garage.tf.policies import GaussianMLPPolicy
-from tests.fixtures import snapshot_config, TfGraphTestCase
+from tests.fixtures import snapshot_config
+from tests.fixtures import TfGraphTestCase
 from tests.fixtures.envs.wrappers import ReshapeObservation
 
 

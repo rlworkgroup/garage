@@ -5,14 +5,18 @@ import tempfile
 
 import akro
 import dowel
-from dowel import logger, tabular
+from dowel import logger
+from dowel import tabular
 import numpy as np
 import pytest
 import tensorflow as tf
 import torch
 
-from garage import _Default, make_optimizer
-from garage import log_multitask_performance, log_performance, TrajectoryBatch
+from garage import _Default
+from garage import log_multitask_performance
+from garage import log_performance
+from garage import make_optimizer
+from garage import TrajectoryBatch
 from garage.envs import EnvSpec
 from tests.fixtures import TfGraphTestCase
 

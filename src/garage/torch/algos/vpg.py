@@ -7,11 +7,14 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 
-from garage import log_performance, TrajectoryBatch
+from garage import log_performance
+from garage import TrajectoryBatch
 from garage.misc import tensor_utils as tu
 from garage.np.algos.rl_algorithm import RLAlgorithm
 from garage.sampler import OnPolicyVectorizedSampler
-from garage.torch import (compute_advantages, filter_valids, pad_to_last)
+from garage.torch import compute_advantages
+from garage.torch import filter_valids
+from garage.torch import pad_to_last
 from garage.torch.optimizers import OptimizerWrapper
 
 

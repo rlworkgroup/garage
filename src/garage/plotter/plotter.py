@@ -66,20 +66,18 @@ class Plotter:
                     param_values, max_length = msgs[Op.DEMO].args
                     policy.set_param_values(param_values)
                     initial_rollout = False
-                    rollout(
-                        env,
-                        policy,
-                        max_path_length=max_length,
-                        animated=True,
-                        speedup=5)
-                else:
-                    if max_length:
-                        rollout(
-                            env,
+                    rollout(env,
                             policy,
                             max_path_length=max_length,
                             animated=True,
                             speedup=5)
+                else:
+                    if max_length:
+                        rollout(env,
+                                policy,
+                                max_path_length=max_length,
+                                animated=True,
+                                speedup=5)
         except KeyboardInterrupt:
             pass
 
@@ -123,8 +121,11 @@ class Plotter:
 
         # Needed in order to draw glfw window on the main thread
         if ('Darwin' in platform.platform()):
-            rollout(
-                env, policy, max_path_length=np.inf, animated=True, speedup=5)
+            rollout(env,
+                    policy,
+                    max_path_length=np.inf,
+                    animated=True,
+                    speedup=5)
 
         self._queue.put(Message(op=Op.UPDATE, args=(env, policy), kwargs=None))
 
@@ -132,7 +133,6 @@ class Plotter:
         if not Plotter.enable:
             return
         self._queue.put(
-            Message(
-                op=Op.DEMO,
-                args=(policy.get_param_values(), max_length),
-                kwargs=None))
+            Message(op=Op.DEMO,
+                    args=(policy.get_param_values(), max_length),
+                    kwargs=None))

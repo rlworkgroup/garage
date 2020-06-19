@@ -6,7 +6,8 @@ import gym
 import pytest
 import tensorflow as tf
 
-from garage.envs import GarageEnv, normalize
+from garage.envs import GarageEnv
+from garage.envs import normalize
 from garage.experiment import deterministic
 from garage.experiment import LocalTFRunner
 from garage.experiment import snapshotter
@@ -19,7 +20,8 @@ from garage.tf.policies import CategoricalCNNPolicy
 from garage.tf.policies import CategoricalGRUPolicy
 from garage.tf.policies import CategoricalLSTMPolicy
 from garage.tf.policies import GaussianMLPPolicy
-from tests.fixtures import snapshot_config, TfGraphTestCase
+from tests.fixtures import snapshot_config
+from tests.fixtures import TfGraphTestCase
 
 
 class TestTRPO(TfGraphTestCase):

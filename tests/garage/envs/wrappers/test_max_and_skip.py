@@ -5,6 +5,7 @@ from tests.fixtures.envs.dummy import DummyDiscretePixelEnv
 
 
 class TestMaxAndSkip:
+
     def setup_method(self):
         self.env = DummyDiscretePixelEnv(random=False)
         self.env_wrap = MaxAndSkip(DummyDiscretePixelEnv(random=False), skip=4)

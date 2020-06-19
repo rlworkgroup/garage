@@ -75,10 +75,10 @@ def recurrent_parameter(input_var,
     """
     with tf.compat.v1.variable_scope(name):
         p = tf.compat.v1.get_variable('parameter',
-                            shape=(length, ),
-                            dtype=dtype,
-                            initializer=initializer,
-                            trainable=trainable)
+                                      shape=(length, ),
+                                      dtype=dtype,
+                                      initializer=initializer,
+                                      trainable=trainable)
         batch_dim = tf.shape(input_var)[:2]
         step_batch_dim = tf.shape(step_input_var)[:1]
         broadcast_shape = tf.concat(axis=0, values=[batch_dim, [length]])

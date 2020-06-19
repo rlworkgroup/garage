@@ -6,6 +6,7 @@ from garage.envs.env_spec import EnvSpec
 
 
 class TestEnvSpec:
+
     def test_pickleable(self):
         env_spec = EnvSpec(akro.Box(-1, 1, (1, )), akro.Box(-2, 2, (2, )))
         round_trip = pickle.loads(pickle.dumps(env_spec))

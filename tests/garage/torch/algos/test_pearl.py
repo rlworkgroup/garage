@@ -1,7 +1,24 @@
 """This script is a test that fails when PEARL performance is too low."""
 import pickle
 
+from metaworld.benchmarks import ML1  # noqa: I100, I202
 import pytest
+
+from garage.envs import GarageEnv
+from garage.envs import normalize
+from garage.envs import PointEnv
+from garage.experiment import LocalRunner
+from garage.experiment.deterministic import set_seed
+from garage.experiment.task_sampler import SetTaskSampler
+from garage.sampler import LocalSampler
+from garage.torch import set_gpu_mode
+from garage.torch.algos import PEARL
+from garage.torch.algos.pearl import PEARLWorker
+from garage.torch.embeddings import MLPEncoder
+from garage.torch.policies import ContextConditionedPolicy
+from garage.torch.policies import TanhGaussianMLPPolicy
+from garage.torch.q_functions import ContinuousMLPQFunction
+from tests.fixtures import snapshot_config
 
 try:
     # pylint: disable=unused-import
@@ -14,21 +31,6 @@ except Exception:  # pylint: disable=broad-except
         'Skipping tests, failed to import mujoco. Do you have a '
         'valid mujoco key installed?',
         allow_module_level=True)
-from metaworld.benchmarks import ML1  # noqa: I100, I202
-
-from garage.envs import GarageEnv, normalize, PointEnv
-from garage.experiment import LocalRunner
-from garage.experiment.deterministic import set_seed
-from garage.experiment.task_sampler import SetTaskSampler
-from garage.sampler import LocalSampler
-from garage.torch import set_gpu_mode
-from garage.torch.algos import PEARL
-from garage.torch.algos.pearl import PEARLWorker
-from garage.torch.embeddings import MLPEncoder
-from garage.torch.policies import (ContextConditionedPolicy,
-                                   TanhGaussianMLPPolicy)
-from garage.torch.q_functions import ContinuousMLPQFunction
-from tests.fixtures import snapshot_config
 
 
 @pytest.mark.mujoco

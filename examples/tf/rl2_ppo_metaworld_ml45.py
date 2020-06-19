@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Example script to run RL2 in ML45."""
-# pylint: disable=no-value-for-parameter, wrong-import-order
+# pylint: disable=no-value-for-parameter
 import click
 import metaworld.benchmarks as mwb
 

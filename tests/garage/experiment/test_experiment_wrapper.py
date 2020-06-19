@@ -22,6 +22,7 @@ def invalid_method_call():
 
 
 class TestExperimentWrapper:
+
     def test_experiment_wrapper_method_call(self):
         data = base64.b64encode(pickle.dumps(method_call)).decode('utf-8')
         args = [

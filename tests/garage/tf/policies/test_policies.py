@@ -9,7 +9,8 @@ from garage.tf.policies import GaussianGRUPolicy
 from garage.tf.policies import GaussianLSTMPolicy
 from garage.tf.policies import GaussianMLPPolicy
 from tests.fixtures import TfGraphTestCase
-from tests.fixtures.envs.dummy import DummyBoxEnv, DummyDiscreteEnv
+from tests.fixtures.envs.dummy import DummyBoxEnv
+from tests.fixtures.envs.dummy import DummyDiscreteEnv
 
 
 class TestDiscretePolicies(TfGraphTestCase):

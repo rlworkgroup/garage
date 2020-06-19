@@ -6,8 +6,9 @@ from dowel import tabular
 import numpy as np
 import torch
 
-from garage import _Default, make_optimizer
+from garage import _Default
 from garage import log_multitask_performance
+from garage import make_optimizer
 from garage import TrajectoryBatch
 from garage.misc import tensor_utils
 from garage.sampler import OnPolicyVectorizedSampler

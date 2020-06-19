@@ -1,8 +1,10 @@
 """Evaluator which tests Meta-RL algorithms on test environments."""
 
-from dowel import logger, tabular
+from dowel import logger
+from dowel import tabular
 
-from garage import log_multitask_performance, TrajectoryBatch
+from garage import log_multitask_performance
+from garage import TrajectoryBatch
 from garage.experiment.deterministic import get_seed
 from garage.sampler import DefaultWorker
 from garage.sampler import LocalSampler

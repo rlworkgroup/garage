@@ -5,6 +5,7 @@ from tests.fixtures.envs.dummy import DummyDiscretePixelEnv
 
 
 class TestNoop:
+
     def test_noop(self):
         env = Noop(DummyDiscretePixelEnv(), noop_max=3)
 

@@ -3,17 +3,6 @@ This script creates a test that fails when garage.tf.algos.RL2TRPO
 performance is too low.
 """
 import pytest
-try:
-    # pylint: disable=unused-import
-    import mujoco_py  # noqa: F401
-except ImportError:
-    pytest.skip('To use mujoco-based features, please install garage[mujoco].',
-                allow_module_level=True)
-except Exception:  # pylint: disable=broad-except
-    pytest.skip(
-        'Skipping tests, failed to import mujoco. Do you have a '
-        'valid mujoco key installed?',
-        allow_module_level=True)
 
 from garage.envs import normalize
 from garage.envs.mujoco import HalfCheetahDirEnv
@@ -28,7 +17,20 @@ from garage.tf.optimizers import ConjugateGradientOptimizer
 from garage.tf.optimizers import FiniteDifferenceHvp
 from garage.tf.optimizers import PenaltyLbfgsOptimizer
 from garage.tf.policies import GaussianGRUPolicy
-from tests.fixtures import snapshot_config, TfGraphTestCase
+from tests.fixtures import snapshot_config
+from tests.fixtures import TfGraphTestCase
+
+try:
+    # pylint: disable=unused-import
+    import mujoco_py  # noqa: F401
+except ImportError:
+    pytest.skip('To use mujoco-based features, please install garage[mujoco].',
+                allow_module_level=True)
+except Exception:  # pylint: disable=broad-except
+    pytest.skip(
+        'Skipping tests, failed to import mujoco. Do you have a '
+        'valid mujoco key installed?',
+        allow_module_level=True)
 
 
 @pytest.mark.mujoco

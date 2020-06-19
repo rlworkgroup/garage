@@ -5,7 +5,8 @@ garage.tf.policies.
 import gym
 import pytest
 
-from garage.envs import GarageEnv, normalize
+from garage.envs import GarageEnv
+from garage.envs import normalize
 from garage.experiment import LocalTFRunner
 from garage.np.baselines import LinearFeatureBaseline
 from garage.tf.algos import TRPO
@@ -14,7 +15,8 @@ from garage.tf.optimizers import FiniteDifferenceHvp
 from garage.tf.policies import CategoricalGRUPolicy
 from garage.tf.policies import CategoricalLSTMPolicy
 from garage.tf.policies import CategoricalMLPPolicy
-from tests.fixtures import snapshot_config, TfGraphTestCase
+from tests.fixtures import snapshot_config
+from tests.fixtures import TfGraphTestCase
 
 policies = [CategoricalGRUPolicy, CategoricalLSTMPolicy, CategoricalMLPPolicy]
 

@@ -13,8 +13,10 @@ class DummyDiscreteEnv(DummyEnv):
     @property
     def observation_space(self):
         """Return an observation space."""
-        return gym.spaces.Box(
-            low=-1, high=1, shape=self._obs_dim, dtype=np.float32)
+        return gym.spaces.Box(low=-1,
+                              high=1,
+                              shape=self._obs_dim,
+                              dtype=np.float32)
 
     @property
     def action_space(self):
@@ -35,5 +37,5 @@ class DummyDiscreteEnv(DummyEnv):
                 obs = self.state + action / 10.
         else:
             raise RuntimeError(
-                "DummyEnv: reset() must be called before step()!")
+                'DummyEnv: reset() must be called before step()!')
         return obs, 0, True, dict()

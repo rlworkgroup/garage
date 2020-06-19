@@ -15,10 +15,11 @@ from garage.tf.models.lstm_model import LSTMModel
 from garage.tf.models.mlp_dueling_model import MLPDuelingModel
 from garage.tf.models.mlp_merge_model import MLPMergeModel
 from garage.tf.models.mlp_model import MLPModel
-from garage.tf.models.model import BaseModel, Model
-from garage.tf.models.module import Module, StochasticModule
-from garage.tf.models.normalized_input_mlp_model import (
-    NormalizedInputMLPModel)
+from garage.tf.models.model import BaseModel
+from garage.tf.models.model import Model
+from garage.tf.models.module import Module
+from garage.tf.models.module import StochasticModule
+from garage.tf.models.normalized_input_mlp_model import NormalizedInputMLPModel
 from garage.tf.models.sequential import Sequential
 
 __all__ = [

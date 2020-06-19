@@ -9,9 +9,11 @@ from garage_benchmarks.experiments.policies import continuous_mlp_policy
 from garage_benchmarks.experiments.policies import gaussian_gru_policy
 from garage_benchmarks.experiments.policies import gaussian_lstm_policy
 from garage_benchmarks.experiments.policies import gaussian_mlp_policy
-from garage_benchmarks.helper import benchmark, iterate_experiments
-from garage_benchmarks.parameters import (MuJoCo1M_ENV_SET, PIXEL_ENV_SET,
-                                          STATE_ENV_SET)
+from garage_benchmarks.helper import benchmark
+from garage_benchmarks.helper import iterate_experiments
+from garage_benchmarks.parameters import MuJoCo1M_ENV_SET
+from garage_benchmarks.parameters import PIXEL_ENV_SET
+from garage_benchmarks.parameters import STATE_ENV_SET
 
 _seeds = random.sample(range(100), 3)
 

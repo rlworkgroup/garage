@@ -5,6 +5,7 @@ from tests.fixtures.envs.dummy import DummyDiscretePixelEnvBaselines
 
 
 class TestFireReset:
+
     def test_atari_env(self):
         env = DummyDiscretePixelEnvBaselines()
         env_wrapped = AtariEnv(env)

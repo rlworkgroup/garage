@@ -2,12 +2,14 @@
 # pylint: disable=wrong-import-order
 import collections
 
-from dowel import logger, tabular
+from dowel import logger
+from dowel import tabular
 import numpy as np
 import tensorflow as tf
 
-from garage import log_performance, TrajectoryBatch
+from garage import log_performance
 from garage import make_optimizer
+from garage import TrajectoryBatch
 from garage.misc import tensor_utils as np_tensor_utils
 from garage.np.algos import RLAlgorithm
 from garage.sampler import OnPolicyVectorizedSampler

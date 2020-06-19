@@ -2,17 +2,20 @@
 from collections import deque
 import copy
 
-from dowel import logger, tabular
+from dowel import logger
+from dowel import tabular
 import numpy as np
 import torch
 
-from garage import _Default, make_optimizer
+from garage import _Default
 from garage import log_performance
+from garage import make_optimizer
 from garage.np import obtain_evaluation_samples
 from garage.np import samples_to_tensors
 from garage.np.algos import RLAlgorithm
 from garage.sampler import OffPolicyVectorizedSampler
-from garage.torch import dict_np_to_torch, torch_to_np
+from garage.torch import dict_np_to_torch
+from garage.torch import torch_to_np
 
 
 class DDPG(RLAlgorithm):

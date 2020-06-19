@@ -5,6 +5,7 @@ from tests.fixtures.envs.dummy import DummyDiscretePixelEnv
 
 
 class TestFireReset:
+
     def test_fire_reset(self):
         env = DummyDiscretePixelEnv()
         env_wrap = FireReset(env)

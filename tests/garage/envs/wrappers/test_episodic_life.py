@@ -5,6 +5,7 @@ from tests.fixtures.envs.dummy import DummyDiscretePixelEnv
 
 
 class TestEpisodicLife:
+
     def test_episodic_life_reset(self):
         env = EpisodicLife(DummyDiscretePixelEnv())
         obs = env.reset()

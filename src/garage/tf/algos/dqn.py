@@ -4,8 +4,9 @@ from dowel import tabular
 import numpy as np
 import tensorflow as tf
 
-from garage import _Default, make_optimizer
+from garage import _Default
 from garage import log_performance
+from garage import make_optimizer
 from garage.np import obtain_evaluation_samples
 from garage.np import samples_to_tensors
 from garage.np.algos import RLAlgorithm

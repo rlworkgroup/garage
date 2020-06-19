@@ -12,7 +12,8 @@ import numpy as np
 import tensorflow as tf
 
 from garage.tf.misc import tensor_utils
-from garage.tf.optimizers.utils import LazyDict, sliced_fun
+from garage.tf.optimizers.utils import LazyDict
+from garage.tf.optimizers.utils import sliced_fun
 
 
 class HessianVectorProduct(abc.ABC):
@@ -172,7 +173,12 @@ class FiniteDifferenceHvp(HessianVectorProduct):
         self.base_eps = base_eps
         self.symmetric = symmetric
 
-    def update_hvp(self, f, target, inputs, reg_coeff, name='FiniteDifferenceHvp'):
+    def update_hvp(self,
+                   f,
+                   target,
+                   inputs,
+                   reg_coeff,
+                   name='FiniteDifferenceHvp'):
         """Build the symbolic graph to compute the Hessian-vector product.
 
         Args:

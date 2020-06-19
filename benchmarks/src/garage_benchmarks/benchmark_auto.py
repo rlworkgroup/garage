@@ -7,7 +7,8 @@ from garage_benchmarks.experiments.algos import trpo_garage_pytorch
 from garage_benchmarks.experiments.algos import trpo_garage_tf
 from garage_benchmarks.experiments.algos import vpg_garage_pytorch
 from garage_benchmarks.experiments.algos import vpg_garage_tf
-from garage_benchmarks.helper import benchmark, iterate_experiments
+from garage_benchmarks.helper import benchmark
+from garage_benchmarks.helper import iterate_experiments
 from garage_benchmarks.parameters import MuJoCo1M_ENV_SET
 
 

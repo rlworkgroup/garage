@@ -6,7 +6,9 @@ from garage.envs import GarageEnv
 from garage.envs import GridWorldEnv
 from garage.experiment.task_sampler import EnvPoolSampler
 from garage.np.policies import ScriptedPolicy
-from garage.sampler import LocalSampler, VecWorker, WorkerFactory
+from garage.sampler import LocalSampler
+from garage.sampler import VecWorker
+from garage.sampler import WorkerFactory
 
 SEED = 100
 N_TRAJ = 5

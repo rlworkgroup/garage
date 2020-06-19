@@ -20,6 +20,7 @@ configurations = [('all', {
 
 
 class TestSnapshotter:
+
     def setup_method(self):
         self.temp_dir = tempfile.TemporaryDirectory()
 
@@ -47,6 +48,6 @@ class TestSnapshotter:
 
     def test_invalid_snapshot_mode(self):
         with pytest.raises(ValueError):
-            snapshotter = Snapshotter(
-                snapshot_dir=self.temp_dir.name, snapshot_mode='invalid')
+            snapshotter = Snapshotter(snapshot_dir=self.temp_dir.name,
+                                      snapshot_mode='invalid')
             snapshotter.save_itr_params(2, {'testparam': 'invalid'})

@@ -1,12 +1,14 @@
 """Deep Deterministic Policy Gradient (DDPG) implementation in TensorFlow."""
 from collections import deque
 
-from dowel import logger, tabular
+from dowel import logger
+from dowel import tabular
 import numpy as np
 import tensorflow as tf
 
-from garage import _Default, make_optimizer
+from garage import _Default
 from garage import log_performance
+from garage import make_optimizer
 from garage.np import obtain_evaluation_samples
 from garage.np import samples_to_tensors
 from garage.np.algos import RLAlgorithm

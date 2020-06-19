@@ -4,7 +4,8 @@ from garage.experiment.experiment import to_local_command
 from garage.experiment.local_runner import LocalRunner
 from garage.experiment.local_tf_runner import LocalTFRunner
 from garage.experiment.meta_evaluator import MetaEvaluator
-from garage.experiment.snapshotter import SnapshotConfig, Snapshotter
+from garage.experiment.snapshotter import SnapshotConfig
+from garage.experiment.snapshotter import Snapshotter
 from garage.experiment.task_sampler import TaskSampler
 
 __all__ = [

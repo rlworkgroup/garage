@@ -4,6 +4,7 @@ import glfw
 
 
 class DmControlViewer(dm_viewer_app.Application):
+
     def render(self):
         # Don't try to render into closed windows
         if not self._window._context:

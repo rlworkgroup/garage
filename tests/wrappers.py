@@ -4,7 +4,7 @@ import gym
 class AutoStopEnv(gym.Wrapper):
     """A env wrapper that stops rollout at step max_path_length."""
 
-    def __init__(self, env=None, env_name="", max_path_length=100):
+    def __init__(self, env=None, env_name='', max_path_length=100):
         if env_name:
             super().__init__(gym.make(env_name))
         else:

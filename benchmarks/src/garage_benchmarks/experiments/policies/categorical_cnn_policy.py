@@ -2,7 +2,8 @@
 import gym
 
 from garage import wrap_experiment
-from garage.envs import GarageEnv, normalize
+from garage.envs import GarageEnv
+from garage.envs import normalize
 from garage.experiment import deterministic
 from garage.experiment import LocalTFRunner
 from garage.tf.algos import PPO

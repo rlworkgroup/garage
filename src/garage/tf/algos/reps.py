@@ -1,13 +1,16 @@
 """Relative Entropy Policy Search implementation in Tensorflow."""
 import collections
 
-from dowel import logger, tabular
+from dowel import logger
+from dowel import tabular
 import numpy as np
 import scipy.optimize
 import tensorflow as tf
 
-from garage import _Default, make_optimizer
-from garage import log_performance, TrajectoryBatch
+from garage import _Default
+from garage import log_performance
+from garage import make_optimizer
+from garage import TrajectoryBatch
 from garage.np.algos import RLAlgorithm
 from garage.sampler import OnPolicyVectorizedSampler
 from garage.tf import paths_to_tensors

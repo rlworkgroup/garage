@@ -5,9 +5,13 @@ import pytest
 import torch
 import torch.nn.functional as F
 
-from garage.torch import compute_advantages, pad_to_last
-from garage.torch import dict_np_to_torch, global_device
-from garage.torch import product_of_gaussians, set_gpu_mode, torch_to_np
+from garage.torch import compute_advantages
+from garage.torch import dict_np_to_torch
+from garage.torch import global_device
+from garage.torch import pad_to_last
+from garage.torch import product_of_gaussians
+from garage.torch import set_gpu_mode
+from garage.torch import torch_to_np
 import garage.torch._functions as tu
 from tests.fixtures import TfGraphTestCase
 

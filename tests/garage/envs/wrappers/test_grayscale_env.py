@@ -7,6 +7,7 @@ from tests.fixtures.envs.dummy import DummyDiscretePixelEnv
 
 
 class TestGrayscale:
+
     def setup_method(self):
         self.env = DummyDiscretePixelEnv(random=False)
         self.env_g = Grayscale(DummyDiscretePixelEnv(random=False))
@@ -22,8 +23,10 @@ class TestGrayscale:
 
     def test_grayscale_invalid_environment_shape(self):
         with pytest.raises(ValueError):
-            self.env.observation_space = gym.spaces.Box(
-                low=0, high=255, shape=(4, ), dtype=np.uint8)
+            self.env.observation_space = gym.spaces.Box(low=0,
+                                                        high=255,
+                                                        shape=(4, ),
+                                                        dtype=np.uint8)
             Grayscale(self.env)
 
     def test_grayscale_observation_space(self):

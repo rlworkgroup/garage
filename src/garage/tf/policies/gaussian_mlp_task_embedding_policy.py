@@ -1,5 +1,4 @@
 """GaussianMLPTaskEmbeddingPolicy."""
-# pylint: disable=wrong-import-order
 import akro
 import numpy as np
 import tensorflow as tf

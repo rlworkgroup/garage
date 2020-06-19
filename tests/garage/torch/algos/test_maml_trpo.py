@@ -1,5 +1,17 @@
 """This script is a test that fails when MAML-TRPO performance is too low."""
 import pytest
+import torch
+
+from garage.envs import GarageEnv
+from garage.envs import normalize
+from garage.envs.mujoco import HalfCheetahDirEnv
+from garage.experiment import LocalRunner
+from garage.torch.algos import MAMLTRPO
+from garage.torch.policies import GaussianMLPPolicy
+from garage.torch.value_functions import GaussianMLPValueFunction
+from tests.fixtures import snapshot_config
+from tests.fixtures.envs.dummy import DummyMultiTaskBoxEnv
+
 try:
     # pylint: disable=unused-import
     import mujoco_py  # noqa: F401
@@ -11,16 +23,6 @@ except Exception:  # pylint: disable=broad-except
         'Skipping tests, failed to import mujoco. Do you have a '
         'valid mujoco key installed?',
         allow_module_level=True)
-import torch
-
-from garage.envs import GarageEnv, normalize
-from garage.envs.mujoco import HalfCheetahDirEnv
-from garage.experiment import LocalRunner
-from garage.torch.algos import MAMLTRPO
-from garage.torch.policies import GaussianMLPPolicy
-from garage.torch.value_functions import GaussianMLPValueFunction
-from tests.fixtures import snapshot_config
-from tests.fixtures.envs.dummy import DummyMultiTaskBoxEnv
 
 
 @pytest.mark.mujoco

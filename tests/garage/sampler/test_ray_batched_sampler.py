@@ -9,8 +9,11 @@ from garage.envs import GarageEnv
 from garage.envs import PointEnv
 from garage.envs.grid_world_env import GridWorldEnv
 from garage.experiment.task_sampler import SetTaskSampler
-from garage.np.policies import FixedPolicy, ScriptedPolicy
-from garage.sampler import OnPolicyVectorizedSampler, RaySampler, WorkerFactory
+from garage.np.policies import FixedPolicy
+from garage.np.policies import ScriptedPolicy
+from garage.sampler import OnPolicyVectorizedSampler
+from garage.sampler import RaySampler
+from garage.sampler import WorkerFactory
 from tests.fixtures.sampler import ray_local_session_fixture
 
 

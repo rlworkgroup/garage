@@ -2,6 +2,7 @@ import numpy as np
 
 
 class BatchDataset:
+
     def __init__(self, inputs, batch_size, extra_inputs=None):
         self._inputs = [i for i in inputs]
         if extra_inputs is None:
