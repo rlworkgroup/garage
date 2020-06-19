@@ -1,5 +1,0 @@
-ARG PARENT_IMAGE=rlworkgroup/garage-base
-FROM $PARENT_IMAGE
-
-# Ready, set, go.
-ENTRYPOINT ["docker/entrypoint-runtime.sh"]
