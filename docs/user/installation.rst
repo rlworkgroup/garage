@@ -8,7 +8,7 @@ Installation
 Install Garage in a Python Environment
 --------------------------------------
 
-Garage is a Python package which can be installed in most Python 3.5+ environments using standard commands, i.e.
+Garage is a Python package which can be installed in most Python 3.6+ environments using standard commands, i.e.
 
 .. code-block:: bash
 
@@ -19,13 +19,13 @@ We recommend you build your project using a Python environment manager which sup
 
 Garage is also tested using `virtualenv <https://virtualenv.pypa.io/en/latest/>`_. However, virtualenv has difficulty resolving dependency conflicts which may arise between garage and other packages in your project, so additional care is needed when using it. You are of course free to install garage as a system-wide Python package using pip, but we don't recommend doing so.
 
-NOTE: garage only supports Python 3.5+, so make sure you Python environment is using this or a later version.
+NOTE: garage only supports Python 3.6+, so make sure you Python environment is using this or a later version. You can still install version 2020.06 if you need to use Python 3.5.
 
 - pipenv
 
 .. code-block:: bash
 
-    pipenv --three  # garage only supports Python 3.5+
+    pipenv --three  # garage only supports Python 3.6+
     pipenv install --pre garage  # --pre required because garage has some dependencies with verion numbers <1.0
 
 
@@ -44,7 +44,7 @@ Alternatively, you can add garage in the pip section of your `environment.yml`
     channels:
       - conda-forge
     dependencies:
-    - python>=3.5
+    - python>=3.6
     - pip
     - pip
       - garage

@@ -1,6 +1,7 @@
 """Dummy gym.spaces.Box environment for testing purpose."""
+from random import choices
+
 from tests.fixtures.envs.dummy import DummyBoxEnv
-from tests.helpers import choices
 
 
 class DummyMultiTaskBoxEnv(DummyBoxEnv):
