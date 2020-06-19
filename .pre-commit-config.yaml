@@ -25,6 +25,16 @@ repos:
         entry: pylint
         args: [--rcfile=tests/garage/.pylintrc]
 
+-   repo: https://github.com/timothycrosley/isort
+    rev: 4.3.21-2
+    hooks:
+    -   id: isort
+        name: isort
+        entry: isort
+        require_serial: true
+        language: python
+        types: [python]
+
 -   repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v2.2.3
     hooks:
