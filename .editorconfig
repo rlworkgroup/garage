@@ -32,8 +32,13 @@ max_line_length = 80
 indent_style = space
 indent_size = 2
 
-# shell scripts
+# Shell scripts
 [*.sh]
 indent_style = space
 indent_size = 2
+max_line_length = 80
+
+# Markdown
+[*.md]
+indent_style = space
 max_line_length = 80
