@@ -79,7 +79,7 @@ class OnPolicyVectorizedSampler(BatchSampler):
         paths = []
         n_samples = 0
         obses = self.vec_env.reset()
-        dones = np.asarray([True] * self.vec_env.num_envs)
+        completes = np.asarray([True] * self.vec_env.num_envs)
         running_paths = [None] * self.vec_env.num_envs
 
         pbar = ProgBarCounter(batch_size)
@@ -91,13 +91,14 @@ class OnPolicyVectorizedSampler(BatchSampler):
 
         while n_samples < batch_size:
             t = time.time()
-            policy.reset(dones)
+            policy.reset(completes)
 
             actions, agent_infos = policy.get_actions(obses)
 
             policy_time += time.time() - t
             t = time.time()
-            next_obses, rewards, dones, env_infos = self.vec_env.step(actions)
+            next_obses, rewards, _, env_infos, completes = \
+                self.vec_env.step(actions)
             env_time += time.time() - t
             t = time.time()
 
@@ -107,9 +108,9 @@ class OnPolicyVectorizedSampler(BatchSampler):
                 env_infos = [dict() for _ in range(self.vec_env.num_envs)]
             if agent_infos is None:
                 agent_infos = [dict() for _ in range(self.vec_env.num_envs)]
-            for idx, observation, action, reward, env_info, agent_info, done in zip(  # noqa: E501
+            for idx, observation, action, reward, env_info, agent_info, complete in zip(  # noqa: E501
                     itertools.count(), obses, actions, rewards, env_infos,
-                    agent_infos, dones):
+                    agent_infos, completes):
                 if running_paths[idx] is None:
                     running_paths[idx] = dict(
                         observations=[],
@@ -123,7 +124,7 @@ class OnPolicyVectorizedSampler(BatchSampler):
                 running_paths[idx]['rewards'].append(reward)
                 running_paths[idx]['env_infos'].append(env_info)
                 running_paths[idx]['agent_infos'].append(agent_info)
-                if done:
+                if complete:
                     obs = np.asarray(running_paths[idx]['observations'])
                     actions = np.asarray(running_paths[idx]['actions'])
                     paths.append(
