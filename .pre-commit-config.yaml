@@ -54,6 +54,16 @@ repos:
     -   id: pretty-format-json               # Checks that all your JSON files have keys that are sorted and indented.
     -   id: trailing-whitespace              # Trims trailing whitespace.
 
+-   repo: https://github.com/markdownlint/markdownlint
+    rev: v0.9.0
+    hooks:
+      - id: markdownlint                     # Check markdown files and flag style issues
+        name: Markdownlint
+        description: Run markdownlint on your Markdown files
+        entry: mdl
+        language: ruby
+        files: \.(md|mdown|markdown)$
+
 # First pass: check format
 -   repo: https://github.com/pre-commit/mirrors-yapf
     rev: v0.28.0
