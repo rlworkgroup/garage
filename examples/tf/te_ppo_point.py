@@ -100,7 +100,7 @@ def te_ppo_pointenv(ctxt, seed, n_epochs, batch_size_per_task):
         task_encoder = GaussianMLPEncoder(
             name='embedding',
             embedding_spec=task_embed_spec,
-            hidden_sizes=[20, 20],
+            hidden_sizes=(20, 20),
             std_share_network=True,
             init_std=embedding_init_std,
             max_std=embedding_max_std,
@@ -117,7 +117,7 @@ def te_ppo_pointenv(ctxt, seed, n_epochs, batch_size_per_task):
         inference = GaussianMLPEncoder(
             name='inference',
             embedding_spec=traj_embed_spec,
-            hidden_sizes=[20, 20],
+            hidden_sizes=(20, 20),
             std_share_network=True,
             init_std=0.1,
             output_nonlinearity=tf.nn.tanh,
@@ -129,7 +129,7 @@ def te_ppo_pointenv(ctxt, seed, n_epochs, batch_size_per_task):
             name='policy',
             env_spec=env.spec,
             encoder=task_encoder,
-            hidden_sizes=[32, 16],
+            hidden_sizes=(32, 16),
             std_share_network=True,
             max_std=policy_max_std,
             init_std=policy_init_std,

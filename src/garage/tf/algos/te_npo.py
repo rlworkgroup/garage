@@ -10,6 +10,7 @@ from garage import InOutSpec, log_performance, TrajectoryBatch
 from garage.misc import tensor_utils as np_tensor_utils
 from garage.np.algos import RLAlgorithm
 from garage.sampler import LocalSampler
+from garage.tf import paths_to_tensors
 from garage.tf.embeddings import StochasticEncoder
 from garage.tf.misc.tensor_utils import center_advs
 from garage.tf.misc.tensor_utils import compile_function
@@ -221,7 +222,15 @@ class TENPO(RLAlgorithm):
             numpy.float64: Average return.
 
         """
-        samples_data = self.paths_to_tensors(itr, paths)
+        undiscounted_returns = log_performance(
+            itr,
+            TrajectoryBatch.from_trajectory_list(self._env_spec, paths),
+            discount=self._discount)
+
+        samples_data = self.paths_to_tensors(paths)
+
+        samples_data['average_return'] = np.mean(undiscounted_returns)
+
         logger.log('Optimizing policy...')
         self.optimize_policy(itr, samples_data)
         return samples_data['average_return']
@@ -256,38 +265,31 @@ class TENPO(RLAlgorithm):
             self.policy.encoder.model.parameters)
         self._old_inference.model.parameters = self._inference.model.parameters
 
-    def paths_to_tensors(self, itr, paths):
+    def paths_to_tensors(self, paths):
         # pylint: disable=too-many-statements
         """Return processed sample data based on the collected paths.
 
         Args:
-            itr (int): Iteration number.
             paths (list[dict]): A list of collected paths.
 
         Returns:
             dict: Processed sample data, with key
                 * observations: (numpy.ndarray)
+                * tasks: (numpy.ndarray)
                 * actions: (numpy.ndarray)
+                * trjectories: (numpy.ndarray)
                 * rewards: (numpy.ndarray)
                 * baselines: (numpy.ndarray)
                 * returns: (numpy.ndarray)
                 * valids: (numpy.ndarray)
                 * agent_infos: (dict)
+                * letent_infos: (dict)
                 * env_infos: (dict)
+                * trjectory_infos: (dict)
                 * paths: (list[dict])
-                * average_return: (numpy.float64)
 
         """
-        baselines = []
-        returns = []
-        total_steps = 0
-
         max_path_length = self.max_path_length
-
-        undiscounted_returns = log_performance(
-            itr,
-            TrajectoryBatch.from_trajectory_list(self._env_spec, paths),
-            discount=self._discount)
 
         def _extract_latent_infos(infos):
             """Extract and pack latent infos from dict.
@@ -306,58 +308,18 @@ class TENPO(RLAlgorithm):
                     latent_infos[k[7:]] = v
             return latent_infos
 
-        if self._flatten_input:
-            paths = [
-                dict(observations=(self._env_spec.observation_space.flatten_n(
-                    path['observations'])),
-                     tasks=self.policy.task_space.flatten_n(
-                         path['env_infos']['task_onehot']),
-                     latents=path['agent_infos']['latent'],
-                     actions=self._env_spec.action_space.flatten_n(
-                         path['actions']),
-                     rewards=path['rewards'],
-                     env_infos=path['env_infos'],
-                     agent_infos=path['agent_infos'],
-                     latent_infos=_extract_latent_infos(path['agent_infos']),
-                     dones=path['dones']) for path in paths
-            ]
-        else:
-            paths = [
-                dict(observations=path['observations'],
-                     tasks=path['env_infos']['task_onehot'],
-                     latenst=path['agent_infos']['latent'],
-                     actions=(self._env_spec.action_space.flatten_n(
-                         path['actions'])),
-                     rewards=path['rewards'],
-                     env_infos=path['env_infos'],
-                     agent_infos=path['agent_infos'],
-                     latent_infos=_extract_latent_infos(path['agent_infos']),
-                     dones=path['dones']) for path in paths
-            ]
+        for path in paths:
+            if self._flatten_input:
+                path['observations'] = (
+                    self._env_spec.observation_space.flatten_n(
+                        path['observations']))
+            path['actions'] = (self._env_spec.action_space.flatten_n(
+                path['actions']))
+            path['tasks'] = self.policy.task_space.flatten_n(
+                path['env_infos']['task_onehot'])
+            path['latents'] = path['agent_infos']['latent']
+            path['latent_infos'] = _extract_latent_infos(path['agent_infos'])
 
-        all_path_baselines = [self._baseline.predict(path) for path in paths]
-
-        for idx, path in enumerate(paths):
-            total_steps += len(path['rewards'])
-            path_baselines = np.append(all_path_baselines[idx], 0)
-            deltas = (path['rewards'] + self._discount * path_baselines[1:] -
-                      path_baselines[:-1])
-            path['advantages'] = np_tensor_utils.discount_cumsum(
-                deltas, self._discount * self._gae_lambda)
-            path['deltas'] = deltas
-
-        for idx, path in enumerate(paths):
-            # baselines
-            path['baselines'] = all_path_baselines[idx]
-            baselines.append(path['baselines'])
-
-            # returns
-            path['returns'] = np_tensor_utils.discount_cumsum(
-                path['rewards'], self._discount)
-            returns.append(path['returns'])
-
-        # calculate inference trajectories samples
-        for idx, path in enumerate(paths):
             # - Calculate a forward-looking sliding window.
             # - If step_space has shape (n, d), then trajs will have shape
             #   (n, window, d)
@@ -378,32 +340,37 @@ class TENPO(RLAlgorithm):
             _, traj_info = self._inference.get_latents(traj_flat)
             path['trajectory_infos'] = traj_info
 
-        # make all paths the same length
-        obs = [path['observations'] for path in paths]
-        obs = pad_tensor_n(obs, max_path_length)
+        all_path_baselines = [self._baseline.predict(path) for path in paths]
 
-        actions = [path['actions'] for path in paths]
-        actions = pad_tensor_n(actions, max_path_length)
+        # calculate inference trajectories samples
+        for path in paths:
+            # - Calculate a forward-looking sliding window.
+            # - If step_space has shape (n, d), then trajs will have shape
+            #   (n, window, d)
+            # - The length of the sliding window is determined by the
+            #   trajectory inference spec. We smear the last few elements to
+            #   preserve the time dimension.
+            # - Only observation is used for a single step.
+            #   Alternatively, stacked [observation, action] can be used for
+            #   in harder tasks.
+            obs = pad_tensor(path['observations'], max_path_length)
+            obs_flat = self._env_spec.observation_space.flatten_n(obs)
+            steps = obs_flat
+            window = self._inference.spec.input_space.shape[0]
+            traj = np_tensor_utils.sliding_window(steps, window, smear=True)
+            traj_flat = self._inference.spec.input_space.flatten_n(traj)
+            path['trajectories'] = traj_flat
+
+            _, traj_info = self._inference.get_latents(traj_flat)
+            path['trajectory_infos'] = traj_info
 
         tasks = [path['tasks'] for path in paths]
         tasks = pad_tensor_n(tasks, max_path_length)
 
-        latents = [path['latents'] for path in paths]
-        latents = pad_tensor_n(latents, max_path_length)
-
-        rewards = [path['rewards'] for path in paths]
-        rewards = pad_tensor_n(rewards, max_path_length)
-
-        returns = [path['returns'] for path in paths]
-        returns = pad_tensor_n(returns, max_path_length)
-
-        baselines = pad_tensor_n(baselines, max_path_length)
-
         trajectories = np.stack([path['trajectories'] for path in paths])
 
-        agent_infos = [path['agent_infos'] for path in paths]
-        agent_infos = stack_tensor_dict_list(
-            [pad_tensor_dict(p, max_path_length) for p in agent_infos])
+        latents = [path['latents'] for path in paths]
+        latents = pad_tensor_n(latents, max_path_length)
 
         latent_infos = [path['latent_infos'] for path in paths]
         latent_infos = stack_tensor_dict_list(
@@ -413,33 +380,14 @@ class TENPO(RLAlgorithm):
         trajectory_infos = stack_tensor_dict_list(
             [pad_tensor_dict(p, max_path_length) for p in trajectory_infos])
 
-        env_infos = [path['env_infos'] for path in paths]
-        env_infos = stack_tensor_dict_list(
-            [pad_tensor_dict(p, max_path_length) for p in env_infos])
-
-        valids = [np.ones_like(path['returns']) for path in paths]
-        valids = pad_tensor_n(valids, max_path_length)
-
-        lengths = np.asarray([v.sum() for v in valids])
-
-        samples_data = dict(
-            observations=obs,
-            actions=actions,
-            tasks=tasks,
-            latents=latents,
-            trajectories=trajectories,
-            rewards=rewards,
-            baselines=baselines,
-            returns=returns,
-            valids=valids,
-            lengths=lengths,
-            agent_infos=agent_infos,
-            env_infos=env_infos,
-            latent_infos=latent_infos,
-            trajectory_infos=trajectory_infos,
-            paths=paths,
-            average_return=np.mean(undiscounted_returns),
-        )
+        samples_data = paths_to_tensors(paths, max_path_length,
+                                        all_path_baselines, self._discount,
+                                        self._gae_lambda)
+        samples_data['tasks'] = tasks
+        samples_data['latents'] = latents
+        samples_data['latent_infos'] = latent_infos
+        samples_data['trajectories'] = trajectories
+        samples_data['trajectory_infos'] = trajectory_infos
 
         return samples_data
 
@@ -571,8 +519,6 @@ class TENPO(RLAlgorithm):
         extra_obs_var = [
             tf.cast(v, tf.float32) for v in policy_state_info_vars_list
         ]
-        # pylint false alarm
-        # pylint: disable=unexpected-keyword-arg, no-value-for-parameter
         augmented_obs_var = tf.concat([obs_var] + extra_obs_var, axis=-1)
         extra_traj_var = [
             tf.cast(v, tf.float32) for v in infer_state_info_vars_list
@@ -707,7 +653,7 @@ class TENPO(RLAlgorithm):
                 # Encoder entropy bonus
                 loss -= self.encoder_ent_coeff * encoder_entropy
 
-            encoder_mean_kl = self._build_encoder_kl(i)
+            encoder_mean_kl = self._build_encoder_kl()
 
             # Diagnostic functions
             self._f_policy_kl = tf.compat.v1.get_default_session(
@@ -801,19 +747,13 @@ class TENPO(RLAlgorithm):
 
         return encoder_entropy, inference_ce, policy_entropy
 
-    def _build_encoder_kl(self, i):
+    def _build_encoder_kl(self):
         """Build graph for encoder KL divergence.
-
-        Args:
-            i (namedtuple): Collection of variables to compute encoder KL
-                divergence.
 
         Returns:
             tf.Tensor: Encoder KL divergence.
 
         """
-        del i
-
         dist = self.policy.encoder.distribution
         old_dist = self._old_policy.encoder.distribution
 
@@ -849,8 +789,6 @@ class TENPO(RLAlgorithm):
             traj_gammas = tf.constant(float(self._discount),
                                       dtype=tf.float32,
                                       shape=[self.max_path_length])
-            # pylint false alarm
-            # pylint: disable=no-value-for-parameter
             traj_discounts = tf.compat.v1.cumprod(traj_gammas,
                                                   exclusive=True,
                                                   name='traj_discounts')
@@ -1030,7 +968,6 @@ class TENPO(RLAlgorithm):
 
         for task in range(num_tasks):
             for i in range(self.policy.latent_space.flat_dim):
-                # pylint: disable=protected-access
                 stds = np.exp(latent_infos['log_std'][task, i])
 
                 norm = scipy.stats.norm(loc=latent_infos['mean'][task, i],
