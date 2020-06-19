@@ -130,10 +130,11 @@ class TENPO(RLAlgorithm):
         self._use_softplus_entropy = use_softplus_entropy
         self._stop_ce_gradient = stop_ce_gradient
 
-        optimizer, optimizer_args = self._build_optimizer(
-            optimizer, optimizer_args)
-        inference_opt, inference_opt_args = self._build_inference_optimizer(
-            inference_optimizer, inference_optimizer_args)
+        optimizer = optimizer or LbfgsOptimizer
+        optimizer_args = optimizer_args or dict()
+
+        inference_opt = inference_optimizer or LbfgsOptimizer
+        inference_opt_args = inference_optimizer_args or dict()
 
         with self._name_scope:
             self._optimizer = optimizer(**optimizer_args)
@@ -390,43 +391,6 @@ class TENPO(RLAlgorithm):
         samples_data['trajectory_infos'] = trajectory_infos
 
         return samples_data
-
-    def _build_optimizer(self, optimizer, optimizer_args):
-        """Build up optimizer for policy.
-
-        Args:
-            optimizer (obj): Policy optimizer. Should be one of the optimizers
-                in garage.tf.optimizers.
-            optimizer_args (dict): The arguments of the optimizer.
-
-        Returns:
-            obj: Policy optimizer. Should be one of the optimizers
-                in garage.tf.optimizers.
-            dict: The arguments of the optimizer.
-
-        """
-        # pylint: disable=no-self-use
-        if optimizer is None:
-            optimizer = LbfgsOptimizer
-        if optimizer_args is None:
-            optimizer_args = dict()
-        return optimizer, optimizer_args
-
-    def _build_inference_optimizer(self, optimizer, optimizer_args):
-        """Build up optimizer for inference.
-
-        Args:
-            optimizer (obj): Policy optimizer. Should be one of the optimizers
-                in garage.tf.optimizers.
-            optimizer_args (dict): The arguments of the optimizer.
-
-        Returns:
-            obj: Policy optimizer. Should be one of the optimizers
-                in garage.tf.optimizers.
-            dict: The arguments of the optimizer.
-
-        """
-        return self._build_optimizer(optimizer, optimizer_args)
 
     def _build_inputs(self):
         """Build input variables.

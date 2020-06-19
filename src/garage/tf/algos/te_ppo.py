@@ -84,10 +84,13 @@ class TEPPO(TENPO):
                  inference_optimizer_args=None,
                  inference_ce_coeff=1e-3,
                  name='PPOTaskEmbedding'):
-        optimizer, optimizer_args = self._build_optimizer(
-            optimizer, optimizer_args)
-        inference_optimizer, inference_optimizer_args = self._build_optimizer(
-            inference_optimizer, inference_optimizer_args)
+
+        optimizer = optimizer or FirstOrderOptimizer
+        optimizer_args = optimizer_args or dict(batch_size=32, max_epochs=10)
+
+        inference_optimizer = inference_optimizer or FirstOrderOptimizer
+        inference_optimizer_args = inference_optimizer_args or dict(
+            batch_size=32, max_epochs=10)
 
         super().__init__(env_spec=env_spec,
                          policy=policy,
@@ -113,26 +116,3 @@ class TEPPO(TENPO):
                          inference_optimizer_args=inference_optimizer_args,
                          inference_ce_coeff=inference_ce_coeff,
                          name=name)
-
-    def _build_optimizer(self, optimizer, optimizer_args):
-        """Build up optimizer for policy.
-
-        Args:
-            optimizer (obj): Policy optimizer. Should be one of the optimizers
-                in garage.tf.optimizers.
-            optimizer_args (dict): The arguments of the optimizer.
-
-        Returns:
-            obj: Policy optimizer. Should be one of the optimizers
-                in garage.tf.optimizers.
-            dict: The arguments of the optimizer.
-
-        """
-        if optimizer is None:
-            optimizer = FirstOrderOptimizer
-        if optimizer_args is None:
-            optimizer_args = dict(
-                batch_size=32,
-                max_epochs=10,
-            )
-        return optimizer, optimizer_args
