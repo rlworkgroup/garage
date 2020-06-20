@@ -54,7 +54,7 @@ The table below summarizes the algorithms available in garage.
 | Task Embedding         | TensorFlow          |
 
 ## Supported Tools and Frameworks
-Starting from version 2020.09, garage supports Python 3.6+. 2020.06 is the last version of garage that supports Python 3.5.
+Starting from version 2020.09, garage supports Python 3.6+. 2020.06 was the last version of garage that supports Python 3.5.
 
 The package is tested on Ubuntu 18.04. It is also known to run on recent versions of macOS, using Homebrew to install some dependencies. Windows users can install garage via WSL, or by making use of the Docker containers.
 

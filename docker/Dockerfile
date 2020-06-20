@@ -29,10 +29,10 @@ RUN \
     # OpenAI baselines
     libopenmpi-dev \
     # virtualenv
-    python3 \
-    python3-pip \
-    python3-tk \
-    python3-virtualenv && \
+    libbz2-dev \
+    libreadline-dev \
+    libssl-dev \
+    libsqlite3-dev && \
   apt-get clean && \
   rm -rf /var/lib/apt/lists/*
 
@@ -58,9 +58,16 @@ RUN groupadd -g $uid $user && \
 ENV USER $user
 USER $user
 ENV HOME /home/$user
-ENV PATH "$PATH:$HOME/.local/bin"
+ENV PYENV_ROOT "$HOME/.pyenv"
+ENV PATH "$PYENV_ROOT/shims:$PYENV_ROOT/bin:$PATH:$HOME/.local/bin"
 ENV PATH_NO_VENV $PATH
 WORKDIR $HOME
+
+RUN curl https://pyenv.run | bash && \
+  pyenv install 3.6.10 && \
+  pyenv global 3.6.10 && \
+  pip install virtualenv && \
+  rm -r $HOME/.cache/pip
 
 # MuJoCo 2.0 (for dm_control)
 RUN mkdir -p $HOME/.mujoco && \
@@ -80,7 +87,7 @@ ENV MUJOCO_GL "glfw"
 
 # Create virtualenv
 ENV VIRTUAL_ENV $HOME/venv
-RUN python3 -m virtualenv --python=/usr/bin/python3 $VIRTUAL_ENV
+RUN python -m virtualenv $VIRTUAL_ENV
 ENV PATH "$VIRTUAL_ENV/bin:$PATH"
 
 # Prevent pip from complaining about available upgrades inside virtualenv
@@ -154,7 +161,7 @@ RUN git init && \
 # Install deps (but not the code)
 # Note that we don't delete the pip cache for dev builds
 RUN rm -rf $VIRTUAL_ENV && \
-  python3 -m virtualenv --python=/usr/bin/python3 $VIRTUAL_ENV && \
+  python -m virtualenv $VIRTUAL_ENV && \
   pip install --upgrade pip setuptools wheel && \
   pip install .[all,dev] && \
   rm $HOME/.mujoco/mjkey.txt
@@ -163,11 +170,11 @@ RUN rm -rf $VIRTUAL_ENV && \
 COPY --chown=$user:$user . $HOME/code/garage
 
 # Build and install the sdist
-RUN python3 setup.py sdist && \
+RUN python setup.py sdist && \
     cp dist/*.tar.gz dist/garage.tar.gz && \
     pip install dist/garage.tar.gz[all,dev]
 
-RUN cd benchmarks && python3 setup.py sdist && \
+RUN cd benchmarks && python setup.py sdist && \
     cp dist/*.tar.gz dist/benchmarks.tar.gz && \
     pip install dist/benchmarks.tar.gz
 
