@@ -177,6 +177,7 @@ hash brew 2>/dev/null || {
 # For building glfw: cmake
 # Required for OpenAI gym: cmake boost boost-python ffmpeg sdl2 swig wget
 # Required for OpenAI baselines: cmake openmpi
+# Ruby required for markdownlint tool
 brew update
 set +e
 brew install \
@@ -192,7 +193,8 @@ brew install \
   ffmpeg \
   sdl2 \
   swig \
-  openmpi
+  openmpi \
+  ruby
 set -e
 
 # Leave a note in ~/.bash_profile for the added environment variables
