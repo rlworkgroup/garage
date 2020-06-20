@@ -10,7 +10,7 @@ Results:
 from pybullet_envs.bullet.cartpole_bullet import CartPoleBulletEnv
 
 from garage import wrap_experiment
-from garage.envs.pybullet import PybulletEnv
+from garage.envs.bullet import BulletEnv
 from garage.experiment import LocalTFRunner
 from garage.experiment.deterministic import set_seed
 from garage.np.baselines import LinearFeatureBaseline
@@ -19,7 +19,7 @@ from garage.tf.policies import CategoricalMLPPolicy
 
 
 @wrap_experiment
-def trpo_cartpole(ctxt=None, seed=1):
+def trpo_cartpole_bullet(ctxt=None, seed=1):
     """Train TRPO with Pybullet's CartPoleBulletEnv environment.
 
     Args:
@@ -32,7 +32,7 @@ def trpo_cartpole(ctxt=None, seed=1):
     set_seed(seed)
     with LocalTFRunner(ctxt) as runner:
         env = CartPoleBulletEnv(renders=False, discrete_actions=True)
-        env = PybulletEnv(env)
+        env = BulletEnv(env)
 
         policy = CategoricalMLPPolicy(name='policy',
                                       env_spec=env.spec,
@@ -51,4 +51,4 @@ def trpo_cartpole(ctxt=None, seed=1):
         runner.train(n_epochs=100, batch_size=4000)
 
 
-trpo_cartpole()
+trpo_cartpole_bullet()

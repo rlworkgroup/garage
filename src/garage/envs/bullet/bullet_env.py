@@ -7,8 +7,8 @@ from pybullet_envs.bullet.minitaur_gym_env import MinitaurBulletEnv
 from garage.envs import GarageEnv
 
 
-class PybulletEnv(GarageEnv):
-    """Binding for py_bullet envrionments."""
+class BulletEnv(GarageEnv):
+    """Binding for py_bullet environments."""
 
     def __getstate__(self):
         """See `Object.__getstate__.
@@ -39,7 +39,7 @@ class PybulletEnv(GarageEnv):
     def __setstate__(self, state):
         """See `Object.__setstate__.
 
-        This will create a new pybullet client/server connection.
+        This will create a new py_bullet client/server connection.
 
         Args:
             state (dict): The instance’s __init__() arguments.
