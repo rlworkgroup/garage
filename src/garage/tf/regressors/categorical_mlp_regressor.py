@@ -140,8 +140,8 @@ class CategoricalMLPRegressor(StochasticRegressor):
 
             y_hat = self._network.y_hat
 
-            dist = self._network.categorical_dist
-            old_dist = self._old_network.categorical_dist
+            dist = self._network.dist
+            old_dist = self._old_network.dist
 
             mean_kl = tf.reduce_mean(old_dist.kl_divergence(dist))
 

@@ -4,6 +4,7 @@ from unittest import mock
 import numpy as np
 import pytest
 import tensorflow as tf
+import tensorflow_probability as tfp
 
 from garage.tf.optimizers import ConjugateGradientOptimizer, LbfgsOptimizer
 from garage.tf.regressors import CategoricalMLPRegressor
@@ -57,6 +58,11 @@ def get_test_data(input_shape):
 
 class TestCategoricalMLPRegressor(TfGraphTestCase):
 
+    def test_dist(self):
+        cmr = CategoricalMLPRegressor(input_shape=(1, ), output_dim=2)
+        dist = cmr._network.dist
+        assert isinstance(dist, tfp.distributions.OneHotCategorical)
+
     @pytest.mark.parametrize('input_shape, output_dim', [((1, ), 2),
                                                          ((2, ), 2)])
     def test_fit_normalized(self, input_shape, output_dim):
@@ -77,9 +83,9 @@ class TestCategoricalMLPRegressor(TfGraphTestCase):
 
         assert np.allclose(prediction, expected, rtol=0, atol=0.1)
 
-        x_mean = self.sess.run(cmr.model._networks['default'].x_mean)
+        x_mean = self.sess.run(cmr._network.x_mean)
         x_mean_expected = np.mean(observations, axis=0, keepdims=True)
-        x_std = self.sess.run(cmr.model._networks['default'].x_std)
+        x_std = self.sess.run(cmr._network.x_std)
         x_std_expected = np.std(observations, axis=0, keepdims=True)
 
         assert np.allclose(x_mean, x_mean_expected)
@@ -106,9 +112,9 @@ class TestCategoricalMLPRegressor(TfGraphTestCase):
 
         assert np.allclose(prediction, expected, rtol=0, atol=0.1)
 
-        x_mean = self.sess.run(cmr.model._networks['default'].x_mean)
+        x_mean = self.sess.run(cmr._network.x_mean)
         x_mean_expected = np.zeros_like(x_mean)
-        x_std = self.sess.run(cmr.model._networks['default'].x_std)
+        x_std = self.sess.run(cmr._network.x_std)
         x_std_expected = np.ones_like(x_std)
 
         assert np.allclose(x_mean, x_mean_expected)
@@ -135,9 +141,9 @@ class TestCategoricalMLPRegressor(TfGraphTestCase):
 
         assert np.allclose(prediction, expected, rtol=0, atol=0.1)
 
-        x_mean = self.sess.run(cmr.model._networks['default'].x_mean)
+        x_mean = self.sess.run(cmr._network.x_mean)
         x_mean_expected = np.mean(observations, axis=0, keepdims=True)
-        x_std = self.sess.run(cmr.model._networks['default'].x_std)
+        x_std = self.sess.run(cmr._network.x_std)
         x_std_expected = np.std(observations, axis=0, keepdims=True)
 
         assert np.allclose(x_mean, x_mean_expected)

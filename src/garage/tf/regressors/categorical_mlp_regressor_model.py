@@ -71,7 +71,7 @@ class CategoricalMLPRegressorModel(NormalizedInputMLPModel):
             list[str]: List of key(str) for the network outputs.
 
         """
-        return ['y_hat', 'x_mean', 'x_std', 'categorical_dist']
+        return ['y_hat', 'x_mean', 'x_std', 'dist']
 
     def _build(self, state_input, name=None):
         """Build model.
@@ -105,7 +105,8 @@ class CategoricalMLPRegressorModel(NormalizedInputMLPModel):
                 computational graph.
 
         Returns:
-            garage.tf.policies.GaussianMLPModel: Newly cloned model.
+            garage.tf.regressors.CategoricalMLPRegressorModel: Newly cloned
+                model.
 
         """
         return self.__class__(name=name,
