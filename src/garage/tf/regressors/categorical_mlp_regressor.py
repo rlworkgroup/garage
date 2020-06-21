@@ -4,10 +4,10 @@ import numpy as np
 import tensorflow as tf
 
 from garage import make_optimizer
-from garage.tf.distributions import Categorical
 from garage.tf.misc import tensor_utils
-from garage.tf.models import NormalizedInputMLPModel
 from garage.tf.optimizers import ConjugateGradientOptimizer, LbfgsOptimizer
+from garage.tf.regressors.categorical_mlp_regressor_model import (
+    CategoricalMLPRegressorModel)
 from garage.tf.regressors.regressor import StochasticRegressor
 
 
@@ -106,7 +106,7 @@ class CategoricalMLPRegressor(StochasticRegressor):
                                                     **tr_optimizer_args)
             self._first_optimized = False
 
-        self.model = NormalizedInputMLPModel(
+        self.model = CategoricalMLPRegressorModel(
             input_shape,
             output_dim,
             hidden_sizes=hidden_sizes,
@@ -118,38 +118,34 @@ class CategoricalMLPRegressor(StochasticRegressor):
             output_b_init=output_b_init,
             layer_normalization=layer_normalization)
 
+        # model for old distribution, used when trusted region is on
+        self._old_model = self.model.clone(name='model_for_old_dist')
         self._network = None
-
+        self._old_network = None
         self._initialize()
 
     def _initialize(self):
         input_var = tf.compat.v1.placeholder(tf.float32,
                                              shape=(None, ) +
                                              self._input_shape)
+        self._old_network = self._old_model.build(input_var)
 
         with tf.compat.v1.variable_scope(self._variable_scope):
             self._network = self.model.build(input_var)
+            self._old_model.parameters = self.model.parameters
 
             ys_var = tf.compat.v1.placeholder(dtype=tf.float32,
                                               name='ys',
                                               shape=(None, self._output_dim))
 
-            old_prob_var = tf.compat.v1.placeholder(dtype=tf.float32,
-                                                    name='old_prob',
-                                                    shape=(None,
-                                                           self._output_dim))
-
             y_hat = self._network.y_hat
 
-            old_info_vars = dict(prob=old_prob_var)
-            info_vars = dict(prob=y_hat)
+            dist = self._network.dist
+            old_dist = self._old_network.dist
 
-            self._dist = Categorical(self._output_dim)
-            mean_kl = tf.reduce_mean(
-                self._dist.kl_sym(old_info_vars, info_vars))
+            mean_kl = tf.reduce_mean(old_dist.kl_divergence(dist))
 
-            loss = -tf.reduce_mean(
-                self._dist.log_likelihood_sym(ys_var, info_vars))
+            loss = -tf.reduce_mean(dist.log_prob(ys_var))
 
             # pylint: disable=no-value-for-parameter
             predicted = tf.one_hot(tf.argmax(y_hat, axis=1),
@@ -157,16 +153,15 @@ class CategoricalMLPRegressor(StochasticRegressor):
 
             self._f_predict = tensor_utils.compile_function([input_var],
                                                             predicted)
-            self._f_prob = tensor_utils.compile_function([input_var], y_hat)
 
             self._optimizer.update_opt(loss=loss,
                                        target=self,
                                        inputs=[input_var, ys_var])
-            self._tr_optimizer.update_opt(
-                loss=loss,
-                target=self,
-                inputs=[input_var, ys_var, old_prob_var],
-                leq_constraint=(mean_kl, self._max_kl_step))
+            self._tr_optimizer.update_opt(loss=loss,
+                                          target=self,
+                                          inputs=[input_var, ys_var],
+                                          leq_constraint=(mean_kl,
+                                                          self._max_kl_step))
 
     def fit(self, xs, ys):
         """Fit with input data xs and label ys.
@@ -180,14 +175,14 @@ class CategoricalMLPRegressor(StochasticRegressor):
             # recompute normalizing constants for inputs
             self._network.x_mean.load(np.mean(xs, axis=0, keepdims=True))
             self._network.x_std.load(np.std(xs, axis=0, keepdims=True))
+            self._old_network.x_mean.load(np.mean(xs, axis=0, keepdims=True))
+            self._old_network.x_std.load(np.std(xs, axis=0, keepdims=True))
 
+        inputs = [xs, ys]
         if self._use_trust_region:
             # To use trust region constraint and optimizer
-            old_prob = self._f_prob(xs)
-            inputs = [xs, ys, old_prob]
             optimizer = self._tr_optimizer
         else:
-            inputs = [xs, ys]
             optimizer = self._optimizer
         loss_before = optimizer.loss(inputs)
         tabular.record('{}/LossBefore'.format(self._name), loss_before)
@@ -196,6 +191,7 @@ class CategoricalMLPRegressor(StochasticRegressor):
         tabular.record('{}/LossAfter'.format(self._name), loss_after)
         tabular.record('{}/dLoss'.format(self._name), loss_before - loss_after)
         self._first_optimized = True
+        self._old_model.parameters = self.model.parameters
 
     def predict(self, xs):
         """Predict ys based on input xs.
@@ -208,58 +204,6 @@ class CategoricalMLPRegressor(StochasticRegressor):
 
         """
         return self._f_predict(xs)
-
-    def predict_log_likelihood(self, xs, ys):
-        """Predict log-likelihood of output data conditioned on the input data.
-
-        Args:
-            xs (numpy.ndarray): Input data.
-            ys (numpy.ndarray): Output labels in one hot representation.
-
-        Return:
-            numpy.ndarray: The predicted log likelihoods.
-
-        """
-        prob = self._f_prob(xs)
-        return self._dist.log_likelihood(ys, dict(prob=prob))
-
-    def dist_info_sym(self, input_var, state_info_vars=None, name=None):
-        """Build a symbolic graph of the distribution parameters.
-
-        Args:
-            input_var (tf.Tensor): Input tf.Tensor for the input data.
-            state_info_vars (dict): a dictionary whose values should contain
-                information about the state of the regressor at the time it
-                received the input.
-            name (str): Name of the new graph.
-
-        Return:
-            dict[tf.Tensor]: Output of the symbolic graph of the distribution
-                parameters.
-
-        """
-        del state_info_vars
-        with tf.compat.v1.variable_scope(self._variable_scope):
-            prob, _, _ = self.model.build(input_var, name=name).outputs
-
-        return dict(prob=prob)
-
-    def log_likelihood_sym(self, x_var, y_var, name=None):
-        """Build a symbolic graph of the log-likelihood.
-
-        Args:
-            x_var (tf.Tensor): Input tf.Tensor for the input data.
-            y_var (tf.Tensor): Input tf.Tensor for the one hot label of data.
-            name (str): Name of the new graph.
-
-        Return:
-            tf.Tensor: Output of the symbolic log-likelihood graph.
-
-        """
-        with tf.compat.v1.variable_scope(self._variable_scope):
-            prob, _, _ = self.model.build(x_var, name=name).outputs
-
-        return self._dist.log_likelihood_sym(y_var, dict(prob=prob))
 
     @property
     def recurrent(self):
@@ -274,7 +218,7 @@ class CategoricalMLPRegressor(StochasticRegressor):
     @property
     def distribution(self):
         """garage.tf.distributions.DiagonalGaussian: Distribution."""
-        return self._dist
+        return self._network.dist
 
     def __getstate__(self):
         """Object.__getstate__.
@@ -285,9 +229,8 @@ class CategoricalMLPRegressor(StochasticRegressor):
         """
         new_dict = super().__getstate__()
         del new_dict['_f_predict']
-        del new_dict['_f_prob']
-        del new_dict['_dist']
         del new_dict['_network']
+        del new_dict['_old_network']
         return new_dict
 
     def __setstate__(self, state):
