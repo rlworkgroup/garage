@@ -15,26 +15,26 @@ class FixedPolicy(Policy):
     """
 
     def __init__(self, env_spec, scripted_actions, agent_infos=None):
-        super().__init__(env_spec)
         if agent_infos is None:
             agent_infos = [{}] * len(scripted_actions)
+        self._env_spec = env_spec
         self._scripted_actions = scripted_actions
         self._agent_infos = agent_infos
         self._indices = [0]
 
-    def reset(self, dones=None):
+    def reset(self, do_resets=None):
         """Reset policy.
 
         Args:
-            dones (None or list[bool]): Vectorized policy states to reset.
+            do_resets (None or list[bool]): Vectorized policy states to reset.
 
         Raises:
-            ValueError: If dones has length greater than 1.
+            ValueError: If do_resets has length greater than 1.
 
         """
-        if dones is None:
-            dones = [True]
-        if len(dones) > 1:
+        if do_resets is None:
+            do_resets = [True]
+        if len(do_resets) > 1:
             raise ValueError('FixedPolicy does not support more than one '
                              'action at a time.')
         self._indices[0] = 0
@@ -98,3 +98,13 @@ class FixedPolicy(Policy):
             raise ValueError('FixedPolicy does not support more than one '
                              'observation at a time.')
         return self.get_action(observations[0])
+
+    @property
+    def observation_space(self):
+        """akro.Space: The observation space of the environment."""
+        return self._env_spec.observation_space
+
+    @property
+    def action_space(self):
+        """akro.Space: The action space for the environment."""
+        return self._env_spec.action_space

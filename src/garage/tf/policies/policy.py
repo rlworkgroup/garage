@@ -1,10 +1,11 @@
 """Base class for policies in TensorFlow."""
 import abc
 
+from garage.np.policies import Policy as BasePolicy
 from garage.tf.models import Module, StochasticModule
 
 
-class Policy(Module):
+class Policy(Module, BasePolicy):
     """Base class for policies in TensorFlow.
 
     Args:
@@ -24,34 +25,16 @@ class Policy(Module):
         Args:
             observation (np.ndarray): Observation from the environment.
 
-        Returns:
-            (np.ndarray): Action sampled from the policy.
-
         """
 
     @abc.abstractmethod
     def get_actions(self, observations):
-        """Get action sampled from the policy.
+        """Get actions given observations.
 
         Args:
-            observations (list[np.ndarray]): Observations from the environment.
-
-        Returns:
-            (np.ndarray): Actions sampled from the policy.
+            observations (torch.Tensor): Observations from the environment.
 
         """
-
-    @property
-    def vectorized(self):
-        """Boolean for vectorized.
-
-        Returns:
-            bool: Indicates whether the policy is vectorized. If True, it
-                should implement get_actions(), and support resetting with
-                multiple simultaneous states.
-
-        """
-        return False
 
     @property
     def observation_space(self):

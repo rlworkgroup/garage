@@ -3,8 +3,10 @@ import abc
 
 import torch
 
+from garage.np.policies import Policy as BasePolicy
 
-class Policy(torch.nn.Module, abc.ABC):
+
+class Policy(torch.nn.Module, BasePolicy, abc.ABC):
     """Policy base class.
 
     Args:
@@ -20,18 +22,10 @@ class Policy(torch.nn.Module, abc.ABC):
 
     @abc.abstractmethod
     def get_action(self, observation):
-        """Get a single action given an observation.
+        """Get action sampled from the policy.
 
         Args:
-            observation (torch.Tensor): Observation from the environment.
-
-        Returns:
-            tuple:
-                * torch.Tensor: Predicted action.
-                * dict:
-                    * list[float]: Mean of the distribution
-                    * list[float]: Log of standard deviation of the
-                        distribution
+            observation (np.ndarray): Observation from the environment.
 
         """
 
@@ -41,14 +35,6 @@ class Policy(torch.nn.Module, abc.ABC):
 
         Args:
             observations (torch.Tensor): Observations from the environment.
-
-        Returns:
-            tuple:
-                * torch.Tensor: Predicted actions.
-                * dict:
-                    * list[float]: Mean of the distribution
-                    * list[float]: Log of standard deviation of the
-                        distribution
 
         """
 
@@ -94,13 +80,15 @@ class Policy(torch.nn.Module, abc.ABC):
         """
         self.load_state_dict(state_dict)
 
-    def reset(self, dones=None):
-        """Reset the environment.
+    @property
+    def env_spec(self):
+        """Policy environment specification.
 
-        Args:
-            dones (numpy.ndarray): Reset values
+        Returns:
+            garage.EnvSpec: Environment specification.
 
         """
+        return self._env_spec
 
     @property
     def name(self):
