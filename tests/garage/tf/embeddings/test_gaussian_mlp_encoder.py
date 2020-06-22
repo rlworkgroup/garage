@@ -33,7 +33,7 @@ class TestGaussianMLPEncoder(TfGraphTestCase):
         task_input = tf.compat.v1.placeholder(tf.float32,
                                               shape=(None, None,
                                                      embedding.input_dim))
-        embedding.build(task_input)
+        embedding.build(task_input, name='task_input')
 
         env.reset()
         obs, _, _, _ = env.step(1)

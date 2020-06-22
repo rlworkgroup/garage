@@ -109,6 +109,7 @@ class TENPO(RLAlgorithm):
                  inference_optimizer_args=None,
                  inference_ce_coeff=0.0,
                  name='NPOTaskEmbedding'):
+        # pylint: disable=too-many-statements
         assert isinstance(policy, TaskEmbeddingPolicy)
         assert isinstance(inference, StochasticEncoder)
 
@@ -127,6 +128,9 @@ class TENPO(RLAlgorithm):
         self._name = name
         self._name_scope = tf.name_scope(self._name)
         self._old_policy = policy.clone('old_policy')
+        self._old_policy.model.parameters = self.policy.model.parameters
+        self._old_policy.encoder.model.parameters = (
+            self.policy.encoder.model.parameters)
         self._use_softplus_entropy = use_softplus_entropy
         self._stop_ce_gradient = stop_ce_gradient
 
@@ -144,6 +148,8 @@ class TENPO(RLAlgorithm):
 
             self._inference = inference
             self._old_inference = inference.clone('old_inference')
+            self._old_inference.model.parameters = (
+                self._inference.model.parameters)
             self.inference_ce_coeff = float(inference_ce_coeff)
             self.inference_optimizer = inference_opt(**inference_opt_args)
             self.encoder_ent_coeff = encoder_ent_coeff
@@ -156,6 +162,12 @@ class TENPO(RLAlgorithm):
         self._f_encoder_entropy = None
         self._f_task_entropies = None
         self._f_inference_ce = None
+        self._policy_network = None
+        self._old_policy_network = None
+        self._encoder_network = None
+        self._old_encoder_network = None
+        self._infer_network = None
+        self._old_infer_network = None
 
         self.sampler_cls = LocalSampler
 
@@ -343,28 +355,6 @@ class TENPO(RLAlgorithm):
 
         all_path_baselines = [self._baseline.predict(path) for path in paths]
 
-        # calculate inference trajectories samples
-        for path in paths:
-            # - Calculate a forward-looking sliding window.
-            # - If step_space has shape (n, d), then trajs will have shape
-            #   (n, window, d)
-            # - The length of the sliding window is determined by the
-            #   trajectory inference spec. We smear the last few elements to
-            #   preserve the time dimension.
-            # - Only observation is used for a single step.
-            #   Alternatively, stacked [observation, action] can be used for
-            #   in harder tasks.
-            obs = pad_tensor(path['observations'], max_path_length)
-            obs_flat = self._env_spec.observation_space.flatten_n(obs)
-            steps = obs_flat
-            window = self._inference.spec.input_space.shape[0]
-            traj = np_tensor_utils.sliding_window(steps, window, smear=True)
-            traj_flat = self._inference.spec.input_space.flatten_n(traj)
-            path['trajectories'] = traj_flat
-
-            _, traj_info = self._inference.get_latents(traj_flat)
-            path['trajectory_infos'] = traj_info
-
         tasks = [path['tasks'] for path in paths]
         tasks = pad_tensor_n(tasks, max_path_length)
 
@@ -541,17 +531,19 @@ class TENPO(RLAlgorithm):
 
         """
         # pylint: disable=too-many-statements
-        self.policy.build(i.augmented_obs_var, i.task_var)
-        self._old_policy.build(i.augmented_obs_var, i.task_var)
-        self._inference.build(i.augmented_traj_var)
-        self._old_inference.build(i.augmented_traj_var)
-        self.policy.model.parameters = self._old_policy.model.parameters
-        self.policy.encoder.model.parameters = (
-            self._old_policy.encoder.model.parameters)
-        self._inference.model.parameters = self._old_inference.model.parameters
+        self._policy_network, self._encoder_network = (self.policy.build(
+            i.augmented_obs_var, i.task_var, name='loss_policy'))
+        self._old_policy_network, self._old_encoder_network = (
+            self._old_policy.build(i.augmented_obs_var,
+                                   i.task_var,
+                                   name='loss_old_policy'))
+        self._infer_network = self._inference.build(i.augmented_traj_var,
+                                                    name='loss_infer')
+        self._old_infer_network = self._old_inference.build(
+            i.augmented_traj_var, name='loss_old_infer')
 
-        pol_dist = self.policy.distribution
-        old_pol_dist = self._old_policy.distribution
+        pol_dist = self._policy_network.dist
+        old_pol_dist = self._old_policy_network.dist
 
         # Entropy terms
         encoder_entropy, inference_ce, policy_entropy = (
@@ -646,12 +638,14 @@ class TENPO(RLAlgorithm):
             tf.Tensor: Policy entropy.
 
         """
-        pol_dist = self.policy.distribution
+        pol_dist = self._policy_network.dist
+        infer_dist = self._infer_network.dist
+        enc_dist = self._encoder_network.dist
         with tf.name_scope('entropy_terms'):
             # 1. Encoder distribution total entropy
             with tf.name_scope('encoder_entropy'):
-                encoder_dist, _, _ = self.policy.encoder.model.build(
-                    i.task_var)
+                encoder_dist, _, _ = self.policy.encoder.build(
+                    i.task_var, name='encoder_entropy').outputs
                 encoder_all_task_entropies = -encoder_dist.log_prob(
                     i.latent_var)
 
@@ -667,8 +661,8 @@ class TENPO(RLAlgorithm):
             with tf.name_scope('inference_ce'):
                 # Build inference with trajectory windows
 
-                traj_ll = self._inference.distribution.log_prob(
-                    self.policy.encoder.distribution.sample(), name='traj_ll')
+                traj_ll = infer_dist.log_prob(enc_dist.sample(),
+                                              name='traj_ll')
 
                 inference_ce_raw = -traj_ll
                 inference_ce = tf.clip_by_value(inference_ce_raw, -3, 3)
@@ -718,8 +712,8 @@ class TENPO(RLAlgorithm):
             tf.Tensor: Encoder KL divergence.
 
         """
-        dist = self.policy.encoder.distribution
-        old_dist = self._old_policy.encoder.distribution
+        dist = self._encoder_network.dist
+        old_dist = self._old_encoder_network.dist
 
         with tf.name_scope('encoder_kl'):
             kl = old_dist.kl_divergence(dist)
@@ -743,8 +737,8 @@ class TENPO(RLAlgorithm):
             tf.Tensor: Inference loss.
 
         """
-        dist = self._inference.distribution
-        old_dist = self._old_inference.distribution
+        dist = self._infer_network.dist
+        old_dist = self._old_infer_network.dist
         with tf.name_scope('infer_loss'):
 
             traj_ll = dist.log_prob(i.latent_var, name='traj_ll_2')
@@ -952,6 +946,7 @@ class TENPO(RLAlgorithm):
 
         """
         logger.log('Computing loss before')
+
         loss_before = self._optimizer.loss(policy_opt_input_values)
 
         logger.log('Computing KL before')
@@ -1078,6 +1073,12 @@ class TENPO(RLAlgorithm):
         del data['_f_policy_kl']
         del data['_f_rewards']
         del data['_f_returns']
+        del data['_policy_network']
+        del data['_old_policy_network']
+        del data['_encoder_network']
+        del data['_old_encoder_network']
+        del data['_infer_network']
+        del data['_old_infer_network']
         return data
 
     def __setstate__(self, state):

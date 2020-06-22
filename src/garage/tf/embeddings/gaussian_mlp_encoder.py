@@ -140,7 +140,8 @@ class GaussianMLPEncoder(StochasticEncoder, StochasticModule):
         """Initialize encoder."""
         embedding_input = tf.compat.v1.placeholder(tf.float32,
                                                    shape=(None, None,
-                                                          self._input_dim))
+                                                          self._input_dim),
+                                                   name='default_encoder')
         with tf.compat.v1.variable_scope(self._name) as vs:
             self._variable_scope = vs
             self._network = self.model.build(embedding_input)

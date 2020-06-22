@@ -142,13 +142,12 @@ class GaussianMLPTaskEmbeddingPolicy(TaskEmbeddingPolicy):
 
         """
         obs_input = tf.compat.v1.placeholder(tf.float32,
-                                             shape=(None, None, self._obs_dim))
+                                             shape=(None, None, self.obs_dim))
         latent_input = tf.compat.v1.placeholder(
             tf.float32, shape=(None, None, self._encoder.output_dim))
 
         # Encoder should be outside policy scope
         with tf.compat.v1.variable_scope(self._encoder.name):
-            self._encoder.build(task_input, name='te_encoder')
             latent_var = self._encoder.distribution.sample()
 
         with tf.compat.v1.variable_scope(self.name) as vs:
@@ -175,33 +174,28 @@ class GaussianMLPTaskEmbeddingPolicy(TaskEmbeddingPolicy):
                         feed_list=[obs_input, self._encoder.input])
 
     def build(self, obs_input, task_input, name=None):
-        """Build policy to support symbolic computation.
-
-        After build, self.distribution is a Gaussian distribution conditioned
-        on (obs_input, task_input).
-
-        An auxiliary distribution conditioned on (obs_input, latent_input) will
-        also be built for sampling.
+        """Build policy.
 
         Args:
             obs_input (tf.Tensor): Observation input.
             task_input (tf.Tensor): One-hot task id input.
             name (str): Name of the model, which is also the name scope.
 
+        Returns:
+            namedtuple: Policy network.
+            namedtuple: Encoder network.
+
         """
-        # TODO
         name = name or 'additional'
         # Encoder should be outside policy scope
         with tf.compat.v1.variable_scope(self._encoder.name):
-            self._encoder.build(task_input, name=name)
-            latent_var = self._encoder.distribution.loc
+            enc_net = self._encoder.build(task_input, name=name)
+            latent_var = enc_net.dist.loc
 
         with tf.compat.v1.variable_scope(self.name) as vs:
             self._variable_scope = vs
-
-            # with tf.compat.v1.variable_scope('concat_obs_latent_var'):
             embed_state_input = tf.concat([obs_input, latent_var], -1)
-            self._dist, _, _ = self.model.build(embed_state_input, name=name)
+            return self.model.build(embed_state_input, name=name), enc_net
 
     @property
     def distribution(self):
