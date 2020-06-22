@@ -42,9 +42,9 @@ def gaussian_cnn_baseline(ctxt, env_id, seed):
         env = GarageEnv(normalize(gym.make(env_id)))
 
         policy = CategoricalCNNPolicy(env_spec=env.spec,
-                                      conv_filters=params['conv_filters'],
-                                      conv_strides=params['conv_strides'],
-                                      conv_pad=params['conv_pad'],
+                                      filters=params['conv_filters'],
+                                      strides=params['conv_strides'],
+                                      padding=params['conv_pad'],
                                       hidden_sizes=params['hidden_sizes'])
 
         baseline = GaussianCNNBaseline(

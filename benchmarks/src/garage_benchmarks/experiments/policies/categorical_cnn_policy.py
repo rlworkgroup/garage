@@ -43,9 +43,9 @@ def categorical_cnn_policy(ctxt, env_id, seed):
 
         policy = CategoricalCNNPolicy(
             env_spec=env.spec,
-            conv_filters=hyper_params['conv_filters'],
-            conv_strides=hyper_params['conv_strides'],
-            conv_pad=hyper_params['conv_pad'],
+            filters=hyper_params['conv_filters'],
+            strides=hyper_params['conv_strides'],
+            padding=hyper_params['conv_pad'],
             hidden_sizes=hyper_params['hidden_sizes'])
 
         baseline = GaussianCNNBaseline(
