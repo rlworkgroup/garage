@@ -4,6 +4,229 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2020.06.0
+
+### Added
+- Algorithms
+  * PPO in PyTorch (
+    [#905](https://github.com/rlworkgroup/garage/pull/905),
+    [#1188](https://github.com/rlworkgroup/garage/pull/1188))
+  * TRPO in PyTorch (
+    [#1018](https://github.com/rlworkgroup/garage/pull/1018),
+    [#1053](https://github.com/rlworkgroup/garage/pull/1053),
+    [#1186](https://github.com/rlworkgroup/garage/pull/1186))
+  * MAML in PyTorch (
+    [#1128](https://github.com/rlworkgroup/garage/pull/1128),
+    [#1136](https://github.com/rlworkgroup/garage/pull/1136),
+    [#1214](https://github.com/rlworkgroup/garage/pull/1214),
+    [#1234](https://github.com/rlworkgroup/garage/pull/1234),
+    [#1283](https://github.com/rlworkgroup/garage/pull/1283))
+  * RL2 in TensorFlow (
+    [#1127](https://github.com/rlworkgroup/garage/pull/1127),
+    [#1175](https://github.com/rlworkgroup/garage/pull/1175),
+    [#1189](https://github.com/rlworkgroup/garage/pull/1189),
+    [#1190](https://github.com/rlworkgroup/garage/pull/1190),
+    [#1195](https://github.com/rlworkgroup/garage/pull/1195),
+    [#1231](https://github.com/rlworkgroup/garage/pull/1231))
+  * PEARL in PyTorch (
+    [#1059](https://github.com/rlworkgroup/garage/pull/1059),
+    [#1124](https://github.com/rlworkgroup/garage/pull/1124),
+    [#1218](https://github.com/rlworkgroup/garage/pull/1218),
+    [#1316](https://github.com/rlworkgroup/garage/pull/1316),
+    [#1374](https://github.com/rlworkgroup/garage/pull/1374))
+  * SAC in PyTorch ([#1235](https://github.com/rlworkgroup/garage/pull/1235))
+  * MTSAC in PyTorch ([#1332](https://github.com/rlworkgroup/garage/pull/1332))
+  * Task Embeddings in TensorFlow (
+    [#1168](https://github.com/rlworkgroup/garage/pull/1168),
+    [#1169](https://github.com/rlworkgroup/garage/pull/1169),
+    [#1167](https://github.com/rlworkgroup/garage/pull/1167))
+- Samplers
+  * New Sampler API, with efficient multi-env and multi-policy support (
+    [#881](https://github.com/rlworkgroup/garage/pull/881),
+    [#1153](https://github.com/rlworkgroup/garage/pull/1153),
+    [#1319](https://github.com/rlworkgroup/garage/pull/1319))
+  * `garage.sampler.LocalSampler`, which uses the main process to sample (
+    [#1133](https://github.com/rlworkgroup/garage/pull/1133),
+    [#1156](https://github.com/rlworkgroup/garage/pull/1156))
+  * Reworked `garage.sampler.RaySampler` to use new API (
+    [#1133](https://github.com/rlworkgroup/garage/pull/1133),
+    [#1134](https://github.com/rlworkgroup/garage/pull/1134))
+  * `garage.sampler.MultiprocessingSampler` ([#1298](https://github.com/rlworkgroup/garage/pull/1298))
+  * `garage.sampler.VecWorker`, a replacement for VecEnvExecutor ([#1311](https://github.com/rlworkgroup/garage/pull/1311))
+- APIs
+  * `garage.TrajectoryBatch` data type (
+    [#1058](https://github.com/rlworkgroup/garage/pull/1058),
+    [#1065](https://github.com/rlworkgroup/garage/pull/1065),
+    [#1132](https://github.com/rlworkgroup/garage/pull/1132),
+    [#1154](https://github.com/rlworkgroup/garage/pull/1154))
+  * `garage.TimeStep` data type (
+    [#1114](https://github.com/rlworkgroup/garage/pull/1114),
+    [#1221](https://github.com/rlworkgroup/garage/pull/1221))
+  * `garage.TimeStepBatch` data type ([#1529](https://github.com/rlworkgroup/garage/pull/1529))
+  * `garage.log_performance` (
+    [#1116](https://github.com/rlworkgroup/garage/pull/1116),
+    [#1142](https://github.com/rlworkgroup/garage/pull/1142),
+    [#1159](https://github.com/rlworkgroup/garage/pull/1159))
+  * `garage.np.algos.MetaRLAlgorithm` ([#1142](https://github.com/rlworkgroup/garage/pull/1142))
+  * `garage.experiment.MetaEvaluator` (
+    [#1142](https://github.com/rlworkgroup/garage/pull/1142),
+    [#1152](https://github.com/rlworkgroup/garage/pull/1152),
+    [#1227](https://github.com/rlworkgroup/garage/pull/1227))
+  * `garage.log_multitask_performance` ([#1192](https://github.com/rlworkgroup/garage/pull/1192))
+  * `garage.torch.distributions.TanhNormal` ([#1140](https://github.com/rlworkgroup/garage/pull/1140))
+  * `garage.torch.policies.TanhGaussianMLPPolicy` ([#1176](https://github.com/rlworkgroup/garage/pull/1176))
+  * `garage.experiment.wrap_experiment` to replace `run_experiment` with several new features (
+    [#1100](https://github.com/rlworkgroup/garage/pull/1100),
+    [#1155](https://github.com/rlworkgroup/garage/pull/1155),
+    [#1160](https://github.com/rlworkgroup/garage/pull/1160),
+    [#1164](https://github.com/rlworkgroup/garage/pull/1164),
+    [#1249](https://github.com/rlworkgroup/garage/pull/1249),
+    [#1258](https://github.com/rlworkgroup/garage/pull/1258),
+    [#1281](https://github.com/rlworkgroup/garage/pull/1281),
+    [#1396](https://github.com/rlworkgroup/garage/pull/1396),
+    [#1482](https://github.com/rlworkgroup/garage/pull/1482))
+  * `garage.torch.q_functions.ContinuousCNNQFunction` ([#1326](https://github.com/rlworkgroup/garage/pull/1326))
+  * PyTorch support for non-linearities with parameters ([#928](https://github.com/rlworkgroup/garage/pull/928),
+  * `garage.torch.value_function.GaussianMLPValueFunction` (
+    [#1317](https://github.com/rlworkgroup/garage/pull/1317))
+  * Simpler PyTorch policy API ([#1528](https://github.com/rlworkgroup/garage/pull/1528))
+  * `garage.envs.TaskOnehotWrapper` ([#1157](https://github.com/rlworkgroup/garage/pull/1157))
+- HalfCheetah meta environments (
+    [#1108](https://github.com/rlworkgroup/garage/pull/1108),
+    [#1131](https://github.com/rlworkgroup/garage/pull/1131),
+    [#1216](https://github.com/rlworkgroup/garage/pull/1216),
+    [#1385](https://github.com/rlworkgroup/garage/pull/1385))
+- PyTorch GPU support ([#1182](https://github.com/rlworkgroup/garage/pull/1182))
+- PyTorch deterministic support ([#1063](https://github.com/rlworkgroup/garage/pull/1063))
+- Support for running Meta-RL algorithms on MetaWorld benchmarks (
+  [#1306](https://github.com/rlworkgroup/garage/pull/1306))
+- Examples for running MetaWorld benchmarks (
+  [#1010](https://github.com/rlworkgroup/garage/pull/1010),
+  [#1263](https://github.com/rlworkgroup/garage/pull/1263),
+  [#1265](https://github.com/rlworkgroup/garage/pull/1265),
+  [#1265](https://github.com/rlworkgroup/garage/pull/1265),
+  [#1241](https://github.com/rlworkgroup/garage/pull/1241),
+  [#1232](https://github.com/rlworkgroup/garage/pull/1232),
+  [#1327](https://github.com/rlworkgroup/garage/pull/1327),
+  [#1351](https://github.com/rlworkgroup/garage/pull/1351),
+  [#1393](https://github.com/rlworkgroup/garage/pull/1393))
+- Improved off-policy evaluation (
+  [#1139](https://github.com/rlworkgroup/garage/pull/1139),
+  [#1279](https://github.com/rlworkgroup/garage/pull/1279),
+  [#1331](https://github.com/rlworkgroup/garage/pull/1331),
+  [#1384](https://github.com/rlworkgroup/garage/pull/1384))
+
+### Changed
+- Allow TensorFlow 2 (or TF >=1.14) (
+  [#1309](https://github.com/rlworkgroup/garage/pull/1309),
+  [#1563](https://github.com/rlworkgroup/garage/pull/1563))
+- Require Torch 1.4.0 (
+  [#1335](https://github.com/rlworkgroup/garage/pull/1335),
+  [#1361](https://github.com/rlworkgroup/garage/pull/1361))
+- Ensure TF and torch are optional ([#1510](https://github.com/rlworkgroup/garage/pull/1510))
+- Update gym to 0.15.4 (
+  [#1098](https://github.com/rlworkgroup/garage/pull/1098),
+  [#1158](https://github.com/rlworkgroup/garage/pull/1158))
+- Rename `baseline` to `value_function` ([#1275](https://github.com/rlworkgroup/garage/pull/1275))
+- Make `runner._sampler` optional ([#1394](https://github.com/rlworkgroup/garage/pull/1394))
+- Make ExplorationStrategies a type of Policy ([#1397](https://github.com/rlworkgroup/garage/pull/1397))
+- Use `garage.replay_buffer.PathBuffer` in off-policy algos (
+  [#1173](https://github.com/rlworkgroup/garage/pull/1173),
+  [#1433](https://github.com/rlworkgroup/garage/pull/1433))
+- Deprecated `run_experiment` (
+    [#1370](https://github.com/rlworkgroup/garage/pull/1370),
+    [#1412](https://github.com/rlworkgroup/garage/pull/1412))
+- Deprecated old-style samplers ([#1369](https://github.com/rlworkgroup/garage/pull/1369))
+- Refactor TensorFlow to use tfp.distribution (
+  [#1073](https://github.com/rlworkgroup/garage/pull/1073),
+  [#1356](https://github.com/rlworkgroup/garage/pull/1356),
+  [#1357](https://github.com/rlworkgroup/garage/pull/1357),
+  [#1410](https://github.com/rlworkgroup/garage/pull/1410),
+  [#1456](https://github.com/rlworkgroup/garage/pull/1456),
+  [#1444](https://github.com/rlworkgroup/garage/pull/1444),
+  [#1554](https://github.com/rlworkgroup/garage/pull/1554),
+  [#1569](https://github.com/rlworkgroup/garage/pull/1569))
+- Set TotalEnvSteps as the default Tensorboard x-axis (
+  [#1017](https://github.com/rlworkgroup/garage/pull/1017),
+  [#1069](https://github.com/rlworkgroup/garage/pull/1069))
+- Update dependencies for docs ([#1383](https://github.com/rlworkgroup/garage/pull/1383))
+- New optimizer_args TensorFlow interface ([#1496](https://github.com/rlworkgroup/garage/pull/1496))
+- Move LocalTFRunner to garage.experiment ([#1513](https://github.com/rlworkgroup/garage/pull/1513))
+- Implement HER using PathBuffer (
+  [#1282](https://github.com/rlworkgroup/garage/pull/1282)
+  [#1505](https://github.com/rlworkgroup/garage/pull/1505))
+- Change CNN API to use tuples for defining kernels ([#1515](https://github.com/rlworkgroup/garage/pull/1515))
+- Many documentation improvements (
+  [#1056](https://github.com/rlworkgroup/garage/pull/1056),
+  [#1065](https://github.com/rlworkgroup/garage/pull/1065),
+  [#1120](https://github.com/rlworkgroup/garage/pull/1120),
+  [#1266](https://github.com/rlworkgroup/garage/pull/1266),
+  [#1327](https://github.com/rlworkgroup/garage/pull/1327),
+  [#1413](https://github.com/rlworkgroup/garage/pull/1413),
+  [#1429](https://github.com/rlworkgroup/garage/pull/1429),
+  [#1451](https://github.com/rlworkgroup/garage/pull/1451),
+  [#1481](https://github.com/rlworkgroup/garage/pull/1481),
+  [#1484](https://github.com/rlworkgroup/garage/pull/1484))
+- Eliminate use of "base" module name ([#1403](https://github.com/rlworkgroup/garage/pull/1403))
+- Significant improvements to benchmarking (
+  [#1271](https://github.com/rlworkgroup/garage/pull/1271)
+  [#1291](https://github.com/rlworkgroup/garage/pull/1291),
+  [#1306](https://github.com/rlworkgroup/garage/pull/1306),
+  [#1307](https://github.com/rlworkgroup/garage/pull/1307),
+  [#1310](https://github.com/rlworkgroup/garage/pull/1310),
+  [#1320](https://github.com/rlworkgroup/garage/pull/1320),
+  [#1368](https://github.com/rlworkgroup/garage/pull/1368),
+  [#1380](https://github.com/rlworkgroup/garage/pull/1380),
+  [#1409](https://github.com/rlworkgroup/garage/pull/1409))
+- Refactor benchmarks into a separate module (
+  [#1395](https://github.com/rlworkgroup/garage/pull/1395),
+  [#1402](https://github.com/rlworkgroup/garage/pull/1402),
+  [#1400](https://github.com/rlworkgroup/garage/pull/1400),
+  [#1411](https://github.com/rlworkgroup/garage/pull/1411),
+  [#1408](https://github.com/rlworkgroup/garage/pull/1408),
+  [#1416](https://github.com/rlworkgroup/garage/pull/1416),
+  [#1414](https://github.com/rlworkgroup/garage/pull/1414),
+  [#1432](https://github.com/rlworkgroup/garage/pull/1432))
+
+### Removed
+- Dependencies:
+  * matplotlib (moved to dev) ([#1083](https://github.com/rlworkgroup/garage/pull/1083))
+  * atari-py ([#1194](https://github.com/rlworkgroup/garage/pull/1194))
+  * gtimer, pandas, rlkit, seaborn (moved to benchmarks) ([#1325](https://github.com/rlworkgroup/garage/pull/1325))
+  * pyprind ([#1495](https://github.com/rlworkgroup/garage/pull/1495))
+- `RLAlgorithm.get_itr_snapshot` ([#1054](https://github.com/rlworkgroup/garage/pull/1054))
+- `garage.misc.nb_utils` ([#1288](https://github.com/rlworkgroup/garage/pull/1288))
+- `garage.np.regressors` ([#1493](https://github.com/rlworkgroup/garage/pull/1493))
+- `garage.np.BatchPolopt` (
+  [#1486](https://github.com/rlworkgroup/garage/pull/1486),
+  [#1492](https://github.com/rlworkgroup/garage/pull/1492))
+- `garage.misc.prog_bar_counter` ([#1495](https://github.com/rlworkgroup/garage/pull/1495))
+- `garage.tf.envs.TfEnv` ([#1443](https://github.com/rlworkgroup/garage/pull/1443))
+- `garage.tf.BatchPolopt` ([#1504](https://github.com/rlworkgroup/garage/pull/1504))
+- `garage.np.OffPolicyRLAlgorithm` ([#1552](https://github.com/rlworkgroup/garage/pull/1552))
+
+### Fixed
+- Bug where `GarageEnv` did not pickle ([#1029](https://github.com/rlworkgroup/garage/pull/1029))
+- Bug where `VecEnvExecutor` conflated terminal state and time limit signal (
+  [#1178](https://github.com/rlworkgroup/garage/pull/1178),
+  [#1570](https://github.com/rlworkgroup/garage/pull/1570))
+- Bug where plotter window was opened multiple times ([#1253](https://github.com/rlworkgroup/garage/pull/1253))
+- Bug where TF plotter used main policy on separate thread ([#1270](https://github.com/rlworkgroup/garage/pull/1270))
+- Workaround gym timelimit and terminal state conflation ([#1118](https://github.com/rlworkgroup/garage/pull/1118))
+- Bug where pixels weren't normalized correctly when using CNNs (
+  [#1236](https://github.com/rlworkgroup/garage/pull/1236),
+  [#1419](https://github.com/rlworkgroup/garage/pull/1419))
+- Bug where `garage.envs.PointEnv` did not step correctly ([#1165](https://github.com/rlworkgroup/garage/pull/1165))
+- Bug where sampler workers crashed in non-Deterministic mode ([#1567](https://github.com/rlworkgroup/garage/pull/1567))
+- Use cloudpickle in old-style samplers to handle lambdas ([#1371](https://github.com/rlworkgroup/garage/pull/1371))
+- Bug where workers where not shut down after running a resumed algorithm ([#1293](https://github.com/rlworkgroup/garage/pull/1293))
+- Non-PyPI dependencies, which blocked using pipenv and poetry ([#1247](https://github.com/rlworkgroup/garage/pull/1247))
+- Bug where TensorFlow paramter setting didn't work across differently named policies ([#1355](https://github.com/rlworkgroup/garage/pull/1355))
+- Bug where advantages where computed incorrectly in PyTorch ([#1197](https://github.com/rlworkgroup/garage/pull/1197))
+- Bug where TF plotter was used in LocalRunner ([#1267](https://github.com/rlworkgroup/garage/pull/1267))
+- Worker processes are no longer started unnecessarily ([#1006](https://github.com/rlworkgroup/garage/pull/1006))
+- All examples where fixed and are now tested ([#1009](https://github.com/rlworkgroup/garage/pull/1009))
+
 
 ## 2019.10.1
 
