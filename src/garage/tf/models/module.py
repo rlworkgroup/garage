@@ -25,11 +25,6 @@ class Module(abc.ABC):
         """str: Name of this module."""
         return self._name
 
-    @property
-    @abc.abstractmethod
-    def vectorized(self):
-        """bool: If this module supports vectorization input."""
-
     def reset(self, do_resets=None):
         """Reset the module.
 
