@@ -3,11 +3,8 @@
 
 Here it runs CartPoleBulletEnv environment with 100 iterations.
 
-Results:
-    AverageReturn: 100
-    RiseTime: itr 13
 """
-from pybullet_envs.bullet.cartpole_bullet import CartPoleBulletEnv
+import gym
 
 from garage import wrap_experiment
 from garage.envs.bullet import BulletEnv
@@ -31,8 +28,10 @@ def trpo_cartpole_bullet(ctxt=None, seed=1):
     """
     set_seed(seed)
     with LocalTFRunner(ctxt) as runner:
-        env = CartPoleBulletEnv(renders=False, discrete_actions=True)
-        env = BulletEnv(env)
+        env = BulletEnv(
+            gym.make('CartPoleBulletEnv-v1',
+                     renders=False,
+                     discrete_actions=True))
 
         policy = CategoricalMLPPolicy(name='policy',
                                       env_spec=env.spec,

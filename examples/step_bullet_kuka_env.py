@@ -4,17 +4,17 @@
 This example requires that garage[bullet] be installed.
 """
 import click
-from pybullet_envs.bullet.kukaGymEnv import KukaGymEnv
+import gym
 
 from garage.envs.bullet import BulletEnv
 
 
 @click.command()
 @click.option('--n_steps',
-              default=100,
+              default=1000,
               type=int,
               help='Number of steps to run')
-def step_bullet_kuka_env(n_steps=100):
+def step_bullet_kuka_env(n_steps=1000):
     """Load, step, and visualize a Bullet Kuka environment.
 
     Args:
@@ -23,7 +23,10 @@ def step_bullet_kuka_env(n_steps=100):
     """
     # Construct the environment
     env = BulletEnv(
-        KukaGymEnv(renders=True, isDiscrete=True, maxSteps=10000000))
+        gym.make('KukaBulletEnv-v0',
+                 renders=True,
+                 isDiscrete=True,
+                 maxSteps=10000000))
 
     # Reset the environment and launch the viewer
     env.reset()

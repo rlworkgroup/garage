@@ -3,6 +3,7 @@ import inspect
 
 from pybullet_envs.bullet.minitaur_duck_gym_env import MinitaurBulletDuckEnv
 from pybullet_envs.bullet.minitaur_gym_env import MinitaurBulletEnv
+from pybullet_envs.env_bases import MJCFBaseBulletEnv
 
 from garage.envs import GarageEnv
 
@@ -17,7 +18,7 @@ class BulletEnv(GarageEnv):
             dict: The instance’s __init__() arguments
 
         """
-        env = self._env
+        env = self._env.env
 
         # Extract constructor signature
         sig = inspect.signature(env.__init__)
@@ -28,6 +29,13 @@ class BulletEnv(GarageEnv):
         if isinstance(env, (MinitaurBulletEnv, MinitaurBulletDuckEnv)):
             args['render'] = env._is_render
             param_names.remove('render')
+        elif issubclass(type(env), MJCFBaseBulletEnv):
+            args['render'] = env.isRender
+            if 'render' in param_names:
+                param_names.remove('render')
+            if 'robot' in param_names:
+                args['robot'] = env.robot
+                param_names.remove('robot')
 
         # Create param name -> param value mapping
         args = {key: env.__dict__['_' + key] for key in param_names}

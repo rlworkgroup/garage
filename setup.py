@@ -50,7 +50,7 @@ EXTRAS['dm_control'] = [
     'dm_control==0.0.300771433',
 ]
 
-EXTRAS['bullet'] = ['pybullet']
+EXTRAS['bullet'] = ['mpi4py', 'pybullet']
 
 EXTRAS['all'] = list(set(sum(EXTRAS.values(), [])))
 

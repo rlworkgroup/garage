@@ -5,7 +5,7 @@ See https://github.com/bulletphysics/bullet3/tree/master/examples/pybullet
 try:
     import pybullet_envs  # noqa: F401
 except Exception as e:
-    raise ImportError('To use garage\'s py_bullet wrappers, please install '
+    raise ImportError('To use garage\'s bullet wrappers, please install '
                       'garage[bullet]')
 
 from garage.envs.bullet.bullet_env import BulletEnv
