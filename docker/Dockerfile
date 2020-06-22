@@ -79,7 +79,7 @@ WORKDIR $HOME
 
 # MuJoCo 2.0 (for dm_control)
 RUN mkdir -p $HOME/.mujoco && \
-  wget https://www.roboti.us/download/mujoco200_linux.zip -O mujoco.zip && \
+  wget https://www.roboti.us/download/mujoco200_linux.zip -O mujoco.zip --no-check-certificate && \
   unzip mujoco.zip -d $HOME/.mujoco && \
   rm mujoco.zip && \
   ln -s $HOME/.mujoco/mujoco200_linux $HOME/.mujoco/mujoco200
