@@ -9,6 +9,8 @@ from garage.tf.algos.rl2 import RL2
 from garage.tf.algos.rl2ppo import RL2PPO
 from garage.tf.algos.rl2trpo import RL2TRPO
 from garage.tf.algos.td3 import TD3
+from garage.tf.algos.te_npo import TENPO
+from garage.tf.algos.te_ppo import TEPPO
 from garage.tf.algos.tnpg import TNPG
 from garage.tf.algos.trpo import TRPO
 from garage.tf.algos.vpg import VPG
@@ -27,4 +29,6 @@ __all__ = [
     'TNPG',
     'TRPO',
     'VPG',
+    'TENPO',
+    'TEPPO',
 ]

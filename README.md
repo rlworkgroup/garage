@@ -51,6 +51,7 @@ The table below summarizes the algorithms available in garage.
 | MTSAC                  | PyTorch             |
 | MTPPO                  | PyTorch, TensorFlow |
 | MTTRPO                 | PyTorch, TensorFlow |
+| Task Embedding         | TensorFlow          |
 
 ## Supported Tools and Frameworks
 garage supports Python 3.5+

@@ -46,7 +46,7 @@ class TaskEmbeddingPolicy(StochasticPolicy):
             dict: Embedding distribution information.
 
         """
-        return self.encoder.forward(task_id)
+        return self.encoder.get_latent(task_id)
 
     @property
     def latent_space(self):

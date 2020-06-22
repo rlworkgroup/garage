@@ -30,12 +30,19 @@ class TestGaussianMLPEncoder(TfGraphTestCase):
         embedding_spec = InOutSpec(input_space=env.spec.observation_space,
                                    output_space=env.spec.action_space)
         embedding = GaussianMLPEncoder(embedding_spec)
+        task_input = tf.compat.v1.placeholder(tf.float32,
+                                              shape=(None, None,
+                                                     embedding.input_dim))
+        embedding.build(task_input, name='task_input')
 
         env.reset()
         obs, _, _, _ = env.step(1)
 
-        latent, _ = embedding.forward(obs)
+        latent, _ = embedding.get_latent(obs)
+        latents, _ = embedding.get_latents([obs] * 5)
         assert env.action_space.contains(latent)
+        for latent in latents:
+            assert env.action_space.contains(latent)
 
     @pytest.mark.parametrize('obs_dim, embedding_dim', [
         ((1, ), (1, )),
@@ -77,6 +84,15 @@ class TestGaussianMLPEncoder(TfGraphTestCase):
                 ],
                 feed_dict={embedding_pickled.model.input: [[obs.flatten()]]})
             assert np.array_equal(output1, output2)
+
+    def test_clone(self):
+        env = GarageEnv(DummyBoxEnv(obs_dim=(2, ), action_dim=(2, )))
+        embedding_spec = InOutSpec(input_space=env.spec.observation_space,
+                                   output_space=env.spec.action_space)
+        embedding = GaussianMLPEncoder(embedding_spec)
+        clone_embedding = embedding.clone(name='cloned')
+        assert clone_embedding.input_dim == embedding.input_dim
+        assert clone_embedding.output_dim == embedding.output_dim
 
     def test_auxiliary(self):
         input_space = akro.Box(np.array([-1, -1]), np.array([1, 1]))

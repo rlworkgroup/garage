@@ -88,6 +88,25 @@ class GaussianMLPEncoder(StochasticEncoder, StochasticModule):
                  layer_normalization=False):
         super().__init__(name)
         self._embedding_spec = embedding_spec
+        self._hidden_sizes = hidden_sizes
+        self._hidden_nonlinearity = hidden_nonlinearity
+        self._hidden_w_init = hidden_w_init
+        self._hidden_b_init = hidden_b_init
+        self._output_nonlinearity = output_nonlinearity
+        self._output_w_init = output_w_init
+        self._output_b_init = output_b_init
+        self._learn_std = learn_std
+        self._adaptive_std = adaptive_std
+        self._std_share_network = std_share_network
+        self._init_std = init_std
+        self._min_std = min_std
+        self._max_std = max_std
+        self._std_hidden_sizes = std_hidden_sizes
+        self._std_hidden_nonlinearity = std_hidden_nonlinearity
+        self._std_output_nonlinearity = std_output_nonlinearity
+        self._std_parameterization = std_parameterization
+        self._layer_normalization = layer_normalization
+
         self._latent_dim = embedding_spec.output_space.flat_dim
         self._input_dim = embedding_spec.input_space.flat_dim
         self._network = None
@@ -121,7 +140,8 @@ class GaussianMLPEncoder(StochasticEncoder, StochasticModule):
         """Initialize encoder."""
         embedding_input = tf.compat.v1.placeholder(tf.float32,
                                                    shape=(None, None,
-                                                          self._input_dim))
+                                                          self._input_dim),
+                                                   name='default_encoder')
         with tf.compat.v1.variable_scope(self._name) as vs:
             self._variable_scope = vs
             self._network = self.model.build(embedding_input)
@@ -168,8 +188,8 @@ class GaussianMLPEncoder(StochasticEncoder, StochasticModule):
         """bool: If this module supports vectorization input."""
         return True
 
-    def forward(self, input_value):
-        """Get an sample of embedding for the given input.
+    def get_latent(self, input_value):
+        """Get a sample of embedding for the given input.
 
         Args:
             input_value (numpy.ndarray): Tensor to encode.
@@ -195,6 +215,33 @@ class GaussianMLPEncoder(StochasticEncoder, StochasticModule):
             np.squeeze(log_std, 1)[0])
         return sample, dict(mean=mean, log_std=log_std)
 
+    def get_latents(self, input_values):
+        """Get samples of embedding for the given inputs.
+
+        Args:
+            input_values (numpy.ndarray): Tensors to encode.
+
+        Returns:
+            numpy.ndarray: Embeddings sampled from embedding distribution.
+            dict: Embedding distribution information.
+
+        Note:
+            It returns an embedding and a dict, with keys
+            - mean (list[numpy.ndarray]): Means of the distribution.
+            - log_std (list[numpy.ndarray]): Log standard deviations of the
+                distribution.
+
+        """
+        flat_input = self._embedding_spec.input_space.flatten_n(input_values)
+        samples, means, log_stds = self._f_dist(np.expand_dims(flat_input, 1))
+        samples = self._embedding_spec.output_space.unflatten_n(
+            np.squeeze(samples, 1))
+        means = self._embedding_spec.output_space.unflatten_n(
+            np.squeeze(means, 1))
+        log_stds = self._embedding_spec.output_space.unflatten_n(
+            np.squeeze(log_stds, 1))
+        return samples, dict(mean=means, log_std=log_stds)
+
     @property
     def distribution(self):
         """Encoder distribution.
@@ -219,6 +266,42 @@ class GaussianMLPEncoder(StochasticEncoder, StochasticModule):
     def latent_std_param(self):
         """tf.Tensor: Predicted std of a Gaussian distribution."""
         return self._network.log_std
+
+    def clone(self, name):
+        """Return a clone of the encoder.
+
+        Args:
+            name (str): Name of the newly created encoder. It has to be
+                different from source encoder if cloned under the same
+                computational graph.
+
+        Returns:
+            garage.tf.embeddings.encoder.Encoder: Newly cloned encoder.
+
+        """
+        new_encoder = self.__class__(
+            embedding_spec=self._embedding_spec,
+            name=name,
+            hidden_sizes=self._hidden_sizes,
+            hidden_nonlinearity=self._hidden_nonlinearity,
+            hidden_w_init=self._hidden_w_init,
+            hidden_b_init=self._hidden_b_init,
+            output_nonlinearity=self._output_nonlinearity,
+            output_w_init=self._output_w_init,
+            output_b_init=self._output_b_init,
+            learn_std=self._learn_std,
+            adaptive_std=self._adaptive_std,
+            std_share_network=self._std_share_network,
+            init_std=self._init_std,
+            min_std=self._min_std,
+            max_std=self._max_std,
+            std_hidden_sizes=self._std_hidden_sizes,
+            std_hidden_nonlinearity=self._std_hidden_nonlinearity,
+            std_output_nonlinearity=self._std_output_nonlinearity,
+            std_parameterization=self._std_parameterization,
+            layer_normalization=self._layer_normalization)
+
+        return new_encoder
 
     def __getstate__(self):
         """Object.__getstate__.

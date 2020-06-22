@@ -5,18 +5,6 @@ import abc
 class Encoder(abc.ABC):
     """Base class of context encoders for training meta-RL algorithms."""
 
-    @abc.abstractmethod
-    def forward(self, input_value):
-        """Encode an input value.
-
-        Args:
-            input_value (numpy.ndarray): Input values of (N, input_dim) shape.
-
-        Returns:
-            numpy.ndarray: Encoded embedding.
-
-        """
-
     @property
     @abc.abstractmethod
     def spec(self):

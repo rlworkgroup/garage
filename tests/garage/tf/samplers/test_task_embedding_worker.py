@@ -13,6 +13,7 @@ class TestTaskEmbeddingWorker(TfGraphTestCase):
     def test_task_embedding_worker(self):
         env = GarageEnv(DummyBoxEnv(obs_dim=(1, )))
         env.active_task_one_hot = np.array([1., 0., 0., 0.])
+        env._active_task_one_hot = lambda: np.array([1., 0., 0., 0.])
 
         a = np.random.random(env.action_space.shape)
         z = np.random.random(5)
@@ -22,7 +23,7 @@ class TestTaskEmbeddingWorker(TfGraphTestCase):
         policy = Mock()
         policy.get_latent.return_value = (z, latent_info)
         policy.latent_space.flatten.return_value = z
-        policy.get_action_from_latent.return_value = (a, agent_info)
+        policy.get_action_given_latent.return_value = (a, agent_info)
 
         worker = TaskEmbeddingWorker(seed=1,
                                      max_path_length=100,

@@ -46,7 +46,7 @@ def test_wrapped_env_list_produces_correct_onehots():
 
 def test_wrapped_env_cons_list_produces_correct_onehots():
     env_cons = [PointEnv] * 6
-    base_len = 2
+    base_len = 3
     n_total_tasks = len(env_cons)
     wrapped_cons = TaskOnehotWrapper.wrap_env_cons_list(env_cons)
     wrapped_envs = [cons() for cons in wrapped_cons]
