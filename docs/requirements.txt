@@ -1,5 +1,4 @@
 akro
-cached_property
 click
 cloudpickle
 cma==2.7.0

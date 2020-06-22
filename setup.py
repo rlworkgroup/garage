@@ -11,7 +11,6 @@ GYM_VERSION = '==0.15.4'
 REQUIRED = [
     # Please keep alphabetized
     'akro',
-    'cached_property',
     'click>=2.0',
     'cloudpickle',
     'cma==2.7.0',
