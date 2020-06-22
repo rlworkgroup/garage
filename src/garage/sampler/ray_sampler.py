@@ -89,7 +89,7 @@ class RaySampler(BaseSampler):
         completed_samples = 0
         traj = []
         updating_workers = []
-
+        samples_to_be_collected = 0
         # update the policy params of each worker before sampling
         # for the current iteration
         curr_policy_params = self.algo.policy.get_param_values()
@@ -98,7 +98,6 @@ class RaySampler(BaseSampler):
             worker_id = self._idle_worker_ids.pop()
             worker = self._all_workers[worker_id]
             updating_workers.append(worker.set_agent.remote(params_id))
-
         while completed_samples < num_samples:
             # if there are workers still being updated, check
             # which ones are still updating and take the workers that
@@ -113,12 +112,20 @@ class RaySampler(BaseSampler):
 
             # if there are idle workers, use them to collect trajectories
             # mark the newly busy workers as active
-            while self._idle_worker_ids:
+            workers_to_use = int(
+                np.clip(
+                    np.ceil(
+                        (num_samples - completed_samples -
+                         samples_to_be_collected) / self._max_path_length) -
+                    len(self._active_worker_ids), 0, len(self._all_workers)))
+            workers_started = 0
+            while self._idle_worker_ids and workers_started < workers_to_use:
                 idle_worker_id = self._idle_worker_ids.pop()
+                workers_started += 1
                 self._active_worker_ids.append(idle_worker_id)
+                samples_to_be_collected += self._max_path_length
                 worker = self._all_workers[idle_worker_id]
                 _active_workers.append(worker.rollout.remote())
-
             # check which workers are done/not done collecting a sample
             # if any are done, send them to process the collected trajectory
             # if they are not, keep checking if they are done
@@ -129,9 +136,12 @@ class RaySampler(BaseSampler):
             for result in ready:
                 trajectory, num_returned_samples = self._process_trajectory(
                     result)
+                samples_to_be_collected -= self._max_path_length
                 completed_samples += num_returned_samples
                 pbar.inc(num_returned_samples)
                 traj.append(trajectory)
+        self._idle_worker_ids = list(range(self._num_workers))
+        self._active_worker_ids = []
         pbar.stop()
         return traj
 
