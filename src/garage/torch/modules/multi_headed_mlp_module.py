@@ -58,7 +58,7 @@ class MultiHeadedMLPModule(nn.Module):
                  layer_normalization=False):
         super().__init__()
 
-        self._layers = nn.ModuleList()  # why
+        self._layers = nn.ModuleList()
 
         output_dims = self._check_parameter_for_output_layer(
             'output_dims', output_dims, n_heads)

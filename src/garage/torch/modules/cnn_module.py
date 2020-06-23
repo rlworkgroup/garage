@@ -1,25 +1,17 @@
 """CNN Module."""
 import copy
 
+import torch
 from torch import nn
 
-# from garage.torch.modules.multi_headed_mlp_module import MultiHeadedMLPModule
 
-
-class CNNBaseModule(nn.Module):
-    """Convolutional neural network (CNN) module in pytorch.
-
-    Note:
-        Based on 'NCHW' data format: [batch_size, channel, height, width].
-
-    A PyTorch module composed only of a CNN with
-    multiple parallel output layers which maps real-valued inputs to
-    real-valued outputs. The length of outputs is n_heads and shape of each
-    output element is depend on each output dimension
+# pylint: disable=unused-argument
+class CNNModule(nn.Module):
+    """Convolutional neural network (CNN) model in pytorch.
 
     Args:
-        input_dim (int): Dimension of the network input.
-        output_dim (int): Dimension of the network output.
+        input_var (int): Input tensor of the model.
+            Based on 'NCHW' data format: [batch_size, channel, height, width].
         kernel_sizes (tuple[int]): Dimension of the conv filters.
             For example, (3, 5) means there are two convolutional layers.
             The filter for first layer is of dimension (3 x 3)
@@ -27,7 +19,7 @@ class CNNBaseModule(nn.Module):
         strides (tuple[int]): The stride of the sliding window. For example,
             (1, 2) means there are two convolutional layers. The stride of the
             filter for first layer is 1 and that of the second layer is 2.
-        hidden_sizes (tuple[int]): Number of output channels for CNN.
+        hidden_channels (tuple[int]): Number of output channels for CNN.
             For example, (3, 32) means there are two convolutional layers.
             The filter for the first conv layer outputs 3 channels
             and the second one outputs 32 channels.
@@ -41,66 +33,63 @@ class CNNBaseModule(nn.Module):
         hidden_b_init (callable): Initializer function for the bias
             of intermediate dense layer(s). The function should return a
             torch.Tensor.
-        paddings (tuple[int]):  Zero-padding added to both sides of the input
-        padding_mode (str): The type of padding algorithm to use,
-            either 'SAME' or 'VALID'.
+        paddings (tuple[int]): Amount of zero-padding added to both sides of 
+            the input of a conv layer.
+        padding_mode (str): The type of padding algorithm to use, i.e.
+            'constant', 'reflect', 'replicate' or 'circular' and by default is 'zeros'.
         max_pool (bool): Bool for using max-pooling or not.
-        pool_shapes (tuple[int]): Dimension of the pooling layer(s). For
-            example, (2, 2) means that all the pooling layers have
+        pool_shape (tuple[int]): Dimension of the pooling layer(s). For
+            example, (2, 2) means that all pooling layers are of the same
             shape (2, 2).
-        pool_strides (tuple[int]): The strides of the pooling layer(s). For
+        pool_stride (tuple[int]): The strides of the pooling layer(s). For
             example, (2, 2) means that all the pooling layers have
             strides (2, 2).
-        output_nonlinearity (callable or torch.nn.Module):
-            Activation function for output dense layer. It should return a
-            torch.Tensor. Set it to None to maintain a linear activation.
-            Size of the parameter should be 1 or equal to n_head
-        output_w_init (callable): Initializer function for
-            the weight of output dense layer(s). The function should return a
-            torch.Tensor. Size of the parameter should be 1 or equal to n_head
-        output_b_init (callable): Initializer function for
-            the bias of output dense layer(s). The function should return a
-            torch.Tensor. Size of the parameter should be 1 or equal to n_head
         layer_normalization (bool): Bool for using layer normalization or not.
-
+        n_layers (int): number of convolutional layer
     """
 
     def __init__(
             self,
-            input_dim,
-            output_dim,
+            input_var,
+            hidden_channels,
             kernel_sizes,
-            strides,
-            hidden_sizes,
+            strides=1,
             hidden_nonlinearity=nn.ReLU,
             hidden_w_init=nn.init.xavier_uniform_,
             hidden_b_init=nn.init.zeros_,
-            paddings=[
-                0,
-            ],
+            paddings=0,
             padding_mode='zeros',
             max_pool=False,
-            pool_shapes=None,
-            pool_strides=1,
-            output_nonlinearity=None,
-            output_w_init=nn.init.xavier_uniform_,
-            output_b_init=nn.init.zeros_,
+            pool_shape=None,
+            pool_stride=1,
             layer_normalization=False,
+            n_layers=None,
     ):
         super().__init__()
 
-        self._layers = nn.ModuleList()
-        prev_size = input_dim
-        for index, (size, kernel_size, stride, padding) in enumerate(
-                zip(hidden_sizes, kernel_sizes, strides, paddings)):
+        self._cnn_layers = nn.ModuleList()
+
+        if isinstance(input_var, torch.Tensor): 
+            in_channel = input_var.shape[1]  # read in N, C, H, W
+        else:
+            in_channel = input_var.shape[0]
+        prev_channel = in_channel
+        for index, (channel, kernel_size, stride) in enumerate(
+                zip(hidden_channels, kernel_sizes, strides)):
+
             hidden_layers = nn.Sequential()
+
+            if isinstance(paddings, (list, tuple)):
+                padding = paddings[index]
+            elif isinstance(paddings, int):
+                padding = paddings
+
             # conv 2D layer
-            conv_layer = _conv(in_channels=prev_size,
-                               out_channels=size,
+            conv_layer = _conv(in_channels=prev_channel,
+                               out_channels=channel,
                                kernel_size=kernel_size,
                                stride=stride,
-                               padding=padding,
-                               padding_mode=padding_mode)
+                               padding=padding)
             hidden_w_init(conv_layer.weight)
             hidden_b_init(conv_layer.bias)
             hidden_layers.add_module('conv_{}'.format(index), conv_layer)
@@ -108,7 +97,7 @@ class CNNBaseModule(nn.Module):
             # layer normalization
             if layer_normalization:
                 hidden_layers.add_module('layer_normalization',
-                                         nn.LayerNorm(size))
+                                         nn.LayerNorm(channel))
 
             # non-linear function
             if hidden_nonlinearity:
@@ -118,31 +107,43 @@ class CNNBaseModule(nn.Module):
             if max_pool:
                 hidden_layers.add_module(
                     'max_pooling',
-                    nn.MaxPool2d(kernel_size=pool_shapes, stride=pool_strides))
+                    nn.MaxPool2d(kernel_size=pool_shape, stride=pool_stride))
 
-            self._layers.append(hidden_layers)
-            prev_size = size
+            self._cnn_layers.append(hidden_layers)
+            prev_channel = channel
 
-        # flattening
-        self._layers.append(_Flatten())
+    @classmethod
+    def _check_parameter_for_output_layer(cls, var, n_layers):
+        """Check input parameters for conv layer are valid.
 
-        self._output_layers = nn.ModuleList()
-        output_layer = nn.Sequential()
-        linear_layer = nn.Linear(prev_size, output_dim)
-        output_w_init(linear_layer.weight)
-        output_b_init(linear_layer.bias)
-        output_layer.add_module('linear', linear_layer)
-        if output_nonlinearity:
-            output_layer.add_module('non_linearity',
-                                    _NonLinearity(output_nonlinearity))
-        self._output_layers.append(output_layer)
+        Args:
+            var (any): variable to be checked
+            n_layers (int): number of layers
+
+        Returns:
+            list: list of variables (length of n_layers)
+
+        Raises:
+            ValueError: if the variable is a list but length of the variable
+                is not equal to n_layers
+
+        """
+        if isinstance(var, (list, tuple)):
+            if len(var) == 1:
+                return list(var) * n_layers
+            if len(var) == n_layers:
+                return var
+            msg = ('{} should be either an integer or a collection of length '
+                   'n_layers ({}), but got {} instead.')
+            raise ValueError(msg.format(str(var), n_layers, var))
+        return [copy.deepcopy(var) for _ in range(n_layers)]
 
     # pylint: disable=arguments-differ
     def forward(self, input_val):
         """Forward method.
 
         Args:
-            input_val (torch.Tensor): Input values with (N, *, input_dim)
+            input_val (torch.Tensor): Input values with (N, C, H, W)
                 shape.
 
         Returns:
@@ -150,10 +151,10 @@ class CNNBaseModule(nn.Module):
 
         """
         x = input_val
-        for layer in self._layers:
+        for layer in self._cnn_layers:
             x = layer(x)
-
-        return [output_layer(x) for output_layer in self._output_layers]
+        x = flatten(x)
+        return x
 
 
 def _conv(in_channels,
@@ -198,21 +199,20 @@ def _conv(in_channels,
                      bias=bias)
 
 
-class _Flatten(nn.Module):
-    # pylint: disable=arguments-differ, missing-return-type-doc
-    def forward(self, x):
-        """Collapse the C x H x W values per representation into a single long vector.
+# pylint: disable=missing-return-type-doc
+def flatten(x):
+    """Collapse the C x H x W values per representation into a single long vector.
 
-        Args:
-            x (torch.tensor): batch of data
+    Args:
+        x (torch.tensor): batch of data
 
-        Returns:
-            View of that data (analogous to numpy.reshape)
+    Returns:
+        View of that data (analogous to numpy.reshape)
 
-        """
-        # x.shape read in [N, C, H, W]
-        # "flatten" the C * H * W values into a single vector per data, such that the shape becomes: [batch_size, C x H x W]
-        return x.view(x.shape[0], -1)
+    """
+    N = x.shape[0]  # read in N, C, H, W
+    return x.view(
+        N, -1)  # "flatten" the C * H * W values into a single vector per image
 
 
 class _NonLinearity(nn.Module):
