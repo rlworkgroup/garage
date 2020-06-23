@@ -21,7 +21,7 @@ Install `google-cloud-storage`:
 Use `@wrap_experiment` to define your experiment. `ctxt` is used for `@wrap_experiment`.
 The second and third parameters of the function should be `env_id` and `seed`.
 You should give your function a good name because it is used as the label name when it comes to plotting.
-See more [examples](https://github.com/rlworkgroup/garage/tree/master/benchmarks/src/garage_benchmarks/experiments).
+See more [examples](https://github.com/rlworkgroup/garage/tree/master/benchmarks/src/garage_benchmarks/experiments). You can see detailed documentations of defining experiments [here](https://garage.readthedocs.io/en/stable/user/experiments.html#).
 ```py
 @wrap_experiment
 def trpo_garage_pytorch(ctxt, env_id, seed):
@@ -30,7 +30,7 @@ def trpo_garage_pytorch(ctxt, env_id, seed):
 
 **Define an execution function using `@benchmark` and `iterate_experiments()`**
 
-Plotting is enabled by default. You can explicitly disable it by defining `@benchmark(plot=False)`. Automatic benchmarking is diabled by default. You can explicitly disable it by defining `@benchmark(auto=True)`.
+Plotting is enabled by default. You can explicitly disable it by defining `@benchmark(plot=False)`.
 ```py
 @benchmark
 def your_benchmarks():
