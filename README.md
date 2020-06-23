@@ -80,6 +80,7 @@ Our testing strategy has three pillars:
 | Release | Build Status | Last date of support |
 | ------- | ------------ | -------------------- |
 | [v2019.10](https://github.com/rlworkgroup/garage/releases/tag/v2019.10.0) | [![Build Status](https://travis-ci.com/rlworkgroup/garage.svg?branch=release-2019.10)](https://travis-ci.com/rlworkgroup/garage) | October 31st, 2020 |
+| [v2020.06](https://github.com/rlworkgroup/garage/releases/tag/v2020.06.0) | [![Build Status](https://travis-ci.com/rlworkgroup/garage.svg?branch=release-2020.06)](https://travis-ci.com/rlworkgroup/garage) | February 28th, 2020 |
 
 Garage releases a new stable version approximately every 4 months, in February, June, and October. Maintenance releases have a stable API and dependency tree, and receive bug fixes and critical improvements but not new features. We currently support each release for a window of 8 months.
 
