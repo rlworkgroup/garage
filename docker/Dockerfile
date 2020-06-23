@@ -71,6 +71,7 @@ ARG uid=999
 RUN groupadd -g $uid $user && \
     useradd -m -r -u $uid -g $user $user && \
     chown -R $user:$user /home/$user
+ENV USER $user
 USER $user
 ENV HOME /home/$user
 ENV PATH "$PATH:$HOME/.local/bin"
