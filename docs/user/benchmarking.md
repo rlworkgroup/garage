@@ -6,10 +6,6 @@ This guide explains how to write and run garage benchmark scripts.
 
 Firstly, you should have installed garage. If not, you can see instructions in the [latest documentation](https://garage.readthedocs.io/en/latest/user/installation.html) to install garage.
 
-Install `google-cloud-storage`:
-
-`pip install google-cloud-storage`
-
 ## Install `garage-benchmarks`
 
 `cd garage/benchmarks && pip install -e .`
