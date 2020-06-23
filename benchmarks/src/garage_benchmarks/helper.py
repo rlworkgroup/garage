@@ -45,8 +45,6 @@ _plot = None
 _log_dir = None
 _auto = False
 
-_bucket = storage.Client().bucket('resl-garage-benchmarks')
-
 
 def benchmark(exec_func=None, *, plot=True, auto=False):
     """Decorator for benchmark function.
@@ -229,6 +227,7 @@ def _upload_to_gcp_storage(exec_dir):
         exec_dir (str): The execution directory.
 
     """
+    _bucket = storage.Client().bucket('resl-garage-benchmarks')
     exec_name = os.path.basename(exec_dir)
 
     for folder_name in os.listdir(exec_dir):
