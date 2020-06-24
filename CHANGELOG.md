@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2019.10.2
+
+### Fixed
+- Use a GitHub Token in the CI to retrieve packages to avoid hitting GitHub API rate limit ([#1250](https://github.com/rlworkgroup/garage/pull/1250))
+- Avoid installing dev extra dependencies during the conda check ([#1296](https://github.com/rlworkgroup/garage/pull/1296))
+- Install `dm_control` from PyPI ([#1406](https://github.com/rlworkgroup/garage/pull/1406))
+- Pin tfp to 0.8.x to avoid breaking pipenv ([#1480](https://github.com/rlworkgroup/garage/pull/1480))
+- Force python 3.5 in CI ([#1522](https://github.com/rlworkgroup/garage/pull/1522))
+- Separate terminal and completion signal in vectorized sampler ([#1581](https://github.com/rlworkgroup/garage/pull/1581))
+- Disable certicate check for roboti.us ([#1595](https://github.com/rlworkgroup/garage/pull/1595))
+- Fix `advantages` shape in `compute_advantage()` in torch tree ([#1209](https://github.com/rlworkgroup/garage/pull/1209))
+- Fix plotting using tf.plotter ([#1292](https://github.com/rlworkgroup/garage/pull/1292))
+- Fix duplicate window rendering when using garage.Plotter ([#1299](https://github.com/rlworkgroup/garage/pull/1299))
+- Fix setting garage.model parameters ([#1363](https://github.com/rlworkgroup/garage/pull/1363))
+- Fix two example jupyter notebook ([#1584](https://github.com/rlworkgroup/garage/pull/1584))
+- Fix collecting samples in `RaySampler` ([#1583](https://github.com/rlworkgroup/garage/pull/1583))
 
 ## 2019.10.1
 
