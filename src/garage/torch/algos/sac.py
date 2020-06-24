@@ -109,7 +109,8 @@ class SAC(RLAlgorithm):
             optimizer=torch.optim.Adam,
             steps_per_epoch=1,
             num_evaluation_trajectories=10,
-            eval_env=None):
+            eval_env=None,
+    ):
 
         self._qf1 = qf1
         self._qf2 = qf2

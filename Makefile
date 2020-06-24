@@ -88,7 +88,7 @@ ci-job-verify-envs-conda:
 	$(CONDA) init
 	# Useful for debugging any issues with conda
 	$(CONDA) info -a
-	$(CONDA) create -n garage-ci python=3.5 pip -y
+	$(CONDA) create -n garage-ci python=3.6 pip -y
 	$(GARAGE_BIN)/pip install --upgrade pip setuptools
 	$(GARAGE_BIN)/pip install dist/garage.tar.gz[all,dev]
 	# pylint will verify all imports work
@@ -102,9 +102,9 @@ ci-job-verify-envs-pipenv: export VIRTUAL_ENV=
 ci-job-verify-envs-pipenv: export PIPENV_MAX_RETRIES=2  # number of retries for network requests. Default is 0
 ci-job-verify-envs-pipenv:
 	touch $(MJKEY_PATH)
-	pip install --upgrade pip setuptools
-	pip install pipenv
-	pipenv --python=3.5
+	pip3 install --upgrade pip setuptools
+	pip3 install pipenv
+	pipenv --python=3.6
 	pipenv install dist/garage.tar.gz[all,dev]
 	pipenv graph
 	# pylint will verify all imports work

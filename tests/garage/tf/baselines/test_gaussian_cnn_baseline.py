@@ -69,9 +69,7 @@ class TestGaussianCNNBaseline(TfGraphTestCase):
                 gcb.fit(paths)
                 observations = np.concatenate(
                     [p['observations'] for p in paths])
-                assert npb.call_count == 1, (
-                    "Expected '%s' to have been called once. Called %s times."
-                    % (npb._mock_name or 'mock', npb.call_count))
+                npb.assert_called_once()
                 assert (npb.call_args_list[0][0][0] == observations).all()
 
                 obs = {

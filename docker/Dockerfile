@@ -7,16 +7,6 @@ FROM $PARENT_IMAGE AS garage-18.04
 # > At the moment, setting "LANG=C" on a Linux system *fundamentally breaks Python 3*, and that's not OK.
 ENV LANG C.UTF-8
 
-# Add PPA for old Python 3.5
-RUN \
-  apt-get -y -q update && \
-  # Prevents debconf from prompting for user input
-  # See https://github.com/phusion/baseimage-docker/issues/58
-  DEBIAN_FRONTEND=noninteractive apt-get install -y \
-    # Dockerfile deps
-    software-properties-common && \
-  add-apt-repository ppa:deadsnakes/ppa
-
 # apt dependencies
 RUN \
   apt-get -y -q update && \
@@ -39,18 +29,12 @@ RUN \
     # OpenAI baselines
     libopenmpi-dev \
     # virtualenv
-    python3.5 \
-    python3.5-dev \
-    python3.5-tk \
-    python3.5-venv && \
+    libbz2-dev \
+    libreadline-dev \
+    libssl-dev \
+    libsqlite3-dev && \
   apt-get clean && \
   rm -rf /var/lib/apt/lists/*
-
-# Install pip on system since python3.5-dev package doesn't install it by default.
-# This is different from a similar command around line 104 since that upgrades
-# the pip module inside virtual env
-RUN python3.5 -m ensurepip && \
-  python3.5 -m pip install --upgrade pip setuptools
 
 # Build GLFW because the Ubuntu 18.04 version is too old
 # See https://github.com/glfw/glfw/issues/1004
@@ -74,9 +58,16 @@ RUN groupadd -g $uid $user && \
 ENV USER $user
 USER $user
 ENV HOME /home/$user
-ENV PATH "$PATH:$HOME/.local/bin"
+ENV PYENV_ROOT "$HOME/.pyenv"
+ENV PATH "$PYENV_ROOT/shims:$PYENV_ROOT/bin:$PATH:$HOME/.local/bin"
 ENV PATH_NO_VENV $PATH
 WORKDIR $HOME
+
+RUN curl https://pyenv.run | bash && \
+  pyenv install 3.6.10 && \
+  pyenv global 3.6.10 && \
+  pip install virtualenv && \
+  rm -r $HOME/.cache/pip
 
 # MuJoCo 2.0 (for dm_control)
 RUN mkdir -p $HOME/.mujoco && \
@@ -96,7 +87,7 @@ ENV MUJOCO_GL "glfw"
 
 # Create virtualenv
 ENV VIRTUAL_ENV $HOME/venv
-RUN python3.5 -m venv $VIRTUAL_ENV
+RUN python -m virtualenv $VIRTUAL_ENV
 ENV PATH "$VIRTUAL_ENV/bin:$PATH"
 
 # Prevent pip from complaining about available upgrades inside virtualenv
@@ -170,7 +161,7 @@ RUN git init && \
 # Install deps (but not the code)
 # Note that we don't delete the pip cache for dev builds
 RUN rm -rf $VIRTUAL_ENV && \
-  python3.5 -m venv $VIRTUAL_ENV && \
+  python -m virtualenv $VIRTUAL_ENV && \
   pip install --upgrade pip setuptools wheel && \
   pip install .[all,dev] && \
   rm $HOME/.mujoco/mjkey.txt
@@ -179,11 +170,11 @@ RUN rm -rf $VIRTUAL_ENV && \
 COPY --chown=$user:$user . $HOME/code/garage
 
 # Build and install the sdist
-RUN python3.5 setup.py sdist && \
+RUN python setup.py sdist && \
     cp dist/*.tar.gz dist/garage.tar.gz && \
     pip install dist/garage.tar.gz[all,dev]
 
-RUN cd benchmarks && python3.5 setup.py sdist && \
+RUN cd benchmarks && python setup.py sdist && \
     cp dist/*.tar.gz dist/benchmarks.tar.gz && \
     pip install dist/benchmarks.tar.gz
 
