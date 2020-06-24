@@ -23,9 +23,12 @@ stages:
     if: tag IS present
 
 jobs:
+  fast_finish: true
   include:
     - name: "Build and cache docker container"
       stage: "Build"
+      env:
+        - SKIP_FOR_DOCS_ONLY="true"
       before_script: skip
       install: skip
       script:
@@ -36,30 +39,38 @@ jobs:
       stage: "Check"
       env:
         - JOB_RUN_CMD="make ci-job-precommit"
+        - SKIP_FOR_DOCS_ONLY="false"
     - name: "Normal tests"
       stage: "Test"
       env:
         - JOB_RUN_CMD="make ci-job-normal"
+        - SKIP_FOR_DOCS_ONLY="true"
     - name: "Large tests"
       stage: "Test"
-      env: JOB_RUN_CMD="make ci-job-large"
+      env:
+        - JOB_RUN_CMD="make ci-job-large"
+        - SKIP_FOR_DOCS_ONLY="true"
     - name: "MuJoCo-based tests"
       stage: "Test"
       if: type != pull_request OR head_repo = "rlworkgroup/garage"
       env:
         - JOB_RUN_CMD="make ci-job-mujoco"
+        - SKIP_FOR_DOCS_ONLY="true"
     - name: "MuJoCo-based long running tests"
       stage: "Test"
       if: type != pull_request OR head_repo = "rlworkgroup/garage"
       env:
         - JOB_RUN_CMD="make ci-job-mujoco-long"
+        - SKIP_FOR_DOCS_ONLY="true"
     - name: "Nightly tests"
       stage: "Test"
       if: type = cron
       env: JOB_RUN_CMD="make ci-job-nightly"
     - name: "Verify conda and pipenv installations"
       stage: "Verify"
-      env: JOB_RUN_CMD="make ci-job-verify-envs"
+      env:
+        - JOB_RUN_CMD="make ci-job-verify-envs"
+        - SKIP_FOR_DOCS_ONLY="true"
     - name: "Deploy to PyPI"
       stage: "Deploy"
       before_install: skip
@@ -76,6 +87,12 @@ jobs:
           tags: true
 
 before_install:
+  # Skip the job for PRs with only documentation changes
+  - >
+    scripts/travisci/check_docs_only.sh &&
+    [[ "${TRAVIS_PULL_REQUEST}" != "false" ]] &&
+    [[ "${SKIP_FOR_DOCS_ONLY}" == "true" ]] &&
+    travis_terminate 0 || true
   # Reconfigure docker to be more efficient
   - curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
   - sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
