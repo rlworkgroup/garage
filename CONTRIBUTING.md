@@ -38,6 +38,7 @@ The Python code in garage conforms to the [PEP8](https://www.python.org/dev/peps
 
 ### garage-specific Python style
 These are garage-specific rules which are not part of the aforementioned style guides.
+
 * Python package imports should be sorted alphabetically within their PEP8 groupings.
 
     The sorting is alphabetical from left to right, ignoring case and Python keywords (i.e. `import`, `from`, `as`). Notable exceptions apply in `__init__.py` files, where sometimes this rule will trigger a circular import.
@@ -45,6 +46,10 @@ These are garage-specific rules which are not part of the aforementioned style g
 * Prefer single-quoted strings (`'foo'`) over double-quoted strings (`"foo"`).
 
     Double-quoted strings can be used if there is a compelling escape or formatting reason for using single quotes (e.g. a single quote appears inside the string).
+
+* Prefer [f-strings](https://www.python.org/dev/peps/pep-0498) for string interpolation.
+
+    Keep this consistent within a file. When editing a file, if you encounter non f-string interpolation syntax (e.g. `'Hello, {}!.format('World)` or `'Hello, %s!' % 'World'`), either use the existing format or convert all interpolations in the file to use f-strings.
 
 * Add convenience imports in `__init__.py` of a package for shallow first-level repetitive imports, but not for subpackages, even if that subpackage is defined in a single `.py` file.
 
