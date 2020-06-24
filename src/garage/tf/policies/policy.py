@@ -1,10 +1,11 @@
 """Base class for policies in TensorFlow."""
 import abc
 
+from garage.np.policies import Policy as BasePolicy
 from garage.tf.models import Module, StochasticModule
 
 
-class Policy(Module):
+class Policy(Module, BasePolicy):
     """Base class for policies in TensorFlow.
 
     Args:
@@ -25,53 +26,23 @@ class Policy(Module):
             observation (np.ndarray): Observation from the environment.
 
         Returns:
-            (np.ndarray): Action sampled from the policy.
+            Tuple[np.ndarray, dict[str,np.ndarray]]: Action and extra agent
+                info.
 
         """
 
     @abc.abstractmethod
     def get_actions(self, observations):
-        """Get action sampled from the policy.
+        """Get actions given observations.
 
         Args:
-            observations (list[np.ndarray]): Observations from the environment.
+            observations (np.ndarray): Observations from the environment.
 
         Returns:
-            (np.ndarray): Actions sampled from the policy.
+            Tuple[np.ndarray, dict[str,np.ndarray]]: Actions and extra agent
+                infos.
 
         """
-
-    @property
-    def vectorized(self):
-        """Boolean for vectorized.
-
-        Returns:
-            bool: Indicates whether the policy is vectorized. If True, it
-                should implement get_actions(), and support resetting with
-                multiple simultaneous states.
-
-        """
-        return False
-
-    @property
-    def observation_space(self):
-        """Observation space.
-
-        Returns:
-            akro.Space: The observation space of the environment.
-
-        """
-        return self._env_spec.observation_space
-
-    @property
-    def action_space(self):
-        """Action space.
-
-        Returns:
-            akro.Space: The action space of the environment.
-
-        """
-        return self._env_spec.action_space
 
     @property
     def env_spec(self):
@@ -83,13 +54,27 @@ class Policy(Module):
         """
         return self._env_spec
 
-    def log_diagnostics(self, paths):
-        """Log extra information per iteration based on the collected paths.
+    @property
+    def state_info_specs(self):
+        """State info specification.
 
-        Args:
-            paths (dict[numpy.ndarray]): Sample paths.
+        Returns:
+            List[str]: keys and shapes for the information related to the
+                module's state when taking an action.
 
         """
+        return list()
+
+    @property
+    def state_info_keys(self):
+        """State info keys.
+
+        Returns:
+            List[str]: keys for the information related to the module's state
+                when taking an input.
+
+        """
+        return [k for k, _ in self.state_info_specs]
 
 
 # pylint: disable=abstract-method

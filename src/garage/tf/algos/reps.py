@@ -218,7 +218,6 @@ class REPS(RLAlgorithm):  # noqa: D416
 
         """
         logger.log('Logging diagnostics...')
-        self.policy.log_diagnostics(paths)
         self._baseline.log_diagnostics(paths)
 
     def __getstate__(self):

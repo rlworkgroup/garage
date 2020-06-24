@@ -3,8 +3,10 @@ import abc
 
 import torch
 
+from garage.np.policies import Policy as BasePolicy
 
-class Policy(torch.nn.Module, abc.ABC):
+
+class Policy(torch.nn.Module, BasePolicy, abc.ABC):
     """Policy base class.
 
     Args:
@@ -20,18 +22,14 @@ class Policy(torch.nn.Module, abc.ABC):
 
     @abc.abstractmethod
     def get_action(self, observation):
-        """Get a single action given an observation.
+        """Get action sampled from the policy.
 
         Args:
-            observation (torch.Tensor): Observation from the environment.
+            observation (np.ndarray): Observation from the environment.
 
         Returns:
-            tuple:
-                * torch.Tensor: Predicted action.
-                * dict:
-                    * list[float]: Mean of the distribution
-                    * list[float]: Log of standard deviation of the
-                        distribution
+            Tuple[np.ndarray, dict[str,np.ndarray]]: Action and extra agent
+                info.
 
         """
 
@@ -40,37 +38,13 @@ class Policy(torch.nn.Module, abc.ABC):
         """Get actions given observations.
 
         Args:
-            observations (torch.Tensor): Observations from the environment.
+            observations (np.ndarray): Observations from the environment.
 
         Returns:
-            tuple:
-                * torch.Tensor: Predicted actions.
-                * dict:
-                    * list[float]: Mean of the distribution
-                    * list[float]: Log of standard deviation of the
-                        distribution
+            Tuple[np.ndarray, dict[str,np.ndarray]]: Actions and extra agent
+                infos.
 
         """
-
-    @property
-    def observation_space(self):
-        """The observation space for the environment.
-
-        Returns:
-            akro.Space: Observation space.
-
-        """
-        return self._env_spec.observation_space
-
-    @property
-    def action_space(self):
-        """The action space for the environment.
-
-        Returns:
-            akro.Space: Action space.
-
-        """
-        return self._env_spec.action_space
 
     def get_param_values(self):
         """Get the parameters to the policy.
@@ -93,14 +67,6 @@ class Policy(torch.nn.Module, abc.ABC):
 
         """
         self.load_state_dict(state_dict)
-
-    def reset(self, dones=None):
-        """Reset the environment.
-
-        Args:
-            dones (numpy.ndarray): Reset values
-
-        """
 
     @property
     def name(self):

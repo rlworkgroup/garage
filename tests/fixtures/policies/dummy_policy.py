@@ -17,7 +17,7 @@ class DummyPolicy(Policy):
             self,
             env_spec,
     ):
-        super().__init__(env_spec=env_spec)
+        self._env_spec = env_spec
         self._param = []
         self._param_values = np.random.uniform(-1, 1, 1000)
 
@@ -56,7 +56,6 @@ class DummyPolicy(Policy):
             list: Policy parameters.
 
         """
-
         return self._param
 
     def get_param_values(self):
@@ -88,9 +87,19 @@ class DummyPolicy(Policy):
         """
         return True
 
+    @property
+    def env_spec(self):
+        """Policy environment specification.
+
+        Returns:
+            garage.EnvSpec: Environment specification.
+
+        """
+        return self._env_spec
+
 
 class DummyPolicyWithoutVectorized(DummyPolicy):
-    """Dummy Policy without vectorized
+    """Dummy Policy without vectorized.
 
     Args:
         env_spec (garage.envs.env_spec.EnvSpec): Environment specification.
