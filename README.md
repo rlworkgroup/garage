@@ -5,6 +5,7 @@
 [![PyPI version](https://badge.fury.io/py/garage.svg)](https://badge.fury.io/py/garage)
 
 # garage
+TESTING SKIP DOCS ONLY
 
 garage is a toolkit for developing and evaluating reinforcement learning algorithms, and an accompanying library of state-of-the-art implementations built using that toolkit.
 
