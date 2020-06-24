@@ -25,6 +25,10 @@ class Policy(Module, BasePolicy):
         Args:
             observation (np.ndarray): Observation from the environment.
 
+        Returns:
+            Tuple[np.ndarray, dict[str,np.ndarray]]: Action and extra agent
+                info.
+
         """
 
     @abc.abstractmethod
@@ -32,29 +36,13 @@ class Policy(Module, BasePolicy):
         """Get actions given observations.
 
         Args:
-            observations (torch.Tensor): Observations from the environment.
-
-        """
-
-    @property
-    def observation_space(self):
-        """Observation space.
+            observations (np.ndarray): Observations from the environment.
 
         Returns:
-            akro.Space: The observation space of the environment.
+            Tuple[np.ndarray, dict[str,np.ndarray]]: Actions and extra agent
+                infos.
 
         """
-        return self._env_spec.observation_space
-
-    @property
-    def action_space(self):
-        """Action space.
-
-        Returns:
-            akro.Space: The action space of the environment.
-
-        """
-        return self._env_spec.action_space
 
     @property
     def env_spec(self):
@@ -66,13 +54,27 @@ class Policy(Module, BasePolicy):
         """
         return self._env_spec
 
-    def log_diagnostics(self, paths):
-        """Log extra information per iteration based on the collected paths.
+    @property
+    def state_info_specs(self):
+        """State info specification.
 
-        Args:
-            paths (dict[numpy.ndarray]): Sample paths.
+        Returns:
+            List[str]: keys and shapes for the information related to the
+                module's state when taking an action.
 
         """
+        return list()
+
+    @property
+    def state_info_keys(self):
+        """State info keys.
+
+        Returns:
+            List[str]: keys for the information related to the module's state
+                when taking an input.
+
+        """
+        return [k for k, _ in self.state_info_specs]
 
 
 # pylint: disable=abstract-method

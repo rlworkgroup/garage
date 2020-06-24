@@ -369,7 +369,6 @@ class TD3(RLAlgorithm):
                     self._min_buffer_size):
                 avg_success_rate = np.mean(self._success_history)
 
-        self.policy.log_diagnostics(paths)
         self._qf.log_diagnostics(paths)
 
         for _ in range(self._n_train_steps):

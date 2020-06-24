@@ -100,11 +100,11 @@ class FixedPolicy(Policy):
         return self.get_action(observations[0])
 
     @property
-    def observation_space(self):
-        """akro.Space: The observation space of the environment."""
-        return self._env_spec.observation_space
+    def env_spec(self):
+        """Policy environment specification.
 
-    @property
-    def action_space(self):
-        """akro.Space: The action space for the environment."""
-        return self._env_spec.action_space
+        Returns:
+            garage.EnvSpec: Environment specification.
+
+        """
+        return self._env_spec

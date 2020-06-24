@@ -27,6 +27,10 @@ class Policy(torch.nn.Module, BasePolicy, abc.ABC):
         Args:
             observation (np.ndarray): Observation from the environment.
 
+        Returns:
+            Tuple[np.ndarray, dict[str,np.ndarray]]: Action and extra agent
+                info.
+
         """
 
     @abc.abstractmethod
@@ -34,29 +38,13 @@ class Policy(torch.nn.Module, BasePolicy, abc.ABC):
         """Get actions given observations.
 
         Args:
-            observations (torch.Tensor): Observations from the environment.
-
-        """
-
-    @property
-    def observation_space(self):
-        """The observation space for the environment.
+            observations (np.ndarray): Observations from the environment.
 
         Returns:
-            akro.Space: Observation space.
+            Tuple[np.ndarray, dict[str,np.ndarray]]: Actions and extra agent
+                infos.
 
         """
-        return self._env_spec.observation_space
-
-    @property
-    def action_space(self):
-        """The action space for the environment.
-
-        Returns:
-            akro.Space: Action space.
-
-        """
-        return self._env_spec.action_space
 
     def get_param_values(self):
         """Get the parameters to the policy.
@@ -79,16 +67,6 @@ class Policy(torch.nn.Module, BasePolicy, abc.ABC):
 
         """
         self.load_state_dict(state_dict)
-
-    @property
-    def env_spec(self):
-        """Policy environment specification.
-
-        Returns:
-            garage.EnvSpec: Environment specification.
-
-        """
-        return self._env_spec
 
     @property
     def name(self):

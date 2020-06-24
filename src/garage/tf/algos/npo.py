@@ -257,7 +257,6 @@ class NPO(RLAlgorithm):
 
         """
         logger.log('Logging diagnostics...')
-        self.policy.log_diagnostics(paths)
         self._baseline.log_diagnostics(paths)
 
     def optimize_policy(self, samples_data):

@@ -88,24 +88,14 @@ class DummyPolicy(Policy):
         return True
 
     @property
-    def observation_space(self):
-        """Observation space.
+    def env_spec(self):
+        """Policy environment specification.
 
         Returns:
-            akro.Space: The observation space of the environment.
+            garage.EnvSpec: Environment specification.
 
         """
-        return self._env_spec.observation_space
-
-    @property
-    def action_space(self):
-        """Action space.
-
-        Returns:
-            akro.Space: The action space of the environment.
-
-        """
-        return self._env_spec.action_space
+        return self._env_spec
 
 
 class DummyPolicyWithoutVectorized(DummyPolicy):

@@ -12,6 +12,10 @@ class Policy(abc.ABC):
         Args:
             observation (np.ndarray): Observation from the environment.
 
+        Returns:
+            Tuple[np.ndarray, dict[str,np.ndarray]]: Actions and extra agent
+                infos.
+
         """
 
     @abc.abstractmethod
@@ -20,6 +24,10 @@ class Policy(abc.ABC):
 
         Args:
             observations (torch.Tensor): Observations from the environment.
+
+        Returns:
+            Tuple[np.ndarray, dict[str,np.ndarray]]: Actions and extra agent
+                infos.
 
         """
 
@@ -39,12 +47,13 @@ class Policy(abc.ABC):
         """
 
     @property
-    def observation_space(self):
-        """akro.Space: The observation space of the environment."""
+    def name(self):
+        """Name of policy.
 
-    @property
-    def action_space(self):
-        """akro.Space: The action space for the environment."""
+        Returns:
+            str: Name of policy
+
+        """
 
     @property
     def env_spec(self):
@@ -56,40 +65,21 @@ class Policy(abc.ABC):
         """
 
     @property
-    def name(self):
-        """Name of policy.
+    def observation_space(self):
+        """Observation space.
 
         Returns:
-            str: Name of policy
+            akro.Space: The observation space of the environment.
 
         """
-
-    def log_diagnostics(self, paths):
-        """Log extra information per iteration based on the collected paths.
-
-        Args:
-            paths (list[dict]): A list of collected paths
-
-        """
+        return self.env_spec.observation_space
 
     @property
-    def state_info_specs(self):
-        """State info specification.
+    def action_space(self):
+        """Action space.
 
         Returns:
-            List[str]: keys and shapes for the information related to the
-                module's state when taking an action.
+            akro.Space: The action space of the environment.
 
         """
-        return list()
-
-    @property
-    def state_info_keys(self):
-        """State info keys.
-
-        Returns:
-            List[str]: keys for the information related to the module's state
-                when taking an input.
-
-        """
-        return [k for k, _ in self.state_info_specs]
+        return self.env_spec.action_space
