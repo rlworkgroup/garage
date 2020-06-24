@@ -10,46 +10,58 @@ addons:
     packages:
       - docker-ce
 
+stages:
+  - name: "Build"
+    if: NOT fork
+  - name: "Check"
+    # pre-commit checks only run for pull requests
+    if: type = pull_request
+  - name: "Test"
+  - name: "Verify"
+  - name: "Deploy"
+    # special deploy stage for tag builds ONLY
+    if: tag IS present
+
 jobs:
   include:
-    - stage: "Build"
-      if: NOT fork
-      name: "Build and cache docker container"
+    - name: "Build and cache docker container"
+      stage: "Build"
       before_script: skip
       install: skip
       script:
         - tag="rlworkgroup/garage-ci:${TRAVIS_BUILD_NUMBER}"
         - make build-ci TAG="${tag}" BUILD_ARGS="--no-cache"
         - make ci-deploy-docker TAG="${tag}"
-    - stage: test
-    # pre-commit checks only run for pull requests
-      if: type = pull_request
-      name: "Pre-commit checks"
+    - name: "Check pre-commit"
+      stage: "Check"
       env:
         - JOB_RUN_CMD="make ci-job-precommit"
     - name: "Normal tests"
+      stage: "Test"
       env:
         - JOB_RUN_CMD="make ci-job-normal"
-        - DEPLOY_FROM_THIS_JOB="true"
     - name: "Large tests"
+      stage: "Test"
       env: JOB_RUN_CMD="make ci-job-large"
-    - if: type != pull_request OR head_repo = "rlworkgroup/garage"
-      name: "MuJoCo-based tests"
+    - name: "MuJoCo-based tests"
+      stage: "Test"
+      if: type != pull_request OR head_repo = "rlworkgroup/garage"
       env:
         - JOB_RUN_CMD="make ci-job-mujoco"
-    - if: type != pull_request OR head_repo = "rlworkgroup/garage"
-      name: "MuJoCo-based long running tests"
+    - name: "MuJoCo-based long running tests"
+      stage: "Test"
+      if: type != pull_request OR head_repo = "rlworkgroup/garage"
       env:
         - JOB_RUN_CMD="make ci-job-mujoco-long"
-    - name: "Verify conda and pipenv installations"
-      env: JOB_RUN_CMD="make ci-job-verify-envs"
-    - if: type = cron
-      name: "Nightly tests"
+    - name: "Nightly tests"
+      stage: "Test"
+      if: type = cron
       env: JOB_RUN_CMD="make ci-job-nightly"
-    # special deploy stage for tag builds ONLY
-    - stage: deploy
-      if: tag IS present
-      name: "Deploy to PyPI"
+    - name: "Verify conda and pipenv installations"
+      stage: "Verify"
+      env: JOB_RUN_CMD="make ci-job-verify-envs"
+    - name: "Deploy to PyPI"
+      stage: "Deploy"
       before_install: skip
       install: skip
       script:
@@ -90,13 +102,6 @@ before_script:
 
 script:
   - make run-ci RUN_CMD="${JOB_RUN_CMD}" RUN_ARGS="${ci_env}" TAG="${tag}"
-
-deploy:
-  provider: script
-  script: make ci-deploy-docker TAG="${tag}"
-  on:
-    branch: master
-    condition: $DEPLOY_FROM_THIS_JOB = true
 
 git:
   depth: false
