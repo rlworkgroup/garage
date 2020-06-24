@@ -1,4 +1,4 @@
-data
+**/data
 Pipfile*
 .pytest_cache
 .idea
