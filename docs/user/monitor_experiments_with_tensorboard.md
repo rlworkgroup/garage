@@ -8,89 +8,7 @@ The TensorBoard package should be installed upon garage's installation. It can b
 $ pip install tensorboard
 ```
 
-## Logger Introduction and Setup
-Logging in garage is done via the [dowel](https://github.com/rlworkgroup/dowel) module.
-
-To start using dowel, import `logger`, dowel's logging facility:
-
-`from dowel import logger`
-
-`logger` takes in many different types of input and directs them to the correct output.
-
-Let's start by adding some outputs to logger:
-
-```bash
-from dowel import StdOutput, TextOutput, CsvOutput
-
-logger.add_output(StdOutput())  # Add std output
-logger.add_output(TextOutput('log_folder/log.txt'))  # Add text output
-logger.add_output(CsvOutput('log_folder/table.csv'))  # Add csv output
-```
-
-Then call `logger.log()` to direct input to all outputs that accept its type.
-
-For example: `logger.log('test')` will log to both StdOutput and TextOutput, but not to CsvOutput (since it doesn't handle string output):
-```bash
-                    +---------+
-       +---'test'--->StdOutput|
-       |            +---------+
-       |
-+------+            +----------+
-|logger+---'test'--->TextOutput|
-+------+            +----------+
-       |
-       |            +---------+
-       +-----!!----->CsvOutput|
-                    +---------+
-```
-
-You can find more about `logger` and its supported types [here](https://github.com/rlworkgroup/dowel/blob/master/src/dowel/logger.py).
-
-## Log TensorBoard with `logger`
-This section introduces how to log TensorBoard output with `logger`, and how to log different types of TensorBoard output.
-
-First, add TensorBoard output type to `logger`. Pass `log_dir` as the save location of the TensorBoard event files :
-```bash
-logger.add_output(dowel.TensorBoardOutput(log_dir))
-```
-
-### Log **Scalar** Values to TensorBoard
-
-You would need [`dowel.TabularInput`](https://github.com/rlworkgroup/dowel/blob/master/src/dowel/tabular_input.py).
-
-To prepare your TensorBoard output, import dowel's TabularInput instance `tabular` by:
-
-`from dowel import tabular`
-
-Add scalar values:
-```bash
-tabular.record('Epoch', epoch)
-tabular.record('# Sample', i_sample)
-tabular.record('AverageDiscountedReturn', return)
-```
-
-Finally, log your scalar values with `logger`:
-
-`logger.log(tabular)`
-
-### Log **histograms** to Tensorboard
-
-To log histograms to TensorBoard, you would need to pass [`dowel.Histogram`](https://github.com/rlworkgroup/dowel/blob/master/src/dowel/histogram.py) to `tabular`.
-
-`dowel.Histogram` is implemented as a typed view of a numpy array. It will accept input that `numpy.asarray` will.
-
-For example:
-```bash
-from dowel import Histogram, logger, tabular
-
-samples = norm.rvs(100)  # ndarray of 100 samples of a distribution
-hist = Histogram(samples)
-tabular.record('Sample', hist)
-
-logger.log(tabular)
-```
-
-## The "Automatic" Way: Setup Your Experiment with `@wrap_experiment`
+## Setup Your Experiment with `@wrap_experiment`
 Garage provides a decorator `@wrap_experiment` to help the logger setup process.
 
 Suppose you have an experiment function `my_experiment()` with the following definition:
@@ -114,9 +32,9 @@ def my_experiment(ctxt=None, seed=1):
             configuration used by LocalRunner to create the snapshotter.
     """
 ```
-`@wrap_experiment` helps create experiment log directories and set up logger outputs (e.g. `logger.add_output(dowel.TensorBoardOutput(log_dir))`). After the setup process, `my_experiment()` is called to start the actual experiment.
+`@wrap_experiment` helps create experiment log directories and set up logger outputs. After the setup process, `my_experiment()` is called to start the actual experiment.
 
-Note that `my_experiment()` now receives a new input `ctxt`. This is required for  the wrapped function to receive experiment configuration created by the wrapper.
+Note that `my_experiment()` now receives a new input `ctxt`. This new argument represents the hyperparameters of the experiments, which will be automatically saved into the experiment's log directory.
 
 This decorater can also be invoked **with arguments**:
 
@@ -128,11 +46,93 @@ For a complete list of arguments, you can refer to the definition of `wrap_exper
 
 Congrats! Now you have finished setting up TensorBoard logging. You can run your experiment and find your TensorBoard logs under the log directory.
 
-By default, your `log_dir` is `garage/data/local/experiment/{experiment_name}_{experiment_id}`
+By default, your `log_dir` is `$(pwd)/data/local/experiment/{experiment_name}_{experiment_id}`
 
-For our example experiment `my_experiment`, the default log directory is `garage/data/local/experiment/my_experiment`.
+For our example experiment `my_experiment`, the default log directory is `$(pwd)/data/local/experiment/my_experiment`.
 
-Now if you run the experiment again, the logs of the second run will be saved under `garage/data/local/experiment/my_experiment_1`.
+Now if you run the experiment again, the logs of the second run will be saved under `$(pwd)/data/local/experiment/my_experiment_1`.
+
+
+## Add Your Own Log Output
+Logging in garage is done via the [dowel](https://github.com/rlworkgroup/dowel) module.
+
+By default, `@wrap_experiment` calls the following code to automatically set up logging for you:
+
+```bash
+import dowel
+from dowel import logger
+
+logger.add_output(dowel.TextOutput(text_log_file))  # Add text output
+logger.add_output(dowel.CsvOutput(tabular_log_file))  # Add csv output
+logger.add_output(dowel.TensorBoardOutput(log_dir))  # Add TensorBoard output
+logger.add_output(dowel.StdOutput())  # Add std output
+```
+
+`logger` takes in many different types of input and directs them to the correct output.
+
+In your experiment, simply call `logger.log()` to direct input to all outputs that accept its type.
+
+For example: `logger.log('test')` will log to both StdOutput and TextOutput, but not to CsvOutput (since it doesn't handle string output):
+```bash
+                    +---------+
+       +---'test'--->StdOutput|
+       |            +---------+
+       |
++------+            +----------+
+|logger+---'test'--->TextOutput|
++------+            +----------+
+       |
+       |            +---------+
+       +-----!!----->CsvOutput|
+                    +---------+
+```
+
+You are welcome to add your own inputs and outputs to `logger`. If you want to add a new custom output type (e.g. `MyCustomOutput`), don't forget to call
+
+`logger.add_output(MyCustomOutput())` in your experiment to enable logging for this output type.
+
+You can find more about `logger` and its supported types [here](https://github.com/rlworkgroup/dowel/blob/master/src/dowel/logger.py).
+
+## Log TensorBoard with `logger`
+This section introduces how to log TensorBoard output with `logger`, and how to log different types of TensorBoard output.
+
+### Log **Scalar** Values to TensorBoard
+
+You would need [`dowel.TabularInput`](https://github.com/rlworkgroup/dowel/blob/master/src/dowel/tabular_input.py).
+
+To prepare your TensorBoard output, import dowel's `TabularInput` instance `tabular` by:
+
+`from dowel import tabular`
+
+Add scalar values:
+```bash
+tabular.record('Epoch', epoch)
+tabular.record('# Sample', i_sample)
+tabular.record('AverageDiscountedReturn', return)
+```
+
+Finally, log your scalar values with `logger`:
+
+`logger.log(tabular)`
+
+### Log **Histograms** to TensorBoard
+
+To log histograms to TensorBoard, you would need to pass [`dowel.Histogram`](https://github.com/rlworkgroup/dowel/blob/master/src/dowel/histogram.py) to `tabular`.
+
+`dowel.Histogram` is implemented as a typed view of a numpy array. It will accept input that `numpy.asarray` will.
+
+For example:
+```bash
+from dowel import Histogram, logger, tabular
+
+samples = norm.rvs(100)  # ndarray of 100 samples of a normal distribution
+hist = Histogram(samples)
+tabular.record('Sample', hist)
+
+logger.log(tabular)
+```
+
+You can use `Histogram()` to log distribution types from [`scipy.stats`](https://docs.scipy.org/doc/scipy/reference/stats.html).
 
 ## View Your TensorBoard Logs
 
@@ -159,14 +159,14 @@ You can find more TensorBoard dashboard details [here](https://www.tensorflow.or
 
 Upload your logs by:
 ```bash
-$ tensorboard dev upload --logdir logs \
+$ tensorboard dev upload --logdir data/log \
     --name "(optional) My latest experiment" \
     --description "(optional) Simple comparison of several hyperparameters"
 ```
 
 You should see:
 ```bash
-$ tensorboard dev upload --logdir logs
+$ tensorboard dev upload --logdir data/log
 
 Upload started and will continue reading any new data as it's added
 to the logdir. To stop uploading, press Ctrl-C.
