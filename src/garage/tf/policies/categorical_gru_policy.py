@@ -9,10 +9,11 @@ import numpy as np
 import tensorflow as tf
 
 from garage.tf.models import CategoricalGRUModel
-from garage.tf.policies.policy import StochasticPolicy
+from garage.tf.policies.policy import Policy
 
 
-class CategoricalGRUPolicy(StochasticPolicy):
+# pylint: disable=too-many-ancestors
+class CategoricalGRUPolicy(CategoricalGRUModel, Policy):
     """Categorical GRU Policy.
 
     A policy represented by a Categorical distribution
@@ -79,7 +80,7 @@ class CategoricalGRUPolicy(StochasticPolicy):
             raise ValueError('CategoricalGRUPolicy only works'
                              'with akro.Discrete action space.')
 
-        super().__init__(name, env_spec)
+        self._env_spec = env_spec
         self._obs_dim = env_spec.observation_space.flat_dim
         self._action_dim = env_spec.action_space.n
 
@@ -104,10 +105,10 @@ class CategoricalGRUPolicy(StochasticPolicy):
 
         self._f_step_prob = None
 
-        self.model = CategoricalGRUModel(
+        super().__init__(
             output_dim=self._action_dim,
             hidden_dim=self._hidden_dim,
-            name='prob_network',
+            name=name,
             hidden_nonlinearity=hidden_nonlinearity,
             hidden_w_init=hidden_w_init,
             hidden_b_init=hidden_b_init,
@@ -122,35 +123,33 @@ class CategoricalGRUPolicy(StochasticPolicy):
 
         self._prev_actions = None
         self._prev_hiddens = None
-        self._dist = None
         self._init_hidden = None
 
-        self._initialize()
+        self._initialize_policy()
 
-    def _initialize(self):
+    def _initialize_policy(self):
         """Initialize policy."""
-        with tf.compat.v1.variable_scope(self.name) as vs:
-            self._variable_scope = vs
-            state_input = tf.compat.v1.placeholder(shape=(None, None,
-                                                          self._input_dim),
-                                                   name='state_input',
+        state_input = tf.compat.v1.placeholder(shape=(None, None,
+                                                      self._input_dim),
+                                               name='state_input',
+                                               dtype=tf.float32)
+        step_input_var = tf.compat.v1.placeholder(shape=(None,
+                                                         self._input_dim),
+                                                  name='step_input',
+                                                  dtype=tf.float32)
+        step_hidden_var = tf.compat.v1.placeholder(shape=(None,
+                                                          self._hidden_dim),
+                                                   name='step_hidden_input',
                                                    dtype=tf.float32)
-            step_input_var = tf.compat.v1.placeholder(shape=(None,
-                                                             self._input_dim),
-                                                      name='step_input',
-                                                      dtype=tf.float32)
-            step_hidden_var = tf.compat.v1.placeholder(
-                shape=(None, self._hidden_dim),
-                name='step_hidden_input',
-                dtype=tf.float32)
-            (self._dist, step_out, step_hidden,
-             self._init_hidden) = self.model.build(state_input, step_input_var,
-                                                   step_hidden_var).outputs
+        (_, step_out, step_hidden,
+         self._init_hidden) = super().build(state_input, step_input_var,
+                                            step_hidden_var).outputs
 
         self._f_step_prob = tf.compat.v1.get_default_session().make_callable(
             [step_out, step_hidden],
             feed_list=[step_input_var, step_hidden_var])
 
+    # pylint: disable=arguments-differ
     def build(self, state_input, name=None):
         """Build policy.
 
@@ -166,27 +165,16 @@ class CategoricalGRUPolicy(StochasticPolicy):
                 when policy resets. Shape: :math:`(S^*)`.
 
         """
-        with tf.compat.v1.variable_scope(self._variable_scope):
-            _, step_input_var, step_hidden_var = self.model.inputs
-            return self.model.build(state_input,
-                                    step_input_var,
-                                    step_hidden_var,
-                                    name=name)
+        _, step_input_var, step_hidden_var = self.inputs
+        return super().build(state_input,
+                             step_input_var,
+                             step_hidden_var,
+                             name=name)
 
     @property
     def input_dim(self):
         """int: Dimension of the policy input."""
         return self._input_dim
-
-    @property
-    def vectorized(self):
-        """Vectorized or not.
-
-        Returns:
-            Bool: True if primitive supports vectorized operations.
-
-        """
-        return True
 
     def reset(self, do_resets=None):
         """Reset the policy.
@@ -254,14 +242,14 @@ class CategoricalGRUPolicy(StochasticPolicy):
         return actions, agent_info
 
     @property
-    def distribution(self):
-        """Policy distribution.
+    def env_spec(self):
+        """Policy environment specification.
 
         Returns:
-            tfp.Distribution.OneHotCategorical: Policy distribution.
+            garage.EnvSpec: Environment specification.
 
         """
-        return self._dist
+        return self._env_spec
 
     @property
     def state_info_specs(self):
@@ -319,7 +307,6 @@ class CategoricalGRUPolicy(StochasticPolicy):
         """
         new_dict = super().__getstate__()
         del new_dict['_f_step_prob']
-        del new_dict['_dist']
         del new_dict['_init_hidden']
         return new_dict
 
@@ -331,4 +318,4 @@ class CategoricalGRUPolicy(StochasticPolicy):
 
         """
         super().__setstate__(state)
-        self._initialize()
+        self._initialize_policy()

@@ -9,10 +9,11 @@ import numpy as np
 import tensorflow as tf
 
 from garage.tf.models import CategoricalMLPModel
-from garage.tf.policies.policy import StochasticPolicy
+from garage.tf.policies.policy import Policy
 
 
-class CategoricalMLPPolicy(CategoricalMLPModel, StochasticPolicy):
+# pylint: disable=too-many-ancestors
+class CategoricalMLPPolicy(CategoricalMLPModel, Policy):
     """Categorical MLP Policy.
 
     A policy represented by a Categorical distribution
@@ -55,13 +56,14 @@ class CategoricalMLPPolicy(CategoricalMLPModel, StochasticPolicy):
                  hidden_nonlinearity=tf.nn.tanh,
                  hidden_w_init=tf.initializers.glorot_uniform(),
                  hidden_b_init=tf.zeros_initializer(),
-                 output_nonlinearity=None,
+                 output_nonlinearity=tf.nn.softmax,
                  output_w_init=tf.initializers.glorot_uniform(),
                  output_b_init=tf.zeros_initializer(),
                  layer_normalization=False):
         if not isinstance(env_spec.action_space, akro.Discrete):
             raise ValueError('CategoricalMLPPolicy only works'
                              'with akro.Discrete action space.')
+
         self._env_spec = env_spec
         self._obs_dim = env_spec.observation_space.flat_dim
         self._action_dim = env_spec.action_space.n
@@ -76,7 +78,6 @@ class CategoricalMLPPolicy(CategoricalMLPModel, StochasticPolicy):
         self._layer_normalization = layer_normalization
 
         self._f_prob = None
-        self._dist = None
 
         super().__init__(output_dim=self._action_dim,
                          hidden_sizes=hidden_sizes,
@@ -96,50 +97,15 @@ class CategoricalMLPPolicy(CategoricalMLPModel, StochasticPolicy):
         state_input = tf.compat.v1.placeholder(tf.float32,
                                                shape=(None, None,
                                                       self._obs_dim))
-        self._dist = self._build_network(state_input).dist
+        dist = self.build(state_input).outputs
         self._f_prob = tf.compat.v1.get_default_session().make_callable(
-            [tf.argmax(self._dist.sample(), -1), self._dist.probs],
+            [tf.argmax(dist.sample(), -1), dist.probs],
             feed_list=[state_input])
-
-    # pylint: disable=arguments-differ
-    def build(self, state_input, name=None):
-        """Build policy.
-
-        Args:
-            state_input (tf.Tensor) : State input.
-            name (str): Name of the policy, which is also the name scope.
-
-        Returns:
-            tfp.distributions.OneHotCategorical: Policy distribution.
-
-        """
-        with tf.compat.v1.variable_scope(self._variable_scope):
-            return self._build_network(state_input, name=name)
 
     @property
     def input_dim(self):
         """int: Dimension of the policy input."""
         return self._obs_dim
-
-    @property
-    def distribution(self):
-        """Policy distribution.
-
-        Returns:
-            tfp.Distribution.OneHotCategorical: Policy distribution.
-
-        """
-        return self._dist
-
-    @property
-    def vectorized(self):
-        """Vectorized or not.
-
-        Returns:
-            Bool: True if primitive supports vectorized operations.
-
-        """
-        return True
 
     def get_action(self, observation):
         """Return a single action.
@@ -230,7 +196,6 @@ class CategoricalMLPPolicy(CategoricalMLPModel, StochasticPolicy):
         """
         new_dict = super().__getstate__()
         del new_dict['_f_prob']
-        del new_dict['_dist']
         return new_dict
 
     def __setstate__(self, state):

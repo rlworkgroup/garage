@@ -96,7 +96,7 @@ class RL2NPO(NPO):
                                                    samples_data['returns'],
                                                    samples_data['valids'])
         tabular.record('{}/ExplainedVariance'.format(self._baseline.name), ev)
-        self._old_policy.model.parameters = self.policy.model.parameters
+        self._old_policy.parameters = self.policy.parameters
 
     def _get_baseline_prediction(self, samples_data):
         """Get baseline prediction.

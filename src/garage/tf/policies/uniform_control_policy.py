@@ -10,21 +10,8 @@ class UniformControlPolicy(Policy):
 
     """
 
-    def __init__(
-            self,
-            env_spec,
-    ):
-        super().__init__(env_spec=env_spec)
-
-    @property
-    def vectorized(self):
-        """Vectorized or not.
-
-        Returns:
-            Bool: True if primitive supports vectorized operations.
-
-        """
-        return True
+    def __init__(self, env_spec):
+        self._env_spec = env_spec
 
     def get_action(self, observation):
         """Get single action from this policy for the input observation.

@@ -10,10 +10,11 @@ import numpy as np
 import tensorflow as tf
 
 from garage.tf.models import CategoricalCNNModel
-from garage.tf.policies.policy import StochasticPolicy
+from garage.tf.policies.policy import Policy
 
 
-class CategoricalCNNPolicy(StochasticPolicy):
+# pylint: disable=too-many-ancestors
+class CategoricalCNNPolicy(CategoricalCNNModel, Policy):
     """CategoricalCNNPolicy.
 
     A policy that contains a CNN and a MLP to make prediction based on
@@ -77,7 +78,8 @@ class CategoricalCNNPolicy(StochasticPolicy):
         assert isinstance(env_spec.action_space, akro.Discrete), (
             'CategoricalCNNPolicy only works with akro.Discrete action '
             'space.')
-        super().__init__(name, env_spec)
+
+        self._env_spec = env_spec
         self._obs_dim = env_spec.observation_space.shape
         self._action_dim = env_spec.action_space.n
         self._filters = filters
@@ -93,84 +95,45 @@ class CategoricalCNNPolicy(StochasticPolicy):
         self._layer_normalization = layer_normalization
 
         self._f_prob = None
-        self._dist = None
 
-        self.model = CategoricalCNNModel(
-            output_dim=self._action_dim,
-            filters=filters,
-            strides=strides,
-            padding=padding,
-            hidden_sizes=hidden_sizes,
-            hidden_nonlinearity=hidden_nonlinearity,
-            hidden_w_init=hidden_w_init,
-            hidden_b_init=hidden_b_init,
-            output_nonlinearity=output_nonlinearity,
-            output_w_init=output_w_init,
-            output_b_init=output_b_init,
-            layer_normalization=layer_normalization)
+        is_image = isinstance(self.env_spec.observation_space, akro.Image)
+
+        super().__init__(output_dim=self._action_dim,
+                         filters=filters,
+                         strides=strides,
+                         padding=padding,
+                         hidden_sizes=hidden_sizes,
+                         hidden_nonlinearity=hidden_nonlinearity,
+                         hidden_w_init=hidden_w_init,
+                         hidden_b_init=hidden_b_init,
+                         output_nonlinearity=output_nonlinearity,
+                         output_w_init=output_w_init,
+                         output_b_init=output_b_init,
+                         layer_normalization=layer_normalization,
+                         name=name,
+                         is_image=is_image)
 
         self._initialize()
 
     def _initialize(self):
         """Initialize policy."""
-        with tf.compat.v1.variable_scope(self.name) as vs:
-            self._variable_scope = vs
-            state_input = tf.compat.v1.placeholder(tf.float32,
-                                                   shape=(None, None) +
-                                                   self._obs_dim)
-            if isinstance(self.env_spec.observation_space, akro.Image):
-                augmented_state_input = tf.cast(state_input, tf.float32)
-                augmented_state_input /= 255.0
-            else:
-                augmented_state_input = state_input
-            self._dist = self.model.build(augmented_state_input).dist
-            self._f_prob = tf.compat.v1.get_default_session().make_callable(
-                [tf.argmax(self._dist.sample(), -1), self._dist.probs],
-                feed_list=[state_input])
-
-    def build(self, state_input, name=None):
-        """Build policy.
-
-        Args:
-            state_input (tf.Tensor) : State input.
-            name (str): Name of the policy, which is also the name scope.
-
-        Returns:
-            tfp.distributions.OneHotCategorical: Policy distribution.
-
-        """
-        with tf.compat.v1.variable_scope(self._variable_scope):
-            if isinstance(self.env_spec.observation_space, akro.Image):
-                augmented_state_input = tf.cast(state_input, tf.float32)
-                augmented_state_input /= 255.0
-            else:
-                augmented_state_input = state_input
-            return self.model.build(augmented_state_input, name=name)
+        state_input = tf.compat.v1.placeholder(tf.float32,
+                                               shape=(None, None) +
+                                               self._obs_dim)
+        if isinstance(self.env_spec.observation_space, akro.Image):
+            augmented_state_input = tf.cast(state_input, tf.float32)
+            augmented_state_input /= 255.0
+        else:
+            augmented_state_input = state_input
+        dist = self.build(augmented_state_input).outputs
+        self._f_prob = tf.compat.v1.get_default_session().make_callable(
+            [tf.argmax(dist.sample(), -1), dist.probs],
+            feed_list=[state_input])
 
     @property
     def input_dim(self):
         """int: Dimension of the policy input."""
         return self._obs_dim
-
-    @property
-    def distribution(self):
-        """Policy distribution.
-
-        Returns:
-            tfp.Distribution.OneHotCategorical: Policy distribution.
-
-        """
-        return self._dist
-
-    @property
-    def vectorized(self):
-        """Vectorized or not.
-
-        Returns:
-            bool: True if primitive supports vectorized operations.
-
-        """
-        return True
 
     def get_action(self, observation):
         """Return a single action.
@@ -199,6 +162,16 @@ class CategoricalCNNPolicy(StochasticPolicy):
         """
         samples, probs = self._f_prob(np.expand_dims(observations, 1))
         return np.squeeze(samples), dict(prob=np.squeeze(probs, axis=1))
+
+    @property
+    def env_spec(self):
+        """Policy environment specification.
+
+        Returns:
+            garage.EnvSpec: Environment specification.
+
+        """
+        return self._env_spec
 
     def clone(self, name):
         """Return a clone of the policy.
@@ -238,7 +211,6 @@ class CategoricalCNNPolicy(StochasticPolicy):
         """
         new_dict = super().__getstate__()
         del new_dict['_f_prob']
-        del new_dict['_dist']
         return new_dict
 
     def __setstate__(self, state):

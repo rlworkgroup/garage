@@ -1,36 +1,18 @@
 """Policy class for Task Embedding envs."""
 import abc
 
-import akro
-
-from garage.tf.policies.policy import StochasticPolicy
+from garage.tf.policies.policy import Policy
 
 
-class TaskEmbeddingPolicy(StochasticPolicy):
+class TaskEmbeddingPolicy(Policy):
     """Base class for Task Embedding policies in TensorFlow.
 
     This policy needs a task id in addition to observation to sample an action.
-
-    Args:
-        name (str): Policy name, also the variable scope.
-        env_spec (garage.envs.EnvSpec): Environment specification.
-        encoder (garage.tf.embeddings.StochasticEncoder):
-            A encoder that embeds a task id to a latent.
-
     """
-
-    # pylint: disable=too-many-public-methods
-
-    def __init__(self, name, env_spec, encoder):
-        super().__init__(name, env_spec)
-        self._encoder = encoder
-        self._augmented_observation_space = akro.concat(
-            self._env_spec.observation_space, self.task_space)
 
     @property
     def encoder(self):
         """garage.tf.embeddings.encoder.Encoder: Encoder."""
-        return self._encoder
 
     def get_latent(self, task_id):
         """Get embedded task id in latent space.
@@ -61,7 +43,6 @@ class TaskEmbeddingPolicy(StochasticPolicy):
     @property
     def augmented_observation_space(self):
         """akro.Box: Concatenated observation space and one-hot task id."""
-        return self._augmented_observation_space
 
     @property
     def encoder_distribution(self):
@@ -174,34 +155,6 @@ class TaskEmbeddingPolicy(StochasticPolicy):
             dict: Action distribution information.
 
         """
-
-    def get_trainable_vars(self):
-        """Get trainable variables.
-
-        The trainable vars of a multitask policy should be the trainable vars
-        of its model and the trainable vars of its embedding model.
-
-        Returns:
-            List[tf.Variable]: A list of trainable variables in the current
-                variable scope.
-
-        """
-        return (self._variable_scope.trainable_variables() +
-                self.encoder.get_trainable_vars())
-
-    def get_global_vars(self):
-        """Get global variables.
-
-        The global vars of a multitask policy should be the global vars
-        of its model and the trainable vars of its embedding model.
-
-        Returns:
-            List[tf.Variable]: A list of global variables in the current
-                variable scope.
-
-        """
-        return (self._variable_scope.global_variables() +
-                self.encoder.get_global_vars())
 
     def split_augmented_observation(self, collated):
         """Splits up observation into one-hot task and environment observation.

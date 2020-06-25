@@ -34,6 +34,10 @@ class TestCategoricalMLPModel(TfGraphTestCase):
 
     def test_output_nonlinearity(self):
         model = CategoricalMLPModel(output_dim=1,
+                                    hidden_nonlinearity=None,
+                                    hidden_w_init=tf.ones_initializer(),
+                                    output_w_init=tf.ones_initializer(),
+                                    hidden_sizes=(1, ),
                                     output_nonlinearity=lambda x: x / 2)
         obs_ph = tf.compat.v1.placeholder(tf.float32, shape=(None, 1))
         obs = np.ones((1, 1))

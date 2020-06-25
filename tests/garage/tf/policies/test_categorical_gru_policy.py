@@ -60,13 +60,14 @@ class TestCategoricalGRUPolicy(TfGraphTestCase):
                                                shape=(None, None,
                                                       policy.input_dim))
         dist_sym = policy.build(state_input, name='dist_sym').dist
+        dist_sym2 = policy.build(state_input, name='dist_sym2').dist
 
         concat_obs = np.concatenate([obs.flatten(), np.zeros(action_dim)])
         output1 = self.sess.run(
-            [policy.distribution.probs],
-            feed_dict={policy.model.input: [[concat_obs], [concat_obs]]})
-        output2 = self.sess.run(
             [dist_sym.probs],
+            feed_dict={state_input: [[concat_obs], [concat_obs]]})
+        output2 = self.sess.run(
+            [dist_sym2.probs],
             feed_dict={state_input: [[concat_obs], [concat_obs]]})
         assert np.array_equal(output1, output2)
 
@@ -90,11 +91,12 @@ class TestCategoricalGRUPolicy(TfGraphTestCase):
                                                shape=(None, None,
                                                       policy.input_dim))
         dist_sym = policy.build(state_input, name='dist_sym').dist
+        dist_sym2 = policy.build(state_input, name='dist_sym2').dist
         output1 = self.sess.run(
-            [policy.distribution.probs],
-            feed_dict={policy.model.input: [[obs.flatten()], [obs.flatten()]]})
-        output2 = self.sess.run(
             [dist_sym.probs],
+            feed_dict={state_input: [[obs.flatten()], [obs.flatten()]]})
+        output2 = self.sess.run(
+            [dist_sym2.probs],
             feed_dict={state_input: [[obs.flatten()], [obs.flatten()]]})
         assert np.array_equal(output1, output2)
 
@@ -126,23 +128,30 @@ class TestCategoricalGRUPolicy(TfGraphTestCase):
                                       state_include_action=False)
 
         obs = env.reset()
-        policy.model._gru_cell.weights[0].load(
-            tf.ones_like(policy.model._gru_cell.weights[0]).eval())
+        policy._gru_cell.weights[0].load(
+            tf.ones_like(policy._gru_cell.weights[0]).eval())
 
+        state_input = tf.compat.v1.placeholder(tf.float32,
+                                               shape=(None, None,
+                                                      policy.input_dim))
+        dist_sym = policy.build(state_input, name='dist_sym').dist
         output1 = self.sess.run(
-            [policy.distribution.probs],
-            feed_dict={policy.model.input: [[obs.flatten()], [obs.flatten()]]})
+            [dist_sym.probs],
+            feed_dict={state_input: [[obs.flatten()], [obs.flatten()]]})
 
         p = pickle.dumps(policy)
 
         with tf.compat.v1.Session(graph=tf.Graph()) as sess:
             policy_pickled = pickle.loads(p)
+            state_input = tf.compat.v1.placeholder(tf.float32,
+                                                   shape=(None, None,
+                                                          policy.input_dim))
+            dist_sym = policy_pickled.build(state_input, name='dist_sym').dist
             # yapf: disable
             output2 = sess.run(
-                [policy_pickled.distribution.probs],
+                [dist_sym.probs],
                 feed_dict={
-                    policy_pickled.model.input: [[obs.flatten()],
-                                                 [obs.flatten()]]
+                    state_input: [[obs.flatten()], [obs.flatten()]]
                 })
             # yapf: enable
             assert np.array_equal(output1, output2)

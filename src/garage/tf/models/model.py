@@ -13,8 +13,8 @@ class BaseModel(abc.ABC):
 
     A Model contains the structure/configuration of a set of computation
     graphs, or can be understood as a set of networks. Using a model
-    requires calling `build()` with given input placeholder, which can be
-    either tf.compat.v1.placeholder, or the output from another model. This
+    requires calling `build()` with given input placeholder, which can
+    be either tf.compat.v1.placeholder, or the output from another model. This
     makes composition of complex models with simple models much easier.
 
     Examples:
@@ -183,13 +183,12 @@ class Model(BaseModel, Module):
 
     def __init__(self, name):
         super().__init__(name or type(self).__name__)
-        # self._name = name or type(self).__name__  # name default to class
         self._networks = {}
         self._default_parameters = None
         self._variable_scope = None
 
     # pylint: disable=protected-access, assignment-from-no-return
-    def _build_network(self, *inputs, name=None):
+    def build(self, *inputs, name=None):
         """Build a Network with the given input(s).
 
         ***
@@ -225,7 +224,7 @@ class Model(BaseModel, Module):
                 with tf.name_scope(name=network_name):
                     network = Network()
                     network._inputs = inputs
-                    network._outputs = self._build_model(*inputs, name)
+                    network._outputs = self._build(*inputs, name)
                 variables = self._get_variables().values()
                 tf.compat.v1.get_default_session().run(
                     tf.compat.v1.variables_initializer(variables))
@@ -241,7 +240,7 @@ class Model(BaseModel, Module):
                 with tf.name_scope(name=network_name):
                     network = Network()
                     network._inputs = inputs
-                    network._outputs = self._build_model(*inputs, name)
+                    network._outputs = self._build(*inputs, name)
         custom_in_spec = self.network_input_spec()
         custom_out_spec = self.network_output_spec()
         in_spec = ['input', 'inputs']
@@ -277,10 +276,10 @@ class Model(BaseModel, Module):
 
         return out_network
 
-    def _build_model(self, *inputs, name=None):
+    def _build(self, *inputs, name=None):
         """Build this model given input placeholder(s).
 
-        User should implement _build_model() inside their subclassed model,
+        User should implement _build() inside their subclassed model,
         and construct the computation graphs in this function.
 
         Args:
@@ -438,7 +437,7 @@ class Model(BaseModel, Module):
             dict: The pickled state.
 
         """
-        new_dict = self.__dict__.copy()
+        new_dict = super().__getstate__()
         del new_dict['_networks']
         new_dict['_default_parameters'] = self.parameters
         return new_dict
@@ -450,5 +449,5 @@ class Model(BaseModel, Module):
             state (dict): unpickled state.
 
         """
-        self.__dict__.update(state)
+        super().__setstate__(state)
         self._networks = {}

@@ -54,13 +54,3 @@ class Policy(BasePolicy):
 
         """
         return [k for k, _ in self.state_info_specs]
-
-
-# pylint: disable=abstract-method
-class StochasticPolicy(Policy):
-    """Stochastic Policy."""
-
-    @property
-    @abc.abstractmethod
-    def distribution(self):
-        """Distribution."""

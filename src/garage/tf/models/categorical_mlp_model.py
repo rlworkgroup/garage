@@ -50,14 +50,13 @@ class CategoricalMLPModel(MLPModel):
                  hidden_nonlinearity=tf.nn.tanh,
                  hidden_w_init=tf.initializers.glorot_uniform(),
                  hidden_b_init=tf.zeros_initializer(),
-                 output_nonlinearity=None,
+                 output_nonlinearity=tf.nn.softmax,
                  output_w_init=tf.initializers.glorot_uniform(),
                  output_b_init=tf.zeros_initializer(),
                  layer_normalization=False):
         super().__init__(output_dim, name, hidden_sizes, hidden_nonlinearity,
-                         hidden_w_init, hidden_b_init, tf.nn.softmax,
+                         hidden_w_init, hidden_b_init, output_nonlinearity,
                          output_w_init, output_b_init, layer_normalization)
-        self._output_normalization_fn = output_nonlinearity
 
     def network_output_spec(self):
         """Network output spec.
@@ -68,7 +67,7 @@ class CategoricalMLPModel(MLPModel):
         """
         return ['dist']
 
-    def _build_model(self, state_input, name=None):
+    def _build(self, state_input, name=None):
         """Build model.
 
         Args:
@@ -81,7 +80,5 @@ class CategoricalMLPModel(MLPModel):
             tfp.distributions.OneHotCategorical: Policy distribution.
 
         """
-        prob = super()._build_model(state_input, name=name)
-        if self._output_normalization_fn:
-            prob = self._output_normalization_fn(prob)
+        prob = super()._build(state_input, name=name)
         return tfp.distributions.OneHotCategorical(probs=prob)

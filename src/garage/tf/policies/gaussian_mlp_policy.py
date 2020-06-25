@@ -9,10 +9,11 @@ import numpy as np
 import tensorflow as tf
 
 from garage.tf.models import GaussianMLPModel
-from garage.tf.policies.policy import StochasticPolicy
+from garage.tf.policies.policy import Policy
 
 
-class GaussianMLPPolicy(StochasticPolicy):
+# pylint: disable=too-many-ancestors
+class GaussianMLPPolicy(GaussianMLPModel, Policy):
     """Gaussian MLP Policy.
 
     A policy represented by a Gaussian distribution
@@ -94,7 +95,8 @@ class GaussianMLPPolicy(StochasticPolicy):
             raise ValueError('GaussianMLPPolicy only works with '
                              'akro.Box action space, but not {}'.format(
                                  env_spec.action_space))
-        super().__init__(name, env_spec)
+
+        self._env_spec = env_spec
         self._obs_dim = env_spec.observation_space.flat_dim
         self._action_dim = env_spec.action_space.flat_dim
 
@@ -118,73 +120,43 @@ class GaussianMLPPolicy(StochasticPolicy):
         self._layer_normalization = layer_normalization
 
         self._f_dist = None
-        self._dist = None
 
-        self.model = GaussianMLPModel(
-            output_dim=self._action_dim,
-            hidden_sizes=hidden_sizes,
-            hidden_nonlinearity=hidden_nonlinearity,
-            hidden_w_init=hidden_w_init,
-            hidden_b_init=hidden_b_init,
-            output_nonlinearity=output_nonlinearity,
-            output_w_init=output_w_init,
-            output_b_init=output_b_init,
-            learn_std=learn_std,
-            adaptive_std=adaptive_std,
-            std_share_network=std_share_network,
-            init_std=init_std,
-            min_std=min_std,
-            max_std=max_std,
-            std_hidden_sizes=std_hidden_sizes,
-            std_hidden_nonlinearity=std_hidden_nonlinearity,
-            std_output_nonlinearity=std_output_nonlinearity,
-            std_parameterization=std_parameterization,
-            layer_normalization=layer_normalization,
-            name='GaussianMLPModel')
+        super().__init__(output_dim=self._action_dim,
+                         hidden_sizes=hidden_sizes,
+                         hidden_nonlinearity=hidden_nonlinearity,
+                         hidden_w_init=hidden_w_init,
+                         hidden_b_init=hidden_b_init,
+                         output_nonlinearity=output_nonlinearity,
+                         output_w_init=output_w_init,
+                         output_b_init=output_b_init,
+                         learn_std=learn_std,
+                         adaptive_std=adaptive_std,
+                         std_share_network=std_share_network,
+                         init_std=init_std,
+                         min_std=min_std,
+                         max_std=max_std,
+                         std_hidden_sizes=std_hidden_sizes,
+                         std_hidden_nonlinearity=std_hidden_nonlinearity,
+                         std_output_nonlinearity=std_output_nonlinearity,
+                         std_parameterization=std_parameterization,
+                         layer_normalization=layer_normalization,
+                         name=name)
 
-        self._initialize()
+        self._initialize_policy()
 
-    def _initialize(self):
+    def _initialize_policy(self):
         """Initialize policy."""
-        with tf.compat.v1.variable_scope(self.name) as vs:
-            self._variable_scope = vs
-            state_input = tf.compat.v1.placeholder(tf.float32,
-                                                   shape=(None, None,
-                                                          self._obs_dim))
-            self._dist, mean, log_std = self.model.build(state_input).outputs
-            self._f_dist = tf.compat.v1.get_default_session().make_callable(
-                [self._dist.sample(), mean, log_std], feed_list=[state_input])
+        state_input = tf.compat.v1.placeholder(tf.float32,
+                                               shape=(None, None,
+                                                      self._obs_dim))
+        dist, mean, log_std = self.build(state_input).outputs
+        self._f_dist = tf.compat.v1.get_default_session().make_callable(
+            [dist.sample(), mean, log_std], feed_list=[state_input])
 
     @property
     def input_dim(self):
         """int: Dimension of the policy input."""
         return self._obs_dim
-
-    def build(self, state_input, name=None):
-        """Build policy.
-
-        Args:
-            state_input (tf.Tensor) : State input.
-            name (str): Name of the policy, which is also the name scope.
-
-        Returns:
-            tfp.distributions.MultivariateNormalDiag: Distribution.
-            tf.tensor: Mean.
-            tf.Tensor: Log of standard deviation.
-
-        """
-        with tf.compat.v1.variable_scope(self._variable_scope):
-            return self.model.build(state_input, name=name)
-
-    @property
-    def vectorized(self):
-        """Vectorized or not.
-
-        Returns:
-            Bool: True if primitive supports vectorized operations.
-
-        """
-        return True
 
     def get_action(self, observation):
         """Get single action from this policy for the input observation.
@@ -233,16 +205,6 @@ class GaussianMLPPolicy(StochasticPolicy):
         log_stds = self.action_space.unflatten_n(np.squeeze(log_stds, 1))
         return samples, dict(mean=means, log_std=log_stds)
 
-    @property
-    def distribution(self):
-        """Policy distribution.
-
-        Returns:
-            tfp.Distribution.MultivariateNormalDiag: Policy distribution.
-
-        """
-        return self._dist
-
     def clone(self, name):
         """Return a clone of the policy.
 
@@ -280,6 +242,16 @@ class GaussianMLPPolicy(StochasticPolicy):
             std_parameterization=self._std_parameterization,
             layer_normalization=self._layer_normalization)
 
+    @property
+    def env_spec(self):
+        """Policy environment specification.
+
+        Returns:
+            garage.EnvSpec: Environment specification.
+
+        """
+        return self._env_spec
+
     def __getstate__(self):
         """Object.__getstate__.
 
@@ -289,7 +261,6 @@ class GaussianMLPPolicy(StochasticPolicy):
         """
         new_dict = super().__getstate__()
         del new_dict['_f_dist']
-        del new_dict['_dist']
         return new_dict
 
     def __setstate__(self, state):
@@ -300,4 +271,4 @@ class GaussianMLPPolicy(StochasticPolicy):
 
         """
         super().__setstate__(state)
-        self._initialize()
+        self._initialize_policy()

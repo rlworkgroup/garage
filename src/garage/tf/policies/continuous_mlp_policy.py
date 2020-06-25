@@ -10,7 +10,8 @@ from garage.tf.models import MLPModel
 from garage.tf.policies.policy import Policy
 
 
-class ContinuousMLPPolicy(Policy):
+# pylint: disable=too-many-ancestors
+class ContinuousMLPPolicy(MLPModel, Policy):
     """Continuous MLP Policy Network.
 
     The policy network selects action based on the state of the environment.
@@ -55,7 +56,7 @@ class ContinuousMLPPolicy(Policy):
                  output_w_init=tf.initializers.glorot_uniform(),
                  output_b_init=tf.zeros_initializer(),
                  layer_normalization=False):
-        super().__init__(name, env_spec)
+        self._env_spec = env_spec
         action_dim = env_spec.action_space.flat_dim
         self._hidden_sizes = hidden_sizes
         self._hidden_nonlinearity = hidden_nonlinearity
@@ -67,36 +68,29 @@ class ContinuousMLPPolicy(Policy):
         self._layer_normalization = layer_normalization
         self._obs_dim = env_spec.observation_space.flat_dim
 
-        self.model = MLPModel(output_dim=action_dim,
-                              name='MLPModel',
-                              hidden_sizes=hidden_sizes,
-                              hidden_nonlinearity=hidden_nonlinearity,
-                              hidden_w_init=hidden_w_init,
-                              hidden_b_init=hidden_b_init,
-                              output_nonlinearity=output_nonlinearity,
-                              output_w_init=output_w_init,
-                              output_b_init=output_b_init,
-                              layer_normalization=layer_normalization)
+        super().__init__(output_dim=action_dim,
+                         name=name,
+                         hidden_sizes=hidden_sizes,
+                         hidden_nonlinearity=hidden_nonlinearity,
+                         hidden_w_init=hidden_w_init,
+                         hidden_b_init=hidden_b_init,
+                         output_nonlinearity=output_nonlinearity,
+                         output_w_init=output_w_init,
+                         output_b_init=output_b_init,
+                         layer_normalization=layer_normalization)
 
         self._initialize()
 
     def _initialize(self):
         state_input = tf.compat.v1.placeholder(tf.float32,
                                                shape=(None, self._obs_dim))
-
-        with tf.compat.v1.variable_scope(self.name) as vs:
-            self._variable_scope = vs
-            outputs = self.model.build(state_input).outputs
+        outputs = super().build(state_input).outputs
 
         self._f_prob = tf.compat.v1.get_default_session().make_callable(
             outputs, feed_list=[state_input])
 
-    @property
-    def input_dim(self):
-        """int: Dimension of the policy input."""
-        return self._obs_dim
-
-    def get_action_sym(self, obs_var, name=None):
+    # pylint: disable=arguments-differ
+    def build(self, obs_var, name=None):
         """Symbolic graph of the action.
 
         Args:
@@ -107,8 +101,12 @@ class ContinuousMLPPolicy(Policy):
             tf.Tensor: symbolic graph of the action.
 
         """
-        with tf.compat.v1.variable_scope(self._variable_scope):
-            return self.model.build(obs_var, name=name).outputs
+        return super().build(obs_var, name=name).outputs
+
+    @property
+    def input_dim(self):
+        """int: Dimension of the policy input."""
+        return self._obs_dim
 
     def get_action(self, observation):
         """Get single action from this policy for the input observation.
@@ -154,14 +152,14 @@ class ContinuousMLPPolicy(Policy):
         ]
 
     @property
-    def vectorized(self):
-        """Vectorized or not.
+    def env_spec(self):
+        """Policy environment specification.
 
         Returns:
-            bool: vectorized or not.
+            garage.EnvSpec: Environment specification.
 
         """
-        return True
+        return self._env_spec
 
     def clone(self, name):
         """Return a clone of the policy.

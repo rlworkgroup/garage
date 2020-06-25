@@ -8,7 +8,8 @@ from garage.tf.models import GaussianMLPModel
 from garage.tf.policies.task_embedding_policy import TaskEmbeddingPolicy
 
 
-class GaussianMLPTaskEmbeddingPolicy(TaskEmbeddingPolicy):
+# pylint: disable=too-many-ancestors
+class GaussianMLPTaskEmbeddingPolicy(GaussianMLPModel, TaskEmbeddingPolicy):
     """GaussianMLPTaskEmbeddingPolicy.
 
     Args:
@@ -87,7 +88,12 @@ class GaussianMLPTaskEmbeddingPolicy(TaskEmbeddingPolicy):
                  std_parameterization='exp',
                  layer_normalization=False):
         assert isinstance(env_spec.action_space, akro.Box)
-        super().__init__(name, env_spec, encoder)
+
+        self._env_spec = env_spec
+        self._name = name
+        self._encoder = encoder
+        self._augmented_observation_space = akro.concat(
+            self._env_spec.observation_space, self.task_space)
         self._hidden_sizes = hidden_sizes
         self._hidden_nonlinearity = hidden_nonlinearity
         self._hidden_w_init = hidden_w_init
@@ -109,29 +115,27 @@ class GaussianMLPTaskEmbeddingPolicy(TaskEmbeddingPolicy):
 
         self.obs_dim = env_spec.observation_space.flat_dim
         self.action_dim = env_spec.action_space.flat_dim
-        self._dist = None
 
-        self.model = GaussianMLPModel(
-            output_dim=self.action_dim,
-            hidden_sizes=hidden_sizes,
-            hidden_nonlinearity=hidden_nonlinearity,
-            hidden_w_init=hidden_w_init,
-            hidden_b_init=hidden_b_init,
-            output_nonlinearity=output_nonlinearity,
-            output_w_init=output_w_init,
-            output_b_init=output_b_init,
-            learn_std=learn_std,
-            adaptive_std=adaptive_std,
-            std_share_network=std_share_network,
-            init_std=init_std,
-            min_std=min_std,
-            max_std=max_std,
-            std_hidden_sizes=std_hidden_sizes,
-            std_hidden_nonlinearity=std_hidden_nonlinearity,
-            std_output_nonlinearity=std_output_nonlinearity,
-            std_parameterization=std_parameterization,
-            layer_normalization=layer_normalization,
-            name='GaussianMLPModel')
+        super().__init__(output_dim=self.action_dim,
+                         hidden_sizes=hidden_sizes,
+                         hidden_nonlinearity=hidden_nonlinearity,
+                         hidden_w_init=hidden_w_init,
+                         hidden_b_init=hidden_b_init,
+                         output_nonlinearity=output_nonlinearity,
+                         output_w_init=output_w_init,
+                         output_b_init=output_b_init,
+                         learn_std=learn_std,
+                         adaptive_std=adaptive_std,
+                         std_share_network=std_share_network,
+                         init_std=init_std,
+                         min_std=min_std,
+                         max_std=max_std,
+                         std_hidden_sizes=std_hidden_sizes,
+                         std_hidden_nonlinearity=std_hidden_nonlinearity,
+                         std_output_nonlinearity=std_output_nonlinearity,
+                         std_parameterization=std_parameterization,
+                         layer_normalization=layer_normalization,
+                         name=name)
 
         self._initialize()
 
@@ -143,36 +147,37 @@ class GaussianMLPTaskEmbeddingPolicy(TaskEmbeddingPolicy):
         """
         obs_input = tf.compat.v1.placeholder(tf.float32,
                                              shape=(None, None, self.obs_dim))
+        encoder_input = tf.compat.v1.placeholder(
+            tf.float32, shape=(None, None, self._encoder.input_dim))
         latent_input = tf.compat.v1.placeholder(
             tf.float32, shape=(None, None, self._encoder.output_dim))
 
-        # Encoder should be outside policy scope
         with tf.compat.v1.variable_scope(self._encoder.name):
-            latent_var = self._encoder.distribution.sample()
+            encoder_dist = self._encoder.build(encoder_input,
+                                               name='encoder').dist
 
-        with tf.compat.v1.variable_scope(self.name) as vs:
-            self._variable_scope = vs
+        with tf.compat.v1.variable_scope('concat_obs_latent'):
+            obs_latent_input = tf.concat([obs_input, latent_input], -1)
 
-            with tf.compat.v1.variable_scope('concat_obs_latent'):
-                obs_latent_input = tf.concat([obs_input, latent_input], -1)
-            self._dist, mean_var, log_std_var = self.model.build(
-                obs_latent_input,
-                # Must named 'default' to
-                # compensate tf default worker
-                name='default').outputs
+        dist, mean_var, log_std_var = super().build(
+            obs_latent_input,
+            # Must named 'default' to
+            # compensate tf default worker
+            name='default').outputs
 
-            embed_state_input = tf.concat([obs_input, latent_var], -1)
-            dist_given_task, mean_g_t, log_std_g_t = self.model.build(
-                embed_state_input, name='given_task').outputs
+        embed_state_input = tf.concat([obs_input, encoder_dist.sample()], -1)
+        dist_given_task, mean_g_t, log_std_g_t = super().build(
+            embed_state_input, name='given_task').outputs
 
         self._f_dist_obs_latent = tf.compat.v1.get_default_session(
-        ).make_callable([self._dist.sample(), mean_var, log_std_var],
+        ).make_callable([dist.sample(), mean_var, log_std_var],
                         feed_list=[obs_input, latent_input])
 
         self._f_dist_obs_task = tf.compat.v1.get_default_session(
         ).make_callable([dist_given_task.sample(), mean_g_t, log_std_g_t],
-                        feed_list=[obs_input, self._encoder.input])
+                        feed_list=[obs_input, encoder_input])
 
+    # pylint: disable=arguments-differ
     def build(self, obs_input, task_input, name=None):
         """Build policy.
 
@@ -192,20 +197,8 @@ class GaussianMLPTaskEmbeddingPolicy(TaskEmbeddingPolicy):
             enc_net = self._encoder.build(task_input, name=name)
             latent_var = enc_net.dist.loc
 
-        with tf.compat.v1.variable_scope(self.name) as vs:
-            self._variable_scope = vs
-            embed_state_input = tf.concat([obs_input, latent_var], -1)
-            return self.model.build(embed_state_input, name=name), enc_net
-
-    @property
-    def distribution(self):
-        """Policy action distribution.
-
-        Returns:
-            tfp.Distribution.MultivariateNormalDiag: Policy distribution.
-
-        """
-        return self._dist
+        embed_state_input = tf.concat([obs_input, latent_var], -1)
+        return super().build(embed_state_input, name=name), enc_net
 
     def get_action(self, observation):
         """Get action sampled from the policy.
@@ -388,6 +381,54 @@ class GaussianMLPTaskEmbeddingPolicy(TaskEmbeddingPolicy):
         log_stds = self.action_space.unflatten_n(np.squeeze(log_stds, 1))
         return samples, dict(mean=means, log_std=log_stds)
 
+    def get_trainable_vars(self):
+        """Get trainable variables.
+
+        The trainable vars of a multitask policy should be the trainable vars
+        of its model and the trainable vars of its embedding model.
+
+        Returns:
+            List[tf.Variable]: A list of trainable variables in the current
+                variable scope.
+
+        """
+        return (self._variable_scope.trainable_variables() +
+                self.encoder.get_trainable_vars())
+
+    def get_global_vars(self):
+        """Get global variables.
+
+        The global vars of a multitask policy should be the global vars
+        of its model and the trainable vars of its embedding model.
+
+        Returns:
+            List[tf.Variable]: A list of global variables in the current
+                variable scope.
+
+        """
+        return (self._variable_scope.global_variables() +
+                self.encoder.get_global_vars())
+
+    @property
+    def env_spec(self):
+        """Policy environment specification.
+
+        Returns:
+            garage.EnvSpec: Environment specification.
+
+        """
+        return self._env_spec
+
+    @property
+    def encoder(self):
+        """garage.tf.embeddings.encoder.Encoder: Encoder."""
+        return self._encoder
+
+    @property
+    def augmented_observation_space(self):
+        """akro.Box: Concatenated observation space and one-hot task id."""
+        return self._augmented_observation_space
+
     def clone(self, name):
         """Return a clone of the policy.
 
@@ -435,7 +476,6 @@ class GaussianMLPTaskEmbeddingPolicy(TaskEmbeddingPolicy):
         new_dict = super().__getstate__()
         del new_dict['_f_dist_obs_latent']
         del new_dict['_f_dist_obs_task']
-        del new_dict['_dist']
         return new_dict
 
     def __setstate__(self, state):

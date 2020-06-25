@@ -34,6 +34,7 @@ class CategoricalCNNModel(Model):
             For example, (32, 32) means this MLP consists of two
             hidden layers, each with 32 hidden units.
         name (str): Model name, also the variable scope.
+        is_image (bool): Whether observations are images or not.
         hidden_nonlinearity (callable): Activation function for intermediate
             dense layer(s). It should return a tf.Tensor. Set it to
             None to maintain a linear activation.
@@ -62,6 +63,7 @@ class CategoricalCNNModel(Model):
                  strides,
                  padding,
                  name=None,
+                 is_image=True,
                  hidden_sizes=(32, 32),
                  hidden_nonlinearity=tf.nn.relu,
                  hidden_w_init=tf.initializers.glorot_uniform(),
@@ -71,6 +73,7 @@ class CategoricalCNNModel(Model):
                  output_b_init=tf.zeros_initializer(),
                  layer_normalization=False):
         super().__init__(name)
+        self._is_image = is_image
         self._cnn_model = CNNModel(filters=filters,
                                    strides=strides,
                                    padding=padding,
@@ -111,10 +114,16 @@ class CategoricalCNNModel(Model):
             tfp.distributions.OneHotCategorical: Policy distribution.
 
         """
-        time_dim = tf.shape(state_input)[1]
-        dim = state_input.get_shape()[2:].as_list()
-        state_input = tf.reshape(state_input, [-1, *dim])
-        cnn_output = self._cnn_model.build(state_input, name=name).outputs
+        if self._is_image:
+            augmented_state_input = tf.cast(state_input, tf.float32)
+            augmented_state_input /= 255.0
+        else:
+            augmented_state_input = state_input
+        time_dim = tf.shape(augmented_state_input)[1]
+        dim = augmented_state_input.get_shape()[2:].as_list()
+        augmented_state_input = tf.reshape(augmented_state_input, [-1, *dim])
+        cnn_output = self._cnn_model.build(augmented_state_input,
+                                           name=name).outputs
         dim = cnn_output.get_shape()[-1]
         cnn_output = tf.reshape(cnn_output, [-1, time_dim, dim])
         mlp_output = self._mlp_model.build(cnn_output, name=name).dist

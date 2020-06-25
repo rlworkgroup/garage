@@ -9,10 +9,11 @@ import numpy as np
 import tensorflow as tf
 
 from garage.tf.models import CategoricalLSTMModel
-from garage.tf.policies.policy import StochasticPolicy
+from garage.tf.policies.policy import Policy
 
 
-class CategoricalLSTMPolicy(StochasticPolicy):
+# pylint: disable=too-many-ancestors
+class CategoricalLSTMPolicy(CategoricalLSTMModel, Policy):
     """Categorical LSTM Policy.
 
     A policy represented by a Categorical distribution
@@ -89,7 +90,7 @@ class CategoricalLSTMPolicy(StochasticPolicy):
             raise ValueError('CategoricalLSTMPolicy only works'
                              'with akro.Discrete action space.')
 
-        super().__init__(name, env_spec)
+        self._env_spec = env_spec
         self._obs_dim = env_spec.observation_space.flat_dim
         self._action_dim = env_spec.action_space.n
 
@@ -117,10 +118,10 @@ class CategoricalLSTMPolicy(StochasticPolicy):
 
         self._f_step_prob = None
 
-        self.model = CategoricalLSTMModel(
+        super().__init__(
             output_dim=self._action_dim,
             hidden_dim=self._hidden_dim,
-            name='prob_network',
+            name=name,
             forget_bias=forget_bias,
             hidden_nonlinearity=hidden_nonlinearity,
             hidden_w_init=hidden_w_init,
@@ -139,41 +140,39 @@ class CategoricalLSTMPolicy(StochasticPolicy):
         self._prev_actions = None
         self._prev_hiddens = None
         self._prev_cells = None
-        self._dist = None
         self._init_hidden = None
         self._init_cell = None
 
-        self._initialize()
+        self._initialize_policy()
 
-    def _initialize(self):
+    def _initialize_policy(self):
         """Initialize policy."""
-        with tf.compat.v1.variable_scope(self.name) as vs:
-            self._variable_scope = vs
-            state_input = tf.compat.v1.placeholder(shape=(None, None,
-                                                          self._input_dim),
-                                                   name='state_input',
+        state_input = tf.compat.v1.placeholder(shape=(None, None,
+                                                      self._input_dim),
+                                               name='state_input',
+                                               dtype=tf.float32)
+        step_input_var = tf.compat.v1.placeholder(shape=(None,
+                                                         self._input_dim),
+                                                  name='step_input',
+                                                  dtype=tf.float32)
+        step_hidden_var = tf.compat.v1.placeholder(shape=(None,
+                                                          self._hidden_dim),
+                                                   name='step_hidden_input',
                                                    dtype=tf.float32)
-            step_input_var = tf.compat.v1.placeholder(shape=(None,
-                                                             self._input_dim),
-                                                      name='step_input',
-                                                      dtype=tf.float32)
-            step_hidden_var = tf.compat.v1.placeholder(
-                shape=(None, self._hidden_dim),
-                name='step_hidden_input',
-                dtype=tf.float32)
-            step_cell_var = tf.compat.v1.placeholder(shape=(None,
-                                                            self._hidden_dim),
-                                                     name='step_cell_input',
-                                                     dtype=tf.float32)
-            (self._dist, step_out, step_hidden, step_cell, self._init_hidden,
-             self._init_cell) = self.model.build(state_input, step_input_var,
-                                                 step_hidden_var,
-                                                 step_cell_var).outputs
+        step_cell_var = tf.compat.v1.placeholder(shape=(None,
+                                                        self._hidden_dim),
+                                                 name='step_cell_input',
+                                                 dtype=tf.float32)
+        (_, step_out, step_hidden, step_cell, self._init_hidden,
+         self._init_cell) = super().build(state_input, step_input_var,
+                                          step_hidden_var,
+                                          step_cell_var).outputs
 
         self._f_step_prob = tf.compat.v1.get_default_session().make_callable(
             [step_out, step_hidden, step_cell],
             feed_list=[step_input_var, step_hidden_var, step_cell_var])
 
+    # pylint: disable=arguments-differ
     def build(self, state_input, name=None):
         """Build policy.
 
@@ -192,28 +191,17 @@ class CategoricalLSTMPolicy(StochasticPolicy):
                 when policy resets. Shape: :math:`(S^*)`
 
         """
-        with tf.compat.v1.variable_scope(self._variable_scope):
-            _, step_input, step_hidden, step_cell = self.model.inputs
-            return self.model.build(state_input,
-                                    step_input,
-                                    step_hidden,
-                                    step_cell,
-                                    name=name)
+        _, step_input, step_hidden, step_cell = self.inputs
+        return super().build(state_input,
+                             step_input,
+                             step_hidden,
+                             step_cell,
+                             name=name)
 
     @property
     def input_dim(self):
         """int: Dimension of the policy input."""
         return self._input_dim
-
-    @property
-    def vectorized(self):
-        """Vectorized or not.
-
-        Returns:
-            Bool: True if primitive supports vectorized operations.
-
-        """
-        return True
 
     def reset(self, do_resets=None):
         """Reset the policy.
@@ -286,16 +274,6 @@ class CategoricalLSTMPolicy(StochasticPolicy):
         return actions, agent_info
 
     @property
-    def distribution(self):
-        """Policy distribution.
-
-        Returns:
-            tfp.Distribution.OneHotCategorical: Policy distribution.
-
-        """
-        return self._dist
-
-    @property
     def state_info_specs(self):
         """State info specifcation.
 
@@ -309,6 +287,16 @@ class CategoricalLSTMPolicy(StochasticPolicy):
                 ('prev_action', (self._action_dim, )),
             ]
         return []
+
+    @property
+    def env_spec(self):
+        """Policy environment specification.
+
+        Returns:
+            garage.EnvSpec: Environment specification.
+
+        """
+        return self._env_spec
 
     def clone(self, name):
         """Return a clone of the policy.
@@ -354,7 +342,6 @@ class CategoricalLSTMPolicy(StochasticPolicy):
         """
         new_dict = super().__getstate__()
         del new_dict['_f_step_prob']
-        del new_dict['_dist']
         del new_dict['_init_hidden']
         del new_dict['_init_cell']
         return new_dict
@@ -367,4 +354,4 @@ class CategoricalLSTMPolicy(StochasticPolicy):
 
         """
         super().__setstate__(state)
-        self._initialize()
+        self._initialize_policy()

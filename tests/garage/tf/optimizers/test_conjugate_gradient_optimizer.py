@@ -5,17 +5,18 @@ import numpy as np
 import pytest
 import tensorflow as tf
 
+from garage.tf.models import Module
 from garage.tf.optimizers.conjugate_gradient_optimizer import (
     cg, ConjugateGradientOptimizer, FiniteDifferenceHvp, PearlmutterHvp)
 from garage.tf.policies import Policy
 from tests.fixtures import TfGraphTestCase
 
 
-class HelperPolicy(Policy):
+class HelperPolicy(Module, Policy):
     """Helper policy class for testing hvp classes"""
 
     def __init__(self, n_vars, name='OneParamPolicy'):
-        super().__init__(name, None)
+        super().__init__(name)
         with tf.compat.v1.variable_scope(self.name) as vs:
             self._variable_scope = vs
             _ = [tf.Variable([0.]) for _ in range(n_vars)]
