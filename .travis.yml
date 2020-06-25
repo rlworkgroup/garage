@@ -17,7 +17,6 @@ stages:
     # pre-commit checks only run for pull requests
     if: type = pull_request
   - name: "Test"
-  - name: "Verify"
   - name: "Deploy"
     # special deploy stage for tag builds ONLY
     if: tag IS present
@@ -76,7 +75,8 @@ jobs:
       if: type = cron
       env: JOB_RUN_CMD="make ci-job-nightly"
     - name: "Verify conda and pipenv installations"
-      stage: "Verify"
+      if: type = cron
+      stage: "Test"
       env:
         - JOB_RUN_CMD="make ci-job-verify-envs"
         - SKIP_FOR_DOCS_ONLY="true"
@@ -141,6 +141,3 @@ branches:
   - master
   - /release-.*/
   - /^v([1-9][0-9]*!)?(0|[1-9][0-9]*)(\.([0-9]*))*((a|b|rc)(0|[1-9][0-9]*))?(\.post(0|[1-9][0-9]*))?(\.dev(0|[1-9][0-9]*))?$/  # regex for release tags
-
-notifications:
-  email: false
