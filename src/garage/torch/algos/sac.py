@@ -10,7 +10,7 @@ import torch.nn.functional as F
 from garage import log_performance
 from garage.np import obtain_evaluation_samples
 from garage.np.algos import RLAlgorithm
-from garage.sampler import RaySampler
+from garage.sampler import FragmentWorker, RaySampler
 from garage.torch import dict_np_to_torch, global_device
 
 
@@ -86,30 +86,30 @@ class SAC(RLAlgorithm):
     """
 
     def __init__(
-            self,
-            env_spec,
-            policy,
-            qf1,
-            qf2,
-            replay_buffer,
-            *,  # Everything after this is numbers.
-            max_path_length,
-            max_eval_path_length=None,
-            gradient_steps_per_itr,
-            fixed_alpha=None,
-            target_entropy=None,
-            initial_log_entropy=0.,
-            discount=0.99,
-            buffer_batch_size=64,
-            min_buffer_size=int(1e4),
-            target_update_tau=5e-3,
-            policy_lr=3e-4,
-            qf_lr=3e-4,
-            reward_scale=1.0,
-            optimizer=torch.optim.Adam,
-            steps_per_epoch=1,
-            num_evaluation_trajectories=10,
-            eval_env=None,
+        self,
+        env_spec,
+        policy,
+        qf1,
+        qf2,
+        replay_buffer,
+        *,  # Everything after this is numbers.
+        max_path_length,
+        max_eval_path_length=None,
+        gradient_steps_per_itr,
+        fixed_alpha=None,
+        target_entropy=None,
+        initial_log_entropy=0.,
+        discount=0.99,
+        buffer_batch_size=64,
+        min_buffer_size=int(1e4),
+        target_update_tau=5e-3,
+        policy_lr=3e-4,
+        qf_lr=3e-4,
+        reward_scale=1.0,
+        optimizer=torch.optim.Adam,
+        steps_per_epoch=1,
+        num_evaluation_trajectories=10,
+        eval_env=None,
     ):
 
         self._qf1 = qf1
@@ -137,6 +137,7 @@ class SAC(RLAlgorithm):
         self.replay_buffer = replay_buffer
 
         self.sampler_cls = RaySampler
+        self.worker_cls = FragmentWorker
 
         self._reward_scale = reward_scale
         # use 2 target q networks
