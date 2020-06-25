@@ -1,5 +1,7 @@
 # Using Docker to run garage
 
+TESTING BRANCH docker-on-master
+
 Currently there are two types of garage images:
   - headless: garage without environment visualization.
   - nvidia: garage with environment visualization using an NVIDIA graphics

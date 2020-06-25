@@ -6,6 +6,8 @@ SHELL := /bin/bash
 
 .DEFAULT_GOAL := help
 
+# TESTING BRANCH docker-on-master
+
 # Path in host where the experiment data obtained in the container is stored
 DATA_PATH ?= $(shell pwd)/data
 # Set the environment variable MJKEY with the contents of the file specified by
