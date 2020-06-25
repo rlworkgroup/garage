@@ -32,6 +32,15 @@ jobs:
       before_script: skip
       install: skip
       script:
+        # Skip building for PRs and pushes in which no deps change
+        # Nightlies and API builds still always build
+        - >
+          scripts/travisci/check_no_deps_changed.sh &&
+          (
+            [[ "${TRAVIS_EVENT_TYPE}" == "pull_request" ]] ||
+            [[ "${TRAVIS_EVENT_TYPE}" == "push" ]]
+          ) &&
+          travis_terminate 0 || true
         - tag="rlworkgroup/garage-ci:${TRAVIS_BUILD_NUMBER}"
         - make build-ci TAG="${tag}" BUILD_ARGS="--no-cache"
         - make ci-deploy-docker TAG="${tag}"
@@ -87,10 +96,14 @@ jobs:
           tags: true
 
 before_install:
-  # Skip the job for PRs with only documentation changes
+  # Skip the job for PRs and pushes with only documentation changes
+  # Nightlies and API builds always run the job
   - >
     scripts/travisci/check_docs_only.sh &&
-    [[ "${TRAVIS_PULL_REQUEST}" != "false" ]] &&
+    (
+      [[ "${TRAVIS_EVENT_TYPE}" == "pull_request" ]] ||
+      [[ "${TRAVIS_EVENT_TYPE}" == "push" ]]
+    ) &&
     [[ "${SKIP_FOR_DOCS_ONLY}" == "true" ]] &&
     travis_terminate 0 || true
   # Reconfigure docker to be more efficient
