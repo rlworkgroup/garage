@@ -1,7 +1,7 @@
 # Training a policy to solve an environment
 This page will guide you training a policy to solve an environment.
 ### Define an experiment
-In garage, we train a policy in an experiment, which is a function wrapped by a decorator called `wrap_experiment`. Below is an simple example. `wrap_experiment` could have some arguments. You can see the [experiments doc](https://garage.readthedocs.io/en/latest/user/experiments.html) for details of running experiments.
+In garage, we train a policy in an experiment, which is a function wrapped by a decorator called `wrap_experiment`. Below is an simple example. `wrap_experiment` could have some arguments. You can see the [experiments doc](experiments.rst) for details of running experiments.
 ```py
 @wrap_experiment
 def my_first_experiment():
@@ -25,12 +25,12 @@ def my_first_experiment(ctxt=None, seed=1):
         ...
 ```
 ### Construct an environment
-Garage supports many envinronments. You can also implement your own environment like [this](https://garage.readthedocs.io/en/latest/user/implement_env.html). In this example, we choose `CartPole-V1` environment.
+Garage supports many envinronments. You can also implement your own environment like [this](implement_env.rst). In this example, we choose `CartPole-V1` environment.
 ```py
 env = GarageEnv(env_name='CartPole-v1')
 ```
 ### Construct a policy and an algorithm
-Construct your policy and choose an algorithm to train it. Here, we use `CategoricalMLPPolicy` and `TRPO`, you can also implement your own algorithm like [this](https://garage.readthedocs.io/en/latest/user/implement_algo.html).
+Construct your policy and choose an algorithm to train it. Here, we use `CategoricalMLPPolicy` and `TRPO`, you can also implement your own algorithm like [this](implement_algo.rst).
 ```py
 policy = CategoricalMLPPolicy(name='policy',
                               env_spec=env.spec,
@@ -52,7 +52,7 @@ runner.setup(algo, env)
 runner.train(n_epochs=100, batch_size=4000)
 ```
 ### Run the experiment
-In the above steps, we construct the requited componects to train a `CategoricalMLPPolicy` with `TRPO` to solve `CartPole-v1` and wrap all into an experiment function. You can find the full example in `examples/tf/trpo_cartpole.py`, which is also pasted below:
+In the above steps, we construct the requited componects to train a `CategoricalMLPPolicy` with `TRPO` to solve `CartPole-v1` and wrap all into an experiment function. You can find the full example in [`examples/tf/trpo_cartpole.py`](https://github.com/rlworkgroup/garage/blob/master/examples/tf/trpo_cartpole.py), which is also pasted below:
 ```py
 from garage import wrap_experiment
 from garage.envs import GarageEnv
